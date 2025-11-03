@@ -17,13 +17,10 @@ export const mobileAndTabletCheck = () => {
 /* eslint-enable */
 
 // From https://stackoverflow.com/a/9039885
-export const iosCheck = () => {
-  return (
-    ['iPad Simulator', 'iPhone Simulator', 'iPod Simulator', 'iPad', 'iPhone', 'iPod'].includes(navigator.platform) ||
-    // iPad on iOS 13 detection
-    (navigator.userAgent.includes('Mac') && 'ontouchend' in document)
-  );
-};
+export const iosCheck = () =>
+  ['iPad Simulator', 'iPhone Simulator', 'iPod Simulator', 'iPad', 'iPhone', 'iPod'].includes(navigator.platform) ||
+  // iPad on iOS 13 detection
+  (navigator.userAgent.includes('Mac') && 'ontouchend' in document);
 
 // From https://stackoverflow.com/a/23522755/2804332
 export const safariCheck = () =>

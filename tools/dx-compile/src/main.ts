@@ -114,8 +114,8 @@ export default async (options: EsbuildExecutorOptions): Promise<{ success: boole
     }),
   });
 
-  const configurations = options.platforms.flatMap((platform) => {
-    return platform === 'node'
+  const configurations = options.platforms.flatMap((platform) =>
+    platform === 'node'
       ? [
           ...(options.moduleFormat.includes('esm')
             ? [{ platform: 'node', format: 'esm', slug: 'node-esm', replaceRequire: false }]
@@ -124,8 +124,8 @@ export default async (options: EsbuildExecutorOptions): Promise<{ success: boole
             ? [{ platform: 'node', format: 'cjs', slug: 'node-cjs', replaceRequire: false }]
             : []),
         ]
-      : [{ platform: 'browser', format: 'esm', slug: 'browser', replaceRequire: true }];
-  });
+      : [{ platform: 'browser', format: 'esm', slug: 'browser', replaceRequire: true }],
+  );
 
   const errors = await Promise.all(
     configurations.map(async ({ platform, format, slug, replaceRequire }) => {
@@ -182,16 +182,12 @@ export default async (options: EsbuildExecutorOptions): Promise<{ success: boole
           {
             name: 'url',
             setup: ({ onResolve, onLoad }) => {
-              onResolve({ filter: /\?url$/ }, (args) => {
-                return {
-                  path: args.path.replace(/\?url$/, '/empty-url'),
-                  namespace: 'url',
-                };
-              });
+              onResolve({ filter: /\?url$/ }, (args) => ({
+                path: args.path.replace(/\?url$/, '/empty-url'),
+                namespace: 'url',
+              }));
 
-              onLoad({ filter: /\/empty-url/, namespace: 'url' }, async (args) => {
-                return { contents: 'export default ""' };
-              });
+              onLoad({ filter: /\/empty-url/, namespace: 'url' }, async (args) => ({ contents: 'export default ""' }));
             },
           } satisfies Plugin,
           yamlPlugin({}),

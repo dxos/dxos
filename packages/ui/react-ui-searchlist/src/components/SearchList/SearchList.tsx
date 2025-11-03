@@ -35,13 +35,11 @@ type SearchListRootProps = ThemedClassName<ComponentPropsWithRef<typeof CommandR
 };
 
 const SearchListRoot = forwardRef<HTMLDivElement, SearchListRootProps>(
-  ({ children, classNames, ...props }, forwardedRef) => {
-    return (
-      <CommandRoot {...props} className={mx(classNames)} ref={forwardedRef}>
-        {children}
-      </CommandRoot>
-    );
-  },
+  ({ children, classNames, ...props }, forwardedRef) => (
+    <CommandRoot {...props} className={mx(classNames)} ref={forwardedRef}>
+      {children}
+    </CommandRoot>
+  ),
 );
 
 SearchListRoot.displayName = SEARCHLIST_NAME;
@@ -97,13 +95,11 @@ const SearchListInput = forwardRef<HTMLInputElement, SearchListInputProps>(
 type SearchListContentProps = ThemedClassName<ComponentPropsWithRef<typeof CommandList>>;
 
 const SearchListContent = forwardRef<HTMLDivElement, SearchListContentProps>(
-  ({ children, classNames, ...props }, forwardedRef) => {
-    return (
-      <CommandList {...props} className={mx(classNames)} ref={forwardedRef}>
-        {children}
-      </CommandList>
-    );
-  },
+  ({ children, classNames, ...props }, forwardedRef) => (
+    <CommandList {...props} className={mx(classNames)} ref={forwardedRef}>
+      {children}
+    </CommandList>
+  ),
 );
 
 //
@@ -113,13 +109,11 @@ const SearchListContent = forwardRef<HTMLDivElement, SearchListContentProps>(
 type SearchListEmptyProps = ThemedClassName<ComponentPropsWithRef<typeof CommandEmpty>>;
 
 const SearchListEmpty = forwardRef<HTMLDivElement, SearchListEmptyProps>(
-  ({ children, classNames, ...props }, forwardedRef) => {
-    return (
-      <CommandEmpty {...props} className={mx(classNames)} ref={forwardedRef}>
-        {children}
-      </CommandEmpty>
-    );
-  },
+  ({ children, classNames, ...props }, forwardedRef) => (
+    <CommandEmpty {...props} className={mx(classNames)} ref={forwardedRef}>
+      {children}
+    </CommandEmpty>
+  ),
 );
 
 //
@@ -129,13 +123,11 @@ const SearchListEmpty = forwardRef<HTMLDivElement, SearchListEmptyProps>(
 type SearchListItemProps = ThemedClassName<ComponentPropsWithRef<typeof CommandItem>>;
 
 const SearchListItem = forwardRef<HTMLDivElement, SearchListItemProps>(
-  ({ children, classNames, ...props }, forwardedRef) => {
-    return (
-      <CommandItem {...props} className={mx(searchListItem, classNames)} ref={forwardedRef}>
-        {children}
-      </CommandItem>
-    );
-  },
+  ({ children, classNames, ...props }, forwardedRef) => (
+    <CommandItem {...props} className={mx(searchListItem, classNames)} ref={forwardedRef}>
+      {children}
+    </CommandItem>
+  ),
 );
 
 SearchListItem.displayName = SEARCHLIST_ITEM_NAME;

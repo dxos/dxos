@@ -13,15 +13,13 @@ import { Editor } from '../Editor';
 
 import { Shapes, type ShapesProps } from './Shapes';
 
-const DefaultStory = ({ layout }: ShapesProps) => {
-  return (
-    <Editor.Root id='test'>
-      <Canvas>
-        <Shapes layout={layout} />
-      </Canvas>
-    </Editor.Root>
-  );
-};
+const DefaultStory = ({ layout }: ShapesProps) => (
+  <Editor.Root id='test'>
+    <Canvas>
+      <Shapes layout={layout} />
+    </Canvas>
+  </Editor.Root>
+);
 
 const meta = {
   title: 'ui/react-ui-canvas-editor/Frame',

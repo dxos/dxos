@@ -58,9 +58,7 @@ export const placeholder = ({ content, delay = 3_000 }: PlaceholderOptions): Ext
       }
     },
     {
-      provide: (plugin) => {
-        return [EditorView.decorations.of((view) => view.plugin(plugin)?._decorations ?? Decoration.none)];
-      },
+      provide: (plugin) => [EditorView.decorations.of((view) => view.plugin(plugin)?._decorations ?? Decoration.none)],
     },
   );
 

@@ -25,9 +25,7 @@ export type CreateTextToImageProps = CreateShapeProps<TextToImageShape>;
 export const createTextToImage = (props: CreateTextToImageProps) =>
   createShape<TextToImageShape>({ type: 'text-to-image', size: { width: 128, height: 64 }, ...props });
 
-export const TextToImageComponent = ({ shape }: ShapeComponentProps<TextToImageShape>) => {
-  return <Box shape={shape} />;
-};
+export const TextToImageComponent = ({ shape }: ShapeComponentProps<TextToImageShape>) => <Box shape={shape} />;
 
 export const textToImageShape: ShapeDef<TextToImageShape> = {
   type: 'text-to-image',

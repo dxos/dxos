@@ -58,9 +58,7 @@ export const subscribeToSignal = ({ signalManager }: { signalManager: SignalMana
         receivedAt: new Date(),
       });
     });
-    return () => {
-      return ctx.dispose();
-    };
+    return () => ctx.dispose();
   });
 
 export const subscribeToNetworkTopics = ({ networkManager }: { networkManager: SwarmNetworkManager }) =>

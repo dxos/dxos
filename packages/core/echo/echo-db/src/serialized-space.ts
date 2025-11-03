@@ -79,9 +79,7 @@ export type SerializedObject = {
  * Updates the serialized object data to the latest version.
  */
 export const normalizeSerializedObjectData = async (data: SerializedObject): Promise<SerializedObject> => {
-  data = await deepMapValuesAsync(data, async (value, recurse) => {
-    return recurse(value);
-  });
+  data = await deepMapValuesAsync(data, async (value, recurse) => recurse(value));
 
   if (data['@timestamp']) {
     data['@timestamp'] = new Date(data['@timestamp']).toISOString();

@@ -41,9 +41,7 @@ export const DataSpaceSelector = () => {
     }
   }, []);
 
-  const getLabel = (space: Space) => {
-    return space?.isOpen ? (space?.properties.name ?? 'New space') : '(closed)';
-  };
+  const getLabel = (space: Space) => (space?.isOpen ? (space?.properties.name ?? 'New space') : '(closed)');
 
   return (
     <Select.Root

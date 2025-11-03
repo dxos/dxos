@@ -10,18 +10,16 @@ import { Tooltip } from '../Tooltip';
 
 import { IconButton, type IconButtonProps } from './IconButton';
 
-const DefaultStory = (props: IconButtonProps) => {
-  return (
-    <Tooltip.Provider>
-      <div className='mbe-4'>
-        <IconButton {...props} />
-      </div>
-      <div className='mbe-4'>
-        <IconButton iconOnly {...props} />
-      </div>
-    </Tooltip.Provider>
-  );
-};
+const DefaultStory = (props: IconButtonProps) => (
+  <Tooltip.Provider>
+    <div className='mbe-4'>
+      <IconButton {...props} />
+    </div>
+    <div className='mbe-4'>
+      <IconButton iconOnly {...props} />
+    </div>
+  </Tooltip.Provider>
+);
 
 const meta = {
   title: 'ui/react-ui-core/IconButton',

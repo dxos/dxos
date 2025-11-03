@@ -17,17 +17,15 @@ import { createObjectFactory } from '@dxos/schema/testing';
 
 import { Masonry } from './Masonry';
 
-const StoryItem = ({ data: { image, name, description } }: { data: DataType.Organization }) => {
-  return (
-    <Card.StaticRoot>
-      <Card.Poster alt={name!} {...(image ? { image } : { icon: 'ph--building-office--regular' })} />
-      <div role='none' className={mx('flex items-center gap-2', cardSpacing)}>
-        <Card.Heading classNames={cardNoSpacing}>{name}</Card.Heading>
-      </div>
-      {description && <Card.Text classNames='line-clamp-2'>{description}</Card.Text>}
-    </Card.StaticRoot>
-  );
-};
+const StoryItem = ({ data: { image, name, description } }: { data: DataType.Organization }) => (
+  <Card.StaticRoot>
+    <Card.Poster alt={name!} {...(image ? { image } : { icon: 'ph--building-office--regular' })} />
+    <div role='none' className={mx('flex items-center gap-2', cardSpacing)}>
+      <Card.Heading classNames={cardNoSpacing}>{name}</Card.Heading>
+    </div>
+    {description && <Card.Text classNames='line-clamp-2'>{description}</Card.Text>}
+  </Card.StaticRoot>
+);
 
 const DefaultStory = () => {
   const { space } = useClientProvider();

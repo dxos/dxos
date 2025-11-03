@@ -229,18 +229,16 @@ const ComboboxVirtualTrigger = Popover.VirtualTrigger;
 
 type ComboboxInputProps = SearchListInputProps;
 
-const ComboboxInput = forwardRef<HTMLInputElement, ComboboxInputProps>(({ classNames, ...props }, forwardedRef) => {
-  return (
-    <SearchList.Input
-      {...props}
-      classNames={[
-        'mli-cardSpacingChrome mbs-cardSpacingChrome mbe-0 is-[calc(100%-2*var(--dx-cardSpacingChrome))]',
-        classNames,
-      ]}
-      ref={forwardedRef}
-    />
-  );
-});
+const ComboboxInput = forwardRef<HTMLInputElement, ComboboxInputProps>(({ classNames, ...props }, forwardedRef) => (
+  <SearchList.Input
+    {...props}
+    classNames={[
+      'mli-cardSpacingChrome mbs-cardSpacingChrome mbe-0 is-[calc(100%-2*var(--dx-cardSpacingChrome))]',
+      classNames,
+    ]}
+    ref={forwardedRef}
+  />
+));
 
 //
 // List
@@ -248,15 +246,13 @@ const ComboboxInput = forwardRef<HTMLInputElement, ComboboxInputProps>(({ classN
 
 type ComboboxListProps = SearchListContentProps;
 
-const ComboboxList = forwardRef<HTMLDivElement, ComboboxListProps>(({ classNames, ...props }, forwardedRef) => {
-  return (
-    <SearchList.Content
-      {...props}
-      classNames={['min-bs-0 overflow-y-auto plb-cardSpacingChrome', classNames]}
-      ref={forwardedRef}
-    />
-  );
-});
+const ComboboxList = forwardRef<HTMLDivElement, ComboboxListProps>(({ classNames, ...props }, forwardedRef) => (
+  <SearchList.Content
+    {...props}
+    classNames={['min-bs-0 overflow-y-auto plb-cardSpacingChrome', classNames]}
+    ref={forwardedRef}
+  />
+));
 
 //
 // Item

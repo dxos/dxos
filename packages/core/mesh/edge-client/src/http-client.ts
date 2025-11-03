@@ -38,8 +38,8 @@ export const withRetry = (
     retryBaseDelay = Duration.millis(1_000),
     retryTimes = 3,
   }: Partial<RetryOptions> = {},
-) => {
-  return effect.pipe(
+) =>
+  effect.pipe(
     Effect.flatMap((res) =>
       // Treat 500 errors as retryable?
       res.status === 500 ? Effect.fail(new Error(res.status.toString())) : res.json,
@@ -50,7 +50,6 @@ export const withRetry = (
       times: retryTimes,
     }),
   );
-};
 
 export const withRetryConfig = (
   effect: Effect.Effect<HttpClientResponse.HttpClientResponse, HttpClientError.HttpClientError, HttpClient.HttpClient>,

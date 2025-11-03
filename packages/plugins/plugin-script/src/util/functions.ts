@@ -64,19 +64,17 @@ export const updateFunctionMetadata = (
   }
 };
 
-export const getAccessCredential = (identityKey: PublicKey): Credential => {
-  return {
-    issuer: identityKey,
-    issuanceDate: new Date(),
-    subject: {
-      id: identityKey,
-      assertion: {
-        '@type': 'dxos.halo.credentials.ServiceAccess',
-        serverName: 'hub.dxos.network',
-        serverKey: identityKey,
-        identityKey,
-        capabilities: ['composer:beta'],
-      },
+export const getAccessCredential = (identityKey: PublicKey): Credential => ({
+  issuer: identityKey,
+  issuanceDate: new Date(),
+  subject: {
+    id: identityKey,
+    assertion: {
+      '@type': 'dxos.halo.credentials.ServiceAccess',
+      serverName: 'hub.dxos.network',
+      serverKey: identityKey,
+      identityKey,
+      capabilities: ['composer:beta'],
     },
-  };
-};
+  },
+});

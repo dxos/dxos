@@ -13,24 +13,22 @@ export type ControlledSelectorProps<T> = {
   placeholder?: string;
 };
 
-export const ControlledSelector = <T extends string>(props: ControlledSelectorProps<T>) => {
-  return (
-    <Select.Root value={props.value} onValueChange={props.setValue}>
-      <Select.TriggerButton placeholder={props.placeholder ?? 'Select space'} />
-      <Select.Portal>
-        <Select.Content>
-          <Select.Viewport>
-            {props.values.map((mode) => (
-              <Select.Option key={mode} value={mode}>
-                <div className='flex items-center gap-2'>
-                  <span className='font-mono text-neutral-250'>{mode}</span>
-                </div>
-              </Select.Option>
-            ))}
-          </Select.Viewport>
-          <Select.Arrow />
-        </Select.Content>
-      </Select.Portal>
-    </Select.Root>
-  );
-};
+export const ControlledSelector = <T extends string>(props: ControlledSelectorProps<T>) => (
+  <Select.Root value={props.value} onValueChange={props.setValue}>
+    <Select.TriggerButton placeholder={props.placeholder ?? 'Select space'} />
+    <Select.Portal>
+      <Select.Content>
+        <Select.Viewport>
+          {props.values.map((mode) => (
+            <Select.Option key={mode} value={mode}>
+              <div className='flex items-center gap-2'>
+                <span className='font-mono text-neutral-250'>{mode}</span>
+              </div>
+            </Select.Option>
+          ))}
+        </Select.Viewport>
+        <Select.Arrow />
+      </Select.Content>
+    </Select.Portal>
+  </Select.Root>
+);

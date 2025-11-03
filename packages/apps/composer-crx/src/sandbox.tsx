@@ -7,9 +7,7 @@ import { createRoot } from 'react-dom/client';
 
 import { log } from '@dxos/log';
 
-const Root = () => {
-  return <div>Sandbox</div>;
-};
+const Root = () => <div>Sandbox</div>;
 
 const main = async () => {
   log.info('sandbox');

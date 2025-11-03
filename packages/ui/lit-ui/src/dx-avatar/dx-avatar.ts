@@ -223,12 +223,11 @@ export class DxAvatar extends LitElement {
  * Returns the first two renderable characters from a string that are separated by non-word characters.
  * Handles Unicode characters correctly.
  */
-const getInitials = (label = ''): string[] => {
-  return label
+const getInitials = (label = ''): string[] =>
+  label
     .trim()
     .split(/\s+/)
     .map((str) => str.replace(/[^\p{L}\p{N}\s]/gu, ''))
     .filter(Boolean)
     .slice(0, 2)
     .map((word) => word[0].toUpperCase());
-};

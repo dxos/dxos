@@ -117,9 +117,8 @@ const useCustomInputs = ({ space, readonlySpec, types, tags, onQueryRefOptions }
   );
 };
 
-const getWorkflowOptions = (graphs: ComputeGraph[]) => {
-  return graphs.map((graph) => ({ label: `compute-${graph.id}`, value: `dxn:echo:@:${graph.id}` }));
-};
+const getWorkflowOptions = (graphs: ComputeGraph[]) =>
+  graphs.map((graph) => ({ label: `compute-${graph.id}`, value: `dxn:echo:@:${graph.id}` }));
 
 const getFunctionOptions = (scripts: Script.Script[], functions: Function.Function[]) => {
   const getLabel = (fn: Function.Function) => scripts.find((s) => fn.source?.target?.id === s.id)?.name ?? fn.name;

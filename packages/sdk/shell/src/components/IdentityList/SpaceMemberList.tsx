@@ -46,16 +46,14 @@ export const SpaceMemberListImpl = ({ members, onSelect }: SpaceMemberListImplPr
   const visibleMembers = members.filter((member) => member.identity);
   return visibleMembers.length > 0 ? (
     <List classNames='flex flex-col gap-2' data-testid='space-members-list'>
-      {visibleMembers.map((member) => {
-        return (
-          <IdentityListItem
-            key={member.identity.identityKey.toHex()}
-            identity={member.identity}
-            presence={member.presence}
-            onClick={onSelect && (() => onSelect(member))}
-          />
-        );
-      })}
+      {visibleMembers.map((member) => (
+        <IdentityListItem
+          key={member.identity.identityKey.toHex()}
+          identity={member.identity}
+          presence={member.presence}
+          onClick={onSelect && (() => onSelect(member))}
+        />
+      ))}
     </List>
   ) : (
     <div role='none' className='grow flex items-center p-2'>

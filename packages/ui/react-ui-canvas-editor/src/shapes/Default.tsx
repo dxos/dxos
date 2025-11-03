@@ -15,6 +15,5 @@ export const DefaultFrameComponent = ({ debug, shape, editing, onClose, onCancel
   return <ReadonlyTextBox classNames={debug && 'font-mono text-xs'} value={getLabel(shape, debug)} />;
 };
 
-const getLabel = (shape: Polygon, debug = false) => {
-  return debug ? [shape.id, shape.type, `(${shape.center.x},${shape.center.y})`].join('\n') : (shape.text ?? shape.id);
-};
+const getLabel = (shape: Polygon, debug = false) =>
+  debug ? [shape.id, shape.type, `(${shape.center.x},${shape.center.y})`].join('\n') : (shape.text ?? shape.id);

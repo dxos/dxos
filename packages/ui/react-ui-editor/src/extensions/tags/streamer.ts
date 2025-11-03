@@ -19,12 +19,11 @@ export type StreamerOptions = {
 /**
  * Extension that adds a blinking cursor widget at the end of the document.
  */
-export const streamer = (options: StreamerOptions = {}): Extension => {
-  return [
+export const streamer = (options: StreamerOptions = {}): Extension =>
+  [
     options.cursor && cursor(),
     options.fadeIn && fadeIn(typeof options.fadeIn === 'object' ? options.fadeIn : {}),
   ].filter(isTruthy);
-};
 
 /**
  * State field to manage the cursor widget decoration.

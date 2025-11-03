@@ -141,16 +141,18 @@ export const DeckMain = () => {
     [topbar, hoistStatusbar],
   );
 
-  const { order, itemsCount }: { order: Record<string, number>; itemsCount: number } = useMemo(() => {
-    return active.reduce(
-      (acc: { order: Record<string, number>; itemsCount: number }, entryId) => {
-        acc.order[entryId] = acc.itemsCount + 1;
-        acc.itemsCount += activeCompanions?.[entryId] ? 3 : 2;
-        return acc;
-      },
-      { order: {}, itemsCount: 0 },
-    );
-  }, [active, activeCompanions]);
+  const { order, itemsCount }: { order: Record<string, number>; itemsCount: number } = useMemo(
+    () =>
+      active.reduce(
+        (acc: { order: Record<string, number>; itemsCount: number }, entryId) => {
+          acc.order[entryId] = acc.itemsCount + 1;
+          acc.itemsCount += activeCompanions?.[entryId] ? 3 : 2;
+          return acc;
+        },
+        { order: {}, itemsCount: 0 },
+      ),
+    [active, activeCompanions],
+  );
 
   return (
     <Main.Root

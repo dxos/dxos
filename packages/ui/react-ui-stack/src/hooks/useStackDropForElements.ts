@@ -43,12 +43,11 @@ export const useStackDropForElements = ({
       selfDroppable
         ? dropTargetForElements({
             element,
-            getData: ({ input, element }) => {
-              return attachClosestEdge(
+            getData: ({ input, element }) =>
+              attachClosestEdge(
                 { id, type: orientation === 'horizontal' ? 'card' : 'column' },
                 { input, element, allowedEdges: [orientation === 'horizontal' ? 'left' : 'top'] },
-              );
-            },
+              ),
             onDragEnter: ({ source }) => {
               if (source.data.type === acceptSourceType) {
                 setDropping(true);
@@ -59,9 +58,7 @@ export const useStackDropForElements = ({
                 setDropping(true);
               }
             },
-            onDragLeave: () => {
-              return setDropping(false);
-            },
+            onDragLeave: () => setDropping(false),
             onDrop: ({ self, source }) => {
               setDropping(false);
               if (source.data.type === acceptSourceType && selfDroppable && onRearrange) {

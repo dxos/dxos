@@ -20,19 +20,17 @@ export type ToolsProps = ThemedClassName<{
 }>;
 
 // TODO(burdon): Toolbar/menu.
-export const Tools = ({ classNames, registry }: ToolsProps) => {
-  return (
-    <div className={mx('flex flex-wrap gap-2 max-w-[80%] justify-center', classNames)}>
-      {registry.defs.map(({ shapes }, i) => (
-        <div key={i} className='flex p-1 gap-2 items-center bg-baseSurface rounded-md border border-separator'>
-          {shapes.map((shape) => (
-            <Tool key={shape.type} type={shape.type} icon={shape.icon} />
-          ))}
-        </div>
-      ))}
-    </div>
-  );
-};
+export const Tools = ({ classNames, registry }: ToolsProps) => (
+  <div className={mx('flex flex-wrap gap-2 max-w-[80%] justify-center', classNames)}>
+    {registry.defs.map(({ shapes }, i) => (
+      <div key={i} className='flex p-1 gap-2 items-center bg-baseSurface rounded-md border border-separator'>
+        {shapes.map((shape) => (
+          <Tool key={shape.type} type={shape.type} icon={shape.icon} />
+        ))}
+      </div>
+    ))}
+  </div>
+);
 
 type ToolProps = {
   type: string;
@@ -58,9 +56,7 @@ const Tool = ({ type, icon }: ToolProps) => {
         setCustomNativeDragPreview({
           nativeSetDragImage,
           // TODO(burdon): Adjust for scale (need to get projection).
-          getOffset: () => {
-            return getCenter(data.shape.size);
-          },
+          getOffset: () => getCenter(data.shape.size),
           // TODO(burdon): Same preview pattern as frame?
           render: ({ container }) => {
             dragMonitor.start({ container, type: 'tool', shape: data.shape });

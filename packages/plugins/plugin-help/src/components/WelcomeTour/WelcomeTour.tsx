@@ -25,9 +25,7 @@ const removeTargetClass = (target: string | HTMLElement) => {
   }
 };
 
-const getTarget = (step: Step) => {
-  return typeof step.target === 'string' ? document.querySelector(step.target) : step.target;
-};
+const getTarget = (step: Step) => (typeof step.target === 'string' ? document.querySelector(step.target) : step.target);
 
 /**
  * Wait for the target element to be in the document.

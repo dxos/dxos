@@ -58,11 +58,9 @@ export const DevicesContainer = ({ createInvitationUrl }: DevicesContainerProps)
           <ControlFrame>
             <ControlFrameItem title={t('devices label', { ns: meta.id })}>
               <List>
-                {devices.map((device: Device) => {
-                  return (
-                    <DeviceListItem key={device.deviceKey.toHex()} device={device} connectionState={connectionState} />
-                  );
-                })}
+                {devices.map((device: Device) => (
+                  <DeviceListItem key={device.deviceKey.toHex()} device={device} connectionState={connectionState} />
+                ))}
               </List>
             </ControlFrameItem>
             {createInvitationUrl && (
@@ -273,10 +271,9 @@ const InvitationAuthCode = ({ id, code, onCancel }: { id: string; code: string; 
   );
 };
 
-const InvitationComplete = ({ statusValue }: { statusValue: number }) => {
-  return statusValue > 0 ? (
+const InvitationComplete = ({ statusValue }: { statusValue: number }) =>
+  statusValue > 0 ? (
     <Icon icon='ph--check--regular' size={6} classNames='m-1.5' />
   ) : (
     <Icon icon='ph--x--regular' size={6} classNames='m-1.5' />
   );
-};

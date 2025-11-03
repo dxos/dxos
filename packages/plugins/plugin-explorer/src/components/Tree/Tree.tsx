@@ -65,12 +65,14 @@ export const Tree = <N,>({ space, selected, variant = 'tidy', onNodeClick }: Tre
   const [model] = useAsyncState(async () => (space ? new SpaceGraphModel().open(space) : undefined), [space, selected]);
 
   const [tree, setTree] = useState<TreeNode>();
-  useEffect(() => {
-    return model?.subscribe(() => {
-      const tree = mapGraphToTreeData(model);
-      setTree(tree);
-    }, true);
-  }, [model]);
+  useEffect(
+    () =>
+      model?.subscribe(() => {
+        const tree = mapGraphToTreeData(model);
+        setTree(tree);
+      }, true),
+    [model],
+  );
 
   const context = useRef<SVGContext>(null);
 

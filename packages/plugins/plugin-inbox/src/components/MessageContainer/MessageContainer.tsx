@@ -35,9 +35,10 @@ export const MessageContainer = ({ space, message, inMailbox, role }: MessageCon
     return textBlocks.length > 1 && !!textBlocks[1]?.text;
   }, [message]);
 
-  const initialViewMode = useMemo<ViewMode>(() => {
-    return hasEnrichedContent ? 'enriched' : 'plain-only';
-  }, [hasEnrichedContent]);
+  const initialViewMode = useMemo<ViewMode>(
+    () => (hasEnrichedContent ? 'enriched' : 'plain-only'),
+    [hasEnrichedContent],
+  );
 
   const viewMode = useSignal<ViewMode>(initialViewMode);
   const hasEmail = useComputed(() => !!message?.sender.email);

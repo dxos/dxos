@@ -14,17 +14,16 @@ export const ASSISTANT_BLUEPRINT_KEY = 'dxos.org/blueprint/inbox';
 const functions: FunctionDefinition[] = [open, summarize, sync];
 const tools: string[] = [];
 
-export default () => {
-  return [
-    contributes(Capabilities.Functions, functions),
-    contributes(
-      Capabilities.BlueprintDefinition,
-      Blueprint.make({
-        key: ASSISTANT_BLUEPRINT_KEY,
-        name: 'Inbox',
-        tools: Blueprint.toolDefinitions({ functions, tools }),
-        instructions: Template.make({
-          source: trim`
+export default () => [
+  contributes(Capabilities.Functions, functions),
+  contributes(
+    Capabilities.BlueprintDefinition,
+    Blueprint.make({
+      key: ASSISTANT_BLUEPRINT_KEY,
+      name: 'Inbox',
+      tools: Blueprint.toolDefinitions({ functions, tools }),
+      instructions: Template.make({
+        source: trim`
             You manage my email inbox.
 
             # Summary formatting:
@@ -50,8 +49,7 @@ export default () => {
 
             Additional information can be included (indented).
           `,
-        }),
       }),
-    ),
-  ];
-};
+    }),
+  ),
+];

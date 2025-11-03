@@ -87,29 +87,29 @@ export const GraphInner = <Node extends BaseGraphNode = any, Edge extends BaseGr
       repaint: () => {
         renderer.render(projector.layout);
       },
-      findNode: (id: string) => {
-        return graphRef.current?.querySelector<SVGGElement>(`g[data-id="${id}"]`);
-      },
+      findNode: (id: string) => graphRef.current?.querySelector<SVGGElement>(`g[data-id="${id}"]`),
     }),
     [model, projector, renderer],
   );
 
   // Subscriptions.
-  useEffect(() => {
-    return combine(
-      effect(() => {
-        projector.updateData(model?.graph);
-      }),
-      projector.updated.on(({ layout }) => {
-        try {
-          renderer.render(layout);
-        } catch (error) {
-          void projector.stop();
-          log.catch(error);
-        }
-      }),
-    );
-  }, [model, projector, renderer]);
+  useEffect(
+    () =>
+      combine(
+        effect(() => {
+          projector.updateData(model?.graph);
+        }),
+        projector.updated.on(({ layout }) => {
+          try {
+            renderer.render(layout);
+          } catch (error) {
+            void projector.stop();
+            log.catch(error);
+          }
+        }),
+      ),
+    [model, projector, renderer],
+  );
 
   // Start.
   useEffect(() => {

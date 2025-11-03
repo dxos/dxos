@@ -28,9 +28,8 @@ const TEST_OBJECT: Testing.TestSchema = {
 };
 
 for (const schema of [undefined, Testing.TestSchemaWithClass]) {
-  const createObject = (props: Partial<Testing.TestSchemaWithClass> = {}): Live<Testing.TestSchemaWithClass> => {
-    return schema == null ? (live(props) as Testing.TestSchemaWithClass) : live(schema, props);
-  };
+  const createObject = (props: Partial<Testing.TestSchemaWithClass> = {}): Live<Testing.TestSchemaWithClass> =>
+    schema == null ? (live(props) as Testing.TestSchemaWithClass) : live(schema, props);
 
   describe(`Non-echo specific proxy properties${schema == null ? '' : ' with schema'}`, () => {
     test.skipIf(!isNode())('inspect', () => {

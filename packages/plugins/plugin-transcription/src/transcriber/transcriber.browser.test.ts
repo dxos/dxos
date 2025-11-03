@@ -23,9 +23,7 @@ import { mergeFloat64Arrays } from '../util';
 describe.skip('Transcriber', () => {
   const DIR_PATH = path.join(__dirname, 'assets');
 
-  const readFile = async (filename: string) => {
-    return fs.readFileSync(path.join(DIR_PATH, filename));
-  };
+  const readFile = async (filename: string) => fs.readFileSync(path.join(DIR_PATH, filename));
 
   const writeOutputFile = async (filename: string, data: Uint8Array) => {
     const outputPath = path.join(DIR_PATH, 'out', filename);

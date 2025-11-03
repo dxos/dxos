@@ -99,15 +99,13 @@ export const getZoomTransform = ({
   offset,
   pos,
   newScale,
-}: ProjectionState & { pos: Point; newScale: number }): ProjectionState => {
-  return {
-    scale: newScale,
-    offset: {
-      x: pos.x - (pos.x - offset.x) * (newScale / scale),
-      y: pos.y - (pos.y - offset.y) * (newScale / scale),
-    },
-  };
-};
+}: ProjectionState & { pos: Point; newScale: number }): ProjectionState => ({
+  scale: newScale,
+  offset: {
+    x: pos.x - (pos.x - offset.x) * (newScale / scale),
+    y: pos.y - (pos.y - offset.y) * (newScale / scale),
+  },
+});
 
 /**
  * Zoom while keeping the specified position in place.

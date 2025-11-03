@@ -29,13 +29,11 @@ import { Shapes } from './Shapes';
 /**
  * Main canvas component.
  */
-export const Canvas = ({ children }: PropsWithChildren) => {
-  return (
-    <NaturalCanvas {...testId<TestId>('dx-canvas')}>
-      <CanvasContent>{children}</CanvasContent>
-    </NaturalCanvas>
-  );
-};
+export const Canvas = ({ children }: PropsWithChildren) => (
+  <NaturalCanvas {...testId<TestId>('dx-canvas')}>
+    <CanvasContent>{children}</CanvasContent>
+  </NaturalCanvas>
+);
 
 export const CanvasContent = ({ children }: PropsWithChildren) => {
   const { dragMonitor, overlayRef, options, showGrid, selection } = useEditorContext();
@@ -130,10 +128,8 @@ export const CanvasContent = ({ children }: PropsWithChildren) => {
   );
 };
 
-const SelectionBox = ({ rect }: { rect: Rect }) => {
-  return (
-    <svg className='absolute overflow-visible cursor-crosshair' width={1} height={1}>
-      <rect {...rect} className={styles.cursor} />
-    </svg>
-  );
-};
+const SelectionBox = ({ rect }: { rect: Rect }) => (
+  <svg className='absolute overflow-visible cursor-crosshair' width={1} height={1}>
+    <rect {...rect} className={styles.cursor} />
+  </svg>
+);

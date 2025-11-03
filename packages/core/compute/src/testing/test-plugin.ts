@@ -19,9 +19,7 @@ export class TestPlugin extends AsyncFunctionPlugin {
    * Simple local function returns input value.
    */
   test(ast: ProcedureAst, state: InterpreterState) {
-    const handler: AsyncFunction = async (_value) => {
-      return _value;
-    };
+    const handler: AsyncFunction = async (_value) => _value;
 
     return this.runAsyncFunction(ast, state, handler);
   }
@@ -30,9 +28,7 @@ export class TestPlugin extends AsyncFunctionPlugin {
    * Simple local function returns random number.
    */
   random(ast: ProcedureAst, state: InterpreterState) {
-    const handler: AsyncFunction = async () => {
-      return Math.random();
-    };
+    const handler: AsyncFunction = async () => Math.random();
 
     return this.runAsyncFunction(ast, state, handler);
   }

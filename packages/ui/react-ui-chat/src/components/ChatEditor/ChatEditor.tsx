@@ -79,8 +79,9 @@ export const ChatEditor = forwardRef<ChatEditorController, ChatEditorProps>(
     );
 
     // Expose editor view.
-    useImperativeHandle(forwardRef, () => {
-      return {
+    useImperativeHandle(
+      forwardRef,
+      () => ({
         focus: () => {
           view?.focus();
         },
@@ -98,8 +99,9 @@ export const ChatEditor = forwardRef<ChatEditorController, ChatEditorProps>(
             },
           });
         },
-      };
-    }, [view, onSubmit]);
+      }),
+      [view, onSubmit],
+    );
 
     return <div ref={parentRef} className={mx('is-full', classNames)} />;
   },

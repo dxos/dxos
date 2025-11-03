@@ -65,13 +65,9 @@ export const parseSignature = (body: string): ParsedSignature => {
     const isAllCaps = line === line.toUpperCase() && line.length > 3 && /[A-Z]/.test(line);
     return hasCompanyKeyword || isAllCaps;
   };
-  const looksLikeName = (line: string) => {
+  const looksLikeName = (line: string) =>
     // Names typically start with capital letter, have 2-4 words, and don't contain company keywords.
-    return (
-      /^[A-Z][a-z]/.test(line) && line.split(/\s+/).length >= 2 && line.split(/\s+/).length <= 4 && !isCompanyName(line)
-    );
-  };
-
+    /^[A-Z][a-z]/.test(line) && line.split(/\s+/).length >= 2 && line.split(/\s+/).length <= 4 && !isCompanyName(line);
   // First, classify all lines.
   const lineTypes = lines.map((line) => ({
     line,

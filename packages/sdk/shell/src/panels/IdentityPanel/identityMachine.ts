@@ -110,8 +110,8 @@ type IdentityMachine = typeof identityMachine;
 type IdentityState = StateFrom<IdentityMachine>;
 type IdentitySend = InterpreterFrom<IdentityMachine>['send'];
 
-const useIdentityMachine = (client: Client, options?: Parameters<typeof useMachine<IdentityMachine>>[1]) => {
-  return useMachine(identityMachine, {
+const useIdentityMachine = (client: Client, options?: Parameters<typeof useMachine<IdentityMachine>>[1]) =>
+  useMachine(identityMachine, {
     ...options,
     context: {
       ...options?.context,
@@ -122,7 +122,6 @@ const useIdentityMachine = (client: Client, options?: Parameters<typeof useMachi
       })) satisfies Subscribable<SetIdentityEvent>,
     },
   });
-};
 
 export type {
   IdentityMachine,

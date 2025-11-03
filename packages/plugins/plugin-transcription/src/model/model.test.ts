@@ -15,13 +15,11 @@ const blockToMarkdown: ChunkRenderer<DataType.Message> = (
   message: DataType.Message,
   index: number,
   debug = true,
-): string[] => {
-  return [
-    `###### ${message.sender.name}`,
-    ...message.blocks.filter((block) => block._tag === 'transcript').map((block) => block.text),
-    '',
-  ];
-};
+): string[] => [
+  `###### ${message.sender.name}`,
+  ...message.blocks.filter((block) => block._tag === 'transcript').map((block) => block.text),
+  '',
+];
 
 const createDate = () => new Date().toISOString();
 

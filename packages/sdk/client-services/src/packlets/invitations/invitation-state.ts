@@ -101,12 +101,11 @@ const logStateUpdate = (invitation: Invitation, actor: any, newState: Invitation
   }
 };
 
-const isNonTerminalState = (currentState: Invitation.State): boolean => {
-  return ![
+const isNonTerminalState = (currentState: Invitation.State): boolean =>
+  ![
     Invitation.State.SUCCESS,
     Invitation.State.ERROR,
     Invitation.State.CANCELLED,
     Invitation.State.TIMEOUT,
     Invitation.State.EXPIRED,
   ].includes(currentState);
-};

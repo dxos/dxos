@@ -43,11 +43,8 @@ export const image = (options: ImageOptions): Extension[] => {
 
   return [
     StateField.define({
-      create: (state) => {
-        return Decoration.set(
-          buildDecorations({ from: 0, to: state.doc.length, state, blobUrlCache, preload, options }),
-        );
-      },
+      create: (state) =>
+        Decoration.set(buildDecorations({ from: 0, to: state.doc.length, state, blobUrlCache, preload, options })),
       update: (value, tr) => {
         if (!tr.docChanged && !tr.selection) {
           return value;

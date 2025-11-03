@@ -83,27 +83,25 @@ export const TriggerComponent = ({ shape }: TriggerComponentProps) => {
 };
 
 // TODO(burdon): Factor out.
-const TriggerKindSelect = ({ value, onValueChange }: Pick<SelectRootProps, 'value' | 'onValueChange'>) => {
-  return (
-    <Select.Root value={value} onValueChange={onValueChange}>
-      <Select.TriggerButton variant='ghost' classNames='w-full !px-0' />
-      <Select.Portal>
-        <Select.Content>
-          <Select.ScrollUpButton />
-          <Select.Viewport>
-            {Trigger.Kinds.map((kind) => (
-              <Select.Option key={kind} value={kind}>
-                {kind}
-              </Select.Option>
-            ))}
-          </Select.Viewport>
-          <Select.ScrollDownButton />
-          <Select.Arrow />
-        </Select.Content>
-      </Select.Portal>
-    </Select.Root>
-  );
-};
+const TriggerKindSelect = ({ value, onValueChange }: Pick<SelectRootProps, 'value' | 'onValueChange'>) => (
+  <Select.Root value={value} onValueChange={onValueChange}>
+    <Select.TriggerButton variant='ghost' classNames='w-full !px-0' />
+    <Select.Portal>
+      <Select.Content>
+        <Select.ScrollUpButton />
+        <Select.Viewport>
+          {Trigger.Kinds.map((kind) => (
+            <Select.Option key={kind} value={kind}>
+              {kind}
+            </Select.Option>
+          ))}
+        </Select.Viewport>
+        <Select.ScrollDownButton />
+        <Select.Arrow />
+      </Select.Content>
+    </Select.Portal>
+  </Select.Root>
+);
 
 const createTriggerSpec = (props: { triggerKind?: Trigger.Kind; spaceId?: SpaceId }): Trigger.Spec => {
   const kind = props.triggerKind ?? 'email';

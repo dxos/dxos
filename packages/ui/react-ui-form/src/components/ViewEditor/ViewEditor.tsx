@@ -79,12 +79,12 @@ export const ViewEditor = forwardRef<ProjectionModel, ViewEditorProps>(
     const [expandedField, setExpandedField] = useState<FieldType['id']>();
 
     const queueTarget = Match.value(view.query.ast).pipe(
-      Match.when({ type: 'options' }, ({ options }) => {
-        return Option.fromNullable(options.queues).pipe(
+      Match.when({ type: 'options' }, ({ options }) =>
+        Option.fromNullable(options.queues).pipe(
           Option.flatMap((queues) => Array.head(queues)),
           Option.getOrUndefined,
-        );
-      }),
+        ),
+      ),
       Match.orElse(() => undefined),
     );
 

@@ -23,9 +23,7 @@ export const SearchContextProvider = ({ children }: PropsWithChildren) => {
   return <SearchContext.Provider value={{ match, setMatch: handleMatch }}>{children}</SearchContext.Provider>;
 };
 
-export const useGlobalSearch = () => {
-  return useContext(SearchContext) ?? raise(new Error('Missing SearchContext.'));
-};
+export const useGlobalSearch = () => useContext(SearchContext) ?? raise(new Error('Missing SearchContext.'));
 
 export const useGlobalSearchResults = <T extends Record<string, any>>(objects?: T[]): SearchResult[] => {
   const { match } = useGlobalSearch();

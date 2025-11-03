@@ -68,9 +68,10 @@ export const MasterDetailTable = ({
     }
   }, [selected, detailsTransform]);
 
-  const gridLayout = useMemo(() => {
-    return detailsPosition === 'right' ? 'grid grid-cols-[2fr_1fr]' : 'grid grid-rows-[3fr_4fr]';
-  }, [detailsPosition]);
+  const gridLayout = useMemo(
+    () => (detailsPosition === 'right' ? 'grid grid-cols-[2fr_1fr]' : 'grid grid-rows-[3fr_4fr]'),
+    [detailsPosition],
+  );
 
   const features: Partial<TableFeatures> = useMemo(
     () => ({

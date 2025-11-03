@@ -69,9 +69,7 @@ export interface Queue<T extends Obj.Any | Relation.Any = Obj.Any | Relation.Any
 }
 
 // TODO(dmaretskyi): Implement.
-const isQueue = (value: unknown): value is Queue => {
-  return false;
-};
+const isQueue = (value: unknown): value is Queue => false;
 
 export const Queue: Schema.Schema<Queue> = Schema.declare(isQueue, {
   [TypeAnnotationId]: {

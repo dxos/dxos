@@ -51,18 +51,15 @@ export const useComputeNodeState = (shape: ComputeShape): ComputeNodeState => {
     };
   }, [shape.node]);
 
-  const evalNode = useCallback(() => {
-    return controller.evalNode(shape.node!);
-  }, [shape.node]);
+  const evalNode = useCallback(() => controller.evalNode(shape.node!), [shape.node]);
 
   const subscribeToEventLog = useCallback(
-    (cb: (event: ComputeEventPayload) => void) => {
-      return controller.events.on((ev) => {
+    (cb: (event: ComputeEventPayload) => void) =>
+      controller.events.on((ev) => {
         if (ev.nodeId === shape.node) {
           cb(ev);
         }
-      });
-    },
+      }),
     [shape.node],
   );
 

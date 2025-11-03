@@ -1012,9 +1012,7 @@ export class DxGrid extends LitElement {
    * Sums all column sizes plus gaps up to the target column.
    */
   private inlineOffset(col: number, plane: DxGridPlane): number {
-    return [...Array(col)].reduce((acc, _, c0) => {
-      return acc + this.colSize(c0, plane) + gap;
-    }, 0);
+    return [...Array(col)].reduce((acc, _, c0) => acc + this.colSize(c0, plane) + gap, 0);
   }
 
   /**
@@ -1022,9 +1020,7 @@ export class DxGrid extends LitElement {
    * Sums all row sizes plus gaps up to the target row.
    */
   private blockOffset(row: number, plane: DxGridPlane): number {
-    return [...Array(row)].reduce((acc, _, r0) => {
-      return acc + this.rowSize(r0, plane) + gap;
-    }, 0);
+    return [...Array(row)].reduce((acc, _, r0) => acc + this.rowSize(r0, plane) + gap, 0);
   }
 
   /**
@@ -1222,11 +1218,9 @@ export class DxGrid extends LitElement {
             'grid-template-rows': this[`template${rowPlane}`],
           })}
         >
-          ${[...Array(rows)].map((_, r) => {
-            return [...Array(cols)].map((_, c) => {
-              return this.renderCell(c, r, plane, cellSelected(c, r, plane, selection));
-            });
-          })}
+          ${[...Array(rows)].map((_, r) =>
+            [...Array(cols)].map((_, c) => this.renderCell(c, r, plane, cellSelected(c, r, plane, selection))),
+          )}
         </div>`
       : null;
   }
@@ -1254,12 +1248,12 @@ export class DxGrid extends LitElement {
             style="transform:translate3d(${offsetInline}px,0,0);grid-template-columns:${this
               .templateGridColumns};grid-template-rows:${this[`template${rowPlane}`]}"
           >
-            ${[...Array(rows)].map((_, r) => {
-              return [...Array(visibleCols)].map((_, c0) => {
+            ${[...Array(rows)].map((_, r) =>
+              [...Array(visibleCols)].map((_, c0) => {
                 const c = this.visColMin + c0;
                 return this.renderCell(c, r, plane, cellSelected(c, r, plane, selection), c0, r);
-              });
-            })}
+              }),
+            )}
           </div>
         </div>`
       : null;
@@ -1288,12 +1282,12 @@ export class DxGrid extends LitElement {
             style="transform:translate3d(0,${offsetBlock}px,0);grid-template-rows:${this
               .templateGridRows};grid-template-columns:${this[`template${colPlane}`]}"
           >
-            ${[...Array(visibleRows)].map((_, r0) => {
-              return [...Array(cols)].map((_, c) => {
+            ${[...Array(visibleRows)].map((_, r0) =>
+              [...Array(cols)].map((_, c) => {
                 const r = this.visRowMin + r0;
                 return this.renderCell(c, r, plane, cellSelected(c, r, plane, selection), c, r0);
-              });
-            })}
+              }),
+            )}
           </div>
         </div>`
       : null;
@@ -1321,13 +1315,13 @@ export class DxGrid extends LitElement {
             style="transform:translate3d(${offsetInline}px,${offsetBlock}px,0);grid-template-columns:${this
               .templateGridColumns};grid-template-rows:${this.templateGridRows};"
           >
-            ${[...Array(visibleRows)].map((_, r0) => {
-              return [...Array(visibleCols)].map((_, c0) => {
+            ${[...Array(visibleRows)].map((_, r0) =>
+              [...Array(visibleCols)].map((_, c0) => {
                 const c = c0 + this.visColMin;
                 const r = r0 + this.visRowMin;
                 return this.renderCell(c, r, 'grid', cellSelected(c, r, 'grid', selection), c0, r0);
-              });
-            })}
+              }),
+            )}
           </div>
         </div>`
       : null;

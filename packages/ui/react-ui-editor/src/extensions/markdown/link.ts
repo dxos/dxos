@@ -11,8 +11,8 @@ import { tooltipContent } from '@dxos/react-ui-theme';
 
 import { type RenderCallback } from '../../types';
 
-export const linkTooltip = (renderTooltip: RenderCallback<{ url: string }>) => {
-  return hoverTooltip(
+export const linkTooltip = (renderTooltip: RenderCallback<{ url: string }>) =>
+  hoverTooltip(
     (view, pos, side) => {
       const syntax = syntaxTree(view.state).resolveInner(pos, side);
       let link = null;
@@ -47,4 +47,3 @@ export const linkTooltip = (renderTooltip: RenderCallback<{ url: string }>) => {
       hoverTime: 1,
     },
   );
-};

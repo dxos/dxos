@@ -46,11 +46,9 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, State> {
   }
 }
 
-const DefaultFallback: NonNullable<ErrorBoundaryProps['fallback']> = ({ data, error }) => {
-  return (
-    <div className='flex flex-col gap-2 overflow-hidden border border-red-500 rounded-sm'>
-      <h1 className='p-2'>ERROR: {error.message}</h1>
-      <pre className='p-2 overflow-y-auto text-sm text-subdued'>{JSON.stringify(data, null, 2)}</pre>
-    </div>
-  );
-};
+const DefaultFallback: NonNullable<ErrorBoundaryProps['fallback']> = ({ data, error }) => (
+  <div className='flex flex-col gap-2 overflow-hidden border border-red-500 rounded-sm'>
+    <h1 className='p-2'>ERROR: {error.message}</h1>
+    <pre className='p-2 overflow-y-auto text-sm text-subdued'>{JSON.stringify(data, null, 2)}</pre>
+  </div>
+);

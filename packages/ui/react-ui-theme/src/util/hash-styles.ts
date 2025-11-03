@@ -151,13 +151,9 @@ export const styles: ColorStyles[] = [
   },
 ];
 
-export const getStyles = (hue: string): ColorStyles => {
-  return styles.find((color) => color.hue === hue) || neutralColor;
-};
+export const getStyles = (hue: string): ColorStyles => styles.find((color) => color.hue === hue) || neutralColor;
 
-export const getHashHue = (id: string | undefined): Hue => {
-  return id ? styles[getHash(id) % styles.length].hue : 'neutral';
-};
+export const getHashHue = (id: string | undefined): Hue => (id ? styles[getHash(id) % styles.length].hue : 'neutral');
 
 // TODO(thure): Reconcile with `to-fallback.ts` which exports `toHue` which overlaps a lot.
 export const getHashStyles = (id: string | undefined): ColorStyles => {

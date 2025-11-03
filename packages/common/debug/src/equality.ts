@@ -11,13 +11,10 @@ export interface Equatable {
 // TODO(dmaretskyi): export to @dxos/traits.
 // TODO(dmaretskyi): Hash trait for maps?
 
-export const isEquatable = (value: any): value is Equatable => {
-  return typeof value === 'object' && value !== null && typeof value[equalsSymbol] === 'function';
-};
+export const isEquatable = (value: any): value is Equatable =>
+  typeof value === 'object' && value !== null && typeof value[equalsSymbol] === 'function';
 
-export const isEqual = (value: Equatable, other: any) => {
-  return value[equalsSymbol](other);
-};
+export const isEqual = (value: Equatable, other: any) => value[equalsSymbol](other);
 
 /**
  * Feed this as a third argument to `_.isEqualWith` to compare objects with `Equatable` interface.

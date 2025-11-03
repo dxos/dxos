@@ -13,9 +13,8 @@ import { ServiceContext } from '../services';
 /**
  * Strip secrets from invitation before giving it to the peer.
  */
-export const sanitizeInvitation = (invitation: Invitation): Invitation => {
-  return InvitationEncoder.decode(InvitationEncoder.encode(invitation));
-};
+export const sanitizeInvitation = (invitation: Invitation): Invitation =>
+  InvitationEncoder.decode(InvitationEncoder.encode(invitation));
 
 export type InvitationHost = {
   share(options?: Partial<Invitation>): CancellableInvitation;

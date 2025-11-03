@@ -65,23 +65,18 @@ export const createObjectFactory =
 /**
  * Set properties based on generator annotation.
  */
-export const createProps = <S extends Schema.Schema.AnyNoContext>(
-  generator: ValueGenerator,
-  schema: S,
-  force = false,
-) => {
-  return (
+export const createProps =
+  <S extends Schema.Schema.AnyNoContext>(generator: ValueGenerator, schema: S, force = false) =>
+  (
     data: Type.Properties<Schema.Schema.Type<S>> = {} as Type.Properties<Schema.Schema.Type<S>>,
-  ): Type.Properties<Schema.Schema.Type<S>> => {
-    return getSchemaProperties<S>(schema.ast).reduce<Type.Properties<Schema.Schema.Type<S>>>((obj, property) => {
+  ): Type.Properties<Schema.Schema.Type<S>> =>
+    getSchemaProperties<S>(schema.ast).reduce<Type.Properties<Schema.Schema.Type<S>>>((obj, property) => {
       if ((obj as any)[property.name] === undefined) {
         (obj as any)[property.name] = createValue(generator, schema, property, force);
       }
 
       return obj;
     }, data);
-  };
-};
 
 /**
  * Generate value for property.
@@ -134,8 +129,9 @@ const createValue = <T extends BaseObject>(
 /**
  * Set references.
  */
-export const createReferences = <T extends BaseObject>(schema: Schema.Schema<T>, db: EchoDatabase) => {
-  return async (obj: T): Promise<T> => {
+export const createReferences =
+  <T extends BaseObject>(schema: Schema.Schema<T>, db: EchoDatabase) =>
+  async (obj: T): Promise<T> => {
     for (const property of getSchemaProperties<T>(schema.ast)) {
       if (!property.optional || randomBoolean()) {
         if (property.format === FormatEnum.Ref) {
@@ -157,16 +153,17 @@ export const createReferences = <T extends BaseObject>(schema: Schema.Schema<T>,
 
     return obj;
   };
-};
 
-export const createReactiveObject = <S extends Schema.Schema.AnyNoContext>(type: S) => {
-  return (data: Type.Properties<Schema.Schema.Type<S>>) => Obj.make<S>(type, data);
-};
+export const createReactiveObject =
+  <S extends Schema.Schema.AnyNoContext>(type: S) =>
+  (data: Type.Properties<Schema.Schema.Type<S>>) =>
+    Obj.make<S>(type, data);
 
-export const addToDatabase = (db: EchoDatabase) => {
+export const addToDatabase =
+  (db: EchoDatabase) =>
   // TODO(dmaretskyi): Fix DB types.
-  return <T extends BaseObject>(obj: Live<T>): AnyLiveObject<T> => db.add(obj as any) as any;
-};
+  <T extends BaseObject>(obj: Live<T>): AnyLiveObject<T> =>
+    db.add(obj as any) as any;
 
 export const logObject = (message: string) => (obj: any) => log.info(message, { obj });
 
@@ -176,9 +173,7 @@ export const createObjectArray = <T extends BaseObject>(n: number): Type.Propert
 export const createArrayPipeline = <T extends BaseObject>(
   n: number,
   pipeline: (obj: Type.Properties<T>) => Effect.Effect<Live<T>, never, never>,
-) => {
-  return Effect.forEach(createObjectArray<T>(n), pipeline);
-};
+) => Effect.forEach(createObjectArray<T>(n), pipeline);
 
 export type CreateOptions = {
   /** Database for references. */

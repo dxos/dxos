@@ -40,27 +40,29 @@ export const SpaceListPanel = ({ onSelect }: { onSelect?: (space: SpaceData | un
   const setState = useDevtoolsDispatch();
   const download = useFileDownload();
 
-  const rows = useMemo(() => {
-    return spaces.map((space) => {
-      const { open, ready } = space.internal.data.metrics ?? {};
-      return {
-        id: space.id.toString(),
-        name: space.isOpen ? space.properties.name : undefined,
-        objects: -1, // TODO(dmaretskyi): Fix this.
-        members: space.members.get().length,
-        startup: open && ready ? ready.getTime() - open.getTime() : -1,
-        isOpen: space.isOpen,
-        _original: {
-          key: space.key,
+  const rows = useMemo(
+    () =>
+      spaces.map((space) => {
+        const { open, ready } = space.internal.data.metrics ?? {};
+        return {
+          id: space.id.toString(),
           name: space.isOpen ? space.properties.name : undefined,
-          objects: -1,
+          objects: -1, // TODO(dmaretskyi): Fix this.
           members: space.members.get().length,
           startup: open && ready ? ready.getTime() - open.getTime() : -1,
           isOpen: space.isOpen,
-        },
-      };
-    });
-  }, [spaces]);
+          _original: {
+            key: space.key,
+            name: space.isOpen ? space.properties.name : undefined,
+            objects: -1,
+            members: space.members.get().length,
+            startup: open && ready ? ready.getTime() - open.getTime() : -1,
+            isOpen: space.isOpen,
+          },
+        };
+      }),
+    [spaces],
+  );
 
   const handleRowClicked = useCallback(
     (row: any) => {

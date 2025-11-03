@@ -61,9 +61,7 @@ export const ValueBag = Object.freeze({
     values: mapValues(values as any, (value) => (Effect.isEffect(value) ? value : Effect.succeed(value))) as any,
   }),
 
-  get: <T extends ValueRecord>(bag: ValueBag<T>, key: keyof T): ValueEffect<T[typeof key]> => {
-    return bag.values[key];
-  },
+  get: <T extends ValueRecord>(bag: ValueBag<T>, key: keyof T): ValueEffect<T[typeof key]> => bag.values[key],
 
   /**
    * Unwraps the bag into a single effect.
@@ -86,9 +84,7 @@ export const ValueBag = Object.freeze({
   map: (
     bag: ValueBag<Record<string, unknown>>,
     fn: (value: ValueEffect<unknown>, key: string) => ValueEffect<unknown>,
-  ): ValueBag<Record<string, unknown>> => {
-    return ValueBag.make(mapValues(bag.values, (value, key) => fn(value, key)));
-  },
+  ): ValueBag<Record<string, unknown>> => ValueBag.make(mapValues(bag.values, (value, key) => fn(value, key))),
 });
 
 //

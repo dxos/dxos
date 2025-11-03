@@ -173,8 +173,8 @@ export class SpaceManager {
   }
 
   public findSpaceByRootDocumentId(documentId: string): Space | undefined {
-    return [...this._spaces.values()].find((space) => {
-      return space.spaceState.credentials.some((credential) => {
+    return [...this._spaces.values()].find((space) =>
+      space.spaceState.credentials.some((credential) => {
         const assertion = getCredentialAssertion(credential);
         if (assertion['@type'] !== 'dxos.halo.credentials.Epoch') {
           return false;
@@ -183,7 +183,7 @@ export class SpaceManager {
           return false;
         }
         return parseAutomergeUrl(assertion.automergeRoot as AutomergeUrl).documentId === documentId;
-      });
-    });
+      }),
+    );
   }
 }

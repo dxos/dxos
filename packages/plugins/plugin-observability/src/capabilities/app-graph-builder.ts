@@ -25,21 +25,19 @@ export default (_context: PluginContext) =>
           Function.pipe(
             get(node),
             Option.flatMap((node) => (node.id === ROOT_ID ? Option.some(node) : Option.none())),
-            Option.map((node) => {
-              return [
-                {
-                  id: [node.id, 'help'].join(ATTENDABLE_PATH_SEPARATOR),
-                  type: DECK_COMPANION_TYPE,
-                  data: null,
-                  properties: {
-                    label: ['help label', { ns: meta.id }],
-                    icon: 'ph--question--regular',
-                    disposition: 'hidden',
-                    position: 'hoist',
-                  },
+            Option.map((node) => [
+              {
+                id: [node.id, 'help'].join(ATTENDABLE_PATH_SEPARATOR),
+                type: DECK_COMPANION_TYPE,
+                data: null,
+                properties: {
+                  label: ['help label', { ns: meta.id }],
+                  icon: 'ph--question--regular',
+                  disposition: 'hidden',
+                  position: 'hoist',
                 },
-              ];
-            }),
+              },
+            ]),
             Option.getOrElse(() => []),
           ),
         ),

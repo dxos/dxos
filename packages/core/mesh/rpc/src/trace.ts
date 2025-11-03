@@ -22,15 +22,14 @@ export class PortTracer {
 
         return this._wrappedPort.send(msg);
       },
-      subscribe: (cb: (msg: Uint8Array) => void) => {
-        return this._wrappedPort.subscribe((msg) => {
+      subscribe: (cb: (msg: Uint8Array) => void) =>
+        this._wrappedPort.subscribe((msg) => {
           this.message.emit({
             direction: MessageTrace.Direction.INCOMING,
             data: msg,
           });
           cb(msg);
-        });
-      },
+        }),
     };
   }
 

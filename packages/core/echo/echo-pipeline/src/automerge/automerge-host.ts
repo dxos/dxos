@@ -837,9 +837,8 @@ const waitForHeads = async (handle: DocHandle<DatabaseDirectory>, heads: Heads) 
   });
 };
 
-const changeIsPresentInDoc = (doc: Doc<any>, changeHash: string): boolean => {
-  return !!getBackend(doc).getChangeByHash(changeHash);
-};
+const changeIsPresentInDoc = (doc: Doc<any>, changeHash: string): boolean =>
+  !!getBackend(doc).getChangeByHash(changeHash);
 
 const decodeCollectionState = (state: unknown): CollectionState => {
   invariant(typeof state === 'object' && state !== null, 'Invalid state');
@@ -847,6 +846,4 @@ const decodeCollectionState = (state: unknown): CollectionState => {
   return state as CollectionState;
 };
 
-const encodeCollectionState = (state: CollectionState): unknown => {
-  return state;
-};
+const encodeCollectionState = (state: CollectionState): unknown => state;

@@ -176,8 +176,8 @@ export class TestReplicatorConnection implements ReplicatorConnection {
   }
 }
 
-export const testAutomergeReplicatorFactory: AutomergeReplicatorFactory = (params) => {
-  return new AutomergeReplicator(
+export const testAutomergeReplicatorFactory: AutomergeReplicatorFactory = (params) =>
+  new AutomergeReplicator(
     {
       ...params[0],
       sendSyncRetryPolicy: {
@@ -188,7 +188,6 @@ export const testAutomergeReplicatorFactory: AutomergeReplicatorFactory = (param
     },
     params[1],
   );
-};
 
 export const brokenAutomergeReplicatorFactory: AutomergeReplicatorFactory = (params) => {
   params[1]!.onSyncMessage = () => {

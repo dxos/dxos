@@ -45,8 +45,8 @@ export type PopoverOptions = {
  * Creates a popover that appears when the trigger character is inserted.
  * This can be used for context menus or autocompletion.
  */
-export const popover = (options: PopoverOptions = {}): Extension => {
-  return [
+export const popover = (options: PopoverOptions = {}): Extension =>
+  [
     Prec.highest(popoverKeymap(options)),
     popoverStateField,
     popoverTriggerListener(options),
@@ -59,7 +59,6 @@ export const popover = (options: PopoverOptions = {}): Extension => {
         ...options.placeholder,
       }),
   ].filter(isTruthy);
-};
 
 /**
  * Listen for selection and document changes.
@@ -207,8 +206,8 @@ const popoverKeymap = (options: PopoverOptions) => {
 /**
  * Creates a <dx-anchor> tag, which is used to anchor the Popver.
  */
-const popoverAnchorDecoration = (options: PopoverOptions) => {
-  return ViewPlugin.fromClass(
+const popoverAnchorDecoration = (options: PopoverOptions) =>
+  ViewPlugin.fromClass(
     class {
       _decorations: DecorationSet = Decoration.none;
 
@@ -253,7 +252,6 @@ const popoverAnchorDecoration = (options: PopoverOptions) => {
       decorations: (v) => v._decorations,
     },
   );
-};
 
 type PopoverState = {
   /**

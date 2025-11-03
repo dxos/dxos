@@ -29,14 +29,14 @@ export const linkerRenderer: D3Callable = (root, { source, target, point }: Link
     .data(source ? [{ id: 'edge' }] : [])
     .join('path')
     .attr('marker-end', () => (target ? 'url(#marker-arrow-end)' : 'url(#marker-dot)'))
-    .attr('d', () => {
-      return createLine(
+    .attr('d', () =>
+      createLine(
         getCircumferencePoints(
           [source.x, source.y],
           target ? [target.x, target.y] : point,
           source.r,
           target ? target.r : 0,
         ),
-      );
-    });
+      ),
+    );
 };

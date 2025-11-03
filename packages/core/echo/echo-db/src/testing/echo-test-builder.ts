@@ -204,15 +204,14 @@ export const createDataAssertion = ({
       seedObjects = range(numObjects).map((idx) => db.add({ type: 'task', title: 'A', idx } as any));
       await db.flush();
     },
-    waitForReplication: (db: EchoDatabase) => {
-      return waitForCondition({
+    waitForReplication: (db: EchoDatabase) =>
+      waitForCondition({
         breakOnError: true,
         condition: async () => {
           const { received } = await findSeedObject(db);
           return received.every((obj) => obj != null);
         },
-      });
-    },
+      }),
     verify: async (db: EchoDatabase) => {
       const { objects } = await findSeedObject(db);
       if (onlyObject) {

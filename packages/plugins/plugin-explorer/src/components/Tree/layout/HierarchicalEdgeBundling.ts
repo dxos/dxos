@@ -67,9 +67,7 @@ const HierarchicalEdgeBundling = (s: SVGSVGElement, data: TreeNode, options: Tre
     .join('path')
     .style('mix-blend-mode', 'multiply')
     .attr('class', slots?.path ?? '')
-    .attr('d', ([i, o]) => {
-      return line(i.path(o));
-    })
+    .attr('d', ([i, o]) => line(i.path(o)))
     .each(function (d) {
       d.path = this;
     });
@@ -121,10 +119,7 @@ const addLinks = (root: HierarchyNode<TreeNode>) => {
     const parent = parents.get(d.data.id);
     if (parent) {
       // Skip the first node which is a placeholder created by flatten().
-      (d as any).outgoing =
-        parent.data.children?.slice(1).map((child) => {
-          return [d, nodes.get(child.id)!];
-        }) ?? [];
+      (d as any).outgoing = parent.data.children?.slice(1).map((child) => [d, nodes.get(child.id)!]) ?? [];
     } else {
       (d as any).outgoing = [];
     }

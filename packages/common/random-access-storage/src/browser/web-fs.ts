@@ -32,11 +32,7 @@ export class WebFS implements Storage {
 
   private _getFiles(path: string): Map<string, WebFile> {
     const fullName = this._getFullFilename(this.path, path);
-    return new Map(
-      [...this._files.entries()].filter(([path, file]) => {
-        return path.includes(fullName) && !file.destroyed;
-      }),
-    );
+    return new Map([...this._files.entries()].filter(([path, file]) => path.includes(fullName) && !file.destroyed));
   }
 
   private async _list(path: string): Promise<string[]> {
@@ -133,9 +129,9 @@ export class WebFS implements Storage {
 
   async close(): Promise<void> {
     await Promise.all(
-      Array.from(this._files.values()).map((file) => {
-        return file.close().catch((e) => log.warn('failed to close a file', { file: file.fileName, e }));
-      }),
+      Array.from(this._files.values()).map((file) =>
+        file.close().catch((e) => log.warn('failed to close a file', { file: file.fileName, e })),
+      ),
     );
   }
 

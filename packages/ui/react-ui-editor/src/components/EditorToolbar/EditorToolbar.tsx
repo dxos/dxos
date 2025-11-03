@@ -89,8 +89,8 @@ const createToolbarActions = ({
   getView,
   customActions,
   ...features
-}: ToolbarActionsProps): Rx.Rx<ActionGraphProps> => {
-  return Rx.make((get) => {
+}: ToolbarActionsProps): Rx.Rx<ActionGraphProps> =>
+  Rx.make((get) => {
     const graph: ActionGraphProps = {
       nodes: [],
       edges: [],
@@ -132,4 +132,3 @@ const createToolbarActions = ({
 
     return graph;
   });
-};

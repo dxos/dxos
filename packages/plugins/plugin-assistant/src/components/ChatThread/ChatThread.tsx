@@ -42,9 +42,10 @@ export const ChatThread = forwardRef<ChatThreadController | null, ChatThreadProp
     { classNames, identity, messages = [], error, cursor = false, fadeIn = true, overscroll, onEvent },
     forwardedRef,
   ) => {
-    const userHue = useMemo(() => {
-      return identity?.profile?.data?.hue || keyToFallback(identity?.identityKey ?? PublicKey.random()).hue;
-    }, [identity]);
+    const userHue = useMemo(
+      () => identity?.profile?.data?.hue || keyToFallback(identity?.identityKey ?? PublicKey.random()).hue,
+      [identity],
+    );
 
     // Expose controller.
     const [controller, setController] = useState<MarkdownStreamController | null>(null);

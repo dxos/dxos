@@ -60,15 +60,16 @@ export type WithClientProviderProps = InitializeProps & Omit<ClientProviderProps
 /**
  * Decorator that provides the client context.
  */
-export const withClientProvider = ({
-  createIdentity,
-  createSpace,
-  onCreateSpace,
-  onCreateIdentity,
-  onInitialized,
-  ...props
-}: WithClientProviderProps = {}): Decorator => {
-  return (Story, context) => {
+export const withClientProvider =
+  ({
+    createIdentity,
+    createSpace,
+    onCreateSpace,
+    onCreateIdentity,
+    onInitialized,
+    ...props
+  }: WithClientProviderProps = {}): Decorator =>
+  (Story, context) => {
     const [data, setData] = useState<ClientStory>({});
     const handleInitialized = async (client: Client) => {
       const data = await initializeClient(
@@ -96,7 +97,6 @@ export const withClientProvider = ({
       </ErrorBoundary>
     );
   };
-};
 
 // TODO(burdon): Implement context per client for context.
 // TODO(burdon): Callback once all invitations have completed.
@@ -112,16 +112,17 @@ export const useMultiClient = () => useContext(MultiClientContext);
  * Decorator that creates a scaffold for multiple clients.
  * Orchestrates invitations between a randomly selected host and the remaining clients.
  */
-export const withMultiClientProvider = ({
-  numClients = 2,
-  createIdentity,
-  createSpace,
-  onCreateSpace,
-  onCreateIdentity,
-  onInitialized,
-  ...props
-}: WithMultiClientProviderProps): Decorator => {
-  return (Story, context) => {
+export const withMultiClientProvider =
+  ({
+    numClients = 2,
+    createIdentity,
+    createSpace,
+    onCreateSpace,
+    onCreateIdentity,
+    onInitialized,
+    ...props
+  }: WithMultiClientProviderProps): Decorator =>
+  (Story, context) => {
     const builder = useRef(new TestBuilder());
     const hostRef = useRef<Client>(null);
     const spaceReady = useRef(new Trigger<Space | undefined>());
@@ -174,7 +175,6 @@ export const withMultiClientProvider = ({
       </ErrorBoundary>
     );
   };
-};
 
 const ErrorBoundary = ({ children }: PropsWithChildren) => {
   const [error, setError] = useState<Error>();

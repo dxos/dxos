@@ -26,28 +26,26 @@ export default (context: PluginContext) =>
           Function.pipe(
             get(node),
             Option.flatMap((node) => (node.id === ROOT_ID ? Option.some(node) : Option.none())),
-            Option.map(() => {
-              return [
-                {
-                  id: `${meta.id}/open-user-account`,
-                  data: async () => {
-                    const { dispatchPromise: dispatch } = context.getCapability(Capabilities.IntentDispatcher);
-                    await dispatch(createIntent(ClientAction.ShareIdentity));
-                  },
-                  properties: {
-                    label: ['open user account label', { ns: meta.id }],
-                    icon: 'ph--user--regular',
-                    disposition: 'menu',
-                    keyBinding: {
-                      macos: 'meta+shift+.',
-                      // TODO(wittjosiah): Test on windows to see if it behaves the same as linux.
-                      windows: 'alt+shift+.',
-                      linux: 'alt+shift+>',
-                    },
+            Option.map(() => [
+              {
+                id: `${meta.id}/open-user-account`,
+                data: async () => {
+                  const { dispatchPromise: dispatch } = context.getCapability(Capabilities.IntentDispatcher);
+                  await dispatch(createIntent(ClientAction.ShareIdentity));
+                },
+                properties: {
+                  label: ['open user account label', { ns: meta.id }],
+                  icon: 'ph--user--regular',
+                  disposition: 'menu',
+                  keyBinding: {
+                    macos: 'meta+shift+.',
+                    // TODO(wittjosiah): Test on windows to see if it behaves the same as linux.
+                    windows: 'alt+shift+.',
+                    linux: 'alt+shift+>',
                   },
                 },
-              ];
-            }),
+              },
+            ]),
             Option.getOrElse(() => []),
           ),
         ),

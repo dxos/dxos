@@ -24,13 +24,8 @@ export const save = (value: string) => {
   }
 };
 
-export const restore = () => {
-  return JSON.stringify(
-    JSON.parse(localStorage.getItem(themeEditorId) ?? JSON.stringify(userDefaultTokenSet)),
-    null,
-    2,
-  );
-};
+export const restore = () =>
+  JSON.stringify(JSON.parse(localStorage.getItem(themeEditorId) ?? JSON.stringify(userDefaultTokenSet)), null, 2);
 
 const styleNodeId = `${themeEditorId}/style`;
 

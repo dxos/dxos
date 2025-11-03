@@ -20,18 +20,13 @@ export default {
   parameters: { layout: 'fullscreen' },
 };
 
-export const CombinedThemeEditor = (props: DxThemeEditorProps) => {
-  return html`<dx-theme-editor></dx-theme-editor>`;
-};
+export const CombinedThemeEditor = (props: DxThemeEditorProps) => html`<dx-theme-editor></dx-theme-editor>`;
 
-export const PhysicalColors = (props: DxThemeEditorPhysicalColorsProps) => {
-  return html`<dx-theme-editor-physical-colors></dx-theme-editor-physical-colors>`;
-};
+export const PhysicalColors = (props: DxThemeEditorPhysicalColorsProps) =>
+  html`<dx-theme-editor-physical-colors></dx-theme-editor-physical-colors>`;
 
-export const SemanticColors = (props: DxThemeEditorSemanticColorsProps) => {
-  return html`<dx-theme-editor-semantic-colors></dx-theme-editor-semantic-colors>`;
-};
+export const SemanticColors = (props: DxThemeEditorSemanticColorsProps) =>
+  html`<dx-theme-editor-semantic-colors></dx-theme-editor-semantic-colors>`;
 
-export const AliasColors = (props: DxThemeEditorAliasColorsProps) => {
-  return html`<dx-theme-editor-alias-colors></dx-theme-editor-alias-colors>`;
-};
+export const AliasColors = (props: DxThemeEditorAliasColorsProps) =>
+  html`<dx-theme-editor-alias-colors></dx-theme-editor-alias-colors>`;

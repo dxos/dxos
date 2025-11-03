@@ -206,6 +206,4 @@ export const Kanban = ({ model, onAddCard, onRemoveCard }: KanbanProps) => {
   );
 };
 
-const getColumnDropElement = (stackElement: HTMLDivElement) => {
-  return stackElement.closest('.kanban-drop') as HTMLDivElement;
-};
+const getColumnDropElement = (stackElement: HTMLDivElement) => stackElement.closest('.kanban-drop') as HTMLDivElement;

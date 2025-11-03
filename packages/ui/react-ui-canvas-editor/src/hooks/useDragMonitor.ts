@@ -243,9 +243,12 @@ export const useDragMonitor = () => {
 
           case 'anchor': {
             // Snap to closest anchor.
-            const target = getClosestAnchor(layout, graph as CanvasGraphModel<Polygon>, pos, (shape, anchor, d) => {
-              return d < 32 && dragMonitor.canDrop({ type: 'anchor', shape, anchor });
-            });
+            const target = getClosestAnchor(
+              layout,
+              graph as CanvasGraphModel<Polygon>,
+              pos,
+              (shape, anchor, d) => d < 32 && dragMonitor.canDrop({ type: 'anchor', shape, anchor }),
+            );
             dragMonitor.update({
               pointer: target?.anchor.pos ?? pos,
               snapTarget: target,

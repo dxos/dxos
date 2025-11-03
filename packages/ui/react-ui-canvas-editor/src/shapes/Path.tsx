@@ -33,37 +33,35 @@ export const createPath = ({ id, points, ...rest }: CreatePathProps): PathShape 
 /**
  * Path shape.
  */
-export const PathComponent = ({ shape, selected, onSelect }: ShapeComponentProps<PathShape>) => {
-  return (
-    <div>
-      <svg className={mx('absolute overflow-visible', eventsNone, styles.path, selected && styles.pathSelected)}>
-        <g>
-          {/* Hit area. */}
-          {!shape.guide && onSelect && (
-            <path
-              d={shape.path}
-              fill={'none'}
-              strokeWidth={8}
-              className={mx('stroke-transparent', eventsAuto)}
-              onClick={(ev) => onSelect?.(shape.id, { toggle: true, shift: ev.shiftKey })}
-            />
-          )}
-          {/* TODO(burdon): Document if this is required. */}
-          <use href={`#${DEFS_ID}`} />
+export const PathComponent = ({ shape, selected, onSelect }: ShapeComponentProps<PathShape>) => (
+  <div>
+    <svg className={mx('absolute overflow-visible', eventsNone, styles.path, selected && styles.pathSelected)}>
+      <g>
+        {/* Hit area. */}
+        {!shape.guide && onSelect && (
           <path
-            {...shapeAttrs(shape)}
             d={shape.path}
             fill={'none'}
-            markerStart={!shape.guide ? createUrl(shape.start) : undefined}
-            markerEnd={!shape.guide ? createUrl(shape.end) : undefined}
-            className={mx(
-              'stroke-[var(--dx-stroke-color)]',
-              selected && styles.pathSelected,
-              shape.guide && styles.pathGuide,
-            )}
+            strokeWidth={8}
+            className={mx('stroke-transparent', eventsAuto)}
+            onClick={(ev) => onSelect?.(shape.id, { toggle: true, shift: ev.shiftKey })}
           />
-        </g>
-      </svg>
-    </div>
-  );
-};
+        )}
+        {/* TODO(burdon): Document if this is required. */}
+        <use href={`#${DEFS_ID}`} />
+        <path
+          {...shapeAttrs(shape)}
+          d={shape.path}
+          fill={'none'}
+          markerStart={!shape.guide ? createUrl(shape.start) : undefined}
+          markerEnd={!shape.guide ? createUrl(shape.end) : undefined}
+          className={mx(
+            'stroke-[var(--dx-stroke-color)]',
+            selected && styles.pathSelected,
+            shape.guide && styles.pathGuide,
+          )}
+        />
+      </g>
+    </svg>
+  </div>
+);

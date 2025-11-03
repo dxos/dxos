@@ -11,6 +11,4 @@ import { type StyleState } from './style';
 
 export type ToolbarState = Partial<StyleState & AlignState>;
 
-export const useToolbarState = (initialState: ToolbarState = {}) => {
-  return useMemo(() => live<ToolbarState>(initialState), []);
-};
+export const useToolbarState = (initialState: ToolbarState = {}) => useMemo(() => live<ToolbarState>(initialState), []);

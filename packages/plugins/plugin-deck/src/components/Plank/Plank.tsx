@@ -174,9 +174,10 @@ const PlankComponent = memo(
     const size = deck.plankSizing[sizeKey] as number | undefined;
 
     const handleSizeChange = useCallback(
-      debounce((nextSize: number) => {
-        return dispatch(createIntent(DeckAction.UpdatePlankSize, { id: sizeKey, size: nextSize }));
-      }, 200),
+      debounce(
+        (nextSize: number) => dispatch(createIntent(DeckAction.UpdatePlankSize, { id: sizeKey, size: nextSize })),
+        200,
+      ),
       [dispatch, sizeKey],
     );
 

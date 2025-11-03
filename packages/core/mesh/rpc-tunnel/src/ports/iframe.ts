@@ -55,55 +55,53 @@ export type IFramePortOptions = {
  * @param options.onOrigin Callback triggered when origin of destination window is verified.
  * @returns RPC port for messaging.
  */
-export const createIFramePort = ({ channel, iframe, origin, onOrigin }: IFramePortOptions): RpcPort => {
-  return {
-    send: async (data) => {
-      if (!origin) {
-        log('no origin set', { channel });
+export const createIFramePort = ({ channel, iframe, origin, onOrigin }: IFramePortOptions): RpcPort => ({
+  send: async (data) => {
+    if (!origin) {
+      log('no origin set', { channel });
+      return;
+    }
+
+    log('sending', { channel, data: data.length });
+    const payload = data.buffer.slice(data.byteOffset, data.byteOffset + data.byteLength);
+    const message = { channel, payload };
+    if (iframe) {
+      sendToIFrame(iframe, origin, message);
+    } else {
+      sendToParentWindow(origin, message);
+    }
+  },
+
+  subscribe: (callback) => {
+    const handler = (event: MessageEvent<unknown>) => {
+      if (!iframe && event.source !== window.parent) {
+        // Not from parent window.
+        return;
+      } else if (iframe && event.source !== iframe.contentWindow) {
+        // Not from child window.
         return;
       }
 
-      log('sending', { channel, data: data.length });
-      const payload = data.buffer.slice(data.byteOffset, data.byteOffset + data.byteLength);
-      const message = { channel, payload };
-      if (iframe) {
-        sendToIFrame(iframe, origin, message);
-      } else {
-        sendToParentWindow(origin, message);
+      const isMessageData =
+        event.data && typeof event.data === 'object' && 'channel' in event.data && 'payload' in event.data;
+      const message = isMessageData ? (event.data as MessageData) : undefined;
+      if (message?.channel !== channel) {
+        return;
       }
-    },
 
-    subscribe: (callback) => {
-      const handler = (event: MessageEvent<unknown>) => {
-        if (!iframe && event.source !== window.parent) {
-          // Not from parent window.
-          return;
-        } else if (iframe && event.source !== iframe.contentWindow) {
-          // Not from child window.
-          return;
-        }
+      if (!origin) {
+        origin = event.origin;
+        onOrigin?.(origin);
+      }
 
-        const isMessageData =
-          event.data && typeof event.data === 'object' && 'channel' in event.data && 'payload' in event.data;
-        const message = isMessageData ? (event.data as MessageData) : undefined;
-        if (message?.channel !== channel) {
-          return;
-        }
+      log('received', message);
+      callback(new Uint8Array(message.payload));
+    };
 
-        if (!origin) {
-          origin = event.origin;
-          onOrigin?.(origin);
-        }
-
-        log('received', message);
-        callback(new Uint8Array(message.payload));
-      };
-
-      window.addEventListener('message', handler);
-      return () => window.removeEventListener('message', handler);
-    },
-  };
-};
+    window.addEventListener('message', handler);
+    return () => window.removeEventListener('message', handler);
+  },
+});
 
 export type CreateIFrameOptions = {
   hidden?: boolean;

@@ -10,18 +10,16 @@ import { defaultTx } from '@dxos/react-ui-theme';
 
 import { Demo, NetworkToggle } from './components';
 
-const App = () => {
-  return (
-    <ThemeProvider tx={defaultTx}>
-      <ClientRepeater
-        className='flex place-content-evenly'
-        component={Demo}
-        count={2}
-        createSpace
-        controls={NetworkToggle}
-      />
-    </ThemeProvider>
-  );
-};
+const App = () => (
+  <ThemeProvider tx={defaultTx}>
+    <ClientRepeater
+      className='flex place-content-evenly'
+      component={Demo}
+      count={2}
+      createSpace
+      controls={NetworkToggle}
+    />
+  </ThemeProvider>
+);
 
 export default App;

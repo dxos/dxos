@@ -150,8 +150,8 @@ export const compile = async ({
   };
 };
 
-const formatDiagnostics = (diagnostic: GraphDiagnostic[]): string => {
-  return diagnostic
+const formatDiagnostics = (diagnostic: GraphDiagnostic[]): string =>
+  diagnostic
     .map((d) => {
       const objects = [
         d.nodeId && `Node(${d.nodeId})`,
@@ -163,7 +163,6 @@ const formatDiagnostics = (diagnostic: GraphDiagnostic[]): string => {
       return `${d.severity}: ${d.message}${objects ? `. ${objects}.` : ''} `;
     })
     .join('\n');
-};
 
 export const compileOrThrow = async (params: CompileParams): Promise<Executable> => {
   const result = await compile(params);

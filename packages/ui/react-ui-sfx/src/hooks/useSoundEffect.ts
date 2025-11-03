@@ -27,6 +27,5 @@ const SOUND_EFFECTS: Record<SoundEffect, string> = {
   LeaveCall: 'https://dxos.network/sound-call-leave.mp3',
 };
 
-export const useSoundEffect = (effect?: SoundEffect) => {
-  return useMemo(() => new Audio(SOUND_EFFECTS[effect ?? 'Click']), [effect]);
-};
+export const useSoundEffect = (effect?: SoundEffect) =>
+  useMemo(() => new Audio(SOUND_EFFECTS[effect ?? 'Click']), [effect]);

@@ -14,8 +14,8 @@ import { useMemo } from 'react';
  * };
  * ```
  */
-export const useFileDownload = (): ((data: Blob | string, filename: string) => void) => {
-  return useMemo(
+export const useFileDownload = (): ((data: Blob | string, filename: string) => void) =>
+  useMemo(
     () => (data: Blob | string, filename: string) => {
       const url = typeof data === 'string' ? data : URL.createObjectURL(data);
       const element = document.createElement('a');
@@ -26,4 +26,3 @@ export const useFileDownload = (): ((data: Blob | string, filename: string) => v
     },
     [],
   );
-};

@@ -188,11 +188,10 @@ export const getDecorators = ({
  * @note All environment variables should use the VITE_ prefix for proper Vite bundling
  */
 
-export const accessTokensFromEnv = (tokens: Record<string, string | undefined>) => {
-  return Object.entries(tokens)
+export const accessTokensFromEnv = (tokens: Record<string, string | undefined>) =>
+  Object.entries(tokens)
     .filter(([, token]) => !!token)
     .map(([source, token]) => Obj.make(DataType.AccessToken, { source, token: token! }));
-};
 
 type StoryPluginOptions = {
   onChatCreated?: (props: { space: Space; chat: Assistant.Chat; binder: AiContextBinder }) => Promise<void>;

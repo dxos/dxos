@@ -13,11 +13,10 @@ import {
   type MenuSeparator,
 } from './types';
 
-export const getShortcut = (action: ActionLike) => {
-  return typeof action.properties?.keyBinding === 'string'
+export const getShortcut = (action: ActionLike) =>
+  typeof action.properties?.keyBinding === 'string'
     ? action.properties.keyBinding
     : action.properties?.keyBinding?.[getHostPlatform()];
-};
 
 export const fallbackIcon = 'ph--placeholder--regular';
 

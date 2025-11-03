@@ -96,9 +96,9 @@ export const DeploymentDialog = ({ accessToken, scriptTemplates }: DeploymentDia
           })}
         </p>
         <ul className='pbs-2'>
-          {scriptTemplates.map((template) => {
-            return <li key={template.id}>{template.name}</li>;
-          })}
+          {scriptTemplates.map((template) => (
+            <li key={template.id}>{template.name}</li>
+          ))}
         </ul>
       </div>
       <div role='none' className='flex flex-row-reverse gap-1'>

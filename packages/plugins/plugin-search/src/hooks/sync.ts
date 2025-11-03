@@ -109,8 +109,8 @@ const getKeys = (object: Record<string, unknown>): string[] => {
 };
 
 // TODO(burdon): Use ECHO schema.
-export const mapObjectToTextFields = <T extends Record<string, unknown>>(object: T): TextFields => {
-  return getKeys(object).reduce<TextFields>((fields, key) => {
+export const mapObjectToTextFields = <T extends Record<string, unknown>>(object: T): TextFields =>
+  getKeys(object).reduce<TextFields>((fields, key) => {
     const value = object[key] as any;
     if (typeof value === 'string' || value instanceof DataType.Text) {
       try {
@@ -122,4 +122,3 @@ export const mapObjectToTextFields = <T extends Record<string, unknown>>(object:
 
     return fields;
   }, {});
-};

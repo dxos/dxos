@@ -44,8 +44,8 @@ export const makeTypedEntityClass = (
   typename: string,
   version: string,
   baseSchema: Schema.Schema.AnyNoContext,
-): Schema.SchemaClass<any> => {
-  return class {
+): Schema.SchemaClass<any> =>
+  class {
     // Implement TypedObject properties.
     static readonly typename = typename;
     static readonly version = version;
@@ -67,7 +67,6 @@ export const makeTypedEntityClass = (
       throw new Error('Use live(Typename, { ...fields }) to instantiate an object.');
     }
   } as any;
-};
 
 const schemaVariance = {
   _A: (_: any) => _,

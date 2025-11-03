@@ -152,9 +152,7 @@ export class ClientServicesHost {
       config: () => this._config,
       statusUpdate: this._statusUpdate,
       getCurrentStatus: () => (this.isOpen && !this._resetting ? SystemStatus.ACTIVE : SystemStatus.INACTIVE),
-      getDiagnostics: () => {
-        return createDiagnostics(this._serviceRegistry.services, this._serviceContext, this._config!);
-      },
+      getDiagnostics: () => createDiagnostics(this._serviceRegistry.services, this._serviceContext, this._config!),
       onUpdateStatus: async (status: SystemStatus) => {
         if (!this.isOpen && status === SystemStatus.ACTIVE) {
           await this._resourceLock?.acquire();

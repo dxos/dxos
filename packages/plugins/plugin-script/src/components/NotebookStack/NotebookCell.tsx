@@ -46,13 +46,15 @@ export type NotebookCellProps = {
 export const NotebookCell = ({ space, graph, dragging, cell, promptResults, env }: NotebookCellProps) => {
   const { t } = useTranslation(meta.id);
 
-  const extensions = useMemo(() => {
-    return cell.source?.target
-      ? [createDataExtensions({ id: cell.id, text: createDocAccessor(cell.source.target, ['content']) })].filter(
-          isNonNullable,
-        )
-      : [];
-  }, [cell.source?.target]);
+  const extensions = useMemo(
+    () =>
+      cell.source?.target
+        ? [createDataExtensions({ id: cell.id, text: createDocAccessor(cell.source.target, ['content']) })].filter(
+            isNonNullable,
+          )
+        : [],
+    [cell.source?.target],
+  );
 
   const view = cell.view?.target;
 
@@ -194,15 +196,17 @@ const NotebookTextEditor = ({
 }: EditorProps & Pick<BasicExtensionsOptions, 'readOnly'>) => {
   const { t } = useTranslation(meta.id);
   const { themeMode } = useThemeContext();
-  const extensions = useMemo(() => {
-    return [
-      createBasicExtensions({ placeholder: t('notebook markdown placeholder'), readOnly }),
-      createThemeExtensions({ themeMode, syntaxHighlighting: true }),
-      createMarkdownExtensions(),
-      decorateMarkdown(),
-      extensionsParam,
-    ].filter(isNonNullable);
-  }, [extensionsParam]);
+  const extensions = useMemo(
+    () =>
+      [
+        createBasicExtensions({ placeholder: t('notebook markdown placeholder'), readOnly }),
+        createThemeExtensions({ themeMode, syntaxHighlighting: true }),
+        createMarkdownExtensions(),
+        decorateMarkdown(),
+        extensionsParam,
+      ].filter(isNonNullable),
+    [extensionsParam],
+  );
 
   return <Editor {...props} extensions={extensions} moveToEnd />;
 };

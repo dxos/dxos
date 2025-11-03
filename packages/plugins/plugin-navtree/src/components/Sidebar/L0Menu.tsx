@@ -186,12 +186,8 @@ const L0Item = ({ item, parent, path, pinned, onRearrange }: L0ItemProps) => {
       }),
       dropTargetForElements({
         element: itemElement.current,
-        getData: ({ input, element }) => {
-          return attachClosestEdge(
-            { id: item.id, type: 'l0Item' },
-            { input, element, allowedEdges: ['top', 'bottom'] },
-          );
-        },
+        getData: ({ input, element }) =>
+          attachClosestEdge({ id: item.id, type: 'l0Item' }, { input, element, allowedEdges: ['top', 'bottom'] }),
         onDragEnter: ({ self, source }) => {
           if (source.data.type === self.data.type) {
             setEdge(extractClosestEdge(self.data));

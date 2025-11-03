@@ -48,8 +48,6 @@ export default () =>
       role: 'article',
       filter: (data): data is { companionTo: Obj.Any; subject: 'automation' } =>
         Obj.isObject(data.companionTo) && data.subject === 'automation',
-      component: ({ data }) => {
-        return <AutomationSettings space={getSpace(data.companionTo)!} object={data.companionTo} />;
-      },
+      component: ({ data }) => <AutomationSettings space={getSpace(data.companionTo)!} object={data.companionTo} />,
     }),
   ]);

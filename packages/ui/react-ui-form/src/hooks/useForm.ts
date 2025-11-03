@@ -135,9 +135,7 @@ export const useForm = <T extends BaseObject>({
     }
   }, [values, schemaDirty]);
 
-  const formIsValid = useMemo(() => {
-    return Object.keys(errors).length === 0;
-  }, [errors]);
+  const formIsValid = useMemo(() => Object.keys(errors).length === 0, [errors]);
 
   /**
    * NOTE: We can submit if there is no touched field that has an error.
@@ -198,9 +196,7 @@ export const useForm = <T extends BaseObject>({
   );
 
   const getFormValue = useCallback<FormHandler<T>['getValue']>(
-    <V>(path: (string | number)[]): V | undefined => {
-      return getValue(values, createJsonPath(path));
-    },
+    <V>(path: (string | number)[]): V | undefined => getValue(values, createJsonPath(path)),
     [values],
   );
 
@@ -281,8 +277,8 @@ const createKeySet = <T extends BaseObject, V>(obj: T, value: V): Record<JsonPat
   return Object.keys(obj).reduce((acc, key) => ({ ...acc, [key]: value }), {} as Record<JsonPath, V>);
 };
 
-const flatMap = (errors: ValidationError[]) => {
-  return errors.reduce(
+const flatMap = (errors: ValidationError[]) =>
+  errors.reduce(
     (result, { path, message }) => {
       // Convert the validation error path format to our JsonPath format.
       const jsonPath = fromEffectValidationPath(path);
@@ -293,4 +289,3 @@ const flatMap = (errors: ValidationError[]) => {
     },
     {} as Record<JsonPath, string>,
   );
-};

@@ -33,9 +33,7 @@ export const ChatProgress = ({ chat }: ChatProgressProps) => {
 
   const [index, setIndex] = useState<number | undefined>(undefined);
   const handleSelect = useCallback<NonNullable<ProgressBarProps['onSelect']>>(({ index }) => {
-    setIndex((current) => {
-      return current === index ? undefined : index;
-    });
+    setIndex((current) => (current === index ? undefined : index));
   }, []);
 
   const ref = useRef<HTMLDivElement>(null);

@@ -75,8 +75,7 @@ class NodeRtcConnectionFactory implements RtcConnectionFactory {
 /**
  * Create platform-specific connection factory.
  */
-export const getRtcConnectionFactory = (): RtcConnectionFactory => {
-  return typeof (globalThis as any).RTCPeerConnection === 'undefined'
+export const getRtcConnectionFactory = (): RtcConnectionFactory =>
+  typeof (globalThis as any).RTCPeerConnection === 'undefined'
     ? new NodeRtcConnectionFactory()
     : new BrowserRtcConnectionFactory();
-};

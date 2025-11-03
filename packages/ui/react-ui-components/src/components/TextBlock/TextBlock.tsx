@@ -33,9 +33,7 @@ export const TextBlock = ({ classNames, text, delay = 0 }: TextBlockProps) => {
         }
 
         // TODO(burdon): Break words.
-        setCurrent((prev) => {
-          return prev + char;
-        });
+        setCurrent((prev) => prev + char);
       }
     })();
 

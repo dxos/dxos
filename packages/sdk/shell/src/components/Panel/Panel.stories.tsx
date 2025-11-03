@@ -24,32 +24,28 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-export const Normal = (props: any) => {
-  return (
-    <StorybookDialog {...props}>
-      <Heading title='Panel heading' titleId='panel-heading'></Heading>
-      <div className='p-3 text-center'>
-        <Label>Lorem ipsum</Label>
-        <Actions>
-          <Action variant='ghost'>Ghost</Action>
-          <Action>Normal</Action>
-        </Actions>
-      </div>
-    </StorybookDialog>
-  );
-};
+export const Normal = (props: any) => (
+  <StorybookDialog {...props}>
+    <Heading title='Panel heading' titleId='panel-heading'></Heading>
+    <div className='p-3 text-center'>
+      <Label>Lorem ipsum</Label>
+      <Actions>
+        <Action variant='ghost'>Ghost</Action>
+        <Action>Normal</Action>
+      </Actions>
+    </div>
+  </StorybookDialog>
+);
 
-export const Primary = (props: any) => {
-  return (
-    <StorybookDialog {...props}>
-      <Heading title='Panel heading' titleId='panel-heading'></Heading>
-      <div className='p-3 text-center'>
-        <Label>Lorem ipsum</Label>
-        <Actions>
-          <Action variant='ghost'>Ghost</Action>
-          <Action variant='primary'>Primary</Action>
-        </Actions>
-      </div>
-    </StorybookDialog>
-  );
-};
+export const Primary = (props: any) => (
+  <StorybookDialog {...props}>
+    <Heading title='Panel heading' titleId='panel-heading'></Heading>
+    <div className='p-3 text-center'>
+      <Label>Lorem ipsum</Label>
+      <Actions>
+        <Action variant='ghost'>Ghost</Action>
+        <Action variant='primary'>Primary</Action>
+      </Actions>
+    </div>
+  </StorybookDialog>
+);

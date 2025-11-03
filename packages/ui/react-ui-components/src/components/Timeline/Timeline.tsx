@@ -145,58 +145,60 @@ export const Timeline = forwardRef<ScrollController, TimelineProps>(
       const el = containerRef.current?.querySelector(`[data-index="${current}"]`);
       el?.scrollIntoView({ behavior: 'instant', block: 'nearest' });
     }, [current]);
-    useEffect(() => {
-      return addEventListener(containerRef.current!, 'keydown', (event) => {
-        switch (event.key) {
-          case 'ArrowUp': {
-            event.preventDefault(); // Prevent implicit scrolling.
-            if (event.metaKey || currentRef.current === undefined) {
-              setCurrent(0);
-            } else {
-              setCurrent((selected) => {
-                if (event.shiftKey && selected !== undefined) {
-                  const branch = commits[selected].branch;
-                  for (let i = selected - 1; i >= 0; i--) {
-                    if (commits[i].branch === branch) {
-                      return i;
+    useEffect(
+      () =>
+        addEventListener(containerRef.current!, 'keydown', (event) => {
+          switch (event.key) {
+            case 'ArrowUp': {
+              event.preventDefault(); // Prevent implicit scrolling.
+              if (event.metaKey || currentRef.current === undefined) {
+                setCurrent(0);
+              } else {
+                setCurrent((selected) => {
+                  if (event.shiftKey && selected !== undefined) {
+                    const branch = commits[selected].branch;
+                    for (let i = selected - 1; i >= 0; i--) {
+                      if (commits[i].branch === branch) {
+                        return i;
+                      }
                     }
+                    return selected;
+                  } else {
+                    return selected === undefined ? commits.length - 1 : Math.max(0, selected - 1);
                   }
-                  return selected;
-                } else {
-                  return selected === undefined ? commits.length - 1 : Math.max(0, selected - 1);
-                }
-              });
+                });
+              }
+              break;
             }
-            break;
-          }
-          case 'ArrowDown': {
-            event.preventDefault(); // Prevent implicit scrolling.
-            if (event.metaKey || currentRef.current === undefined) {
-              setCurrent(commits.length - 1);
-            } else {
-              setCurrent((selected) => {
-                if (event.shiftKey && selected !== undefined) {
-                  const branch = commits[selected].branch;
-                  for (let i = selected + 1; i <= commits.length - 1; i++) {
-                    if (commits[i].branch === branch) {
-                      return i;
+            case 'ArrowDown': {
+              event.preventDefault(); // Prevent implicit scrolling.
+              if (event.metaKey || currentRef.current === undefined) {
+                setCurrent(commits.length - 1);
+              } else {
+                setCurrent((selected) => {
+                  if (event.shiftKey && selected !== undefined) {
+                    const branch = commits[selected].branch;
+                    for (let i = selected + 1; i <= commits.length - 1; i++) {
+                      if (commits[i].branch === branch) {
+                        return i;
+                      }
                     }
+                    return selected;
+                  } else {
+                    return selected === undefined ? 0 : Math.min(commits.length - 1, selected + 1);
                   }
-                  return selected;
-                } else {
-                  return selected === undefined ? 0 : Math.min(commits.length - 1, selected + 1);
-                }
-              });
+                });
+              }
+              break;
             }
-            break;
+            case 'Escape': {
+              setCurrent(undefined);
+              break;
+            }
           }
-          case 'Escape': {
-            setCurrent(undefined);
-            break;
-          }
-        }
-      });
-    }, [commits, containerRef.current]);
+        }),
+      [commits, containerRef.current],
+    );
 
     return (
       <ScrollContainer.Root pin ref={scrollerRef}>

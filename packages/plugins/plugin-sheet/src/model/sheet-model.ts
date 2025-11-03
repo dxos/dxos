@@ -458,9 +458,9 @@ export class SheetModel extends Resource {
    */
   mapFormulaIndicesToRefs(formula: string): string {
     invariant(isFormula(formula));
-    return formula.replace(/([a-zA-Z0-9]+)@([a-zA-Z0-9]+)/g, (idx) => {
-      return addressToA1Notation(addressFromIndex(this._sheet, idx));
-    });
+    return formula.replace(/([a-zA-Z0-9]+)@([a-zA-Z0-9]+)/g, (idx) =>
+      addressToA1Notation(addressFromIndex(this._sheet, idx)),
+    );
   }
 
   //

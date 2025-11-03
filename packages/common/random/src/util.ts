@@ -10,9 +10,7 @@ export const toRange = (range: number | Range, min = 0) => (typeof range === 'nu
 
 export const getCount = (range?: number | Range) => (typeof range === 'number' ? range : randNumber(range));
 
-export const multiple = <T>(fn: (i: number) => T, n: number): T[] => {
-  return Array.from({ length: n }).map((_, i) => fn(i));
-};
+export const multiple = <T>(fn: (i: number) => T, n: number): T[] => Array.from({ length: n }).map((_, i) => fn(i));
 
 export const uniqueArray = <T>(values: T[] | (() => T), n: number): T[] => {
   if (Array.isArray(values)) {

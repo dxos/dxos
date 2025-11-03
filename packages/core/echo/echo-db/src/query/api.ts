@@ -73,16 +73,14 @@ export type QueryOptions = {
 
 export interface QueryJoinSpec extends Record<string, true | QueryJoinSpec> {}
 
-export const optionsToProto = (options: QueryOptions): QueryOptionsProto => {
-  return {
-    spaces: options.spaces,
-    spaceIds: options.spaceIds,
-    deleted: options.deleted,
-    dataLocation: options.dataLocation,
-    include: options.include,
-    limit: options.limit,
-  };
-};
+export const optionsToProto = (options: QueryOptions): QueryOptionsProto => ({
+  spaces: options.spaces,
+  spaceIds: options.spaceIds,
+  deleted: options.deleted,
+  dataLocation: options.dataLocation,
+  include: options.include,
+  limit: options.limit,
+});
 
 type NormalizeQueryOptions = {
   defaultSpaceId?: SpaceId;

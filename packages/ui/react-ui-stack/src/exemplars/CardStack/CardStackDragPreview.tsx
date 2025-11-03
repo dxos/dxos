@@ -10,15 +10,13 @@ import { mx } from '@dxos/react-ui-theme';
 import { type StackProps } from '../../components';
 import { translationKey } from '../../translations';
 
-const CardStackDragPreviewRoot = ({ children }: PropsWithChildren<{}>) => {
-  return (
-    <div className='p-2'>
-      <div className='rounded-md max-bs-[calc(100dvh-1rem)] overflow-hidden bg-baseSurface border border-separator ring-focusLine ring-neutralFocusIndicator flex flex-col'>
-        {children}
-      </div>
+const CardStackDragPreviewRoot = ({ children }: PropsWithChildren<{}>) => (
+  <div className='p-2'>
+    <div className='rounded-md max-bs-[calc(100dvh-1rem)] overflow-hidden bg-baseSurface border border-separator ring-focusLine ring-neutralFocusIndicator flex flex-col'>
+      {children}
     </div>
-  );
-};
+  </div>
+);
 
 const CardStackDragPreviewHeading = ({ children }: PropsWithChildren<{}>) => {
   const { t } = useTranslation(translationKey);
@@ -39,19 +37,15 @@ const CardStackDragPreviewHeading = ({ children }: PropsWithChildren<{}>) => {
 const CardStackDragPreviewContent = ({
   children,
   itemsCount = 0,
-}: PropsWithChildren<Pick<StackProps, 'itemsCount'>>) => {
-  return (
-    <div
-      className={mx('overflow-y-auto flex-1 pli-2 flex flex-col gap-2', 'plb-1', itemsCount > 0 ? 'plb-2' : 'plb-1')}
-    >
-      {children}
-    </div>
-  );
-};
+}: PropsWithChildren<Pick<StackProps, 'itemsCount'>>) => (
+  <div className={mx('overflow-y-auto flex-1 pli-2 flex flex-col gap-2', 'plb-1', itemsCount > 0 ? 'plb-2' : 'plb-1')}>
+    {children}
+  </div>
+);
 
-const CardStackDragPreviewFooter = ({ children }: PropsWithChildren<{}>) => {
-  return <div className='p-2 border-t border-separator'>{children}</div>;
-};
+const CardStackDragPreviewFooter = ({ children }: PropsWithChildren<{}>) => (
+  <div className='p-2 border-t border-separator'>{children}</div>
+);
 
 export const CardStackDragPreview = {
   Root: CardStackDragPreviewRoot,

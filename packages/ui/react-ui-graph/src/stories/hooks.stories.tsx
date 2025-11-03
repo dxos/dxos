@@ -138,16 +138,14 @@ const Component = ({
   );
 };
 
-const DefaultStory = ({ children, ...props }: ComponentProps) => {
-  return (
-    <>
-      <SVG.Root>
-        <Component {...props} />
-      </SVG.Root>
-      {children && <div className='absolute left-4 bottom-4 font-mono text-green-500 text-xs'>{children}</div>}
-    </>
-  );
-};
+const DefaultStory = ({ children, ...props }: ComponentProps) => (
+  <>
+    <SVG.Root>
+      <Component {...props} />
+    </SVG.Root>
+    {children && <div className='absolute left-4 bottom-4 font-mono text-green-500 text-xs'>{children}</div>}
+  </>
+);
 
 const meta = {
   title: 'ui/react-ui-graph/hooks',

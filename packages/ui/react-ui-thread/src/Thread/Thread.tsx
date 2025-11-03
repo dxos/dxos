@@ -20,25 +20,23 @@ export const threadLayout = 'is-full place-self-start grid grid-cols-[var(--rail
 type ThreadRootProps = ThemedClassName<ComponentPropsWithRef<'div'>> & ThreadEntity & { current?: boolean };
 
 const ThreadRoot = forwardRef<HTMLDivElement, ThreadRootProps>(
-  ({ current, children, classNames, ...props }, forwardedRef) => {
-    return (
-      <div
-        role='group'
-        data-testid='thread'
-        {...(current && { 'aria-current': typeof current === 'string' ? current : 'location' })}
-        {...props}
-        className={mx(
-          threadLayout,
-          hoverableFocusedWithinControls,
-          'bg-[var(--surface-bg)] current-related attention-surface [--controls-opacity:0]',
-          classNames,
-        )}
-        ref={forwardedRef}
-      >
-        {children}
-      </div>
-    );
-  },
+  ({ current, children, classNames, ...props }, forwardedRef) => (
+    <div
+      role='group'
+      data-testid='thread'
+      {...(current && { 'aria-current': typeof current === 'string' ? current : 'location' })}
+      {...props}
+      className={mx(
+        threadLayout,
+        hoverableFocusedWithinControls,
+        'bg-[var(--surface-bg)] current-related attention-surface [--controls-opacity:0]',
+        classNames,
+      )}
+      ref={forwardedRef}
+    >
+      {children}
+    </div>
+  ),
 );
 
 //
@@ -48,29 +46,24 @@ const ThreadRoot = forwardRef<HTMLDivElement, ThreadRootProps>(
 type ThreadHeaderProps = ComponentPropsWithRef<'div'> & { detached?: boolean };
 
 const ThreadHeader = forwardRef<HTMLParagraphElement, ThreadHeaderProps>(
-  ({ children, detached, ...props }, forwardedRef) => {
-    return (
-      <>
-        <div role='none' className='flex items-center justify-center text-description'>
-          <Icon icon='ph--caret-double-right--regular' />
-        </div>
-        <div role='none' className='flex items-center overflow-hidden'>
-          <p
-            role='heading'
-            data-testid='thread.heading'
-            {...props}
-            className={mx(
-              'mie-2 text-description font-medium truncate italic',
-              detached && 'line-through decoration-1',
-            )}
-            ref={forwardedRef}
-          >
-            {children}
-          </p>
-        </div>
-      </>
-    );
-  },
+  ({ children, detached, ...props }, forwardedRef) => (
+    <>
+      <div role='none' className='flex items-center justify-center text-description'>
+        <Icon icon='ph--caret-double-right--regular' />
+      </div>
+      <div role='none' className='flex items-center overflow-hidden'>
+        <p
+          role='heading'
+          data-testid='thread.heading'
+          {...props}
+          className={mx('mie-2 text-description font-medium truncate italic', detached && 'line-through decoration-1')}
+          ref={forwardedRef}
+        >
+          {children}
+        </p>
+      </div>
+    </>
+  ),
 );
 
 //

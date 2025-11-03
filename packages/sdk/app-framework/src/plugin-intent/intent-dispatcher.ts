@@ -208,8 +208,8 @@ export const createDispatcher = (
       return { _intent: intent, ...result } as AnyIntentResult;
     });
 
-  const dispatch: IntentDispatcher = (intentChain, depth = 0) => {
-    return Effect.gen(function* () {
+  const dispatch: IntentDispatcher = (intentChain, depth = 0) =>
+    Effect.gen(function* () {
       if (depth > executionLimit) {
         return yield* Effect.fail(new CycleDetectedError());
       }
@@ -265,19 +265,17 @@ export const createDispatcher = (
 
       return result.data;
     });
-  };
 
-  const dispatchPromise: PromiseIntentDispatcher = (intentChain) => {
-    return Effect.runPromise(dispatch(intentChain))
+  const dispatchPromise: PromiseIntentDispatcher = (intentChain) =>
+    Effect.runPromise(dispatch(intentChain))
       .then((data) => ({ data }))
       .catch((error) => {
         log.catch(error);
         return { error };
       });
-  };
 
-  const undo: IntentUndo = () => {
-    return Effect.gen(function* () {
+  const undo: IntentUndo = () =>
+    Effect.gen(function* () {
       const history = yield* historyRef.get;
       const last = history.findLastIndex(isUndoable);
       const result = last !== -1 ? history[last] : undefined;
@@ -292,13 +290,11 @@ export const createDispatcher = (
         return yield* dispatch(intent);
       }
     });
-  };
 
-  const undoPromise: PromiseIntentUndo = () => {
-    return Effect.runPromise(undo())
+  const undoPromise: PromiseIntentUndo = () =>
+    Effect.runPromise(undo())
       .then((data) => ({ data }))
       .catch((error) => ({ error }));
-  };
 
   return { dispatch, dispatchPromise, undo, undoPromise };
 };
@@ -320,12 +316,11 @@ export default (context: PluginContext) => {
   );
 
   const manager = context.getCapability(Capabilities.PluginManager);
-  state.dispatch = (intentChain, depth) => {
-    return Effect.gen(function* () {
+  state.dispatch = (intentChain, depth) =>
+    Effect.gen(function* () {
       yield* manager._activate(Events.SetupIntentResolver);
       return yield* dispatch(intentChain, depth);
     });
-  };
   state.dispatchPromise = async (intentChain) => {
     await manager.activate(Events.SetupIntentResolver);
     return await dispatchPromise(intentChain);

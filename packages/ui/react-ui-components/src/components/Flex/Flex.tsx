@@ -20,22 +20,20 @@ export type FlexProps = ThemedClassName<
 >;
 
 export const Flex = forwardRef<HTMLDivElement, FlexProps>(
-  ({ classNames, children, column, scroll, grow, role = 'none', ...props }, forwardedRef) => {
-    return (
-      <div
-        role={role}
-        className={mx(
-          'flex',
-          grow && 'flex-1 overflow-hidden',
-          column && 'flex-col',
-          scroll && (column ? 'overflow-y-auto pie-3' : 'overflow-x-auto'),
-          classNames,
-        )}
-        ref={forwardedRef}
-        {...props}
-      >
-        {children}
-      </div>
-    );
-  },
+  ({ classNames, children, column, scroll, grow, role = 'none', ...props }, forwardedRef) => (
+    <div
+      role={role}
+      className={mx(
+        'flex',
+        grow && 'flex-1 overflow-hidden',
+        column && 'flex-col',
+        scroll && (column ? 'overflow-y-auto pie-3' : 'overflow-x-auto'),
+        classNames,
+      )}
+      ref={forwardedRef}
+      {...props}
+    >
+      {children}
+    </div>
+  ),
 );

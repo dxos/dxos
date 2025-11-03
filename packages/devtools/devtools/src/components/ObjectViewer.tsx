@@ -51,15 +51,15 @@ export const ObjectViewer = ({ object, id, onNavigate }: ObjectViewerProps) => {
 
     rows.forEach(addDxnLinks);
 
-    return rows.map((row, index) => {
-      return createElement({
+    return rows.map((row, index) =>
+      createElement({
         node: row,
         stylesheet,
         style: {},
         useInlineStyles,
         key: index,
-      });
-    });
+      }),
+    );
   };
 
   return (
@@ -93,13 +93,10 @@ interface rendererNode {
   children?: rendererNode[];
 }
 
-const isDxnSpanNode = (node: rendererNode) => {
-  return (
-    node.type === 'element' &&
-    node.tagName === 'span' &&
-    node.children?.length === 1 &&
-    node.children[0].type === 'text' &&
-    typeof node.children[0].value === 'string' &&
-    node.children[0].value.match(/^"(dxn:[^"]+)"$/)
-  );
-};
+const isDxnSpanNode = (node: rendererNode) =>
+  node.type === 'element' &&
+  node.tagName === 'span' &&
+  node.children?.length === 1 &&
+  node.children[0].type === 'text' &&
+  typeof node.children[0].value === 'string' &&
+  node.children[0].value.match(/^"(dxn:[^"]+)"$/);

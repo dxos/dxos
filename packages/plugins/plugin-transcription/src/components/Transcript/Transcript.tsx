@@ -67,8 +67,8 @@ export type TranscriptViewProps = ThemedClassName<{
  */
 export const TranscriptView = ({ classNames, space, transcript: object, model }: TranscriptViewProps) => {
   const { themeMode } = useThemeContext();
-  const { parentRef } = useTextEditor(() => {
-    return {
+  const { parentRef } = useTextEditor(
+    () => ({
       extensions: [
         createBasicExtensions({ readOnly: true, lineWrapping: true, search: true }),
         createMarkdownExtensions(),
@@ -81,8 +81,9 @@ export const TranscriptView = ({ classNames, space, transcript: object, model }:
         }),
         autoScroll(),
       ].filter(isTruthy),
-    };
-  }, [space, model]);
+    }),
+    [space, model],
+  );
 
   return (
     <div

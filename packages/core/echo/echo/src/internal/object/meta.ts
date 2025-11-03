@@ -42,9 +42,7 @@ export const foreignKeyEquals = (a: ForeignKey, b: ForeignKey) => a.source === b
  * @deprecated Use {@link getMeta}.
  */
 // TODO(dmaretskyi): Remove.
-export const getObjectMeta = (obj: any): ObjectMeta => {
-  return getMeta(obj);
-};
+export const getObjectMeta = (obj: any): ObjectMeta => getMeta(obj);
 
 /*
  * Get metadata from object.

@@ -40,9 +40,9 @@ export const mapEdge = (
  * @param model Compute graph to update on change.
  */
 // TODO(burdon): Generalize into sync function.
-export const useGraphMonitor = (model?: ComputeGraphModel): GraphMonitor<ComputeShape> => {
-  return useMemo<GraphMonitor<ComputeShape>>(() => {
-    return {
+export const useGraphMonitor = (model?: ComputeGraphModel): GraphMonitor<ComputeShape> =>
+  useMemo<GraphMonitor<ComputeShape>>(
+    () => ({
       onCreate: ({ node }) => {
         if (!model) {
           return;
@@ -74,10 +74,10 @@ export const useGraphMonitor = (model?: ComputeGraphModel): GraphMonitor<Compute
 
           // NOTE(ZaymonFC): Based on the information we have, this is O(edges to remove * compute edges).
           const edgeIds = subgraph.edges
-            .map(({ source, target, output = DEFAULT_OUTPUT, input = DEFAULT_INPUT }) => {
-              return model.edges.find((computeEdge) => computeEdge.input === input && computeEdge.output === output)
-                ?.id;
-            })
+            .map(
+              ({ source, target, output = DEFAULT_OUTPUT, input = DEFAULT_INPUT }) =>
+                model.edges.find((computeEdge) => computeEdge.input === input && computeEdge.output === output)?.id,
+            )
             .filter(isNonNullable);
 
           model.removeNodes(nodeIds);
@@ -86,9 +86,9 @@ export const useGraphMonitor = (model?: ComputeGraphModel): GraphMonitor<Compute
           deleteTriggerObjects(model, subgraph);
         }
       },
-    };
-  }, [model]);
-};
+    }),
+    [model],
+  );
 
 export const createComputeGraph = (graph?: CanvasGraphModel<ComputeShape>) => {
   const computeGraph = ComputeGraphModel.create();

@@ -10,8 +10,6 @@ import { ClientProvider } from '@dxos/react-client';
 
 const client = new Client();
 
-const App = () => {
-  return <ClientProvider client={client}>{/* ... */}</ClientProvider>;
-};
+const App = () => <ClientProvider client={client}>{/* ... */}</ClientProvider>;
 
 createRoot(document.body).render(<App />);

@@ -175,9 +175,8 @@ export const defineFunction: {
 
 export const FunctionDefinition = {
   make: defineFunction,
-  isFunction: (value: unknown): value is FunctionDefinition.Any => {
-    return typeof value === 'object' && value !== null && Symbol.for('@dxos/functions/FunctionDefinition') in value;
-  },
+  isFunction: (value: unknown): value is FunctionDefinition.Any =>
+    typeof value === 'object' && value !== null && Symbol.for('@dxos/functions/FunctionDefinition') in value,
   serialize: (functionDef: FunctionDefinition.Any): Function.Function => {
     assertArgument(FunctionDefinition.isFunction(functionDef), 'functionDef');
     return serializeFunction(functionDef);
@@ -208,19 +207,17 @@ export const serializeFunction = (functionDef: FunctionDefinition<any, any>): Fu
   return fn;
 };
 
-export const deserializeFunction = (functionObj: Function.Function): FunctionDefinition<unknown, unknown> => {
-  return {
-    [typeId]: true,
-    // TODO(dmaretskyi): Fix key.
-    key: functionObj.key ?? functionObj.name,
-    name: functionObj.name,
-    description: functionObj.description,
-    inputSchema: !functionObj.inputSchema ? Schema.Unknown : Type.toEffectSchema(functionObj.inputSchema),
-    outputSchema: !functionObj.outputSchema ? undefined : Type.toEffectSchema(functionObj.outputSchema),
-    // TODO(dmaretskyi): This should throw error.
-    handler: () => {},
-    meta: {
-      deployedFunctionId: getUserFunctionIdInMetadata(Obj.getMeta(functionObj)),
-    },
-  };
-};
+export const deserializeFunction = (functionObj: Function.Function): FunctionDefinition<unknown, unknown> => ({
+  [typeId]: true,
+  // TODO(dmaretskyi): Fix key.
+  key: functionObj.key ?? functionObj.name,
+  name: functionObj.name,
+  description: functionObj.description,
+  inputSchema: !functionObj.inputSchema ? Schema.Unknown : Type.toEffectSchema(functionObj.inputSchema),
+  outputSchema: !functionObj.outputSchema ? undefined : Type.toEffectSchema(functionObj.outputSchema),
+  // TODO(dmaretskyi): This should throw error.
+  handler: () => {},
+  meta: {
+    deployedFunctionId: getUserFunctionIdInMetadata(Obj.getMeta(functionObj)),
+  },
+});

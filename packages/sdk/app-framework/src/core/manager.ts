@@ -23,9 +23,8 @@ import { type ActivationEvent, eventKey, getEvents, isAllOf } from './events';
 import { type Plugin, type PluginModule } from './plugin';
 
 // TODO(wittjosiah): Factor out?
-const isPromise = (value: unknown): value is Promise<unknown> => {
-  return value !== null && typeof value === 'object' && 'then' in value;
-};
+const isPromise = (value: unknown): value is Promise<unknown> =>
+  value !== null && typeof value === 'object' && 'then' in value;
 
 export type PluginManagerOptions = {
   pluginLoader: (id: string) => MaybePromise<Plugin>;

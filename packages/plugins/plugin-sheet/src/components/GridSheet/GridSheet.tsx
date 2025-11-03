@@ -296,12 +296,7 @@ export const GridSheet = () => {
     [model, handleClose, editing],
   );
 
-  const getCellContent = useCallback(
-    (index: DxGridCellIndex) => {
-      return model.getCellText(parseCellIndex(index));
-    },
-    [model],
-  );
+  const getCellContent = useCallback((index: DxGridCellIndex) => model.getCellText(parseCellIndex(index)), [model]);
 
   useUpdateFocusedCellOnThreadSelection(dxGrid);
   useSelectThreadOnCellFocus();

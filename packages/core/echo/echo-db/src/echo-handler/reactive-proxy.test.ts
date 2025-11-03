@@ -14,14 +14,10 @@ import { reactiveProxyTests } from './reactive-proxy.blueprint-test';
 // NOTE: These are tests for @dxos/echo/internal but they live here currently because the tests are shared.
 //  echo-schema cannot export the test sequence because @dxos/test is not published.
 describe('Reactive proxy', () => {
-  reactiveProxyTests((schema) => {
-    return {
-      objectsHaveId: true,
-      createObjectFn: async (props = {}) => {
-        return Obj.make(schema, props) as any;
-      },
-    };
-  });
+  reactiveProxyTests((schema) => ({
+    objectsHaveId: true,
+    createObjectFn: async (props = {}) => Obj.make(schema, props) as any,
+  }));
 });
 
 describe('Echo reactive proxy', () => {

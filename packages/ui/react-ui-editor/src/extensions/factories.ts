@@ -42,8 +42,8 @@ import { focus } from './focus';
 // Basic
 //
 
-export const filterChars = (chars: RegExp) => {
-  return EditorState.transactionFilter.of((transaction) => {
+export const filterChars = (chars: RegExp) =>
+  EditorState.transactionFilter.of((transaction) => {
     if (!transaction.docChanged) return transaction;
 
     const changes: ChangeSpec[] = [];
@@ -64,7 +64,6 @@ export const filterChars = (chars: RegExp) => {
     }
     return transaction;
   });
-};
 
 /**
  * https://codemirror.net/docs/extensions

@@ -27,12 +27,11 @@ type CreateOptions = {
   links: number;
 };
 
-export const createMessages = (count: number, space?: Space, options?: CreateOptions) => {
-  return faker.helpers
+export const createMessages = (count: number, space?: Space, options?: CreateOptions) =>
+  faker.helpers
     .multiple(() => createMessage(space, options), { count })
     .sort(sortByCreated(false))
     .reverse();
-};
 
 /**
  * Creates a message with plain and enriched content blocks, where the enriched version

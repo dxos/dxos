@@ -40,17 +40,19 @@ export const WorkflowPanel = (props: { space?: Space }) => {
     [],
   );
 
-  const tableData = useMemo(() => {
-    return graphs.map((graph) => ({
-      id: graph.id,
-      nodes: graph.graph.nodes.length,
-      edges: graph.graph.edges.length,
-      _original: graph,
-    }));
-  }, [graphs]);
+  const tableData = useMemo(
+    () =>
+      graphs.map((graph) => ({
+        id: graph.id,
+        nodes: graph.graph.nodes.length,
+        edges: graph.graph.edges.length,
+        _original: graph,
+      })),
+    [graphs],
+  );
 
-  const detailsTransform = useMemo(() => {
-    return async (data: any) => {
+  const detailsTransform = useMemo(
+    () => async (data: any) => {
       const graph = data._original;
       if (!graph) {
         return null;
@@ -68,8 +70,9 @@ export const WorkflowPanel = (props: { space?: Space }) => {
       } catch (err: any) {
         return { error: err.message, stack: err.stack };
       }
-    };
-  }, [loader, displayMode]);
+    },
+    [loader, displayMode],
+  );
 
   return (
     <PanelContainer

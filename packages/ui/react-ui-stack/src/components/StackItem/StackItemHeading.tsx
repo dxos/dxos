@@ -51,13 +51,11 @@ export const StackItemHeading = ({
   );
 };
 
-export const StackItemHeadingStickyContent = ({ children }: PropsWithChildren<{}>) => {
-  return (
-    <div role='none' className='sticky block-start-0 bg-[--sticky-bg] p-1 is-full'>
-      {children}
-    </div>
-  );
-};
+export const StackItemHeadingStickyContent = ({ children }: PropsWithChildren<{}>) => (
+  <div role='none' className='sticky block-start-0 bg-[--sticky-bg] p-1 is-full'>
+    {children}
+  </div>
+);
 
 export type StackItemHeadingLabelProps = ThemedClassName<ComponentPropsWithRef<'h1'>> & AttendableId & Related;
 

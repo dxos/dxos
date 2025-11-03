@@ -154,9 +154,10 @@ const getPropertyType = (
     return ast;
   }
 
-  const typeOrDiscriminatedUnion = unwrapAst(ast, (t) => {
-    return SchemaAST.isTypeLiteral(t) || (SchemaAST.isUnion(t) && t.types.some((t) => SchemaAST.isTypeLiteral(t)));
-  });
+  const typeOrDiscriminatedUnion = unwrapAst(
+    ast,
+    (t) => SchemaAST.isTypeLiteral(t) || (SchemaAST.isUnion(t) && t.types.some((t) => SchemaAST.isTypeLiteral(t))),
+  );
   if (typeOrDiscriminatedUnion == null) {
     return null;
   }

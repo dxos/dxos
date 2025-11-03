@@ -58,9 +58,9 @@ describe('schema-validator', () => {
       expectToThrow?: boolean;
     }) => {
       const expectation = expect(() => {
-        const nestedSchema = SchemaValidator.getPropertySchema(args.schema, args.path, (path) => {
-          return getDeep(args.target, path);
-        });
+        const nestedSchema = SchemaValidator.getPropertySchema(args.schema, args.path, (path) =>
+          getDeep(args.target, path),
+        );
         Schema.validateSync(nestedSchema)(args.valueToAssign);
       });
       if (args.expectToThrow) {

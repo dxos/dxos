@@ -13,9 +13,7 @@ import { log } from '@dxos/log';
 const main = async () => {
   log.info('background', { browser });
 
-  onMessage('config', ({ data }) => {
-    return { debug: data.debug ?? false };
-  });
+  onMessage('config', ({ data }) => ({ debug: data.debug ?? false }));
 };
 
 void main();

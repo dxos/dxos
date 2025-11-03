@@ -34,9 +34,7 @@ export class ReplicantRpcHandle<T> {
         continue;
       }
       Object.defineProperty(this, method, {
-        value: async (...args: any[]) => {
-          return rpcCodec.decode(await this._rpc.call(method, rpcCodec.encode(args)));
-        },
+        value: async (...args: any[]) => rpcCodec.decode(await this._rpc.call(method, rpcCodec.encode(args))),
       });
     }
   }

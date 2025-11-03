@@ -65,8 +65,9 @@ export type WithPluginManagerInitializer<Args = void> =
  * Wraps a story with a plugin manager.
  * NOTE: This builds up and tears down the plugin manager on every render.
  */
-export const withPluginManager = <Args,>(init: WithPluginManagerInitializer<Args> = {}): Decorator => {
-  return (Story, context) => {
+export const withPluginManager =
+  <Args,>(init: WithPluginManagerInitializer<Args> = {}): Decorator =>
+  (Story, context) => {
     const options = typeof init === 'function' ? init(context as any) : init;
     const pluginManager = useMemo(() => setupPluginManager(options), [init]);
 
@@ -97,7 +98,6 @@ export const withPluginManager = <Args,>(init: WithPluginManagerInitializer<Args
 
     return <App />;
   };
-};
 
 const storyMeta = {
   id: 'dxos.org/app-framework/story',

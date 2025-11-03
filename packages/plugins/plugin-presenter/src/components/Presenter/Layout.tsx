@@ -17,17 +17,15 @@ export type LayoutProps = ThemedClassName<
   }>
 >;
 
-export const Layout = ({ children, classNames, topLeft, topRight, bottomLeft, bottomRight }: LayoutProps) => {
-  return (
-    <div className={mx('flex grow relative overflow-hidden bg-attention', classNames)}>
-      <div className={mx('flex flex-col grow overflow-hidden')}>{children}</div>
+export const Layout = ({ children, classNames, topLeft, topRight, bottomLeft, bottomRight }: LayoutProps) => (
+  <div className={mx('flex grow relative overflow-hidden bg-attention', classNames)}>
+    <div className={mx('flex flex-col grow overflow-hidden')}>{children}</div>
 
-      <div className='z-[200]'>
-        <div className='absolute top-4 left-4'>{topLeft}</div>
-        <div className='absolute top-4 right-4'>{topRight}</div>
-        <div className='absolute bottom-4 left-4'>{bottomLeft}</div>
-        <div className='absolute bottom-4 right-4'>{bottomRight}</div>
-      </div>
+    <div className='z-[200]'>
+      <div className='absolute top-4 left-4'>{topLeft}</div>
+      <div className='absolute top-4 right-4'>{topRight}</div>
+      <div className='absolute bottom-4 left-4'>{bottomLeft}</div>
+      <div className='absolute bottom-4 right-4'>{bottomRight}</div>
     </div>
-  );
-};
+  </div>
+);

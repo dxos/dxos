@@ -157,9 +157,7 @@ const convertLevel = (level: LogLevel): SeverityLevel => {
   }
 };
 
-const never = (_: never) => {
-  return new Error('unhandled value');
-};
+const never = (_: never) => new Error('unhandled value');
 
 const getRelativeFilename = (filename: string) => {
   // TODO(burdon): Hack uses "packages" as an anchor (pre-parse NX?)

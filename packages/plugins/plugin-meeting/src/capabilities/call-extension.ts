@@ -111,7 +111,7 @@ const _createEntityExtractionEnricher = ({ contextTypes, space }: EntityExtracti
 };
 
 // TODO(dmaretskyi): Use Type.Any
-const processContextObject = async (object: Obj.Any): Promise<any> => {
+const processContextObject = async (object: Obj.Any): Promise<any> =>
   // TODO(dmaretskyi): Documents need special processing is the content is behind a ref.
   // TODO(dmaretskyi): Think about a way to handle this serialization with a decorator.
   // if (Obj.instanceOf(DocumentType, object)) {
@@ -121,7 +121,5 @@ const processContextObject = async (object: Obj.Any): Promise<any> => {
   //   };
   // }
 
-  return object;
-};
-
+  object;
 const ENTITY_EXTRACTOR_TIMEOUT = 25_000;

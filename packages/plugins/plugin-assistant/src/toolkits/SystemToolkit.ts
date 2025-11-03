@@ -198,16 +198,15 @@ export namespace SystemToolkit {
         }).pipe(Effect.provide(DatabaseService.layer(space.db)));
       },
 
-      'schema-add': ({ name, typename, jsonSchema }) => {
-        return Effect.gen(function* () {
+      'schema-add': ({ name, typename, jsonSchema }) =>
+        Effect.gen(function* () {
           const { dispatch } = context.getCapability(Capabilities.IntentDispatcher);
           const space = getActiveSpace(context);
           invariant(space, 'No active space');
 
           const schema = Type.toEffectSchema(jsonSchema).pipe(Type.Obj({ typename, version: '0.1.0' }));
           yield* dispatch(createIntent(SpaceAction.AddSchema, { space, name, typename, schema }));
-        }).pipe(Effect.orDie);
-      },
+        }).pipe(Effect.orDie),
 
       'object-create': ({ typename, data }) => {
         const { dispatch } = context.getCapability(Capabilities.IntentDispatcher);

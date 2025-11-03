@@ -14,6 +14,4 @@ export type ComputeContextType = {
 
 export const ComputeContext = createContext<ComputeContextType | null>(null);
 
-export const useComputeContext = () => {
-  return useContext(ComputeContext) ?? raise(new Error('Missing ComputeContext'));
-};
+export const useComputeContext = () => useContext(ComputeContext) ?? raise(new Error('Missing ComputeContext'));

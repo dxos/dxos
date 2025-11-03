@@ -28,8 +28,8 @@ const getNextSize = (
   side: Side,
   minSize: number,
   maxSize: number | undefined,
-) => {
-  return Math.min(
+) =>
+  Math.min(
     maxSize ?? Infinity,
     Math.max(
       minSize,
@@ -37,7 +37,6 @@ const getNextSize = (
         ((location.current.input[client] - location.initial.input[client]) / REM) * (side.endsWith('end') ? 1 : -1),
     ),
   );
-};
 
 const RESIZE_SUBJECT = 'data-dx-resize-subject';
 const RESIZE_SUBJECT_DRAGGING = 'data-dx-resizing';
@@ -168,27 +167,25 @@ export const ResizeHandle = ({
   );
 };
 
-const DragHandleSignifier = ({ side }: Pick<ResizeHandleProps, 'side'>) => {
-  return (
-    <svg
-      xmlns='http://www.w3.org/2000/svg'
-      viewBox='0 0 256 256'
-      fill='currentColor'
-      className={mx(
-        'shrink-0 bs-4 is-4 text-unAccent',
-        side === 'block-end'
-          ? 'rotate-90'
-          : side === 'block-start'
-            ? '-rotate-90'
-            : side === 'inline-start' && 'rotate-180',
-      )}
-    >
-      {/* two pips: <path d='M256,120c-8.8,0-16-7.2-16-16v-56c0-8.8,7.2-16,16-16v88Z' />
+const DragHandleSignifier = ({ side }: Pick<ResizeHandleProps, 'side'>) => (
+  <svg
+    xmlns='http://www.w3.org/2000/svg'
+    viewBox='0 0 256 256'
+    fill='currentColor'
+    className={mx(
+      'shrink-0 bs-4 is-4 text-unAccent',
+      side === 'block-end'
+        ? 'rotate-90'
+        : side === 'block-start'
+          ? '-rotate-90'
+          : side === 'inline-start' && 'rotate-180',
+    )}
+  >
+    {/* two pips: <path d='M256,120c-8.8,0-16-7.2-16-16v-56c0-8.8,7.2-16,16-16v88Z' />
       <path d='M256,232c-8.8,0-16-7.2-16-16v-56c0-8.8,7.2-16,16-16v88Z' /> */}
-      <path d='M256,64c-8.8,0-16-7.2-16-16s7.2-16,16-16v32Z' />
-      <path d='M256,120c-8.8,0-16-7.2-16-16s7.2-16,16-16v32Z' />
-      <path d='M256,176c-8.8,0-16-7.2-16-16s7.2-16,16-16v32Z' />
-      <path d='M256,232c-8.8,0-16-7.2-16-16s7.2-16,16-16v32Z' />
-    </svg>
-  );
-};
+    <path d='M256,64c-8.8,0-16-7.2-16-16s7.2-16,16-16v32Z' />
+    <path d='M256,120c-8.8,0-16-7.2-16-16s7.2-16,16-16v32Z' />
+    <path d='M256,176c-8.8,0-16-7.2-16-16s7.2-16,16-16v32Z' />
+    <path d='M256,232c-8.8,0-16-7.2-16-16s7.2-16,16-16v32Z' />
+  </svg>
+);

@@ -48,16 +48,16 @@ export const createSetDispatch = <T extends {}>({ handlers }: SetCallbacks<T>) =
       handlers,
     },
     {
-      get: (target: Obj, prop) => {
-        return (...args: any[]) => {
+      get:
+        (target: Obj, prop) =>
+        (...args: any[]) => {
           handlers.forEach((handler: Obj) => {
             const method = handler[prop];
             if (method) {
               method.apply(handler, args);
             }
           });
-        };
-      },
+        },
     },
   );
 };

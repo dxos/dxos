@@ -14,8 +14,8 @@ export type ListenerOptions = {
   onChange?: (event: { id: string; text: string }) => void;
 };
 
-export const listener = ({ onFocus, onChange }: ListenerOptions): Extension => {
-  return [
+export const listener = ({ onFocus, onChange }: ListenerOptions): Extension =>
+  [
     onFocus &&
       EditorView.focusChangeEffect.of((state, focusing) => {
         onFocus({ id: state.facet(documentId), focusing });
@@ -29,4 +29,3 @@ export const listener = ({ onFocus, onChange }: ListenerOptions): Extension => {
         }
       }),
   ].filter(isNonNullable);
-};

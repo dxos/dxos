@@ -23,9 +23,8 @@ type FormContextValue<T extends BaseObject> = FormHandler<T>;
 
 const FormContext = createContext<FormContextValue<any> | undefined>(undefined);
 
-export const useFormContext = <T extends BaseObject>(): FormContextValue<T> => {
-  return useContext(FormContext) ?? raise(new Error('Missing FormContext'));
-};
+export const useFormContext = <T extends BaseObject>(): FormContextValue<T> =>
+  useContext(FormContext) ?? raise(new Error('Missing FormContext'));
 
 export const useFormValues = (path: (string | number)[] = []): any => {
   const { values: formValues } = useFormContext();

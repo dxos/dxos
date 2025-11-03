@@ -44,9 +44,8 @@ export const registerSignalsRuntime = () => {
 export const scheduledEffect = <T extends Record<string, any> = Record<string, any>>(
   subscribeTo: () => T,
   exec: (data: T) => void,
-) => {
-  return effect(() => {
+) =>
+  effect(() => {
     const data = subscribeTo();
     setTimeout(() => exec(data));
   });
-};

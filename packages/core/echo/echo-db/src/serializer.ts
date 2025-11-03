@@ -40,9 +40,7 @@ export class Serializer {
     }
 
     const data = {
-      objects: loadedObjects.filter(isNonNullable).map((object) => {
-        return this.exportObject(object as any);
-      }),
+      objects: loadedObjects.filter(isNonNullable).map((object) => this.exportObject(object as any)),
 
       version: Serializer.version,
       timestamp: new Date().toISOString(),

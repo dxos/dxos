@@ -14,9 +14,7 @@ import { getDeep } from '../util';
  * Snap to grid.
  */
 export const handleSnap = async (sketch: Diagram.Diagram) => {
-  const snap = (value: number, tolerance = 40) => {
-    return Math.round(value / tolerance) * tolerance;
-  };
+  const snap = (value: number, tolerance = 40) => Math.round(value / tolerance) * tolerance;
 
   // TODO(burdon): Use context to access document.
   const accessor = createDocAccessor(sketch.canvas.target!, ['content']);

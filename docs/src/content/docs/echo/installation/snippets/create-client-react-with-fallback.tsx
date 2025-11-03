@@ -12,12 +12,10 @@ const client = new Client();
 
 const Fallback = () => <div>Loading...</div>;
 
-const App = () => {
-  return (
-    <ClientProvider client={client} fallback={Fallback}>
-      {/* ... */}
-    </ClientProvider>
-  );
-};
+const App = () => (
+  <ClientProvider client={client} fallback={Fallback}>
+    {/* ... */}
+  </ClientProvider>
+);
 
 createRoot(document.body).render(<App />);

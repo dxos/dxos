@@ -174,9 +174,7 @@ export const sheetExtension = ({ debug, functions = [] }: SheetExtensionOptions)
     keymap.of([
       {
         key: 'Tab',
-        run: (view) => {
-          return completionStatus(view.state) === 'active' ? acceptCompletion(view) : startCompletion(view);
-        },
+        run: (view) => (completionStatus(view.state) === 'active' ? acceptCompletion(view) : startCompletion(view)),
       },
     ]),
 

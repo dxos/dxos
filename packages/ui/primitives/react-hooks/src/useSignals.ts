@@ -12,16 +12,10 @@ import { type DependencyList, useEffect, useMemo } from 'react';
 export const useSignalsEffect = (cb: () => void | (() => void), deps?: DependencyList) => {
   const callback = useRef(cb);
   callback.current = cb;
-  useEffect(() => {
-    return effect(() => {
-      return callback.current();
-    });
-  }, deps ?? []);
+  useEffect(() => effect(() => callback.current()), deps ?? []);
 };
 
 /**
  * Like `useMemo` but also tracks signals inside of the callback.
  */
-export const useSignalsMemo = <T>(cb: () => T, deps?: DependencyList) => {
-  return useMemo(() => computed(cb), deps ?? []).value;
-};
+export const useSignalsMemo = <T>(cb: () => T, deps?: DependencyList) => useMemo(() => computed(cb), deps ?? []).value;

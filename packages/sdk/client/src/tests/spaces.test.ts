@@ -539,9 +539,7 @@ describe('Spaces', () => {
     return createInitializedClientsWithContext(context, count, options);
   };
 
-  const createSharedSpace = async (host: Client, guest: Client) => {
-    return inviteMember(await host.spaces.create(), guest);
-  };
+  const createSharedSpace = async (host: Client, guest: Client) => inviteMember(await host.spaces.create(), guest);
 
   const inviteMember = async (hostSpace: Space, guest: Client) => {
     await Promise.all(performInvitation({ host: hostSpace, guest: guest.spaces }));
@@ -549,9 +547,8 @@ describe('Spaces', () => {
     return [hostSpace, guestSpace];
   };
 
-  const getDocumentText = (space: Space, documentId: string): string => {
-    return (space.db.getObjectById(documentId) as DocumentType).content.target!.content;
-  };
+  const getDocumentText = (space: Space, documentId: string): string =>
+    (space.db.getObjectById(documentId) as DocumentType).content.target!.content;
 
   const registerTypes = (client: Client) => {
     client.addTypes([DocumentType, TextV0Type]);
@@ -565,9 +562,7 @@ describe('Spaces', () => {
     });
   };
 
-  const createObject = <T extends {}>(props: T): Live<Expando> => {
-    return Obj.make(Type.Expando, props);
-  };
+  const createObject = <T extends {}>(props: T): Live<Expando> => Obj.make(Type.Expando, props);
 
   const waitForObject = async (space: Space, object: HasId) => {
     await expect.poll(() => space.db.getObjectById(object.id)).not.toEqual(undefined);

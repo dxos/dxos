@@ -68,15 +68,12 @@ export class QueryServiceImpl extends Resource implements QueryService {
     trace.diagnostic({
       id: 'active-queries',
       name: 'Active Queries',
-      fetch: () => {
-        return Array.from(this._queries).map((query) => {
-          return {
-            query: JSON.stringify(query.executor.query),
-            plan: JSON.stringify(query.executor.plan),
-            trace: JSON.stringify(query.executor.trace),
-          };
-        });
-      },
+      fetch: () =>
+        Array.from(this._queries).map((query) => ({
+          query: JSON.stringify(query.executor.query),
+          plan: JSON.stringify(query.executor.plan),
+          trace: JSON.stringify(query.executor.trace),
+        })),
     });
   }
 
@@ -230,13 +227,11 @@ const createDocumentsIterator = (automergeHost: AutomergeHost) =>
       const doc = handle.doc()!;
       const spaceKey = DatabaseDirectory.getSpaceKey(doc) ?? undefined;
       if (doc.objects) {
-        yield Object.entries(doc.objects as { [key: string]: any }).map(([objectId, object]) => {
-          return {
-            id: objectPointerCodec.encode({ documentId: handle.documentId, objectId, spaceKey }),
-            object,
-            heads: getHeads(doc),
-          };
-        });
+        yield Object.entries(doc.objects as { [key: string]: any }).map(([objectId, object]) => ({
+          id: objectPointerCodec.encode({ documentId: handle.documentId, objectId, spaceKey }),
+          object,
+          heads: getHeads(doc),
+        }));
       }
 
       if (doc.links) {

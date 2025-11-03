@@ -9,13 +9,11 @@ import {
   type CollectDiagnosticsBroadcastSender,
 } from './diagnostics-collector';
 
-export const createCollectDiagnosticsBroadcastSender = (): CollectDiagnosticsBroadcastSender => {
-  return { broadcastDiagnosticsRequest: async () => undefined };
-};
+export const createCollectDiagnosticsBroadcastSender = (): CollectDiagnosticsBroadcastSender => ({
+  broadcastDiagnosticsRequest: async () => undefined,
+});
 
-export const createCollectDiagnosticsBroadcastHandler = (_: SystemService): CollectDiagnosticsBroadcastHandler => {
-  return {
-    start: () => {},
-    stop: () => {},
-  };
-};
+export const createCollectDiagnosticsBroadcastHandler = (_: SystemService): CollectDiagnosticsBroadcastHandler => ({
+  start: () => {},
+  stop: () => {},
+});

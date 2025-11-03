@@ -45,9 +45,8 @@ export const updateFieldsInSchema = (
 export const removeFieldsFromSchema = (
   schema: Schema.Schema.AnyNoContext,
   fieldNames: string[],
-): Schema.Schema.AnyNoContext => {
-  return Schema.make(SchemaAST.omit(schema.ast, fieldNames)).annotations(schema.ast.annotations);
-};
+): Schema.Schema.AnyNoContext =>
+  Schema.make(SchemaAST.omit(schema.ast, fieldNames)).annotations(schema.ast.annotations);
 
 export const updateFieldNameInSchema = (
   schema: Schema.Schema.AnyNoContext,

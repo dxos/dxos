@@ -154,8 +154,8 @@ export class AiSession {
 
         // Execute the tool calls.
         // TODO(burdon): Retry errors? Write result when each completes individually?
-        const toolResults = yield* Effect.forEach(toolCalls, (toolCall) => {
-          return callTool(toolkit, toolCall).pipe(
+        const toolResults = yield* Effect.forEach(toolCalls, (toolCall) =>
+          callTool(toolkit, toolCall).pipe(
             Effect.provide(
               TracingService.layerSubframe((context) => ({
                 ...context,
@@ -163,8 +163,8 @@ export class AiSession {
                 toolCallId: toolCall.toolCallId,
               })),
             ),
-          );
-        });
+          ),
+        );
 
         // Add to queue and continue loop.
         // TODO(wittjosiah): Sometimes tool error results are added to the queue before the tool agent statuses.

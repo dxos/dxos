@@ -57,15 +57,13 @@ export const useWheel = (options: WheelOptions = defaultOptions) => {
               return getZoomTransform({ scale, offset, newScale, pos });
             });
           } else {
-            setProjection(({ scale, offset: { x, y } }) => {
-              return {
-                scale,
-                offset: {
-                  x: x - ev.deltaX,
-                  y: y - ev.deltaY,
-                },
-              };
-            });
+            setProjection(({ scale, offset: { x, y } }) => ({
+              scale,
+              offset: {
+                x: x - ev.deltaX,
+                y: y - ev.deltaY,
+              },
+            }));
           }
         },
       },

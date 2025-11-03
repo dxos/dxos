@@ -15,9 +15,7 @@ export type ToolbarProps = ThemedClassName<{
 
 export const Toolbar = ({ classNames, onAction }: ToolbarProps) => {
   const [layout, setLayout] = useState<LayoutKind>(LAYOUTS[0]);
-  const handleAction: ActionHandler = async (action) => {
-    return onAction?.(action) ?? false;
-  };
+  const handleAction: ActionHandler = async (action) => onAction?.(action) ?? false;
 
   // TODO(burdon): Translations.
   return (

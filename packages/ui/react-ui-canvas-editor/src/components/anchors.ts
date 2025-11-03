@@ -56,8 +56,8 @@ export const resizeCursor: Record<string, string> = {
 export const createAnchorMap = (
   { id, size: { width, height } }: Polygon,
   anchors: Record<string, Point> = defaultAnchors,
-): Record<string, Anchor> => {
-  return Object.entries(anchors).reduce(
+): Record<string, Anchor> =>
+  Object.entries(anchors).reduce(
     (map, [anchor, { x, y }]) => {
       map[anchor] = {
         id: anchor,
@@ -69,7 +69,6 @@ export const createAnchorMap = (
     },
     {} as Record<string, Anchor>,
   );
-};
 
 export const createAnchors = ({
   shape,

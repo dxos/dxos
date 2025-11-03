@@ -11,9 +11,7 @@ import { type AnyLiveObject, getObjectCore } from '../echo-handler';
  * @param obj
  */
 // TODO(burdon): Rename/review SDK.
-export const loadObject = <T extends BaseObject>(obj: T): T => {
-  return getObjectCore(obj).getDecoded(['data']) as any;
-};
+export const loadObject = <T extends BaseObject>(obj: T): T => getObjectCore(obj).getDecoded(['data']) as any;
 
 /**
  * EXPERIMENTAL - the API is subject to change.

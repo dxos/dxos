@@ -60,11 +60,8 @@ export type MapSpacesOptions = {
   truncateKeys?: boolean;
 };
 
-export const mapSpaces = async (
-  spaces: Space[],
-  options: MapSpacesOptions = { verbose: false, truncateKeys: false },
-) => {
-  return await Promise.all(
+export const mapSpaces = async (spaces: Space[], options: MapSpacesOptions = { verbose: false, truncateKeys: false }) =>
+  await Promise.all(
     spaces.map(async (space) => {
       // TODO(burdon): Factor out.
       // TODO(burdon): Agent needs to restart before `ready` is available.
@@ -95,7 +92,6 @@ export const mapSpaces = async (
       };
     }),
   );
-};
 
 export const printSpaces = async (spaces: Space[], flags: MapSpacesOptions & TableOptions = {}) => {
   ux.stdout(
@@ -151,13 +147,12 @@ export const printSpaces = async (spaces: Space[], flags: MapSpacesOptions & Tab
 //
 
 // TODO(burdon): Export proto type.
-export const mapMembers = (members: SpaceMember[], truncateKeys = false) => {
-  return members.map((member) => ({
+export const mapMembers = (members: SpaceMember[], truncateKeys = false) =>
+  members.map((member) => ({
     key: maybeTruncateKey(member.identity.identityKey, truncateKeys),
     name: member.identity.profile?.displayName,
     presence: member.presence === SpaceMember.PresenceState.ONLINE ? 'Online' : 'Offline',
   }));
-};
 
 export const printMembers = (members: SpaceMember[], flags = {}) => {
   ux.stdout(

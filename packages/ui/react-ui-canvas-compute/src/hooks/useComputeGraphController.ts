@@ -11,13 +11,13 @@ import { type ComputeGraphController } from '../graph';
 import { type ComputeShape } from '../shapes';
 
 // TODO(burdon): Move to async/context?
-const combine = (...cbs: CleanupFn[]) => {
-  return () => {
+const combine =
+  (...cbs: CleanupFn[]) =>
+  () => {
     for (const cb of cbs) {
       cb();
     }
   };
-};
 
 export type UseComputeGraphControllerOptions = Pick<EditorRootProps<ComputeShape>, 'graph'> & {
   controller: ComputeGraphController | null;

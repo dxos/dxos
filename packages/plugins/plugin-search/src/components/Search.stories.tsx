@@ -34,13 +34,11 @@ const DefaultStory = ({ objects, ...props }: StoryProps) => {
   );
 };
 
-const withSearchContext = (): Decorator => {
-  return (Story) => (
-    <SearchContextProvider>
-      <Story />
-    </SearchContextProvider>
-  );
-};
+const withSearchContext = (): Decorator => (Story) => (
+  <SearchContextProvider>
+    <Story />
+  </SearchContextProvider>
+);
 
 export const Default: Story = {
   args: {

@@ -31,16 +31,11 @@ export type ButtonStyleProps = Partial<{
   variant: 'default' | 'primary' | 'ghost' | 'outline';
 }>;
 
-export const buttonRoot: ComponentFunction<ButtonStyleProps> = (_props, ...etc) => {
-  return mx('dx-button dx-focus-ring group max-w-full [&>span]:truncate', ...etc);
-};
+export const buttonRoot: ComponentFunction<ButtonStyleProps> = (_props, ...etc) =>
+  mx('dx-button dx-focus-ring group max-w-full [&>span]:truncate', ...etc);
 
-export const buttonGroup: ComponentFunction<{ elevation?: Elevation }> = (props, ...etc) => {
-  return mx(
-    'inline-flex rounded-sm [&>:first-child]:rounded-is-sm [&>:last-child]:rounded-ie-sm [&>button]:relative',
-    ...etc,
-  );
-};
+export const buttonGroup: ComponentFunction<{ elevation?: Elevation }> = (props, ...etc) =>
+  mx('inline-flex rounded-sm [&>:first-child]:rounded-is-sm [&>:last-child]:rounded-ie-sm [&>button]:relative', ...etc);
 
 export const buttonTheme: Theme<ButtonStyleProps> = {
   root: buttonRoot,

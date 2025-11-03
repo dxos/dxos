@@ -481,12 +481,11 @@ const getBranchName = (options: { parentMessage?: ObjectId; toolCallId?: string 
   }
 };
 
-const getMessageBranch = (message: DataType.Message) => {
-  return getBranchName({
+const getMessageBranch = (message: DataType.Message) =>
+  getBranchName({
     parentMessage: message.parentMessage,
     toolCallId: message.properties?.[MESSAGE_PROPERTY_TOOL_CALL_ID],
   });
-};
 
 const getParentId = (message: DataType.Message) => {
   if (message.parentMessage && message.properties?.[MESSAGE_PROPERTY_TOOL_CALL_ID]) {
@@ -504,6 +503,4 @@ const stringifyRef = (ref: Ref.Any) => {
   return ref.dxn.asEchoDXN()?.echoId ?? ref.dxn.asQueueDXN()?.objectId ?? '';
 };
 
-const stringifyObject = (obj: Obj.Any) => {
-  return Obj.getLabel(obj) ?? Obj.getTypename(obj) ?? obj.id;
-};
+const stringifyObject = (obj: Obj.Any) => Obj.getLabel(obj) ?? Obj.getTypename(obj) ?? obj.id;

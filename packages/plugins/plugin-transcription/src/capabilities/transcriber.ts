@@ -36,9 +36,9 @@ export default (context: PluginContext) => {
     onSegments,
     transcriberConfig,
     recorderConfig,
-  }) => {
+  }) =>
     // Initialize audio transcription.
-    return new Transcriber({
+    new Transcriber({
       config: {
         transcribeAfterChunksAmount: TRANSCRIBE_AFTER_CHUNKS_AMOUNT,
         prefixBufferChunksAmount: PREFIXED_CHUNKS_AMOUNT,
@@ -53,8 +53,6 @@ export default (context: PluginContext) => {
       }),
       onSegments,
     });
-  };
-
   const getTranscriptionManager: TranscriptionCapabilities.GetTranscriptionManager = ({ messageEnricher }) => {
     const client = context.getCapability(ClientCapabilities.Client);
     const transcriptionManager = new TranscriptionManager({

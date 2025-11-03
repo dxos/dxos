@@ -84,9 +84,7 @@ export const ObjectId: ObjectIdClass = class extends ObjectIdSchema {
  */
 const makeTestPRNG = (): PRNG => {
   const rng = new SimplePRNG();
-  return () => {
-    return rng.next();
-  };
+  return () => rng.next();
 };
 
 /**

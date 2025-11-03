@@ -40,12 +40,10 @@ export class QueueService extends Context.Tag('@dxos/functions/QueueService')<
     queue: undefined,
   });
 
-  static make = (queues: QueueFactory, queue?: Queue): Context.Tag.Service<QueueService> => {
-    return {
-      queues,
-      queue,
-    };
-  };
+  static make = (queues: QueueFactory, queue?: Queue): Context.Tag.Service<QueueService> => ({
+    queues,
+    queue,
+  });
 
   static layer = (queues: QueueFactory, queue?: Queue): Layer.Layer<QueueService> =>
     Layer.succeed(QueueService, QueueService.make(queues, queue));

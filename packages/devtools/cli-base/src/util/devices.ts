@@ -9,8 +9,8 @@ import { Device, DeviceKind, DeviceType } from '@dxos/client/halo';
 import { maybeTruncateKey } from './keys';
 import { table } from './table';
 
-export const mapDevices = (devices: Device[], truncateKeys = false) => {
-  return devices.map((device) => ({
+export const mapDevices = (devices: Device[], truncateKeys = false) =>
+  devices.map((device) => ({
     label: device.profile?.label,
     type: device.profile?.type ? DeviceType[device.profile?.type] : 'UNKNOWN',
     key: maybeTruncateKey(device.deviceKey, truncateKeys),
@@ -22,7 +22,6 @@ export const mapDevices = (devices: Device[], truncateKeys = false) => {
     osVersion: device.profile?.osVersion,
     presence: device?.kind === DeviceKind.CURRENT ? 'THIS DEVICE' : Device.PresenceState[device.presence],
   }));
-};
 
 export const printDevices = (devices: Device[], flags = {}) => {
   ux.stdout(

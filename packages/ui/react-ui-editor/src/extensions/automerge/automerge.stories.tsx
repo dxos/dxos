@@ -129,21 +129,19 @@ export const Default: Story = {
 };
 
 export const WithEcho: Story = {
-  render: () => {
-    return (
-      <ClientRepeater
-        count={2}
-        component={EchoStory}
-        createSpace
-        onCreateSpace={async ({ space }) => {
-          space.db.add(
-            Obj.make(Type.Expando, {
-              type: 'test',
-              content: Ref.make(Obj.make(Type.Expando, { content: initialContent })),
-            }),
-          );
-        }}
-      />
-    );
-  },
+  render: () => (
+    <ClientRepeater
+      count={2}
+      component={EchoStory}
+      createSpace
+      onCreateSpace={async ({ space }) => {
+        space.db.add(
+          Obj.make(Type.Expando, {
+            type: 'test',
+            content: Ref.make(Obj.make(Type.Expando, { content: initialContent })),
+          }),
+        );
+      }}
+    />
+  ),
 };

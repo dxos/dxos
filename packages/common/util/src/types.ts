@@ -60,9 +60,8 @@ export const doAsync = async (fn: () => Promise<void>) => fn();
 /**
  * Get value from a provider.
  */
-export const getProviderValue = <T, V = void>(provider: MaybeProvider<T, V>, arg?: V): T => {
-  return typeof provider === 'function' ? (provider as Function)(arg) : provider;
-};
+export const getProviderValue = <T, V = void>(provider: MaybeProvider<T, V>, arg?: V): T =>
+  typeof provider === 'function' ? (provider as Function)(arg) : provider;
 
 /**
  * Get value from a provider, which may be async.
@@ -70,9 +69,7 @@ export const getProviderValue = <T, V = void>(provider: MaybeProvider<T, V>, arg
 export const getAsyncProviderValue = <T, V = void>(
   provider: MaybeProvider<MaybePromise<T>, V>,
   arg?: V,
-): MaybePromise<T> => {
-  return getProviderValue(provider, arg);
-};
+): MaybePromise<T> => getProviderValue(provider, arg);
 
 /**
  * Remove keys with undefined values.

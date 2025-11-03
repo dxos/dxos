@@ -139,22 +139,18 @@ const updateRole = async (
   }
 };
 
-const findMember = (space: Space, client: Client) => {
-  return space.members.get().find((m) => m.identity.identityKey.equals(client.halo.identity.get()!.identityKey));
-};
+const findMember = (space: Space, client: Client) =>
+  space.members.get().find((m) => m.identity.identityKey.equals(client.halo.identity.get()!.identityKey));
 
-const waitHasRole = async (spaceOrMany: Space | Space[], client: Client, role: HaloSpaceMember.Role) => {
-  return waitForMemberState(spaceOrMany, client, (m) => m?.role === role);
-};
+const waitHasRole = async (spaceOrMany: Space | Space[], client: Client, role: HaloSpaceMember.Role) =>
+  waitForMemberState(spaceOrMany, client, (m) => m?.role === role);
 
 const waitHasStatus = async (
   spaceOrMany: Space | Space[],
   client: Client,
   status: SpaceMember.PresenceState,
   options?: { timeout: number },
-) => {
-  return waitForMemberState(spaceOrMany, client, (m) => m?.presence === status, options);
-};
+) => waitForMemberState(spaceOrMany, client, (m) => m?.presence === status, options);
 
 const waitForMemberState = async (
   spaceOrMany: Space | Space[],
@@ -171,6 +167,4 @@ const waitForMemberState = async (
   }
 };
 
-const getClientSpace = (client: Client, space: Space) => {
-  return client.spaces.get().find((s) => s.key.equals(space.key))!;
-};
+const getClientSpace = (client: Client, space: Space) => client.spaces.get().find((s) => s.key.equals(space.key))!;

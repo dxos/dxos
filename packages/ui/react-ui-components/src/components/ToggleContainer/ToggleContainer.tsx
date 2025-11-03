@@ -8,9 +8,9 @@ import React, { type JSX, type PropsWithChildren, useEffect, useState } from 're
 import { Icon, type ThemedClassName, useControlledState } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
-const IconBlock = ({ children }: PropsWithChildren) => {
-  return <div className='grid bs-[24px] is-[24px] place-items-center'>{children}</div>;
-};
+const IconBlock = ({ children }: PropsWithChildren) => (
+  <div className='grid bs-[24px] is-[24px] place-items-center'>{children}</div>
+);
 
 //
 // Context

@@ -24,9 +24,9 @@ const SWARM_PEEK_INTERVAL = 1_000;
 
 type LobbyRootProps = PropsWithChildren<ThemedClassName>;
 
-const LobbyRoot: FC<LobbyRootProps> = ({ children }) => {
-  return <div className='relative flex flex-col grow overflow-hidden group'>{children}</div>;
-};
+const LobbyRoot: FC<LobbyRootProps> = ({ children }) => (
+  <div className='relative flex flex-col grow overflow-hidden group'>{children}</div>
+);
 
 LobbyRoot.displayName = 'LobbyRoot';
 

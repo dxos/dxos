@@ -90,14 +90,12 @@ const Grid = () => {
   );
 };
 
-const GraphStory = (props: EditorProps) => {
-  return (
-    <div className='grid grid-rows-2'>
-      <DefaultStory {...props} />
-      <Grid />
-    </div>
-  );
-};
+const GraphStory = (props: EditorProps) => (
+  <div className='grid grid-rows-2'>
+    <DefaultStory {...props} />
+    <Grid />
+  </div>
+);
 
 const meta = {
   title: 'plugins/plugin-sheet/extensions',

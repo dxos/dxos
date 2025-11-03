@@ -24,9 +24,9 @@ type TreeRootProps = ListProps;
 
 type TreeItemProps = ListItemRootProps;
 
-const TreeRoot = forwardRef<HTMLOListElement, TreeRootProps>((props, forwardedRef) => {
-  return <List {...props} ref={forwardedRef} />;
-});
+const TreeRoot = forwardRef<HTMLOListElement, TreeRootProps>((props, forwardedRef) => (
+  <List {...props} ref={forwardedRef} />
+));
 
 type TreeBranchProps = TreeRootProps;
 
@@ -37,9 +37,9 @@ const TreeBranch = forwardRef<HTMLOListElement, ListScopedProps<TreeBranchProps>
   },
 );
 
-const TreeItemRoot = forwardRef<HTMLLIElement, ListItemRootProps>((props, forwardedRef) => {
-  return <ListItem.Root role='treeitem' {...props} ref={forwardedRef} />;
-});
+const TreeItemRoot = forwardRef<HTMLLIElement, ListItemRootProps>((props, forwardedRef) => (
+  <ListItem.Root role='treeitem' {...props} ref={forwardedRef} />
+));
 
 type TreeItemHeadingProps = ListItemHeadingProps;
 

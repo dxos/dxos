@@ -131,41 +131,37 @@ export class EchoHost extends Resource {
     trace.diagnostic<EchoStatsDiagnostic>({
       id: 'echo-stats',
       name: 'Echo Stats',
-      fetch: async () => {
-        return {
-          dataStats: this._echoDataMonitor.computeStats(),
-          loadedDocsCount: this._automergeHost.loadedDocsCount,
-        };
-      },
+      fetch: async () => ({
+        dataStats: this._echoDataMonitor.computeStats(),
+        loadedDocsCount: this._automergeHost.loadedDocsCount,
+      }),
     });
 
     trace.diagnostic({
       id: 'database-roots',
       name: 'Database Roots',
-      fetch: async () => {
-        return Array.from(this._spaceStateManager.roots.values()).map((root) => ({
+      fetch: async () =>
+        Array.from(this._spaceStateManager.roots.values()).map((root) => ({
           url: root.url,
           isLoaded: root.isLoaded,
           spaceKey: root.getSpaceKey(),
           inlineObjects: root.getInlineObjectCount(),
           linkedObjects: root.getLinkedObjectCount(),
-        }));
-      },
+        })),
     });
 
     trace.diagnostic({
       id: 'database-root-metrics',
       name: 'Database Roots (with metrics)',
-      fetch: async () => {
-        return Array.from(this._spaceStateManager.roots.values()).map((root) => ({
+      fetch: async () =>
+        Array.from(this._spaceStateManager.roots.values()).map((root) => ({
           url: root.url,
           isLoaded: root.isLoaded,
           spaceKey: root.getSpaceKey(),
           inlineObjects: root.getInlineObjectCount(),
           linkedObjects: root.getLinkedObjectCount(),
           ...(root.measureMetrics() ?? {}),
-        }));
-      },
+        })),
     });
   }
 

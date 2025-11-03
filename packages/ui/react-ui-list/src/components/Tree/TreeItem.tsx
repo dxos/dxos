@@ -133,16 +133,15 @@ const RawTreeItem = <T extends HasId = any>({
       // https://github.com/atlassian/pragmatic-drag-and-drop/blob/main/packages/hitbox/constellation/index/about.mdx
       dropTargetForElements({
         element: buttonRef.current,
-        getData: ({ input, element }) => {
-          return attachInstruction(data, {
+        getData: ({ input, element }) =>
+          attachInstruction(data, {
             input,
             element,
             indentPerLevel: DEFAULT_INDENTATION,
             currentLevel: level,
             mode,
             block: isBranch ? [] : ['make-child'],
-          });
-        },
+          }),
         canDrop: ({ source }) => {
           const _canDrop = canDrop ?? (() => true);
           return source.element !== buttonRef.current && _canDrop({ source: source.data as TreeData, target: data });

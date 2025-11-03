@@ -125,8 +125,8 @@ describe('SignalClient', () => {
     }
   });
 
-  const setupPeers = (options?: { broker?: SignalServerRunner; peerCount?: number }): TestPeer[] => {
-    return range(options?.peerCount ?? 1, () => {
+  const setupPeers = (options?: { broker?: SignalServerRunner; peerCount?: number }): TestPeer[] =>
+    range(options?.peerCount ?? 1, () => {
       const peers = new ComplexSet(PublicKey.hash);
       const peerKey = PublicKey.random();
       const identityKey = PublicKey.random();
@@ -148,24 +148,20 @@ describe('SignalClient', () => {
         identityKey,
         client,
         peerInfo: { peerKey: peerKey.toHex(), identityKey: identityKey.toHex() },
-        waitForNextMessage: async ({ timeout = 5_000 } = {}) => {
-          return asyncTimeout(
+        waitForNextMessage: async ({ timeout = 5_000 } = {}) =>
+          asyncTimeout(
             client.onMessage.waitFor(() => true),
             timeout,
-          );
-        },
+          ),
         waitForPeer: (peerId: PublicKey) => waitForCondition({ condition: () => peers.has(peerId) }),
       };
     });
-  };
 
-  const createMessage = (from: TestPeer, to: TestPeer, payload: Any = PAYLOAD): Message => {
-    return {
-      author: { peerKey: from.peerKey.toHex() },
-      recipient: { peerKey: to.peerKey.toHex() },
-      payload: PAYLOAD,
-    };
-  };
+  const createMessage = (from: TestPeer, to: TestPeer, payload: Any = PAYLOAD): Message => ({
+    author: { peerKey: from.peerKey.toHex() },
+    recipient: { peerKey: to.peerKey.toHex() },
+    payload: PAYLOAD,
+  });
 
   const waitForSubscription = async (signal: SignalClient, peerId: PublicKey) => {
     await asyncTimeout(

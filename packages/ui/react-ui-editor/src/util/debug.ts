@@ -7,15 +7,15 @@ import { type EditorView } from '@codemirror/view';
 
 import { log } from '@dxos/log';
 
-export const wrapWithCatch = (fn: (...args: any[]) => any, label?: string) => {
-  return (...args: any[]) => {
+export const wrapWithCatch =
+  (fn: (...args: any[]) => any, label?: string) =>
+  (...args: any[]) => {
     try {
       return fn(...args);
     } catch (err) {
       log.catch(err, { label });
     }
   };
-};
 
 /**
  * CodeMirror callbacks swallow errors so wrap handlers.

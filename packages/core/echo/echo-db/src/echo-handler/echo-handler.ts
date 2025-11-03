@@ -429,9 +429,9 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
 
     // DynamicEchoSchema is a utility-wrapper around the object we actually store in automerge, unwrap it
     const unwrappedValue = value instanceof EchoSchema ? value.storedSchema : value;
-    const propertySchema = SchemaValidator.getPropertySchema(rootObjectSchema, path, (path) => {
-      return target[symbolInternals].core.getDecoded([getNamespace(target), ...path]);
-    });
+    const propertySchema = SchemaValidator.getPropertySchema(rootObjectSchema, path, (path) =>
+      target[symbolInternals].core.getDecoded([getNamespace(target), ...path]),
+    );
     if (propertySchema == null) {
       return unwrappedValue;
     }
@@ -741,9 +741,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
   }
 
   private _validateForArray(target: ProxyTarget, path: KeyPath, items: any[], start: number) {
-    return items.map((item, index) => {
-      return this._validateValue(target, [...path, String(start + index)], item);
-    });
+    return items.map((item, index) => this._validateValue(target, [...path, String(start + index)], item));
   }
 
   // TODO(dmaretskyi): Change to not rely on object-core doing linking.
@@ -917,13 +915,10 @@ export const isRootDataObject = (target: ProxyTarget) => {
 /**
  * @returns True if `value` is part of another EchoObject but not the root data object.
  */
-const isEchoObjectField = (value: any) => {
-  return (
-    isLiveObject(value) &&
-    getProxyHandler(value) instanceof EchoReactiveHandler &&
-    !isRootDataObject(getProxyTarget(value))
-  );
-};
+const isEchoObjectField = (value: any) =>
+  isLiveObject(value) &&
+  getProxyHandler(value) instanceof EchoReactiveHandler &&
+  !isRootDataObject(getProxyTarget(value));
 
 const getNamespace = (target: ProxyTarget): string => target[symbolNamespace];
 
@@ -1148,15 +1143,14 @@ const validateInitialProps = (target: any, seen: Set<object> = new Set()) => {
   }
 };
 
-const linkAllNestedProperties = (target: ProxyTarget): DecodedAutomergePrimaryValue => {
-  return deepMapValues(target, (value, recurse) => {
+const linkAllNestedProperties = (target: ProxyTarget): DecodedAutomergePrimaryValue =>
+  deepMapValues(target, (value, recurse) => {
     if (Ref.isRef(value)) {
       return refToEchoReference(target, value);
     }
 
     return recurse(value);
   });
-};
 
 const refToEchoReference = (target: ProxyTarget, ref: Ref<any>): Reference => {
   const savedTarget = getRefSavedTarget(ref);

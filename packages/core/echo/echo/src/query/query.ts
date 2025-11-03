@@ -611,8 +611,8 @@ const propsFilterToAst = (predicates: Filter.Props<any>): Pick<QueryAST.FilterOb
   };
 };
 
-const processPredicate = (predicate: any): QueryAST.Filter => {
-  return Match.value(predicate).pipe(
+const processPredicate = (predicate: any): QueryAST.Filter =>
+  Match.value(predicate).pipe(
     Match.withReturnType<QueryAST.Filter>(),
     Match.when(Filter.is, (predicate) => predicate.ast),
     // TODO(wittjosiah): Add support for array predicates.
@@ -635,7 +635,6 @@ const processPredicate = (predicate: any): QueryAST.Filter => {
     ),
     Match.orElse((value) => Filter.eq(value).ast),
   );
-};
 
 // TODO(dmaretskyi): Separate object instead of statics for better devex with type errors.
 class QueryClass implements Query<any> {

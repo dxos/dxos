@@ -27,9 +27,8 @@ export interface LogEntry {
  */
 export type LogProcessor = (config: LogConfig, entry: LogEntry) => void;
 
-const matchFilter = (filter: LogFilter, level: LogLevel, path: string) => {
-  return level >= filter.level && (!filter.pattern || path.includes(filter.pattern));
-};
+const matchFilter = (filter: LogFilter, level: LogLevel, path: string) =>
+  level >= filter.level && (!filter.pattern || path.includes(filter.pattern));
 
 /**
  * Determines if the current line should be logged (called by the processor).

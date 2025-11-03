@@ -230,14 +230,12 @@ const Line = ({
   line,
   active,
   transition,
-}: ThemedClassName<{ line: string; active: boolean; transition: number }>) => {
-  return (
-    <div
-      role='none'
-      style={{ transitionDuration: `${transition / 3}ms` }}
-      className={mx('flex items-center truncate transition-opacity', active ? 'opacity-100' : 'opacity-50', classNames)}
-    >
-      {line}
-    </div>
-  );
-};
+}: ThemedClassName<{ line: string; active: boolean; transition: number }>) => (
+  <div
+    role='none'
+    style={{ transitionDuration: `${transition / 3}ms` }}
+    className={mx('flex items-center truncate transition-opacity', active ? 'opacity-100' : 'opacity-50', classNames)}
+  >
+    {line}
+  </div>
+);

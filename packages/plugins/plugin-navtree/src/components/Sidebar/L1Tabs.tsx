@@ -20,23 +20,21 @@ export type L1TabsProps = Pick<L1PanelProps, 'open' | 'currentItemId' | 'onBack'
 /**
  * Each space is an L1 tab.
  */
-export const L1Tabs = ({ topLevelItems, onBack, ...props }: L1TabsProps) => {
-  return (
-    <>
-      {topLevelItems.map((item) => {
-        const type = l0ItemType(item);
-        switch (type) {
-          case 'tab':
-            return <L1Panel key={item.id} item={item} {...props} onBack={onBack} />;
-          case 'collection':
-            return <L1PanelCollection key={item.id} item={item} {...props} />;
-          default:
-            return null;
-        }
-      })}
-    </>
-  );
-};
+export const L1Tabs = ({ topLevelItems, onBack, ...props }: L1TabsProps) => (
+  <>
+    {topLevelItems.map((item) => {
+      const type = l0ItemType(item);
+      switch (type) {
+        case 'tab':
+          return <L1Panel key={item.id} item={item} {...props} onBack={onBack} />;
+        case 'collection':
+          return <L1PanelCollection key={item.id} item={item} {...props} />;
+        default:
+          return null;
+      }
+    })}
+  </>
+);
 
 /**
  *

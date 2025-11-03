@@ -163,16 +163,13 @@ export class WorkerClientServices implements ClientServicesProvider {
   }
 }
 
-const mapLogMeta = (meta: LogEntry.Meta | undefined): CallMetadata | undefined => {
-  return (
-    meta && {
-      F: meta.file,
-      L: meta.line,
-      S: {
-        ...meta.scope,
-        remoteSessionId: meta.scope?.hostSessionId,
-        hostSessionId: undefined,
-      },
-    }
-  );
-};
+const mapLogMeta = (meta: LogEntry.Meta | undefined): CallMetadata | undefined =>
+  meta && {
+    F: meta.file,
+    L: meta.line,
+    S: {
+      ...meta.scope,
+      remoteSessionId: meta.scope?.hostSessionId,
+      hostSessionId: undefined,
+    },
+  };

@@ -10,21 +10,19 @@ import { trim } from '@dxos/util';
 const functions: FunctionDefinition[] = [];
 const tools: string[] = [];
 
-export default () => {
-  return [
-    contributes(Capabilities.Functions, functions),
-    contributes(
-      Capabilities.BlueprintDefinition,
-      Blueprint.make({
-        key: 'dxos.org/blueprint/script',
-        name: 'Script',
-        tools: Blueprint.toolDefinitions({ functions, tools }),
-        instructions: Template.make({
-          source: trim`
+export default () => [
+  contributes(Capabilities.Functions, functions),
+  contributes(
+    Capabilities.BlueprintDefinition,
+    Blueprint.make({
+      key: 'dxos.org/blueprint/script',
+      name: 'Script',
+      tools: Blueprint.toolDefinitions({ functions, tools }),
+      instructions: Template.make({
+        source: trim`
             You can create and update scripts which contain Typescript code.
           `,
-        }),
       }),
-    ),
-  ];
-};
+    }),
+  ),
+];

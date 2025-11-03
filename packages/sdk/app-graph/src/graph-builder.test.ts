@@ -438,8 +438,8 @@ describe('GraphBuilder', () => {
       builder.addExtension(
         createExtension({
           id: 'connector',
-          connector: (node) => {
-            return Rx.make((get) =>
+          connector: (node) =>
+            Rx.make((get) =>
               Function.pipe(
                 get(node),
                 Option.map((node) => (node.data ? node.data + 1 : 1)),
@@ -447,8 +447,7 @@ describe('GraphBuilder', () => {
                 Option.map((data) => [{ id: `node-${data}`, type: EXAMPLE_TYPE, data }]),
                 Option.getOrElse(() => []),
               ),
-            );
-          },
+            ),
         }),
       );
 

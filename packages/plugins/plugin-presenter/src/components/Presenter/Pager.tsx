@@ -139,17 +139,15 @@ export const PageNumber = ({ index = 0, count = 1 }: PageNumberProps) => {
   );
 };
 
-export const StartButton = ({ running, onClick }: { running?: boolean; onClick?: (start: boolean) => void }) => {
-  return (
-    <IconButton
-      icon={running ? 'ph--x--regular' : 'ph--play--regular'}
-      size={6}
-      label={running ? 'Stop' : 'Play'}
-      iconOnly
-      noTooltip
-      variant='ghost'
-      classNames='p-0'
-      onClick={() => onClick?.(!running)}
-    />
-  );
-};
+export const StartButton = ({ running, onClick }: { running?: boolean; onClick?: (start: boolean) => void }) => (
+  <IconButton
+    icon={running ? 'ph--x--regular' : 'ph--play--regular'}
+    size={6}
+    label={running ? 'Stop' : 'Play'}
+    iconOnly
+    noTooltip
+    variant='ghost'
+    classNames='p-0'
+    onClick={() => onClick?.(!running)}
+  />
+);

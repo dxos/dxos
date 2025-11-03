@@ -506,9 +506,8 @@ describe('MemberStateMachine', () => {
     }
   });
 
-  const createSpace = async (stateMachine: MemberStateMachine, creator: PublicKey): Promise<PublicKey> => {
-    return admit(stateMachine, spaceKey, creator, [], SpaceMember.Role.OWNER);
-  };
+  const createSpace = async (stateMachine: MemberStateMachine, creator: PublicKey): Promise<PublicKey> =>
+    admit(stateMachine, spaceKey, creator, [], SpaceMember.Role.OWNER);
 
   const updateRole = (
     stateMachine: MemberStateMachine,
@@ -516,9 +515,7 @@ describe('MemberStateMachine', () => {
     guest: PublicKey,
     role?: SpaceMember.Role,
     parents?: PublicKey[],
-  ) => {
-    return admit(stateMachine, host, guest, parents, role);
-  };
+  ) => admit(stateMachine, host, guest, parents, role);
 
   const admit = async (
     stateMachine: MemberStateMachine,

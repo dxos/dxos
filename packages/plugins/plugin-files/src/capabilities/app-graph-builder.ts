@@ -67,8 +67,8 @@ export default (context: PluginContext) =>
               const settings = get(rxFromSignal(() => settingsStore?.getStore<FilesSettingsProps>(meta.id)?.value));
               return settings ? Option.some(settings) : Option.none();
             }),
-            Option.map((settings) => {
-              return settings.openLocalFiles
+            Option.map((settings) =>
+              settings.openLocalFiles
                 ? [
                     {
                       // TODO(wittjosiah): Deck does not currently support `/` in ids.
@@ -82,8 +82,8 @@ export default (context: PluginContext) =>
                       },
                     },
                   ]
-                : [];
-            }),
+                : [],
+            ),
             Option.getOrElse(() => []),
           ),
         ),

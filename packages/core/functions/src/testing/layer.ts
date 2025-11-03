@@ -20,9 +20,7 @@ import { DatabaseService, QueueService } from '../services';
 
 const testBuilder = acquireReleaseResource(() => new EchoTestBuilder());
 
-export const testStoragePath = ({ name = PublicKey.random().toHex() }: { name?: string }) => {
-  return `/tmp/dxos-${name}`;
-};
+export const testStoragePath = ({ name = PublicKey.random().toHex() }: { name?: string }) => `/tmp/dxos-${name}`;
 
 const FIXED_SPACE_KEY = PublicKey.from('665c420e0dec9aa36c2bedca567afb0778701920e346eaf83ab2bd3403859723');
 

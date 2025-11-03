@@ -46,16 +46,16 @@ export const LogPanel: FC<LogPanelProps> = ({ queue }) => {
       return [];
     }
 
-    return objects.flatMap((event) => {
-      return event.logs.map((log) => ({
+    return objects.flatMap((event) =>
+      event.logs.map((log) => ({
         id: `${event.id}-${log.timestamp}`,
         timestamp: new Date(log.timestamp).toLocaleString(),
         level: log.level,
         message: log.message,
         context: JSON.stringify(log.context) ?? {},
         _original: { ...log, eventId: event.id },
-      }));
-    });
+      })),
+    );
   }, [objects]);
 
   return <DynamicTable properties={properties} rows={rows} />;

@@ -32,12 +32,9 @@ const getValue = <T>(
   valueOrFunction: T | ((...args: any[]) => T) | undefined,
   invoker: (fn: (...args: any[]) => T) => T,
   defaultValue: T,
-) => {
-  return (
-    (typeof valueOrFunction === 'function' ? invoker(valueOrFunction as (...args: any[]) => T) : valueOrFunction) ??
-    defaultValue
-  );
-};
+) =>
+  (typeof valueOrFunction === 'function' ? invoker(valueOrFunction as (...args: any[]) => T) : valueOrFunction) ??
+  defaultValue;
 
 /**
  * Returns the config object or an empty object if the property is set to true (or defaults to true).
@@ -387,9 +384,9 @@ export class GraphForceProjector<NodeData = any> extends GraphProjector<NodeData
       // https://github.com/d3/d3-force#forcePoint
       .force(
         'point',
-        maybeForce<ForcePositioningOptions>(forces?.point, ({ x = 0, y = 0, strength }) => {
-          return forcePoint({ x, y, strength });
-        }),
+        maybeForce<ForcePositioningOptions>(forces?.point, ({ x = 0, y = 0, strength }) =>
+          forcePoint({ x, y, strength }),
+        ),
       )
       .force(
         'x',

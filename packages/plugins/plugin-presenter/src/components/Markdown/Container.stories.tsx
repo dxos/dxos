@@ -12,13 +12,11 @@ import { createSlide } from '../../testing';
 import { Container } from './Container';
 import { Slide, type SlideProps } from './Slide';
 
-const DefaultStory = ({ content = '' }: SlideProps) => {
-  return (
-    <Container classNames='bg-neutral-200'>
-      <Slide content={content} />
-    </Container>
-  );
-};
+const DefaultStory = ({ content = '' }: SlideProps) => (
+  <Container classNames='bg-neutral-200'>
+    <Slide content={content} />
+  </Container>
+);
 
 const meta = {
   title: 'plugins/plugin-presenter/Container',

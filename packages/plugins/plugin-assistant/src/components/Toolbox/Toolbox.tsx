@@ -137,6 +137,4 @@ export const ToolboxContainer = ({ classNames, space, processor }: ToolboxContai
   );
 };
 
-const safeToolId = (name: string) => {
-  return name.split('_').pop();
-};
+const safeToolId = (name: string) => name.split('_').pop();

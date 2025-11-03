@@ -38,12 +38,12 @@ export const useMediaQuery = (query: string | string[], options: UseMediaQueryOp
   let fallbackValues = Array.isArray(fallback) ? fallback : [fallback];
   fallbackValues = fallbackValues.filter((v) => v != null) as boolean[];
 
-  const [value, setValue] = useState(() => {
-    return queries.map((query, index) => ({
+  const [value, setValue] = useState(() =>
+    queries.map((query, index) => ({
       media: query,
       matches: ssr ? !!fallbackValues[index] : document.defaultView?.matchMedia(query).matches,
-    }));
-  });
+    })),
+  );
 
   useEffect(() => {
     setValue(
@@ -56,14 +56,14 @@ export const useMediaQuery = (query: string | string[], options: UseMediaQueryOp
     const mql = queries.map((query) => document.defaultView?.matchMedia(query));
 
     const handler = (evt: MediaQueryListEvent) => {
-      setValue((prev) => {
-        return prev.slice().map((item) => {
+      setValue((prev) =>
+        prev.slice().map((item) => {
           if (item.media === evt.media) {
             return { ...item, matches: evt.matches };
           }
           return item;
-        });
-      });
+        }),
+      );
     };
 
     mql.forEach((mql) => {

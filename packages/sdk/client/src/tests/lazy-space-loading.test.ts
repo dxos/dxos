@@ -145,9 +145,7 @@ const inviteMember = async (space: Space, client: Client) => {
   return waitForSpace(client, space.key, { ready: true });
 };
 
-const findClientSpace = (client: Client, space: Space) => {
-  return client.spaces.get().find((s) => s.id === space.id)!;
-};
+const findClientSpace = (client: Client, space: Space) => client.spaces.get().find((s) => s.id === space.id)!;
 
 const openAndWaitReady = async (space: Space) => {
   await space.open();

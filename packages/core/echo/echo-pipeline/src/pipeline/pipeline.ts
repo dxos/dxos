@@ -140,9 +140,9 @@ export class PipelineState {
     });
 
     this._reachedTargetPromise ??= Promise.race([
-      this._timeframeClock.update.waitForCondition(() => {
-        return Timeframe.dependencies(this.targetTimeframe, this.timeframe).isEmpty();
-      }),
+      this._timeframeClock.update.waitForCondition(() =>
+        Timeframe.dependencies(this.targetTimeframe, this.timeframe).isEmpty(),
+      ),
       ...(breakOnStall ? [this.stalled.discardParameter().waitForCount(1)] : []),
     ]);
 

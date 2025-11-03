@@ -28,24 +28,22 @@ type StoryProps = {
   items: StoryItems;
 };
 
-const DefaultStory = ({ items = defaultItems }: StoryProps) => {
-  return (
-    <SearchList.Root filter={(value, search) => (items[value].toLowerCase().includes(search.toLowerCase()) ? 1 : 0)}>
-      <SearchList.Input />
-      <SearchList.Content>
-        {Object.entries(items).map(([value, label]) => (
-          <SearchList.Item
-            key={value}
-            value={value}
-            onSelect={(value) => console.log('[SearchList.Item.onSelect]', value)}
-          >
-            {label}
-          </SearchList.Item>
-        ))}
-      </SearchList.Content>
-    </SearchList.Root>
-  );
-};
+const DefaultStory = ({ items = defaultItems }: StoryProps) => (
+  <SearchList.Root filter={(value, search) => (items[value].toLowerCase().includes(search.toLowerCase()) ? 1 : 0)}>
+    <SearchList.Input />
+    <SearchList.Content>
+      {Object.entries(items).map(([value, label]) => (
+        <SearchList.Item
+          key={value}
+          value={value}
+          onSelect={(value) => console.log('[SearchList.Item.onSelect]', value)}
+        >
+          {label}
+        </SearchList.Item>
+      ))}
+    </SearchList.Content>
+  </SearchList.Root>
+);
 
 const meta = {
   title: 'ui/react-ui-searchlist/SearchList',

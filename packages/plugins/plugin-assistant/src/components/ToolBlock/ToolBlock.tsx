@@ -14,9 +14,8 @@ import { isNonNullable, safeParseJson } from '@dxos/util';
 
 import { meta } from '../../meta';
 
-export const isToolMessage = (message: DataType.Message) => {
-  return message.blocks.some((block) => block._tag === 'toolCall' || block._tag === 'toolResult');
-};
+export const isToolMessage = (message: DataType.Message) =>
+  message.blocks.some((block) => block._tag === 'toolCall' || block._tag === 'toolResult');
 
 export type ToolBlockProps = XmlWidgetProps<{
   blocks: ContentBlock.Any[];

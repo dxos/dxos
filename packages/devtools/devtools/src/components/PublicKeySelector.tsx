@@ -22,33 +22,31 @@ export const PublicKeySelector = ({
   keys,
   value,
   onChange,
-}: PublicKeySelectorProps) => {
-  return (
-    <Select.Root
-      value={value?.toHex()}
-      onValueChange={(id) => {
-        id && onChange?.(PublicKey.fromHex(id));
-      }}
-    >
-      <Select.TriggerButton placeholder={placeholder} />
-      <Select.Portal>
-        <Select.Content>
-          <Select.Viewport>
-            {removeDuplicates(keys).map((key) => (
-              <Select.Option key={key.toHex()} value={key.toHex()}>
-                <div className='flex items-center gap-2'>
-                  <span className='font-mono text-neutral-250'>{key.truncate()}</span>
-                  {getLabel(key)}
-                </div>
-              </Select.Option>
-            ))}
-          </Select.Viewport>
-          <Select.Arrow />
-        </Select.Content>
-      </Select.Portal>
-    </Select.Root>
-  );
-};
+}: PublicKeySelectorProps) => (
+  <Select.Root
+    value={value?.toHex()}
+    onValueChange={(id) => {
+      id && onChange?.(PublicKey.fromHex(id));
+    }}
+  >
+    <Select.TriggerButton placeholder={placeholder} />
+    <Select.Portal>
+      <Select.Content>
+        <Select.Viewport>
+          {removeDuplicates(keys).map((key) => (
+            <Select.Option key={key.toHex()} value={key.toHex()}>
+              <div className='flex items-center gap-2'>
+                <span className='font-mono text-neutral-250'>{key.truncate()}</span>
+                {getLabel(key)}
+              </div>
+            </Select.Option>
+          ))}
+        </Select.Viewport>
+        <Select.Arrow />
+      </Select.Content>
+    </Select.Portal>
+  </Select.Root>
+);
 
 // TODO(burdon): Factor out.
 const removeDuplicates = (keys: PublicKey[]) =>

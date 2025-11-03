@@ -9,13 +9,11 @@ import { withTheme } from '@dxos/react-ui/testing';
 
 import { Chain, type ChainRootProps } from './Chain';
 
-const DefaultStory = (props: ChainRootProps) => {
-  return (
-    <Chain.Root {...props}>
-      <Chain.Background />
-    </Chain.Root>
-  );
-};
+const DefaultStory = (props: ChainRootProps) => (
+  <Chain.Root {...props}>
+    <Chain.Background />
+  </Chain.Root>
+);
 
 const meta = {
   title: 'ui/react-ui-board/Chain',

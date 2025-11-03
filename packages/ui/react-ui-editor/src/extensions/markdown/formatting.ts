@@ -86,8 +86,9 @@ export enum List {
 // Headings
 //
 
-export const setHeading = (level: number): StateCommand => {
-  return ({ state, dispatch }) => {
+export const setHeading =
+  (level: number): StateCommand =>
+  ({ state, dispatch }) => {
     const {
       selection: { ranges },
       doc,
@@ -153,14 +154,14 @@ export const setHeading = (level: number): StateCommand => {
     );
     return true;
   };
-};
 
 //
 // Styles
 //
 
-export const setStyle = (type: Inline, enable: boolean): StateCommand => {
-  return ({ state, dispatch }) => {
+export const setStyle =
+  (type: Inline, enable: boolean): StateCommand =>
+  ({ state, dispatch }) => {
     const marker = inlineMarkerText(type);
     const changes = state.changeByRange((range) => {
       // Special case for markers directly around the cursor, which will often not be parsed as valid styling.
@@ -324,14 +325,14 @@ export const setStyle = (type: Inline, enable: boolean): StateCommand => {
 
     return true;
   };
-};
 
 export const addStyle = (style: Inline): StateCommand => setStyle(style, true);
 
 export const removeStyle = (style: Inline): StateCommand => setStyle(style, false);
 
-export const toggleStyle = (style: Inline): StateCommand => {
-  return (arg) => {
+export const toggleStyle =
+  (style: Inline): StateCommand =>
+  (arg) => {
     const form = getFormatting(arg.state);
     return setStyle(
       style,
@@ -344,7 +345,6 @@ export const toggleStyle = (style: Inline): StateCommand => {
             : !form.code,
     )(arg);
   };
-};
 
 export const toggleStrong = toggleStyle(Inline.Strong);
 export const toggleEmphasis = toggleStyle(Inline.Emphasis);
@@ -473,8 +473,9 @@ export const removeLink: StateCommand = ({ state, dispatch }) => {
 };
 
 // Add link markup around the selection.
-export const addLink = ({ url, image }: { url?: string; image?: boolean } = {}): StateCommand => {
-  return ({ state, dispatch }) => {
+export const addLink =
+  ({ url, image }: { url?: string; image?: boolean } = {}): StateCommand =>
+  ({ state, dispatch }) => {
     const changes = state.changeByRange((range) => {
       let { from, to } = range;
       const cutStyles: SyntaxNode[] = [];
@@ -566,14 +567,14 @@ export const addLink = ({ url, image }: { url?: string; image?: boolean } = {}):
     );
     return true;
   };
-};
 
 //
 // Lists
 //
 
-export const addList = (type: List): StateCommand => {
-  return ({ state, dispatch }) => {
+export const addList =
+  (type: List): StateCommand =>
+  ({ state, dispatch }) => {
     let lastBlock = -1;
     let counter = 1;
     let first = true;
@@ -719,10 +720,10 @@ export const addList = (type: List): StateCommand => {
     );
     return true;
   };
-};
 
-export const removeList = (type: List): StateCommand => {
-  return ({ state, dispatch }) => {
+export const removeList =
+  (type: List): StateCommand =>
+  ({ state, dispatch }) => {
     let lastBlock = -1;
     const changes: ChangeSpec[] = [];
     const stack: string[] = [];
@@ -784,16 +785,15 @@ export const removeList = (type: List): StateCommand => {
     );
     return true;
   };
-};
 
-export const toggleList = (type: List): StateCommand => {
-  return (target) => {
+export const toggleList =
+  (type: List): StateCommand =>
+  (target) => {
     const formatting = getFormatting(target.state);
     const active =
       formatting.listStyle === (type === List.Bullet ? 'bullet' : type === List.Ordered ? 'ordered' : 'task');
     return (active ? removeList(type) : addList(type))(target);
   };
-};
 
 const renumberListItems = (item: SyntaxNode | null, counter: number, changes: ChangeSpec[], doc: Text) => {
   for (; item; item = item.nextSibling) {
@@ -814,8 +814,9 @@ const renumberListItems = (item: SyntaxNode | null, counter: number, changes: Ch
 // Block quotes
 //
 
-export const setBlockquote = (enable: boolean): StateCommand => {
-  return ({ state, dispatch }) => {
+export const setBlockquote =
+  (enable: boolean): StateCommand =>
+  ({ state, dispatch }) => {
     const lines: Line[] = [];
     let lastBlock = -1;
     for (const { from, to } of state.selection.ranges) {
@@ -887,15 +888,13 @@ export const setBlockquote = (enable: boolean): StateCommand => {
     );
     return true;
   };
-};
 
 export const addBlockquote = setBlockquote(true);
 
 export const removeBlockquote = setBlockquote(false);
 
-export const toggleBlockquote: StateCommand = (target) => {
-  return (getFormatting(target.state).blockQuote ? removeBlockquote : addBlockquote)(target);
-};
+export const toggleBlockquote: StateCommand = (target) =>
+  (getFormatting(target.state).blockQuote ? removeBlockquote : addBlockquote)(target);
 
 //
 // Code block
@@ -1009,9 +1008,8 @@ export const removeCodeblock: StateCommand = ({ state, dispatch }) => {
   return true;
 };
 
-export const toggleCodeblock: StateCommand = (target) => {
-  return (getFormatting(target.state).blockType === 'codeblock' ? removeCodeblock : addCodeblock)(target);
-};
+export const toggleCodeblock: StateCommand = (target) =>
+  (getFormatting(target.state).blockType === 'codeblock' ? removeCodeblock : addCodeblock)(target);
 
 //
 // Formatting extension.
@@ -1019,20 +1017,18 @@ export const toggleCodeblock: StateCommand = (target) => {
 
 export type FormattingOptions = {};
 
-export const formattingKeymap = (_options: FormattingOptions = {}): Extension => {
-  return [
-    keymap.of([
-      {
-        key: 'meta-b',
-        run: toggleStrong,
-      },
-      {
-        key: 'meta-i',
-        run: toggleEmphasis,
-      },
-    ]),
-  ];
-};
+export const formattingKeymap = (_options: FormattingOptions = {}): Extension => [
+  keymap.of([
+    {
+      key: 'meta-b',
+      run: toggleStrong,
+    },
+    {
+      key: 'meta-i',
+      run: toggleEmphasis,
+    },
+  ]),
+];
 
 const InlineMarker: { [name: string]: number } = {
   Emphasis: Inline.Emphasis,
@@ -1249,8 +1245,8 @@ export const getFormatting = (state: EditorState): Formatting => {
 /**
  * Hook provides an extension to compute the current formatting state.
  */
-export const formattingListener = (stateProvider: () => EditorToolbarState | undefined, delay = 100): Extension => {
-  return EditorView.updateListener.of(
+export const formattingListener = (stateProvider: () => EditorToolbarState | undefined, delay = 100): Extension =>
+  EditorView.updateListener.of(
     debounceAndThrottle((update: ViewUpdate) => {
       if (update.docChanged || update.selectionSet) {
         const state = stateProvider();
@@ -1264,4 +1260,3 @@ export const formattingListener = (stateProvider: () => EditorToolbarState | und
       }
     }, delay),
   );
-};

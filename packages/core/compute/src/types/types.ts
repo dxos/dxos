@@ -16,9 +16,8 @@ export const RANGE_NOTATION = /^[A-Z]+[0-9]+(:[A-Z]+[0-9]+)?$/;
 
 export const isFormula = (value: any): value is string => typeof value === 'string' && value.charAt(0) === '=';
 
-export const cellEquals = (a: CellAddress | undefined, b: CellAddress | undefined) => {
-  return a?.col === b?.col && a?.row === b?.row;
-};
+export const cellEquals = (a: CellAddress | undefined, b: CellAddress | undefined) =>
+  a?.col === b?.col && a?.row === b?.row;
 
 export const columnLetter = (col: number): string => {
   invariant(col < 676, `Invalid column: ${col}`); // 26^2
@@ -28,9 +27,7 @@ export const columnLetter = (col: number): string => {
   );
 };
 
-export const addressToA1Notation = ({ col, row }: CellAddress): string => {
-  return `${columnLetter(col)}${row + 1}`;
-};
+export const addressToA1Notation = ({ col, row }: CellAddress): string => `${columnLetter(col)}${row + 1}`;
 
 // TODO(burdon): See (HF) simpleCellAddressFromString.
 export const addressFromA1Notation = (ref: string): CellAddress => {
@@ -42,11 +39,10 @@ export const addressFromA1Notation = (ref: string): CellAddress => {
   };
 };
 
-export const rangeToA1Notation = (range: CellRange) => {
-  return [range?.from && addressToA1Notation(range?.from), range?.to && addressToA1Notation(range?.to)]
+export const rangeToA1Notation = (range: CellRange) =>
+  [range?.from && addressToA1Notation(range?.from), range?.to && addressToA1Notation(range?.to)]
     .filter(Boolean)
     .join(':');
-};
 
 export const rangeFromA1Notation = (ref: string): CellRange => {
   const [from, to] = ref.split(':').map(addressFromA1Notation);

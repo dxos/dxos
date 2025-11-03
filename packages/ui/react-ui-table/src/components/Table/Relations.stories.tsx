@@ -92,9 +92,7 @@ const DefaultStory = () => {
   const { space } = useClientProvider();
 
   const handleCreate = useCallback(
-    (schema: Schema.Schema.AnyNoContext, values: any) => {
-      return client.spaces.default.db.add(Obj.make(schema, values));
-    },
+    (schema: Schema.Schema.AnyNoContext, values: any) => client.spaces.default.db.add(Obj.make(schema, values)),
     [space],
   );
 

@@ -59,30 +59,28 @@ type Props = {
   style: CSSProperties;
 };
 
-const getLayers = (size: number, [a, b, c]: string[]): Props[] => {
-  return [
-    {
-      inset: 0,
-      spin: 'animate-[spin_2s_linear_infinite]',
-      style: {},
-      className: a,
+const getLayers = (size: number, [a, b, c]: string[]): Props[] => [
+  {
+    inset: 0,
+    spin: 'animate-[spin_2s_linear_infinite]',
+    style: {},
+    className: a,
+  },
+  {
+    inset: size / 6,
+    spin: 'animate-[spin_2s_linear_infinite]',
+    style: {
+      animationDirection: 'reverse',
     },
-    {
-      inset: size / 6,
-      spin: 'animate-[spin_2s_linear_infinite]',
-      style: {
-        animationDirection: 'reverse',
-      },
-      className: b,
-    },
-    {
-      inset: size / 3.6,
-      spin: 'animate-[spin_1s_linear_infinite]',
-      style: {},
-      className: c,
-    },
-  ];
-};
+    className: b,
+  },
+  {
+    inset: size / 3.6,
+    spin: 'animate-[spin_1s_linear_infinite]',
+    style: {},
+    className: c,
+  },
+];
 
 type ComposerLogoProps = { animate?: boolean; size?: number; classNames?: string[] } & Omit<
   HTMLAttributes<HTMLDivElement>,

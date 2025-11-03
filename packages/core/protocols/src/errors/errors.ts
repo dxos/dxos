@@ -166,9 +166,10 @@ export class InvalidStorageVersionError extends DatabaseError {
   }
 }
 
-registerError('INVALID_STORAGE_VERSION', (_, context) => {
-  return new InvalidStorageVersionError(context.expected ?? NaN, context.actual ?? NaN);
-});
+registerError(
+  'INVALID_STORAGE_VERSION',
+  (_, context) => new InvalidStorageVersionError(context.expected ?? NaN, context.actual ?? NaN),
+);
 
 export class SpaceNotFoundError extends DatabaseError {
   constructor(spaceKey: PublicKey) {
@@ -176,9 +177,10 @@ export class SpaceNotFoundError extends DatabaseError {
   }
 }
 
-registerError('SPACE_NOT_FOUND', (_, context) => {
-  return new SpaceNotFoundError(PublicKey.safeFrom(context.spaceKey) ?? PublicKey.from('00'));
-});
+registerError(
+  'SPACE_NOT_FOUND',
+  (_, context) => new SpaceNotFoundError(PublicKey.safeFrom(context.spaceKey) ?? PublicKey.from('00')),
+);
 
 export class EntityNotFoundError extends DatabaseError {
   constructor(entityId: ObjectId) {
@@ -186,9 +188,7 @@ export class EntityNotFoundError extends DatabaseError {
   }
 }
 
-registerError('ITEM_NOT_FOUND', (_, context) => {
-  return new EntityNotFoundError(context.entityId);
-});
+registerError('ITEM_NOT_FOUND', (_, context) => new EntityNotFoundError(context.entityId));
 
 export class UnknownModelError extends DatabaseError {
   constructor(model: string) {
@@ -196,9 +196,7 @@ export class UnknownModelError extends DatabaseError {
   }
 }
 
-registerError('UNKNOWN_MODEL', (_, context) => {
-  return new UnknownModelError(context.model);
-});
+registerError('UNKNOWN_MODEL', (_, context) => new UnknownModelError(context.model));
 
 export class AuthorizationError extends ApiError {
   constructor(message?: string, context?: any) {

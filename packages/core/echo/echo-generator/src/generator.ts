@@ -65,9 +65,7 @@ export class TestObjectGenerator<T extends string = TestSchemaType> {
     }
 
     const tasks = Object.entries<number>(map as any)
-      .map(([type, count]) => {
-        return range(count, () => this.createObject({ types: [type as T] }));
-      })
+      .map(([type, count]) => range(count, () => this.createObject({ types: [type as T] })))
       .flatMap((t) => t);
 
     return Promise.all(tasks);

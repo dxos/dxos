@@ -103,15 +103,17 @@ export const TracingPanel = () => {
     [],
   );
 
-  const rows = useMemo(() => {
-    return Array.from(state.resources.values()).map((resourceState) => ({
-      id: String(resourceState.resource.id),
-      name: resourceState.resource.className,
-      logs: resourceState.logs.length,
-      spans: resourceState.spans.length,
-      info: JSON.stringify(resourceState.resource.info),
-    }));
-  }, [state.resources]);
+  const rows = useMemo(
+    () =>
+      Array.from(state.resources.values()).map((resourceState) => ({
+        id: String(resourceState.resource.id),
+        name: resourceState.resource.className,
+        logs: resourceState.logs.length,
+        spans: resourceState.spans.length,
+        info: JSON.stringify(resourceState.resource.info),
+      })),
+    [state.resources],
+  );
 
   const handleRowClicked = useCallback((row: any) => {
     if (!row) {

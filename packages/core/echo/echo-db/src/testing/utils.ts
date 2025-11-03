@@ -4,6 +4,4 @@
 
 import { PublicKey } from '@dxos/keys';
 
-export const createTmpPath = (): string => {
-  return `/tmp/dxos-${PublicKey.random().toHex()}`;
-};
+export const createTmpPath = (): string => `/tmp/dxos-${PublicKey.random().toHex()}`;

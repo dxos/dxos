@@ -65,13 +65,10 @@ export class Scale {
       return { x, y, width, height };
     },
 
-    toValue: (value: Fraction): number => {
-      return Math.round(FractionUtil.toNumber(value) * this._gridSize);
-    },
+    toValue: (value: Fraction): number => Math.round(FractionUtil.toNumber(value) * this._gridSize),
 
-    toValues: (values: Fraction[]): number[] => {
-      return values.map((value) => Math.round(FractionUtil.toNumber(value) * this._gridSize));
-    },
+    toValues: (values: Fraction[]): number[] =>
+      values.map((value) => Math.round(FractionUtil.toNumber(value) * this._gridSize)),
 
     toPoint: (point: Vertex): Point => {
       const [x, y] = this.model.toValues([point.x, point.y]);
@@ -106,13 +103,10 @@ export class Scale {
       return { x, y, width, height };
     },
 
-    toValue: (value: number): Fraction => {
-      return FractionUtil.divide(FractionUtil.toFraction(value), [this._gridSize, 1]);
-    },
+    toValue: (value: number): Fraction => FractionUtil.divide(FractionUtil.toFraction(value), [this._gridSize, 1]),
 
-    toValues: (values: number[]): Fraction[] => {
-      return values.map((value) => FractionUtil.divide(FractionUtil.toFraction(value), [this._gridSize, 1]));
-    },
+    toValues: (values: number[]): Fraction[] =>
+      values.map((value) => FractionUtil.divide(FractionUtil.toFraction(value), [this._gridSize, 1])),
 
     toVertex: (point: Point): Vertex => {
       const [x, y] = point;

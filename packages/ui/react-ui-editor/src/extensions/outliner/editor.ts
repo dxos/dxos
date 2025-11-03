@@ -15,8 +15,8 @@ const LIST_ITEM_REGEX = /^\s*- (\[ \]|\[x\])? /;
 /**
  * Initialize empty document.
  */
-const initialize = () => {
-  return ViewPlugin.fromClass(
+const initialize = () =>
+  ViewPlugin.fromClass(
     class {
       constructor(view: EditorView) {
         const first = view.state.doc.lineAt(0);
@@ -34,7 +34,6 @@ const initialize = () => {
       }
     },
   );
-};
 
 /**
  * Handle cursor movement, selection, and editing.

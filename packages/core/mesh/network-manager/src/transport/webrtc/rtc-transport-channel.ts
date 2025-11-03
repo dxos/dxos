@@ -105,9 +105,7 @@ export class RtcTransportChannel extends Resource implements Transport {
         log('onopen');
         const duplex = new Duplex({
           read: () => {},
-          write: (chunk, encoding, callback) => {
-            return this._handleChannelWrite(chunk, callback);
-          },
+          write: (chunk, encoding, callback) => this._handleChannelWrite(chunk, callback),
         });
         duplex.pipe(this._options.stream).pipe(duplex);
         this._stream = duplex;

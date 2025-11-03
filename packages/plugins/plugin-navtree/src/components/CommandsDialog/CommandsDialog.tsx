@@ -48,11 +48,11 @@ export const CommandsDialogContent = ({ selected: initial }: { selected?: string
       },
     });
 
-    actions.sort((a, b) => {
-      return toLocalizedString(a.properties.label, t)
+    actions.sort((a, b) =>
+      toLocalizedString(a.properties.label, t)
         ?.toLowerCase()
-        .localeCompare(toLocalizedString(b.properties.label, t)?.toLowerCase());
-    });
+        .localeCompare(toLocalizedString(b.properties.label, t)?.toLowerCase()),
+    );
 
     return actions;
   }, [graph]);

@@ -29,9 +29,7 @@ export const AgentHostingProvider = (props: PropsWithChildren) => {
   );
 };
 
-export const useAgentHostingClient = () => {
-  return useContext(AgentHostingContext);
-};
+export const useAgentHostingClient = () => useContext(AgentHostingContext);
 
 const makeClient = ({ config, halo }: AgentHostingProviderProps) => {
   const agentHostingConfig = config.get('runtime.services.agentHosting');

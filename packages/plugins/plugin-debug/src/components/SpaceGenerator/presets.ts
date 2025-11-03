@@ -673,15 +673,14 @@ const createQueueSinkPreset = <SpecType extends Trigger.Kind>(
   return { canvasModel, computeModel };
 };
 
-const addToSpace = (name: string, space: Space, canvas: CanvasGraphModel, compute: ComputeGraphModel) => {
-  return space.db.add(
+const addToSpace = (name: string, space: Space, canvas: CanvasGraphModel, compute: ComputeGraphModel) =>
+  space.db.add(
     Obj.make(CanvasBoardType, {
       name,
       computeGraph: Ref.make(compute.root),
       layout: canvas.graph,
     }),
   );
-};
 
 const setupQueue = (
   space: Space,
@@ -712,9 +711,10 @@ const attachTrigger = (functionTrigger: Trigger.Trigger | undefined, computeMode
 
 type RawPositionInput = { centerX: number; centerY: number; width: number; height: number };
 
-const rawPosition = (args: RawPositionInput) => {
-  return { center: { x: args.centerX, y: args.centerY }, size: { width: args.width, height: args.height } };
-};
+const rawPosition = (args: RawPositionInput) => ({
+  center: { x: args.centerX, y: args.centerY },
+  size: { width: args.width, height: args.height },
+});
 
 const position = (rect: { x: number; y: number; width?: number; height?: number }) => {
   const snap = 32;

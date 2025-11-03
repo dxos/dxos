@@ -21,25 +21,23 @@ const MAX_RENDERED_COUNT = 80;
 
 export type ItemListProps<T> = { objects: T[] } & Pick<ItemProps<T>, 'debug' | 'onDelete'>;
 
-export const ItemList = ({ objects, debug, ...props }: ItemListProps<Obj.Any>) => {
-  return (
-    <div className='flex flex-col grow overflow-hidden'>
-      <div className='flex flex-col overflow-y-scroll pr-2'>
-        {objects
-          .slice(0, MAX_RENDERED_COUNT)
-          .map(
-            (object) =>
-              (debug && <DebugItem key={object.id} object={object} {...props} />) || (
-                <Item key={object.id} object={object} {...props} />
-              ),
-          )}
-        {objects.length > MAX_RENDERED_COUNT && (
-          <div className='text-xs text-gray-400'>({objects.length - MAX_RENDERED_COUNT} more items)</div>
+export const ItemList = ({ objects, debug, ...props }: ItemListProps<Obj.Any>) => (
+  <div className='flex flex-col grow overflow-hidden'>
+    <div className='flex flex-col overflow-y-scroll pr-2'>
+      {objects
+        .slice(0, MAX_RENDERED_COUNT)
+        .map(
+          (object) =>
+            (debug && <DebugItem key={object.id} object={object} {...props} />) || (
+              <Item key={object.id} object={object} {...props} />
+            ),
         )}
-      </div>
+      {objects.length > MAX_RENDERED_COUNT && (
+        <div className='text-xs text-gray-400'>({objects.length - MAX_RENDERED_COUNT} more items)</div>
+      )}
     </div>
-  );
-};
+  </div>
+);
 
 const labelProps = 'shrink-0 w-20 text-right text-primary-500 px-2 py-[2px]';
 
@@ -105,8 +103,8 @@ export const Item = ({ object, onDelete }: ItemProps<Obj.Any>) => {
 
 const Editor = ({ object, prop }: { object: Obj.Any; prop: string }) => {
   const { themeMode } = useThemeContext();
-  const { parentRef } = useTextEditor(() => {
-    return {
+  const { parentRef } = useTextEditor(
+    () => ({
       initialValue: (object as any)[prop],
       extensions: [
         createBasicExtensions(),
@@ -114,8 +112,9 @@ const Editor = ({ object, prop }: { object: Obj.Any; prop: string }) => {
         createThemeExtensions({ themeMode, slots: { content: { className: 'p-0' } } }),
         automerge(createDocAccessor(object, [prop])),
       ],
-    };
-  }, []);
+    }),
+    [],
+  );
 
   return <div ref={parentRef} className='grow' />;
 };

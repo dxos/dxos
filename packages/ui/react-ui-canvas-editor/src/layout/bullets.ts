@@ -20,14 +20,13 @@ export const getPaths = (
   graph: CanvasGraphModel,
   root: HTMLElement,
   filter: { source?: string; target?: string },
-): { edge: BaseGraphEdge; el: SVGPathElement }[] => {
-  return getShapeElements<SVGPathElement>(root, 'path')
+): { edge: BaseGraphEdge; el: SVGPathElement }[] =>
+  getShapeElements<SVGPathElement>(root, 'path')
     .map((el) => {
       const edge = graph.getEdge(el.getAttribute(DATA_SHAPE_ID)!);
       return edge && edge.source === filter.source ? { edge, el } : null;
     })
     .filter(isTruthy);
-};
 
 export type BulletOptions = {
   max: number;
@@ -80,13 +79,14 @@ export const fireBullet = (
 /**
  * Creates a bullet animation.
  */
-export const createBullet = (
-  edge: BaseGraphEdge,
-  path: SVGPathElement,
-  options: BulletOptions = defaultBulletOptions,
-  cb?: (edge: BaseGraphEdge) => void,
-) => {
-  return (selection: Selection<any, any, any, any>) => {
+export const createBullet =
+  (
+    edge: BaseGraphEdge,
+    path: SVGPathElement,
+    options: BulletOptions = defaultBulletOptions,
+    cb?: (edge: BaseGraphEdge) => void,
+  ) =>
+  (selection: Selection<any, any, any, any>) => {
     selection.each(function () {
       const p = path.getPointAtLength(0);
       const bullet = select(this)
@@ -127,4 +127,3 @@ export const createBullet = (
         });
     });
   };
-};

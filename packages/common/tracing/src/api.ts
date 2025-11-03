@@ -167,9 +167,8 @@ export interface TraceDiagnostic {
 /**
  * Register a diagnostic that could be queried.
  */
-const diagnostic = <T>(params: TraceDiagnosticParams<T>): TraceDiagnostic => {
-  return TRACE_PROCESSOR.diagnostics.registerDiagnostic(params);
-};
+const diagnostic = <T>(params: TraceDiagnosticParams<T>): TraceDiagnostic =>
+  TRACE_PROCESSOR.diagnostics.registerDiagnostic(params);
 
 export const trace = {
   addLink,

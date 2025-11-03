@@ -25,27 +25,23 @@ export default () =>
       role: ['article', 'section', 'tabpanel'],
       filter: (data): data is { subject: Markdown.Document; variant: undefined } =>
         Obj.instanceOf(Markdown.Document, data.subject) && !data.variant,
-      component: ({ data, role }) => {
-        return <Container id={fullyQualifiedId(data.subject)} subject={data.subject} role={role} />;
-      },
+      component: ({ data, role }) => (
+        <Container id={fullyQualifiedId(data.subject)} subject={data.subject} role={role} />
+      ),
     }),
     createSurface({
       id: `${meta.id}/surface/text`,
       role: ['article', 'section', 'tabpanel'],
       filter: (data): data is { id: string; subject: DataType.Text } =>
         typeof data.id === 'string' && Obj.instanceOf(DataType.Text, data.subject),
-      component: ({ data, role }) => {
-        return <Container id={data.id} subject={data.subject} role={role} />;
-      },
+      component: ({ data, role }) => <Container id={data.id} subject={data.subject} role={role} />,
     }),
     // TODO(burdon): Remove this variant and conform to DataType.Text.
     createSurface({
       id: `${meta.id}/surface/editor`,
       role: ['article', 'section'],
       filter: (data): data is { subject: { id: string; text: string } } => isEditorModel(data.subject),
-      component: ({ data, role }) => {
-        return <Container id={data.subject.id} subject={data.subject} role={role} />;
-      },
+      component: ({ data, role }) => <Container id={data.subject.id} subject={data.subject} role={role} />,
     }),
     createSurface({
       id: `${meta.id}/surface/plugin-settings`,

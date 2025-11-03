@@ -18,9 +18,9 @@ export type ComputeGraphContextType = {
  */
 export const ComputeGraphContext = createContext<ComputeGraphContextType | undefined>(undefined);
 
-export const ComputeGraphContextProvider = ({ registry, children }: PropsWithChildren<ComputeGraphContextType>) => {
-  return <ComputeGraphContext.Provider value={{ registry }}>{children}</ComputeGraphContext.Provider>;
-};
+export const ComputeGraphContextProvider = ({ registry, children }: PropsWithChildren<ComputeGraphContextType>) => (
+  <ComputeGraphContext.Provider value={{ registry }}>{children}</ComputeGraphContext.Provider>
+);
 
 export const useComputeGraph = (space?: Space): ComputeGraph | undefined => {
   const { registry } = useContext(ComputeGraphContext) ?? raise(new Error('Missing ComputeGraphContext'));

@@ -40,29 +40,25 @@ export const AccordionItem = <T extends ListItemRecord>({ children, classNames, 
 
 export type AccordionItemHeaderProps = ThemedClassName<AccordionPrimitive.AccordionHeaderProps>;
 
-export const AccordionItemHeader = ({ classNames, children, ...props }: AccordionItemHeaderProps) => {
-  return (
-    <AccordionPrimitive.Header {...props} className={mx(classNames)}>
-      <AccordionPrimitive.Trigger className='group flex items-center p-2 dx-focus-ring-inset is-full text-start'>
-        {children}
-        <Icon
-          icon='ph--caret-right--regular'
-          size={4}
-          classNames='transition-transform duration-200 group-data-[state=open]:rotate-90'
-        />
-      </AccordionPrimitive.Trigger>
-    </AccordionPrimitive.Header>
-  );
-};
+export const AccordionItemHeader = ({ classNames, children, ...props }: AccordionItemHeaderProps) => (
+  <AccordionPrimitive.Header {...props} className={mx(classNames)}>
+    <AccordionPrimitive.Trigger className='group flex items-center p-2 dx-focus-ring-inset is-full text-start'>
+      {children}
+      <Icon
+        icon='ph--caret-right--regular'
+        size={4}
+        classNames='transition-transform duration-200 group-data-[state=open]:rotate-90'
+      />
+    </AccordionPrimitive.Trigger>
+  </AccordionPrimitive.Header>
+);
 
 export type AccordionItemBodyProps = ThemedClassName<PropsWithChildren>;
 
-export const AccordionItemBody = ({ children, classNames }: AccordionItemBodyProps) => {
-  return (
-    <AccordionPrimitive.Content className='overflow-hidden data-[state=closed]:animate-slideUp data-[state=open]:animate-slideDown'>
-      <div role='none' className={mx('p-2', classNames)}>
-        {children}
-      </div>
-    </AccordionPrimitive.Content>
-  );
-};
+export const AccordionItemBody = ({ children, classNames }: AccordionItemBodyProps) => (
+  <AccordionPrimitive.Content className='overflow-hidden data-[state=closed]:animate-slideUp data-[state=open]:animate-slideDown'>
+    <div role='none' className={mx('p-2', classNames)}>
+      {children}
+    </div>
+  </AccordionPrimitive.Content>
+);

@@ -51,9 +51,7 @@ const StorybookTreeItem = ({ data, prefix }: StorybookTreeItemProps) => {
   );
 };
 
-const DefaultStory = ({ data }: StorybookTreeProps) => {
-  return <StorybookTreeItem data={data} />;
-};
+const DefaultStory = ({ data }: StorybookTreeProps) => <StorybookTreeItem data={data} />;
 
 const meta = {
   title: 'ui/react-ui-core/Tree',

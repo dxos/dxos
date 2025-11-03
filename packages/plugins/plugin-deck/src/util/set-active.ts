@@ -14,8 +14,8 @@ export type SetActiveOptions = {
   attention?: AttentionManager;
 };
 
-export const setActive = ({ next, state, attention }: SetActiveOptions) => {
-  return batch(() => {
+export const setActive = ({ next, state, attention }: SetActiveOptions) =>
+  batch(() => {
     const active = state.deck.solo ? [state.deck.solo] : state.deck.active;
     const removed = active.filter((id) => !next.includes(id));
     const closed = Array.from(new Set([...state.deck.inactive.filter((id) => !next.includes(id)), ...removed]));
@@ -44,4 +44,3 @@ export const setActive = ({ next, state, attention }: SetActiveOptions) => {
       }
     }
   });
-};

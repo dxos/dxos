@@ -63,9 +63,9 @@ export default (context: PluginContext) => {
     //   Alternative: the call/meeting/thread should be a child node of the channel and that should be opened.
     createExtension({
       id: `${meta.id}/channel-chat-companion`,
-      connector: (node) => {
-        return Rx.make((get) => {
-          return Function.pipe(
+      connector: (node) =>
+        Rx.make((get) =>
+          Function.pipe(
             get(node),
             Option.flatMap((node) =>
               Obj.instanceOf(Channel.Channel, node.data) ? Option.some(node.data) : Option.none(),
@@ -94,9 +94,8 @@ export default (context: PluginContext) => {
               ];
             }),
             Option.getOrElse(() => []),
-          );
-        });
-      },
+          ),
+        ),
     }),
     createExtension({
       id: `${meta.id}/comments-companion`,

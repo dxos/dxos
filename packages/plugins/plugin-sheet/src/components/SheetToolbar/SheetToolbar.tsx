@@ -28,8 +28,8 @@ const createToolbarActions = (
   state: ToolbarState,
   cursorFallbackRange?: CompleteCellRange,
   customActions?: Rx.Rx<ActionGraphProps>,
-): Rx.Rx<ActionGraphProps> => {
-  return Rx.make((get) => {
+): Rx.Rx<ActionGraphProps> =>
+  Rx.make((get) => {
     const align = get(rxFromSignal(() => createAlign(model, state, cursorFallbackRange)));
     const style = get(rxFromSignal(() => createStyle(model, state, cursorFallbackRange)));
     const gap = createGapSeparator();
@@ -47,7 +47,6 @@ const createToolbarActions = (
 
     return graph;
   });
-};
 
 export type SheetToolbarProps = PropsWithChildren<{ id: string }>;
 
@@ -58,13 +57,15 @@ export const SheetToolbar = ({ id }: SheetToolbarProps) => {
   useStyleState(state);
 
   const { graph } = useAppGraph();
-  const customActions = useMemo(() => {
-    return Rx.make((get) => {
-      const actions = get(graph.actions(id));
-      const nodes = actions.filter((action) => action.properties.disposition === 'toolbar');
-      return { nodes, edges: nodes.map((node) => ({ source: 'root', target: node.id })) };
-    });
-  }, [graph]);
+  const customActions = useMemo(
+    () =>
+      Rx.make((get) => {
+        const actions = get(graph.actions(id));
+        const nodes = actions.filter((action) => action.properties.disposition === 'toolbar');
+        return { nodes, edges: nodes.map((node) => ({ source: 'root', target: node.id })) };
+      }),
+    [graph],
+  );
 
   const actionsCreator = useMemo(
     () => createToolbarActions(model, state, cursorFallbackRange, customActions),

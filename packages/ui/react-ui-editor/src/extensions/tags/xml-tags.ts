@@ -214,11 +214,8 @@ export const xmlTags = ({ registry, setWidgets, bookmarks }: XmlTagsOptions): Ex
  * Effect processing plugin for navigation.
  * Handles navigation up/down effects.
  */
-const createNavigationEffectPlugin = (
-  widgetDecorationsField: StateField<WidgetDecorationSet>,
-  bookmarks?: string[],
-) => {
-  return EditorView.updateListener.of((update) => {
+const createNavigationEffectPlugin = (widgetDecorationsField: StateField<WidgetDecorationSet>, bookmarks?: string[]) =>
+  EditorView.updateListener.of((update) => {
     update.transactions.forEach((transaction) => {
       for (const effect of transaction.effects) {
         if (effect.is(navigatePreviousEffect)) {
@@ -277,7 +274,6 @@ const createNavigationEffectPlugin = (
       }
     });
   });
-};
 
 /**
  * Effect processing plugin.
@@ -319,9 +315,7 @@ const createWidgetUpdatePlugin = (
  */
 const createWidgetDecorationsField = (registry: XmlWidgetRegistry, notifier: XmlWidgetNotifier) =>
   StateField.define<WidgetDecorationSet>({
-    create: (state) => {
-      return buildDecorations(state, { from: 0, to: state.doc.length }, registry, notifier);
-    },
+    create: (state) => buildDecorations(state, { from: 0, to: state.doc.length }, registry, notifier),
     update: ({ from, decorations }, tr) => {
       // Check for reset effect.
       for (const effect of tr.effects) {

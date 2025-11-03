@@ -24,21 +24,19 @@ export type DefaultstoryProps = {
   cards: CardProps<any>[];
 };
 
-export const Defaultstory = ({ role, cards }: DefaultstoryProps) => {
-  return (
-    <div className='flex bs-full'>
-      <div className='flex shrink-0 gap-8 overflow-x-auto pbe-4'>
-        {cards.map(({ Component, icon, image, subject }, i) => (
-          <div key={i} className='flex is-[24rem] justify-center'>
-            <CardContainer icon={icon} role={role}>
-              <Component role={role} subject={image ? subject : omitImage(subject)} />
-            </CardContainer>
-          </div>
-        ))}
-      </div>
+export const Defaultstory = ({ role, cards }: DefaultstoryProps) => (
+  <div className='flex bs-full'>
+    <div className='flex shrink-0 gap-8 overflow-x-auto pbe-4'>
+      {cards.map(({ Component, icon, image, subject }, i) => (
+        <div key={i} className='flex is-[24rem] justify-center'>
+          <CardContainer icon={icon} role={role}>
+            <Component role={role} subject={image ? subject : omitImage(subject)} />
+          </CardContainer>
+        </div>
+      ))}
     </div>
-  );
-};
+  </div>
+);
 
 export const omitImage = ({ image: _, ...rest }: any) => rest;
 

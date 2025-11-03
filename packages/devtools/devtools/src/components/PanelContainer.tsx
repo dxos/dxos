@@ -14,12 +14,10 @@ type PanelContainerProps = ThemedClassName<
   }>
 >;
 
-export const PanelContainer = ({ classNames, children, toolbar, footer }: PanelContainerProps) => {
-  return (
-    <div className='flex flex-col bs-full overflow-hidden divide-y divide-separator'>
-      {toolbar}
-      <div className={mx('flex flex-col bs-full overflow-auto', classNames)}>{children}</div>
-      {footer}
-    </div>
-  );
-};
+export const PanelContainer = ({ classNames, children, toolbar, footer }: PanelContainerProps) => (
+  <div className='flex flex-col bs-full overflow-hidden divide-y divide-separator'>
+    {toolbar}
+    <div className={mx('flex flex-col bs-full overflow-auto', classNames)}>{children}</div>
+    {footer}
+  </div>
+);

@@ -295,11 +295,10 @@ export const createGptCircuit = (options: {
   return model;
 };
 
-export const createGPTRealtimeCircuit = () => {
-  return CanvasGraphModel.create<ComputeShape>({
+export const createGPTRealtimeCircuit = () =>
+  CanvasGraphModel.create<ComputeShape>({
     nodes: [createGptRealtime(position({ x: 0, y: 0 }))],
   });
-};
 
 export const createAudioCircuit = () => {
   const model = CanvasGraphModel.create<ComputeShape>();

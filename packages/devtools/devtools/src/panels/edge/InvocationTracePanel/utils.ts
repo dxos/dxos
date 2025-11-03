@@ -4,9 +4,7 @@
 
 import { type DXN } from '@dxos/keys';
 
-export const formatDuration = (duration: number): string => {
-  return `${(duration / 1000).toFixed(2)}`;
-};
+export const formatDuration = (duration: number): string => `${(duration / 1000).toFixed(2)}`;
 
 /**
  * Extracts the UUID part from a DXN.

@@ -9,13 +9,12 @@ import { type PeerSyncState, type Space, type SpaceId, SpaceState, useSpace } fr
 import { mx } from '@dxos/react-ui-theme';
 
 // TODO(wittjosiah): Copied from plugin-space. Factor out?
-export const getSpaceDisplayName = (space: Space, { personal }: { personal?: boolean } = {}): string => {
-  return space.state.get() === SpaceState.SPACE_READY && (space.properties.name?.length ?? 0) > 0
+export const getSpaceDisplayName = (space: Space, { personal }: { personal?: boolean } = {}): string =>
+  space.state.get() === SpaceState.SPACE_READY && (space.properties.name?.length ?? 0) > 0
     ? space.properties.name
     : personal
       ? 'Personal Space'
       : 'New space';
-};
 
 export type SpaceRowContainerProps = Omit<SpaceRowProps, 'spaceName'>;
 

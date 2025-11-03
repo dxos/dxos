@@ -36,13 +36,10 @@ export const getProxySlot = <T extends object>(proxy: Live<any>): ProxyHandlerSl
   return value;
 };
 
-export const getProxyTarget = <T extends object>(proxy: Live<any>): T => {
-  return getProxySlot<T>(proxy).target;
-};
+export const getProxyTarget = <T extends object>(proxy: Live<any>): T => getProxySlot<T>(proxy).target;
 
-export const getProxyHandler = <T extends object>(proxy: Live<any>): ReactiveHandler<T> => {
-  return getProxySlot<T>(proxy).handler;
-};
+export const getProxyHandler = <T extends object>(proxy: Live<any>): ReactiveHandler<T> =>
+  getProxySlot<T>(proxy).handler;
 
 /**
  * Unsafe method to override id for debugging/testing and migration purposes.

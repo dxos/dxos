@@ -56,9 +56,7 @@ export const Controlled: Story = {
         <Toolbar.Root>
           <Toolbar.Button
             onClick={() =>
-              setLines((lines) => {
-                return [...lines, `[${lines.length + 1}/${lines.length + 1}] ${faker.lorem.paragraph()}`];
-              })
+              setLines((lines) => [...lines, `[${lines.length + 1}/${lines.length + 1}] ${faker.lorem.paragraph()}`])
             }
           >
             Add

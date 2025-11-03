@@ -14,15 +14,14 @@ export type TokenManagerProps = {
   onDelete?: (token: DataType.AccessToken) => void;
 };
 
-export const TokenManager = ({ tokens, onDelete }: TokenManagerProps) => {
-  return tokens.length > 0 ? (
+export const TokenManager = ({ tokens, onDelete }: TokenManagerProps) =>
+  tokens.length > 0 ? (
     <List classNames='space-y-2'>
       {tokens.map((token) => (
         <TokenItem key={token.id} token={token} onDelete={onDelete} />
       ))}
     </List>
   ) : null;
-};
 
 type TokenItemProps = {
   token: DataType.AccessToken;

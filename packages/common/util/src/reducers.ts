@@ -72,24 +72,22 @@ export const numericalValues = <T>(values: T[], accessor: Accessor<T, number>) =
 /**
  * Returns an array of unique values.
  */
-export const reduceSet = <T, V>(values: T[], accessor: Accessor<T, V>): Set<V> => {
-  return values.reduce((values, value) => {
+export const reduceSet = <T, V>(values: T[], accessor: Accessor<T, V>): Set<V> =>
+  values.reduce((values, value) => {
     const v = accessBy(value, accessor);
     values.add(v);
     return values;
   }, new Set<V>());
-};
 
 /**
  * Returns an object containing values grouped by the given key accessor.
  */
-export const reduceGroupBy = <T, K>(values: T[], accessor: Accessor<T, K>): Map<K, T[]> => {
-  return values.reduce((values, value) => {
+export const reduceGroupBy = <T, K>(values: T[], accessor: Accessor<T, K>): Map<K, T[]> =>
+  values.reduce((values, value) => {
     const key = accessBy(value, accessor);
     defaultMap(values, key, []).push(value);
     return values;
   }, new Map<K, T[]>());
-};
 
 /**
  * Generic composable reducer interface.

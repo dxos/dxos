@@ -19,13 +19,11 @@ import { Syncer } from './sync';
 
 export const automerge = (accessor: DocAccessor): Extension => {
   const syncState = StateField.define<State>({
-    create: () => {
-      return {
-        path: accessor.path.slice(),
-        lastHeads: A.getHeads(accessor.handle.doc()!),
-        unreconciledTransactions: [],
-      };
-    },
+    create: () => ({
+      path: accessor.path.slice(),
+      lastHeads: A.getHeads(accessor.handle.doc()!),
+      unreconciledTransactions: [],
+    }),
 
     update: (value, tr) => {
       const result: State = {

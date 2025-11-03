@@ -20,9 +20,7 @@ export type RootProps = ThemedClassName<PropsWithChildren<SVGContextOptions>>;
 export const Root = forwardRef<SVGContext, RootProps>(({ classNames, children, ...props }, ref) => {
   const { ref: containerRef, width = 0, height = 0 } = useResizeDetector({ refreshRate: 200 });
 
-  const context = useMemo<SVGContext>(() => {
-    return new SVGContext(props);
-  }, [props.scale, props.centered]);
+  const context = useMemo<SVGContext>(() => new SVGContext(props), [props.scale, props.centered]);
 
   useImperativeHandle(ref, () => context, [context]);
 

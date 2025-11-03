@@ -43,9 +43,7 @@ export const generateJWKKeyPair = async (): Promise<TestKeyPair> => {
 /**
  * Parse a key pair from JWK format.
  */
-export const parseJWKKeyPair = async (privateKey: JsonWebKey, publicKey: JsonWebKey): Promise<CryptoKeyPair> => {
-  return {
-    privateKey: await subtleCrypto.importKey('jwk', privateKey, { name: 'ECDSA', namedCurve: 'P-256' }, true, ['sign']),
-    publicKey: await subtleCrypto.importKey('jwk', publicKey, { name: 'ECDSA', namedCurve: 'P-256' }, true, ['verify']),
-  };
-};
+export const parseJWKKeyPair = async (privateKey: JsonWebKey, publicKey: JsonWebKey): Promise<CryptoKeyPair> => ({
+  privateKey: await subtleCrypto.importKey('jwk', privateKey, { name: 'ECDSA', namedCurve: 'P-256' }, true, ['sign']),
+  publicKey: await subtleCrypto.importKey('jwk', publicKey, { name: 'ECDSA', namedCurve: 'P-256' }, true, ['verify']),
+});

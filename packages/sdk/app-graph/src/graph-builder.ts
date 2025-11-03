@@ -290,9 +290,9 @@ export class GraphBuilder {
     this._subscriptions.clear();
   }
 
-  private readonly _resolvers = Rx.family<string, Rx.Rx<Option.Option<NodeArg<any>>>>((id) => {
-    return Rx.make((get) => {
-      return Function.pipe(
+  private readonly _resolvers = Rx.family<string, Rx.Rx<Option.Option<NodeArg<any>>>>((id) =>
+    Rx.make((get) =>
+      Function.pipe(
         get(this._extensions),
         Record.values,
         Array.sortBy(byPosition),
@@ -301,12 +301,12 @@ export class GraphBuilder {
         Array.map((resolver) => get(resolver(id))),
         Array.filter(isNonNullable),
         Array.head,
-      );
-    });
-  });
+      ),
+    ),
+  );
 
-  private readonly _connectors = Rx.family<string, Rx.Rx<NodeArg<any>[]>>((key) => {
-    return Rx.make((get) => {
+  private readonly _connectors = Rx.family<string, Rx.Rx<NodeArg<any>[]>>((key) =>
+    Rx.make((get) => {
       const [id, relation] = key.split('+');
       const node = this._graph.node(id);
 
@@ -320,8 +320,8 @@ export class GraphBuilder {
         Array.filter(isNonNullable),
         Array.flatMap((result) => get(result)),
       );
-    }).pipe(Rx.withLabel(`graph-builder:connectors:${key}`));
-  });
+    }).pipe(Rx.withLabel(`graph-builder:connectors:${key}`)),
+  );
 
   private _onExpand(id: string, relation: Relation): void {
     log('onExpand', { id, relation, registry: getDebugName(this._registry) });
@@ -406,8 +406,8 @@ export class GraphBuilder {
  * Creates an Rx.Rx<T> from a callback which accesses signals.
  * Will return a new rx instance each time.
  */
-export const rxFromSignal = <T>(cb: () => T): Rx.Rx<T> => {
-  return Rx.make((get) => {
+export const rxFromSignal = <T>(cb: () => T): Rx.Rx<T> =>
+  Rx.make((get) => {
     const dispose = effect(() => {
       get.setSelf(cb());
     });
@@ -416,22 +416,20 @@ export const rxFromSignal = <T>(cb: () => T): Rx.Rx<T> => {
 
     return cb();
   });
-};
 
-const observableFamily = Rx.family((observable: MulticastObservable<any>) => {
-  return Rx.make((get) => {
+const observableFamily = Rx.family((observable: MulticastObservable<any>) =>
+  Rx.make((get) => {
     const subscription = observable.subscribe((value) => get.setSelf(value));
 
     get.addFinalizer(() => subscription.unsubscribe());
 
     return observable.get();
-  });
-});
+  }),
+);
 
 /**
  * Creates an Rx.Rx<T> from a MulticastObservable<T>
  * Will return the same rx instance for the same observable.
  */
-export const rxFromObservable = <T>(observable: MulticastObservable<T>): Rx.Rx<T> => {
-  return observableFamily(observable) as Rx.Rx<T>;
-};
+export const rxFromObservable = <T>(observable: MulticastObservable<T>): Rx.Rx<T> =>
+  observableFamily(observable) as Rx.Rx<T>;

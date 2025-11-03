@@ -198,9 +198,7 @@ export namespace Ref {
  * @example "dxn:example.com/type/Person:0.1.0"
  * @example "dxn:echo:SSSSSSSSSS:XXXXXXXXXXXXX"
  */
-export const getDXN = (schema: Obj.Any | Relation.Any): Keys.DXN | undefined => {
-  return EchoSchema.getSchemaDXN(schema);
-};
+export const getDXN = (schema: Obj.Any | Relation.Any): Keys.DXN | undefined => EchoSchema.getSchemaDXN(schema);
 
 /**
  * @param schema - Schema to get the typename from.
@@ -235,9 +233,7 @@ export type Meta = EchoSchema.TypeAnnotation;
 /**
  * Gets the meta data of the schema.
  */
-export const getMeta = (schema: Obj.Any | Relation.Any): Meta | undefined => {
-  return EchoSchema.getTypeAnnotation(schema);
-};
+export const getMeta = (schema: Obj.Any | Relation.Any): Meta | undefined => EchoSchema.getTypeAnnotation(schema);
 
 // TODO(dmaretskyi): Remove re-exports.
 export { SpaceId, ObjectId, DXN } from '@dxos/keys';

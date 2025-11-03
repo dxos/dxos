@@ -17,9 +17,9 @@ export const ShortcutsList = () => {
   const bindings = Keyboard.singleton.getBindings();
 
   // TODO(burdon): Get shortcuts from TextEditor.
-  bindings.sort((a, b) => {
-    return toLocalizedString(a.data, t)?.toLowerCase().localeCompare(toLocalizedString(b.data, t)?.toLowerCase());
-  });
+  bindings.sort((a, b) =>
+    toLocalizedString(a.data, t)?.toLowerCase().localeCompare(toLocalizedString(b.data, t)?.toLowerCase()),
+  );
 
   return (
     <dl className={mx('is-fit grid grid-cols-[min-content_minmax(12rem,1fr)] gap-2 mlb-4 text-subdued select-none')}>

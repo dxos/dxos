@@ -62,9 +62,7 @@ export const getBounds = (p1: Point, p2: Point): Rect => ({
   height: Math.abs(p1.y - p2.y),
 });
 
-export const pointsToRect = ([p1, p2]: Point[]): Rect => {
-  return getBounds(p1, p2);
-};
+export const pointsToRect = ([p1, p2]: Point[]): Rect => getBounds(p1, p2);
 
 export const rectToPoints = (rect: Rect): Point[] => [
   { x: rect.x, y: rect.y },

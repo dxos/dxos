@@ -183,13 +183,11 @@ export class RtcTransportService implements BridgeService {
   }
 }
 
-const createStateUpdater = (next: (event: BridgeEvent) => void) => {
-  return (state: ConnectionState, err?: Error) => {
-    next({
-      connection: {
-        state,
-        ...(err ? { error: err.message } : undefined),
-      },
-    });
-  };
+const createStateUpdater = (next: (event: BridgeEvent) => void) => (state: ConnectionState, err?: Error) => {
+  next({
+    connection: {
+      state,
+      ...(err ? { error: err.message } : undefined),
+    },
+  });
 };

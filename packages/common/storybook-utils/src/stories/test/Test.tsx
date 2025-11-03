@@ -10,6 +10,4 @@ export const TEST_ID = 'test';
 
 export type TestProps = IconButtonProps;
 
-export const Test = (props: TestProps) => {
-  return <IconButton {...props} />;
-};
+export const Test = (props: TestProps) => <IconButton {...props} />;

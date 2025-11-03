@@ -57,9 +57,7 @@ export const Todos = () => {
       .forEach((item) => space?.db.remove(item));
   };
 
-  const activeTodoCount = allTodos.reduce((acc, todo) => {
-    return todo?.completed ? acc : acc + 1;
-  }, 0);
+  const activeTodoCount = allTodos.reduce((acc, todo) => (todo?.completed ? acc : acc + 1), 0);
 
   const completedCount = allTodos.length - activeTodoCount;
 

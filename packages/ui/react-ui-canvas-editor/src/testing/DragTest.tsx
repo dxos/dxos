@@ -77,17 +77,15 @@ export const DragTest = () => {
 
 type DragElementProps = ThemedClassName<{ style?: CSSProperties }>;
 
-const DragElement = forwardRef<HTMLDivElement, DragElementProps>(({ classNames, style }, forwardedRef) => {
-  return (
-    <div
-      ref={forwardedRef}
-      style={{ ...style, ...size, boxSizing: 'border-box' }}
-      className={mx(
-        'absolute flex items-center justify-center border border-primary-500 rounded-md text-4xl',
-        classNames,
-      )}
-    >
-      <Icon icon={'ph--crosshair-simple--regular'} size={16} />
-    </div>
-  );
-});
+const DragElement = forwardRef<HTMLDivElement, DragElementProps>(({ classNames, style }, forwardedRef) => (
+  <div
+    ref={forwardedRef}
+    style={{ ...style, ...size, boxSizing: 'border-box' }}
+    className={mx(
+      'absolute flex items-center justify-center border border-primary-500 rounded-md text-4xl',
+      classNames,
+    )}
+  >
+    <Icon icon={'ph--crosshair-simple--regular'} size={16} />
+  </div>
+));

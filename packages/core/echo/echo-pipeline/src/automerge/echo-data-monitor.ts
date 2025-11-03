@@ -326,9 +326,8 @@ type LocalTimeSeries = {
   replication: MessageCountTimeSeries;
 };
 
-const isAutomergeProtocolMessage = (message: Message) => {
-  return !(isCollectionQueryMessage(message) || isCollectionStateMessage(message));
-};
+const isAutomergeProtocolMessage = (message: Message) =>
+  !(isCollectionQueryMessage(message) || isCollectionStateMessage(message));
 
 const createSlidingWindow = (overrides?: SlidingWindowSummaryConfig) =>
   new SlidingWindowSummary({ dataPoints: DEFAULT_AVG_WINDOW_SIZE, precision: 2, ...overrides });
@@ -365,12 +364,9 @@ const createStorageAverages = (): StorageAverages => ({
   storesPerSecond: createSlidingWindow({ dataPoints: PER_SECOND_RATE_AVG_WINDOW_SIZE }),
 });
 
-const getByteCount = (message: Message): number => {
-  return (
-    message.type.length +
-    message.senderId.length +
-    message.targetId.length +
-    (message.data?.byteLength ?? 0) +
-    (message.documentId?.length ?? 0)
-  );
-};
+const getByteCount = (message: Message): number =>
+  message.type.length +
+  message.senderId.length +
+  message.targetId.length +
+  (message.data?.byteLength ?? 0) +
+  (message.documentId?.length ?? 0);

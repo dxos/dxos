@@ -170,9 +170,10 @@ const GlobeCanvas = forwardRef<GlobeController, GlobeCanvasProps>(
 
     // Layers.
     // TODO(burdon): Generate on the fly based on what is visible.
-    const layers = useMemo(() => {
-      return timer(() => createLayers(topology as Topology, features, styles));
-    }, [topology, features, styles]);
+    const layers = useMemo(
+      () => timer(() => createLayers(topology as Topology, features, styles)),
+      [topology, features, styles],
+    );
 
     // State.
     const { size, center, zoom, translation, rotation, setCenter, setZoom, setTranslation, setRotation } =
@@ -189,8 +190,9 @@ const GlobeCanvas = forwardRef<GlobeController, GlobeCanvasProps>(
 
     // External controller.
     const zooming = useRef(false);
-    useImperativeHandle<GlobeController, GlobeController>(forwardRef, () => {
-      return {
+    useImperativeHandle<GlobeController, GlobeController>(
+      forwardRef,
+      () => ({
         canvas,
         projection,
         center,
@@ -217,8 +219,9 @@ const GlobeCanvas = forwardRef<GlobeController, GlobeCanvasProps>(
         },
         setTranslation,
         setRotation,
-      };
-    }, [canvas]);
+      }),
+      [canvas],
+    );
 
     // https://d3js.org/d3-geo/path#geoPath
     // https://developer.mozilla.org/en-US/docs/Web/API/HTMLCanvasElement/getContext
@@ -278,17 +281,17 @@ const GlobePanel = ({
   position,
   classNames,
   children,
-}: ThemedClassName<PropsWithChildren & { position?: ControlPosition }>) => {
-  return <div className={mx('z-10 absolute overflow-hidden', controlPositions[position], classNames)}>{children}</div>;
-};
+}: ThemedClassName<PropsWithChildren & { position?: ControlPosition }>) => (
+  <div className={mx('z-10 absolute overflow-hidden', controlPositions[position], classNames)}>{children}</div>
+);
 
 //
 // Controls
 //
 
-const CustomControl = ({ position, children }: PropsWithChildren<{ position: ControlPosition }>) => {
-  return <div className={mx('z-10 absolute overflow-hidden', controlPositions[position])}>{children}</div>;
-};
+const CustomControl = ({ position, children }: PropsWithChildren<{ position: ControlPosition }>) => (
+  <div className={mx('z-10 absolute overflow-hidden', controlPositions[position])}>{children}</div>
+);
 
 type GlobeControlProps = { position?: ControlPosition } & Pick<ControlProps, 'onAction'>;
 

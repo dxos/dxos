@@ -47,14 +47,12 @@ type HistoryRow = {
   message: string | null;
 };
 
-const mapHistoryRow = (item: AmState<any>): HistoryRow => {
-  return {
-    hash: item.change.hash,
-    actor: item.change.actor,
-    time: item.change.time,
-    message: item.change.message,
-  };
-};
+const mapHistoryRow = (item: AmState<any>): HistoryRow => ({
+  hash: item.change.hash,
+  actor: item.change.actor,
+  time: item.change.time,
+  message: item.change.message,
+});
 
 export const ObjectsPanel = (props: { space?: Space }) => {
   const state = useDevtoolsState();
@@ -82,10 +80,12 @@ export const ObjectsPanel = (props: { space?: Space }) => {
     setSelected(object);
   };
 
-  const history = useMemo(() => {
-    // It's better for performance to materialize all changes here in one loop.
-    return selected ? getEditHistory(selected).map(mapHistoryRow) : [];
-  }, [selected]);
+  const history = useMemo(
+    () =>
+      // It's better for performance to materialize all changes here in one loop.
+      selected ? getEditHistory(selected).map(mapHistoryRow) : [],
+    [selected],
+  );
 
   const dataProperties = useMemo(
     () => [
@@ -115,16 +115,18 @@ export const ObjectsPanel = (props: { space?: Space }) => {
     [],
   );
 
-  const dataRows = useMemo(() => {
-    return items.filter(textFilter(filter)).map((item) => ({
-      id: item.id,
-      type: getTypename(item),
-      version: getSchema(item) ? getSchemaVersion(getSchema(item)!) : undefined,
-      deleted: isDeleted(item) ? 'DELETED' : ' ',
-      schemaAvailable: getSchema(item) ? 'YES' : 'NO',
-      _original: item, // Store the original item for selection
-    }));
-  }, [items, filter]);
+  const dataRows = useMemo(
+    () =>
+      items.filter(textFilter(filter)).map((item) => ({
+        id: item.id,
+        type: getTypename(item),
+        version: getSchema(item) ? getSchemaVersion(getSchema(item)!) : undefined,
+        deleted: isDeleted(item) ? 'DELETED' : ' ',
+        schemaAvailable: getSchema(item) ? 'YES' : 'NO',
+        _original: item, // Store the original item for selection
+      })),
+    [items, filter],
+  );
 
   const handleObjectRowClicked = useCallback((row: any) => {
     if (!row) {
@@ -148,13 +150,15 @@ export const ObjectsPanel = (props: { space?: Space }) => {
     [],
   );
 
-  const historyRows = useMemo(() => {
-    return history.map((item) => ({
-      id: item.hash,
-      hash: item.hash.slice(0, 8),
-      actor: item.actor,
-    }));
-  }, [history, selectedVersion]);
+  const historyRows = useMemo(
+    () =>
+      history.map((item) => ({
+        id: item.hash,
+        hash: item.hash.slice(0, 8),
+        actor: item.actor,
+      })),
+    [history, selectedVersion],
+  );
 
   const handleVersionClick = useCallback(
     (version: HistoryRow) => {

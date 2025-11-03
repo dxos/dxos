@@ -11,12 +11,10 @@ export default () =>
     Capabilities.IntentResolver,
     createResolver({
       intent: ChessAction.Create,
-      resolve: ({ name, pgn }) => {
-        return {
-          data: {
-            object: Chess.makeGame({ name, pgn }),
-          },
-        };
-      },
+      resolve: ({ name, pgn }) => ({
+        data: {
+          object: Chess.makeGame({ name, pgn }),
+        },
+      }),
     }),
   );

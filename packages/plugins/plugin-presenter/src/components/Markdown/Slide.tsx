@@ -20,24 +20,22 @@ export type SlideProps = {
   classes?: Record<string, string>;
 };
 
-export const Slide = ({ content = '', classes = theme.nodes }: SlideProps) => {
+export const Slide = ({ content = '', classes = theme.nodes }: SlideProps) => (
   // TODO(thure): `rehype-highlight` ends up using `github.css` from `highlight.js`, but this does not appear to be
   //  configurable. Find a way to remove the literal stylesheet here.
-  return (
-    <>
-      <style>{styles}</style>
-      <ReactMarkdown
-        components={components}
-        // Markdown to HTML.
-        remarkPlugins={[[remarkFrontmatter, 'yaml'], remarkParseFrontmatter as any]}
-        // HTML processing.
-        rehypePlugins={[[rehypeAddClasses, classes], rehypeHighlight as any, slideLayout]}
-      >
-        {content}
-      </ReactMarkdown>
-    </>
-  );
-};
+  <>
+    <style>{styles}</style>
+    <ReactMarkdown
+      components={components}
+      // Markdown to HTML.
+      remarkPlugins={[[remarkFrontmatter, 'yaml'], remarkParseFrontmatter as any]}
+      // HTML processing.
+      rehypePlugins={[[rehypeAddClasses, classes], rehypeHighlight as any, slideLayout]}
+    >
+      {content}
+    </ReactMarkdown>
+  </>
+);
 
 /**
  * Rehype plugin to format DOM based on frontmatter.

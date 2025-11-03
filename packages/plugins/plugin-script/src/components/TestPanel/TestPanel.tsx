@@ -47,11 +47,12 @@ export const TestPanel = ({ classNames, functionUrl }: TestPanelProps) => {
   };
 
   const controller = useRef<AbortController>(null);
-  useEffect(() => {
-    return () => {
+  useEffect(
+    () => () => {
       handleStop();
-    };
-  }, []);
+    },
+    [],
+  );
 
   const handleStop = () => {
     controller.current?.abort('stop');
@@ -217,33 +218,31 @@ type MessageThreadProps = {
 };
 
 const MessageThread = forwardRef<HTMLDivElement, MessageThreadProps>(
-  ({ state, history, result }: MessageThreadProps, forwardedRef) => {
-    return (
-      <div ref={forwardedRef} className='flex flex-col gap-6 h-full p-2 overflow-x-hidden overflow-y-auto'>
-        {history.map((message, i) => (
-          <div key={i} className='grid grid-cols-[2rem_1fr_2rem]'>
-            <div className='p-1'>{message.type === 'response' && <RobotAvatar />}</div>
-            <div className='overflow-auto'>
-              <MessageItem message={message} />
-            </div>
+  ({ state, history, result }: MessageThreadProps, forwardedRef) => (
+    <div ref={forwardedRef} className='flex flex-col gap-6 h-full p-2 overflow-x-hidden overflow-y-auto'>
+      {history.map((message, i) => (
+        <div key={i} className='grid grid-cols-[2rem_1fr_2rem]'>
+          <div className='p-1'>{message.type === 'response' && <RobotAvatar />}</div>
+          <div className='overflow-auto'>
+            <MessageItem message={message} />
           </div>
-        ))}
+        </div>
+      ))}
 
-        {result?.length > 0 && (
-          <div className='grid grid-cols-[2rem_1fr_2rem]'>
-            <div className='p-1'>
-              {(state === 'pending' && <Icon icon='ph--spinner--regular' size={6} classNames='animate-spin' />) || (
-                <Icon icon='ph--robot--regular' size={6} classNames='animate-[pulse_1s_ease-in-out_infinite]' />
-              )}
-            </div>
-            <div className='overflow-auto'>
-              <MessageItem message={{ type: 'response', text: result }} />
-            </div>
+      {result?.length > 0 && (
+        <div className='grid grid-cols-[2rem_1fr_2rem]'>
+          <div className='p-1'>
+            {(state === 'pending' && <Icon icon='ph--spinner--regular' size={6} classNames='animate-spin' />) || (
+              <Icon icon='ph--robot--regular' size={6} classNames='animate-[pulse_1s_ease-in-out_infinite]' />
+            )}
           </div>
-        )}
-      </div>
-    );
-  },
+          <div className='overflow-auto'>
+            <MessageItem message={{ type: 'response', text: result }} />
+          </div>
+        </div>
+      )}
+    </div>
+  ),
 );
 
 const MessageItem = ({ classNames, message }: ThemedClassName<{ message: Message }>) => {

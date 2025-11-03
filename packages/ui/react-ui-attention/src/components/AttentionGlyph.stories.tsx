@@ -11,21 +11,19 @@ import { range } from '@dxos/util';
 
 import { AttentionGlyph, type AttentionGlyphProps } from './AttentionGlyph';
 
-const DefaultStory = (props: AttentionGlyphProps) => {
-  return (
-    <ul className='flex gap-2 mbe-2'>
-      <li>
-        <AttentionGlyph presence='none' {...props} />
-      </li>
-      <li>
-        <AttentionGlyph presence='one' {...props} />
-      </li>
-      <li>
-        <AttentionGlyph presence='many' {...props} />
-      </li>
-    </ul>
-  );
-};
+const DefaultStory = (props: AttentionGlyphProps) => (
+  <ul className='flex gap-2 mbe-2'>
+    <li>
+      <AttentionGlyph presence='none' {...props} />
+    </li>
+    <li>
+      <AttentionGlyph presence='one' {...props} />
+    </li>
+    <li>
+      <AttentionGlyph presence='many' {...props} />
+    </li>
+  </ul>
+);
 
 const meta = {
   title: 'ui/react-ui-attention/AttentionGlyph',

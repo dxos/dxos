@@ -36,45 +36,43 @@ const Swatch = ({ variableName, value, semantic, physical }: TokenAudit<HelicalA
   );
 };
 
-const DefaultStory = () => {
-  return (
-    <>
-      <div className='flex'>
-        <div className='p-2 bg-baseSurface rounded'>
-          <h1 className='text-lg mbe-2'>Physical color tokens</h1>
-          <pre className='text-xs'>
-            Luminosity (/ alpha)?
-            <br />
-            value // (whether added directly as a physical value)
-            <br />
-            naming // (whether added as a named physical value)
-            <br />
-            ...`semantic token name / theme`[]
-          </pre>
-        </div>
+const DefaultStory = () => (
+  <>
+    <div className='flex'>
+      <div className='p-2 bg-baseSurface rounded'>
+        <h1 className='text-lg mbe-2'>Physical color tokens</h1>
+        <pre className='text-xs'>
+          Luminosity (/ alpha)?
+          <br />
+          value // (whether added directly as a physical value)
+          <br />
+          naming // (whether added as a named physical value)
+          <br />
+          ...`semantic token name / theme`[]
+        </pre>
       </div>
+    </div>
 
-      {Object.entries(colorAudit).map(([seriesId, audits], i) => (
-        <Fragment key={i}>
-          <h2 className='mbs-12 mbe-4'>
-            <span className='pli-2 plb-1 bg-baseSurface rounded'>{seriesId}</span>
-          </h2>
-          <dl className='flex flex-wrap gap-2'>
-            {audits
-              .sort((a, b) => {
-                const [aL, aA] = parseAlphaLuminosity(a.value);
-                const [bL, bA] = parseAlphaLuminosity(b.value);
-                return aL - bL - (Number.isFinite(aA) && Number.isFinite(bA) ? aA! - bA! : 0);
-              })
-              .map((audit, i) => (
-                <Swatch key={i} {...audit} />
-              ))}
-          </dl>
-        </Fragment>
-      ))}
-    </>
-  );
-};
+    {Object.entries(colorAudit).map(([seriesId, audits], i) => (
+      <Fragment key={i}>
+        <h2 className='mbs-12 mbe-4'>
+          <span className='pli-2 plb-1 bg-baseSurface rounded'>{seriesId}</span>
+        </h2>
+        <dl className='flex flex-wrap gap-2'>
+          {audits
+            .sort((a, b) => {
+              const [aL, aA] = parseAlphaLuminosity(a.value);
+              const [bL, bA] = parseAlphaLuminosity(b.value);
+              return aL - bL - (Number.isFinite(aA) && Number.isFinite(bA) ? aA! - bA! : 0);
+            })
+            .map((audit, i) => (
+              <Swatch key={i} {...audit} />
+            ))}
+        </dl>
+      </Fragment>
+    ))}
+  </>
+);
 
 const meta = {
   title: 'ui/react-ui-theme/Tokens',

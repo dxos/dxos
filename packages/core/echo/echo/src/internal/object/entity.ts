@@ -54,8 +54,9 @@ export const EchoObject: {
   // TODO(burdon): Tighten Self type to Schema.TypeLiteral or Schema.Struct to facilitate definition of `make` method.
   // (meta: TypeMeta): <Self extends Schema.Struct<Fields>, Fields extends Schema.Struct.Fields>(self: Self) => EchoObjectSchema<Self, Fields>;
   (meta: TypeMeta): <Self extends Schema.Schema.Any>(self: Self) => EchoTypeSchema<Self>;
-} = ({ typename, version }) => {
-  return <Self extends Schema.Schema.Any>(self: Self): EchoTypeSchema<Self> => {
+} =
+  ({ typename, version }) =>
+  <Self extends Schema.Schema.Any>(self: Self): EchoTypeSchema<Self> => {
     invariant(typeof TypeAnnotationId === 'symbol', 'Sanity.');
     invariant(SchemaAST.isTypeLiteral(self.ast), 'Schema must be a TypeLiteral.');
 
@@ -76,7 +77,6 @@ export const EchoObject: {
 
     return makeEchoObjectSchema<Self>(/* self.fields, */ ast, typename, version);
   };
-};
 
 export type EchoRelationOptions<
   TSource extends Schema.Schema.AnyNoContext,
@@ -213,8 +213,8 @@ const makeEchoObjectSchema = <Self extends Schema.Schema.Any>(
   ast: SchemaAST.AST,
   typename: string,
   version: string,
-): EchoTypeSchema<Self> => {
-  return class EchoObjectSchemaClass extends Schema.make<
+): EchoTypeSchema<Self> =>
+  class EchoObjectSchemaClass extends Schema.make<
     EchoTypeSchemaProps<Schema.Schema.Type<Self>>,
     EchoTypeSchemaProps<Schema.Schema.Encoded<Self>>,
     Schema.Schema.Context<Self>
@@ -245,4 +245,3 @@ const makeEchoObjectSchema = <Self extends Schema.Schema.Any>(
       return Schema.is(this)(value);
     }
   };
-};

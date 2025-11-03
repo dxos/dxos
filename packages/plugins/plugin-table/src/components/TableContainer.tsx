@@ -48,13 +48,15 @@ export const TableContainer = ({ role, view }: TableContainerProps) => {
   const filteredObjects = useGlobalFilteredObjects(queriedObjects);
 
   const { graph } = useAppGraph();
-  const customActions = useMemo(() => {
-    return Rx.make((get) => {
-      const actions = get(graph.actions(fullyQualifiedId(view)));
-      const nodes = actions.filter((action) => action.properties.disposition === 'toolbar');
-      return { nodes, edges: nodes.map((node) => ({ source: 'root', target: node.id })) };
-    });
-  }, [graph]);
+  const customActions = useMemo(
+    () =>
+      Rx.make((get) => {
+        const actions = get(graph.actions(fullyQualifiedId(view)));
+        const nodes = actions.filter((action) => action.properties.disposition === 'toolbar');
+        return { nodes, edges: nodes.map((node) => ({ source: 'root', target: node.id })) };
+      }),
+    [graph],
+  );
 
   const addRow = useAddRow({ space, schema });
 

@@ -37,15 +37,13 @@ const createMockMessage = (): DataType.Message =>
 const meta = {
   title: 'plugins/plugin-inbox/MessageCard',
   component: MessageCard,
-  render: (args) => {
-    return (
-      <IntrinsicCardContainer>
-        <Card.StaticRoot>
-          <MessageCard {...args} />
-        </Card.StaticRoot>
-      </IntrinsicCardContainer>
-    );
-  },
+  render: (args) => (
+    <IntrinsicCardContainer>
+      <Card.StaticRoot>
+        <MessageCard {...args} />
+      </Card.StaticRoot>
+    </IntrinsicCardContainer>
+  ),
   decorators: [withTheme],
   parameters: {
     layout: 'fullscreen',

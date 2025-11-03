@@ -23,9 +23,7 @@ export const resolveComputeNode = async (node: ComputeNode): Promise<Executable>
   return impl;
 };
 
-export const isValidComputeNode = (type: string): boolean => {
-  return nodeFactory[type as NodeType] !== undefined;
-};
+export const isValidComputeNode = (type: string): boolean => nodeFactory[type as NodeType] !== undefined;
 
 export const createComputeNode = (shape: ComputeShape): ComputeNode => {
   const type = shape.type ?? raise(new Error('Type not specified'));

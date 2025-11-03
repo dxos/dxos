@@ -43,9 +43,8 @@ export const ComputeShape = Schema.extend(
 
 export type ComputeShape = Schema.Schema.Type<typeof ComputeShape>;
 
-export const createShape = <S extends ComputeShape>({ id, ...rest }: CreateShapeProps<S> & { type: string }): S => {
-  return {
+export const createShape = <S extends ComputeShape>({ id, ...rest }: CreateShapeProps<S> & { type: string }): S =>
+  ({
     id: id ?? ObjectId.random(),
     ...rest,
-  } as S;
-};
+  }) as S;

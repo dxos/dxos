@@ -55,13 +55,11 @@ const defineShape = <S extends GateShape>({
   icon,
   // NOTE: Preact interprets captitalized properties as React components.
   // Be careful not to name component factories with a capital letter.
-  component: () => {
-    return (
-      <div className='flex w-full justify-center items-center'>
-        <Symbol />
-      </div>
-    );
-  },
+  component: () => (
+    <div className='flex w-full justify-center items-center'>
+      <Symbol />
+    </div>
+  ),
   createShape,
   getAnchors: (shape) => createAnchors({ shape, inputs, outputs }),
 });
@@ -132,9 +130,7 @@ const AndSymbol = createSymbol(({ startX, endX, height }) => {
 export const AndShape = GateShape;
 export type AndShape = GateShape;
 
-export const createAnd = (props: Omit<CreateGateProps, 'type' | 'node'>) => {
-  return createGate({ ...props, type: 'and' });
-};
+export const createAnd = (props: Omit<CreateGateProps, 'type' | 'node'>) => createGate({ ...props, type: 'and' });
 export const andShape = defineShape({
   type: 'and',
   name: 'AND',
@@ -166,9 +162,7 @@ const OrSymbol = createSymbol(({ startX, endX, height }) => {
 export const OrShape = GateShape;
 export type OrShape = GateShape;
 
-export const createOr = (props: Omit<CreateGateProps, 'type' | 'node'>) => {
-  return createGate({ ...props, type: 'or' });
-};
+export const createOr = (props: Omit<CreateGateProps, 'type' | 'node'>) => createGate({ ...props, type: 'or' });
 export const orShape = defineShape({
   type: 'or',
   name: 'OR',
@@ -182,8 +176,8 @@ export const orShape = defineShape({
 // NOT
 //
 
-const NotSymbol = createSymbol(({ startX, endX, height }) => {
-  return [
+const NotSymbol = createSymbol(
+  ({ startX, endX, height }) => [
     `
     M ${startX},${height * 0.1}
     L ${endX * 0.9},${height * 0.5}
@@ -196,15 +190,14 @@ const NotSymbol = createSymbol(({ startX, endX, height }) => {
     A ${height * 0.1} ${height * 0.1} 0 0 1 ${endX - height * 0.2},${height * 0.5}
     Z
   `,
-  ];
-}, 1);
+  ],
+  1,
+);
 
 export const NotShape = GateShape;
 export type NotShape = GateShape;
 
-export const createNot = (props: Omit<CreateGateProps, 'type' | 'node'>) => {
-  return createGate({ ...props, type: 'not' });
-};
+export const createNot = (props: Omit<CreateGateProps, 'type' | 'node'>) => createGate({ ...props, type: 'not' });
 export const notShape = defineShape({
   type: 'not',
   name: 'NOT',

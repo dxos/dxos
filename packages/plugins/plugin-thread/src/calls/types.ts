@@ -20,12 +20,8 @@ export type UserState = buf.MessageInitShape<typeof UserStateSchema>;
 export type ActivityState = buf.MessageInitShape<typeof ActivitySchema>;
 
 export const codec = {
-  encode: (message: UserState): Uint8Array => {
-    return buf.toBinary(UserStateSchema, buf.create(UserStateSchema, message));
-  },
-  decode: (message: Uint8Array): UserStateProto => {
-    return buf.fromBinary(UserStateSchema, message);
-  },
+  encode: (message: UserState): Uint8Array => buf.toBinary(UserStateSchema, buf.create(UserStateSchema, message)),
+  decode: (message: Uint8Array): UserStateProto => buf.fromBinary(UserStateSchema, message),
 };
 
 export type TrackObject = {

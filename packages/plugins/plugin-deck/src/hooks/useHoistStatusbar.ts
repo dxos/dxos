@@ -15,12 +15,12 @@ export const useHoistStatusbar = (breakpoint: string, layoutMode?: LayoutMode): 
   const enableStatusbar = useCapability(Capabilities.SettingsStore).getStore<DeckSettingsProps>(meta.id)?.value
     .enableStatusbar;
 
-  return useMemo(() => {
-    return (
+  return useMemo(
+    () =>
       breakpoint === 'desktop' &&
       layoutMode !== 'solo--fullscreen' &&
       !!enableStatusbar &&
-      safeAreaPadding?.bottom === 0
-    );
-  }, [enableStatusbar, breakpoint, safeAreaPadding?.bottom, layoutMode]);
+      safeAreaPadding?.bottom === 0,
+    [enableStatusbar, breakpoint, safeAreaPadding?.bottom, layoutMode],
+  );
 };

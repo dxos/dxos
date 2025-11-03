@@ -23,15 +23,13 @@ export const createRedisRpcPort = ({
   receiveClient: Redis;
   sendQueue: string;
   receiveQueue: string;
-}): RpcPort => {
-  return {
-    send: async (message: Uint8Array) => {
-      await sendClient.rpush(sendQueue, Buffer.from(message));
-    },
-    subscribe: (callback: (message: Uint8Array) => void) =>
-      subscribeToRedisQueue({ client: receiveClient, queue: receiveQueue, callback }),
-  };
-};
+}): RpcPort => ({
+  send: async (message: Uint8Array) => {
+    await sendClient.rpush(sendQueue, Buffer.from(message));
+  },
+  subscribe: (callback: (message: Uint8Array) => void) =>
+    subscribeToRedisQueue({ client: receiveClient, queue: receiveQueue, callback }),
+});
 
 export const createRedisReadableStream = ({ client, queue }: { client: Redis; queue: string }) => {
   let unsubscribe: () => void;

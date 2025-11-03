@@ -24,13 +24,12 @@ export type TableOptions = {};
  * GFM tables.
  * https://github.github.com/gfm/#tables-extension
  */
-export const table = (options: TableOptions = {}): Extension => {
-  return StateField.define<RangeSet<Decoration>>({
+export const table = (options: TableOptions = {}): Extension =>
+  StateField.define<RangeSet<Decoration>>({
     create: (state) => update(state, options),
     update: (_: RangeSet<Decoration>, tr: Transaction) => update(tr.state, options),
     provide: (field) => EditorView.decorations.from(field),
   });
-};
 
 type Table = {
   from: number;

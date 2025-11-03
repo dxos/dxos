@@ -108,41 +108,39 @@ export const Colors: Story = {
 };
 
 export const Pacman: Story = {
-  render: () => {
-    return (
-      <div className='absolute inset-0 flex flex-col justify-center'>
-        <div className='flex flex-col'>
-          <div className='flex items-center p-4'>
-            <div className='flex ml-8 mr-[100px]'>
-              <div>
-                <Icon icon='ph--ghost--duotone' classNames='w-[180px] h-[180px] text-blue-500' />
-              </div>
-              <div>
-                <Icon icon='ph--ghost--duotone' classNames='w-[180px] h-[180px] text-purple-500' />
-              </div>
-              <div>
-                <Icon icon='ph--ghost--duotone' classNames='w-[180px] h-[180px] text-red-500' />
-              </div>
+  render: () => (
+    <div className='absolute inset-0 flex flex-col justify-center'>
+      <div className='flex flex-col'>
+        <div className='flex items-center p-4'>
+          <div className='flex ml-8 mr-[100px]'>
+            <div>
+              <Icon icon='ph--ghost--duotone' classNames='w-[180px] h-[180px] text-blue-500' />
             </div>
-
-            <ComposerLogo size={145} classNames={['fill-yellow-200', 'fill-yellow-300', 'fill-yellow-400']} />
-
-            <div className='flex -ml-10'>
-              {Array.from({ length: 6 }).map((_, i) => (
-                <div key={i} className='p-4'>
-                  <Icon icon='ph--square--duotone' classNames='w-6 h-6 text-yellow-200' />
-                </div>
-              ))}
+            <div>
+              <Icon icon='ph--ghost--duotone' classNames='w-[180px] h-[180px] text-purple-500' />
+            </div>
+            <div>
+              <Icon icon='ph--ghost--duotone' classNames='w-[180px] h-[180px] text-red-500' />
             </div>
           </div>
 
-          <div className='flex justify-center font-mono font-light text-[60px] mt-8 text-neutral-200'>
-            <div>Ready Player 1</div>
+          <ComposerLogo size={145} classNames={['fill-yellow-200', 'fill-yellow-300', 'fill-yellow-400']} />
+
+          <div className='flex -ml-10'>
+            {Array.from({ length: 6 }).map((_, i) => (
+              <div key={i} className='p-4'>
+                <Icon icon='ph--square--duotone' classNames='w-6 h-6 text-yellow-200' />
+              </div>
+            ))}
           </div>
         </div>
+
+        <div className='flex justify-center font-mono font-light text-[60px] mt-8 text-neutral-200'>
+          <div>Ready Player 1</div>
+        </div>
       </div>
-    );
-  },
+    </div>
+  ),
 };
 
 const SpinnerContainer = () => {
@@ -183,28 +181,23 @@ const SpinnerContainer = () => {
 };
 
 export const Spinner: Story = {
-  render: () => {
-    return (
-      <div className='absolute inset-0 flex items-center justify-center'>
-        <SpinnerContainer />
-      </div>
-    );
-  },
+  render: () => (
+    <div className='absolute inset-0 flex items-center justify-center'>
+      <SpinnerContainer />
+    </div>
+  ),
 };
 
 // https://github.com/grafana/grafana/blob/main/packages/grafana-ui/src/components/LoadingBar/LoadingBar.tsx
 export const Linear: Story = {
-  render: () => {
-    return (
-      <div className='absolute flex flex-col inset-0 bg-black'>
-        <div
-          className={'h-[1px] translateX(-100%) animate-progress-linear'}
-          style={{
-            background:
-              'linear-gradient(90deg, rgba(110, 159, 255, 0) 0%, #6E9FFF 80.75%, rgba(110, 159, 255, 0) 100%)',
-          }}
-        />
-      </div>
-    );
-  },
+  render: () => (
+    <div className='absolute flex flex-col inset-0 bg-black'>
+      <div
+        className={'h-[1px] translateX(-100%) animate-progress-linear'}
+        style={{
+          background: 'linear-gradient(90deg, rgba(110, 159, 255, 0) 0%, #6E9FFF 80.75%, rgba(110, 159, 255, 0) 100%)',
+        }}
+      />
+    </div>
+  ),
 };

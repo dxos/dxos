@@ -20,9 +20,7 @@ import { DeckLayout } from './DeckLayout';
 const meta = {
   title: 'plugins/plugin-deck/DeckLayout',
   component: DeckLayout,
-  render: (args) => {
-    return <DeckLayout {...args} />;
-  },
+  render: (args) => <DeckLayout {...args} />,
   decorators: [
     withTheme,
     withPluginManager({

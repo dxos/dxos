@@ -10,18 +10,14 @@ import { type Plugin } from 'esbuild';
 export const FixGracefulFsPlugin = (): Plugin => ({
   name: 'fix-graceful-fs-plugin',
   setup: ({ onResolve, onLoad }) => {
-    onResolve({ filter: /^graceful-fs$/ }, () => {
-      return {
-        path: 'graceful-fs',
-        namespace: 'fix-graceful-fs-plugin',
-      };
-    });
+    onResolve({ filter: /^graceful-fs$/ }, () => ({
+      path: 'graceful-fs',
+      namespace: 'fix-graceful-fs-plugin',
+    }));
 
-    onLoad({ filter: /^graceful-fs$/, namespace: 'fix-graceful-fs-plugin' }, async (args) => {
-      return {
-        contents: 'module.exports = {};',
-        loader: 'js',
-      };
-    });
+    onLoad({ filter: /^graceful-fs$/, namespace: 'fix-graceful-fs-plugin' }, async (args) => ({
+      contents: 'module.exports = {};',
+      loader: 'js',
+    }));
   },
 });

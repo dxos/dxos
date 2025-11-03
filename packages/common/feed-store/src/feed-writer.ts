@@ -26,9 +26,7 @@ export interface FeedWriter<T extends {}> {
 }
 
 export const createFeedWriter = <T extends {}>(cb: (data: T) => Promise<WriteReceipt>): FeedWriter<T> => ({
-  write: async (data: T) => {
-    return cb(data);
-  },
+  write: async (data: T) => cb(data),
 });
 
 export const writeMessages = async <T extends {}>(writer: FeedWriter<T>, messages: T[]): Promise<WriteReceipt[]> => {

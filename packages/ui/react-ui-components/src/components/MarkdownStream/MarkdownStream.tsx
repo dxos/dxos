@@ -70,8 +70,8 @@ export const MarkdownStream = forwardRef<MarkdownStreamController | null, Markdo
   ({ classNames, debug, content, registry, fadeIn, cursor, onEvent }, forwardedRef) => {
     const { themeMode } = useThemeContext();
     const [widgets, setWidgets] = useState<XmlWidgetState[]>([]);
-    const { parentRef, view } = useTextEditor(() => {
-      return {
+    const { parentRef, view } = useTextEditor(
+      () => ({
         initialValue: content,
         selection: EditorSelection.cursor(content?.length ?? 0),
         extensions: [
@@ -100,8 +100,9 @@ export const MarkdownStream = forwardRef<MarkdownStreamController | null, Markdo
                 autoScroll({ autoScroll: false, overscroll: 0 }),
               ],
         ].filter(isNonNullable),
-      };
-    }, [themeMode, registry]);
+      }),
+      [themeMode, registry],
+    );
 
     // Streaming queue.
     const [queue, setQueue, queueRef] = useStateWithRef(Effect.runSync(Queue.unbounded<string>()));
@@ -201,11 +202,12 @@ export const MarkdownStream = forwardRef<MarkdownStreamController | null, Markdo
     }, [view, onEvent]);
 
     // Cleanup.
-    useEffect(() => {
-      return () => {
+    useEffect(
+      () => () => {
         view?.destroy();
-      };
-    }, [view]);
+      },
+      [view],
+    );
 
     return (
       <>

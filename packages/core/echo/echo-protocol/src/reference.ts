@@ -173,10 +173,6 @@ export const EncodedReference = Object.freeze({
     assertArgument(isEncodedReference(value), 'value', 'invalid reference');
     return value['/'];
   },
-  toDXN: (value: EncodedReference): DXN => {
-    return DXN.parse(EncodedReference.getReferenceString(value));
-  },
-  fromDXN: (dxn: DXN): EncodedReference => {
-    return encodeReference(Reference.fromDXN(dxn));
-  },
+  toDXN: (value: EncodedReference): DXN => DXN.parse(EncodedReference.getReferenceString(value)),
+  fromDXN: (dxn: DXN): EncodedReference => encodeReference(Reference.fromDXN(dxn)),
 });

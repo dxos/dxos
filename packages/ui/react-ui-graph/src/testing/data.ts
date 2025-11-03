@@ -39,9 +39,7 @@ export const createTree = ({ depth = 2, children = 3 } = {}): TestNode => {
     if (d < depth) {
       const max = Math.round(Math.log(depth + 1 - d) * children);
       const num = faker.number.int({ min: 1, max });
-      root.children = [...new Array(num)].map(() => {
-        return createChildren(createNode(), d + 1);
-      });
+      root.children = [...new Array(num)].map(() => createChildren(createNode(), d + 1));
     }
 
     return root;

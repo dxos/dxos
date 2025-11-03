@@ -114,12 +114,11 @@ describe('open', () => {
   });
 });
 
-const createIdentityService = (serviceContext: ServiceContext) => {
-  return new IdentityServiceImpl(
+const createIdentityService = (serviceContext: ServiceContext) =>
+  new IdentityServiceImpl(
     serviceContext.identityManager,
     serviceContext.recoveryManager,
     serviceContext.keyring,
     () => serviceContext.dataSpaceManager!,
     (options) => serviceContext.createIdentity(options),
   );
-};

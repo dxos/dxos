@@ -10,8 +10,8 @@ import { DataType } from '@dxos/schema';
 
 import { Thread } from '../types';
 
-export const createCommentThread = (identity: Identity): Thread.Thread => {
-  return Thread.make({
+export const createCommentThread = (identity: Identity): Thread.Thread =>
+  Thread.make({
     name: 'Comment',
     messages: faker.helpers.multiple(
       () =>
@@ -28,10 +28,9 @@ export const createCommentThread = (identity: Identity): Thread.Thread => {
     ),
     status: 'active',
   });
-};
 
-export const createProposalThread = (identity: Identity): Thread.Thread => {
-  return Thread.make({
+export const createProposalThread = (identity: Identity): Thread.Thread =>
+  Thread.make({
     name: 'Proposal',
     messages: faker.helpers.multiple(
       () =>
@@ -48,4 +47,3 @@ export const createProposalThread = (identity: Identity): Thread.Thread => {
     ),
     status: 'active',
   });
-};

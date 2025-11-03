@@ -207,12 +207,11 @@ export const createRpcServer = <S>({ service, handlers, ...rest }: RpcServerOpti
 export const createBundledRpcClient = <S>(
   descriptors: ServiceBundle<S>,
   options: Omit<RpcPeerOptions, 'callHandler' | 'streamHandler'>,
-): ProtoRpcPeer<S> => {
-  return createProtoRpcPeer({
+): ProtoRpcPeer<S> =>
+  createProtoRpcPeer({
     requested: descriptors,
     ...options,
   });
-};
 
 /**
  * @deprecated

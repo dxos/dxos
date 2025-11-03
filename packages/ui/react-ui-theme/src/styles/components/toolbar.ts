@@ -15,13 +15,11 @@ export const toolbarLayout =
 // TODO(burdon): Detect: &:not([data-is-attention-source]_&)]:
 export const toolbarInactive = '*:opacity-20';
 
-export const toolbarRoot: ComponentFunction<ToolbarStyleProps> = ({ layoutManaged, disabled }, ...etc) => {
-  return mx('bg-toolbarSurface dx-toolbar', !layoutManaged && toolbarLayout, disabled && toolbarInactive, ...etc);
-};
+export const toolbarRoot: ComponentFunction<ToolbarStyleProps> = ({ layoutManaged, disabled }, ...etc) =>
+  mx('bg-toolbarSurface dx-toolbar', !layoutManaged && toolbarLayout, disabled && toolbarInactive, ...etc);
 
-export const toolbarInner: ComponentFunction<ToolbarStyleProps> = ({ layoutManaged }, ...etc) => {
-  return mx(!layoutManaged && ['flex gap-1', textBlockWidth], ...etc);
-};
+export const toolbarInner: ComponentFunction<ToolbarStyleProps> = ({ layoutManaged }, ...etc) =>
+  mx(!layoutManaged && ['flex gap-1', textBlockWidth], ...etc);
 
 export const toolbarTheme: Theme<ToolbarStyleProps> = {
   root: toolbarRoot,

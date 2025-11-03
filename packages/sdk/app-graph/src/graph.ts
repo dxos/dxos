@@ -248,13 +248,13 @@ export class Graph implements WritableGraph {
     return Rx.make<Option.Option<Node>>(initial).pipe(Rx.keepAlive, Rx.withLabel(`graph:node:${id}`));
   });
 
-  private readonly _nodeOrThrow = Rx.family<string, Rx.Rx<Node>>((id) => {
-    return Rx.make((get) => {
+  private readonly _nodeOrThrow = Rx.family<string, Rx.Rx<Node>>((id) =>
+    Rx.make((get) => {
       const node = get(this._node(id));
       invariant(Option.isSome(node), `Node not available: ${id}`);
       return node.value;
-    });
-  });
+    }),
+  );
 
   private readonly _edges = Rx.family<string, Rx.Writable<Edges>>((id) => {
     const initial = Record.get(this._initialEdges, id).pipe(Option.getOrElse(() => ({ inbound: [], outbound: [] })));
@@ -263,27 +263,27 @@ export class Graph implements WritableGraph {
 
   // NOTE: Currently the argument to the family needs to be referentially stable for the rx to be referentially stable.
   // TODO(wittjosiah): Rx feature request, support for something akin to `ComplexMap` to allow for complex arguments.
-  private readonly _connections = Rx.family<string, Rx.Rx<Node[]>>((key) => {
-    return Rx.make((get) => {
+  private readonly _connections = Rx.family<string, Rx.Rx<Node[]>>((key) =>
+    Rx.make((get) => {
       const [id, relation] = key.split('$');
       const edges = get(this._edges(id));
       return edges[relation as Relation]
         .map((id) => get(this._node(id)))
         .filter(Option.isSome)
         .map((o) => o.value);
-    }).pipe(Rx.withLabel(`graph:connections:${key}`));
-  });
+    }).pipe(Rx.withLabel(`graph:connections:${key}`)),
+  );
 
-  private readonly _actions = Rx.family<string, Rx.Rx<(Action | ActionGroup)[]>>((id) => {
-    return Rx.make((get) => {
-      return get(this._connections(`${id}$outbound`)).filter(
+  private readonly _actions = Rx.family<string, Rx.Rx<(Action | ActionGroup)[]>>((id) =>
+    Rx.make((get) =>
+      get(this._connections(`${id}$outbound`)).filter(
         (node) => node.type === ACTION_TYPE || node.type === ACTION_GROUP_TYPE,
-      );
-    }).pipe(Rx.withLabel(`graph:actions:${id}`));
-  });
+      ),
+    ).pipe(Rx.withLabel(`graph:actions:${id}`)),
+  );
 
-  private readonly _json = Rx.family<string, Rx.Rx<any>>((id) => {
-    return Rx.make((get) => {
+  private readonly _json = Rx.family<string, Rx.Rx<any>>((id) =>
+    Rx.make((get) => {
       const toJSON = (node: Node, seen: string[] = []): any => {
         const nodes = get(this.connections(node.id));
         const obj: Record<string, any> = {
@@ -307,8 +307,8 @@ export class Graph implements WritableGraph {
 
       const root = get(this.nodeOrThrow(id));
       return toJSON(root);
-    }).pipe(Rx.withLabel(`graph:json:${id}`));
-  });
+    }).pipe(Rx.withLabel(`graph:json:${id}`)),
+  );
 
   constructor({ registry, nodes, edges, onInitialize, onExpand, onRemoveNode }: GraphParams = {}) {
     this._registry = registry ?? Registry.make();

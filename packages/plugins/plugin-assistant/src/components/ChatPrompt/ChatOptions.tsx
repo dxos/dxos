@@ -132,20 +132,16 @@ const ModelsPanel = ({
   presets,
   preset,
   onPresetChange,
-}: Pick<ChatOptionsProps, 'presets' | 'preset' | 'onPresetChange'>) => {
-  return (
-    <Listbox.Root value={preset} onValueChange={onPresetChange} autoFocus>
-      {presets?.map(({ id, label }) => {
-        return (
-          <Listbox.Option key={id} value={id}>
-            <Listbox.OptionLabel>{label}</Listbox.OptionLabel>
-            <Listbox.OptionIndicator />
-          </Listbox.Option>
-        );
-      })}
-    </Listbox.Root>
-  );
-};
+}: Pick<ChatOptionsProps, 'presets' | 'preset' | 'onPresetChange'>) => (
+  <Listbox.Root value={preset} onValueChange={onPresetChange} autoFocus>
+    {presets?.map(({ id, label }) => (
+      <Listbox.Option key={id} value={id}>
+        <Listbox.OptionLabel>{label}</Listbox.OptionLabel>
+        <Listbox.OptionIndicator />
+      </Listbox.Option>
+    ))}
+  </Listbox.Root>
+);
 
 const ANY = '__any__';
 

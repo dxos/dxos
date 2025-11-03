@@ -23,8 +23,6 @@ export default () =>
     createSurface({
       id: `${meta.id}/banner`,
       role: 'banner',
-      component: ({ data }) => {
-        return <Banner variant={data.variant} />;
-      },
+      component: ({ data }) => <Banner variant={data.variant} />,
     }),
   ]);

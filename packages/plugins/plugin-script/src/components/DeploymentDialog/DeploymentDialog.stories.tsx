@@ -17,13 +17,11 @@ import { translations } from '../../translations';
 
 import { DeploymentDialog, type DeploymentDialogProps } from './DeploymentDialog';
 
-const DefaultStory = (props: DeploymentDialogProps) => {
-  return (
-    <Dialog.Root defaultOpen={true}>
-      <DeploymentDialog {...props} />
-    </Dialog.Root>
-  );
-};
+const DefaultStory = (props: DeploymentDialogProps) => (
+  <Dialog.Root defaultOpen={true}>
+    <DeploymentDialog {...props} />
+  </Dialog.Root>
+);
 
 const meta = {
   title: 'plugins/plugin-script/DeploymentDialog',

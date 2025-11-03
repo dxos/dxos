@@ -37,9 +37,10 @@ export const AutomationPanel = ({ classNames, space, object, initialTrigger, onD
   const client = useClient();
   const functions = useQuery(space, Filter.type(Function.Function));
   const triggers = useQuery(space, Filter.type(Trigger.Trigger));
-  const filteredTriggers = useMemo(() => {
-    return object ? triggers.filter(triggerMatch(object)) : triggers;
-  }, [object, triggers]);
+  const filteredTriggers = useMemo(
+    () => (object ? triggers.filter(triggerMatch(object)) : triggers),
+    [object, triggers],
+  );
   const tags = useQuery(space, Filter.type(Tag.Tag));
   const types = useTypeOptions({ space, annotation: ['dynamic', 'limited-static', 'object-form'] });
 

@@ -6,13 +6,11 @@ import React, { type FC, type HTMLAttributes, useState } from 'react';
 
 import { mx } from '@dxos/react-ui-theme';
 
-export const Tree: FC<{ data?: object }> = ({ data }) => {
-  return (
-    <div className='flex is-full py-2 overflow-auto'>
-      <Node data={data} root />
-    </div>
-  );
-};
+export const Tree: FC<{ data?: object }> = ({ data }) => (
+  <div className='flex is-full py-2 overflow-auto'>
+    <Node data={data} root />
+  </div>
+);
 
 export const Node: FC<{ data?: any; root?: boolean }> = ({ data }) => {
   if (typeof data !== 'object' || data === undefined || data === null) {
@@ -57,21 +55,17 @@ export const KeyValue: FC<{ label: string; data?: any; className?: string }> = (
   );
 };
 
-const Scalar: FC<{ value: any }> = ({ value }) => {
-  return (
-    <Box className='bg-skySurface text-information rounded-r-sm text-sm font-thin'>
-      {(value === undefined && 'undefined') ||
-        (value === null && 'null') ||
-        (typeof value === 'string' && value) ||
-        JSON.stringify(value)}
-    </Box>
-  );
-};
+const Scalar: FC<{ value: any }> = ({ value }) => (
+  <Box className='bg-skySurface text-information rounded-r-sm text-sm font-thin'>
+    {(value === undefined && 'undefined') ||
+      (value === null && 'null') ||
+      (typeof value === 'string' && value) ||
+      JSON.stringify(value)}
+  </Box>
+);
 
-const Box: FC<HTMLAttributes<HTMLDivElement>> = ({ children, className, ...props }) => {
-  return (
-    <div className={mx('flex px-2 font-mono truncate', className)} {...props}>
-      {children}
-    </div>
-  );
-};
+const Box: FC<HTMLAttributes<HTMLDivElement>> = ({ children, className, ...props }) => (
+  <div className={mx('flex px-2 font-mono truncate', className)} {...props}>
+    {children}
+  </div>
+);

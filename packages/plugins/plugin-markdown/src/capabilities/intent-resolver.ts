@@ -24,9 +24,7 @@ export default (context: PluginContext) =>
   contributes(Capabilities.IntentResolver, [
     createResolver({
       intent: MarkdownAction.Create,
-      resolve: ({ name, content }) => {
-        return { data: { object: Markdown.makeDocument({ name, content }) } };
-      },
+      resolve: ({ name, content }) => ({ data: { object: Markdown.makeDocument({ name, content }) } }),
     }),
     createResolver({
       intent: MarkdownAction.SetViewMode,

@@ -121,18 +121,16 @@ const createTooltipRenderer = (themeMode: ThemeMode) => {
     return theme.style([tag]) ?? '';
   };
 
-  return (info: HoverInfo) => {
-    return {
-      dom: Domino.of('div')
-        .classNames('xs:max-is-80 max-is-lg p-1 bg-baseSurface rounded border border-separator')
-        .children(
-          ...(info.quickInfo?.displayParts?.map(({ kind, text }) =>
-            Domino.of('span').classNames(classFromKind(kind)).text(text),
-          ) ?? []),
-        )
-        .build(),
-    };
-  };
+  return (info: HoverInfo) => ({
+    dom: Domino.of('div')
+      .classNames('xs:max-is-80 max-is-lg p-1 bg-baseSurface rounded border border-separator')
+      .children(
+        ...(info.quickInfo?.displayParts?.map(({ kind, text }) =>
+          Domino.of('span').classNames(classFromKind(kind)).text(text),
+        ) ?? []),
+      )
+      .build(),
+  });
 };
 
 export default TypescriptEditor;

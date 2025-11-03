@@ -20,8 +20,8 @@ export type UseAddRowParams = {
  * Returns a callback that attempts to create an object and returns boolean success/failure.
  * Can accept optional data to create objects with specific content (used for committing draft rows).
  */
-export const useAddRow = ({ space, schema }: UseAddRowParams) => {
-  return useCallback(
+export const useAddRow = ({ space, schema }: UseAddRowParams) =>
+  useCallback(
     (data?: any): InsertRowResult => {
       if (space && schema) {
         try {
@@ -35,4 +35,3 @@ export const useAddRow = ({ space, schema }: UseAddRowParams) => {
     },
     [space, schema],
   );
-};

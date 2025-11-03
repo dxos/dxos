@@ -25,16 +25,14 @@ faker.seed(1234);
  *  - right to enter space/folder children
  *  - left to parent
  */
-const Container = ({ children, sidebar }: PropsWithChildren<{ sidebar: JSX.Element }>) => {
-  return (
-    <div className='flex'>
-      {/* TODO(burdon): Custom thin scrollbar. */}
-      {/* TODO(burdon): Horizontal scrolling within navtree? */}
-      <div className='flex flex-col overflow-y-auto w-[300px] bg-neutral-100 dark:bg-neutral-950'>{sidebar}</div>
-      <div className='flex flex-col grow overflow-hidden'>{children}</div>
-    </div>
-  );
-};
+const Container = ({ children, sidebar }: PropsWithChildren<{ sidebar: JSX.Element }>) => (
+  <div className='flex'>
+    {/* TODO(burdon): Custom thin scrollbar. */}
+    {/* TODO(burdon): Horizontal scrolling within navtree? */}
+    <div className='flex flex-col overflow-y-auto w-[300px] bg-neutral-100 dark:bg-neutral-950'>{sidebar}</div>
+    <div className='flex flex-col grow overflow-hidden'>{children}</div>
+  </div>
+);
 
 // TODO(burdon): Generate.
 const data: TreeNodeData[] = [
@@ -208,9 +206,7 @@ const meta = {
 
 export default meta;
 
-export const Default = () => {
-  return <Container sidebar={<Sidebar mutate />} />;
-};
+export const Default = () => <Container sidebar={<Sidebar mutate />} />;
 
 export const Visitor = () => {
   const [items] = useState(data);

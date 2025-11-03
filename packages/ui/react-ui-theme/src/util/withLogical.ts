@@ -71,8 +71,8 @@ export type WithLogicalClassGroups = keyof typeof classGroupsConfig;
 
 type WithLogicalConfig = Config<WithLogicalClassGroups, string>;
 
-export const withLogical = (prevConfig: WithLogicalConfig): WithLogicalConfig => {
-  return mergeConfigs(prevConfig, {
+export const withLogical = (prevConfig: WithLogicalConfig): WithLogicalConfig =>
+  mergeConfigs(prevConfig, {
     extend: {
       classGroups: classGroupsConfig,
       conflictingClassGroups: {
@@ -111,4 +111,3 @@ export const withLogical = (prevConfig: WithLogicalConfig): WithLogicalConfig =>
       },
     },
   });
-};

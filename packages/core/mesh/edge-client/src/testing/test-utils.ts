@@ -75,9 +75,7 @@ export const createTestEdgeWsServer = async (port = DEFAULT_PORT, params?: TestE
     cleanup: () => wsServer.close(),
     currentConnection: () => connection,
     sendResponseMessage,
-    sendMessage: (msg: Message) => {
-      return connection!.muxer.send(msg);
-    },
+    sendMessage: (msg: Message) => connection!.muxer.send(msg),
     closeConnection: () => {
       closeTrigger.reset();
       connection!.ws.close(1011);
@@ -86,8 +84,8 @@ export const createTestEdgeWsServer = async (port = DEFAULT_PORT, params?: TestE
   };
 };
 
-const createConnectionDelayHandler = (params: TestEdgeWsServerParams | undefined) => {
-  return (_: any, callback: (admit: boolean) => void) => {
+const createConnectionDelayHandler =
+  (params: TestEdgeWsServerParams | undefined) => (_: any, callback: (admit: boolean) => void) => {
     if (params?.admitConnection) {
       log('delaying edge connection admission');
       void params.admitConnection.wait().then(() => {
@@ -98,22 +96,19 @@ const createConnectionDelayHandler = (params: TestEdgeWsServerParams | undefined
       callback(true);
     }
   };
-};
 
-const createResponseSender = (connection: () => WebSocketMuxer) => {
-  return (request: Message, responsePayload: Uint8Array) => {
-    const recipient = request.source!;
-    void connection().send(
-      buf.create(MessageSchema, {
-        source: {
-          identityKey: recipient.identityKey,
-          peerKey: recipient.peerKey,
-        },
-        serviceId: request.serviceId!,
-        payload: { value: responsePayload },
-      }),
-    );
-  };
+const createResponseSender = (connection: () => WebSocketMuxer) => (request: Message, responsePayload: Uint8Array) => {
+  const recipient = request.source!;
+  void connection().send(
+    buf.create(MessageSchema, {
+      source: {
+        identityKey: recipient.identityKey,
+        peerKey: recipient.peerKey,
+      },
+      serviceId: request.serviceId!,
+      payload: { value: responsePayload },
+    }),
+  );
 };
 
 const decodePayload = async (request: Message, params: TestEdgeWsServerParams | undefined) => {

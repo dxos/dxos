@@ -271,10 +271,6 @@ const validateCollectionState = (state: CollectionState) => {
   });
 };
 
-const isValidDocumentId = (documentId: DocumentId) => {
-  return typeof documentId === 'string' && !documentId.includes(':');
-};
+const isValidDocumentId = (documentId: DocumentId) => typeof documentId === 'string' && !documentId.includes(':');
 
-const getSpanName = (peerId: PeerId) => {
-  return `collection-sync-${peerId}`;
-};
+const getSpanName = (peerId: PeerId) => `collection-sync-${peerId}`;

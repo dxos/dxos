@@ -188,8 +188,8 @@ export const Default: Story = {
   render: () => {
     const [view, setView] = useState<EditorView>();
     const [previewBlocks, setPreviewBlocks] = useState<PreviewBlock[]>([]);
-    const extensions = useMemo(() => {
-      return [
+    const extensions = useMemo(
+      () => [
         image(),
         preview({
           addBlockContainer: (block) => {
@@ -199,8 +199,9 @@ export const Default: Story = {
             setPreviewBlocks((prev) => prev.filter(({ link: prevLink }) => prevLink.ref !== block.link.ref));
           },
         }),
-      ];
-    }, []);
+      ],
+      [],
+    );
 
     const handleViewRef = useCallback((instance?: EditorView | null) => {
       setView(instance ?? undefined);

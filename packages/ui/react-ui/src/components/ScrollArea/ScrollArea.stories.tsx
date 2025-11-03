@@ -14,24 +14,22 @@ import { ScrollArea } from './ScrollArea';
 
 faker.seed(1234);
 
-const DefaultStory = ({ children }: PropsWithChildren<{}>) => {
-  return (
-    <ScrollArea.Root
-      classNames={['is-[300px] bs-[400px] rounded', activeSurface, surfaceShadow({ elevation: 'positioned' })]}
-    >
-      <ScrollArea.Viewport classNames='rounded p-4'>
-        <p>{children}</p>
-      </ScrollArea.Viewport>
-      <ScrollArea.Scrollbar orientation='horizontal'>
-        <ScrollArea.Thumb />
-      </ScrollArea.Scrollbar>
-      <ScrollArea.Scrollbar orientation='vertical'>
-        <ScrollArea.Thumb />
-      </ScrollArea.Scrollbar>
-      <ScrollArea.Corner />
-    </ScrollArea.Root>
-  );
-};
+const DefaultStory = ({ children }: PropsWithChildren<{}>) => (
+  <ScrollArea.Root
+    classNames={['is-[300px] bs-[400px] rounded', activeSurface, surfaceShadow({ elevation: 'positioned' })]}
+  >
+    <ScrollArea.Viewport classNames='rounded p-4'>
+      <p>{children}</p>
+    </ScrollArea.Viewport>
+    <ScrollArea.Scrollbar orientation='horizontal'>
+      <ScrollArea.Thumb />
+    </ScrollArea.Scrollbar>
+    <ScrollArea.Scrollbar orientation='vertical'>
+      <ScrollArea.Thumb />
+    </ScrollArea.Scrollbar>
+    <ScrollArea.Corner />
+  </ScrollArea.Root>
+);
 
 const meta = {
   title: 'ui/react-ui-core/Scroll area',

@@ -41,18 +41,16 @@ export const AccordionRoot = <T extends ListItemRecord>({
   defaultValue,
   onValueChange,
 }: AccordionRootProps<T> &
-  Pick<AccordionPrimitive.AccordionMultipleProps, 'value' | 'defaultValue' | 'onValueChange'>) => {
-  return (
-    <AccordionProvider {...{ getId }}>
-      <AccordionPrimitive.Root
-        type='multiple'
-        value={value}
-        defaultValue={defaultValue}
-        onValueChange={onValueChange}
-        className={mx(classNames)}
-      >
-        {children?.({ items: items ?? [] })}
-      </AccordionPrimitive.Root>
-    </AccordionProvider>
-  );
-};
+  Pick<AccordionPrimitive.AccordionMultipleProps, 'value' | 'defaultValue' | 'onValueChange'>) => (
+  <AccordionProvider {...{ getId }}>
+    <AccordionPrimitive.Root
+      type='multiple'
+      value={value}
+      defaultValue={defaultValue}
+      onValueChange={onValueChange}
+      className={mx(classNames)}
+    >
+      {children?.({ items: items ?? [] })}
+    </AccordionPrimitive.Root>
+  </AccordionProvider>
+);

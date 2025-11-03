@@ -115,9 +115,8 @@ export class Presence extends Resource {
       .map((message) => message.payload);
   }
 
-  private _isOnline = (message: GossipMessage): boolean => {
-    return message.timestamp.getTime() > Date.now() - this._params.offlineTimeout;
-  };
+  private _isOnline = (message: GossipMessage): boolean =>
+    message.timestamp.getTime() > Date.now() - this._params.offlineTimeout;
 
   getLocalState(): PeerState {
     return {

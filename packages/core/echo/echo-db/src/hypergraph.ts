@@ -510,15 +510,12 @@ export const OBJECT_DIAGNOSTICS = new Map<string, ObjectDiagnostic>();
 trace.diagnostic({
   id: 'referenced-objects',
   name: 'Referenced Objects (Client)',
-  fetch: () => {
-    return Array.from(OBJECT_DIAGNOSTICS.values()).map((object) => {
-      return {
-        objectId: object.objectId,
-        spaceId: object.spaceId,
-        loadReason: object.loadReason,
-        creationStack: object.loadedStack?.getStack(),
-        query: object.query,
-      };
-    });
-  },
+  fetch: () =>
+    Array.from(OBJECT_DIAGNOSTICS.values()).map((object) => ({
+      objectId: object.objectId,
+      spaceId: object.spaceId,
+      loadReason: object.loadReason,
+      creationStack: object.loadedStack?.getStack(),
+      query: object.query,
+    })),
 });

@@ -14,19 +14,17 @@ import { Popover } from './Popover';
 
 faker.seed(1234);
 
-const DefaultStory = ({ openTrigger, children }: PropsWithChildren<{ openTrigger: ReactNode }>) => {
-  return (
-    <Popover.Root defaultOpen>
-      <Popover.Trigger asChild>{openTrigger}</Popover.Trigger>
-      <Popover.Content>
-        <Popover.Viewport>
-          <p className='pli-2 plb-1 min-is-[18rem] max-is-[38rem]'>{children}</p>
-        </Popover.Viewport>
-        <Popover.Arrow />
-      </Popover.Content>
-    </Popover.Root>
-  );
-};
+const DefaultStory = ({ openTrigger, children }: PropsWithChildren<{ openTrigger: ReactNode }>) => (
+  <Popover.Root defaultOpen>
+    <Popover.Trigger asChild>{openTrigger}</Popover.Trigger>
+    <Popover.Content>
+      <Popover.Viewport>
+        <p className='pli-2 plb-1 min-is-[18rem] max-is-[38rem]'>{children}</p>
+      </Popover.Viewport>
+      <Popover.Arrow />
+    </Popover.Content>
+  </Popover.Root>
+);
 
 const meta = {
   title: 'ui/react-ui-core/Popover',

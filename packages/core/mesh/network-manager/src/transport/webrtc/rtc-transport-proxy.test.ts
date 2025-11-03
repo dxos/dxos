@@ -345,17 +345,15 @@ describe.skip('RtcPeerTransportProxy', () => {
   };
 });
 
-const createTransportOptions = (options: Partial<TransportOptions>): TransportOptions => {
-  return {
-    initiator: false,
-    stream: new Duplex(),
-    sendSignal: async () => {},
-    remotePeerKey: PublicKey.random().toHex(),
-    ownPeerKey: PublicKey.random().toHex(),
-    topic: PublicKey.random().toHex(),
-    ...options,
-  };
-};
+const createTransportOptions = (options: Partial<TransportOptions>): TransportOptions => ({
+  initiator: false,
+  stream: new Duplex(),
+  sendSignal: async () => {},
+  remotePeerKey: PublicKey.random().toHex(),
+  ownPeerKey: PublicKey.random().toHex(),
+  topic: PublicKey.random().toHex(),
+  ...options,
+});
 
 const createMockTransport = (delegate?: Partial<Transport>) => {
   const transport = new MockTransport(delegate);

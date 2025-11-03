@@ -209,9 +209,7 @@ const Sidebar: FC<{
   // Sort by y-position.
   const sortedThreads = useMemo(() => {
     const sorted = [...threads];
-    return sorted.sort(({ yPos: a = Infinity }, { yPos: b = Infinity }) => {
-      return a < b ? -1 : a > b ? 1 : 0;
-    });
+    return sorted.sort(({ yPos: a = Infinity }, { yPos: b = Infinity }) => (a < b ? -1 : a > b ? 1 : 0));
   }, [threads]);
 
   return (

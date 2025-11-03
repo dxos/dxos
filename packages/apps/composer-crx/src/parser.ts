@@ -53,7 +53,6 @@ const regisgtry: Record<string, Parser> = PARSERS.reduce<Record<string, Parser>>
   return map;
 }, {});
 
-export const getParser = (url: URL): Parser => {
+export const getParser = (url: URL): Parser =>
   // TODO(burdon): Find best match based on length of path.
-  return regisgtry[url.hostname] ?? defaultParser;
-};
+  regisgtry[url.hostname] ?? defaultParser;

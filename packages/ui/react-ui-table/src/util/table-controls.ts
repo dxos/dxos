@@ -29,11 +29,10 @@ const BASE_CLASSES = {
   switch: 'absolute inset-block-[.25rem] inline-end-[.25rem] dx-checkbox--switch',
 } as const;
 
-const renderAttributes = (data: Record<string, string>) => {
-  return Object.entries(data)
+const renderAttributes = (data: Record<string, string>) =>
+  Object.entries(data)
     .map(([k, v]) => `${k}="${v}"`)
     .join(' ');
-};
 
 const renderInput = (
   baseClass: string,
@@ -42,9 +41,8 @@ const renderInput = (
   disabled = false,
   preventToggle = false,
   testId: string,
-) => {
-  return `<input type="checkbox" class="${baseClass}" ${renderAttributes(attrs)} ${checked ? 'checked' : ''} ${preventToggle ? 'onclick="return false"' : ''} ${disabled ? 'disabled' : ''} data-testid="${testId}" data-dx-grid-action="accessory"/>`;
-};
+) =>
+  `<input type="checkbox" class="${baseClass}" ${renderAttributes(attrs)} ${checked ? 'checked' : ''} ${preventToggle ? 'onclick="return false"' : ''} ${disabled ? 'disabled' : ''} data-testid="${testId}" data-dx-grid-action="accessory"/>`;
 
 export const CheckboxStory = ({
   rowIndex,

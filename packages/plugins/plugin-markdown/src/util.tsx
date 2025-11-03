@@ -32,9 +32,8 @@ export const isMarkdownProperties = (data: unknown): data is MarkdownProperties 
 
 const nonTitleChars = /[^\w ]/g;
 
-export const getFallbackName = (content = '') => {
-  return content.substring(0, 31).split('\n')[0].replaceAll(nonTitleChars, '').trim();
-};
+export const getFallbackName = (content = '') =>
+  content.substring(0, 31).split('\n')[0].replaceAll(nonTitleChars, '').trim();
 
 export const getContentSnippet = (content = '') => {
   const abstract = content

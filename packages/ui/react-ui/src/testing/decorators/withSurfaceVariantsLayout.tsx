@@ -34,18 +34,18 @@ const Panel = ({
   </div>
 );
 
-export const withSurfaceVariantsLayout = ({
-  elevations = [
-    { elevation: 'base', surface: 'bg-baseSurface' },
-    { elevation: 'positioned', surface: 'bg-cardSurface' },
-    { elevation: 'dialog', surface: 'bg-modalSurface' },
-  ],
-  densities = ['coarse'],
-}: Config = {}): Decorator => {
-  return (Story) => (
+export const withSurfaceVariantsLayout =
+  ({
+    elevations = [
+      { elevation: 'base', surface: 'bg-baseSurface' },
+      { elevation: 'positioned', surface: 'bg-cardSurface' },
+      { elevation: 'dialog', surface: 'bg-modalSurface' },
+    ],
+    densities = ['coarse'],
+  }: Config = {}): Decorator =>
+  (Story) => (
     <div className='fixed inset-0 grid grid-cols-2 overflow-y-auto'>
       <Panel Story={Story} className='light' elevations={elevations} densities={densities} />
       <Panel Story={Story} className='dark' elevations={elevations} densities={densities} />
     </div>
   );
-};

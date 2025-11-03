@@ -54,9 +54,9 @@ const ProjectContent = ({ project }: ProjectContentProps) => {
 
   return (
     <Stack orientation='horizontal' size='contain' rail={false}>
-      {views.map((view) => {
-        return <ViewColumn key={view.id} view={view} />;
-      })}
+      {views.map((view) => (
+        <ViewColumn key={view.id} view={view} />
+      ))}
     </Stack>
   );
 };

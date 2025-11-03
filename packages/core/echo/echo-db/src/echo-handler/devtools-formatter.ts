@@ -17,16 +17,14 @@ const nullStyle = { style: 'color: #777' };
 
 const defaultKeys = ['id', '@type', '@meta'];
 
-export const getHeader = (tag: string, id: string, config?: any): JsonML => {
-  return [
-    'span',
-    {
-      style: (config?.nested ? 'padding: 2px 0 0;' : '') + '\n height: 18px;',
-    },
-    `${tag}`,
-    ['span', idStyle, `#${id}`],
-  ];
-};
+export const getHeader = (tag: string, id: string, config?: any): JsonML => [
+  'span',
+  {
+    style: (config?.nested ? 'padding: 2px 0 0;' : '') + '\n height: 18px;',
+  },
+  `${tag}`,
+  ['span', idStyle, `#${id}`],
+];
 
 const formatValue = (object: any, config?: any): JsonML => {
   if (typeof object === 'undefined') {
@@ -38,22 +36,20 @@ const formatValue = (object: any, config?: any): JsonML => {
   }
 };
 
-export const getBody = (objData: any): JsonML => {
-  return [
-    'ol',
-    listStyle,
-    ...Object.keys(objData).map(
-      (key): JsonML => [
-        'li',
-        liStyle,
-        [
-          'span',
-          defaultKeys.includes(key) ? keyStyle : key.startsWith('[[') ? defaultValueKeyStyle : alteredValueKeyStyle,
-          key,
-        ],
-        ['span', {}, ': '],
-        formatValue(objData[key], { nested: true }),
+export const getBody = (objData: any): JsonML => [
+  'ol',
+  listStyle,
+  ...Object.keys(objData).map(
+    (key): JsonML => [
+      'li',
+      liStyle,
+      [
+        'span',
+        defaultKeys.includes(key) ? keyStyle : key.startsWith('[[') ? defaultValueKeyStyle : alteredValueKeyStyle,
+        key,
       ],
-    ),
-  ];
-};
+      ['span', {}, ': '],
+      formatValue(objData[key], { nested: true }),
+    ],
+  ),
+];

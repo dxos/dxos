@@ -39,19 +39,18 @@ export const useStyleState = (state: StyleState) => {
   }, [cursorFallbackRange, model.sheet]);
 };
 
-const createStyleGroup = (state: StyleState) => {
-  return createMenuItemGroup('style', {
+const createStyleGroup = (state: StyleState) =>
+  createMenuItemGroup('style', {
     variant: 'toggleGroup',
     selectCardinality: 'multiple',
     value: Object.keys(styles)
       .filter((key) => !!state[key as StyleValue])
       .map((styleValue) => `style--${styleValue}`),
   } as ToolbarMenuActionGroupProperties);
-};
 
 const createStyleActions = (model: SheetModel, state: StyleState, cursorFallbackRange?: CompleteCellRange) =>
-  Object.entries(styles).map(([styleValue, icon]) => {
-    return createMenuAction<StyleAction>(
+  Object.entries(styles).map(([styleValue, icon]) =>
+    createMenuAction<StyleAction>(
       `style--${styleValue}`,
       () => {
         if (!cursorFallbackRange) {
@@ -92,8 +91,8 @@ const createStyleActions = (model: SheetModel, state: StyleState, cursorFallback
         label: [`range value ${styleValue} label`, { ns: meta.id }],
         checked: !!state[styleValue as StyleValue],
       },
-    );
-  });
+    ),
+  );
 
 export const createStyle = (model: SheetModel, state: StyleState, cursorFallbackRange?: CompleteCellRange) => {
   const styleGroupAction = createStyleGroup(state);

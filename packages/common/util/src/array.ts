@@ -89,13 +89,12 @@ export const removeBy = <T>(array: T[], test: (element: T, index: number) => boo
  * Splits an array based on a type guard predicate function.
  * Infers the output tuple types from the guard function.
  */
-export const partition = <T>(array: T[], guard: (item: T, index: number, array: T[]) => boolean): [T[], T[]] => {
-  return array.reduce<[T[], T[]]>(
+export const partition = <T>(array: T[], guard: (item: T, index: number, array: T[]) => boolean): [T[], T[]] =>
+  array.reduce<[T[], T[]]>(
     ([accepted, rejected], item, index, array) =>
       guard(item, index, array) ? [[...accepted, item], rejected] : [accepted, [...rejected, item]],
     [[], []],
   );
-};
 
 /**
  * Returns elements that exist in all provided arrays based on a selector function.

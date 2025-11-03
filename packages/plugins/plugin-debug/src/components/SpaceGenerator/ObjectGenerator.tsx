@@ -20,18 +20,14 @@ import { range } from '@dxos/util';
 
 const generator: ValueGenerator = faker as any;
 
-const findViewByTypename = async (views: DataType.View[], typename: string) => {
-  return views.find((view) => getTypenameFromQuery(view.query.ast) === typename);
-};
+const findViewByTypename = async (views: DataType.View[], typename: string) =>
+  views.find((view) => getTypenameFromQuery(view.query.ast) === typename);
 
 export type ObjectGenerator<T extends Obj.Any> = (space: Space, n: number, cb?: (objects: T[]) => void) => Promise<T[]>;
 
-export const createGenerator = <T extends Obj.Any>(
-  client: Client,
-  dispatch: PromiseIntentDispatcher,
-  schema: TypedObject<T>,
-): ObjectGenerator<T> => {
-  return async (space: Space, n: number): Promise<T[]> => {
+export const createGenerator =
+  <T extends Obj.Any>(client: Client, dispatch: PromiseIntentDispatcher, schema: TypedObject<T>): ObjectGenerator<T> =>
+  async (space: Space, n: number): Promise<T[]> => {
     const typename = schema.typename;
 
     // Find or create table and view.
@@ -48,20 +44,19 @@ export const createGenerator = <T extends Obj.Any>(
     const generate = createAsyncGenerator(generator, schema, { db: space.db });
     return generate.createObjects(n);
   };
-};
 
 export const staticGenerators = new Map<string, ObjectGenerator<any>>([
   [
     Markdown.Document.typename,
     async (space, n, cb) => {
-      const objects = range(n).map(() => {
-        return space.db.add(
+      const objects = range(n).map(() =>
+        space.db.add(
           Markdown.makeDocument({
             name: faker.commerce.productName(),
             content: faker.lorem.sentences(5),
           }),
-        );
-      });
+        ),
+      );
 
       cb?.(objects);
       return objects;

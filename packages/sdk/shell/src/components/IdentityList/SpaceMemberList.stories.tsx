@@ -21,6 +21,4 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-export const Default = (props: any) => {
-  return <SpaceMemberListImpl {...props} members={[alice]} />;
-};
+export const Default = (props: any) => <SpaceMemberListImpl {...props} members={[alice]} />;

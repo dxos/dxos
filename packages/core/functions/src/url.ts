@@ -10,16 +10,13 @@ export const FUNCTIONS_META_KEY = 'dxos.org/service/function';
 
 export const FUNCTIONS_PRESET_META_KEY = 'dxos.org/service/function-preset';
 
-const isSecure = (protocol: string) => {
-  return protocol === 'https:' || protocol === 'wss:';
-};
+const isSecure = (protocol: string) => protocol === 'https:' || protocol === 'wss:';
 
 /**
  * NOTE: functionId is backend ID, not ECHO object id.
  */
-export const getUserFunctionIdInMetadata = (meta: ObjectMeta) => {
-  return meta.keys.find((key) => key.source === FUNCTIONS_META_KEY)?.id;
-};
+export const getUserFunctionIdInMetadata = (meta: ObjectMeta) =>
+  meta.keys.find((key) => key.source === FUNCTIONS_META_KEY)?.id;
 
 /**
  * NOTE: functionId is backend ID, not ECHO object id.

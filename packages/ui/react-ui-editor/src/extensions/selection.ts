@@ -33,14 +33,12 @@ export type EditorStateStore = {
 
 const stateRestoreAnnotation = 'dxos.org/cm/state-restore';
 
-export const createEditorStateTransaction = ({ scrollTo, selection }: EditorSelectionState): TransactionSpec => {
-  return {
-    selection,
-    scrollIntoView: !scrollTo,
-    effects: scrollTo ? EditorView.scrollIntoView(scrollTo, { yMargin: 96 }) : undefined,
-    annotations: Transaction.userEvent.of(stateRestoreAnnotation),
-  };
-};
+export const createEditorStateTransaction = ({ scrollTo, selection }: EditorSelectionState): TransactionSpec => ({
+  selection,
+  scrollIntoView: !scrollTo,
+  effects: scrollTo ? EditorView.scrollIntoView(scrollTo, { yMargin: 96 }) : undefined,
+  annotations: Transaction.userEvent.of(stateRestoreAnnotation),
+});
 
 export const createEditorStateStore = (keyPrefix: string): EditorStateStore => ({
   getState: (id) => {

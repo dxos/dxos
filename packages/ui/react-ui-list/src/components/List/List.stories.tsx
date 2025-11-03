@@ -69,23 +69,21 @@ const DefaultStory = ({ items = [], ...props }: ListRootProps<TestItemType>) => 
   );
 };
 
-const SimpleStory = ({ items = [], ...props }: ListRootProps<TestItemType>) => {
-  return (
-    <List.Root<TestItemType> dragPreview items={items} {...props}>
-      {({ items }) => (
-        <div role='list' className='w-full h-full overflow-auto'>
-          {items?.map((item) => (
-            <List.Item<TestItemType> key={item.id} item={item} classNames={mx(grid, ghostHover)}>
-              <List.ItemDragHandle />
-              <List.ItemTitle>{item.name}</List.ItemTitle>
-              <List.ItemDeleteButton />
-            </List.Item>
-          ))}
-        </div>
-      )}
-    </List.Root>
-  );
-};
+const SimpleStory = ({ items = [], ...props }: ListRootProps<TestItemType>) => (
+  <List.Root<TestItemType> dragPreview items={items} {...props}>
+    {({ items }) => (
+      <div role='list' className='w-full h-full overflow-auto'>
+        {items?.map((item) => (
+          <List.Item<TestItemType> key={item.id} item={item} classNames={mx(grid, ghostHover)}>
+            <List.ItemDragHandle />
+            <List.ItemTitle>{item.name}</List.ItemTitle>
+            <List.ItemDeleteButton />
+          </List.Item>
+        ))}
+      </div>
+    )}
+  </List.Root>
+);
 
 const list = live(createList(100));
 

@@ -84,9 +84,7 @@ export class SelectionModel<T extends TableRow> extends Resource {
     return this._selection.value.has(row.id);
   };
 
-  public isObjectSelected = (object: T): boolean => {
-    return this._selection.value.has(object.id);
-  };
+  public isObjectSelected = (object: T): boolean => this._selection.value.has(object.id);
 
   //
   // Manipulation

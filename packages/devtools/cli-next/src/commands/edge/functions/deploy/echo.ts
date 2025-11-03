@@ -26,12 +26,11 @@ export const DATA_TYPES: Schema.Schema.AnyNoContext[] = [
   DataType.Text,
 ];
 
-export const getNextVersion = (fnObject: Option.Option<Function.Function>) => {
-  return Option.match(fnObject, {
+export const getNextVersion = (fnObject: Option.Option<Function.Function>) =>
+  Option.match(fnObject, {
     onNone: () => '0.0.1',
     onSome: (fnObject) => incrementSemverPatch(fnObject.version),
   });
-};
 
 export const loadFunctionObject: (space: Space, functionId: string) => Effect.Effect<Function.Function, Error, never> =
   Effect.fn(function* (space: Space, functionId: string) {

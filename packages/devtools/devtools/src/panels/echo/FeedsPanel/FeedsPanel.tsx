@@ -92,12 +92,14 @@ export const FeedsPanel = (props: { space?: Space }) => {
     [],
   );
 
-  const tableData = useMemo(() => {
-    return tableRows.map((row) => ({
-      id: `${row.feedKey.toHex()}-${row.seq}`,
-      ...row,
-    }));
-  }, [tableRows]);
+  const tableData = useMemo(
+    () =>
+      tableRows.map((row) => ({
+        id: `${row.feedKey.toHex()}-${row.seq}`,
+        ...row,
+      })),
+    [tableRows],
+  );
 
   return (
     <PanelContainer
@@ -129,8 +131,8 @@ const mapToRows = (
   spaceKey: PublicKey | undefined,
   contacts: Contact[],
   blocks: SubscribeToFeedBlocksResponse.Block[],
-): FeedTableRow[] => {
-  return blocks.map((block) => {
+): FeedTableRow[] =>
+  blocks.map((block) => {
     const credential = block.data.payload.credential?.credential;
     const type = (credential?.subject?.assertion?.['@type'] as string) ?? 'unknown_type';
     const issuerKeys = credential ? { identity: credential.issuer, device: credential.proof!.signer } : undefined;
@@ -140,7 +142,6 @@ const mapToRows = (
       ...block,
     };
   });
-};
 
 const formatIdentity = (
   client: Client,

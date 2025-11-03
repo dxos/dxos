@@ -63,15 +63,13 @@ export type AwarenessState = {
 /**
  * Extension provides presence information about other peers.
  */
-export const awareness = (provider = dummyProvider): Extension => {
-  return [
-    awarenessProvider.of(provider),
-    ViewPlugin.fromClass(RemoteSelectionsDecorator, {
-      decorations: (value) => value.decorations,
-    }),
-    styles,
-  ];
-};
+export const awareness = (provider = dummyProvider): Extension => [
+  awarenessProvider.of(provider),
+  ViewPlugin.fromClass(RemoteSelectionsDecorator, {
+    decorations: (value) => value.decorations,
+  }),
+  styles,
+];
 
 /**
  * Generates selection decorations from remote peers.

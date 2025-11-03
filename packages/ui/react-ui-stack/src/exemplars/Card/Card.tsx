@@ -100,13 +100,11 @@ const CardHeading = forwardRef<HTMLDivElement, SharedCardProps>(
   },
 );
 
-const CardToolbar = forwardRef<HTMLDivElement, ToolbarRootProps>(({ children, classNames, ...props }, forwardedRef) => {
-  return (
-    <Toolbar.Root {...props} classNames={['bg-transparent density-coarse', classNames]} ref={forwardedRef}>
-      {children}
-    </Toolbar.Root>
-  );
-});
+const CardToolbar = forwardRef<HTMLDivElement, ToolbarRootProps>(({ children, classNames, ...props }, forwardedRef) => (
+  <Toolbar.Root {...props} classNames={['bg-transparent density-coarse', classNames]} ref={forwardedRef}>
+    {children}
+  </Toolbar.Root>
+));
 
 const CardToolbarIconButton = Toolbar.IconButton;
 const CardToolbarSeparator = Toolbar.Separator;

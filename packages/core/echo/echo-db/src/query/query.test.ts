@@ -35,12 +35,11 @@ type ObjectProps = {
 
 const tags = ['red', 'green', 'blue'];
 
-const createTestObject = (props: ObjectProps = {}) => {
-  return Obj.make(Type.Expando, { title: faker.commerce.productName(), ...props });
-};
+const createTestObject = (props: ObjectProps = {}) =>
+  Obj.make(Type.Expando, { title: faker.commerce.productName(), ...props });
 
-const createTestObjects = () => {
-  return new Array<Expando>()
+const createTestObjects = () =>
+  new Array<Expando>()
     .concat(range(1).map(() => createTestObject()))
     .concat(
       range(3).map(() =>
@@ -65,7 +64,6 @@ const createTestObjects = () => {
         }),
       ),
     );
-};
 
 describe('Query', () => {
   let builder: EchoTestBuilder;

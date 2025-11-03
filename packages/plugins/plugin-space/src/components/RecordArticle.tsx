@@ -67,11 +67,10 @@ const useRelatedObjects = (
     // TODO(burdon): Change Person => Organization to relations.
     // TODO(burdon): Filter relation types.
     if (options.references) {
-      const getReferences = (obj: Obj.Any): Ref.Any[] => {
-        return Object.getOwnPropertyNames(obj)
+      const getReferences = (obj: Obj.Any): Ref.Any[] =>
+        Object.getOwnPropertyNames(obj)
           .map((name) => obj[name as keyof Obj.Any])
           .filter((value) => Ref.isRef(value)) as Ref.Any[];
-      };
 
       const references = getReferences(record);
       const referenceTargets = references.map((ref) => ref.target).filter(isNonNullable);

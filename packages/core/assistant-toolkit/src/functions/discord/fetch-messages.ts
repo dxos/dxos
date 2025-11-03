@@ -238,8 +238,8 @@ const makeMessage = (message: MessageResponse): DataType.Message =>
 /**
  * Standard JSON serialization is to verbose for large amounts of data.
  */
-const serializeThread = (thread: Thread): string => {
-  return `<thread id=${thread.discordChannelId} name=${thread.name ?? ''}>\n${thread.messages
+const serializeThread = (thread: Thread): string =>
+  `<thread id=${thread.discordChannelId} name=${thread.name ?? ''}>\n${thread.messages
     .map(
       (message) =>
         `  ${message.sender.name}: ${message.blocks
@@ -248,4 +248,3 @@ const serializeThread = (thread: Thread): string => {
           .join(' ')}`,
     )
     .join('\n')}\n</thread>`;
-};

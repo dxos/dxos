@@ -91,6 +91,4 @@ export const SVGContextProvider = SVGContextType.Provider;
 /**
  * Get SVG context from the React context.
  */
-export const useSvgContext = (): SVGContext => {
-  return useContext(SVGContextType) ?? raise(new Error('Missing SVGRoot'));
-};
+export const useSvgContext = (): SVGContext => useContext(SVGContextType) ?? raise(new Error('Missing SVGRoot'));

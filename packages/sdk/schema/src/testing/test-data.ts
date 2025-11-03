@@ -23,22 +23,20 @@ const getDate = (daysAgo: number): string => {
 
 // TODO(burdon): Replace with standard data generator pattern from dxos/schema.
 
-const createDocument = (name: string, content: string): Testing.DocumentType => {
-  return Obj.make(Testing.DocumentType, {
+const createDocument = (name: string, content: string): Testing.DocumentType =>
+  Obj.make(Testing.DocumentType, {
     name,
     content,
   });
-};
 
 const createOrganization = (
   props: Pick<DataType.Organization, 'name' | 'website'> & Partial<Omit<DataType.Organization, 'name' | 'website'>>,
-): DataType.Organization => {
-  return Obj.make(DataType.Organization, {
+): DataType.Organization =>
+  Obj.make(DataType.Organization, {
     description: faker.lorem.paragraph(),
     image: faker.image.url(),
     ...props,
   });
-};
 
 const createContact = ({
   email,
@@ -46,17 +44,15 @@ const createContact = ({
   ...props
 }: { email: string; organization?: DataType.Organization } & Partial<
   Omit<DataType.Person, 'organization'>
->): DataType.Person => {
+>): DataType.Person =>
   // TODO(dmaretskyi): `Obj.make` with nested refs throws an error when added to db.
-  return Obj.make(DataType.Person, {
+  Obj.make(DataType.Person, {
     organization: organization ? Ref.make(organization) : undefined,
     emails: [{ value: email }],
     ...props,
   });
-};
-
-const createTranscriptMessage = (sender: DataType.Person, blocks: string[]) => {
-  return Obj.make(DataType.Message, {
+const createTranscriptMessage = (sender: DataType.Person, blocks: string[]) =>
+  Obj.make(DataType.Message, {
     sender: {
       name: sender.fullName,
     },
@@ -72,7 +68,6 @@ const createTranscriptMessage = (sender: DataType.Person, blocks: string[]) => {
         }) as const,
     ),
   });
-};
 
 export const createTestData = () => {
   const organizations: Record<string, DataType.Organization> = {

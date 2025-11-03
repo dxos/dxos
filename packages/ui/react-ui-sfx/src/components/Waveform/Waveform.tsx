@@ -44,25 +44,23 @@ export const Waveform = ({ classNames, active, size: _size = 4 }: WaveformProps)
     <AnimatePresence>
       <div className={mx('flex p-1 bg-neutral-200 dark:bg-neutral-800 rounded', classNames)}>
         <div className={mx('flex w-full h-full items-center justify-center', waveClassNames)}>
-          {range.map(({ duration, scaleY }, i) => {
-            return (
-              <motion.div
-                key={i}
-                className={mx('flex bg-neutral-800 dark:bg-neutral-100', h)}
-                transition={{ ease: 'linear', duration, repeat: Infinity }}
-                initial={{ scaleY: [0.1] }}
-                variants={{
-                  active: {
-                    scaleY,
-                  },
-                  inactive: {
-                    scaleY: [0.1],
-                  },
-                }}
-                animate={active ? 'active' : 'inactive'}
-              />
-            );
-          })}
+          {range.map(({ duration, scaleY }, i) => (
+            <motion.div
+              key={i}
+              className={mx('flex bg-neutral-800 dark:bg-neutral-100', h)}
+              transition={{ ease: 'linear', duration, repeat: Infinity }}
+              initial={{ scaleY: [0.1] }}
+              variants={{
+                active: {
+                  scaleY,
+                },
+                inactive: {
+                  scaleY: [0.1],
+                },
+              }}
+              animate={active ? 'active' : 'inactive'}
+            />
+          ))}
         </div>
       </div>
     </AnimatePresence>

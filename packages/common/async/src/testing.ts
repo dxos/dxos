@@ -60,8 +60,8 @@ export type UntilCallback<T> = (resolve: (value: T) => void, reject: (error: Err
 /**
  * Awaits promise.
  */
-export const until = <T = void>(cb: UntilCallback<T>, timeout?: number): Promise<T> => {
-  return new Promise((resolve, reject) => {
+export const until = <T = void>(cb: UntilCallback<T>, timeout?: number): Promise<T> =>
+  new Promise((resolve, reject) => {
     const t =
       timeout &&
       setTimeout(() => {
@@ -85,7 +85,6 @@ export const until = <T = void>(cb: UntilCallback<T>, timeout?: number): Promise
       }
     });
   });
-};
 
 /**
  * Wait until promise resolves.
@@ -95,8 +94,8 @@ export const untilPromise = <T = void>(cb: () => Promise<T>) => cb();
 /**
  * Wait until error is thrown.
  */
-export const untilError = (cb: () => Promise<any>) => {
-  return new Promise((resolve, reject) => {
+export const untilError = (cb: () => Promise<any>) =>
+  new Promise((resolve, reject) => {
     setTimeout(async () => {
       try {
         await cb();
@@ -106,4 +105,3 @@ export const untilError = (cb: () => Promise<any>) => {
       }
     });
   });
-};

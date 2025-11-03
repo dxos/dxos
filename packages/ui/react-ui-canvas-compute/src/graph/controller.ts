@@ -375,8 +375,8 @@ export class ComputeGraphController extends Resource {
 /**
  * Waits for all effects in the bag to complete and returns the `RuntimeValue` for each property.
  */
-const computeValueBag = (bag: ValueBag<any>): Effect.Effect<Record<string, RuntimeValue>, never, never> => {
-  return Effect.all(
+const computeValueBag = (bag: ValueBag<any>): Effect.Effect<Record<string, RuntimeValue>, never, never> =>
+  Effect.all(
     Object.entries(bag.values).map(([key, eff]) =>
       Effect.either(eff).pipe(
         Effect.map((value) => {
@@ -393,4 +393,3 @@ const computeValueBag = (bag: ValueBag<any>): Effect.Effect<Record<string, Runti
       ),
     ),
   ).pipe(Effect.map((entries) => Object.fromEntries(entries) as Record<string, RuntimeValue>));
-};

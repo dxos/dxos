@@ -300,21 +300,19 @@ export const FormFields = forwardRef<HTMLDivElement, FormFieldsProps>(
     return (
       <div role='form' className={mx('is-full', classNames)} ref={forwardRef}>
         {properties
-          .map((property) => {
-            return (
-              <FormField
-                key={property.name}
-                property={property}
-                path={[...(path ?? []), property.name]}
-                readonly={readonly}
-                projection={projection}
-                onQueryRefOptions={onQueryRefOptions}
-                lookupComponent={lookupComponent}
-                Custom={Custom}
-                {...props}
-              />
-            );
-          })
+          .map((property) => (
+            <FormField
+              key={property.name}
+              property={property}
+              path={[...(path ?? []), property.name]}
+              readonly={readonly}
+              projection={projection}
+              onQueryRefOptions={onQueryRefOptions}
+              lookupComponent={lookupComponent}
+              Custom={Custom}
+              {...props}
+            />
+          ))
           .filter(isTruthy)}
       </div>
     );

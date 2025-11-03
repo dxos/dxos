@@ -37,9 +37,9 @@ export default (context: PluginContext) =>
         Rx.make((get) =>
           Function.pipe(
             get(node),
-            Option.flatMap((node) => {
-              return Obj.instanceOf(Assistant.Chat, node.data) ? Option.some(node.data) : Option.none();
-            }),
+            Option.flatMap((node) =>
+              Obj.instanceOf(Assistant.Chat, node.data) ? Option.some(node.data) : Option.none(),
+            ),
             Option.map((object) => {
               const id = fullyQualifiedId(object);
               return [
@@ -114,8 +114,8 @@ export default (context: PluginContext) =>
 
     createExtension({
       id: `${meta.id}/companion-chat`,
-      connector: (node) => {
-        return Rx.make((get) =>
+      connector: (node) =>
+        Rx.make((get) =>
           Function.pipe(
             get(node),
             Option.flatMap((node) => (Obj.isObject(node.data) ? Option.some(node.data) : Option.none())),
@@ -142,8 +142,7 @@ export default (context: PluginContext) =>
             }),
             Option.getOrElse(() => []),
           ),
-        );
-      },
+        ),
     }),
 
     createExtension({

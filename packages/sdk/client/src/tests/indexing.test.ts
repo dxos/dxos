@@ -69,9 +69,7 @@ describe('Index queries', () => {
 
   const addObjects = async <T extends {}>(space: Space, objects: AnyLiveObject<T>[]) => {
     await space.waitUntilReady();
-    const objectsInDataBase = objects.map((object) => {
-      return space.db.add(object);
-    });
+    const objectsInDataBase = objects.map((object) => space.db.add(object));
 
     await space.db.flush();
     return objectsInDataBase;

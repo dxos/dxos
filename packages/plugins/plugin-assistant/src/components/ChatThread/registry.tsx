@@ -21,16 +21,14 @@ import { ToolBlock } from '../ToolBlock';
 
 import { type BlockRenderer, type MessageThreadContext } from './sync';
 
-const Fallback = ({ _tag, ...props }: XmlWidgetProps<MessageThreadContext>) => {
-  return (
-    <ToggleContainer.Root classNames='rounded-sm'>
-      <ToggleContainer.Header classNames='bg-groupSurface'>{_tag}</ToggleContainer.Header>
-      <ToggleContainer.Content classNames='bg-modalSurface'>
-        <Json classNames='!p-2 text-sm' data={props} />
-      </ToggleContainer.Content>
-    </ToggleContainer.Root>
-  );
-};
+const Fallback = ({ _tag, ...props }: XmlWidgetProps<MessageThreadContext>) => (
+  <ToggleContainer.Root classNames='rounded-sm'>
+    <ToggleContainer.Header classNames='bg-groupSurface'>{_tag}</ToggleContainer.Header>
+    <ToggleContainer.Content classNames='bg-modalSurface'>
+      <Json classNames='!p-2 text-sm' data={props} />
+    </ToggleContainer.Content>
+  </ToggleContainer.Root>
+);
 
 /**
  * Custom XML tags registry.

@@ -22,11 +22,9 @@ export const defaultAnchorSize: Dimension = { width: 12, height: 12 };
 
 export const DATA_ANCHOR_ID = 'data-anchor-id';
 
-export const anchorAttrs = (shape: Shape, anchor: Anchor) => {
-  return {
-    [DATA_ANCHOR_ID]: `${shape.id}-${anchor.id}`,
-  };
-};
+export const anchorAttrs = (shape: Shape, anchor: Anchor) => ({
+  [DATA_ANCHOR_ID]: `${shape.id}-${anchor.id}`,
+});
 
 export const getAnchorElement = (root: HTMLElement, shapeId: string, anchorId: string): Element | null =>
   root.querySelector(`[${DATA_ANCHOR_ID}="${shapeId}-${anchorId}"]`);

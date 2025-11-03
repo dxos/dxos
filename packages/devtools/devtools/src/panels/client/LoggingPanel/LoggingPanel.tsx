@@ -77,18 +77,20 @@ export const LoggingPanel = () => {
     [],
   );
 
-  const tableData = useMemo(() => {
-    return logs.map((entry, index) => ({
-      id: `${entry.timestamp}-${index}`, // Stable ID based on position and timestamp
-      timestamp: entry.timestamp,
-      level: Object.entries(levels)
-        .find(([, level]) => level === entry.level)?.[0]
-        .toUpperCase(),
-      file: `${shortFile(entry.meta?.file)}:${entry.meta?.line}`,
-      message: entry.message,
-      context: entry.context,
-    }));
-  }, [logs]);
+  const tableData = useMemo(
+    () =>
+      logs.map((entry, index) => ({
+        id: `${entry.timestamp}-${index}`, // Stable ID based on position and timestamp
+        timestamp: entry.timestamp,
+        level: Object.entries(levels)
+          .find(([, level]) => level === entry.level)?.[0]
+          .toUpperCase(),
+        file: `${shortFile(entry.meta?.file)}:${entry.meta?.line}`,
+        message: entry.message,
+        context: entry.context,
+      })),
+    [logs],
+  );
 
   const presets = useMemo(
     () => [

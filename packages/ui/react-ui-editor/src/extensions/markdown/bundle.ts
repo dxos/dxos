@@ -31,51 +31,49 @@ export type MarkdownBundleOptions = {
  * https://codemirror.net/docs/community
  * https://codemirror.net/docs/ref/#codemirror.basicSetup
  */
-export const createMarkdownExtensions = (options: MarkdownBundleOptions = {}): Extension[] => {
-  return [
-    // Main extension.
-    // https://github.com/codemirror/lang-markdown
-    // https://codemirror.net/5/mode/markdown/index.html (demo).
-    markdown({
-      // GRM by default (vs strict CommonMark):
-      // Table, TaskList, Strikethrough, and Autolink.
-      // NOTE: This extends the parser; it doesn't affect rendering.
-      // https://github.github.com/gfm
-      // https://github.com/lezer-parser/markdown?tab=readme-ov-file#github-flavored-markdown
-      base: markdownLanguage,
+export const createMarkdownExtensions = (options: MarkdownBundleOptions = {}): Extension[] => [
+  // Main extension.
+  // https://github.com/codemirror/lang-markdown
+  // https://codemirror.net/5/mode/markdown/index.html (demo).
+  markdown({
+    // GRM by default (vs strict CommonMark):
+    // Table, TaskList, Strikethrough, and Autolink.
+    // NOTE: This extends the parser; it doesn't affect rendering.
+    // https://github.github.com/gfm
+    // https://github.com/lezer-parser/markdown?tab=readme-ov-file#github-flavored-markdown
+    base: markdownLanguage,
 
-      // Languages for syntax highlighting fenced code blocks.
-      defaultCodeLanguage: jsonLanguage,
-      codeLanguages: languages,
+    // Languages for syntax highlighting fenced code blocks.
+    defaultCodeLanguage: jsonLanguage,
+    codeLanguages: languages,
 
-      // Don't complete HTML tags.
-      completeHTMLTags: false,
+    // Don't complete HTML tags.
+    completeHTMLTags: false,
 
-      // Parser extensions.
-      extensions: [
-        // GFM provided by default.
-        markdownTagsExtensions,
-        ...(options.extensions ?? defaultExtensions()),
-      ],
-    }),
+    // Parser extensions.
+    extensions: [
+      // GFM provided by default.
+      markdownTagsExtensions,
+      ...(options.extensions ?? defaultExtensions()),
+    ],
+  }),
 
-    // Custom styles.
-    syntaxHighlighting(markdownHighlightStyle()),
+  // Custom styles.
+  syntaxHighlighting(markdownHighlightStyle()),
 
-    keymap.of(
-      [
-        // https://codemirror.net/docs/ref/#commands.indentWithTab
-        options.indentWithTab !== false && indentWithTab,
+  keymap.of(
+    [
+      // https://codemirror.net/docs/ref/#commands.indentWithTab
+      options.indentWithTab !== false && indentWithTab,
 
-        // https://codemirror.net/docs/ref/#commands.defaultKeymap
-        ...defaultKeymap,
+      // https://codemirror.net/docs/ref/#commands.defaultKeymap
+      ...defaultKeymap,
 
-        // TODO(burdon): Remove?
-        ...completionKeymap,
-      ].filter(isTruthy),
-    ),
-  ];
-};
+      // TODO(burdon): Remove?
+      ...completionKeymap,
+    ].filter(isTruthy),
+  ),
+];
 
 const xmlLanguageDesc = LanguageDescription.of({
   name: 'xml',

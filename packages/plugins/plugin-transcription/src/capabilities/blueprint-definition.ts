@@ -11,21 +11,19 @@ import { open, summarize } from '../functions';
 
 const functions: FunctionDefinition[] = [open, summarize];
 
-export default () => {
-  return [
-    contributes(Capabilities.Functions, functions),
-    contributes(
-      Capabilities.BlueprintDefinition,
-      Blueprint.make({
-        key: 'dxos.org/blueprint/transcription',
-        name: 'Transcription',
-        tools: Blueprint.toolDefinitions({ functions }),
-        instructions: Template.make({
-          source: trim`
+export default () => [
+  contributes(Capabilities.Functions, functions),
+  contributes(
+    Capabilities.BlueprintDefinition,
+    Blueprint.make({
+      key: 'dxos.org/blueprint/transcription',
+      name: 'Transcription',
+      tools: Blueprint.toolDefinitions({ functions }),
+      instructions: Template.make({
+        source: trim`
             You can open and summarize a meeting transcript.
           `,
-        }),
       }),
-    ),
-  ];
-};
+    }),
+  ),
+];

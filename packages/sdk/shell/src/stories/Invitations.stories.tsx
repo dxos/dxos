@@ -232,14 +232,12 @@ type Story = StoryObj<typeof meta>;
 //   The issue appears to be related to dynamic imports during client initialization.
 //   This does not seem to be a problem in other browsers nor in Safari in the app.
 export const Default: Story = {
-  render: () => {
-    return (
-      // TODO(wittjosiah): Include Clipboard.Provider in layout decorator.
-      <Clipboard.Provider>
-        <Invitations />
-      </Clipboard.Provider>
-    );
-  },
+  render: () => (
+    // TODO(wittjosiah): Include Clipboard.Provider in layout decorator.
+    <Clipboard.Provider>
+      <Invitations />
+    </Clipboard.Provider>
+  ),
   decorators: [withMultiClientProvider({ numClients: 3 }), withLayout({ classNames: 'grid grid-cols-3' })],
   parameters: {
     layout: 'fullscreen',

@@ -17,24 +17,22 @@ export type ExtendedMarkdownOptions = {
 /**
  * Extended markdown parser with mixed parser for custom rendering of XML tags.
  */
-export const extendedMarkdown = ({ registry }: ExtendedMarkdownOptions = {}): Extension => {
-  return [
-    createMarkdownExtensions({
-      extensions: [
-        {
-          wrap: mixedParser(registry),
-          parseBlock: [
-            // Disable SetextHeading since it causes flickering when parsing/rendering tasks in chunks.
-            {
-              name: 'SetextHeading',
-              parse: () => false,
-            },
-          ],
-        },
-      ],
-    }),
-  ];
-};
+export const extendedMarkdown = ({ registry }: ExtendedMarkdownOptions = {}): Extension => [
+  createMarkdownExtensions({
+    extensions: [
+      {
+        wrap: mixedParser(registry),
+        parseBlock: [
+          // Disable SetextHeading since it causes flickering when parsing/rendering tasks in chunks.
+          {
+            name: 'SetextHeading',
+            parse: () => false,
+          },
+        ],
+      },
+    ],
+  }),
+];
 
 /**
  * Configure mixed parser to recognize custom tags.

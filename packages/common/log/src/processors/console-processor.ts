@@ -78,13 +78,11 @@ export const DEFAULT_FORMATTER: Formatter = (
       ];
 };
 
-export const SHORT_FORMATTER: Formatter = (config, { path, level, message }) => {
-  return [
-    chalk.grey(truncate(path, 16, true)), // NOTE: Breaks terminal linking.
-    chalk[LEVEL_COLORS[level]](shortLevelName[level]),
-    message,
-  ];
-};
+export const SHORT_FORMATTER: Formatter = (config, { path, level, message }) => [
+  chalk.grey(truncate(path, 16, true)), // NOTE: Breaks terminal linking.
+  chalk[LEVEL_COLORS[level]](shortLevelName[level]),
+  message,
+];
 
 // TODO(burdon): Config option.
 const formatter = DEFAULT_FORMATTER;

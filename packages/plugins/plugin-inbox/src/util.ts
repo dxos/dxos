@@ -14,9 +14,8 @@ import { toHue } from '@dxos/util';
  * @returns A non-negative number hash
  */
 // TODO(burdon): Factor out.
-export const hashString = (str?: string): number => {
-  return str ? Math.abs(str.split('').reduce((hash, char) => (hash << 5) + hash + char.charCodeAt(0), 0)) : 0;
-};
+export const hashString = (str?: string): number =>
+  str ? Math.abs(str.split('').reduce((hash, char) => (hash << 5) + hash + char.charCodeAt(0), 0)) : 0;
 
 // TODO(burdon): Factor out sort pattern with getters.
 export const sortByCreated =

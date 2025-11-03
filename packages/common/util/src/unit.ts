@@ -17,8 +17,9 @@ export type UnitValue<T> = {
 
 export type UnitFormat<T = any> = (n: number, precision?: number) => UnitValue<T>;
 
-const createFormat = (unit: Unit): UnitFormat<string> => {
-  return (n: number, precision = unit.precision ?? 0) => {
+const createFormat =
+  (unit: Unit): UnitFormat<string> =>
+  (n: number, precision = unit.precision ?? 0) => {
     const value = n / unit.quotient;
     return {
       unit,
@@ -27,7 +28,6 @@ const createFormat = (unit: Unit): UnitFormat<string> => {
       toString: () => `${value.toFixed(precision)}${unit.symbol}`,
     };
   };
-};
 
 const MS_SECONDS = 1_000;
 const MS_MINUTES = 60 * MS_SECONDS;

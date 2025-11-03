@@ -58,8 +58,8 @@ const messages: MessageWithRangeId[] = [
 // const REMOTE_AI = true;
 
 describe.skip('SentenceNormalization', () => {
-  const getExecutor = () => {
-    return new FunctionExecutor(
+  const getExecutor = () =>
+    new FunctionExecutor(
       new ServiceContainer().setServices({
         // ai: {
         //   client: REMOTE_AI
@@ -77,7 +77,6 @@ describe.skip('SentenceNormalization', () => {
         // },
       }),
     );
-  };
 
   test('messages merging', { timeout: 120_000 }, async () => {
     const executor = getExecutor();

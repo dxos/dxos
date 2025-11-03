@@ -158,21 +158,13 @@ export class EchoSchemaRegistry extends Resource implements SchemaRegistry {
           .map((result) => result.object)
           .filter((object) => object != null);
 
-        const results = filterOrderResults(
-          objects.map((stored) => {
-            return self._register(stored);
-          }),
-        );
+        const results = filterOrderResults(objects.map((stored) => self._register(stored)));
         return results;
       },
       async getResults() {
         const { objects } = await self._db.query(Filter.type(StoredSchema)).run();
 
-        return filterOrderResults(
-          objects.map((stored) => {
-            return self._register(stored);
-          }),
-        );
+        return filterOrderResults(objects.map((stored) => self._register(stored)));
       },
       async start() {
         if (unsubscribe) {

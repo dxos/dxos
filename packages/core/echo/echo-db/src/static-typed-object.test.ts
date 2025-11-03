@@ -76,23 +76,21 @@ const createLivePrototype = (ast: SchemaAST.AST) => {
   switch (ast._tag) {
     case 'TypeLiteral': {
       const properties: PropertyDescriptorMap = Object.fromEntries(
-        ast.propertySignatures.map((prop) => {
-          return [
-            prop.name,
-            {
-              configurable: false,
-              enumerable: true,
-              get(this: LiveProto) {
-                return this[Cell].get(prop.name);
-              },
-              set: prop.isReadonly
-                ? undefined
-                : function set(this: LiveProto, value: any) {
-                    this[Cell].set(prop.name, value);
-                  },
-            } satisfies PropertyDescriptor,
-          ];
-        }),
+        ast.propertySignatures.map((prop) => [
+          prop.name,
+          {
+            configurable: false,
+            enumerable: true,
+            get(this: LiveProto) {
+              return this[Cell].get(prop.name);
+            },
+            set: prop.isReadonly
+              ? undefined
+              : function set(this: LiveProto, value: any) {
+                  this[Cell].set(prop.name, value);
+                },
+          } satisfies PropertyDescriptor,
+        ]),
       );
 
       const proto: LiveProto = {} as any; // [Cell] will be defined in the object factory.

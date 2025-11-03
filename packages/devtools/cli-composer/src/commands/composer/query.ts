@@ -31,9 +31,7 @@ export default class Query extends BaseCommand<typeof Query> {
         switch (this.flags.type) {
           case DataType.Message.typename: {
             filter = Filter.type(DataType.Message);
-            printer = (data: DataType.Message) => {
-              return stringify({ from: data.sender.email, content: data.blocks.length });
-            };
+            printer = (data: DataType.Message) => stringify({ from: data.sender.email, content: data.blocks.length });
             break;
           }
 

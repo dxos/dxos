@@ -32,25 +32,22 @@ export const NodeExternalPlugin = ({ injectGlobals = false, importGlobals = fals
       initialOptions.banner.js = 'import "@dxos/node-std/globals";';
     }
 
-    onResolve({ filter: /^@inject-globals*/ }, (args) => {
-      return { path: '@inject-globals', namespace: 'inject-globals' };
-    });
+    onResolve({ filter: /^@inject-globals*/ }, (args) => ({ path: '@inject-globals', namespace: 'inject-globals' }));
 
-    onLoad({ filter: /^@inject-globals/, namespace: 'inject-globals' }, async (args) => {
-      return {
-        contents: `
+    onLoad({ filter: /^@inject-globals/, namespace: 'inject-globals' }, async (args) => ({
+      contents: `
           export {
             ${GLOBALS.join(',\n')}
           } from '@dxos/node-std/inject-globals';
           // Empty source map so that esbuild does not inject virtual source file names.
           //# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJzb3VyY2VzIjpbIiJdLCJtYXBwaW5ncyI6IkEifQ==
         `,
-      };
-    });
+    }));
 
-    onResolve({ filter: /^@dxos\/node-std\/inject-globals$/ }, (args) => {
-      return { external: true, path: '@dxos/node-std/inject-globals' };
-    });
+    onResolve({ filter: /^@dxos\/node-std\/inject-globals$/ }, (args) => ({
+      external: true,
+      path: '@dxos/node-std/inject-globals',
+    }));
 
     onResolve({ filter: /^node:.*/ }, (args) => {
       if (!nodeStd) {

@@ -8,9 +8,7 @@ import { Link } from 'react-router-dom';
 
 import { FILTER } from '../constants';
 
-const pluralize = (count: number, word: string) => {
-  return count === 1 ? word : word + 's';
-};
+const pluralize = (count: number, word: string) => (count === 1 ? word : word + 's');
 
 export interface TodoFooterProps {
   completedCount: number;

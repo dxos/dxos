@@ -60,18 +60,16 @@ export const PickerButton = ({
       <DropdownMenu.Portal>
         <DropdownMenu.Content side='bottom' classNames='!is-min'>
           <DropdownMenu.Viewport classNames='grid grid-cols-[repeat(6,min-content)]'>
-            {values.map((_value) => {
-              return (
-                <DropdownMenu.CheckboxItem
-                  key={_value}
-                  checked={_value === value}
-                  onCheckedChange={() => setValue(_value)}
-                  classNames={'p-1 items-center justify-center aspect-square'}
-                >
-                  <Component value={_value} size={iconSize} />
-                </DropdownMenu.CheckboxItem>
-              );
-            })}
+            {values.map((_value) => (
+              <DropdownMenu.CheckboxItem
+                key={_value}
+                checked={_value === value}
+                onCheckedChange={() => setValue(_value)}
+                classNames={'p-1 items-center justify-center aspect-square'}
+              >
+                <Component value={_value} size={iconSize} />
+              </DropdownMenu.CheckboxItem>
+            ))}
             {onReset && (
               <DropdownMenu.CheckboxItem
                 onCheckedChange={() => onReset()}

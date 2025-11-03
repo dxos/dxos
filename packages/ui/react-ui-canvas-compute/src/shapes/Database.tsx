@@ -25,9 +25,7 @@ export type CreateDatabaseProps = CreateShapeProps<DatabaseShape>;
 export const createDatabase = (props: CreateDatabaseProps) =>
   createShape<DatabaseShape>({ type: 'database', size: { width: 128, height: 64 }, ...props });
 
-export const DatabaseComponent = ({ shape }: ShapeComponentProps<DatabaseShape>) => {
-  return <Box shape={shape} />;
-};
+export const DatabaseComponent = ({ shape }: ShapeComponentProps<DatabaseShape>) => <Box shape={shape} />;
 
 export const databaseShape: ShapeDef<DatabaseShape> = {
   type: 'database',

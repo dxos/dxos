@@ -65,9 +65,8 @@ type SpaceMachine = typeof spaceMachine;
 type SpaceState = StateFrom<SpaceMachine>;
 type SpaceSend = InterpreterFrom<SpaceMachine>['send'];
 
-const useSpaceMachine = (options?: Parameters<typeof useMachine<SpaceMachine>>[1]) => {
-  return useMachine(spaceMachine, { ...options, context: { ...options?.context } });
-};
+const useSpaceMachine = (options?: Parameters<typeof useMachine<SpaceMachine>>[1]) =>
+  useMachine(spaceMachine, { ...options, context: { ...options?.context } });
 
 export type { SpaceMachine, SpaceEvent, SpaceMachineContext, SpaceState, SpaceSend };
 export { spaceMachine, useSpaceMachine };

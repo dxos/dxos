@@ -67,20 +67,12 @@ export type SearchResultsProps = {
 };
 
 // TODO(burdon): Key cursor up/down.
-export const SearchResults = ({ items, selected, onSelect }: SearchResultsProps) => {
-  return (
-    <div className='flex flex-col grow overflow-y-auto'>
-      <div className='flex flex-col'>
-        {items.map((item) => (
-          <SearchItem
-            key={item.id}
-            type={SEARCH_RESULT}
-            {...item}
-            onSelect={onSelect}
-            selected={selected === item.id}
-          />
-        ))}
-      </div>
+export const SearchResults = ({ items, selected, onSelect }: SearchResultsProps) => (
+  <div className='flex flex-col grow overflow-y-auto'>
+    <div className='flex flex-col'>
+      {items.map((item) => (
+        <SearchItem key={item.id} type={SEARCH_RESULT} {...item} onSelect={onSelect} selected={selected === item.id} />
+      ))}
     </div>
-  );
-};
+  </div>
+);

@@ -24,9 +24,7 @@ export type ActivationEvents =
 /**
  * Helper to define an activation event.
  */
-export const defineEvent = (id: string, specifier?: string) => {
-  return { id, specifier } as ActivationEvent;
-};
+export const defineEvent = (id: string, specifier?: string) => ({ id, specifier }) as ActivationEvent;
 
 /**
  * Helper to create an activation event key.

@@ -79,14 +79,14 @@ const meta = {
         space.db.add(view);
 
         // Populate.
-        Array.from({ length: 10 }).map(() => {
-          return space.db.add(
+        Array.from({ length: 10 }).map(() =>
+          space.db.add(
             live(storedSchema, {
               single: faker.helpers.arrayElement([...selectOptionIds, undefined]),
               multiple: faker.helpers.randomSubset(selectOptionIds),
             }),
-          );
-        });
+          ),
+        );
       },
     }),
     withPluginManager({

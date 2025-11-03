@@ -19,9 +19,9 @@ import { translations } from '../../translations';
 
 import { Toolbox, type ToolboxProps } from './Toolbox';
 
-const DefaultStory = (props: ToolboxProps) => {
-  return <Toolbox {...props} classNames='w-[30rem] h-[15rem] rounded-sm border border-separator py-1' />;
-};
+const DefaultStory = (props: ToolboxProps) => (
+  <Toolbox {...props} classNames='w-[30rem] h-[15rem] rounded-sm border border-separator py-1' />
+);
 
 const meta = {
   title: 'plugins/plugin-assistant/Toolbox',

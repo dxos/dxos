@@ -11,21 +11,19 @@ const functions: FunctionDefinition[] = [];
 const tools: string[] = [];
 
 // TODO(wittjosiah): Remove? All table ops other than resizing columns are more generically handled as schema ops.
-export default () => {
-  return [
-    contributes(Capabilities.Functions, functions),
-    contributes(
-      Capabilities.BlueprintDefinition,
-      Blueprint.make({
-        key: 'dxos.org/blueprint/table',
-        name: 'Table',
-        tools: Blueprint.toolDefinitions({ functions, tools }),
-        instructions: Template.make({
-          source: trim`
+export default () => [
+  contributes(Capabilities.Functions, functions),
+  contributes(
+    Capabilities.BlueprintDefinition,
+    Blueprint.make({
+      key: 'dxos.org/blueprint/table',
+      name: 'Table',
+      tools: Blueprint.toolDefinitions({ functions, tools }),
+      instructions: Template.make({
+        source: trim`
             You can create and update tables to show data in sorted columns defined by schema.
           `,
-        }),
       }),
-    ),
-  ];
-};
+    }),
+  ),
+];

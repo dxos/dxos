@@ -8,11 +8,10 @@ import { randomInt } from './random';
 import { createBucketReducer, numericalValues, reduceGroupBy, reduceSeries, reduceSet } from './reducers';
 import { Tracer } from './tracer';
 
-const sleep = (ms: number) => {
-  return new Promise<void>((resolve) => {
+const sleep = (ms: number) =>
+  new Promise<void>((resolve) => {
     setTimeout(resolve, ms);
   });
-};
 
 describe('Tracer', () => {
   test('simple time-series', async () => {

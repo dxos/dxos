@@ -143,6 +143,5 @@ export class Keyring implements Signer {
   }
 }
 
-const keyPairToPublicKey = async (keyPair: CryptoKeyPair): Promise<PublicKey> => {
-  return PublicKey.from(new Uint8Array(await subtleCrypto.exportKey('raw', keyPair.publicKey)));
-};
+const keyPairToPublicKey = async (keyPair: CryptoKeyPair): Promise<PublicKey> =>
+  PublicKey.from(new Uint8Array(await subtleCrypto.exportKey('raw', keyPair.publicKey)));

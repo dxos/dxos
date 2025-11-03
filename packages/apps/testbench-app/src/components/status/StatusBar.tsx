@@ -29,31 +29,29 @@ export type StatusBarProps = {
 };
 
 // TODO(burdon): Toggle network.
-export const StatusBar = ({ flushing, showStats, onShowStats }: StatusBarProps) => {
-  return (
-    <div className='flex items-center'>
+export const StatusBar = ({ flushing, showStats, onShowStats }: StatusBarProps) => (
+  <div className='flex items-center'>
+    <IconButton
+      icon='ph--chart-bar--regular'
+      iconOnly
+      label='Toggle stats'
+      onClick={() => onShowStats?.(!showStats)}
+      variant='ghost'
+    />
+    {flushing && (
       <IconButton
-        icon='ph--chart-bar--regular'
+        classNames='animate-spin'
+        icon='ph--arrows-clockwise--regular'
         iconOnly
-        label='Toggle stats'
-        onClick={() => onShowStats?.(!showStats)}
+        label='Syncing'
         variant='ghost'
       />
-      {flushing && (
-        <IconButton
-          classNames='animate-spin'
-          icon='ph--arrows-clockwise--regular'
-          iconOnly
-          label='Syncing'
-          variant='ghost'
-        />
-      )}
-      <Button variant='ghost'>
-        <NetworkIndicator />
-      </Button>
-      <Button variant='ghost'>
-        <ErrorIndicator />
-      </Button>
-    </div>
-  );
-};
+    )}
+    <Button variant='ghost'>
+      <NetworkIndicator />
+    </Button>
+    <Button variant='ghost'>
+      <ErrorIndicator />
+    </Button>
+  </div>
+);

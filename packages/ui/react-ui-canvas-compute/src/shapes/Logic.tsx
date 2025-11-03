@@ -39,15 +39,15 @@ export type IfElseShape = Schema.Schema.Type<typeof IfElseShape>;
 
 export type IfComponentProps = ShapeComponentProps<IfShape>;
 
-export const IfComponent = ({ shape, ...props }: IfComponentProps) => {
-  return <FunctionBody shape={shape} inputSchema={IfInput} outputSchema={IfOutput} />;
-};
+export const IfComponent = ({ shape, ...props }: IfComponentProps) => (
+  <FunctionBody shape={shape} inputSchema={IfInput} outputSchema={IfOutput} />
+);
 
 export type IfElseComponentProps = ShapeComponentProps<IfElseShape>;
 
-export const IfElseComponent = ({ shape, ...props }: IfElseComponentProps) => {
-  return <FunctionBody shape={shape} inputSchema={IfElseInput} outputSchema={IfElseOutput} />;
-};
+export const IfElseComponent = ({ shape, ...props }: IfElseComponentProps) => (
+  <FunctionBody shape={shape} inputSchema={IfElseInput} outputSchema={IfElseOutput} />
+);
 
 //
 // Defs

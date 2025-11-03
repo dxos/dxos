@@ -143,12 +143,12 @@ export abstract class AbstractStorage implements Storage {
   // TODO(burdon): Delete directory (not just listed files).
   protected async _remove(path: string): Promise<void> {
     await Promise.all(
-      Array.from(await this._getFiles(path)).map(([path, file]) => {
-        return file
+      Array.from(await this._getFiles(path)).map(([path, file]) =>
+        file
           .destroy()
           .then(() => this._files.delete(path))
-          .catch((err: any) => log.error(err.message));
-      }),
+          .catch((err: any) => log.error(err.message)),
+      ),
     );
   }
 }

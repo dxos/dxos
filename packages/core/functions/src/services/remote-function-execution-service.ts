@@ -52,12 +52,10 @@ export class RemoteFunctionExecutionService extends Context.Tag('@dxos/functions
     });
   }
 
-  static mock = (): Context.Tag.Service<RemoteFunctionExecutionService> => {
-    return {
-      callFunction: <I, O>(deployedFunctionId: string, input: I): Effect.Effect<O> =>
-        Effect.succeed(input as unknown as O),
-    };
-  };
+  static mock = (): Context.Tag.Service<RemoteFunctionExecutionService> => ({
+    callFunction: <I, O>(deployedFunctionId: string, input: I): Effect.Effect<O> =>
+      Effect.succeed(input as unknown as O),
+  });
 
   static layerMock = Layer.succeed(RemoteFunctionExecutionService, RemoteFunctionExecutionService.mock());
 }

@@ -15,12 +15,10 @@ export type JournalContainerProps = {
   journal: JournalType;
 };
 
-export const JournalContainer = ({ journal }: JournalContainerProps) => {
-  return (
-    <StackItem.Content>
-      <Journal journal={journal} classNames='container-max-width' />
-    </StackItem.Content>
-  );
-};
+export const JournalContainer = ({ journal }: JournalContainerProps) => (
+  <StackItem.Content>
+    <Journal journal={journal} classNames='container-max-width' />
+  </StackItem.Content>
+);
 
 export default JournalContainer;

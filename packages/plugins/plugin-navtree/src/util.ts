@@ -77,8 +77,8 @@ export const getChildren = (
   graph: ReadableGraph,
   node: NavTreeItemGraphNode,
   path: readonly string[] = [],
-): NavTreeItemGraphNode[] => {
-  return graph
+): NavTreeItemGraphNode[] =>
+  graph
     .getConnections(node.id, 'outbound')
     .map((n) => {
       // Break cycles.
@@ -86,7 +86,6 @@ export const getChildren = (
       return nextPath.includes(n.id) ? undefined : (n as NavTreeItemGraphNode);
     })
     .filter(isNonNullable) as NavTreeItemGraphNode[];
-};
 
 export const l0ItemType = (item: Node<any>) => {
   if (item.properties.disposition === 'collection') {

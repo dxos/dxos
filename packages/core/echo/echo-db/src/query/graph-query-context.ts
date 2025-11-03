@@ -326,9 +326,8 @@ export class SpaceQuerySource implements QuerySource {
   }
 }
 
-const isObjectIdFilter = (filter: QueryAST.Filter) => {
-  return filter.type === 'object' && filter.id !== undefined && filter.id.length > 0;
-};
+const isObjectIdFilter = (filter: QueryAST.Filter) =>
+  filter.type === 'object' && filter.id !== undefined && filter.id.length > 0;
 
 const filterCoreByDeletedFlag = (core: ObjectCore, options: QueryAST.QueryOptions | undefined): boolean => {
   switch (options?.deleted) {

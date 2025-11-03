@@ -36,14 +36,16 @@ export const BaseObjectSettings = ({ classNames, children, object }: BaseObjectS
   const space = getSpace(object);
   const handleRefQueryLookup = useRefQueryLookupHandler({ space });
 
-  const formSchema = useMemo(() => {
-    return Function.pipe(
-      Obj.getSchema(object),
-      Option.fromNullable,
-      Option.map((schema) => BaseSchema.pipe(Schema.extend(schema))),
-      Option.getOrUndefined,
-    );
-  }, [object]);
+  const formSchema = useMemo(
+    () =>
+      Function.pipe(
+        Obj.getSchema(object),
+        Option.fromNullable,
+        Option.map((schema) => BaseSchema.pipe(Schema.extend(schema))),
+        Option.getOrUndefined,
+      ),
+    [object],
+  );
 
   const meta = Obj.getMeta(object);
   const tag = meta.tags?.[0] ? space?.db.ref(DXN.parse(meta.tags?.[0])) : undefined;

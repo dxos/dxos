@@ -36,8 +36,8 @@ export const SHARED = 'shared-spaces';
 /**
  * Convert a query result to an Rx value of the objects.
  */
-export const rxFromQuery = <T extends AnyEchoObject>(query: QueryResult<T>): Rx.Rx<T[]> => {
-  return Rx.make((get) => {
+export const rxFromQuery = <T extends AnyEchoObject>(query: QueryResult<T>): Rx.Rx<T[]> =>
+  Rx.make((get) => {
     const unsubscribe = query.subscribe((result) => {
       get.setSelf(result.objects);
     });
@@ -45,21 +45,19 @@ export const rxFromQuery = <T extends AnyEchoObject>(query: QueryResult<T>): Rx.
     get.addFinalizer(() => unsubscribe());
     return query.objects;
   });
-};
 
 // TODO(wittjosiah): Factor out? Expose via capability?
 export const getSpaceDisplayName = (
   space: Space,
   { personal, namesCache = {} }: { personal?: boolean; namesCache?: Record<string, string> } = {},
-): string | [string, { ns: string }] => {
-  return space.state.get() === SpaceState.SPACE_READY && (space.properties.name?.length ?? 0) > 0
+): string | [string, { ns: string }] =>
+  space.state.get() === SpaceState.SPACE_READY && (space.properties.name?.length ?? 0) > 0
     ? space.properties.name
     : namesCache[space.id]
       ? namesCache[space.id]
       : personal
         ? ['personal space label', { ns: meta.id }]
         : ['unnamed space label', { ns: meta.id }];
-};
 
 const getCollectionGraphNodePartials = ({
   collection,
@@ -69,72 +67,70 @@ const getCollectionGraphNodePartials = ({
   collection: DataType.Collection;
   space: Space;
   resolve: (typename: string) => Record<string, any>;
-}) => {
-  return {
-    acceptPersistenceClass: new Set(['echo']),
-    acceptPersistenceKey: new Set([space.id]),
-    role: 'branch',
-    onRearrangeChildren: (nextOrder: unknown[]) => {
-      // Change on disk.
-      collection.objects = nextOrder.filter(Obj.isObject).map(Ref.make);
-    },
-    onTransferStart: (child: Node<Obj.Any>, index?: number) => {
-      // TODO(wittjosiah): Support transfer between spaces.
-      // const childSpace = getSpace(child.data);
-      // if (space && childSpace && !childSpace.key.equals(space.key)) {
-      //   // Create clone of child and add to destination space.
-      //   const newObject = clone(child.data, {
-      //     // TODO(wittjosiah): This needs to be generalized and not hardcoded here.
-      //     additional: [
-      //       child.data.content,
-      //       ...(child.data.objects ?? []),
-      //       ...(child.data.objects ?? []).map((object: TypedObject) => object.content),
-      //     ],
-      //   });
-      //   space.db.add(newObject);
-      //   collection.objects.push(newObject);
-      // } else {
+}) => ({
+  acceptPersistenceClass: new Set(['echo']),
+  acceptPersistenceKey: new Set([space.id]),
+  role: 'branch',
+  onRearrangeChildren: (nextOrder: unknown[]) => {
+    // Change on disk.
+    collection.objects = nextOrder.filter(Obj.isObject).map(Ref.make);
+  },
+  onTransferStart: (child: Node<Obj.Any>, index?: number) => {
+    // TODO(wittjosiah): Support transfer between spaces.
+    // const childSpace = getSpace(child.data);
+    // if (space && childSpace && !childSpace.key.equals(space.key)) {
+    //   // Create clone of child and add to destination space.
+    //   const newObject = clone(child.data, {
+    //     // TODO(wittjosiah): This needs to be generalized and not hardcoded here.
+    //     additional: [
+    //       child.data.content,
+    //       ...(child.data.objects ?? []),
+    //       ...(child.data.objects ?? []).map((object: TypedObject) => object.content),
+    //     ],
+    //   });
+    //   space.db.add(newObject);
+    //   collection.objects.push(newObject);
+    // } else {
 
-      // Add child to destination collection.
-      // TODO(dmaretskyi): Compare by id.
-      if (!collection.objects.find((object) => object.target === child.data)) {
-        if (typeof index !== 'undefined') {
-          collection.objects.splice(index, 0, Ref.make(child.data));
-        } else {
-          collection.objects.push(Ref.make(child.data));
-        }
-      }
-
-      // }
-    },
-    onTransferEnd: (child: Node<Obj.Any>, destination: Node) => {
-      // Remove child from origin collection.
-      const index = collection.objects.findIndex((object) => object.target === child.data);
-      if (index > -1) {
-        collection.objects.splice(index, 1);
-      }
-
-      // TODO(wittjosiah): Support transfer between spaces.
-      // const childSpace = getSpace(child.data);
-      // const destinationSpace =
-      //   destination.data instanceof SpaceProxy ? destination.data : getSpace(destination.data);
-      // if (destinationSpace && childSpace && !childSpace.key.equals(destinationSpace.key)) {
-      //   // Mark child as deleted in origin space.
-      //   childSpace.db.remove(child.data);
-      // }
-    },
-    onCopy: async (child: Node<Obj.Any>, index?: number) => {
-      // Create clone of child and add to destination space.
-      const newObject = await cloneObject(child.data, resolve, space);
-      space.db.add(newObject);
+    // Add child to destination collection.
+    // TODO(dmaretskyi): Compare by id.
+    if (!collection.objects.find((object) => object.target === child.data)) {
       if (typeof index !== 'undefined') {
-        collection.objects.splice(index, 0, Ref.make(newObject));
+        collection.objects.splice(index, 0, Ref.make(child.data));
       } else {
-        collection.objects.push(Ref.make(newObject));
+        collection.objects.push(Ref.make(child.data));
       }
-    },
-  };
-};
+    }
+
+    // }
+  },
+  onTransferEnd: (child: Node<Obj.Any>, destination: Node) => {
+    // Remove child from origin collection.
+    const index = collection.objects.findIndex((object) => object.target === child.data);
+    if (index > -1) {
+      collection.objects.splice(index, 1);
+    }
+
+    // TODO(wittjosiah): Support transfer between spaces.
+    // const childSpace = getSpace(child.data);
+    // const destinationSpace =
+    //   destination.data instanceof SpaceProxy ? destination.data : getSpace(destination.data);
+    // if (destinationSpace && childSpace && !childSpace.key.equals(destinationSpace.key)) {
+    //   // Mark child as deleted in origin space.
+    //   childSpace.db.remove(child.data);
+    // }
+  },
+  onCopy: async (child: Node<Obj.Any>, index?: number) => {
+    // Create clone of child and add to destination space.
+    const newObject = await cloneObject(child.data, resolve, space);
+    space.db.add(newObject);
+    if (typeof index !== 'undefined') {
+      collection.objects.splice(index, 0, Ref.make(newObject));
+    } else {
+      collection.objects.push(Ref.make(newObject));
+    }
+  },
+});
 
 const getQueryCollectionNodePartials = ({
   collection,
@@ -153,11 +149,8 @@ const getQueryCollectionNodePartials = ({
     acceptPersistenceClass: new Set(['echo']),
     acceptPersistenceKey: new Set([space.id]),
     role: 'branch',
-    canDrop: (source: TreeData) => {
-      return (
-        isGraphNode(source.item) && Obj.isObject(source.item.data) && Obj.getTypename(source.item.data) === typename
-      );
-    },
+    canDrop: (source: TreeData) =>
+      isGraphNode(source.item) && Obj.isObject(source.item.data) && Obj.getTypename(source.item.data) === typename,
     onTransferStart: (child: Node<Obj.Any>, index?: number) => {
       // No-op. Objects are moved into query collections by being removed from their original collection.
     },
@@ -167,12 +160,10 @@ const getQueryCollectionNodePartials = ({
   };
 };
 
-const getSchemaGraphNodePartials = () => {
-  return {
-    role: 'branch',
-    canDrop: () => false,
-  };
-};
+const getSchemaGraphNodePartials = () => ({
+  role: 'branch',
+  canDrop: () => false,
+});
 
 const getViewGraphNodePartials = ({
   view,
@@ -193,14 +184,11 @@ const getViewGraphNodePartials = ({
   };
 };
 
-const checkPendingMigration = (space: Space) => {
-  return (
-    space.state.get() === SpaceState.SPACE_REQUIRES_MIGRATION ||
-    (space.state.get() === SpaceState.SPACE_READY &&
-      !!Migrations.versionProperty &&
-      space.properties[Migrations.versionProperty] !== Migrations.targetVersion)
-  );
-};
+const checkPendingMigration = (space: Space) =>
+  space.state.get() === SpaceState.SPACE_REQUIRES_MIGRATION ||
+  (space.state.get() === SpaceState.SPACE_READY &&
+    !!Migrations.versionProperty &&
+    space.properties[Migrations.versionProperty] !== Migrations.targetVersion);
 
 export const constructSpaceNode = ({
   space,
@@ -240,10 +228,9 @@ export const constructSpaceNode = ({
       iconHue: space.state.get() === SpaceState.SPACE_READY && space.properties.iconHue,
       disabled: !navigable || space.state.get() !== SpaceState.SPACE_READY || hasPendingMigration,
       testId: 'spacePlugin.space',
-      canDrop: (source: TreeData) => {
+      canDrop: (source: TreeData) =>
         // TODO(wittjosiah): Find a way to only allow space as source for rearranging.
-        return Obj.isObject(source.item.data) || isSpace(source.item.data);
-      },
+        Obj.isObject(source.item.data) || isSpace(source.item.data),
     },
     nodes: [
       {
@@ -359,22 +346,20 @@ export const constructSpaceActions = ({
   return actions;
 };
 
-export const createStaticSchemaNode = ({ schema, space }: { schema: Type.Obj.Any; space: Space }) => {
-  return {
-    id: `${space.id}/${Type.getTypename(schema)}`,
-    type: `${meta.id}/static-schema`,
-    data: schema,
-    properties: {
-      label: ['typename label', { ns: Type.getTypename(schema), default: Type.getTypename(schema) }],
-      icon: 'ph--database--regular',
-      iconHue: 'green',
-      role: 'branch',
-      selectable: false,
-      canDrop: () => false,
-      space,
-    },
-  };
-};
+export const createStaticSchemaNode = ({ schema, space }: { schema: Type.Obj.Any; space: Space }) => ({
+  id: `${space.id}/${Type.getTypename(schema)}`,
+  type: `${meta.id}/static-schema`,
+  data: schema,
+  properties: {
+    label: ['typename label', { ns: Type.getTypename(schema), default: Type.getTypename(schema) }],
+    icon: 'ph--database--regular',
+    iconHue: 'green',
+    role: 'branch',
+    selectable: false,
+    canDrop: () => false,
+    space,
+  },
+});
 
 export const createStaticSchemaActions = ({
   schema,
@@ -505,9 +490,7 @@ export const createObjectNode = ({
       persistenceClass: 'echo',
       persistenceKey: space?.id,
       selectable,
-      canDrop: (source: TreeData) => {
-        return droppable && isGraphNode(source.item) && Obj.isObject(source.item.data);
-      },
+      canDrop: (source: TreeData) => droppable && isGraphNode(source.item) && Obj.isObject(source.item.data),
       ...partials,
     },
   };

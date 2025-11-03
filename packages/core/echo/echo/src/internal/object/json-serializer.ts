@@ -210,16 +210,13 @@ const typedJsonSerializer = function (this: any) {
   return result;
 };
 
-const serializeData = (data: unknown) => {
-  return deepMapValues(data, (value, recurse) => {
+const serializeData = (data: unknown) =>
+  deepMapValues(data, (value, recurse) => {
     if (Ref.isRef(value)) {
       // TODO(dmaretskyi): Should this be configurable?
       return value.noInline().encode();
     }
     return recurse(value);
   });
-};
 
-const serializeMeta = (meta: ObjectMeta) => {
-  return deepMapValues(meta, (value, recurse) => recurse(value));
-};
+const serializeMeta = (meta: ObjectMeta) => deepMapValues(meta, (value, recurse) => recurse(value));

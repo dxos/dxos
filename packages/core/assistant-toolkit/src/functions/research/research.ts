@@ -169,8 +169,8 @@ const join = (...strings: (string | undefined)[]) => strings.filter(Boolean).joi
  * Skips citations.
  */
 // TODO(burdon): Factor out.
-const extractLastTextBlock = (result: DataType.Message[]) => {
-  return Function.pipe(
+const extractLastTextBlock = (result: DataType.Message[]) =>
+  Function.pipe(
     result,
     Array.last,
     Option.map(
@@ -186,4 +186,3 @@ const extractLastTextBlock = (result: DataType.Message[]) => {
     ),
     Option.getOrElse(() => ''),
   );
-};

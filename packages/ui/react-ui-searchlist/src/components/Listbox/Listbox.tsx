@@ -158,13 +158,11 @@ ListboxOption.displayName = LISTBOX_OPTION_NAME;
 //
 
 const ListboxOptionLabel = forwardRef<HTMLDivElement, ThemedClassName<ComponentPropsWithRef<'div'>>>(
-  ({ children, classNames, ...rootProps }, forwardedRef) => {
-    return (
-      <span {...rootProps} className={mx('grow truncate', classNames)} ref={forwardedRef}>
-        {children}
-      </span>
-    );
-  },
+  ({ children, classNames, ...rootProps }, forwardedRef) => (
+    <span {...rootProps} className={mx('grow truncate', classNames)} ref={forwardedRef}>
+      {children}
+    </span>
+  ),
 );
 
 ListboxOptionLabel.displayName = LISTBOX_OPTION_LABEL_NAME;

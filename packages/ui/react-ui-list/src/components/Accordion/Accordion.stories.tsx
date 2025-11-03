@@ -20,24 +20,22 @@ const items: TestItem[] = Array.from({ length: 10 }, (_, i) => ({
   text: faker.lorem.paragraphs(3),
 }));
 
-const DefaultStory = () => {
-  return (
-    <Accordion.Root<TestItem> items={items} classNames='w-[40rem]'>
-      {({ items }) => (
-        <div className='flex flex-col w-full border-y border-separator divide-y divide-separator'>
-          {items.map((item) => (
-            <Accordion.Item key={item.id} item={item} classNames='border-x border-separator'>
-              <Accordion.ItemHeader>{item.name}</Accordion.ItemHeader>
-              <Accordion.ItemBody>
-                <p>{item.text}</p>
-              </Accordion.ItemBody>
-            </Accordion.Item>
-          ))}
-        </div>
-      )}
-    </Accordion.Root>
-  );
-};
+const DefaultStory = () => (
+  <Accordion.Root<TestItem> items={items} classNames='w-[40rem]'>
+    {({ items }) => (
+      <div className='flex flex-col w-full border-y border-separator divide-y divide-separator'>
+        {items.map((item) => (
+          <Accordion.Item key={item.id} item={item} classNames='border-x border-separator'>
+            <Accordion.ItemHeader>{item.name}</Accordion.ItemHeader>
+            <Accordion.ItemBody>
+              <p>{item.text}</p>
+            </Accordion.ItemBody>
+          </Accordion.Item>
+        ))}
+      </div>
+    )}
+  </Accordion.Root>
+);
 
 const meta = {
   title: 'ui/react-ui-list/Accordion',
