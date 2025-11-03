@@ -34,14 +34,11 @@ export type ChatThreadProps = ThemedClassName<
     error?: Error;
     overscroll?: number;
     onEvent?: (event: ChatEvent) => void;
-  } & Pick<MarkdownStreamProps, 'cursor' | 'fadeIn' | 'overscroll'>
+  } & Pick<MarkdownStreamProps, 'cursor' | 'fadeIn'>
 >;
 
 export const ChatThread = forwardRef<ChatThreadController | null, ChatThreadProps>(
-  (
-    { classNames, identity, messages = [], error, cursor = false, fadeIn = true, overscroll, onEvent },
-    forwardedRef,
-  ) => {
+  ({ classNames, identity, messages = [], error, cursor = false, fadeIn = true, onEvent }, forwardedRef) => {
     const userHue = useMemo(() => {
       return identity?.profile?.data?.hue || keyToFallback(identity?.identityKey ?? PublicKey.random()).hue;
     }, [identity]);
@@ -89,7 +86,6 @@ export const ChatThread = forwardRef<ChatThreadController | null, ChatThreadProp
           registry={componentRegistry}
           cursor={cursor}
           fadeIn={fadeIn}
-          overscroll={overscroll}
           onEvent={handleEvent}
         />
       </div>
