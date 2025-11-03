@@ -9,13 +9,14 @@ import { useContext, useMemo, useState } from 'react';
 import { AiConversation } from '@dxos/assistant';
 import { type Blueprint } from '@dxos/blueprints';
 import { log } from '@dxos/log';
-import { type Queue } from '@dxos/react-client/echo';
+import { type Queue, type Space } from '@dxos/react-client/echo';
 import { useAsyncEffect } from '@dxos/react-ui';
 
 import { AiChatProcessor, type AiChatServices, type AiServicePreset } from '../processor';
 import { type Assistant } from '../types';
 
 export type UseChatProcessorProps = {
+  space?: Space;
   chat?: Assistant.Chat;
   preset?: AiServicePreset;
   services?: () => Promise<Runtime.Runtime<AiChatServices>>;
@@ -27,6 +28,7 @@ export type UseChatProcessorProps = {
  * Configure and create AiChatProcessor.
  */
 export const useChatProcessor = ({
+  space,
   chat,
   preset,
   services,
@@ -38,18 +40,25 @@ export const useChatProcessor = ({
   // Create conversation from chat queue.
   const [conversation, setConversation] = useState<AiConversation>();
   useAsyncEffect(async () => {
-    if (!chat?.queue.target) {
+    if (!chat || !space) {
       return;
     }
 
-    const conversation = new AiConversation(chat.queue.target as Queue<any>);
+    // NOTE: Passing in space and getting queue from space rather than resolving the reference.
+    //  This is because if the chat isn't in a space yet, the reference will not be resolvable.
+    const queue = space.queues.get(chat.queue.dxn);
+    if (!queue) {
+      return;
+    }
+
+    const conversation = new AiConversation(queue as Queue<any>);
     await conversation.open();
     setConversation(conversation);
     return () => {
       void conversation.close();
       setConversation(undefined);
     };
-  }, [chat?.queue.target]);
+  }, [space, chat?.queue.dxn.toString()]);
 
   // Create processor.
   const processor = useMemo(() => {

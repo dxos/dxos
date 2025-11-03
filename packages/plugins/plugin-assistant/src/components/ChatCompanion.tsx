@@ -3,21 +3,19 @@
 //
 
 import * as Array from 'effect/Array';
-import * as Effect from 'effect/Effect';
 import * as Function from 'effect/Function';
 import * as Option from 'effect/Option';
-import React, { useMemo } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { Capabilities, createIntent, useCapabilities, useIntentDispatcher } from '@dxos/app-framework';
 import { Blueprint } from '@dxos/blueprints';
 import { getSpace } from '@dxos/client/echo';
-import { Filter, Obj, Query, Ref } from '@dxos/echo';
-import { DatabaseService } from '@dxos/functions';
+import { Filter, Obj, Ref } from '@dxos/echo';
 import { SpaceAction } from '@dxos/plugin-space/types';
 import { useQuery } from '@dxos/react-client/echo';
 import { useAsyncEffect } from '@dxos/react-ui';
 
-import { ChatContainer } from '../components';
+import { ChatContainer, type ChatEvent } from '../components';
 import { useBlueprintRegistry, useContextBinder } from '../hooks';
 import { Assistant, AssistantAction } from '../types';
 
@@ -29,49 +27,55 @@ export type ChatCompanionProps = {
 export const ChatCompanion = ({ role, data }: ChatCompanionProps) => {
   const companionTo = data.companionTo;
   const space = getSpace(companionTo);
-  const chat = data.subject === 'assistant-chat' ? undefined : data.subject;
+  const { dispatchPromise: dispatch } = useIntentDispatcher();
   const blueprintRegistry = useBlueprintRegistry();
-  const binder = useContextBinder(chat);
-  const { dispatch } = useIntentDispatcher();
 
-  // Initialize companion chat if it doesn't exist.
+  const [chat, setChat] = useState(data.subject === 'assistant-chat' ? undefined : data.subject);
+  useEffect(() => {
+    setChat(data.subject === 'assistant-chat' ? undefined : data.subject);
+  }, [data.subject]);
+
+  const chatQueue = space && chat ? space.queues.get(chat.queue.dxn) : undefined;
+  const binder = useContextBinder(chatQueue);
+
+  // Initialize companion chat if it doesn't exist, but don't add it to the space immediately.
   useAsyncEffect(async () => {
     if (chat || !space) {
       return;
     }
 
-    // TODO(burdon): Garbage collection of queues?
-    await Effect.gen(function* () {
-      const { objects } = yield* DatabaseService.runQuery(
-        Query.select(Filter.ids(companionTo.id)).targetOf(Assistant.CompanionTo).source(),
-      );
+    const { data } = await dispatch(createIntent(AssistantAction.CreateChat, { space }));
+    setChat(data?.object);
+  }, [chat, space]);
 
-      // TODO(wittjosiah): This should be the default sort order.
-      let nextChat = objects.toSorted(({ id: a }, { id: b }) => a.localeCompare(b)).at(-1);
-      if (!nextChat) {
-        ({ object: nextChat } = yield* dispatch(createIntent(AssistantAction.CreateChat, { space })));
+  // Add chat to space when user submits the first message.
+  const handleEvent = useCallback(
+    async (event: ChatEvent) => {
+      const chatInSpace = !!getSpace(chat);
+      if (chatInSpace || !chat || !space) {
+        return;
+      }
 
-        // TODO(burdon): Lazily add to space and companionTo.
-        yield* dispatch(
+      if (event.type === 'submit') {
+        await dispatch(
           createIntent(SpaceAction.AddObject, {
-            object: nextChat,
+            object: chat,
             target: space,
             hidden: true,
           }),
         );
-        yield* dispatch(
+        await dispatch(
           createIntent(SpaceAction.AddRelation, {
             space,
             schema: Assistant.CompanionTo,
-            source: nextChat,
-            target: data.companionTo,
+            source: chat,
+            target: companionTo,
           }),
         );
       }
-
-      yield* dispatch(createIntent(AssistantAction.SetCurrentChat, { companionTo, chat: nextChat }));
-    }).pipe(Effect.provide(DatabaseService.layer(space.db)), Effect.runPromise);
-  }, [space, chat, companionTo]);
+    },
+    [chat, space, companionTo, dispatch],
+  );
 
   const metadata = useCapabilities(Capabilities.Metadata);
   const blueprintKeys = useMemo(
@@ -132,7 +136,7 @@ export const ChatCompanion = ({ role, data }: ChatCompanionProps) => {
     }
   }, [binder, companionTo, blueprintKeys]);
 
-  return <ChatContainer role={role} chat={chat} companionTo={companionTo} />;
+  return <ChatContainer role={role} space={space} chat={chat} companionTo={companionTo} onEvent={handleEvent} />;
 };
 
 export default ChatCompanion;
