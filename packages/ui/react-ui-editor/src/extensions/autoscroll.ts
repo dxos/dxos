@@ -5,7 +5,7 @@
 import { StateEffect } from '@codemirror/state';
 import { EditorView, ViewPlugin } from '@codemirror/view';
 
-import { debounce, throttle } from '@dxos/async';
+import { debounce } from '@dxos/async';
 import { Domino } from '@dxos/react-ui';
 
 import { scrollToLineEffect } from './scrolling';
@@ -65,12 +65,12 @@ export const autoScroll = ({
   };
 
   // Throttled check for distance from bottom (for downward scrolls only).
-  const checkDistance = throttle((view: EditorView) => {
+  const checkDistance = debounce((view: EditorView) => {
     const scrollerRect = view.scrollDOM.getBoundingClientRect();
     const coords = view.coordsAtPos(view.state.doc.length);
     const distanceFromBottom = coords ? coords.bottom - scrollerRect.bottom : 0;
-    setPinned(distanceFromBottom < threshold);
-  }, throttleDelay);
+    setPinned(distanceFromBottom <= threshold);
+  }, 1_000);
 
   // Debounce scroll updates so rapid edits don't cause clunky scrolling.
   const triggerUpdate = debounce((view: EditorView) => scrollToBottom(view), throttleDelay);
@@ -89,7 +89,7 @@ export const autoScroll = ({
 
       // Maybe scroll if doc changed and pinned.
       // NOTE: Geometry changed is triggered when widgets change height (e.g., toggle tool block).
-      if (autoScroll && heightChanged && isPinned) {
+      if (heightChanged && autoScroll && isPinned) {
         const scrollerRect = view.scrollDOM.getBoundingClientRect();
         const coords = view.coordsAtPos(view.state.doc.length);
         const distanceFromBottom = coords ? coords.bottom - scrollerRect.bottom : 0;
