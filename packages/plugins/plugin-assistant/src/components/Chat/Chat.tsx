@@ -340,7 +340,7 @@ ChatPrompt.displayName = 'Chat.Prompt';
 type ChatThreadProps = Omit<NaturalChatThreadProps, 'identity' | 'messages' | 'tools'>;
 
 const ChatThread = (props: ChatThreadProps) => {
-  const { event, messages, processor } = useChatContext(ChatThread.displayName);
+  const { debug, event, messages, processor } = useChatContext(ChatThread.displayName);
   const identity = useIdentity();
   const error = useRxValue(processor.error).pipe(Option.getOrUndefined);
 
@@ -374,6 +374,7 @@ const ChatThread = (props: ChatThreadProps) => {
       identity={identity}
       messages={messages}
       error={error}
+      debug={debug}
       onEvent={handleEvent}
     />
   );

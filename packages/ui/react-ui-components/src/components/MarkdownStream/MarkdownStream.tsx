@@ -97,11 +97,11 @@ export const MarkdownStream = forwardRef<MarkdownStreamController | null, Markdo
                 preview(),
                 xmlTags({ registry, setWidgets, bookmarks: ['prompt'] }),
                 streamer({ cursor, fadeIn }),
-                autoScroll({ autoScroll: true }),
+                autoScroll({ autoScroll: false }),
               ],
         ].filter(isNonNullable),
       };
-    }, [themeMode, registry]);
+    }, [debug, themeMode, registry]);
 
     // Streaming queue.
     const [queue, setQueue, queueRef] = useStateWithRef(Effect.runSync(Queue.unbounded<string>()));
