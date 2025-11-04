@@ -13,11 +13,9 @@ import { type Space } from '@dxos/client/echo';
 import { Filter, Obj, Query, QueryAST, Ref, Type } from '@dxos/echo';
 import {
   FormAnnotation,
-  FormatAnnotation,
   FormatEnum,
   JsonSchemaType,
   LabelAnnotation,
-  PropertyMetaAnnotationId,
   ReferenceAnnotationId,
   type ReferenceAnnotationValue,
   type RuntimeSchemaRegistry,
@@ -27,11 +25,13 @@ import {
 import { type EchoSchemaRegistry } from '@dxos/echo-db';
 import { type JsonPath, type JsonProp, findAnnotation } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
-import { DXN, PublicKey } from '@dxos/keys';
+import { DXN } from '@dxos/keys';
 import { type Live } from '@dxos/live-object';
 
 import { FieldSchema, FieldSortType, ProjectionModel } from '../projection';
 import { getSchemaProperties } from '../properties';
+
+import { createDefaultSchema } from './util';
 
 export const Projection = Schema.Struct({
   /**
@@ -312,33 +312,6 @@ export const createViewFromSpace = async ({
     }),
   };
 };
-
-export const createDefaultSchema = () =>
-  Schema.Struct({
-    title: Schema.optional(Schema.String).annotations({ title: 'Title' }),
-    status: Schema.optional(
-      Schema.Literal('todo', 'in-progress', 'done')
-        .pipe(FormatAnnotation.set(FormatEnum.SingleSelect))
-        .annotations({
-          title: 'Status',
-          [PropertyMetaAnnotationId]: {
-            singleSelect: {
-              options: [
-                { id: 'todo', title: 'Todo', color: 'indigo' },
-                { id: 'in-progress', title: 'In Progress', color: 'purple' },
-                { id: 'done', title: 'Done', color: 'amber' },
-              ],
-            },
-          },
-        }),
-    ),
-    description: Schema.optional(Schema.String).annotations({ title: 'Description' }),
-  }).pipe(
-    Type.Obj({
-      typename: `example.com/type/${PublicKey.random().truncate()}`,
-      version: '0.1.0',
-    }),
-  );
 
 // TODO(burdon): Factor out.
 const getSchema = async (

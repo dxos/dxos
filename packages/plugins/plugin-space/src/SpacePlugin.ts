@@ -17,7 +17,7 @@ import {
 import { Ref, Tag, Type } from '@dxos/echo';
 import { AttentionEvents } from '@dxos/plugin-attention';
 import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
-import { DataType, DataTypes, createDefaultSchema, getTypenameFromQuery } from '@dxos/schema';
+import { DataType, DataTypes, getTypenameFromQuery } from '@dxos/schema';
 import { translations as shellTranslations } from '@dxos/shell/react';
 
 import {
@@ -177,7 +177,7 @@ export const SpacePlugin = definePlugin<SpacePluginOptions>(
                   : createIntent(SpaceAction.AddSchema, {
                       space: options.space,
                       name: props.name,
-                      schema: createDefaultSchema(),
+                      schema: DataType.createDefaultSchema(),
                     }),
             }),
           ),

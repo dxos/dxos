@@ -2,6 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
+export { createDefaultSchema } from './util';
+
 //
 // System
 // TODO(burdon): Move from DataType namespace?
