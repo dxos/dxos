@@ -108,7 +108,8 @@ export default () =>
     createSurface({
       id: `${meta.id}/contact-related`,
       role: 'related',
-      filter: (data): data is { subject: DataType.Person.Person } => Obj.instanceOf(DataType.Person.Person, data.subject),
+      filter: (data): data is { subject: DataType.Person.Person } =>
+        Obj.instanceOf(DataType.Person.Person, data.subject),
       component: ({ data: { subject: contact } }) => {
         const { dispatchPromise: dispatch } = useIntentDispatcher();
         const space = useSpace();
@@ -154,7 +155,8 @@ export default () =>
     createSurface({
       id: `${meta.id}/organization-related`,
       role: 'related',
-      filter: (data): data is { subject: DataType.Organization.Organization } => Obj.instanceOf(DataType.Organization.Organization, data.subject),
+      filter: (data): data is { subject: DataType.Organization.Organization } =>
+        Obj.instanceOf(DataType.Organization.Organization, data.subject),
       component: ({ data: { subject: organization } }) => {
         const { dispatch } = useIntentDispatcher();
         const space = getSpace(organization);

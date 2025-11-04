@@ -103,7 +103,9 @@ export default (context: PluginContext) =>
 
         log.info('extracted email domain', { emailDomain });
 
-        const { objects: existingOrganisations } = await space.db.query(Filter.type(DataType.Organization.Organization)).run();
+        const { objects: existingOrganisations } = await space.db
+          .query(Filter.type(DataType.Organization.Organization))
+          .run();
         const matchingOrg = existingOrganisations.find((org) => {
           if (org.website) {
             try {

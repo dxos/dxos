@@ -94,7 +94,8 @@ export default ({ createInvitationUrl }: ReactSurfaceOptions) =>
       id: `${meta.id}/collection-fallback`,
       role: 'article',
       position: 'fallback',
-      filter: (data): data is { subject: DataType.Collection.Collection } => Obj.instanceOf(DataType.Collection.Collection, data.subject),
+      filter: (data): data is { subject: DataType.Collection.Collection } =>
+        Obj.instanceOf(DataType.Collection.Collection, data.subject),
       component: ({ data }) => <CollectionArticle object={data.subject} />,
     }),
     createSurface({
@@ -230,7 +231,11 @@ export default ({ createInvitationUrl }: ReactSurfaceOptions) =>
       role: 'form-input',
       filter: (
         data,
-      ): data is { prop: string; schema: Schema.Schema<any>; target: Space | DataType.Collection.Collection | undefined } => {
+      ): data is {
+        prop: string;
+        schema: Schema.Schema<any>;
+        target: Space | DataType.Collection.Collection | undefined;
+      } => {
         if (data.prop !== 'typename') {
           return false;
         }
@@ -307,7 +312,8 @@ export default ({ createInvitationUrl }: ReactSurfaceOptions) =>
         const space = isSpace(data.subject) ? data.subject : getSpace(data.subject);
         const object = isSpace(data.subject)
           ? data.subject.state.get() === SpaceState.SPACE_READY
-            ? (space?.properties[Type.getTypename(DataType.Collection.Collection)]?.target as DataType.Collection.Collection)
+            ? (space?.properties[Type.getTypename(DataType.Collection.Collection)]
+                ?.target as DataType.Collection.Collection)
             : undefined
           : data.subject;
 
@@ -317,7 +323,8 @@ export default ({ createInvitationUrl }: ReactSurfaceOptions) =>
     createSurface({
       id: `${meta.id}/collection-section`,
       role: 'section',
-      filter: (data): data is { subject: DataType.Collection.Collection } => Obj.instanceOf(DataType.Collection.Collection, data.subject),
+      filter: (data): data is { subject: DataType.Collection.Collection } =>
+        Obj.instanceOf(DataType.Collection.Collection, data.subject),
       component: ({ data }) => <CollectionSection object={data.subject} />,
     }),
     createSurface({

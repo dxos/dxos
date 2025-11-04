@@ -31,7 +31,8 @@ const createDocument = (name: string, content: string): Testing.DocumentType => 
 };
 
 const createOrganization = (
-  props: Pick<DataType.Organization.Organization, 'name' | 'website'> & Partial<Omit<DataType.Organization.Organization, 'name' | 'website'>>,
+  props: Pick<DataType.Organization.Organization, 'name' | 'website'> &
+    Partial<Omit<DataType.Organization.Organization, 'name' | 'website'>>,
 ): DataType.Organization.Organization => {
   return Obj.make(DataType.Organization.Organization, {
     description: faker.lorem.paragraph(),

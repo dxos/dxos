@@ -7,6 +7,7 @@ import React, { useEffect, useState } from 'react';
 
 import { IntentPlugin, SettingsPlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
+import { Type } from '@dxos/echo';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { PreviewPlugin } from '@dxos/plugin-preview';
 import { SpacePlugin } from '@dxos/plugin-space';
@@ -14,7 +15,6 @@ import { StorybookLayoutPlugin } from '@dxos/plugin-storybook-layout';
 import { ThemePlugin } from '@dxos/plugin-theme';
 import { faker } from '@dxos/random';
 import { Filter, useQuery, useSpaces } from '@dxos/react-client/echo';
-import { Type } from '@dxos/echo';
 import { withTheme } from '@dxos/react-ui/testing';
 import { defaultTx } from '@dxos/react-ui-theme';
 import { DataType } from '@dxos/schema';
@@ -56,7 +56,11 @@ const meta = {
             const space = await client.spaces.create();
             await space.waitUntilReady();
 
-            const { view } = await Masonry.makeView({ space, client, typename: Type.getTypename(DataType.Organization.Organization) });
+            const { view } = await Masonry.makeView({
+              space,
+              client,
+              typename: Type.getTypename(DataType.Organization.Organization),
+            });
             space.db.add(view);
 
             const factory = createObjectFactory(space.db, faker as any);

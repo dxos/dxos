@@ -703,7 +703,10 @@ export default ({ context, observability, createInvitationUrl }: IntentResolverO
       intent: CollectionAction.CreateQueryCollection,
       resolve: async ({ name, typename }) => ({
         data: {
-          object: Obj.make(DataType.Collection.QueryCollection, { name, query: Query.select(Filter.typename(typename)).ast }),
+          object: Obj.make(DataType.Collection.QueryCollection, {
+            name,
+            query: Query.select(Filter.typename(typename)).ast,
+          }),
         },
       }),
     }),

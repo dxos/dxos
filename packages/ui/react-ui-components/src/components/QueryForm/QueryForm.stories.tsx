@@ -51,7 +51,12 @@ const meta = {
     withTheme,
     withLayout({ container: 'column' }),
     withClientProvider({
-      types: [DataType.Organization.Organization, DataType.Person.Person, DataType.Project.Project, DataType.Employer.Employer],
+      types: [
+        DataType.Organization.Organization,
+        DataType.Person.Person,
+        DataType.Project.Project,
+        DataType.Employer.Employer,
+      ],
       createIdentity: true,
     }),
   ],

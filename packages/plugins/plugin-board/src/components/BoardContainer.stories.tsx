@@ -44,7 +44,7 @@ const createOrg = () =>
     image: faker.image.url(),
     website: faker.internet.url(),
     // TODO(burdon): Fix.
-    // status: faker.helpers.arrayElement(DataType.Organization.OrganizationStatusOptions).id,
+    // status: faker.helpers.arrayElement(DataType.Organization.StatusOptions).id,
   });
 
 const DefaultStory = () => {

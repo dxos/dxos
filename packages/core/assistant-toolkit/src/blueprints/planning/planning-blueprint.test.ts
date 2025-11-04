@@ -119,7 +119,9 @@ describe('Planning Blueprint', { timeout: 120_000 }, () => {
             ),
           ),
           Layer.provideMerge(FunctionImplementationResolver.layerTest({ functions: [Tasks.read, Tasks.update] })),
-          Layer.provideMerge(TestDatabaseLayer({ types: [DataType.Text.Text, Markdown.Document, Blueprint.Blueprint] })),
+          Layer.provideMerge(
+            TestDatabaseLayer({ types: [DataType.Text.Text, Markdown.Document, Blueprint.Blueprint] }),
+          ),
           Layer.provideMerge(AiServiceTestingPreset('direct')),
         ),
       ),

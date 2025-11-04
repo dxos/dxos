@@ -217,7 +217,8 @@ export const constructSpaceNode = ({
 }) => {
   const hasPendingMigration = checkPendingMigration(space);
   const collection =
-    space.state.get() === SpaceState.SPACE_READY && space.properties[Type.getTypename(DataType.Collection.Collection)]?.target;
+    space.state.get() === SpaceState.SPACE_READY &&
+    space.properties[Type.getTypename(DataType.Collection.Collection)]?.target;
   const partials =
     space.state.get() === SpaceState.SPACE_READY && Obj.instanceOf(DataType.Collection.Collection, collection)
       ? getCollectionGraphNodePartials({ collection, space, resolve })

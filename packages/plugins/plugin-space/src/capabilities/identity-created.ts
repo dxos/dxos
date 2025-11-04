@@ -16,7 +16,9 @@ export default async (context: PluginContext) => {
   await defaultSpace.waitUntilReady();
 
   // Create root collection structure.
-  defaultSpace.properties[Type.getTypename(DataType.Collection.Collection)] = Ref.make(Obj.make(DataType.Collection.Collection, { objects: [] }));
+  defaultSpace.properties[Type.getTypename(DataType.Collection.Collection)] = Ref.make(
+    Obj.make(DataType.Collection.Collection, { objects: [] }),
+  );
   if (Migrations.versionProperty) {
     defaultSpace.properties[Migrations.versionProperty] = Migrations.targetVersion;
   }

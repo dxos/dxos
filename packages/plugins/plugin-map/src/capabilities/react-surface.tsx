@@ -99,7 +99,11 @@ export default () =>
       role: 'form-input',
       filter: (
         data,
-      ): data is { prop: string; schema: Schema.Schema<any>; target: Space | DataType.Collection.Collection | undefined } => {
+      ): data is {
+        prop: string;
+        schema: Schema.Schema<any>;
+        target: Space | DataType.Collection.Collection | undefined;
+      } => {
         const annotation = findAnnotation<boolean>((data.schema as Schema.Schema.All).ast, LocationAnnotationId);
         return !!annotation;
       },

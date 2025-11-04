@@ -94,7 +94,8 @@ export const SpacePlugin = definePlugin<SpacePluginOptions>(
               icon: 'ph--cards-three--regular',
               iconHue: 'neutral',
               // TODO(wittjosiah): Move out of metadata.
-              loadReferences: async (collection: DataType.Collection.Collection) => await Ref.Array.loadAll(collection.objects),
+              loadReferences: async (collection: DataType.Collection.Collection) =>
+                await Ref.Array.loadAll(collection.objects),
             },
           }),
           contributes(Capabilities.Metadata, {

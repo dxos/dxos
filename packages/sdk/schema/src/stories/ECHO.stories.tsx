@@ -47,7 +47,9 @@ const DefaultStory = () => {
   const handleCreate = async () => {
     await test('create', async () => {
       invariant(space);
-      space.db.add(Obj.make(DataType.Organization.Organization, { id: 'dxos', name: 'DXOS', website: 'https://dxos.org' }));
+      space.db.add(
+        Obj.make(DataType.Organization.Organization, { id: 'dxos', name: 'DXOS', website: 'https://dxos.org' }),
+      );
     });
   };
 

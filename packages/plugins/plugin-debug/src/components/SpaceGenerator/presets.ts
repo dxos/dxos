@@ -66,7 +66,9 @@ export const generator = () => ({
           const tag = space.db.add(Tag.make({ label: 'Investor' }));
           const tagDxn = Obj.getDXN(tag).toString();
 
-          const org = space.db.add(Obj.make(DataType.Organization.Organization, { name: 'DXOS', website: 'https://dxos.org' }));
+          const org = space.db.add(
+            Obj.make(DataType.Organization.Organization, { name: 'DXOS', website: 'https://dxos.org' }),
+          );
 
           const doc = space.db.add(
             Markdown.makeDocument({
@@ -106,7 +108,9 @@ export const generator = () => ({
 
         const objects = range(n, () => {
           const contactsQuery = Query.select(Filter.type(DataType.Person.Person)).select(Filter.tag(tagDxn));
-          const organizationsQuery = Query.select(Filter.type(DataType.Organization.Organization)).select(Filter.tag(tagDxn));
+          const organizationsQuery = Query.select(Filter.type(DataType.Organization.Organization)).select(
+            Filter.tag(tagDxn),
+          );
           const notesQuery = Query.select(Filter.type(Markdown.Document)).select(Filter.tag(tagDxn));
 
           const emailSyncTrigger = Trigger.make({

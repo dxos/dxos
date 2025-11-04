@@ -54,6 +54,7 @@ export const Projection = Schema.Struct({
    */
   pivotFieldId: Schema.optional(Schema.String),
 }).pipe(Schema.mutable);
+
 export type Projection = Schema.Schema.Type<typeof Projection>;
 
 /**
@@ -97,6 +98,7 @@ const View_ = Schema.Struct({
 })
   .pipe(LabelAnnotation.set(['name']))
   .pipe(Type.Obj({ typename: 'dxos.org/type/View', version: '0.4.0' }));
+
 export interface View extends Schema.Schema.Type<typeof View_> {}
 export interface ViewEncoded extends Schema.Schema.Encoded<typeof View_> {}
 export const View: Schema.Schema<View, ViewEncoded> = View_;

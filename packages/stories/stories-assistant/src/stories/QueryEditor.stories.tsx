@@ -75,7 +75,12 @@ const meta: Meta<typeof QueryEditor> = {
   decorators: [
     withTheme,
     withClientProvider({
-      types: [DataType.Organization.Organization, DataType.Person.Person, DataType.Project.Project, DataType.Employer.Employer],
+      types: [
+        DataType.Organization.Organization,
+        DataType.Person.Person,
+        DataType.Project.Project,
+        DataType.Employer.Employer,
+      ],
       createIdentity: true,
       onCreateIdentity: async ({ client }) => {
         const space = client.spaces.default;

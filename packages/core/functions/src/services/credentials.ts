@@ -84,7 +84,9 @@ export class CredentialsService extends Context.Tag('@dxos/functions/Credentials
       Effect.gen(function* () {
         const dbService = yield* DatabaseService;
         const queryCredentials = async (query: CredentialQuery): Promise<ServiceCredential[]> => {
-          const { objects: accessTokens } = await dbService.db.query(Query.type(DataType.AccessToken.AccessToken)).run();
+          const { objects: accessTokens } = await dbService.db
+            .query(Query.type(DataType.AccessToken.AccessToken))
+            .run();
           return accessTokens
             .filter((accessToken) => accessToken.source === query.service)
             .map((accessToken) => ({

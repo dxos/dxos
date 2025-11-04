@@ -132,7 +132,9 @@ const extractContact = Effect.fn('extractContact')(function* (message: DataType.
 
   log.info('extracted email domain', { emailDomain });
 
-  const { objects: existingOrganisations } = yield* DatabaseService.runQuery(Filter.type(DataType.Organization.Organization));
+  const { objects: existingOrganisations } = yield* DatabaseService.runQuery(
+    Filter.type(DataType.Organization.Organization),
+  );
   const matchingOrg = existingOrganisations.find((org) => {
     if (org.website) {
       try {

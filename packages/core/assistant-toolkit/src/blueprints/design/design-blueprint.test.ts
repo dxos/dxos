@@ -92,7 +92,9 @@ describe('Design Blueprint', { timeout: 120_000 }, () => {
           makeToolExecutionServiceFromFunctions(testToolkit, testToolkit.toLayer({}) as any),
           AiService.model('@anthropic/claude-3-5-sonnet-20241022'),
         ).pipe(
-          Layer.provideMerge(TestDatabaseLayer({ types: [DataType.Text.Text, Markdown.Document, Blueprint.Blueprint] })),
+          Layer.provideMerge(
+            TestDatabaseLayer({ types: [DataType.Text.Text, Markdown.Document, Blueprint.Blueprint] }),
+          ),
           Layer.provideMerge(AiServiceTestingPreset('direct')),
           Layer.provideMerge(
             FunctionInvocationService.layerTestMocked({ functions: [Document.read, Document.update] }).pipe(

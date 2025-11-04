@@ -786,7 +786,9 @@ export const WithProject: Story = {
       // );
 
       const contactsQuery = Query.select(Filter.type(DataType.Person.Person)).select(Filter.tag(tagDxn));
-      const organizationsQuery = Query.select(Filter.type(DataType.Organization.Organization)).select(Filter.tag(tagDxn));
+      const organizationsQuery = Query.select(Filter.type(DataType.Organization.Organization)).select(
+        Filter.tag(tagDxn),
+      );
       const notesQuery = Query.select(Filter.type(Markdown.Document)).select(Filter.tag(tagDxn));
 
       const researchPrompt = space.db.add(

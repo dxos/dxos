@@ -39,7 +39,8 @@ const rollOrg = () => ({
   description: faker.lorem.paragraph(),
   image: faker.image.url(),
   website: faker.internet.url(),
-  status: faker.helpers.arrayElement(DataType.Organization.OrganizationStatusOptions).id as DataType.Organization.Organization['status'],
+  status: faker.helpers.arrayElement(DataType.Organization.StatusOptions)
+    .id as DataType.Organization.Organization['status'],
 });
 
 const StorybookKanban = () => {

@@ -100,7 +100,11 @@ const meta = {
   render: DefaultStory,
   decorators: [
     withTheme,
-    withClientProvider({ createIdentity: true, createSpace: true, types: [DataType.Organization.Organization, DataType.Person.Person] }),
+    withClientProvider({
+      createIdentity: true,
+      createSpace: true,
+      types: [DataType.Organization.Organization, DataType.Person.Person],
+    }),
   ],
   parameters: {
     layout: 'fullscreen',

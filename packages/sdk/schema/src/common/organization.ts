@@ -17,7 +17,7 @@ import {
 import { IconAnnotation, ItemAnnotation } from '../annotations';
 
 // TODO(burdon): Remove (specific to kanban demo).
-export const OrganizationStatusOptions = [
+export const StatusOptions = [
   { id: 'prospect', title: 'Prospect', color: 'indigo' },
   { id: 'qualified', title: 'Qualified', color: 'purple' },
   { id: 'active', title: 'Active', color: 'amber' },
@@ -57,7 +57,7 @@ const OrganizationSchema = Schema.Struct({
       title: 'Status',
       [PropertyMetaAnnotationId]: {
         singleSelect: {
-          options: OrganizationStatusOptions,
+          options: StatusOptions,
         },
       },
     }),

@@ -70,7 +70,12 @@ const meta = {
     withClientProvider({
       createIdentity: true,
       createSpace: true,
-      types: [DataType.Organization.Organization, DataType.Person.Person, DataType.Task.Task, DataType.HasSubject.HasSubject],
+      types: [
+        DataType.Organization.Organization,
+        DataType.Person.Person,
+        DataType.Task.Task,
+        DataType.HasSubject.HasSubject,
+      ],
       onCreateSpace: async ({ space }) => {
         const org = space.db.add(
           Obj.make(DataType.Organization.Organization, {
