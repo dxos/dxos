@@ -7,7 +7,7 @@ import * as Exit from 'effect/Exit';
 import * as Fiber from 'effect/Fiber';
 import * as Runtime from 'effect/Runtime';
 
-import { AiService, DEFAULT_EDGE_MODEL, type ModelName } from '@dxos/ai';
+import { AiService, type ModelName } from '@dxos/ai';
 import { type AiConversation, AiSession } from '@dxos/assistant';
 import { throwCause } from '@dxos/effect';
 import { trim } from '@dxos/util';
@@ -24,8 +24,7 @@ export const updateName = async (
   runtime: Runtime.Runtime<AiChatServices>,
   conversation: AiConversation,
   chat: Assistant.Chat,
-  // TODO(burdon): Use simpler model.
-  model: ModelName = DEFAULT_EDGE_MODEL,
+  model: ModelName = '@anthropic/claude-4-5-haiku',
 ): Promise<void> => {
   const history = await conversation.getHistory();
   const system = trim`
