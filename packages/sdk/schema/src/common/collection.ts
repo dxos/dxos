@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
-import { PropertiesType } from '@dxos/client-protocol';
+import { PropertiesType } from '@dxos/client-protocol/types';
 import { Obj, Query, QueryAST, Ref, Type } from '@dxos/echo';
 import { type Expando, FormAnnotation } from '@dxos/echo/internal';
 import { DatabaseService } from '@dxos/echo-db';
