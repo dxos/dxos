@@ -13,9 +13,6 @@ import { IconAnnotation, ItemAnnotation } from '../annotations';
 import { Collection } from './collection';
 import { View } from './view';
 
-/**
- * Project schema.
- */
 export const Project = Schema.Struct({
   name: Schema.String.pipe(GeneratorAnnotation.set('commerce.productName'), Schema.optional),
   description: Schema.String.pipe(Schema.optional),

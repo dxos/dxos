@@ -11,17 +11,14 @@ import { Actor } from './actor';
 /**
  * https://schema.org/Event
  */
-// TODO(burdon): Fix.
-const EventSchema = Schema.Struct({
+export const Event = Schema.Struct({
   name: Schema.optional(Schema.String),
   owner: Actor,
   attendees: Schema.mutable(Schema.Array(Actor)),
   startDate: Schema.String, // TODO(burdon): Date.
   endDate: Schema.String,
   links: Schema.mutable(Schema.Array(Type.Ref(Type.Expando))),
-});
-
-export const Event = EventSchema.pipe(
+}).pipe(
   Type.Obj({
     typename: 'dxos.org/type/Event',
     version: '0.1.0',

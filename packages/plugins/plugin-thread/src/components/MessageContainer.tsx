@@ -116,7 +116,7 @@ const TextboxBlock = ({
   isAuthor,
   editing,
 }: {
-  block: DataType.MessageBlock.Text;
+  block: DataType.ContentBlock.Text;
   editing?: boolean;
   isAuthor?: boolean;
   identity?: Identity;
@@ -158,7 +158,7 @@ const TextboxBlock = ({
   return <div role='none' ref={parentRef} className='mie-4' {...focusAttributes} />;
 };
 
-const ProposalBlock = ({ block }: { block: DataType.MessageBlock.Proposal }) => {
+const ProposalBlock = ({ block }: { block: DataType.ContentBlock.Proposal }) => {
   return (
     <div role='none' className='mie-4 italic'>
       {block.text}

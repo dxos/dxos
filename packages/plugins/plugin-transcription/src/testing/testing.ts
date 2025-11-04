@@ -67,7 +67,7 @@ export class MessageBuilder extends AbstractMessageBuilder {
     });
   }
 
-  createBlock(): DataType.MessageBlock.Transcript {
+  createBlock(): DataType.ContentBlock.Transcript {
     let text = faker.lorem.paragraph();
     if (this._space) {
       const label = faker.commerce.productName();

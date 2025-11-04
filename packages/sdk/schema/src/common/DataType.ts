@@ -18,6 +18,7 @@ export * as Text from './text';
 //
 
 export { Actor, ActorRole, ActorRoles } from './actor';
+export * as ContentBlock from './content-block';
 export { PostalAddress } from './postal-address';
 
 //
@@ -25,7 +26,7 @@ export { PostalAddress } from './postal-address';
 //
 
 // TODO(burdon): Message.Message
-export { Message, ContentBlock as MessageBlock } from './message';
+export { Message } from './message';
 
 export * as AccessToken from './access-token';
 export * as Event from './event';
