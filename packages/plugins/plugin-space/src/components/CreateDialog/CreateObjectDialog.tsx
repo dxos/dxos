@@ -55,10 +55,10 @@ export const CreateObjectDialog = ({
   const spaces = useSpaces();
   const { dispatch } = useIntentDispatcher();
   const forms = useCapabilities(SpaceCapabilities.ObjectForm);
-  const [target, setTarget] = useState<Space | DataType.Collection | undefined>(initialTarget);
+  const [target, setTarget] = useState<Space | DataType.Collection.Collection | undefined>(initialTarget);
   const [typename, setTypename] = useState<string | undefined>(initialTypename);
   const space = isSpace(target) ? target : getSpace(target);
-  const queryCollections = useQuery(space, Query.type(DataType.QueryCollection));
+  const queryCollections = useQuery(space, Query.type(DataType.Collection.QueryCollection));
   const hiddenTypenames = queryCollections
     .map((collection) => getTypenameFromQuery(collection.query))
     .filter(isNonNullable);

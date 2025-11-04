@@ -508,13 +508,13 @@ export const WithResearch: Story = {
     plugins: [MarkdownPlugin(), TablePlugin(), ThreadPlugin()],
     config: config.remote,
     types: [...ResearchDataTypes, ResearchGraph],
-    accessTokens: [Obj.make(DataType.AccessToken, { source: 'exa.ai', token: EXA_API_KEY })],
+    accessTokens: [Obj.make(DataType.AccessToken.AccessToken, { source: 'exa.ai', token: EXA_API_KEY })],
     onInit: async ({ space }) => {
-      space.db.add(Obj.make(DataType.Organization, { name: 'BlueYard Capital' }));
+      space.db.add(Obj.make(DataType.Organization.Organization, { name: 'BlueYard Capital' }));
       space.db.add(Markdown.makeDocument({ name: 'DXOS', content: DXOS_DOCUMENT }));
     },
     onChatCreated: async ({ space, binder }) => {
-      const { objects: organizations } = await space.db.query(Filter.type(DataType.Organization)).run();
+      const { objects: organizations } = await space.db.query(Filter.type(DataType.Organization.Organization)).run();
       const { objects: documents } = await space.db.query(Filter.type(Markdown.Document)).run();
       await binder.bind({ objects: [...organizations, ...documents].map((object) => Ref.make(object)) });
     },
@@ -572,7 +572,7 @@ export const WithLinearSync: Story = {
   decorators: getDecorators({
     plugins: [],
     config: config.remote,
-    types: [DataType.Task, DataType.Person, DataType.Project.Project],
+    types: [DataType.Task.Task, DataType.Person.Person, DataType.Project.Project],
     accessTokens: accessTokensFromEnv({
       'linear.app': VITE_LINEAR_API_KEY,
     }),
@@ -664,12 +664,12 @@ export const WithResearchQueue: Story = {
     plugins: [],
     config: config.remote,
     types: [...ResearchDataTypes, ResearchGraph, ResearchInputQueue],
-    accessTokens: [Obj.make(DataType.AccessToken, { source: 'exa.ai', token: EXA_API_KEY })],
+    accessTokens: [Obj.make(DataType.AccessToken.AccessToken, { source: 'exa.ai', token: EXA_API_KEY })],
     onInit: async ({ space }) => {
       const researchInputQueue = space.db.add(
         Obj.make(ResearchInputQueue, { queue: Ref.fromDXN(space.queues.create().dxn) }),
       );
-      const orgs = organizations.map(({ id: _, ...org }) => Obj.make(DataType.Organization, org));
+      const orgs = organizations.map(({ id: _, ...org }) => Obj.make(DataType.Organization.Organization, org));
       await researchInputQueue.queue.target!.append(orgs);
 
       const researchPrompt = space.db.add(
@@ -716,23 +716,23 @@ export const WithProject: Story = {
   decorators: getDecorators({
     plugins: [InboxPlugin(), MarkdownPlugin(), ProjectPlugin()],
     config: config.remote,
-    accessTokens: [Obj.make(DataType.AccessToken, { source: 'exa.ai', token: EXA_API_KEY })],
+    accessTokens: [Obj.make(DataType.AccessToken.AccessToken, { source: 'exa.ai', token: EXA_API_KEY })],
     types: [
       Tag.Tag,
-      DataType.Employer,
-      DataType.HasConnection,
-      DataType.HasSubject,
+      DataType.Employer.Employer,
+      DataType.HasConnection.HasConnection,
+      DataType.HasSubject.HasSubject,
       DataType.Message,
-      DataType.Organization,
-      DataType.Person,
+      DataType.Organization.Organization,
+      DataType.Person.Person,
       DataType.Project.Project,
       DataType.View,
       Mailbox.Mailbox,
     ],
     onInit: async ({ space }) => {
       await addTestData(space);
-      const { objects: people } = await space.db.query(Filter.type(DataType.Person)).run();
-      const { objects: organizations } = await space.db.query(Filter.type(DataType.Organization)).run();
+      const { objects: people } = await space.db.query(Filter.type(DataType.Person.Person)).run();
+      const { objects: organizations } = await space.db.query(Filter.type(DataType.Organization.Organization)).run();
       const tag = space.db.add(Tag.make({ label: 'Project' }));
       const tagDxn = Obj.getDXN(tag).toString();
 
@@ -785,8 +785,8 @@ export const WithProject: Story = {
       //   }),
       // );
 
-      const contactsQuery = Query.select(Filter.type(DataType.Person)).select(Filter.tag(tagDxn));
-      const organizationsQuery = Query.select(Filter.type(DataType.Organization)).select(Filter.tag(tagDxn));
+      const contactsQuery = Query.select(Filter.type(DataType.Person.Person)).select(Filter.tag(tagDxn));
+      const organizationsQuery = Query.select(Filter.type(DataType.Organization.Organization)).select(Filter.tag(tagDxn));
       const notesQuery = Query.select(Filter.type(Markdown.Document)).select(Filter.tag(tagDxn));
 
       const researchPrompt = space.db.add(
@@ -834,25 +834,25 @@ export const WithProject: Story = {
             queues: [mailbox.queue.dxn.toString()],
           }),
         jsonSchema: Type.toJsonSchema(DataType.Message),
-        presentation: Obj.make(DataType.Collection, { objects: [] }),
+        presentation: Obj.make(DataType.Collection.Collection, { objects: [] }),
       });
       const contactsView = createView({
         name: 'Contacts',
         query: contactsQuery,
-        jsonSchema: Type.toJsonSchema(DataType.Person),
-        presentation: Obj.make(DataType.Collection, { objects: [] }),
+        jsonSchema: Type.toJsonSchema(DataType.Person.Person),
+        presentation: Obj.make(DataType.Collection.Collection, { objects: [] }),
       });
       const organizationsView = createView({
         name: 'Organizations',
         query: organizationsQuery,
-        jsonSchema: Type.toJsonSchema(DataType.Organization),
-        presentation: Obj.make(DataType.Collection, { objects: [] }),
+        jsonSchema: Type.toJsonSchema(DataType.Organization.Organization),
+        presentation: Obj.make(DataType.Collection.Collection, { objects: [] }),
       });
       const notesView = createView({
         name: 'Notes',
         query: notesQuery,
         jsonSchema: Type.toJsonSchema(Markdown.Document),
-        presentation: Obj.make(DataType.Collection, { objects: [] }),
+        presentation: Obj.make(DataType.Collection.Collection, { objects: [] }),
       });
 
       space.db.add(
@@ -873,7 +873,7 @@ export const WithScript: Story = {
   decorators: getDecorators({
     plugins: [MarkdownPlugin(), ScriptPlugin()],
     config: config.local,
-    types: [Script.Script, DataType.Text],
+    types: [Script.Script, DataType.Text.Text],
     onInit: async ({ client, space }) => {
       const { identityKey } = client.halo.identity.get()!;
       await client.halo.writeCredentials([getAccessCredential(identityKey)]);
@@ -921,7 +921,7 @@ export const WithPrompt: Story = {
   decorators: getDecorators({
     plugins: [MarkdownPlugin()],
     config: config.remote,
-    types: [DataType.Text],
+    types: [DataType.Text.Text],
     onInit: async ({ space }) => {
       space.db.add(serializeFunction(Agent.prompt));
 

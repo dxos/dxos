@@ -46,8 +46,8 @@ export default (context: PluginContext) =>
             created: new Date().toISOString(),
             participants: [],
             transcript: Ref.make(transcript),
-            notes: Ref.make(DataType.makeText()),
-            summary: Ref.make(DataType.makeText()),
+            notes: Ref.make(DataType.Text.make()),
+            summary: Ref.make(DataType.Text.make()),
             thread: Ref.make(thread),
           });
 

@@ -37,7 +37,7 @@ export default () =>
     createSurface({
       id: `${meta.id}/schema-popover--contact`,
       role: ['card--popover', 'card--intrinsic', 'card--transclusion', 'card--extrinsic', 'card'],
-      filter: (data): data is { subject: DataType.Person } => Obj.instanceOf(DataType.Person, data.subject),
+      filter: (data): data is { subject: DataType.Person.Person } => Obj.instanceOf(DataType.Person.Person, data.subject),
       component: ({ data, role }) => {
         const { dispatchPromise: dispatch } = useIntentDispatcher();
         const space = getSpace(data.subject);
@@ -66,7 +66,7 @@ export default () =>
     createSurface({
       id: `${meta.id}/schema-popover--organization`,
       role: ['card--popover', 'card--intrinsic', 'card--transclusion', 'card--extrinsic', 'card'],
-      filter: (data): data is { subject: DataType.Organization } => Obj.instanceOf(DataType.Organization, data.subject),
+      filter: (data): data is { subject: DataType.Organization.Organization } => Obj.instanceOf(DataType.Organization.Organization, data.subject),
       component: ({ data, role }) => {
         const activeSpace = useActiveSpace();
         return (
@@ -89,7 +89,7 @@ export default () =>
     createSurface({
       id: `${meta.id}/schema-popover--task`,
       role: ['card--popover', 'card--intrinsic', 'card--transclusion', 'card--extrinsic', 'card'],
-      filter: (data): data is { subject: DataType.Task } => Obj.instanceOf(DataType.Task, data.subject),
+      filter: (data): data is { subject: DataType.Task.Task } => Obj.instanceOf(DataType.Task.Task, data.subject),
       component: ({ data, role }) => {
         return <TaskCard subject={data.subject} role={role} />;
       },

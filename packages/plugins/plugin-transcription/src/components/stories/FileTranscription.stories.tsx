@@ -192,7 +192,7 @@ const meta = {
     withPluginManager({
       plugins: [
         ClientPlugin({
-          types: [TestItem, DataType.Person, DataType.Organization, Testing.DocumentType],
+          types: [TestItem, DataType.Person.Person, DataType.Organization.Organization, Testing.DocumentType],
           onClientInitialized: async ({ client }) => {
             await client.halo.createIdentity();
             await client.spaces.waitUntilReady();

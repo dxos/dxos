@@ -144,14 +144,14 @@ describe('ProjectionModel', () => {
 
   test('gets and updates references', async ({ expect }) => {
     const registry = new RuntimeSchemaRegistry();
-    registry.addSchema([DataType.Organization]);
+    registry.addSchema([DataType.Organization.Organization]);
 
     const typename = 'example.com/type/Person';
     const schema = Schema.Struct({
       name: Schema.String.annotations({ title: 'Name' }),
       email: Format.Email,
       salary: Format.Currency({ code: 'usd', decimals: 2 }),
-      organization: Ref(DataType.Organization),
+      organization: Ref(DataType.Organization.Organization),
     }).pipe(Type.Obj({ typename, version: '0.1.0' }));
     const jsonSchema = toJsonSchema(schema);
 
@@ -880,7 +880,7 @@ describe('ProjectionModel', () => {
   });
 
   test('create view from static organization schema', async ({ expect }) => {
-    const schema = DataType.Organization;
+    const schema = DataType.Organization.Organization;
     const jsonSchema = toJsonSchema(schema);
 
     const presentation = Obj.make(Type.Expando, {});

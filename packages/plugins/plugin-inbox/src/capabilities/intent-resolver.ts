@@ -18,7 +18,7 @@ import {
 // import { getSpace } from '@dxos/client/echo';
 // import { SequenceBuilder, compileSequence, DEFAULT_INPUT, ValueBag, ComputeGraphModel } from '@dxos/conductor';
 // import { TestRuntime } from '@dxos/conductor/testing';
-import { Filter, Obj, Ref } from '@dxos/echo';
+import { Filter, Obj, Ref, Type } from '@dxos/echo';
 // import { runAndForwardErrors } from '@dxos/effect';
 // import { AiService, DatabaseService, QueueService, ServiceContainer, ToolResolverService } from '@dxos/functions';
 // import { failedInvariant } from '@dxos/invariant';
@@ -73,7 +73,7 @@ export default (context: PluginContext) =>
           return;
         }
 
-        const { objects: existingContacts } = await space.db.query(Filter.type(DataType.Person)).run();
+        const { objects: existingContacts } = await space.db.query(Filter.type(DataType.Person.Person)).run();
 
         // Check for existing contact
         const existingContact = existingContacts.find((contact) =>
@@ -85,7 +85,7 @@ export default (context: PluginContext) =>
           return;
         }
 
-        const newContact = Obj.make(DataType.Person, {
+        const newContact = Obj.make(DataType.Person.Person, {
           emails: [{ value: email }],
         });
 
@@ -103,7 +103,7 @@ export default (context: PluginContext) =>
 
         log.info('extracted email domain', { emailDomain });
 
-        const { objects: existingOrganisations } = await space.db.query(Filter.type(DataType.Organization)).run();
+        const { objects: existingOrganisations } = await space.db.query(Filter.type(DataType.Organization.Organization)).run();
         const matchingOrg = existingOrganisations.find((org) => {
           if (org.website) {
             try {
@@ -132,12 +132,12 @@ export default (context: PluginContext) =>
         }
 
         const intents: AnyIntentChain[] = [];
-        if (!space.properties.staticRecords.includes(DataType.Person.typename)) {
+        if (!space.properties.staticRecords.includes(Type.getTypename(DataType.Person.Person))) {
           log.info('adding record type for contacts');
           intents.push(
             createIntent(SpaceAction.UseStaticSchema, {
               space,
-              typename: DataType.Person.typename,
+              typename: Type.getTypename(DataType.Person.Person),
             }),
           );
         }

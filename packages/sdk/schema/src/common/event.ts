@@ -4,7 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Type } from '@dxos/echo';
+import { Obj, Type } from '@dxos/echo';
 
 import { Actor } from './actor';
 
@@ -29,3 +29,5 @@ export const Event = EventSchema.pipe(
 );
 
 export interface Event extends Schema.Schema.Type<typeof Event> {}
+
+export const make = (props: Obj.MakeProps<typeof Event>) => Obj.make(Event, props);

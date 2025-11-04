@@ -92,14 +92,14 @@ describe.skip('Sequence', () => {
 
     const [org1] = [
       db.add(
-        Obj.make(DataType.Organization, {
+        Obj.make(DataType.Organization.Organization, {
           name: 'Exa',
           website: 'https://exa.ai',
           description: 'An AI-powered search engine company building search infrastructure for AI agents',
         }),
       ),
       db.add(
-        Obj.make(DataType.Organization, {
+        Obj.make(DataType.Organization.Organization, {
           name: 'Cresta',
           website: 'https://cresta.ai',
           description: 'A company that builds AI agents',

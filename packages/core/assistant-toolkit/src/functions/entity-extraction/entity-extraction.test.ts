@@ -43,7 +43,7 @@ const TestLayer = Layer.mergeAll(
       TestDatabaseLayer({
         spaceKey: 'fixed',
         indexing: { vector: true },
-        types: [Blueprint.Blueprint, DataType.Message, DataType.Person, DataType.Organization, ResearchGraph],
+        types: [Blueprint.Blueprint, DataType.Message, DataType.Person.Person, DataType.Organization.Organization, ResearchGraph],
       }),
       CredentialsService.configuredLayer([]),
       TracingService.layerNoop,

@@ -66,7 +66,7 @@ const getCollectionGraphNodePartials = ({
   space,
   resolve,
 }: {
-  collection: DataType.Collection;
+  collection: DataType.Collection.Collection;
   space: Space;
   resolve: (typename: string) => Record<string, any>;
 }) => {
@@ -141,7 +141,7 @@ const getQueryCollectionNodePartials = ({
   space,
   resolve,
 }: {
-  collection: DataType.QueryCollection;
+  collection: DataType.Collection.QueryCollection;
   space: Space;
   resolve: (typename: string) => Record<string, any>;
 }) => {
@@ -217,9 +217,9 @@ export const constructSpaceNode = ({
 }) => {
   const hasPendingMigration = checkPendingMigration(space);
   const collection =
-    space.state.get() === SpaceState.SPACE_READY && space.properties[DataType.Collection.typename]?.target;
+    space.state.get() === SpaceState.SPACE_READY && space.properties[Type.getTypename(DataType.Collection.Collection)]?.target;
   const partials =
-    space.state.get() === SpaceState.SPACE_READY && Obj.instanceOf(DataType.Collection, collection)
+    space.state.get() === SpaceState.SPACE_READY && Obj.instanceOf(DataType.Collection.Collection, collection)
       ? getCollectionGraphNodePartials({ collection, space, resolve })
       : {};
 
@@ -468,9 +468,9 @@ export const createObjectNode = ({
   }
 
   const metadata = resolve(type);
-  const partials = Obj.instanceOf(DataType.Collection, object)
+  const partials = Obj.instanceOf(DataType.Collection.Collection, object)
     ? getCollectionGraphNodePartials({ collection: object, space, resolve })
-    : Obj.instanceOf(DataType.QueryCollection, object)
+    : Obj.instanceOf(DataType.Collection.QueryCollection, object)
       ? getQueryCollectionNodePartials({ collection: object, space, resolve })
       : Obj.instanceOf(DataType.StoredSchema, object)
         ? getSchemaGraphNodePartials()
@@ -487,9 +487,9 @@ export const createObjectNode = ({
 
   const selectable =
     (!Obj.instanceOf(DataType.StoredSchema, object) &&
-      !Obj.instanceOf(DataType.QueryCollection, object) &&
-      !Obj.instanceOf(DataType.Collection, object)) ||
-    (navigable && Obj.instanceOf(DataType.Collection, object));
+      !Obj.instanceOf(DataType.Collection.QueryCollection, object) &&
+      !Obj.instanceOf(DataType.Collection.Collection, object)) ||
+    (navigable && Obj.instanceOf(DataType.Collection.Collection, object));
 
   return {
     id: fullyQualifiedId(object),
@@ -535,13 +535,13 @@ export const constructObjectActions = ({
 
   const getId = (id: string) => `${id}/${fullyQualifiedId(object)}`;
 
-  const queryCollection = Obj.instanceOf(DataType.QueryCollection, object) ? object : undefined;
+  const queryCollection = Obj.instanceOf(DataType.Collection.QueryCollection, object) ? object : undefined;
   const matchingObjectForm = queryCollection
     ? objectForms.find((form) => Type.getTypename(form.objectSchema) === getTypenameFromQuery(queryCollection.query))
     : undefined;
 
   const actions: NodeArg<ActionData>[] = [
-    ...(Obj.instanceOf(DataType.Collection, object)
+    ...(Obj.instanceOf(DataType.Collection.Collection, object)
       ? [
           {
             id: getId(SpaceAction.OpenCreateObject._tag),
@@ -636,7 +636,7 @@ export const constructObjectActions = ({
       data: async () => {
         const collection = graph
           .getConnections(fullyQualifiedId(object), 'inbound')
-          .find(({ data }) => Obj.instanceOf(DataType.Collection, data))?.data;
+          .find(({ data }) => Obj.instanceOf(DataType.Collection.Collection, data))?.data;
         await dispatch(createIntent(SpaceAction.RemoveObjects, { objects: [object], target: collection }));
       },
       properties: {
@@ -650,8 +650,8 @@ export const constructObjectActions = ({
       },
     },
     ...(navigable ||
-    (!Obj.instanceOf(DataType.Collection, object) &&
-      !Obj.instanceOf(DataType.QueryCollection, object) &&
+    (!Obj.instanceOf(DataType.Collection.Collection, object) &&
+      !Obj.instanceOf(DataType.Collection.QueryCollection, object) &&
       !Obj.instanceOf(DataType.StoredSchema, object))
       ? [
           {

@@ -12,8 +12,8 @@ import { type DataType } from '@dxos/schema';
 import { meta } from '../meta';
 
 export type RelatedContactsProps = {
-  contacts: DataType.Person[];
-  onContactClick?: (contact: DataType.Person) => void;
+  contacts: DataType.Person.Person[];
+  onContactClick?: (contact: DataType.Person.Person) => void;
 };
 
 export const RelatedContacts = ({ contacts, onContactClick }: RelatedContactsProps) => {

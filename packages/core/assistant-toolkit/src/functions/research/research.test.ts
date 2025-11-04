@@ -58,7 +58,7 @@ const TestLayer = Layer.mergeAll(
       TestDatabaseLayer({
         spaceKey: 'fixed',
         indexing: { vector: true },
-        types: [...ResearchDataTypes, ResearchGraph, Blueprint.Blueprint, Markdown.Document, DataType.HasSubject],
+        types: [...ResearchDataTypes, ResearchGraph, Blueprint.Blueprint, Markdown.Document, DataType.HasSubject.HasSubject],
       }),
       CredentialsService.configuredLayer([]),
       TracingService.layerNoop,
@@ -72,7 +72,7 @@ describe('Research', () => {
     Effect.fnUntraced(
       function* (_) {
         yield* DatabaseService.add(
-          Obj.make(DataType.Organization, {
+          Obj.make(DataType.Organization.Organization, {
             name: 'BlueYard',
             website: 'https://blueyard.com',
           }),
@@ -105,7 +105,7 @@ describe('Research', () => {
     Effect.fnUntraced(
       function* (_) {
         const organization = yield* DatabaseService.add(
-          Obj.make(DataType.Organization, {
+          Obj.make(DataType.Organization.Organization, {
             name: 'BlueYard',
             website: 'https://blueyard.com',
           }),
@@ -128,7 +128,7 @@ describe('Research', () => {
         });
         {
           const { objects: docs } = yield* DatabaseService.runQuery(
-            Query.select(Filter.ids(organization.id)).targetOf(DataType.HasSubject).source(),
+            Query.select(Filter.ids(organization.id)).targetOf(DataType.HasSubject.HasSubject).source(),
           );
           if (docs.length !== 1) {
             throw new Error(`Expected 1 research document; got ${docs.length}: ${docs.map((_) => _.name)}`);
@@ -148,7 +148,7 @@ describe('Research', () => {
         });
         {
           const { objects: docs } = yield* DatabaseService.runQuery(
-            Query.select(Filter.ids(organization.id)).targetOf(DataType.HasSubject).source(),
+            Query.select(Filter.ids(organization.id)).targetOf(DataType.HasSubject.HasSubject).source(),
           );
           if (docs.length !== 1) {
             throw new Error(`Expected 1 research document; got ${docs.length}: ${docs.map((_) => _.name)}`);

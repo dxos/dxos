@@ -23,10 +23,10 @@ const summarization = defineFunction({
   name: 'Summarize transcript',
   description: 'Summarize a document',
   inputSchema: Schema.Struct({
-    document: Schema.optional(DataType.Text),
+    document: Schema.optional(DataType.Text.Text),
     transcript: Schema.Array(DataType.Message),
   }),
-  outputSchema: DataType.Text,
+  outputSchema: DataType.Text.Text,
   handler: async ({ data: { document, transcript }, context }) => {
     const ai = context.getService(AiService.AiService);
     const result = await new MixedStreamParser().parse(
@@ -80,7 +80,7 @@ const summarization = defineFunction({
       }),
     );
 
-    return DataType.makeText(Function.pipe(result[0]?.blocks[0], (c) => (c?._tag === 'text' ? c.text : '')));
+    return DataType.Text.make(Function.pipe(result[0]?.blocks[0], (c) => (c?._tag === 'text' ? c.text : '')));
   },
 });
 
@@ -89,10 +89,10 @@ const refinement = defineFunction({
   name: 'Refine transcript summary',
   description: 'Refine a summary',
   inputSchema: Schema.Struct({
-    summaries: Schema.Array(DataType.Text),
+    summaries: Schema.Array(DataType.Text.Text),
   }),
   outputSchema: Schema.Struct({
-    summary: DataType.Text,
+    summary: DataType.Text.Text,
   }),
   handler: async ({ data: { summaries }, context }) => {
     const ai = context.getService(AiService.AiService);
@@ -137,7 +137,7 @@ const refinement = defineFunction({
       }),
     );
     return {
-      summary: DataType.makeText(Function.pipe(result[0]?.blocks[0], (c) => (c?._tag === 'text' ? c.text : ''))),
+      summary: DataType.Text.make(Function.pipe(result[0]?.blocks[0], (c) => (c?._tag === 'text' ? c.text : ''))),
     };
   },
 });
@@ -166,7 +166,7 @@ describe.skip('Summarization', () => {
   test('keeps transcript outline', { timeout: 1000_000 }, async () => {
     const { transcriptMessages } = createTestData();
 
-    const summary = DataType.makeText();
+    const summary = DataType.Text.make();
 
     const summaries = [];
 
@@ -177,7 +177,7 @@ describe.skip('Summarization', () => {
         transcript: blocks,
       });
       summary.content = result.content;
-      summaries.push(DataType.makeText(result.content));
+      summaries.push(DataType.Text.make(result.content));
 
       console.log(blocks.at(-1));
       console.log();
@@ -190,7 +190,7 @@ describe.skip('Summarization', () => {
           summaries: history,
         });
         summary.content = result.summary.content;
-        summaries.push(DataType.makeText(result.summary.content));
+        summaries.push(DataType.Text.make(result.summary.content));
 
         console.log('REFINED');
         console.log();

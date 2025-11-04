@@ -328,7 +328,7 @@ export default (context: PluginContext) => {
 
               const collection = get(
                 rxFromSignal(
-                  () => space.properties[DataType.Collection.typename]?.target as DataType.Collection | undefined,
+                  () => space.properties[Type.getTypename(DataType.Collection.Collection)]?.target as DataType.Collection.Collection | undefined,
                 ),
               );
               if (!collection) {
@@ -367,7 +367,7 @@ export default (context: PluginContext) => {
           Function.pipe(
             get(node),
             Option.flatMap((node) =>
-              Obj.instanceOf(DataType.Collection, node.data) ? Option.some(node.data) : Option.none(),
+              Obj.instanceOf(DataType.Collection.Collection, node.data) ? Option.some(node.data) : Option.none(),
             ),
             Option.map((collection) => {
               const state = context.getCapability(SpaceCapabilities.State);
@@ -439,7 +439,7 @@ export default (context: PluginContext) => {
           Function.pipe(
             get(node),
             Option.flatMap((node) =>
-              Obj.instanceOf(DataType.QueryCollection, node.data) ? Option.some(node.data) : Option.none(),
+              Obj.instanceOf(DataType.Collection.QueryCollection, node.data) ? Option.some(node.data) : Option.none(),
             ),
             Option.flatMap((collection) => {
               const space = getSpace(collection);
@@ -456,7 +456,7 @@ export default (context: PluginContext) => {
                     //   It will return all objects in the collection, not just the ones of the given type.
                     //   However this works fine for now because this query is only used for exclusions.
                     Query.select(Filter.typename(typename))
-                      .referencedBy(DataType.Collection, 'objects')
+                      .referencedBy(DataType.Collection.Collection, 'objects')
                       .reference('objects'),
                   ),
                 );
@@ -496,7 +496,7 @@ export default (context: PluginContext) => {
           Function.pipe(
             get(node),
             Option.flatMap((node) =>
-              Obj.instanceOf(DataType.QueryCollection, node.data) &&
+              Obj.instanceOf(DataType.Collection.QueryCollection, node.data) &&
               getTypenameFromQuery(node.data.query) === DataType.StoredSchema.typename
                 ? Option.some(node.data)
                 : Option.none(),
@@ -667,7 +667,7 @@ export default (context: PluginContext) => {
                 !isSchema &&
                 // Don't allow the Records smart collection to be deleted.
                 !(
-                  Obj.instanceOf(DataType.QueryCollection, object) &&
+                  Obj.instanceOf(DataType.Collection.QueryCollection, object) &&
                   getTypenameFromQuery(object.query) === DataType.StoredSchema.typename
                 );
               if (isSchema && query) {

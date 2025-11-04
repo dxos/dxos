@@ -276,7 +276,7 @@ export namespace SpaceAction {
 
   export class OpenCreateObject extends Schema.TaggedClass<OpenCreateObject>()(`${SPACE_ACTION}/open-create-object`, {
     input: Schema.Struct({
-      target: Schema.Union(SpaceSchema, DataType.Collection),
+      target: Schema.Union(SpaceSchema, DataType.Collection.Collection),
       views: Schema.optional(Schema.Boolean),
       typename: Schema.optional(Schema.String),
       initialFormValues: Schema.optional(Schema.Any),
@@ -290,7 +290,7 @@ export namespace SpaceAction {
   export class AddObject extends Schema.TaggedClass<AddObject>()(`${SPACE_ACTION}/add-object`, {
     input: Schema.Struct({
       object: ReactiveObjectSchema,
-      target: Schema.Union(SpaceSchema, DataType.Collection),
+      target: Schema.Union(SpaceSchema, DataType.Collection.Collection),
       hidden: Schema.optional(Schema.Boolean),
     }),
     output: Schema.Struct({
@@ -318,7 +318,7 @@ export namespace SpaceAction {
 
   export const DeletionData = Schema.Struct({
     objects: Schema.Array(EchoObjectSchema),
-    parentCollection: DataType.Collection,
+    parentCollection: DataType.Collection.Collection,
     indices: Schema.Array(Schema.Number),
     nestedObjectsList: Schema.Array(Schema.Array(EchoObjectSchema)),
     wasActive: Schema.Array(Schema.String),
@@ -330,7 +330,7 @@ export namespace SpaceAction {
     input: Schema.Struct({
       // TODO(wittjosiah): Should be Schema.Union(Type.Obj, Type.Relation).
       objects: Schema.Array(ReactiveObjectSchema),
-      target: Schema.optional(DataType.Collection),
+      target: Schema.optional(DataType.Collection.Collection),
       deletionData: Schema.optional(DeletionData),
     }),
     output: Schema.Void,
@@ -347,7 +347,7 @@ export namespace SpaceAction {
   export class DuplicateObject extends Schema.TaggedClass<DuplicateObject>()(`${SPACE_ACTION}/duplicate-object`, {
     input: Schema.Struct({
       object: EchoObjectSchema,
-      target: Schema.Union(SpaceSchema, DataType.Collection),
+      target: Schema.Union(SpaceSchema, DataType.Collection.Collection),
     }),
     output: Schema.Void,
   }) {}
@@ -366,7 +366,7 @@ export namespace CollectionAction {
       name: Schema.optional(Schema.String),
     }),
     output: Schema.Struct({
-      object: DataType.Collection,
+      object: DataType.Collection.Collection,
     }),
   }) {}
 
@@ -383,7 +383,7 @@ export namespace CollectionAction {
       input: QueryCollectionForm,
       output: Schema.Struct({
         // TODO(wittjosiah): Remove cast.
-        object: EchoObjectSchema, // DataType.QueryCollection,
+        object: EchoObjectSchema, // DataType.Collection.QueryCollection,
       }),
     },
   ) {}

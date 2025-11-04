@@ -4,7 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { QueryAST, Type } from '@dxos/echo';
+import { Obj, QueryAST, Type } from '@dxos/echo';
 import { FormAnnotation } from '@dxos/echo/internal';
 
 export const Collection = Schema.Struct({
@@ -33,3 +33,6 @@ const QueryCollection_ = Schema.Struct({
 export type QueryCollection = Schema.Schema.Type<typeof QueryCollection_>;
 export type QueryCollectionEncoded = Schema.Schema.Encoded<typeof QueryCollection_>;
 export const QueryCollection: Schema.Schema<QueryCollection, QueryCollectionEncoded> = QueryCollection_;
+
+export const makeCollection = (props: Partial<Obj.MakeProps<typeof Collection>> = {}) => Obj.make(Collection, { objects: [], ...props });
+export const makeQueryCollection = (props: Obj.MakeProps<typeof QueryCollection>) => Obj.make(QueryCollection, props);

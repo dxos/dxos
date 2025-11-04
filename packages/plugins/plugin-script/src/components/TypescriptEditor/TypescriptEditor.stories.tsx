@@ -25,7 +25,7 @@ const DefaultStory = (props: TypescriptEditorProps) => {
   const [result, setResult] = useState<object | undefined>({});
 
   // TODO(burdon): Make this work.
-  // const object = useMemo(() => DataType.makeText(templates[1].source), []);
+  // const object = useMemo(() => DataType.Text.make(templates[1].source), []);
   // const script = useMemo(
   //   () =>
   //     Obj.make(ScriptType, {

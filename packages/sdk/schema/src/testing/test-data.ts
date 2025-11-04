@@ -31,9 +31,9 @@ const createDocument = (name: string, content: string): Testing.DocumentType => 
 };
 
 const createOrganization = (
-  props: Pick<DataType.Organization, 'name' | 'website'> & Partial<Omit<DataType.Organization, 'name' | 'website'>>,
-): DataType.Organization => {
-  return Obj.make(DataType.Organization, {
+  props: Pick<DataType.Organization.Organization, 'name' | 'website'> & Partial<Omit<DataType.Organization.Organization, 'name' | 'website'>>,
+): DataType.Organization.Organization => {
+  return Obj.make(DataType.Organization.Organization, {
     description: faker.lorem.paragraph(),
     image: faker.image.url(),
     ...props,
@@ -44,18 +44,18 @@ const createContact = ({
   email,
   organization,
   ...props
-}: { email: string; organization?: DataType.Organization } & Partial<
-  Omit<DataType.Person, 'organization'>
->): DataType.Person => {
+}: { email: string; organization?: DataType.Organization.Organization } & Partial<
+  Omit<DataType.Person.Person, 'organization'>
+>): DataType.Person.Person => {
   // TODO(dmaretskyi): `Obj.make` with nested refs throws an error when added to db.
-  return Obj.make(DataType.Person, {
+  return Obj.make(DataType.Person.Person, {
     organization: organization ? Ref.make(organization) : undefined,
     emails: [{ value: email }],
     ...props,
   });
 };
 
-const createTranscriptMessage = (sender: DataType.Person, blocks: string[]) => {
+const createTranscriptMessage = (sender: DataType.Person.Person, blocks: string[]) => {
   return Obj.make(DataType.Message, {
     sender: {
       name: sender.fullName,
@@ -75,14 +75,14 @@ const createTranscriptMessage = (sender: DataType.Person, blocks: string[]) => {
 };
 
 export const createTestData = () => {
-  const organizations: Record<string, DataType.Organization> = {
+  const organizations: Record<string, DataType.Organization.Organization> = {
     amco: createOrganization({ name: 'Amco', website: 'amco.org' }),
     cyberdyne: createOrganization({ name: 'Cyberdyne', website: 'cyberdyne.com' }),
     dxos: createOrganization({ name: 'DXOS', website: 'dxos.org' }),
     inkandswitch: createOrganization({ name: 'Ink & Switch', website: 'inkandswitch.com' }),
   };
 
-  const contacts: Record<string, DataType.Person> = {
+  const contacts: Record<string, DataType.Person.Person> = {
     john: createContact({ fullName: 'John Doe', email: 'john.doe@example.com', organization: organizations.dxos }),
     sarah: createContact({
       fullName: 'Sarah Johnson',
@@ -528,7 +528,7 @@ export const createTestData = () => {
 };
 
 export const seedTestData = async (space: Space) => {
-  const schemas = [DataType.Person, DataType.Organization, Testing.DocumentType];
+  const schemas = [DataType.Person.Person, DataType.Organization.Organization, Testing.DocumentType];
   for (const schema of schemas) {
     if (!space.db.graph.schemaRegistry.hasSchema(schema)) {
       space.db.graph.schemaRegistry.addSchema([schema]);

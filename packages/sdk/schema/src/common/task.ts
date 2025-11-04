@@ -4,7 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Type } from '@dxos/echo';
+import { Obj, Type } from '@dxos/echo';
 import {
   FormatAnnotation,
   FormatEnum,
@@ -15,8 +15,8 @@ import {
 
 import { ItemAnnotation } from '../annotations';
 
-import { Person } from './person';
-import { Project } from './project';
+import { Person as PersonSchema } from './person';
+import { Project as ProjectSchema } from './project';
 
 /**
  * Task schema.
@@ -73,7 +73,7 @@ const TaskSchema = Schema.Struct({
       }),
     ),
   ),
-  assigned: Schema.optional(Type.Ref(Person).annotations({ title: 'Assigned' })),
+  assigned: Schema.optional(Type.Ref(PersonSchema).annotations({ title: 'Assigned' })),
   estimate: Schema.optional(Schema.Number.annotations({ title: 'Estimate' })),
   description: Schema.optional(
     Schema.String.annotations({ title: 'Description' }).pipe(
@@ -83,7 +83,7 @@ const TaskSchema = Schema.Struct({
       }),
     ),
   ),
-  project: Schema.optional(Type.Ref(Project).annotations({ title: 'Project' })),
+  project: Schema.optional(Type.Ref(ProjectSchema).annotations({ title: 'Project' })),
   // TODO(burdon): Created date metadata.
   // due: Date,
   // TODO(burdon): Generic tags.
@@ -98,3 +98,5 @@ export const Task = TaskSchema.pipe(
 );
 
 export interface Task extends Schema.Schema.Type<typeof Task> {}
+
+export const make = (props: Obj.MakeProps<typeof Task>) => Obj.make(Task, props);

@@ -104,9 +104,9 @@ export const ProjectObjectSettings = ({ classNames, project }: ProjectObjectSett
 
   const handleAdd = useCallback(() => {
     const view = createView({
-      query: Query.select(Filter.type(DataType.Task)),
-      jsonSchema: Type.toJsonSchema(DataType.Task),
-      presentation: Obj.make(DataType.Collection, { objects: [] }),
+      query: Query.select(Filter.type(DataType.Task.Task)),
+      jsonSchema: Type.toJsonSchema(DataType.Task.Task),
+      presentation: Obj.make(DataType.Collection.Collection, { objects: [] }),
     });
     project.collections.push(Ref.make(view));
     setExpandedId(view.id);

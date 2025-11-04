@@ -19,10 +19,10 @@ import { QueryForm, type QueryFormProps } from './QueryForm';
 
 const types = [
   // TODO(burdon): Get label from annotation.
-  { value: Type.getTypename(DataType.Organization), label: 'Organization' },
-  { value: Type.getTypename(DataType.Person), label: 'Person' },
+  { value: Type.getTypename(DataType.Organization.Organization), label: 'Organization' },
+  { value: Type.getTypename(DataType.Person.Person), label: 'Person' },
   { value: Type.getTypename(DataType.Project.Project), label: 'Project' },
-  { value: Type.getTypename(DataType.Employer), label: 'Employer' },
+  { value: Type.getTypename(DataType.Employer.Employer), label: 'Employer' },
 ];
 
 const tags = Tag.createTagList({
@@ -51,7 +51,7 @@ const meta = {
     withTheme,
     withLayout({ container: 'column' }),
     withClientProvider({
-      types: [DataType.Organization, DataType.Person, DataType.Project.Project, DataType.Employer],
+      types: [DataType.Organization.Organization, DataType.Person.Person, DataType.Project.Project, DataType.Employer.Employer],
       createIdentity: true,
     }),
   ],

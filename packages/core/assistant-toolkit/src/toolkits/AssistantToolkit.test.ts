@@ -48,7 +48,7 @@ const TestLayer = Layer.mergeAll(
       TestDatabaseLayer({
         spaceKey: 'fixed',
         indexing: { vector: true },
-        types: [Blueprint.Blueprint, DataType.Message, DataType.Person, DataType.Organization],
+        types: [Blueprint.Blueprint, DataType.Message, DataType.Person.Person, DataType.Organization.Organization],
       }),
       CredentialsService.configuredLayer([]),
       TracingService.layerNoop,
@@ -75,7 +75,7 @@ describe('AssistantToolkit', () => {
         yield* Effect.promise(() => conversation.context.bind({ blueprints: [Ref.make(db.add(blueprint))] }));
 
         const organization = yield* DatabaseService.add(
-          Obj.make(DataType.Organization, {
+          Obj.make(DataType.Organization.Organization, {
             name: 'Cyberdyne Systems',
             website: 'https://cyberdyne.com',
           }),

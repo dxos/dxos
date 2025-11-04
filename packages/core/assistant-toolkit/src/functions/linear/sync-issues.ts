@@ -87,7 +87,7 @@ export default defineFunction({
     const client = yield* HttpClient.HttpClient.pipe(Effect.map(withAuthorization({ service: 'linear.app' })));
 
     // Get the timestamp that was previosly synced.
-    const after = yield* getLatestUpdateTimestamp(data.team, DataType.Task);
+    const after = yield* getLatestUpdateTimestamp(data.team, DataType.Task.Task);
     log.info('will fetch', { after });
 
     // Fetch the issues that have changed since the last sync.
@@ -126,8 +126,8 @@ const getLatestUpdateTimestamp: (
   );
 });
 
-const mapLinearPerson = (person: LinearPerson, { teamId }: { teamId: string }): DataType.Person =>
-  Obj.make(DataType.Person, {
+const mapLinearPerson = (person: LinearPerson, { teamId }: { teamId: string }): DataType.Person.Person =>
+  Obj.make(DataType.Person.Person, {
     [Obj.Meta]: {
       keys: [
         {
@@ -143,8 +143,8 @@ const mapLinearPerson = (person: LinearPerson, { teamId }: { teamId: string }): 
     nickname: person.name,
   });
 
-const mapLinearIssue = (issue: LinearIssue, { teamId }: { teamId: string }): DataType.Task =>
-  Obj.make(DataType.Task, {
+const mapLinearIssue = (issue: LinearIssue, { teamId }: { teamId: string }): DataType.Task.Task =>
+  Obj.make(DataType.Task.Task, {
     [Obj.Meta]: {
       keys: [
         {

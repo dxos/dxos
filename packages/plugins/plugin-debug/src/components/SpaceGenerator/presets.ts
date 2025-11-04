@@ -66,7 +66,7 @@ export const generator = () => ({
           const tag = space.db.add(Tag.make({ label: 'Investor' }));
           const tagDxn = Obj.getDXN(tag).toString();
 
-          const org = space.db.add(Obj.make(DataType.Organization, { name: 'DXOS', website: 'https://dxos.org' }));
+          const org = space.db.add(Obj.make(DataType.Organization.Organization, { name: 'DXOS', website: 'https://dxos.org' }));
 
           const doc = space.db.add(
             Markdown.makeDocument({
@@ -84,12 +84,12 @@ export const generator = () => ({
           // );
 
           space.db.add(
-            Obj.make(DataType.Person, { fullName: 'Rich', organization: Ref.make(org) }, { tags: [tagDxn] }),
+            Obj.make(DataType.Person.Person, { fullName: 'Rich', organization: Ref.make(org) }, { tags: [tagDxn] }),
           );
-          space.db.add(Obj.make(DataType.Person, { fullName: 'Josiah', organization: Ref.make(org) }));
-          space.db.add(Obj.make(DataType.Person, { fullName: 'Dima', organization: Ref.make(org) }));
-          space.db.add(Obj.make(DataType.Person, { fullName: 'Mykola', organization: Ref.make(org) }));
-          space.db.add(Obj.make(DataType.Person, { fullName: 'Will', organization: Ref.make(org) }));
+          space.db.add(Obj.make(DataType.Person.Person, { fullName: 'Josiah', organization: Ref.make(org) }));
+          space.db.add(Obj.make(DataType.Person.Person, { fullName: 'Dima', organization: Ref.make(org) }));
+          space.db.add(Obj.make(DataType.Person.Person, { fullName: 'Mykola', organization: Ref.make(org) }));
+          space.db.add(Obj.make(DataType.Person.Person, { fullName: 'Will', organization: Ref.make(org) }));
 
           return doc;
         });
@@ -105,8 +105,8 @@ export const generator = () => ({
         const tagDxn = Obj.getDXN(tag).toString();
 
         const objects = range(n, () => {
-          const contactsQuery = Query.select(Filter.type(DataType.Person)).select(Filter.tag(tagDxn));
-          const organizationsQuery = Query.select(Filter.type(DataType.Organization)).select(Filter.tag(tagDxn));
+          const contactsQuery = Query.select(Filter.type(DataType.Person.Person)).select(Filter.tag(tagDxn));
+          const organizationsQuery = Query.select(Filter.type(DataType.Organization.Organization)).select(Filter.tag(tagDxn));
           const notesQuery = Query.select(Filter.type(Markdown.Document)).select(Filter.tag(tagDxn));
 
           const emailSyncTrigger = Trigger.make({
@@ -180,25 +180,25 @@ export const generator = () => ({
               queues: [mailbox.queue.dxn.toString()],
             }),
             jsonSchema: Type.toJsonSchema(DataType.Message),
-            presentation: Obj.make(DataType.Collection, { objects: [] }),
+            presentation: Obj.make(DataType.Collection.Collection, { objects: [] }),
           });
           const contactsView = createView({
             name: 'Contacts',
             query: contactsQuery,
-            jsonSchema: Type.toJsonSchema(DataType.Person),
-            presentation: Obj.make(DataType.Collection, { objects: [] }),
+            jsonSchema: Type.toJsonSchema(DataType.Person.Person),
+            presentation: Obj.make(DataType.Collection.Collection, { objects: [] }),
           });
           const organizationsView = createView({
             name: 'Organizations',
             query: organizationsQuery,
-            jsonSchema: Type.toJsonSchema(DataType.Organization),
-            presentation: Obj.make(DataType.Collection, { objects: [] }),
+            jsonSchema: Type.toJsonSchema(DataType.Organization.Organization),
+            presentation: Obj.make(DataType.Collection.Collection, { objects: [] }),
           });
           const notesView = createView({
             name: 'Notes',
             query: notesQuery,
             jsonSchema: Type.toJsonSchema(Markdown.Document),
-            presentation: Obj.make(DataType.Collection, { objects: [] }),
+            presentation: Obj.make(DataType.Collection.Collection, { objects: [] }),
           });
 
           return space.db.add(

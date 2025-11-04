@@ -3,7 +3,7 @@
 //
 
 import { Capabilities, type PluginContext, contributes } from '@dxos/app-framework';
-import { Obj, Ref } from '@dxos/echo';
+import { Obj, Ref, Type } from '@dxos/echo';
 import { Migrations } from '@dxos/migrations';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { DataType } from '@dxos/schema';
@@ -16,7 +16,7 @@ export default async (context: PluginContext) => {
   await defaultSpace.waitUntilReady();
 
   // Create root collection structure.
-  defaultSpace.properties[DataType.Collection.typename] = Ref.make(Obj.make(DataType.Collection, { objects: [] }));
+  defaultSpace.properties[Type.getTypename(DataType.Collection.Collection)] = Ref.make(Obj.make(DataType.Collection.Collection, { objects: [] }));
   if (Migrations.versionProperty) {
     defaultSpace.properties[Migrations.versionProperty] = Migrations.targetVersion;
   }

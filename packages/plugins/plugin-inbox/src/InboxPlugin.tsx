@@ -3,7 +3,7 @@
 //
 
 import { Capabilities, Events, contributes, createIntent, defineModule, definePlugin } from '@dxos/app-framework';
-import { Ref } from '@dxos/echo';
+import { Ref, Type } from '@dxos/echo';
 import { ClientEvents } from '@dxos/plugin-client';
 import { SpaceCapabilities } from '@dxos/plugin-space';
 import { defineObjectForm } from '@dxos/plugin-space/types';
@@ -62,10 +62,10 @@ export const InboxPlugin = definePlugin(meta, () => [
         },
       }),
       contributes(Capabilities.Metadata, {
-        id: DataType.Event.typename,
+        id: Type.getTypename(DataType.Event.Event),
         metadata: {
           // TODO(wittjosiah): Move out of metadata.
-          loadReferences: async (event: DataType.Event) => await Ref.Array.loadAll(event.links ?? []),
+          loadReferences: async (event: DataType.Event.Event) => await Ref.Array.loadAll(event.links ?? []),
         },
       }),
     ],

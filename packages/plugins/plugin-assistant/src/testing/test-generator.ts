@@ -146,10 +146,10 @@ export const createMessageGenerator = (): MessageGenerator[] => [
   Effect.gen(function* () {
     const { queue } = yield* ContextQueueService;
     const { db } = yield* DatabaseService;
-    const obj1 = db.add(Obj.make(DataType.Organization, { name: 'DXOS' }));
-    // const obj2 = db.add(Obj.make(DataType.Person, { fullName: 'Alice' }));
-    // const obj3 = db.add(Obj.make(DataType.Person, { fullName: 'Bob' }));
-    // const obj4 = db.add(Obj.make(DataType.Person, { fullName: 'Charlie' }));
+    const obj1 = db.add(Obj.make(DataType.Organization.Organization, { name: 'DXOS' }));
+    // const obj2 = db.add(Obj.make(DataType.Person.Person, { fullName: 'Alice' }));
+    // const obj3 = db.add(Obj.make(DataType.Person.Person, { fullName: 'Bob' }));
+    // const obj4 = db.add(Obj.make(DataType.Person.Person, { fullName: 'Charlie' }));
     yield* Effect.promise(() =>
       queue.append([
         createMessage('assistant', [

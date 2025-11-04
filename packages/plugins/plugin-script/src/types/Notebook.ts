@@ -17,7 +17,7 @@ const Cell_ = Schema.Struct({
   type: Schema.String,
   name: Schema.optional(Schema.String),
   // TODO(burdon): Union type.
-  source: Schema.optional(Type.Ref(DataType.Text)),
+  source: Schema.optional(Type.Ref(DataType.Text.Text)),
   prompt: Schema.optional(Type.Ref(Prompt.Prompt)),
   view: Schema.optional(Type.Ref(DataType.View)),
 }).pipe(Schema.mutable);

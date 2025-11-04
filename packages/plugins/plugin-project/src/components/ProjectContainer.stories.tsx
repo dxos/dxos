@@ -61,10 +61,10 @@ const meta = {
             Tag.Tag,
             DataType.Project.Project,
             DataType.View,
-            DataType.Collection,
-            DataType.Organization,
-            DataType.Task,
-            DataType.Person,
+            DataType.Collection.Collection,
+            DataType.Organization.Organization,
+            DataType.Task.Task,
+            DataType.Person.Person,
             DataType.Message,
           ],
           onClientInitialized: async ({ client }) => {
@@ -82,24 +82,24 @@ const meta = {
             // Create a view for Contacts
             const personView = createView({
               name: 'Contacts',
-              query: Query.select(Filter.type(DataType.Person)),
-              jsonSchema: Type.toJsonSchema(DataType.Person),
+              query: Query.select(Filter.type(DataType.Person.Person)),
+              jsonSchema: Type.toJsonSchema(DataType.Person.Person),
               presentation: project,
             });
 
             // Create a view for Organizations
             const organizationView = createView({
               name: 'Organizations',
-              query: Query.select(Filter.type(DataType.Organization)).select(Filter.tag(tagDxn)),
-              jsonSchema: Type.toJsonSchema(DataType.Organization),
+              query: Query.select(Filter.type(DataType.Organization.Organization)).select(Filter.tag(tagDxn)),
+              jsonSchema: Type.toJsonSchema(DataType.Organization.Organization),
               presentation: project,
             });
 
             // Create a view for Tasks
             const taskView = createView({
               name: 'Tasks',
-              query: Query.select(Filter.type(DataType.Task)).select(Filter.tag(tagDxn)),
-              jsonSchema: Type.toJsonSchema(DataType.Task),
+              query: Query.select(Filter.type(DataType.Task.Task)).select(Filter.tag(tagDxn)),
+              jsonSchema: Type.toJsonSchema(DataType.Task.Task),
               presentation: project,
             });
 
@@ -138,7 +138,7 @@ const meta = {
             // Generate sample Organizations
             Array.from({ length: 5 }).forEach(() => {
               const org = Obj.make(
-                DataType.Organization,
+                DataType.Organization.Organization,
                 {
                   name: faker.company.name(),
                   website: faker.internet.url(),
@@ -155,7 +155,7 @@ const meta = {
             // Generate sample Tasks
             Array.from({ length: 8 }).forEach(() => {
               const task = Obj.make(
-                DataType.Task,
+                DataType.Task.Task,
                 {
                   title: faker.lorem.sentence(),
                   status: faker.helpers.arrayElement(['todo', 'in-progress', 'done']) as any,
@@ -170,7 +170,7 @@ const meta = {
 
             // Generate sample Contacts
             const factory = createObjectFactory(space.db, faker as any);
-            await factory([{ type: DataType.Person, count: 12 }]);
+            await factory([{ type: DataType.Person.Person, count: 12 }]);
 
             // Generate sample Projects
             Array.from({ length: 3 }).forEach(() => {

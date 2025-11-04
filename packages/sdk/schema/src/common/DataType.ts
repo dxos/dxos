@@ -4,18 +4,24 @@
 
 export { StoredSchema } from '@dxos/echo/internal';
 
-export { AccessToken } from './access-token';
+export * as AccessToken from './access-token';
 export { Actor, ActorRole, ActorRoles } from './actor';
-export { Event } from './event';
-export { Collection, QueryCollection } from './collection';
+export * as Event from './event';
+export * as Collection from './collection';
 export { Message, ContentBlock as MessageBlock } from './message';
 /** @deprecated */
 export { MessageV1, MessageV1ToV2 } from './message';
-export { LegacyOrganization, Organization, OrganizationStatusOptions } from './organization';
+export { LegacyOrganization, OrganizationStatusOptions } from './organization';
+export * as Organization from './organization';
 export { PostalAddress } from './postal-address';
-export { LegacyPerson, Person } from './person';
+export { LegacyPerson } from './person';
+export * as Person from './person';
 export * as Project from './project';
-export { Task } from './task';
-export { Text } from './text';
+export * as Task from './task';
+export * as Text from './text';
 export { View } from '../view';
-export { AnchoredTo, Employer, HasConnection, HasRelationship, HasSubject } from './relations';
+export * as AnchoredTo from './relations';
+export * as Employer from './relations';
+export * as HasConnection from './relations';
+export * as HasRelationship from './relations';
+export * as HasSubject from './relations';

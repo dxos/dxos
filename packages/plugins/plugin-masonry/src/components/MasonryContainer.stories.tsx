@@ -14,6 +14,7 @@ import { StorybookLayoutPlugin } from '@dxos/plugin-storybook-layout';
 import { ThemePlugin } from '@dxos/plugin-theme';
 import { faker } from '@dxos/random';
 import { Filter, useQuery, useSpaces } from '@dxos/react-client/echo';
+import { Type } from '@dxos/echo';
 import { withTheme } from '@dxos/react-ui/testing';
 import { defaultTx } from '@dxos/react-ui-theme';
 import { DataType } from '@dxos/schema';
@@ -49,17 +50,17 @@ const meta = {
     withPluginManager({
       plugins: [
         ClientPlugin({
-          types: [DataType.Organization, DataType.View, Masonry.Masonry],
+          types: [DataType.Organization.Organization, DataType.View, Masonry.Masonry],
           onClientInitialized: async ({ client }) => {
             await client.halo.createIdentity();
             const space = await client.spaces.create();
             await space.waitUntilReady();
 
-            const { view } = await Masonry.makeView({ space, client, typename: DataType.Organization.typename });
+            const { view } = await Masonry.makeView({ space, client, typename: Type.getTypename(DataType.Organization.Organization) });
             space.db.add(view);
 
             const factory = createObjectFactory(space.db, faker as any);
-            await factory([{ type: DataType.Organization, count: 64 }]);
+            await factory([{ type: DataType.Organization.Organization, count: 64 }]);
           },
         }),
         SpacePlugin({}),

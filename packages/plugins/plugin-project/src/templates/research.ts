@@ -21,23 +21,23 @@ export const createResearchProject = async (space: Space, name?: string): Promis
       queues: [mailbox.queue.dxn.toString()],
     }),
     jsonSchema: Type.toJsonSchema(DataType.Message),
-    presentation: Obj.make(DataType.Collection, { objects: [] }),
+    presentation: Obj.make(DataType.Collection.Collection, { objects: [] }),
   });
 
-  const contactsQuery = Query.select(Filter.type(DataType.Person));
+  const contactsQuery = Query.select(Filter.type(DataType.Person.Person));
   const contactsView = createView({
     name: 'Contacts',
     query: contactsQuery,
-    jsonSchema: Type.toJsonSchema(DataType.Person),
-    presentation: Obj.make(DataType.Collection, { objects: [] }),
+    jsonSchema: Type.toJsonSchema(DataType.Person.Person),
+    presentation: Obj.make(DataType.Collection.Collection, { objects: [] }),
   });
 
-  const organizationsQuery = Query.select(Filter.type(DataType.Organization));
+  const organizationsQuery = Query.select(Filter.type(DataType.Organization.Organization));
   const organizationsView = createView({
     name: 'Organizations',
     query: organizationsQuery,
-    jsonSchema: Type.toJsonSchema(DataType.Organization),
-    presentation: Obj.make(DataType.Collection, { objects: [] }),
+    jsonSchema: Type.toJsonSchema(DataType.Organization.Organization),
+    presentation: Obj.make(DataType.Collection.Collection, { objects: [] }),
   });
 
   const notesQuery = Query.select(Filter.type(Markdown.Document));
@@ -45,7 +45,7 @@ export const createResearchProject = async (space: Space, name?: string): Promis
     name: 'Notes',
     query: notesQuery,
     jsonSchema: Type.toJsonSchema(Markdown.Document),
-    presentation: Obj.make(DataType.Collection, { objects: [] }),
+    presentation: Obj.make(DataType.Collection.Collection, { objects: [] }),
   });
 
   return DataType.Project.make({

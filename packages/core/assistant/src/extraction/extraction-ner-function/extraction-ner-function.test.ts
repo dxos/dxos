@@ -25,11 +25,11 @@ describe.skip('NER EntityExtraction', () => {
     transcriptWoflram: DataType.Message[];
     transcriptMessages: DataType.Message[];
     documents: Testing.DocumentType[];
-    contacts: Record<string, DataType.Person>;
-    organizations: Record<string, DataType.Organization>;
+    contacts: Record<string, DataType.Person.Person>;
+    organizations: Record<string, DataType.Organization.Organization>;
   };
 
-  const TYPES = [DataType.Organization, DataType.Person, Testing.Contact, Testing.DocumentType];
+  const TYPES = [DataType.Organization.Organization, DataType.Person.Person, Testing.Contact, Testing.DocumentType];
 
   beforeAll(async () => {
     // TODO(dmaretskyi): Helper to scaffold this from a config.

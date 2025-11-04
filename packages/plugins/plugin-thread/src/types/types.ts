@@ -17,7 +17,7 @@ export namespace ThreadAction {
   export class onCreateSpace extends Schema.TaggedClass<onCreateSpace>()(`${meta.id}/action/on-space-created`, {
     input: Schema.Struct({
       space: SpaceSchema,
-      rootCollection: DataType.Collection,
+      rootCollection: DataType.Collection.Collection,
     }),
     output: Schema.Void,
   }) {}

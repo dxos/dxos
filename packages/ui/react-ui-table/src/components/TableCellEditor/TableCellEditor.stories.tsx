@@ -5,7 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
-import { Obj } from '@dxos/echo';
+import { Obj, Type } from '@dxos/echo';
 import { faker } from '@dxos/random';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { withTheme } from '@dxos/react-ui/testing';
@@ -32,7 +32,7 @@ const DefaultStory = ({ editing }: StoryProps) => {
   return (
     <div className='flex w-[300px] border border-separator' style={{ height: defaultRowSize }}>
       <Grid.Root id='test' editing={editing}>
-        <TableCellEditor model={model} schema={DataType.Task} />
+        <TableCellEditor model={model} schema={DataType.Task.Task} />
       </Grid.Root>
     </div>
   );
@@ -45,15 +45,15 @@ const meta = {
   decorators: [
     withTheme,
     withClientProvider({
-      types: [DataType.View, DataType.Task, Table.Table],
+      types: [DataType.View, DataType.Task.Task, Table.Table],
       createIdentity: true,
       createSpace: true,
       onCreateSpace: async ({ client, space }) => {
-        const { view } = await Table.makeView({ client, space, typename: DataType.Task.typename });
+        const { view } = await Table.makeView({ client, space, typename: Type.getTypename(DataType.Task.Task) });
         space.db.add(view);
         Array.from({ length: 10 }).forEach(() => {
           space.db.add(
-            Obj.make(DataType.Task, {
+            Obj.make(DataType.Task.Task, {
               title: faker.person.fullName(),
               status: faker.helpers.arrayElement(['todo', 'in-progress', 'done'] as const),
               description: faker.lorem.sentence(),

@@ -42,7 +42,7 @@ export type Input = Schema.Schema.Type<typeof Input>;
  * Template type.
  */
 export const Template = Schema.Struct({
-  source: Type.Ref(DataType.Text).annotations({ description: 'Handlebars template source' }),
+  source: Type.Ref(DataType.Text.Text).annotations({ description: 'Handlebars template source' }),
   inputs: Schema.optional(Schema.mutable(Schema.Array(Input))),
 }).pipe(Schema.mutable);
 
@@ -53,6 +53,6 @@ export const make = ({
   inputs = [],
   id,
 }: { source?: string; inputs?: Input[]; id?: ObjectId } = {}): Template => ({
-  source: Ref.make(DataType.makeText(source, id)),
+  source: Ref.make(DataType.Text.make(source, id)),
   inputs,
 });

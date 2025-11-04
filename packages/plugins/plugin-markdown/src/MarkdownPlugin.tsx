@@ -91,7 +91,7 @@ export const MarkdownPlugin = definePlugin(meta, () => [
   defineModule({
     id: `${meta.id}/module/schema`,
     activatesOn: ClientEvents.SetupSchema,
-    activate: () => contributes(ClientCapabilities.Schema, [DataType.Text]),
+    activate: () => contributes(ClientCapabilities.Schema, [DataType.Text.Text]),
   }),
   defineModule({
     id: `${meta.id}/module/react-surface`,

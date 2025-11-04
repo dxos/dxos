@@ -19,7 +19,7 @@ export const PreviewPlugin = definePlugin(meta, () => [
   defineModule({
     id: `${meta.id}/module/schema`,
     activatesOn: ClientEvents.SetupSchema,
-    activate: () => [contributes(ClientCapabilities.Schema, [DataType.Person, DataType.Organization])],
+    activate: () => [contributes(ClientCapabilities.Schema, [DataType.Person.Person, DataType.Organization.Organization])],
   }),
   defineModule({
     id: `${meta.id}/module/preview-popover`,

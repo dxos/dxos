@@ -105,8 +105,8 @@ const DefaultStory = ({
       objects = space.db
         .query(
           Filter.or(
-            Filter.type(DataType.Person),
-            Filter.type(DataType.Organization),
+            Filter.type(DataType.Person.Person),
+            Filter.type(DataType.Organization.Organization),
             Filter.type(Testing.DocumentType),
           ),
         )
@@ -200,7 +200,7 @@ const meta = {
     withPluginManager({
       plugins: [
         ClientPlugin({
-          types: [TestItem, DataType.Person, DataType.Organization, Testing.DocumentType],
+          types: [TestItem, DataType.Person.Person, DataType.Organization.Organization, Testing.DocumentType],
           onClientInitialized: async ({ client }) => {
             await client.halo.createIdentity();
             await client.spaces.waitUntilReady();

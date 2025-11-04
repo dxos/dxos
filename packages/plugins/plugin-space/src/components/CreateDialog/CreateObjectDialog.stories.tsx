@@ -37,7 +37,7 @@ const meta = {
   decorators: [
     withTheme, // TODO(wittjosiah): Try to write story which does not depend on plugin manager.
     withPluginManager({ plugins: [IntentPlugin()] }),
-    withClientProvider({ createIdentity: true, createSpace: true, types: [DataType.Collection] }),
+    withClientProvider({ createIdentity: true, createSpace: true, types: [DataType.Collection.Collection] }),
   ],
   parameters: {
     translations: [...translations, ...shellTranslations],
@@ -50,7 +50,7 @@ export default meta;
 export const Default: StoryObj<typeof CreateObjectDialog> = {};
 
 export const Typename: StoryObj<typeof CreateObjectDialog> = {
-  args: { typename: Type.getTypename(DataType.Collection) },
+  args: { typename: Type.getTypename(DataType.Collection.Collection) },
 };
 
 export const TargetSpace: StoryObj<typeof CreateObjectDialog> = {
@@ -68,11 +68,11 @@ export const TargetSpace: StoryObj<typeof CreateObjectDialog> = {
 export const TargetCollection: StoryObj<typeof CreateObjectDialog> = {
   render: (args) => {
     const space = useSpace();
-    const [collection] = useQuery(space, Filter.type(DataType.Collection));
+    const [collection] = useQuery(space, Filter.type(DataType.Collection.Collection));
 
     useEffect(() => {
       if (space) {
-        space.db.add(Obj.make(DataType.Collection, { name: 'My Collection', objects: [] }));
+        space.db.add(Obj.make(DataType.Collection.Collection, { name: 'My Collection', objects: [] }));
       }
     }, [space]);
 

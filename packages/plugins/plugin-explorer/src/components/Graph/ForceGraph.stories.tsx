@@ -58,10 +58,10 @@ const meta = {
       types: [
         Graph.Graph,
         DataType.View,
-        DataType.HasRelationship,
-        DataType.Organization,
+        DataType.HasRelationship.HasRelationship,
+        DataType.Organization.Organization,
         DataType.Project.Project,
-        DataType.Person,
+        DataType.Person.Person,
       ],
     }),
   ],

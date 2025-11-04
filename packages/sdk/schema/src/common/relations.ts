@@ -4,7 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Type } from '@dxos/echo';
+import { Obj, Type } from '@dxos/echo';
 
 import { Organization } from './organization';
 import { Person } from './person';
@@ -123,3 +123,9 @@ export const HasSubject = Schema.Struct({
  * @deprecated Reconcile with AnchoredTo?
  */
 export interface HasSubject extends Schema.Schema.Type<typeof HasSubject> {}
+
+export const makeAnchoredTo = (props: Obj.MakeProps<typeof AnchoredTo>) => Obj.make(AnchoredTo, props);
+export const makeEmployer = (props: Obj.MakeProps<typeof Employer>) => Obj.make(Employer, props);
+export const makeHasConnection = (props: Obj.MakeProps<typeof HasConnection>) => Obj.make(HasConnection, props);
+export const makeHasRelationship = (props: Obj.MakeProps<typeof HasRelationship>) => Obj.make(HasRelationship, props);
+export const makeHasSubject = (props: Obj.MakeProps<typeof HasSubject>) => Obj.make(HasSubject, props);

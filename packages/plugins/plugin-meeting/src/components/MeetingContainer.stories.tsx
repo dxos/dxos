@@ -59,8 +59,8 @@ const meta = {
                 created: new Date().toISOString(),
                 participants: [],
                 transcript: Ref.make(Transcript.makeTranscript(space.queues.create().dxn)),
-                notes: Ref.make(DataType.makeText('Notes')),
-                summary: Ref.make(DataType.makeText()),
+                notes: Ref.make(DataType.Text.make('Notes')),
+                summary: Ref.make(DataType.Text.make()),
                 thread: Ref.make(Thread.make()),
               }),
             );

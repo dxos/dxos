@@ -27,7 +27,7 @@ export const blueprint = Obj.make(Blueprint.Blueprint, {
   name: 'Linear',
   description: 'Syncs Linear workspaces.',
   instructions: {
-    source: Ref.make(DataType.makeText(instructions)),
+    source: Ref.make(DataType.Text.make(instructions)),
   },
   tools: [Linear.sync].map((tool) => ToolId.make(tool.key)),
 });

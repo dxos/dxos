@@ -24,7 +24,7 @@ export type CreateObjectPanelProps = {
   forms: ObjectForm[];
   spaces: Space[];
   typename?: string;
-  target?: Space | DataType.Collection;
+  target?: Space | DataType.Collection.Collection;
   views?: boolean;
   initialFormValues?: Partial<BaseObject>;
   defaultSpaceId?: SpaceId;

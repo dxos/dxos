@@ -7,6 +7,7 @@ import { QR } from 'react-qr-rounded';
 
 import { createIntent, useIntentDispatcher } from '@dxos/app-framework';
 import { log } from '@dxos/log';
+import { Type } from '@dxos/echo';
 import { useConfig } from '@dxos/react-client';
 import { type Space, fullyQualifiedId, useSpaceInvitations } from '@dxos/react-client/echo';
 import { type CancellableInvitationObservable, Invitation, InvitationEncoder } from '@dxos/react-client/invitations';
@@ -63,7 +64,7 @@ export const MembersContainer = ({ space, createInvitationUrl }: MembersContaine
   };
 
   // TODO(wittjosiah): Track which was the most recently viewed object.
-  const target = space.properties[DataType.Collection.typename]?.target?.objects[0]?.target;
+  const target = space.properties[Type.getTypename(DataType.Collection.Collection)]?.target?.objects[0]?.target;
 
   const locked = space.properties[COMPOSER_SPACE_LOCK];
   const handleChangeLocked = useCallback(() => {

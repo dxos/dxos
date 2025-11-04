@@ -89,18 +89,18 @@ export const SpacePlugin = definePlugin<SpacePluginOptions>(
         activatesOn: Events.SetupMetadata,
         activate: () => [
           contributes(Capabilities.Metadata, {
-            id: Type.getTypename(DataType.Collection),
+            id: Type.getTypename(DataType.Collection.Collection),
             metadata: {
               icon: 'ph--cards-three--regular',
               iconHue: 'neutral',
               // TODO(wittjosiah): Move out of metadata.
-              loadReferences: async (collection: DataType.Collection) => await Ref.Array.loadAll(collection.objects),
+              loadReferences: async (collection: DataType.Collection.Collection) => await Ref.Array.loadAll(collection.objects),
             },
           }),
           contributes(Capabilities.Metadata, {
-            id: Type.getTypename(DataType.QueryCollection),
+            id: Type.getTypename(DataType.Collection.QueryCollection),
             metadata: {
-              label: (object: DataType.QueryCollection) => [
+              label: (object: DataType.Collection.QueryCollection) => [
                 'typename label',
                 {
                   ns: getTypenameFromQuery(object.query),
@@ -119,25 +119,25 @@ export const SpacePlugin = definePlugin<SpacePluginOptions>(
             },
           }),
           contributes(Capabilities.Metadata, {
-            id: Type.getTypename(DataType.Event),
+            id: Type.getTypename(DataType.Event.Event),
             metadata: {
               icon: 'ph--calendar-dot--regular',
             },
           }),
           contributes(Capabilities.Metadata, {
-            id: Type.getTypename(DataType.Organization),
+            id: Type.getTypename(DataType.Organization.Organization),
             metadata: {
               icon: 'ph--building-office--regular',
             },
           }),
           contributes(Capabilities.Metadata, {
-            id: Type.getTypename(DataType.Person),
+            id: Type.getTypename(DataType.Person.Person),
             metadata: {
               icon: 'ph--user--regular',
             },
           }),
           contributes(Capabilities.Metadata, {
-            id: Type.getTypename(DataType.Task),
+            id: Type.getTypename(DataType.Task.Task),
             metadata: {
               icon: 'ph--check-circle--regular',
             },
@@ -151,7 +151,7 @@ export const SpacePlugin = definePlugin<SpacePluginOptions>(
           contributes(
             SpaceCapabilities.ObjectForm,
             defineObjectForm({
-              objectSchema: DataType.Collection,
+              objectSchema: DataType.Collection.Collection,
               formSchema: Schema.Struct({ name: Schema.optional(Schema.String) }),
               getIntent: (props) => createIntent(CollectionAction.Create, props),
             }),
@@ -160,7 +160,7 @@ export const SpacePlugin = definePlugin<SpacePluginOptions>(
             SpaceCapabilities.ObjectForm,
             defineObjectForm({
               // TODO(wittjosiah): Remove cast.
-              objectSchema: DataType.QueryCollection as any,
+              objectSchema: DataType.Collection.QueryCollection as any,
               formSchema: CollectionAction.QueryCollectionForm,
               getIntent: (props) => createIntent(CollectionAction.CreateQueryCollection, props),
             }),
@@ -198,11 +198,11 @@ export const SpacePlugin = definePlugin<SpacePluginOptions>(
         activatesOn: ClientEvents.SetupSchema,
         activate: () =>
           contributes(ClientCapabilities.SchemaWhiteList, [
-            DataType.Event,
-            DataType.Organization,
-            DataType.Person,
+            DataType.Event.Event,
+            DataType.Organization.Organization,
+            DataType.Person.Person,
             DataType.Project.Project,
-            DataType.Task,
+            DataType.Task.Task,
           ]),
       }),
       defineModule({

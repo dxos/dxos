@@ -3,18 +3,18 @@
 //
 
 import { type Live, type Space } from '@dxos/client/echo';
-import { Obj, Ref, Relation, type Type } from '@dxos/echo';
+import { Obj, Ref, Relation, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { DataType } from '@dxos/schema';
 
 export const testTypes: Type.Obj.Any[] = [
-  DataType.Organization,
-  DataType.Person,
-  DataType.Employer,
-  DataType.HasConnection,
+  DataType.Organization.Organization,
+  DataType.Person.Person,
+  DataType.Employer.Employer,
+  DataType.HasConnection.HasConnection,
 ];
 
-export const organizations: (Type.Properties<DataType.Organization> & { id: string })[] = [
+export const organizations: (Type.Properties<DataType.Organization.Organization> & { id: string })[] = [
   { id: 'dxos', name: 'DXOS', website: 'https://dxos.org' },
   { id: 'socket_supply', name: 'Socket Supply', website: 'https://socketsupply.com' },
   { id: 'ink_and_switch', name: 'Ink & Switch', website: 'https://inkandswitch.com' },
@@ -31,7 +31,7 @@ export const organizations: (Type.Properties<DataType.Organization> & { id: stri
   { id: 'deshaw', name: 'D. E. Shaw & Co.', website: 'https://deshaw.com' },
 ];
 
-export const people: (Type.Properties<DataType.Person> & { id: string })[] = [
+export const people: (Type.Properties<DataType.Person.Person> & { id: string })[] = [
   { id: 'rich_burdon', fullName: 'Rich Burdon' },
   { id: 'josiah_witt', fullName: 'Josiah Witt' },
   { id: 'dima_maretskyi', fullName: 'Dima Maretskyi' },
@@ -48,8 +48,8 @@ export const people: (Type.Properties<DataType.Person> & { id: string })[] = [
 ];
 
 const testObjects: Record<string, any[]> = {
-  [DataType.Organization.typename]: organizations,
-  [DataType.Person.typename]: people,
+  [Type.getTypename(DataType.Organization.Organization)]: organizations,
+  [Type.getTypename(DataType.Person.Person)]: people,
 };
 
 const testRelationships: Record<
@@ -59,7 +59,7 @@ const testRelationships: Record<
     target: string;
   } & Record<string, any>)[]
 > = {
-  [DataType.Employer.typename]: [
+  [Type.getTypename(DataType.Employer.Employer)]: [
     // prettier-ignore
     { source: 'rich_burdon', target: 'dxos', active: true },
     { source: 'rich_burdon', target: 'google', active: false }, // TODO(burdon): Should not contribute to force.
@@ -82,7 +82,7 @@ const testRelationships: Record<
   ],
 
   // TODO(burdon): Limit graph view to selected relationship types.
-  [DataType.HasConnection.typename]: [
+  [Type.getTypename(DataType.HasConnection.HasConnection)]: [
     // prettier-ignore
     { kind: 'partner', source: 'dxos', target: 'ink_and_switch' },
     { kind: 'partner', source: 'dxos', target: 'effectful' },
@@ -186,7 +186,7 @@ export const createTestTranscription = (): DataType.Message[] => {
 };
 
 // TODO(wittjosiah): Find way to use data generator to generate substantive messages that could be summarized.
-export const createTestMailbox = (contacts?: DataType.Person[]): DataType.Message[] => {
+export const createTestMailbox = (contacts?: DataType.Person.Person[]): DataType.Message[] => {
   const timeInterval = 1000;
   const messages: DataType.Message[] = [
     {

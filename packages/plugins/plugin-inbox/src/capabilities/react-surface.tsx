@@ -15,7 +15,7 @@ import {
   createSurface,
   useIntentDispatcher,
 } from '@dxos/app-framework';
-import { Obj } from '@dxos/echo';
+import { Obj, Type } from '@dxos/echo';
 import { AttentionAction } from '@dxos/plugin-attention/types';
 import { ATTENDABLE_PATH_SEPARATOR, DeckAction } from '@dxos/plugin-deck/types';
 import { Filter, fullyQualifiedId, getSpace, useQuery, useQueue, useSpace } from '@dxos/react-client/echo';
@@ -108,7 +108,7 @@ export default () =>
     createSurface({
       id: `${meta.id}/contact-related`,
       role: 'related',
-      filter: (data): data is { subject: DataType.Person } => Obj.instanceOf(DataType.Person, data.subject),
+      filter: (data): data is { subject: DataType.Person.Person } => Obj.instanceOf(DataType.Person.Person, data.subject),
       component: ({ data: { subject: contact } }) => {
         const { dispatchPromise: dispatch } = useIntentDispatcher();
         const space = useSpace();
@@ -154,15 +154,15 @@ export default () =>
     createSurface({
       id: `${meta.id}/organization-related`,
       role: 'related',
-      filter: (data): data is { subject: DataType.Organization } => Obj.instanceOf(DataType.Organization, data.subject),
+      filter: (data): data is { subject: DataType.Organization.Organization } => Obj.instanceOf(DataType.Organization.Organization, data.subject),
       component: ({ data: { subject: organization } }) => {
         const { dispatch } = useIntentDispatcher();
         const space = getSpace(organization);
         const defaultSpace = useSpace();
-        const currentSpaceContacts = useQuery(space, Filter.type(DataType.Person));
+        const currentSpaceContacts = useQuery(space, Filter.type(DataType.Person.Person));
         const defaultSpaceContacts = useQuery(
           defaultSpace === space ? undefined : defaultSpace,
-          Filter.type(DataType.Person),
+          Filter.type(DataType.Person.Person),
         );
         const contacts = [...(currentSpaceContacts ?? []), ...(defaultSpaceContacts ?? [])];
         const related = contacts.filter((contact) =>
@@ -173,18 +173,18 @@ export default () =>
         const defaultSpaceViews = useQuery(defaultSpace, Filter.type(DataType.View));
         const currentSpaceContactTable = currentSpaceViews.find(
           (view) =>
-            getTypenameFromQuery(view.query.ast) === DataType.Person.typename &&
+            getTypenameFromQuery(view.query.ast) === Type.getTypename(DataType.Person.Person) &&
             Obj.instanceOf(Table.Table, view.presentation.target),
         );
         const defaultSpaceContactTable = defaultSpaceViews.find(
           (view) =>
-            getTypenameFromQuery(view.query.ast) === DataType.Person.typename &&
+            getTypenameFromQuery(view.query.ast) === Type.getTypename(DataType.Person.Person) &&
             Obj.instanceOf(Table.Table, view.presentation.target),
         );
 
         // TODO(wittjosiah): Generalized way of handling related objects navigation.
         const handleContactClick = useCallback(
-          (contact: DataType.Person) =>
+          (contact: DataType.Person.Person) =>
             Effect.gen(function* () {
               const view = currentSpaceContacts.includes(contact) ? currentSpaceContactTable : defaultSpaceContactTable;
               yield* dispatch(

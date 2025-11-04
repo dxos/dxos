@@ -19,4 +19,4 @@ export const Text = Schema.Struct({
 
 export interface Text extends Schema.Schema.Type<typeof Text> {}
 
-export const makeText = (content = '', id?: ObjectId) => Obj.make(Text, { id, content });
+export const make = (content = '', id?: ObjectId) => Obj.make(Text, { id, content });

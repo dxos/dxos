@@ -39,7 +39,7 @@ const rollOrg = () => ({
   description: faker.lorem.paragraph(),
   image: faker.image.url(),
   website: faker.internet.url(),
-  status: faker.helpers.arrayElement(DataType.OrganizationStatusOptions).id as DataType.Organization['status'],
+  status: faker.helpers.arrayElement(DataType.Organization.OrganizationStatusOptions).id as DataType.Organization.Organization['status'],
 });
 
 const StorybookKanban = () => {
@@ -150,7 +150,7 @@ const meta = {
     withPluginManager({
       plugins: [
         ClientPlugin({
-          types: [DataType.Organization, DataType.Person, DataType.View, Kanban.Kanban],
+          types: [DataType.Organization.Organization, DataType.Person.Person, DataType.View, Kanban.Kanban],
           onClientInitialized: async ({ client }) => {
             await client.halo.createIdentity();
             const space = await client.spaces.create();
@@ -158,14 +158,14 @@ const meta = {
             const { view } = await Kanban.makeView({
               client,
               space,
-              typename: DataType.Organization.typename,
+              typename: Type.getTypename(DataType.Organization.Organization),
               pivotFieldName: 'status',
             });
             space.db.add(view);
 
             // TODO(burdon): Replace with sdk/schema/testing.
             Array.from({ length: 80 }).map(() => {
-              return space.db.add(Obj.make(DataType.Organization, rollOrg()));
+              return space.db.add(Obj.make(DataType.Organization.Organization, rollOrg()));
             });
           },
         }),

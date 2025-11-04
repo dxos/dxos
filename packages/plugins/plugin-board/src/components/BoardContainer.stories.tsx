@@ -38,13 +38,13 @@ const createBoard = () =>
   });
 
 const createOrg = () =>
-  Obj.make(DataType.Organization, {
+  Obj.make(DataType.Organization.Organization, {
     name: faker.commerce.productName(),
     description: faker.lorem.paragraph(),
     image: faker.image.url(),
     website: faker.internet.url(),
     // TODO(burdon): Fix.
-    // status: faker.helpers.arrayElement(DataType.OrganizationStatusOptions).id,
+    // status: faker.helpers.arrayElement(DataType.Organization.OrganizationStatusOptions).id,
   });
 
 const DefaultStory = () => {
@@ -79,7 +79,7 @@ const meta = {
     withPluginManager({
       plugins: [
         ClientPlugin({
-          types: [DataType.Organization, DataType.Person, Board.Board],
+          types: [DataType.Organization.Organization, DataType.Person.Person, Board.Board],
           onClientInitialized: async ({ client }) => {
             await client.halo.createIdentity();
             const space = await client.spaces.create();

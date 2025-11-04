@@ -30,10 +30,10 @@ export default (context: PluginContext) =>
         Effect.gen(function* () {
           const { dispatch } = context.getCapability(Capabilities.IntentDispatcher);
           const { object } = yield* dispatch(
-            createIntent(TableAction.Create, { space, typename: DataType.Task.typename }),
+            createIntent(TableAction.Create, { space, typename: Type.getTypename(DataType.Task.Task) }),
           );
           space.db.add(object);
-          space.properties.staticRecords = [DataType.Task.typename];
+          space.properties.staticRecords = [Type.getTypename(DataType.Task.Task)];
         }),
     }),
     createResolver({

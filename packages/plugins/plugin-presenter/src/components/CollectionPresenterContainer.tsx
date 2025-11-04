@@ -13,7 +13,7 @@ import { useExitPresenter } from '../useExitPresenter';
 
 import { Layout, PageNumber, Pager } from './Presenter';
 
-const CollectionPresenterContainer: FC<{ collection: DataType.Collection }> = ({ collection }) => {
+const CollectionPresenterContainer: FC<{ collection: DataType.Collection.Collection }> = ({ collection }) => {
   const [slide, setSlide] = useState(0);
 
   const { running } = useContext(PresenterContext);

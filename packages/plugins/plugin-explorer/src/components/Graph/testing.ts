@@ -11,9 +11,9 @@ import { range } from '@dxos/util';
 const getObject = (objects: Obj.Any[]) => objects[Math.floor(Math.random() * objects.length)];
 
 const defaultTypes: TypeSpec[] = [
-  { type: DataType.Organization, count: 5 },
+  { type: DataType.Organization.Organization, count: 5 },
   { type: DataType.Project.Project, count: 5 },
-  { type: DataType.Person, count: 10 },
+  { type: DataType.Person.Person, count: 10 },
 ];
 
 export type GenerateOptions = {
@@ -38,13 +38,13 @@ export const generate = async (
   await createObjects(spec);
 
   // Add relations between objects.
-  const { objects: contacts } = await space.db.query(Query.type(DataType.Person)).run();
+  const { objects: contacts } = await space.db.query(Query.type(DataType.Person.Person)).run();
   for (const _ of range(relations.count)) {
     const source = getObject(contacts);
     const target = getObject(contacts);
     if (source.id !== target.id) {
       space.db.add(
-        Relation.make(DataType.HasRelationship, {
+        Relation.make(DataType.HasRelationship.HasRelationship, {
           [Relation.Source]: source,
           [Relation.Target]: target,
           kind: relations.kind,

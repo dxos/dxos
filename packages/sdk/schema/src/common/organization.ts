@@ -4,7 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Type } from '@dxos/echo';
+import { Obj, Type } from '@dxos/echo';
 import {
   Format,
   FormatAnnotation,
@@ -107,3 +107,5 @@ export const LegacyOrganization = OrganizationSchema.pipe(
 );
 
 export interface Organization extends Schema.Schema.Type<typeof Organization> {}
+
+export const make = (props: Partial<Obj.MakeProps<typeof Organization>> = {}) => Obj.make(Organization, props);
