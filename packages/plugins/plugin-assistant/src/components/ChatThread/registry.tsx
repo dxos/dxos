@@ -154,13 +154,13 @@ const blockToMarkdownImpl = (context: MessageThreadContext, message: DataType.Me
     //   return `<toolkit />`;
     // }
     case 'toolCall': {
-      context.updateWidget(block.toolCallId, {
+      context.updateWidget<{ blocks: ContentBlock.Any[] }>(block.toolCallId, {
         blocks: [block],
       });
       return `<toolCall id="${block.toolCallId}" />`;
     }
     case 'toolResult': {
-      context.updateWidget(block.toolCallId, ({ blocks = [] }: { blocks: ContentBlock.Any[] }) => ({
+      context.updateWidget<{ blocks: ContentBlock.Any[] }>(block.toolCallId, ({ blocks = [] }) => ({
         blocks: [...blocks, block],
       }));
       break;

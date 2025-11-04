@@ -25,7 +25,10 @@ import { type ChatEvent } from '../Chat';
 import { blockToMarkdown, componentRegistry } from './registry';
 import { MessageSyncer, type TextModel } from './sync';
 
-export type ChatThreadController = Pick<MarkdownStreamController, 'setContext' | 'scrollToBottom'>;
+export type ChatThreadController = Pick<
+  MarkdownStreamController,
+  'setContext' | 'scrollToBottom' | 'navigatePrevious' | 'navigateNext'
+>;
 
 export type ChatThreadProps = ThemedClassName<
   {
@@ -34,12 +37,12 @@ export type ChatThreadProps = ThemedClassName<
     error?: Error;
     overscroll?: number;
     onEvent?: (event: ChatEvent) => void;
-  } & Pick<MarkdownStreamProps, 'cursor' | 'fadeIn' | 'overscroll'>
+  } & Pick<MarkdownStreamProps, 'cursor' | 'fadeIn' | 'debug'>
 >;
 
 export const ChatThread = forwardRef<ChatThreadController | null, ChatThreadProps>(
   (
-    { classNames, identity, messages = [], error, cursor = false, fadeIn = true, overscroll, onEvent },
+    { classNames, identity, messages = [], error, cursor = false, fadeIn = true, debug = false, onEvent },
     forwardedRef,
   ) => {
     const userHue = useMemo(
@@ -90,7 +93,7 @@ export const ChatThread = forwardRef<ChatThreadController | null, ChatThreadProp
           registry={componentRegistry}
           cursor={cursor}
           fadeIn={fadeIn}
-          overscroll={overscroll}
+          debug={debug}
           onEvent={handleEvent}
         />
       </div>

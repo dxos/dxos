@@ -227,29 +227,49 @@ const ChatPrompt = ({
           keymap.of(
             [
               {
-                key: 'cmd-d',
+                key: 'Mod-d',
                 preventDefault: true,
                 run: () => {
                   event.emit({ type: 'toggle-debug' });
                   return true;
                 },
               },
-              expandable && {
-                key: 'cmd-ArrowUp',
+              {
+                key: 'Mod-ArrowUp',
                 preventDefault: true,
                 run: () => {
-                  event.emit({ type: 'thread-open' });
+                  event.emit({ type: 'nav-previous' });
                   return true;
                 },
               },
-              expandable && {
-                key: 'cmd-ArrowDown',
+              {
+                key: 'Mod-ArrowDown',
                 preventDefault: true,
                 run: () => {
-                  event.emit({ type: 'thread-close' });
+                  event.emit({ type: 'nav-next' });
                   return true;
                 },
               },
+              ...(expandable
+                ? [
+                    {
+                      key: 'Shift-Mod-ArrowUp',
+                      preventDefault: true,
+                      run: () => {
+                        event.emit({ type: 'thread-open' });
+                        return true;
+                      },
+                    },
+                    {
+                      key: 'Shift-Mod-ArrowDown',
+                      preventDefault: true,
+                      run: () => {
+                        event.emit({ type: 'thread-close' });
+                        return true;
+                      },
+                    },
+                  ]
+                : []),
             ].filter(isTruthy),
           ),
         ),
@@ -344,18 +364,24 @@ ChatPrompt.displayName = 'Chat.Prompt';
 type ChatThreadProps = Omit<NaturalChatThreadProps, 'identity' | 'messages' | 'tools'>;
 
 const ChatThread = (props: ChatThreadProps) => {
-  const { event, messages, processor } = useChatContext(ChatThread.displayName);
+  const { debug, event, messages, processor } = useChatContext(ChatThread.displayName);
   const identity = useIdentity();
   const error = useRxValue(processor.error).pipe(Option.getOrUndefined);
 
-  const scrollerRef = useRef<ChatThreadController | null>(null);
+  const controllerRef = useRef<ChatThreadController | null>(null);
   useEffect(
     () =>
       event.on((event) => {
         switch (event.type) {
           case 'submit':
           case 'scroll-to-bottom':
-            scrollerRef.current?.scrollToBottom();
+            controllerRef.current?.scrollToBottom();
+            break;
+          case 'nav-previous':
+            controllerRef.current?.navigatePrevious();
+            break;
+          case 'nav-next':
+            controllerRef.current?.navigateNext();
             break;
         }
       }),
@@ -376,11 +402,12 @@ const ChatThread = (props: ChatThreadProps) => {
   return (
     <NaturalChatThread
       {...props}
-      ref={scrollerRef}
       identity={identity}
       messages={messages}
       error={error}
+      debug={debug}
       onEvent={handleEvent}
+      ref={controllerRef}
     />
   );
 };

@@ -59,6 +59,6 @@ export class TableManager {
     await this.page.getByLabel(`format ${format}`).click();
     await this.page.getByPlaceholder('Property label.').click();
     await this.page.getByPlaceholder('Property label.').fill(label);
-    await this.page.getByRole('button', { name: 'button save' }).click();
+    await this.page.getByRole('button', { name: 'save button' }).click();
   }
 }

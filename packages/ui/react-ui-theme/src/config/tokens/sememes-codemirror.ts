@@ -39,12 +39,12 @@ export const codemirrorSememes = {
     dark: ['cyan', 600],
   },
   // TODO(burdon): Factor out defs in common with sheet.
-  cmComment: {
-    light: ['neutral', 950],
-    dark: ['neutral', 50],
+  cmCommentText: {
+    light: ['neutral', 50],
+    dark: ['neutral', 950],
   },
   cmCommentSurface: {
-    light: ['green', 200],
-    dark: ['green', 700],
+    light: ['amber', 700],
+    dark: ['amber', 200],
   },
 } satisfies ColorSememes;

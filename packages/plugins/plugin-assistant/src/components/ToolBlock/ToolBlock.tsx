@@ -24,13 +24,6 @@ export type ToolBlockProps = XmlWidgetProps<{
 export const ToolBlock = ({ view, blocks = [] }: ToolBlockProps) => {
   const { t } = useTranslation(meta.id);
 
-  const handleChangeOpen = useCallback(() => {
-    setTimeout(() => {
-      // Measure after animation.
-      view?.requestMeasure();
-    }, 1_000);
-  }, [view]);
-
   const items = useMemo<ToolContainerParams['items']>(() => {
     let lastToolCall: { tool: Tool.Any | undefined; block: ContentBlock.ToolCall } | undefined;
     // TODO(burdon): Get from context?
@@ -91,6 +84,13 @@ export const ToolBlock = ({ view, blocks = [] }: ToolBlockProps) => {
       .filter(isNonNullable);
   }, [blocks]);
 
+  const handleChangeOpen = useCallback(() => {
+    setTimeout(() => {
+      // Measure after animation.
+      view?.requestMeasure();
+    }, 1_000);
+  }, [view]);
+
   if (!items.length) {
     return null;
   }
@@ -108,6 +108,7 @@ export const ToolContainer = ({ items, onChangeOpen }: ToolContainerParams) => {
   const tabsRef = useRef<HTMLDivElement>(null);
   const [selected, setSelected] = useState(0);
   const [open, setOpen] = useState(false);
+
   useEffect(() => {
     onChangeOpen?.(open);
     if (open) {

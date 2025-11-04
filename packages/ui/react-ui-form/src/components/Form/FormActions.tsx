@@ -37,7 +37,7 @@ export const FormActions = ({ readonly, onCancel, outerSpacing = true }: FormAct
       )}
     >
       {onCancel && !readonly && (
-        <IconButton data-testid='cancel-button' icon='ph--x--regular' label={t('button cancel')} onClick={onCancel} />
+        <IconButton data-testid='cancel-button' icon='ph--x--regular' label={t('cancel button')} onClick={onCancel} />
       )}
       {handleSave && (
         <IconButton
@@ -45,7 +45,7 @@ export const FormActions = ({ readonly, onCancel, outerSpacing = true }: FormAct
           data-testid='save-button'
           disabled={!canSave}
           icon='ph--check--regular'
-          label={t('button save')}
+          label={t('save button')}
           onClick={handleSave}
         />
       )}
