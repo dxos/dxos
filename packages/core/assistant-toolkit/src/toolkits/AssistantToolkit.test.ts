@@ -60,9 +60,7 @@ const blueprint = Blueprint.make({
   key: 'dxos.org/blueprint/assistant',
   name: 'Assistant',
   tools: Blueprint.toolDefinitions({ tools: AssistantToolkit.tools }),
-  instructions: Template.make({
-    source: '',
-  }),
+  instructions: Template.make(),
 });
 
 describe('AssistantToolkit', () => {

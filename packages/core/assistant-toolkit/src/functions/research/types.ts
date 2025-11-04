@@ -12,7 +12,7 @@ export const ResearchDataTypes = [
   DataType.Event,
   DataType.LegacyOrganization,
   DataType.LegacyPerson,
-  DataType.Project,
+  DataType.Project.Project,
   DataType.Task,
   DataType.Text,
 

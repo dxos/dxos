@@ -12,7 +12,7 @@ const getObject = (objects: Obj.Any[]) => objects[Math.floor(Math.random() * obj
 
 const defaultTypes: TypeSpec[] = [
   { type: DataType.Organization, count: 5 },
-  { type: DataType.Project, count: 5 },
+  { type: DataType.Project.Project, count: 5 },
   { type: DataType.Person, count: 10 },
 ];
 

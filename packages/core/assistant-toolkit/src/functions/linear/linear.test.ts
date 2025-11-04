@@ -37,7 +37,7 @@ const TestLayer = Layer.mergeAll(
       AiServiceTestingPreset('direct'),
       TestDatabaseLayer({
         // indexing: { vector: true },
-        types: [DataType.Task, DataType.Person, DataType.Project],
+        types: [DataType.Task, DataType.Person, DataType.Project.Project],
         storagePath: testStoragePath({ name: 'feed-test-13' }),
       }),
       CredentialsService.layerConfig([{ service: 'linear.app', apiKey: Config.redacted('LINEAR_API_KEY') }]),
@@ -66,7 +66,7 @@ describe('Linear', { timeout: 600_000 }, () => {
           count: persons.length,
           people: persons.map((_) => `(${_.id}) ${Obj.getLabel(_)} [${Obj.getKeys(_, LINEAR_ID_KEY)[0]?.id}]`),
         });
-        const { objects: projects } = yield* DatabaseService.runQuery(Query.type(DataType.Project));
+        const { objects: projects } = yield* DatabaseService.runQuery(Query.type(DataType.Project.Project));
         console.log('projects', {
           count: projects.length,
           projects: projects.map((_) => `(${_.id}) ${Obj.getLabel(_)} [${Obj.getKeys(_, LINEAR_ID_KEY)[0]?.id}]`),

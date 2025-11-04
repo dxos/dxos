@@ -4,6 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
+import { Obj } from '@dxos/echo';
 import { Type } from '@dxos/echo';
 import { Format, GeneratorAnnotation, LabelAnnotation } from '@dxos/echo/internal';
 
@@ -30,4 +31,11 @@ export const Project = Schema.Struct({
   ItemAnnotation.set(true),
   IconAnnotation.set('ph--check-square-offset--regular'),
 );
+
 export interface Project extends Schema.Schema.Type<typeof Project> {}
+
+export const make = (props: Partial<Obj.MakeProps<typeof Project>> = {}) =>
+  Obj.make(Project, {
+    collections: [],
+    ...props,
+  });

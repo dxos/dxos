@@ -57,7 +57,7 @@ describe('Generator', () => {
     }
 
     {
-      const objectGenerator = createGenerator(generator, DataType.Project, { force: true });
+      const objectGenerator = createGenerator(generator, DataType.Project.Project, { force: true });
       const object = objectGenerator.createObject();
       expect(object).to.exist;
     }
@@ -68,12 +68,12 @@ describe('Generator', () => {
     const createObjects = createObjectFactory(db, generator);
 
     // Register static schema.
-    db.graph.schemaRegistry.addSchema([DataType.Organization, DataType.Project, DataType.Person]);
+    db.graph.schemaRegistry.addSchema([DataType.Organization, DataType.Project.Project, DataType.Person]);
 
     const spec: TypeSpec[] = [
       { type: DataType.Organization, count: 5 },
       { type: DataType.Person, count: 10 },
-      { type: DataType.Project, count: 5 },
+      { type: DataType.Project.Project, count: 5 },
     ];
 
     await createObjects(spec);
@@ -87,7 +87,7 @@ describe('Generator', () => {
     // Register mutable schema.
     const [organization] = await db.schemaRegistry.register([DataType.Organization]);
     const [person] = await db.schemaRegistry.register([DataType.Person]);
-    const [project] = await db.schemaRegistry.register([DataType.Project]);
+    const [project] = await db.schemaRegistry.register([DataType.Project.Project]);
 
     const spec: TypeSpec[] = [
       { type: organization, count: 5 },

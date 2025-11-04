@@ -60,7 +60,7 @@ const meta = {
         DataType.View,
         DataType.HasRelationship,
         DataType.Organization,
-        DataType.Project,
+        DataType.Project.Project,
         DataType.Person,
       ],
     }),

@@ -170,7 +170,7 @@ const mapLinearIssue = (issue: LinearIssue, { teamId }: { teamId: string }): Dat
     project: !issue.project
       ? undefined
       : Ref.make(
-          DataType.makeProject({
+          DataType.Project.make({
             [Obj.Meta]: {
               keys: [
                 {

@@ -75,7 +75,7 @@ export interface Blueprint extends Schema.Schema.Type<typeof Blueprint> {}
  */
 export const make = ({
   tools = [],
-  instructions = Template.make({ source: '' }),
+  instructions = Template.make(),
   ...props
 }: Pick<Blueprint, 'key' | 'name'> & Partial<Blueprint>) => Obj.make(Blueprint, { tools, instructions, ...props });
 

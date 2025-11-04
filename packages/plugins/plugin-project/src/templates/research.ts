@@ -8,7 +8,7 @@ import { Markdown } from '@dxos/plugin-markdown/types';
 import { type Space } from '@dxos/react-client/echo';
 import { DataType, createView } from '@dxos/schema';
 
-export const createResearchProject = async (space: Space, name?: string): Promise<DataType.Project | null> => {
+export const createResearchProject = async (space: Space, name?: string): Promise<DataType.Project.Project | null> => {
   const { objects: mailboxes } = await space.db.query(Filter.type(Mailbox.Mailbox)).run();
   if (!mailboxes.length) {
     return null;
@@ -48,7 +48,7 @@ export const createResearchProject = async (space: Space, name?: string): Promis
     presentation: Obj.make(DataType.Collection, { objects: [] }),
   });
 
-  return DataType.makeProject({
+  return DataType.Project.make({
     name: name ?? 'Research',
     collections: [mailboxView, contactsView, organizationsView, notesView].map((view) => Ref.make(view)),
   });

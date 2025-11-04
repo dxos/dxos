@@ -79,7 +79,8 @@ export default () =>
     createSurface({
       id: `${meta.id}/schema-popover--project`,
       role: ['card--popover', 'card--intrinsic', 'card--transclusion', 'card--extrinsic', 'card'],
-      filter: (data): data is { subject: DataType.Project } => Obj.instanceOf(DataType.Project, data.subject),
+      filter: (data): data is { subject: DataType.Project.Project } =>
+        Obj.instanceOf(DataType.Project.Project, data.subject),
       component: ({ data, role }) => {
         const activeSpace = useActiveSpace();
         return <ProjectCard subject={data.subject} role={role} activeSpace={activeSpace} />;

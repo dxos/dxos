@@ -70,7 +70,7 @@ export const translations = [
         'typename label_other': 'People',
         'object name placeholder': 'New person',
       },
-      [Type.getTypename(DataType.Project)]: {
+      [DataType.Project.Project.typename]: {
         'typename label': 'Project',
         'typename label_zero': 'Projects',
         'typename label_one': 'Project',

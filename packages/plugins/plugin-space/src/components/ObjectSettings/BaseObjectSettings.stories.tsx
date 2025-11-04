@@ -21,7 +21,7 @@ const DefaultStory = () => {
 
   useEffect(() => {
     if (space && !object) {
-      const object = space.db.add(DataType.makeProject());
+      const object = space.db.add(DataType.Project.make());
       setObject(object as Obj.Any);
     }
   }, [space, object]);
@@ -42,7 +42,7 @@ const meta = {
     withClientProvider({
       createIdentity: true,
       createSpace: true,
-      types: [DataType.Project, Tag.Tag],
+      types: [DataType.Project.Project, Tag.Tag],
       onCreateSpace: async ({ space }) => {
         space.db.add(Tag.make({ label: 'Tag 1' }));
         space.db.add(Tag.make({ label: 'Tag 2' }));

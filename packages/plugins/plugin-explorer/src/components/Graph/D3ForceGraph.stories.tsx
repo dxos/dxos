@@ -59,7 +59,7 @@ const meta = {
         Graph.Graph,
         DataType.View,
         DataType.Organization,
-        DataType.Project,
+        DataType.Project.Project,
         DataType.Person,
         DataType.HasRelationship,
       ],

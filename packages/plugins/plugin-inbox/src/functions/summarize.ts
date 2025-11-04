@@ -43,7 +43,7 @@ export default defineFunction({
   handler: Effect.fnUntraced(
     function* ({ data: { messages } }) {
       const GraphWriterToolkit = makeGraphWriterToolkit({
-        schema: [DataType.Person, DataType.Project, DataType.Organization],
+        schema: [DataType.Person, DataType.Project.Project, DataType.Organization],
       });
       const GraphWriterHandler = makeGraphWriterHandler(GraphWriterToolkit);
 

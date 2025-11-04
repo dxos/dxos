@@ -17,7 +17,7 @@ export namespace Project {
       template: Schema.optional(Schema.Literal('org-research')),
     }),
     output: Schema.Struct({
-      object: DataType.Project,
+      object: DataType.Project.Project,
     }),
   }) {}
 }

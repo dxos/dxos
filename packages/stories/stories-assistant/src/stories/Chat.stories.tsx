@@ -572,7 +572,7 @@ export const WithLinearSync: Story = {
   decorators: getDecorators({
     plugins: [],
     config: config.remote,
-    types: [DataType.Task, DataType.Person, DataType.Project],
+    types: [DataType.Task, DataType.Person, DataType.Project.Project],
     accessTokens: accessTokensFromEnv({
       'linear.app': VITE_LINEAR_API_KEY,
     }),
@@ -725,7 +725,7 @@ export const WithProject: Story = {
       DataType.Message,
       DataType.Organization,
       DataType.Person,
-      DataType.Project,
+      DataType.Project.Project,
       DataType.View,
       Mailbox.Mailbox,
     ],
@@ -856,7 +856,7 @@ export const WithProject: Story = {
       });
 
       space.db.add(
-        DataType.makeProject({
+        DataType.Project.make({
           name: 'Investor Research',
           collections: [mailboxView, contactsView, organizationsView, notesView].map((view) => Ref.make(view)),
         }),

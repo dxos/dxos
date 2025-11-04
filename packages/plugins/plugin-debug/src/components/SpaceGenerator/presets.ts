@@ -202,7 +202,7 @@ export const generator = () => ({
           });
 
           return space.db.add(
-            DataType.makeProject({
+            DataType.Project.make({
               name: 'Investor Research',
               collections: [mailboxView, contactsView, organizationsView, notesView].map((view) => Ref.make(view)),
             }),

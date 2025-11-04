@@ -88,7 +88,7 @@ export default (context: PluginContext) => [
       intent: AssistantAction.CreateBlueprint,
       resolve: ({ key, name, description }) => ({
         data: {
-          object: Blueprint.make({ key, name, description, instructions: Template.make({ source: '' }) }),
+          object: Blueprint.make({ key, name, description, instructions: Template.make() }),
         },
       }),
     }),

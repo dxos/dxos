@@ -45,7 +45,7 @@ ProjectRoot.displayName = PROJECT_ROOT;
 //
 
 type ProjectContentProps = {
-  project: DataType.Project;
+  project: DataType.Project.Project;
 };
 
 const ProjectContent = ({ project }: ProjectContentProps) => {

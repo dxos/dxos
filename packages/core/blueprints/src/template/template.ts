@@ -48,7 +48,11 @@ export const Template = Schema.Struct({
 
 export interface Template extends Schema.Schema.Type<typeof Template> {}
 
-export const make = ({ source, inputs = [], id }: { source: string; inputs?: Input[]; id?: ObjectId }): Template => ({
+export const make = ({
+  source,
+  inputs = [],
+  id,
+}: { source?: string; inputs?: Input[]; id?: ObjectId } = {}): Template => ({
   source: Ref.make(DataType.makeText(source, id)),
   inputs,
 });

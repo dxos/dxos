@@ -34,7 +34,7 @@ faker.seed(0);
 
 const DefaultStory = () => {
   const space = useSpace();
-  const projects = useQuery(space, Filter.type(DataType.Project));
+  const projects = useQuery(space, Filter.type(DataType.Project.Project));
   const project = projects[0];
 
   if (!project) {
@@ -59,7 +59,7 @@ const meta = {
         ClientPlugin({
           types: [
             Tag.Tag,
-            DataType.Project,
+            DataType.Project.Project,
             DataType.View,
             DataType.Collection,
             DataType.Organization,
@@ -77,7 +77,7 @@ const meta = {
             const tagDxn = Obj.getDXN(tag).toString();
 
             // Create a project
-            const project = DataType.makeProject({ collections: [] });
+            const project = DataType.Project.make({ collections: [] });
 
             // Create a view for Contacts
             const personView = createView({
@@ -106,8 +106,8 @@ const meta = {
             // Create a view for Project-Projects
             const projectView = createView({
               name: 'Projects (not the UI component)',
-              query: Query.select(Filter.type(DataType.Project)),
-              jsonSchema: Type.toJsonSchema(DataType.Project),
+              query: Query.select(Filter.type(DataType.Project.Project)),
+              jsonSchema: Type.toJsonSchema(DataType.Project.Project),
               presentation: project,
             });
 
@@ -174,7 +174,7 @@ const meta = {
 
             // Generate sample Projects
             Array.from({ length: 3 }).forEach(() => {
-              const nestedProject = DataType.makeProject({
+              const nestedProject = DataType.Project.make({
                 name: faker.commerce.productName(),
                 description: faker.lorem.sentence(),
               });

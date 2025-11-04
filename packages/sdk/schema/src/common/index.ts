@@ -23,7 +23,7 @@ export const DataTypes: (Type.Obj.Any | Type.Relation.Any)[] = [
   DataType.Event,
   DataType.Organization,
   DataType.Person,
-  DataType.Project,
+  DataType.Project.Project,
   DataType.QueryCollection,
   DataType.StoredSchema,
   DataType.Task,

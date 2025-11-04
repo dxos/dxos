@@ -29,7 +29,7 @@ const StorybookProjectItem = ({ item, projectionModel }: ItemProps) => {
 
 const DefaultStory = () => {
   const { space } = useClientProvider();
-  const projects = useQuery(space, Filter.type(DataType.Project));
+  const projects = useQuery(space, Filter.type(DataType.Project.Project));
   const project = projects[0];
 
   const handleAddColumn = useCallback(() => {
@@ -65,7 +65,7 @@ const DefaultStory = () => {
 
 const MutationsStory = () => {
   const { space } = useClientProvider();
-  const projects = useQuery(space, Filter.type(DataType.Project));
+  const projects = useQuery(space, Filter.type(DataType.Project.Project));
   const contacts = useQuery(space, Filter.type(DataType.Person));
   const project = projects[0];
 
@@ -130,12 +130,12 @@ const meta = {
   decorators: [
     withTheme,
     withClientProvider({
-      types: [DataType.Project, DataType.View, DataType.Collection, DataType.Person],
+      types: [DataType.Project.Project, DataType.View, DataType.Collection, DataType.Person],
       createIdentity: true,
       createSpace: true,
       onCreateSpace: async ({ space }) => {
         // Create a project
-        const project = DataType.makeProject({
+        const project = DataType.Project.make({
           collections: [],
         });
 

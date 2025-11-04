@@ -201,7 +201,7 @@ export const SpacePlugin = definePlugin<SpacePluginOptions>(
             DataType.Event,
             DataType.Organization,
             DataType.Person,
-            DataType.Project,
+            DataType.Project.Project,
             DataType.Task,
           ]),
       }),

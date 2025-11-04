@@ -25,7 +25,7 @@ const listItemGrid = 'grid grid-cols-subgrid col-span-5';
 
 // TODO(burdon): Standardize Object/Plugin settings.
 export type ProjectObjectSettingsProps = ThemedClassName<{
-  project: DataType.Project;
+  project: DataType.Project.Project;
 }>;
 
 /**
