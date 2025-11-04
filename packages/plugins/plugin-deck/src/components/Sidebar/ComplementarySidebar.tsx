@@ -154,9 +154,9 @@ type ComplementarySidebarPanelProps = {
   hoistStatusbar: boolean;
 };
 
-const ScrollArea = ({ children }: PropsWithChildren) => {
-  return <div className='flex flex-col grow overflow-x-hidden overflow-y-auto scrollbar-thin'>{children}</div>;
-};
+const ScrollArea = ({ children }: PropsWithChildren) => (
+  <div className='flex flex-col grow overflow-x-hidden overflow-y-auto scrollbar-thin'>{children}</div>
+);
 
 const ComplementarySidebarPanel = ({ companion, activeId, data, hoistStatusbar }: ComplementarySidebarPanelProps) => {
   const { t } = useTranslation(meta.id);

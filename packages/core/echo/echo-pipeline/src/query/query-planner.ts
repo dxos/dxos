@@ -544,12 +544,9 @@ const createRelationTraversalStep = (direction: QueryPlan.RelationTraversal['dir
   },
 });
 
-const isTrivialTypenameFilter = (filter: QueryAST.Filter): boolean => {
-  return (
-    filter.type === 'object' &&
-    filter.typename !== null &&
-    Object.keys(filter.props).length === 0 &&
-    (filter.id === undefined || filter.id.length === 0) &&
-    (filter.foreignKeys === undefined || filter.foreignKeys.length === 0)
-  );
-};
+const isTrivialTypenameFilter = (filter: QueryAST.Filter): boolean =>
+  filter.type === 'object' &&
+  filter.typename !== null &&
+  Object.keys(filter.props).length === 0 &&
+  (filter.id === undefined || filter.id.length === 0) &&
+  (filter.foreignKeys === undefined || filter.foreignKeys.length === 0);

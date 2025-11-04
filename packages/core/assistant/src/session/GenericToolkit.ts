@@ -70,18 +70,16 @@ export type Requirements<T extends Any> = T extends GenericToolkit<infer _TR, in
 export const make = <Tools extends Record<string, Tool.Any>, E, R>(
   toolkit: Toolkit.Toolkit<Tools>,
   layer: Layer.Layer<Tool.HandlersFor<Tools>, E, R>,
-): GenericToolkit<E, R> => {
-  return {
-    [TypeId]: TypeId,
-    toolkit: toolkit as any,
-    layer: layer as any,
-    handlers: toolkit.pipe(Effect.provide(layer)) as any,
-    pipe() {
-      // eslint-disable-next-line prefer-rest-params
-      return Pipeable.pipeArguments(this, arguments);
-    },
-  };
-};
+): GenericToolkit<E, R> => ({
+  [TypeId]: TypeId,
+  toolkit: toolkit as any,
+  layer: layer as any,
+  handlers: toolkit.pipe(Effect.provide(layer)) as any,
+  pipe() {
+    // eslint-disable-next-line prefer-rest-params
+    return Pipeable.pipeArguments(this, arguments);
+  },
+});
 
 /**
  * Merges multiple portable toolkits into a single portable toolkit.
@@ -95,12 +93,11 @@ export const merge = <const Toolkits extends ReadonlyArray<Any>>(
   InvocationRequirements<Toolkits[number]>,
   Failure<Toolkits[number]>,
   Requirements<Toolkits[number]>
-> => {
-  return make(
+> =>
+  make(
     Toolkit.merge(...toolkits.map((t) => t.toolkit)),
     Layer.mergeAll(...(toolkits.map((t) => t.layer) as any)),
   ) as any;
-};
 
 /**
  * Generic tools type where we cannot statically enumerate individual tools.

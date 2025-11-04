@@ -48,44 +48,40 @@ const Wrapper = ({
   validationValence,
   validationMessage,
   ...props
-}: BaseProps) => {
-  return (
-    <Input.Root {...{ validationValence }}>
-      <Input.Label srOnly={labelVisuallyHidden}>{label}</Input.Label>
+}: BaseProps) => (
+  <Input.Root {...{ validationValence }}>
+    <Input.Label srOnly={labelVisuallyHidden}>{label}</Input.Label>
 
-      {kind === 'text' && <Input.TextInput {...props} />}
-      {kind === 'pin' && <Input.PinInput {...props} />}
-      {kind === 'textarea' && <Input.TextArea {...props} />}
-      {kind === 'checkbox' && <Input.Checkbox {...props} />}
-      {kind === 'switch' && <Input.Switch {...props} />}
+    {kind === 'text' && <Input.TextInput {...props} />}
+    {kind === 'pin' && <Input.PinInput {...props} />}
+    {kind === 'textarea' && <Input.TextArea {...props} />}
+    {kind === 'checkbox' && <Input.Checkbox {...props} />}
+    {kind === 'switch' && <Input.Switch {...props} />}
 
-      <Input.DescriptionAndValidation srOnly={descriptionVisuallyHidden}>
-        {validationMessage && (
-          <>
-            <Input.Validation>{validationMessage}</Input.Validation>{' '}
-          </>
-        )}
-        <Input.Description>{description}</Input.Description>
-      </Input.DescriptionAndValidation>
-    </Input.Root>
-  );
-};
+    <Input.DescriptionAndValidation srOnly={descriptionVisuallyHidden}>
+      {validationMessage && (
+        <>
+          <Input.Validation>{validationMessage}</Input.Validation>{' '}
+        </>
+      )}
+      <Input.Description>{description}</Input.Description>
+    </Input.DescriptionAndValidation>
+  </Input.Root>
+);
 
-const DefaultStory = (props: BaseProps) => {
-  return (
-    <div className='space-b-4'>
-      <div className={mx(baseSurface, 'p-4 rounded-md')}>
-        <Wrapper {...props} />
-      </div>
-      <div className={mx('bg-cardSurface', 'p-4 rounded-md', surfaceShadow({ elevation: 'positioned' }))}>
-        <Wrapper {...props} />
-      </div>
-      <div className={mx(modalSurface, 'p-4 rounded-md', surfaceShadow({ elevation: 'dialog' }))}>
-        <Wrapper {...props} />
-      </div>
+const DefaultStory = (props: BaseProps) => (
+  <div className='space-b-4'>
+    <div className={mx(baseSurface, 'p-4 rounded-md')}>
+      <Wrapper {...props} />
     </div>
-  );
-};
+    <div className={mx('bg-cardSurface', 'p-4 rounded-md', surfaceShadow({ elevation: 'positioned' }))}>
+      <Wrapper {...props} />
+    </div>
+    <div className={mx(modalSurface, 'p-4 rounded-md', surfaceShadow({ elevation: 'dialog' }))}>
+      <Wrapper {...props} />
+    </div>
+  </div>
+);
 
 const meta = {
   title: 'ui/react-ui-core/Input',

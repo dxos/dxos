@@ -10,14 +10,12 @@ export type DiagnosticOverlayProps = {
   diagnostics: GraphDiagnostic[];
 };
 
-export const DiagnosticOverlay = ({ diagnostics }: DiagnosticOverlayProps) => {
-  return (
-    <div className='absolute inset-0 pointer-events-none'>
-      {diagnostics.map((diagnostic, index) => (
-        <div key={index} className='absolute inset-0 pointer-events-none'>
-          {diagnostic.message}
-        </div>
-      ))}
-    </div>
-  );
-};
+export const DiagnosticOverlay = ({ diagnostics }: DiagnosticOverlayProps) => (
+  <div className='absolute inset-0 pointer-events-none'>
+    {diagnostics.map((diagnostic, index) => (
+      <div key={index} className='absolute inset-0 pointer-events-none'>
+        {diagnostic.message}
+      </div>
+    ))}
+  </div>
+);

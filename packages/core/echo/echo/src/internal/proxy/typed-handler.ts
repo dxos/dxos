@@ -177,9 +177,7 @@ export class TypedReactiveHandler implements ReactiveHandler<ProxyTarget> {
 /**
  * @deprecated Use `Obj.toJSON` instead.
  */
-const toJSON = (target: ProxyTarget): any => {
-  return { '@type': 'TypedReactiveObject', ...target };
-};
+const toJSON = (target: ProxyTarget): any => ({ '@type': 'TypedReactiveObject', ...target });
 
 /**
  * Recursively set AST on all potential proxy targets.

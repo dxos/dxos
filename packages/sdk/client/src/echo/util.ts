@@ -111,8 +111,8 @@ export const createEmptyEdgeSyncState = (): PeerSyncState => ({
   unsyncedDocumentCount: 0,
 });
 
-export const getSyncSummary = (syncMap: SpaceSyncStateMap): PeerSyncState => {
-  return Object.entries(syncMap).reduce<PeerSyncState>((summary, [_spaceId, peerState]) => {
+export const getSyncSummary = (syncMap: SpaceSyncStateMap): PeerSyncState =>
+  Object.entries(syncMap).reduce<PeerSyncState>((summary, [_spaceId, peerState]) => {
     summary.missingOnLocal += peerState.missingOnLocal;
     summary.missingOnRemote += peerState.missingOnRemote;
     summary.localDocumentCount += peerState.localDocumentCount;
@@ -122,4 +122,3 @@ export const getSyncSummary = (syncMap: SpaceSyncStateMap): PeerSyncState => {
     summary.unsyncedDocumentCount += peerState.unsyncedDocumentCount;
     return summary;
   }, createEmptyEdgeSyncState());
-};

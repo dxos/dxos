@@ -31,12 +31,10 @@ export default () =>
     }),
     createResolver({
       intent: OutlinerAction.CreateTask,
-      resolve: ({ text }) => {
-        return {
-          data: {
-            object: Obj.make(DataType.Task, { title: text }),
-          },
-        };
-      },
+      resolve: ({ text }) => ({
+        data: {
+          object: Obj.make(DataType.Task, { title: text }),
+        },
+      }),
     }),
   ]);

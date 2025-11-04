@@ -477,8 +477,7 @@ const expectObjects = (echoObjects: any[], expectedObjects: any) => {
   expect(mapEchoToPlainJsObject(echoObjects)).to.deep.eq(expectedObjects);
 };
 
-const mapEchoToPlainJsObject = (array: any[]): any[] => {
-  return array.map((o) => (Array.isArray(o) ? mapEchoToPlainJsObject(o) : { ...o }));
-};
+const mapEchoToPlainJsObject = (array: any[]): any[] =>
+  array.map((o) => (Array.isArray(o) ? mapEchoToPlainJsObject(o) : { ...o }));
 
 const newTask = () => Obj.make(Testing.Task, { subTasks: [] });

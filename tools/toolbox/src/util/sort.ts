@@ -4,9 +4,7 @@
 
 import sortBy from 'lodash.sortby';
 
-const isPlainObject = (obj: any) => {
-  return Object.prototype.toString.call(obj) === '[object Object]';
-};
+const isPlainObject = (obj: any) => Object.prototype.toString.call(obj) === '[object Object]';
 
 // TODO(burdon): Replace with npm package?
 

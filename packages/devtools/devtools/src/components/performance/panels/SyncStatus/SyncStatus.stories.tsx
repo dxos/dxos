@@ -71,9 +71,7 @@ export default meta;
 type Story = StoryObj<typeof SyncStatus>;
 
 export const Default: Story = {
-  render: (args) => {
-    return <SyncStatus {...args} state={{}} />;
-  },
+  render: (args) => <SyncStatus {...args} state={{}} />,
 };
 
 export const Sync: Story = {

@@ -51,16 +51,11 @@ export const toCellIndex = (cellCoords: DxGridPosition): DxGridCellIndex =>
 // A1 notation is the fallback for numbering columns and rows.
 //
 
-export const colToA1Notation = (col: number): string => {
-  return (
-    (col >= 26 ? String.fromCharCode('A'.charCodeAt(0) + Math.floor(col / 26) - 1) : '') +
-    String.fromCharCode('A'.charCodeAt(0) + (col % 26))
-  );
-};
+export const colToA1Notation = (col: number): string =>
+  (col >= 26 ? String.fromCharCode('A'.charCodeAt(0) + Math.floor(col / 26) - 1) : '') +
+  String.fromCharCode('A'.charCodeAt(0) + (col % 26));
 
-export const rowToA1Notation = (row: number): string => {
-  return `${row + 1}`;
-};
+export const rowToA1Notation = (row: number): string => `${row + 1}`;
 
 /**
  * The size in pixels of the gap between cells
@@ -103,20 +98,12 @@ export const selectionProps = (selectionStart: DxGridPosition, selectionEnd: DxG
   return { colMin, colMax, rowMin, rowMax, plane, visible };
 };
 
-export const cellSelected = (
-  col: number,
-  row: number,
-  plane: DxGridPlane,
-  selection: DxGridSelectionProps,
-): boolean => {
-  return (
-    plane === selection.plane &&
-    col >= selection.colMin &&
-    col <= selection.colMax &&
-    row >= selection.rowMin &&
-    row <= selection.rowMax
-  );
-};
+export const cellSelected = (col: number, row: number, plane: DxGridPlane, selection: DxGridSelectionProps): boolean =>
+  plane === selection.plane &&
+  col >= selection.colMin &&
+  col <= selection.colMax &&
+  row >= selection.rowMin &&
+  row <= selection.rowMax;
 
 export const closestAction = (target: EventTarget | null): { action: string | null; actionEl: HTMLElement | null } => {
   const actionEl: HTMLElement | null = (target as HTMLElement | null)?.closest('[data-dx-grid-action]') ?? null;
@@ -146,9 +133,8 @@ export const closestCell = (target: EventTarget | null, actionEl?: HTMLElement |
   }
 };
 
-export const targetIsPlane = (target: EventTarget | null): DxGridPlane | null => {
-  return ((target as HTMLElement | null)?.getAttribute('data-dx-grid-plane') as DxGridPlane | undefined | null) ?? null;
-};
+export const targetIsPlane = (target: EventTarget | null): DxGridPlane | null =>
+  ((target as HTMLElement | null)?.getAttribute('data-dx-grid-plane') as DxGridPlane | undefined | null) ?? null;
 
 export const resolveRowPlane = (plane: DxGridPlane): 'grid' | DxGridFrozenRowsPlane => {
   switch (plane) {
@@ -210,6 +196,5 @@ export const isSameCell = (a: DxGridPositionNullable, b: DxGridPositionNullable)
   a.col === b.col &&
   a.row === b.row;
 
-export const isReadonly = (cellReadonly?: DxGridReadonlyValue) => {
-  return !(cellReadonly === false || cellReadonly === undefined);
-};
+export const isReadonly = (cellReadonly?: DxGridReadonlyValue) =>
+  !(cellReadonly === false || cellReadonly === undefined);

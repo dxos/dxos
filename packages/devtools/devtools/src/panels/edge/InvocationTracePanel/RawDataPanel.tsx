@@ -17,12 +17,13 @@ type RawDataPanelProps = {
 export const RawDataPanel: FC<ThemedClassName<RawDataPanelProps>> = ({ classNames, span, queue }) => {
   const objects = useQuery(queue, Filter.type(TraceEvent));
 
-  const combinedData = useMemo(() => {
-    return {
+  const combinedData = useMemo(
+    () => ({
       span,
       traceEvents: objects ?? [],
-    };
-  }, [span, objects]);
+    }),
+    [span, objects],
+  );
 
   const rowRenderer = ({
     rows,
@@ -38,17 +39,16 @@ export const RawDataPanel: FC<ThemedClassName<RawDataPanelProps>> = ({ className
     }[];
     stylesheet: any;
     useInlineStyles: any;
-  }) => {
-    return rows.map((row, index) => {
-      return createElement({
+  }) =>
+    rows.map((row, index) =>
+      createElement({
         node: row,
         stylesheet,
         style: {},
         useInlineStyles,
         key: index,
-      });
-    });
-  };
+      }),
+    );
 
   return (
     <SyntaxHighlighter language='json' className={classNames} renderer={rowRenderer}>

@@ -46,9 +46,11 @@ const valenceMapping = {
   fuchsia: ['internal'],
 };
 
-export const valenceAliases: ColorAliases = valenceAliasSememeStems.reduce((acc: ColorAliases, stem) => {
-  return Object.entries(valenceMapping).reduce((acc: ColorAliases, [hue, valences]) => {
-    acc[`${hue}${stem}`] = { root: valences.map((valence) => `${valence}${stem}`) };
-    return acc;
-  }, acc);
-}, {});
+export const valenceAliases: ColorAliases = valenceAliasSememeStems.reduce(
+  (acc: ColorAliases, stem) =>
+    Object.entries(valenceMapping).reduce((acc: ColorAliases, [hue, valences]) => {
+      acc[`${hue}${stem}`] = { root: valences.map((valence) => `${valence}${stem}`) };
+      return acc;
+    }, acc),
+  {},
+);

@@ -131,8 +131,8 @@ const createLayout = (type: LayoutKind, options: CommonLayoutOptions) => {
 };
 
 // TODO(burdon): Preserve existing position with Shape adapter.
-const toLayoutGraph = ({ nodes, edges }: Graph): NaturalGraph<PlainObject, PlainObject> => {
-  return new NaturalGraph<PlainObject, PlainObject>({
+const toLayoutGraph = ({ nodes, edges }: Graph): NaturalGraph<PlainObject, PlainObject> =>
+  new NaturalGraph<PlainObject, PlainObject>({
     nodes: nodes.map((node) => ({
       id: node.id,
       data: {
@@ -147,4 +147,3 @@ const toLayoutGraph = ({ nodes, edges }: Graph): NaturalGraph<PlainObject, Plain
       data: {},
     })),
   });
-};

@@ -6,8 +6,8 @@ import { transform } from '@swc/core';
 
 const wasmModule = require.resolve('@dxos/swc-log-plugin');
 
-const _runTransform = async (source: string) => {
-  return transform(source, {
+const _runTransform = async (source: string) =>
+  transform(source, {
     filename: 'test.ts',
     sourceMaps: 'inline',
     minify: false,
@@ -22,7 +22,6 @@ const _runTransform = async (source: string) => {
       target: 'esnext',
     },
   });
-};
 
 // it('transform one', async () => {
 //   const source = `

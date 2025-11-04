@@ -12,11 +12,9 @@ import { mx } from '@dxos/react-ui-theme';
 const preventDefault = (event: Event) => event.preventDefault();
 
 // TODO(burdon): Factor out.
-const Endcap = ({ children }: PropsWithChildren) => {
-  return (
-    <div className='grid w-[var(--rail-action)] h-[var(--rail-action)] items-center justify-center'>{children}</div>
-  );
-};
+const Endcap = ({ children }: PropsWithChildren) => (
+  <div className='grid w-[var(--rail-action)] h-[var(--rail-action)] items-center justify-center'>{children}</div>
+);
 
 //
 // Context
@@ -175,9 +173,9 @@ ChatDialogContent.displayName = 'ChatDialog.Content';
 
 type ChatDialogFooterProps = ThemedClassName<PropsWithChildren>;
 
-const ChatDialogFooter = ({ children, classNames }: ChatDialogFooterProps) => {
-  return <div className={mx(classNames)}>{children}</div>;
-};
+const ChatDialogFooter = ({ children, classNames }: ChatDialogFooterProps) => (
+  <div className={mx(classNames)}>{children}</div>
+);
 
 ChatDialogFooter.displayName = 'ChatDialog.Footer';
 

@@ -38,9 +38,7 @@ const Component = ({ type }: ComponentProps) => {
   return <Tree space={space} selected={object?.id} variant={type} />;
 };
 
-const DefaultStory = () => {
-  return <ClientRepeater component={Component} types={[TreeType]} createSpace />;
-};
+const DefaultStory = () => <ClientRepeater component={Component} types={[TreeType]} createSpace />;
 
 const meta = {
   title: 'plugins/plugin-explorer/Tree',

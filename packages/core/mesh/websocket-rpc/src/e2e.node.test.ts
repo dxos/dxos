@@ -18,22 +18,18 @@ describe('e2e', () => {
   test('roundtrip', async () => {
     const server = new WebsocketRpcServer<{}, ServiceTypesOf<typeof services>>({
       port: 12342,
-      onConnection: async () => {
-        return {
-          exposed: services,
-          requested: {},
-          handlers: {
-            TestService: {
-              testCall: async (request: any) => {
-                return {
-                  data: request.data,
-                };
-              },
-              voidCall: async () => {},
-            },
+      onConnection: async () => ({
+        exposed: services,
+        requested: {},
+        handlers: {
+          TestService: {
+            testCall: async (request: any) => ({
+              data: request.data,
+            }),
+            voidCall: async () => {},
           },
-        };
-      },
+        },
+      }),
     });
 
     const client = new WebsocketRpcClient<ServiceTypesOf<typeof services>, {}>({

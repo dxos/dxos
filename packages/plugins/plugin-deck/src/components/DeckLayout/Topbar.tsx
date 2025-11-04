@@ -6,6 +6,4 @@ import React from 'react';
 
 import { Banner } from './Banner';
 
-export const Topbar = () => {
-  return <Banner variant='topbar' />;
-};
+export const Topbar = () => <Banner variant='topbar' />;

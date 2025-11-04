@@ -13,27 +13,24 @@ import { type Dimension, type Point } from '../types';
 //  - https://airbnb.io/visx/gallery
 //  - https://github.com/tldraw/tldraw/blob/main/packages/editor/src/lib/primitives/Vec.ts
 
-export const createPath = (points: Point[], join = false) => {
-  return ['M', points.map(({ x, y }) => `${x},${y}`).join(' L '), join ? 'Z' : ''].join(' ');
-};
+export const createPath = (points: Point[], join = false) =>
+  ['M', points.map(({ x, y }) => `${x},${y}`).join(' L '), join ? 'Z' : ''].join(' ');
 
 /**
  * https://developer.mozilla.org/en-US/docs/Web/SVG/Tutorial/Paths
  * NOTE: Leave space around shape for line width.
  */
-export const Markers = ({ id = 'dx-marker', classNames }: ThemedClassName<{ id?: string }>) => {
-  return (
-    <>
-      <Arrow id={`${id}-arrow-start`} dir='start' classNames={classNames} />
-      <Arrow id={`${id}-arrow-end`} dir='end' classNames={classNames} />
-      <Arrow id={`${id}-triangle-start`} dir='start' closed classNames={classNames} />
-      <Arrow id={`${id}-triangle-end`} dir='end' closed classNames={classNames} />
-      <Marker id={`${id}-circle`} pos={{ x: 8, y: 8 }} size={{ width: 16, height: 16 }}>
-        <circle cx={8} cy={8} r={5} stroke={'context-stroke'} className={mx(classNames)} />
-      </Marker>
-    </>
-  );
-};
+export const Markers = ({ id = 'dx-marker', classNames }: ThemedClassName<{ id?: string }>) => (
+  <>
+    <Arrow id={`${id}-arrow-start`} dir='start' classNames={classNames} />
+    <Arrow id={`${id}-arrow-end`} dir='end' classNames={classNames} />
+    <Arrow id={`${id}-triangle-start`} dir='start' closed classNames={classNames} />
+    <Arrow id={`${id}-triangle-end`} dir='end' closed classNames={classNames} />
+    <Marker id={`${id}-circle`} pos={{ x: 8, y: 8 }} size={{ width: 16, height: 16 }}>
+      <circle cx={8} cy={8} r={5} stroke={'context-stroke'} className={mx(classNames)} />
+    </Marker>
+  </>
+);
 
 export type MarkerProps = SVGProps<SVGMarkerElement> &
   PropsWithChildren<

@@ -29,14 +29,9 @@ export const IdentityDid = Object.freeze({
 
     return new Uint8Array(base32Decode(value.slice(10), 'RFC4648'));
   },
-  isValid: (value: string): value is IdentityDid => {
-    return (
-      typeof value === 'string' && value.startsWith(DID_PREFIX + MULTIBASE_PREFIX) && value.length === ENCODED_LENGTH
-    );
-  },
-  random: (): IdentityDid => {
-    return IdentityDid.encode(randomBytes(IdentityDid.byteLength));
-  },
+  isValid: (value: string): value is IdentityDid =>
+    typeof value === 'string' && value.startsWith(DID_PREFIX + MULTIBASE_PREFIX) && value.length === ENCODED_LENGTH,
+  random: (): IdentityDid => IdentityDid.encode(randomBytes(IdentityDid.byteLength)),
 });
 
 /**

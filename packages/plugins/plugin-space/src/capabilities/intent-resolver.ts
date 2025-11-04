@@ -255,20 +255,18 @@ export default ({ context, observability, createInvitationUrl }: IntentResolverO
     }),
     createResolver({
       intent: SpaceAction.Rename,
-      resolve: ({ caller, space }) => {
-        return {
-          intents: [
-            createIntent(LayoutAction.UpdatePopover, {
-              part: 'popover',
-              subject: SPACE_RENAME_POPOVER,
-              options: {
-                anchorId: `dxos.org/ui/${caller}/${space.id}`,
-                props: space,
-              },
-            }),
-          ],
-        };
-      },
+      resolve: ({ caller, space }) => ({
+        intents: [
+          createIntent(LayoutAction.UpdatePopover, {
+            part: 'popover',
+            subject: SPACE_RENAME_POPOVER,
+            options: {
+              anchorId: `dxos.org/ui/${caller}/${space.id}`,
+              props: space,
+            },
+          }),
+        ],
+      }),
     }),
     createResolver({
       intent: SpaceAction.OpenSettings,

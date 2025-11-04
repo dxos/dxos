@@ -35,11 +35,10 @@ export const D3ForceGraph = ({ classNames, model, selection: _selection, grid, .
     if (context.current) {
       return new GraphForceProjector(context.current, {
         attributes: {
-          linkForce: (edge) => {
+          linkForce: (edge) =>
             // TODO(burdon): Check type (currently assumes Employee property).
             // Edge shouldn't contribute to force if it's not active.
-            return edge.data?.object?.active !== false;
-          },
+            edge.data?.object?.active !== false,
         },
         forces: {
           point: {
@@ -76,9 +75,7 @@ export const D3ForceGraph = ({ classNames, model, selection: _selection, grid, .
           model={model}
           projector={projector}
           labels={{
-            text: (node) => {
-              return node.data?.data.label ?? node.id;
-            },
+            text: (node) => node.data?.data.label ?? node.id,
           }}
           attributes={{
             node: (node: GraphLayoutNode<SpaceGraphNode>) => {

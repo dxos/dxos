@@ -18,12 +18,9 @@ const safePadding = (
   propsPadding: TooltipContentProps['collisionPadding'],
   safePadding: SafeAreaPadding,
   side: keyof SafeAreaPadding,
-) => {
-  return (
-    (propIsNumber(safePadding[side]) ? safePadding[side] : 0) +
-    (propIsNumber(propsPadding) ? propsPadding : propsIsRecord(propsPadding) ? (propsPadding[side] ?? 0) : 0)
-  );
-};
+) =>
+  (propIsNumber(safePadding[side]) ? safePadding[side] : 0) +
+  (propIsNumber(propsPadding) ? propsPadding : propsIsRecord(propsPadding) ? (propsPadding[side] ?? 0) : 0);
 
 export const useSafeCollisionPadding = (collisionPadding?: PaddingProp) => {
   const { safeAreaPadding } = useThemeContext();

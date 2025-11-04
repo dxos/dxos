@@ -25,15 +25,13 @@ export type NotebookStackProps = ThemedClassName<
 >;
 
 // TODO(burdon): Option for narrow rail (with compact buttons that align with first button in toolbar).
-export const NotebookStack = ({ classNames, notebook, onRearrange, ...props }: NotebookStackProps) => {
-  return (
-    <Stack classNames={classNames} orientation='vertical' size='contain' rail onRearrange={onRearrange}>
-      {notebook?.cells.map((cell, i) => (
-        <NotebookSection key={i} cell={cell} {...props} />
-      ))}
-    </Stack>
-  );
-};
+export const NotebookStack = ({ classNames, notebook, onRearrange, ...props }: NotebookStackProps) => (
+  <Stack classNames={classNames} orientation='vertical' size='contain' rail onRearrange={onRearrange}>
+    {notebook?.cells.map((cell, i) => (
+      <NotebookSection key={i} cell={cell} {...props} />
+    ))}
+  </Stack>
+);
 
 type NotebookSectionProps = NotebookCellProps;
 

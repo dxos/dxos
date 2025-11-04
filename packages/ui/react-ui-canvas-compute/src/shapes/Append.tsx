@@ -29,9 +29,9 @@ export const createAppend = (props: CreateAppendProps) =>
     ...props,
   });
 
-export const AppendComponent = ({ shape }: ShapeComponentProps<AppendShape>) => {
-  return <FunctionBody shape={shape} inputSchema={AppendInput} />;
-};
+export const AppendComponent = ({ shape }: ShapeComponentProps<AppendShape>) => (
+  <FunctionBody shape={shape} inputSchema={AppendInput} />
+);
 
 export const appendShape: ShapeDef<AppendShape> = {
   type: 'append',

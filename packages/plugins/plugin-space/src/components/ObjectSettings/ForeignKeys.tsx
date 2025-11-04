@@ -15,15 +15,13 @@ export type ForeignKeysProps = {
 };
 
 // TODO(wittjosiah): This is a clone of `TokenManager`. Consider a form variant for arrays of read-only objects.
-export const ForeignKeys = ({ keys, onDelete }: ForeignKeysProps) => {
-  return (
-    <List classNames='flex flex-col gap-2'>
-      {keys.map((key) => (
-        <KeyItem key={key.id} forignKey={key} onDelete={onDelete} />
-      ))}
-    </List>
-  );
-};
+export const ForeignKeys = ({ keys, onDelete }: ForeignKeysProps) => (
+  <List classNames='flex flex-col gap-2'>
+    {keys.map((key) => (
+      <KeyItem key={key.id} forignKey={key} onDelete={onDelete} />
+    ))}
+  </List>
+);
 
 type KeyItemProps = {
   forignKey: ForeignKey;

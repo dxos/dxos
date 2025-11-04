@@ -59,26 +59,23 @@ export interface JournalType extends Schema.Schema.Type<typeof JournalType> {}
 // Helpers
 //
 
-export const createOutline = (name?: string, content?: string): OutlineType => {
-  return Obj.make(OutlineType, {
+export const createOutline = (name?: string, content?: string): OutlineType =>
+  Obj.make(OutlineType, {
     name,
     content: Ref.make(DataType.makeText(content)),
   });
-};
 
-export const createJournal = (name?: string): JournalType => {
-  return Obj.make(JournalType, {
+export const createJournal = (name?: string): JournalType =>
+  Obj.make(JournalType, {
     name,
     entries: [Ref.make(createJournalEntry())],
   });
-};
 
-export const createJournalEntry = (date = new Date()): JournalEntryType => {
-  return Obj.make(JournalEntryType, {
+export const createJournalEntry = (date = new Date()): JournalEntryType =>
+  Obj.make(JournalEntryType, {
     date: getDateString(date),
     content: Ref.make(DataType.makeText()),
   });
-};
 
 export const getJournalEntries = (journal: JournalType, date: Date): JournalEntryType[] => {
   const str = getDateString(date);

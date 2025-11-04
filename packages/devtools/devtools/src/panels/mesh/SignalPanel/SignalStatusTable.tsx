@@ -18,15 +18,13 @@ export interface SignalStatusProps {
   status: SignalStatus[];
 }
 
-const getSignalStatus = (server: SubscribeToSignalStatusResponse.SignalServer): SignalStatus => {
-  return {
-    connectionStarted: server.connectionStarted!,
-    lastStateChange: server.lastStateChange!,
-    reconnectIn: server.reconnectIn!,
-    host: server.host!,
-    state: server.state!,
-  };
-};
+const getSignalStatus = (server: SubscribeToSignalStatusResponse.SignalServer): SignalStatus => ({
+  connectionStarted: server.connectionStarted!,
+  lastStateChange: server.lastStateChange!,
+  reconnectIn: server.reconnectIn!,
+  host: server.host!,
+  state: server.state!,
+});
 
 const signalStateLabels = {
   [SignalState.CONNECTING]: 'CONNECTING',
@@ -48,9 +46,7 @@ const stateColors = {
   UNKNOWN: 'neutral',
 } as const;
 
-const getStateLabel = (state: SignalState): string => {
-  return signalStateLabels[state] ?? 'UNKNOWN';
-};
+const getStateLabel = (state: SignalState): string => signalStateLabels[state] ?? 'UNKNOWN';
 
 const tableProperties: TablePropertyDefinition[] = [
   {
@@ -102,20 +98,25 @@ export const SignalStatusTable = () => {
   }
 
   const properties = useMemo(() => tableProperties, []);
-  const rows = useMemo(() => {
-    return status.map((status, index) => ({
-      id: `${index}-${status.host}`,
-      host: new URL(status.host).origin,
-      status: getStateLabel(status.state),
-      connected:
-        status.state === SignalState.CONNECTED
-          ? formatDistance(status.lastStateChange.getTime(), time.getTime(), { includeSeconds: true, addSuffix: true })
-          : `Reconnecting ${formatDistance(time.getTime(), status.lastStateChange.getTime() + status.reconnectIn, {
-              addSuffix: true,
-            })}`,
-      _original: status,
-    }));
-  }, [status, time]);
+  const rows = useMemo(
+    () =>
+      status.map((status, index) => ({
+        id: `${index}-${status.host}`,
+        host: new URL(status.host).origin,
+        status: getStateLabel(status.state),
+        connected:
+          status.state === SignalState.CONNECTED
+            ? formatDistance(status.lastStateChange.getTime(), time.getTime(), {
+                includeSeconds: true,
+                addSuffix: true,
+              })
+            : `Reconnecting ${formatDistance(time.getTime(), status.lastStateChange.getTime() + status.reconnectIn, {
+                addSuffix: true,
+              })}`,
+        _original: status,
+      })),
+    [status, time],
+  );
 
   return <DynamicTable properties={properties} rows={rows} />;
 };

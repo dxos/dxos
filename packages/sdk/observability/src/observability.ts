@@ -298,9 +298,7 @@ export class Observability {
         getTags: () =>
           Object.fromEntries(
             Array.from(this._tags)
-              .filter(([key, value]) => {
-                return value.scope === 'all' || value.scope === 'errors';
-              })
+              .filter(([key, value]) => value.scope === 'all' || value.scope === 'errors')
               .map(([key, value]) => [key, value.value]),
           ),
         logLevel: LogLevel.VERBOSE,
@@ -328,9 +326,7 @@ export class Observability {
         getTags: () =>
           Object.fromEntries(
             Array.from(this._tags)
-              .filter(([key, value]) => {
-                return value.scope === 'all' || value.scope === 'metrics';
-              })
+              .filter(([key, value]) => value.scope === 'all' || value.scope === 'metrics')
               .map(([key, value]) => [key, value.value]),
           ),
       });
@@ -513,9 +509,7 @@ export class Observability {
         getTags: () =>
           Object.fromEntries(
             Array.from(this._tags)
-              .filter(([key, value]) => {
-                return value.scope === 'all' || value.scope === 'telemetry';
-              })
+              .filter(([key, value]) => value.scope === 'all' || value.scope === 'telemetry')
               .map(([key, value]) => [key, value.value]),
           ),
       });
@@ -597,9 +591,7 @@ export class Observability {
         getTags: () =>
           Object.fromEntries(
             Array.from(this._tags)
-              .filter(([key, value]) => {
-                return value.scope === 'all' || value.scope === 'metrics';
-              })
+              .filter(([key, value]) => value.scope === 'all' || value.scope === 'metrics')
               .map(([key, value]) => [key, value.value]),
           ),
       });

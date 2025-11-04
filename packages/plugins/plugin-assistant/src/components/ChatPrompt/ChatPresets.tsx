@@ -12,18 +12,16 @@ export type ChatPresetsProps = {
   onChange?: (id: string) => void;
 };
 
-export const ChatPresets = ({ presets, preset, onChange }: ChatPresetsProps) => {
-  return (
-    <Select.Root value={preset} onValueChange={onChange}>
-      <Select.TriggerButton classNames='text-sm' />
-      <Select.Content>
-        {presets?.map(({ id, label }) => (
-          <Select.Option key={id} value={id} classNames='text-sm'>
-            {label}
-          </Select.Option>
-        ))}
-        <Select.Arrow />
-      </Select.Content>
-    </Select.Root>
-  );
-};
+export const ChatPresets = ({ presets, preset, onChange }: ChatPresetsProps) => (
+  <Select.Root value={preset} onValueChange={onChange}>
+    <Select.TriggerButton classNames='text-sm' />
+    <Select.Content>
+      {presets?.map(({ id, label }) => (
+        <Select.Option key={id} value={id} classNames='text-sm'>
+          {label}
+        </Select.Option>
+      ))}
+      <Select.Arrow />
+    </Select.Content>
+  </Select.Root>
+);

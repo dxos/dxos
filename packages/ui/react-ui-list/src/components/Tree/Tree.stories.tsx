@@ -21,28 +21,30 @@ import { type TreeData } from './TreeItem';
 faker.seed(1234);
 
 const DefaultStory = (props: TreeProps) => {
-  useEffect(() => {
-    return monitorForElements({
-      canMonitor: ({ source }) => typeof source.data.id === 'string' && Array.isArray(source.data.path),
-      onDrop: ({ location, source }) => {
-        // Didn't drop on anything.
-        if (!location.current.dropTargets.length) {
-          return;
-        }
+  useEffect(
+    () =>
+      monitorForElements({
+        canMonitor: ({ source }) => typeof source.data.id === 'string' && Array.isArray(source.data.path),
+        onDrop: ({ location, source }) => {
+          // Didn't drop on anything.
+          if (!location.current.dropTargets.length) {
+            return;
+          }
 
-        const target = location.current.dropTargets[0];
-        const instruction: Instruction | null = extractInstruction(target.data);
-        if (instruction !== null) {
-          updateState({
-            state: tree,
-            instruction,
-            source: source.data as TreeData,
-            target: target.data as TreeData,
-          });
-        }
-      },
-    });
-  }, []);
+          const target = location.current.dropTargets[0];
+          const instruction: Instruction | null = extractInstruction(target.data);
+          if (instruction !== null) {
+            updateState({
+              state: tree,
+              instruction,
+              source: source.data as TreeData,
+              target: target.data as TreeData,
+            });
+          }
+        },
+      }),
+    [],
+  );
 
   return <Tree {...props} />;
 };
@@ -58,9 +60,7 @@ const meta = {
   render: DefaultStory,
   args: {
     id: tree.id,
-    useItems: (parent?: TestItem) => {
-      return parent?.items ?? tree.items;
-    },
+    useItems: (parent?: TestItem) => parent?.items ?? tree.items,
     getProps: (parent: TestItem) => ({
       id: parent.id,
       label: parent.name,
@@ -87,13 +87,11 @@ const meta = {
 
       return object.current;
     },
-    renderColumns: () => {
-      return (
-        <div className='flex items-center'>
-          <Icon icon='ph--placeholder--regular' size={5} />
-        </div>
-      );
-    },
+    renderColumns: () => (
+      <div className='flex items-center'>
+        <Icon icon='ph--placeholder--regular' size={5} />
+      </div>
+    ),
     onOpenChange: ({ path: _path, open }) => {
       const path = Path.create(..._path);
       const object = state.get(path);

@@ -29,9 +29,7 @@ export namespace InterfaceDef {
 /**
  * Helper to define the interface of a capability.
  */
-export const defineCapability = <T>(identifier: string) => {
-  return { identifier } as InterfaceDef<T>;
-};
+export const defineCapability = <T>(identifier: string) => ({ identifier }) as InterfaceDef<T>;
 
 /**
  * A unique string identifier with a Typescript type associated with it.
@@ -77,13 +75,12 @@ export const contributes = <I extends InterfaceDef<any>, T = InterfaceDef.Implem
   interfaceDef: I,
   implementation: T,
   deactivate?: Capability<InterfaceDef.Implementation<I>>['deactivate'],
-): Capability<I> => {
-  return {
+): Capability<I> =>
+  ({
     interface: interfaceDef,
     implementation: implementation as any, // NOTE: Added to allow providing readonly implementation.
     deactivate,
-  } satisfies Capability<I>;
-};
+  }) satisfies Capability<I>;
 
 type LoadCapability<T, U> = () => Promise<{ default: (props: T) => MaybePromise<Capability<U>> }>;
 type LoadCapabilities<T> = () => Promise<{ default: (props: T) => MaybePromise<AnyCapability[]> }>;
@@ -109,24 +106,24 @@ export const lazy =
 export class PluginContext {
   private readonly _registry: Registry.Registry;
 
-  private readonly _capabilityImpls = Rx.family<string, Rx.Writable<CapabilityImpl<unknown>[]>>(() => {
-    return Rx.make<CapabilityImpl<unknown>[]>([]).pipe(Rx.keepAlive);
-  });
+  private readonly _capabilityImpls = Rx.family<string, Rx.Writable<CapabilityImpl<unknown>[]>>(() =>
+    Rx.make<CapabilityImpl<unknown>[]>([]).pipe(Rx.keepAlive),
+  );
 
-  readonly _capabilities = Rx.family<string, Rx.Rx<unknown[]>>((id: string) => {
-    return Rx.make((get) => {
+  readonly _capabilities = Rx.family<string, Rx.Rx<unknown[]>>((id: string) =>
+    Rx.make((get) => {
       const current = get(this._capabilityImpls(id));
       return current.map((c) => c.implementation);
-    });
-  });
+    }),
+  );
 
-  readonly _capability = Rx.family<string, Rx.Rx<unknown>>((id: string) => {
-    return Rx.make((get) => {
+  readonly _capability = Rx.family<string, Rx.Rx<unknown>>((id: string) =>
+    Rx.make((get) => {
       const current = get(this._capabilities(id));
       invariant(current.length > 0, `No capability found for ${id}`);
       return current[0];
-    });
-  });
+    }),
+  );
 
   /**
    * Activates plugins based on the activation event.

@@ -118,14 +118,13 @@ export const ExecutionTrace = Object.freeze({
     }
   },
   format: (trace: ExecutionTrace): string => {
-    const go = (trace: ExecutionTrace, indent: number): string => {
-      return [
+    const go = (trace: ExecutionTrace, indent: number): string =>
+      [
         `${' '.repeat(indent)} - ${trace.name}(${trace.details})`,
         `${' '.repeat(indent)}   objects: ${trace.objectCount}  docs: ${trace.documentsLoaded}  index hits: ${trace.indexHits} | total: ${trace.executionTime.toFixed(0)}ms  index: ${trace.indexQueryTime.toFixed(0)}ms  load: ${trace.documentLoadTime.toFixed(0)}ms`,
         '',
         ...trace.children.map((child) => go(child, indent + 2)),
       ].join('\n');
-    };
     return go(trace, 0);
   },
 });
@@ -720,11 +719,7 @@ export class QueryExecutor extends Resource {
   }
 
   private async _loadDocumentsAfterIndexQuery(indexHits: FindResult[]): Promise<(QueryItem | null)[]> {
-    return Promise.all(
-      indexHits.map(async (hit): Promise<QueryItem | null> => {
-        return this._loadFromIndexHit(hit);
-      }),
-    );
+    return Promise.all(indexHits.map(async (hit): Promise<QueryItem | null> => this._loadFromIndexHit(hit)));
   }
 
   /**

@@ -13,12 +13,11 @@ import { extendedMarkdown } from './extended-markdown';
 import { nodeToJson } from './xml-util';
 
 describe('extended-markdown', () => {
-  const createEditorState = (doc: string) => {
-    return EditorState.create({
+  const createEditorState = (doc: string) =>
+    EditorState.create({
       doc,
       extensions: [extendedMarkdown()],
     });
-  };
 
   test('tree', async ({ expect }) => {
     const doc = trim`

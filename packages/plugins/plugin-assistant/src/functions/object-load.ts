@@ -35,10 +35,9 @@ export default defineFunction({
       Option.flatMap((object) => (Obj.getTypename(object) === typename ? Option.some(object) : Option.none())),
       Option.match({
         onNone: () => Effect.fail('Object not found.'),
-        onSome: (object) => {
+        onSome: (object) =>
           // log.info('object', { object });
-          return Effect.succeed({ object });
-        },
+          Effect.succeed({ object }),
       }),
     );
   }),

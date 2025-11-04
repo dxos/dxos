@@ -68,9 +68,7 @@ const MetricComponent: FC<{ metric: Metric }> = ({ metric }) => {
           <span>
             {JSON.stringify(
               metric.timeSeries.tracks?.reduce((acc, track) => ({ ...acc, [track.name]: track.total }), {}),
-              (key: string, value: any) => {
-                return typeof value === 'number' ? value.toFixed(2) : value;
-              },
+              (key: string, value: any) => (typeof value === 'number' ? value.toFixed(2) : value),
             )}
           </span>
         </div>

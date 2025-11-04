@@ -19,15 +19,13 @@ import { translations } from '../../translations';
 
 import { CreateObjectDialog, type CreateObjectDialogProps } from './CreateObjectDialog';
 
-const Story = (props: CreateObjectDialogProps) => {
-  return (
-    <Dialog.Root open>
-      <Dialog.Overlay blockAlign='start'>
-        <CreateObjectDialog {...props} />
-      </Dialog.Overlay>
-    </Dialog.Root>
-  );
-};
+const Story = (props: CreateObjectDialogProps) => (
+  <Dialog.Root open>
+    <Dialog.Overlay blockAlign='start'>
+      <CreateObjectDialog {...props} />
+    </Dialog.Overlay>
+  </Dialog.Root>
+);
 
 // TODO(wittjosiah): Story should be for CreateObjectPanel.
 const meta = {

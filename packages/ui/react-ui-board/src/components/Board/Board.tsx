@@ -240,13 +240,11 @@ BoardViewport.displayName = 'Board.Viewport';
 
 type BoardContentProps = ThemedClassName<ComponentPropsWithoutRef<'div'>>;
 
-const BoardContent = ({ classNames, children, ...props }: BoardContentProps) => {
-  return (
-    <div role='none' className={mx(classNames)}>
-      {children}
-    </div>
-  );
-};
+const BoardContent = ({ classNames, children, ...props }: BoardContentProps) => (
+  <div role='none' className={mx(classNames)}>
+    {children}
+  </div>
+);
 
 BoardContent.displayName = 'Board.Content';
 

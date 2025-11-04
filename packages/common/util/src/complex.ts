@@ -134,13 +134,12 @@ export type ComplexSetConstructor<T> = new (values?: Iterable<T> | null) => Comp
 /**
  * Create a subclass of ComplexSet with predefined projection function.
  */
-export const makeSet = <T>(projection: PrimitiveProjection<T>): ComplexSetConstructor<T> => {
-  return class BoundComplexSet extends ComplexSet<T> {
+export const makeSet = <T>(projection: PrimitiveProjection<T>): ComplexSetConstructor<T> =>
+  class BoundComplexSet extends ComplexSet<T> {
     constructor(values?: Iterable<T> | null) {
       super(projection, values);
     }
   };
-};
 
 /**
  * A map implementation that can hold complex values (like Buffer) as keys.

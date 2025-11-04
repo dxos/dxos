@@ -315,9 +315,7 @@ export class Swarm {
           onAccepted: () => {
             this._topology.update();
           },
-          onOffer: (remoteId) => {
-            return this._topology.onOffer(PublicKey.from(remoteId.peerKey));
-          },
+          onOffer: (remoteId) => this._topology.onOffer(PublicKey.from(remoteId.peerKey)),
           onPeerAvailable: () => {
             this._topology.update();
           },

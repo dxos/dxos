@@ -33,26 +33,24 @@ export type PreviewOptions = {
 /**
  * Create preview decorations.
  */
-export const preview = (options: PreviewOptions = {}): Extension => {
-  return [
-    // NOTE: Atomic block decorations must be created from a state field, now a widget, otherwise it results in the following error:
-    // "Block decorations may not be specified via plugins".
-    StateField.define<DecorationSet>({
-      create: (state) => buildDecorations(state, options),
-      update: (decorations, tr) => {
-        if (tr.docChanged) {
-          return buildDecorations(tr.state, options);
-        }
+export const preview = (options: PreviewOptions = {}): Extension => [
+  // NOTE: Atomic block decorations must be created from a state field, now a widget, otherwise it results in the following error:
+  // "Block decorations may not be specified via plugins".
+  StateField.define<DecorationSet>({
+    create: (state) => buildDecorations(state, options),
+    update: (decorations, tr) => {
+      if (tr.docChanged) {
+        return buildDecorations(tr.state, options);
+      }
 
-        return decorations.map(tr.changes);
-      },
-      provide: (field) => [
-        EditorView.decorations.from(field),
-        EditorView.atomicRanges.of((view) => view.state.field(field)),
-      ],
-    }),
-  ];
-};
+      return decorations.map(tr.changes);
+    },
+    provide: (field) => [
+      EditorView.decorations.from(field),
+      EditorView.atomicRanges.of((view) => view.state.field(field)),
+    ],
+  }),
+];
 
 /**
  * Echo references are represented as markdown reference links.

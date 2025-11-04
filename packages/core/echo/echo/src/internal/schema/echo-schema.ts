@@ -118,11 +118,11 @@ export class ImmutableSchema<A = any, I = any> implements BaseSchema<A, I> {
  *
  * This is here so that `EchoSchema` class can be used as a part of another schema definition (e.g., `ref(EchoSchema)`).
  */
-const EchoSchemaConstructor = (): TypedObjectPrototype => {
+const EchoSchemaConstructor = (): TypedObjectPrototype =>
   /**
    * Return class definition satisfying Schema.Schema.
    */
-  return class {
+  class {
     private static get _schema() {
       // The field is DynamicEchoSchema in runtime, but is serialized as StoredEchoSchema in automerge.
       return Schema.Union(StoredSchema, Schema.instanceOf(EchoSchema)).annotations(StoredSchema.ast.annotations);
@@ -145,11 +145,7 @@ const EchoSchemaConstructor = (): TypedObjectPrototype => {
       return schema.pipe.bind(schema);
     }
   } as any;
-};
-
-export const isMutable = (schema: Schema.Schema.AnyNoContext): schema is EchoSchema => {
-  return schema instanceof EchoSchema;
-};
+export const isMutable = (schema: Schema.Schema.AnyNoContext): schema is EchoSchema => schema instanceof EchoSchema;
 
 // NOTE: Keep in this file.
 const schemaVariance = {

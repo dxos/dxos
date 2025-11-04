@@ -13,9 +13,7 @@ export type ObjectVersion = {
 };
 
 export const ObjectVersion = Object.freeze({
-  equals: (a: ObjectVersion, b: ObjectVersion) => {
-    return JSON.stringify(a) === JSON.stringify(b);
-  },
+  equals: (a: ObjectVersion, b: ObjectVersion) => JSON.stringify(a) === JSON.stringify(b),
 });
 
 /**

@@ -77,14 +77,10 @@ const mapTranscriptQueue = (blocks?: TranscriptBlock[]): QueueRows => {
   if (!blocks || !Array.isArray(blocks) || blocks.length === 0) {
     return [];
   } else {
-    return blocks.flatMap((block, blockIndex) => {
-      return [
-        [blockIndex, -1],
-        ...block.segments.map((segment, segmentIndex) => {
-          return [blockIndex, segmentIndex] as [number, number];
-        }),
-      ];
-    });
+    return blocks.flatMap((block, blockIndex) => [
+      [blockIndex, -1],
+      ...block.segments.map((segment, segmentIndex) => [blockIndex, segmentIndex] as [number, number]),
+    ]);
   }
 };
 

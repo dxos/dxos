@@ -11,15 +11,13 @@ import { log } from '@dxos/log';
 
 import { Container, Options } from './components';
 
-const Root = () => {
-  return (
-    <Container classNames='absolute inset-0 flex justify-center overflow-hidden bg-modalSurface'>
-      <div className='container-max-width'>
-        <Options />
-      </div>
-    </Container>
-  );
-};
+const Root = () => (
+  <Container classNames='absolute inset-0 flex justify-center overflow-hidden bg-modalSurface'>
+    <div className='container-max-width'>
+      <Options />
+    </div>
+  </Container>
+);
 
 const main = async () => {
   log.info('options');

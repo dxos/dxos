@@ -12,9 +12,7 @@ import { log } from '@dxos/log';
 
 const CONFIG_ENDPOINT = '/.well-known/dx/config';
 
-export const Local = () => {
-  return typeof __CONFIG_LOCAL__ !== 'undefined' ? __CONFIG_LOCAL__ : {};
-};
+export const Local = () => (typeof __CONFIG_LOCAL__ !== 'undefined' ? __CONFIG_LOCAL__ : {});
 
 export const Dynamics = async () => {
   const { publicUrl = '', dynamic } = __DXOS_CONFIG__;
@@ -32,13 +30,9 @@ export const Dynamics = async () => {
     });
 };
 
-export const Envs = () => {
-  return typeof __CONFIG_ENVS__ !== 'undefined' ? __CONFIG_ENVS__ : {};
-};
+export const Envs = () => (typeof __CONFIG_ENVS__ !== 'undefined' ? __CONFIG_ENVS__ : {});
 
-export const Defaults = () => {
-  return typeof __CONFIG_DEFAULTS__ !== 'undefined' ? __CONFIG_DEFAULTS__ : {};
-};
+export const Defaults = () => (typeof __CONFIG_DEFAULTS__ !== 'undefined' ? __CONFIG_DEFAULTS__ : {});
 
 /**
  * Settings config from browser storage.

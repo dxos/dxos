@@ -202,29 +202,27 @@ const MapMarkers = ({ selected, markers }: MapMarkersProps) => {
 
   return (
     <>
-      {markers?.map(({ id, title, location: { lat, lng } }) => {
-        return (
-          <Marker
-            key={id}
-            position={{ lat, lng }}
-            icon={
-              // TODO(burdon): Create custom icon from bundled assets.
-              // TODO(burdon): Selection state.
-              new L.Icon({
-                iconUrl: 'https://dxos.network/marker-icon.png',
-                iconRetinaUrl: 'https://dxos.network/marker-icon-2x.png',
-                shadowUrl: 'https://dxos.network/marker-shadow.png',
-                iconSize: [25, 41],
-                iconAnchor: [12, 41],
-                popupAnchor: [1, -34],
-                shadowSize: [41, 41],
-              })
-            }
-          >
-            {title && <Popup>{title}</Popup>}
-          </Marker>
-        );
-      })}
+      {markers?.map(({ id, title, location: { lat, lng } }) => (
+        <Marker
+          key={id}
+          position={{ lat, lng }}
+          icon={
+            // TODO(burdon): Create custom icon from bundled assets.
+            // TODO(burdon): Selection state.
+            new L.Icon({
+              iconUrl: 'https://dxos.network/marker-icon.png',
+              iconRetinaUrl: 'https://dxos.network/marker-icon-2x.png',
+              shadowUrl: 'https://dxos.network/marker-shadow.png',
+              iconSize: [25, 41],
+              iconAnchor: [12, 41],
+              popupAnchor: [1, -34],
+              shadowSize: [41, 41],
+            })
+          }
+        >
+          {title && <Popup>{title}</Popup>}
+        </Marker>
+      ))}
     </>
   );
 };

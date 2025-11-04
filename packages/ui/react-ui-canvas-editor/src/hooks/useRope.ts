@@ -102,11 +102,7 @@ export const useRope = (
         if (options.curve) {
           return createCurveThroughPoints(points);
         } else {
-          return points
-            .map(({ x, y }, i) => {
-              return i === 0 ? `M ${x},${y}` : `L ${x},${y}`;
-            })
-            .join(' ');
+          return points.map(({ x, y }, i) => (i === 0 ? `M ${x},${y}` : `L ${x},${y}`)).join(' ');
         }
       });
     });

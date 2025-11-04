@@ -25,35 +25,33 @@ interface Message {
   payload?: any;
 }
 
-export const createCollectDiagnosticsBroadcastSender = (): CollectDiagnosticsBroadcastSender => {
-  return {
-    broadcastDiagnosticsRequest: async () => {
-      let expectedResponse = MessageType.PROBE_ACK;
-      let channel: BroadcastChannel | undefined;
-      try {
-        const trigger = new Trigger<Message>();
-        channel = new BroadcastChannel(CHANNEL_NAME);
-        channel.onmessage = (msg) => {
-          if (expectedResponse === msg.data.type) {
-            trigger.wake(msg.data);
-          }
-        };
-        channel.postMessage({ type: MessageType.PROBE });
-        await trigger.wait({ timeout: 200 });
-        expectedResponse = MessageType.RECEIVE_DIAGNOSTICS;
-        trigger.reset();
-        channel.postMessage({ type: MessageType.REQUEST_DIAGNOSTICS });
-        const diagnostics = await trigger.wait({ timeout: 5000 });
-        return diagnostics.payload;
-      } catch (e) {
-        const errorDescription = e instanceof Error ? e.message : JSON.stringify(e);
-        return { expectedResponse, errorDescription };
-      } finally {
-        safeClose(channel);
-      }
-    },
-  };
-};
+export const createCollectDiagnosticsBroadcastSender = (): CollectDiagnosticsBroadcastSender => ({
+  broadcastDiagnosticsRequest: async () => {
+    let expectedResponse = MessageType.PROBE_ACK;
+    let channel: BroadcastChannel | undefined;
+    try {
+      const trigger = new Trigger<Message>();
+      channel = new BroadcastChannel(CHANNEL_NAME);
+      channel.onmessage = (msg) => {
+        if (expectedResponse === msg.data.type) {
+          trigger.wake(msg.data);
+        }
+      };
+      channel.postMessage({ type: MessageType.PROBE });
+      await trigger.wait({ timeout: 200 });
+      expectedResponse = MessageType.RECEIVE_DIAGNOSTICS;
+      trigger.reset();
+      channel.postMessage({ type: MessageType.REQUEST_DIAGNOSTICS });
+      const diagnostics = await trigger.wait({ timeout: 5000 });
+      return diagnostics.payload;
+    } catch (e) {
+      const errorDescription = e instanceof Error ? e.message : JSON.stringify(e);
+      return { expectedResponse, errorDescription };
+    } finally {
+      safeClose(channel);
+    }
+  },
+});
 
 export const createCollectDiagnosticsBroadcastHandler = (
   systemService: SystemService,

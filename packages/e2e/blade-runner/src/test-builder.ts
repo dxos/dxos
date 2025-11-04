@@ -180,6 +180,5 @@ export class TestPeer {
   }
 }
 
-export const arrayContain = (container: PublicKey[], contained: PublicKey[]) => {
-  return contained.every((v) => container.some((w) => w.equals(v)));
-};
+export const arrayContain = (container: PublicKey[], contained: PublicKey[]) =>
+  contained.every((v) => container.some((w) => w.equals(v)));

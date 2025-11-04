@@ -201,12 +201,13 @@ export const useInvitationStatus = (observable?: CancellableInvitationObservable
 
   const cancel = useCallback(async () => observable?.cancel(), [observable]);
 
-  return useMemo(() => {
-    return {
+  return useMemo(
+    () => ({
       ...state,
       cancel,
       connect,
       authenticate,
-    };
-  }, [state, cancel, connect, authenticate]);
+    }),
+    [state, cancel, connect, authenticate],
+  );
 };

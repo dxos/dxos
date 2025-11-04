@@ -4,9 +4,8 @@
 
 import { useEffect, useRef, useState } from 'react';
 
-const isFunction = <T>(functionToCheck: any): functionToCheck is (value: T) => boolean => {
-  return functionToCheck instanceof Function;
-};
+const isFunction = <T>(functionToCheck: any): functionToCheck is (value: T) => boolean =>
+  functionToCheck instanceof Function;
 
 /**
  * This is an internal custom hook that checks if a value has transitioned from a specified 'from' value to a 'to' value.

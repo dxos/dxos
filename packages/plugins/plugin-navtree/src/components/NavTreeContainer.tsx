@@ -56,9 +56,8 @@ const filterItems = (node: Node, disposition?: string) => {
   }
 };
 
-const getItems = (graph: ReadableGraph, node?: Node, disposition?: string) => {
-  return graph.getConnections(node?.id ?? ROOT_ID, 'outbound').filter((node) => filterItems(node, disposition));
-};
+const getItems = (graph: ReadableGraph, node?: Node, disposition?: string) =>
+  graph.getConnections(node?.id ?? ROOT_ID, 'outbound').filter((node) => filterItems(node, disposition));
 
 const useItems = (node?: Node, options?: { disposition?: string; sort?: boolean }) => {
   const { graph } = useAppGraph();
@@ -176,13 +175,12 @@ export const NavTreeContainer = memo(({ tab, popoverAnchorId, topbar }: NavTreeC
     [dispatch, layout.active, tab, navigationSidebarState, isLg],
   );
 
-  const canDrop = useCallback(({ source, target }: { source: TreeData; target: TreeData }) => {
-    return target.item.properties.canDrop?.(source) ?? false;
-  }, []);
+  const canDrop = useCallback(
+    ({ source, target }: { source: TreeData; target: TreeData }) => target.item.properties.canDrop?.(source) ?? false,
+    [],
+  );
 
-  const canSelect = useCallback(({ item }: { item: Node }) => {
-    return item.properties.selectable ?? true;
-  }, []);
+  const canSelect = useCallback(({ item }: { item: Node }) => item.properties.selectable ?? true, []);
 
   const handleSelect = useCallback(
     ({ item: node, path, option }: { item: Node; path: string[]; option: boolean }) => {
@@ -231,63 +229,65 @@ export const NavTreeContainer = memo(({ tab, popoverAnchorId, topbar }: NavTreeC
   );
 
   // TODO(wittjosiah): Factor out hook.
-  useEffect(() => {
-    return monitorForElements({
-      canMonitor: ({ source }) => isTreeData(source.data),
-      onDrop: ({ location, source }) => {
-        // Didn't drop on anything.
-        if (!location.current.dropTargets.length) {
-          return;
-        }
-        const target = location.current.dropTargets[0];
-        const instruction: Instruction | null = extractInstruction(target.data);
-        if (instruction !== null && instruction.type !== 'instruction-blocked') {
-          const sourceNode = source.data.item as NavTreeItemGraphNode;
-          const targetNode = target.data.item as NavTreeItemGraphNode;
-          const sourcePath = source.data.path as string[];
-          const targetPath = target.data.path as string[];
-          const operation =
-            sourcePath.slice(0, -1).join() === targetPath.slice(0, -1).join() && instruction.type !== 'make-child'
-              ? 'rearrange'
-              : resolveMigrationOperation(graph, sourceNode, targetPath, targetNode);
-          const sourceParent = getParent(graph, sourceNode, sourcePath);
-          const targetParent = getParent(graph, targetNode, targetPath);
-          const sourceItems = getItems(graph, sourceParent);
-          const targetItems = getItems(graph, targetParent);
-          const sourceIndex = sourceItems.findIndex(({ id }) => id === sourceNode.id);
-          const targetIndex = targetItems.findIndex(({ id }) => id === targetNode.id);
-          const migrationIndex =
-            instruction.type === 'make-child'
-              ? undefined
-              : instruction.type === 'reorder-below'
-                ? targetIndex + 1
-                : targetIndex;
-          switch (operation) {
-            case 'rearrange': {
-              const nextItems = sourceItems.map(({ data }) => data);
-              arrayMove(nextItems, sourceIndex, targetIndex);
-              void sourceParent?.properties.onRearrangeChildren?.(nextItems);
-              break;
-            }
-            case 'copy': {
-              const target = instruction.type === 'make-child' ? targetNode : targetParent;
-              void target?.properties.onCopy?.(sourceNode, migrationIndex);
-              break;
-            }
-            case 'transfer': {
-              const target = instruction.type === 'make-child' ? targetNode : targetParent;
-              if (!target?.properties.onTransferStart || !sourceParent?.properties.onTransferEnd) {
+  useEffect(
+    () =>
+      monitorForElements({
+        canMonitor: ({ source }) => isTreeData(source.data),
+        onDrop: ({ location, source }) => {
+          // Didn't drop on anything.
+          if (!location.current.dropTargets.length) {
+            return;
+          }
+          const target = location.current.dropTargets[0];
+          const instruction: Instruction | null = extractInstruction(target.data);
+          if (instruction !== null && instruction.type !== 'instruction-blocked') {
+            const sourceNode = source.data.item as NavTreeItemGraphNode;
+            const targetNode = target.data.item as NavTreeItemGraphNode;
+            const sourcePath = source.data.path as string[];
+            const targetPath = target.data.path as string[];
+            const operation =
+              sourcePath.slice(0, -1).join() === targetPath.slice(0, -1).join() && instruction.type !== 'make-child'
+                ? 'rearrange'
+                : resolveMigrationOperation(graph, sourceNode, targetPath, targetNode);
+            const sourceParent = getParent(graph, sourceNode, sourcePath);
+            const targetParent = getParent(graph, targetNode, targetPath);
+            const sourceItems = getItems(graph, sourceParent);
+            const targetItems = getItems(graph, targetParent);
+            const sourceIndex = sourceItems.findIndex(({ id }) => id === sourceNode.id);
+            const targetIndex = targetItems.findIndex(({ id }) => id === targetNode.id);
+            const migrationIndex =
+              instruction.type === 'make-child'
+                ? undefined
+                : instruction.type === 'reorder-below'
+                  ? targetIndex + 1
+                  : targetIndex;
+            switch (operation) {
+              case 'rearrange': {
+                const nextItems = sourceItems.map(({ data }) => data);
+                arrayMove(nextItems, sourceIndex, targetIndex);
+                void sourceParent?.properties.onRearrangeChildren?.(nextItems);
                 break;
               }
-              void target?.properties.onTransferStart(sourceNode, migrationIndex);
-              void sourceParent?.properties.onTransferEnd?.(sourceNode, target);
-              break;
+              case 'copy': {
+                const target = instruction.type === 'make-child' ? targetNode : targetParent;
+                void target?.properties.onCopy?.(sourceNode, migrationIndex);
+                break;
+              }
+              case 'transfer': {
+                const target = instruction.type === 'make-child' ? targetNode : targetParent;
+                if (!target?.properties.onTransferStart || !sourceParent?.properties.onTransferEnd) {
+                  break;
+                }
+                void target?.properties.onTransferStart(sourceNode, migrationIndex);
+                void sourceParent?.properties.onTransferEnd?.(sourceNode, target);
+                break;
+              }
             }
           }
-        }
-      },
-    });
-  }, [graph]);
+        },
+      }),
+    [graph],
+  );
 
   const setAlternateTree = useCallback(
     (path: string[], open: boolean) => {

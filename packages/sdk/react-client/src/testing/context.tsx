@@ -14,6 +14,4 @@ export type ClientStory = {
 // TODO(wittjosiah): Add to multi-client as well.
 export const ClientStory = createContext<ClientStory | undefined>(undefined);
 
-export const useClientProvider = (): ClientStory => {
-  return useContext(ClientStory) ?? raise(new Error('Missing ClientStory'));
-};
+export const useClientProvider = (): ClientStory => useContext(ClientStory) ?? raise(new Error('Missing ClientStory'));

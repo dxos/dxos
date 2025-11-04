@@ -10,8 +10,8 @@ import { type PluginValue, ViewPlugin, type ViewUpdate } from '@codemirror/view'
  * Monitors and augments changes.
  */
 // TODO(burdon): Tests.
-export const adjustChanges = () => {
-  return ViewPlugin.fromClass(
+export const adjustChanges = () =>
+  ViewPlugin.fromClass(
     class implements PluginValue {
       update(update: ViewUpdate) {
         const tree = syntaxTree(update.state);
@@ -98,7 +98,6 @@ export const adjustChanges = () => {
       }
     },
   );
-};
 
 //
 // Links

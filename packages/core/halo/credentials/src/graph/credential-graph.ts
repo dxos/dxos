@@ -552,6 +552,5 @@ interface ReplayRequiredMergeResult<A> {
   stateOverrides: ComplexMap<PublicKey, ChainVertex<A>>;
 }
 
-const toChosenPath = <A>(path: PathState<A>) => {
-  return Object.fromEntries(Object.entries(path.chosenPath!).map(([k, vs]) => [k, vs.map((v) => v.id)]));
-};
+const toChosenPath = <A>(path: PathState<A>) =>
+  Object.fromEntries(Object.entries(path.chosenPath!).map(([k, vs]) => [k, vs.map((v) => v.id)]));

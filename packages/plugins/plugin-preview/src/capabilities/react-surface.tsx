@@ -89,9 +89,7 @@ export default () =>
       id: `${meta.id}/schema-popover--task`,
       role: ['card--popover', 'card--intrinsic', 'card--transclusion', 'card--extrinsic', 'card'],
       filter: (data): data is { subject: DataType.Task } => Obj.instanceOf(DataType.Task, data.subject),
-      component: ({ data, role }) => {
-        return <TaskCard subject={data.subject} role={role} />;
-      },
+      component: ({ data, role }) => <TaskCard subject={data.subject} role={role} />,
     }),
 
     //
@@ -141,14 +139,12 @@ export default () =>
       role: ['section'],
       position: 'fallback',
       filter: (data): data is { subject: Obj.Any } => Obj.isObject(data.subject),
-      component: ({ data }) => {
-        return (
-          <div role='none' className='flex is-full justify-center'>
-            <div role='none' className='pbs-2 pbe-2 card-min-width card-max-width'>
-              <Surface role='card' data={data} limit={1} />
-            </div>
+      component: ({ data }) => (
+        <div role='none' className='flex is-full justify-center'>
+          <div role='none' className='pbs-2 pbe-2 card-min-width card-max-width'>
+            <Surface role='card' data={data} limit={1} />
           </div>
-        );
-      },
+        </div>
+      ),
     }),
   ]);

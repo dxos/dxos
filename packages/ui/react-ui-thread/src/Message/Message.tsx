@@ -25,49 +25,45 @@ export const MessageRoot = forwardRef<HTMLDivElement, MessageRootProps>(
   (
     { authorImgSrc, authorId, authorName, authorAvatarProps, continues = true, children, classNames, ...rootProps },
     forwardedRef,
-  ) => {
-    return (
-      // Must wrap the message since Avatar.Label may be used in the content.
-      <Avatar.Root>
-        <div
-          role='none'
-          data-testid='thread.message'
-          {...rootProps}
-          className={mx('grid grid-cols-subgrid col-span-2', classNames)}
-          ref={forwardedRef}
-        >
-          <div role='none' className='flex flex-col items-center gap-2 pbs-1'>
-            <Avatar.Content
-              size={avatarSize}
-              hue={authorAvatarProps?.hue || hexToHue(authorId ?? '0')}
-              fallback={authorAvatarProps?.emoji || hexToEmoji(authorId ?? '0')}
-              {...(authorImgSrc && { imgSrc: authorImgSrc })}
-            />
-            {continues && <div role='none' className='is-px grow bg-separator' />}
-          </div>
-          <div role='none' className='plb-1 min-is-0'>
-            {children}
-          </div>
+  ) => (
+    // Must wrap the message since Avatar.Label may be used in the content.
+    <Avatar.Root>
+      <div
+        role='none'
+        data-testid='thread.message'
+        {...rootProps}
+        className={mx('grid grid-cols-subgrid col-span-2', classNames)}
+        ref={forwardedRef}
+      >
+        <div role='none' className='flex flex-col items-center gap-2 pbs-1'>
+          <Avatar.Content
+            size={avatarSize}
+            hue={authorAvatarProps?.hue || hexToHue(authorId ?? '0')}
+            fallback={authorAvatarProps?.emoji || hexToEmoji(authorId ?? '0')}
+            {...(authorImgSrc && { imgSrc: authorImgSrc })}
+          />
+          {continues && <div role='none' className='is-px grow bg-separator' />}
         </div>
-      </Avatar.Root>
-    );
-  },
+        <div role='none' className='plb-1 min-is-0'>
+          {children}
+        </div>
+      </div>
+    </Avatar.Root>
+  ),
 );
 
 export type MessageHeadingProps = ThemedClassName<ComponentPropsWithoutRef<'div'>> &
   Pick<MessageMetadata, 'authorName' | 'timestamp'>;
 
-export const MessageHeading = ({ children, classNames, timestamp, authorName, ...props }: MessageHeadingProps) => {
-  return (
-    <div role='none' {...props} className={mx('flex gap-2 items-start', classNames)}>
-      <p className='grow'>
-        <MessageAuthorName authorName={authorName} />
-        {timestamp && <MessageTime timestamp={timestamp} />}
-      </p>
-      {children}
-    </div>
-  );
-};
+export const MessageHeading = ({ children, classNames, timestamp, authorName, ...props }: MessageHeadingProps) => (
+  <div role='none' {...props} className={mx('flex gap-2 items-start', classNames)}>
+    <p className='grow'>
+      <MessageAuthorName authorName={authorName} />
+      {timestamp && <MessageTime timestamp={timestamp} />}
+    </p>
+    {children}
+  </div>
+);
 
 export type MessageAuthorNameProps = Pick<MessageMetadata, 'authorName'>;
 
@@ -92,9 +88,7 @@ export const MessageTime = ({ timestamp }: MessageTimeProps) => {
 
 export type MessageBodyProps = ComponentPropsWithoutRef<'p'>;
 
-export const MessageBody = ({ children, ...props }: MessageBodyProps) => {
-  return <p {...props}>{children}</p>;
-};
+export const MessageBody = ({ children, ...props }: MessageBodyProps) => <p {...props}>{children}</p>;
 
 export type MessageTextboxProps = {
   disabled?: boolean;

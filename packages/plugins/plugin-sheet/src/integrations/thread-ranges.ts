@@ -26,9 +26,8 @@ import { AnchoredTo } from '@dxos/schema';
 import { useSheetContext } from '../components';
 import { meta } from '../meta';
 
-export const completeCellRangeToThreadCursor = (range: CompleteCellRange): string => {
-  return `${range.from.col},${range.from.row},${range.to.col},${range.to.row}`;
-};
+export const completeCellRangeToThreadCursor = (range: CompleteCellRange): string =>
+  `${range.from.col},${range.from.row},${range.to.col},${range.to.row}`;
 
 export const parseThreadAnchorAsCellRange = (cursor: string): CompleteCellRange | null => {
   const coords = cursor.split(',');
@@ -111,9 +110,10 @@ export const useSelectThreadOnCellFocus = () => {
     [dispatch, anchors],
   );
 
-  const debounced = useMemo(() => {
-    return debounce((cellCoords: CellAddress) => requestAnimationFrame(() => selectClosestThread(cellCoords)), 50);
-  }, [selectClosestThread]);
+  const debounced = useMemo(
+    () => debounce((cellCoords: CellAddress) => requestAnimationFrame(() => selectClosestThread(cellCoords)), 50),
+    [selectClosestThread],
+  );
 
   useEffect(() => {
     if (!cursor) {

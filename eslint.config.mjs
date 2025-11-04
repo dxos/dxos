@@ -162,6 +162,7 @@ export default tseslint.config(
       '@typescript-eslint/unbound-method': 'off',
 
       // General
+      'arrow-body-style': ['error', 'as-needed'],
       camelcase: 'off',
       'jsx-quotes': ['error', 'prefer-single'],
       'no-unused-vars': 'off',

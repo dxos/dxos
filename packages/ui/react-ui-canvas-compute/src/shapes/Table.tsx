@@ -29,11 +29,11 @@ export type CreateTableProps = CreateShapeProps<TableShape>;
 export const createTable = (props: CreateTableProps) =>
   createShape<TableShape>({ type: 'table', size: { width: 320, height: 512 }, ...props });
 
-export const TableComponent = ({ shape }: ShapeComponentProps<TableShape>) => {
+export const TableComponent = ({ shape }: ShapeComponentProps<TableShape>) => (
   // const items = shape.node.items.value;
 
-  return <Box shape={shape}></Box>;
-};
+  <Box shape={shape}></Box>
+);
 
 export const tableShape: ShapeDef<TableShape> = {
   type: 'table',

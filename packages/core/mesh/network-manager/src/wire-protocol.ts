@@ -34,11 +34,12 @@ export interface WireProtocol {
  * @param defaultParams Optionally provide default Teleport params that might be overridden by factory callers.
  * @returns
  */
-export const createTeleportProtocolFactory = (
-  onConnection: (teleport: Teleport) => Promise<void>,
-  defaultParams?: Partial<TeleportParams>,
-): WireProtocolProvider => {
-  return (params) => {
+export const createTeleportProtocolFactory =
+  (
+    onConnection: (teleport: Teleport) => Promise<void>,
+    defaultParams?: Partial<TeleportParams>,
+  ): WireProtocolProvider =>
+  (params) => {
     const teleport = new Teleport({ ...defaultParams, ...params });
     return {
       stream: teleport.stream,
@@ -54,4 +55,3 @@ export const createTeleportProtocolFactory = (
       },
     };
   };
-};

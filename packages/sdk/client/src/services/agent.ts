@@ -30,9 +30,7 @@ export type FromAgentOptions = {
  */
 export const fromAgent = ({
   profile = process.env[ENV_DX_PROFILE] ?? ENV_DX_PROFILE_DEFAULT,
-}: FromAgentOptions = {}): ClientServicesProvider => {
-  return new AgentClientServiceProvider(profile);
-};
+}: FromAgentOptions = {}): ClientServicesProvider => new AgentClientServiceProvider(profile);
 
 @trace.resource({ annotation: ClientServicesProviderResource })
 export class AgentClientServiceProvider implements ClientServicesProvider {

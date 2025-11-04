@@ -55,9 +55,7 @@ export const getLevel = (digest: Uint8Array): number => {
   return level;
 };
 
-export const formatDigest = (digest: Uint8Array) => {
-  return arrayToHex(digest.buffer);
-};
+export const formatDigest = (digest: Uint8Array) => arrayToHex(digest.buffer);
 
 export const getLevelHex = (digest: string): number => {
   let level = 0;

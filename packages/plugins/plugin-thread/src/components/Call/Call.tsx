@@ -20,9 +20,9 @@ import { Toolbar, type ToolbarProps } from './Toolbar';
 
 type CallRootProps = PropsWithChildren<ThemedClassName>;
 
-const CallRoot: FC<CallRootProps> = ({ children }) => {
-  return <div className='relative flex flex-col grow overflow-hidden'>{children}</div>;
-};
+const CallRoot: FC<CallRootProps> = ({ children }) => (
+  <div className='relative flex flex-col grow overflow-hidden'>{children}</div>
+);
 
 CallRoot.displayName = 'CallRoot';
 
@@ -67,13 +67,11 @@ CallGrid.displayName = 'CallGrid';
 
 type CallToolbarProps = Pick<ToolbarProps, 'channel' | 'onLeave'>;
 
-const CallToolbar: FC<CallToolbarProps> = (props) => {
-  return (
-    <div className='absolute bottom-0 left-0 right-0 flex justify-center'>
-      <Toolbar isInRoom {...props} />
-    </div>
-  );
-};
+const CallToolbar: FC<CallToolbarProps> = (props) => (
+  <div className='absolute bottom-0 left-0 right-0 flex justify-center'>
+    <Toolbar isInRoom {...props} />
+  </div>
+);
 
 CallToolbar.displayName = 'CallToolbar';
 

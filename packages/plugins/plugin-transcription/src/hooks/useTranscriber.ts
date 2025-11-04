@@ -29,11 +29,12 @@ export const useTranscriber = ({
     return getTranscriber({ audioStreamTrack, recorderConfig, transcriberConfig, onSegments });
   }, [getTranscriber, audioStreamTrack, recorderConfig, transcriberConfig, onSegments]);
 
-  useEffect(() => {
-    return () => {
+  useEffect(
+    () => () => {
       void transcriber?.close();
-    };
-  }, [transcriber]);
+    },
+    [transcriber],
+  );
 
   return transcriber;
 };

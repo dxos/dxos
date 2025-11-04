@@ -10,14 +10,12 @@ import { withTheme } from '@dxos/react-ui/testing';
 
 import { CompoundButton, type CompoundButtonProps } from './CompoundButton';
 
-const DefaultStory = (props: CompoundButtonProps) => {
-  return (
-    <Container>
-      <CompoundButton {...props} />
-      <CompoundButton {...props} disabled />
-    </Container>
-  );
-};
+const DefaultStory = (props: CompoundButtonProps) => (
+  <Container>
+    <CompoundButton {...props} />
+    <CompoundButton {...props} disabled />
+  </Container>
+);
 
 const meta = {
   title: 'sdk/shell/CompoundButton',

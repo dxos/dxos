@@ -53,11 +53,13 @@ const Root = forwardRef<ChessboardController, RootProps>(({ game, children }, fo
   const click = useSoundEffect('Click');
 
   // Controller.
-  useImperativeHandle(forwardedRef, () => {
-    return {
+  useImperativeHandle(
+    forwardedRef,
+    () => ({
       setMoveNumber: (index) => model.setMoveIndex(index),
-    };
-  }, [model]);
+    }),
+    [model],
+  );
 
   // External change.
   // NOTE: Warning if user has not interacted with the board.
@@ -100,17 +102,15 @@ type Role = 'card--popover' | 'card--intrinsic' | 'card--extrinsic';
 
 type ContentProps = ThemedClassName<PropsWithChildren<{ role?: Role }>>;
 
-const Content = ({ classNames, children, role }: ContentProps) => {
-  return (
-    <Gameboard.Content
-      classNames={mx(classNames, role === 'card--popover' && 'size-container popover-square')}
-      grow={!role || role === 'card--extrinsic'}
-      contain={!role || role === 'card--extrinsic' || role === 'card--popover'}
-    >
-      {children}
-    </Gameboard.Content>
-  );
-};
+const Content = ({ classNames, children, role }: ContentProps) => (
+  <Gameboard.Content
+    classNames={mx(classNames, role === 'card--popover' && 'size-container popover-square')}
+    grow={!role || role === 'card--extrinsic'}
+    contain={!role || role === 'card--extrinsic' || role === 'card--popover'}
+  >
+    {children}
+  </Gameboard.Content>
+);
 
 //
 // Board

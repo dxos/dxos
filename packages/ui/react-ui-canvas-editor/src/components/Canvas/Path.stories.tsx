@@ -31,8 +31,8 @@ const Rope = () => {
   useWheel();
 
   const g = useRef<SVGGElement>(null);
-  const elements = useMemo(() => {
-    return [
+  const elements = useMemo(
+    () => [
       {
         id: 's1',
         start: { x: -128, y: 0 },
@@ -47,8 +47,9 @@ const Rope = () => {
         id: 's3',
         start: { x: -256, y: 0 },
       },
-    ];
-  }, []);
+    ],
+    [],
+  );
   useRope(g.current, elements, { nodes: 7, ropeLength: 200, linkStrength: 0.1, gravity: 0.95, curve: true });
 
   return (

@@ -43,16 +43,14 @@ export default () =>
       role: ['article', 'section'],
       filter: (data): data is { attendableId?: string; subject: Mailbox.Mailbox; properties: { filter?: string } } =>
         Obj.instanceOf(Mailbox.Mailbox, data.subject),
-      component: ({ data, role }) => {
-        return (
-          <MailboxContainer
-            mailbox={data.subject}
-            role={role}
-            attendableId={data.attendableId}
-            filter={data.properties?.filter}
-          />
-        );
-      },
+      component: ({ data, role }) => (
+        <MailboxContainer
+          mailbox={data.subject}
+          role={role}
+          attendableId={data.attendableId}
+          filter={data.properties?.filter}
+        />
+      ),
     }),
     createSurface({
       id: `${meta.id}/message`,

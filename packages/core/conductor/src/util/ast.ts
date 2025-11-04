@@ -16,9 +16,8 @@ import * as SchemaAST from 'effect/SchemaAST';
 export const pickProperty = <S extends Schema.Schema.Any, K extends keyof Schema.Schema.Type<S>>(
   schema: S,
   property: K,
-): Schema.Schema<Schema.Schema.Type<S>[K], Schema.Schema.Encoded<S>[K], Schema.Schema.Context<S>> => {
-  return Schema.make(getPropertyKeyIndexedAccess(schema.ast, property).type);
-};
+): Schema.Schema<Schema.Schema.Type<S>[K], Schema.Schema.Encoded<S>[K], Schema.Schema.Context<S>> =>
+  Schema.make(getPropertyKeyIndexedAccess(schema.ast, property).type);
 
 // Copied from effect.
 // TODO(burdon): Reconcile with common/effect.

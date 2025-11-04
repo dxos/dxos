@@ -164,9 +164,7 @@ const meta = {
             space.db.add(view);
 
             // TODO(burdon): Replace with sdk/schema/testing.
-            Array.from({ length: 80 }).map(() => {
-              return space.db.add(Obj.make(DataType.Organization, rollOrg()));
-            });
+            Array.from({ length: 80 }).map(() => space.db.add(Obj.make(DataType.Organization, rollOrg())));
           },
         }),
         SpacePlugin({}),

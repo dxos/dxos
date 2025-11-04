@@ -17,9 +17,7 @@ export const mapValues = <T, U>(obj: Record<string, T>, fn: (value: T, key: stri
 export const deepMapValues = (
   value: any,
   fn: (value: any, recurse: (value: any) => any, key: string | number | undefined) => any,
-): any => {
-  return new DeepMapper(fn).map(value);
-};
+): any => new DeepMapper(fn).map(value);
 
 class DeepMapper {
   private readonly _cyclic = new Map<any, any>();
@@ -73,9 +71,7 @@ class DeepMapper {
 export const deepMapValuesAsync = (
   value: any,
   fn: (value: any, recurse: (value: any) => Promise<any>, key: string | number | undefined) => Promise<any>,
-): Promise<any> => {
-  return new DeepMapperAsync(fn).map(value);
-};
+): Promise<any> => new DeepMapperAsync(fn).map(value);
 
 class DeepMapperAsync {
   private readonly _cyclic = new Map<any, any>();

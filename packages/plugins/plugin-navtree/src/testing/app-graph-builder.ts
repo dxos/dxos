@@ -32,21 +32,19 @@ export const storybookGraphBuilders = (context: PluginContext): BuilderExtension
           Function.pipe(
             get(node),
             Option.flatMap((node) => (node.id === ROOT_ID ? Option.some(node) : Option.none())),
-            Option.map((node) => {
-              return [
-                ...Array.from({ length: 5 }, (_, i) => ({
-                  id: `${node.id}/action-${i}`,
-                  data: () => {
-                    log.info('action', { id: node.id, index: i });
-                  },
-                  properties: {
-                    label: `Action ${i}`,
-                    icon: faker.properties.icon(),
-                    disposition: 'menu',
-                  },
-                })),
-              ];
-            }),
+            Option.map((node) => [
+              ...Array.from({ length: 5 }, (_, i) => ({
+                id: `${node.id}/action-${i}`,
+                data: () => {
+                  log.info('action', { id: node.id, index: i });
+                },
+                properties: {
+                  label: `Action ${i}`,
+                  icon: faker.properties.icon(),
+                  disposition: 'menu',
+                },
+              })),
+            ]),
             Option.getOrElse(() => []),
           ),
         ),
@@ -59,49 +57,47 @@ export const storybookGraphBuilders = (context: PluginContext): BuilderExtension
           Function.pipe(
             get(node),
             Option.flatMap((node) => (node.id === ROOT_ID ? Option.some(node) : Option.none())),
-            Option.map(() => {
-              return [
-                {
-                  id: 'user-account',
-                  type: 'user-account',
-                  properties: {
-                    label: 'User Account',
-                    icon: 'ph--user--regular',
-                    disposition: 'user-account',
-                    userId: '1234567890ABCDEF',
-                    hue: faker.properties.hue(),
-                    emoji: faker.properties.emoji(),
-                    status: 'active',
-                  },
-                  nodes: [
-                    {
-                      id: 'profile',
-                      type: 'profile',
-                      properties: {
-                        label: 'Profile',
-                        icon: 'ph--user--regular',
-                      },
-                    },
-                    {
-                      id: 'devices',
-                      type: 'devices',
-                      properties: {
-                        label: 'Devices',
-                        icon: 'ph--devices--regular',
-                      },
-                    },
-                    {
-                      id: 'security',
-                      type: 'security',
-                      properties: {
-                        label: 'Security',
-                        icon: 'ph--key--regular',
-                      },
-                    },
-                  ],
+            Option.map(() => [
+              {
+                id: 'user-account',
+                type: 'user-account',
+                properties: {
+                  label: 'User Account',
+                  icon: 'ph--user--regular',
+                  disposition: 'user-account',
+                  userId: '1234567890ABCDEF',
+                  hue: faker.properties.hue(),
+                  emoji: faker.properties.emoji(),
+                  status: 'active',
                 },
-              ];
-            }),
+                nodes: [
+                  {
+                    id: 'profile',
+                    type: 'profile',
+                    properties: {
+                      label: 'Profile',
+                      icon: 'ph--user--regular',
+                    },
+                  },
+                  {
+                    id: 'devices',
+                    type: 'devices',
+                    properties: {
+                      label: 'Devices',
+                      icon: 'ph--devices--regular',
+                    },
+                  },
+                  {
+                    id: 'security',
+                    type: 'security',
+                    properties: {
+                      label: 'Security',
+                      icon: 'ph--key--regular',
+                    },
+                  },
+                ],
+              },
+            ]),
             Option.getOrElse(() => []),
           ),
         ),
@@ -116,20 +112,18 @@ export const storybookGraphBuilders = (context: PluginContext): BuilderExtension
           Function.pipe(
             get(node),
             Option.flatMap((node) => (node.id === ROOT_ID ? Option.some(node) : Option.none())),
-            Option.map(() => {
-              return [
-                {
-                  id: 'spaces-root',
-                  type: 'spaces-root',
-                  properties: {
-                    label: 'Spaces',
-                    icon: 'ph--planet--regular',
-                    role: 'branch',
-                    disposition: 'collection',
-                  },
+            Option.map(() => [
+              {
+                id: 'spaces-root',
+                type: 'spaces-root',
+                properties: {
+                  label: 'Spaces',
+                  icon: 'ph--planet--regular',
+                  role: 'branch',
+                  disposition: 'collection',
                 },
-              ];
-            }),
+              },
+            ]),
             Option.getOrElse(() => []),
           ),
         ),
@@ -157,19 +151,17 @@ export const storybookGraphBuilders = (context: PluginContext): BuilderExtension
           Function.pipe(
             get(node),
             Option.flatMap((node) => (node.id === 'spaces-root' ? Option.some(node) : Option.none())),
-            Option.map(() => {
-              return [
-                ...Array.from({ length: get(count) }, (_, i) => ({
-                  id: `space-${i}`,
-                  type: 'space',
-                  properties: getProperties(`space-${i}`, {
-                    label: `Space ${i}`,
-                    icon: faker.properties.icon(),
-                    hue: faker.properties.hue(),
-                  }),
-                })),
-              ];
-            }),
+            Option.map(() => [
+              ...Array.from({ length: get(count) }, (_, i) => ({
+                id: `space-${i}`,
+                type: 'space',
+                properties: getProperties(`space-${i}`, {
+                  label: `Space ${i}`,
+                  icon: faker.properties.icon(),
+                  hue: faker.properties.hue(),
+                }),
+              })),
+            ]),
             Option.getOrElse(() => []),
           ),
         );
@@ -183,20 +175,18 @@ export const storybookGraphBuilders = (context: PluginContext): BuilderExtension
           Function.pipe(
             get(node),
             Option.flatMap((node) => (node.type === 'space' ? Option.some(node) : Option.none())),
-            Option.map((node) => {
-              return [
-                ...Array.from({ length: 5 }, (_, i) => ({
-                  id: `${node.id}/action-${i}`,
-                  data: () => {
-                    log.info('action', { id: node.id, index: i });
-                  },
-                  properties: getProperties(`${node.id}/action-${i}`, {
-                    label: `Action ${i}`,
-                    icon: faker.properties.icon(),
-                  }),
-                })),
-              ];
-            }),
+            Option.map((node) => [
+              ...Array.from({ length: 5 }, (_, i) => ({
+                id: `${node.id}/action-${i}`,
+                data: () => {
+                  log.info('action', { id: node.id, index: i });
+                },
+                properties: getProperties(`${node.id}/action-${i}`, {
+                  label: `Action ${i}`,
+                  icon: faker.properties.icon(),
+                }),
+              })),
+            ]),
             Option.getOrElse(() => []),
           ),
         ),
@@ -224,18 +214,16 @@ export const storybookGraphBuilders = (context: PluginContext): BuilderExtension
           Function.pipe(
             get(node),
             Option.flatMap((node) => (node.type === 'space' ? Option.some(node) : Option.none())),
-            Option.map((node) => {
-              return [
-                ...Array.from({ length: get(count) }, (_, i) => ({
-                  id: `${node.id}/object-${i}`,
-                  type: 'object',
-                  properties: getProperties(`${node.id}/object-${i}`, {
-                    label: `Object ${i}`,
-                    icon: faker.properties.icon(),
-                  }),
-                })),
-              ];
-            }),
+            Option.map((node) => [
+              ...Array.from({ length: get(count) }, (_, i) => ({
+                id: `${node.id}/object-${i}`,
+                type: 'object',
+                properties: getProperties(`${node.id}/object-${i}`, {
+                  label: `Object ${i}`,
+                  icon: faker.properties.icon(),
+                }),
+              })),
+            ]),
             Option.getOrElse(() => []),
           ),
         );
@@ -249,20 +237,18 @@ export const storybookGraphBuilders = (context: PluginContext): BuilderExtension
           Function.pipe(
             get(node),
             Option.flatMap((node) => (node.type === 'object' ? Option.some(node) : Option.none())),
-            Option.map((node) => {
-              return [
-                ...Array.from({ length: 5 }, (_, i) => ({
-                  id: `${node.id}/action-${i}`,
-                  data: () => {
-                    log.info('action', { id: node.id, index: i });
-                  },
-                  properties: getProperties(`${node.id}/action-${i}`, {
-                    label: `Action ${i}`,
-                    icon: faker.properties.icon(),
-                  }),
-                })),
-              ];
-            }),
+            Option.map((node) => [
+              ...Array.from({ length: 5 }, (_, i) => ({
+                id: `${node.id}/action-${i}`,
+                data: () => {
+                  log.info('action', { id: node.id, index: i });
+                },
+                properties: getProperties(`${node.id}/action-${i}`, {
+                  label: `Action ${i}`,
+                  icon: faker.properties.icon(),
+                }),
+              })),
+            ]),
             Option.getOrElse(() => []),
           ),
         ),

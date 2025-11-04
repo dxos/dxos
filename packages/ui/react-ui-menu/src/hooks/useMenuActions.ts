@@ -9,8 +9,8 @@ import { type Edge, type Edges, Graph, type Node, type NodeArg, ROOT_ID } from '
 
 import { type MenuItem, type MenuItemGroup } from '../types';
 
-const edgesArrayToRecord = (edges: Edge[]): Record<string, Edges> => {
-  return Object.fromEntries(
+const edgesArrayToRecord = (edges: Edge[]): Record<string, Edges> =>
+  Object.fromEntries(
     Object.entries(
       edges.reduce((acc: Record<string, { inbound: string[]; outbound: string[] }>, { source, target }) => {
         if (!acc[source]) {
@@ -34,7 +34,6 @@ const edgesArrayToRecord = (edges: Edge[]): Record<string, Edges> => {
       }, {}),
     ),
   );
-};
 
 export type ActionGraphNodes = NodeArg<any>[];
 export type ActionGraphEdges = Edge[];

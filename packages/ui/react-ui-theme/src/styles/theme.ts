@@ -59,11 +59,11 @@ export const defaultTheme: Theme<Record<string, any>> = {
   treegrid: treegridTheme,
 };
 
-export const bindTheme = <P extends Record<string, any>>(theme: Theme<Record<string, any>>) => {
-  return (path: string, defaultClassName: string, styleProps: P, ...options: any[]): string => {
+export const bindTheme =
+  <P extends Record<string, any>>(theme: Theme<Record<string, any>>) =>
+  (path: string, defaultClassName: string, styleProps: P, ...options: any[]): string => {
     const result: Theme<P> | ComponentFunction<P> = get(theme, path);
     return typeof result === 'function' ? result(styleProps, ...options) : defaultClassName;
   };
-};
 
 export const defaultTx = bindTheme(defaultTheme);

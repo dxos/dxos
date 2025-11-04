@@ -16,14 +16,12 @@ export const gridRow = 'is-full grid grid-cols-[1.5rem_1fr_min-content] gap-2 it
 
 // TODO(burdon): Standardize card grid for common rows.
 
-export const CardHeader = ({ label, subject, activeSpace }: { label?: string } & PreviewProps) => {
-  return (
-    <div role='none' className={mx('flex items-center gap-2', cardSpacing)}>
-      <Card.Heading classNames={cardNoSpacing}>{label}</Card.Heading>
-      <CardSubjectMenu subject={subject} activeSpace={activeSpace} />
-    </div>
-  );
-};
+export const CardHeader = ({ label, subject, activeSpace }: { label?: string } & PreviewProps) => (
+  <div role='none' className={mx('flex items-center gap-2', cardSpacing)}>
+    <Card.Heading classNames={cardNoSpacing}>{label}</Card.Heading>
+    <CardSubjectMenu subject={subject} activeSpace={activeSpace} />
+  </div>
+);
 
 export const CardRow = ({ icon, label, onClick }: { icon: string; label: string; onClick?: () => void }) => {
   if (!onClick) {
@@ -48,20 +46,18 @@ export const CardRow = ({ icon, label, onClick }: { icon: string; label: string;
   );
 };
 
-export const CardLink = ({ label, href }: { label: string; href: string }) => {
-  return (
-    <Card.Chrome>
-      <a
-        className={mx(gridRow, 'dx-button dx-focus-ring')}
-        data-variant='ghost'
-        href={href}
-        target='_blank'
-        rel='noreferrer'
-      >
-        <Icon icon='ph--link--regular' size={5} classNames='text-subdued' />
-        <span className='min-is-0 flex-1 truncate'>{label}</span>
-        <Icon icon='ph--arrow-square-out--regular' />
-      </a>
-    </Card.Chrome>
-  );
-};
+export const CardLink = ({ label, href }: { label: string; href: string }) => (
+  <Card.Chrome>
+    <a
+      className={mx(gridRow, 'dx-button dx-focus-ring')}
+      data-variant='ghost'
+      href={href}
+      target='_blank'
+      rel='noreferrer'
+    >
+      <Icon icon='ph--link--regular' size={5} classNames='text-subdued' />
+      <span className='min-is-0 flex-1 truncate'>{label}</span>
+      <Icon icon='ph--arrow-square-out--regular' />
+    </a>
+  </Card.Chrome>
+);

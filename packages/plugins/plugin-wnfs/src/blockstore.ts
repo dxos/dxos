@@ -14,9 +14,7 @@ import * as Uint8Arrays from 'uint8arrays';
 
 import { storeName } from './helpers';
 
-export const create = (apiHost?: string) => {
-  return new MixedBlockstore(apiHost);
-};
+export const create = (apiHost?: string) => new MixedBlockstore(apiHost);
 
 /**
  * A blockstore that communicates with the DXOS blob service,
@@ -206,11 +204,7 @@ export class MixedBlockstore extends BaseBlockstore {
     const { writer, out } = CarWriter.create();
     const outPromise = all(out);
 
-    await Promise.all(
-      blocks.map((block) => {
-        return writer.put(block);
-      }),
-    );
+    await Promise.all(blocks.map((block) => writer.put(block)));
 
     await writer.close();
     return Uint8Arrays.concat(await outPromise);

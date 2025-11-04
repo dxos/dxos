@@ -10,11 +10,11 @@ export type CleanupFn = () => void;
  * Combine multiple cleanup functions into a single cleanup function.
  * Can be used in effect hooks in conjunction with `addEventListener`.
  */
-export const combine = (...cleanupFns: (CleanupFn | CleanupFn[])[]): CleanupFn => {
-  return () => {
+export const combine =
+  (...cleanupFns: (CleanupFn | CleanupFn[])[]): CleanupFn =>
+  () => {
     cleanupFns.flat().forEach((cleanupFn) => cleanupFn());
   };
-};
 
 export const timeout = (cb: Function, ms = 0): CleanupFn => {
   const t = setTimeout(cb, ms);

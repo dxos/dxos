@@ -27,9 +27,7 @@ export const JsonProp = Schema.NonEmptyString.pipe(
   }),
 ) as any as Schema.Schema<JsonProp>;
 
-export const isJsonPath = (value: unknown): value is JsonPath => {
-  return Option.isSome(Schema.validateOption(JsonPath)(value));
-};
+export const isJsonPath = (value: unknown): value is JsonPath => Option.isSome(Schema.validateOption(JsonPath)(value));
 
 /**
  * Creates a JsonPath from an array of path segments.
@@ -95,7 +93,6 @@ export const splitJsonPath = (path: JsonPath): string[] => {
 /**
  * Applies a JsonPath to an object.
  */
-export const getField = (object: any, path: JsonPath): any => {
+export const getField = (object: any, path: JsonPath): any =>
   // By default, JSONPath returns an array of results.
-  return JSONPath({ path, json: object })[0];
-};
+  JSONPath({ path, json: object })[0];

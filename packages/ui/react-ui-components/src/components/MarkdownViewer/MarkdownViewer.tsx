@@ -25,35 +25,25 @@ export type MarkdownViewerProps = ThemedClassName<
  * https://github.com/remarkjs/react-markdown
  * markdown -> remark -> [mdast -> remark plugins] -> [hast -> rehype plugins] -> components -> react elements.
  */
-export const MarkdownViewer = ({ classNames, children, components, content = '' }: MarkdownViewerProps) => {
-  return (
-    <div className={mx(classNames)}>
-      <ReactMarkdown remarkPlugins={[remarkGfm]} skipHtml components={{ ...defaultComponents, ...components }}>
-        {content}
-      </ReactMarkdown>
-      {children}
-    </div>
-  );
-};
+export const MarkdownViewer = ({ classNames, children, components, content = '' }: MarkdownViewerProps) => (
+  <div className={mx(classNames)}>
+    <ReactMarkdown remarkPlugins={[remarkGfm]} skipHtml components={{ ...defaultComponents, ...components }}>
+      {content}
+    </ReactMarkdown>
+    {children}
+  </div>
+);
 
 const defaultComponents: ReactMarkdownOptions['components'] = {
-  h1: ({ children }) => {
-    return <h1 className='pbs-1 pbe-1 text-xl'>{children}</h1>;
-  },
-  h2: ({ children }) => {
-    return <h2 className='pbs-1 pbe-1 text-lg'>{children}</h2>;
-  },
-  h3: ({ children }) => {
-    return <h3 className='pbs-1 pbe-1 text-base'>{children}</h3>;
-  },
+  h1: ({ children }) => <h1 className='pbs-1 pbe-1 text-xl'>{children}</h1>,
+  h2: ({ children }) => <h2 className='pbs-1 pbe-1 text-lg'>{children}</h2>,
+  h3: ({ children }) => <h3 className='pbs-1 pbe-1 text-base'>{children}</h3>,
   blockquote: ({ children, ...props }) => (
     <blockquote className='pis-4 mbs-2 mbe-2 pbs-2 pbe-2 border-l-4 border-accentText text-accentText' {...props}>
       {children}
     </blockquote>
   ),
-  p: ({ children }) => {
-    return <div className='pbs-1 pbe-1'>{children}</div>;
-  },
+  p: ({ children }) => <div className='pbs-1 pbe-1'>{children}</div>,
   a: ({ children, href, ...props }) => (
     <a
       href={href}

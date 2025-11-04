@@ -67,13 +67,9 @@ export const DatabaseDirectory = Object.freeze({
     return rawKey;
   },
 
-  getInlineObject: (doc: DatabaseDirectory, id: ObjectId): ObjectStructure | undefined => {
-    return doc.objects?.[id];
-  },
+  getInlineObject: (doc: DatabaseDirectory, id: ObjectId): ObjectStructure | undefined => doc.objects?.[id],
 
-  getLink: (doc: DatabaseDirectory, id: ObjectId): string | undefined => {
-    return doc.links?.[id]?.toString();
-  },
+  getLink: (doc: DatabaseDirectory, id: ObjectId): string | undefined => doc.links?.[id]?.toString(),
 
   make: ({
     spaceKey,
@@ -112,9 +108,7 @@ export const ObjectStructure = Object.freeze({
   /**
    * @throws On invalid object structure.
    */
-  getTypeReference: (object: ObjectStructure): EncodedReference | undefined => {
-    return object.system?.type;
-  },
+  getTypeReference: (object: ObjectStructure): EncodedReference | undefined => object.system?.type,
 
   /**
    * @throws On invalid object structure.
@@ -125,17 +119,11 @@ export const ObjectStructure = Object.freeze({
     return kind;
   },
 
-  isDeleted: (object: ObjectStructure): boolean => {
-    return object.system?.deleted ?? false;
-  },
+  isDeleted: (object: ObjectStructure): boolean => object.system?.deleted ?? false,
 
-  getRelationSource: (object: ObjectStructure): EncodedReference | undefined => {
-    return object.system?.source;
-  },
+  getRelationSource: (object: ObjectStructure): EncodedReference | undefined => object.system?.source,
 
-  getRelationTarget: (object: ObjectStructure): EncodedReference | undefined => {
-    return object.system?.target;
-  },
+  getRelationTarget: (object: ObjectStructure): EncodedReference | undefined => object.system?.target,
 
   /**
    * @returns All references in the data section of the object.
@@ -153,9 +141,7 @@ export const ObjectStructure = Object.freeze({
     return references;
   },
 
-  getTags: (object: ObjectStructure): string[] => {
-    return object.meta.tags ?? [];
-  },
+  getTags: (object: ObjectStructure): string[] => object.meta.tags ?? [],
 
   makeObject: ({
     type,
@@ -166,18 +152,16 @@ export const ObjectStructure = Object.freeze({
     deleted?: boolean;
     keys?: ForeignKey[];
     data?: unknown;
-  }): ObjectStructure => {
-    return {
-      system: {
-        kind: 'object',
-        type: { '/': type },
-      },
-      meta: {
-        keys: keys ?? [],
-      },
-      data: data ?? {},
-    };
-  },
+  }): ObjectStructure => ({
+    system: {
+      kind: 'object',
+      type: { '/': type },
+    },
+    meta: {
+      keys: keys ?? [],
+    },
+    data: data ?? {},
+  }),
 
   makeRelation: ({
     type,
@@ -193,21 +177,19 @@ export const ObjectStructure = Object.freeze({
     deleted?: boolean;
     keys?: ForeignKey[];
     data?: unknown;
-  }): ObjectStructure => {
-    return {
-      system: {
-        kind: 'relation',
-        type: { '/': type },
-        source,
-        target,
-        deleted: deleted ?? false,
-      },
-      meta: {
-        keys: keys ?? [],
-      },
-      data: data ?? {},
-    };
-  },
+  }): ObjectStructure => ({
+    system: {
+      kind: 'relation',
+      type: { '/': type },
+      source,
+      target,
+      deleted: deleted ?? false,
+    },
+    meta: {
+      keys: keys ?? [],
+    },
+    data: data ?? {},
+  }),
 });
 
 /**

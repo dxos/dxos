@@ -15,15 +15,13 @@ import { translations } from '../translations';
 
 import { ResetDialog, type ResetDialogProps } from './ResetDialog';
 
-const Render = (props: ResetDialogProps) => {
-  return (
-    <Dialog.Root open>
-      <Dialog.Overlay>
-        <ResetDialog onReset={() => console.log('reset')} {...props} />
-      </Dialog.Overlay>
-    </Dialog.Root>
-  );
-};
+const Render = (props: ResetDialogProps) => (
+  <Dialog.Root open>
+    <Dialog.Overlay>
+      <ResetDialog onReset={() => console.log('reset')} {...props} />
+    </Dialog.Overlay>
+  </Dialog.Root>
+);
 
 const meta = {
   title: 'plugins/plugin-client/ResetDialog',

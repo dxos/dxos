@@ -303,9 +303,7 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
     log.trace('dxos.sdk.echo-proxy.create-space', Trace.begin({ id: traceId }));
     const space = await this._serviceProvider.services.SpacesService.createSpace(undefined, { timeout: RPC_TIMEOUT });
 
-    await this._spaceCreated.waitForCondition(() => {
-      return this.get().some(({ key }) => key.equals(space.spaceKey));
-    });
+    await this._spaceCreated.waitForCondition(() => this.get().some(({ key }) => key.equals(space.spaceKey)));
     const spaceProxy = this._findProxy(space);
 
     await spaceProxy._databaseInitialized.wait({ timeout: CREATE_SPACE_TIMEOUT });
@@ -327,9 +325,7 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
       { timeout: CREATE_SPACE_TIMEOUT },
     );
     invariant(SpaceId.isValid(newSpaceId), 'Invalid space ID');
-    await this._spaceCreated.waitForCondition(() => {
-      return this.get().some((space) => space.id === newSpaceId);
-    });
+    await this._spaceCreated.waitForCondition(() => this.get().some((space) => space.id === newSpaceId));
 
     const spaceProxy = this.get(newSpaceId) ?? failedInvariant();
     await spaceProxy.waitUntilReady();

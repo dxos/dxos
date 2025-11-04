@@ -54,9 +54,8 @@ export type WithMeta = { [ATTR_META]?: ObjectMeta };
  */
 export const RawObject = <S extends Schema.Schema.AnyNoContext>(
   schema: S,
-): Schema.Schema<ExcludeId<Schema.Schema.Type<S>> & WithMeta, Schema.Schema.Encoded<S>> => {
-  return Schema.make(SchemaAST.omit(schema.ast, ['id']));
-};
+): Schema.Schema<ExcludeId<Schema.Schema.Type<S>> & WithMeta, Schema.Schema.Encoded<S>> =>
+  Schema.make(SchemaAST.omit(schema.ast, ['id']));
 
 //
 // Utils
@@ -73,21 +72,19 @@ export const splitMeta = <T>(object: T & WithMeta): { object: T; meta?: ObjectMe
 };
 
 // TODO(burdon): Move to `@dxos/util`.
-export const getValue = <T extends object>(obj: T, path: JsonPath): any => {
-  return getDeep(
+export const getValue = <T extends object>(obj: T, path: JsonPath): any =>
+  getDeep(
     obj,
     splitJsonPath(path).map((p) => p.replace(/[[\]]/g, '')),
   );
-};
 
 // TODO(burdon): Move to `@dxos/util`.
-export const setValue = <T extends object>(obj: T, path: JsonPath, value: any): T => {
-  return setDeep(
+export const setValue = <T extends object>(obj: T, path: JsonPath, value: any): T =>
+  setDeep(
     obj,
     splitJsonPath(path).map((p) => p.replace(/[[\]]/g, '')),
     value,
   );
-};
 
 /**
  * Returns a reference that will be used to point to a schema.

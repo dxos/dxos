@@ -16,26 +16,24 @@ type SharedCardStackProps = ThemedClassName<ComponentPropsWithoutRef<'div'>> & {
 const CardStackStack = forwardRef<
   HTMLDivElement,
   Omit<StackProps, 'orientation' | 'size' | 'rail' | 'separatorOnScroll'>
->(({ children, classNames, itemsCount = 0, ...props }, forwardedRef) => {
-  return (
-    <Stack
-      orientation='vertical'
-      size='contain'
-      rail={false}
-      classNames={
-        /* NOTE(thure): Do not let this element have zero intrinsic size, otherwise the drop indicator will not display. See #9035. */
-        ['plb-1', itemsCount > 0 && 'plb-2', classNames]
-      }
-      itemsCount={itemsCount}
-      separatorOnScroll={9}
-      data-density='fine'
-      {...props}
-      ref={forwardedRef}
-    >
-      {children}
-    </Stack>
-  );
-});
+>(({ children, classNames, itemsCount = 0, ...props }, forwardedRef) => (
+  <Stack
+    orientation='vertical'
+    size='contain'
+    rail={false}
+    classNames={
+      /* NOTE(thure): Do not let this element have zero intrinsic size, otherwise the drop indicator will not display. See #9035. */
+      ['plb-1', itemsCount > 0 && 'plb-2', classNames]
+    }
+    itemsCount={itemsCount}
+    separatorOnScroll={9}
+    data-density='fine'
+    {...props}
+    ref={forwardedRef}
+  >
+    {children}
+  </Stack>
+));
 
 const CardStackDragHandle = Card.DragHandle;
 

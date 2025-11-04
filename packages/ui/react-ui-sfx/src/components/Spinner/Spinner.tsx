@@ -18,60 +18,58 @@ export type SpinnerProps = ThemedClassName<{
 }>;
 
 export const Spinner = forwardRef<HTMLDivElement, SpinnerProps>(
-  ({ classNames, state = 'pulse', duration = 3_000, size = 5, onClick }: SpinnerProps, forwardedRef) => {
-    return (
-      <AnimatePresence>
-        <motion.div
-          ref={forwardedRef}
-          className={mx(
-            'flex shrink-0 cursor-pointer',
-            getSize(size),
-            state === 'error' ? 'bg-rose-700 border-2 border-rose-500' : 'bg-primary-500',
-            classNames,
-          )}
-          transition={{
-            ease: 'linear',
-            duration: duration / 1_000,
-            repeat: Infinity,
-          }}
-          initial={{
-            scale: 0.9,
-            rotate: 0,
-            borderRadius: '10%',
-          }}
-          animate={state}
-          variants={{
-            pulse: {
-              scale: [0.9, 0.8, 0.9, 0.8, 0.9, 0.9, 0.9, 0.8, 0.9, 0.8, 0.9, 0.9, 0.9],
-              rotate: [0],
-              borderRadius: ['10%'],
-            },
-            spin: {
-              scale: [0.9, 1, 0.5, 1, 0.9],
-              rotate: spinRotatation,
-              borderRadius: ['10%', '20%', '10%'],
-            },
-            flash: {
-              scale: [0.9, 0.2, 0.2, 0.2, 0.9, 0.2, 0.2, 0.2, 0.9],
-              rotate: [0],
-              borderRadius: ['10%', '50%', '10%'],
-            },
-            error: {
-              scale: [0.9, 0.7, 0.9, 0.9, 0.9, 0.9, 0.9, 0.9, 0.9, 0.9, 0.9, 0.9, 0.9],
-              rotate: [0],
-              borderRadius: ['10%', '20%', '10%'],
-            },
-          }}
-          exit={{
-            opacity: 0,
-            rotate: 0,
-            scale: 0,
-          }}
-          onClick={onClick}
-        />
-      </AnimatePresence>
-    );
-  },
+  ({ classNames, state = 'pulse', duration = 3_000, size = 5, onClick }: SpinnerProps, forwardedRef) => (
+    <AnimatePresence>
+      <motion.div
+        ref={forwardedRef}
+        className={mx(
+          'flex shrink-0 cursor-pointer',
+          getSize(size),
+          state === 'error' ? 'bg-rose-700 border-2 border-rose-500' : 'bg-primary-500',
+          classNames,
+        )}
+        transition={{
+          ease: 'linear',
+          duration: duration / 1_000,
+          repeat: Infinity,
+        }}
+        initial={{
+          scale: 0.9,
+          rotate: 0,
+          borderRadius: '10%',
+        }}
+        animate={state}
+        variants={{
+          pulse: {
+            scale: [0.9, 0.8, 0.9, 0.8, 0.9, 0.9, 0.9, 0.8, 0.9, 0.8, 0.9, 0.9, 0.9],
+            rotate: [0],
+            borderRadius: ['10%'],
+          },
+          spin: {
+            scale: [0.9, 1, 0.5, 1, 0.9],
+            rotate: spinRotatation,
+            borderRadius: ['10%', '20%', '10%'],
+          },
+          flash: {
+            scale: [0.9, 0.2, 0.2, 0.2, 0.9, 0.2, 0.2, 0.2, 0.9],
+            rotate: [0],
+            borderRadius: ['10%', '50%', '10%'],
+          },
+          error: {
+            scale: [0.9, 0.7, 0.9, 0.9, 0.9, 0.9, 0.9, 0.9, 0.9, 0.9, 0.9, 0.9, 0.9],
+            rotate: [0],
+            borderRadius: ['10%', '20%', '10%'],
+          },
+        }}
+        exit={{
+          opacity: 0,
+          rotate: 0,
+          scale: 0,
+        }}
+        onClick={onClick}
+      />
+    </AnimatePresence>
+  ),
 );
 
 const n = 36;

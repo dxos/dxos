@@ -3,6 +3,4 @@
 //
 
 // TODO(burdon): Factor out.
-export const parseNumberString = (str: string): number => {
-  return parseFloat(str.replace(/[^\d.]/g, ''));
-};
+export const parseNumberString = (str: string): number => parseFloat(str.replace(/[^\d.]/g, ''));

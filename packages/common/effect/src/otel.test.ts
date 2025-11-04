@@ -42,8 +42,9 @@ logs.setGlobalLoggerProvider(loggerProvider);
 // You can also use global singleton
 const logger = logs.getLogger('test');
 
-const makeOtelLogProcessor = (logger: Logger): LogProcessor => {
-  return (config, entry) => {
+const makeOtelLogProcessor =
+  (logger: Logger): LogProcessor =>
+  (config, entry) => {
     let severity: SeverityNumber = SeverityNumber.UNSPECIFIED;
     switch (entry.level) {
       case LogLevel.DEBUG:
@@ -75,7 +76,6 @@ const makeOtelLogProcessor = (logger: Logger): LogProcessor => {
       },
     });
   };
-};
 log.addProcessor(makeOtelLogProcessor(logger));
 
 beforeAll(() => {

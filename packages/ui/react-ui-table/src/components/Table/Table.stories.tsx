@@ -175,15 +175,15 @@ const meta = {
 
         space.db.add(view);
 
-        Array.from({ length: 10 }).map(() => {
-          return space.db.add(
+        Array.from({ length: 10 }).map(() =>
+          space.db.add(
             Obj.make(schema, {
               name: faker.lorem.sentence(),
               status: faker.helpers.arrayElement(['todo', 'in-progress', 'done'] as const),
               description: faker.lorem.paragraph(),
             }),
-          );
-        });
+          ),
+        );
       },
     }),
   ],
@@ -310,14 +310,14 @@ export const Tags: Meta<StoryProps> = {
         space.db.add(view);
 
         // Populate.
-        Array.from({ length: 10 }).map(() => {
-          return space.db.add(
+        Array.from({ length: 10 }).map(() =>
+          space.db.add(
             live(storedSchema, {
               single: faker.helpers.arrayElement([...selectOptionIds, undefined]),
               multiple: faker.helpers.randomSubset(selectOptionIds),
             }),
-          );
-        });
+          ),
+        );
       },
     }),
   ],

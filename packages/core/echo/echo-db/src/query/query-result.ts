@@ -325,13 +325,10 @@ const QUERIES = new Set<QueryDiagnostic>();
 trace.diagnostic({
   id: 'client-queries',
   name: 'Queries (Client)',
-  fetch: () => {
-    return Array.from(QUERIES).map((query) => {
-      return {
-        isActive: query.isActive,
-        filter: query.filter,
-        creationStack: query.creationStack.getStack(),
-      };
-    });
-  },
+  fetch: () =>
+    Array.from(QUERIES).map((query) => ({
+      isActive: query.isActive,
+      filter: query.filter,
+      creationStack: query.creationStack.getStack(),
+    })),
 });

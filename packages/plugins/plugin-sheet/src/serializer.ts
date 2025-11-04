@@ -9,9 +9,7 @@ import { getObjectCore } from '@dxos/react-client/echo';
 import { Sheet } from './types';
 
 export const serializer: TypedObjectSerializer<Sheet.Sheet> = {
-  serialize: async ({ object }): Promise<string> => {
-    return JSON.stringify(object, null, 2);
-  },
+  serialize: async ({ object }): Promise<string> => JSON.stringify(object, null, 2),
 
   deserialize: async ({ content, newId }) => {
     const { id, ...parsed } = JSON.parse(content);

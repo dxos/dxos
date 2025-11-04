@@ -32,8 +32,8 @@ export type EditorKeysProps = {
 };
 
 // TODO(Zan): Should each consumer be responsible for defining these?
-export const editorKeys = ({ onNav, onClose }: EditorKeysProps): Extension => {
-  return keymap.of([
+export const editorKeys = ({ onNav, onClose }: EditorKeysProps): Extension =>
+  keymap.of([
     {
       key: 'ArrowUp',
       run: (editor) => {
@@ -112,7 +112,6 @@ export const editorKeys = ({ onNav, onClose }: EditorKeysProps): Extension => {
       },
     },
   ]);
-};
 
 export type CellEditorProps = {
   value?: string;
@@ -125,8 +124,8 @@ export type CellEditorProps = {
 
 export const CellEditor = ({ value, extensions, box, gridId, onBlur, autoFocus, slots }: CellEditorProps) => {
   const { themeMode } = useThemeContext();
-  const { parentRef } = useTextEditor(() => {
-    return {
+  const { parentRef } = useTextEditor(
+    () => ({
       autoFocus,
       initialValue: value,
       selection: { anchor: value?.length ?? 0 },
@@ -161,8 +160,9 @@ export const CellEditor = ({ value, extensions, box, gridId, onBlur, autoFocus, 
           },
         }),
       ],
-    };
-  }, [extensions, autoFocus, value, onBlur, themeMode, slots]);
+    }),
+    [extensions, autoFocus, value, onBlur, themeMode, slots],
+  );
 
   return (
     <div

@@ -133,7 +133,7 @@ export class ConnectionLog {
 }
 
 const gcSwarm = (swarm: SwarmInfo) => {
-  swarm.connections = swarm.connections?.filter((connection) => {
-    return connection.lastUpdate ? Date.now() - connection.lastUpdate.getTime() < CONNECTION_GC_THRESHOLD : true;
-  });
+  swarm.connections = swarm.connections?.filter((connection) =>
+    connection.lastUpdate ? Date.now() - connection.lastUpdate.getTime() < CONNECTION_GC_THRESHOLD : true,
+  );
 };

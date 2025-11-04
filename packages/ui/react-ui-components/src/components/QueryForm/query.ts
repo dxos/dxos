@@ -8,8 +8,8 @@ import * as Option from 'effect/Option';
 import { DXN, type QueryAST } from '@dxos/echo';
 
 // Helper to extract typename from query AST
-export const extractTypename = (query: QueryAST.Query): Option.Option<string> => {
-  return Match.value(query).pipe(
+export const extractTypename = (query: QueryAST.Query): Option.Option<string> =>
+  Match.value(query).pipe(
     Match.withReturnType<Option.Option<string>>(),
     Match.when({ type: 'select' }, (q) => extractTypenameFromFilter(q.filter)),
     Match.when({ type: 'filter' }, (q) => {
@@ -20,11 +20,10 @@ export const extractTypename = (query: QueryAST.Query): Option.Option<string> =>
     Match.when({ type: 'options' }, (q) => extractTypename(q.query)),
     Match.orElse(() => Option.none()),
   );
-};
 
 // Helper to extract tag from query AST
-export const extractTag = (query: QueryAST.Query): Option.Option<string> => {
-  return Match.value(query).pipe(
+export const extractTag = (query: QueryAST.Query): Option.Option<string> =>
+  Match.value(query).pipe(
     Match.withReturnType<Option.Option<string>>(),
     Match.when({ type: 'select' }, (q) => extractTagFromFilter(q.filter)),
     Match.when({ type: 'filter' }, (q) => {
@@ -35,11 +34,10 @@ export const extractTag = (query: QueryAST.Query): Option.Option<string> => {
     Match.when({ type: 'options' }, (q) => extractTag(q.query)),
     Match.orElse(() => Option.none()),
   );
-};
 
 // Helper to extract typename from filter AST
-const extractTypenameFromFilter = (filter: QueryAST.Filter): Option.Option<string> => {
-  return Match.value(filter).pipe(
+const extractTypenameFromFilter = (filter: QueryAST.Filter): Option.Option<string> =>
+  Match.value(filter).pipe(
     Match.withReturnType<Option.Option<string>>(),
     Match.when({ type: 'object' }, (f) =>
       Option.fromNullable(f.typename).pipe(
@@ -63,11 +61,10 @@ const extractTypenameFromFilter = (filter: QueryAST.Filter): Option.Option<strin
     ),
     Match.orElse(() => Option.none()),
   );
-};
 
 // Helper to extract tag from filter AST
-const extractTagFromFilter = (filter: QueryAST.Filter): Option.Option<string> => {
-  return Match.value(filter).pipe(
+const extractTagFromFilter = (filter: QueryAST.Filter): Option.Option<string> =>
+  Match.value(filter).pipe(
     Match.withReturnType<Option.Option<string>>(),
     Match.when({ type: 'tag' }, (f) => Option.some(f.tag)),
     Match.when({ type: 'and' }, (f) =>
@@ -86,4 +83,3 @@ const extractTagFromFilter = (filter: QueryAST.Filter): Option.Option<string> =>
     ),
     Match.orElse(() => Option.none()),
   );
-};

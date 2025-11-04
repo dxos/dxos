@@ -14,9 +14,7 @@ export class FractionUtil {
    * Convert number to fraction.
    * @param n
    */
-  static toFraction = (n: Num): Fraction => {
-    return typeof n === 'number' ? [n, 1] : n;
-  };
+  static toFraction = (n: Num): Fraction => (typeof n === 'number' ? [n, 1] : n);
 
   static validate = (...fraction: Fraction[]): Fraction[] => {
     fraction.forEach(([n, d]) => {
@@ -58,17 +56,13 @@ export class FractionUtil {
    * @param n1
    * @param n2
    */
-  static equals = (n1: Fraction, n2: Fraction) => {
-    return n1[0] * n2[1] === n1[1] * n2[0];
-  };
+  static equals = (n1: Fraction, n2: Fraction) => n1[0] * n2[1] === n1[1] * n2[0];
 
   /**
    * @param {Fraction}
    * True if zero.
    */
-  static isZero = ([n]: Fraction): boolean => {
-    return n === 0;
-  };
+  static isZero = ([n]: Fraction): boolean => n === 0;
 
   //
   // Normalization.

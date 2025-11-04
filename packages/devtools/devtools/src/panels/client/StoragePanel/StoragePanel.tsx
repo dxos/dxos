@@ -293,31 +293,27 @@ const TreeItemText = ({ primary, secondary }: TreeItemTextProps) => (
   </div>
 );
 
-const DataTree: FC<{ items: Node[]; onSelect: (item: Node) => void }> = ({ items = [], onSelect }) => {
-  return (
-    <Tree.Root classNames='p-2'>
-      <DataItems items={items} onSelect={onSelect} />
-    </Tree.Root>
-  );
-};
+const DataTree: FC<{ items: Node[]; onSelect: (item: Node) => void }> = ({ items = [], onSelect }) => (
+  <Tree.Root classNames='p-2'>
+    <DataItems items={items} onSelect={onSelect} />
+  </Tree.Root>
+);
 
-const DataItems: FC<{ items: Node[]; onSelect: (item: Node) => void }> = ({ items = [], onSelect }) => {
-  return (
-    <>
-      {items.map((item) => {
-        const { id, iconName, Element, items } = item;
-        return (
-          <TreeItem.Root key={id} collapsible={!!items?.length} open>
-            <div role='none' className='flex grow items-center gap-2 font-mono' onClick={() => onSelect(item)}>
-              <Icon icon={iconName} />
-              {Element}
-            </div>
-            <TreeItem.Body className='pis-4'>
-              <Tree.Branch>{items && <DataItems items={items} onSelect={onSelect} />}</Tree.Branch>
-            </TreeItem.Body>
-          </TreeItem.Root>
-        );
-      })}
-    </>
-  );
-};
+const DataItems: FC<{ items: Node[]; onSelect: (item: Node) => void }> = ({ items = [], onSelect }) => (
+  <>
+    {items.map((item) => {
+      const { id, iconName, Element, items } = item;
+      return (
+        <TreeItem.Root key={id} collapsible={!!items?.length} open>
+          <div role='none' className='flex grow items-center gap-2 font-mono' onClick={() => onSelect(item)}>
+            <Icon icon={iconName} />
+            {Element}
+          </div>
+          <TreeItem.Body className='pis-4'>
+            <Tree.Branch>{items && <DataItems items={items} onSelect={onSelect} />}</Tree.Branch>
+          </TreeItem.Body>
+        </TreeItem.Root>
+      );
+    })}
+  </>
+);

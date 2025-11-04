@@ -343,9 +343,8 @@ export const JsonSchemaType: Schema.Schema<JsonSchemaType> = _JsonSchemaType.pip
 
 // TODO(burdon): Factor out JSON schema utils.
 
-export const getSchemaProperty = (schema: JsonSchemaType, property: JsonProp): JsonSchemaType | undefined => {
-  return schema.properties?.[property];
-};
+export const getSchemaProperty = (schema: JsonSchemaType, property: JsonProp): JsonSchemaType | undefined =>
+  schema.properties?.[property];
 
 // TODO(burdon): Properties should be ordered.
 export const setSchemaProperty = (schema: JsonSchemaType, property: JsonProp, value: JsonSchemaType) => {

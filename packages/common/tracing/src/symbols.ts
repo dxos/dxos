@@ -16,11 +16,10 @@ export type TracingContext = {
   metricsProperties: Record<string, {}>;
 };
 
-export const getTracingContext = (target: any): TracingContext => {
-  return ((target[symbolTracingContext] as TracingContext | undefined) ??= {
+export const getTracingContext = (target: any): TracingContext =>
+  ((target[symbolTracingContext] as TracingContext | undefined) ??= {
     infoProperties: {},
     metricsProperties: {},
   });
-};
 
 export const TRACE_SPAN_ATTRIBUTE = 'dxos.trace-span';

@@ -99,9 +99,7 @@ describe('AutomergeDocumentLoader', () => {
     return { loader, spaceRootDocHandle, repo };
   };
 
-  const createRootDoc = (repo: RepoProxy) => {
-    return repo.create<DatabaseDirectory>({ version: SpaceDocVersion.CURRENT });
-  };
+  const createRootDoc = (repo: RepoProxy) => repo.create<DatabaseDirectory>({ version: SpaceDocVersion.CURRENT });
 
   const loadLinkedObjects = (loader: AutomergeDocumentLoader, links: DatabaseDirectory['links']) => {
     Object.keys(links ?? {}).forEach((objectId) => loader.loadObjectDocument(objectId));

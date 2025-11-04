@@ -20,8 +20,9 @@ export type BulletOptions = {
  * @param nodeId
  * @param options
  */
-export const createBullets = (group: SVGGElement, nodeId: string, options: BulletOptions = {}): D3Callable => {
-  return (selection: D3Selection) => {
+export const createBullets =
+  (group: SVGGElement, nodeId: string, options: BulletOptions = {}): D3Callable =>
+  (selection: D3Selection) => {
     const { max = 32, radius = 3, delay = 50, minDuration = 100, maxDuration = 500 } = options;
 
     // Edge selection.
@@ -69,4 +70,3 @@ export const createBullets = (group: SVGGElement, nodeId: string, options: Bulle
       }
     });
   };
-};

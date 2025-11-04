@@ -10,9 +10,9 @@ import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { arrayToBuffer } from '@dxos/util';
 
 // TODO(burdon): Move util to SyntaxHighlighter.
-export const JsonView: FC<{ data?: object; truncate?: boolean }> = ({ data, truncate = true }) => {
-  return <SyntaxHighlighter language='json'>{JSON.stringify(data, replacer(truncate), 2)}</SyntaxHighlighter>;
-};
+export const JsonView: FC<{ data?: object; truncate?: boolean }> = ({ data, truncate = true }) => (
+  <SyntaxHighlighter language='json'>{JSON.stringify(data, replacer(truncate), 2)}</SyntaxHighlighter>
+);
 
 // TODO(burdon): Factor out.
 // TODO(mykola): Add proto schema. Decode bytes.

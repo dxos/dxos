@@ -58,9 +58,10 @@ export const MeetingsList = ({ channel }: { channel: Channel.Channel }) => {
   const space = getSpace(channel);
   const meetings = useQuery(space, Query.type(Meeting.Meeting));
   // TODO(wittjosiah): This should be done in the query.
-  const sortedMeetings = useMemo(() => {
-    return meetings.toSorted((a, b) => new Date(b.created).getTime() - new Date(a.created).getTime());
-  }, [meetings]);
+  const sortedMeetings = useMemo(
+    () => meetings.toSorted((a, b) => new Date(b.created).getTime() - new Date(a.created).getTime()),
+    [meetings],
+  );
 
   const metadata = useCapabilities(Capabilities.Metadata);
   const [meetingMetadata] = useMemo(

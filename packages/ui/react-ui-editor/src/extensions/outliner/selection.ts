@@ -40,11 +40,7 @@ export const selectAll: Command = (view: EditorView) => {
 };
 
 // TODO(burdon): Implement.
-export const selectUp: Command = (view: EditorView) => {
-  return true;
-};
+export const selectUp: Command = (view: EditorView) => true;
 
 // TODO(burdon): Implement.
-export const selectDown: Command = (view: EditorView) => {
-  return true;
-};
+export const selectDown: Command = (view: EditorView) => true;

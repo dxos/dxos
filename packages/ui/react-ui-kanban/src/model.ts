@@ -195,14 +195,14 @@ export class KanbanModel<T extends BaseKanbanItem = { id: string }> extends Reso
       return [];
     }
 
-    return untracked(() => {
-      return computeArrangement<T>({
+    return untracked(() =>
+      computeArrangement<T>({
         kanban: this.kanban,
         items: this._items.value,
         pivotPath: this.columnFieldPath,
         selectOptions: options,
-      });
-    });
+      }),
+    );
   }
 
   /**

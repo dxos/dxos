@@ -122,26 +122,22 @@ function* visitor(node: StorybookNode, isOpen?: (node: StorybookNode) => boolean
 
 const flattenedContent = Array.from(visitor(content, () => true));
 
-const DefaultStory = () => {
-  return (
-    <Treegrid.Root gridTemplateColumns='1fr'>
-      {flattenedContent.map(({ node, parentOf, path }) => {
-        return (
-          <Treegrid.Row
-            key={node.id}
-            id={path.join(Treegrid.PATH_SEPARATOR)}
-            {...(parentOf && { parentOf: parentOf.join(Treegrid.PARENT_OF_SEPARATOR) })}
-          >
-            <Treegrid.Cell indent classNames='flex items-center'>
-              {node.icon && <Icon icon={node.icon} classNames='is-[1em] bs-[1em] mlb-1' />}
-              {node.title}
-            </Treegrid.Cell>
-          </Treegrid.Row>
-        );
-      })}
-    </Treegrid.Root>
-  );
-};
+const DefaultStory = () => (
+  <Treegrid.Root gridTemplateColumns='1fr'>
+    {flattenedContent.map(({ node, parentOf, path }) => (
+      <Treegrid.Row
+        key={node.id}
+        id={path.join(Treegrid.PATH_SEPARATOR)}
+        {...(parentOf && { parentOf: parentOf.join(Treegrid.PARENT_OF_SEPARATOR) })}
+      >
+        <Treegrid.Cell indent classNames='flex items-center'>
+          {node.icon && <Icon icon={node.icon} classNames='is-[1em] bs-[1em] mlb-1' />}
+          {node.title}
+        </Treegrid.Cell>
+      </Treegrid.Row>
+    ))}
+  </Treegrid.Root>
+);
 
 const meta = {
   title: 'ui/react-ui-core/Treegrid',

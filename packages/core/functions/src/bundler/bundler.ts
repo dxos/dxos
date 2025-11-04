@@ -90,17 +90,14 @@ export class Bundler {
           {
             name: 'memory',
             setup: (build) => {
-              build.onResolve({ filter: /^\.\/runtime\.js$/ }, ({ path }) => {
-                return { path, external: true };
-              });
+              build.onResolve({ filter: /^\.\/runtime\.js$/ }, ({ path }) => ({ path, external: true }));
 
-              build.onResolve({ filter: /^dxos:functions$/ }, ({ path }) => {
-                return { path: './runtime.js', external: true };
-              });
+              build.onResolve({ filter: /^dxos:functions$/ }, ({ path }) => ({ path: './runtime.js', external: true }));
 
-              build.onResolve({ filter: /^memory:/ }, ({ path }) => {
-                return { path: path.split(':')[1], namespace: 'memory' };
-              });
+              build.onResolve({ filter: /^memory:/ }, ({ path }) => ({
+                path: path.split(':')[1],
+                namespace: 'memory',
+              }));
 
               build.onLoad({ filter: /.*/, namespace: 'memory' }, ({ path }) => {
                 if (path === 'main.tsx') {
@@ -112,9 +109,10 @@ export class Bundler {
               });
 
               for (const module of providedModules) {
-                build.onResolve({ filter: new RegExp(`^${module}$`) }, ({ path }) => {
-                  return { path, namespace: 'injected-module' };
-                });
+                build.onResolve({ filter: new RegExp(`^${module}$`) }, ({ path }) => ({
+                  path,
+                  namespace: 'injected-module',
+                }));
               }
 
               build.onLoad({ filter: /.*/, namespace: 'injected-module' }, ({ path }) => {
@@ -186,15 +184,13 @@ export class Bundler {
   }[] {
     // TODO(dmaretskyi): Support import aliases and wildcard imports.
     const parsedImports = allMatches(IMPORT_REGEX, code);
-    return parsedImports.map((capture) => {
-      return {
-        defaultImportName: capture[1],
-        namedImports: capture[2]?.split(',').map((importName) => importName.trim()),
-        wildcardImportName: capture[3],
-        moduleIdentifier: capture[4],
-        quotes: capture[5],
-      };
-    });
+    return parsedImports.map((capture) => ({
+      defaultImportName: capture[1],
+      namedImports: capture[2]?.split(',').map((importName) => importName.trim()),
+      wildcardImportName: capture[3],
+      moduleIdentifier: capture[4],
+      quotes: capture[5],
+    }));
   }
 }
 
@@ -232,19 +228,17 @@ type ParsedImport = {
 const analyzeSourceFileImports = (code: string): ParsedImport[] => {
   // TODO(dmaretskyi): Support import aliases and wildcard imports.
   const parsedImports = allMatches(IMPORT_REGEX, code);
-  return parsedImports.map((capture) => {
-    return {
-      defaultImportName: capture[1],
-      namedImports: capture[2]
-        ?.trim()
-        .slice(1, -1)
-        .split(',')
-        .map((importName) => importName.trim()),
-      wildcardImportName: capture[3],
-      moduleIdentifier: capture[4],
-      quotes: capture[5],
-    };
-  });
+  return parsedImports.map((capture) => ({
+    defaultImportName: capture[1],
+    namedImports: capture[2]
+      ?.trim()
+      .slice(1, -1)
+      .split(',')
+      .map((importName) => importName.trim()),
+    wildcardImportName: capture[3],
+    moduleIdentifier: capture[4],
+    quotes: capture[5],
+  }));
 };
 
 const MAX_RETRIES = 5;
@@ -270,8 +264,8 @@ const httpPlugin: Plugin = {
 
     // When a URL is loaded, we want to actually download the content from the internet.
     // This has just enough logic to be able to handle the example import from unpkg.com but in reality this would probably need to be more complex.
-    build.onLoad({ filter: /.*/, namespace: 'http-url' }, async (args) => {
-      return Effect.gen(function* () {
+    build.onLoad({ filter: /.*/, namespace: 'http-url' }, async (args) =>
+      Effect.gen(function* () {
         const response = yield* HttpClient.get(args.path);
         if (response.status !== 200) {
           throw new Error(`failed to fetch: ${response.status}`);
@@ -289,7 +283,7 @@ const httpPlugin: Plugin = {
         ),
         Effect.provide(FetchHttpClient.layer),
         runAndForwardErrors,
-      );
-    });
+      ),
+    );
   },
 };

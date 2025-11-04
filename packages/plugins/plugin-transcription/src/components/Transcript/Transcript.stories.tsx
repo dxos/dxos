@@ -45,28 +45,26 @@ const TranscriptContainer: FC<
     onRunningChange: (running: boolean) => void;
     onReset?: () => void;
   }
-> = ({ space, model, running, onRunningChange, onReset }) => {
-  return (
-    <div className='grid grid-rows-[1fr_40px] grow divide-y divide-separator'>
-      <TranscriptView space={space} model={model} />
-      <div className='grid grid-cols-[1fr_16rem] overflow-hidden'>
-        <div className='flex items-center'>
-          <SyntaxHighlighter language='json' className='text-sm'>
-            {JSON.stringify(model.toJSON())}
-          </SyntaxHighlighter>
-        </div>
-        <Toolbar.Root classNames='justify-end'>
-          <IconButton
-            icon={running ? 'ph--pause--regular' : 'ph--play--regular'}
-            label={running ? 'Pause' : 'Start'}
-            onClick={() => onRunningChange(!running)}
-          />
-          {onReset && <IconButton icon='ph--x--regular' label='Reset' onClick={onReset} />}
-        </Toolbar.Root>
+> = ({ space, model, running, onRunningChange, onReset }) => (
+  <div className='grid grid-rows-[1fr_40px] grow divide-y divide-separator'>
+    <TranscriptView space={space} model={model} />
+    <div className='grid grid-cols-[1fr_16rem] overflow-hidden'>
+      <div className='flex items-center'>
+        <SyntaxHighlighter language='json' className='text-sm'>
+          {JSON.stringify(model.toJSON())}
+        </SyntaxHighlighter>
       </div>
+      <Toolbar.Root classNames='justify-end'>
+        <IconButton
+          icon={running ? 'ph--pause--regular' : 'ph--play--regular'}
+          label={running ? 'Pause' : 'Start'}
+          onClick={() => onRunningChange(!running)}
+        />
+        {onReset && <IconButton icon='ph--x--regular' label='Reset' onClick={onReset} />}
+      </Toolbar.Root>
     </div>
-  );
-};
+  </div>
+);
 
 type StoryProps = { messages?: DataType.Message[] } & Pick<TranscriptViewProps, 'ignoreAttention' | 'attendableId'>;
 

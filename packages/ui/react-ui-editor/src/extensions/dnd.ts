@@ -18,20 +18,18 @@ const styles = EditorView.theme({
   },
 });
 
-export const dropFile = (options: DNDOptions = {}): Extension => {
-  return [
-    styles,
-    dropCursor(),
-    EditorView.domEventHandlers({
-      drop: (event, view) => {
-        event.preventDefault();
-        const files = event.dataTransfer?.files;
-        const pos = view.posAtCoords(event);
-        if (files?.length && pos !== null) {
-          view.dispatch({ selection: { anchor: pos } });
-          options.onDrop?.(view, { files });
-        }
-      },
-    }),
-  ];
-};
+export const dropFile = (options: DNDOptions = {}): Extension => [
+  styles,
+  dropCursor(),
+  EditorView.domEventHandlers({
+    drop: (event, view) => {
+      event.preventDefault();
+      const files = event.dataTransfer?.files;
+      const pos = view.posAtCoords(event);
+      if (files?.length && pos !== null) {
+        view.dispatch({ selection: { anchor: pos } });
+        options.onDrop?.(view, { files });
+      }
+    },
+  }),
+];

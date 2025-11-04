@@ -46,9 +46,7 @@ describe('InvitationStateMachine', () => {
     const stateMachine = createStateMachine();
     const invitations = range(3, () => ({ ...baseInvitation, invitationId: PublicKey.random().toHex() }));
     await Promise.all(
-      invitations.map(async (invitation) => {
-        return stateMachine.process(await delegateInvitation(invitation));
-      }),
+      invitations.map(async (invitation) => stateMachine.process(await delegateInvitation(invitation))),
     );
     invitations.forEach((invitation) => expectHasInvitation(stateMachine, invitation));
   });
@@ -136,8 +134,8 @@ describe('InvitationStateMachine', () => {
     return message.credential!.credential;
   };
 
-  const cancelInvitation = async (invitation: Credential): Promise<Credential> => {
-    return createCredential({
+  const cancelInvitation = async (invitation: Credential): Promise<Credential> =>
+    createCredential({
       issuer: space,
       subject: identity,
       assertion: {
@@ -146,10 +144,9 @@ describe('InvitationStateMachine', () => {
       },
       signer: keyring,
     });
-  };
 
-  const admitMember = (invitation: Credential) => {
-    return createCredential({
+  const admitMember = (invitation: Credential) =>
+    createCredential({
       issuer: space,
       subject: identity,
       assertion: {
@@ -161,7 +158,6 @@ describe('InvitationStateMachine', () => {
       },
       signer: keyring,
     });
-  };
 });
 
 const createStateMachine = () => new InvitationStateMachine();

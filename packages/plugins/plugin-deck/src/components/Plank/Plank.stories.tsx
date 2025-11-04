@@ -20,13 +20,11 @@ import { Plank } from './Plank';
 const meta = {
   title: 'plugins/plugin-deck/Plank',
   component: Plank,
-  render: (args) => {
-    return (
-      <Stack orientation='horizontal'>
-        <Plank {...args} />
-      </Stack>
-    );
-  },
+  render: (args) => (
+    <Stack orientation='horizontal'>
+      <Plank {...args} />
+    </Stack>
+  ),
   decorators: [
     withTheme,
     withPluginManager({

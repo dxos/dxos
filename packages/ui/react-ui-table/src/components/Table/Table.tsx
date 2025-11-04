@@ -50,23 +50,21 @@ const rowDefault = { frozenRowsStart: { readonly: true, focusUnfurl: false } };
 
 export type TableRootProps = PropsWithChildren<{ role?: string }>;
 
-const TableRoot = ({ children, role = 'article' }: TableRootProps) => {
-  return (
-    <div
-      role='none'
-      className={mx(
-        'relative !border-separator [&_.dx-grid]:max-is-[--dx-grid-content-inline-size] [&_.dx-grid]:max-bs-[--dx-grid-content-block-size]',
-        role === 'card--popover' && 'popover-card-height',
-        role === 'section' && 'attention-surface',
-        role === 'card--intrinsic' && '[&_.dx-grid]:bs-[--dx-grid-content-block-size]',
-        ['card--popover', 'section', 'card--extrinsic'].includes(role) && 'overflow-hidden',
-        ['article', 'slide'].includes(role) && 'flex flex-col [&_.dx-grid]:grow [&_.dx-grid]:bs-0',
-      )}
-    >
-      {children}
-    </div>
-  );
-};
+const TableRoot = ({ children, role = 'article' }: TableRootProps) => (
+  <div
+    role='none'
+    className={mx(
+      'relative !border-separator [&_.dx-grid]:max-is-[--dx-grid-content-inline-size] [&_.dx-grid]:max-bs-[--dx-grid-content-block-size]',
+      role === 'card--popover' && 'popover-card-height',
+      role === 'section' && 'attention-surface',
+      role === 'card--intrinsic' && '[&_.dx-grid]:bs-[--dx-grid-content-block-size]',
+      ['card--popover', 'section', 'card--extrinsic'].includes(role) && 'overflow-hidden',
+      ['article', 'slide'].includes(role) && 'flex flex-col [&_.dx-grid]:grow [&_.dx-grid]:bs-0',
+    )}
+  >
+    {children}
+  </div>
+);
 
 //
 // Table.Main

@@ -94,13 +94,11 @@ export class IndexStore {
 const encodings = { keyEncoding: 'utf8', valueEncoding: 'json' };
 
 const indexCodec = {
-  encode: async (index: Index): Promise<IndexData> => {
-    return {
-      index: await index.serialize(),
-      kind: index.kind,
-      version: CODEC_VERSION,
-    };
-  },
+  encode: async (index: Index): Promise<IndexData> => ({
+    index: await index.serialize(),
+    kind: index.kind,
+    version: CODEC_VERSION,
+  }),
   decode: async (identifier: string, data: IndexData): Promise<Index> => {
     invariant(data.version === CODEC_VERSION, `Index version ${data.version} is not supported`);
     const IndexConstructor = IndexConstructors[data.kind.kind];

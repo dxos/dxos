@@ -122,16 +122,14 @@ export const ProfileContainer = () => {
         );
       },
       // TODO(wittjosiah): We need text input annotations for disabled and copyable.
-      did: ({ label, getValue }) => {
-        return (
-          <ControlItemInput title={label} description={t('did description')}>
-            <ButtonGroup>
-              <Input.TextInput value={getValue()} disabled classNames='min-is-64' />
-              <Clipboard.IconButton value={getValue() ?? ''} />
-            </ButtonGroup>
-          </ControlItemInput>
-        );
-      },
+      did: ({ label, getValue }) => (
+        <ControlItemInput title={label} description={t('did description')}>
+          <ButtonGroup>
+            <Input.TextInput value={getValue()} disabled classNames='min-is-64' />
+            <Clipboard.IconButton value={getValue() ?? ''} />
+          </ButtonGroup>
+        </ControlItemInput>
+      ),
     }),
     [t],
   );

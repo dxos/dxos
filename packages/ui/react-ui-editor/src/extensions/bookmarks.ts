@@ -15,31 +15,29 @@ export const addBookmark = StateEffect.define<Bookmark>();
 export const removeBookmark = StateEffect.define<string>();
 export const clearBookmarks = StateEffect.define<void>();
 
-export const bookmarks = (): Extension => {
-  return [
-    bookmarksField,
-    Prec.highest(
-      keymap.of([
-        {
-          key: 'Mod-ArrowUp',
-          run: (view) => {
-            const bookmarks = view.state.field(bookmarksField);
-            console.log('up', bookmarks);
-            return true;
-          },
+export const bookmarks = (): Extension => [
+  bookmarksField,
+  Prec.highest(
+    keymap.of([
+      {
+        key: 'Mod-ArrowUp',
+        run: (view) => {
+          const bookmarks = view.state.field(bookmarksField);
+          console.log('up', bookmarks);
+          return true;
         },
-        {
-          key: 'Mod-ArrowDown',
-          run: (view) => {
-            const bookmarks = view.state.field(bookmarksField);
-            console.log('down', bookmarks);
-            return true;
-          },
+      },
+      {
+        key: 'Mod-ArrowDown',
+        run: (view) => {
+          const bookmarks = view.state.field(bookmarksField);
+          console.log('down', bookmarks);
+          return true;
         },
-      ]),
-    ),
-  ];
-};
+      },
+    ]),
+  ),
+];
 
 type BookmarkFieldState = {
   bookmarks: Bookmark[];

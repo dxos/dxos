@@ -62,6 +62,4 @@ export const incrementSemverPatch = (version: string): string => {
 };
 
 // TODO(burdon): Factor out.
-export const publicKeyToDid = (key: PublicKey): DID => {
-  return `did:key:${key.toHex()}`;
-};
+export const publicKeyToDid = (key: PublicKey): DID => `did:key:${key.toHex()}`;

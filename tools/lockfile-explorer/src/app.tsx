@@ -70,9 +70,9 @@ const App = () => {
       : entries(lockfile?.packageIndex.packages[selectedPackage.name]?.versions ?? {}).sort(([a], [b]) =>
           a === selectedPackage.version ? -1 : b === selectedPackage.version ? 1 : 0,
         );
-  const versionRowCounts = selectedPackageVersions.map(([version, { dependents, importers }]) => {
-    return dependents.length + importers.length + 1;
-  });
+  const versionRowCounts = selectedPackageVersions.map(
+    ([version, { dependents, importers }]) => dependents.length + importers.length + 1,
+  );
 
   let selectedVersionRow:
     | {

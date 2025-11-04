@@ -53,9 +53,9 @@ export const CustomGrid = ({ x, y, z, size }: TLGridProps) => {
           );
         })}
       </defs>
-      {GRID_STEPS.map(({ step }, i) => {
-        return <rect key={`grid-rect-${i}`} width='100%' height='100%' fill={`url(#grid-${step})`} />;
-      })}
+      {GRID_STEPS.map(({ step }, i) => (
+        <rect key={`grid-rect-${i}`} width='100%' height='100%' fill={`url(#grid-${step})`} />
+      ))}
     </svg>
   );
 };

@@ -28,12 +28,11 @@ import {
 } from '@dxos/react-ui-canvas-editor';
 import { StackItem } from '@dxos/react-ui-stack';
 
-const createServices = (config: Config, space?: Space): ServiceContainer => {
-  return new ServiceContainer().setServices({
+const createServices = (config: Config, space?: Space): ServiceContainer =>
+  new ServiceContainer().setServices({
     database: space == null ? undefined : DatabaseService.make(space.db),
     queues: space == null ? undefined : QueueService.make(space.queues, undefined),
   });
-};
 
 const useGraphController = (canvas: CanvasBoardType) => {
   const config = useConfig();

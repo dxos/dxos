@@ -19,9 +19,7 @@ import { type ControlProps } from '../Toolbar';
 import { Globe, type GlobeCanvasProps, type GlobeController, type GlobeRootProps } from './Globe';
 
 // TODO(burdon): Load from JSON at runtime?
-const useTopology = () => {
-  return useAsyncState(async () => (await import('../../../data/countries-110m.ts')).default);
-};
+const useTopology = () => useAsyncState(async () => (await import('../../../data/countries-110m.ts')).default);
 
 const defaultStyles: StyleSet = {
   water: {
@@ -158,9 +156,10 @@ const DefaultStory = ({
   const [topology] = useTopology();
   const [airports] = useAsyncState(async () => (await import('../../../data/airports.ts')).default);
 
-  const features = useMemo(() => {
-    return airports ? createTrip(airports, routes, (dots?.objects.dots as any)?.geometries[0].coordinates) : undefined;
-  }, [airports, routes, dots]);
+  const features = useMemo(
+    () => (airports ? createTrip(airports, routes, (dots?.objects.dots as any)?.geometries[0].coordinates) : undefined),
+    [airports, routes, dots],
+  );
 
   // Control hooks.
   const [startSpinner, stopSpinner] = useSpinner(controller.current, { disabled: !spin });

@@ -11,26 +11,24 @@ import { Icon } from '../Icon';
 
 import { Button, ButtonGroup, type ButtonProps } from './Button';
 
-const DefaultStory = ({ children, ...args }: Omit<ButtonProps, 'ref'>) => {
-  return (
-    <div>
-      <Button {...args}>{children}</Button>
-      <Button {...args} disabled>
-        {children}
-      </Button>
-      {(args.variant === 'default' || args.variant === 'primary') && (
-        <ButtonGroup>
-          <Button {...args}>
-            <Icon icon='ph--caret-left--regular' />
-          </Button>
-          <Button {...args}>
-            <Icon icon='ph--caret-right--regular' />
-          </Button>
-        </ButtonGroup>
-      )}
-    </div>
-  );
-};
+const DefaultStory = ({ children, ...args }: Omit<ButtonProps, 'ref'>) => (
+  <div>
+    <Button {...args}>{children}</Button>
+    <Button {...args} disabled>
+      {children}
+    </Button>
+    {(args.variant === 'default' || args.variant === 'primary') && (
+      <ButtonGroup>
+        <Button {...args}>
+          <Icon icon='ph--caret-left--regular' />
+        </Button>
+        <Button {...args}>
+          <Icon icon='ph--caret-right--regular' />
+        </Button>
+      </ButtonGroup>
+    )}
+  </div>
+);
 
 const meta = {
   title: 'ui/react-ui-core/Button',

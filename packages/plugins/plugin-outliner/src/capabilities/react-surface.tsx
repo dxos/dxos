@@ -23,9 +23,7 @@ export default () => [
       id: `${meta.id}/article/outline`,
       role: ['article', 'section'],
       filter: (data): data is { subject: OutlineType } => Obj.instanceOf(OutlineType, data.subject),
-      component: ({ data, role }) => {
-        return <OutlinerContainer outline={data.subject} role={role} />;
-      },
+      component: ({ data, role }) => <OutlinerContainer outline={data.subject} role={role} />,
     }),
   ]),
 ];

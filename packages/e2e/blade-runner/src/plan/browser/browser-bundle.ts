@@ -33,13 +33,10 @@ export const buildBrowserBundle = async (outfile: string) => {
 const signalStubPlugin = (): Plugin => ({
   name: 'signal-stub',
   setup: (build) => {
-    build.onResolve({ filter: /^@dxos\/signal$/ }, (args) => {
-      return { path: args.path, namespace: 'signal-stub' };
-    });
+    build.onResolve({ filter: /^@dxos\/signal$/ }, (args) => ({ path: args.path, namespace: 'signal-stub' }));
 
-    build.onLoad({ filter: /.*/, namespace: 'signal-stub' }, () => {
-      return {
-        contents: `
+    build.onLoad({ filter: /.*/, namespace: 'signal-stub' }, () => ({
+      contents: `
           export class SignalServerRunner {
             constructor() {}
             async start() {}
@@ -47,20 +44,19 @@ const signalStubPlugin = (): Plugin => ({
           }
           export {}; // For any other exports
         `,
-      };
-    });
+    }));
   },
 });
 
 const wasmCompat = (): Plugin => ({
   name: 'wasm-compat',
   setup: (build) => {
-    build.onResolve({ filter: /.*\.wasm\?init$/ }, async (args) => {
-      return build.resolve(args.path.replace(/\?init$/, ''), {
+    build.onResolve({ filter: /.*\.wasm\?init$/ }, async (args) =>
+      build.resolve(args.path.replace(/\?init$/, ''), {
         importer: args.importer,
         kind: args.kind,
         resolveDir: args.resolveDir,
-      });
-    });
+      }),
+    );
   },
 });

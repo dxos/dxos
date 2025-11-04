@@ -21,14 +21,13 @@ const MEMORY_TRANSPORT_DELAY = 1;
 /**
  * Creates a binary stream that delays data being sent through the stream by the specified amount of time.
  */
-const createStreamDelay = (delay: number): NodeJS.ReadWriteStream => {
-  return new Transform({
+const createStreamDelay = (delay: number): NodeJS.ReadWriteStream =>
+  new Transform({
     objectMode: true,
     transform: (chunk, _, cb) => {
       setTimeout(() => cb(null, chunk), delay); // TODO(burdon): Randomize.
     },
   });
-};
 
 export const MemoryTransportFactory: TransportFactory = {
   createTransport: (options) => new MemoryTransport(options),

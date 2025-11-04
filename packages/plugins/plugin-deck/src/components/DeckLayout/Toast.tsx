@@ -65,22 +65,20 @@ export type ToasterProps = {
   onDismissToast?: (id: string) => void;
 };
 
-export const Toaster = ({ toasts, onDismissToast }: ToasterProps) => {
-  return (
-    <>
-      {toasts?.map((toast) => (
-        <Toast
-          {...toast}
-          key={toast.id}
-          onOpenChange={(open) => {
-            if (!open) {
-              onDismissToast?.(toast.id);
-            }
+export const Toaster = ({ toasts, onDismissToast }: ToasterProps) => (
+  <>
+    {toasts?.map((toast) => (
+      <Toast
+        {...toast}
+        key={toast.id}
+        onOpenChange={(open) => {
+          if (!open) {
+            onDismissToast?.(toast.id);
+          }
 
-            return open;
-          }}
-        />
-      ))}
-    </>
-  );
-};
+          return open;
+        }}
+      />
+    ))}
+  </>
+);

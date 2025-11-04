@@ -158,17 +158,15 @@ export type TableProps = {
   rows: (string | number | undefined)[][];
 };
 
-export const Table = ({ rows }: TableProps) => {
-  return (
-    <div className='w-full text-xs font-mono'>
-      {rows.map(([prefix, label, value, unit], i) => (
-        <div key={i} className='grid grid-cols-[3fr_1fr_1fr_1fr]'>
-          <div className='p-1'>{prefix}</div>
-          <div className='p-1'>{label}</div>
-          <div className='p-1'>{value}</div>
-          <div className='p-1'>{unit}</div>
-        </div>
-      ))}
-    </div>
-  );
-};
+export const Table = ({ rows }: TableProps) => (
+  <div className='w-full text-xs font-mono'>
+    {rows.map(([prefix, label, value, unit], i) => (
+      <div key={i} className='grid grid-cols-[3fr_1fr_1fr_1fr]'>
+        <div className='p-1'>{prefix}</div>
+        <div className='p-1'>{label}</div>
+        <div className='p-1'>{value}</div>
+        <div className='p-1'>{unit}</div>
+      </div>
+    ))}
+  </div>
+);

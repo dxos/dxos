@@ -127,16 +127,14 @@ const gatherObjectVersions = (messages: DataType.Message[]): Map<ObjectId, Objec
 
 const createArtifactUpdateBlock = (
   artifactDiff: Map<ObjectId, { version: ObjectVersion; diff?: string }>,
-): ContentBlock.Any => {
-  return {
-    _tag: 'text',
-    // TODO(dmaretskyi): Does this need to be a special content-block?
-    disposition: 'artifact-update',
-    text: trim`
+): ContentBlock.Any => ({
+  _tag: 'text',
+  // TODO(dmaretskyi): Does this need to be a special content-block?
+  disposition: 'artifact-update',
+  text: trim`
       The following artifacts have been updated since the last message:
       ${[...artifactDiff.entries()]
         .map(([id, { diff }]) => `<changed-artifact id="${id}">${diff ? `\n${diff}` : ''}</changed-artifact>`)
         .join('\n')}
     `,
-  };
-};
+});

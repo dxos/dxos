@@ -360,16 +360,13 @@ export class MetadataStore {
 
 const fromBytesInt32 = (buf: Buffer) => buf.readInt32LE(0);
 
-export const hasInvitationExpired = (invitation: Invitation): boolean => {
-  return Boolean(
+export const hasInvitationExpired = (invitation: Invitation): boolean =>
+  Boolean(
     invitation.created &&
       invitation.lifetime &&
       invitation.lifetime !== 0 &&
       invitation.created.getTime() + invitation.lifetime * 1000 < Date.now(),
   );
-};
 
 // TODO: remove once "multiuse" type invitations get removed from local metadata of existing profiles
-const isLegacyInvitationFormat = (invitation: Invitation): boolean => {
-  return invitation.type === Invitation.Type.MULTIUSE;
-};
+const isLegacyInvitationFormat = (invitation: Invitation): boolean => invitation.type === Invitation.Type.MULTIUSE;

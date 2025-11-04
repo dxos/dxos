@@ -31,9 +31,9 @@ export type PlankControlsProps = Omit<ButtonGroupProps, 'onClick'> & {
   pin?: 'start' | 'end' | 'both';
 };
 
-const PlankControl = ({ icon, label, ...props }: Omit<ButtonProps, 'children'> & { label: string; icon: string }) => {
-  return <IconButton label={label} icon={icon} iconOnly variant='ghost' tooltipSide='bottom' {...props} />;
-};
+const PlankControl = ({ icon, label, ...props }: Omit<ButtonProps, 'children'> & { label: string; icon: string }) => (
+  <IconButton label={label} icon={icon} iconOnly variant='ghost' tooltipSide='bottom' {...props} />
+);
 
 const plankControlSpacing = 'pli-2';
 

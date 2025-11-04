@@ -45,9 +45,8 @@ const getStoredObject = (doc: DatabaseDirectory | undefined): any => {
   return { id, object };
 };
 
-const getStoredObjectType = (data: Data): string | undefined => {
-  return isSpaceRoot(data.accessor()) ? '' : getStoredObject(data.accessor())?.object?.system?.type?.['/'];
-};
+const getStoredObjectType = (data: Data): string | undefined =>
+  isSpaceRoot(data.accessor()) ? '' : getStoredObject(data.accessor())?.object?.system?.type?.['/'];
 
 type Data = {
   documentId: string;
@@ -79,20 +78,22 @@ export const AutomergePanel = (props: { space?: Space }) => {
     [],
   );
 
-  const data = useMemo(() => {
-    return handles
-      .map((handle) => {
-        const doc = handle.doc();
-        return {
-          id: handle.documentId,
-          documentId: handle.documentId,
-          content: isSpaceRoot(doc) ? 'space root doc' : getStoredObject(doc)?.id,
-          type: getStoredObjectType({ documentId: handle.documentId, accessor: () => doc, id: handle.documentId }),
-          accessor: () => doc,
-        };
-      })
-      .filter(textFilter(filter));
-  }, [handles, filter]);
+  const data = useMemo(
+    () =>
+      handles
+        .map((handle) => {
+          const doc = handle.doc();
+          return {
+            id: handle.documentId,
+            documentId: handle.documentId,
+            content: isSpaceRoot(doc) ? 'space root doc' : getStoredObject(doc)?.id,
+            type: getStoredObjectType({ documentId: handle.documentId, accessor: () => doc, id: handle.documentId }),
+            accessor: () => doc,
+          };
+        })
+        .filter(textFilter(filter)),
+    [handles, filter],
+  );
 
   return (
     <PanelContainer
@@ -108,6 +109,4 @@ export const AutomergePanel = (props: { space?: Space }) => {
   );
 };
 
-const isSpaceRoot = (accessor: DatabaseDirectory) => {
-  return Object.keys(accessor?.links ?? {}).length > 0;
-};
+const isSpaceRoot = (accessor: DatabaseDirectory) => Object.keys(accessor?.links ?? {}).length > 0;

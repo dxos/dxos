@@ -44,14 +44,16 @@ export const FeedTable: FC<FeedTableProps> = ({ onSelect }) => {
     [],
   );
 
-  const rows = useMemo(() => {
-    return feeds.map((feed) => ({
-      id: feed.feedKey.toString(),
-      feedKey: feed.feedKey.toString(),
-      progress: createTextBitbar(feed.downloaded, maxLength),
-      _original: { ...feed, maxLength },
-    }));
-  }, [feeds, maxLength]);
+  const rows = useMemo(
+    () =>
+      feeds.map((feed) => ({
+        id: feed.feedKey.toString(),
+        feedKey: feed.feedKey.toString(),
+        progress: createTextBitbar(feed.downloaded, maxLength),
+        _original: { ...feed, maxLength },
+      })),
+    [feeds, maxLength],
+  );
 
   const handleRowClick = (row: any) => {
     if (row?._original !== undefined) {

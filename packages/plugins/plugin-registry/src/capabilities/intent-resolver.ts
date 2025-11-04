@@ -18,10 +18,8 @@ export default () =>
     Capabilities.IntentResolver,
     createResolver({
       intent: SettingsAction.OpenPluginRegistry,
-      resolve: () => {
-        return {
-          intents: [createIntent(LayoutAction.SwitchWorkspace, { part: 'workspace', subject: REGISTRY_ID })],
-        };
-      },
+      resolve: () => ({
+        intents: [createIntent(LayoutAction.SwitchWorkspace, { part: 'workspace', subject: REGISTRY_ID })],
+      }),
     }),
   );

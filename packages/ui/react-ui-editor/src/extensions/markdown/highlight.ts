@@ -62,8 +62,8 @@ export type HighlightOptions = {};
  * - https://github.com/codemirror/language/blob/main/src/highlight.ts#L194
  * - https://github.com/codemirror/theme-one-dark/blob/main/src/one-dark.ts#L115
  */
-export const markdownHighlightStyle = (_options: HighlightOptions = {}) => {
-  return HighlightStyle.define(
+export const markdownHighlightStyle = (_options: HighlightOptions = {}) =>
+  HighlightStyle.define(
     [
       {
         tag: [
@@ -180,4 +180,3 @@ export const markdownHighlightStyle = (_options: HighlightOptions = {}) => {
       },
     },
   );
-};

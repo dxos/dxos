@@ -193,8 +193,8 @@ const createBaseExtensions = ({
   return extensions;
 };
 
-const selectionChange = (selectionManager: SelectionManager) => {
-  return EditorView.updateListener.of(
+const selectionChange = (selectionManager: SelectionManager) =>
+  EditorView.updateListener.of(
     debounceAndThrottle((update: ViewUpdate) => {
       if (update.selectionSet) {
         const id = update.state.facet(documentId);
@@ -211,7 +211,6 @@ const selectionChange = (selectionManager: SelectionManager) => {
       }
     }, 100),
   );
-};
 
 // TODO(burdon): Factor out styles.
 const style = {

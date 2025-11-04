@@ -510,9 +510,8 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
       yield* this.invokeScheduledTriggers();
     }).pipe(Effect.repeat(Schedule.fixed(this.livePollInterval)), Effect.asVoid);
 
-  private _prepareInputData = (trigger: Trigger.Trigger, event: TriggerEvent.TriggerEvent): any => {
-    return createInvocationPayload(trigger, event);
-  };
+  private _prepareInputData = (trigger: Trigger.Trigger, event: TriggerEvent.TriggerEvent): any =>
+    createInvocationPayload(trigger, event);
 }
 
 /**

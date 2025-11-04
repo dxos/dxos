@@ -11,12 +11,11 @@ import { translations } from '../../translations';
 
 import { SheetToolbar } from './SheetToolbar';
 
-const DefaultStory = () => {
+const DefaultStory = () => (
   // TODO(wittjosiah): Depends on SheetProvider.
   // return <SheetToolbar id='test' />;
-  return <>TODO</>;
-};
-
+  <>TODO</>
+);
 const meta = {
   title: 'plugins/plugin-sheet/Toolbar',
   component: SheetToolbar as any,

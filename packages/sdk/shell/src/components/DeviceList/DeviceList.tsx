@@ -27,16 +27,14 @@ export const DeviceList = ({
       <h2 className={mx(descriptionText, 'text-center mbs-2')}>{t('devices heading')}</h2>
       {devices.length > 0 && (
         <List>
-          {devices.map((device: Device) => {
-            return (
-              <DeviceListItem
-                key={device.deviceKey.toHex()}
-                device={device}
-                onClickEdit={() => onClickEdit?.(device)}
-                {...{ onClickReset, onClickRecover, onClickJoinExisting, connectionState, onAgentDestroy }}
-              />
-            );
-          })}
+          {devices.map((device: Device) => (
+            <DeviceListItem
+              key={device.deviceKey.toHex()}
+              device={device}
+              onClickEdit={() => onClickEdit?.(device)}
+              {...{ onClickReset, onClickRecover, onClickJoinExisting, connectionState, onAgentDestroy }}
+            />
+          ))}
         </List>
       )}
       <Button

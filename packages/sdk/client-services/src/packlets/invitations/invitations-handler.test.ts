@@ -331,12 +331,11 @@ describe.skipIf(process.env.CI && !process.env.RUN_FLAKY_TESTS)(
 
     const newStateUpdateSink = (): StateUpdateSink => {
       const sink: Invitation[] = [];
-      const hasState = (startingIndex: number, state: Invitation.State): boolean => {
-        return sink
+      const hasState = (startingIndex: number, state: Invitation.State): boolean =>
+        sink
           .slice(startingIndex)
           .map((i) => i.state)
           .includes(state);
-      };
       return {
         sink,
         next: sink.push.bind(sink),

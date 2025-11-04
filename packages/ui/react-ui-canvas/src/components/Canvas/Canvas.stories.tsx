@@ -21,33 +21,29 @@ const points: Point[] = [0, (2 * Math.PI) / 3, (2 * Math.PI * 2) / 3].map((a, i)
   y: Math.round(Math.sin(a - Math.PI / 2) * size * 1.5),
 }));
 
-const DefaultStory = (props: GridProps) => {
-  return (
-    <Canvas>
-      <Grid {...props} />
-      <Content />
-    </Canvas>
-  );
-};
+const DefaultStory = (props: GridProps) => (
+  <Canvas>
+    <Grid {...props} />
+    <Content />
+  </Canvas>
+);
 
-const TwoCanvases = (props: GridProps) => {
-  return (
-    <div className='grid grid-cols-2 gap-2 w-full h-full'>
-      <div className='h-full relative'>
-        <Canvas>
-          <Grid {...props} />
-          <Content />
-        </Canvas>
-      </div>
-      <div className='h-full relative'>
-        <Canvas>
-          <Grid {...props} />
-          <Content />
-        </Canvas>
-      </div>
+const TwoCanvases = (props: GridProps) => (
+  <div className='grid grid-cols-2 gap-2 w-full h-full'>
+    <div className='h-full relative'>
+      <Canvas>
+        <Grid {...props} />
+        <Content />
+      </Canvas>
     </div>
-  );
-};
+    <div className='h-full relative'>
+      <Canvas>
+        <Grid {...props} />
+        <Content />
+      </Canvas>
+    </div>
+  </div>
+);
 
 const Content = () => {
   useWheel();

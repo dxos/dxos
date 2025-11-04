@@ -32,13 +32,15 @@ export const QueuesPanel = () => {
     [],
   );
 
-  const rows = useMemo(() => {
-    return (queue?.objects ?? []).map((item: any) => ({
-      id: item.id,
-      type: item['@type'],
-      _original: item,
-    }));
-  }, [queue?.objects]);
+  const rows = useMemo(
+    () =>
+      (queue?.objects ?? []).map((item: any) => ({
+        id: item.id,
+        type: item['@type'],
+        _original: item,
+      })),
+    [queue?.objects],
+  );
 
   const handleRowClicked = (row: any) => {
     if (!row) {
@@ -91,17 +93,16 @@ const ObjectDataViewer = ({ object }: ObjectDataViewerProps) => {
     rows: rendererNode[];
     stylesheet: any;
     useInlineStyles: any;
-  }) => {
-    return rows.map((row, index) => {
-      return createElement({
+  }) =>
+    rows.map((row, index) =>
+      createElement({
         node: row,
         stylesheet,
         style: {},
         useInlineStyles,
         key: index,
-      });
-    });
-  };
+      }),
+    );
 
   return (
     <SyntaxHighlighter language='json' renderer={rowRenderer}>

@@ -173,13 +173,11 @@ const TabsBackButton = ({ onClick, classNames, ...props }: ButtonProps) => {
 
 type TabsTabGroupHeadingProps = ThemedClassName<ComponentPropsWithoutRef<'h2'>>;
 
-const TabsTabGroupHeading = ({ children, classNames, ...props }: ThemedClassName<TabsTabGroupHeadingProps>) => {
-  return (
-    <h2 {...props} className={mx('mlb-1 pli-2 text-sm text-unAccent', classNames)}>
-      {children}
-    </h2>
-  );
-};
+const TabsTabGroupHeading = ({ children, classNames, ...props }: ThemedClassName<TabsTabGroupHeadingProps>) => (
+  <h2 {...props} className={mx('mlb-1 pli-2 text-sm text-unAccent', classNames)}>
+    {children}
+  </h2>
+);
 
 type TabsTabProps = ButtonProps & Pick<TabsPrimitive.TabsTriggerProps, 'value'>;
 
@@ -253,13 +251,11 @@ const TabsIconTab = ({ value, classNames, onClick, ...props }: TabsIconTabProps)
 
 type TabsTabpanelProps = ThemedClassName<TabsPrimitive.TabsContentProps>;
 
-const TabsTabpanel = ({ classNames, children, ...props }: TabsTabpanelProps) => {
-  return (
-    <TabsPrimitive.Content {...props} className={mx('dx-focus-ring-inset-over-all', classNames)}>
-      {children}
-    </TabsPrimitive.Content>
-  );
-};
+const TabsTabpanel = ({ classNames, children, ...props }: TabsTabpanelProps) => (
+  <TabsPrimitive.Content {...props} className={mx('dx-focus-ring-inset-over-all', classNames)}>
+    {children}
+  </TabsPrimitive.Content>
+);
 
 type TabsTabPrimitiveProps = TabsPrimitive.TabsTriggerProps;
 

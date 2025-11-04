@@ -18,9 +18,8 @@ import { type Readable as StreamXReadable } from 'streamx';
  * https://nodejs.org/api/stream.html#readable-streams
  * https://nodejs.org/dist/v18.9.0/docs/api/stream.html#readablewrapstream
  */
-export const createReadable = (stream: StreamXReadable): Readable => {
-  return new Readable({ objectMode: true }).wrap(stream as any);
-};
+export const createReadable = (stream: StreamXReadable): Readable =>
+  new Readable({ objectMode: true }).wrap(stream as any);
 
 /**
  * Converts streamx.Readable (hypercore.createReadStream) to an async iterator.
@@ -30,6 +29,4 @@ export const createReadable = (stream: StreamXReadable): Readable => {
  * https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Iterators_and_Generators
  * https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Iteration_protocols
  */
-export const createAsyncIterator = (stream: Readable): AsyncIterator<any> => {
-  return stream[Symbol.asyncIterator]();
-};
+export const createAsyncIterator = (stream: Readable): AsyncIterator<any> => stream[Symbol.asyncIterator]();

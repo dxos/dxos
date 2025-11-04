@@ -416,8 +416,8 @@ const downloadFile = (data: string | Uint8Array, contentType: string, filename: 
   element.click();
 };
 
-const uploadFile = (): Promise<Uint8Array> => {
-  return new Promise((resolve, reject) => {
+const uploadFile = (): Promise<Uint8Array> =>
+  new Promise((resolve, reject) => {
     const dropArea = document.createElement('div');
     dropArea.style.width = '100%';
     dropArea.style.height = '100%';
@@ -470,4 +470,3 @@ const uploadFile = (): Promise<Uint8Array> => {
     dropArea.addEventListener('dragleave', handleDragLeave);
     dropArea.addEventListener('dragenter', handleDragEnter);
   });
-};

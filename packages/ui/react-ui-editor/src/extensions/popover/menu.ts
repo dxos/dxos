@@ -22,9 +22,8 @@ export type PopoverMenuItem = {
   onSelect?: (view: EditorView, head: number) => MaybePromise<void>;
 };
 
-export const getMenuItem = (groups: PopoverMenuGroup[], id?: string): PopoverMenuItem | undefined => {
-  return groups.flatMap((group) => group.items).find((item) => item.id === id);
-};
+export const getMenuItem = (groups: PopoverMenuGroup[], id?: string): PopoverMenuItem | undefined =>
+  groups.flatMap((group) => group.items).find((item) => item.id === id);
 
 export const getNextMenuItem = (groups: PopoverMenuGroup[], id?: string): PopoverMenuItem => {
   const items = groups.flatMap((group) => group.items);
@@ -59,9 +58,8 @@ export const createMenuGroup = ({
 export const filterMenuGroups = (
   groups: PopoverMenuGroup[],
   filter: (item: PopoverMenuItem) => boolean,
-): PopoverMenuGroup[] => {
-  return groups.map((group) => ({
+): PopoverMenuGroup[] =>
+  groups.map((group) => ({
     ...group,
     items: group.items.filter(filter),
   }));
-};

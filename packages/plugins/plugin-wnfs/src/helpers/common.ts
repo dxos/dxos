@@ -14,9 +14,7 @@ import { type Space } from '@dxos/react-client/echo';
 // PATH
 //
 
-export const filePath = (fileName: string, space: Space) => {
-  return ['spaces', space.id, 'files', fileName];
-};
+export const filePath = (fileName: string, space: Space) => ['spaces', space.id, 'files', fileName];
 
 //
 // RNG
@@ -65,8 +63,8 @@ export const storeName = () => 'dxos/wnfs';
 // OTHER
 //
 
-export const readFile = (file: File): Promise<Uint8Array> => {
-  return new Promise((resolve, reject) => {
+export const readFile = (file: File): Promise<Uint8Array> =>
+  new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = (event) => {
       const result = event.target?.result;
@@ -81,4 +79,3 @@ export const readFile = (file: File): Promise<Uint8Array> => {
     };
     reader.readAsArrayBuffer(file);
   });
-};

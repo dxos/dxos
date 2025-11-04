@@ -26,8 +26,8 @@ export type Diff = {
 /**
  * Convert a list of diffs into a list of operations.
  */
-export const reduceDiffs = (diffs: readonly string[]): Diff[] => {
-  return diffs.reduce<Diff[]>((acc, diff) => {
+export const reduceDiffs = (diffs: readonly string[]): Diff[] =>
+  diffs.reduce<Diff[]>((acc, diff) => {
     const current = acc[acc.length - 1];
     const [op, ...rest] = diff.split(' ');
     switch (op) {
@@ -51,10 +51,9 @@ export const reduceDiffs = (diffs: readonly string[]): Diff[] => {
 
     return acc;
   }, []);
-};
 
-export const computeDiffsWithCursors = <T>(accessor: DocAccessor<T>, diffs: readonly string[]) => {
-  return reduceDiffs(diffs)
+export const computeDiffsWithCursors = <T>(accessor: DocAccessor<T>, diffs: readonly string[]) =>
+  reduceDiffs(diffs)
     .map((diff) => {
       const text = DocAccessor.getValue<string>(accessor);
       const idx = text.indexOf(diff.match);
@@ -63,7 +62,6 @@ export const computeDiffsWithCursors = <T>(accessor: DocAccessor<T>, diffs: read
       }
     })
     .filter(isNonNullable);
-};
 
 export const applyDiffs = <T>(accessor: DocAccessor<T>, diffs: readonly string[]): string => {
   for (const diff of reduceDiffs(diffs)) {

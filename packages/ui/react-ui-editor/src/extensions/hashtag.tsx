@@ -51,10 +51,7 @@ export const hashtag = (): Extension => [
     },
     {
       decorations: (instance) => instance.tags,
-      provide: (plugin) =>
-        EditorView.atomicRanges.of((view) => {
-          return view.plugin(plugin)?.tags || Decoration.none;
-        }),
+      provide: (plugin) => EditorView.atomicRanges.of((view) => view.plugin(plugin)?.tags || Decoration.none),
     },
   ),
 

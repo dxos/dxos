@@ -68,10 +68,9 @@ export const QueryEditor = forwardRef<EditorController, QueryEditorProps>(
           keymap.of([
             {
               key: 'Enter',
-              run: () => {
+              run: () =>
                 // Prevent newline.
-                return true;
-              },
+                true,
             },
           ]),
         ),

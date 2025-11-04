@@ -126,9 +126,7 @@ const StackItemRoot = forwardRef<HTMLDivElement, StackItemRootProps>(
             const rect = source.element.getBoundingClientRect();
             setCustomNativeDragPreview({
               nativeSetDragImage,
-              getOffset: ({ container }) => {
-                return offsetFn({ container });
-              },
+              getOffset: ({ container }) => offsetFn({ container }),
               render: ({ container }) => {
                 container.style.width = rect.width + 'px';
                 setDragState({ type: 'preview', container, item });
@@ -148,12 +146,11 @@ const StackItemRoot = forwardRef<HTMLDivElement, StackItemRootProps>(
         }),
         dropTargetForElements({
           element: itemElement,
-          getData: ({ input, element }) => {
-            return attachClosestEdge(
+          getData: ({ input, element }) =>
+            attachClosestEdge(
               { id: item.id, type },
               { input, element, allowedEdges: orientation === 'horizontal' ? ['left', 'right'] : ['top', 'bottom'] },
-            );
-          },
+            ),
           onDragEnter: ({ self, source }) => {
             if (source.data.type === self.data.type) {
               setEdge(extractClosestEdge(self.data));

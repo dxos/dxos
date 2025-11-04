@@ -143,8 +143,9 @@ const EditorRootWithType = <S extends Shape = Shape>(
   };
 
   // Controller.
-  useImperativeHandle(forwardedRef, () => {
-    return {
+  useImperativeHandle(
+    forwardedRef,
+    () => ({
       action: actionHandler,
       zoomToFit: () => {
         requestAnimationFrame(() => {
@@ -152,8 +153,9 @@ const EditorRootWithType = <S extends Shape = Shape>(
         });
       },
       update: () => forceUpdate({}),
-    };
-  }, [actionHandler]);
+    }),
+    [actionHandler],
+  );
 
   // Trigger on graph change.
   useEffect(() => {

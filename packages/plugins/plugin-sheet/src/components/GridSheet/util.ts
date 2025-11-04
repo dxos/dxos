@@ -24,8 +24,8 @@ import { mx } from '@dxos/react-ui-theme';
 import { type SheetModel } from '../../model';
 import { cellClassNameForRange, rangeFromIndex } from '../../types';
 
-const createDxGridColumns = (model: SheetModel): DxGridAxisMeta => {
-  return model.sheet.columns.reduce(
+const createDxGridColumns = (model: SheetModel): DxGridAxisMeta =>
+  model.sheet.columns.reduce(
     (acc: DxGridAxisMeta, columnId, numericIndex) => {
       if (model.sheet.columnMeta[columnId] && model.sheet.columnMeta[columnId].size) {
         acc.grid[numericIndex] = { size: model.sheet.columnMeta[columnId].size, resizeable: true };
@@ -34,10 +34,9 @@ const createDxGridColumns = (model: SheetModel): DxGridAxisMeta => {
     },
     { grid: {} },
   );
-};
 
-const createDxGridRows = (model: SheetModel): DxGridAxisMeta => {
-  return model.sheet.rows.reduce(
+const createDxGridRows = (model: SheetModel): DxGridAxisMeta =>
+  model.sheet.rows.reduce(
     (acc: DxGridAxisMeta, rowId, numericIndex) => {
       if (model.sheet.rowMeta[rowId] && model.sheet.rowMeta[rowId].size) {
         acc.grid[numericIndex] = { size: model.sheet.rowMeta[rowId].size, resizeable: true };
@@ -46,7 +45,6 @@ const createDxGridRows = (model: SheetModel): DxGridAxisMeta => {
     },
     { grid: {} },
   );
-};
 
 const projectCellProps = (model: SheetModel, col: number, row: number): DxGridCellValue => {
   const address = { col, row };
@@ -77,13 +75,13 @@ const gridCellGetter = (model: SheetModel) => {
   // TODO(thure): Actually use the cache.
   const cachedGridCells: DxGridPlaneCells = {};
   return (nextBounds: DxGridPlaneRange): DxGridPlaneCells => {
-    [...Array(nextBounds.end.col - nextBounds.start.col)].forEach((_, c0) => {
-      return [...Array(nextBounds.end.row - nextBounds.start.row)].forEach((_, r0) => {
+    [...Array(nextBounds.end.col - nextBounds.start.col)].forEach((_, c0) =>
+      [...Array(nextBounds.end.row - nextBounds.start.row)].forEach((_, r0) => {
         const col = nextBounds.start.col + c0;
         const row = nextBounds.start.row + r0;
         cachedGridCells[`${col},${row}`] = projectCellProps(model, col, row);
-      });
-    });
+      }),
+    );
     return cachedGridCells;
   };
 };

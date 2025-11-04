@@ -262,8 +262,9 @@ export type Comparator = (a: Any, b: Any) => number;
 
 export const sortByLabel: Comparator = (a: Any, b: Any) => compare(getLabel(a), getLabel(b));
 export const sortByTypename: Comparator = (a: Any, b: Any) => compare(getTypename(a), getTypename(b));
-export const sort = (...comparators: Comparator[]): Comparator => {
-  return (a: Any, b: Any) => {
+export const sort =
+  (...comparators: Comparator[]): Comparator =>
+  (a: Any, b: Any) => {
     for (const comparator of comparators) {
       const result = comparator(a, b);
       if (result !== 0) {
@@ -273,7 +274,6 @@ export const sort = (...comparators: Comparator[]): Comparator => {
 
     return 0;
   };
-};
 
 /**
  * JSON representation of an object.
@@ -371,9 +371,8 @@ const unversioned: Version = {
 /**
  * Checks that `obj` is a version object.
  */
-export const isVersion = (obj: unknown): obj is Version => {
-  return obj != null && typeof obj === 'object' && VersionTypeId in obj;
-};
+export const isVersion = (obj: unknown): obj is Version =>
+  obj != null && typeof obj === 'object' && VersionTypeId in obj;
 
 /**
  * Returns the version of the object.
@@ -420,9 +419,7 @@ export const compareVersions = (version1: Version, version2: Version): VersionCo
   return 'equal';
 };
 
-export const encodeVersion = (version: Version): string => {
-  return JSON.stringify(version);
-};
+export const encodeVersion = (version: Version): string => JSON.stringify(version);
 
 export const decodeVersion = (version: string): Version => {
   const parsed = JSON.parse(version);

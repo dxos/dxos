@@ -31,12 +31,10 @@ export const HuePicker = (props: ThemedClassName<HuePickerProps>) => {
   );
 };
 
-const HuePreview = ({ value, size = 5 }: { value: string; size?: IconProps['size'] }) => {
-  return (
-    <div role='none' className='flex justify-center items-center'>
-      <svg viewBox={`0 0 ${size} ${size}`} className={getSize(size)}>
-        <rect x={0} y={0} width={size} height={size} fill={`var(--dx-${value}Fill)`} strokeWidth={4} />
-      </svg>
-    </div>
-  );
-};
+const HuePreview = ({ value, size = 5 }: { value: string; size?: IconProps['size'] }) => (
+  <div role='none' className='flex justify-center items-center'>
+    <svg viewBox={`0 0 ${size} ${size}`} className={getSize(size)}>
+      <rect x={0} y={0} width={size} height={size} fill={`var(--dx-${value}Fill)`} strokeWidth={4} />
+    </svg>
+  </div>
+);

@@ -63,8 +63,6 @@ export const ObservabilityPlugin = definePlugin<ObservabilityPluginOptions>(meta
   defineModule({
     id: `${meta.id}/module/client-ready`,
     activatesOn: allOf(Events.DispatcherReady, ObservabilityEvents.StateReady, ClientReadyEvent),
-    activate: async (context) => {
-      return ClientReady({ context, observability: await observability(), namespace });
-    },
+    activate: async (context) => ClientReady({ context, observability: await observability(), namespace }),
   }),
 ]);

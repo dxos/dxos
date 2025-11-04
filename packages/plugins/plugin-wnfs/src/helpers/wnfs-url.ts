@@ -7,9 +7,7 @@ import { type PrivateDirectory, type PrivateForest } from 'wnfs';
 
 import { store } from './common';
 
-export const wnfsUrl = (filePath: string[]) => {
-  return 'wnfs://' + filePath.map((f) => encodeURIComponent(f)).join('/');
-};
+export const wnfsUrl = (filePath: string[]) => 'wnfs://' + filePath.map((f) => encodeURIComponent(f)).join('/');
 
 export const getPathFromUrl = (wnfsUrl: string) =>
   wnfsUrl

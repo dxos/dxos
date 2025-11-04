@@ -16,14 +16,12 @@ export const IconButton = ({
   iconName: string;
   classNames?: ClassNameValue;
   size?: Size;
-} & Pick<HTMLAttributes<HTMLDivElement>, 'onClick'>) => {
+} & Pick<HTMLAttributes<HTMLDivElement>, 'onClick'>) => (
   // TODO(burdon): Density aware.
-  return (
-    <div className={mx('flex w-6 h-6 items-center justify-center select-none', classNames)} onClick={onClick}>
-      <Icon icon={iconName} classNames='cursor-pointer' size={size} />
-    </div>
-  );
-};
+  <div className={mx('flex w-6 h-6 items-center justify-center select-none', classNames)} onClick={onClick}>
+    <Icon icon={iconName} classNames='cursor-pointer' size={size} />
+  </div>
+);
 
 export type TreeNodeData = {
   id: string;
@@ -129,56 +127,48 @@ const OpenIcon = ({
   node: { id, children },
   open,
   onChangeOpen,
-}: Pick<TreeNodeProps, 'node' | 'open' | 'onChangeOpen'>) => {
-  return (
-    (children?.length && open && (
-      <IconButton
-        iconName='ph--caret-right--regular'
-        size={3}
-        classNames={mx('transition duration-200', open?.[id] ? 'rotate-90' : 'transform-none')}
-        onClick={(ev) => {
-          ev.stopPropagation();
-          onChangeOpen?.(id, !open[id]);
-        }}
-      />
-    )) || <div />
-  );
-};
+}: Pick<TreeNodeProps, 'node' | 'open' | 'onChangeOpen'>) =>
+  (children?.length && open && (
+    <IconButton
+      iconName='ph--caret-right--regular'
+      size={3}
+      classNames={mx('transition duration-200', open?.[id] ? 'rotate-90' : 'transform-none')}
+      onClick={(ev) => {
+        ev.stopPropagation();
+        onChangeOpen?.(id, !open[id]);
+      }}
+    />
+  )) || <div />;
 
 // TODO(burdon): Drag handle,
 const ItemIcon = ({
   node: { children, iconName = children?.length ? 'ph--folder--regular' : 'ph--file--regular', color },
-}: Pick<TreeNodeProps, 'node'>) => {
-  return (iconName && <IconButton iconName={iconName} classNames={color ?? 'text-subdued'} />) || <div />;
-};
+}: Pick<TreeNodeProps, 'node'>) =>
+  (iconName && <IconButton iconName={iconName} classNames={color ?? 'text-subdued'} />) || <div />;
 
-const MenuItem = ({ node: { id }, onMenuAction }: Pick<TreeNodeProps, 'node' | 'onMenuAction'>) => {
-  return (
-    <IconButton
-      iconName='ph--plus--regular'
-      classNames='invisible group-hover:visible'
-      onClick={(ev) => {
-        ev.stopPropagation();
-        onMenuAction?.(id, 'create');
-      }}
-    />
-  );
-};
+const MenuItem = ({ node: { id }, onMenuAction }: Pick<TreeNodeProps, 'node' | 'onMenuAction'>) => (
+  <IconButton
+    iconName='ph--plus--regular'
+    classNames='invisible group-hover:visible'
+    onClick={(ev) => {
+      ev.stopPropagation();
+      onMenuAction?.(id, 'create');
+    }}
+  />
+);
 
 // TODO(burdon): Editable.
-export const Title = ({ node: { title } }: Pick<TreeNodeProps, 'node'>) => {
-  return (
-    <div className='grow p-1 text-sm whitespace-nowrap truncate text-neutral-800 dark:text-neutral-200'>{title}</div>
-  );
-};
+export const Title = ({ node: { title } }: Pick<TreeNodeProps, 'node'>) => (
+  <div className='grow p-1 text-sm whitespace-nowrap truncate text-neutral-800 dark:text-neutral-200'>{title}</div>
+);
 
 export const Grid = ({
   className,
   ...props
-}: PropsWithChildren<{ className?: string }> & HTMLAttributes<HTMLDivElement>) => {
+}: PropsWithChildren<{ className?: string }> & HTMLAttributes<HTMLDivElement>) => (
   // TODO(burdon): Density aware.
-  return <div className={mx('grid grid-cols-[24px_24px_1fr_24px_24px]', className)} {...props} />;
-};
+  <div className={mx('grid grid-cols-[24px_24px_1fr_24px_24px]', className)} {...props} />
+);
 
 export const TreeNodeRow = (props: TreeNodeProps & { className?: string }) => {
   const {

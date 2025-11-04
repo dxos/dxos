@@ -240,9 +240,7 @@ export class EdgeSignalManager extends Resource implements SignalManager {
   }
 }
 
-const createMessageSource = (topic: PublicKey, peerInfo: PeerInfo): buf.MessageInitShape<typeof PeerSchema> => {
-  return {
-    swarmKey: topic.toHex(),
-    ...peerInfo,
-  };
-};
+const createMessageSource = (topic: PublicKey, peerInfo: PeerInfo): buf.MessageInitShape<typeof PeerSchema> => ({
+  swarmKey: topic.toHex(),
+  ...peerInfo,
+});

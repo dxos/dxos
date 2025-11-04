@@ -54,17 +54,15 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-export const IdentityActionChooser = () => {
-  return (
-    <StorybookDialog inOverlayLayout>
-      <IdentityPanelImpl
-        {...noOpProps}
-        activeView='identity action chooser'
-        IdentityActionChooser={IdentityActionChooserImpl}
-      />
-    </StorybookDialog>
-  );
-};
+export const IdentityActionChooser = () => (
+  <StorybookDialog inOverlayLayout>
+    <IdentityPanelImpl
+      {...noOpProps}
+      activeView='identity action chooser'
+      IdentityActionChooser={IdentityActionChooserImpl}
+    />
+  </StorybookDialog>
+);
 
 const DeviceInvitationManagerWithState = (extraProps: InvitationManagerProps) => (
   <StorybookDialog inOverlayLayout>

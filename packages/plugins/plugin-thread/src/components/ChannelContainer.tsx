@@ -164,21 +164,19 @@ const DisplayNameMissing = () => {
 const useChannelToolbarActions = (onJoinCall?: () => void) => {
   const creator = useMemo(
     () =>
-      Rx.make(() => {
-        return {
-          nodes: [
-            createMenuItemGroup('root', {
-              label: ['channel toolbar title', { ns: meta.id }],
-            }),
-            createMenuAction('video-call', () => onJoinCall?.(), {
-              label: ['start video call label', { ns: meta.id }],
-              icon: 'ph--video-camera--regular',
-              type: 'video-call',
-            }),
-          ],
-          edges: [{ source: 'root', target: 'video-call' }],
-        };
-      }),
+      Rx.make(() => ({
+        nodes: [
+          createMenuItemGroup('root', {
+            label: ['channel toolbar title', { ns: meta.id }],
+          }),
+          createMenuAction('video-call', () => onJoinCall?.(), {
+            label: ['start video call label', { ns: meta.id }],
+            icon: 'ph--video-camera--regular',
+            type: 'video-call',
+          }),
+        ],
+        edges: [{ source: 'root', target: 'video-call' }],
+      })),
     [],
   );
 

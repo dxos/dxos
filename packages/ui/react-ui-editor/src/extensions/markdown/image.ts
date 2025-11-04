@@ -13,42 +13,38 @@ export type ImageOptions = {};
 /**
  * Create image decorations.
  */
-export const image = (_options: ImageOptions = {}): Extension => {
-  return [
-    StateField.define<DecorationSet>({
-      create: (state) => {
-        return Decoration.set(buildDecorations(state, 0, state.doc.length));
-      },
-      update: (value: DecorationSet, tr: Transaction) => {
-        if (!tr.docChanged && !tr.selection) {
-          return value;
-        }
+export const image = (_options: ImageOptions = {}): Extension => [
+  StateField.define<DecorationSet>({
+    create: (state) => Decoration.set(buildDecorations(state, 0, state.doc.length)),
+    update: (value: DecorationSet, tr: Transaction) => {
+      if (!tr.docChanged && !tr.selection) {
+        return value;
+      }
 
-        // Find range of changes and cursor changes.
-        const cursor = tr.state.selection.main.head;
-        const oldCursor = tr.changes.mapPos(tr.startState.selection.main.head);
-        let from = Math.min(cursor, oldCursor);
-        let to = Math.max(cursor, oldCursor);
-        tr.changes.iterChangedRanges((fromA, toA, fromB, toB) => {
-          from = Math.min(from, fromB);
-          to = Math.max(to, toB);
-        });
+      // Find range of changes and cursor changes.
+      const cursor = tr.state.selection.main.head;
+      const oldCursor = tr.changes.mapPos(tr.startState.selection.main.head);
+      let from = Math.min(cursor, oldCursor);
+      let to = Math.max(cursor, oldCursor);
+      tr.changes.iterChangedRanges((fromA, toA, fromB, toB) => {
+        from = Math.min(from, fromB);
+        to = Math.max(to, toB);
+      });
 
-        // Expand to cover lines.
-        from = tr.state.doc.lineAt(from).from;
-        to = tr.state.doc.lineAt(to).to;
+      // Expand to cover lines.
+      from = tr.state.doc.lineAt(from).from;
+      to = tr.state.doc.lineAt(to).to;
 
-        return value.map(tr.changes).update({
-          filterFrom: from,
-          filterTo: to,
-          filter: () => false,
-          add: buildDecorations(tr.state, from, to),
-        });
-      },
-      provide: (field) => EditorView.decorations.from(field),
-    }),
-  ];
-};
+      return value.map(tr.changes).update({
+        filterFrom: from,
+        filterTo: to,
+        filter: () => false,
+        add: buildDecorations(tr.state, from, to),
+      });
+    },
+    provide: (field) => EditorView.decorations.from(field),
+  }),
+];
 
 const buildDecorations = (state: EditorState, from: number, to: number) => {
   const decorations: Range<Decoration>[] = [];

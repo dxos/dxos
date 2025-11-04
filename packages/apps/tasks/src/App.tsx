@@ -105,21 +105,19 @@ const createWorker = () =>
     name: 'dxos-client-worker',
   });
 
-export const App = () => {
-  return (
-    <ClientProvider
-      config={getConfig}
-      createWorker={createWorker}
-      shell='./shell.html'
-      types={[Task]}
-      onInitialized={async (client) => {
-        const searchParams = new URLSearchParams(location.search);
-        if (!client.halo.identity.get() && !searchParams.has('deviceInvitationCode')) {
-          await client.halo.createIdentity();
-        }
-      }}
-    >
-      <RouterProvider router={router} />
-    </ClientProvider>
-  );
-};
+export const App = () => (
+  <ClientProvider
+    config={getConfig}
+    createWorker={createWorker}
+    shell='./shell.html'
+    types={[Task]}
+    onInitialized={async (client) => {
+      const searchParams = new URLSearchParams(location.search);
+      if (!client.halo.identity.get() && !searchParams.has('deviceInvitationCode')) {
+        await client.halo.createIdentity();
+      }
+    }}
+  >
+    <RouterProvider router={router} />
+  </ClientProvider>
+);

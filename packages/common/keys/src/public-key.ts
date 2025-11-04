@@ -241,9 +241,7 @@ export class PublicKey implements Equatable {
       return `<PublicKey ${this.truncate()}>`;
     }
 
-    const printControlCode = (code: number) => {
-      return `\x1b[${code}m`;
-    };
+    const printControlCode = (code: number) => `\x1b[${code}m`;
 
     // NOTE: Keep in sync with formatter colors.
     const colors = [

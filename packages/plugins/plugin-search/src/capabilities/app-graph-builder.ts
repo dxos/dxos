@@ -54,25 +54,23 @@ export default (context: PluginContext) =>
           Function.pipe(
             get(node),
             Option.flatMap((node) => (node.id === ROOT_ID ? Option.some(node) : Option.none())),
-            Option.map(() => {
-              return [
-                {
-                  id: SearchAction.OpenSearch._tag,
-                  data: async () => {
-                    const { dispatchPromise: dispatch } = context.getCapability(Capabilities.IntentDispatcher);
-                    await dispatch(createIntent(SearchAction.OpenSearch));
-                  },
-                  properties: {
-                    label: ['search action label', { ns: meta.id }],
-                    icon: 'ph--magnifying-glass--regular',
-                    keyBinding: {
-                      macos: 'shift+meta+f',
-                      windows: 'shift+alt+f',
-                    },
+            Option.map(() => [
+              {
+                id: SearchAction.OpenSearch._tag,
+                data: async () => {
+                  const { dispatchPromise: dispatch } = context.getCapability(Capabilities.IntentDispatcher);
+                  await dispatch(createIntent(SearchAction.OpenSearch));
+                },
+                properties: {
+                  label: ['search action label', { ns: meta.id }],
+                  icon: 'ph--magnifying-glass--regular',
+                  keyBinding: {
+                    macos: 'shift+meta+f',
+                    windows: 'shift+alt+f',
                   },
                 },
-              ];
-            }),
+              },
+            ]),
             Option.getOrElse(() => []),
           ),
         ),

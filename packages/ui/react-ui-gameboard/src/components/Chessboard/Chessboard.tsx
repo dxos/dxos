@@ -42,25 +42,27 @@ const ChessboardComponent = forwardRef<HTMLDivElement, ChessboardProps>(
     const { model, promoting, onPromotion } = useGameboardContext<ChessModel>(Chessboard.displayName!);
 
     // Board squares.
-    const squares = useMemo<Location[]>(() => {
-      return Array.from({ length: rows }, (_, i) => (orientation === 'black' ? i : rows - 1 - i)).flatMap((row) =>
-        Array.from({ length: cols }).map((_, col) => [row, col] as Location),
-      );
-    }, [orientation, rows, cols]);
+    const squares = useMemo<Location[]>(
+      () =>
+        Array.from({ length: rows }, (_, i) => (orientation === 'black' ? i : rows - 1 - i)).flatMap((row) =>
+          Array.from({ length: cols }).map((_, col) => [row, col] as Location),
+        ),
+      [orientation, rows, cols],
+    );
 
     // Use DOM grid layout to position squares.
-    const layout = useMemo(() => {
-      return squares.map((location) => {
-        return (
+    const layout = useMemo(
+      () =>
+        squares.map((location) => (
           <div
             key={locationToString(location)}
             {...{
               ['data-location' as const]: locationToString(location),
             }}
           />
-        );
-      });
-    }, [squares]);
+        )),
+      [squares],
+    );
 
     // Build map of square locations to bounds.
     const [grid, setGrid] = useState<Record<string, DOMRectBounds>>({});
@@ -193,6 +195,5 @@ const PromotionSelector = ({
   );
 };
 
-const getSquareLocation = (container: HTMLElement, location: Location): HTMLElement | null => {
-  return container.querySelector(`[data-location="${locationToString(location)}"]`);
-};
+const getSquareLocation = (container: HTMLElement, location: Location): HTMLElement | null =>
+  container.querySelector(`[data-location="${locationToString(location)}"]`);

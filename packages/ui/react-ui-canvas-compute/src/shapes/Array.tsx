@@ -30,9 +30,9 @@ export type ReducerShape = Schema.Schema.Type<typeof ReducerShape>;
 
 export type ReducerComponentProps = ShapeComponentProps<ReducerShape>;
 
-export const ReducerComponent = ({ shape }: ReducerComponentProps) => {
-  return <FunctionBody shape={shape} inputSchema={ReducerInput} outputSchema={ReducerOutput} />;
-};
+export const ReducerComponent = ({ shape }: ReducerComponentProps) => (
+  <FunctionBody shape={shape} inputSchema={ReducerInput} outputSchema={ReducerOutput} />
+);
 
 //
 // Defs

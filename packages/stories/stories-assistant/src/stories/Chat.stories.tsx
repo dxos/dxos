@@ -138,48 +138,38 @@ const DefaultStory = ({ modules, showContext, blueprints = [] }: StoryProps) => 
       itemsCount={modules.length + (showContext ? 1 : 0)}
       classNames='absolute inset-0 gap-[--stack-gap]'
     >
-      {modules.map((Components, i) => {
-        return (
-          <StackItem.Root key={i} item={{ id: `${i}` }}>
-            <Stack
-              orientation='vertical'
-              classNames='gap-[--stack-gap]'
-              size={i > 0 ? 'contain' : 'split'}
-              itemsCount={Components.length}
-              rail={false}
-            >
-              {Components.map((Component, i) => (
-                <StackItem.Root key={i} item={{ id: `${i}` }} classNames={panelClassNames}>
-                  <Component space={space} onEvent={handleEvent} />
-                </StackItem.Root>
-              ))}
-            </Stack>
-          </StackItem.Root>
-        );
-      })}
+      {modules.map((Components, i) => (
+        <StackItem.Root key={i} item={{ id: `${i}` }}>
+          <Stack
+            orientation='vertical'
+            classNames='gap-[--stack-gap]'
+            size={i > 0 ? 'contain' : 'split'}
+            itemsCount={Components.length}
+            rail={false}
+          >
+            {Components.map((Component, i) => (
+              <StackItem.Root key={i} item={{ id: `${i}` }} classNames={panelClassNames}>
+                <Component space={space} onEvent={handleEvent} />
+              </StackItem.Root>
+            ))}
+          </Stack>
+        </StackItem.Root>
+      ))}
 
       {showContext && <StackContainer objects={objects} />}
     </Stack>
   );
 };
 
-const StackContainer = ({ objects }: { objects: Obj.Any[] }) => {
-  return (
-    <Stack
-      orientation='vertical'
-      classNames='gap-[--stack-gap]'
-      size='contain'
-      rail={false}
-      itemsCount={objects.length}
-    >
-      {objects.map((object) => (
-        <StackItem.Root key={object.id} item={object} classNames={panelClassNames}>
-          <Surface role='section' limit={1} data={{ subject: object }} />
-        </StackItem.Root>
-      ))}
-    </Stack>
-  );
-};
+const StackContainer = ({ objects }: { objects: Obj.Any[] }) => (
+  <Stack orientation='vertical' classNames='gap-[--stack-gap]' size='contain' rail={false} itemsCount={objects.length}>
+    {objects.map((object) => (
+      <StackItem.Root key={object.id} item={object} classNames={panelClassNames}>
+        <Surface role='section' limit={1} data={{ subject: object }} />
+      </StackItem.Root>
+    ))}
+  </Stack>
+);
 
 const storybook: Meta<typeof DefaultStory> = {
   title: 'stories/stories-assistant/Chat',

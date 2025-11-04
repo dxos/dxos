@@ -20,13 +20,11 @@ export type InvitationManagerProps = StepProps &
     invitationUrl?: string;
   };
 
-const InvitationManagerView = ({ children, ...props }: ViewportViewProps & { emoji?: string }) => {
-  return (
-    <Viewport.View {...props} classNames='grow flex flex-col justify-around items-center'>
-      {children}
-    </Viewport.View>
-  );
-};
+const InvitationManagerView = ({ children, ...props }: ViewportViewProps & { emoji?: string }) => (
+  <Viewport.View {...props} classNames='grow flex flex-col justify-around items-center'>
+    {children}
+  </Viewport.View>
+);
 
 export const InvitationManager = ({
   invitationUrl,

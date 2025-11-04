@@ -20,16 +20,14 @@ const nullStyle = { style: 'color: #777' };
 
 const defaultKeys = ['id', '__typename', '__schema', 'meta'];
 
-export const getHeader = (obj: any /* TypedObject */, config?: any): JsonML => {
-  return [
-    'span',
-    {
-      style: (config?.nested ? 'padding: 2px 0 0;' : '') + '\n height: 18px;',
-    },
-    `${obj[Symbol.toStringTag]}`,
-    ['span', idStyle, `#${obj.id}`],
-  ];
-};
+export const getHeader = (obj: any /* TypedObject */, config?: any): JsonML => [
+  'span',
+  {
+    style: (config?.nested ? 'padding: 2px 0 0;' : '') + '\n height: 18px;',
+  },
+  `${obj[Symbol.toStringTag]}`,
+  ['span', idStyle, `#${obj.id}`],
+];
 
 const formatValue = (object: any, config?: any): JsonML => {
   if (typeof object === 'undefined') {

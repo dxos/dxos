@@ -498,11 +498,11 @@ describe('AutomergeRepo', () => {
       const handleB = await repoB.find<any>(handleA.url);
 
       const text = 'Hello world';
-      handleA.update((doc: any) => {
-        return A.change(doc, (doc: any) => {
+      handleA.update((doc: any) =>
+        A.change(doc, (doc: any) => {
           doc.text = text;
-        });
-      });
+        }),
+      );
 
       expect(handleA.doc()!.text).to.equal(text);
 
@@ -580,13 +580,13 @@ describe('AutomergeRepo', () => {
       const teleportBuilder = new TeleportBuilder();
       onTestFinished(() => teleportBuilder.destroy());
 
-      const peerWithDocs = await createTeleportPeerWithStoredDocs(teleportBuilder, spaceKey, async (repo) => {
-        return range(2, (idx) => {
+      const peerWithDocs = await createTeleportPeerWithStoredDocs(teleportBuilder, spaceKey, async (repo) =>
+        range(2, (idx) => {
           const document = repo.create();
           document.change((doc: any) => (doc.text = 'hello ' + idx));
           return document;
-        });
-      });
+        }),
+      );
       const [docInRemoteCollection, docNotInRemoteCollection] = peerWithDocs.documents;
 
       // Create a peer that shares one of the collections.
@@ -769,13 +769,13 @@ const createRepoTopology = async <Peers extends string[], Peer extends string = 
   );
   const repos = args.peers.map((peerId, peerIndex) => {
     const network = adapters
-      .map((pair, idx) => {
-        return args.connections[idx].includes(peerId as Peer)
+      .map((pair, idx) =>
+        args.connections[idx].includes(peerId as Peer)
           ? peerId === args.connections[idx][0]
             ? pair[0]
             : pair[1]
-          : null;
-      })
+          : null,
+      )
       .filter(isNonNullable);
     return new Repo({
       peerId: peerId as PeerId,
@@ -830,12 +830,10 @@ const createTeleportTestPeer = async (
   const meshAdapter = new MeshEchoReplicator();
   const echoAdapter = new EchoNetworkAdapter({
     // If a document is in the remote collection we don't have it locally, so can't get spaceKey from it.
-    getContainingSpaceForDocument: async (documentId) => {
-      return options?.localDocuments ? (options.localDocuments.includes(documentId) ? spaceKey : null) : spaceKey;
-    },
-    isDocumentInRemoteCollection: async (params) => {
-      return options?.remoteCollections?.[params.peerId]?.includes(params.documentId) ?? false;
-    },
+    getContainingSpaceForDocument: async (documentId) =>
+      options?.localDocuments ? (options.localDocuments.includes(documentId) ? spaceKey : null) : spaceKey,
+    isDocumentInRemoteCollection: async (params) =>
+      options?.remoteCollections?.[params.peerId]?.includes(params.documentId) ?? false,
     onCollectionStateQueried: () => {},
     onCollectionStateReceived: () => {},
   });

@@ -11,16 +11,14 @@ import { withTheme } from '@dxos/react-ui/testing';
 
 import { Ghost, type GhostProps } from './Ghost';
 
-const DefaultStory = (props: Partial<GhostProps>) => {
-  return (
-    <>
-      <Ghost {...props} />
-      <div className='inset-0 absolute grid place-content-center'>
-        <DXOS className='w-[40rem] h-[40rem] opacity-5' />
-      </div>
-    </>
-  );
-};
+const DefaultStory = (props: Partial<GhostProps>) => (
+  <>
+    <Ghost {...props} />
+    <div className='inset-0 absolute grid place-content-center'>
+      <DXOS className='w-[40rem] h-[40rem] opacity-5' />
+    </div>
+  </>
+);
 
 const meta = {
   title: 'ui/react-ui-sfx/Ghost',

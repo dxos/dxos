@@ -57,9 +57,7 @@ export const JsonComponent = ({ shape, ...props }: JsonComponentProps) => {
 
 export type JsonTransformComponentProps = ShapeComponentProps<JsonTransformShape>;
 
-export const JsonTransformComponent = ({ shape, ...props }: JsonTransformComponentProps) => {
-  return <Box shape={shape} />;
-};
+export const JsonTransformComponent = ({ shape, ...props }: JsonTransformComponentProps) => <Box shape={shape} />;
 
 //
 // Defs

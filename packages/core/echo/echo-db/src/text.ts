@@ -28,9 +28,8 @@ export const toCursor = (accessor: DocAccessor, pos: number, assoc = 0): A.Curso
   return A.getCursor(doc, accessor.path.slice(), pos);
 };
 
-export const toCursorRange = (accessor: DocAccessor, start: number, end: number) => {
-  return `${toCursor(accessor, start)}:${toCursor(accessor, end)}`;
-};
+export const toCursorRange = (accessor: DocAccessor, start: number, end: number) =>
+  `${toCursor(accessor, start)}:${toCursor(accessor, end)}`;
 
 export const fromCursor = (accessor: DocAccessor, cursor: A.Cursor): number => {
   if (cursor === '') {

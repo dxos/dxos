@@ -44,8 +44,8 @@ export const TextBox = forwardRef<TextBoxControl, TextBoxProps>(
       doc.current = value;
     }, [value]);
 
-    const { parentRef, view, focusAttributes } = useTextEditor(() => {
-      return {
+    const { parentRef, view, focusAttributes } = useTextEditor(
+      () => ({
         id: 'text',
         initialValue: value,
         extensions: [
@@ -107,8 +107,9 @@ export const TextBox = forwardRef<TextBoxControl, TextBoxProps>(
             ]),
           ),
         ],
-      };
-    }, [value, language]);
+      }),
+      [value, language],
+    );
 
     // External control.
     useImperativeHandle(

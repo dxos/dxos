@@ -36,9 +36,14 @@ export interface Item {
   contentRange: Range;
 }
 
-export const itemToJSON = ({ type, index, level, lineRange, contentRange, children }: Item): any => {
-  return { type, index, level, lineRange, contentRange, children: children.map(itemToJSON) };
-};
+export const itemToJSON = ({ type, index, level, lineRange, contentRange, children }: Item): any => ({
+  type,
+  index,
+  level,
+  lineRange,
+  contentRange,
+  children: children.map(itemToJSON),
+});
 
 /**
  * Tree assumes the entire document is a single contiguous well-formed hierarchy of markdown LiteItem nodes.
@@ -155,9 +160,8 @@ export const traverse = <T = any>(root: Item, cb: (item: Item, level: number) =>
   return t(root, root.type === 'root' ? -1 : 0);
 };
 
-export const getListItemContent = (state: EditorState, item: Item): string => {
-  return state.doc.sliceString(item.contentRange.from, item.contentRange.to);
-};
+export const getListItemContent = (state: EditorState, item: Item): string =>
+  state.doc.sliceString(item.contentRange.from, item.contentRange.to);
 
 export const listItemToString = (item: Item, level = 0) => {
   const indent = '  '.repeat(level);
@@ -301,9 +305,7 @@ export const outlinerTree = (_options: TreeOptions = {}): Extension => {
 
   return [
     StateField.define<Tree | undefined>({
-      create: (state) => {
-        return buildTree(state);
-      },
+      create: (state) => buildTree(state),
       update: (value: Tree | undefined, tr: Transaction) => {
         if (!tr.docChanged) {
           return value;

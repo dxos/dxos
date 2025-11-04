@@ -20,29 +20,25 @@ import { translationKey } from '../../translations';
 
 export type ControlPageProps = ThemedClassName<ComponentPropsWithoutRef<'div'>>;
 
-export const ControlPage = ({ children, classNames, ...props }: ControlPageProps) => {
-  return (
-    <StackItem.Content scrollable classNames='[--control-spacing:var(--dx-trimMd)]'>
-      <div role='none' className={mx('pli-cardSpacingInline pbe-trimLg', classNames)} {...props}>
-        {children}
-      </div>
-    </StackItem.Content>
-  );
-};
+export const ControlPage = ({ children, classNames, ...props }: ControlPageProps) => (
+  <StackItem.Content scrollable classNames='[--control-spacing:var(--dx-trimMd)]'>
+    <div role='none' className={mx('pli-cardSpacingInline pbe-trimLg', classNames)} {...props}>
+      {children}
+    </div>
+  </StackItem.Content>
+);
 
 export type ControlSectionProps = PropsWithChildren<{
   title: Label;
   description?: Label;
 }>;
 
-export const ControlSection = ({ title, description, children }: ControlSectionProps) => {
-  return (
-    <>
-      <ControlSectionHeading title={title} description={description} />
-      {children}
-    </>
-  );
-};
+export const ControlSection = ({ title, description, children }: ControlSectionProps) => (
+  <>
+    <ControlSectionHeading title={title} description={description} />
+    {children}
+  </>
+);
 
 export const ControlSectionHeading = ({ title, description }: Omit<ControlSectionProps, 'children'>) => {
   const { t } = useTranslation(translationKey);
@@ -58,9 +54,9 @@ export const ControlSectionHeading = ({ title, description }: Omit<ControlSectio
   );
 };
 
-export const ControlGroupButton = ({ classNames, ...props }: ButtonProps) => {
-  return <Button {...props} classNames={['md:col-span-2', classNames]} />;
-};
+export const ControlGroupButton = ({ classNames, ...props }: ButtonProps) => (
+  <Button {...props} classNames={['md:col-span-2', classNames]} />
+);
 
 export type ControlGroupProps = ThemedClassName<PropsWithChildren>;
 

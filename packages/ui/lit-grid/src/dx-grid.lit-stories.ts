@@ -22,8 +22,8 @@ export default {
   parameters: { layout: 'fullscreen' },
 };
 
-export const Basic = (props: DxGridProps) => {
-  return html`<div class="dark" style="position:fixed;inset:0;">
+export const Basic = (props: DxGridProps) =>
+  html`<div class="dark" style="position:fixed;inset:0;">
     <dx-grid
       initialCells=${props.initialCells ?? nothing}
       columnDefault=${props.columnDefault ?? nothing}
@@ -32,7 +32,6 @@ export const Basic = (props: DxGridProps) => {
       frozen=${props.frozen ?? nothing}
     ></dx-grid>
   </div>`;
-};
 
 const initialLabels = {
   fixedStartStart: {
@@ -105,8 +104,8 @@ Basic.args = {
 /**
  * This story is for testing, please make changes in concert with changes to `dx-grid.spec.ts`.
  */
-export const Spec = (props: DxGridProps) => {
-  return html`<div class="dark" style="position:fixed;inset:0;">
+export const Spec = (props: DxGridProps) =>
+  html`<div class="dark" style="position:fixed;inset:0;">
     <dx-grid
       initialCells=${props.initialCells ?? nothing}
       columnDefault=${props.columnDefault ?? nothing}
@@ -115,7 +114,6 @@ export const Spec = (props: DxGridProps) => {
       frozen=${props.frozen ?? nothing}
     ></dx-grid>
   </div>`;
-};
 
 Spec.args = {
   initialCells: JSON.stringify({
@@ -153,8 +151,8 @@ Spec.args = {
   } satisfies DxGridProps['frozen']),
 };
 
-export const Limits = (props: DxGridProps) => {
-  return html`<div style="position:fixed;inset:0;">
+export const Limits = (props: DxGridProps) =>
+  html`<div style="position:fixed;inset:0;">
     <dx-grid
       limitRows=${props.limitRows ?? nothing}
       limitColumns=${props.limitColumns ?? nothing}
@@ -163,7 +161,6 @@ export const Limits = (props: DxGridProps) => {
       columns=${props.columns ?? nothing}
     ></dx-grid>
   </div>`;
-};
 
 Limits.args = {
   limitRows: JSON.stringify(10 satisfies DxGridProps['limitRows']),

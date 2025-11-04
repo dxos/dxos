@@ -20,12 +20,10 @@ export const MARKER_PREFIX = 'dx-marker';
 export const DATA_SHAPE_ID = 'data-shape-id';
 export const DATA_SHAPE_TYPE = 'data-shape-type';
 
-export const shapeAttrs = (shape: Shape) => {
-  return {
-    [DATA_SHAPE_ID]: shape.id,
-    [DATA_SHAPE_TYPE]: shape.type,
-  };
-};
+export const shapeAttrs = (shape: Shape) => ({
+  [DATA_SHAPE_ID]: shape.id,
+  [DATA_SHAPE_TYPE]: shape.type,
+});
 
 export const getShapeElements = <E extends Element>(el: HTMLElement, type: string): E[] => {
   const elements: E[] = [];

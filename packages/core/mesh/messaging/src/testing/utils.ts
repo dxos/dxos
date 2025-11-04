@@ -27,8 +27,8 @@ export const expectPeerLeft = (client: SignalMethods, expectedTopic: PublicKey, 
     6000,
   );
 
-export const expectReceivedMessage = (event: Event<Message>, expectedMessage: Message) => {
-  return asyncTimeout(
+export const expectReceivedMessage = (event: Event<Message>, expectedMessage: Message) =>
+  asyncTimeout(
     event.waitFor(
       (msg) =>
         msg.author.peerKey === expectedMessage.author.peerKey &&
@@ -37,7 +37,6 @@ export const expectReceivedMessage = (event: Event<Message>, expectedMessage: Me
     ),
     5000,
   );
-};
 
 export const createMessage = (author: PeerInfo, recipient: PeerInfo, payload: Any = PAYLOAD_1): Message => ({
   author,

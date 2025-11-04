@@ -34,12 +34,11 @@ export default () =>
       filter: (data): data is { subject: Meeting.Meeting | 'meeting'; companionTo: Channel.Channel } =>
         (Obj.instanceOf(Meeting.Meeting, data.subject) || data.subject === 'meeting') &&
         Obj.instanceOf(Channel.Channel, data.companionTo),
-      component: ({ data }) => {
-        return data.subject === 'meeting' ? (
+      component: ({ data }) =>
+        data.subject === 'meeting' ? (
           <MeetingsList channel={data.companionTo} />
         ) : (
           <MeetingContainer meeting={data.subject} />
-        );
-      },
+        ),
     }),
   ]);

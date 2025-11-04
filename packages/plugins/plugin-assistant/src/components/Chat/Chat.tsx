@@ -83,46 +83,48 @@ const ChatRoot = ({ children, chat, processor, onEvent, ...props }: ChatRootProp
 
   // Events.
   const event = useMemo(() => new Event<ChatEvent>(), []);
-  useEffect(() => {
-    return event.on((ev) => {
-      switch (ev.type) {
-        case 'toggle-debug': {
-          setDebug((current) => !current);
-          break;
-        }
-
-        case 'submit': {
-          const text = ev.text.trim();
-          if (!streaming && text.length) {
-            lastPrompt.current = ev.text;
-            void processor.request({ message: text });
+  useEffect(
+    () =>
+      event.on((ev) => {
+        switch (ev.type) {
+          case 'toggle-debug': {
+            setDebug((current) => !current);
+            break;
           }
-          break;
-        }
 
-        case 'retry': {
-          if (!streaming) {
-            void processor.retry();
-          }
-          break;
-        }
-
-        case 'cancel': {
-          if (streaming) {
-            void processor.cancel();
-            if (lastPrompt.current) {
-              event.emit({ type: 'update-prompt', text: lastPrompt.current });
+          case 'submit': {
+            const text = ev.text.trim();
+            if (!streaming && text.length) {
+              lastPrompt.current = ev.text;
+              void processor.request({ message: text });
             }
+            break;
           }
-          break;
-        }
 
-        default: {
-          onEvent?.(ev);
+          case 'retry': {
+            if (!streaming) {
+              void processor.retry();
+            }
+            break;
+          }
+
+          case 'cancel': {
+            if (streaming) {
+              void processor.cancel();
+              if (lastPrompt.current) {
+                event.emit({ type: 'update-prompt', text: lastPrompt.current });
+              }
+            }
+            break;
+          }
+
+          default: {
+            onEvent?.(ev);
+          }
         }
-      }
-    });
-  }, [event, processor, streaming, onEvent]);
+      }),
+    [event, processor, streaming, onEvent],
+  );
 
   return (
     <ChatContextProvider debug={debug} event={event} chat={chat} messages={messages} processor={processor} {...props}>
@@ -139,13 +141,11 @@ ChatRoot.displayName = 'Chat.Root';
 
 type ChatContentProps = ThemedClassName<PropsWithChildren>;
 
-const ChatContent = ({ classNames, children }: ChatContentProps) => {
-  return (
-    <div role='none' className={mx('flex flex-col bs-full is-full', classNames)}>
-      {children}
-    </div>
-  );
-};
+const ChatContent = ({ classNames, children }: ChatContentProps) => (
+  <div role='none' className={mx('flex flex-col bs-full is-full', classNames)}>
+    {children}
+  </div>
+);
 
 //
 // Prompt
@@ -187,24 +187,26 @@ const ChatPrompt = ({
 
   const editorRef = useRef<ChatEditorController>(null);
   const [recordingState, setRecordingState] = useState(false);
-  useEffect(() => {
-    return event.on((event) => {
-      switch (event.type) {
-        case 'update-prompt':
-          if (!editorRef.current?.getText()?.length) {
-            editorRef.current?.setText(event.text);
-            editorRef.current?.focus();
-          }
-          break;
-        case 'record-start':
-          setRecordingState(true);
-          break;
-        case 'record-stop':
-          setRecordingState(false);
-          break;
-      }
-    });
-  }, [event]);
+  useEffect(
+    () =>
+      event.on((event) => {
+        switch (event.type) {
+          case 'update-prompt':
+            if (!editorRef.current?.getText()?.length) {
+              editorRef.current?.setText(event.text);
+              editorRef.current?.focus();
+            }
+            break;
+          case 'record-start':
+            setRecordingState(true);
+            break;
+          case 'record-stop':
+            setRecordingState(false);
+            break;
+        }
+      }),
+    [event],
+  );
 
   // TODO(burdon): Configure capability in TranscriptionPlugin.
   const { recording } = useVoiceInput({
@@ -217,61 +219,63 @@ const ChatPrompt = ({
 
   // TODO(burdon): Reconcile with object tags.
   const referencesProvider = useReferencesProvider(space);
-  const extensions = useMemo<Extension[]>(() => {
-    return [
-      referencesProvider && references({ provider: referencesProvider }),
-      Prec.highest(
-        keymap.of(
-          [
-            {
-              key: 'Mod-d',
-              preventDefault: true,
-              run: () => {
-                event.emit({ type: 'toggle-debug' });
-                return true;
+  const extensions = useMemo<Extension[]>(
+    () =>
+      [
+        referencesProvider && references({ provider: referencesProvider }),
+        Prec.highest(
+          keymap.of(
+            [
+              {
+                key: 'Mod-d',
+                preventDefault: true,
+                run: () => {
+                  event.emit({ type: 'toggle-debug' });
+                  return true;
+                },
               },
-            },
-            {
-              key: 'Mod-ArrowUp',
-              preventDefault: true,
-              run: () => {
-                event.emit({ type: 'nav-previous' });
-                return true;
+              {
+                key: 'Mod-ArrowUp',
+                preventDefault: true,
+                run: () => {
+                  event.emit({ type: 'nav-previous' });
+                  return true;
+                },
               },
-            },
-            {
-              key: 'Mod-ArrowDown',
-              preventDefault: true,
-              run: () => {
-                event.emit({ type: 'nav-next' });
-                return true;
+              {
+                key: 'Mod-ArrowDown',
+                preventDefault: true,
+                run: () => {
+                  event.emit({ type: 'nav-next' });
+                  return true;
+                },
               },
-            },
-            ...(expandable
-              ? [
-                  {
-                    key: 'Shift-Mod-ArrowUp',
-                    preventDefault: true,
-                    run: () => {
-                      event.emit({ type: 'thread-open' });
-                      return true;
+              ...(expandable
+                ? [
+                    {
+                      key: 'Shift-Mod-ArrowUp',
+                      preventDefault: true,
+                      run: () => {
+                        event.emit({ type: 'thread-open' });
+                        return true;
+                      },
                     },
-                  },
-                  {
-                    key: 'Shift-Mod-ArrowDown',
-                    preventDefault: true,
-                    run: () => {
-                      event.emit({ type: 'thread-close' });
-                      return true;
+                    {
+                      key: 'Shift-Mod-ArrowDown',
+                      preventDefault: true,
+                      run: () => {
+                        event.emit({ type: 'thread-close' });
+                        return true;
+                      },
                     },
-                  },
-                ]
-              : []),
-          ].filter(isTruthy),
+                  ]
+                : []),
+            ].filter(isTruthy),
+          ),
         ),
-      ),
-    ].filter(isTruthy);
-  }, [event, expandable, referencesProvider]);
+      ].filter(isTruthy),
+    [event, expandable, referencesProvider],
+  );
 
   const handleSubmit = useCallback<NonNullable<ChatEditorProps['onSubmit']>>(
     (text) => {
@@ -365,22 +369,24 @@ const ChatThread = (props: ChatThreadProps) => {
   const error = useRxValue(processor.error).pipe(Option.getOrUndefined);
 
   const controllerRef = useRef<ChatThreadController | null>(null);
-  useEffect(() => {
-    return event.on((event) => {
-      switch (event.type) {
-        case 'submit':
-        case 'scroll-to-bottom':
-          controllerRef.current?.scrollToBottom();
-          break;
-        case 'nav-previous':
-          controllerRef.current?.navigatePrevious();
-          break;
-        case 'nav-next':
-          controllerRef.current?.navigateNext();
-          break;
-      }
-    });
-  }, [event]);
+  useEffect(
+    () =>
+      event.on((event) => {
+        switch (event.type) {
+          case 'submit':
+          case 'scroll-to-bottom':
+            controllerRef.current?.scrollToBottom();
+            break;
+          case 'nav-previous':
+            controllerRef.current?.navigatePrevious();
+            break;
+          case 'nav-next':
+            controllerRef.current?.navigateNext();
+            break;
+        }
+      }),
+    [event],
+  );
 
   const handleEvent = useCallback<NonNullable<NaturalChatThreadProps['onEvent']>>(
     (ev) => {

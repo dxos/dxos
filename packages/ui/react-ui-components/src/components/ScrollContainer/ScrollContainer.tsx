@@ -22,9 +22,7 @@ import { mx } from '@dxos/react-ui-theme';
 
 import { translationKey } from '../../translations';
 
-const isBottom = (el: HTMLElement | null) => {
-  return !!(el && el.scrollHeight - el.scrollTop === el.clientHeight);
-};
+const isBottom = (el: HTMLElement | null) => !!(el && el.scrollHeight - el.scrollTop === el.clientHeight);
 
 export interface ScrollController {
   viewport: HTMLDivElement | null;

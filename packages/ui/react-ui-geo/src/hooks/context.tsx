@@ -60,6 +60,4 @@ export const GlobeContextProvider = ({
   );
 };
 
-export const useGlobeContext = () => {
-  return useContext(GlobeContext) ?? raise(new Error('Missing GlobeContext'));
-};
+export const useGlobeContext = () => useContext(GlobeContext) ?? raise(new Error('Missing GlobeContext'));

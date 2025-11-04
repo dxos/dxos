@@ -37,15 +37,13 @@ export const StatusBarActions = () => {
   );
 };
 
-export const StatusBarPanel = () => {
-  return (
-    <>
-      <StatusBarActions />
-      <span role='separator' className='grow' />
-      <Surface role='status' />
-    </>
-  );
-};
+export const StatusBarPanel = () => (
+  <>
+    <StatusBarActions />
+    <span role='separator' className='grow' />
+    <Surface role='status' />
+  </>
+);
 
 const ENV_LABELS: Record<string, string> = {
   'edge-dev': 'Dev',

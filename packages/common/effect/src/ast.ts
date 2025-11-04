@@ -22,11 +22,9 @@ import { type JsonPath, type JsonProp } from './jsonPath';
 // TODO(wittjosiah): What is a "simple type"?
 export type SimpleType = 'object' | 'string' | 'number' | 'boolean' | 'enum' | 'literal';
 
-const isTupleType = (node: SchemaAST.AST): boolean => {
+const isTupleType = (node: SchemaAST.AST): boolean =>
   // NOTE: Arrays are represented as tuples with no elements and a rest part.
-  return SchemaAST.isTupleType(node) && node.elements.length > 0;
-};
-
+  SchemaAST.isTupleType(node) && node.elements.length > 0;
 /**
  * Get the base type; e.g., traverse through refinements.
  */
@@ -331,23 +329,20 @@ export const findAnnotation = <T>(node: SchemaAST.AST, annotationId: symbol, noD
 /**
  * Effect Schema.optional creates a union type with undefined as the second type.
  */
-export const isOption = (node: SchemaAST.AST): boolean => {
-  return SchemaAST.isUnion(node) && node.types.length === 2 && SchemaAST.isUndefinedKeyword(node.types[1]);
-};
+export const isOption = (node: SchemaAST.AST): boolean =>
+  SchemaAST.isUnion(node) && node.types.length === 2 && SchemaAST.isUndefinedKeyword(node.types[1]);
 
 /**
  * Determines if the node is a union of literal types.
  */
-export const isLiteralUnion = (node: SchemaAST.AST): boolean => {
-  return SchemaAST.isUnion(node) && node.types.every(SchemaAST.isLiteral);
-};
+export const isLiteralUnion = (node: SchemaAST.AST): boolean =>
+  SchemaAST.isUnion(node) && node.types.every(SchemaAST.isLiteral);
 
 /**
  * Determines if the node is a discriminated union.
  */
-export const isDiscriminatedUnion = (node: SchemaAST.AST): boolean => {
-  return SchemaAST.isUnion(node) && !!getDiscriminatingProps(node)?.length;
-};
+export const isDiscriminatedUnion = (node: SchemaAST.AST): boolean =>
+  SchemaAST.isUnion(node) && !!getDiscriminatingProps(node)?.length;
 
 /**
  * Get the discriminating properties for the given union type.
@@ -472,12 +467,9 @@ export const mapAst = (
 /**
  * @returns true if AST is for Array(T) or optional(Array(T)).
  */
-export const isArrayType = (node: SchemaAST.AST): boolean => {
-  return (
-    SchemaAST.isTupleType(node) ||
-    (SchemaAST.isUnion(node) &&
-      node.types.some(isArrayType) &&
-      node.types.some(SchemaAST.isUndefinedKeyword) &&
-      node.types.length === 2)
-  );
-};
+export const isArrayType = (node: SchemaAST.AST): boolean =>
+  SchemaAST.isTupleType(node) ||
+  (SchemaAST.isUnion(node) &&
+    node.types.some(isArrayType) &&
+    node.types.some(SchemaAST.isUndefinedKeyword) &&
+    node.types.length === 2);

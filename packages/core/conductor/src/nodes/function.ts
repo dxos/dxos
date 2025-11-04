@@ -30,12 +30,11 @@ export const executeFunction = (
   path: string,
   input: any,
   outputSchema: Schema.Schema.AnyNoContext,
-): Effect.Effect<any, any, ComputeRequirements> => {
-  return Effect.gen(function* () {
+): Effect.Effect<any, any, ComputeRequirements> =>
+  Effect.gen(function* () {
     const functionCallService = yield* RemoteFunctionExecutionService;
 
     const result = yield* functionCallService.callFunction(path, input).pipe(Effect.catchAll((e) => Effect.succeed(e)));
 
     return yield* Schema.decodeUnknown(outputSchema)(result);
   });
-};

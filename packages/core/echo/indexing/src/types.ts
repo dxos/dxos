@@ -103,9 +103,8 @@ export interface IndexStaticProps {
  */
 export const staticImplements =
   <T>() =>
-  <U extends T>(constructor: U) => {
-    return constructor;
-  };
+  <U extends T>(constructor: U) =>
+    constructor;
 
 /**
  * Escaped property path within an object.

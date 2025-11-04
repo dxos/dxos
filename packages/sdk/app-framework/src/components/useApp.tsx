@@ -96,18 +96,20 @@ export const useApp = ({
     [pluginManager, pluginLoader, plugins, core, enabled],
   );
 
-  useEffect(() => {
-    return manager.activation.on(({ event, state: _state, error }) => {
-      // Once the app is ready the first time, don't show the fallback again.
-      if (!state.ready && event === Events.Startup.id) {
-        state.ready = _state === 'activated';
-      }
+  useEffect(
+    () =>
+      manager.activation.on(({ event, state: _state, error }) => {
+        // Once the app is ready the first time, don't show the fallback again.
+        if (!state.ready && event === Events.Startup.id) {
+          state.ready = _state === 'activated';
+        }
 
-      if (error && !state.ready && !state.error) {
-        state.error = error;
-      }
-    });
-  }, [manager, state]);
+        if (error && !state.ready && !state.error) {
+          state.error = error;
+        }
+      }),
+    [manager, state],
+  );
 
   useEffect(() => {
     effect(() => {

@@ -8,13 +8,11 @@ import { mx } from '@dxos/react-ui-theme';
 
 // TODO(burdon): Copied form devtools.
 
-export const JsonTree: FC<{ data?: object }> = ({ data }) => {
-  return (
-    <div className='flex overflow-auto ml-2 border-l-4 border-blue-500'>
-      <Node data={data} root />
-    </div>
-  );
-};
+export const JsonTree: FC<{ data?: object }> = ({ data }) => (
+  <div className='flex overflow-auto ml-2 border-l-4 border-blue-500'>
+    <Node data={data} root />
+  </div>
+);
 
 export const Node: FC<{ data?: any; root?: boolean }> = ({ data, root }) => {
   if (typeof data !== 'object' || data === undefined || data === null) {
@@ -59,21 +57,17 @@ export const KeyValue: FC<{ label: string; data?: any; className?: string }> = (
   );
 };
 
-const Scalar: FC<{ value: any }> = ({ value }) => {
-  return (
-    <Box className='border-green-500 text-sm font-thin'>
-      {(value === undefined && 'undefined') ||
-        (value === null && 'null') ||
-        (typeof value === 'string' && value) ||
-        JSON.stringify(value)}
-    </Box>
-  );
-};
+const Scalar: FC<{ value: any }> = ({ value }) => (
+  <Box className='border-green-500 text-sm font-thin'>
+    {(value === undefined && 'undefined') ||
+      (value === null && 'null') ||
+      (typeof value === 'string' && value) ||
+      JSON.stringify(value)}
+  </Box>
+);
 
-const Box: FC<HTMLAttributes<HTMLDivElement>> = ({ children, className, ...props }) => {
-  return (
-    <div className={mx('flex px-2 border border-l-0 font-mono truncate', className)} {...props}>
-      {children}
-    </div>
-  );
-};
+const Box: FC<HTMLAttributes<HTMLDivElement>> = ({ children, className, ...props }) => (
+  <div className={mx('flex px-2 border border-l-0 font-mono truncate', className)} {...props}>
+    {children}
+  </div>
+);

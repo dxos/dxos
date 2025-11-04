@@ -238,8 +238,8 @@ const RobotAvatar = () => (
   </Avatar.Root>
 );
 
-const createLocalExecutionContext = (space: Space): Layer.Layer<Services> => {
-  return new ServiceContainer()
+const createLocalExecutionContext = (space: Space): Layer.Layer<Services> =>
+  new ServiceContainer()
     .setServices({
       eventLogger: createEventLogger(LogLevel.INFO),
       database: DatabaseService.make(space.db),
@@ -247,13 +247,11 @@ const createLocalExecutionContext = (space: Space): Layer.Layer<Services> => {
       functionCallService: RemoteFunctionExecutionService.mock(),
     })
     .createLayer();
-};
 
-const inputTemplateFromAst = (ast: SchemaAST.AST): string => {
-  return `{ ${SchemaAST.getPropertySignatures(ast)
+const inputTemplateFromAst = (ast: SchemaAST.AST): string =>
+  `{ ${SchemaAST.getPropertySignatures(ast)
     .map((property) => `"${property.name.toString()}": ""`)
     .join(', ')} }`;
-};
 
 /**
  * Request or response.

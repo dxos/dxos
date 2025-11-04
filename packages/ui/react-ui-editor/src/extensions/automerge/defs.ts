@@ -26,6 +26,4 @@ export const updateHeads = (newHeads: Heads): StateEffect<UpdateHeads> => update
 
 export const reconcileAnnotation = Annotation.define<boolean>();
 
-export const isReconcile = (tr: Transaction): boolean => {
-  return !!tr.annotation(reconcileAnnotation);
-};
+export const isReconcile = (tr: Transaction): boolean => !!tr.annotation(reconcileAnnotation);

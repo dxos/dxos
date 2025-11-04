@@ -505,14 +505,14 @@ export default (context: PluginContext) => {
               const space = getSpace(collection);
               return space?.properties.staticRecords ? Option.some(space) : Option.none();
             }),
-            Option.map((space) => {
-              return get(rxFromSignal(() => (space.properties.staticRecords ?? []) as string[]))
+            Option.map((space) =>
+              get(rxFromSignal(() => (space.properties.staticRecords ?? []) as string[]))
                 .map((typename) =>
                   client.graph.schemaRegistry.schemas.find((schema) => Type.getTypename(schema) === typename),
                 )
                 .filter(isNonNullable)
-                .map((schema) => createStaticSchemaNode({ schema, space }));
-            }),
+                .map((schema) => createStaticSchemaNode({ schema, space })),
+            ),
             Option.getOrElse(() => []),
           ),
         );

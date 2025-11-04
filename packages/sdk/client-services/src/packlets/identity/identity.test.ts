@@ -127,9 +127,9 @@ describe('identity/identity', () => {
         },
         open: async () => {},
         close: async () => {},
-        onMessage: (_: MessageListener): (() => void) => {
-          return () => {};
-        },
+        onMessage:
+          (_: MessageListener): (() => void) =>
+          () => {},
         send: async (_) => {
           replicationStarted = true;
         },

@@ -100,9 +100,7 @@ export class CredentialsService extends Context.Tag('@dxos/functions/Credentials
 
             return credentials[0];
           },
-          queryCredentials: async (query) => {
-            return queryCredentials(query);
-          },
+          queryCredentials: async (query) => queryCredentials(query),
         };
       }),
     );

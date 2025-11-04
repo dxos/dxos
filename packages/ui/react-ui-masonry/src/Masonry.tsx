@@ -48,15 +48,15 @@ type MasonryRootProps<Item> = ThemedClassName<ComponentPropsWithRef<'div'>> &
 
 const usePxProps = (remProps: Omit<UsePositionerOptions, 'width' | 'columnCount' | 'maxColumnCount'>) => {
   const remInPx = usePx(1);
-  return useMemo(() => {
-    return Object.fromEntries(
-      Object.entries(remProps)
-        .filter(([_, value]) => Number.isFinite(value))
-        .map(([key, value]) => {
-          return [key, value * remInPx];
-        }),
-    );
-  }, [remProps, remInPx]);
+  return useMemo(
+    () =>
+      Object.fromEntries(
+        Object.entries(remProps)
+          .filter(([_, value]) => Number.isFinite(value))
+          .map(([key, value]) => [key, value * remInPx]),
+      ),
+    [remProps, remInPx],
+  );
 };
 
 const MasonryRootImpl = <Item,>(

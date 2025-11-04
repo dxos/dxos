@@ -30,10 +30,10 @@ export const createClient = async ({
   return { client, space };
 };
 
-export const createClientContextProvider = async (client: Client) => {
-  return ({ children }: any) => <ClientContext.Provider value={{ client }}>{children}</ClientContext.Provider>;
-};
+export const createClientContextProvider =
+  async (client: Client) =>
+  ({ children }: any) => <ClientContext.Provider value={{ client }}>{children}</ClientContext.Provider>;
 
-export const createClientProvider = async (client: Client) => {
-  return ({ children }: any) => <ClientProvider client={client}>{children}</ClientProvider>;
-};
+export const createClientProvider =
+  async (client: Client) =>
+  ({ children }: any) => <ClientProvider client={client}>{children}</ClientProvider>;

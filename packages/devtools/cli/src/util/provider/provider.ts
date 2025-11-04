@@ -31,12 +31,11 @@ export interface MachineryProvider {
   deploy(options: KubeDeployOptions): Promise<KUBE>;
 }
 
-export const mapKubes = (kubes: KUBE[]) => {
-  return kubes.map((kube) => ({
+export const mapKubes = (kubes: KUBE[]) =>
+  kubes.map((kube) => ({
     key: kube.hostname,
     ipAddress: kube.ipAddress,
   }));
-};
 
 export const printKubes = (kubes: KUBE[], flags: TableFlags = {}) => {
   ux.stdout(

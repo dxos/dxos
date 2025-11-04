@@ -107,19 +107,21 @@ export const SchemaPanel = (props: { space?: Space }) => {
     [],
   );
 
-  const dataRows = useMemo(() => {
-    return schema
-      .filter(textFilter(filter))
-      .map((item) => ({
-        id: getSchemaDXN(item),
-        typename: getSchemaTypename(item) ?? '',
-        version: getSchemaVersion(item) ?? '',
-        kind: getEntityKind(item),
+  const dataRows = useMemo(
+    () =>
+      schema
+        .filter(textFilter(filter))
+        .map((item) => ({
+          id: getSchemaDXN(item),
+          typename: getSchemaTypename(item) ?? '',
+          version: getSchemaVersion(item) ?? '',
+          kind: getEntityKind(item),
 
-        _original: item, // Store the original item for selection
-      }))
-      .toSorted((a, b) => (a.id?.toString() ?? '').localeCompare(b.id?.toString() ?? ''));
-  }, [schema, filter]);
+          _original: item, // Store the original item for selection
+        }))
+        .toSorted((a, b) => (a.id?.toString() ?? '').localeCompare(b.id?.toString() ?? '')),
+    [schema, filter],
+  );
 
   const handleObjectRowClicked = useCallback((row: any) => {
     if (!row) {

@@ -21,13 +21,11 @@ faker.seed(1234);
 const meta: Meta<typeof MarkdownCard> = {
   title: 'plugins/plugin-markdown/Card',
   component: MarkdownCard,
-  render: ({ role, subject, ...args }) => {
-    return (
-      <CardContainer icon='ph--text-aa--regular' role={role}>
-        <MarkdownCard role={role} subject={subject} {...args} />
-      </CardContainer>
-    );
-  },
+  render: ({ role, subject, ...args }) => (
+    <CardContainer icon='ph--text-aa--regular' role={role}>
+      <MarkdownCard role={role} subject={subject} {...args} />
+    </CardContainer>
+  ),
   decorators: [
     withTheme,
     withPluginManager({

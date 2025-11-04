@@ -52,83 +52,75 @@ export default ({ context, appName = 'Composer' }: IntentResolverOptions) =>
     }),
     createResolver({
       intent: ClientAction.JoinIdentity,
-      resolve: async (data) => {
-        return {
-          intents: [
-            createIntent(LayoutAction.UpdateDialog, {
-              part: 'dialog',
-              subject: JOIN_DIALOG,
-              options: {
-                blockAlign: 'start',
-                props: {
-                  initialInvitationCode: data.invitationCode,
-                  initialDisposition: 'accept-halo-invitation',
-                },
+      resolve: async (data) => ({
+        intents: [
+          createIntent(LayoutAction.UpdateDialog, {
+            part: 'dialog',
+            subject: JOIN_DIALOG,
+            options: {
+              blockAlign: 'start',
+              props: {
+                initialInvitationCode: data.invitationCode,
+                initialDisposition: 'accept-halo-invitation',
               },
-            }),
-          ],
-        };
-      },
+            },
+          }),
+        ],
+      }),
     }),
     createResolver({
       intent: ClientAction.ShareIdentity,
-      resolve: async () => {
-        return {
-          intents: [
-            Function.pipe(
-              createIntent(LayoutAction.SwitchWorkspace, {
-                part: 'workspace',
-                subject: Account.id,
-              }),
-              chain(LayoutAction.Open, {
-                part: 'main',
-                subject: [Account.Profile],
-              }),
-            ),
-            createIntent(ObservabilityAction.SendEvent, {
-              name: 'identity.share',
+      resolve: async () => ({
+        intents: [
+          Function.pipe(
+            createIntent(LayoutAction.SwitchWorkspace, {
+              part: 'workspace',
+              subject: Account.id,
             }),
-          ],
-        };
-      },
+            chain(LayoutAction.Open, {
+              part: 'main',
+              subject: [Account.Profile],
+            }),
+          ),
+          createIntent(ObservabilityAction.SendEvent, {
+            name: 'identity.share',
+          }),
+        ],
+      }),
     }),
     createResolver({
       intent: ClientAction.RecoverIdentity,
-      resolve: async () => {
-        return {
-          intents: [
-            createIntent(LayoutAction.UpdateDialog, {
-              part: 'dialog',
-              subject: JOIN_DIALOG,
-              options: {
-                blockAlign: 'start',
-                props: {
-                  initialDisposition: 'recover-identity',
-                } satisfies Partial<JoinPanelProps>,
-              },
-            }),
-          ],
-        };
-      },
+      resolve: async () => ({
+        intents: [
+          createIntent(LayoutAction.UpdateDialog, {
+            part: 'dialog',
+            subject: JOIN_DIALOG,
+            options: {
+              blockAlign: 'start',
+              props: {
+                initialDisposition: 'recover-identity',
+              } satisfies Partial<JoinPanelProps>,
+            },
+          }),
+        ],
+      }),
     }),
     createResolver({
       intent: ClientAction.ResetStorage,
-      resolve: async (data) => {
-        return {
-          intents: [
-            createIntent(LayoutAction.UpdateDialog, {
-              part: 'dialog',
-              subject: RESET_DIALOG,
-              options: {
-                blockAlign: 'start',
-                props: {
-                  mode: data.mode ?? 'reset storage',
-                },
+      resolve: async (data) => ({
+        intents: [
+          createIntent(LayoutAction.UpdateDialog, {
+            part: 'dialog',
+            subject: RESET_DIALOG,
+            options: {
+              blockAlign: 'start',
+              props: {
+                mode: data.mode ?? 'reset storage',
               },
-            }),
-          ],
-        };
-      },
+            },
+          }),
+        ],
+      }),
     }),
     createResolver({
       intent: ClientAction.CreateAgent,

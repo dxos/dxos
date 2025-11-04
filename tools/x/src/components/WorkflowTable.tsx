@@ -11,9 +11,7 @@ import React from 'react';
 
 import { relativeTime } from '../util';
 
-const formatPullRequest = (pull_requests?: any) => {
-  return pull_requests?.[0]?.head.ref ?? '';
-};
+const formatPullRequest = (pull_requests?: any) => pull_requests?.[0]?.head.ref ?? '';
 
 export const WorkflowTable = ({ items }: { items: any[] }) => {
   const rows = columnify(

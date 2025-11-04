@@ -7,7 +7,5 @@ import { Facet } from '@codemirror/state';
 export const singleValueFacet = <I, O = I>(defaultValue?: O) =>
   Facet.define<I, O>({
     // Called immediately.
-    combine: (providers) => {
-      return (providers[0] ?? defaultValue) as O;
-    },
+    combine: (providers) => (providers[0] ?? defaultValue) as O,
   });

@@ -204,19 +204,17 @@ export const ResponsiveGrid = <T extends object = any>({
   );
 };
 
-const SoloItem: FC<Pick<ResponsiveGridProps, 'debug'> & { id: string }> = ({ debug, id }) => {
-  return (
-    <ResponsiveContainer>
-      <div
-        {...{ 'data-grid-item': id }}
-        className={mx('aspect-video overflow-hidden', debug && 'z-20 border-2 border-primary-500')}
-      >
-        {/* Maximum size placeholder image forces aspect ratio. */}
-        <img alt='placeholder video' className={mx('opacity-0', maxImageSize)} />
-      </div>
-    </ResponsiveContainer>
-  );
-};
+const SoloItem: FC<Pick<ResponsiveGridProps, 'debug'> & { id: string }> = ({ debug, id }) => (
+  <ResponsiveContainer>
+    <div
+      {...{ 'data-grid-item': id }}
+      className={mx('aspect-video overflow-hidden', debug && 'z-20 border-2 border-primary-500')}
+    >
+      {/* Maximum size placeholder image forces aspect ratio. */}
+      <img alt='placeholder video' className={mx('opacity-0', maxImageSize)} />
+    </div>
+  </ResponsiveContainer>
+);
 
 type DOMRectBounds = Pick<DOMRect, 'top' | 'left' | 'width' | 'height'>;
 

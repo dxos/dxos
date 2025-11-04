@@ -38,8 +38,8 @@ export const inferObjectOrder = <T = any>(objectMap: Record<string, T>, order: I
  * @param objectMap
  * @param order
  */
-export const inferRecordOrder = <T = any>(objectMap: Record<string, T>, order: IdOrder = []): Record<string, T> => {
-  return Object.assign(
+export const inferRecordOrder = <T = any>(objectMap: Record<string, T>, order: IdOrder = []): Record<string, T> =>
+  Object.assign(
     order
       .filter((id) => id in objectMap)
       .reduce((acc: Record<string, null>, id) => {
@@ -48,4 +48,3 @@ export const inferRecordOrder = <T = any>(objectMap: Record<string, T>, order: I
       }, {}),
     objectMap,
   );
-};

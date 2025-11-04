@@ -14,14 +14,12 @@ export type LargeInputProps = TextInputProps & {
   onChange?: ChangeEventHandler<HTMLInputElement>;
 };
 
-export const Input = ({ validationMessage, label, ...props }: LargeInputProps) => {
-  return (
-    <UiInput.Root>
-      <UiInput.Label>{label}</UiInput.Label>
-      <UiInput.TextInput {...props} classNames='plb-3 mbs-2 text-center' />
-      <UiInput.DescriptionAndValidation>
-        {validationMessage && <UiInput.Validation>{validationMessage}</UiInput.Validation>}
-      </UiInput.DescriptionAndValidation>
-    </UiInput.Root>
-  );
-};
+export const Input = ({ validationMessage, label, ...props }: LargeInputProps) => (
+  <UiInput.Root>
+    <UiInput.Label>{label}</UiInput.Label>
+    <UiInput.TextInput {...props} classNames='plb-3 mbs-2 text-center' />
+    <UiInput.DescriptionAndValidation>
+      {validationMessage && <UiInput.Validation>{validationMessage}</UiInput.Validation>}
+    </UiInput.DescriptionAndValidation>
+  </UiInput.Root>
+);

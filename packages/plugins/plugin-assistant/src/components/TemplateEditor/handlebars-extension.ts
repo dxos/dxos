@@ -32,18 +32,16 @@ export type HandlebarsOptions = {};
  * - Variables: {{var}}
  * - Commands with variables: {{#each items}} {{/each}}
  */
-export const handlebars = (_: HandlebarsOptions = {}): Extension => {
-  return [
-    handlebarsHighlightPlugin,
-    autocompletion({
-      activateOnTyping: true,
-      aboveCursor: true,
-      closeOnBlur: true,
-      override: [handlebarsCompletions],
-    }),
-    keymap.of(completionKeymap),
-  ];
-};
+export const handlebars = (_: HandlebarsOptions = {}): Extension => [
+  handlebarsHighlightPlugin,
+  autocompletion({
+    activateOnTyping: true,
+    aboveCursor: true,
+    closeOnBlur: true,
+    override: [handlebarsCompletions],
+  }),
+  keymap.of(completionKeymap),
+];
 
 const regex = {
   comment: /\{\{!\s*[^}]*\}\}/g,

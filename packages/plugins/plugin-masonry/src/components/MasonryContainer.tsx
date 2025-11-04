@@ -13,9 +13,7 @@ import { getSpace, useQuery } from '@dxos/react-client/echo';
 import { Masonry } from '@dxos/react-ui-masonry';
 import { type DataType, ProjectionModel, getTypenameFromQuery } from '@dxos/schema';
 
-const Item = ({ data }: { data: any }) => {
-  return <Surface role='card' limit={1} data={{ subject: data }} />;
-};
+const Item = ({ data }: { data: any }) => <Surface role='card' limit={1} data={{ subject: data }} />;
 
 export const MasonryContainer = ({ view, role }: { view: DataType.View; role: string }) => {
   const client = useClient();

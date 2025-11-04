@@ -39,9 +39,7 @@ export class Screen {
     }
   };
 
-  static center = ({ x, y, width, height }: Rect): Point => {
-    return [x + width / 2, y + height / 2];
-  };
+  static center = ({ x, y, width, height }: Rect): Point => [x + width / 2, y + height / 2];
 
   static contains = (bounds: Rect, point: Point): boolean => {
     const [x, y] = point;
@@ -62,9 +60,8 @@ export class Screen {
    * @param p1
    * @param p2
    */
-  static len = (p1: Point, p2: Point) => {
-    return Math.sqrt(Math.pow(Math.abs(p1[0] - p2[0]), 2) + Math.pow(Math.abs(p1[1] - p2[1]), 2));
-  };
+  static len = (p1: Point, p2: Point) =>
+    Math.sqrt(Math.pow(Math.abs(p1[0] - p2[0]), 2) + Math.pow(Math.abs(p1[1] - p2[1]), 2));
 
   /**
    * Distance to line segment.

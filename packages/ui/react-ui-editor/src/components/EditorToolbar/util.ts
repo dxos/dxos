@@ -24,9 +24,8 @@ import { type EditorViewMode } from '../../types';
 
 export type EditorToolbarState = { viewMode?: EditorViewMode } & Formatting;
 
-export const useEditorToolbarState = (initialState: Partial<EditorToolbarState> = {}): Live<EditorToolbarState> => {
-  return useMemo(() => live<EditorToolbarState>(initialState), []);
-};
+export const useEditorToolbarState = (initialState: Partial<EditorToolbarState> = {}): Live<EditorToolbarState> =>
+  useMemo(() => live<EditorToolbarState>(initialState), []);
 
 export type EditorToolbarActionGraphProps = {
   state: Live<EditorToolbarState>;

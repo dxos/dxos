@@ -146,9 +146,7 @@ export const useStats = (): [Stats, () => void] => {
     const resources = get(diagnostics, 'services.diagnostics.trace.resources') as Record<string, Resource>;
     const queries: QueryInfo[] = Object.values(resources)
       .filter((res) => res.className === 'QueryState')
-      .map((res) => {
-        return res.info as QueryInfo;
-      });
+      .map((res) => res.info as QueryInfo);
 
     const syncStates = await Promise.all(
       client.spaces

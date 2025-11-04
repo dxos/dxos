@@ -62,9 +62,9 @@ export class Framer {
   });
 
   public readonly port: RpcPort = {
-    send: (message) => {
+    send: (message) =>
       // log('write', { len: message.length, frame: Buffer.from(message).toString('hex') })
-      return new Promise<void>((resolve) => {
+      new Promise<void>((resolve) => {
         const frame = encodeFrame(message);
         this._bytesSent += frame.length;
         this._writable = this._stream.push(frame);
@@ -73,8 +73,7 @@ export class Framer {
         } else {
           resolve();
         }
-      });
-    },
+      }),
     subscribe: (callback) => {
       invariant(!this._messageCb, 'Rpc port already has a message listener.');
       this._messageCb = callback;

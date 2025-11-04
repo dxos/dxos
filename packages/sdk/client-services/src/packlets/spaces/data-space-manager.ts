@@ -174,8 +174,8 @@ export class DataSpaceManager extends Resource {
     trace.diagnostic({
       id: 'spaces',
       name: 'Spaces',
-      fetch: async () => {
-        return Promise.all(
+      fetch: async () =>
+        Promise.all(
           Array.from(this._spaces.values()).map(async (space) => {
             const rootUrl = space.automergeSpaceState.rootUrl;
             const rootHandle = rootUrl
@@ -197,8 +197,7 @@ export class DataSpaceManager extends Resource {
               rootUrl,
             };
           }),
-        );
-      },
+        ),
     });
   }
 
@@ -546,9 +545,8 @@ export class DataSpaceManager extends Resource {
         }
       },
       memberKey: this._signingContext.identityKey,
-      onDelegatedInvitationStatusChange: (invitation, isActive) => {
-        return this._handleInvitationStatusChange(dataSpace, invitation, isActive);
-      },
+      onDelegatedInvitationStatusChange: (invitation, isActive) =>
+        this._handleInvitationStatusChange(dataSpace, invitation, isActive),
     });
     controlFeed && (await space.setControlFeed(controlFeed));
     dataFeed && (await space.setDataFeed(dataFeed));
@@ -635,9 +633,10 @@ export class DataSpaceManager extends Resource {
       }
       const peers = presence.getPeersByIdentityKey(member.key);
       const sessions = peers.map((p) => p.peerId && spaceProtocol.sessions.get(p.peerId));
-      const sessionsToClose = sessions.filter((s): s is SpaceProtocolSession => {
-        return (s && (member.role === SpaceMember.Role.REMOVED) !== (s.authStatus === AuthStatus.FAILURE)) ?? false;
-      });
+      const sessionsToClose = sessions.filter(
+        (s): s is SpaceProtocolSession =>
+          (s && (member.role === SpaceMember.Role.REMOVED) !== (s.authStatus === AuthStatus.FAILURE)) ?? false,
+      );
       sessionsToClose.forEach((session) => {
         void session.close().catch(log.error);
       });
@@ -684,8 +683,8 @@ export class DataSpaceManager extends Resource {
     space: DataSpace,
     invitations: Array<[PublicKey, DelegateSpaceInvitation]>,
   ): Promise<void> {
-    const tasks = invitations.map(([credentialId, invitation]) => {
-      return this._invitationsManager.createInvitation({
+    const tasks = invitations.map(([credentialId, invitation]) =>
+      this._invitationsManager.createInvitation({
         type: Invitation.Type.DELEGATED,
         kind: Invitation.Kind.SPACE,
         spaceKey: space.key,
@@ -697,8 +696,8 @@ export class DataSpaceManager extends Resource {
         multiUse: invitation.multiUse,
         delegationCredentialId: credentialId,
         persistent: false,
-      });
-    });
+      }),
+    );
     await Promise.all(tasks);
   }
 }

@@ -17,9 +17,8 @@ const MULTIBASE_PREFIX = 'B';
 
 const ENCODED_LENGTH = 33;
 
-const isValid = (value: string): value is SpaceId => {
-  return typeof value === 'string' && value.startsWith(MULTIBASE_PREFIX) && value.length === ENCODED_LENGTH;
-};
+const isValid = (value: string): value is SpaceId =>
+  typeof value === 'string' && value.startsWith(MULTIBASE_PREFIX) && value.length === ENCODED_LENGTH;
 
 /**
  * A unique identifier for a space.
@@ -52,7 +51,5 @@ export const SpaceId: Schema.Schema<SpaceId, string> & {
 
   static isValid = isValid;
 
-  static random = (): SpaceId => {
-    return SpaceId.encode(randomBytes(SpaceId.byteLength));
-  };
+  static random = (): SpaceId => SpaceId.encode(randomBytes(SpaceId.byteLength));
 };

@@ -475,9 +475,8 @@ const jsonSchemaFieldsToAnnotations = (schema: JsonSchemaType): SchemaAST.Annota
   return clearUndefined(annotations);
 };
 
-const makeAnnotatedRefinement = (ast: SchemaAST.AST, annotations: SchemaAST.Annotations): SchemaAST.Refinement => {
-  return new SchemaAST.Refinement(ast, () => Option.none(), annotations);
-};
+const makeAnnotatedRefinement = (ast: SchemaAST.AST, annotations: SchemaAST.Annotations): SchemaAST.Refinement =>
+  new SchemaAST.Refinement(ast, () => Option.none(), annotations);
 
 const addJsonSchemaFields = (ast: SchemaAST.AST, schema: JsonSchemaType): SchemaAST.AST =>
   makeAnnotatedRefinement(ast, { [SchemaAST.JSONSchemaAnnotationId]: schema });

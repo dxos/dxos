@@ -456,9 +456,7 @@ export const Query1: typeof Echo.Query = QueryClass;
 export { Query1 as Query };
 
 const RefTypeId: unique symbol = Symbol('@dxos/echo-query/Ref');
-const isRef = (obj: any): obj is Ref.Ref<any> => {
-  return obj && typeof obj === 'object' && RefTypeId in obj;
-};
+const isRef = (obj: any): obj is Ref.Ref<any> => obj && typeof obj === 'object' && RefTypeId in obj;
 
 const makeTypeDxn = (typename: string) => {
   assertArgument(typeof typename === 'string', 'typename');

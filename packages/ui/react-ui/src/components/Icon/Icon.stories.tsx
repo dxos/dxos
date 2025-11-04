@@ -50,14 +50,12 @@ const createIcon = ({
   return CustomIcon;
 };
 
-const DefaultStory = ({ CustomIcon }: { CustomIcon: FC<IconProps> }) => {
-  return (
-    <div className='grid grid-cols-2 gap-8'>
-      <CustomIcon weight={'regular'} className={mx(getSize(16))} />
-      <Icon icon='ph--github-logo--regular' classNames={mx(getSize(16))} />
-    </div>
-  );
-};
+const DefaultStory = ({ CustomIcon }: { CustomIcon: FC<IconProps> }) => (
+  <div className='grid grid-cols-2 gap-8'>
+    <CustomIcon weight={'regular'} className={mx(getSize(16))} />
+    <Icon icon='ph--github-logo--regular' classNames={mx(getSize(16))} />
+  </div>
+);
 
 const meta = {
   title: 'ui/react-ui-core/Icon',

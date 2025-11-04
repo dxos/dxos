@@ -30,13 +30,9 @@ export const posToLocation = (pos: string): Location => {
   return [row, col];
 };
 
-export const locationToPos = ([row, col]: Location): string => {
-  return String.fromCharCode(col + 'a'.charCodeAt(0)) + (row + 1);
-};
+export const locationToPos = ([row, col]: Location): string => String.fromCharCode(col + 'a'.charCodeAt(0)) + (row + 1);
 
-export const getRawPgn = (pgn: string) => {
-  return pgn.replace(/\[.*?\]/g, '').trim();
-};
+export const getRawPgn = (pgn: string) => pgn.replace(/\[.*?\]/g, '').trim();
 
 const styles = {
   neutral: {
@@ -63,9 +59,7 @@ const styles = {
 
 export const boardStyles = styles.original;
 
-export const getSquareColor = ([row, col]: Location) => {
-  return (col + row) % 2 === 0 ? boardStyles.black : boardStyles.white;
-};
+export const getSquareColor = ([row, col]: Location) => ((col + row) % 2 === 0 ? boardStyles.black : boardStyles.white);
 
 export const createChess = (pgn?: string): ChessJS => {
   const chess = new ChessJS();

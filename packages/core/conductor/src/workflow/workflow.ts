@@ -125,9 +125,7 @@ export class Workflow {
       graph: this._graph,
       inputNodeId: inputNodes[0].id,
       outputNodeId: outputNodes[0].id,
-      computeResolver: async (node) => {
-        return this._resolvedNodeById.get(node.id)!;
-      },
+      computeResolver: async (node) => this._resolvedNodeById.get(node.id)!,
     });
   }
 

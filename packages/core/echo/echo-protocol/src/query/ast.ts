@@ -355,8 +355,8 @@ export const visit = (query: Query, visitor: (node: Query) => void) => {
   );
 };
 
-export const fold = <T>(query: Query, reducer: (node: Query) => T): T[] => {
-  return Match.value(query).pipe(
+export const fold = <T>(query: Query, reducer: (node: Query) => T): T[] =>
+  Match.value(query).pipe(
     Match.withReturnType<T[]>(),
     Match.when({ type: 'filter' }, ({ selection }) => fold(selection, reducer)),
     Match.when({ type: 'reference-traversal' }, ({ anchor }) => fold(anchor, reducer)),
@@ -372,4 +372,3 @@ export const fold = <T>(query: Query, reducer: (node: Query) => T): T[] => {
     Match.when({ type: 'select' }, () => []),
     Match.exhaustive,
   );
-};

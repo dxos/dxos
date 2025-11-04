@@ -36,9 +36,8 @@ export const turndown = new TurndownService({
 
 export const toMarkdown = (html: string): string => turndown.turndown(html);
 
-export const isHTML = (str: string): boolean => {
-  return /<(\/?(p|div|span|ul|ol|li|a|strong|em|br|table|tr|td|h[1-6]))\b[^>]*>/i.test(str);
-};
+export const isHTML = (str: string): boolean =>
+  /<(\/?(p|div|span|ul|ol|li|a|strong|em|br|table|tr|td|h[1-6]))\b[^>]*>/i.test(str);
 
 export const stripWhitespace = (str: string): string => {
   const WHITESPACE = /[ \t\u00A0]*\n[ \t\u00A0]*\n[\s\u00A0]*/g;

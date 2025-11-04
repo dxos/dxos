@@ -48,11 +48,9 @@ export class TestExtension implements TeleportExtension {
           voidCall: async (request) => {
             // Ok.
           },
-          testCall: async (request) => {
-            return {
-              data: request.data,
-            };
-          },
+          testCall: async (request) => ({
+            data: request.data,
+          }),
         },
       },
       timeout: 2000,

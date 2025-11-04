@@ -398,13 +398,12 @@ export const Message = MessageSchema.pipe(
 
 export interface Message extends Schema.Schema.Type<typeof Message> {}
 
-export const makeMessage = (sender: Actor | ActorRole, blocks: ContentBlock.Any[]) => {
-  return Obj.make(Message, {
+export const makeMessage = (sender: Actor | ActorRole, blocks: ContentBlock.Any[]) =>
+  Obj.make(Message, {
     created: new Date().toISOString(),
     sender: typeof sender === 'string' ? { role: sender } : sender,
     blocks,
   });
-};
 
 /** @deprecated */
 export enum MessageV1State {
@@ -429,27 +428,25 @@ export class MessageV1 extends TypedObject({ typename: 'dxos.org/type/Message', 
 export const MessageV1ToV2 = defineObjectMigration({
   from: MessageV1,
   to: Message,
-  transform: async (from) => {
-    return {
-      id: from.id,
-      created: from.timestamp,
-      sender: from.sender,
-      blocks: [
-        {
-          _tag: 'text' as const,
-          text: from.text,
-        },
-        ...(from.parts ?? []).map((part) => ({
-          _tag: 'reference' as const,
-          reference: part,
-        })),
-      ],
-      properties: {
-        ...from.properties,
-        state: from.state,
-        context: from.context,
+  transform: async (from) => ({
+    id: from.id,
+    created: from.timestamp,
+    sender: from.sender,
+    blocks: [
+      {
+        _tag: 'text' as const,
+        text: from.text,
       },
-    };
-  },
+      ...(from.parts ?? []).map((part) => ({
+        _tag: 'reference' as const,
+        reference: part,
+      })),
+    ],
+    properties: {
+      ...from.properties,
+      state: from.state,
+      context: from.context,
+    },
+  }),
   onMigration: async () => {},
 });

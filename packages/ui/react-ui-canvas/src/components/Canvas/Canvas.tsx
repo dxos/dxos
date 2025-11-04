@@ -55,22 +55,25 @@ export const Canvas = forwardRef<CanvasController, CanvasProps>(
     }, [projection, scale, offset, width, height]);
 
     // CSS transforms.
-    const styles = useMemo<CSSProperties>(() => {
-      return {
+    const styles = useMemo<CSSProperties>(
+      () => ({
         // NOTE: Order is important.
         transform: `translate(${offset.x}px, ${offset.y}px) scale(${scale})`,
         visibility: width && height ? 'visible' : 'hidden',
-      };
-    }, [scale, offset]);
+      }),
+      [scale, offset],
+    );
 
     // Controller.
-    useImperativeHandle(forwardedRef, () => {
-      return {
+    useImperativeHandle(
+      forwardedRef,
+      () => ({
         setProjection: async (projection: ProjectionState) => {
           setProjection(projection);
         },
-      };
-    }, [ref]);
+      }),
+      [ref],
+    );
 
     return (
       <CanvasContext.Provider

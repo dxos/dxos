@@ -26,11 +26,13 @@ export const ForceGraph: FC<ForceGraphProps> = ({ model, match }) => {
   filteredRef.current = filterObjectsSync(model?.objects ?? [], match);
 
   const [data, setData] = useState<GraphAdapter>();
-  useEffect(() => {
-    return model?.subscribe((model) => {
-      setData(new GraphAdapter(model.graph));
-    });
-  }, [model]);
+  useEffect(
+    () =>
+      model?.subscribe((model) => {
+        setData(new GraphAdapter(model.graph));
+      }),
+    [model],
+  );
 
   useEffect(() => {
     if (rootRef.current) {

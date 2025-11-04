@@ -44,17 +44,14 @@ export class DatabaseService extends Context.Tag('@dxos/functions/DatabaseServic
     },
   });
 
-  static make = (db: EchoDatabase): Context.Tag.Service<DatabaseService> => {
-    return {
-      get db() {
-        return db;
-      },
-    };
-  };
+  static make = (db: EchoDatabase): Context.Tag.Service<DatabaseService> => ({
+    get db() {
+      return db;
+    },
+  });
 
-  static layer = (db: EchoDatabase): Layer.Layer<DatabaseService> => {
-    return Layer.succeed(DatabaseService, DatabaseService.make(db));
-  };
+  static layer = (db: EchoDatabase): Layer.Layer<DatabaseService> =>
+    Layer.succeed(DatabaseService, DatabaseService.make(db));
 
   /**
    * Resolves an object by its DXN.
@@ -138,9 +135,8 @@ export class DatabaseService extends Context.Tag('@dxos/functions/DatabaseServic
    */
   static getObjectById = <T extends Obj.Any | Relation.Any>(
     id: string,
-  ): Effect.Effect<Live<T> | undefined, never, DatabaseService> => {
-    return DatabaseService.pipe(Effect.map(({ db }) => db.getObjectById(id)));
-  };
+  ): Effect.Effect<Live<T> | undefined, never, DatabaseService> =>
+    DatabaseService.pipe(Effect.map(({ db }) => db.getObjectById(id)));
 
   // TODO(dmaretskyi): Change API to `yield* DatabaseService.query(...).first` and `yield* DatabaseService.query(...).objects`.
 

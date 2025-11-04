@@ -107,9 +107,7 @@ export const MessageContainer = ({
   );
 };
 
-const MessagePart = ({ part }: { part: Type.Expando }) => {
-  return <MessageBlockObjectTile subject={part} />;
-};
+const MessagePart = ({ part }: { part: Type.Expando }) => <MessageBlockObjectTile subject={part} />;
 
 const TextboxBlock = ({
   block,
@@ -158,13 +156,11 @@ const TextboxBlock = ({
   return <div role='none' ref={parentRef} className='mie-4' {...focusAttributes} />;
 };
 
-const ProposalBlock = ({ block }: { block: DataType.MessageBlock.Proposal }) => {
-  return (
-    <div role='none' className='mie-4 italic'>
-      {block.text}
-    </div>
-  );
-};
+const ProposalBlock = ({ block }: { block: DataType.MessageBlock.Proposal }) => (
+  <div role='none' className='mie-4 italic'>
+    {block.text}
+  </div>
+);
 
 const MessageBlockObjectTile = forwardRef<HTMLDivElement, { subject: Obj.Any }>(({ subject }, forwardedRef) => {
   // TODO(burdon): Use annotation to get title.

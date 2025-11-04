@@ -534,68 +534,66 @@ export interface DecorateOptions {
   renderLinkButton?: RenderCallback<{ url: string }>;
 }
 
-export const decorateMarkdown = (options: DecorateOptions = {}) => {
-  return [
-    ViewPlugin.fromClass(
-      class {
-        deco: DecorationSet;
-        atomicDeco: DecorationSet;
-        pendingUpdate?: NodeJS.Timeout;
+export const decorateMarkdown = (options: DecorateOptions = {}) => [
+  ViewPlugin.fromClass(
+    class {
+      deco: DecorationSet;
+      atomicDeco: DecorationSet;
+      pendingUpdate?: NodeJS.Timeout;
 
-        constructor(view: EditorView) {
-          ({ deco: this.deco, atomicDeco: this.atomicDeco } = buildDecorations(view, options, view.hasFocus));
-        }
+      constructor(view: EditorView) {
+        ({ deco: this.deco, atomicDeco: this.atomicDeco } = buildDecorations(view, options, view.hasFocus));
+      }
 
-        update(update: ViewUpdate) {
-          if (
-            update.docChanged ||
-            update.viewportChanged ||
-            update.focusChanged ||
-            update.transactions.some((tr) => tr.effects.some((effect) => effect.is(forceUpdate))) ||
-            (update.selectionSet && !options.selectionChangeDelay)
-          ) {
-            ({ deco: this.deco, atomicDeco: this.atomicDeco } = buildDecorations(
-              update.view,
-              options,
-              update.view.hasFocus,
-            ));
+      update(update: ViewUpdate) {
+        if (
+          update.docChanged ||
+          update.viewportChanged ||
+          update.focusChanged ||
+          update.transactions.some((tr) => tr.effects.some((effect) => effect.is(forceUpdate))) ||
+          (update.selectionSet && !options.selectionChangeDelay)
+        ) {
+          ({ deco: this.deco, atomicDeco: this.atomicDeco } = buildDecorations(
+            update.view,
+            options,
+            update.view.hasFocus,
+          ));
 
-            this.clearUpdate();
-          } else if (update.selectionSet) {
-            this.scheduleUpdate(update.view);
-          }
-        }
-
-        // Defer update in case moving through the document.
-        scheduleUpdate(view: EditorView) {
           this.clearUpdate();
-          this.pendingUpdate = setTimeout(() => {
-            view.dispatch({ effects: forceUpdate.of(null) });
-          }, options.selectionChangeDelay);
+        } else if (update.selectionSet) {
+          this.scheduleUpdate(update.view);
         }
+      }
 
-        clearUpdate() {
-          if (this.pendingUpdate) {
-            clearTimeout(this.pendingUpdate);
-            this.pendingUpdate = undefined;
-          }
-        }
+      // Defer update in case moving through the document.
+      scheduleUpdate(view: EditorView) {
+        this.clearUpdate();
+        this.pendingUpdate = setTimeout(() => {
+          view.dispatch({ effects: forceUpdate.of(null) });
+        }, options.selectionChangeDelay);
+      }
 
-        destroy() {
-          this.clearUpdate();
+      clearUpdate() {
+        if (this.pendingUpdate) {
+          clearTimeout(this.pendingUpdate);
+          this.pendingUpdate = undefined;
         }
-      },
-      {
-        provide: (plugin) => [
-          Prec.low(EditorView.decorations.of((view) => view.plugin(plugin)?.deco ?? Decoration.none)),
-          EditorView.decorations.of((view) => view.plugin(plugin)?.atomicDeco ?? Decoration.none),
-          EditorView.atomicRanges.of((view) => view.plugin(plugin)?.atomicDeco ?? Decoration.none),
-        ],
-      },
-    ),
-    image(),
-    table(),
-    adjustChanges(),
-    formattingStyles,
-  ];
-};
+      }
+
+      destroy() {
+        this.clearUpdate();
+      }
+    },
+    {
+      provide: (plugin) => [
+        Prec.low(EditorView.decorations.of((view) => view.plugin(plugin)?.deco ?? Decoration.none)),
+        EditorView.decorations.of((view) => view.plugin(plugin)?.atomicDeco ?? Decoration.none),
+        EditorView.atomicRanges.of((view) => view.plugin(plugin)?.atomicDeco ?? Decoration.none),
+      ],
+    },
+  ),
+  image(),
+  table(),
+  adjustChanges(),
+  formattingStyles,
+];

@@ -16,16 +16,14 @@ export const RefArray = Object.freeze({
   /**
    * @returns all resolved targets.
    */
-  targets: <T extends AnyEchoObject>(refs: readonly Ref<T>[]): T[] => {
-    return refs.map((ref) => ref.target).filter(isNonNullable);
-  },
+  targets: <T extends AnyEchoObject>(refs: readonly Ref<T>[]): T[] =>
+    refs.map((ref) => ref.target).filter(isNonNullable),
 
   /**
    * Load all referenced objects.
    */
-  loadAll: <T extends AnyEchoObject>(refs: readonly Ref<T>[]): Promise<T[]> => {
-    return Promise.all(refs.map((ref) => ref.load()));
-  },
+  loadAll: <T extends AnyEchoObject>(refs: readonly Ref<T>[]): Promise<T[]> =>
+    Promise.all(refs.map((ref) => ref.load())),
 
   /**
    * Removes the ref with the given id.

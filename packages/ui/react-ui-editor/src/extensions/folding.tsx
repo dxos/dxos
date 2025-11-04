@@ -18,17 +18,14 @@ export type FoldingOptions = {};
  */
 export const folding = (_props: FoldingOptions = {}): Extension => [
   codeFolding({
-    placeholderDOM: () => {
-      return document.createElement('span'); // Collapse content.
-    },
+    placeholderDOM: () => document.createElement('span'), // Collapse content.
   }),
   foldGutter({
-    markerDOM: (open) => {
-      return renderRoot(
+    markerDOM: (open) =>
+      renderRoot(
         Domino.of('div').classNames('flex h-full items-center').build(),
         <Icon icon='ph--caret-right--bold' size={3} classNames={['mx-3 cursor-pointer', open && 'rotate-90']} />,
-      );
-    },
+      ),
   }),
   EditorView.theme({
     '.cm-foldGutter': {

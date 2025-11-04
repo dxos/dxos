@@ -16,14 +16,10 @@ import { type Node, type ReadableGraph, type Relation } from '@dxos/app-graph';
  * @returns Node if found, undefined otherwise.
  */
 // TODO(wittjosiah): Factor out to @dxos/app-graph/react.
-export const useNode = <T = any>(graph: ReadableGraph, id?: string): Node<T> | undefined => {
-  return Option.getOrElse(useRxValue(graph.node(id ?? '')), () => undefined);
-};
+export const useNode = <T = any>(graph: ReadableGraph, id?: string): Node<T> | undefined =>
+  Option.getOrElse(useRxValue(graph.node(id ?? '')), () => undefined);
 
-export const useConnections = (graph: ReadableGraph, id?: string, relation?: Relation): Node[] => {
-  return useRxValue(graph.connections(id ?? '', relation));
-};
+export const useConnections = (graph: ReadableGraph, id?: string, relation?: Relation): Node[] =>
+  useRxValue(graph.connections(id ?? '', relation));
 
-export const useActions = (graph: ReadableGraph, id?: string): Node[] => {
-  return useRxValue(graph.actions(id ?? ''));
-};
+export const useActions = (graph: ReadableGraph, id?: string): Node[] => useRxValue(graph.actions(id ?? ''));

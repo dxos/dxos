@@ -88,12 +88,10 @@ const FocusContainer = ({ id }: { id: string }) => {
 };
 
 export const Test: Story = {
-  render: () => {
-    return (
-      <div className='flex flex-col w-full justify-center items-center gap-2 m-4'>
-        <FocusContainer id='test-1' />
-        <FocusContainer id='test-2' />
-      </div>
-    );
-  },
+  render: () => (
+    <div className='flex flex-col w-full justify-center items-center gap-2 m-4'>
+      <FocusContainer id='test-1' />
+      <FocusContainer id='test-2' />
+    </div>
+  ),
 };

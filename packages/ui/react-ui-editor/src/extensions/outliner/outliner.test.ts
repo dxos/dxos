@@ -24,9 +24,7 @@ const lines = [
   '- [ ] 3',
 ];
 
-const getPos = (line: number) => {
-  return lines.slice(0, line).reduce((acc, line) => acc + line.length + 1, 0);
-};
+const getPos = (line: number) => lines.slice(0, line).reduce((acc, line) => acc + line.length + 1, 0);
 
 const extensions = [createMarkdownExtensions(), outlinerTree()];
 

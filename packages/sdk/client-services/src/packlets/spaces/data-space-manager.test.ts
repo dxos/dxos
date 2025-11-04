@@ -208,16 +208,13 @@ describe('DataSpaceManager', () => {
     });
   });
 
-  const connectReplicators = (peers: TestPeer[]) => {
-    return Promise.all(peers.map((peer) => peer.echoHost.addReplicator(peer.meshEchoReplicator)));
-  };
+  const connectReplicators = (peers: TestPeer[]) =>
+    Promise.all(peers.map((peer) => peer.echoHost.addReplicator(peer.meshEchoReplicator)));
 
   const reloadDataSpaces = async (peer: TestPeer) => {
     await peer.dataSpaceManager.close();
     await peer.dataSpaceManager.open();
   };
 
-  const getFirstSpace = (peer: TestPeer) => {
-    return Array.from(peer.dataSpaceManager.spaces.values())[0];
-  };
+  const getFirstSpace = (peer: TestPeer) => Array.from(peer.dataSpaceManager.spaces.values())[0];
 });

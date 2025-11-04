@@ -19,25 +19,23 @@ type StoryProps = Partial<{
   blockAlign: 'center' | 'start';
 }>;
 
-const DefaultStory = ({ title, openTrigger, description, body, closeTrigger, blockAlign }: StoryProps) => {
-  return (
-    <Dialog.Root defaultOpen>
-      <Dialog.Trigger asChild>
-        <Button>{openTrigger}</Button>
-      </Dialog.Trigger>
-      <Dialog.Overlay blockAlign={blockAlign}>
-        <Dialog.Content>
-          <Dialog.Title>{title}</Dialog.Title>
-          <Dialog.Description>{description}</Dialog.Description>
-          <p className='mbs-2 mbe-4'>{body}</p>
-          <Dialog.Close asChild>
-            <Button variant='primary'>{closeTrigger}</Button>
-          </Dialog.Close>
-        </Dialog.Content>
-      </Dialog.Overlay>
-    </Dialog.Root>
-  );
-};
+const DefaultStory = ({ title, openTrigger, description, body, closeTrigger, blockAlign }: StoryProps) => (
+  <Dialog.Root defaultOpen>
+    <Dialog.Trigger asChild>
+      <Button>{openTrigger}</Button>
+    </Dialog.Trigger>
+    <Dialog.Overlay blockAlign={blockAlign}>
+      <Dialog.Content>
+        <Dialog.Title>{title}</Dialog.Title>
+        <Dialog.Description>{description}</Dialog.Description>
+        <p className='mbs-2 mbe-4'>{body}</p>
+        <Dialog.Close asChild>
+          <Button variant='primary'>{closeTrigger}</Button>
+        </Dialog.Close>
+      </Dialog.Content>
+    </Dialog.Overlay>
+  </Dialog.Root>
+);
 
 const meta = {
   title: 'ui/react-ui-core/Dialog',

@@ -20,13 +20,11 @@ type StoryStackItem = {
   items?: StoryStackItem[];
 };
 
-const KanbanBlock = ({ item }: { item: StoryStackItem }) => {
-  return (
-    <div className='overflow-hidden'>
-      <p className='place-content-center p-4'>{item.title}</p>
-    </div>
-  );
-};
+const KanbanBlock = ({ item }: { item: StoryStackItem }) => (
+  <div className='overflow-hidden'>
+    <p className='place-content-center p-4'>{item.title}</p>
+  </div>
+);
 
 const DefaultStory = () => {
   const [columns, setColumns] = useState<StoryStackItem[]>(

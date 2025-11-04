@@ -82,8 +82,8 @@ export class AuthenticatingInvitation extends CancellableInvitation {
  * @deprecated
  */
 // TODO(wittjosiah): Move to testing.
-export const wrapObservable = async (observable: CancellableInvitation): Promise<Invitation> => {
-  return new Promise((resolve, reject) => {
+export const wrapObservable = async (observable: CancellableInvitation): Promise<Invitation> =>
+  new Promise((resolve, reject) => {
     const subscription = observable.subscribe(
       (invitation: Invitation | undefined) => {
         // TODO(burdon): Throw error if auth requested.
@@ -97,7 +97,6 @@ export const wrapObservable = async (observable: CancellableInvitation): Promise
       },
     );
   });
-};
 
 export const getExpirationTime = (invitation: Partial<Invitation>): Date | undefined => {
   if (!(invitation.created && invitation.lifetime)) {

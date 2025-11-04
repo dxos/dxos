@@ -14,32 +14,29 @@ import type { EdgeIdentity } from './edge-identity';
 /**
  * Edge identity backed by a device key without a credential chain.
  */
-export const createDeviceEdgeIdentity = async (signer: Signer, key: PublicKey): Promise<EdgeIdentity> => {
-  return {
-    identityKey: key.toHex(),
-    peerKey: key.toHex(),
-    presentCredentials: async ({ challenge }) => {
-      return signPresentation({
-        presentation: {
-          credentials: [
-            // Verifier requires at least one credential in the presentation to establish the subject.
-            await createCredential({
-              assertion: {
-                '@type': 'dxos.halo.credentials.Auth',
-              },
-              issuer: key,
-              subject: key,
-              signer,
-            }),
-          ],
-        },
-        signer,
-        signerKey: key,
-        nonce: challenge,
-      });
-    },
-  };
-};
+export const createDeviceEdgeIdentity = async (signer: Signer, key: PublicKey): Promise<EdgeIdentity> => ({
+  identityKey: key.toHex(),
+  peerKey: key.toHex(),
+  presentCredentials: async ({ challenge }) =>
+    signPresentation({
+      presentation: {
+        credentials: [
+          // Verifier requires at least one credential in the presentation to establish the subject.
+          await createCredential({
+            assertion: {
+              '@type': 'dxos.halo.credentials.Auth',
+            },
+            issuer: key,
+            subject: key,
+            signer,
+          }),
+        ],
+      },
+      signer,
+      signerKey: key,
+      nonce: challenge,
+    }),
+});
 
 /**
  * Edge identity backed by a chain of credentials.

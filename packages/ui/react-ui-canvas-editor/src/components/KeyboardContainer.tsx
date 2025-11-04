@@ -14,13 +14,11 @@ export const GLOBAL_SCOPE = 'global';
  * NOTE: Works with [hotkeys-js](https://www.npmjs.com/package/hotkeys-js) for headless processing.
  */
 // TODO(burdon): Factor out and replace @dxos/keyboard.
-export const KeyboardContainer = ({ id, children }: PropsWithChildren<{ id: string }>) => {
-  return (
-    <HotkeysProvider initiallyActiveScopes={[GLOBAL_SCOPE]}>
-      <KeyboardContainerImpl id={id}>{children}</KeyboardContainerImpl>
-    </HotkeysProvider>
-  );
-};
+export const KeyboardContainer = ({ id, children }: PropsWithChildren<{ id: string }>) => (
+  <HotkeysProvider initiallyActiveScopes={[GLOBAL_SCOPE]}>
+    <KeyboardContainerImpl id={id}>{children}</KeyboardContainerImpl>
+  </HotkeysProvider>
+);
 
 const KeyboardContainerImpl = ({ id, children }: PropsWithChildren<{ id: string }>) => {
   const { hasAttention } = useAttention(id);

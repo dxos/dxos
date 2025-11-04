@@ -36,10 +36,9 @@ export const L1Panel = ({ open, path, item, currentItemId, onBack }: L1PanelProp
   const alternatePath = useMemo(() => [...path, item.id], [item.id, path]);
   const isAlternate = isAlternateTree?.(alternatePath, item) ?? false;
   const useAlternateItems = useCallback(
-    (node?: Node, { disposition }: { disposition?: string } = {}) => {
+    (node?: Node, { disposition }: { disposition?: string } = {}) =>
       // TODO(wittjosiah): Sorting is expensive, limit to necessary items for now.
-      return useItems(node, { disposition, sort: node?.id === alternateTree.id });
-    },
+      useItems(node, { disposition, sort: node?.id === alternateTree.id }),
     [alternateTree, useItems],
   );
 

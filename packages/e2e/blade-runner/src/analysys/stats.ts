@@ -12,8 +12,8 @@ import { type SignalTestSpec } from '../spec';
 
 import { LogReader, type TraceEvent, zapPreprocessor } from './logging';
 
-export const mapToJson = (m: Map<string, any>) => {
-  return Object.fromEntries(
+export const mapToJson = (m: Map<string, any>) =>
+  Object.fromEntries(
     Array.from(m.entries()).map(([key, val]) => {
       const decodeVal = (val: any): any => {
         if (val instanceof Map) {
@@ -28,7 +28,6 @@ export const mapToJson = (m: Map<string, any>) => {
       return [key, decoded];
     }),
   );
-};
 
 export const analyzeMessages = async (results: ReplicantsSummary) => {
   const messages = new Map<string, { sent?: number; received?: number }>();

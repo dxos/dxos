@@ -178,12 +178,10 @@ const SavingIndicator = () => {
 
 const indicators = [SavingIndicator, SwarmIndicator, ErrorIndicator];
 
-export const DebugStatus = () => {
-  return (
-    <>
-      {indicators.map((Indicator) => (
-        <Indicator key={Indicator.name} />
-      ))}
-    </>
-  );
-};
+export const DebugStatus = () => (
+  <>
+    {indicators.map((Indicator) => (
+      <Indicator key={Indicator.name} />
+    ))}
+  </>
+);

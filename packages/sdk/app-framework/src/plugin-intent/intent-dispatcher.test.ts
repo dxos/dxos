@@ -237,8 +237,8 @@ class Compute extends Schema.TaggedClass<Compute>()('Compute', {
 
 const computeResolver = createResolver({
   intent: Compute,
-  resolve: (data, undo) => {
-    return Effect.gen(function* () {
+  resolve: (data, undo) =>
+    Effect.gen(function* () {
       if (undo) {
         return { data: { value: data.value / 2 } };
       }
@@ -246,8 +246,7 @@ const computeResolver = createResolver({
       yield* Effect.sleep(data.value * 10);
       const value = data.value * 2;
       return { data: { value }, undoable: { message: 'test', data: { value } } };
-    });
-  },
+    }),
 });
 
 class Concat extends Schema.TaggedClass<Concat>()('Concat', {

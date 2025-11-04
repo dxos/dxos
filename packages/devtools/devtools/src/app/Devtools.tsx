@@ -7,9 +7,7 @@ import { HashRouter } from 'react-router-dom';
 
 import { DevtoolsContextProvider, useRoutes } from '../hooks';
 
-const Routes = () => {
-  return useRoutes();
-};
+const Routes = () => useRoutes();
 
 export type DevtoolsProps = {
   noRouter?: boolean;

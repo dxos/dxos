@@ -276,10 +276,9 @@ const InvitationAuthCode = ({ id, code, onCancel }: { id: string; code: string; 
   );
 };
 
-const InvitationComplete = ({ statusValue }: { statusValue: number }) => {
-  return statusValue > 0 ? (
+const InvitationComplete = ({ statusValue }: { statusValue: number }) =>
+  statusValue > 0 ? (
     <Icon icon='ph--check--regular' size={6} classNames='m-1.5' />
   ) : (
     <Icon icon='ph--x--regular' size={6} classNames='m-1.5' />
   );
-};

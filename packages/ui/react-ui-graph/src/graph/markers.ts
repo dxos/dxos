@@ -55,8 +55,8 @@ const createDot =
  */
 export const createMarkers =
   ({ arrowSize = 12 }: MarkerOptions = {}): D3Callable =>
-  (group) => {
-    return group
+  (group) =>
+    group
       .selectAll('marker')
       .data([
         {
@@ -82,4 +82,3 @@ export const createMarkers =
       .each((d, i, nodes) => {
         select(nodes[i]).call(d.generator);
       });
-  };

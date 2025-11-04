@@ -73,14 +73,16 @@ export const MarkdownContainer = ({
 
   // Toolbar actions from app graph.
   const { graph } = useAppGraph();
-  const customActions = useMemo(() => {
-    return Rx.make((get) => {
-      const actions = get(graph.actions(id));
-      const nodes = actions.filter((action) => action.properties.disposition === 'toolbar');
-      const edges = nodes.map((node) => ({ source: 'root', target: node.id }));
-      return { nodes, edges };
-    });
-  }, [graph]);
+  const customActions = useMemo(
+    () =>
+      Rx.make((get) => {
+        const actions = get(graph.actions(id));
+        const nodes = actions.filter((action) => action.properties.disposition === 'toolbar');
+        const edges = nodes.map((node) => ({ source: 'root', target: node.id }));
+        return { nodes, edges };
+      }),
+    [graph],
+  );
 
   // File upload.
   const [upload] = useCapabilities(Capabilities.FileUploader);

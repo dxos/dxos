@@ -23,9 +23,8 @@ export type GameboardContextValue<M extends GameboardModel> = {
 
 const [GameboardContextProvider, useRadixGameboardContext] = createContext<GameboardContextValue<any>>('Gameboard');
 
-const useGameboardContext = <M extends GameboardModel>(consumerName: string): GameboardContextValue<M> => {
-  return useRadixGameboardContext(consumerName);
-};
+const useGameboardContext = <M extends GameboardModel>(consumerName: string): GameboardContextValue<M> =>
+  useRadixGameboardContext(consumerName);
 
 //
 // Root
@@ -104,17 +103,15 @@ GameboardRoot.displayName = 'Gameboard.Root';
 type GameboardContentProps = ThemedClassName<PropsWithChildren<{ grow?: boolean; contain?: boolean }>>;
 
 const GameboardContent = forwardRef<HTMLDivElement, GameboardContentProps>(
-  ({ children, classNames, grow, contain }, forwardedRef) => {
-    return (
-      <div
-        role='none'
-        className={mx(grow && 'grid is-full bs-full size-container place-content-center', classNames)}
-        ref={forwardedRef}
-      >
-        {contain ? <div className='is-[min(100cqw,100cqh)] bs-[min(100cqw,100cqh)]'>{children}</div> : children}
-      </div>
-    );
-  },
+  ({ children, classNames, grow, contain }, forwardedRef) => (
+    <div
+      role='none'
+      className={mx(grow && 'grid is-full bs-full size-container place-content-center', classNames)}
+      ref={forwardedRef}
+    >
+      {contain ? <div className='is-[min(100cqw,100cqh)] bs-[min(100cqw,100cqh)]'>{children}</div> : children}
+    </div>
+  ),
 );
 
 GameboardContent.displayName = 'Gameboard.Content';

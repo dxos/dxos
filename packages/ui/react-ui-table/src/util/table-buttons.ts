@@ -45,23 +45,22 @@ const createButton = ({
 const addColumnButton = {
   attr: BUTTON_IDENTIFIERS.newColumn,
   icon: 'ph--plus--regular',
-  render: ({ disabled }: Omit<Extract<ButtonData, { type: 'newColumn' }>, 'type'>) => {
-    return createButton({
+  render: ({ disabled }: Omit<Extract<ButtonData, { type: 'newColumn' }>, 'type'>) =>
+    createButton({
       attr: BUTTON_IDENTIFIERS.newColumn,
       icon: addColumnButton.icon,
       disabled,
       data: {},
       testId: 'table-new-column-button',
-    });
-  },
+    }),
   getData: (_el: HTMLElement): Extract<ButtonData, { type: 'newColumn' }> => ({ type: 'newColumn' }),
 } as const;
 
 const columnSettingsButton = {
   attr: BUTTON_IDENTIFIERS.columnSettings,
   icon: 'ph--caret-down--regular',
-  render: ({ fieldId }: Omit<Extract<ButtonData, { type: 'columnSettings' }>, 'type'>) => {
-    return createButton({
+  render: ({ fieldId }: Omit<Extract<ButtonData, { type: 'columnSettings' }>, 'type'>) =>
+    createButton({
       attr: BUTTON_IDENTIFIERS.columnSettings,
       icon: columnSettingsButton.icon,
       data: {
@@ -69,8 +68,7 @@ const columnSettingsButton = {
         'data-variant': 'ghost',
       },
       testId: 'table-column-settings-button',
-    });
-  },
+    }),
   getData: (el: HTMLElement): Extract<ButtonData, { type: 'columnSettings' }> => ({
     type: 'columnSettings',
     fieldId: el.getAttribute('data-field-id')!,
@@ -80,16 +78,15 @@ const columnSettingsButton = {
 const rowMenuButton = {
   attr: BUTTON_IDENTIFIERS.rowMenu,
   icon: 'ph--dots-three--regular',
-  render: ({ rowIndex }: Omit<Extract<ButtonData, { type: 'rowMenu' }>, 'type'>) => {
-    return createButton({
+  render: ({ rowIndex }: Omit<Extract<ButtonData, { type: 'rowMenu' }>, 'type'>) =>
+    createButton({
       attr: BUTTON_IDENTIFIERS.rowMenu,
       icon: rowMenuButton.icon,
       data: {
         'data-row-index': rowIndex.toString(),
       },
       testId: 'table-row-menu-button',
-    });
-  },
+    }),
   getData: (el: HTMLElement): Extract<ButtonData, { type: 'rowMenu' }> => ({
     type: 'rowMenu',
     rowIndex: Number(el.getAttribute('data-row-index')!),
@@ -99,8 +96,8 @@ const rowMenuButton = {
 const sortButton = {
   attr: BUTTON_IDENTIFIERS.sort,
   icon: 'ph--sort-ascending--regular',
-  render: ({ fieldId, direction }: Omit<Extract<ButtonData, { type: 'sort' }>, 'type'>) => {
-    return createButton({
+  render: ({ fieldId, direction }: Omit<Extract<ButtonData, { type: 'sort' }>, 'type'>) =>
+    createButton({
       attr: BUTTON_IDENTIFIERS.sort,
       icon: direction === 'desc' ? 'ph--sort-descending--regular' : 'ph--sort-ascending--regular',
       data: {
@@ -111,8 +108,7 @@ const sortButton = {
       // TODO(ZaymonFC): All buttons should be rendered into an absolutely positioned flex container.
       // This is a bit hacky.
       type: 'secondary',
-    });
-  },
+    }),
   getData: (el: HTMLElement): Extract<ButtonData, { type: 'sort' }> => ({
     type: 'sort',
     fieldId: el.getAttribute('data-field-id')!,
@@ -123,8 +119,8 @@ const sortButton = {
 const saveDraftRowButton = {
   attr: BUTTON_IDENTIFIERS.saveDraftRow,
   icon: 'ph--floppy-disk--regular',
-  render: ({ rowIndex, disabled }: Omit<Extract<ButtonData, { type: 'saveDraftRow' }>, 'type'>) => {
-    return createButton({
+  render: ({ rowIndex, disabled }: Omit<Extract<ButtonData, { type: 'saveDraftRow' }>, 'type'>) =>
+    createButton({
       attr: BUTTON_IDENTIFIERS.saveDraftRow,
       icon: saveDraftRowButton.icon,
       disabled,
@@ -133,8 +129,7 @@ const saveDraftRowButton = {
         'data-variant': 'primary',
       },
       testId: 'table-save-draft-row-button',
-    });
-  },
+    }),
   getData: (el: HTMLElement): Extract<ButtonData, { type: 'saveDraftRow' }> => ({
     type: 'saveDraftRow',
     rowIndex: Number(el.getAttribute('data-row-index')!),

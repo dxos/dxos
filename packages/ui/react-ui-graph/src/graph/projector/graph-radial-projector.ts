@@ -126,9 +126,7 @@ export const layoutRadial = (x: number, y: number, r: number, n: number, start =
 export const layoutHorizontal = (x: number, y: number, w: number, n: number) => {
   const dx = n > 1 ? w / (n - 1) : 0;
   const sx = x - ((n - 1) * dx) / 2;
-  return (i: number): Point => {
-    return [sx + i * dx, y];
-  };
+  return (i: number): Point => [sx + i * dx, y];
 };
 
 /**
@@ -137,7 +135,5 @@ export const layoutHorizontal = (x: number, y: number, w: number, n: number) => 
 export const layoutVertical = (x: number, y: number, h: number, n: number) => {
   const dy = n > 1 ? h / (n - 1) : 0;
   const sy = y - ((n - 1) * dy) / 2;
-  return (i: number): Point => {
-    return [x, sy + i * dy];
-  };
+  return (i: number): Point => [x, sy + i * dy];
 };

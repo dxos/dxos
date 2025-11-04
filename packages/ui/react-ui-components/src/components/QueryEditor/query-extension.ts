@@ -22,24 +22,22 @@ export type QueryOptions = {
 /**
  * Create a CodeMirror extension for the query language with syntax highlighting.
  */
-export const query = ({ tags }: QueryOptions = {}): Extension => {
-  return [
-    new LanguageSupport(queryLanguage),
-    syntaxHighlighting(queryHighlightStyle),
-    decorations({ tags }),
-    typeahead({
-      onComplete: ({ line }: CompoetionContext) => {
-        const words = line.split(/\s+/).filter(Boolean);
-        if (words.length > 0) {
-          // TODO(burdon): Get suggestion from parser.
-          return staticCompletion(['type:', 'AND', 'OR', 'NOT'])({ line });
-        }
-      },
-    }),
-    focus,
-    styles,
-  ];
-};
+export const query = ({ tags }: QueryOptions = {}): Extension => [
+  new LanguageSupport(queryLanguage),
+  syntaxHighlighting(queryHighlightStyle),
+  decorations({ tags }),
+  typeahead({
+    onComplete: ({ line }: CompoetionContext) => {
+      const words = line.split(/\s+/).filter(Boolean);
+      if (words.length > 0) {
+        // TODO(burdon): Get suggestion from parser.
+        return staticCompletion(['type:', 'AND', 'OR', 'NOT'])({ line });
+      }
+    },
+  }),
+  focus,
+  styles,
+];
 
 /**
  * Decorations
@@ -210,8 +208,8 @@ const lineHeight = '30px';
 /**
  * NOTE: The outer container vertically aligns the inner text with content in the outer div.
  */
-const container = (classNames: string, ...children: Domino<HTMLElement>[]) => {
-  return Domino.of('span')
+const container = (classNames: string, ...children: Domino<HTMLElement>[]) =>
+  Domino.of('span')
     .classNames('inline-flex bs-[28px] align-middle')
     .children(
       Domino.of('span')
@@ -219,7 +217,6 @@ const container = (classNames: string, ...children: Domino<HTMLElement>[]) => {
         .children(...children),
     )
     .build();
-};
 
 /**
  * TypeKeyword:Identifier

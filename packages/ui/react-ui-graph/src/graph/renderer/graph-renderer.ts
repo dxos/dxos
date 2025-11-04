@@ -114,8 +114,8 @@ export class GraphRenderer<NodeData = any, EdgeData = any> extends Renderer<
         .data(components)
         .join(
           (enter) => enter.append('path').classed('dx-subgraph', true),
-          (update) => {
-            return update.attr('d', ({ component }) => {
+          (update) =>
+            update.attr('d', ({ component }) => {
               const points: Point[] =
                 layout.graph?.nodes.filter((node) => component.includes(node.id)).map((node) => [node.x, node.y]) ?? [];
 
@@ -132,8 +132,7 @@ export class GraphRenderer<NodeData = any, EdgeData = any> extends Renderer<
                 const offset = solution[0].map(({ X, Y }) => [X / scale, Y / scale]);
                 return createLine([...offset, offset[0]]);
               }
-            });
-          },
+            }),
         );
     }
 
@@ -170,17 +169,16 @@ export class GraphRenderer<NodeData = any, EdgeData = any> extends Renderer<
             .classed('dx-node', true)
             .call(createNode, this.options),
         (update) => update.call(updateNode, this.options),
-        (exit) => {
+        (exit) =>
           // Fade out.
-          return exit
+          exit
             .transition()
             .ease(easeCubicOut)
             .duration(300)
             .attr('opacity', 0)
             .on('end', function (d) {
               select(this).remove();
-            });
-        },
+            }),
       )
       .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
 
@@ -282,9 +280,7 @@ const updateNode: D3Callable = <NodeData = any, EdgeData = any>(
   group: D3Selection,
   options: GraphRendererOptions<NodeData, EdgeData>,
 ) => {
-  group.attr('transform', (d) => {
-    return d.x != null && d.y != null ? `translate(${d.x},${d.y})` : undefined;
-  });
+  group.attr('transform', (d) => (d.x != null && d.y != null ? `translate(${d.x},${d.y})` : undefined));
 
   // Custom attributes.
   if (options.attributes?.node) {

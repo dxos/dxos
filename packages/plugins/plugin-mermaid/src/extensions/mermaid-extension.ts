@@ -12,125 +12,123 @@ export type MermaidOptions = {};
 /**
  * Extension to create mermaid diagrams.
  */
-export const mermaid = (_options: MermaidOptions = {}): Extension => {
-  return [
-    ViewPlugin.fromClass(
-      class {
-        decorations: DecorationSet;
+export const mermaid = (_options: MermaidOptions = {}): Extension => [
+  ViewPlugin.fromClass(
+    class {
+      decorations: DecorationSet;
 
-        constructor(view: EditorView) {
-          this.decorations = this.buildDecorations(view);
+      constructor(view: EditorView) {
+        this.decorations = this.buildDecorations(view);
+      }
+
+      update(update: ViewUpdate) {
+        // Always rebuild decorations when selection changes to handle arrow key navigation.
+        if (update.docChanged || update.viewportChanged || update.selectionSet || update.focusChanged) {
+          this.decorations = this.buildDecorations(update.view);
         }
+      }
 
-        update(update: ViewUpdate) {
-          // Always rebuild decorations when selection changes to handle arrow key navigation.
-          if (update.docChanged || update.viewportChanged || update.selectionSet || update.focusChanged) {
-            this.decorations = this.buildDecorations(update.view);
-          }
-        }
+      buildDecorations(view: EditorView): DecorationSet {
+        const decorations: Array<{ from: number; to: number; decoration: Decoration }> = [];
 
-        buildDecorations(view: EditorView): DecorationSet {
-          const decorations: Array<{ from: number; to: number; decoration: Decoration }> = [];
+        syntaxTree(view.state).iterate({
+          enter: (node) => {
+            if (node.name === 'FencedCode') {
+              const cursor = view.state.selection.main.head;
+              // Show widget when cursor is outside the code block.
+              // Add a buffer of 1 position before and after to handle edge cases.
+              const showWidget = view.state.readOnly || cursor < node.from - 1 || cursor > node.to + 1;
+              if (showWidget) {
+                const info = node.node.getChild('CodeInfo');
+                if (info) {
+                  const type = view.state.sliceDoc(info.from, info.to);
+                  const text = node.node.getChild('CodeText');
+                  if (type === 'mermaid' && text) {
+                    const content = view.state.sliceDoc(text.from, text.to).trim();
+                    const label = content.split(' ')[0];
 
-          syntaxTree(view.state).iterate({
-            enter: (node) => {
-              if (node.name === 'FencedCode') {
-                const cursor = view.state.selection.main.head;
-                // Show widget when cursor is outside the code block.
-                // Add a buffer of 1 position before and after to handle edge cases.
-                const showWidget = view.state.readOnly || cursor < node.from - 1 || cursor > node.to + 1;
-                if (showWidget) {
-                  const info = node.node.getChild('CodeInfo');
-                  if (info) {
-                    const type = view.state.sliceDoc(info.from, info.to);
-                    const text = node.node.getChild('CodeText');
-                    if (type === 'mermaid' && text) {
-                      const content = view.state.sliceDoc(text.from, text.to).trim();
-                      const label = content.split(' ')[0];
+                    // Create widget.
+                    const widget = new MermaidWidget(`mermaid-${node.from}`, content, label);
 
-                      // Create widget.
-                      const widget = new MermaidWidget(`mermaid-${node.from}`, content, label);
+                    // Find the line after the code block to place the widget.
+                    const endLine = view.state.doc.lineAt(node.to);
+                    const nextLinePos = endLine.to + 1;
 
-                      // Find the line after the code block to place the widget.
-                      const endLine = view.state.doc.lineAt(node.to);
-                      const nextLinePos = endLine.to + 1;
+                    // Add widget after the code block.
+                    if (nextLinePos <= view.state.doc.length) {
+                      decorations.push({
+                        from: nextLinePos,
+                        to: nextLinePos,
+                        decoration: Decoration.widget({
+                          widget,
+                        }),
+                      });
+                    } else {
+                      // Check if at the end of the document.
+                      decorations.push({
+                        from: endLine.to,
+                        to: endLine.to,
+                        decoration: Decoration.widget({
+                          widget,
+                          side: 1,
+                        }),
+                      });
+                    }
 
-                      // Add widget after the code block.
-                      if (nextLinePos <= view.state.doc.length) {
-                        decorations.push({
-                          from: nextLinePos,
-                          to: nextLinePos,
-                          decoration: Decoration.widget({
-                            widget,
-                          }),
-                        });
-                      } else {
-                        // Check if at the end of the document.
-                        decorations.push({
-                          from: endLine.to,
-                          to: endLine.to,
-                          decoration: Decoration.widget({
-                            widget,
-                            side: 1,
-                          }),
-                        });
-                      }
-
-                      // Hide each line of the code block.
-                      const startLine = view.state.doc.lineAt(node.from);
-                      for (let lineNum = startLine.number; lineNum <= endLine.number; lineNum++) {
-                        const line = view.state.doc.line(lineNum);
-                        decorations.push({
-                          from: line.from,
-                          to: line.from,
-                          decoration: Decoration.line({
-                            class: 'cm-mermaid-hidden',
-                          }),
-                        });
-                      }
+                    // Hide each line of the code block.
+                    const startLine = view.state.doc.lineAt(node.from);
+                    for (let lineNum = startLine.number; lineNum <= endLine.number; lineNum++) {
+                      const line = view.state.doc.line(lineNum);
+                      decorations.push({
+                        from: line.from,
+                        to: line.from,
+                        decoration: Decoration.line({
+                          class: 'cm-mermaid-hidden',
+                        }),
+                      });
                     }
                   }
                 }
               }
-            },
-          });
+            }
+          },
+        });
 
-          return Decoration.set(
-            decorations.sort((a, b) => a.from - b.from || a.to - b.to).map((d) => d.decoration.range(d.from, d.to)),
-          );
-        }
-      },
-      {
-        decorations: (v) => v.decorations,
-      },
-    ),
-    EditorView.theme({
-      '& .cm-mermaid': {
-        position: 'relative',
-        display: 'inline-flex',
-        width: '100%',
-        maring: '4px 0',
-        padding: '16px',
-        justifyContent: 'center',
-        backgroundColor: 'var(--dx-groupSurface)',
-        borderRadius: '8px',
-      },
-      '& .cm-mermaid-label': {
-        position: 'absolute',
-        right: '16px',
-        fontFamily: 'unset',
-        color: 'var(--dx-subdued)',
-      },
-      '& .cm-mermaid-error': {
-        display: 'inline-block',
-        color: 'var(--dx-errorText)',
-      },
-      '& .cm-mermaid-hidden': {
-        display: 'none !important',
-      },
-    }),
-  ];
-};
+        return Decoration.set(
+          decorations.sort((a, b) => a.from - b.from || a.to - b.to).map((d) => d.decoration.range(d.from, d.to)),
+        );
+      }
+    },
+    {
+      decorations: (v) => v.decorations,
+    },
+  ),
+  EditorView.theme({
+    '& .cm-mermaid': {
+      position: 'relative',
+      display: 'inline-flex',
+      width: '100%',
+      maring: '4px 0',
+      padding: '16px',
+      justifyContent: 'center',
+      backgroundColor: 'var(--dx-groupSurface)',
+      borderRadius: '8px',
+    },
+    '& .cm-mermaid-label': {
+      position: 'absolute',
+      right: '16px',
+      fontFamily: 'unset',
+      color: 'var(--dx-subdued)',
+    },
+    '& .cm-mermaid-error': {
+      display: 'inline-block',
+      color: 'var(--dx-errorText)',
+    },
+    '& .cm-mermaid-hidden': {
+      display: 'none !important',
+    },
+  }),
+];
 
 class MermaidWidget extends WidgetType {
   _svg: string | undefined;

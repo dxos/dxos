@@ -22,15 +22,13 @@ export type ScriptObjectSettingsProps = {
   object: Script.Script;
 };
 
-export const ScriptObjectSettings = ({ object }: ScriptObjectSettingsProps) => {
-  return (
-    <>
-      <Binding object={object} />
-      <BlueprintEditor object={object} />
-      <Publishing object={object} />
-    </>
-  );
-};
+export const ScriptObjectSettings = ({ object }: ScriptObjectSettingsProps) => (
+  <>
+    <Binding object={object} />
+    <BlueprintEditor object={object} />
+    <Publishing object={object} />
+  </>
+);
 
 export const ScriptProperties = ({ object }: ScriptObjectSettingsProps) => {
   const { t } = useTranslation(meta.id);

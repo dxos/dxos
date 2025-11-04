@@ -20,31 +20,29 @@ type StoryProps = Partial<{
   actionTrigger: string;
 }>;
 
-const DefaultStory = ({ title, description, body, openTrigger, cancelTrigger, actionTrigger }: StoryProps) => {
-  return (
-    <AlertDialog.Root defaultOpen>
-      <AlertDialog.Trigger asChild>
-        <Button>{openTrigger}</Button>
-      </AlertDialog.Trigger>
-      <AlertDialog.Overlay>
-        <AlertDialog.Content>
-          <AlertDialog.Title>{title}</AlertDialog.Title>
-          <AlertDialog.Description>{description}</AlertDialog.Description>
-          <p className='mbs-2 mbe-8'>{body}</p>
-          <Toolbar.Root>
-            <div className='grow' />
-            <AlertDialog.Cancel asChild>
-              <Toolbar.Button>{cancelTrigger}</Toolbar.Button>
-            </AlertDialog.Cancel>
-            <AlertDialog.Action asChild>
-              <Toolbar.Button variant='primary'>{actionTrigger}</Toolbar.Button>
-            </AlertDialog.Action>
-          </Toolbar.Root>
-        </AlertDialog.Content>
-      </AlertDialog.Overlay>
-    </AlertDialog.Root>
-  );
-};
+const DefaultStory = ({ title, description, body, openTrigger, cancelTrigger, actionTrigger }: StoryProps) => (
+  <AlertDialog.Root defaultOpen>
+    <AlertDialog.Trigger asChild>
+      <Button>{openTrigger}</Button>
+    </AlertDialog.Trigger>
+    <AlertDialog.Overlay>
+      <AlertDialog.Content>
+        <AlertDialog.Title>{title}</AlertDialog.Title>
+        <AlertDialog.Description>{description}</AlertDialog.Description>
+        <p className='mbs-2 mbe-8'>{body}</p>
+        <Toolbar.Root>
+          <div className='grow' />
+          <AlertDialog.Cancel asChild>
+            <Toolbar.Button>{cancelTrigger}</Toolbar.Button>
+          </AlertDialog.Cancel>
+          <AlertDialog.Action asChild>
+            <Toolbar.Button variant='primary'>{actionTrigger}</Toolbar.Button>
+          </AlertDialog.Action>
+        </Toolbar.Root>
+      </AlertDialog.Content>
+    </AlertDialog.Overlay>
+  </AlertDialog.Root>
+);
 
 const meta = {
   title: 'ui/react-ui-core/AlertDialog',

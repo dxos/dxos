@@ -400,9 +400,8 @@ const createClientDbInSpaceWithObject = async (
   return peer2.openDatabase(spaceKey, db1.rootUrl!);
 };
 
-const createTextObject = (content: string = ''): AnyLiveObject<{ content: string }> => {
-  return Obj.make(Expando, { content }) as AnyLiveObject<{ content: string }>;
-};
+const createTextObject = (content: string = ''): AnyLiveObject<{ content: string }> =>
+  Obj.make(Expando, { content }) as AnyLiveObject<{ content: string }>;
 
 interface DocumentHandles {
   spaceRootHandle: DocHandleProxy<DatabaseDirectory>;
@@ -419,6 +418,5 @@ const addObjectToDoc = <T extends { id: string }>(docHandle: DocHandleProxy<Data
   return object;
 };
 
-const createTestRootDoc = (repo: RepoProxy): DocHandleProxy<DatabaseDirectory> => {
-  return repo.create<DatabaseDirectory>({ version: SpaceDocVersion.CURRENT });
-};
+const createTestRootDoc = (repo: RepoProxy): DocHandleProxy<DatabaseDirectory> =>
+  repo.create<DatabaseDirectory>({ version: SpaceDocVersion.CURRENT });

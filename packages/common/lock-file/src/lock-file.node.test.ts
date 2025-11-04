@@ -72,11 +72,7 @@ describe('LockFile', () => {
     processHandle.stdin.write('close');
 
     // Wait for process to be killed
-    await expect
-      .poll(async () => {
-        return await LockFile.isLocked(filename);
-      })
-      .toBe(false);
+    await expect.poll(async () => await LockFile.isLocked(filename)).toBe(false);
 
     const handle = await LockFile.acquire(filename);
     await LockFile.release(handle);
@@ -116,11 +112,7 @@ describe('LockFile', () => {
     processHandle.kill('SIGKILL');
 
     // Wait for process to be killed
-    await expect
-      .poll(async () => {
-        return await LockFile.isLocked(filename);
-      })
-      .toBe(false);
+    await expect.poll(async () => await LockFile.isLocked(filename)).toBe(false);
 
     const handle = await LockFile.acquire(filename);
     await LockFile.release(handle);

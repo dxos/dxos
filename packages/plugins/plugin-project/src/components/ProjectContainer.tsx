@@ -41,17 +41,15 @@ export const ProjectContainer = ({ project }: ProjectContainerProps) => {
   );
 };
 
-const ProjectItem = ({ item, projectionModel }: ItemProps) => {
-  return (
-    <Surface
-      role='card--intrinsic'
-      data={{
-        subject: item,
-        projection: projectionModel,
-      }}
-      limit={1}
-    />
-  );
-};
+const ProjectItem = ({ item, projectionModel }: ItemProps) => (
+  <Surface
+    role='card--intrinsic'
+    data={{
+      subject: item,
+      projection: projectionModel,
+    }}
+    limit={1}
+  />
+);
 
 export default ProjectContainer;

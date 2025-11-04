@@ -12,9 +12,7 @@ export type XmlOptions = {};
  * XML decorator plugin for CodeMirror.
  * Decorates XML tags with monospace font using the XML language grammar.
  */
-export const xmlDecorator = (_: XmlOptions = {}): Extension => {
-  return [xmlDecoratorPlugin];
-};
+export const xmlDecorator = (_: XmlOptions = {}): Extension => [xmlDecoratorPlugin];
 
 /**
  * ViewPlugin that decorates XML tags using syntax tree.

@@ -53,13 +53,11 @@ export default () =>
     }),
     createResolver({
       intent: ScriptAction.CreateNotebook,
-      resolve: async ({ name }) => {
-        return {
-          data: {
-            object: Obj.make(Notebook.Notebook, { name, cells: [] }),
-          },
-        };
-      },
+      resolve: async ({ name }) => ({
+        data: {
+          object: Obj.make(Notebook.Notebook, { name, cells: [] }),
+        },
+      }),
     }),
     createResolver({
       intent: TokenManagerAction.AccessTokenCreated,

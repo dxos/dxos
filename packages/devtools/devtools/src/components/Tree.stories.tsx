@@ -20,13 +20,11 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
-  render: () => {
-    return (
-      <div>
-        <Tree data={JSON.parse(data)} />
-      </div>
-    );
-  },
+  render: () => (
+    <div>
+      <Tree data={JSON.parse(data)} />
+    </div>
+  ),
 };
 
 const data =

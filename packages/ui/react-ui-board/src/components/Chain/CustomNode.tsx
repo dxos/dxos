@@ -10,15 +10,13 @@ import { type NodeType } from './Chain';
 /**
  * https://reactflow.dev/examples/styling/tailwind
  */
-const CustomNodeComponent = ({ data }: { data: NodeType['data'] }) => {
-  return (
-    <div className='w-20 p-2 border border-separator rounded-sm shadow bg-inputSurface'>
-      <div className='flex grow justify-center'>{data.label}</div>
+const CustomNodeComponent = ({ data }: { data: NodeType['data'] }) => (
+  <div className='w-20 p-2 border border-separator rounded-sm shadow bg-inputSurface'>
+    <div className='flex grow justify-center'>{data.label}</div>
 
-      <Handle type='target' position={Position.Top} className='border rounded-full' />
-      <Handle type='source' position={Position.Bottom} className='border rounded-full' />
-    </div>
-  );
-};
+    <Handle type='target' position={Position.Top} className='border rounded-full' />
+    <Handle type='source' position={Position.Bottom} className='border rounded-full' />
+  </div>
+);
 
 export const CustomNode = memo(CustomNodeComponent);

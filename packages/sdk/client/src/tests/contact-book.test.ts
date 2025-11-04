@@ -160,9 +160,7 @@ describe('ContactBook', () => {
     expect(hostInvitation?.state).to.eq(Invitation.State.SUCCESS);
   };
 
-  const findSpace = (client: Client, spaceKey: PublicKey) => {
-    return client.spaces.get().find((s) => s.key.equals(spaceKey))!;
-  };
+  const findSpace = (client: Client, spaceKey: PublicKey) => client.spaces.get().find((s) => s.key.equals(spaceKey))!;
 
   const joinSpaceAndCheck = async (host: Space, guest: Client) => {
     expect((await guest.spaces.joinBySpaceKey(host.key)).key.toHex()).to.eq(host.key.toHex());

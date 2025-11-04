@@ -144,9 +144,10 @@ const TooltipProvider: FC<TooltipProviderProps> = (props: TooltipScopedProps<Too
     defaultProp: defaultOpen,
     onChange: handleOpenChange,
   });
-  const stateAttribute = useMemo(() => {
-    return open ? (wasOpenDelayedRef.current ? 'delayed-open' : 'instant-open') : 'closed';
-  }, [open]);
+  const stateAttribute = useMemo(
+    () => (open ? (wasOpenDelayedRef.current ? 'delayed-open' : 'instant-open') : 'closed'),
+    [open],
+  );
 
   const handleOpen = useCallback(() => {
     window.clearTimeout(openTimerRef.current);
@@ -170,14 +171,15 @@ const TooltipProvider: FC<TooltipProviderProps> = (props: TooltipScopedProps<Too
     }, delayDuration);
   }, [delayDuration, setOpen]);
 
-  useEffect(() => {
-    return () => {
+  useEffect(
+    () => () => {
       if (openTimerRef.current) {
         window.clearTimeout(openTimerRef.current);
         openTimerRef.current = 0;
       }
-    };
-  }, []);
+    },
+    [],
+  );
 
   const { tx } = useThemeContext();
   const elevation = useElevationContext();
@@ -273,9 +275,7 @@ const TooltipTrigger = forwardRef<TooltipTriggerElement, TooltipTriggerProps>(
     const hasPointerMoveOpenedRef = useRef(false);
     const handlePointerUp = useCallback(() => (isPointerDownRef.current = false), []);
 
-    useEffect(() => {
-      return () => document.removeEventListener('pointerup', handlePointerUp);
-    }, [handlePointerUp]);
+    useEffect(() => () => document.removeEventListener('pointerup', handlePointerUp), [handlePointerUp]);
 
     return (
       <Primitive.button
@@ -433,9 +433,7 @@ const TooltipContentHoverable = forwardRef<TooltipContentHoverableElement, Toolt
       [onPointerInTransitChange],
     );
 
-    useEffect(() => {
-      return () => handleRemoveGraceArea();
-    }, [handleRemoveGraceArea]);
+    useEffect(() => () => handleRemoveGraceArea(), [handleRemoveGraceArea]);
 
     useEffect(() => {
       if (trigger && content) {

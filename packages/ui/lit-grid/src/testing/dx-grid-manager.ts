@@ -54,13 +54,9 @@ export class DxGridManager {
     const nRows = 1 + end.row - start.row;
 
     await Promise.all(
-      [...Array(nCols)].map(async (_, c0) => {
-        return Promise.all(
-          [...Array(nRows)].map(async (_, r0) => {
-            return iterator(start.col + c0, start.row + r0);
-          }),
-        );
-      }),
+      [...Array(nCols)].map(async (_, c0) =>
+        Promise.all([...Array(nRows)].map(async (_, r0) => iterator(start.col + c0, start.row + r0))),
+      ),
     );
   }
 
@@ -99,12 +95,8 @@ export class DxGridManager {
   }
 
   async waitForDxEvent<E>(): Promise<E> {
-    const event = await this.page.waitForFunction(() => {
-      return (window as any).DX_GRID_EVENT;
-    });
-    await this.grid.evaluate(() => {
-      return ((window as any).DX_GRID_EVENT = undefined);
-    });
+    const event = await this.page.waitForFunction(() => (window as any).DX_GRID_EVENT);
+    await this.grid.evaluate(() => ((window as any).DX_GRID_EVENT = undefined));
     return event.jsonValue();
   }
 }

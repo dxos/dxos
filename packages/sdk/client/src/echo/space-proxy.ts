@@ -233,12 +233,11 @@ export class SpaceProxy implements Space, CustomInspectable {
     return 'SpaceProxy';
   }
 
-  [inspectCustom]: CustomInspectFunction = (depth, options, inspect) => {
-    return `${options.stylize(this[Symbol.toStringTag], 'special')} ${inspect({
+  [inspectCustom]: CustomInspectFunction = (depth, options, inspect) =>
+    `${options.stylize(this[Symbol.toStringTag], 'special')} ${inspect({
       id: this.id,
       state: SpaceState[this.state.get()],
     })}`;
-  };
 
   /**
    * Current state of the space.
@@ -574,13 +573,10 @@ export class SpaceProxy implements Space, CustomInspectable {
   }
 }
 
-const shouldUpdate = (prev: SpaceData, next: SpaceData) => {
-  return prev.state !== next.state;
-};
+const shouldUpdate = (prev: SpaceData, next: SpaceData) => prev.state !== next.state;
 
-const shouldPipelineUpdate = (prev: SpaceData, next: SpaceData) => {
-  return !isEqualWith(prev.pipeline, next.pipeline, loadashEqualityFn);
-};
+const shouldPipelineUpdate = (prev: SpaceData, next: SpaceData) =>
+  !isEqualWith(prev.pipeline, next.pipeline, loadashEqualityFn);
 
 const shouldMembersUpdate = (prev: SpaceMember[] | undefined, next: SpaceMember[] | undefined) => {
   if (!next) {

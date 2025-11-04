@@ -53,43 +53,35 @@ const ToolbarRoot = forwardRef<HTMLDivElement, ToolbarRootProps>(
 
 type ToolbarButtonProps = ButtonProps;
 
-const ToolbarButton = forwardRef<HTMLButtonElement, ToolbarButtonProps>((props, forwardedRef) => {
-  return (
-    <ToolbarPrimitive.Button asChild>
-      <Button {...props} ref={forwardedRef} />
-    </ToolbarPrimitive.Button>
-  );
-});
+const ToolbarButton = forwardRef<HTMLButtonElement, ToolbarButtonProps>((props, forwardedRef) => (
+  <ToolbarPrimitive.Button asChild>
+    <Button {...props} ref={forwardedRef} />
+  </ToolbarPrimitive.Button>
+));
 
 type ToolbarIconButtonProps = IconButtonProps;
 
-const ToolbarIconButton = forwardRef<HTMLButtonElement, ToolbarIconButtonProps>((props, forwardedRef) => {
-  return (
-    <ToolbarPrimitive.Button asChild>
-      <IconButton {...props} ref={forwardedRef} />
-    </ToolbarPrimitive.Button>
-  );
-});
+const ToolbarIconButton = forwardRef<HTMLButtonElement, ToolbarIconButtonProps>((props, forwardedRef) => (
+  <ToolbarPrimitive.Button asChild>
+    <IconButton {...props} ref={forwardedRef} />
+  </ToolbarPrimitive.Button>
+));
 
 type ToolbarToggleProps = ToggleProps;
 
-const ToolbarToggle = forwardRef<HTMLButtonElement, ToolbarToggleProps>((props, forwardedRef) => {
-  return (
-    <ToolbarPrimitive.Button asChild>
-      <Toggle {...props} ref={forwardedRef} />
-    </ToolbarPrimitive.Button>
-  );
-});
+const ToolbarToggle = forwardRef<HTMLButtonElement, ToolbarToggleProps>((props, forwardedRef) => (
+  <ToolbarPrimitive.Button asChild>
+    <Toggle {...props} ref={forwardedRef} />
+  </ToolbarPrimitive.Button>
+));
 
 type ToolbarLinkProps = LinkProps;
 
-const ToolbarLink = forwardRef<HTMLAnchorElement, ToolbarLinkProps>((props, forwardedRef) => {
-  return (
-    <ToolbarPrimitive.Link asChild>
-      <Link {...props} ref={forwardedRef} />
-    </ToolbarPrimitive.Link>
-  );
-});
+const ToolbarLink = forwardRef<HTMLAnchorElement, ToolbarLinkProps>((props, forwardedRef) => (
+  <ToolbarPrimitive.Link asChild>
+    <Link {...props} ref={forwardedRef} />
+  </ToolbarPrimitive.Link>
+));
 
 type ToolbarToggleGroupProps = (
   | Omit<ToolbarPrimitive.ToolbarToggleGroupSingleProps, 'className'>
@@ -98,51 +90,44 @@ type ToolbarToggleGroupProps = (
   ButtonGroupProps;
 
 const ToolbarToggleGroup = forwardRef<HTMLDivElement, ToolbarToggleGroupProps>(
-  ({ classNames, children, elevation, ...props }, forwardedRef) => {
-    return (
-      <ToolbarPrimitive.ToolbarToggleGroup {...props} asChild>
-        <ButtonGroup {...{ classNames, children, elevation }} ref={forwardedRef} />
-      </ToolbarPrimitive.ToolbarToggleGroup>
-    );
-  },
+  ({ classNames, children, elevation, ...props }, forwardedRef) => (
+    <ToolbarPrimitive.ToolbarToggleGroup {...props} asChild>
+      <ButtonGroup {...{ classNames, children, elevation }} ref={forwardedRef} />
+    </ToolbarPrimitive.ToolbarToggleGroup>
+  ),
 );
 
 type ToolbarToggleGroupItemProps = ToggleGroupItemProps;
 
 const ToolbarToggleGroupItem = forwardRef<HTMLButtonElement, ToolbarToggleGroupItemProps>(
-  ({ variant, density, elevation, classNames, children, ...props }, forwardedRef) => {
-    return (
-      <ToolbarPrimitive.ToolbarToggleItem {...props} asChild>
-        <Button {...{ variant, density, elevation, classNames, children }} ref={forwardedRef} />
-      </ToolbarPrimitive.ToolbarToggleItem>
-    );
-  },
+  ({ variant, density, elevation, classNames, children, ...props }, forwardedRef) => (
+    <ToolbarPrimitive.ToolbarToggleItem {...props} asChild>
+      <Button {...{ variant, density, elevation, classNames, children }} ref={forwardedRef} />
+    </ToolbarPrimitive.ToolbarToggleItem>
+  ),
 );
 
 type ToolbarToggleGroupIconItemProps = Omit<ToggleGroupItemPrimitiveProps, 'className'> & IconButtonProps;
 
 const ToolbarToggleGroupIconItem = forwardRef<HTMLButtonElement, ToolbarToggleGroupIconItemProps>(
-  ({ variant, density, elevation, classNames, icon, label, iconOnly, ...props }, forwardedRef) => {
-    return (
-      <ToolbarPrimitive.ToolbarToggleItem {...props} asChild>
-        <IconButton {...{ variant, density, elevation, classNames, icon, label, iconOnly }} ref={forwardedRef} />
-      </ToolbarPrimitive.ToolbarToggleItem>
-    );
-  },
+  ({ variant, density, elevation, classNames, icon, label, iconOnly, ...props }, forwardedRef) => (
+    <ToolbarPrimitive.ToolbarToggleItem {...props} asChild>
+      <IconButton {...{ variant, density, elevation, classNames, icon, label, iconOnly }} ref={forwardedRef} />
+    </ToolbarPrimitive.ToolbarToggleItem>
+  ),
 );
 
 type ToolbarSeparatorProps = SeparatorProps & { variant?: 'gap' | 'line' };
 
 const ToolbarSeparator = forwardRef<HTMLDivElement, ToolbarSeparatorProps>(
-  ({ variant = 'line', ...props }, forwardedRef) => {
-    return variant === 'line' ? (
+  ({ variant = 'line', ...props }, forwardedRef) =>
+    variant === 'line' ? (
       <ToolbarPrimitive.Separator asChild>
         <Separator {...props} ref={forwardedRef} />
       </ToolbarPrimitive.Separator>
     ) : (
       <ToolbarPrimitive.Separator className='grow' ref={forwardedRef} />
-    );
-  },
+    ),
 );
 
 export const Toolbar = {

@@ -24,31 +24,29 @@ interface QueryResult<T> {
 }
 
 const QueryResult = Object.freeze({
-  fromPromise: <T>(run: (onDispose: (cb: Cb) => void) => Promise<T[]>): QueryResult<T> => {
-    return {
-      run: (onData, onError) => {
-        const cbs: Cb[] = [];
-        let disposed = false;
-        const dispose = () => {
-          cbs.forEach((cb) => cb());
-          disposed = true;
-        };
-        run((cb) => (disposed ? cb() : cbs.push(cb))).then(
-          (data) => {
-            if (disposed) {
-              return;
-            }
-            onData(data);
-          },
-          (err) => {
-            dispose();
-            onError(err);
-          },
-        );
-        return dispose;
-      },
-    };
-  },
+  fromPromise: <T>(run: (onDispose: (cb: Cb) => void) => Promise<T[]>): QueryResult<T> => ({
+    run: (onData, onError) => {
+      const cbs: Cb[] = [];
+      let disposed = false;
+      const dispose = () => {
+        cbs.forEach((cb) => cb());
+        disposed = true;
+      };
+      run((cb) => (disposed ? cb() : cbs.push(cb))).then(
+        (data) => {
+          if (disposed) {
+            return;
+          }
+          onData(data);
+        },
+        (err) => {
+          dispose();
+          onError(err);
+        },
+      );
+      return dispose;
+    },
+  }),
 });
 
 interface _Resolver<T> {

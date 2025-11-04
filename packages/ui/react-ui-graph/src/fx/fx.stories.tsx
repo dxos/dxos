@@ -26,13 +26,11 @@ type StoryProps = {
   count: number;
 } & Pulsar.Options;
 
-const DefaultStory = (props: StoryProps) => {
-  return (
-    <SVG.Root>
-      <StoryComponent {...props} />
-    </SVG.Root>
-  );
-};
+const DefaultStory = (props: StoryProps) => (
+  <SVG.Root>
+    <StoryComponent {...props} />
+  </SVG.Root>
+);
 
 const StoryComponent: FC<StoryProps> = ({ count = 1, ...options }) => {
   const items = useMemo<Datum[]>(

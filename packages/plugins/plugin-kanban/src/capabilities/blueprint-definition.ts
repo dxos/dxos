@@ -10,21 +10,19 @@ import { trim } from '@dxos/util';
 const functions: FunctionDefinition[] = [];
 const tools: string[] = [];
 
-export default () => {
-  return [
-    contributes(Capabilities.Functions, functions),
-    contributes(
-      Capabilities.BlueprintDefinition,
-      Blueprint.make({
-        key: 'dxos.org/blueprint/kanban',
-        name: 'Kanban',
-        tools: Blueprint.toolDefinitions({ functions, tools }),
-        instructions: Template.make({
-          source: trim`
+export default () => [
+  contributes(Capabilities.Functions, functions),
+  contributes(
+    Capabilities.BlueprintDefinition,
+    Blueprint.make({
+      key: 'dxos.org/blueprint/kanban',
+      name: 'Kanban',
+      tools: Blueprint.toolDefinitions({ functions, tools }),
+      instructions: Template.make({
+        source: trim`
             You can create and update kanban boards to show data in sorted columns defined by schema.
           `,
-        }),
       }),
-    ),
-  ];
-};
+    }),
+  ),
+];

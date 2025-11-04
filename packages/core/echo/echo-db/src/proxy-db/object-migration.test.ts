@@ -41,18 +41,14 @@ const ContactV3 = Schema.Struct({
 const migrationV2 = defineObjectMigration({
   from: ContactV1,
   to: ContactV2,
-  transform: async (from) => {
-    return { name: `${from.firstName} ${from.lastName}` };
-  },
+  transform: async (from) => ({ name: `${from.firstName} ${from.lastName}` }),
   onMigration: async () => {},
 });
 
 const migrationV3 = defineObjectMigration({
   from: ContactV2,
   to: ContactV3,
-  transform: async (from) => {
-    return { ...from, email: `${from.name.toLocaleLowerCase().replaceAll(' ', '.')}@example.com` };
-  },
+  transform: async (from) => ({ ...from, email: `${from.name.toLocaleLowerCase().replaceAll(' ', '.')}@example.com` }),
   onMigration: async () => {},
 });
 

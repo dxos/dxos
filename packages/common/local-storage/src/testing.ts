@@ -31,8 +31,8 @@ class MockStorage implements Storage {
   }
 }
 
-export const createLocalStorageMock = () => {
-  return new Proxy(new MockStorage(), {
+export const createLocalStorageMock = () =>
+  new Proxy(new MockStorage(), {
     ownKeys: (target) => Reflect.ownKeys(target.store),
     getOwnPropertyDescriptor: (target, prop) => {
       if (prop in target.store) {
@@ -47,4 +47,3 @@ export const createLocalStorageMock = () => {
       return Reflect.getOwnPropertyDescriptor(target, prop);
     },
   });
-};

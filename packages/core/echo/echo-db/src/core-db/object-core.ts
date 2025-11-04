@@ -209,9 +209,7 @@ export class ObjectCore {
         change: (callback, options) => {
           this.change(callback, options);
         },
-        changeAt: (heads, callback, options) => {
-          return this.changeAt(heads, callback, options);
-        },
+        changeAt: (heads, callback, options) => this.changeAt(heads, callback, options),
         addListener: (event, listener) => {
           if (event === 'change') {
             // TODO(dmaretskyi): We probably don't need to subscribe to docHandle here separately.

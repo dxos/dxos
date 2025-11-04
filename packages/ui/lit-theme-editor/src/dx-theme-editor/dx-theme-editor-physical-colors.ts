@@ -19,9 +19,7 @@ export type DxThemeEditorPhysicalColorsProps = {};
 
 const bindSeriesDefinitions = ['neutral', 'primary'];
 
-const isHelicalArcSeries = (o: any): o is ResolvedHelicalArcSeries => {
-  return 'keyPoint' in (o ?? {});
-};
+const isHelicalArcSeries = (o: any): o is ResolvedHelicalArcSeries => 'keyPoint' in (o ?? {});
 
 @customElement('dx-theme-editor-physical-colors')
 export class DxThemeEditorPhysicalColors extends LitElement {

@@ -11,13 +11,12 @@ import { renderObjectLink } from '@dxos/react-ui-components';
 import { type ContentBlock, DataType } from '@dxos/schema';
 import { trim } from '@dxos/util';
 
-export const createMessage = (role: DataType.ActorRole, blocks: ContentBlock.Any[]): DataType.Message => {
-  return Obj.make(DataType.Message, {
+export const createMessage = (role: DataType.ActorRole, blocks: ContentBlock.Any[]): DataType.Message =>
+  Obj.make(DataType.Message, {
     created: new Date().toISOString(),
     sender: { role },
     blocks,
   });
-};
 
 export type MessageGenerator = Effect.Effect<void, never, DatabaseService | ContextQueueService>;
 

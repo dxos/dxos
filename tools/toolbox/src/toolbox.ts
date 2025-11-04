@@ -387,9 +387,7 @@ export class Toolbox {
     );
 
     const includedPackages = this.graph.projects.filter((project) =>
-      regexes.some((re) => {
-        return relative(this.rootDir!, project.path).match(re.regex);
-      }),
+      regexes.some((re) => relative(this.rootDir!, project.path).match(re.regex)),
     );
 
     if (this.config.tsconfig?.pathMapping?.roots) {
@@ -469,9 +467,7 @@ export class Toolbox {
           !project.name.includes('kube-publishing'),
       )
       .filter((project) => existsSync(join(project.path, 'tsconfig.json')))
-      .map((project) => {
-        return { path: relative(this.rootDir, join(project.path, 'tsconfig.json')) };
-      });
+      .map((project) => ({ path: relative(this.rootDir, join(project.path, 'tsconfig.json')) }));
 
     await saveJson(join(this.rootDir, 'tsconfig.all.json'), tsconfigAll, this.options.verbose);
   }

@@ -23,8 +23,8 @@ type OpenLayoutEntryOptions = {
   variant?: string;
 };
 
-export const openEntry = (deck: string[], _entryId: string, options?: OpenLayoutEntryOptions): string[] => {
-  return produce(deck, (draft) => {
+export const openEntry = (deck: string[], _entryId: string, options?: OpenLayoutEntryOptions): string[] =>
+  produce(deck, (draft) => {
     const entryId = createEntryId(_entryId, options?.variant);
 
     // Check that the entry is not already in the part
@@ -63,19 +63,17 @@ export const openEntry = (deck: string[], _entryId: string, options?: OpenLayout
       draft.push(entryId);
     }
   });
-};
 
-export const closeEntry = (deck: string[], entryId: string): string[] => {
-  return produce(deck, (draft) => {
+export const closeEntry = (deck: string[], entryId: string): string[] =>
+  produce(deck, (draft) => {
     const index = draft.findIndex((id) => id === entryId);
     if (index !== -1) {
       draft.splice(index, 1);
     }
   });
-};
 
-export const incrementPlank = (deck: string[], adjustment: DeckAction.Adjustment): string[] => {
-  return produce(deck, (draft) => {
+export const incrementPlank = (deck: string[], adjustment: DeckAction.Adjustment): string[] =>
+  produce(deck, (draft) => {
     const index = draft.findIndex((id) => id === adjustment.id);
     if (
       index === -1 ||
@@ -93,4 +91,3 @@ export const incrementPlank = (deck: string[], adjustment: DeckAction.Adjustment
       [draft[index], draft[index + 1]] = [draft[index + 1], draft[index]];
     }
   });
-};

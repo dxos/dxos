@@ -160,29 +160,25 @@ const getMemoizedConversationParameters = (
   model: string,
   stream: boolean,
   params: LanguageModel.ProviderOptions,
-): ConversationParameters => {
-  return {
-    model,
-    stream,
-    tools: params.tools.map((tool) => ({
-      name: tool.name,
-      description: Tool.getDescription(tool as any),
-      inputSchema: Tool.getJsonSchema(tool as any),
-    })),
-  };
-};
+): ConversationParameters => ({
+  model,
+  stream,
+  tools: params.tools.map((tool) => ({
+    name: tool.name,
+    description: Tool.getDescription(tool as any),
+    inputSchema: Tool.getJsonSchema(tool as any),
+  })),
+});
 
 const getConversationFromOptions = (
   model: string,
   stream: boolean,
   params: LanguageModel.ProviderOptions,
-): MemoziedConversation => {
-  return {
-    parameters: getMemoizedConversationParameters(model, stream, params),
-    prompt: params.prompt,
-    response: [],
-  };
-};
+): MemoziedConversation => ({
+  parameters: getMemoizedConversationParameters(model, stream, params),
+  prompt: params.prompt,
+  response: [],
+});
 
 const converstationMatches = (haystack: MemoziedConversation, needle: MemoziedConversation): boolean => {
   // TODO(dmaretskyi): dequal doesn't work for some reason.
@@ -309,23 +305,20 @@ type ConversationStore = Schema.Schema.Type<typeof ConversationStore>;
  * Formats the conversation for diffing and displaying to the developer.
  * Doesn't need to be lossless.
  */
-const formatMemoizedConversation = (conversation: MemoziedConversation): string => {
-  return (
-    jsonStableStringify(
-      {
-        parameters: conversation.parameters,
-        // Promps may contain long encrypted strings, which are not important to see. We sanitize them so that levenstein distance doesn't OOM.
-        prompt: deepMapValues(conversation.prompt, (value, recurse, key) => {
-          if (typeof value === 'string' && value.length > 256 && key === 'encrypted_content') {
-            return sanitizeString(value);
-          }
-          return recurse(value);
-        }),
-      },
-      { space: 2 },
-    ) ?? ''
-  );
-};
+const formatMemoizedConversation = (conversation: MemoziedConversation): string =>
+  jsonStableStringify(
+    {
+      parameters: conversation.parameters,
+      // Promps may contain long encrypted strings, which are not important to see. We sanitize them so that levenstein distance doesn't OOM.
+      prompt: deepMapValues(conversation.prompt, (value, recurse, key) => {
+        if (typeof value === 'string' && value.length > 256 && key === 'encrypted_content') {
+          return sanitizeString(value);
+        }
+        return recurse(value);
+      }),
+    },
+    { space: 2 },
+  ) ?? '';
 
 const sanitizeString = (str: string): string => {
   let hash = 0;

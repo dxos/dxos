@@ -73,10 +73,11 @@ describe('memoization', () => {
             toolkit: TestingToolkit,
           });
           yield* stream.pipe(
-            Stream.runForEach((_part) => {
-              // console.log(part);
-              return Effect.void;
-            }),
+            Stream.runForEach(
+              (_part) =>
+                // console.log(part);
+                Effect.void,
+            ),
           );
 
           const lastMessage = (yield* chat.history).content.at(-1);

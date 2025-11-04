@@ -36,40 +36,42 @@ export const GptComponent = ({ shape }: ShapeComponentProps<GptShape>) => {
   const [text, setText] = useState('');
   const [tokens, setTokens] = useState(0);
 
-  useEffect(() => {
-    return runtime.subscribeToEventLog((ev) => {
-      switch (ev.type) {
-        case 'begin-compute': {
-          setText('');
-          break;
-        }
-
-        case 'custom': {
-          // TODO(burdon): Any?
-          const token = ev.event;
-          switch (token.type) {
-            case 'content_block_delta':
-              switch (token.delta.type) {
-                case 'text_delta': {
-                  const delta = token.delta.text;
-                  setText((prev) => {
-                    const text = prev + delta;
-                    // TODO(burdon): Get token count.
-                    setTokens(text.split(' ').length);
-                    return text;
-                  });
-                  break;
-                }
-              }
-              break;
-
-            // TODO(dmaretskyi): Handle other types of events.
+  useEffect(
+    () =>
+      runtime.subscribeToEventLog((ev) => {
+        switch (ev.type) {
+          case 'begin-compute': {
+            setText('');
+            break;
           }
-          break;
+
+          case 'custom': {
+            // TODO(burdon): Any?
+            const token = ev.event;
+            switch (token.type) {
+              case 'content_block_delta':
+                switch (token.delta.type) {
+                  case 'text_delta': {
+                    const delta = token.delta.text;
+                    setText((prev) => {
+                      const text = prev + delta;
+                      // TODO(burdon): Get token count.
+                      setTokens(text.split(' ').length);
+                      return text;
+                    });
+                    break;
+                  }
+                }
+                break;
+
+              // TODO(dmaretskyi): Handle other types of events.
+            }
+            break;
+          }
         }
-      }
-    });
-  }, [runtime?.subscribeToEventLog]);
+      }),
+    [runtime?.subscribeToEventLog],
+  );
 
   return (
     <FunctionBody

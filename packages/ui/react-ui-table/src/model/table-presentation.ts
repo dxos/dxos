@@ -191,9 +191,7 @@ export class TablePresentation<T extends TableRow = TableRow> {
         const tags = targetArray
           .map(getLabel)
           .filter(Predicate.isNotNullable)
-          .map((title) => {
-            return `<span class="dx-tag" data-hue="neutral">${title}</span>`;
-          })
+          .map((title) => `<span class="dx-tag" data-hue="neutral">${title}</span>`)
           .join('');
 
         cell.accessoryHtml = `<div role='none' class="flex flex-row gap-1 overflow-x-auto">${tags}</div>`;

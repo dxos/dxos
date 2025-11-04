@@ -101,24 +101,26 @@ export const InvocationTraceContainer = ({
     return [...generateProperties()];
   }, [target]);
 
-  const rows = useMemo(() => {
-    return invocationSpans.map((invocation) => {
-      const status = invocation.outcome;
-      const targetDxn = invocation.invocationTarget?.dxn;
+  const rows = useMemo(
+    () =>
+      invocationSpans.map((invocation) => {
+        const status = invocation.outcome;
+        const targetDxn = invocation.invocationTarget?.dxn;
 
-      // TODO(burdon): Use InvocationTraceStartEvent.
-      return {
-        id: invocation.id,
-        target: resolver(targetDxn),
-        // TODO(burdon): Change to timestamp?
-        time: new Date(invocation.timestamp),
-        duration: formatDuration(invocation.duration),
-        status,
-        queue: invocation.invocationTraceQueue?.dxn.toString() ?? 'unknown',
-        _original: invocation,
-      };
-    });
-  }, [invocationSpans, resolver]);
+        // TODO(burdon): Use InvocationTraceStartEvent.
+        return {
+          id: invocation.id,
+          target: resolver(targetDxn),
+          // TODO(burdon): Change to timestamp?
+          time: new Date(invocation.timestamp),
+          duration: formatDuration(invocation.duration),
+          status,
+          queue: invocation.invocationTraceQueue?.dxn.toString() ?? 'unknown',
+          _original: invocation,
+        };
+      }),
+    [invocationSpans, resolver],
+  );
 
   const handleRowClick = useCallback((row: any) => {
     if (!row) {

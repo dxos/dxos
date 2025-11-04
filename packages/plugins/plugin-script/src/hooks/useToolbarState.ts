@@ -11,6 +11,5 @@ import { type DeployState } from './deploy';
 export type ScriptToolbarState = Partial<DeployState>;
 
 // TODO(burdon): Replace with context provider?
-export const useToolbarState = (initialState: ScriptToolbarState = {}) => {
-  return useMemo(() => live<ScriptToolbarState>(initialState), []);
-};
+export const useToolbarState = (initialState: ScriptToolbarState = {}) =>
+  useMemo(() => live<ScriptToolbarState>(initialState), []);

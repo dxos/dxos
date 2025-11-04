@@ -25,8 +25,8 @@ type FeedInfo = {
 export const subscribeToFeeds = (
   { feedStore, spaceManager }: { feedStore: FeedStore<FeedMessage>; spaceManager: SpaceManager },
   { feedKeys }: SubscribeToFeedsRequest,
-) => {
-  return new Stream<SubscribeToFeedsResponse>(({ next }) => {
+) =>
+  new Stream<SubscribeToFeedsResponse>(({ next }) => {
     const subscriptions = new SubscriptionList();
     const feedMap = new ComplexMap<PublicKey, FeedInfo>(PublicKey.hash);
 
@@ -63,7 +63,6 @@ export const subscribeToFeeds = (
       subscriptions.clear();
     };
   });
-};
 
 const findFeedOwner = (
   spaceManager: SpaceManager,
@@ -85,8 +84,8 @@ const findFeedOwner = (
 export const subscribeToFeedBlocks = (
   { feedStore }: { feedStore: FeedStore<FeedMessage> },
   { feedKey, maxBlocks = 10 }: SubscribeToFeedBlocksRequest,
-) => {
-  return new Stream<SubscribeToFeedBlocksResponse>(({ next }) => {
+) =>
+  new Stream<SubscribeToFeedBlocksResponse>(({ next }) => {
     if (!feedKey) {
       return;
     }
@@ -135,4 +134,3 @@ export const subscribeToFeedBlocks = (
       clearTimeout(timeout);
     };
   });
-};

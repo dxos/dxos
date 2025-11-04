@@ -91,14 +91,14 @@ const meta = {
         for (const fn of functions) {
           space.db.add(Function.make(fn));
         }
-        Array.from({ length: 10 }).map(() => {
-          return space.db.add(
+        Array.from({ length: 10 }).map(() =>
+          space.db.add(
             Obj.make(ContactType, {
               name: faker.person.fullName(),
               identifiers: [],
             }),
-          );
-        });
+          ),
+        );
       },
     }),
   ],

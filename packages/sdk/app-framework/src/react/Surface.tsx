@@ -97,13 +97,12 @@ export const isSurfaceAvailable = (context: PluginContext, { role, data }: Pick<
   return candidates.length > 0;
 };
 
-const findCandidates = (surfaces: SurfaceDefinition[], { role, data }: Pick<SurfaceProps, 'role' | 'data'>) => {
-  return Object.values(surfaces)
+const findCandidates = (surfaces: SurfaceDefinition[], { role, data }: Pick<SurfaceProps, 'role' | 'data'>) =>
+  Object.values(surfaces)
     .filter((definition) =>
       Array.isArray(definition.role) ? definition.role.includes(role) : definition.role === role,
     )
     .filter(({ filter }) => (filter ? filter(data ?? {}) : true))
     .toSorted(byPosition);
-};
 
 Surface.displayName = 'Surface';

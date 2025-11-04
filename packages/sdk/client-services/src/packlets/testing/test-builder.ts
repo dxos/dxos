@@ -25,13 +25,12 @@ import { DataSpaceManager, type DataSpaceManagerRuntimeParams, type SigningConte
 // TODO(burdon): Replace with test builder.
 //
 
-export const createServiceHost = (config: Config, signalManagerContext: MemorySignalManagerContext) => {
-  return new ClientServicesHost({
+export const createServiceHost = (config: Config, signalManagerContext: MemorySignalManagerContext) =>
+  new ClientServicesHost({
     config,
     signalManager: new MemorySignalManager(signalManagerContext),
     transportFactory: MemoryTransportFactory,
   });
-};
 
 export const createServiceContext = async ({
   signalManagerFactory = async () => {

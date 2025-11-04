@@ -30,16 +30,14 @@ export const getSchemaReference = (property: JsonSchemaType): { typename: string
   }
 };
 
-export const createSchemaReference = (typename: string): JsonSchemaType => {
-  return {
-    $id: JSON_SCHEMA_ECHO_REF_ID,
-    reference: {
-      schema: {
-        $ref: DXN.fromTypename(typename).toString(),
-      },
+export const createSchemaReference = (typename: string): JsonSchemaType => ({
+  $id: JSON_SCHEMA_ECHO_REF_ID,
+  reference: {
+    schema: {
+      $ref: DXN.fromTypename(typename).toString(),
     },
-  };
-};
+  },
+});
 
 /**
  * Runtime type-info for a reference extracted from effect AST.
@@ -195,19 +193,14 @@ export declare namespace Ref {
   export type Target<R> = R extends Ref<infer U> ? U : never;
 }
 
-Ref.isRef = (obj: any): obj is Ref<any> => {
-  return obj && typeof obj === 'object' && RefTypeId in obj;
-};
+Ref.isRef = (obj: any): obj is Ref<any> => obj && typeof obj === 'object' && RefTypeId in obj;
 
 Ref.hasObjectId = (id: ObjectId) => (ref: Ref<any>) => ref.dxn.isLocalObjectId() && ref.dxn.parts[1] === id;
 
-Ref.isRefSchema = (schema: Schema.Schema<any, any>): schema is Ref$<any> => {
-  return Ref.isRefSchemaAST(schema.ast);
-};
+Ref.isRefSchema = (schema: Schema.Schema<any, any>): schema is Ref$<any> => Ref.isRefSchemaAST(schema.ast);
 
-Ref.isRefSchemaAST = (ast: SchemaAST.AST): boolean => {
-  return SchemaAST.getAnnotation(ast, ReferenceAnnotationId).pipe(Option.isSome);
-};
+Ref.isRefSchemaAST = (ast: SchemaAST.AST): boolean =>
+  SchemaAST.getAnnotation(ast, ReferenceAnnotationId).pipe(Option.isSome);
 
 Ref.make = <T extends BaseObject>(obj: T): Ref<T> => {
   if (typeof obj !== 'object' || obj === null) {
@@ -260,26 +253,21 @@ export const createEchoReferenceSchema = (
   const refSchema = Schema.declare<Ref<any>, EncodedReference, []>(
     [],
     {
-      encode: () => {
-        return (value) => {
-          return Effect.succeed({
-            '/': (value as Ref<any>).dxn.toString(),
-          });
-        };
-      },
-      decode: () => {
-        return (value) => {
-          // TODO(dmaretskyi): This branch seems to be taken by Schema.is
-          if (Ref.isRef(value)) {
-            return Effect.succeed(value);
-          }
+      encode: () => (value) =>
+        Effect.succeed({
+          '/': (value as Ref<any>).dxn.toString(),
+        }),
+      decode: () => (value) => {
+        // TODO(dmaretskyi): This branch seems to be taken by Schema.is
+        if (Ref.isRef(value)) {
+          return Effect.succeed(value);
+        }
 
-          if (typeof value !== 'object' || value == null || typeof (value as any)['/'] !== 'string') {
-            return Effect.fail(new ParseResult.Unexpected(value, 'reference'));
-          }
+        if (typeof value !== 'object' || value == null || typeof (value as any)['/'] !== 'string') {
+          return Effect.fail(new ParseResult.Unexpected(value, 'reference'));
+        }
 
-          return Effect.succeed(Ref.fromDXN(DXN.parse((value as any)['/'])));
-        };
+        return Effect.succeed(Ref.fromDXN(DXN.parse((value as any)['/'])));
       },
     },
     {
@@ -299,13 +287,12 @@ export const createEchoReferenceSchema = (
   return refSchema;
 };
 
-const getSchemaExpectedName = (ast: SchemaAST.Annotated): string | undefined => {
-  return SchemaAST.getIdentifierAnnotation(ast).pipe(
+const getSchemaExpectedName = (ast: SchemaAST.Annotated): string | undefined =>
+  SchemaAST.getIdentifierAnnotation(ast).pipe(
     Option.orElse(() => SchemaAST.getTitleAnnotation(ast)),
     Option.orElse(() => SchemaAST.getDescriptionAnnotation(ast)),
     Option.getOrElse(() => undefined),
   );
-};
 
 export interface RefResolver {
   /**

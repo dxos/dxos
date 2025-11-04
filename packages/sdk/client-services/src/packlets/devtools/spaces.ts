@@ -12,8 +12,8 @@ import { type SpaceMetadata } from '@dxos/protocols/proto/dxos/echo/metadata';
 
 import { type ServiceContext } from '../services';
 
-export const subscribeToSpaces = (context: ServiceContext, { spaceKeys = [] }: SubscribeToSpacesRequest) => {
-  return new Stream<SubscribeToSpacesResponse>(({ next }) => {
+export const subscribeToSpaces = (context: ServiceContext, { spaceKeys = [] }: SubscribeToSpacesRequest) =>
+  new Stream<SubscribeToSpacesResponse>(({ next }) => {
     let unsubscribe: () => void;
 
     const update = async () => {
@@ -53,4 +53,3 @@ export const subscribeToSpaces = (context: ServiceContext, { spaceKeys = [] }: S
       clearTimeout(timeout);
     };
   });
-};

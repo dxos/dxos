@@ -40,19 +40,17 @@ const Views = ({ __viewportScope }: ViewportScopedProps<{}>) => {
   );
 };
 
-const StorybookViewport = (props: StorybookViewportProps) => {
-  return (
-    <AlertDialog.Root defaultOpen>
-      <AlertDialog.Overlay>
-        <AlertDialog.Content classNames='p-0'>
-          <Viewport.Root defaultActiveView='one'>
-            <Views />
-          </Viewport.Root>
-        </AlertDialog.Content>
-      </AlertDialog.Overlay>
-    </AlertDialog.Root>
-  );
-};
+const StorybookViewport = (props: StorybookViewportProps) => (
+  <AlertDialog.Root defaultOpen>
+    <AlertDialog.Overlay>
+      <AlertDialog.Content classNames='p-0'>
+        <Viewport.Root defaultActiveView='one'>
+          <Views />
+        </Viewport.Root>
+      </AlertDialog.Content>
+    </AlertDialog.Overlay>
+  </AlertDialog.Root>
+);
 
 const meta = {
   title: 'sdk/shell/StorybookViewport',

@@ -54,21 +54,17 @@ const runEnvTest = async (config: EnvTestConfig): Promise<void> => {
       {
         name: 'test-plugin',
         setup: (build) => {
-          build.onResolve({ filter: /^test:entry$/ }, async (args) => {
-            return {
-              path: args.path,
-              namespace: 'test-plugin',
-            };
-          });
-          build.onLoad({ filter: /^test:entry$/, namespace: 'test-plugin' }, async (args) => {
-            return {
-              loader: 'ts',
-              contents: config.imports
-                .map((specifier, idx) => `export * as test${idx} from ${JSON.stringify(specifier)};`)
-                .join('\n'),
-              resolveDir: import.meta.dirname,
-            };
-          });
+          build.onResolve({ filter: /^test:entry$/ }, async (args) => ({
+            path: args.path,
+            namespace: 'test-plugin',
+          }));
+          build.onLoad({ filter: /^test:entry$/, namespace: 'test-plugin' }, async (args) => ({
+            loader: 'ts',
+            contents: config.imports
+              .map((specifier, idx) => `export * as test${idx} from ${JSON.stringify(specifier)};`)
+              .join('\n'),
+            resolveDir: import.meta.dirname,
+          }));
         },
       },
     ],

@@ -232,11 +232,10 @@ export class ControlPipeline {
   }
 }
 
-const getSnapshotLoggerContext = (snapshot: ControlPipelineSnapshot) => {
-  return snapshot.messages?.map((msg) => {
+const getSnapshotLoggerContext = (snapshot: ControlPipelineSnapshot) =>
+  snapshot.messages?.map((msg) => {
     const issuer = msg.credential.issuer;
     const subject = msg.credential.subject.id;
     const type = msg.credential.subject.assertion['@type'];
     return { issuer, subject, type };
   });
-};

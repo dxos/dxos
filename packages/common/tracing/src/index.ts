@@ -17,12 +17,10 @@ export * from './remote/metrics';
 trace.diagnostic({
   id: 'process-info',
   name: 'Process Info',
-  fetch: async () => {
-    return {
-      platform: globalThis.process?.platform,
-      arch: globalThis.process?.arch,
-      versions: globalThis.process?.versions,
-      href: globalThis.location?.href,
-    };
-  },
+  fetch: async () => ({
+    platform: globalThis.process?.platform,
+    arch: globalThis.process?.arch,
+    versions: globalThis.process?.versions,
+    href: globalThis.location?.href,
+  }),
 });

@@ -177,8 +177,11 @@ export class AsyncFunctionPlugin extends FunctionPlugin {
   ): RawInterpreterValue {
     const { procedureName } = ast;
     const metadata = this.metadata(procedureName);
-    return this.runFunction(ast.args, state, metadata, (...args: any) => {
-      return this.context.invokeFunction(procedureName, state, args, cb, options) ?? EmptyValue;
-    });
+    return this.runFunction(
+      ast.args,
+      state,
+      metadata,
+      (...args: any) => this.context.invokeFunction(procedureName, state, args, cb, options) ?? EmptyValue,
+    );
   }
 }

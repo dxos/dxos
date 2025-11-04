@@ -219,18 +219,14 @@ export class EchoSchemaRegistry extends Resource implements SchemaRegistry {
           .filter((object) => object != null);
 
         const results = filterOrderResults([
-          ...self._db.graph.schemaRegistry.schemas.map((schema) => {
-            return {
-              source: 'runtime',
-              schema,
-            } as const;
-          }),
-          ...objects.map((stored) => {
-            return {
-              source: 'database',
-              schema: self._register(stored),
-            } as const;
-          }),
+          ...self._db.graph.schemaRegistry.schemas.map((schema) => ({
+            source: 'runtime',
+            schema,
+          }) as const),
+          ...objects.map((stored) => ({
+            source: 'database',
+            schema: self._register(stored),
+          }) as const),
         ]);
         return results;
       },
@@ -238,18 +234,14 @@ export class EchoSchemaRegistry extends Resource implements SchemaRegistry {
         const { objects } = await self._db.query(Filter.type(StoredSchema)).run();
 
         return filterOrderResults([
-          ...self._db.graph.schemaRegistry.schemas.map((schema) => {
-            return {
-              source: 'runtime',
-              schema,
-            } as const;
-          }),
-          ...objects.map((stored) => {
-            return {
-              source: 'database',
-              schema: self._register(stored),
-            } as const;
-          }),
+          ...self._db.graph.schemaRegistry.schemas.map((schema) => ({
+            source: 'runtime',
+            schema,
+          }) as const),
+          ...objects.map((stored) => ({
+            source: 'database',
+            schema: self._register(stored),
+          }) as const),
         ]);
       },
       async start() {

@@ -47,8 +47,8 @@ const createAlignGroupAction = (value?: AlignValue) =>
   } as ToolbarMenuActionGroupProperties);
 
 const createAlignActions = (model: SheetModel, state: ToolbarState, cursorFallbackRange?: CompleteCellRange) =>
-  Object.entries(aligns).map(([alignValue, icon]) => {
-    return createMenuAction<AlignAction>(
+  Object.entries(aligns).map(([alignValue, icon]) =>
+    createMenuAction<AlignAction>(
       `${alignKey}--${alignValue}`,
       () => {
         if (!cursorFallbackRange) {
@@ -83,8 +83,8 @@ const createAlignActions = (model: SheetModel, state: ToolbarState, cursorFallba
         icon,
         testId: `grid.toolbar.${alignKey}.${alignValue}`,
       },
-    );
-  });
+    ),
+  );
 
 export const createAlign = (model: SheetModel, state: ToolbarState, cursorFallbackRange?: CompleteCellRange) => {
   const alignGroup = createAlignGroupAction(state[alignKey]);

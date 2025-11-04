@@ -21,16 +21,14 @@ const Attendable = ({ id }: { id: string }) => {
   );
 };
 
-const Story = () => {
-  return (
-    <div className='flex justify-between'>
-      <Attendable id='1' />
-      <Attendable id='2' />
-      <Attendable id='3' />
-      <Attendable id='4' />
-    </div>
-  );
-};
+const Story = () => (
+  <div className='flex justify-between'>
+    <Attendable id='1' />
+    <Attendable id='2' />
+    <Attendable id='3' />
+    <Attendable id='4' />
+  </div>
+);
 
 const meta = {
   title: 'ui/react-ui-attention/AttentionProvider',

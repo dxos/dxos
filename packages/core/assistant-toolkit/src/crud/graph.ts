@@ -151,8 +151,8 @@ class GraphWriterSchema extends Context.Tag('@dxos/assistant/GraphWriterSchema')
 /**
  * Forms typed objects that can be written to the graph database.
  */
-export const makeGraphWriterToolkit = ({ schema }: { schema: Schema.Schema.AnyNoContext[] }) => {
-  return Toolkit.make(
+export const makeGraphWriterToolkit = ({ schema }: { schema: Schema.Schema.AnyNoContext[] }) =>
+  Toolkit.make(
     Tool.make('graph_writer', {
       description: 'Write to the local graph database',
       parameters: createExtractionSchema(schema).fields,
@@ -161,7 +161,6 @@ export const makeGraphWriterToolkit = ({ schema }: { schema: Schema.Schema.AnyNo
       dependencies: [DatabaseService, ContextQueueService],
     }).annotateContext(Context.make(GraphWriterSchema, { schema })),
   );
-};
 
 export const makeGraphWriterHandler = (
   toolkit: ReturnType<typeof makeGraphWriterToolkit>,
@@ -193,8 +192,8 @@ export const makeGraphWriterHandler = (
 /**
  * Create a schema for structured data extraction.
  */
-export const createExtractionSchema = (types: Schema.Schema.AnyNoContext[]) => {
-  return Schema.Struct({
+export const createExtractionSchema = (types: Schema.Schema.AnyNoContext[]) =>
+  Schema.Struct({
     ...Object.fromEntries(
       types.map(preprocessSchema).map((schema, index) => [
         `objects_${getSanitizedSchemaName(types[index])}`,
@@ -204,13 +203,11 @@ export const createExtractionSchema = (types: Schema.Schema.AnyNoContext[]) => {
       ]),
     ),
   });
-};
 
-export const getSanitizedSchemaName = (schema: Schema.Schema.AnyNoContext) => {
-  return getSchemaDXN(schema)!
+export const getSanitizedSchemaName = (schema: Schema.Schema.AnyNoContext) =>
+  getSchemaDXN(schema)!
     .asTypeDXN()!
     .type.replaceAll(/[^a-zA-Z0-9]+/g, '_');
-};
 
 export const sanitizeObjects = async (
   types: Schema.Schema.AnyNoContext[],

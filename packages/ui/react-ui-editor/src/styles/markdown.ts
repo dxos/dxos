@@ -20,7 +20,5 @@ export const theme = {
   code: 'font-mono !no-underline text-neutral-700 dark:text-neutral-300',
   codeMark: 'font-mono text-primary-500',
   mark: 'opacity-50',
-  heading: (level: HeadingLevel) => {
-    return mx(headings[level], 'dark:text-neutral-400');
-  },
+  heading: (level: HeadingLevel) => mx(headings[level], 'dark:text-neutral-400'),
 };

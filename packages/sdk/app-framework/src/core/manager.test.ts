@@ -227,9 +227,7 @@ describe('PluginManager', () => {
     const Hello = defineModule({
       id: 'dxos.org/test/hello',
       activatesOn: allOf(Events.Startup, CountEvent),
-      activate: () => {
-        return contributes(String, { string: 'hello' });
-      },
+      activate: () => contributes(String, { string: 'hello' }),
     });
     plugins = [new Plugin(testMeta, [Hello])];
 

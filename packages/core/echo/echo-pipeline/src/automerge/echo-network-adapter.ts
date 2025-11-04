@@ -203,11 +203,9 @@ export class EchoNetworkAdapter extends NetworkAdapter {
   // TODO(dmaretskyi): Remove.
   getPeersInterestedInCollection(collectionId: string): PeerId[] {
     return Array.from(this._connections.values())
-      .map((connection) => {
-        return connection.connection.shouldSyncCollection({ collectionId })
-          ? (connection.connection.peerId as PeerId)
-          : null;
-      })
+      .map((connection) =>
+        connection.connection.shouldSyncCollection({ collectionId }) ? (connection.connection.peerId as PeerId) : null,
+      )
       .filter(isNonNullable);
   }
 

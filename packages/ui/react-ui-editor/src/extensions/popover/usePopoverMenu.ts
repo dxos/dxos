@@ -122,43 +122,45 @@ export const usePopoverMenu = ({
   }, []);
 
   const serializedTrigger = Array.isArray(trigger) ? trigger.join(',') : trigger;
-  const extension = useMemo<Extension>(() => {
-    return popover({
-      trigger,
-      triggerKey,
-      placeholder,
-      onClose: ({ view }) => handleOpenChange({ view, open: false }),
-      onEnter: ({ view }) => {
-        if (currentRef.current) {
-          handleSelect({ view, item: currentRef.current });
-        }
-      },
-      onArrowUp: () => {
-        setCurrentItem((currentItem) => {
-          const previous = getPreviousMenuItem(groupsRef.current, currentItem);
-          currentRef.current = previous;
-          return previous.id;
-        });
-      },
-      onArrowDown: () => {
-        setCurrentItem((currentItem) => {
-          const next = getNextMenuItem(groupsRef.current, currentItem);
-          currentRef.current = next;
-          return next.id;
-        });
-      },
-      onTextChange: async ({ view, pos, text, trigger }) => {
-        groupsRef.current = (await getMenuOptions({ state: view.state, pos, text, trigger })) ?? [];
-        const firstItem = groupsRef.current.filter((group) => group.items.length > 0)[0]?.items[0];
-        if (firstItem) {
-          setCurrentItem(firstItem.id);
-          currentRef.current = firstItem;
-        }
+  const extension = useMemo<Extension>(
+    () =>
+      popover({
+        trigger,
+        triggerKey,
+        placeholder,
+        onClose: ({ view }) => handleOpenChange({ view, open: false }),
+        onEnter: ({ view }) => {
+          if (currentRef.current) {
+            handleSelect({ view, item: currentRef.current });
+          }
+        },
+        onArrowUp: () => {
+          setCurrentItem((currentItem) => {
+            const previous = getPreviousMenuItem(groupsRef.current, currentItem);
+            currentRef.current = previous;
+            return previous.id;
+          });
+        },
+        onArrowDown: () => {
+          setCurrentItem((currentItem) => {
+            const next = getNextMenuItem(groupsRef.current, currentItem);
+            currentRef.current = next;
+            return next.id;
+          });
+        },
+        onTextChange: async ({ view, pos, text, trigger }) => {
+          groupsRef.current = (await getMenuOptions({ state: view.state, pos, text, trigger })) ?? [];
+          const firstItem = groupsRef.current.filter((group) => group.items.length > 0)[0]?.items[0];
+          if (firstItem) {
+            setCurrentItem(firstItem.id);
+            currentRef.current = firstItem;
+          }
 
-        refresh({});
-      },
-    });
-  }, [handleOpenChange, getMenuOptions, serializedTrigger, placeholder]);
+          refresh({});
+        },
+      }),
+    [handleOpenChange, getMenuOptions, serializedTrigger, placeholder],
+  );
 
   return {
     groupsRef,

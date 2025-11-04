@@ -115,8 +115,9 @@ export type PropertyMetaAnnotation = {
   [name: string]: PropertyMetaValue;
 };
 
-export const PropertyMeta = (name: string, value: PropertyMetaValue) => {
-  return <A, I, R>(self: Schema.Schema<A, I, R>): Schema.Schema<A, I, R> => {
+export const PropertyMeta =
+  (name: string, value: PropertyMetaValue) =>
+  <A, I, R>(self: Schema.Schema<A, I, R>): Schema.Schema<A, I, R> => {
     const existingMeta = self.ast.annotations[PropertyMetaAnnotationId] as PropertyMetaAnnotation;
     return self.annotations({
       [PropertyMetaAnnotationId]: {
@@ -125,7 +126,6 @@ export const PropertyMeta = (name: string, value: PropertyMetaValue) => {
       },
     });
   };
-};
 
 export const getPropertyMetaAnnotation = <T>(prop: SchemaAST.PropertySignature, name: string) =>
   Function.pipe(

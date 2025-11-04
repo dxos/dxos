@@ -38,27 +38,29 @@ export const MembersPanel = (props: { space?: Space }) => {
     [],
   );
 
-  const data = useMemo(() => {
-    return members.map((member) => {
-      let status = 'unknown';
-      switch (member.presence) {
-        case SpaceMember.PresenceState.ONLINE:
-          status = 'online';
-          break;
-        case SpaceMember.PresenceState.OFFLINE:
-          status = 'offline';
-          break;
-      }
+  const data = useMemo(
+    () =>
+      members.map((member) => {
+        let status = 'unknown';
+        switch (member.presence) {
+          case SpaceMember.PresenceState.ONLINE:
+            status = 'online';
+            break;
+          case SpaceMember.PresenceState.OFFLINE:
+            status = 'offline';
+            break;
+        }
 
-      return {
-        id: member.identity.identityKey.toString(),
-        identityKey: member.identity.identityKey,
-        displayName: member.identity.profile?.displayName,
-        status,
-        _original: member,
-      };
-    });
-  }, [members]);
+        return {
+          id: member.identity.identityKey.toString(),
+          identityKey: member.identity.identityKey,
+          displayName: member.identity.profile?.displayName,
+          status,
+          _original: member,
+        };
+      }),
+    [members],
+  );
 
   return (
     <PanelContainer

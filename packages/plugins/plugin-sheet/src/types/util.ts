@@ -69,9 +69,8 @@ export const initialize = (
 /**
  * E.g., "A1" => "CA2@CB3".
  */
-export const addressToIndex = (sheet: Sheet.Sheet, cell: CellAddress): string => {
-  return `${sheet.columns[cell.col]}@${sheet.rows[cell.row]}`;
-};
+export const addressToIndex = (sheet: Sheet.Sheet, cell: CellAddress): string =>
+  `${sheet.columns[cell.col]}@${sheet.rows[cell.row]}`;
 
 /**
  * E.g., "CA2@CB3" => "A1".
@@ -87,9 +86,8 @@ export const addressFromIndex = (sheet: Sheet.Sheet, idx: string): CellAddress =
 /**
  * E.g., "A1:B2" => "CA2@CB3:CC4@CD5".
  */
-export const rangeToIndex = (sheet: Sheet.Sheet, range: CellRange): string => {
-  return [range.from, range.to ?? range.from].map((cell) => addressToIndex(sheet, cell)).join(':');
-};
+export const rangeToIndex = (sheet: Sheet.Sheet, range: CellRange): string =>
+  [range.from, range.to ?? range.from].map((cell) => addressToIndex(sheet, cell)).join(':');
 
 /**
  * E.g., "CA2@CB3:CC4@CD5" => "A1:B2".
@@ -122,9 +120,7 @@ export const compareIndexPositions = (sheet: Sheet.Sheet, indexA: string, indexB
  */
 export const mapFormulaRefsToIndices = (sheet: Sheet.Sheet, formula: string): string => {
   invariant(isFormula(formula));
-  return formula.replace(/([a-zA-Z]+)([0-9]+)/g, (match) => {
-    return addressToIndex(sheet, addressFromA1Notation(match));
-  });
+  return formula.replace(/([a-zA-Z]+)([0-9]+)/g, (match) => addressToIndex(sheet, addressFromA1Notation(match)));
 };
 
 /**
@@ -132,7 +128,5 @@ export const mapFormulaRefsToIndices = (sheet: Sheet.Sheet, formula: string): st
  */
 export const mapFormulaIndicesToRefs = (sheet: Sheet.Sheet, formula: string): string => {
   invariant(isFormula(formula));
-  return formula.replace(/([a-zA-Z0-9]+)@([a-zA-Z0-9]+)/g, (idx) => {
-    return addressToA1Notation(addressFromIndex(sheet, idx));
-  });
+  return formula.replace(/([a-zA-Z0-9]+)@([a-zA-Z0-9]+)/g, (idx) => addressToA1Notation(addressFromIndex(sheet, idx)));
 };

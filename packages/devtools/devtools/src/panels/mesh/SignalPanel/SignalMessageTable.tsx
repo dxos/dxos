@@ -28,9 +28,7 @@ const views: View<SignalResponse>[] = [
   {
     id: 'swarm-event',
     title: 'SwarmEvent',
-    filter: (response: SignalResponse) => {
-      return !!response.swarmEvent;
-    },
+    filter: (response: SignalResponse) => !!response.swarmEvent,
 
     // TODO(burdon): Fixed width for date.
     // TODO(burdon): Add id property (can't use date?) Same for swarm panel.
@@ -73,9 +71,7 @@ const views: View<SignalResponse>[] = [
   {
     id: 'message',
     title: 'Message',
-    filter: (response: SignalResponse) => {
-      return !!response.message;
-    },
+    filter: (response: SignalResponse) => !!response.message,
     properties: [
       {
         name: 'receivedAt',
@@ -101,9 +97,7 @@ const views: View<SignalResponse>[] = [
   {
     id: 'ack',
     title: 'Acknowledgement',
-    filter: (response: SignalResponse) => {
-      return response.message?.payload['@type'] === 'dxos.mesh.messaging.Acknowledgement';
-    },
+    filter: (response: SignalResponse) => response.message?.payload['@type'] === 'dxos.mesh.messaging.Acknowledgement',
     properties: [
       {
         name: 'receivedAt',

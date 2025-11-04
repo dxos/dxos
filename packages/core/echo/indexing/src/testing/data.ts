@@ -15,105 +15,93 @@ export const TYPES = {
   worksFor: DXN.fromTypenameAndVersion('example.org/relation/WorksFor', '0.1.0').toString(),
 };
 
-const createArticle = (title: string, content: string): { id: ObjectId; doc: ObjectStructure } => {
-  return {
-    id: ObjectId.random(),
-    doc: {
-      system: {
-        kind: 'object',
-        type: { '/': TYPES.document },
-      },
-      meta: { keys: [] },
-      data: {
-        title,
-        content,
-      },
+const createArticle = (title: string, content: string): { id: ObjectId; doc: ObjectStructure } => ({
+  id: ObjectId.random(),
+  doc: {
+    system: {
+      kind: 'object',
+      type: { '/': TYPES.document },
     },
-  };
-};
+    meta: { keys: [] },
+    data: {
+      title,
+      content,
+    },
+  },
+});
 
-const createCollection = (name: string, objects: ObjectId[]): { id: ObjectId; doc: ObjectStructure } => {
-  return {
-    id: ObjectId.random(),
-    doc: {
-      system: { kind: 'object', type: { '/': TYPES.collection } },
-      meta: { keys: [] },
-      data: {
-        name,
-        objects: objects.map((id) => ({ '/': DXN.fromLocalObjectId(id).toString() })),
-      },
+const createCollection = (name: string, objects: ObjectId[]): { id: ObjectId; doc: ObjectStructure } => ({
+  id: ObjectId.random(),
+  doc: {
+    system: { kind: 'object', type: { '/': TYPES.collection } },
+    meta: { keys: [] },
+    data: {
+      name,
+      objects: objects.map((id) => ({ '/': DXN.fromLocalObjectId(id).toString() })),
     },
-  };
-};
+  },
+});
 
-const createOrganization = (name: string, website?: string): { id: ObjectId; doc: ObjectStructure } => {
-  return {
-    id: ObjectId.random(),
-    doc: {
-      system: {
-        kind: 'object',
-        type: { '/': TYPES.org },
-      },
-      meta: { keys: [] },
-      data: { name, website },
+const createOrganization = (name: string, website?: string): { id: ObjectId; doc: ObjectStructure } => ({
+  id: ObjectId.random(),
+  doc: {
+    system: {
+      kind: 'object',
+      type: { '/': TYPES.org },
     },
-  };
-};
+    meta: { keys: [] },
+    data: { name, website },
+  },
+});
 
-const createContact = (name: string, email: string): { id: ObjectId; doc: ObjectStructure } => {
-  return {
-    id: ObjectId.random(),
-    doc: {
-      system: {
-        kind: 'object',
-        type: { '/': TYPES.contact },
-      },
-      meta: { keys: [] },
-      data: {
-        name,
-        email,
-      },
+const createContact = (name: string, email: string): { id: ObjectId; doc: ObjectStructure } => ({
+  id: ObjectId.random(),
+  doc: {
+    system: {
+      kind: 'object',
+      type: { '/': TYPES.contact },
     },
-  };
-};
+    meta: { keys: [] },
+    data: {
+      name,
+      email,
+    },
+  },
+});
 
 const createTask = (
   title: string,
   description: string,
   assignedTo?: ObjectId,
-): { id: ObjectId; doc: ObjectStructure } => {
-  return {
-    id: ObjectId.random(),
-    doc: {
-      system: {
-        kind: 'object',
-        type: { '/': TYPES.task },
-      },
-      meta: { keys: [] },
-      data: {
-        title,
-        description,
-        assignedTo: assignedTo ? { '/': DXN.fromLocalObjectId(assignedTo).toString() } : undefined,
-      },
+): { id: ObjectId; doc: ObjectStructure } => ({
+  id: ObjectId.random(),
+  doc: {
+    system: {
+      kind: 'object',
+      type: { '/': TYPES.task },
     },
-  };
-};
+    meta: { keys: [] },
+    data: {
+      title,
+      description,
+      assignedTo: assignedTo ? { '/': DXN.fromLocalObjectId(assignedTo).toString() } : undefined,
+    },
+  },
+});
 
-const createWorksFor = (source: ObjectId, target: ObjectId, since: string): { id: ObjectId; doc: ObjectStructure } => {
-  return {
-    id: ObjectId.random(),
-    doc: {
-      system: {
-        kind: 'relation',
-        type: { '/': TYPES.worksFor },
-        source: { '/': DXN.fromLocalObjectId(source).toString() },
-        target: { '/': DXN.fromLocalObjectId(target).toString() },
-      },
-      meta: { keys: [] },
-      data: { since },
+const createWorksFor = (source: ObjectId, target: ObjectId, since: string): { id: ObjectId; doc: ObjectStructure } => ({
+  id: ObjectId.random(),
+  doc: {
+    system: {
+      kind: 'relation',
+      type: { '/': TYPES.worksFor },
+      source: { '/': DXN.fromLocalObjectId(source).toString() },
+      target: { '/': DXN.fromLocalObjectId(target).toString() },
     },
-  };
-};
+    meta: { keys: [] },
+    data: { since },
+  },
+});
 
 export const ARTICLES = {
   marineLife: createArticle(

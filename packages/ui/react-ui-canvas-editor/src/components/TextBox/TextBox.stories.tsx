@@ -9,13 +9,11 @@ import { withTheme } from '@dxos/react-ui/testing';
 
 import { TextBox, type TextBoxProps } from './TextBox';
 
-const DefaultStory = (props: TextBoxProps) => {
-  return (
-    <div className='flex w-[300px] rounded border border-primary-500'>
-      <TextBox {...props} onEnter={console.log} />
-    </div>
-  );
-};
+const DefaultStory = (props: TextBoxProps) => (
+  <div className='flex w-[300px] rounded border border-primary-500'>
+    <TextBox {...props} onEnter={console.log} />
+  </div>
+);
 
 const meta = {
   title: 'ui/react-ui-canvas-editor/TextBox',

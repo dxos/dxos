@@ -74,12 +74,10 @@ export const FormCellEditor = ({
       if (model && schema && space) {
         const { objects } = await space.db.query(Filter.type(schema)).run();
         return objects
-          .map((obj) => {
-            return {
-              dxn: Obj.getDXN(obj),
-              label: getValue(obj, fieldProjection.field.referencePath!) || obj.id.toString(),
-            };
-          })
+          .map((obj) => ({
+            dxn: Obj.getDXN(obj),
+            label: getValue(obj, fieldProjection.field.referencePath!) || obj.id.toString(),
+          }))
           .filter(isTruthy);
       }
 

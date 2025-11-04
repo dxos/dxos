@@ -66,8 +66,8 @@ export const resolveSchemaWithClientAndSpace = (client: Client, space: Space, qu
 const resolveSchema = (
   query: QueryAST.Query,
   resolve: (dxn: string) => Effect.Effect<Option.Option<Schema.Schema.AnyNoContext>>,
-): Effect.Effect<Option.Option<Schema.Schema.AnyNoContext>> => {
-  return Match.value(query).pipe(
+): Effect.Effect<Option.Option<Schema.Schema.AnyNoContext>> =>
+  Match.value(query).pipe(
     Match.withReturnType<Effect.Effect<Option.Option<Schema.Schema.AnyNoContext>>>(),
     // TODO(wittjosiah): Reconcile with filter match?
     Match.when({ type: 'select' }, ({ filter }) =>
@@ -127,12 +127,11 @@ const resolveSchema = (
       ),
     ),
     Match.when({ type: 'options' }, ({ query }) => resolveSchema(query, resolve)),
-    Match.orElse((_q) => {
+    Match.orElse((_q) =>
       // TODO(wittjosiah): Implement other cases.
-      return Effect.succeed(Option.none());
-    }),
+      Effect.succeed(Option.none()),
+    ),
   );
-};
 
 const typenameFromFilter = (filter: QueryAST.Filter): Option.Option<string> =>
   Match.value(filter).pipe(
@@ -148,16 +147,15 @@ const typenameFromFilter = (filter: QueryAST.Filter): Option.Option<string> =>
   );
 
 // TODO(wittjosiah): Currently assumes options is at the top-level of the ast.
-export const getQueryTarget = (query: QueryAST.Query, space?: Space) => {
-  return Match.value(query).pipe(
-    Match.when({ type: 'options' }, ({ options }) => {
-      return Option.fromNullable(options.queues).pipe(
+export const getQueryTarget = (query: QueryAST.Query, space?: Space) =>
+  Match.value(query).pipe(
+    Match.when({ type: 'options' }, ({ options }) =>
+      Option.fromNullable(options.queues).pipe(
         Option.flatMap((queues) => Array.head(queues)),
         Option.flatMap((queueDxn) => Option.fromNullable(DXN.tryParse(queueDxn))),
         Option.flatMap((queueDxn) => Option.fromNullable(space?.queues.get(queueDxn))),
         Option.getOrElse(() => space),
-      );
-    }),
+      ),
+    ),
     Match.orElse(() => space),
   );
-};

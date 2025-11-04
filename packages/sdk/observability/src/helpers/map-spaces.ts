@@ -9,8 +9,8 @@ export type MapSpacesOptions = {
   truncateKeys?: boolean;
 };
 
-export const mapSpaces = (spaces: Space[], options: MapSpacesOptions = { verbose: false, truncateKeys: false }) => {
-  return spaces.map((space) => {
+export const mapSpaces = (spaces: Space[], options: MapSpacesOptions = { verbose: false, truncateKeys: false }) =>
+  spaces.map((space) => {
     // TODO(burdon): Factor out.
     // TODO(burdon): Agent needs to restart before `ready` is available.
     const { open, ready } = space.internal.data.metrics ?? {};
@@ -45,4 +45,3 @@ export const mapSpaces = (spaces: Space[], options: MapSpacesOptions = { verbose
       ).toFixed(0),
     };
   });
-};

@@ -10,9 +10,9 @@ import { templates } from '../templates';
 
 export type TemplateActionProperties = { type: 'template'; value: string };
 
-const createTemplateSelectActions = (script: Script.Script) => {
-  return templates.map((template) => {
-    return createMenuAction<TemplateActionProperties>(
+const createTemplateSelectActions = (script: Script.Script) =>
+  templates.map((template) =>
+    createMenuAction<TemplateActionProperties>(
       `template--${template.id}`,
       () => {
         script.name = template.name;
@@ -31,9 +31,8 @@ const createTemplateSelectActions = (script: Script.Script) => {
         value: template.id,
         type: 'template',
       },
-    );
-  });
-};
+    ),
+  );
 
 export const createTemplateSelect = (script: Script.Script) => {
   const templateSelectActions = createTemplateSelectActions(script);

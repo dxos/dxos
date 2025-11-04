@@ -30,8 +30,8 @@ import { invariant } from '@dxos/invariant';
 export const makeToolResolverFromFunctions = (
   functions: FunctionDefinition<any, any>[],
   toolkit: Toolkit.Toolkit<any>,
-): Layer.Layer<ToolResolverService, never, DatabaseService> => {
-  return Layer.effect(
+): Layer.Layer<ToolResolverService, never, DatabaseService> =>
+  Layer.effect(
     ToolResolverService,
     Effect.gen(function* () {
       const dbService = yield* DatabaseService;
@@ -60,13 +60,12 @@ export const makeToolResolverFromFunctions = (
       } satisfies Context.Tag.Service<ToolResolverService>;
     }),
   );
-};
 
 export const makeToolExecutionServiceFromFunctions = (
   toolkit: Toolkit.Toolkit<any>,
   handlersLayer: Layer.Layer<Tool.Handler<any>, never, never>,
-): Layer.Layer<ToolExecutionService, never, FunctionInvocationService> => {
-  return Layer.effect(
+): Layer.Layer<ToolExecutionService, never, FunctionInvocationService> =>
+  Layer.effect(
     ToolExecutionService,
     Effect.gen(function* () {
       const toolkitHandler = yield* toolkit.pipe(Effect.provide(handlersLayer));
@@ -75,8 +74,8 @@ export const makeToolExecutionServiceFromFunctions = (
 
       return {
         handlersFor: (toolkit) => {
-          const makeHandler = (tool: Tool.Any): ((params: unknown) => Effect.Effect<unknown, any, any>) => {
-            return Effect.fn(`toolFunctionHandler ${tool.name}`)(function* (input: any) {
+          const makeHandler = (tool: Tool.Any): ((params: unknown) => Effect.Effect<unknown, any, any>) =>
+            Effect.fn(`toolFunctionHandler ${tool.name}`)(function* (input: any) {
               if (toolkitHandler.tools[tool.name]) {
                 if (Tool.isProviderDefined(tool)) {
                   throw new Error('Attempted to call a provider-defined tool');
@@ -92,7 +91,6 @@ export const makeToolExecutionServiceFromFunctions = (
                 .invokeFunction(functionDef, input as any)
                 .pipe(Effect.catchAllDefect((defect) => Effect.fail(defect)));
             });
-          };
 
           return toolkit.of(
             Record.map(toolkit.tools, (tool, _name) => (Tool.isUserDefined(tool) ? makeHandler(tool) : null)) as any,
@@ -101,7 +99,6 @@ export const makeToolExecutionServiceFromFunctions = (
       };
     }),
   );
-};
 
 class FunctionToolAnnotation extends Context.Tag('@dxos/assistant/FunctionToolAnnotation')<
   FunctionToolAnnotation,
@@ -155,6 +152,5 @@ const createStructFieldsFromSchema = (schema: Schema.Schema<any, any>): Record<s
   }
 };
 
-const isHandlerLike = (value: unknown): value is Toolkit.WithHandler<Record<string, Tool.Any>> => {
-  return typeof (value as any).tools === 'object' && typeof (value as any).handle === 'function';
-};
+const isHandlerLike = (value: unknown): value is Toolkit.WithHandler<Record<string, Tool.Any>> =>
+  typeof (value as any).tools === 'object' && typeof (value as any).handle === 'function';

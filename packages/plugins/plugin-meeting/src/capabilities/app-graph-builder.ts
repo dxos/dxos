@@ -70,8 +70,8 @@ export default (context: PluginContext) =>
 
     createExtension({
       id: `${meta.id}/call-thread`,
-      connector: (node) => {
-        return Rx.make((get) =>
+      connector: (node) =>
+        Rx.make((get) =>
           Function.pipe(
             get(node),
             Option.map((node) => node.data),
@@ -106,8 +106,7 @@ export default (context: PluginContext) =>
             }),
             Option.getOrElse(() => []),
           ),
-        );
-      },
+        ),
     }),
 
     createExtension({
@@ -226,21 +225,19 @@ export default (context: PluginContext) =>
               const meeting = get(rxFromSignal(() => state.activeMeeting));
               return meeting ? Option.some({ channel, meeting }) : Option.none();
             }),
-            Option.map(({ channel, meeting }) => {
-              return [
-                {
-                  id: `${fullyQualifiedId(channel)}${ATTENDABLE_PATH_SEPARATOR}transcript`,
-                  type: PLANK_COMPANION_TYPE,
-                  data: get(rxFromSignal(() => meeting.transcript.target)),
-                  properties: {
-                    label: ['transcript companion label', { ns: meta.id }],
-                    icon: 'ph--subtitles--regular',
-                    position: 'hoist',
-                    disposition: 'hidden',
-                  },
+            Option.map(({ channel, meeting }) => [
+              {
+                id: `${fullyQualifiedId(channel)}${ATTENDABLE_PATH_SEPARATOR}transcript`,
+                type: PLANK_COMPANION_TYPE,
+                data: get(rxFromSignal(() => meeting.transcript.target)),
+                properties: {
+                  label: ['transcript companion label', { ns: meta.id }],
+                  icon: 'ph--subtitles--regular',
+                  position: 'hoist',
+                  disposition: 'hidden',
                 },
-              ];
-            }),
+              },
+            ]),
             Option.getOrElse(() => []),
           ),
         ),
@@ -255,21 +252,19 @@ export default (context: PluginContext) =>
             Option.flatMap((node) =>
               Obj.instanceOf(Meeting.Meeting, node.data) ? Option.some(node.data) : Option.none(),
             ),
-            Option.map((meeting) => {
-              return [
-                {
-                  id: `${fullyQualifiedId(meeting)}${ATTENDABLE_PATH_SEPARATOR}transcript`,
-                  type: PLANK_COMPANION_TYPE,
-                  data: get(rxFromSignal(() => meeting.transcript.target)),
-                  properties: {
-                    label: ['transcript companion label', { ns: meta.id }],
-                    icon: 'ph--subtitles--regular',
-                    position: 'hoist',
-                    disposition: 'hidden',
-                  },
+            Option.map((meeting) => [
+              {
+                id: `${fullyQualifiedId(meeting)}${ATTENDABLE_PATH_SEPARATOR}transcript`,
+                type: PLANK_COMPANION_TYPE,
+                data: get(rxFromSignal(() => meeting.transcript.target)),
+                properties: {
+                  label: ['transcript companion label', { ns: meta.id }],
+                  icon: 'ph--subtitles--regular',
+                  position: 'hoist',
+                  disposition: 'hidden',
                 },
-              ];
-            }),
+              },
+            ]),
             Option.getOrElse(() => []),
           ),
         ),

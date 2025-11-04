@@ -26,9 +26,9 @@ export type LayoutControlsProps = Omit<ButtonGroupProps, 'onClick'> & {
   pin?: 'start' | 'end' | 'both';
 };
 
-const LayoutControl = ({ icon, label, ...props }: Omit<ButtonProps, 'children'> & { label: string; icon: string }) => {
-  return <IconButton iconOnly icon={icon} label={label} tooltipSide='bottom' variant='ghost' {...props} />;
-};
+const LayoutControl = ({ icon, label, ...props }: Omit<ButtonProps, 'children'> & { label: string; icon: string }) => (
+  <IconButton iconOnly icon={icon} label={label} tooltipSide='bottom' variant='ghost' {...props} />
+);
 
 export const LayoutControls = forwardRef<HTMLDivElement, LayoutControlsProps>(
   (

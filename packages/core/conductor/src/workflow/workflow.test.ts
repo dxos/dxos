@@ -156,8 +156,8 @@ describe('workflow', () => {
     };
   });
 
-  const execute = (effect: ComputeEffect<any>, services: TestEffectLayers = createTestExecutionContext()) => {
-    return Effect.runPromise(
+  const execute = (effect: ComputeEffect<any>, services: TestEffectLayers = createTestExecutionContext()) =>
+    Effect.runPromise(
       effect.pipe(
         Effect.withSpan('runTestWorkflow'),
         Effect.flatMap(ValueBag.unwrap),
@@ -165,13 +165,11 @@ describe('workflow', () => {
         Effect.scoped,
       ),
     ).then((r) => r.result);
-  };
 
   const makeInput = (input: any) => ValueBag.make({ input });
 
-  const createSimpleTransformGraph = (transform: Transform): TestWorkflowGraph => {
-    return createGraphFromTransformMap('I', { I: transform });
-  };
+  const createSimpleTransformGraph = (transform: Transform): TestWorkflowGraph =>
+    createGraphFromTransformMap('I', { I: transform });
 
   const createGraphFromTransformMap = (
     outputPath: string | null,
@@ -228,35 +226,32 @@ describe('workflow', () => {
     }
   };
 
-  const createResolver = (...params: TestWorkflowGraph[]): WorkflowLoaderParams => {
-    return {
-      nodeResolver: async (node: ComputeNode) => {
-        const transform = params.flatMap((v) => v.compute).find((v) => v[0].toString() === node.type)?.[1];
-        invariant(transform, 'Transform not found.');
-        return {
-          meta: { input: AnyInput, output: AnyOutput },
-          exec: synchronizedComputeFunction(({ input }) => Effect.succeed({ result: transform(input) })),
-        } satisfies Executable;
-      },
-      graphLoader: async (graphDxn: DXN) => {
-        const result = params.find((v) => v.graphDxn.toString() === graphDxn.toString())?.graph;
-        invariant(result, 'Graph not found.');
-        return result;
-      },
-    };
-  };
+  const createResolver = (...params: TestWorkflowGraph[]): WorkflowLoaderParams => ({
+    nodeResolver: async (node: ComputeNode) => {
+      const transform = params.flatMap((v) => v.compute).find((v) => v[0].toString() === node.type)?.[1];
+      invariant(transform, 'Transform not found.');
+      return {
+        meta: { input: AnyInput, output: AnyOutput },
+        exec: synchronizedComputeFunction(({ input }) => Effect.succeed({ result: transform(input) })),
+      } satisfies Executable;
+    },
+    graphLoader: async (graphDxn: DXN) => {
+      const result = params.find((v) => v.graphDxn.toString() === graphDxn.toString())?.graph;
+      invariant(result, 'Graph not found.');
+      return result;
+    },
+  });
 });
 
 const createTestExecutionContext = (mocks?: {
   functions?: Context.Tag.Service<RemoteFunctionExecutionService>;
-}): TestEffectLayers => {
-  return new ServiceContainer()
+}): TestEffectLayers =>
+  new ServiceContainer()
     .setServices({
       eventLogger: createEventLogger(LogLevel.INFO),
       functionCallService: mocks?.functions,
     })
     .createLayer();
-};
 
 type TestEffectLayers = Layer.Layer<Exclude<ComputeRequirements, Scope.Scope>>;
 

@@ -26,53 +26,45 @@ export type Trace = {
 };
 
 export const trace: Trace = {
-  begin: ({ id, parentId, data }) => {
-    return {
-      span: {
-        command: 'begin',
-        id,
-        parent: parentId,
-        data,
-      },
-    };
-  },
+  begin: ({ id, parentId, data }) => ({
+    span: {
+      command: 'begin',
+      id,
+      parent: parentId,
+      data,
+    },
+  }),
 
-  end: ({ id, status, data }) => {
-    return {
-      span: {
-        command: 'end',
-        id,
-        status: status ?? 'ok',
-        data,
-      },
-    };
-  },
+  end: ({ id, status, data }) => ({
+    span: {
+      command: 'end',
+      id,
+      status: status ?? 'ok',
+      data,
+    },
+  }),
 
-  update: ({ id, data }) => {
-    return {
-      span: {
-        command: 'update',
-        id,
-        data,
-      },
-    };
-  },
+  update: ({ id, data }) => ({
+    span: {
+      command: 'update',
+      id,
+      data,
+    },
+  }),
 
-  error: ({ id, error, data }) => {
-    return {
-      span: {
-        command: 'end',
-        id,
-        status: 'error',
-        data: {
-          errorMessage: error.message,
-          errorName: error.name,
-          errorStack: error.stack,
-          ...data,
-        },
+  error: ({ id, error, data }) => ({
+    span: {
+      command: 'end',
+      id,
+      status: 'error',
+      data: {
+        errorMessage: error.message,
+        errorName: error.name,
+        errorStack: error.stack,
+        ...data,
       },
-    };
-  },
+    },
+  }),
 };
 
 //

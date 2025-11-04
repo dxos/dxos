@@ -18,9 +18,8 @@ import './dx-range-spinbutton';
 
 export type DxThemeEditorSemanticColorsProps = {};
 
-const isAlphaLuminosity = (value: any): value is AlphaLuminosity => {
-  return Number.isFinite(value) || (typeof value === 'string' && value.includes('/'));
-};
+const isAlphaLuminosity = (value: any): value is AlphaLuminosity =>
+  Number.isFinite(value) || (typeof value === 'string' && value.includes('/'));
 
 @customElement('dx-theme-editor-semantic-colors')
 export class DxThemeEditorSemanticColors extends LitElement {

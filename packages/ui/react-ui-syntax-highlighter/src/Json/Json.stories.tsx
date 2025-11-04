@@ -42,9 +42,7 @@ const createData = ({ depth = 2, children = 3 } = {}): any => {
   const createChildren = (root: any, d = 0) => {
     if (d < depth) {
       const num = faker.number.int({ min: 1, max: Math.round(Math.log(depth + 1 - d) * children) });
-      root.children = [...new Array(num)].map(() => {
-        return createChildren(createNode(), d + 1);
-      });
+      root.children = [...new Array(num)].map(() => createChildren(createNode(), d + 1));
     }
 
     return root;

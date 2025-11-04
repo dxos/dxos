@@ -23,16 +23,14 @@ import { type FunctionsRuntimeProvider } from '../compute-graph-registry';
  */
 export const createMockedComputeRuntimeProvider = ({
   functions,
-}: { functions?: FunctionDefinition<any, any>[] } = {}): FunctionsRuntimeProvider => {
-  return {
-    getRuntime: (_spaceId: SpaceId) =>
-      ManagedRuntime.make(
-        FunctionInvocationService.layerTest({ functions }).pipe(
-          Layer.provide(AiService.notAvailable),
-          Layer.provide(CredentialsService.configuredLayer([])),
-          Layer.provide(DatabaseService.notAvailable),
-          Layer.provide(QueueService.notAvailable),
-        ),
+}: { functions?: FunctionDefinition<any, any>[] } = {}): FunctionsRuntimeProvider => ({
+  getRuntime: (_spaceId: SpaceId) =>
+    ManagedRuntime.make(
+      FunctionInvocationService.layerTest({ functions }).pipe(
+        Layer.provide(AiService.notAvailable),
+        Layer.provide(CredentialsService.configuredLayer([])),
+        Layer.provide(DatabaseService.notAvailable),
+        Layer.provide(QueueService.notAvailable),
       ),
-  };
-};
+    ),
+});

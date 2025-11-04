@@ -44,9 +44,8 @@ export type RefFieldProps = InputProps & {
 };
 
 // TODO(thure): Is this a standard that should be better canonized?
-const isRefSnapShot = (val: any): val is { '/': string } => {
-  return typeof val === 'object' && typeof (val as any)?.['/'] === 'string';
-};
+const isRefSnapShot = (val: any): val is { '/': string } =>
+  typeof val === 'object' && typeof (val as any)?.['/'] === 'string';
 
 export const RefField = ({
   type,
