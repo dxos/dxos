@@ -222,11 +222,11 @@ export class EchoSchemaRegistry extends Resource implements SchemaRegistry {
           ...self._db.graph.schemaRegistry.schemas.map((schema) => ({
             source: 'runtime',
             schema,
-          })),
+          }) as const),
           ...objects.map((stored) => ({
             source: 'database',
             schema: self._register(stored),
-          })),
+          }) as const),
         ]);
         return results;
       },
@@ -237,11 +237,11 @@ export class EchoSchemaRegistry extends Resource implements SchemaRegistry {
           ...self._db.graph.schemaRegistry.schemas.map((schema) => ({
             source: 'runtime',
             schema,
-          })),
+          }) as const),
           ...objects.map((stored) => ({
             source: 'database',
             schema: self._register(stored),
-          })),
+          }) as const),
         ]);
       },
       async start() {
