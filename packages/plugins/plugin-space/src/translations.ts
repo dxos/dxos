@@ -13,7 +13,7 @@ import { meta } from './meta';
 export const translations = [
   {
     'en-US': {
-      [Type.getTypename(DataType.Collection.Collection)]: {
+      [DataType.Collection.Collection.typename]: {
         'typename label': 'Collection',
         'typename label_zero': 'Collections',
         'typename label_one': 'Collection',
@@ -49,21 +49,21 @@ export const translations = [
         'rename object label': 'Rename view',
         'delete object label': 'Delete view',
       },
-      [Type.getTypename(DataType.Event.Event)]: {
+      [DataType.Event.Event.typename]: {
         'typename label': 'Event',
         'typename label_zero': 'Events',
         'typename label_one': 'Event',
         'typename label_other': 'Events',
         'object name placeholder': 'New event',
       },
-      [Type.getTypename(DataType.Organization.Organization)]: {
+      [DataType.Organization.Organization.typename]: {
         'typename label': 'Organization',
         'typename label_zero': 'Organizations',
         'typename label_one': 'Organization',
         'typename label_other': 'Organizations',
         'object name placeholder': 'New organization',
       },
-      [Type.getTypename(DataType.Person.Person)]: {
+      [DataType.Person.Person.typename]: {
         'typename label': 'Person',
         'typename label_zero': 'People',
         'typename label_one': 'Person',
@@ -77,7 +77,7 @@ export const translations = [
         'typename label_other': 'Projects',
         'object name placeholder': 'New project',
       },
-      [Type.getTypename(DataType.Task.Task)]: {
+      [DataType.Task.Task.typename]: {
         'typename label': 'Task',
         'typename label_zero': 'Tasks',
         'typename label_one': 'Task',

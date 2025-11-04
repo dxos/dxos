@@ -32,7 +32,7 @@ export default (context: PluginContext) =>
         const space = ancestors.find(isSpace);
         const target =
           ancestors.findLast((ancestor) => Obj.instanceOf(DataType.Collection.Collection, ancestor)) ??
-          space?.properties[Type.getTypename(DataType.Collection.Collection)]?.target;
+          space?.properties[DataType.Collection.Collection.typename]?.target;
         if (!space || !target) {
           return;
         }

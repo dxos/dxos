@@ -15,9 +15,9 @@ import { TokenManager } from './TokenManager';
 faker.seed(1);
 
 const generator = new TestObjectGenerator(
-  { [Type.getTypename(DataType.AccessToken.AccessToken)]: DataType.AccessToken.AccessToken },
+  { [DataType.AccessToken.AccessToken.typename]: DataType.AccessToken.AccessToken },
   {
-    [Type.getTypename(DataType.AccessToken.AccessToken)]: async () => ({
+    [DataType.AccessToken.AccessToken.typename]: async () => ({
       token: faker.string.hexadecimal({ length: 32 }),
       source: faker.internet.url(),
       note: faker.lorem.sentence(faker.number.int({ min: 1, max: 9 })),

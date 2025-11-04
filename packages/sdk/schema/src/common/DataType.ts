@@ -4,7 +4,7 @@
 
 //
 // System
-// TODO(burdon): Move.
+// TODO(burdon): Move from DataType namespace?
 //
 
 export { StoredSchema } from '@dxos/echo/internal';
@@ -14,15 +14,22 @@ export * as Collection from './collection';
 export * as Text from './text';
 
 //
-// Common types
+// Common structs
 //
 
-export * as AccessToken from './access-token';
 export { Actor, ActorRole, ActorRoles } from './actor';
-export * as Event from './event';
-export { Message, ContentBlock as MessageBlock } from './message';
-export * as Organization from './organization';
 export { PostalAddress } from './postal-address';
+
+//
+// Common object and relation types
+//
+
+// TODO(burdon): Message.Message
+export { Message, ContentBlock as MessageBlock } from './message';
+
+export * as AccessToken from './access-token';
+export * as Event from './event';
+export * as Organization from './organization';
 export * as Person from './person';
 export * as Project from './project';
 export * as Task from './task';

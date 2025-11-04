@@ -159,7 +159,7 @@ const meta = {
             const { view } = await Kanban.makeView({
               client,
               space,
-              typename: Type.getTypename(DataType.Organization.Organization),
+              typename: DataType.Organization.Organization.typename,
               pivotFieldName: 'status',
             });
             space.db.add(view);

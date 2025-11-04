@@ -134,12 +134,12 @@ export default (context: PluginContext) =>
         }
 
         const intents: AnyIntentChain[] = [];
-        if (!space.properties.staticRecords.includes(Type.getTypename(DataType.Person.Person))) {
+        if (!space.properties.staticRecords.includes(DataType.Person.Person.typename)) {
           log.info('adding record type for contacts');
           intents.push(
             createIntent(SpaceAction.UseStaticSchema, {
               space,
-              typename: Type.getTypename(DataType.Person.Person),
+              typename: DataType.Person.Person.typename,
             }),
           );
         }

@@ -12,7 +12,7 @@ import { translations } from '../translations';
 import { SPACE_TYPE, SpaceAction } from '../types';
 import { SPACES } from '../util';
 
-const COLLECTION_TYPE = Type.getTypename(DataType.Collection.Collection);
+const COLLECTION_TYPE = DataType.Collection.Collection.typename;
 
 // https://stackoverflow.com/a/19016910
 const DIRECTORY_TYPE = 'text/directory';

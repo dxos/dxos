@@ -29,7 +29,7 @@ export default async (context: PluginContext) => {
     content: README_CONTENT,
   });
 
-  const defaultSpaceCollection = space.properties[Type.getTypename(DataType.Collection.Collection)].target;
+  const defaultSpaceCollection = space.properties[DataType.Collection.Collection.typename].target;
 
   defaultSpaceCollection?.objects.push(Ref.make(readme));
   defaultSpaceCollection?.objects.push(

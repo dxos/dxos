@@ -140,11 +140,10 @@ type CreateViewProps = {
   pivotFieldName?: string;
 };
 
-// TODO(wittjosiah): Export as `DataType.View.make`.
-
 /**
  * Create view from provided schema.
  */
+// TODO(wittjosiah): Export as `DataType.View.make`.
 export const createView = ({
   name,
   query,
@@ -200,26 +199,6 @@ export const createView = ({
   }
 
   return view;
-};
-
-const getSchema = async (
-  dxn: DXN,
-  registry?: RuntimeSchemaRegistry,
-  echoRegistry?: EchoSchemaRegistry,
-): Promise<Type.Obj.Any | undefined> => {
-  const staticSchema = registry?.getSchemaByDXN(dxn);
-  if (staticSchema) {
-    return staticSchema;
-  }
-
-  const typeDxn = dxn.asTypeDXN();
-  if (!typeDxn) {
-    return;
-  }
-
-  const { type, version } = typeDxn;
-  const echoSchema = await echoRegistry?.query({ typename: type, version }).firstOrUndefined();
-  return echoSchema?.snapshot;
 };
 
 type CreateViewWithReferencesProps = CreateViewProps & {
@@ -390,3 +369,24 @@ export const createDefaultSchema = () =>
       version: '0.1.0',
     }),
   );
+
+// TODO(burdon): Factor out.
+const getSchema = async (
+  dxn: DXN,
+  registry?: RuntimeSchemaRegistry,
+  echoRegistry?: EchoSchemaRegistry,
+): Promise<Type.Obj.Any | undefined> => {
+  const staticSchema = registry?.getSchemaByDXN(dxn);
+  if (staticSchema) {
+    return staticSchema;
+  }
+
+  const typeDxn = dxn.asTypeDXN();
+  if (!typeDxn) {
+    return;
+  }
+
+  const { type, version } = typeDxn;
+  const echoSchema = await echoRegistry?.query({ typename: type, version }).firstOrUndefined();
+  return echoSchema?.snapshot;
+};

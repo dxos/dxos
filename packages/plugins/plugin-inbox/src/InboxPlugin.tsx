@@ -62,7 +62,7 @@ export const InboxPlugin = definePlugin(meta, () => [
         },
       }),
       contributes(Capabilities.Metadata, {
-        id: Type.getTypename(DataType.Event.Event),
+        id: DataType.Event.Event.typename,
         metadata: {
           // TODO(wittjosiah): Move out of metadata.
           loadReferences: async (event: DataType.Event.Event) => await Ref.Array.loadAll(event.links ?? []),

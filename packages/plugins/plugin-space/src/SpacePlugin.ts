@@ -89,7 +89,7 @@ export const SpacePlugin = definePlugin<SpacePluginOptions>(
         activatesOn: Events.SetupMetadata,
         activate: () => [
           contributes(Capabilities.Metadata, {
-            id: Type.getTypename(DataType.Collection.Collection),
+            id: DataType.Collection.Collection.typename,
             metadata: {
               icon: 'ph--cards-three--regular',
               iconHue: 'neutral',
@@ -120,25 +120,25 @@ export const SpacePlugin = definePlugin<SpacePluginOptions>(
             },
           }),
           contributes(Capabilities.Metadata, {
-            id: Type.getTypename(DataType.Event.Event),
+            id: DataType.Event.Event.typename,
             metadata: {
               icon: 'ph--calendar-dot--regular',
             },
           }),
           contributes(Capabilities.Metadata, {
-            id: Type.getTypename(DataType.Organization.Organization),
+            id: DataType.Organization.Organization.typename,
             metadata: {
               icon: 'ph--building-office--regular',
             },
           }),
           contributes(Capabilities.Metadata, {
-            id: Type.getTypename(DataType.Person.Person),
+            id: DataType.Person.Person.typename,
             metadata: {
               icon: 'ph--user--regular',
             },
           }),
           contributes(Capabilities.Metadata, {
-            id: Type.getTypename(DataType.Task.Task),
+            id: DataType.Task.Task.typename,
             metadata: {
               icon: 'ph--check-circle--regular',
             },

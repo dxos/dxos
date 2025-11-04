@@ -83,7 +83,7 @@ export default ({ context, observability, createInvitationUrl }: IntentResolverO
 
         // Create root collection.
         const collection = Obj.make(DataType.Collection.Collection, { objects: [] });
-        space.properties[Type.getTypename(DataType.Collection.Collection)] = Ref.make(collection);
+        space.properties[DataType.Collection.Collection.typename] = Ref.make(collection);
 
         // Set current migration version.
         if (Migrations.versionProperty) {
@@ -505,13 +505,13 @@ export default ({ context, observability, createInvitationUrl }: IntentResolverO
         } else if (isSpace(target) && hidden) {
           space.db.add(object);
         } else if (isSpace(target)) {
-          const collection = space.properties[Type.getTypename(DataType.Collection.Collection)]?.target;
+          const collection = space.properties[DataType.Collection.Collection.typename]?.target;
           if (Obj.instanceOf(DataType.Collection.Collection, collection)) {
             collection.objects.push(Ref.make(object));
           } else {
             // TODO(wittjosiah): Can't add non-echo objects by including in a collection because of types.
             const collection = Obj.make(DataType.Collection.Collection, { objects: [Ref.make(object)] });
-            space.properties[Type.getTypename(DataType.Collection.Collection)] = Ref.make(collection);
+            space.properties[DataType.Collection.Collection.typename] = Ref.make(collection);
           }
         }
 
@@ -568,7 +568,7 @@ export default ({ context, observability, createInvitationUrl }: IntentResolverO
 
         if (!undo) {
           const parentCollection: DataType.Collection.Collection =
-            target ?? space.properties[Type.getTypename(DataType.Collection.Collection)]?.target;
+            target ?? space.properties[DataType.Collection.Collection.typename]?.target;
           const nestedObjectsList = await Promise.all(objects.map((obj) => getNestedObjects(obj, resolve)));
 
           const deletionData = {

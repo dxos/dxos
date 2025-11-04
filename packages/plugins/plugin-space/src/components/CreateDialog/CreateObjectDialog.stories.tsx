@@ -50,7 +50,7 @@ export default meta;
 export const Default: StoryObj<typeof CreateObjectDialog> = {};
 
 export const Typename: StoryObj<typeof CreateObjectDialog> = {
-  args: { typename: Type.getTypename(DataType.Collection.Collection) },
+  args: { typename: DataType.Collection.Collection.typename },
 };
 
 export const TargetSpace: StoryObj<typeof CreateObjectDialog> = {

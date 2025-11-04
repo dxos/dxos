@@ -329,7 +329,7 @@ export default (context: PluginContext) => {
               const collection = get(
                 rxFromSignal(
                   () =>
-                    space.properties[Type.getTypename(DataType.Collection.Collection)]?.target as
+                    space.properties[DataType.Collection.Collection.typename]?.target as
                       | DataType.Collection.Collection
                       | undefined,
                 ),

@@ -49,7 +49,7 @@ const meta = {
       createIdentity: true,
       createSpace: true,
       onCreateSpace: async ({ client, space }) => {
-        const { view } = await Table.makeView({ client, space, typename: Type.getTypename(DataType.Task.Task) });
+        const { view } = await Table.makeView({ client, space, typename: DataType.Task.Task.typename });
         space.db.add(view);
         Array.from({ length: 10 }).forEach(() => {
           space.db.add(

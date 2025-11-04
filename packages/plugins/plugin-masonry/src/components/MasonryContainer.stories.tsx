@@ -59,7 +59,7 @@ const meta = {
             const { view } = await Masonry.makeView({
               space,
               client,
-              typename: Type.getTypename(DataType.Organization.Organization),
+              typename: DataType.Organization.Organization.typename,
             });
             space.db.add(view);
 

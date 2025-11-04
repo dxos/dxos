@@ -175,12 +175,12 @@ export default () =>
         const defaultSpaceViews = useQuery(defaultSpace, Filter.type(DataType.View));
         const currentSpaceContactTable = currentSpaceViews.find(
           (view) =>
-            getTypenameFromQuery(view.query.ast) === Type.getTypename(DataType.Person.Person) &&
+            getTypenameFromQuery(view.query.ast) === DataType.Person.Person.typename &&
             Obj.instanceOf(Table.Table, view.presentation.target),
         );
         const defaultSpaceContactTable = defaultSpaceViews.find(
           (view) =>
-            getTypenameFromQuery(view.query.ast) === Type.getTypename(DataType.Person.Person) &&
+            getTypenameFromQuery(view.query.ast) === DataType.Person.Person.typename &&
             Obj.instanceOf(Table.Table, view.presentation.target),
         );
 

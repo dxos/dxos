@@ -76,7 +76,7 @@ export default ({ createInvitationUrl }: ReactSurfaceOptions) =>
         <Surface
           data={{
             id: data.subject.id,
-            subject: data.subject.properties[Type.getTypename(DataType.Collection.Collection)]?.target,
+            subject: data.subject.properties[DataType.Collection.Collection.typename]?.target,
           }}
           role={role}
           {...rest}
@@ -312,7 +312,7 @@ export default ({ createInvitationUrl }: ReactSurfaceOptions) =>
         const space = isSpace(data.subject) ? data.subject : getSpace(data.subject);
         const object = isSpace(data.subject)
           ? data.subject.state.get() === SpaceState.SPACE_READY
-            ? (space?.properties[Type.getTypename(DataType.Collection.Collection)]
+            ? (space?.properties[DataType.Collection.Collection.typename]
                 ?.target as DataType.Collection.Collection)
             : undefined
           : data.subject;

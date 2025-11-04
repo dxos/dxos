@@ -97,8 +97,8 @@ describe('Projection', () => {
       contact: Type.toJsonSchema(DataType.Person.Person),
     });
     log('objects', { organization, contact });
-    expect(Obj.getTypename(organization)).to.eq(Type.getTypename(DataType.Organization.Organization));
-    expect(Obj.getTypename(contact)).to.eq(Type.getTypename(DataType.Person.Person));
+    expect(Obj.getTypename(organization)).to.eq(DataType.Organization.Organization.typename);
+    expect(Obj.getTypename(contact)).to.eq(DataType.Person.Person.typename);
   });
 
   test('maintains field order during initialization', async ({ expect }) => {
