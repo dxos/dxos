@@ -6,7 +6,7 @@ import * as Schema from 'effect/Schema';
 
 import { Obj, Type } from '@dxos/echo';
 import { type JsonSchemaType, LabelAnnotation, ViewAnnotation } from '@dxos/echo/internal';
-import { type CreateViewFromSpaceProps, type DataType, createViewFromSpace } from '@dxos/schema';
+import { DataType } from '@dxos/schema';
 
 export const Kanban = Schema.Struct({
   name: Schema.optional(Schema.String),
@@ -47,7 +47,7 @@ export const SettingsSchema = Schema.Struct({
   }),
 });
 
-type MakeViewProps = Omit<CreateViewFromSpaceProps, 'presentation'>;
+type MakeViewProps = Omit<DataType.View.MakeFromSpaceProps, 'presentation'>;
 
 /**
  * Make a kanban as a view of a data set.
@@ -56,5 +56,5 @@ export const makeView = async (
   props: MakeViewProps,
 ): Promise<{ jsonSchema: JsonSchemaType; view: DataType.View.View }> => {
   const kanban = Obj.make(Kanban, {});
-  return createViewFromSpace({ ...props, presentation: kanban });
+  return DataType.View.makeFromSpace({ ...props, presentation: kanban });
 };

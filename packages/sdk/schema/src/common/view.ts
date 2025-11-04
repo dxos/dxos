@@ -263,10 +263,7 @@ export const makeWithReferences = async ({
   return view;
 };
 
-export type CreateViewFromSpaceProps = Omit<
-  MakeWithReferencesProps,
-  'query' | 'queryRaw' | 'jsonSchema' | 'registry'
-> & {
+export type MakeFromSpaceProps = Omit<MakeWithReferencesProps, 'query' | 'queryRaw' | 'jsonSchema' | 'registry'> & {
   client?: Client;
   space: Space;
   typename?: string;
@@ -276,13 +273,13 @@ export type CreateViewFromSpaceProps = Omit<
 /**
  * Create view from a schema in provided space or client.
  */
-export const createViewFromSpace = async ({
+export const makeFromSpace = async ({
   client,
   space,
   typename,
   createInitial = 1,
   ...props
-}: CreateViewFromSpaceProps): Promise<{ jsonSchema: JsonSchemaType; view: View }> => {
+}: MakeFromSpaceProps): Promise<{ jsonSchema: JsonSchemaType; view: View }> => {
   if (!typename) {
     const [schema] = await space.db.schemaRegistry.register([createDefaultSchema()]);
     typename = schema.typename;
