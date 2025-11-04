@@ -17,7 +17,7 @@ import * as ContentBlock from './ContentBlock';
 // TODO(wittjosiah): Add read status:
 //  - Read receipts need to be per space member.
 //  - Read receipts don't need to be added to schema until they being implemented.
-const MessageSchema = Schema.Struct({
+export const Message = Schema.Struct({
   id: ObjectId,
   // TODO(dmaretskyi): Consider adding a channelId too.
   parentMessage: Schema.optional(ObjectId),
@@ -38,9 +38,7 @@ const MessageSchema = Schema.Struct({
       }),
     ),
   ),
-});
-
-export const Message = MessageSchema.pipe(
+}).pipe(
   Type.Obj({
     typename: 'dxos.org/type/Message',
     version: '0.2.0',

@@ -4,6 +4,8 @@
 
 export { createDefaultSchema } from './util';
 
+// TODO(burdon): Use type `make` constructors instead of `Obj.make`.
+
 //
 // System
 // TODO(burdon): Move from DataType namespace?
