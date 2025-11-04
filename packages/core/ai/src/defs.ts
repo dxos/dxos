@@ -12,6 +12,8 @@ export const DEFAULT_EDGE_MODELS = [
   // Deprecated?
   '@anthropic/claude-3-5-sonnet-20241022',
   '@anthropic/claude-3-7-sonnet-20250219',
+  '@anthropic/claude-4-5-sonnet',
+  '@anthropic/claude-4-5-haiku',
   '@anthropic/claude-sonnet-4-0',
   '@anthropic/claude-sonnet-4-20250514',
   '@anthropic/claude-opus-4-0',
@@ -26,7 +28,7 @@ export const DEFAULT_EDGE_MODELS = [
   '@ollama/llama-3-2-3b',
 ] as const;
 
-export const DEFAULT_EDGE_MODEL = '@anthropic/claude-3-5-haiku-latest';
+export const DEFAULT_EDGE_MODEL = '@anthropic/claude-4-5-sonnet';
 
 // TODO(burdon): Config.
 export const DEFAULT_OLLAMA_ENDPOINT = 'http://localhost:11434';
