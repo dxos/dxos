@@ -92,39 +92,6 @@ export default (context: PluginContext) =>
       },
     }),
     createResolver({
-      intent: ThreadAction.AddProposal,
-      resolve: ({ text, anchor, sender, subject }) => {
-        const space = getSpace(subject);
-        invariant(space, 'Space not found');
-
-        const subjectId = fullyQualifiedId(subject);
-        const proposal = Obj.make(DataType.Message, {
-          created: new Date().toISOString(),
-          sender,
-          blocks: [{ _tag: 'proposal', text }],
-        });
-        const thread = Thread.make({ name: 'Proposal', messages: [Ref.make(proposal)], status: 'active' });
-
-        return {
-          intents: [
-            createIntent(SpaceAction.AddObject, { object: thread, target: space, hidden: true }),
-            createIntent(SpaceAction.AddRelation, {
-              space,
-              schema: AnchoredTo,
-              source: thread,
-              target: subject,
-              fields: { anchor },
-            }),
-            createIntent(ThreadAction.Select, { current: fullyQualifiedId(thread) }),
-            createIntent(DeckAction.ChangeCompanion, {
-              primary: subjectId,
-              companion: `${subjectId}${ATTENDABLE_PATH_SEPARATOR}comments`,
-            }),
-          ],
-        };
-      },
-    }),
-    createResolver({
       intent: ThreadAction.Select,
       resolve: ({ current }) => {
         const { state } = context.getCapability(ThreadCapabilities.MutableState);

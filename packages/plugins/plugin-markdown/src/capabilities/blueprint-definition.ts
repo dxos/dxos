@@ -7,10 +7,9 @@ import { Blueprint, Template } from '@dxos/blueprints';
 import { type FunctionDefinition } from '@dxos/functions';
 import { trim } from '@dxos/util';
 
-import { diff, open } from '../functions';
+import { create, diff, open } from '../functions';
 
-const functions: FunctionDefinition[] = [diff, open];
-const tools = ['add-proposals', 'create-document'];
+const functions: FunctionDefinition[] = [create, diff, open];
 
 export const ASSISTANT_BLUEPRINT_KEY = 'dxos.org/blueprint/markdown';
 
@@ -21,10 +20,10 @@ export default (): Capability<any>[] => [
     Blueprint.make({
       key: ASSISTANT_BLUEPRINT_KEY,
       name: 'Markdown',
-      tools: Blueprint.toolDefinitions({ functions, tools }),
+      tools: Blueprint.toolDefinitions({ functions }),
       instructions: Template.make({
         source: trim`
-            You can create and update markdown documents.
+            You can create, read and diff markdown documents.
             When asked to edit or update documents return updates as a set of compact diff string pairs.
             For each diff, respond with the smallest possible matching span.
             For example:
