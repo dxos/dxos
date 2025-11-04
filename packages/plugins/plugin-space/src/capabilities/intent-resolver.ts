@@ -13,6 +13,7 @@ import {
   createResolver,
 } from '@dxos/app-framework';
 import { Filter, Obj, Query, Ref, Relation, Type } from '@dxos/echo';
+import { DatabaseService } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { Migrations } from '@dxos/migrations';
 import { ClientCapabilities } from '@dxos/plugin-client';
@@ -23,7 +24,7 @@ import { Invitation, InvitationEncoder } from '@dxos/react-client/invitations';
 import { ATTENDABLE_PATH_SEPARATOR } from '@dxos/react-ui-attention';
 import { iconValues } from '@dxos/react-ui-pickers';
 import { hues } from '@dxos/react-ui-theme';
-import { DataType, ProjectionModel, getTypenameFromQuery } from '@dxos/schema';
+import { DataType, ProjectionModel, addObject, getTypenameFromQuery } from '@dxos/schema';
 
 import {
   CREATE_OBJECT_DIALOG,
@@ -500,20 +501,13 @@ export default ({ context, observability, createInvitationUrl }: IntentResolverO
           };
         }
 
-        if (Obj.instanceOf(DataType.Collection, target)) {
-          target.objects.push(Ref.make(object));
-        } else if (isSpace(target) && hidden) {
-          space.db.add(object);
-        } else if (isSpace(target)) {
-          const collection = space.properties[DataType.Collection.typename]?.target;
-          if (Obj.instanceOf(DataType.Collection, collection)) {
-            collection.objects.push(Ref.make(object));
-          } else {
-            // TODO(wittjosiah): Can't add non-echo objects by including in a collection because of types.
-            const collection = Obj.make(DataType.Collection, { objects: [Ref.make(object)] });
-            space.properties[DataType.Collection.typename] = Ref.make(collection);
-          }
-        }
+        await Effect.gen(function* () {
+          yield* addObject({
+            object,
+            target: isSpace(target) ? undefined : target,
+            hidden,
+          });
+        }).pipe(Effect.provide(DatabaseService.layer(space.db)), Effect.runPromise);
 
         return {
           data: {
