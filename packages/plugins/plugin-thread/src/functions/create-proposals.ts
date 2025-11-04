@@ -37,13 +37,13 @@ export default defineFunction({
       computeDiffsWithCursors(accessor, _diffs),
       Array.map(
         Effect.fnUntraced(function* ({ cursor, text }) {
-          const proposal = Obj.make(DataType.Message, {
+          const proposal = Obj.make(DataType.Message.Message, {
             created: new Date().toISOString(),
             sender: { role: 'assistant' },
             blocks: [{ _tag: 'proposal', text }],
           });
           const thread = Thread.make({ name: 'Proposal', messages: [Ref.make(proposal)], status: 'active' });
-          const relation = Relation.make(DataType.AnchoredTo, {
+          const relation = Relation.make(DataType.AnchoredTo.AnchoredTo, {
             [Relation.Source]: thread,
             [Relation.Target]: object,
             anchor: cursor,

@@ -6,8 +6,7 @@ import { EditorView } from '@codemirror/view';
 import { describe, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 
-import { DataType } from '@dxos/schema';
-type ContentBlock = typeof DataType.ContentBlock;
+import { type DataType } from '@dxos/schema';
 
 import { createMessage } from '../../testing';
 
@@ -22,11 +21,15 @@ class TestDocument implements TextModel {
   }
 
   async reset(text: string) {
-    this._view.dispatch({ changes: { from: 0, to: this._view.state.doc.length, insert: text } });
+    this._view.dispatch({
+      changes: { from: 0, to: this._view.state.doc.length, insert: text },
+    });
   }
 
   async append(text: string) {
-    this._view.dispatch({ changes: { from: this._view.state.doc.length, insert: text } });
+    this._view.dispatch({
+      changes: { from: this._view.state.doc.length, insert: text },
+    });
   }
 
   updateWidget(_id: string, _value: any) {}
@@ -67,7 +70,7 @@ describe('reducers', () => {
       syncer.sync(messages);
       expect(doc.content).toEqual(['<prompt>Hello</prompt>', 'Hi there!'].join('\n'));
 
-      const block = messages[1].blocks[0] as ContentBlock.Text;
+      const block = messages[1].blocks[0] as DataType.ContentBlock.Text;
       block.text = 'Hi there! How are you?';
       block.pending = false;
       syncer.sync(messages);

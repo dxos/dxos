@@ -43,7 +43,7 @@ export const reduceMessages: Reducer<
     toolBlock?: boolean;
     assistantMessages?: DataType.Message.Message[];
   },
-  DataType.Message
+  DataType.Message.Message
 > = ({ messages, current, toolBlock, assistantMessages = [] }, message) => {
   // Treat tool calls as assistant messages.
   let assistant = message?.sender.role === 'assistant';
@@ -111,9 +111,9 @@ export const reduceMessages: Reducer<
 /**
  * Accumulate token counts from all summary blocks in pending messages.
  */
-const reduceSummary = (messages: DataType.Message.Message[]): ContentBlock.Summary => {
+const reduceSummary = (messages: DataType.Message.Message[]): DataType.ContentBlock.Summary => {
   let start: number | undefined;
-  return messages.reduce<ContentBlock.Summary>(
+  return messages.reduce<DataType.ContentBlock.Summary>(
     (acc, msg) => {
       const time = new Date(msg.created).getTime();
       if (!start) {
@@ -146,6 +146,6 @@ const reduceSummary = (messages: DataType.Message.Message[]): ContentBlock.Summa
     {
       _tag: 'summary',
       duration: 0,
-    } satisfies ContentBlock.Summary,
+    } satisfies DataType.ContentBlock.Summary,
   );
 };

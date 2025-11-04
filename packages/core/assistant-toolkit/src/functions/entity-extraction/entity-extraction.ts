@@ -25,7 +25,7 @@ export default defineFunction({
   name: 'Entity Extraction',
   description: 'Extracts entities from emails and transcripts.',
   inputSchema: Schema.Struct({
-    source: DataType.Message.annotations({ description: 'Email or transcript to extract entities from.' }),
+    source: DataType.Message.Message.annotations({ description: 'Email or transcript to extract entities from.' }),
 
     // TODO(dmaretskyi): Consider making this an array of blueprints instead.
     instructions: Schema.optional(Schema.String).annotations({ description: 'Instructions extraction process.' }),

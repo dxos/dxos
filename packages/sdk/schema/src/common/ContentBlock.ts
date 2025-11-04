@@ -153,6 +153,7 @@ export const Summary = Schema.TaggedStruct('summary', {
   }),
   ...Base.fields,
 }).pipe(Schema.mutable);
+
 export interface Summary extends Schema.Schema.Type<typeof Summary> {}
 
 /**
@@ -181,6 +182,7 @@ export const createSummaryMessage = ({ message, model, usage, toolCalls, duratio
         .join(' '),
     duration && Unit.Duration(duration),
   ].filter(isTruthy);
+
   return [message, paren(parts.join(' · '))].filter(isTruthy).join(' ');
 };
 

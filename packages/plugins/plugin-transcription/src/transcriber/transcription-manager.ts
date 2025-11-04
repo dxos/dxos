@@ -154,7 +154,7 @@ export class TranscriptionManager extends Resource {
     await this._transcriber?.close();
   }
 
-  private async _onSegments(segments: DataType.DataType.ContentBlock.Transcript[]): Promise<void> {
+  private async _onSegments(segments: DataType.ContentBlock.Transcript[]): Promise<void> {
     if (!this.isOpen || !this._queue) {
       return;
     }
