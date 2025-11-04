@@ -6,8 +6,8 @@ import * as Schema from 'effect/Schema';
 
 import { Obj, Type } from '@dxos/echo';
 
-import { Organization } from './organization';
-import { Person } from './person';
+import { Organization } from './Organization';
+import { Person } from './Person';
 
 //
 // AnchoredTo

@@ -32,7 +32,7 @@ type StoryProps = ChatThreadProps & { generator?: MessageGenerator[]; delay?: nu
 const DefaultStory = ({ generator = [], delay = 0, ...props }: StoryProps) => {
   const space = useSpace();
   const queueDxn = useMemo(() => space?.queues.create().dxn, [space]);
-  const queue = useQueue<DataType.Message>(queueDxn);
+  const queue = useQueue<DataType.Message.Message>(queueDxn);
 
   // Generate messages.
   useEffect(() => {

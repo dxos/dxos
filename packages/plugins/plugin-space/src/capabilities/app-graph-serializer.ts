@@ -4,7 +4,7 @@
 
 import { Capabilities, type PluginContext, contributes, createIntent } from '@dxos/app-framework';
 import { isSpace } from '@dxos/client/echo';
-import { Obj, Type } from '@dxos/echo';
+import { Obj } from '@dxos/echo';
 import { DataType } from '@dxos/schema';
 
 import { meta } from '../meta';

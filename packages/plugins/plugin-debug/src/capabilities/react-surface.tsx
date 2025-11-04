@@ -43,7 +43,7 @@ import {
   TracingPanel,
   WorkflowPanel,
 } from '@dxos/devtools';
-import { Obj, Type } from '@dxos/echo';
+import { Obj } from '@dxos/echo';
 import { SettingsStore } from '@dxos/local-storage';
 import { log } from '@dxos/log';
 import { ClientCapabilities } from '@dxos/plugin-client';

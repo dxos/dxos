@@ -30,7 +30,7 @@ const PREFIXED_CHUNKS_AMOUNT = 10;
  */
 const TRANSCRIBE_AFTER_CHUNKS_AMOUNT = 50;
 
-export type TranscriptMessageEnricher = (message: DataType.Message) => Promise<DataType.Message>;
+export type TranscriptMessageEnricher = (message: DataType.Message.Message) => Promise<DataType.Message.Message>;
 
 export type TranscriptionManagerOptions = {
   edgeClient: EdgeHttpClient;
@@ -51,7 +51,7 @@ export class TranscriptionManager extends Resource {
   private _identityDid?: string = undefined;
   private _mediaRecorder?: MediaStreamRecorder = undefined;
   private _transcriber?: Transcriber = undefined;
-  private _queue?: Queue<DataType.Message> = undefined;
+  private _queue?: Queue<DataType.Message.Message> = undefined;
   private _enabled = signal(false);
 
   constructor(options: TranscriptionManagerOptions) {
@@ -65,7 +65,7 @@ export class TranscriptionManager extends Resource {
     return this._enabled.value;
   }
 
-  setQueue(queue: Queue<DataType.Message>): this {
+  setQueue(queue: Queue<DataType.Message.Message>): this {
     this._queue = queue;
     return this;
   }
@@ -154,12 +154,12 @@ export class TranscriptionManager extends Resource {
     await this._transcriber?.close();
   }
 
-  private async _onSegments(segments: DataType.ContentBlock.Transcript[]): Promise<void> {
+  private async _onSegments(segments: DataType.DataType.ContentBlock.Transcript[]): Promise<void> {
     if (!this.isOpen || !this._queue) {
       return;
     }
 
-    let block = Obj.make(DataType.Message, {
+    let block = Obj.make(DataType.Message.Message, {
       created: new Date().toISOString(),
       blocks: segments,
       sender: { identityDid: this._identityDid },

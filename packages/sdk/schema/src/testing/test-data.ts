@@ -57,7 +57,7 @@ const createContact = ({
 };
 
 const createTranscriptMessage = (sender: DataType.Person.Person, blocks: string[]) => {
-  return Obj.make(DataType.Message, {
+  return Obj.make(DataType.Message.Message, {
     sender: {
       name: sender.fullName,
     },
@@ -175,13 +175,13 @@ export const createTestData = () => {
     createDocument('Composer VIP call', ''),
   ];
 
-  const transcriptWoflram: DataType.Message[] = [
+  const transcriptWoflram: DataType.Message.Message[] = [
     createTranscriptMessage(contacts.john, [
       "And what I'd like to talk today about is Steven Wolfram's concept of a computational irreducibility.",
     ]),
   ];
 
-  const transcriptJosiah: DataType.Message[] = [
+  const transcriptJosiah: DataType.Message.Message[] = [
     createTranscriptMessage(contacts.john, [
       'Today, I need to talk to Peter Van Hardenburg about the Composer VIP call.',
     ]),
@@ -189,7 +189,7 @@ export const createTestData = () => {
     createTranscriptMessage(contacts.john, ['Peter works at Ink and Switch.']),
   ];
 
-  const transcriptMessages: DataType.Message[] = [
+  const transcriptMessages: DataType.Message.Message[] = [
     ...transcriptWoflram,
     ...transcriptJosiah,
 
@@ -263,9 +263,9 @@ export const createTestData = () => {
     ]),
   ];
 
-  const emails: DataType.Message[] = [
+  const emails: DataType.Message.Message[] = [
     // Recent emails.
-    Obj.make(DataType.Message, {
+    Obj.make(DataType.Message.Message, {
       blocks: [
         {
           _tag: 'text',
@@ -277,7 +277,7 @@ export const createTestData = () => {
       properties: { subject: 'Q3 Financial Review' },
     }),
 
-    Obj.make(DataType.Message, {
+    Obj.make(DataType.Message.Message, {
       blocks: [
         {
           _tag: 'text',
@@ -289,7 +289,7 @@ export const createTestData = () => {
       properties: { subject: 'Board Feedback and Next Steps' },
     }),
 
-    Obj.make(DataType.Message, {
+    Obj.make(DataType.Message.Message, {
       blocks: [
         {
           _tag: 'text',
@@ -301,7 +301,7 @@ export const createTestData = () => {
       properties: { subject: 'New Feature Ready for Testing' },
     }),
 
-    Obj.make(DataType.Message, {
+    Obj.make(DataType.Message.Message, {
       blocks: [
         {
           _tag: 'text',
@@ -313,7 +313,7 @@ export const createTestData = () => {
       properties: { subject: 'URGENT: Bitcoin Wallet Verification Required' },
     }),
 
-    Obj.make(DataType.Message, {
+    Obj.make(DataType.Message.Message, {
       blocks: [
         {
           _tag: 'text',
@@ -325,7 +325,7 @@ export const createTestData = () => {
       properties: { subject: 'Potential Strategic Partnership' },
     }),
 
-    Obj.make(DataType.Message, {
+    Obj.make(DataType.Message.Message, {
       blocks: [
         {
           _tag: 'text',
@@ -337,7 +337,7 @@ export const createTestData = () => {
       properties: { subject: 'New Hires Starting Next Week' },
     }),
 
-    Obj.make(DataType.Message, {
+    Obj.make(DataType.Message.Message, {
       blocks: [
         {
           _tag: 'text',
@@ -349,7 +349,7 @@ export const createTestData = () => {
       properties: { subject: 'Security Incident Report' },
     }),
 
-    Obj.make(DataType.Message, {
+    Obj.make(DataType.Message.Message, {
       blocks: [
         {
           _tag: 'text',
@@ -361,7 +361,7 @@ export const createTestData = () => {
       properties: { subject: 'Acquisition Target Concerns' },
     }),
 
-    Obj.make(DataType.Message, {
+    Obj.make(DataType.Message.Message, {
       blocks: [
         {
           _tag: 'text',
@@ -373,7 +373,7 @@ export const createTestData = () => {
       properties: { subject: 'Quarterly Tax Filings' },
     }),
 
-    Obj.make(DataType.Message, {
+    Obj.make(DataType.Message.Message, {
       blocks: [
         {
           _tag: 'text',
@@ -385,7 +385,7 @@ export const createTestData = () => {
       properties: { subject: 'Speaking Opportunity: International Tech Summit' },
     }),
 
-    Obj.make(DataType.Message, {
+    Obj.make(DataType.Message.Message, {
       blocks: [
         {
           _tag: 'text',
@@ -397,7 +397,7 @@ export const createTestData = () => {
       properties: { subject: 'MANDATORY: Security Update Required' },
     }),
 
-    Obj.make(DataType.Message, {
+    Obj.make(DataType.Message.Message, {
       blocks: [
         {
           _tag: 'text',
@@ -409,7 +409,7 @@ export const createTestData = () => {
       properties: { subject: 'Q2 Customer Satisfaction Results' },
     }),
 
-    Obj.make(DataType.Message, {
+    Obj.make(DataType.Message.Message, {
       blocks: [
         {
           _tag: 'text',
@@ -421,7 +421,7 @@ export const createTestData = () => {
       properties: { subject: 'Annual Company Retreat Planning' },
     }),
 
-    Obj.make(DataType.Message, {
+    Obj.make(DataType.Message.Message, {
       blocks: [
         {
           _tag: 'text',
@@ -433,7 +433,7 @@ export const createTestData = () => {
       properties: { subject: 'Competitor Price Change - Strategic Response Needed' },
     }),
 
-    Obj.make(DataType.Message, {
+    Obj.make(DataType.Message.Message, {
       blocks: [
         {
           _tag: 'text',
@@ -445,7 +445,7 @@ export const createTestData = () => {
       properties: { subject: 'Privacy Policy Update - Final Review' },
     }),
 
-    Obj.make(DataType.Message, {
+    Obj.make(DataType.Message.Message, {
       blocks: [
         {
           _tag: 'text',
@@ -457,7 +457,7 @@ export const createTestData = () => {
       properties: { subject: 'Series C Funding Update - Oversubscribed' },
     }),
 
-    Obj.make(DataType.Message, {
+    Obj.make(DataType.Message.Message, {
       blocks: [
         {
           _tag: 'text',
@@ -469,7 +469,7 @@ export const createTestData = () => {
       properties: { subject: 'Product Roadmap Finalized' },
     }),
 
-    Obj.make(DataType.Message, {
+    Obj.make(DataType.Message.Message, {
       blocks: [
         {
           _tag: 'text',
@@ -481,7 +481,7 @@ export const createTestData = () => {
       properties: { subject: 'CONFIDENTIAL: Acquisition Offer Received' },
     }),
 
-    Obj.make(DataType.Message, {
+    Obj.make(DataType.Message.Message, {
       blocks: [
         {
           _tag: 'text',
@@ -493,7 +493,7 @@ export const createTestData = () => {
       properties: { subject: 'Annual Audit Preparation' },
     }),
 
-    Obj.make(DataType.Message, {
+    Obj.make(DataType.Message.Message, {
       blocks: [
         {
           _tag: 'text',

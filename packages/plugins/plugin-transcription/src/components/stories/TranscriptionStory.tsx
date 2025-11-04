@@ -15,7 +15,7 @@ import { type SerializationModel } from '../../model';
 import { TranscriptView } from '../Transcript';
 
 export const TranscriptionStory: FC<{
-  model: SerializationModel<DataType.Message>;
+  model: SerializationModel<DataType.Message.Message>;
   disabled?: boolean;
   running: boolean;
   onRunningChange: Dispatch<SetStateAction<boolean>>;

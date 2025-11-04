@@ -65,7 +65,7 @@ const meta = {
             DataType.Organization.Organization,
             DataType.Task.Task,
             DataType.Person.Person,
-            DataType.Message,
+            DataType.Message.Message,
           ],
           onClientInitialized: async ({ client }) => {
             await client.halo.createIdentity();
@@ -115,8 +115,10 @@ const meta = {
             const messageQueue = space.queues.create();
             const messageView = DataType.View.make({
               name: 'Messages',
-              query: Query.select(Filter.type(DataType.Message)).options({ queues: [messageQueue.dxn.toString()] }),
-              jsonSchema: Type.toJsonSchema(DataType.Message),
+              query: Query.select(Filter.type(DataType.Message.Message)).options({
+                queues: [messageQueue.dxn.toString()],
+              }),
+              jsonSchema: Type.toJsonSchema(DataType.Message.Message),
               presentation: project,
             });
 
@@ -183,7 +185,7 @@ const meta = {
 
             // Generate sample Messages
             const messages = Array.from({ length: 6 }).map(() => {
-              const message = Obj.make(DataType.Message, {
+              const message = Obj.make(DataType.Message.Message, {
                 created: faker.date.recent().toISOString(),
                 sender: { role: 'user' },
                 blocks: [

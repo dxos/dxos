@@ -88,7 +88,7 @@ type EntityExtractionEnricherFactoryOptions = {
 const _createEntityExtractionEnricher = ({ contextTypes, space }: EntityExtractionEnricherFactoryOptions) => {
   const executor = new FunctionExecutor(new ServiceContainer());
 
-  return async (message: DataType.Message) => {
+  return async (message: DataType.Message.Message) => {
     const { objects } = await space.db
       .query(Query.select(Filter.or(...contextTypes.map((schema) => Filter.type(schema as Schema.Schema<Obj.Any>)))))
       .run();

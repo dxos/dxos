@@ -8,8 +8,8 @@ import { Obj, Type } from '@dxos/echo';
 import { GeneratorAnnotation, ObjectId, TypedObject } from '@dxos/echo/internal';
 import { defineObjectMigration } from '@dxos/echo-db';
 
-import { Actor, type ActorRole } from './actor';
-import * as ContentBlock from './content-block';
+import * as Actor from './Actor';
+import * as ContentBlock from './ContentBlock';
 
 /**
  * Message.
@@ -19,20 +19,17 @@ import * as ContentBlock from './content-block';
 //  - Read receipts don't need to be added to schema until they being implemented.
 const MessageSchema = Schema.Struct({
   id: ObjectId,
-
-  parentMessage: Schema.optional(ObjectId),
   // TODO(dmaretskyi): Consider adding a channelId too.
-
+  parentMessage: Schema.optional(ObjectId),
   created: Schema.String.pipe(
     Schema.annotations({ description: 'ISO date string when the message was sent.' }),
     GeneratorAnnotation.set('date.iso8601'),
   ),
-  sender: Schema.mutable(Actor).pipe(Schema.annotations({ description: 'Identity of the message sender.' })),
+  sender: Schema.mutable(Actor.Actor).pipe(Schema.annotations({ description: 'Identity of the message sender.' })),
   blocks: Schema.mutable(Schema.Array(ContentBlock.Any)).annotations({
     description: 'Contents of the message.',
     default: [],
   }),
-
   // TODO(dmaretskyi): Add tool call ID here.
   properties: Schema.optional(
     Schema.mutable(
@@ -52,7 +49,7 @@ export const Message = MessageSchema.pipe(
 
 export interface Message extends Schema.Schema.Type<typeof Message> {}
 
-export const makeMessage = (sender: Actor | ActorRole, blocks: ContentBlock.Any[]) => {
+export const makeMessage = (sender: Actor.Actor | Actor.Role, blocks: ContentBlock.Any[]) => {
   return Obj.make(Message, {
     created: new Date().toISOString(),
     sender: typeof sender === 'string' ? { role: sender } : sender,
@@ -72,7 +69,7 @@ export enum MessageV1State {
 export class MessageV1 extends TypedObject({ typename: 'dxos.org/type/Message', version: '0.1.0' })({
   timestamp: Schema.String,
   state: Schema.optional(Schema.Enums(MessageV1State)),
-  sender: Actor,
+  sender: Actor.Actor,
   text: Schema.String,
   parts: Schema.optional(Schema.mutable(Schema.Array(Type.Ref(Type.Expando)))),
   properties: Schema.optional(Schema.mutable(Schema.Record({ key: Schema.String, value: Schema.Any }))),

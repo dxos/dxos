@@ -3,7 +3,7 @@
 //
 
 import { Capabilities, LayoutAction, type PluginContext, contributes, createIntent } from '@dxos/app-framework';
-import { Filter, Query, Type } from '@dxos/echo';
+import { Query } from '@dxos/echo';
 import { SPACES, SpaceCapabilities, SpaceEvents } from '@dxos/plugin-space';
 
 import README_CONTENT from '../content/README.md?raw';
@@ -36,7 +36,7 @@ export default async (context: PluginContext) => {
     Ref.make(
       Obj.make(DataType.Collection.QueryCollection, {
         // NOTE: This is specifically Filter.typename due to current limitations in query collection parsing.
-        query: Query.select(Filter.typename(DataType.StoredSchema.typename)).ast,
+        query: Query.select(DataType.StoredSchema.typename).ast,
       }),
     ),
   );

@@ -80,7 +80,7 @@ export namespace ThreadAction {
     input: Schema.Struct({
       text: Schema.String,
       anchor: Schema.String,
-      sender: DataType.Actor,
+      sender: DataType.Actor.Actor,
       subject: EchoObjectSchema,
     }),
     output: Schema.Void,
@@ -90,7 +90,7 @@ export namespace ThreadAction {
     input: Schema.Struct({
       subject: EchoObjectSchema,
       anchor: AnchoredTo,
-      sender: DataType.Actor,
+      sender: DataType.Actor.Actor,
       text: Schema.String,
     }),
     output: Schema.Void,
@@ -101,7 +101,7 @@ export namespace ThreadAction {
       anchor: AnchoredTo,
       subject: EchoObjectSchema,
       messageId: Schema.String,
-      message: Schema.optional(DataType.Message),
+      message: Schema.optional(DataType.Message.Message),
       messageIndex: Schema.optional(Schema.Number),
     }),
     output: Schema.Void,

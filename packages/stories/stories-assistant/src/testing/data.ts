@@ -3,7 +3,7 @@
 //
 
 import { type Live, type Space } from '@dxos/client/echo';
-import { Obj, Ref, Relation, Type } from '@dxos/echo';
+import { Obj, Ref, Relation, type Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { DataType } from '@dxos/schema';
 
@@ -134,9 +134,9 @@ export const addTestData = async (space: Space): Promise<void> => {
   }
 };
 
-export const createTestTranscription = (): DataType.Message[] => {
+export const createTestTranscription = (): DataType.Message.Message[] => {
   const timeInterval = 1_000;
-  const transcription: DataType.Message[] = [
+  const transcription: DataType.Message.Message[] = [
     {
       text: 'Hey everyone, glad we could all connect today. I was thinking we could discuss where AI might be heading in the next decade.',
       sender: 'Mykola',
@@ -175,7 +175,7 @@ export const createTestTranscription = (): DataType.Message[] => {
     },
   ].map((message, index, array) => {
     const created = new Date(Date.now() - (array.length - index) * timeInterval);
-    return Obj.make(DataType.Message, {
+    return Obj.make(DataType.Message.Message, {
       created: created.toISOString(),
       blocks: [{ _tag: 'transcript', started: created.toISOString(), text: message.text }],
       sender: { identityDid: message.sender },
@@ -186,9 +186,9 @@ export const createTestTranscription = (): DataType.Message[] => {
 };
 
 // TODO(wittjosiah): Find way to use data generator to generate substantive messages that could be summarized.
-export const createTestMailbox = (contacts?: DataType.Person.Person[]): DataType.Message[] => {
+export const createTestMailbox = (contacts?: DataType.Person.Person[]): DataType.Message.Message[] => {
   const timeInterval = 1000;
-  const messages: DataType.Message[] = [
+  const messages: DataType.Message.Message[] = [
     {
       text: 'Subject: Project Kickoff\n\nHi team,\n\nWe are excited to announce the kickoff of the Apollo project. Please review the attached roadmap and be prepared for our first meeting on Monday.\n\nBest,\nAlice',
       sender: contacts?.[0] ?? 'alice.johnson@acme-corp.com',
@@ -236,7 +236,7 @@ export const createTestMailbox = (contacts?: DataType.Person.Person[]): DataType
     },
   ].map((message, index, array) => {
     const created = new Date(Date.now() - (array.length - index) * timeInterval);
-    return Obj.make(DataType.Message, {
+    return Obj.make(DataType.Message.Message, {
       created: created.toISOString(),
       blocks: [{ _tag: 'text', text: message.text }],
       sender: typeof message.sender === 'string' ? { email: message.sender } : { contact: Ref.make(message.sender) },

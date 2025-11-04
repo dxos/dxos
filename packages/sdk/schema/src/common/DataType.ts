@@ -7,43 +7,47 @@
 // TODO(burdon): Move from DataType namespace?
 //
 
+// TODO(burdon): Move out of here (internal only?)
 export { StoredSchema } from '@dxos/echo/internal';
 
-export * as Collection from './collection';
-export * as View from './view';
-export * as Text from './text';
+export * as Collection from './Collection';
+export * as View from './View';
+export * as Text from './Text';
 
 //
 // Common structs
 //
 
-export { Actor, ActorRole, ActorRoles } from './actor';
-export * as ContentBlock from './content-block';
-export { PostalAddress } from './postal-address';
+export * as Actor from './Actor';
+export * as ContentBlock from './ContentBlock';
+export * as Geo from './Geo';
 
 //
-// Common object and relation types
+// Common object types
 //
 
-// TODO(burdon): Message.Message
-export { Message } from './message';
+export * as AccessToken from './AccessToken';
+export * as Event from './Event';
+export * as Message from './Message';
+export * as Organization from './Organization';
+export * as Person from './Person';
+export * as Project from './Project';
+export * as Task from './Task';
 
-export * as AccessToken from './access-token';
-export * as Event from './event';
-export * as Organization from './organization';
-export * as Person from './person';
-export * as Project from './project';
-export * as Task from './task';
-export * as AnchoredTo from './relations';
-export * as Employer from './relations';
-export * as HasConnection from './relations';
-export * as HasRelationship from './relations';
-export * as HasSubject from './relations';
+//
+// Common relation types
+//
+
+export * as AnchoredTo from './AnchoredTo';
+export * as Employer from './Employer';
+export * as HasConnection from './HasConnection';
+export * as HasRelationship from './HasRelationship';
+export * as HasSubject from './HasSubject';
 
 //
 // Deprecated
 //
 
-export { MessageV1, MessageV1ToV2 } from './message';
-export { LegacyOrganization } from './organization';
-export { LegacyPerson } from './person';
+export { MessageV1, MessageV1ToV2 } from './Message';
+export { LegacyOrganization } from './Organization';
+export { LegacyPerson } from './Person';

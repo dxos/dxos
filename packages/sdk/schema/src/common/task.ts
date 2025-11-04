@@ -15,8 +15,8 @@ import {
 
 import { ItemAnnotation } from '../annotations';
 
-import { Person as PersonSchema } from './person';
-import { Project as ProjectSchema } from './project';
+import * as Person from './Person';
+import * as Project from './Project';
 
 /**
  * Task schema.
@@ -73,7 +73,7 @@ const TaskSchema = Schema.Struct({
       }),
     ),
   ),
-  assigned: Schema.optional(Type.Ref(PersonSchema).annotations({ title: 'Assigned' })),
+  assigned: Schema.optional(Type.Ref(Person.Person).annotations({ title: 'Assigned' })),
   estimate: Schema.optional(Schema.Number.annotations({ title: 'Estimate' })),
   description: Schema.optional(
     Schema.String.annotations({ title: 'Description' }).pipe(
@@ -83,7 +83,7 @@ const TaskSchema = Schema.Struct({
       }),
     ),
   ),
-  project: Schema.optional(Type.Ref(ProjectSchema).annotations({ title: 'Project' })),
+  project: Schema.optional(Type.Ref(Project.Project).annotations({ title: 'Project' })),
   // TODO(burdon): Created date metadata.
   // due: Date,
   // TODO(burdon): Generic tags.

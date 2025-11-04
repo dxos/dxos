@@ -75,7 +75,7 @@ const DefaultStory = ({
   // Queue.
   // TODO(dmaretskyi): Use space.queues.create() instead.
   const queueDxn = useMemo(() => createQueueDXN(), []);
-  const queue = useMemo(() => new MemoryQueue<DataType.Message>(queueDxn), [queueDxn]);
+  const queue = useMemo(() => new MemoryQueue<DataType.Message.Message>(queueDxn), [queueDxn]);
   const model = useQueueModelAdapter(renderByline([]), queue);
   const space = useSpace();
 
@@ -132,7 +132,7 @@ const DefaultStory = ({
   // Transcriber.
   const handleSegments = useCallback<TranscriberParams['onSegments']>(
     async (blocks) => {
-      const message = Obj.make(DataType.Message, {
+      const message = Obj.make(DataType.Message.Message, {
         sender: { name: 'You' },
         created: new Date().toISOString(),
         blocks,

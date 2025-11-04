@@ -713,7 +713,9 @@ export default (context: PluginContext) => {
         Rx.make((get) =>
           Function.pipe(
             get(node),
-            Option.flatMap((node) => (Obj.instanceOf(DataType.View.View, node.data) ? Option.some(node) : Option.none())),
+            Option.flatMap((node) =>
+              Obj.instanceOf(DataType.View.View, node.data) ? Option.some(node) : Option.none(),
+            ),
             Option.map((node) => [
               {
                 id: [node.id, 'selected-objects'].join(ATTENDABLE_PATH_SEPARATOR),

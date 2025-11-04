@@ -6,7 +6,8 @@ import { EditorView } from '@codemirror/view';
 import { describe, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 
-import { type ContentBlock } from '@dxos/schema';
+import { DataType } from '@dxos/schema';
+type ContentBlock = typeof DataType.ContentBlock;
 
 import { createMessage } from '../../testing';
 

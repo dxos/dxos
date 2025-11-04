@@ -15,7 +15,7 @@ import {
 } from '@dxos/react-ui-components';
 import { type XmlWidgetProps, type XmlWidgetRegistry, getXmlTextChild } from '@dxos/react-ui-editor';
 import { Json } from '@dxos/react-ui-syntax-highlighter';
-import { ContentBlock, type DataType } from '@dxos/schema';
+import { type DataType } from '@dxos/schema';
 
 import { ToolBlock } from '../ToolBlock';
 
@@ -110,7 +110,7 @@ export const componentRegistry: XmlWidgetRegistry = {
  */
 export const blockToMarkdown: BlockRenderer = (
   context: MessageThreadContext,
-  message: DataType.Message,
+  message: DataType.Message.Message,
   block: ContentBlock.Any,
 ) => {
   let str = blockToMarkdownImpl(context, message, block);
@@ -121,7 +121,7 @@ export const blockToMarkdown: BlockRenderer = (
   return str;
 };
 
-const blockToMarkdownImpl = (context: MessageThreadContext, message: DataType.Message, block: ContentBlock.Any) => {
+const blockToMarkdownImpl = (context: MessageThreadContext, message: DataType.Message.Message, block: ContentBlock.Any) => {
   log('blockToMarkdown', { block: JSON.stringify(block) });
   switch (block._tag) {
     case 'text': {

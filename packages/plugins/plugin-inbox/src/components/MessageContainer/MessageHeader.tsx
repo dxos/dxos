@@ -14,7 +14,7 @@ import { formatDateTime } from '../../util';
 export type ViewMode = 'plain' | 'enriched' | 'plain-only';
 
 export type MessageHeaderProps = ThemedClassName<{
-  message: DataType.Message;
+  message: DataType.Message.Message;
   contact?: string; // TODO(burdon): Type for DXN?
   viewMode?: ViewMode;
 }>;

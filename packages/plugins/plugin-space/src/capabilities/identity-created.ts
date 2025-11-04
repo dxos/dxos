@@ -3,7 +3,7 @@
 //
 
 import { Capabilities, type PluginContext, contributes } from '@dxos/app-framework';
-import { Obj, Ref, Type } from '@dxos/echo';
+import { Obj, Ref } from '@dxos/echo';
 import { Migrations } from '@dxos/migrations';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { DataType } from '@dxos/schema';

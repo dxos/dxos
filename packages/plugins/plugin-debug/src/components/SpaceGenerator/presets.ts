@@ -179,11 +179,11 @@ export const generator = () => ({
           const mailboxView = DataType.View.make({
             name: 'Mailbox',
             query: Query.select(
-              Filter.type(DataType.Message, { properties: { labels: Filter.contains('investor') } }),
+              Filter.type(DataType.Message.Message, { properties: { labels: Filter.contains('investor') } }),
             ).options({
               queues: [mailbox.queue.dxn.toString()],
             }),
-            jsonSchema: Type.toJsonSchema(DataType.Message),
+            jsonSchema: Type.toJsonSchema(DataType.Message.Message),
             presentation: Obj.make(DataType.Collection.Collection, { objects: [] }),
           });
           const contactsView = DataType.View.make({

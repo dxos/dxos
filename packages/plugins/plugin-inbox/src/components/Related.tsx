@@ -46,8 +46,8 @@ export const RelatedContacts = ({ contacts, onContactClick }: RelatedContactsPro
 };
 
 export type RelatedMessagesProps = {
-  messages: DataType.Message[];
-  onMessageClick?: (message: DataType.Message) => void;
+  messages: DataType.Message.Message[];
+  onMessageClick?: (message: DataType.Message.Message) => void;
 };
 
 export const RelatedMessages = ({ messages, onMessageClick }: RelatedMessagesProps) => {

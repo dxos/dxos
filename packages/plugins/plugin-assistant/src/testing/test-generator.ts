@@ -11,8 +11,8 @@ import { renderObjectLink } from '@dxos/react-ui-components';
 import { type ContentBlock, DataType } from '@dxos/schema';
 import { trim } from '@dxos/util';
 
-export const createMessage = (role: DataType.ActorRole, blocks: ContentBlock.Any[]): DataType.Message => {
-  return Obj.make(DataType.Message, {
+export const createMessage = (role: DataType.Actor.Role, blocks: ContentBlock.Any[]): DataType.Message.Message => {
+  return Obj.make(DataType.Message.Message, {
     created: new Date().toISOString(),
     sender: { role },
     blocks,

@@ -78,7 +78,7 @@ export default (context: PluginContext) =>
         const enabled = !!transcriptionEnabled;
         if (space && transcriptDxn) {
           // NOTE: Must set queue before enabling transcription.
-          const queue = space.queues.get<DataType.Message>(Type.DXN.parse(transcriptDxn));
+          const queue = space.queues.get<DataType.Message.Message>(Type.DXN.parse(transcriptDxn));
           state.transcriptionManager?.setQueue(queue);
         }
 

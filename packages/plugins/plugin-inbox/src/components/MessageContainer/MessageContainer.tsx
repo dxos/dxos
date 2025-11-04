@@ -22,7 +22,7 @@ import { useMessageToolbarActions } from './toolbar';
 
 export type MessageContainerProps = {
   space?: Space;
-  message?: DataType.Message;
+  message?: DataType.Message.Message;
   inMailbox: Mailbox.Mailbox;
   role?: string;
 };

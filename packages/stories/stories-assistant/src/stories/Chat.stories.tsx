@@ -364,7 +364,7 @@ export const WithMail: Story = {
     types: [Mailbox.Mailbox],
     onInit: async ({ space }) => {
       const mailbox = space.db.add(Mailbox.make({ name: 'Mailbox', space }));
-      const queue = space.queues.get<DataType.Message>(mailbox.queue.dxn);
+      const queue = space.queues.get<DataType.Message.Message>(mailbox.queue.dxn);
       const messages = createTestMailbox();
       await queue.append(messages);
     },
@@ -722,7 +722,7 @@ export const WithProject: Story = {
       DataType.Employer.Employer,
       DataType.HasConnection.HasConnection,
       DataType.HasSubject.HasSubject,
-      DataType.Message,
+      DataType.Message.Message,
       DataType.Organization.Organization,
       DataType.Person.Person,
       DataType.Project.Project,
@@ -742,7 +742,7 @@ export const WithProject: Story = {
       });
 
       const mailbox = space.db.add(Mailbox.make({ name: 'Mailbox', space }));
-      const queue = space.queues.get<DataType.Message>(mailbox.queue.dxn);
+      const queue = space.queues.get<DataType.Message.Message>(mailbox.queue.dxn);
       const messages = createTestMailbox(people);
       await queue.append(messages);
 
@@ -830,12 +830,12 @@ export const WithProject: Story = {
 
       const mailboxView = DataType.View.make({
         name: 'Mailbox',
-        query: Query.select(Filter.type(DataType.Message))
+        query: Query.select(Filter.type(DataType.Message.Message))
           .select(Filter.tag(tagDxn))
           .options({
             queues: [mailbox.queue.dxn.toString()],
           }),
-        jsonSchema: Type.toJsonSchema(DataType.Message),
+        jsonSchema: Type.toJsonSchema(DataType.Message.Message),
         presentation: Obj.make(DataType.Collection.Collection, { objects: [] }),
       });
       const contactsView = DataType.View.make({

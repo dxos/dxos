@@ -48,7 +48,12 @@ const TestLayer = Layer.mergeAll(
       TestDatabaseLayer({
         spaceKey: 'fixed',
         indexing: { vector: true },
-        types: [Blueprint.Blueprint, DataType.Message, DataType.Person.Person, DataType.Organization.Organization],
+        types: [
+          Blueprint.Blueprint,
+          DataType.Message.Message,
+          DataType.Person.Person,
+          DataType.Organization.Organization,
+        ],
       }),
       CredentialsService.configuredLayer([]),
       TracingService.layerNoop,
@@ -69,7 +74,7 @@ describe('AssistantToolkit', () => {
     Effect.fnUntraced(
       function* (_) {
         const { db } = yield* DatabaseService;
-        const queue = yield* QueueService.createQueue<DataType.Message | ContextBinding>();
+        const queue = yield* QueueService.createQueue<DataType.Message.Message | ContextBinding>();
         const conversation = yield* acquireReleaseResource(() => new AiConversation(queue));
         const observer = GenerationObserver.fromPrinter(new ConsolePrinter());
         yield* Effect.promise(() => conversation.context.bind({ blueprints: [Ref.make(db.add(blueprint))] }));

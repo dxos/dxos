@@ -70,7 +70,7 @@ export type TranscriberParams = {
    * Callback to handle the transcribed segments, after all segment transformers are applied.
    * @param segments - The transcribed segments.
    */
-  onSegments: (segments: DataType.ContentBlock.Transcript[]) => Promise<void>;
+  onSegments: (segments: DataType.DataType.ContentBlock.Transcript[]) => Promise<void>;
 };
 
 /**
@@ -221,7 +221,7 @@ export class Transcriber extends Resource {
     return segments;
   }
 
-  private _alignSegments(segments: WhisperSegment[], originalChunks: AudioChunk[]): DataType.ContentBlock.Transcript[] {
+  private _alignSegments(segments: WhisperSegment[], originalChunks: AudioChunk[]): DataType.DataType.ContentBlock.Transcript[] {
     // Absolute zero for all relative timestamps in the segments.
     const zeroTimestamp = originalChunks.at(0)!.timestamp;
 

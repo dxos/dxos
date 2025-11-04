@@ -55,10 +55,10 @@ export const MailboxContainer = ({ mailbox, attendableId, role, filter: filterPa
   const [filterText, setFilterText] = useState<string>(filterParam ?? '');
   // TODO(burdon): Query not supported on queues.
   //  Query.select(filter ?? Filter.everything()).orderBy(Order.property('createdAt', 'desc')),
-  const messages: DataType.Message[] = useQuery(
+  const messages: DataType.Message.Message[] = useQuery(
     mailbox.queue.target,
     filter ?? Filter.everything(),
-  ) as DataType.Message[];
+  ) as DataType.Message.Message[];
   const sortedMessages = useMemo(
     () => [...messages].sort(sortByCreated(sortDescending.value)),
     [messages, sortDescending.value],

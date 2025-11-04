@@ -96,7 +96,12 @@ const meta = {
     withPluginManager({
       plugins: [
         ClientPlugin({
-          types: [Mailbox.Mailbox, DataType.Message, DataType.Person.Person, DataType.Organization.Organization],
+          types: [
+            Mailbox.Mailbox,
+            DataType.Message.Message,
+            DataType.Person.Person,
+            DataType.Organization.Organization,
+          ],
           onClientInitialized: async ({ client }) => {
             await client.halo.createIdentity();
             await client.spaces.waitUntilReady();
@@ -105,7 +110,7 @@ const meta = {
             const mailbox = Mailbox.make({ space });
             const { emails } = await seedTestData(space);
             const queueDxn = mailbox.queue.dxn;
-            const queue = space.queues.get<DataType.Message>(queueDxn);
+            const queue = space.queues.get<DataType.Message.Message>(queueDxn);
             await queue.append(emails);
             space.db.add(mailbox);
           },

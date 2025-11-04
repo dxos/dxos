@@ -13,7 +13,7 @@ type ProcessEmailResult = {
 };
 
 type ProcessEmailParams = {
-  email: DataType.Message;
+  email: DataType.Message.Message;
   context: {
     labels: Testing.Label[];
     documents?: Testing.DocumentType[];
@@ -47,13 +47,13 @@ export const processEmail = async ({ email, context }: ProcessEmailParams): Prom
     ${JSON.stringify([...(context.contacts ?? []), ...(context.documents ?? [])])}
   `;
 
-  const messages: DataType.Message[] = [];
+  const messages: DataType.Message.Message[] = [];
   // const messages = await new MixedStreamParser().parse(
   //   await aiClient.execStream({
   //     model: '@anthropic/claude-3-5-sonnet-20241022',
   //     systemPrompt,
   //     history: [
-  //       Obj.make(DataType.Message, {
+  //       Obj.make(DataType.Message.Message, {
   //         created: new Date().toISOString(),
   //         sender: { role: 'user' },
   //         blocks: [

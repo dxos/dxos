@@ -15,7 +15,7 @@ import {
   createSurface,
   useIntentDispatcher,
 } from '@dxos/app-framework';
-import { Obj, Type } from '@dxos/echo';
+import { Obj } from '@dxos/echo';
 import { AttentionAction } from '@dxos/plugin-attention/types';
 import { ATTENDABLE_PATH_SEPARATOR, DeckAction } from '@dxos/plugin-deck/types';
 import { Filter, fullyQualifiedId, getSpace, useQuery, useQueue, useSpace } from '@dxos/react-client/echo';
@@ -57,9 +57,9 @@ export default () =>
     createSurface({
       id: `${meta.id}/message`,
       role: ['article', 'section'],
-      filter: (data): data is { companionTo: Mailbox.Mailbox; subject: DataType.Message | 'message' } =>
+      filter: (data): data is { companionTo: Mailbox.Mailbox; subject: DataType.Message.Message | 'message' } =>
         Obj.instanceOf(Mailbox.Mailbox, data.companionTo) &&
-        (data.subject === 'message' || Obj.instanceOf(DataType.Message, data.subject)),
+        (data.subject === 'message' || Obj.instanceOf(DataType.Message.Message, data.subject)),
       component: ({ data: { companionTo, subject: message }, role }) => {
         const space = getSpace(companionTo);
         return (
@@ -81,7 +81,8 @@ export default () =>
     createSurface({
       id: `${meta.id}/message-card`,
       role: ['card', 'card--intrinsic', 'card--extrinsic', 'card--popover', 'card--transclusion'],
-      filter: (data): data is { subject: DataType.Message } => Obj.instanceOf(DataType.Message, data?.subject),
+      filter: (data): data is { subject: DataType.Message.Message } =>
+        Obj.instanceOf(DataType.Message.Message, data?.subject),
       component: ({ data: { subject: message }, role }) => <MessageCard message={message} role={role} />,
     }),
     createSurface({
@@ -114,7 +115,7 @@ export default () =>
         const { dispatchPromise: dispatch } = useIntentDispatcher();
         const space = useSpace();
         const [mailbox] = useQuery(space, Filter.type(Mailbox.Mailbox));
-        const queue = useQueue<DataType.Message>(mailbox?.queue.dxn);
+        const queue = useQueue<DataType.Message.Message>(mailbox?.queue.dxn);
         const messages = queue?.objects ?? [];
         const related = messages
           .filter(
@@ -127,7 +128,7 @@ export default () =>
           .slice(0, 5);
 
         const handleMessageClick = useCallback(
-          (message: DataType.Message) => {
+          (message: DataType.Message.Message) => {
             void dispatch(
               Function.pipe(
                 createIntent(LayoutAction.UpdatePopover, {

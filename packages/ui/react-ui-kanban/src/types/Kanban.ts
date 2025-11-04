@@ -52,7 +52,9 @@ type MakeViewProps = Omit<CreateViewFromSpaceProps, 'presentation'>;
 /**
  * Make a kanban as a view of a data set.
  */
-export const makeView = async (props: MakeViewProps): Promise<{ jsonSchema: JsonSchemaType; view: DataType.View.View }> => {
+export const makeView = async (
+  props: MakeViewProps,
+): Promise<{ jsonSchema: JsonSchemaType; view: DataType.View.View }> => {
   const kanban = Obj.make(Kanban, {});
   return createViewFromSpace({ ...props, presentation: kanban });
 };

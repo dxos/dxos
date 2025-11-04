@@ -45,7 +45,7 @@ const TestLayer = Layer.mergeAll(
         indexing: { vector: true },
         types: [
           Blueprint.Blueprint,
-          DataType.Message,
+          DataType.Message.Message,
           DataType.Person.Person,
           DataType.Organization.Organization,
           ResearchGraph,
@@ -63,7 +63,7 @@ describe('Entity extraction', () => {
     Effect.fnUntraced(
       function* (_) {
         const email = yield* DatabaseService.add(
-          Obj.make(DataType.Message, {
+          Obj.make(DataType.Message.Message, {
             [Obj.Meta]: {
               tags: ['important'],
             },

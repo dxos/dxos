@@ -5,7 +5,7 @@
 import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 
-import { Obj, Type } from '@dxos/echo';
+import { Obj } from '@dxos/echo';
 import { DataType } from '@dxos/schema';
 
 import { ClientService } from '../../../services';

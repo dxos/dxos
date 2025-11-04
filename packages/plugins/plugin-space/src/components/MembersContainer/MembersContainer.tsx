@@ -6,7 +6,6 @@ import React, { type Dispatch, type SetStateAction, useCallback, useMemo, useSta
 import { QR } from 'react-qr-rounded';
 
 import { createIntent, useIntentDispatcher } from '@dxos/app-framework';
-import { Type } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { useConfig } from '@dxos/react-client';
 import { type Space, fullyQualifiedId, useSpaceInvitations } from '@dxos/react-client/echo';

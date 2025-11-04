@@ -222,7 +222,7 @@ export const registry: Record<NodeType, Executable> = {
     input: VoidInput,
     output: Schema.Struct({
       id: ObjectId,
-      messages: Schema.Array(DataType.Message),
+      messages: Schema.Array(DataType.Message.Message),
     }),
   }),
 

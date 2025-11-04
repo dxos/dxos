@@ -6,15 +6,15 @@ import * as Schema from 'effect/Schema';
 
 import { Obj, Type } from '@dxos/echo';
 
-import { Actor } from './actor';
+import * as Actor from './Actor';
 
 /**
  * https://schema.org/Event
  */
 export const Event = Schema.Struct({
   name: Schema.optional(Schema.String),
-  owner: Actor,
-  attendees: Schema.mutable(Schema.Array(Actor)),
+  owner: Actor.Actor,
+  attendees: Schema.mutable(Schema.Array(Actor.Actor)),
   startDate: Schema.String, // TODO(burdon): Date.
   endDate: Schema.String,
   links: Schema.mutable(Schema.Array(Type.Ref(Type.Expando))),

@@ -4,7 +4,6 @@
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 
-import { Type } from '@dxos/echo';
 import { TestObjectGenerator } from '@dxos/echo-generator';
 import { faker } from '@dxos/random';
 import { withTheme } from '@dxos/react-ui/testing';

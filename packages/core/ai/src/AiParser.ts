@@ -13,7 +13,9 @@ import { Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { type ContentBlock } from '@dxos/schema';
+import { type DataType } from '@dxos/schema';
+
+type ContentBlock = typeof DataType.ContentBlock;
 
 import { type StreamBlock, StreamTransform } from './parser';
 
@@ -67,12 +69,12 @@ export interface ParseResponseCallbacks {
    *  2. { pending: true, text: "Hello, I am a"}
    *  3. { pending: false, text: "Hello, I am a helpful assistant!"}
    */
-  onBlock: (block: ContentBlock.Any) => Effect.Effect<void>;
+  onBlock: (block: DataType.ContentBlock.Any) => Effect.Effect<void>;
 
   /**
    * Called when the stream ends.
    */
-  onEnd: (block: ContentBlock.Summary) => Effect.Effect<void>;
+  onEnd: (block: DataType.ContentBlock.Summary) => Effect.Effect<void>;
 }
 
 export interface ParseResponseOptions extends ParseResponseCallbacks {
@@ -94,7 +96,7 @@ export const parseResponse =
     onBlock = Function.constant(Effect.void),
     onEnd = Function.constant(Effect.void),
   }: Partial<ParseResponseOptions> = {}) =>
-  <E, R>(input: Stream.Stream<Response.StreamPart<any>, E, R>): Stream.Stream<ContentBlock.Any, E, R> =>
+  <E, R>(input: Stream.Stream<Response.StreamPart<any>, E, R>): Stream.Stream<DataType.ContentBlock.Any, E, R> =>
     Stream.asyncPush(
       Effect.fnUntraced(function* (emit) {
         const transformer = new StreamTransform();
@@ -102,23 +104,23 @@ export const parseResponse =
 
         /** Stack of open tags. */
         const tagStack: StreamBlock[] = [];
-        const summary: ContentBlock.Summary = {
+        const summary: DataType.ContentBlock.Summary = {
           _tag: 'summary',
         };
 
         /** Current partial block used to accumulate content. */
         let current: StreamBlock | undefined;
-        let block: ContentBlock.Any | undefined;
+        let block: DataType.ContentBlock.Any | undefined;
         let blocks = 0;
         let parts = 0;
         let toolCalls = 0;
 
-        const emitPartialContentBlock = Effect.fnUntraced(function* (block: ContentBlock.Any) {
+        const emitPartialContentBlock = Effect.fnUntraced(function* (block: DataType.ContentBlock.Any) {
           yield* onBlock({ ...block });
           blocks++;
         });
 
-        const emitFullBlock = Effect.fnUntraced(function* (block: ContentBlock.Any) {
+        const emitFullBlock = Effect.fnUntraced(function* (block: DataType.ContentBlock.Any) {
           log('block', { block });
           if (block.pending === false) {
             delete block.pending;
@@ -260,7 +262,7 @@ export const parseResponse =
                 //   input: '',
                 //   pending: true,
                 //   providerExecuted: part.providerExecuted,
-                // } satisfies ContentBlock.ToolCall;
+                // } satisfies DataType.ContentBlock.ToolCall;
                 // yield* onBlock(block);
                 break;
               }
@@ -287,7 +289,7 @@ export const parseResponse =
                   name: part.name,
                   input: JSON.stringify(part.params),
                   providerExecuted: part.providerExecuted,
-                } satisfies ContentBlock.ToolCall);
+                } satisfies DataType.ContentBlock.ToolCall);
                 toolCalls++;
                 break;
               }
@@ -299,7 +301,7 @@ export const parseResponse =
                   name: part.name,
                   result: JSON.stringify(part.result),
                   providerExecuted: part.providerExecuted,
-                } satisfies ContentBlock.ToolResult);
+                } satisfies DataType.ContentBlock.ToolResult);
                 break;
               }
 
@@ -309,7 +311,7 @@ export const parseResponse =
                   _tag: 'reasoning',
                   reasoningText: '',
                   pending: true,
-                } satisfies ContentBlock.Reasoning;
+                } satisfies DataType.ContentBlock.Reasoning;
                 if (part.metadata.anthropic?.type === 'thinking') {
                   block.signature = part.metadata.anthropic.signature;
                 }
@@ -360,7 +362,7 @@ export const parseResponse =
                 yield* emitFullBlock({
                   ...summary,
                   _tag: 'summary',
-                } satisfies ContentBlock.Summary);
+                } satisfies DataType.ContentBlock.Summary);
                 log('finish', { finish: part });
                 break;
               }
@@ -388,7 +390,7 @@ export const parseResponse =
 const makeContentBlock = (
   block: StreamBlock,
   { parseReasoningTags }: Pick<ParseResponseOptions, 'parseReasoningTags'>,
-): ContentBlock.Any | undefined => {
+): DataType.ContentBlock.Any | undefined => {
   switch (block.type) {
     //
     // Text
@@ -397,7 +399,7 @@ const makeContentBlock = (
       return {
         _tag: 'text',
         text: block.content,
-      } satisfies ContentBlock.Text;
+      } satisfies DataType.ContentBlock.Text;
     }
 
     //
@@ -423,12 +425,12 @@ const makeContentBlock = (
             return {
               _tag: 'text',
               text: content,
-            } satisfies ContentBlock.Text;
+            } satisfies DataType.ContentBlock.Text;
           }
           return {
             _tag: 'reasoning',
             reasoningText: content,
-          } satisfies ContentBlock.Reasoning;
+          } satisfies DataType.ContentBlock.Reasoning;
         }
 
         case ModelTags.STATUS: {
@@ -447,7 +449,7 @@ const makeContentBlock = (
           return {
             _tag: 'status',
             statusText: content,
-          } satisfies ContentBlock.Status;
+          } satisfies DataType.ContentBlock.Status;
         }
 
         case ModelTags.OBJECT: {
@@ -464,7 +466,7 @@ const makeContentBlock = (
             return {
               _tag: 'suggestion',
               text: block.content[0].content,
-            } satisfies ContentBlock.Suggestion;
+            } satisfies DataType.ContentBlock.Suggestion;
           }
 
           return undefined;
@@ -475,7 +477,7 @@ const makeContentBlock = (
             return {
               _tag: 'proposal',
               text: block.content[0].content,
-            } satisfies ContentBlock.Proposal;
+            } satisfies DataType.ContentBlock.Proposal;
           }
 
           return undefined;
@@ -489,13 +491,13 @@ const makeContentBlock = (
                 ? [content.content[0].content]
                 : [],
             ),
-          } satisfies ContentBlock.Select;
+          } satisfies DataType.ContentBlock.Select;
         }
 
         case ModelTags.TOOLKIT: {
           return {
             _tag: 'toolkit',
-          } satisfies ContentBlock.Toolkit;
+          } satisfies DataType.ContentBlock.Toolkit;
         }
       }
 
@@ -504,7 +506,7 @@ const makeContentBlock = (
   }
 };
 
-const parseObjectBlock = (block: StreamBlock): ContentBlock.Reference | undefined => {
+const parseObjectBlock = (block: StreamBlock): DataType.ContentBlock.Reference | undefined => {
   if (block.type !== 'tag') {
     return undefined;
   }

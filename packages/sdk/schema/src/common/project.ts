@@ -10,14 +10,14 @@ import { Format, GeneratorAnnotation, LabelAnnotation } from '@dxos/echo/interna
 
 import { IconAnnotation, ItemAnnotation } from '../annotations';
 
-import { Collection } from './collection';
-import { View } from './view';
+import * as Collection from './Collection';
+import * as View from './View';
 
 export const Project = Schema.Struct({
   name: Schema.String.pipe(GeneratorAnnotation.set('commerce.productName'), Schema.optional),
   description: Schema.String.pipe(Schema.optional),
   image: Format.URL.pipe(Schema.annotations({ title: 'Image' }), Schema.optional),
-  collections: Schema.Union(Type.Ref(Collection), Type.Ref(View)).pipe(Schema.Array, Schema.mutable),
+  collections: Schema.Union(Type.Ref(Collection.Collection), Type.Ref(View.View)).pipe(Schema.Array, Schema.mutable),
 }).pipe(
   Type.Obj({
     typename: 'dxos.org/type/Project',

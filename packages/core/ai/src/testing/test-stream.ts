@@ -43,7 +43,7 @@ export const createTestSSEStream = (
 
       push({
         type: 'message_start',
-        message: Obj.make(DataType.Message, {
+        message: Obj.make(DataType.Message.Message, {
           created: new Date().toISOString(),
           sender: { role: 'assistant' },
           blocks: [],

@@ -105,11 +105,11 @@ export class TracingService extends Context.Tag('@dxos/functions/TracingService'
   });
 
   static emitConverationMessage: (
-    data: Obj.MakeProps<typeof DataType.Message>,
+    data: Obj.MakeProps<typeof DataType.Message.Message>,
   ) => Effect.Effect<void, never, TracingService> = Effect.fnUntraced(function* (data) {
     const tracing = yield* TracingService;
     tracing.write(
-      Obj.make(DataType.Message, {
+      Obj.make(DataType.Message.Message, {
         parentMessage: tracing.getTraceContext().parentMessage,
         ...data,
         properties: {
@@ -138,6 +138,6 @@ export namespace TracingService {
 }
 
 /**
- * Goes into {@link DataType.Message['properties']}
+ * Goes into {@link DataType.Message.Message['properties']}
  */
 export const MESSAGE_PROPERTY_TOOL_CALL_ID = 'toolCallId' as const;

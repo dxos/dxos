@@ -9,12 +9,12 @@ import { useTranslation } from '@dxos/react-ui';
 import { NumericTabs, TextCrawl, ToggleContainer, type ToggleContainerRootProps } from '@dxos/react-ui-components';
 import { type XmlWidgetProps } from '@dxos/react-ui-editor';
 import { Json } from '@dxos/react-ui-syntax-highlighter';
-import { type ContentBlock, type DataType } from '@dxos/schema';
+import { type DataType } from '@dxos/schema';
 import { isNonNullable, safeParseJson } from '@dxos/util';
 
 import { meta } from '../../meta';
 
-export const isToolMessage = (message: DataType.Message) => {
+export const isToolMessage = (message: DataType.Message.Message) => {
   return message.blocks.some((block) => block._tag === 'toolCall' || block._tag === 'toolResult');
 };
 

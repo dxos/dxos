@@ -10,10 +10,11 @@ import { FormatEnum, RuntimeSchemaRegistry, StoredSchema, TypeEnum } from '@dxos
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
 import { log } from '@dxos/log';
 
-import { DataType } from '../common';
 import { ProjectionModel } from '../projection';
 
-import { make, makeWithReferences } from './view';
+import * as Organization from './Organization';
+import * as Person from './Person';
+import * as View from './View';
 
 describe('Projection', () => {
   let builder: EchoTestBuilder;
@@ -27,13 +28,13 @@ describe('Projection', () => {
   });
 
   test('create view from schema', async ({ expect }) => {
-    const schema = DataType.Person.Person;
+    const schema = Person.Person;
     const jsonSchema = Type.toJsonSchema(schema);
 
     const registry = new RuntimeSchemaRegistry();
-    registry.addSchema([DataType.Person.Person, DataType.Organization.Organization]);
+    registry.addSchema([Person.Person, Organization.Organization]);
 
-    const view = await makeWithReferences({
+    const view = await View.makeWithReferences({
       query: Query.select(Filter.type(schema)),
       jsonSchema,
       presentation: Obj.make(Type.Expando, {}),
@@ -83,22 +84,22 @@ describe('Projection', () => {
   });
 
   test('static schema definitions with references', async ({ expect }) => {
-    const organization = Obj.make(DataType.Organization.Organization, {
+    const organization = Obj.make(Organization.Organization, {
       name: 'DXOS',
       website: 'https://dxos.org',
     });
-    const contact = Obj.make(DataType.Person.Person, {
+    const contact = Obj.make(Person.Person, {
       fullName: 'Alice',
       emails: [{ value: 'alice@example.com' }],
       organization: Ref.make(organization),
     });
     log('schema', {
-      organization: Type.toJsonSchema(DataType.Organization.Organization),
-      contact: Type.toJsonSchema(DataType.Person.Person),
+      organization: Type.toJsonSchema(Organization.Organization),
+      contact: Type.toJsonSchema(Person.Person),
     });
     log('objects', { organization, contact });
-    expect(Obj.getTypename(organization)).to.eq(DataType.Organization.Organization.typename);
-    expect(Obj.getTypename(contact)).to.eq(DataType.Person.Person.typename);
+    expect(Obj.getTypename(organization)).to.eq(Organization.Organization.typename);
+    expect(Obj.getTypename(contact)).to.eq(Person.Person.typename);
   });
 
   test('maintains field order during initialization', async ({ expect }) => {
@@ -115,7 +116,7 @@ describe('Projection', () => {
     });
 
     const presentation = Obj.make(Type.Expando, {});
-    const view = make({
+    const view = View.make({
       query: Query.select(Filter.typename(schema.typename)),
       jsonSchema: schema.jsonSchema,
       presentation,

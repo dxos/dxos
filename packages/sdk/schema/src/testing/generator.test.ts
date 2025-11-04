@@ -104,7 +104,7 @@ describe('Generator', () => {
   });
 
   test('generate message from static schema', async ({ expect }) => {
-    const schema = DataType.Message;
+    const schema = DataType.Message.Message;
     const objectGenerator = createGenerator(generator, schema, { force: true });
     const object = objectGenerator.createObject();
     expect(object).to.exist;
@@ -112,7 +112,7 @@ describe('Generator', () => {
 
   test('generate message from stored schema', async ({ expect }) => {
     const { db } = await builder.createDatabase();
-    const schema = (await db.schemaRegistry.register([DataType.Message]))[0];
+    const schema = (await db.schemaRegistry.register([DataType.Message.Message]))[0];
     const objectGenerator = createGenerator(generator, schema, { force: true });
     const object = objectGenerator.createObject();
     expect(object).to.exist;

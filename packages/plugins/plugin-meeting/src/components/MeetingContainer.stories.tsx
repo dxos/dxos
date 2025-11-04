@@ -71,7 +71,9 @@ const meta = {
         SettingsPlugin(),
         MarkdownPlugin(),
       ],
-      capabilities: [contributes(ClientCapabilities.Schema, [Channel.Channel, Thread.Thread, DataType.Message])],
+      capabilities: [
+        contributes(ClientCapabilities.Schema, [Channel.Channel, Thread.Thread, DataType.Message.Message]),
+      ],
     }),
   ],
 } satisfies Meta<typeof MeetingContainer>;

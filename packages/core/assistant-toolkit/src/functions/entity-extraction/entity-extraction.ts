@@ -91,7 +91,7 @@ export default defineFunction({
   ),
 });
 
-const extractContact = Effect.fn('extractContact')(function* (message: DataType.Message) {
+const extractContact = Effect.fn('extractContact')(function* (message: DataType.Message.Message) {
   const name = message.sender.name;
   const email = message.sender.email;
   if (!email) {

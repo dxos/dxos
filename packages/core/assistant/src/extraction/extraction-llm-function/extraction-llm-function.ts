@@ -9,7 +9,7 @@ import { AiService } from '@dxos/ai';
 import { Obj } from '@dxos/echo';
 import { create } from '@dxos/echo/internal';
 import { type FunctionDefinition, defineFunction } from '@dxos/functions';
-import { type ContentBlock, DataType } from '@dxos/schema';
+import { DataType } from '@dxos/schema';
 
 import { AiSession } from '../../session';
 import { ExtractionInput, ExtractionOutput } from '../extraction';
@@ -34,18 +34,18 @@ export const extractionAnthropicFunction: FunctionDefinition<ExtractionInput, Ex
       client: ai.client,
       systemPrompt: PROMPT,
       history: [
-        Obj.make(DataType.Message, {
+        Obj.make(DataType.Message.Message, {
           created: new Date().toISOString(),
           sender: { role: 'user' },
           blocks: [
             {
               _tag: 'text',
               text: `<context>${JSON.stringify(objects)}</context>`,
-            } satisfies ContentBlock.Text,
+            } satisfies DataType.ContentBlock.Text,
             {
               _tag: 'text',
               text: `<transcript>${JSON.stringify(message.blocks)}</transcript>`,
-            } satisfies ContentBlock.Text,
+            } satisfies DataType.ContentBlock.Text,
           ],
         }),
       ],
@@ -56,7 +56,7 @@ export const extractionAnthropicFunction: FunctionDefinition<ExtractionInput, Ex
 
     return {
       timeElapsed: performance.now() - startTime,
-      message: create(DataType.Message, {
+      message: create(DataType.Message.Message, {
         ...message,
         blocks: message.blocks.map((block) =>
           block._tag !== 'transcript'

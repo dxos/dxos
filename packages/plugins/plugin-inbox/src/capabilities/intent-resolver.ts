@@ -18,7 +18,7 @@ import {
 // import { getSpace } from '@dxos/client/echo';
 // import { SequenceBuilder, compileSequence, DEFAULT_INPUT, ValueBag, ComputeGraphModel } from '@dxos/conductor';
 // import { TestRuntime } from '@dxos/conductor/testing';
-import { Filter, Obj, Ref, Type } from '@dxos/echo';
+import { Filter, Obj, Ref } from '@dxos/echo';
 // import { runAndForwardErrors } from '@dxos/effect';
 // import { AiService, DatabaseService, QueueService, ServiceContainer, ToolResolverService } from '@dxos/functions';
 // import { failedInvariant } from '@dxos/invariant';
@@ -55,7 +55,7 @@ export default (context: PluginContext) =>
           // TODO(wittjosiah): Static to live object fails.
           //  Needs to be a live object because graph is live and the current message is included in the companion.
           const { '@type': _, ...messageWithoutType } = { ...message } as any;
-          const liveMessage = Obj.make(DataType.Message, messageWithoutType);
+          const liveMessage = Obj.make(DataType.Message.Message, messageWithoutType);
           state[mailboxId] = liveMessage;
         } else {
           delete state[mailboxId];

@@ -14,7 +14,7 @@ import { Obj } from '@dxos/echo';
 import { type EchoDatabase } from '@dxos/echo-db';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
 import { FunctionExecutor, ServiceContainer, defineFunction } from '@dxos/functions';
-import { type ContentBlock, DataType } from '@dxos/schema';
+import { DataType } from '@dxos/schema';
 import { createTestData } from '@dxos/schema/testing';
 import { trim } from '@dxos/util';
 
@@ -24,7 +24,7 @@ const summarization = defineFunction({
   description: 'Summarize a document',
   inputSchema: Schema.Struct({
     document: Schema.optional(DataType.Text.Text),
-    transcript: Schema.Array(DataType.Message),
+    transcript: Schema.Array(DataType.Message.Message),
   }),
   outputSchema: DataType.Text.Text,
   handler: async ({ data: { document, transcript }, context }) => {
@@ -50,7 +50,7 @@ const summarization = defineFunction({
           The Transcript Summarizer outputs only the summary text.
         `,
         history: [
-          Obj.make(DataType.Message, {
+          Obj.make(DataType.Message.Message, {
             created: new Date().toISOString(),
             sender: { role: 'user' },
             blocks: [
@@ -71,7 +71,7 @@ const summarization = defineFunction({
                           ${document.content}
                         </summary>
                       `,
-                    } satisfies ContentBlock.Text,
+                    } satisfies DataType.ContentBlock.Text,
                   ]
                 : []),
             ],
@@ -118,7 +118,7 @@ const refinement = defineFunction({
           The Transcript Summary Refiner outputs only the summary text.
         `,
         history: [
-          Obj.make(DataType.Message, {
+          Obj.make(DataType.Message.Message, {
             created: new Date().toISOString(),
             sender: { role: 'user' },
             blocks: summaries.map(
@@ -130,7 +130,7 @@ const refinement = defineFunction({
                       ${summary.content}
                     </summary>
                   `,
-                }) satisfies ContentBlock.Text,
+                }) satisfies DataType.ContentBlock.Text,
             ),
           }),
         ],

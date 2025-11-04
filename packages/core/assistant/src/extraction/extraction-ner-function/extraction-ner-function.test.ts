@@ -21,9 +21,9 @@ describe.skip('NER EntityExtraction', () => {
   let db: EchoDatabase;
   let executor: FunctionExecutor;
   let testData: {
-    transcriptJosiah: DataType.Message[];
-    transcriptWoflram: DataType.Message[];
-    transcriptMessages: DataType.Message[];
+    transcriptJosiah: DataType.Message.Message[];
+    transcriptWoflram: DataType.Message.Message[];
+    transcriptMessages: DataType.Message.Message[];
     documents: Testing.DocumentType[];
     contacts: Record<string, DataType.Person.Person>;
     organizations: Record<string, DataType.Organization.Organization>;

@@ -17,10 +17,10 @@ export const createResearchProject = async (space: Space, name?: string): Promis
   const mailbox = mailboxes[0];
   const mailboxView = DataType.View.make({
     name: 'Mailbox',
-    query: Query.select(Filter.type(DataType.Message)).options({
+    query: Query.select(Filter.type(DataType.Message.Message)).options({
       queues: [mailbox.queue.dxn.toString()],
     }),
-    jsonSchema: Type.toJsonSchema(DataType.Message),
+    jsonSchema: Type.toJsonSchema(DataType.Message.Message),
     presentation: Obj.make(DataType.Collection.Collection, { objects: [] }),
   });
 

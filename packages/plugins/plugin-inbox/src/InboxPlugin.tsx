@@ -3,7 +3,7 @@
 //
 
 import { Capabilities, Events, contributes, createIntent, defineModule, definePlugin } from '@dxos/app-framework';
-import { Ref, Type } from '@dxos/echo';
+import { Ref } from '@dxos/echo';
 import { ClientEvents } from '@dxos/plugin-client';
 import { SpaceCapabilities } from '@dxos/plugin-space';
 import { defineObjectForm } from '@dxos/plugin-space/types';
@@ -48,7 +48,7 @@ export const InboxPlugin = definePlugin(meta, () => [
         },
       }),
       contributes(Capabilities.Metadata, {
-        id: DataType.Message.typename,
+        id: DataType.Message.Message.typename,
         metadata: {
           icon: 'ph--note--regular',
           iconHue: 'rose',

@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type ContentBlock, type DataType } from '@dxos/schema';
+import { type DataType } from '@dxos/schema';
 
 type Reducer<R, I> = (acc: R, value: I, idx: number) => R;
 
@@ -38,10 +38,10 @@ type Reducer<R, I> = (acc: R, value: I, idx: number) => R;
  */
 export const reduceMessages: Reducer<
   {
-    messages: DataType.Message[];
-    current?: DataType.Message;
+    messages: DataType.Message.Message[];
+    current?: DataType.Message.Message;
     toolBlock?: boolean;
-    assistantMessages?: DataType.Message[];
+    assistantMessages?: DataType.Message.Message[];
   },
   DataType.Message
 > = ({ messages, current, toolBlock, assistantMessages = [] }, message) => {
@@ -111,7 +111,7 @@ export const reduceMessages: Reducer<
 /**
  * Accumulate token counts from all summary blocks in pending messages.
  */
-const reduceSummary = (messages: DataType.Message[]): ContentBlock.Summary => {
+const reduceSummary = (messages: DataType.Message.Message[]): ContentBlock.Summary => {
   let start: number | undefined;
   return messages.reduce<ContentBlock.Summary>(
     (acc, msg) => {

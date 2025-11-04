@@ -89,10 +89,10 @@ export class AiChatProcessor {
   private _lastRequest: AiRequest | undefined;
 
   /** Pending messages (incl. the current user request). */
-  private readonly _pending = Rx.make<DataType.Message[]>([]);
+  private readonly _pending = Rx.make<DataType.Message.Message[]>([]);
 
   /** Currently streaming message (from the AI service). */
-  private readonly _streaming = Rx.make<Option.Option<DataType.Message>>(Option.none());
+  private readonly _streaming = Rx.make<Option.Option<DataType.Message.Message>>(Option.none());
 
   /** Streaming state. */
   public readonly streaming = Rx.make<boolean>((get) => Option.isSome(get(this._streaming)));
@@ -101,7 +101,7 @@ export class AiChatProcessor {
   public readonly active = Rx.make(false);
 
   /** Array of Messages (incl. the current message being streamed). */
-  public readonly messages = Rx.make<DataType.Message[]>((get) =>
+  public readonly messages = Rx.make<DataType.Message.Message[]>((get) =>
     Option.match(get(this._streaming), {
       onNone: () => get(this._pending),
       onSome: (streaming) => [...get(this._pending), streaming],
@@ -250,7 +250,7 @@ export class AiChatProcessor {
   };
 
   private _onMessage = Effect.fn(
-    function* (this: AiChatProcessor, message: DataType.Message) {
+    function* (this: AiChatProcessor, message: DataType.Message.Message) {
       this._rx.set(this._streaming, Option.none());
       this._rx.update(this._pending, (pending) => [...pending, message]);
     }.bind(this),
@@ -265,7 +265,7 @@ export class AiChatProcessor {
         );
 
         return Option.some(
-          Obj.make(DataType.Message, {
+          Obj.make(DataType.Message.Message, {
             created: new Date().toISOString(),
             sender: { role: 'assistant' },
             blocks: [...blocks, block],

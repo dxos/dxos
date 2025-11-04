@@ -9,8 +9,8 @@ import { Format, GeneratorAnnotation, LabelAnnotation, PropertyMeta } from '@dxo
 
 import { ItemAnnotation } from '../annotations';
 
-import { Organization } from './organization';
-import { PostalAddress } from './postal-address';
+import * as Geo from './Geo';
+import * as Organization from './Organization';
 
 // TODO(burdon): Materialize link for Role (Organization => [Role] => Contact).
 // TODO(burdon): Address sub type with geo location.
@@ -34,7 +34,7 @@ const PersonSchema = Schema.Struct({
   // TODO(wittjosiah): Format.URL. Support ref?
   image: Schema.String.pipe(Schema.annotations({ title: 'Image' }), Schema.optional),
   // TODO(burdon): Use reference links.
-  organization: Type.Ref(Organization).pipe(
+  organization: Type.Ref(Organization.Organization).pipe(
     PropertyMeta('referenceProperty', 'name'),
     Schema.annotations({
       title: 'Organization',
@@ -71,7 +71,7 @@ const PersonSchema = Schema.Struct({
   addresses: Schema.Array(
     Schema.Struct({
       label: Schema.optional(Schema.String),
-      value: PostalAddress,
+      value: Geo.PostalAddress,
     }),
   ).pipe(Schema.mutable, Schema.optional),
   urls: Schema.Array(

@@ -69,7 +69,7 @@ export const createMessage = (space?: Space, options: CreateOptions = { paragrap
   }
 
   return Obj.make(
-    DataType.Message,
+    DataType.Message.Message,
     {
       created: faker.date.recent().toISOString(),
       sender: {
@@ -101,7 +101,7 @@ export const createMessage = (space?: Space, options: CreateOptions = { paragrap
  */
 export const initializeMailbox = async (space: Space, count = 30) => {
   const mailbox = Mailbox.make({ space });
-  const queue = space.queues.get<DataType.Message>(mailbox.queue.dxn);
+  const queue = space.queues.get<DataType.Message.Message>(mailbox.queue.dxn);
   await queue.append(createMessages(count, space));
   space.db.add(mailbox);
   return mailbox;

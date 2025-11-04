@@ -24,7 +24,8 @@ export default () =>
       id: meta.id,
       role: ['article', 'section'],
       filter: (data): data is { subject: DataType.View.View } =>
-        Obj.instanceOf(DataType.View.View, data.subject) && Obj.instanceOf(Kanban.Kanban, data.subject.presentation.target),
+        Obj.instanceOf(DataType.View.View, data.subject) &&
+        Obj.instanceOf(Kanban.Kanban, data.subject.presentation.target),
       component: ({ data, role }) => <KanbanContainer view={data.subject} role={role} />,
     }),
     createSurface({
@@ -32,7 +33,8 @@ export default () =>
       role: 'object-settings',
       position: 'hoist',
       filter: (data): data is { subject: DataType.View.View } =>
-        Obj.instanceOf(DataType.View.View, data.subject) && Obj.instanceOf(Kanban.Kanban, data.subject.presentation.target),
+        Obj.instanceOf(DataType.View.View, data.subject) &&
+        Obj.instanceOf(Kanban.Kanban, data.subject.presentation.target),
       component: ({ data }) => <KanbanViewEditor view={data.subject} />,
     }),
     createSurface({

@@ -98,7 +98,7 @@ export default (context: PluginContext) =>
         invariant(space, 'Space not found');
 
         const subjectId = fullyQualifiedId(subject);
-        const proposal = Obj.make(DataType.Message, {
+        const proposal = Obj.make(DataType.Message.Message, {
           created: new Date().toISOString(),
           sender,
           blocks: [{ _tag: 'proposal', text }],
@@ -228,7 +228,7 @@ export default (context: PluginContext) =>
         const space = getSpace(subject);
         invariant(space, 'Space not found');
 
-        const message = Obj.make(DataType.Message, {
+        const message = Obj.make(DataType.Message.Message, {
           created: new Date().toISOString(),
           sender,
           blocks: [{ _tag: 'text', text }],
