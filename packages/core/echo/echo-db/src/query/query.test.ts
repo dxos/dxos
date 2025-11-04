@@ -403,7 +403,7 @@ describe('Query', () => {
       await db.flush({ indexes: true });
 
       const assertQueries = async (db: EchoDatabase) => {
-        await assertQuery(db, Filter.typename(ContactV1.typename), [contactV1, contactV2]);
+        await assertQuery(db, Filter.type(ContactV1), [contactV1, contactV2]);
         await assertQuery(db, Filter.type(ContactV1), [contactV1]);
         await assertQuery(db, Filter.type(ContactV2), [contactV2]);
         await assertQuery(db, Filter.typeDXN(DXN.parse('dxn:type:example.com/type/Contact')), [contactV1, contactV2]);
@@ -915,7 +915,7 @@ describe('Query', () => {
       const contact = db.add(live(TestingDeprecated.Contact, {}));
       const name = 'DXOS User';
 
-      const query = db.query(Filter.typename(Type.getTypename(TestingDeprecated.Contact)));
+      const query = db.query(Filter.type(TestingDeprecated.Contact));
       const result = await query.run();
       expect(result.objects).to.have.length(1);
       expect(result.objects[0]).to.eq(contact);

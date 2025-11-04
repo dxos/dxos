@@ -11,7 +11,7 @@ import README_CONTENT from '../content/README.md?raw';
 const SPACE_ICON = 'house-line';
 
 export default async (context: PluginContext) => {
-  const { Obj, Ref } = await import('@dxos/echo');
+  const { Filter, Obj, Ref } = await import('@dxos/echo');
   const { fullyQualifiedId } = await import('@dxos/react-client/echo');
   const { ClientCapabilities } = await import('@dxos/plugin-client');
   const { Markdown } = await import('@dxos/plugin-markdown/types');
@@ -36,7 +36,7 @@ export default async (context: PluginContext) => {
     Ref.make(
       Obj.make(DataType.Collection.QueryCollection, {
         // NOTE: This is specifically Filter.typename due to current limitations in query collection parsing.
-        query: Query.select(DataType.StoredSchema.typename).ast,
+        query: Query.select(Filter.type(DataType.StoredSchema)).ast,
       }),
     ),
   );

@@ -71,7 +71,7 @@ const DefaultStory = (props: StoryProps) => {
       const [testSchema] = await space.db.schemaRegistry.register([TestSchema, AlternateSchema]);
       const view = DataType.View.make({
         name: 'Test',
-        query: Query.select(Filter.typename(TestSchema.typename)),
+        query: Query.select(Filter.type(TestSchema)),
         jsonSchema: Type.toJsonSchema(TestSchema),
         presentation: Obj.make(Type.Expando, {}),
       });
