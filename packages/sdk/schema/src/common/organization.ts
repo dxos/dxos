@@ -12,6 +12,7 @@ import {
   GeneratorAnnotation,
   LabelAnnotation,
   PropertyMetaAnnotationId,
+  ModelUsageAnnotation,
 } from '@dxos/echo/internal';
 
 import { IconAnnotation, ItemAnnotation } from '../annotations';
@@ -80,7 +81,11 @@ const OrganizationSchema = Schema.Struct({
 export const Organization = OrganizationSchema.pipe(
   Schema.extend(
     Schema.Struct({
-      location: Format.GeoPoint.pipe(Schema.annotations({ title: 'Location' }), Schema.optional),
+      location: Format.GeoPoint.pipe(
+        Schema.annotations({ title: 'Location' }),
+        ModelUsageAnnotation.set({ writeable: false }),
+        Schema.optional,
+      ),
     }),
   ),
   Schema.annotations({ title: 'Organization', description: 'An organization.' }),
