@@ -42,7 +42,7 @@ export const useChatToolbarActions = ({ chat, companionTo }: ChatToolbarActionsP
           .action(
             'new',
             {
-              label: ['button new thread', { ns: meta.id }],
+              label: ['new thread button', { ns: meta.id }],
               icon: 'ph--plus--regular',
               type: 'new',
             },
@@ -64,6 +64,20 @@ export const useChatToolbarActions = ({ chat, companionTo }: ChatToolbarActionsP
 
                   yield* dispatch(createIntent(AssistantAction.SetCurrentChat, { companionTo, chat: object }));
                 }
+              }).pipe(Effect.runPromise),
+          )
+          .action(
+            'rename',
+            {
+              label: ['rename thread button', { ns: meta.id }],
+              icon: 'ph--magic-wand--regular',
+              type: 'rename',
+              disabled: !chat,
+            },
+            () =>
+              Effect.gen(function* () {
+                invariant(chat);
+                yield* dispatch(createIntent(AssistantAction.UpdateChatName, { chat }));
               }).pipe(Effect.runPromise),
           )
           .action(
@@ -109,6 +123,6 @@ export const useChatToolbarActions = ({ chat, companionTo }: ChatToolbarActionsP
 
         return builder.build();
       });
-    }, [chats.length, space?.id, companionTo?.id, dispatch]),
+    }, [chats.length, space?.id, companionTo?.id, chat?.id, dispatch]),
   );
 };
