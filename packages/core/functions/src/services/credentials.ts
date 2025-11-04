@@ -11,9 +11,8 @@ import * as Layer from 'effect/Layer';
 import * as Redacted from 'effect/Redacted';
 
 import { Query } from '@dxos/echo';
+import { DatabaseService } from '@dxos/echo-db';
 import { DataType } from '@dxos/schema';
-
-import { DatabaseService } from './database';
 
 export type CredentialQuery = {
   service?: string;

@@ -6,11 +6,11 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
 import { AiService } from '@dxos/ai';
+import { DatabaseService } from '@dxos/echo-db';
 
 import { type FunctionDefinition } from '../handler';
 
 import { CredentialsService } from './credentials';
-import { DatabaseService } from './database';
 import {
   FunctionImplementationResolver,
   type InvocationServices,

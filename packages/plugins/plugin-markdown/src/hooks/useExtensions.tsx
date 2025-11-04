@@ -32,6 +32,7 @@ import {
   linkTooltip,
   listener,
   preview,
+  replacer,
   selectionState,
   typewriter,
 } from '@dxos/react-ui-editor';
@@ -177,6 +178,7 @@ const createBaseExtensions = ({
         }),
         linkTooltip(renderLinkTooltip),
         preview(previewOptions),
+        replacer(),
       ],
     );
   }

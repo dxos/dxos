@@ -6,7 +6,7 @@ import * as Schema from 'effect/Schema';
 
 import { Type } from '@dxos/echo';
 import { EchoObjectSchema, SpaceSchema } from '@dxos/react-client/echo';
-import { AnchoredTo, DataType } from '@dxos/schema';
+import { DataType } from '@dxos/schema';
 
 import { meta } from '../meta';
 
@@ -55,7 +55,7 @@ export namespace ThreadAction {
 
   export class Delete extends Schema.TaggedClass<Delete>()(`${meta.id}/action/delete`, {
     input: Schema.Struct({
-      anchor: AnchoredTo,
+      anchor: DataType.AnchoredTo.AnchoredTo,
       subject: EchoObjectSchema,
       thread: Schema.optional(Thread.Thread),
     }),
@@ -76,20 +76,10 @@ export namespace ThreadAction {
     output: Schema.Void,
   }) {}
 
-  export class AddProposal extends Schema.TaggedClass<AddProposal>()(`${meta.id}/action/add-proposal`, {
-    input: Schema.Struct({
-      text: Schema.String,
-      anchor: Schema.String,
-      sender: DataType.Actor.Actor,
-      subject: EchoObjectSchema,
-    }),
-    output: Schema.Void,
-  }) {}
-
   export class AddMessage extends Schema.TaggedClass<AddMessage>()(`${meta.id}/action/add-message`, {
     input: Schema.Struct({
       subject: EchoObjectSchema,
-      anchor: AnchoredTo,
+      anchor: DataType.AnchoredTo.AnchoredTo,
       sender: DataType.Actor.Actor,
       text: Schema.String,
     }),
@@ -98,7 +88,7 @@ export namespace ThreadAction {
 
   export class DeleteMessage extends Schema.TaggedClass<DeleteMessage>()(`${meta.id}/action/delete-message`, {
     input: Schema.Struct({
-      anchor: AnchoredTo,
+      anchor: DataType.AnchoredTo.AnchoredTo,
       subject: EchoObjectSchema,
       messageId: Schema.String,
       message: Schema.optional(DataType.Message.Message),

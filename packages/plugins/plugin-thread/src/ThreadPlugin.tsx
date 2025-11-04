@@ -13,13 +13,13 @@ import { AnchoredTo, DataType } from '@dxos/schema';
 
 import {
   AppGraphBuilder,
+  BlueprintDefinition,
   CallManager,
   IntentResolver,
   Markdown,
   ReactRoot,
   ReactSurface,
   ThreadState,
-  Toolkit,
 } from './capabilities';
 import { THREAD_ITEM, meta } from './meta';
 import { translations } from './translations';
@@ -162,9 +162,8 @@ export const ThreadPlugin = definePlugin(meta, () => [
     activate: AppGraphBuilder,
   }),
   defineModule({
-    id: `${meta.id}/module/toolkit`,
-    // TODO(wittjosiah): Shouldn't use the startup event.
-    activatesOn: Events.Startup,
-    activate: Toolkit,
+    id: `${meta.id}/module/blueprint`,
+    activatesOn: Events.SetupArtifactDefinition,
+    activate: BlueprintDefinition,
   }),
 ]);

@@ -11,4 +11,4 @@ export * from './service-definitions';
 export type * from './shell';
 export type * from './space';
 export * from './timeouts';
-export * from './schema';
+export * from './types';

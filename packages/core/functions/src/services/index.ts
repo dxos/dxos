@@ -2,8 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
+export { DatabaseService } from '@dxos/echo-db';
+
 export * from './credentials';
-export * from './database';
 export * from './event-logger';
 export * from './function-invocation-service';
 export * from './local-function-execution';

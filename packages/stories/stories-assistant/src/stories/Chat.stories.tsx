@@ -294,7 +294,7 @@ export const WithDocument: Story = {
   args: {
     showContext: true,
     modules: [[ChatModule], [CommentsModule]],
-    blueprints: [ASSISTANT_BLUEPRINT_KEY, 'dxos.org/blueprint/markdown'],
+    blueprints: [ASSISTANT_BLUEPRINT_KEY, 'dxos.org/blueprint/markdown', 'dxos.org/blueprint/thread'],
   },
 };
 
