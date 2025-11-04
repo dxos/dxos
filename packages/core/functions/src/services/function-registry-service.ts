@@ -44,7 +44,7 @@ export class FunctionRegistryService extends Context.Tag('@dxos/functions/Functi
     /**
      * Query functions registry.
      */
-    query: (query?: FunctionsQuery) => QueryResult;
+    query: (query?: FunctionsQuery) => Effect.Effect<QueryResult>;
   }
 >() {
   static layer = Layer.effect(
@@ -55,18 +55,30 @@ export class FunctionRegistryService extends Context.Tag('@dxos/functions/Functi
       const db = yield* DatabaseService;
 
       return {
-        query: (query = {}) => {
-          return {
-            results: Effect.gen(function* () {
-              const { objects } = yield* DatabaseService.runQuery(Query.type(Function));
-              return [
-                ...objects.map(FunctionDefinition.deserialize),
-                ...(yield* Rx.get(staticFunctionsProvider.functions)),
-              ];
-            }).pipe(Effect.provideService(Registry.RxRegistry, registry), Effect.provideService(DatabaseService, db)),
-            rx: staticFunctionsProvider.functions,
-          };
-        },
+        query: Effect.fnUntraced(
+          function* (query = {}) {
+            const dbQuery = yield* DatabaseService.query(Query.type(Function));
+            return {
+              results: Effect.gen(function* () {
+                const dbFunctions = yield* DatabaseService.query(Query.type(Function)).objects;
+
+                // TODO(dmaretskyi): Dedup.
+                return [
+                  ...dbFunctions.map(FunctionDefinition.deserialize),
+                  ...(yield* Rx.get(staticFunctionsProvider.functions)),
+                ];
+              }).pipe(Effect.provideService(Registry.RxRegistry, registry), Effect.provideService(DatabaseService, db)),
+              rx: Rx.make((get) => {
+                // TODO(dmaretskyi): Dedup.
+                return [
+                  ...get(staticFunctionsProvider.functions),
+                  ...get(dbQuery.rx).map(FunctionDefinition.deserialize),
+                ];
+              }),
+            } satisfies QueryResult;
+          },
+          Effect.provideService(DatabaseService, db),
+        ),
       };
     }),
   );
