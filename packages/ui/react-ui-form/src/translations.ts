@@ -15,7 +15,7 @@ export const translations = [
         'empty readonly ref field label': '(none)',
 
         // TODO(burdon): Standardize field/property.
-        'button add property': 'Add property',
+        'add property button': 'Add property',
         'field property label': 'Property',
         'field property placeholder': 'Property name',
         'field format label': 'Type',
@@ -33,8 +33,7 @@ export const translations = [
         'ref field placeholder_other': 'Select items…',
 
         // TODO(burdon): Factor out?
-        'button cancel': 'Cancel',
-        'button save': 'Save',
+        'save button': 'Save',
 
         // FormatEnum
         'format boolean': 'Boolean',
