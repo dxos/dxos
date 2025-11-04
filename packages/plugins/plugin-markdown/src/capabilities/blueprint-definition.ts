@@ -2,37 +2,31 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Capabilities, type Capability, contributes } from '@dxos/app-framework';
+import { Capabilities, contributes } from '@dxos/app-framework';
 import { Blueprint, Template } from '@dxos/blueprints';
 import { type FunctionDefinition } from '@dxos/functions';
 import { trim } from '@dxos/util';
 
-import { create, diff, open } from '../functions';
+import { MarkdownFunction } from '../functions';
 
-const functions: FunctionDefinition[] = [create, diff, open];
+const functions: FunctionDefinition[] = [MarkdownFunction.create, MarkdownFunction.open, MarkdownFunction.update];
 
-export const ASSISTANT_BLUEPRINT_KEY = 'dxos.org/blueprint/markdown';
+export const MARKDOWN_BLUEPRINT_KEY = 'dxos.org/blueprint/markdown';
 
-export default (): Capability<any>[] => [
-  contributes(Capabilities.Functions, functions),
-  contributes(
-    Capabilities.BlueprintDefinition,
-    Blueprint.make({
-      key: ASSISTANT_BLUEPRINT_KEY,
-      name: 'Markdown',
-      tools: Blueprint.toolDefinitions({ functions }),
-      instructions: Template.make({
-        source: trim`
-            You can create, read and diff markdown documents.
+export const MarkdownBlueprint: Blueprint.Blueprint = Blueprint.make({
+  key: MARKDOWN_BLUEPRINT_KEY,
+  name: 'Markdown',
+  tools: Blueprint.toolDefinitions({ functions }),
+  instructions: Template.make({
+    source: trim`
+            You can create, read and update markdown documents.
             When asked to edit or update documents return updates as a set of compact diff string pairs.
             For each diff, respond with the smallest possible matching span.
-            For example:
-            - "There is a tyop in this sentence."
-            + "There is a typo in this sentence."
-            - "This id goof."
-            + "This is good."
           `,
-      }),
-    }),
-  ),
+  }),
+});
+
+export default () => [
+  contributes(Capabilities.Functions, functions),
+  contributes(Capabilities.BlueprintDefinition, MarkdownBlueprint),
 ];

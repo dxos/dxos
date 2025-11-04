@@ -24,6 +24,7 @@ export default (): Capability<any>[] => [
       instructions: Template.make({
         source: trim`
             You can update markdown documents via proposals.
+            For each diff, respond with the smallest possible matching span.
           `,
       }),
     }),

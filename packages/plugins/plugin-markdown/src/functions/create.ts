@@ -6,6 +6,7 @@ import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
 import { ArtifactId } from '@dxos/assistant';
+import { Obj } from '@dxos/echo';
 import { defineFunction } from '@dxos/functions';
 import { addObject } from '@dxos/schema';
 
@@ -27,7 +28,7 @@ export default defineFunction({
     yield* addObject({ object });
 
     return {
-      id: object.id,
+      id: Obj.getDXN(object).toString(),
     };
   }),
 });

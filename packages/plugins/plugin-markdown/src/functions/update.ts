@@ -14,8 +14,8 @@ import { Markdown } from '../types';
 
 // TODO(wittjosiah): Reconcile with ThreadAction.AddProposal.
 export default defineFunction({
-  key: 'dxos.org/function/markdown/diff',
-  name: 'Diff',
+  key: 'dxos.org/function/markdown/update',
+  name: 'Update',
   description: trim`
     Applies a set of diffs to the markdown document.
   `,
@@ -25,6 +25,14 @@ export default defineFunction({
     }),
     diffs: Schema.Array(Schema.String).annotations({
       description: 'The diffs to apply to the document.',
+      examples: [
+        [
+          '- "There is a tyop in this sentence."',
+          '+ "There is a typo in this sentence."',
+          '- "This id goof."',
+          '+ "This is good."',
+        ],
+      ],
     }),
   }),
   outputSchema: Schema.Void,

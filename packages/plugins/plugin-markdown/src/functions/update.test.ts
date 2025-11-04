@@ -2,9 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { inspect } from 'node:util';
-
-import { describe, it } from '@effect/vitest';
+import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
@@ -18,7 +16,8 @@ import {
   makeToolResolverFromFunctions,
 } from '@dxos/assistant';
 import { Blueprint } from '@dxos/blueprints';
-import { Filter, Obj, Query, Ref } from '@dxos/echo';
+import { PropertiesType } from '@dxos/client-protocol';
+import { Obj, Query, Ref } from '@dxos/echo';
 import { TestHelpers, acquireReleaseResource } from '@dxos/effect';
 import {
   ComputeEventLogger,
@@ -31,32 +30,23 @@ import {
 import { TestDatabaseLayer } from '@dxos/functions/testing';
 import { invariant } from '@dxos/invariant';
 import { ObjectId } from '@dxos/keys';
-import { MarkdownBlueprint, MarkdownFunction } from '@dxos/plugin-markdown/toolkit';
 import { Markdown } from '@dxos/plugin-markdown/types';
 import { DataType } from '@dxos/schema';
 
-import { ResearchBlueprint } from '../../blueprints';
-import { testToolkit } from '../../blueprints/testing';
-
-import { default as createDocument } from './document-create';
-import { default as research } from './research';
-import { ResearchGraph, queryResearchGraph } from './research-graph';
-import { ResearchDataTypes } from './types';
+import { WithProperties, testToolkit } from '../testing';
+import { MarkdownBlueprint, MarkdownFunction } from '../toolkit';
 
 ObjectId.dangerouslyDisableRandomness();
 
 const TestLayer = Layer.mergeAll(
   AiService.model('@anthropic/claude-opus-4-0'),
-  makeToolResolverFromFunctions(
-    [research, createDocument, MarkdownFunction.create, MarkdownFunction.open, MarkdownFunction.update],
-    testToolkit,
-  ),
+  makeToolResolverFromFunctions([MarkdownFunction.create, MarkdownFunction.open, MarkdownFunction.update], testToolkit),
   makeToolExecutionServiceFromFunctions(testToolkit, testToolkit.toLayer({}) as any),
   ComputeEventLogger.layerFromTracing,
 ).pipe(
   Layer.provideMerge(
     FunctionInvocationService.layerTest({
-      functions: [research, createDocument, MarkdownFunction.create, MarkdownFunction.open, MarkdownFunction.update],
+      functions: [MarkdownFunction.create, MarkdownFunction.open, MarkdownFunction.update],
     }),
   ),
   Layer.provideMerge(
@@ -65,7 +55,7 @@ const TestLayer = Layer.mergeAll(
       TestDatabaseLayer({
         spaceKey: 'fixed',
         indexing: { vector: true },
-        types: [...ResearchDataTypes, ResearchGraph, Blueprint.Blueprint, Markdown.Document, DataType.HasSubject],
+        types: [PropertiesType, DataType.Collection, Blueprint.Blueprint, Markdown.Document, DataType.HasSubject],
       }),
       CredentialsService.configuredLayer([]),
       TracingService.layerNoop,
@@ -73,61 +63,45 @@ const TestLayer = Layer.mergeAll(
   ),
 );
 
-describe('Research', () => {
+describe('update', () => {
   it.effect(
-    'call a function to generate a research report',
+    'call a function to update a markdown document',
     Effect.fnUntraced(
       function* (_) {
-        yield* DatabaseService.add(
-          Obj.make(DataType.Organization, {
-            name: 'BlueYard',
-            website: 'https://blueyard.com',
-          }),
-        );
-        yield* DatabaseService.flush({ indexes: true });
-        const result = yield* FunctionInvocationService.invokeFunction(research, {
-          query: 'Founders and portfolio of BlueYard.',
+        const doc = Markdown.makeDocument({
+          name: 'BlueYard',
+          content: 'Founders and portfolio of BlueYard.',
+        });
+        yield* DatabaseService.add(doc);
+
+        yield* FunctionInvocationService.invokeFunction(MarkdownFunction.update, {
+          id: doc.id,
+          diffs: ['- Founders', '+ # Founders'],
         });
 
-        console.log(inspect(result, { depth: null, colors: true }));
-        console.log(JSON.stringify(result, null, 2));
-
-        yield* DatabaseService.flush({ indexes: true });
-        const researchGraph = yield* queryResearchGraph();
-        if (researchGraph) {
-          const data = yield* DatabaseService.load(researchGraph.queue).pipe(
-            Effect.flatMap((queue) => Effect.promise(() => queue.queryObjects())),
-          );
-          console.log(inspect(data, { depth: null, colors: true }));
-        }
+        const updatedDoc = yield* DatabaseService.resolve(Obj.getDXN(doc), Markdown.Document);
+        expect(updatedDoc.name).toBe(doc.name);
+        const text = yield* DatabaseService.load(updatedDoc.content);
+        expect(text.content).toBe('# Founders and portfolio of BlueYard.');
       },
+      WithProperties,
       Effect.provide(TestLayer),
       TestHelpers.provideTestContext,
     ),
-    MemoizedAiService.isGenerationEnabled() ? 240_000 : 30_000,
   );
 
   it.scoped(
-    'create and update research report',
+    'create and update a markdown document',
     Effect.fnUntraced(
       function* (_) {
-        const organization = yield* DatabaseService.add(
-          Obj.make(DataType.Organization, {
-            name: 'BlueYard',
-            website: 'https://blueyard.com',
-          }),
-        );
-
         const queue = yield* QueueService.createQueue<DataType.Message | ContextBinding>();
         const conversation = yield* acquireReleaseResource(() => new AiConversation(queue));
 
         yield* DatabaseService.flush({ indexes: true });
-        const researchBlueprint = yield* DatabaseService.add(Obj.clone(ResearchBlueprint));
         const markdownBlueprint = yield* DatabaseService.add(Obj.clone(MarkdownBlueprint));
         yield* Effect.promise(() =>
           conversation.context.bind({
-            blueprints: [Ref.make(researchBlueprint), Ref.make(markdownBlueprint)],
-            objects: [Ref.make(organization)],
+            blueprints: [Ref.make(markdownBlueprint)],
           }),
         );
 
@@ -135,14 +109,12 @@ describe('Research', () => {
 
         yield* conversation.createRequest({
           observer,
-          prompt: `Create a research summary about ${organization.name}.`,
+          prompt: `Create a document with a cookie recipe.`,
         });
         {
-          const { objects: docs } = yield* DatabaseService.runQuery(
-            Query.select(Filter.ids(organization.id)).targetOf(DataType.HasSubject).source(),
-          );
+          const { objects: docs } = yield* DatabaseService.runQuery(Query.type(Markdown.Document));
           if (docs.length !== 1) {
-            throw new Error(`Expected 1 research document; got ${docs.length}: ${docs.map((_) => _.name)}`);
+            throw new Error(`Expected 1 document; got ${docs.length}: ${docs.map((_) => _.name)}`);
           }
 
           const doc = docs[0];
@@ -155,14 +127,12 @@ describe('Research', () => {
 
         yield* conversation.createRequest({
           observer,
-          prompt: 'Add a section about their portfolio.',
+          prompt: 'Add a section with a holiday-themed variation.',
         });
         {
-          const { objects: docs } = yield* DatabaseService.runQuery(
-            Query.select(Filter.ids(organization.id)).targetOf(DataType.HasSubject).source(),
-          );
+          const { objects: docs } = yield* DatabaseService.runQuery(Query.type(Markdown.Document));
           if (docs.length !== 1) {
-            throw new Error(`Expected 1 research document; got ${docs.length}: ${docs.map((_) => _.name)}`);
+            throw new Error(`Expected 1 document; got ${docs.length}: ${docs.map((_) => _.name)}`);
           }
 
           const doc = docs[0];
@@ -173,6 +143,7 @@ describe('Research', () => {
           });
         }
       },
+      WithProperties,
       Effect.provide(TestLayer),
       TestHelpers.provideTestContext,
     ),

@@ -49,7 +49,7 @@ export default (): Capability<any>[] => [
   contributes(Capabilities.BlueprintDefinition, blueprint),
 
   // TODO(burdon): Factor out.
-  contributes(Capabilities.Functions, [Research.create, Research.update, Research.research]),
+  contributes(Capabilities.Functions, [Research.create, Research.research]),
   contributes(Capabilities.BlueprintDefinition, ResearchBlueprint),
 
   // TODO(burdon): Factor out.

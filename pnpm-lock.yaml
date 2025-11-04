@@ -7258,12 +7258,18 @@ importers:
       '@dxos/blueprints':
         specifier: workspace:*
         version: link:../../core/blueprints
+      '@dxos/client-protocol':
+        specifier: workspace:*
+        version: link:../../sdk/client-protocol
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
       '@dxos/echo-db':
         specifier: workspace:*
         version: link:../../core/echo/echo-db
+      '@dxos/effect':
+        specifier: workspace:*
+        version: link:../../common/effect
       '@dxos/functions':
         specifier: workspace:*
         version: link:../../core/functions
