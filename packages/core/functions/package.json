@@ -75,6 +75,7 @@
     "@dxos/protocols": "workspace:*",
     "@dxos/schema": "workspace:*",
     "@dxos/util": "workspace:*",
+    "@effect-rx/rx": "0.48.7",
     "@effect/platform": "0.92.1",
     "effect": "3.18.3",
     "esbuild-wasm": "^0.16.14",

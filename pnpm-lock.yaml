@@ -3063,6 +3063,9 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
+      '@effect-rx/rx':
+        specifier: 0.48.7
+        version: 0.48.7(@effect/platform@0.92.1(effect@3.18.3))(effect@3.18.3)
       '@effect/platform':
         specifier: 0.92.1
         version: 0.92.1(effect@3.18.3)
