@@ -269,7 +269,7 @@ export const registry: Record<NodeType, Executable> = {
             const {
               objects: [container],
             } = yield* Effect.promise(() => db.query(Filter.ids(echoId)).run());
-            if (isInstanceOf(DataType.View, container)) {
+            if (isInstanceOf(DataType.View.View, container)) {
               const schema = yield* Effect.promise(async () =>
                 db.schemaRegistry
                   .query({

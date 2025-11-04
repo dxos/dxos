@@ -24,6 +24,6 @@ export const MasonryProps = Schema.Struct({
 export class CreateMasonry extends Schema.TaggedClass<CreateMasonry>()(`${MASONRY_ACTION}/create`, {
   input: Schema.extend(Schema.Struct({ space: SpaceSchema }), MasonryProps),
   output: Schema.Struct({
-    object: DataType.View,
+    object: DataType.View.View,
   }),
 }) {}

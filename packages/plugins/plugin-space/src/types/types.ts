@@ -258,7 +258,7 @@ export namespace SpaceAction {
 
   export class DeleteField extends Schema.TaggedClass<DeleteField>()(`${SPACE_ACTION}/delete-field`, {
     input: Schema.Struct({
-      view: DataType.View,
+      view: DataType.View.View,
       fieldId: Schema.String,
       // TODO(wittjosiah): Separate fields for undo data?
       deletionData: Schema.optional(

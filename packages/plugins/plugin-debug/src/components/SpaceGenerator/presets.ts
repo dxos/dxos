@@ -36,7 +36,7 @@ import {
   pointsToRect,
   rectToPoints,
 } from '@dxos/react-ui-canvas-editor';
-import { DataType, createView } from '@dxos/schema';
+import { DataType } from '@dxos/schema';
 import { range, trim } from '@dxos/util';
 
 import { type ObjectGenerator } from './ObjectGenerator';
@@ -176,7 +176,7 @@ export const generator = () => ({
           });
           space.db.add(researchTrigger);
 
-          const mailboxView = createView({
+          const mailboxView = DataType.View.make({
             name: 'Mailbox',
             query: Query.select(
               Filter.type(DataType.Message, { properties: { labels: Filter.contains('investor') } }),
@@ -186,19 +186,19 @@ export const generator = () => ({
             jsonSchema: Type.toJsonSchema(DataType.Message),
             presentation: Obj.make(DataType.Collection.Collection, { objects: [] }),
           });
-          const contactsView = createView({
+          const contactsView = DataType.View.make({
             name: 'Contacts',
             query: contactsQuery,
             jsonSchema: Type.toJsonSchema(DataType.Person.Person),
             presentation: Obj.make(DataType.Collection.Collection, { objects: [] }),
           });
-          const organizationsView = createView({
+          const organizationsView = DataType.View.make({
             name: 'Organizations',
             query: organizationsQuery,
             jsonSchema: Type.toJsonSchema(DataType.Organization.Organization),
             presentation: Obj.make(DataType.Collection.Collection, { objects: [] }),
           });
-          const notesView = createView({
+          const notesView = DataType.View.make({
             name: 'Notes',
             query: notesQuery,
             jsonSchema: Type.toJsonSchema(Markdown.Document),

@@ -22,7 +22,7 @@ import { withTheme } from '@dxos/react-ui/testing';
 import { translations as stackTranslations } from '@dxos/react-ui-stack';
 import { Stack } from '@dxos/react-ui-stack';
 import { defaultTx } from '@dxos/react-ui-theme';
-import { DataType, createView } from '@dxos/schema';
+import { DataType } from '@dxos/schema';
 import { createObjectFactory } from '@dxos/schema/testing';
 
 import { translations } from '../translations';
@@ -60,7 +60,7 @@ const meta = {
           types: [
             Tag.Tag,
             DataType.Project.Project,
-            DataType.View,
+            DataType.View.View,
             DataType.Collection.Collection,
             DataType.Organization.Organization,
             DataType.Task.Task,
@@ -76,44 +76,44 @@ const meta = {
             const tag = space.db.add(Tag.make({ label: 'important', hue: 'green' }));
             const tagDxn = Obj.getDXN(tag).toString();
 
-            // Create a project
+            // Create a project.
             const project = DataType.Project.make({ collections: [] });
 
-            // Create a view for Contacts
-            const personView = createView({
+            // Create a view for Contacts.
+            const personView = DataType.View.make({
               name: 'Contacts',
               query: Query.select(Filter.type(DataType.Person.Person)),
               jsonSchema: Type.toJsonSchema(DataType.Person.Person),
               presentation: project,
             });
 
-            // Create a view for Organizations
-            const organizationView = createView({
+            // Create a view for Organizations.
+            const organizationView = DataType.View.make({
               name: 'Organizations',
               query: Query.select(Filter.type(DataType.Organization.Organization)).select(Filter.tag(tagDxn)),
               jsonSchema: Type.toJsonSchema(DataType.Organization.Organization),
               presentation: project,
             });
 
-            // Create a view for Tasks
-            const taskView = createView({
+            // Create a view for Tasks.
+            const taskView = DataType.View.make({
               name: 'Tasks',
               query: Query.select(Filter.type(DataType.Task.Task)).select(Filter.tag(tagDxn)),
               jsonSchema: Type.toJsonSchema(DataType.Task.Task),
               presentation: project,
             });
 
-            // Create a view for Project-Projects
-            const projectView = createView({
+            // Create a view for Project-Projects.
+            const projectView = DataType.View.make({
               name: 'Projects (not the UI component)',
               query: Query.select(Filter.type(DataType.Project.Project)),
               jsonSchema: Type.toJsonSchema(DataType.Project.Project),
               presentation: project,
             });
 
-            // Create a view for Messages
+            // Create a view for Messages.
             const messageQueue = space.queues.create();
-            const messageView = createView({
+            const messageView = DataType.View.make({
               name: 'Messages',
               query: Query.select(Filter.type(DataType.Message)).options({ queues: [messageQueue.dxn.toString()] }),
               jsonSchema: Type.toJsonSchema(DataType.Message),

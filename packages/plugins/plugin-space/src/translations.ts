@@ -40,7 +40,7 @@ export const translations = [
         'rename object label': 'Rename record type',
         'delete object label': 'Delete record type',
       },
-      [Type.getTypename(DataType.View)]: {
+      [Type.getTypename(DataType.View.View)]: {
         'typename label': 'View',
         'typename label_zero': 'Views',
         'typename label_one': 'View',

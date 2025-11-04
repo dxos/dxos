@@ -50,7 +50,7 @@ type ProjectContentProps = {
 
 const ProjectContent = ({ project }: ProjectContentProps) => {
   // NOTE: This doesn’t encompass column types which the Project schema.
-  const views = project.collections.map((ref) => ref.target).filter((object) => Obj.instanceOf(DataType.View, object));
+  const views = project.collections.map((ref) => ref.target).filter((object) => Obj.instanceOf(DataType.View.View, object));
 
   return (
     <Stack orientation='horizontal' size='contain' rail={false}>

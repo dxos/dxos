@@ -17,15 +17,15 @@ export default () =>
     createSurface({
       id: `${meta.id}/table`,
       role: ['article', 'section', 'slide'],
-      filter: (data): data is { subject: DataType.View } =>
-        Obj.instanceOf(DataType.View, data.subject) && Obj.instanceOf(Table.Table, data.subject.presentation.target),
+      filter: (data): data is { subject: DataType.View.View } =>
+        Obj.instanceOf(DataType.View.View, data.subject) && Obj.instanceOf(Table.Table, data.subject.presentation.target),
       component: ({ data, role }) => <TableContainer view={data.subject} role={role} />,
     }),
     createSurface({
       id: `${meta.id}/table-card`,
       role: ['card--intrinsic', 'card--extrinsic', 'card--popover', 'card--transclusion', 'card'],
-      filter: (data): data is { subject: DataType.View } =>
-        Obj.instanceOf(DataType.View, data.subject) && Obj.instanceOf(Table.Table, data.subject.presentation.target),
+      filter: (data): data is { subject: DataType.View.View } =>
+        Obj.instanceOf(DataType.View.View, data.subject) && Obj.instanceOf(Table.Table, data.subject.presentation.target),
       component: ({ data, role }) => <TableCard view={data.subject} role={role} />,
     }),
   ]);

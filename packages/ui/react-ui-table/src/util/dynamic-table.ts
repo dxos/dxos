@@ -8,11 +8,10 @@ import { Filter, Obj, Query } from '@dxos/echo';
 import { getTypename, toJsonSchema } from '@dxos/echo/internal';
 import type { JsonSchemaType } from '@dxos/echo/internal';
 import {
-  type DataType,
+  DataType,
   ProjectionModel,
   type SchemaPropertyDefinition,
   type SortDirectionType,
-  createView,
   getSchemaFromPropertyDefinitions,
 } from '@dxos/schema';
 
@@ -60,9 +59,9 @@ export const makeDynamicTable = ({
 }: {
   jsonSchema: JsonSchemaType;
   properties?: TablePropertyDefinition[];
-}): { projection: ProjectionModel; view: DataType.View } => {
+}): { projection: ProjectionModel; view: DataType.View.View } => {
   const table = Obj.make(Table.Table, { sizes: {} });
-  const view = createView({
+  const view = DataType.View.make({
     query: Query.select(Filter.everything()),
     jsonSchema,
     presentation: table,
@@ -79,7 +78,7 @@ export const makeDynamicTable = ({
 };
 
 const setProperties = (
-  view: DataType.View,
+  view: DataType.View.View,
   projection: ProjectionModel,
   table: Table.Table,
   properties: TablePropertyDefinition[],

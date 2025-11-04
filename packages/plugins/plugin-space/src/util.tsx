@@ -178,7 +178,7 @@ const getViewGraphNodePartials = ({
   view,
   resolve,
 }: {
-  view: DataType.View;
+  view: DataType.View.View;
   resolve: (typename: string) => Record<string, any>;
 }) => {
   const presentation = view.presentation.target;
@@ -475,7 +475,7 @@ export const createObjectNode = ({
       ? getQueryCollectionNodePartials({ collection: object, space, resolve })
       : Obj.instanceOf(DataType.StoredSchema, object)
         ? getSchemaGraphNodePartials()
-        : Obj.instanceOf(DataType.View, object)
+        : Obj.instanceOf(DataType.View.View, object)
           ? getViewGraphNodePartials({ view: object, resolve })
           : metadata.graphProps;
 

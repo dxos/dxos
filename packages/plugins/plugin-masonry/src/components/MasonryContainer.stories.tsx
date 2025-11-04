@@ -29,8 +29,8 @@ faker.seed(0);
 const StorybookMasonry = () => {
   const spaces = useSpaces();
   const space = spaces[spaces.length - 1];
-  const views = useQuery(space, Filter.type(DataType.View));
-  const [view, setView] = useState<DataType.View>();
+  const views = useQuery(space, Filter.type(DataType.View.View));
+  const [view, setView] = useState<DataType.View.View>();
   useEffect(() => {
     if (views.length && !view) {
       const view = views[0];
@@ -50,7 +50,7 @@ const meta = {
     withPluginManager({
       plugins: [
         ClientPlugin({
-          types: [DataType.Organization.Organization, DataType.View, Masonry.Masonry],
+          types: [DataType.Organization.Organization, DataType.View.View, Masonry.Masonry],
           onClientInitialized: async ({ client }) => {
             await client.halo.createIdentity();
             const space = await client.spaces.create();

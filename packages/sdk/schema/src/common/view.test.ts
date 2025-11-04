@@ -11,9 +11,9 @@ import { EchoTestBuilder } from '@dxos/echo-db/testing';
 import { log } from '@dxos/log';
 
 import { DataType } from '../common';
+import { ProjectionModel } from '../projection';
 
-import { ProjectionModel } from './projection-model';
-import { createView, createViewWithReferences } from './view';
+import { make, makeWithReferences } from './view';
 
 describe('Projection', () => {
   let builder: EchoTestBuilder;
@@ -33,7 +33,7 @@ describe('Projection', () => {
     const registry = new RuntimeSchemaRegistry();
     registry.addSchema([DataType.Person.Person, DataType.Organization.Organization]);
 
-    const view = await createViewWithReferences({
+    const view = await makeWithReferences({
       query: Query.select(Filter.type(schema)),
       jsonSchema,
       presentation: Obj.make(Type.Expando, {}),
@@ -115,7 +115,7 @@ describe('Projection', () => {
     });
 
     const presentation = Obj.make(Type.Expando, {});
-    const view = createView({
+    const view = make({
       query: Query.select(Filter.typename(schema.typename)),
       jsonSchema: schema.jsonSchema,
       presentation,

@@ -37,7 +37,7 @@ const generator: ValueGenerator = faker as any;
 const useTestModel = <S extends Type.Obj.Any>(schema: S, count: number) => {
   const client = useClient();
   const { space } = useClientProvider();
-  const [view, setView] = useState<DataType.View>();
+  const [view, setView] = useState<DataType.View.View>();
   const [jsonSchema, setJsonSchema] = useState<JsonSchemaType>();
 
   const features = useMemo<TableFeatures>(
@@ -134,7 +134,7 @@ const meta = {
     // TODO(thure): Shouldn’t `layout: 'fullscreen'` below make this unnecessary?
     withLayout({ classNames: 'fixed inset-0' }),
     withClientProvider({
-      types: [DataType.View, DataType.Organization.Organization, DataType.Person.Person, Table.Table],
+      types: [DataType.View.View, DataType.Organization.Organization, DataType.Person.Person, Table.Table],
       createIdentity: true,
       createSpace: true,
     }),

@@ -8,7 +8,6 @@ import { Filter, type Live, Obj, Query, Type } from '@dxos/echo';
 import { TypedObject } from '@dxos/echo/internal';
 
 import { DataType } from '../common';
-import { createView } from '../view';
 
 export class TestSchema extends TypedObject({
   typename: 'example.com/type/Test',
@@ -49,7 +48,7 @@ export const testSchema: Live<DataType.StoredSchema> = Obj.make(DataType.StoredS
   jsonSchema: Type.toJsonSchema(TestSchema),
 });
 
-export const testView: Live<DataType.View> = createView({
+export const testView: Live<DataType.View.View> = DataType.View.make({
   name: 'Test',
   query: Query.select(Filter.type(TestSchema)),
   jsonSchema: Type.toJsonSchema(TestSchema),

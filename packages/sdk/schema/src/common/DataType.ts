@@ -9,8 +9,8 @@
 
 export { StoredSchema } from '@dxos/echo/internal';
 
-export { View } from '../view';
 export * as Collection from './collection';
+export * as View from './view';
 export * as Text from './text';
 
 //

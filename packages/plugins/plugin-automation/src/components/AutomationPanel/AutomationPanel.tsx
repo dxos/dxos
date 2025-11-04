@@ -192,7 +192,7 @@ const projectMatch = (project: DataType.Project.Project) => {
   const viewQueries = EFn.pipe(
     project.collections,
     Array.map((collection) => collection.target),
-    Array.filter(Schema.is(DataType.View)),
+    Array.filter(Schema.is(DataType.View.View)),
     Array.map((view) => Obj.getSnapshot(view).query.ast),
     Array.map((ast) => JSON.stringify(ast)),
   );

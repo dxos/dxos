@@ -30,11 +30,8 @@ import { invariant } from '@dxos/invariant';
 import { DXN, PublicKey } from '@dxos/keys';
 import { type Live } from '@dxos/live-object';
 
+import { FieldSchema, FieldSortType, ProjectionModel } from '../projection';
 import { getSchemaProperties } from '../properties';
-
-import { FieldSchema } from './field';
-import { ProjectionModel } from './projection-model';
-import { FieldSortType } from './sort';
 
 export const Projection = Schema.Struct({
   /**
@@ -103,33 +100,7 @@ export interface View extends Schema.Schema.Type<typeof View_> {}
 export interface ViewEncoded extends Schema.Schema.Encoded<typeof View_> {}
 export const View: Schema.Schema<View, ViewEncoded> = View_;
 
-// TODO(wittjosiah): This needs to be cleaned up.
-//   Ideally this should be something like `Query.getTypename` or something like that.
-//   It should return the typename the query is indexing on if it is, regardless or where in the AST it is.
-export const getTypenameFromQuery = (query: QueryAST.Query | undefined) => {
-  if (query?.type !== 'select') {
-    return '';
-  }
-
-  if (query.filter.type !== 'object') {
-    return '';
-  }
-
-  if (!query.filter.typename) {
-    return '';
-  }
-
-  const dxn = DXN.tryParse(query.filter.typename)?.asTypeDXN();
-  if (!dxn) {
-    return '';
-  }
-
-  return dxn.type;
-};
-
-export const createFieldId = () => PublicKey.random().truncate();
-
-type CreateViewProps = {
+type MakeProps = {
   name?: string;
   query: Query.Any;
   queryRaw?: string;
@@ -143,8 +114,7 @@ type CreateViewProps = {
 /**
  * Create view from provided schema.
  */
-// TODO(wittjosiah): Export as `DataType.View.make`.
-export const createView = ({
+export const make = ({
   name,
   query,
   queryRaw,
@@ -153,7 +123,7 @@ export const createView = ({
   presentation,
   fields: include,
   pivotFieldName,
-}: CreateViewProps): Live<View> => {
+}: MakeProps): Live<View> => {
   const view = Obj.make(View, {
     name,
     query: { raw: queryRaw, ast: query.ast },
@@ -201,7 +171,7 @@ export const createView = ({
   return view;
 };
 
-type CreateViewWithReferencesProps = CreateViewProps & {
+type MakeWithReferencesProps = MakeProps & {
   // TODO(wittjosiah): Unify these.
   registry?: RuntimeSchemaRegistry;
   echoRegistry?: EchoSchemaRegistry;
@@ -211,7 +181,7 @@ type CreateViewWithReferencesProps = CreateViewProps & {
  * Create view from provided schema with references for fields that are references.
  * Referenced schemas are resolved in the provided registries.
  */
-export const createViewWithReferences = async ({
+export const makeWithReferences = async ({
   name,
   query,
   queryRaw,
@@ -222,8 +192,8 @@ export const createViewWithReferences = async ({
   pivotFieldName,
   registry,
   echoRegistry,
-}: CreateViewWithReferencesProps): Promise<Live<View>> => {
-  const view = createView({
+}: MakeWithReferencesProps): Promise<Live<View>> => {
+  const view = make({
     name,
     query,
     queryRaw,
@@ -294,7 +264,7 @@ export const createViewWithReferences = async ({
 };
 
 export type CreateViewFromSpaceProps = Omit<
-  CreateViewWithReferencesProps,
+  MakeWithReferencesProps,
   'query' | 'queryRaw' | 'jsonSchema' | 'registry'
 > & {
   client?: Client;
@@ -333,7 +303,7 @@ export const createViewFromSpace = async ({
 
   return {
     jsonSchema,
-    view: await createViewWithReferences({
+    view: await makeWithReferences({
       ...props,
       query: Query.select(Filter.typename(typename)),
       jsonSchema,

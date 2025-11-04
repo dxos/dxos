@@ -28,7 +28,7 @@ export const DataTypes: (Type.Obj.Any | Type.Relation.Any)[] = [
   DataType.StoredSchema,
   DataType.Task.Task,
   DataType.Text.Text,
-  DataType.View,
+  DataType.View.View,
 
   // Relations
   DataType.AnchoredTo.AnchoredTo,

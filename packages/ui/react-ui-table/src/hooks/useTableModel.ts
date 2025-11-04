@@ -16,7 +16,7 @@ import { isNonNullable } from '@dxos/util';
 import { TableModel, type TableModelProps, type TableRow, type TableRowAction } from '../model';
 
 export type UseTableModelParams<T extends TableRow = TableRow> = {
-  view?: DataType.View;
+  view?: DataType.View.View;
   schema?: JsonSchemaType;
   projection?: ProjectionModel;
   rows?: Live<T>[];

@@ -526,7 +526,7 @@ export default (context: PluginContext) => {
     createExtension({
       id: `${meta.id}/static-schema-actions`,
       actions: (node) => {
-        let query: QueryResult<DataType.View> | undefined;
+        let query: QueryResult<DataType.View.View> | undefined;
         return Rx.make((get) =>
           Function.pipe(
             get(node),
@@ -537,7 +537,7 @@ export default (context: PluginContext) => {
             Option.map(({ space, schema }) => {
               if (!query) {
                 // TODO(wittjosiah): Support filtering by nested properties (e.g. `query.typename`).
-                query = space.db.query(Filter.type(DataType.View));
+                query = space.db.query(Filter.type(DataType.View.View));
               }
 
               const views = get(rxFromQuery(query));
@@ -574,7 +574,7 @@ export default (context: PluginContext) => {
     createExtension({
       id: `${meta.id}/schema-views`,
       connector: (node) => {
-        let query: QueryResult<DataType.View> | undefined;
+        let query: QueryResult<DataType.View.View> | undefined;
         return Rx.make((get) =>
           Function.pipe(
             get(node),
@@ -587,7 +587,7 @@ export default (context: PluginContext) => {
             Option.map(({ space, schema }) => {
               if (!query) {
                 // TODO(wittjosiah): Support filtering by nested properties (e.g. `query.typename`).
-                query = space.db.query(Filter.type(DataType.View));
+                query = space.db.query(Filter.type(DataType.View.View));
               }
 
               // TODO(wittjosiah): Remove cast.
@@ -649,7 +649,7 @@ export default (context: PluginContext) => {
     createExtension({
       id: `${meta.id}/object-actions`,
       actions: (node) => {
-        let query: QueryResult<DataType.View> | undefined;
+        let query: QueryResult<DataType.View.View> | undefined;
         return Rx.make((get) =>
           Function.pipe(
             get(node),
@@ -663,7 +663,7 @@ export default (context: PluginContext) => {
               const isSchema = Obj.instanceOf(DataType.StoredSchema, object);
               if (!query && isSchema) {
                 // TODO(wittjosiah): Support filtering by nested properties (e.g. `query.typename`).
-                query = space.db.query(Filter.type(DataType.View));
+                query = space.db.query(Filter.type(DataType.View.View));
               }
 
               let deletable =
@@ -713,7 +713,7 @@ export default (context: PluginContext) => {
         Rx.make((get) =>
           Function.pipe(
             get(node),
-            Option.flatMap((node) => (Obj.instanceOf(DataType.View, node.data) ? Option.some(node) : Option.none())),
+            Option.flatMap((node) => (Obj.instanceOf(DataType.View.View, node.data) ? Option.some(node) : Option.none())),
             Option.map((node) => [
               {
                 id: [node.id, 'selected-objects'].join(ATTENDABLE_PATH_SEPARATOR),

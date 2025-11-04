@@ -171,8 +171,8 @@ export default () =>
           typeof contact.organization === 'string' ? false : contact.organization?.target === organization,
         );
 
-        const currentSpaceViews = useQuery(space, Filter.type(DataType.View));
-        const defaultSpaceViews = useQuery(defaultSpace, Filter.type(DataType.View));
+        const currentSpaceViews = useQuery(space, Filter.type(DataType.View.View));
+        const defaultSpaceViews = useQuery(defaultSpace, Filter.type(DataType.View.View));
         const currentSpaceContactTable = currentSpaceViews.find(
           (view) =>
             getTypenameFromQuery(view.query.ast) === DataType.Person.Person.typename &&

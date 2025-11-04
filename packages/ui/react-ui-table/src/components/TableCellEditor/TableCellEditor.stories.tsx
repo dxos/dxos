@@ -45,7 +45,7 @@ const meta = {
   decorators: [
     withTheme,
     withClientProvider({
-      types: [DataType.View, DataType.Task.Task, Table.Table],
+      types: [DataType.View.View, DataType.Task.Task, Table.Table],
       createIdentity: true,
       createSpace: true,
       onCreateSpace: async ({ client, space }) => {

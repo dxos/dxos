@@ -40,7 +40,7 @@ export const makeView = async ({
   ...props
 }: MakeViewProps): Promise<{
   jsonSchema: JsonSchemaType;
-  view: DataType.View;
+  view: DataType.View.View;
   schema: ReturnType<typeof toEffectSchema>;
 }> => {
   const table = Obj.make(Table, { sizes: {} });

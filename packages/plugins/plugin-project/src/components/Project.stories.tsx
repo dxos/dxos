@@ -12,7 +12,7 @@ import { useQuery } from '@dxos/react-client/echo';
 import { useClientProvider, withClientProvider } from '@dxos/react-client/testing';
 import { withTheme } from '@dxos/react-ui/testing';
 import { Form } from '@dxos/react-ui-form';
-import { DataType, createView } from '@dxos/schema';
+import { DataType } from '@dxos/schema';
 import { createObjectFactory } from '@dxos/schema/testing';
 
 import { translations } from '../translations';
@@ -38,7 +38,7 @@ const DefaultStory = () => {
     }
 
     // Create a new view for contacts similar to the initialization
-    const view = createView({
+    const view = DataType.View.make({
       name: 'New Contacts',
       query: Query.select(Filter.type(DataType.Person.Person)),
       jsonSchema: Type.toJsonSchema(DataType.Person.Person),
@@ -74,8 +74,8 @@ const MutationsStory = () => {
       return;
     }
 
-    // Create a new view for contacts similar to the initialization
-    const view = createView({
+    // Create a new view for contacts similar to the initialization.
+    const view = DataType.View.make({
       name: 'New Contacts',
       query: Query.select(Filter.type(DataType.Person.Person)),
       jsonSchema: Type.toJsonSchema(DataType.Person.Person),
@@ -130,17 +130,17 @@ const meta = {
   decorators: [
     withTheme,
     withClientProvider({
-      types: [DataType.Project.Project, DataType.View, DataType.Collection.Collection, DataType.Person.Person],
+      types: [DataType.Project.Project, DataType.View.View, DataType.Collection.Collection, DataType.Person.Person],
       createIdentity: true,
       createSpace: true,
       onCreateSpace: async ({ space }) => {
-        // Create a project
+        // Create a project.
         const project = DataType.Project.make({
           collections: [],
         });
 
-        // Create a view for contacts
-        const view = createView({
+        // Create a view for contacts.
+        const view = DataType.View.make({
           name: 'Contacts',
           query: Query.select(Filter.type(DataType.Person.Person)),
           jsonSchema: Type.toJsonSchema(DataType.Person.Person),

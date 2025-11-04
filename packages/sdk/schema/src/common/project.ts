@@ -9,9 +9,9 @@ import { Type } from '@dxos/echo';
 import { Format, GeneratorAnnotation, LabelAnnotation } from '@dxos/echo/internal';
 
 import { IconAnnotation, ItemAnnotation } from '../annotations';
-import { View } from '../view';
 
 import { Collection } from './collection';
+import { View } from './view';
 
 /**
  * Project schema.

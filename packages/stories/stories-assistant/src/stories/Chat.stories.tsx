@@ -42,7 +42,7 @@ import { useAsyncEffect, useSignalsMemo } from '@dxos/react-ui';
 import { withTheme } from '@dxos/react-ui/testing';
 import { Stack, StackItem } from '@dxos/react-ui-stack';
 import { Table } from '@dxos/react-ui-table/types';
-import { DataType, createView } from '@dxos/schema';
+import { DataType } from '@dxos/schema';
 import { render } from '@dxos/storybook-utils';
 import { isNonNullable, trim } from '@dxos/util';
 
@@ -406,7 +406,7 @@ export const WithMap: Story = {
   decorators: getDecorators({
     plugins: [MapPlugin(), TablePlugin()],
     config: config.remote,
-    types: [DataType.View, Map.Map, Table.Table],
+    types: [DataType.View.View, Map.Map, Table.Table],
     onInit: async ({ space }) => {
       const [schema] = await space.db.schemaRegistry.register([createLocationSchema()]);
       const { view: tableView } = await Table.makeView({ name: 'Table', space, typename: schema.typename });
@@ -420,7 +420,7 @@ export const WithMap: Story = {
       space.db.add(mapView);
     },
     onChatCreated: async ({ space, binder }) => {
-      const { objects } = await space.db.query(Filter.type(DataType.View)).run();
+      const { objects } = await space.db.query(Filter.type(DataType.View.View)).run();
       await binder.bind({ objects: objects.map((object) => Ref.make(object)) });
     },
   }),
@@ -726,7 +726,7 @@ export const WithProject: Story = {
       DataType.Organization.Organization,
       DataType.Person.Person,
       DataType.Project.Project,
-      DataType.View,
+      DataType.View.View,
       Mailbox.Mailbox,
     ],
     onInit: async ({ space }) => {
@@ -828,7 +828,7 @@ export const WithProject: Story = {
       });
       space.db.add(researchTrigger);
 
-      const mailboxView = createView({
+      const mailboxView = DataType.View.make({
         name: 'Mailbox',
         query: Query.select(Filter.type(DataType.Message))
           .select(Filter.tag(tagDxn))
@@ -838,19 +838,19 @@ export const WithProject: Story = {
         jsonSchema: Type.toJsonSchema(DataType.Message),
         presentation: Obj.make(DataType.Collection.Collection, { objects: [] }),
       });
-      const contactsView = createView({
+      const contactsView = DataType.View.make({
         name: 'Contacts',
         query: contactsQuery,
         jsonSchema: Type.toJsonSchema(DataType.Person.Person),
         presentation: Obj.make(DataType.Collection.Collection, { objects: [] }),
       });
-      const organizationsView = createView({
+      const organizationsView = DataType.View.make({
         name: 'Organizations',
         query: organizationsQuery,
         jsonSchema: Type.toJsonSchema(DataType.Organization.Organization),
         presentation: Obj.make(DataType.Collection.Collection, { objects: [] }),
       });
-      const notesView = createView({
+      const notesView = DataType.View.make({
         name: 'Notes',
         query: notesQuery,
         jsonSchema: Type.toJsonSchema(Markdown.Document),

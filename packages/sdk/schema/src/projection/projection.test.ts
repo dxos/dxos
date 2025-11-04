@@ -28,12 +28,12 @@ import { invariant } from '@dxos/invariant';
 
 import { DataType } from '../common';
 
-import { ProjectionModel } from './projection-model';
-import { type Projection, createFieldId, createView, createViewWithReferences } from './view';
+import { createFieldId } from './field';
+import { ProjectionModel } from './projection';
 
 registerSignalsRuntime();
 
-const getFieldId = (projection: Projection, path: string): string => {
+const getFieldId = (projection: DataType.View.Projection, path: string): string => {
   const field = projection.fields.find((field) => field.path === path);
   invariant(field);
   return field.id;
@@ -68,7 +68,7 @@ describe('ProjectionModel', () => {
     const [mutable] = await registry.register([schema]);
 
     const presentation = Obj.make(Type.Expando, {});
-    const view = createView({
+    const view = DataType.View.make({
       query: Query.select(Filter.type(mutable)),
       jsonSchema: mutable.jsonSchema,
       presentation,
@@ -156,7 +156,7 @@ describe('ProjectionModel', () => {
     const jsonSchema = toJsonSchema(schema);
 
     const presentation = Obj.make(Type.Expando, {});
-    const view = await createViewWithReferences({
+    const view = await DataType.View.makeWithReferences({
       query: Query.select(Filter.type(schema)),
       jsonSchema,
       presentation,
@@ -209,7 +209,7 @@ describe('ProjectionModel', () => {
 
     const [mutable] = await registry.register([schema]);
     const presentation = Obj.make(Type.Expando, {});
-    const view = createView({
+    const view = DataType.View.make({
       query: Query.select(Filter.type(mutable)),
       jsonSchema: mutable.jsonSchema,
       presentation,
@@ -246,7 +246,7 @@ describe('ProjectionModel', () => {
 
     const [mutable] = await registry.register([schema]);
     const presentation = Obj.make(Type.Expando, {});
-    const view = createView({
+    const view = DataType.View.make({
       query: Query.select(Filter.type(mutable)),
       jsonSchema: mutable.jsonSchema,
       presentation,
@@ -297,7 +297,7 @@ describe('ProjectionModel', () => {
 
     const [mutable] = await registry.register([schema]);
     const presentation = Obj.make(Type.Expando, {});
-    const view = createView({
+    const view = DataType.View.make({
       query: Query.select(Filter.type(mutable)),
       jsonSchema: mutable.jsonSchema,
       presentation,
@@ -350,7 +350,7 @@ describe('ProjectionModel', () => {
 
     const [mutable] = await registry.register([schema]);
     const presentation = Obj.make(Type.Expando, {});
-    const view = createView({
+    const view = DataType.View.make({
       query: Query.select(Filter.type(mutable)),
       jsonSchema: mutable.jsonSchema,
       presentation,
@@ -408,7 +408,7 @@ describe('ProjectionModel', () => {
 
     const [mutable] = await registry.register([schema]);
     const presentation = Obj.make(Type.Expando, {});
-    const view = createView({
+    const view = DataType.View.make({
       query: Query.select(Filter.type(mutable)),
       jsonSchema: mutable.jsonSchema,
       presentation,
@@ -520,7 +520,7 @@ describe('ProjectionModel', () => {
 
     const [mutable] = await registry.register([schema]);
     const presentation = Obj.make(Type.Expando, {});
-    const view = createView({
+    const view = DataType.View.make({
       query: Query.select(Filter.type(mutable)),
       jsonSchema: mutable.jsonSchema,
       presentation,
@@ -659,7 +659,7 @@ describe('ProjectionModel', () => {
 
     // Create view with only name and email fields.
     const presentation = Obj.make(Type.Expando, {});
-    const view = createView({
+    const view = DataType.View.make({
       query: Query.select(Filter.type(mutable)),
       jsonSchema: mutable.jsonSchema,
       presentation,
@@ -765,7 +765,7 @@ describe('ProjectionModel', () => {
 
     // Create view with no explicit fields.
     const presentation = Obj.make(Type.Expando, {});
-    const view = createView({
+    const view = DataType.View.make({
       query: Query.select(Filter.type(mutable)),
       jsonSchema: mutable.jsonSchema,
       presentation,
@@ -803,7 +803,7 @@ describe('ProjectionModel', () => {
 
     // Create empty view (no fields).
     const presentation = Obj.make(Type.Expando, {});
-    const view = createView({
+    const view = DataType.View.make({
       query: Query.select(Filter.type(mutable)),
       jsonSchema: mutable.jsonSchema,
       presentation,
@@ -846,7 +846,7 @@ describe('ProjectionModel', () => {
 
     const [mutable] = await registry.register([schema]);
     const presentation = Obj.make(Type.Expando, {});
-    const view = createView({
+    const view = DataType.View.make({
       query: Query.select(Filter.type(mutable)),
       jsonSchema: mutable.jsonSchema,
       presentation,
@@ -884,7 +884,7 @@ describe('ProjectionModel', () => {
     const jsonSchema = toJsonSchema(schema);
 
     const presentation = Obj.make(Type.Expando, {});
-    const view = createView({ query: Query.select(Filter.type(schema)), jsonSchema, presentation });
+    const view = DataType.View.make({ query: Query.select(Filter.type(schema)), jsonSchema, presentation });
     const projection = new ProjectionModel(jsonSchema, view.projection);
     const fieldId = getFieldId(view.projection, 'status');
     invariant(fieldId);
@@ -942,7 +942,11 @@ describe('ProjectionModel', () => {
     const jsonSchema = toJsonSchema(ContactWithArrayOfEmails);
 
     const presentation = Obj.make(Type.Expando, {});
-    const view = createView({ query: Query.select(Filter.type(ContactWithArrayOfEmails)), jsonSchema, presentation });
+    const view = DataType.View.make({
+      query: Query.select(Filter.type(ContactWithArrayOfEmails)),
+      jsonSchema,
+      presentation,
+    });
     const projection = new ProjectionModel(jsonSchema, view.projection);
 
     const fieldId = createFieldId();
@@ -983,7 +987,7 @@ describe('ProjectionModel', () => {
 
       const [mutable] = await registry.register([schema]);
       const presentation = Obj.make(Type.Expando, {});
-      const view = createView({
+      const view = DataType.View.make({
         query: Query.select(Filter.type(mutable)),
         jsonSchema: mutable.jsonSchema,
         presentation,
