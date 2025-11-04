@@ -300,7 +300,7 @@ export const ViewEditor = forwardRef<ProjectionModel, ViewEditorProps>(
           <div role='none' className={outerSpacing ? cardSpacing : 'mlb-cardSpacingBlock'}>
             <IconButton
               icon='ph--plus--regular'
-              label={t('button add property')}
+              label={t('add property button')}
               onClick={readonly ? undefined : handleAdd}
               // TODO(burdon): Show field limit in ux (not tooltip).
               disabled={view.projection.fields.length >= VIEW_FIELD_LIMIT}
