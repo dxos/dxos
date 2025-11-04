@@ -6,10 +6,10 @@ import type * as Context from 'effect/Context';
 import * as Layer from 'effect/Layer';
 
 import { AiService } from '@dxos/ai';
+import { DatabaseService } from '@dxos/echo-db';
 import { entries } from '@dxos/util';
 
 import { ConfiguredCredentialsService, CredentialsService } from './credentials';
-import { DatabaseService } from './database';
 import { ComputeEventLogger } from './event-logger';
 import { QueueService } from './queues';
 import { RemoteFunctionExecutionService } from './remote-function-execution-service';

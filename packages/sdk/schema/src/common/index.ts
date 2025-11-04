@@ -38,6 +38,8 @@ export const DataTypes: (Type.Obj.Any | Type.Relation.Any)[] = [
   DataType.HasSubject,
 ];
 
+// TODO(wittjosiah): Should be exported as `Collection.addObject`.
+export { addObject } from './collection';
 // TODO(burdon): Remove (fix The inferred type of 'DeleteMessage' cannot be named without a reference.)
 export * from './message';
 export * from './relations';

@@ -9,13 +9,13 @@ import * as Schema from 'effect/Schema';
 
 import { AiService } from '@dxos/ai';
 import { todo } from '@dxos/debug';
+import { DatabaseService } from '@dxos/echo-db';
 import { log } from '@dxos/log';
 
 import { FunctionError, FunctionNotFoundError } from '../errors';
 import type { FunctionContext, FunctionDefinition } from '../handler';
 
 import { CredentialsService } from './credentials';
-import { DatabaseService } from './database';
 import { type ComputeEventLogger } from './event-logger';
 import { QueueService } from './queues';
 import { RemoteFunctionExecutionService } from './remote-function-execution-service';
