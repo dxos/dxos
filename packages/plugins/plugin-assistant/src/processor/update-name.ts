@@ -24,8 +24,7 @@ export const updateName = async (
   runtime: Runtime.Runtime<AiChatServices>,
   conversation: AiConversation,
   chat: Assistant.Chat,
-  // TODO(burdon): Use simpler model.
-  model: ModelName = DEFAULT_EDGE_MODEL,
+  model: ModelName = '@anthropic/claude-4-5-haiku',
 ): Promise<void> => {
   const history = await conversation.getHistory();
   const system = trim`
