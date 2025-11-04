@@ -45,6 +45,8 @@ export class FunctionRegistryService extends Context.Tag('@dxos/functions/Functi
      * Query functions registry.
      */
     query: (query?: FunctionsQuery) => Effect.Effect<QueryResult>;
+
+    // TODO(dmaretskyi): import function to local space
   }
 >() {
   static layer = Layer.effect(
