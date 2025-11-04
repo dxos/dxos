@@ -36,7 +36,7 @@ export default async (context: PluginContext) => {
     Ref.make(
       Obj.make(DataType.Collection.QueryCollection, {
         // NOTE: This is specifically Filter.typename due to current limitations in query collection parsing.
-        query: Query.select(Filter.type(DataType.StoredSchema)).ast,
+        query: Query.select(Filter.typename(DataType.StoredSchema.typename)).ast,
       }),
     ),
   );

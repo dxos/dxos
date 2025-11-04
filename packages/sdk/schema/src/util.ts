@@ -4,32 +4,11 @@
 
 import type * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
-// TODO(burdon): Move to jsonpath-plus.
-import jp from 'jsonpath';
 
 import { type QueryAST } from '@dxos/echo';
-import { type BaseObject, FormatEnum, type JsonSchemaType, TypeEnum } from '@dxos/echo/internal';
+import { FormatEnum, type JsonSchemaType, TypeEnum } from '@dxos/echo/internal';
 import { visit } from '@dxos/effect';
 import { DXN } from '@dxos/keys';
-
-import { type FieldType } from './projection';
-
-// TODO(burdon): Remove once deprecated table is removed.
-
-/**
- * @deprecated
- */
-export const getFieldValue = <T extends BaseObject, V = any>(
-  object: T,
-  field: FieldType,
-  defaultValue?: V,
-): V | undefined => (jp.value(object, '$.' + field.path) as V) ?? defaultValue;
-
-/**
- * @deprecated
- */
-export const setFieldValue = <T extends BaseObject, V = any>(object: T, field: FieldType, value: V): V =>
-  jp.value(object, '$.' + field.path, value);
 
 /**
  * @deprecated
