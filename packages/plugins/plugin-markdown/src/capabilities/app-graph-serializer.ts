@@ -5,7 +5,7 @@
 import * as Function from 'effect/Function';
 
 import { Capabilities, type PluginContext, chain, contributes, createIntent } from '@dxos/app-framework';
-import { Obj, Type } from '@dxos/echo';
+import { Obj } from '@dxos/echo';
 import { SpaceAction } from '@dxos/plugin-space/types';
 import { isSpace } from '@dxos/react-client/echo';
 import { DataType } from '@dxos/schema';

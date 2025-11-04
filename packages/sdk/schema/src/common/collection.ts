@@ -40,6 +40,7 @@ const QueryCollection_ = Schema.Struct({
 /** @deprecated */
 export type QueryCollection = Schema.Schema.Type<typeof QueryCollection_>;
 export type QueryCollectionEncoded = Schema.Schema.Encoded<typeof QueryCollection_>;
+/** @deprecated */
 export const QueryCollection: Schema.Schema<QueryCollection, QueryCollectionEncoded> = QueryCollection_;
 
 type AddParams = {

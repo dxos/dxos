@@ -68,7 +68,10 @@ const TranscriptContainer: FC<
   );
 };
 
-type StoryProps = { messages?: DataType.Message.Message[] } & Pick<TranscriptViewProps, 'ignoreAttention' | 'attendableId'>;
+type StoryProps = { messages?: DataType.Message.Message[] } & Pick<
+  TranscriptViewProps,
+  'ignoreAttention' | 'attendableId'
+>;
 
 /**
  * Basic story mutates array of messages.
