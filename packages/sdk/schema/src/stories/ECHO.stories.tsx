@@ -17,7 +17,7 @@ import { withTheme } from '@dxos/react-ui/testing';
 import { JsonFilter } from '@dxos/react-ui-syntax-highlighter';
 import { type ValueGenerator, createObjectFactory } from '@dxos/schema/testing';
 
-import { DataType, DataTypes } from '../common';
+import { DataType, DataTypes } from '../types';
 
 faker.seed(1);
 

@@ -7,7 +7,7 @@ import * as Schema from 'effect/Schema';
 import { Filter, type Live, Obj, Query, Type } from '@dxos/echo';
 import { TypedObject } from '@dxos/echo/internal';
 
-import { DataType } from '../common';
+import { DataType } from '../types';
 
 export class TestSchema extends TypedObject({
   typename: 'example.com/type/Test',

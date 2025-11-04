@@ -6,7 +6,7 @@ import type { Space } from '@dxos/client-protocol';
 import { Obj, Ref } from '@dxos/echo';
 import { faker } from '@dxos/random';
 
-import { DataType } from '../common';
+import { DataType } from '../types';
 
 import { Testing } from './types';
 

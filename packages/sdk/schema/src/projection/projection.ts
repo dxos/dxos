@@ -19,8 +19,8 @@ import { type Live, getSnapshot } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { omit, pick } from '@dxos/util';
 
-import { type DataType } from '../common';
 import { PropertySchema, type PropertyType } from '../format';
+import { type DataType } from '../types';
 import { makeMultiSelectAnnotations, makeSingleSelectAnnotations } from '../util';
 
 import { type FieldType, createFieldId } from './field';

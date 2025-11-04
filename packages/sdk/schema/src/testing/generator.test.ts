@@ -10,7 +10,7 @@ import { log } from '@dxos/log';
 import { faker } from '@dxos/random';
 import { stripUndefined } from '@dxos/util';
 
-import { DataType } from '../common';
+import { DataType } from '../types';
 
 import { type TypeSpec, type ValueGenerator, createGenerator, createObjectFactory } from './generator';
 
