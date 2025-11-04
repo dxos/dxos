@@ -4,6 +4,7 @@
 
 import comment from './rules/comment.js';
 import effectSubpathImports from './rules/effect-subpath-imports.js';
+import forceNamespaceImport from './rules/force-namespace-import.js';
 import header from './rules/header.js';
 import noEmptyPromiseCatch from './rules/no-empty-promise-catch.js';
 import fs from 'node:fs';
@@ -19,6 +20,7 @@ const plugin = {
   rules: {
     comment,
     'effect-subpath-imports': effectSubpathImports,
+    'force-namespace-import': forceNamespaceImport,
     header,
     'no-empty-promise-catch': noEmptyPromiseCatch,
   },
