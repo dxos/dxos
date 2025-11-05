@@ -45,6 +45,7 @@
   "dependencies": {
     "@dxos/ai": "workspace:*",
     "@dxos/app-graph": "workspace:*",
+    "@dxos/assistant": "workspace:*",
     "@dxos/async": "workspace:*",
     "@dxos/blueprints": "workspace:*",
     "@dxos/client-protocol": "workspace:*",

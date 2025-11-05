@@ -24,7 +24,7 @@ import {
   definePlugin,
 } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { AiContextBinder, ArtifactId } from '@dxos/assistant';
+import { AiContextBinder, ArtifactId, GenericToolkit } from '@dxos/assistant';
 import { Agent, DesignBlueprint, Document, PlanningBlueprint, Research, Tasks } from '@dxos/assistant-toolkit';
 import { Blueprint, Prompt } from '@dxos/blueprints';
 import { type Space } from '@dxos/client/echo';
@@ -213,7 +213,7 @@ const StoryPlugin = definePlugin<StoryPluginOptions>(
         contributes(Capabilities.Functions, [Agent.prompt]),
         contributes(Capabilities.Functions, [Document.read, Document.update]),
         contributes(Capabilities.Functions, [Tasks.read, Tasks.update]),
-        contributes(Capabilities.Functions, [Research.create, Research.update, Research.research]),
+        contributes(Capabilities.Functions, [Research.create, Research.research]),
         contributes(Capabilities.Functions, [Example.reply]),
       ],
     }),
@@ -221,8 +221,10 @@ const StoryPlugin = definePlugin<StoryPluginOptions>(
       id: 'example.com/plugin/testing/module/toolkit',
       activatesOn: Events.Startup,
       activate: (context) => [
-        contributes(Capabilities.Toolkit, TestingToolkit.Toolkit),
-        contributes(Capabilities.ToolkitHandler, TestingToolkit.createLayer(context)),
+        contributes(
+          Capabilities.Toolkit,
+          GenericToolkit.make(TestingToolkit.Toolkit, TestingToolkit.createLayer(context)),
+        ),
       ],
     }),
     defineModule({
