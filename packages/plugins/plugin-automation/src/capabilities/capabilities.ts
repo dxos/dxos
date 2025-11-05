@@ -14,6 +14,7 @@ import type {
   QueueService,
   TriggerDispatcher,
   TriggerStateStore,
+  FunctionRegistryService,
 } from '@dxos/functions';
 import type { SpaceId } from '@dxos/keys';
 
@@ -30,6 +31,7 @@ export namespace AutomationCapabilities {
     | QueueService
     | CredentialsService
     | FunctionInvocationService
+    | FunctionRegistryService
     | InvocationTracer
     | TriggerStateStore
     // TODO(dmaretskyi): Those should be provided at AI-chat call site.

@@ -120,7 +120,7 @@ export const LocalSearchToolkit = Toolkit.make(
 
 export const LocalSearchHandler = LocalSearchToolkit.toLayer({
   search_local_search: Effect.fn(function* ({ query }) {
-    const { objects } = yield* DatabaseService.runQuery(Query.select(Filter.text(query, { type: 'vector' })));
+    const objects = yield* DatabaseService.query(Query.select(Filter.text(query, { type: 'vector' }))).run;
     const results = [...objects];
 
     const option = yield* Effect.serviceOption(ContextQueueService);

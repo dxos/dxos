@@ -12,3 +12,4 @@ export * from './queues';
 export * from './service-container';
 export * from './tracing';
 export * from './remote-function-execution-service';
+export * from './function-registry-service';

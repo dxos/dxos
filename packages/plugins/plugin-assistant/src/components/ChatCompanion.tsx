@@ -42,9 +42,9 @@ export const ChatCompanion = ({ role, data }: ChatCompanionProps) => {
 
     // TODO(burdon): Garbage collection of queues?
     await Effect.gen(function* () {
-      const { objects } = yield* DatabaseService.runQuery(
+      const objects = yield* DatabaseService.query(
         Query.select(Filter.ids(companionTo.id)).targetOf(Assistant.CompanionTo).source(),
-      );
+      ).run;
 
       // TODO(wittjosiah): This should be the default sort order.
       let nextChat = objects.toSorted(({ id: a }, { id: b }) => a.localeCompare(b)).at(-1);

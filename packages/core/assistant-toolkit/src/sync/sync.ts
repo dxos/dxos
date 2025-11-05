@@ -39,11 +39,10 @@ export const syncObjects: (
 
       const schema = Obj.getSchema(obj) ?? failedInvariant('No schema.');
       const foreignId = Obj.getKeys(obj, foreignKeyId)[0]?.id ?? failedInvariant('No foreign key.');
-      const {
-        objects: [existing],
-      } = yield* DatabaseService.runQuery(
+      const objects = yield* DatabaseService.query(
         Query.select(Filter.foreignKeys(schema, [{ source: foreignKeyId, id: foreignId }])),
-      );
+      ).run;
+      const existing = objects[0];
       log('sync object', {
         type: Obj.getTypename(obj),
         foreignId,

@@ -70,6 +70,7 @@
     "@dxos/react-ui-stack": "workspace:*",
     "@dxos/schema": "workspace:*",
     "@dxos/util": "workspace:*",
+    "@effect-rx/rx": "0.48.7",
     "@effect/ai": "0.29.1",
     "@effect/platform-browser": "0.72.0",
     "@preact-signals/safe-react": "^0.9.0",

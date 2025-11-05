@@ -26,7 +26,7 @@ describe('TestDatabaseLayer', { timeout: 600_000 }, () => {
       }).pipe(Effect.provide(DbLayer));
 
       yield* Effect.gen(function* () {
-        const { objects } = yield* DatabaseService.runQuery(Query.select(Filter.everything()));
+        const objects = yield* DatabaseService.query(Query.select(Filter.everything())).run;
         expect(objects[0]?.label).toEqual('test');
       }).pipe(Effect.provide(DbLayer));
     }),

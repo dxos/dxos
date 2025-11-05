@@ -8,6 +8,7 @@ import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
 import type * as Schema from 'effect/Schema';
 import type * as Types from 'effect/Types';
+import { Record } from 'effect';
 
 import {
   type Filter,
@@ -18,6 +19,7 @@ import {
   type Ref,
   type Relation,
   type Type,
+  NoResultsError,
 } from '@dxos/echo';
 import type {
   EchoDatabase,
@@ -28,9 +30,10 @@ import type {
   SchemaRegistryQuery,
 } from '@dxos/echo-db';
 import type { SchemaRegistryPreparedQuery } from '@dxos/echo-db';
-import { promiseWithCauseCapture } from '@dxos/effect';
+import { promiseWithCauseCapture, extendEffect } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import type { DXN } from '@dxos/keys';
+import { Rx, Registry } from '@effect-rx/rx';
 
 export class DatabaseService extends Context.Tag('@dxos/functions/DatabaseService')<
   DatabaseService,
@@ -145,27 +148,60 @@ export class DatabaseService extends Context.Tag('@dxos/functions/DatabaseServic
   // TODO(dmaretskyi): Change API to `yield* DatabaseService.query(...).first` and `yield* DatabaseService.query(...).objects`.
 
   /**
-   * Creates a `QueryResult` object that can be subscribed to.
+   * Queries the database. Allows one-shot execution and subscription.
+   *
+   * Examples:
+   * ```ts
+   * const queryResult = yield* DatabaseService.query(...).objects;
+   *
+   * const query = yield* DatabaseService.query(...);
+   * Rx.subscribe(query.rx, (objects) => {
+   *   console.log(objects);
+   * });
+   * ```
    */
   static query: {
-    <Q extends Query.Any>(query: Q): Effect.Effect<QueryResult<Live<Query.Type<Q>>>, never, DatabaseService>;
-    <F extends Filter.Any>(filter: F): Effect.Effect<QueryResult<Live<Filter.Type<F>>>, never, DatabaseService>;
-  } = (queryOrFilter: Query.Any | Filter.Any) =>
-    DatabaseService.pipe(
-      Effect.map(({ db }) => db.query(queryOrFilter as any)),
+    <Q extends Query.Any>(query: Q): QueryResultEffect<Live<Query.Type<Q>>>;
+    <F extends Filter.Any>(filter: F): QueryResultEffect<Live<Filter.Type<F>>>;
+  } = (queryOrFilter: Query.Any | Filter.Any) => {
+    const effect = DatabaseService.pipe(
+      Effect.map(({ db }): QueryResultEx<any> => {
+        const query = db.query(queryOrFilter as any);
+
+        return {
+          run: Effect.gen(function* () {
+            const { objects } = yield* Effect.promise(() => query.run());
+            return objects;
+          }),
+          first: Effect.gen(function* () {
+            const { objects } = yield* Effect.promise(() => query.run());
+            if (objects.length === 0) {
+              return yield* Effect.fail(new NoResultsError());
+            }
+            return objects[0];
+          }),
+          objects: Rx.make((get) => {
+            get.addFinalizer(
+              query.subscribe(
+                (queryResult) => {
+                  get.setSelf(queryResult.objects);
+                },
+                { fire: true },
+              ),
+            );
+            return query.runSync();
+          }),
+        } satisfies QueryResultEx<any>;
+      }),
       Effect.withSpan('DatabaseService.query'),
     );
 
-  /**
-   * Executes the query once and returns the results.
-   */
-  static runQuery: {
-    <Q extends Query.Any>(query: Q): Effect.Effect<OneShotQueryResult<Live<Query.Type<Q>>>, never, DatabaseService>;
-    <F extends Filter.Any>(filter: F): Effect.Effect<OneShotQueryResult<Live<Filter.Type<F>>>, never, DatabaseService>;
-  } = (queryOrFilter: Query.Any | Filter.Any) =>
-    DatabaseService.query(queryOrFilter as any).pipe(
-      Effect.flatMap((queryResult) => promiseWithCauseCapture(() => queryResult.run())),
-    );
+    // Create a new object that has the effect as prototype, but extends it with the additional properties.
+    return extendEffect(effect, {
+      run: effect.pipe(Effect.flatMap((_) => _.run)),
+      first: effect.pipe(Effect.flatMap((_) => _.first)),
+    }) as QueryResultEffect<any>;
+  };
 
   // TODO(dmaretskyi): Change API to `yield* DatabaseService.querySchema(...).first` and `yield* DatabaseService.querySchema(...).schema`.
 
@@ -184,3 +220,45 @@ export class DatabaseService extends Context.Tag('@dxos/functions/DatabaseServic
       Effect.flatMap((queryResult) => promiseWithCauseCapture(() => queryResult.run())),
     );
 }
+
+// TODO(dmaretskyi): Rename.
+export interface QueryResultEx<T> {
+  /**
+   * Executes the query once and returns the results.
+   */
+  readonly run: Effect.Effect<T[]>;
+
+  /**
+   * Executes the query once and returns the first result.
+   * @throws {NoResultsError} if no results are found.
+   */
+  readonly first: Effect.Effect<T, NoResultsError>;
+
+  /**
+   * Subscribes to the query and returns the results.
+   */
+  readonly objects: Rx.Rx<T[]>;
+}
+
+export interface QueryResultEffect<T> extends Effect.Effect<QueryResultEx<T>> {
+  /**
+   * Executes the query once and returns the results.
+   */
+  readonly run: Effect.Effect<T[], never, DatabaseService>;
+
+  /**
+   * Executes the query once and returns the first result.
+   * @throws {NoResultsError} if no results are found.
+   */
+  readonly first: Effect.Effect<T, NoResultsError, DatabaseService>;
+}
+
+const addPropsOnEffect = <T, E, R, P extends { readonly [key: keyof any]: any }>(
+  effect: Effect.Effect<T, E, R>,
+  props: P,
+): Effect.Effect<T, E, R> & P => {
+  return Object.create(
+    effect,
+    Record.map(props, (value): PropertyDescriptor => ({ value })),
+  );
+};

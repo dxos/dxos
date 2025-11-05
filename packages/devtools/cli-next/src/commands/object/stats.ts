@@ -22,7 +22,7 @@ export const stats = Command.make(
   },
   ({ spaceId }) =>
     Effect.gen(function* () {
-      const { objects } = yield* DatabaseService.runQuery(Query.select(Filter.everything()));
+      const objects = yield* DatabaseService.query(Query.select(Filter.everything())).run; // note that no destructuring is require
       const stats = Function.pipe(
         objects,
         Array.groupBy((obj) => Obj.getTypename(obj) ?? '<empty>'),

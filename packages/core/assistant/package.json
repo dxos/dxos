@@ -61,6 +61,7 @@
     "@dxos/node-std": "workspace:*",
     "@dxos/schema": "workspace:*",
     "@dxos/util": "workspace:*",
+    "@effect-rx/rx": "0.48.7",
     "@effect/ai": "0.29.1",
     "@effect/experimental": "0.56.0",
     "@effect/platform": "^0.92.1",
