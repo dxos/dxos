@@ -14,8 +14,8 @@ export class SuggestionWidget extends WidgetType {
     super();
   }
 
-  override eq(other: WidgetType) {
-    return other instanceof SuggestionWidget && other.text === this.text;
+  override eq(other: this) {
+    return this.text === other.text;
   }
 
   override toDOM() {

@@ -14,8 +14,8 @@ export class PromptWidget extends WidgetType {
     super();
   }
 
-  override eq(other: WidgetType) {
-    return other instanceof PromptWidget && other.text === this.text;
+  override eq(other: this) {
+    return this.text === other.text;
   }
 
   /**

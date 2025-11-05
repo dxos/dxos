@@ -479,21 +479,21 @@ class PlaceholderWidget<TProps extends XmlWidgetProps> extends WidgetType {
     return this._root;
   }
 
-  override eq(other: WidgetType): boolean {
-    return other instanceof PlaceholderWidget && this.id === other.id;
+  override eq(other: this) {
+    return this.id === other.id;
   }
 
   override ignoreEvent() {
     return true;
   }
 
-  override toDOM(_view: EditorView): HTMLElement {
+  override toDOM(_view: EditorView) {
     this._root = document.createElement('span');
     this.notifier.mounted({ id: this.id, root: this._root, props: this.props, Component: this.Component });
     return this._root;
   }
 
-  override destroy(_dom: HTMLElement): void {
+  override destroy(_dom: HTMLElement) {
     this.notifier.unmounted(this.id);
     this._root = null;
   }
