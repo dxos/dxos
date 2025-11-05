@@ -63,12 +63,13 @@ export type MarkdownStreamEvent = {
   value: string | null;
 };
 
-export type MarkdownStreamProps = ThemedClassName<{
-  debug?: boolean;
-  content?: string;
-  onEvent?: (event: MarkdownStreamEvent) => void;
-}> &
-  (XmlTagsOptions & StreamerOptions & AutoScrollOptions);
+export type MarkdownStreamProps = ThemedClassName<
+  {
+    debug?: boolean;
+    content?: string;
+    onEvent?: (event: MarkdownStreamEvent) => void;
+  } & (XmlTagsOptions & StreamerOptions & AutoScrollOptions)
+>;
 
 export const MarkdownStream = forwardRef<MarkdownStreamController | null, MarkdownStreamProps>(
   ({ classNames, debug, content, registry, fadeIn, cursor, onEvent }, forwardedRef) => {

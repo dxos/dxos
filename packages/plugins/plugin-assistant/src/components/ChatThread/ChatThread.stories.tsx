@@ -6,14 +6,15 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
 import * as Fiber from 'effect/Fiber';
 import * as Layer from 'effect/Layer';
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { type CSSProperties, useEffect, useMemo, useState } from 'react';
 
 import { ContextQueueService, DatabaseService } from '@dxos/functions';
 import { faker } from '@dxos/random';
 import { useQueue, useSpace } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { Popover } from '@dxos/react-ui';
-import { withTheme } from '@dxos/react-ui/testing';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import { MarkdownStream } from '@dxos/react-ui-components';
 import { PreviewPopoverProvider, usePreviewPopover } from '@dxos/react-ui-editor/testing';
 import { Card } from '@dxos/react-ui-stack';
 import { DataType } from '@dxos/schema';
@@ -22,6 +23,8 @@ import { createMessageGenerator } from '../../testing';
 import { translations } from '../../translations';
 
 import { ChatThread, type ChatThreadController, type ChatThreadProps } from './ChatThread';
+import { componentRegistry } from './registry';
+import TEXT from './testing/thread.md?raw';
 
 faker.seed(1);
 
@@ -100,6 +103,7 @@ const meta = {
   render: DefaultStory,
   decorators: [
     withTheme,
+    withLayout({ container: 'column' }),
     withClientProvider({
       createIdentity: true,
       createSpace: true,
@@ -129,4 +133,20 @@ export const Delayed: Story = {
     fadeIn: true,
     cursor: false,
   },
+};
+
+export const Raw: Story = {
+  render: () => (
+    <div className='contents' style={{ '--user-fill': 'var(--dx-amberFill)' } as CSSProperties}>
+      <MarkdownStream content={TEXT} />
+    </div>
+  ),
+};
+
+export const Static: Story = {
+  render: () => (
+    <div className='contents' style={{ '--user-fill': 'var(--dx-amberFill)' } as CSSProperties}>
+      <MarkdownStream registry={componentRegistry} content={TEXT} />
+    </div>
+  ),
 };
