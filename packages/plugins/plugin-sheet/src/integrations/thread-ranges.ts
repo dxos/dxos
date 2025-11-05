@@ -6,14 +6,8 @@ import * as Function from 'effect/Function';
 import * as Schema from 'effect/Schema';
 import { useCallback, useEffect, useMemo } from 'react';
 
-import {
-  LayoutAction,
-  chain,
-  createIntent,
-  createResolver,
-  useIntentDispatcher,
-  useIntentResolver,
-} from '@dxos/app-framework';
+import { LayoutAction, chain, createIntent, createResolver } from '@dxos/app-framework';
+import { useIntentDispatcher, useIntentResolver } from '@dxos/app-framework/react';
 import { debounce } from '@dxos/async';
 import { type CellAddress, type CompleteCellRange, inRange } from '@dxos/compute';
 import { Obj, Relation } from '@dxos/echo';
@@ -102,8 +96,13 @@ export const useSelectThreadOnCellFocus = () => {
       if (closestThread) {
         const primary = fullyQualifiedId(model.sheet);
         const intent = Function.pipe(
-          createIntent(ThreadAction.Select, { current: fullyQualifiedId(closestThread) }),
-          chain(DeckAction.ChangeCompanion, { primary, companion: `${primary}${ATTENDABLE_PATH_SEPARATOR}comments` }),
+          createIntent(ThreadAction.Select, {
+            current: fullyQualifiedId(closestThread),
+          }),
+          chain(DeckAction.ChangeCompanion, {
+            primary,
+            companion: `${primary}${ATTENDABLE_PATH_SEPARATOR}comments`,
+          }),
         );
         void dispatch(intent);
       }

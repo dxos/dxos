@@ -5,7 +5,8 @@
 import { useComputed, useSignal } from '@preact/signals-react';
 import React, { useCallback, useEffect, useMemo } from 'react';
 
-import { createIntent, useIntentDispatcher } from '@dxos/app-framework';
+import { createIntent } from '@dxos/app-framework';
+import { useIntentDispatcher } from '@dxos/app-framework/react';
 import { Obj } from '@dxos/echo';
 import { Filter, type Space, fullyQualifiedId, useQuery } from '@dxos/react-client/echo';
 import { ElevationProvider, useTranslation } from '@dxos/react-ui';

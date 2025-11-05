@@ -4,7 +4,8 @@
 
 import { useMemo } from 'react';
 
-import { Capabilities, useCapability } from '@dxos/app-framework';
+import { Capabilities } from '@dxos/app-framework';
+import { useCapability } from '@dxos/app-framework/react';
 import { useThemeContext } from '@dxos/react-ui';
 
 import { meta } from '../meta';

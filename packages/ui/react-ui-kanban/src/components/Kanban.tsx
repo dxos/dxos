@@ -4,7 +4,7 @@
 
 import React, { useCallback, useEffect } from 'react';
 
-import { Surface } from '@dxos/app-framework';
+import { Surface } from '@dxos/app-framework/react';
 import { IconButton, Tag, useTranslation } from '@dxos/react-ui';
 import { AttentionGlyph, useSelected, useSelectionActions } from '@dxos/react-ui-attention';
 import {
@@ -103,7 +103,10 @@ export const Kanban = ({ model, onAddCard, onRemoveCard }: KanbanProps) => {
                           <Surface
                             role='card--intrinsic'
                             limit={1}
-                            data={{ subject: card, projection: model.projection }}
+                            data={{
+                              subject: card,
+                              projection: model.projection,
+                            }}
                           />
                         </Card.StaticRoot>
                         <StackItem.DragPreview>
@@ -116,7 +119,10 @@ export const Kanban = ({ model, onAddCard, onRemoveCard }: KanbanProps) => {
                                 <Surface
                                   role='card--intrinsic'
                                   limit={1}
-                                  data={{ subject: item, projection: model.projection }}
+                                  data={{
+                                    subject: item,
+                                    projection: model.projection,
+                                  }}
                                 />
                               </CardDragPreview.Content>
                             </CardDragPreview.Root>
@@ -182,7 +188,10 @@ export const Kanban = ({ model, onAddCard, onRemoveCard }: KanbanProps) => {
                             <Surface
                               role='card--intrinsic'
                               limit={1}
-                              data={{ subject: card, projection: model.projection }}
+                              data={{
+                                subject: card,
+                                projection: model.projection,
+                              }}
                             />
                           </Card.StaticRoot>
                         ))}

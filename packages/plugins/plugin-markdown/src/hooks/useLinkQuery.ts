@@ -4,7 +4,8 @@
 
 import { useCallback, useMemo } from 'react';
 
-import { Capabilities, useCapabilities, usePluginManager } from '@dxos/app-framework';
+import { Capabilities } from '@dxos/app-framework';
+import { useCapabilities, usePluginManager } from '@dxos/app-framework/react';
 import { Filter, Obj, Query, Type } from '@dxos/echo';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { SpaceCapabilities } from '@dxos/plugin-space';

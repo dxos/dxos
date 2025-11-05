@@ -7,7 +7,7 @@ import '@dxos-theme';
 import React, { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 
-import { useApp } from '@dxos/app-framework';
+import { useApp } from '@dxos/app-framework/react';
 import { registerSignalsRuntime } from '@dxos/echo-signals';
 import { LogLevel, log } from '@dxos/log';
 import { getObservabilityGroup, initializeAppObservability, isObservabilityDisabled } from '@dxos/observability';
@@ -57,7 +57,11 @@ const main = async () => {
     // NOTE: Set default for first time users to IDB (works better with automerge CRDTs).
     // Needs to be done before worker is created.
     await SaveConfig({
-      runtime: { client: { storage: { dataStore: defs.Runtime.Client.Storage.StorageDriver.IDB } } },
+      runtime: {
+        client: {
+          storage: { dataStore: defs.Runtime.Client.Storage.StorageDriver.IDB },
+        },
+      },
     });
     config = await setupConfig();
   }

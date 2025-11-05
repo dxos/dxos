@@ -5,14 +5,8 @@
 import * as Option from 'effect/Option';
 import React, { useCallback, useState } from 'react';
 
-import {
-  Capabilities,
-  LayoutAction,
-  createIntent,
-  useAppGraph,
-  useCapabilities,
-  useIntentDispatcher,
-} from '@dxos/app-framework';
+import { Capabilities, LayoutAction, createIntent } from '@dxos/app-framework';
+import { useAppGraph, useCapabilities, useIntentDispatcher } from '@dxos/app-framework/react';
 import { fullyQualifiedId, isLiveObject } from '@dxos/client/echo';
 import { Obj } from '@dxos/echo';
 import { SpaceAction } from '@dxos/plugin-space/types';
@@ -72,7 +66,12 @@ const StackContainer = ({ id, collection }: StackContainerProps) => {
             // TODO(wittjosiah): `getNode` is not reactive.
             toLocalizedString(graph.getNode(fullyQualifiedId(object)).pipe(Option.getOrNull)?.properties.label, t),
         } as StackSectionView;
-        return { id: fullyQualifiedId(object), object, metadata, view } satisfies StackSectionItem;
+        return {
+          id: fullyQualifiedId(object),
+          object,
+          metadata,
+          view,
+        } satisfies StackSectionItem;
       }) ?? [];
 
   const handleDelete = useCallback(
@@ -83,7 +82,12 @@ const StackContainer = ({ id, collection }: StackContainerProps) => {
         .findIndex((section) => fullyQualifiedId(section) === id);
       const object = collection.objects[index].target;
       if (isLiveObject(object)) {
-        await dispatch(createIntent(SpaceAction.RemoveObjects, { objects: [object], target: collection }));
+        await dispatch(
+          createIntent(SpaceAction.RemoveObjects, {
+            objects: [object],
+            target: collection,
+          }),
+        );
 
         // TODO(wittjosiah): The section should also be removed, but needs to be restored if the action is undone.
         // delete stack.sections[Path.last(path)];
@@ -126,7 +130,13 @@ const StackContainer = ({ id, collection }: StackContainerProps) => {
   );
 
   const handleAddSection = useCallback(
-    () => dispatch?.(createIntent(SpaceAction.OpenCreateObject, { target: collection, navigable: false })),
+    () =>
+      dispatch?.(
+        createIntent(SpaceAction.OpenCreateObject, {
+          target: collection,
+          navigable: false,
+        }),
+      ),
     [collection, dispatch],
   );
 

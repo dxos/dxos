@@ -13,7 +13,8 @@ import React, {
   useState,
 } from 'react';
 
-import { createIntent, useIntentDispatcher } from '@dxos/app-framework';
+import { createIntent } from '@dxos/app-framework';
+import { useIntentDispatcher } from '@dxos/app-framework/react';
 import { type CellRange, rangeToA1Notation } from '@dxos/compute';
 import { defaultColSize, defaultRowSize } from '@dxos/lit-grid';
 import { DropdownMenu, Icon, useTranslation } from '@dxos/react-ui';
@@ -172,12 +173,20 @@ export const GridSheet = () => {
         case 'frozenRowsStart':
           return dxGrid?.setSelection({
             start: { col: pos.col, row: 0, plane: 'grid' },
-            end: { col: pos.col, row: model.sheet.rows.length - 1, plane: 'grid' },
+            end: {
+              col: pos.col,
+              row: model.sheet.rows.length - 1,
+              plane: 'grid',
+            },
           });
         case 'frozenColsStart':
           return dxGrid?.setSelection({
             start: { row: pos.row, col: 0, plane: 'grid' },
-            end: { row: pos.row, col: model.sheet.columns.length - 1, plane: 'grid' },
+            end: {
+              row: pos.row,
+              col: model.sheet.columns.length - 1,
+              plane: 'grid',
+            },
           });
       }
     },
@@ -281,7 +290,10 @@ export const GridSheet = () => {
 
   const extensions = useMemo(
     () => [
-      editorKeys({ onClose: handleClose, ...(editing?.initialContent && { onNav: handleClose }) }),
+      editorKeys({
+        onClose: handleClose,
+        ...(editing?.initialContent && { onNav: handleClose }),
+      }),
       sheetExtension({ functions: model.graph.getFunctions() }),
       rangeExtension({
         onInit: (fn) => (rangeController.current = fn),

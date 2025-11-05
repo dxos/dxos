@@ -4,7 +4,7 @@
 
 import React, { useCallback, useMemo } from 'react';
 
-import { Surface } from '@dxos/app-framework';
+import { Surface } from '@dxos/app-framework/react';
 import { invariant } from '@dxos/invariant';
 import { TemplateEditor } from '@dxos/plugin-assistant';
 import { createDocAccessor } from '@dxos/react-client/echo';
@@ -48,9 +48,12 @@ export const NotebookCell = ({ space, graph, dragging, cell, promptResults, env 
 
   const extensions = useMemo(() => {
     return cell.source?.target
-      ? [createDataExtensions({ id: cell.id, text: createDocAccessor(cell.source.target, ['content']) })].filter(
-          isNonNullable,
-        )
+      ? [
+          createDataExtensions({
+            id: cell.id,
+            text: createDocAccessor(cell.source.target, ['content']),
+          }),
+        ].filter(isNonNullable)
       : [];
   }, [cell.source?.target]);
 
@@ -196,7 +199,10 @@ const NotebookTextEditor = ({
   const { themeMode } = useThemeContext();
   const extensions = useMemo(() => {
     return [
-      createBasicExtensions({ placeholder: t('notebook markdown placeholder'), readOnly }),
+      createBasicExtensions({
+        placeholder: t('notebook markdown placeholder'),
+        readOnly,
+      }),
       createThemeExtensions({ themeMode, syntaxHighlighting: true }),
       createMarkdownExtensions(),
       decorateMarkdown(),

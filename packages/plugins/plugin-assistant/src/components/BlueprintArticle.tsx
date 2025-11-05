@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { type ArticleComponentProps } from '@dxos/app-framework';
+import { type ArticleComponentProps } from '@dxos/app-framework/react';
 import { type Blueprint } from '@dxos/blueprints';
 import { fullyQualifiedId } from '@dxos/react-client/echo';
 import { Toolbar } from '@dxos/react-ui';

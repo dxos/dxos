@@ -7,7 +7,8 @@ import * as Match from 'effect/Match';
 import type * as Schema from 'effect/Schema';
 import React, { useCallback, useMemo, useRef } from 'react';
 
-import { LayoutAction, createIntent, useAppGraph, useIntentDispatcher } from '@dxos/app-framework';
+import { LayoutAction, createIntent } from '@dxos/app-framework';
+import { useAppGraph, useIntentDispatcher } from '@dxos/app-framework/react';
 import { Filter, Obj, Type } from '@dxos/echo';
 import { EchoSchema } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
@@ -52,7 +53,10 @@ export const TableContainer = ({ role, view }: TableContainerProps) => {
     return Rx.make((get) => {
       const actions = get(graph.actions(fullyQualifiedId(view)));
       const nodes = actions.filter((action) => action.properties.disposition === 'toolbar');
-      return { nodes, edges: nodes.map((node) => ({ source: 'root', target: node.id })) };
+      return {
+        nodes,
+        edges: nodes.map((node) => ({ source: 'root', target: node.id })),
+      };
     });
   }, [graph]);
 
@@ -102,7 +106,12 @@ export const TableContainer = ({ role, view }: TableContainerProps) => {
       Match.value(actionId).pipe(
         Match.when('open', () => {
           invariant(typename);
-          void dispatch(createIntent(LayoutAction.Open, { part: 'main', subject: [fullyQualifiedId(data)] }));
+          void dispatch(
+            createIntent(LayoutAction.Open, {
+              part: 'main',
+              subject: [fullyQualifiedId(data)],
+            }),
+          );
         }),
         Match.orElseAbsurd,
       ),

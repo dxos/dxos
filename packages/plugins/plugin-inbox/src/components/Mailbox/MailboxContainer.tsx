@@ -6,7 +6,8 @@ import { Rx, useRxSet } from '@effect-rx/rx-react';
 import { useRxValue } from '@effect-rx/rx-react';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { LayoutAction, createIntent, useCapability, useIntentDispatcher } from '@dxos/app-framework';
+import { LayoutAction, createIntent } from '@dxos/app-framework';
+import { useCapability, useIntentDispatcher } from '@dxos/app-framework/react';
 import { Tag } from '@dxos/echo';
 import { QueryBuilder } from '@dxos/echo-query';
 import { ATTENDABLE_PATH_SEPARATOR, DeckAction } from '@dxos/plugin-deck/types';
@@ -48,7 +49,10 @@ export const MailboxContainer = ({ mailbox, attendableId, role, filter: filterPa
   // Menu state.
   const sortDescending = useRxState(true);
   const filterVisible = useRxState(false);
-  const menuActions = useMailboxActions({ sortDescending: sortDescending.rx, filterVisible: filterVisible.rx });
+  const menuActions = useMailboxActions({
+    sortDescending: sortDescending.rx,
+    filterVisible: filterVisible.rx,
+  });
 
   // Filter and messages.
   const [filter, setFilter] = useState<Filter.Any>();

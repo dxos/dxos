@@ -5,7 +5,8 @@
 import * as Schema from 'effect/Schema';
 import React, { useCallback, useState } from 'react';
 
-import { createIntent, useIntentDispatcher } from '@dxos/app-framework';
+import { createIntent } from '@dxos/app-framework';
+import { useIntentDispatcher } from '@dxos/app-framework/react';
 import { Obj } from '@dxos/echo';
 import { SpaceAction } from '@dxos/plugin-space/types';
 import { Filter, type Space, useQuery } from '@dxos/react-client/echo';
@@ -42,11 +43,19 @@ export const TokensContainer = ({ space }: { space: Space }) => {
     async (token: DataType.AccessToken.AccessToken) => {
       // TODO(ZaymonFC): Is there a more ergonomic way to do this intent chain?
       const result = await dispatch(
-        createIntent(SpaceAction.AddObject, { object: token, target: space, hidden: true }),
+        createIntent(SpaceAction.AddObject, {
+          object: token,
+          target: space,
+          hidden: true,
+        }),
       );
 
       if (Obj.instanceOf(DataType.AccessToken.AccessToken, result.data?.object)) {
-        void dispatch(createIntent(TokenManagerAction.AccessTokenCreated, { accessToken: result.data?.object }));
+        void dispatch(
+          createIntent(TokenManagerAction.AccessTokenCreated, {
+            accessToken: result.data?.object,
+          }),
+        );
       }
     },
     [space, dispatch],

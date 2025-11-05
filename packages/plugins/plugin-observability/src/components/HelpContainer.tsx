@@ -5,7 +5,8 @@
 import * as Function from 'effect/Function';
 import React, { useCallback } from 'react';
 
-import { LayoutAction, chain, createIntent, useIntentDispatcher } from '@dxos/app-framework';
+import { LayoutAction, chain, createIntent } from '@dxos/app-framework';
+import { useIntentDispatcher } from '@dxos/app-framework/react';
 
 import { meta } from '../meta';
 import { ObservabilityAction, type UserFeedback } from '../types';

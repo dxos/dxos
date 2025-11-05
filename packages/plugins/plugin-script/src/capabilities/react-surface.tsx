@@ -4,7 +4,8 @@
 
 import React from 'react';
 
-import { Capabilities, contributes, createSurface, useCapability } from '@dxos/app-framework';
+import { Capabilities, contributes, createSurface } from '@dxos/app-framework';
+import { useCapability } from '@dxos/app-framework/react';
 import { InvocationTraceContainer } from '@dxos/devtools';
 import { Obj } from '@dxos/echo';
 import { Script } from '@dxos/functions';
@@ -95,8 +96,14 @@ export default () =>
     createSurface({
       id: DEPLOYMENT_DIALOG,
       role: 'dialog',
-      filter: (data): data is { props: { accessToken: DataType.AccessToken.AccessToken; scriptTemplates: any } } =>
-        data.component === DEPLOYMENT_DIALOG,
+      filter: (
+        data,
+      ): data is {
+        props: {
+          accessToken: DataType.AccessToken.AccessToken;
+          scriptTemplates: any;
+        };
+      } => data.component === DEPLOYMENT_DIALOG,
       component: ({ data }) => <DeploymentDialog {...data.props} />,
     }),
   ]);

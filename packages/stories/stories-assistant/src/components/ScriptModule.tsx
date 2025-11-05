@@ -4,7 +4,8 @@
 
 import React from 'react';
 
-import { Capabilities, useCapability } from '@dxos/app-framework';
+import { Capabilities } from '@dxos/app-framework';
+import { useCapability } from '@dxos/app-framework/react';
 import { Filter } from '@dxos/echo';
 import { Script } from '@dxos/functions';
 import { ScriptCapabilities, ScriptContainer as ScriptContainerComponent, meta } from '@dxos/plugin-script';

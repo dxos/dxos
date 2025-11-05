@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Resource } from '@dxos/react-ui';
+import { type Resource } from '../common';
 
 import { meta } from './meta';
 

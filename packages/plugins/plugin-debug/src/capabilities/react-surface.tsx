@@ -13,9 +13,8 @@ import {
   contributes,
   createIntent,
   createSurface,
-  useCapability,
-  useIntentDispatcher,
 } from '@dxos/app-framework';
+import { useCapability, useIntentDispatcher } from '@dxos/app-framework/react';
 import {
   AutomergePanel,
   ConfigPanel,
@@ -118,7 +117,12 @@ export default (context: PluginContext) =>
             }
 
             objects.forEach((object) => {
-              void dispatch(createIntent(SpaceAction.AddObject, { target: collection, object }));
+              void dispatch(
+                createIntent(SpaceAction.AddObject, {
+                  target: collection,
+                  object,
+                }),
+              );
             });
           },
           [data.subject.space],
@@ -234,7 +238,13 @@ export default (context: PluginContext) =>
       component: () => {
         const { dispatchPromise: dispatch } = useIntentDispatcher();
         const handleSelect = useCallback(
-          () => dispatch(createIntent(LayoutAction.Open, { part: 'main', subject: [Devtools.Echo.Space] })),
+          () =>
+            dispatch(
+              createIntent(LayoutAction.Open, {
+                part: 'main',
+                subject: [Devtools.Echo.Space],
+              }),
+            ),
           [dispatch],
         );
         return <SpaceListPanel onSelect={handleSelect} />;
@@ -248,7 +258,13 @@ export default (context: PluginContext) =>
         const space = useCurrentSpace();
         const { dispatchPromise: dispatch } = useIntentDispatcher();
         const handleSelect = useCallback(
-          () => dispatch(createIntent(LayoutAction.Open, { part: 'main', subject: [Devtools.Echo.Feeds] })),
+          () =>
+            dispatch(
+              createIntent(LayoutAction.Open, {
+                part: 'main',
+                subject: [Devtools.Echo.Feeds],
+              }),
+            ),
           [dispatch],
         );
         return <SpaceInfoPanel space={space} onSelectFeed={handleSelect} onSelectPipeline={handleSelect} />;
@@ -388,7 +404,10 @@ export default (context: PluginContext) =>
             );
             log.info('script created', { result });
             await dispatch(
-              createIntent(LayoutAction.Open, { part: 'main', subject: [`${space.id}:${result.data?.object.id}`] }),
+              createIntent(LayoutAction.Open, {
+                part: 'main',
+                subject: [`${space.id}:${result.data?.object.id}`],
+              }),
             );
           },
           [dispatch],

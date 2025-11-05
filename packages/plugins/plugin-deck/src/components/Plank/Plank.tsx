@@ -13,14 +13,8 @@ import React, {
   useRef,
 } from 'react';
 
-import {
-  LayoutAction,
-  Surface,
-  createIntent,
-  useAppGraph,
-  useCapability,
-  useIntentDispatcher,
-} from '@dxos/app-framework';
+import { LayoutAction, createIntent } from '@dxos/app-framework';
+import { Surface, useAppGraph, useCapability, useIntentDispatcher } from '@dxos/app-framework/react';
 import { debounce } from '@dxos/async';
 import { type Node, useNode } from '@dxos/plugin-graph';
 import { ATTENDABLE_PATH_SEPARATOR, useAttentionAttributes } from '@dxos/react-ui-attention';

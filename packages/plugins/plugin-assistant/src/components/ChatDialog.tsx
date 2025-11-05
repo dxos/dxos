@@ -4,7 +4,8 @@
 
 import React, { useCallback, useState } from 'react';
 
-import { Capabilities, useCapability } from '@dxos/app-framework';
+import { Capabilities } from '@dxos/app-framework';
+import { useCapability } from '@dxos/app-framework/react';
 import { getSpace } from '@dxos/client/echo';
 import { useTranslation } from '@dxos/react-ui';
 import { ChatDialog as NaturalChatDialog } from '@dxos/react-ui-chat';
@@ -28,7 +29,13 @@ export const ChatDialog = ({ chat }: ChatDialogProps) => {
   const [online, setOnline] = useOnline();
   const { preset, ...chatProps } = usePresets(online);
   const blueprintRegistry = useBlueprintRegistry();
-  const processor = useChatProcessor({ chat, preset, services, blueprintRegistry, settings });
+  const processor = useChatProcessor({
+    chat,
+    preset,
+    services,
+    blueprintRegistry,
+    settings,
+  });
 
   // TODO(burdon): Refocus when open.
   const [open, setOpen] = useState(true);
