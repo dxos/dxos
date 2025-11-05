@@ -14,8 +14,8 @@ export class ReferenceWidget extends WidgetType {
     super();
   }
 
-  override eq(other: WidgetType) {
-    return other instanceof ReferenceWidget && other.refid === this.refid;
+  override eq(other: this) {
+    return this.refid === other.refid;
   }
 
   override toDOM() {

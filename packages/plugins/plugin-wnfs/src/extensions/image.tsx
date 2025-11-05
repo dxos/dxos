@@ -165,11 +165,11 @@ class WnfsImageWidget extends WidgetType {
     super();
   }
 
-  override eq(other: this): boolean {
-    return this._wnfsUrl === (other as any as WnfsImageWidget)._wnfsUrl;
+  override eq(other: this) {
+    return this._wnfsUrl === other._wnfsUrl;
   }
 
-  override toDOM(view: EditorView): HTMLDivElement {
+  override toDOM(view: EditorView) {
     if (typeof this._url === 'string') {
       return createImg(view, this._url);
     }

@@ -46,11 +46,22 @@ export const handlebars = (_: HandlebarsOptions = {}): Extension => {
 };
 
 const regex = {
+  // {{! comment }}
   comment: /\{\{!\s*[^}]*\}\}/g,
+
+  // {{var}}
   brackets: /\{\{[^}]*\}\}/g,
+
+  // {{#command}} {{/command}}
   command: /\{\{[#/]([^}]+)\}\}/g,
+
+  // {{var}}
   var: /\{\{(?!\s*!)(\w[^}]*)\}\}/g,
-  dxn: /dxn:[\w@:]+/g,
+
+  // @dxn:queue:data:xxx
+  dxn: /@?dxn:[\w@:]+/g,
+
+  // dxos.org/type/xxx
   url: /[\w.-]+\.[\w.-]+\/[\w/]+/g,
 };
 
@@ -88,7 +99,7 @@ const handlebarsHighlightPlugin = ViewPlugin.fromClass(
             const start = from + match.index;
             const end = start + match[0].length;
             // Only show widget if selection doesn't overlap with the match range.
-            const overlaps = selection.from < end && selection.to > start;
+            const overlaps = selection.to > start && selection.from <= end;
             if (!overlaps) {
               decorations.push({
                 from: start,
@@ -202,9 +213,16 @@ class DXNWidget extends WidgetType {
   override toDOM() {
     const text = this._identifier
       .split(':')
-      .map((part) => part.slice(0, 8))
+      .map((part) => {
+        const len = 16;
+        const plen = 4;
+        if (part.length > len) {
+          return `[${part.slice(0, plen)}…${part.slice(-plen)}]`;
+        }
+        return part;
+      })
       .join(':');
-    return Domino.of('span').classNames(['dx-tag--blue', tagPadding]).text(text).build();
+    return Domino.of('span').classNames(['font-mono dx-tag--blue', tagPadding]).text(text).build();
   }
 }
 

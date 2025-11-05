@@ -52,12 +52,12 @@ class LinkButton extends WidgetType {
     super();
   }
 
-  override eq(other: this): boolean {
+  override eq(other: this) {
     return this.url === other.url;
   }
 
   // TODO(burdon): Create icon and link directly without react?
-  override toDOM(view: EditorView): HTMLSpanElement {
+  override toDOM(view: EditorView) {
     const el = document.createElement('span');
     this.render(el, { url: this.url }, view);
     return el;
@@ -69,11 +69,15 @@ class CheckboxWidget extends WidgetType {
     super();
   }
 
-  override eq(other: this): boolean {
+  override eq(other: this) {
     return this._checked === other._checked;
   }
 
-  override toDOM(view: EditorView): HTMLSpanElement {
+  override ignoreEvent() {
+    return false;
+  }
+
+  override toDOM(view: EditorView) {
     const input = document.createElement('input');
     input.className = 'cm-task-checkbox dx-checkbox';
     input.type = 'checkbox';
@@ -104,10 +108,6 @@ class CheckboxWidget extends WidgetType {
     span.className = 'cm-task';
     span.appendChild(input);
     return span;
-  }
-
-  override ignoreEvent(): boolean {
-    return false;
   }
 }
 
