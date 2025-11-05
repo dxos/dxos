@@ -70,7 +70,8 @@ test.describe('Basic tests', () => {
     await expect(host.getSpaceItems()).toHaveCount(1, { timeout: 10_000 });
   });
 
-  test('reset app', async ({ browserName }) => {
+  // TODO(wittjosiah): Remove? The reset button was hidden from the app.
+  test.skip('reset app', async ({ browserName }) => {
     // TODO(wittjosiah): This test seems to be flaky in webkit.
     if (browserName === 'webkit') {
       test.skip();
