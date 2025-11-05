@@ -51,7 +51,7 @@ export type Capability<T> = {
   /**
    * Called when the capability is deactivated.
    */
-  deactivate?: () => MaybePromise<void> | Effect.Effect<void, Error>;
+  readonly deactivate?: () => MaybePromise<void> | Effect.Effect<void, Error>;
 };
 
 export type AnyCapability = Capability<any>;
@@ -73,14 +73,14 @@ class CapabilityImpl<T> {
 /**
  * Helper to define the implementation of a capability.
  */
-export const contributes = <I extends InterfaceDef<any>, T = InterfaceDef.Implementation<I>>(
+export const contributes = <I extends InterfaceDef<any>>(
   interfaceDef: I,
-  implementation: T,
+  implementation: Capability<InterfaceDef.Implementation<I>>['implementation'],
   deactivate?: Capability<InterfaceDef.Implementation<I>>['deactivate'],
 ): Capability<I> => {
   return {
     interface: interfaceDef,
-    implementation: implementation as any, // NOTE: Added to allow providing readonly implementation.
+    implementation,
     deactivate,
   } satisfies Capability<I>;
 };
