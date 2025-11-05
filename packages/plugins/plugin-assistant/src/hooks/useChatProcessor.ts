@@ -39,6 +39,7 @@ export const useChatProcessor = ({
   const [conversation, setConversation] = useState<AiConversation>();
   useAsyncEffect(async () => {
     if (!chat?.queue.target) {
+      log.warn('missing queue', { chat });
       return;
     }
 
