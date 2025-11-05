@@ -47,10 +47,6 @@ export const useChatProcessor = ({
     // NOTE: Passing in space and getting queue from space rather than resolving the reference.
     //  This is because if the chat isn't in a space yet, the reference will not be resolvable.
     const queue = space.queues.get(chat.queue.dxn);
-    if (!queue) {
-      return;
-    }
-
     const conversation = new AiConversation(queue as Queue<any>);
     await conversation.open();
     setConversation(conversation);
