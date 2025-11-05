@@ -15,6 +15,12 @@
       "browser": "./dist/lib/browser/index.mjs",
       "node": "./dist/lib/node-esm/index.mjs"
     },
+    "./toolkit": {
+      "source": "./src/toolkit.ts",
+      "types": "./dist/types/src/toolkit.d.ts",
+      "browser": "./dist/lib/browser/toolkit.mjs",
+      "node": "./dist/lib/node-esm/toolkit.mjs"
+    },
     "./types": {
       "source": "./src/types/index.ts",
       "types": "./dist/types/src/types/index.d.ts",
@@ -25,6 +31,9 @@
   "types": "dist/types/src/index.d.ts",
   "typesVersions": {
     "*": {
+      "toolkit": [
+        "dist/types/src/toolkit.d.ts"
+      ],
       "types": [
         "dist/types/src/types/index.d.ts"
       ]
@@ -44,8 +53,10 @@
     "@dxos/assistant": "workspace:*",
     "@dxos/async": "workspace:*",
     "@dxos/blueprints": "workspace:*",
+    "@dxos/client-protocol": "workspace:*",
     "@dxos/echo": "workspace:*",
     "@dxos/echo-db": "workspace:*",
+    "@dxos/effect": "workspace:*",
     "@dxos/functions": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
