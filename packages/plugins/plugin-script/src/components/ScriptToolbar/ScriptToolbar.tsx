@@ -5,8 +5,8 @@
 import { Rx } from '@effect-rx/rx-react';
 import React, { useMemo } from 'react';
 
+import { Obj } from '@dxos/echo';
 import { type Script } from '@dxos/functions';
-import { fullyQualifiedId } from '@dxos/react-client/echo';
 import { ElevationProvider, useTranslation } from '@dxos/react-ui';
 import {
   type ActionGraphProps,
@@ -41,7 +41,7 @@ export const ScriptToolbar = ({ script, role, state }: ScriptToolbarProps) => {
 
   return (
     <ElevationProvider elevation={role === 'section' ? 'positioned' : 'base'}>
-      <MenuProvider {...actions} attendableId={fullyQualifiedId(script)}>
+      <MenuProvider {...actions} attendableId={Obj.getDXN(script).toString()}>
         <ToolbarMenu />
       </MenuProvider>
     </ElevationProvider>

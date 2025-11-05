@@ -21,7 +21,7 @@ import { SpacePlugin } from '@dxos/plugin-space';
 import { StorybookLayoutPlugin } from '@dxos/plugin-storybook-layout';
 import { ThemePlugin } from '@dxos/plugin-theme';
 import { faker } from '@dxos/random';
-import { createDocAccessor, fullyQualifiedId, toCursorRange, useQueue, useSpace } from '@dxos/react-client/echo';
+import { createDocAccessor, toCursorRange, useQueue, useSpace } from '@dxos/react-client/echo';
 import { IconButton, Toolbar } from '@dxos/react-ui';
 import { withTheme } from '@dxos/react-ui/testing';
 import { type EditorSelection, type Range, useTextEditor } from '@dxos/react-ui-editor';
@@ -81,7 +81,7 @@ const TestChat: FC<{ doc: Markdown.Document; content: string }> = ({ doc, conten
     const text = await doc.content.load();
     const accessor = createDocAccessor(text, ['content']);
     const cursor = Function.pipe(
-      editorState.getState(fullyQualifiedId(doc))?.selection,
+      editorState.getState(Obj.getDXN(doc).toString())?.selection,
       Option.fromNullable,
       Option.map(selectionToRange),
       Option.map((range) => toCursorRange(accessor, range.from, range.to)),

@@ -7,9 +7,10 @@ import { QR } from 'react-qr-rounded';
 
 import { createIntent } from '@dxos/app-framework';
 import { useIntentDispatcher } from '@dxos/app-framework/react';
+import { Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { useConfig } from '@dxos/react-client';
-import { type Space, fullyQualifiedId, useSpaceInvitations } from '@dxos/react-client/echo';
+import { type Space, useSpaceInvitations } from '@dxos/react-client/echo';
 import { type CancellableInvitationObservable, Invitation, InvitationEncoder } from '@dxos/react-client/invitations';
 import { Button, Clipboard, Icon, Input, useId, useTranslation } from '@dxos/react-ui';
 import { ControlFrame, ControlFrameItem, ControlItemInput, ControlPage, ControlSection } from '@dxos/react-ui-form';
@@ -85,7 +86,7 @@ export const MembersContainer = ({ space, createInvitationUrl }: MembersContaine
               type: Invitation.Type.INTERACTIVE,
               authMethod: Invitation.AuthMethod.SHARED_SECRET,
               multiUse: false,
-              target: target && fullyQualifiedId(target),
+              target: target && Obj.getDXN(target).toString(),
             }),
           );
           if (invitation && config.values.runtime?.app?.env?.DX_ENVIRONMENT !== 'production') {
@@ -107,7 +108,7 @@ export const MembersContainer = ({ space, createInvitationUrl }: MembersContaine
               type: Invitation.Type.DELEGATED,
               authMethod: Invitation.AuthMethod.KNOWN_PUBLIC_KEY,
               multiUse: true,
-              target: target && fullyQualifiedId(target),
+              target: target && Obj.getDXN(target).toString(),
             }),
           );
           if (invitation && config.values.runtime?.app?.env?.DX_ENVIRONMENT !== 'production') {

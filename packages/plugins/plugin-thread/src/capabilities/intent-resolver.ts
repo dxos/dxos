@@ -11,7 +11,7 @@ import { invariant } from '@dxos/invariant';
 import { ATTENDABLE_PATH_SEPARATOR, DeckAction } from '@dxos/plugin-deck/types';
 import { ObservabilityAction } from '@dxos/plugin-observability/types';
 import { CollectionAction, SpaceAction } from '@dxos/plugin-space/types';
-import { Ref, fullyQualifiedId, getSpace } from '@dxos/react-client/echo';
+import { Ref, getSpace } from '@dxos/react-client/echo';
 import { DataType } from '@dxos/schema';
 
 import { meta } from '../meta';
@@ -65,7 +65,7 @@ export default (context: PluginContext) =>
         invariant(space, 'Space not found');
 
         const { state } = context.getCapability(ThreadCapabilities.MutableState);
-        const subjectId = fullyQualifiedId(subject);
+        const subjectId = Obj.getDXN(subject).toString();
         const thread = Thread.make({ name });
         const anchor = Relation.make(DataType.AnchoredTo.AnchoredTo, {
           [Relation.Source]: thread,
@@ -82,7 +82,7 @@ export default (context: PluginContext) =>
 
         return {
           intents: [
-            createIntent(ThreadAction.Select, { current: fullyQualifiedId(thread) }),
+            createIntent(ThreadAction.Select, { current: Obj.getDXN(thread).toString() }),
             createIntent(DeckAction.ChangeCompanion, {
               primary: subjectId,
               companion: `${subjectId}${ATTENDABLE_PATH_SEPARATOR}comments`,
@@ -129,7 +129,7 @@ export default (context: PluginContext) =>
       resolve: async ({ subject, anchor, thread: _thread }, undo) => {
         const thread = _thread ?? (Relation.getSource(anchor) as Thread.Thread);
         const { state } = context.getCapability(ThreadCapabilities.MutableState);
-        const subjectId = fullyQualifiedId(subject);
+        const subjectId = Obj.getDXN(subject).toString();
         const draft = state.drafts[subjectId];
         if (draft) {
           // Check if we're deleting a draft; if so, remo ve it.
@@ -191,7 +191,7 @@ export default (context: PluginContext) =>
       resolve: ({ anchor, subject, sender, text }) => {
         const thread = Relation.getSource(anchor) as Thread.Thread;
         const { state } = context.getCapability(ThreadCapabilities.MutableState);
-        const subjectId = fullyQualifiedId(subject);
+        const subjectId = Obj.getDXN(subject).toString();
         const space = getSpace(subject);
         invariant(space, 'Space not found');
 

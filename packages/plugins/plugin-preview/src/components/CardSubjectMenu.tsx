@@ -10,7 +10,6 @@ import { useIntentDispatcher } from '@dxos/app-framework/react';
 import { ACTION_TYPE } from '@dxos/app-graph';
 import { Obj } from '@dxos/echo';
 import { SpaceAction } from '@dxos/plugin-space/types';
-import { fullyQualifiedId } from '@dxos/react-client/echo';
 import { IconButton, type IconButtonProps, useTranslation } from '@dxos/react-ui';
 import {
   type ActionGraphProps,
@@ -67,7 +66,7 @@ const useSubjectMenuGroupItems = ({ subject, activeSpace }: PreviewProps): MenuA
       dispatch(
         createIntent(LayoutAction.Open, {
           part: 'main',
-          subject: [fullyQualifiedId(subject)],
+          subject: [Obj.getDXN(subject).toString()],
         }),
       ),
     properties: {
