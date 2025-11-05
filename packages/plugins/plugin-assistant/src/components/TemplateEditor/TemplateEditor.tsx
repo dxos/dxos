@@ -21,8 +21,7 @@ import { isNonNullable } from '@dxos/util';
 
 import { meta } from '../../meta';
 
-import { handlebars } from './handlebars-extension';
-import { xmlDecorator } from './xml-extension';
+import { handlebars, xmlDecorator } from './extensions';
 
 export type TemplateEditorProps = ThemedClassName<{
   id: string;
