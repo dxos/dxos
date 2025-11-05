@@ -255,7 +255,7 @@ export class AutomergeDocumentLoaderImpl implements AutomergeDocumentLoader {
 
       const logMeta = { objectId, docUrl: handle.url };
       if (this.onObjectDocumentLoaded.listenerCount() === 0) {
-        log.info('document loaded after all listeners were removed', logMeta);
+        log('document loaded after all listeners were removed', logMeta);
         return;
       }
       const objectDocHandle = this._objectDocumentHandles.get(objectId);

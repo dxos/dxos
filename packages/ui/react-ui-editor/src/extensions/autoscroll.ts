@@ -11,7 +11,7 @@ import { Domino } from '@dxos/react-ui';
 import { scrollToLineEffect } from './scrolling';
 
 // TODO(burdon): Reconcile with scrollToLineEffect (scrolling).
-export const scrollToBottomEffect = StateEffect.define<void>();
+export const scrollToBottomEffect = StateEffect.define<ScrollBehavior | undefined>();
 
 export type AutoScrollOptions = {
   /** Auto-scroll when reaches the bottom. */
@@ -54,13 +54,14 @@ export const autoScroll = ({
   };
 
   // Throttled scroll to bottom.
-  const scrollToBottom = (view: EditorView) => {
+  const scrollToBottom = (view: EditorView, behavior?: ScrollBehavior) => {
+    console.log('scrollToBottom', behavior);
     setPinned(true);
     hideScrollbar(view);
     const line = view.state.doc.lineAt(view.state.doc.length);
     view.dispatch({
       selection: { anchor: line.to, head: line.to },
-      effects: scrollToLineEffect.of({ line: line.number, options: { position: 'end', offset: threshold } }),
+      effects: scrollToLineEffect.of({ line: line.number, options: { position: 'end', offset: threshold, behavior } }),
     });
   };
 
@@ -69,7 +70,7 @@ export const autoScroll = ({
     const scrollerRect = view.scrollDOM.getBoundingClientRect();
     const coords = view.coordsAtPos(view.state.doc.length);
     const distanceFromBottom = coords ? coords.bottom - scrollerRect.bottom : 0;
-    setPinned(distanceFromBottom <= threshold);
+    setPinned(distanceFromBottom < 0);
   }, 1_000);
 
   // Debounce scroll updates so rapid edits don't cause clunky scrolling.
@@ -82,22 +83,25 @@ export const autoScroll = ({
       transactions.forEach((transaction) => {
         for (const effect of transaction.effects) {
           if (effect.is(scrollToBottomEffect)) {
-            scrollToBottom(view);
+            scrollToBottom(view, effect.value);
           }
         }
       });
 
       // Maybe scroll if doc changed and pinned.
       // NOTE: Geometry changed is triggered when widgets change height (e.g., toggle tool block).
-      if (heightChanged && autoScroll && isPinned) {
-        const scrollerRect = view.scrollDOM.getBoundingClientRect();
+      if (heightChanged && isPinned) {
         const coords = view.coordsAtPos(view.state.doc.length);
+        const scrollerRect = view.scrollDOM.getBoundingClientRect();
         const distanceFromBottom = coords ? scrollerRect.bottom - coords.bottom : 0;
-        if (distanceFromBottom < threshold) {
+        if (autoScroll && distanceFromBottom < threshold) {
           const shouldScroll = onAutoScroll?.({ view, distanceFromBottom }) ?? true;
           if (shouldScroll) {
             triggerUpdate(view);
           }
+        } else if (distanceFromBottom < 0) {
+          console.log('distanceFromBottom', distanceFromBottom);
+          setPinned(false);
         }
       }
     }),
@@ -112,11 +116,9 @@ export const autoScroll = ({
         // If user scrolls up, immediately unpin auto-scroll.
         if (scrollingUp) {
           setPinned(false);
-          return;
+        } else {
+          checkDistance(view);
         }
-
-        // For downward scrolls, throttle the distance check.
-        checkDistance(view);
       },
     }),
 

@@ -86,7 +86,6 @@ const BoardRoot = forwardRef<BoardController, BoardRootProps>(
   ) => {
     const remInPx = usePx(1);
     const gridInPx = useMemo(() => {
-      console.log('[px update]', remInPx);
       return {
         size: { width: grid.size.width * remInPx, height: grid.size.height * remInPx },
         gap: grid.gap * remInPx,

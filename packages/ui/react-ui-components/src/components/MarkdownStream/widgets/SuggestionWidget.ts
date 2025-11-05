@@ -22,7 +22,7 @@ export class SuggestionWidget extends WidgetType {
     return (
       Domino.of('span')
         // NOTW: Scroll container must have `size-container`.
-        .classNames('inline-flex max-is-[100cqi] mbs-3 mbe-3 pie-2')
+        .classNames('inline-flex max-is-[100cqi] mlb-1 pie-2')
         .children(
           Domino.of('button')
             .data('action', 'submit')

@@ -66,9 +66,9 @@ class ComputeRuntimeProviderImpl extends Resource implements AutomationCapabilit
 
         // TODO(dmaretskyi): Make these reactive.
         const toolkits = this.#context.getCapabilities(Capabilities.Toolkit);
-        const functions = this.#context.getCapabilities(Capabilities.Functions);
-        const allFunctions = functions.flat();
+        const functions = this.#context.getCapabilities(Capabilities.Functions).flat();
 
+        console.log(toolkits);
         const mergedToolkit = GenericToolkit.merge(...toolkits);
         const toolkit = mergedToolkit.toolkit;
         const toolkitLayer = mergedToolkit.layer;
@@ -82,7 +82,7 @@ class ComputeRuntimeProviderImpl extends Resource implements AutomationCapabilit
             Layer.mergeAll(
               InvocationTracerLive,
               TriggerStateStore.layerKv.pipe(Layer.provide(BrowserKeyValueStore.layerLocalStorage)),
-              makeToolResolverFromFunctions(allFunctions, toolkit),
+              makeToolResolverFromFunctions(functions, toolkit),
               makeToolExecutionServiceFromFunctions(toolkit, toolkitLayer),
             ),
           ),
@@ -91,7 +91,7 @@ class ComputeRuntimeProviderImpl extends Resource implements AutomationCapabilit
               FunctionInvocationService.layer.pipe(
                 Layer.provideMerge(
                   LocalFunctionExecutionService.layerLive.pipe(
-                    Layer.provideMerge(FunctionImplementationResolver.layerTest({ functions: allFunctions })),
+                    Layer.provideMerge(FunctionImplementationResolver.layerTest({ functions })),
                     Layer.provideMerge(
                       RemoteFunctionExecutionService.fromClient(
                         client.edge.baseUrl,
