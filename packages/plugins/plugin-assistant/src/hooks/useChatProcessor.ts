@@ -40,7 +40,7 @@ export const useChatProcessor = ({
   // Create conversation from chat queue.
   const [conversation, setConversation] = useState<AiConversation>();
   useAsyncEffect(async () => {
-    if (!chat || !space) {
+    if (!space || !chat) {
       return;
     }
 

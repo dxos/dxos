@@ -55,7 +55,6 @@ export const autoScroll = ({
 
   // Throttled scroll to bottom.
   const scrollToBottom = (view: EditorView, behavior?: ScrollBehavior) => {
-    console.log('scrollToBottom', behavior);
     setPinned(true);
     hideScrollbar(view);
     const line = view.state.doc.lineAt(view.state.doc.length);
@@ -100,7 +99,6 @@ export const autoScroll = ({
             triggerUpdate(view);
           }
         } else if (distanceFromBottom < 0) {
-          console.log('distanceFromBottom', distanceFromBottom);
           setPinned(false);
         }
       }
