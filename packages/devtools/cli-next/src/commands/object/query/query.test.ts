@@ -21,7 +21,7 @@ describe('spaces query', () => {
       yield* Effect.tryPromise(() => client.halo.createIdentity());
       yield* Effect.tryPromise(() => client.spaces.waitUntilReady());
       yield* Effect.tryPromise(() => client.spaces.default.waitUntilReady());
-      yield* handler({ spaceId: client.spaces.default.id, typename: DataType.Task.typename });
+      yield* handler({ spaceId: client.spaces.default.id, typename: DataType.Task.Task.typename });
       const logger = yield* TestConsole.TestConsole;
       const logs = logger.logs;
       expect(logs).toHaveLength(1);
@@ -31,14 +31,14 @@ describe('spaces query', () => {
   it('should query space for objects', () =>
     Effect.gen(function* () {
       const client = yield* ClientService;
-      client.addTypes([DataType.Task]);
+      client.addTypes([DataType.Task.Task]);
       yield* Effect.tryPromise(() => client.halo.createIdentity());
       yield* Effect.tryPromise(() => client.spaces.waitUntilReady());
       const space = client.spaces.default;
       yield* Effect.tryPromise(() => space.waitUntilReady());
-      space.db.add(Obj.make(DataType.Task, { title: 'Task 1' }));
-      space.db.add(Obj.make(DataType.Task, { title: 'Task 2' }));
-      yield* handler({ spaceId: space.id, typename: DataType.Task.typename });
+      space.db.add(Obj.make(DataType.Task.Task, { title: 'Task 1' }));
+      space.db.add(Obj.make(DataType.Task.Task, { title: 'Task 2' }));
+      yield* handler({ spaceId: space.id, typename: DataType.Task.Task.typename });
       const logger = yield* TestConsole.TestConsole;
       const logs = logger.logs;
       expect(logs).toHaveLength(1);

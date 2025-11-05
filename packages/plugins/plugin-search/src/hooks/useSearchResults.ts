@@ -20,7 +20,7 @@ export const filterObjects = async <T extends Record<string, any>>(
   }
   await Promise.all(
     objects
-      .filter((object) => !(object instanceof DataType.Text))
+      .filter((object) => !(object instanceof DataType.Text.Text))
       .map(async (object) => {
         await yieldOrContinue('interactive');
         const fields = mapObjectToTextFields<T>(object);

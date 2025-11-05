@@ -22,8 +22,8 @@ import { CommandConfig } from '../../../../services';
 export const DATA_TYPES: Schema.Schema.AnyNoContext[] = [
   Function.Function,
   Script.Script,
-  DataType.Collection,
-  DataType.Text,
+  DataType.Collection.Collection,
+  DataType.Text.Text,
 ];
 
 export const getNextVersion = (fnObject: Option.Option<Function.Function>) => {
@@ -81,7 +81,9 @@ export const upsertFunctionObject = Effect.fn(function* ({
 });
 
 const makeObjectNavigableInComposer = Effect.fn(function* (space: Space, obj: Obj.Any) {
-  const collectionRef = space.properties['dxos.org/type/Collection'] as Ref.Ref<DataType.Collection> | undefined;
+  const collectionRef = space.properties['dxos.org/type/Collection'] as
+    | Ref.Ref<DataType.Collection.Collection>
+    | undefined;
   if (collectionRef) {
     const collection = yield* Effect.tryPromise(() => collectionRef.load());
     if (collection) {

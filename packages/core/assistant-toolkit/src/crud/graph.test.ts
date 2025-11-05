@@ -46,7 +46,7 @@ describe('graph', () => {
   //   const relatedSchemas = await findRelatedSchema(db, Schema.Struct({}));
   // });
 
-  const Toolkit = makeGraphWriterToolkit({ schema: [DataType.Project] });
+  const Toolkit = makeGraphWriterToolkit({ schema: [DataType.Project.Project] });
   const ToolkitLayer = makeGraphWriterHandler(Toolkit);
 
   it.effect.skip(

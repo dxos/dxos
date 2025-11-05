@@ -11,7 +11,7 @@ import { type DataType } from '@dxos/schema';
 
 import { meta } from '../meta';
 
-export const CollectionArticle = ({ object }: ArticleComponentProps<DataType.Collection>) => {
+export const CollectionArticle = ({ object }: ArticleComponentProps<DataType.Collection.Collection>) => {
   const { t } = useTranslation(meta.id);
 
   return (

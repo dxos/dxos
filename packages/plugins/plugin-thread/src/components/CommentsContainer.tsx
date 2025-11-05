@@ -7,7 +7,9 @@ import React, { useEffect } from 'react';
 import { Relation } from '@dxos/echo';
 import { fullyQualifiedId } from '@dxos/react-client/echo';
 import { Callout, Icon, Trans, useTranslation } from '@dxos/react-ui';
-import { type AnchoredTo } from '@dxos/schema';
+import { type DataType } from '@dxos/schema';
+
+type AnchoredTo = DataType.AnchoredTo.AnchoredTo;
 
 import { meta } from '../meta';
 import { type Thread } from '../types';

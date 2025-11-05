@@ -23,7 +23,7 @@ import { type ViewMode } from './MessageHeader';
 
 export type MessageProps = ThemedClassName<{
   space?: Space;
-  message: DataType.Message;
+  message: DataType.Message.Message;
   viewMode: ViewMode;
   hasEnrichedContent: boolean;
   contactDxn?: string;

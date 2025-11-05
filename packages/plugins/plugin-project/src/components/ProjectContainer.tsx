@@ -13,7 +13,7 @@ import { type DataType } from '@dxos/schema';
 
 import { type ItemProps, Project } from './Project';
 
-export type ProjectContainerProps = { project: DataType.Project; role: string };
+export type ProjectContainerProps = { project: DataType.Project.Project; role: string };
 
 export const ProjectContainer = ({ project }: ProjectContainerProps) => {
   const { dispatchPromise: dispatch } = useIntentDispatcher();

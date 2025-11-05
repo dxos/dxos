@@ -17,14 +17,14 @@ import { meta } from '../meta';
 
 type NewTokenSelectorProps = {
   space: Space;
-  onAddAccessToken: (token: DataType.AccessToken) => void;
+  onAddAccessToken: (token: DataType.AccessToken.AccessToken) => void;
   onCustomToken?: () => void;
 };
 
 export const NewTokenSelector = ({ space, onAddAccessToken, onCustomToken }: NewTokenSelectorProps) => {
   const { t } = useTranslation(meta.id);
   const edgeClient = useEdgeClient();
-  const [tokenMap] = useState(new Map<string, DataType.AccessToken>());
+  const [tokenMap] = useState(new Map<string, DataType.AccessToken.AccessToken>());
 
   useEffect(() => {
     const edgeUrl = new URL(edgeClient.baseUrl);
@@ -58,7 +58,7 @@ export const NewTokenSelector = ({ space, onAddAccessToken, onCustomToken }: New
       return;
     }
 
-    const token = Obj.make(DataType.AccessToken, {
+    const token = Obj.make(DataType.AccessToken.AccessToken, {
       source: preset.source,
       note: preset.note,
       token: '',

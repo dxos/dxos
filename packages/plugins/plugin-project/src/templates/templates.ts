@@ -7,6 +7,6 @@ import { type DataType } from '@dxos/schema';
 
 import { createResearchProject } from './research';
 
-export const templates: Record<string, (space: Space) => Promise<DataType.Project | null>> = {
+export const templates: Record<string, (space: Space) => Promise<DataType.Project.Project | null>> = {
   'org-research': createResearchProject,
 };

@@ -38,7 +38,7 @@ export const TestItem = Schema.Struct({
 
 // TODO(wittjosiah): Make builder generic and reuse for all message types.
 abstract class AbstractMessageBuilder {
-  abstract createMessage(numSegments?: number): Promise<DataType.Message>;
+  abstract createMessage(numSegments?: number): Promise<DataType.Message.Message>;
 }
 
 /**
@@ -59,15 +59,15 @@ export class MessageBuilder extends AbstractMessageBuilder {
     super();
   }
 
-  override async createMessage(numSegments = 1): Promise<DataType.Message> {
-    return Obj.make(DataType.Message, {
+  override async createMessage(numSegments = 1): Promise<DataType.Message.Message> {
+    return Obj.make(DataType.Message.Message, {
       created: this.next().toISOString(),
       sender: faker.helpers.arrayElement(this.users),
       blocks: Array.from({ length: numSegments }).map(() => this.createBlock()),
     });
   }
 
-  createBlock(): DataType.MessageBlock.Transcript {
+  createBlock(): DataType.ContentBlock.Transcript {
     let text = faker.lorem.paragraph();
     if (this._space) {
       const label = faker.commerce.productName();
@@ -103,7 +103,7 @@ class EntityExtractionMessageBuilder extends AbstractMessageBuilder {
 
   space: Space | undefined;
   currentMessage: number = 0;
-  transcriptMessages: DataType.Message[] = [];
+  transcriptMessages: DataType.Message.Message[] = [];
 
   async connect(space: Space): Promise<void> {
     this.space = space;
@@ -111,14 +111,18 @@ class EntityExtractionMessageBuilder extends AbstractMessageBuilder {
     this.transcriptMessages = transcriptMessages;
   }
 
-  override async createMessage(): Promise<DataType.Message> {
+  override async createMessage(): Promise<DataType.Message.Message> {
     if (!this.space) {
       throw new Error('Space not connected');
     }
 
     const { objects } = await this.space.db
       .query(
-        Filter.or(Filter.type(DataType.Person), Filter.type(DataType.Organization), Filter.type(Testing.DocumentType)),
+        Filter.or(
+          Filter.type(DataType.Person.Person),
+          Filter.type(DataType.Organization.Organization),
+          Filter.type(Testing.DocumentType),
+        ),
       )
       .run();
 
@@ -142,7 +146,7 @@ type UseTestTranscriptionQueue = (
   queueId?: Key.ObjectId,
   running?: boolean,
   interval?: number,
-) => Queue<DataType.Message> | undefined;
+) => Queue<DataType.Message.Message> | undefined;
 
 /**
  * Test transcriptionqueue.
@@ -155,7 +159,7 @@ export const useTestTranscriptionQueue: UseTestTranscriptionQueue = (
 ) => {
   // TODO(dmaretskyi): Use space.queues.create() instead.
   const queueDxn = useMemo(() => (space ? createQueueDXN(space.id, queueId) : undefined), [space, queueId]);
-  const queue = useQueue<DataType.Message>(queueDxn);
+  const queue = useQueue<DataType.Message.Message>(queueDxn);
   const builder = useMemo(() => new MessageBuilder(space), [space]);
 
   useEffect(() => {
@@ -165,7 +169,7 @@ export const useTestTranscriptionQueue: UseTestTranscriptionQueue = (
 
     const i = setInterval(() => {
       void builder.createMessage(Math.ceil(Math.random() * 3)).then(async (message) => {
-        await queue.append([Obj.make(DataType.Message, message)]);
+        await queue.append([Obj.make(DataType.Message.Message, message)]);
       });
     }, interval);
     return () => clearInterval(i);
@@ -186,7 +190,7 @@ export const useTestTranscriptionQueueWithEntityExtraction: UseTestTranscription
 ) => {
   // TODO(dmaretskyi): Use space.queues.create() instead.
   const queueDxn = useMemo(() => (space ? createQueueDXN(space.id, queueId) : undefined), [space, queueId]);
-  const queue = useQueue<DataType.Message>(queueDxn);
+  const queue = useQueue<DataType.Message.Message>(queueDxn);
   const [builder] = useState(() => new EntityExtractionMessageBuilder());
 
   useEffect(() => {
@@ -203,7 +207,7 @@ export const useTestTranscriptionQueueWithEntityExtraction: UseTestTranscription
       ctx,
       async () => {
         const message = await builder.createMessage();
-        void queue.append([Obj.make(DataType.Message, message)]);
+        void queue.append([Obj.make(DataType.Message.Message, message)]);
       },
       interval,
     );

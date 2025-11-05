@@ -16,7 +16,7 @@ import { DocumentAdapter, type SerializationModel } from '../../model';
  * Data structure that maps Chunks queue to lines with transcript state.
  */
 export type TranscriptOptions = {
-  model: SerializationModel<DataType.Message>;
+  model: SerializationModel<DataType.Message.Message>;
   started?: Date;
 };
 
@@ -180,7 +180,7 @@ class TimestampMarker extends GutterMarker {
   }
 }
 
-const getStartTime = (started?: Date, message?: DataType.Message): Date | undefined => {
+const getStartTime = (started?: Date, message?: DataType.Message.Message): Date | undefined => {
   if (started) {
     return started;
   }

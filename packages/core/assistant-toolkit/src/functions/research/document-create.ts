@@ -58,7 +58,7 @@ export default defineFunction({
 
     // Create relation.
     yield* DatabaseService.add(
-      Relation.make(DataType.HasSubject, {
+      Relation.make(DataType.HasSubject.HasSubject, {
         [Relation.Source]: object,
         [Relation.Target]: target,
         completedAt: new Date().toISOString(),

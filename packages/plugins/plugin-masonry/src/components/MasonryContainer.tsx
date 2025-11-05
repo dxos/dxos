@@ -17,7 +17,7 @@ const Item = ({ data }: { data: any }) => {
   return <Surface role='card' limit={1} data={{ subject: data }} />;
 };
 
-export const MasonryContainer = ({ view, role }: { view: DataType.View; role: string }) => {
+export const MasonryContainer = ({ view, role }: { view: DataType.View.View; role: string }) => {
   const client = useClient();
   const space = getSpace(view);
   const typename = view.query ? getTypenameFromQuery(view.query.ast) : undefined;

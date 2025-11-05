@@ -23,7 +23,7 @@ const MAX_RANGE_ID_COUNT = 10;
 
 export type SegmentsNormalizerParams = {
   functionExecutor: FunctionExecutor;
-  queue: Queue<DataType.Message>;
+  queue: Queue<DataType.Message.Message>;
   startingCursor: QueueCursor;
 };
 
@@ -36,7 +36,7 @@ export type QueueCursor = {
 // TODO(mykola): .
 export class MessageNormalizer extends Resource {
   private readonly _functionExecutor: FunctionExecutor;
-  private _queue: Queue<DataType.Message>;
+  private _queue: Queue<DataType.Message.Message>;
   private _cursor: QueueCursor;
   private _messagesToProcess: MessageWithRangeId[] = [];
   private _normalizationTask?: DeferredTask;

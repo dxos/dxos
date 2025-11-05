@@ -19,7 +19,7 @@ import { D3ForceGraph } from './Graph';
 
 type ExplorerContainerProps = {
   role: string;
-  view: DataType.View;
+  view: DataType.View.View;
 };
 
 const ExplorerContainer = ({ role, view }: ExplorerContainerProps) => {

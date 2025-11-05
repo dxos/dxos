@@ -4,7 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Type } from '@dxos/echo';
+import { Obj, Type } from '@dxos/echo';
 import {
   Format,
   FormatAnnotation,
@@ -17,7 +17,7 @@ import {
 import { IconAnnotation, ItemAnnotation } from '../annotations';
 
 // TODO(burdon): Remove (specific to kanban demo).
-export const OrganizationStatusOptions = [
+export const StatusOptions = [
   { id: 'prospect', title: 'Prospect', color: 'indigo' },
   { id: 'qualified', title: 'Qualified', color: 'purple' },
   { id: 'active', title: 'Active', color: 'amber' },
@@ -57,7 +57,7 @@ const OrganizationSchema = Schema.Struct({
       title: 'Status',
       [PropertyMetaAnnotationId]: {
         singleSelect: {
-          options: OrganizationStatusOptions,
+          options: StatusOptions,
         },
       },
     }),
@@ -107,3 +107,5 @@ export const LegacyOrganization = OrganizationSchema.pipe(
 );
 
 export interface Organization extends Schema.Schema.Type<typeof Organization> {}
+
+export const make = (props: Partial<Obj.MakeProps<typeof Organization>> = {}) => Obj.make(Organization, props);

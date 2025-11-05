@@ -112,8 +112,8 @@ export default (context: PluginContext) =>
 
             const collection =
               data.subject.space.state.get() === SpaceState.SPACE_READY &&
-              data.subject.space.properties[DataType.Collection.typename]?.target;
-            if (!Obj.instanceOf(DataType.Collection, collection)) {
+              data.subject.space.properties[DataType.Collection.Collection.typename]?.target;
+            if (!Obj.instanceOf(DataType.Collection.Collection, collection)) {
               return;
             }
 

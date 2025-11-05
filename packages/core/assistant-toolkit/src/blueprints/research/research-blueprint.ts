@@ -45,7 +45,7 @@ export const blueprint: Blueprint.Blueprint = Obj.make(Blueprint.Blueprint, {
   name: 'Research',
   description: 'Researches the web and creates structured data.',
   instructions: {
-    source: Ref.make(DataType.makeText(instructions)),
+    source: Ref.make(DataType.Text.make(instructions)),
   },
   tools: [Research.create, Research.update, Research.research].map((fn) => ToolId.make(fn.key)),
 });

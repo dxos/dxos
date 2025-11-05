@@ -36,10 +36,10 @@ export const processMessages = Effect.fn(function* ({
   messages = [],
 }: {
   system?: string;
-  messages?: DataType.Message[];
+  messages?: DataType.Message.Message[];
 }) {
   const toolkit = yield* TestingToolkit.pipe(Effect.provide(testingLayer));
-  const history: DataType.Message[] = [...messages];
+  const history: DataType.Message.Message[] = [...messages];
 
   do {
     const prompt = yield* AiPreprocessor.preprocessPrompt(history, { system });
@@ -49,7 +49,7 @@ export const processMessages = Effect.fn(function* ({
       prompt,
     }).pipe(AiParser.parseResponse(), Stream.runCollect, Effect.map(Chunk.toArray));
 
-    const message = Obj.make(DataType.Message, {
+    const message = Obj.make(DataType.Message.Message, {
       created: new Date().toISOString(),
       sender: { role: 'assistant' },
       blocks,
@@ -65,7 +65,7 @@ export const processMessages = Effect.fn(function* ({
     log.info('toolCalls', { toolCalls });
     const toolResults = yield* callTools(toolkit, toolCalls);
     history.push(
-      Obj.make(DataType.Message, {
+      Obj.make(DataType.Message.Message, {
         created: new Date().toISOString(),
         sender: { role: 'user' },
         blocks: toolResults,

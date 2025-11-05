@@ -29,13 +29,13 @@ export type BaseKanbanItem = Record<JsonProp, any> & { id: string };
 export type ArrangedCards<T extends BaseKanbanItem = { id: string }> = { columnValue: string; cards: T[] }[];
 
 export type KanbanModelProps = {
-  view: DataType.View;
+  view: DataType.View.View;
   schema: Schema.Schema.AnyNoContext;
   projection: ProjectionModel;
 };
 
 export class KanbanModel<T extends BaseKanbanItem = { id: string }> extends Resource {
-  private readonly _view: DataType.View;
+  private readonly _view: DataType.View.View;
   private readonly _schema: Schema.Schema.AnyNoContext;
   private readonly _projection: ProjectionModel;
   private _kanban?: Kanban.Kanban;

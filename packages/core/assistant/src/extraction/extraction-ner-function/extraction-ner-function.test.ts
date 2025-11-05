@@ -21,15 +21,15 @@ describe.skip('NER EntityExtraction', () => {
   let db: EchoDatabase;
   let executor: FunctionExecutor;
   let testData: {
-    transcriptJosiah: DataType.Message[];
-    transcriptWoflram: DataType.Message[];
-    transcriptMessages: DataType.Message[];
+    transcriptJosiah: DataType.Message.Message[];
+    transcriptWoflram: DataType.Message.Message[];
+    transcriptMessages: DataType.Message.Message[];
     documents: Testing.DocumentType[];
-    contacts: Record<string, DataType.Person>;
-    organizations: Record<string, DataType.Organization>;
+    contacts: Record<string, DataType.Person.Person>;
+    organizations: Record<string, DataType.Organization.Organization>;
   };
 
-  const TYPES = [DataType.Organization, DataType.Person, Testing.Contact, Testing.DocumentType];
+  const TYPES = [DataType.Organization.Organization, DataType.Person.Person, Testing.Contact, Testing.DocumentType];
 
   beforeAll(async () => {
     // TODO(dmaretskyi): Helper to scaffold this from a config.

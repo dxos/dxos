@@ -70,7 +70,7 @@ const meta = {
     withPluginManager<{ title?: string; content?: string }>((context) => ({
       plugins: [
         ClientPlugin({
-          types: [Markdown.Document, DataType.Text, DataType.Person, DataType.Organization],
+          types: [Markdown.Document, DataType.Text.Text, DataType.Person.Person, DataType.Organization.Organization],
           onClientInitialized: async ({ client }) => {
             await client.halo.createIdentity();
             await client.spaces.waitUntilReady();
@@ -78,11 +78,11 @@ const meta = {
 
             const space = client.spaces.default;
             const createObjects = createObjectFactory(space.db, generator);
-            await createObjects([{ type: DataType.Organization, count: 10 }]);
+            await createObjects([{ type: DataType.Organization.Organization, count: 10 }]);
 
             const queue = space.queues.create();
-            const kai = Obj.make(DataType.Person, { fullName: 'Kai' });
-            const dxos = Obj.make(DataType.Organization, { name: 'DXOS' });
+            const kai = Obj.make(DataType.Person.Person, { fullName: 'Kai' });
+            const dxos = Obj.make(DataType.Organization.Organization, { name: 'DXOS' });
             await queue.append([kai, dxos]);
 
             space.db.add(

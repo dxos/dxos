@@ -24,7 +24,7 @@ export const ProjectPlugin = definePlugin(meta, () => [
     activatesOn: Events.SetupMetadata,
     activate: () =>
       contributes(Capabilities.Metadata, {
-        id: DataType.Project.typename,
+        id: DataType.Project.Project.typename,
         metadata: {
           icon: 'ph--check-square-offset--regular',
           iconHue: 'purple',
@@ -38,7 +38,7 @@ export const ProjectPlugin = definePlugin(meta, () => [
       contributes(
         SpaceCapabilities.ObjectForm,
         defineObjectForm({
-          objectSchema: DataType.Project,
+          objectSchema: DataType.Project.Project,
           getIntent: (_, options) => createIntent(Project.Create, { space: options.space }),
         }),
       ),
@@ -46,7 +46,7 @@ export const ProjectPlugin = definePlugin(meta, () => [
   defineModule({
     id: `${meta.id}/module/schema`,
     activatesOn: ClientEvents.SetupSchema,
-    activate: () => contributes(ClientCapabilities.Schema, [DataType.Project]),
+    activate: () => contributes(ClientCapabilities.Schema, [DataType.Project.Project]),
   }),
   defineModule({
     id: `${meta.id}/module/react-surface`,

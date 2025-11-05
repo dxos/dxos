@@ -17,7 +17,7 @@ export const Script = Schema.Struct({
   // TODO(burdon): Change to hash of deployed content.
   // Whether source has changed since last deploy.
   changed: Schema.Boolean.pipe(FormAnnotation.set(false), Schema.optional),
-  source: Type.Ref(DataType.Text).pipe(FormAnnotation.set(false)),
+  source: Type.Ref(DataType.Text.Text).pipe(FormAnnotation.set(false)),
 }).pipe(
   Type.Obj({
     typename: 'dxos.org/type/Script',
@@ -30,4 +30,4 @@ export interface Script extends Schema.Schema.Type<typeof Script> {}
 type Props = Omit<Obj.MakeProps<typeof Script>, 'source'> & { source?: string };
 
 export const make = ({ source = '', ...props }: Props = {}) =>
-  Obj.make(Script, { ...props, source: Ref.make(DataType.makeText(source)) });
+  Obj.make(Script, { ...props, source: Ref.make(DataType.Text.make(source)) });

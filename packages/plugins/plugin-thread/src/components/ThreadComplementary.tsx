@@ -21,7 +21,10 @@ import { useAttended } from '@dxos/react-ui-attention';
 import { StackItem } from '@dxos/react-ui-stack';
 import { Tabs } from '@dxos/react-ui-tabs';
 import { mx } from '@dxos/react-ui-theme';
-import { AnchoredTo } from '@dxos/schema';
+import { DataType } from '@dxos/schema';
+
+const AnchoredTo = DataType.AnchoredTo.AnchoredTo;
+type AnchoredTo = DataType.AnchoredTo.AnchoredTo;
 
 import { ThreadCapabilities } from '../capabilities';
 import { CommentsContainer, type CommentsContainerProps } from '../components';
@@ -90,7 +93,12 @@ export const ThreadComplementary = ({ subject }: { subject: any }) => {
   const handleComment = useCallback(
     async (anchor: AnchoredTo, text: string) => {
       await dispatch(
-        createIntent(ThreadAction.AddMessage, { anchor, subject, sender: { identityDid: identity?.did }, text }),
+        createIntent(ThreadAction.AddMessage, {
+          anchor,
+          subject,
+          sender: { identityDid: identity?.did },
+          text,
+        }),
       );
 
       const thread = Relation.getSource(anchor) as Thread.Thread;
@@ -101,7 +109,11 @@ export const ThreadComplementary = ({ subject }: { subject: any }) => {
 
   const handleResolve = useCallback(
     (anchor: AnchoredTo) =>
-      dispatch(createIntent(ThreadAction.ToggleResolved, { thread: Relation.getSource(anchor) as Thread.Thread })),
+      dispatch(
+        createIntent(ThreadAction.ToggleResolved, {
+          thread: Relation.getSource(anchor) as Thread.Thread,
+        }),
+      ),
     [dispatch],
   );
 
@@ -112,7 +124,13 @@ export const ThreadComplementary = ({ subject }: { subject: any }) => {
 
   const handleMessageDelete = useCallback(
     (anchor: AnchoredTo, messageId: string) =>
-      dispatch(createIntent(ThreadAction.DeleteMessage, { anchor, subject, messageId })),
+      dispatch(
+        createIntent(ThreadAction.DeleteMessage, {
+          anchor,
+          subject,
+          messageId,
+        }),
+      ),
     [dispatch, subject],
   );
 

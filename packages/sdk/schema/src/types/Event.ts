@@ -4,24 +4,21 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Type } from '@dxos/echo';
+import { Obj, Type } from '@dxos/echo';
 
-import { Actor } from './actor';
+import * as Actor from './Actor';
 
 /**
  * https://schema.org/Event
  */
-// TODO(burdon): Fix.
-const EventSchema = Schema.Struct({
+export const Event = Schema.Struct({
   name: Schema.optional(Schema.String),
-  owner: Actor,
-  attendees: Schema.mutable(Schema.Array(Actor)),
+  owner: Actor.Actor,
+  attendees: Schema.mutable(Schema.Array(Actor.Actor)),
   startDate: Schema.String, // TODO(burdon): Date.
   endDate: Schema.String,
   links: Schema.mutable(Schema.Array(Type.Ref(Type.Expando))),
-});
-
-export const Event = EventSchema.pipe(
+}).pipe(
   Type.Obj({
     typename: 'dxos.org/type/Event',
     version: '0.1.0',
@@ -29,3 +26,5 @@ export const Event = EventSchema.pipe(
 );
 
 export interface Event extends Schema.Schema.Type<typeof Event> {}
+
+export const make = (props: Obj.MakeProps<typeof Event>) => Obj.make(Event, props);

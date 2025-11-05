@@ -9,7 +9,7 @@ import { Obj, Type } from '@dxos/echo';
 import { JsonPath, type JsonSchemaType, toEffectSchema } from '@dxos/echo/internal';
 import { ViewAnnotation } from '@dxos/echo/internal';
 import { type SimpleType } from '@dxos/effect';
-import { type CreateViewFromSpaceProps, type DataType, createViewFromSpace, getSchemaProperties } from '@dxos/schema';
+import { DataType, getSchemaProperties } from '@dxos/schema';
 
 export const Table = Schema.Struct({
   sizes: Schema.Record({
@@ -31,7 +31,7 @@ export type Table = Schema.Schema.Type<typeof Table>;
  */
 export const make = (props: Partial<Obj.MakeProps<typeof Table>> = {}) => Obj.make(Table, { sizes: {}, ...props });
 
-type MakeViewProps = Omit<CreateViewFromSpaceProps, 'presentation'> & {
+type MakeViewProps = Omit<DataType.View.MakeFromSpaceProps, 'presentation'> & {
   sizes?: Record<string, number>;
 };
 
@@ -40,11 +40,11 @@ export const makeView = async ({
   ...props
 }: MakeViewProps): Promise<{
   jsonSchema: JsonSchemaType;
-  view: DataType.View;
+  view: DataType.View.View;
   schema: ReturnType<typeof toEffectSchema>;
 }> => {
   const table = Obj.make(Table, { sizes: {} });
-  const { jsonSchema, view } = await createViewFromSpace({ ...props, presentation: table });
+  const { jsonSchema, view } = await DataType.View.makeFromSpace({ ...props, presentation: table });
 
   // Preset sizes.
   const schema = toEffectSchema(jsonSchema);

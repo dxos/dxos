@@ -35,7 +35,7 @@ const meta = {
     withClientProvider({
       createIdentity: true,
       createSpace: true,
-      types: [DataType.Text, JournalType, JournalEntryType, OutlineType],
+      types: [DataType.Text.Text, JournalType, JournalEntryType, OutlineType],
     }),
   ],
   parameters: {

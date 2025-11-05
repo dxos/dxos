@@ -16,7 +16,7 @@ import { meta } from '../../meta';
 
 import { ObjectForm } from './ObjectForm';
 
-type RowDetailsPanelProps = { objectId: string; view: DataType.View };
+type RowDetailsPanelProps = { objectId: string; view: DataType.View.View };
 
 export const ObjectDetailsPanel = ({ objectId, view }: RowDetailsPanelProps) => {
   const { t } = useTranslation(meta.id);

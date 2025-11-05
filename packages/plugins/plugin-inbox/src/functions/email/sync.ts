@@ -53,8 +53,8 @@ export default defineFunction({
       //   (mailbox.tags ??= {})[label.id] = { label: label.name };
       // });
 
-      const queue = yield* QueueService.getQueue<DataType.Message>(mailbox.queue.dxn);
-      const newMessages = yield* Ref.make<DataType.Message[]>([]);
+      const queue = yield* QueueService.getQueue<DataType.Message.Message>(mailbox.queue.dxn);
+      const newMessages = yield* Ref.make<DataType.Message.Message[]>([]);
       const nextPage = yield* Ref.make<string | undefined>(undefined);
 
       do {

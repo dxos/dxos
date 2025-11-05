@@ -96,7 +96,7 @@ namespace TestingToolkit {
 
 type DecoratorsProps = {
   plugins?: Plugin[];
-  accessTokens?: DataType.AccessToken[];
+  accessTokens?: DataType.AccessToken.AccessToken[];
   onInit?: (props: { client: Client; space: Space }) => Promise<void>;
 } & (Omit<ClientPluginOptions, 'onClientInitialized' | 'onSpacesReady'> & Pick<StoryPluginOptions, 'onChatCreated'>);
 
@@ -124,7 +124,7 @@ export const getDecorators = ({
         types: [
           Assistant.Chat,
           Blueprint.Blueprint,
-          DataType.AccessToken,
+          DataType.AccessToken.AccessToken,
           Function.Function,
           Markdown.Document,
           Prompt.Prompt,
@@ -191,7 +191,7 @@ export const getDecorators = ({
 export const accessTokensFromEnv = (tokens: Record<string, string | undefined>) => {
   return Object.entries(tokens)
     .filter(([, token]) => !!token)
-    .map(([source, token]) => Obj.make(DataType.AccessToken, { source, token: token! }));
+    .map(([source, token]) => Obj.make(DataType.AccessToken.AccessToken, { source, token: token! }));
 };
 
 type StoryPluginOptions = {

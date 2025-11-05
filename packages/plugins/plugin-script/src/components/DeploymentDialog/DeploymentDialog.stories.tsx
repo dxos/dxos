@@ -45,7 +45,7 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
   args: {
-    accessToken: Obj.make(DataType.AccessToken, {
+    accessToken: Obj.make(DataType.AccessToken.AccessToken, {
       source: 'example.com',
       token: 'example-token',
     }),

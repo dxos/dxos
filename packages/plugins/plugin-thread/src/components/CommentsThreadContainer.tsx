@@ -16,8 +16,10 @@ import {
   Thread as ThreadComponent,
   type ThreadRootProps,
 } from '@dxos/react-ui-thread';
-import { type AnchoredTo } from '@dxos/schema';
+import { type DataType } from '@dxos/schema';
 import { isNonNullable } from '@dxos/util';
+
+type AnchoredTo = DataType.AnchoredTo.AnchoredTo;
 
 import { useStatus } from '../hooks';
 import { meta } from '../meta';

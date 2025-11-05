@@ -22,7 +22,7 @@
 //   beforeEach(async () => {
 //     client = new Client({
 //       services: testBuilder.createLocalClientServices(),
-//       types: [ChannelType, CollectionType, Markdown.Document, DataType.Message, DiagramType, TableType, ThreadType],
+//       types: [ChannelType, CollectionType, Markdown.Document, DataType.Message.Message, DiagramType, TableType, ThreadType],
 //     });
 
 //     await client.initialize();

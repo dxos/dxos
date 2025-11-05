@@ -21,7 +21,7 @@ import { type DataType, getTypenameFromQuery } from '@dxos/schema';
 
 export type TableCardProps = {
   role: string;
-  view: DataType.View;
+  view: DataType.View.View;
 };
 
 export const TableCard = ({ role, view }: TableCardProps) => {

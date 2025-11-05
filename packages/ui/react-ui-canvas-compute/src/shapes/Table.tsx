@@ -12,8 +12,8 @@ import { DataType } from '@dxos/schema';
 import { Box, createFunctionAnchors } from './common';
 import { ComputeShape, type CreateShapeProps, createShape } from './defs';
 
-const InputSchema = createInputSchema(DataType.Message);
-const OutputSchema = createOutputSchema(Schema.mutable(Schema.Array(DataType.Message)));
+const InputSchema = createInputSchema(DataType.Message.Message);
+const OutputSchema = createOutputSchema(Schema.mutable(Schema.Array(DataType.Message.Message)));
 
 export const TableShape = Schema.extend(
   ComputeShape,
