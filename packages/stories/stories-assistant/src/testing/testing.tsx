@@ -213,7 +213,7 @@ const StoryPlugin = definePlugin<StoryPluginOptions>(
         contributes(Capabilities.Functions, [Agent.prompt]),
         contributes(Capabilities.Functions, [Document.read, Document.update]),
         contributes(Capabilities.Functions, [Tasks.read, Tasks.update]),
-        contributes(Capabilities.Functions, [Research.create, Research.update, Research.research]),
+        contributes(Capabilities.Functions, [Research.create, Research.research]),
         contributes(Capabilities.Functions, [Example.reply]),
       ],
     }),

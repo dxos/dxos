@@ -2,6 +2,12 @@
 // Copyright 2024 DXOS.org
 //
 
-export { default as create } from './create';
-export { default as diff } from './diff';
-export { default as open } from './open';
+import { default as create } from './create';
+import { default as open } from './open';
+import { default as update } from './update';
+
+export const MarkdownFunction = {
+  create,
+  open,
+  update,
+};
