@@ -25,11 +25,11 @@ export type ChatCompanionProps = {
 };
 
 export const ChatCompanion = ({ role, data }: ChatCompanionProps) => {
-  const companionTo = data.companionTo;
-  const space = getSpace(companionTo);
   const { dispatchPromise: dispatch } = useIntentDispatcher();
   const blueprintRegistry = useBlueprintRegistry();
+  const companionTo = data.companionTo;
 
+  const space = getSpace(companionTo);
   const [chat, setChat] = useState(data.subject === 'assistant-chat' ? undefined : data.subject);
   useEffect(() => {
     setChat(data.subject === 'assistant-chat' ? undefined : data.subject);
@@ -40,7 +40,7 @@ export const ChatCompanion = ({ role, data }: ChatCompanionProps) => {
 
   // Initialize companion chat if it doesn't exist, but don't add it to the space immediately.
   useAsyncEffect(async () => {
-    if (chat || !space) {
+    if (!space || chat) {
       return;
     }
 
