@@ -118,4 +118,6 @@ export class StaticFunctionsProvider extends Context.Tag('@dxos/functions/Static
   }
 >() {
   static toLayer = (impl: Context.Tag.Service<StaticFunctionsProvider>) => Layer.succeed(StaticFunctionsProvider, impl);
+
+  static layerEmpty = this.toLayer({ functions: Rx.make(() => []) });
 }
