@@ -21,12 +21,8 @@ const paragraphBlockPlugin = ViewPlugin.fromClass(
       }
     }
 
-    build(view: EditorView) {
+    build({ state }: EditorView) {
       const builder = new RangeSetBuilder<Decoration>();
-      const { state } = view;
-      const totalLines = state.doc.lines;
-
-      let blockStart: number | null = null;
 
       // Helper: commit a block from blockStart to endLine (inclusive).
       const pushBlock = (fromLine: number, toLine: number) => {
@@ -43,19 +39,20 @@ const paragraphBlockPlugin = ViewPlugin.fromClass(
             line.from,
             Decoration.line({
               class: mx(
-                'paragraph-block-line',
-                isSingle && 'paragraph-block-single',
-                isFirst && 'paragraph-block-first',
-                isMiddle && 'paragraph-block-middle',
-                isLast && 'paragraph-block-last',
+                'block-line',
+                isSingle && 'block-single',
+                isFirst && 'block-first',
+                isMiddle && 'block-middle',
+                isLast && 'block-last',
               ),
             }),
           );
         }
       };
 
+      let blockStart: number | null = null;
       let consecutiveBlankLines = 0;
-
+      const totalLines = state.doc.lines;
       for (let i = 1; i <= totalLines; i++) {
         const line = state.doc.line(i);
         const isBlank = /^\s*$/.test(line.text);
@@ -106,13 +103,13 @@ const paragraphBlockPlugin = ViewPlugin.fromClass(
 export const blocks = () => [
   paragraphBlockPlugin,
   EditorView.baseTheme({
-    '.cm-line.paragraph-block-line': {
+    '.cm-line.block-line': {
       paddingLeft: '0.75rem',
       paddingRight: '0.75rem',
       borderLeft: '1px solid var(--dx-subduedSeparator)',
       borderRight: '1px solid var(--dx-subduedSeparator)',
     },
-    '.cm-line.paragraph-block-single': {
+    '.cm-line.block-single': {
       border: '1px solid var(--dx-subduedSeparator)',
       borderRadius: '6px',
       paddingTop: '0.5rem',
@@ -120,15 +117,15 @@ export const blocks = () => [
       marginTop: '0.5rem',
       marginBottom: '0.5rem',
     },
-    '.cm-line.paragraph-block-first': {
+    '.cm-line.block-first': {
       borderTop: '1px solid var(--dx-subduedSeparator)',
       borderTopLeftRadius: '6px',
       borderTopRightRadius: '6px',
       paddingTop: '0.5rem',
       marginTop: '0.5rem',
     },
-    '.cm-line.paragraph-block-middle': {},
-    '.cm-line.paragraph-block-last': {
+    '.cm-line.block-middle': {},
+    '.cm-line.block-last': {
       borderBottom: '1px solid var(--dx-subduedSeparator)',
       borderBottomLeftRadius: '6px',
       borderBottomRightRadius: '6px',
