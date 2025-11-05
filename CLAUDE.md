@@ -3,7 +3,6 @@
 - lint task takes `--fix` argument to fix issues.
 - use `moon :build --quiet --no-bail` to build all packages.
 - when reaching a natural stopping point, run the linter for impacted packages.
-- create a new branch before starting work.
 - use `gh pr create` to create a pull request.
 - use "Conventional Commits" for PR titles.
 - ask for confirmation to ensure all work is complete and if so check that all packages build and pass linting and fix any problems that come up.
