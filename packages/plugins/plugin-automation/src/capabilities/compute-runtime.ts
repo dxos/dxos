@@ -7,6 +7,7 @@ import * as BrowserKeyValueStore from '@effect/platform-browser/BrowserKeyValueS
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as ManagedRuntime from 'effect/ManagedRuntime';
+import * as Array from 'effect/Array';
 
 import { Capabilities, type PluginContext, contributes } from '@dxos/app-framework';
 import { makeToolExecutionServiceFromFunctions, makeToolResolverFromFunctions } from '@dxos/assistant';
@@ -22,12 +23,16 @@ import {
   QueueService,
   RemoteFunctionExecutionService,
   TriggerDispatcher,
+  FunctionRegistryService,
+  StaticFunctionsProvider,
+  FunctionDefinition,
 } from '@dxos/functions';
 import { TriggerStateStore } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { type SpaceId } from '@dxos/keys';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { PropertiesType } from '@dxos/react-client/echo';
+import { Rx, Registry } from '@effect-rx/rx';
 
 import { AutomationCapabilities } from './capabilities';
 
@@ -50,7 +55,7 @@ class ComputeRuntimeProviderImpl extends Resource implements AutomationCapabilit
   protected override async _open() {}
 
   protected override async _close() {
-    await Promise.all(Array.from(this.#runtimes.values()).map((rt) => rt.dispose()));
+    await Promise.all(Array.fromIterable(this.#runtimes.values()).map((rt) => rt.dispose()));
     this.#runtimes.clear();
   }
 
@@ -68,8 +73,7 @@ class ComputeRuntimeProviderImpl extends Resource implements AutomationCapabilit
         // TODO(dmaretskyi): Make these reactive.
         const toolkits = this.#context.getCapabilities(Capabilities.Toolkit);
         const handlers = this.#context.getCapabilities(Capabilities.ToolkitHandler);
-        const functions = this.#context.getCapabilities(Capabilities.Functions);
-        const allFunctions = functions.flat();
+        const allFunctions = this.#context.getCapabilities(Capabilities.Functions).flat();
 
         const toolkit = Toolkit.merge(...toolkits);
         const toolkitLayer = Layer.mergeAll(Layer.empty, ...handlers);
@@ -85,6 +89,7 @@ class ComputeRuntimeProviderImpl extends Resource implements AutomationCapabilit
               TriggerStateStore.layerKv.pipe(Layer.provide(BrowserKeyValueStore.layerLocalStorage)),
               makeToolResolverFromFunctions(allFunctions, toolkit),
               makeToolExecutionServiceFromFunctions(toolkit, toolkitLayer),
+              FunctionRegistryService.layer,
             ),
           ),
           Layer.provideMerge(
@@ -92,6 +97,11 @@ class ComputeRuntimeProviderImpl extends Resource implements AutomationCapabilit
               FunctionInvocationService.layer.pipe(
                 Layer.provideMerge(
                   LocalFunctionExecutionService.layerLive.pipe(
+                    Layer.provideMerge(
+                      StaticFunctionsProvider.toLayer({
+                        functions: this.#context.capabilities(Capabilities.Functions).pipe(Rx.map(Array.flatten)),
+                      }),
+                    ),
                     Layer.provideMerge(FunctionImplementationResolver.layerTest({ functions: allFunctions })),
                     Layer.provideMerge(
                       RemoteFunctionExecutionService.fromClient(
@@ -104,6 +114,9 @@ class ComputeRuntimeProviderImpl extends Resource implements AutomationCapabilit
                     Layer.provideMerge(CredentialsService.layerFromDatabase()),
                     Layer.provideMerge(space ? DatabaseService.layer(space.db) : DatabaseService.notAvailable),
                     Layer.provideMerge(space ? QueueService.layer(space.queues) : QueueService.notAvailable),
+                    Layer.provideMerge(
+                      Layer.succeed(Registry.RxRegistry, this.#context.getCapability(Capabilities.RxRegistry)),
+                    ),
                   ),
                 ),
               ),
