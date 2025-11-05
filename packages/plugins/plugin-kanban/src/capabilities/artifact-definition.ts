@@ -94,7 +94,7 @@ export default () => {
         execute: async (_input, { extensions }) => {
           invariant(extensions?.space, 'No space');
           const space = extensions.space;
-          const { objects } = await space.db.query(Filter.type(DataType.View)).run();
+          const { objects } = await space.db.query(Filter.type(DataType.View.View)).run();
 
           const boardInfo = await Promise.all(
             objects.map(async (view) => {
@@ -124,8 +124,8 @@ export default () => {
           const space = extensions.space;
           const view = (await space.db
             // TODO(wittjosiah): Filter.and should aggregate type
-            .query(Query.select(Filter.and(Filter.type(DataType.View), Filter.ids(id))))
-            .first()) as DataType.View;
+            .query(Query.select(Filter.and(Filter.type(DataType.View.View), Filter.ids(id))))
+            .first()) as DataType.View.View;
 
           const kanban = await view.presentation.load();
           invariant(Obj.instanceOf(KanbanView, kanban));

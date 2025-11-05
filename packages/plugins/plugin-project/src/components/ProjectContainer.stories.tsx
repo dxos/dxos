@@ -22,7 +22,7 @@ import { withTheme } from '@dxos/react-ui/testing';
 import { translations as stackTranslations } from '@dxos/react-ui-stack';
 import { Stack } from '@dxos/react-ui-stack';
 import { defaultTx } from '@dxos/react-ui-theme';
-import { DataType, createView } from '@dxos/schema';
+import { DataType } from '@dxos/schema';
 import { createObjectFactory } from '@dxos/schema/testing';
 
 import { translations } from '../translations';
@@ -34,7 +34,7 @@ faker.seed(0);
 
 const DefaultStory = () => {
   const space = useSpace();
-  const projects = useQuery(space, Filter.type(DataType.Project));
+  const projects = useQuery(space, Filter.type(DataType.Project.Project));
   const project = projects[0];
 
   if (!project) {
@@ -59,13 +59,13 @@ const meta = {
         ClientPlugin({
           types: [
             Tag.Tag,
-            DataType.Project,
-            DataType.View,
-            DataType.Collection,
-            DataType.Organization,
-            DataType.Task,
-            DataType.Person,
-            DataType.Message,
+            DataType.Project.Project,
+            DataType.View.View,
+            DataType.Collection.Collection,
+            DataType.Organization.Organization,
+            DataType.Task.Task,
+            DataType.Person.Person,
+            DataType.Message.Message,
           ],
           onClientInitialized: async ({ client }) => {
             await client.halo.createIdentity();
@@ -76,47 +76,49 @@ const meta = {
             const tag = space.db.add(Tag.make({ label: 'important', hue: 'green' }));
             const tagDxn = Obj.getDXN(tag).toString();
 
-            // Create a project
-            const project = DataType.makeProject({ collections: [] });
+            // Create a project.
+            const project = DataType.Project.make({ collections: [] });
 
-            // Create a view for Contacts
-            const personView = createView({
+            // Create a view for Contacts.
+            const personView = DataType.View.make({
               name: 'Contacts',
-              query: Query.select(Filter.type(DataType.Person)),
-              jsonSchema: Type.toJsonSchema(DataType.Person),
+              query: Query.select(Filter.type(DataType.Person.Person)),
+              jsonSchema: Type.toJsonSchema(DataType.Person.Person),
               presentation: project,
             });
 
-            // Create a view for Organizations
-            const organizationView = createView({
+            // Create a view for Organizations.
+            const organizationView = DataType.View.make({
               name: 'Organizations',
-              query: Query.select(Filter.type(DataType.Organization)).select(Filter.tag(tagDxn)),
-              jsonSchema: Type.toJsonSchema(DataType.Organization),
+              query: Query.select(Filter.type(DataType.Organization.Organization)).select(Filter.tag(tagDxn)),
+              jsonSchema: Type.toJsonSchema(DataType.Organization.Organization),
               presentation: project,
             });
 
-            // Create a view for Tasks
-            const taskView = createView({
+            // Create a view for Tasks.
+            const taskView = DataType.View.make({
               name: 'Tasks',
-              query: Query.select(Filter.type(DataType.Task)).select(Filter.tag(tagDxn)),
-              jsonSchema: Type.toJsonSchema(DataType.Task),
+              query: Query.select(Filter.type(DataType.Task.Task)).select(Filter.tag(tagDxn)),
+              jsonSchema: Type.toJsonSchema(DataType.Task.Task),
               presentation: project,
             });
 
-            // Create a view for Project-Projects
-            const projectView = createView({
+            // Create a view for Project-Projects.
+            const projectView = DataType.View.make({
               name: 'Projects (not the UI component)',
-              query: Query.select(Filter.type(DataType.Project)),
-              jsonSchema: Type.toJsonSchema(DataType.Project),
+              query: Query.select(Filter.type(DataType.Project.Project)),
+              jsonSchema: Type.toJsonSchema(DataType.Project.Project),
               presentation: project,
             });
 
-            // Create a view for Messages
+            // Create a view for Messages.
             const messageQueue = space.queues.create();
-            const messageView = createView({
+            const messageView = DataType.View.make({
               name: 'Messages',
-              query: Query.select(Filter.type(DataType.Message)).options({ queues: [messageQueue.dxn.toString()] }),
-              jsonSchema: Type.toJsonSchema(DataType.Message),
+              query: Query.select(Filter.type(DataType.Message.Message)).options({
+                queues: [messageQueue.dxn.toString()],
+              }),
+              jsonSchema: Type.toJsonSchema(DataType.Message.Message),
               presentation: project,
             });
 
@@ -138,7 +140,7 @@ const meta = {
             // Generate sample Organizations
             Array.from({ length: 5 }).forEach(() => {
               const org = Obj.make(
-                DataType.Organization,
+                DataType.Organization.Organization,
                 {
                   name: faker.company.name(),
                   website: faker.internet.url(),
@@ -155,7 +157,7 @@ const meta = {
             // Generate sample Tasks
             Array.from({ length: 8 }).forEach(() => {
               const task = Obj.make(
-                DataType.Task,
+                DataType.Task.Task,
                 {
                   title: faker.lorem.sentence(),
                   status: faker.helpers.arrayElement(['todo', 'in-progress', 'done']) as any,
@@ -170,11 +172,11 @@ const meta = {
 
             // Generate sample Contacts
             const factory = createObjectFactory(space.db, faker as any);
-            await factory([{ type: DataType.Person, count: 12 }]);
+            await factory([{ type: DataType.Person.Person, count: 12 }]);
 
             // Generate sample Projects
             Array.from({ length: 3 }).forEach(() => {
-              const nestedProject = DataType.makeProject({
+              const nestedProject = DataType.Project.make({
                 name: faker.commerce.productName(),
                 description: faker.lorem.sentence(),
               });
@@ -183,7 +185,7 @@ const meta = {
 
             // Generate sample Messages
             const messages = Array.from({ length: 6 }).map(() => {
-              const message = Obj.make(DataType.Message, {
+              const message = Obj.make(DataType.Message.Message, {
                 created: faker.date.recent().toISOString(),
                 sender: { role: 'user' },
                 blocks: [

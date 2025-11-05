@@ -39,15 +39,16 @@ const rollOrg = () => ({
   description: faker.lorem.paragraph(),
   image: faker.image.url(),
   website: faker.internet.url(),
-  status: faker.helpers.arrayElement(DataType.OrganizationStatusOptions).id as DataType.Organization['status'],
+  status: faker.helpers.arrayElement(DataType.Organization.StatusOptions)
+    .id as DataType.Organization.Organization['status'],
 });
 
 const StorybookKanban = () => {
   const client = useClient();
   const spaces = useSpaces();
   const space = spaces[spaces.length - 1];
-  const views = useQuery(space, Filter.type(DataType.View));
-  const [view, setView] = useState<DataType.View>();
+  const views = useQuery(space, Filter.type(DataType.View.View));
+  const [view, setView] = useState<DataType.View.View>();
   const [projection, setProjection] = useState<ProjectionModel>();
   const typename = view?.query ? getTypenameFromQuery(view.query.ast) : undefined;
   const schema = useSchema(client, space, typename);
@@ -150,7 +151,7 @@ const meta = {
     withPluginManager({
       plugins: [
         ClientPlugin({
-          types: [DataType.Organization, DataType.Person, DataType.View, Kanban.Kanban],
+          types: [DataType.Organization.Organization, DataType.Person.Person, DataType.View.View, Kanban.Kanban],
           onClientInitialized: async ({ client }) => {
             await client.halo.createIdentity();
             const space = await client.spaces.create();
@@ -158,14 +159,14 @@ const meta = {
             const { view } = await Kanban.makeView({
               client,
               space,
-              typename: DataType.Organization.typename,
+              typename: DataType.Organization.Organization.typename,
               pivotFieldName: 'status',
             });
             space.db.add(view);
 
             // TODO(burdon): Replace with sdk/schema/testing.
             Array.from({ length: 80 }).map(() => {
-              return space.db.add(Obj.make(DataType.Organization, rollOrg()));
+              return space.db.add(Obj.make(DataType.Organization.Organization, rollOrg()));
             });
           },
         }),

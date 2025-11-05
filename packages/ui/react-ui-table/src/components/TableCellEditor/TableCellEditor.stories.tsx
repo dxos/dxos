@@ -32,7 +32,7 @@ const DefaultStory = ({ editing }: StoryProps) => {
   return (
     <div className='flex w-[300px] border border-separator' style={{ height: defaultRowSize }}>
       <Grid.Root id='test' editing={editing}>
-        <TableCellEditor model={model} schema={DataType.Task} />
+        <TableCellEditor model={model} schema={DataType.Task.Task} />
       </Grid.Root>
     </div>
   );
@@ -45,15 +45,15 @@ const meta = {
   decorators: [
     withTheme,
     withClientProvider({
-      types: [DataType.View, DataType.Task, Table.Table],
+      types: [DataType.View.View, DataType.Task.Task, Table.Table],
       createIdentity: true,
       createSpace: true,
       onCreateSpace: async ({ client, space }) => {
-        const { view } = await Table.makeView({ client, space, typename: DataType.Task.typename });
+        const { view } = await Table.makeView({ client, space, typename: DataType.Task.Task.typename });
         space.db.add(view);
         Array.from({ length: 10 }).forEach(() => {
           space.db.add(
-            Obj.make(DataType.Task, {
+            Obj.make(DataType.Task.Task, {
               title: faker.person.fullName(),
               status: faker.helpers.arrayElement(['todo', 'in-progress', 'done'] as const),
               description: faker.lorem.sentence(),

@@ -13,7 +13,7 @@ import { type ObjectId } from '@dxos/echo/internal';
 import { ObjectVersion } from '@dxos/echo-db';
 import { DatabaseService } from '@dxos/functions';
 import { log } from '@dxos/log';
-import { type ContentBlock, DataType } from '@dxos/schema';
+import { DataType } from '@dxos/schema';
 import { trim } from '@dxos/util';
 
 import { AiAssistantError } from '../errors';
@@ -76,7 +76,7 @@ export const formatSystemPrompt = ({
 // TODO(burdon): Convert util below to `Effect.fn` (to preserve stack info)
 export const formatUserPrompt = ({ prompt, history = [] }: Pick<AiSessionRunParams<any>, 'prompt' | 'history'>) =>
   Effect.gen(function* () {
-    const blocks: ContentBlock.Any[] = [];
+    const blocks: DataType.ContentBlock.Any[] = [];
 
     // TODO(dmaretskyi): Evaluate other approaches as `serviceOption` isn't represented in the type system.
     const artifactDiffResolver = yield* Effect.serviceOption(ArtifactDiffResolver);
@@ -105,14 +105,14 @@ export const formatUserPrompt = ({ prompt, history = [] }: Pick<AiSessionRunPara
       }
     }
 
-    return Obj.make(DataType.Message, {
+    return Obj.make(DataType.Message.Message, {
       created: new Date().toISOString(),
       sender: { role: 'user' },
       blocks: [...blocks, { _tag: 'text', text: prompt }],
     });
   });
 
-const gatherObjectVersions = (messages: DataType.Message[]): Map<ObjectId, ObjectVersion> => {
+const gatherObjectVersions = (messages: DataType.Message.Message[]): Map<ObjectId, ObjectVersion> => {
   const artifactIds = new Map<ObjectId, ObjectVersion>();
   for (const message of messages) {
     for (const block of message.blocks) {
@@ -127,7 +127,7 @@ const gatherObjectVersions = (messages: DataType.Message[]): Map<ObjectId, Objec
 
 const createArtifactUpdateBlock = (
   artifactDiff: Map<ObjectId, { version: ObjectVersion; diff?: string }>,
-): ContentBlock.Any => {
+): DataType.ContentBlock.Any => {
   return {
     _tag: 'text',
     // TODO(dmaretskyi): Does this need to be a special content-block?

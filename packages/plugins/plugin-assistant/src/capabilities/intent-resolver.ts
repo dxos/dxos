@@ -69,7 +69,7 @@ export default (context: PluginContext) => [
       intent: AssistantAction.UpdateChatName,
       resolve: async ({ chat }) => {
         const space = getSpace(chat);
-        const queue = chat.queue.target as Queue<DataType.Message>;
+        const queue = chat.queue.target as Queue<DataType.Message.Message>;
         if (!space || !queue) {
           return;
         }
@@ -88,7 +88,7 @@ export default (context: PluginContext) => [
       intent: AssistantAction.CreateBlueprint,
       resolve: ({ key, name, description }) => ({
         data: {
-          object: Blueprint.make({ key, name, description, instructions: Template.make({ source: '' }) }),
+          object: Blueprint.make({ key, name, description, instructions: Template.make() }),
         },
       }),
     }),

@@ -22,7 +22,7 @@ import { useMessageToolbarActions } from './toolbar';
 
 export type MessageContainerProps = {
   space?: Space;
-  message?: DataType.Message;
+  message?: DataType.Message.Message;
   inMailbox: Mailbox.Mailbox;
   role?: string;
 };
@@ -41,8 +41,8 @@ export const MessageContainer = ({ space, message, inMailbox, role }: MessageCon
 
   const viewMode = useSignal<ViewMode>(initialViewMode);
   const hasEmail = useComputed(() => !!message?.sender.email);
-  const contacts = useQuery(space, Filter.type(DataType.Person));
-  const existingContact = useSignal<DataType.Person | undefined>(undefined);
+  const contacts = useQuery(space, Filter.type(DataType.Person.Person));
+  const existingContact = useSignal<DataType.Person.Person | undefined>(undefined);
   const contactDxn = useComputed(() =>
     existingContact.value ? Obj.getDXN(existingContact.value)?.toString() : undefined,
   );

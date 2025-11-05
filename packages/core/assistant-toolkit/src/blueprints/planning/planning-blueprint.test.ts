@@ -41,7 +41,7 @@ describe('Planning Blueprint', { timeout: 120_000 }, () => {
     'planning blueprint',
     Effect.fn(
       function* ({ expect }) {
-        const queue = yield* QueueService.createQueue<DataType.Message | ContextBinding>();
+        const queue = yield* QueueService.createQueue<DataType.Message.Message | ContextBinding>();
         const conversation = yield* acquireReleaseResource(() => new AiConversation(queue));
 
         yield* DatabaseService.add(blueprint);
@@ -107,7 +107,7 @@ describe('Planning Blueprint', { timeout: 120_000 }, () => {
       },
       Effect.provide(
         Layer.mergeAll(
-          TestDatabaseLayer({ types: [DataType.Text, Markdown.Document, Blueprint.Blueprint] }),
+          TestDatabaseLayer({ types: [DataType.Text.Text, Markdown.Document, Blueprint.Blueprint] }),
           makeToolResolverFromFunctions([Tasks.read, Tasks.update], testToolkit),
           makeToolExecutionServiceFromFunctions(testToolkit, testToolkit.toLayer({}) as any),
           AiService.model('@anthropic/claude-3-5-sonnet-20241022'),
@@ -119,7 +119,9 @@ describe('Planning Blueprint', { timeout: 120_000 }, () => {
             ),
           ),
           Layer.provideMerge(FunctionImplementationResolver.layerTest({ functions: [Tasks.read, Tasks.update] })),
-          Layer.provideMerge(TestDatabaseLayer({ types: [DataType.Text, Markdown.Document, Blueprint.Blueprint] })),
+          Layer.provideMerge(
+            TestDatabaseLayer({ types: [DataType.Text.Text, Markdown.Document, Blueprint.Blueprint] }),
+          ),
           Layer.provideMerge(AiServiceTestingPreset('direct')),
         ),
       ),

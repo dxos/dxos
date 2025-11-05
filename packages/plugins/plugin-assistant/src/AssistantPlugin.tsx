@@ -111,7 +111,7 @@ export const AssistantPlugin = definePlugin(meta, () => [
         ServiceType,
         Assistant.CompanionTo,
         ResearchGraph,
-        DataType.HasSubject,
+        DataType.HasSubject.HasSubject,
         Prompt.Prompt,
       ]),
   }),

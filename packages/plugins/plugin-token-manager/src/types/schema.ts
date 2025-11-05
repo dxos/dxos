@@ -12,7 +12,7 @@ export namespace TokenManagerAction {
   export class AccessTokenCreated extends Schema.TaggedClass<AccessTokenCreated>()(
     `${meta.id}/action/access-token-created`,
     {
-      input: Schema.Struct({ accessToken: DataType.AccessToken }),
+      input: Schema.Struct({ accessToken: DataType.AccessToken.AccessToken }),
       output: Schema.Void,
     },
   ) {}

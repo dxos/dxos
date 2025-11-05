@@ -84,7 +84,7 @@ export default defineFunction({
     function* ({ data: { query, instructions, mockSearch = false, entityExtraction = false } }) {
       if (mockSearch) {
         const mockPerson = yield* DatabaseService.add(
-          Obj.make(DataType.Person, {
+          Obj.make(DataType.Person.Person, {
             preferredName: 'John Doe',
             emails: [{ value: 'john.doe@example.com' }],
             phoneNumbers: [{ value: '123-456-7890' }],
@@ -169,7 +169,7 @@ const join = (...strings: (string | undefined)[]) => strings.filter(Boolean).joi
  * Skips citations.
  */
 // TODO(burdon): Factor out.
-const extractLastTextBlock = (result: DataType.Message[]) => {
+const extractLastTextBlock = (result: DataType.Message.Message[]) => {
   return Function.pipe(
     result,
     Array.last,

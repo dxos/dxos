@@ -207,14 +207,14 @@ class InlineSuggestionWidget extends WidgetType {
     super();
   }
 
-  override toDOM(): HTMLSpanElement {
+  override eq(other: this) {
+    return this.suffix === other.suffix;
+  }
+
+  override toDOM() {
     const span = document.createElement('span');
     span.textContent = this.suffix;
     span.className = 'cm-inline-suggestion';
     return span;
-  }
-
-  override eq(other: InlineSuggestionWidget): boolean {
-    return other.suffix === this.suffix;
   }
 }

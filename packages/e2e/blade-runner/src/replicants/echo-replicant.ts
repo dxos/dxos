@@ -143,7 +143,7 @@ export class EchoReplicant {
     invariant(this._db, 'Database not initialized.');
     const queried = new Trigger();
 
-    const query = this._db.query(Filter.typename(Text.typename));
+    const query = this._db.query(Filter.type(Text));
     query.subscribe(
       ({ results }) => {
         const ids = new Set<string>();

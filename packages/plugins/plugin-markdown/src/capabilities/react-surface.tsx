@@ -32,8 +32,8 @@ export default () =>
     createSurface({
       id: `${meta.id}/surface/text`,
       role: ['article', 'section', 'tabpanel'],
-      filter: (data): data is { id: string; subject: DataType.Text } =>
-        typeof data.id === 'string' && Obj.instanceOf(DataType.Text, data.subject),
+      filter: (data): data is { id: string; subject: DataType.Text.Text } =>
+        typeof data.id === 'string' && Obj.instanceOf(DataType.Text.Text, data.subject),
       component: ({ data, role }) => {
         return <Container id={data.id} subject={data.subject} role={role} />;
       },
@@ -57,8 +57,8 @@ export default () =>
     createSurface({
       id: `${meta.id}/surface/preview`,
       role: ['card--popover', 'card--intrinsic', 'card--extrinsic', 'card--transclusion', 'card'],
-      filter: (data): data is { subject: Markdown.Document | DataType.Text } =>
-        Obj.instanceOf(Markdown.Document, data.subject) || Obj.instanceOf(DataType.Text, data.subject),
+      filter: (data): data is { subject: Markdown.Document | DataType.Text.Text } =>
+        Obj.instanceOf(Markdown.Document, data.subject) || Obj.instanceOf(DataType.Text.Text, data.subject),
       component: ({ data, role }) => <MarkdownCard {...data} role={role} />,
     }),
   ]);

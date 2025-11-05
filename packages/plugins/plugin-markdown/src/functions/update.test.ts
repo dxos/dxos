@@ -55,7 +55,13 @@ const TestLayer = Layer.mergeAll(
       TestDatabaseLayer({
         spaceKey: 'fixed',
         indexing: { vector: true },
-        types: [PropertiesType, DataType.Collection, Blueprint.Blueprint, Markdown.Document, DataType.HasSubject],
+        types: [
+          PropertiesType,
+          DataType.Collection.Collection,
+          Blueprint.Blueprint,
+          Markdown.Document,
+          DataType.HasSubject.HasSubject,
+        ],
       }),
       CredentialsService.configuredLayer([]),
       TracingService.layerNoop,
@@ -94,7 +100,7 @@ describe('update', () => {
     'create and update a markdown document',
     Effect.fnUntraced(
       function* (_) {
-        const queue = yield* QueueService.createQueue<DataType.Message | ContextBinding>();
+        const queue = yield* QueueService.createQueue<DataType.Message.Message | ContextBinding>();
         const conversation = yield* acquireReleaseResource(() => new AiConversation(queue));
 
         yield* DatabaseService.flush({ indexes: true });

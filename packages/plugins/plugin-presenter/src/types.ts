@@ -17,7 +17,7 @@ export namespace PresenterAction {
     `${PRESENTER_ACTION}/toggle-presentation`,
     {
       input: Schema.Struct({
-        object: Schema.Union(Markdown.Document, DataType.Collection),
+        object: Schema.Union(Markdown.Document, DataType.Collection.Collection),
         state: Schema.optional(Schema.Boolean),
       }),
       output: Schema.Void,

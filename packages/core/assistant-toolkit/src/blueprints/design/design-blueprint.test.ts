@@ -42,7 +42,7 @@ describe('Design Blueprint', { timeout: 120_000 }, () => {
     Effect.fn(
       function* ({ expect }) {
         const observer = GenerationObserver.fromPrinter(new ConsolePrinter());
-        const queue = yield* QueueService.createQueue<DataType.Message | ContextBinding>();
+        const queue = yield* QueueService.createQueue<DataType.Message.Message | ContextBinding>();
         const conversation = yield* acquireReleaseResource(() => new AiConversation(queue));
 
         yield* DatabaseService.add(blueprint);
@@ -92,7 +92,9 @@ describe('Design Blueprint', { timeout: 120_000 }, () => {
           makeToolExecutionServiceFromFunctions(testToolkit, testToolkit.toLayer({}) as any),
           AiService.model('@anthropic/claude-3-5-sonnet-20241022'),
         ).pipe(
-          Layer.provideMerge(TestDatabaseLayer({ types: [DataType.Text, Markdown.Document, Blueprint.Blueprint] })),
+          Layer.provideMerge(
+            TestDatabaseLayer({ types: [DataType.Text.Text, Markdown.Document, Blueprint.Blueprint] }),
+          ),
           Layer.provideMerge(AiServiceTestingPreset('direct')),
           Layer.provideMerge(
             FunctionInvocationService.layerTestMocked({ functions: [Document.read, Document.update] }).pipe(

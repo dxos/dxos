@@ -124,7 +124,7 @@ describe('tree', () => {
   });
 
   test('task', ({ expect }) => {
-    const task = Obj.make(DataType.Task, { title: 'Test task.' });
+    const task = Obj.make(DataType.Task.Task, { title: 'Test task.' });
     expect(task.title).to.eq('Test task.');
 
     const tree = createTree();

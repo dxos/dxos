@@ -17,11 +17,7 @@ export const WithProperties = <A, E, R>(effect: Effect.Effect<A, E, R>): Effect.
       // TODO(wittjosiah): Remove cast.
       yield* DatabaseService.add(
         Obj.make(PropertiesType as any, {
-          [DataType.Collection.typename]: Ref.make(
-            Obj.make(DataType.Collection, {
-              objects: [],
-            }),
-          ),
+          [DataType.Collection.Collection.typename]: Ref.make(DataType.Collection.make()),
         }) as any,
       );
     }),

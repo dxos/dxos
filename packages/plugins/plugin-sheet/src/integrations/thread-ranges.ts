@@ -21,7 +21,7 @@ import { ATTENDABLE_PATH_SEPARATOR, DeckAction } from '@dxos/plugin-deck/types';
 import { Thread, ThreadAction } from '@dxos/plugin-thread/types';
 import { Filter, Query, fullyQualifiedId, getSpace, useQuery } from '@dxos/react-client/echo';
 import { type DxGridElement, type GridContentProps } from '@dxos/react-ui-grid';
-import { AnchoredTo } from '@dxos/schema';
+import { DataType } from '@dxos/schema';
 
 import { useSheetContext } from '../components';
 import { meta } from '../meta';
@@ -81,7 +81,7 @@ export const useSelectThreadOnCellFocus = () => {
   const { dispatchPromise: dispatch } = useIntentDispatcher();
 
   const space = getSpace(model.sheet);
-  const anchors = useQuery(space, Query.select(Filter.ids(model.sheet.id)).targetOf(AnchoredTo));
+  const anchors = useQuery(space, Query.select(Filter.ids(model.sheet.id)).targetOf(DataType.AnchoredTo.AnchoredTo));
 
   const selectClosestThread = useCallback(
     (cellAddress: CellAddress) => {

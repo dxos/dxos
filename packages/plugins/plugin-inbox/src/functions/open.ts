@@ -30,14 +30,14 @@ export default defineFunction({
     const queue = yield* QueueService.getQueue(dxn);
     yield* Effect.promise(() => queue?.queryObjects());
     const content = queue?.objects
-      .filter((message) => Obj.instanceOf(DataType.Message, message))
+      .filter((message) => Obj.instanceOf(DataType.Message.Message, message))
       .flatMap(renderMarkdown)
       .join('\n\n');
     return { content };
   }),
 });
 
-const renderMarkdown = (message: DataType.Message): string[] => {
+const renderMarkdown = (message: DataType.Message.Message): string[] => {
   const sender =
     message.sender.contact?.target?.fullName ??
     message.sender.name ??

@@ -46,8 +46,8 @@ export default (context: PluginContext) =>
             created: new Date().toISOString(),
             participants: [],
             transcript: Ref.make(transcript),
-            notes: Ref.make(DataType.makeText()),
-            summary: Ref.make(DataType.makeText()),
+            notes: Ref.make(DataType.Text.make()),
+            summary: Ref.make(DataType.Text.make()),
             thread: Ref.make(thread),
           });
 
@@ -78,7 +78,7 @@ export default (context: PluginContext) =>
         const enabled = !!transcriptionEnabled;
         if (space && transcriptDxn) {
           // NOTE: Must set queue before enabling transcription.
-          const queue = space.queues.get<DataType.Message>(Type.DXN.parse(transcriptDxn));
+          const queue = space.queues.get<DataType.Message.Message>(Type.DXN.parse(transcriptDxn));
           state.transcriptionManager?.setQueue(queue);
         }
 

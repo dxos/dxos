@@ -70,7 +70,7 @@ const meta = {
         ),
       ],
     }),
-    withClientProvider({ createSpace: true, types: [Thread.Thread, Channel.Channel, DataType.Message] }),
+    withClientProvider({ createSpace: true, types: [Thread.Thread, Channel.Channel, DataType.Message.Message] }),
   ],
   parameters: {
     layout: 'fullscreen',

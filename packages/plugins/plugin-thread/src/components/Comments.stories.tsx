@@ -14,8 +14,11 @@ import { useQuery, useSpace } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { useAsyncEffect } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
-import { AnchoredTo, DataType } from '@dxos/schema';
+import { DataType } from '@dxos/schema';
 import { render } from '@dxos/storybook-utils';
+
+const AnchoredTo = DataType.AnchoredTo.AnchoredTo;
+type AnchoredTo = DataType.AnchoredTo.AnchoredTo;
 
 import { translations } from '../translations';
 import { Thread } from '../types';
@@ -71,7 +74,7 @@ const meta = {
       plugins: [
         IntentPlugin(),
         ClientPlugin({
-          types: [DataType.Message, Thread.Thread, AnchoredTo],
+          types: [DataType.Message.Message, Thread.Thread, AnchoredTo],
           onClientInitialized: async ({ client }) => {
             await client.halo.createIdentity();
           },
