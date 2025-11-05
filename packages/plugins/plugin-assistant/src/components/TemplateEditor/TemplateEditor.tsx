@@ -47,7 +47,7 @@ export const TemplateEditor = ({ id, classNames, template, lineNumbers = true }:
         }),
         createBasicExtensions({
           bracketMatching: false,
-          lineNumbers: true,
+          lineNumbers,
           lineWrapping: true,
           placeholder: t('template placeholder'),
         }),
