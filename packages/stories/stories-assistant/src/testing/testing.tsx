@@ -24,7 +24,7 @@ import {
   definePlugin,
 } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { AiContextBinder, ArtifactId } from '@dxos/assistant';
+import { AiContextBinder, ArtifactId, GenericToolkit } from '@dxos/assistant';
 import { Agent, DesignBlueprint, Document, PlanningBlueprint, Research, Tasks } from '@dxos/assistant-toolkit';
 import { Blueprint, Prompt } from '@dxos/blueprints';
 import { type Space } from '@dxos/client/echo';
@@ -221,8 +221,7 @@ const StoryPlugin = definePlugin<StoryPluginOptions>(
       id: 'example.com/plugin/testing/module/toolkit',
       activatesOn: Events.Startup,
       activate: (context) => [
-        contributes(Capabilities.Toolkit, TestingToolkit.Toolkit),
-        contributes(Capabilities.ToolkitHandler, TestingToolkit.createLayer(context)),
+        contributes(Capabilities.Toolkit, GenericToolkit.make(TestingToolkit.Toolkit, TestingToolkit.createLayer(context))),
       ],
     }),
     defineModule({

@@ -17,6 +17,7 @@ import { type Space } from '@dxos/client-protocol';
 import { type FunctionDefinition } from '@dxos/functions';
 import { type RootSettingsStore } from '@dxos/local-storage';
 import { type DataType } from '@dxos/schema';
+import { type GenericToolkit } from '@dxos/assistant';
 
 import { type PluginManager, defineCapability } from '../core';
 import { type AnyIntentResolver, type IntentContext } from '../plugin-intent';
@@ -165,18 +166,11 @@ export namespace Capabilities {
    */
   export const Metadata = defineCapability<Metadata>('dxos.org/app-framework/capability/metadata');
 
-  // TODO(dmaretskyi): Consider combining Toolkit and ToolkitHandler for type-safe context -- use GenericToolkit.
-
   /**
    * @category Capability
    */
-  export const Toolkit = defineCapability<Toolkit.Any>('dxos.org/app-framework/capability/ai-toolkit');
-
-  /**
-   * @category Capability
-   */
-  export const ToolkitHandler = defineCapability<Layer.Layer<Tool.Handler<any>, never, never>>(
-    'dxos.org/app-framework/capability/ai-toolkit-handler',
+  export const Toolkit = defineCapability<GenericToolkit.GenericToolkit>(
+    'dxos.org/app-framework/capability/ai-toolkit',
   );
 
   /**
