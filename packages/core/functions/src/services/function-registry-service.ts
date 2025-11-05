@@ -50,12 +50,16 @@ export class FunctionRegistryService extends Context.Tag('@dxos/functions/Functi
      * Imports a function into the local space.
      * @returns The stored function object.
      * If the function is already imported, returns the existing function.
+     * Can be used to resolve a function to it's database version.
      */
     import: (func: FunctionDefinition.Any) => Effect.Effect<Function>;
 
     // TODO(dmaretskyi): import function to local space
   }
 >() {
+  static query = Effect.serviceFunctionEffect(FunctionRegistryService, (_) => _.query);
+  static import = Effect.serviceFunctionEffect(FunctionRegistryService, (_) => _.import);
+
   static layer = Layer.effect(
     FunctionRegistryService,
     Effect.gen(function* () {
