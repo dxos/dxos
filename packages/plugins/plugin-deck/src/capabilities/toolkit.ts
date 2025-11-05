@@ -15,6 +15,7 @@ import {
   contributes,
   createIntent,
 } from '@dxos/app-framework';
+import { GenericToolkit } from '@dxos/assistant';
 import { ArtifactId } from '@dxos/assistant';
 import { type SpaceId } from '@dxos/keys';
 import { trim } from '@dxos/util';
@@ -61,6 +62,5 @@ export namespace DeckToolkit {
 }
 
 export default (context: PluginContext): Capability<any>[] => [
-  contributes(Capabilities.Toolkit, DeckToolkit.Toolkit),
-  contributes(Capabilities.ToolkitHandler, DeckToolkit.createLayer(context)),
+  contributes(Capabilities.Toolkit, GenericToolkit.make(DeckToolkit.Toolkit, DeckToolkit.createLayer(context))),
 ];

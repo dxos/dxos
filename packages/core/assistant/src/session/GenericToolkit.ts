@@ -56,7 +56,7 @@ export interface GenericToolkit<TR = never, E = never, R = never> extends Pipeab
  */
 export interface Any {
   readonly [TypeId]: TypeId;
-  readonly toolkit: Toolkit.Toolkit<GenericTools<any>>;
+  readonly toolkit: Toolkit.Toolkit<any>;
   readonly layer: Layer.Layer<unknown, any, any>;
 }
 
