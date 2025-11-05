@@ -19,7 +19,7 @@ export const list = Command.make(
   },
   ({ spaceId }) =>
     Effect.gen(function* () {
-      const { objects: triggers } = yield* DatabaseService.runQuery(Filter.type(Trigger.Trigger));
-      yield* Console.log(JSON.stringify(triggers, null, 2));
+      const objects = yield* DatabaseService.query(Filter.type(Trigger.Trigger)).run; // note that no destructuring is require
+      yield* Console.log(JSON.stringify(objects, null, 2));
     }).pipe(withDatabase(spaceId)),
 ).pipe(Command.withDescription('List triggers configured on EDGE.'));

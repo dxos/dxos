@@ -44,9 +44,8 @@ export const PromptModule = ({ space }: { space: Space }) => {
     space,
     Effect.fnUntraced(function* () {
       // Resolve the function
-      const {
-        objects: [serializedFunction],
-      } = yield* DatabaseService.runQuery(Query.select(Filter.type(Function.Function, { key: Agent.prompt.key })));
+      const objects = yield* DatabaseService.query(Query.select(Filter.type(Function.Function, { key: Agent.prompt.key }))).run;
+      const [serializedFunction] = objects;
       invariant(Obj.instanceOf(Function.Function, serializedFunction));
       const functionDef = deserializeFunction(serializedFunction);
 

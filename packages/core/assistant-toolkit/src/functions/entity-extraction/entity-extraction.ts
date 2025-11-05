@@ -99,7 +99,7 @@ const extractContact = Effect.fn('extractContact')(function* (message: DataType.
     return undefined;
   }
 
-  const { objects: existingContacts } = yield* DatabaseService.runQuery(Filter.type(DataType.Person));
+  const existingContacts = yield* DatabaseService.query(Filter.type(DataType.Person)).run;
 
   // Check for existing contact
   // TODO(dmaretskyi): Query filter DSL - https://linear.app/dxos/issue/DX-541/filtercontains-should-work-with-partial-objects
@@ -132,7 +132,7 @@ const extractContact = Effect.fn('extractContact')(function* (message: DataType.
 
   log.info('extracted email domain', { emailDomain });
 
-  const { objects: existingOrganisations } = yield* DatabaseService.runQuery(Filter.type(DataType.Organization));
+  const existingOrganisations = yield* DatabaseService.query(Filter.type(DataType.Organization)).run;
   const matchingOrg = existingOrganisations.find((org) => {
     if (org.website) {
       try {

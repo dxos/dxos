@@ -29,8 +29,8 @@ export const create = Command.make(
   },
   ({ spaceId, enabled, functionId, cron, input }) =>
     Effect.gen(function* () {
-      const { objects: functions } = yield* DatabaseService.runQuery(Filter.type(Function.Function));
-      const fn = functions.find((fn) => getUserFunctionIdInMetadata(Obj.getMeta(fn)) === functionId);
+      const objects = yield* DatabaseService.query(Filter.type(Function.Function)).run; // note that no destructuring is require
+      const fn = objects.find((fn) => getUserFunctionIdInMetadata(Obj.getMeta(fn)) === functionId);
       if (!fn) {
         throw new Error(`Function not found: ${functionId}`);
       }

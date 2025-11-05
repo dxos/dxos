@@ -135,9 +135,8 @@ class ComputeRuntimeProviderImpl extends Resource implements AutomationCapabilit
 
 const InvocationTracerLive = Layer.unwrapEffect(
   Effect.gen(function* () {
-    const {
-      objects: [properties],
-    } = yield* DatabaseService.runQuery(Query.type(PropertiesType));
+    const objects = yield* DatabaseService.query(Query.type(PropertiesType)).run;
+    const [properties] = objects;
     invariant(properties);
     if (!properties.invocationTraceQueue) {
       const queue = yield* QueueService.createQueue({ subspaceTag: 'trace' });

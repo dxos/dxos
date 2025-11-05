@@ -13,7 +13,7 @@ import { Common } from '../../options';
 
 export const list = Command.make('list', { spaceId: Common.spaceId }, ({ spaceId }) =>
   Effect.gen(function* () {
-    const { objects: functions } = yield* DatabaseService.runQuery(Filter.type(Function.Function));
-    console.log(JSON.stringify(functions, null, 2));
+    const objects = yield* DatabaseService.query(Filter.type(Function.Function)).run; // note that no destructuring is require
+    console.log(JSON.stringify(objects, null, 2));
   }).pipe(withDatabase(spaceId)),
 ).pipe(Command.withDescription('List functions deployed to EDGE.'));

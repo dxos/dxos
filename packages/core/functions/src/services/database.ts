@@ -203,19 +203,6 @@ export class DatabaseService extends Context.Tag('@dxos/functions/DatabaseServic
     }) as QueryResultEffect<any>;
   };
 
-  /**
-   * Executes the query once and returns the results.
-   * @deprecated use `DatabaseService.query(...).objects`
-   */
-  static runQuery: {
-    <Q extends Query.Any>(query: Q): Effect.Effect<OneShotQueryResult<Live<Query.Type<Q>>>, never, DatabaseService>;
-    <F extends Filter.Any>(filter: F): Effect.Effect<OneShotQueryResult<Live<Filter.Type<F>>>, never, DatabaseService>;
-  } = (queryOrFilter: Query.Any | Filter.Any) =>
-    DatabaseService.query(queryOrFilter as any).pipe(
-      Effect.flatMap((queryResult) => queryResult.run),
-      Effect.map((objects) => ({ results: [], objects })),
-    );
-
   // TODO(dmaretskyi): Change API to `yield* DatabaseService.querySchema(...).first` and `yield* DatabaseService.querySchema(...).schema`.
 
   static schemaQuery = <Query extends Types.NoExcessProperties<SchemaRegistryQuery, Query>>(
