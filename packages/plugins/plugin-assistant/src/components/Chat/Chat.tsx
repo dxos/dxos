@@ -421,7 +421,7 @@ type ChatToolbarProps = ThemedClassName<{ companionTo?: Obj.Any }>;
 
 const ChatToolbar = ({ classNames, companionTo }: ChatToolbarProps) => {
   const { chat } = useChatContext(ChatToolbar.displayName);
-  const menu = useChatToolbarActions({ companionTo });
+  const menu = useChatToolbarActions({ chat, companionTo });
 
   return (
     <MenuProvider {...menu} attendableId={companionTo ? fullyQualifiedId(companionTo) : fullyQualifiedId(chat)}>

@@ -18,10 +18,11 @@ import { meta } from '../meta';
 import { Assistant, AssistantAction } from '../types';
 
 export type ChatToolbarActionsProps = {
+  chat?: Assistant.Chat;
   companionTo?: Obj.Any;
 };
 
-export const useChatToolbarActions = ({ companionTo }: ChatToolbarActionsProps) => {
+export const useChatToolbarActions = ({ chat, companionTo }: ChatToolbarActionsProps) => {
   const { dispatch } = useIntentDispatcher();
   const { space } = useChatContext('useChatToolbarActions');
   const query = companionTo
