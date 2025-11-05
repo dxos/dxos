@@ -134,7 +134,7 @@ export const Raw: Story = {
 export const Static: Story = {
   render: () => (
     <div className='contents' style={{ '--user-fill': 'var(--dx-amberFill)' } as CSSProperties}>
-      <MarkdownStream registry={componentRegistry} content={TEXT} />
+      <MarkdownStream content={TEXT} registry={componentRegistry} />
     </div>
   ),
 };

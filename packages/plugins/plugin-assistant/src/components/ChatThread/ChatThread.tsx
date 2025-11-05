@@ -35,9 +35,6 @@ export const ChatThread = forwardRef<MarkdownStreamController, ChatThreadProps>(
     const controllerRef = useForwardedRef(forwardedRef);
     const controller = controllerRef.current;
 
-    // TODO(burdon): controller is null.
-    console.log('ChatThread', messages.length, controller);
-
     const userHue = useMemo(
       () => identity?.profile?.data?.hue || keyToFallback(identity?.identityKey ?? PublicKey.random()).hue,
       [identity],
