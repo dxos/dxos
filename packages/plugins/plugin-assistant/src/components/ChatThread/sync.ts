@@ -13,7 +13,7 @@ import ContentBlock = DataType.ContentBlock;
 /**
  * Update document.
  */
-export type TextModel = Pick<MarkdownStreamController, 'view' | 'reset' | 'append' | 'updateWidget' | 'scrollToBottom'>;
+export type TextModel = Pick<MarkdownStreamController, 'view' | 'reset' | 'append' | 'updateWidget'>;
 
 /**
  * Thread context passed to renderer.
@@ -74,7 +74,13 @@ export class MessageSyncer {
   /**
    * Syncs messages with the editor.
    */
-  sync(messages: DataType.Message.Message[], flush = false) {
+  append(messages: DataType.Message.Message[], flush = false): boolean {
+    // Check if new set of messages.
+    if (this._initialMessageId !== messages[0]?.id) {
+      this.reset();
+      this._initialMessageId = messages[0]?.id;
+    }
+
     if (flush && this._model.view?.state.doc.length === 0) {
       const buffer: string[] = [];
       this.process(messages, (content) => {
@@ -87,12 +93,13 @@ export class MessageSyncer {
         selection: { anchor: content.length },
       });
 
-      // Use the proper scrollToBottom method which handles widget height changes.
-      this._model.scrollToBottom('instant');
+      return true;
     } else {
       this.process(messages, (content) => {
         void this._model.append(content);
       });
+
+      return false;
     }
   }
 
@@ -104,11 +111,6 @@ export class MessageSyncer {
       currentBlockIndex: this._currentBlockIndex,
       currentBlockContent: this._currentBlockContent,
     });
-
-    if (this._initialMessageId !== messages[0]?.id) {
-      this.reset();
-      this._initialMessageId = messages[0]?.id;
-    }
 
     let i = this._currentMessageIndex;
     for (const message of messages.slice(this._currentMessageIndex)) {

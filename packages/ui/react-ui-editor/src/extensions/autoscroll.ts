@@ -55,6 +55,7 @@ export const autoScroll = ({
 
   // Throttled scroll to bottom.
   const scrollToBottom = (view: EditorView, behavior?: ScrollBehavior) => {
+    console.log('scrollToBottom', behavior);
     setPinned(true);
     hideScrollbar(view);
     const line = view.state.doc.lineAt(view.state.doc.length);
@@ -69,7 +70,7 @@ export const autoScroll = ({
     const scrollerRect = view.scrollDOM.getBoundingClientRect();
     const coords = view.coordsAtPos(view.state.doc.length);
     const distanceFromBottom = coords ? coords.bottom - scrollerRect.bottom : 0;
-    setPinned(distanceFromBottom <= threshold);
+    setPinned(distanceFromBottom < 0);
   }, 1_000);
 
   // Debounce scroll updates so rapid edits don't cause clunky scrolling.
@@ -89,15 +90,18 @@ export const autoScroll = ({
 
       // Maybe scroll if doc changed and pinned.
       // NOTE: Geometry changed is triggered when widgets change height (e.g., toggle tool block).
-      if (heightChanged && autoScroll && isPinned) {
-        const scrollerRect = view.scrollDOM.getBoundingClientRect();
+      if (heightChanged && isPinned) {
         const coords = view.coordsAtPos(view.state.doc.length);
+        const scrollerRect = view.scrollDOM.getBoundingClientRect();
         const distanceFromBottom = coords ? scrollerRect.bottom - coords.bottom : 0;
-        if (distanceFromBottom < threshold) {
+        if (autoScroll && distanceFromBottom < threshold) {
           const shouldScroll = onAutoScroll?.({ view, distanceFromBottom }) ?? true;
           if (shouldScroll) {
             triggerUpdate(view);
           }
+        } else if (distanceFromBottom < 0) {
+          console.log('distanceFromBottom', distanceFromBottom);
+          setPinned(false);
         }
       }
     }),
@@ -112,11 +116,9 @@ export const autoScroll = ({
         // If user scrolls up, immediately unpin auto-scroll.
         if (scrollingUp) {
           setPinned(false);
-          return;
+        } else {
+          checkDistance(view);
         }
-
-        // For downward scrolls, throttle the distance check.
-        checkDistance(view);
       },
     }),
 

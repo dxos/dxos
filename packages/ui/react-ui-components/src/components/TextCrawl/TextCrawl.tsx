@@ -45,7 +45,7 @@ export const TextCrawl = ({
   }, []);
 
   // Determine if reset.
-  const prevLinesRef = useRef<string[]>([]);
+  const prevLinesRef = useRef<string[]>(lines);
   const wasReset = useMemo(() => {
     const prevLines = prevLinesRef.current;
     const wasReset =
@@ -183,7 +183,6 @@ export const TextRibbon = forwardRef<TextRibbonController, TextRibbonProps>(
     const setPosition = useCallback<TextRibbonController['setPosition']>(
       (index, animate = false) => {
         if (containerRef.current) {
-          console.log('>>', index, animate);
           containerRef.current.style.transition = animate ? `transform ${transition}ms ease-in-out` : 'transform 0ms';
           containerRef.current.style.transform = `translateY(-${index * lineHeight}px)`;
         }

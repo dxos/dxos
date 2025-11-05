@@ -51,11 +51,11 @@ describe('reducers', () => {
         createMessage('assistant', [{ _tag: 'text', text: 'Hi there!' }]),
       ];
 
-      syncer.sync(messages);
+      syncer.append(messages);
       expect(doc.content).toEqual(['<prompt>Hello</prompt>', 'Hi there!', ''].join('\n'));
 
       messages[1].blocks.push({ _tag: 'text', text: 'How can I help?' });
-      syncer.sync(messages);
+      syncer.append(messages);
       expect(doc.content).toEqual(['<prompt>Hello</prompt>', 'Hi there!', 'How can I help?', ''].join('\n'));
     }),
   );
@@ -71,16 +71,16 @@ describe('reducers', () => {
         createMessage('assistant', [{ _tag: 'text', text: 'Hi there!', pending: true }]),
       ];
 
-      syncer.sync(messages);
+      syncer.append(messages);
       expect(doc.content).toEqual(['<prompt>Hello</prompt>', 'Hi there!'].join('\n'));
 
       const block = messages[1].blocks[0] as DataType.ContentBlock.Text;
       block.text = 'Hi there! How are you?';
       block.pending = false;
-      syncer.sync(messages);
+      syncer.append(messages);
 
       messages[1].blocks.push({ _tag: 'text', text: 'How can I help?' });
-      syncer.sync(messages);
+      syncer.append(messages);
       expect(doc.content).toEqual(
         ['<prompt>Hello</prompt>', 'Hi there! How are you?', 'How can I help?', ''].join('\n'),
       );

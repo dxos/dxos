@@ -2,16 +2,16 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as Layer from 'effect/Layer';
+
 import { Capabilities, type Capability, type PluginContext, contributes } from '@dxos/app-framework';
 import { GenericToolkit } from '@dxos/assistant';
-import { AssistantToolkit, SystemToolkit } from '@dxos/assistant-toolkit';
+import { AssistantToolkit, SystemToolkit, WebSearchToolkit } from '@dxos/assistant-toolkit';
 
 export default (_context: PluginContext): Capability<any>[] => [
   contributes(Capabilities.Toolkit, GenericToolkit.make(AssistantToolkit.AssistantToolkit, AssistantToolkit.layer())),
 
-  // TODO(burdon): How to manage dependencies?
+  // TODO(burdon): How to manage dependencies across blueprints.
   contributes(Capabilities.Toolkit, GenericToolkit.make(SystemToolkit.SystemToolkit, SystemToolkit.layer())),
-
-  // TODO(burdon): Fix.
-  // contributes(Capabilities.Toolkit, WebSearchToolkit),
+  contributes(Capabilities.Toolkit, GenericToolkit.make(WebSearchToolkit, Layer.empty)),
 ];

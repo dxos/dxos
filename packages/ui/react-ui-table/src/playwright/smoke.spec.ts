@@ -159,7 +159,8 @@ test.describe('Table', () => {
     await page.close();
   });
 
-  test('extant relations work as expected', async ({ browser, browserName }) => {
+  // TODO(wittjosiah): Remove? Conflicts with story play function which is run as a unit test anyways.
+  test.skip('extant relations work as expected', async ({ browser, browserName }) => {
     test.skip(browserName === 'webkit');
     test.skip(browserName === 'firefox');
     const { page } = await setupPage(browser, { url: relationsStoryUrl });
@@ -213,7 +214,8 @@ test.describe('Table', () => {
     await page.close();
   });
 
-  test('new relations work as expected', async ({ browser, browserName }) => {
+  // TODO(wittjosiah): Remove? Conflicts with story play function which is run as a unit test anyways.
+  test.skip('new relations work as expected', async ({ browser, browserName }) => {
     test.skip(browserName === 'webkit');
     test.skip(browserName === 'firefox');
     const { page } = await setupPage(browser, { url: relationsStoryUrl });
