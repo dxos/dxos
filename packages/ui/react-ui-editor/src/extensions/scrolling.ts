@@ -22,6 +22,11 @@ export type SmoothScrollOptions = {
    * @default 'start'
    */
   position?: 'start' | 'end';
+  /**
+   * Whether to use smooth scrolling.
+   * @default 'smooth'
+   */
+  behavior?: ScrollBehavior;
 };
 
 /**
@@ -82,14 +87,23 @@ export const smoothScroll = ({ offset = 0, position = 'start' }: Partial<SmoothS
        * Perform smooth scroll to the specified line.
        */
       scrollToLine(lineNumber: number, options: SmoothScrollOptions) {
-        const { offset: animOffset = 0, position: animPosition } = options;
+        const { offset: animOffset = 0, position: animPosition, behavior } = options;
+        const doc = this.view.state.doc;
         const scroller = this.view.scrollDOM;
 
         // Convert 1-based line number to 0-based.
         const targetLine = Math.max(0, lineNumber - 1);
+        if (behavior === 'instant') {
+          requestAnimationFrame(() => {
+            this.view.dispatch({
+              selection: { anchor: doc.line(targetLine + 1).from },
+              scrollIntoView: true,
+            });
+          });
+          return;
+        }
 
         // Get the position of the target line.
-        const doc = this.view.state.doc;
         if (targetLine >= doc.lines) {
           // Line doesn't exist, scroll to end.
           const targetScrollTop = scroller.scrollHeight - scroller.clientHeight + (animOffset || 0);
@@ -107,8 +121,8 @@ export const smoothScroll = ({ offset = 0, position = 'start' }: Partial<SmoothS
         const currentScrollTop = scroller.scrollTop;
         const scrollerRect = scroller.getBoundingClientRect();
         const maxScrollTop = scroller.scrollHeight - scroller.clientHeight;
-        let targetScrollTop: number;
 
+        let targetScrollTop: number;
         if (animPosition === 'end') {
           // Position line at end (bottom) of viewport.
           // Calculate how far down we need to scroll so the line's bottom aligns with viewport bottom.
@@ -130,21 +144,6 @@ export const smoothScroll = ({ offset = 0, position = 'start' }: Partial<SmoothS
         if (Math.abs(targetScrollTop - element.scrollTop) < 1) {
           return;
         }
-
-        // console.log('scrollTo', element);
-        // console.log(
-        //   JSON.stringify(
-        //     {
-        //       targetScrollTop,
-        //       currentScrollTop: element.scrollTop,
-        //       scrollHeight: element.scrollHeight,
-        //       clientHeight: element.clientHeight,
-        //       maxScroll: element.scrollHeight - element.clientHeight,
-        //     },
-        //     null,
-        //     2,
-        //   ),
-        // );
 
         // Use browser's built-in smooth scrolling.
         element.scrollTo({

@@ -11,7 +11,7 @@ import { Domino } from '@dxos/react-ui';
 import { scrollToLineEffect } from './scrolling';
 
 // TODO(burdon): Reconcile with scrollToLineEffect (scrolling).
-export const scrollToBottomEffect = StateEffect.define<void>();
+export const scrollToBottomEffect = StateEffect.define<ScrollBehavior | undefined>();
 
 export type AutoScrollOptions = {
   /** Auto-scroll when reaches the bottom. */
@@ -54,13 +54,13 @@ export const autoScroll = ({
   };
 
   // Throttled scroll to bottom.
-  const scrollToBottom = (view: EditorView) => {
+  const scrollToBottom = (view: EditorView, behavior?: ScrollBehavior) => {
     setPinned(true);
     hideScrollbar(view);
     const line = view.state.doc.lineAt(view.state.doc.length);
     view.dispatch({
       selection: { anchor: line.to, head: line.to },
-      effects: scrollToLineEffect.of({ line: line.number, options: { position: 'end', offset: threshold } }),
+      effects: scrollToLineEffect.of({ line: line.number, options: { position: 'end', offset: threshold, behavior } }),
     });
   };
 
@@ -82,7 +82,7 @@ export const autoScroll = ({
       transactions.forEach((transaction) => {
         for (const effect of transaction.effects) {
           if (effect.is(scrollToBottomEffect)) {
-            scrollToBottom(view);
+            scrollToBottom(view, effect.value);
           }
         }
       });

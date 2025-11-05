@@ -46,10 +46,9 @@ export const ChatThread = forwardRef<MarkdownStreamController, ChatThreadProps>(
     }, [controller, error]);
 
     // Update document.
-    // TODO(burdon): Initially directly update the document.
     const syncer = useMemo(() => controller && new MessageSyncer(controller, blockToMarkdown), [controller]);
     useEffect(() => {
-      syncer?.sync(messages);
+      syncer?.sync(messages, true);
     }, [syncer, messages]);
 
     // Event adapter.

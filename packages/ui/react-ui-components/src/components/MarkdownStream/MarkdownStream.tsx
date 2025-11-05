@@ -52,7 +52,7 @@ import { createStreamer } from './stream';
 
 export interface MarkdownStreamController extends XmlWidgetStateManager {
   get view(): EditorView | null;
-  scrollToBottom: () => void;
+  scrollToBottom: (behavior?: ScrollBehavior) => void;
   navigateNext: () => void;
   navigatePrevious: () => void;
   setContext: (context: any) => void;
@@ -154,9 +154,9 @@ export const MarkdownStream = forwardRef<MarkdownStreamController | null, Markdo
         get view() {
           return viewRef.current;
         },
-        scrollToBottom: () => {
+        scrollToBottom: (behavior?: ScrollBehavior) => {
           viewRef.current?.dispatch({
-            effects: scrollToBottomEffect.of(),
+            effects: scrollToBottomEffect.of(behavior),
           });
         },
         navigatePrevious: () => {
