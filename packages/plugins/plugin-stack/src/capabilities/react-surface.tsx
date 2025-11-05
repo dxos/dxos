@@ -18,8 +18,8 @@ export default () =>
     createSurface({
       id: `${meta.id}/article`,
       role: 'article',
-      filter: (data): data is { id?: string; subject: DataType.Collection } =>
-        Obj.instanceOf(DataType.Collection, data.subject),
+      filter: (data): data is { id?: string; subject: DataType.Collection.Collection } =>
+        Obj.instanceOf(DataType.Collection.Collection, data.subject),
       component: ({ data }) => {
         // This allows the id to be overridden by the surface for situations where the id of the collection
         // is not the same as the id of what is being represented (e.g., a space with a root collection).

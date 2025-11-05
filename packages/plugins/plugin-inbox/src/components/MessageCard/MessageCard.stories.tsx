@@ -16,8 +16,8 @@ import { MessageCard } from './MessageCard';
 
 faker.seed(1234);
 
-const createMockMessage = (): DataType.Message =>
-  Obj.make(DataType.Message, {
+const createMockMessage = (): DataType.Message.Message =>
+  Obj.make(DataType.Message.Message, {
     blocks: [
       {
         _tag: 'text',

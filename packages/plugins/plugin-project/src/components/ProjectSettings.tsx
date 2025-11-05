@@ -14,7 +14,7 @@ import { ViewEditor } from '@dxos/react-ui-form';
 import { List } from '@dxos/react-ui-list';
 import { cardChrome, cardText } from '@dxos/react-ui-stack';
 import { inputTextLabel, mx, subtleHover } from '@dxos/react-ui-theme';
-import { DataType, type ProjectionModel, createView } from '@dxos/schema';
+import { DataType, type ProjectionModel } from '@dxos/schema';
 import { arrayMove } from '@dxos/util';
 
 import { resolveSchemaWithClientAndSpace } from '../helpers';
@@ -25,7 +25,7 @@ const listItemGrid = 'grid grid-cols-subgrid col-span-5';
 
 // TODO(burdon): Standardize Object/Plugin settings.
 export type ProjectObjectSettingsProps = ThemedClassName<{
-  project: DataType.Project;
+  project: DataType.Project.Project;
 }>;
 
 /**
@@ -35,8 +35,10 @@ export const ProjectObjectSettings = ({ classNames, project }: ProjectObjectSett
   const { t } = useTranslation(meta.id);
   const client = useClient();
   const space = getSpace(project);
-  const views = project.collections.map((ref) => ref.target).filter((object) => Obj.instanceOf(DataType.View, object));
-  const [expandedId, setExpandedId] = useState<DataType.View['id']>();
+  const views = project.collections
+    .map((ref) => ref.target)
+    .filter((object) => Obj.instanceOf(DataType.View.View, object));
+  const [expandedId, setExpandedId] = useState<DataType.View.View['id']>();
   const view = useMemo(() => views.find((view) => view.id === expandedId), [views, expandedId]);
   const [schema, setSchema] = useState<Schema.Schema.AnyNoContext>(() => Schema.Struct({}));
   const projectionRef = useRef<ProjectionModel>(null);
@@ -73,7 +75,7 @@ export const ProjectObjectSettings = ({ classNames, project }: ProjectObjectSett
         return;
       }
 
-      const newView = createView({
+      const newView = DataType.View.make({
         query,
         jsonSchema: Type.toJsonSchema(newSchema),
         presentation: Obj.make(Type.Expando, {}),
@@ -85,12 +87,12 @@ export const ProjectObjectSettings = ({ classNames, project }: ProjectObjectSett
     [view, schema],
   );
 
-  const handleToggleField = useCallback((view: DataType.View) => {
+  const handleToggleField = useCallback((view: DataType.View.View) => {
     setExpandedId((prevExpandedId) => (prevExpandedId === view.id ? undefined : view.id));
   }, []);
 
   const handleDelete = useCallback(
-    (view: DataType.View) => {
+    (view: DataType.View.View) => {
       if (view.id === expandedId) {
         setExpandedId(undefined);
       }
@@ -103,10 +105,10 @@ export const ProjectObjectSettings = ({ classNames, project }: ProjectObjectSett
   );
 
   const handleAdd = useCallback(() => {
-    const view = createView({
-      query: Query.select(Filter.type(DataType.Task)),
-      jsonSchema: Type.toJsonSchema(DataType.Task),
-      presentation: Obj.make(DataType.Collection, { objects: [] }),
+    const view = DataType.View.make({
+      query: Query.select(Filter.type(DataType.Task.Task)),
+      jsonSchema: Type.toJsonSchema(DataType.Task.Task),
+      presentation: Obj.make(DataType.Collection.Collection, { objects: [] }),
     });
     project.collections.push(Ref.make(view));
     setExpandedId(view.id);
@@ -116,9 +118,9 @@ export const ProjectObjectSettings = ({ classNames, project }: ProjectObjectSett
     <div role='none' className={mx('plb-cardSpacingBlock overflow-y-auto', classNames)}>
       <h2 className={mx(inputTextLabel, cardText)}>{t('views label')}</h2>
 
-      <List.Root<DataType.View>
+      <List.Root<DataType.View.View>
         items={views}
-        isItem={Schema.is(DataType.View)}
+        isItem={Schema.is(DataType.View.View)}
         getId={(view) => view.id}
         onMove={handleMove}
       >
@@ -126,7 +128,7 @@ export const ProjectObjectSettings = ({ classNames, project }: ProjectObjectSett
           <>
             <div role='list' className={mx(listGrid, cardChrome)}>
               {views.map((view) => (
-                <List.Item<DataType.View>
+                <List.Item<DataType.View.View>
                   key={view.id}
                   item={view}
                   classNames={listItemGrid}

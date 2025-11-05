@@ -28,7 +28,7 @@ const generator: ValueGenerator = faker as any;
 
 const DefaultStory = () => {
   const { space } = useClientProvider();
-  const [object] = useQuery(space, Filter.type(DataType.Organization));
+  const [object] = useQuery(space, Filter.type(DataType.Organization.Organization));
   if (!object) {
     return null;
   }
@@ -70,26 +70,31 @@ const meta = {
     withClientProvider({
       createIdentity: true,
       createSpace: true,
-      types: [DataType.Organization, DataType.Person, DataType.Task, DataType.HasSubject],
+      types: [
+        DataType.Organization.Organization,
+        DataType.Person.Person,
+        DataType.Task.Task,
+        DataType.HasSubject.HasSubject,
+      ],
       onCreateSpace: async ({ space }) => {
         const org = space.db.add(
-          Obj.make(DataType.Organization, {
+          Obj.make(DataType.Organization.Organization, {
             name: 'DXOS',
           }),
         );
         const task = space.db.add(
-          Obj.make(DataType.Task, {
+          Obj.make(DataType.Task.Task, {
             title: 'Task',
           }),
         );
         space.db.add(
-          Relation.make(DataType.HasSubject, {
+          Relation.make(DataType.HasSubject.HasSubject, {
             [Relation.Source]: task,
             [Relation.Target]: org,
             completedAt: new Date().toISOString(),
           }),
         );
-        const objectGenerator = createAsyncGenerator(generator, DataType.Person as Type.Obj.Any, {
+        const objectGenerator = createAsyncGenerator(generator, DataType.Person.Person as Type.Obj.Any, {
           db: space?.db,
           force: true,
         });

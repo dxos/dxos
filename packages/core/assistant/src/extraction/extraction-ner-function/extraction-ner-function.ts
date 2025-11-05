@@ -50,7 +50,7 @@ export const extractionNerFunction = defineFunction({
       return { ...block, text: insertReferences(block._tag, quoteReferences) };
     });
 
-    const messageWithReferences = create(DataType.Message, {
+    const messageWithReferences = create(DataType.Message.Message, {
       ...message,
       blocks: blocksWithReferences,
     });

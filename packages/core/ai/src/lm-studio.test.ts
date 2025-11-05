@@ -33,8 +33,8 @@ describe.skip('lm-studio', () => {
     'streaming',
     Effect.fn(
       function* ({ expect }) {
-        const history: DataType.Message[] = [
-          Obj.make(DataType.Message, {
+        const history: DataType.Message.Message[] = [
+          Obj.make(DataType.Message.Message, {
             created: new Date().toISOString(),
             sender: { role: 'user' },
             blocks: [
@@ -60,7 +60,7 @@ describe.skip('lm-studio', () => {
           Effect.map(Chunk.toArray),
         );
 
-        const message = Obj.make(DataType.Message, {
+        const message = Obj.make(DataType.Message.Message, {
           created: new Date().toISOString(),
           sender: { role: 'assistant' },
           blocks,

@@ -16,7 +16,7 @@ export const createCommentThread = (identity: Identity): Thread.Thread => {
     messages: faker.helpers.multiple(
       () =>
         Ref.make(
-          Obj.make(DataType.Message, {
+          Obj.make(DataType.Message.Message, {
             created: new Date().toISOString(),
             sender: {
               identityDid: faker.datatype.boolean() ? identity.did : IdentityDid.random(),
@@ -36,7 +36,7 @@ export const createProposalThread = (identity: Identity): Thread.Thread => {
     messages: faker.helpers.multiple(
       () =>
         Ref.make(
-          Obj.make(DataType.Message, {
+          Obj.make(DataType.Message.Message, {
             created: new Date().toISOString(),
             sender: {
               identityDid: faker.datatype.boolean() ? identity.did : IdentityDid.random(),

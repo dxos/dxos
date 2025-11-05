@@ -21,7 +21,7 @@ export const DEPLOYMENT_DIALOG = `${meta.id}/deployment/dialog`;
 //  - Pending / onError states.
 
 export type DeploymentDialogProps = {
-  accessToken: DataType.AccessToken;
+  accessToken: DataType.AccessToken.AccessToken;
   scriptTemplates: Template[];
 };
 

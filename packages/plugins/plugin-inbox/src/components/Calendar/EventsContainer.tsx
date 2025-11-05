@@ -14,7 +14,7 @@ import { EventList } from './EventtList';
 
 const byDate =
   (direction = -1) =>
-  ({ startDate: a }: DataType.Event, { startDate: b }: DataType.Event) =>
+  ({ startDate: a }: DataType.Event.Event, { startDate: b }: DataType.Event.Event) =>
     a < b ? -direction : a > b ? direction : 0;
 
 export type EventsContainerProps = {
@@ -22,9 +22,9 @@ export type EventsContainerProps = {
 };
 
 export const EventsContainer = ({ calendar }: EventsContainerProps) => {
-  const [selected, setSelected] = useState<DataType.Event>();
+  const [selected, setSelected] = useState<DataType.Event.Event>();
   const space = getSpace(calendar);
-  const objects = useQuery(space, Filter.type(DataType.Event));
+  const objects = useQuery(space, Filter.type(DataType.Event.Event));
   objects.sort(byDate());
 
   return (

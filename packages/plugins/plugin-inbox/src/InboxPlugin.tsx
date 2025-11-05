@@ -48,7 +48,7 @@ export const InboxPlugin = definePlugin(meta, () => [
         },
       }),
       contributes(Capabilities.Metadata, {
-        id: DataType.Message.typename,
+        id: DataType.Message.Message.typename,
         metadata: {
           icon: 'ph--note--regular',
           iconHue: 'rose',
@@ -62,10 +62,10 @@ export const InboxPlugin = definePlugin(meta, () => [
         },
       }),
       contributes(Capabilities.Metadata, {
-        id: DataType.Event.typename,
+        id: DataType.Event.Event.typename,
         metadata: {
           // TODO(wittjosiah): Move out of metadata.
-          loadReferences: async (event: DataType.Event) => await Ref.Array.loadAll(event.links ?? []),
+          loadReferences: async (event: DataType.Event.Event) => await Ref.Array.loadAll(event.links ?? []),
         },
       }),
     ],

@@ -188,11 +188,11 @@ const scriptMatch = (script: Script.Script) => (trigger: Trigger.Trigger) => {
   return fn.source?.target === script;
 };
 
-const projectMatch = (project: DataType.Project) => {
+const projectMatch = (project: DataType.Project.Project) => {
   const viewQueries = EFn.pipe(
     project.collections,
     Array.map((collection) => collection.target),
-    Array.filter(Schema.is(DataType.View)),
+    Array.filter(Schema.is(DataType.View.View)),
     Array.map((view) => Obj.getSnapshot(view).query.ast),
     Array.map((ast) => JSON.stringify(ast)),
   );
@@ -215,7 +215,7 @@ const triggerMatch = Match.type<Obj.Any>().pipe(
     (obj) => scriptMatch(obj),
   ),
   Match.when(
-    (obj) => Obj.instanceOf(DataType.Project, obj),
+    (obj) => Obj.instanceOf(DataType.Project.Project, obj),
     (obj) => projectMatch(obj),
   ),
   Match.orElse((_obj) => () => true),

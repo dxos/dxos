@@ -200,7 +200,7 @@ const Publishing = ({ object }: ScriptObjectSettingsProps) => {
   const { t } = useTranslation(meta.id);
   const { dispatchPromise: dispatch } = useIntentDispatcher();
   const space = getSpace(object);
-  const [githubToken] = useQuery(space, Filter.type(DataType.AccessToken, { source: 'github.com' }));
+  const [githubToken] = useQuery(space, Filter.type(DataType.AccessToken.AccessToken, { source: 'github.com' }));
   const gistKey = getMeta(object).keys.find(({ source }) => source === 'github.com');
   const [gistUrl, setGistUrl] = useState<string | undefined>();
 

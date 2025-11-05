@@ -8,7 +8,7 @@ import { evalQuery } from './query';
 
 describe('evalQuery', () => {
   it('should evaluate a query string', () => {
-    const query = evalQuery('Query.select(Filter.type(DataType.Person))');
+    const query = evalQuery('Query.select(Filter.type(DataType.Person.Person))');
     expect(query.ast).toMatchInlineSnapshot(`
       {
         "filter": {

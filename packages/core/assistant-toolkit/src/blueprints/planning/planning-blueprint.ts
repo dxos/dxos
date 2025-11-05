@@ -90,7 +90,7 @@ export const blueprint: Blueprint.Blueprint = Obj.make(Blueprint.Blueprint, {
   name: 'Planning',
   description: 'Plans and tracks complex tasks with artifact management.',
   instructions: {
-    source: Ref.make(DataType.makeText(instructions)),
+    source: Ref.make(DataType.Text.make(instructions)),
   },
   tools: [Tasks.read, Tasks.update].map((fn) => ToolId.make(fn.key)),
 });

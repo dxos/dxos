@@ -11,7 +11,7 @@ export namespace CollaborationActions {
     input: Schema.Struct({
       subject: Schema.Any,
       anchor: Schema.String,
-      proposal: DataType.MessageBlock.Proposal,
+      proposal: DataType.ContentBlock.Proposal,
     }),
     output: Schema.Void,
   }) {}

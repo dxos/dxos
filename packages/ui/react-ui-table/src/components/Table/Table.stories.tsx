@@ -70,7 +70,7 @@ const StoryViewEditor = ({
   space,
   handleDeleteColumn,
 }: {
-  view?: DataType.View;
+  view?: DataType.View.View;
   schema?: Schema.Schema.AnyNoContext;
   space?: Space;
   handleDeleteColumn: (fieldId: string) => void;
@@ -162,7 +162,7 @@ const meta = {
   decorators: [
     withTheme,
     withClientProvider({
-      types: [DataType.View, Table.Table],
+      types: [DataType.View.View, Table.Table],
       createIdentity: true,
       createSpace: true,
       onCreateSpace: async ({ client, space }) => {
@@ -206,7 +206,7 @@ export const StaticSchema: StoryObj = {
   render: DefaultStory,
   decorators: [
     withClientProvider({
-      types: [DataType.View, Table.Table, Testing.Contact, Testing.Organization],
+      types: [DataType.View.View, Table.Table, Testing.Contact, Testing.Organization],
       createIdentity: true,
       createSpace: true,
       onCreateSpace: async ({ client, space }) => {
@@ -248,7 +248,7 @@ export const ArrayOfObjects: StoryObj = {
   render: DefaultStory,
   decorators: [
     withClientProvider({
-      types: [DataType.View, Table.Table, Testing.Contact, Testing.Organization, ContactWithArrayOfEmails],
+      types: [DataType.View.View, Table.Table, Testing.Contact, Testing.Organization, ContactWithArrayOfEmails],
       createIdentity: true,
       createSpace: true,
       onCreateSpace: async ({ client, space }) => {
@@ -275,7 +275,7 @@ export const Tags: Meta<StoryProps> = {
   render: DefaultStory,
   decorators: [
     withClientProvider({
-      types: [DataType.View, Table.Table],
+      types: [DataType.View.View, Table.Table],
       createIdentity: true,
       createSpace: true,
       onCreateSpace: async ({ client, space }) => {

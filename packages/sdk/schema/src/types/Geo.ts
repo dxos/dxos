@@ -4,7 +4,9 @@
 
 import * as Schema from 'effect/Schema';
 
-// Based on https://schema.org/PostalAddress
+/**
+ * https://schema.org/PostalAddress
+ */
 export const PostalAddress = Schema.Struct({
   street: Schema.optional(
     Schema.String.annotations({

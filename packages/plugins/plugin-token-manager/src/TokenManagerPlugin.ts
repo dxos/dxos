@@ -19,7 +19,7 @@ export const TokenManagerPlugin = definePlugin(meta, () => [
   defineModule({
     id: `${meta.id}/module/schema`,
     activatesOn: ClientEvents.SetupSchema,
-    activate: () => contributes(ClientCapabilities.Schema, [DataType.AccessToken]),
+    activate: () => contributes(ClientCapabilities.Schema, [DataType.AccessToken.AccessToken]),
   }),
   defineModule({
     id: `${meta.id}/module/react-surface`,

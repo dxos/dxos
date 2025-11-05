@@ -13,7 +13,7 @@ export type AddSectionPosition = 'before' | 'after' | 'beforeAll' | 'afterAll';
 
 export type CollapsedSections = Record<string, boolean>;
 
-export type CollectionItem = DataType.Collection['objects'][number];
+export type CollectionItem = DataType.Collection.Collection['objects'][number];
 
 export type StackSectionView = {
   title?: string;

@@ -23,16 +23,18 @@ export default () =>
     createSurface({
       id: meta.id,
       role: ['article', 'section'],
-      filter: (data): data is { subject: DataType.View } =>
-        Obj.instanceOf(DataType.View, data.subject) && Obj.instanceOf(Kanban.Kanban, data.subject.presentation.target),
+      filter: (data): data is { subject: DataType.View.View } =>
+        Obj.instanceOf(DataType.View.View, data.subject) &&
+        Obj.instanceOf(Kanban.Kanban, data.subject.presentation.target),
       component: ({ data, role }) => <KanbanContainer view={data.subject} role={role} />,
     }),
     createSurface({
       id: `${meta.id}/object-settings`,
       role: 'object-settings',
       position: 'hoist',
-      filter: (data): data is { subject: DataType.View } =>
-        Obj.instanceOf(DataType.View, data.subject) && Obj.instanceOf(Kanban.Kanban, data.subject.presentation.target),
+      filter: (data): data is { subject: DataType.View.View } =>
+        Obj.instanceOf(DataType.View.View, data.subject) &&
+        Obj.instanceOf(Kanban.Kanban, data.subject.presentation.target),
       component: ({ data }) => <KanbanViewEditor view={data.subject} />,
     }),
     createSurface({
@@ -40,7 +42,11 @@ export default () =>
       role: 'form-input',
       filter: (
         data,
-      ): data is { prop: string; schema: Schema.Schema<any>; target: Space | DataType.Collection | undefined } => {
+      ): data is {
+        prop: string;
+        schema: Schema.Schema<any>;
+        target: Space | DataType.Collection.Collection | undefined;
+      } => {
         const annotation = findAnnotation<boolean>((data.schema as Schema.Schema.All).ast, PivotColumnAnnotationId);
         return !!annotation;
       },

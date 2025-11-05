@@ -20,7 +20,7 @@ import { range } from '@dxos/util';
 
 const generator: ValueGenerator = faker as any;
 
-const findViewByTypename = async (views: DataType.View[], typename: string) => {
+const findViewByTypename = async (views: DataType.View.View[], typename: string) => {
   return views.find((view) => getTypenameFromQuery(view.query.ast) === typename);
 };
 
@@ -35,7 +35,7 @@ export const createGenerator = <T extends Obj.Any>(
     const typename = schema.typename;
 
     // Find or create table and view.
-    const { objects: views } = await space.db.query(Filter.type(DataType.View)).run();
+    const { objects: views } = await space.db.query(Filter.type(DataType.View.View)).run();
     const view = await findViewByTypename(views, typename);
     const staticSchema = client?.graph.schemaRegistry.schemas.find((schema) => Type.getTypename(schema) === typename);
     if (!view && !staticSchema) {
