@@ -25,14 +25,6 @@ export default defineFunction({
     }),
     diffs: Schema.Array(Schema.String).annotations({
       description: 'The diffs to apply to the document.',
-      examples: [
-        [
-          '- "There is a tyop in this sentence."',
-          '+ "There is a typo in this sentence."',
-          '- "This id goof."',
-          '+ "This is good."',
-        ],
-      ],
     }),
   }),
   outputSchema: Schema.Void,
