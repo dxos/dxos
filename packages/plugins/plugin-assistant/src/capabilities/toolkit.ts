@@ -2,9 +2,11 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as Layer from 'effect/Layer';
+
 import { Capabilities, type Capability, type PluginContext, contributes } from '@dxos/app-framework';
 import { GenericToolkit } from '@dxos/assistant';
-import { AssistantToolkit, SystemToolkit } from '@dxos/assistant-toolkit';
+import { AssistantToolkit, SystemToolkit, WebSearchToolkit } from '@dxos/assistant-toolkit';
 
 export default (context: PluginContext): Capability<any>[] => [
   contributes(Capabilities.Toolkit, GenericToolkit.make(AssistantToolkit.AssistantToolkit, AssistantToolkit.layer())),
@@ -12,6 +14,5 @@ export default (context: PluginContext): Capability<any>[] => [
   // TODO(burdon): How to manage dependencies?
   contributes(Capabilities.Toolkit, GenericToolkit.make(SystemToolkit.SystemToolkit, SystemToolkit.layer())),
 
-  // TODO(wittjosiah): Fix.
-  // contributes(Capabilities.Toolkit, WebSearchToolkit),
+  contributes(Capabilities.Toolkit, GenericToolkit.make(WebSearchToolkit, Layer.empty)),
 ];
