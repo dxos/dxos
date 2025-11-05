@@ -6,7 +6,7 @@ import { Capabilities, type Capability, type PluginContext, contributes } from '
 import { GenericToolkit } from '@dxos/assistant';
 import { AssistantToolkit, SystemToolkit } from '@dxos/assistant-toolkit';
 
-export default (context: PluginContext): Capability<any>[] => [
+export default (_context: PluginContext): Capability<any>[] => [
   contributes(Capabilities.Toolkit, GenericToolkit.make(AssistantToolkit.AssistantToolkit, AssistantToolkit.layer())),
 
   // TODO(burdon): How to manage dependencies?

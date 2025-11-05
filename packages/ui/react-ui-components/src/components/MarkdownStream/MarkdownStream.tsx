@@ -3,6 +3,7 @@
 //
 
 import { EditorSelection, Transaction } from '@codemirror/state';
+import { type EditorView } from '@codemirror/view';
 import * as Effect from 'effect/Effect';
 import * as Fiber from 'effect/Fiber';
 import * as Queue from 'effect/Queue';
@@ -19,7 +20,7 @@ import React, {
 import { createPortal } from 'react-dom';
 
 import { addEventListener } from '@dxos/async';
-import { type ThemedClassName, useStateWithRef } from '@dxos/react-ui';
+import { type ThemedClassName, useDynamicRef, useStateWithRef } from '@dxos/react-ui';
 import { useThemeContext } from '@dxos/react-ui';
 import {
   type AutoScrollOptions,
@@ -49,14 +50,15 @@ import { isNonNullable } from '@dxos/util';
 
 import { createStreamer } from './stream';
 
-export type MarkdownStreamController = {
+export interface MarkdownStreamController extends XmlWidgetStateManager {
+  get view(): EditorView | null;
   scrollToBottom: () => void;
   navigateNext: () => void;
   navigatePrevious: () => void;
   setContext: (context: any) => void;
   reset: (text: string) => Promise<void>;
   append: (text: string) => Promise<void>;
-} & Pick<XmlWidgetStateManager, 'updateWidget'>;
+}
 
 export type MarkdownStreamEvent = {
   type: 'submit';
@@ -74,7 +76,11 @@ export type MarkdownStreamProps = ThemedClassName<
 export const MarkdownStream = forwardRef<MarkdownStreamController | null, MarkdownStreamProps>(
   ({ classNames, debug, content, registry, fadeIn, cursor, onEvent }, forwardedRef) => {
     const { themeMode } = useThemeContext();
+
+    // Active widgets.
     const [widgets, setWidgets] = useState<XmlWidgetState[]>([]);
+
+    // Editor.
     const { parentRef, view } = useTextEditor(() => {
       return {
         initialValue: content,
@@ -121,7 +127,6 @@ export const MarkdownStream = forwardRef<MarkdownStreamController | null, Markdo
         Stream.runForEach((text) =>
           Effect.sync(() => {
             const scrollTop = view.scrollDOM.scrollTop;
-            // view.scrollDOM.classList.add('cm-hide-scrollbar');
             view.dispatch({
               changes: [{ from: view.state.doc.length, insert: text }],
               annotations: Transaction.remote.of(true),
@@ -131,7 +136,6 @@ export const MarkdownStream = forwardRef<MarkdownStreamController | null, Markdo
             // Prevent autoscrolling.
             requestAnimationFrame(() => {
               view.scrollDOM.scrollTop = scrollTop;
-              // view.scrollDOM.classList.remove('cm-hide-scrollbar');
             });
           }),
         ),
@@ -144,39 +148,38 @@ export const MarkdownStream = forwardRef<MarkdownStreamController | null, Markdo
     }, [view, queue]);
 
     // Expose controller as API.
+    const viewRef = useDynamicRef(view);
     useImperativeHandle(forwardedRef, () => {
-      if (!view) {
-        return null as any;
-      }
-
       return {
-        // Immediately scroll to bottom (and pin).
+        get view() {
+          return viewRef.current;
+        },
         scrollToBottom: () => {
-          view.dispatch({
+          viewRef.current?.dispatch({
             effects: scrollToBottomEffect.of(),
           });
         },
         navigatePrevious: () => {
-          view.dispatch({
+          viewRef.current?.dispatch({
             effects: navigatePreviousEffect.of(),
           });
         },
         navigateNext: () => {
-          view.dispatch({
+          viewRef.current?.dispatch({
             effects: navigateNextEffect.of(),
           });
         },
         // Set the context for XML tags.
         setContext: (context: any) => {
-          view.dispatch({
+          viewRef.current?.dispatch({
             effects: xmlTagContextEffect.of(context),
           });
         },
         // Reset document.
         reset: async (text: string) => {
-          view.dispatch({
+          viewRef.current?.dispatch({
             effects: [xmlTagContextEffect.of(null), xmlTagResetEffect.of(null)],
-            changes: [{ from: 0, to: view.state.doc.length, insert: text }],
+            changes: [{ from: 0, to: viewRef.current?.state.doc.length ?? 0, insert: text }],
           });
 
           // New queue.
@@ -191,12 +194,12 @@ export const MarkdownStream = forwardRef<MarkdownStreamController | null, Markdo
         },
         // Update widget.
         updateWidget: (id: string, value: any) => {
-          view.dispatch({
+          viewRef.current?.dispatch({
             effects: xmlTagUpdateEffect.of({ id, value }),
           });
         },
       } satisfies MarkdownStreamController;
-    }, [view]);
+    }, []);
 
     // Widget events.
     useEffect(() => {

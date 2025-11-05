@@ -13,7 +13,7 @@ import ContentBlock = DataType.ContentBlock;
 /**
  * Update document.
  */
-export type TextModel = Pick<MarkdownStreamController, 'reset' | 'append' | 'updateWidget'>;
+export type TextModel = Pick<MarkdownStreamController, 'view' | 'reset' | 'append' | 'updateWidget'>;
 
 /**
  * Thread context passed to renderer.
@@ -71,13 +71,18 @@ export class MessageSyncer {
     void this._model.reset('');
   }
 
+  /**
+   * Syncs messages with the editor.
+   */
   sync(messages: DataType.Message.Message[]) {
-    log('sync', {
+    log.info('sync', {
+      doc: this._model.view?.state.doc.length,
       messages: messages.map((message) => message.blocks.length),
       currentMessageIndex: this._currentMessageIndex,
       currentBlockIndex: this._currentBlockIndex,
       currentBlockContent: this._currentBlockContent,
     });
+
     if (this._initialMessageId !== messages[0]?.id) {
       this.reset();
       this._initialMessageId = messages[0]?.id;
