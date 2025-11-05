@@ -60,11 +60,7 @@ const DefaultStory = ({ generator = [], delay = 0, ...props }: StoryProps) => {
   }, [space, queue, generator]);
 
   return (
-    <PreviewPopoverProvider
-      onLookup={async ({ label, ref }) => {
-        return { label, text: ref };
-      }}
-    >
+    <PreviewPopoverProvider onLookup={async ({ label, ref }) => ({ label, text: ref })}>
       <ChatThread {...props} messages={queue?.objects ?? []} />
       <PreviewCard />
     </PreviewPopoverProvider>

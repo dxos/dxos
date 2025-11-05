@@ -22,7 +22,6 @@ export type ChatThreadProps = ThemedClassName<
     identity?: Identity;
     messages?: DataType.Message.Message[];
     error?: Error;
-    overscroll?: number;
     onEvent?: (event: ChatEvent) => void;
   } & Pick<MarkdownStreamProps, 'cursor' | 'fadeIn' | 'debug'>
 >;
@@ -52,16 +51,12 @@ export const ChatThread = forwardRef<MarkdownStreamController, ChatThreadProps>(
       controller?.scrollToBottom();
     }, [controller, error]);
 
-    // Event handler.
+    // Event adapter.
     const handleEvent = useCallback<NonNullable<MarkdownStreamProps['onEvent']>>(
-      (ev) => {
-        switch (ev.type) {
+      ({ type, value }) => {
+        switch (type) {
           case 'submit': {
-            ev.value &&
-              onEvent?.({
-                type: 'submit',
-                text: ev.value,
-              });
+            value && onEvent?.({ type, text: value });
             break;
           }
         }
@@ -71,6 +66,7 @@ export const ChatThread = forwardRef<MarkdownStreamController, ChatThreadProps>(
 
     return (
       <div
+        role='none'
         className={mx('flex bs-full is-full justify-center overflow-hidden', classNames)}
         style={{ '--user-fill': `var(--dx-${userHue}Fill)` } as CSSProperties}
       >
