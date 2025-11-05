@@ -5,7 +5,7 @@
 import React from 'react';
 
 import { Capabilities, useCapability } from '@dxos/app-framework';
-import { getSpace } from '@dxos/client/echo';
+import { type Space, getSpace } from '@dxos/client/echo';
 import { type Obj } from '@dxos/echo';
 import { StackItem } from '@dxos/react-ui-stack';
 
@@ -13,22 +13,23 @@ import { useBlueprintRegistry, useChatProcessor, useChatServices, useOnline, use
 import { meta } from '../meta';
 import { type Assistant } from '../types';
 
-import { Chat } from './Chat';
+import { Chat, type ChatRootProps } from './Chat';
 
 export type ChatContainerProps = {
   role?: string;
+  space?: Space;
   chat?: Assistant.Chat;
   companionTo?: Obj.Any;
-};
+} & Pick<ChatRootProps, 'onEvent'>;
 
-export const ChatContainer = ({ chat, companionTo }: ChatContainerProps) => {
-  const space = getSpace(chat);
+export const ChatContainer = ({ space: spaceProp, chat, companionTo, onEvent }: ChatContainerProps) => {
+  const space = spaceProp ?? getSpace(chat);
   const settings = useCapability(Capabilities.SettingsStore).getStore<Assistant.Settings>(meta.id)?.value;
   const services = useChatServices({ space, chat });
   const [online, setOnline] = useOnline();
   const { preset, ...chatProps } = usePresets(online);
   const blueprintRegistry = useBlueprintRegistry();
-  const processor = useChatProcessor({ chat, preset, services, blueprintRegistry, settings });
+  const processor = useChatProcessor({ space, chat, preset, services, blueprintRegistry, settings });
 
   if (!processor) {
     return null;
@@ -36,7 +37,7 @@ export const ChatContainer = ({ chat, companionTo }: ChatContainerProps) => {
 
   return (
     <StackItem.Content toolbar>
-      <Chat.Root chat={chat} processor={processor}>
+      <Chat.Root space={space} chat={chat} processor={processor} onEvent={onEvent}>
         <Chat.Toolbar companionTo={companionTo} />
         <Chat.Content classNames='container-max-width'>
           <Chat.Thread />
