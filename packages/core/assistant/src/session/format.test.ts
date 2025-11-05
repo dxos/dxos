@@ -21,7 +21,7 @@ describe('format', () => {
   beforeAll(async () => {
     const builder = await new EchoTestBuilder().open();
     ({ db } = await builder.createDatabase({
-      types: [DataType.Text, DataType.Organization, Blueprint.Blueprint],
+      types: [DataType.Text.Text, DataType.Organization.Organization, Blueprint.Blueprint],
     }));
   });
 
@@ -29,7 +29,7 @@ describe('format', () => {
     'should format',
     Effect.fn(function* () {
       const object = db.add(
-        Obj.make(DataType.Organization, {
+        Obj.make(DataType.Organization.Organization, {
           name: 'Test',
           website: 'https://www.test.com',
         }),

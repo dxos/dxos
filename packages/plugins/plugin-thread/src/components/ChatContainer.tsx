@@ -101,7 +101,7 @@ export const ChatContainer = ({
 
     thread.messages.push(
       Ref.make(
-        Obj.make(DataType.Message, {
+        Obj.make(DataType.Message.Message, {
           created: new Date().toISOString(),
           sender: { identityDid: identity.did },
           blocks: [{ _tag: 'text', text: messageRef.current }],

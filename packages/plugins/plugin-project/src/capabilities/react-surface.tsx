@@ -19,14 +19,15 @@ export default () =>
     createSurface({
       id: meta.id,
       role: 'article',
-      filter: (data): data is { subject: DataType.Project } => Obj.instanceOf(DataType.Project, data.subject),
+      filter: (data): data is { subject: DataType.Project.Project } =>
+        Obj.instanceOf(DataType.Project.Project, data.subject),
       component: ({ data, role }) => <ProjectContainer role={role} project={data.subject} />,
     }),
     createSurface({
       id: `${meta.id}/companion/invocations`,
       role: 'article',
-      filter: (data): data is { companionTo: DataType.Project } =>
-        Obj.instanceOf(DataType.Project, data.companionTo) && data.subject === 'invocations',
+      filter: (data): data is { companionTo: DataType.Project.Project } =>
+        Obj.instanceOf(DataType.Project.Project, data.companionTo) && data.subject === 'invocations',
       component: ({ data }) => {
         const space = getSpace(data.companionTo);
         // TODO(wittjosiah): Filter the invocations to those relevant to the project.
@@ -40,7 +41,8 @@ export default () =>
     createSurface({
       id: `${meta.id}/object-settings`,
       role: 'object-settings',
-      filter: (data): data is { subject: DataType.Project } => Obj.instanceOf(DataType.Project, data.subject),
+      filter: (data): data is { subject: DataType.Project.Project } =>
+        Obj.instanceOf(DataType.Project.Project, data.subject),
       component: ({ data }) => <ProjectObjectSettings project={data.subject} />,
     }),
   ]);

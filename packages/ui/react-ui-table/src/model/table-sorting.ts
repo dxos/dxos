@@ -58,7 +58,7 @@ export class TableSorting<T extends TableRow> {
 
   constructor(
     rows: Signal<T[]>,
-    private readonly _view: DataType.View,
+    private readonly _view: DataType.View.View,
     private readonly _projection: ProjectionModel,
   ) {
     this._rows = rows;

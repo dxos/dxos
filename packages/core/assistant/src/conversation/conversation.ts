@@ -38,7 +38,7 @@ export class AiConversation extends Resource {
   /**
    * Message and binding queue.
    */
-  private readonly _queue: Queue<DataType.Message | ContextBinding>;
+  private readonly _queue: Queue<DataType.Message.Message | ContextBinding>;
 
   /**
    * Blueprints bound to the conversation.
@@ -50,7 +50,7 @@ export class AiConversation extends Resource {
    */
   private _toolkit: Toolkit.WithHandler<any> | undefined;
 
-  public constructor(queue: Queue<DataType.Message | ContextBinding>) {
+  public constructor(queue: Queue<DataType.Message.Message | ContextBinding>) {
     super();
     this._queue = queue;
     this._context = new AiContextBinder(this._queue);
@@ -73,9 +73,9 @@ export class AiConversation extends Resource {
     return this._toolkit;
   }
 
-  public async getHistory(): Promise<DataType.Message[]> {
+  public async getHistory(): Promise<DataType.Message.Message[]> {
     const queueItems = await this._queue.queryObjects();
-    return queueItems.filter(Obj.instanceOf(DataType.Message));
+    return queueItems.filter(Obj.instanceOf(DataType.Message.Message));
   }
 
   /**
@@ -83,7 +83,7 @@ export class AiConversation extends Resource {
    */
   createRequest(
     params: AiConversationRunParams,
-  ): Effect.Effect<DataType.Message[], AiSessionRunError, AiSessionRunRequirements> {
+  ): Effect.Effect<DataType.Message.Message[], AiSessionRunError, AiSessionRunRequirements> {
     return Effect.gen(this, function* () {
       const session = new AiSession();
       const history = yield* Effect.promise(() => this.getHistory());

@@ -37,7 +37,7 @@ const generator: ValueGenerator = faker as any;
 const useTestModel = <S extends Type.Obj.Any>(schema: S, count: number) => {
   const client = useClient();
   const { space } = useClientProvider();
-  const [view, setView] = useState<DataType.View>();
+  const [view, setView] = useState<DataType.View.View>();
   const [jsonSchema, setJsonSchema] = useState<JsonSchemaType>();
 
   const features = useMemo<TableFeatures>(
@@ -87,8 +87,8 @@ const useTestModel = <S extends Type.Obj.Any>(schema: S, count: number) => {
 
 const DefaultStory = () => {
   const client = useClient();
-  const { model: orgModel, presentation: orgPresentation } = useTestModel(DataType.Organization, 50);
-  const { model: contactModel, presentation: contactPresentation } = useTestModel(DataType.Person, 50);
+  const { model: orgModel, presentation: orgPresentation } = useTestModel(DataType.Organization.Organization, 50);
+  const { model: contactModel, presentation: contactPresentation } = useTestModel(DataType.Person.Person, 50);
   const { space } = useClientProvider();
 
   const handleCreate = useCallback(
@@ -103,7 +103,7 @@ const DefaultStory = () => {
       <TableComponent.Root>
         <TableComponent.Main
           model={orgModel}
-          schema={DataType.Organization}
+          schema={DataType.Organization.Organization}
           presentation={orgPresentation}
           onCreate={handleCreate}
           client={client}
@@ -114,7 +114,7 @@ const DefaultStory = () => {
       <TableComponent.Root>
         <TableComponent.Main
           model={contactModel}
-          schema={DataType.Person}
+          schema={DataType.Person.Person}
           presentation={contactPresentation}
           onCreate={handleCreate}
           client={client}
@@ -134,7 +134,7 @@ const meta = {
     // TODO(thure): Shouldn’t `layout: 'fullscreen'` below make this unnecessary?
     withLayout({ classNames: 'fixed inset-0' }),
     withClientProvider({
-      types: [DataType.View, DataType.Organization, DataType.Person, Table.Table],
+      types: [DataType.View.View, DataType.Organization.Organization, DataType.Person.Person, Table.Table],
       createIdentity: true,
       createSpace: true,
     }),

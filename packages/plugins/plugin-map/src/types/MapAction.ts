@@ -38,7 +38,7 @@ export class Create extends Schema.TaggedClass<Create>()(`${meta.id}/action/crea
     Schema.extend(Map.pipe(Schema.pick('center', 'zoom', 'coordinates'))),
   ),
   output: Schema.Struct({
-    object: DataType.View,
+    object: DataType.View.View,
   }),
 }) {}
 

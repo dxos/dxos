@@ -36,7 +36,7 @@ import { StackSection } from './StackSection';
 
 type StackContainerProps = {
   id: string;
-  collection: DataType.Collection;
+  collection: DataType.Collection.Collection;
 };
 
 const StackContainer = ({ id, collection }: StackContainerProps) => {

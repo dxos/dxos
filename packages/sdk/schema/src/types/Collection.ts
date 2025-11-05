@@ -23,6 +23,9 @@ export const Collection = Schema.Struct({
 
 export type Collection = Schema.Schema.Type<typeof Collection>;
 
+export const make = (props: Partial<Obj.MakeProps<typeof Collection>> = {}) =>
+  Obj.make(Collection, { objects: [], ...props });
+
 // TODO(wittjosiah): Remove. Use View instead.
 const QueryCollection_ = Schema.Struct({
   name: Schema.String.pipe(Schema.optional),
@@ -34,17 +37,19 @@ const QueryCollection_ = Schema.Struct({
   }),
 );
 
+/** @deprecated */
 export type QueryCollection = Schema.Schema.Type<typeof QueryCollection_>;
 export type QueryCollectionEncoded = Schema.Schema.Encoded<typeof QueryCollection_>;
+/** @deprecated */
 export const QueryCollection: Schema.Schema<QueryCollection, QueryCollectionEncoded> = QueryCollection_;
 
-type AddObjectParams = {
+type AddParams = {
   object: Obj.Any;
   target?: Collection;
   hidden?: boolean;
 };
 
-export const addObject = Effect.fn(function* ({ object, target, hidden }: AddObjectParams) {
+export const add = Effect.fn(function* ({ object, target, hidden }: AddParams) {
   if (Obj.instanceOf(Collection, target)) {
     target.objects.push(Ref.make(object));
   } else if (hidden) {

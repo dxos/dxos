@@ -33,7 +33,7 @@ export type OutlinerController = {
 export type OutlinerProps = ThemedClassName<
   {
     id: string;
-    text: DataType.Text;
+    text: DataType.Text.Text;
     scrollable?: boolean;
     showSelected?: boolean;
   } & Pick<UseTextEditorProps, 'id' | 'autoFocus'>

@@ -146,7 +146,7 @@ export const NotebookContainer = ({ notebook, env }: NotebookContainerProps) => 
         case 'markdown':
         case 'script':
         case 'query': {
-          cell.source = Ref.make(DataType.makeText());
+          cell.source = Ref.make(DataType.Text.make());
           break;
         }
 

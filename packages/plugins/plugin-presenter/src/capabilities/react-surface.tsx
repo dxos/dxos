@@ -38,13 +38,13 @@ export default () =>
       id: `${meta.id}/collection`,
       role: 'article',
       position: 'hoist',
-      filter: (data): data is { subject: { type: typeof meta.id; object: DataType.Collection } } =>
+      filter: (data): data is { subject: { type: typeof meta.id; object: DataType.Collection.Collection } } =>
         !!data.subject &&
         typeof data.subject === 'object' &&
         'type' in data.subject &&
         'object' in data.subject &&
         data.subject.type === meta.id &&
-        Obj.instanceOf(DataType.Collection, data.subject.object),
+        Obj.instanceOf(DataType.Collection.Collection, data.subject.object),
       component: ({ data }) => <CollectionPresenterContainer collection={data.subject.object} />,
     }),
     createSurface({

@@ -75,7 +75,7 @@ const DefaultStory = ({
   // Queue.
   // TODO(dmaretskyi): Use space.queues.create() instead.
   const queueDxn = useMemo(() => createQueueDXN(), []);
-  const queue = useMemo(() => new MemoryQueue<DataType.Message>(queueDxn), [queueDxn]);
+  const queue = useMemo(() => new MemoryQueue<DataType.Message.Message>(queueDxn), [queueDxn]);
   const model = useQueueModelAdapter(renderByline([]), queue);
   const space = useSpace();
 
@@ -105,8 +105,8 @@ const DefaultStory = ({
       objects = space.db
         .query(
           Filter.or(
-            Filter.type(DataType.Person),
-            Filter.type(DataType.Organization),
+            Filter.type(DataType.Person.Person),
+            Filter.type(DataType.Organization.Organization),
             Filter.type(Testing.DocumentType),
           ),
         )
@@ -132,7 +132,7 @@ const DefaultStory = ({
   // Transcriber.
   const handleSegments = useCallback<TranscriberParams['onSegments']>(
     async (blocks) => {
-      const message = Obj.make(DataType.Message, {
+      const message = Obj.make(DataType.Message.Message, {
         sender: { name: 'You' },
         created: new Date().toISOString(),
         blocks,
@@ -200,7 +200,7 @@ const meta = {
     withPluginManager({
       plugins: [
         ClientPlugin({
-          types: [TestItem, DataType.Person, DataType.Organization, Testing.DocumentType],
+          types: [TestItem, DataType.Person.Person, DataType.Organization.Organization, Testing.DocumentType],
           onClientInitialized: async ({ client }) => {
             await client.halo.createIdentity();
             await client.spaces.waitUntilReady();

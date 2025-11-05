@@ -25,7 +25,7 @@ export type MapControlType = 'globe' | 'map';
 export type MapContainerProps = {
   role?: string;
   type?: MapControlType;
-  view?: DataType.View;
+  view?: DataType.View.View;
   map?: Map.Map;
 } & (GeoControlProps & Pick<MapRootProps, 'onChange'>);
 

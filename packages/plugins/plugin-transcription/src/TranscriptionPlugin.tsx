@@ -33,10 +33,10 @@ export const TranscriptionPlugin = definePlugin(meta, () => [
           getTextContent: async (transcript: Transcript.Transcript) => {
             const space = getSpace(transcript);
             const members = space?.members.get().map((member) => member.identity) ?? [];
-            const queue = space?.queues.get<DataType.Message>(transcript.queue.dxn);
+            const queue = space?.queues.get<DataType.Message.Message>(transcript.queue.dxn);
             await queue?.refresh();
             const content = queue?.objects
-              .filter((message) => Obj.instanceOf(DataType.Message, message))
+              .filter((message) => Obj.instanceOf(DataType.Message.Message, message))
               .flatMap((message, index) => renderByline(members)(message, index))
               .join('\n\n');
             return content;

@@ -37,7 +37,7 @@ export namespace InboxAction {
   export class SelectMessage extends Schema.TaggedClass<SelectMessage>()(`${INBOX_ACTION}/select-message`, {
     input: Schema.Struct({
       mailboxId: Schema.String,
-      message: Schema.optional(DataType.Message),
+      message: Schema.optional(DataType.Message.Message),
     }),
     output: Schema.Void,
   }) {}
@@ -45,7 +45,7 @@ export namespace InboxAction {
   export class ExtractContact extends Schema.TaggedClass<ExtractContact>()(`${INBOX_ACTION}/extract-contact`, {
     input: Schema.Struct({
       space: SpaceSchema,
-      message: DataType.Message,
+      message: DataType.Message.Message,
     }),
     output: Schema.Void,
   }) {}

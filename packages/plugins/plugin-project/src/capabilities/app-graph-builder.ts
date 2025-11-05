@@ -14,7 +14,7 @@ import { DataType } from '@dxos/schema';
 
 import { meta } from '../meta';
 
-export default (context: PluginContext) =>
+export default (_context: PluginContext) =>
   contributes(Capabilities.AppGraphBuilder, [
     createExtension({
       id: `${meta.id}/triggers`,
@@ -22,7 +22,9 @@ export default (context: PluginContext) =>
         Rx.make((get) =>
           Function.pipe(
             get(node),
-            Option.flatMap((node) => (Obj.instanceOf(DataType.Project, node.data) ? Option.some(node) : Option.none())),
+            Option.flatMap((node) =>
+              Obj.instanceOf(DataType.Project.Project, node.data) ? Option.some(node) : Option.none(),
+            ),
             Option.map((node) => [
               {
                 id: [node.id, 'invocations'].join(ATTENDABLE_PATH_SEPARATOR),

@@ -22,12 +22,12 @@ import { ObjectPicker } from './ObjectPicker';
 faker.seed(1);
 
 const createPerson = () =>
-  Obj.make(DataType.Person, {
+  Obj.make(DataType.Person.Person, {
     fullName: faker.person.fullName(),
   });
 
 const omitId = Schema.omit<any, any, ['id']>('id');
-const personSchema = omitId(DataType.Person);
+const personSchema = omitId(DataType.Person.Person);
 
 // Mock functions for testing
 const mockHandleSelect = fn();
@@ -65,7 +65,7 @@ const DefaultStory = () => {
     (values: any) => {
       console.log('[on create]', values);
       if (!space) return;
-      const newPerson = space.db.add(Obj.make(DataType.Person, values));
+      const newPerson = space.db.add(Obj.make(DataType.Person.Person, values));
       mockHandleCreate(values);
       return newPerson;
     },
@@ -101,7 +101,7 @@ const meta = {
   decorators: [
     withTheme,
     withClientProvider({
-      types: [DataType.Person],
+      types: [DataType.Person.Person],
       createIdentity: true,
       createSpace: true,
     }),

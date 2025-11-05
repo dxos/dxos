@@ -16,7 +16,7 @@ import { type DataType, ProjectionModel, getTypenameFromQuery } from '@dxos/sche
 
 import { KanbanAction } from '../types';
 
-export const KanbanContainer = ({ view }: { view: DataType.View; role: string }) => {
+export const KanbanContainer = ({ view }: { view: DataType.View.View; role: string }) => {
   const client = useClient();
   const [cardSchema, setCardSchema] = useState<TypedObject<any, any>>();
   const [projection, setProjection] = useState<ProjectionModel>();

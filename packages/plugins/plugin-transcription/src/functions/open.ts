@@ -31,7 +31,7 @@ export default defineFunction({
     const queue = yield* QueueService.getQueue(dxn);
     yield* Effect.promise(() => queue?.queryObjects());
     const content = queue?.objects
-      .filter((message) => Obj.instanceOf(DataType.Message, message))
+      .filter((message) => Obj.instanceOf(DataType.Message.Message, message))
       .flatMap((message, index) => renderByline([])(message, index))
       .join('\n\n');
     return { content };

@@ -6,7 +6,7 @@ import * as Schema from 'effect/Schema';
 
 import { Obj, Type } from '@dxos/echo';
 import { LabelAnnotation, ViewAnnotation } from '@dxos/echo/internal';
-import { type CreateViewFromSpaceProps, createViewFromSpace } from '@dxos/schema';
+import { DataType } from '@dxos/schema';
 
 export const Map = Schema.Struct({
   name: Schema.optional(Schema.String),
@@ -31,7 +31,7 @@ export type Map = Schema.Schema.Type<typeof Map>;
  */
 export const make = (props: Obj.MakeProps<typeof Map> = {}) => Obj.make(Map, props);
 
-type MakeViewProps = Omit<CreateViewFromSpaceProps, 'presentation'> & {
+type MakeViewProps = Omit<DataType.View.MakeFromSpaceProps, 'presentation'> & {
   presentation?: Omit<Obj.MakeProps<typeof Map>, 'name'>;
 };
 
@@ -40,5 +40,5 @@ type MakeViewProps = Omit<CreateViewFromSpaceProps, 'presentation'> & {
  */
 export const makeView = async ({ presentation, ...props }: MakeViewProps) => {
   const map = Obj.make(Map, presentation ?? {});
-  return createViewFromSpace({ ...props, presentation: map });
+  return DataType.View.makeFromSpace({ ...props, presentation: map });
 };

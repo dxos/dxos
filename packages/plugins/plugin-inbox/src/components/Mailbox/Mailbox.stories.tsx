@@ -82,7 +82,7 @@ export const WithCompanion: Story = {
     withPluginManager({
       plugins: [
         ClientPlugin({
-          types: [Mailbox.Mailbox, DataType.Message, DataType.Person],
+          types: [Mailbox.Mailbox, DataType.Message.Message, DataType.Person.Person],
           onClientInitialized: async ({ client }) => {
             await client.halo.createIdentity();
             await client.spaces.waitUntilReady();

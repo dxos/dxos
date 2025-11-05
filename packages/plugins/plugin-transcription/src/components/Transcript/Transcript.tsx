@@ -29,7 +29,7 @@ import { transcript } from './transcript-extension';
 // TODO(thure): Move this?
 export const renderByline =
   (identities: Identity[]) =>
-  (message: DataType.Message, index: number, debug = false): string[] => {
+  (message: DataType.Message.Message, index: number, debug = false): string[] => {
     if (message.sender.role === 'assistant') {
       // Start/stop block.
       return [message.blocks.find((block) => block._tag === 'transcript')?.text ?? '', ''];
@@ -56,7 +56,7 @@ export const renderByline =
 export type TranscriptViewProps = ThemedClassName<{
   space?: Space;
   transcript?: Transcript.Transcript;
-  model: SerializationModel<DataType.Message>;
+  model: SerializationModel<DataType.Message.Message>;
   // TODO(burdon): Are these still in use?
   attendableId?: string;
   ignoreAttention?: boolean;

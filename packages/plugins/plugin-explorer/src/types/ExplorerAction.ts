@@ -24,6 +24,6 @@ export class CreateGraph extends Schema.TaggedClass<CreateGraph>()(`${EXPLORER_A
     space: SpaceSchema,
   }).pipe(Schema.extend(GraphProps)),
   output: Schema.Struct({
-    object: DataType.View,
+    object: DataType.View.View,
   }),
 }) {}

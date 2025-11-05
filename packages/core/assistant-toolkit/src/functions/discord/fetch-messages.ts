@@ -71,7 +71,7 @@ const DEFAULT_IGNORE_USERNAMES = ['GitHub', 'Needle'];
 type Thread = {
   discordChannelId: string;
   name?: string;
-  messages: DataType.Message[];
+  messages: DataType.Message.Message[];
 };
 
 export default defineFunction({
@@ -141,9 +141,9 @@ export default defineFunction({
       const threads = yield* Effect.forEach(
         channels,
         Effect.fnUntraced(function* (channel) {
-          const allMessages: DataType.Message[] = [];
+          const allMessages: DataType.Message.Message[] = [];
 
-          let lastMessage: Option.Option<DataType.Message> = Option.none();
+          let lastMessage: Option.Option<DataType.Message.Message> = Option.none();
           while (true) {
             const { id: lastId = undefined } = Function.pipe(
               lastMessage,
@@ -222,8 +222,8 @@ const parseSnowflake = (snowflake: string): Date => {
   return new Date(Number((BigInt(snowflake) >> 22n) + discordEpoch));
 };
 
-const makeMessage = (message: MessageResponse): DataType.Message =>
-  Obj.make(DataType.Message, {
+const makeMessage = (message: MessageResponse): DataType.Message.Message =>
+  Obj.make(DataType.Message.Message, {
     [Obj.Meta]: {
       keys: [
         { id: message.id, source: 'discord.com' },

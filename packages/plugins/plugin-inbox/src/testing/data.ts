@@ -54,7 +54,7 @@ export const createMessage = (space?: Space, options: CreateOptions = { paragrap
       const linkCount = Math.floor(Math.random() * options.links) + 1;
       for (let i = 0; i < linkCount; i++) {
         const fullName = faker.person.fullName();
-        const obj = space.db.add(Obj.make(DataType.Person, { fullName }));
+        const obj = space.db.add(Obj.make(DataType.Person.Person, { fullName }));
         const dxn = Ref.make(obj).dxn.toString();
         const position = Math.floor(Math.random() * words.length);
         words.splice(position, 0, `[${fullName}](${dxn})`);
@@ -69,7 +69,7 @@ export const createMessage = (space?: Space, options: CreateOptions = { paragrap
   }
 
   return Obj.make(
-    DataType.Message,
+    DataType.Message.Message,
     {
       created: faker.date.recent().toISOString(),
       sender: {
@@ -101,7 +101,7 @@ export const createMessage = (space?: Space, options: CreateOptions = { paragrap
  */
 export const initializeMailbox = async (space: Space, count = 30) => {
   const mailbox = Mailbox.make({ space });
-  const queue = space.queues.get<DataType.Message>(mailbox.queue.dxn);
+  const queue = space.queues.get<DataType.Message.Message>(mailbox.queue.dxn);
   await queue.append(createMessages(count, space));
   space.db.add(mailbox);
   return mailbox;

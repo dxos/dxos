@@ -37,7 +37,7 @@ export namespace OutlinerAction {
       text: Schema.String,
     }),
     output: Schema.Struct({
-      object: DataType.Task,
+      object: DataType.Task.Task,
     }),
   }) {}
 }

@@ -39,12 +39,12 @@ const Meeting_ = Schema.Struct({
   /**
    * Markdown notes for the meeting.
    */
-  notes: Type.Ref(DataType.Text).pipe(FormAnnotation.set(false)),
+  notes: Type.Ref(DataType.Text.Text).pipe(FormAnnotation.set(false)),
 
   /**
    * Generated summary of the meeting.
    */
-  summary: Type.Ref(DataType.Text).pipe(FormAnnotation.set(false)),
+  summary: Type.Ref(DataType.Text.Text).pipe(FormAnnotation.set(false)),
 
   /**
    * Message thread for the meeting.

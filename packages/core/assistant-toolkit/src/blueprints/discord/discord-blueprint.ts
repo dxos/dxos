@@ -26,7 +26,7 @@ export const blueprint = Obj.make(Blueprint.Blueprint, {
   name: 'Discord',
   description: 'Discord integration.',
   instructions: {
-    source: Ref.make(DataType.makeText(instructions)),
+    source: Ref.make(DataType.Text.make(instructions)),
   },
   tools: [ToolId.make(Discord.fetch.key)],
 });

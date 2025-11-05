@@ -4,30 +4,11 @@
 
 import type * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
-// TODO(burdon): Move to jsonpath-plus.
-import jp from 'jsonpath';
 
-import { type BaseObject, FormatEnum, type JsonSchemaType, TypeEnum } from '@dxos/echo/internal';
+import { type QueryAST } from '@dxos/echo';
+import { FormatEnum, type JsonSchemaType, TypeEnum } from '@dxos/echo/internal';
 import { visit } from '@dxos/effect';
-
-import { type FieldType } from './view';
-
-// TODO(burdon): Remove once deprecated table is removed.
-
-/**
- * @deprecated
- */
-export const getFieldValue = <T extends BaseObject, V = any>(
-  object: T,
-  field: FieldType,
-  defaultValue?: V,
-): V | undefined => (jp.value(object, '$.' + field.path) as V) ?? defaultValue;
-
-/**
- * @deprecated
- */
-export const setFieldValue = <T extends BaseObject, V = any>(object: T, field: FieldType, value: V): V =>
-  jp.value(object, '$.' + field.path, value);
+import { DXN } from '@dxos/keys';
 
 /**
  * @deprecated
@@ -123,4 +104,28 @@ export const makeMultiSelectAnnotations = (
   };
 
   return jsonProperty;
+};
+
+// TODO(wittjosiah): This needs to be cleaned up.
+//   Ideally this should be something like `Query.getTypename` or something like that.
+//   It should return the typename the query is indexing on if it is, regardless or where in the AST it is.
+export const getTypenameFromQuery = (query: QueryAST.Query | undefined) => {
+  if (query?.type !== 'select') {
+    return '';
+  }
+
+  if (query.filter.type !== 'object') {
+    return '';
+  }
+
+  if (!query.filter.typename) {
+    return '';
+  }
+
+  const dxn = DXN.tryParse(query.filter.typename)?.asTypeDXN();
+  if (!dxn) {
+    return '';
+  }
+
+  return dxn.type;
 };
