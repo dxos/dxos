@@ -13,7 +13,7 @@ import { type DataType } from '@dxos/schema';
 
 export const useOnEditAnalytics = (
   message: Live<any>,
-  textBlock: DataType.MessageBlock.Text | undefined,
+  textBlock: DataType.ContentBlock.Text | undefined,
   editing: boolean,
 ) => {
   const { dispatchPromise: dispatch } = useIntentDispatcher();

@@ -9,7 +9,10 @@ import { MarkdownEvents } from '@dxos/plugin-markdown';
 import { SpaceCapabilities, SpaceEvents } from '@dxos/plugin-space';
 import { defineObjectForm } from '@dxos/plugin-space/types';
 import { translations as threadTranslations } from '@dxos/react-ui-thread';
-import { AnchoredTo, DataType } from '@dxos/schema';
+import { DataType } from '@dxos/schema';
+
+const AnchoredTo = DataType.AnchoredTo.AnchoredTo;
+type AnchoredTo = DataType.AnchoredTo.AnchoredTo;
 
 import {
   AppGraphBuilder,
@@ -74,7 +77,7 @@ export const ThreadPlugin = definePlugin(meta, () => [
         },
       }),
       contributes(Capabilities.Metadata, {
-        id: DataType.Message.typename,
+        id: DataType.Message.Message.typename,
         metadata: {
           // TODO(wittjosiah): Move out of metadata.
           loadReferences: () => [], // loadObjectReferences(message, (message) => [...message.parts, message.context]),
@@ -116,12 +119,17 @@ export const ThreadPlugin = definePlugin(meta, () => [
     id: `${meta.id}/module/schema`,
     activatesOn: ClientEvents.SetupSchema,
     activate: () =>
-      contributes(ClientCapabilities.Schema, [AnchoredTo, Thread.Thread, DataType.Message, DataType.MessageV1]),
+      contributes(ClientCapabilities.Schema, [
+        AnchoredTo,
+        Thread.Thread,
+        DataType.Message.Message,
+        DataType.Message.MessageV1,
+      ]),
   }),
   defineModule({
     id: `${meta.id}/module/migration`,
     activatesOn: ClientEvents.SetupMigration,
-    activate: () => contributes(ClientCapabilities.Migration, [DataType.MessageV1ToV2]),
+    activate: () => contributes(ClientCapabilities.Migration, [DataType.Message.MessageV1ToV2]),
   }),
   defineModule({
     id: `${meta.id}/module/on-space-created`,

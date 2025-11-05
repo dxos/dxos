@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { lazy } from 'react';
+import { type ComponentType, lazy } from 'react';
 
 export * from './AwaitingObject';
 export * from './CreateDialog';
@@ -20,6 +20,6 @@ export * from './SyncStatus';
 export * from './ViewEditor';
 
 export const CollectionArticle = lazy(() => import('./CollectionArticle'));
-export const ObjectDetailsPanel = lazy(() => import('./ObjectDetailsPanel'));
+export const ObjectDetailsPanel: ComponentType<any> = lazy(() => import('./ObjectDetailsPanel'));
 export const ObjectSettingsContainer = lazy(() => import('./ObjectSettings'));
 export const RecordArticle = lazy(() => import('./RecordArticle'));

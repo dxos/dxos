@@ -23,7 +23,7 @@ import { seedTestData } from '@dxos/schema/testing';
 import { InboxPlugin } from '../InboxPlugin';
 import { Mailbox } from '../types';
 
-const ContactItem = ({ contact }: { contact: DataType.Person }) => {
+const ContactItem = ({ contact }: { contact: DataType.Person.Person }) => {
   const { dispatchPromise: dispatch } = useIntentDispatcher();
   const ref = useRef<HTMLLIElement>(null);
 
@@ -56,7 +56,7 @@ const ContactItem = ({ contact }: { contact: DataType.Person }) => {
   );
 };
 
-const OrganizationItem = ({ organization }: { organization: DataType.Organization }) => {
+const OrganizationItem = ({ organization }: { organization: DataType.Organization.Organization }) => {
   const { dispatchPromise: dispatch } = useIntentDispatcher();
   const ref = useRef<HTMLLIElement>(null);
 
@@ -96,7 +96,12 @@ const meta = {
     withPluginManager({
       plugins: [
         ClientPlugin({
-          types: [Mailbox.Mailbox, DataType.Message, DataType.Person, DataType.Organization],
+          types: [
+            Mailbox.Mailbox,
+            DataType.Message.Message,
+            DataType.Person.Person,
+            DataType.Organization.Organization,
+          ],
           onClientInitialized: async ({ client }) => {
             await client.halo.createIdentity();
             await client.spaces.waitUntilReady();
@@ -105,7 +110,7 @@ const meta = {
             const mailbox = Mailbox.make({ space });
             const { emails } = await seedTestData(space);
             const queueDxn = mailbox.queue.dxn;
-            const queue = space.queues.get<DataType.Message>(queueDxn);
+            const queue = space.queues.get<DataType.Message.Message>(queueDxn);
             await queue.append(emails);
             space.db.add(mailbox);
           },
@@ -131,7 +136,7 @@ type Story = StoryObj<typeof meta>;
 export const Contacts: Story = {
   render: () => {
     const space = useSpace();
-    const contacts = useQuery(space, Filter.type(DataType.Person));
+    const contacts = useQuery(space, Filter.type(DataType.Person.Person));
 
     return (
       <List>
@@ -146,7 +151,7 @@ export const Contacts: Story = {
 export const Organizations: Story = {
   render: () => {
     const space = useSpace();
-    const organizations = useQuery(space, Filter.type(DataType.Organization));
+    const organizations = useQuery(space, Filter.type(DataType.Organization.Organization));
 
     return (
       <List>

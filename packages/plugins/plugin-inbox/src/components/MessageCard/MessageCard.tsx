@@ -12,7 +12,7 @@ import { type DataType } from '@dxos/schema';
 import { getMessageProps } from '../../util';
 
 export type MessageCardProps = {
-  message: DataType.Message;
+  message: DataType.Message.Message;
   role?: string;
 };
 

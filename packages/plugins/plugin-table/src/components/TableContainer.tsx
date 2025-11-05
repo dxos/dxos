@@ -33,7 +33,7 @@ import { meta } from '../meta';
 
 export type TableContainerProps = {
   role: string;
-  view: DataType.View;
+  view: DataType.View.View;
 };
 
 export const TableContainer = ({ role, view }: TableContainerProps) => {

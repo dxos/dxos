@@ -33,7 +33,7 @@ export default class Watch extends BaseCommand<typeof Watch> {
 
   async run(): Promise<any> {
     return this.execWithSpace(async ({ client, space }) => {
-      client.addTypes([DataType.Text, Function.Function, Script.Script]);
+      client.addTypes([DataType.Text.Text, Function.Function, Script.Script]);
 
       const { scriptContent } = await this._loadFunctionObject(space);
 

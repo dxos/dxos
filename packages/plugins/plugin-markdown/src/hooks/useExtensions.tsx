@@ -43,7 +43,7 @@ import { isTruthy } from '@dxos/util';
 import { Markdown } from '../types';
 import { setFallbackName } from '../util';
 
-export type DocumentType = Markdown.Document | DataType.Text | { id: string; text: string };
+export type DocumentType = Markdown.Document | DataType.Text.Text | { id: string; text: string };
 
 export type ExtensionsOptions = {
   id: string;
@@ -73,7 +73,7 @@ export const useExtensions = ({
   let target: Obj.Any | undefined;
   if (Obj.instanceOf(Markdown.Document, object)) {
     target = (object as Markdown.Document).content.target;
-  } else if (Obj.instanceOf(DataType.Text, object)) {
+  } else if (Obj.instanceOf(DataType.Text.Text, object)) {
     target = object;
   }
 

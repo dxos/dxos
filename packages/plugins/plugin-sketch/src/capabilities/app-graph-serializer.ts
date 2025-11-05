@@ -31,8 +31,8 @@ export default (context: PluginContext) =>
       deserialize: async (data, ancestors) => {
         const space = ancestors.find(isSpace);
         const target =
-          ancestors.findLast((ancestor) => Obj.instanceOf(DataType.Collection, ancestor)) ??
-          space?.properties[DataType.Collection.typename]?.target;
+          ancestors.findLast((ancestor) => Obj.instanceOf(DataType.Collection.Collection, ancestor)) ??
+          space?.properties[DataType.Collection.Collection.typename]?.target;
         if (!space || !target) {
           return;
         }

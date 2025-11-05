@@ -23,7 +23,7 @@ export const TranscriptionContainer = ({ transcript }: TranscriptionContainerPro
   const attendableId = fullyQualifiedId(transcript);
   const space = getSpace(transcript);
   const members = useMembers(space?.key).map((member) => member.identity);
-  const queue = useQueue<DataType.Message>(transcript.queue.dxn, { pollInterval: 1_000 });
+  const queue = useQueue<DataType.Message.Message>(transcript.queue.dxn, { pollInterval: 1_000 });
   const model = useQueueModelAdapter(renderByline(members), queue);
 
   return (

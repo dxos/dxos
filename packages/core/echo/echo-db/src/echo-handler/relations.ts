@@ -45,9 +45,9 @@ export const getSource = (relation: AnyLiveObject<any>): AnyLiveObject<any> => {
 };
 
 /**
- * @deprecated Use {@link @dxos/echo#Relation.getTarget} instead.
  * @returns Target ref from a relation.
  * @throws If the object is not a relation.
+ * @deprecated Use {@link @dxos/echo#Relation.getTarget} instead.
  */
 export const getTarget = (relation: AnyLiveObject<any>): AnyLiveObject<any> => {
   invariant(isRelation(relation));

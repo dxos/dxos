@@ -94,7 +94,7 @@ describe.skip('Transcriber', () => {
   });
 
   test.skip('transcription of audio recording', { timeout: 10_000 }, async () => {
-    const trigger = new Trigger<DataType.MessageBlock.Transcript[]>({ autoReset: true });
+    const trigger = new Trigger<DataType.ContentBlock.Transcript[]>({ autoReset: true });
     const recorder = new MockAudioRecorder({
       buffer: await readFile('test.wav'),
       chunkDuration: 3_000,
@@ -128,7 +128,7 @@ describe.skip('Transcriber', () => {
   });
 
   test.skip('transcription of audio recording with overlapping chunks', { timeout: 20_000 }, async () => {
-    const trigger = new Trigger<DataType.MessageBlock.Transcript[]>({ autoReset: true });
+    const trigger = new Trigger<DataType.ContentBlock.Transcript[]>({ autoReset: true });
     const recorder = new MockAudioRecorder({
       buffer: await readFile('test.wav'),
       chunkDuration: 3_000,

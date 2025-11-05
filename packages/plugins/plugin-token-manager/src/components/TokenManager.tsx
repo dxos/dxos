@@ -10,8 +10,8 @@ import { type DataType } from '@dxos/schema';
 import { meta } from '../meta';
 
 export type TokenManagerProps = {
-  tokens: DataType.AccessToken[];
-  onDelete?: (token: DataType.AccessToken) => void;
+  tokens: DataType.AccessToken.AccessToken[];
+  onDelete?: (token: DataType.AccessToken.AccessToken) => void;
 };
 
 export const TokenManager = ({ tokens, onDelete }: TokenManagerProps) => {
@@ -25,8 +25,8 @@ export const TokenManager = ({ tokens, onDelete }: TokenManagerProps) => {
 };
 
 type TokenItemProps = {
-  token: DataType.AccessToken;
-  onDelete?: (token: DataType.AccessToken) => void;
+  token: DataType.AccessToken.AccessToken;
+  onDelete?: (token: DataType.AccessToken.AccessToken) => void;
 };
 
 const TokenItem = ({ token, onDelete }: TokenItemProps) => {

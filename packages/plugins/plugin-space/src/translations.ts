@@ -13,7 +13,7 @@ import { meta } from './meta';
 export const translations = [
   {
     'en-US': {
-      [DataType.Collection.typename]: {
+      [DataType.Collection.Collection.typename]: {
         'typename label': 'Collection',
         'typename label_zero': 'Collections',
         'typename label_one': 'Collection',
@@ -22,7 +22,7 @@ export const translations = [
         'rename object label': 'Rename collection',
         'delete object label': 'Delete collection',
       },
-      [Type.getTypename(DataType.QueryCollection)]: {
+      [Type.getTypename(DataType.Collection.QueryCollection)]: {
         'typename label': 'Smart Collection',
         'typename label_zero': 'Smart Collections',
         'typename label_one': 'Smart Collection',
@@ -40,7 +40,7 @@ export const translations = [
         'rename object label': 'Rename record type',
         'delete object label': 'Delete record type',
       },
-      [Type.getTypename(DataType.View)]: {
+      [Type.getTypename(DataType.View.View)]: {
         'typename label': 'View',
         'typename label_zero': 'Views',
         'typename label_one': 'View',
@@ -49,35 +49,35 @@ export const translations = [
         'rename object label': 'Rename view',
         'delete object label': 'Delete view',
       },
-      [DataType.Event.typename]: {
+      [DataType.Event.Event.typename]: {
         'typename label': 'Event',
         'typename label_zero': 'Events',
         'typename label_one': 'Event',
         'typename label_other': 'Events',
         'object name placeholder': 'New event',
       },
-      [DataType.Organization.typename]: {
+      [DataType.Organization.Organization.typename]: {
         'typename label': 'Organization',
         'typename label_zero': 'Organizations',
         'typename label_one': 'Organization',
         'typename label_other': 'Organizations',
         'object name placeholder': 'New organization',
       },
-      [DataType.Person.typename]: {
+      [DataType.Person.Person.typename]: {
         'typename label': 'Person',
         'typename label_zero': 'People',
         'typename label_one': 'Person',
         'typename label_other': 'People',
         'object name placeholder': 'New person',
       },
-      [Type.getTypename(DataType.Project)]: {
+      [DataType.Project.Project.typename]: {
         'typename label': 'Project',
         'typename label_zero': 'Projects',
         'typename label_one': 'Project',
         'typename label_other': 'Projects',
         'object name placeholder': 'New project',
       },
-      [DataType.Task.typename]: {
+      [DataType.Task.Task.typename]: {
         'typename label': 'Task',
         'typename label_zero': 'Tasks',
         'typename label_one': 'Task',

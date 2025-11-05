@@ -14,7 +14,7 @@ import { type DataType, getTypenameFromQuery } from '@dxos/schema';
 
 import { SpaceAction } from '../types';
 
-export type ViewEditorProps = { view: DataType.View };
+export type ViewEditorProps = { view: DataType.View.View };
 
 export const ViewEditor = ({ view }: ViewEditorProps) => {
   const { dispatchPromise: dispatch } = useIntentDispatcher();

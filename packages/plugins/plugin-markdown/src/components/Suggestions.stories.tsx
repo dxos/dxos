@@ -62,13 +62,13 @@ const TestChat: FC<{ doc: Markdown.Document; content: string }> = ({ doc, conten
 
   const space = useSpace();
   const queueDxn = useMemo(() => space && space.queues.create().dxn, [space]);
-  const queue = useQueue<DataType.Message>(queueDxn);
+  const queue = useQueue<DataType.Message.Message>(queueDxn);
 
   const handleInsert = async () => {
     invariant(space);
     invariant(queue);
     await queue.append([
-      Obj.make(DataType.Message, {
+      Obj.make(DataType.Message.Message, {
         created: new Date().toISOString(),
         sender: { role: 'assistant' },
         blocks: [{ _tag: 'text', text: 'Hello' }],

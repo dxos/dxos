@@ -16,7 +16,7 @@ import { type Blueprint } from '@dxos/blueprints';
 import { type Space } from '@dxos/client-protocol';
 import { type FunctionDefinition } from '@dxos/functions';
 import { type RootSettingsStore } from '@dxos/local-storage';
-import { type AnchoredTo } from '@dxos/schema';
+import { type DataType } from '@dxos/schema';
 
 import { type PluginManager, defineCapability } from '../core';
 import { type AnyIntentResolver, type IntentContext } from '../plugin-intent';
@@ -43,7 +43,11 @@ export namespace Capabilities {
    */
   export const RxRegistry = defineCapability<Registry.Registry>('dxos.org/app-framework/capability/rx-registry');
 
-  export type ReactContext = Readonly<{ id: string; dependsOn?: string[]; context: FC<PropsWithChildren> }>;
+  export type ReactContext = Readonly<{
+    id: string;
+    dependsOn?: string[];
+    context: FC<PropsWithChildren>;
+  }>;
 
   /**
    * @category Capability
@@ -151,7 +155,10 @@ export namespace Capabilities {
    */
   export const Settings = defineCapability<Settings>('dxos.org/app-framework/capability/settings');
 
-  export type Metadata = Readonly<{ id: string; metadata: Record<string, any> }>;
+  export type Metadata = Readonly<{
+    id: string;
+    metadata: Record<string, any>;
+  }>;
 
   /**
    * @category Capability
@@ -205,9 +212,9 @@ export namespace Capabilities {
    */
   export const FileUploader = defineCapability<FileUploader>('dxos.org/app-framework/capability/file-uploader');
 
-  type AnchorSort = {
+  export type AnchorSort = {
     key: string;
-    sort: (anchorA: AnchoredTo, anchorB: AnchoredTo) => number;
+    sort: (anchorA: DataType.AnchoredTo.AnchoredTo, anchorB: DataType.AnchoredTo.AnchoredTo) => number;
   };
 
   /**

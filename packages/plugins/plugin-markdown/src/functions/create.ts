@@ -6,8 +6,7 @@ import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
 import { ArtifactId } from '@dxos/assistant';
-import { defineFunction } from '@dxos/functions';
-import { addObject } from '@dxos/schema';
+import { DatabaseService, defineFunction } from '@dxos/functions';
 
 import { Markdown } from '../types';
 
@@ -23,8 +22,7 @@ export default defineFunction({
     id: ArtifactId,
   }),
   handler: Effect.fn(function* ({ data: { name, content } }) {
-    const object = Markdown.makeDocument({ name, content });
-    yield* addObject({ object });
+    const object = yield* DatabaseService.add(Markdown.makeDocument({ name, content }));
 
     return {
       id: object.id,

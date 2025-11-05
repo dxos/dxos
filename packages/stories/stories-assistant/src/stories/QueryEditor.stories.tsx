@@ -75,15 +75,20 @@ const meta: Meta<typeof QueryEditor> = {
   decorators: [
     withTheme,
     withClientProvider({
-      types: [DataType.Organization, DataType.Person, DataType.Project, DataType.Employer],
+      types: [
+        DataType.Organization.Organization,
+        DataType.Person.Person,
+        DataType.Project.Project,
+        DataType.Employer.Employer,
+      ],
       createIdentity: true,
       onCreateIdentity: async ({ client }) => {
         const space = client.spaces.default;
         const createObjects = createObjectFactory(space.db, generator);
         const objects = await createObjects([
-          { type: DataType.Organization, count: 30 },
-          { type: DataType.Project, count: 20 },
-          { type: DataType.Person, count: 50 },
+          { type: DataType.Organization.Organization, count: 30 },
+          { type: DataType.Project.Project, count: 20 },
+          { type: DataType.Person.Person, count: 50 },
         ]);
         objects.forEach((obj) => {
           Obj.getMeta(obj).tags = faker.helpers.uniqueArray(Object.keys(tags), faker.number.int(3));

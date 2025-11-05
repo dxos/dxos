@@ -17,9 +17,9 @@ const Cell_ = Schema.Struct({
   type: Schema.String,
   name: Schema.optional(Schema.String),
   // TODO(burdon): Union type.
-  source: Schema.optional(Type.Ref(DataType.Text)),
+  source: Schema.optional(Type.Ref(DataType.Text.Text)),
   prompt: Schema.optional(Type.Ref(Prompt.Prompt)),
-  view: Schema.optional(Type.Ref(DataType.View)),
+  view: Schema.optional(Type.Ref(DataType.View.View)),
 }).pipe(Schema.mutable);
 export interface Cell extends Schema.Schema.Type<typeof Cell_> {}
 export interface Cell_Encoded extends Schema.Schema.Encoded<typeof Cell_> {}

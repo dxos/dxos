@@ -12,7 +12,7 @@ import { useQuery } from '@dxos/react-client/echo';
 import { useClientProvider, withClientProvider } from '@dxos/react-client/testing';
 import { useAsyncEffect } from '@dxos/react-ui';
 import { withTheme } from '@dxos/react-ui/testing';
-import { DataType, type ProjectionModel, createView, getTypenameFromQuery } from '@dxos/schema';
+import { DataType, type ProjectionModel, getTypenameFromQuery } from '@dxos/schema';
 
 import { translations } from '../../translations';
 import { TestLayout, TestPanel, VIEW_EDITOR_DEBUG_SYMBOL } from '../testing';
@@ -21,16 +21,16 @@ import { ViewEditor, type ViewEditorProps } from './ViewEditor';
 
 const types = [
   // TODO(burdon): Get label from annotation.
-  { value: Type.getTypename(DataType.Organization), label: 'Organization' },
-  { value: Type.getTypename(DataType.Person), label: 'Person' },
-  { value: Type.getTypename(DataType.Project), label: 'Project' },
-  { value: Type.getTypename(DataType.Employer), label: 'Employer' },
+  { value: DataType.Organization.Organization.typename, label: 'Organization' },
+  { value: DataType.Person.Person.typename, label: 'Person' },
+  { value: Type.getTypename(DataType.Project.Project), label: 'Project' },
+  { value: DataType.Employer.Employer.typename, label: 'Employer' },
 ];
 
 // Type definition for debug objects exposed to tests.
 export type ViewEditorDebugObjects = {
   schema: EchoSchema;
-  view: DataType.View;
+  view: DataType.View.View;
   projection: ProjectionModel;
 };
 
@@ -39,7 +39,7 @@ type StoryProps = Pick<ViewEditorProps, 'readonly' | 'mode'>;
 const DefaultStory = (props: StoryProps) => {
   const { space } = useClientProvider();
   const [schema, setSchema] = useState<EchoSchema>();
-  const [view, setView] = useState<DataType.View>();
+  const [view, setView] = useState<DataType.View.View>();
   const projectionRef = useRef<ProjectionModel>(null);
 
   const tags = useQuery(space, Filter.type(Tag.Tag));
@@ -69,9 +69,9 @@ const DefaultStory = (props: StoryProps) => {
       );
 
       const [testSchema] = await space.db.schemaRegistry.register([TestSchema, AlternateSchema]);
-      const view = createView({
+      const view = DataType.View.make({
         name: 'Test',
-        query: Query.select(Filter.typename(TestSchema.typename)),
+        query: Query.select(Filter.type(TestSchema)),
         jsonSchema: Type.toJsonSchema(TestSchema),
         presentation: Obj.make(Type.Expando, {}),
       });
@@ -98,7 +98,7 @@ const DefaultStory = (props: StoryProps) => {
           return;
         }
 
-        const newView = createView({
+        const newView = DataType.View.make({
           query,
           jsonSchema: newSchema.jsonSchema,
           presentation: Obj.make(Type.Expando, {}),

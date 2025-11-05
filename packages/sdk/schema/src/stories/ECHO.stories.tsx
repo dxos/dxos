@@ -17,7 +17,7 @@ import { withTheme } from '@dxos/react-ui/testing';
 import { JsonFilter } from '@dxos/react-ui-syntax-highlighter';
 import { type ValueGenerator, createObjectFactory } from '@dxos/schema/testing';
 
-import { DataType, DataTypes } from '../common';
+import { DataType, DataTypes } from '../types';
 
 faker.seed(1);
 
@@ -47,7 +47,9 @@ const DefaultStory = () => {
   const handleCreate = async () => {
     await test('create', async () => {
       invariant(space);
-      space.db.add(Obj.make(DataType.Organization, { id: 'dxos', name: 'DXOS', website: 'https://dxos.org' }));
+      space.db.add(
+        Obj.make(DataType.Organization.Organization, { id: 'dxos', name: 'DXOS', website: 'https://dxos.org' }),
+      );
     });
   };
 
@@ -55,7 +57,7 @@ const DefaultStory = () => {
     await test('create-objects', async () => {
       invariant(space);
       const createObjects = createObjectFactory(space.db, generator);
-      await createObjects([{ type: DataType.Organization, count: 1_000 }]);
+      await createObjects([{ type: DataType.Organization.Organization, count: 1_000 }]);
     });
   };
 

@@ -28,7 +28,7 @@ faker.seed(1);
 const DefaultStory = () => {
   const client = useClient();
   const [space, setSpace] = useState<Space>();
-  const [view, setView] = useState<DataType.View>();
+  const [view, setView] = useState<DataType.View.View>();
 
   useAsyncEffect(async () => {
     const space = client.spaces.default;
@@ -57,11 +57,11 @@ const meta = {
       createSpace: true,
       types: [
         Graph.Graph,
-        DataType.View,
-        DataType.Organization,
-        DataType.Project,
-        DataType.Person,
-        DataType.HasRelationship,
+        DataType.View.View,
+        DataType.Organization.Organization,
+        DataType.Project.Project,
+        DataType.Person.Person,
+        DataType.HasRelationship.HasRelationship,
       ],
     }),
   ],

@@ -15,7 +15,7 @@ import { type PreviewProps } from '../types';
 
 // TODO(thure): Should this move upstream as a helper? Is there an easier way to get options?
 const getActiveStatusOption = (status?: string) => {
-  const properties = SchemaAST.getPropertySignatures(DataType.Task.ast);
+  const properties = SchemaAST.getPropertySignatures(DataType.Task.Task.ast);
   const statusProperty = properties.find((p) => p.name === 'status');
   const statusMeta = SchemaAST.getAnnotation<PropertyMetaAnnotation>(PropertyMetaAnnotationId)(
     // TODO(thure): Typescript asserts `.type` doesn’t have `.types`, but in runtime it does.
@@ -26,7 +26,7 @@ const getActiveStatusOption = (status?: string) => {
   return options.find(({ id }) => id === status);
 };
 
-export const TaskCard = ({ subject, role, activeSpace }: PreviewProps<DataType.Task>) => {
+export const TaskCard = ({ subject, role, activeSpace }: PreviewProps<DataType.Task.Task>) => {
   const { title, status } = subject;
   const statusOption = getActiveStatusOption(status);
 

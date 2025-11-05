@@ -95,7 +95,7 @@ export default () =>
     createSurface({
       id: DEPLOYMENT_DIALOG,
       role: 'dialog',
-      filter: (data): data is { props: { accessToken: DataType.AccessToken; scriptTemplates: any } } =>
+      filter: (data): data is { props: { accessToken: DataType.AccessToken.AccessToken; scriptTemplates: any } } =>
         data.component === DEPLOYMENT_DIALOG,
       component: ({ data }) => <DeploymentDialog {...data.props} />,
     }),

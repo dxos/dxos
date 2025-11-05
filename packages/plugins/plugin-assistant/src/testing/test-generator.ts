@@ -8,11 +8,13 @@ import { Obj } from '@dxos/echo';
 import { ContextQueueService, DatabaseService } from '@dxos/functions';
 import { faker } from '@dxos/random';
 import { renderObjectLink } from '@dxos/react-ui-components';
-import { type ContentBlock, DataType } from '@dxos/schema';
+import { DataType } from '@dxos/schema';
 import { trim } from '@dxos/util';
 
-export const createMessage = (role: DataType.ActorRole, blocks: ContentBlock.Any[]): DataType.Message => {
-  return Obj.make(DataType.Message, {
+import ContentBlock = DataType.ContentBlock;
+
+export const createMessage = (role: DataType.Actor.Role, blocks: ContentBlock.Any[]): DataType.Message.Message => {
+  return Obj.make(DataType.Message.Message, {
     created: new Date().toISOString(),
     sender: { role },
     blocks,
@@ -70,9 +72,9 @@ export const createMessageGenerator = (): MessageGenerator[] => [
               [
                 faker.lorem.paragraph(),
                 '',
-                ...Array.from({ length: faker.number.int({ min: 3, max: 5 }) }).map(
-                  (_, idx) => `${idx + 1}. ${faker.lorem.paragraph()}`,
-                ),
+                ...Array.from({
+                  length: faker.number.int({ min: 3, max: 5 }),
+                }).map((_, idx) => `${idx + 1}. ${faker.lorem.paragraph()}`),
               ].join('\n') + '\n',
           },
         ]),
@@ -146,10 +148,10 @@ export const createMessageGenerator = (): MessageGenerator[] => [
   Effect.gen(function* () {
     const { queue } = yield* ContextQueueService;
     const { db } = yield* DatabaseService;
-    const obj1 = db.add(Obj.make(DataType.Organization, { name: 'DXOS' }));
-    // const obj2 = db.add(Obj.make(DataType.Person, { fullName: 'Alice' }));
-    // const obj3 = db.add(Obj.make(DataType.Person, { fullName: 'Bob' }));
-    // const obj4 = db.add(Obj.make(DataType.Person, { fullName: 'Charlie' }));
+    const obj1 = db.add(Obj.make(DataType.Organization.Organization, { name: 'DXOS' }));
+    // const obj2 = db.add(Obj.make(DataType.Person.Person, { fullName: 'Alice' }));
+    // const obj3 = db.add(Obj.make(DataType.Person.Person, { fullName: 'Bob' }));
+    // const obj4 = db.add(Obj.make(DataType.Person.Person, { fullName: 'Charlie' }));
     yield* Effect.promise(() =>
       queue.append([
         createMessage('assistant', [

@@ -4,7 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Type } from '@dxos/echo';
+import { Obj, Type } from '@dxos/echo';
 
 export const AccessToken = Schema.Struct({
   note: Schema.optional(
@@ -33,3 +33,5 @@ export const AccessToken = Schema.Struct({
 );
 
 export interface AccessToken extends Schema.Schema.Type<typeof AccessToken> {}
+
+export const make = (props: Obj.MakeProps<typeof AccessToken>) => Obj.make(AccessToken, props);

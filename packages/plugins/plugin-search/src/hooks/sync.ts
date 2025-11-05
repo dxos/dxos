@@ -46,7 +46,7 @@ export const filterObjectsSync = <T extends Record<string, any>>(objects: T[], m
 
   return objects.reduce<SearchResult[]>((results, object) => {
     // TODO(burdon): Hack to ignore Text objects.
-    if (object instanceof DataType.Text) {
+    if (object instanceof DataType.Text.Text) {
       return results;
     }
 
@@ -112,7 +112,7 @@ const getKeys = (object: Record<string, unknown>): string[] => {
 export const mapObjectToTextFields = <T extends Record<string, unknown>>(object: T): TextFields => {
   return getKeys(object).reduce<TextFields>((fields, key) => {
     const value = object[key] as any;
-    if (typeof value === 'string' || value instanceof DataType.Text) {
+    if (typeof value === 'string' || value instanceof DataType.Text.Text) {
       try {
         fields[key] = String(value);
       } catch (err) {

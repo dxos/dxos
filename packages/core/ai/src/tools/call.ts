@@ -9,27 +9,29 @@ import * as Cause from 'effect/Cause';
 import * as Effect from 'effect/Effect';
 
 import { log } from '@dxos/log';
-import { type ContentBlock } from '@dxos/schema';
+import { type DataType } from '@dxos/schema';
 import { safeParseJson } from '@dxos/util';
+
+type ContentBlock = typeof DataType.ContentBlock;
 
 // TODO(burdon): Not Used?
 export const callTools: <Tools extends Record<string, Tool.Any>>(
   toolkit: Toolkit.WithHandler<Tools>,
-  toolCalls: ContentBlock.ToolCall[],
-) => Effect.Effect<ContentBlock.ToolResult[], AiError.AiError, Tool.Requirements<Tools>> = Effect.fn('callTools')(
-  function* (toolkit, toolCalls) {
-    log.info('callTools', { count: toolCalls.length });
-    return yield* Effect.forEach(toolCalls, (toolCall) => callTool(toolkit, toolCall));
-  },
-);
+  toolCalls: DataType.ContentBlock.ToolCall[],
+) => Effect.Effect<DataType.ContentBlock.ToolResult[], AiError.AiError, Tool.Requirements<Tools>> = Effect.fn(
+  'callTools',
+)(function* (toolkit, toolCalls) {
+  log.info('callTools', { count: toolCalls.length });
+  return yield* Effect.forEach(toolCalls, (toolCall) => callTool(toolkit, toolCall));
+});
 
 /**
  * Call individual tool.
  */
 export const callTool: <Tools extends Record<string, Tool.Any>>(
   toolkit: Toolkit.WithHandler<Tools>,
-  toolCall: ContentBlock.ToolCall,
-) => Effect.Effect<ContentBlock.ToolResult, AiError.AiError, Tool.Requirements<Tools>> = Effect.fn('callTool')(
+  toolCall: DataType.ContentBlock.ToolCall,
+) => Effect.Effect<DataType.ContentBlock.ToolResult, AiError.AiError, Tool.Requirements<Tools>> = Effect.fn('callTool')(
   function* (toolkit, toolCall) {
     const input = safeParseJson<Tool.Parameters<any>>(toolCall.input, {});
 
@@ -45,7 +47,7 @@ export const callTool: <Tools extends Record<string, Tool.Any>>(
             // TODO(dmaretskyi): Should we use encodedResult?
             result: JSON.stringify(result),
             providerExecuted: false,
-          }) satisfies ContentBlock.ToolResult,
+          }) satisfies DataType.ContentBlock.ToolResult,
       ),
       Effect.catchAllCause((cause) =>
         Effect.sync(
@@ -57,7 +59,7 @@ export const callTool: <Tools extends Record<string, Tool.Any>>(
               name: toolCall.name,
               error: formatError(Cause.prettyErrors(cause)[0]),
               providerExecuted: false,
-            }) satisfies ContentBlock.ToolResult,
+            }) satisfies DataType.ContentBlock.ToolResult,
         ),
       ),
     );

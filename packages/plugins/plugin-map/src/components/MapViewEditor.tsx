@@ -20,7 +20,7 @@ export const MapSettingsSchema = Schema.Struct({
   coordinateColumn: Schema.optional(Schema.String.annotations({ title: 'Coordinate column' })),
 });
 
-type MapViewEditorProps = { view: DataType.View };
+type MapViewEditorProps = { view: DataType.View.View };
 
 export const MapViewEditor = ({ view }: MapViewEditorProps) => {
   const client = useClient();

@@ -43,13 +43,13 @@ export namespace KanbanAction {
   export class Create extends Schema.TaggedClass<Create>()(`${KANBAN_ACTION}/create`, {
     input: Schema.extend(Schema.Struct({ space: SpaceSchema }), CreateKanbanSchema),
     output: Schema.Struct({
-      object: DataType.View,
+      object: DataType.View.View,
     }),
   }) {}
 
   export class DeleteCardField extends Schema.TaggedClass<DeleteCardField>()(`${KANBAN_ACTION}/delete-card-field`, {
     input: Schema.Struct({
-      view: DataType.View,
+      view: DataType.View.View,
       fieldId: Schema.String,
       // TODO(wittjosiah): Separate fields for undo data?
       deletionData: Schema.optional(

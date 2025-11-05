@@ -17,7 +17,7 @@ import {
 import { Ref, Tag, Type } from '@dxos/echo';
 import { AttentionEvents } from '@dxos/plugin-attention';
 import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
-import { DataType, DataTypes, createDefaultSchema, getTypenameFromQuery } from '@dxos/schema';
+import { DataType, DataTypes, getTypenameFromQuery } from '@dxos/schema';
 import { translations as shellTranslations } from '@dxos/shell/react';
 
 import {
@@ -89,18 +89,19 @@ export const SpacePlugin = definePlugin<SpacePluginOptions>(
         activatesOn: Events.SetupMetadata,
         activate: () => [
           contributes(Capabilities.Metadata, {
-            id: Type.getTypename(DataType.Collection),
+            id: DataType.Collection.Collection.typename,
             metadata: {
               icon: 'ph--cards-three--regular',
               iconHue: 'neutral',
               // TODO(wittjosiah): Move out of metadata.
-              loadReferences: async (collection: DataType.Collection) => await Ref.Array.loadAll(collection.objects),
+              loadReferences: async (collection: DataType.Collection.Collection) =>
+                await Ref.Array.loadAll(collection.objects),
             },
           }),
           contributes(Capabilities.Metadata, {
-            id: Type.getTypename(DataType.QueryCollection),
+            id: Type.getTypename(DataType.Collection.QueryCollection),
             metadata: {
-              label: (object: DataType.QueryCollection) => [
+              label: (object: DataType.Collection.QueryCollection) => [
                 'typename label',
                 {
                   ns: getTypenameFromQuery(object.query),
@@ -119,25 +120,25 @@ export const SpacePlugin = definePlugin<SpacePluginOptions>(
             },
           }),
           contributes(Capabilities.Metadata, {
-            id: Type.getTypename(DataType.Event),
+            id: DataType.Event.Event.typename,
             metadata: {
               icon: 'ph--calendar-dot--regular',
             },
           }),
           contributes(Capabilities.Metadata, {
-            id: Type.getTypename(DataType.Organization),
+            id: DataType.Organization.Organization.typename,
             metadata: {
               icon: 'ph--building-office--regular',
             },
           }),
           contributes(Capabilities.Metadata, {
-            id: Type.getTypename(DataType.Person),
+            id: DataType.Person.Person.typename,
             metadata: {
               icon: 'ph--user--regular',
             },
           }),
           contributes(Capabilities.Metadata, {
-            id: Type.getTypename(DataType.Task),
+            id: DataType.Task.Task.typename,
             metadata: {
               icon: 'ph--check-circle--regular',
             },
@@ -151,7 +152,7 @@ export const SpacePlugin = definePlugin<SpacePluginOptions>(
           contributes(
             SpaceCapabilities.ObjectForm,
             defineObjectForm({
-              objectSchema: DataType.Collection,
+              objectSchema: DataType.Collection.Collection,
               formSchema: Schema.Struct({ name: Schema.optional(Schema.String) }),
               getIntent: (props) => createIntent(CollectionAction.Create, props),
             }),
@@ -160,7 +161,7 @@ export const SpacePlugin = definePlugin<SpacePluginOptions>(
             SpaceCapabilities.ObjectForm,
             defineObjectForm({
               // TODO(wittjosiah): Remove cast.
-              objectSchema: DataType.QueryCollection as any,
+              objectSchema: DataType.Collection.QueryCollection as any,
               formSchema: CollectionAction.QueryCollectionForm,
               getIntent: (props) => createIntent(CollectionAction.CreateQueryCollection, props),
             }),
@@ -176,7 +177,7 @@ export const SpacePlugin = definePlugin<SpacePluginOptions>(
                   : createIntent(SpaceAction.AddSchema, {
                       space: options.space,
                       name: props.name,
-                      schema: createDefaultSchema(),
+                      schema: DataType.createDefaultSchema(),
                     }),
             }),
           ),
@@ -198,11 +199,11 @@ export const SpacePlugin = definePlugin<SpacePluginOptions>(
         activatesOn: ClientEvents.SetupSchema,
         activate: () =>
           contributes(ClientCapabilities.SchemaWhiteList, [
-            DataType.Event,
-            DataType.Organization,
-            DataType.Person,
-            DataType.Project,
-            DataType.Task,
+            DataType.Event.Event,
+            DataType.Organization.Organization,
+            DataType.Person.Person,
+            DataType.Project.Project,
+            DataType.Task.Task,
           ]),
       }),
       defineModule({

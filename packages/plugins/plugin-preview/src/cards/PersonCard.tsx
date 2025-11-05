@@ -12,7 +12,13 @@ import { type DataType } from '@dxos/schema';
 import { CardRow, CardSubjectMenu, gridRow } from '../components';
 import { type PreviewProps } from '../types';
 
-export const PersonCard = ({ children, role, subject, activeSpace, onSelect }: PreviewProps<DataType.Person>) => {
+export const PersonCard = ({
+  children,
+  role,
+  subject,
+  activeSpace,
+  onSelect,
+}: PreviewProps<DataType.Person.Person>) => {
   const { fullName, image, organization: { target: organization } = {}, emails = [] } = subject;
 
   return (

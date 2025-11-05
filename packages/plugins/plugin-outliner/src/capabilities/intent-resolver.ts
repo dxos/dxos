@@ -34,7 +34,7 @@ export default () =>
       resolve: ({ text }) => {
         return {
           data: {
-            object: Obj.make(DataType.Task, { title: text }),
+            object: Obj.make(DataType.Task.Task, { title: text }),
           },
         };
       },
