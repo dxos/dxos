@@ -29,21 +29,16 @@ const paragraphBlockPlugin = ViewPlugin.fromClass(
         // Add line decorations for each line in the block.
         for (let lineNum = fromLine; lineNum <= toLine; lineNum++) {
           const line = state.doc.line(lineNum);
-          const isSingle = fromLine === toLine;
-          const isFirst = lineNum === fromLine;
-          const isLast = lineNum === toLine;
-          const isMiddle = !isSingle && !isFirst && !isLast;
-
           builder.add(
             line.from,
             line.from,
             Decoration.line({
               class: mx(
                 'block-line',
-                isSingle && 'block-single',
-                isFirst && 'block-first',
-                isMiddle && 'block-middle',
-                isLast && 'block-last',
+                fromLine === toLine && 'block-single',
+                lineNum === fromLine && 'block-first',
+                lineNum === toLine && 'block-last',
+                lineNum > fromLine && lineNum < toLine && 'block-middle',
               ),
             }),
           );
