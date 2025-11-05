@@ -39,7 +39,9 @@ const meta = {
     withLayout({ container: 'column' }),
     withPluginManager({
       plugins: [...(await createThreadPlugins())],
-      capabilities: [contributes(ClientCapabilities.Schema, [Channel.Channel, Thread.Thread, DataType.Message])],
+      capabilities: [
+        contributes(ClientCapabilities.Schema, [Channel.Channel, Thread.Thread, DataType.Message.Message]),
+      ],
     }),
   ],
   parameters: {

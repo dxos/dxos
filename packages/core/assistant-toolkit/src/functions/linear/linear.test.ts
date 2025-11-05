@@ -37,7 +37,7 @@ const TestLayer = Layer.mergeAll(
       AiServiceTestingPreset('direct'),
       TestDatabaseLayer({
         // indexing: { vector: true },
-        types: [DataType.Task, DataType.Person, DataType.Project],
+        types: [DataType.Task.Task, DataType.Person.Person, DataType.Project.Project],
         storagePath: testStoragePath({ name: 'feed-test-13' }),
       }),
       CredentialsService.layerConfig([{ service: 'linear.app', apiKey: Config.redacted('LINEAR_API_KEY') }]),
@@ -61,17 +61,17 @@ describe('Linear', { timeout: 600_000 }, () => {
           team: '1127c63a-6f77-4725-9229-50f6cd47321c',
         });
 
-        const persons = yield* DatabaseService.query(Query.type(DataType.Person)).run;
+        const persons = yield* DatabaseService.query(Query.type(DataType.Person.Person)).run;
         console.log('people', {
           count: persons.length,
           people: persons.map((_) => `(${_.id}) ${Obj.getLabel(_)} [${Obj.getKeys(_, LINEAR_ID_KEY)[0]?.id}]`),
         });
-        const projects = yield* DatabaseService.query(Query.type(DataType.Project)).run;
+        const projects = yield* DatabaseService.query(Query.type(DataType.Project.Project)).run;
         console.log('projects', {
           count: projects.length,
           projects: projects.map((_) => `(${_.id}) ${Obj.getLabel(_)} [${Obj.getKeys(_, LINEAR_ID_KEY)[0]?.id}]`),
         });
-        const tasks = yield* DatabaseService.query(Query.type(DataType.Task)).run;
+        const tasks = yield* DatabaseService.query(Query.type(DataType.Task.Task)).run;
         console.log('tasks', {
           count: tasks.length,
           tasks: tasks.map((_) => `(${_.id}) ${Obj.getLabel(_)} [${Obj.getKeys(_, LINEAR_ID_KEY)[0]?.id}]`),

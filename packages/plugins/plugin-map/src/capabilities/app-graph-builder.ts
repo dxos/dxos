@@ -24,7 +24,7 @@ export default (context: PluginContext) =>
           Function.pipe(
             get(node),
             Option.flatMap((node) =>
-              Obj.instanceOf(DataType.View, node.data) &&
+              Obj.instanceOf(DataType.View.View, node.data) &&
               Obj.instanceOf(Map.Map, get(rxFromSignal(() => node.data.presentation.target)))
                 ? Option.some(node)
                 : Option.none(),

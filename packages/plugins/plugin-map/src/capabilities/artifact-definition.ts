@@ -48,7 +48,7 @@ export default () => {
         execute: async (_, { extensions }) => {
           invariant(extensions?.space, 'No space');
           const space = extensions.space;
-          const { objects } = await space.db.query(Filter.type(DataType.View)).run();
+          const { objects } = await space.db.query(Filter.type(DataType.View.View)).run();
 
           const mapInfo = await Promise.all(
             objects.map(async (view) => {

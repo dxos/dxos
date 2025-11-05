@@ -52,8 +52,8 @@ export default () =>
     createSurface({
       id: `${meta.id}/surface/map-view`,
       role: ['article', 'section'],
-      filter: (data): data is { subject: DataType.View } =>
-        Obj.instanceOf(DataType.View, data.subject) && Obj.instanceOf(Map.Map, data.subject.presentation.target),
+      filter: (data): data is { subject: DataType.View.View } =>
+        Obj.instanceOf(DataType.View.View, data.subject) && Obj.instanceOf(Map.Map, data.subject.presentation.target),
       component: ({ data, role }) => {
         const state = useCapability(MapCapabilities.MutableState);
         const [center, setCenter] = useState<LatLngLiteral | undefined>(undefined);
@@ -89,8 +89,8 @@ export default () =>
       id: `${meta.id}/surface/object-settings`,
       role: 'object-settings',
       position: 'hoist',
-      filter: (data): data is { subject: DataType.View } =>
-        Obj.instanceOf(DataType.View, data.subject) && Obj.instanceOf(Map.Map, data.subject.presentation.target),
+      filter: (data): data is { subject: DataType.View.View } =>
+        Obj.instanceOf(DataType.View.View, data.subject) && Obj.instanceOf(Map.Map, data.subject.presentation.target),
       component: ({ data }) => <MapViewEditor view={data.subject} />,
     }),
     createSurface({
@@ -99,7 +99,11 @@ export default () =>
       role: 'form-input',
       filter: (
         data,
-      ): data is { prop: string; schema: Schema.Schema<any>; target: Space | DataType.Collection | undefined } => {
+      ): data is {
+        prop: string;
+        schema: Schema.Schema<any>;
+        target: Space | DataType.Collection.Collection | undefined;
+      } => {
         const annotation = findAnnotation<boolean>((data.schema as Schema.Schema.All).ast, LocationAnnotationId);
         return !!annotation;
       },

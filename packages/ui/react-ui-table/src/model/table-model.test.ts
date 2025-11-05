@@ -12,7 +12,7 @@ import { updateCounter } from '@dxos/echo/testing';
 import { createEchoSchema } from '@dxos/echo/testing';
 import { registerSignalsRuntime } from '@dxos/echo-signals';
 import { live } from '@dxos/live-object';
-import { createView } from '@dxos/schema';
+import { DataType } from '@dxos/schema';
 
 import { Table } from '../types';
 
@@ -113,7 +113,7 @@ class Test extends TypedObject({ typename: 'example.com/type/Test', version: '0.
 const createTableModel = (props: Partial<TableModelProps> = {}): TableModel => {
   const schema = createEchoSchema(Test);
   const table = Table.make();
-  const view = createView({
+  const view = DataType.View.make({
     query: Query.select(Filter.type(schema)),
     jsonSchema: schema.jsonSchema,
     presentation: table,

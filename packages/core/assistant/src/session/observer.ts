@@ -16,7 +16,7 @@ export interface GenerationObserver extends AiParser.ParseResponseCallbacks {
    * Complete messages fired during the session, both from the model and from the user.
    * This message will contain all message blocks emitted through the `onBlock` callback.
    */
-  onMessage: (message: DataType.Message) => Effect.Effect<void>;
+  onMessage: (message: DataType.Message.Message) => Effect.Effect<void>;
 }
 
 export const GenerationObserver = Object.freeze({

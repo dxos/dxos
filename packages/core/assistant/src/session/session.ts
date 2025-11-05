@@ -45,7 +45,7 @@ export type AiSessionRunParams<Tools extends Record<string, Tool.Any>> = {
   prompt: string;
   // TODO(wittjosiah): Rename to systemPrompt.
   system?: string;
-  history?: DataType.Message[];
+  history?: DataType.Message.Message[];
   objects?: Obj.Any[];
   blueprints?: Blueprint.Blueprint[];
   toolkit?: Toolkit.WithHandler<Tools>;
@@ -70,10 +70,10 @@ export class AiSession {
 
   /** Message history from queue. */
   // TODO(burdon): Evolve into supporting a git-like graph of messages.
-  private _history: DataType.Message[] = [];
+  private _history: DataType.Message.Message[] = [];
 
   /** Pending messages for this session (incl. the current prompt). */
-  private _pending: DataType.Message[] = [];
+  private _pending: DataType.Message.Message[] = [];
 
   constructor(private readonly _options: AiSessionOptions = {}) {}
 
@@ -85,13 +85,17 @@ export class AiSession {
     blueprints = [],
     toolkit,
     observer = GenerationObserver.noop(),
-  }: AiSessionRunParams<Tools>): Effect.Effect<DataType.Message[], AiSessionRunError, AiSessionRunRequirements> =>
+  }: AiSessionRunParams<Tools>): Effect.Effect<
+    DataType.Message.Message[],
+    AiSessionRunError,
+    AiSessionRunRequirements
+  > =>
     Effect.gen(this, function* () {
       this._history = [...history];
       this._pending = [];
       const pending = this._pending;
 
-      const submitMessage = Effect.fnUntraced(function* (message: DataType.Message) {
+      const submitMessage = Effect.fnUntraced(function* (message: DataType.Message.Message) {
         pending.push(message);
         yield* observer.onMessage(message);
         yield* TracingService.emitConverationMessage(message);
@@ -137,7 +141,7 @@ export class AiSession {
 
         // Create the response message.
         const response = yield* submitMessage(
-          Obj.make(DataType.Message, {
+          Obj.make(DataType.Message.Message, {
             created: new Date().toISOString(),
             sender: { role: 'assistant' },
             blocks,
@@ -170,7 +174,7 @@ export class AiSession {
         // TODO(wittjosiah): Sometimes tool error results are added to the queue before the tool agent statuses.
         //   This results in a broken execution graph.
         yield* submitMessage(
-          Obj.make(DataType.Message, {
+          Obj.make(DataType.Message.Message, {
             created: new Date().toISOString(),
             sender: { role: 'tool' },
             blocks: toolResults,

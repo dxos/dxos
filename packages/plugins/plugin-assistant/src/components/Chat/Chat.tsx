@@ -52,7 +52,7 @@ type ChatContextValue = {
   debug?: boolean;
   event: Event<ChatEvent>;
   chat?: Assistant.Chat;
-  messages: DataType.Message[];
+  messages: DataType.Message.Message[];
   processor: AiChatProcessor;
 };
 
@@ -75,9 +75,9 @@ const ChatRoot = ({ children, chat, processor, onEvent, ...props }: ChatRootProp
   const lastPrompt = useRef<string | undefined>(undefined);
 
   // Messages.
-  const queue = useQueue<DataType.Message>(chat?.queue.dxn);
+  const queue = useQueue<DataType.Message.Message>(chat?.queue.dxn);
   const messages = useMemo(() => {
-    const queueMessages = queue?.objects?.filter(Obj.instanceOf(DataType.Message)) ?? [];
+    const queueMessages = queue?.objects?.filter(Obj.instanceOf(DataType.Message.Message)) ?? [];
     return Array.dedupeWith([...queueMessages, ...pending], ({ id: a }, { id: b }) => a === b);
   }, [queue?.objects, pending]);
 

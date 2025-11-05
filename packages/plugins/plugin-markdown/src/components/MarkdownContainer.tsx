@@ -47,7 +47,7 @@ export const MarkdownContainer = ({
 }: MarkdownContainerProps) => {
   const space = getSpace(object);
   const isDocument = Obj.instanceOf(Markdown.Document, object);
-  const isText = Obj.instanceOf(DataType.Text, object);
+  const isText = Obj.instanceOf(DataType.Text.Text, object);
   const attendableId = isDocument ? fullyQualifiedId(object) : undefined;
 
   // Extensions from other plugins.

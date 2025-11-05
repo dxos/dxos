@@ -24,7 +24,7 @@ export default () =>
         }
 
         return {
-          data: { object: DataType.makeProject({ name }) },
+          data: { object: DataType.Project.make({ name }) },
         };
       },
     }),

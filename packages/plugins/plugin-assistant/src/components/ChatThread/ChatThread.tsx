@@ -33,7 +33,7 @@ export type ChatThreadController = Pick<
 export type ChatThreadProps = ThemedClassName<
   {
     identity?: Identity;
-    messages?: DataType.Message[];
+    messages?: DataType.Message.Message[];
     error?: Error;
     overscroll?: number;
     onEvent?: (event: ChatEvent) => void;

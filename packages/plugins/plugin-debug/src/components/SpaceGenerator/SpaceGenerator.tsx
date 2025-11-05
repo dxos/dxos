@@ -30,7 +30,7 @@ export const SpaceGenerator = ({ space, onCreateObjects }: SpaceGeneratorProps) 
   const { dispatchPromise: dispatch } = useIntentDispatcher();
   const client = useClient();
   const staticTypes = [Markdown.Document, Diagram.Diagram, Sheet.Sheet, ComputeGraph]; // TODO(burdon): Make extensible.
-  const recordTypes = [DataType.Organization, DataType.Person, DataType.Task];
+  const recordTypes = [DataType.Organization.Organization, DataType.Person.Person, DataType.Task.Task];
   const [count, setCount] = useState(1);
   const [info, setInfo] = useState<any>({});
   const presets = useMemo(() => generator(), []);

@@ -12,7 +12,7 @@ import { ATTENDABLE_PATH_SEPARATOR, DeckAction } from '@dxos/plugin-deck/types';
 import { ObservabilityAction } from '@dxos/plugin-observability/types';
 import { CollectionAction, SpaceAction } from '@dxos/plugin-space/types';
 import { Ref, fullyQualifiedId, getSpace } from '@dxos/react-client/echo';
-import { AnchoredTo, DataType } from '@dxos/schema';
+import { DataType } from '@dxos/schema';
 
 import { meta } from '../meta';
 import { Channel, Thread, ThreadAction } from '../types';
@@ -67,7 +67,7 @@ export default (context: PluginContext) =>
         const { state } = context.getCapability(ThreadCapabilities.MutableState);
         const subjectId = fullyQualifiedId(subject);
         const thread = Thread.make({ name });
-        const anchor = Relation.make(AnchoredTo, {
+        const anchor = Relation.make(DataType.AnchoredTo.AnchoredTo, {
           [Relation.Source]: thread,
           [Relation.Target]: subject,
           anchor: _anchor,
@@ -82,39 +82,6 @@ export default (context: PluginContext) =>
 
         return {
           intents: [
-            createIntent(ThreadAction.Select, { current: fullyQualifiedId(thread) }),
-            createIntent(DeckAction.ChangeCompanion, {
-              primary: subjectId,
-              companion: `${subjectId}${ATTENDABLE_PATH_SEPARATOR}comments`,
-            }),
-          ],
-        };
-      },
-    }),
-    createResolver({
-      intent: ThreadAction.AddProposal,
-      resolve: ({ text, anchor, sender, subject }) => {
-        const space = getSpace(subject);
-        invariant(space, 'Space not found');
-
-        const subjectId = fullyQualifiedId(subject);
-        const proposal = Obj.make(DataType.Message, {
-          created: new Date().toISOString(),
-          sender,
-          blocks: [{ _tag: 'proposal', text }],
-        });
-        const thread = Thread.make({ name: 'Proposal', messages: [Ref.make(proposal)], status: 'active' });
-
-        return {
-          intents: [
-            createIntent(SpaceAction.AddObject, { object: thread, target: space, hidden: true }),
-            createIntent(SpaceAction.AddRelation, {
-              space,
-              schema: AnchoredTo,
-              source: thread,
-              target: subject,
-              fields: { anchor },
-            }),
             createIntent(ThreadAction.Select, { current: fullyQualifiedId(thread) }),
             createIntent(DeckAction.ChangeCompanion, {
               primary: subjectId,
@@ -228,7 +195,7 @@ export default (context: PluginContext) =>
         const space = getSpace(subject);
         invariant(space, 'Space not found');
 
-        const message = Obj.make(DataType.Message, {
+        const message = Obj.make(DataType.Message.Message, {
           created: new Date().toISOString(),
           sender,
           blocks: [{ _tag: 'text', text }],
@@ -248,7 +215,7 @@ export default (context: PluginContext) =>
           intents.push(
             createIntent(SpaceAction.AddRelation, {
               space,
-              schema: AnchoredTo,
+              schema: DataType.AnchoredTo.AnchoredTo,
               source: thread,
               target: subject,
               fields: { anchor: draft.anchor },

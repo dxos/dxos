@@ -12,8 +12,8 @@ import { type DataType } from '@dxos/schema';
 import { meta } from '../meta';
 
 export type RelatedContactsProps = {
-  contacts: DataType.Person[];
-  onContactClick?: (contact: DataType.Person) => void;
+  contacts: DataType.Person.Person[];
+  onContactClick?: (contact: DataType.Person.Person) => void;
 };
 
 export const RelatedContacts = ({ contacts, onContactClick }: RelatedContactsProps) => {
@@ -46,8 +46,8 @@ export const RelatedContacts = ({ contacts, onContactClick }: RelatedContactsPro
 };
 
 export type RelatedMessagesProps = {
-  messages: DataType.Message[];
-  onMessageClick?: (message: DataType.Message) => void;
+  messages: DataType.Message.Message[];
+  onMessageClick?: (message: DataType.Message.Message) => void;
 };
 
 export const RelatedMessages = ({ messages, onMessageClick }: RelatedMessagesProps) => {

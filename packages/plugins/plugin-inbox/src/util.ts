@@ -21,7 +21,7 @@ export const hashString = (str?: string): number => {
 // TODO(burdon): Factor out sort pattern with getters.
 export const sortByCreated =
   (descending = false) =>
-  ({ created: a }: Obj.Obj<DataType.Message>, { created: b }: Obj.Obj<DataType.Message>) =>
+  ({ created: a }: Obj.Obj<DataType.Message.Message>, { created: b }: Obj.Obj<DataType.Message.Message>) =>
     descending ? b.localeCompare(a) : a.localeCompare(b);
 
 export const formatDateTime = (date: Date, now: Date, compact = false) =>
@@ -45,7 +45,11 @@ type MessageProps = {
   hue: string;
 };
 
-export const getMessageProps = (message: DataType.Message, now: Date = new Date(), compact = false): MessageProps => {
+export const getMessageProps = (
+  message: DataType.Message.Message,
+  now: Date = new Date(),
+  compact = false,
+): MessageProps => {
   const id = message.id;
   // Always use the first text block for display in the mailbox list.
   const textBlocks = message.blocks.filter((block) => 'text' in block);

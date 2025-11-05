@@ -11,7 +11,7 @@ import { Filter, Obj, Query, Relation } from '@dxos/echo';
 import { type Markdown } from '@dxos/plugin-markdown/types';
 import { createDocAccessor, fullyQualifiedId, getSource, getSpace, getTextInRange } from '@dxos/react-client/echo';
 import { comments, createExternalCommentSync } from '@dxos/react-ui-editor';
-import { AnchoredTo } from '@dxos/schema';
+import { DataType } from '@dxos/schema';
 
 import { Thread, ThreadAction, type ThreadState } from '../types';
 
@@ -34,7 +34,7 @@ export const threads = (state: ThreadState, doc?: Markdown.Document, dispatch?: 
     return [comments()];
   }
 
-  const query = space.db.query(Query.select(Filter.ids(doc.id)).targetOf(AnchoredTo));
+  const query = space.db.query(Query.select(Filter.ids(doc.id)).targetOf(DataType.AnchoredTo.AnchoredTo));
   const unsubscribe = query.subscribe();
 
   const anchors = computed(() =>
@@ -75,14 +75,23 @@ export const threads = (state: ThreadState, doc?: Markdown.Document, dispatch?: 
       () =>
         anchors.value
           .filter((anchor) => anchor.anchor)
-          .map((anchor) => ({ id: fullyQualifiedId(Relation.getSource(anchor)), cursor: anchor.anchor })),
+          .map((anchor) => ({
+            id: fullyQualifiedId(Relation.getSource(anchor)),
+            cursor: anchor.anchor,
+          })),
     ),
 
     comments({
       id: fullyQualifiedId(doc),
       onCreate: ({ cursor }) => {
         const name = getName(doc, cursor);
-        void dispatch(createIntent(ThreadAction.Create, { anchor: cursor, name, subject: doc }));
+        void dispatch(
+          createIntent(ThreadAction.Create, {
+            anchor: cursor,
+            name,
+            subject: doc,
+          }),
+        );
       },
       onDelete: ({ id }) => {
         const draft = state.drafts[fullyQualifiedId(doc)];

@@ -53,7 +53,7 @@ export const Automerge: Story = {
         // Basic extensions.
         createBasicExtensions(),
         createThemeExtensions({ themeMode }),
-        automerge(createDocAccessor(createObject(DataType.makeText(value)), ['content'])),
+        automerge(createDocAccessor(createObject(DataType.Text.make(value)), ['content'])),
       ],
       [],
     );

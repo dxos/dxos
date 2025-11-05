@@ -49,13 +49,13 @@ export namespace TableAction {
       CreateTableSchema,
     ),
     output: Schema.Struct({
-      object: DataType.View,
+      object: DataType.View.View,
     }),
   }) {}
 
   export class AddRow extends Schema.TaggedClass<AddRow>()(`${TABLE_ACTION}/add-row`, {
     input: Schema.Struct({
-      view: DataType.View,
+      view: DataType.View.View,
       data: Schema.Any,
     }),
     output: Schema.Void,

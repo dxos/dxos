@@ -15,7 +15,7 @@ describe('diff', () => {
   it('should apply diffs', async () => {
     const builder = new EchoTestBuilder();
     const { db, graph } = await builder.createDatabase();
-    graph.schemaRegistry.addSchema([DataType.Text]);
+    graph.schemaRegistry.addSchema([DataType.Text.Text]);
 
     const document = trim`
       # Hello World
@@ -24,7 +24,7 @@ describe('diff', () => {
       But not this one.
     `;
 
-    const text = db.add(DataType.makeText(document));
+    const text = db.add(DataType.Text.make(document));
     const accessor = createDocAccessor(text, ['content']);
     const result = applyDiffs(accessor, [
       `- There'z a typo in this sentence.`,

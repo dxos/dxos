@@ -2,7 +2,6 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Toolkit from '@effect/ai/Toolkit';
 import * as BrowserKeyValueStore from '@effect/platform-browser/BrowserKeyValueStore';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
@@ -10,7 +9,7 @@ import * as ManagedRuntime from 'effect/ManagedRuntime';
 import * as Array from 'effect/Array';
 
 import { Capabilities, type PluginContext, contributes } from '@dxos/app-framework';
-import { makeToolExecutionServiceFromFunctions, makeToolResolverFromFunctions } from '@dxos/assistant';
+import { GenericToolkit, makeToolExecutionServiceFromFunctions, makeToolResolverFromFunctions } from '@dxos/assistant';
 import { Resource } from '@dxos/context';
 import { Query, Ref } from '@dxos/echo';
 import {
@@ -72,11 +71,11 @@ class ComputeRuntimeProviderImpl extends Resource implements AutomationCapabilit
 
         // TODO(dmaretskyi): Make these reactive.
         const toolkits = this.#context.getCapabilities(Capabilities.Toolkit);
-        const handlers = this.#context.getCapabilities(Capabilities.ToolkitHandler);
         const allFunctions = this.#context.getCapabilities(Capabilities.Functions).flat();
 
-        const toolkit = Toolkit.merge(...toolkits);
-        const toolkitLayer = Layer.mergeAll(Layer.empty, ...handlers);
+        const mergedToolkit = GenericToolkit.merge(...toolkits);
+        const toolkit = mergedToolkit.toolkit;
+        const toolkitLayer = mergedToolkit.layer;
 
         const space = client.spaces.get(spaceId);
         invariant(space);

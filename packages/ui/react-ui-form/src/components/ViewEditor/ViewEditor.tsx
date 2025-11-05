@@ -36,7 +36,7 @@ const listItemGrid = 'grid grid-cols-subgrid col-span-5';
 export type ViewEditorProps = ThemedClassName<
   {
     schema: Schema.Schema.AnyNoContext;
-    view: DataType.View;
+    view: DataType.View.View;
     mode?: 'schema' | 'query';
     registry?: SchemaRegistry;
     readonly?: boolean;

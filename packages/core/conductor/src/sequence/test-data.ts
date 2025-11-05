@@ -6,8 +6,8 @@ import { Obj } from '@dxos/echo';
 import { DataType } from '@dxos/schema';
 
 // TODO(burdon): Convert to queue.
-export const TEST_EMAILS: DataType.Message[] = [
-  Obj.make(DataType.Message, {
+export const TEST_EMAILS: DataType.Message.Message[] = [
+  Obj.make(DataType.Message.Message, {
     created: new Date().toISOString(),
     sender: {
       email: 'alice@example.com',
@@ -22,7 +22,7 @@ export const TEST_EMAILS: DataType.Message[] = [
       },
     ],
   }),
-  Obj.make(DataType.Message, {
+  Obj.make(DataType.Message.Message, {
     created: new Date().toISOString(),
     sender: {
       email: 'bob@example.com',
@@ -37,7 +37,7 @@ export const TEST_EMAILS: DataType.Message[] = [
       },
     ],
   }),
-  Obj.make(DataType.Message, {
+  Obj.make(DataType.Message.Message, {
     created: new Date().toISOString(),
     sender: {
       email: 'spammer123@sketchy.com',

@@ -16,7 +16,7 @@ export const Document = Schema.Struct({
   name: Schema.optional(Schema.String),
   description: Schema.optional(Schema.String),
   fallbackName: Schema.String.pipe(FormAnnotation.set(false), Schema.optional),
-  content: Type.Ref(DataType.Text).pipe(FormAnnotation.set(false)),
+  content: Type.Ref(DataType.Text.Text).pipe(FormAnnotation.set(false)),
 }).pipe(
   Type.Obj({
     typename: 'dxos.org/type/Document',
@@ -36,7 +36,7 @@ export const makeDocument = ({
   content = '',
   ...props
 }: Partial<{ name: string; fallbackName: string; content: string }> = {}) =>
-  Obj.make(Document, { ...props, content: Ref.make(DataType.makeText(content)) });
+  Obj.make(Document, { ...props, content: Ref.make(DataType.Text.make(content)) });
 
 /**
  * Plugin settings.

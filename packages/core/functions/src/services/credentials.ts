@@ -11,9 +11,8 @@ import * as Layer from 'effect/Layer';
 import * as Redacted from 'effect/Redacted';
 
 import { Query } from '@dxos/echo';
+import { DatabaseService } from '@dxos/echo-db';
 import { DataType } from '@dxos/schema';
-
-import { DatabaseService } from './database';
 
 export type CredentialQuery = {
   service?: string;
@@ -84,7 +83,9 @@ export class CredentialsService extends Context.Tag('@dxos/functions/Credentials
       Effect.gen(function* () {
         const dbService = yield* DatabaseService;
         const queryCredentials = async (query: CredentialQuery): Promise<ServiceCredential[]> => {
-          const { objects: accessTokens } = await dbService.db.query(Query.type(DataType.AccessToken)).run();
+          const { objects: accessTokens } = await dbService.db
+            .query(Query.type(DataType.AccessToken.AccessToken))
+            .run();
           return accessTokens
             .filter((accessToken) => accessToken.source === query.service)
             .map((accessToken) => ({

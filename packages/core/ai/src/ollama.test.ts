@@ -29,9 +29,9 @@ describe('ollama', () => {
     'streaming',
     Effect.fn(
       function* (_) {
-        const history: DataType.Message[] = [];
+        const history: DataType.Message.Message[] = [];
         history.push(
-          Obj.make(DataType.Message, {
+          Obj.make(DataType.Message.Message, {
             created: new Date().toISOString(),
             sender: { role: 'user' },
             blocks: [{ _tag: 'text', text: 'What is 2 + 2?' }],
@@ -45,7 +45,7 @@ describe('ollama', () => {
           prompt,
           disableToolCallResolution: true,
         }).pipe(parseResponse(), Stream.runCollect, Effect.map(Chunk.toArray));
-        const message = Obj.make(DataType.Message, {
+        const message = Obj.make(DataType.Message.Message, {
           created: new Date().toISOString(),
           sender: { role: 'assistant' },
           blocks,
@@ -71,7 +71,7 @@ describe('ollama', () => {
       function* (_) {
         yield* processMessages({
           messages: [
-            Obj.make(DataType.Message, {
+            Obj.make(DataType.Message.Message, {
               created: new Date().toISOString(),
               sender: { role: 'user' },
               blocks: [{ _tag: 'text', text: 'What is 2 + 2?' }],

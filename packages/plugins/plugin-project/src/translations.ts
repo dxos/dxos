@@ -10,7 +10,7 @@ import { meta } from './meta';
 export const translations = [
   {
     'en-US': {
-      [DataType.Project.typename]: {
+      [DataType.Project.Project.typename]: {
         'typename label': 'Project',
         'typename label_zero': 'Projects',
         'typename label_one': 'Project',

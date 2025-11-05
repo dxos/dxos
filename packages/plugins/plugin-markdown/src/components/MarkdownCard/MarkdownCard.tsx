@@ -17,7 +17,7 @@ import { meta } from '../../meta';
 import { Markdown } from '../../types';
 import { getContentSnippet, getFallbackName } from '../../util';
 
-export type MarkdownCardProps = PreviewProps<Markdown.Document | DataType.Text>;
+export type MarkdownCardProps = PreviewProps<Markdown.Document | DataType.Text.Text>;
 
 export const MarkdownCard = ({ subject, role }: MarkdownCardProps) => {
   const { dispatchPromise: dispatch } = useIntentDispatcher();
@@ -61,25 +61,25 @@ export const MarkdownCard = ({ subject, role }: MarkdownCardProps) => {
   );
 };
 
-const getInfo = (subject: Markdown.Document | DataType.Text) => {
+const getInfo = (subject: Markdown.Document | DataType.Text.Text) => {
   const text = (Obj.instanceOf(Markdown.Document, subject) ? subject.content?.target?.content : subject.content) ?? '';
   return { words: text.split(' ').length };
 };
 
 // TODO(burdon): Factor out.
-const getTitle = (subject: Markdown.Document | DataType.Text, fallback: string) => {
+const getTitle = (subject: Markdown.Document | DataType.Text.Text, fallback: string) => {
   if (Obj.instanceOf(Markdown.Document, subject)) {
     return subject.name ?? subject.fallbackName ?? getFallbackName(subject.content?.target?.content ?? fallback);
-  } else if (Obj.instanceOf(DataType.Text, subject)) {
+  } else if (Obj.instanceOf(DataType.Text.Text, subject)) {
     return getFallbackName(subject.content);
   }
 };
 
 // TODO(burdon): Factor out.
-const getSnippet = (subject: Markdown.Document | DataType.Text, fallback: string) => {
+const getSnippet = (subject: Markdown.Document | DataType.Text.Text, fallback: string) => {
   if (Obj.instanceOf(Markdown.Document, subject)) {
     return Obj.getDescription(subject) || getContentSnippet(subject.content?.target?.content ?? fallback);
-  } else if (Obj.instanceOf(DataType.Text, subject)) {
+  } else if (Obj.instanceOf(DataType.Text.Text, subject)) {
     return getContentSnippet(subject.content ?? fallback);
   }
 };

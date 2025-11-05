@@ -9,9 +9,9 @@ import { attentionSurface, ghostHover, groupBorder, mx } from '@dxos/react-ui-th
 import { type DataType } from '@dxos/schema';
 
 export type EventListProps = {
-  events?: DataType.Event[];
+  events?: DataType.Event.Event[];
   selected?: string;
-  onSelect?: (contact: DataType.Event) => void;
+  onSelect?: (contact: DataType.Event.Event) => void;
 };
 
 export const EventList = ({ events = [], selected, onSelect }: EventListProps) => {

@@ -7,3 +7,4 @@
 - use `gh pr create` to create a pull request.
 - use "Conventional Commits" for PR titles.
 - ask for confirmation to ensure all work is complete and if so check that all packages build and pass linting and fix any problems that come up.
+- use single quotes for strings in Typescript.

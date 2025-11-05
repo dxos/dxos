@@ -25,7 +25,7 @@ const blueprint: Blueprint.Blueprint = Obj.make(Blueprint.Blueprint, {
   name: 'Design Spec',
   description: 'Preserve the conversation in the design spec.',
   instructions: {
-    source: Ref.make(DataType.makeText(instructions)),
+    source: Ref.make(DataType.Text.make(instructions)),
   },
   tools: [Document.read, Document.update].map((fn) => ToolId.make(fn.key)),
 });

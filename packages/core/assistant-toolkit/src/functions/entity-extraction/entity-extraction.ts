@@ -25,7 +25,7 @@ export default defineFunction({
   name: 'Entity Extraction',
   description: 'Extracts entities from emails and transcripts.',
   inputSchema: Schema.Struct({
-    source: DataType.Message.annotations({ description: 'Email or transcript to extract entities from.' }),
+    source: DataType.Message.Message.annotations({ description: 'Email or transcript to extract entities from.' }),
 
     // TODO(dmaretskyi): Consider making this an array of blueprints instead.
     instructions: Schema.optional(Schema.String).annotations({ description: 'Instructions extraction process.' }),
@@ -40,7 +40,7 @@ export default defineFunction({
   handler: Effect.fnUntraced(
     function* ({ data: { source, instructions } }) {
       const contact = yield* extractContact(source);
-      let organization: DataType.Organization | null = null;
+      let organization: DataType.Organization.Organization | null = null;
 
       if (contact && !contact.organization) {
         const created: DXN[] = [];
@@ -65,7 +65,7 @@ export default defineFunction({
         if (created.length > 1) {
           throw new Error('Multiple organizations created');
         } else if (created.length === 1) {
-          organization = yield* DatabaseService.resolve(created[0], DataType.Organization);
+          organization = yield* DatabaseService.resolve(created[0], DataType.Organization.Organization);
           Obj.getMeta(organization).tags ??= [];
           Obj.getMeta(organization).tags!.push(...(Obj.getMeta(source)?.tags ?? []));
           contact.organization = Ref.make(organization);
@@ -91,7 +91,7 @@ export default defineFunction({
   ),
 });
 
-const extractContact = Effect.fn('extractContact')(function* (message: DataType.Message) {
+const extractContact = Effect.fn('extractContact')(function* (message: DataType.Message.Message) {
   const name = message.sender.name;
   const email = message.sender.email;
   if (!email) {
@@ -99,7 +99,7 @@ const extractContact = Effect.fn('extractContact')(function* (message: DataType.
     return undefined;
   }
 
-  const existingContacts = yield* DatabaseService.query(Filter.type(DataType.Person)).run;
+  const existingContacts = yield*  DatabaseService.query(Filter.type(DataType.Person.Person)).run;
 
   // Check for existing contact
   // TODO(dmaretskyi): Query filter DSL - https://linear.app/dxos/issue/DX-541/filtercontains-should-work-with-partial-objects
@@ -112,7 +112,7 @@ const extractContact = Effect.fn('extractContact')(function* (message: DataType.
     return existingContact;
   }
 
-  const newContact = Obj.make(DataType.Person, {
+  const newContact = Obj.make(DataType.Person.Person, {
     [Obj.Meta]: {
       tags: Obj.getMeta(message)?.tags,
     },
@@ -132,7 +132,9 @@ const extractContact = Effect.fn('extractContact')(function* (message: DataType.
 
   log.info('extracted email domain', { emailDomain });
 
-  const existingOrganisations = yield* DatabaseService.query(Filter.type(DataType.Organization)).run;
+  const existingOrganisations = yield*  DatabaseService.query(
+    Filter.type(DataType.Organization.Organization),
+  ).run;
   const matchingOrg = existingOrganisations.find((org) => {
     if (org.website) {
       try {

@@ -63,7 +63,7 @@ export const MembersContainer = ({ space, createInvitationUrl }: MembersContaine
   };
 
   // TODO(wittjosiah): Track which was the most recently viewed object.
-  const target = space.properties[DataType.Collection.typename]?.target?.objects[0]?.target;
+  const target = space.properties[DataType.Collection.Collection.typename]?.target?.objects[0]?.target;
 
   const locked = space.properties[COMPOSER_SPACE_LOCK];
   const handleChangeLocked = useCallback(() => {

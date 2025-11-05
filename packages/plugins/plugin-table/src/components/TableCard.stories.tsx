@@ -45,7 +45,7 @@ const meta = {
   decorators: [
     withTheme, // TODO(burdon): Should not require space.
     withClientProvider({
-      types: [DataType.View, Table.Table],
+      types: [DataType.View.View, Table.Table],
       createIdentity: true,
       createSpace: true,
       onCreateSpace: async ({ client, space }) => {

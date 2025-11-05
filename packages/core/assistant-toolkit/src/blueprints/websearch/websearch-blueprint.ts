@@ -12,7 +12,7 @@ const blueprint: Blueprint.Blueprint = Obj.make(Blueprint.Blueprint, {
   name: 'Web Search',
   description: 'Search the web.',
   instructions: {
-    source: Ref.make(DataType.makeText('')), // No instructions required.
+    source: Ref.make(DataType.Text.make()),
   },
   tools: [ToolId.make('AnthropicWebSearch')],
 });

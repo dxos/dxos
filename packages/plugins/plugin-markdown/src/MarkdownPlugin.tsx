@@ -20,7 +20,6 @@ import {
   MarkdownSettings,
   MarkdownState,
   ReactSurface,
-  Toolkit,
 } from './capabilities';
 import { MarkdownEvents } from './events';
 import { meta } from './meta';
@@ -91,7 +90,7 @@ export const MarkdownPlugin = definePlugin(meta, () => [
   defineModule({
     id: `${meta.id}/module/schema`,
     activatesOn: ClientEvents.SetupSchema,
-    activate: () => contributes(ClientCapabilities.Schema, [DataType.Text]),
+    activate: () => contributes(ClientCapabilities.Schema, [DataType.Text.Text]),
   }),
   defineModule({
     id: `${meta.id}/module/react-surface`,
@@ -120,11 +119,5 @@ export const MarkdownPlugin = definePlugin(meta, () => [
     id: `${meta.id}/module/blueprint`,
     activatesOn: Events.SetupArtifactDefinition,
     activate: BlueprintDefinition,
-  }),
-  defineModule({
-    id: `${meta.id}/module/toolkit`,
-    // TODO(wittjosiah): Use a different event.
-    activatesOn: Events.Startup,
-    activate: Toolkit,
   }),
 ]);

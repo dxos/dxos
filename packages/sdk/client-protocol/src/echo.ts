@@ -8,8 +8,8 @@ import type { PublicKey, SpaceId } from '@dxos/keys';
 import type { Invitation, SpaceArchive } from '@dxos/protocols/proto/dxos/client/services';
 
 import type { AuthenticatingInvitation } from './invitations';
-import type { PropertiesTypeProps } from './schema';
 import type { Space } from './space';
+import type { PropertiesTypeProps } from './types';
 
 /**
  * Public database API.

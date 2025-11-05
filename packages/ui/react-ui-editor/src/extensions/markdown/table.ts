@@ -112,14 +112,18 @@ class TableWidget extends WidgetType {
     super();
   }
 
-  override eq(other: this): boolean {
+  override eq(other: this) {
     return (
       this._table.header?.join() === other._table.header?.join() &&
       this._table.rows?.join() === other._table.rows?.join()
     );
   }
 
-  override toDOM(view: EditorView): HTMLDivElement {
+  override ignoreEvent(e: Event): boolean {
+    return !/^mouse/.test(e.type);
+  }
+
+  override toDOM(_view: EditorView) {
     const div = document.createElement('div');
     const table = div.appendChild(document.createElement('table'));
 
@@ -142,9 +146,5 @@ class TableWidget extends WidgetType {
     });
 
     return div;
-  }
-
-  override ignoreEvent(e: Event): boolean {
-    return !/^mouse/.test(e.type);
   }
 }

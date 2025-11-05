@@ -24,7 +24,7 @@ import {
   definePlugin,
 } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { AiContextBinder, ArtifactId } from '@dxos/assistant';
+import { AiContextBinder, ArtifactId, GenericToolkit } from '@dxos/assistant';
 import { Agent, DesignBlueprint, Document, PlanningBlueprint, Research, Tasks } from '@dxos/assistant-toolkit';
 import { Blueprint, Prompt } from '@dxos/blueprints';
 import { type Space } from '@dxos/client/echo';
@@ -96,7 +96,7 @@ namespace TestingToolkit {
 
 type DecoratorsProps = {
   plugins?: Plugin[];
-  accessTokens?: DataType.AccessToken[];
+  accessTokens?: DataType.AccessToken.AccessToken[];
   onInit?: (props: { client: Client; space: Space }) => Promise<void>;
 } & (Omit<ClientPluginOptions, 'onClientInitialized' | 'onSpacesReady'> & Pick<StoryPluginOptions, 'onChatCreated'>);
 
@@ -124,7 +124,7 @@ export const getDecorators = ({
         types: [
           Assistant.Chat,
           Blueprint.Blueprint,
-          DataType.AccessToken,
+          DataType.AccessToken.AccessToken,
           Function.Function,
           Markdown.Document,
           Prompt.Prompt,
@@ -191,7 +191,7 @@ export const getDecorators = ({
 export const accessTokensFromEnv = (tokens: Record<string, string | undefined>) => {
   return Object.entries(tokens)
     .filter(([, token]) => !!token)
-    .map(([source, token]) => Obj.make(DataType.AccessToken, { source, token: token! }));
+    .map(([source, token]) => Obj.make(DataType.AccessToken.AccessToken, { source, token: token! }));
 };
 
 type StoryPluginOptions = {
@@ -221,8 +221,10 @@ const StoryPlugin = definePlugin<StoryPluginOptions>(
       id: 'example.com/plugin/testing/module/toolkit',
       activatesOn: Events.Startup,
       activate: (context) => [
-        contributes(Capabilities.Toolkit, TestingToolkit.Toolkit),
-        contributes(Capabilities.ToolkitHandler, TestingToolkit.createLayer(context)),
+        contributes(
+          Capabilities.Toolkit,
+          GenericToolkit.make(TestingToolkit.Toolkit, TestingToolkit.createLayer(context)),
+        ),
       ],
     }),
     defineModule({

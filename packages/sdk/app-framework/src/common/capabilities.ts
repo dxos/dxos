@@ -2,8 +2,6 @@
 // Copyright 2025 DXOS.org
 //
 
-import type * as Tool from '@effect/ai/Tool';
-import type * as Toolkit from '@effect/ai/Toolkit';
 import { type Registry } from '@effect-rx/rx-react';
 import type * as Layer from 'effect/Layer';
 import type * as Schema from 'effect/Schema';
@@ -12,11 +10,12 @@ import { type FC, type PropsWithChildren } from 'react';
 import { type AiService } from '@dxos/ai';
 import type * as AiServiceRouter from '@dxos/ai/AiServiceRouter';
 import { type BuilderExtensions, type GraphBuilder } from '@dxos/app-graph';
+import { type GenericToolkit } from '@dxos/assistant';
 import { type Blueprint } from '@dxos/blueprints';
 import { type Space } from '@dxos/client-protocol';
 import { type FunctionDefinition } from '@dxos/functions';
 import { type RootSettingsStore } from '@dxos/local-storage';
-import { type AnchoredTo } from '@dxos/schema';
+import { type DataType } from '@dxos/schema';
 
 import { type PluginManager, defineCapability } from '../core';
 import { type AnyIntentResolver, type IntentContext } from '../plugin-intent';
@@ -43,7 +42,11 @@ export namespace Capabilities {
    */
   export const RxRegistry = defineCapability<Registry.Registry>('dxos.org/app-framework/capability/rx-registry');
 
-  export type ReactContext = Readonly<{ id: string; dependsOn?: string[]; context: FC<PropsWithChildren> }>;
+  export type ReactContext = Readonly<{
+    id: string;
+    dependsOn?: string[];
+    context: FC<PropsWithChildren>;
+  }>;
 
   /**
    * @category Capability
@@ -151,25 +154,21 @@ export namespace Capabilities {
    */
   export const Settings = defineCapability<Settings>('dxos.org/app-framework/capability/settings');
 
-  export type Metadata = Readonly<{ id: string; metadata: Record<string, any> }>;
+  export type Metadata = Readonly<{
+    id: string;
+    metadata: Record<string, any>;
+  }>;
 
   /**
    * @category Capability
    */
   export const Metadata = defineCapability<Metadata>('dxos.org/app-framework/capability/metadata');
 
-  // TODO(dmaretskyi): Consider combining Toolkit and ToolkitHandler for type-safe context -- use GenericToolkit.
-
   /**
    * @category Capability
    */
-  export const Toolkit = defineCapability<Toolkit.Any>('dxos.org/app-framework/capability/ai-toolkit');
-
-  /**
-   * @category Capability
-   */
-  export const ToolkitHandler = defineCapability<Layer.Layer<Tool.Handler<any>, never, never>>(
-    'dxos.org/app-framework/capability/ai-toolkit-handler',
+  export const Toolkit = defineCapability<GenericToolkit.GenericToolkit>(
+    'dxos.org/app-framework/capability/ai-toolkit',
   );
 
   /**
@@ -205,9 +204,9 @@ export namespace Capabilities {
    */
   export const FileUploader = defineCapability<FileUploader>('dxos.org/app-framework/capability/file-uploader');
 
-  type AnchorSort = {
+  export type AnchorSort = {
     key: string;
-    sort: (anchorA: AnchoredTo, anchorB: AnchoredTo) => number;
+    sort: (anchorA: DataType.AnchoredTo.AnchoredTo, anchorB: DataType.AnchoredTo.AnchoredTo) => number;
   };
 
   /**

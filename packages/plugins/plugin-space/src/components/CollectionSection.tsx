@@ -10,7 +10,7 @@ import { type DataType } from '@dxos/schema';
 
 import { meta } from '../meta';
 
-export const CollectionSection = ({ object }: SectionComponentProps<DataType.Collection>) => {
+export const CollectionSection = ({ object }: SectionComponentProps<DataType.Collection.Collection>) => {
   const { t } = useTranslation(meta.id);
 
   // TODO(wittjosiah): Better placeholder.

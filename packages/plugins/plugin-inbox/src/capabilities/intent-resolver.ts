@@ -55,7 +55,7 @@ export default (context: PluginContext) =>
           // TODO(wittjosiah): Static to live object fails.
           //  Needs to be a live object because graph is live and the current message is included in the companion.
           const { '@type': _, ...messageWithoutType } = { ...message } as any;
-          const liveMessage = Obj.make(DataType.Message, messageWithoutType);
+          const liveMessage = Obj.make(DataType.Message.Message, messageWithoutType);
           state[mailboxId] = liveMessage;
         } else {
           delete state[mailboxId];
@@ -73,7 +73,7 @@ export default (context: PluginContext) =>
           return;
         }
 
-        const { objects: existingContacts } = await space.db.query(Filter.type(DataType.Person)).run();
+        const { objects: existingContacts } = await space.db.query(Filter.type(DataType.Person.Person)).run();
 
         // Check for existing contact
         const existingContact = existingContacts.find((contact) =>
@@ -85,7 +85,7 @@ export default (context: PluginContext) =>
           return;
         }
 
-        const newContact = Obj.make(DataType.Person, {
+        const newContact = Obj.make(DataType.Person.Person, {
           emails: [{ value: email }],
         });
 
@@ -103,7 +103,9 @@ export default (context: PluginContext) =>
 
         log.info('extracted email domain', { emailDomain });
 
-        const { objects: existingOrganisations } = await space.db.query(Filter.type(DataType.Organization)).run();
+        const { objects: existingOrganisations } = await space.db
+          .query(Filter.type(DataType.Organization.Organization))
+          .run();
         const matchingOrg = existingOrganisations.find((org) => {
           if (org.website) {
             try {
@@ -132,12 +134,12 @@ export default (context: PluginContext) =>
         }
 
         const intents: AnyIntentChain[] = [];
-        if (!space.properties.staticRecords.includes(DataType.Person.typename)) {
+        if (!space.properties.staticRecords.includes(DataType.Person.Person.typename)) {
           log.info('adding record type for contacts');
           intents.push(
             createIntent(SpaceAction.UseStaticSchema, {
               space,
-              typename: DataType.Person.typename,
+              typename: DataType.Person.Person.typename,
             }),
           );
         }

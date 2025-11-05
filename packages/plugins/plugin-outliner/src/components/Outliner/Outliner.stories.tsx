@@ -30,7 +30,7 @@ const meta = {
   }),
   decorators: [
     withTheme,
-    withClientProvider({ createIdentity: true, createSpace: true, types: [DataType.Text, OutlineType] }),
+    withClientProvider({ createIdentity: true, createSpace: true, types: [DataType.Text.Text, OutlineType] }),
   ],
   parameters: {
     layout: 'fullscreen',
@@ -44,6 +44,6 @@ type Story = StoryObj<typeof Outliner>;
 
 export const Default: Story = {
   args: {
-    text: DataType.makeText('- [x] Initial content'),
+    text: DataType.Text.make('- [x] Initial content'),
   },
 };
