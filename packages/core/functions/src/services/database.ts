@@ -30,7 +30,7 @@ import type {
   SchemaRegistryQuery,
 } from '@dxos/echo-db';
 import type { SchemaRegistryPreparedQuery } from '@dxos/echo-db';
-import { promiseWithCauseCapture } from '@dxos/effect';
+import { promiseWithCauseCapture, extendEffect } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import type { DXN } from '@dxos/keys';
 import { Rx, Registry } from '@effect-rx/rx';
@@ -165,11 +165,11 @@ export class DatabaseService extends Context.Tag('@dxos/functions/DatabaseServic
     <F extends Filter.Any>(filter: F): QueryResultEffect<Live<Filter.Type<F>>>;
   } = (queryOrFilter: Query.Any | Filter.Any) => {
     const effect = DatabaseService.pipe(
-      Effect.map(({ db }) => {
+      Effect.map(({ db }): QueryResultEx<any> => {
         const query = db.query(queryOrFilter as any);
 
         return {
-          objects: Effect.gen(function* () {
+          run: Effect.gen(function* () {
             const { objects } = yield* Effect.promise(() => query.run());
             return objects;
           }),
@@ -180,7 +180,7 @@ export class DatabaseService extends Context.Tag('@dxos/functions/DatabaseServic
             }
             return objects[0];
           }),
-          rx: Rx.make((get) => {
+          objects: Rx.make((get) => {
             get.addFinalizer(
               query.subscribe(
                 (queryResult) => {
@@ -197,14 +197,10 @@ export class DatabaseService extends Context.Tag('@dxos/functions/DatabaseServic
     );
 
     // Create a new object that has the effect as prototype, but extends it with the additional properties.
-    return Object.create(effect, {
-      objects: {
-        value: effect.pipe(Effect.flatMap((queryResult) => queryResult.objects)),
-      },
-      first: {
-        value: effect.pipe(Effect.flatMap((queryResult) => queryResult.first)),
-      },
-    });
+    return extendEffect(effect, {
+      run: effect.pipe(Effect.flatMap((_) => _.run)),
+      first: effect.pipe(Effect.flatMap((_) => _.first)),
+    }) as QueryResultEffect<any>;
   };
 
   /**
@@ -216,7 +212,7 @@ export class DatabaseService extends Context.Tag('@dxos/functions/DatabaseServic
     <F extends Filter.Any>(filter: F): Effect.Effect<OneShotQueryResult<Live<Filter.Type<F>>>, never, DatabaseService>;
   } = (queryOrFilter: Query.Any | Filter.Any) =>
     DatabaseService.query(queryOrFilter as any).pipe(
-      Effect.flatMap((queryResult) => queryResult.objects),
+      Effect.flatMap((queryResult) => queryResult.run),
       Effect.map((objects) => ({ results: [], objects })),
     );
 
@@ -238,15 +234,35 @@ export class DatabaseService extends Context.Tag('@dxos/functions/DatabaseServic
     );
 }
 
+// TODO(dmaretskyi): Rename.
 export interface QueryResultEx<T> {
-  readonly objects: Effect.Effect<T[]>;
+  /**
+   * Executes the query once and returns the results.
+   */
+  readonly run: Effect.Effect<T[]>;
+
+  /**
+   * Executes the query once and returns the first result.
+   * @throws {NoResultsError} if no results are found.
+   */
   readonly first: Effect.Effect<T, NoResultsError>;
 
-  readonly rx: Rx.Rx<T[]>;
+  /**
+   * Subscribes to the query and returns the results.
+   */
+  readonly objects: Rx.Rx<T[]>;
 }
 
 export interface QueryResultEffect<T> extends Effect.Effect<QueryResultEx<T>> {
-  readonly objects: Effect.Effect<T[], never, DatabaseService>;
+  /**
+   * Executes the query once and returns the results.
+   */
+  readonly run: Effect.Effect<T[], never, DatabaseService>;
+
+  /**
+   * Executes the query once and returns the first result.
+   * @throws {NoResultsError} if no results are found.
+   */
   readonly first: Effect.Effect<T, NoResultsError, DatabaseService>;
 }
 

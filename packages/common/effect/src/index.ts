@@ -9,3 +9,4 @@ export * from './context';
 export * from './errors';
 export * from './testing';
 export * from './resource';
+export * from './extend';
