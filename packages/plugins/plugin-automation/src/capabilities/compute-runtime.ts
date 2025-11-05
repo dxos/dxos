@@ -69,7 +69,7 @@ class ComputeRuntimeProviderImpl extends Resource implements AutomationCapabilit
         const functions = this.#context.getCapabilities(Capabilities.Functions);
         const allFunctions = functions.flat();
 
-        const mergedToolkit = GenericToolkit.merge(...(toolkits as unknown as GenericToolkit.Any[]));
+        const mergedToolkit = GenericToolkit.merge(...toolkits);
         const toolkit = mergedToolkit.toolkit;
         const toolkitLayer = mergedToolkit.layer;
 
