@@ -181,7 +181,8 @@ export class DxAvatar extends LitElement {
                 y=${sizePx / 5}
                 width=${(3 * sizePx) / 5}
                 height=${(3 * sizePx) / 5} />`
-            : svg`
+            : // NOTE: Firefox currently doesn't fully support alignment-baseline.
+              svg`
               <text
                 x="50%"
                 y="50%"
@@ -189,6 +190,7 @@ export class DxAvatar extends LitElement {
                 fill=${fg}
                 text-anchor="middle"
                 alignment-baseline="central"
+                dominant-baseline="middle"
                 font-size=${this.size === 'px' ? '200%' : this.size * fontScale}
                 mask=${`url(#${this.maskId})`}
               >
