@@ -45,6 +45,7 @@ You can reply with a block reference for objects if you have the DXN. For exampl
 
 Each suggestion must in the form of a proposed action enclosed in a <suggestion> tag.
 Example: <suggestion>Show on a map</suggestion>
+Do not use bullets when listing suggestions.
 
 ### Multiple choice questions
 
