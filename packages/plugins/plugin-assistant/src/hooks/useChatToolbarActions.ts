@@ -10,9 +10,10 @@ import { createIntent, useIntentDispatcher } from '@dxos/app-framework';
 import { Filter, Obj, Query } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { SpaceAction } from '@dxos/plugin-space/types';
-import { getSpace, useQuery } from '@dxos/react-client/echo';
+import { useQuery } from '@dxos/react-client/echo';
 import { MenuBuilder, useMenuActions } from '@dxos/react-ui-menu';
 
+import { useChatContext } from '../components';
 import { meta } from '../meta';
 import { Assistant, AssistantAction } from '../types';
 
@@ -23,7 +24,7 @@ export type ChatToolbarActionsProps = {
 
 export const useChatToolbarActions = ({ chat, companionTo }: ChatToolbarActionsProps) => {
   const { dispatch } = useIntentDispatcher();
-  const space = getSpace(chat);
+  const { space } = useChatContext('useChatToolbarActions');
   const query = companionTo
     ? Query.select(Filter.ids(companionTo.id)).targetOf(Assistant.CompanionTo).source()
     : Query.select(Filter.nothing());
