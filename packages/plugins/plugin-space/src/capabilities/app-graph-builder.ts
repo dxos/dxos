@@ -36,9 +36,8 @@ import {
 import { SpaceCapabilities } from './capabilities';
 
 export default (context: PluginContext) => {
-  // TODO(wittjosiah): Make reactive.
-  const resolve = (typename: string) =>
-    context.getCapabilities(Capabilities.Metadata).find(({ id }) => id === typename)?.metadata ?? {};
+  const resolve = (get: Rx.Context) => (typename: string) =>
+    get(context.capabilities(Capabilities.Metadata)).find(({ id }) => id === typename)?.metadata ?? {};
 
   const spacesNode = {
     id: SPACES,
@@ -222,7 +221,7 @@ export default (context: PluginContext) => {
                           navigable: state.navigableCollections,
                           personal: space === client.spaces.default,
                           namesCache: state.spaceNames,
-                          resolve,
+                          resolve: resolve(get),
                         }),
                       );
                   }),
@@ -348,7 +347,7 @@ export default (context: PluginContext) => {
                       createObjectNode({
                         space,
                         object,
-                        resolve,
+                        resolve: resolve(get),
                         navigable: state.navigableCollections,
                       }),
                     ),
@@ -384,7 +383,13 @@ export default (context: PluginContext) => {
                     Array.filter(isNonNullable),
                     Array.map(
                       (object) =>
-                        space && createObjectNode({ object, space, resolve, navigable: state.navigableCollections }),
+                        space &&
+                        createObjectNode({
+                          object,
+                          space,
+                          resolve: resolve(get),
+                          navigable: state.navigableCollections,
+                        }),
                     ),
                     Array.filter(isNonNullable),
                   ),
@@ -474,7 +479,7 @@ export default (context: PluginContext) => {
                         createObjectNode({
                           object,
                           space,
-                          resolve,
+                          resolve: resolve(get),
                           droppable: false, // Cannot rearrange query collections.
                           navigable: state.navigableCollections,
                         }),
@@ -600,7 +605,7 @@ export default (context: PluginContext) => {
                       createObjectNode({
                         object: view,
                         space,
-                        resolve,
+                        resolve: resolve(get),
                         droppable: false,
                       }),
                     ),
@@ -640,7 +645,7 @@ export default (context: PluginContext) => {
             return null;
           }
 
-          return createObjectNode({ object, space, resolve, disposition: 'hidden' });
+          return createObjectNode({ object, space, resolve: resolve(get), disposition: 'hidden' });
         });
       },
     }),
