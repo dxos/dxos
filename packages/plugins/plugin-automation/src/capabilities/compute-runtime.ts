@@ -96,12 +96,12 @@ class ComputeRuntimeProviderImpl extends Resource implements AutomationCapabilit
               FunctionInvocationService.layer.pipe(
                 Layer.provideMerge(
                   LocalFunctionExecutionService.layerLive.pipe(
+                    Layer.provideMerge(FunctionImplementationResolver.layer),
                     Layer.provideMerge(
                       StaticFunctionsProvider.toLayer({
                         functions: this.#context.capabilities(Capabilities.Functions).pipe(Rx.map(Array.flatten)),
                       }),
                     ),
-                    Layer.provideMerge(FunctionImplementationResolver.layerTest({ functions: allFunctions })),
                     Layer.provideMerge(
                       RemoteFunctionExecutionService.fromClient(
                         client.edge.baseUrl,

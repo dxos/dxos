@@ -83,6 +83,8 @@ export const make = <Tools extends Record<string, Tool.Any>, E, R>(
   };
 };
 
+export const empty: GenericToolkit = make(Toolkit.empty, Layer.empty);
+
 /**
  * Merges multiple portable toolkits into a single portable toolkit.
  */

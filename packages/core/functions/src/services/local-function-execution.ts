@@ -21,6 +21,8 @@ import { QueueService } from './queues';
 import { RemoteFunctionExecutionService } from './remote-function-execution-service';
 import { type Services } from './service-container';
 import { type TracingService } from './tracing';
+import { Rx, Registry } from '@effect-rx/rx';
+import { StaticFunctionsProvider } from './function-registry-service';
 
 /**
  * Services that are provided at the function call site.
@@ -140,6 +142,27 @@ export class FunctionImplementationResolver extends Context.Tag('@dxos/functions
     ): Effect.Effect<FunctionDefinition<I, O>, FunctionNotFoundError>;
   }
 >() {
+  static layer = Layer.effect(
+    FunctionImplementationResolver,
+    Effect.gen(function* () {
+      const staticFunctionsProvider = yield* StaticFunctionsProvider;
+      const registry = yield* Registry.RxRegistry;
+
+      return {
+        resolveFunctionImplementation: Effect.fn('FunctionImplementationResolver.resolveFunctionImplementation')(
+          function* (functionDef) {
+            const functions = registry.get(staticFunctionsProvider.functions);
+            const resolved = functions.find((f) => f.key === functionDef.key);
+            if (!resolved) {
+              return yield* Effect.fail(new FunctionNotFoundError(functionDef.name));
+            }
+            return resolved;
+          },
+        ),
+      };
+    }),
+  );
+
   static layerTest = ({ functions }: { functions: readonly FunctionDefinition<any, any>[] }) =>
     Layer.succeed(FunctionImplementationResolver, {
       resolveFunctionImplementation: <I, O>(functionDef: FunctionDefinition<I, O>) => {
