@@ -73,7 +73,7 @@ export class FunctionRegistryService extends Context.Tag('@dxos/functions/Functi
             const dbQuery = yield* DatabaseService.query(Query.type(Function));
             return {
               results: Effect.gen(function* () {
-                const dbFunctions = yield* DatabaseService.query(Query.type(Function)).objects;
+                const dbFunctions = yield* DatabaseService.query(Query.type(Function)).run;
 
                 return Array.unionWith(
                   dbFunctions.map(FunctionDefinition.deserialize),
@@ -84,7 +84,7 @@ export class FunctionRegistryService extends Context.Tag('@dxos/functions/Functi
               rx: Rx.make((get) => {
                 return Array.unionWith(
                   get(staticFunctionsProvider.functions),
-                  get(dbQuery.rx).map(FunctionDefinition.deserialize),
+                  get(dbQuery.objects).map(FunctionDefinition.deserialize),
                   (a, b) => a.key === b.key,
                 );
               }),
