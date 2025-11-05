@@ -33,10 +33,10 @@ const paragraphBlockPlugin = ViewPlugin.fromClass(
         // Add line decorations for each line in the block.
         for (let lineNum = fromLine; lineNum <= toLine; lineNum++) {
           const line = state.doc.line(lineNum);
+          const isSingle = fromLine === toLine;
           const isFirst = lineNum === fromLine;
           const isLast = lineNum === toLine;
-          const isSingle = fromLine === toLine;
-          const isMiddle = !isFirst && !isFirst && !isLast;
+          const isMiddle = !isSingle && !isFirst && !isLast;
 
           builder.add(
             line.from,
