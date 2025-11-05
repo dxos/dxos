@@ -49,7 +49,7 @@ const xmlDecoratorPlugin = ViewPlugin.fromClass(
               node.name === 'SelfClosingTag' ||
               node.name === 'Element'
             ) {
-              builder.add(node.from, node.to, Decoration.mark({ class: 'font-mono' }));
+              builder.add(node.from, node.to, Decoration.mark({ class: 'font-mono text-subdued' }));
             }
           },
         });

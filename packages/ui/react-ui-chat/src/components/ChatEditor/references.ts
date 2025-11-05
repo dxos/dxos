@@ -158,18 +158,18 @@ class ReferenceWidget extends WidgetType {
     super();
   }
 
-  override toDOM(): HTMLSpanElement {
+  override ignoreEvent() {
+    return true;
+  }
+
+  override eq(other: this) {
+    return this.data.uri === other.data.uri;
+  }
+
+  override toDOM() {
     const span = document.createElement('span');
     span.textContent = `@${this.data.label}`;
     span.className = 'cm-reference-pill';
     return span;
-  }
-
-  override eq(other: ReferenceWidget): boolean {
-    return other.data.uri === this.data.uri;
-  }
-
-  override ignoreEvent(): boolean {
-    return true;
   }
 }

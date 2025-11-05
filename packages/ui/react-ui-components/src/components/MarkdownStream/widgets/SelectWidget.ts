@@ -14,8 +14,8 @@ export class SelectWidget extends WidgetType {
     super();
   }
 
-  override eq(other: WidgetType) {
-    return other instanceof SelectWidget && JSON.stringify(other.options) === JSON.stringify(this.options);
+  override eq(other: this) {
+    return JSON.stringify(this.options) === JSON.stringify(other.options);
   }
 
   /**
