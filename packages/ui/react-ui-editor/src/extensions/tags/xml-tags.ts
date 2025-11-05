@@ -155,7 +155,7 @@ const widgetStateMapStateField = StateField.define<XmlWidgetStateMap>({
 
 export type XmlTagsOptions = {
   /** Tag registry. */
-  registry: XmlWidgetRegistry;
+  registry?: XmlWidgetRegistry;
 
   /** Called when widgets are mounted or unmounted. */
   setWidgets?: (widgets: XmlWidgetState[]) => void;
@@ -343,7 +343,7 @@ const createWidgetUpdatePlugin = (
  * Builds and maintains decorations for XML widgets.
  * Must be a StateField because block decorations cannot be provided via ViewPlugin.
  */
-const createWidgetDecorationsField = (registry: XmlWidgetRegistry, notifier: XmlWidgetNotifier) =>
+const createWidgetDecorationsField = (registry: XmlWidgetRegistry = {}, notifier: XmlWidgetNotifier) =>
   StateField.define<WidgetDecorationSet>({
     create: (state) => {
       return buildDecorations(state, { from: 0, to: state.doc.length }, registry, notifier);

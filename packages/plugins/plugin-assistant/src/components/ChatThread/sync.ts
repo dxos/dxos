@@ -13,7 +13,7 @@ import ContentBlock = DataType.ContentBlock;
 /**
  * Update document.
  */
-export type TextModel = Pick<MarkdownStreamController, 'reset' | 'append' | 'updateWidget'>;
+export type TextModel = Pick<MarkdownStreamController, 'view' | 'reset' | 'append' | 'updateWidget'>;
 
 /**
  * Thread context passed to renderer.
@@ -71,17 +71,46 @@ export class MessageSyncer {
     void this._model.reset('');
   }
 
-  sync(messages: DataType.Message.Message[]) {
+  /**
+   * Syncs messages with the editor.
+   */
+  append(messages: DataType.Message.Message[], flush = false): boolean {
+    // Check if new set of messages.
+    if (this._initialMessageId !== messages[0]?.id) {
+      this.reset();
+      this._initialMessageId = messages[0]?.id;
+    }
+
+    if (flush && this._model.view?.state.doc.length === 0) {
+      const buffer: string[] = [];
+      this.process(messages, (content) => {
+        buffer.push(content);
+      });
+
+      const content = buffer.join('');
+      this._model.view?.dispatch({
+        changes: [{ from: 0, to: this._model.view?.state.doc.length ?? 0, insert: content }],
+        selection: { anchor: content.length },
+      });
+
+      return true;
+    } else {
+      this.process(messages, (content) => {
+        void this._model.append(content);
+      });
+
+      return false;
+    }
+  }
+
+  private process(messages: DataType.Message.Message[], append: (content: string) => void) {
     log('sync', {
+      doc: this._model.view?.state.doc.length,
       messages: messages.map((message) => message.blocks.length),
       currentMessageIndex: this._currentMessageIndex,
       currentBlockIndex: this._currentBlockIndex,
       currentBlockContent: this._currentBlockContent,
     });
-    if (this._initialMessageId !== messages[0]?.id) {
-      this.reset();
-      this._initialMessageId = messages[0]?.id;
-    }
 
     let i = this._currentMessageIndex;
     for (const message of messages.slice(this._currentMessageIndex)) {
@@ -102,9 +131,9 @@ export class MessageSyncer {
             content = currentBlockContent;
           }
 
-          void this._model.append(content);
-          this._currentBlockContent = currentBlockContent;
           log('append', { message: i, block: j, content });
+          this._currentBlockContent = currentBlockContent;
+          append(content);
         }
 
         if (block.pending) {

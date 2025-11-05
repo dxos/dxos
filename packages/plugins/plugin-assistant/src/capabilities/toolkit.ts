@@ -8,11 +8,10 @@ import { Capabilities, type Capability, type PluginContext, contributes } from '
 import { GenericToolkit } from '@dxos/assistant';
 import { AssistantToolkit, SystemToolkit, WebSearchToolkit } from '@dxos/assistant-toolkit';
 
-export default (context: PluginContext): Capability<any>[] => [
+export default (_context: PluginContext): Capability<any>[] => [
   contributes(Capabilities.Toolkit, GenericToolkit.make(AssistantToolkit.AssistantToolkit, AssistantToolkit.layer())),
 
-  // TODO(burdon): How to manage dependencies?
+  // TODO(burdon): How to manage dependencies across blueprints.
   contributes(Capabilities.Toolkit, GenericToolkit.make(SystemToolkit.SystemToolkit, SystemToolkit.layer())),
-
   contributes(Capabilities.Toolkit, GenericToolkit.make(WebSearchToolkit, Layer.empty)),
 ];

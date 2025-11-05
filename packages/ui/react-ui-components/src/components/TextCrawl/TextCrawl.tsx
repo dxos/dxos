@@ -145,10 +145,10 @@ export const TextCrawl = ({
 // Ribbon
 //
 
-const sizeClassNames: Record<Size, { height: number; className: string }> = {
-  sm: { height: 20, className: 'h-[20px] text-sm' },
-  md: { height: 24, className: 'h-[24px]' },
-  lg: { height: 28, className: 'h-[28px] text-lg' },
+const sizeClassNames: Record<Size, { lineHeight: number; className: string }> = {
+  sm: { lineHeight: 20, className: 'h-[20px] text-sm' },
+  md: { lineHeight: 24, className: 'h-[24px]' },
+  lg: { lineHeight: 28, className: 'h-[28px] text-lg' },
 };
 
 export interface TextRibbonController {
@@ -177,27 +177,21 @@ export const TextRibbon = forwardRef<TextRibbonController, TextRibbonProps>(
     }: TextRibbonProps,
     forwardedRef: React.Ref<TextRibbonController>,
   ) => {
-    const { className, height } = sizeClassNames[size];
+    const { className, lineHeight } = sizeClassNames[size];
     const containerRef = useRef<HTMLDivElement>(null);
 
     const setPosition = useCallback<TextRibbonController['setPosition']>(
       (index, animate = false) => {
         if (containerRef.current) {
           containerRef.current.style.transition = animate ? `transform ${transition}ms ease-in-out` : 'transform 0ms';
-          containerRef.current.style.transform = `translateY(-${index * height}px)`;
+          containerRef.current.style.transform = `translateY(-${index * lineHeight}px)`;
         }
       },
-      [height, transition],
+      [lineHeight, transition],
     );
 
     // Controller.
-    useImperativeHandle(
-      forwardedRef,
-      () => ({
-        setPosition,
-      }),
-      [setPosition],
-    );
+    useImperativeHandle(forwardedRef, () => ({ setPosition }), [setPosition]);
 
     return (
       <div role='none' className={mx('relative overflow-hidden', classNames, className)}>

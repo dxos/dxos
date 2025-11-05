@@ -139,6 +139,10 @@ const blockToMarkdownImpl = (
       }
       break;
     }
+    case 'reference': {
+      const dxn = block.reference.dxn;
+      return `<reference ref="${dxn.toString()}">${context.getObjectLabel(dxn)}</reference>`;
+    }
     case 'suggestion': {
       if (block.pending) {
         return;
@@ -151,14 +155,6 @@ const blockToMarkdownImpl = (
       }
       return `<select>${block.options.map((option) => `<option>${option}</option>`).join('')}</select>`;
     }
-    case 'reference': {
-      const dxn = block.reference.dxn;
-      return `<reference ref="${dxn.toString()}">${context.getObjectLabel(dxn)}</reference>`;
-    }
-    // TODO(burdon): Implement.
-    // case 'toolkit': {
-    //   return `<toolkit />`;
-    // }
     case 'toolCall': {
       context.updateWidget<{ blocks: DataType.ContentBlock.Any[] }>(block.toolCallId, {
         blocks: [block],
@@ -174,8 +170,8 @@ const blockToMarkdownImpl = (
     case 'summary': {
       return `<summary>${DataType.ContentBlock.createSummaryMessage(block)}</summary>`;
     }
-    // TODO(burdon): Need stable ID.
     default: {
+      // TODO(burdon): Needs stable ID.
       return `<json id="${message.id}">\n${JSON.stringify(block)}\n</json>`;
     }
   }

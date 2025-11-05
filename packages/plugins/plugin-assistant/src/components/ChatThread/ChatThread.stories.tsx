@@ -6,33 +6,38 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
 import * as Fiber from 'effect/Fiber';
 import * as Layer from 'effect/Layer';
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { type CSSProperties, useEffect, useMemo, useState } from 'react';
 
 import { ContextQueueService, DatabaseService } from '@dxos/functions';
 import { faker } from '@dxos/random';
 import { useQueue, useSpace } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { Popover } from '@dxos/react-ui';
-import { withTheme } from '@dxos/react-ui/testing';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import { MarkdownStream } from '@dxos/react-ui-components';
 import { PreviewPopoverProvider, usePreviewPopover } from '@dxos/react-ui-editor/testing';
 import { Card } from '@dxos/react-ui-stack';
 import { DataType } from '@dxos/schema';
+import { render } from '@dxos/storybook-utils';
 
 import { createMessageGenerator } from '../../testing';
 import { translations } from '../../translations';
 
-import { ChatThread, type ChatThreadController, type ChatThreadProps } from './ChatThread';
+import { ChatThread, type ChatThreadProps } from './ChatThread';
+import { componentRegistry } from './registry';
+import TEXT from './testing/thread.md?raw';
 
 faker.seed(1);
 
 type MessageGenerator = Effect.Effect<void, never, DatabaseService | ContextQueueService>;
 
-type StoryProps = ChatThreadProps & { generator?: MessageGenerator[]; delay?: number };
+type StoryProps = { generator?: MessageGenerator[]; delay?: number; wait?: boolean } & ChatThreadProps;
 
-const DefaultStory = ({ generator = [], delay = 0, ...props }: StoryProps) => {
+const DefaultStory = ({ generator = [], delay = 0, wait, ...props }: StoryProps) => {
   const space = useSpace();
   const queueDxn = useMemo(() => space?.queues.create().dxn, [space]);
   const queue = useQueue<DataType.Message.Message>(queueDxn);
+  const [done, setDone] = useState(false);
 
   // Generate messages.
   useEffect(() => {
@@ -48,6 +53,7 @@ const DefaultStory = ({ generator = [], delay = 0, ...props }: StoryProps) => {
             yield* Effect.sleep(delay);
           }
         }
+        setDone(true);
       }).pipe(Effect.provide(Layer.mergeAll(DatabaseService.layer(space.db), ContextQueueService.layer(queue)))),
     );
 
@@ -56,26 +62,18 @@ const DefaultStory = ({ generator = [], delay = 0, ...props }: StoryProps) => {
     };
   }, [space, queue, generator]);
 
-  // Set context.
-  const [controller, setController] = useState<ChatThreadController | null>(null);
-  useEffect(() => {
-    // controller?.setContext({ timestamp: Date.now() });
-  }, [controller]);
+  if (wait && !done) {
+    return null;
+  }
 
-  // TODO(burdon): Elsewhere PreviewProvider is implemented via the plugin-preview.
   return (
-    <PreviewPopoverProvider
-      onLookup={async ({ label, ref }) => {
-        return { label, text: ref };
-      }}
-    >
-      <ChatThread {...props} messages={queue?.objects ?? []} ref={setController} />
+    <PreviewPopoverProvider onLookup={async ({ label, ref }) => ({ label, text: ref })}>
+      <ChatThread {...props} messages={queue?.objects} />
       <PreviewCard />
     </PreviewPopoverProvider>
   );
 };
 
-// TODO(burdon): Provide renderer for preview extension.
 const PreviewCard = () => {
   const { target } = usePreviewPopover('PreviewCard');
 
@@ -97,9 +95,10 @@ const PreviewCard = () => {
 const meta = {
   title: 'plugins/plugin-assistant/ChatThread',
   component: ChatThread,
-  render: DefaultStory,
+  render: render(DefaultStory),
   decorators: [
     withTheme,
+    withLayout({ container: 'column' }),
     withClientProvider({
       createIdentity: true,
       createSpace: true,
@@ -110,23 +109,40 @@ const meta = {
     layout: 'fullscreen',
     translations,
   },
-} satisfies Meta<typeof ChatThread>;
+} satisfies Meta<StoryProps>;
 
 export default meta;
 
-type Story = StoryObj<typeof meta>;
+type Story = StoryObj<StoryProps>;
 
 export const Default: Story = {
   args: {
     generator: createMessageGenerator(),
+    wait: true,
   },
 };
 
 export const Delayed: Story = {
   args: {
     generator: createMessageGenerator(),
-    delay: 3_000,
+    delay: 1_000,
     fadeIn: true,
     cursor: false,
   },
+};
+
+export const Raw: Story = {
+  render: () => (
+    <div className='contents' style={{ '--user-fill': 'var(--dx-amberFill)' } as CSSProperties}>
+      <MarkdownStream content={TEXT} />
+    </div>
+  ),
+};
+
+export const Static: Story = {
+  render: () => (
+    <div className='contents' style={{ '--user-fill': 'var(--dx-amberFill)' } as CSSProperties}>
+      <MarkdownStream content={TEXT} registry={componentRegistry} />
+    </div>
+  ),
 };
