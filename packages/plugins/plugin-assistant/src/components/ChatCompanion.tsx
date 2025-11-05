@@ -30,17 +30,17 @@ export const ChatCompanion = ({ role, data }: ChatCompanionProps) => {
   const companionTo = data.companionTo;
   const space = getSpace(companionTo);
   const chat = data.subject === 'assistant-chat' ? undefined : data.subject;
-  const blueprintRegistry = useBlueprintRegistry();
   const binder = useContextBinder(chat);
+  const blueprintRegistry = useBlueprintRegistry();
   const { dispatch } = useIntentDispatcher();
+  console.log(chat, data.subject);
 
   // Initialize companion chat if it doesn't exist.
   useAsyncEffect(async () => {
-    if (chat || !space) {
+    if (!space || chat) {
       return;
     }
 
-    // TODO(burdon): Garbage collection of queues?
     await Effect.gen(function* () {
       const { objects } = yield* DatabaseService.runQuery(
         Query.select(Filter.ids(companionTo.id)).targetOf(Assistant.CompanionTo).source(),
