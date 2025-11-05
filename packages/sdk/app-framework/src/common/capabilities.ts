@@ -2,8 +2,6 @@
 // Copyright 2025 DXOS.org
 //
 
-import type * as Tool from '@effect/ai/Tool';
-import type * as Toolkit from '@effect/ai/Toolkit';
 import { type Registry } from '@effect-rx/rx-react';
 import type * as Layer from 'effect/Layer';
 import type * as Schema from 'effect/Schema';
@@ -12,12 +10,12 @@ import { type FC, type PropsWithChildren } from 'react';
 import { type AiService } from '@dxos/ai';
 import type * as AiServiceRouter from '@dxos/ai/AiServiceRouter';
 import { type BuilderExtensions, type GraphBuilder } from '@dxos/app-graph';
+import { type GenericToolkit } from '@dxos/assistant';
 import { type Blueprint } from '@dxos/blueprints';
 import { type Space } from '@dxos/client-protocol';
 import { type FunctionDefinition } from '@dxos/functions';
 import { type RootSettingsStore } from '@dxos/local-storage';
 import { type DataType } from '@dxos/schema';
-import { type GenericToolkit } from '@dxos/assistant';
 
 import { type PluginManager, defineCapability } from '../core';
 import { type AnyIntentResolver, type IntentContext } from '../plugin-intent';

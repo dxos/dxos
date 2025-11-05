@@ -2,7 +2,6 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Toolkit from '@effect/ai/Toolkit';
 import * as BrowserKeyValueStore from '@effect/platform-browser/BrowserKeyValueStore';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
