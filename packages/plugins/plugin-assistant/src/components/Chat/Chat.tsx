@@ -17,6 +17,7 @@ import { fullyQualifiedId, getSpace, useQueue } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { Input, type ThemedClassName, useDynamicRef, useTranslation } from '@dxos/react-ui';
 import { ChatEditor, type ChatEditorController, type ChatEditorProps, references } from '@dxos/react-ui-chat';
+import { type MarkdownStreamController } from '@dxos/react-ui-components';
 import { MenuProvider, ToolbarMenu } from '@dxos/react-ui-menu';
 import { mx } from '@dxos/react-ui-theme';
 import { DataType } from '@dxos/schema';
@@ -34,11 +35,7 @@ import {
   ChatReferences,
   ChatStatusIndicator,
 } from '../ChatPrompt';
-import {
-  type ChatThreadController,
-  ChatThread as NaturalChatThread,
-  type ChatThreadProps as NaturalChatThreadProps,
-} from '../ChatThread';
+import { ChatThread as NaturalChatThread, type ChatThreadProps as NaturalChatThreadProps } from '../ChatThread';
 
 import { type ChatEvent } from './events';
 
@@ -364,7 +361,7 @@ const ChatThread = (props: ChatThreadProps) => {
   const identity = useIdentity();
   const error = useRxValue(processor.error).pipe(Option.getOrUndefined);
 
-  const controllerRef = useRef<ChatThreadController | null>(null);
+  const controllerRef = useRef<MarkdownStreamController | null>(null);
   useEffect(() => {
     return event.on((event) => {
       switch (event.type) {

@@ -2,19 +2,11 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, {
-  type CSSProperties,
-  forwardRef,
-  useCallback,
-  useEffect,
-  useImperativeHandle,
-  useMemo,
-  useState,
-} from 'react';
+import React, { type CSSProperties, forwardRef, useCallback, useEffect, useMemo } from 'react';
 
 import { PublicKey } from '@dxos/keys';
 import { type Identity } from '@dxos/react-client/halo';
-import { type ThemedClassName } from '@dxos/react-ui';
+import { type ThemedClassName, useForwardedRef } from '@dxos/react-ui';
 import { MarkdownStream, type MarkdownStreamController, type MarkdownStreamProps } from '@dxos/react-ui-components';
 import { mx } from '@dxos/react-ui-theme';
 import { type DataType } from '@dxos/schema';
@@ -23,12 +15,7 @@ import { keyToFallback } from '@dxos/util';
 import { type ChatEvent } from '../Chat';
 
 import { blockToMarkdown, componentRegistry } from './registry';
-import { MessageSyncer, type TextModel } from './sync';
-
-export type ChatThreadController = Pick<
-  MarkdownStreamController,
-  'setContext' | 'scrollToBottom' | 'navigatePrevious' | 'navigateNext'
->;
+import { MessageSyncer } from './sync';
 
 export type ChatThreadProps = ThemedClassName<
   {
@@ -40,30 +27,30 @@ export type ChatThreadProps = ThemedClassName<
   } & Pick<MarkdownStreamProps, 'cursor' | 'fadeIn' | 'debug'>
 >;
 
-export const ChatThread = forwardRef<ChatThreadController | null, ChatThreadProps>(
+// TODO(burdon): Memo thread position.
+export const ChatThread = forwardRef<MarkdownStreamController, ChatThreadProps>(
   (
     { classNames, identity, messages = [], error, cursor = false, fadeIn = true, debug = false, onEvent },
     forwardedRef,
   ) => {
-    const userHue = useMemo(() => {
-      return identity?.profile?.data?.hue || keyToFallback(identity?.identityKey ?? PublicKey.random()).hue;
-    }, [identity]);
+    const controllerRef = useForwardedRef(forwardedRef);
+    const controller = controllerRef.current;
 
-    // Expose controller.
-    const [controller, setController] = useState<MarkdownStreamController | null>(null);
-    useImperativeHandle(forwardedRef, () => (controller ? controller : (null as any)), [controller]);
+    const userHue = useMemo(
+      () => identity?.profile?.data?.hue || keyToFallback(identity?.identityKey ?? PublicKey.random()).hue,
+      [identity],
+    );
+
+    // Update document.
+    const syncer = useMemo(() => controller && new MessageSyncer(controller, blockToMarkdown), [controller]);
+    useEffect(() => {
+      syncer?.sync(messages);
+    }, [syncer, messages]);
 
     // Show error.
     useEffect(() => {
       controller?.scrollToBottom();
     }, [controller, error]);
-
-    // Update document.
-    const textModel: TextModel | null = controller;
-    const syncer = useMemo(() => textModel && new MessageSyncer(textModel, blockToMarkdown), [controller]);
-    useEffect(() => {
-      syncer?.sync(messages);
-    }, [syncer, messages]);
 
     // Event handler.
     const handleEvent = useCallback<NonNullable<MarkdownStreamProps['onEvent']>>(
@@ -88,7 +75,7 @@ export const ChatThread = forwardRef<ChatThreadController | null, ChatThreadProp
         style={{ '--user-fill': `var(--dx-${userHue}Fill)` } as CSSProperties}
       >
         <MarkdownStream
-          ref={setController}
+          ref={controllerRef}
           registry={componentRegistry}
           cursor={cursor}
           fadeIn={fadeIn}

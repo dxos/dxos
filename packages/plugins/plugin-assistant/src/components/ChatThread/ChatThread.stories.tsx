@@ -6,7 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
 import * as Fiber from 'effect/Fiber';
 import * as Layer from 'effect/Layer';
-import React, { type CSSProperties, useEffect, useMemo, useState } from 'react';
+import React, { type CSSProperties, useEffect, useMemo } from 'react';
 
 import { ContextQueueService, DatabaseService } from '@dxos/functions';
 import { faker } from '@dxos/random';
@@ -22,7 +22,7 @@ import { DataType } from '@dxos/schema';
 import { createMessageGenerator } from '../../testing';
 import { translations } from '../../translations';
 
-import { ChatThread, type ChatThreadController, type ChatThreadProps } from './ChatThread';
+import { ChatThread, type ChatThreadProps } from './ChatThread';
 import { componentRegistry } from './registry';
 import TEXT from './testing/thread.md?raw';
 
@@ -59,26 +59,18 @@ const DefaultStory = ({ generator = [], delay = 0, ...props }: StoryProps) => {
     };
   }, [space, queue, generator]);
 
-  // Set context.
-  const [controller, setController] = useState<ChatThreadController | null>(null);
-  useEffect(() => {
-    // controller?.setContext({ timestamp: Date.now() });
-  }, [controller]);
-
-  // TODO(burdon): Elsewhere PreviewProvider is implemented via the plugin-preview.
   return (
     <PreviewPopoverProvider
       onLookup={async ({ label, ref }) => {
         return { label, text: ref };
       }}
     >
-      <ChatThread {...props} messages={queue?.objects ?? []} ref={setController} />
+      <ChatThread {...props} messages={queue?.objects ?? []} />
       <PreviewCard />
     </PreviewPopoverProvider>
   );
 };
 
-// TODO(burdon): Provide renderer for preview extension.
 const PreviewCard = () => {
   const { target } = usePreviewPopover('PreviewCard');
 
@@ -129,7 +121,7 @@ export const Default: Story = {
 export const Delayed: Story = {
   args: {
     generator: createMessageGenerator(),
-    delay: 3_000,
+    delay: 1_000,
     fadeIn: true,
     cursor: false,
   },
