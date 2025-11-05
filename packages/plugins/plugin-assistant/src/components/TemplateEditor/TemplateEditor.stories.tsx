@@ -16,22 +16,28 @@ import { translations } from '../../translations';
 
 import { TemplateEditor, type TemplateEditorProps } from './TemplateEditor';
 
+const FENCE = '```';
+
 const TEMPLATE = trim`
   {{! System Prompt }}
   
-  You are a machine that is an expert chess player.
+  You are an expert chess player.
   The move history of the current game is: {{history}}.
   If asked to suggest a move explain why it is a good move.
 
   {{#each artifacts}}
-  - {{this}}
+    {{this}}
   {{/each}}
 
   Reponse in the format: <suggestion>SUGGESTION</suggestion>
 
-  dxn:queue:data:B6INSIBY3CBEF4M5VZRYBCMAHQMPYK5AJ:01K24XMVHSZHS97SG1VTVQDM5Z:01K24XPK464FSCKVQJAB2H662M
+  @dxn:queue:data:B6INSIBY3CBEF4M5VZRYBCMAHQMPYK5AJ:01K24XMVHSZHS97SG1VTVQDM5Z:01K24XPK464FSCKVQJAB2H662M
 
   ---
+
+  ${FENCE}ts
+  const x = 100;
+  ${FENCE}
 
   {{input}}
 `;

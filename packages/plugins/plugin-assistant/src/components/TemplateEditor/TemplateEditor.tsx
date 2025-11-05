@@ -48,11 +48,11 @@ export const TemplateEditor = ({ id, classNames, template, lineNumbers = true }:
         }),
         createBasicExtensions({
           bracketMatching: false,
-          lineNumbers,
+          lineNumbers: true,
           lineWrapping: true,
           placeholder: t('template placeholder'),
         }),
-        createThemeExtensions({ themeMode }),
+        createThemeExtensions({ themeMode, slots: { content: { className: '!pie-4' } } }),
         createMarkdownExtensions(),
         decorateMarkdown(),
         handlebars(),
