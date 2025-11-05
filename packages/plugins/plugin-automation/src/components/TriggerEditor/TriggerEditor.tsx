@@ -14,7 +14,7 @@ import { type CustomInputMap, Form, InputHeader, SelectInput, useRefQueryLookupH
 
 import { FunctionInputEditor, type FunctionInputEditorProps } from './FunctionInputEditor';
 import { SpecSelector } from './SpecSelector';
-import { useCapability } from '../../../../../sdk/app-framework/src';
+import { useCapability } from '@dxos/app-framework';
 import { AutomationCapabilities } from '../..';
 import { Effect, Runtime } from 'effect';
 import { Rx, Result } from '@effect-rx/rx';
