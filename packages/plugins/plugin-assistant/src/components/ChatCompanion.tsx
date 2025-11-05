@@ -27,12 +27,14 @@ export type ChatCompanionProps = {
 };
 
 export const ChatCompanion = ({ role, data }: ChatCompanionProps) => {
+  const { dispatch } = useIntentDispatcher();
+  const blueprintRegistry = useBlueprintRegistry();
   const companionTo = data.companionTo;
   const space = getSpace(companionTo);
+
+  // Check if the chat exists yet.
   const chat = data.subject === 'assistant-chat' ? undefined : data.subject;
   const binder = useContextBinder(chat);
-  const blueprintRegistry = useBlueprintRegistry();
-  const { dispatch } = useIntentDispatcher();
   console.log(chat, data.subject);
 
   // Initialize companion chat if it doesn't exist.
