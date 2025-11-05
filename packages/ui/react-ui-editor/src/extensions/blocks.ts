@@ -37,8 +37,8 @@ const paragraphBlockPlugin = ViewPlugin.fromClass(
                 'block-line',
                 fromLine === toLine && 'block-single',
                 lineNum === fromLine && 'block-first',
-                lineNum === toLine && 'block-last',
                 lineNum > fromLine && lineNum < toLine && 'block-middle',
+                lineNum === toLine && 'block-last',
               ),
             }),
           );
