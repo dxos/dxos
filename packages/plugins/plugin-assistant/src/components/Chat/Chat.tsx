@@ -13,7 +13,7 @@ import React, { type PropsWithChildren, useCallback, useEffect, useMemo, useRef,
 import { Event } from '@dxos/async';
 import { Obj } from '@dxos/echo';
 import { useVoiceInput } from '@dxos/plugin-transcription';
-import { fullyQualifiedId, getSpace, useQueue } from '@dxos/react-client/echo';
+import { type Space, fullyQualifiedId, getSpace, useQueue } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { Input, type ThemedClassName, useDynamicRef, useTranslation } from '@dxos/react-ui';
 import { ChatEditor, type ChatEditorController, type ChatEditorProps, references } from '@dxos/react-ui-chat';
@@ -48,6 +48,7 @@ import { type ChatEvent } from './events';
 type ChatContextValue = {
   debug?: boolean;
   event: Event<ChatEvent>;
+  space?: Space;
   chat?: Assistant.Chat;
   messages: DataType.Message.Message[];
   processor: AiChatProcessor;
@@ -60,7 +61,7 @@ export const [ChatContextProvider, useChatContext] = createContext<ChatContextVa
 //
 
 type ChatRootProps = PropsWithChildren<
-  Pick<ChatContextValue, 'chat' | 'processor'> & {
+  Pick<ChatContextValue, 'space' | 'chat' | 'processor'> & {
     onEvent?: (event: ChatEvent) => void;
   }
 >;
@@ -113,16 +114,24 @@ const ChatRoot = ({ children, chat, processor, onEvent, ...props }: ChatRootProp
           }
           break;
         }
-
-        default: {
-          onEvent?.(ev);
-        }
       }
+
+      onEvent?.(ev);
     });
   }, [event, processor, streaming, onEvent]);
 
+  const space = props.space ?? getSpace(chat);
+
   return (
-    <ChatContextProvider debug={debug} event={event} chat={chat} messages={messages} processor={processor} {...props}>
+    <ChatContextProvider
+      debug={debug}
+      event={event}
+      space={space}
+      chat={chat}
+      messages={messages}
+      processor={processor}
+      {...props}
+    >
       {children}
     </ChatContextProvider>
   );
@@ -174,8 +183,7 @@ const ChatPrompt = ({
   onOnlineChange,
 }: ChatPromptProps) => {
   const { t } = useTranslation(meta.id);
-  const { chat, processor, event } = useChatContext(ChatPrompt.displayName);
-  const space = getSpace(chat);
+  const { space, processor, event } = useChatContext(ChatPrompt.displayName);
 
   const error = useRxValue(processor.error).pipe(Option.getOrUndefined);
   const streaming = useRxValue(processor.streaming);
