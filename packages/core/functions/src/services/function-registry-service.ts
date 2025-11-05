@@ -4,6 +4,8 @@
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
+import * as Array from 'effect/Array';
+import * as Either from 'effect/Either';
 
 import { AiService } from '@dxos/ai';
 import { Rx, Registry } from '@effect-rx/rx';
@@ -21,8 +23,6 @@ import { QueueService } from './queues';
 import { RemoteFunctionExecutionService } from './remote-function-execution-service';
 import { Query } from '@dxos/echo';
 import { Function } from '../types/Function';
-
-// @import-as-namespace
 
 export type FunctionsQuery = {
   key?: string | string[];
@@ -46,6 +46,13 @@ export class FunctionRegistryService extends Context.Tag('@dxos/functions/Functi
      */
     query: (query?: FunctionsQuery) => Effect.Effect<QueryResult>;
 
+    /**
+     * Imports a function into the local space.
+     * @returns The stored function object.
+     * If the function is already imported, returns the existing function.
+     */
+    import: (func: FunctionDefinition.Any) => Effect.Effect<Function>;
+
     // TODO(dmaretskyi): import function to local space
   }
 >() {
@@ -57,31 +64,46 @@ export class FunctionRegistryService extends Context.Tag('@dxos/functions/Functi
       const db = yield* DatabaseService;
 
       return {
-        query: Effect.fnUntraced(
+        query: Effect.fn('FunctionRegistryService.query')(
           function* (query = {}) {
             const dbQuery = yield* DatabaseService.query(Query.type(Function));
             return {
               results: Effect.gen(function* () {
                 const dbFunctions = yield* DatabaseService.query(Query.type(Function)).objects;
 
-                // TODO(dmaretskyi): Dedup.
-                return [
-                  ...dbFunctions.map(FunctionDefinition.deserialize),
-                  ...(yield* Rx.get(staticFunctionsProvider.functions)),
-                ];
+                return Array.unionWith(
+                  dbFunctions.map(FunctionDefinition.deserialize),
+                  yield* Rx.get(staticFunctionsProvider.functions),
+                  (a, b) => a.key === b.key,
+                );
               }).pipe(Effect.provideService(Registry.RxRegistry, registry), Effect.provideService(DatabaseService, db)),
               rx: Rx.make((get) => {
-                // TODO(dmaretskyi): Dedup.
-                return [
-                  ...get(staticFunctionsProvider.functions),
-                  ...get(dbQuery.rx).map(FunctionDefinition.deserialize),
-                ];
+                return Array.unionWith(
+                  get(staticFunctionsProvider.functions),
+                  get(dbQuery.rx).map(FunctionDefinition.deserialize),
+                  (a, b) => a.key === b.key,
+                );
               }),
             } satisfies QueryResult;
           },
           Effect.provideService(DatabaseService, db),
         ),
-      };
+
+        import: Effect.fn('FunctionRegistryService.import')(
+          function* (func) {
+            const dbFunc = yield* DatabaseService.query(Query.type(Function, { key: func.key })).first.pipe(
+              Effect.either,
+            );
+
+            if (Either.isLeft(dbFunc)) {
+              return yield* DatabaseService.add(FunctionDefinition.serialize(func));
+            } else {
+              return dbFunc.right;
+            }
+          },
+          Effect.provideService(DatabaseService, db),
+        ),
+      } satisfies Context.Tag.Service<FunctionRegistryService>;
     }),
   );
 }

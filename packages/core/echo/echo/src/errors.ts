@@ -16,3 +16,9 @@ export class ObjectNotFoundError extends BaseError.extend('OBJECT_NOT_FOUND', 'O
     super({ context: { dxn }, ...options });
   }
 }
+
+export class NoResultsError extends BaseError.extend('NO_RESULTS', 'No results') {
+  constructor(options?: BaseErrorOptions) {
+    super({ ...options });
+  }
+}

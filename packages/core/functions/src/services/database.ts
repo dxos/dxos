@@ -19,6 +19,7 @@ import {
   type Ref,
   type Relation,
   type Type,
+  NoResultsError,
 } from '@dxos/echo';
 import type {
   EchoDatabase,
@@ -172,6 +173,13 @@ export class DatabaseService extends Context.Tag('@dxos/functions/DatabaseServic
             const { objects } = yield* Effect.promise(() => query.run());
             return objects;
           }),
+          first: Effect.gen(function* () {
+            const { objects } = yield* Effect.promise(() => query.run());
+            if (objects.length === 0) {
+              return yield* Effect.fail(new NoResultsError());
+            }
+            return objects[0];
+          }),
           rx: Rx.make((get) => {
             get.addFinalizer(
               query.subscribe(
@@ -188,9 +196,13 @@ export class DatabaseService extends Context.Tag('@dxos/functions/DatabaseServic
       Effect.withSpan('DatabaseService.query'),
     );
 
+    // Create a new object that has the effect as prototype, but extends it with the additional properties.
     return Object.create(effect, {
       objects: {
         value: effect.pipe(Effect.flatMap((queryResult) => queryResult.objects)),
+      },
+      first: {
+        value: effect.pipe(Effect.flatMap((queryResult) => queryResult.first)),
       },
     });
   };
@@ -228,11 +240,14 @@ export class DatabaseService extends Context.Tag('@dxos/functions/DatabaseServic
 
 export interface QueryResultEx<T> {
   readonly objects: Effect.Effect<T[]>;
+  readonly first: Effect.Effect<T, NoResultsError>;
+
   readonly rx: Rx.Rx<T[]>;
 }
 
 export interface QueryResultEffect<T> extends Effect.Effect<QueryResultEx<T>> {
   readonly objects: Effect.Effect<T[], never, DatabaseService>;
+  readonly first: Effect.Effect<T, NoResultsError, DatabaseService>;
 }
 
 const addPropsOnEffect = <T, E, R, P extends { readonly [key: keyof any]: any }>(
