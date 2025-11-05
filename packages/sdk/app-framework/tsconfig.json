@@ -39,6 +39,9 @@
       "path": "../../core/ai"
     },
     {
+      "path": "../../core/assistant"
+    },
+    {
       "path": "../../core/blueprints"
     },
     {
