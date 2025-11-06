@@ -5,6 +5,8 @@
 import * as Schema from 'effect/Schema';
 
 import { SpaceSchema } from '@dxos/react-client/echo';
+// eslint-disable-next-line unused-imports/no-unused-imports
+import { View as _View } from '@dxos/schema';
 import { Project } from '@dxos/types';
 
 import { meta } from '../meta';
