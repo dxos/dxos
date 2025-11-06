@@ -8,18 +8,19 @@ import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 import React, { type PropsWithChildren, useCallback, useMemo } from 'react';
 
-import { DXN, Obj, Tag, Type } from '@dxos/echo';
+import { DXN, Obj, type Ref, Tag, Type } from '@dxos/echo';
+import { type JsonPath, setValue } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
 import { getSpace } from '@dxos/react-client/echo';
 import { type ThemedClassName } from '@dxos/react-ui';
 import { Form, useRefQueryLookupHandler } from '@dxos/react-ui-form';
+import { isNonNullable } from '@dxos/util';
 
 import { meta as pluginMeta } from '../../meta';
 
 // TODO(wittjosiah): Would be nice to control order when extending so this isn't always first/last.
 const BaseSchema = Schema.Struct({
-  // TODO(wittjosiah): Support multiple tags.
-  tag: Type.Ref(Tag.Tag).pipe(Schema.optional),
+  tags: Schema.Array(Type.Ref(Tag.Tag)).pipe(Schema.optional),
 });
 
 // TODO(wittjosiah): Better way to support validation of object schemas?
@@ -46,36 +47,39 @@ export const BaseObjectSettings = ({ classNames, children, object }: BaseObjectS
   }, [object]);
 
   const meta = Obj.getMeta(object);
-  const tag = meta.tags?.[0] ? space?.db.ref(DXN.parse(meta.tags?.[0])) : undefined;
+  const tags = (meta.tags ?? []).map((tag) => space?.db.ref(DXN.parse(tag))).filter(isNonNullable);
   const values = useMemo(
     () => ({
-      tag,
+      tags,
       ...object,
     }),
-    [object, tag],
+    [object, tags],
   );
 
   const handleCreateTag = useCallback((values: Schema.Schema.Type<typeof TagSchema>) => {
     invariant(space);
     const tag = space.db.add(Tag.make(values));
     const meta = Obj.getMeta(object);
-    meta.tags = [Obj.getDXN(tag).toString()];
+    meta.tags = [...(meta.tags ?? []), Obj.getDXN(tag).toString()];
   }, []);
 
   const handleSave = useCallback(
-    ({ tag, ...values }: Schema.Schema.Type<typeof formSchema>) => {
+    (
+      { tags, ...values }: Schema.Schema.Type<typeof formSchema>,
+      { changed }: { changed: Record<JsonPath, boolean> },
+    ) => {
+      const changedPaths = Object.keys(changed).filter((path) => changed[path as JsonPath]) as JsonPath[];
       batch(() => {
-        const meta = Obj.getMeta(object);
-        const currentTag = meta.tags?.[0];
-        if (tag !== undefined && currentTag !== tag?.dxn.toString()) {
-          meta.tags = [tag.dxn.toString()];
-        }
-
-        Object.entries(values).forEach(([key, value]) => {
-          if (value !== undefined && value !== object[key as keyof Obj.Any]) {
-            Object.defineProperty(object, key, { value });
+        for (const path of changedPaths) {
+          if (path === 'tags') {
+            const meta = Obj.getMeta(object);
+            meta.tags = tags.map((tag: Ref.Ref<Tag.Tag>) => tag.dxn.toString());
+            continue;
           }
-        });
+
+          const value = values[path];
+          setValue(object, path, value);
+        }
       });
     },
     [object],
