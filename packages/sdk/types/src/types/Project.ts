@@ -8,7 +8,6 @@ import { Obj } from '@dxos/echo';
 import { Type } from '@dxos/echo';
 import { Format, GeneratorAnnotation, LabelAnnotation } from '@dxos/echo/internal';
 import { Collection, IconAnnotation, ItemAnnotation, View } from '@dxos/schema';
-import { type View } from '@dxos/schema'; // TODO(burdon): Build error without this.
 
 export const Project = Schema.Struct({
   name: Schema.String.pipe(GeneratorAnnotation.set('commerce.productName'), Schema.optional),
