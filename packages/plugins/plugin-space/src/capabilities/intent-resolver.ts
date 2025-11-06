@@ -24,7 +24,7 @@ import { Invitation, InvitationEncoder } from '@dxos/react-client/invitations';
 import { ATTENDABLE_PATH_SEPARATOR } from '@dxos/react-ui-attention';
 import { iconValues } from '@dxos/react-ui-pickers';
 import { hues } from '@dxos/react-ui-theme';
-import { DataType, ProjectionModel, getTypenameFromQuery } from '@dxos/schema';
+import { DataType, ProjectionModel, StoredSchema, getTypenameFromQuery } from '@dxos/schema';
 
 import {
   CREATE_OBJECT_DIALOG,
@@ -96,7 +96,7 @@ export default ({ context, observability, createInvitationUrl }: IntentResolverO
           Ref.make(
             Obj.make(DataType.Collection.QueryCollection, {
               // NOTE: This is specifically Filter.typename due to current limitations in query collection parsing.
-              query: Query.select(Filter.typename(DataType.StoredSchema.typename)).ast,
+              query: Query.select(Filter.typename(StoredSchema.typename)).ast,
             }),
           ),
         );

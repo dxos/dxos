@@ -8,15 +8,11 @@ export { createDefaultSchema } from './util';
 
 //
 // System
-// TODO(burdon): Move from DataType namespace?
 //
 
-// TODO(burdon): Move out of here (internal only?)
-export { StoredSchema } from '@dxos/echo/internal';
-
 export * as Collection from './Collection';
-export * as View from './View';
 export * as Text from './Text';
+export * as View from './View';
 
 //
 // Common structs

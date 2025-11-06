@@ -15,7 +15,7 @@ import { log } from '@dxos/log';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { ATTENDABLE_PATH_SEPARATOR, PLANK_COMPANION_TYPE } from '@dxos/plugin-deck/types';
 import { ROOT_ID, createExtension, rxFromObservable, rxFromSignal } from '@dxos/plugin-graph';
-import { DataType, getTypenameFromQuery } from '@dxos/schema';
+import { DataType, StoredSchema, getTypenameFromQuery } from '@dxos/schema';
 import { isNonNullable } from '@dxos/util';
 
 import { getActiveSpace } from '../hooks';
@@ -505,7 +505,7 @@ export default (context: PluginContext) => {
             get(node),
             Option.flatMap((node) =>
               Obj.instanceOf(DataType.Collection.QueryCollection, node.data) &&
-              getTypenameFromQuery(node.data.query) === DataType.StoredSchema.typename
+              getTypenameFromQuery(node.data.query) === StoredSchema.typename
                 ? Option.some(node.data)
                 : Option.none(),
             ),
@@ -585,7 +585,7 @@ export default (context: PluginContext) => {
             get(node),
             Option.flatMap((node) => {
               const space = getSpace(node.data) ?? (isSpace(node.properties.space) ? node.properties.space : undefined);
-              return space && (Obj.instanceOf(DataType.StoredSchema, node.data) || Schema.isSchema(node.data))
+              return space && (Obj.instanceOf(StoredSchema, node.data) || Schema.isSchema(node.data))
                 ? Option.some({ space, schema: node.data })
                 : Option.none();
             }),
@@ -665,7 +665,7 @@ export default (context: PluginContext) => {
                 : Option.none();
             }),
             Option.flatMap(({ space, object }) => {
-              const isSchema = Obj.instanceOf(DataType.StoredSchema, object);
+              const isSchema = Obj.instanceOf(StoredSchema, object);
               if (!query && isSchema) {
                 // TODO(wittjosiah): Support filtering by nested properties (e.g. `query.typename`).
                 query = space.db.query(Filter.type(DataType.View.View));
@@ -676,7 +676,7 @@ export default (context: PluginContext) => {
                 // Don't allow the Records smart collection to be deleted.
                 !(
                   Obj.instanceOf(DataType.Collection.QueryCollection, object) &&
-                  getTypenameFromQuery(object.query) === DataType.StoredSchema.typename
+                  getTypenameFromQuery(object.query) === StoredSchema.typename
                 );
               if (isSchema && query) {
                 const views = get(rxFromQuery(query));

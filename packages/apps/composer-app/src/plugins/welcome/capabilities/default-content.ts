@@ -15,7 +15,7 @@ export default async (context: PluginContext) => {
   const { fullyQualifiedId } = await import('@dxos/react-client/echo');
   const { ClientCapabilities } = await import('@dxos/plugin-client');
   const { Markdown } = await import('@dxos/plugin-markdown/types');
-  const { DataType } = await import('@dxos/schema');
+  const { DataType, StoredSchema } = await import('@dxos/schema');
 
   const { dispatchPromise: dispatch } = context.getCapability(Capabilities.IntentDispatcher);
   const { graph } = context.getCapability(Capabilities.AppGraph);
@@ -36,7 +36,7 @@ export default async (context: PluginContext) => {
     Ref.make(
       Obj.make(DataType.Collection.QueryCollection, {
         // NOTE: This is specifically Filter.typename due to current limitations in query collection parsing.
-        query: Query.select(Filter.typename(DataType.StoredSchema.typename)).ast,
+        query: Query.select(Filter.typename(StoredSchema.typename)).ast,
       }),
     ),
   );

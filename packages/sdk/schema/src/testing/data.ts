@@ -7,7 +7,7 @@ import * as Schema from 'effect/Schema';
 import { Filter, type Live, Obj, Query, Type } from '@dxos/echo';
 import { TypedObject } from '@dxos/echo/internal';
 
-import { DataType } from '../types';
+import { DataType, StoredSchema } from '../types';
 
 export class TestSchema extends TypedObject({
   typename: 'example.com/type/Test',
@@ -42,7 +42,7 @@ export class TestSchema extends TypedObject({
 
 export type TestType = Schema.Schema.Type<typeof TestSchema>;
 
-export const testSchema: Live<DataType.StoredSchema> = Obj.make(DataType.StoredSchema, {
+export const testSchema: Live<StoredSchema> = Obj.make(StoredSchema, {
   typename: 'example.com/type/Test',
   version: '0.1.0',
   jsonSchema: Type.toJsonSchema(TestSchema),

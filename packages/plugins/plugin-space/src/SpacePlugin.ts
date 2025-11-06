@@ -17,7 +17,7 @@ import {
 import { Ref, Tag, Type } from '@dxos/echo';
 import { AttentionEvents } from '@dxos/plugin-attention';
 import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
-import { DataType, DataTypes, getTypenameFromQuery } from '@dxos/schema';
+import { DataType, DataTypes, StoredSchema, getTypenameFromQuery } from '@dxos/schema';
 import { translations as shellTranslations } from '@dxos/shell/react';
 
 import {
@@ -113,7 +113,7 @@ export const SpacePlugin = definePlugin<SpacePluginOptions>(
             },
           }),
           contributes(Capabilities.Metadata, {
-            id: Type.getTypename(DataType.StoredSchema),
+            id: Type.getTypename(StoredSchema),
             metadata: {
               icon: 'ph--database--regular',
               iconHue: 'green',
@@ -169,7 +169,7 @@ export const SpacePlugin = definePlugin<SpacePluginOptions>(
           contributes(
             SpaceCapabilities.ObjectForm,
             defineObjectForm({
-              objectSchema: DataType.StoredSchema,
+              objectSchema: StoredSchema,
               formSchema: SpaceAction.StoredSchemaForm,
               getIntent: (props, options) =>
                 props.typename

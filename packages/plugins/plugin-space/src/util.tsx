@@ -23,7 +23,7 @@ import {
 import { type QueryResult, type Space, SpaceState, fullyQualifiedId, getSpace, isSpace } from '@dxos/react-client/echo';
 import { ATTENDABLE_PATH_SEPARATOR } from '@dxos/react-ui-attention';
 import { type TreeData } from '@dxos/react-ui-list';
-import { DataType, getTypenameFromQuery } from '@dxos/schema';
+import { DataType, StoredSchema, getTypenameFromQuery } from '@dxos/schema';
 
 import { meta } from './meta';
 import { type ObjectForm, SPACE_TYPE, SpaceAction } from './types';
@@ -403,7 +403,7 @@ export const createStaticSchemaActions = ({
         );
       },
       properties: {
-        label: ['add view to schema label', { ns: Type.getTypename(DataType.StoredSchema) }],
+        label: ['add view to schema label', { ns: Type.getTypename(StoredSchema) }],
         icon: 'ph--plus--regular',
         disposition: 'list-item-primary',
         testId: 'spacePlugin.addViewToSchema',
@@ -416,7 +416,7 @@ export const createStaticSchemaActions = ({
         throw new Error('Not implemented');
       },
       properties: {
-        label: ['rename object label', { ns: Type.getTypename(DataType.StoredSchema) }],
+        label: ['rename object label', { ns: Type.getTypename(StoredSchema) }],
         icon: 'ph--pencil-simple-line--regular',
         disabled: true,
         disposition: 'list-item',
@@ -435,7 +435,7 @@ export const createStaticSchemaActions = ({
         }
       },
       properties: {
-        label: ['delete object label', { ns: Type.getTypename(DataType.StoredSchema) }],
+        label: ['delete object label', { ns: Type.getTypename(StoredSchema) }],
         icon: 'ph--trash--regular',
         disposition: 'list-item',
         disabled: !deletable,
@@ -472,7 +472,7 @@ export const createObjectNode = ({
     ? getCollectionGraphNodePartials({ collection: object, space, resolve })
     : Obj.instanceOf(DataType.Collection.QueryCollection, object)
       ? getQueryCollectionNodePartials({ collection: object, space, resolve })
-      : Obj.instanceOf(DataType.StoredSchema, object)
+      : Obj.instanceOf(StoredSchema, object)
         ? getSchemaGraphNodePartials()
         : Obj.instanceOf(DataType.View.View, object)
           ? getViewGraphNodePartials({ view: object, resolve })
@@ -486,7 +486,7 @@ export const createObjectNode = ({
     metadata.label?.(object) || ['object name placeholder', { ns: type, default: 'New item' }];
 
   const selectable =
-    (!Obj.instanceOf(DataType.StoredSchema, object) &&
+    (!Obj.instanceOf(StoredSchema, object) &&
       !Obj.instanceOf(DataType.Collection.QueryCollection, object) &&
       !Obj.instanceOf(DataType.Collection.Collection, object)) ||
     (navigable && Obj.instanceOf(DataType.Collection.Collection, object));
@@ -558,7 +558,7 @@ export const constructObjectActions = ({
           },
         ]
       : []),
-    ...(Obj.instanceOf(DataType.StoredSchema, object)
+    ...(Obj.instanceOf(StoredSchema, object)
       ? [
           {
             id: getId(SpaceAction.AddObject._tag),
@@ -573,7 +573,7 @@ export const constructObjectActions = ({
               );
             },
             properties: {
-              label: ['add view to schema label', { ns: Type.getTypename(DataType.StoredSchema) }],
+              label: ['add view to schema label', { ns: Type.getTypename(StoredSchema) }],
               icon: 'ph--plus--regular',
               disposition: 'list-item-primary',
               testId: 'spacePlugin.addViewToSchema',
@@ -652,7 +652,7 @@ export const constructObjectActions = ({
     ...(navigable ||
     (!Obj.instanceOf(DataType.Collection.Collection, object) &&
       !Obj.instanceOf(DataType.Collection.QueryCollection, object) &&
-      !Obj.instanceOf(DataType.StoredSchema, object))
+      !Obj.instanceOf(StoredSchema, object))
       ? [
           {
             id: getId('copy-link'),
