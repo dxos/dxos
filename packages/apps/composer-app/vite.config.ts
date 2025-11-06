@@ -142,6 +142,11 @@ export default defineConfig((env) => ({
 
     react({
       tsDecorators: true,
+      useAtYourOwnRisk_mutateSwcOptions: (options) => {
+        // Disable syntax lowering. Prevents perfomance loss due to private properties polyfill.
+        options.jsc ??= {};
+        options.jsc.target = 'esnext';
+      },
       plugins: [
         [
           '@dxos/swc-log-plugin',
