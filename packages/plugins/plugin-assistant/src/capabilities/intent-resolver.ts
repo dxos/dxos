@@ -136,7 +136,7 @@ export default (context: PluginContext) => [
       resolve: ({ companionTo, chat }) =>
         Effect.gen(function* () {
           const state = context.getCapability(AssistantCapabilities.MutableState);
-          state.currentChat[Obj.getDXN(companionTo).toString()] = chat;
+          state.currentChat[Obj.getDXN(companionTo).toString()] = chat && Obj.getDXN(chat).toString();
         }),
     }),
   ]),
