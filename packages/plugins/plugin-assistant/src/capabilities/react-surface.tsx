@@ -5,7 +5,7 @@
 import React from 'react';
 
 import { Capabilities, contributes, createSurface } from '@dxos/app-framework';
-import { Blueprint } from '@dxos/blueprints';
+import { Blueprint, Prompt } from '@dxos/blueprints';
 import { getSpace } from '@dxos/client/echo';
 import { Sequence } from '@dxos/conductor';
 import { InvocationTraceContainer } from '@dxos/devtools';
@@ -13,7 +13,14 @@ import { Obj } from '@dxos/echo';
 import { SettingsStore } from '@dxos/local-storage';
 import { StackItem } from '@dxos/react-ui-stack';
 
-import { AssistantSettings, BlueprintArticle, ChatCompanion, ChatContainer, ChatDialog } from '../components';
+import {
+  AssistantSettings,
+  BlueprintArticle,
+  ChatCompanion,
+  ChatContainer,
+  ChatDialog,
+  PromptArticle,
+} from '../components';
 import { ASSISTANT_DIALOG, meta } from '../meta';
 import { Assistant } from '../types';
 
@@ -61,6 +68,12 @@ export default () =>
       role: 'article',
       filter: (data): data is { subject: Blueprint.Blueprint } => Obj.instanceOf(Blueprint.Blueprint, data.subject),
       component: ({ data }) => <BlueprintArticle object={data.subject} />,
+    }),
+    createSurface({
+      id: `${meta.id}/prompt`,
+      role: 'article',
+      filter: (data): data is { subject: Prompt.Prompt } => Obj.instanceOf(Prompt.Prompt, data.subject),
+      component: ({ data }) => <PromptArticle object={data.subject} />,
     }),
     createSurface({
       id: ASSISTANT_DIALOG,

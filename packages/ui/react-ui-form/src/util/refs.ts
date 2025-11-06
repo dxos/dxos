@@ -18,11 +18,6 @@ type RefProps = {
 export const getRefProps = (property: SchemaProperty<any>): RefProps | undefined => {
   const { ast, format, array } = property;
 
-  // Direct reference.
-  if (format === FormatEnum.Ref) {
-    return { ast, isArray: false };
-  }
-
   // Array of references.
   if (array) {
     const elementType = findArrayElementType(ast);
@@ -32,6 +27,11 @@ export const getRefProps = (property: SchemaProperty<any>): RefProps | undefined
         return { ast: elementType, isArray: true };
       }
     }
+  }
+
+  // Direct reference.
+  if (format === FormatEnum.Ref) {
+    return { ast, isArray: false };
   }
 
   return undefined;
