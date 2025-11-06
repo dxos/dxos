@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { useCapability } from '@dxos/app-framework';
+import { useCapability } from '@dxos/app-framework/react';
 
 import { DeckCapabilities } from '../../capabilities';
 

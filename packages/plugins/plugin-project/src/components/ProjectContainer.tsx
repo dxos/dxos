@@ -4,7 +4,8 @@
 
 import React, { useCallback } from 'react';
 
-import { Surface, createIntent, useIntentDispatcher } from '@dxos/app-framework';
+import { createIntent } from '@dxos/app-framework';
+import { Surface, useIntentDispatcher } from '@dxos/app-framework/react';
 import { ATTENDABLE_PATH_SEPARATOR, DeckAction } from '@dxos/plugin-deck/types';
 import { fullyQualifiedId } from '@dxos/react-client/echo';
 import { useAttention } from '@dxos/react-ui-attention';
@@ -13,7 +14,10 @@ import { type DataType } from '@dxos/schema';
 
 import { type ItemProps, Project } from './Project';
 
-export type ProjectContainerProps = { project: DataType.Project.Project; role: string };
+export type ProjectContainerProps = {
+  project: DataType.Project.Project;
+  role: string;
+};
 
 export const ProjectContainer = ({ project }: ProjectContainerProps) => {
   const { dispatchPromise: dispatch } = useIntentDispatcher();

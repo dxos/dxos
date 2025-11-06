@@ -4,7 +4,8 @@
 
 import React, { useCallback } from 'react';
 
-import { LayoutAction, createIntent, useCapability, useIntentDispatcher } from '@dxos/app-framework';
+import { LayoutAction, createIntent } from '@dxos/app-framework';
+import { useCapability, useIntentDispatcher } from '@dxos/app-framework/react';
 import { IconButton, type IconButtonProps, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 
 import { DeckCapabilities } from '../../capabilities';

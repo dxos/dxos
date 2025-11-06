@@ -4,7 +4,8 @@
 
 import { useMemo } from 'react';
 
-import { Capabilities, useCapabilities } from '@dxos/app-framework';
+import { Capabilities } from '@dxos/app-framework';
+import { useCapabilities } from '@dxos/app-framework/react';
 import { type Space } from '@dxos/client/echo';
 import { Filter, Obj } from '@dxos/echo';
 import { type ReferencesProvider } from '@dxos/react-ui-chat';

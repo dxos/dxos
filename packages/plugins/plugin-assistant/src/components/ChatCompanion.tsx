@@ -7,7 +7,8 @@ import * as Function from 'effect/Function';
 import * as Option from 'effect/Option';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { Capabilities, createIntent, useCapabilities, useIntentDispatcher } from '@dxos/app-framework';
+import { Capabilities, createIntent } from '@dxos/app-framework';
+import { useCapabilities, useIntentDispatcher } from '@dxos/app-framework/react';
 import { Blueprint } from '@dxos/blueprints';
 import { getSpace } from '@dxos/client/echo';
 import { Filter, Obj, Ref } from '@dxos/echo';
@@ -83,8 +84,12 @@ export const ChatCompanion = ({ role, data }: ChatCompanionProps) => {
       Function.pipe(
         metadata,
         Array.findFirst(
-          (capability): capability is { id: string; metadata: { blueprints?: string[] } } =>
-            capability.id === Obj.getTypename(companionTo),
+          (
+            capability,
+          ): capability is {
+            id: string;
+            metadata: { blueprints?: string[] };
+          } => capability.id === Obj.getTypename(companionTo),
         ),
         Option.flatMap((c) => Option.fromNullable(c.metadata.blueprints)),
         Option.getOrElse(() => [] as string[]),
@@ -126,7 +131,9 @@ export const ChatCompanion = ({ role, data }: ChatCompanionProps) => {
     }
 
     if (pluginBlueprints.length > 0) {
-      await binder.bind({ blueprints: pluginBlueprints.map((blueprint) => Ref.make(blueprint)) });
+      await binder.bind({
+        blueprints: pluginBlueprints.map((blueprint) => Ref.make(blueprint)),
+      });
     }
 
     if (Obj.instanceOf(Blueprint.Blueprint, companionTo)) {

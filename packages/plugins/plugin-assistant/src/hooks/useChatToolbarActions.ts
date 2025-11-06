@@ -6,7 +6,8 @@ import { Rx } from '@effect-rx/rx-react';
 import * as Effect from 'effect/Effect';
 import { useMemo } from 'react';
 
-import { createIntent, useIntentDispatcher } from '@dxos/app-framework';
+import { createIntent } from '@dxos/app-framework';
+import { useIntentDispatcher } from '@dxos/app-framework/react';
 import { Filter, Obj, Query } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { SpaceAction } from '@dxos/plugin-space/types';
@@ -52,7 +53,13 @@ export const useChatToolbarActions = ({ chat, companionTo }: ChatToolbarActionsP
                 // TODO(burdon): Defer creation until first message.
                 invariant(space);
                 const { object } = yield* dispatch(createIntent(AssistantAction.CreateChat, { space }));
-                yield* dispatch(createIntent(SpaceAction.AddObject, { object, target: space, hidden: true }));
+                yield* dispatch(
+                  createIntent(SpaceAction.AddObject, {
+                    object,
+                    target: space,
+                    hidden: true,
+                  }),
+                );
                 if (companionTo) {
                   yield* dispatch(
                     createIntent(SpaceAction.AddRelation, {
@@ -63,7 +70,12 @@ export const useChatToolbarActions = ({ chat, companionTo }: ChatToolbarActionsP
                     }),
                   );
 
-                  yield* dispatch(createIntent(AssistantAction.SetCurrentChat, { companionTo, chat: object }));
+                  yield* dispatch(
+                    createIntent(AssistantAction.SetCurrentChat, {
+                      companionTo,
+                      chat: object,
+                    }),
+                  );
                 }
               }).pipe(Effect.runPromise),
           )
@@ -114,7 +126,12 @@ export const useChatToolbarActions = ({ chat, companionTo }: ChatToolbarActionsP
                     () =>
                       Effect.gen(function* () {
                         invariant(companionTo);
-                        yield* dispatch(createIntent(AssistantAction.SetCurrentChat, { companionTo, chat }));
+                        yield* dispatch(
+                          createIntent(AssistantAction.SetCurrentChat, {
+                            companionTo,
+                            chat,
+                          }),
+                        );
                       }).pipe(Effect.runPromise),
                   );
                 });

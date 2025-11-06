@@ -8,7 +8,8 @@ import React, { type FC, useCallback } from 'react';
 
 import { ToolId } from '@dxos/ai';
 import { EXA_API_KEY } from '@dxos/ai/testing';
-import { Capabilities, Surface, useCapabilities } from '@dxos/app-framework';
+import { Capabilities } from '@dxos/app-framework';
+import { Surface, useCapabilities } from '@dxos/app-framework/react';
 import { AiContextBinder } from '@dxos/assistant';
 import { Agent, LinearBlueprint, ResearchBlueprint, ResearchDataTypes, ResearchGraph } from '@dxos/assistant-toolkit';
 import { Blueprint, Prompt, Template } from '@dxos/blueprints';
@@ -112,7 +113,11 @@ const DefaultStory = ({ modules, showContext, blueprints = [] }: StoryProps) => 
       .filter(isNonNullable);
 
     const binder = new AiContextBinder(await chat.queue.load());
-    await binder.use((binder) => binder.bind({ blueprints: blueprintObjects.map((blueprint) => Ref.make(blueprint)) }));
+    await binder.use((binder) =>
+      binder.bind({
+        blueprints: blueprintObjects.map((blueprint) => Ref.make(blueprint)),
+      }),
+    );
   }, [space, blueprints, blueprintsDefinitions]);
 
   const handleEvent = useCallback<NonNullable<ComponentProps['onEvent']>>((event) => {
@@ -409,7 +414,11 @@ export const WithMap: Story = {
     types: [DataType.View.View, Map.Map, Table.Table],
     onInit: async ({ space }) => {
       const [schema] = await space.db.schemaRegistry.register([createLocationSchema()]);
-      const { view: tableView } = await Table.makeView({ name: 'Table', space, typename: schema.typename });
+      const { view: tableView } = await Table.makeView({
+        name: 'Table',
+        space,
+        typename: schema.typename,
+      });
       const { view: mapView } = await Map.makeView({
         name: 'Map',
         space,
@@ -508,15 +517,26 @@ export const WithResearch: Story = {
     plugins: [MarkdownPlugin(), TablePlugin(), ThreadPlugin()],
     config: config.remote,
     types: [...ResearchDataTypes, ResearchGraph],
-    accessTokens: [Obj.make(DataType.AccessToken.AccessToken, { source: 'exa.ai', token: EXA_API_KEY })],
+    accessTokens: [
+      Obj.make(DataType.AccessToken.AccessToken, {
+        source: 'exa.ai',
+        token: EXA_API_KEY,
+      }),
+    ],
     onInit: async ({ space }) => {
-      space.db.add(Obj.make(DataType.Organization.Organization, { name: 'BlueYard Capital' }));
+      space.db.add(
+        Obj.make(DataType.Organization.Organization, {
+          name: 'BlueYard Capital',
+        }),
+      );
       space.db.add(Markdown.makeDocument({ name: 'DXOS', content: DXOS_DOCUMENT }));
     },
     onChatCreated: async ({ space, binder }) => {
       const { objects: organizations } = await space.db.query(Filter.type(DataType.Organization.Organization)).run();
       const { objects: documents } = await space.db.query(Filter.type(Markdown.Document)).run();
-      await binder.bind({ objects: [...organizations, ...documents].map((object) => Ref.make(object)) });
+      await binder.bind({
+        objects: [...organizations, ...documents].map((object) => Ref.make(object)),
+      });
     },
   }),
   args: {
@@ -664,10 +684,17 @@ export const WithResearchQueue: Story = {
     plugins: [],
     config: config.remote,
     types: [...ResearchDataTypes, ResearchGraph, ResearchInputQueue],
-    accessTokens: [Obj.make(DataType.AccessToken.AccessToken, { source: 'exa.ai', token: EXA_API_KEY })],
+    accessTokens: [
+      Obj.make(DataType.AccessToken.AccessToken, {
+        source: 'exa.ai',
+        token: EXA_API_KEY,
+      }),
+    ],
     onInit: async ({ space }) => {
       const researchInputQueue = space.db.add(
-        Obj.make(ResearchInputQueue, { queue: Ref.fromDXN(space.queues.create().dxn) }),
+        Obj.make(ResearchInputQueue, {
+          queue: Ref.fromDXN(space.queues.create().dxn),
+        }),
       );
       const orgs = organizations.map(({ id: _, ...org }) => Obj.make(DataType.Organization.Organization, org));
       await researchInputQueue.queue.target!.append(orgs);
@@ -716,7 +743,12 @@ export const WithProject: Story = {
   decorators: getDecorators({
     plugins: [InboxPlugin(), MarkdownPlugin(), ProjectPlugin()],
     config: config.remote,
-    accessTokens: [Obj.make(DataType.AccessToken.AccessToken, { source: 'exa.ai', token: EXA_API_KEY })],
+    accessTokens: [
+      Obj.make(DataType.AccessToken.AccessToken, {
+        source: 'exa.ai',
+        token: EXA_API_KEY,
+      }),
+    ],
     types: [
       Tag.Tag,
       DataType.Employer.Employer,
@@ -911,7 +943,9 @@ export const WithScript: Story = {
     },
     onChatCreated: async ({ space, binder }) => {
       const { objects: blueprints } = await space.db.query(Query.select(Filter.type(Blueprint.Blueprint))).run();
-      await binder.bind({ blueprints: blueprints.map((blueprint) => Ref.make(blueprint)) });
+      await binder.bind({
+        blueprints: blueprints.map((blueprint) => Ref.make(blueprint)),
+      });
     },
   }),
   args: {

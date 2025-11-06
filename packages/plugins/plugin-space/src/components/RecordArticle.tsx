@@ -4,7 +4,8 @@
 
 import React, { useMemo } from 'react';
 
-import { type ArticleComponentProps, Surface } from '@dxos/app-framework';
+import { Surface } from '@dxos/app-framework/react';
+import { type ArticleComponentProps } from '@dxos/app-framework/react';
 import { Filter, type Obj, Ref, Relation } from '@dxos/echo';
 import { type Space, getSpace, useQuery } from '@dxos/react-client/echo';
 import { useTranslation } from '@dxos/react-ui';
@@ -19,7 +20,10 @@ export const RecordArticle = ({ object }: ArticleComponentProps) => {
   const { t } = useTranslation(meta.id);
   const space = getSpace(object);
   const data = useMemo(() => ({ subject: object }), [object]);
-  const related = useRelatedObjects(space, object, { references: true, relations: true });
+  const related = useRelatedObjects(space, object, {
+    references: true,
+    relations: true,
+  });
   const singleColumn = related.length === 1;
 
   return (

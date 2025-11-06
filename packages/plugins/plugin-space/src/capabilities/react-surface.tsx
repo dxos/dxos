@@ -5,7 +5,8 @@
 import type * as Schema from 'effect/Schema';
 import React, { useCallback } from 'react';
 
-import { Capabilities, Surface, contributes, createSurface, useCapability, useLayout } from '@dxos/app-framework';
+import { Capabilities, contributes, createSurface } from '@dxos/app-framework';
+import { Surface, useCapability, useLayout } from '@dxos/app-framework/react';
 import { Obj } from '@dxos/echo';
 import { findAnnotation } from '@dxos/effect';
 import { SettingsStore } from '@dxos/local-storage';
@@ -160,8 +161,12 @@ export default ({ createInvitationUrl }: ReactSurfaceOptions) =>
     createSurface({
       id: `${meta.id}/selected-objects`,
       role: 'article',
-      filter: (data): data is { companionTo: DataType.View.View; subject: 'selected-objects' } =>
-        Obj.instanceOf(DataType.View.View, data.companionTo) && data.subject === 'selected-objects',
+      filter: (
+        data,
+      ): data is {
+        companionTo: DataType.View.View;
+        subject: 'selected-objects';
+      } => Obj.instanceOf(DataType.View.View, data.companionTo) && data.subject === 'selected-objects',
       component: ({ data }) => (
         <ObjectDetailsPanel
           key={fullyQualifiedId(data.companionTo)}

@@ -4,7 +4,8 @@
 
 import React from 'react';
 
-import { Capabilities, contributes, createSurface, useCapability } from '@dxos/app-framework';
+import { Capabilities, contributes, createSurface } from '@dxos/app-framework';
+import { useCapability } from '@dxos/app-framework/react';
 import { SettingsStore } from '@dxos/local-storage';
 import { Diagram } from '@dxos/plugin-sketch/types';
 import { fullyQualifiedId } from '@dxos/react-client/echo';

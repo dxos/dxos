@@ -4,7 +4,8 @@
 
 import React from 'react';
 
-import { Capabilities, contributes, useCapability } from '@dxos/app-framework';
+import { Capabilities, contributes } from '@dxos/app-framework';
+import { useCapability } from '@dxos/app-framework/react';
 import { ClientProvider } from '@dxos/react-client';
 
 import { meta } from '../meta';

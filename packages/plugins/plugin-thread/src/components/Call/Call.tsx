@@ -4,7 +4,7 @@
 
 import React, { type FC, type PropsWithChildren } from 'react';
 
-import { useCapability } from '@dxos/app-framework';
+import { useCapability } from '@dxos/app-framework/react';
 import { type ThemedClassName } from '@dxos/react-ui';
 
 import { ThreadCapabilities } from '../../capabilities';

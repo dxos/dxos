@@ -4,7 +4,8 @@
 
 import React from 'react';
 
-import { Capabilities, useCapability } from '@dxos/app-framework';
+import { Capabilities } from '@dxos/app-framework';
+import { useCapability } from '@dxos/app-framework/react';
 import { type Space, getSpace } from '@dxos/client/echo';
 import { type Obj } from '@dxos/echo';
 import { StackItem } from '@dxos/react-ui-stack';
@@ -29,7 +30,14 @@ export const ChatContainer = ({ space: spaceProp, chat, companionTo, onEvent }: 
   const [online, setOnline] = useOnline();
   const { preset, ...chatProps } = usePresets(online);
   const blueprintRegistry = useBlueprintRegistry();
-  const processor = useChatProcessor({ space, chat, preset, services, blueprintRegistry, settings });
+  const processor = useChatProcessor({
+    space,
+    chat,
+    preset,
+    services,
+    blueprintRegistry,
+    settings,
+  });
 
   if (!processor) {
     return null;

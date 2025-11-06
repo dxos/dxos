@@ -6,7 +6,8 @@ import { type Extension } from '@codemirror/state';
 import { Rx } from '@effect-rx/rx-react';
 import React, { useMemo } from 'react';
 
-import { Capabilities, useAppGraph, useCapabilities } from '@dxos/app-framework';
+import { Capabilities } from '@dxos/app-framework';
+import { useAppGraph, useCapabilities } from '@dxos/app-framework/react';
 import { Obj } from '@dxos/echo';
 import { fullyQualifiedId, getSpace } from '@dxos/react-client/echo';
 import { type SelectionManager } from '@dxos/react-ui-attention';

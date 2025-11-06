@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { type ArticleComponentProps } from '@dxos/app-framework';
+import { type ArticleComponentProps } from '@dxos/app-framework/react';
 import { useTranslation } from '@dxos/react-ui';
 import { baseSurface, descriptionMessage, mx } from '@dxos/react-ui-theme';
 import { type DataType } from '@dxos/schema';

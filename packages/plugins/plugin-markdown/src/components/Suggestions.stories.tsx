@@ -9,7 +9,8 @@ import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 import React, { type FC, useEffect, useMemo, useState } from 'react';
 
-import { Capabilities, IntentPlugin, SettingsPlugin, useCapability, useIntentDispatcher } from '@dxos/app-framework';
+import { Capabilities, IntentPlugin, SettingsPlugin } from '@dxos/app-framework';
+import { useCapability, useIntentDispatcher } from '@dxos/app-framework/react';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Obj, Ref, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
@@ -127,7 +128,12 @@ const DefaultStory = ({ document, chat }: { document: string; chat: string }) =>
       Markdown.makeDocument({
         name: 'Test',
         content: document.replaceAll(/\[(\w+)\]/g, (_, label) => {
-          const obj = space.db.add(Obj.make(TestItem, { title: label, description: faker.lorem.paragraph() }));
+          const obj = space.db.add(
+            Obj.make(TestItem, {
+              title: label,
+              description: faker.lorem.paragraph(),
+            }),
+          );
           const dxn = Ref.make(obj).dxn.toString();
           return `[${label}](${dxn})`;
         }),

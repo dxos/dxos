@@ -6,7 +6,8 @@ import { type ViewUpdate } from '@codemirror/view';
 import React, { type AnchorHTMLAttributes, type ReactNode, useMemo } from 'react';
 import { createRoot } from 'react-dom/client';
 
-import { LayoutAction, type PromiseIntentDispatcher, createIntent, useIntentDispatcher } from '@dxos/app-framework';
+import { LayoutAction, type PromiseIntentDispatcher, createIntent } from '@dxos/app-framework';
+import { useIntentDispatcher } from '@dxos/app-framework/react';
 import { debounceAndThrottle } from '@dxos/async';
 import { Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
@@ -114,7 +115,13 @@ export const useExtensions = ({
       [
         // TODO(burdon): Pass this in?
         // NOTE: Data extensions must be first so that automerge is updated before other extensions compute their state.
-        target && createDataExtensions({ id, text: createDocAccessor(target, ['content']), space, identity }),
+        target &&
+          createDataExtensions({
+            id,
+            text: createDocAccessor(target, ['content']),
+            space,
+            identity,
+          }),
 
         // TODO(burdon): Reconcile with effect in parent.
         Obj.instanceOf(Markdown.Document, object) &&
