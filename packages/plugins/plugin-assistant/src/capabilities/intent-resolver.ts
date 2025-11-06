@@ -9,7 +9,7 @@ import { AiContextBinder, AiConversation } from '@dxos/assistant';
 import { Blueprint, Prompt, Template } from '@dxos/blueprints';
 import { type Queue } from '@dxos/client/echo';
 import { Sequence } from '@dxos/conductor';
-import { Filter, Key, Obj, Ref } from '@dxos/echo';
+import { Filter, Key, Obj, Ref, Type } from '@dxos/echo';
 import { TracingService } from '@dxos/functions';
 import { AutomationCapabilities } from '@dxos/plugin-automation';
 import { CollectionAction } from '@dxos/plugin-space/types';
@@ -39,7 +39,16 @@ export default (context: PluginContext) => [
               typename: Blueprint.Blueprint.typename,
             }),
           );
-          rootCollection.objects.push(Ref.make(chatCollection), Ref.make(blueprintCollection));
+          const { object: promptCollection } = yield* dispatch(
+            createIntent(CollectionAction.CreateQueryCollection, {
+              typename: Type.getTypename(Prompt.Prompt),
+            }),
+          );
+          rootCollection.objects.push(
+            Ref.make(chatCollection),
+            Ref.make(blueprintCollection),
+            Ref.make(promptCollection),
+          );
 
           // Create default chat.
           const { object: chat } = yield* dispatch(createIntent(AssistantAction.CreateChat, { space }));
