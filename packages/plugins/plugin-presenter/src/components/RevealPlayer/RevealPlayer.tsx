@@ -142,11 +142,18 @@ export const RevealPlayer = ({ classNames, content, slide, fullscreen = true, on
     };
   });
 
+  // TOOD(burdon): Trap cursor keys (tabster grabs focus.)
   return (
-    <div className={mx('absolute flex h-full w-full items-center justify-center', fullscreen && 'inset-0', classNames)}>
-      <div className='relative aspect-video w-full'>
-        <div ref={deckDivRef} className='reveal'>
-          {/* TODO(burdon): Must be in head. */}
+    <div
+      className={mx(
+        'grid place-items-center w-full h-full overflow-hidden bg-black',
+        fullscreen && 'absolute inset-0',
+        classNames,
+      )}
+    >
+      <div className='relative aspect-video w-full h-auto max-h-full overflow-hidden'>
+        <div ref={deckDivRef} className='absolute inset-0 reveal'>
+          {/* NOTE: Must be in head. */}
           <style>
             <link rel='preconnect' href='https://fonts.googleapis.com' />
             <link rel='preconnect' href='https://fonts.gstatic.com' {...{ crossOrigin: '' }} />

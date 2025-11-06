@@ -232,13 +232,15 @@ const PlankComponent = memo(
       isSolo && mainIntrinsicSize,
       railGridHorizontal,
       part.startsWith('solo') && 'grid',
-      part === 'deck' && (companioned === 'companion' ? '!border-separator border-ie' : '!border-separator border-li'),
       part.startsWith('solo-') && 'row-span-2 grid-rows-subgrid min-is-0',
+      part === 'deck' && (companioned === 'companion' ? '!border-separator border-ie' : '!border-separator border-li'),
       part === 'solo-companion' && '!border-separator border-is',
       settings?.encapsulatedPlanks &&
         !part.startsWith('solo') &&
         'mli-[--main-spacing] !border-separator border rounded overflow-hidden',
     );
+
+    const heading = true;
 
     return (
       <Root
@@ -261,19 +263,21 @@ const PlankComponent = memo(
       >
         {node ? (
           <>
-            <PlankHeading
-              id={id}
-              part={part.startsWith('solo-') ? 'solo' : part}
-              node={node}
-              layoutMode={layoutMode}
-              deckEnabled={settings?.enableDeck}
-              canIncrementStart={canIncrementStart}
-              canIncrementEnd={canIncrementEnd}
-              popoverAnchorId={popoverAnchorId}
-              primaryId={primary?.id}
-              companioned={companioned}
-              companions={companions}
-            />
+            {heading && (
+              <PlankHeading
+                id={id}
+                part={part.startsWith('solo-') ? 'solo' : part}
+                node={node}
+                layoutMode={layoutMode}
+                deckEnabled={settings?.enableDeck}
+                canIncrementStart={canIncrementStart}
+                canIncrementEnd={canIncrementEnd}
+                popoverAnchorId={popoverAnchorId}
+                primaryId={primary?.id}
+                companioned={companioned}
+                companions={companions}
+              />
+            )}
             <Surface
               key={node.id}
               role='article'

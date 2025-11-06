@@ -46,6 +46,8 @@ export const DeckMain = () => {
   const scrollLeftRef = useRef<number>(null);
   const deckRef = useRef<HTMLDivElement>(null);
 
+  console.log(layoutMode);
+
   // Ensure the first plank is attended when the deck is first rendered.
   useEffect(() => {
     // NOTE: Not `useAttended` so that the layout component is not re-rendered when the attended list changes.
@@ -155,8 +157,8 @@ export const DeckMain = () => {
   return (
     <Main.Root
       navigationSidebarState={fullscreen ? 'closed' : context.sidebarState}
-      onNavigationSidebarStateChange={(next) => (context.sidebarState = next)}
       complementarySidebarState={fullscreen ? 'closed' : context.complementarySidebarState}
+      onNavigationSidebarStateChange={(next) => (context.sidebarState = next)}
       onComplementarySidebarStateChange={(next) => (context.complementarySidebarState = next)}
     >
       {/* Left sidebar. */}

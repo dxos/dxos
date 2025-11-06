@@ -29,23 +29,23 @@ export default (context: PluginContext) =>
 
               // NOTE(Zan): This is currently disabled.
               // TODO(Zan): Fullscreen needs to know the active node and provide that to the layout part.
-              const _fullscreen = {
-                id: `${LayoutAction.UpdateLayout._tag}/fullscreen`,
-                data: async () => {
-                  const { dispatchPromise: dispatch } = context.getCapability(Capabilities.IntentDispatcher);
-                  await dispatch(
-                    createIntent(LayoutAction.SetLayoutMode, { part: 'mode', options: { mode: 'fullscreen' } }),
-                  );
-                },
-                properties: {
-                  label: ['toggle fullscreen label', { ns: meta.id }],
-                  icon: 'ph--arrows-out--regular',
-                  keyBinding: {
-                    macos: 'ctrl+meta+f',
-                    windows: 'shift+ctrl+f',
-                  },
-                },
-              };
+              // const _fullscreen = {
+              //   id: `${LayoutAction.UpdateLayout._tag}/fullscreen`,
+              //   data: async () => {
+              //     const { dispatchPromise: dispatch } = context.getCapability(Capabilities.IntentDispatcher);
+              //     await dispatch(
+              //       createIntent(LayoutAction.SetLayoutMode, { part: 'mode', options: { mode: 'fullscreen' } }),
+              //     );
+              //   },
+              //   properties: {
+              //     label: ['toggle fullscreen label', { ns: meta.id }],
+              //     icon: 'ph--arrows-out--regular',
+              //     keyBinding: {
+              //       macos: 'ctrl+meta+f',
+              //       windows: 'shift+ctrl+f',
+              //     },
+              //   },
+              // };
 
               const closeCurrent = {
                 id: `${LayoutAction.Close._tag}/current`,

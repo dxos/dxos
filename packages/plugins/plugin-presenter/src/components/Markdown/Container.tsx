@@ -36,7 +36,7 @@ export const Container = ({ children, classNames }: ContainerProps) => {
   // https://www.npmjs.com/package/react-markdown
   return (
     <div ref={containerRef} className={mx('flex grow relative overflow-hidden bg-attention', classNames)}>
-      <div className={mx('flex w-full h-full overflow-hidden absolute')} style={props}>
+      <div className={mx('flex is-full bs-full overflow-hidden absolute')} style={props}>
         {width && height && children}
       </div>
     </div>
