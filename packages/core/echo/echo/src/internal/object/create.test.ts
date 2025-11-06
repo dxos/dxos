@@ -112,7 +112,7 @@ describe('create (static version)', () => {
     const text = inspect(contact);
     expect(text).toContain('Bot');
     expect(text).toContain('bot@example.com');
-    expect(text).toContain('example.com/type/Contact');
+    expect(text).toContain('example.com/type/Person');
     expect(text).toContain('0.1.0');
   });
 });

@@ -44,7 +44,7 @@ export const setTypename = (obj: any, typename: DXN) => {
 /**
  * @returns Object type as {@link DXN}.
  * @returns undefined if the object doesn't have a type.
- * @example `dxn:example.com/type/Contact:1.0.0`
+ * @example `dxn:example.com/type/Person:1.0.0`
  */
 export const getType = (obj: BaseObject): DXN | undefined => {
   if (!obj) {

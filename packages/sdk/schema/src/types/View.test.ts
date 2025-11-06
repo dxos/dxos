@@ -87,7 +87,7 @@ describe('Projection', () => {
 
   test('maintains field order during initialization', async ({ expect }) => {
     const schema = Obj.make(StoredSchema, {
-      typename: 'example.com/type/Contact',
+      typename: 'example.com/type/Person',
       version: '0.1.0',
       jsonSchema: Type.toJsonSchema(
         Schema.Struct({

@@ -412,7 +412,7 @@ describe('Reactive Object with ECHO database', () => {
       previousEmployment: Schema.optional(Schema.Array(Ref(Organization))),
     }).pipe(
       EchoObject({
-        typename: 'example.com/type/Contact',
+        typename: 'example.com/type/Person',
         version: '0.1.0',
       }),
     );

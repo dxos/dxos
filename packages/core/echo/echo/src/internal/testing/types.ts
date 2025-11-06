@@ -4,7 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { EchoObject, EchoRelation, Expando, TypedObject } from '../object';
+import { EchoObject, EchoRelation, TypedObject } from '../object';
 import { Ref, type Ref$ } from '../ref';
 
 /**
@@ -126,34 +126,6 @@ export namespace Testing {
       previous: Schema.optional(Schema.suspend((): Ref$<Task> => Ref(Task))),
       subTasks: Schema.optional(Schema.mutable(Schema.Array(Schema.suspend((): Ref$<Task> => Ref(Task))))),
       description: Schema.optional(Schema.String),
-    },
-    { partial: true },
-  ) {}
-
-  export enum RecordType {
-    UNDEFINED = 0,
-    PERSONAL = 1,
-    WORK = 2,
-  }
-
-  export class Container extends TypedObject({
-    typename: 'example.com/type/Container',
-    version: '0.1.0',
-  })(
-    {
-      objects: Schema.mutable(Schema.Array(Ref(Expando))),
-      records: Schema.mutable(
-        Schema.Array(
-          Schema.partial(
-            Schema.Struct({
-              title: Schema.String,
-              description: Schema.String,
-              contacts: Schema.mutable(Schema.Array(Ref(Person))),
-              type: Schema.Enums(RecordType),
-            }),
-          ),
-        ),
-      ),
     },
     { partial: true },
   ) {}

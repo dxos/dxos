@@ -16,7 +16,7 @@ export const Contact = Schema.Struct({
   .annotations({
     [TypeAnnotationId]: {
       kind: EntityKind.Object,
-      typename: 'example.com/type/Contact',
+      typename: 'example.com/type/Person',
       version: '0.1.0',
     },
     description: 'Contact information.',

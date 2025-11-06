@@ -166,17 +166,17 @@ describe('effect-to-json', () => {
       }),
     }).pipe(
       Type.Obj({
-        typename: 'example.com/type/Contact',
+        typename: 'example.com/type/Person',
         version: '0.1.0',
       }),
     );
     const jsonSchema = toJsonSchema(TestSchema);
     expect(jsonSchema).to.deep.eq({
       $schema: 'http://json-schema.org/draft-07/schema#',
-      $id: 'dxn:type:example.com/type/Contact',
+      $id: 'dxn:type:example.com/type/Person',
 
       entityKind: EntityKind.Object,
-      typename: 'example.com/type/Contact',
+      typename: 'example.com/type/Person',
       version: '0.1.0',
 
       type: 'object',
@@ -224,7 +224,7 @@ describe('effect-to-json', () => {
       organization: Ref(Organization).annotations({ description: 'Contact organization' }),
     }).pipe(
       Type.Obj({
-        typename: 'example.com/type/Contact',
+        typename: 'example.com/type/Person',
         version: '0.1.0',
       }),
     );
@@ -234,10 +234,10 @@ describe('effect-to-json', () => {
     const jsonSchema = toJsonSchema(Contact);
     expect(jsonSchema).toEqual({
       $schema: 'http://json-schema.org/draft-07/schema#',
-      $id: 'dxn:type:example.com/type/Contact',
+      $id: 'dxn:type:example.com/type/Person',
 
       entityKind: EntityKind.Object,
-      typename: 'example.com/type/Contact',
+      typename: 'example.com/type/Person',
       version: '0.1.0',
 
       type: 'object',
@@ -286,7 +286,7 @@ describe('effect-to-json', () => {
       organization: Ref(Organization).annotations({ description: 'Contact organization' }),
     }).pipe(
       Type.Obj({
-        typename: 'example.com/type/Contact',
+        typename: 'example.com/type/Person',
         version: '0.1.0',
       }),
     );
@@ -354,11 +354,11 @@ describe('effect-to-json', () => {
       version: '0.1.0',
       relationSource: {
         // TODO(dmaretskyi): Should those point to specific schema version?
-        $ref: 'dxn:type:example.com/type/Contact',
+        $ref: 'dxn:type:example.com/type/Person',
       },
       relationTarget: {
         // TODO(dmaretskyi): Should those point to specific schema version?
-        $ref: 'dxn:type:example.com/type/Contact',
+        $ref: 'dxn:type:example.com/type/Person',
       },
       type: 'object',
       properties: {
@@ -711,7 +711,7 @@ describe('json-to-effect', () => {
             "$ref": "/schemas/echo/ref",
             "reference": {
               "schema": {
-                "$ref": "dxn:type:example.com/type/Contact",
+                "$ref": "dxn:type:example.com/type/Person",
               },
               "schemaVersion": "0.1.0",
             },
@@ -732,7 +732,7 @@ describe('json-to-effect', () => {
   test('object nested inside another struct', () => {
     const Contact = Schema.Struct({
       name: Schema.String,
-    }).pipe(EchoObject({ typename: 'example.com/type/Contact', version: '0.1.0' }));
+    }).pipe(EchoObject({ typename: 'example.com/type/Person', version: '0.1.0' }));
     const input = Schema.Struct({
       contact: Contact,
     });
@@ -743,7 +743,7 @@ describe('json-to-effect', () => {
         "additionalProperties": false,
         "properties": {
           "contact": {
-            "$id": "dxn:type:example.com/type/Contact",
+            "$id": "dxn:type:example.com/type/Person",
             "additionalProperties": false,
             "entityKind": "object",
             "properties": {
@@ -763,7 +763,7 @@ describe('json-to-effect', () => {
               "id",
             ],
             "type": "object",
-            "typename": "example.com/type/Contact",
+            "typename": "example.com/type/Person",
             "version": "0.1.0",
           },
         },
@@ -792,7 +792,7 @@ describe('reference', () => {
       $schema: 'http://json-schema.org/draft-07/schema#',
       reference: {
         schema: {
-          $ref: 'dxn:type:example.com/type/Contact',
+          $ref: 'dxn:type:example.com/type/Person',
         },
         schemaVersion: '0.1.0',
       },
@@ -810,7 +810,7 @@ describe('reference', () => {
           $ref: '/schemas/echo/ref',
           reference: {
             schema: {
-              $ref: 'dxn:type:example.com/type/Contact',
+              $ref: 'dxn:type:example.com/type/Person',
             },
             schemaVersion: '0.1.0',
           },
@@ -831,7 +831,7 @@ describe('reference', () => {
           $ref: '/schemas/echo/ref',
           reference: {
             schema: {
-              $ref: 'dxn:type:example.com/type/Contact',
+              $ref: 'dxn:type:example.com/type/Person',
             },
             schemaVersion: '0.1.0',
           },
