@@ -6,8 +6,8 @@ import React, { useCallback } from 'react';
 
 import { createIntent } from '@dxos/app-framework';
 import { Surface, useIntentDispatcher } from '@dxos/app-framework/react';
+import { Obj } from '@dxos/echo';
 import { ATTENDABLE_PATH_SEPARATOR, DeckAction } from '@dxos/plugin-deck/types';
-import { fullyQualifiedId } from '@dxos/react-client/echo';
 import { useAttention } from '@dxos/react-ui-attention';
 import { StackItem } from '@dxos/react-ui-stack';
 import { type DataType } from '@dxos/schema';
@@ -21,7 +21,7 @@ export type ProjectContainerProps = {
 
 export const ProjectContainer = ({ project }: ProjectContainerProps) => {
   const { dispatchPromise: dispatch } = useIntentDispatcher();
-  const attendableId = fullyQualifiedId(project);
+  const attendableId = Obj.getDXN(project).toString();
   const { hasAttention } = useAttention(attendableId);
 
   const handleColumnAdd = useCallback(

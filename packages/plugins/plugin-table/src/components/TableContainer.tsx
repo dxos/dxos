@@ -15,7 +15,7 @@ import { invariant } from '@dxos/invariant';
 import { useGlobalFilteredObjects } from '@dxos/plugin-search';
 import { SpaceAction } from '@dxos/plugin-space/types';
 import { useClient } from '@dxos/react-client';
-import { fullyQualifiedId, getSpace, useQuery, useSchema } from '@dxos/react-client/echo';
+import { getSpace, useQuery, useSchema } from '@dxos/react-client/echo';
 import { StackItem } from '@dxos/react-ui-stack';
 import {
   Table,
@@ -51,7 +51,7 @@ export const TableContainer = ({ role, view }: TableContainerProps) => {
   const { graph } = useAppGraph();
   const customActions = useMemo(() => {
     return Rx.make((get) => {
-      const actions = get(graph.actions(fullyQualifiedId(view)));
+      const actions = get(graph.actions(Obj.getDXN(view).toString()));
       const nodes = actions.filter((action) => action.properties.disposition === 'toolbar');
       return {
         nodes,
@@ -106,12 +106,7 @@ export const TableContainer = ({ role, view }: TableContainerProps) => {
       Match.value(actionId).pipe(
         Match.when('open', () => {
           invariant(typename);
-          void dispatch(
-            createIntent(LayoutAction.Open, {
-              part: 'main',
-              subject: [fullyQualifiedId(data)],
-            }),
-          );
+          void dispatch(createIntent(LayoutAction.Open, { part: 'main', subject: [Obj.getDXN(data).toString()] }));
         }),
         Match.orElseAbsurd,
       ),
@@ -167,14 +162,14 @@ export const TableContainer = ({ role, view }: TableContainerProps) => {
   return (
     <StackItem.Content toolbar>
       <TableToolbar
-        attendableId={fullyQualifiedId(view)}
+        attendableId={Obj.getDXN(view).toString()}
         customActions={customActions}
         onAdd={handleInsertRow}
         onSave={handleSave}
       />
       <Table.Root role={role}>
         <Table.Main
-          key={fullyQualifiedId(view)}
+          key={Obj.getDXN(view).toString()}
           ref={tableRef}
           client={client}
           model={model}

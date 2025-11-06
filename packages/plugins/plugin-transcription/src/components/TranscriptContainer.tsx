@@ -4,7 +4,8 @@
 
 import React from 'react';
 
-import { fullyQualifiedId, getSpace } from '@dxos/client/echo';
+import { getSpace } from '@dxos/client/echo';
+import { Obj } from '@dxos/echo';
 import { useMembers, useQueue } from '@dxos/react-client/echo';
 import { StackItem } from '@dxos/react-ui-stack';
 import { type DataType } from '@dxos/schema';
@@ -20,10 +21,12 @@ export type TranscriptionContainerProps = {
 };
 
 export const TranscriptionContainer = ({ transcript }: TranscriptionContainerProps) => {
-  const attendableId = fullyQualifiedId(transcript);
+  const attendableId = Obj.getDXN(transcript).toString();
   const space = getSpace(transcript);
   const members = useMembers(space?.key).map((member) => member.identity);
-  const queue = useQueue<DataType.Message.Message>(transcript.queue.dxn, { pollInterval: 1_000 });
+  const queue = useQueue<DataType.Message.Message>(transcript.queue.dxn, {
+    pollInterval: 1_000,
+  });
   const model = useQueueModelAdapter(renderByline(members), queue);
 
   return (

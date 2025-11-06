@@ -7,8 +7,9 @@ import React from 'react';
 
 import { Capabilities, IntentPlugin, contributes, createResolver } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
+import { Obj } from '@dxos/echo';
 import { GraphPlugin } from '@dxos/plugin-graph';
-import { fullyQualifiedId, useSpace } from '@dxos/react-client/echo';
+import { useSpace } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { withTheme } from '@dxos/react-ui/testing';
 import { AttendableContainer } from '@dxos/react-ui-attention';
@@ -63,7 +64,7 @@ export const Default = () => {
   }
 
   return (
-    <AttendableContainer id={fullyQualifiedId(sheet)} classNames='contents'>
+    <AttendableContainer id={Obj.getDXN(sheet).toString()} classNames='contents'>
       <SheetContainer space={space} sheet={sheet} role='story' ignoreAttention />
     </AttendableContainer>
   );
@@ -72,13 +73,15 @@ export const Default = () => {
 export const Spec = () => {
   const space = useSpace();
   const graph = useComputeGraph(space);
-  const sheet = useTestSheet(space, graph, { cells: { A1: { value: 'Ready' } } });
+  const sheet = useTestSheet(space, graph, {
+    cells: { A1: { value: 'Ready' } },
+  });
   if (!sheet || !space) {
     return null;
   }
 
   return (
-    <AttendableContainer id={fullyQualifiedId(sheet)} classNames='contents'>
+    <AttendableContainer id={Obj.getDXN(sheet).toString()} classNames='contents'>
       <div role='none' className='grid grid-rows-[66%_33%] bs-full grid-cols-1'>
         <SheetContainer space={space} sheet={sheet} role='story' ignoreAttention />
         <div role='none' data-testid='grid.range-list'>

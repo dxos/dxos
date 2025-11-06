@@ -11,7 +11,6 @@ import { Obj } from '@dxos/echo';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
 import { ATTENDABLE_PATH_SEPARATOR, DECK_COMPANION_TYPE, PLANK_COMPANION_TYPE } from '@dxos/plugin-deck/types';
 import { ROOT_ID, createExtension, rxFromSignal } from '@dxos/plugin-graph';
-import { fullyQualifiedId } from '@dxos/react-client/echo';
 
 import { meta } from '../meta';
 import { Channel, ThreadAction } from '../types';
@@ -73,7 +72,7 @@ export default (context: PluginContext) => {
             Option.map((channel) => {
               const callManager = context.getCapability(ThreadCapabilities.CallManager);
               const joined = get(
-                rxFromSignal(() => callManager.joined && callManager.roomId === fullyQualifiedId(channel)),
+                rxFromSignal(() => callManager.joined && callManager.roomId === Obj.getDXN(channel).toString()),
               );
               if (!joined) {
                 return [];
@@ -81,7 +80,7 @@ export default (context: PluginContext) => {
 
               return [
                 {
-                  id: `${fullyQualifiedId(channel)}${ATTENDABLE_PATH_SEPARATOR}chat`,
+                  id: `${Obj.getDXN(channel).toString()}${ATTENDABLE_PATH_SEPARATOR}chat`,
                   type: PLANK_COMPANION_TYPE,
                   data: 'chat',
                   properties: {
@@ -147,26 +146,35 @@ export default (context: PluginContext) => {
               const disabled = get(
                 rxFromSignal(() => {
                   const metadata = resolve(Obj.getTypename(object)!);
-                  const selection = selectionManager.getSelection(fullyQualifiedId(object), metadata.selectionMode);
+                  const selection = selectionManager.getSelection(
+                    Obj.getDXN(object).toString(),
+                    metadata.selectionMode,
+                  );
                   const anchor = getAnchor(selection);
                   const invalidSelection = !anchor;
-                  const overlappingComment = toolbar[fullyQualifiedId(object)];
+                  const overlappingComment = toolbar[Obj.getDXN(object).toString()];
                   return (metadata.comments === 'anchored' && invalidSelection) || overlappingComment;
                 }),
               );
 
               return [
                 {
-                  id: `${fullyQualifiedId(object)}/comment`,
+                  id: `${Obj.getDXN(object).toString()}/comment`,
                   data: () => {
                     const { dispatchPromise: dispatch } = context.getCapability(Capabilities.IntentDispatcher);
                     const metadata = resolve(Obj.getTypename(object)!);
-                    const selection = selectionManager.getSelection(fullyQualifiedId(object));
+                    const selection = selectionManager.getSelection(Obj.getDXN(object).toString());
                     // TODO(wittjosiah): Use presence of selection to determine if the comment should be anchored.
                     // Requires all components which support selection (e.g. table/kanban) to support anchored comments.
                     const anchor = metadata.comments === 'anchored' ? getAnchor(selection) : Date.now().toString();
                     const name = metadata.getAnchorLabel?.(object, anchor);
-                    void dispatch(createIntent(ThreadAction.Create, { anchor, name, subject: object }));
+                    void dispatch(
+                      createIntent(ThreadAction.Create, {
+                        anchor,
+                        name,
+                        subject: object,
+                      }),
+                    );
                   },
                   properties: {
                     label: ['add comment label', { ns: meta.id }],

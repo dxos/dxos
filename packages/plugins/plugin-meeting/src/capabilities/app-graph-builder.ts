@@ -16,7 +16,7 @@ import { COMPOSER_SPACE_LOCK } from '@dxos/plugin-space';
 import { SpaceAction } from '@dxos/plugin-space/types';
 import { ThreadCapabilities } from '@dxos/plugin-thread';
 import { Channel } from '@dxos/plugin-thread/types';
-import { SpaceState, fullyQualifiedId, getSpace } from '@dxos/react-client/echo';
+import { SpaceState, getSpace } from '@dxos/react-client/echo';
 
 import { meta } from '../meta';
 import { Meeting, MeetingAction } from '../types';
@@ -44,7 +44,7 @@ export default (context: PluginContext) =>
             }),
             Option.map((channel) => [
               {
-                id: `${fullyQualifiedId(channel)}/action/share-meeting-link`,
+                id: `${Obj.getDXN(channel).toString()}/action/share-meeting-link`,
                 data: async () => {
                   const { dispatchPromise: dispatch } = context.getCapability(Capabilities.IntentDispatcher);
                   const space = getSpace(channel);
@@ -52,7 +52,7 @@ export default (context: PluginContext) =>
                   await dispatch(
                     createIntent(SpaceAction.GetShareLink, {
                       space,
-                      target: fullyQualifiedId(channel),
+                      target: Obj.getDXN(channel).toString(),
                       copyToClipboard: true,
                     }),
                   );
@@ -84,7 +84,7 @@ export default (context: PluginContext) =>
             Option.map(({ channel, meeting }) => {
               const callManager = context.getCapability(ThreadCapabilities.CallManager);
               const joined = get(
-                rxFromSignal(() => callManager.joined && callManager.roomId === fullyQualifiedId(channel)),
+                rxFromSignal(() => callManager.joined && callManager.roomId === Obj.getDXN(channel).toString()),
               );
               if (!joined) {
                 return [];
@@ -92,7 +92,7 @@ export default (context: PluginContext) =>
 
               return [
                 {
-                  id: `${fullyQualifiedId(channel)}${ATTENDABLE_PATH_SEPARATOR}meeting-thread`,
+                  id: `${Obj.getDXN(channel).toString()}${ATTENDABLE_PATH_SEPARATOR}meeting-thread`,
                   type: PLANK_COMPANION_TYPE,
                   data: get(rxFromSignal(() => meeting.thread.target)),
                   properties: {
@@ -122,7 +122,7 @@ export default (context: PluginContext) =>
             Option.flatMap((channel) => {
               const callManager = context.getCapability(ThreadCapabilities.CallManager);
               const isCallActive = get(
-                rxFromSignal(() => callManager.joined && callManager.roomId === fullyQualifiedId(channel)),
+                rxFromSignal(() => callManager.joined && callManager.roomId === Obj.getDXN(channel).toString()),
               );
               return isCallActive ? Option.some(channel) : Option.none();
             }),
@@ -132,7 +132,7 @@ export default (context: PluginContext) =>
 
               return [
                 {
-                  id: `${fullyQualifiedId(channel)}${ATTENDABLE_PATH_SEPARATOR}meeting`,
+                  id: `${Obj.getDXN(channel).toString()}${ATTENDABLE_PATH_SEPARATOR}meeting`,
                   type: PLANK_COMPANION_TYPE,
                   data,
                   properties: {
@@ -163,7 +163,7 @@ export default (context: PluginContext) =>
               const enabled = get(rxFromSignal(() => state.transcriptionManager?.enabled ?? false));
               return [
                 {
-                  id: `${fullyQualifiedId(channel)}/action/start-stop-transcription`,
+                  id: `${Obj.getDXN(channel).toString()}/action/start-stop-transcription`,
                   data: async () => {
                     // NOTE: We are not saving the state of the transcription manager here.
                     // We expect the state to be updated through `onCallStateUpdated` once it is propagated through Swarm.
@@ -187,7 +187,7 @@ export default (context: PluginContext) =>
                     const transcript = await meeting.transcript.load();
                     const transcriptionEnabled = !enabled;
                     callManager.setActivity(Type.getTypename(Meeting.Meeting)!, {
-                      meetingId: fullyQualifiedId(meeting),
+                      meetingId: Obj.getDXN(meeting).toString(),
                       transcriptDxn: transcript.queue.dxn.toString(),
                       transcriptionEnabled,
                     });
@@ -195,7 +195,7 @@ export default (context: PluginContext) =>
                     if (!transcriptionEnabled) {
                       log.warn('transcription disabled');
                     } else {
-                      const primary = fullyQualifiedId(channel);
+                      const primary = Obj.getDXN(channel).toString();
                       const companion = `${primary}${ATTENDABLE_PATH_SEPARATOR}transcript`;
                       await dispatch(createIntent(DeckAction.ChangeCompanion, { primary, companion }));
                     }
@@ -229,7 +229,7 @@ export default (context: PluginContext) =>
             Option.map(({ channel, meeting }) => {
               return [
                 {
-                  id: `${fullyQualifiedId(channel)}${ATTENDABLE_PATH_SEPARATOR}transcript`,
+                  id: `${Obj.getDXN(channel).toString()}${ATTENDABLE_PATH_SEPARATOR}transcript`,
                   type: PLANK_COMPANION_TYPE,
                   data: get(rxFromSignal(() => meeting.transcript.target)),
                   properties: {
@@ -258,7 +258,7 @@ export default (context: PluginContext) =>
             Option.map((meeting) => {
               return [
                 {
-                  id: `${fullyQualifiedId(meeting)}${ATTENDABLE_PATH_SEPARATOR}transcript`,
+                  id: `${Obj.getDXN(meeting).toString()}${ATTENDABLE_PATH_SEPARATOR}transcript`,
                   type: PLANK_COMPANION_TYPE,
                   data: get(rxFromSignal(() => meeting.transcript.target)),
                   properties: {

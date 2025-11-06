@@ -9,7 +9,6 @@ import { LayoutAction, chain, createIntent } from '@dxos/app-framework';
 import { useIntentDispatcher } from '@dxos/app-framework/react';
 import { Obj } from '@dxos/echo';
 import { type PreviewProps } from '@dxos/plugin-preview';
-import { fullyQualifiedId } from '@dxos/react-client/echo';
 import { IconButton, useTranslation } from '@dxos/react-ui';
 import { Card } from '@dxos/react-ui-stack';
 import { DataType } from '@dxos/schema';
@@ -38,7 +37,7 @@ export const MarkdownCard = ({ subject, role }: MarkdownCardProps) => {
           }),
           chain(LayoutAction.Open, {
             part: 'main',
-            subject: [fullyQualifiedId(subject)],
+            subject: [Obj.getDXN(subject).toString()],
           }),
         ),
       ),

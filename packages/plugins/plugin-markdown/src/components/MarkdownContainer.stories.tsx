@@ -17,7 +17,7 @@ import { SpacePlugin } from '@dxos/plugin-space';
 import { StorybookLayoutPlugin } from '@dxos/plugin-storybook-layout';
 import { ThemePlugin } from '@dxos/plugin-theme';
 import { faker } from '@dxos/random';
-import { fullyQualifiedId, useQuery, useSpace } from '@dxos/react-client/echo';
+import { useQuery, useSpace } from '@dxos/react-client/echo';
 import { useAsyncEffect } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { useAttentionAttributes } from '@dxos/react-ui-attention';
@@ -38,7 +38,7 @@ const DefaultStory = () => {
   const space = useSpace();
   const [doc] = useQuery(space, Query.type(Markdown.Document));
   const data = useMemo(() => ({ subject: doc }), [doc]);
-  const id = doc && fullyQualifiedId(doc);
+  const id = doc && Obj.getDXN(doc).toString();
   const attentionAttrs = useAttentionAttributes(id);
 
   useAsyncEffect(async () => {

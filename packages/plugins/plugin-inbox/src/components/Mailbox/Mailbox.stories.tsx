@@ -10,12 +10,13 @@ import React, { useMemo, useState } from 'react';
 import { IntentPlugin, SettingsPlugin } from '@dxos/app-framework';
 import { Surface, useCapability } from '@dxos/app-framework/react';
 import { withPluginManager } from '@dxos/app-framework/testing';
+import { Obj } from '@dxos/echo';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { PreviewPlugin } from '@dxos/plugin-preview';
 import { SpacePlugin } from '@dxos/plugin-space';
 import { StorybookLayoutPlugin } from '@dxos/plugin-storybook-layout';
 import { ThemePlugin } from '@dxos/plugin-theme';
-import { Filter, fullyQualifiedId, useQuery, useSpace } from '@dxos/react-client/echo';
+import { Filter, useQuery, useSpace } from '@dxos/react-client/echo';
 import { withTheme } from '@dxos/react-ui/testing';
 import { useAttentionAttributes } from '@dxos/react-ui-attention';
 import { withAttention } from '@dxos/react-ui-attention/testing';
@@ -41,13 +42,13 @@ const WithCompanionStory = () => {
   const [mailbox] = useQuery(space, Filter.type(Mailbox.Mailbox));
 
   const state = useCapability(InboxCapabilities.MailboxState);
-  const message = mailbox && state[fullyQualifiedId(mailbox)];
+  const message = mailbox && state[Obj.getDXN(mailbox).toString()];
 
   const mailboxData = useMemo(() => ({ subject: mailbox }), [mailbox]);
   const companionData = useMemo(() => ({ subject: message ?? 'message', companionTo: mailbox }), [message, mailbox]);
 
   // NOTE: Attention required for scrolling.
-  const attentionAttrs = useAttentionAttributes(mailbox ? fullyQualifiedId(mailbox) : undefined);
+  const attentionAttrs = useAttentionAttributes(mailbox ? Obj.getDXN(mailbox).toString() : undefined);
 
   if (!space || !mailbox) {
     return null;
