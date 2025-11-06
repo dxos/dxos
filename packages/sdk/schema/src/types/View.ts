@@ -57,7 +57,7 @@ export type Projection = Schema.Schema.Type<typeof Projection>;
  * Views are generated or user-defined projections of a schema's properties.
  * They are used to configure the visual representation of the data.
  */
-const View_ = Schema.Struct({
+export const ViewSchema = Schema.Struct({
   /**
    * Name of the view.
    */
@@ -93,13 +93,18 @@ const View_ = Schema.Struct({
   presentation: Type.Ref(Type.Expando).pipe(FormAnnotation.set(false)),
 })
   .pipe(LabelAnnotation.set(['name']))
-  .pipe(Type.Obj({ typename: 'dxos.org/type/View', version: '0.4.0' }));
+  .pipe(
+    Type.Obj({
+      typename: 'dxos.org/type/View',
+      version: '0.4.0',
+    }),
+  );
 
-export interface View extends Schema.Schema.Type<typeof View_> {}
-export interface ViewEncoded extends Schema.Schema.Encoded<typeof View_> {}
-export const View: Schema.Schema<View, ViewEncoded> = View_;
+export interface View extends Schema.Schema.Type<typeof ViewSchema> {}
+export interface ViewEncoded extends Schema.Schema.Encoded<typeof ViewSchema> {}
+export const View: Schema.Schema<View, ViewEncoded> = ViewSchema;
 
-type MakeProps = {
+export type MakeProps = {
   name?: string;
   query: Query.Any;
   queryRaw?: string;
@@ -170,7 +175,7 @@ export const make = ({
   return view;
 };
 
-type MakeWithReferencesProps = MakeProps & {
+export type MakeWithReferencesProps = MakeProps & {
   // TODO(wittjosiah): Unify these.
   registry?: RuntimeSchemaRegistry;
   echoRegistry?: EchoSchemaRegistry;

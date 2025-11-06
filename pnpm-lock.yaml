@@ -13528,6 +13528,9 @@ importers:
       '@codemirror/lang-xml':
         specifier: ^6.1.0
         version: 6.1.0
+      '@codemirror/lang-yaml':
+        specifier: ^6.1.2
+        version: 6.1.2
       '@codemirror/language':
         specifier: ^6.11.3
         version: 6.11.3
@@ -16940,8 +16943,8 @@ packages:
   '@codemirror/lang-xml@6.1.0':
     resolution: {integrity: sha512-3z0blhicHLfwi2UgkZYRPioSgVTo9PV5GP5ducFH6FaHy0IAJRg+ixj5gTR1gnT/glAIC8xv4w2VL1LoZfs+Jg==}
 
-  '@codemirror/lang-yaml@6.1.1':
-    resolution: {integrity: sha512-HV2NzbK9bbVnjWxwObuZh5FuPCowx51mEfoFT9y3y+M37fA3+pbxx4I7uePuygFzDsAmCTwQSc/kXh/flab4uw==}
+  '@codemirror/lang-yaml@6.1.2':
+    resolution: {integrity: sha512-dxrfG8w5Ce/QbT7YID7mWZFKhdhsaTNOYjOkSIMt1qmC4VQnXSDSYVHHHn8k6kJUfIhtLo8t1JJgltlxWdsITw==}
 
   '@codemirror/language-data@6.5.1':
     resolution: {integrity: sha512-0sWxeUSNlBr6OmkqybUTImADFUP0M3P0IiSde4nc24bz/6jIYzqYSgkOSLS+CBIoW1vU8Q9KUWXscBXeoMVC9w==}
@@ -36162,13 +36165,14 @@ snapshots:
       '@lezer/common': 1.2.2
       '@lezer/xml': 1.0.6
 
-  '@codemirror/lang-yaml@6.1.1':
+  '@codemirror/lang-yaml@6.1.2':
     dependencies:
       '@codemirror/autocomplete': 6.19.0
       '@codemirror/language': 6.11.3
       '@codemirror/state': 6.5.2
       '@lezer/common': 1.2.2
       '@lezer/highlight': 1.2.1
+      '@lezer/lr': 1.4.2
       '@lezer/yaml': 1.0.3
 
   '@codemirror/language-data@6.5.1':
@@ -36192,7 +36196,7 @@ snapshots:
       '@codemirror/lang-vue': 0.1.2
       '@codemirror/lang-wast': 6.0.1
       '@codemirror/lang-xml': 6.1.0
-      '@codemirror/lang-yaml': 6.1.1
+      '@codemirror/lang-yaml': 6.1.2
       '@codemirror/language': 6.11.3
       '@codemirror/legacy-modes': 6.4.0
 
