@@ -124,6 +124,7 @@ const projectFunctionToTool = (fn: FunctionDefinition<any, any>): Tool.Any => {
   }
 
   // TODO(burdon): Use and map function.key?
+  // TODO(dmaretskyi): Use function key instead.
   const tool = Tool.make(makeToolName(fn.name), {
     description: fn.description,
     parameters: createStructFieldsFromSchema(fn.inputSchema),
