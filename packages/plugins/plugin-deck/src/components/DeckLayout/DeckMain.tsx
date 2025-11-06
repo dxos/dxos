@@ -155,8 +155,8 @@ export const DeckMain = () => {
   return (
     <Main.Root
       navigationSidebarState={fullscreen ? 'closed' : context.sidebarState}
-      onNavigationSidebarStateChange={(next) => (context.sidebarState = next)}
       complementarySidebarState={fullscreen ? 'closed' : context.complementarySidebarState}
+      onNavigationSidebarStateChange={(next) => (context.sidebarState = next)}
       onComplementarySidebarStateChange={(next) => (context.complementarySidebarState = next)}
     >
       {/* Left sidebar. */}
@@ -201,6 +201,7 @@ export const DeckMain = () => {
             } as MainProps['style']
           }
         >
+          {/* Deck mode. */}
           <div
             role='none'
             className={!solo ? 'relative bg-deckSurface overflow-hidden' : 'sr-only'}
@@ -238,6 +239,7 @@ export const DeckMain = () => {
               ))}
             </Stack>
           </div>
+          {/* Solo mode. */}
           <div
             role='none'
             className={solo ? 'relative overflow-hidden bg-deckSurface' : 'sr-only'}
