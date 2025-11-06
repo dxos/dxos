@@ -46,8 +46,6 @@ export const DeckMain = () => {
   const scrollLeftRef = useRef<number>(null);
   const deckRef = useRef<HTMLDivElement>(null);
 
-  console.log(layoutMode);
-
   // Ensure the first plank is attended when the deck is first rendered.
   useEffect(() => {
     // NOTE: Not `useAttended` so that the layout component is not re-rendered when the attended list changes.
@@ -203,6 +201,7 @@ export const DeckMain = () => {
             } as MainProps['style']
           }
         >
+          {/* Deck mode. */}
           <div
             role='none'
             className={!solo ? 'relative bg-deckSurface overflow-hidden' : 'sr-only'}
@@ -240,6 +239,7 @@ export const DeckMain = () => {
               ))}
             </Stack>
           </div>
+          {/* Solo mode. */}
           <div
             role='none'
             className={solo ? 'relative overflow-hidden bg-deckSurface' : 'sr-only'}

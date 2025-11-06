@@ -38,6 +38,10 @@ import { PlankLoading } from './PlankLoading';
 
 const UNKNOWN_ID = 'unknown_id';
 
+//
+// Plank
+//
+
 export type PlankProps = Pick<PlankComponentProps, 'layoutMode' | 'part' | 'path' | 'order' | 'active' | 'settings'> & {
   id?: string;
   companionId?: string;
@@ -97,12 +101,13 @@ export const Plank = memo(({ id = UNKNOWN_ID, companionId, ...props }: PlankProp
   );
 });
 
-const PlankContainer = ({
-  children,
-  solo,
-  companion,
-  encapsulate,
-}: PropsWithChildren<{ solo: boolean; companion: boolean; encapsulate: boolean }>) => {
+//
+// PlankContainer
+//
+
+type PlankContainerProps = PropsWithChildren<{ solo: boolean; companion: boolean; encapsulate: boolean }>;
+
+const PlankContainer = ({ children, solo, companion, encapsulate }: PlankContainerProps) => {
   const sizeAttrs = useMainSize();
   if (!solo) {
     return children;
@@ -116,7 +121,7 @@ const PlankContainer = ({
       className={mx(
         'absolute inset-[--main-spacing] grid',
         encapsulate && 'border border-separator rounded overflow-hidden',
-        companion && 'grid-cols-[6fr_4fr]',
+        companion && 'grid-cols-[6fr_4fr]', // TODO(burdon): Resize.
         railGridHorizontal,
         mainIntrinsicSize,
       )}
@@ -127,6 +132,10 @@ const PlankContainer = ({
   );
 };
 
+//
+// PlankComponent
+//
+
 type PlankComponentProps = {
   layoutMode: LayoutMode;
   id: string;
@@ -134,7 +143,6 @@ type PlankComponentProps = {
   path?: string[];
   order?: number;
   active?: string[];
-  // TODO(burdon): Change to role?
   companioned?: 'primary' | 'companion';
   node?: Node;
   primary?: Node;
@@ -226,21 +234,21 @@ const PlankComponent = memo(
     const placeholder = useMemo(() => <PlankLoading />, []);
 
     const Root = part.startsWith('solo') ? 'article' : StackItem.Root;
+    const fullscreen = layoutMode === 'solo--fullscreen';
     const className = mx(
       'attention-surface relative dx-focus-ring-inset-over-all density-coarse',
       isSolo && 'absolute inset-0',
       isSolo && mainIntrinsicSize,
       railGridHorizontal,
       part.startsWith('solo') && 'grid',
-      part.startsWith('solo-') && 'row-span-2 grid-rows-subgrid min-is-0',
+      part.startsWith('solo-') && 'grid-rows-subgrid row-span-2 min-is-0',
+      fullscreen && 'grid-rows-1',
       part === 'deck' && (companioned === 'companion' ? '!border-separator border-ie' : '!border-separator border-li'),
       part === 'solo-companion' && '!border-separator border-is',
       settings?.encapsulatedPlanks &&
         !part.startsWith('solo') &&
         'mli-[--main-spacing] !border-separator border rounded overflow-hidden',
     );
-
-    const heading = true;
 
     return (
       <Root
@@ -263,7 +271,7 @@ const PlankComponent = memo(
       >
         {node ? (
           <>
-            {heading && (
+            {!fullscreen && (
               <PlankHeading
                 id={id}
                 part={part.startsWith('solo-') ? 'solo' : part}
