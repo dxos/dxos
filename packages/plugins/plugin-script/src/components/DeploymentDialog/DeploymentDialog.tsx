@@ -7,8 +7,9 @@ import React, { useEffect, useMemo } from 'react';
 import { LayoutAction, createIntent, useIntentDispatcher } from '@dxos/app-framework';
 import { getSpace } from '@dxos/react-client/echo';
 import { Button, Dialog, IconButton, useTranslation } from '@dxos/react-ui';
+import { type AccessToken } from '@dxos/types';
 
-import { useCreateAndDeployScriptTemplates } from '../../hooks/useCreateAndDeployScriptTemplates';
+import { useCreateAndDeployScriptTemplates } from '../../hooks';
 import { meta } from '../../meta';
 import { type Template } from '../../templates';
 

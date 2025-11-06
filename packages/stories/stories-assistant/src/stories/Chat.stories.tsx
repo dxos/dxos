@@ -837,7 +837,7 @@ export const WithProject: Story = {
       });
       space.db.add(researchTrigger);
 
-      const mailboxView = View.View.make({
+      const mailboxView = View.make({
         name: 'Mailbox',
         query: Query.select(Filter.type(Message.Message))
           .select(Filter.tag(tagDxn))
@@ -847,19 +847,19 @@ export const WithProject: Story = {
         jsonSchema: Type.toJsonSchema(Message.Message),
         presentation: Obj.make(Collection.Collection, { objects: [] }),
       });
-      const contactsView = View.View.make({
+      const contactsView = View.make({
         name: 'Contacts',
         query: contactsQuery,
         jsonSchema: Type.toJsonSchema(Person.Person),
         presentation: Obj.make(Collection.Collection, { objects: [] }),
       });
-      const organizationsView = View.View.make({
+      const organizationsView = View.make({
         name: 'Organizations',
         query: organizationsQuery,
         jsonSchema: Type.toJsonSchema(Organization.Organization),
         presentation: Obj.make(Collection.Collection, { objects: [] }),
       });
-      const notesView = View.View.make({
+      const notesView = View.make({
         name: 'Notes',
         query: notesQuery,
         jsonSchema: Type.toJsonSchema(Markdown.Document),
@@ -867,7 +867,7 @@ export const WithProject: Story = {
       });
 
       space.db.add(
-        Project.Project.make({
+        Project.make({
           name: 'Investor Research',
           collections: [mailboxView, contactsView, organizationsView, notesView].map((view) => Ref.make(view)),
         }),

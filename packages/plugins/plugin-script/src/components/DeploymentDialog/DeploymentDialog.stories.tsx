@@ -11,6 +11,7 @@ import { Obj } from '@dxos/echo';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { Dialog } from '@dxos/react-ui';
 import { withTheme } from '@dxos/react-ui/testing';
+import { AccessToken } from '@dxos/types';
 
 import { translations } from '../../translations';
 
