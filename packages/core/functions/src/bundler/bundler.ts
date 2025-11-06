@@ -57,7 +57,7 @@ export const initializeBundler = async (options: { wasmUrl: string }) => {
 };
 
 /**
- * ESBuild bundler.
+ * In-browser ESBuild bundler.
  */
 export class Bundler {
   constructor(private readonly _options: BundlerOptions) {}

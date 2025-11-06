@@ -12,3 +12,4 @@ export * from './loaders';
 export * from './savers';
 export * from './plugin';
 export * from './types';
+export * from './preset';

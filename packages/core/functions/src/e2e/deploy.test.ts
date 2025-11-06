@@ -25,8 +25,7 @@ describe.runIf(process.env.DX_TEST_TAGS?.includes('functions-e2e'))('Functions d
       },
     });
 
-    const client = new Client({ config });
-    await client.initialize();
+    await using client = await new Client({ config }).initialize();
     await client.halo.createIdentity();
 
     const space = await client.spaces.create();
@@ -64,7 +63,5 @@ describe.runIf(process.env.DX_TEST_TAGS?.includes('functions-e2e'))('Functions d
     const resultNumber = Number(result);
     expect(resultNumber).toBeGreaterThan(0);
     expect(resultNumber).toBeLessThan(100);
-
-    await client.destroy();
   });
 });

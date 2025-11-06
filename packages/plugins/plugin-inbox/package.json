@@ -89,6 +89,7 @@
     "turndown": "^7.2.1"
   },
   "devDependencies": {
+    "@dxos/config": "workspace:*",
     "@dxos/plugin-storybook-layout": "workspace:*",
     "@dxos/plugin-theme": "workspace:*",
     "@dxos/random": "workspace:*",

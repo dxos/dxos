@@ -3072,6 +3072,9 @@ importers:
       effect:
         specifier: 3.18.3
         version: 3.18.3
+      esbuild:
+        specifier: 0.25.10
+        version: 0.25.10
       esbuild-wasm:
         specifier: ^0.16.14
         version: 0.16.17
@@ -6956,6 +6959,9 @@ importers:
         specifier: ^7.2.1
         version: 7.2.1
     devDependencies:
+      '@dxos/config':
+        specifier: workspace:*
+        version: link:../../sdk/config
       '@dxos/plugin-storybook-layout':
         specifier: workspace:*
         version: link:../plugin-storybook-layout

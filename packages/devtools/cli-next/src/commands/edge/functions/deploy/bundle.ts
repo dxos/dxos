@@ -14,6 +14,7 @@ import { type Message, build } from 'esbuild';
 
 import { BaseError } from '@dxos/errors';
 import { PublicKey } from '@dxos/keys';
+import { bundleFunction } from '@dxos/functions/native';
 
 import { CommandConfig } from '../../../../services';
 
@@ -36,90 +37,12 @@ export const bundle: (
   FileSystem.FileSystem | CommandConfig
 > = Effect.fn(function* (options) {
   const { verbose } = yield* CommandConfig;
-  const outdir = `/tmp/dxos-functions-bundle-${new Date().toISOString()}-${PublicKey.random().toHex()}`;
-
-  const result = yield* Effect.promise(() =>
-    build({
-      entryPoints: {
-        // Gets mapped to `userFunc.js` by esbuild.
-        userFunc: options.entryPoint,
-      },
-      bundle: true,
-      format: 'esm',
-      platform: 'browser',
-      conditions: ['workerd', 'worker', 'browser'],
-      outdir,
-      metafile: true,
-      treeShaking: true,
-      splitting: true,
-      loader: {
-        '.wasm': 'copy',
-      },
-      external: [
-        'cloudflare:workers',
-        'functions-service:user-script',
-        'node:async_hooks',
-        'node:buffer',
-        'node:crypto',
-        'node:diagnostics_channel',
-        'node:events',
-      ],
-      plugins: [
-        {
-          name: 'metafile',
-          setup: (build) => {
-            build.onEnd(async (result) => {
-              await writeFile(
-                join(build.initialOptions.outdir!, 'metafile.json'),
-                JSON.stringify(result.metafile, null, 2),
-              );
-              await writeFile(
-                join(build.initialOptions.outdir!, 'manifest.json'),
-                JSON.stringify(
-                  {
-                    files: Object.keys(result.metafile!.outputs).map((path) => ({
-                      name: relative(build.initialOptions.outdir!, path),
-                    })),
-                  },
-                  null,
-                  2,
-                ),
-              );
-            });
-          },
-        },
-      ],
+  return yield* Effect.promise(() =>
+    bundleFunction({
+      entryPoint: options.entryPoint,
+      verbose,
     }),
   );
-
-  if (result.errors.length > 0) {
-    return yield* Effect.fail(new BundleCreationError(result.errors));
-  }
-
-  const fs = yield* FileSystem.FileSystem;
-  const assetPaths = Object.keys(result.metafile!.outputs).map((path) => relative(outdir, path));
-  const assets = yield* Effect.all(assetPaths.map((path) => fs.readFile(join(outdir, path)))).pipe(
-    Effect.map((assets) => Array.zip(assetPaths, assets)),
-    Effect.map((assets) => Object.fromEntries(assets)),
-  );
-
-  if (verbose) {
-    yield* Console.log('Function compiled');
-    yield* Console.log('Metafile path:', `${outdir}/metafile.json`);
-    yield* Console.log('Assets:\n');
-    yield* Console.log(
-      Object.entries(result.metafile!.outputs)
-        .sort((a, b) => b[1].bytes - a[1].bytes)
-        .map(
-          ([path, desc]) =>
-            `${formatBytes(desc.bytes).padEnd(10)} - ${relative(outdir, path)} ${basename(path) === 'userFunc.js' ? ' (entry point)' : ''}`,
-        )
-        .join('\n'),
-    );
-  }
-
-  // Must match esbuild entry point.
-  return { entryPoint: 'userFunc.js', assets };
 });
 
 class BundleCreationError extends BaseError.extend('BUNDLE_CREATION_ERROR', 'Bundle creation failed') {

@@ -15,6 +15,12 @@
       "browser": "./dist/lib/browser/index.mjs",
       "node": "./dist/lib/node-esm/index.mjs"
     },
+    "./native": {
+      "source": "./src/native/index.ts",
+      "types": "./dist/types/src/native/index.d.ts",
+      "browser": "./dist/lib/browser/native/index.mjs",
+      "node": "./dist/lib/node-esm/native/index.mjs"
+    },
     "./bundler": {
       "source": "./src/bundler/index.ts",
       "types": "./dist/types/src/bundler/index.d.ts",
@@ -77,6 +83,7 @@
     "@dxos/util": "workspace:*",
     "@effect/platform": "0.92.1",
     "effect": "3.18.3",
+    "esbuild": "0.25.10",
     "esbuild-wasm": "^0.16.14",
     "i18next": "^24.2.1",
     "iso-did": "^1.6.0"
