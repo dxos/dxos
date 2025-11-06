@@ -14,7 +14,7 @@ import { withTheme } from '@dxos/react-ui/testing';
 import { View } from '@dxos/schema';
 import { type ValueGenerator } from '@dxos/schema/testing';
 import { render } from '@dxos/storybook-utils';
-import { Organization, Person, Project } from '@dxos/types';
+import { HasRelationship, Organization, Person, Project } from '@dxos/types';
 
 import { useGraphModel } from '../../hooks';
 import { Graph } from '../../types';
