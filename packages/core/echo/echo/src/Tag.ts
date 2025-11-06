@@ -4,9 +4,9 @@
 
 import * as Schema from 'effect/Schema';
 
-import { LabelAnnotation } from '../internal';
-import * as Obj from '../Obj';
-import * as Type from '../Type';
+import { LabelAnnotation } from './internal';
+import * as Obj from './Obj';
+import * as Type from './Type';
 
 export const Tag = Schema.Struct({
   label: Schema.String,

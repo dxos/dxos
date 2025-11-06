@@ -6,7 +6,7 @@ import type * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
 
 import { type QueryAST } from '@dxos/echo';
-import { FormatEnum, type JsonSchemaType, TypeEnum } from '@dxos/echo/internal';
+import { FormatEnum, TypeEnum } from '@dxos/echo/internal';
 import { visit } from '@dxos/effect';
 import { DXN } from '@dxos/keys';
 
@@ -33,7 +33,7 @@ export const mapSchemaToFields = (schema: Schema.Schema<any, any>): SchemaFieldD
 };
 
 /**
- * @deprecatedq
+ * @deprecated
  */
 const toFieldValueType = (type: SchemaAST.AST): { format?: FormatEnum; type: TypeEnum } => {
   if (SchemaAST.isTypeLiteral(type)) {
@@ -67,52 +67,12 @@ const toFieldValueType = (type: SchemaAST.AST): { format?: FormatEnum; type: Typ
   return { type: TypeEnum.String, format: FormatEnum.JSON };
 };
 
-/**
- * Creates or updates echo annotations for SingleSelect options in a JSON Schema property.
- */
-export const makeSingleSelectAnnotations = (
-  jsonProperty: JsonSchemaType,
-  options: Array<{ id: string; title?: string; color?: string }>,
-) => {
-  jsonProperty.enum = options.map(({ id }) => id);
-  jsonProperty.format = FormatEnum.SingleSelect;
-  jsonProperty.annotations = {
-    meta: {
-      singleSelect: {
-        options: options.map(({ id, title, color }) => ({ id, title, color })),
-      },
-    },
-  };
-
-  return jsonProperty;
-};
-
-/**
- * Creates or updates echo annotations for MultiSelect options in a JSON Schema property.
- */
-export const makeMultiSelectAnnotations = (
-  jsonProperty: JsonSchemaType,
-  options: Array<{ id: string; title?: string; color?: string }>,
-) => {
-  // TODO(ZaymonFC): Is this how do we encode an array of enums?
-  jsonProperty.type = 'object';
-  jsonProperty.items = { type: 'string', enum: options.map(({ id }) => id) };
-  jsonProperty.format = FormatEnum.MultiSelect;
-  jsonProperty.annotations = {
-    meta: {
-      multiSelect: {
-        options: options.map(({ id, title, color }) => ({ id, title, color })),
-      },
-    },
-  };
-
-  return jsonProperty;
-};
-
 // TODO(wittjosiah): This needs to be cleaned up.
-//   Ideally this should be something like `Query.getTypename` or something like that.
-//   It should return the typename the query is indexing on if it is, regardless or where in the AST it is.
-export const getTypenameFromQuery = (query: QueryAST.Query | undefined) => {
+//   Ideally this should be something like `Query.getTypename`.
+//   It should return the typename the query is indexing, regardless or where in the AST it is.
+// TODO(burdon): Should return type or undefined not empty string.
+// TODO(burdon): What does this actually mean? Queries may be complex (in the future) and have multiple types.
+export const getTypenameFromQuery = (query: QueryAST.Query | undefined): string => {
   if (query?.type !== 'select') {
     return '';
   }
