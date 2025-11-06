@@ -9,8 +9,8 @@ import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 
 import { Capabilities, type PluginContext, contributes, createIntent } from '@dxos/app-framework';
-import { type QueryResult, type Space, SpaceState, getSpace, isSpace, parseId } from '@dxos/client/echo';
-import { Filter, Obj, Query, Type } from '@dxos/echo';
+import { type QueryResult, type Space, SpaceState, getSpace, isSpace } from '@dxos/client/echo';
+import { DXN, Filter, Obj, Query, Type } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { ATTENDABLE_PATH_SEPARATOR, PLANK_COMPANION_TYPE } from '@dxos/plugin-deck/types';
@@ -626,18 +626,18 @@ export default (context: PluginContext) => {
         let query: QueryResult<Type.Expando> | undefined;
         return Rx.make((get) => {
           const client = context.getCapability(ClientCapabilities.Client);
-          const { spaceId, objectId } = parseId(id);
-          if (!spaceId || !objectId) {
+          const dxn = DXN.tryParse(id)?.asEchoDXN();
+          if (!dxn || !dxn.spaceId) {
             return null;
           }
 
-          const space = client.spaces.get(spaceId);
+          const space = client.spaces.get(dxn.spaceId);
           if (!space) {
             return null;
           }
 
           if (!query) {
-            query = space.db.query(Filter.ids(objectId));
+            query = space.db.query(Filter.ids(dxn.echoId));
           }
 
           const object = get(rxFromQuery(query)).at(0);

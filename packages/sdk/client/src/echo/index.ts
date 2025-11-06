@@ -71,7 +71,6 @@ export {
   ReactiveObjectSchema,
   getSpace,
   getSyncSummary,
-  parseFullyQualifiedId,
   parseId,
   type Progress,
   type PeerSyncState,
