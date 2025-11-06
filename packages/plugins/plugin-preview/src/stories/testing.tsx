@@ -8,6 +8,7 @@ import { Obj, Ref } from '@dxos/echo';
 import { faker } from '@dxos/random';
 import { CardContainer } from '@dxos/react-ui-stack/testing';
 import { Organization, Person, Task } from '@dxos/types';
+import { Project } from '@dxos/types';
 
 import { OrganizationCard, PersonCard, ProjectCard, TaskCard } from '../cards';
 import { type PreviewProps } from '../types';

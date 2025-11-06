@@ -65,7 +65,7 @@ const meta: Meta<typeof DefaultStory> = {
             await client.spaces.waitUntilReady();
             const space = client.spaces.default;
             await space.waitUntilReady();
-            space.db.add(Markdown.makeDocument({ content }));
+            space.db.add(Markdown.make({ content }));
           },
         }),
         IntentPlugin(),

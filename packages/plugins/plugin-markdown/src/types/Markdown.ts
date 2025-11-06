@@ -7,6 +7,7 @@ import * as Schema from 'effect/Schema';
 import { Obj, Ref, Type } from '@dxos/echo';
 import { DescriptionAnnotation, FormAnnotation, LabelAnnotation } from '@dxos/echo/internal';
 import { EditorInputMode, EditorViewMode } from '@dxos/react-ui-editor/types';
+import { ItemAnnotation, Text } from '@dxos/schema';
 
 /**
  * Document Item type.
@@ -31,7 +32,7 @@ export type Document = Schema.Schema.Type<typeof Document>;
 /**
  * Document factory.
  */
-export const makeDocument = ({
+export const make = ({
   content = '',
   ...props
 }: Partial<{ name: string; fallbackName: string; content: string }> = {}) =>

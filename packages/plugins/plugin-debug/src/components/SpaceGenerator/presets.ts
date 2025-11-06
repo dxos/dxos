@@ -70,7 +70,7 @@ export const generator = () => ({
           const org = space.db.add(Obj.make(Organization.Organization, { name: 'DXOS', website: 'https://dxos.org' }));
 
           const doc = space.db.add(
-            Markdown.makeDocument({
+            Markdown.make({
               name: 'DXOS Research',
               content: 'DXOS builds Composer, an open-source AI-powered malleable application.',
             }),

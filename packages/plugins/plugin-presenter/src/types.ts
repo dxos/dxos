@@ -6,6 +6,7 @@ import * as Schema from 'effect/Schema';
 import { type Context, createContext } from 'react';
 
 import { Markdown } from '@dxos/plugin-markdown/types';
+import { Collection } from '@dxos/schema';
 
 import { meta } from './meta';
 

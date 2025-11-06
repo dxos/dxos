@@ -9,6 +9,7 @@ import { SpaceCapabilities } from '@dxos/plugin-space';
 import { defineObjectForm } from '@dxos/plugin-space/types';
 import { createDocAccessor, getTextInRange } from '@dxos/react-client/echo';
 import { translations as editorTranslations } from '@dxos/react-ui-editor';
+import { Text } from '@dxos/schema';
 
 import {
   AnchorSort,

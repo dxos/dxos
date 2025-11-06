@@ -9,6 +9,7 @@ import { type Live } from '@dxos/live-object';
 import { ObservabilityAction } from '@dxos/plugin-observability/types';
 import { getSpace } from '@dxos/react-client/echo';
 import { useOnTransition } from '@dxos/react-ui';
+import { type ContentBlock } from '@dxos/types';
 
 export const useOnEditAnalytics = (message: Live<any>, textBlock: ContentBlock.Text | undefined, editing: boolean) => {
   const { dispatchPromise: dispatch } = useIntentDispatcher();

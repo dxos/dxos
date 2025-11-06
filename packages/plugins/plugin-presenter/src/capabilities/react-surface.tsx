@@ -8,6 +8,7 @@ import { Capabilities, contributes, createSurface } from '@dxos/app-framework';
 import { Obj } from '@dxos/echo';
 import { SettingsStore } from '@dxos/local-storage';
 import { Markdown } from '@dxos/plugin-markdown/types';
+import { Collection } from '@dxos/schema';
 
 import {
   CollectionPresenterContainer,

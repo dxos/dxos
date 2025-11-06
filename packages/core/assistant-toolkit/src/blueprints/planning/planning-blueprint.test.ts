@@ -52,7 +52,7 @@ describe('Planning Blueprint', { timeout: 120_000 }, () => {
           }),
         );
 
-        const artifact = yield* DatabaseService.add(Markdown.makeDocument());
+        const artifact = yield* DatabaseService.add(Markdown.make());
         let prevContent = artifact.content;
         const matchList =
           ({ includes = [], excludes = [] }: { includes: RegExp[]; excludes?: RegExp[] }) =>

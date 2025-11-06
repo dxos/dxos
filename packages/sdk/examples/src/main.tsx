@@ -52,7 +52,7 @@ const main = async () => {
     types: [Markdown.Document, Text.Text],
     onCreateSpace: ({ space }) => {
       space.db.add(
-        Markdown.makeDocument({
+        Markdown.make({
           content: '## Type here...\n\ntry the airplane mode switch.',
         }),
       );

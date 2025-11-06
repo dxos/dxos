@@ -6,6 +6,7 @@ import * as Schema from 'effect/Schema';
 
 import { Filter, Obj, Query, QueryAST, Type } from '@dxos/echo';
 import { LabelAnnotation, ViewAnnotation } from '@dxos/echo/internal';
+import { View } from '@dxos/schema';
 
 export const Graph = Schema.Struct({
   name: Schema.optional(Schema.String),
@@ -38,6 +39,7 @@ type MakeViewProps = Omit<View.MakeFromSpaceProps, 'presentation'> & {
 /**
  * Make a graph as a view of a data set.
  */
+// TODO(burdon): Move to @dxos/schema.
 export const makeView = async ({ presentation, ...props }: MakeViewProps) => {
   const graph = make(presentation);
   return View.makeFromSpace({ ...props, presentation: graph });

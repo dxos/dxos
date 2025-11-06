@@ -12,7 +12,7 @@ import { ATTENDABLE_PATH_SEPARATOR, DeckAction } from '@dxos/plugin-deck/types';
 import { ObservabilityAction } from '@dxos/plugin-observability/types';
 import { CollectionAction, SpaceAction } from '@dxos/plugin-space/types';
 import { Ref, fullyQualifiedId, getSpace } from '@dxos/react-client/echo';
-import { Message } from '@dxos/types';
+import { AnchoredTo, Message } from '@dxos/types';
 
 import { meta } from '../meta';
 import { Channel, Thread, ThreadAction } from '../types';

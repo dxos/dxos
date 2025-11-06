@@ -11,6 +11,7 @@ import { Filter, Obj, Query, Relation } from '@dxos/echo';
 import { type Markdown } from '@dxos/plugin-markdown/types';
 import { createDocAccessor, fullyQualifiedId, getSource, getSpace, getTextInRange } from '@dxos/react-client/echo';
 import { comments, createExternalCommentSync } from '@dxos/react-ui-editor';
+import { AnchoredTo } from '@dxos/types';
 
 import { Thread, ThreadAction, type ThreadState } from '../types';
 

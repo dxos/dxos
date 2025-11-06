@@ -9,10 +9,7 @@ import { MarkdownEvents } from '@dxos/plugin-markdown';
 import { SpaceCapabilities, SpaceEvents } from '@dxos/plugin-space';
 import { defineObjectForm } from '@dxos/plugin-space/types';
 import { translations as threadTranslations } from '@dxos/react-ui-thread';
-import { Message } from '@dxos/types';
-
-const AnchoredTo = AnchoredTo.AnchoredTo;
-type AnchoredTo = AnchoredTo.AnchoredTo;
+import { AnchoredTo, Message } from '@dxos/types';
 
 import {
   AppGraphBuilder,
@@ -119,7 +116,12 @@ export const ThreadPlugin = definePlugin(meta, () => [
     id: `${meta.id}/module/schema`,
     activatesOn: ClientEvents.SetupSchema,
     activate: () =>
-      contributes(ClientCapabilities.Schema, [AnchoredTo, Thread.Thread, Message.Message, Message.MessageV1]),
+      contributes(ClientCapabilities.Schema, [
+        AnchoredTo.AnchoredTo,
+        Thread.Thread,
+        Message.Message,
+        Message.MessageV1,
+      ]),
   }),
   defineModule({
     id: `${meta.id}/module/migration`,

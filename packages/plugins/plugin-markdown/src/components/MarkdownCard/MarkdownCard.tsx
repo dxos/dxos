@@ -11,6 +11,7 @@ import { type PreviewProps } from '@dxos/plugin-preview';
 import { fullyQualifiedId } from '@dxos/react-client/echo';
 import { IconButton, useTranslation } from '@dxos/react-ui';
 import { Card } from '@dxos/react-ui-stack';
+import { Text } from '@dxos/schema';
 
 import { meta } from '../../meta';
 import { Markdown } from '../../types';

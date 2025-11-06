@@ -13,6 +13,7 @@ import { ATTENDABLE_PATH_SEPARATOR, DeckAction } from '@dxos/plugin-deck/types';
 import { createExtension, rxFromSignal } from '@dxos/plugin-graph';
 import { Markdown } from '@dxos/plugin-markdown/types';
 import { fullyQualifiedId, getSpace } from '@dxos/react-client/echo';
+import { Collection } from '@dxos/schema';
 
 import { meta } from '../meta';
 import { PresenterAction, type PresenterSettingsProps } from '../types';

@@ -24,7 +24,7 @@ export default async (context: PluginContext) => {
   const space = client.spaces.default;
   space.properties.icon = SPACE_ICON;
 
-  const readme = Markdown.makeDocument({
+  const readme = Markdown.make({
     name: 'README',
     content: README_CONTENT,
   });

@@ -21,8 +21,9 @@ import { StorybookLayoutPlugin } from '@dxos/plugin-storybook-layout';
 import { ThemePlugin } from '@dxos/plugin-theme';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { defaultTx } from '@dxos/react-ui-theme';
-import { Testing, seedTestData } from '@dxos/schema/testing';
+import { Testing } from '@dxos/schema/testing';
 import { type Actor, Message, Organization, Person } from '@dxos/types';
+import { seedTestData } from '@dxos/types/testing';
 
 import { useAudioFile, useQueueModelAdapter, useTranscriber } from '../../hooks';
 import { MessageNormalizer, getActorId } from '../../segments-normalization';

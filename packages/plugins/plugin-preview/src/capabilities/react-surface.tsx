@@ -21,6 +21,7 @@ import { useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 import { Card } from '@dxos/react-ui-stack';
 import { descriptionMessage, mx } from '@dxos/react-ui-theme';
+import { type ProjectionModel } from '@dxos/schema';
 import { Organization, Person, Project, Task } from '@dxos/types';
 
 import { OrganizationCard, PersonCard, ProjectCard, TaskCard } from '../cards';

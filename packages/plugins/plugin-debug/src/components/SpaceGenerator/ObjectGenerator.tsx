@@ -56,7 +56,7 @@ export const staticGenerators = new Map<string, ObjectGenerator<any>>([
     async (space, n, cb) => {
       const objects = range(n).map(() => {
         return space.db.add(
-          Markdown.makeDocument({
+          Markdown.make({
             name: faker.commerce.productName(),
             content: faker.lorem.sentences(5),
           }),

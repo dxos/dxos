@@ -9,6 +9,7 @@ import { Obj } from '@dxos/echo';
 import { SettingsStore } from '@dxos/local-storage';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
 import { fullyQualifiedId } from '@dxos/react-client/echo';
+import { Text } from '@dxos/schema';
 
 import { MarkdownCard, MarkdownContainer, type MarkdownContainerProps, MarkdownSettings } from '../components';
 import { meta } from '../meta';

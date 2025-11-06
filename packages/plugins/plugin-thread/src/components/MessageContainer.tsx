@@ -14,7 +14,7 @@ import { IconButton, useOnTransition, useThemeContext, useTranslation } from '@d
 import { createBasicExtensions, createThemeExtensions, useTextEditor } from '@dxos/react-ui-editor';
 import { hoverableControlItem, hoverableControls, hoverableFocusedWithinControls, mx } from '@dxos/react-ui-theme';
 import { MessageHeading, MessageRoot } from '@dxos/react-ui-thread';
-import { type Message } from '@dxos/types';
+import { type ContentBlock, type Message } from '@dxos/types';
 
 import { useOnEditAnalytics } from '../hooks';
 import { meta } from '../meta';

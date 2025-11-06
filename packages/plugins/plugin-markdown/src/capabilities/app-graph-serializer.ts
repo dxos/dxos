@@ -8,6 +8,7 @@ import { Capabilities, type PluginContext, chain, contributes, createIntent } fr
 import { Obj } from '@dxos/echo';
 import { SpaceAction } from '@dxos/plugin-space/types';
 import { isSpace } from '@dxos/react-client/echo';
+import { Collection } from '@dxos/schema';
 
 import { translations } from '../translations';
 import { Markdown, MarkdownAction } from '../types';

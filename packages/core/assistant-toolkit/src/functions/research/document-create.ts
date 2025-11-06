@@ -50,7 +50,7 @@ export default defineFunction({
 
     // Create document.
     const object = yield* DatabaseService.add(
-      Markdown.makeDocument({
+      Markdown.make({
         name,
         content,
       }),

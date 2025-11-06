@@ -6,9 +6,8 @@ import * as Schema from 'effect/Schema';
 
 import { Type } from '@dxos/echo';
 import { EchoObjectSchema, SpaceSchema } from '@dxos/react-client/echo';
-import { Actor, Message } from '@dxos/types';
-
-type AnchoredTo = AnchoredTo.AnchoredTo;
+import { Collection } from '@dxos/schema';
+import { Actor, AnchoredTo, Message } from '@dxos/types';
 
 import { meta } from '../meta';
 
@@ -115,6 +114,6 @@ export type ThreadState = {
   /** Object toolbar state. */
   toolbar: Record<string, boolean>;
   /** In-memory draft threads. */
-  drafts: Record<string, AnchoredTo[]>;
+  drafts: Record<string, AnchoredTo.AnchoredTo[]>;
   current?: string | undefined;
 };

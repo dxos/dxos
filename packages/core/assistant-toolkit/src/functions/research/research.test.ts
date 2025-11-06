@@ -33,7 +33,7 @@ import { invariant } from '@dxos/invariant';
 import { ObjectId } from '@dxos/keys';
 import { MarkdownBlueprint, MarkdownFunction } from '@dxos/plugin-markdown/toolkit';
 import { Markdown } from '@dxos/plugin-markdown/types';
-import { type Message, Organization } from '@dxos/types';
+import { HasSubject, type Message, Organization } from '@dxos/types';
 
 import { ResearchBlueprint } from '../../blueprints';
 import { testToolkit } from '../../blueprints/testing';

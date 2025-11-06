@@ -37,6 +37,7 @@ import {
   typewriter,
 } from '@dxos/react-ui-editor';
 import { defaultTx } from '@dxos/react-ui-theme';
+import { Text } from '@dxos/schema';
 import { isTruthy } from '@dxos/util';
 
 import { Markdown } from '../types';

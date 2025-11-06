@@ -48,7 +48,7 @@ type Story = StoryObj<typeof meta>;
 export const Popover: Story = {
   args: {
     role: 'card--popover',
-    subject: Markdown.makeDocument({
+    subject: Markdown.make({
       name: faker.lorem.words(3),
       content: faker.lorem.paragraphs(3),
     }),
@@ -58,7 +58,7 @@ export const Popover: Story = {
 export const Intrinsic: Story = {
   args: {
     role: 'card--intrinsic',
-    subject: Markdown.makeDocument({
+    subject: Markdown.make({
       name: faker.lorem.words(3),
       content: faker.lorem.paragraphs(3),
     }),
@@ -68,7 +68,7 @@ export const Intrinsic: Story = {
 export const Extrinsic: Story = {
   args: {
     role: 'card--extrinsic',
-    subject: Markdown.makeDocument({
+    subject: Markdown.make({
       name: faker.lorem.words(3),
       content: faker.lorem.paragraphs(3),
     }),

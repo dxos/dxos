@@ -285,13 +285,13 @@ export const WithDocument: Story = {
     config: config.remote, // TODO(burdon): Issue making persistent.
     onInit: async ({ space }) => {
       space.db.add(
-        Markdown.makeDocument({
+        Markdown.make({
           name: 'My Document',
           content: addSpellingMistakes(MARKDOWN_DOCUMENT, 2),
         }),
       );
       space.db.add(
-        Markdown.makeDocument({
+        Markdown.make({
           name: 'Style Guide',
           content: STYLE_GUIDE,
         }),
@@ -314,7 +314,7 @@ export const WithBlueprints: Story = {
     plugins: [InboxPlugin(), MarkdownPlugin(), TablePlugin()],
     config: config.remote,
     onInit: async ({ space }) => {
-      space.db.add(Markdown.makeDocument({ name: 'Tasks' }));
+      space.db.add(Markdown.make({ name: 'Tasks' }));
     },
     onChatCreated: async ({ space, binder }) => {
       const { objects } = await space.db.query(Filter.type(Markdown.Document)).run();
@@ -451,7 +451,7 @@ export const WithTrip: Story = {
       // TODO(burdon): Table.
       space.db.add(Map.make({ name: 'Trip' }));
       space.db.add(
-        Markdown.makeDocument({
+        Markdown.make({
           name: 'Itinerary',
           content: trim`
             # Itinerary
@@ -469,7 +469,7 @@ export const WithTrip: Story = {
         }),
       );
       space.db.add(
-        Markdown.makeDocument({
+        Markdown.make({
           name: 'Barcelona',
           content: trim`
             # Barcelona
@@ -522,7 +522,7 @@ export const WithResearch: Story = {
     accessTokens: [Obj.make(AccessToken.AccessToken, { source: 'exa.ai', token: EXA_API_KEY })],
     onInit: async ({ space }) => {
       space.db.add(Obj.make(Organization.Organization, { name: 'BlueYard Capital' }));
-      space.db.add(Markdown.makeDocument({ name: 'DXOS', content: DXOS_DOCUMENT }));
+      space.db.add(Markdown.make({ name: 'DXOS', content: DXOS_DOCUMENT }));
     },
     onChatCreated: async ({ space, binder }) => {
       const { objects: organizations } = await space.db.query(Filter.type(Organization.Organization)).run();
@@ -758,13 +758,13 @@ export const WithProject: Story = {
       await queue.append(messages);
 
       const dxosResearch = space.db.add(
-        Markdown.makeDocument({
+        Markdown.make({
           name: 'DXOS Research',
           content: 'DXOS builds Composer, an open-source AI-powered malleable application.',
         }),
       );
       const blueyardResearch = space.db.add(
-        Markdown.makeDocument({
+        Markdown.make({
           name: 'BlueYard Research',
           content: 'BlueYard is a venture capital firm that invests in early-stage startups.',
         }),

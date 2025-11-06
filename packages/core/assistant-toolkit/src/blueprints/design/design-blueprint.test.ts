@@ -53,7 +53,7 @@ describe('Design Blueprint', { timeout: 120_000 }, () => {
           }),
         );
 
-        const artifact = yield* DatabaseService.add(Markdown.makeDocument({ content: 'Hello, world!' }));
+        const artifact = yield* DatabaseService.add(Markdown.make({ content: 'Hello, world!' }));
         let prevContent = artifact.content;
 
         {

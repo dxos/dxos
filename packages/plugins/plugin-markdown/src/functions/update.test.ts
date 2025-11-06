@@ -31,7 +31,8 @@ import { TestDatabaseLayer } from '@dxos/functions/testing';
 import { invariant } from '@dxos/invariant';
 import { ObjectId } from '@dxos/keys';
 import { Markdown } from '@dxos/plugin-markdown/types';
-import { type Message } from '@dxos/types';
+import { Collection } from '@dxos/schema';
+import { HasSubject, type Message } from '@dxos/types';
 
 import { WithProperties, testToolkit } from '../testing';
 import { MarkdownBlueprint, MarkdownFunction } from '../toolkit';
@@ -68,7 +69,7 @@ describe('update', () => {
     'call a function to update a markdown document',
     Effect.fnUntraced(
       function* (_) {
-        const doc = Markdown.makeDocument({
+        const doc = Markdown.make({
           name: 'BlueYard',
           content: 'Founders and portfolio of BlueYard.',
         });
