@@ -19,18 +19,18 @@ describe('DatabaseService', () => {
         );
 
         {
-          const objects = yield* DatabaseService.query(Query.type(DataType.Person)).objects;
+          const objects = yield* DatabaseService.query(Query.type(DataType.Person)).run;
           expect(objects).toEqual([person]);
         }
 
         {
           const query = yield* DatabaseService.query(Query.type(DataType.Person));
-          expect(yield* query.objects).toEqual([person]);
+          expect(yield* query.run).toEqual([person]);
         }
 
         {
           const query = yield* DatabaseService.query(Query.type(DataType.Person));
-          expect(yield* Rx.get(query.rx)).toEqual([person]);
+          expect(yield* Rx.get(query.objects)).toEqual([person]);
         }
       },
       Effect.provide(
@@ -51,7 +51,7 @@ describe('DatabaseService', () => {
         const registry = yield* Registry.RxRegistry;
         let results: Obj.Any[][] = [];
         registry.subscribe(
-          query.rx,
+          query.objects,
           (objects) => {
             results.push(objects);
           },
