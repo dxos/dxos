@@ -19,11 +19,11 @@ import { type Live, getSnapshot } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { omit, pick } from '@dxos/util';
 
-import { PropertySchema, type PropertyType } from '../format';
 import { type View } from '../types';
 import { makeMultiSelectAnnotations, makeSingleSelectAnnotations } from '../util';
 
 import { type FieldType, createFieldId } from './field';
+import { PropertySchema, type PropertyType } from './format';
 
 export const VIEW_FIELD_LIMIT = 32;
 

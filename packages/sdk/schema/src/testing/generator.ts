@@ -25,7 +25,7 @@ import { type Live } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { getDeep } from '@dxos/util';
 
-import { type SchemaProperty, getSchemaProperties } from '../properties';
+import { type SchemaProperty, getSchemaProperties } from '../projection';
 
 /**
  * Decouples from faker.

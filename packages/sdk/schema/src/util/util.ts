@@ -32,6 +32,9 @@ export const mapSchemaToFields = (schema: Schema.Schema<any, any>): SchemaFieldD
   return fields;
 };
 
+/**
+ * @deprecatedq
+ */
 const toFieldValueType = (type: SchemaAST.AST): { format?: FormatEnum; type: TypeEnum } => {
   if (SchemaAST.isTypeLiteral(type)) {
     return { type: TypeEnum.Ref, format: FormatEnum.Ref };

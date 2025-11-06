@@ -28,8 +28,7 @@ import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
 import { type Live } from '@dxos/live-object';
 
-import { FieldSchema, FieldSortType, ProjectionModel } from '../projection';
-import { getSchemaProperties } from '../properties';
+import { FieldSchema, FieldSortType, ProjectionModel, getSchemaProperties } from '../projection';
 
 import { createDefaultSchema } from './util';
 
