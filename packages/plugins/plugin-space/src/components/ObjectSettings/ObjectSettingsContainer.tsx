@@ -4,7 +4,7 @@
 
 import React, { useMemo } from 'react';
 
-import { Surface } from '@dxos/app-framework';
+import { Surface } from '@dxos/app-framework/react';
 import { type Obj } from '@dxos/echo';
 import { Clipboard, Toolbar } from '@dxos/react-ui';
 import { StackItem } from '@dxos/react-ui-stack';

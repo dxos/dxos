@@ -4,15 +4,8 @@
 
 import React, { useCallback, useMemo } from 'react';
 
-import {
-  Capabilities,
-  CollaborationActions,
-  LayoutAction,
-  createIntent,
-  useCapabilities,
-  useCapability,
-  useIntentDispatcher,
-} from '@dxos/app-framework';
+import { Capabilities, CollaborationActions, LayoutAction, createIntent } from '@dxos/app-framework';
+import { useCapabilities, useCapability, useIntentDispatcher } from '@dxos/app-framework/react';
 import { Filter, Obj, Query, Relation } from '@dxos/echo';
 import { Ref, fullyQualifiedId, getSpace, useQuery } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';

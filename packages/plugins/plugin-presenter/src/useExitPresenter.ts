@@ -4,7 +4,8 @@
 
 import { useCallback } from 'react';
 
-import { LayoutAction, createIntent, useCapability, useIntentDispatcher } from '@dxos/app-framework';
+import { LayoutAction, createIntent } from '@dxos/app-framework';
+import { useCapability, useIntentDispatcher } from '@dxos/app-framework/react';
 import { type Live } from '@dxos/live-object';
 import { DeckCapabilities } from '@dxos/plugin-deck';
 import { DeckAction } from '@dxos/plugin-deck/types';

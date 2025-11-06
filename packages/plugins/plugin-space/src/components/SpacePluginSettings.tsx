@@ -4,7 +4,8 @@
 
 import React from 'react';
 
-import { createIntent, useIntentDispatcher } from '@dxos/app-framework';
+import { createIntent } from '@dxos/app-framework';
+import { useIntentDispatcher } from '@dxos/app-framework/react';
 import { useClient } from '@dxos/react-client';
 import { useSpaces } from '@dxos/react-client/echo';
 import { IconButton, Input, List, ListItem, toLocalizedString, useTranslation } from '@dxos/react-ui';
@@ -36,7 +37,12 @@ export const SpacePluginSettings = ({ settings }: { settings: SpaceSettingsProps
             <ListItem.Root key={space.id} classNames='is-full items-center'>
               {/* TODO(burdon): Should auto center and truncate; NOTE truncate doesn't work with flex grow. */}
               <ListItem.Heading classNames='grow truncate !min-bs-0'>
-                {toLocalizedString(getSpaceDisplayName(space, { personal: space === client.spaces.default }), t)}
+                {toLocalizedString(
+                  getSpaceDisplayName(space, {
+                    personal: space === client.spaces.default,
+                  }),
+                  t,
+                )}
               </ListItem.Heading>
               <IconButton
                 icon='ph--faders--regular'

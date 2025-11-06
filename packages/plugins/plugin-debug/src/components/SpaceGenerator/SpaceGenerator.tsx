@@ -4,7 +4,7 @@
 
 import React, { useCallback, useMemo, useState } from 'react';
 
-import { useIntentDispatcher } from '@dxos/app-framework';
+import { useIntentDispatcher } from '@dxos/app-framework/react';
 import { ComputeGraph } from '@dxos/conductor';
 import { Filter, type Obj } from '@dxos/echo';
 import { Markdown } from '@dxos/plugin-markdown/types';

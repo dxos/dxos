@@ -4,7 +4,8 @@
 
 import React, { useEffect, useMemo } from 'react';
 
-import { LayoutAction, createIntent, useIntentDispatcher } from '@dxos/app-framework';
+import { LayoutAction, createIntent } from '@dxos/app-framework';
+import { useIntentDispatcher } from '@dxos/app-framework/react';
 import { getSpace } from '@dxos/react-client/echo';
 import { Button, Dialog, IconButton, useTranslation } from '@dxos/react-ui';
 import { type DataType } from '@dxos/schema';

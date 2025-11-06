@@ -8,7 +8,7 @@ import { createContext } from '@radix-ui/react-context';
 import React, { type PropsWithChildren, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 
-import { Surface } from '@dxos/app-framework';
+import { Surface } from '@dxos/app-framework/react';
 import { DXN } from '@dxos/keys';
 import { type Live } from '@dxos/live-object';
 import { useClient } from '@dxos/react-client';

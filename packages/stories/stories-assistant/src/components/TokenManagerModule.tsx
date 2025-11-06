@@ -4,7 +4,7 @@
 
 import React, { useMemo } from 'react';
 
-import { Surface } from '@dxos/app-framework';
+import { Surface } from '@dxos/app-framework/react';
 import { meta } from '@dxos/plugin-token-manager';
 
 export const TokenManagerModule = () => {

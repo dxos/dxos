@@ -4,7 +4,8 @@
 
 import React from 'react';
 
-import { Capabilities, contributes, createSurface, useLayout } from '@dxos/app-framework';
+import { Capabilities, contributes, createSurface } from '@dxos/app-framework';
+import { useLayout } from '@dxos/app-framework/react';
 import { Obj } from '@dxos/echo';
 import { getSpace, parseId, useSpace } from '@dxos/react-client/echo';
 

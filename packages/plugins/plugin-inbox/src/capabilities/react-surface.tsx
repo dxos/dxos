@@ -6,15 +6,8 @@ import * as Effect from 'effect/Effect';
 import * as Function from 'effect/Function';
 import React, { useCallback } from 'react';
 
-import {
-  Capabilities,
-  LayoutAction,
-  chain,
-  contributes,
-  createIntent,
-  createSurface,
-  useIntentDispatcher,
-} from '@dxos/app-framework';
+import { Capabilities, LayoutAction, chain, contributes, createIntent, createSurface } from '@dxos/app-framework';
+import { useIntentDispatcher } from '@dxos/app-framework/react';
 import { Obj } from '@dxos/echo';
 import { AttentionAction } from '@dxos/plugin-attention/types';
 import { ATTENDABLE_PATH_SEPARATOR, DeckAction } from '@dxos/plugin-deck/types';
@@ -41,8 +34,13 @@ export default () =>
     createSurface({
       id: `${meta.id}/mailbox`,
       role: ['article', 'section'],
-      filter: (data): data is { attendableId?: string; subject: Mailbox.Mailbox; properties: { filter?: string } } =>
-        Obj.instanceOf(Mailbox.Mailbox, data.subject),
+      filter: (
+        data,
+      ): data is {
+        attendableId?: string;
+        subject: Mailbox.Mailbox;
+        properties: { filter?: string };
+      } => Obj.instanceOf(Mailbox.Mailbox, data.subject),
       component: ({ data, role }) => {
         return (
           <MailboxContainer
@@ -57,7 +55,12 @@ export default () =>
     createSurface({
       id: `${meta.id}/message`,
       role: ['article', 'section'],
-      filter: (data): data is { companionTo: Mailbox.Mailbox; subject: DataType.Message.Message | 'message' } =>
+      filter: (
+        data,
+      ): data is {
+        companionTo: Mailbox.Mailbox;
+        subject: DataType.Message.Message | 'message';
+      } =>
         Obj.instanceOf(Mailbox.Mailbox, data.companionTo) &&
         (data.subject === 'message' || Obj.instanceOf(DataType.Message.Message, data.subject)),
       component: ({ data: { companionTo, subject: message }, role }) => {
@@ -143,7 +146,10 @@ export default () =>
                   subject: [fullyQualifiedId(mailbox)],
                   options: { workspace: space?.id },
                 }),
-                chain(InboxAction.SelectMessage, { mailboxId: fullyQualifiedId(mailbox), message }),
+                chain(InboxAction.SelectMessage, {
+                  mailboxId: fullyQualifiedId(mailbox),
+                  message,
+                }),
               ),
             );
           },

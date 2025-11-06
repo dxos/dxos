@@ -5,7 +5,8 @@
 import * as Schema from 'effect/Schema';
 import React from 'react';
 
-import { createIntent, useIntentDispatcher } from '@dxos/app-framework';
+import { createIntent } from '@dxos/app-framework';
+import { useIntentDispatcher } from '@dxos/app-framework/react';
 import { Input, Message, useTranslation } from '@dxos/react-ui';
 import { ControlGroup, ControlItemInput, ControlPage, ControlSection } from '@dxos/react-ui-form';
 

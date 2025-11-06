@@ -5,14 +5,8 @@
 import { untracked } from '@preact/signals-core';
 import React, { Fragment, type UIEvent, useCallback, useEffect, useMemo, useRef } from 'react';
 
-import {
-  Capabilities,
-  LayoutAction,
-  createIntent,
-  useCapability,
-  useIntentDispatcher,
-  usePluginManager,
-} from '@dxos/app-framework';
+import { Capabilities, LayoutAction, createIntent } from '@dxos/app-framework';
+import { useCapability, useIntentDispatcher, usePluginManager } from '@dxos/app-framework/react';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
 import { Main, type MainProps, useMediaQuery, useOnTransition } from '@dxos/react-ui';
 import { DEFAULT_HORIZONTAL_SIZE, Stack, StackContext } from '@dxos/react-ui-stack';

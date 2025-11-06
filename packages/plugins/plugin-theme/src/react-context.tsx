@@ -4,7 +4,8 @@
 
 import React, { useMemo } from 'react';
 
-import { Capabilities, contributes, useCapabilities } from '@dxos/app-framework';
+import { Capabilities, contributes } from '@dxos/app-framework';
+import { useCapabilities } from '@dxos/app-framework/react';
 import { live } from '@dxos/live-object';
 import { type ThemeMode, ThemeProvider, type ThemeProviderProps, Toast, Tooltip } from '@dxos/react-ui';
 import { defaultTx } from '@dxos/react-ui-theme';

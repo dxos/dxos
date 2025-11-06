@@ -12,10 +12,11 @@ import { useAsyncEffect, useDefaultValue } from '@dxos/react-hooks';
 
 import { Capabilities, Events } from '../common';
 import { type Plugin, PluginManager, type PluginManagerOptions } from '../core';
-import { ErrorBoundary, PluginManagerProvider } from '../react';
 
 import { App } from './App';
 import { DefaultFallback } from './DefaultFallback';
+import { ErrorBoundary } from './ErrorBoundary';
+import { PluginManagerProvider } from './PluginManagerProvider';
 
 const ENABLED_KEY = 'dxos.org/app-framework/enabled';
 

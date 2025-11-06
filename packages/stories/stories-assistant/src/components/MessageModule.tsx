@@ -4,7 +4,7 @@
 
 import React, { useMemo } from 'react';
 
-import { Surface, useCapability } from '@dxos/app-framework';
+import { Surface, useCapability } from '@dxos/app-framework/react';
 import { Filter } from '@dxos/echo';
 import { InboxCapabilities } from '@dxos/plugin-inbox';
 import { Mailbox } from '@dxos/plugin-inbox/types';

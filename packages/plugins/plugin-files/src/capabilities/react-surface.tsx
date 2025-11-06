@@ -3,7 +3,8 @@
 //
 import React from 'react';
 
-import { Capabilities, type PluginContext, contributes, createSurface, useCapability } from '@dxos/app-framework';
+import { Capabilities, type PluginContext, contributes, createSurface } from '@dxos/app-framework';
+import { useCapability } from '@dxos/app-framework/react';
 import { SettingsStore } from '@dxos/local-storage';
 
 import { ExportStatus, FilesSettings, LocalFileContainer } from '../components';
