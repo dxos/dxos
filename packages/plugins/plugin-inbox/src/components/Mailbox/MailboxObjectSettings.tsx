@@ -14,6 +14,7 @@ import { Button, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '../../meta';
 import { type Mailbox } from '../../types';
+import { Obj } from '@dxos/echo';
 
 export const MailboxObjectSettings = ({ object }: { object: Mailbox.Mailbox }) => {
   const { t } = useTranslation(meta.id);
@@ -43,7 +44,7 @@ export const MailboxObjectSettings = ({ object }: { object: Mailbox.Mailbox }) =
           space,
           template: { type: 'timer', cron: '*/30 * * * * *' },
           scriptName: 'Gmail',
-          input: { mailboxId: object.id },
+          input: { mailboxId: Obj.getDXN(object).toString() },
         }),
       );
     }
