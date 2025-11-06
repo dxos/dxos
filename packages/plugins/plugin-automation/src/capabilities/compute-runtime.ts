@@ -92,7 +92,7 @@ class ComputeRuntimeProviderImpl extends Resource implements AutomationCapabilit
                     Layer.provideMerge(FunctionImplementationResolver.layerTest({ functions })),
                     Layer.provideMerge(
                       RemoteFunctionExecutionService.fromClient(
-                        client.edge.baseUrl,
+                        client,
                         // If agent is not enabled do not provide spaceId because space context will be unavailable on EDGE.
                         client.config.get('runtime.client.edgeFeatures.agents') ? spaceId : undefined,
                       ),
