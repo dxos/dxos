@@ -12,7 +12,7 @@ import {
   LabelAnnotation,
   PropertyMetaAnnotationId,
 } from '@dxos/echo/internal';
-import { ItemAnnotation } from '@dxos/schema';
+import { ItemAnnotation, View } from '@dxos/schema';
 
 import * as Person from './Person';
 import * as Project from './Project';

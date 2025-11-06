@@ -28,8 +28,6 @@ import { log } from '@dxos/log';
 import { type CanvasGraphModel } from '@dxos/react-ui-canvas-editor';
 import { type DataType } from '@dxos/schema';
 
-type ContentBlock = typeof DataType.ContentBlock;
-
 import { createComputeGraph } from '../hooks';
 import { type ComputeShape } from '../shapes';
 
