@@ -6,9 +6,10 @@ import { effect } from '@preact/signals-core';
 import type * as ManagedRuntime from 'effect/ManagedRuntime';
 
 import { Event } from '@dxos/async';
-import { Filter, type Space, fullyQualifiedId } from '@dxos/client/echo';
+import { Filter, type Space } from '@dxos/client/echo';
 import { FQ_ID_LENGTH } from '@dxos/client/echo';
 import { Resource } from '@dxos/context';
+import { Obj } from '@dxos/echo';
 import { getTypename } from '@dxos/echo/internal';
 import { Function, type FunctionInvocationService } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
@@ -107,7 +108,10 @@ export class ComputeGraph extends Resource {
   }
 
   getFunctions(
-    { standard, echo }: { standard?: boolean; echo?: boolean } = { standard: true, echo: true },
+    { standard, echo }: { standard?: boolean; echo?: boolean } = {
+      standard: true,
+      echo: true,
+    },
   ): FunctionDefinition[] {
     return [
       ...(standard
@@ -207,7 +211,7 @@ export class ComputeGraph extends Resource {
 
       const fn = this._remoteFunctions.find((fn) => fn.binding === binding);
       if (fn) {
-        const id = fullyQualifiedId(fn);
+        const id = Obj.getDXN(fn).toString();
         return `${id}(${args})`;
       } else {
         return match;
@@ -226,7 +230,7 @@ export class ComputeGraph extends Resource {
         return match;
       }
 
-      const fn = this._remoteFunctions.find((fn) => fullyQualifiedId(fn) === id);
+      const fn = this._remoteFunctions.find((fn) => Obj.getDXN(fn).toString() === id);
       if (fn?.binding) {
         return `${fn.binding}(${args})`;
       } else {

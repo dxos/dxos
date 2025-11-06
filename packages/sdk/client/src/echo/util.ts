@@ -45,16 +45,6 @@ export const getSpace = (object?: Live<any>): Space | undefined => {
 };
 
 /**
- * Fully qualified id of a reactive object is a combination of the space id and the object id.
- * @returns Fully qualified id of a reactive object.
- * @deprecated Prefer DXNs.
- */
-export const fullyQualifiedId = (object: Live<any>): string => {
-  const space = getSpace(object);
-  return space ? `${space.id}:${object.id}` : object.id;
-};
-
-/**
  * @deprecated Use `parseId` instead.
  */
 export const parseFullyQualifiedId = (id: string): [string, string] => {

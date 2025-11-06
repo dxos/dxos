@@ -9,7 +9,6 @@ import { useCapability } from '@dxos/app-framework/react';
 import { Obj } from '@dxos/echo';
 import { SettingsStore } from '@dxos/local-storage';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
-import { fullyQualifiedId } from '@dxos/react-client/echo';
 import { DataType } from '@dxos/schema';
 
 import { MarkdownCard, MarkdownContainer, type MarkdownContainerProps, MarkdownSettings } from '../components';
@@ -27,7 +26,7 @@ export default () =>
       filter: (data): data is { subject: Markdown.Document; variant: undefined } =>
         Obj.instanceOf(Markdown.Document, data.subject) && !data.variant,
       component: ({ data, role }) => {
-        return <Container id={fullyQualifiedId(data.subject)} subject={data.subject} role={role} />;
+        return <Container id={Obj.getDXN(data.subject).toString()} subject={data.subject} role={role} />;
       },
     }),
     createSurface({

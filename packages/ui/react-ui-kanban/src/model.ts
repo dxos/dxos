@@ -9,7 +9,6 @@ import { Resource } from '@dxos/context';
 import { Obj } from '@dxos/echo';
 import { type JsonProp } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
-import { fullyQualifiedId } from '@dxos/react-client/echo';
 import type { StackItemRearrangeHandler } from '@dxos/react-ui-stack';
 import { type DataType, type ProjectionModel } from '@dxos/schema';
 import { arrayMove } from '@dxos/util';
@@ -26,7 +25,10 @@ export const UNCATEGORIZED_ATTRIBUTES = {
 
 export type BaseKanbanItem = Record<JsonProp, any> & { id: string };
 
-export type ArrangedCards<T extends BaseKanbanItem = { id: string }> = { columnValue: string; cards: T[] }[];
+export type ArrangedCards<T extends BaseKanbanItem = { id: string }> = {
+  columnValue: string;
+  cards: T[];
+}[];
 
 export type KanbanModelProps = {
   view: DataType.View.View;
@@ -51,7 +53,7 @@ export class KanbanModel<T extends BaseKanbanItem = { id: string }> extends Reso
   }
 
   get id() {
-    return fullyQualifiedId(this._view);
+    return Obj.getDXN(this._view).toString();
   }
 
   get kanban(): Kanban.Kanban {
@@ -249,7 +251,10 @@ export class KanbanModel<T extends BaseKanbanItem = { id: string }> extends Reso
           (targetIndex > sourceIndex ? (closestEdge === 'right' ? 0 : -1) : closestEdge === 'right' ? 1 : 0);
     arrayMove(options, sourceIndex, insertIndex);
 
-    this._projection.setFieldProjection({ ...fieldProjection, props: { ...fieldProjection.props, options } });
+    this._projection.setFieldProjection({
+      ...fieldProjection,
+      props: { ...fieldProjection.props, options },
+    });
   }
 
   /**

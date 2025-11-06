@@ -7,9 +7,10 @@ import React, { useCallback, useMemo } from 'react';
 
 import { LayoutAction, createIntent } from '@dxos/app-framework';
 import { useIntentDispatcher } from '@dxos/app-framework/react';
+import { Obj } from '@dxos/echo';
 import { Function, Script } from '@dxos/functions';
 import { SpaceAction } from '@dxos/plugin-space/types';
-import { Filter, type Space, fullyQualifiedId, useQuery } from '@dxos/react-client/echo';
+import { Filter, type Space, useQuery } from '@dxos/react-client/echo';
 import { Button, IconButton, useTranslation } from '@dxos/react-ui';
 import { controlItemClasses } from '@dxos/react-ui-form';
 import { List } from '@dxos/react-ui-list';
@@ -62,7 +63,7 @@ export const FunctionsPanel = ({ space }: FunctionsPanelProps) => {
         void dispatch(
           createIntent(LayoutAction.Open, {
             part: 'main',
-            subject: [fullyQualifiedId(script)],
+            subject: [Obj.getDXN(script).toString()],
           }),
         );
       }

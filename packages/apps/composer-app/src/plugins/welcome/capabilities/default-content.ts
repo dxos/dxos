@@ -12,7 +12,6 @@ const SPACE_ICON = 'house-line';
 
 export default async (context: PluginContext) => {
   const { Filter, Obj, Ref } = await import('@dxos/echo');
-  const { fullyQualifiedId } = await import('@dxos/react-client/echo');
   const { ClientCapabilities } = await import('@dxos/plugin-client');
   const { Markdown } = await import('@dxos/plugin-markdown/types');
   const { DataType } = await import('@dxos/schema');
@@ -63,7 +62,7 @@ export default async (context: PluginContext) => {
   await dispatch(
     createIntent(LayoutAction.SetLayoutMode, {
       part: 'mode',
-      subject: fullyQualifiedId(readme),
+      subject: Obj.getDXN(readme).toString(),
       options: { mode: 'solo' },
     }),
   );

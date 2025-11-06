@@ -10,7 +10,6 @@ import { Capabilities, type PluginContext, contributes } from '@dxos/app-framewo
 import { Obj } from '@dxos/echo';
 import { ATTENDABLE_PATH_SEPARATOR, PLANK_COMPANION_TYPE } from '@dxos/plugin-deck/types';
 import { ACTION_TYPE, createExtension, rxFromSignal } from '@dxos/plugin-graph';
-import { fullyQualifiedId } from '@dxos/react-client/echo';
 import { kebabize } from '@dxos/util';
 
 import { meta } from '../meta';
@@ -37,7 +36,7 @@ export default (context: PluginContext) =>
               get(
                 rxFromSignal(() => [
                   {
-                    id: `${fullyQualifiedId(mailbox)}-unfiltered`,
+                    id: `${Obj.getDXN(mailbox).toString()}-unfiltered`,
                     type: `${Mailbox.Mailbox.typename}-filter`,
                     data: mailbox,
                     properties: {
@@ -47,7 +46,7 @@ export default (context: PluginContext) =>
                     },
                   },
                   ...mailbox.filters?.map(({ name, filter }) => ({
-                    id: `${fullyQualifiedId(mailbox)}-filter-${kebabize(name)}`,
+                    id: `${Obj.getDXN(mailbox).toString()}-filter-${kebabize(name)}`,
                     type: `${Mailbox.Mailbox.typename}-filter`,
                     data: mailbox,
                     properties: {
@@ -57,7 +56,7 @@ export default (context: PluginContext) =>
                     },
                     nodes: [
                       {
-                        id: `${fullyQualifiedId(mailbox)}-filter-${kebabize(name)}-delete`,
+                        id: `${Obj.getDXN(mailbox).toString()}-filter-${kebabize(name)}-delete`,
                         type: ACTION_TYPE,
                         data: async () => {
                           const index = mailbox.filters.findIndex((f) => f.name === name);

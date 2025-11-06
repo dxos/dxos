@@ -23,7 +23,6 @@ import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { useComputeRuntimeCallback } from '@dxos/plugin-automation';
 import { Graph } from '@dxos/plugin-explorer/types';
-import { fullyQualifiedId } from '@dxos/react-client/echo';
 import { getSpace } from '@dxos/react-client/echo';
 import { DropdownMenu, IconButton, Toolbar, useTranslation } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
@@ -50,7 +49,7 @@ export type NotebookContainerProps = {
 export const NotebookContainer = ({ notebook, env }: NotebookContainerProps) => {
   const { t } = useTranslation(meta.id);
   const space = getSpace(notebook);
-  const attendableId = fullyQualifiedId(notebook);
+  const attendableId = notebook ? Obj.getDXN(notebook).toString() : '';
   const { hasAttention } = useAttention(attendableId);
 
   // TODO(burdon): Consolidate execution and state (with graph).
@@ -72,7 +71,10 @@ export const NotebookContainer = ({ notebook, env }: NotebookContainerProps) => 
             const view = cell.view?.target;
             if (!view) {
               const graph = Graph.make({ query: { ast } });
-              const { view } = await Graph.makeView({ space, presentation: graph });
+              const { view } = await Graph.makeView({
+                space,
+                presentation: graph,
+              });
               cell.view = Ref.make(view);
               cell.name = name;
             } else {
@@ -108,7 +110,11 @@ export const NotebookContainer = ({ notebook, env }: NotebookContainerProps) => 
         yield* runPrompt({
           prompt,
           input: { ...queryValues, ...graph.valuesByName.value },
-          onResult: (result) => setPromptResults((prev) => ({ ...prev, [prompt.dxn.toString()]: result })),
+          onResult: (result) =>
+            setPromptResults((prev) => ({
+              ...prev,
+              [prompt.dxn.toString()]: result,
+            })),
         });
       }
     }),
@@ -225,7 +231,10 @@ const runPrompt = Effect.fn(function* ({
   input: Record<string, any>;
   onResult: (result: string) => void;
 }) {
-  const inputData: FunctionDefinition.Input<typeof Agent.prompt> = { prompt, input };
+  const inputData: FunctionDefinition.Input<typeof Agent.prompt> = {
+    prompt,
+    input,
+  };
   const tracer = yield* InvocationTracer;
   const trace = yield* tracer.traceInvocationStart({
     target: undefined,

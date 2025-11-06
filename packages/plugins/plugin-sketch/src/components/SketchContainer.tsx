@@ -5,8 +5,8 @@
 import React from 'react';
 
 import { useAppGraph } from '@dxos/app-framework/react';
+import { Obj } from '@dxos/echo';
 import { useActions } from '@dxos/plugin-graph';
-import { fullyQualifiedId } from '@dxos/react-client/echo';
 import { useAttention } from '@dxos/react-ui-attention';
 import { StackItem } from '@dxos/react-ui-stack';
 
@@ -21,7 +21,7 @@ export type SketchContainerProps = {
 };
 
 export const SketchContainer = ({ role, sketch, settings }: SketchContainerProps) => {
-  const id = fullyQualifiedId(sketch);
+  const id = Obj.getDXN(sketch).toString();
   const { hasAttention } = useAttention(id);
 
   const props = {

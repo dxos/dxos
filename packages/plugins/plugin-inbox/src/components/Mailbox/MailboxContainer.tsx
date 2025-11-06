@@ -8,10 +8,10 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 import { LayoutAction, createIntent } from '@dxos/app-framework';
 import { useCapability, useIntentDispatcher } from '@dxos/app-framework/react';
-import { Tag } from '@dxos/echo';
+import { Obj, Tag } from '@dxos/echo';
 import { QueryBuilder } from '@dxos/echo-query';
 import { ATTENDABLE_PATH_SEPARATOR, DeckAction } from '@dxos/plugin-deck/types';
-import { Filter, fullyQualifiedId, getSpace, useQuery } from '@dxos/react-client/echo';
+import { Filter, getSpace, useQuery } from '@dxos/react-client/echo';
 import { ElevationProvider, IconButton, useTranslation } from '@dxos/react-ui';
 import { QueryEditor } from '@dxos/react-ui-components';
 import { type EditorController } from '@dxos/react-ui-editor';
@@ -38,7 +38,7 @@ export type MailboxContainerProps = {
 
 export const MailboxContainer = ({ mailbox, attendableId, role, filter: filterParam }: MailboxContainerProps) => {
   const { t } = useTranslation(meta.id);
-  const id = attendableId ?? fullyQualifiedId(mailbox);
+  const id = attendableId ?? Obj.getDXN(mailbox).toString();
   const state = useCapability(InboxCapabilities.MailboxState);
   const { dispatchPromise: dispatch } = useIntentDispatcher();
   const currentMessageId = state[id]?.id;

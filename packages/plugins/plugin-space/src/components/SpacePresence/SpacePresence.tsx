@@ -7,9 +7,9 @@ import React, { forwardRef, useCallback, useEffect, useState } from 'react';
 
 import { useAppGraph, useCapability } from '@dxos/app-framework/react';
 import { generateName } from '@dxos/display-name';
-import { type Type } from '@dxos/echo';
+import { Obj, type Type } from '@dxos/echo';
 import { PublicKey, useClient } from '@dxos/react-client';
-import { type SpaceMember, fullyQualifiedId, getSpace, useMembers } from '@dxos/react-client/echo';
+import { type SpaceMember, getSpace, useMembers } from '@dxos/react-client/echo';
 import { type Identity, useIdentity } from '@dxos/react-client/halo';
 import {
   Avatar,
@@ -75,7 +75,7 @@ export const SpacePresence = ({ object, spaceKey }: SpacePresenceProps) => {
     return null;
   }
 
-  const currentObjectViewers = spaceState.viewersByObject[fullyQualifiedId(object)] ?? noViewers;
+  const currentObjectViewers = spaceState.viewersByObject[Obj.getDXN(object).toString()] ?? noViewers;
 
   const membersForObject = spaceMembers
     .filter((member) => memberOnline(member) && memberIsNotSelf(member))

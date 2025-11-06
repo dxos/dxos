@@ -7,9 +7,10 @@ import React, { forwardRef, useCallback, useState } from 'react';
 
 import { LayoutAction, createIntent } from '@dxos/app-framework';
 import { useAppGraph, useIntentDispatcher, useLayout } from '@dxos/app-framework/react';
+import { Obj } from '@dxos/echo';
 import { type Node } from '@dxos/plugin-graph';
 import { useClient } from '@dxos/react-client';
-import { Filter, fullyQualifiedId, useQuery } from '@dxos/react-client/echo';
+import { Filter, useQuery } from '@dxos/react-client/echo';
 import { Button, Dialog, Icon, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { SearchList, type SearchListItemProps } from '@dxos/react-ui-searchlist';
 import { descriptionText, mx } from '@dxos/react-ui-theme';
@@ -108,7 +109,7 @@ export const SearchDialog = ({ pivotId }: SearchDialogProps) => {
           {queryString.length > 0 ? (
             resultObjects.length > 0 ? (
               resultObjects
-                .map((object) => graph.getNode(fullyQualifiedId(object)))
+                .map((object) => graph.getNode(Obj.getDXN(object).toString()))
                 .filter(Option.isSome)
                 .map((node) => <SearchListResult key={node.value.id} node={node.value} onSelect={handleSelect} />)
             ) : (
