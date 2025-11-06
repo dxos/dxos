@@ -11,7 +11,7 @@ import { Project } from '@dxos/types';
 import { AppGraphBuilder, IntentResolver, ReactSurface } from './capabilities';
 import { meta } from './meta';
 import { translations } from './translations';
-import { Project } from './types';
+import { ProjectAction } from './types';
 
 export const ProjectPlugin = definePlugin(meta, () => [
   defineModule({
@@ -39,7 +39,8 @@ export const ProjectPlugin = definePlugin(meta, () => [
         SpaceCapabilities.ObjectForm,
         defineObjectForm({
           objectSchema: Project.Project,
-          getIntent: (_, options) => createIntent(Project.Create, { space: options.space }),
+
+          getIntent: (_, options) => createIntent(ProjectAction.Create, { space: options.space }),
         }),
       ),
   }),
