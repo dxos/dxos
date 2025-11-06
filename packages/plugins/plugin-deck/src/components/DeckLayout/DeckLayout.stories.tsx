@@ -20,9 +20,7 @@ import { DeckLayout } from './DeckLayout';
 const meta = {
   title: 'plugins/plugin-deck/DeckLayout',
   component: DeckLayout,
-  render: (args) => {
-    return <DeckLayout {...args} />;
-  },
+  render: (args) => <DeckLayout {...args} />,
   decorators: [
     withTheme,
     withPluginManager({
@@ -38,6 +36,11 @@ const meta = {
           },
           () => [
             defineModule({
+              id: `${pluginMeta.id}/module/deck-state`,
+              activatesOn: Events.AppGraphReady,
+              activate: () => DeckStateFactory(),
+            }),
+            defineModule({
               id: `${pluginMeta.id}/module/layout-intent-resolver`,
               activatesOn: Events.SetupIntentResolver,
               activate: LayoutIntentResolver,
@@ -45,8 +48,6 @@ const meta = {
           ],
         )(),
       ],
-      // TODO(burdon): Remove?
-      capabilities: () => DeckStateFactory(),
     }),
   ],
   parameters: {
@@ -59,6 +60,4 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-export const Default: Story = {
-  args: {},
-};
+export const Default: Story = {};
