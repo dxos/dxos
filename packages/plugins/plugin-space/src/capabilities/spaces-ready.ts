@@ -14,7 +14,7 @@ import { ClientCapabilities } from '@dxos/plugin-client';
 import { DeckCapabilities } from '@dxos/plugin-deck';
 import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { PublicKey } from '@dxos/react-client';
-import { FQ_ID_LENGTH, SpaceState, parseFullyQualifiedId } from '@dxos/react-client/echo';
+import { SpaceState, parseId } from '@dxos/react-client/echo';
 import { ComplexMap, reduceGroupBy } from '@dxos/util';
 
 import { SpaceAction } from '../types';
@@ -24,6 +24,9 @@ import { SpaceCapabilities } from './capabilities';
 
 const ACTIVE_NODE_BROADCAST_INTERVAL = 30_000;
 const WAIT_FOR_OBJECT_TIMEOUT = 5_000;
+
+// E.g., dxn:echo:BA25QRC2FEWCSAMRP4RZL65LWJ7352CKE:01J00J9B45YHYSGZQTQMSKMGJ6
+const ECHO_DXN_LENGTH = 3 + 1 + 4 + 1 + 33 + 1 + 26;
 
 export default async (context: PluginContext) => {
   const subscriptions = new SubscriptionList();
@@ -69,7 +72,7 @@ export default async (context: PluginContext) => {
 
         const id = active[0];
         const node = graph.getNode(id).pipe(Option.getOrNull);
-        if (!node && id.length === FQ_ID_LENGTH) {
+        if (!node && id.length === ECHO_DXN_LENGTH) {
           void graph.initialize(id);
           const timeout = setTimeout(async () => {
             const node = graph.getNode(id).pipe(Option.getOrNull);
@@ -117,7 +120,7 @@ export default async (context: PluginContext) => {
             // Group parts by space for efficient messaging.
             const idsBySpace = reduceGroupBy(active, (id) => {
               try {
-                const [spaceId] = parseFullyQualifiedId(id);
+                const { spaceId } = parseId(id);
                 return spaceId;
               } catch {
                 return null;
@@ -126,7 +129,7 @@ export default async (context: PluginContext) => {
 
             const removedBySpace = reduceGroupBy(inactive, (id) => {
               try {
-                const [spaceId] = parseFullyQualifiedId(id);
+                const { spaceId } = parseId(id);
                 return spaceId;
               } catch {
                 return null;
