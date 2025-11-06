@@ -5,8 +5,7 @@
 import React from 'react';
 import { useResizeDetector } from 'react-resize-detector';
 
-import { type Obj } from '@dxos/echo';
-import { fullyQualifiedId } from '@dxos/react-client/echo';
+import { Obj } from '@dxos/echo';
 import { type ThemedClassName } from '@dxos/react-ui';
 import { useAttentionAttributes } from '@dxos/react-ui-attention';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
@@ -20,7 +19,7 @@ export type WireframeProps = ThemedClassName<{
 
 // TODO(burdon): Make focusable and attendable with input.
 export const Wireframe = ({ classNames, label, object }: WireframeProps) => {
-  const attentionAttrs = useAttentionAttributes(fullyQualifiedId(object));
+  const attentionAttrs = useAttentionAttributes(Obj.getDXN(object).toString());
   const { width, height, ref } = useResizeDetector();
 
   return (

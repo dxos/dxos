@@ -6,9 +6,10 @@ import React, { useEffect, useMemo, useRef } from 'react';
 
 import { type Config } from '@dxos/client';
 import { ComputeGraphModel } from '@dxos/conductor';
+import { Obj } from '@dxos/echo';
 import { DatabaseService, QueueService, ServiceContainer } from '@dxos/functions';
 import { useConfig } from '@dxos/react-client';
-import { type Space, fullyQualifiedId, getSpace } from '@dxos/react-client/echo';
+import { type Space, getSpace } from '@dxos/react-client/echo';
 import {
   ComputeContext,
   ComputeGraphController,
@@ -62,7 +63,7 @@ const useGraphController = (canvas: CanvasBoardType) => {
 };
 
 export const CanvasContainer = ({ canvas, role }: { canvas: CanvasBoardType; role: string }) => {
-  const id = fullyQualifiedId(canvas);
+  const id = Obj.getDXN(canvas as any).toString();
   const graph = useMemo(() => CanvasGraphModel.create<ComputeShape>(canvas.layout), [canvas.layout]);
   const controller = useGraphController(canvas);
   const graphMonitor = useGraphMonitor(controller?.graph);

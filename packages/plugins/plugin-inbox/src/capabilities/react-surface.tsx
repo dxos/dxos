@@ -11,7 +11,7 @@ import { useIntentDispatcher } from '@dxos/app-framework/react';
 import { Obj } from '@dxos/echo';
 import { AttentionAction } from '@dxos/plugin-attention/types';
 import { ATTENDABLE_PATH_SEPARATOR, DeckAction } from '@dxos/plugin-deck/types';
-import { Filter, fullyQualifiedId, getSpace, useQuery, useQueue, useSpace } from '@dxos/react-client/echo';
+import { Filter, getSpace, useQuery, useQueue, useSpace } from '@dxos/react-client/echo';
 import { Table } from '@dxos/react-ui-table/types';
 import { DataType, getTypenameFromQuery } from '@dxos/schema';
 
@@ -143,13 +143,10 @@ export default () =>
                 }),
                 chain(LayoutAction.Open, {
                   part: 'main',
-                  subject: [fullyQualifiedId(mailbox)],
+                  subject: [Obj.getDXN(mailbox).toString()],
                   options: { workspace: space?.id },
                 }),
-                chain(InboxAction.SelectMessage, {
-                  mailboxId: fullyQualifiedId(mailbox),
-                  message,
-                }),
+                chain(InboxAction.SelectMessage, { mailboxId: Obj.getDXN(mailbox).toString(), message }),
               ),
             );
           },
@@ -206,7 +203,7 @@ export default () =>
                 }),
               );
               if (view) {
-                const id = fullyQualifiedId(view);
+                const id = Obj.getDXN(view).toString();
                 yield* dispatch(
                   createIntent(LayoutAction.Open, {
                     part: 'main',

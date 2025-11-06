@@ -13,7 +13,7 @@ import { type CellAddress, type CompleteCellRange, inRange } from '@dxos/compute
 import { Obj, Relation } from '@dxos/echo';
 import { ATTENDABLE_PATH_SEPARATOR, DeckAction } from '@dxos/plugin-deck/types';
 import { Thread, ThreadAction } from '@dxos/plugin-thread/types';
-import { Filter, Query, fullyQualifiedId, getSpace, useQuery } from '@dxos/react-client/echo';
+import { Filter, Query, getSpace, useQuery } from '@dxos/react-client/echo';
 import { type DxGridElement, type GridContentProps } from '@dxos/react-ui-grid';
 import { DataType } from '@dxos/schema';
 
@@ -55,7 +55,7 @@ export const useUpdateFocusedCellOnThreadSelection = (grid: DxGridElement | null
             return false;
           }
 
-          return data.subject === fullyQualifiedId(model.sheet) && !!data.options?.cursor;
+          return data.subject === Obj.getDXN(model.sheet).toString() && !!data.options?.cursor;
         },
         resolve: ({ options: { cursor, ref } }) => {
           setActiveRefs(ref);
@@ -94,15 +94,10 @@ export const useSelectThreadOnCellFocus = () => {
       });
 
       if (closestThread) {
-        const primary = fullyQualifiedId(model.sheet);
+        const primary = Obj.getDXN(model.sheet).toString();
         const intent = Function.pipe(
-          createIntent(ThreadAction.Select, {
-            current: fullyQualifiedId(closestThread),
-          }),
-          chain(DeckAction.ChangeCompanion, {
-            primary,
-            companion: `${primary}${ATTENDABLE_PATH_SEPARATOR}comments`,
-          }),
+          createIntent(ThreadAction.Select, { current: Obj.getDXN(closestThread).toString() }),
+          chain(DeckAction.ChangeCompanion, { primary, companion: `${primary}${ATTENDABLE_PATH_SEPARATOR}comments` }),
         );
         void dispatch(intent);
       }

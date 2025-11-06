@@ -6,17 +6,18 @@ import { useCallback } from 'react';
 
 import { LayoutAction, createIntent } from '@dxos/app-framework';
 import { useCapability, useIntentDispatcher } from '@dxos/app-framework/react';
+import { Obj } from '@dxos/echo';
 import { type Live } from '@dxos/live-object';
 import { DeckCapabilities } from '@dxos/plugin-deck';
 import { DeckAction } from '@dxos/plugin-deck/types';
-import { fullyQualifiedId, getSpace } from '@dxos/react-client/echo';
+import { getSpace } from '@dxos/react-client/echo';
 
 export const useExitPresenter = (object: Live<any>) => {
   const { dispatchPromise: dispatch } = useIntentDispatcher();
   const layout = useCapability(DeckCapabilities.MutableDeckState);
 
   return useCallback(() => {
-    const objectId = fullyQualifiedId(object);
+    const objectId = Obj.getDXN(object).toString();
     if (layout.deck.fullscreen) {
       void dispatch(
         createIntent(DeckAction.Adjust, {

@@ -11,7 +11,7 @@ import { useIntentDispatcher } from '@dxos/app-framework/react';
 import { debounceAndThrottle } from '@dxos/async';
 import { Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
-import { createDocAccessor, fullyQualifiedId } from '@dxos/react-client/echo';
+import { createDocAccessor } from '@dxos/react-client/echo';
 import { getSpace } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { Icon, ThemeProvider } from '@dxos/react-ui';
@@ -176,7 +176,7 @@ const createBaseExtensions = ({
                       part: 'main',
                       subject: [id],
                       options: {
-                        pivotId: object ? fullyQualifiedId(object) : id,
+                        pivotId: object && Obj.isObject(object) ? Obj.getDXN(object).toString() : id,
                       },
                     }),
                   );

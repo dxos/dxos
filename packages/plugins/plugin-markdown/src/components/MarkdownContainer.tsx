@@ -9,7 +9,7 @@ import React, { useMemo } from 'react';
 import { Capabilities } from '@dxos/app-framework';
 import { useAppGraph, useCapabilities } from '@dxos/app-framework/react';
 import { Obj } from '@dxos/echo';
-import { fullyQualifiedId, getSpace } from '@dxos/react-client/echo';
+import { getSpace } from '@dxos/react-client/echo';
 import { type SelectionManager } from '@dxos/react-ui-attention';
 import { StackItem } from '@dxos/react-ui-stack';
 import { DataType } from '@dxos/schema';
@@ -49,7 +49,7 @@ export const MarkdownContainer = ({
   const space = getSpace(object);
   const isDocument = Obj.instanceOf(Markdown.Document, object);
   const isText = Obj.instanceOf(DataType.Text.Text, object);
-  const attendableId = isDocument ? fullyQualifiedId(object) : undefined;
+  const attendableId = isDocument ? Obj.getDXN(object).toString() : undefined;
 
   // Extensions from other plugins.
   // TODO(burdon): Document MarkdownPluginState.extensionProviders

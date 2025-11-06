@@ -12,7 +12,7 @@ import { DeckCapabilities } from '@dxos/plugin-deck';
 import { ATTENDABLE_PATH_SEPARATOR, DeckAction } from '@dxos/plugin-deck/types';
 import { createExtension, rxFromSignal } from '@dxos/plugin-graph';
 import { Markdown } from '@dxos/plugin-markdown/types';
-import { fullyQualifiedId, getSpace } from '@dxos/react-client/echo';
+import { getSpace } from '@dxos/react-client/echo';
 import { DataType } from '@dxos/schema';
 
 import { meta } from '../meta';
@@ -38,7 +38,7 @@ export default (context: PluginContext) =>
               return isPresentable ? Option.some(node.data) : Option.none();
             }),
             Option.map((object) => {
-              const id = fullyQualifiedId(object);
+              const id = Obj.getDXN(object).toString();
               return [
                 {
                   id: [id, 'presenter'].join(ATTENDABLE_PATH_SEPARATOR),
@@ -69,7 +69,7 @@ export default (context: PluginContext) =>
               return isPresentable ? Option.some(node.data) : Option.none();
             }),
             Option.map((object) => {
-              const id = fullyQualifiedId(object);
+              const id = Obj.getDXN(object).toString();
               const spaceId = getSpace(object)?.id;
               return [
                 {
