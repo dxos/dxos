@@ -11,11 +11,11 @@ import { Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { useConfig } from '@dxos/react-client';
 import { type Space, useSpaceInvitations } from '@dxos/react-client/echo';
-import { Collection } from '@dxos/schema';
 import { type CancellableInvitationObservable, Invitation, InvitationEncoder } from '@dxos/react-client/invitations';
 import { Button, Clipboard, Icon, Input, useId, useTranslation } from '@dxos/react-ui';
 import { ControlFrame, ControlFrameItem, ControlItemInput, ControlPage, ControlSection } from '@dxos/react-ui-form';
 import { StackItem } from '@dxos/react-ui-stack';
+import { Collection } from '@dxos/schema';
 import {
   type ActionMenuItem,
   AuthCode,

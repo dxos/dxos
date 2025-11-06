@@ -4,7 +4,6 @@
 
 import * as Schema from 'effect/Schema';
 
-import { View } from '@dxos/schema';
 import { Task } from '@dxos/types';
 
 import { meta } from '../meta';

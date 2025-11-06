@@ -8,8 +8,8 @@ import React, { type FC } from 'react';
 import { Obj } from '@dxos/echo';
 import { Toolbar, type ToolbarRootProps, useTranslation } from '@dxos/react-ui';
 import { Stack } from '@dxos/react-ui-stack';
-import { ProjectionModel, View } from '@dxos/schema';
-import { Project as ProjectType } from '@dxos/types';
+import { type ProjectionModel, View } from '@dxos/schema';
+import { type Project as ProjectType } from '@dxos/types';
 
 import { meta } from '../meta';
 

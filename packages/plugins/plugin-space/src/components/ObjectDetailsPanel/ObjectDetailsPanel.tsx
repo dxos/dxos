@@ -8,7 +8,7 @@ import { useClient } from '@dxos/react-client';
 import { Filter, getSpace, useQuery, useSchema } from '@dxos/react-client/echo';
 import { Callout, useTranslation } from '@dxos/react-ui';
 import { useSelected } from '@dxos/react-ui-attention';
-import { View, getTypenameFromQuery } from '@dxos/schema';
+import { type View, getTypenameFromQuery } from '@dxos/schema';
 import { isNonNullable } from '@dxos/util';
 
 import { meta } from '../../meta';

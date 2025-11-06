@@ -12,7 +12,7 @@ import { Trigger } from '@dxos/async';
 import { log } from '@dxos/log';
 import { openAndClose } from '@dxos/test-utils';
 import { TRACE_PROCESSOR, trace } from '@dxos/tracing';
-import { type ContentBlock, type Message } from '@dxos/types';
+import { type ContentBlock } from '@dxos/types';
 
 import { type AudioChunk, type AudioRecorder, Transcriber } from '../transcriber';
 import { mergeFloat64Arrays } from '../util';

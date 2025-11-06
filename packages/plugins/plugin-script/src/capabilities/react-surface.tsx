@@ -12,7 +12,7 @@ import { Script } from '@dxos/functions';
 import { SettingsStore } from '@dxos/local-storage';
 import { getSpace } from '@dxos/react-client/echo';
 import { StackItem } from '@dxos/react-ui-stack';
-import { AccessToken } from '@dxos/types';
+import { type AccessToken } from '@dxos/types';
 
 import {
   DEPLOYMENT_DIALOG,

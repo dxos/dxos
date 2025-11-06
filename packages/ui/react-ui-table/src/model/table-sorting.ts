@@ -10,10 +10,10 @@ import { formatForDisplay } from '@dxos/react-ui-form';
 import {
   type FieldSortType,
   type FieldType,
-  ProjectionModel,
+  type ProjectionModel,
   type PropertyType,
   type SortDirectionType,
-  View,
+  type View,
 } from '@dxos/schema';
 
 import { type TableRow } from './table-model';

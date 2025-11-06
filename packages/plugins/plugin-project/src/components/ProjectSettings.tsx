@@ -14,7 +14,7 @@ import { ViewEditor } from '@dxos/react-ui-form';
 import { List } from '@dxos/react-ui-list';
 import { cardChrome, cardText } from '@dxos/react-ui-stack';
 import { inputTextLabel, mx, subtleHover } from '@dxos/react-ui-theme';
-import { Collection, ProjectionModel, View } from '@dxos/schema';
+import { Collection, type ProjectionModel, View } from '@dxos/schema';
 import { type Project, Task } from '@dxos/types';
 import { arrayMove } from '@dxos/util';
 

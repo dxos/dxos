@@ -17,7 +17,14 @@ import { QueryForm, type QueryFormProps } from '@dxos/react-ui-components';
 import { List } from '@dxos/react-ui-list';
 import { cardSpacing } from '@dxos/react-ui-stack';
 import { inputTextLabel, mx, subtleHover } from '@dxos/react-ui-theme';
-import { FieldSchema, type FieldType, ProjectionModel, VIEW_FIELD_LIMIT, View, getTypenameFromQuery } from '@dxos/schema';
+import {
+  FieldSchema,
+  type FieldType,
+  ProjectionModel,
+  VIEW_FIELD_LIMIT,
+  type View,
+  getTypenameFromQuery,
+} from '@dxos/schema';
 
 import { translationKey } from '../../translations';
 import { FieldEditor } from '../FieldEditor';

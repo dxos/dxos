@@ -10,7 +10,7 @@ import { Obj } from '@dxos/echo';
 import { ATTENDABLE_PATH_SEPARATOR, DeckAction } from '@dxos/plugin-deck/types';
 import { useAttention } from '@dxos/react-ui-attention';
 import { StackItem } from '@dxos/react-ui-stack';
-import { Project as ProjectType } from '@dxos/types';
+import { type Project as ProjectType } from '@dxos/types';
 
 import { type ItemProps, Project } from './Project';
 

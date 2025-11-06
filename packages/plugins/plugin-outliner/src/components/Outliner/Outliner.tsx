@@ -22,7 +22,7 @@ import {
   useTextEditor,
 } from '@dxos/react-ui-editor';
 import { mx } from '@dxos/react-ui-theme';
-import { Text as TextType } from '@dxos/schema';
+import { type Text as TextType } from '@dxos/schema';
 
 import { meta } from '../../meta';
 

@@ -8,7 +8,7 @@ import { DeferredTask, Trigger } from '@dxos/async';
 import { type Context, LifecycleState, Resource } from '@dxos/context';
 import { log } from '@dxos/log';
 import { trace } from '@dxos/tracing';
-import { type ContentBlock, type Message } from '@dxos/types';
+import { type ContentBlock } from '@dxos/types';
 
 import { TRANSCRIPTION_URL } from '../types';
 import { mergeFloat64Arrays } from '../util';

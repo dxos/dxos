@@ -17,7 +17,6 @@ import { DatabaseService } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { Migrations } from '@dxos/migrations';
 import { ClientCapabilities } from '@dxos/plugin-client';
-import { Collection, ProjectionModel, StoredSchema, getTypenameFromQuery } from '@dxos/schema';
 import { ObservabilityAction } from '@dxos/plugin-observability/types';
 import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { SpaceState, getSpace, isSpace } from '@dxos/react-client/echo';
@@ -25,6 +24,7 @@ import { Invitation, InvitationEncoder } from '@dxos/react-client/invitations';
 import { ATTENDABLE_PATH_SEPARATOR } from '@dxos/react-ui-attention';
 import { iconValues } from '@dxos/react-ui-pickers';
 import { hues } from '@dxos/react-ui-theme';
+import { Collection, ProjectionModel, StoredSchema, getTypenameFromQuery } from '@dxos/schema';
 
 import {
   CREATE_OBJECT_DIALOG,

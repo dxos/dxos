@@ -9,7 +9,7 @@ import { Resource } from '@dxos/context';
 import { Obj } from '@dxos/echo';
 import { type Queue } from '@dxos/echo-db';
 import { type EdgeHttpClient } from '@dxos/react-edge-client';
-import { ContentBlock, Message } from '@dxos/types';
+import { type ContentBlock, Message } from '@dxos/types';
 
 import { MediaStreamRecorder } from './media-stream-recorder';
 import { Transcriber } from './transcriber';

@@ -3,7 +3,7 @@
 //
 
 import { type Type } from '@dxos/echo';
-import { Text, type View } from '@dxos/schema';
+import { Text } from '@dxos/schema';
 import { Event, HasConnection, HasRelationship, LegacyOrganization, LegacyPerson, Project, Task } from '@dxos/types';
 
 /**

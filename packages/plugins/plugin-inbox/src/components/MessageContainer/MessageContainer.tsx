@@ -12,7 +12,7 @@ import { Filter, type Space, useQuery } from '@dxos/react-client/echo';
 import { ElevationProvider, useTranslation } from '@dxos/react-ui';
 import { MenuProvider, ToolbarMenu } from '@dxos/react-ui-menu';
 import { StackItem } from '@dxos/react-ui-stack';
-import { Message as MessageType, Person } from '@dxos/types';
+import { type Message as MessageType, Person } from '@dxos/types';
 
 import { meta } from '../../meta';
 import { InboxAction, type Mailbox } from '../../types';
