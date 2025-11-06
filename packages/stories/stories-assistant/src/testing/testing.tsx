@@ -124,7 +124,7 @@ export const getDecorators = ({
         types: [
           Assistant.Chat,
           Blueprint.Blueprint,
-          AccessToken.AccessToken.AccessToken,
+          AccessToken.AccessToken,
           Function.Function,
           Markdown.Document,
           Prompt.Prompt,
