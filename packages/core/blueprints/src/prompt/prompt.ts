@@ -69,7 +69,7 @@ export const make = (params: {
   description?: string;
   input?: Schema.Schema.AnyNoContext;
   output?: Schema.Schema.AnyNoContext;
-  instructions: string;
+  instructions?: string;
   blueprints?: Ref.Ref<Blueprint>[];
   context?: any[];
 }): Prompt =>

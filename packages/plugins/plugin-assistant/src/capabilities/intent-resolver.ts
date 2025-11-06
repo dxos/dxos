@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 
 import { Capabilities, type PluginContext, contributes, createIntent, createResolver } from '@dxos/app-framework';
 import { AiContextBinder, AiConversation } from '@dxos/assistant';
-import { Blueprint, Template } from '@dxos/blueprints';
+import { Blueprint, Prompt, Template } from '@dxos/blueprints';
 import { type Queue } from '@dxos/client/echo';
 import { Sequence } from '@dxos/conductor';
 import { Filter, Key, Obj, Ref } from '@dxos/echo';
@@ -78,11 +78,9 @@ export default (context: PluginContext) => [
         }
 
         const runtimeResolver = context.getCapability(AutomationCapabilities.ComputeRuntime);
-        const runtime = await runtimeResolver.getRuntime(space.id).runPromise(
-          Effect.gen(function* () {
-            return yield* Effect.runtime<AiChatServices>().pipe(Effect.provide(TracingService.layerNoop));
-          }),
-        );
+        const runtime = await runtimeResolver
+          .getRuntime(space.id)
+          .runPromise(Effect.runtime<AiChatServices>().pipe(Effect.provide(TracingService.layerNoop)));
 
         await new AiConversation(queue).use(async (conversation) => updateName(runtime, conversation, chat));
       },
@@ -97,6 +95,14 @@ export default (context: PluginContext) => [
             description,
             instructions: Template.make(),
           }),
+        },
+      }),
+    }),
+    createResolver({
+      intent: AssistantAction.CreatePrompt,
+      resolve: ({ name }) => ({
+        data: {
+          object: Prompt.make({ name }),
         },
       }),
     }),

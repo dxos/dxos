@@ -2,8 +2,9 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Blueprint } from '@dxos/blueprints';
+import { Blueprint, Prompt } from '@dxos/blueprints';
 import { Sequence } from '@dxos/conductor';
+import { Type } from '@dxos/echo';
 import { type Resource } from '@dxos/react-ui';
 
 import { meta } from './meta';
@@ -22,6 +23,15 @@ export const translations = [
         'object name placeholder': 'New blueprint',
         'rename object label': 'Rename blueprint',
         'delete object label': 'Delete blueprint',
+      },
+      [Type.getTypename(Prompt.Prompt)]: {
+        'typename label': 'Prompt',
+        'typename label_zero': 'Prompts',
+        'typename label_one': 'Prompt',
+        'typename label_other': 'Prompts',
+        'object name placeholder': 'New prompt',
+        'rename object label': 'Rename prompt',
+        'delete object label': 'Delete prompt',
       },
       // TODO(burdon): From conductor.
       [Sequence.typename]: {
