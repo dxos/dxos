@@ -13,7 +13,7 @@ import { ClientService } from '../../../services';
 import { withDatabase } from '../../../util';
 import { Common } from '../../options';
 
-import { getDeployedFunctions } from './util';
+import { getDeployedFunctions } from '@dxos/functions/edge';
 
 export const importCommand = Command.make(
   'import',

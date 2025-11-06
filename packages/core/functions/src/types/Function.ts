@@ -30,6 +30,11 @@ export const Function = Schema.Struct({
 
   description: Schema.optional(Schema.String),
 
+  /**
+   * ISO date string of the last deployment.
+   */
+  updated: Schema.optional(Schema.String),
+
   // Reference to a source script if it exists within ECHO.
   // TODO(burdon): Don't ref ScriptType directly (core).
   source: Schema.optional(Ref(Script)),

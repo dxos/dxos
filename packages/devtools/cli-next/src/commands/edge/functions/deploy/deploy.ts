@@ -15,7 +15,7 @@ import { invariant } from '@dxos/invariant';
 import { ClientService, CommandConfig } from '../../../../services';
 import { waitForSync } from '../../../../util';
 import { Common } from '../../../options';
-import { createEdgeClient } from '../util';
+import { createEdgeClient } from '@dxos/functions/edge';
 
 import { bundle } from './bundle';
 import { DATA_TYPES, upsertComposerScript, upsertFunctionObject } from './echo';
