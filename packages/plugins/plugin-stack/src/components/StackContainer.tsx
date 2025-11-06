@@ -5,15 +5,9 @@
 import * as Option from 'effect/Option';
 import React, { useCallback, useState } from 'react';
 
-import {
-  Capabilities,
-  LayoutAction,
-  createIntent,
-  useAppGraph,
-  useCapabilities,
-  useIntentDispatcher,
-} from '@dxos/app-framework';
-import { fullyQualifiedId, isLiveObject } from '@dxos/client/echo';
+import { Capabilities, LayoutAction, createIntent } from '@dxos/app-framework';
+import { useAppGraph, useCapabilities, useIntentDispatcher } from '@dxos/app-framework/react';
+import { isLiveObject } from '@dxos/client/echo';
 import { Obj } from '@dxos/echo';
 import { SpaceAction } from '@dxos/plugin-space/types';
 import { Toolbar, toLocalizedString, useTranslation } from '@dxos/react-ui';
@@ -66,13 +60,13 @@ const StackContainer = ({ id, collection }: StackContainerProps) => {
           ?.metadata as StackSectionMetadata;
         const view = {
           // ...stack.sections[object.id],
-          collapsed: collapsedSections[fullyQualifiedId(object)],
+          collapsed: collapsedSections[Obj.getDXN(object).toString()],
           title:
             (object as any)?.title ??
             // TODO(wittjosiah): `getNode` is not reactive.
-            toLocalizedString(graph.getNode(fullyQualifiedId(object)).pipe(Option.getOrNull)?.properties.label, t),
+            toLocalizedString(graph.getNode(Obj.getDXN(object).toString()).pipe(Option.getOrNull)?.properties.label, t),
         } as StackSectionView;
-        return { id: fullyQualifiedId(object), object, metadata, view } satisfies StackSectionItem;
+        return { id: Obj.getDXN(object).toString(), object, metadata, view } satisfies StackSectionItem;
       }) ?? [];
 
   const handleDelete = useCallback(
@@ -80,10 +74,15 @@ const StackContainer = ({ id, collection }: StackContainerProps) => {
       const index = collection.objects
         .map((object) => object.target)
         .filter(isNonNullable)
-        .findIndex((section) => fullyQualifiedId(section) === id);
+        .findIndex((section) => Obj.getDXN(section).toString() === id);
       const object = collection.objects[index].target;
       if (isLiveObject(object)) {
-        await dispatch(createIntent(SpaceAction.RemoveObjects, { objects: [object], target: collection }));
+        await dispatch(
+          createIntent(SpaceAction.RemoveObjects, {
+            objects: [object],
+            target: collection,
+          }),
+        );
 
         // TODO(wittjosiah): The section should also be removed, but needs to be restored if the action is undone.
         // delete stack.sections[Path.last(path)];
@@ -126,7 +125,13 @@ const StackContainer = ({ id, collection }: StackContainerProps) => {
   );
 
   const handleAddSection = useCallback(
-    () => dispatch?.(createIntent(SpaceAction.OpenCreateObject, { target: collection, navigable: false })),
+    () =>
+      dispatch?.(
+        createIntent(SpaceAction.OpenCreateObject, {
+          target: collection,
+          navigable: false,
+        }),
+      ),
     [collection, dispatch],
   );
 

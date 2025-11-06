@@ -4,7 +4,7 @@
 
 import React, { useState } from 'react';
 
-import { Surface } from '@dxos/app-framework';
+import { Surface } from '@dxos/app-framework/react';
 import { useConfig } from '@dxos/react-client';
 import { Icon, Popover, useTranslation } from '@dxos/react-ui';
 

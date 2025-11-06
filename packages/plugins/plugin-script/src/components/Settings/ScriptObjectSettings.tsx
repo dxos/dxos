@@ -6,7 +6,8 @@ import { Octokit } from '@octokit/core';
 import React, { type ChangeEvent, useCallback, useState } from 'react';
 
 import { ToolId } from '@dxos/ai';
-import { SettingsAction, createIntent, useIntentDispatcher } from '@dxos/app-framework';
+import { SettingsAction, createIntent } from '@dxos/app-framework';
+import { useIntentDispatcher } from '@dxos/app-framework/react';
 import { Blueprint, Template } from '@dxos/blueprints';
 import { Function, type Script, getInvocationUrl, getUserFunctionIdInMetadata } from '@dxos/functions';
 import { log } from '@dxos/log';
@@ -106,14 +107,18 @@ const BlueprintEditor = ({ object }: ScriptObjectSettingsProps) => {
       <div>
         <h2>{t('blueprint editor label', { default: 'Blueprint' })}</h2>
         <p className='text-description text-sm'>
-          {t('blueprint editor description', { default: 'Create a blueprint that exposes this script as a tool.' })}
+          {t('blueprint editor description', {
+            default: 'Create a blueprint that exposes this script as a tool.',
+          })}
         </p>
       </div>
       <Input.Root>
         <div role='none' className='flex flex-col gap-1'>
           <Input.Label>{t('blueprint instructions label', { default: 'Instructions' })}</Input.Label>
           <Input.TextArea
-            placeholder={t('blueprint instructions placeholder', { default: 'Describe how this tool should be used.' })}
+            placeholder={t('blueprint instructions placeholder', {
+              default: 'Describe how this tool should be used.',
+            })}
             rows={6}
             value={instructions}
             onChange={(event) => setInstructions(event.target.value)}
@@ -225,7 +230,12 @@ const Publishing = ({ object }: ScriptObjectSettingsProps) => {
   }, [githubToken, gistKey]);
 
   const handleOpenTokenManager = useCallback(
-    () => dispatch(createIntent(SettingsAction.Open, { plugin: 'dxos.org/plugin/token-manager' })),
+    () =>
+      dispatch(
+        createIntent(SettingsAction.Open, {
+          plugin: 'dxos.org/plugin/token-manager',
+        }),
+      ),
     [],
   );
 

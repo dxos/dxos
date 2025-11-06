@@ -4,10 +4,11 @@
 
 import React from 'react';
 
-import { Capabilities, contributes, createSurface, useCapability } from '@dxos/app-framework';
+import { Capabilities, contributes, createSurface } from '@dxos/app-framework';
+import { useCapability } from '@dxos/app-framework/react';
+import { Obj } from '@dxos/echo';
 import { SettingsStore } from '@dxos/local-storage';
 import { Diagram } from '@dxos/plugin-sketch/types';
-import { fullyQualifiedId } from '@dxos/react-client/echo';
 
 import { SketchContainer, SketchSettings } from '../components';
 import { meta } from '../meta';
@@ -24,7 +25,7 @@ export default () =>
 
         return (
           <SketchContainer
-            key={fullyQualifiedId(data.subject)} // Force instance per sketch object. Otherwise, sketch shares the same instance.
+            key={Obj.getDXN(data.subject).toString()} // Force instance per sketch object. Otherwise, sketch shares the same instance.
             sketch={data.subject}
             role={role}
             settings={settings}

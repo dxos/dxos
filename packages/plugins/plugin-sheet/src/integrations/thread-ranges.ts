@@ -6,20 +6,14 @@ import * as Function from 'effect/Function';
 import * as Schema from 'effect/Schema';
 import { useCallback, useEffect, useMemo } from 'react';
 
-import {
-  LayoutAction,
-  chain,
-  createIntent,
-  createResolver,
-  useIntentDispatcher,
-  useIntentResolver,
-} from '@dxos/app-framework';
+import { LayoutAction, chain, createIntent, createResolver } from '@dxos/app-framework';
+import { useIntentDispatcher, useIntentResolver } from '@dxos/app-framework/react';
 import { debounce } from '@dxos/async';
 import { type CellAddress, type CompleteCellRange, inRange } from '@dxos/compute';
 import { Obj, Relation } from '@dxos/echo';
 import { ATTENDABLE_PATH_SEPARATOR, DeckAction } from '@dxos/plugin-deck/types';
 import { Thread, ThreadAction } from '@dxos/plugin-thread/types';
-import { Filter, Query, fullyQualifiedId, getSpace, useQuery } from '@dxos/react-client/echo';
+import { Filter, Query, getSpace, useQuery } from '@dxos/react-client/echo';
 import { type DxGridElement, type GridContentProps } from '@dxos/react-ui-grid';
 import { AnchoredTo } from '@dxos/types';
 
@@ -61,7 +55,7 @@ export const useUpdateFocusedCellOnThreadSelection = (grid: DxGridElement | null
             return false;
           }
 
-          return data.subject === fullyQualifiedId(model.sheet) && !!data.options?.cursor;
+          return data.subject === Obj.getDXN(model.sheet).toString() && !!data.options?.cursor;
         },
         resolve: ({ options: { cursor, ref } }) => {
           setActiveRefs(ref);
@@ -100,9 +94,9 @@ export const useSelectThreadOnCellFocus = () => {
       });
 
       if (closestThread) {
-        const primary = fullyQualifiedId(model.sheet);
+        const primary = Obj.getDXN(model.sheet).toString();
         const intent = Function.pipe(
-          createIntent(ThreadAction.Select, { current: fullyQualifiedId(closestThread) }),
+          createIntent(ThreadAction.Select, { current: Obj.getDXN(closestThread).toString() }),
           chain(DeckAction.ChangeCompanion, { primary, companion: `${primary}${ATTENDABLE_PATH_SEPARATOR}comments` }),
         );
         void dispatch(intent);

@@ -67,6 +67,13 @@ export const AssistantPlugin = definePlugin(meta, () => [
         },
       }),
       contributes(Capabilities.Metadata, {
+        id: Type.getTypename(Prompt.Prompt),
+        metadata: {
+          icon: 'ph--scroll--regular',
+          iconHue: 'sky',
+        },
+      }),
+      contributes(Capabilities.Metadata, {
         id: Type.getTypename(Sequence),
         metadata: {
           icon: 'ph--circuitry--regular',
@@ -92,6 +99,13 @@ export const AssistantPlugin = definePlugin(meta, () => [
           objectSchema: Blueprint.Blueprint,
           formSchema: AssistantAction.BlueprintForm,
           getIntent: (props) => createIntent(AssistantAction.CreateBlueprint, props),
+        }),
+      ),
+      contributes(
+        SpaceCapabilities.ObjectForm,
+        defineObjectForm({
+          objectSchema: Prompt.Prompt,
+          getIntent: () => createIntent(AssistantAction.CreatePrompt),
         }),
       ),
       contributes(

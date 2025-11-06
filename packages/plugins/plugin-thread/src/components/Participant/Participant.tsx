@@ -4,7 +4,7 @@
 
 import React, { memo, useMemo } from 'react';
 
-import { useCapability } from '@dxos/app-framework';
+import { useCapability } from '@dxos/app-framework/react';
 
 import { type EncodedTrackName, type UserState } from '../../calls';
 import { ThreadCapabilities } from '../../capabilities';

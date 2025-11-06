@@ -4,11 +4,11 @@
 
 import React, { useMemo, useRef } from 'react';
 
-import { Filter, Type } from '@dxos/echo';
+import { Filter, Obj, Type } from '@dxos/echo';
 import { EchoSchema } from '@dxos/echo/internal';
 import { useGlobalFilteredObjects } from '@dxos/plugin-search';
 import { useClient } from '@dxos/react-client';
-import { fullyQualifiedId, getSpace, useQuery, useSchema } from '@dxos/react-client/echo';
+import { getSpace, useQuery, useSchema } from '@dxos/react-client/echo';
 import { Card } from '@dxos/react-ui-stack';
 import {
   Table,
@@ -65,7 +65,7 @@ export const TableCard = ({ role, view }: TableCardProps) => {
     <Card.SurfaceRoot role={role}>
       <Table.Root role={role}>
         <Table.Main
-          key={fullyQualifiedId(view)}
+          key={Obj.getDXN(view).toString()}
           ref={tableRef}
           client={client}
           model={model}

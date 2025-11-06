@@ -5,7 +5,7 @@
 import { createContext } from '@radix-ui/react-context';
 import React, { type PropsWithChildren, useCallback, useEffect, useRef, useState } from 'react';
 
-import { Surface, useCapability } from '@dxos/app-framework';
+import { Surface, useCapability } from '@dxos/app-framework/react';
 import { Popover, type PopoverContentInteractOutsideEvent } from '@dxos/react-ui';
 
 import { DeckCapabilities } from '../../capabilities';

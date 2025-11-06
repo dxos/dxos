@@ -4,7 +4,8 @@
 
 import React, { useMemo, useState } from 'react';
 
-import { LayoutAction, createIntent, useAppGraph, useIntentDispatcher } from '@dxos/app-framework';
+import { LayoutAction, createIntent } from '@dxos/app-framework';
+import { useAppGraph, useIntentDispatcher } from '@dxos/app-framework/react';
 import { type ActionLike, isAction, isActionGroup } from '@dxos/app-graph';
 import { Keyboard, keySymbols } from '@dxos/keyboard';
 import { useActions } from '@dxos/plugin-graph';
@@ -89,7 +90,12 @@ export const CommandsDialogContent = ({ selected: initial }: { selected?: string
                     return;
                   }
 
-                  void dispatch(createIntent(LayoutAction.UpdateDialog, { part: 'dialog', options: { state: false } }));
+                  void dispatch(
+                    createIntent(LayoutAction.UpdateDialog, {
+                      part: 'dialog',
+                      options: { state: false },
+                    }),
+                  );
                   setTimeout(() => {
                     const node = graph.getConnections(group?.id ?? action.id, 'inbound')[0];
                     void (node && isAction(action) && action.data({ parent: node, caller: KEY_BINDING }));
@@ -97,7 +103,9 @@ export const CommandsDialogContent = ({ selected: initial }: { selected?: string
                 }}
                 classNames='flex items-center gap-2'
                 disabled={action.properties.disabled}
-                {...(action.properties?.testId && { 'data-testid': action.properties.testId })}
+                {...(action.properties?.testId && {
+                  'data-testid': action.properties.testId,
+                })}
               >
                 <Icon icon={action.properties.icon} size={4} />
                 <span className='grow truncate'>{label}</span>

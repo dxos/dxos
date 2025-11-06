@@ -5,20 +5,12 @@
 import type * as Schema from 'effect/Schema';
 import React, { useCallback } from 'react';
 
-import { Capabilities, Surface, contributes, createSurface, useCapability, useLayout } from '@dxos/app-framework';
+import { Capabilities, contributes, createSurface } from '@dxos/app-framework';
+import { Surface, useCapability, useLayout } from '@dxos/app-framework/react';
 import { Obj } from '@dxos/echo';
 import { findAnnotation } from '@dxos/effect';
 import { SettingsStore } from '@dxos/local-storage';
-import {
-  type Space,
-  SpaceState,
-  fullyQualifiedId,
-  getSpace,
-  isLiveObject,
-  isSpace,
-  parseId,
-  useSpace,
-} from '@dxos/react-client/echo';
+import { type Space, SpaceState, getSpace, isLiveObject, isSpace, parseId, useSpace } from '@dxos/react-client/echo';
 import { Input } from '@dxos/react-ui';
 import { type InputProps, SelectInput } from '@dxos/react-ui-form';
 import { HuePicker, IconPicker } from '@dxos/react-ui-pickers';
@@ -163,8 +155,8 @@ export default ({ createInvitationUrl }: ReactSurfaceOptions) =>
         Obj.instanceOf(View.View, data.companionTo) && data.subject === 'selected-objects',
       component: ({ data }) => (
         <ObjectDetailsPanel
-          key={fullyQualifiedId(data.companionTo)}
-          objectId={fullyQualifiedId(data.companionTo)}
+          key={Obj.getDXN(data.companionTo).toString()}
+          objectId={Obj.getDXN(data.companionTo).toString()}
           view={data.companionTo}
         />
       ),

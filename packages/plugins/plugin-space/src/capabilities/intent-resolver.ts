@@ -20,7 +20,7 @@ import { ClientCapabilities } from '@dxos/plugin-client';
 import { Collection, ProjectionModel, StoredSchema, getTypenameFromQuery } from '@dxos/schema';
 import { ObservabilityAction } from '@dxos/plugin-observability/types';
 import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
-import { SpaceState, fullyQualifiedId, getSpace, isSpace } from '@dxos/react-client/echo';
+import { SpaceState, getSpace, isSpace } from '@dxos/react-client/echo';
 import { Invitation, InvitationEncoder } from '@dxos/react-client/invitations';
 import { ATTENDABLE_PATH_SEPARATOR } from '@dxos/react-ui-attention';
 import { iconValues } from '@dxos/react-ui-pickers';
@@ -514,8 +514,8 @@ export default ({ context, observability, createInvitationUrl }: IntentResolverO
 
         return {
           data: {
-            id: fullyQualifiedId(object),
-            subject: [fullyQualifiedId(object)],
+            id: Obj.getDXN(object).toString(),
+            subject: [Obj.getDXN(object).toString()],
             object,
           },
           intents: [
@@ -579,7 +579,7 @@ export default ({ context, observability, createInvitationUrl }: IntentResolverO
             nestedObjectsList,
             wasActive: objects
               .flatMap((obj, i) => [obj, ...nestedObjectsList[i]])
-              .map((obj) => fullyQualifiedId(obj))
+              .map((obj) => Obj.getDXN(obj).toString())
               .filter((id) => openObjectIds.has(id)),
           } satisfies SpaceAction.DeletionData;
 
@@ -664,7 +664,7 @@ export default ({ context, observability, createInvitationUrl }: IntentResolverO
             part: 'popover',
             subject: OBJECT_RENAME_POPOVER,
             options: {
-              anchorId: `dxos.org/ui/${caller}/${fullyQualifiedId(object)}`,
+              anchorId: `dxos.org/ui/${caller}/${Obj.getDXN(object).toString()}`,
               props: object,
             },
           }),

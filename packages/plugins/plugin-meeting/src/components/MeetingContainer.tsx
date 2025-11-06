@@ -4,8 +4,9 @@
 
 import React, { useCallback, useMemo } from 'react';
 
-import { Surface, createIntent, useIntentDispatcher } from '@dxos/app-framework';
-import { fullyQualifiedId } from '@dxos/client/echo';
+import { createIntent } from '@dxos/app-framework';
+import { Surface, useIntentDispatcher } from '@dxos/app-framework/react';
+import { Obj } from '@dxos/echo';
 import { IconButton, useTranslation } from '@dxos/react-ui';
 import { Stack, StackItem } from '@dxos/react-ui-stack';
 
@@ -21,9 +22,14 @@ export const MeetingContainer = ({ meeting }: MeetingContainerProps) => {
   const { dispatchPromise: dispatch } = useIntentDispatcher();
   const notes = meeting.notes?.target;
   const summary = meeting.summary?.target;
-  const notesData = useMemo(() => ({ id: fullyQualifiedId(meeting), subject: notes }), [notes]);
+  const notesData = useMemo(() => ({ id: Obj.getDXN(meeting).toString(), subject: notes }), [notes]);
   const summaryData = useMemo(
-    () => summary && summary.content.length > 0 && { id: fullyQualifiedId(meeting), subject: summary },
+    () =>
+      summary &&
+      summary.content.length > 0 && {
+        id: Obj.getDXN(meeting).toString(),
+        subject: summary,
+      },
     [summary, summary?.content],
   );
 

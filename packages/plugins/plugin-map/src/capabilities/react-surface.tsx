@@ -5,7 +5,8 @@
 import type * as Schema from 'effect/Schema';
 import React, { useCallback, useMemo, useState } from 'react';
 
-import { Capabilities, contributes, createSurface, useCapability } from '@dxos/app-framework';
+import { Capabilities, contributes, createSurface } from '@dxos/app-framework';
+import { useCapability } from '@dxos/app-framework/react';
 import { Obj, Type } from '@dxos/echo';
 import { FormatEnum } from '@dxos/echo/internal';
 import { findAnnotation } from '@dxos/effect';
@@ -139,7 +140,14 @@ export default () =>
           return null;
         }
 
-        return <SelectInput {...props} options={coordinateProperties.map((property) => ({ value: property }))} />;
+        return (
+          <SelectInput
+            {...props}
+            options={coordinateProperties.map((property) => ({
+              value: property,
+            }))}
+          />
+        );
       },
     }),
   ]);

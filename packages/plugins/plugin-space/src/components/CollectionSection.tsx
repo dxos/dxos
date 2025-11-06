@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { type SectionComponentProps } from '@dxos/app-framework';
+import { type SectionComponentProps } from '@dxos/app-framework/react';
 import { useTranslation } from '@dxos/react-ui';
 import { type Collection } from '@dxos/schema';
 

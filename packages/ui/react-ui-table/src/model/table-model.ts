@@ -18,7 +18,6 @@ import {
 import { invariant } from '@dxos/invariant';
 import { ObjectId } from '@dxos/keys';
 import { getSnapshot, isLiveObject } from '@dxos/live-object';
-import { fullyQualifiedId } from '@dxos/react-client/echo';
 import { type Label } from '@dxos/react-ui';
 import { formatForEditing, parseValue } from '@dxos/react-ui-form';
 import {
@@ -176,7 +175,7 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
   }
 
   public get id(): string {
-    return fullyQualifiedId(this._view);
+    return Obj.getDXN(this._view).toString();
   }
 
   public get view(): View.View {
@@ -480,7 +479,11 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
       }
 
       default: {
-        return formatForEditing({ type: props.type, format: props.format, value });
+        return formatForEditing({
+          type: props.type,
+          format: props.format,
+          value,
+        });
       }
     }
   };

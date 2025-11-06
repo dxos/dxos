@@ -4,8 +4,8 @@
 
 import React, { useCallback, useMemo, useRef, useState } from 'react';
 
-import { Ref, Relation } from '@dxos/echo';
-import { fullyQualifiedId, getSpace, useMembers } from '@dxos/react-client/echo';
+import { Obj, Ref, Relation } from '@dxos/echo';
+import { getSpace, useMembers } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { IconButton, Tag, Tooltip, useThemeContext, useTranslation } from '@dxos/react-ui';
 import { createBasicExtensions, createThemeExtensions, listener } from '@dxos/react-ui-editor';
@@ -54,10 +54,10 @@ export const CommentsThreadContainer = ({
   const members = useMembers(space?.key);
   const detached = !anchor.anchor;
   const thread = Relation.getSource(anchor) as Thread.Thread;
-  const activity = useStatus(space, fullyQualifiedId(thread));
+  const activity = useStatus(space, Obj.getDXN(thread).toString());
   const threadScrollRef = useRef<HTMLDivElement | null>(null);
 
-  const textboxMetadata = getMessageMetadata(fullyQualifiedId(thread), identity);
+  const textboxMetadata = getMessageMetadata(Obj.getDXN(thread).toString(), identity);
 
   // TODO(wittjosiah): This is a hack to reset the editor after a message is sent.
   const [state, setState] = useState({});
@@ -97,7 +97,7 @@ export const CommentsThreadContainer = ({
 
   return (
     <ThreadComponent.Root
-      id={fullyQualifiedId(thread)}
+      id={Obj.getDXN(thread).toString()}
       classNames='pbs-2 border-be border-subduedSeparator last:border-none'
       current={current}
       onClickCapture={handleAttend}

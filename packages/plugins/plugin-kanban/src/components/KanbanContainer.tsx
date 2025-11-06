@@ -4,7 +4,8 @@
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { createIntent, useIntentDispatcher } from '@dxos/app-framework';
+import { createIntent } from '@dxos/app-framework';
+import { useIntentDispatcher } from '@dxos/app-framework/react';
 import { Filter, Obj, Type } from '@dxos/echo';
 import { EchoSchema, type TypedObject } from '@dxos/echo/internal';
 import { useGlobalFilteredObjects } from '@dxos/plugin-search';

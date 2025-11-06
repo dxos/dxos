@@ -28,7 +28,10 @@ const createDxGridColumns = (model: SheetModel): DxGridAxisMeta => {
   return model.sheet.columns.reduce(
     (acc: DxGridAxisMeta, columnId, numericIndex) => {
       if (model.sheet.columnMeta[columnId] && model.sheet.columnMeta[columnId].size) {
-        acc.grid[numericIndex] = { size: model.sheet.columnMeta[columnId].size, resizeable: true };
+        acc.grid[numericIndex] = {
+          size: model.sheet.columnMeta[columnId].size,
+          resizeable: true,
+        };
       }
       return acc;
     },
@@ -40,7 +43,10 @@ const createDxGridRows = (model: SheetModel): DxGridAxisMeta => {
   return model.sheet.rows.reduce(
     (acc: DxGridAxisMeta, rowId, numericIndex) => {
       if (model.sheet.rowMeta[rowId] && model.sheet.rowMeta[rowId].size) {
-        acc.grid[numericIndex] = { size: model.sheet.rowMeta[rowId].size, resizeable: true };
+        acc.grid[numericIndex] = {
+          size: model.sheet.rowMeta[rowId].size,
+          resizeable: true,
+        };
       }
       return acc;
     },
@@ -59,7 +65,7 @@ const projectCellProps = (model: SheetModel, col: number, row: number): DxGridCe
   //     const range = thread.target?.anchor && parseThreadAnchorAsCellRange(thread.target!.anchor);
   //     return thread && range ? inRange(range, address) : false;
   //   })
-  //   .map((thread) => fullyQualifiedId(thread!))
+  //   .map((thread) => Obj.getDXN(thread!).toString())
   //   .join(' ');
 
   const description = model.getValueDescription(address);

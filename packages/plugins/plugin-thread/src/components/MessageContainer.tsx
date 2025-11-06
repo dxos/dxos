@@ -5,7 +5,7 @@
 import { EditorView } from '@codemirror/view';
 import React, { forwardRef, useCallback, useEffect, useRef, useState } from 'react';
 
-import { Surface } from '@dxos/app-framework';
+import { Surface } from '@dxos/app-framework/react';
 import { type Obj, Ref, type Type } from '@dxos/echo';
 import { PublicKey } from '@dxos/react-client';
 import { type SpaceMember } from '@dxos/react-client/echo';

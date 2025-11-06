@@ -16,7 +16,7 @@ import { Obj, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { SpaceAction } from '@dxos/plugin-space/types';
-import { fullyQualifiedId, getSpace } from '@dxos/react-client/echo';
+import { getSpace } from '@dxos/react-client/echo';
 import { Table } from '@dxos/react-ui-table/types';
 import { getTypenameFromQuery } from '@dxos/schema';
 import { Task } from '@dxos/types';
@@ -47,7 +47,7 @@ export default (context: PluginContext) =>
 
           if (show) {
             return {
-              intents: [createIntent(LayoutAction.Open, { part: 'main', subject: [fullyQualifiedId(object)] })],
+              intents: [createIntent(LayoutAction.Open, { part: 'main', subject: [Obj.getDXN(object).toString()] })],
             };
           }
         }),

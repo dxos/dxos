@@ -6,19 +6,12 @@ import * as Effect from 'effect/Effect';
 import * as Function from 'effect/Function';
 import React, { useCallback } from 'react';
 
-import {
-  Capabilities,
-  LayoutAction,
-  chain,
-  contributes,
-  createIntent,
-  createSurface,
-  useIntentDispatcher,
-} from '@dxos/app-framework';
+import { Capabilities, LayoutAction, chain, contributes, createIntent, createSurface } from '@dxos/app-framework';
+import { useIntentDispatcher } from '@dxos/app-framework/react';
 import { Obj } from '@dxos/echo';
 import { AttentionAction } from '@dxos/plugin-attention/types';
 import { ATTENDABLE_PATH_SEPARATOR, DeckAction } from '@dxos/plugin-deck/types';
-import { Filter, fullyQualifiedId, getSpace, useQuery, useQueue, useSpace } from '@dxos/react-client/echo';
+import { Filter, getSpace, useQuery, useQueue, useSpace } from '@dxos/react-client/echo';
 import { Table } from '@dxos/react-ui-table/types';
 import { View, getTypenameFromQuery } from '@dxos/schema';
 import { Message, Organization, Person } from '@dxos/types';
@@ -42,8 +35,13 @@ export default () =>
     createSurface({
       id: `${meta.id}/mailbox`,
       role: ['article', 'section'],
-      filter: (data): data is { attendableId?: string; subject: Mailbox.Mailbox; properties: { filter?: string } } =>
-        Obj.instanceOf(Mailbox.Mailbox, data.subject),
+      filter: (
+        data,
+      ): data is {
+        attendableId?: string;
+        subject: Mailbox.Mailbox;
+        properties: { filter?: string };
+      } => Obj.instanceOf(Mailbox.Mailbox, data.subject),
       component: ({ data, role }) => {
         return (
           <MailboxContainer
@@ -139,10 +137,10 @@ export default () =>
                 }),
                 chain(LayoutAction.Open, {
                   part: 'main',
-                  subject: [fullyQualifiedId(mailbox)],
+                  subject: [Obj.getDXN(mailbox).toString()],
                   options: { workspace: space?.id },
                 }),
-                chain(InboxAction.SelectMessage, { mailboxId: fullyQualifiedId(mailbox), message }),
+                chain(InboxAction.SelectMessage, { mailboxId: Obj.getDXN(mailbox).toString(), message }),
               ),
             );
           },
@@ -199,7 +197,7 @@ export default () =>
                 }),
               );
               if (view) {
-                const id = fullyQualifiedId(view);
+                const id = Obj.getDXN(view).toString();
                 yield* dispatch(
                   createIntent(LayoutAction.Open, {
                     part: 'main',

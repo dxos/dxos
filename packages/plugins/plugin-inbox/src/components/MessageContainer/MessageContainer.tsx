@@ -5,9 +5,10 @@
 import { useComputed, useSignal } from '@preact/signals-react';
 import React, { useCallback, useEffect, useMemo } from 'react';
 
-import { createIntent, useIntentDispatcher } from '@dxos/app-framework';
+import { createIntent } from '@dxos/app-framework';
+import { useIntentDispatcher } from '@dxos/app-framework/react';
 import { Obj } from '@dxos/echo';
-import { Filter, type Space, fullyQualifiedId, useQuery } from '@dxos/react-client/echo';
+import { Filter, type Space, useQuery } from '@dxos/react-client/echo';
 import { ElevationProvider, useTranslation } from '@dxos/react-ui';
 import { MenuProvider, ToolbarMenu } from '@dxos/react-ui-menu';
 import { StackItem } from '@dxos/react-ui-stack';
@@ -71,7 +72,7 @@ export const MessageContainer = ({ space, message, inMailbox, role }: MessageCon
   return (
     <StackItem.Content classNames='relative' toolbar>
       <ElevationProvider elevation='positioned'>
-        <MenuProvider {...menu} attendableId={fullyQualifiedId(inMailbox)}>
+        <MenuProvider {...menu} attendableId={Obj.getDXN(inMailbox).toString()}>
           <ToolbarMenu />
         </MenuProvider>
       </ElevationProvider>

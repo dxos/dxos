@@ -13,7 +13,7 @@ import React, { type PropsWithChildren, useCallback, useEffect, useMemo, useRef,
 import { Event } from '@dxos/async';
 import { Obj } from '@dxos/echo';
 import { useVoiceInput } from '@dxos/plugin-transcription';
-import { type Space, fullyQualifiedId, getSpace, useQueue } from '@dxos/react-client/echo';
+import { type Space, getSpace, useQueue } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { Input, type ThemedClassName, useDynamicRef, useTranslation } from '@dxos/react-ui';
 import { ChatEditor, type ChatEditorController, type ChatEditorProps, references } from '@dxos/react-ui-chat';
@@ -424,7 +424,10 @@ const ChatToolbar = ({ classNames, companionTo }: ChatToolbarProps) => {
   const menu = useChatToolbarActions({ chat, companionTo });
 
   return (
-    <MenuProvider {...menu} attendableId={companionTo ? fullyQualifiedId(companionTo) : fullyQualifiedId(chat)}>
+    <MenuProvider
+      {...menu}
+      attendableId={companionTo ? Obj.getDXN(companionTo).toString() : chat ? Obj.getDXN(chat).toString() : ''}
+    >
       <ToolbarMenu classNames={classNames} textBlockWidth />
     </MenuProvider>
   );

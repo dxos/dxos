@@ -12,7 +12,7 @@ import { CollectionAction } from '@dxos/plugin-space/types';
 import { ThreadCapabilities } from '@dxos/plugin-thread';
 import { ThreadAction } from '@dxos/plugin-thread/types';
 import { TranscriptAction } from '@dxos/plugin-transcription/types';
-import { Filter, Query, fullyQualifiedId, getSpace, parseId } from '@dxos/react-client/echo';
+import { Filter, Query, getSpace, parseId } from '@dxos/react-client/echo';
 import { Text } from '@dxos/schema';
 import { type Message } from '@dxos/types';
 
@@ -28,7 +28,9 @@ export default (context: PluginContext) =>
         Effect.gen(function* () {
           const { dispatch } = context.getCapability(Capabilities.IntentDispatcher);
           const { object: meetingCollection } = yield* dispatch(
-            createIntent(CollectionAction.CreateQueryCollection, { typename: Type.getTypename(Meeting.Meeting) }),
+            createIntent(CollectionAction.CreateQueryCollection, {
+              typename: Type.getTypename(Meeting.Meeting),
+            }),
           );
           rootCollection.objects.push(Ref.make(meetingCollection));
         }),
@@ -61,7 +63,9 @@ export default (context: PluginContext) =>
         const callManager = context.getCapability(ThreadCapabilities.CallManager);
         const state = context.getCapability(MeetingCapabilities.State);
         state.activeMeeting = object;
-        callManager.setActivity(Type.getTypename(Meeting.Meeting)!, { meetingId: fullyQualifiedId(object) });
+        callManager.setActivity(Type.getTypename(Meeting.Meeting)!, {
+          meetingId: object ? Obj.getDXN(object).toString() : '',
+        });
         return { data: { object } };
       },
     }),

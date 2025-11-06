@@ -5,10 +5,12 @@
 import * as Option from 'effect/Option';
 import React, { forwardRef, useCallback, useState } from 'react';
 
-import { LayoutAction, createIntent, useAppGraph, useIntentDispatcher, useLayout } from '@dxos/app-framework';
+import { LayoutAction, createIntent } from '@dxos/app-framework';
+import { useAppGraph, useIntentDispatcher, useLayout } from '@dxos/app-framework/react';
+import { Obj } from '@dxos/echo';
 import { type Node } from '@dxos/plugin-graph';
 import { useClient } from '@dxos/react-client';
-import { Filter, fullyQualifiedId, useQuery } from '@dxos/react-client/echo';
+import { Filter, useQuery } from '@dxos/react-client/echo';
 import { Button, Dialog, Icon, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { SearchList, type SearchListItemProps } from '@dxos/react-ui-searchlist';
 import { descriptionText, mx } from '@dxos/react-ui-theme';
@@ -59,12 +61,22 @@ export const SearchDialog = ({ pivotId }: SearchDialogProps) => {
 
   const handleSelect = useCallback(
     async (nodeId: string) => {
-      await dispatch(createIntent(LayoutAction.UpdateDialog, { part: 'dialog', options: { state: false } }));
+      await dispatch(
+        createIntent(LayoutAction.UpdateDialog, {
+          part: 'dialog',
+          options: { state: false },
+        }),
+      );
 
       // If node is already present in the active parts, scroll to it and close the dialog.
       const index = layout.active.findIndex((id) => id === nodeId);
       if (index !== -1) {
-        await dispatch(createIntent(LayoutAction.ScrollIntoView, { part: 'current', subject: nodeId }));
+        await dispatch(
+          createIntent(LayoutAction.ScrollIntoView, {
+            part: 'current',
+            subject: nodeId,
+          }),
+        );
       } else {
         await dispatch(
           createIntent(LayoutAction.Open, {
@@ -97,7 +109,7 @@ export const SearchDialog = ({ pivotId }: SearchDialogProps) => {
           {queryString.length > 0 ? (
             resultObjects.length > 0 ? (
               resultObjects
-                .map((object) => graph.getNode(fullyQualifiedId(object)))
+                .map((object) => graph.getNode(Obj.getDXN(object).toString()))
                 .filter(Option.isSome)
                 .map((node) => <SearchListResult key={node.value.id} node={node.value} onSelect={handleSelect} />)
             ) : (

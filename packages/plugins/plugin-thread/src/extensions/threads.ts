@@ -9,7 +9,7 @@ import { computed, effect } from '@preact/signals-core';
 import { type PromiseIntentDispatcher, createIntent } from '@dxos/app-framework';
 import { Filter, Obj, Query, Relation } from '@dxos/echo';
 import { type Markdown } from '@dxos/plugin-markdown/types';
-import { createDocAccessor, fullyQualifiedId, getSource, getSpace, getTextInRange } from '@dxos/react-client/echo';
+import { createDocAccessor, getSource, getSpace, getTextInRange } from '@dxos/react-client/echo';
 import { comments, createExternalCommentSync } from '@dxos/react-ui-editor';
 import { AnchoredTo } from '@dxos/types';
 
@@ -43,7 +43,7 @@ export const threads = (state: ThreadState, doc?: Markdown.Document, dispatch?: 
         const thread = Relation.getSource(anchor);
         return Obj.instanceOf(Thread.Thread, thread) && thread.status !== 'resolved';
       })
-      .concat(state.drafts[fullyQualifiedId(doc)] ?? []),
+      .concat(state.drafts[Obj.getDXN(doc).toString()] ?? []),
   );
 
   return [
@@ -70,19 +70,19 @@ export const threads = (state: ThreadState, doc?: Markdown.Document, dispatch?: 
     }),
 
     createExternalCommentSync(
-      fullyQualifiedId(doc),
+      Obj.getDXN(doc).toString(),
       (sink) => effect(() => sink()),
       () =>
         anchors.value
           .filter((anchor) => anchor.anchor)
           .map((anchor) => ({
-            id: fullyQualifiedId(Relation.getSource(anchor)),
+            id: Obj.getDXN(Relation.getSource(anchor)).toString(),
             cursor: anchor.anchor,
           })),
     ),
 
     comments({
-      id: fullyQualifiedId(doc),
+      id: Obj.getDXN(doc).toString(),
       onCreate: ({ cursor }) => {
         const name = getName(doc, cursor);
         void dispatch(
@@ -94,9 +94,9 @@ export const threads = (state: ThreadState, doc?: Markdown.Document, dispatch?: 
         );
       },
       onDelete: ({ id }) => {
-        const draft = state.drafts[fullyQualifiedId(doc)];
+        const draft = state.drafts[Obj.getDXN(doc).toString()];
         if (draft) {
-          const index = draft.findIndex((thread) => fullyQualifiedId(thread) === id);
+          const index = draft.findIndex((thread) => Obj.getDXN(thread).toString() === id);
           if (index !== -1) {
             draft.splice(index, 1);
           }
@@ -108,7 +108,7 @@ export const threads = (state: ThreadState, doc?: Markdown.Document, dispatch?: 
         }
       },
       onUpdate: ({ id, cursor }) => {
-        const draft = state.drafts[fullyQualifiedId(doc)]?.find((thread) => fullyQualifiedId(thread) === id);
+        const draft = state.drafts[Obj.getDXN(doc).toString()]?.find((thread) => Obj.getDXN(thread).toString() === id);
         if (draft) {
           const thread = Relation.getSource(draft) as Thread.Thread;
           thread.name = getName(doc, cursor);

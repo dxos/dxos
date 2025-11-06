@@ -6,15 +6,8 @@ import * as Effect from 'effect/Effect';
 import * as Function from 'effect/Function';
 import React, { useCallback, useRef, useState } from 'react';
 
-import {
-  Capabilities,
-  LayoutAction,
-  chain,
-  createIntent,
-  useCapabilities,
-  useIntentDispatcher,
-  usePluginManager,
-} from '@dxos/app-framework';
+import { Capabilities, LayoutAction, chain, createIntent } from '@dxos/app-framework';
+import { useCapabilities, useIntentDispatcher, usePluginManager } from '@dxos/app-framework/react';
 import { Obj, Query, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { useClient } from '@dxos/react-client';

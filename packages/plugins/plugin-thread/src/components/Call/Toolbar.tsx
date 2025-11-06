@@ -4,9 +4,9 @@
 
 import React from 'react';
 
-import { useAppGraph, useCapability } from '@dxos/app-framework';
+import { useAppGraph, useCapability } from '@dxos/app-framework/react';
+import { Obj } from '@dxos/echo';
 import { useActions, useNode } from '@dxos/plugin-graph';
-import { fullyQualifiedId } from '@dxos/react-client/echo';
 import {
   Icon,
   IconButton,
@@ -45,7 +45,7 @@ export const Toolbar = ({
   const call = useCapability(ThreadCapabilities.CallManager);
 
   // Channel app graph node.
-  const node = useNode(graph, channel && fullyQualifiedId(channel));
+  const node = useNode(graph, channel && Obj.getDXN(channel).toString());
   const actions = useActions(graph, node?.id).filter((action) => action.properties.disposition === 'toolbar');
 
   // Screen sharing.

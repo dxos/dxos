@@ -9,7 +9,8 @@ import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 import React, { type FC, useEffect, useMemo, useState } from 'react';
 
-import { Capabilities, IntentPlugin, SettingsPlugin, useCapability, useIntentDispatcher } from '@dxos/app-framework';
+import { Capabilities, IntentPlugin, SettingsPlugin } from '@dxos/app-framework';
+import { useCapability, useIntentDispatcher } from '@dxos/app-framework/react';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Obj, Ref, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
@@ -20,7 +21,7 @@ import { SpacePlugin } from '@dxos/plugin-space';
 import { StorybookLayoutPlugin } from '@dxos/plugin-storybook-layout';
 import { ThemePlugin } from '@dxos/plugin-theme';
 import { faker } from '@dxos/random';
-import { createDocAccessor, fullyQualifiedId, toCursorRange, useQueue, useSpace } from '@dxos/react-client/echo';
+import { createDocAccessor, toCursorRange, useQueue, useSpace } from '@dxos/react-client/echo';
 import { IconButton, Toolbar } from '@dxos/react-ui';
 import { withTheme } from '@dxos/react-ui/testing';
 import { type EditorSelection, type Range, useTextEditor } from '@dxos/react-ui-editor';
@@ -80,7 +81,7 @@ const TestChat: FC<{ doc: Markdown.Document; content: string }> = ({ doc, conten
     const text = await doc.content.load();
     const accessor = createDocAccessor(text, ['content']);
     const cursor = Function.pipe(
-      editorState.getState(fullyQualifiedId(doc))?.selection,
+      editorState.getState(Obj.getDXN(doc).toString())?.selection,
       Option.fromNullable,
       Option.map(selectionToRange),
       Option.map((range) => toCursorRange(accessor, range.from, range.to)),
@@ -127,7 +128,12 @@ const DefaultStory = ({ document, chat }: { document: string; chat: string }) =>
       Markdown.make({
         name: 'Test',
         content: document.replaceAll(/\[(\w+)\]/g, (_, label) => {
-          const obj = space.db.add(Obj.make(TestItem, { title: label, description: faker.lorem.paragraph() }));
+          const obj = space.db.add(
+            Obj.make(TestItem, {
+              title: label,
+              description: faker.lorem.paragraph(),
+            }),
+          );
           const dxn = Ref.make(obj).dxn.toString();
           return `[${label}](${dxn})`;
         }),

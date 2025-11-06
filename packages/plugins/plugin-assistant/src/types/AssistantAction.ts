@@ -4,7 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Blueprint } from '@dxos/blueprints';
+import { Blueprint, Prompt } from '@dxos/blueprints';
 import { EchoObjectSchema, SpaceSchema } from '@dxos/client/echo';
 import { Sequence } from '@dxos/conductor';
 import { Collection } from '@dxos/schema';
@@ -49,6 +49,15 @@ export class CreateBlueprint extends Schema.TaggedClass<CreateBlueprint>()(`${me
   input: BlueprintForm,
   output: Schema.Struct({
     object: Blueprint.Blueprint,
+  }),
+}) {}
+
+export class CreatePrompt extends Schema.TaggedClass<CreatePrompt>()(`${meta.id}/action/create-prompt`, {
+  input: Schema.Struct({
+    name: Schema.optional(Schema.String),
+  }),
+  output: Schema.Struct({
+    object: Prompt.Prompt,
   }),
 }) {}
 

@@ -5,7 +5,7 @@
 import type * as Effect from 'effect/Effect';
 import { useCallback } from 'react';
 
-import { useCapability } from '@dxos/app-framework';
+import { useCapability } from '@dxos/app-framework/react';
 import type { Space } from '@dxos/react-client/echo';
 
 import { AutomationCapabilities } from '../capabilities';

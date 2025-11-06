@@ -15,7 +15,7 @@ import { defineArtifact } from '@dxos/blueprints';
 import { Obj } from '@dxos/echo';
 import { assertArgument, invariant } from '@dxos/invariant';
 import { SpaceAction } from '@dxos/plugin-space/types';
-import { Filter, fullyQualifiedId } from '@dxos/react-client/echo';
+import { Filter } from '@dxos/react-client/echo';
 
 import { meta } from '../meta';
 import { Markdown, MarkdownAction } from '../types';
@@ -76,7 +76,7 @@ export default () => {
           const documentInfo = documents.map((doc) => {
             invariant(Obj.instanceOf(Markdown.Document, doc));
             return {
-              id: fullyQualifiedId(doc),
+              id: Obj.getDXN(doc).toString(),
               name: doc.name || doc.fallbackName || 'Unnamed Document',
               // TODO(ZaymonFC): Include updatedAt?
             };
@@ -99,7 +99,7 @@ export default () => {
 
           const { content } = await document.content?.load();
           return ToolResult.Success({
-            id: fullyQualifiedId(document),
+            id: Obj.getDXN(document).toString(),
             name: document.name || document.fallbackName || 'Unnamed Document',
             content,
           });

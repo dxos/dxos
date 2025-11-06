@@ -4,7 +4,7 @@
 
 import React, { type FC, type PropsWithChildren, useEffect, useState } from 'react';
 
-import { useCapability } from '@dxos/app-framework';
+import { useCapability } from '@dxos/app-framework/react';
 import { type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 

@@ -5,8 +5,8 @@
 import React, { type PropsWithChildren, createContext, useCallback, useContext, useState } from 'react';
 
 import { type CellAddress, type CellRange, type CompleteCellRange, type ComputeGraph } from '@dxos/compute';
+import { Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
-import { fullyQualifiedId } from '@dxos/react-client/echo';
 import {
   Grid,
   type GridContentProps,
@@ -130,7 +130,7 @@ export const SheetProvider = ({
   const model = useSheetModel(graph, sheet, { readonly });
 
   return !model ? null : (
-    <Grid.Root id={fullyQualifiedId(sheet)}>
+    <Grid.Root id={Obj.getDXN(sheet).toString()}>
       <SheetProviderImpl model={model} onInfo={onInfo} ignoreAttention={ignoreAttention}>
         {children}
       </SheetProviderImpl>

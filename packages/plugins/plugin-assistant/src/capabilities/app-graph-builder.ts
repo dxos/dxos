@@ -14,6 +14,7 @@ import {
   contributes,
   createIntent,
 } from '@dxos/app-framework';
+import { Prompt } from '@dxos/blueprints';
 import { Sequence } from '@dxos/conductor';
 import { Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
@@ -22,7 +23,7 @@ import { ATTENDABLE_PATH_SEPARATOR, PLANK_COMPANION_TYPE } from '@dxos/plugin-de
 import { ROOT_ID, createExtension, rxFromSignal } from '@dxos/plugin-graph';
 import { getActiveSpace } from '@dxos/plugin-space';
 import { SpaceAction } from '@dxos/plugin-space/types';
-import { Query, type Space, fullyQualifiedId } from '@dxos/react-client/echo';
+import { Query, type Space } from '@dxos/react-client/echo';
 
 import { ASSISTANT_DIALOG, meta } from '../meta';
 import { Assistant, AssistantAction } from '../types';
@@ -41,7 +42,7 @@ export default (context: PluginContext) =>
               return Obj.instanceOf(Assistant.Chat, node.data) ? Option.some(node.data) : Option.none();
             }),
             Option.map((object) => {
-              const id = fullyQualifiedId(object);
+              const id = Obj.getDXN(object).toString();
               return [
                 {
                   id: `${AssistantAction.UpdateChatName._tag}/${id}`,
@@ -122,13 +123,13 @@ export default (context: PluginContext) =>
             Option.map((object) => {
               const currentChat = get(
                 rxFromSignal(
-                  () => context.getCapability(AssistantCapabilities.State).currentChat[fullyQualifiedId(object)],
+                  () => context.getCapability(AssistantCapabilities.State).currentChat[Obj.getDXN(object).toString()],
                 ),
               );
 
               return [
                 {
-                  id: [fullyQualifiedId(object), 'assistant-chat'].join(ATTENDABLE_PATH_SEPARATOR),
+                  id: [Obj.getDXN(object).toString(), 'assistant-chat'].join(ATTENDABLE_PATH_SEPARATOR),
                   type: PLANK_COMPANION_TYPE,
                   data: currentChat ?? 'assistant-chat',
                   properties: {
@@ -147,19 +148,23 @@ export default (context: PluginContext) =>
     }),
 
     createExtension({
-      id: `${meta.id}/sequence-logs`,
+      id: `${meta.id}/invocations`,
       connector: (node) =>
         Rx.make((get) =>
           Function.pipe(
             get(node),
-            Option.flatMap((node) => (Obj.instanceOf(Sequence, node.data) ? Option.some(node) : Option.none())),
+            Option.flatMap((node) =>
+              Obj.instanceOf(Sequence, node.data) || Obj.instanceOf(Prompt.Prompt, node.data)
+                ? Option.some(node)
+                : Option.none(),
+            ),
             Option.map((node) => [
               {
-                id: [node.id, 'logs'].join(ATTENDABLE_PATH_SEPARATOR),
+                id: [node.id, 'invocations'].join(ATTENDABLE_PATH_SEPARATOR),
                 type: PLANK_COMPANION_TYPE,
-                data: 'logs',
+                data: 'invocations',
                 properties: {
-                  label: ['sequence logs label', { ns: meta.id }],
+                  label: ['invocations label', { ns: meta.id }],
                   icon: 'ph--clock-countdown--regular',
                   disposition: 'hidden',
                 },

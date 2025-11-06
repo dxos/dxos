@@ -4,9 +4,10 @@
 
 import React, { useCallback } from 'react';
 
-import { Surface, createIntent, useIntentDispatcher } from '@dxos/app-framework';
+import { createIntent } from '@dxos/app-framework';
+import { Surface, useIntentDispatcher } from '@dxos/app-framework/react';
+import { Obj } from '@dxos/echo';
 import { ATTENDABLE_PATH_SEPARATOR, DeckAction } from '@dxos/plugin-deck/types';
-import { fullyQualifiedId } from '@dxos/react-client/echo';
 import { useAttention } from '@dxos/react-ui-attention';
 import { StackItem } from '@dxos/react-ui-stack';
 import { Project as ProjectType } from '@dxos/types';
@@ -17,7 +18,7 @@ export type ProjectContainerProps = { project: ProjectType.Project; role: string
 
 export const ProjectContainer = ({ project }: ProjectContainerProps) => {
   const { dispatchPromise: dispatch } = useIntentDispatcher();
-  const attendableId = fullyQualifiedId(project);
+  const attendableId = Obj.getDXN(project).toString();
   const { hasAttention } = useAttention(attendableId);
 
   const handleColumnAdd = useCallback(

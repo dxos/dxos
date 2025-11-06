@@ -4,7 +4,8 @@
 
 import React, { useCallback, useRef, useState } from 'react';
 
-import { LayoutAction, createIntent, useIntentDispatcher } from '@dxos/app-framework';
+import { LayoutAction, createIntent } from '@dxos/app-framework';
+import { useIntentDispatcher } from '@dxos/app-framework/react';
 import { type Space } from '@dxos/client/echo';
 import { Button, Input, Popover, useTranslation } from '@dxos/react-ui';
 

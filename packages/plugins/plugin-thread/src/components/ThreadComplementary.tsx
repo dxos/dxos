@@ -4,17 +4,10 @@
 
 import React, { useCallback, useMemo } from 'react';
 
-import {
-  Capabilities,
-  CollaborationActions,
-  LayoutAction,
-  createIntent,
-  useCapabilities,
-  useCapability,
-  useIntentDispatcher,
-} from '@dxos/app-framework';
+import { Capabilities, CollaborationActions, LayoutAction, createIntent } from '@dxos/app-framework';
+import { useCapabilities, useCapability, useIntentDispatcher } from '@dxos/app-framework/react';
 import { Filter, Obj, Query, Relation } from '@dxos/echo';
-import { Ref, fullyQualifiedId, getSpace, useQuery } from '@dxos/react-client/echo';
+import { Ref, getSpace, useQuery } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { useTranslation } from '@dxos/react-ui';
 import { useAttended } from '@dxos/react-ui-attention';
@@ -32,7 +25,7 @@ export const ThreadComplementary = ({ subject }: { subject: any }) => {
   const { t } = useTranslation(meta.id);
   const { dispatchPromise: dispatch } = useIntentDispatcher();
   const identity = useIdentity();
-  const subjectId = fullyQualifiedId(subject);
+  const subjectId = Obj.getDXN(subject).toString();
 
   const { state, getViewState } = useCapability(ThreadCapabilities.MutableState);
   const drafts = state.drafts[subjectId];
@@ -63,7 +56,7 @@ export const ThreadComplementary = ({ subject }: { subject: any }) => {
   const handleAttend = useCallback(
     (anchor: AnchoredTo.AnchoredTo) => {
       const thread = Relation.getSource(anchor) as Thread.Thread;
-      const threadId = fullyQualifiedId(thread);
+      const threadId = Obj.getDXN(thread).toString();
 
       if (state.current !== threadId) {
         state.current = threadId;
@@ -74,7 +67,7 @@ export const ThreadComplementary = ({ subject }: { subject: any }) => {
         void dispatch(
           createIntent(LayoutAction.ScrollIntoView, {
             part: 'current',
-            subject: fullyQualifiedId(subject),
+            subject: Obj.getDXN(subject).toString(),
             options: {
               cursor: anchor.anchor,
               ref: threadId,
@@ -98,7 +91,7 @@ export const ThreadComplementary = ({ subject }: { subject: any }) => {
       );
 
       const thread = Relation.getSource(anchor) as Thread.Thread;
-      state.current = fullyQualifiedId(thread);
+      state.current = Obj.getDXN(thread).toString();
     },
     [dispatch, identity, subject],
   );

@@ -4,16 +4,9 @@
 
 import React, { useCallback } from 'react';
 
-import {
-  Capabilities,
-  LayoutAction,
-  Surface,
-  contributes,
-  createIntent,
-  createSurface,
-  useIntentDispatcher,
-} from '@dxos/app-framework';
-import { fullyQualifiedId, getSchema, getSpace } from '@dxos/client/echo';
+import { Capabilities, LayoutAction, contributes, createIntent, createSurface } from '@dxos/app-framework';
+import { Surface, useIntentDispatcher } from '@dxos/app-framework/react';
+import { getSchema, getSpace } from '@dxos/client/echo';
 import { Obj } from '@dxos/echo';
 import { type JsonPath, setValue } from '@dxos/echo/internal';
 import { useActiveSpace } from '@dxos/plugin-space';
@@ -48,7 +41,7 @@ export default () =>
             dispatch(
               createIntent(LayoutAction.Open, {
                 part: 'main',
-                subject: [fullyQualifiedId(object)],
+                subject: [Obj.getDXN(object).toString()],
                 options: {
                   workspace: space?.id,
                 },
@@ -131,7 +124,9 @@ export default () =>
               readonly={role === 'card--popover' ? 'static' : false}
               onSave={handleSave}
               autoSave
-              {...(role === 'card--intrinsic' && { outerSpacing: 'blockStart-0' })}
+              {...(role === 'card--intrinsic' && {
+                outerSpacing: 'blockStart-0',
+              })}
             />
           </Card.SurfaceRoot>
         );

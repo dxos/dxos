@@ -4,7 +4,7 @@
 
 import React, { useState } from 'react';
 
-import { useCapability } from '@dxos/app-framework';
+import { useCapability } from '@dxos/app-framework/react';
 import { invariant } from '@dxos/invariant';
 import { getSpace } from '@dxos/react-client/echo';
 import { useAsyncEffect } from '@dxos/react-ui';
@@ -29,9 +29,19 @@ export const FileContainer = ({ file }: FileContainerProps) => {
   useAsyncEffect(async () => {
     const space = getSpace(file);
     invariant(space);
-    const { directory, forest } = await loadWnfs({ blockstore, instances, space });
+    const { directory, forest } = await loadWnfs({
+      blockstore,
+      instances,
+      space,
+    });
     const path = filePath(file.cid.toString(), space);
-    const url = await getBlobUrl({ wnfsUrl: wnfsUrl(path), blockstore, directory, forest, type: file.type });
+    const url = await getBlobUrl({
+      wnfsUrl: wnfsUrl(path),
+      blockstore,
+      directory,
+      forest,
+      type: file.type,
+    });
     setBlobUrl(url);
   }, [file]);
 

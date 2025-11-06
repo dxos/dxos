@@ -6,9 +6,9 @@ import React, { type PropsWithChildren } from 'react';
 
 import { Capabilities } from '../common';
 import { topologicalSort } from '../helpers';
-import { useCapabilities } from '../react';
 
 import { type UseAppOptions } from './useApp';
+import { useCapabilities } from './useCapabilities';
 import { LoadingState, useLoading } from './useLoading';
 
 export type AppProps = Pick<UseAppOptions, 'placeholder' | 'debounce'> & {

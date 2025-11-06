@@ -4,7 +4,7 @@
 
 import React, { type PropsWithChildren, useCallback, useEffect, useRef, useState } from 'react';
 
-import { Surface, useCapability } from '@dxos/app-framework';
+import { Surface, useCapability } from '@dxos/app-framework/react';
 import {
   AlertDialog,
   Dialog,

@@ -5,10 +5,10 @@
 import * as Function from 'effect/Function';
 import React, { useCallback } from 'react';
 
-import { LayoutAction, chain, createIntent, useIntentDispatcher } from '@dxos/app-framework';
+import { LayoutAction, chain, createIntent } from '@dxos/app-framework';
+import { useIntentDispatcher } from '@dxos/app-framework/react';
 import { Obj } from '@dxos/echo';
 import { type PreviewProps } from '@dxos/plugin-preview';
-import { fullyQualifiedId } from '@dxos/react-client/echo';
 import { IconButton, useTranslation } from '@dxos/react-ui';
 import { Card } from '@dxos/react-ui-stack';
 import { Text } from '@dxos/schema';
@@ -35,7 +35,10 @@ export const MarkdownCard = ({ subject, role }: MarkdownCardProps) => {
             subject: null,
             options: { state: false, anchorId: '' },
           }),
-          chain(LayoutAction.Open, { part: 'main', subject: [fullyQualifiedId(subject)] }),
+          chain(LayoutAction.Open, {
+            part: 'main',
+            subject: [Obj.getDXN(subject).toString()],
+          }),
         ),
       ),
     [dispatch, subject],

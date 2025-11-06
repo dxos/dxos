@@ -4,7 +4,7 @@
 
 import React, { type FC } from 'react';
 
-import { Surface } from '@dxos/app-framework';
+import { Surface } from '@dxos/app-framework/react';
 import { Filter } from '@dxos/echo';
 import { useQuery } from '@dxos/react-client/echo';
 import { Project } from '@dxos/types';

@@ -15,7 +15,7 @@ import { defineArtifact } from '@dxos/blueprints';
 import { Obj, Query } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { SpaceAction } from '@dxos/plugin-space/types';
-import { Filter, type Space, fullyQualifiedId } from '@dxos/react-client/echo';
+import { Filter, type Space } from '@dxos/react-client/echo';
 import { KanbanView } from '@dxos/react-ui-kanban';
 import { View } from '@dxos/schema';
 import { isNonNullable } from '@dxos/util';
@@ -104,7 +104,7 @@ export default () => {
               }
 
               return {
-                id: fullyQualifiedId(view),
+                id: Obj.getDXN(view).toString(),
                 name: view.name ?? 'Unnamed Kanban',
                 typename: view.query.typename,
               };

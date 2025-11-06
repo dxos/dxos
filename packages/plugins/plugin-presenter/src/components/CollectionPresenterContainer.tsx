@@ -4,7 +4,7 @@
 
 import React, { type FC, useContext, useState } from 'react';
 
-import { Surface } from '@dxos/app-framework';
+import { Surface } from '@dxos/app-framework/react';
 import { StackItem } from '@dxos/react-ui-stack';
 import { type Collection } from '@dxos/schema';
 

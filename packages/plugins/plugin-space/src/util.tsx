@@ -20,7 +20,7 @@ import {
   type ReadableGraph,
   isGraphNode,
 } from '@dxos/plugin-graph';
-import { type QueryResult, type Space, SpaceState, fullyQualifiedId, getSpace, isSpace } from '@dxos/react-client/echo';
+import { type QueryResult, type Space, SpaceState, getSpace, isSpace } from '@dxos/react-client/echo';
 import { ATTENDABLE_PATH_SEPARATOR } from '@dxos/react-ui-attention';
 import { type TreeData } from '@dxos/react-ui-list';
 import { Collection, StoredSchema, View, getTypenameFromQuery } from '@dxos/schema';
@@ -492,7 +492,7 @@ export const createObjectNode = ({
     (navigable && Obj.instanceOf(Collection.Collection, object));
 
   return {
-    id: fullyQualifiedId(object),
+    id: Obj.getDXN(object).toString(),
     type,
     cacheable: ['label', 'icon', 'role'],
     data: object,
@@ -533,7 +533,7 @@ export const constructObjectActions = ({
   const typename = Obj.getTypename(object);
   invariant(typename, 'Object has no typename');
 
-  const getId = (id: string) => `${id}/${fullyQualifiedId(object)}`;
+  const getId = (id: string) => `${id}/${Obj.getDXN(object).toString()}`;
 
   const queryCollection = Obj.instanceOf(Collection.QueryCollection, object) ? object : undefined;
   const matchingObjectForm = queryCollection
@@ -635,7 +635,7 @@ export const constructObjectActions = ({
       type: ACTION_TYPE,
       data: async () => {
         const collection = graph
-          .getConnections(fullyQualifiedId(object), 'inbound')
+          .getConnections(Obj.getDXN(object).toString(), 'inbound')
           .find(({ data }) => Obj.instanceOf(Collection.Collection, data))?.data;
         await dispatch(createIntent(SpaceAction.RemoveObjects, { objects: [object], target: collection }));
       },
@@ -658,7 +658,7 @@ export const constructObjectActions = ({
             id: getId('copy-link'),
             type: ACTION_TYPE,
             data: async () => {
-              const url = `${window.location.origin}/${space.id}/${fullyQualifiedId(object)}`;
+              const url = `${window.location.origin}/${space.id}/${Obj.getDXN(object).toString()}`;
               await navigator.clipboard.writeText(url);
             },
             properties: {
@@ -675,7 +675,9 @@ export const constructObjectActions = ({
       id: getId(LayoutAction.Expose._tag),
       type: ACTION_TYPE,
       data: async () => {
-        await dispatch(createIntent(LayoutAction.Expose, { part: 'navigation', subject: fullyQualifiedId(object) }));
+        await dispatch(
+          createIntent(LayoutAction.Expose, { part: 'navigation', subject: Obj.getDXN(object).toString() }),
+        );
       },
       properties: {
         label: ['expose object label', { ns: meta.id }],

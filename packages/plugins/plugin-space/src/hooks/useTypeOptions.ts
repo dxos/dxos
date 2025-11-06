@@ -4,7 +4,7 @@
 
 import { useMemo } from 'react';
 
-import { useCapabilities } from '@dxos/app-framework';
+import { useCapabilities } from '@dxos/app-framework/react';
 import { Type } from '@dxos/echo';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { useClient } from '@dxos/react-client';

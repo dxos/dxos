@@ -5,7 +5,8 @@
 import type * as Schema from 'effect/Schema';
 import React, { useMemo } from 'react';
 
-import { Capabilities, contributes, createSurface, useCapabilities } from '@dxos/app-framework';
+import { Capabilities, contributes, createSurface } from '@dxos/app-framework';
+import { useCapabilities } from '@dxos/app-framework/react';
 import { Obj, Type } from '@dxos/echo';
 import { findAnnotation } from '@dxos/effect';
 import { ClientCapabilities } from '@dxos/plugin-client';
