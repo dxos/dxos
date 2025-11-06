@@ -11828,6 +11828,94 @@ importers:
         specifier: workspace:*
         version: link:../../ui/react-ui-theme
 
+  packages/sdk/types:
+    dependencies:
+      '@dxos/async':
+        specifier: workspace:*
+        version: link:../../common/async
+      '@dxos/client-protocol':
+        specifier: workspace:*
+        version: link:../client-protocol
+      '@dxos/debug':
+        specifier: workspace:*
+        version: link:../../common/debug
+      '@dxos/echo':
+        specifier: workspace:*
+        version: link:../../core/echo/echo
+      '@dxos/echo-db':
+        specifier: workspace:*
+        version: link:../../core/echo/echo-db
+      '@dxos/echo-protocol':
+        specifier: workspace:*
+        version: link:../../core/echo/echo-protocol
+      '@dxos/echo-query':
+        specifier: workspace:*
+        version: link:../../core/echo/echo-query
+      '@dxos/effect':
+        specifier: workspace:*
+        version: link:../../common/effect
+      '@dxos/invariant':
+        specifier: workspace:*
+        version: link:../../common/invariant
+      '@dxos/keys':
+        specifier: workspace:*
+        version: link:../../common/keys
+      '@dxos/live-object':
+        specifier: workspace:*
+        version: link:../../core/echo/live-object
+      '@dxos/log':
+        specifier: workspace:*
+        version: link:../../common/log
+      '@dxos/random':
+        specifier: workspace:*
+        version: link:../../common/random
+      '@dxos/schema':
+        specifier: workspace:*
+        version: link:../schema
+      '@dxos/util':
+        specifier: workspace:*
+        version: link:../../common/util
+      '@effect/schema':
+        specifier: ^0.75.5
+        version: 0.75.5(effect@3.18.3)
+      '@preact/signals-core':
+        specifier: ^1.12.1
+        version: 1.12.1
+      date-fns:
+        specifier: ^3.3.1
+        version: 3.6.0
+      effect:
+        specifier: 3.18.3
+        version: 3.18.3
+      jsonpath:
+        specifier: ^1.1.1
+        version: 1.1.1
+    devDependencies:
+      '@dxos/echo-signals':
+        specifier: workspace:*
+        version: link:../../core/echo/echo-signals
+      '@dxos/react-client':
+        specifier: workspace:*
+        version: link:../react-client
+      '@dxos/react-ui':
+        specifier: workspace:*
+        version: link:../../ui/react-ui
+      '@dxos/react-ui-syntax-highlighter':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-syntax-highlighter
+      '@dxos/storybook-utils':
+        specifier: workspace:*
+        version: link:../../common/storybook-utils
+      '@types/jsonpath':
+        specifier: ^0.2.4
+        version: 0.2.4
+      fast-check:
+        specifier: ^3.19.0
+        version: 3.23.1
+      vite:
+        specifier: 7.1.9
+        version: 7.1.9(@types/node@22.10.2)(jiti@2.6.1)(terser@5.19.2)(yaml@2.7.1)
+
   packages/stories/stories-assistant:
     dependencies:
       '@dxos/ai':

@@ -745,6 +745,11 @@
         },
         {
           "type": "json",
+          "path": "packages/sdk/types/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/stories/stories-assistant/package.json",
           "jsonpath": "$.version"
         },
