@@ -6,8 +6,8 @@ import { writeFile } from 'node:fs/promises';
 import * as fs from 'node:fs/promises';
 import { basename, join, relative } from 'node:path';
 
-import * as Function from 'effect/Function';
 import * as Array from 'effect/Array';
+import * as Function from 'effect/Function';
 import * as Record from 'effect/Record';
 import { type Message, build } from 'esbuild';
 
