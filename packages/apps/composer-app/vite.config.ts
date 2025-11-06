@@ -69,7 +69,7 @@ export default defineConfig((env) => ({
     outDir: 'out/composer',
     sourcemap: true,
     minify: !isFalse(process.env.DX_MINIFY),
-    target: ['chrome89', 'edge89', 'firefox89', 'safari15'],
+    target: ['chrome108', 'edge107', 'firefox104', 'safari16'],
     rollupOptions: {
       // NOTE: Set cache to `false` to help debug flaky builds.
       // cache: false,
