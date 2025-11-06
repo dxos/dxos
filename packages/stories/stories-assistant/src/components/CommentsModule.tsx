@@ -4,7 +4,7 @@
 
 import React, { useMemo } from 'react';
 
-import { Surface } from '@dxos/app-framework';
+import { Surface } from '@dxos/app-framework/react';
 import { Assistant, useContextBinder } from '@dxos/plugin-assistant';
 import { Filter, useQuery } from '@dxos/react-client/echo';
 

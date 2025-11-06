@@ -5,7 +5,7 @@
 import { Rx } from '@effect-rx/rx-react';
 import React, { type PropsWithChildren, useMemo } from 'react';
 
-import { useAppGraph } from '@dxos/app-framework';
+import { useAppGraph } from '@dxos/app-framework/react';
 import { type CompleteCellRange } from '@dxos/compute';
 import {
   type ActionGraphProps,
@@ -62,7 +62,10 @@ export const SheetToolbar = ({ id }: SheetToolbarProps) => {
     return Rx.make((get) => {
       const actions = get(graph.actions(id));
       const nodes = actions.filter((action) => action.properties.disposition === 'toolbar');
-      return { nodes, edges: nodes.map((node) => ({ source: 'root', target: node.id })) };
+      return {
+        nodes,
+        edges: nodes.map((node) => ({ source: 'root', target: node.id })),
+      };
     });
   }, [graph]);
 

@@ -7,15 +7,8 @@ import { type Instruction, extractInstruction } from '@atlaskit/pragmatic-drag-a
 import { untracked } from '@preact/signals-core';
 import React, { memo, useCallback, useEffect, useMemo } from 'react';
 
-import {
-  LayoutAction,
-  Surface,
-  createIntent,
-  useAppGraph,
-  useCapability,
-  useIntentDispatcher,
-  useLayout,
-} from '@dxos/app-framework';
+import { LayoutAction, createIntent } from '@dxos/app-framework';
+import { Surface, useAppGraph, useCapability, useIntentDispatcher, useLayout } from '@dxos/app-framework/react';
 import { type Node, ROOT_ID, type ReadableGraph, isAction, isActionLike } from '@dxos/app-graph';
 import { PLANK_COMPANION_TYPE } from '@dxos/plugin-deck/types';
 import { useConnections, useActions as useGraphActions } from '@dxos/plugin-graph';
@@ -163,13 +156,23 @@ export const NavTreeContainer = memo(({ tab, popoverAnchorId, topbar }: NavTreeC
         }),
       );
 
-      await dispatch(createIntent(LayoutAction.SwitchWorkspace, { part: 'workspace', subject: node.id }));
+      await dispatch(
+        createIntent(LayoutAction.SwitchWorkspace, {
+          part: 'workspace',
+          subject: node.id,
+        }),
+      );
 
       // Open the first item if the workspace is empty.
       if (layout.active.length === 0) {
         const [item] = getItems(graph, node).filter((node) => !isActionLike(node));
         if (item && item.data) {
-          await dispatch(createIntent(LayoutAction.Open, { part: 'main', subject: [item.id] }));
+          await dispatch(
+            createIntent(LayoutAction.Open, {
+              part: 'main',
+              subject: [item.id],
+            }),
+          );
         }
       }
     },
@@ -207,10 +210,19 @@ export const NavTreeContainer = memo(({ tab, popoverAnchorId, topbar }: NavTreeC
         );
       } else if (option) {
         void dispatch(
-          createIntent(LayoutAction.Close, { part: 'main', subject: [node.id], options: { state: false } }),
+          createIntent(LayoutAction.Close, {
+            part: 'main',
+            subject: [node.id],
+            options: { state: false },
+          }),
         );
       } else {
-        void dispatch(createIntent(LayoutAction.ScrollIntoView, { part: 'current', subject: node.id }));
+        void dispatch(
+          createIntent(LayoutAction.ScrollIntoView, {
+            part: 'current',
+            subject: node.id,
+          }),
+        );
       }
 
       const defaultAction = graph.getActions(node.id).find((action) => action.properties?.disposition === 'default');
@@ -219,14 +231,25 @@ export const NavTreeContainer = memo(({ tab, popoverAnchorId, topbar }: NavTreeC
       }
 
       if (!isLg) {
-        void dispatch(createIntent(LayoutAction.UpdateSidebar, { part: 'sidebar', options: { state: 'closed' } }));
+        void dispatch(
+          createIntent(LayoutAction.UpdateSidebar, {
+            part: 'sidebar',
+            options: { state: 'closed' },
+          }),
+        );
       }
     },
     [graph, dispatch, isCurrent, isLg],
   );
 
   const handleBack = useCallback(
-    () => dispatch(createIntent(LayoutAction.RevertWorkspace, { part: 'workspace', options: { revert: true } })),
+    () =>
+      dispatch(
+        createIntent(LayoutAction.RevertWorkspace, {
+          part: 'workspace',
+          options: { revert: true },
+        }),
+      ),
     [dispatch],
   );
 

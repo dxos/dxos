@@ -4,7 +4,8 @@
 
 import { useCallback } from 'react';
 
-import { createIntent, useIntentDispatcher } from '@dxos/app-framework';
+import { createIntent } from '@dxos/app-framework';
+import { useIntentDispatcher } from '@dxos/app-framework/react';
 import { type Live } from '@dxos/live-object';
 import { ObservabilityAction } from '@dxos/plugin-observability/types';
 import { getSpace } from '@dxos/react-client/echo';

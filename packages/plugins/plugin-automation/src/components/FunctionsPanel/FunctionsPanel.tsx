@@ -5,7 +5,8 @@
 import * as Schema from 'effect/Schema';
 import React, { useCallback, useMemo } from 'react';
 
-import { LayoutAction, createIntent, useIntentDispatcher } from '@dxos/app-framework';
+import { LayoutAction, createIntent } from '@dxos/app-framework';
+import { useIntentDispatcher } from '@dxos/app-framework/react';
 import { Function, Script } from '@dxos/functions';
 import { SpaceAction } from '@dxos/plugin-space/types';
 import { Filter, type Space, fullyQualifiedId, useQuery } from '@dxos/react-client/echo';
@@ -58,7 +59,12 @@ export const FunctionsPanel = ({ space }: FunctionsPanelProps) => {
     (func: Function.Function) => {
       const script = functionToScriptMap[func.id];
       if (script) {
-        void dispatch(createIntent(LayoutAction.Open, { part: 'main', subject: [fullyQualifiedId(script)] }));
+        void dispatch(
+          createIntent(LayoutAction.Open, {
+            part: 'main',
+            subject: [fullyQualifiedId(script)],
+          }),
+        );
       }
     },
     [functionToScriptMap, dispatch],

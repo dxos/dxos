@@ -5,7 +5,7 @@
 import { Rx } from '@effect-rx/rx-react';
 import React, { type ChangeEvent, useCallback, useEffect, useMemo, useState } from 'react';
 
-import { useCapabilities, useCapability } from '@dxos/app-framework';
+import { useCapabilities, useCapability } from '@dxos/app-framework/react';
 import { Context } from '@dxos/context';
 import { failUndefined } from '@dxos/debug';
 import { log } from '@dxos/log';

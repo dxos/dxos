@@ -5,7 +5,7 @@
 import * as Option from 'effect/Option';
 import React, { forwardRef, useCallback, useEffect, useState } from 'react';
 
-import { useAppGraph, useCapability } from '@dxos/app-framework';
+import { useAppGraph, useCapability } from '@dxos/app-framework/react';
 import { generateName } from '@dxos/display-name';
 import { type Type } from '@dxos/echo';
 import { PublicKey, useClient } from '@dxos/react-client';

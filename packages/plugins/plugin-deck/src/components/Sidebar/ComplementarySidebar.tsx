@@ -12,7 +12,8 @@ import React, {
   useState,
 } from 'react';
 
-import { LayoutAction, Surface, createIntent, useCapability, useIntentDispatcher } from '@dxos/app-framework';
+import { LayoutAction, createIntent } from '@dxos/app-framework';
+import { Surface, useCapability, useIntentDispatcher } from '@dxos/app-framework/react';
 import { IconButton, type Label, Main, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { Tabs } from '@dxos/react-ui-tabs';
 

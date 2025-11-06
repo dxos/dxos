@@ -5,15 +5,8 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useMemo } from 'react';
 
-import {
-  type Capabilities,
-  IntentPlugin,
-  LayoutAction,
-  SettingsPlugin,
-  Surface,
-  createIntent,
-  useIntentDispatcher,
-} from '@dxos/app-framework';
+import { type Capabilities, IntentPlugin, LayoutAction, SettingsPlugin, createIntent } from '@dxos/app-framework';
+import { Surface, useIntentDispatcher } from '@dxos/app-framework/react';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Obj, Query } from '@dxos/echo';
 import { AttentionPlugin } from '@dxos/plugin-attention';
@@ -50,7 +43,12 @@ const DefaultStory = () => {
 
   useAsyncEffect(async () => {
     if (space) {
-      await dispatch(createIntent(LayoutAction.SwitchWorkspace, { part: 'workspace', subject: space.id }));
+      await dispatch(
+        createIntent(LayoutAction.SwitchWorkspace, {
+          part: 'workspace',
+          subject: space.id,
+        }),
+      );
     }
   }, [space, dispatch]);
 
@@ -82,7 +80,9 @@ const meta = {
 
             const queue = space.queues.create();
             const kai = Obj.make(DataType.Person.Person, { fullName: 'Kai' });
-            const dxos = Obj.make(DataType.Organization.Organization, { name: 'DXOS' });
+            const dxos = Obj.make(DataType.Organization.Organization, {
+              name: 'DXOS',
+            });
             await queue.append([kai, dxos]);
 
             space.db.add(

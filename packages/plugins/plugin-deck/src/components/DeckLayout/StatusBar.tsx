@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { Surface } from '@dxos/app-framework';
+import { Surface } from '@dxos/app-framework/react';
 import { useLandmarkMover } from '@dxos/react-ui';
 
 export const StatusBar = ({ showHints }: { showHints?: boolean }) => {

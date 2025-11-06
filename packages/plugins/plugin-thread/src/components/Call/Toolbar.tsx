@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { useAppGraph, useCapability } from '@dxos/app-framework';
+import { useAppGraph, useCapability } from '@dxos/app-framework/react';
 import { useActions, useNode } from '@dxos/plugin-graph';
 import { fullyQualifiedId } from '@dxos/react-client/echo';
 import {

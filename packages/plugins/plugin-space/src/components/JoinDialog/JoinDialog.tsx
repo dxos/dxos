@@ -4,7 +4,8 @@
 
 import React, { useCallback } from 'react';
 
-import { LayoutAction, createIntent, useAppGraph, useIntentDispatcher } from '@dxos/app-framework';
+import { LayoutAction, createIntent } from '@dxos/app-framework';
+import { useAppGraph, useIntentDispatcher } from '@dxos/app-framework/react';
 import { Trigger } from '@dxos/async';
 import { ObservabilityAction } from '@dxos/plugin-observability/types';
 import { useClient } from '@dxos/react-client';
@@ -69,7 +70,12 @@ export const JoinDialog = ({ navigableCollections, onDone, ...props }: JoinDialo
         space = await trigger.wait();
       }
 
-      await dispatch(createIntent(LayoutAction.SwitchWorkspace, { part: 'workspace', subject: space.id }));
+      await dispatch(
+        createIntent(LayoutAction.SwitchWorkspace, {
+          part: 'workspace',
+          subject: space.id,
+        }),
+      );
 
       // TODO(wittjosiah): If navigableCollections is false and there's no target,
       //   should try to navigate to the first object of the space replicates.
@@ -80,8 +86,18 @@ export const JoinDialog = ({ navigableCollections, onDone, ...props }: JoinDialo
         // If the target has not yet replicated, this will trigger a loading toast.
         await graph.waitForPath({ target }).catch(() => {});
         await Promise.all([
-          dispatch(createIntent(LayoutAction.Open, { part: 'main', subject: [target] })),
-          dispatch(createIntent(LayoutAction.Expose, { part: 'navigation', subject: target })),
+          dispatch(
+            createIntent(LayoutAction.Open, {
+              part: 'main',
+              subject: [target],
+            }),
+          ),
+          dispatch(
+            createIntent(LayoutAction.Expose, {
+              part: 'navigation',
+              subject: target,
+            }),
+          ),
         ]);
       }
 
