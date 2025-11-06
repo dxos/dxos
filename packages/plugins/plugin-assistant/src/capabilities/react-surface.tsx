@@ -49,16 +49,18 @@ export default () =>
       component: ({ data, role }) => <ChatCompanion role={role} data={data} />,
     }),
     createSurface({
-      id: `${meta.id}/companion-logs`,
+      id: `${meta.id}/companion-invocations`,
       role: 'article',
       filter: (data): data is { companionTo: Sequence } =>
-        Obj.instanceOf(Sequence, data.companionTo) && data.subject === 'logs',
-      // eslint-disable-next-line unused-imports/no-unused-vars
-      component: ({ data, role }) => {
+        (Obj.instanceOf(Sequence, data.companionTo) || Obj.instanceOf(Prompt.Prompt, data.companionTo)) &&
+        data.subject === 'invocations',
+      component: ({ data }) => {
         const space = getSpace(data.companionTo);
+        // TODO(wittjosiah): Support invocation filtering for prompts.
+        const target = Obj.instanceOf(Prompt.Prompt, data.companionTo) ? undefined : data.companionTo;
         return (
           <StackItem.Content>
-            <InvocationTraceContainer space={space} target={data.companionTo} detailAxis='block' />
+            <InvocationTraceContainer space={space} target={target} detailAxis='block' />
           </StackItem.Content>
         );
       },

@@ -75,7 +75,7 @@ export const translations = [
         'tool result label': 'Success',
         'tool error label': 'Tool call failed',
 
-        'sequence logs label': 'Logs',
+        'invocations label': 'Invocations',
 
         'assistant dialog title': 'Assistant',
         'open assistant label': 'Open assistant',
