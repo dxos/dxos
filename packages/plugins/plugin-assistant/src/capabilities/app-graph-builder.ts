@@ -14,6 +14,7 @@ import {
   contributes,
   createIntent,
 } from '@dxos/app-framework';
+import { Prompt } from '@dxos/blueprints';
 import { Sequence } from '@dxos/conductor';
 import { Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
@@ -147,19 +148,23 @@ export default (context: PluginContext) =>
     }),
 
     createExtension({
-      id: `${meta.id}/sequence-logs`,
+      id: `${meta.id}/invocations`,
       connector: (node) =>
         Rx.make((get) =>
           Function.pipe(
             get(node),
-            Option.flatMap((node) => (Obj.instanceOf(Sequence, node.data) ? Option.some(node) : Option.none())),
+            Option.flatMap((node) =>
+              Obj.instanceOf(Sequence, node.data) || Obj.instanceOf(Prompt.Prompt, node.data)
+                ? Option.some(node)
+                : Option.none(),
+            ),
             Option.map((node) => [
               {
-                id: [node.id, 'logs'].join(ATTENDABLE_PATH_SEPARATOR),
+                id: [node.id, 'invocations'].join(ATTENDABLE_PATH_SEPARATOR),
                 type: PLANK_COMPANION_TYPE,
-                data: 'logs',
+                data: 'invocations',
                 properties: {
-                  label: ['sequence logs label', { ns: meta.id }],
+                  label: ['invocations label', { ns: meta.id }],
                   icon: 'ph--clock-countdown--regular',
                   disposition: 'hidden',
                 },
