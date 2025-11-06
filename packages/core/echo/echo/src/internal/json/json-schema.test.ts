@@ -197,7 +197,7 @@ describe('effect-to-json', () => {
   });
 
   test('handles suspend -- Contact schema serialization', () => {
-    const schema = toJsonSchema(Testing.Contact);
+    const schema = toJsonSchema(Testing.Person);
     expect(Object.keys(schema.properties!)).toEqual([
       'id',
       'name',
@@ -321,7 +321,7 @@ describe('effect-to-json', () => {
 
   test('reference with title annotation', () => {
     const schema = Schema.Struct({
-      contact: Ref(Testing.Contact).annotations({ title: 'Custom Title' }),
+      contact: Ref(Testing.Person).annotations({ title: 'Custom Title' }),
     });
 
     // log.info('schema before', { ast: schema.ast });
@@ -698,7 +698,7 @@ describe('json-to-effect', () => {
 
   test('schema with optional referece', () => {
     const TestSchema = Schema.Struct({
-      contact: Schema.optional(Ref(Testing.Contact)),
+      contact: Schema.optional(Ref(Testing.Person)),
     });
     const jsonSchema = toJsonSchema(TestSchema);
     expect(jsonSchema).toMatchInlineSnapshot(`
@@ -784,7 +784,7 @@ describe('json-to-effect', () => {
 
 describe('reference', () => {
   test('reference annotation', () => {
-    const schema = Ref(Testing.Contact);
+    const schema = Ref(Testing.Person);
     const jsonSchema = toJsonSchema(schema);
     expect(jsonSchema).toEqual({
       $id: '/schemas/echo/ref',
@@ -800,7 +800,7 @@ describe('reference', () => {
   });
 
   test('title annotation', () => {
-    const schema = Ref(Testing.Contact).annotations({ title: 'My custom title' });
+    const schema = Ref(Testing.Person).annotations({ title: 'My custom title' });
     const jsonSchema = toJsonSchema(schema);
     expect(jsonSchema).toEqual({
       $schema: 'http://json-schema.org/draft-07/schema#',
@@ -821,7 +821,7 @@ describe('reference', () => {
   });
 
   test('description annotation', () => {
-    const schema = Ref(Testing.Contact).annotations({ description: 'My custom description' });
+    const schema = Ref(Testing.Person).annotations({ description: 'My custom description' });
     const jsonSchema = toJsonSchema(schema);
     expect(jsonSchema).toEqual({
       $schema: 'http://json-schema.org/draft-07/schema#',
@@ -845,13 +845,13 @@ describe('reference', () => {
   });
 
   test('serialize and deserialize', () => {
-    const schema = Ref(Testing.Contact);
+    const schema = Ref(Testing.Person);
     const jsonSchema = toJsonSchema(schema);
     const deserializedSchema = toEffectSchema(jsonSchema);
     const refAst = getReferenceAst(deserializedSchema.ast);
     expect(refAst).toEqual({
-      typename: Testing.Contact.typename,
-      version: Testing.Contact.version,
+      typename: Testing.Person.typename,
+      version: Testing.Person.version,
     });
   });
 });

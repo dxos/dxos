@@ -6,9 +6,12 @@ import * as Schema from 'effect/Schema';
 
 import { Type } from '..';
 
-// TODO(burdon): These are non-canonical test types, so we really shouldn't export and use in other classes (compare with @dxos/sdk/testing).
+/**
+ * @deprecated
+ */
+// TOOD(burdon): Reconcile with @dxos/schema.
 export namespace Testing {
-  const _Contact = Schema.Struct({
+  const _Person = Schema.Struct({
     name: Schema.String,
     username: Schema.String,
     email: Schema.String,
@@ -25,17 +28,17 @@ export namespace Testing {
   }).pipe(
     Schema.partial,
     Type.Obj({
-      typename: 'example.com/type/Contact',
+      typename: 'example.com/type/Person',
       version: '0.1.0',
     }),
   );
-  export interface Contact extends Schema.Schema.Type<typeof _Contact> {}
-  export const Contact: Schema.Schema<Contact, Schema.Schema.Encoded<typeof _Contact>, never> = _Contact;
+  export interface Person extends Schema.Schema.Type<typeof _Person> {}
+  export const Person: Schema.Schema<Person, Schema.Schema.Encoded<typeof _Person>, never> = _Person;
 
   const _Task = Schema.Struct({
     title: Schema.optional(Schema.String),
     completed: Schema.optional(Schema.Boolean),
-    assignee: Schema.optional(Type.Ref(Contact)),
+    assignee: Schema.optional(Type.Ref(Person)),
     previous: Schema.optional(Schema.suspend((): Type.Ref<Task> => Type.Ref(Task))),
     subTasks: Schema.optional(Schema.mutable(Schema.Array(Schema.suspend((): Type.Ref<Task> => Type.Ref(Task))))),
     description: Schema.optional(Schema.String),
@@ -63,7 +66,7 @@ export namespace Testing {
           Schema.Struct({
             title: Schema.String,
             description: Schema.String,
-            contacts: Schema.mutable(Schema.Array(Type.Ref(Contact))),
+            contacts: Schema.mutable(Schema.Array(Type.Ref(Person))),
             type: Schema.Enums(RecordType),
           }),
         ),
@@ -83,8 +86,8 @@ export namespace Testing {
     Type.Relation({
       typename: 'example.com/type/WorksFor',
       version: '0.1.0',
-      source: Contact,
-      target: Contact,
+      source: Person,
+      target: Person,
     }),
   );
   export interface WorksFor extends Schema.Schema.Type<typeof WorksFor> {}

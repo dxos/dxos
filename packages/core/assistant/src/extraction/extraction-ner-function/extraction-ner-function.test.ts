@@ -30,7 +30,7 @@ describe.skip('NER EntityExtraction', () => {
     organizations: Record<string, Organization.Organization>;
   };
 
-  const TYPES = [Organization.Organization, Person.Person, Testing.Contact, Testing.DocumentType];
+  const TYPES = [Organization.Organization, Person.Person, Testing.Person, Testing.DocumentType];
 
   beforeAll(async () => {
     // TODO(dmaretskyi): Helper to scaffold this from a config.

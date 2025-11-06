@@ -210,12 +210,12 @@ export const StaticSchema: StoryObj = {
       createIdentity: true,
       createSpace: true,
       onCreateSpace: async ({ client, space }) => {
-        const { view } = await Table.makeView({ client, space, typename: Testing.Contact.typename });
+        const { view } = await Table.makeView({ client, space, typename: Testing.Person.typename });
         space.db.add(view);
 
         const factory = createObjectFactory(space.db, faker as any);
         await factory([
-          { type: Testing.Contact, count: 10 },
+          { type: Testing.Person, count: 10 },
           // { type: Testing.Organization, count: 1 },
         ]);
       },
@@ -248,7 +248,7 @@ export const ArrayOfObjects: StoryObj = {
   render: DefaultStory,
   decorators: [
     withClientProvider({
-      types: [View.View, Table.Table, Testing.Contact, Testing.Organization, ContactWithArrayOfEmails],
+      types: [View.View, Table.Table, Testing.Person, Testing.Organization, ContactWithArrayOfEmails],
       createIdentity: true,
       createSpace: true,
       onCreateSpace: async ({ client, space }) => {
@@ -257,7 +257,7 @@ export const ArrayOfObjects: StoryObj = {
 
         const factory = createObjectFactory(space.db, faker as any);
         await factory([
-          // { type: Testing.Contact, count: 10 },
+          // { type: Testing.Person, count: 10 },
           // { type: Testing.Organization, count: 1 },
           { type: ContactWithArrayOfEmails, count: 10 },
         ]);
