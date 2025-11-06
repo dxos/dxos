@@ -10,6 +10,7 @@ import { faker } from '@dxos/random';
 import { useClient } from '@dxos/react-client';
 import { Filter, useQuery, useSchema } from '@dxos/react-client/echo';
 import { useClientProvider } from '@dxos/react-client/testing';
+import { ProjectionModel, View, getTypenameFromQuery } from '@dxos/schema';
 
 import { type TableController } from '../components';
 import { useAddRow, useTableModel } from '../hooks';

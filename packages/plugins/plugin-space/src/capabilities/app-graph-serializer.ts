@@ -5,6 +5,7 @@
 import { Capabilities, type PluginContext, contributes, createIntent } from '@dxos/app-framework';
 import { isSpace } from '@dxos/client/echo';
 import { Obj } from '@dxos/echo';
+import { Collection } from '@dxos/schema';
 
 import { meta } from '../meta';
 import { translations } from '../translations';

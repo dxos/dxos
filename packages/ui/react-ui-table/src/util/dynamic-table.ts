@@ -7,6 +7,13 @@ import type * as Schema from 'effect/Schema';
 import { Filter, Obj, Query } from '@dxos/echo';
 import { getTypename, toJsonSchema } from '@dxos/echo/internal';
 import type { JsonSchemaType } from '@dxos/echo/internal';
+import {
+  ProjectionModel,
+  type SchemaPropertyDefinition,
+  type SortDirectionType,
+  View,
+  getSchemaFromPropertyDefinitions,
+} from '@dxos/schema';
 
 import { Table } from '../types';
 

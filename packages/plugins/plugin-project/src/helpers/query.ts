@@ -23,7 +23,6 @@ import { type Space } from '@dxos/react-client/echo';
 
 // TODO(wittjosiah): Factor out and add tests.
 // TODO(wittjosiah): Support arbitrary type imports.
-// TODO(burdon): Translate tags.
 export const evalQuery = (queryString: string): Query.Any => {
   try {
     // eslint-disable-next-line @typescript-eslint/no-implied-eval

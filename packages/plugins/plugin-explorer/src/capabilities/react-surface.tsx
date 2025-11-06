@@ -6,6 +6,7 @@ import React from 'react';
 
 import { Capabilities, contributes, createSurface } from '@dxos/app-framework';
 import { Obj } from '@dxos/echo';
+import { View } from '@dxos/schema';
 
 import { ExplorerContainer } from '../components';
 import { meta } from '../meta';

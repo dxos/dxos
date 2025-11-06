@@ -5,6 +5,7 @@
 import * as Schema from 'effect/Schema';
 
 import { SpaceSchema } from '@dxos/react-client/echo';
+import { TypenameAnnotationId, View } from '@dxos/schema';
 
 import { meta } from '../meta';
 

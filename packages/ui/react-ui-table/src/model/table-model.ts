@@ -32,6 +32,7 @@ import {
   ProjectionModel,
   type PropertyType,
   type ValidationError,
+  View,
   validateSchema,
 } from '@dxos/schema';
 

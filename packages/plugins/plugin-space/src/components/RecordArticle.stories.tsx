@@ -17,7 +17,7 @@ import { Json } from '@dxos/react-ui-syntax-highlighter';
 import { type ValueGenerator, createAsyncGenerator } from '@dxos/schema/testing';
 import { translations as shellTranslations } from '@dxos/shell/react';
 import { render } from '@dxos/storybook-utils';
-import { Organization, Person, Task } from '@dxos/types';
+import { HasSubject, Organization, Person, Task } from '@dxos/types';
 
 import { translations } from '../translations';
 

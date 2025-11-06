@@ -12,7 +12,8 @@ import { useQuery } from '@dxos/react-client/echo';
 import { useClientProvider, withClientProvider } from '@dxos/react-client/testing';
 import { useAsyncEffect } from '@dxos/react-ui';
 import { withTheme } from '@dxos/react-ui/testing';
-import { Organization, Person, Project } from '@dxos/types';
+import { type ProjectionModel, View, getTypenameFromQuery } from '@dxos/schema';
+import { Employer, Organization, Person, Project } from '@dxos/types';
 
 import { translations } from '../../translations';
 import { TestLayout, TestPanel, VIEW_EDITOR_DEBUG_SYMBOL } from '../testing';

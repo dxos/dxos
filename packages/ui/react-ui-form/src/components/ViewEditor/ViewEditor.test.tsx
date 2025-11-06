@@ -7,6 +7,7 @@ import { cleanup, fireEvent, screen, waitFor } from '@testing-library/react';
 import { afterEach, describe, expect, test } from 'vitest';
 
 import { EchoSchema, isInstanceOf } from '@dxos/echo/internal';
+import { ProjectionModel, View } from '@dxos/schema';
 
 import { VIEW_EDITOR_DEBUG_SYMBOL } from '../testing';
 

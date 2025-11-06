@@ -222,6 +222,7 @@ const parseSnowflake = (snowflake: string): Date => {
   return new Date(Number((BigInt(snowflake) >> 22n) + discordEpoch));
 };
 
+// TODO(burdon): Move to @dxos/types.
 const makeMessage = (message: MessageResponse): Message.Message =>
   Obj.make(Message.Message, {
     [Obj.Meta]: {

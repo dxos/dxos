@@ -8,6 +8,7 @@ import { QR } from 'react-qr-rounded';
 import { createIntent, useIntentDispatcher } from '@dxos/app-framework';
 import { log } from '@dxos/log';
 import { useConfig } from '@dxos/react-client';
+import { Collection } from '@dxos/schema';
 import { type Space, fullyQualifiedId, useSpaceInvitations } from '@dxos/react-client/echo';
 import { type CancellableInvitationObservable, Invitation, InvitationEncoder } from '@dxos/react-client/invitations';
 import { Button, Clipboard, Icon, Input, useId, useTranslation } from '@dxos/react-ui';

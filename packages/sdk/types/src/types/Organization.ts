@@ -92,6 +92,10 @@ export const Organization = OrganizationSchema.pipe(
   }),
 );
 
+export interface Organization extends Schema.Schema.Type<typeof Organization> {}
+
+export const make = (props: Partial<Obj.MakeProps<typeof Organization>> = {}) => Obj.make(Organization, props);
+
 // TODO(wittjosiah): Remove to move location into base schema.
 //   GeoPoint format currently breaks Anthropic schema validation.
 export const LegacyOrganization = OrganizationSchema.pipe(
@@ -104,7 +108,3 @@ export const LegacyOrganization = OrganizationSchema.pipe(
     version: '0.1.0',
   }),
 );
-
-export interface Organization extends Schema.Schema.Type<typeof Organization> {}
-
-export const make = (props: Partial<Obj.MakeProps<typeof Organization>> = {}) => Obj.make(Organization, props);

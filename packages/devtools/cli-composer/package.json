@@ -39,6 +39,7 @@
     "@dxos/random": "workspace:*",
     "@dxos/rpc": "workspace:*",
     "@dxos/schema": "workspace:*",
+    "@dxos/types": "workspace:*",
     "@dxos/util": "workspace:*",
     "@oclif/core": "^4.0.30",
     "@oclif/plugin-autocomplete": "^3.2.6",

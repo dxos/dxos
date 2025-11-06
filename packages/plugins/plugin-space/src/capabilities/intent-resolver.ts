@@ -17,6 +17,7 @@ import { DatabaseService } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { Migrations } from '@dxos/migrations';
 import { ClientCapabilities } from '@dxos/plugin-client';
+import { Collection, ProjectionModel, StoredSchema, getTypenameFromQuery } from '@dxos/schema';
 import { ObservabilityAction } from '@dxos/plugin-observability/types';
 import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { SpaceState, fullyQualifiedId, getSpace, isSpace } from '@dxos/react-client/echo';

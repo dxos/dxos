@@ -13,6 +13,7 @@ import { type QueryResult, type Space, SpaceState, getSpace, isSpace, parseId } 
 import { Filter, Obj, Query, Type } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { ClientCapabilities } from '@dxos/plugin-client';
+import { Collection, StoredSchema, View, getTypenameFromQuery } from '@dxos/schema';
 import { ATTENDABLE_PATH_SEPARATOR, PLANK_COMPANION_TYPE } from '@dxos/plugin-deck/types';
 import { ROOT_ID, createExtension, rxFromObservable, rxFromSignal } from '@dxos/plugin-graph';
 import { isNonNullable } from '@dxos/util';

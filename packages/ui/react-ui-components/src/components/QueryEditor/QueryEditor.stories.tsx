@@ -51,7 +51,7 @@ const meta = {
     withTheme,
     withLayout({ container: 'column', classNames: 'p-2', scroll: true }),
     withClientProvider({
-      types: [Organization, Person, Project, Employer],
+      types: [Organization.Organization, Person.Person, Project.Project, Employer.Employer],
       createIdentity: true,
     }),
   ],
