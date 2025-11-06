@@ -10,9 +10,9 @@ import { useClient } from '@dxos/react-client';
 import { getSpace, useSchema } from '@dxos/react-client/echo';
 import { type CustomInputMap, Form, SelectInput } from '@dxos/react-ui-form';
 import { Kanban } from '@dxos/react-ui-kanban/types';
-import { type DataType, ProjectionModel, getTypenameFromQuery } from '@dxos/schema';
+import { ProjectionModel, type View, getTypenameFromQuery } from '@dxos/schema';
 
-type KanbanViewEditorProps = { view: DataType.View.View };
+type KanbanViewEditorProps = { view: View.View };
 
 export const KanbanViewEditor = ({ view }: KanbanViewEditorProps) => {
   const client = useClient();

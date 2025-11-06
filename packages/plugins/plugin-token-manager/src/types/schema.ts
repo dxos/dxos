@@ -4,7 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { DataType } from '@dxos/schema';
+import { AccessToken } from '@dxos/types';
 
 import { meta } from '../meta';
 
@@ -12,7 +12,7 @@ export namespace TokenManagerAction {
   export class AccessTokenCreated extends Schema.TaggedClass<AccessTokenCreated>()(
     `${meta.id}/action/access-token-created`,
     {
-      input: Schema.Struct({ accessToken: DataType.AccessToken.AccessToken }),
+      input: Schema.Struct({ accessToken: AccessToken.AccessToken }),
       output: Schema.Void,
     },
   ) {}

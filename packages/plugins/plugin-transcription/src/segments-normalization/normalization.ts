@@ -13,11 +13,11 @@ import { Obj } from '@dxos/echo';
 import { defineFunction } from '@dxos/functions';
 import { ObjectId } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { DataType } from '@dxos/schema';
+import { Message } from '@dxos/types';
 import { trim } from '@dxos/util';
 
 const MessageWithRangeId = Schema.extend(
-  DataType.Message.Message,
+  Message.Message,
   Schema.Struct({
     // TODO(mykola): Move to meta in DataType.Message. Use `DataType.Message.Message` instead.
     rangeId: Schema.optional(Schema.Array(Schema.String)).annotations({
@@ -61,7 +61,7 @@ export const sentenceNormalization = defineFunction<NormalizationInput, Normaliz
       tools: [],
       artifacts: [],
       history: [
-        Obj.make(DataType.Message.Message, {
+        Obj.make(Message.Message, {
           created: new Date().toISOString(),
           sender: {
             role: 'user',

@@ -24,7 +24,8 @@ import { Kanban as KanbanComponent, useKanbanModel } from '@dxos/react-ui-kanban
 import { Kanban } from '@dxos/react-ui-kanban/types';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { defaultTx } from '@dxos/react-ui-theme';
-import { DataType, ProjectionModel, getTypenameFromQuery } from '@dxos/schema';
+import { ProjectionModel, View, getTypenameFromQuery } from '@dxos/schema';
+import { Organization, Person } from '@dxos/types';
 
 import { translations } from '../translations';
 
@@ -39,16 +40,15 @@ const rollOrg = () => ({
   description: faker.lorem.paragraph(),
   image: faker.image.url(),
   website: faker.internet.url(),
-  status: faker.helpers.arrayElement(DataType.Organization.StatusOptions)
-    .id as DataType.Organization.Organization['status'],
+  status: faker.helpers.arrayElement(Organization.StatusOptions).id as Organization.Organization['status'],
 });
 
 const StorybookKanban = () => {
   const client = useClient();
   const spaces = useSpaces();
   const space = spaces[spaces.length - 1];
-  const views = useQuery(space, Filter.type(DataType.View.View));
-  const [view, setView] = useState<DataType.View.View>();
+  const views = useQuery(space, Filter.type(View.View));
+  const [view, setView] = useState<View.View>();
   const [projection, setProjection] = useState<ProjectionModel>();
   const typename = view?.query ? getTypenameFromQuery(view.query.ast) : undefined;
   const schema = useSchema(client, space, typename);
@@ -151,7 +151,7 @@ const meta = {
     withPluginManager({
       plugins: [
         ClientPlugin({
-          types: [DataType.Organization.Organization, DataType.Person.Person, DataType.View.View, Kanban.Kanban],
+          types: [Organization.Organization, Person.Person, View.View, Kanban.Kanban],
           onClientInitialized: async ({ client }) => {
             await client.halo.createIdentity();
             const space = await client.spaces.create();
@@ -159,14 +159,14 @@ const meta = {
             const { view } = await Kanban.makeView({
               client,
               space,
-              typename: DataType.Organization.Organization.typename,
+              typename: Organization.Organization.typename,
               pivotFieldName: 'status',
             });
             space.db.add(view);
 
             // TODO(burdon): Replace with sdk/schema/testing.
             Array.from({ length: 80 }).map(() => {
-              return space.db.add(Obj.make(DataType.Organization.Organization, rollOrg()));
+              return space.db.add(Obj.make(Organization.Organization, rollOrg()));
             });
           },
         }),

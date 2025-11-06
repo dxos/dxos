@@ -11,7 +11,7 @@ import { Obj } from '@dxos/echo';
 import type { ObjectId } from '@dxos/echo/internal';
 import type { Queue } from '@dxos/echo-db';
 import { log } from '@dxos/log';
-import { DataType } from '@dxos/schema';
+import { Message } from '@dxos/types';
 
 /**
  * Provides a way for compute primitives (functions, workflows, tools)
@@ -105,11 +105,11 @@ export class TracingService extends Context.Tag('@dxos/functions/TracingService'
   });
 
   static emitConverationMessage: (
-    data: Obj.MakeProps<typeof DataType.Message.Message>,
+    data: Obj.MakeProps<typeof Message.Message>,
   ) => Effect.Effect<void, never, TracingService> = Effect.fnUntraced(function* (data) {
     const tracing = yield* TracingService;
     tracing.write(
-      Obj.make(DataType.Message.Message, {
+      Obj.make(Message.Message, {
         parentMessage: tracing.getTraceContext().parentMessage,
         ...data,
         properties: {
@@ -138,6 +138,6 @@ export namespace TracingService {
 }
 
 /**
- * Goes into {@link DataType.Message.Message['properties']}
+ * Goes into {@link Message['properties']}
  */
 export const MESSAGE_PROPERTY_TOOL_CALL_ID = 'toolCallId' as const;

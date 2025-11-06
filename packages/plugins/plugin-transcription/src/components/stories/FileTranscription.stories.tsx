@@ -21,8 +21,8 @@ import { StorybookLayoutPlugin } from '@dxos/plugin-storybook-layout';
 import { ThemePlugin } from '@dxos/plugin-theme';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { defaultTx } from '@dxos/react-ui-theme';
-import { DataType } from '@dxos/schema';
 import { Testing, seedTestData } from '@dxos/schema/testing';
+import { type Actor, Message, Organization, Person } from '@dxos/types';
 
 import { useAudioFile, useQueueModelAdapter, useTranscriber } from '../../hooks';
 import { MessageNormalizer, getActorId } from '../../segments-normalization';
@@ -50,7 +50,7 @@ const AudioFile = ({
   audioConstraints?: MediaTrackConstraints;
 }) => {
   const [running, setRunning] = useState(false);
-  const actor: DataType.Actor.Actor = useMemo(() => ({ name: 'You' }), []);
+  const actor: Actor.Actor = useMemo(() => ({ name: 'You' }), []);
 
   // Audio.
   const { audio, track, stream } = useAudioFile(audioUrl, audioConstraints);
@@ -79,13 +79,13 @@ const AudioFile = ({
   // Transcriber.
   // TODO(dmaretskyi): Use space.queues.create() instead.
   const queueDxn = useMemo(() => createQueueDXN(), []);
-  const queue = useMemo(() => new MemoryQueue<DataType.Message.Message>(queueDxn), [queueDxn]);
+  const queue = useMemo(() => new MemoryQueue<Message.Message>(queueDxn), [queueDxn]);
 
   const model = useQueueModelAdapter(renderByline([]), queue);
   const handleSegments = useCallback<TranscriberParams['onSegments']>(
     async (blocks) => {
       void queue?.append([
-        Obj.make(DataType.Message.Message, {
+        Obj.make(Message.Message, {
           created: new Date().toISOString(),
           sender: actor,
           blocks,
@@ -192,7 +192,7 @@ const meta = {
     withPluginManager({
       plugins: [
         ClientPlugin({
-          types: [TestItem, DataType.Person.Person, DataType.Organization.Organization, Testing.DocumentType],
+          types: [TestItem, Person.Person, Organization.Organization, Testing.DocumentType],
           onClientInitialized: async ({ client }) => {
             await client.halo.createIdentity();
             await client.spaces.waitUntilReady();

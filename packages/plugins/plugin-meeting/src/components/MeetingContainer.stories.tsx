@@ -19,6 +19,7 @@ import { Query, useQuery, useSpace } from '@dxos/react-client/echo';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { defaultTx } from '@dxos/react-ui-theme';
 import { DataType } from '@dxos/schema';
+import { Message } from '@dxos/types';
 
 import { translations } from '../translations';
 import { Meeting } from '../types';
@@ -71,9 +72,7 @@ const meta = {
         SettingsPlugin(),
         MarkdownPlugin(),
       ],
-      capabilities: [
-        contributes(ClientCapabilities.Schema, [Channel.Channel, Thread.Thread, DataType.Message.Message]),
-      ],
+      capabilities: [contributes(ClientCapabilities.Schema, [Channel.Channel, Thread.Thread, Message.Message])],
     }),
   ],
 } satisfies Meta<typeof MeetingContainer>;

@@ -14,7 +14,7 @@ import { useClient } from '@dxos/react-client';
 import { type Space, getTypename } from '@dxos/react-client/echo';
 import { IconButton, Input, Toolbar, useAsyncEffect } from '@dxos/react-ui';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
-import { DataType } from '@dxos/schema';
+import { Organization, Person, Task } from '@dxos/types';
 import { jsonKeyReplacer, sortKeys } from '@dxos/util';
 
 import { type ObjectGenerator, createGenerator, staticGenerators } from './ObjectGenerator';
@@ -30,7 +30,7 @@ export const SpaceGenerator = ({ space, onCreateObjects }: SpaceGeneratorProps) 
   const { dispatchPromise: dispatch } = useIntentDispatcher();
   const client = useClient();
   const staticTypes = [Markdown.Document, Diagram.Diagram, Sheet.Sheet, ComputeGraph]; // TODO(burdon): Make extensible.
-  const recordTypes = [DataType.Organization.Organization, DataType.Person.Person, DataType.Task.Task];
+  const recordTypes = [Organization.Organization, Person.Person, Task.Task];
   const [count, setCount] = useState(1);
   const [info, setInfo] = useState<any>({});
   const presets = useMemo(() => generator(), []);

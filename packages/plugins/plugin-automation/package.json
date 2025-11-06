@@ -69,6 +69,7 @@
     "@dxos/react-ui-list": "workspace:*",
     "@dxos/react-ui-stack": "workspace:*",
     "@dxos/schema": "workspace:*",
+    "@dxos/types": "workspace:*",
     "@dxos/util": "workspace:*",
     "@effect/ai": "0.29.1",
     "@effect/platform-browser": "0.72.0",

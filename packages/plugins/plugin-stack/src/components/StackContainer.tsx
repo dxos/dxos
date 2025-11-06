@@ -19,7 +19,7 @@ import { SpaceAction } from '@dxos/plugin-space/types';
 import { Toolbar, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { AttentionProvider } from '@dxos/react-ui-attention';
 import { Stack, StackItem } from '@dxos/react-ui-stack';
-import { type DataType } from '@dxos/schema';
+import { type Collection } from '@dxos/schema';
 import { isNonNullable } from '@dxos/util';
 
 import { meta } from '../meta';
@@ -36,7 +36,7 @@ import { StackSection } from './StackSection';
 
 type StackContainerProps = {
   id: string;
-  collection: DataType.Collection.Collection;
+  collection: Collection.Collection;
 };
 
 const StackContainer = ({ id, collection }: StackContainerProps) => {

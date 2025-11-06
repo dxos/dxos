@@ -7,7 +7,7 @@ import React from 'react';
 import { fullyQualifiedId, getSpace } from '@dxos/client/echo';
 import { useMembers, useQueue } from '@dxos/react-client/echo';
 import { StackItem } from '@dxos/react-ui-stack';
-import { type DataType } from '@dxos/schema';
+import { type Message } from '@dxos/types';
 
 import { useQueueModelAdapter } from '../hooks';
 import { type Transcript } from '../types';
@@ -23,7 +23,7 @@ export const TranscriptionContainer = ({ transcript }: TranscriptionContainerPro
   const attendableId = fullyQualifiedId(transcript);
   const space = getSpace(transcript);
   const members = useMembers(space?.key).map((member) => member.identity);
-  const queue = useQueue<DataType.Message.Message>(transcript.queue.dxn, { pollInterval: 1_000 });
+  const queue = useQueue<Message.Message>(transcript.queue.dxn, { pollInterval: 1_000 });
   const model = useQueueModelAdapter(renderByline(members), queue);
 
   return (

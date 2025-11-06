@@ -14,6 +14,7 @@ import { withTheme } from '@dxos/react-ui/testing';
 import { DataType } from '@dxos/schema';
 import { type ValueGenerator } from '@dxos/schema/testing';
 import { render } from '@dxos/storybook-utils';
+import { HasRelationship, Organization, Person, Project } from '@dxos/types';
 
 import { useGraphModel } from '../../hooks';
 import { Graph } from '../../types';
@@ -58,10 +59,10 @@ const meta = {
       types: [
         Graph.Graph,
         DataType.View.View,
-        DataType.HasRelationship.HasRelationship,
-        DataType.Organization.Organization,
-        DataType.Project.Project,
-        DataType.Person.Person,
+        HasRelationship.HasRelationship,
+        Organization.Organization,
+        Project.Project,
+        Person.Person,
       ],
     }),
   ],

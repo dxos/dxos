@@ -9,7 +9,7 @@ import { type GetMenuContext } from '@dxos/react-ui-editor';
 
 export type CompletionOptions = {
   db?: EchoDatabase;
-  tags?: Tag.TagMap;
+  tags?: Tag.Map;
 };
 
 export const completions = ({ db, tags }: CompletionOptions) => {

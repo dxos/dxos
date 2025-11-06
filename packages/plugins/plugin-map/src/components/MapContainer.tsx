@@ -11,7 +11,7 @@ import { useControlledState } from '@dxos/react-ui';
 import { useSelected } from '@dxos/react-ui-attention';
 import { type GeoMarker, type MapRootProps } from '@dxos/react-ui-geo';
 import { StackItem } from '@dxos/react-ui-stack';
-import { type DataType, getTypenameFromQuery } from '@dxos/schema';
+import { type View, getTypenameFromQuery } from '@dxos/schema';
 import { getDeep } from '@dxos/util';
 
 import { type Map } from '../types';
@@ -25,7 +25,7 @@ export type MapControlType = 'globe' | 'map';
 export type MapContainerProps = {
   role?: string;
   type?: MapControlType;
-  view?: DataType.View.View;
+  view?: View.View;
   map?: Map.Map;
 } & (GeoControlProps & Pick<MapRootProps, 'onChange'>);
 

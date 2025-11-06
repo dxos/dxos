@@ -3,4 +3,5 @@
 //
 
 export * from './query';
-export * as Tag from './tag';
+
+export * as Tag from './Tag';

@@ -17,7 +17,7 @@ import { invariant } from '@dxos/invariant';
 import { SpaceAction } from '@dxos/plugin-space/types';
 import { Filter, type Space, fullyQualifiedId } from '@dxos/react-client/echo';
 import { KanbanView } from '@dxos/react-ui-kanban';
-import { DataType } from '@dxos/schema';
+import { View } from '@dxos/schema';
 import { isNonNullable } from '@dxos/util';
 
 import { meta } from '../meta';
@@ -94,7 +94,7 @@ export default () => {
         execute: async (_input, { extensions }) => {
           invariant(extensions?.space, 'No space');
           const space = extensions.space;
-          const { objects } = await space.db.query(Filter.type(DataType.View.View)).run();
+          const { objects } = await space.db.query(Filter.type(View.View)).run();
 
           const boardInfo = await Promise.all(
             objects.map(async (view) => {
@@ -124,8 +124,8 @@ export default () => {
           const space = extensions.space;
           const view = (await space.db
             // TODO(wittjosiah): Filter.and should aggregate type
-            .query(Query.select(Filter.and(Filter.type(DataType.View.View), Filter.ids(id))))
-            .first()) as DataType.View.View;
+            .query(Query.select(Filter.and(Filter.type(View.View), Filter.ids(id))))
+            .first()) as View.View;
 
           const kanban = await view.presentation.load();
           invariant(Obj.instanceOf(KanbanView, kanban));

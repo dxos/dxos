@@ -17,7 +17,7 @@ import { translations } from '../../translations';
 
 import { QueryEditor, type QueryEditorProps } from './QueryEditor';
 
-const tags: Tag.TagMap = {
+const tags: Tag.Map = {
   ['tag_1' as const]: Tag.make({ label: 'Important' }),
   ['tag_2' as const]: Tag.make({ label: 'Investor' }),
   ['tag_3' as const]: Tag.make({ label: 'New' }),

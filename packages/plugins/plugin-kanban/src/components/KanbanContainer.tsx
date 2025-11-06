@@ -12,11 +12,11 @@ import { useClient } from '@dxos/react-client';
 import { getSpace, useQuery } from '@dxos/react-client/echo';
 import { Kanban, useKanbanModel } from '@dxos/react-ui-kanban';
 import { StackItem } from '@dxos/react-ui-stack';
-import { type DataType, ProjectionModel, getTypenameFromQuery } from '@dxos/schema';
+import { ProjectionModel, type View, getTypenameFromQuery } from '@dxos/schema';
 
 import { KanbanAction } from '../types';
 
-export const KanbanContainer = ({ view }: { view: DataType.View.View; role: string }) => {
+export const KanbanContainer = ({ view }: { view: View.View; role: string }) => {
   const client = useClient();
   const [cardSchema, setCardSchema] = useState<TypedObject<any, any>>();
   const [projection, setProjection] = useState<ProjectionModel>();

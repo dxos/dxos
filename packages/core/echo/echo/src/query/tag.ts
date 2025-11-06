@@ -18,20 +18,22 @@ export const Tag = Schema.Struct({
   }),
   LabelAnnotation.set(['label']),
 );
+
 export type Tag = Schema.Schema.Type<typeof Tag>;
 
 export const make = (props: Obj.MakeProps<typeof Tag>) => Obj.make(Tag, props);
 
-export type TagMap = Record<string, Tag>;
+// TODO(burdon): Rename Map.
+export type Map = Record<string, Tag>;
 
 export const sortTags = ({ label: a }: Tag, { label: b }: Tag) => a.localeCompare(b);
 
-export const createTagList = (tags: TagMap): Tag[] =>
+export const createTagList = (tags: Map): Tag[] =>
   Object.entries(tags)
     .map(([id, tag]) => ({ ...tag, id }))
     .sort(sortTags);
 
-export const findTagByLabel = (tags: TagMap | undefined, name: string): Tag | undefined => {
+export const findTagByLabel = (tags: Map | undefined, name: string): Tag | undefined => {
   const entry = Object.entries(tags ?? {}).find(([_, tag]) => tag.label.toLowerCase() === name.toLowerCase());
   return entry ? { ...entry[1], id: entry[0] } : undefined;
 };

@@ -10,7 +10,7 @@ import { Trigger, debounce } from '@dxos/async';
 import { type Space } from '@dxos/client/echo';
 import { Function, Script } from '@dxos/functions';
 import { Bundler } from '@dxos/functions/bundler';
-import { DataType } from '@dxos/schema';
+import { Text } from '@dxos/schema';
 
 import { BaseCommand } from '../../base';
 import { findFunctionByDeploymentId } from '../../util/function/lookup';
@@ -33,7 +33,7 @@ export default class Watch extends BaseCommand<typeof Watch> {
 
   async run(): Promise<any> {
     return this.execWithSpace(async ({ client, space }) => {
-      client.addTypes([DataType.Text.Text, Function.Function, Script.Script]);
+      client.addTypes([Text.Text, Function.Function, Script.Script]);
 
       const { scriptContent } = await this._loadFunctionObject(space);
 

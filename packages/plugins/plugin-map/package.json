@@ -66,6 +66,7 @@
     "@dxos/react-ui-geo": "workspace:*",
     "@dxos/react-ui-stack": "workspace:*",
     "@dxos/schema": "workspace:*",
+    "@dxos/types": "workspace:*",
     "@dxos/util": "workspace:*",
     "@preact-signals/safe-react": "^0.9.0",
     "@preact/signals-core": "^1.12.1",

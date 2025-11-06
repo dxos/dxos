@@ -71,7 +71,7 @@ export const MailboxContainer = ({ mailbox, attendableId, role, filter: filterPa
     return tags.reduce((acc, tag) => {
       acc[tag.id] = tag;
       return acc;
-    }, {} as Tag.TagMap);
+    }, {} as Tag.Map);
   }, [tags]);
   const parser = useMemo(() => new QueryBuilder(tagMap), [tagMap]);
   useEffect(() => setFilter(parser.build(filterText).filter), [filterText, parser]);

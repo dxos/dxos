@@ -36,7 +36,8 @@ import {
   pointsToRect,
   rectToPoints,
 } from '@dxos/react-ui-canvas-editor';
-import { DataType } from '@dxos/schema';
+import { Collection, View } from '@dxos/schema';
+import { Message, Organization, Person, Project } from '@dxos/types';
 import { range, trim } from '@dxos/util';
 
 import { type ObjectGenerator } from './ObjectGenerator';
@@ -66,9 +67,7 @@ export const generator = () => ({
           const tag = space.db.add(Tag.make({ label: 'Investor' }));
           const tagDxn = Obj.getDXN(tag).toString();
 
-          const org = space.db.add(
-            Obj.make(DataType.Organization.Organization, { name: 'DXOS', website: 'https://dxos.org' }),
-          );
+          const org = space.db.add(Obj.make(Organization.Organization, { name: 'DXOS', website: 'https://dxos.org' }));
 
           const doc = space.db.add(
             Markdown.makeDocument({
@@ -85,13 +84,11 @@ export const generator = () => ({
           //   }),
           // );
 
-          space.db.add(
-            Obj.make(DataType.Person.Person, { fullName: 'Rich', organization: Ref.make(org) }, { tags: [tagDxn] }),
-          );
-          space.db.add(Obj.make(DataType.Person.Person, { fullName: 'Josiah', organization: Ref.make(org) }));
-          space.db.add(Obj.make(DataType.Person.Person, { fullName: 'Dima', organization: Ref.make(org) }));
-          space.db.add(Obj.make(DataType.Person.Person, { fullName: 'Mykola', organization: Ref.make(org) }));
-          space.db.add(Obj.make(DataType.Person.Person, { fullName: 'Will', organization: Ref.make(org) }));
+          space.db.add(Obj.make(Person.Person, { fullName: 'Rich', organization: Ref.make(org) }, { tags: [tagDxn] }));
+          space.db.add(Obj.make(Person.Person, { fullName: 'Josiah', organization: Ref.make(org) }));
+          space.db.add(Obj.make(Person.Person, { fullName: 'Dima', organization: Ref.make(org) }));
+          space.db.add(Obj.make(Person.Person, { fullName: 'Mykola', organization: Ref.make(org) }));
+          space.db.add(Obj.make(Person.Person, { fullName: 'Will', organization: Ref.make(org) }));
 
           return doc;
         });
@@ -107,10 +104,8 @@ export const generator = () => ({
         const tagDxn = Obj.getDXN(tag).toString();
 
         const objects = range(n, () => {
-          const contactsQuery = Query.select(Filter.type(DataType.Person.Person)).select(Filter.tag(tagDxn));
-          const organizationsQuery = Query.select(Filter.type(DataType.Organization.Organization)).select(
-            Filter.tag(tagDxn),
-          );
+          const contactsQuery = Query.select(Filter.type(Person.Person)).select(Filter.tag(tagDxn));
+          const organizationsQuery = Query.select(Filter.type(Organization.Organization)).select(Filter.tag(tagDxn));
           const notesQuery = Query.select(Filter.type(Markdown.Document)).select(Filter.tag(tagDxn));
 
           const emailSyncTrigger = Trigger.make({
@@ -176,37 +171,37 @@ export const generator = () => ({
           });
           space.db.add(researchTrigger);
 
-          const mailboxView = DataType.View.make({
+          const mailboxView = View.make({
             name: 'Mailbox',
             query: Query.select(
-              Filter.type(DataType.Message.Message, { properties: { labels: Filter.contains('investor') } }),
+              Filter.type(Message.Message, { properties: { labels: Filter.contains('investor') } }),
             ).options({
               queues: [mailbox.queue.dxn.toString()],
             }),
-            jsonSchema: Type.toJsonSchema(DataType.Message.Message),
-            presentation: Obj.make(DataType.Collection.Collection, { objects: [] }),
+            jsonSchema: Type.toJsonSchema(Message.Message),
+            presentation: Obj.make(Collection.Collection, { objects: [] }),
           });
-          const contactsView = DataType.View.make({
+          const contactsView = View.make({
             name: 'Contacts',
             query: contactsQuery,
-            jsonSchema: Type.toJsonSchema(DataType.Person.Person),
-            presentation: Obj.make(DataType.Collection.Collection, { objects: [] }),
+            jsonSchema: Type.toJsonSchema(Person.Person),
+            presentation: Obj.make(Collection.Collection, { objects: [] }),
           });
-          const organizationsView = DataType.View.make({
+          const organizationsView = View.make({
             name: 'Organizations',
             query: organizationsQuery,
-            jsonSchema: Type.toJsonSchema(DataType.Organization.Organization),
-            presentation: Obj.make(DataType.Collection.Collection, { objects: [] }),
+            jsonSchema: Type.toJsonSchema(Organization.Organization),
+            presentation: Obj.make(Collection.Collection, { objects: [] }),
           });
-          const notesView = DataType.View.make({
+          const notesView = View.make({
             name: 'Notes',
             query: notesQuery,
             jsonSchema: Type.toJsonSchema(Markdown.Document),
-            presentation: Obj.make(DataType.Collection.Collection, { objects: [] }),
+            presentation: Obj.make(Collection.Collection, { objects: [] }),
           });
 
           return space.db.add(
-            DataType.Project.make({
+            Project.make({
               name: 'Investor Research',
               collections: [mailboxView, contactsView, organizationsView, notesView].map((view) => Ref.make(view)),
             }),

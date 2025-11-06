@@ -6,7 +6,7 @@
 // @ts-nocheck
 
 import { Obj } from '@dxos/echo';
-import { DataType } from '@dxos/schema';
+import { Message } from '@dxos/types';
 
 import { type GenerationStreamEvent } from '../types';
 
@@ -43,7 +43,7 @@ export const createTestSSEStream = (
 
       push({
         type: 'message_start',
-        message: Obj.make(DataType.Message.Message, {
+        message: Obj.make(Message.Message, {
           created: new Date().toISOString(),
           sender: { role: 'assistant' },
           blocks: [],

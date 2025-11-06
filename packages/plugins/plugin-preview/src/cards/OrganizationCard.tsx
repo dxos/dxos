@@ -5,17 +5,12 @@
 import React from 'react';
 
 import { Card } from '@dxos/react-ui-stack';
-import { type DataType } from '@dxos/schema';
+import { type Organization } from '@dxos/types';
 
 import { CardHeader, CardLink } from '../components';
 import { type PreviewProps } from '../types';
 
-export const OrganizationCard = ({
-  children,
-  subject,
-  role,
-  activeSpace,
-}: PreviewProps<DataType.Organization.Organization>) => {
+export const OrganizationCard = ({ children, subject, role, activeSpace }: PreviewProps<Organization.Organization>) => {
   const { name, image, description, website } = subject;
 
   return (

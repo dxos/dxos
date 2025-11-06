@@ -9,13 +9,13 @@ import React, { type Dispatch, type FC, type RefObject, type SetStateAction } fr
 import { useSpace } from '@dxos/react-client/echo';
 import { IconButton, Toolbar } from '@dxos/react-ui';
 import { ScrollContainer } from '@dxos/react-ui-components';
-import { type DataType } from '@dxos/schema';
+import { type Message } from '@dxos/types';
 
 import { type SerializationModel } from '../../model';
 import { TranscriptView } from '../Transcript';
 
 export const TranscriptionStory: FC<{
-  model: SerializationModel<DataType.Message.Message>;
+  model: SerializationModel<Message.Message>;
   disabled?: boolean;
   running: boolean;
   onRunningChange: Dispatch<SetStateAction<boolean>>;

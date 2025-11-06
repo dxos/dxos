@@ -37,7 +37,7 @@ const messageColumnDefault = {
   grid: { size: 100 },
 };
 
-const renderMessageCell = (message: DataType.Message.Message, now: Date, current?: boolean, tags?: Tag.TagMap) => {
+const renderMessageCell = (message: DataType.Message.Message, now: Date, current?: boolean, tags?: Tag.Map) => {
   const { id, hue, from, date, subject } = getMessageProps(message, now);
 
   // NOTE: Currently all grid cells have borders, so we render a single cell for each row.
@@ -95,7 +95,7 @@ export type MailboxProps = {
   id: string;
   role?: string;
   messages: DataType.Message.Message[];
-  tags?: Tag.TagMap;
+  tags?: Tag.Map;
   currentMessageId?: string;
   ignoreAttention?: boolean;
   onAction?: MailboxActionHandler;
