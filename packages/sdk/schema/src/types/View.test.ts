@@ -9,11 +9,10 @@ import { Filter, Obj, Query, Ref, Type } from '@dxos/echo';
 import { FormatEnum, RuntimeSchemaRegistry, StoredSchema, TypeEnum } from '@dxos/echo/internal';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
 import { log } from '@dxos/log';
+import { ProjectionModel } from '@dxos/schema';
 
-import { ProjectionModel } from '../projection';
+import { Testing } from '../testing';
 
-import * as Organization from './Organization';
-import * as Person from './Person';
 import * as View from './View';
 
 describe('Projection', () => {
@@ -28,11 +27,11 @@ describe('Projection', () => {
   });
 
   test('create view from schema', async ({ expect }) => {
-    const schema = Person.Person;
+    const schema = Testing.Contact;
     const jsonSchema = Type.toJsonSchema(schema);
 
     const registry = new RuntimeSchemaRegistry();
-    registry.addSchema([Person.Person, Organization.Organization]);
+    registry.addSchema([Testing.Contact, Testing.Organization]);
 
     const view = await View.makeWithReferences({
       query: Query.select(Filter.type(schema)),
@@ -84,22 +83,21 @@ describe('Projection', () => {
   });
 
   test('static schema definitions with references', async ({ expect }) => {
-    const organization = Obj.make(Organization.Organization, {
+    const organization = Obj.make(Testing.Organization, {
       name: 'DXOS',
       website: 'https://dxos.org',
     });
-    const contact = Obj.make(Person.Person, {
-      fullName: 'Alice',
-      emails: [{ value: 'alice@example.com' }],
+    const contact = Obj.make(Testing.Contact, {
+      name: 'Alice',
       organization: Ref.make(organization),
     });
     log('schema', {
-      organization: Type.toJsonSchema(Organization.Organization),
-      contact: Type.toJsonSchema(Person.Person),
+      organization: Type.toJsonSchema(Testing.Organization),
+      contact: Type.toJsonSchema(Testing.Contact),
     });
     log('objects', { organization, contact });
-    expect(Obj.getTypename(organization)).to.eq(Organization.Organization.typename);
-    expect(Obj.getTypename(contact)).to.eq(Person.Person.typename);
+    expect(Obj.getTypename(organization)).to.eq(Testing.Organization.typename);
+    expect(Obj.getTypename(contact)).to.eq(Testing.Contact.typename);
   });
 
   test('maintains field order during initialization', async ({ expect }) => {

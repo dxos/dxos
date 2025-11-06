@@ -13,8 +13,7 @@ import {
   LabelAnnotation,
   PropertyMetaAnnotationId,
 } from '@dxos/echo/internal';
-
-import { IconAnnotation, ItemAnnotation } from '../annotations';
+import { IconAnnotation, ItemAnnotation } from '@dxos/schema';
 
 // TODO(burdon): Remove (specific to kanban demo).
 export const StatusOptions = [

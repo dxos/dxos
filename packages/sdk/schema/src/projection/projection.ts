@@ -20,7 +20,7 @@ import { log } from '@dxos/log';
 import { omit, pick } from '@dxos/util';
 
 import { PropertySchema, type PropertyType } from '../format';
-import { type DataType } from '../types';
+import { type View } from '../types';
 import { makeMultiSelectAnnotations, makeSingleSelectAnnotations } from '../util';
 
 import { type FieldType, createFieldId } from './field';
@@ -51,7 +51,7 @@ export class ProjectionModel {
   constructor(
     // TODO(burdon): Pass in boolean readonly?
     private readonly _baseSchema: Live<JsonSchemaType>,
-    private readonly _projection: Live<DataType.View.Projection>,
+    private readonly _projection: Live<View.Projection>,
   ) {}
 
   /**
@@ -64,7 +64,7 @@ export class ProjectionModel {
   /**
    * The core projection data type.
    */
-  get data(): Live<DataType.View.Projection> {
+  get data(): Live<View.Projection> {
     return this._projection;
   }
 
@@ -383,7 +383,7 @@ export class ProjectionModel {
   }
 }
 
-export const createUniqueProperty = (projection: DataType.View.Projection): JsonProp => {
+export const createUniqueProperty = (projection: View.Projection): JsonProp => {
   let n = 1;
   while (true) {
     const property: JsonProp = `prop_${n++}` as JsonProp;

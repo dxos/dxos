@@ -7,11 +7,7 @@ import * as Schema from 'effect/Schema';
 import { Obj } from '@dxos/echo';
 import { Type } from '@dxos/echo';
 import { Format, GeneratorAnnotation, LabelAnnotation } from '@dxos/echo/internal';
-
-import { IconAnnotation, ItemAnnotation } from '../annotations';
-
-import * as Collection from './Collection';
-import * as View from './View';
+import { Collection, IconAnnotation, ItemAnnotation, View } from '@dxos/schema';
 
 export const Project = Schema.Struct({
   name: Schema.String.pipe(GeneratorAnnotation.set('commerce.productName'), Schema.optional),
