@@ -7,7 +7,6 @@ import * as Schema from 'effect/Schema';
 import { type Space } from '@dxos/client-protocol';
 import { Obj, type Type } from '@dxos/echo';
 import { type AnyLiveObject, type SpaceSyncState, getDatabaseFromObject } from '@dxos/echo-db';
-import { invariant } from '@dxos/invariant';
 import { type Live, isLiveObject } from '@dxos/live-object';
 
 import { SpaceProxy } from './space-proxy';
@@ -44,21 +43,12 @@ export const getSpace = (object?: Live<any>): Space | undefined => {
   return undefined;
 };
 
-/**
- * @deprecated Use `parseId` instead.
- */
-export const parseFullyQualifiedId = (id: string): [string, string] => {
-  const [spaceId, objectId] = id.split(':');
-  invariant(objectId, 'invalid id');
-  return [spaceId, objectId];
-};
-
 // TODO(burdon): Don't export.
 export const SPACE_ID_LENGTH = 33;
 export const OBJECT_ID_LENGTH = 26;
 export const FQ_ID_LENGTH = SPACE_ID_LENGTH + OBJECT_ID_LENGTH + 1;
 
-// TODO(burdon): Move to @dxos/keys.
+/** @deprecated */
 export const parseId = (id?: string): { spaceId?: Type.SpaceId; objectId?: Type.ObjectId } => {
   if (!id) {
     return {};
