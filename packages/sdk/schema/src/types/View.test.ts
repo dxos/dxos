@@ -27,11 +27,10 @@ describe('Projection', () => {
   });
 
   test('create view from schema', async ({ expect }) => {
-    const schema = Testing.Contact;
+    const schema = Testing.Person;
     const jsonSchema = Type.toJsonSchema(schema);
-
     const registry = new RuntimeSchemaRegistry();
-    registry.addSchema([Testing.Contact, Testing.Organization]);
+    registry.addSchema([Testing.Person, Testing.Organization]);
 
     const view = await View.makeWithReferences({
       query: Query.select(Filter.type(schema)),
@@ -43,26 +42,14 @@ describe('Projection', () => {
     assert(view.query.ast.filter.type === 'object');
     expect(view.query.ast.filter.typename).to.eq(Type.getDXN(schema)?.toString());
     const visibleFields = view.projection.fields.filter((f) => f.visible);
-    expect(visibleFields.map((f) => f.path)).to.deep.eq([
-      'fullName',
-      'preferredName',
-      'nickname',
-      'image',
-      'organization',
-      'jobTitle',
-      'department',
-      'notes',
-      'birthday',
-      'location',
-    ]);
+    expect(visibleFields.map((f) => f.path)).to.deep.eq(['name', 'image', 'email', 'organization']);
 
     const projection = new ProjectionModel(jsonSchema, view.projection);
 
     {
-      const { props } = projection.getFieldProjection(projection.getFieldId('fullName')!);
+      const { props } = projection.getFieldProjection(projection.getFieldId('name')!);
       expect(props).to.deep.eq({
-        property: 'fullName',
-        title: 'Full Name',
+        property: 'name',
         type: TypeEnum.String,
         format: FormatEnum.String,
       });
@@ -72,12 +59,10 @@ describe('Projection', () => {
       const { props } = projection.getFieldProjection(projection.getFieldId('organization')!);
       expect(props).to.deep.eq({
         property: 'organization',
-        title: 'Organization',
-        description: 'The organization the person is currently employed by.',
         type: TypeEnum.Ref,
         format: FormatEnum.Ref,
         referencePath: 'name',
-        referenceSchema: 'dxos.org/type/Organization',
+        referenceSchema: 'example.com/type/Organization',
       });
     }
   });
@@ -87,17 +72,17 @@ describe('Projection', () => {
       name: 'DXOS',
       website: 'https://dxos.org',
     });
-    const contact = Obj.make(Testing.Contact, {
+    const contact = Obj.make(Testing.Person, {
       name: 'Alice',
       organization: Ref.make(organization),
     });
     log('schema', {
       organization: Type.toJsonSchema(Testing.Organization),
-      contact: Type.toJsonSchema(Testing.Contact),
+      contact: Type.toJsonSchema(Testing.Person),
     });
     log('objects', { organization, contact });
     expect(Obj.getTypename(organization)).to.eq(Testing.Organization.typename);
-    expect(Obj.getTypename(contact)).to.eq(Testing.Contact.typename);
+    expect(Obj.getTypename(contact)).to.eq(Testing.Person.typename);
   });
 
   test('maintains field order during initialization', async ({ expect }) => {

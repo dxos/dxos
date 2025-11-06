@@ -45,7 +45,7 @@ const OrganizationSchema = Schema.Struct({
     }),
     Schema.optional,
   ),
-  // TODO(wittjosiah): Remove; 1change to relation.
+  // TODO(wittjosiah): Remove (change to relation).
   status: Schema.Literal('prospect', 'qualified', 'active', 'commit', 'reject').pipe(
     FormatAnnotation.set(FormatEnum.SingleSelect),
     GeneratorAnnotation.set({
