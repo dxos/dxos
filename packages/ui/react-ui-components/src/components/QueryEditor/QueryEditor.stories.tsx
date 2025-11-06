@@ -11,7 +11,7 @@ import { useSpaces } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Json } from '@dxos/react-ui-syntax-highlighter';
-import { DataType } from '@dxos/schema';
+import { Employer, Organization, Person, Project } from '@dxos/types';
 
 import { translations } from '../../translations';
 
@@ -51,12 +51,7 @@ const meta = {
     withTheme,
     withLayout({ container: 'column', classNames: 'p-2', scroll: true }),
     withClientProvider({
-      types: [
-        DataType.Organization.Organization,
-        DataType.Person.Person,
-        DataType.Project.Project,
-        DataType.Employer.Employer,
-      ],
+      types: [Organization, Person, Project, Employer],
       createIdentity: true,
     }),
   ],

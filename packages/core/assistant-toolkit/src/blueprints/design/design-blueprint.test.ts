@@ -28,7 +28,8 @@ import {
 import { TestDatabaseLayer } from '@dxos/functions/testing';
 import { log } from '@dxos/log';
 import { Markdown } from '@dxos/plugin-markdown/types';
-import { DataType } from '@dxos/schema';
+import { Text } from '@dxos/schema';
+import { type Message } from '@dxos/types';
 import { trim } from '@dxos/util';
 
 import { Document } from '../../functions';
@@ -42,7 +43,7 @@ describe('Design Blueprint', { timeout: 120_000 }, () => {
     Effect.fn(
       function* ({ expect }) {
         const observer = GenerationObserver.fromPrinter(new ConsolePrinter());
-        const queue = yield* QueueService.createQueue<DataType.Message.Message | ContextBinding>();
+        const queue = yield* QueueService.createQueue<Message.Message | ContextBinding>();
         const conversation = yield* acquireReleaseResource(() => new AiConversation(queue));
 
         yield* DatabaseService.add(blueprint);
@@ -92,9 +93,7 @@ describe('Design Blueprint', { timeout: 120_000 }, () => {
           makeToolExecutionServiceFromFunctions(testToolkit, testToolkit.toLayer({}) as any),
           AiService.model('@anthropic/claude-3-5-sonnet-20241022'),
         ).pipe(
-          Layer.provideMerge(
-            TestDatabaseLayer({ types: [DataType.Text.Text, Markdown.Document, Blueprint.Blueprint] }),
-          ),
+          Layer.provideMerge(TestDatabaseLayer({ types: [Text.Text, Markdown.Document, Blueprint.Blueprint] })),
           Layer.provideMerge(AiServiceTestingPreset('direct')),
           Layer.provideMerge(
             FunctionInvocationService.layerTestMocked({ functions: [Document.read, Document.update] }).pipe(

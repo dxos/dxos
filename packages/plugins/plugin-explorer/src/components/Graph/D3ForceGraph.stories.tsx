@@ -11,9 +11,10 @@ import { type Space } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { useAsyncEffect } from '@dxos/react-ui';
 import { withTheme } from '@dxos/react-ui/testing';
-import { DataType } from '@dxos/schema';
+import { View } from '@dxos/schema';
 import { type ValueGenerator } from '@dxos/schema/testing';
 import { render } from '@dxos/storybook-utils';
+import { Organization, Person, Project } from '@dxos/types';
 
 import { useGraphModel } from '../../hooks';
 import { Graph } from '../../types';
@@ -28,7 +29,7 @@ faker.seed(1);
 const DefaultStory = () => {
   const client = useClient();
   const [space, setSpace] = useState<Space>();
-  const [view, setView] = useState<DataType.View.View>();
+  const [view, setView] = useState<View.View>();
 
   useAsyncEffect(async () => {
     const space = client.spaces.default;
@@ -57,11 +58,11 @@ const meta = {
       createSpace: true,
       types: [
         Graph.Graph,
-        DataType.View.View,
-        DataType.Organization.Organization,
-        DataType.Project.Project,
-        DataType.Person.Person,
-        DataType.HasRelationship.HasRelationship,
+        View.View,
+        Organization.Organization,
+        Project.Project,
+        Person.Person,
+        HasRelationship.HasRelationship,
       ],
     }),
   ],

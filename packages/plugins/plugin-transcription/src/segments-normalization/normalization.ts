@@ -19,7 +19,7 @@ import { trim } from '@dxos/util';
 const MessageWithRangeId = Schema.extend(
   Message.Message,
   Schema.Struct({
-    // TODO(mykola): Move to meta in DataType.Message. Use `DataType.Message.Message` instead.
+    // TODO(mykola): Move to meta in Message. Use `Message.Message` instead.
     rangeId: Schema.optional(Schema.Array(Schema.String)).annotations({
       description: 'The IDs of the messages that contain the sentences.',
     }),
@@ -29,7 +29,7 @@ const MessageWithRangeId = Schema.extend(
 export interface MessageWithRangeId extends Schema.Schema.Type<typeof MessageWithRangeId> {}
 
 export const NormalizationInput = Schema.Struct({
-  // TODO(mykola): Move to meta in DataType.Message. Use `DataType.Message.Message` instead.
+  // TODO(mykola): Move to meta in Message. Use `Message.Message` instead.
   messages: Schema.Array(MessageWithRangeId).annotations({
     description: 'Messages to normalize into sentences.',
   }),
@@ -89,7 +89,7 @@ const prompt = trim`
 
   # Input Format:
     - The input is an array of messages that contain transcription blocks.
-    - Each message is a DataType.Message.Message, as described in the output format.
+    - Each message is a Message.Message, as described in the output format.
 
   # Output Format:
     - You have been provided with the tool that defines the output format; make sure to query it.

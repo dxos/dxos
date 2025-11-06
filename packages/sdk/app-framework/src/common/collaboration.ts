@@ -4,7 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { ContentBlock } from '@dxos/schema';
+import { ContentBlock } from '@dxos/types';
 
 export namespace CollaborationActions {
   export class AcceptProposal extends Schema.TaggedClass<AcceptProposal>()('collaboration/accept-proposal', {

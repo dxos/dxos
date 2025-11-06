@@ -17,14 +17,7 @@ import { QueryForm, type QueryFormProps } from '@dxos/react-ui-components';
 import { List } from '@dxos/react-ui-list';
 import { cardSpacing } from '@dxos/react-ui-stack';
 import { inputTextLabel, mx, subtleHover } from '@dxos/react-ui-theme';
-import {
-  type DataType,
-  FieldSchema,
-  type FieldType,
-  ProjectionModel,
-  VIEW_FIELD_LIMIT,
-  getTypenameFromQuery,
-} from '@dxos/schema';
+import { FieldSchema, type FieldType, ProjectionModel, VIEW_FIELD_LIMIT, getTypenameFromQuery } from '@dxos/schema';
 
 import { translationKey } from '../../translations';
 import { FieldEditor } from '../FieldEditor';
@@ -36,7 +29,7 @@ const listItemGrid = 'grid grid-cols-subgrid col-span-5';
 export type ViewEditorProps = ThemedClassName<
   {
     schema: Schema.Schema.AnyNoContext;
-    view: DataType.View.View;
+    view: View.View;
     mode?: 'schema' | 'query';
     registry?: SchemaRegistry;
     readonly?: boolean;

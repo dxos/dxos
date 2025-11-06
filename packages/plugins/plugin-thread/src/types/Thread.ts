@@ -5,7 +5,7 @@
 import * as Schema from 'effect/Schema';
 
 import { Obj, Type } from '@dxos/echo';
-import { DataType } from '@dxos/schema';
+import { Message } from '@dxos/types';
 
 export const ThreadStatus = Schema.Union(
   Schema.Literal('staged'),
@@ -16,7 +16,7 @@ export const ThreadStatus = Schema.Union(
 const _Thread = Schema.Struct({
   name: Schema.String.pipe(Schema.optional),
   status: ThreadStatus.pipe(Schema.optional),
-  messages: Schema.mutable(Schema.Array(Type.Ref(DataType.Message.Message))),
+  messages: Schema.mutable(Schema.Array(Type.Ref(Message.Message))),
 }).pipe(Type.Obj({ typename: 'dxos.org/type/Thread', version: '0.1.0' }));
 export interface Thread extends Schema.Schema.Type<typeof _Thread> {}
 export interface ThreadEncoded extends Schema.Schema.Encoded<typeof _Thread> {}

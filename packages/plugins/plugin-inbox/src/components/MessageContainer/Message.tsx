@@ -16,14 +16,14 @@ import {
   useTextEditor,
 } from '@dxos/react-ui-editor';
 import { mx } from '@dxos/react-ui-theme';
-import { type DataType } from '@dxos/schema';
+import { Message } from '@dxos/types';
 
 import { MessageHeader } from './MessageHeader';
 import { type ViewMode } from './MessageHeader';
 
 export type MessageProps = ThemedClassName<{
   space?: Space;
-  message: DataType.Message.Message;
+  message: Message.Message;
   viewMode: ViewMode;
   hasEnrichedContent: boolean;
   contactDxn?: string;

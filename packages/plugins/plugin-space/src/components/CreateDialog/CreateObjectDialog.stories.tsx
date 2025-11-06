@@ -12,7 +12,6 @@ import { useQuery, useSpace } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { Dialog } from '@dxos/react-ui';
 import { withTheme } from '@dxos/react-ui/testing';
-import { DataType } from '@dxos/schema';
 import { translations as shellTranslations } from '@dxos/shell/react';
 
 import { translations } from '../../translations';
@@ -37,7 +36,7 @@ const meta = {
   decorators: [
     withTheme, // TODO(wittjosiah): Try to write story which does not depend on plugin manager.
     withPluginManager({ plugins: [IntentPlugin()] }),
-    withClientProvider({ createIdentity: true, createSpace: true, types: [DataType.Collection.Collection] }),
+    withClientProvider({ createIdentity: true, createSpace: true, types: [Collection.Collection] }),
   ],
   parameters: {
     translations: [...translations, ...shellTranslations],
@@ -50,7 +49,7 @@ export default meta;
 export const Default: StoryObj<typeof CreateObjectDialog> = {};
 
 export const Typename: StoryObj<typeof CreateObjectDialog> = {
-  args: { typename: DataType.Collection.Collection.typename },
+  args: { typename: Collection.Collection.typename },
 };
 
 export const TargetSpace: StoryObj<typeof CreateObjectDialog> = {
@@ -68,11 +67,11 @@ export const TargetSpace: StoryObj<typeof CreateObjectDialog> = {
 export const TargetCollection: StoryObj<typeof CreateObjectDialog> = {
   render: (args) => {
     const space = useSpace();
-    const [collection] = useQuery(space, Filter.type(DataType.Collection.Collection));
+    const [collection] = useQuery(space, Filter.type(Collection.Collection));
 
     useEffect(() => {
       if (space) {
-        space.db.add(Obj.make(DataType.Collection.Collection, { name: 'My Collection', objects: [] }));
+        space.db.add(Obj.make(Collection.Collection, { name: 'My Collection', objects: [] }));
       }
     }, [space]);
 

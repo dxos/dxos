@@ -3,7 +3,6 @@
 //
 
 import { Capabilities, contributes, createResolver } from '@dxos/app-framework';
-import { DataType } from '@dxos/schema';
 
 import { templates } from '../templates';
 import { Project } from '../types';
@@ -24,7 +23,7 @@ export default () =>
         }
 
         return {
-          data: { object: DataType.Project.make({ name }) },
+          data: { object: Project.make({ name }) },
         };
       },
     }),

@@ -8,15 +8,16 @@ import { useClient } from '@dxos/react-client';
 import { Filter, getSpace, useQuery, useSchema } from '@dxos/react-client/echo';
 import { Callout, useTranslation } from '@dxos/react-ui';
 import { useSelected } from '@dxos/react-ui-attention';
-import { type DataType } from '@dxos/schema';
+import { type View } from '@dxos/schema';
 import { getTypenameFromQuery } from '@dxos/schema';
+import { type View } from '@dxos/schema';
 import { isNonNullable } from '@dxos/util';
 
 import { meta } from '../../meta';
 
 import { ObjectForm } from './ObjectForm';
 
-type RowDetailsPanelProps = { objectId: string; view: DataType.View.View };
+type RowDetailsPanelProps = { objectId: string; view: View.View };
 
 export const ObjectDetailsPanel = ({ objectId, view }: RowDetailsPanelProps) => {
   const { t } = useTranslation(meta.id);

@@ -15,8 +15,8 @@ import { withClientProvider } from '@dxos/react-client/testing';
 import { useAsyncEffect } from '@dxos/react-ui';
 import { withTheme } from '@dxos/react-ui/testing';
 import { Thread as ThreadComponent } from '@dxos/react-ui-thread';
-import { DataType } from '@dxos/schema';
 import { render } from '@dxos/storybook-utils';
+import { Message } from '@dxos/types';
 
 import { translations } from '../translations';
 import { Channel, Thread } from '../types';
@@ -70,7 +70,7 @@ const meta = {
         ),
       ],
     }),
-    withClientProvider({ createSpace: true, types: [Thread.Thread, Channel.Channel, DataType.Message.Message] }),
+    withClientProvider({ createSpace: true, types: [Thread.Thread, Channel.Channel, Message.Message] }),
   ],
   parameters: {
     layout: 'fullscreen',

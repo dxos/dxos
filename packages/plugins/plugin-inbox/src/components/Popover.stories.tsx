@@ -17,13 +17,13 @@ import { useQuery, useSpace } from '@dxos/react-client/echo';
 import { List, ListItem } from '@dxos/react-ui';
 import { withTheme } from '@dxos/react-ui/testing';
 import { defaultTx } from '@dxos/react-ui-theme';
-import { DataType } from '@dxos/schema';
 import { seedTestData } from '@dxos/schema/testing';
+import { Message, Organization, Person } from '@dxos/types';
 
 import { InboxPlugin } from '../InboxPlugin';
 import { Mailbox } from '../types';
 
-const ContactItem = ({ contact }: { contact: DataType.Person.Person }) => {
+const ContactItem = ({ contact }: { contact: Person.Person }) => {
   const { dispatchPromise: dispatch } = useIntentDispatcher();
   const ref = useRef<HTMLLIElement>(null);
 
@@ -56,7 +56,7 @@ const ContactItem = ({ contact }: { contact: DataType.Person.Person }) => {
   );
 };
 
-const OrganizationItem = ({ organization }: { organization: DataType.Organization.Organization }) => {
+const OrganizationItem = ({ organization }: { organization: Organization.Organization }) => {
   const { dispatchPromise: dispatch } = useIntentDispatcher();
   const ref = useRef<HTMLLIElement>(null);
 
@@ -96,12 +96,7 @@ const meta = {
     withPluginManager({
       plugins: [
         ClientPlugin({
-          types: [
-            Mailbox.Mailbox,
-            DataType.Message.Message,
-            DataType.Person.Person,
-            DataType.Organization.Organization,
-          ],
+          types: [Mailbox.Mailbox, Message.Message, Person.Person, Organization.Organization],
           onClientInitialized: async ({ client }) => {
             await client.halo.createIdentity();
             await client.spaces.waitUntilReady();
@@ -110,7 +105,7 @@ const meta = {
             const mailbox = Mailbox.make({ space });
             const { emails } = await seedTestData(space);
             const queueDxn = mailbox.queue.dxn;
-            const queue = space.queues.get<DataType.Message.Message>(queueDxn);
+            const queue = space.queues.get<Message.Message>(queueDxn);
             await queue.append(emails);
             space.db.add(mailbox);
           },
@@ -136,7 +131,7 @@ type Story = StoryObj<typeof meta>;
 export const Contacts: Story = {
   render: () => {
     const space = useSpace();
-    const contacts = useQuery(space, Filter.type(DataType.Person.Person));
+    const contacts = useQuery(space, Filter.type(Person.Person));
 
     return (
       <List>
@@ -151,7 +146,7 @@ export const Contacts: Story = {
 export const Organizations: Story = {
   render: () => {
     const space = useSpace();
-    const organizations = useQuery(space, Filter.type(DataType.Organization.Organization));
+    const organizations = useQuery(space, Filter.type(Organization.Organization));
 
     return (
       <List>

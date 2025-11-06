@@ -21,7 +21,6 @@ import { useClient } from '@dxos/react-client';
 import { type Space, getSpace, isLiveObject, isSpace, useQuery, useSpaces } from '@dxos/react-client/echo';
 import { Dialog, IconButton, useTranslation } from '@dxos/react-ui';
 import { cardDialogContent, cardDialogHeader } from '@dxos/react-ui-stack';
-import { DataType, StoredSchema, getTypenameFromQuery } from '@dxos/schema';
 import { isNonNullable } from '@dxos/util';
 
 import { SpaceCapabilities } from '../../capabilities';
@@ -55,10 +54,10 @@ export const CreateObjectDialog = ({
   const spaces = useSpaces();
   const { dispatch } = useIntentDispatcher();
   const forms = useCapabilities(SpaceCapabilities.ObjectForm);
-  const [target, setTarget] = useState<Space | DataType.Collection.Collection | undefined>(initialTarget);
+  const [target, setTarget] = useState<Space | Collection.Collection | undefined>(initialTarget);
   const [typename, setTypename] = useState<string | undefined>(initialTypename);
   const space = isSpace(target) ? target : getSpace(target);
-  const queryCollections = useQuery(space, Query.type(DataType.Collection.QueryCollection));
+  const queryCollections = useQuery(space, Query.type(Collection.QueryCollection));
   const hiddenTypenames = queryCollections
     .map((collection) => getTypenameFromQuery(collection.query))
     .filter(isNonNullable);

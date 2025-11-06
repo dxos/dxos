@@ -14,10 +14,10 @@ import { useClientProvider, withClientProvider } from '@dxos/react-client/testin
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Card } from '@dxos/react-ui-stack';
 import { Json } from '@dxos/react-ui-syntax-highlighter';
-import { DataType } from '@dxos/schema';
 import { type ValueGenerator, createAsyncGenerator } from '@dxos/schema/testing';
 import { translations as shellTranslations } from '@dxos/shell/react';
 import { render } from '@dxos/storybook-utils';
+import { Organization, Person, Task } from '@dxos/types';
 
 import { translations } from '../translations';
 
@@ -28,7 +28,7 @@ const generator: ValueGenerator = faker as any;
 
 const DefaultStory = () => {
   const { space } = useClientProvider();
-  const [object] = useQuery(space, Filter.type(DataType.Organization.Organization));
+  const [object] = useQuery(space, Filter.type(Organization.Organization));
   if (!object) {
     return null;
   }
@@ -70,31 +70,26 @@ const meta = {
     withClientProvider({
       createIdentity: true,
       createSpace: true,
-      types: [
-        DataType.Organization.Organization,
-        DataType.Person.Person,
-        DataType.Task.Task,
-        DataType.HasSubject.HasSubject,
-      ],
+      types: [Organization.Organization, Person.Person, Task.Task, HasSubject.HasSubject],
       onCreateSpace: async ({ space }) => {
         const org = space.db.add(
-          Obj.make(DataType.Organization.Organization, {
+          Obj.make(Organization.Organization, {
             name: 'DXOS',
           }),
         );
         const task = space.db.add(
-          Obj.make(DataType.Task.Task, {
+          Obj.make(Task.Task, {
             title: 'Task',
           }),
         );
         space.db.add(
-          Relation.make(DataType.HasSubject.HasSubject, {
+          Relation.make(HasSubject.HasSubject, {
             [Relation.Source]: task,
             [Relation.Target]: org,
             completedAt: new Date().toISOString(),
           }),
         );
-        const objectGenerator = createAsyncGenerator(generator, DataType.Person.Person as Type.Obj.Any, {
+        const objectGenerator = createAsyncGenerator(generator, Person.Person as Type.Obj.Any, {
           db: space?.db,
           force: true,
         });

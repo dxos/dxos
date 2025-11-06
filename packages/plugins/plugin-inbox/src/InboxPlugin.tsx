@@ -7,7 +7,7 @@ import { Ref } from '@dxos/echo';
 import { ClientEvents } from '@dxos/plugin-client';
 import { SpaceCapabilities } from '@dxos/plugin-space';
 import { defineObjectForm } from '@dxos/plugin-space/types';
-import { DataType } from '@dxos/schema';
+import { Event, Message } from '@dxos/types';
 
 import {
   ASSISTANT_BLUEPRINT_KEY,
@@ -48,7 +48,7 @@ export const InboxPlugin = definePlugin(meta, () => [
         },
       }),
       contributes(Capabilities.Metadata, {
-        id: DataType.Message.Message.typename,
+        id: Message.Message.typename,
         metadata: {
           icon: 'ph--note--regular',
           iconHue: 'rose',
@@ -62,10 +62,10 @@ export const InboxPlugin = definePlugin(meta, () => [
         },
       }),
       contributes(Capabilities.Metadata, {
-        id: DataType.Event.Event.typename,
+        id: Event.Event.typename,
         metadata: {
           // TODO(wittjosiah): Move out of metadata.
-          loadReferences: async (event: DataType.Event.Event) => await Ref.Array.loadAll(event.links ?? []),
+          loadReferences: async (event: Event.Event) => await Ref.Array.loadAll(event.links ?? []),
         },
       }),
     ],

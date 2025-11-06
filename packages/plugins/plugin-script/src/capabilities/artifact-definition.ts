@@ -16,7 +16,6 @@ import { ScriptType } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { SpaceAction } from '@dxos/plugin-space/types';
 import { type Space } from '@dxos/react-client/echo';
-import { DataType } from '@dxos/schema';
 
 import { meta } from '../meta';
 
@@ -159,7 +158,7 @@ export default () => {
         execute: async ({ name, code }, { extensions }) => {
           invariant(extensions?.space, 'No space');
           invariant(extensions?.dispatch, 'No intent dispatcher');
-          const script = Obj.make(ScriptType, { name, source: Ref.make(DataType.Text.make(code)) });
+          const script = Obj.make(ScriptType, { name, source: Ref.make(Text.make(code)) });
           extensions.space.db.add(script);
           await extensions.space.db.flush();
 

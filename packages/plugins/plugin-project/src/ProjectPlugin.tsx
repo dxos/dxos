@@ -6,7 +6,7 @@ import { Capabilities, Events, contributes, createIntent, defineModule, definePl
 import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
 import { SpaceCapabilities } from '@dxos/plugin-space';
 import { defineObjectForm } from '@dxos/plugin-space/types';
-import { DataType } from '@dxos/schema';
+import { Project } from '@dxos/types';
 
 import { AppGraphBuilder, IntentResolver, ReactSurface } from './capabilities';
 import { meta } from './meta';
@@ -24,7 +24,7 @@ export const ProjectPlugin = definePlugin(meta, () => [
     activatesOn: Events.SetupMetadata,
     activate: () =>
       contributes(Capabilities.Metadata, {
-        id: DataType.Project.Project.typename,
+        id: Project.Project.typename,
         metadata: {
           icon: 'ph--check-square-offset--regular',
           iconHue: 'purple',
@@ -38,7 +38,7 @@ export const ProjectPlugin = definePlugin(meta, () => [
       contributes(
         SpaceCapabilities.ObjectForm,
         defineObjectForm({
-          objectSchema: DataType.Project.Project,
+          objectSchema: Project.Project,
           getIntent: (_, options) => createIntent(Project.Create, { space: options.space }),
         }),
       ),
@@ -46,7 +46,7 @@ export const ProjectPlugin = definePlugin(meta, () => [
   defineModule({
     id: `${meta.id}/module/schema`,
     activatesOn: ClientEvents.SetupSchema,
-    activate: () => contributes(ClientCapabilities.Schema, [DataType.Project.Project]),
+    activate: () => contributes(ClientCapabilities.Schema, [Project.Project]),
   }),
   defineModule({
     id: `${meta.id}/module/react-surface`,

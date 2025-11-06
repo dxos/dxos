@@ -20,7 +20,7 @@ import {
   makeGraphWriterToolkit,
 } from '@dxos/assistant-toolkit';
 import { TracingService, defineFunction } from '@dxos/functions';
-import { DataType } from '@dxos/schema';
+import { Organization, Person, Project } from '@dxos/types';
 import { trim } from '@dxos/util';
 
 /**
@@ -43,7 +43,7 @@ export default defineFunction({
   handler: Effect.fnUntraced(
     function* ({ data: { messages } }) {
       const GraphWriterToolkit = makeGraphWriterToolkit({
-        schema: [DataType.Person.Person, DataType.Project.Project, DataType.Organization.Organization],
+        schema: [Person.Person, Project.Project, Organization.Organization],
       });
       const GraphWriterHandler = makeGraphWriterHandler(GraphWriterToolkit);
 

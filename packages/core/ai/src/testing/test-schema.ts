@@ -6,8 +6,6 @@ import * as Schema from 'effect/Schema';
 
 import { EntityKind, ObjectId, Ref, TypeAnnotationId } from '@dxos/echo/internal';
 
-// TODO(burdon): Remove (use @dxos/schema DataType).
-
 /** @deprecated */
 export const Contact = Schema.Struct({
   id: ObjectId,

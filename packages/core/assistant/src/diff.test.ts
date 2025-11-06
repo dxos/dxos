@@ -6,7 +6,7 @@ import { describe, expect, it } from 'vitest';
 
 import { createDocAccessor } from '@dxos/echo-db';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
-import { DataType } from '@dxos/schema';
+import { Text } from '@dxos/schema';
 import { trim } from '@dxos/util';
 
 import { applyDiffs } from './diff';
@@ -15,7 +15,7 @@ describe('diff', () => {
   it('should apply diffs', async () => {
     const builder = new EchoTestBuilder();
     const { db, graph } = await builder.createDatabase();
-    graph.schemaRegistry.addSchema([DataType.Text.Text]);
+    graph.schemaRegistry.addSchema([Text.Text]);
 
     const document = trim`
       # Hello World
@@ -24,7 +24,7 @@ describe('diff', () => {
       But not this one.
     `;
 
-    const text = db.add(DataType.Text.make(document));
+    const text = db.add(Text.make(document));
     const accessor = createDocAccessor(text, ['content']);
     const result = applyDiffs(accessor, [
       `- There'z a typo in this sentence.`,

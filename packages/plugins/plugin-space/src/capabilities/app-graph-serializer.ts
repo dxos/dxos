@@ -5,14 +5,13 @@
 import { Capabilities, type PluginContext, contributes, createIntent } from '@dxos/app-framework';
 import { isSpace } from '@dxos/client/echo';
 import { Obj } from '@dxos/echo';
-import { DataType } from '@dxos/schema';
 
 import { meta } from '../meta';
 import { translations } from '../translations';
 import { SPACE_TYPE, SpaceAction } from '../types';
 import { SPACES } from '../util';
 
-const COLLECTION_TYPE = DataType.Collection.Collection.typename;
+const COLLECTION_TYPE = Collection.Collection.typename;
 
 // https://stackoverflow.com/a/19016910
 const DIRECTORY_TYPE = 'text/directory';
@@ -56,7 +55,7 @@ export default (context: PluginContext) =>
       deserialize: async (data, ancestors) => {
         const space = ancestors.find(isSpace);
         const collection =
-          ancestors.findLast((ancestor) => Obj.instanceOf(DataType.Collection.Collection, ancestor)) ??
+          ancestors.findLast((ancestor) => Obj.instanceOf(Collection.Collection, ancestor)) ??
           space?.properties[COLLECTION_TYPE]?.target;
         if (!space || !collection) {
           return;
@@ -66,7 +65,7 @@ export default (context: PluginContext) =>
         const result = await dispatch(
           createIntent(SpaceAction.AddObject, {
             target: collection,
-            object: Obj.make(DataType.Collection.Collection, { name: data.name, objects: [] }),
+            object: Obj.make(Collection.Collection, { name: data.name, objects: [] }),
           }),
         );
 

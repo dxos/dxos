@@ -20,7 +20,6 @@ import {
 import { Markdown } from '@dxos/plugin-markdown';
 import { type Client } from '@dxos/react-client';
 import { type Space } from '@dxos/react-client/echo';
-import { DataType } from '@dxos/schema';
 
 // TODO(wittjosiah): Factor out and add tests.
 

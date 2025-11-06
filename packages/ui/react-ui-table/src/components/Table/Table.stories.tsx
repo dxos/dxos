@@ -24,7 +24,7 @@ import { withClientProvider } from '@dxos/react-client/testing';
 import { withTheme } from '@dxos/react-ui/testing';
 import { ViewEditor } from '@dxos/react-ui-form';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
-import { DataType, getSchemaFromPropertyDefinitions, getTypenameFromQuery } from '@dxos/schema';
+import { View, getSchemaFromPropertyDefinitions, getTypenameFromQuery } from '@dxos/schema';
 import { Testing, createObjectFactory } from '@dxos/schema/testing';
 
 import { useTestTableModel } from '../../testing';
@@ -70,7 +70,7 @@ const StoryViewEditor = ({
   space,
   handleDeleteColumn,
 }: {
-  view?: DataType.View.View;
+  view?: View.View;
   schema?: Schema.Schema.AnyNoContext;
   space?: Space;
   handleDeleteColumn: (fieldId: string) => void;
@@ -162,15 +162,15 @@ const meta = {
   decorators: [
     withTheme,
     withClientProvider({
-      types: [DataType.View.View, Table.Table],
+      types: [View.View, Table.Table],
       createIdentity: true,
       createSpace: true,
       onCreateSpace: async ({ client, space }) => {
         const [schema] = await space.db.schemaRegistry.register([TestSchema]);
         const { view } = await Table.makeView({ client, space, typename: schema.typename });
         view.projection.fields = [
-          view.projection.fields.find((field) => field.path === 'name')!,
-          ...view.projection.fields.filter((field) => field.path !== 'name'),
+          view.projection.fields.find((field: any) => field.path === 'name')!,
+          ...view.projection.fields.filter((field: any) => field.path !== 'name'),
         ];
 
         space.db.add(view);
@@ -206,7 +206,7 @@ export const StaticSchema: StoryObj = {
   render: DefaultStory,
   decorators: [
     withClientProvider({
-      types: [DataType.View.View, Table.Table, Testing.Contact, Testing.Organization],
+      types: [View.View, Table.Table],
       createIdentity: true,
       createSpace: true,
       onCreateSpace: async ({ client, space }) => {
@@ -248,7 +248,7 @@ export const ArrayOfObjects: StoryObj = {
   render: DefaultStory,
   decorators: [
     withClientProvider({
-      types: [DataType.View.View, Table.Table, Testing.Contact, Testing.Organization, ContactWithArrayOfEmails],
+      types: [View.View, Table.Table, Testing.Contact, Testing.Organization, ContactWithArrayOfEmails],
       createIdentity: true,
       createSpace: true,
       onCreateSpace: async ({ client, space }) => {
@@ -275,7 +275,7 @@ export const Tags: Meta<StoryProps> = {
   render: DefaultStory,
   decorators: [
     withClientProvider({
-      types: [DataType.View.View, Table.Table],
+      types: [View.View, Table.Table],
       createIdentity: true,
       createSpace: true,
       onCreateSpace: async ({ client, space }) => {

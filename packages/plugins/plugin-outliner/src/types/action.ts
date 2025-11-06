@@ -1,10 +1,9 @@
+import * as Schema from 'effect/Schema';
+
+import { Task } from '@dxos/types';
 //
 // Copyright 2023 DXOS.org
 //
-
-import * as Schema from 'effect/Schema';
-
-import { DataType } from '@dxos/schema';
 
 import { meta } from '../meta';
 
@@ -37,7 +36,7 @@ export namespace OutlinerAction {
       text: Schema.String,
     }),
     output: Schema.Struct({
-      object: DataType.Task.Task,
+      object: Task.Task,
     }),
   }) {}
 }

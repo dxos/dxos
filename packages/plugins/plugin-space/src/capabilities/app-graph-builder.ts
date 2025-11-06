@@ -15,7 +15,6 @@ import { log } from '@dxos/log';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { ATTENDABLE_PATH_SEPARATOR, PLANK_COMPANION_TYPE } from '@dxos/plugin-deck/types';
 import { ROOT_ID, createExtension, rxFromObservable, rxFromSignal } from '@dxos/plugin-graph';
-import { DataType, StoredSchema, getTypenameFromQuery } from '@dxos/schema';
 import { isNonNullable } from '@dxos/util';
 
 import { getActiveSpace } from '../hooks';
@@ -327,10 +326,7 @@ export default (context: PluginContext) => {
 
               const collection = get(
                 rxFromSignal(
-                  () =>
-                    space.properties[DataType.Collection.Collection.typename]?.target as
-                      | DataType.Collection.Collection
-                      | undefined,
+                  () => space.properties[Collection.Collection.typename]?.target as Collection.Collection | undefined,
                 ),
               );
               if (!collection) {
@@ -369,7 +365,7 @@ export default (context: PluginContext) => {
           Function.pipe(
             get(node),
             Option.flatMap((node) =>
-              Obj.instanceOf(DataType.Collection.Collection, node.data) ? Option.some(node.data) : Option.none(),
+              Obj.instanceOf(Collection.Collection, node.data) ? Option.some(node.data) : Option.none(),
             ),
             Option.map((collection) => {
               const state = context.getCapability(SpaceCapabilities.State);
@@ -447,7 +443,7 @@ export default (context: PluginContext) => {
           Function.pipe(
             get(node),
             Option.flatMap((node) =>
-              Obj.instanceOf(DataType.Collection.QueryCollection, node.data) ? Option.some(node.data) : Option.none(),
+              Obj.instanceOf(Collection.QueryCollection, node.data) ? Option.some(node.data) : Option.none(),
             ),
             Option.flatMap((collection) => {
               const space = getSpace(collection);
@@ -464,7 +460,7 @@ export default (context: PluginContext) => {
                     //   It will return all objects in the collection, not just the ones of the given type.
                     //   However this works fine for now because this query is only used for exclusions.
                     Query.select(Filter.typename(typename))
-                      .referencedBy(DataType.Collection.Collection, 'objects')
+                      .referencedBy(Collection.Collection, 'objects')
                       .reference('objects'),
                   ),
                 );
@@ -504,7 +500,7 @@ export default (context: PluginContext) => {
           Function.pipe(
             get(node),
             Option.flatMap((node) =>
-              Obj.instanceOf(DataType.Collection.QueryCollection, node.data) &&
+              Obj.instanceOf(Collection.QueryCollection, node.data) &&
               getTypenameFromQuery(node.data.query) === StoredSchema.typename
                 ? Option.some(node.data)
                 : Option.none(),
@@ -531,7 +527,7 @@ export default (context: PluginContext) => {
     createExtension({
       id: `${meta.id}/static-schema-actions`,
       actions: (node) => {
-        let query: QueryResult<DataType.View.View> | undefined;
+        let query: QueryResult<View.View> | undefined;
         return Rx.make((get) =>
           Function.pipe(
             get(node),
@@ -542,7 +538,7 @@ export default (context: PluginContext) => {
             Option.map(({ space, schema }) => {
               if (!query) {
                 // TODO(wittjosiah): Support filtering by nested properties (e.g. `query.typename`).
-                query = space.db.query(Filter.type(DataType.View.View));
+                query = space.db.query(Filter.type(View.View));
               }
 
               const views = get(rxFromQuery(query));
@@ -579,7 +575,7 @@ export default (context: PluginContext) => {
     createExtension({
       id: `${meta.id}/schema-views`,
       connector: (node) => {
-        let query: QueryResult<DataType.View.View> | undefined;
+        let query: QueryResult<View.View> | undefined;
         return Rx.make((get) =>
           Function.pipe(
             get(node),
@@ -592,7 +588,7 @@ export default (context: PluginContext) => {
             Option.map(({ space, schema }) => {
               if (!query) {
                 // TODO(wittjosiah): Support filtering by nested properties (e.g. `query.typename`).
-                query = space.db.query(Filter.type(DataType.View.View));
+                query = space.db.query(Filter.type(View.View));
               }
 
               // TODO(wittjosiah): Remove cast.
@@ -654,7 +650,7 @@ export default (context: PluginContext) => {
     createExtension({
       id: `${meta.id}/object-actions`,
       actions: (node) => {
-        let query: QueryResult<DataType.View.View> | undefined;
+        let query: QueryResult<View.View> | undefined;
         return Rx.make((get) =>
           Function.pipe(
             get(node),
@@ -668,14 +664,14 @@ export default (context: PluginContext) => {
               const isSchema = Obj.instanceOf(StoredSchema, object);
               if (!query && isSchema) {
                 // TODO(wittjosiah): Support filtering by nested properties (e.g. `query.typename`).
-                query = space.db.query(Filter.type(DataType.View.View));
+                query = space.db.query(Filter.type(View.View));
               }
 
               let deletable =
                 !isSchema &&
                 // Don't allow the Records smart collection to be deleted.
                 !(
-                  Obj.instanceOf(DataType.Collection.QueryCollection, object) &&
+                  Obj.instanceOf(Collection.QueryCollection, object) &&
                   getTypenameFromQuery(object.query) === StoredSchema.typename
                 );
               if (isSchema && query) {
@@ -718,9 +714,7 @@ export default (context: PluginContext) => {
         Rx.make((get) =>
           Function.pipe(
             get(node),
-            Option.flatMap((node) =>
-              Obj.instanceOf(DataType.View.View, node.data) ? Option.some(node) : Option.none(),
-            ),
+            Option.flatMap((node) => (Obj.instanceOf(View.View, node.data) ? Option.some(node) : Option.none())),
             Option.map((node) => [
               {
                 id: [node.id, 'selected-objects'].join(ATTENDABLE_PATH_SEPARATOR),

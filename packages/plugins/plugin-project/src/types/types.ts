@@ -5,11 +5,11 @@
 import * as Schema from 'effect/Schema';
 
 import { SpaceSchema } from '@dxos/react-client/echo';
-import { DataType } from '@dxos/schema';
+import { Project } from '@dxos/types';
 
 import { meta } from '../meta';
 
-export namespace Project {
+export namespace ProjectAction {
   export class Create extends Schema.TaggedClass<Create>()(`${meta.id}/action/create`, {
     input: Schema.Struct({
       space: SpaceSchema,
@@ -17,7 +17,7 @@ export namespace Project {
       template: Schema.optional(Schema.Literal('org-research')),
     }),
     output: Schema.Struct({
-      object: DataType.Project.Project,
+      object: Project.Project,
     }),
   }) {}
 }

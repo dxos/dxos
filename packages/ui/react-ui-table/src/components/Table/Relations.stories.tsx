@@ -17,8 +17,9 @@ import { useClientProvider, withClientProvider } from '@dxos/react-client/testin
 import { useAsyncEffect } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { translations as formTranslations } from '@dxos/react-ui-form';
-import { DataType } from '@dxos/schema';
+import { View } from '@dxos/schema';
 import { type ValueGenerator, createAsyncGenerator } from '@dxos/schema/testing';
+import { Organization, Person } from '@dxos/types';
 
 import { useTableModel } from '../../hooks';
 import { type TableFeatures, TablePresentation, type TableRow } from '../../model';
@@ -37,7 +38,7 @@ const generator: ValueGenerator = faker as any;
 const useTestModel = <S extends Type.Obj.Any>(schema: S, count: number) => {
   const client = useClient();
   const { space } = useClientProvider();
-  const [view, setView] = useState<DataType.View.View>();
+  const [view, setView] = useState<View.View>();
   const [jsonSchema, setJsonSchema] = useState<JsonSchemaType>();
 
   const features = useMemo<TableFeatures>(
@@ -87,8 +88,8 @@ const useTestModel = <S extends Type.Obj.Any>(schema: S, count: number) => {
 
 const DefaultStory = () => {
   const client = useClient();
-  const { model: orgModel, presentation: orgPresentation } = useTestModel(DataType.Organization.Organization, 50);
-  const { model: contactModel, presentation: contactPresentation } = useTestModel(DataType.Person.Person, 50);
+  const { model: orgModel, presentation: orgPresentation } = useTestModel(Organization.Organization, 50);
+  const { model: contactModel, presentation: contactPresentation } = useTestModel(Person.Person, 50);
   const { space } = useClientProvider();
 
   const handleCreate = useCallback(
@@ -103,7 +104,7 @@ const DefaultStory = () => {
       <TableComponent.Root>
         <TableComponent.Main
           model={orgModel}
-          schema={DataType.Organization.Organization}
+          schema={Organization.Organization}
           presentation={orgPresentation}
           onCreate={handleCreate}
           client={client}
@@ -114,7 +115,7 @@ const DefaultStory = () => {
       <TableComponent.Root>
         <TableComponent.Main
           model={contactModel}
-          schema={DataType.Person.Person}
+          schema={Person.Person}
           presentation={contactPresentation}
           onCreate={handleCreate}
           client={client}
@@ -134,7 +135,7 @@ const meta = {
     // TODO(thure): Shouldn’t `layout: 'fullscreen'` below make this unnecessary?
     withLayout({ classNames: 'fixed inset-0' }),
     withClientProvider({
-      types: [DataType.View.View, DataType.Organization.Organization, DataType.Person.Person, Table.Table],
+      types: [View.View, Organization.Organization, Person.Person, Table.Table],
       createIdentity: true,
       createSpace: true,
     }),

@@ -13,7 +13,6 @@ import { type CancellableInvitationObservable, Invitation, InvitationEncoder } f
 import { Button, Clipboard, Icon, Input, useId, useTranslation } from '@dxos/react-ui';
 import { ControlFrame, ControlFrameItem, ControlItemInput, ControlPage, ControlSection } from '@dxos/react-ui-form';
 import { StackItem } from '@dxos/react-ui-stack';
-import { DataType } from '@dxos/schema';
 import {
   type ActionMenuItem,
   AuthCode,
@@ -63,7 +62,7 @@ export const MembersContainer = ({ space, createInvitationUrl }: MembersContaine
   };
 
   // TODO(wittjosiah): Track which was the most recently viewed object.
-  const target = space.properties[DataType.Collection.Collection.typename]?.target?.objects[0]?.target;
+  const target = space.properties[Collection.Collection.typename]?.target?.objects[0]?.target;
 
   const locked = space.properties[COMPOSER_SPACE_LOCK];
   const handleChangeLocked = useCallback(() => {

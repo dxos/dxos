@@ -12,7 +12,7 @@ import * as Schema from 'effect/Schema';
 import { Filter, Obj, Query, Ref, type Type } from '@dxos/echo';
 import { DatabaseService, defineFunction, withAuthorization } from '@dxos/functions';
 import { log } from '@dxos/log';
-import { DataType } from '@dxos/schema';
+import { Person, Project, Task } from '@dxos/types';
 
 import { syncObjects } from '../../sync';
 import { graphqlRequestBody } from '../../util';
@@ -87,7 +87,7 @@ export default defineFunction({
     const client = yield* HttpClient.HttpClient.pipe(Effect.map(withAuthorization({ service: 'linear.app' })));
 
     // Get the timestamp that was previosly synced.
-    const after = yield* getLatestUpdateTimestamp(data.team, DataType.Task.Task);
+    const after = yield* getLatestUpdateTimestamp(data.team, Task.Task);
     log.info('will fetch', { after });
 
     // Fetch the issues that have changed since the last sync.
@@ -126,8 +126,8 @@ const getLatestUpdateTimestamp: (
   );
 });
 
-const mapLinearPerson = (person: LinearPerson, { teamId }: { teamId: string }): DataType.Person.Person =>
-  Obj.make(DataType.Person.Person, {
+const mapLinearPerson = (person: LinearPerson, { teamId }: { teamId: string }): Person.Person =>
+  Obj.make(Person.Person, {
     [Obj.Meta]: {
       keys: [
         {
@@ -143,8 +143,8 @@ const mapLinearPerson = (person: LinearPerson, { teamId }: { teamId: string }): 
     nickname: person.name,
   });
 
-const mapLinearIssue = (issue: LinearIssue, { teamId }: { teamId: string }): DataType.Task.Task =>
-  Obj.make(DataType.Task.Task, {
+const mapLinearIssue = (issue: LinearIssue, { teamId }: { teamId: string }): Task.Task =>
+  Obj.make(Task.Task, {
     [Obj.Meta]: {
       keys: [
         {
@@ -170,7 +170,7 @@ const mapLinearIssue = (issue: LinearIssue, { teamId }: { teamId: string }): Dat
     project: !issue.project
       ? undefined
       : Ref.make(
-          DataType.Project.make({
+          Project.make({
             [Obj.Meta]: {
               keys: [
                 {

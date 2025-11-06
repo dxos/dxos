@@ -5,7 +5,7 @@
 import * as Schema from 'effect/Schema';
 
 import { SpaceSchema } from '@dxos/client/echo';
-import { DataType } from '@dxos/schema';
+import { Message } from '@dxos/types';
 
 import { meta } from '../meta';
 
@@ -37,7 +37,7 @@ export namespace InboxAction {
   export class SelectMessage extends Schema.TaggedClass<SelectMessage>()(`${INBOX_ACTION}/select-message`, {
     input: Schema.Struct({
       mailboxId: Schema.String,
-      message: Schema.optional(DataType.Message.Message),
+      message: Schema.optional(Message.Message),
     }),
     output: Schema.Void,
   }) {}
@@ -45,7 +45,7 @@ export namespace InboxAction {
   export class ExtractContact extends Schema.TaggedClass<ExtractContact>()(`${INBOX_ACTION}/extract-contact`, {
     input: Schema.Struct({
       space: SpaceSchema,
-      message: DataType.Message.Message,
+      message: Message.Message,
     }),
     output: Schema.Void,
   }) {}

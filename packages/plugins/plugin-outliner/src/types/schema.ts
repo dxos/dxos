@@ -5,7 +5,6 @@
 import * as Schema from 'effect/Schema';
 
 import { Obj, Ref, Type } from '@dxos/echo';
-import { DataType } from '@dxos/schema';
 
 import { getDateString } from './util';
 
@@ -15,7 +14,7 @@ import { getDateString } from './util';
 
 export const OutlineType = Schema.Struct({
   name: Schema.optional(Schema.String),
-  content: Type.Ref(DataType.Text.Text),
+  content: Type.Ref(Text.Text),
 }).pipe(
   Type.Obj({
     typename: 'dxos.org/type/Outline',
@@ -32,7 +31,7 @@ export interface OutlineType extends Schema.Schema.Type<typeof OutlineType> {}
 export const JournalEntryType = Schema.Struct({
   id: Schema.String,
   date: Schema.String,
-  content: Type.Ref(DataType.Text.Text),
+  content: Type.Ref(Text.Text),
 }).pipe(
   Type.Obj({
     typename: 'dxos.org/type/JournalEntry',
@@ -62,7 +61,7 @@ export interface JournalType extends Schema.Schema.Type<typeof JournalType> {}
 export const createOutline = (name?: string, content?: string): OutlineType => {
   return Obj.make(OutlineType, {
     name,
-    content: Ref.make(DataType.Text.make(content)),
+    content: Ref.make(Text.make(content)),
   });
 };
 
@@ -76,7 +75,7 @@ export const createJournal = (name?: string): JournalType => {
 export const createJournalEntry = (date = new Date()): JournalEntryType => {
   return Obj.make(JournalEntryType, {
     date: getDateString(date),
-    content: Ref.make(DataType.Text.make()),
+    content: Ref.make(Text.make()),
   });
 };
 

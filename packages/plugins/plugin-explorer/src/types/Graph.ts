@@ -6,7 +6,6 @@ import * as Schema from 'effect/Schema';
 
 import { Filter, Obj, Query, QueryAST, Type } from '@dxos/echo';
 import { LabelAnnotation, ViewAnnotation } from '@dxos/echo/internal';
-import { DataType } from '@dxos/schema';
 
 export const Graph = Schema.Struct({
   name: Schema.optional(Schema.String),
@@ -32,7 +31,7 @@ export const make = (
   props: Obj.MakeProps<typeof Graph> = { query: { raw: '', ast: Query.select(Filter.nothing()).ast } },
 ) => Obj.make(Graph, props);
 
-type MakeViewProps = Omit<DataType.View.MakeFromSpaceProps, 'presentation'> & {
+type MakeViewProps = Omit<View.MakeFromSpaceProps, 'presentation'> & {
   presentation?: Omit<Obj.MakeProps<typeof Graph>, 'name'>;
 };
 
@@ -41,5 +40,5 @@ type MakeViewProps = Omit<DataType.View.MakeFromSpaceProps, 'presentation'> & {
  */
 export const makeView = async ({ presentation, ...props }: MakeViewProps) => {
   const graph = make(presentation);
-  return DataType.View.makeFromSpace({ ...props, presentation: graph });
+  return View.makeFromSpace({ ...props, presentation: graph });
 };

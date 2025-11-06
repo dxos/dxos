@@ -28,7 +28,6 @@ import {
   type DxGridPosition,
 } from '@dxos/react-ui-grid';
 import {
-  type DataType,
   type FieldSortType,
   ProjectionModel,
   type PropertyType,
@@ -78,7 +77,7 @@ const defaultFeatures: TableFeatures = {
 export type InsertRowResult = 'draft' | 'final';
 
 export type TableModelProps<T extends TableRow = TableRow> = {
-  view: DataType.View.View;
+  view: View.View;
   schema: JsonSchemaType;
   projection?: ProjectionModel;
   features?: Partial<TableFeatures>;
@@ -96,7 +95,7 @@ export type TableModelProps<T extends TableRow = TableRow> = {
 };
 
 export class TableModel<T extends TableRow = TableRow> extends Resource {
-  private readonly _view: DataType.View.View;
+  private readonly _view: View.View;
   private readonly _projection: ProjectionModel;
   private _table?: Table.Table;
 
@@ -179,7 +178,7 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
     return fullyQualifiedId(this._view);
   }
 
-  public get view(): DataType.View.View {
+  public get view(): View.View {
     return this._view;
   }
 

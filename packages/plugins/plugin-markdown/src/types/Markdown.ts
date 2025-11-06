@@ -7,7 +7,6 @@ import * as Schema from 'effect/Schema';
 import { Obj, Ref, Type } from '@dxos/echo';
 import { DescriptionAnnotation, FormAnnotation, LabelAnnotation } from '@dxos/echo/internal';
 import { EditorInputMode, EditorViewMode } from '@dxos/react-ui-editor/types';
-import { DataType, ItemAnnotation } from '@dxos/schema';
 
 /**
  * Document Item type.
@@ -16,7 +15,7 @@ export const Document = Schema.Struct({
   name: Schema.optional(Schema.String),
   description: Schema.optional(Schema.String),
   fallbackName: Schema.String.pipe(FormAnnotation.set(false), Schema.optional),
-  content: Type.Ref(DataType.Text.Text).pipe(FormAnnotation.set(false)),
+  content: Type.Ref(Text.Text).pipe(FormAnnotation.set(false)),
 }).pipe(
   Type.Obj({
     typename: 'dxos.org/type/Document',
@@ -36,7 +35,7 @@ export const makeDocument = ({
   content = '',
   ...props
 }: Partial<{ name: string; fallbackName: string; content: string }> = {}) =>
-  Obj.make(Document, { ...props, content: Ref.make(DataType.Text.make(content)) });
+  Obj.make(Document, { ...props, content: Ref.make(Text.make(content)) });
 
 /**
  * Plugin settings.

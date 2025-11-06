@@ -21,7 +21,7 @@ import * as Schema from 'effect/Schema';
 import { Obj } from '@dxos/echo';
 import { CredentialsService, TracingService, defineFunction } from '@dxos/functions';
 import { log } from '@dxos/log';
-import { DataType } from '@dxos/schema';
+import { Message } from '@dxos/types';
 
 // TODO(dmaretskyi): Extract.
 const TimeRange = class extends Schema.String.pipe(Schema.pattern(/\d+(s|m|h|d)/)).annotations({
@@ -71,7 +71,7 @@ const DEFAULT_IGNORE_USERNAMES = ['GitHub', 'Needle'];
 type Thread = {
   discordChannelId: string;
   name?: string;
-  messages: DataType.Message.Message[];
+  messages: Message.Message[];
 };
 
 export default defineFunction({
@@ -141,9 +141,9 @@ export default defineFunction({
       const threads = yield* Effect.forEach(
         channels,
         Effect.fnUntraced(function* (channel) {
-          const allMessages: DataType.Message.Message[] = [];
+          const allMessages: Message.Message[] = [];
 
-          let lastMessage: Option.Option<DataType.Message.Message> = Option.none();
+          let lastMessage: Option.Option<Message.Message> = Option.none();
           while (true) {
             const { id: lastId = undefined } = Function.pipe(
               lastMessage,
@@ -188,7 +188,7 @@ export default defineFunction({
             messages: allMessages
               .filter((message) => !message.sender.name || !ignoreUsernames.includes(message.sender.name))
               .filter((message) =>
-                message.blocks.some((block) => block._tag === 'text' && block.text.trim().length > 0),
+                message.blocks.some((block: any) => block._tag === 'text' && block.text.trim().length > 0),
               ),
           } satisfies Thread;
         }),
@@ -222,8 +222,8 @@ const parseSnowflake = (snowflake: string): Date => {
   return new Date(Number((BigInt(snowflake) >> 22n) + discordEpoch));
 };
 
-const makeMessage = (message: MessageResponse): DataType.Message.Message =>
-  Obj.make(DataType.Message.Message, {
+const makeMessage = (message: MessageResponse): Message.Message =>
+  Obj.make(Message.Message, {
     [Obj.Meta]: {
       keys: [
         { id: message.id, source: 'discord.com' },
@@ -243,8 +243,8 @@ const serializeThread = (thread: Thread): string => {
     .map(
       (message) =>
         `  ${message.sender.name}: ${message.blocks
-          .filter((block) => block._tag === 'text')
-          .map((block) => block.text)
+          .filter((block: any) => block._tag === 'text')
+          .map((block: any) => block.text)
           .join(' ')}`,
     )
     .join('\n')}\n</thread>`;

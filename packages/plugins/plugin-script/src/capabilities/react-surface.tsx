@@ -11,7 +11,6 @@ import { Script } from '@dxos/functions';
 import { SettingsStore } from '@dxos/local-storage';
 import { getSpace } from '@dxos/react-client/echo';
 import { StackItem } from '@dxos/react-ui-stack';
-import { type DataType } from '@dxos/schema';
 
 import {
   DEPLOYMENT_DIALOG,
@@ -95,7 +94,7 @@ export default () =>
     createSurface({
       id: DEPLOYMENT_DIALOG,
       role: 'dialog',
-      filter: (data): data is { props: { accessToken: DataType.AccessToken.AccessToken; scriptTemplates: any } } =>
+      filter: (data): data is { props: { accessToken: AccessToken.AccessToken; scriptTemplates: any } } =>
         data.component === DEPLOYMENT_DIALOG,
       component: ({ data }) => <DeploymentDialog {...data.props} />,
     }),

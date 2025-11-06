@@ -8,7 +8,6 @@ import { Capabilities, contributes, createSurface } from '@dxos/app-framework';
 import { Obj } from '@dxos/echo';
 import { SettingsStore } from '@dxos/local-storage';
 import { Markdown } from '@dxos/plugin-markdown/types';
-import { DataType } from '@dxos/schema';
 
 import {
   CollectionPresenterContainer,
@@ -38,13 +37,13 @@ export default () =>
       id: `${meta.id}/collection`,
       role: 'article',
       position: 'hoist',
-      filter: (data): data is { subject: { type: typeof meta.id; object: DataType.Collection.Collection } } =>
+      filter: (data): data is { subject: { type: typeof meta.id; object: Collection.Collection } } =>
         !!data.subject &&
         typeof data.subject === 'object' &&
         'type' in data.subject &&
         'object' in data.subject &&
         data.subject.type === meta.id &&
-        Obj.instanceOf(DataType.Collection.Collection, data.subject.object),
+        Obj.instanceOf(Collection.Collection, data.subject.object),
       component: ({ data }) => <CollectionPresenterContainer collection={data.subject.object} />,
     }),
     createSurface({

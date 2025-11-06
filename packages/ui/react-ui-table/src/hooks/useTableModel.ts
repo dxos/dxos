@@ -10,13 +10,13 @@ import { type JsonSchemaType } from '@dxos/echo/internal';
 import { type Live } from '@dxos/live-object';
 import { fullyQualifiedId } from '@dxos/react-client/echo';
 import { useSelected, useSelectionActions } from '@dxos/react-ui-attention';
-import { type DataType, type ProjectionModel } from '@dxos/schema';
+import { type ProjectionModel, type View } from '@dxos/schema';
 import { isNonNullable } from '@dxos/util';
 
 import { TableModel, type TableModelProps, type TableRow, type TableRowAction } from '../model';
 
 export type UseTableModelParams<T extends TableRow = TableRow> = {
-  view?: DataType.View.View;
+  view?: View.View;
   schema?: JsonSchemaType;
   projection?: ProjectionModel;
   rows?: Live<T>[];

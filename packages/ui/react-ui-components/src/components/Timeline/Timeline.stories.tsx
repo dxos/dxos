@@ -14,7 +14,7 @@ import { withClientProvider } from '@dxos/react-client/testing';
 import { Button, Toolbar, useAsyncEffect, useInterval } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { type ScrollController, useExecutionGraph } from '@dxos/react-ui-components';
-import { DataType } from '@dxos/schema';
+import { Message } from '@dxos/types';
 
 import { research } from './testing';
 import { type Commit, Timeline } from './Timeline';
@@ -311,7 +311,7 @@ export const Streaming: Story = {
 //
 
 const toolCalls = [
-  Obj.make(DataType.Message.Message, {
+  Obj.make(Message.Message, {
     created: '2025-09-25T19:51:53.086Z',
     sender: {
       role: 'assistant',
@@ -340,7 +340,7 @@ const toolCalls = [
     ],
     properties: {},
   }),
-  Obj.make(DataType.Message.Message, {
+  Obj.make(Message.Message, {
     created: '2025-09-25T19:51:59.898Z',
     sender: {
       role: 'assistant',
@@ -380,7 +380,7 @@ const testExecutionGraph = [
     created: '2025-09-25T19:51:39.014Z',
     message: 'Running Research',
   }),
-  Obj.make(DataType.Message.Message, {
+  Obj.make(Message.Message, {
     created: '2025-09-25T19:51:39.014Z',
     sender: {
       role: 'user',
@@ -393,7 +393,7 @@ const testExecutionGraph = [
     ],
     properties: {},
   }),
-  Obj.make(DataType.Message.Message, {
+  Obj.make(Message.Message, {
     created: '2025-09-25T19:51:44.250Z',
     sender: {
       role: 'assistant',
@@ -426,7 +426,7 @@ const testExecutionGraph = [
     ],
     properties: {},
   }),
-  Obj.make(DataType.Message.Message, {
+  Obj.make(Message.Message, {
     created: '2025-09-25T19:51:44.267Z',
     sender: {
       role: 'user',
@@ -450,7 +450,7 @@ const testExecutionGraph = [
     toolCallId: 'toolu_0135wZiFUzdmKpPFzeEXxt6e',
     message: 'Creating research note...',
   }),
-  Obj.make(DataType.Message.Message, {
+  Obj.make(Message.Message, {
     created: '2025-09-25T19:51:53.228Z',
     sender: {
       role: 'user',
@@ -473,7 +473,7 @@ const testExecutionGraph = [
     toolCallId: 'toolu_01XVw86GhNb2Y7piyykdePdQ',
     message: 'Creating research note...',
   }),
-  Obj.make(DataType.Message.Message, {
+  Obj.make(Message.Message, {
     created: '2025-09-25T19:51:59.934Z',
     sender: {
       role: 'user',
@@ -489,7 +489,7 @@ const testExecutionGraph = [
     ],
     properties: {},
   }),
-  Obj.make(DataType.Message.Message, {
+  Obj.make(Message.Message, {
     created: '2025-09-25T19:52:06.559Z',
     sender: {
       role: 'assistant',

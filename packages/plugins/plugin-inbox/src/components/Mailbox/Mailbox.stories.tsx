@@ -19,8 +19,8 @@ import { withTheme } from '@dxos/react-ui/testing';
 import { useAttentionAttributes } from '@dxos/react-ui-attention';
 import { withAttention } from '@dxos/react-ui-attention/testing';
 import { defaultTx } from '@dxos/react-ui-theme';
-import { DataType } from '@dxos/schema';
 import { render } from '@dxos/storybook-utils';
+import { Message, Person } from '@dxos/types';
 
 import { InboxCapabilities } from '../../capabilities';
 import { InboxPlugin } from '../../InboxPlugin';
@@ -82,7 +82,7 @@ export const WithCompanion: Story = {
     withPluginManager({
       plugins: [
         ClientPlugin({
-          types: [Mailbox.Mailbox, DataType.Message.Message, DataType.Person.Person],
+          types: [Mailbox.Mailbox, Message.Message, Person.Person],
           onClientInitialized: async ({ client }) => {
             await client.halo.createIdentity();
             await client.spaces.waitUntilReady();

@@ -11,7 +11,7 @@ import { EchoTestBuilder } from '@dxos/echo-db/testing';
 import { type ServiceContainer } from '@dxos/functions';
 import { createTestServices } from '@dxos/functions/testing';
 import { log } from '@dxos/log';
-import { DataType } from '@dxos/schema';
+import { Message } from '@dxos/types';
 
 import { ValueBag } from '../../types';
 
@@ -64,7 +64,7 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('gptNode', () => {
         const conversation = queues.create();
         yield* Effect.promise(() =>
           conversation.append([
-            Obj.make(DataType.Message.Message, {
+            Obj.make(Message.Message, {
               created: new Date().toISOString(),
               sender: { role: 'user' },
               blocks: [{ _tag: 'text', text: 'I have 10 apples in my bag' }],
@@ -86,7 +86,7 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('gptNode', () => {
         expect(output.text.length).toBeGreaterThan(10);
 
         const conversationMessages = yield* Effect.promise(() =>
-          queues.get<DataType.Message.Message>(conversation.dxn).queryObjects(),
+          queues.get<Message.Message>(conversation.dxn).queryObjects(),
         );
         log.info('conversationMessages', { conversationMessages });
         expect(conversationMessages.at(-1)?.sender.role).toEqual('assistant');

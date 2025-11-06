@@ -10,11 +10,12 @@ import { invariant } from '@dxos/invariant';
 import { useClient } from '@dxos/react-client';
 import { getSpace, useSchema } from '@dxos/react-client/echo';
 import { ViewEditor as NaturalViewEditor } from '@dxos/react-ui-form';
-import { type DataType, getTypenameFromQuery } from '@dxos/schema';
+import { getTypenameFromQuery } from '@dxos/schema';
+import { type View } from '@dxos/schema';
 
 import { SpaceAction } from '../types';
 
-export type ViewEditorProps = { view: DataType.View.View };
+export type ViewEditorProps = { view: View.View };
 
 export const ViewEditor = ({ view }: ViewEditorProps) => {
   const { dispatchPromise: dispatch } = useIntentDispatcher();

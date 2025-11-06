@@ -247,6 +247,9 @@
       "path": "../../sdk/shell"
     },
     {
+      "path": "../../sdk/types"
+    },
+    {
       "path": "../../ui/brand"
     },
     {

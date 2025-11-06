@@ -8,13 +8,11 @@ import { Obj } from '@dxos/echo';
 import { ContextQueueService, DatabaseService } from '@dxos/functions';
 import { faker } from '@dxos/random';
 import { renderObjectLink } from '@dxos/react-ui-components';
-import { DataType } from '@dxos/schema';
+import { type Actor, type ContentBlock, Message, Organization } from '@dxos/types';
 import { trim } from '@dxos/util';
 
-import ContentBlock = DataType.ContentBlock;
-
-export const createMessage = (role: DataType.Actor.Role, blocks: ContentBlock.Any[]): DataType.Message.Message => {
-  return Obj.make(DataType.Message.Message, {
+export const createMessage = (role: Actor.Role, blocks: ContentBlock.Any[]): Message.Message => {
+  return Obj.make(Message.Message, {
     created: new Date().toISOString(),
     sender: { role },
     blocks,
@@ -148,10 +146,10 @@ export const createMessageGenerator = (): MessageGenerator[] => [
   Effect.gen(function* () {
     const { queue } = yield* ContextQueueService;
     const { db } = yield* DatabaseService;
-    const obj1 = db.add(Obj.make(DataType.Organization.Organization, { name: 'DXOS' }));
-    // const obj2 = db.add(Obj.make(DataType.Person.Person, { fullName: 'Alice' }));
-    // const obj3 = db.add(Obj.make(DataType.Person.Person, { fullName: 'Bob' }));
-    // const obj4 = db.add(Obj.make(DataType.Person.Person, { fullName: 'Charlie' }));
+    const obj1 = db.add(Obj.make(Organization.Organization, { name: 'DXOS' }));
+    // const obj2 = db.add(Obj.make(Person.Person, { fullName: 'Alice' }));
+    // const obj3 = db.add(Obj.make(Person.Person, { fullName: 'Bob' }));
+    // const obj4 = db.add(Obj.make(Person.Person, { fullName: 'Charlie' }));
     yield* Effect.promise(() =>
       queue.append([
         createMessage('assistant', [

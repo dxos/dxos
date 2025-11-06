@@ -11,7 +11,6 @@ import { Obj } from '@dxos/echo';
 import { fullyQualifiedId, getSpace } from '@dxos/react-client/echo';
 import { type SelectionManager } from '@dxos/react-ui-attention';
 import { StackItem } from '@dxos/react-ui-stack';
-import { DataType } from '@dxos/schema';
 
 import { MarkdownCapabilities } from '../capabilities';
 import { type DocumentType, useLinkQuery } from '../hooks';
@@ -47,7 +46,7 @@ export const MarkdownContainer = ({
 }: MarkdownContainerProps) => {
   const space = getSpace(object);
   const isDocument = Obj.instanceOf(Markdown.Document, object);
-  const isText = Obj.instanceOf(DataType.Text.Text, object);
+  const isText = Obj.instanceOf(Text.Text, object);
   const attendableId = isDocument ? fullyQualifiedId(object) : undefined;
 
   // Extensions from other plugins.

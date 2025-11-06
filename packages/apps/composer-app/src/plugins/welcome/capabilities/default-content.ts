@@ -15,7 +15,7 @@ export default async (context: PluginContext) => {
   const { fullyQualifiedId } = await import('@dxos/react-client/echo');
   const { ClientCapabilities } = await import('@dxos/plugin-client');
   const { Markdown } = await import('@dxos/plugin-markdown/types');
-  const { DataType, StoredSchema } = await import('@dxos/schema');
+  const { Collection, StoredSchema } = await import('@dxos/schema');
 
   const { dispatchPromise: dispatch } = context.getCapability(Capabilities.IntentDispatcher);
   const { graph } = context.getCapability(Capabilities.AppGraph);
@@ -29,12 +29,12 @@ export default async (context: PluginContext) => {
     content: README_CONTENT,
   });
 
-  const defaultSpaceCollection = space.properties[DataType.Collection.Collection.typename].target;
+  const defaultSpaceCollection = space.properties[Collection.Collection.typename].target;
 
   defaultSpaceCollection?.objects.push(Ref.make(readme));
   defaultSpaceCollection?.objects.push(
     Ref.make(
-      Obj.make(DataType.Collection.QueryCollection, {
+      Obj.make(Collection.QueryCollection, {
         // NOTE: This is specifically Filter.typename due to current limitations in query collection parsing.
         query: Query.select(Filter.typename(StoredSchema.typename)).ast,
       }),

@@ -4,7 +4,7 @@
 
 import { Capabilities, contributes, createResolver } from '@dxos/app-framework';
 import { Obj, Ref } from '@dxos/echo';
-import { DataType } from '@dxos/schema';
+import { Task } from '@dxos/types';
 
 import { JournalType, OutlinerAction, createJournalEntry, createOutline } from '../types';
 
@@ -34,7 +34,7 @@ export default () =>
       resolve: ({ text }) => {
         return {
           data: {
-            object: Obj.make(DataType.Task.Task, { title: text }),
+            object: Obj.make(Task.Task, { title: text }),
           },
         };
       },

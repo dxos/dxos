@@ -7,7 +7,7 @@ import * as Schema from 'effect/Schema';
 import { Blueprint } from '@dxos/blueprints';
 import { EchoObjectSchema, SpaceSchema } from '@dxos/client/echo';
 import { Sequence } from '@dxos/conductor';
-import { DataType } from '@dxos/schema';
+import { Collection } from '@dxos/schema';
 
 import { meta } from '../meta';
 
@@ -17,7 +17,7 @@ import { Chat } from './Assistant';
 export class onCreateSpace extends Schema.TaggedClass<onCreateSpace>()(`${meta.id}/on-space-created`, {
   input: Schema.Struct({
     space: SpaceSchema,
-    rootCollection: DataType.Collection.Collection,
+    rootCollection: Collection.Collection,
   }),
   output: Schema.Void,
 }) {}

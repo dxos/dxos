@@ -11,7 +11,6 @@ import { Obj } from '@dxos/echo';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { Dialog } from '@dxos/react-ui';
 import { withTheme } from '@dxos/react-ui/testing';
-import { DataType } from '@dxos/schema';
 
 import { translations } from '../../translations';
 
@@ -45,7 +44,7 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
   args: {
-    accessToken: Obj.make(DataType.AccessToken.AccessToken, {
+    accessToken: Obj.make(AccessToken.AccessToken, {
       source: 'example.com',
       token: 'example-token',
     }),

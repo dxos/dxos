@@ -23,7 +23,7 @@ import {
 import { type QueryResult, type Space, SpaceState, fullyQualifiedId, getSpace, isSpace } from '@dxos/react-client/echo';
 import { ATTENDABLE_PATH_SEPARATOR } from '@dxos/react-ui-attention';
 import { type TreeData } from '@dxos/react-ui-list';
-import { DataType, StoredSchema, getTypenameFromQuery } from '@dxos/schema';
+import { Collection, StoredSchema, View, getTypenameFromQuery } from '@dxos/schema';
 
 import { meta } from './meta';
 import { type ObjectForm, SPACE_TYPE, SpaceAction } from './types';
@@ -66,7 +66,7 @@ const getCollectionGraphNodePartials = ({
   space,
   resolve,
 }: {
-  collection: DataType.Collection.Collection;
+  collection: Collection.Collection;
   space: Space;
   resolve: (typename: string) => Record<string, any>;
 }) => {
@@ -141,7 +141,7 @@ const getQueryCollectionNodePartials = ({
   space,
   resolve,
 }: {
-  collection: DataType.Collection.QueryCollection;
+  collection: Collection.QueryCollection;
   space: Space;
   resolve: (typename: string) => Record<string, any>;
 }) => {
@@ -178,7 +178,7 @@ const getViewGraphNodePartials = ({
   view,
   resolve,
 }: {
-  view: DataType.View.View;
+  view: View.View;
   resolve: (typename: string) => Record<string, any>;
 }) => {
   const presentation = view.presentation.target;
@@ -217,9 +217,9 @@ export const constructSpaceNode = ({
 }) => {
   const hasPendingMigration = checkPendingMigration(space);
   const collection =
-    space.state.get() === SpaceState.SPACE_READY && space.properties[DataType.Collection.Collection.typename]?.target;
+    space.state.get() === SpaceState.SPACE_READY && space.properties[Collection.Collection.typename]?.target;
   const partials =
-    space.state.get() === SpaceState.SPACE_READY && Obj.instanceOf(DataType.Collection.Collection, collection)
+    space.state.get() === SpaceState.SPACE_READY && Obj.instanceOf(Collection.Collection, collection)
       ? getCollectionGraphNodePartials({ collection, space, resolve })
       : {};
 
@@ -468,13 +468,13 @@ export const createObjectNode = ({
   }
 
   const metadata = resolve(type);
-  const partials = Obj.instanceOf(DataType.Collection.Collection, object)
+  const partials = Obj.instanceOf(Collection.Collection, object)
     ? getCollectionGraphNodePartials({ collection: object, space, resolve })
-    : Obj.instanceOf(DataType.Collection.QueryCollection, object)
+    : Obj.instanceOf(Collection.QueryCollection, object)
       ? getQueryCollectionNodePartials({ collection: object, space, resolve })
       : Obj.instanceOf(StoredSchema, object)
         ? getSchemaGraphNodePartials()
-        : Obj.instanceOf(DataType.View.View, object)
+        : Obj.instanceOf(View.View, object)
           ? getViewGraphNodePartials({ view: object, resolve })
           : metadata.graphProps;
 
@@ -487,9 +487,9 @@ export const createObjectNode = ({
 
   const selectable =
     (!Obj.instanceOf(StoredSchema, object) &&
-      !Obj.instanceOf(DataType.Collection.QueryCollection, object) &&
-      !Obj.instanceOf(DataType.Collection.Collection, object)) ||
-    (navigable && Obj.instanceOf(DataType.Collection.Collection, object));
+      !Obj.instanceOf(Collection.QueryCollection, object) &&
+      !Obj.instanceOf(Collection.Collection, object)) ||
+    (navigable && Obj.instanceOf(Collection.Collection, object));
 
   return {
     id: fullyQualifiedId(object),
@@ -535,13 +535,13 @@ export const constructObjectActions = ({
 
   const getId = (id: string) => `${id}/${fullyQualifiedId(object)}`;
 
-  const queryCollection = Obj.instanceOf(DataType.Collection.QueryCollection, object) ? object : undefined;
+  const queryCollection = Obj.instanceOf(Collection.QueryCollection, object) ? object : undefined;
   const matchingObjectForm = queryCollection
     ? objectForms.find((form) => Type.getTypename(form.objectSchema) === getTypenameFromQuery(queryCollection.query))
     : undefined;
 
   const actions: NodeArg<ActionData>[] = [
-    ...(Obj.instanceOf(DataType.Collection.Collection, object)
+    ...(Obj.instanceOf(Collection.Collection, object)
       ? [
           {
             id: getId(SpaceAction.OpenCreateObject._tag),
@@ -636,7 +636,7 @@ export const constructObjectActions = ({
       data: async () => {
         const collection = graph
           .getConnections(fullyQualifiedId(object), 'inbound')
-          .find(({ data }) => Obj.instanceOf(DataType.Collection.Collection, data))?.data;
+          .find(({ data }) => Obj.instanceOf(Collection.Collection, data))?.data;
         await dispatch(createIntent(SpaceAction.RemoveObjects, { objects: [object], target: collection }));
       },
       properties: {
@@ -650,8 +650,8 @@ export const constructObjectActions = ({
       },
     },
     ...(navigable ||
-    (!Obj.instanceOf(DataType.Collection.Collection, object) &&
-      !Obj.instanceOf(DataType.Collection.QueryCollection, object) &&
+    (!Obj.instanceOf(Collection.Collection, object) &&
+      !Obj.instanceOf(Collection.QueryCollection, object) &&
       !Obj.instanceOf(StoredSchema, object))
       ? [
           {

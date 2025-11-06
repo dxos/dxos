@@ -8,7 +8,6 @@ import * as Schema from 'effect/Schema';
 import { ArtifactId } from '@dxos/assistant';
 import { Obj } from '@dxos/echo';
 import { defineFunction } from '@dxos/functions';
-import { DataType } from '@dxos/schema';
 
 import { Markdown } from '../types';
 
@@ -25,7 +24,7 @@ export default defineFunction({
   }),
   handler: Effect.fn(function* ({ data: { name, content } }) {
     const object = Markdown.makeDocument({ name, content });
-    yield* DataType.Collection.add({ object });
+    yield* Collection.add({ object });
 
     return {
       id: Obj.getDXN(object).toString(),

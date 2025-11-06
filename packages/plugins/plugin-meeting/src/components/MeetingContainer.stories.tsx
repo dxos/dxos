@@ -18,7 +18,6 @@ import { Transcript } from '@dxos/plugin-transcription/types';
 import { Query, useQuery, useSpace } from '@dxos/react-client/echo';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { defaultTx } from '@dxos/react-ui-theme';
-import { DataType } from '@dxos/schema';
 import { Message } from '@dxos/types';
 
 import { translations } from '../translations';
@@ -60,8 +59,8 @@ const meta = {
                 created: new Date().toISOString(),
                 participants: [],
                 transcript: Ref.make(Transcript.makeTranscript(space.queues.create().dxn)),
-                notes: Ref.make(DataType.Text.make('Notes')),
-                summary: Ref.make(DataType.Text.make()),
+                notes: Ref.make(Text.make('Notes')),
+                summary: Ref.make(Text.make()),
                 thread: Ref.make(Thread.make()),
               }),
             );

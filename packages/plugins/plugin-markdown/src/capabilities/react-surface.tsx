@@ -9,7 +9,6 @@ import { Obj } from '@dxos/echo';
 import { SettingsStore } from '@dxos/local-storage';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
 import { fullyQualifiedId } from '@dxos/react-client/echo';
-import { DataType } from '@dxos/schema';
 
 import { MarkdownCard, MarkdownContainer, type MarkdownContainerProps, MarkdownSettings } from '../components';
 import { meta } from '../meta';
@@ -32,13 +31,13 @@ export default () =>
     createSurface({
       id: `${meta.id}/surface/text`,
       role: ['article', 'section', 'tabpanel'],
-      filter: (data): data is { id: string; subject: DataType.Text.Text } =>
-        typeof data.id === 'string' && Obj.instanceOf(DataType.Text.Text, data.subject),
+      filter: (data): data is { id: string; subject: Text.Text } =>
+        typeof data.id === 'string' && Obj.instanceOf(Text.Text, data.subject),
       component: ({ data, role }) => {
         return <Container id={data.id} subject={data.subject} role={role} />;
       },
     }),
-    // TODO(burdon): Remove this variant and conform to DataType.Text.
+    // TODO(burdon): Remove this variant and conform to Text.
     createSurface({
       id: `${meta.id}/surface/editor`,
       role: ['article', 'section'],
@@ -57,8 +56,8 @@ export default () =>
     createSurface({
       id: `${meta.id}/surface/preview`,
       role: ['card--popover', 'card--intrinsic', 'card--extrinsic', 'card--transclusion', 'card'],
-      filter: (data): data is { subject: Markdown.Document | DataType.Text.Text } =>
-        Obj.instanceOf(Markdown.Document, data.subject) || Obj.instanceOf(DataType.Text.Text, data.subject),
+      filter: (data): data is { subject: Markdown.Document | Text.Text } =>
+        Obj.instanceOf(Markdown.Document, data.subject) || Obj.instanceOf(Text.Text, data.subject),
       component: ({ data, role }) => <MarkdownCard {...data} role={role} />,
     }),
   ]);
