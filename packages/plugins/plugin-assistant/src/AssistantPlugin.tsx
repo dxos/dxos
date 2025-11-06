@@ -67,6 +67,13 @@ export const AssistantPlugin = definePlugin(meta, () => [
         },
       }),
       contributes(Capabilities.Metadata, {
+        id: Type.getTypename(Prompt.Prompt),
+        metadata: {
+          icon: 'ph--scroll--regular',
+          iconHue: 'sky',
+        },
+      }),
+      contributes(Capabilities.Metadata, {
         id: Type.getTypename(Sequence),
         metadata: {
           icon: 'ph--circuitry--regular',
@@ -97,6 +104,13 @@ export const AssistantPlugin = definePlugin(meta, () => [
       contributes(
         SpaceCapabilities.ObjectForm,
         defineObjectForm({
+          objectSchema: Prompt.Prompt,
+          getIntent: () => createIntent(AssistantAction.CreatePrompt),
+        }),
+      ),
+      contributes(
+        SpaceCapabilities.ObjectForm,
+        defineObjectForm({
           objectSchema: Sequence,
           getIntent: () => createIntent(AssistantAction.CreateSequence),
         }),
@@ -112,7 +126,6 @@ export const AssistantPlugin = definePlugin(meta, () => [
         Assistant.CompanionTo,
         ResearchGraph,
         DataType.HasSubject.HasSubject,
-        Prompt.Prompt,
       ]),
   }),
   defineModule({

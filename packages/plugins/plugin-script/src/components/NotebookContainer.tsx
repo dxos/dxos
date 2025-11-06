@@ -221,7 +221,7 @@ export const NotebookContainer = ({ notebook, env }: NotebookContainerProps) => 
 
 export default NotebookContainer;
 
-// TODO(wittjosiah): Factor out. Copied from PromptContainer in stories-assistant.
+// TODO(wittjosiah): Factor out. Copied from PromptArticle in plugin-assistant.
 const runPrompt = Effect.fn(function* ({
   prompt,
   input,
