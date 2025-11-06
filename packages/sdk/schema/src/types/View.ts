@@ -30,7 +30,7 @@ import { type Live } from '@dxos/live-object';
 
 import { FieldSchema, FieldSortType, ProjectionModel, getSchemaProperties } from '../projection';
 
-import { createDefaultSchema } from './util';
+import { createDefaultSchema, getSchema } from './util';
 
 export const Projection = Schema.Struct({
   /**
@@ -312,25 +312,4 @@ export const makeFromSpace = async ({
       echoRegistry: space.db.schemaRegistry,
     }),
   };
-};
-
-// TODO(burdon): Factor out.
-const getSchema = async (
-  dxn: DXN,
-  registry?: RuntimeSchemaRegistry,
-  echoRegistry?: EchoSchemaRegistry,
-): Promise<Type.Obj.Any | undefined> => {
-  const staticSchema = registry?.getSchemaByDXN(dxn);
-  if (staticSchema) {
-    return staticSchema;
-  }
-
-  const typeDxn = dxn.asTypeDXN();
-  if (!typeDxn) {
-    return;
-  }
-
-  const { type, version } = typeDxn;
-  const echoSchema = await echoRegistry?.query({ typename: type, version }).firstOrUndefined();
-  return echoSchema?.snapshot;
 };

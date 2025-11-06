@@ -12,7 +12,7 @@ import { Text as TextType } from '@dxos/schema';
 import { render } from '@dxos/storybook-utils';
 
 import { translations } from '../../translations';
-import { OutlineType } from '../../types';
+import { Outline } from '../../types';
 
 import { Outliner } from './Outliner';
 
@@ -30,7 +30,7 @@ const meta = {
   }),
   decorators: [
     withTheme,
-    withClientProvider({ createIdentity: true, createSpace: true, types: [TextType.Text, OutlineType] }),
+    withClientProvider({ createIdentity: true, createSpace: true, types: [TextType.Text, Outline.Outline] }),
   ],
   parameters: {
     layout: 'fullscreen',

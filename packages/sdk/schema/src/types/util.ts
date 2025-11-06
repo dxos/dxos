@@ -5,8 +5,14 @@
 import * as Schema from 'effect/Schema';
 
 import { Type } from '@dxos/echo';
-import { FormatAnnotation, FormatEnum, PropertyMetaAnnotationId } from '@dxos/echo/internal';
-import { PublicKey } from '@dxos/keys';
+import {
+  FormatAnnotation,
+  FormatEnum,
+  PropertyMetaAnnotationId,
+  type RuntimeSchemaRegistry,
+} from '@dxos/echo/internal';
+import { type EchoSchemaRegistry } from '@dxos/echo-db';
+import { type DXN, PublicKey } from '@dxos/keys';
 
 export const createDefaultSchema = () =>
   Schema.Struct({
@@ -34,3 +40,23 @@ export const createDefaultSchema = () =>
       version: '0.1.0',
     }),
   );
+
+export const getSchema = async (
+  dxn: DXN,
+  registry?: RuntimeSchemaRegistry,
+  echoRegistry?: EchoSchemaRegistry,
+): Promise<Type.Obj.Any | undefined> => {
+  const staticSchema = registry?.getSchemaByDXN(dxn);
+  if (staticSchema) {
+    return staticSchema;
+  }
+
+  const typeDxn = dxn.asTypeDXN();
+  if (!typeDxn) {
+    return;
+  }
+
+  const { type, version } = typeDxn;
+  const echoSchema = await echoRegistry?.query({ typename: type, version }).firstOrUndefined();
+  return echoSchema?.snapshot;
+};

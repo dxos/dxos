@@ -6,13 +6,13 @@ import React from 'react';
 
 import { StackItem } from '@dxos/react-ui-stack';
 
-import { type OutlineType } from '../types';
+import { type Outline } from '../types';
 
 import { Outliner } from './Outliner';
 
 export type OutlinerContainerProps = {
   role: string;
-  outline: OutlineType;
+  outline: Outline.Outline;
 };
 
 export const OutlinerContainer = ({ outline }: OutlinerContainerProps) => {
