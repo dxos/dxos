@@ -11,17 +11,8 @@ import React, { useMemo } from 'react';
 import { type ArticleComponentProps } from '@dxos/app-framework/react';
 import { Agent } from '@dxos/assistant-toolkit';
 import { type Prompt } from '@dxos/blueprints';
-import { Filter, Obj, Query } from '@dxos/echo';
-import {
-  ComputeEventLogger,
-  DatabaseService,
-  Function,
-  FunctionInvocationService,
-  InvocationTracer,
-  TracingService,
-  deserializeFunction,
-} from '@dxos/functions';
-import { invariant } from '@dxos/invariant';
+import { Obj } from '@dxos/echo';
+import { ComputeEventLogger, FunctionInvocationService, InvocationTracer, TracingService } from '@dxos/functions';
 import { log } from '@dxos/log';
 import { useComputeRuntimeCallback } from '@dxos/plugin-automation';
 import { getSpace } from '@dxos/react-client/echo';
@@ -49,7 +40,7 @@ export const PromptArticle = ({ object }: PromptArticleProps) => {
     [object, space],
   );
 
-  // TODO(wittjosiah): Factor out. Copied from NotebookContainer.
+  // TODO(wittjosiah): Factor out.
   const handleRun = useComputeRuntimeCallback(
     space,
     Effect.fnUntraced(function* () {
