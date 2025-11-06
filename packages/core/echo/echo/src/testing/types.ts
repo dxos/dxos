@@ -11,7 +11,7 @@ import { Type } from '..';
  */
 // TOOD(burdon): Reconcile with @dxos/schema.
 export namespace Testing {
-  const _Person = Schema.Struct({
+  export const Person = Schema.Struct({
     name: Schema.String,
     username: Schema.String,
     email: Schema.String,
@@ -32,10 +32,10 @@ export namespace Testing {
       version: '0.1.0',
     }),
   );
-  export interface Person extends Schema.Schema.Type<typeof _Person> {}
-  export const Person: Schema.Schema<Person, Schema.Schema.Encoded<typeof _Person>, never> = _Person;
 
-  const _Task = Schema.Struct({
+  export interface Person extends Schema.Schema.Type<typeof Person> {}
+
+  export const Task = Schema.Struct({
     title: Schema.optional(Schema.String),
     completed: Schema.optional(Schema.Boolean),
     assignee: Schema.optional(Type.Ref(Person)),
@@ -49,8 +49,34 @@ export namespace Testing {
       version: '0.1.0',
     }),
   );
-  export interface Task extends Schema.Schema.Type<typeof _Task> {}
-  export const Task: Schema.Schema<Task, Schema.Schema.Encoded<typeof _Task>, never> = _Task;
+
+  export interface Task extends Schema.Schema.Type<typeof Task> {}
+
+  export const WorksFor = Schema.Struct({
+    since: Schema.optional(Schema.String),
+  }).pipe(
+    Type.Relation({
+      typename: 'example.com/type/WorksFor',
+      version: '0.1.0',
+      source: Person,
+      target: Person,
+    }),
+  );
+
+  export interface WorksFor extends Schema.Schema.Type<typeof WorksFor> {}
+
+  export const HasManager = Schema.Struct({
+    since: Schema.optional(Schema.String),
+  }).pipe(
+    Type.Relation({
+      typename: 'example.com/type/HasManager',
+      version: '0.1.0',
+      source: Person,
+      target: Person,
+    }),
+  );
+
+  export interface HasManager extends Schema.Schema.Type<typeof HasManager> {}
 
   export enum RecordType {
     UNDEFINED = 0,
@@ -79,16 +105,4 @@ export namespace Testing {
       version: '0.1.0',
     }),
   );
-
-  export const WorksFor = Schema.Struct({
-    since: Schema.optional(Schema.String),
-  }).pipe(
-    Type.Relation({
-      typename: 'example.com/type/WorksFor',
-      version: '0.1.0',
-      source: Person,
-      target: Person,
-    }),
-  );
-  export interface WorksFor extends Schema.Schema.Type<typeof WorksFor> {}
 }

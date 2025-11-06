@@ -12,6 +12,7 @@ import { ObjectId } from '@dxos/keys';
 import { log } from '@dxos/log';
 
 import { Type } from '../..';
+import { Testing, prepareAstForCompare } from '../../testing';
 import {
   EntityKind,
   FieldLookupAnnotationId,
@@ -26,7 +27,6 @@ import { JsonSchemaType, getNormalizedEchoAnnotations, getSchemaProperty, setSch
 import { EchoObject } from '../object';
 import { Ref, createSchemaReference, getReferenceAst, getSchemaReference } from '../ref';
 import { StoredSchema } from '../schema';
-import { Testing, prepareAstForCompare } from '../testing';
 
 import { toEffectSchema, toJsonSchema } from './json-schema';
 
