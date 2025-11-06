@@ -3,20 +3,16 @@
 //
 
 import { writeFile } from 'node:fs/promises';
+import * as fs from 'node:fs/promises';
 import { basename, join, relative } from 'node:path';
 
-import type * as PlatformError from '@effect/platform/Error';
-import * as FileSystem from '@effect/platform/FileSystem';
+import * as Function from 'effect/Function';
 import * as Array from 'effect/Array';
-import * as Console from 'effect/Console';
-import * as Effect from 'effect/Effect';
+import * as Record from 'effect/Record';
 import { type Message, build } from 'esbuild';
-import * as fs from 'node:fs/promises';
 
 import { BaseError } from '@dxos/errors';
 import { PublicKey } from '@dxos/keys';
-import { pipe } from 'effect';
-import { Record } from 'effect';
 
 type BundleOptions = {
   entryPoint: string;
@@ -92,7 +88,7 @@ export const bundleFunction = async (options: BundleOptions): Promise<BundleResu
   }
 
   const assetPaths = Object.keys(result.metafile!.outputs).map((path) => relative(outdir, path));
-  const assets = pipe(
+  const assets = Function.pipe(
     await Promise.all(assetPaths.map((path) => fs.readFile(join(outdir, path)))),
     Array.zipWith(assetPaths, (content, path) => [path, content] as const),
     Record.fromEntries,

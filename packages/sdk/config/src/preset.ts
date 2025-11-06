@@ -1,3 +1,7 @@
+//
+// Copyright 2025 DXOS.org
+//
+
 import { Config } from './config';
 
 export type ConfigPresetOptions = {

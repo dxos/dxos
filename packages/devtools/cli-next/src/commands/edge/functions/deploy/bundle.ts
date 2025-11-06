@@ -2,18 +2,12 @@
 // Copyright 2025 DXOS.org
 //
 
-import { writeFile } from 'node:fs/promises';
-import { basename, join, relative } from 'node:path';
-
 import type * as PlatformError from '@effect/platform/Error';
-import * as FileSystem from '@effect/platform/FileSystem';
-import * as Array from 'effect/Array';
-import * as Console from 'effect/Console';
+import type * as FileSystem from '@effect/platform/FileSystem';
 import * as Effect from 'effect/Effect';
-import { type Message, build } from 'esbuild';
+import { type Message } from 'esbuild';
 
 import { BaseError } from '@dxos/errors';
-import { PublicKey } from '@dxos/keys';
 import { bundleFunction } from '@dxos/functions/native';
 
 import { CommandConfig } from '../../../../services';
