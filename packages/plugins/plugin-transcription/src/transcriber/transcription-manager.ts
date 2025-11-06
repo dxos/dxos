@@ -9,7 +9,7 @@ import { Resource } from '@dxos/context';
 import { Obj } from '@dxos/echo';
 import { type Queue } from '@dxos/echo-db';
 import { type EdgeHttpClient } from '@dxos/react-edge-client';
-import { Message } from '@dxos/types';
+import { ContentBlock, Message } from '@dxos/types';
 
 import { MediaStreamRecorder } from './media-stream-recorder';
 import { Transcriber } from './transcriber';
@@ -154,7 +154,7 @@ export class TranscriptionManager extends Resource {
     await this._transcriber?.close();
   }
 
-  private async _onSegments(segments: Message.ContentBlock.Transcript[]): Promise<void> {
+  private async _onSegments(segments: ContentBlock.Transcript[]): Promise<void> {
     if (!this.isOpen || !this._queue) {
       return;
     }

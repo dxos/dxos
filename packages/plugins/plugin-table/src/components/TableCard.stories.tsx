@@ -16,6 +16,7 @@ import { CardContainer } from '@dxos/react-ui-stack/testing';
 import { translations as tableTranslations } from '@dxos/react-ui-table';
 import { useTestTableModel } from '@dxos/react-ui-table/testing';
 import { Table } from '@dxos/react-ui-table/types';
+import { View, getSchemaFromPropertyDefinitions } from '@dxos/schema';
 
 import { translations } from '../translations';
 

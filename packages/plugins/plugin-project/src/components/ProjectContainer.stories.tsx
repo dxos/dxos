@@ -22,9 +22,7 @@ import { withTheme } from '@dxos/react-ui/testing';
 import { translations as stackTranslations } from '@dxos/react-ui-stack';
 import { Stack } from '@dxos/react-ui-stack';
 import { defaultTx } from '@dxos/react-ui-theme';
-import { Collection } from '@dxos/schema';
-import { View } from '@dxos/schema';
-import { Collection } from '@dxos/schema';
+import { Collection, View } from '@dxos/schema';
 import { createObjectFactory } from '@dxos/schema/testing';
 import { Message, Organization, Person, Project, Task } from '@dxos/types';
 

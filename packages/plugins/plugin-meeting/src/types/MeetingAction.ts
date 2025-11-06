@@ -6,6 +6,7 @@ import * as Schema from 'effect/Schema';
 
 import { SpaceSchema } from '@dxos/client/echo';
 import { Channel } from '@dxos/plugin-thread/types';
+import { Collection } from '@dxos/schema';
 
 import { meta } from '../meta';
 

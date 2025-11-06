@@ -9,11 +9,11 @@ import { ATTENDABLE_PATH_SEPARATOR, DeckAction } from '@dxos/plugin-deck/types';
 import { fullyQualifiedId } from '@dxos/react-client/echo';
 import { useAttention } from '@dxos/react-ui-attention';
 import { StackItem } from '@dxos/react-ui-stack';
-import { Project } from '@dxos/types';
+import { Project as ProjectType } from '@dxos/types';
 
 import { type ItemProps, Project } from './Project';
 
-export type ProjectContainerProps = { project: Project.Project; role: string };
+export type ProjectContainerProps = { project: ProjectType.Project; role: string };
 
 export const ProjectContainer = ({ project }: ProjectContainerProps) => {
   const { dispatchPromise: dispatch } = useIntentDispatcher();

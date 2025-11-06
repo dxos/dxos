@@ -10,6 +10,7 @@ import { useSpace } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { withTheme } from '@dxos/react-ui/testing';
 import { render } from '@dxos/storybook-utils';
+import { Text as TextType } from '@dxos/schema';
 
 import { translations } from '../../translations';
 import { JournalEntryType, JournalType, OutlineType, createJournal, createJournalEntry } from '../../types';
@@ -34,7 +35,7 @@ const meta = {
     withClientProvider({
       createIdentity: true,
       createSpace: true,
-      types: [Text.Text, JournalType, JournalEntryType, OutlineType],
+      types: [TextType.Text, JournalType, JournalEntryType, OutlineType],
     }),
   ],
   parameters: {

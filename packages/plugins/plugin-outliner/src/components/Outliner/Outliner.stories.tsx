@@ -9,6 +9,7 @@ import { useSpace } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { withTheme } from '@dxos/react-ui/testing';
 import { render } from '@dxos/storybook-utils';
+import { Text as TextType } from '@dxos/schema';
 
 import { translations } from '../../translations';
 import { OutlineType } from '../../types';
@@ -29,7 +30,7 @@ const meta = {
   }),
   decorators: [
     withTheme,
-    withClientProvider({ createIdentity: true, createSpace: true, types: [Text.Text, OutlineType] }),
+    withClientProvider({ createIdentity: true, createSpace: true, types: [TextType.Text, OutlineType] }),
   ],
   parameters: {
     layout: 'fullscreen',
@@ -43,6 +44,6 @@ type Story = StoryObj<typeof Outliner>;
 
 export const Default: Story = {
   args: {
-    text: Text.make('- [x] Initial content'),
+    text: TextType.make('- [x] Initial content'),
   },
 };

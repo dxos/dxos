@@ -8,6 +8,7 @@ import { LayoutAction, createIntent, useIntentDispatcher } from '@dxos/app-frame
 import { ATTENDABLE_PATH_SEPARATOR } from '@dxos/plugin-deck/types';
 import { Filter, getSpace, useQuery } from '@dxos/react-client/echo';
 import { Button, useTranslation } from '@dxos/react-ui';
+import { AccessToken } from '@dxos/types';
 
 import { meta } from '../../meta';
 import { type Mailbox } from '../../types';

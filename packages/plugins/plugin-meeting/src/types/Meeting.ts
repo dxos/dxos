@@ -8,6 +8,7 @@ import { Type } from '@dxos/echo';
 import { FormAnnotation, LabelAnnotation } from '@dxos/echo/internal';
 import { Thread } from '@dxos/plugin-thread/types';
 import { Transcript } from '@dxos/plugin-transcription/types';
+import { Text } from '@dxos/schema';
 
 // TODO(wittjosiah): Factor out. Brand.
 const IdentityDidSchema = Schema.String;

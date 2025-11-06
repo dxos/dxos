@@ -13,6 +13,7 @@ import { ThreadCapabilities } from '@dxos/plugin-thread';
 import { ThreadAction } from '@dxos/plugin-thread/types';
 import { TranscriptAction } from '@dxos/plugin-transcription/types';
 import { Filter, Query, fullyQualifiedId, getSpace, parseId } from '@dxos/react-client/echo';
+import { Text } from '@dxos/schema';
 import { type Message } from '@dxos/types';
 
 import { Meeting, MeetingAction } from '../types';

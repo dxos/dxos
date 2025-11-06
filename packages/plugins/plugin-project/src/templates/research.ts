@@ -6,6 +6,7 @@ import { Filter, Obj, Query, Ref, Type } from '@dxos/echo';
 import { Mailbox } from '@dxos/plugin-inbox/types';
 import { Markdown } from '@dxos/plugin-markdown/types';
 import { type Space } from '@dxos/react-client/echo';
+import { Collection, View } from '@dxos/schema';
 import { Message, Organization, Person, Project } from '@dxos/types';
 
 export const createResearchProject = async (space: Space, name?: string): Promise<Project.Project | null> => {

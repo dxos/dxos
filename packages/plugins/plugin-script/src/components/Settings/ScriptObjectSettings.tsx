@@ -13,6 +13,7 @@ import { log } from '@dxos/log';
 import { useClient } from '@dxos/react-client';
 import { Filter, Ref, getMeta, getSpace, useQuery } from '@dxos/react-client/echo';
 import { Button, Clipboard, Input, useAsyncEffect, useControlledState, useTranslation } from '@dxos/react-ui';
+import { AccessToken } from '@dxos/types';
 import { kebabize } from '@dxos/util';
 
 import { meta } from '../../meta';

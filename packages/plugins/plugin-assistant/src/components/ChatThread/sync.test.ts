@@ -6,6 +6,8 @@ import { EditorView } from '@codemirror/view';
 import { describe, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 
+import { ContentBlock } from '@dxos/types';
+
 import { createMessage } from '../../testing';
 
 import { blockToMarkdown } from './registry';

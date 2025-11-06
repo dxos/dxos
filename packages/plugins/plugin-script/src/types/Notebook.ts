@@ -8,6 +8,7 @@ import { Prompt } from '@dxos/blueprints';
 import { Obj, Type } from '@dxos/echo';
 import { FormAnnotation } from '@dxos/echo/internal';
 import { LabelAnnotation } from '@dxos/echo/internal';
+import { Text, View } from '@dxos/schema';
 
 export type CellType = 'markdown' | 'script' | 'query' | 'prompt' | 'view';
 

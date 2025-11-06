@@ -16,8 +16,9 @@ import { IdentityDid } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { faker } from '@dxos/random';
 import { type Space, useQueue } from '@dxos/react-client/echo';
-import { Testing, seedTestData } from '@dxos/schema/testing';
-import { Message, Organization, Person } from '@dxos/types';
+import { Testing } from '@dxos/schema/testing';
+import { type ContentBlock, Message, Organization, Person } from '@dxos/types';
+import { seedTestData } from '@dxos/types/testing';
 
 // TODO(burdon): Reconcile with plugin-markdown. Move to @dxos/schema/testing.
 export const TestItem = Schema.Struct({
@@ -67,7 +68,7 @@ export class MessageBuilder extends AbstractMessageBuilder {
     });
   }
 
-  createBlock(): Message.ContentBlock.Transcript {
+  createBlock(): ContentBlock.Transcript {
     let text = faker.lorem.paragraph();
     if (this._space) {
       const label = faker.commerce.productName();

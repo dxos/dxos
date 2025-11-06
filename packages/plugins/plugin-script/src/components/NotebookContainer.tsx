@@ -22,6 +22,7 @@ import {
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { useComputeRuntimeCallback } from '@dxos/plugin-automation';
+import { Text } from '@dxos/schema';
 import { Graph } from '@dxos/plugin-explorer/types';
 import { fullyQualifiedId } from '@dxos/react-client/echo';
 import { getSpace } from '@dxos/react-client/echo';

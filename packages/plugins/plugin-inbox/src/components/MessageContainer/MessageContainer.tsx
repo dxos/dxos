@@ -11,7 +11,7 @@ import { Filter, type Space, fullyQualifiedId, useQuery } from '@dxos/react-clie
 import { ElevationProvider, useTranslation } from '@dxos/react-ui';
 import { MenuProvider, ToolbarMenu } from '@dxos/react-ui-menu';
 import { StackItem } from '@dxos/react-ui-stack';
-import { Message, Person } from '@dxos/types';
+import { Message as MessageType, Person } from '@dxos/types';
 
 import { meta } from '../../meta';
 import { InboxAction, type Mailbox } from '../../types';
@@ -22,7 +22,7 @@ import { useMessageToolbarActions } from './toolbar';
 
 export type MessageContainerProps = {
   space?: Space;
-  message?: Message.Message;
+  message?: MessageType.Message;
   inMailbox: Mailbox.Mailbox;
   role?: string;
 };
