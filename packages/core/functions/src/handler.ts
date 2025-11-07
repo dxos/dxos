@@ -7,11 +7,8 @@ import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
 import { Obj, Type } from '@dxos/echo';
-import { type HasId } from '@dxos/echo/internal';
-import { type DatabaseService, type EchoDatabase } from '@dxos/echo-db';
+import { type DatabaseService } from '@dxos/echo-db';
 import { assertArgument } from '@dxos/invariant';
-import { type DXN, type SpaceId } from '@dxos/keys';
-import { type QueryResult } from '@dxos/protocols';
 import { AiService } from '@dxos/ai';
 import { type TracingService, type QueueService, type ComputeEventLogger, type CredentialsService } from '.';
 import { Function } from './types';
@@ -54,7 +51,7 @@ export type FunctionHandler<TData = {}, TOutput = any> = (params: {
  * Function context.
  */
 export interface FunctionContext {
-  // TODO(dmaretskyi): 
+  // TODO(dmaretskyi):
 }
 
 const typeId = Symbol.for('@dxos/functions/FunctionDefinition');
