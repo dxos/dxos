@@ -17,16 +17,6 @@
     }
   },
   "types": "dist/types/src/index.d.ts",
-  "typesVersions": {
-    "*": {
-      "bundler": [
-        "dist/types/src/bundler/index.d.ts"
-      ],
-      "edge": [
-        "dist/types/src/edge/index.d.ts"
-      ]
-    }
-  },
   "files": [
     "dist",
     "schema",

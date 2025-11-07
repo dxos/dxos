@@ -11,7 +11,7 @@ import * as Schema from 'effect/Schema';
 
 import { ObjectId } from '@dxos/keys';
 
-import { TriggerStateNotFoundError } from '../errors';
+import { TriggerStateNotFoundError } from '@dxos/functions';
 
 export const TriggerState = Schema.Struct({
   version: Schema.Literal('1'),

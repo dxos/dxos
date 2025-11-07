@@ -74,6 +74,9 @@
       "path": "../echo/live-object"
     },
     {
+      "path": "../functions"
+    },
+    {
       "path": "../mesh/edge-client"
     },
     {

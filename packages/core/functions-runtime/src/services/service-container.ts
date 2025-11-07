@@ -7,13 +7,16 @@ import * as Layer from 'effect/Layer';
 
 import { AiService } from '@dxos/ai';
 import { DatabaseService } from '@dxos/echo-db';
+import {
+  ConfiguredCredentialsService,
+  CredentialsService,
+  ComputeEventLogger,
+  QueueService,
+  TracingService,
+} from '@dxos/functions';
 import { entries } from '@dxos/util';
 
-import { ConfiguredCredentialsService, CredentialsService } from './credentials';
-import { ComputeEventLogger } from './event-logger';
-import { QueueService } from './queues';
 import { RemoteFunctionExecutionService } from './remote-function-execution-service';
-import { TracingService } from './tracing';
 
 // TODO(dmaretskyi): Refactor this module to only rely on tags and not the human-assigned names.
 
@@ -45,9 +48,9 @@ export type ServiceRecord = {
 };
 
 /**
- * Union of all services tags.
+ * Union of all runtime services tags.
  */
-export type Services = ServiceTagRecord[keyof ServiceTagRecord];
+export type RuntimeServices = ServiceTagRecord[keyof ServiceTagRecord];
 
 const SERVICE_MAPPING: Record<string, keyof ServiceRecord> = Object.fromEntries(
   entries(SERVICES).map(([name, tag]) => [tag.key, name]),
@@ -90,7 +93,7 @@ export class ServiceContainer {
   }
 
   // TODO(dmaretskyi): `getService` is designed to error at runtime if the service is not available, but Layer forces us to provide all services and makes stubs for the ones that are not available.
-  createLayer(): Layer.Layer<Services> {
+  createLayer(): Layer.Layer<RuntimeServices> {
     const ai =
       this._services.ai != null ? Layer.succeed(AiService.AiService, this._services.ai) : AiService.notAvailable;
     const credentials = Layer.succeed(

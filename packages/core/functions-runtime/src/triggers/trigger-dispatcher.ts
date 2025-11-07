@@ -29,6 +29,7 @@ import {
   QueueService,
   TracingService,
 } from '../services';
+import { TracingServiceExt } from '../trace';
 import { Function, Trigger, type TriggerEvent } from '../types';
 
 import { createInvocationPayload } from './input-builder';
@@ -250,7 +251,7 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
         return yield* FunctionInvocationService.invokeFunction(functionDef, inputData).pipe(
           Effect.provide(
             ComputeEventLogger.layerFromTracing.pipe(
-              Layer.provideMerge(TracingService.layerQueue(trace.invocationTraceQueue)),
+              Layer.provideMerge(TracingServiceExt.layerQueue(trace.invocationTraceQueue)),
             ),
           ),
         );

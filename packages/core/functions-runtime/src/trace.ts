@@ -2,11 +2,13 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as Layer from 'effect/Layer';
 import * as Schema from 'effect/Schema';
 
-import { type Ref, Type } from '@dxos/echo';
+import { Obj, type Ref, Type } from '@dxos/echo';
 import { ObjectId } from '@dxos/echo/internal';
 import { Queue } from '@dxos/echo-db';
+import { TracingService } from '@dxos/functions';
 import { log } from '@dxos/log';
 
 import { Trigger } from './types';
@@ -176,3 +178,38 @@ export const createInvocationSpans = (items?: InvocationTraceEvent[]): Invocatio
 
   return result;
 };
+
+/**
+ * Extension of TracingService with runtime-specific helpers.
+ */
+export namespace TracingServiceExt {
+  /**
+   * Creates a TracingService layer that writes events to a specific queue.
+   */
+  export const layerQueue = (queue: Queue): Layer.Layer<TracingService> =>
+    Layer.succeed(TracingService, {
+      getTraceContext: () => ({}),
+      write: (event: Obj.Any) => {
+        void queue.append([event]).catch((error) => {
+          log.warn('Failed to write trace event to queue', { error });
+        });
+      },
+    });
+
+  /**
+   * Creates a TracingService layer that logs events using the logger.
+   */
+  export const layerLogInfo = (): Layer.Layer<TracingService> =>
+    Layer.succeed(TracingService, {
+      getTraceContext: () => ({}),
+      write: (event: Obj.Any) => {
+        log.info('trace event', { event });
+      },
+    });
+}
+
+// Add layer helpers as static methods on TracingService for convenience
+Object.assign(TracingService, {
+  layerQueue: TracingServiceExt.layerQueue,
+  layerLogInfo: TracingServiceExt.layerLogInfo,
+});

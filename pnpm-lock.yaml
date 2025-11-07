@@ -3129,6 +3129,9 @@ importers:
       '@dxos/errors':
         specifier: workspace:*
         version: link:../../common/errors
+      '@dxos/functions':
+        specifier: workspace:*
+        version: link:../functions
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant

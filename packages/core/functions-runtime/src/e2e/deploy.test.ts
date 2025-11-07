@@ -8,8 +8,8 @@ import { describe, expect, test } from 'vitest';
 
 import { Client, Config } from '@dxos/client';
 import { createEdgeIdentity } from '@dxos/client/edge';
-import { Bundler } from '@dxos/functions/bundler';
-import { uploadWorkerFunction } from '@dxos/functions/edge';
+import { Bundler } from '@dxos/functions-runtime/bundler';
+import { uploadWorkerFunction } from '@dxos/functions-runtime/edge';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 

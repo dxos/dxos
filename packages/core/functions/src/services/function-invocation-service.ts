@@ -22,4 +22,10 @@ export class FunctionInvocationService extends Context.Tag('@dxos/functions/Func
   {
     invokeFunction<I, O>(functionDef: FunctionDefinition<I, O>, input: I): Effect.Effect<O, never, InvocationServices>;
   }
->() {}
+>() {
+  static invokeFunction = <I, O>(
+    functionDef: FunctionDefinition<I, O>,
+    input: I,
+  ): Effect.Effect<O, never, FunctionInvocationService | InvocationServices> =>
+    Effect.serviceFunctionEffect(FunctionInvocationService, (service) => service.invokeFunction)(functionDef, input);
+}

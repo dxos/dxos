@@ -2,12 +2,13 @@
 // Copyright 2024 DXOS.org
 //
 
-export * from './errors';
-export * from './example';
+// Re-export SDK
+export * from '@dxos/functions';
+
 export * from './executor';
 export * from './handler';
 export * from './services';
 export * from './trace';
 export * from './triggers';
-export * from './types';
-export * from './url';
+export * as Trigger from './types/Trigger';
+export * as TriggerEvent from './types/TriggerEvent';

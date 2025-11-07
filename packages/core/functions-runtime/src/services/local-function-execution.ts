@@ -10,17 +10,24 @@ import * as Schema from 'effect/Schema';
 import { AiService } from '@dxos/ai';
 import { todo } from '@dxos/debug';
 import { DatabaseService } from '@dxos/echo-db';
+import {
+  FunctionError,
+  FunctionNotFoundError,
+  CredentialsService,
+  ComputeEventLogger,
+  QueueService,
+  TracingService,
+} from '@dxos/functions';
 import { log } from '@dxos/log';
 
-import { FunctionError, FunctionNotFoundError } from '../errors';
-import type { FunctionContext, FunctionDefinition } from '../handler';
-
-import { CredentialsService } from './credentials';
-import { type ComputeEventLogger } from './event-logger';
-import { QueueService } from './queues';
+import type { RuntimeFunctionContext, FunctionDefinition } from '../handler';
 import { RemoteFunctionExecutionService } from './remote-function-execution-service';
-import { type Services } from './service-container';
-import { type TracingService } from './tracing';
+import { type RuntimeServices } from './service-container';
+
+/**
+ * Services that are provided at the function call site.
+ */
+export type InvocationServices = TracingService | ComputeEventLogger;
 
 export class LocalFunctionExecutionService extends Context.Tag('@dxos/functions/LocalFunctionExecutionService')<
   LocalFunctionExecutionService,
@@ -65,14 +72,14 @@ export class LocalFunctionExecutionService extends Context.Tag('@dxos/functions/
   static invokeFunction: <F extends FunctionDefinition.Any>(
     functionDef: F,
     input: FunctionDefinition.Input<F>,
-  ) => Effect.Effect<FunctionDefinition.Output<F>, never, Services | LocalFunctionExecutionService> =
+  ) => Effect.Effect<FunctionDefinition.Output<F>, never, RuntimeServices | LocalFunctionExecutionService> =
     Effect.serviceFunctionEffect(LocalFunctionExecutionService, (_) => _.invokeFunction as any);
 }
 
 const invokeFunction = (
   functionDef: FunctionDefinition<any, any>,
   input: any,
-): Effect.Effect<unknown, never, Services> =>
+): Effect.Effect<unknown, never, RuntimeServices> =>
   Effect.gen(function* () {
     // Assert input matches schema.
     try {
@@ -82,7 +89,7 @@ const invokeFunction = (
       throw new FunctionError({ message: 'Invalid function input', context: { name: functionDef.name }, cause: e });
     }
 
-    const context: FunctionContext = {
+    const context: RuntimeFunctionContext = {
       space: undefined,
       getService: () => todo(),
       getSpace: async (_spaceId: any) => {
@@ -96,7 +103,7 @@ const invokeFunction = (
     const data = yield* Effect.gen(function* () {
       const result = functionDef.handler({ context, data: input });
       if (Effect.isEffect(result)) {
-        return yield* (result as Effect.Effect<unknown, unknown, Services>).pipe(Effect.orDie);
+        return yield* (result as Effect.Effect<unknown, unknown, RuntimeServices>).pipe(Effect.orDie);
       } else if (
         typeof result === 'object' &&
         result !== null &&

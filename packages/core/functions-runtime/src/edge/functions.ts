@@ -15,7 +15,7 @@ import { type SpaceId } from '@dxos/client/echo';
 import { Obj } from '@dxos/echo';
 import { safeParseJson } from '@dxos/util';
 import * as Function from '../types/Function';
-import { FUNCTIONS_META_KEY, setUserFunctionIdInMetadata } from '..';
+import { FUNCTIONS_META_KEY, setUserFunctionIdInMetadata } from '@dxos/functions';
 
 export type UploadWorkerArgs = {
   client: Client;

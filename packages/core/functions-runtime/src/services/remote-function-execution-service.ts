@@ -8,7 +8,7 @@ import * as Layer from 'effect/Layer';
 
 import type { SpaceId } from '@dxos/keys';
 
-import { FunctionError } from '../errors';
+import { FunctionError } from '@dxos/functions';
 import { getInvocationUrl } from '../url';
 import { type Client } from '@dxos/client';
 import { createEdgeClient } from '../edge';

@@ -30,6 +30,10 @@ export class TracingService extends Context.Tag('@dxos/functions/TracingService'
     write: (event: Obj.Any) => void;
   }
 >() {
+  static noop: Context.Tag.Service<TracingService> = {
+    getTraceContext: () => ({}),
+    write: () => {},
+  };
   /**
    * Creates a TracingService layer that emits events to the parent tracing service.
    */

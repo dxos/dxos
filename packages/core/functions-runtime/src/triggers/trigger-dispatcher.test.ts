@@ -9,28 +9,41 @@ import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
 import * as Fn from 'effect/Function';
 import * as Layer from 'effect/Layer';
+import * as Schema from 'effect/Schema';
 
 import { AiService } from '@dxos/ai';
 import { Filter, Obj, Query, Ref } from '@dxos/echo';
+import { defineFunction } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { DataType } from '@dxos/schema';
 
-import { Example } from '../example';
 import { serializeFunction } from '../handler';
 import {
   ComputeEventLogger,
   CredentialsService,
   DatabaseService,
-  FunctionInvocationService,
   QueueService,
   TracingService,
 } from '../services';
+import { FunctionInvocationServiceLayerTestMocked } from '../services/function-invocation-service';
 import { TestDatabaseLayer } from '../testing';
+import { TracingServiceExt } from '../trace';
 import { Function, Trigger } from '../types';
 
 import { InvocationTracer } from './invocation-tracer';
 import { TriggerDispatcher } from './trigger-dispatcher';
 import { TriggerStateStore } from './trigger-state-store';
+
+// Example function for testing
+const Example = {
+  reply: defineFunction({
+    key: 'example.org/function/reply',
+    name: 'reply',
+    inputSchema: Schema.Struct({ message: Schema.String }),
+    outputSchema: Schema.String,
+    handler: ({ data }) => `Reply: ${data.message}`,
+  }),
+};
 
 const TestLayer = Fn.pipe(
   Layer.mergeAll(ComputeEventLogger.layerFromTracing, InvocationTracer.layerTest, TriggerStateStore.layerMemory),
@@ -38,9 +51,9 @@ const TestLayer = Fn.pipe(
     Layer.mergeAll(
       AiService.notAvailable,
       CredentialsService.layerConfig([]),
-      FunctionInvocationService.layerTestMocked({ functions: [Example.reply] }).pipe(
+      FunctionInvocationServiceLayerTestMocked({ functions: [Example.reply] }).pipe(
         Layer.provideMerge(ComputeEventLogger.layerFromTracing),
-        Layer.provideMerge(TracingService.layerLogInfo()),
+        Layer.provideMerge(TracingServiceExt.layerLogInfo()),
       ),
       FetchHttpClient.layer,
       TestDatabaseLayer({

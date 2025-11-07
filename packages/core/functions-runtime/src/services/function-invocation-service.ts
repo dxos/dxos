@@ -7,78 +7,75 @@ import * as Layer from 'effect/Layer';
 
 import { AiService } from '@dxos/ai';
 import { DatabaseService } from '@dxos/echo-db';
+import { CredentialsService, FunctionInvocationService, QueueService } from '@dxos/functions';
 
 import { type FunctionDefinition } from '../handler';
 
-import { CredentialsService } from './credentials';
 import {
   FunctionImplementationResolver,
   type InvocationServices,
   LocalFunctionExecutionService,
 } from './local-function-execution';
-import { QueueService } from './queues';
 import { RemoteFunctionExecutionService } from './remote-function-execution-service';
 
-export class FunctionInvocationService extends Context.Tag('@dxos/functions/FunctionInvocationService')<
+/**
+ * Layer that provides FunctionInvocationService implementation routing between local and remote execution.
+ */
+export const FunctionInvocationServiceLayer = Layer.effect(
   FunctionInvocationService,
-  {
-    invokeFunction<I, O>(functionDef: FunctionDefinition<I, O>, input: I): Effect.Effect<O, never, InvocationServices>;
-  }
->() {
-  static invokeFunction = Effect.serviceFunctionEffect(FunctionInvocationService, (_) => _.invokeFunction);
+  Effect.gen(function* () {
+    const localExecutioner = yield* LocalFunctionExecutionService;
+    const remoteExecutioner = yield* RemoteFunctionExecutionService;
 
-  static layer = Layer.effect(
-    FunctionInvocationService,
-    Effect.gen(function* () {
-      const localExecutioner = yield* LocalFunctionExecutionService;
-      const remoteExecutioner = yield* RemoteFunctionExecutionService;
+    return {
+      invokeFunction: <I, O>(
+        functionDef: FunctionDefinition<I, O>,
+        input: I,
+      ): Effect.Effect<O, never, InvocationServices> =>
+        Effect.gen(function* () {
+          if (functionDef.meta?.deployedFunctionId) {
+            return yield* remoteExecutioner.callFunction<I, O>(functionDef.meta.deployedFunctionId, input);
+          }
 
-      return {
-        invokeFunction: <I, O>(
-          functionDef: FunctionDefinition<I, O>,
-          input: I,
-        ): Effect.Effect<O, never, InvocationServices> =>
-          Effect.gen(function* () {
-            if (functionDef.meta?.deployedFunctionId) {
-              return yield* remoteExecutioner.callFunction<I, O>(functionDef.meta.deployedFunctionId, input);
-            }
+          return yield* localExecutioner.invokeFunction(functionDef, input);
+        }),
+    } satisfies Context.Tag.Service<FunctionInvocationService>;
+  }),
+);
 
-            return yield* localExecutioner.invokeFunction(functionDef, input);
-          }),
-      } satisfies Context.Tag.Service<FunctionInvocationService>;
-    }),
+// TODO(dmaretskyi): Don't provide `FunctionImplementationResolver`.
+/**
+ * Layer for testing with optional function implementations.
+ */
+export const FunctionInvocationServiceLayerTest = ({
+  functions = [],
+}: {
+  functions?: readonly FunctionDefinition<any, any>[];
+} = {}): Layer.Layer<
+  FunctionInvocationService,
+  never,
+  AiService.AiService | CredentialsService | DatabaseService | QueueService
+> =>
+  FunctionInvocationServiceLayer.pipe(
+    Layer.provide(LocalFunctionExecutionService.layerLive),
+    Layer.provide(FunctionImplementationResolver.layerTest({ functions })),
+    Layer.provide(RemoteFunctionExecutionService.layerMock),
   );
 
-  // TODO(dmaretskyi): Don't provide `FunctionImplementationResolver`.
-  static layerTest = ({
-    functions = [],
-  }: {
-    functions?: readonly FunctionDefinition<any, any>[];
-  } = {}): Layer.Layer<
-    FunctionInvocationService,
-    never,
-    AiService.AiService | CredentialsService | DatabaseService | QueueService
-  > =>
-    FunctionInvocationService.layer.pipe(
-      Layer.provide(LocalFunctionExecutionService.layerLive),
-      Layer.provide(FunctionImplementationResolver.layerTest({ functions })),
-      Layer.provide(RemoteFunctionExecutionService.layerMock),
-    );
-
-  // TODO(dmaretskyi): This shouldn't default to all services being not available.
-  // TODO(dmaretskyi): Don't provide `FunctionImplementationResolver`.
-  /**
-   * @deprecated Use {@link layerTest} instead.
-   */
-  static layerTestMocked = ({
-    functions,
-  }: {
-    functions?: readonly FunctionDefinition<any, any>[];
-  }): Layer.Layer<FunctionInvocationService> =>
-    FunctionInvocationService.layerTest({ functions }).pipe(
-      Layer.provide(AiService.notAvailable),
-      Layer.provide(CredentialsService.configuredLayer([])),
-      Layer.provide(DatabaseService.notAvailable),
-      Layer.provide(QueueService.notAvailable),
-    );
-}
+// TODO(dmaretskyi): This shouldn't default to all services being not available.
+// TODO(dmaretskyi): Don't provide `FunctionImplementationResolver`.
+/**
+ * @deprecated Use {@link FunctionInvocationServiceLayerTest} instead.
+ * Layer for testing with all services mocked/unavailable.
+ */
+export const FunctionInvocationServiceLayerTestMocked = ({
+  functions,
+}: {
+  functions?: readonly FunctionDefinition<any, any>[];
+}): Layer.Layer<FunctionInvocationService> =>
+  FunctionInvocationServiceLayerTest({ functions }).pipe(
+    Layer.provide(AiService.notAvailable),
+    Layer.provide(CredentialsService.configuredLayer([])),
+    Layer.provide(DatabaseService.notAvailable),
+    Layer.provide(QueueService.notAvailable),
+  );

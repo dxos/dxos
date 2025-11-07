@@ -8,11 +8,11 @@ import * as Layer from 'effect/Layer';
 import * as Schema from 'effect/Schema';
 
 import { AiService } from '@dxos/ai';
+import { defineFunction, FunctionInvocationService } from '@dxos/functions';
 
-import { defineFunction } from '../handler';
 import { TestDatabaseLayer } from '../testing';
 
-import { FunctionInvocationService } from './function-invocation-service';
+import { FunctionInvocationServiceLayer } from './function-invocation-service';
 import { FunctionImplementationResolver } from './local-function-execution';
 
 const TestLayer = Layer.mergeAll(AiService.model('@anthropic/claude-opus-4-0')).pipe(
@@ -22,7 +22,7 @@ const TestLayer = Layer.mergeAll(AiService.model('@anthropic/claude-opus-4-0')).
         indexing: { vector: true },
         types: [],
       }),
-      FunctionInvocationService.layer,
+      FunctionInvocationServiceLayer,
     ),
   ),
 );
