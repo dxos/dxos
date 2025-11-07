@@ -2,10 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-// NOTE(thure): The following unused imports quell TS2742 (“likely not portable”).
-
-// eslint-disable-next-line unused-imports/no-unused-imports
-import { type CreateScope, type Scope, createContext } from '@radix-ui/react-context';
+import { createContext } from '@radix-ui/react-context';
 import { Primitive } from '@radix-ui/react-primitive';
 import { Slot } from '@radix-ui/react-slot';
 import React, { type ComponentPropsWithRef, type FocusEvent, type PropsWithChildren, forwardRef, useMemo } from 'react';

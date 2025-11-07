@@ -8,7 +8,7 @@ import { Prompt } from '@dxos/blueprints';
 import { Obj, Type } from '@dxos/echo';
 import { FormAnnotation } from '@dxos/echo/internal';
 import { LabelAnnotation } from '@dxos/echo/internal';
-import { DataType } from '@dxos/schema';
+import { Text, View } from '@dxos/schema';
 
 export type CellType = 'markdown' | 'script' | 'query' | 'prompt' | 'view';
 
@@ -17,9 +17,9 @@ const Cell_ = Schema.Struct({
   type: Schema.String,
   name: Schema.optional(Schema.String),
   // TODO(burdon): Union type.
-  source: Schema.optional(Type.Ref(DataType.Text.Text)),
+  source: Schema.optional(Type.Ref(Text.Text)),
   prompt: Schema.optional(Type.Ref(Prompt.Prompt)),
-  view: Schema.optional(Type.Ref(DataType.View.View)),
+  view: Schema.optional(Type.Ref(View.View)),
 }).pipe(Schema.mutable);
 export interface Cell extends Schema.Schema.Type<typeof Cell_> {}
 export interface Cell_Encoded extends Schema.Schema.Encoded<typeof Cell_> {}

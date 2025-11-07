@@ -5,16 +5,16 @@
 import { type Live, type Space } from '@dxos/client/echo';
 import { Obj, Ref, Relation, type Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
-import { DataType } from '@dxos/schema';
+import { Employer, HasConnection, Message, Organization, Person } from '@dxos/types';
 
 export const testTypes: Type.Obj.Any[] = [
-  DataType.Organization.Organization,
-  DataType.Person.Person,
-  DataType.Employer.Employer,
-  DataType.HasConnection.HasConnection,
+  Organization.Organization,
+  Person.Person,
+  Employer.Employer,
+  HasConnection.HasConnection,
 ];
 
-export const organizations: (Type.Properties<DataType.Organization.Organization> & { id: string })[] = [
+export const organizations: (Type.Properties<Organization.Organization> & { id: string })[] = [
   { id: 'dxos', name: 'DXOS', website: 'https://dxos.org' },
   { id: 'socket_supply', name: 'Socket Supply', website: 'https://socketsupply.com' },
   { id: 'ink_and_switch', name: 'Ink & Switch', website: 'https://inkandswitch.com' },
@@ -31,7 +31,7 @@ export const organizations: (Type.Properties<DataType.Organization.Organization>
   { id: 'deshaw', name: 'D. E. Shaw & Co.', website: 'https://deshaw.com' },
 ];
 
-export const people: (Type.Properties<DataType.Person.Person> & { id: string })[] = [
+export const people: (Type.Properties<Person.Person> & { id: string })[] = [
   { id: 'rich_burdon', fullName: 'Rich Burdon' },
   { id: 'josiah_witt', fullName: 'Josiah Witt' },
   { id: 'dima_maretskyi', fullName: 'Dima Maretskyi' },
@@ -48,8 +48,8 @@ export const people: (Type.Properties<DataType.Person.Person> & { id: string })[
 ];
 
 const testObjects: Record<string, any[]> = {
-  [DataType.Organization.Organization.typename]: organizations,
-  [DataType.Person.Person.typename]: people,
+  [Organization.Organization.typename]: organizations,
+  [Person.Person.typename]: people,
 };
 
 const testRelationships: Record<
@@ -59,7 +59,7 @@ const testRelationships: Record<
     target: string;
   } & Record<string, any>)[]
 > = {
-  [DataType.Employer.Employer.typename]: [
+  [Employer.Employer.typename]: [
     // prettier-ignore
     { source: 'rich_burdon', target: 'dxos', active: true },
     { source: 'rich_burdon', target: 'google', active: false }, // TODO(burdon): Should not contribute to force.
@@ -82,7 +82,7 @@ const testRelationships: Record<
   ],
 
   // TODO(burdon): Limit graph view to selected relationship types.
-  [DataType.HasConnection.HasConnection.typename]: [
+  [HasConnection.HasConnection.typename]: [
     // prettier-ignore
     { kind: 'partner', source: 'dxos', target: 'ink_and_switch' },
     { kind: 'partner', source: 'dxos', target: 'effectful' },
@@ -134,9 +134,9 @@ export const addTestData = async (space: Space): Promise<void> => {
   }
 };
 
-export const createTestTranscription = (): DataType.Message.Message[] => {
+export const createTestTranscription = (): Message.Message[] => {
   const timeInterval = 1_000;
-  const transcription: DataType.Message.Message[] = [
+  const transcription: Message.Message[] = [
     {
       text: 'Hey everyone, glad we could all connect today. I was thinking we could discuss where AI might be heading in the next decade.',
       sender: 'Mykola',
@@ -175,7 +175,7 @@ export const createTestTranscription = (): DataType.Message.Message[] => {
     },
   ].map((message, index, array) => {
     const created = new Date(Date.now() - (array.length - index) * timeInterval);
-    return Obj.make(DataType.Message.Message, {
+    return Obj.make(Message.Message, {
       created: created.toISOString(),
       blocks: [{ _tag: 'transcript', started: created.toISOString(), text: message.text }],
       sender: { identityDid: message.sender },
@@ -186,9 +186,9 @@ export const createTestTranscription = (): DataType.Message.Message[] => {
 };
 
 // TODO(wittjosiah): Find way to use data generator to generate substantive messages that could be summarized.
-export const createTestMailbox = (contacts?: DataType.Person.Person[]): DataType.Message.Message[] => {
+export const createTestMailbox = (contacts?: Person.Person[]): Message.Message[] => {
   const timeInterval = 1000;
-  const messages: DataType.Message.Message[] = [
+  const messages: Message.Message[] = [
     {
       text: 'Subject: Project Kickoff\n\nHi team,\n\nWe are excited to announce the kickoff of the Apollo project. Please review the attached roadmap and be prepared for our first meeting on Monday.\n\nBest,\nAlice',
       sender: contacts?.[0] ?? 'alice.johnson@acme-corp.com',
@@ -236,7 +236,7 @@ export const createTestMailbox = (contacts?: DataType.Person.Person[]): DataType
     },
   ].map((message, index, array) => {
     const created = new Date(Date.now() - (array.length - index) * timeInterval);
-    return Obj.make(DataType.Message.Message, {
+    return Obj.make(Message.Message, {
       created: created.toISOString(),
       blocks: [{ _tag: 'text', text: message.text }],
       sender: typeof message.sender === 'string' ? { email: message.sender } : { contact: Ref.make(message.sender) },

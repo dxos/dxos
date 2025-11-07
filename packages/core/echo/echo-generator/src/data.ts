@@ -26,7 +26,7 @@ export const Priority = [1, 2, 3, 4, 5];
 export enum TestSchemaType {
   document = 'example.com/type/Document',
   organization = 'example.com/type/Organization',
-  contact = 'example.com/type/Contact',
+  contact = 'example.com/type/Person',
   project = 'example.com/type/Project',
 }
 

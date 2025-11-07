@@ -16,10 +16,8 @@ import {
   Thread as ThreadComponent,
   type ThreadRootProps,
 } from '@dxos/react-ui-thread';
-import { type DataType } from '@dxos/schema';
+import { type AnchoredTo } from '@dxos/types';
 import { isNonNullable } from '@dxos/util';
-
-type AnchoredTo = DataType.AnchoredTo.AnchoredTo;
 
 import { useStatus } from '../hooks';
 import { meta } from '../meta';
@@ -30,13 +28,13 @@ import { command } from './command-extension';
 import { MessageContainer, buttonClassNames, buttonGroupClassNames } from './MessageContainer';
 
 export type CommentsThreadContainerProps = {
-  anchor: AnchoredTo;
-  onAttend?: (anchor: AnchoredTo) => void;
-  onComment?: (anchor: AnchoredTo, message: string) => void;
-  onResolve?: (anchor: AnchoredTo) => void;
-  onMessageDelete?: (anchor: AnchoredTo, messageId: string) => void;
-  onThreadDelete?: (anchor: AnchoredTo) => void;
-  onAcceptProposal?: (anchor: AnchoredTo, messageId: string) => void;
+  anchor: AnchoredTo.AnchoredTo;
+  onAttend?: (anchor: AnchoredTo.AnchoredTo) => void;
+  onComment?: (anchor: AnchoredTo.AnchoredTo, message: string) => void;
+  onResolve?: (anchor: AnchoredTo.AnchoredTo) => void;
+  onMessageDelete?: (anchor: AnchoredTo.AnchoredTo, messageId: string) => void;
+  onThreadDelete?: (anchor: AnchoredTo.AnchoredTo) => void;
+  onAcceptProposal?: (anchor: AnchoredTo.AnchoredTo, messageId: string) => void;
 } & Pick<ThreadRootProps, 'current'>;
 
 export const CommentsThreadContainer = ({

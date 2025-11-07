@@ -7,7 +7,8 @@ import { describe, test } from 'vitest';
 import { todo } from '@dxos/debug';
 import { Obj } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
-import { DataType, DataTypes } from '@dxos/schema';
+import { DataTypes } from '@dxos/schema';
+import { Organization } from '@dxos/types';
 
 import { SequenceBuilder } from './sequence';
 
@@ -92,14 +93,14 @@ describe.skip('Sequence', () => {
 
     const [org1] = [
       db.add(
-        Obj.make(DataType.Organization.Organization, {
+        Obj.make(Organization.Organization, {
           name: 'Exa',
           website: 'https://exa.ai',
           description: 'An AI-powered search engine company building search infrastructure for AI agents',
         }),
       ),
       db.add(
-        Obj.make(DataType.Organization.Organization, {
+        Obj.make(Organization.Organization, {
           name: 'Cresta',
           website: 'https://cresta.ai',
           description: 'A company that builds AI agents',

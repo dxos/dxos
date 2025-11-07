@@ -9,11 +9,10 @@ import { Filter, Obj, Query, Ref, Type } from '@dxos/echo';
 import { FormatEnum, RuntimeSchemaRegistry, StoredSchema, TypeEnum } from '@dxos/echo/internal';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
 import { log } from '@dxos/log';
+import { ProjectionModel } from '@dxos/schema';
 
-import { ProjectionModel } from '../projection';
+import { Testing } from '../testing';
 
-import * as Organization from './Organization';
-import * as Person from './Person';
 import * as View from './View';
 
 describe('Projection', () => {
@@ -28,11 +27,10 @@ describe('Projection', () => {
   });
 
   test('create view from schema', async ({ expect }) => {
-    const schema = Person.Person;
+    const schema = Testing.Person;
     const jsonSchema = Type.toJsonSchema(schema);
-
     const registry = new RuntimeSchemaRegistry();
-    registry.addSchema([Person.Person, Organization.Organization]);
+    registry.addSchema([Testing.Person, Testing.Organization]);
 
     const view = await View.makeWithReferences({
       query: Query.select(Filter.type(schema)),
@@ -44,26 +42,14 @@ describe('Projection', () => {
     assert(view.query.ast.filter.type === 'object');
     expect(view.query.ast.filter.typename).to.eq(Type.getDXN(schema)?.toString());
     const visibleFields = view.projection.fields.filter((f) => f.visible);
-    expect(visibleFields.map((f) => f.path)).to.deep.eq([
-      'fullName',
-      'preferredName',
-      'nickname',
-      'image',
-      'organization',
-      'jobTitle',
-      'department',
-      'notes',
-      'birthday',
-      'location',
-    ]);
+    expect(visibleFields.map((f) => f.path)).to.deep.eq(['name', 'image', 'email', 'organization']);
 
     const projection = new ProjectionModel(jsonSchema, view.projection);
 
     {
-      const { props } = projection.getFieldProjection(projection.getFieldId('fullName')!);
+      const { props } = projection.getFieldProjection(projection.getFieldId('name')!);
       expect(props).to.deep.eq({
-        property: 'fullName',
-        title: 'Full Name',
+        property: 'name',
         type: TypeEnum.String,
         format: FormatEnum.String,
       });
@@ -73,38 +59,35 @@ describe('Projection', () => {
       const { props } = projection.getFieldProjection(projection.getFieldId('organization')!);
       expect(props).to.deep.eq({
         property: 'organization',
-        title: 'Organization',
-        description: 'The organization the person is currently employed by.',
         type: TypeEnum.Ref,
         format: FormatEnum.Ref,
         referencePath: 'name',
-        referenceSchema: 'dxos.org/type/Organization',
+        referenceSchema: 'example.com/type/Organization',
       });
     }
   });
 
   test('static schema definitions with references', async ({ expect }) => {
-    const organization = Obj.make(Organization.Organization, {
+    const organization = Obj.make(Testing.Organization, {
       name: 'DXOS',
       website: 'https://dxos.org',
     });
-    const contact = Obj.make(Person.Person, {
-      fullName: 'Alice',
-      emails: [{ value: 'alice@example.com' }],
+    const contact = Obj.make(Testing.Person, {
+      name: 'Alice',
       organization: Ref.make(organization),
     });
     log('schema', {
-      organization: Type.toJsonSchema(Organization.Organization),
-      contact: Type.toJsonSchema(Person.Person),
+      organization: Type.toJsonSchema(Testing.Organization),
+      contact: Type.toJsonSchema(Testing.Person),
     });
     log('objects', { organization, contact });
-    expect(Obj.getTypename(organization)).to.eq(Organization.Organization.typename);
-    expect(Obj.getTypename(contact)).to.eq(Person.Person.typename);
+    expect(Obj.getTypename(organization)).to.eq(Testing.Organization.typename);
+    expect(Obj.getTypename(contact)).to.eq(Testing.Person.typename);
   });
 
   test('maintains field order during initialization', async ({ expect }) => {
     const schema = Obj.make(StoredSchema, {
-      typename: 'example.com/type/Contact',
+      typename: 'example.com/type/Person',
       version: '0.1.0',
       jsonSchema: Type.toJsonSchema(
         Schema.Struct({

@@ -8,7 +8,7 @@ import { Type } from '@dxos/echo';
 import { FormAnnotation, LabelAnnotation } from '@dxos/echo/internal';
 import { Thread } from '@dxos/plugin-thread/types';
 import { Transcript } from '@dxos/plugin-transcription/types';
-import { DataType } from '@dxos/schema';
+import { Text } from '@dxos/schema';
 
 // TODO(wittjosiah): Factor out. Brand.
 const IdentityDidSchema = Schema.String;
@@ -39,12 +39,12 @@ const Meeting_ = Schema.Struct({
   /**
    * Markdown notes for the meeting.
    */
-  notes: Type.Ref(DataType.Text.Text).pipe(FormAnnotation.set(false)),
+  notes: Type.Ref(Text.Text).pipe(FormAnnotation.set(false)),
 
   /**
    * Generated summary of the meeting.
    */
-  summary: Type.Ref(DataType.Text.Text).pipe(FormAnnotation.set(false)),
+  summary: Type.Ref(Text.Text).pipe(FormAnnotation.set(false)),
 
   /**
    * Message thread for the meeting.

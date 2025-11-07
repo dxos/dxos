@@ -6,9 +6,12 @@ import * as Schema from 'effect/Schema';
 
 import { Type } from '..';
 
-// TODO(burdon): These are non-canonical test types, so we really shouldn't export and use in other classes (compare with @dxos/sdk/testing).
+/**
+ * @deprecated
+ */
+// TOOD(burdon): Reconcile with @dxos/schema.
 export namespace Testing {
-  const _Contact = Schema.Struct({
+  export const Person = Schema.Struct({
     name: Schema.String,
     username: Schema.String,
     email: Schema.String,
@@ -25,17 +28,17 @@ export namespace Testing {
   }).pipe(
     Schema.partial,
     Type.Obj({
-      typename: 'example.com/type/Contact',
+      typename: 'example.com/type/Person',
       version: '0.1.0',
     }),
   );
-  export interface Contact extends Schema.Schema.Type<typeof _Contact> {}
-  export const Contact: Schema.Schema<Contact, Schema.Schema.Encoded<typeof _Contact>, never> = _Contact;
 
-  const _Task = Schema.Struct({
+  export interface Person extends Schema.Schema.Type<typeof Person> {}
+
+  export const Task = Schema.Struct({
     title: Schema.optional(Schema.String),
     completed: Schema.optional(Schema.Boolean),
-    assignee: Schema.optional(Type.Ref(Contact)),
+    assignee: Schema.optional(Type.Ref(Person)),
     previous: Schema.optional(Schema.suspend((): Type.Ref<Task> => Type.Ref(Task))),
     subTasks: Schema.optional(Schema.mutable(Schema.Array(Schema.suspend((): Type.Ref<Task> => Type.Ref(Task))))),
     description: Schema.optional(Schema.String),
@@ -46,8 +49,34 @@ export namespace Testing {
       version: '0.1.0',
     }),
   );
-  export interface Task extends Schema.Schema.Type<typeof _Task> {}
-  export const Task: Schema.Schema<Task, Schema.Schema.Encoded<typeof _Task>, never> = _Task;
+
+  export interface Task extends Schema.Schema.Type<typeof Task> {}
+
+  export const WorksFor = Schema.Struct({
+    since: Schema.optional(Schema.String),
+  }).pipe(
+    Type.Relation({
+      typename: 'example.com/type/WorksFor',
+      version: '0.1.0',
+      source: Person,
+      target: Person,
+    }),
+  );
+
+  export interface WorksFor extends Schema.Schema.Type<typeof WorksFor> {}
+
+  export const HasManager = Schema.Struct({
+    since: Schema.optional(Schema.String),
+  }).pipe(
+    Type.Relation({
+      typename: 'example.com/type/HasManager',
+      version: '0.1.0',
+      source: Person,
+      target: Person,
+    }),
+  );
+
+  export interface HasManager extends Schema.Schema.Type<typeof HasManager> {}
 
   export enum RecordType {
     UNDEFINED = 0,
@@ -63,7 +92,7 @@ export namespace Testing {
           Schema.Struct({
             title: Schema.String,
             description: Schema.String,
-            contacts: Schema.mutable(Schema.Array(Type.Ref(Contact))),
+            contacts: Schema.mutable(Schema.Array(Type.Ref(Person))),
             type: Schema.Enums(RecordType),
           }),
         ),
@@ -76,16 +105,4 @@ export namespace Testing {
       version: '0.1.0',
     }),
   );
-
-  export const WorksFor = Schema.Struct({
-    since: Schema.optional(Schema.String),
-  }).pipe(
-    Type.Relation({
-      typename: 'example.com/type/WorksFor',
-      version: '0.1.0',
-      source: Contact,
-      target: Contact,
-    }),
-  );
-  export interface WorksFor extends Schema.Schema.Type<typeof WorksFor> {}
 }

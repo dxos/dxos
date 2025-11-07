@@ -4,16 +4,16 @@
 
 import { type Space } from '@dxos/client/echo';
 import { type Obj, Query, Relation } from '@dxos/echo';
-import { DataType } from '@dxos/schema';
 import { type TypeSpec, type ValueGenerator, createObjectFactory } from '@dxos/schema/testing';
+import { HasRelationship, Organization, Person, Project } from '@dxos/types';
 import { range } from '@dxos/util';
 
 const getObject = (objects: Obj.Any[]) => objects[Math.floor(Math.random() * objects.length)];
 
 const defaultTypes: TypeSpec[] = [
-  { type: DataType.Organization.Organization, count: 5 },
-  { type: DataType.Project.Project, count: 5 },
-  { type: DataType.Person.Person, count: 10 },
+  { type: Organization.Organization, count: 5 },
+  { type: Project.Project, count: 5 },
+  { type: Person.Person, count: 10 },
 ];
 
 export type GenerateOptions = {
@@ -38,13 +38,13 @@ export const generate = async (
   await createObjects(spec);
 
   // Add relations between objects.
-  const { objects: contacts } = await space.db.query(Query.type(DataType.Person.Person)).run();
+  const { objects: contacts } = await space.db.query(Query.type(Person.Person)).run();
   for (const _ of range(relations.count)) {
     const source = getObject(contacts);
     const target = getObject(contacts);
     if (source.id !== target.id) {
       space.db.add(
-        Relation.make(DataType.HasRelationship.HasRelationship, {
+        Relation.make(HasRelationship.HasRelationship, {
           [Relation.Source]: source,
           [Relation.Target]: target,
           kind: relations.kind,

@@ -10,7 +10,7 @@ import { Capabilities, type PluginContext, contributes } from '@dxos/app-framewo
 import { Obj } from '@dxos/echo';
 import { ATTENDABLE_PATH_SEPARATOR, PLANK_COMPANION_TYPE } from '@dxos/plugin-deck/types';
 import { createExtension } from '@dxos/plugin-graph';
-import { DataType } from '@dxos/schema';
+import { Project } from '@dxos/types';
 
 import { meta } from '../meta';
 
@@ -22,9 +22,7 @@ export default (_context: PluginContext) =>
         Rx.make((get) =>
           Function.pipe(
             get(node),
-            Option.flatMap((node) =>
-              Obj.instanceOf(DataType.Project.Project, node.data) ? Option.some(node) : Option.none(),
-            ),
+            Option.flatMap((node) => (Obj.instanceOf(Project.Project, node.data) ? Option.some(node) : Option.none())),
             Option.map((node) => [
               {
                 id: [node.id, 'invocations'].join(ATTENDABLE_PATH_SEPARATOR),

@@ -13,7 +13,7 @@ import { Filter, type Space, useQuery } from '@dxos/react-client/echo';
 import { Separator, useTranslation } from '@dxos/react-ui';
 import { ControlItem, ControlPage, ControlSection, Form, controlItemClasses } from '@dxos/react-ui-form';
 import { StackItem } from '@dxos/react-ui-stack';
-import { DataType } from '@dxos/schema';
+import { AccessToken } from '@dxos/types';
 
 import { meta } from '../meta';
 import { TokenManagerAction } from '../types';
@@ -27,20 +27,20 @@ const initialValues = {
   token: '',
 };
 
-const FormSchema = DataType.AccessToken.AccessToken.pipe(Schema.omit('id'));
+const FormSchema = AccessToken.AccessToken.pipe(Schema.omit('id'));
 type TokenForm = Schema.Schema.Type<typeof FormSchema>;
 
 export const TokensContainer = ({ space }: { space: Space }) => {
   const { t } = useTranslation(meta.id);
   const { dispatchPromise: dispatch } = useIntentDispatcher();
   const [adding, setAdding] = useState(false);
-  const tokens = useQuery(space, Filter.type(DataType.AccessToken.AccessToken));
+  const tokens = useQuery(space, Filter.type(AccessToken.AccessToken));
 
   const handleNew = useCallback(() => setAdding(true), []);
   const handleCancel = useCallback(() => setAdding(false), []);
 
   const handleAddAccessToken = useCallback(
-    async (token: DataType.AccessToken.AccessToken) => {
+    async (token: AccessToken.AccessToken) => {
       // TODO(ZaymonFC): Is there a more ergonomic way to do this intent chain?
       const result = await dispatch(
         createIntent(SpaceAction.AddObject, {
@@ -50,12 +50,8 @@ export const TokensContainer = ({ space }: { space: Space }) => {
         }),
       );
 
-      if (Obj.instanceOf(DataType.AccessToken.AccessToken, result.data?.object)) {
-        void dispatch(
-          createIntent(TokenManagerAction.AccessTokenCreated, {
-            accessToken: result.data?.object,
-          }),
-        );
+      if (Obj.instanceOf(AccessToken.AccessToken, result.data?.object)) {
+        void dispatch(createIntent(TokenManagerAction.AccessTokenCreated, { accessToken: result.data?.object }));
       }
     },
     [space, dispatch],
@@ -63,14 +59,14 @@ export const TokensContainer = ({ space }: { space: Space }) => {
 
   const handleAdd = useCallback(
     async (form: TokenForm) => {
-      const token = Obj.make(DataType.AccessToken.AccessToken, form);
+      const token = Obj.make(AccessToken.AccessToken, form);
       await handleAddAccessToken(token);
       setAdding(false);
     },
     [handleAddAccessToken],
   );
 
-  const handleDelete = useCallback((token: DataType.AccessToken.AccessToken) => space.db.remove(token), [space]);
+  const handleDelete = useCallback((token: AccessToken.AccessToken) => space.db.remove(token), [space]);
 
   return (
     <StackItem.Content scrollable>

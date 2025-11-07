@@ -2,8 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type DataType } from '@dxos/schema';
+import { type Actor } from '@dxos/types';
 
-export const getActorId = (actor: DataType.Actor.Actor) => {
+export const getActorId = (actor: Actor.Actor) => {
   return actor.identityDid || actor.identityKey || actor.email || actor.name || '';
 };

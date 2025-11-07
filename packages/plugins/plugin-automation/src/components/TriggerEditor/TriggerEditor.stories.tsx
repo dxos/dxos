@@ -13,7 +13,7 @@ import { useQuery } from '@dxos/react-client/echo';
 import { ContactType, useClientProvider, withClientProvider } from '@dxos/react-client/testing';
 import { useAsyncEffect } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
-import { DataType } from '@dxos/schema';
+import { Employer, Organization, Person, Project } from '@dxos/types';
 
 import { functions } from '../../testing';
 import { translations } from '../../translations';
@@ -22,10 +22,10 @@ import { TriggerEditor, type TriggerEditorProps } from './TriggerEditor';
 
 const types = [
   // TODO(burdon): Get label from annotation.
-  { value: DataType.Organization.Organization.typename, label: 'Organization' },
-  { value: DataType.Person.Person.typename, label: 'Person' },
-  { value: Type.getTypename(DataType.Project.Project), label: 'Project' },
-  { value: DataType.Employer.Employer.typename, label: 'Employer' },
+  { value: Organization.Organization.typename, label: 'Organization' },
+  { value: Person.Person.typename, label: 'Person' },
+  { value: Type.getTypename(Project.Project), label: 'Project' },
+  { value: Employer.Employer.typename, label: 'Employer' },
 ];
 
 const DefaultStory = (props: Partial<TriggerEditorProps>) => {

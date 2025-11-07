@@ -18,7 +18,7 @@ import {
   type ThreadRootProps,
   threadLayout,
 } from '@dxos/react-ui-thread';
-import { DataType } from '@dxos/schema';
+import { Message } from '@dxos/types';
 import { isNonNullable } from '@dxos/util';
 
 import { useStatus } from '../hooks';
@@ -101,7 +101,7 @@ export const ChatContainer = ({
 
     thread.messages.push(
       Ref.make(
-        Obj.make(DataType.Message.Message, {
+        Obj.make(Message.Message, {
           created: new Date().toISOString(),
           sender: { identityDid: identity.did },
           blocks: [{ _tag: 'text', text: messageRef.current }],

@@ -23,7 +23,7 @@ import {
 import { Template } from '@dxos/blueprints';
 import { type DXN, Obj } from '@dxos/echo';
 import { DatabaseService, FunctionInvocationService, TracingService, defineFunction } from '@dxos/functions';
-import { DataType } from '@dxos/schema';
+import { type Message, Person } from '@dxos/types';
 import { trim } from '@dxos/util';
 
 import { LocalSearchHandler, LocalSearchToolkit, makeGraphWriterHandler, makeGraphWriterToolkit } from '../../crud';
@@ -84,7 +84,7 @@ export default defineFunction({
     function* ({ data: { query, instructions, mockSearch = false, entityExtraction = false } }) {
       if (mockSearch) {
         const mockPerson = yield* DatabaseService.add(
-          Obj.make(DataType.Person.Person, {
+          Obj.make(Person.Person, {
             preferredName: 'John Doe',
             emails: [{ value: 'john.doe@example.com' }],
             phoneNumbers: [{ value: '123-456-7890' }],
@@ -169,18 +169,18 @@ const join = (...strings: (string | undefined)[]) => strings.filter(Boolean).joi
  * Skips citations.
  */
 // TODO(burdon): Factor out.
-const extractLastTextBlock = (result: DataType.Message.Message[]) => {
+const extractLastTextBlock = (result: Message.Message[]) => {
   return Function.pipe(
     result,
     Array.last,
     Option.map(
       Function.flow(
-        (_) => _.blocks,
+        (_: Message.Message) => _.blocks,
         Array.reverse,
-        Array.dropWhile((_) => _._tag === 'summary'),
-        Array.takeWhile((_) => _._tag === 'text'),
+        Array.dropWhile((_: any) => _._tag === 'summary'),
+        Array.takeWhile((_: any) => _._tag === 'text'),
         Array.reverse,
-        Array.map((_) => _.text),
+        Array.map((_: any) => _.text),
         Array.reduce('', String.concat),
       ),
     ),

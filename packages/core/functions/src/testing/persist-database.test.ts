@@ -6,7 +6,7 @@ import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 
 import { Filter, Obj, Query, Type } from '@dxos/echo';
-import { DataType } from '@dxos/schema';
+import { Person } from '@dxos/types';
 
 import { DatabaseService } from '../services';
 
@@ -37,19 +37,19 @@ describe('TestDatabaseLayer', { timeout: 600_000 }, () => {
     Effect.fnUntraced(function* (_) {
       const NUM_OBJECTS = 500;
       const DbLayer = TestDatabaseLayer({
-        types: [DataType.Person.Person],
+        types: [Person.Person],
         storagePath: testStoragePath({ name: `reload-test-${Date.now()}` }),
       });
 
       yield* Effect.gen(function* () {
         for (let i = 0; i < NUM_OBJECTS; i++) {
-          yield* DatabaseService.add(Obj.make(DataType.Person.Person, { nickname: `Person ${i}` }));
+          yield* DatabaseService.add(Obj.make(Person.Person, { nickname: `Person ${i}` }));
         }
         yield* DatabaseService.flush({ indexes: true });
       }).pipe(Effect.provide(DbLayer));
 
       yield* Effect.gen(function* () {
-        const { objects } = yield* DatabaseService.runQuery(Query.select(Filter.type(DataType.Person.Person)));
+        const { objects } = yield* DatabaseService.runQuery(Query.select(Filter.type(Person.Person)));
         expect(objects.length).toEqual(NUM_OBJECTS);
       }).pipe(Effect.provide(DbLayer));
     }),
@@ -62,23 +62,23 @@ describe('TestDatabaseLayer', { timeout: 600_000 }, () => {
         const NUM_OBJECTS = 500;
 
         {
-          const { objects } = yield* DatabaseService.runQuery(Query.select(Filter.type(DataType.Person.Person)));
+          const { objects } = yield* DatabaseService.runQuery(Query.select(Filter.type(Person.Person)));
           console.log({ count: objects.length });
         }
 
         for (let i = 0; i < NUM_OBJECTS; i++) {
-          yield* DatabaseService.add(Obj.make(DataType.Person.Person, { nickname: `Person ${i}` }));
+          yield* DatabaseService.add(Obj.make(Person.Person, { nickname: `Person ${i}` }));
         }
         yield* DatabaseService.flush({ indexes: true });
 
         {
-          const { objects } = yield* DatabaseService.runQuery(Query.select(Filter.type(DataType.Person.Person)));
+          const { objects } = yield* DatabaseService.runQuery(Query.select(Filter.type(Person.Person)));
           console.log({ count: objects.length });
         }
       },
       Effect.provide(
         TestDatabaseLayer({
-          types: [DataType.Person.Person],
+          types: [Person.Person],
           storagePath: testStoragePath({ name: `reload-test` }),
         }),
       ),

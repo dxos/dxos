@@ -15,9 +15,9 @@ import { useQuery } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { withTheme } from '@dxos/react-ui/testing';
 import { QueryEditor, type QueryEditorProps } from '@dxos/react-ui-components';
-import { DataType } from '@dxos/schema';
 import { type ValueGenerator, createObjectFactory } from '@dxos/schema/testing';
 import { render } from '@dxos/storybook-utils';
+import { Employer, Organization, Person, Project } from '@dxos/types';
 
 faker.seed(1);
 const generator = faker as any as ValueGenerator;
@@ -62,7 +62,7 @@ const DefaultStory = ({ value: valueParam }: QueryEditorProps) => {
   );
 };
 
-const tags: Tag.TagMap = {
+const tags: Tag.Map = {
   ['tag_1' as const]: Tag.make({ label: 'Red' }),
   ['tag_2' as const]: Tag.make({ label: 'Green' }),
   ['tag_3' as const]: Tag.make({ label: 'Blue' }),
@@ -75,20 +75,15 @@ const meta: Meta<typeof QueryEditor> = {
   decorators: [
     withTheme,
     withClientProvider({
-      types: [
-        DataType.Organization.Organization,
-        DataType.Person.Person,
-        DataType.Project.Project,
-        DataType.Employer.Employer,
-      ],
+      types: [Organization.Organization, Person.Person, Project.Project, Employer.Employer],
       createIdentity: true,
       onCreateIdentity: async ({ client }) => {
         const space = client.spaces.default;
         const createObjects = createObjectFactory(space.db, generator);
         const objects = await createObjects([
-          { type: DataType.Organization.Organization, count: 30 },
-          { type: DataType.Project.Project, count: 20 },
-          { type: DataType.Person.Person, count: 50 },
+          { type: Organization.Organization, count: 30 },
+          { type: Project.Project, count: 20 },
+          { type: Person.Person, count: 50 },
         ]);
         objects.forEach((obj) => {
           Obj.getMeta(obj).tags = faker.helpers.uniqueArray(Object.keys(tags), faker.number.int(3));

@@ -11,7 +11,7 @@ import * as Schema from 'effect/Schema';
 import { Obj, Type } from '@dxos/echo';
 import { withAuthorization } from '@dxos/functions';
 import { log } from '@dxos/log';
-import { DataType } from '@dxos/schema';
+import { Message } from '@dxos/types';
 
 import { LabelsResponse, MessageDetails, MessagesResponse } from './types';
 import { createUrl, getPart, normalizeText, parseFromHeader } from './util';
@@ -76,7 +76,7 @@ export const getMessage = Effect.fn(function* (userId: string, messageId: string
 /**
  * Transforms Gmail message to ECHO message object.
  */
-export const messageToObject = (last?: DataType.Message.Message) =>
+export const messageToObject = (last?: Message.Message) =>
   Effect.fn(function* (message: MessageDetails) {
     // Skip the message if it's the same as the last message.
     const created = new Date(parseInt(message.internalDate)).toISOString();
@@ -98,7 +98,7 @@ export const messageToObject = (last?: DataType.Message.Message) =>
     const text = normalizeText(Buffer.from(data, 'base64').toString('utf-8'));
 
     return Obj.make(
-      DataType.Message.Message,
+      Message.Message,
       {
         id: Type.ObjectId.random(),
         created,

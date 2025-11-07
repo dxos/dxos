@@ -13,7 +13,7 @@ import { createDocAccessor } from '@dxos/echo-db';
 import { DatabaseService, defineFunction } from '@dxos/functions';
 import { DXN } from '@dxos/keys';
 import { Markdown } from '@dxos/plugin-markdown/types';
-import { DataType } from '@dxos/schema';
+import { AnchoredTo, Message } from '@dxos/types';
 
 import { Thread } from '../types';
 
@@ -37,13 +37,13 @@ export default defineFunction({
       computeDiffsWithCursors(accessor, _diffs),
       Array.map(
         Effect.fnUntraced(function* ({ cursor, text }) {
-          const proposal = Obj.make(DataType.Message.Message, {
+          const proposal = Obj.make(Message.Message, {
             created: new Date().toISOString(),
             sender: { role: 'assistant' },
             blocks: [{ _tag: 'proposal', text }],
           });
           const thread = Thread.make({ name: 'Proposal', messages: [Ref.make(proposal)], status: 'active' });
-          const relation = Relation.make(DataType.AnchoredTo.AnchoredTo, {
+          const relation = Relation.make(AnchoredTo.AnchoredTo, {
             [Relation.Source]: thread,
             [Relation.Target]: object,
             anchor: cursor,

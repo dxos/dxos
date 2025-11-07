@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type DataType } from '@dxos/schema';
+import { type ContentBlock, type Message } from '@dxos/types';
 
 type Reducer<R, I> = (acc: R, value: I, idx: number) => R;
 
@@ -38,12 +38,12 @@ type Reducer<R, I> = (acc: R, value: I, idx: number) => R;
  */
 export const reduceMessages: Reducer<
   {
-    messages: DataType.Message.Message[];
-    current?: DataType.Message.Message;
+    messages: Message.Message[];
+    current?: Message.Message;
     toolBlock?: boolean;
-    assistantMessages?: DataType.Message.Message[];
+    assistantMessages?: Message.Message[];
   },
-  DataType.Message.Message
+  Message.Message
 > = ({ messages, current, toolBlock, assistantMessages = [] }, message) => {
   // Treat tool calls as assistant messages.
   let assistant = message?.sender.role === 'assistant';
@@ -111,9 +111,9 @@ export const reduceMessages: Reducer<
 /**
  * Accumulate token counts from all summary blocks in pending messages.
  */
-const reduceSummary = (messages: DataType.Message.Message[]): DataType.ContentBlock.Summary => {
+const reduceSummary = (messages: Message.Message[]): ContentBlock.Summary => {
   let start: number | undefined;
-  return messages.reduce<DataType.ContentBlock.Summary>(
+  return messages.reduce<ContentBlock.Summary>(
     (acc, msg) => {
       const time = new Date(msg.created).getTime();
       if (!start) {
@@ -146,6 +146,6 @@ const reduceSummary = (messages: DataType.Message.Message[]): DataType.ContentBl
     {
       _tag: 'summary',
       duration: 0,
-    } satisfies DataType.ContentBlock.Summary,
+    } satisfies ContentBlock.Summary,
   );
 };

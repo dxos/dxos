@@ -6,7 +6,7 @@ import * as Schema from 'effect/Schema';
 
 import { Ref, Type } from '@dxos/echo';
 import { type ObjectId } from '@dxos/keys';
-import { DataType } from '@dxos/schema';
+import { Text } from '@dxos/schema';
 
 /**
  * Template input kind determines how template variables are resolved.
@@ -42,7 +42,7 @@ export type Input = Schema.Schema.Type<typeof Input>;
  * Template type.
  */
 export const Template = Schema.Struct({
-  source: Type.Ref(DataType.Text.Text).annotations({ description: 'Handlebars template source' }),
+  source: Type.Ref(Text.Text).annotations({ description: 'Handlebars template source' }),
   inputs: Schema.optional(Schema.mutable(Schema.Array(Input))),
 }).pipe(Schema.mutable);
 
@@ -53,6 +53,6 @@ export const make = ({
   inputs = [],
   id,
 }: { source?: string; inputs?: Input[]; id?: ObjectId } = {}): Template => ({
-  source: Ref.make(DataType.Text.make(source, id)),
+  source: Ref.make(Text.make(source, id)),
   inputs,
 });

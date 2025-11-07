@@ -7,12 +7,12 @@ import React from 'react';
 import { type Tag } from '@dxos/echo';
 import { DxAvatar } from '@dxos/lit-ui/react';
 import { Card } from '@dxos/react-ui-stack';
-import { type DataType } from '@dxos/schema';
+import { type Message } from '@dxos/types';
 
 import { getMessageProps } from '../../util';
 
 export type MessageCardProps = {
-  message: DataType.Message.Message;
+  message: Message.Message;
   role?: string;
 };
 

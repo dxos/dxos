@@ -369,9 +369,9 @@ describe('Reactive Object with ECHO database', () => {
 
   test('relation toJSON', async () => {
     const { db, graph } = await builder.createDatabase();
-    graph.schemaRegistry.addSchema([TestingDeprecated.Contact, TestingDeprecated.HasManager]);
-    const alice = db.add(Obj.make(TestingDeprecated.Contact, { name: 'Alice' }));
-    const bob = db.add(Obj.make(TestingDeprecated.Contact, { name: 'Bob' }));
+    graph.schemaRegistry.addSchema([TestingDeprecated.Person, TestingDeprecated.HasManager]);
+    const alice = db.add(Obj.make(TestingDeprecated.Person, { name: 'Alice' }));
+    const bob = db.add(Obj.make(TestingDeprecated.Person, { name: 'Bob' }));
     const manager = db.add(live(TestingDeprecated.HasManager, { [RelationTargetId]: bob, [RelationSourceId]: alice }));
     const objData: any = Obj.toJSON(manager as any);
     expect(objData).to.deep.contain({
@@ -412,7 +412,7 @@ describe('Reactive Object with ECHO database', () => {
       previousEmployment: Schema.optional(Schema.Array(Ref(Organization))),
     }).pipe(
       EchoObject({
-        typename: 'example.com/type/Contact',
+        typename: 'example.com/type/Person',
         version: '0.1.0',
       }),
     );
@@ -518,9 +518,9 @@ describe('Reactive Object with ECHO database', () => {
       const testBuilder = new EchoTestBuilder();
       await openAndClose(testBuilder);
       const { db } = await testBuilder.createDatabase();
-      db.graph.schemaRegistry.addSchema([TestingDeprecated.Contact, TestingDeprecated.Task]);
+      db.graph.schemaRegistry.addSchema([TestingDeprecated.Person, TestingDeprecated.Task]);
 
-      const contact = Obj.make(TestingDeprecated.Contact, { name: 'Contact', tasks: [] });
+      const contact = Obj.make(TestingDeprecated.Person, { name: 'Contact', tasks: [] });
       db.add(contact);
       const task1 = Obj.make(TestingDeprecated.Task, { title: 'Task1' });
       const task2 = Obj.make(TestingDeprecated.Task, { title: 'Task2' });

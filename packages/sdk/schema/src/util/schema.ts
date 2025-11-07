@@ -7,14 +7,13 @@ import * as Schema from 'effect/Schema';
 import {
   type EchoSchema,
   FormatEnum,
+  type JsonSchemaType,
   type SelectOptionSchema,
   TypeEnum,
   TypedObject,
   formatToType,
 } from '@dxos/echo/internal';
 import { createEchoSchema } from '@dxos/echo/testing';
-
-import { makeMultiSelectAnnotations, makeSingleSelectAnnotations } from './util';
 
 export type SelectOptionType = typeof SelectOptionSchema.Type;
 
@@ -26,6 +25,7 @@ export type SchemaPropertyDefinition = {
   config?: { options?: SelectOptionType[] };
 };
 
+// TODO(burdon): Factor out.
 export const getSchemaFromPropertyDefinitions = (
   typename: string,
   properties: SchemaPropertyDefinition[],
@@ -65,4 +65,48 @@ export const getSchemaFromPropertyDefinitions = (
   }
 
   return schema;
+};
+
+/**
+ * Creates or updates echo annotations for SingleSelect options in a JSON Schema property.
+ */
+// TODO(burdon): Factor out (dxos/echo)
+export const makeSingleSelectAnnotations = (
+  jsonProperty: JsonSchemaType,
+  options: Array<{ id: string; title?: string; color?: string }>,
+) => {
+  jsonProperty.enum = options.map(({ id }) => id);
+  jsonProperty.format = FormatEnum.SingleSelect;
+  jsonProperty.annotations = {
+    meta: {
+      singleSelect: {
+        options: options.map(({ id, title, color }) => ({ id, title, color })),
+      },
+    },
+  };
+
+  return jsonProperty;
+};
+
+/**
+ * Creates or updates echo annotations for MultiSelect options in a JSON Schema property.
+ */
+// TODO(burdon): Factor out (dxos/echo)
+export const makeMultiSelectAnnotations = (
+  jsonProperty: JsonSchemaType,
+  options: Array<{ id: string; title?: string; color?: string }>,
+) => {
+  // TODO(ZaymonFC): Is this how do we encode an array of enums?
+  jsonProperty.type = 'object';
+  jsonProperty.items = { type: 'string', enum: options.map(({ id }) => id) };
+  jsonProperty.format = FormatEnum.MultiSelect;
+  jsonProperty.annotations = {
+    meta: {
+      multiSelect: {
+        options: options.map(({ id, title, color }) => ({ id, title, color })),
+      },
+    },
+  };
+
+  return jsonProperty;
 };

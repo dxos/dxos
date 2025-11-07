@@ -9,9 +9,7 @@ import * as Effect from 'effect/Effect';
 import * as Function from 'effect/Function';
 import * as Stream from 'effect/Stream';
 
-import { type DataType } from '@dxos/schema';
-
-type ContentBlock = typeof DataType.ContentBlock;
+import { type ContentBlock } from '@dxos/types';
 
 import { parseResponse } from './AiParser';
 
@@ -166,7 +164,7 @@ describe('parser', () => {
             _tag: 'reasoning',
             reasoningText: 'My thoughts are...',
           },
-        ] satisfies DataType.ContentBlock.Any[]);
+        ] satisfies ContentBlock.Any[]);
       }),
     );
 
@@ -183,7 +181,7 @@ describe('parser', () => {
             _tag: 'reasoning',
             reasoningText: 'My thoughts are...',
           },
-        ] satisfies DataType.ContentBlock.Any[]);
+        ] satisfies ContentBlock.Any[]);
       }),
     );
 
@@ -199,7 +197,7 @@ describe('parser', () => {
           {
             _tag: 'toolkit',
           },
-        ] satisfies DataType.ContentBlock.Any[]);
+        ] satisfies ContentBlock.Any[]);
       }),
     );
 
@@ -218,7 +216,7 @@ describe('parser', () => {
             _tag: 'select',
             options: ['Yes', 'No'],
           },
-        ] satisfies DataType.ContentBlock.Any[]);
+        ] satisfies ContentBlock.Any[]);
       }),
     );
 
@@ -262,7 +260,7 @@ describe('parser', () => {
             _tag: 'select',
             options: ['Yes', 'No'],
           },
-        ] satisfies DataType.ContentBlock.Any[]);
+        ] satisfies ContentBlock.Any[]);
       }),
     );
   });
@@ -331,7 +329,7 @@ describe('parser', () => {
                 input: '{"bar":"baz"}',
                 providerExecuted: false,
               },
-            ] satisfies DataType.ContentBlock.Any[]
+            ] satisfies ContentBlock.Any[]
           ).map((block) => [block]),
         );
       }),

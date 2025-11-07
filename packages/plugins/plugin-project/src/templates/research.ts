@@ -6,49 +6,50 @@ import { Filter, Obj, Query, Ref, Type } from '@dxos/echo';
 import { Mailbox } from '@dxos/plugin-inbox/types';
 import { Markdown } from '@dxos/plugin-markdown/types';
 import { type Space } from '@dxos/react-client/echo';
-import { DataType } from '@dxos/schema';
+import { Collection, View } from '@dxos/schema';
+import { Message, Organization, Person, Project } from '@dxos/types';
 
-export const createResearchProject = async (space: Space, name?: string): Promise<DataType.Project.Project | null> => {
+export const createResearchProject = async (space: Space, name?: string): Promise<Project.Project | null> => {
   const { objects: mailboxes } = await space.db.query(Filter.type(Mailbox.Mailbox)).run();
   if (!mailboxes.length) {
     return null;
   }
 
   const mailbox = mailboxes[0];
-  const mailboxView = DataType.View.make({
+  const mailboxView = View.make({
     name: 'Mailbox',
-    query: Query.select(Filter.type(DataType.Message.Message)).options({
+    query: Query.select(Filter.type(Message.Message)).options({
       queues: [mailbox.queue.dxn.toString()],
     }),
-    jsonSchema: Type.toJsonSchema(DataType.Message.Message),
-    presentation: Obj.make(DataType.Collection.Collection, { objects: [] }),
+    jsonSchema: Type.toJsonSchema(Message.Message),
+    presentation: Obj.make(Collection.Collection, { objects: [] }),
   });
 
-  const contactsQuery = Query.select(Filter.type(DataType.Person.Person));
-  const contactsView = DataType.View.make({
+  const contactsQuery = Query.select(Filter.type(Person.Person));
+  const contactsView = View.make({
     name: 'Contacts',
     query: contactsQuery,
-    jsonSchema: Type.toJsonSchema(DataType.Person.Person),
-    presentation: Obj.make(DataType.Collection.Collection, { objects: [] }),
+    jsonSchema: Type.toJsonSchema(Person.Person),
+    presentation: Obj.make(Collection.Collection, { objects: [] }),
   });
 
-  const organizationsQuery = Query.select(Filter.type(DataType.Organization.Organization));
-  const organizationsView = DataType.View.make({
+  const organizationsQuery = Query.select(Filter.type(Organization.Organization));
+  const organizationsView = View.make({
     name: 'Organizations',
     query: organizationsQuery,
-    jsonSchema: Type.toJsonSchema(DataType.Organization.Organization),
-    presentation: Obj.make(DataType.Collection.Collection, { objects: [] }),
+    jsonSchema: Type.toJsonSchema(Organization.Organization),
+    presentation: Obj.make(Collection.Collection, { objects: [] }),
   });
 
   const notesQuery = Query.select(Filter.type(Markdown.Document));
-  const notesView = DataType.View.make({
+  const notesView = View.make({
     name: 'Notes',
     query: notesQuery,
     jsonSchema: Type.toJsonSchema(Markdown.Document),
-    presentation: Obj.make(DataType.Collection.Collection, { objects: [] }),
+    presentation: Obj.make(Collection.Collection, { objects: [] }),
   });
 
-  return DataType.Project.make({
+  return Project.make({
     name: name ?? 'Research',
     collections: [mailboxView, contactsView, organizationsView, notesView].map((view) => Ref.make(view)),
   });

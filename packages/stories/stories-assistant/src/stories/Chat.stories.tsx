@@ -43,8 +43,19 @@ import { useAsyncEffect, useSignalsMemo } from '@dxos/react-ui';
 import { withTheme } from '@dxos/react-ui/testing';
 import { Stack, StackItem } from '@dxos/react-ui-stack';
 import { Table } from '@dxos/react-ui-table/types';
-import { DataType } from '@dxos/schema';
+import { Collection, Text, View } from '@dxos/schema';
 import { render } from '@dxos/storybook-utils';
+import {
+  AccessToken,
+  Employer,
+  HasConnection,
+  HasSubject,
+  Message,
+  Organization,
+  Person,
+  Project,
+  Task,
+} from '@dxos/types';
 import { isNonNullable, trim } from '@dxos/util';
 
 import {
@@ -113,11 +124,7 @@ const DefaultStory = ({ modules, showContext, blueprints = [] }: StoryProps) => 
       .filter(isNonNullable);
 
     const binder = new AiContextBinder(await chat.queue.load());
-    await binder.use((binder) =>
-      binder.bind({
-        blueprints: blueprintObjects.map((blueprint) => Ref.make(blueprint)),
-      }),
-    );
+    await binder.use((binder) => binder.bind({ blueprints: blueprintObjects.map((blueprint) => Ref.make(blueprint)) }));
   }, [space, blueprints, blueprintsDefinitions]);
 
   const handleEvent = useCallback<NonNullable<ComponentProps['onEvent']>>((event) => {
@@ -279,13 +286,13 @@ export const WithDocument: Story = {
     config: config.remote, // TODO(burdon): Issue making persistent.
     onInit: async ({ space }) => {
       space.db.add(
-        Markdown.makeDocument({
+        Markdown.make({
           name: 'My Document',
           content: addSpellingMistakes(MARKDOWN_DOCUMENT, 2),
         }),
       );
       space.db.add(
-        Markdown.makeDocument({
+        Markdown.make({
           name: 'Style Guide',
           content: STYLE_GUIDE,
         }),
@@ -308,7 +315,7 @@ export const WithBlueprints: Story = {
     plugins: [InboxPlugin(), MarkdownPlugin(), TablePlugin()],
     config: config.remote,
     onInit: async ({ space }) => {
-      space.db.add(Markdown.makeDocument({ name: 'Tasks' }));
+      space.db.add(Markdown.make({ name: 'Tasks' }));
     },
     onChatCreated: async ({ space, binder }) => {
       const { objects } = await space.db.query(Filter.type(Markdown.Document)).run();
@@ -369,7 +376,7 @@ export const WithMail: Story = {
     types: [Mailbox.Mailbox],
     onInit: async ({ space }) => {
       const mailbox = space.db.add(Mailbox.make({ name: 'Mailbox', space }));
-      const queue = space.queues.get<DataType.Message.Message>(mailbox.queue.dxn);
+      const queue = space.queues.get<Message.Message>(mailbox.queue.dxn);
       const messages = createTestMailbox();
       await queue.append(messages);
     },
@@ -411,14 +418,10 @@ export const WithMap: Story = {
   decorators: getDecorators({
     plugins: [MapPlugin(), TablePlugin()],
     config: config.remote,
-    types: [DataType.View.View, Map.Map, Table.Table],
+    types: [View.View, Map.Map, Table.Table],
     onInit: async ({ space }) => {
       const [schema] = await space.db.schemaRegistry.register([createLocationSchema()]);
-      const { view: tableView } = await Table.makeView({
-        name: 'Table',
-        space,
-        typename: schema.typename,
-      });
+      const { view: tableView } = await Table.makeView({ name: 'Table', space, typename: schema.typename });
       const { view: mapView } = await Map.makeView({
         name: 'Map',
         space,
@@ -429,7 +432,7 @@ export const WithMap: Story = {
       space.db.add(mapView);
     },
     onChatCreated: async ({ space, binder }) => {
-      const { objects } = await space.db.query(Filter.type(DataType.View.View)).run();
+      const { objects } = await space.db.query(Filter.type(View.View)).run();
       await binder.bind({ objects: objects.map((object) => Ref.make(object)) });
     },
   }),
@@ -449,7 +452,7 @@ export const WithTrip: Story = {
       // TODO(burdon): Table.
       space.db.add(Map.make({ name: 'Trip' }));
       space.db.add(
-        Markdown.makeDocument({
+        Markdown.make({
           name: 'Itinerary',
           content: trim`
             # Itinerary
@@ -467,7 +470,7 @@ export const WithTrip: Story = {
         }),
       );
       space.db.add(
-        Markdown.makeDocument({
+        Markdown.make({
           name: 'Barcelona',
           content: trim`
             # Barcelona
@@ -517,26 +520,15 @@ export const WithResearch: Story = {
     plugins: [MarkdownPlugin(), TablePlugin(), ThreadPlugin()],
     config: config.remote,
     types: [...ResearchDataTypes, ResearchGraph],
-    accessTokens: [
-      Obj.make(DataType.AccessToken.AccessToken, {
-        source: 'exa.ai',
-        token: EXA_API_KEY,
-      }),
-    ],
+    accessTokens: [Obj.make(AccessToken.AccessToken, { source: 'exa.ai', token: EXA_API_KEY })],
     onInit: async ({ space }) => {
-      space.db.add(
-        Obj.make(DataType.Organization.Organization, {
-          name: 'BlueYard Capital',
-        }),
-      );
-      space.db.add(Markdown.makeDocument({ name: 'DXOS', content: DXOS_DOCUMENT }));
+      space.db.add(Obj.make(Organization.Organization, { name: 'BlueYard Capital' }));
+      space.db.add(Markdown.make({ name: 'DXOS', content: DXOS_DOCUMENT }));
     },
     onChatCreated: async ({ space, binder }) => {
-      const { objects: organizations } = await space.db.query(Filter.type(DataType.Organization.Organization)).run();
+      const { objects: organizations } = await space.db.query(Filter.type(Organization.Organization)).run();
       const { objects: documents } = await space.db.query(Filter.type(Markdown.Document)).run();
-      await binder.bind({
-        objects: [...organizations, ...documents].map((object) => Ref.make(object)),
-      });
+      await binder.bind({ objects: [...organizations, ...documents].map((object) => Ref.make(object)) });
     },
   }),
   args: {
@@ -592,7 +584,7 @@ export const WithLinearSync: Story = {
   decorators: getDecorators({
     plugins: [],
     config: config.remote,
-    types: [DataType.Task.Task, DataType.Person.Person, DataType.Project.Project],
+    types: [Task.Task, Person.Person, Project.Project],
     accessTokens: accessTokensFromEnv({
       'linear.app': VITE_LINEAR_API_KEY,
     }),
@@ -684,19 +676,12 @@ export const WithResearchQueue: Story = {
     plugins: [],
     config: config.remote,
     types: [...ResearchDataTypes, ResearchGraph, ResearchInputQueue],
-    accessTokens: [
-      Obj.make(DataType.AccessToken.AccessToken, {
-        source: 'exa.ai',
-        token: EXA_API_KEY,
-      }),
-    ],
+    accessTokens: [Obj.make(AccessToken.AccessToken, { source: 'exa.ai', token: EXA_API_KEY })],
     onInit: async ({ space }) => {
       const researchInputQueue = space.db.add(
-        Obj.make(ResearchInputQueue, {
-          queue: Ref.fromDXN(space.queues.create().dxn),
-        }),
+        Obj.make(ResearchInputQueue, { queue: Ref.fromDXN(space.queues.create().dxn) }),
       );
-      const orgs = organizations.map(({ id: _, ...org }) => Obj.make(DataType.Organization.Organization, org));
+      const orgs = organizations.map(({ id: _, ...org }) => Obj.make(Organization.Organization, org));
       await researchInputQueue.queue.target!.append(orgs);
 
       const researchPrompt = space.db.add(
@@ -743,28 +728,23 @@ export const WithProject: Story = {
   decorators: getDecorators({
     plugins: [InboxPlugin(), MarkdownPlugin(), ProjectPlugin()],
     config: config.remote,
-    accessTokens: [
-      Obj.make(DataType.AccessToken.AccessToken, {
-        source: 'exa.ai',
-        token: EXA_API_KEY,
-      }),
-    ],
+    accessTokens: [Obj.make(AccessToken.AccessToken, { source: 'exa.ai', token: EXA_API_KEY })],
     types: [
       Tag.Tag,
-      DataType.Employer.Employer,
-      DataType.HasConnection.HasConnection,
-      DataType.HasSubject.HasSubject,
-      DataType.Message.Message,
-      DataType.Organization.Organization,
-      DataType.Person.Person,
-      DataType.Project.Project,
-      DataType.View.View,
+      Employer.Employer,
+      HasConnection.HasConnection,
+      HasSubject.HasSubject,
+      Message.Message,
+      Organization.Organization,
+      Person.Person,
+      Project.Project,
+      View.View,
       Mailbox.Mailbox,
     ],
     onInit: async ({ space }) => {
       await addTestData(space);
-      const { objects: people } = await space.db.query(Filter.type(DataType.Person.Person)).run();
-      const { objects: organizations } = await space.db.query(Filter.type(DataType.Organization.Organization)).run();
+      const { objects: people } = await space.db.query(Filter.type(Person.Person)).run();
+      const { objects: organizations } = await space.db.query(Filter.type(Organization.Organization)).run();
       const tag = space.db.add(Tag.make({ label: 'Project' }));
       const tagDxn = Obj.getDXN(tag).toString();
 
@@ -774,18 +754,18 @@ export const WithProject: Story = {
       });
 
       const mailbox = space.db.add(Mailbox.make({ name: 'Mailbox', space }));
-      const queue = space.queues.get<DataType.Message.Message>(mailbox.queue.dxn);
+      const queue = space.queues.get<Message.Message>(mailbox.queue.dxn);
       const messages = createTestMailbox(people);
       await queue.append(messages);
 
       const dxosResearch = space.db.add(
-        Markdown.makeDocument({
+        Markdown.make({
           name: 'DXOS Research',
           content: 'DXOS builds Composer, an open-source AI-powered malleable application.',
         }),
       );
       const blueyardResearch = space.db.add(
-        Markdown.makeDocument({
+        Markdown.make({
           name: 'BlueYard Research',
           content: 'BlueYard is a venture capital firm that invests in early-stage startups.',
         }),
@@ -817,10 +797,8 @@ export const WithProject: Story = {
       //   }),
       // );
 
-      const contactsQuery = Query.select(Filter.type(DataType.Person.Person)).select(Filter.tag(tagDxn));
-      const organizationsQuery = Query.select(Filter.type(DataType.Organization.Organization)).select(
-        Filter.tag(tagDxn),
-      );
+      const contactsQuery = Query.select(Filter.type(Person.Person)).select(Filter.tag(tagDxn));
+      const organizationsQuery = Query.select(Filter.type(Organization.Organization)).select(Filter.tag(tagDxn));
       const notesQuery = Query.select(Filter.type(Markdown.Document)).select(Filter.tag(tagDxn));
 
       const researchPrompt = space.db.add(
@@ -860,37 +838,37 @@ export const WithProject: Story = {
       });
       space.db.add(researchTrigger);
 
-      const mailboxView = DataType.View.make({
+      const mailboxView = View.make({
         name: 'Mailbox',
-        query: Query.select(Filter.type(DataType.Message.Message))
+        query: Query.select(Filter.type(Message.Message))
           .select(Filter.tag(tagDxn))
           .options({
             queues: [mailbox.queue.dxn.toString()],
           }),
-        jsonSchema: Type.toJsonSchema(DataType.Message.Message),
-        presentation: Obj.make(DataType.Collection.Collection, { objects: [] }),
+        jsonSchema: Type.toJsonSchema(Message.Message),
+        presentation: Obj.make(Collection.Collection, { objects: [] }),
       });
-      const contactsView = DataType.View.make({
+      const contactsView = View.make({
         name: 'Contacts',
         query: contactsQuery,
-        jsonSchema: Type.toJsonSchema(DataType.Person.Person),
-        presentation: Obj.make(DataType.Collection.Collection, { objects: [] }),
+        jsonSchema: Type.toJsonSchema(Person.Person),
+        presentation: Obj.make(Collection.Collection, { objects: [] }),
       });
-      const organizationsView = DataType.View.make({
+      const organizationsView = View.make({
         name: 'Organizations',
         query: organizationsQuery,
-        jsonSchema: Type.toJsonSchema(DataType.Organization.Organization),
-        presentation: Obj.make(DataType.Collection.Collection, { objects: [] }),
+        jsonSchema: Type.toJsonSchema(Organization.Organization),
+        presentation: Obj.make(Collection.Collection, { objects: [] }),
       });
-      const notesView = DataType.View.make({
+      const notesView = View.make({
         name: 'Notes',
         query: notesQuery,
         jsonSchema: Type.toJsonSchema(Markdown.Document),
-        presentation: Obj.make(DataType.Collection.Collection, { objects: [] }),
+        presentation: Obj.make(Collection.Collection, { objects: [] }),
       });
 
       space.db.add(
-        DataType.Project.make({
+        Project.make({
           name: 'Investor Research',
           collections: [mailboxView, contactsView, organizationsView, notesView].map((view) => Ref.make(view)),
         }),
@@ -907,7 +885,7 @@ export const WithScript: Story = {
   decorators: getDecorators({
     plugins: [MarkdownPlugin(), ScriptPlugin()],
     config: config.local,
-    types: [Script.Script, DataType.Text.Text],
+    types: [Script.Script, Text.Text],
     onInit: async ({ client, space }) => {
       const { identityKey } = client.halo.identity.get()!;
       await client.halo.writeCredentials([getAccessCredential(identityKey)]);
@@ -943,9 +921,7 @@ export const WithScript: Story = {
     },
     onChatCreated: async ({ space, binder }) => {
       const { objects: blueprints } = await space.db.query(Query.select(Filter.type(Blueprint.Blueprint))).run();
-      await binder.bind({
-        blueprints: blueprints.map((blueprint) => Ref.make(blueprint)),
-      });
+      await binder.bind({ blueprints: blueprints.map((blueprint) => Ref.make(blueprint)) });
     },
   }),
   args: {
@@ -957,7 +933,7 @@ export const WithPrompt: Story = {
   decorators: getDecorators({
     plugins: [MarkdownPlugin()],
     config: config.remote,
-    types: [DataType.Text.Text],
+    types: [Text.Text],
     onInit: async ({ space }) => {
       space.db.add(serializeFunction(Agent.prompt));
 

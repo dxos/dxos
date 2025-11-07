@@ -14,7 +14,7 @@ import { TracingService } from '@dxos/functions';
 import { AutomationCapabilities } from '@dxos/plugin-automation';
 import { CollectionAction } from '@dxos/plugin-space/types';
 import { getSpace } from '@dxos/react-client/echo';
-import { type DataType } from '@dxos/schema';
+import { type Message } from '@dxos/types';
 
 import { type AiChatServices, updateName } from '../processor';
 import { Assistant, AssistantAction } from '../types';
@@ -81,7 +81,7 @@ export default (context: PluginContext) => [
       intent: AssistantAction.UpdateChatName,
       resolve: async ({ chat }) => {
         const space = getSpace(chat);
-        const queue = chat.queue.target as Queue<DataType.Message.Message>;
+        const queue = chat.queue.target as Queue<Message.Message>;
         if (!space || !queue) {
           return;
         }

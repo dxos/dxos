@@ -8,9 +8,9 @@ import { LayoutAction, createIntent } from '@dxos/app-framework';
 import { useIntentDispatcher } from '@dxos/app-framework/react';
 import { getSpace } from '@dxos/react-client/echo';
 import { Button, Dialog, IconButton, useTranslation } from '@dxos/react-ui';
-import { type DataType } from '@dxos/schema';
+import { type AccessToken } from '@dxos/types';
 
-import { useCreateAndDeployScriptTemplates } from '../../hooks/useCreateAndDeployScriptTemplates';
+import { useCreateAndDeployScriptTemplates } from '../../hooks';
 import { meta } from '../../meta';
 import { type Template } from '../../templates';
 
@@ -22,7 +22,7 @@ export const DEPLOYMENT_DIALOG = `${meta.id}/deployment/dialog`;
 //  - Pending / onError states.
 
 export type DeploymentDialogProps = {
-  accessToken: DataType.AccessToken.AccessToken;
+  accessToken: AccessToken.AccessToken;
   scriptTemplates: Template[];
 };
 

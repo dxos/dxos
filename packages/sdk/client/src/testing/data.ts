@@ -6,7 +6,9 @@ import * as Schema from 'effect/Schema';
 
 import { Expando, Ref, TypedObject } from '@dxos/echo/internal';
 
+//
 // TODO(burdon): Remove.
+//
 
 /** @deprecated */
 export class TextV0Type extends TypedObject({ typename: 'dxos.org/TextV0', version: '0.1.0' })({

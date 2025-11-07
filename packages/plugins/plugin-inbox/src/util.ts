@@ -5,7 +5,7 @@
 import { format, formatDistance, isThisWeek, isToday } from 'date-fns';
 
 import { type Obj } from '@dxos/echo';
-import { type DataType } from '@dxos/schema';
+import { type Message } from '@dxos/types';
 import { toHue } from '@dxos/util';
 
 /**
@@ -21,7 +21,7 @@ export const hashString = (str?: string): number => {
 // TODO(burdon): Factor out sort pattern with getters.
 export const sortByCreated =
   (descending = false) =>
-  ({ created: a }: Obj.Obj<DataType.Message.Message>, { created: b }: Obj.Obj<DataType.Message.Message>) =>
+  ({ created: a }: Obj.Obj<Message.Message>, { created: b }: Obj.Obj<Message.Message>) =>
     descending ? b.localeCompare(a) : a.localeCompare(b);
 
 export const formatDateTime = (date: Date, now: Date, compact = false) =>
@@ -45,11 +45,7 @@ type MessageProps = {
   hue: string;
 };
 
-export const getMessageProps = (
-  message: DataType.Message.Message,
-  now: Date = new Date(),
-  compact = false,
-): MessageProps => {
+export const getMessageProps = (message: Message.Message, now: Date = new Date(), compact = false): MessageProps => {
   const id = message.id;
   // Always use the first text block for display in the mailbox list.
   const textBlocks = message.blocks.filter((block) => 'text' in block);

@@ -9,25 +9,25 @@ import { Obj, Ref } from '@dxos/echo';
 import { useSpace } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { withTheme } from '@dxos/react-ui/testing';
-import { DataType } from '@dxos/schema';
+import { Text as TextType } from '@dxos/schema';
 import { render } from '@dxos/storybook-utils';
 
 import { translations } from '../../translations';
-import { JournalEntryType, JournalType, OutlineType, createJournal, createJournalEntry } from '../../types';
+import { Journal, Outline } from '../../types';
 
-import { Journal } from './Journal';
+import { JournalComponent } from './Journal';
 
 const meta = {
   title: 'plugins/plugin-outliner/Journal',
-  component: Journal,
-  render: render(({ journal: _journal }) => {
+  component: JournalComponent,
+  render: render(({ journal: journalParam }) => {
     const space = useSpace();
     // TODO(burdon): Throws:
     //  Uncaught InvariantViolation: invariant violation: assignFromLocalState [doc] at packages/core/echo/echo-db/src/core-db/object-core.ts:126
     //  Uncaught Error: Object references must be wrapped with `Ref.make`
-    const journal = useMemo(() => space?.db.add(_journal), [space, _journal]);
+    const journal = useMemo(() => space?.db.add(journalParam), [space, journalParam]);
     if (journal) {
-      return <Journal journal={journal} />;
+      return <JournalComponent journal={journal} />;
     }
   }),
   decorators: [
@@ -35,33 +35,33 @@ const meta = {
     withClientProvider({
       createIdentity: true,
       createSpace: true,
-      types: [DataType.Text.Text, JournalType, JournalEntryType, OutlineType],
+      types: [TextType.Text, Journal.Journal, Journal.JournalEntry, Outline.Outline],
     }),
   ],
   parameters: {
     layout: 'fullscreen',
     translations,
   },
-} satisfies Meta<typeof Journal>;
+} satisfies Meta<typeof JournalComponent>;
 
 export default meta;
 
-type Story = StoryObj<typeof Journal>;
+type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
   args: {
-    journal: createJournal(),
+    journal: Journal.make(),
   },
 };
 
 export const Jounals: Story = {
   args: {
-    journal: Obj.make(JournalType, {
+    journal: Obj.make(Journal.Journal, {
       name: 'Journal 1',
       entries: [
-        Ref.make(createJournalEntry()),
-        Ref.make(createJournalEntry(new Date(Date.now() - 5 * 24 * 60 * 60 * 1_000))),
-        Ref.make(createJournalEntry(new Date(2025, 0, 1))),
+        Ref.make(Journal.makeEntry()),
+        Ref.make(Journal.makeEntry(new Date(Date.now() - 5 * 24 * 60 * 60 * 1_000))),
+        Ref.make(Journal.makeEntry(new Date(2025, 0, 1))),
       ],
     }),
   },
@@ -87,7 +87,7 @@ const FocusContainer = ({ id }: { id: string }) => {
   );
 };
 
-export const Test: Story = {
+export const Test: StoryObj = {
   render: () => {
     return (
       <div className='flex flex-col w-full justify-center items-center gap-2 m-4'>

@@ -8,8 +8,9 @@ import { type EchoDatabase } from '@dxos/echo-db';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
 import { FunctionExecutor, ServiceContainer } from '@dxos/functions';
 import { log } from '@dxos/log';
-import { DataType } from '@dxos/schema';
-import { Testing, createTestData } from '@dxos/schema/testing';
+import { Testing } from '@dxos/schema/testing';
+import { type Message, Organization, Person } from '@dxos/types';
+import { createTestData } from '@dxos/types/testing';
 import { range } from '@dxos/util';
 
 import { processTranscriptMessage } from '../extraction';
@@ -21,15 +22,15 @@ describe.skip('NER EntityExtraction', () => {
   let db: EchoDatabase;
   let executor: FunctionExecutor;
   let testData: {
-    transcriptJosiah: DataType.Message.Message[];
-    transcriptWoflram: DataType.Message.Message[];
-    transcriptMessages: DataType.Message.Message[];
+    transcriptJosiah: Message.Message[];
+    transcriptWoflram: Message.Message[];
+    transcriptMessages: Message.Message[];
     documents: Testing.DocumentType[];
-    contacts: Record<string, DataType.Person.Person>;
-    organizations: Record<string, DataType.Organization.Organization>;
+    contacts: Record<string, Person.Person>;
+    organizations: Record<string, Organization.Organization>;
   };
 
-  const TYPES = [DataType.Organization.Organization, DataType.Person.Person, Testing.Contact, Testing.DocumentType];
+  const TYPES = [Organization.Organization, Person.Person, Testing.Person, Testing.DocumentType];
 
   beforeAll(async () => {
     // TODO(dmaretskyi): Helper to scaffold this from a config.

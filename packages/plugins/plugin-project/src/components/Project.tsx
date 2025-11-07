@@ -8,7 +8,8 @@ import React, { type FC } from 'react';
 import { Obj } from '@dxos/echo';
 import { Toolbar, type ToolbarRootProps, useTranslation } from '@dxos/react-ui';
 import { Stack } from '@dxos/react-ui-stack';
-import { DataType, type ProjectionModel } from '@dxos/schema';
+import { type ProjectionModel, View } from '@dxos/schema';
+import { type Project as ProjectType } from '@dxos/types';
 
 import { meta } from '../meta';
 
@@ -45,14 +46,12 @@ ProjectRoot.displayName = PROJECT_ROOT;
 //
 
 type ProjectContentProps = {
-  project: DataType.Project.Project;
+  project: ProjectType.Project;
 };
 
 const ProjectContent = ({ project }: ProjectContentProps) => {
   // NOTE: This doesn’t encompass column types which the Project schema.
-  const views = project.collections
-    .map((ref) => ref.target)
-    .filter((object) => Obj.instanceOf(DataType.View.View, object));
+  const views = project.collections.map((ref) => ref.target).filter((object) => Obj.instanceOf(View.View, object));
 
   return (
     <Stack orientation='horizontal' size='contain' rail={false}>

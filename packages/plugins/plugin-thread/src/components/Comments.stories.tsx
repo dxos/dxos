@@ -14,11 +14,8 @@ import { useQuery, useSpace } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { useAsyncEffect } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
-import { DataType } from '@dxos/schema';
 import { render } from '@dxos/storybook-utils';
-
-const AnchoredTo = DataType.AnchoredTo.AnchoredTo;
-type AnchoredTo = DataType.AnchoredTo.AnchoredTo;
+import { AnchoredTo, Message } from '@dxos/types';
 
 import { translations } from '../translations';
 import { Thread } from '../types';
@@ -31,7 +28,7 @@ faker.seed(1);
 const DefaultStory = () => {
   const identity = useIdentity();
   const space = useSpace();
-  const anchors = useQuery(space, Query.type(AnchoredTo));
+  const anchors = useQuery(space, Query.type(AnchoredTo.AnchoredTo));
 
   useAsyncEffect(async () => {
     if (identity && space) {
@@ -39,14 +36,14 @@ const DefaultStory = () => {
       const thread1 = space.db.add(createCommentThread(identity));
       const thread2 = space.db.add(createProposalThread(identity));
       space.db.add(
-        Relation.make(AnchoredTo, {
+        Relation.make(AnchoredTo.AnchoredTo, {
           [Relation.Source]: thread1,
           [Relation.Target]: object,
           anchor: 'test',
         }),
       );
       space.db.add(
-        Relation.make(AnchoredTo, {
+        Relation.make(AnchoredTo.AnchoredTo, {
           [Relation.Source]: thread2,
           [Relation.Target]: object,
           anchor: 'test',
@@ -74,7 +71,7 @@ const meta = {
       plugins: [
         IntentPlugin(),
         ClientPlugin({
-          types: [DataType.Message.Message, Thread.Thread, AnchoredTo],
+          types: [Message.Message, Thread.Thread, AnchoredTo.AnchoredTo],
           onClientInitialized: async ({ client }) => {
             await client.halo.createIdentity();
           },

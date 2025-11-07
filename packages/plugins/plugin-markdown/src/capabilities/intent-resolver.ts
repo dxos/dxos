@@ -25,7 +25,7 @@ export default (context: PluginContext) =>
     createResolver({
       intent: MarkdownAction.Create,
       resolve: ({ name, content }) => {
-        return { data: { object: Markdown.makeDocument({ name, content }) } };
+        return { data: { object: Markdown.make({ name, content }) } };
       },
     }),
     createResolver({

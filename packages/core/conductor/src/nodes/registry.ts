@@ -13,7 +13,8 @@ import { Queue } from '@dxos/echo-db';
 import { DatabaseService, QueueService } from '@dxos/functions';
 import { failedInvariant, invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
-import { DataType, getTypenameFromQuery } from '@dxos/schema';
+import { View, getTypenameFromQuery } from '@dxos/schema';
+import { Message } from '@dxos/types';
 import { safeParseJson } from '@dxos/util';
 
 import {
@@ -222,7 +223,7 @@ export const registry: Record<NodeType, Executable> = {
     input: VoidInput,
     output: Schema.Struct({
       id: ObjectId,
-      messages: Schema.Array(DataType.Message.Message),
+      messages: Schema.Array(Message.Message),
     }),
   }),
 
@@ -269,7 +270,7 @@ export const registry: Record<NodeType, Executable> = {
             const {
               objects: [container],
             } = yield* Effect.promise(() => db.query(Filter.ids(echoId)).run());
-            if (isInstanceOf(DataType.View.View, container)) {
+            if (isInstanceOf(View.View, container)) {
               const schema = yield* Effect.promise(async () =>
                 db.schemaRegistry
                   .query({

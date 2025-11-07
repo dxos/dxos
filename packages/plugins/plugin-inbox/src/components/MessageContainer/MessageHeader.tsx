@@ -6,7 +6,7 @@ import React, { useCallback, useRef } from 'react';
 
 import { Avatar, DxAnchorActivate, IconButton } from '@dxos/react-ui';
 import { type ThemedClassName, useTranslation } from '@dxos/react-ui';
-import { type DataType } from '@dxos/schema';
+import { type Message } from '@dxos/types';
 
 import { meta } from '../../meta';
 import { formatDateTime } from '../../util';
@@ -14,7 +14,7 @@ import { formatDateTime } from '../../util';
 export type ViewMode = 'plain' | 'enriched' | 'plain-only';
 
 export type MessageHeaderProps = ThemedClassName<{
-  message: DataType.Message.Message;
+  message: Message.Message;
   contact?: string; // TODO(burdon): Type for DXN?
   viewMode?: ViewMode;
 }>;

@@ -5,10 +5,9 @@
 import type { Space } from '@dxos/client-protocol';
 import { Obj, Ref } from '@dxos/echo';
 import { faker } from '@dxos/random';
+import { Testing } from '@dxos/schema/testing';
 
-import { DataType } from '../types';
-
-import { Testing } from './types';
+import { Message, Organization, Person } from '../types';
 
 faker.seed(1);
 
@@ -31,10 +30,10 @@ const createDocument = (name: string, content: string): Testing.DocumentType => 
 };
 
 const createOrganization = (
-  props: Pick<DataType.Organization.Organization, 'name' | 'website'> &
-    Partial<Omit<DataType.Organization.Organization, 'name' | 'website'>>,
-): DataType.Organization.Organization => {
-  return Obj.make(DataType.Organization.Organization, {
+  props: Pick<Organization.Organization, 'name' | 'website'> &
+    Partial<Omit<Organization.Organization, 'name' | 'website'>>,
+): Organization.Organization => {
+  return Obj.make(Organization.Organization, {
     description: faker.lorem.paragraph(),
     image: faker.image.url(),
     ...props,
@@ -45,19 +44,19 @@ const createContact = ({
   email,
   organization,
   ...props
-}: { email: string; organization?: DataType.Organization.Organization } & Partial<
-  Omit<DataType.Person.Person, 'organization'>
->): DataType.Person.Person => {
+}: { email: string; organization?: Organization.Organization } & Partial<
+  Omit<Person.Person, 'organization'>
+>): Person.Person => {
   // TODO(dmaretskyi): `Obj.make` with nested refs throws an error when added to db.
-  return Obj.make(DataType.Person.Person, {
+  return Obj.make(Person.Person, {
     organization: organization ? Ref.make(organization) : undefined,
     emails: [{ value: email }],
     ...props,
   });
 };
 
-const createTranscriptMessage = (sender: DataType.Person.Person, blocks: string[]) => {
-  return Obj.make(DataType.Message.Message, {
+const createTranscriptMessage = (sender: Person.Person, blocks: string[]) => {
+  return Obj.make(Message.Message, {
     sender: {
       name: sender.fullName,
     },
@@ -76,14 +75,14 @@ const createTranscriptMessage = (sender: DataType.Person.Person, blocks: string[
 };
 
 export const createTestData = () => {
-  const organizations: Record<string, DataType.Organization.Organization> = {
+  const organizations: Record<string, Organization.Organization> = {
     amco: createOrganization({ name: 'Amco', website: 'amco.org' }),
     cyberdyne: createOrganization({ name: 'Cyberdyne', website: 'cyberdyne.com' }),
     dxos: createOrganization({ name: 'DXOS', website: 'dxos.org' }),
     inkandswitch: createOrganization({ name: 'Ink & Switch', website: 'inkandswitch.com' }),
   };
 
-  const contacts: Record<string, DataType.Person.Person> = {
+  const contacts: Record<string, Person.Person> = {
     john: createContact({ fullName: 'John Doe', email: 'john.doe@example.com', organization: organizations.dxos }),
     sarah: createContact({
       fullName: 'Sarah Johnson',
@@ -175,13 +174,13 @@ export const createTestData = () => {
     createDocument('Composer VIP call', ''),
   ];
 
-  const transcriptWoflram: DataType.Message.Message[] = [
+  const transcriptWoflram: Message.Message[] = [
     createTranscriptMessage(contacts.john, [
       "And what I'd like to talk today about is Steven Wolfram's concept of a computational irreducibility.",
     ]),
   ];
 
-  const transcriptJosiah: DataType.Message.Message[] = [
+  const transcriptJosiah: Message.Message[] = [
     createTranscriptMessage(contacts.john, [
       'Today, I need to talk to Peter Van Hardenburg about the Composer VIP call.',
     ]),
@@ -189,7 +188,7 @@ export const createTestData = () => {
     createTranscriptMessage(contacts.john, ['Peter works at Ink and Switch.']),
   ];
 
-  const transcriptMessages: DataType.Message.Message[] = [
+  const transcriptMessages: Message.Message[] = [
     ...transcriptWoflram,
     ...transcriptJosiah,
 
@@ -263,9 +262,9 @@ export const createTestData = () => {
     ]),
   ];
 
-  const emails: DataType.Message.Message[] = [
+  const emails: Message.Message[] = [
     // Recent emails.
-    Obj.make(DataType.Message.Message, {
+    Obj.make(Message.Message, {
       blocks: [
         {
           _tag: 'text',
@@ -277,7 +276,7 @@ export const createTestData = () => {
       properties: { subject: 'Q3 Financial Review' },
     }),
 
-    Obj.make(DataType.Message.Message, {
+    Obj.make(Message.Message, {
       blocks: [
         {
           _tag: 'text',
@@ -289,7 +288,7 @@ export const createTestData = () => {
       properties: { subject: 'Board Feedback and Next Steps' },
     }),
 
-    Obj.make(DataType.Message.Message, {
+    Obj.make(Message.Message, {
       blocks: [
         {
           _tag: 'text',
@@ -301,7 +300,7 @@ export const createTestData = () => {
       properties: { subject: 'New Feature Ready for Testing' },
     }),
 
-    Obj.make(DataType.Message.Message, {
+    Obj.make(Message.Message, {
       blocks: [
         {
           _tag: 'text',
@@ -313,7 +312,7 @@ export const createTestData = () => {
       properties: { subject: 'URGENT: Bitcoin Wallet Verification Required' },
     }),
 
-    Obj.make(DataType.Message.Message, {
+    Obj.make(Message.Message, {
       blocks: [
         {
           _tag: 'text',
@@ -325,7 +324,7 @@ export const createTestData = () => {
       properties: { subject: 'Potential Strategic Partnership' },
     }),
 
-    Obj.make(DataType.Message.Message, {
+    Obj.make(Message.Message, {
       blocks: [
         {
           _tag: 'text',
@@ -337,7 +336,7 @@ export const createTestData = () => {
       properties: { subject: 'New Hires Starting Next Week' },
     }),
 
-    Obj.make(DataType.Message.Message, {
+    Obj.make(Message.Message, {
       blocks: [
         {
           _tag: 'text',
@@ -349,7 +348,7 @@ export const createTestData = () => {
       properties: { subject: 'Security Incident Report' },
     }),
 
-    Obj.make(DataType.Message.Message, {
+    Obj.make(Message.Message, {
       blocks: [
         {
           _tag: 'text',
@@ -361,7 +360,7 @@ export const createTestData = () => {
       properties: { subject: 'Acquisition Target Concerns' },
     }),
 
-    Obj.make(DataType.Message.Message, {
+    Obj.make(Message.Message, {
       blocks: [
         {
           _tag: 'text',
@@ -373,7 +372,7 @@ export const createTestData = () => {
       properties: { subject: 'Quarterly Tax Filings' },
     }),
 
-    Obj.make(DataType.Message.Message, {
+    Obj.make(Message.Message, {
       blocks: [
         {
           _tag: 'text',
@@ -385,7 +384,7 @@ export const createTestData = () => {
       properties: { subject: 'Speaking Opportunity: International Tech Summit' },
     }),
 
-    Obj.make(DataType.Message.Message, {
+    Obj.make(Message.Message, {
       blocks: [
         {
           _tag: 'text',
@@ -397,7 +396,7 @@ export const createTestData = () => {
       properties: { subject: 'MANDATORY: Security Update Required' },
     }),
 
-    Obj.make(DataType.Message.Message, {
+    Obj.make(Message.Message, {
       blocks: [
         {
           _tag: 'text',
@@ -409,7 +408,7 @@ export const createTestData = () => {
       properties: { subject: 'Q2 Customer Satisfaction Results' },
     }),
 
-    Obj.make(DataType.Message.Message, {
+    Obj.make(Message.Message, {
       blocks: [
         {
           _tag: 'text',
@@ -421,7 +420,7 @@ export const createTestData = () => {
       properties: { subject: 'Annual Company Retreat Planning' },
     }),
 
-    Obj.make(DataType.Message.Message, {
+    Obj.make(Message.Message, {
       blocks: [
         {
           _tag: 'text',
@@ -433,7 +432,7 @@ export const createTestData = () => {
       properties: { subject: 'Competitor Price Change - Strategic Response Needed' },
     }),
 
-    Obj.make(DataType.Message.Message, {
+    Obj.make(Message.Message, {
       blocks: [
         {
           _tag: 'text',
@@ -445,7 +444,7 @@ export const createTestData = () => {
       properties: { subject: 'Privacy Policy Update - Final Review' },
     }),
 
-    Obj.make(DataType.Message.Message, {
+    Obj.make(Message.Message, {
       blocks: [
         {
           _tag: 'text',
@@ -457,7 +456,7 @@ export const createTestData = () => {
       properties: { subject: 'Series C Funding Update - Oversubscribed' },
     }),
 
-    Obj.make(DataType.Message.Message, {
+    Obj.make(Message.Message, {
       blocks: [
         {
           _tag: 'text',
@@ -469,7 +468,7 @@ export const createTestData = () => {
       properties: { subject: 'Product Roadmap Finalized' },
     }),
 
-    Obj.make(DataType.Message.Message, {
+    Obj.make(Message.Message, {
       blocks: [
         {
           _tag: 'text',
@@ -481,7 +480,7 @@ export const createTestData = () => {
       properties: { subject: 'CONFIDENTIAL: Acquisition Offer Received' },
     }),
 
-    Obj.make(DataType.Message.Message, {
+    Obj.make(Message.Message, {
       blocks: [
         {
           _tag: 'text',
@@ -493,7 +492,7 @@ export const createTestData = () => {
       properties: { subject: 'Annual Audit Preparation' },
     }),
 
-    Obj.make(DataType.Message.Message, {
+    Obj.make(Message.Message, {
       blocks: [
         {
           _tag: 'text',
@@ -529,7 +528,7 @@ export const createTestData = () => {
 };
 
 export const seedTestData = async (space: Space) => {
-  const schemas = [DataType.Person.Person, DataType.Organization.Organization, Testing.DocumentType];
+  const schemas = [Person.Person, Organization.Organization, Testing.DocumentType];
   for (const schema of schemas) {
     if (!space.db.graph.schemaRegistry.hasSchema(schema)) {
       space.db.graph.schemaRegistry.addSchema([schema]);

@@ -5,13 +5,13 @@
 import React, { useCallback } from 'react';
 
 import { IconButton, List, ListItem, useTranslation } from '@dxos/react-ui';
-import { type DataType } from '@dxos/schema';
+import { type AccessToken } from '@dxos/types';
 
 import { meta } from '../meta';
 
 export type TokenManagerProps = {
-  tokens: DataType.AccessToken.AccessToken[];
-  onDelete?: (token: DataType.AccessToken.AccessToken) => void;
+  tokens: AccessToken.AccessToken[];
+  onDelete?: (token: AccessToken.AccessToken) => void;
 };
 
 export const TokenManager = ({ tokens, onDelete }: TokenManagerProps) => {
@@ -25,8 +25,8 @@ export const TokenManager = ({ tokens, onDelete }: TokenManagerProps) => {
 };
 
 type TokenItemProps = {
-  token: DataType.AccessToken.AccessToken;
-  onDelete?: (token: DataType.AccessToken.AccessToken) => void;
+  token: AccessToken.AccessToken;
+  onDelete?: (token: AccessToken.AccessToken) => void;
 };
 
 const TokenItem = ({ token, onDelete }: TokenItemProps) => {

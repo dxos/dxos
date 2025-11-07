@@ -22,8 +22,9 @@ import { useAsyncEffect } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { useAttentionAttributes } from '@dxos/react-ui-attention';
 import { defaultTx } from '@dxos/react-ui-theme';
-import { DataType } from '@dxos/schema';
+import { Text } from '@dxos/schema';
 import { type ValueGenerator, createObjectFactory } from '@dxos/schema/testing';
+import { Organization, Person } from '@dxos/types';
 
 import { MarkdownPlugin } from '../MarkdownPlugin';
 import { translations } from '../translations';
@@ -68,7 +69,7 @@ const meta = {
     withPluginManager<{ title?: string; content?: string }>((context) => ({
       plugins: [
         ClientPlugin({
-          types: [Markdown.Document, DataType.Text.Text, DataType.Person.Person, DataType.Organization.Organization],
+          types: [Markdown.Document, Text.Text, Person.Person, Organization.Organization],
           onClientInitialized: async ({ client }) => {
             await client.halo.createIdentity();
             await client.spaces.waitUntilReady();
@@ -76,17 +77,15 @@ const meta = {
 
             const space = client.spaces.default;
             const createObjects = createObjectFactory(space.db, generator);
-            await createObjects([{ type: DataType.Organization.Organization, count: 10 }]);
+            await createObjects([{ type: Organization.Organization, count: 10 }]);
 
             const queue = space.queues.create();
-            const kai = Obj.make(DataType.Person.Person, { fullName: 'Kai' });
-            const dxos = Obj.make(DataType.Organization.Organization, {
-              name: 'DXOS',
-            });
+            const kai = Obj.make(Person.Person, { fullName: 'Kai' });
+            const dxos = Obj.make(Organization.Organization, { name: 'DXOS' });
             await queue.append([kai, dxos]);
 
             space.db.add(
-              Markdown.makeDocument({
+              Markdown.make({
                 name: context.args.title ?? 'Testing',
                 content: [
                   `# ${context.args.title ?? 'Testing'}`,

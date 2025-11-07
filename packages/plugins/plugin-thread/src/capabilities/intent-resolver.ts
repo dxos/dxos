@@ -12,7 +12,7 @@ import { ATTENDABLE_PATH_SEPARATOR, DeckAction } from '@dxos/plugin-deck/types';
 import { ObservabilityAction } from '@dxos/plugin-observability/types';
 import { CollectionAction, SpaceAction } from '@dxos/plugin-space/types';
 import { Ref, getSpace } from '@dxos/react-client/echo';
-import { DataType } from '@dxos/schema';
+import { AnchoredTo, Message } from '@dxos/types';
 
 import { meta } from '../meta';
 import { Channel, Thread, ThreadAction } from '../types';
@@ -67,7 +67,7 @@ export default (context: PluginContext) =>
         const { state } = context.getCapability(ThreadCapabilities.MutableState);
         const subjectId = Obj.getDXN(subject).toString();
         const thread = Thread.make({ name });
-        const anchor = Relation.make(DataType.AnchoredTo.AnchoredTo, {
+        const anchor = Relation.make(AnchoredTo.AnchoredTo, {
           [Relation.Source]: thread,
           [Relation.Target]: subject,
           anchor: _anchor,
@@ -195,7 +195,7 @@ export default (context: PluginContext) =>
         const space = getSpace(subject);
         invariant(space, 'Space not found');
 
-        const message = Obj.make(DataType.Message.Message, {
+        const message = Obj.make(Message.Message, {
           created: new Date().toISOString(),
           sender,
           blocks: [{ _tag: 'text', text }],
@@ -215,7 +215,7 @@ export default (context: PluginContext) =>
           intents.push(
             createIntent(SpaceAction.AddRelation, {
               space,
-              schema: DataType.AnchoredTo.AnchoredTo,
+              schema: AnchoredTo.AnchoredTo,
               source: thread,
               target: subject,
               fields: { anchor: draft.anchor },

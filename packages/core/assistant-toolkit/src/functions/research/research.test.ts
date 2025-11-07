@@ -33,7 +33,7 @@ import { invariant } from '@dxos/invariant';
 import { ObjectId } from '@dxos/keys';
 import { MarkdownBlueprint, MarkdownFunction } from '@dxos/plugin-markdown/toolkit';
 import { Markdown } from '@dxos/plugin-markdown/types';
-import { DataType } from '@dxos/schema';
+import { HasSubject, type Message, Organization } from '@dxos/types';
 
 import { ResearchBlueprint } from '../../blueprints';
 import { testToolkit } from '../../blueprints/testing';
@@ -65,13 +65,7 @@ const TestLayer = Layer.mergeAll(
       TestDatabaseLayer({
         spaceKey: 'fixed',
         indexing: { vector: true },
-        types: [
-          ...ResearchDataTypes,
-          ResearchGraph,
-          Blueprint.Blueprint,
-          Markdown.Document,
-          DataType.HasSubject.HasSubject,
-        ],
+        types: [...ResearchDataTypes, ResearchGraph, Blueprint.Blueprint, Markdown.Document, HasSubject.HasSubject],
       }),
       CredentialsService.configuredLayer([]),
       TracingService.layerNoop,
@@ -85,7 +79,7 @@ describe('Research', () => {
     Effect.fnUntraced(
       function* (_) {
         yield* DatabaseService.add(
-          Obj.make(DataType.Organization.Organization, {
+          Obj.make(Organization.Organization, {
             name: 'BlueYard',
             website: 'https://blueyard.com',
           }),
@@ -118,13 +112,13 @@ describe('Research', () => {
     Effect.fnUntraced(
       function* (_) {
         const organization = yield* DatabaseService.add(
-          Obj.make(DataType.Organization.Organization, {
+          Obj.make(Organization.Organization, {
             name: 'BlueYard',
             website: 'https://blueyard.com',
           }),
         );
 
-        const queue = yield* QueueService.createQueue<DataType.Message.Message | ContextBinding>();
+        const queue = yield* QueueService.createQueue<Message.Message | ContextBinding>();
         const conversation = yield* acquireReleaseResource(() => new AiConversation(queue));
 
         yield* DatabaseService.flush({ indexes: true });
@@ -145,7 +139,7 @@ describe('Research', () => {
         });
         {
           const { objects: docs } = yield* DatabaseService.runQuery(
-            Query.select(Filter.ids(organization.id)).targetOf(DataType.HasSubject.HasSubject).source(),
+            Query.select(Filter.ids(organization.id)).targetOf(HasSubject.HasSubject).source(),
           );
           if (docs.length !== 1) {
             throw new Error(`Expected 1 research document; got ${docs.length}: ${docs.map((_) => _.name)}`);
@@ -165,7 +159,7 @@ describe('Research', () => {
         });
         {
           const { objects: docs } = yield* DatabaseService.runQuery(
-            Query.select(Filter.ids(organization.id)).targetOf(DataType.HasSubject.HasSubject).source(),
+            Query.select(Filter.ids(organization.id)).targetOf(HasSubject.HasSubject).source(),
           );
           if (docs.length !== 1) {
             throw new Error(`Expected 1 research document; got ${docs.length}: ${docs.map((_) => _.name)}`);

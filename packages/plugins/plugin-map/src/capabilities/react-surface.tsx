@@ -14,7 +14,7 @@ import { useClient } from '@dxos/react-client';
 import { type Space, getSpace, isSpace } from '@dxos/react-client/echo';
 import { type InputProps, SelectInput, useFormValues } from '@dxos/react-ui-form';
 import { type LatLngLiteral } from '@dxos/react-ui-geo';
-import { DataType } from '@dxos/schema';
+import { type Collection, View } from '@dxos/schema';
 
 import { MapContainer, MapViewEditor } from '../components';
 import { meta } from '../meta';
@@ -53,8 +53,8 @@ export default () =>
     createSurface({
       id: `${meta.id}/surface/map-view`,
       role: ['article', 'section'],
-      filter: (data): data is { subject: DataType.View.View } =>
-        Obj.instanceOf(DataType.View.View, data.subject) && Obj.instanceOf(Map.Map, data.subject.presentation.target),
+      filter: (data): data is { subject: View.View } =>
+        Obj.instanceOf(View.View, data.subject) && Obj.instanceOf(Map.Map, data.subject.presentation.target),
       component: ({ data, role }) => {
         const state = useCapability(MapCapabilities.MutableState);
         const [center, setCenter] = useState<LatLngLiteral | undefined>(undefined);
@@ -90,8 +90,8 @@ export default () =>
       id: `${meta.id}/surface/object-settings`,
       role: 'object-settings',
       position: 'hoist',
-      filter: (data): data is { subject: DataType.View.View } =>
-        Obj.instanceOf(DataType.View.View, data.subject) && Obj.instanceOf(Map.Map, data.subject.presentation.target),
+      filter: (data): data is { subject: View.View } =>
+        Obj.instanceOf(View.View, data.subject) && Obj.instanceOf(Map.Map, data.subject.presentation.target),
       component: ({ data }) => <MapViewEditor view={data.subject} />,
     }),
     createSurface({
@@ -103,7 +103,7 @@ export default () =>
       ): data is {
         prop: string;
         schema: Schema.Schema<any>;
-        target: Space | DataType.Collection.Collection | undefined;
+        target: Space | Collection.Collection | undefined;
       } => {
         const annotation = findAnnotation<boolean>((data.schema as Schema.Schema.All).ast, LocationAnnotationId);
         return !!annotation;

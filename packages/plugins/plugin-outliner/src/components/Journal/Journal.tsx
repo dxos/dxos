@@ -10,24 +10,17 @@ import { IconButton, type ThemedClassName, useTranslation } from '@dxos/react-ui
 import { mx } from '@dxos/react-ui-theme';
 
 import { meta } from '../../meta';
-import {
-  type JournalEntryType,
-  type JournalType,
-  createJournalEntry,
-  getDateString,
-  getJournalEntries,
-  parseDateString,
-} from '../../types';
+import { Journal, getDateString, parseDateString } from '../../types';
 import { Outliner, type OutlinerController, type OutlinerProps } from '../Outliner';
 
 // TODO(burdon): Only show one selected line entry.
 
 type JournalProps = ThemedClassName<{
-  journal: JournalType;
+  journal: Journal.Journal;
 }>;
 
 // TODO(burdon): Virtualize.
-export const Journal = ({ journal, classNames, ...props }: JournalProps) => {
+export const JournalComponent = ({ journal, classNames, ...props }: JournalProps) => {
   const { t } = useTranslation(meta.id);
   const date = new Date();
 
@@ -38,7 +31,7 @@ export const Journal = ({ journal, classNames, ...props }: JournalProps) => {
     }
 
     // TODO(burdon): CRDT issue (merge entries with same date?)
-    const entries = getJournalEntries(journal, date);
+    const entries = Journal.getEntries(journal, date);
     setShowAddEntry(entries.length === 0);
   }, [journal, journal?.entries.length, date]);
 
@@ -47,7 +40,7 @@ export const Journal = ({ journal, classNames, ...props }: JournalProps) => {
       return;
     }
 
-    const entry = createJournalEntry();
+    const entry = Journal.makeEntry();
     journal.entries.push(Ref.make(entry));
     setShowAddEntry(false);
   }, [journal, date]);
@@ -72,7 +65,7 @@ const RECENT = 7 * 24 * 60 * 60 * 1_000;
 
 type JournalEntryProps = ThemedClassName<
   {
-    entry: JournalEntryType;
+    entry: Journal.JournalEntry;
   } & Pick<OutlinerProps, 'autoFocus'>
 >;
 

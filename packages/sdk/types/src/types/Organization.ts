@@ -13,8 +13,7 @@ import {
   LabelAnnotation,
   PropertyMetaAnnotationId,
 } from '@dxos/echo/internal';
-
-import { IconAnnotation, ItemAnnotation } from '../annotations';
+import { IconAnnotation, ItemAnnotation } from '@dxos/schema';
 
 // TODO(burdon): Remove (specific to kanban demo).
 export const StatusOptions = [
@@ -46,7 +45,7 @@ const OrganizationSchema = Schema.Struct({
     }),
     Schema.optional,
   ),
-  // TODO(wittjosiah): Remove; 1change to relation.
+  // TODO(wittjosiah): Remove (change to relation).
   status: Schema.Literal('prospect', 'qualified', 'active', 'commit', 'reject').pipe(
     FormatAnnotation.set(FormatEnum.SingleSelect),
     GeneratorAnnotation.set({
@@ -93,6 +92,10 @@ export const Organization = OrganizationSchema.pipe(
   }),
 );
 
+export interface Organization extends Schema.Schema.Type<typeof Organization> {}
+
+export const make = (props: Partial<Obj.MakeProps<typeof Organization>> = {}) => Obj.make(Organization, props);
+
 // TODO(wittjosiah): Remove to move location into base schema.
 //   GeoPoint format currently breaks Anthropic schema validation.
 export const LegacyOrganization = OrganizationSchema.pipe(
@@ -105,7 +108,3 @@ export const LegacyOrganization = OrganizationSchema.pipe(
     version: '0.1.0',
   }),
 );
-
-export interface Organization extends Schema.Schema.Type<typeof Organization> {}
-
-export const make = (props: Partial<Obj.MakeProps<typeof Organization>> = {}) => Obj.make(Organization, props);

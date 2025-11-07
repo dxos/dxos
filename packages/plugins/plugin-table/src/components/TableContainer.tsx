@@ -28,13 +28,14 @@ import {
   useAddRow,
   useTableModel,
 } from '@dxos/react-ui-table';
-import { type DataType, getTypenameFromQuery } from '@dxos/schema';
+import { getTypenameFromQuery } from '@dxos/schema';
+import { type View } from '@dxos/schema';
 
 import { meta } from '../meta';
 
 export type TableContainerProps = {
   role: string;
-  view: DataType.View.View;
+  view: View.View;
 };
 
 export const TableContainer = ({ role, view }: TableContainerProps) => {

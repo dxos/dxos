@@ -12,7 +12,6 @@ import { IconAnnotation } from '../annotations';
 /**
  * @deprecated
  */
-// TODO(wittjosiah): Migrate to using common types.
 export namespace Testing {
   //
   // Document
@@ -51,8 +50,6 @@ export namespace Testing {
     IconAnnotation.set('ph--building--regular'),
   );
 
-  // export type OrgSchemaType = Schema.Schema.Type<typeof OrgSchema>;
-
   export const Organization = OrganizationSchema.pipe(
     Type.Obj({
       typename: 'example.com/type/Organization',
@@ -61,26 +58,14 @@ export namespace Testing {
   );
   export type Organization = Schema.Schema.Type<typeof Organization>;
 
-  //
-  // Contact
-  // TODO(burdon): Array of email addresses.
-  // TODO(burdon): Materialize link for Role (Organization => [Role] => Contact).
-  // TODO(burdon): Use with concrete Message type.
-  // TODO(burdon): Address sub type with geo location.
-  // TODO(burdon): Reconcile with user id.
-  //
-
   export const AddressSchema = Schema.Struct({
     street: Schema.optional(Schema.String),
     city: Schema.optional(Schema.String),
     state: Schema.optional(Schema.String),
     zip: Schema.optional(Schema.String),
-    // TODO(burdon): Unknown error (handling tuples?)
-    // location: Schema.optional(Format.GeoPoint),
-    // location: Schema.Tuple(S.Number, Schema.Number),
   });
 
-  export const ContactSchema = Schema.Struct({
+  export const PersonSchema = Schema.Struct({
     id: Type.ObjectId,
     name: Schema.String.pipe(GeneratorAnnotation.set('person.fullName')),
     image: Schema.optional(
@@ -92,27 +77,22 @@ export namespace Testing {
         [FieldLookupAnnotationId]: 'name',
       }),
     ),
-    // TODO(burdon): This breaks the table view.
-    // address: Schema.optional(AddressSchema),
   }).pipe(
-    Schema.annotations({ title: 'Contact' }),
+    Schema.annotations({ title: 'Person' }),
     LabelAnnotation.set(['name']),
     IconAnnotation.set('ph--user--regular'),
   );
 
-  // export type ContactSchemaType = Schema.Schema.Type<typeof ContactSchema>;
-
-  export const Contact = ContactSchema.pipe(
+  export const Person = PersonSchema.pipe(
     Type.Obj({
-      typename: 'example.com/type/Contact',
+      typename: 'example.com/type/Person',
       version: '0.1.0',
     }),
   );
-  export type Contact = Schema.Schema.Type<typeof Contact>;
+  export type Person = Schema.Schema.Type<typeof Person>;
 
   //
   // Project
-  // TODO(burdon): Use with concrete Task type.
   //
 
   export const ProjectSchema = Schema.Struct({
@@ -125,8 +105,6 @@ export namespace Testing {
     LabelAnnotation.set(['name']),
     IconAnnotation.set('ph--kanban--regular'),
   );
-
-  // export type ProjectSchemaType = Schema.Schema.Type<typeof ProjectSchema>;
 
   export const Project = ProjectSchema.pipe(
     Type.Obj({
@@ -146,8 +124,6 @@ export namespace Testing {
     title: Schema.String,
     content: Schema.String,
   }).pipe(Schema.annotations({ title: 'Message' }), LabelAnnotation.set(['name']));
-
-  // export type MessageSchemaType = Schema.Schema.Type<typeof MessageSchema>;
 
   export const Message = MessageSchema.pipe(
     Type.Obj({

@@ -7,13 +7,13 @@ import orderBy from 'lodash.orderby';
 
 import { FormatEnum, TypeEnum, getValue } from '@dxos/echo/internal';
 import { formatForDisplay } from '@dxos/react-ui-form';
-import type {
-  DataType,
-  FieldSortType,
-  FieldType,
-  ProjectionModel,
-  PropertyType,
-  SortDirectionType,
+import {
+  type FieldSortType,
+  type FieldType,
+  type ProjectionModel,
+  type PropertyType,
+  type SortDirectionType,
+  type View,
 } from '@dxos/schema';
 
 import { type TableRow } from './table-model';
@@ -58,7 +58,7 @@ export class TableSorting<T extends TableRow> {
 
   constructor(
     rows: Signal<T[]>,
-    private readonly _view: DataType.View.View,
+    private readonly _view: View.View,
     private readonly _projection: ProjectionModel,
   ) {
     this._rows = rows;
