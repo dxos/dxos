@@ -166,6 +166,9 @@
       "path": "packages/core/functions/tsconfig.json"
     },
     {
+      "path": "packages/core/functions-runtime/tsconfig.json"
+    },
+    {
       "path": "packages/core/halo/credentials/tsconfig.json"
     },
     {

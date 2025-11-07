@@ -9,8 +9,6 @@ import * as Layer from 'effect/Layer';
 import { AgentStatus } from '@dxos/ai';
 import { Obj } from '@dxos/echo';
 import type { ObjectId } from '@dxos/echo/internal';
-import type { Queue } from '@dxos/echo-db';
-import { log } from '@dxos/log';
 import { DataType } from '@dxos/schema';
 
 /**
@@ -32,29 +30,6 @@ export class TracingService extends Context.Tag('@dxos/functions/TracingService'
     write: (event: Obj.Any) => void;
   }
 >() {
-  static noop: Context.Tag.Service<TracingService> = { write: () => {}, getTraceContext: () => ({}) };
-
-  static layerNoop = Layer.succeed(TracingService, TracingService.noop);
-
-  static console: Context.Tag.Service<TracingService> = {
-    write: (event) => {
-      console.log(event);
-    },
-    getTraceContext: () => ({}),
-  };
-
-  static layerConsole = Layer.succeed(TracingService, TracingService.console);
-
-  static layerLogInfo = () =>
-    Layer.succeed(TracingService, {
-      write: (event) => {
-        if (Obj.instanceOf(AgentStatus, event)) {
-          log.info('status', { message: event.message });
-        }
-      },
-      getTraceContext: () => ({}),
-    });
-
   /**
    * Creates a TracingService layer that emits events to the parent tracing service.
    */
@@ -67,22 +42,6 @@ export class TracingService extends Context.Tag('@dxos/functions/TracingService'
         return {
           write: (event) => tracing.write(event),
           getTraceContext: () => context,
-        };
-      }),
-    );
-
-  static layerQueue = (queue: Queue) =>
-    Layer.effect(
-      TracingService,
-      Effect.gen(function* () {
-        // TODO(dmaretskyi): Batching.
-        return {
-          write: (event) => queue.append([event]),
-          getTraceContext: () => ({
-            debugInfo: {
-              queue: queue.dxn.toString(),
-            },
-          }),
         };
       }),
     );

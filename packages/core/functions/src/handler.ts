@@ -8,19 +8,28 @@ import * as Schema from 'effect/Schema';
 
 import { Obj, Type } from '@dxos/echo';
 import { type HasId } from '@dxos/echo/internal';
-import { type EchoDatabase } from '@dxos/echo-db';
+import { type DatabaseService, type EchoDatabase } from '@dxos/echo-db';
 import { assertArgument } from '@dxos/invariant';
 import { type DXN, type SpaceId } from '@dxos/keys';
 import { type QueryResult } from '@dxos/protocols';
-
-import { type Services } from './services';
-import { Function } from './types';
-import { getUserFunctionIdInMetadata, setUserFunctionIdInMetadata } from './url';
+import { type AiService } from '../../ai/src';
+import { type TracingService, type QueueService, type ComputeEventLogger, type CredentialsService } from '.';
 
 // TODO(burdon): Model after http request. Ref Lambda/OpenFaaS.
 // https://docs.aws.amazon.com/lambda/latest/dg/typescript-handler.html
 // https://www.serverless.com/framework/docs/providers/aws/guide/serverless.yml/#functions
 // https://www.npmjs.com/package/aws-lambda
+
+/**
+ * Union of all services tags.
+ */
+export type Services =
+  | AiService.AiService
+  | CredentialsService
+  | DatabaseService
+  | ComputeEventLogger
+  | QueueService
+  | TracingService;
 
 /**
  * Function handler.
@@ -43,51 +52,8 @@ export type FunctionHandler<TData = {}, TOutput = any> = (params: {
  * Function context.
  */
 export interface FunctionContext {
-  /**
-   * Space from which the function was invoked.
-   */
-  space: SpaceAPI | undefined;
-
-  /**
-   * Resolves a service available to the function.
-   * @throws if the service is not available.
-   */
-  getService: <T extends Context.Tag<any, any>>(tag: T) => Context.Tag.Service<T>;
-
-  getSpace: (spaceId: SpaceId) => Promise<SpaceAPI>;
+  // TODO(dmaretskyi): 
 }
-
-export interface FunctionContextAi {
-  // TODO(dmaretskyi): Refer to cloudflare AI docs for more comprehensive typedefs.
-  run(model: string, inputs: any, options?: any): Promise<any>;
-}
-
-//
-// API.
-//
-
-// TODO(dmaretskyi): Temporary API to get the queues working.
-// TODO(dmaretskyi): To be replaced with integrating queues into echo.
-export interface QueuesAPI {
-  queryQueue(queue: DXN, options?: {}): Promise<QueryResult>;
-  insertIntoQueue(queue: DXN, objects: HasId[]): Promise<void>;
-}
-
-/**
- * Space interface available to functions.
- */
-export interface SpaceAPI {
-  get id(): SpaceId;
-  get db(): EchoDatabase;
-
-  // TODO(dmaretskyi): Align with echo api: queues.get(id).append(items);
-  get queues(): QueuesAPI;
-}
-
-// TODO(wittjosiah): Queues are incompatible.
-const __assertFunctionSpaceIsCompatibleWithTheClientSpace = () => {
-  // const _: SpaceAPI = {} as Space;
-};
 
 const typeId = Symbol.for('@dxos/functions/FunctionDefinition');
 

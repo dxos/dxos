@@ -22,11 +22,6 @@ import { RemoteFunctionExecutionService } from './remote-function-execution-serv
 import { type Services } from './service-container';
 import { type TracingService } from './tracing';
 
-/**
- * Services that are provided at the function call site.
- */
-export type InvocationServices = TracingService | ComputeEventLogger;
-
 export class LocalFunctionExecutionService extends Context.Tag('@dxos/functions/LocalFunctionExecutionService')<
   LocalFunctionExecutionService,
   {
