@@ -13,6 +13,7 @@ const MASONRY_ACTION = `${meta.id}/action`;
 
 export const MasonryProps = Schema.Struct({
   name: Schema.optional(Schema.String),
+  // TODO(wittjosiah): This should be a query input instead.
   typename: Schema.optional(
     Schema.String.annotations({
       [TypenameAnnotationId]: ['used-static', 'dynamic'],

@@ -4,8 +4,9 @@
 
 // - Records smart collection
 // - Channels smart collection
+// - Meetings smart collection (no object form)
 // - Assistant smart collection
 // - Blueprint smart collection
-// - Meetings smart collection (no object form)
-export const INITIAL_OBJECT_COUNT = 5;
-export const INITIAL_CREATE_ACTION_COUNT = 4;
+// - Prompt smart collection
+export const INITIAL_OBJECT_COUNT = 6;
+export const INITIAL_CREATE_ACTION_COUNT = 5;

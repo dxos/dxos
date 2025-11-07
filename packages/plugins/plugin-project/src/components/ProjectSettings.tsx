@@ -7,6 +7,7 @@ import React, { useCallback, useMemo, useRef, useState } from 'react';
 
 import { DXN, Filter, Obj, Query, type QueryAST, Ref, Tag, Type } from '@dxos/echo';
 import { useTypeOptions } from '@dxos/plugin-space';
+import { resolveSchemaWithClientAndSpace } from '@dxos/plugin-space';
 import { useClient } from '@dxos/react-client';
 import { getSpace, useQuery } from '@dxos/react-client/echo';
 import { IconButton, type ThemedClassName, useAsyncEffect, useTranslation } from '@dxos/react-ui';
@@ -18,7 +19,6 @@ import { Collection, type ProjectionModel, View } from '@dxos/schema';
 import { type Project, Task } from '@dxos/types';
 import { arrayMove } from '@dxos/util';
 
-import { resolveSchemaWithClientAndSpace } from '../helpers';
 import { meta } from '../meta';
 
 const listGrid = 'grid grid-cols-[min-content_1fr_min-content_min-content_min-content]';
@@ -149,7 +149,7 @@ export const ProjectObjectSettings = ({ classNames, project }: ProjectObjectSett
                     <div role='none' className='col-span-5 mbs-1 mbe-1 border border-separator rounded-md'>
                       <ViewEditor
                         ref={projectionRef}
-                        mode='query'
+                        mode='named-query'
                         schema={schema}
                         view={view}
                         registry={space?.db.schemaRegistry}

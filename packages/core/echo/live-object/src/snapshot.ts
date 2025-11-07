@@ -11,8 +11,13 @@ import type { Live } from './live';
  */
 export const getSnapshot = <T extends object>(obj: Live<T>): T => {
   return deepMapValues(obj, (value, recurse) => {
-    // Do not recurse on references.
-    if (typeof value === 'object' && value !== null && Object.getPrototypeOf(value) !== Object.prototype) {
+    // Do not recurse on references (but do recurse on arrays).
+    if (
+      typeof value === 'object' &&
+      value !== null &&
+      Object.getPrototypeOf(value) !== Object.prototype &&
+      !Array.isArray(value)
+    ) {
       return value;
     }
 
