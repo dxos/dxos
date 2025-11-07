@@ -10,7 +10,7 @@ import * as Option from 'effect/Option';
 import { Resource } from '@dxos/context';
 import { Obj } from '@dxos/echo';
 import { type Queue } from '@dxos/echo-db';
-import { DatabaseService } from '@dxos/functions';
+import { DatabaseService } from '@dxos/functions-runtime';
 import { log } from '@dxos/log';
 import { DataType } from '@dxos/schema';
 

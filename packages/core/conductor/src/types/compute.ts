@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 import type * as Schema from 'effect/Schema';
 import type * as Scope from 'effect/Scope';
 
-import type { Services } from '@dxos/functions';
+import type { Services } from '@dxos/functions-runtime';
 import { mapValues } from '@dxos/util';
 
 import type { ComputeNode } from './graph';

@@ -9,13 +9,13 @@ import * as Console from 'effect/Console';
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
-import { type Function } from '@dxos/functions';
+import { type Function } from '@dxos/functions-runtime';
 import { invariant } from '@dxos/invariant';
 
 import { ClientService, CommandConfig } from '../../../../services';
 import { waitForSync } from '../../../../util';
 import { Common } from '../../../options';
-import { createEdgeClient } from '@dxos/functions/edge';
+import { createEdgeClient } from '@dxos/functions-runtime/edge';
 
 import { bundle } from './bundle';
 import { DATA_TYPES, upsertComposerScript, upsertFunctionObject } from './echo';

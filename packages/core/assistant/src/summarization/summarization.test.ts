@@ -13,7 +13,7 @@ import { AiService, MixedStreamParser } from '@dxos/ai';
 import { Obj } from '@dxos/echo';
 import { type EchoDatabase } from '@dxos/echo-db';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
-import { FunctionExecutor, ServiceContainer, defineFunction } from '@dxos/functions';
+import { FunctionExecutor, ServiceContainer, defineFunction } from '@dxos/functions-runtime';
 import { DataType } from '@dxos/schema';
 import { createTestData } from '@dxos/schema/testing';
 import { trim } from '@dxos/util';

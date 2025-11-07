@@ -10,7 +10,7 @@ import { Filter, Ref, Type } from '@dxos/echo';
 import { ObjectId, getTypename, isInstanceOf, toEffectSchema } from '@dxos/echo/internal';
 import { live } from '@dxos/echo/internal';
 import { Queue } from '@dxos/echo-db';
-import { DatabaseService, QueueService } from '@dxos/functions';
+import { DatabaseService, QueueService } from '@dxos/functions-runtime';
 import { failedInvariant, invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
 import { DataType, getTypenameFromQuery } from '@dxos/schema';

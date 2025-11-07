@@ -6,7 +6,7 @@ import * as Command from '@effect/cli/Command';
 import * as Effect from 'effect/Effect';
 
 import { Filter } from '@dxos/echo';
-import { DatabaseService, Function } from '@dxos/functions';
+import { DatabaseService, Function } from '@dxos/functions-runtime';
 
 import { withDatabase } from '../../../util';
 import { Common } from '../../options';

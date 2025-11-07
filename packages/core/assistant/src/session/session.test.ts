@@ -13,7 +13,7 @@ import { AiService, MemoizedAiService, ToolExecutionService, ToolResolverService
 import { AiServiceTestingPreset } from '@dxos/ai/testing';
 import { Obj, Type } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect';
-import { TracingService } from '@dxos/functions';
+import { TracingService } from '@dxos/functions-runtime';
 import { log } from '@dxos/log';
 
 import { AiSession } from './session';

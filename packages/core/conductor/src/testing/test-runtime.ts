@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 import type * as Scope from 'effect/Scope';
 
 import { raise } from '@dxos/debug';
-import type { ServiceContainer } from '@dxos/functions';
+import type { ServiceContainer } from '@dxos/functions-runtime';
 import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
 

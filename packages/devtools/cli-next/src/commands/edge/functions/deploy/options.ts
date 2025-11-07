@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
 import { type Space } from '@dxos/client/echo';
-import { type Function } from '@dxos/functions';
+import { type Function } from '@dxos/functions-runtime';
 import { invariant } from '@dxos/invariant';
 
 import { ClientService } from '../../../../services';

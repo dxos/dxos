@@ -7,7 +7,7 @@ import * as Schema from 'effect/Schema';
 import * as Stream from 'effect/Stream';
 import { describe, test } from 'vitest';
 
-import { createTestServices } from '@dxos/functions/testing';
+import { createTestServices } from '@dxos/functions-runtime/testing';
 
 import { NODE_INPUT, NODE_OUTPUT } from '../nodes';
 import { TestRuntime } from '../testing';

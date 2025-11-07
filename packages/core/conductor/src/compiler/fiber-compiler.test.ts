@@ -9,8 +9,8 @@ import * as Schema from 'effect/Schema';
 import { describe, test } from 'vitest';
 
 import { Ref } from '@dxos/echo';
-import { logCustomEvent } from '@dxos/functions';
-import { createTestServices } from '@dxos/functions/testing';
+import { logCustomEvent } from '@dxos/functions-runtime';
+import { createTestServices } from '@dxos/functions-runtime/testing';
 import { DXN } from '@dxos/keys';
 import { mapValues } from '@dxos/util';
 

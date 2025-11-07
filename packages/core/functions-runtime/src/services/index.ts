@@ -12,6 +12,7 @@ export {
   FunctionInvocationService,
   createEventLogger,
   createDefectLogger,
+  type ServiceCredential,
 } from '@dxos/functions';
 
 export * from './database';
@@ -20,7 +21,7 @@ export {
   FunctionInvocationServiceLayerTest,
   FunctionInvocationServiceLayerTestMocked,
 } from './function-invocation-service';
-export * from './local-function-execution';
+export { LocalFunctionExecutionService, FunctionImplementationResolver } from './local-function-execution';
 export * from './remote-function-execution-service';
 export * from './service-container';
 export * from './service-registry';

@@ -4,7 +4,7 @@
 
 import { AgentStatus } from '@dxos/ai';
 import { Obj, type Ref } from '@dxos/echo';
-import { MESSAGE_PROPERTY_TOOL_CALL_ID } from '@dxos/functions';
+import { MESSAGE_PROPERTY_TOOL_CALL_ID } from '@dxos/functions-runtime';
 import { type ObjectId } from '@dxos/keys';
 import { LogLevel } from '@dxos/log';
 import { DataType } from '@dxos/schema';

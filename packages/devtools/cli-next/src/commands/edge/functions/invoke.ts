@@ -12,7 +12,7 @@ import * as Schema from 'effect/Schema';
 
 import { ClientService } from '../../../services';
 
-import { createEdgeClient, getDeployedFunctions, invokeFunction } from '@dxos/functions/edge';
+import { createEdgeClient, getDeployedFunctions, invokeFunction } from '@dxos/functions-runtime/edge';
 
 export const invoke = Command.make(
   'invoke',

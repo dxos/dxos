@@ -5,7 +5,7 @@
 import * as Schema from 'effect/Schema';
 
 import { Obj, Type } from '@dxos/echo';
-import { Function } from '@dxos/functions';
+import { Function } from '@dxos/functions-runtime';
 import { BaseGraphEdge, BaseGraphNode, Graph } from '@dxos/graph';
 
 export const ComputeValueType = Schema.Literal('string', 'number', 'boolean', 'object');

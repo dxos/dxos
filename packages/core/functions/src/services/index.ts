@@ -5,7 +5,7 @@
 export { DatabaseService } from '@dxos/echo-db';
 
 export * from './credentials';
-export { ConfiguredCredentialsService } from './credentials';
+export { ConfiguredCredentialsService, type ServiceCredential } from './credentials';
 export * from './event-logger';
 export { createEventLogger, createDefectLogger } from './event-logger';
 export * from './function-invocation-service';

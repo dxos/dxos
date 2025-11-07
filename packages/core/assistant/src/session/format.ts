@@ -11,7 +11,7 @@ import { Template } from '@dxos/blueprints';
 import { Obj } from '@dxos/echo';
 import { type ObjectId } from '@dxos/echo/internal';
 import { ObjectVersion } from '@dxos/echo-db';
-import { DatabaseService } from '@dxos/functions';
+import { DatabaseService } from '@dxos/functions-runtime';
 import { log } from '@dxos/log';
 import { DataType } from '@dxos/schema';
 import { trim } from '@dxos/util';

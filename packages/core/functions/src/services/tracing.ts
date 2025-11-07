@@ -34,6 +34,8 @@ export class TracingService extends Context.Tag('@dxos/functions/TracingService'
     getTraceContext: () => ({}),
     write: () => {},
   };
+
+  static layerNoop: Layer.Layer<TracingService> = Layer.succeed(TracingService, TracingService.noop);
   /**
    * Creates a TracingService layer that emits events to the parent tracing service.
    */

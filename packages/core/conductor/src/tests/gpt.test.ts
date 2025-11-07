@@ -12,7 +12,7 @@ import * as Scope from 'effect/Scope';
 import * as Stream from 'effect/Stream';
 import { describe, test } from 'vitest';
 
-import { createTestServices } from '@dxos/functions/testing';
+import { createTestServices } from '@dxos/functions-runtime/testing';
 import { log } from '@dxos/log';
 
 import { type GptOutput, NODE_INPUT, NODE_OUTPUT } from '../nodes';

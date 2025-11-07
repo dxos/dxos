@@ -20,6 +20,7 @@
     "@dxos/effect": "workspace:*",
     "@dxos/errors": "workspace:*",
     "@dxos/functions": "workspace:*",
+    "@dxos/functions-runtime": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/log": "workspace:*",

@@ -11,8 +11,8 @@ import { describe, expect, test } from 'vitest';
 import { todo } from '@dxos/debug';
 import { DXN, Obj, Ref } from '@dxos/echo';
 import { ObjectId, type RefResolver, setRefResolver } from '@dxos/echo/internal';
-import { Function, ServiceContainer, setUserFunctionIdInMetadata } from '@dxos/functions';
-import { type RemoteFunctionExecutionService, createEventLogger } from '@dxos/functions';
+import { Function, ServiceContainer, setUserFunctionIdInMetadata } from '@dxos/functions-runtime';
+import { type RemoteFunctionExecutionService, createEventLogger } from '@dxos/functions-runtime';
 import { invariant } from '@dxos/invariant';
 import { LogLevel } from '@dxos/log';
 

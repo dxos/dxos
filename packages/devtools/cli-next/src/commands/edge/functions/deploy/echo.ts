@@ -12,8 +12,8 @@ import type * as Schema from 'effect/Schema';
 
 import { Filter, type Space, getMeta } from '@dxos/client/echo';
 import { Obj, Ref } from '@dxos/echo';
-import { Function, Script, getUserFunctionIdInMetadata, setUserFunctionIdInMetadata } from '@dxos/functions';
-import { incrementSemverPatch } from '@dxos/functions/edge';
+import { Function, Script, getUserFunctionIdInMetadata, setUserFunctionIdInMetadata } from '@dxos/functions-runtime';
+import { incrementSemverPatch } from '@dxos/functions-runtime/edge';
 import { type UploadFunctionResponseBody } from '@dxos/protocols';
 import { DataType } from '@dxos/schema';
 

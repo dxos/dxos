@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
-import { createDefectLogger } from '@dxos/functions';
+import { createDefectLogger } from '@dxos/functions-runtime';
 import { type DXN } from '@dxos/keys';
 
 import { type GraphExecutor, compileOrThrow } from '../compiler';

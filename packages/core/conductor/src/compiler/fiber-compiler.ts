@@ -16,8 +16,8 @@ import {
   QueueService,
   RemoteFunctionExecutionService,
   TracingService,
-} from '@dxos/functions';
-import { createDefectLogger } from '@dxos/functions';
+} from '@dxos/functions-runtime';
+import { createDefectLogger } from '@dxos/functions-runtime';
 import { failedInvariant, invariant } from '@dxos/invariant';
 import { isNonNullable } from '@dxos/util';
 

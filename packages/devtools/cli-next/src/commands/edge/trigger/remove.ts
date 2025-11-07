@@ -7,7 +7,7 @@ import * as Console from 'effect/Console';
 import * as Effect from 'effect/Effect';
 
 import { DXN } from '@dxos/echo';
-import { DatabaseService, Trigger } from '@dxos/functions';
+import { DatabaseService, Trigger } from '@dxos/functions-runtime';
 
 import { withDatabase } from '../../../util';
 import { Common } from '../../options';

@@ -64,6 +64,9 @@
     },
     {
       "path": "../functions"
+    },
+    {
+      "path": "../functions-runtime"
     }
   ]
 }

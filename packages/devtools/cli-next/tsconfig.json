@@ -45,6 +45,9 @@
       "path": "../../core/functions"
     },
     {
+      "path": "../../core/functions-runtime"
+    },
+    {
       "path": "../../core/mesh/edge-client"
     },
     {

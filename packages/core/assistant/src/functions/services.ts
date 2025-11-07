@@ -13,7 +13,7 @@ import * as Schema from 'effect/Schema';
 import { AiToolNotFoundError, ToolExecutionService, ToolResolverService } from '@dxos/ai';
 import { todo } from '@dxos/debug';
 import { Query } from '@dxos/echo';
-import { DatabaseService, Function, FunctionDefinition, FunctionInvocationService } from '@dxos/functions';
+import { DatabaseService, Function, FunctionDefinition, FunctionInvocationService } from '@dxos/functions-runtime';
 import { invariant } from '@dxos/invariant';
 
 /**

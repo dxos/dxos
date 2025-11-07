@@ -7,7 +7,7 @@
 
 import { asyncTimeout } from '@dxos/async';
 import { create } from '@dxos/echo/internal';
-import { DatabaseService, defineFunction } from '@dxos/functions';
+import { DatabaseService, defineFunction } from '@dxos/functions-runtime';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { DataType } from '@dxos/schema';
