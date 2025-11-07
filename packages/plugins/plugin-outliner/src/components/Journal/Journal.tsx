@@ -11,7 +11,7 @@ import { mx } from '@dxos/react-ui-theme';
 
 import { meta } from '../../meta';
 import { Journal, getDateString, parseDateString } from '../../types';
-import { Outliner, type OutlinerController, type OutlinerProps } from '../Outliner';
+import { OutlineComponent, type OutlineController, type OutlineProps } from '../Outline';
 
 // TODO(burdon): Only show one selected line entry.
 
@@ -66,7 +66,7 @@ const RECENT = 7 * 24 * 60 * 60 * 1_000;
 type JournalEntryProps = ThemedClassName<
   {
     entry: Journal.JournalEntry;
-  } & Pick<OutlinerProps, 'autoFocus'>
+  } & Pick<OutlineProps, 'autoFocus'>
 >;
 
 const JournalEntry = ({ entry, classNames, ...props }: JournalEntryProps) => {
@@ -74,7 +74,7 @@ const JournalEntry = ({ entry, classNames, ...props }: JournalEntryProps) => {
   const date = parseDateString(entry.date);
   const isToday = getDateString() === entry.date;
   const isRecent = useMemo(() => Date.now() - new Date(entry.date).getTime() < RECENT, [entry.date]);
-  const outlinerRef = useRef<OutlinerController>(null);
+  const outlinerRef = useRef<OutlineController>(null);
   const [focused, setFocused] = useState(false);
 
   const handleFocus = useCallback(() => {
@@ -102,7 +102,7 @@ const JournalEntry = ({ entry, classNames, ...props }: JournalEntryProps) => {
         {isRecent && <div className='text-sm text-subdued'>{format(date, 'EEEE')}</div>}
         {isToday && <div className='text-xs'>{t('today label')}</div>}
       </div>
-      <Outliner
+      <OutlineComponent
         ref={outlinerRef}
         id={entry.id}
         text={entry.content.target}

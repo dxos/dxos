@@ -7,7 +7,7 @@ import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
 import { SpaceCapabilities } from '@dxos/plugin-space';
 import { defineObjectForm } from '@dxos/plugin-space/types';
 
-import { IntentResolver, ReactSurface } from './capabilities';
+import { AppGraphBuilder, IntentResolver, ReactSurface } from './capabilities';
 import { meta } from './meta';
 import { translations } from './translations';
 import { Journal, Outline, OutlineAction } from './types';
@@ -62,6 +62,11 @@ export const OutlinerPlugin = definePlugin(meta, () => [
     id: `${meta.id}/module/schema`,
     activatesOn: ClientEvents.SetupSchema,
     activate: () => contributes(ClientCapabilities.Schema, [Journal.JournalEntry, Journal.Journal, Outline.Outline]),
+  }),
+  defineModule({
+    id: `${meta.id}/module/app-graph-builder`,
+    activatesOn: Events.SetupAppGraph,
+    activate: AppGraphBuilder,
   }),
   defineModule({
     id: `${meta.id}/module/react-surface`,

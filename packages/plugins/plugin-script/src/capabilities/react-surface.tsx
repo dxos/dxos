@@ -84,7 +84,7 @@ export default () =>
       role: 'article',
       filter: (data): data is { companionTo: Script.Script } =>
         Obj.instanceOf(Script.Script, data.companionTo) && data.subject === 'logs',
-      component: ({ data, role }) => {
+      component: ({ data }) => {
         const space = getSpace(data.companionTo);
         return (
           <StackItem.Content>
