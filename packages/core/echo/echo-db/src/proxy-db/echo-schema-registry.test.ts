@@ -135,7 +135,7 @@ describe('schema registry', () => {
 
     const [echoSchema] = await registry.register([Contact]);
     const retrieved = await registry.query({ location: ['database', 'runtime'] }).run();
-    expect(retrieved.map(Type.getTypename)).toEqual(['example.com/type/Person', 'example.com/type/Organization']);
+    expect(retrieved.map(Type.getTypename)).toEqual(['example.com/type/Organization', 'example.com/type/Person']);
   });
 
   test('query only runtime schemas', async () => {
