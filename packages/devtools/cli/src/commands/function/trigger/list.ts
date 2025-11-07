@@ -7,7 +7,7 @@ import chalk from 'chalk';
 
 import { type TableOptions, table } from '@dxos/cli-base';
 import { Filter } from '@dxos/client/echo';
-import { Trigger } from '@dxos/functions';
+import { Trigger } from '@dxos/functions-runtime';
 
 import { BaseCommand } from '../../../base';
 

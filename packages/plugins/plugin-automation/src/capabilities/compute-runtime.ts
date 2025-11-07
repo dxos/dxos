@@ -16,13 +16,14 @@ import {
   DatabaseService,
   FunctionImplementationResolver,
   FunctionInvocationService,
+  FunctionInvocationServiceLayer,
   InvocationTracer,
   LocalFunctionExecutionService,
   QueueService,
   RemoteFunctionExecutionService,
   TriggerDispatcher,
-} from '@dxos/functions';
-import { TriggerStateStore } from '@dxos/functions';
+} from '@dxos/functions-runtime';
+import { TriggerStateStore } from '@dxos/functions-runtime';
 import { invariant } from '@dxos/invariant';
 import { type SpaceId } from '@dxos/keys';
 import { ClientCapabilities } from '@dxos/plugin-client';
@@ -86,7 +87,7 @@ class ComputeRuntimeProviderImpl extends Resource implements AutomationCapabilit
           ),
           Layer.provideMerge(
             Layer.mergeAll(
-              FunctionInvocationService.layer.pipe(
+              FunctionInvocationServiceLayer.pipe(
                 Layer.provideMerge(
                   LocalFunctionExecutionService.layerLive.pipe(
                     Layer.provideMerge(FunctionImplementationResolver.layerTest({ functions })),

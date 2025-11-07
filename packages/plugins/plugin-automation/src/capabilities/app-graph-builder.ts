@@ -8,7 +8,7 @@ import * as Option from 'effect/Option';
 
 import { Capabilities, type PluginContext, contributes } from '@dxos/app-framework';
 import { Obj } from '@dxos/echo';
-import { Script } from '@dxos/functions';
+import { Script } from '@dxos/functions-runtime';
 import { ATTENDABLE_PATH_SEPARATOR, PLANK_COMPANION_TYPE } from '@dxos/plugin-deck/types';
 import { createExtension } from '@dxos/plugin-graph';
 import { meta as spaceMeta } from '@dxos/plugin-space';

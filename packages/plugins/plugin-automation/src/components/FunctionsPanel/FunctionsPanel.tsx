@@ -6,7 +6,7 @@ import * as Schema from 'effect/Schema';
 import React, { useCallback, useMemo } from 'react';
 
 import { LayoutAction, createIntent, useIntentDispatcher } from '@dxos/app-framework';
-import { Function, Script } from '@dxos/functions';
+import { Function, Script } from '@dxos/functions-runtime';
 import { SpaceAction } from '@dxos/plugin-space/types';
 import { Filter, type Space, fullyQualifiedId, useQuery } from '@dxos/react-client/echo';
 import { Button, IconButton, useTranslation } from '@dxos/react-ui';

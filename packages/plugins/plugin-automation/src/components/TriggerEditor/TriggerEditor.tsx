@@ -6,7 +6,7 @@ import React, { useCallback, useMemo } from 'react';
 
 import { ComputeGraph } from '@dxos/conductor';
 import { type Query, Type } from '@dxos/echo';
-import { Function, Script, Trigger } from '@dxos/functions';
+import { Function, Script, Trigger } from '@dxos/functions-runtime';
 import { Filter, Ref, type Space, useQuery } from '@dxos/react-client/echo';
 import { Input } from '@dxos/react-ui';
 import { QueryForm, type QueryFormProps } from '@dxos/react-ui-components';

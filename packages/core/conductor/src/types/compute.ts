@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 import type * as Schema from 'effect/Schema';
 import type * as Scope from 'effect/Scope';
 
-import type { Services } from '@dxos/functions-runtime';
+import type { RuntimeServices } from '@dxos/functions-runtime';
 import { mapValues } from '@dxos/util';
 
 import type { ComputeNode } from './graph';
@@ -104,7 +104,7 @@ export type ComputeFunction<I extends ValueRecord, O extends ValueRecord> = (
   node?: ComputeNode, // TODO(burdon): Why could node be undefined?
 ) => ComputeEffect<ValueBag<O>>;
 
-export type ComputeRequirements = Services | Scope.Scope;
+export type ComputeRequirements = RuntimeServices | Scope.Scope;
 
 /**
  * For results of compute functions.

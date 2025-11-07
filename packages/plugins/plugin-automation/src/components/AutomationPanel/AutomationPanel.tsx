@@ -9,7 +9,7 @@ import * as Schema from 'effect/Schema';
 import React, { useMemo, useState } from 'react';
 
 import { Filter, Obj, Tag } from '@dxos/echo';
-import { Function, Script, Trigger } from '@dxos/functions';
+import { Function, Script, Trigger } from '@dxos/functions-runtime';
 import { useTypeOptions } from '@dxos/plugin-space';
 import { type Client, useClient } from '@dxos/react-client';
 import { type Space, getSpace, useQuery } from '@dxos/react-client/echo';

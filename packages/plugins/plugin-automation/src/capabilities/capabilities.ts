@@ -14,7 +14,7 @@ import type {
   QueueService,
   TriggerDispatcher,
   TriggerStateStore,
-} from '@dxos/functions';
+} from '@dxos/functions-runtime';
 import type { SpaceId } from '@dxos/keys';
 
 import { meta } from '../meta';

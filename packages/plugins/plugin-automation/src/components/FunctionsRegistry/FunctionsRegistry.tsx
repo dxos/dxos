@@ -1,8 +1,8 @@
 import { useAsyncEffect } from '@dxos/react-ui';
 import { useClient } from '@dxos/react-client';
 import { useState } from 'react';
-import { Function } from '@dxos/functions';
-import { getDeployedFunctions } from '@dxos/functions/edge';
+import { Function } from '@dxos/functions-runtime';
+import { getDeployedFunctions, incrementSemverPatch } from '@dxos/functions-runtime/edge';
 import * as Schema from 'effect/Schema';
 import React, { useCallback, useMemo } from 'react';
 

@@ -5,7 +5,7 @@
 import React, { useCallback, useMemo } from 'react';
 
 import { Filter, Query } from '@dxos/echo';
-import { Trigger } from '@dxos/functions';
+import { Trigger } from '@dxos/functions-runtime';
 import { useTranslation } from '@dxos/react-ui';
 import { type InputProps, SelectInput, useInputProps } from '@dxos/react-ui-form';
 
