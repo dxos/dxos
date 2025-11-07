@@ -214,6 +214,12 @@ export const findNode = (node: SchemaAST.AST, test: (node: SchemaAST.AST) => boo
         return child;
       }
     }
+    for (const prop of getIndexSignatures(node)) {
+      const child = findNode(prop.type, test);
+      if (child) {
+        return child;
+      }
+    }
   }
 
   // Tuple.
@@ -480,4 +486,20 @@ export const isArrayType = (node: SchemaAST.AST): boolean => {
       node.types.some(SchemaAST.isUndefinedKeyword) &&
       node.types.length === 2)
   );
+};
+
+const getIndexSignatures = (ast: SchemaAST.AST): Array<SchemaAST.IndexSignature> => {
+  const annotation = SchemaAST.getSurrogateAnnotation(ast);
+  if (Option.isSome(annotation)) {
+    return getIndexSignatures(annotation.value);
+  }
+  switch (ast._tag) {
+    case 'TypeLiteral':
+      return ast.indexSignatures.slice();
+    case 'Suspend':
+      return getIndexSignatures(ast.f());
+    case 'Refinement':
+      return getIndexSignatures(ast.from);
+  }
+  return [];
 };

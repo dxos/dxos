@@ -5,6 +5,7 @@
 import * as Array from 'effect/Array';
 import * as Effect from 'effect/Effect';
 import * as Function from 'effect/Function';
+import * as Match from 'effect/Match';
 import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 
@@ -32,29 +33,41 @@ export default defineFunction({
      * Input object or data.
      * References get auto-resolved.
      */
-    input: Schema.Record({ key: Schema.String, value: Schema.Any }),
+    input: Schema.Any.pipe(Schema.annotations({ title: 'Input' })),
   }),
   outputSchema: Schema.Any,
   handler: Effect.fnUntraced(function* ({ data }) {
     log.info('processing input', { input: data.input });
 
-    const input = { ...data.input };
-    for (const key of Object.keys(data.input)) {
-      const value = data.input[key];
-      if (Ref.isRef(value)) {
-        const object = yield* DatabaseService.load(value);
-        input[key] = Obj.toJSON(object);
-      } else {
-        input[key] = JSON.stringify(value);
-      }
-    }
+    // TODO(wittjosiah): Support templated object as input.
+    //   Currently the object templating only supports direct pass-through or strings.
+    // const input = { ...data.input };
+    // for (const key of Object.keys(data.input)) {
+    //   const value = data.input[key];
+    //   if (Ref.isRef(value)) {
+    //     const object = yield* DatabaseService.load(value);
+    //     input[key] = Obj.toJSON(object);
+    //   } else {
+    //     input[key] = JSON.stringify(value);
+    //   }
+    // }
+    const input = yield* Match.value(data.input).pipe(
+      Match.when(
+        (value: any) => Ref.isRef(value),
+        Effect.fnUntraced(function* (ref) {
+          const object = yield* DatabaseService.load(ref);
+          return Obj.toJSON(object as Obj.Any);
+        }),
+      ),
+      Match.orElse(() => Effect.succeed(data.input)),
+    );
 
     yield* DatabaseService.flush({ indexes: true });
     const prompt = yield* DatabaseService.load(data.prompt);
     const systemPrompt = data.systemPrompt ? yield* DatabaseService.load(data.systemPrompt) : undefined;
     yield* TracingService.emitStatus({ message: `Running ${prompt.id}` });
 
-    log.info('starting agent', { prompt: prompt.id, input: data.input });
+    log.info('starting agent', { prompt: prompt.id, input });
 
     const blueprints = yield* Function.pipe(
       prompt.blueprints,
