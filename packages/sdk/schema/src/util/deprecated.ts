@@ -5,7 +5,7 @@
 import type * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
 
-import { type QueryAST } from '@dxos/echo';
+import { QueryAST } from '@dxos/echo';
 import { FormatEnum, TypeEnum } from '@dxos/echo/internal';
 import { visit } from '@dxos/effect';
 import { DXN } from '@dxos/keys';
@@ -73,22 +73,28 @@ const toFieldValueType = (type: SchemaAST.AST): { format?: FormatEnum; type: Typ
 // TODO(burdon): Should return type or undefined not empty string.
 // TODO(burdon): What does this actually mean? Queries may be complex (in the future) and have multiple types.
 export const getTypenameFromQuery = (query: QueryAST.Query | undefined): string => {
-  if (query?.type !== 'select') {
-    return '';
-  }
+  let typename = '';
+  query &&
+    QueryAST.visit(query, (node) => {
+      if (node?.type !== 'select') {
+        return;
+      }
 
-  if (query.filter.type !== 'object') {
-    return '';
-  }
+      if (node.filter.type !== 'object') {
+        return;
+      }
 
-  if (!query.filter.typename) {
-    return '';
-  }
+      if (!node.filter.typename) {
+        return;
+      }
 
-  const dxn = DXN.tryParse(query.filter.typename)?.asTypeDXN();
-  if (!dxn) {
-    return '';
-  }
+      const dxn = DXN.tryParse(node.filter.typename)?.asTypeDXN();
+      if (!dxn) {
+        return;
+      }
 
-  return dxn.type;
+      typename = dxn.type;
+    });
+
+  return typename;
 };

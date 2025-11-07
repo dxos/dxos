@@ -594,21 +594,37 @@ export default (context: PluginContext) => {
 
               // TODO(wittjosiah): Remove cast.
               const typename = Schema.isSchema(schema) ? Type.getTypename(schema as Type.Obj.Any) : schema.typename;
-              return get(rxFromQuery(query))
-                .filter((view) => getTypenameFromQuery(view.query.ast) === typename)
-                .map((view) =>
-                  get(
-                    rxFromSignal(() =>
-                      createObjectNode({
-                        object: view,
-                        space,
-                        resolve: resolve(get),
-                        droppable: false,
+              return (
+                get(rxFromQuery(query))
+                  .filter((view) => getTypenameFromQuery(view.query.ast) === typename)
+                  // Filter out Collection views from Projects.
+                  .filter((view) =>
+                    get(
+                      rxFromSignal(() => {
+                        const presentation = view.presentation.target;
+                        if (presentation) {
+                          const typename = Obj.getTypename(presentation);
+                          return typename !== Collection.Collection.typename;
+                        } else {
+                          return false;
+                        }
                       }),
                     ),
-                  ),
-                )
-                .filter(isNonNullable);
+                  )
+                  .map((view) =>
+                    get(
+                      rxFromSignal(() =>
+                        createObjectNode({
+                          object: view,
+                          space,
+                          resolve: resolve(get),
+                          droppable: false,
+                        }),
+                      ),
+                    ),
+                  )
+                  .filter(isNonNullable)
+              );
             }),
             Option.getOrElse(() => []),
           ),
