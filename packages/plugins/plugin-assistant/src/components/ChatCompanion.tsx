@@ -73,6 +73,12 @@ export const ChatCompanion = ({ role, data }: ChatCompanionProps) => {
             target: companionTo,
           }),
         );
+        await dispatch(
+          createIntent(AssistantAction.SetCurrentChat, {
+            companionTo,
+            chat,
+          }),
+        );
       }
     },
     [chat, space, companionTo, dispatch],
