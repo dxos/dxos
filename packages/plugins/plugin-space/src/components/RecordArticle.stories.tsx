@@ -51,7 +51,7 @@ const meta = {
             role: 'section',
             component: ({ data }) => (
               <Card.SurfaceRoot>
-                <Json data={data} />
+                <Json classNames='text-sm' data={data} />
               </Card.SurfaceRoot>
             ),
           }),
@@ -60,7 +60,7 @@ const meta = {
             role: 'card',
             component: ({ data }) => (
               <Card.SurfaceRoot>
-                <Json data={data} />
+                <Json classNames='text-sm' data={data} />
               </Card.SurfaceRoot>
             ),
           }),

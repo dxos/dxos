@@ -16,6 +16,8 @@ import { isNonNullable } from '@dxos/util';
 
 import { meta } from '../meta';
 
+// TODO(burdon): Relation to Outline/Journal.
+
 export const RecordArticle = ({ object }: SurfaceComponentProps) => {
   const { t } = useTranslation(meta.id);
   const space = getSpace(object);
@@ -29,7 +31,7 @@ export const RecordArticle = ({ object }: SurfaceComponentProps) => {
   return (
     <StackItem.Content>
       <div role='none' className={mx('flex flex-col gap-4 p-4 is-full overflow-y-auto')}>
-        <div role='none' className={mx('flex card-min-width card-max-width')}>
+        <div role='none' className={mx('flex is-full card-max-width')}>
           <Surface role='section' data={data} limit={1} />
         </div>
 
