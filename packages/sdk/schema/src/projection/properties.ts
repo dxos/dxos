@@ -162,7 +162,11 @@ const processProperty = <T extends BaseObject>(
       format = FormatEnum.Ref;
     }
   } else {
-    if (baseType) {
+    const any = findNode(prop.type, SchemaAST.isAnyKeyword);
+    if (any) {
+      // NOTE: Schema.Any is currently used to represent template inputs.
+      type = 'string';
+    } else if (baseType) {
       type = getSimpleType(baseType);
     } else {
       // Transformations.
