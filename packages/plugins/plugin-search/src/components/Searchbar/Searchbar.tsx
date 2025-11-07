@@ -45,7 +45,7 @@ export const Searchbar = ({ classes, variant, placeholder, value, onChange, onSu
   };
 
   return (
-    <div className='flex shrink-0w-full items-center pli-1 pbs-1'>
+    <div className='flex shrink-0is-full items-center pli-1 pbs-1'>
       <Input.Root>
         <Input.TextInput
           ref={inputRef}

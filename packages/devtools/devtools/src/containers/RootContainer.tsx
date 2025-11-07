@@ -37,7 +37,7 @@ const Sidebar = () => {
       <div className='flex flex-col gap-4 divide-y divide-separator'>
         {sections.map((section) => (
           <div key={section.id}>
-            <div className='flex text-sm pis-4 py-1'>{section.title}</div>
+            <div className='flex text-sm pis-4 plb-1'>{section.title}</div>
             <div>
               {section.items?.map(({ id, title, icon }) => (
                 <div key={id} className={mx('flex items-center pis-4 gap-2', id === pathname && 'bg-activeSurface')}>
@@ -64,7 +64,7 @@ const Footer = () => {
 
   return (
     <div className='flex p-2'>
-      <div className='flex flex-col w-full text-sm text-neutral-500'>
+      <div className='flex flex-col is-full text-sm text-neutral-500'>
         <div className='grid grid-cols-2 gap-2'>
           <div className='text-neutral-300 text-right'>Identity</div>
           <div className='font-mono'>{identity?.identityKey.truncate()}</div>

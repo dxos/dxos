@@ -31,7 +31,7 @@ export const DataToolbar = ({ types, onAdd, onTypeChange, onFilterChange, onView
       <Toolbar.IconButton icon='ph--plus--regular' iconOnly label='Create objects' onClick={() => onAdd(count)} />
       <Input.Root>
         <Input.TextInput
-          classNames='max-w-16 text-right'
+          classNames='max-is-16 text-right'
           value={count}
           onChange={(event) => setCount(safeParseInt(event.target.value) ?? count)}
         />

@@ -24,7 +24,7 @@ export const Counter = () => {
       {counter && (
         <div className='text-center'>
           <button
-            className='border bg-white py-2 px-4 rounded'
+            className='border bg-white plb-2 pli-4 rounded'
             onClick={() => {
               counter.values.push(1);
             }}

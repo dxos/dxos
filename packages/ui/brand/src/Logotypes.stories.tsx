@@ -31,7 +31,7 @@ const Cell: FC<{ children: ReactNode; dark?: boolean }> = ({ children, dark }) =
 export const Default: Story = {
   render: () => {
     return (
-      <div className='absolute flex w-full h-full items-center justify-center'>
+      <div className='absolute flex is-full bs-full items-center justify-center'>
         <div className='flex grid grid-cols-2 gap-16'>
           <Cell>
             <DXOSType className='w-[256px]' />

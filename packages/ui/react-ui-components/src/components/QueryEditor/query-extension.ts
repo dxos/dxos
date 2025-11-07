@@ -241,8 +241,8 @@ class TypeWidget extends WidgetType {
     const label: string = this._identifier.split(/\W/).at(-1)!;
     return container(
       'border-sky-500',
-      Domino.of('span').classNames(['flex items-center pis-1 pie-1 text-black text-xs bg-sky-500']).text('type'),
-      Domino.of('span').classNames(['flex items-center pis-1 pie-1 text-subdued']).text(label),
+      Domino.of('span').classNames(['flex items-center pli-1 text-black text-xs bg-sky-500']).text('type'),
+      Domino.of('span').classNames(['flex items-center pli-1 text-subdued']).text(label),
     );
   }
 }
@@ -266,9 +266,9 @@ class TagWidget extends WidgetType {
     const { bg, border, surface } = getStyles(this._hue);
     return container(
       border,
-      Domino.of('span').classNames(['flex items-center pis-1 pie-1 text-black text-xs', bg]).text('#'),
+      Domino.of('span').classNames(['flex items-center pli-1 text-black text-xs', bg]).text('#'),
       Domino.of('span')
-        .classNames(['flex items-center pis-1 pie-1 text-subdued text-sm rounded-r-[3px]', surface])
+        .classNames(['flex items-center pli-1 text-subdued text-sm rounded-r-[3px]', surface])
         .text(this._str),
     );
   }
@@ -303,9 +303,9 @@ class ObjectWidget extends WidgetType {
           .classNames('inline-flex items-stretch')
           .children(
             Domino.of('span')
-              .classNames('flex items-center pis-1 pie-1 text-subdued text-xs bg-modalSurface first:rounded-l-[3px]')
+              .classNames('flex items-center pli-1 text-subdued text-xs bg-modalSurface first:rounded-l-[3px]')
               .text(key),
-            Domino.of('span').classNames('flex items-center pis-1 pie-1 text-subdued').text(value),
+            Domino.of('span').classNames('flex items-center pli-1 text-subdued').text(value),
           ),
       ),
     );

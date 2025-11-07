@@ -47,7 +47,7 @@ export const GridComponent = forwardRef<SVGSVGElement, GridProps>(
         {...testId('dx-canvas-grid')}
         ref={svgRef}
         className={mx(
-          'absolute inset-0 w-full h-full pointer-events-none touch-none select-none',
+          'absolute inset-0 is-full bs-full pointer-events-none touch-none select-none',
           'stroke-neutral-500',
           classNames,
         )}
