@@ -40,6 +40,7 @@ export default () =>
         Obj.instanceOf(Assistant.Chat, data.subject) && data.variant !== 'assistant-chat',
       component: ({ data, role }) => <ChatContainer role={role} chat={data.subject} />,
     }),
+    // TODO(wittjosiah): This is flashing when chat changes.
     createSurface({
       id: `${meta.id}/companion-chat`,
       role: 'article',
