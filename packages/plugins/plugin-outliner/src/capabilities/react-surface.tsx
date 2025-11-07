@@ -8,7 +8,7 @@ import { Capabilities, contributes, createSurface } from '@dxos/app-framework';
 import { type SurfaceComponentProps } from '@dxos/app-framework/react';
 import { Obj } from '@dxos/echo';
 
-import { JournalContainer, OutlineContainer } from '../components';
+import { JournalContainer, OutlineCard, OutlineContainer } from '../components';
 import { meta } from '../meta';
 import { Journal, Outline } from '../types';
 
@@ -29,6 +29,12 @@ export default () => [
       component: ({ role, data }) => (
         <OutlineContainer role={role as SurfaceComponentProps['role']} object={data.subject} />
       ),
+    }),
+    createSurface({
+      id: `${meta.id}/card/outline`,
+      role: ['card'],
+      filter: (data): data is { subject: Outline.Outline } => Obj.instanceOf(Outline.Outline, data.subject),
+      component: ({ data }) => <OutlineCard object={data.subject} />,
     }),
   ]),
 ];

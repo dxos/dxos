@@ -9,3 +9,4 @@ export * from './Outline';
 
 export const JournalContainer = lazy(() => import('./JournalContainer'));
 export const OutlineContainer = lazy(() => import('./OutlineContainer'));
+export const OutlineCard = lazy(() => import('./OutlineCard'));

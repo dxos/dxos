@@ -31,6 +31,7 @@ export const translations = [
       [meta.id]: {
         'plugin name': 'Outliner',
         'delete object label': 'Delete item',
+        'create outline label': 'Create outline',
         'create entry label': 'Create entry',
         'text placeholder': 'Enter text...',
         'menu label': 'Menu',
