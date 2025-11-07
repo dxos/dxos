@@ -4,7 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Type } from '@dxos/echo';
+import { Obj, Type } from '@dxos/echo';
 import { TypedObject } from '@dxos/echo/internal';
 import { Queue } from '@dxos/echo-db';
 
@@ -20,7 +20,7 @@ export class PropertiesType extends TypedObject({
     // TODO(wittjosiah): Make generic?
     hue: Schema.optional(Schema.String),
     icon: Schema.optional(Schema.String),
-    invocationTraceQueue: Schema.optional(Type.Ref(Queue)),
+    invocationTraceQueue: Schema.optional(Type.Ref(Obj.Any)),
   },
   { record: true },
 ) {}

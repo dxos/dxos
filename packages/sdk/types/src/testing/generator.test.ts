@@ -72,7 +72,7 @@ describe('Generator', () => {
     const spec: TypeSpec[] = [
       { type: Organization.Organization, count: 5 },
       { type: Person.Person, count: 10 },
-      { type: Project.Project, count: 5 },
+      { type: Project.Project as any, count: 5 },
     ];
 
     await createObjects(spec);

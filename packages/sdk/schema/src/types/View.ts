@@ -27,6 +27,7 @@ import { type JsonPath, type JsonProp, findAnnotation } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
 import { type Live } from '@dxos/live-object';
+import { opaque } from '@dxos/effect';
 
 import { FieldSchema, FieldSortType, ProjectionModel, getSchemaProperties } from '../projection';
 
@@ -100,9 +101,13 @@ export const ViewSchema = Schema.Struct({
     }),
   );
 
-export interface View extends Schema.Schema.Type<typeof ViewSchema> {}
-export interface ViewEncoded extends Schema.Schema.Encoded<typeof ViewSchema> {}
-export const View: Schema.Schema<View, ViewEncoded> = ViewSchema;
+// export interface View extends Schema.Schema.Type<typeof ViewSchema> {}
+// export interface ViewEncoded extends Schema.Schema.Encoded<typeof ViewSchema> {}
+// export const View: Schema.Schema<View, ViewEncoded> = ViewSchema;
+
+export class View extends opaque(ViewSchema) {}
+
+// export { View$ as View };
 
 export type MakeProps = {
   name?: string;

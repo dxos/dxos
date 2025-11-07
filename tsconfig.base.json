@@ -2,6 +2,7 @@
 // Don't rename it tsconfig.json. This is specifically non-standard name so TSC doesn't pick it up.
 {
   "compilerOptions": {
+    "baseUrl": ".",
     "allowJs": false,
     "composite": true,
     "declaration": true,

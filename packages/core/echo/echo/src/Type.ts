@@ -173,13 +173,15 @@ export namespace Relation {
  * This typedef avoids `TS4023` error (name from external module cannot be used named).
  * See Effect's note on interface types.
  */
-export interface ref<TargetSchema extends EffectSchema.Schema.Any>
-  extends EchoSchema.Ref$<EffectSchema.Schema.Type<TargetSchema>> {}
+export interface ref<TargetSchema>
+  extends EchoSchema.Ref$<
+    TargetSchema extends EffectSchema.Schema.Any ? EffectSchema.Schema.Type<TargetSchema> : never
+  > {}
 
 /**
  * Ref schema.
  */
-export const Ref: <S extends Obj.Any>(schema: S) => ref<S> = EchoSchema.Ref;
+export const Ref: <S extends Obj.Any>(schema: S) => ref<S> = EchoSchema.Ref as any;
 
 export interface Ref<T> extends EffectSchema.SchemaClass<EchoSchema.Ref<T>, EncodedReference> {}
 
