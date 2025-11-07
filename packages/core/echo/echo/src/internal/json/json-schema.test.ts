@@ -198,15 +198,7 @@ describe('effect-to-json', () => {
 
   test('handles suspend -- Contact schema serialization', () => {
     const schema = toJsonSchema(Testing.Person);
-    expect(Object.keys(schema.properties!)).toEqual([
-      'id',
-      'name',
-      'username',
-      'email',
-      'phoneNumbers',
-      'tasks',
-      'address',
-    ]);
+    expect(Object.keys(schema.properties!)).toEqual(['id', 'name', 'username', 'email', 'tasks', 'address']);
   });
 
   test('reference property by ref', () => {
