@@ -18,7 +18,7 @@ import { Filter, Ref, useQuery, useSpaces } from '@dxos/react-client/echo';
 import { withTheme } from '@dxos/react-ui/testing';
 import { translations as stackTranslations } from '@dxos/react-ui-stack';
 import { defaultTx } from '@dxos/react-ui-theme';
-import { DataType } from '@dxos/schema';
+import { Organization, Person } from '@dxos/types';
 
 import { translations } from '../translations';
 import { Board } from '../types';
@@ -38,13 +38,13 @@ const createBoard = () =>
   });
 
 const createOrg = () =>
-  Obj.make(DataType.Organization.Organization, {
+  Obj.make(Organization.Organization, {
     name: faker.commerce.productName(),
     description: faker.lorem.paragraph(),
     image: faker.image.url(),
     website: faker.internet.url(),
     // TODO(burdon): Fix.
-    // status: faker.helpers.arrayElement(DataType.Organization.StatusOptions).id,
+    // status: faker.helpers.arrayElement(Organization.StatusOptions).id,
   });
 
 const DefaultStory = () => {
@@ -79,7 +79,7 @@ const meta = {
     withPluginManager({
       plugins: [
         ClientPlugin({
-          types: [DataType.Organization.Organization, DataType.Person.Person, Board.Board],
+          types: [Organization.Organization, Person.Person, Board.Board],
           onClientInitialized: async ({ client }) => {
             await client.halo.createIdentity();
             const space = await client.spaces.create();

@@ -65,11 +65,11 @@ describe('complex schema validations', () => {
   });
 
   test('nesting static objects with schema in the live object', () => {
-    const contact1 = create(Testing.Contact, {
+    const contact1 = create(Testing.Person, {
       name: 'Robert Smith',
       email: 'robert@example.com',
     } as any);
-    const contact2 = create(Testing.Contact, {
+    const contact2 = create(Testing.Person, {
       name: 'Katy Perry',
       email: 'katy@example.com',
     } as any);
@@ -78,16 +78,16 @@ describe('complex schema validations', () => {
       contacts: [contact1],
     });
 
-    expect(isInstanceOf(Testing.Contact, contactBook.contacts[0])).to.eq(true);
-    expect(getSchema(contactBook.contacts[0])).to.eq(Testing.Contact);
+    expect(isInstanceOf(Testing.Person, contactBook.contacts[0])).to.eq(true);
+    expect(getSchema(contactBook.contacts[0])).to.eq(Testing.Person);
 
     contactBook.contacts.push(contact2);
-    expect(isInstanceOf(Testing.Contact, contactBook.contacts[1])).to.eq(true);
-    expect(getSchema(contactBook.contacts[1])).to.eq(Testing.Contact);
+    expect(isInstanceOf(Testing.Person, contactBook.contacts[1])).to.eq(true);
+    expect(getSchema(contactBook.contacts[1])).to.eq(Testing.Person);
   });
 
   test('creating an object with data from another object', () => {
-    const contact = live(Testing.Contact, {
+    const contact = live(Testing.Person, {
       name: 'Robert Smith',
       email: 'robert@example.com',
     });

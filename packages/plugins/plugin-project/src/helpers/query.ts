@@ -20,21 +20,13 @@ import {
 import { Markdown } from '@dxos/plugin-markdown';
 import { type Client } from '@dxos/react-client';
 import { type Space } from '@dxos/react-client/echo';
-import { DataType } from '@dxos/schema';
 
 // TODO(wittjosiah): Factor out and add tests.
-
 // TODO(wittjosiah): Support arbitrary type imports.
-// TODO(burdon): Translate tags.
 export const evalQuery = (queryString: string): Query.Any => {
   try {
     // eslint-disable-next-line @typescript-eslint/no-implied-eval
-    return new Function('Query', 'Filter', 'DataType', 'Markdown', `return ${queryString}`)(
-      Query,
-      Filter,
-      DataType,
-      Markdown,
-    );
+    return new Function('Query', 'Filter', 'Markdown', `return ${queryString}`)(Query, Filter, Markdown);
   } catch {
     return Query.select(Filter.nothing());
   }

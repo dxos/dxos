@@ -3,8 +3,8 @@
 //
 
 import { raise } from '@dxos/debug';
-import { type DataType } from '@dxos/schema';
 import { type Testing } from '@dxos/schema/testing';
+import { type Message, type Person } from '@dxos/types';
 import { trim } from '@dxos/util';
 
 type ProcessEmailResult = {
@@ -13,11 +13,11 @@ type ProcessEmailResult = {
 };
 
 type ProcessEmailParams = {
-  email: DataType.Message.Message;
+  email: Message.Message;
   context: {
     labels: Testing.Label[];
     documents?: Testing.DocumentType[];
-    contacts?: DataType.Person.Person[];
+    contacts?: Person.Person[];
   };
 };
 
@@ -47,13 +47,13 @@ export const processEmail = async ({ email, context }: ProcessEmailParams): Prom
     ${JSON.stringify([...(context.contacts ?? []), ...(context.documents ?? [])])}
   `;
 
-  const messages: DataType.Message.Message[] = [];
+  const messages: Message.Message[] = [];
   // const messages = await new MixedStreamParser().parse(
   //   await aiClient.execStream({
   //     model: '@anthropic/claude-3-5-sonnet-20241022',
   //     systemPrompt,
   //     history: [
-  //       Obj.make(DataType.Message.Message, {
+  //       Obj.make(Message.Message, {
   //         created: new Date().toISOString(),
   //         sender: { role: 'user' },
   //         blocks: [

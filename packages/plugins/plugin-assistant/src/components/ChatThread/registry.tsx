@@ -15,7 +15,7 @@ import {
 } from '@dxos/react-ui-components';
 import { type XmlWidgetProps, type XmlWidgetRegistry, getXmlTextChild } from '@dxos/react-ui-editor';
 import { Json } from '@dxos/react-ui-syntax-highlighter';
-import { DataType } from '@dxos/schema';
+import { ContentBlock, type Message } from '@dxos/types';
 
 import { ToolBlock } from '../ToolBlock';
 
@@ -110,8 +110,8 @@ export const componentRegistry: XmlWidgetRegistry = {
  */
 export const blockToMarkdown: BlockRenderer = (
   context: MessageThreadContext,
-  message: DataType.Message.Message,
-  block: DataType.ContentBlock.Any,
+  message: Message.Message,
+  block: ContentBlock.Any,
 ) => {
   let str = blockToMarkdownImpl(context, message, block);
   if (str && !block.pending) {
@@ -121,11 +121,7 @@ export const blockToMarkdown: BlockRenderer = (
   return str;
 };
 
-const blockToMarkdownImpl = (
-  context: MessageThreadContext,
-  message: DataType.Message.Message,
-  block: DataType.ContentBlock.Any,
-) => {
+const blockToMarkdownImpl = (context: MessageThreadContext, message: Message.Message, block: ContentBlock.Any) => {
   log('blockToMarkdown', { block: JSON.stringify(block) });
   switch (block._tag) {
     case 'text': {
@@ -156,19 +152,19 @@ const blockToMarkdownImpl = (
       return `<select>${block.options.map((option) => `<option>${option}</option>`).join('')}</select>`;
     }
     case 'toolCall': {
-      context.updateWidget<{ blocks: DataType.ContentBlock.Any[] }>(block.toolCallId, {
+      context.updateWidget<{ blocks: ContentBlock.Any[] }>(block.toolCallId, {
         blocks: [block],
       });
       return `<toolCall id="${block.toolCallId}" />`;
     }
     case 'toolResult': {
-      context.updateWidget<{ blocks: DataType.ContentBlock.Any[] }>(block.toolCallId, ({ blocks = [] }) => ({
+      context.updateWidget<{ blocks: ContentBlock.Any[] }>(block.toolCallId, ({ blocks = [] }) => ({
         blocks: [...blocks, block],
       }));
       break;
     }
     case 'summary': {
-      return `<summary>${DataType.ContentBlock.createSummaryMessage(block)}</summary>`;
+      return `<summary>${ContentBlock.createSummaryMessage(block)}</summary>`;
     }
     default: {
       // TODO(burdon): Needs stable ID.

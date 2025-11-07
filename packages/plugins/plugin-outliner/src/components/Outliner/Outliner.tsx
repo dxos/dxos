@@ -22,7 +22,7 @@ import {
   useTextEditor,
 } from '@dxos/react-ui-editor';
 import { mx } from '@dxos/react-ui-theme';
-import { type DataType } from '@dxos/schema';
+import { type Text as TextType } from '@dxos/schema';
 
 import { meta } from '../../meta';
 
@@ -33,7 +33,7 @@ export type OutlinerController = {
 export type OutlinerProps = ThemedClassName<
   {
     id: string;
-    text: DataType.Text.Text;
+    text: TextType.Text;
     scrollable?: boolean;
     showSelected?: boolean;
   } & Pick<UseTextEditorProps, 'id' | 'autoFocus'>

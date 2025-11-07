@@ -77,6 +77,7 @@
     "@dxos/react-ui-menu": "workspace:*",
     "@dxos/react-ui-stack": "workspace:*",
     "@dxos/schema": "workspace:*",
+    "@dxos/types": "workspace:*",
     "@dxos/util": "workspace:*",
     "@lezer/common": "^1.2.2",
     "@lezer/highlight": "^1.2.1",

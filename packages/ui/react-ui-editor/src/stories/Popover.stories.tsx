@@ -78,7 +78,7 @@ const LinkStory = (args: StoryProps) => {
       }
 
       const name = text?.startsWith('@') ? text.slice(1).toLowerCase() : (text?.toLowerCase() ?? '');
-      const result = await space?.db.query(Query.type(Testing.Contact)).run();
+      const result = await space?.db.query(Query.type(Testing.Person)).run();
       const items = result.objects
         .filter((object) => object.name.toLowerCase().includes(name))
         .map(
@@ -144,11 +144,11 @@ export const Link: Story = {
     withClientProvider({
       createSpace: true,
       onInitialized: async (client) => {
-        client.addTypes([Testing.Contact]);
+        client.addTypes([Testing.Person]);
       },
       onCreateSpace: async ({ space }) => {
         const createObjects = createObjectFactory(space.db, generator);
-        await createObjects([{ type: Testing.Contact, count: 10 }]);
+        await createObjects([{ type: Testing.Person, count: 10 }]);
         await space.db.flush({ indexes: true });
       },
     }),

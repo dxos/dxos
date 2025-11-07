@@ -17,7 +17,7 @@ import * as Stream from 'effect/Stream';
 import { ArtifactId } from '@dxos/assistant';
 import { DXN } from '@dxos/echo';
 import { DatabaseService, QueueService, defineFunction } from '@dxos/functions';
-import { type DataType } from '@dxos/schema';
+import { type Message } from '@dxos/types';
 
 // TODO(burdon): Importing from types/index.ts pulls in @dxos/client dependencies.
 import * as Mailbox from '../../types/Mailbox';
@@ -53,8 +53,8 @@ export default defineFunction({
       //   (mailbox.tags ??= {})[label.id] = { label: label.name };
       // });
 
-      const queue = yield* QueueService.getQueue<DataType.Message.Message>(mailbox.queue.dxn);
-      const newMessages = yield* Ref.make<DataType.Message.Message[]>([]);
+      const queue = yield* QueueService.getQueue<Message.Message>(mailbox.queue.dxn);
+      const newMessages = yield* Ref.make<Message.Message[]>([]);
       const nextPage = yield* Ref.make<string | undefined>(undefined);
 
       do {

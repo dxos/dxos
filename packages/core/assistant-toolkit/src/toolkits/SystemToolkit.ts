@@ -14,9 +14,6 @@ import { DXN, Obj, Relation, Tag, Type } from '@dxos/echo';
 import { DatabaseService } from '@dxos/functions';
 import { trim } from '@dxos/util';
 
-// TODO(burdon): Factor out (is there a way to remove plugin deps?)
-// TODO(burdon): Reconcile with functions (currently reuses plugin framework intents).
-
 export const SystemToolkit = Toolkit.make(
   //
   // Schema
@@ -190,8 +187,8 @@ export const layer = (): Layer.Layer<Tool.Handler<any>, never, never> =>
         db.schemaRegistry.query({ typename, location: ['database', 'runtime'] }).first(),
       );
 
+      // TODO(dmaretskyi): How to add object to a collection?
       const object = db.add(Obj.make(schema, data));
-      // TODO(dmaretskyi): How to add object to a collection???
       return object;
     }),
 

@@ -5,7 +5,7 @@
 import { ToolId } from '@dxos/ai';
 import { Blueprint } from '@dxos/blueprints';
 import { Obj, Ref } from '@dxos/echo';
-import { DataType } from '@dxos/schema';
+import { Text } from '@dxos/schema';
 import { trim } from '@dxos/util';
 
 import { Document } from '../../functions';
@@ -25,7 +25,7 @@ const blueprint: Blueprint.Blueprint = Obj.make(Blueprint.Blueprint, {
   name: 'Design Spec',
   description: 'Preserve the conversation in the design spec.',
   instructions: {
-    source: Ref.make(DataType.Text.make(instructions)),
+    source: Ref.make(Text.make(instructions)),
   },
   tools: [Document.read, Document.update].map((fn) => ToolId.make(fn.key)),
 });

@@ -10,7 +10,7 @@ import { faker } from '@dxos/random';
 import { useClient } from '@dxos/react-client';
 import { Filter, useQuery, useSchema } from '@dxos/react-client/echo';
 import { useClientProvider } from '@dxos/react-client/testing';
-import { DataType, ProjectionModel, getTypenameFromQuery } from '@dxos/schema';
+import { ProjectionModel, View, getTypenameFromQuery } from '@dxos/schema';
 
 import { type TableController } from '../components';
 import { useAddRow, useTableModel } from '../hooks';
@@ -26,7 +26,7 @@ export const useTestTableModel = () => {
   const client = useClient();
   const { space } = useClientProvider();
 
-  const views = useQuery(space, Filter.type(DataType.View.View));
+  const views = useQuery(space, Filter.type(View.View));
   const view = useMemo(() => views.at(0), [views]);
   const typename = view?.query ? getTypenameFromQuery(view.query.ast) : undefined;
   const schema = useSchema(client, space, typename);

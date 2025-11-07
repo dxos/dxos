@@ -8,7 +8,7 @@ import chalk from 'chalk';
 import { FLAG_SPACE_KEYS, type TableOptions, stringify, table } from '@dxos/cli-base';
 import { Filter, getMeta, getTypename } from '@dxos/client/echo';
 import { omit } from '@dxos/log';
-import { DataType } from '@dxos/schema';
+import { Message } from '@dxos/types';
 
 import { BaseCommand } from '../../base.js';
 
@@ -29,9 +29,9 @@ export default class Query extends BaseCommand<typeof Query> {
         let filter: Filter.Any | undefined;
         let printer: ObjectPrinter<any> | undefined;
         switch (this.flags.type) {
-          case DataType.Message.Message.typename: {
-            filter = Filter.type(DataType.Message.Message);
-            printer = (data: DataType.Message.Message) => {
+          case Message.Message.typename: {
+            filter = Filter.type(Message.Message);
+            printer = (data: Message.Message) => {
               return stringify({ from: data.sender.email, content: data.blocks.length });
             };
             break;

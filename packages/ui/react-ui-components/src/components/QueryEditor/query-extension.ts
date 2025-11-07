@@ -16,7 +16,7 @@ import { type CompoetionContext, focus, focusField, staticCompletion, typeahead 
 import { getHashHue, getStyles } from '@dxos/react-ui-theme';
 
 export type QueryOptions = {
-  tags?: Tag.TagMap;
+  tags?: Tag.Map;
 };
 
 /**

@@ -8,7 +8,7 @@ import { type AnyLiveObject } from '@dxos/echo-db';
 import { Graph, GraphModel, type GraphNode, createEdgeId } from '@dxos/graph';
 import { log } from '@dxos/log';
 
-import { getSchemaProperties } from '../properties';
+import { getSchemaProperties } from '../projection';
 
 /**
  * Creates a new reactive graph from a set of ECHO objects.

@@ -6,7 +6,8 @@ import { type TokenClassificationOutput, type TokenClassificationPipelineType } 
 import { beforeAll, describe, expect, test } from 'vitest';
 
 import { log } from '@dxos/log';
-import { createTestData } from '@dxos/schema/testing';
+import { type ContentBlock, type Message } from '@dxos/types';
+import { createTestData } from '@dxos/types/testing';
 
 import { combineNerTokens, createTokenGroups, extractFullEntities, getNer } from './named-entity-recognition';
 
@@ -57,8 +58,10 @@ describe.skip('NamedEntityRecognition', () => {
   test('own data', async () => {
     const { transcriptWoflram, transcriptJosiah } = await createTestData();
 
-    const blocks = [...transcriptWoflram, ...transcriptJosiah].flatMap((message) =>
-      message.blocks.flatMap((block) => (block._tag === 'transcript' ? [block.text] : [])),
+    const blocks = [...transcriptWoflram, ...transcriptJosiah].flatMap((message: Message.Message) =>
+      message.blocks.flatMap((block: ContentBlock.Any) =>
+        block._tag === 'transcript' ? [(block as ContentBlock.Transcript).text] : [],
+      ),
     );
 
     for (const block of blocks) {
@@ -70,8 +73,10 @@ describe.skip('NamedEntityRecognition', () => {
   test('more own data', async () => {
     const { transcriptMessages } = await createTestData();
 
-    const blocks = transcriptMessages.flatMap((message) =>
-      message.blocks.flatMap((block) => (block._tag === 'transcript' ? [block.text] : [])),
+    const blocks = transcriptMessages.flatMap((message: Message.Message) =>
+      message.blocks.flatMap((block: ContentBlock.Any) =>
+        block._tag === 'transcript' ? [(block as ContentBlock.Transcript).text] : [],
+      ),
     );
 
     for (const block of blocks) {

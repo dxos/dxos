@@ -85,6 +85,7 @@
     "@dxos/schema": "workspace:*",
     "@dxos/shell": "workspace:*",
     "@dxos/tracing": "workspace:*",
+    "@dxos/types": "workspace:*",
     "@dxos/util": "workspace:*",
     "@fontsource/poiret-one": "^5.0.20",
     "effect": "3.18.3",

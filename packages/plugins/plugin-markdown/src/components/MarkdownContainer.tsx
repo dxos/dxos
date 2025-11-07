@@ -12,7 +12,7 @@ import { Obj } from '@dxos/echo';
 import { getSpace } from '@dxos/react-client/echo';
 import { type SelectionManager } from '@dxos/react-ui-attention';
 import { StackItem } from '@dxos/react-ui-stack';
-import { DataType } from '@dxos/schema';
+import { Text } from '@dxos/schema';
 
 import { MarkdownCapabilities } from '../capabilities';
 import { type DocumentType, useLinkQuery } from '../hooks';
@@ -29,15 +29,6 @@ export type MarkdownContainerProps = {
   Pick<MarkdownEditorContentProps, 'editorStateStore'> &
   Pick<MarkdownPluginState, 'extensionProviders'>);
 
-// TODO(burdon): Attention doesn't update in storybook.
-// TODO(burdon): Toolbar state (currently not working in labs: e.g., heading, list, table).
-//  Heading state is correct (see react-ui-editor headings.ts, but the toolbar isn't updated).
-// TODO(burdon): View mode (currently not working in labs).
-// TODO(burdon): Test update document name.
-// TODO(burdon): Test comment threads.
-// TODO(burdon): Test preview blocks.
-// TODO(burdon): Test file upload.
-
 export const MarkdownContainer = ({
   id,
   role,
@@ -48,7 +39,7 @@ export const MarkdownContainer = ({
 }: MarkdownContainerProps) => {
   const space = getSpace(object);
   const isDocument = Obj.instanceOf(Markdown.Document, object);
-  const isText = Obj.instanceOf(DataType.Text.Text, object);
+  const isText = Obj.instanceOf(Text.Text, object);
   const attendableId = isDocument ? Obj.getDXN(object).toString() : undefined;
 
   // Extensions from other plugins.

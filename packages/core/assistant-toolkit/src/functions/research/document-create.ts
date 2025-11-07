@@ -10,7 +10,7 @@ import { Obj, Relation } from '@dxos/echo';
 import { DatabaseService, TracingService, defineFunction } from '@dxos/functions';
 import { log } from '@dxos/log';
 import { Markdown } from '@dxos/plugin-markdown/types';
-import { DataType } from '@dxos/schema';
+import { HasSubject } from '@dxos/types';
 import { trim } from '@dxos/util';
 
 export default defineFunction({
@@ -50,7 +50,7 @@ export default defineFunction({
 
     // Create document.
     const object = yield* DatabaseService.add(
-      Markdown.makeDocument({
+      Markdown.make({
         name,
         content,
       }),
@@ -58,7 +58,7 @@ export default defineFunction({
 
     // Create relation.
     yield* DatabaseService.add(
-      Relation.make(DataType.HasSubject.HasSubject, {
+      Relation.make(HasSubject.HasSubject, {
         [Relation.Source]: object,
         [Relation.Target]: target,
         completedAt: new Date().toISOString(),

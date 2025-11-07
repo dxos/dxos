@@ -19,8 +19,8 @@ import { IconButton, Toolbar } from '@dxos/react-ui';
 import { withTheme } from '@dxos/react-ui/testing';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { defaultTx } from '@dxos/react-ui-theme';
-import { DataType } from '@dxos/schema';
 import { Testing } from '@dxos/schema/testing';
+import { type Message, Organization, Person } from '@dxos/types';
 
 import { useQueueModelAdapter } from '../../hooks';
 import { SerializationModel } from '../../model';
@@ -68,10 +68,7 @@ const TranscriptContainer: FC<
   );
 };
 
-type StoryProps = { messages?: DataType.Message.Message[] } & Pick<
-  TranscriptViewProps,
-  'ignoreAttention' | 'attendableId'
->;
+type StoryProps = { messages?: Message.Message[] } & Pick<TranscriptViewProps, 'ignoreAttention' | 'attendableId'>;
 
 /**
  * Basic story mutates array of messages.
@@ -80,11 +77,11 @@ const BasicStory = ({ messages: initialMessages = [], ...props }: StoryProps) =>
   const [reset, setReset] = useState({});
   const builder = useMemo(() => new MessageBuilder(), []);
   const model = useMemo(
-    () => new SerializationModel<DataType.Message.Message>(renderByline([]), initialMessages),
+    () => new SerializationModel<Message.Message>(renderByline([]), initialMessages),
     [initialMessages, reset],
   );
   const [running, setRunning] = useState(true);
-  const [currentMessage, setCurrentMessage] = useState<DataType.Message.Message | null>(null);
+  const [currentMessage, setCurrentMessage] = useState<Message.Message | null>(null);
   useEffect(() => {
     if (!running) {
       return;
@@ -187,7 +184,7 @@ const meta = {
     withPluginManager({
       plugins: [
         ClientPlugin({
-          types: [TestItem, Testing.DocumentType, DataType.Person.Person, DataType.Organization.Organization],
+          types: [TestItem, Testing.DocumentType, Person.Person, Organization.Organization],
           onClientInitialized: async ({ client }) => {
             await client.halo.createIdentity();
           },

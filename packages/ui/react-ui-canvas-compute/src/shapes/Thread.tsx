@@ -9,13 +9,13 @@ import { createInputSchema, createOutputSchema } from '@dxos/conductor';
 import { type ThemedClassName } from '@dxos/react-ui';
 import { type ShapeComponentProps, type ShapeDef } from '@dxos/react-ui-canvas-editor';
 import { mx } from '@dxos/react-ui-theme';
-import { DataType } from '@dxos/schema';
+import { Message } from '@dxos/types';
 
 import { Box, createFunctionAnchors } from './common';
 import { ComputeShape, type CreateShapeProps, createShape } from './defs';
 
-const InputSchema = createInputSchema(DataType.Message.Message);
-const OutputSchema = createOutputSchema(Schema.mutable(Schema.Array(DataType.Message.Message)));
+const InputSchema = createInputSchema(Message.Message);
+const OutputSchema = createOutputSchema(Schema.mutable(Schema.Array(Message.Message)));
 
 export const ThreadShape = Schema.extend(
   ComputeShape,

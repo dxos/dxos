@@ -10,7 +10,7 @@ import { Obj } from '@dxos/echo';
 import { type JsonProp } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import type { StackItemRearrangeHandler } from '@dxos/react-ui-stack';
-import { type DataType, type ProjectionModel } from '@dxos/schema';
+import { type ProjectionModel, type View } from '@dxos/schema';
 import { arrayMove } from '@dxos/util';
 
 import { Kanban } from './types';
@@ -31,13 +31,13 @@ export type ArrangedCards<T extends BaseKanbanItem = { id: string }> = {
 }[];
 
 export type KanbanModelProps = {
-  view: DataType.View.View;
+  view: View.View;
   schema: Schema.Schema.AnyNoContext;
   projection: ProjectionModel;
 };
 
 export class KanbanModel<T extends BaseKanbanItem = { id: string }> extends Resource {
-  private readonly _view: DataType.View.View;
+  private readonly _view: View.View;
   private readonly _schema: Schema.Schema.AnyNoContext;
   private readonly _projection: ProjectionModel;
   private _kanban?: Kanban.Kanban;

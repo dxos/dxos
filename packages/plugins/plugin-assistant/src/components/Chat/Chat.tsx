@@ -20,7 +20,7 @@ import { ChatEditor, type ChatEditorController, type ChatEditorProps, references
 import { type MarkdownStreamController } from '@dxos/react-ui-components';
 import { MenuProvider, ToolbarMenu } from '@dxos/react-ui-menu';
 import { mx } from '@dxos/react-ui-theme';
-import { DataType } from '@dxos/schema';
+import { Message } from '@dxos/types';
 import { isTruthy } from '@dxos/util';
 
 import { useChatToolbarActions, useReferencesProvider } from '../../hooks';
@@ -50,7 +50,7 @@ type ChatContextValue = {
   event: Event<ChatEvent>;
   space?: Space;
   chat?: Assistant.Chat;
-  messages: DataType.Message.Message[];
+  messages: Message.Message[];
   processor: AiChatProcessor;
 };
 
@@ -73,9 +73,9 @@ const ChatRoot = ({ children, chat, processor, onEvent, ...props }: ChatRootProp
   const lastPrompt = useRef<string | undefined>(undefined);
 
   // Messages.
-  const queue = useQueue<DataType.Message.Message>(chat?.queue.dxn);
+  const queue = useQueue<Message.Message>(chat?.queue.dxn);
   const messages = useMemo(() => {
-    const queueMessages = queue?.objects?.filter(Obj.instanceOf(DataType.Message.Message)) ?? [];
+    const queueMessages = queue?.objects?.filter(Obj.instanceOf(Message.Message)) ?? [];
     return Array.dedupeWith([...queueMessages, ...pending], ({ id: a }, { id: b }) => a === b);
   }, [queue?.objects, pending]);
 

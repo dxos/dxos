@@ -10,9 +10,9 @@ import { WaveFile } from 'wavefile';
 
 import { Trigger } from '@dxos/async';
 import { log } from '@dxos/log';
-import { type DataType } from '@dxos/schema';
 import { openAndClose } from '@dxos/test-utils';
 import { TRACE_PROCESSOR, trace } from '@dxos/tracing';
+import { type ContentBlock } from '@dxos/types';
 
 import { type AudioChunk, type AudioRecorder, Transcriber } from '../transcriber';
 import { mergeFloat64Arrays } from '../util';
@@ -94,7 +94,7 @@ describe.skip('Transcriber', () => {
   });
 
   test.skip('transcription of audio recording', { timeout: 10_000 }, async () => {
-    const trigger = new Trigger<DataType.ContentBlock.Transcript[]>({ autoReset: true });
+    const trigger = new Trigger<ContentBlock.Transcript[]>({ autoReset: true });
     const recorder = new MockAudioRecorder({
       buffer: await readFile('test.wav'),
       chunkDuration: 3_000,
@@ -128,7 +128,7 @@ describe.skip('Transcriber', () => {
   });
 
   test.skip('transcription of audio recording with overlapping chunks', { timeout: 20_000 }, async () => {
-    const trigger = new Trigger<DataType.ContentBlock.Transcript[]>({ autoReset: true });
+    const trigger = new Trigger<ContentBlock.Transcript[]>({ autoReset: true });
     const recorder = new MockAudioRecorder({
       buffer: await readFile('test.wav'),
       chunkDuration: 3_000,

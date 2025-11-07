@@ -4,37 +4,37 @@
 
 import { Capabilities, contributes, createResolver } from '@dxos/app-framework';
 import { Obj, Ref } from '@dxos/echo';
-import { DataType } from '@dxos/schema';
+import { Task } from '@dxos/types';
 
-import { JournalType, OutlinerAction, createJournalEntry, createOutline } from '../types';
+import { Journal, Outline, OutlineAction } from '../types';
 
 export default () =>
   contributes(Capabilities.IntentResolver, [
     createResolver({
-      intent: OutlinerAction.CreateJournal,
+      intent: OutlineAction.CreateJournal,
       resolve: ({ name }) => ({
         data: {
-          object: Obj.make(JournalType, {
+          object: Obj.make(Journal.Journal, {
             name,
-            entries: [Ref.make(createJournalEntry())],
+            entries: [Ref.make(Journal.makeEntry())],
           }),
         },
       }),
     }),
     createResolver({
-      intent: OutlinerAction.CreateOutline,
+      intent: OutlineAction.CreateOutline,
       resolve: ({ name }) => ({
         data: {
-          object: createOutline(name),
+          object: Outline.make(name),
         },
       }),
     }),
     createResolver({
-      intent: OutlinerAction.CreateTask,
+      intent: OutlineAction.CreateTask,
       resolve: ({ text }) => {
         return {
           data: {
-            object: Obj.make(DataType.Task.Task, { title: text }),
+            object: Obj.make(Task.Task, { title: text }),
           },
         };
       },

@@ -19,7 +19,7 @@ import {
   toPlaneCellIndex,
 } from '@dxos/react-ui-grid';
 import { getHashStyles, mx } from '@dxos/react-ui-theme';
-import { type DataType } from '@dxos/schema';
+import { type Message } from '@dxos/types';
 import { trim } from '@dxos/util';
 
 import { filterLabel } from '../../functions/email/api';
@@ -37,7 +37,7 @@ const messageColumnDefault = {
   grid: { size: 100 },
 };
 
-const renderMessageCell = (message: DataType.Message.Message, now: Date, current?: boolean, tags?: Tag.TagMap) => {
+const renderMessageCell = (message: Message.Message, now: Date, current?: boolean, tags?: Tag.Map) => {
   const { id, hue, from, date, subject } = getMessageProps(message, now);
 
   // NOTE: Currently all grid cells have borders, so we render a single cell for each row.
@@ -94,8 +94,8 @@ export type MailboxActionHandler = (action: MailboxAction) => void;
 export type MailboxProps = {
   id: string;
   role?: string;
-  messages: DataType.Message.Message[];
-  tags?: Tag.TagMap;
+  messages: Message.Message[];
+  tags?: Tag.Map;
   currentMessageId?: string;
   ignoreAttention?: boolean;
   onAction?: MailboxActionHandler;

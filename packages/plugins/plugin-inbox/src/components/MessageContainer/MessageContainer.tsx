@@ -12,7 +12,7 @@ import { Filter, type Space, useQuery } from '@dxos/react-client/echo';
 import { ElevationProvider, useTranslation } from '@dxos/react-ui';
 import { MenuProvider, ToolbarMenu } from '@dxos/react-ui-menu';
 import { StackItem } from '@dxos/react-ui-stack';
-import { DataType } from '@dxos/schema';
+import { type Message as MessageType, Person } from '@dxos/types';
 
 import { meta } from '../../meta';
 import { InboxAction, type Mailbox } from '../../types';
@@ -23,7 +23,7 @@ import { useMessageToolbarActions } from './toolbar';
 
 export type MessageContainerProps = {
   space?: Space;
-  message?: DataType.Message.Message;
+  message?: MessageType.Message;
   inMailbox: Mailbox.Mailbox;
   role?: string;
 };
@@ -42,8 +42,8 @@ export const MessageContainer = ({ space, message, inMailbox, role }: MessageCon
 
   const viewMode = useSignal<ViewMode>(initialViewMode);
   const hasEmail = useComputed(() => !!message?.sender.email);
-  const contacts = useQuery(space, Filter.type(DataType.Person.Person));
-  const existingContact = useSignal<DataType.Person.Person | undefined>(undefined);
+  const contacts = useQuery(space, Filter.type(Person.Person));
+  const existingContact = useSignal<Person.Person | undefined>(undefined);
   const contactDxn = useComputed(() =>
     existingContact.value ? Obj.getDXN(existingContact.value)?.toString() : undefined,
   );

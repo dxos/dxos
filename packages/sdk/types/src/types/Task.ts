@@ -12,8 +12,9 @@ import {
   LabelAnnotation,
   PropertyMetaAnnotationId,
 } from '@dxos/echo/internal';
-
-import { ItemAnnotation } from '../annotations';
+import { ItemAnnotation } from '@dxos/schema';
+// eslint-disable-next-line unused-imports/no-unused-imports
+import { View as _View } from '@dxos/schema';
 
 import * as Person from './Person';
 import * as Project from './Project';
@@ -21,7 +22,7 @@ import * as Project from './Project';
 /**
  * Task schema.
  */
-const TaskSchema = Schema.Struct({
+export const Task = Schema.Struct({
   title: Schema.String.pipe(
     Schema.annotations({ title: 'Title' }),
     GeneratorAnnotation.set({
@@ -88,15 +89,15 @@ const TaskSchema = Schema.Struct({
   // due: Date,
   // TODO(burdon): Generic tags.
   // tags: [String],
-}).pipe(LabelAnnotation.set(['title']), ItemAnnotation.set(true));
-
-export const Task = TaskSchema.pipe(
+}).pipe(
   Type.Obj({
     typename: 'dxos.org/type/Task',
     version: '0.2.0',
   }),
+  LabelAnnotation.set(['title']),
+  ItemAnnotation.set(true),
 );
 
 export interface Task extends Schema.Schema.Type<typeof Task> {}
 
-export const make = (props: Obj.MakeProps<typeof Task>) => Obj.make(Task, props);
+export const make = (props: Obj.MakeProps<typeof Task>): Task => Obj.make(Task, props);

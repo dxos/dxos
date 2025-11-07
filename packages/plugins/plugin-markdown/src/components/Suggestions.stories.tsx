@@ -27,8 +27,8 @@ import { withTheme } from '@dxos/react-ui/testing';
 import { type EditorSelection, type Range, useTextEditor } from '@dxos/react-ui-editor';
 import { StackItem } from '@dxos/react-ui-stack';
 import { defaultTx } from '@dxos/react-ui-theme';
-import { DataType } from '@dxos/schema';
 import { render } from '@dxos/storybook-utils';
+import { Message } from '@dxos/types';
 
 import { MarkdownCapabilities } from '../capabilities';
 import { MarkdownPlugin } from '../MarkdownPlugin';
@@ -63,13 +63,13 @@ const TestChat: FC<{ doc: Markdown.Document; content: string }> = ({ doc, conten
 
   const space = useSpace();
   const queueDxn = useMemo(() => space && space.queues.create().dxn, [space]);
-  const queue = useQueue<DataType.Message.Message>(queueDxn);
+  const queue = useQueue<Message.Message>(queueDxn);
 
   const handleInsert = async () => {
     invariant(space);
     invariant(queue);
     await queue.append([
-      Obj.make(DataType.Message.Message, {
+      Obj.make(Message.Message, {
         created: new Date().toISOString(),
         sender: { role: 'assistant' },
         blocks: [{ _tag: 'text', text: 'Hello' }],
@@ -125,7 +125,7 @@ const DefaultStory = ({ document, chat }: { document: string; chat: string }) =>
     }
 
     const doc = space.db.add(
-      Markdown.makeDocument({
+      Markdown.make({
         name: 'Test',
         content: document.replaceAll(/\[(\w+)\]/g, (_, label) => {
           const obj = space.db.add(

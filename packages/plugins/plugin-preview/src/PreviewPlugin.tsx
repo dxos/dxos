@@ -4,7 +4,7 @@
 
 import { Capabilities, Events, contributes, defineModule, definePlugin } from '@dxos/app-framework';
 import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
-import { DataType } from '@dxos/schema';
+import { Organization, Person } from '@dxos/types';
 
 import { PreviewPopover, ReactSurface } from './capabilities';
 import { meta } from './meta';
@@ -19,9 +19,7 @@ export const PreviewPlugin = definePlugin(meta, () => [
   defineModule({
     id: `${meta.id}/module/schema`,
     activatesOn: ClientEvents.SetupSchema,
-    activate: () => [
-      contributes(ClientCapabilities.Schema, [DataType.Person.Person, DataType.Organization.Organization]),
-    ],
+    activate: () => [contributes(ClientCapabilities.Schema, [Person.Person, Organization.Organization])],
   }),
   defineModule({
     id: `${meta.id}/module/preview-popover`,

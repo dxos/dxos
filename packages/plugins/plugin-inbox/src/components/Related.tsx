@@ -7,13 +7,13 @@ import React from 'react';
 import { Avatar, Button, Icon, useTranslation } from '@dxos/react-ui';
 import { Card, cardText } from '@dxos/react-ui-stack';
 import { mx } from '@dxos/react-ui-theme';
-import { type DataType } from '@dxos/schema';
+import { type Message, type Person } from '@dxos/types';
 
 import { meta } from '../meta';
 
 export type RelatedContactsProps = {
-  contacts: DataType.Person.Person[];
-  onContactClick?: (contact: DataType.Person.Person) => void;
+  contacts: Person.Person[];
+  onContactClick?: (contact: Person.Person) => void;
 };
 
 export const RelatedContacts = ({ contacts, onContactClick }: RelatedContactsProps) => {
@@ -46,8 +46,8 @@ export const RelatedContacts = ({ contacts, onContactClick }: RelatedContactsPro
 };
 
 export type RelatedMessagesProps = {
-  messages: DataType.Message.Message[];
-  onMessageClick?: (message: DataType.Message.Message) => void;
+  messages: Message.Message[];
+  onMessageClick?: (message: Message.Message) => void;
 };
 
 export const RelatedMessages = ({ messages, onMessageClick }: RelatedMessagesProps) => {

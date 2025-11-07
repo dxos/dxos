@@ -8,11 +8,11 @@ import React, { useMemo } from 'react';
 import { useSpace } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { withTheme } from '@dxos/react-ui/testing';
-import { DataType } from '@dxos/schema';
+import { Text as TextType } from '@dxos/schema';
 import { render } from '@dxos/storybook-utils';
 
 import { translations } from '../../translations';
-import { OutlineType } from '../../types';
+import { Outline } from '../../types';
 
 import { Outliner } from './Outliner';
 
@@ -30,7 +30,7 @@ const meta = {
   }),
   decorators: [
     withTheme,
-    withClientProvider({ createIdentity: true, createSpace: true, types: [DataType.Text.Text, OutlineType] }),
+    withClientProvider({ createIdentity: true, createSpace: true, types: [TextType.Text, Outline.Outline] }),
   ],
   parameters: {
     layout: 'fullscreen',
@@ -44,6 +44,6 @@ type Story = StoryObj<typeof Outliner>;
 
 export const Default: Story = {
   args: {
-    text: DataType.Text.make('- [x] Initial content'),
+    text: TextType.make('- [x] Initial content'),
   },
 };

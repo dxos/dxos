@@ -4,10 +4,13 @@
 
 import * as Schema from 'effect/Schema';
 
-import { EchoObject, EchoRelation, Expando, TypedObject } from '../object';
+import { EchoObject, EchoRelation, TypedObject } from '../object';
 import { Ref, type Ref$ } from '../ref';
 
-// TODO(burdon): These are non-canonical test types, so we really shouldn't export and use in other classes (compare with @dxos/sdk/testing).
+/**
+ * @deprecated
+ */
+// TOOD(burdon): Reconcile with ../testing (remove this).
 export namespace Testing {
   //
   // Primitives
@@ -89,8 +92,8 @@ export namespace Testing {
 
   export type TestSchemaWithClass = Schema.Schema.Type<typeof TestSchemaWithClass>;
 
-  export class Contact extends TypedObject({
-    typename: 'example.com/type/Contact',
+  export class Person extends TypedObject({
+    typename: 'example.com/type/Person',
     version: '0.1.0',
   })(
     {
@@ -119,80 +122,10 @@ export namespace Testing {
     {
       title: Schema.optional(Schema.String),
       completed: Schema.optional(Schema.Boolean),
-      assignee: Schema.optional(Ref(Contact)),
+      assignee: Schema.optional(Ref(Person)),
       previous: Schema.optional(Schema.suspend((): Ref$<Task> => Ref(Task))),
       subTasks: Schema.optional(Schema.mutable(Schema.Array(Schema.suspend((): Ref$<Task> => Ref(Task))))),
       description: Schema.optional(Schema.String),
-    },
-    { partial: true },
-  ) {}
-
-  // TOOD(burdon): Ref$ breaks if using new syntax (since ID is not declared).
-
-  // export const Task = Schema.Struct({
-  //   title: Schema.String,
-  //   completed: Schema.Boolean,
-  //   assignee: Schema.optional(Ref(Schema.suspend((): Ref$<Contact> => Ref(Contact)))),
-  //   previous: Schema.optional(Ref(Schema.suspend((): Ref$<Task> => Ref(Task)))),
-  //   subTasks: Schema.optional(Schema.Array(Ref(Schema.suspend((): Ref$<Task> => Ref(Task))))),
-  //   description: Schema.optional(Schema.String),
-  // }).pipe(
-  //   EchoObject({
-  //     typename: 'example.com/type/Task',
-  //     version: '0.1.0',
-  //   }),
-  // );
-
-  // export type Task = Schema.Schema.Type<typeof Task>;
-
-  // export const Contact = Schema.Struct({
-  //   name: Schema.String,
-  //   username: Schema.String,
-  //   email: Schema.String,
-  //   // TOOD(burdon): Should model via relations?
-  //   // tasks: Schema.mutable(Schema.Array(Ref(Task))),
-  //   address: Schema.Struct({
-  //     city: Schema.optional(Schema.String),
-  //     state: Schema.optional(Schema.String),
-  //     zip: Schema.optional(Schema.String),
-  //     coordinates: Schema.Struct({
-  //       lat: Schema.optional(Schema.Number),
-  //       lng: Schema.optional(Schema.Number),
-  //     }),
-  //   }),
-  // }).pipe(
-  //   EchoObject({
-  //     typename: 'example.com/type/Contact',
-  //     version: '0.1.0',
-  //   }),
-  // );
-
-  // export type Contact = Schema.Schema.Type<typeof Contact>;
-
-  export enum RecordType {
-    UNDEFINED = 0,
-    PERSONAL = 1,
-    WORK = 2,
-  }
-
-  export class Container extends TypedObject({
-    typename: 'example.com/type/Container',
-    version: '0.1.0',
-  })(
-    {
-      objects: Schema.mutable(Schema.Array(Ref(Expando))),
-      records: Schema.mutable(
-        Schema.Array(
-          Schema.partial(
-            Schema.Struct({
-              title: Schema.String,
-              description: Schema.String,
-              contacts: Schema.mutable(Schema.Array(Ref(Contact))),
-              type: Schema.Enums(RecordType),
-            }),
-          ),
-        ),
-      ),
     },
     { partial: true },
   ) {}
@@ -203,8 +136,8 @@ export namespace Testing {
     EchoRelation({
       typename: 'example.com/type/HasManager',
       version: '0.1.0',
-      source: Contact,
-      target: Contact,
+      source: Person,
+      target: Person,
     }),
   );
   export interface HasManager extends Schema.Schema.Type<typeof HasManager> {}

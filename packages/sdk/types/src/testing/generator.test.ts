@@ -8,11 +8,10 @@ import { type EchoDatabase, Query } from '@dxos/echo-db';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
 import { log } from '@dxos/log';
 import { faker } from '@dxos/random';
+import { type TypeSpec, type ValueGenerator, createGenerator, createObjectFactory } from '@dxos/schema/testing';
 import { stripUndefined } from '@dxos/util';
 
-import { DataType } from '../types';
-
-import { type TypeSpec, type ValueGenerator, createGenerator, createObjectFactory } from './generator';
+import { Message, Organization, Person, Project } from '../types';
 
 faker.seed(1);
 
@@ -45,19 +44,19 @@ describe('Generator', () => {
 
   test('create object', async ({ expect }) => {
     {
-      const objectGenerator = createGenerator(generator, DataType.Organization.Organization, { force: true });
+      const objectGenerator = createGenerator(generator, Organization.Organization, { force: true });
       const object = objectGenerator.createObject();
       expect(object).to.exist;
     }
 
     {
-      const objectGenerator = createGenerator(generator, DataType.Person.Person, { force: true });
+      const objectGenerator = createGenerator(generator, Person.Person, { force: true });
       const object = objectGenerator.createObject();
       expect(object).to.exist;
     }
 
     {
-      const objectGenerator = createGenerator(generator, DataType.Project.Project, { force: true });
+      const objectGenerator = createGenerator(generator, Project.Project, { force: true });
       const object = objectGenerator.createObject();
       expect(object).to.exist;
     }
@@ -68,16 +67,12 @@ describe('Generator', () => {
     const createObjects = createObjectFactory(db, generator);
 
     // Register static schema.
-    db.graph.schemaRegistry.addSchema([
-      DataType.Organization.Organization,
-      DataType.Project.Project,
-      DataType.Person.Person,
-    ]);
+    db.graph.schemaRegistry.addSchema([Organization.Organization, Project.Project, Person.Person]);
 
     const spec: TypeSpec[] = [
-      { type: DataType.Organization.Organization, count: 5 },
-      { type: DataType.Person.Person, count: 10 },
-      { type: DataType.Project.Project, count: 5 },
+      { type: Organization.Organization, count: 5 },
+      { type: Person.Person, count: 10 },
+      { type: Project.Project, count: 5 },
     ];
 
     await createObjects(spec);
@@ -89,9 +84,9 @@ describe('Generator', () => {
     const createObjects = createObjectFactory(db, generator);
 
     // Register mutable schema.
-    const [organization] = await db.schemaRegistry.register([DataType.Organization.Organization]);
-    const [person] = await db.schemaRegistry.register([DataType.Person.Person]);
-    const [project] = await db.schemaRegistry.register([DataType.Project.Project]);
+    const [organization] = await db.schemaRegistry.register([Organization.Organization]);
+    const [person] = await db.schemaRegistry.register([Person.Person]);
+    const [project] = await db.schemaRegistry.register([Project.Project]);
 
     const spec: TypeSpec[] = [
       { type: organization, count: 5 },
@@ -104,7 +99,7 @@ describe('Generator', () => {
   });
 
   test('generate message from static schema', async ({ expect }) => {
-    const schema = DataType.Message.Message;
+    const schema = Message.Message;
     const objectGenerator = createGenerator(generator, schema, { force: true });
     const object = objectGenerator.createObject();
     expect(object).to.exist;
@@ -112,7 +107,7 @@ describe('Generator', () => {
 
   test('generate message from stored schema', async ({ expect }) => {
     const { db } = await builder.createDatabase();
-    const schema = (await db.schemaRegistry.register([DataType.Message.Message]))[0];
+    const schema = (await db.schemaRegistry.register([Message.Message]))[0];
     const objectGenerator = createGenerator(generator, schema, { force: true });
     const object = objectGenerator.createObject();
     expect(object).to.exist;

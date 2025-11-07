@@ -11,8 +11,7 @@
 // import { DiagramType } from '@dxos/plugin-sketch/types';
 // import { CollectionType, ChannelType, ThreadType } from '@dxos/plugin-space/types';
 // import { TableType } from '@dxos/react-ui-table/types';
-// import { DataType } from '@dxos/schema';
-
+//
 // const testBuilder = new TestBuilder();
 
 // describe('Composer migrations', () => {
@@ -22,7 +21,7 @@
 //   beforeEach(async () => {
 //     client = new Client({
 //       services: testBuilder.createLocalClientServices(),
-//       types: [ChannelType, CollectionType, Markdown.Document, DataType.Message.Message, DiagramType, TableType, ThreadType],
+//       types: [ChannelType, CollectionType, Markdown.Document, Message.Message, DiagramType, TableType, ThreadType],
 //     });
 
 //     await client.initialize();

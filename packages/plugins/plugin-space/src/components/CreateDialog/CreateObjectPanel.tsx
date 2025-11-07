@@ -12,7 +12,7 @@ import { Icon, toLocalizedString, useDefaultValue, useTranslation } from '@dxos/
 import { Form } from '@dxos/react-ui-form';
 import { SearchList } from '@dxos/react-ui-searchlist';
 import { cardDialogOverflow, cardDialogPaddedOverflow, cardDialogSearchListRoot } from '@dxos/react-ui-stack';
-import { type DataType } from '@dxos/schema';
+import { type Collection } from '@dxos/schema';
 import { type MaybePromise, isNonNullable } from '@dxos/util';
 
 import { useInputSurfaceLookup } from '../../hooks';
@@ -24,7 +24,7 @@ export type CreateObjectPanelProps = {
   forms: ObjectForm[];
   spaces: Space[];
   typename?: string;
-  target?: Space | DataType.Collection.Collection;
+  target?: Space | Collection.Collection;
   views?: boolean;
   initialFormValues?: Partial<BaseObject>;
   defaultSpaceId?: SpaceId;

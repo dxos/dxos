@@ -297,7 +297,7 @@ describe('Database', () => {
       await db.flush();
 
       container.objects!.push(Ref.make(Obj.make(Testing.Task, {})));
-      container.objects!.push(Ref.make(Obj.make(Testing.Contact, {})));
+      container.objects!.push(Ref.make(Obj.make(Testing.Person, {})));
     }
 
     {
@@ -305,7 +305,7 @@ describe('Database', () => {
       const [container] = objects;
       expect(container.objects).to.have.length(2);
       expect(getTypename(container.objects![0].target!)).to.equal(Type.getTypename(Testing.Task));
-      expect(getTypename(container.objects![1].target!)).to.equal(Type.getTypename(Testing.Contact));
+      expect(getTypename(container.objects![1].target!)).to.equal(Type.getTypename(Testing.Person));
     }
   });
 
@@ -431,7 +431,7 @@ describe('Database', () => {
       const root = Obj.make(Testing.Container, { records: [] });
       root.records!.push({
         title: 'test',
-        contacts: [Ref.make(Obj.make(Testing.Contact, { name: 'tester' }))],
+        contacts: [Ref.make(Obj.make(Testing.Person, { name: 'tester' }))],
       });
       const { db } = await addToDatabase(root);
 
@@ -461,7 +461,7 @@ describe('Database', () => {
 
   const createDbWithTypes = async () => {
     const { db, graph } = await builder.createDatabase();
-    graph.schemaRegistry.addSchema([Testing.Task, Testing.Contact, Testing.Container]);
+    graph.schemaRegistry.addSchema([Testing.Task, Testing.Person, Testing.Container]);
     return { db, graph };
   };
 

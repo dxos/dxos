@@ -10,7 +10,8 @@ import { useClient } from '@dxos/react-client';
 import { Filter, getSpace, useQuery } from '@dxos/react-client/echo';
 import { useAsyncEffect, useTranslation } from '@dxos/react-ui';
 import { Card, CardStack, StackItem, cardStackDefaultInlineSizeRem, cardStackHeading } from '@dxos/react-ui-stack';
-import { type DataType, ProjectionModel } from '@dxos/schema';
+import { ProjectionModel } from '@dxos/schema';
+import { type View } from '@dxos/schema';
 
 import { getQueryTarget, resolveSchemaWithClientAndSpace } from '../helpers';
 import { meta } from '../meta';
@@ -18,7 +19,7 @@ import { meta } from '../meta';
 import { useProject } from './Project';
 
 export type ViewColumnProps = {
-  view: DataType.View.View;
+  view: View.View;
 };
 
 // TODO(thure): Duplicates a lot of the same boilerplate as Kanban columns; is there an opportunity to DRY these out?

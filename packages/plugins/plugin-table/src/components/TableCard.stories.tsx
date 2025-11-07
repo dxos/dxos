@@ -16,7 +16,7 @@ import { CardContainer } from '@dxos/react-ui-stack/testing';
 import { translations as tableTranslations } from '@dxos/react-ui-table';
 import { useTestTableModel } from '@dxos/react-ui-table/testing';
 import { Table } from '@dxos/react-ui-table/types';
-import { DataType, getSchemaFromPropertyDefinitions } from '@dxos/schema';
+import { View, getSchemaFromPropertyDefinitions } from '@dxos/schema';
 
 import { translations } from '../translations';
 
@@ -45,7 +45,7 @@ const meta = {
   decorators: [
     withTheme, // TODO(burdon): Should not require space.
     withClientProvider({
-      types: [DataType.View.View, Table.Table],
+      types: [View.View, Table.Table],
       createIdentity: true,
       createSpace: true,
       onCreateSpace: async ({ client, space }) => {

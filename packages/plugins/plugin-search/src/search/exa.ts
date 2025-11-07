@@ -63,7 +63,7 @@ export const search = async <Schema extends Schema.Schema.AnyNoContext>(
   //   model: '@anthropic/claude-3-5-haiku-20241022',
   //   systemPrompt,
   //   history: [
-  //     Obj.make(DataType.Message.Message, {
+  //     Obj.make(Message.Message, {
   //       created: new Date().toISOString(),
   //       sender: { role: 'user' },
   //       blocks: context.results.map(
@@ -159,7 +159,7 @@ const DATA_EXTRACTION_INSTRUCTIONS = trim`
 //       Prefer own names of people, companies, and projects, technologies, and other entities.
 //     `,
 //     history: [
-//       Obj.make(DataType.Message.Message, {
+//       Obj.make(Message.Message, {
 //         created: new Date().toISOString(),
 //         sender: { role: 'user' },
 //         blocks: [

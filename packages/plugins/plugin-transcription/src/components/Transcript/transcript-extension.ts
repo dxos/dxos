@@ -8,7 +8,7 @@ import { format } from 'date-fns/format';
 import { intervalToDuration } from 'date-fns/intervalToDuration';
 
 import { type CleanupFn, addEventListener, combine } from '@dxos/async';
-import { type DataType } from '@dxos/schema';
+import { type Message } from '@dxos/types';
 
 import { DocumentAdapter, type SerializationModel } from '../../model';
 
@@ -16,7 +16,7 @@ import { DocumentAdapter, type SerializationModel } from '../../model';
  * Data structure that maps Chunks queue to lines with transcript state.
  */
 export type TranscriptOptions = {
-  model: SerializationModel<DataType.Message.Message>;
+  model: SerializationModel<Message.Message>;
   started?: Date;
 };
 
@@ -180,7 +180,7 @@ class TimestampMarker extends GutterMarker {
   }
 }
 
-const getStartTime = (started?: Date, message?: DataType.Message.Message): Date | undefined => {
+const getStartTime = (started?: Date, message?: Message.Message): Date | undefined => {
   if (started) {
     return started;
   }

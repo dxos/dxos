@@ -6,7 +6,7 @@ import { describe, test } from 'vitest';
 
 import { Obj, Ref } from '@dxos/echo';
 import { faker } from '@dxos/random';
-import { DataType } from '@dxos/schema';
+import { Task } from '@dxos/types';
 
 import { createTree } from '../testing';
 
@@ -124,7 +124,7 @@ describe('tree', () => {
   });
 
   test('task', ({ expect }) => {
-    const task = Obj.make(DataType.Task.Task, { title: 'Test task.' });
+    const task = Obj.make(Task.Task, { title: 'Test task.' });
     expect(task.title).to.eq('Test task.');
 
     const tree = createTree();

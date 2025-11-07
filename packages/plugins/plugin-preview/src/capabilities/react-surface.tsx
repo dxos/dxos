@@ -14,7 +14,8 @@ import { useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 import { Card } from '@dxos/react-ui-stack';
 import { descriptionMessage, mx } from '@dxos/react-ui-theme';
-import { DataType, type ProjectionModel } from '@dxos/schema';
+import { type ProjectionModel } from '@dxos/schema';
+import { Organization, Person, Project, Task } from '@dxos/types';
 
 import { OrganizationCard, PersonCard, ProjectCard, TaskCard } from '../cards';
 import { meta } from '../meta';
@@ -30,8 +31,7 @@ export default () =>
     createSurface({
       id: `${meta.id}/schema-popover--contact`,
       role: ['card--popover', 'card--intrinsic', 'card--transclusion', 'card--extrinsic', 'card'],
-      filter: (data): data is { subject: DataType.Person.Person } =>
-        Obj.instanceOf(DataType.Person.Person, data.subject),
+      filter: (data): data is { subject: Person.Person } => Obj.instanceOf(Person.Person, data.subject),
       component: ({ data, role }) => {
         const { dispatchPromise: dispatch } = useIntentDispatcher();
         const space = getSpace(data.subject);
@@ -60,8 +60,8 @@ export default () =>
     createSurface({
       id: `${meta.id}/schema-popover--organization`,
       role: ['card--popover', 'card--intrinsic', 'card--transclusion', 'card--extrinsic', 'card'],
-      filter: (data): data is { subject: DataType.Organization.Organization } =>
-        Obj.instanceOf(DataType.Organization.Organization, data.subject),
+      filter: (data): data is { subject: Organization.Organization } =>
+        Obj.instanceOf(Organization.Organization, data.subject),
       component: ({ data, role }) => {
         const activeSpace = useActiveSpace();
         return (
@@ -74,8 +74,7 @@ export default () =>
     createSurface({
       id: `${meta.id}/schema-popover--project`,
       role: ['card--popover', 'card--intrinsic', 'card--transclusion', 'card--extrinsic', 'card'],
-      filter: (data): data is { subject: DataType.Project.Project } =>
-        Obj.instanceOf(DataType.Project.Project, data.subject),
+      filter: (data): data is { subject: Project.Project } => Obj.instanceOf(Project.Project, data.subject),
       component: ({ data, role }) => {
         const activeSpace = useActiveSpace();
         return <ProjectCard subject={data.subject} role={role} activeSpace={activeSpace} />;
@@ -84,7 +83,7 @@ export default () =>
     createSurface({
       id: `${meta.id}/schema-popover--task`,
       role: ['card--popover', 'card--intrinsic', 'card--transclusion', 'card--extrinsic', 'card'],
-      filter: (data): data is { subject: DataType.Task.Task } => Obj.instanceOf(DataType.Task.Task, data.subject),
+      filter: (data): data is { subject: Task.Task } => Obj.instanceOf(Task.Task, data.subject),
       component: ({ data, role }) => {
         return <TaskCard subject={data.subject} role={role} />;
       },

@@ -27,7 +27,7 @@ import { Editor, type EditorController, type EditorRootProps } from './Editor';
 
 const generator: ValueGenerator = faker as any;
 
-const types = [Testing.Organization, Testing.Project, Testing.Contact];
+const types = [Testing.Organization, Testing.Project, Testing.Person];
 
 // TODO(burdon): Ref expando breaks the form.
 const RectangleShapeWithoutRef = Schema.omit<any, any, ['object']>('object')(RectangleShape);
@@ -161,7 +161,7 @@ export const Query: Story = {
     spec: [
       { type: Testing.Organization, count: 4 },
       { type: Testing.Project, count: 0 },
-      { type: Testing.Contact, count: 16 },
+      { type: Testing.Person, count: 16 },
     ],
   },
 };

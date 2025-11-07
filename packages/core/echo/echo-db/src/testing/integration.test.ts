@@ -411,17 +411,17 @@ describe('Integration tests', () => {
         reactiveSchemaQuery: false,
         preloadSchemaOnOpen: false,
       });
-      db.graph.schemaRegistry.addSchema([TestingDeprecated.Contact, TestingDeprecated.HasManager]);
+      db.graph.schemaRegistry.addSchema([TestingDeprecated.Person, TestingDeprecated.HasManager]);
 
       let relationId!: ObjectId;
       {
         const alice = db.add(
-          live(TestingDeprecated.Contact, {
+          live(TestingDeprecated.Person, {
             name: 'Alice',
           }),
         );
         const bob = db.add(
-          live(TestingDeprecated.Contact, {
+          live(TestingDeprecated.Person, {
             name: 'Bob',
           }),
         );
@@ -516,7 +516,7 @@ describe('Integration tests', () => {
         reactiveSchemaQuery: false,
         preloadSchemaOnOpen: false,
       });
-      const [schema] = await db.schemaRegistry.register([TestingDeprecated.Contact]);
+      const [schema] = await db.schemaRegistry.register([TestingDeprecated.Person]);
       typeDXN = getTypeReference(schema)!.toDXN();
       db.add(live(schema, { name: 'Bob' }));
       await db.flush({ indexes: true });
@@ -529,7 +529,7 @@ describe('Integration tests', () => {
         objects: [obj],
       } = await db.query(Query.select(Filter.typeDXN(typeDXN))).run();
       expect(getSchema(obj)).toBeDefined();
-      expect(getSchemaTypename(getSchema(obj)!)).toEqual(TestingDeprecated.Contact.typename);
+      expect(getSchemaTypename(getSchema(obj)!)).toEqual(TestingDeprecated.Person.typename);
     }
   });
 });

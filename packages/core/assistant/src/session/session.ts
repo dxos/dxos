@@ -26,7 +26,7 @@ import { todo } from '@dxos/debug';
 import { Obj } from '@dxos/echo';
 import { TracingService } from '@dxos/functions';
 import { log } from '@dxos/log';
-import { DataType } from '@dxos/schema';
+import { Message } from '@dxos/types';
 
 import { type AiAssistantError } from '../errors';
 
@@ -45,7 +45,7 @@ export type AiSessionRunParams<Tools extends Record<string, Tool.Any>> = {
   prompt: string;
   // TODO(wittjosiah): Rename to systemPrompt.
   system?: string;
-  history?: DataType.Message.Message[];
+  history?: Message.Message[];
   objects?: Obj.Any[];
   blueprints?: Blueprint.Blueprint[];
   toolkit?: Toolkit.WithHandler<Tools>;
@@ -70,10 +70,10 @@ export class AiSession {
 
   /** Message history from queue. */
   // TODO(burdon): Evolve into supporting a git-like graph of messages.
-  private _history: DataType.Message.Message[] = [];
+  private _history: Message.Message[] = [];
 
   /** Pending messages for this session (incl. the current prompt). */
-  private _pending: DataType.Message.Message[] = [];
+  private _pending: Message.Message[] = [];
 
   constructor(private readonly _options: AiSessionOptions = {}) {}
 
@@ -85,17 +85,13 @@ export class AiSession {
     blueprints = [],
     toolkit,
     observer = GenerationObserver.noop(),
-  }: AiSessionRunParams<Tools>): Effect.Effect<
-    DataType.Message.Message[],
-    AiSessionRunError,
-    AiSessionRunRequirements
-  > =>
+  }: AiSessionRunParams<Tools>): Effect.Effect<Message.Message[], AiSessionRunError, AiSessionRunRequirements> =>
     Effect.gen(this, function* () {
       this._history = [...history];
       this._pending = [];
       const pending = this._pending;
 
-      const submitMessage = Effect.fnUntraced(function* (message: DataType.Message.Message) {
+      const submitMessage = Effect.fnUntraced(function* (message: Message.Message) {
         pending.push(message);
         yield* observer.onMessage(message);
         yield* TracingService.emitConverationMessage(message);
@@ -141,7 +137,7 @@ export class AiSession {
 
         // Create the response message.
         const response = yield* submitMessage(
-          Obj.make(DataType.Message.Message, {
+          Obj.make(Message.Message, {
             created: new Date().toISOString(),
             sender: { role: 'assistant' },
             blocks,
@@ -174,7 +170,7 @@ export class AiSession {
         // TODO(wittjosiah): Sometimes tool error results are added to the queue before the tool agent statuses.
         //   This results in a broken execution graph.
         yield* submitMessage(
-          Obj.make(DataType.Message.Message, {
+          Obj.make(Message.Message, {
             created: new Date().toISOString(),
             sender: { role: 'tool' },
             blocks: toolResults,

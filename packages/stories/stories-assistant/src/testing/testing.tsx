@@ -45,7 +45,7 @@ import { StorybookLayoutPlugin } from '@dxos/plugin-storybook-layout';
 import { ThemePlugin } from '@dxos/plugin-theme';
 import { type Client, Config } from '@dxos/react-client';
 import { defaultTx } from '@dxos/react-ui-theme';
-import { DataType } from '@dxos/schema';
+import { AccessToken } from '@dxos/types';
 import { trim } from '@dxos/util';
 
 // TODO(burdon): Factor out.
@@ -96,7 +96,7 @@ namespace TestingToolkit {
 
 type DecoratorsProps = {
   plugins?: Plugin[];
-  accessTokens?: DataType.AccessToken.AccessToken[];
+  accessTokens?: AccessToken.AccessToken[];
   onInit?: (props: { client: Client; space: Space }) => Promise<void>;
 } & (Omit<ClientPluginOptions, 'onClientInitialized' | 'onSpacesReady'> & Pick<StoryPluginOptions, 'onChatCreated'>);
 
@@ -124,7 +124,7 @@ export const getDecorators = ({
         types: [
           Assistant.Chat,
           Blueprint.Blueprint,
-          DataType.AccessToken.AccessToken,
+          AccessToken.AccessToken,
           Function.Function,
           Markdown.Document,
           Prompt.Prompt,
@@ -191,7 +191,7 @@ export const getDecorators = ({
 export const accessTokensFromEnv = (tokens: Record<string, string | undefined>) => {
   return Object.entries(tokens)
     .filter(([, token]) => !!token)
-    .map(([source, token]) => Obj.make(DataType.AccessToken.AccessToken, { source, token: token! }));
+    .map(([source, token]) => Obj.make(AccessToken.AccessToken, { source, token: token! }));
 };
 
 type StoryPluginOptions = {

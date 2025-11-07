@@ -6,8 +6,7 @@ import * as Schema from 'effect/Schema';
 
 import { Obj, Type } from '@dxos/echo';
 import { Format, GeneratorAnnotation, LabelAnnotation, PropertyMeta } from '@dxos/echo/internal';
-
-import { ItemAnnotation } from '../annotations';
+import { ItemAnnotation } from '@dxos/schema';
 
 import * as Geo from './Geo';
 import * as Organization from './Organization';
@@ -112,6 +111,13 @@ export const Person = PersonSchema.pipe(
   ItemAnnotation.set(true),
 );
 
+export interface Person extends Schema.Schema.Type<typeof Person> {}
+
+export const make = (props: Partial<Obj.MakeProps<typeof Person>> = {}) => Obj.make(Person, props);
+
+/**
+ * @deprecated
+ */
 export const LegacyPerson = PersonSchema.pipe(
   Type.Obj({
     typename: 'dxos.org/type/Person',
@@ -121,7 +127,3 @@ export const LegacyPerson = PersonSchema.pipe(
   LabelAnnotation.set(['preferredName', 'fullName', 'nickname']),
   ItemAnnotation.set(true),
 );
-
-export interface Person extends Schema.Schema.Type<typeof Person> {}
-
-export const make = (props: Partial<Obj.MakeProps<typeof Person>> = {}) => Obj.make(Person, props);

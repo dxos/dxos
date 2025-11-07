@@ -22,7 +22,7 @@ import {
   TracingService,
 } from '@dxos/functions';
 import { TestDatabaseLayer, testStoragePath } from '@dxos/functions/testing';
-import { DataType } from '@dxos/schema';
+import { Person, Project, Task } from '@dxos/types';
 
 import { LINEAR_ID_KEY, default as fetchLinearIssues } from './sync-issues';
 
@@ -37,7 +37,7 @@ const TestLayer = Layer.mergeAll(
       AiServiceTestingPreset('direct'),
       TestDatabaseLayer({
         // indexing: { vector: true },
-        types: [DataType.Task.Task, DataType.Person.Person, DataType.Project.Project],
+        types: [Task.Task, Person.Person, Project.Project],
         storagePath: testStoragePath({ name: 'feed-test-13' }),
       }),
       CredentialsService.layerConfig([{ service: 'linear.app', apiKey: Config.redacted('LINEAR_API_KEY') }]),
@@ -61,17 +61,17 @@ describe('Linear', { timeout: 600_000 }, () => {
           team: '1127c63a-6f77-4725-9229-50f6cd47321c',
         });
 
-        const { objects: persons } = yield* DatabaseService.runQuery(Query.type(DataType.Person.Person));
+        const { objects: persons } = yield* DatabaseService.runQuery(Query.type(Person.Person));
         console.log('people', {
           count: persons.length,
           people: persons.map((_) => `(${_.id}) ${Obj.getLabel(_)} [${Obj.getKeys(_, LINEAR_ID_KEY)[0]?.id}]`),
         });
-        const { objects: projects } = yield* DatabaseService.runQuery(Query.type(DataType.Project.Project));
+        const { objects: projects } = yield* DatabaseService.runQuery(Query.type(Project.Project));
         console.log('projects', {
           count: projects.length,
           projects: projects.map((_) => `(${_.id}) ${Obj.getLabel(_)} [${Obj.getKeys(_, LINEAR_ID_KEY)[0]?.id}]`),
         });
-        const { objects: tasks } = yield* DatabaseService.runQuery(Query.type(DataType.Task.Task));
+        const { objects: tasks } = yield* DatabaseService.runQuery(Query.type(Task.Task));
         console.log('tasks', {
           count: tasks.length,
           tasks: tasks.map((_) => `(${_.id}) ${Obj.getLabel(_)} [${Obj.getKeys(_, LINEAR_ID_KEY)[0]?.id}]`),

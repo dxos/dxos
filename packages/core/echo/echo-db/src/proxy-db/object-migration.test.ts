@@ -27,16 +27,16 @@ afterEach(async () => {
 const ContactV1 = Schema.Struct({
   firstName: Schema.String,
   lastName: Schema.String,
-}).pipe(Type.Obj({ typename: 'example.com/type/Contact', version: '0.1.0' }));
+}).pipe(Type.Obj({ typename: 'example.com/type/Person', version: '0.1.0' }));
 
 const ContactV2 = Schema.Struct({
   name: Schema.String,
-}).pipe(Type.Obj({ typename: 'example.com/type/Contact', version: '0.2.0' }));
+}).pipe(Type.Obj({ typename: 'example.com/type/Person', version: '0.2.0' }));
 
 const ContactV3 = Schema.Struct({
   name: Schema.String,
   email: Schema.String,
-}).pipe(Type.Obj({ typename: 'example.com/type/Contact', version: '0.3.0' }));
+}).pipe(Type.Obj({ typename: 'example.com/type/Person', version: '0.3.0' }));
 
 const migrationV2 = defineObjectMigration({
   from: ContactV1,
@@ -68,9 +68,9 @@ test('migrate 1 object', async () => {
   expect(objects).to.have.length(1);
 
   expect(getSchemaDXN(getSchema(objects[0])!)?.toString()).to.eq(
-    DXN.fromTypenameAndVersion('example.com/type/Contact', '0.2.0').toString(),
+    DXN.fromTypenameAndVersion('example.com/type/Person', '0.2.0').toString(),
   );
-  expect(getTypename(objects[0])).to.eq('example.com/type/Contact');
+  expect(getTypename(objects[0])).to.eq('example.com/type/Person');
   expect(getSchemaVersion(getSchema(objects[0])!)).to.eq('0.2.0');
   expect(objects[0].name).to.eq('John Doe');
 });
@@ -120,7 +120,7 @@ test('chained migrations', async () => {
 
   const { objects } = await db.query(Filter.type(ContactV3)).run();
   expect(objects).to.have.length(1);
-  expect(getTypename(objects[0])).to.eq('example.com/type/Contact');
+  expect(getTypename(objects[0])).to.eq('example.com/type/Person');
   expect(getSchemaVersion(getSchema(objects[0])!)).to.eq('0.3.0');
   expect(objects[0].name).to.eq('John Doe');
   expect(objects[0].email).to.eq('john.doe@example.com');

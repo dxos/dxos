@@ -27,7 +27,7 @@ export const useWebSearch = ({ query, context }: { query?: string; context?: str
       const results = await search({
         query,
         context,
-        schema: [Testing.Project, Testing.Organization, Testing.Contact],
+        schema: [Testing.Project, Testing.Organization, Testing.Person],
         exaApiKey: EXA_API_KEY,
       });
 

@@ -10,8 +10,8 @@ import { withPluginManager } from '@dxos/app-framework/testing';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { Query, useQuery, useSpace } from '@dxos/react-client/echo';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
-import { DataType } from '@dxos/schema';
 import { render } from '@dxos/storybook-utils';
+import { Message } from '@dxos/types';
 
 import { createThreadPlugins } from '../testing';
 import { translations } from '../translations';
@@ -39,9 +39,7 @@ const meta = {
     withLayout({ container: 'column' }),
     withPluginManager({
       plugins: [...(await createThreadPlugins())],
-      capabilities: [
-        contributes(ClientCapabilities.Schema, [Channel.Channel, Thread.Thread, DataType.Message.Message]),
-      ],
+      capabilities: [contributes(ClientCapabilities.Schema, [Channel.Channel, Thread.Thread, Message.Message])],
     }),
   ],
   parameters: {

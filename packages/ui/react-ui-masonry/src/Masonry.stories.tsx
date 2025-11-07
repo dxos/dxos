@@ -12,12 +12,12 @@ import { useClientProvider, withClientProvider } from '@dxos/react-client/testin
 import { withTheme } from '@dxos/react-ui/testing';
 import { Card, cardNoSpacing, cardSpacing } from '@dxos/react-ui-stack';
 import { mx } from '@dxos/react-ui-theme';
-import { DataType } from '@dxos/schema';
 import { createObjectFactory } from '@dxos/schema/testing';
+import { Organization } from '@dxos/types';
 
 import { Masonry } from './Masonry';
 
-const StoryItem = ({ data: { image, name, description } }: { data: DataType.Organization.Organization }) => {
+const StoryItem = ({ data: { image, name, description } }: { data: Organization.Organization }) => {
   return (
     <Card.StaticRoot>
       <Card.Poster alt={name!} {...(image ? { image } : { icon: 'ph--building-office--regular' })} />
@@ -31,10 +31,10 @@ const StoryItem = ({ data: { image, name, description } }: { data: DataType.Orga
 
 const DefaultStory = () => {
   const { space } = useClientProvider();
-  const organizations = useQuery(space, Filter.type(DataType.Organization.Organization));
+  const organizations = useQuery(space, Filter.type(Organization.Organization));
 
   return (
-    <Masonry.Root<DataType.Organization.Organization>
+    <Masonry.Root<Organization.Organization>
       items={organizations}
       render={StoryItem}
       classNames='is-full max-is-full bs-full max-bs-full overflow-y-auto p-4'
@@ -47,12 +47,12 @@ const meta = {
   decorators: [
     withTheme,
     withClientProvider({
-      types: [DataType.Organization.Organization],
+      types: [Organization.Organization],
       createIdentity: true,
       createSpace: true,
       onCreateSpace: async ({ space }) => {
         const factory = createObjectFactory(space.db, faker as any);
-        await factory([{ type: DataType.Organization.Organization, count: 36 }]);
+        await factory([{ type: Organization.Organization, count: 36 }]);
       },
     }),
   ],
