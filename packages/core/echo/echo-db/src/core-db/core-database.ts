@@ -47,6 +47,7 @@ import {
 } from './automerge-doc-loader';
 import { ObjectCore } from './object-core';
 import { getInlineAndLinkChanges } from './util';
+import { type Database } from '@dxos/echo';
 
 export type InitRootProxyFn = (core: ObjectCore) => void;
 
@@ -63,8 +64,6 @@ export type CoreDatabaseParams = {
  */
 const THROTTLED_UPDATE_FREQUENCY = 10;
 
-export type ObjectPlacement = 'root-doc' | 'linked-doc';
-
 export type AddCoreOptions = {
   /**
    * Where to place the object in the Automerge document tree.
@@ -74,7 +73,7 @@ export type AddCoreOptions = {
    *
    * @default 'linked-doc'
    */
-  placeIn?: ObjectPlacement;
+  placeIn?: Database.ObjectPlacement;
 };
 
 const TRACE_LOADING = false;
