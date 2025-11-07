@@ -102,8 +102,7 @@ export const ViewEditor = forwardRef<ProjectionModel, ViewEditorProps>(
         });
 
         return Schema.Struct({
-          ...(mode === 'named-query' ? name.fields : {}),
-          ...base.fields,
+          ...(mode === 'named-query' ? { ...name.fields, ...base.fields } : base.fields),
           target: Schema.optional(Schema.String.annotations({ title: 'Target Queue' })),
         }).pipe(Schema.mutable);
       }
