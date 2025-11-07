@@ -10,7 +10,7 @@ import { Ref, type Ref$ } from '../ref';
 /**
  * @deprecated
  */
-// TOOD(burdon): Reconcile with @dxos/schema.
+// TOOD(burdon): Reconcile with ../testing (remove this).
 export namespace Testing {
   //
   // Primitives
