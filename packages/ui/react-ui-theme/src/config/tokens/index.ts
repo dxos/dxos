@@ -12,7 +12,9 @@ import { huePalettes, physicalColors } from './physical-colors';
 import { semanticColors } from './semantic-colors';
 import { systemAliases, systemSememes } from './sememes-system';
 
-// TODO(burdon): index.ts file should just contain exports.
+export * from './sizes';
+
+export const hues = Object.keys(huePalettes);
 
 export const tokenSet = {
   colors: {
@@ -23,8 +25,6 @@ export const tokenSet = {
   lengths: lengthsFacet,
   maxSizes: maxSizesFacet,
 } satisfies TokenSet;
-
-export const hues = Object.keys(huePalettes);
 
 const adapterConfig: TailwindAdapterConfig = {
   colors: {

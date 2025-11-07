@@ -8,42 +8,46 @@ import React, { useMemo } from 'react';
 import { useSpace } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { withTheme } from '@dxos/react-ui/testing';
-import { Text as TextType } from '@dxos/schema';
+import { Text } from '@dxos/schema';
 import { render } from '@dxos/storybook-utils';
 
 import { translations } from '../../translations';
 import { Outline } from '../../types';
 
-import { Outliner } from './Outliner';
-
-// TODO(burdon): Can we create a storybook for the Outliner without the database?
+import { OutlineComponent } from './Outline';
 
 const meta = {
-  title: 'plugins/plugin-outliner/Outliner',
-  component: Outliner,
-  render: render(({ text: _text }) => {
+  title: 'plugins/plugin-outliner/Outline',
+  component: OutlineComponent,
+  render: render(({ text: textParam }) => {
     const space = useSpace();
-    const text = useMemo(() => space?.db.add(_text), [space, _text]);
+    const text = useMemo(() => space?.db.add(textParam), [space, textParam]);
     if (text) {
-      return <Outliner id={text.id} text={text} />;
+      return <OutlineComponent id={text.id} text={text} />;
     }
   }),
   decorators: [
     withTheme,
-    withClientProvider({ createIdentity: true, createSpace: true, types: [TextType.Text, Outline.Outline] }),
+    // TODO(burdon): Can we create a storybook for the Outliner without the database?
+    withClientProvider({
+      createIdentity: true,
+      createSpace: true,
+      types: [Text.Text, Outline.Outline],
+    }),
   ],
   parameters: {
     layout: 'fullscreen',
     translations,
   },
-} satisfies Meta<typeof Outliner>;
+} satisfies Meta<typeof OutlineComponent>;
 
 export default meta;
 
-type Story = StoryObj<typeof Outliner>;
+type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
   args: {
-    text: TextType.make('- [x] Initial content'),
+    id: 'outline',
+    text: Text.make('- [x] Initial content'),
   },
 };

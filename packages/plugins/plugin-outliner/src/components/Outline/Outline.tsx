@@ -26,11 +26,11 @@ import { type Text as TextType } from '@dxos/schema';
 
 import { meta } from '../../meta';
 
-export type OutlinerController = {
+export type OutlineController = {
   focus: () => void;
 };
 
-export type OutlinerProps = ThemedClassName<
+export type OutlineProps = ThemedClassName<
   {
     id: string;
     text: TextType.Text;
@@ -39,7 +39,7 @@ export type OutlinerProps = ThemedClassName<
   } & Pick<UseTextEditorProps, 'id' | 'autoFocus'>
 >;
 
-export const Outliner = forwardRef<OutlinerController, OutlinerProps>(
+export const OutlineComponent = forwardRef<OutlineController, OutlineProps>(
   ({ classNames, text, id, autoFocus, scrollable = true, showSelected = true }, forwardedRef) => {
     const { t } = useTranslation(meta.id);
     const { themeMode } = useThemeContext();

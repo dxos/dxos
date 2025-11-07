@@ -1,0 +1,26 @@
+//
+// Copyright 2025 DXOS.org
+//
+
+import React from 'react';
+
+import { type SurfaceComponentProps } from '@dxos/app-framework/react';
+import { StackItem } from '@dxos/react-ui-stack';
+
+import { type Outline } from '../types';
+
+import { OutlineComponent } from './Outline';
+
+export const OutlinerContainer = ({ object }: SurfaceComponentProps<Outline.Outline>) => {
+  if (!object.content.target) {
+    return null;
+  }
+
+  return (
+    <StackItem.Content>
+      <OutlineComponent id={object.content.target.id} text={object.content.target} classNames='container-max-width' />
+    </StackItem.Content>
+  );
+};
+
+export default OutlinerContainer;
