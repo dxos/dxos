@@ -5,7 +5,7 @@
 import React, { useMemo } from 'react';
 
 import { Surface } from '@dxos/app-framework/react';
-import { type ArticleComponentProps } from '@dxos/app-framework/react';
+import { type SurfaceComponentProps } from '@dxos/app-framework/react';
 import { Filter, type Obj, Ref, Relation } from '@dxos/echo';
 import { type Space, getSpace, useQuery } from '@dxos/react-client/echo';
 import { useTranslation } from '@dxos/react-ui';
@@ -16,7 +16,7 @@ import { isNonNullable } from '@dxos/util';
 
 import { meta } from '../meta';
 
-export const RecordArticle = ({ object }: ArticleComponentProps) => {
+export const RecordArticle = ({ object }: SurfaceComponentProps) => {
   const { t } = useTranslation(meta.id);
   const space = getSpace(object);
   const data = useMemo(() => ({ subject: object }), [object]);

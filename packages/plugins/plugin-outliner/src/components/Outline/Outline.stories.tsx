@@ -14,36 +14,36 @@ import { render } from '@dxos/storybook-utils';
 import { translations } from '../../translations';
 import { Outline } from '../../types';
 
-import { Outliner } from './Outliner';
-
-// TODO(burdon): Can we create a storybook for the Outliner without the database?
+import { OutlineComponent } from './Outline';
 
 const meta = {
-  title: 'plugins/plugin-outliner/Outliner',
-  component: Outliner,
-  render: render(({ text: _text }) => {
+  title: 'plugins/plugin-outliner/Outline',
+  component: OutlineComponent,
+  render: render(({ text: textParam }) => {
     const space = useSpace();
-    const text = useMemo(() => space?.db.add(_text), [space, _text]);
+    const text = useMemo(() => space?.db.add(textParam), [space, textParam]);
     if (text) {
-      return <Outliner id={text.id} text={text} />;
+      return <OutlineComponent id={text.id} text={text} />;
     }
   }),
   decorators: [
     withTheme,
+    // TODO(burdon): Can we create a storybook for the Outliner without the database?
     withClientProvider({ createIdentity: true, createSpace: true, types: [TextType.Text, Outline.Outline] }),
   ],
   parameters: {
     layout: 'fullscreen',
     translations,
   },
-} satisfies Meta<typeof Outliner>;
+} satisfies Meta<typeof OutlineComponent>;
 
 export default meta;
 
-type Story = StoryObj<typeof Outliner>;
+type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
   args: {
+    id: 'outline',
     text: TextType.make('- [x] Initial content'),
   },
 };

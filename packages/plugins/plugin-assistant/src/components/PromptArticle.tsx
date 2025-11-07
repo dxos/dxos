@@ -8,7 +8,7 @@ import * as Exit from 'effect/Exit';
 import * as Layer from 'effect/Layer';
 import React, { useMemo } from 'react';
 
-import { type ArticleComponentProps } from '@dxos/app-framework/react';
+import { type SurfaceComponentProps } from '@dxos/app-framework/react';
 import { Agent } from '@dxos/assistant-toolkit';
 import { type Prompt } from '@dxos/blueprints';
 import { Obj } from '@dxos/echo';
@@ -24,7 +24,7 @@ import { meta } from '../meta';
 
 import { TemplateEditor } from './TemplateEditor';
 
-export type PromptArticleProps = ArticleComponentProps<Prompt.Prompt>;
+export type PromptArticleProps = SurfaceComponentProps<Prompt.Prompt>;
 
 export const PromptArticle = ({ object }: PromptArticleProps) => {
   const { t } = useTranslation(meta.id);

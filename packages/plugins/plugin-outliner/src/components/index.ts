@@ -4,8 +4,8 @@
 
 import { lazy } from 'react';
 
-export * from './JournalContainer';
-export * from './OutlinerContainer';
+export * from './Journal';
+export * from './Outline';
 
 export const JournalContainer = lazy(() => import('./JournalContainer'));
-export const OutlinerContainer = lazy(() => import('./OutlinerContainer'));
+export const OutlineContainer = lazy(() => import('./OutlineContainer'));
