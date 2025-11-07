@@ -93,6 +93,11 @@ export const MarkdownPlugin = definePlugin(meta, () => [
     activate: () => contributes(ClientCapabilities.Schema, [Text.Text]),
   }),
   defineModule({
+    id: `${meta.id}/module/whitelist-schema`,
+    activatesOn: ClientEvents.SetupSchema,
+    activate: () => contributes(ClientCapabilities.SchemaWhiteList, [Markdown.Document]),
+  }),
+  defineModule({
     id: `${meta.id}/module/react-surface`,
     activatesOn: Events.SetupReactSurface,
     // TODO(wittjosiah): Should occur before the editor is loaded when surfaces activation is more granular.
