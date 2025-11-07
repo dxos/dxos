@@ -17,11 +17,11 @@ import {
   getTypeAnnotation,
   unwrapOptional,
 } from '@dxos/echo/internal';
+import { log } from '@dxos/log';
 import { Markdown } from '@dxos/plugin-markdown';
 import { type Client } from '@dxos/react-client';
 import { type Space } from '@dxos/react-client/echo';
 import { Person } from '@dxos/types';
-import { log } from '@dxos/log';
 
 // TODO(wittjosiah): Factor out and add tests.
 // TODO(wittjosiah): Support arbitrary type imports.
