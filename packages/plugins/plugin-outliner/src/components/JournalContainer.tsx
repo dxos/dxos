@@ -4,21 +4,17 @@
 
 import React from 'react';
 
+import { type SurfaceComponentProps } from '@dxos/app-framework/react';
 import { StackItem } from '@dxos/react-ui-stack';
 
 import { type Journal } from '../types';
 
 import { JournalComponent } from './Journal';
 
-export type JournalContainerProps = {
-  role: string;
-  journal: Journal.Journal;
-};
-
-export const JournalContainer = ({ journal }: JournalContainerProps) => {
+export const JournalContainer = ({ object }: SurfaceComponentProps<Journal.Journal>) => {
   return (
     <StackItem.Content>
-      <JournalComponent journal={journal} classNames='container-max-width' />
+      <JournalComponent journal={object} classNames='container-max-width' />
     </StackItem.Content>
   );
 };
