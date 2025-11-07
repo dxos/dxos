@@ -1,0 +1,83 @@
+{
+  "extends": "../../../tsconfig.base.json",
+  "compilerOptions": {
+    "types": [
+      "@dxos/typings"
+    ]
+  },
+  "include": [
+    "src",
+    "tools"
+  ],
+  "references": [
+    {
+      "path": "../../common/async"
+    },
+    {
+      "path": "../../common/context"
+    },
+    {
+      "path": "../../common/crypto"
+    },
+    {
+      "path": "../../common/debug"
+    },
+    {
+      "path": "../../common/effect"
+    },
+    {
+      "path": "../../common/errors"
+    },
+    {
+      "path": "../../common/invariant"
+    },
+    {
+      "path": "../../common/keys"
+    },
+    {
+      "path": "../../common/kv-store"
+    },
+    {
+      "path": "../../common/log"
+    },
+    {
+      "path": "../../common/node-std"
+    },
+    {
+      "path": "../../common/util"
+    },
+    {
+      "path": "../../sdk/client"
+    },
+    {
+      "path": "../../sdk/client-protocol"
+    },
+    {
+      "path": "../../sdk/schema"
+    },
+    {
+      "path": "../ai"
+    },
+    {
+      "path": "../echo/echo"
+    },
+    {
+      "path": "../echo/echo-db"
+    },
+    {
+      "path": "../echo/echo-pipeline"
+    },
+    {
+      "path": "../echo/echo-protocol"
+    },
+    {
+      "path": "../echo/live-object"
+    },
+    {
+      "path": "../mesh/edge-client"
+    },
+    {
+      "path": "../protocols"
+    }
+  ]
+}
