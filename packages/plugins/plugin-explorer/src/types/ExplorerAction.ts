@@ -13,6 +13,7 @@ const EXPLORER_ACTION = `${meta.id}/action`;
 
 export const GraphProps = Schema.Struct({
   name: Schema.optional(Schema.String),
+  // TODO(wittjosiah): This should be a query input instead.
   typename: Schema.String.annotations({
     [TypenameAnnotationId]: ['used-static', 'dynamic'],
     title: 'Select graph record type',

@@ -18,7 +18,6 @@ import {
   unwrapOptional,
 } from '@dxos/echo/internal';
 import { log } from '@dxos/log';
-import { Markdown } from '@dxos/plugin-markdown';
 import { type Client } from '@dxos/react-client';
 import { type Space } from '@dxos/react-client/echo';
 import { Person } from '@dxos/types';
@@ -26,7 +25,7 @@ import { Person } from '@dxos/types';
 // TODO(wittjosiah): Factor out and add tests.
 // TODO(wittjosiah): Support arbitrary type imports.
 export const evalQuery = (queryString: string): Query.Any => {
-  const globals = { Query, Filter, Markdown, Person };
+  const globals = { Query, Filter, Person };
   try {
     // eslint-disable-next-line @typescript-eslint/no-implied-eval
     return new Function(...Object.keys(globals), `return ${queryString}`)(...Object.values(globals));

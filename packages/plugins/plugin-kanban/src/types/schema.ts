@@ -23,6 +23,7 @@ export const PivotColumnAnnotationId = Symbol.for('@dxos/plugin-kanban/annotatio
 
 export const CreateKanbanSchema = Schema.Struct({
   name: Schema.optional(Schema.String),
+  // TODO(wittjosiah): This should be a query input instead.
   typename: Schema.optional(
     Schema.String.annotations({
       [TypenameAnnotationId]: ['used-static', 'dynamic'],

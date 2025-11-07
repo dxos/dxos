@@ -6,6 +6,7 @@ import type * as Schema from 'effect/Schema';
 import React, { useMemo, useState } from 'react';
 
 import { Obj, Query, Type } from '@dxos/echo';
+import { getQueryTarget, resolveSchemaWithClientAndSpace } from '@dxos/plugin-space';
 import { useClient } from '@dxos/react-client';
 import { Filter, getSpace, useQuery } from '@dxos/react-client/echo';
 import { useAsyncEffect, useTranslation } from '@dxos/react-ui';
@@ -13,7 +14,6 @@ import { Card, CardStack, StackItem, cardStackDefaultInlineSizeRem, cardStackHea
 import { ProjectionModel } from '@dxos/schema';
 import { type View } from '@dxos/schema';
 
-import { getQueryTarget, resolveSchemaWithClientAndSpace } from '../helpers';
 import { meta } from '../meta';
 
 import { useProject } from './Project';
