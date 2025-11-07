@@ -11,7 +11,7 @@ import { Filter, Obj, Ref, Relation, type Type } from '@dxos/echo';
 import { faker } from '@dxos/random';
 import { useQuery } from '@dxos/react-client/echo';
 import { useClientProvider, withClientProvider } from '@dxos/react-client/testing';
-import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import { withTheme } from '@dxos/react-ui/testing';
 import { Card } from '@dxos/react-ui-stack';
 import { Json } from '@dxos/react-ui-syntax-highlighter';
 import { type ValueGenerator, createAsyncGenerator } from '@dxos/schema/testing';
@@ -41,8 +41,8 @@ const meta = {
   component: RecordArticle as any,
   render: render(DefaultStory),
   decorators: [
-    withTheme, // TODO(wittjosiah): Try to write story which does not depend on plugin manager.
-    withLayout({ container: 'column' }),
+    withTheme,
+    // TODO(wittjosiah): Try to write story which does not depend on plugin manager.
     withPluginManager({
       capabilities: [
         contributes(Capabilities.ReactSurface, [
@@ -67,6 +67,7 @@ const meta = {
         ]),
       ],
     }),
+    // TODO(burdon): Use plugin.
     withClientProvider({
       createIdentity: true,
       createSpace: true,

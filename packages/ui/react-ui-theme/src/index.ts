@@ -4,11 +4,11 @@
 
 import { type TailwindConfig, tailwindConfig } from './config';
 
+export { cardMinInlineSize, cardMaxInlineSize, hues, userDefaultTokenSet } from './config';
 export * from './styles';
 export * from './types';
 export * from './util';
 
-export { userDefaultTokenSet, hues } from './config/tokens';
-export { tokens };
-
 const tokens: TailwindConfig['theme'] = tailwindConfig({}).theme;
+
+export { tokens };
