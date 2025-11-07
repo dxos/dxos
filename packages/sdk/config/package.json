@@ -73,6 +73,7 @@
     "@dxos/tracing": "workspace:*",
     "@dxos/util": "workspace:*",
     "boolean": "^3.0.1",
+    "effect": "3.18.3",
     "js-yaml": "^4.1.0",
     "localforage": "^1.10.0",
     "lodash.defaultsdeep": "^4.6.1",

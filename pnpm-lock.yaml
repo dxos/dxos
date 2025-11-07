@@ -11240,6 +11240,9 @@ importers:
       boolean:
         specifier: ^3.0.1
         version: 3.2.0
+      effect:
+        specifier: 3.18.3
+        version: 3.18.3
       js-yaml:
         specifier: ^4.1.0
         version: 4.1.0
