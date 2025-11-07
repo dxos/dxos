@@ -6,7 +6,7 @@ import type * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
 
 import { Obj } from '@dxos/echo';
-import { DataType } from '@dxos/schema';
+import { Text } from '@dxos/schema';
 
 import { type SearchResult } from '../types';
 
@@ -46,7 +46,7 @@ export const filterObjectsSync = <T extends Record<string, any>>(objects: T[], m
 
   return objects.reduce<SearchResult[]>((results, object) => {
     // TODO(burdon): Hack to ignore Text objects.
-    if (object instanceof DataType.Text.Text) {
+    if (object instanceof Text.Text) {
       return results;
     }
 
@@ -112,7 +112,7 @@ const getKeys = (object: Record<string, unknown>): string[] => {
 export const mapObjectToTextFields = <T extends Record<string, unknown>>(object: T): TextFields => {
   return getKeys(object).reduce<TextFields>((fields, key) => {
     const value = object[key] as any;
-    if (typeof value === 'string' || value instanceof DataType.Text.Text) {
+    if (typeof value === 'string' || value instanceof Text.Text) {
       try {
         fields[key] = String(value);
       } catch (err) {

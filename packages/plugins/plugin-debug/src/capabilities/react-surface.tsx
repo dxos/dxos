@@ -51,7 +51,7 @@ import { ScriptAction } from '@dxos/plugin-script/types';
 import { SpaceAction } from '@dxos/plugin-space/types';
 import { type Space, SpaceState, isSpace, parseId } from '@dxos/react-client/echo';
 import { StackItem } from '@dxos/react-ui-stack';
-import { DataType } from '@dxos/schema';
+import { Collection } from '@dxos/schema';
 
 import {
   DebugGraph,
@@ -111,8 +111,8 @@ export default (context: PluginContext) =>
 
             const collection =
               data.subject.space.state.get() === SpaceState.SPACE_READY &&
-              data.subject.space.properties[DataType.Collection.Collection.typename]?.target;
-            if (!Obj.instanceOf(DataType.Collection.Collection, collection)) {
+              data.subject.space.properties[Collection.Collection.typename]?.target;
+            if (!Obj.instanceOf(Collection.Collection, collection)) {
               return;
             }
 

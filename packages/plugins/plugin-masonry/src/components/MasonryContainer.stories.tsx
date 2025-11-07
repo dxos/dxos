@@ -16,8 +16,9 @@ import { faker } from '@dxos/random';
 import { Filter, useQuery, useSpaces } from '@dxos/react-client/echo';
 import { withTheme } from '@dxos/react-ui/testing';
 import { defaultTx } from '@dxos/react-ui-theme';
-import { DataType } from '@dxos/schema';
+import { View } from '@dxos/schema';
 import { createObjectFactory } from '@dxos/schema/testing';
+import { Organization } from '@dxos/types';
 
 import { Masonry } from '../types';
 
@@ -28,8 +29,8 @@ faker.seed(0);
 const StorybookMasonry = () => {
   const spaces = useSpaces();
   const space = spaces[spaces.length - 1];
-  const views = useQuery(space, Filter.type(DataType.View.View));
-  const [view, setView] = useState<DataType.View.View>();
+  const views = useQuery(space, Filter.type(View.View));
+  const [view, setView] = useState<View.View>();
   useEffect(() => {
     if (views.length && !view) {
       const view = views[0];
@@ -49,7 +50,7 @@ const meta = {
     withPluginManager({
       plugins: [
         ClientPlugin({
-          types: [DataType.Organization.Organization, DataType.View.View, Masonry.Masonry],
+          types: [Organization.Organization, View.View, Masonry.Masonry],
           onClientInitialized: async ({ client }) => {
             await client.halo.createIdentity();
             const space = await client.spaces.create();
@@ -58,12 +59,12 @@ const meta = {
             const { view } = await Masonry.makeView({
               space,
               client,
-              typename: DataType.Organization.Organization.typename,
+              typename: Organization.Organization.typename,
             });
             space.db.add(view);
 
             const factory = createObjectFactory(space.db, faker as any);
-            await factory([{ type: DataType.Organization.Organization, count: 64 }]);
+            await factory([{ type: Organization.Organization, count: 64 }]);
           },
         }),
         SpacePlugin({}),

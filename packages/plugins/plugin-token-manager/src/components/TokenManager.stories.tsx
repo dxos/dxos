@@ -7,16 +7,16 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import { TestObjectGenerator } from '@dxos/echo-generator';
 import { faker } from '@dxos/random';
 import { withTheme } from '@dxos/react-ui/testing';
-import { DataType } from '@dxos/schema';
+import { AccessToken } from '@dxos/types';
 
 import { TokenManager } from './TokenManager';
 
 faker.seed(1);
 
 const generator = new TestObjectGenerator(
-  { [DataType.AccessToken.AccessToken.typename]: DataType.AccessToken.AccessToken },
+  { [AccessToken.AccessToken.typename]: AccessToken.AccessToken },
   {
-    [DataType.AccessToken.AccessToken.typename]: async () => ({
+    [AccessToken.AccessToken.typename]: async () => ({
       token: faker.string.hexadecimal({ length: 32 }),
       source: faker.internet.url(),
       note: faker.lorem.sentence(faker.number.int({ min: 1, max: 9 })),

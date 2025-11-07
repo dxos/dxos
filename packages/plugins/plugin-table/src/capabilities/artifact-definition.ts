@@ -17,7 +17,6 @@ import { invariant } from '@dxos/invariant';
 import { SpaceAction } from '@dxos/plugin-space/types';
 import { Filter, type Space } from '@dxos/react-client/echo';
 import { TableView } from '@dxos/react-ui-table/types';
-import { DataType } from '@dxos/schema';
 import { isNonNullable } from '@dxos/util';
 
 import { meta } from '../meta';
@@ -106,7 +105,7 @@ export default () => {
           invariant(extensions?.space, 'No space');
           const space = extensions.space;
           // TODO(wittjosiah): This query needs to be able to filter to just the table view, post-filtering is awkward.
-          const { objects } = await space.db.query(Filter.type(DataType.View.View)).run();
+          const { objects } = await space.db.query(Filter.type(View.View)).run();
           const tableInfo = await Promise.all(
             objects.map(async (view) => {
               const presentation = await view.presentation.load();
@@ -136,8 +135,8 @@ export default () => {
           const space = extensions.space;
           const view = (await space.db
             // TODO(wittjosiah): Filter.and should aggregate type
-            .query(Query.select(Filter.and(Filter.type(DataType.View.View), Filter.ids(id))))
-            .first()) as DataType.View.View;
+            .query(Query.select(Filter.and(Filter.type(View.View), Filter.ids(id))))
+            .first()) as View.View;
 
           const table = await view.presentation.load();
           invariant(Obj.instanceOf(TableView, table));
@@ -163,8 +162,8 @@ export default () => {
           const space = extensions.space;
           const view = (await space.db
             // TODO(wittjosiah): Filter.and should aggregate type
-            .query(Query.select(Filter.and(Filter.type(DataType.View.View), Filter.ids(id))))
-            .first()) as DataType.View.View;
+            .query(Query.select(Filter.and(Filter.type(View.View), Filter.ids(id))))
+            .first()) as View.View;
 
           const table = await view.presentation.load();
           invariant(Obj.instanceOf(TableView, table));
@@ -193,8 +192,8 @@ export default () => {
           const space = extensions.space;
           const view = (await space.db
             // TODO(wittjosiah): Filter.and should aggregate type
-            .query(Query.select(Filter.and(Filter.type(DataType.View.View), Filter.ids(id))))
-            .first()) as DataType.View.View;
+            .query(Query.select(Filter.and(Filter.type(View.View), Filter.ids(id))))
+            .first()) as View.View;
           // Get schema for validation.
           const typename = view.query.typename;
           const schema = await space.db.schemaRegistry.query({ typename }).first();

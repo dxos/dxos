@@ -167,8 +167,8 @@ describe('Serializer', () => {
 
       {
         const { db, graph } = await builder.createDatabase();
-        graph.schemaRegistry.addSchema([Testing.Contact]);
-        const contact = Obj.make(Testing.Contact, { name });
+        graph.schemaRegistry.addSchema([Testing.Person]);
+        const contact = Obj.make(Testing.Person, { name });
         db.add(contact);
         await db.flush();
         data = await new Serializer().export(db);
@@ -179,17 +179,17 @@ describe('Serializer', () => {
 
       {
         const { db, graph } = await builder.createDatabase();
-        graph.schemaRegistry.addSchema([Testing.Contact]);
+        graph.schemaRegistry.addSchema([Testing.Person]);
 
         await new Serializer().import(db, data);
         expect((await db.query(Query.select(Filter.everything())).run()).objects).to.have.length(1);
 
         const {
           objects: [contact],
-        } = await db.query(Filter.type(Testing.Contact)).run();
+        } = await db.query(Filter.type(Testing.Person)).run();
         expect(contact.name).to.eq(name);
-        expect(Obj.instanceOf(Testing.Contact, contact)).to.be.true;
-        expect(getSchema(contact)).to.eq(Testing.Contact);
+        expect(Obj.instanceOf(Testing.Person, contact)).to.be.true;
+        expect(getSchema(contact)).to.eq(Testing.Person);
       }
     });
 

@@ -11,13 +11,13 @@ import { useSpaces } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Json } from '@dxos/react-ui-syntax-highlighter';
-import { DataType } from '@dxos/schema';
+import { Employer, Organization, Person, Project } from '@dxos/types';
 
 import { translations } from '../../translations';
 
 import { QueryEditor, type QueryEditorProps } from './QueryEditor';
 
-const tags: Tag.TagMap = {
+const tags: Tag.Map = {
   ['tag_1' as const]: Tag.make({ label: 'Important' }),
   ['tag_2' as const]: Tag.make({ label: 'Investor' }),
   ['tag_3' as const]: Tag.make({ label: 'New' }),
@@ -51,12 +51,7 @@ const meta = {
     withTheme,
     withLayout({ container: 'column', classNames: 'p-2', scroll: true }),
     withClientProvider({
-      types: [
-        DataType.Organization.Organization,
-        DataType.Person.Person,
-        DataType.Project.Project,
-        DataType.Employer.Employer,
-      ],
+      types: [Organization.Organization, Person.Person, Project.Project, Employer.Employer],
       createIdentity: true,
     }),
   ],

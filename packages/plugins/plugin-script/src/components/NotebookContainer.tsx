@@ -27,7 +27,7 @@ import { getSpace } from '@dxos/react-client/echo';
 import { DropdownMenu, IconButton, Toolbar, useTranslation } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
 import { StackItem } from '@dxos/react-ui-stack';
-import { DataType } from '@dxos/schema';
+import { Text } from '@dxos/schema';
 import { isNonNullable } from '@dxos/util';
 
 import { meta } from '../meta';
@@ -152,7 +152,7 @@ export const NotebookContainer = ({ notebook, env }: NotebookContainerProps) => 
         case 'markdown':
         case 'script':
         case 'query': {
-          cell.source = Ref.make(DataType.Text.make());
+          cell.source = Ref.make(Text.make());
           break;
         }
 

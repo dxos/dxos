@@ -2,36 +2,23 @@
 // Copyright 2025 DXOS.org
 //
 
-import type { Type } from '@dxos/echo';
+import { type Type } from '@dxos/echo';
+import { StoredSchema as StoredSchema$ } from '@dxos/echo/internal';
 
-/**
- * Common data types.
- * https://schema.org/docs/schemas.html
- */
-import * as DataType from './DataType';
+import * as Collection from './Collection';
+import * as Text from './Text';
+import * as View from './View';
 
-// TODO(wittjosiah): Introduce a generic canvas type which stores data using OCIF (https://www.canvasprotocol.org/).
+export { StoredSchema } from '@dxos/echo/internal';
 
-export * as DataType from './DataType';
+export { Collection, Text, View };
 
 export const DataTypes: (Type.Obj.Any | Type.Relation.Any)[] = [
-  // Objects
-  DataType.AccessToken.AccessToken,
-  DataType.Collection.Collection,
-  DataType.Collection.QueryCollection,
-  DataType.Event.Event,
-  DataType.Organization.Organization,
-  DataType.Person.Person,
-  DataType.Project.Project,
-  DataType.StoredSchema,
-  DataType.Task.Task,
-  DataType.Text.Text,
-  DataType.View.View,
+  StoredSchema$,
 
-  // Relations
-  DataType.AnchoredTo.AnchoredTo,
-  DataType.Employer.Employer,
-  DataType.HasConnection.HasConnection,
-  DataType.HasRelationship.HasRelationship,
-  DataType.HasSubject.HasSubject,
+  // System
+  Collection.Collection,
+  Collection.QueryCollection,
+  Text.Text,
+  View.View,
 ];

@@ -19,7 +19,7 @@ import { getType, getTypename } from './typename';
 
 describe('Object JSON serializer', () => {
   test('should serialize and deserialize object', async () => {
-    const contact = create(Testing.Contact, {
+    const contact = create(Testing.Person, {
       name: 'John Doe',
     });
     getMeta(contact).keys.push({ id: '12345', source: 'crm.example.com' });
@@ -33,7 +33,7 @@ describe('Object JSON serializer', () => {
     const taskJson = objectToJSON(task);
 
     expect(contactJson.id).toBe(contact.id);
-    expect(contactJson[ATTR_TYPE]).toEqual(getSchemaDXN(Testing.Contact)!.toString());
+    expect(contactJson[ATTR_TYPE]).toEqual(getSchemaDXN(Testing.Person)!.toString());
     expect(contactJson.name).toEqual('John Doe');
 
     expect(taskJson.id).toBe(task.id);
@@ -42,17 +42,17 @@ describe('Object JSON serializer', () => {
     expect(taskJson.assignee).toEqual({ '/': DXN.fromLocalObjectId(contact.id).toString() });
 
     const refResolver = new StaticRefResolver()
-      .addSchema(Testing.Contact)
+      .addSchema(Testing.Person)
       .addSchema(Testing.Task)
       .addObject(contact)
       .addObject(task);
 
-    const contactFromJson = (await objectFromJSON(contactJson, { refResolver })) as Testing.Contact;
+    const contactFromJson = (await objectFromJSON(contactJson, { refResolver })) as Testing.Person;
     const taskFromJson = (await objectFromJSON(taskJson, { refResolver })) as Testing.Task;
 
     expect(contactFromJson.id).toBe(contact.id);
     expect(contactFromJson.name).toBe('John Doe');
-    expect((contactFromJson as any)[TypeId]).toEqual(getSchemaDXN(Testing.Contact));
+    expect((contactFromJson as any)[TypeId]).toEqual(getSchemaDXN(Testing.Person));
     expect((contactFromJson as any)[EntityKindId]).toBe(EntityKind.Object);
     expect((contactFromJson as any)[RelationSourceId]).toBeUndefined();
     expect((contactFromJson as any)[RelationTargetId]).toBeUndefined();
@@ -64,10 +64,10 @@ describe('Object JSON serializer', () => {
         },
       ],
     });
-    expect(getType(contactFromJson)?.toString()).toBe(getSchemaDXN(Testing.Contact)!.toString());
-    expect(getTypename(contactFromJson)).toBe(getSchemaTypename(Testing.Contact));
+    expect(getType(contactFromJson)?.toString()).toBe(getSchemaDXN(Testing.Person)!.toString());
+    expect(getTypename(contactFromJson)).toBe(getSchemaTypename(Testing.Person));
     expect(getObjectDXN(contactFromJson)?.toString()).toEqual(getObjectDXN(contact)?.toString());
-    expect(getSchema(contactFromJson)).toEqual(Testing.Contact);
+    expect(getSchema(contactFromJson)).toEqual(Testing.Person);
 
     expect(taskFromJson.id).toBe(task.id);
     expect(taskFromJson.title).toBe('Polish my shoes');
@@ -83,7 +83,7 @@ describe('Object JSON serializer', () => {
   });
 
   test('serialize with unresolved schema', async () => {
-    const contact = create(Testing.Contact, {
+    const contact = create(Testing.Person, {
       name: 'John Doe',
     });
     const contactJson = objectToJSON(contact);
@@ -92,8 +92,8 @@ describe('Object JSON serializer', () => {
     expect(contactFromJson.id).toBe(contact.id);
     expect(contactFromJson.name).toBe('John Doe');
     expect(getSchema(contactFromJson)).toBeUndefined();
-    expect(getTypename(contactFromJson)).toEqual(getSchemaTypename(Testing.Contact));
+    expect(getTypename(contactFromJson)).toEqual(getSchemaTypename(Testing.Person));
     expect(getObjectDXN(contactFromJson)).toEqual(getObjectDXN(contact));
-    expect(getType(contactFromJson)).toEqual(getSchemaDXN(Testing.Contact));
+    expect(getType(contactFromJson)).toEqual(getSchemaDXN(Testing.Person));
   });
 });

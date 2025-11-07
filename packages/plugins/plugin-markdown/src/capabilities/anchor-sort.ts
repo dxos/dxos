@@ -4,14 +4,14 @@
 
 import { Capabilities, contributes } from '@dxos/app-framework';
 import { createDocAccessor, getRangeFromCursor, getTarget } from '@dxos/react-client/echo';
-import { type DataType } from '@dxos/schema';
+import { type AnchoredTo } from '@dxos/types';
 
 import { Markdown } from '../types';
 
 export default () =>
   contributes(Capabilities.AnchorSort, {
     key: Markdown.Document.typename,
-    sort: (anchorA: DataType.AnchoredTo.AnchoredTo, anchorB: DataType.AnchoredTo.AnchoredTo) => {
+    sort: (anchorA: AnchoredTo.AnchoredTo, anchorB: AnchoredTo.AnchoredTo) => {
       const doc = getTarget(anchorA) as Markdown.Document;
       const accessor = doc.content.target ? createDocAccessor(doc.content.target, ['content']) : undefined;
       if (doc !== getTarget(anchorB) || !accessor) {

@@ -5,7 +5,7 @@
 import { ToolId } from '@dxos/ai';
 import { Blueprint } from '@dxos/blueprints';
 import { Obj, Ref } from '@dxos/echo';
-import { DataType } from '@dxos/schema';
+import { Text } from '@dxos/schema';
 import { trim } from '@dxos/util';
 
 import { Discord } from '../../functions';
@@ -26,7 +26,7 @@ export const blueprint = Obj.make(Blueprint.Blueprint, {
   name: 'Discord',
   description: 'Discord integration.',
   instructions: {
-    source: Ref.make(DataType.Text.make(instructions)),
+    source: Ref.make(Text.make(instructions)),
   },
   tools: [ToolId.make(Discord.fetch.key)],
 });

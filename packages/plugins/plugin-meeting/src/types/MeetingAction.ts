@@ -6,7 +6,7 @@ import * as Schema from 'effect/Schema';
 
 import { SpaceSchema } from '@dxos/client/echo';
 import { Channel } from '@dxos/plugin-thread/types';
-import { DataType } from '@dxos/schema';
+import { Collection } from '@dxos/schema';
 
 import { meta } from '../meta';
 
@@ -15,7 +15,7 @@ import { Meeting } from './Meeting';
 export class onCreateSpace extends Schema.TaggedClass<onCreateSpace>()(`${meta.id}/on-space-created`, {
   input: Schema.Struct({
     space: SpaceSchema,
-    rootCollection: DataType.Collection.Collection,
+    rootCollection: Collection.Collection,
   }),
   output: Schema.Void,
 }) {}

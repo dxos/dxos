@@ -17,8 +17,9 @@ import {
 import { Ref, Tag, Type } from '@dxos/echo';
 import { AttentionEvents } from '@dxos/plugin-attention';
 import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
-import { DataType, DataTypes, getTypenameFromQuery } from '@dxos/schema';
+import { Collection, DataTypes, StoredSchema, getTypenameFromQuery } from '@dxos/schema';
 import { translations as shellTranslations } from '@dxos/shell/react';
+import { Event, Organization, Person, Project, Task } from '@dxos/types';
 
 import {
   AppGraphBuilder,
@@ -89,19 +90,18 @@ export const SpacePlugin = definePlugin<SpacePluginOptions>(
         activatesOn: Events.SetupMetadata,
         activate: () => [
           contributes(Capabilities.Metadata, {
-            id: DataType.Collection.Collection.typename,
+            id: Collection.Collection.typename,
             metadata: {
               icon: 'ph--cards-three--regular',
               iconHue: 'neutral',
               // TODO(wittjosiah): Move out of metadata.
-              loadReferences: async (collection: DataType.Collection.Collection) =>
-                await Ref.Array.loadAll(collection.objects),
+              loadReferences: async (collection: Collection.Collection) => await Ref.Array.loadAll(collection.objects),
             },
           }),
           contributes(Capabilities.Metadata, {
-            id: Type.getTypename(DataType.Collection.QueryCollection),
+            id: Type.getTypename(Collection.QueryCollection),
             metadata: {
-              label: (object: DataType.Collection.QueryCollection) => [
+              label: (object: Collection.QueryCollection) => [
                 'typename label',
                 {
                   ns: getTypenameFromQuery(object.query),
@@ -113,32 +113,32 @@ export const SpacePlugin = definePlugin<SpacePluginOptions>(
             },
           }),
           contributes(Capabilities.Metadata, {
-            id: Type.getTypename(DataType.StoredSchema),
+            id: Type.getTypename(StoredSchema),
             metadata: {
               icon: 'ph--database--regular',
               iconHue: 'green',
             },
           }),
           contributes(Capabilities.Metadata, {
-            id: DataType.Event.Event.typename,
+            id: Event.Event.typename,
             metadata: {
               icon: 'ph--calendar-dot--regular',
             },
           }),
           contributes(Capabilities.Metadata, {
-            id: DataType.Organization.Organization.typename,
+            id: Organization.Organization.typename,
             metadata: {
               icon: 'ph--building-office--regular',
             },
           }),
           contributes(Capabilities.Metadata, {
-            id: DataType.Person.Person.typename,
+            id: Person.Person.typename,
             metadata: {
               icon: 'ph--user--regular',
             },
           }),
           contributes(Capabilities.Metadata, {
-            id: DataType.Task.Task.typename,
+            id: Task.Task.typename,
             metadata: {
               icon: 'ph--check-circle--regular',
             },
@@ -152,7 +152,7 @@ export const SpacePlugin = definePlugin<SpacePluginOptions>(
           contributes(
             SpaceCapabilities.ObjectForm,
             defineObjectForm({
-              objectSchema: DataType.Collection.Collection,
+              objectSchema: Collection.Collection,
               formSchema: Schema.Struct({ name: Schema.optional(Schema.String) }),
               getIntent: (props) => createIntent(CollectionAction.Create, props),
             }),
@@ -161,7 +161,7 @@ export const SpacePlugin = definePlugin<SpacePluginOptions>(
             SpaceCapabilities.ObjectForm,
             defineObjectForm({
               // TODO(wittjosiah): Remove cast.
-              objectSchema: DataType.Collection.QueryCollection as any,
+              objectSchema: Collection.QueryCollection as any,
               formSchema: CollectionAction.QueryCollectionForm,
               getIntent: (props) => createIntent(CollectionAction.CreateQueryCollection, props),
             }),
@@ -169,7 +169,7 @@ export const SpacePlugin = definePlugin<SpacePluginOptions>(
           contributes(
             SpaceCapabilities.ObjectForm,
             defineObjectForm({
-              objectSchema: DataType.StoredSchema,
+              objectSchema: StoredSchema,
               formSchema: SpaceAction.StoredSchemaForm,
               getIntent: (props, options) =>
                 props.typename
@@ -177,7 +177,12 @@ export const SpacePlugin = definePlugin<SpacePluginOptions>(
                   : createIntent(SpaceAction.AddSchema, {
                       space: options.space,
                       name: props.name,
-                      schema: DataType.createDefaultSchema(),
+                      // TODO(burdon): Import createDefaultSchema when it's exported from @dxos/schema
+                      schema: Schema.Struct({
+                        title: Schema.optional(Schema.String),
+                        status: Schema.optional(Schema.Literal('todo', 'in-progress', 'done')),
+                        description: Schema.optional(Schema.String),
+                      }),
                     }),
             }),
           ),
@@ -199,11 +204,11 @@ export const SpacePlugin = definePlugin<SpacePluginOptions>(
         activatesOn: ClientEvents.SetupSchema,
         activate: () =>
           contributes(ClientCapabilities.SchemaWhiteList, [
-            DataType.Event.Event,
-            DataType.Organization.Organization,
-            DataType.Person.Person,
-            DataType.Project.Project,
-            DataType.Task.Task,
+            Event.Event,
+            Organization.Organization,
+            Person.Person,
+            Project.Project,
+            Task.Task,
           ]),
       }),
       defineModule({

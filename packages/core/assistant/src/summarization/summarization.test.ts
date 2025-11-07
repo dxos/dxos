@@ -14,8 +14,8 @@ import { Obj } from '@dxos/echo';
 import { type EchoDatabase } from '@dxos/echo-db';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
 import { FunctionExecutor, ServiceContainer, defineFunction } from '@dxos/functions';
-import { DataType } from '@dxos/schema';
 import { createTestData } from '@dxos/schema/testing';
+import { Message } from '@dxos/types';
 import { trim } from '@dxos/util';
 
 const summarization = defineFunction({
@@ -23,10 +23,10 @@ const summarization = defineFunction({
   name: 'Summarize transcript',
   description: 'Summarize a document',
   inputSchema: Schema.Struct({
-    document: Schema.optional(DataType.Text.Text),
-    transcript: Schema.Array(DataType.Message.Message),
+    document: Schema.optional(Text.Text),
+    transcript: Schema.Array(Message.Message),
   }),
-  outputSchema: DataType.Text.Text,
+  outputSchema: Text.Text,
   handler: async ({ data: { document, transcript }, context }) => {
     const ai = context.getService(AiService.AiService);
     const result = await new MixedStreamParser().parse(
@@ -50,7 +50,7 @@ const summarization = defineFunction({
           The Transcript Summarizer outputs only the summary text.
         `,
         history: [
-          Obj.make(DataType.Message.Message, {
+          Obj.make(Message.Message, {
             created: new Date().toISOString(),
             sender: { role: 'user' },
             blocks: [
@@ -71,7 +71,7 @@ const summarization = defineFunction({
                           ${document.content}
                         </summary>
                       `,
-                    } satisfies DataType.ContentBlock.Text,
+                    } satisfies ContentBlock.Text,
                   ]
                 : []),
             ],
@@ -80,7 +80,7 @@ const summarization = defineFunction({
       }),
     );
 
-    return DataType.Text.make(Function.pipe(result[0]?.blocks[0], (c) => (c?._tag === 'text' ? c.text : '')));
+    return Text.make(Function.pipe(result[0]?.blocks[0], (c) => (c?._tag === 'text' ? c.text : '')));
   },
 });
 
@@ -89,10 +89,10 @@ const refinement = defineFunction({
   name: 'Refine transcript summary',
   description: 'Refine a summary',
   inputSchema: Schema.Struct({
-    summaries: Schema.Array(DataType.Text.Text),
+    summaries: Schema.Array(Text.Text),
   }),
   outputSchema: Schema.Struct({
-    summary: DataType.Text.Text,
+    summary: Text.Text,
   }),
   handler: async ({ data: { summaries }, context }) => {
     const ai = context.getService(AiService.AiService);
@@ -118,7 +118,7 @@ const refinement = defineFunction({
           The Transcript Summary Refiner outputs only the summary text.
         `,
         history: [
-          Obj.make(DataType.Message.Message, {
+          Obj.make(Message.Message, {
             created: new Date().toISOString(),
             sender: { role: 'user' },
             blocks: summaries.map(
@@ -130,14 +130,14 @@ const refinement = defineFunction({
                       ${summary.content}
                     </summary>
                   `,
-                }) satisfies DataType.ContentBlock.Text,
+                }) satisfies ContentBlock.Text,
             ),
           }),
         ],
       }),
     );
     return {
-      summary: DataType.Text.make(Function.pipe(result[0]?.blocks[0], (c) => (c?._tag === 'text' ? c.text : ''))),
+      summary: Text.make(Function.pipe(result[0]?.blocks[0], (c) => (c?._tag === 'text' ? c.text : ''))),
     };
   },
 });
@@ -166,7 +166,7 @@ describe.skip('Summarization', () => {
   test('keeps transcript outline', { timeout: 1000_000 }, async () => {
     const { transcriptMessages } = createTestData();
 
-    const summary = DataType.Text.make();
+    const summary = Text.make();
 
     const summaries = [];
 
@@ -177,7 +177,7 @@ describe.skip('Summarization', () => {
         transcript: blocks,
       });
       summary.content = result.content;
-      summaries.push(DataType.Text.make(result.content));
+      summaries.push(Text.make(result.content));
 
       console.log(blocks.at(-1));
       console.log();
@@ -190,7 +190,7 @@ describe.skip('Summarization', () => {
           summaries: history,
         });
         summary.content = result.summary.content;
-        summaries.push(DataType.Text.make(result.summary.content));
+        summaries.push(Text.make(result.summary.content));
 
         console.log('REFINED');
         console.log();

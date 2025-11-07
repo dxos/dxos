@@ -17,8 +17,8 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { MarkdownStream } from '@dxos/react-ui-components';
 import { PreviewPopoverProvider, usePreviewPopover } from '@dxos/react-ui-editor/testing';
 import { Card } from '@dxos/react-ui-stack';
-import { DataType } from '@dxos/schema';
 import { render } from '@dxos/storybook-utils';
+import { type Message, Organization, Person } from '@dxos/types';
 
 import { createMessageGenerator } from '../../testing';
 import { translations } from '../../translations';
@@ -36,7 +36,7 @@ type StoryProps = { generator?: MessageGenerator[]; delay?: number; wait?: boole
 const DefaultStory = ({ generator = [], delay = 0, wait, ...props }: StoryProps) => {
   const space = useSpace();
   const queueDxn = useMemo(() => space?.queues.create().dxn, [space]);
-  const queue = useQueue<DataType.Message.Message>(queueDxn);
+  const queue = useQueue<Message.Message>(queueDxn);
   const [done, setDone] = useState(false);
 
   // Generate messages.
@@ -102,7 +102,7 @@ const meta = {
     withClientProvider({
       createIdentity: true,
       createSpace: true,
-      types: [DataType.Organization.Organization, DataType.Person.Person],
+      types: [Organization.Organization, Person.Person],
     }),
   ],
   parameters: {

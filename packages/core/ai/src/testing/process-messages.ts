@@ -10,7 +10,7 @@ import * as Stream from 'effect/Stream';
 
 import { Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
-import { DataType } from '@dxos/schema';
+import { Message } from '@dxos/types';
 
 import * as AiParser from '../AiParser';
 import * as AiPreprocessor from '../AiPreprocessor';
@@ -36,10 +36,10 @@ export const processMessages = Effect.fn(function* ({
   messages = [],
 }: {
   system?: string;
-  messages?: DataType.Message.Message[];
+  messages?: Message.Message[];
 }) {
   const toolkit = yield* TestingToolkit.pipe(Effect.provide(testingLayer));
-  const history: DataType.Message.Message[] = [...messages];
+  const history: Message.Message[] = [...messages];
 
   do {
     const prompt = yield* AiPreprocessor.preprocessPrompt(history, { system });
@@ -49,7 +49,7 @@ export const processMessages = Effect.fn(function* ({
       prompt,
     }).pipe(AiParser.parseResponse(), Stream.runCollect, Effect.map(Chunk.toArray));
 
-    const message = Obj.make(DataType.Message.Message, {
+    const message = Obj.make(Message.Message, {
       created: new Date().toISOString(),
       sender: { role: 'assistant' },
       blocks,
@@ -65,7 +65,7 @@ export const processMessages = Effect.fn(function* ({
     log.info('toolCalls', { toolCalls });
     const toolResults = yield* callTools(toolkit, toolCalls);
     history.push(
-      Obj.make(DataType.Message.Message, {
+      Obj.make(Message.Message, {
         created: new Date().toISOString(),
         sender: { role: 'user' },
         blocks: toolResults,

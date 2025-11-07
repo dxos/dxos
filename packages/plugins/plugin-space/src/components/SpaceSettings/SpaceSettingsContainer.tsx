@@ -138,7 +138,7 @@ export const SpaceSettingsContainer = ({ space }: SpaceSettingsContainerProps) =
         const handleReset = useCallback(() => onValueChange(type, undefined), [onValueChange, type]);
         return (
           <ControlItem title={label} description={t('hue description')}>
-            <HuePicker value={getValue()} onChange={handleChange} onReset={handleReset} />
+            <HuePicker value={getValue()} onChange={handleChange} onReset={handleReset} classNames='justify-self-end' />
           </ControlItem>
         );
       },

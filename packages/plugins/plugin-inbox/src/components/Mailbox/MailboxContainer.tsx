@@ -18,7 +18,7 @@ import { type EditorController } from '@dxos/react-ui-editor';
 import { MenuBuilder, useMenuActions } from '@dxos/react-ui-menu';
 import { MenuProvider, ToolbarMenu } from '@dxos/react-ui-menu';
 import { StackItem } from '@dxos/react-ui-stack';
-import { type DataType } from '@dxos/schema';
+import { type Message } from '@dxos/types';
 
 import { InboxCapabilities } from '../../capabilities';
 import { meta } from '../../meta';
@@ -59,10 +59,10 @@ export const MailboxContainer = ({ mailbox, attendableId, role, filter: filterPa
   const [filterText, setFilterText] = useState<string>(filterParam ?? '');
   // TODO(burdon): Query not supported on queues.
   //  Query.select(filter ?? Filter.everything()).orderBy(Order.property('createdAt', 'desc')),
-  const messages: DataType.Message.Message[] = useQuery(
+  const messages: Message.Message[] = useQuery(
     mailbox.queue.target,
     filter ?? Filter.everything(),
-  ) as DataType.Message.Message[];
+  ) as Message.Message[];
   const sortedMessages = useMemo(
     () => [...messages].sort(sortByCreated(sortDescending.value)),
     [messages, sortDescending.value],
@@ -75,7 +75,7 @@ export const MailboxContainer = ({ mailbox, attendableId, role, filter: filterPa
     return tags.reduce((acc, tag) => {
       acc[tag.id] = tag;
       return acc;
-    }, {} as Tag.TagMap);
+    }, {} as Tag.Map);
   }, [tags]);
   const parser = useMemo(() => new QueryBuilder(tagMap), [tagMap]);
   useEffect(() => setFilter(parser.build(filterText).filter), [filterText, parser]);

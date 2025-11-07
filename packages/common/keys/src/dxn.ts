@@ -140,14 +140,14 @@ export class DXN {
   }
 
   /**
-   * @example `dxn:type:example.com/type/Contact`
+   * @example `dxn:type:example.com/type/Person`
    */
   static fromTypename(typename: string): DXN {
     return new DXN(DXN.kind.TYPE, [typename]);
   }
 
   /**
-   * @example `dxn:type:example.com/type/Contact:0.1.0`
+   * @example `dxn:type:example.com/type/Person:0.1.0`
    */
   // TODO(dmaretskyi): Consider using @ as the version separator.
   static fromTypenameAndVersion(typename: string, version: string): DXN {

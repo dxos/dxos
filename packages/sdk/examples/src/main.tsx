@@ -16,7 +16,7 @@ import { ConnectionState } from '@dxos/react-client/mesh';
 import { TestBuilder, performInvitation } from '@dxos/react-client/testing';
 import { Icon, Input, Status, ThemeProvider, Tooltip } from '@dxos/react-ui';
 import { defaultTx, mx } from '@dxos/react-ui-theme';
-import { DataType } from '@dxos/schema';
+import { Text } from '@dxos/schema';
 import { type MaybePromise } from '@dxos/util';
 
 import TaskList from './examples/TaskList';
@@ -49,10 +49,10 @@ const setupPeersInSpace = async (options: PeersInSpaceProps = {}) => {
 const main = async () => {
   const { clients, spaceKey } = await setupPeersInSpace({
     count: 2,
-    types: [Markdown.Document, DataType.Text.Text],
+    types: [Markdown.Document, Text.Text],
     onCreateSpace: ({ space }) => {
       space.db.add(
-        Markdown.makeDocument({
+        Markdown.make({
           content: '## Type here...\n\ntry the airplane mode switch.',
         }),
       );

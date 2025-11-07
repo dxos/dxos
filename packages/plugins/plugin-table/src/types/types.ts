@@ -5,7 +5,7 @@
 import * as Schema from 'effect/Schema';
 
 import { SpaceSchema } from '@dxos/react-client/echo';
-import { DataType, TypenameAnnotationId } from '@dxos/schema';
+import { TypenameAnnotationId, View } from '@dxos/schema';
 
 import { meta } from '../meta';
 
@@ -49,13 +49,13 @@ export namespace TableAction {
       CreateTableSchema,
     ),
     output: Schema.Struct({
-      object: DataType.View.View,
+      object: View.View,
     }),
   }) {}
 
   export class AddRow extends Schema.TaggedClass<AddRow>()(`${TABLE_ACTION}/add-row`, {
     input: Schema.Struct({
-      view: DataType.View.View,
+      view: View.View,
       data: Schema.Any,
     }),
     output: Schema.Void,

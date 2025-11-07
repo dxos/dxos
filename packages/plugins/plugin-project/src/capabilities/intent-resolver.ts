@@ -3,16 +3,16 @@
 //
 
 import { Capabilities, contributes, createResolver } from '@dxos/app-framework';
-import { DataType } from '@dxos/schema';
+import { Project } from '@dxos/types';
 
 import { templates } from '../templates';
-import { Project } from '../types';
+import { ProjectAction } from '../types';
 
 export default () =>
   contributes(
     Capabilities.IntentResolver,
     createResolver({
-      intent: Project.Create,
+      intent: ProjectAction.Create,
       resolve: async ({ space, name, template = 'org-research' }) => {
         if (templates[template]) {
           const project = await templates[template](space);
@@ -24,7 +24,7 @@ export default () =>
         }
 
         return {
-          data: { object: DataType.Project.make({ name }) },
+          data: { object: Project.make({ name }) },
         };
       },
     }),

@@ -6,9 +6,7 @@ import { type DXN } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { type MarkdownStreamController } from '@dxos/react-ui-components';
 import { type StateDispatch, type XmlWidgetStateManager } from '@dxos/react-ui-editor';
-import { DataType } from '@dxos/schema';
-
-import ContentBlock = DataType.ContentBlock;
+import { type ContentBlock, type Message } from '@dxos/types';
 
 /**
  * Update document.
@@ -36,7 +34,7 @@ export class MessageThreadContext implements Pick<MarkdownStreamController, 'upd
  */
 export type BlockRenderer = (
   context: MessageThreadContext,
-  message: DataType.Message.Message,
+  message: Message.Message,
   block: ContentBlock.Any,
 ) => string | undefined;
 
@@ -74,7 +72,7 @@ export class MessageSyncer {
   /**
    * Syncs messages with the editor.
    */
-  append(messages: DataType.Message.Message[], flush = false): boolean {
+  append(messages: Message.Message[], flush = false): boolean {
     // Check if new set of messages.
     if (this._initialMessageId !== messages[0]?.id) {
       this.reset();
@@ -103,7 +101,7 @@ export class MessageSyncer {
     }
   }
 
-  private process(messages: DataType.Message.Message[], append: (content: string) => void) {
+  private process(messages: Message.Message[], append: (content: string) => void) {
     log('sync', {
       doc: this._model.view?.state.doc.length,
       messages: messages.map((message) => message.blocks.length),

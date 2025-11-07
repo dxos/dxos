@@ -28,7 +28,7 @@ const Contact = Schema.Struct({
   tasks: Schema.mutable(Schema.Array(Ref(Task))),
 }).pipe(
   EchoObject({
-    typename: 'example.com/type/Contact',
+    typename: 'example.com/type/Person',
     version: '0.1.0',
   }),
 );

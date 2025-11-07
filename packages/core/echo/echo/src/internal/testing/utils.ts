@@ -31,7 +31,7 @@ export const updateCounter = (touch: () => void) => {
  * Converts AST to a format that can be compared with test matchers.
  */
 export const prepareAstForCompare = (obj: SchemaAST.AST): any =>
-  deepMapValues(obj, (value: any, recurse, key) => {
+  deepMapValues(obj, (value: any, recurse) => {
     if (typeof value === 'function') {
       return null;
     }

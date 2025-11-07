@@ -7,10 +7,10 @@ import { Obj, type Ref } from '@dxos/echo';
 import { MESSAGE_PROPERTY_TOOL_CALL_ID } from '@dxos/functions';
 import { type ObjectId } from '@dxos/keys';
 import { LogLevel } from '@dxos/log';
-import { DataType } from '@dxos/schema';
+import { ContentBlock, Message } from '@dxos/types';
 import { isNonNullable } from '@dxos/util';
 
-const SKIP_BLOCKS: DataType.ContentBlock.Any['_tag'][] = ['text'];
+const SKIP_BLOCKS: ContentBlock.Any['_tag'][] = ['text'];
 
 /**
  * Mercurial-style Commit.
@@ -60,7 +60,7 @@ export class ExecutionGraph {
   private _lastCommitByBranch = new Map<string, string>(); // branch -> last commitId
   private _pendingToolResults = new Map<string, string>(); // toolCallId -> toolResultCommitId
 
-  constructor(private readonly _skipBlocks: DataType.ContentBlock.Any['_tag'][] = SKIP_BLOCKS) {}
+  constructor(private readonly _skipBlocks: ContentBlock.Any['_tag'][] = SKIP_BLOCKS) {}
 
   /**
    * Adds events to the graph.
@@ -68,7 +68,7 @@ export class ExecutionGraph {
   addEvents(events: Obj.Any[]) {
     const sortedEvents = this.sortObjectsByCreated(events);
     for (const event of sortedEvents) {
-      if (Obj.instanceOf(DataType.Message.Message, event)) {
+      if (Obj.instanceOf(Message.Message, event)) {
         this._processMessage(event);
       } else if (Obj.instanceOf(AgentStatus, event)) {
         this._processAgentStatus(event);
@@ -79,7 +79,7 @@ export class ExecutionGraph {
   /**
    * Processes a message event and creates commits for its blocks.
    */
-  private _processMessage(message: DataType.Message.Message) {
+  private _processMessage(message: Message.Message) {
     const messageCommits = messageToCommits(
       message,
       this._lastBlockId,
@@ -288,11 +288,11 @@ export class ExecutionGraph {
  */
 // TODO(burdon): Pass in AiToolProvider.
 const messageToCommits = (
-  message: DataType.Message.Message,
+  message: Message.Message,
   lastBlockId?: string,
   toolCallIds?: Map<string, string>,
   lastCommitByBranch?: Map<string, string>,
-  skipBlocks?: DataType.ContentBlock.Any['_tag'][],
+  skipBlocks?: ContentBlock.Any['_tag'][],
 ): Commit[] => {
   let previousBlockId: string | undefined = lastBlockId;
 
@@ -318,9 +318,9 @@ const messageToCommits = (
  * Determines the parent commits for a block based on its type and context.
  */
 const getBlockParents = (
-  block: DataType.ContentBlock.Any,
+  block: ContentBlock.Any,
   previousBlockId: string | undefined,
-  message: DataType.Message.Message,
+  message: Message.Message,
   toolCallIds?: Map<string, string>,
   lastCommitByBranch?: Map<string, string>,
 ): string[] => {
@@ -363,8 +363,8 @@ const getBlockParents = (
  * Creates a commit for a specific block.
  */
 const createBlockCommit = (
-  block: DataType.ContentBlock.Any,
-  message: DataType.Message.Message,
+  block: ContentBlock.Any,
+  message: Message.Message,
   branch: string,
   parents: string[],
   idx: number,
@@ -420,7 +420,7 @@ const createBlockCommit = (
         timestamp,
         icon: IconType.ROCKET,
         level: LogLevel.INFO,
-        message: DataType.ContentBlock.createSummaryMessage(block),
+        message: ContentBlock.createSummaryMessage(block),
       } satisfies Commit;
 
     case 'status':
@@ -481,14 +481,14 @@ const getBranchName = (options: { parentMessage?: ObjectId; toolCallId?: string 
   }
 };
 
-const getMessageBranch = (message: DataType.Message.Message) => {
+const getMessageBranch = (message: Message.Message) => {
   return getBranchName({
     parentMessage: message.parentMessage,
     toolCallId: message.properties?.[MESSAGE_PROPERTY_TOOL_CALL_ID],
   });
 };
 
-const getParentId = (message: DataType.Message.Message) => {
+const getParentId = (message: Message.Message) => {
   if (message.parentMessage && message.properties?.[MESSAGE_PROPERTY_TOOL_CALL_ID]) {
     return getToolCallId(message.parentMessage, message.properties[MESSAGE_PROPERTY_TOOL_CALL_ID]);
   } else {

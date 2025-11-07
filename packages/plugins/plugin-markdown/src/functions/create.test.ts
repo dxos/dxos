@@ -31,7 +31,8 @@ import { TestDatabaseLayer } from '@dxos/functions/testing';
 import { invariant } from '@dxos/invariant';
 import { ObjectId } from '@dxos/keys';
 import { Markdown } from '@dxos/plugin-markdown/types';
-import { DataType } from '@dxos/schema';
+import { Collection } from '@dxos/schema';
+import { HasSubject, type Message } from '@dxos/types';
 
 import { WithProperties, testToolkit } from '../testing';
 import { MarkdownBlueprint, MarkdownFunction } from '../toolkit';
@@ -55,13 +56,7 @@ const TestLayer = Layer.mergeAll(
       TestDatabaseLayer({
         spaceKey: 'fixed',
         indexing: { vector: true },
-        types: [
-          PropertiesType,
-          DataType.Collection.Collection,
-          Blueprint.Blueprint,
-          Markdown.Document,
-          DataType.HasSubject.HasSubject,
-        ],
+        types: [PropertiesType, Collection.Collection, Blueprint.Blueprint, Markdown.Document, HasSubject.HasSubject],
       }),
       CredentialsService.configuredLayer([]),
       TracingService.layerNoop,
@@ -96,7 +91,7 @@ describe('create', () => {
     'create a markdown document',
     Effect.fnUntraced(
       function* (_) {
-        const queue = yield* QueueService.createQueue<DataType.Message.Message | ContextBinding>();
+        const queue = yield* QueueService.createQueue<Message.Message | ContextBinding>();
         const conversation = yield* acquireReleaseResource(() => new AiConversation(queue));
 
         yield* DatabaseService.flush({ indexes: true });
@@ -108,7 +103,6 @@ describe('create', () => {
         );
 
         const observer = GenerationObserver.fromPrinter(new ConsolePrinter());
-
         yield* conversation.createRequest({
           observer,
           prompt: `Create a document with a cookie recipe.`,

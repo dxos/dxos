@@ -12,7 +12,7 @@ import { Obj } from '@dxos/echo';
 import { type Queue } from '@dxos/echo-db';
 import { DatabaseService } from '@dxos/functions';
 import { log } from '@dxos/log';
-import { DataType } from '@dxos/schema';
+import { Message } from '@dxos/types';
 
 import {
   AiSession,
@@ -38,7 +38,7 @@ export class AiConversation extends Resource {
   /**
    * Message and binding queue.
    */
-  private readonly _queue: Queue<DataType.Message.Message | ContextBinding>;
+  private readonly _queue: Queue<Message.Message | ContextBinding>;
 
   /**
    * Blueprints bound to the conversation.
@@ -50,7 +50,7 @@ export class AiConversation extends Resource {
    */
   private _toolkit: Toolkit.WithHandler<any> | undefined;
 
-  public constructor(queue: Queue<DataType.Message.Message | ContextBinding>) {
+  public constructor(queue: Queue<Message.Message | ContextBinding>) {
     super();
     this._queue = queue;
     this._context = new AiContextBinder(this._queue);
@@ -73,9 +73,9 @@ export class AiConversation extends Resource {
     return this._toolkit;
   }
 
-  public async getHistory(): Promise<DataType.Message.Message[]> {
+  public async getHistory(): Promise<Message.Message[]> {
     const queueItems = await this._queue.queryObjects();
-    return queueItems.filter(Obj.instanceOf(DataType.Message.Message));
+    return queueItems.filter(Obj.instanceOf(Message.Message));
   }
 
   /**
@@ -83,7 +83,7 @@ export class AiConversation extends Resource {
    */
   createRequest(
     params: AiConversationRunParams,
-  ): Effect.Effect<DataType.Message.Message[], AiSessionRunError, AiSessionRunRequirements> {
+  ): Effect.Effect<Message.Message[], AiSessionRunError, AiSessionRunRequirements> {
     return Effect.gen(this, function* () {
       const session = new AiSession();
       const history = yield* Effect.promise(() => this.getHistory());

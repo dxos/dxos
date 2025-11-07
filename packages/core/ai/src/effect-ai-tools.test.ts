@@ -8,7 +8,7 @@ import * as Layer from 'effect/Layer';
 
 import { Obj } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect';
-import { DataType } from '@dxos/schema';
+import { Message } from '@dxos/types';
 import { trim } from '@dxos/util';
 
 import * as AiService from './AiService';
@@ -22,7 +22,7 @@ describe('effect AI tool calls', () => {
       function* ({ expect }) {
         const messages = yield* processMessages({
           messages: [
-            Obj.make(DataType.Message.Message, {
+            Obj.make(Message.Message, {
               created: new Date().toISOString(),
               sender: { role: 'user' },
               blocks: [{ _tag: 'text', text: 'What is 2 + 2?' }],
@@ -71,7 +71,7 @@ describe('effect AI tool calls', () => {
             +It looks very happy.
           `,
           messages: [
-            Obj.make(DataType.Message.Message, {
+            Obj.make(Message.Message, {
               created: new Date().toISOString(),
               sender: { role: 'user' },
               blocks: [{ _tag: 'text', text: 'Read the document test.md and fix spelling mistakes' }],

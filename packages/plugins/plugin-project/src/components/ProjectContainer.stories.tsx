@@ -22,8 +22,9 @@ import { withTheme } from '@dxos/react-ui/testing';
 import { translations as stackTranslations } from '@dxos/react-ui-stack';
 import { Stack } from '@dxos/react-ui-stack';
 import { defaultTx } from '@dxos/react-ui-theme';
-import { DataType } from '@dxos/schema';
+import { Collection, View } from '@dxos/schema';
 import { createObjectFactory } from '@dxos/schema/testing';
+import { Message, Organization, Person, Project, Task } from '@dxos/types';
 
 import { translations } from '../translations';
 
@@ -34,7 +35,7 @@ faker.seed(0);
 
 const DefaultStory = () => {
   const space = useSpace();
-  const projects = useQuery(space, Filter.type(DataType.Project.Project));
+  const projects = useQuery(space, Filter.type(Project.Project));
   const project = projects[0];
 
   if (!project) {
@@ -59,13 +60,13 @@ const meta = {
         ClientPlugin({
           types: [
             Tag.Tag,
-            DataType.Project.Project,
-            DataType.View.View,
-            DataType.Collection.Collection,
-            DataType.Organization.Organization,
-            DataType.Task.Task,
-            DataType.Person.Person,
-            DataType.Message.Message,
+            Project.Project,
+            View.View,
+            Collection.Collection,
+            Organization.Organization,
+            Task.Task,
+            Person.Person,
+            Message.Message,
           ],
           onClientInitialized: async ({ client }) => {
             await client.halo.createIdentity();
@@ -77,48 +78,48 @@ const meta = {
             const tagDxn = Obj.getDXN(tag).toString();
 
             // Create a project.
-            const project = DataType.Project.make({ collections: [] });
+            const project = Project.make({ collections: [] });
 
             // Create a view for Contacts.
-            const personView = DataType.View.make({
+            const personView = View.make({
               name: 'Contacts',
-              query: Query.select(Filter.type(DataType.Person.Person)),
-              jsonSchema: Type.toJsonSchema(DataType.Person.Person),
+              query: Query.select(Filter.type(Person.Person)),
+              jsonSchema: Type.toJsonSchema(Person.Person),
               presentation: project,
             });
 
             // Create a view for Organizations.
-            const organizationView = DataType.View.make({
+            const organizationView = View.make({
               name: 'Organizations',
-              query: Query.select(Filter.type(DataType.Organization.Organization)).select(Filter.tag(tagDxn)),
-              jsonSchema: Type.toJsonSchema(DataType.Organization.Organization),
+              query: Query.select(Filter.type(Organization.Organization)).select(Filter.tag(tagDxn)),
+              jsonSchema: Type.toJsonSchema(Organization.Organization),
               presentation: project,
             });
 
             // Create a view for Tasks.
-            const taskView = DataType.View.make({
+            const taskView = View.make({
               name: 'Tasks',
-              query: Query.select(Filter.type(DataType.Task.Task)).select(Filter.tag(tagDxn)),
-              jsonSchema: Type.toJsonSchema(DataType.Task.Task),
+              query: Query.select(Filter.type(Task.Task)).select(Filter.tag(tagDxn)),
+              jsonSchema: Type.toJsonSchema(Task.Task),
               presentation: project,
             });
 
             // Create a view for Project-Projects.
-            const projectView = DataType.View.make({
+            const projectView = View.make({
               name: 'Projects (not the UI component)',
-              query: Query.select(Filter.type(DataType.Project.Project)),
-              jsonSchema: Type.toJsonSchema(DataType.Project.Project),
+              query: Query.select(Filter.type(Project.Project)),
+              jsonSchema: Type.toJsonSchema(Project.Project),
               presentation: project,
             });
 
             // Create a view for Messages.
             const messageQueue = space.queues.create();
-            const messageView = DataType.View.make({
+            const messageView = View.make({
               name: 'Messages',
-              query: Query.select(Filter.type(DataType.Message.Message)).options({
+              query: Query.select(Filter.type(Message.Message)).options({
                 queues: [messageQueue.dxn.toString()],
               }),
-              jsonSchema: Type.toJsonSchema(DataType.Message.Message),
+              jsonSchema: Type.toJsonSchema(Message.Message),
               presentation: project,
             });
 
@@ -140,7 +141,7 @@ const meta = {
             // Generate sample Organizations
             Array.from({ length: 5 }).forEach(() => {
               const org = Obj.make(
-                DataType.Organization.Organization,
+                Organization.Organization,
                 {
                   name: faker.company.name(),
                   website: faker.internet.url(),
@@ -157,7 +158,7 @@ const meta = {
             // Generate sample Tasks
             Array.from({ length: 8 }).forEach(() => {
               const task = Obj.make(
-                DataType.Task.Task,
+                Task.Task,
                 {
                   title: faker.lorem.sentence(),
                   status: faker.helpers.arrayElement(['todo', 'in-progress', 'done']) as any,
@@ -172,11 +173,11 @@ const meta = {
 
             // Generate sample Contacts
             const factory = createObjectFactory(space.db, faker as any);
-            await factory([{ type: DataType.Person.Person, count: 12 }]);
+            await factory([{ type: Person.Person, count: 12 }]);
 
             // Generate sample Projects
             Array.from({ length: 3 }).forEach(() => {
-              const nestedProject = DataType.Project.make({
+              const nestedProject = Project.make({
                 name: faker.commerce.productName(),
                 description: faker.lorem.sentence(),
               });
@@ -185,7 +186,7 @@ const meta = {
 
             // Generate sample Messages
             const messages = Array.from({ length: 6 }).map(() => {
-              const message = Obj.make(DataType.Message.Message, {
+              const message = Obj.make(Message.Message, {
                 created: faker.date.recent().toISOString(),
                 sender: { role: 'user' },
                 blocks: [

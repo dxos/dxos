@@ -9,7 +9,8 @@ import { Blueprint, Template } from '@dxos/blueprints';
 import { Obj } from '@dxos/echo';
 import { type EchoDatabase } from '@dxos/echo-db';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
-import { DataType } from '@dxos/schema';
+import { Text } from '@dxos/schema';
+import { Organization } from '@dxos/types';
 import { trim } from '@dxos/util';
 
 import { createSystemPrompt } from '../templates/system';
@@ -21,7 +22,7 @@ describe('format', () => {
   beforeAll(async () => {
     const builder = await new EchoTestBuilder().open();
     ({ db } = await builder.createDatabase({
-      types: [DataType.Text.Text, DataType.Organization.Organization, Blueprint.Blueprint],
+      types: [Text.Text, Organization.Organization, Blueprint.Blueprint],
     }));
   });
 
@@ -29,7 +30,7 @@ describe('format', () => {
     'should format',
     Effect.fn(function* () {
       const object = db.add(
-        Obj.make(DataType.Organization.Organization, {
+        Obj.make(Organization.Organization, {
           name: 'Test',
           website: 'https://www.test.com',
         }),

@@ -17,11 +17,12 @@ import {
   TablePresentation,
   useTableModel,
 } from '@dxos/react-ui-table';
-import { type DataType, getTypenameFromQuery } from '@dxos/schema';
+import { getTypenameFromQuery } from '@dxos/schema';
+import { type View } from '@dxos/schema';
 
 export type TableCardProps = {
   role: string;
-  view: DataType.View.View;
+  view: View.View;
 };
 
 export const TableCard = ({ role, view }: TableCardProps) => {

@@ -6,7 +6,7 @@ import { EditorView } from '@codemirror/view';
 import { describe, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 
-import { type DataType } from '@dxos/schema';
+import { type ContentBlock } from '@dxos/types';
 
 import { createMessage } from '../../testing';
 
@@ -74,7 +74,7 @@ describe('reducers', () => {
       syncer.append(messages);
       expect(doc.content).toEqual(['<prompt>Hello</prompt>', 'Hi there!'].join('\n'));
 
-      const block = messages[1].blocks[0] as DataType.ContentBlock.Text;
+      const block = messages[1].blocks[0] as ContentBlock.Text;
       block.text = 'Hi there! How are you?';
       block.pending = false;
       syncer.append(messages);

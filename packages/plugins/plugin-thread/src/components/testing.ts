@@ -6,7 +6,7 @@ import { Obj, Ref } from '@dxos/echo';
 import { IdentityDid } from '@dxos/keys';
 import { faker } from '@dxos/random';
 import { type Identity } from '@dxos/react-client/halo';
-import { DataType } from '@dxos/schema';
+import { Message } from '@dxos/types';
 
 import { Thread } from '../types';
 
@@ -16,7 +16,7 @@ export const createCommentThread = (identity: Identity): Thread.Thread => {
     messages: faker.helpers.multiple(
       () =>
         Ref.make(
-          Obj.make(DataType.Message.Message, {
+          Obj.make(Message.Message, {
             created: new Date().toISOString(),
             sender: {
               identityDid: faker.datatype.boolean() ? identity.did : IdentityDid.random(),
@@ -36,7 +36,7 @@ export const createProposalThread = (identity: Identity): Thread.Thread => {
     messages: faker.helpers.multiple(
       () =>
         Ref.make(
-          Obj.make(DataType.Message.Message, {
+          Obj.make(Message.Message, {
             created: new Date().toISOString(),
             sender: {
               identityDid: faker.datatype.boolean() ? identity.did : IdentityDid.random(),

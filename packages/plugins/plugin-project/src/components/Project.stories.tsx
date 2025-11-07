@@ -12,24 +12,25 @@ import { useQuery } from '@dxos/react-client/echo';
 import { useClientProvider, withClientProvider } from '@dxos/react-client/testing';
 import { withTheme } from '@dxos/react-ui/testing';
 import { Form } from '@dxos/react-ui-form';
-import { DataType } from '@dxos/schema';
+import { Collection, View } from '@dxos/schema';
 import { createObjectFactory } from '@dxos/schema/testing';
+import { Person, Project as ProjectType } from '@dxos/types';
 
 import { translations } from '../translations';
 
 import { type ItemProps, Project } from './Project';
 
 const StorybookProjectItem = ({ item, projectionModel }: ItemProps) => {
-  if (Obj.instanceOf(DataType.Person.Person, item)) {
-    const contact = item as Obj.Obj<DataType.Person.Person>;
-    return <Form values={contact} schema={DataType.Person.Person} projection={projectionModel} autoSave />;
+  if (Obj.instanceOf(Person.Person, item)) {
+    const contact = item as Obj.Obj<Person.Person>;
+    return <Form values={contact} schema={Person.Person} projection={projectionModel} autoSave />;
   }
   return <span>{item.id}</span>;
 };
 
 const DefaultStory = () => {
   const { space } = useClientProvider();
-  const projects = useQuery(space, Filter.type(DataType.Project.Project));
+  const projects = useQuery(space, Filter.type(ProjectType.Project));
   const project = projects[0];
 
   const handleAddColumn = useCallback(() => {
@@ -38,10 +39,10 @@ const DefaultStory = () => {
     }
 
     // Create a new view for contacts similar to the initialization
-    const view = DataType.View.make({
+    const view = View.make({
       name: 'New Contacts',
-      query: Query.select(Filter.type(DataType.Person.Person)),
-      jsonSchema: Type.toJsonSchema(DataType.Person.Person),
+      query: Query.select(Filter.type(Person.Person)),
+      jsonSchema: Type.toJsonSchema(Person.Person),
       presentation: project,
       fields: ['fullName'],
     });
@@ -65,8 +66,8 @@ const DefaultStory = () => {
 
 const MutationsStory = () => {
   const { space } = useClientProvider();
-  const projects = useQuery(space, Filter.type(DataType.Project.Project));
-  const contacts = useQuery(space, Filter.type(DataType.Person.Person));
+  const projects = useQuery(space, Filter.type(ProjectType.Project));
+  const contacts = useQuery(space, Filter.type(Person.Person));
   const project = projects[0];
 
   const handleAddColumn = useCallback(() => {
@@ -75,10 +76,10 @@ const MutationsStory = () => {
     }
 
     // Create a new view for contacts similar to the initialization.
-    const view = DataType.View.make({
+    const view = View.make({
       name: 'New Contacts',
-      query: Query.select(Filter.type(DataType.Person.Person)),
-      jsonSchema: Type.toJsonSchema(DataType.Person.Person),
+      query: Query.select(Filter.type(Person.Person)),
+      jsonSchema: Type.toJsonSchema(Person.Person),
       presentation: project,
       fields: ['fullName'],
     });
@@ -107,7 +108,7 @@ const MutationsStory = () => {
         space.db.remove(contactToRemove);
       } else {
         // Add a new contact (30% chance)
-        void factory([{ type: DataType.Person.Person, count: 1 }]);
+        void factory([{ type: Person.Person, count: 1 }]);
       }
     }, 3_000);
 
@@ -130,20 +131,20 @@ const meta = {
   decorators: [
     withTheme,
     withClientProvider({
-      types: [DataType.Project.Project, DataType.View.View, DataType.Collection.Collection, DataType.Person.Person],
+      types: [ProjectType.Project, View.View, Collection.Collection, Person.Person],
       createIdentity: true,
       createSpace: true,
       onCreateSpace: async ({ space }) => {
         // Create a project.
-        const project = DataType.Project.make({
+        const project = ProjectType.make({
           collections: [],
         });
 
         // Create a view for contacts.
-        const view = DataType.View.make({
+        const view = View.make({
           name: 'Contacts',
-          query: Query.select(Filter.type(DataType.Person.Person)),
-          jsonSchema: Type.toJsonSchema(DataType.Person.Person),
+          query: Query.select(Filter.type(Person.Person)),
+          jsonSchema: Type.toJsonSchema(Person.Person),
           presentation: project,
           fields: ['fullName'],
         });
@@ -155,7 +156,7 @@ const meta = {
 
         // Generate random contacts
         const factory = createObjectFactory(space.db, faker as any);
-        await factory([{ type: DataType.Person.Person, count: 12 }]);
+        await factory([{ type: Person.Person, count: 12 }]);
       },
     }),
   ],

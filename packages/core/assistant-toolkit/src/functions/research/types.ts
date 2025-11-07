@@ -2,23 +2,25 @@
 // Copyright 2025 DXOS.org
 //
 
-import { DataType } from '@dxos/schema';
+import { type Type } from '@dxos/echo';
+import { Text } from '@dxos/schema';
+import { Event, HasConnection, HasRelationship, LegacyOrganization, LegacyPerson, Project, Task } from '@dxos/types';
 
 /**
  * Data types for research.
  */
-export const ResearchDataTypes = [
+export const ResearchDataTypes: (Type.Obj.Any | Type.Relation.Any)[] = [
   // Objects
-  DataType.Event.Event,
-  DataType.LegacyOrganization,
-  DataType.LegacyPerson,
-  DataType.Project.Project,
-  DataType.Task.Task,
-  DataType.Text.Text,
+  Event.Event,
+  LegacyOrganization,
+  Task.Task,
+  Text.Text,
 
   // Relations
-  // TODO(wittjosiah): Until views (e.g. table) support relations this needs to be expressed via organization ref.
-  // DataType.Employer.Employer,
-  DataType.HasRelationship.HasRelationship,
-  DataType.HasConnection.HasConnection,
+  // TODO(wittjosiah): Until views (e.g., Table) support relations this needs to be expressed via organization ref.
+  // Employer.Employer,
+  LegacyPerson,
+  Project.Project,
+  HasRelationship.HasRelationship,
+  HasConnection.HasConnection,
 ];

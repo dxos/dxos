@@ -6,9 +6,8 @@ import * as Schema from 'effect/Schema';
 
 import { Type } from '@dxos/echo';
 import { EchoObjectSchema, SpaceSchema } from '@dxos/react-client/echo';
-import { DataType } from '@dxos/schema';
-
-type AnchoredTo = DataType.AnchoredTo.AnchoredTo;
+import { Collection } from '@dxos/schema';
+import { Actor, AnchoredTo, Message } from '@dxos/types';
 
 import { meta } from '../meta';
 
@@ -19,7 +18,7 @@ export namespace ThreadAction {
   export class onCreateSpace extends Schema.TaggedClass<onCreateSpace>()(`${meta.id}/action/on-space-created`, {
     input: Schema.Struct({
       space: SpaceSchema,
-      rootCollection: DataType.Collection.Collection,
+      rootCollection: Collection.Collection,
     }),
     output: Schema.Void,
   }) {}
@@ -57,7 +56,7 @@ export namespace ThreadAction {
 
   export class Delete extends Schema.TaggedClass<Delete>()(`${meta.id}/action/delete`, {
     input: Schema.Struct({
-      anchor: DataType.AnchoredTo.AnchoredTo,
+      anchor: AnchoredTo.AnchoredTo,
       subject: EchoObjectSchema,
       thread: Schema.optional(Thread.Thread),
     }),
@@ -81,8 +80,8 @@ export namespace ThreadAction {
   export class AddMessage extends Schema.TaggedClass<AddMessage>()(`${meta.id}/action/add-message`, {
     input: Schema.Struct({
       subject: EchoObjectSchema,
-      anchor: DataType.AnchoredTo.AnchoredTo,
-      sender: DataType.Actor.Actor,
+      anchor: AnchoredTo.AnchoredTo,
+      sender: Actor.Actor,
       text: Schema.String,
     }),
     output: Schema.Void,
@@ -90,10 +89,10 @@ export namespace ThreadAction {
 
   export class DeleteMessage extends Schema.TaggedClass<DeleteMessage>()(`${meta.id}/action/delete-message`, {
     input: Schema.Struct({
-      anchor: DataType.AnchoredTo.AnchoredTo,
+      anchor: AnchoredTo.AnchoredTo,
       subject: EchoObjectSchema,
       messageId: Schema.String,
-      message: Schema.optional(DataType.Message.Message),
+      message: Schema.optional(Message.Message),
       messageIndex: Schema.optional(Schema.Number),
     }),
     output: Schema.Void,
@@ -115,6 +114,6 @@ export type ThreadState = {
   /** Object toolbar state. */
   toolbar: Record<string, boolean>;
   /** In-memory draft threads. */
-  drafts: Record<string, AnchoredTo[]>;
+  drafts: Record<string, AnchoredTo.AnchoredTo[]>;
   current?: string | undefined;
 };

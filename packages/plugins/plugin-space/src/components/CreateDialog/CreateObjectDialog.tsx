@@ -14,7 +14,7 @@ import { useClient } from '@dxos/react-client';
 import { type Space, getSpace, isLiveObject, isSpace, useQuery, useSpaces } from '@dxos/react-client/echo';
 import { Dialog, IconButton, useTranslation } from '@dxos/react-ui';
 import { cardDialogContent, cardDialogHeader } from '@dxos/react-ui-stack';
-import { DataType, getTypenameFromQuery } from '@dxos/schema';
+import { Collection, StoredSchema, getTypenameFromQuery } from '@dxos/schema';
 import { isNonNullable } from '@dxos/util';
 
 import { SpaceCapabilities } from '../../capabilities';
@@ -41,20 +41,20 @@ export const CreateObjectDialog = ({
   onCreateObject,
   shouldNavigate: _shouldNavigate,
 }: CreateObjectDialogProps) => {
-  const closeRef = useRef<HTMLButtonElement | null>(null);
   const manager = usePluginManager();
   const { t } = useTranslation(meta.id);
-  const client = useClient();
-  const spaces = useSpaces();
   const { dispatch } = useIntentDispatcher();
   const forms = useCapabilities(SpaceCapabilities.ObjectForm);
-  const [target, setTarget] = useState<Space | DataType.Collection.Collection | undefined>(initialTarget);
+  const [target, setTarget] = useState<Space | Collection.Collection | undefined>(initialTarget);
   const [typename, setTypename] = useState<string | undefined>(initialTypename);
+  const client = useClient();
+  const spaces = useSpaces();
   const space = isSpace(target) ? target : getSpace(target);
-  const queryCollections = useQuery(space, Query.type(DataType.Collection.QueryCollection));
+  const queryCollections = useQuery(space, Query.type(Collection.QueryCollection));
   const hiddenTypenames = queryCollections
     .map((collection) => getTypenameFromQuery(collection.query))
     .filter(isNonNullable);
+  const closeRef = useRef<HTMLButtonElement | null>(null);
 
   const resolve = useCallback<NonNullable<CreateObjectPanelProps['resolve']>>(
     (typename) =>
@@ -76,7 +76,7 @@ export const CreateObjectDialog = ({
         const space = isSpace(target) ? target : getSpace(target);
         invariant(space, 'Missing space');
         const { object } = yield* dispatch(form.getIntent(data, { space }));
-        if (isLiveObject(object) && !Obj.instanceOf(DataType.StoredSchema, object)) {
+        if (isLiveObject(object) && !Obj.instanceOf(StoredSchema, object)) {
           // TODO(wittjosiah): Selection in navtree isn't working as expected when hidden typenames evals to true.
           const hidden = form.hidden || hiddenTypenames.includes(Type.getTypename(form.objectSchema));
           const addObjectIntent = createIntent(SpaceAction.AddObject, {

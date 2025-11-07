@@ -64,7 +64,7 @@ describe('Feed', { timeout: 600_000 }, () => {
 
         // const result = yield* AiSession.run({
         //   history: [
-        //     Obj.make(DataType.Message.Message, {
+        //     Obj.make(Message.Message, {
         //       created: new Date().toISOString(),
         //       sender: { role: 'user' },
         //       blocks: messages
@@ -90,7 +90,7 @@ describe('Feed', { timeout: 600_000 }, () => {
 
         // const result = yield* AiSession.run({
         //   history: [
-        //     Obj.make(DataType.Message.Message, {
+        //     Obj.make(Message.Message, {
         //       created: new Date().toISOString(),
         //       sender: { role: 'user' },
         //       blocks: [{ _tag: 'text', text: JSON.stringify(linearIssues) }],

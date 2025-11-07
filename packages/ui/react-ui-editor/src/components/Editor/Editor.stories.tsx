@@ -9,7 +9,7 @@ import { useMemo } from 'react';
 import { createDocAccessor, createObject } from '@dxos/client/echo';
 import { useThemeContext } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
-import { DataType } from '@dxos/schema';
+import { Text } from '@dxos/schema';
 
 import { automerge, createBasicExtensions, createThemeExtensions } from '../../extensions';
 import { Editor } from '../Editor';
@@ -53,7 +53,7 @@ export const Automerge: Story = {
         // Basic extensions.
         createBasicExtensions(),
         createThemeExtensions({ themeMode }),
-        automerge(createDocAccessor(createObject(DataType.Text.make(value)), ['content'])),
+        automerge(createDocAccessor(createObject(Text.make(value)), ['content'])),
       ],
       [],
     );

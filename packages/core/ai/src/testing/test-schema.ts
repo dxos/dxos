@@ -6,8 +6,6 @@ import * as Schema from 'effect/Schema';
 
 import { EntityKind, ObjectId, Ref, TypeAnnotationId } from '@dxos/echo/internal';
 
-// TODO(burdon): Remove (use @dxos/schema DataType).
-
 /** @deprecated */
 export const Contact = Schema.Struct({
   id: ObjectId,
@@ -18,7 +16,7 @@ export const Contact = Schema.Struct({
   .annotations({
     [TypeAnnotationId]: {
       kind: EntityKind.Object,
-      typename: 'example.com/type/Contact',
+      typename: 'example.com/type/Person',
       version: '0.1.0',
     },
     description: 'Contact information.',

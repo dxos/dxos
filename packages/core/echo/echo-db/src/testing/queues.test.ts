@@ -25,7 +25,7 @@ describe('queues', (ctx) => {
   });
 
   test('resolve reference to a queue', async () => {
-    await using peer = await builder.createPeer({ types: [Testing.Contact] });
+    await using peer = await builder.createPeer({ types: [Testing.Person] });
     const db = await peer.createDatabase();
     const queues = peer.client.constructQueueFactory(db.spaceId);
     const obj = db.add(
@@ -41,12 +41,12 @@ describe('queues', (ctx) => {
   });
 
   test('Obj.getDXN on queue objects returns absolute dxn', async () => {
-    await using peer = await builder.createPeer({ types: [Testing.Contact] });
+    await using peer = await builder.createPeer({ types: [Testing.Person] });
     const db = await peer.createDatabase();
     const queues = peer.client.constructQueueFactory(db.spaceId);
     const queue = queues.create();
     await queue.append([
-      Obj.make(Testing.Contact, {
+      Obj.make(Testing.Person, {
         name: 'john',
       }),
     ]);
@@ -55,12 +55,12 @@ describe('queues', (ctx) => {
   });
 
   test('create and resolve an object from a queue', async () => {
-    await using peer = await builder.createPeer({ types: [Testing.Contact] });
+    await using peer = await builder.createPeer({ types: [Testing.Person] });
     const spaceId = SpaceId.random();
     const queues = peer.client.constructQueueFactory(spaceId);
     const queue = queues.create();
 
-    const obj = Obj.make(Testing.Contact, {
+    const obj = Obj.make(Testing.Person, {
       name: 'john',
     });
     await queue.append([obj]);
@@ -71,7 +71,7 @@ describe('queues', (ctx) => {
         .resolve(DXN.fromQueue('data', spaceId, queue.dxn.asQueueDXN()!.queueId, obj.id));
       expect(resolved?.id).toEqual(obj.id);
       expect(resolved?.name).toEqual('john');
-      expect(getSchema(resolved)).toEqual(Testing.Contact);
+      expect(getSchema(resolved)).toEqual(Testing.Person);
     }
 
     {
@@ -80,20 +80,20 @@ describe('queues', (ctx) => {
         .resolve(DXN.fromLocalObjectId(obj.id));
       expect(resolved?.id).toEqual(obj.id);
       expect(resolved?.name).toEqual('john');
-      expect(getSchema(resolved)).toEqual(Testing.Contact);
+      expect(getSchema(resolved)).toEqual(Testing.Person);
     }
   });
 
   test('objects in queues have positions', async () => {
-    await using peer = await builder.createPeer({ types: [Testing.Contact] });
+    await using peer = await builder.createPeer({ types: [Testing.Person] });
     const spaceId = SpaceId.random();
     const queues = peer.client.constructQueueFactory(spaceId);
     const queue = queues.create();
     await queue.append([
-      Obj.make(Testing.Contact, {
+      Obj.make(Testing.Person, {
         name: 'john',
       }),
-      Obj.make(Testing.Contact, {
+      Obj.make(Testing.Person, {
         name: 'jane',
       }),
     ]);
@@ -113,16 +113,16 @@ describe('queues', (ctx) => {
   });
 
   test('relations in queues', async () => {
-    await using peer = await builder.createPeer({ types: [Testing.Contact, Testing.WorksFor] });
+    await using peer = await builder.createPeer({ types: [Testing.Person, Testing.WorksFor] });
     const spaceId = SpaceId.random();
     const queues = peer.client.constructQueueFactory(spaceId);
     const queue = queues.create();
 
     {
-      const obj = Obj.make(Testing.Contact, {
+      const obj = Obj.make(Testing.Person, {
         name: 'john',
       });
-      const obj2 = Obj.make(Testing.Contact, {
+      const obj2 = Obj.make(Testing.Person, {
         name: 'jane',
       });
       const relation = Relation.make(Testing.WorksFor, {
@@ -134,27 +134,27 @@ describe('queues', (ctx) => {
 
     {
       const [obj, obj2, relation] = await queue.queryObjects();
-      expect((obj as Testing.Contact).name).toEqual('john');
-      expect((obj2 as Testing.Contact).name).toEqual('jane');
+      expect((obj as Testing.Person).name).toEqual('john');
+      expect((obj2 as Testing.Person).name).toEqual('jane');
       expect(Relation.getSource(relation as Testing.WorksFor).name).toEqual('john');
       expect(Relation.getTarget(relation as Testing.WorksFor).name).toEqual('jane');
     }
   });
 
   test('relation between queue object and a database object', async () => {
-    await using peer = await builder.createPeer({ types: [Testing.Contact, Testing.WorksFor] });
+    await using peer = await builder.createPeer({ types: [Testing.Person, Testing.WorksFor] });
     const db = await peer.createDatabase();
     const queues = peer.client.constructQueueFactory(db.spaceId);
     const queue = queues.create();
 
     {
       const obj = db.add(
-        Obj.make(Testing.Contact, {
+        Obj.make(Testing.Person, {
           name: 'john',
         }),
       );
 
-      const jane = Obj.make(Testing.Contact, {
+      const jane = Obj.make(Testing.Person, {
         name: 'jane',
       });
       const relation = Relation.make(Testing.WorksFor, {
@@ -167,7 +167,7 @@ describe('queues', (ctx) => {
 
     {
       const [jane, relation] = await queue.queryObjects();
-      expect((jane as Testing.Contact).name).toEqual('jane');
+      expect((jane as Testing.Person).name).toEqual('jane');
       expect(Relation.getSource(relation as Testing.WorksFor).name).toEqual('john');
       expect(Relation.getTarget(relation as Testing.WorksFor).name).toEqual('jane');
     }
@@ -175,91 +175,91 @@ describe('queues', (ctx) => {
 
   describe('Query', () => {
     test('one shot query everything', async ({ expect }) => {
-      await using peer = await builder.createPeer({ types: [Testing.Contact, Testing.WorksFor] });
+      await using peer = await builder.createPeer({ types: [Testing.Person, Testing.WorksFor] });
       const spaceId = SpaceId.random();
       const queues = peer.client.constructQueueFactory(spaceId);
       const queue = queues.create();
 
       await queue.append([
-        Obj.make(Testing.Contact, {
+        Obj.make(Testing.Person, {
           name: 'john',
         }),
-        Obj.make(Testing.Contact, {
+        Obj.make(Testing.Person, {
           name: 'jane',
         }),
-        Obj.make(Testing.Contact, {
+        Obj.make(Testing.Person, {
           name: 'alice',
         }),
       ]);
 
       const result = await queue.query(Query.select(Filter.everything())).run();
       expect(result.objects).toHaveLength(3);
-      expect(result.objects.map((o) => (o as Testing.Contact).name).sort()).toEqual(['alice', 'jane', 'john']);
+      expect(result.objects.map((o) => (o as Testing.Person).name).sort()).toEqual(['alice', 'jane', 'john']);
     });
 
     test('one shot query contacts', async ({ expect }) => {
-      await using peer = await builder.createPeer({ types: [Testing.Contact, Testing.Task] });
+      await using peer = await builder.createPeer({ types: [Testing.Person, Testing.Task] });
       const spaceId = SpaceId.random();
       const queues = peer.client.constructQueueFactory(spaceId);
       const queue = queues.create();
 
       await queue.append([
-        Obj.make(Testing.Contact, {
+        Obj.make(Testing.Person, {
           name: 'john',
         }),
         Obj.make(Testing.Task, {
           title: 'Write tests',
         }),
-        Obj.make(Testing.Contact, {
+        Obj.make(Testing.Person, {
           name: 'jane',
         }),
       ]);
 
-      const result = await queue.query(Query.select(Filter.type(Testing.Contact))).run();
+      const result = await queue.query(Query.select(Filter.type(Testing.Person))).run();
       expect(result.objects).toHaveLength(2);
-      expect(result.objects.map((o) => (o as Testing.Contact).name).sort()).toEqual(['jane', 'john']);
+      expect(result.objects.map((o) => (o as Testing.Person).name).sort()).toEqual(['jane', 'john']);
     });
 
     test('one shot query with name predicate', async ({ expect }) => {
-      await using peer = await builder.createPeer({ types: [Testing.Contact] });
+      await using peer = await builder.createPeer({ types: [Testing.Person] });
       const spaceId = SpaceId.random();
       const queues = peer.client.constructQueueFactory(spaceId);
       const queue = queues.create();
 
       await queue.append([
-        Obj.make(Testing.Contact, {
+        Obj.make(Testing.Person, {
           name: 'john',
         }),
-        Obj.make(Testing.Contact, {
+        Obj.make(Testing.Person, {
           name: 'jane',
         }),
-        Obj.make(Testing.Contact, {
+        Obj.make(Testing.Person, {
           name: 'alice',
         }),
       ]);
 
-      const result = await queue.query(Query.select(Filter.type(Testing.Contact, { name: 'jane' }))).run();
+      const result = await queue.query(Query.select(Filter.type(Testing.Person, { name: 'jane' }))).run();
       expect(result.objects).toHaveLength(1);
       expect(result.objects[0].name).toEqual('jane');
     });
 
     test('subscription query gets initial result', async ({ expect }) => {
-      await using peer = await builder.createPeer({ types: [Testing.Contact] });
+      await using peer = await builder.createPeer({ types: [Testing.Person] });
       const spaceId = SpaceId.random();
       const queues = peer.client.constructQueueFactory(spaceId);
       const queue = queues.create();
 
       await queue.append([
-        Obj.make(Testing.Contact, {
+        Obj.make(Testing.Person, {
           name: 'john',
         }),
-        Obj.make(Testing.Contact, {
+        Obj.make(Testing.Person, {
           name: 'jane',
         }),
       ]);
 
       const called = new Event();
-      const query = queue.query(Query.select(Filter.type(Testing.Contact)));
+      const query = queue.query(Query.select(Filter.type(Testing.Person)));
       const calledOnce = called.waitForCount(1);
       const sub = query.subscribe(() => called.emit(), { fire: true });
 
@@ -271,25 +271,25 @@ describe('queues', (ctx) => {
     });
 
     test('subscription query updates on append', async ({ expect }) => {
-      await using peer = await builder.createPeer({ types: [Testing.Contact] });
+      await using peer = await builder.createPeer({ types: [Testing.Person] });
       const spaceId = SpaceId.random();
       const queues = peer.client.constructQueueFactory(spaceId);
       const queue = queues.create();
 
       await queue.append([
-        Obj.make(Testing.Contact, {
+        Obj.make(Testing.Person, {
           name: 'john',
         }),
       ]);
 
-      const query = queue.query(Query.select(Filter.type(Testing.Contact)));
+      const query = queue.query(Query.select(Filter.type(Testing.Person)));
       const called = new Event();
       const calledOnce = called.waitForCount(1);
       const sub = query.subscribe(() => called.emit());
 
       // Append new contact.
       await queue.append([
-        Obj.make(Testing.Contact, {
+        Obj.make(Testing.Person, {
           name: 'jane',
         }),
       ]);

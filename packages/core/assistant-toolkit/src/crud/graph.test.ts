@@ -17,7 +17,7 @@ import { AiSession } from '@dxos/assistant';
 import { TestHelpers } from '@dxos/effect';
 import { DatabaseService, TracingService } from '@dxos/functions';
 import { log } from '@dxos/log';
-import { DataType } from '@dxos/schema';
+import { Project } from '@dxos/types';
 
 import { makeGraphWriterHandler, makeGraphWriterToolkit } from './graph';
 
@@ -46,7 +46,7 @@ describe('graph', () => {
   //   const relatedSchemas = await findRelatedSchema(db, Schema.Struct({}));
   // });
 
-  const Toolkit = makeGraphWriterToolkit({ schema: [DataType.Project.Project] });
+  const Toolkit = makeGraphWriterToolkit({ schema: [Project.Project] });
   const ToolkitLayer = makeGraphWriterHandler(Toolkit);
 
   it.effect.skip(

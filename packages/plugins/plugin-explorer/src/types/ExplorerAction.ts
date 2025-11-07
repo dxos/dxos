@@ -5,7 +5,7 @@
 import * as Schema from 'effect/Schema';
 
 import { SpaceSchema } from '@dxos/react-client/echo';
-import { DataType, TypenameAnnotationId } from '@dxos/schema';
+import { TypenameAnnotationId, View } from '@dxos/schema';
 
 import { meta } from '../meta';
 
@@ -24,6 +24,6 @@ export class CreateGraph extends Schema.TaggedClass<CreateGraph>()(`${EXPLORER_A
     space: SpaceSchema,
   }).pipe(Schema.extend(GraphProps)),
   output: Schema.Struct({
-    object: DataType.View.View,
+    object: View.View,
   }),
 }) {}

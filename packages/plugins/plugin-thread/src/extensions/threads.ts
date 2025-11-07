@@ -11,7 +11,7 @@ import { Filter, Obj, Query, Relation } from '@dxos/echo';
 import { type Markdown } from '@dxos/plugin-markdown/types';
 import { createDocAccessor, getSource, getSpace, getTextInRange } from '@dxos/react-client/echo';
 import { comments, createExternalCommentSync } from '@dxos/react-ui-editor';
-import { DataType } from '@dxos/schema';
+import { AnchoredTo } from '@dxos/types';
 
 import { Thread, ThreadAction, type ThreadState } from '../types';
 
@@ -34,7 +34,7 @@ export const threads = (state: ThreadState, doc?: Markdown.Document, dispatch?: 
     return [comments()];
   }
 
-  const query = space.db.query(Query.select(Filter.ids(doc.id)).targetOf(DataType.AnchoredTo.AnchoredTo));
+  const query = space.db.query(Query.select(Filter.ids(doc.id)).targetOf(AnchoredTo.AnchoredTo));
   const unsubscribe = query.subscribe();
 
   const anchors = computed(() =>

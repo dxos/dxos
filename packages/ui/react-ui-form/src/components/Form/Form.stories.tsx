@@ -54,7 +54,7 @@ const DefaultStory = <T extends BaseObject = any>({
 const RefStory = <T extends BaseObject = any>(props: StoryProps<T>) => {
   const onQueryRefOptions = useCallback((typeInfo: TypeAnnotation) => {
     switch (typeInfo.typename) {
-      case ContactType.typename:
+      case Testing.Person.typename:
         return [
           { dxn: getObjectDXN(contact1)!, label: 'John Coltraine' },
           { dxn: getObjectDXN(contact2)!, label: 'Erykah Badu' },
@@ -147,10 +147,10 @@ export const OrganizationAutoSave: Story = {
 // TODO(burdon): Type issue with employer reference.
 // TODO(burdon): Test table/form with compound values (e.g., address).
 // Property name is missing in type EncodedReference but required in type
-export const Contact: Story = {
+export const Person: Story = {
   args: {
     debug: true,
-    schema: Testing.ContactSchema,
+    schema: Testing.Person,
     values: {
       name: 'Bot',
     },

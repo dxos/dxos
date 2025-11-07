@@ -9,6 +9,7 @@ import * as Schema from 'effect/Schema';
 
 export type ValidationError = { path: string; message: string };
 
+// TODO(burdon): Factor out (dxos/effect?)
 // TODO(burdon): Validate each field separately.
 export const validateSchema = <T>(schema: Schema.Schema<T>, values: any): ValidationError[] | undefined => {
   const validator = Schema.decodeUnknownEither(schema, { errors: 'all' });

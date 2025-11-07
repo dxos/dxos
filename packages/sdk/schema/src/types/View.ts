@@ -28,10 +28,9 @@ import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
 import { type Live } from '@dxos/live-object';
 
-import { FieldSchema, FieldSortType, ProjectionModel } from '../projection';
-import { getSchemaProperties } from '../properties';
+import { FieldSchema, FieldSortType, ProjectionModel, getSchemaProperties } from '../projection';
 
-import { createDefaultSchema } from './util';
+import { createDefaultSchema, getSchema } from './util';
 
 export const Projection = Schema.Struct({
   /**
@@ -58,7 +57,7 @@ export type Projection = Schema.Schema.Type<typeof Projection>;
  * Views are generated or user-defined projections of a schema's properties.
  * They are used to configure the visual representation of the data.
  */
-const View_ = Schema.Struct({
+export const ViewSchema = Schema.Struct({
   /**
    * Name of the view.
    */
@@ -94,13 +93,18 @@ const View_ = Schema.Struct({
   presentation: Type.Ref(Type.Expando).pipe(FormAnnotation.set(false)),
 })
   .pipe(LabelAnnotation.set(['name']))
-  .pipe(Type.Obj({ typename: 'dxos.org/type/View', version: '0.4.0' }));
+  .pipe(
+    Type.Obj({
+      typename: 'dxos.org/type/View',
+      version: '0.4.0',
+    }),
+  );
 
-export interface View extends Schema.Schema.Type<typeof View_> {}
-export interface ViewEncoded extends Schema.Schema.Encoded<typeof View_> {}
-export const View: Schema.Schema<View, ViewEncoded> = View_;
+export interface View extends Schema.Schema.Type<typeof ViewSchema> {}
+export interface ViewEncoded extends Schema.Schema.Encoded<typeof ViewSchema> {}
+export const View: Schema.Schema<View, ViewEncoded> = ViewSchema;
 
-type MakeProps = {
+export type MakeProps = {
   name?: string;
   query: Query.Any;
   queryRaw?: string;
@@ -171,7 +175,7 @@ export const make = ({
   return view;
 };
 
-type MakeWithReferencesProps = MakeProps & {
+export type MakeWithReferencesProps = MakeProps & {
   // TODO(wittjosiah): Unify these.
   registry?: RuntimeSchemaRegistry;
   echoRegistry?: EchoSchemaRegistry;
@@ -308,25 +312,4 @@ export const makeFromSpace = async ({
       echoRegistry: space.db.schemaRegistry,
     }),
   };
-};
-
-// TODO(burdon): Factor out.
-const getSchema = async (
-  dxn: DXN,
-  registry?: RuntimeSchemaRegistry,
-  echoRegistry?: EchoSchemaRegistry,
-): Promise<Type.Obj.Any | undefined> => {
-  const staticSchema = registry?.getSchemaByDXN(dxn);
-  if (staticSchema) {
-    return staticSchema;
-  }
-
-  const typeDxn = dxn.asTypeDXN();
-  if (!typeDxn) {
-    return;
-  }
-
-  const { type, version } = typeDxn;
-  const echoSchema = await echoRegistry?.query({ typename: type, version }).firstOrUndefined();
-  return echoSchema?.snapshot;
 };

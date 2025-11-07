@@ -96,6 +96,7 @@
     "@dxos/rpc": "workspace:*",
     "@dxos/rpc-tunnel": "workspace:*",
     "@dxos/schema": "workspace:*",
+    "@dxos/types": "workspace:*",
     "@dxos/util": "workspace:*",
     "@dxos/vendor-quickjs": "workspace:*",
     "@lezer/common": "^1.2.2",
