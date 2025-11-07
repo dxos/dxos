@@ -8,7 +8,7 @@ import React, { useMemo } from 'react';
 import { useSpace } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { withTheme } from '@dxos/react-ui/testing';
-import { Text as TextType } from '@dxos/schema';
+import { Text } from '@dxos/schema';
 import { render } from '@dxos/storybook-utils';
 
 import { translations } from '../../translations';
@@ -29,7 +29,11 @@ const meta = {
   decorators: [
     withTheme,
     // TODO(burdon): Can we create a storybook for the Outliner without the database?
-    withClientProvider({ createIdentity: true, createSpace: true, types: [TextType.Text, Outline.Outline] }),
+    withClientProvider({
+      createIdentity: true,
+      createSpace: true,
+      types: [Text.Text, Outline.Outline],
+    }),
   ],
   parameters: {
     layout: 'fullscreen',
@@ -44,6 +48,6 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {
   args: {
     id: 'outline',
-    text: TextType.make('- [x] Initial content'),
+    text: Text.make('- [x] Initial content'),
   },
 };
