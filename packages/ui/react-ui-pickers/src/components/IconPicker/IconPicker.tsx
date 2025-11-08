@@ -34,7 +34,6 @@ export const IconPicker = ({ ...props }: ThemedClassName<IconPickerProps>) => {
 };
 
 const IconPreview = ({ value, size }: { value: string; size?: IconProps['size'] }) => {
-  console.log(size);
   return <Icon icon={`ph--${value}--regular`} size={size} />;
 };
 
