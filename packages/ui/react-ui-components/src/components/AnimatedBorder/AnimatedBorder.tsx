@@ -21,8 +21,8 @@ export type AnimatedBorderProps = ThemedClassName<PropsWithChildren<{ animate?: 
  */
 export const AnimatedBorder = ({ children, classNames, animate = false }: AnimatedBorderProps) => {
   return (
-    <div role='none' className='relative overflow-hidden rounded p-px'>
-      <div role='none' className={mx('relative z-10 rounded bg-baseSurface text-sm', classNames)}>
+    <div role='none' className='relative overflow-hidden p-px rounded'>
+      <div role='none' className={mx('relative z-10 bg-baseSurface rounded', classNames)}>
         {children}
       </div>
       {animate && (

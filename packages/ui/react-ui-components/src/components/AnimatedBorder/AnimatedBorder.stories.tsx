@@ -16,6 +16,11 @@ const meta = {
   parameters: {
     layout: 'centered',
   },
+  argTypes: {
+    animate: {
+      control: 'boolean',
+    },
+  },
 } satisfies Meta<typeof AnimatedBorder>;
 
 export default meta;
@@ -24,7 +29,6 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
   args: {
-    animate: true,
     classNames: 'border border-subduedSeparator',
     children: (
       <div className='pli-4 plb-2 text-center text-description'>
