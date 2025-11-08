@@ -16,7 +16,7 @@ export type IconPickerProps = {
   onReset?: ButtonProps['onClick'];
 } & Pick<
   PickerButtonProps,
-  'disabled' | 'defaultValue' | 'value' | 'onChange' | 'onReset' | 'rootVariant' | 'iconSize'
+  'disabled' | 'rootVariant' | 'iconSize' | 'defaultValue' | 'value' | 'onChange' | 'onReset'
 >;
 
 export const IconPicker = ({ ...props }: ThemedClassName<IconPickerProps>) => {
