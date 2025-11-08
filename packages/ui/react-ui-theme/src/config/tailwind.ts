@@ -104,6 +104,7 @@ export const tailwindConfig = ({
             from: { opacity: 0 },
             to: { opacity: 1 },
           },
+
           // Accordion
           slideDown: {
             from: { height: '0px' },
@@ -182,33 +183,89 @@ export const tailwindConfig = ({
               transform: `translateX(${(100 / 28) * 100}%)`,
             },
           },
+
+          borderFlow: {
+            to: { 'background-position': '200% center' },
+          },
+
+          borderPulse: {
+            '0%, 100%': {
+              opacity: '1',
+              transform: 'scale(1)',
+            },
+            '50%': {
+              opacity: '0.7',
+              transform: 'scale(1.02)',
+            },
+          },
+
+          borderRotate: {
+            from: {
+              transform: 'rotate(0deg)',
+            },
+            to: {
+              transform: 'rotate(360deg)',
+            },
+          },
+
+          borderDash: {
+            from: {
+              'background-position': '0 0',
+            },
+            to: {
+              'background-position': '20px 0',
+            },
+          },
+
+          borderGlow: {
+            '0%, 100%': {
+              filter: 'blur(1px) brightness(1)',
+              'box-shadow': '0 0 5px currentColor',
+            },
+            '50%': {
+              filter: 'blur(2px) brightness(1.2)',
+              'box-shadow': '0 0 20px currentColor',
+            },
+          },
+
+          motionPath: {
+            to: {
+              'offset-distance': '100%',
+            },
+          },
         },
         animation: {
-          'fade-in': 'fadeIn 100ms ease-in forwards',
+          ['fade-in']: 'fadeIn 100ms ease-in forwards',
+          ['border-flow']: 'borderFlow 4s linear infinite',
+          ['border-pulse']: 'borderPulse 2s ease-in-out infinite',
+          ['border-rotate']: 'borderRotate 4s linear infinite',
+          ['border-dash']: 'borderDash 1s linear infinite',
+          ['border-glow']: 'borderGlow 2s ease-in-out infinite',
+          ['motion-path']: 'motionPath 3s linear infinite',
 
           // Popper chrome
-          slideDownAndFade: 'slideDownAndFade 400ms cubic-bezier(0.16, 1, 0.3, 1)',
-          slideLeftAndFade: 'slideLeftAndFade 400ms cubic-bezier(0.16, 1, 0.3, 1)',
-          slideUpAndFade: 'slideUpAndFade 400ms cubic-bezier(0.16, 1, 0.3, 1)',
-          slideRightAndFade: 'slideRightAndFade 400ms cubic-bezier(0.16, 1, 0.3, 1)',
+          ['slideDownAndFade']: 'slideDownAndFade 400ms cubic-bezier(0.16, 1, 0.3, 1)',
+          ['slideLeftAndFade']: 'slideLeftAndFade 400ms cubic-bezier(0.16, 1, 0.3, 1)',
+          ['slideUpAndFade']: 'slideUpAndFade 400ms cubic-bezier(0.16, 1, 0.3, 1)',
+          ['slideRightAndFade']: 'slideRightAndFade 400ms cubic-bezier(0.16, 1, 0.3, 1)',
 
           // Toast
-          'toast-hide': 'toast-hide 100ms ease-in forwards',
-          'toast-slide-in-right': 'toast-slide-in-right 150ms cubic-bezier(0.16, 1, 0.3, 1)',
-          'toast-slide-in-bottom': 'toast-slide-in-bottom 150ms cubic-bezier(0.16, 1, 0.3, 1)',
-          'toast-swipe-out': 'toast-swipe-out 100ms ease-out forwards',
+          ['toast-hide']: 'toast-hide 100ms ease-in forwards',
+          ['toast-slide-in-right']: 'toast-slide-in-right 150ms cubic-bezier(0.16, 1, 0.3, 1)',
+          ['toast-slide-in-bottom']: 'toast-slide-in-bottom 150ms cubic-bezier(0.16, 1, 0.3, 1)',
+          ['toast-swipe-out']: 'toast-swipe-out 100ms ease-out forwards',
 
           // Accordion
-          slideDown: 'slideDown 300ms cubic-bezier(0.87, 0, 0.13, 1)',
-          slideUp: 'slideUp 300ms cubic-bezier(0.87, 0, 0.13, 1)',
+          ['slideDown']: 'slideDown 300ms cubic-bezier(0.87, 0, 0.13, 1)',
+          ['slideUp']: 'slideUp 300ms cubic-bezier(0.87, 0, 0.13, 1)',
 
-          spin: 'spin 1.5s linear infinite',
-          'spin-slow': 'spin 3s linear infinite',
+          ['spin']: 'spin 1.5s linear infinite',
+          ['spin-slow']: 'spin 3s linear infinite',
 
-          shimmer: 'shimmer-loop 2s infinite',
-          'halo-pulse': 'halo-pulse 2s ease-out infinite',
-          'progress-indeterminate': 'progress-indeterminate 2s ease-out infinite',
-          'progress-linear': 'progress-linear 2s ease-out infinite',
+          ['shimmer']: 'shimmer-loop 2s infinite',
+          ['halo-pulse']: 'halo-pulse 2s ease-out infinite',
+          ['progress-indeterminate']: 'progress-indeterminate 2s ease-out infinite',
+          ['progress-linear']: 'progress-linear 2s ease-out infinite',
         },
       },
       extendTokens,

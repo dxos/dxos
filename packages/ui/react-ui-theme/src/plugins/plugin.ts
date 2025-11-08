@@ -101,7 +101,6 @@ export const ThemePlugin = (options: ThemePluginOptions): Plugin => {
         try {
           // Get reference to the theme virtual module.
           const module = server.moduleGraph.getModuleById(config.cssPath!);
-
           if (module) {
             // Read the source theme file that imports all other CSS files.
             const css = await readFile(config.srcCssPath!, 'utf8');
