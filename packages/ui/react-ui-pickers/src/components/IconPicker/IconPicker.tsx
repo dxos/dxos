@@ -16,7 +16,7 @@ export type IconPickerProps = {
   onReset?: ButtonProps['onClick'];
 } & Pick<
   PickerButtonProps,
-  'disabled' | 'defaultValue' | 'value' | 'onChange' | 'onReset' | 'rootVariant' | 'iconSize'
+  'disabled' | 'rootVariant' | 'iconSize' | 'defaultValue' | 'value' | 'onChange' | 'onReset'
 >;
 
 export const IconPicker = ({ ...props }: ThemedClassName<IconPickerProps>) => {
@@ -34,7 +34,6 @@ export const IconPicker = ({ ...props }: ThemedClassName<IconPickerProps>) => {
 };
 
 const IconPreview = ({ value, size }: { value: string; size?: IconProps['size'] }) => {
-  console.log(size);
   return <Icon icon={`ph--${value}--regular`} size={size} />;
 };
 

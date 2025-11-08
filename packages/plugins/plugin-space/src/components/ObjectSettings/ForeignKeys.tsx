@@ -38,7 +38,7 @@ const KeyItem = ({ forignKey, onDelete }: KeyItemProps) => {
   }, [forignKey, onDelete]);
 
   return (
-    <ListItem.Root classNames='px-2'>
+    <ListItem.Root classNames='pli-2'>
       <ListItem.Heading classNames='flex flex-col grow truncate'>
         <div>{forignKey.source}</div>
         <div className='text-description text-sm truncate'>{forignKey.id}</div>

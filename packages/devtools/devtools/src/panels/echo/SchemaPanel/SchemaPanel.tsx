@@ -142,7 +142,7 @@ export const SchemaPanel = (props: { space?: Space }) => {
       }
     >
       <div className='bs-full grid grid-cols-[4fr_3fr] overflow-hidden'>
-        <div className='flex flex-col w-full overflow-hidden'>
+        <div className='flex flex-col is-full overflow-hidden'>
           <DynamicTable
             properties={dataProperties}
             rows={dataRows}
@@ -161,7 +161,7 @@ export const SchemaPanel = (props: { space?: Space }) => {
         </div>
 
         <div className='min-bs-0 bs-full !border-separator border-is border-bs'>
-          <div className={mx('p-1 min-bs-0 h-full overflow-auto')}>
+          <div className={mx('p-1 min-bs-0 bs-full overflow-auto')}>
             {selected ? (
               <ObjectViewer
                 object={toJsonSchema(selected)}

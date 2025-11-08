@@ -62,7 +62,7 @@ const GridStory = () => {
   }, []);
 
   return (
-    <div className='h-full aspect-square mx-auto'>
+    <div className='bs-full aspect-square mx-auto'>
       <div className='grid grid-cols-3 gap-2'>
         {models.map((model, i) => (
           <div key={i} className='aspect-square'>

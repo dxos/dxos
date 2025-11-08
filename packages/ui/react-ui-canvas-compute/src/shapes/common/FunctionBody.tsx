@@ -82,7 +82,7 @@ export const FunctionBody = ({
         {(inputs?.length ?? 0) > 0 && (
           <div className='flex flex-col'>
             {inputs?.map(({ name }) => (
-              <div key={name} className='px-2 truncate text-sm font-mono items-center' style={{ height: rowHeight }}>
+              <div key={name} className='pli-2 truncate text-sm font-mono items-center' style={{ height: rowHeight }}>
                 {name}
               </div>
             ))}
@@ -93,7 +93,7 @@ export const FunctionBody = ({
             {outputs?.map(({ name }) => (
               <div
                 key={name}
-                className='px-2 truncate text-sm font-mono items-center text-right'
+                className='pli-2 truncate text-sm font-mono items-center text-right'
                 style={{ height: rowHeight }}
               >
                 {name}

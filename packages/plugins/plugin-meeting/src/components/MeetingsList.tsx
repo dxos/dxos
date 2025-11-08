@@ -97,7 +97,7 @@ export const MeetingsList = ({ channel }: { channel: Channel.Channel }) => {
       </div>
       <List.Root<Meeting.Meeting> items={sortedMeetings} isItem={Schema.is(Meeting.Meeting)} getId={getId}>
         {({ items }) => (
-          <div role='list' className='flex flex-col w-full'>
+          <div role='list' className='flex flex-col is-full'>
             {items?.map((meeting) => (
               <MeetingItem key={meeting.id} meeting={meeting} getLabel={meetingMetadata.label} />
             ))}

@@ -26,7 +26,7 @@ export const ShortcutsHints = ({ onClose }: { onClose?: () => void }) => {
   const hints = bindings.filter((binding) => defaults.includes(binding.shortcut));
 
   return (
-    <div role='none' className='flex overflow-hidden px-2 gap-4'>
+    <div role='none' className='flex overflow-hidden pli-2 gap-4'>
       {hints.map((binding) => (
         <Shortcut key={binding.shortcut} binding={binding} />
       ))}

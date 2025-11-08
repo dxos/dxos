@@ -27,7 +27,7 @@ export const scrollAreaScrollbar: ComponentFunction<ScrollAreaStyleProps> = (_pr
 export const scrollAreaThumb: ComponentFunction<ScrollAreaStyleProps> = (_props, ...etc) =>
   mx(
     'flex-1 rounded-full relative',
-    "before:content-[''] before:absolute before:top-1/2 before:left-1/2 before:-translate-x-1/2 before:-translate-y-1/2 before:w-full before:h-full before:min-w-[6px] before:min-h-[6px]",
+    "before:content-[''] before:absolute before:top-1/2 before:left-1/2 before:-translate-x-1/2 before:-translate-y-1/2 before:is-full before:bs-full before:min-w-[6px] before:min-h-[6px]",
     ...etc,
   );
 

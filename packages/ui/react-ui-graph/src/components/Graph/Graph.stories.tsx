@@ -200,7 +200,7 @@ const DefaultStory = ({
 
   return (
     <Popover.Root open={!!popover} onOpenChange={(state) => !state && setPopover(undefined)}>
-      <div className={mx('w-full grid divide-x divide-separator', debug && 'grid-cols-[1fr_30rem]')}>
+      <div className={mx('is-full grid divide-x divide-separator', debug && 'grid-cols-[1fr_30rem]')}>
         <SVG.Root ref={context}>
           <SVG.Markers />
           {grid && <SVG.Grid {...(typeof grid === 'boolean' ? { axis: grid } : grid)} />}

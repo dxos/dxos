@@ -33,7 +33,7 @@ export const BeaconComponent = ({ shape }: ShapeComponentProps<BeaconShape>) => 
   const value = input?.type === 'executed' ? input.value : false;
 
   return (
-    <div className='flex w-full justify-center items-center'>
+    <div className='flex is-full justify-center items-center'>
       <Icon
         icon='ph--sun--regular'
         classNames={['transition opacity-20 duration-1000', isTruthy(value) && 'opacity-100 text-yellow-500']}

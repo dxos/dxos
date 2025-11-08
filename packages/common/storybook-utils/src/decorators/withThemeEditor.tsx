@@ -19,7 +19,7 @@ export const withThemeEditor: Decorator = (Story, context) => {
     <>
       <MemoizedStory />
       <div className='absolute top-4 bottom-4 right-4 z-10'>
-        <div className='h-full is-[35rem] overflow-auto bg-baseSurface border border-separator rounded'>
+        <div className='bs-full is-[35rem] overflow-auto bg-baseSurface border border-separator rounded'>
           <ThemeEditor />
         </div>
       </div>

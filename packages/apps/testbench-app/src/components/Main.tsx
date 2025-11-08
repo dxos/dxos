@@ -232,7 +232,7 @@ export const Main = () => {
         </div>
       </div>
       {showDevTools && (
-        <div className='flex flex-col w-[120rem] h-full bg-white dark:bg-black'>
+        <div className='flex flex-col w-[120rem] bs-full bg-white dark:bg-black'>
           <Suspense fallback={<></>}>
             <Devtools noRouter />
           </Suspense>

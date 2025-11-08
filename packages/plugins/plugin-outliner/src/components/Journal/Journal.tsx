@@ -46,7 +46,7 @@ export const JournalComponent = ({ journal, classNames, ...props }: JournalProps
   }, [journal, date]);
 
   return (
-    <div className={mx('flex flex-col w-full overflow-y-auto', classNames)}>
+    <div className={mx('flex flex-col is-full overflow-y-auto', classNames)}>
       {showAddEntry && (
         <div className='p-2'>
           <IconButton label={t('create entry label')} icon='ph--plus--regular' onClick={handleCreateEntry} />

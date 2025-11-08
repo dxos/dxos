@@ -103,7 +103,7 @@ export const SearchDialog = ({ pivotId }: SearchDialogProps) => {
             setQueryString(nextValue);
           }}
           placeholder={t('search placeholder')}
-          classNames='px-1 my-2'
+          classNames='pli-1 my-2'
         />
         <SearchList.Content classNames='max-bs-[24rem] overflow-auto'>
           {queryString.length > 0 ? (

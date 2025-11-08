@@ -68,7 +68,7 @@ const EnvironmentLabel = () => {
 
   return (
     <StatusBar.Item>
-      <StatusBar.Text classNames='text-xs text-subdued border border-separator rounded-full px-1'>
+      <StatusBar.Text classNames='text-xs text-subdued border border-separator rounded-full pli-1'>
         <span title={edgeEnv}>{edgeEnv[0]}</span>
       </StatusBar.Text>
     </StatusBar.Item>

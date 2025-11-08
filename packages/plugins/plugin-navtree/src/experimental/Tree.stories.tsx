@@ -189,7 +189,7 @@ const Sidebar = ({ mutate }: { mutate?: boolean }) => {
         />
       </div>
 
-      <div className='flex items-center my-2 px-2 gap-2'>
+      <div className='flex items-center my-2 pli-2 gap-2'>
         <IconButton icon='ph--plus-circle--regular' iconOnly label='Create space' onClick={handleCreateSpace} />
         <span className='grow text-sm' onClick={handleCreateSpace}>
           New space
