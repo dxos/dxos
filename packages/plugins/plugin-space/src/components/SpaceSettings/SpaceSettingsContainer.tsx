@@ -30,7 +30,7 @@ import { SpaceAction, SpaceForm } from '../../types';
 const FormSchema = SpaceForm.pipe(
   Schema.extend(
     Schema.Struct({
-      archived: Schema.Boolean.annotations({ title: 'Archive space' }),
+      archived: Schema.Boolean.annotations({ title: 'Archive Space' }),
     }),
   ),
 );

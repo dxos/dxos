@@ -13,8 +13,6 @@ const functions: FunctionDefinition[] = [MarkdownFunction.create, MarkdownFuncti
 
 export const MARKDOWN_BLUEPRINT_KEY = 'dxos.org/blueprint/markdown';
 
-const FENCED = '```';
-
 export const MarkdownBlueprint: Blueprint.Blueprint = Blueprint.make({
   key: MARKDOWN_BLUEPRINT_KEY,
   name: 'Markdown',
@@ -29,12 +27,12 @@ export const MarkdownBlueprint: Blueprint.Blueprint = Blueprint.make({
       For each diff, respond with the smallest possible matching span.
  
       Example:
-      ${FENCED}diff
+      ${'```'}diff
       - "There is a tyop in this sentence."
       + "There is a typo in this sentence."
-      - "This id goof."
-      + "This is good."
-      ${FENCED}
+      - "This id good."
+      + "This sentence is really good."
+      ${'```'}
     `,
   }),
 });
