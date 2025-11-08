@@ -23,7 +23,7 @@ export const QueriesPanel = ({ queries, ...props }: CustomPanelProps<{ queries: 
       title='Queries'
       info={<span>{queries.length.toLocaleString()}</span>}
     >
-      <table className='table-fixed w-full text-xs font-mono'>
+      <table className='table-fixed is-full text-xs font-mono'>
         <tbody>
           {queries.map((query, i) => (
             <tr key={i}>

@@ -48,7 +48,7 @@ export const SearchMain: FC<ThemedClassName<{ space: Space }>> = ({ classNames, 
   log.info('results', { results, webResults });
 
   return (
-    <div className={mx('flex flex-col grow h-full overflow-hidden', classNames)}>
+    <div className={mx('flex flex-col grow bs-full overflow-hidden', classNames)}>
       <Searchbar
         placeholder={t('search placeholder')}
         onChange={(text) => {

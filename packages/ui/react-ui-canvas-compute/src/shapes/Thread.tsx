@@ -42,7 +42,7 @@ export const ThreadComponent = ({ shape }: ShapeComponentProps<ThreadShape>) => 
 
   return (
     <Box shape={shape}>
-      <div ref={scrollRef} className='flex flex-col w-full overflow-y-scroll gap-2 p-2'>
+      <div ref={scrollRef} className='flex flex-col is-full overflow-y-scroll gap-2 p-2'>
         {[...items].map((item, i) => (
           <ThreadItem key={i} item={item} />
         ))}
@@ -63,7 +63,7 @@ export const ThreadItem = ({ classNames, item }: ThemedClassName<{ item: any }>)
     <div className={mx('flex', classNames, role === 'user' && 'justify-end')}>
       <div
         className={mx(
-          'block rounded-md p-1 px-2 text-sm',
+          'block rounded-md p-1 pli-2 text-sm',
           role === 'user'
             ? 'bg-blue-100 dark:bg-blue-800'
             : role === 'system'

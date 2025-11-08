@@ -108,7 +108,7 @@ const ChatDialogHeader = ({ classNames, title }: ChatDialogHeaderProps) => {
         </Dialog.Close>
       </Endcap>
       <Dialog.Title
-        classNames='flex w-full justify-center text-sm text-subdued select-none cursor-pointer'
+        classNames='flex is-full justify-center text-sm text-subdued select-none cursor-pointer'
         onClick={() => setExpanded((expanded) => !expanded)}
       >
         {title}

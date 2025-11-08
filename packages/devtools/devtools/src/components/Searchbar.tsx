@@ -29,7 +29,7 @@ export const Searchbar: FC<SearchbarProps> = ({ placeholder, value, onChange }) 
   };
 
   return (
-    <div className='flex w-full items-center'>
+    <div className='flex is-full items-center'>
       <Input.Root>
         <Input.TextInput
           ref={inputRef}

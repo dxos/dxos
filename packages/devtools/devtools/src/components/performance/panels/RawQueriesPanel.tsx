@@ -16,7 +16,7 @@ export const RawQueriesPanel = ({ queries, ...props }: CustomPanelProps<{ querie
       title='Query types'
       info={<span>{keys.length.toLocaleString()}</span>}
     >
-      <table className='table-fixed w-full text-xs font-mono'>
+      <table className='table-fixed is-full text-xs font-mono'>
         <tbody>
           {keys.map((key, i) => (
             <tr key={i}>

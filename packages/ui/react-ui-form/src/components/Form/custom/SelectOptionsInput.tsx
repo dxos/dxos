@@ -121,7 +121,7 @@ export const SelectOptionInput = ({ type, label, readonly, getStatus, getValue, 
             readonly={!!readonly}
           >
             {({ items }) => (
-              <div role='list' className='w-full overflow-auto'>
+              <div role='list' className='is-full overflow-auto'>
                 {items?.map((item) => (
                   <div key={item.id}>
                     <List.Item

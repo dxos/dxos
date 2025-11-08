@@ -16,8 +16,8 @@ export type EventListProps = {
 
 export const EventList = ({ events = [], selected, onSelect }: EventListProps) => {
   return (
-    <div className={mx('flex w-full overflow-y-scroll', attentionSurface)}>
-      <List classNames={mx('w-full divide-y', groupBorder)}>
+    <div className={mx('flex is-full overflow-y-scroll', attentionSurface)}>
+      <List classNames={mx('is-full divide-y', groupBorder)}>
         {events.map((event) => (
           <ListItem.Root
             key={event.id}

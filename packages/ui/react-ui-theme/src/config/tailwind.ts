@@ -43,6 +43,10 @@ export const tailwindConfig = ({
           cardMaxWidth: 'var(--dx-cardMaxWidth)',
           popoverMaxWidth: 'var(--dx-popoverMaxWidth)',
         },
+        backgroundImage: {
+          'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
+          'gradient-conic': 'conic-gradient(from 180deg at 50% 50%, var(--tw-gradient-stops))',
+        },
         borderRadius: {
           none: '0',
           sm: '0.25rem',
@@ -104,6 +108,7 @@ export const tailwindConfig = ({
             from: { opacity: 0 },
             to: { opacity: 1 },
           },
+
           // Accordion
           slideDown: {
             from: { height: '0px' },
@@ -174,41 +179,45 @@ export const tailwindConfig = ({
             },
           },
 
-          'progress-linear': {
-            '0%': {
-              transform: 'translateX(-100%)',
-            },
-            '85%, 100%': {
-              transform: `translateX(${(100 / 28) * 100}%)`,
-            },
+          // Border trail
+          ['trail']: {
+            to: { 'offset-distance': '100%' },
+          },
+          ['trail-offset']: {
+            '0%': { 'offset-distance': '50%' },
+            '100%': { 'offset-distance': '150%' },
           },
         },
         animation: {
-          'fade-in': 'fadeIn 100ms ease-in forwards',
+          ['fade-in']: 'fadeIn 100ms ease-in forwards',
+
+          // Border trail
+          ['trail']: 'trail 6s linear infinite',
+          ['trail-offset']: 'trail-offset 6s linear infinite',
 
           // Popper chrome
-          slideDownAndFade: 'slideDownAndFade 400ms cubic-bezier(0.16, 1, 0.3, 1)',
-          slideLeftAndFade: 'slideLeftAndFade 400ms cubic-bezier(0.16, 1, 0.3, 1)',
-          slideUpAndFade: 'slideUpAndFade 400ms cubic-bezier(0.16, 1, 0.3, 1)',
-          slideRightAndFade: 'slideRightAndFade 400ms cubic-bezier(0.16, 1, 0.3, 1)',
+          ['slideDownAndFade']: 'slideDownAndFade 400ms cubic-bezier(0.16, 1, 0.3, 1)',
+          ['slideLeftAndFade']: 'slideLeftAndFade 400ms cubic-bezier(0.16, 1, 0.3, 1)',
+          ['slideUpAndFade']: 'slideUpAndFade 400ms cubic-bezier(0.16, 1, 0.3, 1)',
+          ['slideRightAndFade']: 'slideRightAndFade 400ms cubic-bezier(0.16, 1, 0.3, 1)',
 
           // Toast
-          'toast-hide': 'toast-hide 100ms ease-in forwards',
-          'toast-slide-in-right': 'toast-slide-in-right 150ms cubic-bezier(0.16, 1, 0.3, 1)',
-          'toast-slide-in-bottom': 'toast-slide-in-bottom 150ms cubic-bezier(0.16, 1, 0.3, 1)',
-          'toast-swipe-out': 'toast-swipe-out 100ms ease-out forwards',
+          ['toast-hide']: 'toast-hide 100ms ease-in forwards',
+          ['toast-slide-in-right']: 'toast-slide-in-right 150ms cubic-bezier(0.16, 1, 0.3, 1)',
+          ['toast-slide-in-bottom']: 'toast-slide-in-bottom 150ms cubic-bezier(0.16, 1, 0.3, 1)',
+          ['toast-swipe-out']: 'toast-swipe-out 100ms ease-out forwards',
 
           // Accordion
-          slideDown: 'slideDown 300ms cubic-bezier(0.87, 0, 0.13, 1)',
-          slideUp: 'slideUp 300ms cubic-bezier(0.87, 0, 0.13, 1)',
+          ['slideDown']: 'slideDown 300ms cubic-bezier(0.87, 0, 0.13, 1)',
+          ['slideUp']: 'slideUp 300ms cubic-bezier(0.87, 0, 0.13, 1)',
 
-          spin: 'spin 1.5s linear infinite',
-          'spin-slow': 'spin 3s linear infinite',
+          ['spin']: 'spin 1.5s linear infinite',
+          ['spin-slow']: 'spin 3s linear infinite',
 
-          shimmer: 'shimmer-loop 2s infinite',
-          'halo-pulse': 'halo-pulse 2s ease-out infinite',
-          'progress-indeterminate': 'progress-indeterminate 2s ease-out infinite',
-          'progress-linear': 'progress-linear 2s ease-out infinite',
+          ['shimmer']: 'shimmer-loop 2s infinite',
+          ['halo-pulse']: 'halo-pulse 2s ease-out infinite',
+          ['progress-indeterminate']: 'progress-indeterminate 2s ease-out infinite',
+          ['progress-linear']: 'progress-linear 2s ease-out infinite',
         },
       },
       extendTokens,

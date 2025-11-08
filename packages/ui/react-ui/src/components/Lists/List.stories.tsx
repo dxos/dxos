@@ -229,7 +229,7 @@ export const SelectableListbox: Story = {
             onClick={() => setSelectedId(id)}
             onKeyUp={(event) => handleKeyUp(event, id)}
           >
-            <ListItem.Heading classNames='flex pis-1 pie-1 items-center grow truncate'>{text}</ListItem.Heading>
+            <ListItem.Heading classNames='flex pli-1 items-center grow truncate'>{text}</ListItem.Heading>
           </ListItem.Root>
         ))}
       </List>

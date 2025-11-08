@@ -42,9 +42,7 @@ const placeholder = (trigger: string[]) =>
     .children(
       Domino.of('span').text('Press'),
       ...trigger.map((trigger) =>
-        Domino.of('span')
-          .text(trigger)
-          .classNames('border border-separator rounded-sm mx-1 pis-1 pie-1 pbs-[2px] pbe-[3px]'),
+        Domino.of('span').text(trigger).classNames('border border-separator rounded-sm mx-1 pli-1 pbs-[2px] pbe-[3px]'),
       ),
       Domino.of('span').text('for commands'),
     )

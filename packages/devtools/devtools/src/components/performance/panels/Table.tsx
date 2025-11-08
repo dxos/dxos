@@ -14,7 +14,7 @@ export type TableProps = {
 
 export const Table = ({ rows }: TableProps) => {
   return (
-    <div className='w-full text-xs font-mono'>
+    <div className='is-full text-xs font-mono'>
       {rows.map(([prefix, label, value, unit], i) => (
         <div key={i} className='grid grid-cols-[1rem_2fr_1fr_3rem]'>
           <div className='p-1 text-subdued'>{prefix}</div>

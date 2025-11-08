@@ -80,7 +80,7 @@ const Key: FC<{ char: string }> = ({ char }) => (
 
 const CommentTooltip: FC<{ shortcut: string }> = ({ shortcut }) => {
   return (
-    <div className='flex items-center gap-2 px-2 py-2 bg-neutral-700 text-white text-xs rounded'>
+    <div className='flex items-center gap-2 pli-2 plb-2 bg-neutral-700 text-white text-xs rounded'>
       <div>Create comment</div>
       <div className='flex gap-1'>
         {keySymbols(parseShortcut(shortcut)).map((char) => (

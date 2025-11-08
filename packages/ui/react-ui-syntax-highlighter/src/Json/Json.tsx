@@ -55,7 +55,7 @@ export const JsonFilter = ({ classNames, data: initialData, replacer, testId }: 
     <div className='flex flex-col grow overflow-hidden'>
       <Input.Root validationValence={error ? 'error' : 'success'}>
         <Input.TextInput
-          classNames={['p-1 px-2 font-mono', error && 'border-red-500']}
+          classNames={['p-1 pli-2 font-mono', error && 'border-red-500']}
           variant='subdued'
           value={text}
           onChange={(event) => setText(event.target.value)}

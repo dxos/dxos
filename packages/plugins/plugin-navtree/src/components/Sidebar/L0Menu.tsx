@@ -102,7 +102,7 @@ const l0Breakpoints: Record<string, string> = {
 };
 
 const l0ItemRoot =
-  'group/l0item flex w-full justify-center items-center relative data[type!="collection"]:cursor-pointer app-no-drag dx-focus-ring-group';
+  'group/l0item flex is-full justify-center items-center relative data[type!="collection"]:cursor-pointer app-no-drag dx-focus-ring-group';
 
 const l0ItemContent = 'flex justify-center items-center dx-focus-ring-group-indicator transition-colors rounded-sm';
 

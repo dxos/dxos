@@ -8,7 +8,7 @@ import { mx } from '@dxos/react-ui-theme';
 
 export const Tree: FC<{ data?: object }> = ({ data }) => {
   return (
-    <div className='flex is-full py-2 overflow-auto'>
+    <div className='flex is-full plb-2 overflow-auto'>
       <Node data={data} root />
     </div>
   );
@@ -70,7 +70,7 @@ const Scalar: FC<{ value: any }> = ({ value }) => {
 
 const Box: FC<HTMLAttributes<HTMLDivElement>> = ({ children, className, ...props }) => {
   return (
-    <div className={mx('flex px-2 font-mono truncate', className)} {...props}>
+    <div className={mx('flex pli-2 font-mono truncate', className)} {...props}>
       {children}
     </div>
   );
