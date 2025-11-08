@@ -25,11 +25,9 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {
   args: {
     children: (
-      <div className='p-4 text-center'>
+      <div className='pli-8 plb-4 text-center'>
         <h3 className='text-lg font-semibold mb-2'>Animated Border</h3>
-        <p className='text-neutral-600 dark:text-neutral-400'>
-          A light effect travels around the border using CSS motion path.
-        </p>
+        <p className='text-neutral-600 dark:text-neutral-400'>A light effect travels around the border.</p>
       </div>
     ),
   },
