@@ -76,7 +76,7 @@ export const CallDebugPanel = ({ state }: CallDebugPanelProps) => {
       maxHeight={false}
       info={<div className='flex items-center gap-2'> {state?.call.joined ? 'Active' : 'Inactive'}</div>}
     >
-      <div className='flex flex-col w-full gap-2 text-xs'>
+      <div className='flex flex-col is-full gap-2 text-xs'>
         <div className='flex items-center gap-2'>
           <Input.Root>
             <Input.Label classNames={'text-sm'}>{t('show webrtc stats title')}</Input.Label>
@@ -160,7 +160,7 @@ export type TableProps = {
 
 export const Table = ({ rows }: TableProps) => {
   return (
-    <div className='w-full text-xs font-mono'>
+    <div className='is-full text-xs font-mono'>
       {rows.map(([prefix, label, value, unit], i) => (
         <div key={i} className='grid grid-cols-[3fr_1fr_1fr_1fr]'>
           <div className='p-1'>{prefix}</div>

@@ -51,7 +51,7 @@ export const Bitbar: FC<BitbarParams> = ({
   };
 
   return (
-    <div ref={ref} className={mx('flex shrink-0 w-full', className)} style={{ minHeight: height }}>
+    <div ref={ref} className={mx('flex shrink-0 is-full', className)} style={{ minHeight: height }}>
       {range(buckets).map((index) => (
         <div key={index} style={{ width: size, marginRight: margin }} className={getColor(index)} />
       ))}

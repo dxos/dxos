@@ -105,14 +105,14 @@ export const AutomationPanel = ({ classNames, space, object, initialTrigger, onD
           getId={(field) => field.id}
         >
           {({ items: filteredTriggers }) => (
-            <div role='list' className='flex flex-col w-full'>
+            <div role='list' className='flex flex-col is-full'>
               {filteredTriggers?.map((trigger) => {
                 const copyAction = getCopyAction(client, trigger);
                 return (
                   <List.Item<Trigger.Trigger>
                     key={trigger.id}
                     item={trigger}
-                    classNames={mx(grid, ghostHover, 'items-center', 'px-2')}
+                    classNames={mx(grid, ghostHover, 'items-center', 'pli-2')}
                   >
                     <Input.Root>
                       <Input.Switch
@@ -123,7 +123,7 @@ export const AutomationPanel = ({ classNames, space, object, initialTrigger, onD
 
                     <div className={'flex'}>
                       <List.ItemTitle
-                        classNames='px-1 cursor-pointer w-0 shrink truncate'
+                        classNames='pli-1 cursor-pointer w-0 shrink truncate'
                         onClick={() => handleSelect(trigger)}
                       >
                         {getFunctionName(functions, trigger) ?? '∅'}

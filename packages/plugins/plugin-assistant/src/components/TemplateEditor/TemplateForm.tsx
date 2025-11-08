@@ -26,7 +26,7 @@ export const TemplateForm = ({ id, template, commandEditable = true }: TemplateF
   usePromptInputs(template);
 
   return (
-    <div className={mx('flex flex-col w-full overflow-hidden gap-4', groupBorder)}>
+    <div className={mx('flex flex-col is-full overflow-hidden gap-4', groupBorder)}>
       {/* {commandEditable && (
         <div className='flex items-center pl-4'>
           <span className='text-neutral-500'>/</span>

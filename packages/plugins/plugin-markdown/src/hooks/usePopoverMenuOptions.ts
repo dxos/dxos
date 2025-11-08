@@ -58,7 +58,7 @@ export const usePopoverMenuOptions = ({
             Domino.of('span').text('Press'),
             ...trigger.map((text) =>
               Domino.of('span')
-                .classNames('mx-1 px-1.5 pt-[1px] pb-[2px] border border-separator rounded-sm')
+                .classNames('mx-1 pli-1.5 pt-[1px] pb-[2px] border border-separator rounded-sm')
                 .text(text),
             ),
             Domino.of('span').text('for commands.'),

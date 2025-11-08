@@ -2,6 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
+export * from './AnimatedBorder';
 export * from './Flex';
 export * from './MarkdownStream';
 export * from './MarkdownViewer';

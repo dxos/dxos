@@ -19,6 +19,6 @@ export class SummaryWidget extends WidgetType {
   }
 
   override toDOM() {
-    return Domino.of('div').classNames('mbs-2 mbe-4 pis-2 pie-2 text-sm text-placeholder').text(this.text).build();
+    return Domino.of('div').classNames('mbs-2 mbe-4 pli-2 text-sm text-placeholder').text(this.text).build();
   }
 }

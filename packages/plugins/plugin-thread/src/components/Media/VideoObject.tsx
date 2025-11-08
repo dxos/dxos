@@ -32,7 +32,7 @@ export const VideoObject = memo(
     return (
       <video
         className={mx(
-          'w-full aspect-video',
+          'is-full aspect-video',
           flip && 'scale-x-[-1]',
           contain ? 'object-contain' : 'object-cover',
           classNames,

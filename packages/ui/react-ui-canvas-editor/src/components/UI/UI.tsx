@@ -38,7 +38,7 @@ export const UI = ({ showTools, showToolbar }: UIProps) => {
   };
 
   return (
-    <div {...testId<TestId>('dx-ui')} className={mx('absolute h-full inset-0', eventsNone)}>
+    <div {...testId<TestId>('dx-ui')} className={mx('absolute bs-full inset-0', eventsNone)}>
       <div>
         <div className='absolute top-2 left-2'>{debug && <FPS bar='bg-cyan-500' />}</div>
       </div>

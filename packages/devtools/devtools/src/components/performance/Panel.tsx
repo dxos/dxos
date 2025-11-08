@@ -36,10 +36,10 @@ export const Panel = ({
   return (
     <div className='flex flex-col'>
       <div
-        className='flex items-center justify-between px-2 text-sm text-fine cursor-pointer'
+        className='flex items-center justify-between pli-2 text-sm text-fine cursor-pointer'
         onClick={() => onToggle?.(id, !open)}
       >
-        <div className='flex items-center gap-2 py-1'>
+        <div className='flex items-center gap-2 plb-1'>
           <Icon icon={icon} size={4} />
           <span className='truncate'>{title}</span>
         </div>
@@ -48,10 +48,10 @@ export const Panel = ({
       {children && (
         <div
           className={mx(
-            'flex w-full overflow-x-hidden overflow-y-scroll transition-max-height',
-            maxHeight && 'max-h-[240px]',
-            !open && 'max-h-0',
-            padding && 'px-2',
+            'flex is-full overflow-x-hidden overflow-y-scroll transition-max-height',
+            maxHeight && 'max-bs-[240px]',
+            !open && 'max-bs-0',
+            padding && 'pli-2',
             className,
           )}
         >

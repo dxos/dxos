@@ -77,11 +77,11 @@ const Section: FC<{
 }> = ({ title, items, striped }) => {
   const stripeClassNames = 'odd:bg-neutral-50 dark:odd:bg-neutral-800';
   const gridClassNames = 'grid grid-cols-[8rem_1fr]';
-  const subGridClassNames = mx('col-span-full grid grid-cols-subgrid text-xs px-2', striped && stripeClassNames);
+  const subGridClassNames = mx('col-span-full grid grid-cols-subgrid text-xs pli-2', striped && stripeClassNames);
 
   return (
     <div>
-      <h1 className='px-2 text-sm'>{title}</h1>
+      <h1 className='pli-2 text-sm'>{title}</h1>
       <div className={gridClassNames}>
         {items.map(({ name, description, subitems }, i) => (
           <Fragment key={i}>

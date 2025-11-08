@@ -193,7 +193,7 @@ export const TreeNodeRow = (props: TreeNodeProps & { className?: string }) => {
     <Grid
       style={{ paddingLeft: `${(depth - 1) * 24}px` }}
       className={mx(
-        'group w-full items-center cursor-pointer bg-hoverSurface',
+        'group is-full items-center cursor-pointer bg-hoverSurface',
         // TODO(burdon): Use data-active.
         selected?.[id] && 'bg-activeSurface',
         className,

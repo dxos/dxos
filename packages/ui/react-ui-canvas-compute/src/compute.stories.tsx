@@ -119,7 +119,7 @@ const DefaultStory = ({
   }
 
   return (
-    <div className='grid grid-cols-[1fr,360px] w-full h-full'>
+    <div className='grid grid-cols-[1fr,360px] is-full bs-full'>
       <ComputeContext.Provider value={{ controller }}>
         <Container id={id} classNames={['flex grow overflow-hidden', !sidebar && 'col-span-2']}>
           <Editor.Root<ComputeShape>
@@ -141,7 +141,7 @@ const DefaultStory = ({
       </ComputeContext.Provider>
 
       {sidebar && (
-        <Container id='sidebar' classNames='flex flex-col h-full overflow-hidden'>
+        <Container id='sidebar' classNames='flex flex-col bs-full overflow-hidden'>
           <Toolbar.Root>
             <Select.Root value={sidebar} onValueChange={(value) => setSidebar(value as RenderProps['sidebar'])}>
               <Select.TriggerButton classNames='is-full'>{sidebar}</Select.TriggerButton>
@@ -160,7 +160,7 @@ const DefaultStory = ({
             </Select.Root>
           </Toolbar.Root>
 
-          <div className='flex flex-col h-full overflow-hidden divide-y divider-separator'>
+          <div className='flex flex-col bs-full overflow-hidden divide-y divider-separator'>
             {sidebar === 'selected' && selected && (
               <div>Form</div>
               // <Form<ComputeNode> schema={FormSchema} values={getComputeNode(selected.id) ?? {}} Custom={{}} />

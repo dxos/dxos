@@ -35,7 +35,7 @@ export const AudioComponent = ({ shape }: ShapeComponentProps<AudioShape>) => {
 
   // https://docs.pmnd.rs/react-three-fiber/api/canvas#render-props
   return (
-    <div className='flex w-full justify-center items-center'>
+    <div className='flex is-full justify-center items-center'>
       <Icon
         icon={active ? 'ph--microphone--regular' : 'ph--microphone-slash--regular'}
         classNames={['transition opacity-20 duration-1000', active && 'opacity-100 text-red-500']}

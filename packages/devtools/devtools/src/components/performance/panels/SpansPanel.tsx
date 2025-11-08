@@ -21,7 +21,7 @@ export const SpansPanel = ({ spans, ...props }: CustomPanelProps<{ spans?: Span[
       title='Spans'
       info={<span>{spans?.length.toLocaleString()}</span>}
     >
-      <table className='table-fixed w-full text-xs font-mono'>
+      <table className='table-fixed is-full text-xs font-mono'>
         <tbody>
           {spans?.map(
             ({ id, resourceId, methodName, startTs, endTs }) =>

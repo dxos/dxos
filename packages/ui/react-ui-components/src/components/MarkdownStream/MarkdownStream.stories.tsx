@@ -17,7 +17,7 @@ import { keyToFallback } from '@dxos/util';
 
 import { MarkdownStream, type MarkdownStreamController, type MarkdownStreamProps } from './MarkdownStream';
 import { type TextStreamOptions, textStream } from './testing';
-import DOC from './testing/doc.md?raw';
+import TEXT from './testing/text.md?raw';
 import { SuggestionWidget } from './widgets';
 
 // TODO(burdon): Get user hue from identity.
@@ -112,9 +112,9 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
   args: {
-    content: DOC,
-    fadeIn: true,
-    cursor: true,
+    content: TEXT,
     registry: testRegistry,
+    fadeIn: true,
+    cursor: false,
   },
 };

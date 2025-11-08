@@ -26,7 +26,7 @@ export const Default: Story = {
   render: () => {
     const size = 'w-[128px] h-[128px]';
     return (
-      <div className='absolute flex w-full h-full items-center justify-center'>
+      <div className='absolute flex is-full bs-full items-center justify-center'>
         <div className='grid grid-cols-3 gap-16'>
           <>
             <div />
