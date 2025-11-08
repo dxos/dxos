@@ -29,7 +29,7 @@ export const PersonCard = ({ children, role, subject, activeSpace, onSelect }: P
             imgSrc={image}
             icon='ph--user--regular'
             size={16}
-            classNames='text-subdued'
+            classNames={['text-subdued', !image && 'opacity-50']}
             hue='neutral'
             variant='square'
           />
