@@ -80,7 +80,7 @@
     "luxon": "^3.4.4",
     "ollama": "^0.5.11",
     "react-charts": "beta",
-    "react-drag-drop-files": "^2.3.8",
+    "react-drag-drop-files": "^3.1.0",
     "react-is": "~19.2.0",
     "react-json-tree": "^0.18.0",
     "react-resize-detector": "^11.0.1",

@@ -82,7 +82,7 @@
     "@preact/signals-core": "^1.12.1",
     "jszip": "^3.10.1",
     "localforage": "^1.10.0",
-    "react-drag-drop-files": "^2.3.8",
+    "react-drag-drop-files": "^3.1.0",
     "react-is": "~19.2.0",
     "react-qr-rounded": "^1.0.0"
   },
