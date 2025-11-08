@@ -12,14 +12,14 @@ import { AnimatedBorder } from './AnimatedBorder';
 const meta = {
   title: 'ui/react-ui-components/AnimatedBorder',
   component: AnimatedBorder,
-  decorators: [withTheme],
-  parameters: {
-    layout: 'centered',
-  },
   argTypes: {
     animate: {
       control: 'boolean',
     },
+  },
+  decorators: [withTheme],
+  parameters: {
+    layout: 'centered',
   },
 } satisfies Meta<typeof AnimatedBorder>;
 
@@ -31,8 +31,8 @@ export const Default: Story = {
   args: {
     classNames: 'border border-subduedSeparator',
     children: (
-      <div className='pli-4 plb-2 text-center text-description'>
-        <p>A light effect travels around the border.</p>
+      <div className='pli-4 plb-2 text-center text-description text-sm'>
+        <p>A light effect that travels around the border.</p>
       </div>
     ),
   },
