@@ -10,7 +10,7 @@ import { mx } from '@dxos/react-ui-theme';
 export type AnimatedBorderProps = ThemedClassName<PropsWithChildren>;
 
 /**
- * AnimatedBorder component using CSS Motion Path.
+ * AnimatedBorder using CSS Motion Path.
  */
 export const AnimatedBorder = ({ children, classNames }: AnimatedBorderProps) => {
   return <div className={mx(classNames)}>{children}</div>;
