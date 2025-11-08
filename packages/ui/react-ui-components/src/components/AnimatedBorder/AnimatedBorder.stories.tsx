@@ -24,10 +24,11 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
   args: {
+    animate: true,
+    classNames: 'border border-subduedSeparator',
     children: (
-      <div className='pli-8 plb-4 text-center'>
-        <h3 className='text-lg font-semibold mb-2'>Animated Border</h3>
-        <p className='text-neutral-600 dark:text-neutral-400'>A light effect travels around the border.</p>
+      <div className='pli-4 plb-2 text-center text-description'>
+        <p>A light effect travels around the border.</p>
       </div>
     ),
   },

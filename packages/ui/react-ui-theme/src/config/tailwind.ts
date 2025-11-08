@@ -43,6 +43,10 @@ export const tailwindConfig = ({
           cardMaxWidth: 'var(--dx-cardMaxWidth)',
           popoverMaxWidth: 'var(--dx-popoverMaxWidth)',
         },
+        backgroundImage: {
+          'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
+          'gradient-conic': 'conic-gradient(from 180deg at 50% 50%, var(--tw-gradient-stops))',
+        },
         borderRadius: {
           none: '0',
           sm: '0.25rem',
@@ -175,17 +179,21 @@ export const tailwindConfig = ({
             },
           },
 
-          'progress-linear': {
-            '0%': {
-              transform: 'translateX(-100%)',
-            },
-            '85%, 100%': {
-              transform: `translateX(${(100 / 28) * 100}%)`,
-            },
+          // Border trail
+          ['trail']: {
+            to: { 'offset-distance': '100%' },
+          },
+          ['trail-offset']: {
+            '0%': { 'offset-distance': '50%' },
+            '100%': { 'offset-distance': '150%' },
           },
         },
         animation: {
           ['fade-in']: 'fadeIn 100ms ease-in forwards',
+
+          // Border trail
+          ['trail']: 'trail 6s linear infinite',
+          ['trail-offset']: 'trail-offset 6s linear infinite',
 
           // Popper chrome
           ['slideDownAndFade']: 'slideDownAndFade 400ms cubic-bezier(0.16, 1, 0.3, 1)',

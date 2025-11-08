@@ -14,42 +14,4 @@
   .animate-blink {
     animation: blink 1s step-start infinite;
   }
-
-  @keyframes border-light-path {
-    0% {
-      top: 0%;
-      left: 0%;
-      opacity: 0;
-    }
-    5% {
-      opacity: 1;
-    }
-    25% {
-      top: 0%;
-      left: 100%;
-      opacity: 1;
-    }
-    50% {
-      top: 100%;
-      left: 100%;
-      opacity: 1;
-    }
-    75% {
-      top: 100%;
-      left: 0%;
-      opacity: 1;
-    }
-    95% {
-      opacity: 1;
-    }
-    100% {
-      top: 0%;
-      left: 0%;
-      opacity: 0;
-    }
-  }
-
-  .animate-border-light {
-    animation: border-light-path 3s ease-in-out infinite;
-  }
 }
