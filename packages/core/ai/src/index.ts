@@ -8,8 +8,7 @@ export * as AiService from './AiService';
 
 export * from './defs';
 export * from './errors';
-export * from './model';
+export * from './memoization';
 export * from './status-report';
 export * from './tools';
 export * from './util';
-export * from './memoization';
