@@ -82,39 +82,51 @@ export class AiModelResolver extends Context.Tag('@dxos/ai/AiModelResolver')<
 
 export const AnthropicResolver = AiModelResolver.fromModelMap(
   Effect.gen(function* () {
-    // TODO(burdon): Reconcile with ModelName.
     return {
-      '@anthropic/claude-3-5-sonnet-20241022': yield* AnthropicLanguageModel.model('claude-3-5-sonnet-20241022'),
-      '@anthropic/claude-3-5-haiku-20241022': yield* AnthropicLanguageModel.model('claude-3-5-haiku-20241022'),
       '@anthropic/claude-3-5-haiku-latest': yield* AnthropicLanguageModel.model('claude-3-5-haiku-latest'),
+      '@anthropic/claude-3-5-haiku-20241022': yield* AnthropicLanguageModel.model('claude-3-5-haiku-20241022'),
+      '@anthropic/claude-3-5-sonnet-20241022': yield* AnthropicLanguageModel.model('claude-3-5-sonnet-20241022'),
+      '@anthropic/claude-opus-4-0': yield* AnthropicLanguageModel.model('claude-opus-4-0'),
       '@anthropic/claude-haiku-4-5': yield* AnthropicLanguageModel.model('claude-haiku-4-5'),
       '@anthropic/claude-sonnet-4-0': yield* AnthropicLanguageModel.model('claude-sonnet-4-0'),
       '@anthropic/claude-sonnet-4-5': yield* AnthropicLanguageModel.model('claude-sonnet-4-5'),
-      '@anthropic/claude-opus-4-0': yield* AnthropicLanguageModel.model('claude-opus-4-0'),
-    };
+    } satisfies Partial<Record<ModelName, Layer.Layer<LanguageModel.LanguageModel, AiModelNotAvailableError, never>>>;
   }),
 );
 
-export const LMSTUDIO_ENDPOINT = 'http://localhost:1234/v1';
+export const OpenAiResolver = AiModelResolver.fromModelMap(
+  Effect.gen(function* () {
+    return {
+      '@openai/gpt-4o': yield* OpenAiLanguageModel.model('gpt-4o'),
+      '@openai/gpt-4o-mini': yield* OpenAiLanguageModel.model('gpt-4o-mini'),
+      '@openai/o1': yield* OpenAiLanguageModel.model('o1'),
+      '@openai/o3': yield* OpenAiLanguageModel.model('o3'),
+      '@openai/o3-mini': yield* OpenAiLanguageModel.model('o3-mini'),
+    } satisfies Partial<Record<ModelName, Layer.Layer<LanguageModel.LanguageModel, AiModelNotAvailableError, never>>>;
+  }),
+);
+
+export const DEFAULT_LMSTUDIO_ENDPOINT = 'http://localhost:1234/v1';
 
 export const LMStudioResolver = AiModelResolver.fromModelMap(
   Effect.gen(function* () {
     return {
-      // TODO(dmaretskyi): Add more LMStudio models.
       '@google/gemma-3-27b': yield* OpenAiLanguageModel.model('google/gemma-3-27b'),
       '@meta/llama-3.2-3b-instruct': yield* OpenAiLanguageModel.model('llama-3.2-3b-instruct'),
-    };
+    } satisfies Partial<Record<ModelName, Layer.Layer<LanguageModel.LanguageModel, AiModelNotAvailableError, never>>>;
   }).pipe(
     Effect.provide(
       OpenAiClient.layer({
-        apiUrl: LMSTUDIO_ENDPOINT,
+        apiUrl: DEFAULT_LMSTUDIO_ENDPOINT,
       }),
     ),
   ),
 );
 
+export const DEFAULT_OLLAMA_ENDPOINT = 'http://localhost:11434';
+
 export const OllamaResolver = ({
-  host = 'http://localhost:11434',
+  host = DEFAULT_OLLAMA_ENDPOINT,
   transformClient,
 }: {
   readonly host?: string;
@@ -126,7 +138,7 @@ export const OllamaResolver = ({
         '@google/gemma-3-27b': yield* OpenAiLanguageModel.model('gemma-3-27b'),
         'deepseek-r1:latest': yield* OpenAiLanguageModel.model('deepseek-r1:latest'),
         'qwen2.5:14b': yield* OpenAiLanguageModel.model('qwen2.5:14b'),
-      };
+      } satisfies Partial<Record<ModelName, Layer.Layer<LanguageModel.LanguageModel, AiModelNotAvailableError, never>>>;
     }).pipe(
       Effect.provide(
         OpenAiClient.layer({
@@ -136,18 +148,6 @@ export const OllamaResolver = ({
       ),
     ),
   );
-
-export const OpenAiResolver = AiModelResolver.fromModelMap(
-  Effect.gen(function* () {
-    return {
-      '@openai/gpt-4o': yield* OpenAiLanguageModel.model('gpt-4o'),
-      '@openai/gpt-4o-mini': yield* OpenAiLanguageModel.model('gpt-4o-mini'),
-      '@openai/o1': yield* OpenAiLanguageModel.model('o1'),
-      '@openai/o3': yield* OpenAiLanguageModel.model('o3'),
-      '@openai/o3-mini': yield* OpenAiLanguageModel.model('o3-mini'),
-    };
-  }),
-);
 
 /**
  * @deprecated This is a preset and we should not use it directly.

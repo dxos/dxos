@@ -27,6 +27,7 @@ export const num = () => faker.number.int({ min: 0, max: 9999 }).toLocaleString(
 export const img = '![dxos](https://dxos.network/dxos-logotype-blue.png)';
 
 export const code = str(
+  // prettier-ignore
   '// Code',
   'const Component = () => {',
   '  const x = 100;',
@@ -38,7 +39,7 @@ export const code = str(
 // Content blocks for stories
 export const content = {
   tasks: str(
-    //
+    // prettier-ignore
     '### TaskList',
     '',
     `- [x] ${faker.lorem.sentences()}`,
@@ -50,7 +51,7 @@ export const content = {
   ),
 
   bullets: str(
-    //
+    // prettier-ignore
     '### BulletList',
     '',
     `- ${faker.lorem.sentences()}`,
@@ -62,7 +63,7 @@ export const content = {
   ),
 
   numbered: str(
-    //
+    // prettier-ignore
     '### OrderedList (part 1)',
     '',
     `1. ${faker.lorem.sentences()}`,
@@ -81,11 +82,34 @@ export const content = {
 
   typescript: code,
 
-  codeblocks: str('### Code', '', '```bash', '$ ls -las', '```', '', '```tsx', code, '```', ''),
+  codeblocks: str(
+    // prettier-ignore
+    '### Code',
+    '',
+    '```bash',
+    '$ ls -las',
+    '```',
+    '',
+    '```tsx',
+    code,
+    '```',
+    '',
+  ),
 
-  comment: str('<!--', 'A comment', '-->', '', 'No comment.', 'Partial comment. <!-- comment. -->'),
+  comment: str(
+    // prettier-ignore
+    '### Comment',
+    '',
+    '<!--',
+    'A comment',
+    '-->',
+    '',
+    'Partial comment. <!-- comment. -->',
+    '',
+  ),
 
   links: str(
+    // prettier-ignore
     '### Links',
     '',
     'This is a naked link https://dxos.org within a sentence.',
@@ -97,6 +121,7 @@ export const content = {
   ),
 
   table: str(
+    // prettier-ignore
     '### Tables',
     '',
     `| ${faker.lorem.word().padStart(12)} | ${faker.lorem.word().padStart(12)} | ${faker.lorem.word().padStart(12)} |`,
@@ -113,9 +138,16 @@ export const content = {
     ...[1, 2, 3, 4, 5, 6].map((level) => ['#'.repeat(level) + ` Heading ${level}`, faker.lorem.sentences(), '']).flat(),
   ),
 
-  formatting: str('### Formatting', '', 'This this is **bold**, ~~strikethrough~~, _italic_, and `f(INLINE)`.', ''),
+  formatting: str(
+    // prettier-ignore
+    '### Formatting',
+    '',
+    'This this is **bold**, ~~strikethrough~~, _italic_, and `f(INLINE)`.',
+    '',
+  ),
 
   blockquotes: str(
+    // prettier-ignore
     '### Blockquotes',
     '',
     '> This is a block quote.',
@@ -154,6 +186,7 @@ export const text = str(
   '---',
   '## Misc',
   content.codeblocks,
+  content.comment,
   content.table,
   content.image,
   content.footer,

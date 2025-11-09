@@ -100,6 +100,8 @@ export const ViewSchema = Schema.Struct({
     }),
   );
 
+// TODO(burdon): Workaround for build issue: TS2742.
+//  See "import { View as _View } ..."
 export interface View extends Schema.Schema.Type<typeof ViewSchema> {}
 export interface ViewEncoded extends Schema.Schema.Encoded<typeof ViewSchema> {}
 export const View: Schema.Schema<View, ViewEncoded> = ViewSchema;
