@@ -20,7 +20,7 @@ import { Message } from '@dxos/types';
 
 import { parseResponse } from './AiParser';
 import { preprocessPrompt } from './AiPreprocessor';
-import { LMSTUDIO_ENDPOINT } from './AiServiceRouter';
+import { DEFAULT_LMSTUDIO_ENDPOINT } from './AiServiceRouter';
 
 /**
  * To start the LM Studio server:
@@ -76,7 +76,7 @@ describe.skip('lm-studio', () => {
           // NOTE: Actual model name is ignored by server.
           OpenAiLanguageModel.model('google/gemma-3-27b'),
           OpenAiClient.layer({
-            apiUrl: LMSTUDIO_ENDPOINT,
+            apiUrl: DEFAULT_LMSTUDIO_ENDPOINT,
           }).pipe(Layer.provide(FetchHttpClient.layer)),
         ),
       ),
