@@ -13,8 +13,8 @@ import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
 
 import { AiService } from './AiService';
+import { type ModelName as ModelName } from './defs';
 import { AiModelNotAvailableError } from './errors';
-import { type ModelName as ModelName } from './model';
 
 // TODO(burdon): Determine canoncical naming and resolution of different models by provider.
 //  Consider: Base model (e.g., claude-opus-4-0), Provider (e.g., anhtropic), Registry (cloudflare), Runtime (dxos-remote).
@@ -82,6 +82,7 @@ export class AiModelResolver extends Context.Tag('@dxos/ai/AiModelResolver')<
 
 export const AnthropicResolver = AiModelResolver.fromModelMap(
   Effect.gen(function* () {
+    // TODO(burdon): Reconcile with ModelName.
     return {
       '@anthropic/claude-3-5-sonnet-20241022': yield* AnthropicLanguageModel.model('claude-3-5-sonnet-20241022'),
       '@anthropic/claude-3-5-haiku-20241022': yield* AnthropicLanguageModel.model('claude-3-5-haiku-20241022'),
