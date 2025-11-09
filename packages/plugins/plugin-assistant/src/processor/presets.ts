@@ -43,7 +43,7 @@ export const AiServicePresets: AiServicePreset[] = [
   },
   {
     provider: 'lm-studio' as const,
-    model: '@mlx-community/llama-3.2-3b-instruct' as const,
+    model: '@meta/llama-3.2-3b-instruct' as const,
   },
   {
     model: 'deepseek-r1:latest' as const,
