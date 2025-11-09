@@ -44,7 +44,6 @@ export const TypescriptEditor = ({
   id,
   role = 'article',
   inputMode = 'vscode',
-  toolbar,
   env,
   options,
   initialValue,
