@@ -130,22 +130,26 @@ const CardDragPreview = StackItem.DragPreview;
 
 const CardMenu = Primitive.div as FC<ComponentPropsWithRef<'div'>>;
 
-type CardPosterProps = {
-  alt: string;
-  aspect?: 'video' | 'auto';
-} & Partial<{ image: string; icon: string }>;
+type CardPosterProps = ThemedClassName<
+  {
+    alt: string;
+    aspect?: 'video' | 'auto';
+  } & Partial<{ image: string; icon: string }>
+>;
 
 const CardPoster = (props: CardPosterProps) => {
   const aspect = props.aspect === 'auto' ? 'aspect-auto' : 'aspect-video';
   if (props.image) {
-    return <Image classNames={[`dx-card__poster is-full`, aspect]} src={props.image} alt={props.alt} />;
+    return (
+      <Image classNames={[`dx-card__poster is-full`, aspect, props.classNames]} src={props.image} alt={props.alt} />
+    );
   }
 
   if (props.icon) {
     return (
       <div
         role='image'
-        className={mx(`dx-card__poster grid place-items-center bg-inputSurface text-subdued`, aspect)}
+        className={mx(`dx-card__poster grid place-items-center bg-inputSurface text-subdued`, aspect, props.classNames)}
         aria-label={props.alt}
       >
         <Icon icon={props.icon} size={10} />

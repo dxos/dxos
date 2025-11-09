@@ -17,7 +17,7 @@ import { TRACE_PROCESSOR } from '@dxos/tracing';
 
 import { Placeholder, ResetDialog } from './components';
 import { setupConfig } from './config';
-import { PARAM_LOG_LEVEL, PARAM_SAFE_MODE } from './config';
+import { PARAM_LOG_LEVEL, PARAM_SAFE_MODE, setSafeModeUrl } from './config';
 import { APP_KEY } from './constants';
 import { type PluginConfig, getCore, getDefaults, getPlugins } from './plugin-defs';
 import { translations } from './translations';
@@ -28,6 +28,7 @@ const main = async () => {
   const safeMode = isTrue(url.searchParams.get(PARAM_SAFE_MODE), false);
   if (safeMode) {
     log.info('SAFE MODE');
+    setSafeModeUrl(false);
   }
   const logLevel = url.searchParams.get(PARAM_LOG_LEVEL) ?? (safeMode ? 'debug' : undefined);
   if (logLevel) {

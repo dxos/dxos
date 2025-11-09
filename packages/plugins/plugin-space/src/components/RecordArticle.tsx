@@ -16,8 +16,6 @@ import { isNonNullable } from '@dxos/util';
 
 import { meta } from '../meta';
 
-// TODO(burdon): Relation to Outline/Journal.
-
 export const RecordArticle = ({ object }: SurfaceComponentProps) => {
   const { t } = useTranslation(meta.id);
   const space = getSpace(object);
@@ -71,7 +69,6 @@ const useRelatedObjects = (
     const related: Obj.Any[] = [];
 
     // TODO(burdon): Change Person => Organization to relations.
-    // TODO(burdon): Filter relation types.
     if (options.references) {
       const getReferences = (obj: Obj.Any): Ref.Any[] => {
         return Object.getOwnPropertyNames(obj)
