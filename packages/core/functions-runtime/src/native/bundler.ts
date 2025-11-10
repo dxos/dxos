@@ -9,6 +9,7 @@ import { basename, join, relative } from 'node:path';
 import * as Array from 'effect/Array';
 import * as Function from 'effect/Function';
 import * as Record from 'effect/Record';
+import * as Order from 'effect/Order';
 import { type Message, build } from 'esbuild';
 
 import { BaseError } from '@dxos/errors';
@@ -108,6 +109,24 @@ export const bundleFunction = async (options: BundleOptions): Promise<BundleResu
         )
         .join('\n'),
     );
+
+    const filesInOutput = Function.pipe(
+      result.metafile.outputs,
+      Record.values,
+      Array.flatMap((_) => Record.toEntries(_.inputs)),
+    );
+
+    const moduleInOutput = Function.pipe(
+      result.metafile.inputs,
+      Record.values,
+      Array.flatMap((_) => _.imports),
+      Array.filter((_) => !!_.original?.match(/^@[a-zA-Z]+/)),
+      Array.filter((_) => !!filesInOutput.find(([name]) => name === _.path)),
+      Array.map((_) => _.original!),
+      Array.dedupe,
+      Array.sort(Order.string),
+    );
+    console.log(`Modules in output:\n${moduleInOutput.map((_) => ` - ${_}`).join('\n')}`);
   }
 
   // Must match esbuild entry point.
