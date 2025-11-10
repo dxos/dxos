@@ -24,9 +24,14 @@
   ],
   "scripts": {},
   "dependencies": {
+    "@dxos/ai": "workspace:*",
+    "@dxos/echo": "workspace:*",
+    "@dxos/echo-db": "workspace:*",
+    "@dxos/errors": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/node-std": "workspace:*",
+    "@dxos/schema": "workspace:*",
     "@effect/platform": "0.92.1",
     "effect": "3.18.3"
   },

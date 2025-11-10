@@ -3009,72 +3009,27 @@ importers:
       '@dxos/ai':
         specifier: workspace:*
         version: link:../ai
-      '@dxos/async':
-        specifier: workspace:*
-        version: link:../../common/async
-      '@dxos/client':
-        specifier: workspace:*
-        version: link:../../sdk/client
-      '@dxos/client-protocol':
-        specifier: workspace:*
-        version: link:../../sdk/client-protocol
-      '@dxos/context':
-        specifier: workspace:*
-        version: link:../../common/context
-      '@dxos/crypto':
-        specifier: workspace:*
-        version: link:../../common/crypto
-      '@dxos/debug':
-        specifier: workspace:*
-        version: link:../../common/debug
       '@dxos/echo':
         specifier: workspace:*
         version: link:../echo/echo
       '@dxos/echo-db':
         specifier: workspace:*
         version: link:../echo/echo-db
-      '@dxos/echo-pipeline':
-        specifier: workspace:*
-        version: link:../echo/echo-pipeline
-      '@dxos/echo-protocol':
-        specifier: workspace:*
-        version: link:../echo/echo-protocol
-      '@dxos/edge-client':
-        specifier: workspace:*
-        version: link:../mesh/edge-client
-      '@dxos/effect':
-        specifier: workspace:*
-        version: link:../../common/effect
       '@dxos/errors':
         specifier: workspace:*
         version: link:../../common/errors
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
-      '@dxos/keys':
-        specifier: workspace:*
-        version: link:../../common/keys
-      '@dxos/kv-store':
-        specifier: workspace:*
-        version: link:../../common/kv-store
-      '@dxos/live-object':
-        specifier: workspace:*
-        version: link:../echo/live-object
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
       '@dxos/node-std':
         specifier: workspace:*
         version: link:../../common/node-std
-      '@dxos/protocols':
-        specifier: workspace:*
-        version: link:../protocols
       '@dxos/schema':
         specifier: workspace:*
         version: link:../../sdk/schema
-      '@dxos/util':
-        specifier: workspace:*
-        version: link:../../common/util
       '@effect/platform':
         specifier: 0.92.1
         version: 0.92.1(effect@3.18.3)
