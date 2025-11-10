@@ -19,6 +19,7 @@ import { List } from '@dxos/react-ui-list';
 import { ghostHover, mx } from '@dxos/react-ui-theme';
 
 import { meta } from '../../meta';
+import { Order } from 'effect';
 
 const grid = 'grid grid-cols-[1fr_1fr_auto] min-bs-[2.5rem]';
 
@@ -46,10 +47,10 @@ export const FunctionsRegistry = ({ space }: FunctionsRegistryProps) => {
 
   const dedupedFunctions = EffectFunction.pipe(
     functions,
-    // TODO(dmaretskyi): Sory by updated
     Array.filter((_) => _.key !== undefined),
+    Array.sort(Order.reverse(Order.mapInput(Order.string, (_: Function.Function) => _.updated ?? ''))),
     Array.dedupeWith((self, that) => self.key === that.key),
-    // TODO(dmaretskyi): Sort by name
+    Array.sort(Order.mapInput(Order.string, (_: Function.Function) => _.key ?? '')),
   );
 
   const hanleImport = useCallback(

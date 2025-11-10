@@ -27,7 +27,7 @@ describe.runIf(process.env.DX_TEST_TAGS?.includes('functions-e2e'))('Functions d
       verbose: true,
     });
 
-    const { functionId } = await uploadWorkerFunction({
+    const { functionId, meta, version } = await uploadWorkerFunction({
       client,
       ownerPublicKey: space.key,
       version: '0.0.1',
@@ -37,6 +37,8 @@ describe.runIf(process.env.DX_TEST_TAGS?.includes('functions-e2e'))('Functions d
     });
 
     expect(functionId).toBeDefined();
+
+    console.log({ functionId, meta, version });
 
     // // Invoke deployed function via EDGE directly.
     // const edgeClient = client.edge;
