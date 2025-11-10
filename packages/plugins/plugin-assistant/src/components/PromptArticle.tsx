@@ -12,7 +12,8 @@ import { type SurfaceComponentProps } from '@dxos/app-framework/react';
 import { Agent } from '@dxos/assistant-toolkit';
 import { type Prompt } from '@dxos/blueprints';
 import { Obj } from '@dxos/echo';
-import { ComputeEventLogger, FunctionInvocationService, InvocationTracer, TracingService } from '@dxos/functions';
+import { ComputeEventLogger, FunctionInvocationService, TracingService } from '@dxos/functions';
+import { TracingServiceExt, InvocationTracer } from '@dxos/functions-runtime';
 import { log } from '@dxos/log';
 import { useComputeRuntimeCallback } from '@dxos/plugin-automation';
 import { getSpace } from '@dxos/react-client/echo';
@@ -56,7 +57,7 @@ export const PromptArticle = ({ object }: PromptArticleProps) => {
       const result = yield* FunctionInvocationService.invokeFunction(Agent.prompt, inputData).pipe(
         Effect.provide(
           ComputeEventLogger.layerFromTracing.pipe(
-            Layer.provideMerge(TracingService.layerQueue(trace.invocationTraceQueue)),
+            Layer.provideMerge(TracingServiceExt.layerQueue(trace.invocationTraceQueue)),
           ),
         ),
         Effect.exit,
