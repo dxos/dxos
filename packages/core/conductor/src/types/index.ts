@@ -4,6 +4,6 @@
 
 export * from './compute';
 export * from './graph';
-export * from './model';
-export * from './types';
 export * from './graphviz';
+export * from './model';
+export * from './schema';

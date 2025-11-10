@@ -9,7 +9,7 @@ import { DXN } from '@dxos/keys';
 import { type MakeOptional } from '@dxos/util';
 
 import { type ComputeEdge, ComputeGraph, type ComputeNode, isComputeGraph } from './graph';
-import { DEFAULT_INPUT, DEFAULT_OUTPUT } from './types';
+import { DEFAULT_INPUT, DEFAULT_OUTPUT } from './schema';
 
 // TODO(burdon): DXN from echo-schema is a different type.
 

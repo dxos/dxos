@@ -20,11 +20,18 @@ import { safeParseJson } from '@dxos/util';
 import {
   AnyInput,
   AnyOutput,
+  AppendInput,
+  ConstantOutput,
   DEFAULT_INPUT,
   DEFAULT_OUTPUT,
   DefaultInput,
   type Executable,
+  JsonTransformInput,
   NotExecuted,
+  QueueInput,
+  QueueOutput,
+  ReducerInput,
+  ReducerOutput,
   ValueBag,
   VoidInput,
   VoidOutput,
@@ -35,21 +42,12 @@ import {
 import { executeFunction, resolveFunctionPath } from './function';
 import { gptNode } from './gpt';
 import { NODE_INPUT, NODE_OUTPUT, inputNode, outputNode } from './system';
-import { templateNode } from './template/node';
-import {
-  AppendInput,
-  ConstantOutput,
-  JsonTransformInput,
-  QueueInput,
-  QueueOutput,
-  ReducerInput,
-  ReducerOutput,
-} from './types';
+import { templateNode } from './template';
 
 /**
  * To prototype a new compute node, first add a new type and a dummy definition (e.g., VoidInput, VoidOutput).
  */
-// TODO(burdon): Convert to DXNs.
+// TODO(burdon): Extensible?
 export type NodeType =
   | typeof NODE_INPUT
   | typeof NODE_OUTPUT
@@ -94,7 +92,6 @@ export const isTruthy = (value: any) => !isFalsy(value);
 
 // TODO(dmaretskyi): Separate into definition and implementation.
 /*
-
 const gpt = Executable.define({
   name: 'gpt',
   input: Schema.Struct({
@@ -116,6 +113,7 @@ cosnt gptImpl2 = Executable.implementIndependent(gpt, Effect.fnUntraced(function
 })
 */
 
+// TODO(burdon): Extensible?
 export const registry: Record<NodeType, Executable> = {
   //
   // System
@@ -149,6 +147,7 @@ export const registry: Record<NodeType, Executable> = {
     output: Schema.Struct({ [DEFAULT_OUTPUT]: Schema.Boolean }),
   }),
 
+  // TODO(burdon): Template?
   ['template' as const]: templateNode,
 
   ['rng' as const]: defineComputeNode({
@@ -203,7 +202,6 @@ export const registry: Record<NodeType, Executable> = {
     exec: synchronizedComputeFunction(({ [DEFAULT_INPUT]: input, expression }) => {
       const json =
         typeof input === 'string' ? safeParseJson(input, {}) : typeof input !== 'object' ? { value: input } : input;
-
       const result = JSONPath({ json, path: expression });
       return Effect.succeed({ [DEFAULT_OUTPUT]: result });
     }),
@@ -234,7 +232,6 @@ export const registry: Record<NodeType, Executable> = {
       Effect.gen(function* () {
         const { queues } = yield* QueueService;
         const messages = yield* Effect.promise(() => queues.get(DXN.parse(id)).queryObjects());
-
         const decoded = Schema.decodeUnknownSync(Schema.Any)(messages);
         return {
           [DEFAULT_OUTPUT]: decoded,
@@ -254,10 +251,8 @@ export const registry: Record<NodeType, Executable> = {
         switch (dxn.kind) {
           case DXN.kind.QUEUE: {
             const mappedItems = items.map((item: any) => ({ ...item, id: item.id ?? ObjectId.random() }));
-
             const { queues } = yield* QueueService;
             yield* Effect.promise(() => queues.get(DXN.parse(id)).append(mappedItems));
-
             return {};
           }
           case DXN.kind.ECHO: {
