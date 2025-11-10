@@ -3,7 +3,7 @@
 //
 
 import { type Extension } from '@codemirror/state';
-import { Rx } from '@effect-rx/rx-react';
+import { Atom, Registry } from '@effect-atom/atom-react';
 import React, { useMemo } from 'react';
 
 import { Capabilities } from '@dxos/app-framework';
@@ -66,7 +66,7 @@ export const MarkdownContainer = ({
   // Toolbar actions from app graph.
   const { graph } = useAppGraph();
   const customActions = useMemo(() => {
-    return Rx.make((get) => {
+    return Atom.make((get) => {
       const actions = get(graph.actions(id));
       const nodes = actions.filter((action) => action.properties.disposition === 'toolbar');
       const edges = nodes.map((node) => ({ source: 'root', target: node.id }));

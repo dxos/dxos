@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Rx } from '@effect-rx/rx-react';
+import { Atom, Registry } from '@effect-atom/atom-react';
 import React, { type ChangeEvent, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { useCapabilities, useCapability } from '@dxos/app-framework/react';
@@ -165,7 +165,7 @@ const DisplayNameMissing = () => {
 const useChannelToolbarActions = (onJoinCall?: () => void) => {
   const creator = useMemo(
     () =>
-      Rx.make(() => {
+      Atom.make(() => {
         return {
           nodes: [
             createMenuItemGroup('root', {

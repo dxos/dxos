@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Registry } from '@effect-rx/rx-react';
+import { Atom, Registry } from '@effect-atom/atom-react';
 import { untracked } from '@preact/signals-core';
 import * as Array from 'effect/Array';
 import * as Duration from 'effect/Duration';
@@ -55,7 +55,7 @@ export class PluginManager {
   readonly context: PluginContext;
   readonly registry: Registry.Registry;
 
-  // TODO(wittjosiah): Replace with Rx.
+  // TODO(wittjosiah): Replace with Atom.
   private readonly _state: Live<PluginManagerState>;
   private readonly _pluginLoader: PluginManagerOptions['pluginLoader'];
   private readonly _capabilities = new Map<string, AnyCapability[]>();

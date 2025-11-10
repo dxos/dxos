@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Rx } from '@effect-rx/rx-react';
+import { Atom, Registry } from '@effect-atom/atom-react';
 import * as Function from 'effect/Function';
 
 import { LayoutAction, type PromiseIntentDispatcher, chain, createIntent } from '@dxos/app-framework';
@@ -34,10 +34,10 @@ export const COMPOSER_SPACE_LOCK = `${meta.id}/lock`;
 export const SHARED = 'shared-spaces';
 
 /**
- * Convert a query result to an Rx value of the objects.
+ * Convert a query result to an Atom value of the objects.
  */
-export const rxFromQuery = <T extends AnyEchoObject>(query: QueryResult<T>): Rx.Rx<T[]> => {
-  return Rx.make((get) => {
+export const rxFromQuery = <T extends AnyEchoObject>(query: QueryResult<T>): Atom.Atom<T[]> => {
+  return Atom.make((get) => {
     const unsubscribe = query.subscribe((result) => {
       get.setSelf(result.objects);
     });

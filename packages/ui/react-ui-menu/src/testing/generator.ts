@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Rx } from '@effect-rx/rx-react';
+import { Atom, Registry } from '@effect-atom/atom-react';
 import { useEffect } from 'react';
 
 import {
@@ -66,7 +66,7 @@ export const createActions = (params?: CreateActionsParams) => {
   );
 };
 
-export const createNestedActions = Rx.make(() => {
+export const createNestedActions = Atom.make(() => {
   const result: ActionGraphProps = { edges: [], nodes: [] };
   const actionGroups = createActions({ type: ACTION_GROUP_TYPE });
   actionGroups.forEach((group) => {

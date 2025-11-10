@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Rx } from '@effect-rx/rx-react';
+import { Atom, Registry } from '@effect-atom/atom-react';
 import React, { useMemo } from 'react';
 
 import { live } from '@dxos/live-object';
@@ -37,7 +37,7 @@ export type TableToolbarProps = ThemedClassName<
     onAdd: () => void;
     onSave: () => void;
     attendableId?: string;
-    customActions?: Rx.Rx<ActionGraphProps>;
+    customActions?: Atom.Atom<ActionGraphProps>;
   }
 >;
 
@@ -50,9 +50,9 @@ const createTableToolbarActions = ({
   state: TableToolbarState;
   onAdd?: () => void;
   onSave?: () => void;
-  customActions?: Rx.Rx<ActionGraphProps>;
+  customActions?: Atom.Atom<ActionGraphProps>;
 }) =>
-  Rx.make((get) => {
+  Atom.make((get) => {
     const nodes: ActionGraphNodes = [];
     if (onAdd) {
       const add = createMenuAction<TableToolbarActionProperties>('add-row', onAdd, {
