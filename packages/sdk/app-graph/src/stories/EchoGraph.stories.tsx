@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type Registry, RegistryContext, Rx, useRxValue } from '@effect-rx/rx-react';
+import { Atom, type Registry, RegistryContext, useAtomValue } from '@effect-atom/atom-react';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Function from 'effect/Function';
 import * as Option from 'effect/Option';
@@ -60,7 +60,7 @@ const createGraph = (client: Client, registry: Registry.Registry): ExpandableGra
   const spaceBuilderExtension = createExtension({
     id: 'space',
     connector: (node) =>
-      Rx.make((get) =>
+      Atom.make((get) =>
         Function.pipe(
           get(node),
           Option.flatMap((node) => (node.id === ROOT_ID ? Option.some(node) : Option.none())),
@@ -71,7 +71,9 @@ const createGraph = (client: Client, registry: Registry.Registry): ExpandableGra
               .map((space) => ({
                 id: space.id,
                 type: 'dxos.org/type/Space',
-                properties: { label: get(rxFromSignal(() => space.properties.name)) },
+                properties: {
+                  label: get(rxFromSignal(() => space.properties.name)),
+                },
                 data: space,
               }));
           }),
@@ -84,7 +86,7 @@ const createGraph = (client: Client, registry: Registry.Registry): ExpandableGra
     id: 'object',
     connector: (node) => {
       let query: QueryResult<Live<Expando>> | undefined;
-      return Rx.make((get) =>
+      return Atom.make((get) =>
         Function.pipe(
           get(node),
           Option.flatMap((node) => (isSpace(node.data) ? Option.some(node.data) : Option.none())),
@@ -159,7 +161,12 @@ const runAction = async (client: Client, action: Action) => {
     }
 
     case Action.ADD_OBJECT:
-      getRandomSpace(client)?.db.add(Obj.make(Type.Expando, { type: 'test', name: faker.commerce.productName() }));
+      getRandomSpace(client)?.db.add(
+        Obj.make(Type.Expando, {
+          type: 'test',
+          name: faker.commerce.productName(),
+        }),
+      );
       break;
 
     case Action.REMOVE_OBJECT: {
@@ -258,7 +265,7 @@ const meta = {
       },
     }),
   ],
-} satisfies Meta<typeof Registry>;
+} satisfies Meta;
 
 export default meta;
 
@@ -269,7 +276,7 @@ export const JsonView: Story = {
     const client = useClient();
     const registry = useContext(RegistryContext);
     const graph = useMemo(() => createGraph(client, registry), [client, registry]);
-    const data = useRxValue(graph.json());
+    const data = useAtomValue(graph.json());
 
     return (
       <>
@@ -289,7 +296,7 @@ export const TreeView: Story = {
 
     const useItems = useCallback(
       (node?: Node, options?: { disposition?: string; sort?: boolean }) => {
-        const connections = useRxValue(graph.connections(node?.id ?? ROOT_ID));
+        const connections = useAtomValue(graph.connections(node?.id ?? ROOT_ID));
         return options?.sort ? connections.toSorted((a, b) => byPosition(a.properties, b.properties)) : connections;
       },
       [graph],

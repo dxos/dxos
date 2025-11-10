@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Rx } from '@effect-rx/rx-react';
+import { Atom } from '@effect-atom/atom-react';
 import * as Effect from 'effect/Effect';
 import { useMemo } from 'react';
 
@@ -35,7 +35,7 @@ export const useChatToolbarActions = ({ chat, companionTo }: ChatToolbarActionsP
   // Create stable reference for dependency array to avoid circular reference issues.
   return useMenuActions(
     useMemo(() => {
-      return Rx.make(() => {
+      return Atom.make(() => {
         const builder = MenuBuilder.make()
           .root({
             label: ['chat toolbar title', { ns: meta.id }],

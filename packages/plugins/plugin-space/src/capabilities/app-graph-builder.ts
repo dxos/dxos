@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Rx } from '@effect-rx/rx-react';
+import { Atom } from '@effect-atom/atom-react';
 import * as Array from 'effect/Array';
 import * as Function from 'effect/Function';
 import * as Option from 'effect/Option';
@@ -36,7 +36,7 @@ import {
 import { SpaceCapabilities } from './capabilities';
 
 export default (context: PluginContext) => {
-  const resolve = (get: Rx.Context) => (typename: string) =>
+  const resolve = (get: Atom.Context) => (typename: string) =>
     get(context.capabilities(Capabilities.Metadata)).find(({ id }) => id === typename)?.metadata ?? {};
 
   const spacesNode = {
@@ -82,7 +82,7 @@ export default (context: PluginContext) => {
       id: `${meta.id}/primary-actions`,
       position: 'hoist',
       actions: (node) =>
-        Rx.make((get) =>
+        Atom.make((get) =>
           Function.pipe(
             get(node),
             Option.flatMap((node) => (node.id === ROOT_ID ? Option.some(node) : Option.none())),
@@ -159,7 +159,7 @@ export default (context: PluginContext) => {
       id: `${meta.id}/root`,
       position: 'hoist',
       connector: (node) =>
-        Rx.make((get) =>
+        Atom.make((get) =>
           Function.pipe(
             get(node),
             Option.flatMap((node) => (node.id === ROOT_ID ? Option.some(node) : Option.none())),
@@ -175,7 +175,7 @@ export default (context: PluginContext) => {
       id: SPACES,
       connector: (node) => {
         let query: QueryResult<Type.Expando> | undefined;
-        return Rx.make((get) =>
+        return Atom.make((get) =>
           Function.pipe(
             get(node),
             Option.flatMap((node) => (node.id === SPACES ? Option.some(node) : Option.none())),
@@ -280,7 +280,7 @@ export default (context: PluginContext) => {
     createExtension({
       id: `${meta.id}/actions`,
       actions: (node) =>
-        Rx.make((get) =>
+        Atom.make((get) =>
           Function.pipe(
             get(node),
             Option.flatMap((node) =>
@@ -312,7 +312,7 @@ export default (context: PluginContext) => {
     createExtension({
       id: `${meta.id}/root-collection`,
       connector: (node) =>
-        Rx.make((get) =>
+        Atom.make((get) =>
           Function.pipe(
             get(node),
             Option.flatMap((node) =>
@@ -362,7 +362,7 @@ export default (context: PluginContext) => {
     createExtension({
       id: `${meta.id}/objects`,
       connector: (node) =>
-        Rx.make((get) =>
+        Atom.make((get) =>
           Function.pipe(
             get(node),
             Option.flatMap((node) =>
@@ -440,7 +440,7 @@ export default (context: PluginContext) => {
       id: `${meta.id}/query-collection-objects`,
       connector: (node) => {
         let query: QueryResult<Type.Expando> | undefined;
-        return Rx.make((get) =>
+        return Atom.make((get) =>
           Function.pipe(
             get(node),
             Option.flatMap((node) =>
@@ -497,7 +497,7 @@ export default (context: PluginContext) => {
       id: `${meta.id}/static-schemas`,
       connector: (node) => {
         const client = context.getCapability(ClientCapabilities.Client);
-        return Rx.make((get) =>
+        return Atom.make((get) =>
           Function.pipe(
             get(node),
             Option.flatMap((node) =>
@@ -529,7 +529,7 @@ export default (context: PluginContext) => {
       id: `${meta.id}/static-schema-actions`,
       actions: (node) => {
         let query: QueryResult<View.View> | undefined;
-        return Rx.make((get) =>
+        return Atom.make((get) =>
           Function.pipe(
             get(node),
             Option.flatMap((node) => {
@@ -577,7 +577,7 @@ export default (context: PluginContext) => {
       id: `${meta.id}/schema-views`,
       connector: (node) => {
         let query: QueryResult<View.View> | undefined;
-        return Rx.make((get) =>
+        return Atom.make((get) =>
           Function.pipe(
             get(node),
             Option.flatMap((node) => {
@@ -637,7 +637,7 @@ export default (context: PluginContext) => {
       id: `${meta.id}/records`,
       resolver: (id) => {
         let query: QueryResult<Type.Expando> | undefined;
-        return Rx.make((get) => {
+        return Atom.make((get) => {
           const client = context.getCapability(ClientCapabilities.Client);
           const dxn = DXN.tryParse(id)?.asEchoDXN();
           if (!dxn || !dxn.spaceId) {
@@ -658,7 +658,12 @@ export default (context: PluginContext) => {
             return null;
           }
 
-          return createObjectNode({ object, space, resolve: resolve(get), disposition: 'hidden' });
+          return createObjectNode({
+            object,
+            space,
+            resolve: resolve(get),
+            disposition: 'hidden',
+          });
         });
       },
     }),
@@ -668,7 +673,7 @@ export default (context: PluginContext) => {
       id: `${meta.id}/object-actions`,
       actions: (node) => {
         let query: QueryResult<View.View> | undefined;
-        return Rx.make((get) =>
+        return Atom.make((get) =>
           Function.pipe(
             get(node),
             Option.flatMap((node) => {
@@ -728,7 +733,7 @@ export default (context: PluginContext) => {
     createExtension({
       id: `${meta.id}/selected-objects`,
       connector: (node) =>
-        Rx.make((get) =>
+        Atom.make((get) =>
           Function.pipe(
             get(node),
             Option.flatMap((node) => (Obj.instanceOf(View.View, node.data) ? Option.some(node) : Option.none())),
@@ -753,7 +758,7 @@ export default (context: PluginContext) => {
     createExtension({
       id: `${meta.id}/settings`,
       connector: (node) =>
-        Rx.make((get) =>
+        Atom.make((get) =>
           Function.pipe(
             get(node),
             Option.flatMap((node) => (Obj.isObject(node.data) ? Option.some(node) : Option.none())),

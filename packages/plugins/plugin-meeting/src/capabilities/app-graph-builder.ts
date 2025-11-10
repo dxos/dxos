@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Rx } from '@effect-rx/rx-react';
+import { Atom } from '@effect-atom/atom-react';
 import * as Function from 'effect/Function';
 import * as Option from 'effect/Option';
 
@@ -29,7 +29,7 @@ export default (context: PluginContext) =>
     createExtension({
       id: `${meta.id}/share-call-link`,
       actions: (node) =>
-        Rx.make((get) =>
+        Atom.make((get) =>
           Function.pipe(
             get(node),
             Option.flatMap((node) =>
@@ -71,7 +71,7 @@ export default (context: PluginContext) =>
     createExtension({
       id: `${meta.id}/call-thread`,
       connector: (node) => {
-        return Rx.make((get) =>
+        return Atom.make((get) =>
           Function.pipe(
             get(node),
             Option.map((node) => node.data),
@@ -113,7 +113,7 @@ export default (context: PluginContext) =>
     createExtension({
       id: `${meta.id}/call-companion`,
       connector: (node) =>
-        Rx.make((get) =>
+        Atom.make((get) =>
           Function.pipe(
             get(node),
             Option.flatMap((node) =>
@@ -152,7 +152,7 @@ export default (context: PluginContext) =>
     createExtension({
       id: `${meta.id}/call-transcript`,
       actions: (node) =>
-        Rx.make((get) =>
+        Atom.make((get) =>
           Function.pipe(
             get(node),
             Option.flatMap((node) =>
@@ -215,7 +215,7 @@ export default (context: PluginContext) =>
           ),
         ),
       connector: (node) =>
-        Rx.make((get) =>
+        Atom.make((get) =>
           Function.pipe(
             get(node),
             Option.flatMap((node) =>
@@ -249,7 +249,7 @@ export default (context: PluginContext) =>
     createExtension({
       id: `${meta.id}/meeting-transcript-companion`,
       connector: (node) =>
-        Rx.make((get) =>
+        Atom.make((get) =>
           Function.pipe(
             get(node),
             Option.flatMap((node) =>

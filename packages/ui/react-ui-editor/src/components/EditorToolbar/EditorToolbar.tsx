@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Rx } from '@effect-rx/rx-react';
+import { Atom } from '@effect-atom/atom-react';
 import React, { memo, useMemo } from 'react';
 
 import { rxFromSignal } from '@dxos/app-graph';
@@ -89,8 +89,8 @@ const createToolbarActions = ({
   getView,
   customActions,
   ...features
-}: ToolbarActionsProps): Rx.Rx<ActionGraphProps> => {
-  return Rx.make((get) => {
+}: ToolbarActionsProps): Atom.Atom<ActionGraphProps> => {
+  return Atom.make((get) => {
     const graph: ActionGraphProps = {
       nodes: [],
       edges: [],

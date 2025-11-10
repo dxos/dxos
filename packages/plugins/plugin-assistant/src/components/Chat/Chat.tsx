@@ -4,7 +4,7 @@
 
 import { type Extension, Prec } from '@codemirror/state';
 import { keymap } from '@codemirror/view';
-import { useRxValue } from '@effect-rx/rx-react';
+import { useAtomValue } from '@effect-atom/atom-react';
 import { createContext } from '@radix-ui/react-context';
 import * as Array from 'effect/Array';
 import * as Option from 'effect/Option';
@@ -68,8 +68,8 @@ type ChatRootProps = PropsWithChildren<
 
 const ChatRoot = ({ children, chat, processor, onEvent, ...props }: ChatRootProps) => {
   const [debug, setDebug] = useState(false);
-  const pending = useRxValue(processor.messages);
-  const streaming = useRxValue(processor.streaming);
+  const pending = useAtomValue(processor.messages);
+  const streaming = useAtomValue(processor.streaming);
   const lastPrompt = useRef<string | undefined>(undefined);
 
   // Messages.
@@ -185,9 +185,9 @@ const ChatPrompt = ({
   const { t } = useTranslation(meta.id);
   const { space, processor, event } = useChatContext(ChatPrompt.displayName);
 
-  const error = useRxValue(processor.error).pipe(Option.getOrUndefined);
-  const streaming = useRxValue(processor.streaming);
-  const active = useRxValue(processor.active);
+  const error = useAtomValue(processor.error).pipe(Option.getOrUndefined);
+  const streaming = useAtomValue(processor.streaming);
+  const active = useAtomValue(processor.active);
   const activeRef = useDynamicRef(active);
 
   const editorRef = useRef<ChatEditorController>(null);
@@ -367,7 +367,7 @@ type ChatThreadProps = Omit<NaturalChatThreadProps, 'identity' | 'messages' | 't
 const ChatThread = (props: ChatThreadProps) => {
   const { debug, event, messages, processor } = useChatContext(ChatThread.displayName);
   const identity = useIdentity();
-  const error = useRxValue(processor.error).pipe(Option.getOrUndefined);
+  const error = useAtomValue(processor.error).pipe(Option.getOrUndefined);
 
   const controllerRef = useRef<MarkdownStreamController | null>(null);
   useEffect(() => {
