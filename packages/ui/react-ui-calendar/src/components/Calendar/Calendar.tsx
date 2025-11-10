@@ -98,6 +98,26 @@ const CalendarRoot = forwardRef<CalendarController, CalendarRootProps>(
 );
 
 //
+// Viewport
+//
+
+type CalendarViewportProps = PropsWithChildren<ThemedClassName<{ fullWidth?: boolean; fullHeight?: boolean }>>;
+
+const CalendarViewport = ({ children, classNames, fullWidth, fullHeight }: CalendarViewportProps) => {
+  return (
+    <div
+      role='none'
+      className={mx('flex flex-col items-center bg-inputSurface', classNames)}
+      // style={{ width: 7 * size }}
+    >
+      {children}
+    </div>
+  );
+};
+
+CalendarViewport.displayName = 'CalendarContent';
+
+//
 // Header
 //
 
@@ -135,39 +155,24 @@ const CalendarHeader = ({ classNames }: CalendarHeaderProps) => {
 CalendarHeader.displayName = 'CalendarHeader';
 
 //
-// Viewport
-//
-
-type CalendarViewportProps = PropsWithChildren<ThemedClassName>;
-
-const CalendarViewport = ({ children, classNames }: CalendarViewportProps) => {
-  return (
-    <div role='none' className={mx('flex flex-col grow bg-inputSurface', classNames)} style={{ width: 7 * size }}>
-      {children}
-    </div>
-  );
-};
-
-CalendarViewport.displayName = 'CalendarContent';
-
-//
 // Grid
 // TODO(burdon): Key nav.
 // TODO(burdon): Drag range.
 //
 
 type CalendarGridProps = ThemedClassName<{
-  grow?: boolean;
   numRows?: number;
   onSelect?: (event: { date: Date }) => void;
 }>;
 
-const CalendarGrid = ({ classNames, grow, numRows = 7, onSelect }: CalendarGridProps) => {
+const CalendarGrid = ({ classNames, numRows, onSelect }: CalendarGridProps) => {
   const { weekStartsOn, event, setIndex, selected, setSelected } = useCalendarContext(CalendarGrid.displayName);
   const { ref, height = 0 } = useResizeDetector();
+  const maxHeight = numRows ? numRows * size : undefined;
   const listRef = useRef<List>(null);
   const today = useMemo(() => new Date(), []);
-  const maxHeight = grow ? undefined : numRows * size;
+
+  console.log('>>>', height, maxHeight);
 
   useEffect(() => {
     const index = differenceInWeeks(today, start);
@@ -244,36 +249,34 @@ const CalendarGrid = ({ classNames, grow, numRows = 7, onSelect }: CalendarGridP
   );
 
   return (
-    <div
-      role='none'
-      className={mx('flex flex-col bs-full is-full overflow-hidden bg-modalSurface', classNames)}
-      style={{ width: days.length * size }}
-    >
-      {/* Day labels */}
-      <div role='none' className='flex shink-0 is-full grid grid-cols-7'>
-        {days.map((date, i) => (
-          <div key={i} className='flex justify-center p-2 text-sm font-thin'>
-            {date}
-          </div>
-        ))}
-      </div>
-      {/* Grid */}
-      <div role='none' ref={ref} className='flex grow bg-inputSurface' style={{ height: maxHeight }}>
-        {height > 0 && (
-          <List
-            ref={listRef}
-            role='none'
-            // TODO(burdon): Snap isn't working.
-            className='[&>div]:snap-y scrollbar-none outline-none'
-            width={days.length * size}
-            height={maxHeight ?? height}
-            rowCount={rows}
-            rowHeight={size}
-            rowRenderer={rowRenderer}
-            scrollToAlignment='start'
-            onScroll={handleScroll}
-          />
-        )}
+    <div role='none' className={mx('flex bs-full is-full justify-center overflow-hidden bg-modalSurface', classNames)}>
+      <div className='flex bs-full is-full overflow-hidden' style={{ width: days.length * size }}>
+        {/* Day labels */}
+        <div role='none' className='flex shink-0 is-full grid grid-cols-7'>
+          {days.map((date, i) => (
+            <div key={i} className='flex justify-center p-2 text-sm font-thin'>
+              {date}
+            </div>
+          ))}
+        </div>
+        {/* Grid */}
+        <div role='none' ref={ref} className='flex bs-full is-full bg-inputSurface' style={{ height: maxHeight }}>
+          {height > 0 && (
+            <List
+              ref={listRef}
+              role='none'
+              // TODO(burdon): Snap isn't working.
+              className='[&>div]:snap-y scrollbar-none outline-none'
+              width={days.length * size}
+              height={maxHeight ?? height}
+              rowCount={rows}
+              rowHeight={size}
+              rowRenderer={rowRenderer}
+              scrollToAlignment='start'
+              onScroll={handleScroll}
+            />
+          )}
+        </div>
       </div>
     </div>
   );
