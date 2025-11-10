@@ -5,7 +5,6 @@
 import { createContext } from '@radix-ui/react-context';
 import { type Day, addDays, differenceInWeeks, format, startOfWeek } from 'date-fns';
 import React, {
-  type CSSProperties,
   type Dispatch,
   type PropsWithChildren,
   type SetStateAction,
@@ -18,7 +17,7 @@ import React, {
   useState,
 } from 'react';
 import { useResizeDetector } from 'react-resize-detector';
-import { List, type ListProps } from 'react-virtualized';
+import { List, type ListProps, type ListRowRenderer } from 'react-virtualized';
 
 import { Event } from '@dxos/async';
 import { IconButton, type ThemedClassName, useTranslation } from '@dxos/react-ui';
@@ -31,6 +30,7 @@ import { getDate, isSameDay } from './util';
 const rows = 50 * 100;
 const start = new Date('1970-01-01');
 const size = 48;
+const defaultWidth = 7 * size;
 
 //
 // Context
@@ -101,15 +101,11 @@ const CalendarRoot = forwardRef<CalendarController, CalendarRootProps>(
 // Viewport
 //
 
-type CalendarViewportProps = PropsWithChildren<ThemedClassName<{ fullWidth?: boolean; fullHeight?: boolean }>>;
+type CalendarViewportProps = PropsWithChildren<ThemedClassName>;
 
-const CalendarViewport = ({ children, classNames, fullWidth, fullHeight }: CalendarViewportProps) => {
+const CalendarViewport = ({ children, classNames }: CalendarViewportProps) => {
   return (
-    <div
-      role='none'
-      className={mx('flex flex-col items-center bg-inputSurface', classNames)}
-      // style={{ width: 7 * size }}
-    >
+    <div role='none' className={mx('flex flex-col items-center bg-inputSurface', classNames)}>
       {children}
     </div>
   );
@@ -134,7 +130,7 @@ const CalendarHeader = ({ classNames }: CalendarHeaderProps) => {
   }, [event, start, today]);
 
   return (
-    <div role='none' className={mx('shink-0 is-full grid grid-cols-3', classNames)}>
+    <div role='none' className={mx('shink-0 is-full grid grid-cols-3', classNames)} style={{ width: defaultWidth }}>
       <div className='flex justify-start'>
         <IconButton
           variant='ghost'
@@ -161,18 +157,16 @@ CalendarHeader.displayName = 'CalendarHeader';
 //
 
 type CalendarGridProps = ThemedClassName<{
-  numRows?: number;
+  rows?: number;
   onSelect?: (event: { date: Date }) => void;
 }>;
 
-const CalendarGrid = ({ classNames, numRows, onSelect }: CalendarGridProps) => {
+const CalendarGrid = ({ classNames, rows: numRows, onSelect }: CalendarGridProps) => {
   const { weekStartsOn, event, setIndex, selected, setSelected } = useCalendarContext(CalendarGrid.displayName);
   const { ref, height = 0 } = useResizeDetector();
   const maxHeight = numRows ? numRows * size : undefined;
   const listRef = useRef<List>(null);
   const today = useMemo(() => new Date(), []);
-
-  console.log('>>>', height, maxHeight);
 
   useEffect(() => {
     const index = differenceInWeeks(today, start);
@@ -211,8 +205,8 @@ const CalendarGrid = ({ classNames, numRows, onSelect }: CalendarGridProps) => {
     setIndex(Math.round(info.scrollTop / size));
   }, []);
 
-  const rowRenderer = useCallback(
-    ({ key, index, style }: { key: string; index: number; style: CSSProperties }) => {
+  const rowRenderer = useCallback<ListRowRenderer>(
+    ({ key, index, style }) => {
       return (
         <div key={key} style={style} className='is-full grid grid-cols-7 snap-center'>
           {Array.from({ length: 7 }).map((_, i) => {
@@ -249,25 +243,30 @@ const CalendarGrid = ({ classNames, numRows, onSelect }: CalendarGridProps) => {
   );
 
   return (
-    <div role='none' className={mx('flex bs-full is-full justify-center overflow-hidden bg-modalSurface', classNames)}>
-      <div className='flex bs-full is-full overflow-hidden' style={{ width: days.length * size }}>
-        {/* Day labels */}
-        <div role='none' className='flex shink-0 is-full grid grid-cols-7'>
+    <div
+      role='none'
+      className={mx('flex flex-col bs-full is-full justify-center overflow-hidden bg-modalSurface', classNames)}
+    >
+      {/* Day labels */}
+      <div className='flex justify-center bg-groupSurface'>
+        <div role='none' className='flex shink-0 is-full grid grid-cols-7' style={{ width: defaultWidth }}>
           {days.map((date, i) => (
             <div key={i} className='flex justify-center p-2 text-sm font-thin'>
               {date}
             </div>
           ))}
         </div>
-        {/* Grid */}
-        <div role='none' ref={ref} className='flex bs-full is-full bg-inputSurface' style={{ height: maxHeight }}>
+      </div>
+      {/* Grid */}
+      <div className='flex bs-full justify-center'>
+        <div role='none' ref={ref} className='flex bs-full bg-inputSurface' style={{ height: maxHeight }}>
           {height > 0 && (
             <List
               ref={listRef}
               role='none'
               // TODO(burdon): Snap isn't working.
               className='[&>div]:snap-y scrollbar-none outline-none'
-              width={days.length * size}
+              width={defaultWidth}
               height={maxHeight ?? height}
               rowCount={rows}
               rowHeight={size}
