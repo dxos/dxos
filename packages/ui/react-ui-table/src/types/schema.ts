@@ -7,9 +7,8 @@ import * as Schema from 'effect/Schema';
 
 import { Obj, Type } from '@dxos/echo';
 import { JsonPath, type JsonSchemaType, toEffectSchema } from '@dxos/echo/internal';
-import { ViewAnnotation } from '@dxos/echo/internal';
 import { type SimpleType } from '@dxos/effect';
-import { View, getSchemaProperties } from '@dxos/schema';
+import { View, ViewAnnotation, getSchemaProperties } from '@dxos/schema';
 
 export const Table = Schema.Struct({
   sizes: Schema.Record({

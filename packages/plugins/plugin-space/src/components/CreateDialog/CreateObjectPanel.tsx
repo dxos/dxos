@@ -6,13 +6,13 @@ import * as Option from 'effect/Option';
 import React, { useCallback } from 'react';
 
 import { Type } from '@dxos/echo';
-import { type BaseObject, type TypeAnnotation, ViewAnnotation, getTypeAnnotation } from '@dxos/echo/internal';
+import { type BaseObject, type TypeAnnotation, getTypeAnnotation } from '@dxos/echo/internal';
 import { type Space, type SpaceId } from '@dxos/react-client/echo';
 import { Icon, toLocalizedString, useDefaultValue, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 import { SearchList } from '@dxos/react-ui-searchlist';
 import { cardDialogOverflow, cardDialogPaddedOverflow, cardDialogSearchListRoot } from '@dxos/react-ui-stack';
-import { type Collection } from '@dxos/schema';
+import { type Collection, ViewAnnotation } from '@dxos/schema';
 import { type MaybePromise, isNonNullable } from '@dxos/util';
 
 import { useInputSurfaceLookup } from '../../hooks';

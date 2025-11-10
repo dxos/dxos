@@ -8,7 +8,6 @@ import { type Space } from '@dxos/client/echo';
 import { Obj, Ref, Type } from '@dxos/echo';
 import { FormAnnotation } from '@dxos/echo/internal';
 import { Queue } from '@dxos/echo-db';
-import { ItemAnnotation } from '@dxos/schema';
 
 // TODO(burdon): Implement as labels?
 export enum MessageState {
@@ -34,7 +33,6 @@ export const Mailbox = Schema.Struct({
     typename: 'dxos.org/type/Mailbox',
     version: '0.1.0',
   }),
-  ItemAnnotation.set(true),
 );
 
 export type Mailbox = Schema.Schema.Type<typeof Mailbox>;

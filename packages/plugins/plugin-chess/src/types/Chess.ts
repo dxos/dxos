@@ -8,7 +8,6 @@ import * as Schema from 'effect/Schema';
 import { Obj, Type } from '@dxos/echo';
 import { FormAnnotation, LabelAnnotation } from '@dxos/echo/internal';
 import { log } from '@dxos/log';
-import { ItemAnnotation } from '@dxos/schema';
 
 export const Game = Schema.Struct({
   name: Schema.optional(Schema.String),
@@ -36,7 +35,6 @@ export const Game = Schema.Struct({
     version: '0.2.0',
   }),
   LabelAnnotation.set(['name']),
-  ItemAnnotation.set(true),
 );
 
 export interface Game extends Schema.Schema.Type<typeof Game> {}

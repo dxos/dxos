@@ -5,8 +5,8 @@
 import * as Schema from 'effect/Schema';
 
 import { Filter, Obj, Query, QueryAST, Type } from '@dxos/echo';
-import { LabelAnnotation, ViewAnnotation } from '@dxos/echo/internal';
-import { View } from '@dxos/schema';
+import { LabelAnnotation } from '@dxos/echo/internal';
+import { View, ViewAnnotation } from '@dxos/schema';
 
 export const Graph = Schema.Struct({
   name: Schema.optional(Schema.String),

@@ -5,8 +5,8 @@
 import * as Schema from 'effect/Schema';
 
 import { Obj, Type } from '@dxos/echo';
-import { LabelAnnotation, ViewAnnotation } from '@dxos/echo/internal';
-import { View } from '@dxos/schema';
+import { LabelAnnotation } from '@dxos/echo/internal';
+import { View, ViewAnnotation } from '@dxos/schema';
 
 export const Map = Schema.Struct({
   name: Schema.optional(Schema.String),

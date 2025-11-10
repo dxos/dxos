@@ -5,8 +5,8 @@
 import * as Schema from 'effect/Schema';
 
 import { Obj, Type } from '@dxos/echo';
-import { type JsonSchemaType, ViewAnnotation, toEffectSchema } from '@dxos/echo/internal';
-import { View } from '@dxos/schema';
+import { type JsonSchemaType, toEffectSchema } from '@dxos/echo/internal';
+import { View, ViewAnnotation } from '@dxos/schema';
 
 export const Masonry = Schema.Struct({
   arrangement: Schema.Array(

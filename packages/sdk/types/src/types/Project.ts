@@ -7,7 +7,7 @@ import * as Schema from 'effect/Schema';
 import { Obj } from '@dxos/echo';
 import { Type } from '@dxos/echo';
 import { Format, GeneratorAnnotation, LabelAnnotation } from '@dxos/echo/internal';
-import { Collection, IconAnnotation, ItemAnnotation, View } from '@dxos/schema';
+import { Collection, IconAnnotation, View } from '@dxos/schema';
 
 export const Project = Schema.Struct({
   name: Schema.String.pipe(GeneratorAnnotation.set('commerce.productName'), Schema.optional),
@@ -21,7 +21,6 @@ export const Project = Schema.Struct({
   }),
   Schema.annotations({ title: 'Project' }),
   LabelAnnotation.set(['name']),
-  ItemAnnotation.set(true),
   IconAnnotation.set('ph--check-square-offset--regular'),
 );
 

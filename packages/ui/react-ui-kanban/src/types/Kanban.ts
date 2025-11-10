@@ -5,8 +5,8 @@
 import * as Schema from 'effect/Schema';
 
 import { Obj, Type } from '@dxos/echo';
-import { type JsonSchemaType, LabelAnnotation, ViewAnnotation } from '@dxos/echo/internal';
-import { View } from '@dxos/schema';
+import { type JsonSchemaType, LabelAnnotation } from '@dxos/echo/internal';
+import { View, ViewAnnotation } from '@dxos/schema';
 
 export const Kanban = Schema.Struct({
   name: Schema.optional(Schema.String),
