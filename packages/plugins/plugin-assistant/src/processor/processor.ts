@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Registry, Rx } from '@effect-rx/rx-react';
+import { Atom, Registry } from '@effect-atom/atom-react';
 import * as Cause from 'effect/Cause';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
@@ -89,19 +89,19 @@ export class AiChatProcessor {
   private _lastRequest: AiRequest | undefined;
 
   /** Pending messages (incl. the current user request). */
-  private readonly _pending = Rx.make<Message.Message[]>([]);
+  private readonly _pending = Atom.make<Message.Message[]>([]);
 
   /** Currently streaming message (from the AI service). */
-  private readonly _streaming = Rx.make<Option.Option<Message.Message>>(Option.none());
+  private readonly _streaming = Atom.make<Option.Option<Message.Message>>(Option.none());
 
   /** Streaming state. */
-  public readonly streaming = Rx.make<boolean>((get) => Option.isSome(get(this._streaming)));
+  public readonly streaming = Atom.make<boolean>((get) => Option.isSome(get(this._streaming)));
 
   /** Active state. */
-  public readonly active = Rx.make(false);
+  public readonly active = Atom.make(false);
 
   /** Array of Messages (incl. the current message being streamed). */
-  public readonly messages = Rx.make<Message.Message[]>((get) =>
+  public readonly messages = Atom.make<Message.Message[]>((get) =>
     Option.match(get(this._streaming), {
       onNone: () => get(this._pending),
       onSome: (streaming) => [...get(this._pending), streaming],
@@ -109,7 +109,7 @@ export class AiChatProcessor {
   );
 
   /** Last error. */
-  public readonly error = Rx.make<Option.Option<Error>>(Option.none());
+  public readonly error = Atom.make<Option.Option<Error>>(Option.none());
 
   constructor(
     private readonly _conversation: AiConversation,

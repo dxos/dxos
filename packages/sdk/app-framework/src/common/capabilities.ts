@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Registry } from '@effect-rx/rx-react';
+import { type Registry } from '@effect-atom/atom-react';
 import type * as Layer from 'effect/Layer';
 import type * as Schema from 'effect/Schema';
 import { type FC, type PropsWithChildren } from 'react';
@@ -40,7 +40,7 @@ export namespace Capabilities {
   /**
    * @category Capability
    */
-  export const RxRegistry = defineCapability<Registry.Registry>('dxos.org/app-framework/capability/rx-registry');
+  export const RxRegistry = defineCapability<Registry.Registry>('dxos.org/app-framework/capability/atom-registry');
 
   export type ReactContext = Readonly<{
     id: string;

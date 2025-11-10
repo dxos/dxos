@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { RegistryContext } from '@effect-rx/rx-react';
+import { RegistryContext } from '@effect-atom/atom-react';
 import type * as Runtime from 'effect/Runtime';
 import { useContext, useMemo, useState } from 'react';
 

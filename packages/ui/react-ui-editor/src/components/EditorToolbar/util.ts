@@ -3,7 +3,7 @@
 //
 
 import { type EditorView } from '@codemirror/view';
-import { type Rx } from '@effect-rx/rx-react';
+import { type Atom } from '@effect-atom/atom-react';
 import { useMemo } from 'react';
 
 import { type Action } from '@dxos/app-graph';
@@ -32,7 +32,7 @@ export type EditorToolbarActionGraphProps = {
   state: Live<EditorToolbarState>;
   getView: () => EditorView;
   // TODO(wittjosiah): Control positioning.
-  customActions?: Rx.Rx<ActionGraphProps>;
+  customActions?: Atom.Atom<ActionGraphProps>;
 };
 
 export type EditorToolbarItem = EditorAction | MenuItemGroup | MenuSeparator;

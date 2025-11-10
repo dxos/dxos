@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Registry, Rx } from '@effect-rx/rx-react';
+import { Atom, Registry } from '@effect-atom/atom-react';
 import * as Option from 'effect/Option';
 import { assert, describe, expect, onTestFinished, test } from 'vitest';
 
@@ -238,7 +238,7 @@ describe('Graph', () => {
     expect(count).toEqual(5);
 
     // Batching the edge and node updates fires a single update.
-    Rx.batch(() => {
+    Atom.batch(() => {
       graph.addEdge({ source: exampleId(1), target: exampleId(6) });
       graph.addNode({ id: exampleId(6), type: EXAMPLE_TYPE });
     });

@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Registry, Rx } from '@effect-rx/rx-react';
+import { Atom, type Registry } from '@effect-atom/atom-react';
 import * as Effect from 'effect/Effect';
 
 import { Trigger } from '@dxos/async';
@@ -109,19 +109,19 @@ export const lazy =
 export class PluginContext {
   private readonly _registry: Registry.Registry;
 
-  private readonly _capabilityImpls = Rx.family<string, Rx.Writable<CapabilityImpl<unknown>[]>>(() => {
-    return Rx.make<CapabilityImpl<unknown>[]>([]).pipe(Rx.keepAlive);
+  private readonly _capabilityImpls = Atom.family<string, Atom.Writable<CapabilityImpl<unknown>[]>>(() => {
+    return Atom.make<CapabilityImpl<unknown>[]>([]).pipe(Atom.keepAlive);
   });
 
-  readonly _capabilities = Rx.family<string, Rx.Rx<unknown[]>>((id: string) => {
-    return Rx.make((get) => {
+  readonly _capabilities = Atom.family<string, Atom.Atom<unknown[]>>((id: string) => {
+    return Atom.make((get) => {
       const current = get(this._capabilityImpls(id));
       return current.map((c) => c.implementation);
     });
   });
 
-  readonly _capability = Rx.family<string, Rx.Rx<unknown>>((id: string) => {
-    return Rx.make((get) => {
+  readonly _capability = Atom.family<string, Atom.Atom<unknown>>((id: string) => {
+    return Atom.make((get) => {
       const current = get(this._capabilities(id));
       invariant(current.length > 0, `No capability found for ${id}`);
       return current[0];
@@ -193,26 +193,26 @@ export class PluginContext {
   }
 
   /**
-   * Get the Rx reference to the available capabilities for a given interface.
-   * Primarily useful for deriving other Rx values based on the capabilities or
+   * Get the Atom reference to the available capabilities for a given interface.
+   * Primarily useful for deriving other Atom values based on the capabilities or
    * for subscribing to changes in the capabilities.
    * @returns An Rx reference to the available capabilities.
    */
-  capabilities<T>(interfaceDef: InterfaceDef<T>): Rx.Rx<T[]> {
+  capabilities<T>(interfaceDef: InterfaceDef<T>): Atom.Atom<T[]> {
     // NOTE: This the type-checking for capabilities is done at the time of contribution.
-    return this._capabilities(interfaceDef.identifier) as Rx.Rx<T[]>;
+    return this._capabilities(interfaceDef.identifier) as Atom.Atom<T[]>;
   }
 
   /**
-   * Get the Rx reference to the available capabilities for a given interface.
-   * Primarily useful for deriving other Rx values based on the capability or
+   * Get the Atom reference to the available capabilities for a given interface.
+   * Primarily useful for deriving other Atom values based on the capability or
    * for subscribing to changes in the capability.
    * @returns An Rx reference to the available capability.
    * @throws If no capability is found.
    */
-  capability<T>(interfaceDef: InterfaceDef<T>): Rx.Rx<T> {
+  capability<T>(interfaceDef: InterfaceDef<T>): Atom.Atom<T> {
     // NOTE: This the type-checking for capabilities is done at the time of contribution.
-    return this._capability(interfaceDef.identifier) as Rx.Rx<T>;
+    return this._capability(interfaceDef.identifier) as Atom.Atom<T>;
   }
 
   /**

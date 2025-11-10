@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Registry, Rx } from '@effect-rx/rx-react';
+import { Atom, Registry } from '@effect-atom/atom-react';
 import { effect } from '@preact/signals-core';
 import * as Array from 'effect/Array';
 import * as Function from 'effect/Function';
@@ -19,28 +19,28 @@ import { type ActionData, type Node, type NodeArg, type Relation, actionGroupSym
 /**
  * Graph builder extension for adding nodes to the graph based on a node id.
  */
-export type ResolverExtension = (id: string) => Rx.Rx<NodeArg<any> | null>;
+export type ResolverExtension = (id: string) => Atom.Atom<NodeArg<any> | null>;
 
 /**
  * Graph builder extension for adding nodes to the graph based on a connection to an existing node.
  *
  * @param params.node The existing node the returned nodes will be connected to.
  */
-export type ConnectorExtension = (node: Rx.Rx<Option.Option<Node>>) => Rx.Rx<NodeArg<any>[]>;
+export type ConnectorExtension = (node: Atom.Atom<Option.Option<Node>>) => Atom.Atom<NodeArg<any>[]>;
 
 /**
  * Constrained case of the connector extension for more easily adding actions to the graph.
  */
 export type ActionsExtension = (
-  node: Rx.Rx<Option.Option<Node>>,
-) => Rx.Rx<Omit<NodeArg<ActionData>, 'type' | 'nodes' | 'edges'>[]>;
+  node: Atom.Atom<Option.Option<Node>>,
+) => Atom.Atom<Omit<NodeArg<ActionData>, 'type' | 'nodes' | 'edges'>[]>;
 
 /**
  * Constrained case of the connector extension for more easily adding action groups to the graph.
  */
 export type ActionGroupsExtension = (
-  node: Rx.Rx<Option.Option<Node>>,
-) => Rx.Rx<Omit<NodeArg<typeof actionGroupSymbol>, 'type' | 'data' | 'nodes' | 'edges'>[]>;
+  node: Atom.Atom<Option.Option<Node>>,
+) => Atom.Atom<Omit<NodeArg<typeof actionGroupSymbol>, 'type' | 'data' | 'nodes' | 'edges'>[]>;
 
 /**
  * A graph builder extension is used to add nodes to the graph.
@@ -79,23 +79,25 @@ export const createExtension = (extension: CreateExtensionOptions): BuilderExten
   const getId = (key: string) => `${id}/${key}`;
 
   const resolver =
-    _resolver && Rx.family((id: string) => _resolver(id).pipe(Rx.withLabel(`graph-builder:_resolver:${id}`)));
+    _resolver && Atom.family((id: string) => _resolver(id).pipe(Atom.withLabel(`graph-builder:_resolver:${id}`)));
 
   const connector =
     _connector &&
-    Rx.family((node: Rx.Rx<Option.Option<Node>>) =>
-      _connector(node).pipe(Rx.withLabel(`graph-builder:_connector:${id}`)),
+    Atom.family((node: Atom.Atom<Option.Option<Node>>) =>
+      _connector(node).pipe(Atom.withLabel(`graph-builder:_connector:${id}`)),
     );
 
   const actionGroups =
     _actionGroups &&
-    Rx.family((node: Rx.Rx<Option.Option<Node>>) =>
-      _actionGroups(node).pipe(Rx.withLabel(`graph-builder:_actionGroups:${id}`)),
+    Atom.family((node: Atom.Atom<Option.Option<Node>>) =>
+      _actionGroups(node).pipe(Atom.withLabel(`graph-builder:_actionGroups:${id}`)),
     );
 
   const actions =
     _actions &&
-    Rx.family((node: Rx.Rx<Option.Option<Node>>) => _actions(node).pipe(Rx.withLabel(`graph-builder:_actions:${id}`)));
+    Atom.family((node: Atom.Atom<Option.Option<Node>>) =>
+      _actions(node).pipe(Atom.withLabel(`graph-builder:_actions:${id}`)),
+    );
 
   return [
     resolver ? { id: getId('resolver'), position, resolver } : undefined,
@@ -104,15 +106,15 @@ export const createExtension = (extension: CreateExtensionOptions): BuilderExten
           id: getId('connector'),
           position,
           relation,
-          connector: Rx.family((node) =>
-            Rx.make((get) => {
+          connector: Atom.family((node) =>
+            Atom.make((get) => {
               try {
                 return get(connector(node));
               } catch {
                 log.warn('Error in connector', { id: getId('connector'), node });
                 return [];
               }
-            }).pipe(Rx.withLabel(`graph-builder:connector:${id}`)),
+            }).pipe(Atom.withLabel(`graph-builder:connector:${id}`)),
           ),
         } satisfies BuilderExtension)
       : undefined,
@@ -121,8 +123,8 @@ export const createExtension = (extension: CreateExtensionOptions): BuilderExten
           id: getId('actionGroups'),
           position,
           relation: 'outbound',
-          connector: Rx.family((node) =>
-            Rx.make((get) => {
+          connector: Atom.family((node) =>
+            Atom.make((get) => {
               try {
                 return get(actionGroups(node)).map((arg) => ({
                   ...arg,
@@ -133,7 +135,7 @@ export const createExtension = (extension: CreateExtensionOptions): BuilderExten
                 log.warn('Error in actionGroups', { id: getId('actionGroups'), node });
                 return [];
               }
-            }).pipe(Rx.withLabel(`graph-builder:connector:actionGroups:${id}`)),
+            }).pipe(Atom.withLabel(`graph-builder:connector:actionGroups:${id}`)),
           ),
         } satisfies BuilderExtension)
       : undefined,
@@ -142,15 +144,15 @@ export const createExtension = (extension: CreateExtensionOptions): BuilderExten
           id: getId('actions'),
           position,
           relation: 'outbound',
-          connector: Rx.family((node) =>
-            Rx.make((get) => {
+          connector: Atom.family((node) =>
+            Atom.make((get) => {
               try {
                 return get(actions(node)).map((arg) => ({ ...arg, type: ACTION_TYPE }));
               } catch {
                 log.warn('Error in actions', { id: getId('actions'), node });
                 return [];
               }
-            }).pipe(Rx.withLabel(`graph-builder:connector:actions:${id}`)),
+            }).pipe(Atom.withLabel(`graph-builder:connector:actions:${id}`)),
           ),
         } satisfies BuilderExtension)
       : undefined,
@@ -169,7 +171,7 @@ export type BuilderExtension = Readonly<{
   position: Position;
   relation?: Relation; // Only for connector.
   resolver?: ResolverExtension;
-  connector?: (node: Rx.Rx<Option.Option<Node>>) => Rx.Rx<NodeArg<any>[]>;
+  connector?: (node: Atom.Atom<Option.Option<Node>>) => Atom.Atom<NodeArg<any>[]>;
 }>;
 
 export type BuilderExtensions = BuilderExtension | BuilderExtension[] | BuilderExtensions[];
@@ -191,9 +193,9 @@ export const flattenExtensions = (extension: BuilderExtensions, acc: BuilderExte
 export class GraphBuilder {
   // TODO(wittjosiah): Use Context.
   private readonly _subscriptions = new Map<string, CleanupFn>();
-  private readonly _extensions = Rx.make(Record.empty<string, BuilderExtension>()).pipe(
-    Rx.keepAlive,
-    Rx.withLabel('graph-builder:extensions'),
+  private readonly _extensions = Atom.make(Record.empty<string, BuilderExtension>()).pipe(
+    Atom.keepAlive,
+    Atom.withLabel('graph-builder:extensions'),
   );
   private readonly _initialized: Record<string, Trigger> = {};
   private readonly _registry: Registry.Registry;
@@ -290,8 +292,8 @@ export class GraphBuilder {
     this._subscriptions.clear();
   }
 
-  private readonly _resolvers = Rx.family<string, Rx.Rx<Option.Option<NodeArg<any>>>>((id) => {
-    return Rx.make((get) => {
+  private readonly _resolvers = Atom.family<string, Atom.Atom<Option.Option<NodeArg<any>>>>((id) => {
+    return Atom.make((get) => {
       return Function.pipe(
         get(this._extensions),
         Record.values,
@@ -305,8 +307,8 @@ export class GraphBuilder {
     });
   });
 
-  private readonly _connectors = Rx.family<string, Rx.Rx<NodeArg<any>[]>>((key) => {
-    return Rx.make((get) => {
+  private readonly _connectors = Atom.family<string, Atom.Atom<NodeArg<any>[]>>((key) => {
+    return Atom.make((get) => {
       const [id, relation] = key.split('+');
       const node = this._graph.node(id);
 
@@ -320,7 +322,7 @@ export class GraphBuilder {
         Array.filter(isNonNullable),
         Array.flatMap((result) => get(result)),
       );
-    }).pipe(Rx.withLabel(`graph-builder:connectors:${key}`));
+    }).pipe(Atom.withLabel(`graph-builder:connectors:${key}`));
   });
 
   private _onExpand(id: string, relation: Relation): void {
@@ -337,7 +339,7 @@ export class GraphBuilder {
 
         log('update', { id, relation, ids, removed });
         const update = () => {
-          Rx.batch(() => {
+          Atom.batch(() => {
             this._graph.removeEdges(
               removed.map((target) => ({ source: id, target })),
               true,
@@ -403,11 +405,11 @@ export class GraphBuilder {
 }
 
 /**
- * Creates an Rx.Rx<T> from a callback which accesses signals.
+ * Creates an Atom.Atom<T> from a callback which accesses signals.
  * Will return a new rx instance each time.
  */
-export const rxFromSignal = <T>(cb: () => T): Rx.Rx<T> => {
-  return Rx.make((get) => {
+export const rxFromSignal = <T>(cb: () => T): Atom.Atom<T> => {
+  return Atom.make((get) => {
     const dispose = effect(() => {
       get.setSelf(cb());
     });
@@ -418,8 +420,8 @@ export const rxFromSignal = <T>(cb: () => T): Rx.Rx<T> => {
   });
 };
 
-const observableFamily = Rx.family((observable: MulticastObservable<any>) => {
-  return Rx.make((get) => {
+const observableFamily = Atom.family((observable: MulticastObservable<any>) => {
+  return Atom.make((get) => {
     const subscription = observable.subscribe((value) => get.setSelf(value));
 
     get.addFinalizer(() => subscription.unsubscribe());
@@ -429,9 +431,9 @@ const observableFamily = Rx.family((observable: MulticastObservable<any>) => {
 });
 
 /**
- * Creates an Rx.Rx<T> from a MulticastObservable<T>
+ * Creates an Atom.Atom<T> from a MulticastObservable<T>
  * Will return the same rx instance for the same observable.
  */
-export const rxFromObservable = <T>(observable: MulticastObservable<T>): Rx.Rx<T> => {
-  return observableFamily(observable) as Rx.Rx<T>;
+export const rxFromObservable = <T>(observable: MulticastObservable<T>): Atom.Atom<T> => {
+  return observableFamily(observable) as Atom.Atom<T>;
 };
