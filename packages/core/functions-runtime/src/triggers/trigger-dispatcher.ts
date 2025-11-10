@@ -19,12 +19,12 @@ import { DXN, Filter, Obj, Query } from '@dxos/echo';
 import { DatabaseService } from '@dxos/echo-db';
 import { causeToError } from '@dxos/effect';
 import { ComputeEventLogger, FunctionInvocationService, QueueService, deserializeFunction } from '@dxos/functions';
+import { Function, Trigger, type TriggerEvent } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { KEY_QUEUE_POSITION } from '@dxos/protocols';
 
 import { TracingServiceExt } from '../trace';
-import { Function, Trigger, type TriggerEvent } from '@dxos/functions';
 
 import { createInvocationPayload } from './input-builder';
 import { InvocationTracer } from './invocation-tracer';

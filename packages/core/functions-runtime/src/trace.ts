@@ -9,9 +9,8 @@ import { type Obj, type Ref, Type } from '@dxos/echo';
 import { ObjectId } from '@dxos/echo/internal';
 import { Queue } from '@dxos/echo-db';
 import { TracingService } from '@dxos/functions';
-import { log } from '@dxos/log';
-
 import { Trigger } from '@dxos/functions';
+import { log } from '@dxos/log';
 
 export enum InvocationOutcome {
   SUCCESS = 'success',

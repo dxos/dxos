@@ -8,8 +8,8 @@ import { basename, join, relative } from 'node:path';
 
 import * as Array from 'effect/Array';
 import * as Function from 'effect/Function';
-import * as Record from 'effect/Record';
 import * as Order from 'effect/Order';
+import * as Record from 'effect/Record';
 import { type Message, build } from 'esbuild';
 
 import { BaseError } from '@dxos/errors';

@@ -12,14 +12,9 @@ import { Agent } from '@dxos/assistant-toolkit';
 import { Blueprint, Prompt } from '@dxos/blueprints';
 import { Filter, Obj, Query, Ref } from '@dxos/echo';
 import { QueryBuilder } from '@dxos/echo-query';
-import {
-  ComputeEventLogger,
-  type FunctionDefinition,
-  FunctionInvocationService,
-  TracingService,
-} from '@dxos/functions';
-
+import { ComputeEventLogger, type FunctionDefinition, FunctionInvocationService } from '@dxos/functions';
 import { InvocationTracer } from '@dxos/functions-runtime';
+import { TracingServiceExt } from '@dxos/functions-runtime';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { useComputeRuntimeCallback } from '@dxos/plugin-automation';
@@ -38,7 +33,6 @@ import { type Notebook } from '../types';
 
 import { NotebookMenu, NotebookStack, type NotebookStackProps } from './NotebookStack';
 import { type TypescriptEditorProps } from './TypescriptEditor';
-import { TracingServiceExt } from '@dxos/functions-runtime';
 
 const INCLUDE_BLUEPRINTS = ['dxos.org/blueprint/assistant', 'dxos.org/blueprint/markdown'];
 

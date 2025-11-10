@@ -155,9 +155,7 @@ export default defineFunction({
       ).pipe(
         Layer.provide(
           // TODO(dmaretskyi): This should be provided by environment.
-          Layer.mergeAll(
-            FunctionInvocationServiceLayerTestMocked({ functions: [exaFunction, exaMockFunction] }),
-          ),
+          Layer.mergeAll(FunctionInvocationServiceLayerTestMocked({ functions: [exaFunction, exaMockFunction] })),
         ),
       ),
     ),

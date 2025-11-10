@@ -10,8 +10,8 @@ import { describe, expect, test } from 'vitest';
 
 import { todo } from '@dxos/debug';
 import { Obj, Ref } from '@dxos/echo';
-import { ObjectId, type RefResolver, create, getMeta, setRefResolver } from '@dxos/echo/internal';
-import { ComputeEventLogger, Function, createEventLogger, setUserFunctionIdInMetadata } from '@dxos/functions';
+import { ObjectId, type RefResolver, setRefResolver } from '@dxos/echo/internal';
+import { Function, createEventLogger, setUserFunctionIdInMetadata } from '@dxos/functions';
 import { type RemoteFunctionExecutionService } from '@dxos/functions-runtime';
 import { ServiceContainer } from '@dxos/functions-runtime';
 import { invariant } from '@dxos/invariant';

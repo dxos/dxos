@@ -28,7 +28,7 @@ import {
   QueueService,
   TracingService,
 } from '@dxos/functions';
-import { TestDatabaseLayer, FunctionInvocationServiceLayerTest } from '@dxos/functions-runtime/testing';
+import { FunctionInvocationServiceLayerTest, TestDatabaseLayer } from '@dxos/functions-runtime/testing';
 import { invariant } from '@dxos/invariant';
 import { ObjectId } from '@dxos/keys';
 import { MarkdownBlueprint, MarkdownFunction } from '@dxos/plugin-markdown/toolkit';

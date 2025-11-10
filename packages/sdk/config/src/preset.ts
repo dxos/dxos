@@ -2,8 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as Match from 'effect/Match';
+
 import { Config } from './config';
-import { Match } from 'effect';
 
 export type ConfigPresetOptions = {
   /**

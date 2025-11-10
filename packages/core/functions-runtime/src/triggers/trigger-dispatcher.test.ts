@@ -16,13 +16,13 @@ import { Filter, Obj, Query, Ref } from '@dxos/echo';
 import { defineFunction } from '@dxos/functions';
 import { serializeFunction } from '@dxos/functions';
 import { ComputeEventLogger, CredentialsService, DatabaseService, QueueService } from '@dxos/functions';
+import { Function, Trigger } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { DataType } from '@dxos/schema';
 
 import { FunctionInvocationServiceLayerTestMocked } from '../services/function-invocation-service';
 import { TestDatabaseLayer } from '../testing';
 import { TracingServiceExt } from '../trace';
-import { Function, Trigger } from '@dxos/functions';
 
 import { InvocationTracer } from './invocation-tracer';
 import { TriggerDispatcher } from './trigger-dispatcher';

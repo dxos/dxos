@@ -11,6 +11,7 @@ import { Capabilities, type PluginContext, contributes } from '@dxos/app-framewo
 import { GenericToolkit, makeToolExecutionServiceFromFunctions, makeToolResolverFromFunctions } from '@dxos/assistant';
 import { Resource } from '@dxos/context';
 import { Query, Ref } from '@dxos/echo';
+import { CredentialsService, DatabaseService, QueueService } from '@dxos/functions';
 import {
   FunctionImplementationResolver,
   FunctionInvocationServiceLayer,
@@ -19,7 +20,6 @@ import {
   RemoteFunctionExecutionService,
   TriggerDispatcher,
 } from '@dxos/functions-runtime';
-import { CredentialsService, DatabaseService, FunctionInvocationService, QueueService } from '@dxos/functions';
 import { TriggerStateStore } from '@dxos/functions-runtime';
 import { invariant } from '@dxos/invariant';
 import { type SpaceId } from '@dxos/keys';

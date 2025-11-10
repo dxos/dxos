@@ -6,12 +6,12 @@ import React from 'react';
 
 import { Filter } from '@dxos/echo';
 import { Obj } from '@dxos/echo';
+import { InvocationTraceStartEvent } from '@dxos/functions-runtime';
 import { Assistant } from '@dxos/plugin-assistant';
 import { type Queue, useQuery, useQueue } from '@dxos/react-client/echo';
 import { Timeline, useExecutionGraph } from '@dxos/react-ui-components';
 
 import { type ComponentProps } from './types';
-import { InvocationTraceStartEvent } from "@dxos/functions-runtime";
 
 export const ExecutionGraphModule = ({ space, traceQueue }: ComponentProps & { traceQueue?: Queue }) => {
   const chats = useQuery(space, Filter.type(Assistant.Chat));

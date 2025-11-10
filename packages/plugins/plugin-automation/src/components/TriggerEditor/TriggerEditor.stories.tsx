@@ -6,6 +6,8 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 
 import { Filter, Obj, Ref, Tag, Type } from '@dxos/echo';
+import { Function } from '@dxos/functions';
+import { Trigger } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { faker } from '@dxos/random';
 import { useQuery } from '@dxos/react-client/echo';
@@ -18,8 +20,6 @@ import { functions } from '../../testing';
 import { translations } from '../../translations';
 
 import { TriggerEditor, type TriggerEditorProps } from './TriggerEditor';
-import { Function } from "@dxos/functions";
-import { Trigger } from "@dxos/functions";
 
 const types = [
   // TODO(burdon): Get label from annotation.

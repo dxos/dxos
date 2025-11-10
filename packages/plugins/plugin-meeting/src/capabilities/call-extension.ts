@@ -8,6 +8,7 @@ import { Capabilities, type PluginContext, contributes, createIntent } from '@dx
 import { extractionAnthropicFunction, processTranscriptMessage } from '@dxos/assistant/extraction';
 import { Filter, type Obj, Query, Type } from '@dxos/echo';
 import { FunctionExecutor } from '@dxos/functions-runtime';
+import { ServiceContainer } from '@dxos/functions-runtime';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { ClientCapabilities } from '@dxos/plugin-client';
@@ -23,7 +24,6 @@ import { meta } from '../meta';
 import { Meeting, MeetingAction } from '../types';
 
 import { MeetingCapabilities } from './capabilities';
-import { ServiceContainer } from '@dxos/functions-runtime';
 
 // TODO(wittjosiah): Factor out.
 // TODO(wittjosiah): Can we stop using protobuf for this?

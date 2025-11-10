@@ -3,10 +3,6 @@
 //
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
-import * as Layer from 'effect/Layer';
-
-import { AiService } from '@dxos/ai';
-import { DatabaseService } from '@dxos/echo-db';
 
 import { type FunctionDefinition } from '../handler';
 

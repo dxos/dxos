@@ -9,7 +9,6 @@ import * as Scope from 'effect/Scope';
 
 import { AiService } from '@dxos/ai';
 import { raise } from '@dxos/debug';
-import { Obj, Query } from '@dxos/echo';
 import { DatabaseService } from '@dxos/echo-db';
 import {
   ComputeEventLogger,

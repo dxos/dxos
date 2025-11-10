@@ -3,11 +3,12 @@
 //
 
 import React, { type ComponentType, type FC, type JSX, useMemo } from 'react';
+
+import { type InvocationSpan } from '@dxos/functions-runtime';
+import { TraceEvent } from '@dxos/functions-runtime';
 import { Filter, type Queue, useQuery } from '@dxos/react-client/echo';
 import { type ThemedClassName } from '@dxos/react-ui';
 import { SyntaxHighlighter, createElement } from '@dxos/react-ui-syntax-highlighter';
-import { InvocationSpan } from "@dxos/functions-runtime";
-import { TraceEvent } from "@dxos/functions-runtime";
 
 type RawDataPanelProps = {
   span: InvocationSpan;

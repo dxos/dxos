@@ -2,17 +2,18 @@
 // Copyright 2023 DXOS.org
 //
 
-import type * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
+import { type AiService } from '@dxos/ai';
 import { Obj, Type } from '@dxos/echo';
 import { type DatabaseService } from '@dxos/echo-db';
 import { assertArgument } from '@dxos/invariant';
-import { AiService } from '@dxos/ai';
-import { type TracingService, type QueueService, type ComputeEventLogger, type CredentialsService } from '.';
+
 import { Function } from './types';
 import { getUserFunctionIdInMetadata, setUserFunctionIdInMetadata } from './url';
+
+import { type ComputeEventLogger, type CredentialsService, type QueueService, type TracingService } from '.';
 
 // TODO(burdon): Model after http request. Ref Lambda/OpenFaaS.
 // https://docs.aws.amazon.com/lambda/latest/dg/typescript-handler.html

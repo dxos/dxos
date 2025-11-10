@@ -6,7 +6,7 @@ import * as Schema from 'effect/Schema';
 
 import { asyncTimeout } from '@dxos/async';
 import { Expando } from '@dxos/echo/internal';
-import { FunctionDefinition } from '@dxos/functions';
+import { type FunctionDefinition } from '@dxos/functions';
 import { type FunctionExecutor } from '@dxos/functions-runtime';
 import { log } from '@dxos/log';
 import { DataType } from '@dxos/schema';

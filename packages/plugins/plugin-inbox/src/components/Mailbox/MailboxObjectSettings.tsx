@@ -5,6 +5,7 @@
 import React, { useCallback, useMemo } from 'react';
 
 import { LayoutAction, createIntent, useIntentDispatcher } from '@dxos/app-framework';
+import { Obj } from '@dxos/echo';
 import { Trigger } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { AutomationAction } from '@dxos/plugin-automation/types';
@@ -14,7 +15,6 @@ import { Button, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '../../meta';
 import { type Mailbox } from '../../types';
-import { Obj } from '@dxos/echo';
 
 export const MailboxObjectSettings = ({ object }: { object: Mailbox.Mailbox }) => {
   const { t } = useTranslation(meta.id);

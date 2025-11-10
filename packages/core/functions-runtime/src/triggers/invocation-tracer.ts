@@ -9,6 +9,7 @@ import * as Layer from 'effect/Layer';
 import { Obj, Ref } from '@dxos/echo';
 import { type Queue } from '@dxos/echo-db';
 import { QueueService } from '@dxos/functions';
+import type { Trigger } from '@dxos/functions';
 import { DXN, ObjectId } from '@dxos/keys';
 
 import {
@@ -17,7 +18,6 @@ import {
   InvocationTraceEventType,
   InvocationTraceStartEvent,
 } from '../trace';
-import type { Trigger } from '@dxos/functions';
 
 export type FunctionInvocationPayload = {
   data?: any;

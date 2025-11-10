@@ -16,10 +16,9 @@ import {
   DatabaseService,
   Function,
   FunctionInvocationService,
-  TracingService,
   deserializeFunction,
 } from '@dxos/functions';
-import { TracingServiceExt, InvocationTracer } from '@dxos/functions-runtime';
+import { InvocationTracer, TracingServiceExt } from '@dxos/functions-runtime';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { TemplateEditor } from '@dxos/plugin-assistant';

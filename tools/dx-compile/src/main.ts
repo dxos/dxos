@@ -6,6 +6,8 @@ import { readFile, readdir, rm, writeFile } from 'node:fs/promises';
 import { basename, dirname } from 'node:path';
 
 import type * as Swc from '@swc/core';
+import * as Array from 'effect/Array';
+import * as Function from 'effect/Function';
 import { type Format, type Platform, type Plugin, build, formatMessages } from 'esbuild';
 import glsl from 'esbuild-plugin-glsl';
 import RawPlugin from 'esbuild-plugin-raw';
@@ -19,7 +21,6 @@ import { esmOutputToCjs } from './esm-output-to-cjs-plugin';
 import { fixRequirePlugin } from './fix-require-plugin';
 import { restrictRelativeImportsPlugin } from './plugin-restrict-relative-imports';
 import { SwcTransformPlugin } from './swc-transform-plugin';
-import { Function, Array, String } from 'effect';
 
 export interface EsbuildExecutorOptions {
   bundle: boolean;
