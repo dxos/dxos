@@ -27,7 +27,7 @@ import {
   QueueService,
   TracingService,
 } from '@dxos/functions';
-import { TestDatabaseLayer } from '@dxos/functions-runtime/testing';
+import { FunctionInvocationServiceLayerTest, TestDatabaseLayer } from '@dxos/functions-runtime/testing';
 import { invariant } from '@dxos/invariant';
 import { ObjectId } from '@dxos/keys';
 import { Markdown } from '@dxos/plugin-markdown/types';
@@ -45,7 +45,7 @@ const TestLayer = Layer.mergeAll(
   ComputeEventLogger.layerFromTracing,
 ).pipe(
   Layer.provideMerge(
-    FunctionInvocationService.layerTest({
+    FunctionInvocationServiceLayerTest({
       functions: [MarkdownFunction.create, MarkdownFunction.open, MarkdownFunction.update],
     }),
   ),

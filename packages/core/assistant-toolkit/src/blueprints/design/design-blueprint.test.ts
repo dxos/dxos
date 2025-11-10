@@ -25,7 +25,7 @@ import {
   QueueService,
   TracingService,
 } from '@dxos/functions';
-import { TestDatabaseLayer } from '@dxos/functions/testing';
+import { TestDatabaseLayer } from '@dxos/functions-runtime/testing';
 import { log } from '@dxos/log';
 import { Markdown } from '@dxos/plugin-markdown/types';
 import { DataType } from '@dxos/schema';
