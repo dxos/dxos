@@ -13,6 +13,7 @@ import { type Message, build } from 'esbuild';
 
 import { BaseError } from '@dxos/errors';
 import { PublicKey } from '@dxos/keys';
+import { Unit } from '@dxos/util';
 
 type BundleOptions = {
   entryPoint: string;
@@ -119,10 +120,9 @@ class BundleCreationError extends BaseError.extend('BUNDLE_CREATION_ERROR', 'Bun
   }
 }
 
-// TODO(dmaretskyi): Consider using Unit.Kilobyte/Megabyte/Gigabyte from @dxos/util (note: uses 1000 vs 1024).
 const formatBytes = (bytes: number) => {
-  if (bytes < 1024) return `${bytes}B`;
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(2)}KB`;
-  if (bytes < 1024 * 1024 * 1024) return `${(bytes / (1024 * 1024)).toFixed(2)}MB`;
-  return `${(bytes / (1024 * 1024 * 1024)).toFixed(2)}GB`;
+  if (bytes < Unit.Kilobyte(1).unit.quotient) return Unit.Byte(bytes).toString();
+  if (bytes < Unit.Megabyte(1).unit.quotient) return Unit.Kilobyte(bytes).toString();
+  if (bytes < Unit.Gigabyte(1).unit.quotient) return Unit.Megabyte(bytes).toString();
+  return Unit.Gigabyte(bytes).toString();
 };
