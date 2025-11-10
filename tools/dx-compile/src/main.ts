@@ -151,6 +151,7 @@ export default async (options: EsbuildExecutorOptions): Promise<{ success: boole
           // The log transform was generating this warning.
           'this-is-undefined-in-esm': 'info',
         },
+        absPaths: ['log'],
         banner: {
           js: format === 'esm' && platform === 'node' ? CREATE_REQUIRE_BANNER : '',
         },
