@@ -24,11 +24,11 @@ import { useMessageToolbarActions } from './toolbar';
 export type MessageContainerProps = {
   space?: Space;
   message?: MessageType.Message;
-  inMailbox: Mailbox.Mailbox;
+  mailbox: Mailbox.Mailbox;
   role?: string;
 };
 
-export const MessageContainer = ({ space, message, inMailbox, role }: MessageContainerProps) => {
+export const MessageContainer = ({ space, message, mailbox, role }: MessageContainerProps) => {
   const { t } = useTranslation(meta.id);
 
   const hasEnrichedContent = useMemo(() => {
@@ -72,7 +72,7 @@ export const MessageContainer = ({ space, message, inMailbox, role }: MessageCon
   return (
     <StackItem.Content classNames='relative' toolbar>
       <ElevationProvider elevation='positioned'>
-        <MenuProvider {...menu} attendableId={Obj.getDXN(inMailbox).toString()}>
+        <MenuProvider {...menu} attendableId={Obj.getDXN(mailbox).toString()}>
           <ToolbarMenu />
         </MenuProvider>
       </ElevationProvider>

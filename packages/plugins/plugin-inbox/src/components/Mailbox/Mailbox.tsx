@@ -170,11 +170,11 @@ export const Mailbox = ({ id, role, messages, tags, currentMessageId, ignoreAtte
 
   const getCells = useCallback<NonNullable<GridContentProps['getCells']>>(
     (range, plane) => {
+      const cells: DxGridPlaneCells = {};
       if (messages) {
         const now = new Date();
         switch (plane) {
           case 'grid': {
-            const cells: DxGridPlaneCells = {};
             for (let row = range.start.row; row <= range.end.row && row < messages.length; row++) {
               const current = currentMessageId === messages[row].id;
               cells[toPlaneCellIndex({ col: 0, row })] = {
@@ -188,7 +188,7 @@ export const Mailbox = ({ id, role, messages, tags, currentMessageId, ignoreAtte
         }
       }
 
-      return {} as DxGridPlaneCells;
+      return cells;
     },
     [messages, currentMessageId],
   );

@@ -805,6 +805,11 @@
         },
         {
           "type": "json",
+          "path": "packages/ui/react-ui-calendar/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/ui/react-ui-canvas/package.json",
           "jsonpath": "$.version"
         },

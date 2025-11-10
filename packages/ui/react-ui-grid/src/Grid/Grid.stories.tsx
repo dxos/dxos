@@ -6,9 +6,11 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { type MouseEvent, type MutableRefObject, useCallback, useRef, useState } from 'react';
 
 import { defaultRowSize } from '@dxos/lit-grid';
+import { type DxGridPlaneCells } from '@dxos/lit-grid';
 import { faker } from '@dxos/random';
 import { DropdownMenu } from '@dxos/react-ui';
-import { withTheme } from '@dxos/react-ui/testing';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import { toPlaneCellIndex } from '@dxos/react-ui-grid';
 import { Combobox, type ComboboxRootProps } from '@dxos/react-ui-searchlist';
 
 import { Grid, type GridContentProps, type GridEditing, type GridRootProps } from './Grid';
@@ -62,7 +64,7 @@ const GridStory = ({ initialCells, ...props }: GridStoryProps) => {
   }, []);
 
   return (
-    <div role='none' className='fixed inset-0 grid'>
+    <div role='none' className='contents'>
       <Grid.Root id='story' editing={editing} onEditingChange={handleEditingChange}>
         {/* TODO(burdon): Why is this property not just "cells" or "values" */}
         <Grid.Content {...props} initialCells={cells} onClick={handleClick} />
@@ -102,7 +104,7 @@ const GridStory = ({ initialCells, ...props }: GridStoryProps) => {
 const meta = {
   title: 'ui/react-ui-grid/Grid',
   component: GridStory,
-  decorators: [withTheme],
+  decorators: [withTheme, withLayout({ container: 'column' })],
   parameters: {
     layout: 'fullscreen',
   },
@@ -111,6 +113,8 @@ const meta = {
 export default meta;
 
 type Story = StoryObj<typeof meta>;
+
+export const Default: Story = {};
 
 export const Basic: Story = {
   args: {
@@ -158,26 +162,47 @@ export const Basic: Story = {
   },
 };
 
-// TODO(burdon): How to make single-column?
-export const SingleColumn: Story = {
+const cellSize = 40;
+
+// TODO(burdon): Calendar.
+export const Calendar: Story = {
   args: {
     id: 'story',
-    limitColumns: 1,
+    limitColumns: 7,
     columnDefault: {
       grid: {
-        size: 180,
+        size: cellSize,
+        resizeable: false,
       },
     },
     rowDefault: {
       grid: {
-        size: defaultRowSize,
+        size: cellSize,
         resizeable: false,
       },
     },
-    columns: {
-      grid: {
-        0: { size: 200 },
-      },
+    getCells: (range, plane) => {
+      const cells: DxGridPlaneCells = {};
+      if (plane === 'grid') {
+        for (let col = range.start.col; col <= range.end.col; col++) {
+          for (let row = range.start.row; row <= range.end.row; row++) {
+            // TODO(burdon): Formatting changes when cell is selected.
+            cells[toPlaneCellIndex({ col, row })] = {
+              readonly: true,
+              accessoryHtml: '<div class="flex bs-full is-full justify-center items-center overflow-hidden">0</div>',
+              className: '',
+            };
+          }
+        }
+      }
+      return cells;
     },
   },
+  render: (args) => (
+    <div className='bs-full flex justify-center'>
+      <div className='bs-full is-[288px] border-x border-separator'>
+        <GridStory {...args} />
+      </div>
+    </div>
+  ),
 };
