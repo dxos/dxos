@@ -102,7 +102,6 @@ export default (context: PluginContext) =>
         }
 
         log.info('extracted email domain', { emailDomain });
-
         const { objects: existingOrganisations } = await space.db.query(Filter.type(Organization.Organization)).run();
         const matchingOrg = existingOrganisations.find((org) => {
           if (org.website) {
@@ -118,8 +117,8 @@ export default (context: PluginContext) =>
                 websiteDomain.endsWith(`.${emailDomain}`) ||
                 emailDomain.endsWith(`.${websiteDomain}`)
               );
-            } catch (e) {
-              log.warn('Error parsing website URL', { website: org.website, error: e });
+            } catch (err) {
+              log.warn('parsing website URL', { website: org.website, error: err });
               return false;
             }
           }

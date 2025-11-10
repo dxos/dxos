@@ -469,6 +469,9 @@
       "path": "packages/ui/react-ui-board/tsconfig.json"
     },
     {
+      "path": "packages/ui/react-ui-calendar/tsconfig.json"
+    },
+    {
       "path": "packages/ui/react-ui-canvas/tsconfig.json"
     },
     {
