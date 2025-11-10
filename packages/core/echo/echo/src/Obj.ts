@@ -139,14 +139,14 @@ export const getDXN = (obj: Any | Relation.Any): DXN => {
 
 /**
  * @returns The DXN of the object's type.
- * @example dxn:example.com/type/Contact:1.0.0
+ * @example dxn:example.com/type/Person:1.0.0
  */
 // TODO(burdon): Expando does not have a type.
 export const getTypeDXN = EchoSchema.getType;
 
 /**
  * @returns The typename of the object's type.
- * @example `example.com/type/Contact`
+ * @example `example.com/type/Person`
  */
 export const getTypename = (obj: Any | Relation.Any): string | undefined => {
   const schema = getSchema(obj);

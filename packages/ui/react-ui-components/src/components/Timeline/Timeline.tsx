@@ -221,7 +221,7 @@ export const Timeline = forwardRef<ScrollController, TimelineProps>(
                   data-index={index}
                   aria-current={current === index}
                   className={mx(
-                    'group flex shrink-0 overflow-hidden pis-3 pie-3 gap-2 items-center',
+                    'group flex shrink-0 overflow-hidden pli-3 gap-2 items-center',
                     // TODO(burdon): Factor out fragment.
                     'aria-[current=true]:bg-activeSurface hover:bg-hoverSurface',
                   )}

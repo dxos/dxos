@@ -5,7 +5,7 @@
 import * as Schema from 'effect/Schema';
 
 import { SpaceSchema } from '@dxos/react-client/echo';
-import { DataType, TypenameAnnotationId } from '@dxos/schema';
+import { TypenameAnnotationId, View } from '@dxos/schema';
 
 import { meta } from '../meta';
 
@@ -13,6 +13,7 @@ const MASONRY_ACTION = `${meta.id}/action`;
 
 export const MasonryProps = Schema.Struct({
   name: Schema.optional(Schema.String),
+  // TODO(wittjosiah): This should be a query input instead.
   typename: Schema.optional(
     Schema.String.annotations({
       [TypenameAnnotationId]: ['used-static', 'dynamic'],
@@ -24,6 +25,6 @@ export const MasonryProps = Schema.Struct({
 export class CreateMasonry extends Schema.TaggedClass<CreateMasonry>()(`${MASONRY_ACTION}/create`, {
   input: Schema.extend(Schema.Struct({ space: SpaceSchema }), MasonryProps),
   output: Schema.Struct({
-    object: DataType.View.View,
+    object: View.View,
   }),
 }) {}

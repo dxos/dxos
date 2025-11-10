@@ -41,6 +41,7 @@
     "@dxos/react-ui-editor": "workspace:*",
     "@dxos/react-ui-stack": "workspace:*",
     "@dxos/react-ui-syntax-highlighter": "workspace:*",
+    "@dxos/types": "workspace:*",
     "@dxos/util": "workspace:*",
     "@effect/ai": "0.29.1",
     "@effect/experimental": "0.56.0",

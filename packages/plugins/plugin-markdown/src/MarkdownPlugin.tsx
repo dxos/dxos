@@ -9,7 +9,7 @@ import { SpaceCapabilities } from '@dxos/plugin-space';
 import { defineObjectForm } from '@dxos/plugin-space/types';
 import { createDocAccessor, getTextInRange } from '@dxos/react-client/echo';
 import { translations as editorTranslations } from '@dxos/react-ui-editor';
-import { DataType } from '@dxos/schema';
+import { Text } from '@dxos/schema';
 
 import {
   AnchorSort,
@@ -90,7 +90,12 @@ export const MarkdownPlugin = definePlugin(meta, () => [
   defineModule({
     id: `${meta.id}/module/schema`,
     activatesOn: ClientEvents.SetupSchema,
-    activate: () => contributes(ClientCapabilities.Schema, [DataType.Text.Text]),
+    activate: () => contributes(ClientCapabilities.Schema, [Text.Text]),
+  }),
+  defineModule({
+    id: `${meta.id}/module/whitelist-schema`,
+    activatesOn: ClientEvents.SetupSchema,
+    activate: () => contributes(ClientCapabilities.SchemaWhiteList, [Markdown.Document]),
   }),
   defineModule({
     id: `${meta.id}/module/react-surface`,

@@ -12,8 +12,9 @@ import { CollectionAction } from '@dxos/plugin-space/types';
 import { ThreadCapabilities } from '@dxos/plugin-thread';
 import { ThreadAction } from '@dxos/plugin-thread/types';
 import { TranscriptAction } from '@dxos/plugin-transcription/types';
-import { Filter, Query, fullyQualifiedId, getSpace, parseId } from '@dxos/react-client/echo';
-import { DataType } from '@dxos/schema';
+import { Filter, Query, getSpace, parseId } from '@dxos/react-client/echo';
+import { Text } from '@dxos/schema';
+import { type Message } from '@dxos/types';
 
 import { Meeting, MeetingAction } from '../types';
 
@@ -27,7 +28,9 @@ export default (context: PluginContext) =>
         Effect.gen(function* () {
           const { dispatch } = context.getCapability(Capabilities.IntentDispatcher);
           const { object: meetingCollection } = yield* dispatch(
-            createIntent(CollectionAction.CreateQueryCollection, { typename: Type.getTypename(Meeting.Meeting) }),
+            createIntent(CollectionAction.CreateQueryCollection, {
+              typename: Type.getTypename(Meeting.Meeting),
+            }),
           );
           rootCollection.objects.push(Ref.make(meetingCollection));
         }),
@@ -46,8 +49,8 @@ export default (context: PluginContext) =>
             created: new Date().toISOString(),
             participants: [],
             transcript: Ref.make(transcript),
-            notes: Ref.make(DataType.Text.make()),
-            summary: Ref.make(DataType.Text.make()),
+            notes: Ref.make(Text.make()),
+            summary: Ref.make(Text.make()),
             thread: Ref.make(thread),
           });
 
@@ -60,7 +63,9 @@ export default (context: PluginContext) =>
         const callManager = context.getCapability(ThreadCapabilities.CallManager);
         const state = context.getCapability(MeetingCapabilities.State);
         state.activeMeeting = object;
-        callManager.setActivity(Type.getTypename(Meeting.Meeting)!, { meetingId: fullyQualifiedId(object) });
+        callManager.setActivity(Type.getTypename(Meeting.Meeting)!, {
+          meetingId: object ? Obj.getDXN(object).toString() : '',
+        });
         return { data: { object } };
       },
     }),
@@ -78,7 +83,7 @@ export default (context: PluginContext) =>
         const enabled = !!transcriptionEnabled;
         if (space && transcriptDxn) {
           // NOTE: Must set queue before enabling transcription.
-          const queue = space.queues.get<DataType.Message.Message>(Type.DXN.parse(transcriptDxn));
+          const queue = space.queues.get<Message.Message>(Type.DXN.parse(transcriptDxn));
           state.transcriptionManager?.setQueue(queue);
         }
 

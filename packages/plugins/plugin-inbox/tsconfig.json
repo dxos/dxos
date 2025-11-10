@@ -96,6 +96,9 @@
       "path": "../../sdk/schema"
     },
     {
+      "path": "../../sdk/types"
+    },
+    {
       "path": "../../ui/lit-ui"
     },
     {
@@ -103,6 +106,9 @@
     },
     {
       "path": "../../ui/react-ui-attention"
+    },
+    {
+      "path": "../../ui/react-ui-calendar"
     },
     {
       "path": "../../ui/react-ui-components"

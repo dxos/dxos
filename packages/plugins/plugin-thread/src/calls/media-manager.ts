@@ -59,9 +59,13 @@ const USE_INAUDIBLE_AUDIO = true;
 
 export class MediaManager extends Resource {
   public readonly stateUpdated = new Event<MediaState>();
-  private readonly _state: MediaState = { pulledVideoStreams: {}, pulledAudioTracks: {} };
-  private _speakingMonitor?: SpeakingMonitor = undefined;
 
+  private readonly _state: MediaState = {
+    pulledVideoStreams: {},
+    pulledAudioTracks: {},
+  };
+
+  private _speakingMonitor?: SpeakingMonitor = undefined;
   private _trackToReconcile: EncodedTrackName[] = [];
   private _blackCanvasStreamTrack?: MediaStreamTrack = undefined;
   private _inaudibleAudioStreamTrack?: MediaStreamTrack = undefined;
@@ -85,6 +89,7 @@ export class MediaManager extends Resource {
       width: VIDEO_WIDTH,
       height: VIDEO_HEIGHT,
     });
+
     this._state.videoTrack = this._blackCanvasStreamTrack;
     this._state.videoStream = new MediaStream();
     this._state.videoStream.addTrack(this._state.videoTrack);
@@ -137,6 +142,7 @@ export class MediaManager extends Resource {
     this._state.videoStream!.removeTrack(this._state.videoTrack!);
     this._state.videoTrack = await getUserMediaTrack('videoinput', { width: VIDEO_WIDTH, height: VIDEO_HEIGHT });
     this._state.videoStream!.addTrack(this._state.videoTrack);
+
     this._state.videoEnabled = true;
     this.stateUpdated.emit(this._state);
     this._pushTracksTask!.schedule();
@@ -226,7 +232,6 @@ export class MediaManager extends Resource {
     // Wait for cloudflare to process the track.
     await cancelWithContext(this._ctx, sleep(800));
     const trackNames = this._trackToReconcile;
-
     const tracksToPull = trackNames.filter(
       (name) => !this._state.pulledAudioTracks[name] && !this._state.pulledVideoStreams[name],
     );
@@ -258,8 +263,8 @@ export class MediaManager extends Resource {
       currentAudioTracks: Object.keys(this._state.pulledAudioTracks),
       currentVideoStreams: Object.keys(this._state.pulledVideoStreams),
     });
-    this.stateUpdated.emit(this._state);
 
+    this.stateUpdated.emit(this._state);
     if (pullResults.some(({ shouldRetry }) => shouldRetry)) {
       await cancelWithContext(this._ctx, sleep(RETRY_INTERVAL));
       log.info('retrying pull tracks', { tracksToPull });
@@ -296,7 +301,6 @@ export class MediaManager extends Resource {
     }
 
     const shouldRetry = pushVideoResult.shouldRetry || pushAudioResult.shouldRetry || pushScreenshareResult.shouldRetry;
-
     if (updated) {
       this.stateUpdated.emit(this._state);
     }
@@ -356,7 +360,6 @@ export class MediaManager extends Resource {
     }
 
     const ctx = this._ctx.derive();
-
     try {
       return {
         track: await this._state.peer!.pushTrack({

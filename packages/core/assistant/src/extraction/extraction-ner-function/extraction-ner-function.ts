@@ -10,7 +10,7 @@ import { create } from '@dxos/echo/internal';
 import { DatabaseService } from '@dxos/echo-db';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { DataType } from '@dxos/schema';
+import { Message } from '@dxos/types';
 
 import { ExtractionInput, ExtractionOutput } from '../extraction';
 import { findQuotes, insertReferences } from '../quotes';
@@ -50,7 +50,7 @@ export const extractionNerFunction = defineFunction({
       return { ...block, text: insertReferences(block._tag, quoteReferences) };
     });
 
-    const messageWithReferences = create(DataType.Message.Message, {
+    const messageWithReferences = create(Message.Message, {
       ...message,
       blocks: blocksWithReferences,
     });

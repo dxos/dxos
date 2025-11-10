@@ -72,7 +72,7 @@ const Scalar: FC<{ value: any }> = ({ value }) => {
 
 const Box: FC<HTMLAttributes<HTMLDivElement>> = ({ children, className, ...props }) => {
   return (
-    <div className={mx('flex px-2 border border-l-0 font-mono truncate', className)} {...props}>
+    <div className={mx('flex pli-2 border border-l-0 font-mono truncate', className)} {...props}>
       {children}
     </div>
   );

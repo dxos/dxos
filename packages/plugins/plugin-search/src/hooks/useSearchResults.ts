@@ -5,7 +5,7 @@
 import { yieldOrContinue } from 'main-thread-scheduling';
 import { useEffect, useState } from 'react';
 
-import { DataType } from '@dxos/schema';
+import { Text } from '@dxos/schema';
 
 // TODO(thure): Deprecate search-sync, move still-relevant utilities elsewhere (here, probably).
 import { mapObjectToTextFields, queryStringToMatch } from './sync';
@@ -20,7 +20,7 @@ export const filterObjects = async <T extends Record<string, any>>(
   }
   await Promise.all(
     objects
-      .filter((object) => !(object instanceof DataType.Text.Text))
+      .filter((object) => !(object instanceof Text.Text))
       .map(async (object) => {
         await yieldOrContinue('interactive');
         const fields = mapObjectToTextFields<T>(object);

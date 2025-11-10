@@ -14,8 +14,8 @@ import { defineArtifact } from '@dxos/blueprints';
 import { Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { SpaceAction } from '@dxos/plugin-space/types';
-import { Filter, type Space, fullyQualifiedId } from '@dxos/react-client/echo';
-import { DataType } from '@dxos/schema';
+import { Filter, type Space } from '@dxos/react-client/echo';
+import { View } from '@dxos/schema';
 import { isNonNullable } from '@dxos/util';
 
 import { meta } from '../meta';
@@ -48,7 +48,7 @@ export default () => {
         execute: async (_, { extensions }) => {
           invariant(extensions?.space, 'No space');
           const space = extensions.space;
-          const { objects } = await space.db.query(Filter.type(DataType.View.View)).run();
+          const { objects } = await space.db.query(Filter.type(View.View)).run();
 
           const mapInfo = await Promise.all(
             objects.map(async (view) => {
@@ -58,7 +58,7 @@ export default () => {
               }
 
               return {
-                id: fullyQualifiedId(view),
+                id: Obj.getDXN(view).toString(),
                 name: view.name ?? 'Unnamed Map',
                 typename: view.query.typename,
               };

@@ -13,7 +13,7 @@ import { Filter, useQuery } from '@dxos/react-client/echo';
 import { useClientProvider, withClientProvider } from '@dxos/react-client/testing';
 import { Button } from '@dxos/react-ui';
 import { withTheme } from '@dxos/react-ui/testing';
-import { DataType } from '@dxos/schema';
+import { Person } from '@dxos/types';
 
 import { translations } from '../../translations';
 
@@ -22,12 +22,12 @@ import { ObjectPicker } from './ObjectPicker';
 faker.seed(1);
 
 const createPerson = () =>
-  Obj.make(DataType.Person.Person, {
+  Obj.make(Person.Person, {
     fullName: faker.person.fullName(),
   });
 
 const omitId = Schema.omit<any, any, ['id']>('id');
-const personSchema = omitId(DataType.Person.Person);
+const personSchema = omitId(Person.Person);
 
 // Mock functions for testing
 const mockHandleSelect = fn();
@@ -65,7 +65,7 @@ const DefaultStory = () => {
     (values: any) => {
       console.log('[on create]', values);
       if (!space) return;
-      const newPerson = space.db.add(Obj.make(DataType.Person.Person, values));
+      const newPerson = space.db.add(Obj.make(Person.Person, values));
       mockHandleCreate(values);
       return newPerson;
     },
@@ -101,7 +101,7 @@ const meta = {
   decorators: [
     withTheme,
     withClientProvider({
-      types: [DataType.Person.Person],
+      types: [Person.Person],
       createIdentity: true,
       createSpace: true,
     }),

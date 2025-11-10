@@ -4,14 +4,14 @@
 
 import React from 'react';
 
-import { type ArticleComponentProps } from '@dxos/app-framework';
+import { type SurfaceComponentProps } from '@dxos/app-framework/react';
 import { useTranslation } from '@dxos/react-ui';
 import { baseSurface, descriptionMessage, mx } from '@dxos/react-ui-theme';
-import { type DataType } from '@dxos/schema';
+import { type Collection } from '@dxos/schema';
 
 import { meta } from '../meta';
 
-export const CollectionArticle = ({ object }: ArticleComponentProps<DataType.Collection.Collection>) => {
+export const CollectionArticle = ({ object }: SurfaceComponentProps<Collection.Collection>) => {
   const { t } = useTranslation(meta.id);
 
   return (

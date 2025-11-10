@@ -5,7 +5,8 @@
 import * as Function from 'effect/Function';
 import { useCallback, useState } from 'react';
 
-import { chain, createIntent, useIntentDispatcher } from '@dxos/app-framework';
+import { chain, createIntent } from '@dxos/app-framework';
+import { useIntentDispatcher } from '@dxos/app-framework/react';
 import { Obj } from '@dxos/echo';
 import { Script } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
@@ -41,7 +42,10 @@ export const useCreateAndDeployScriptTemplates = (space: Space | undefined, scri
       scriptTemplates.map(async (template) => {
         const result = await dispatch(
           Function.pipe(
-            createIntent(ScriptAction.CreateScript, { space, initialTemplateId: template.id as any }),
+            createIntent(ScriptAction.CreateScript, {
+              space,
+              initialTemplateId: template.id as any,
+            }),
             chain(SpaceAction.AddObject, { target: space }),
           ),
         );

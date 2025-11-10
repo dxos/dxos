@@ -18,11 +18,11 @@ import { List } from '@dxos/react-ui-list';
 import { cardSpacing } from '@dxos/react-ui-stack';
 import { inputTextLabel, mx, subtleHover } from '@dxos/react-ui-theme';
 import {
-  type DataType,
   FieldSchema,
   type FieldType,
   ProjectionModel,
   VIEW_FIELD_LIMIT,
+  type View,
   getTypenameFromQuery,
 } from '@dxos/schema';
 
@@ -36,8 +36,8 @@ const listItemGrid = 'grid grid-cols-subgrid col-span-5';
 export type ViewEditorProps = ThemedClassName<
   {
     schema: Schema.Schema.AnyNoContext;
-    view: DataType.View.View;
-    mode?: 'schema' | 'query';
+    view: View.View;
+    mode?: 'schema' | 'query' | 'named-query';
     registry?: SchemaRegistry;
     readonly?: boolean;
     showHeading?: boolean;
@@ -96,10 +96,13 @@ export const ViewEditor = forwardRef<ProjectionModel, ViewEditorProps>(
             : QueryAST.Query.annotations({ title: 'Query' }),
       });
 
-      if (mode === 'query') {
-        return Schema.Struct({
+      if (mode === 'query' || mode === 'named-query') {
+        const name = Schema.Struct({
           name: Schema.optional(Schema.String.annotations({ title: 'Name' })),
-          ...base.fields,
+        });
+
+        return Schema.Struct({
+          ...(mode === 'named-query' ? { ...name.fields, ...base.fields } : base.fields),
           target: Schema.optional(Schema.String.annotations({ title: 'Target Queue' })),
         }).pipe(Schema.mutable);
       }

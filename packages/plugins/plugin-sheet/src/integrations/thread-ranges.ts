@@ -6,22 +6,16 @@ import * as Function from 'effect/Function';
 import * as Schema from 'effect/Schema';
 import { useCallback, useEffect, useMemo } from 'react';
 
-import {
-  LayoutAction,
-  chain,
-  createIntent,
-  createResolver,
-  useIntentDispatcher,
-  useIntentResolver,
-} from '@dxos/app-framework';
+import { LayoutAction, chain, createIntent, createResolver } from '@dxos/app-framework';
+import { useIntentDispatcher, useIntentResolver } from '@dxos/app-framework/react';
 import { debounce } from '@dxos/async';
 import { type CellAddress, type CompleteCellRange, inRange } from '@dxos/compute';
 import { Obj, Relation } from '@dxos/echo';
 import { ATTENDABLE_PATH_SEPARATOR, DeckAction } from '@dxos/plugin-deck/types';
 import { Thread, ThreadAction } from '@dxos/plugin-thread/types';
-import { Filter, Query, fullyQualifiedId, getSpace, useQuery } from '@dxos/react-client/echo';
+import { Filter, Query, getSpace, useQuery } from '@dxos/react-client/echo';
 import { type DxGridElement, type GridContentProps } from '@dxos/react-ui-grid';
-import { DataType } from '@dxos/schema';
+import { AnchoredTo } from '@dxos/types';
 
 import { useSheetContext } from '../components';
 import { meta } from '../meta';
@@ -61,7 +55,7 @@ export const useUpdateFocusedCellOnThreadSelection = (grid: DxGridElement | null
             return false;
           }
 
-          return data.subject === fullyQualifiedId(model.sheet) && !!data.options?.cursor;
+          return data.subject === Obj.getDXN(model.sheet).toString() && !!data.options?.cursor;
         },
         resolve: ({ options: { cursor, ref } }) => {
           setActiveRefs(ref);
@@ -81,7 +75,7 @@ export const useSelectThreadOnCellFocus = () => {
   const { dispatchPromise: dispatch } = useIntentDispatcher();
 
   const space = getSpace(model.sheet);
-  const anchors = useQuery(space, Query.select(Filter.ids(model.sheet.id)).targetOf(DataType.AnchoredTo.AnchoredTo));
+  const anchors = useQuery(space, Query.select(Filter.ids(model.sheet.id)).targetOf(AnchoredTo.AnchoredTo));
 
   const selectClosestThread = useCallback(
     (cellAddress: CellAddress) => {
@@ -100,9 +94,9 @@ export const useSelectThreadOnCellFocus = () => {
       });
 
       if (closestThread) {
-        const primary = fullyQualifiedId(model.sheet);
+        const primary = Obj.getDXN(model.sheet).toString();
         const intent = Function.pipe(
-          createIntent(ThreadAction.Select, { current: fullyQualifiedId(closestThread) }),
+          createIntent(ThreadAction.Select, { current: Obj.getDXN(closestThread).toString() }),
           chain(DeckAction.ChangeCompanion, { primary, companion: `${primary}${ATTENDABLE_PATH_SEPARATOR}comments` }),
         );
         void dispatch(intent);

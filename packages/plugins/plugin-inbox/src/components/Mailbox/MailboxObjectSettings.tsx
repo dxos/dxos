@@ -4,8 +4,9 @@
 
 import React, { useCallback, useMemo } from 'react';
 
-import { LayoutAction, createIntent, useIntentDispatcher } from '@dxos/app-framework';
+import { LayoutAction, createIntent } from '@dxos/app-framework';
 import { Obj } from '@dxos/echo';
+import { useIntentDispatcher } from '@dxos/app-framework/react';
 import { Trigger } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { AutomationAction } from '@dxos/plugin-automation/types';

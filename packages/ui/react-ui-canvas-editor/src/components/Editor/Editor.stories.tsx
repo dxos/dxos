@@ -27,7 +27,7 @@ import { Editor, type EditorController, type EditorRootProps } from './Editor';
 
 const generator: ValueGenerator = faker as any;
 
-const types = [Testing.Organization, Testing.Project, Testing.Contact];
+const types = [Testing.Organization, Testing.Project, Testing.Person];
 
 // TODO(burdon): Ref expando breaks the form.
 const RectangleShapeWithoutRef = Schema.omit<any, any, ['object']>('object')(RectangleShape);
@@ -62,7 +62,7 @@ const DefaultStory = ({ id = 'test', init, sidebar, children, ...props }: Render
   const [selection, selected] = useSelection(graph);
 
   return (
-    <div className='grid grid-cols-[1fr,360px] w-full h-full'>
+    <div className='grid grid-cols-[1fr,360px] is-full bs-full'>
       <Container id={id} classNames={['flex grow overflow-hidden', !sidebar && 'col-span-2']}>
         <Editor.Root ref={editorRef} id={id} graph={graph} selection={selection} autoZoom {...props}>
           <Editor.Canvas>{children}</Editor.Canvas>
@@ -161,7 +161,7 @@ export const Query: Story = {
     spec: [
       { type: Testing.Organization, count: 4 },
       { type: Testing.Project, count: 0 },
-      { type: Testing.Contact, count: 16 },
+      { type: Testing.Person, count: 16 },
     ],
   },
 };

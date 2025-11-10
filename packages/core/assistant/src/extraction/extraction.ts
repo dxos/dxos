@@ -9,10 +9,10 @@ import { Expando } from '@dxos/echo/internal';
 import { type FunctionDefinition } from '@dxos/functions';
 import { type FunctionExecutor } from '@dxos/functions-runtime';
 import { log } from '@dxos/log';
-import { DataType } from '@dxos/schema';
+import { Message } from '@dxos/types';
 
 export const ExtractionInput = Schema.Struct({
-  message: DataType.Message.Message,
+  message: Message.Message,
   objects: Schema.optional(Schema.Array(Expando)),
   options: Schema.optional(
     Schema.Struct({
@@ -24,7 +24,7 @@ export const ExtractionInput = Schema.Struct({
 export interface ExtractionInput extends Schema.Schema.Type<typeof ExtractionInput> {}
 
 export const ExtractionOutput = Schema.Struct({
-  message: DataType.Message.Message,
+  message: Message.Message,
   timeElapsed: Schema.Number,
 });
 export interface ExtractionOutput extends Schema.Schema.Type<typeof ExtractionOutput> {}

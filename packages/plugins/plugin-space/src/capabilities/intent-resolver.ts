@@ -19,12 +19,12 @@ import { Migrations } from '@dxos/migrations';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { ObservabilityAction } from '@dxos/plugin-observability/types';
 import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
-import { SpaceState, fullyQualifiedId, getSpace, isSpace } from '@dxos/react-client/echo';
+import { SpaceState, getSpace, isSpace } from '@dxos/react-client/echo';
 import { Invitation, InvitationEncoder } from '@dxos/react-client/invitations';
 import { ATTENDABLE_PATH_SEPARATOR } from '@dxos/react-ui-attention';
 import { iconValues } from '@dxos/react-ui-pickers';
 import { hues } from '@dxos/react-ui-theme';
-import { DataType, ProjectionModel, getTypenameFromQuery } from '@dxos/schema';
+import { Collection, ProjectionModel, StoredSchema, getTypenameFromQuery } from '@dxos/schema';
 
 import {
   CREATE_OBJECT_DIALOG,
@@ -83,8 +83,8 @@ export default ({ context, observability, createInvitationUrl }: IntentResolverO
         await space.waitUntilReady();
 
         // Create root collection.
-        const collection = Obj.make(DataType.Collection.Collection, { objects: [] });
-        space.properties[DataType.Collection.Collection.typename] = Ref.make(collection);
+        const collection = Obj.make(Collection.Collection, { objects: [] });
+        space.properties[Collection.Collection.typename] = Ref.make(collection);
 
         // Set current migration version.
         if (Migrations.versionProperty) {
@@ -94,9 +94,9 @@ export default ({ context, observability, createInvitationUrl }: IntentResolverO
         // Create records smart collection.
         collection.objects.push(
           Ref.make(
-            Obj.make(DataType.Collection.QueryCollection, {
+            Obj.make(Collection.QueryCollection, {
               // NOTE: This is specifically Filter.typename due to current limitations in query collection parsing.
-              query: Query.select(Filter.typename(DataType.StoredSchema.typename)).ast,
+              query: Query.select(Filter.typename(StoredSchema.typename)).ast,
             }),
           ),
         );
@@ -454,8 +454,8 @@ export default ({ context, observability, createInvitationUrl }: IntentResolverO
                   onCreateObject,
                   shouldNavigate: navigable
                     ? (object: Obj.Any) => {
-                        const isCollection = Obj.instanceOf(DataType.Collection.Collection, object);
-                        const isQueryCollection = Obj.instanceOf(DataType.Collection.QueryCollection, object);
+                        const isCollection = Obj.instanceOf(Collection.Collection, object);
+                        const isQueryCollection = Obj.instanceOf(Collection.QueryCollection, object);
                         return (!isCollection && !isQueryCollection) || state.navigableCollections;
                       }
                     : () => false,
@@ -505,7 +505,7 @@ export default ({ context, observability, createInvitationUrl }: IntentResolverO
         }
 
         await Effect.gen(function* () {
-          yield* DataType.Collection.add({
+          yield* Collection.add({
             object,
             target: isSpace(target) ? undefined : target,
             hidden,
@@ -514,8 +514,8 @@ export default ({ context, observability, createInvitationUrl }: IntentResolverO
 
         return {
           data: {
-            id: fullyQualifiedId(object),
-            subject: [fullyQualifiedId(object)],
+            id: Obj.getDXN(object).toString(),
+            subject: [Obj.getDXN(object).toString()],
             object,
           },
           intents: [
@@ -564,26 +564,26 @@ export default ({ context, observability, createInvitationUrl }: IntentResolverO
         const openObjectIds = new Set<string>(layout.active);
 
         if (!undo) {
-          const parentCollection: DataType.Collection.Collection =
-            target ?? space.properties[DataType.Collection.Collection.typename]?.target;
+          const parentCollection: Collection.Collection =
+            target ?? space.properties[Collection.Collection.typename]?.target;
           const nestedObjectsList = await Promise.all(objects.map((obj) => getNestedObjects(obj, resolve)));
 
           const deletionData = {
             objects,
             parentCollection,
             indices: objects.map((obj) =>
-              Obj.instanceOf(DataType.Collection.Collection, parentCollection)
+              Obj.instanceOf(Collection.Collection, parentCollection)
                 ? parentCollection.objects.findIndex((object) => object.target === obj)
                 : -1,
             ),
             nestedObjectsList,
             wasActive: objects
               .flatMap((obj, i) => [obj, ...nestedObjectsList[i]])
-              .map((obj) => fullyQualifiedId(obj))
+              .map((obj) => Obj.getDXN(obj).toString())
               .filter((id) => openObjectIds.has(id)),
           } satisfies SpaceAction.DeletionData;
 
-          if (Obj.instanceOf(DataType.Collection.Collection, deletionData.parentCollection)) {
+          if (Obj.instanceOf(Collection.Collection, deletionData.parentCollection)) {
             [...deletionData.indices]
               .sort((a, b) => b - a)
               .forEach((index: number) => {
@@ -598,7 +598,7 @@ export default ({ context, observability, createInvitationUrl }: IntentResolverO
           });
           objects.forEach((obj) => space.db.remove(obj));
 
-          const undoMessageKey = objects.some((obj) => Obj.instanceOf(DataType.Collection.Collection, obj))
+          const undoMessageKey = objects.some((obj) => Obj.instanceOf(Collection.Collection, obj))
             ? 'collection deleted label'
             : objects.length > 1
               ? 'objects deleted label'
@@ -625,7 +625,7 @@ export default ({ context, observability, createInvitationUrl }: IntentResolverO
           if (
             deletionData?.objects?.length &&
             deletionData.objects.every(Obj.isObject) &&
-            Obj.instanceOf(DataType.Collection.Collection, deletionData.parentCollection)
+            Obj.instanceOf(Collection.Collection, deletionData.parentCollection)
           ) {
             // Restore the object to the space.
             const restoredObjects = deletionData.objects.map((obj: Type.Expando) => space.db.add(obj));
@@ -664,7 +664,7 @@ export default ({ context, observability, createInvitationUrl }: IntentResolverO
             part: 'popover',
             subject: OBJECT_RENAME_POPOVER,
             options: {
-              anchorId: `dxos.org/ui/${caller}/${fullyQualifiedId(object)}`,
+              anchorId: `dxos.org/ui/${caller}/${Obj.getDXN(object).toString()}`,
               props: object,
             },
           }),
@@ -693,14 +693,14 @@ export default ({ context, observability, createInvitationUrl }: IntentResolverO
     createResolver({
       intent: CollectionAction.Create,
       resolve: async ({ name }) => ({
-        data: { object: Obj.make(DataType.Collection.Collection, { name, objects: [] }) },
+        data: { object: Obj.make(Collection.Collection, { name, objects: [] }) },
       }),
     }),
     createResolver({
       intent: CollectionAction.CreateQueryCollection,
       resolve: async ({ name, typename }) => ({
         data: {
-          object: Obj.make(DataType.Collection.QueryCollection, {
+          object: Obj.make(Collection.QueryCollection, {
             name,
             query: Query.select(Filter.typename(typename)).ast,
           }),

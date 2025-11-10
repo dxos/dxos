@@ -35,7 +35,7 @@ const Contact = Schema.Struct({
 }).annotations({
   [TypeAnnotationId]: {
     kind: EntityKind.Object,
-    typename: 'example.com/type/Contact',
+    typename: 'example.com/type/Person',
     version: '0.1.0',
   } satisfies TypeAnnotation,
 });
@@ -67,7 +67,7 @@ describe('schema registry', () => {
     const { registry } = await setupTest();
     const [echoSchema] = await registry.register([
       {
-        typename: 'example.com/type/Contact',
+        typename: 'example.com/type/Person',
         version: '0.1.0',
         jsonSchema: {
           type: 'object',
@@ -81,7 +81,7 @@ describe('schema registry', () => {
     ]);
     expect(registry.hasSchema(echoSchema)).to.be.true;
     expect(echoSchema.jsonSchema.$id).toEqual(`dxn:echo:@:${echoSchema.id}`);
-    expect(echoSchema.typename).toEqual('example.com/type/Contact');
+    expect(echoSchema.typename).toEqual('example.com/type/Person');
     expect(echoSchema.version).toEqual('0.1.0');
     expect(echoSchema.jsonSchema.properties).toEqual({
       name: expect.any(Object),
@@ -91,7 +91,7 @@ describe('schema registry', () => {
   test('database schema work with echo APIs', async () => {
     const { registry } = await setupTest();
     const [echoSchema] = await registry.register([Contact]);
-    expect(Type.getTypename(echoSchema)).toEqual('example.com/type/Contact');
+    expect(Type.getTypename(echoSchema)).toEqual('example.com/type/Person');
     expect(Type.getVersion(echoSchema)).toEqual('0.1.0');
   });
 
@@ -135,7 +135,7 @@ describe('schema registry', () => {
 
     const [echoSchema] = await registry.register([Contact]);
     const retrieved = await registry.query({ location: ['database', 'runtime'] }).run();
-    expect(retrieved.map(Type.getTypename)).toEqual(['example.com/type/Contact', 'example.com/type/Organization']);
+    expect(retrieved.map(Type.getTypename)).toEqual(['example.com/type/Organization', 'example.com/type/Person']);
   });
 
   test('query only runtime schemas', async () => {
@@ -153,7 +153,7 @@ describe('schema registry', () => {
 
     const [echoSchema] = await registry.register([Contact]);
     const retrieved = await registry.query({ location: ['database'] }).run();
-    expect(retrieved.map(Type.getTypename)).toEqual(['example.com/type/Contact']);
+    expect(retrieved.map(Type.getTypename)).toEqual(['example.com/type/Person']);
   });
 
   test('is registered if was stored in db', async () => {

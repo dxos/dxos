@@ -5,11 +5,11 @@
 import { Rx } from '@effect-rx/rx-react';
 import React from 'react';
 
-import { LayoutAction, createIntent, useIntentDispatcher } from '@dxos/app-framework';
+import { LayoutAction, createIntent } from '@dxos/app-framework';
+import { useIntentDispatcher } from '@dxos/app-framework/react';
 import { ACTION_TYPE } from '@dxos/app-graph';
 import { Obj } from '@dxos/echo';
 import { SpaceAction } from '@dxos/plugin-space/types';
-import { fullyQualifiedId } from '@dxos/react-client/echo';
 import { IconButton, type IconButtonProps, useTranslation } from '@dxos/react-ui';
 import {
   type ActionGraphProps,
@@ -62,7 +62,13 @@ const useSubjectMenuGroupItems = ({ subject, activeSpace }: PreviewProps): MenuA
   result.nodes.push({
     type: ACTION_TYPE,
     id: `${subject.id}/open`,
-    data: () => dispatch(createIntent(LayoutAction.Open, { part: 'main', subject: [fullyQualifiedId(subject)] })),
+    data: () =>
+      dispatch(
+        createIntent(LayoutAction.Open, {
+          part: 'main',
+          subject: [Obj.getDXN(subject).toString()],
+        }),
+      ),
     properties: {
       label: ['open object label', { ns: meta.id }],
       icon: 'ph--arrow-right--regular',
@@ -74,7 +80,14 @@ const useSubjectMenuGroupItems = ({ subject, activeSpace }: PreviewProps): MenuA
       type: ACTION_TYPE,
       id: `${subject.id}/add-to-space`,
       // TODO(wittjosiah): Update reference to point to db object when adding?
-      data: () => dispatch(createIntent(SpaceAction.AddObject, { object: subject, target: activeSpace, hidden: true })),
+      data: () =>
+        dispatch(
+          createIntent(SpaceAction.AddObject, {
+            object: subject,
+            target: activeSpace,
+            hidden: true,
+          }),
+        ),
       properties: {
         label: ['add object to space label', { ns: meta.id }],
         icon: 'ph--file-plus--regular',

@@ -2,7 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Label, useAppGraph } from '@dxos/app-framework';
+import { type Label } from '@dxos/app-framework';
+import { useAppGraph } from '@dxos/app-framework/react';
 import { type Node, ROOT_ID, useConnections } from '@dxos/plugin-graph';
 import { type Position, byPosition } from '@dxos/util';
 

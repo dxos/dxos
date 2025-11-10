@@ -7,18 +7,12 @@ import React, { Fragment } from 'react';
 import { Avatar, Icon } from '@dxos/react-ui';
 import { Card, cardHeading, cardText } from '@dxos/react-ui-stack';
 import { mx } from '@dxos/react-ui-theme';
-import { type DataType } from '@dxos/schema';
+import { type Person } from '@dxos/types';
 
 import { CardRow, CardSubjectMenu, gridRow } from '../components';
 import { type PreviewProps } from '../types';
 
-export const PersonCard = ({
-  children,
-  role,
-  subject,
-  activeSpace,
-  onSelect,
-}: PreviewProps<DataType.Person.Person>) => {
+export const PersonCard = ({ children, role, subject, activeSpace, onSelect }: PreviewProps<Person.Person>) => {
   const { fullName, image, organization: { target: organization } = {}, emails = [] } = subject;
 
   return (
@@ -35,7 +29,7 @@ export const PersonCard = ({
             imgSrc={image}
             icon='ph--user--regular'
             size={16}
-            classNames='text-subdued'
+            classNames={['text-subdued', !image && 'opacity-50']}
             hue='neutral'
             variant='square'
           />

@@ -76,6 +76,9 @@
     },
     {
       "path": "../schema"
+    },
+    {
+      "path": "../types"
     }
   ]
 }

@@ -5,7 +5,7 @@
 import * as Schema from 'effect/Schema';
 
 import { SpaceSchema } from '@dxos/react-client/echo';
-import { DataType, TypenameAnnotationId } from '@dxos/schema';
+import { TypenameAnnotationId, View } from '@dxos/schema';
 
 import { meta } from '../meta';
 
@@ -14,6 +14,7 @@ import { LocationAnnotationId } from './types';
 
 export const CreateMap = Schema.Struct({
   name: Schema.optional(Schema.String),
+  // TODO(wittjosiah): This should be a query input instead.
   typename: Schema.String.annotations({
     [TypenameAnnotationId]: ['used-static', 'dynamic'],
     title: 'Select pin record type',
@@ -38,7 +39,7 @@ export class Create extends Schema.TaggedClass<Create>()(`${meta.id}/action/crea
     Schema.extend(Map.pipe(Schema.pick('center', 'zoom', 'coordinates'))),
   ),
   output: Schema.Struct({
-    object: DataType.View.View,
+    object: View.View,
   }),
 }) {}
 

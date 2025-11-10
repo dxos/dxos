@@ -4,27 +4,17 @@
 
 import React, { useCallback, useMemo } from 'react';
 
-import {
-  Capabilities,
-  CollaborationActions,
-  LayoutAction,
-  createIntent,
-  useCapabilities,
-  useCapability,
-  useIntentDispatcher,
-} from '@dxos/app-framework';
+import { Capabilities, CollaborationActions, LayoutAction, createIntent } from '@dxos/app-framework';
+import { useCapabilities, useCapability, useIntentDispatcher } from '@dxos/app-framework/react';
 import { Filter, Obj, Query, Relation } from '@dxos/echo';
-import { Ref, fullyQualifiedId, getSpace, useQuery } from '@dxos/react-client/echo';
+import { Ref, getSpace, useQuery } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
-import { useThemeContext, useTranslation } from '@dxos/react-ui';
+import { useTranslation } from '@dxos/react-ui';
 import { useAttended } from '@dxos/react-ui-attention';
 import { StackItem } from '@dxos/react-ui-stack';
 import { Tabs } from '@dxos/react-ui-tabs';
 import { mx } from '@dxos/react-ui-theme';
-import { DataType } from '@dxos/schema';
-
-const AnchoredTo = DataType.AnchoredTo.AnchoredTo;
-type AnchoredTo = DataType.AnchoredTo.AnchoredTo;
+import { AnchoredTo } from '@dxos/types';
 
 import { ThreadCapabilities } from '../capabilities';
 import { CommentsContainer, type CommentsContainerProps } from '../components';
@@ -35,8 +25,7 @@ export const ThreadComplementary = ({ subject }: { subject: any }) => {
   const { t } = useTranslation(meta.id);
   const { dispatchPromise: dispatch } = useIntentDispatcher();
   const identity = useIdentity();
-  const { tx } = useThemeContext();
-  const subjectId = fullyQualifiedId(subject);
+  const subjectId = Obj.getDXN(subject).toString();
 
   const { state, getViewState } = useCapability(ThreadCapabilities.MutableState);
   const drafts = state.drafts[subjectId];
@@ -56,7 +45,7 @@ export const ThreadComplementary = ({ subject }: { subject: any }) => {
   );
 
   const space = getSpace(subject);
-  const objectsAnchoredTo = useQuery(space, Query.select(Filter.ids(subject.id)).targetOf(AnchoredTo));
+  const objectsAnchoredTo = useQuery(space, Query.select(Filter.ids(subject.id)).targetOf(AnchoredTo.AnchoredTo));
   const anchors = objectsAnchoredTo
     .toSorted((a, b) => sort?.(a, b) ?? 0)
     .filter((anchor) => Obj.instanceOf(Thread.Thread, Relation.getSource(anchor)))
@@ -65,9 +54,9 @@ export const ThreadComplementary = ({ subject }: { subject: any }) => {
   const attended = useAttended();
 
   const handleAttend = useCallback(
-    (anchor: AnchoredTo) => {
+    (anchor: AnchoredTo.AnchoredTo) => {
       const thread = Relation.getSource(anchor) as Thread.Thread;
-      const threadId = fullyQualifiedId(thread);
+      const threadId = Obj.getDXN(thread).toString();
 
       if (state.current !== threadId) {
         state.current = threadId;
@@ -78,7 +67,7 @@ export const ThreadComplementary = ({ subject }: { subject: any }) => {
         void dispatch(
           createIntent(LayoutAction.ScrollIntoView, {
             part: 'current',
-            subject: fullyQualifiedId(subject),
+            subject: Obj.getDXN(subject).toString(),
             options: {
               cursor: anchor.anchor,
               ref: threadId,
@@ -91,7 +80,7 @@ export const ThreadComplementary = ({ subject }: { subject: any }) => {
   );
 
   const handleComment = useCallback(
-    async (anchor: AnchoredTo, text: string) => {
+    async (anchor: AnchoredTo.AnchoredTo, text: string) => {
       await dispatch(
         createIntent(ThreadAction.AddMessage, {
           anchor,
@@ -102,13 +91,13 @@ export const ThreadComplementary = ({ subject }: { subject: any }) => {
       );
 
       const thread = Relation.getSource(anchor) as Thread.Thread;
-      state.current = fullyQualifiedId(thread);
+      state.current = Obj.getDXN(thread).toString();
     },
     [dispatch, identity, subject],
   );
 
   const handleResolve = useCallback(
-    (anchor: AnchoredTo) =>
+    (anchor: AnchoredTo.AnchoredTo) =>
       dispatch(
         createIntent(ThreadAction.ToggleResolved, {
           thread: Relation.getSource(anchor) as Thread.Thread,
@@ -118,12 +107,12 @@ export const ThreadComplementary = ({ subject }: { subject: any }) => {
   );
 
   const handleThreadDelete = useCallback(
-    (anchor: AnchoredTo) => dispatch(createIntent(ThreadAction.Delete, { anchor, subject })),
+    (anchor: AnchoredTo.AnchoredTo) => dispatch(createIntent(ThreadAction.Delete, { anchor, subject })),
     [dispatch, subject],
   );
 
   const handleMessageDelete = useCallback(
-    (anchor: AnchoredTo, messageId: string) =>
+    (anchor: AnchoredTo.AnchoredTo, messageId: string) =>
       dispatch(
         createIntent(ThreadAction.DeleteMessage, {
           anchor,

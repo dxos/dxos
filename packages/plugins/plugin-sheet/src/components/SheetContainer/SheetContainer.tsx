@@ -4,7 +4,8 @@
 
 import React from 'react';
 
-import { type Space, fullyQualifiedId } from '@dxos/react-client/echo';
+import { Obj } from '@dxos/echo';
+import { type Space } from '@dxos/react-client/echo';
 import { StackItem } from '@dxos/react-ui-stack';
 
 import { type Sheet } from '../../types';
@@ -31,7 +32,7 @@ export const SheetContainer = ({ space, sheet, role, ignoreAttention }: SheetCon
         statusbar
         classNames={[role === 'section' && 'aspect-video', role === 'story' && 'bs-full']}
       >
-        <SheetToolbar id={fullyQualifiedId(sheet)} />
+        <SheetToolbar id={Obj.getDXN(sheet).toString()} />
         <GridSheet />
         <FunctionEditor />
       </StackItem.Content>

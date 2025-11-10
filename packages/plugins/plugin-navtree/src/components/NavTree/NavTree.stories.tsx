@@ -15,8 +15,8 @@ import {
   contributes,
   createResolver,
   defineCapability,
-  useCapability,
 } from '@dxos/app-framework';
+import { useCapability } from '@dxos/app-framework/react';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { live } from '@dxos/live-object';
 import { AttentionPlugin } from '@dxos/plugin-attention';

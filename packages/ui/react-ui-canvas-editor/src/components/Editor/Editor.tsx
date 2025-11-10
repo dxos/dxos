@@ -171,7 +171,7 @@ const EditorRootWithType = <S extends Shape = Shape>(
         {...testId<TestId>('dx-editor')}
         tabIndex={0}
         className={mx(
-          'relative w-full h-full overflow-hidden',
+          'relative is-full bs-full overflow-hidden',
           ready ? 'transition-opacity delay-[1s] duration-[1s] opacity-100' : 'opacity-0',
           classNames,
         )}

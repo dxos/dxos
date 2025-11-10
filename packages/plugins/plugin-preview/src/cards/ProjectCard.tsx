@@ -6,12 +6,12 @@ import React from 'react';
 
 import { Obj } from '@dxos/echo';
 import { Card } from '@dxos/react-ui-stack';
-import { type DataType } from '@dxos/schema';
+import { type Project } from '@dxos/types';
 
 import { CardHeader } from '../components';
 import { type PreviewProps } from '../types';
 
-export const ProjectCard = ({ subject, role, activeSpace }: PreviewProps<DataType.Project.Project>) => {
+export const ProjectCard = ({ subject, role, activeSpace }: PreviewProps<Project.Project>) => {
   const { name, image, description } = subject;
 
   return (

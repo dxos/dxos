@@ -6,7 +6,8 @@ import { EditorView } from '@codemirror/view';
 import * as Schema from 'effect/Schema';
 import { useMemo } from 'react';
 
-import { LayoutAction, createResolver, useIntentResolver } from '@dxos/app-framework';
+import { LayoutAction, createResolver } from '@dxos/app-framework';
+import { useIntentResolver } from '@dxos/app-framework/react';
 import { invariant } from '@dxos/invariant';
 import { Cursor, setSelection } from '@dxos/react-ui-editor';
 
@@ -21,7 +22,13 @@ export const useSelectCurrentThread = (editorView: EditorView | null, documentId
       createResolver({
         intent: LayoutAction.UpdateLayout,
         position: 'hoist',
-        filter: (data): data is { part: 'current'; subject: string; options: { cursor: string } } => {
+        filter: (
+          data,
+        ): data is {
+          part: 'current';
+          subject: string;
+          options: { cursor: string };
+        } => {
           if (!Schema.is(LayoutAction.ScrollIntoView.fields.input)(data)) {
             return false;
           }
@@ -35,7 +42,10 @@ export const useSelectCurrentThread = (editorView: EditorView | null, documentId
             const selection = editorView.state.selection.main.from !== range.from ? { anchor: range.from } : undefined;
             const effects = [
               // NOTE: This does not use the DOM scrollIntoView function.
-              EditorView.scrollIntoView(range.from, { y: 'start', yMargin: 96 }),
+              EditorView.scrollIntoView(range.from, {
+                y: 'start',
+                yMargin: 96,
+              }),
             ];
             if (selection) {
               // Update the editor selection to get bi-directional highlighting.

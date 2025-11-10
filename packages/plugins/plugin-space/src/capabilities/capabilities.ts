@@ -6,7 +6,7 @@ import type * as Schema from 'effect/Schema';
 
 import { type AnyIntentChain, type Label, defineCapability } from '@dxos/app-framework';
 import { type Space } from '@dxos/react-client/echo';
-import { type DataType } from '@dxos/schema';
+import { type Collection } from '@dxos/schema';
 import { type DeepReadonly, type Position } from '@dxos/util';
 
 import { meta } from '../meta';
@@ -19,10 +19,7 @@ export namespace SpaceCapabilities {
   export type SettingsSection = { id: string; label: Label; position?: Position };
   export const SettingsSection = defineCapability<SettingsSection>(`${meta.id}/capability/settings-section`);
 
-  export type onCreateSpace = (params: {
-    space: Space;
-    rootCollection: DataType.Collection.Collection;
-  }) => AnyIntentChain;
+  export type onCreateSpace = (params: { space: Space; rootCollection: Collection.Collection }) => AnyIntentChain;
   export const onCreateSpace = defineCapability<onCreateSpace>(`${meta.id}/capability/on-space-created`);
 
   export type OnSchemaAdded = (params: {

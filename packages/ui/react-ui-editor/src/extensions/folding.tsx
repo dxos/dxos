@@ -25,7 +25,7 @@ export const folding = (_props: FoldingOptions = {}): Extension => [
   foldGutter({
     markerDOM: (open) => {
       return renderRoot(
-        Domino.of('div').classNames('flex h-full items-center').build(),
+        Domino.of('div').classNames('flex bs-full items-center').build(),
         <Icon icon='ph--caret-right--bold' size={3} classNames={['mx-3 cursor-pointer', open && 'rotate-90']} />,
       );
     },

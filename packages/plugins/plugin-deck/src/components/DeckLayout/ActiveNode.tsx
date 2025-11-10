@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { Surface, useAppGraph } from '@dxos/app-framework';
+import { Surface, useAppGraph } from '@dxos/app-framework/react';
 import { useNode } from '@dxos/plugin-graph';
 import { useAttended } from '@dxos/react-ui-attention';
 

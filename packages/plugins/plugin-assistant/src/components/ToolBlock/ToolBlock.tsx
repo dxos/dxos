@@ -9,24 +9,24 @@ import { useTranslation } from '@dxos/react-ui';
 import { NumericTabs, TextCrawl, ToggleContainer, type ToggleContainerRootProps } from '@dxos/react-ui-components';
 import { type XmlWidgetProps } from '@dxos/react-ui-editor';
 import { Json } from '@dxos/react-ui-syntax-highlighter';
-import { type DataType } from '@dxos/schema';
+import { type ContentBlock, type Message } from '@dxos/types';
 import { isNonNullable, safeParseJson } from '@dxos/util';
 
 import { meta } from '../../meta';
 
-export const isToolMessage = (message: DataType.Message.Message) => {
-  return message.blocks.some((block) => block._tag === 'toolCall' || block._tag === 'toolResult');
+export const isToolMessage = (message: Message.Message) => {
+  return message.blocks.some((block: ContentBlock.Any) => block._tag === 'toolCall' || block._tag === 'toolResult');
 };
 
 export type ToolBlockProps = XmlWidgetProps<{
-  blocks: DataType.ContentBlock.Any[];
+  blocks: ContentBlock.Any[];
 }>;
 
 export const ToolBlock = ({ view, blocks = [] }: ToolBlockProps) => {
   const { t } = useTranslation(meta.id);
 
   const items = useMemo<ToolContainerParams['items']>(() => {
-    let lastToolCall: { tool: Tool.Any | undefined; block: DataType.ContentBlock.ToolCall } | undefined;
+    let lastToolCall: { tool: Tool.Any | undefined; block: ContentBlock.ToolCall } | undefined;
     // TODO(burdon): Get from context?
     const tools: Tool.Any[] = []; //processor.conversation.toolkit?.tools ?? [];
     return blocks

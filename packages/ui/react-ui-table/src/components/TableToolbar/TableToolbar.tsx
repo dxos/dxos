@@ -48,27 +48,34 @@ const createTableToolbarActions = ({
   customActions,
 }: {
   state: TableToolbarState;
-  onAdd: () => void;
-  onSave: () => void;
+  onAdd?: () => void;
+  onSave?: () => void;
   customActions?: Rx.Rx<ActionGraphProps>;
 }) =>
   Rx.make((get) => {
-    const add = createMenuAction<TableToolbarActionProperties>('add-row', onAdd, {
-      type: 'add-row' as const,
-      icon: 'ph--plus--regular',
-      label: ['add row', { ns: translationKey }],
-      testId: 'table.toolbar.add-row',
-    });
-    const save = createMenuAction<TableToolbarActionProperties>('save-view', onSave, {
-      type: 'save-view' as const,
-      icon: 'ph--floppy-disk--regular',
-      label: ['save view label', { ns: translationKey }],
-      testId: 'table.toolbar.save-view',
-      iconOnly: false,
-      hidden: get(rxFromSignal(() => !state.viewDirty)),
-    });
+    const nodes: ActionGraphNodes = [];
+    if (onAdd) {
+      const add = createMenuAction<TableToolbarActionProperties>('add-row', onAdd, {
+        type: 'add-row' as const,
+        icon: 'ph--plus--regular',
+        label: ['add row', { ns: translationKey }],
+        testId: 'table.toolbar.add-row',
+      });
+      nodes.push(add);
+    }
+    if (onSave) {
+      const save = createMenuAction<TableToolbarActionProperties>('save-view', onSave, {
+        type: 'save-view' as const,
+        icon: 'ph--floppy-disk--regular',
+        label: ['save view label', { ns: translationKey }],
+        testId: 'table.toolbar.save-view',
+        iconOnly: false,
+        hidden: get(rxFromSignal(() => !state.viewDirty)),
+      });
+      nodes.push(save);
+    }
     const gap = createGapSeparator();
-    const nodes: ActionGraphNodes = [add, save, ...gap.nodes];
+    nodes.push(...gap.nodes);
     const edges: ActionGraphEdges = nodes.map(({ id: target }) => ({ source: 'root', target }));
     if (customActions) {
       const custom = get(customActions);

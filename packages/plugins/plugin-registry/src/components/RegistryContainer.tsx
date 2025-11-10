@@ -4,16 +4,8 @@
 
 import React, { useCallback, useMemo } from 'react';
 
-import {
-  Capabilities,
-  LayoutAction,
-  type Plugin,
-  SettingsAction,
-  createIntent,
-  useCapability,
-  useIntentDispatcher,
-  usePluginManager,
-} from '@dxos/app-framework';
+import { Capabilities, LayoutAction, type Plugin, SettingsAction, createIntent } from '@dxos/app-framework';
+import { useCapability, useIntentDispatcher, usePluginManager } from '@dxos/app-framework/react';
 import { ObservabilityAction } from '@dxos/plugin-observability/types';
 import { StackItem } from '@dxos/react-ui-stack';
 

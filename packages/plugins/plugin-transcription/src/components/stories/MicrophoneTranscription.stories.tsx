@@ -28,8 +28,9 @@ import { ThemePlugin } from '@dxos/plugin-theme';
 import { IndexKind, useSpace } from '@dxos/react-client/echo';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { defaultTx } from '@dxos/react-ui-theme';
-import { DataType } from '@dxos/schema';
-import { Testing, seedTestData } from '@dxos/schema/testing';
+import { Testing } from '@dxos/schema/testing';
+import { Message, Organization, Person } from '@dxos/types';
+import { seedTestData } from '@dxos/types/testing';
 
 import { useAudioTrack, useQueueModelAdapter, useTranscriber } from '../../hooks';
 import { TestItem } from '../../testing';
@@ -75,7 +76,7 @@ const DefaultStory = ({
   // Queue.
   // TODO(dmaretskyi): Use space.queues.create() instead.
   const queueDxn = useMemo(() => createQueueDXN(), []);
-  const queue = useMemo(() => new MemoryQueue<DataType.Message.Message>(queueDxn), [queueDxn]);
+  const queue = useMemo(() => new MemoryQueue<Message.Message>(queueDxn), [queueDxn]);
   const model = useQueueModelAdapter(renderByline([]), queue);
   const space = useSpace();
 
@@ -105,8 +106,8 @@ const DefaultStory = ({
       objects = space.db
         .query(
           Filter.or(
-            Filter.type(DataType.Person.Person),
-            Filter.type(DataType.Organization.Organization),
+            Filter.type(Person.Person),
+            Filter.type(Organization.Organization),
             Filter.type(Testing.DocumentType),
           ),
         )
@@ -132,7 +133,7 @@ const DefaultStory = ({
   // Transcriber.
   const handleSegments = useCallback<TranscriberParams['onSegments']>(
     async (blocks) => {
-      const message = Obj.make(DataType.Message.Message, {
+      const message = Obj.make(Message.Message, {
         sender: { name: 'You' },
         created: new Date().toISOString(),
         blocks,
@@ -200,7 +201,7 @@ const meta = {
     withPluginManager({
       plugins: [
         ClientPlugin({
-          types: [TestItem, DataType.Person.Person, DataType.Organization.Organization, Testing.DocumentType],
+          types: [TestItem, Person.Person, Organization.Organization, Testing.DocumentType],
           onClientInitialized: async ({ client }) => {
             await client.halo.createIdentity();
             await client.spaces.waitUntilReady();

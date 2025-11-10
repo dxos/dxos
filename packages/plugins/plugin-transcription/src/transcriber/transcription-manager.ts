@@ -9,7 +9,7 @@ import { Resource } from '@dxos/context';
 import { Obj } from '@dxos/echo';
 import { type Queue } from '@dxos/echo-db';
 import { type EdgeHttpClient } from '@dxos/react-edge-client';
-import { DataType } from '@dxos/schema';
+import { type ContentBlock, Message } from '@dxos/types';
 
 import { MediaStreamRecorder } from './media-stream-recorder';
 import { Transcriber } from './transcriber';
@@ -30,7 +30,7 @@ const PREFIXED_CHUNKS_AMOUNT = 10;
  */
 const TRANSCRIBE_AFTER_CHUNKS_AMOUNT = 50;
 
-export type TranscriptMessageEnricher = (message: DataType.Message.Message) => Promise<DataType.Message.Message>;
+export type TranscriptMessageEnricher = (message: Message.Message) => Promise<Message.Message>;
 
 export type TranscriptionManagerOptions = {
   edgeClient: EdgeHttpClient;
@@ -51,7 +51,7 @@ export class TranscriptionManager extends Resource {
   private _identityDid?: string = undefined;
   private _mediaRecorder?: MediaStreamRecorder = undefined;
   private _transcriber?: Transcriber = undefined;
-  private _queue?: Queue<DataType.Message.Message> = undefined;
+  private _queue?: Queue<Message.Message> = undefined;
   private _enabled = signal(false);
 
   constructor(options: TranscriptionManagerOptions) {
@@ -65,7 +65,7 @@ export class TranscriptionManager extends Resource {
     return this._enabled.value;
   }
 
-  setQueue(queue: Queue<DataType.Message.Message>): this {
+  setQueue(queue: Queue<Message.Message>): this {
     this._queue = queue;
     return this;
   }
@@ -154,12 +154,12 @@ export class TranscriptionManager extends Resource {
     await this._transcriber?.close();
   }
 
-  private async _onSegments(segments: DataType.ContentBlock.Transcript[]): Promise<void> {
+  private async _onSegments(segments: ContentBlock.Transcript[]): Promise<void> {
     if (!this.isOpen || !this._queue) {
       return;
     }
 
-    let block = Obj.make(DataType.Message.Message, {
+    let block = Obj.make(Message.Message, {
       created: new Date().toISOString(),
       blocks: segments,
       sender: { identityDid: this._identityDid },

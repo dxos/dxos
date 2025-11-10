@@ -5,15 +5,8 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useMemo } from 'react';
 
-import {
-  type Capabilities,
-  IntentPlugin,
-  LayoutAction,
-  SettingsPlugin,
-  Surface,
-  createIntent,
-  useIntentDispatcher,
-} from '@dxos/app-framework';
+import { type Capabilities, IntentPlugin, LayoutAction, SettingsPlugin, createIntent } from '@dxos/app-framework';
+import { Surface, useIntentDispatcher } from '@dxos/app-framework/react';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Obj, Query } from '@dxos/echo';
 import { AttentionPlugin } from '@dxos/plugin-attention';
@@ -24,13 +17,14 @@ import { SpacePlugin } from '@dxos/plugin-space';
 import { StorybookLayoutPlugin } from '@dxos/plugin-storybook-layout';
 import { ThemePlugin } from '@dxos/plugin-theme';
 import { faker } from '@dxos/random';
-import { fullyQualifiedId, useQuery, useSpace } from '@dxos/react-client/echo';
+import { useQuery, useSpace } from '@dxos/react-client/echo';
 import { useAsyncEffect } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { useAttentionAttributes } from '@dxos/react-ui-attention';
 import { defaultTx } from '@dxos/react-ui-theme';
-import { DataType } from '@dxos/schema';
+import { Text } from '@dxos/schema';
 import { type ValueGenerator, createObjectFactory } from '@dxos/schema/testing';
+import { Organization, Person } from '@dxos/types';
 
 import { MarkdownPlugin } from '../MarkdownPlugin';
 import { translations } from '../translations';
@@ -45,12 +39,17 @@ const DefaultStory = () => {
   const space = useSpace();
   const [doc] = useQuery(space, Query.type(Markdown.Document));
   const data = useMemo(() => ({ subject: doc }), [doc]);
-  const id = doc && fullyQualifiedId(doc);
+  const id = doc && Obj.getDXN(doc).toString();
   const attentionAttrs = useAttentionAttributes(id);
 
   useAsyncEffect(async () => {
     if (space) {
-      await dispatch(createIntent(LayoutAction.SwitchWorkspace, { part: 'workspace', subject: space.id }));
+      await dispatch(
+        createIntent(LayoutAction.SwitchWorkspace, {
+          part: 'workspace',
+          subject: space.id,
+        }),
+      );
     }
   }, [space, dispatch]);
 
@@ -70,7 +69,7 @@ const meta = {
     withPluginManager<{ title?: string; content?: string }>((context) => ({
       plugins: [
         ClientPlugin({
-          types: [Markdown.Document, DataType.Text.Text, DataType.Person.Person, DataType.Organization.Organization],
+          types: [Markdown.Document, Text.Text, Person.Person, Organization.Organization],
           onClientInitialized: async ({ client }) => {
             await client.halo.createIdentity();
             await client.spaces.waitUntilReady();
@@ -78,15 +77,15 @@ const meta = {
 
             const space = client.spaces.default;
             const createObjects = createObjectFactory(space.db, generator);
-            await createObjects([{ type: DataType.Organization.Organization, count: 10 }]);
+            await createObjects([{ type: Organization.Organization, count: 10 }]);
 
             const queue = space.queues.create();
-            const kai = Obj.make(DataType.Person.Person, { fullName: 'Kai' });
-            const dxos = Obj.make(DataType.Organization.Organization, { name: 'DXOS' });
+            const kai = Obj.make(Person.Person, { fullName: 'Kai' });
+            const dxos = Obj.make(Organization.Organization, { name: 'DXOS' });
             await queue.append([kai, dxos]);
 
             space.db.add(
-              Markdown.makeDocument({
+              Markdown.make({
                 name: context.args.title ?? 'Testing',
                 content: [
                   `# ${context.args.title ?? 'Testing'}`,

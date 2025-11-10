@@ -5,7 +5,8 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { QR } from 'react-qr-rounded';
 
-import { createIntent, useIntentDispatcher } from '@dxos/app-framework';
+import { createIntent } from '@dxos/app-framework';
+import { useIntentDispatcher } from '@dxos/app-framework/react';
 import { log } from '@dxos/log';
 import { useClient, useMulticastObservable } from '@dxos/react-client';
 import { type Device, useDevices } from '@dxos/react-client/halo';

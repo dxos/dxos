@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 import type * as Runtime from 'effect/Runtime';
 import { useMemo } from 'react';
 
-import { useCapability } from '@dxos/app-framework';
+import { useCapability } from '@dxos/app-framework/react';
 import { type Space } from '@dxos/client/echo';
 import { TracingService } from '@dxos/functions';
 import { TracingServiceExt } from '@dxos/functions-runtime';

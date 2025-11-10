@@ -5,10 +5,12 @@
 import * as Schema from 'effect/Schema';
 import React, { useCallback, useMemo } from 'react';
 
-import { LayoutAction, createIntent, useIntentDispatcher } from '@dxos/app-framework';
+import { LayoutAction, createIntent } from '@dxos/app-framework';
+import { useIntentDispatcher } from '@dxos/app-framework/react';
+import { Obj } from '@dxos/echo';
 import { Function, Script } from '@dxos/functions';
 import { SpaceAction } from '@dxos/plugin-space/types';
-import { Filter, type Space, fullyQualifiedId, useQuery } from '@dxos/react-client/echo';
+import { Filter, type Space, useQuery } from '@dxos/react-client/echo';
 import { Button, IconButton, useTranslation } from '@dxos/react-ui';
 import { controlItemClasses } from '@dxos/react-ui-form';
 import { List } from '@dxos/react-ui-list';
@@ -58,7 +60,12 @@ export const FunctionsPanel = ({ space }: FunctionsPanelProps) => {
     (func: Function.Function) => {
       const script = functionToScriptMap[func.id];
       if (script) {
-        void dispatch(createIntent(LayoutAction.Open, { part: 'main', subject: [fullyQualifiedId(script)] }));
+        void dispatch(
+          createIntent(LayoutAction.Open, {
+            part: 'main',
+            subject: [Obj.getDXN(script).toString()],
+          }),
+        );
       }
     },
     [functionToScriptMap, dispatch],
@@ -74,7 +81,7 @@ export const FunctionsPanel = ({ space }: FunctionsPanelProps) => {
       {functions.length > 0 && (
         <List.Root<Function.Function> items={functions} isItem={Schema.is(Function.Function)} getId={(func) => func.id}>
           {({ items }) => (
-            <div role='list' className='flex flex-col w-full'>
+            <div role='list' className='flex flex-col is-full'>
               {items?.map((func) => (
                 <List.Item<Function.Function>
                   key={func.id}

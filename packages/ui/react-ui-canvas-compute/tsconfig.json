@@ -90,6 +90,9 @@
       "path": "../../sdk/schema"
     },
     {
+      "path": "../../sdk/types"
+    },
+    {
       "path": "../react-ui"
     },
     {

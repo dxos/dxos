@@ -18,7 +18,7 @@ import { Queue } from '@dxos/echo-db';
 import { ComputeEventLogger, QueueService, TracingService } from '@dxos/functions';
 import { assertArgument } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { DataType } from '@dxos/schema';
+import { Message } from '@dxos/types';
 
 import { ValueBag, defineComputeNode } from '../../types';
 import { StreamSchema } from '../../util';
@@ -61,7 +61,7 @@ export const GptInput = Schema.Struct({
    * History messages.
    * Cannot be used together with `conversation`.
    */
-  history: Schema.optional(Schema.Array(DataType.Message.Message)),
+  history: Schema.optional(Schema.Array(Message.Message)),
 
   /**
    * Tools to use.
@@ -75,7 +75,7 @@ export const GptOutput = Schema.Struct({
   /**
    * Messages emitted by the model.
    */
-  messages: Schema.Array(DataType.Message.Message),
+  messages: Schema.Array(Message.Message),
 
   /**
    * Artifact emitted by the model.
@@ -125,7 +125,7 @@ export const gptNode = defineComputeNode({
     const { queues } = yield* QueueService;
     const historyMessages = conversation
       ? yield* Effect.tryPromise({
-          try: () => queues.get<DataType.Message.Message>(conversation.dxn).queryObjects(),
+          try: () => queues.get<Message.Message>(conversation.dxn).queryObjects(),
           catch: (e) => e as Error,
         })
       : (history ?? []);
@@ -173,7 +173,7 @@ export const gptNode = defineComputeNode({
       log.info('messages', { messages });
 
       if (conversation) {
-        yield* Effect.promise(() => queues.get<DataType.Message.Message>(conversation.dxn).append([...messages]));
+        yield* Effect.promise(() => queues.get<Message.Message>(conversation.dxn).append([...messages]));
       }
 
       const text = messages

@@ -10,7 +10,7 @@ import { FormatEnum } from '@dxos/echo/internal';
 import { useClient } from '@dxos/react-client';
 import { getSpace, useSchema } from '@dxos/react-client/echo';
 import { type CustomInputMap, Form, SelectInput } from '@dxos/react-ui-form';
-import { type DataType, getTypenameFromQuery } from '@dxos/schema';
+import { type View, getTypenameFromQuery } from '@dxos/schema';
 
 import { type Map } from '../types';
 
@@ -20,7 +20,7 @@ export const MapSettingsSchema = Schema.Struct({
   coordinateColumn: Schema.optional(Schema.String.annotations({ title: 'Coordinate column' })),
 });
 
-type MapViewEditorProps = { view: DataType.View.View };
+type MapViewEditorProps = { view: View.View };
 
 export const MapViewEditor = ({ view }: MapViewEditorProps) => {
   const client = useClient();

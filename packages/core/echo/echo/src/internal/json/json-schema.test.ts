@@ -12,6 +12,7 @@ import { ObjectId } from '@dxos/keys';
 import { log } from '@dxos/log';
 
 import { Type } from '../..';
+import { Testing, prepareAstForCompare } from '../../testing';
 import {
   EntityKind,
   FieldLookupAnnotationId,
@@ -26,7 +27,6 @@ import { JsonSchemaType, getNormalizedEchoAnnotations, getSchemaProperty, setSch
 import { EchoObject } from '../object';
 import { Ref, createSchemaReference, getReferenceAst, getSchemaReference } from '../ref';
 import { StoredSchema } from '../schema';
-import { Testing, prepareAstForCompare } from '../testing';
 
 import { toEffectSchema, toJsonSchema } from './json-schema';
 
@@ -166,17 +166,17 @@ describe('effect-to-json', () => {
       }),
     }).pipe(
       Type.Obj({
-        typename: 'example.com/type/Contact',
+        typename: 'example.com/type/Person',
         version: '0.1.0',
       }),
     );
     const jsonSchema = toJsonSchema(TestSchema);
     expect(jsonSchema).to.deep.eq({
       $schema: 'http://json-schema.org/draft-07/schema#',
-      $id: 'dxn:type:example.com/type/Contact',
+      $id: 'dxn:type:example.com/type/Person',
 
       entityKind: EntityKind.Object,
-      typename: 'example.com/type/Contact',
+      typename: 'example.com/type/Person',
       version: '0.1.0',
 
       type: 'object',
@@ -197,16 +197,8 @@ describe('effect-to-json', () => {
   });
 
   test('handles suspend -- Contact schema serialization', () => {
-    const schema = toJsonSchema(Testing.Contact);
-    expect(Object.keys(schema.properties!)).toEqual([
-      'id',
-      'name',
-      'username',
-      'email',
-      'phoneNumbers',
-      'tasks',
-      'address',
-    ]);
+    const schema = toJsonSchema(Testing.Person);
+    expect(Object.keys(schema.properties!)).toEqual(['id', 'name', 'username', 'email', 'tasks', 'address']);
   });
 
   test('reference property by ref', () => {
@@ -224,7 +216,7 @@ describe('effect-to-json', () => {
       organization: Ref(Organization).annotations({ description: 'Contact organization' }),
     }).pipe(
       Type.Obj({
-        typename: 'example.com/type/Contact',
+        typename: 'example.com/type/Person',
         version: '0.1.0',
       }),
     );
@@ -234,10 +226,10 @@ describe('effect-to-json', () => {
     const jsonSchema = toJsonSchema(Contact);
     expect(jsonSchema).toEqual({
       $schema: 'http://json-schema.org/draft-07/schema#',
-      $id: 'dxn:type:example.com/type/Contact',
+      $id: 'dxn:type:example.com/type/Person',
 
       entityKind: EntityKind.Object,
-      typename: 'example.com/type/Contact',
+      typename: 'example.com/type/Person',
       version: '0.1.0',
 
       type: 'object',
@@ -286,7 +278,7 @@ describe('effect-to-json', () => {
       organization: Ref(Organization).annotations({ description: 'Contact organization' }),
     }).pipe(
       Type.Obj({
-        typename: 'example.com/type/Contact',
+        typename: 'example.com/type/Person',
         version: '0.1.0',
       }),
     );
@@ -321,7 +313,7 @@ describe('effect-to-json', () => {
 
   test('reference with title annotation', () => {
     const schema = Schema.Struct({
-      contact: Ref(Testing.Contact).annotations({ title: 'Custom Title' }),
+      contact: Ref(Testing.Person).annotations({ title: 'Custom Title' }),
     });
 
     // log.info('schema before', { ast: schema.ast });
@@ -354,11 +346,11 @@ describe('effect-to-json', () => {
       version: '0.1.0',
       relationSource: {
         // TODO(dmaretskyi): Should those point to specific schema version?
-        $ref: 'dxn:type:example.com/type/Contact',
+        $ref: 'dxn:type:example.com/type/Person',
       },
       relationTarget: {
         // TODO(dmaretskyi): Should those point to specific schema version?
-        $ref: 'dxn:type:example.com/type/Contact',
+        $ref: 'dxn:type:example.com/type/Person',
       },
       type: 'object',
       properties: {
@@ -698,7 +690,7 @@ describe('json-to-effect', () => {
 
   test('schema with optional referece', () => {
     const TestSchema = Schema.Struct({
-      contact: Schema.optional(Ref(Testing.Contact)),
+      contact: Schema.optional(Ref(Testing.Person)),
     });
     const jsonSchema = toJsonSchema(TestSchema);
     expect(jsonSchema).toMatchInlineSnapshot(`
@@ -711,7 +703,7 @@ describe('json-to-effect', () => {
             "$ref": "/schemas/echo/ref",
             "reference": {
               "schema": {
-                "$ref": "dxn:type:example.com/type/Contact",
+                "$ref": "dxn:type:example.com/type/Person",
               },
               "schemaVersion": "0.1.0",
             },
@@ -732,7 +724,7 @@ describe('json-to-effect', () => {
   test('object nested inside another struct', () => {
     const Contact = Schema.Struct({
       name: Schema.String,
-    }).pipe(EchoObject({ typename: 'example.com/type/Contact', version: '0.1.0' }));
+    }).pipe(EchoObject({ typename: 'example.com/type/Person', version: '0.1.0' }));
     const input = Schema.Struct({
       contact: Contact,
     });
@@ -743,7 +735,7 @@ describe('json-to-effect', () => {
         "additionalProperties": false,
         "properties": {
           "contact": {
-            "$id": "dxn:type:example.com/type/Contact",
+            "$id": "dxn:type:example.com/type/Person",
             "additionalProperties": false,
             "entityKind": "object",
             "properties": {
@@ -763,7 +755,7 @@ describe('json-to-effect', () => {
               "id",
             ],
             "type": "object",
-            "typename": "example.com/type/Contact",
+            "typename": "example.com/type/Person",
             "version": "0.1.0",
           },
         },
@@ -784,7 +776,7 @@ describe('json-to-effect', () => {
 
 describe('reference', () => {
   test('reference annotation', () => {
-    const schema = Ref(Testing.Contact);
+    const schema = Ref(Testing.Person);
     const jsonSchema = toJsonSchema(schema);
     expect(jsonSchema).toEqual({
       $id: '/schemas/echo/ref',
@@ -792,7 +784,7 @@ describe('reference', () => {
       $schema: 'http://json-schema.org/draft-07/schema#',
       reference: {
         schema: {
-          $ref: 'dxn:type:example.com/type/Contact',
+          $ref: 'dxn:type:example.com/type/Person',
         },
         schemaVersion: '0.1.0',
       },
@@ -800,7 +792,7 @@ describe('reference', () => {
   });
 
   test('title annotation', () => {
-    const schema = Ref(Testing.Contact).annotations({ title: 'My custom title' });
+    const schema = Ref(Testing.Person).annotations({ title: 'My custom title' });
     const jsonSchema = toJsonSchema(schema);
     expect(jsonSchema).toEqual({
       $schema: 'http://json-schema.org/draft-07/schema#',
@@ -810,7 +802,7 @@ describe('reference', () => {
           $ref: '/schemas/echo/ref',
           reference: {
             schema: {
-              $ref: 'dxn:type:example.com/type/Contact',
+              $ref: 'dxn:type:example.com/type/Person',
             },
             schemaVersion: '0.1.0',
           },
@@ -821,7 +813,7 @@ describe('reference', () => {
   });
 
   test('description annotation', () => {
-    const schema = Ref(Testing.Contact).annotations({ description: 'My custom description' });
+    const schema = Ref(Testing.Person).annotations({ description: 'My custom description' });
     const jsonSchema = toJsonSchema(schema);
     expect(jsonSchema).toEqual({
       $schema: 'http://json-schema.org/draft-07/schema#',
@@ -831,7 +823,7 @@ describe('reference', () => {
           $ref: '/schemas/echo/ref',
           reference: {
             schema: {
-              $ref: 'dxn:type:example.com/type/Contact',
+              $ref: 'dxn:type:example.com/type/Person',
             },
             schemaVersion: '0.1.0',
           },
@@ -845,13 +837,13 @@ describe('reference', () => {
   });
 
   test('serialize and deserialize', () => {
-    const schema = Ref(Testing.Contact);
+    const schema = Ref(Testing.Person);
     const jsonSchema = toJsonSchema(schema);
     const deserializedSchema = toEffectSchema(jsonSchema);
     const refAst = getReferenceAst(deserializedSchema.ast);
     expect(refAst).toEqual({
-      typename: Testing.Contact.typename,
-      version: Testing.Contact.version,
+      typename: Testing.Person.typename,
+      version: Testing.Person.version,
     });
   });
 });

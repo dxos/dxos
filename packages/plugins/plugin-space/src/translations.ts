@@ -5,7 +5,8 @@
 import { Type } from '@dxos/echo';
 import { StoredSchema } from '@dxos/echo/internal';
 import { type Resource } from '@dxos/react-ui';
-import { DataType } from '@dxos/schema';
+import { Collection, View } from '@dxos/schema';
+import { Event, Organization, Person, Project, Task } from '@dxos/types';
 
 import { meta } from './meta';
 
@@ -13,7 +14,7 @@ import { meta } from './meta';
 export const translations = [
   {
     'en-US': {
-      [DataType.Collection.Collection.typename]: {
+      [Collection.Collection.typename]: {
         'typename label': 'Collection',
         'typename label_zero': 'Collections',
         'typename label_one': 'Collection',
@@ -22,7 +23,7 @@ export const translations = [
         'rename object label': 'Rename collection',
         'delete object label': 'Delete collection',
       },
-      [Type.getTypename(DataType.Collection.QueryCollection)]: {
+      [Type.getTypename(Collection.QueryCollection)]: {
         'typename label': 'Smart Collection',
         'typename label_zero': 'Smart Collections',
         'typename label_one': 'Smart Collection',
@@ -40,7 +41,7 @@ export const translations = [
         'rename object label': 'Rename record type',
         'delete object label': 'Delete record type',
       },
-      [Type.getTypename(DataType.View.View)]: {
+      [Type.getTypename(View.View)]: {
         'typename label': 'View',
         'typename label_zero': 'Views',
         'typename label_one': 'View',
@@ -49,35 +50,35 @@ export const translations = [
         'rename object label': 'Rename view',
         'delete object label': 'Delete view',
       },
-      [DataType.Event.Event.typename]: {
+      [Event.Event.typename]: {
         'typename label': 'Event',
         'typename label_zero': 'Events',
         'typename label_one': 'Event',
         'typename label_other': 'Events',
         'object name placeholder': 'New event',
       },
-      [DataType.Organization.Organization.typename]: {
+      [Organization.Organization.typename]: {
         'typename label': 'Organization',
         'typename label_zero': 'Organizations',
         'typename label_one': 'Organization',
         'typename label_other': 'Organizations',
         'object name placeholder': 'New organization',
       },
-      [DataType.Person.Person.typename]: {
+      [Person.Person.typename]: {
         'typename label': 'Person',
         'typename label_zero': 'People',
         'typename label_one': 'Person',
         'typename label_other': 'People',
         'object name placeholder': 'New person',
       },
-      [DataType.Project.Project.typename]: {
+      [Project.Project.typename]: {
         'typename label': 'Project',
         'typename label_zero': 'Projects',
         'typename label_one': 'Project',
         'typename label_other': 'Projects',
         'object name placeholder': 'New project',
       },
-      [DataType.Task.Task.typename]: {
+      [Task.Task.typename]: {
         'typename label': 'Task',
         'typename label_zero': 'Tasks',
         'typename label_one': 'Task',

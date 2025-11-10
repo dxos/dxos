@@ -5,12 +5,13 @@
 import { Rx } from '@effect-rx/rx-react';
 import React, { type ChangeEvent, useCallback, useEffect, useMemo, useState } from 'react';
 
-import { useCapabilities, useCapability } from '@dxos/app-framework';
+import { useCapabilities, useCapability } from '@dxos/app-framework/react';
 import { Context } from '@dxos/context';
 import { failUndefined } from '@dxos/debug';
+import { Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { useClient } from '@dxos/react-client';
-import { fullyQualifiedId, getSpace } from '@dxos/react-client/echo';
+import { getSpace } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { ElevationProvider, Input, useTranslation } from '@dxos/react-ui';
 import { ControlGroup, ControlGroupButton, ControlItemInput } from '@dxos/react-ui-form';
@@ -40,8 +41,8 @@ export type ChannelContainerProps = {
 export const ChannelContainer = ({ channel, roomId: _roomId, role, fullscreen }: ChannelContainerProps) => {
   const space = getSpace(channel);
   const callManager = useCapability(ThreadCapabilities.CallManager);
-  const attendableId = fullyQualifiedId(channel);
-  const roomId = _roomId ?? (channel ? attendableId : failUndefined());
+  const attendableId = channel ? Obj.getDXN(channel).toString() : undefined;
+  const roomId = _roomId ?? attendableId ?? failUndefined();
   const identity = useIdentity();
   const isNamed = !!identity?.profile?.displayName;
   const joinSound = useSoundEffect('JoinCall');

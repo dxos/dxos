@@ -5,13 +5,14 @@
 import { useComputed, useSignal } from '@preact/signals-react';
 import React, { useCallback, useEffect, useMemo } from 'react';
 
-import { createIntent, useIntentDispatcher } from '@dxos/app-framework';
+import { createIntent } from '@dxos/app-framework';
+import { useIntentDispatcher } from '@dxos/app-framework/react';
 import { Obj } from '@dxos/echo';
-import { Filter, type Space, fullyQualifiedId, useQuery } from '@dxos/react-client/echo';
+import { Filter, type Space, useQuery } from '@dxos/react-client/echo';
 import { ElevationProvider, useTranslation } from '@dxos/react-ui';
 import { MenuProvider, ToolbarMenu } from '@dxos/react-ui-menu';
 import { StackItem } from '@dxos/react-ui-stack';
-import { DataType } from '@dxos/schema';
+import { type Message as MessageType, Person } from '@dxos/types';
 
 import { meta } from '../../meta';
 import { InboxAction, type Mailbox } from '../../types';
@@ -22,12 +23,12 @@ import { useMessageToolbarActions } from './toolbar';
 
 export type MessageContainerProps = {
   space?: Space;
-  message?: DataType.Message.Message;
-  inMailbox: Mailbox.Mailbox;
+  message?: MessageType.Message;
+  mailbox: Mailbox.Mailbox;
   role?: string;
 };
 
-export const MessageContainer = ({ space, message, inMailbox, role }: MessageContainerProps) => {
+export const MessageContainer = ({ space, message, mailbox, role }: MessageContainerProps) => {
   const { t } = useTranslation(meta.id);
 
   const hasEnrichedContent = useMemo(() => {
@@ -41,8 +42,8 @@ export const MessageContainer = ({ space, message, inMailbox, role }: MessageCon
 
   const viewMode = useSignal<ViewMode>(initialViewMode);
   const hasEmail = useComputed(() => !!message?.sender.email);
-  const contacts = useQuery(space, Filter.type(DataType.Person.Person));
-  const existingContact = useSignal<DataType.Person.Person | undefined>(undefined);
+  const contacts = useQuery(space, Filter.type(Person.Person));
+  const existingContact = useSignal<Person.Person | undefined>(undefined);
   const contactDxn = useComputed(() =>
     existingContact.value ? Obj.getDXN(existingContact.value)?.toString() : undefined,
   );
@@ -71,7 +72,7 @@ export const MessageContainer = ({ space, message, inMailbox, role }: MessageCon
   return (
     <StackItem.Content classNames='relative' toolbar>
       <ElevationProvider elevation='positioned'>
-        <MenuProvider {...menu} attendableId={fullyQualifiedId(inMailbox)}>
+        <MenuProvider {...menu} attendableId={Obj.getDXN(mailbox).toString()}>
           <ToolbarMenu />
         </MenuProvider>
       </ElevationProvider>

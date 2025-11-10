@@ -64,7 +64,6 @@ export { type SpaceSyncState } from '@dxos/protocols/proto/dxos/echo/service';
 
 export {
   createEmptyEdgeSyncState,
-  fullyQualifiedId,
   FQ_ID_LENGTH,
   OBJECT_ID_LENGTH,
   SPACE_ID_LENGTH,
@@ -72,7 +71,6 @@ export {
   ReactiveObjectSchema,
   getSpace,
   getSyncSummary,
-  parseFullyQualifiedId,
   parseId,
   type Progress,
   type PeerSyncState,

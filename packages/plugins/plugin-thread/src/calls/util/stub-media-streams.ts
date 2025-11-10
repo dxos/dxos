@@ -60,13 +60,12 @@ const userGestureEvents = [
  */
 export const createInaudibleAudioStreamTrack = async ({ ctx }: { ctx: Context }): Promise<MediaStreamTrack> => {
   const audioContext = new window.AudioContext();
+
   const oscillator = audioContext.createOscillator();
   oscillator.type = 'triangle';
-  // roughly sounds like a box fan
   oscillator.frequency.setValueAtTime(20, audioContext.currentTime);
 
   const gainNode = audioContext.createGain();
-  // even w/ gain at 0 some packets are sent
   gainNode.gain.setValueAtTime(0, audioContext.currentTime);
   oscillator.connect(gainNode);
 
@@ -85,6 +84,7 @@ export const createInaudibleAudioStreamTrack = async ({ ctx }: { ctx: Context })
       audioContextStartedPreviously = true;
       ensureOscillatorStarted();
     }
+
     if (audioContext.state === 'suspended' || (audioContext.state as string) === 'interrupted') {
       resumeAudioContext();
     }

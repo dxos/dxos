@@ -15,7 +15,7 @@ describe.skip('Search', () => {
     test.skip('contacts', { timeout: 60_000 }, async () => {
       const objects = await search({
         query: 'top executives at google',
-        schema: [Testing.Contact],
+        schema: [Testing.Person],
         exaApiKey: EXA_API_KEY,
       });
 
@@ -25,7 +25,7 @@ describe.skip('Search', () => {
     test.skip('contacts projects and orgs', { timeout: 60_000 }, async () => {
       const objects = await search({
         query: 'top executives at google',
-        schema: [Testing.Contact, Testing.Project, Testing.Organization],
+        schema: [Testing.Person, Testing.Project, Testing.Organization],
         exaApiKey: EXA_API_KEY,
       });
 
@@ -35,7 +35,7 @@ describe.skip('Search', () => {
     test('a19z org, projects they invest in and team', { timeout: 60_000 }, async () => {
       const objects = await search({
         query: 'a19z org, projects they invest in and team',
-        schema: [Testing.Project, Testing.Organization, Testing.Contact],
+        schema: [Testing.Project, Testing.Organization, Testing.Person],
         exaApiKey: EXA_API_KEY,
       });
 
@@ -45,7 +45,7 @@ describe.skip('Search', () => {
     test('companies building CRDTs', { timeout: 60_000 }, async () => {
       const objects = await search({
         query: 'companies building CRDTs',
-        schema: [Testing.Project, Testing.Organization, Testing.Contact],
+        schema: [Testing.Project, Testing.Organization, Testing.Person],
         exaApiKey: EXA_API_KEY,
       });
 
@@ -57,7 +57,7 @@ describe.skip('Search', () => {
     test('composer context-based search', { timeout: 60_000 }, async () => {
       const objects = await search({
         context: COMPOSER_DXOS_DOC,
-        schema: [Testing.Project, Testing.Organization, Testing.Contact],
+        schema: [Testing.Project, Testing.Organization, Testing.Person],
         exaApiKey: EXA_API_KEY,
       });
 
@@ -67,7 +67,7 @@ describe.skip('Search', () => {
     test.only('edge architecture', { timeout: 60_000 }, async () => {
       const objects = await search({
         context: EDGE_ARCHITECTURE_DOC,
-        schema: [Testing.Project, Testing.Organization, Testing.Contact],
+        schema: [Testing.Project, Testing.Organization, Testing.Person],
         exaApiKey: EXA_API_KEY,
       });
 

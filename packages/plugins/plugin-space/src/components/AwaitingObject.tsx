@@ -4,9 +4,11 @@
 
 import React, { useCallback, useEffect, useState } from 'react';
 
-import { LayoutAction, createIntent, useIntentDispatcher, useLayout } from '@dxos/app-framework';
+import { LayoutAction, createIntent } from '@dxos/app-framework';
+import { useIntentDispatcher, useLayout } from '@dxos/app-framework/react';
+import { Obj } from '@dxos/echo';
 import { useClient } from '@dxos/react-client';
-import { Filter, fullyQualifiedId, useQuery } from '@dxos/react-client/echo';
+import { Filter, useQuery } from '@dxos/react-client/echo';
 import { Button, Icon, Toast, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '../meta';
@@ -36,7 +38,7 @@ export const AwaitingObject = ({ id }: { id: string }) => {
   }, [id]);
 
   useEffect(() => {
-    if (objects.findIndex((object) => fullyQualifiedId(object) === id) > -1) {
+    if (objects.findIndex((object) => Obj.getDXN(object).toString() === id) > -1) {
       setFound(true);
       if (layout.active.includes(id)) {
         setOpen(false);

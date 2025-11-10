@@ -5,9 +5,9 @@
 import { EditorView } from '@codemirror/view';
 
 import { Capabilities, type PluginContext, contributes, createIntent } from '@dxos/app-framework';
+import { Obj } from '@dxos/echo';
 import { ATTENDABLE_PATH_SEPARATOR, DeckAction } from '@dxos/plugin-deck/types';
 import { MarkdownCapabilities } from '@dxos/plugin-markdown';
-import { fullyQualifiedId } from '@dxos/react-client/echo';
 import { type EditorState, commentClickedEffect, commentsState, overlap } from '@dxos/react-ui-editor';
 
 import { threads } from '../extensions';
@@ -22,17 +22,19 @@ export default (context: PluginContext) =>
       return threads(state, doc, dispatch);
     },
     ({ document: doc }) => {
+      if (!doc) return [];
       const { state } = context.getCapability(ThreadCapabilities.MutableState);
 
       return EditorView.updateListener.of((update) => {
         if (update.docChanged || update.selectionSet) {
-          state.toolbar[fullyQualifiedId(doc)] = selectionOverlapsComment(update.state);
+          state.toolbar[Obj.getDXN(doc).toString()] = selectionOverlapsComment(update.state);
         }
       });
     },
     ({ document: doc }) => {
+      if (!doc) return [];
       const { dispatchPromise: dispatch } = context.getCapability(Capabilities.IntentDispatcher);
-      const id = fullyQualifiedId(doc);
+      const id = Obj.getDXN(doc).toString();
 
       return EditorView.updateListener.of((update) => {
         update.transactions.forEach((transaction) => {

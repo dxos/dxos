@@ -6,7 +6,7 @@ import * as Schema from 'effect/Schema';
 import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { Trigger } from '@dxos/async';
-import { fullyQualifiedId } from '@dxos/client/echo';
+import { Obj } from '@dxos/echo';
 import { Function, FunctionDefinition } from '@dxos/functions';
 
 import { ComputeGraphRegistry, defaultPlugins } from './compute-graph-registry';
@@ -23,8 +23,13 @@ describe('ComputeGraphRegistry', () => {
   });
 
   test('invokes user function through compute graph', async () => {
-    const computeRuntime = createMockedComputeRuntimeProvider({ functions: [add] });
-    const testBuilder = new TestBuilder({ types: [Function.Function], computeRuntime });
+    const computeRuntime = createMockedComputeRuntimeProvider({
+      functions: [add],
+    });
+    const testBuilder = new TestBuilder({
+      types: [Function.Function],
+      computeRuntime,
+    });
     await testBuilder.open();
     onTestFinished(async () => {
       await testBuilder.close();
@@ -33,7 +38,10 @@ describe('ComputeGraphRegistry', () => {
     const space = await testBuilder.client.spaces.create();
 
     // Register Edge function plugin and runtime in the registry.
-    const registry = new ComputeGraphRegistry({ plugins: defaultPlugins, computeRuntime });
+    const registry = new ComputeGraphRegistry({
+      plugins: defaultPlugins,
+      computeRuntime,
+    });
     await registry.open();
     onTestFinished(async () => {
       await registry.close();
@@ -69,12 +77,17 @@ describe('ComputeGraphRegistry', () => {
 
     // Sanity check: mapping to fully qualified id works as well.
     const bindingId = graph.mapFunctionBindingToId('ADD(2, 3)');
-    expect(bindingId.startsWith(`${fullyQualifiedId(functionObj)}`)).to.be.true;
+    expect(bindingId.startsWith(`${Obj.getDXN(functionObj).toString()}`)).to.be.true;
   });
 
   test('adding a function binding updates autocomplete and enables execution', async () => {
-    const computeRuntime = createMockedComputeRuntimeProvider({ functions: [add] });
-    const testBuilder = new TestBuilder({ types: [Function.Function], computeRuntime });
+    const computeRuntime = createMockedComputeRuntimeProvider({
+      functions: [add],
+    });
+    const testBuilder = new TestBuilder({
+      types: [Function.Function],
+      computeRuntime,
+    });
     await testBuilder.open();
     onTestFinished(async () => {
       await testBuilder.close();
@@ -82,7 +95,10 @@ describe('ComputeGraphRegistry', () => {
 
     const space = await testBuilder.client.spaces.create();
 
-    const registry = new ComputeGraphRegistry({ plugins: defaultPlugins, computeRuntime });
+    const registry = new ComputeGraphRegistry({
+      plugins: defaultPlugins,
+      computeRuntime,
+    });
     await registry.open();
     onTestFinished(async () => {
       await registry.close();

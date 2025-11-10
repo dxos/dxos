@@ -15,7 +15,7 @@ import { DatabaseService, defineFunction } from '@dxos/functions';
 import { FunctionInvocationServiceLayerTest } from '@dxos/functions-runtime/testing';
 import { type DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { DataType } from '@dxos/schema';
+import { LegacyOrganization, Message, Organization, Person } from '@dxos/types';
 import { trim } from '@dxos/util';
 
 import { makeGraphWriterHandler, makeGraphWriterToolkit } from '../../crud';
@@ -26,7 +26,7 @@ export default defineFunction({
   name: 'Entity Extraction',
   description: 'Extracts entities from emails and transcripts.',
   inputSchema: Schema.Struct({
-    source: DataType.Message.Message.annotations({ description: 'Email or transcript to extract entities from.' }),
+    source: Message.Message.annotations({ description: 'Email or transcript to extract entities from.' }),
 
     // TODO(dmaretskyi): Consider making this an array of blueprints instead.
     instructions: Schema.optional(Schema.String).annotations({ description: 'Instructions extraction process.' }),
@@ -41,11 +41,11 @@ export default defineFunction({
   handler: Effect.fnUntraced(
     function* ({ data: { source, instructions } }) {
       const contact = yield* extractContact(source);
-      let organization: DataType.Organization.Organization | null = null;
+      let organization: Organization.Organization | null = null;
 
       if (contact && !contact.organization) {
         const created: DXN[] = [];
-        const GraphWriterToolkit = makeGraphWriterToolkit({ schema: [DataType.LegacyOrganization] }).pipe();
+        const GraphWriterToolkit = makeGraphWriterToolkit({ schema: [LegacyOrganization] }).pipe();
         const GraphWriterHandler = makeGraphWriterHandler(GraphWriterToolkit, {
           onAppend: (dxns) => created.push(...dxns),
         });
@@ -66,7 +66,7 @@ export default defineFunction({
         if (created.length > 1) {
           throw new Error('Multiple organizations created');
         } else if (created.length === 1) {
-          organization = yield* DatabaseService.resolve(created[0], DataType.Organization.Organization);
+          organization = yield* DatabaseService.resolve(created[0], Organization.Organization);
           Obj.getMeta(organization).tags ??= [];
           Obj.getMeta(organization).tags!.push(...(Obj.getMeta(source)?.tags ?? []));
           contact.organization = Ref.make(organization);
@@ -92,7 +92,7 @@ export default defineFunction({
   ),
 });
 
-const extractContact = Effect.fn('extractContact')(function* (message: DataType.Message.Message) {
+const extractContact = Effect.fn('extractContact')(function* (message: Message.Message) {
   const name = message.sender.name;
   const email = message.sender.email;
   if (!email) {
@@ -100,12 +100,12 @@ const extractContact = Effect.fn('extractContact')(function* (message: DataType.
     return undefined;
   }
 
-  const { objects: existingContacts } = yield* DatabaseService.runQuery(Filter.type(DataType.Person.Person));
+  const { objects: existingContacts } = yield* DatabaseService.runQuery(Filter.type(Person.Person));
 
   // Check for existing contact
   // TODO(dmaretskyi): Query filter DSL - https://linear.app/dxos/issue/DX-541/filtercontains-should-work-with-partial-objects
   const existingContact = existingContacts.find((contact) =>
-    contact.emails?.some((contactEmail) => contactEmail.value === email),
+    contact.emails?.some((contactEmail: any) => contactEmail.value === email),
   );
 
   if (existingContact) {
@@ -113,7 +113,7 @@ const extractContact = Effect.fn('extractContact')(function* (message: DataType.
     return existingContact;
   }
 
-  const newContact = Obj.make(DataType.Person.Person, {
+  const newContact = Obj.make(Person.Person, {
     [Obj.Meta]: {
       tags: Obj.getMeta(message)?.tags,
     },
@@ -133,9 +133,7 @@ const extractContact = Effect.fn('extractContact')(function* (message: DataType.
 
   log.info('extracted email domain', { emailDomain });
 
-  const { objects: existingOrganisations } = yield* DatabaseService.runQuery(
-    Filter.type(DataType.Organization.Organization),
-  );
+  const { objects: existingOrganisations } = yield* DatabaseService.runQuery(Filter.type(Organization.Organization));
   const matchingOrg = existingOrganisations.find((org) => {
     if (org.website) {
       try {

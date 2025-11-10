@@ -8,8 +8,8 @@ import React, { useEffect, useState } from 'react';
 import { type Obj, Tag } from '@dxos/echo';
 import { useClientProvider, withClientProvider } from '@dxos/react-client/testing';
 import { withTheme } from '@dxos/react-ui/testing';
-import { DataType } from '@dxos/schema';
 import { render } from '@dxos/storybook-utils';
+import { Project } from '@dxos/types';
 
 import { translations } from '../../translations';
 
@@ -21,7 +21,7 @@ const DefaultStory = () => {
 
   useEffect(() => {
     if (space && !object) {
-      const object = space.db.add(DataType.Project.make());
+      const object = space.db.add(Project.make());
       setObject(object as Obj.Any);
     }
   }, [space, object]);
@@ -42,7 +42,7 @@ const meta = {
     withClientProvider({
       createIdentity: true,
       createSpace: true,
-      types: [DataType.Project.Project, Tag.Tag],
+      types: [Project.Project, Tag.Tag],
       onCreateSpace: async ({ space }) => {
         space.db.add(Tag.make({ label: 'Tag 1' }));
         space.db.add(Tag.make({ label: 'Tag 2' }));

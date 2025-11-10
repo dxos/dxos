@@ -4,12 +4,11 @@
 
 import React, { useCallback, useMemo, useRef, useState } from 'react';
 
-import { Surface } from '@dxos/app-framework';
+import { Surface } from '@dxos/app-framework/react';
 import { getSpace } from '@dxos/client/echo';
 import { Filter, Obj, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { useQuery } from '@dxos/react-client/echo';
-import { fullyQualifiedId } from '@dxos/react-client/echo';
 import { useSignalsMemo } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
 import { Board, type BoardController, type BoardRootProps, type Position } from '@dxos/react-ui-board';
@@ -35,7 +34,7 @@ export const BoardContainer = ({ board }: BoardContainerProps) => {
   const items = useSignalsMemo(() => board.items.map((ref) => ref.target).filter(isNonNullable), [board]);
   const addTriggerRef = useRef<HTMLButtonElement | null>(null);
   const [pickerState, setPickerState] = useState<PickerState | null>(null);
-  const attendableId = fullyQualifiedId(board);
+  const attendableId = Obj.getDXN(board).toString();
   const { hasAttention } = useAttention(attendableId);
 
   // TODO(burdon): Use search.

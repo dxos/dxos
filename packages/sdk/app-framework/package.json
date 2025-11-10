@@ -15,27 +15,27 @@
       "browser": "./dist/lib/browser/index.mjs",
       "node": "./dist/lib/node-esm/index.mjs"
     },
+    "./react": {
+      "source": "./src/react/index.ts",
+      "types": "./dist/types/src/react/index.d.ts",
+      "browser": "./dist/lib/browser/react/index.mjs",
+      "node": "./dist/lib/node-esm/react/index.mjs"
+    },
     "./testing": {
       "source": "./src/testing/index.ts",
       "types": "./dist/types/src/testing/index.d.ts",
       "browser": "./dist/lib/browser/testing/index.mjs",
       "node": "./dist/lib/node-esm/testing/index.mjs"
-    },
-    "./worker": {
-      "source": "./src/worker.ts",
-      "types": "./dist/types/src/worker.d.ts",
-      "browser": "./dist/lib/browser/worker.mjs",
-      "node": "./dist/lib/node-esm/worker.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
   "typesVersions": {
     "*": {
+      "react": [
+        "dist/types/src/react/index.d.ts"
+      ],
       "testing": [
         "dist/types/src/testing/index.d.ts"
-      ],
-      "worker": [
-        "dist/types/src/worker.d.ts"
       ]
     }
   },
@@ -59,6 +59,7 @@
     "@dxos/log": "workspace:*",
     "@dxos/react-hooks": "workspace:*",
     "@dxos/schema": "workspace:*",
+    "@dxos/types": "workspace:*",
     "@dxos/util": "workspace:*",
     "@effect/ai": "0.29.1",
     "@effect/experimental": "0.56.0",

@@ -45,7 +45,7 @@ type CreateData<T> = T extends { id: string } ? Omit<T, 'id' | typeof EntityKind
  *   name: Schema.String,
  *   email: Schema.String,
  * }).pipe(Type.Obj({
- *   typename: 'example.com/type/Contact',
+ *   typename: 'example.com/type/Person',
  *   version: '0.1.0',
  * }))
  *

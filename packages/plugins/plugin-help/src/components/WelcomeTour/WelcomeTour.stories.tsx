@@ -23,8 +23,8 @@ const App = () => {
   };
 
   return (
-    <div className='flex flex-col h-full p-4 space-y-8'>
-      <div className='flex items-center gap-2 py-2'>
+    <div className='flex flex-col bs-full p-4 space-y-8'>
+      <div className='flex items-center gap-2 plb-2'>
         <Button data-joyride='basic/1' onClick={() => start()}>
           Start
         </Button>
@@ -41,13 +41,13 @@ const App = () => {
           ))}
         </ul>
       </div>
-      <div className='flex items-center gap-2 py-2'>
+      <div className='flex items-center gap-2 plb-2'>
         <Button data-joyride='basic/3' onClick={handleAdd}>
           Add
         </Button>
       </div>
       <div className='flex grow' />
-      <div className='flex items-center py-2'>
+      <div className='flex items-center plb-2'>
         <div className='grow' />
         <Icon icon='ph--circle--regular' data-joyride='basic/4' />
         <Icon icon='ph--circle--regular' />

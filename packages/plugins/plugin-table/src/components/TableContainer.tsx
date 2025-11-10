@@ -7,14 +7,15 @@ import * as Match from 'effect/Match';
 import type * as Schema from 'effect/Schema';
 import React, { useCallback, useMemo, useRef } from 'react';
 
-import { LayoutAction, createIntent, useAppGraph, useIntentDispatcher } from '@dxos/app-framework';
-import { Filter, Obj, Type } from '@dxos/echo';
+import { LayoutAction, createIntent } from '@dxos/app-framework';
+import { useAppGraph, useIntentDispatcher } from '@dxos/app-framework/react';
+import { Obj, Query, Type } from '@dxos/echo';
 import { EchoSchema } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
 import { useGlobalFilteredObjects } from '@dxos/plugin-search';
 import { SpaceAction } from '@dxos/plugin-space/types';
 import { useClient } from '@dxos/react-client';
-import { fullyQualifiedId, getSpace, useQuery, useSchema } from '@dxos/react-client/echo';
+import { getSpace, useQuery, useSchema } from '@dxos/react-client/echo';
 import { StackItem } from '@dxos/react-ui-stack';
 import {
   Table,
@@ -27,32 +28,38 @@ import {
   useAddRow,
   useTableModel,
 } from '@dxos/react-ui-table';
-import { type DataType, getTypenameFromQuery } from '@dxos/schema';
+import { getTypenameFromQuery } from '@dxos/schema';
+import { type View } from '@dxos/schema';
 
 import { meta } from '../meta';
 
 export type TableContainerProps = {
   role: string;
-  view: DataType.View.View;
+  view: View.View;
 };
 
+// TODO(wittjosiah): Need to handle more complex queries by restricting add row.
 export const TableContainer = ({ role, view }: TableContainerProps) => {
   const { dispatchPromise: dispatch } = useIntentDispatcher();
   const tableRef = useRef<TableController>(null);
 
   const client = useClient();
   const space = getSpace(view);
-  const typename = view.query ? getTypenameFromQuery(view.query.ast) : undefined;
+  const query = Query.fromAst(Obj.getSnapshot(view).query.ast);
+  const typename = view.query ? getTypenameFromQuery(query.ast) : undefined;
   const schema = useSchema(client, space, typename);
-  const queriedObjects = useQuery(space, schema ? Filter.type(schema) : Filter.nothing());
+  const queriedObjects = useQuery(space, query);
   const filteredObjects = useGlobalFilteredObjects(queriedObjects);
 
   const { graph } = useAppGraph();
   const customActions = useMemo(() => {
     return Rx.make((get) => {
-      const actions = get(graph.actions(fullyQualifiedId(view)));
+      const actions = get(graph.actions(Obj.getDXN(view).toString()));
       const nodes = actions.filter((action) => action.properties.disposition === 'toolbar');
-      return { nodes, edges: nodes.map((node) => ({ source: 'root', target: node.id })) };
+      return {
+        nodes,
+        edges: nodes.map((node) => ({ source: 'root', target: node.id })),
+      };
     });
   }, [graph]);
 
@@ -100,13 +107,12 @@ export const TableContainer = ({ role, view }: TableContainerProps) => {
   const handleRowAction = useCallback(
     (actionId: string, data: any) =>
       Match.value(actionId).pipe(
-        Match.when('open', () => {
-          invariant(typename);
-          void dispatch(createIntent(LayoutAction.Open, { part: 'main', subject: [fullyQualifiedId(data)] }));
-        }),
+        Match.when('open', () =>
+          dispatch(createIntent(LayoutAction.Open, { part: 'main', subject: [Obj.getDXN(data).toString()] })),
+        ),
         Match.orElseAbsurd,
       ),
-    [dispatch, typename],
+    [dispatch],
   );
 
   const handleRowOrderChange = useCallback(() => {
@@ -158,14 +164,14 @@ export const TableContainer = ({ role, view }: TableContainerProps) => {
   return (
     <StackItem.Content toolbar>
       <TableToolbar
-        attendableId={fullyQualifiedId(view)}
+        attendableId={Obj.getDXN(view).toString()}
         customActions={customActions}
         onAdd={handleInsertRow}
         onSave={handleSave}
       />
       <Table.Root role={role}>
         <Table.Main
-          key={fullyQualifiedId(view)}
+          key={Obj.getDXN(view).toString()}
           ref={tableRef}
           client={client}
           model={model}

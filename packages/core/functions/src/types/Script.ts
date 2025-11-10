@@ -6,7 +6,7 @@ import * as Schema from 'effect/Schema';
 
 import { Obj, Ref, Type } from '@dxos/echo';
 import { FormAnnotation, LabelAnnotation } from '@dxos/echo/internal';
-import * as SchemaTypes from '@dxos/schema';
+import { Text } from '@dxos/schema';
 
 /**
  * Source script.
@@ -17,7 +17,7 @@ export const Script = Schema.Struct({
   // TODO(burdon): Change to hash of deployed content.
   // Whether source has changed since last deploy.
   changed: Schema.Boolean.pipe(FormAnnotation.set(false), Schema.optional),
-  source: Type.Ref(SchemaTypes.DataType.Text.Text).pipe(FormAnnotation.set(false)),
+  source: Type.Ref(Text.Text).pipe(FormAnnotation.set(false)),
 }).pipe(
   Type.Obj({
     typename: 'dxos.org/type/Script',
@@ -30,4 +30,4 @@ export interface Script extends Schema.Schema.Type<typeof Script> {}
 type Props = Omit<Obj.MakeProps<typeof Script>, 'source'> & { source?: string };
 
 export const make = ({ source = '', ...props }: Props = {}) =>
-  Obj.make(Script, { ...props, source: Ref.make(SchemaTypes.DataType.Text.make(source)) });
+  Obj.make(Script, { ...props, source: Ref.make(Text.make(source)) });

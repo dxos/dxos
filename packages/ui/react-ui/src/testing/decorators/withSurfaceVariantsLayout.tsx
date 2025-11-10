@@ -23,7 +23,7 @@ const Panel = ({
   densities,
   className,
 }: { Story: ComponentType } & Config & { className?: string }) => (
-  <div className={mx('flex flex-col h-full p-4 gap-4', className)}>
+  <div className={mx('flex flex-col bs-full p-4 gap-4', className)}>
     {elevations?.map(({ elevation, surface }) =>
       densities?.map((density) => (
         <Container key={`${elevation}--${density}`} surface={surface} elevation={elevation}>

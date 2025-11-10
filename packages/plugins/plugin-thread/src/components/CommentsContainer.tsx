@@ -4,12 +4,9 @@
 
 import React, { useEffect } from 'react';
 
-import { Relation } from '@dxos/echo';
-import { fullyQualifiedId } from '@dxos/react-client/echo';
+import { Obj, Relation } from '@dxos/echo';
 import { Callout, Icon, Trans, useTranslation } from '@dxos/react-ui';
-import { type DataType } from '@dxos/schema';
-
-type AnchoredTo = DataType.AnchoredTo.AnchoredTo;
+import { type AnchoredTo } from '@dxos/types';
 
 import { meta } from '../meta';
 import { type Thread } from '../types';
@@ -17,7 +14,7 @@ import { type Thread } from '../types';
 import { CommentsThreadContainer, type CommentsThreadContainerProps } from './CommentsThreadContainer';
 
 export type CommentsContainerProps = Omit<CommentsThreadContainerProps, 'anchor' | 'current'> & {
-  anchors: AnchoredTo[];
+  anchors: AnchoredTo.AnchoredTo[];
   currentId?: string;
   showResolvedThreads?: boolean;
 };
@@ -66,7 +63,7 @@ export const CommentsContainer = ({ anchors, currentId, showResolvedThreads, ...
     <div>
       {filteredAnchors.map((anchor) => {
         const thread = Relation.getSource(anchor) as Thread.Thread;
-        const threadId = fullyQualifiedId(thread);
+        const threadId = Obj.getDXN(thread).toString();
         return <CommentsThreadContainer key={threadId} anchor={anchor} current={currentId === threadId} {...props} />;
       })}
     </div>

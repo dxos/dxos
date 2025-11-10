@@ -4,10 +4,10 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Blueprint } from '@dxos/blueprints';
+import { Blueprint, Prompt } from '@dxos/blueprints';
 import { EchoObjectSchema, SpaceSchema } from '@dxos/client/echo';
 import { Sequence } from '@dxos/conductor';
-import { DataType } from '@dxos/schema';
+import { Collection } from '@dxos/schema';
 
 import { meta } from '../meta';
 
@@ -17,7 +17,7 @@ import { Chat } from './Assistant';
 export class onCreateSpace extends Schema.TaggedClass<onCreateSpace>()(`${meta.id}/on-space-created`, {
   input: Schema.Struct({
     space: SpaceSchema,
-    rootCollection: DataType.Collection.Collection,
+    rootCollection: Collection.Collection,
   }),
   output: Schema.Void,
 }) {}
@@ -52,6 +52,15 @@ export class CreateBlueprint extends Schema.TaggedClass<CreateBlueprint>()(`${me
   }),
 }) {}
 
+export class CreatePrompt extends Schema.TaggedClass<CreatePrompt>()(`${meta.id}/action/create-prompt`, {
+  input: Schema.Struct({
+    name: Schema.optional(Schema.String),
+  }),
+  output: Schema.Struct({
+    object: Prompt.Prompt,
+  }),
+}) {}
+
 export class CreateSequence extends Schema.TaggedClass<CreateSequence>()(`${meta.id}/action/create-sequence`, {
   input: Schema.Struct({
     name: Schema.optional(Schema.String),
@@ -64,7 +73,7 @@ export class CreateSequence extends Schema.TaggedClass<CreateSequence>()(`${meta
 export class SetCurrentChat extends Schema.TaggedClass<SetCurrentChat>()(`${meta.id}/action/set-current-chat`, {
   input: Schema.Struct({
     companionTo: EchoObjectSchema,
-    chat: Chat,
+    chat: Chat.pipe(Schema.optional),
   }),
   output: Schema.Void,
 }) {}

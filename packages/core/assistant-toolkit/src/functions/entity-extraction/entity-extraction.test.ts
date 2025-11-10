@@ -21,7 +21,7 @@ import {
 } from '@dxos/functions';
 import { FunctionInvocationServiceLayerTest, TestDatabaseLayer } from '@dxos/functions-runtime/testing';
 import { ObjectId } from '@dxos/keys';
-import { DataType } from '@dxos/schema';
+import { Message, Organization, Person } from '@dxos/types';
 
 import { testToolkit } from '../../blueprints/testing';
 import { ResearchGraph } from '../research';
@@ -43,13 +43,7 @@ const TestLayer = Layer.mergeAll(
       TestDatabaseLayer({
         spaceKey: 'fixed',
         indexing: { vector: true },
-        types: [
-          Blueprint.Blueprint,
-          DataType.Message.Message,
-          DataType.Person.Person,
-          DataType.Organization.Organization,
-          ResearchGraph,
-        ],
+        types: [Blueprint.Blueprint, Message.Message, Person.Person, Organization.Organization, ResearchGraph],
       }),
       CredentialsService.configuredLayer([]),
       TracingService.layerNoop,
@@ -63,7 +57,7 @@ describe('Entity extraction', () => {
     Effect.fnUntraced(
       function* (_) {
         const email = yield* DatabaseService.add(
-          Obj.make(DataType.Message.Message, {
+          Obj.make(Message.Message, {
             [Obj.Meta]: {
               tags: ['important'],
             },

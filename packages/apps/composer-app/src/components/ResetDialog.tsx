@@ -19,7 +19,7 @@ import {
   useTranslation,
 } from '@dxos/react-ui';
 
-import { PARAM_SAFE_MODE } from '../config';
+import { setSafeModeUrl } from '../config';
 
 // TODO(burdon): Factor out.
 const parseError = (t: (name: string, context?: object) => string, error: Error) => {
@@ -97,9 +97,7 @@ export const ResetDialog = ({
   }, [needRefresh, updateServiceWorker]);
 
   const handleSafeMode = useCallback(() => {
-    const url = new URL(window.location.href);
-    url.searchParams.set(PARAM_SAFE_MODE, 'true');
-    window.location.href = url.toString();
+    window.location.href = setSafeModeUrl(true);
   }, []);
 
   return (

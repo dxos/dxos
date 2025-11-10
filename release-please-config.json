@@ -750,6 +750,11 @@
         },
         {
           "type": "json",
+          "path": "packages/sdk/types/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/stories/stories-assistant/package.json",
           "jsonpath": "$.version"
         },
@@ -801,6 +806,11 @@
         {
           "type": "json",
           "path": "packages/ui/react-ui-board/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/ui/react-ui-calendar/package.json",
           "jsonpath": "$.version"
         },
         {

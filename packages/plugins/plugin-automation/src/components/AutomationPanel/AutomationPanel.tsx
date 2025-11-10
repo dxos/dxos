@@ -17,7 +17,8 @@ import { Clipboard, IconButton, Input, Separator, type ThemedClassName, useTrans
 import { ControlItem, controlItemClasses } from '@dxos/react-ui-form';
 import { List } from '@dxos/react-ui-list';
 import { ghostHover, mx } from '@dxos/react-ui-theme';
-import { DataType } from '@dxos/schema';
+import { View } from '@dxos/schema';
+import { Project } from '@dxos/types';
 
 import { meta } from '../../meta';
 import { TriggerEditor, type TriggerEditorProps } from '../TriggerEditor';
@@ -104,14 +105,14 @@ export const AutomationPanel = ({ classNames, space, object, initialTrigger, onD
           getId={(field) => field.id}
         >
           {({ items: filteredTriggers }) => (
-            <div role='list' className='flex flex-col w-full'>
+            <div role='list' className='flex flex-col is-full'>
               {filteredTriggers?.map((trigger) => {
                 const copyAction = getCopyAction(client, trigger);
                 return (
                   <List.Item<Trigger.Trigger>
                     key={trigger.id}
                     item={trigger}
-                    classNames={mx(grid, ghostHover, 'items-center', 'px-2')}
+                    classNames={mx(grid, ghostHover, 'items-center', 'pli-2')}
                   >
                     <Input.Root>
                       <Input.Switch
@@ -122,7 +123,7 @@ export const AutomationPanel = ({ classNames, space, object, initialTrigger, onD
 
                     <div className={'flex'}>
                       <List.ItemTitle
-                        classNames='px-1 cursor-pointer w-0 shrink truncate'
+                        classNames='pli-1 cursor-pointer w-0 shrink truncate'
                         onClick={() => handleSelect(trigger)}
                       >
                         {getFunctionName(functions, trigger) ?? '∅'}
@@ -188,11 +189,11 @@ const scriptMatch = (script: Script.Script) => (trigger: Trigger.Trigger) => {
   return fn.source?.target === script;
 };
 
-const projectMatch = (project: DataType.Project.Project) => {
+const projectMatch = (project: Project.Project) => {
   const viewQueries = EFn.pipe(
     project.collections,
     Array.map((collection) => collection.target),
-    Array.filter(Schema.is(DataType.View.View)),
+    Array.filter(Schema.is(View.View)),
     Array.map((view) => Obj.getSnapshot(view).query.ast),
     Array.map((ast) => JSON.stringify(ast)),
   );
@@ -215,7 +216,7 @@ const triggerMatch = Match.type<Obj.Any>().pipe(
     (obj) => scriptMatch(obj),
   ),
   Match.when(
-    (obj) => Obj.instanceOf(DataType.Project.Project, obj),
+    (obj) => Obj.instanceOf(Project.Project, obj),
     (obj) => projectMatch(obj),
   ),
   Match.orElse((_obj) => () => true),

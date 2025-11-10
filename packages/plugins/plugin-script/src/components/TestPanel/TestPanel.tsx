@@ -174,7 +174,7 @@ export const TestPanel = ({ classNames, functionUrl }: TestPanelProps) => {
   };
 
   return (
-    <div className={mx('flex flex-col h-full overflow-hidden', classNames)}>
+    <div className={mx('flex flex-col bs-full overflow-hidden', classNames)}>
       {/* TODO(burdon): Replace with Thread. */}
       <MessageThread ref={scrollerRef} state={state} result={result} history={history} />
       {/* TODO(burdon): Replace with Form based on the function's input schema. */}
@@ -219,7 +219,7 @@ type MessageThreadProps = {
 const MessageThread = forwardRef<HTMLDivElement, MessageThreadProps>(
   ({ state, history, result }: MessageThreadProps, forwardedRef) => {
     return (
-      <div ref={forwardedRef} className='flex flex-col gap-6 h-full p-2 overflow-x-hidden overflow-y-auto'>
+      <div ref={forwardedRef} className='flex flex-col gap-6 bs-full p-2 overflow-x-hidden overflow-y-auto'>
         {history.map((message, i) => (
           <div key={i} className='grid grid-cols-[2rem_1fr_2rem]'>
             <div className='p-1'>{message.type === 'response' && <RobotAvatar />}</div>
@@ -248,7 +248,7 @@ const MessageThread = forwardRef<HTMLDivElement, MessageThreadProps>(
 
 const MessageItem = ({ classNames, message }: ThemedClassName<{ message: Message }>) => {
   const { type, text, data, error } = message;
-  const wrapper = 'p-1 px-2 rounded-md bg-hoverSurface overflow-auto';
+  const wrapper = 'p-1 pli-2 rounded-md bg-hoverSurface overflow-auto';
   return (
     <div className={mx('flex', type === 'request' ? 'ml-[1rem] justify-end' : 'mr-[1rem]', classNames)}>
       {error && <div className={mx(wrapper, 'whitespace-pre', errorText)}>{String(error)}</div>}

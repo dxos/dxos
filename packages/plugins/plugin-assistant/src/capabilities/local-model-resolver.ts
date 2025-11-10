@@ -21,7 +21,7 @@ export default (): Capability<any>[] => [
     AiServiceRouter.LMStudioResolver.pipe(
       Layer.provide(
         OpenAiClient.layer({
-          apiUrl: AiServiceRouter.LMSTUDIO_ENDPOINT,
+          apiUrl: AiServiceRouter.DEFAULT_LMSTUDIO_ENDPOINT,
         }),
       ),
       Layer.provide(FetchHttpClient.layer),

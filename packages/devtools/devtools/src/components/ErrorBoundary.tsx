@@ -23,7 +23,7 @@ const ErrorPopup = ({ error, onReset }: { error: Error; onReset?: () => void }) 
   //   <div className='m-4'>
   //     <Message.Root valence='error' className='mlb-4'>
   //       <Message.Title>{message}</Message.Title>
-  //       <pre className='text-xs overflow-auto max-w-72 max-h-72'>{stack}</pre>
+  //       <pre className='text-xs overflow-auto max-is-72 max-bs-72'>{stack}</pre>
   //     </Message.Root>
   //     <div role='none' className='flex gap-2'>
   //       <div className='grow' />

@@ -34,7 +34,7 @@ describe('create (static version)', () => {
   });
 
   test('create static object', () => {
-    const contact = create(Testing.Contact, {
+    const contact = create(Testing.Person, {
       name: 'Bot',
       email: 'bot@example.com',
     });
@@ -43,12 +43,12 @@ describe('create (static version)', () => {
     expect(contact.name).toBe('Bot');
     expect(contact.email).toBe('bot@example.com');
     expect((contact as any)['@type']).toBeUndefined();
-    expect(getType(contact)?.toString()).toBe(getSchemaDXN(Testing.Contact)!.toString());
-    expect(isInstanceOf(Testing.Contact, contact)).toBe(true);
+    expect(getType(contact)?.toString()).toBe(getSchemaDXN(Testing.Person)!.toString());
+    expect(isInstanceOf(Testing.Person, contact)).toBe(true);
   });
 
   test('JSON encoding', () => {
-    const contact = create(Testing.Contact, {
+    const contact = create(Testing.Person, {
       name: 'Bot',
       email: 'bot@example.com',
     });
@@ -56,7 +56,7 @@ describe('create (static version)', () => {
     const json = JSON.parse(JSON.stringify(contact));
     expect(json).toEqual({
       id: contact.id,
-      '@type': DXN.fromTypenameAndVersion(Testing.Contact.typename, Testing.Contact.version).toString(),
+      '@type': DXN.fromTypenameAndVersion(Testing.Person.typename, Testing.Person.version).toString(),
       '@meta': {
         keys: [],
       },
@@ -67,11 +67,11 @@ describe('create (static version)', () => {
   });
 
   test('JSON encoding with relation', () => {
-    const contactA = create(Testing.Contact, {
+    const contactA = create(Testing.Person, {
       name: 'Bot',
       email: 'bot@example.com',
     });
-    const contactB = create(Testing.Contact, {
+    const contactB = create(Testing.Person, {
       name: 'Bot',
       email: 'bot@example.com',
     });
@@ -93,16 +93,16 @@ describe('create (static version)', () => {
   });
 
   test('getSchema', () => {
-    const contact = create(Testing.Contact, {
+    const contact = create(Testing.Person, {
       name: 'Bot',
       email: 'bot@example.com',
     });
 
-    expect(getSchema(contact)).toBe(Testing.Contact);
+    expect(getSchema(contact)).toBe(Testing.Person);
   });
 
   test('inspect', () => {
-    const contact = create(Testing.Contact, {
+    const contact = create(Testing.Person, {
       name: 'Bot',
       email: 'bot@example.com',
     });
@@ -112,7 +112,7 @@ describe('create (static version)', () => {
     const text = inspect(contact);
     expect(text).toContain('Bot');
     expect(text).toContain('bot@example.com');
-    expect(text).toContain('example.com/type/Contact');
+    expect(text).toContain('example.com/type/Person');
     expect(text).toContain('0.1.0');
   });
 });

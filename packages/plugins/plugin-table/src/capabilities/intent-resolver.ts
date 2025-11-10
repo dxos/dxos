@@ -16,9 +16,10 @@ import { Obj, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { SpaceAction } from '@dxos/plugin-space/types';
-import { fullyQualifiedId, getSpace } from '@dxos/react-client/echo';
+import { getSpace } from '@dxos/react-client/echo';
 import { Table } from '@dxos/react-ui-table/types';
-import { DataType, getTypenameFromQuery } from '@dxos/schema';
+import { getTypenameFromQuery } from '@dxos/schema';
+import { Task } from '@dxos/types';
 
 import { TableAction } from '../types';
 
@@ -29,11 +30,9 @@ export default (context: PluginContext) =>
       resolve: ({ space }) =>
         Effect.gen(function* () {
           const { dispatch } = context.getCapability(Capabilities.IntentDispatcher);
-          const { object } = yield* dispatch(
-            createIntent(TableAction.Create, { space, typename: DataType.Task.Task.typename }),
-          );
+          const { object } = yield* dispatch(createIntent(TableAction.Create, { space, typename: Task.Task.typename }));
           space.db.add(object);
-          space.properties.staticRecords = [DataType.Task.Task.typename];
+          space.properties.staticRecords = [Task.Task.typename];
         }),
     }),
     createResolver({
@@ -48,7 +47,7 @@ export default (context: PluginContext) =>
 
           if (show) {
             return {
-              intents: [createIntent(LayoutAction.Open, { part: 'main', subject: [fullyQualifiedId(object)] })],
+              intents: [createIntent(LayoutAction.Open, { part: 'main', subject: [Obj.getDXN(object).toString()] })],
             };
           }
         }),

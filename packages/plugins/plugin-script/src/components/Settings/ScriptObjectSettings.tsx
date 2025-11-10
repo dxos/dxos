@@ -6,7 +6,8 @@ import { Octokit } from '@octokit/core';
 import React, { type ChangeEvent, useCallback, useState } from 'react';
 
 import { ToolId } from '@dxos/ai';
-import { SettingsAction, createIntent, useIntentDispatcher } from '@dxos/app-framework';
+import { SettingsAction, createIntent } from '@dxos/app-framework';
+import { useIntentDispatcher } from '@dxos/app-framework/react';
 import { Blueprint, Template } from '@dxos/blueprints';
 import { Function, type Script, getUserFunctionIdInMetadata } from '@dxos/functions';
 import { getInvocationUrl } from '@dxos/functions-runtime';
@@ -14,7 +15,7 @@ import { log } from '@dxos/log';
 import { useClient } from '@dxos/react-client';
 import { Filter, Ref, getMeta, getSpace, useQuery } from '@dxos/react-client/echo';
 import { Button, Clipboard, Input, useAsyncEffect, useControlledState, useTranslation } from '@dxos/react-ui';
-import { DataType } from '@dxos/schema';
+import { AccessToken } from '@dxos/types';
 import { kebabize } from '@dxos/util';
 
 import { meta } from '../../meta';
@@ -107,14 +108,18 @@ const BlueprintEditor = ({ object }: ScriptObjectSettingsProps) => {
       <div>
         <h2>{t('blueprint editor label', { default: 'Blueprint' })}</h2>
         <p className='text-description text-sm'>
-          {t('blueprint editor description', { default: 'Create a blueprint that exposes this script as a tool.' })}
+          {t('blueprint editor description', {
+            default: 'Create a blueprint that exposes this script as a tool.',
+          })}
         </p>
       </div>
       <Input.Root>
         <div role='none' className='flex flex-col gap-1'>
           <Input.Label>{t('blueprint instructions label', { default: 'Instructions' })}</Input.Label>
           <Input.TextArea
-            placeholder={t('blueprint instructions placeholder', { default: 'Describe how this tool should be used.' })}
+            placeholder={t('blueprint instructions placeholder', {
+              default: 'Describe how this tool should be used.',
+            })}
             rows={6}
             value={instructions}
             onChange={(event) => setInstructions(event.target.value)}
@@ -201,7 +206,7 @@ const Publishing = ({ object }: ScriptObjectSettingsProps) => {
   const { t } = useTranslation(meta.id);
   const { dispatchPromise: dispatch } = useIntentDispatcher();
   const space = getSpace(object);
-  const [githubToken] = useQuery(space, Filter.type(DataType.AccessToken.AccessToken, { source: 'github.com' }));
+  const [githubToken] = useQuery(space, Filter.type(AccessToken.AccessToken, { source: 'github.com' }));
   const gistKey = getMeta(object).keys.find(({ source }) => source === 'github.com');
   const [gistUrl, setGistUrl] = useState<string | undefined>();
 
@@ -226,7 +231,12 @@ const Publishing = ({ object }: ScriptObjectSettingsProps) => {
   }, [githubToken, gistKey]);
 
   const handleOpenTokenManager = useCallback(
-    () => dispatch(createIntent(SettingsAction.Open, { plugin: 'dxos.org/plugin/token-manager' })),
+    () =>
+      dispatch(
+        createIntent(SettingsAction.Open, {
+          plugin: 'dxos.org/plugin/token-manager',
+        }),
+      ),
     [],
   );
 

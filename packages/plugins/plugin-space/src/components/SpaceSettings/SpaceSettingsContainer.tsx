@@ -6,7 +6,8 @@ import * as Function from 'effect/Function';
 import * as Schema from 'effect/Schema';
 import React, { type ChangeEvent, useCallback, useMemo, useState } from 'react';
 
-import { LayoutAction, chain, createIntent, useIntentDispatcher } from '@dxos/app-framework';
+import { LayoutAction, chain, createIntent } from '@dxos/app-framework';
+import { useIntentDispatcher } from '@dxos/app-framework/react';
 import { log } from '@dxos/log';
 import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { useClient } from '@dxos/react-client';
@@ -27,7 +28,11 @@ import { meta } from '../../meta';
 import { SpaceAction, SpaceForm } from '../../types';
 
 const FormSchema = SpaceForm.pipe(
-  Schema.extend(Schema.Struct({ archived: Schema.Boolean.annotations({ title: 'Archive space' }) })),
+  Schema.extend(
+    Schema.Struct({
+      archived: Schema.Boolean.annotations({ title: 'Archive Space' }),
+    }),
+  ),
 );
 
 export type SpaceSettingsContainerProps = {
@@ -72,7 +77,10 @@ export const SpaceSettingsContainer = ({ space }: SpaceSettingsContainerProps) =
         void dispatch(
           Function.pipe(
             createIntent(SpaceAction.Close, { space }),
-            chain(LayoutAction.SwitchWorkspace, { part: 'workspace', subject: client.spaces.default.id }),
+            chain(LayoutAction.SwitchWorkspace, {
+              part: 'workspace',
+              subject: client.spaces.default.id,
+            }),
           ),
         );
       } else if (!properties.archived && archived) {
@@ -130,7 +138,7 @@ export const SpaceSettingsContainer = ({ space }: SpaceSettingsContainerProps) =
         const handleReset = useCallback(() => onValueChange(type, undefined), [onValueChange, type]);
         return (
           <ControlItem title={label} description={t('hue description')}>
-            <HuePicker value={getValue()} onChange={handleChange} onReset={handleReset} />
+            <HuePicker value={getValue()} onChange={handleChange} onReset={handleReset} classNames='justify-self-end' />
           </ControlItem>
         );
       },
@@ -171,7 +179,9 @@ export const SpaceSettingsContainer = ({ space }: SpaceSettingsContainerProps) =
       <ControlPage>
         <ControlSection
           title={t('space properties settings verbose label', { ns: meta.id })}
-          description={t('space properties settings description', { ns: meta.id })}
+          description={t('space properties settings description', {
+            ns: meta.id,
+          })}
         >
           <Form
             schema={FormSchema}

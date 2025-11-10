@@ -141,7 +141,7 @@ export const markdownHighlightStyle = (_options: HighlightOptions = {}) => {
 
       // Fonts.
       {
-        tag: [tags.monospace],
+        tag: [tags.monospace, tags.comment],
         class: 'font-mono',
       },
 

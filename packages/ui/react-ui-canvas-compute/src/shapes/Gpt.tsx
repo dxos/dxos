@@ -74,7 +74,7 @@ export const GptComponent = ({ shape }: ShapeComponentProps<GptShape>) => {
   return (
     <FunctionBody
       shape={shape}
-      content={<div className='px-2 py-1 overflow-y-scroll'>{text}</div>}
+      content={<div className='pli-2 plb-1 overflow-y-scroll'>{text}</div>}
       status={`${tokens} tokens`}
       inputSchema={meta.input}
       outputSchema={meta.output}

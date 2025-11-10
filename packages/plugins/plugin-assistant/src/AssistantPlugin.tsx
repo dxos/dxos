@@ -10,7 +10,7 @@ import { Type } from '@dxos/echo';
 import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
 import { SpaceCapabilities, SpaceEvents } from '@dxos/plugin-space';
 import { defineObjectForm } from '@dxos/plugin-space/types';
-import { DataType } from '@dxos/schema';
+import { HasSubject } from '@dxos/types';
 
 import {
   AiService,
@@ -67,6 +67,13 @@ export const AssistantPlugin = definePlugin(meta, () => [
         },
       }),
       contributes(Capabilities.Metadata, {
+        id: Type.getTypename(Prompt.Prompt),
+        metadata: {
+          icon: 'ph--scroll--regular',
+          iconHue: 'sky',
+        },
+      }),
+      contributes(Capabilities.Metadata, {
         id: Type.getTypename(Sequence),
         metadata: {
           icon: 'ph--circuitry--regular',
@@ -97,6 +104,13 @@ export const AssistantPlugin = definePlugin(meta, () => [
       contributes(
         SpaceCapabilities.ObjectForm,
         defineObjectForm({
+          objectSchema: Prompt.Prompt,
+          getIntent: () => createIntent(AssistantAction.CreatePrompt),
+        }),
+      ),
+      contributes(
+        SpaceCapabilities.ObjectForm,
+        defineObjectForm({
           objectSchema: Sequence,
           getIntent: () => createIntent(AssistantAction.CreateSequence),
         }),
@@ -111,7 +125,7 @@ export const AssistantPlugin = definePlugin(meta, () => [
         ServiceType,
         Assistant.CompanionTo,
         ResearchGraph,
-        DataType.HasSubject.HasSubject,
+        HasSubject.HasSubject,
         Prompt.Prompt,
       ]),
   }),

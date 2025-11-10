@@ -42,9 +42,7 @@ const placeholder = (trigger: string[]) =>
     .children(
       Domino.of('span').text('Press'),
       ...trigger.map((trigger) =>
-        Domino.of('span')
-          .text(trigger)
-          .classNames('border border-separator rounded-sm mx-1 pis-1 pie-1 pbs-[2px] pbe-[3px]'),
+        Domino.of('span').text(trigger).classNames('border border-separator rounded-sm mx-1 pli-1 pbs-[2px] pbe-[3px]'),
       ),
       Domino.of('span').text('for commands'),
     )
@@ -78,7 +76,7 @@ const LinkStory = (args: StoryProps) => {
       }
 
       const name = text?.startsWith('@') ? text.slice(1).toLowerCase() : (text?.toLowerCase() ?? '');
-      const result = await space?.db.query(Query.type(Testing.Contact)).run();
+      const result = await space?.db.query(Query.type(Testing.Person)).run();
       const items = result.objects
         .filter((object) => object.name.toLowerCase().includes(name))
         .map(
@@ -144,11 +142,11 @@ export const Link: Story = {
     withClientProvider({
       createSpace: true,
       onInitialized: async (client) => {
-        client.addTypes([Testing.Contact]);
+        client.addTypes([Testing.Person]);
       },
       onCreateSpace: async ({ space }) => {
         const createObjects = createObjectFactory(space.db, generator);
-        await createObjects([{ type: Testing.Contact, count: 10 }]);
+        await createObjects([{ type: Testing.Person, count: 10 }]);
         await space.db.flush({ indexes: true });
       },
     }),

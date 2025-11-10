@@ -5,7 +5,7 @@
 import React, { useLayoutEffect, useMemo, useRef, useState } from 'react';
 
 import { Obj, Ref } from '@dxos/echo';
-import { type Space, fullyQualifiedId, useMembers } from '@dxos/react-client/echo';
+import { type Space, useMembers } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { Icon, ScrollArea, type ThemedClassName, useThemeContext, useTranslation } from '@dxos/react-ui';
 import { createBasicExtensions, createThemeExtensions, listener } from '@dxos/react-ui-editor';
@@ -18,7 +18,7 @@ import {
   type ThreadRootProps,
   threadLayout,
 } from '@dxos/react-ui-thread';
-import { DataType } from '@dxos/schema';
+import { Message } from '@dxos/types';
 import { isNonNullable } from '@dxos/util';
 
 import { useStatus } from '../hooks';
@@ -59,7 +59,7 @@ export const ChatContainer = ({
   autoFocusTextbox,
 }: ChatContainerProps) => {
   const { t } = useTranslation(meta.id);
-  const id = fullyQualifiedId(thread);
+  const id = Obj.getDXN(thread).toString();
   const identity = useIdentity()!;
   const members = useMembers(space?.key);
   const activity = useStatus(space, id);
@@ -101,7 +101,7 @@ export const ChatContainer = ({
 
     thread.messages.push(
       Ref.make(
-        Obj.make(DataType.Message.Message, {
+        Obj.make(Message.Message, {
           created: new Date().toISOString(),
           sender: { identityDid: identity.did },
           blocks: [{ _tag: 'text', text: messageRef.current }],

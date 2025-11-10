@@ -5,7 +5,7 @@
 import * as Schema from 'effect/Schema';
 
 import { SpaceSchema } from '@dxos/react-client/echo';
-import { DataType, FieldSchema, TypenameAnnotationId } from '@dxos/schema';
+import { FieldSchema, TypenameAnnotationId, View } from '@dxos/schema';
 
 import { meta } from '../meta';
 
@@ -23,6 +23,7 @@ export const PivotColumnAnnotationId = Symbol.for('@dxos/plugin-kanban/annotatio
 
 export const CreateKanbanSchema = Schema.Struct({
   name: Schema.optional(Schema.String),
+  // TODO(wittjosiah): This should be a query input instead.
   typename: Schema.optional(
     Schema.String.annotations({
       [TypenameAnnotationId]: ['used-static', 'dynamic'],
@@ -43,13 +44,13 @@ export namespace KanbanAction {
   export class Create extends Schema.TaggedClass<Create>()(`${KANBAN_ACTION}/create`, {
     input: Schema.extend(Schema.Struct({ space: SpaceSchema }), CreateKanbanSchema),
     output: Schema.Struct({
-      object: DataType.View.View,
+      object: View.View,
     }),
   }) {}
 
   export class DeleteCardField extends Schema.TaggedClass<DeleteCardField>()(`${KANBAN_ACTION}/delete-card-field`, {
     input: Schema.Struct({
-      view: DataType.View.View,
+      view: View.View,
       fieldId: Schema.String,
       // TODO(wittjosiah): Separate fields for undo data?
       deletionData: Schema.optional(

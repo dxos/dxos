@@ -7,7 +7,7 @@ import '@dxos-theme';
 import React, { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 
-import { useApp } from '@dxos/app-framework';
+import { useApp } from '@dxos/app-framework/react';
 import { registerSignalsRuntime } from '@dxos/echo-signals';
 import { LogLevel, log } from '@dxos/log';
 import { getObservabilityGroup, initializeAppObservability, isObservabilityDisabled } from '@dxos/observability';
@@ -17,7 +17,7 @@ import { TRACE_PROCESSOR } from '@dxos/tracing';
 
 import { Placeholder, ResetDialog } from './components';
 import { setupConfig } from './config';
-import { PARAM_LOG_LEVEL, PARAM_SAFE_MODE } from './config';
+import { PARAM_LOG_LEVEL, PARAM_SAFE_MODE, setSafeModeUrl } from './config';
 import { APP_KEY } from './constants';
 import { type PluginConfig, getCore, getDefaults, getPlugins } from './plugin-defs';
 import { translations } from './translations';
@@ -28,6 +28,7 @@ const main = async () => {
   const safeMode = isTrue(url.searchParams.get(PARAM_SAFE_MODE), false);
   if (safeMode) {
     log.info('SAFE MODE');
+    setSafeModeUrl(false);
   }
   const logLevel = url.searchParams.get(PARAM_LOG_LEVEL) ?? (safeMode ? 'debug' : undefined);
   if (logLevel) {
@@ -57,7 +58,11 @@ const main = async () => {
     // NOTE: Set default for first time users to IDB (works better with automerge CRDTs).
     // Needs to be done before worker is created.
     await SaveConfig({
-      runtime: { client: { storage: { dataStore: defs.Runtime.Client.Storage.StorageDriver.IDB } } },
+      runtime: {
+        client: {
+          storage: { dataStore: defs.Runtime.Client.Storage.StorageDriver.IDB },
+        },
+      },
     });
     config = await setupConfig();
   }

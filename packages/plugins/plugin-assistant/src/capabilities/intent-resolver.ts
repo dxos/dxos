@@ -6,16 +6,16 @@ import * as Effect from 'effect/Effect';
 
 import { Capabilities, type PluginContext, contributes, createIntent, createResolver } from '@dxos/app-framework';
 import { AiContextBinder, AiConversation } from '@dxos/assistant';
-import { Blueprint, Template } from '@dxos/blueprints';
-import { fullyQualifiedId } from '@dxos/client/echo';
+import { Agent } from '@dxos/assistant-toolkit';
+import { Blueprint, Prompt, Template } from '@dxos/blueprints';
 import { type Queue } from '@dxos/client/echo';
 import { Sequence } from '@dxos/conductor';
-import { Filter, Key, Obj, Ref } from '@dxos/echo';
-import { TracingService } from '@dxos/functions';
+import { Filter, Key, Obj, Ref, Type } from '@dxos/echo';
+import { TracingService, serializeFunction } from '@dxos/functions';
 import { AutomationCapabilities } from '@dxos/plugin-automation';
 import { CollectionAction } from '@dxos/plugin-space/types';
 import { getSpace } from '@dxos/react-client/echo';
-import { type DataType } from '@dxos/schema';
+import { type Message } from '@dxos/types';
 
 import { type AiChatServices, updateName } from '../processor';
 import { Assistant, AssistantAction } from '../types';
@@ -31,12 +31,28 @@ export default (context: PluginContext) => [
         Effect.gen(function* () {
           const { dispatch } = context.getCapability(Capabilities.IntentDispatcher);
           const { object: chatCollection } = yield* dispatch(
-            createIntent(CollectionAction.CreateQueryCollection, { typename: Assistant.Chat.typename }),
+            createIntent(CollectionAction.CreateQueryCollection, {
+              typename: Assistant.Chat.typename,
+            }),
           );
           const { object: blueprintCollection } = yield* dispatch(
-            createIntent(CollectionAction.CreateQueryCollection, { typename: Blueprint.Blueprint.typename }),
+            createIntent(CollectionAction.CreateQueryCollection, {
+              typename: Blueprint.Blueprint.typename,
+            }),
           );
-          rootCollection.objects.push(Ref.make(chatCollection), Ref.make(blueprintCollection));
+          const { object: promptCollection } = yield* dispatch(
+            createIntent(CollectionAction.CreateQueryCollection, {
+              typename: Type.getTypename(Prompt.Prompt),
+            }),
+          );
+          rootCollection.objects.push(
+            Ref.make(chatCollection),
+            Ref.make(blueprintCollection),
+            Ref.make(promptCollection),
+          );
+
+          // TODO(wittjosiah): Remove once function registry is avaiable.
+          space.db.add(serializeFunction(Agent.prompt));
 
           // Create default chat.
           const { object: chat } = yield* dispatch(createIntent(AssistantAction.CreateChat, { space }));
@@ -69,17 +85,15 @@ export default (context: PluginContext) => [
       intent: AssistantAction.UpdateChatName,
       resolve: async ({ chat }) => {
         const space = getSpace(chat);
-        const queue = chat.queue.target as Queue<DataType.Message.Message>;
+        const queue = chat.queue.target as Queue<Message.Message>;
         if (!space || !queue) {
           return;
         }
 
         const runtimeResolver = context.getCapability(AutomationCapabilities.ComputeRuntime);
-        const runtime = await runtimeResolver.getRuntime(space.id).runPromise(
-          Effect.gen(function* () {
-            return yield* Effect.runtime<AiChatServices>().pipe(Effect.provide(TracingService.layerNoop));
-          }),
-        );
+        const runtime = await runtimeResolver
+          .getRuntime(space.id)
+          .runPromise(Effect.runtime<AiChatServices>().pipe(Effect.provide(TracingService.layerNoop)));
 
         await new AiConversation(queue).use(async (conversation) => updateName(runtime, conversation, chat));
       },
@@ -88,7 +102,20 @@ export default (context: PluginContext) => [
       intent: AssistantAction.CreateBlueprint,
       resolve: ({ key, name, description }) => ({
         data: {
-          object: Blueprint.make({ key, name, description, instructions: Template.make() }),
+          object: Blueprint.make({
+            key,
+            name,
+            description,
+            instructions: Template.make(),
+          }),
+        },
+      }),
+    }),
+    createResolver({
+      intent: AssistantAction.CreatePrompt,
+      resolve: ({ name }) => ({
+        data: {
+          object: Prompt.make({ name }),
         },
       }),
     }),
@@ -113,7 +140,7 @@ export default (context: PluginContext) => [
       resolve: ({ companionTo, chat }) =>
         Effect.gen(function* () {
           const state = context.getCapability(AssistantCapabilities.MutableState);
-          state.currentChat[fullyQualifiedId(companionTo)] = chat;
+          state.currentChat[Obj.getDXN(companionTo).toString()] = chat && Obj.getDXN(chat).toString();
         }),
     }),
   ]),

@@ -67,6 +67,9 @@
     },
     {
       "path": "../../sdk/schema"
+    },
+    {
+      "path": "../../sdk/types"
     }
   ]
 }

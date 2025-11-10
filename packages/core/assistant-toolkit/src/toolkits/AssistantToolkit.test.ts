@@ -22,7 +22,7 @@ import { TestHelpers, acquireReleaseResource } from '@dxos/effect';
 import { ComputeEventLogger, CredentialsService, DatabaseService, QueueService, TracingService } from '@dxos/functions';
 import { FunctionInvocationServiceLayerTest, TestDatabaseLayer } from '@dxos/functions-runtime/testing';
 import { ObjectId } from '@dxos/keys';
-import { DataType } from '@dxos/schema';
+import { Message, Organization, Person } from '@dxos/types';
 
 import * as AssistantToolkit from './AssistantToolkit';
 
@@ -41,12 +41,7 @@ const TestLayer = Layer.mergeAll(
       TestDatabaseLayer({
         spaceKey: 'fixed',
         indexing: { vector: true },
-        types: [
-          Blueprint.Blueprint,
-          DataType.Message.Message,
-          DataType.Person.Person,
-          DataType.Organization.Organization,
-        ],
+        types: [Blueprint.Blueprint, Message.Message, Person.Person, Organization.Organization],
       }),
       CredentialsService.configuredLayer([]),
       TracingService.layerNoop,
@@ -67,13 +62,13 @@ describe('AssistantToolkit', () => {
     Effect.fnUntraced(
       function* (_) {
         const { db } = yield* DatabaseService;
-        const queue = yield* QueueService.createQueue<DataType.Message.Message | ContextBinding>();
+        const queue = yield* QueueService.createQueue<Message.Message | ContextBinding>();
         const conversation = yield* acquireReleaseResource(() => new AiConversation(queue));
         const observer = GenerationObserver.fromPrinter(new ConsolePrinter());
         yield* Effect.promise(() => conversation.context.bind({ blueprints: [Ref.make(db.add(blueprint))] }));
 
         const organization = yield* DatabaseService.add(
-          Obj.make(DataType.Organization.Organization, {
+          Obj.make(Organization.Organization, {
             name: 'Cyberdyne Systems',
             website: 'https://cyberdyne.com',
           }),

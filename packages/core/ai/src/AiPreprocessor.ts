@@ -9,7 +9,7 @@ import * as Function from 'effect/Function';
 import * as Predicate from 'effect/Predicate';
 
 import { log } from '@dxos/log';
-import { type DataType } from '@dxos/schema';
+import { type ContentBlock, type Message } from '@dxos/types';
 import { bufferToArray } from '@dxos/util';
 
 import { PromptPreprocessingError as PromptPreprocesorError } from './errors';
@@ -26,7 +26,7 @@ import { PromptPreprocessingError as PromptPreprocesorError } from './errors';
  * The function returns a list of valid Prompt objects.
  */
 export const preprocessPrompt: (
-  messages: DataType.Message.Message[],
+  messages: Message.Message[],
   opts?: { system?: string },
 ) => Effect.Effect<Prompt.Prompt, PromptPreprocesorError, never> = Effect.fn('preprocessPrompt')(function* (
   messages,
@@ -87,7 +87,7 @@ export const preprocessPrompt: (
 });
 
 const convertUserMessagePart: (
-  block: DataType.ContentBlock.Any,
+  block: ContentBlock.Any,
 ) => Effect.Effect<Prompt.UserMessagePart | undefined, PromptPreprocesorError, never> = Effect.fnUntraced(
   function* (block) {
     switch (block._tag) {
@@ -141,7 +141,7 @@ const convertUserMessagePart: (
 );
 
 export const convertToolMessagePart: (
-  block: DataType.ContentBlock.Any,
+  block: ContentBlock.Any,
 ) => Effect.Effect<Prompt.ToolMessagePart | undefined, PromptPreprocesorError, never> = Effect.fnUntraced(
   function* (block) {
     switch (block._tag) {
@@ -158,7 +158,7 @@ export const convertToolMessagePart: (
 );
 
 const convertAssistantMessagePart: (
-  block: DataType.ContentBlock.Any,
+  block: ContentBlock.Any,
 ) => Effect.Effect<Prompt.AssistantMessagePart | undefined, PromptPreprocesorError, never> = Effect.fnUntraced(
   function* (block) {
     log('parse', { block });

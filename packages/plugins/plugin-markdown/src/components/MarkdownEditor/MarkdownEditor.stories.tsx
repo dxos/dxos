@@ -7,10 +7,10 @@ import React from 'react';
 
 import { IntentPlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { Filter } from '@dxos/echo';
+import { Filter, Obj } from '@dxos/echo';
 import { AttentionPlugin } from '@dxos/plugin-attention';
 import { ClientPlugin } from '@dxos/plugin-client';
-import { fullyQualifiedId, useQuery, useSpace } from '@dxos/react-client/echo';
+import { useQuery, useSpace } from '@dxos/react-client/echo';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { useAttentionAttributes } from '@dxos/react-ui-attention';
 import { translations as editorTranslations } from '@dxos/react-ui-editor';
@@ -28,7 +28,7 @@ type StoryProps = Omit<MarkdownEditorRootProps, 'id' | 'extensions'>;
 const DefaultStory = (props: StoryProps) => {
   const space = useSpace();
   const [doc] = useQuery(space?.db, Filter.type(Markdown.Document));
-  const id = doc && fullyQualifiedId(doc);
+  const id = doc && Obj.getDXN(doc).toString();
   const attentionAttrs = useAttentionAttributes(id);
 
   if (!id) {
@@ -65,7 +65,7 @@ const meta: Meta<typeof DefaultStory> = {
             await client.spaces.waitUntilReady();
             const space = client.spaces.default;
             await space.waitUntilReady();
-            space.db.add(Markdown.makeDocument({ content }));
+            space.db.add(Markdown.make({ content }));
           },
         }),
         IntentPlugin(),

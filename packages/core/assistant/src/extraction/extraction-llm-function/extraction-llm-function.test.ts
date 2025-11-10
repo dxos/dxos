@@ -7,7 +7,7 @@ import { beforeAll, describe, test } from 'vitest';
 import { todo } from '@dxos/debug';
 import { FunctionExecutor } from '@dxos/functions-runtime';
 import { log } from '@dxos/log';
-import { createTestData } from '@dxos/schema/testing';
+import { createTestData } from '@dxos/types/testing';
 import { range } from '@dxos/util';
 
 import { processTranscriptMessage } from '../extraction';

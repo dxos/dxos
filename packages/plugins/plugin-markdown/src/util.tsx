@@ -60,6 +60,6 @@ export const serializer: TypedObjectSerializer<Markdown.Document> = {
 
   deserialize: async ({ content: serialized }) => {
     const { name, fallbackName, content } = JSON.parse(serialized);
-    return Markdown.makeDocument({ name, fallbackName, content });
+    return Markdown.make({ name, fallbackName, content });
   },
 };

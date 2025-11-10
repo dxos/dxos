@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { Surface, useCapability } from '@dxos/app-framework';
+import { Surface, useCapability } from '@dxos/app-framework/react';
 
 import { DeckCapabilities } from '../../capabilities';
 import { useBreakpoints } from '../../hooks';

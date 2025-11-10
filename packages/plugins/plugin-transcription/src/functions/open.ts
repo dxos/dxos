@@ -8,7 +8,7 @@ import * as Schema from 'effect/Schema';
 import { ArtifactId } from '@dxos/assistant';
 import { Obj } from '@dxos/echo';
 import { DatabaseService, QueueService, defineFunction } from '@dxos/functions';
-import { DataType } from '@dxos/schema';
+import { Message } from '@dxos/types';
 
 import { renderByline } from '../components';
 import { Transcript } from '../types';
@@ -31,7 +31,7 @@ export default defineFunction({
     const queue = yield* QueueService.getQueue(dxn);
     yield* Effect.promise(() => queue?.queryObjects());
     const content = queue?.objects
-      .filter((message) => Obj.instanceOf(DataType.Message.Message, message))
+      .filter((message) => Obj.instanceOf(Message.Message, message))
       .flatMap((message, index) => renderByline([])(message, index))
       .join('\n\n');
     return { content };

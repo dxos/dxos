@@ -6,17 +6,17 @@ import { effect } from '@preact/signals-core';
 import orderBy from 'lodash.orderby';
 import { useEffect, useMemo, useState } from 'react';
 
+import { Obj } from '@dxos/echo';
 import { type JsonSchemaType } from '@dxos/echo/internal';
 import { type Live } from '@dxos/live-object';
-import { fullyQualifiedId } from '@dxos/react-client/echo';
 import { useSelected, useSelectionActions } from '@dxos/react-ui-attention';
-import { type DataType, type ProjectionModel } from '@dxos/schema';
+import { type ProjectionModel, type View } from '@dxos/schema';
 import { isNonNullable } from '@dxos/util';
 
 import { TableModel, type TableModelProps, type TableRow, type TableRowAction } from '../model';
 
 export type UseTableModelParams<T extends TableRow = TableRow> = {
-  view?: DataType.View.View;
+  view?: View.View;
   schema?: JsonSchemaType;
   projection?: ProjectionModel;
   rows?: Live<T>[];
@@ -39,7 +39,7 @@ export const useTableModel = <T extends TableRow = TableRow>({
   onRowAction,
   ...props
 }: UseTableModelParams<T>): TableModel<T> | undefined => {
-  const selected = useSelected(view && fullyQualifiedId(view), 'multi');
+  const selected = useSelected(view && Obj.getDXN(view).toString(), 'multi');
   const initialSelection = useMemo(() => selected, [view]);
 
   const [model, setModel] = useState<TableModel<T>>();

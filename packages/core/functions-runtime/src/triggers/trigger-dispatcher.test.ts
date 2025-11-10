@@ -18,7 +18,7 @@ import { serializeFunction } from '@dxos/functions';
 import { ComputeEventLogger, CredentialsService, DatabaseService, QueueService } from '@dxos/functions';
 import { Function, Trigger } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
-import { DataType } from '@dxos/schema';
+import { Person, Task } from '@dxos/types';
 
 import { FunctionInvocationServiceLayerTestMocked } from '../services/function-invocation-service';
 import { TestDatabaseLayer } from '../testing';
@@ -51,7 +51,7 @@ const TestLayer = Fn.pipe(
       ),
       FetchHttpClient.layer,
       TestDatabaseLayer({
-        types: [Function.Function, Trigger.Trigger, DataType.Person.Person, DataType.Task.Task],
+        types: [Function.Function, Trigger.Trigger, Person.Person, Task.Task],
       }),
     ),
   ),
@@ -345,7 +345,7 @@ describe('TriggerDispatcher', () => {
         });
         yield* DatabaseService.add(trigger);
         yield* QueueService.append(queue, [
-          Obj.make(DataType.Person.Person, {
+          Obj.make(Person.Person, {
             fullName: 'John Doe',
           }),
         ]);
@@ -374,10 +374,10 @@ describe('TriggerDispatcher', () => {
         });
         yield* DatabaseService.add(trigger);
         yield* QueueService.append(queue, [
-          Obj.make(DataType.Person.Person, {
+          Obj.make(Person.Person, {
             fullName: 'John Doe',
           }),
-          Obj.make(DataType.Person.Person, {
+          Obj.make(Person.Person, {
             fullName: 'Jane Smith',
           }),
         ]);
@@ -425,7 +425,7 @@ describe('TriggerDispatcher', () => {
           },
         });
         yield* DatabaseService.add(trigger);
-        const person = Obj.make(DataType.Person.Person, {
+        const person = Obj.make(Person.Person, {
           fullName: 'John Doe',
         });
         yield* QueueService.append(queue, [person]);
@@ -455,14 +455,14 @@ describe('TriggerDispatcher', () => {
         const functionObj = serializeFunction(Example.reply);
         yield* DatabaseService.add(functionObj);
 
-        // Create a subscription trigger that watches for DataType.Person.Person objects
+        // Create a subscription trigger that watches for Person objects
         const trigger = Trigger.make({
           function: Ref.make(functionObj),
           enabled: true,
           spec: {
             kind: 'subscription',
             query: {
-              ast: Query.select(Filter.type(DataType.Person.Person)).ast,
+              ast: Query.select(Filter.type(Person.Person)).ast,
             },
           },
         });
@@ -472,7 +472,7 @@ describe('TriggerDispatcher', () => {
         yield* dispatcher.refreshTriggers();
 
         // Create a new Person object - this should trigger the subscription
-        const person = Obj.make(DataType.Person.Person, {
+        const person = Obj.make(Person.Person, {
           fullName: 'Alice Smith',
         });
         yield* DatabaseService.add(person);
@@ -494,7 +494,7 @@ describe('TriggerDispatcher', () => {
         yield* DatabaseService.add(functionObj);
 
         // Create a person object first
-        const person = Obj.make(DataType.Person.Person, {
+        const person = Obj.make(Person.Person, {
           fullName: 'Bob Jones',
         });
         yield* DatabaseService.add(person);
@@ -506,7 +506,7 @@ describe('TriggerDispatcher', () => {
           spec: {
             kind: 'subscription',
             query: {
-              ast: Query.select(Filter.type(DataType.Person.Person)).ast,
+              ast: Query.select(Filter.type(Person.Person)).ast,
             },
           },
         });
@@ -544,7 +544,7 @@ describe('TriggerDispatcher', () => {
           spec: {
             kind: 'subscription',
             query: {
-              ast: Query.select(Filter.type(DataType.Person.Person)).ast,
+              ast: Query.select(Filter.type(Person.Person)).ast,
             },
           },
         });
@@ -554,7 +554,7 @@ describe('TriggerDispatcher', () => {
         yield* dispatcher.refreshTriggers();
 
         // Create a person object
-        const person = Obj.make(DataType.Person.Person, {
+        const person = Obj.make(Person.Person, {
           fullName: 'Charlie Brown',
         });
         yield* DatabaseService.add(person);
@@ -587,14 +587,14 @@ describe('TriggerDispatcher', () => {
         const functionObj = serializeFunction(Example.reply);
         yield* DatabaseService.add(functionObj);
 
-        // Create a subscription trigger that only watches for DataType.Task.Task objects
+        // Create a subscription trigger that only watches for Task objects
         const trigger = Trigger.make({
           function: Ref.make(functionObj),
           enabled: true,
           spec: {
             kind: 'subscription',
             query: {
-              ast: Query.select(Filter.type(DataType.Task.Task)).ast,
+              ast: Query.select(Filter.type(Task.Task)).ast,
             },
           },
         });
@@ -604,7 +604,7 @@ describe('TriggerDispatcher', () => {
         yield* dispatcher.refreshTriggers();
 
         // Create a Person object - should NOT trigger
-        const person = Obj.make(DataType.Person.Person, {
+        const person = Obj.make(Person.Person, {
           fullName: 'David Wilson',
         });
         yield* DatabaseService.add(person);
@@ -613,7 +613,7 @@ describe('TriggerDispatcher', () => {
         expect(results.length).toBe(0);
 
         // Create a Task object - should trigger
-        const task = Obj.make(DataType.Task.Task, {
+        const task = Obj.make(Task.Task, {
           title: 'Important task',
         });
         yield* DatabaseService.add(task);
@@ -631,7 +631,7 @@ describe('TriggerDispatcher', () => {
         const functionObj = serializeFunction(Example.reply);
         yield* DatabaseService.add(functionObj);
 
-        const person = Obj.make(DataType.Person.Person, {
+        const person = Obj.make(Person.Person, {
           fullName: 'Eva Martinez',
         });
         yield* DatabaseService.add(person);
@@ -643,7 +643,7 @@ describe('TriggerDispatcher', () => {
           spec: {
             kind: 'subscription',
             query: {
-              ast: Query.select(Filter.type(DataType.Person.Person)).ast,
+              ast: Query.select(Filter.type(Person.Person)).ast,
             },
           },
           input: {

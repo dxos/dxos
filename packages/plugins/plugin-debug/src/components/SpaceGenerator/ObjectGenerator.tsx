@@ -14,13 +14,13 @@ import { SpaceAction } from '@dxos/plugin-space/types';
 import { faker } from '@dxos/random';
 import { type Client } from '@dxos/react-client';
 import { type Space } from '@dxos/react-client/echo';
-import { DataType, getTypenameFromQuery } from '@dxos/schema';
+import { View, getTypenameFromQuery } from '@dxos/schema';
 import { type ValueGenerator, createAsyncGenerator } from '@dxos/schema/testing';
 import { range } from '@dxos/util';
 
 const generator: ValueGenerator = faker as any;
 
-const findViewByTypename = async (views: DataType.View.View[], typename: string) => {
+const findViewByTypename = async (views: View.View[], typename: string) => {
   return views.find((view) => getTypenameFromQuery(view.query.ast) === typename);
 };
 
@@ -35,7 +35,7 @@ export const createGenerator = <T extends Obj.Any>(
     const typename = schema.typename;
 
     // Find or create table and view.
-    const { objects: views } = await space.db.query(Filter.type(DataType.View.View)).run();
+    const { objects: views } = await space.db.query(Filter.type(View.View)).run();
     const view = await findViewByTypename(views, typename);
     const staticSchema = client?.graph.schemaRegistry.schemas.find((schema) => Type.getTypename(schema) === typename);
     if (!view && !staticSchema) {
@@ -56,7 +56,7 @@ export const staticGenerators = new Map<string, ObjectGenerator<any>>([
     async (space, n, cb) => {
       const objects = range(n).map(() => {
         return space.db.add(
-          Markdown.makeDocument({
+          Markdown.make({
             name: faker.commerce.productName(),
             content: faker.lorem.sentences(5),
           }),

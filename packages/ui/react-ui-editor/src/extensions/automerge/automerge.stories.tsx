@@ -50,7 +50,7 @@ const Editor = ({ source, autoFocus, space, identity }: EditorProps) => {
     [source, themeMode],
   );
 
-  return <div ref={parentRef} className='flex w-full' />;
+  return <div ref={parentRef} className='flex is-full' />;
 };
 
 const DefaultStory = () => {

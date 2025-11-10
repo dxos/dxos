@@ -57,7 +57,7 @@ const meta = {
             await space.waitUntilReady();
 
             space.db.add(createNotebook());
-            space.db.add(Markdown.makeDocument({ content: '# Hello World' }));
+            space.db.add(Markdown.make({ content: '# Hello World' }));
             space.db.add(serializeFunction(Agent.prompt));
           },
         }),

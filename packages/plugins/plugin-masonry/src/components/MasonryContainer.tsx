@@ -4,20 +4,20 @@
 
 import React, { useEffect, useMemo, useState } from 'react';
 
-import { Surface } from '@dxos/app-framework';
+import { Surface } from '@dxos/app-framework/react';
 import { Filter, Type } from '@dxos/echo';
 import { EchoSchema, type TypedObject } from '@dxos/echo/internal';
 import { useGlobalFilteredObjects } from '@dxos/plugin-search';
 import { useClient } from '@dxos/react-client';
 import { getSpace, useQuery } from '@dxos/react-client/echo';
 import { Masonry } from '@dxos/react-ui-masonry';
-import { type DataType, ProjectionModel, getTypenameFromQuery } from '@dxos/schema';
+import { ProjectionModel, type View, getTypenameFromQuery } from '@dxos/schema';
 
 const Item = ({ data }: { data: any }) => {
   return <Surface role='card' limit={1} data={{ subject: data }} />;
 };
 
-export const MasonryContainer = ({ view, role }: { view: DataType.View.View; role: string }) => {
+export const MasonryContainer = ({ view, role }: { view: View.View; role: string }) => {
   const client = useClient();
   const space = getSpace(view);
   const typename = view.query ? getTypenameFromQuery(view.query.ast) : undefined;

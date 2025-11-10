@@ -6,7 +6,8 @@ import * as Function from 'effect/Function';
 import * as Schema from 'effect/Schema';
 import React, { useCallback, useMemo } from 'react';
 
-import { Capabilities, chain, createIntent, useCapabilities, useIntentDispatcher } from '@dxos/app-framework';
+import { Capabilities, chain, createIntent } from '@dxos/app-framework';
+import { useCapabilities, useIntentDispatcher } from '@dxos/app-framework/react';
 import { Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { SpaceAction } from '@dxos/plugin-space/types';
@@ -67,8 +68,12 @@ export const MeetingsList = ({ channel }: { channel: Channel.Channel }) => {
     () =>
       metadata
         .filter(
-          (capability): capability is { id: string; metadata: { label: (object: any) => string; icon: string } } =>
-            capability.id === Type.getTypename(Meeting.Meeting),
+          (
+            capability,
+          ): capability is {
+            id: string;
+            metadata: { label: (object: any) => string; icon: string };
+          } => capability.id === Type.getTypename(Meeting.Meeting),
         )
         .map((c) => c.metadata),
     [metadata],
@@ -92,7 +97,7 @@ export const MeetingsList = ({ channel }: { channel: Channel.Channel }) => {
       </div>
       <List.Root<Meeting.Meeting> items={sortedMeetings} isItem={Schema.is(Meeting.Meeting)} getId={getId}>
         {({ items }) => (
-          <div role='list' className='flex flex-col w-full'>
+          <div role='list' className='flex flex-col is-full'>
             {items?.map((meeting) => (
               <MeetingItem key={meeting.id} meeting={meeting} getLabel={meetingMetadata.label} />
             ))}

@@ -6,18 +6,18 @@ import React from 'react';
 
 import { List, ListItem } from '@dxos/react-ui';
 import { attentionSurface, ghostHover, groupBorder, mx } from '@dxos/react-ui-theme';
-import { type DataType } from '@dxos/schema';
+import { type Event } from '@dxos/types';
 
 export type EventListProps = {
-  events?: DataType.Event.Event[];
+  events?: Event.Event[];
   selected?: string;
-  onSelect?: (contact: DataType.Event.Event) => void;
+  onSelect?: (contact: Event.Event) => void;
 };
 
 export const EventList = ({ events = [], selected, onSelect }: EventListProps) => {
   return (
-    <div className={mx('flex w-full overflow-y-scroll', attentionSurface)}>
-      <List classNames={mx('w-full divide-y', groupBorder)}>
+    <div className={mx('flex is-full overflow-y-scroll', attentionSurface)}>
+      <List classNames={mx('is-full divide-y', groupBorder)}>
         {events.map((event) => (
           <ListItem.Root
             key={event.id}

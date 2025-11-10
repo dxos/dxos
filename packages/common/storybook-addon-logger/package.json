@@ -26,7 +26,7 @@
   ],
   "dependencies": {
     "@dxos/log": "workspace:*",
-    "storybook": "^9.1.15"
+    "storybook": "^10.0.4"
   },
   "devDependencies": {
     "@types/react": "~19.2.2",

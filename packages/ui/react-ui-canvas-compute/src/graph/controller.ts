@@ -26,9 +26,7 @@ import { type ComputeEventLogger, type ComputeEventPayload } from '@dxos/functio
 import { type ServiceContainer } from '@dxos/functions-runtime';
 import { log } from '@dxos/log';
 import { type CanvasGraphModel } from '@dxos/react-ui-canvas-editor';
-import { type DataType } from '@dxos/schema';
-
-type ContentBlock = typeof DataType.ContentBlock;
+import { type ContentBlock } from '@dxos/types';
 
 import { createComputeGraph } from '../hooks';
 import { type ComputeShape } from '../shapes';
@@ -49,7 +47,7 @@ export interface GptExecutor {
   invoke: FunctionCallback<GptInput, GptOutput>;
 
   // TODO(dmaretskyi): A hack to get image artifacts working. Rework into querying images from the ai-service store.
-  imageCache: Map<string, DataType.ContentBlock.Image>;
+  imageCache: Map<string, ContentBlock.Image>;
 }
 
 export type RuntimeValue =

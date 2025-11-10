@@ -4,8 +4,8 @@
 
 import React, { useCallback, useMemo, useRef, useState } from 'react';
 
-import { Ref, Relation } from '@dxos/echo';
-import { fullyQualifiedId, getSpace, useMembers } from '@dxos/react-client/echo';
+import { Obj, Ref, Relation } from '@dxos/echo';
+import { getSpace, useMembers } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { IconButton, Tag, Tooltip, useThemeContext, useTranslation } from '@dxos/react-ui';
 import { createBasicExtensions, createThemeExtensions, listener } from '@dxos/react-ui-editor';
@@ -16,10 +16,8 @@ import {
   Thread as ThreadComponent,
   type ThreadRootProps,
 } from '@dxos/react-ui-thread';
-import { type DataType } from '@dxos/schema';
+import { type AnchoredTo } from '@dxos/types';
 import { isNonNullable } from '@dxos/util';
-
-type AnchoredTo = DataType.AnchoredTo.AnchoredTo;
 
 import { useStatus } from '../hooks';
 import { meta } from '../meta';
@@ -30,13 +28,13 @@ import { command } from './command-extension';
 import { MessageContainer, buttonClassNames, buttonGroupClassNames } from './MessageContainer';
 
 export type CommentsThreadContainerProps = {
-  anchor: AnchoredTo;
-  onAttend?: (anchor: AnchoredTo) => void;
-  onComment?: (anchor: AnchoredTo, message: string) => void;
-  onResolve?: (anchor: AnchoredTo) => void;
-  onMessageDelete?: (anchor: AnchoredTo, messageId: string) => void;
-  onThreadDelete?: (anchor: AnchoredTo) => void;
-  onAcceptProposal?: (anchor: AnchoredTo, messageId: string) => void;
+  anchor: AnchoredTo.AnchoredTo;
+  onAttend?: (anchor: AnchoredTo.AnchoredTo) => void;
+  onComment?: (anchor: AnchoredTo.AnchoredTo, message: string) => void;
+  onResolve?: (anchor: AnchoredTo.AnchoredTo) => void;
+  onMessageDelete?: (anchor: AnchoredTo.AnchoredTo, messageId: string) => void;
+  onThreadDelete?: (anchor: AnchoredTo.AnchoredTo) => void;
+  onAcceptProposal?: (anchor: AnchoredTo.AnchoredTo, messageId: string) => void;
 } & Pick<ThreadRootProps, 'current'>;
 
 export const CommentsThreadContainer = ({
@@ -56,10 +54,10 @@ export const CommentsThreadContainer = ({
   const members = useMembers(space?.key);
   const detached = !anchor.anchor;
   const thread = Relation.getSource(anchor) as Thread.Thread;
-  const activity = useStatus(space, fullyQualifiedId(thread));
+  const activity = useStatus(space, Obj.getDXN(thread).toString());
   const threadScrollRef = useRef<HTMLDivElement | null>(null);
 
-  const textboxMetadata = getMessageMetadata(fullyQualifiedId(thread), identity);
+  const textboxMetadata = getMessageMetadata(Obj.getDXN(thread).toString(), identity);
 
   // TODO(wittjosiah): This is a hack to reset the editor after a message is sent.
   const [state, setState] = useState({});
@@ -99,7 +97,7 @@ export const CommentsThreadContainer = ({
 
   return (
     <ThreadComponent.Root
-      id={fullyQualifiedId(thread)}
+      id={Obj.getDXN(thread).toString()}
       classNames='pbs-2 border-be border-subduedSeparator last:border-none'
       current={current}
       onClickCapture={handleAttend}

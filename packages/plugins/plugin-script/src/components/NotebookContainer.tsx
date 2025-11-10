@@ -19,12 +19,11 @@ import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { useComputeRuntimeCallback } from '@dxos/plugin-automation';
 import { Graph } from '@dxos/plugin-explorer/types';
-import { fullyQualifiedId } from '@dxos/react-client/echo';
 import { getSpace } from '@dxos/react-client/echo';
 import { DropdownMenu, IconButton, Toolbar, useTranslation } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
 import { StackItem } from '@dxos/react-ui-stack';
-import { DataType } from '@dxos/schema';
+import { Text } from '@dxos/schema';
 import { isNonNullable } from '@dxos/util';
 
 import { meta } from '../meta';
@@ -46,7 +45,7 @@ export type NotebookContainerProps = {
 export const NotebookContainer = ({ notebook, env }: NotebookContainerProps) => {
   const { t } = useTranslation(meta.id);
   const space = getSpace(notebook);
-  const attendableId = fullyQualifiedId(notebook);
+  const attendableId = notebook ? Obj.getDXN(notebook).toString() : '';
   const { hasAttention } = useAttention(attendableId);
 
   // TODO(burdon): Consolidate execution and state (with graph).
@@ -68,7 +67,10 @@ export const NotebookContainer = ({ notebook, env }: NotebookContainerProps) => 
             const view = cell.view?.target;
             if (!view) {
               const graph = Graph.make({ query: { ast } });
-              const { view } = await Graph.makeView({ space, presentation: graph });
+              const { view } = await Graph.makeView({
+                space,
+                presentation: graph,
+              });
               cell.view = Ref.make(view);
               cell.name = name;
             } else {
@@ -104,7 +106,11 @@ export const NotebookContainer = ({ notebook, env }: NotebookContainerProps) => 
         yield* runPrompt({
           prompt,
           input: { ...queryValues, ...graph.valuesByName.value },
-          onResult: (result) => setPromptResults((prev) => ({ ...prev, [prompt.dxn.toString()]: result })),
+          onResult: (result) =>
+            setPromptResults((prev) => ({
+              ...prev,
+              [prompt.dxn.toString()]: result,
+            })),
         });
       }
     }),
@@ -142,7 +148,7 @@ export const NotebookContainer = ({ notebook, env }: NotebookContainerProps) => 
         case 'markdown':
         case 'script':
         case 'query': {
-          cell.source = Ref.make(DataType.Text.make());
+          cell.source = Ref.make(Text.make());
           break;
         }
 
@@ -211,7 +217,7 @@ export const NotebookContainer = ({ notebook, env }: NotebookContainerProps) => 
 
 export default NotebookContainer;
 
-// TODO(wittjosiah): Factor out. Copied from PromptContainer in stories-assistant.
+// TODO(wittjosiah): Factor out. Copied from PromptArticle in plugin-assistant.
 const runPrompt = Effect.fn(function* ({
   prompt,
   input,
@@ -221,7 +227,10 @@ const runPrompt = Effect.fn(function* ({
   input: Record<string, any>;
   onResult: (result: string) => void;
 }) {
-  const inputData: FunctionDefinition.Input<typeof Agent.prompt> = { prompt, input };
+  const inputData: FunctionDefinition.Input<typeof Agent.prompt> = {
+    prompt,
+    input,
+  };
   const tracer = yield* InvocationTracer;
   const trace = yield* tracer.traceInvocationStart({
     target: undefined,

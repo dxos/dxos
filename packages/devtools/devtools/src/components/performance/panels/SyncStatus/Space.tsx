@@ -70,7 +70,7 @@ export const SpaceRow = ({
       }}
     >
       <span className='is-1/2 truncate'>{spaceName}</span>
-      <span className={mx('px-1 py-0.5 rounded text-xs shrink-0')}>
+      <span className={mx('pli-1 plb-0.5 rounded text-xs shrink-0')}>
         {isSynced ? `✅ total: ${totalDocumentCount}` : `↕ syncing: ${unsyncedDocumentCount}`}
       </span>
     </div>

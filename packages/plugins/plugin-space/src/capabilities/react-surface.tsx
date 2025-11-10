@@ -5,24 +5,16 @@
 import type * as Schema from 'effect/Schema';
 import React, { useCallback } from 'react';
 
-import { Capabilities, Surface, contributes, createSurface, useCapability, useLayout } from '@dxos/app-framework';
+import { Capabilities, contributes, createSurface } from '@dxos/app-framework';
+import { Surface, useCapability, useLayout } from '@dxos/app-framework/react';
 import { Obj } from '@dxos/echo';
 import { findAnnotation } from '@dxos/effect';
 import { SettingsStore } from '@dxos/local-storage';
-import {
-  type Space,
-  SpaceState,
-  fullyQualifiedId,
-  getSpace,
-  isLiveObject,
-  isSpace,
-  parseId,
-  useSpace,
-} from '@dxos/react-client/echo';
+import { type Space, SpaceState, getSpace, isLiveObject, isSpace, parseId, useSpace } from '@dxos/react-client/echo';
 import { Input } from '@dxos/react-ui';
 import { type InputProps, SelectInput } from '@dxos/react-ui-form';
 import { HuePicker, IconPicker } from '@dxos/react-ui-pickers';
-import { DataType, type TypenameAnnotation, TypenameAnnotationId } from '@dxos/schema';
+import { Collection, type TypenameAnnotation, TypenameAnnotationId, View } from '@dxos/schema';
 import { type JoinPanelProps } from '@dxos/shell/react';
 
 // TODO(burdon): Component name standard: NounVerbComponent.
@@ -76,7 +68,7 @@ export default ({ createInvitationUrl }: ReactSurfaceOptions) =>
         <Surface
           data={{
             id: data.subject.id,
-            subject: data.subject.properties[DataType.Collection.Collection.typename]?.target,
+            subject: data.subject.properties[Collection.Collection.typename]?.target,
           }}
           role={role}
           {...rest}
@@ -94,8 +86,7 @@ export default ({ createInvitationUrl }: ReactSurfaceOptions) =>
       id: `${meta.id}/collection-fallback`,
       role: 'article',
       position: 'fallback',
-      filter: (data): data is { subject: DataType.Collection.Collection } =>
-        Obj.instanceOf(DataType.Collection.Collection, data.subject),
+      filter: (data): data is { subject: Collection.Collection } => Obj.instanceOf(Collection.Collection, data.subject),
       component: ({ data }) => <CollectionArticle object={data.subject} />,
     }),
     createSurface({
@@ -160,12 +151,12 @@ export default ({ createInvitationUrl }: ReactSurfaceOptions) =>
     createSurface({
       id: `${meta.id}/selected-objects`,
       role: 'article',
-      filter: (data): data is { companionTo: DataType.View.View; subject: 'selected-objects' } =>
-        Obj.instanceOf(DataType.View.View, data.companionTo) && data.subject === 'selected-objects',
+      filter: (data): data is { companionTo: View.View; subject: 'selected-objects' } =>
+        Obj.instanceOf(View.View, data.companionTo) && data.subject === 'selected-objects',
       component: ({ data }) => (
         <ObjectDetailsPanel
-          key={fullyQualifiedId(data.companionTo)}
-          objectId={fullyQualifiedId(data.companionTo)}
+          key={Obj.getDXN(data.companionTo).toString()}
+          objectId={Obj.getDXN(data.companionTo).toString()}
           view={data.companionTo}
         />
       ),
@@ -234,7 +225,7 @@ export default ({ createInvitationUrl }: ReactSurfaceOptions) =>
       ): data is {
         prop: string;
         schema: Schema.Schema<any>;
-        target: Space | DataType.Collection.Collection | undefined;
+        target: Space | Collection.Collection | undefined;
       } => {
         if (data.prop !== 'typename') {
           return false;
@@ -255,7 +246,7 @@ export default ({ createInvitationUrl }: ReactSurfaceOptions) =>
     createSurface({
       id: `${meta.id}/object-settings`,
       role: 'object-settings',
-      filter: (data): data is { subject: DataType.View.View } => Obj.instanceOf(DataType.View.View, data.subject),
+      filter: (data): data is { subject: View.View } => Obj.instanceOf(View.View, data.subject),
       component: ({ data }) => <ViewEditor view={data.subject} />,
     }),
     createSurface({
@@ -312,7 +303,7 @@ export default ({ createInvitationUrl }: ReactSurfaceOptions) =>
         const space = isSpace(data.subject) ? data.subject : getSpace(data.subject);
         const object = isSpace(data.subject)
           ? data.subject.state.get() === SpaceState.SPACE_READY
-            ? (space?.properties[DataType.Collection.Collection.typename]?.target as DataType.Collection.Collection)
+            ? (space?.properties[Collection.Collection.typename]?.target as Collection.Collection)
             : undefined
           : data.subject;
 
@@ -322,8 +313,7 @@ export default ({ createInvitationUrl }: ReactSurfaceOptions) =>
     createSurface({
       id: `${meta.id}/collection-section`,
       role: 'section',
-      filter: (data): data is { subject: DataType.Collection.Collection } =>
-        Obj.instanceOf(DataType.Collection.Collection, data.subject),
+      filter: (data): data is { subject: Collection.Collection } => Obj.instanceOf(Collection.Collection, data.subject),
       component: ({ data }) => <CollectionSection object={data.subject} />,
     }),
     createSurface({

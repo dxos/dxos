@@ -12,8 +12,8 @@ import { DeckCapabilities } from '@dxos/plugin-deck';
 import { ATTENDABLE_PATH_SEPARATOR, DeckAction } from '@dxos/plugin-deck/types';
 import { createExtension, rxFromSignal } from '@dxos/plugin-graph';
 import { Markdown } from '@dxos/plugin-markdown/types';
-import { fullyQualifiedId, getSpace } from '@dxos/react-client/echo';
-import { DataType } from '@dxos/schema';
+import { getSpace } from '@dxos/react-client/echo';
+import { Collection } from '@dxos/schema';
 
 import { meta } from '../meta';
 import { PresenterAction, type PresenterSettingsProps } from '../types';
@@ -32,13 +32,12 @@ export default (context: PluginContext) =>
               const [settingsStore] = get(context.capabilities(Capabilities.SettingsStore));
               const settings = get(rxFromSignal(() => settingsStore?.getStore<PresenterSettingsProps>(meta.id)?.value));
               const isPresentable = settings?.presentCollections
-                ? Obj.instanceOf(DataType.Collection.Collection, node.data) ||
-                  Obj.instanceOf(Markdown.Document, node.data)
+                ? Obj.instanceOf(Collection.Collection, node.data) || Obj.instanceOf(Markdown.Document, node.data)
                 : Obj.instanceOf(Markdown.Document, node.data);
               return isPresentable ? Option.some(node.data) : Option.none();
             }),
             Option.map((object) => {
-              const id = fullyQualifiedId(object);
+              const id = Obj.getDXN(object).toString();
               return [
                 {
                   id: [id, 'presenter'].join(ATTENDABLE_PATH_SEPARATOR),
@@ -63,13 +62,12 @@ export default (context: PluginContext) =>
               const [settingsStore] = get(context.capabilities(Capabilities.SettingsStore));
               const settings = get(rxFromSignal(() => settingsStore?.getStore<PresenterSettingsProps>(meta.id)?.value));
               const isPresentable = settings?.presentCollections
-                ? Obj.instanceOf(DataType.Collection.Collection, node.data) ||
-                  Obj.instanceOf(Markdown.Document, node.data)
+                ? Obj.instanceOf(Collection.Collection, node.data) || Obj.instanceOf(Markdown.Document, node.data)
                 : Obj.instanceOf(Markdown.Document, node.data);
               return isPresentable ? Option.some(node.data) : Option.none();
             }),
             Option.map((object) => {
-              const id = fullyQualifiedId(object);
+              const id = Obj.getDXN(object).toString();
               const spaceId = getSpace(object)?.id;
               return [
                 {

@@ -21,7 +21,7 @@ export type BuildResult = { filter?: Filter.Any; name?: string };
 export class QueryBuilder {
   private readonly _parser: Parser = QueryDSL.Parser.configure({ strict: true });
 
-  constructor(private readonly _tags?: Tag.TagMap) {}
+  constructor(private readonly _tags?: Tag.Map) {}
 
   /**
    * Check valid input.

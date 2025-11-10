@@ -7,10 +7,10 @@ import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
 import { SpaceCapabilities } from '@dxos/plugin-space';
 import { defineObjectForm } from '@dxos/plugin-space/types';
 
-import { IntentResolver, ReactSurface } from './capabilities';
+import { AppGraphBuilder, IntentResolver, ReactSurface } from './capabilities';
 import { meta } from './meta';
 import { translations } from './translations';
-import { JournalEntryType, JournalType, OutlineType, OutlinerAction } from './types';
+import { Journal, Outline, OutlineAction } from './types';
 
 export const OutlinerPlugin = definePlugin(meta, () => [
   defineModule({
@@ -23,14 +23,14 @@ export const OutlinerPlugin = definePlugin(meta, () => [
     activatesOn: Events.SetupMetadata,
     activate: () => [
       contributes(Capabilities.Metadata, {
-        id: JournalType.typename,
+        id: Journal.Journal.typename,
         metadata: {
           icon: 'ph--calendar-check--regular',
           iconHue: 'indigo',
         },
       }),
       contributes(Capabilities.Metadata, {
-        id: OutlineType.typename,
+        id: Outline.Outline.typename,
         metadata: {
           icon: 'ph--tree-structure--regular',
           iconHue: 'indigo',
@@ -45,15 +45,15 @@ export const OutlinerPlugin = definePlugin(meta, () => [
       contributes(
         SpaceCapabilities.ObjectForm,
         defineObjectForm({
-          objectSchema: JournalType,
-          getIntent: () => createIntent(OutlinerAction.CreateJournal),
+          objectSchema: Journal.Journal,
+          getIntent: () => createIntent(OutlineAction.CreateJournal),
         }),
       ),
       contributes(
         SpaceCapabilities.ObjectForm,
         defineObjectForm({
-          objectSchema: OutlineType,
-          getIntent: () => createIntent(OutlinerAction.CreateOutline),
+          objectSchema: Outline.Outline,
+          getIntent: () => createIntent(OutlineAction.CreateOutline),
         }),
       ),
     ],
@@ -61,7 +61,12 @@ export const OutlinerPlugin = definePlugin(meta, () => [
   defineModule({
     id: `${meta.id}/module/schema`,
     activatesOn: ClientEvents.SetupSchema,
-    activate: () => contributes(ClientCapabilities.Schema, [JournalEntryType, JournalType, OutlineType]),
+    activate: () => contributes(ClientCapabilities.Schema, [Journal.JournalEntry, Journal.Journal, Outline.Outline]),
+  }),
+  defineModule({
+    id: `${meta.id}/module/app-graph-builder`,
+    activatesOn: Events.SetupAppGraph,
+    activate: AppGraphBuilder,
   }),
   defineModule({
     id: `${meta.id}/module/react-surface`,

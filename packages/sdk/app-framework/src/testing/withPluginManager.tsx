@@ -10,7 +10,6 @@ import { useAsyncEffect } from '@dxos/react-hooks';
 import { type MaybeProvider, getProviderValue } from '@dxos/util';
 
 import { Capabilities, Events } from '../common';
-import { type UseAppOptions, useApp } from '../components';
 import {
   type ActivationEvent,
   type AnyCapability,
@@ -20,6 +19,7 @@ import {
   defineModule,
   definePlugin,
 } from '../core';
+import { type UseAppOptions, useApp } from '../react';
 
 /**
  * @internal

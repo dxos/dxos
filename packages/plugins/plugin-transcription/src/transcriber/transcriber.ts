@@ -7,8 +7,8 @@ import { WaveFile } from 'wavefile';
 import { DeferredTask, Trigger } from '@dxos/async';
 import { type Context, LifecycleState, Resource } from '@dxos/context';
 import { log } from '@dxos/log';
-import { type DataType } from '@dxos/schema';
 import { trace } from '@dxos/tracing';
+import { type ContentBlock } from '@dxos/types';
 
 import { TRANSCRIPTION_URL } from '../types';
 import { mergeFloat64Arrays } from '../util';
@@ -70,7 +70,7 @@ export type TranscriberParams = {
    * Callback to handle the transcribed segments, after all segment transformers are applied.
    * @param segments - The transcribed segments.
    */
-  onSegments: (segments: DataType.ContentBlock.Transcript[]) => Promise<void>;
+  onSegments: (segments: ContentBlock.Transcript[]) => Promise<void>;
 };
 
 /**
@@ -221,7 +221,7 @@ export class Transcriber extends Resource {
     return segments;
   }
 
-  private _alignSegments(segments: WhisperSegment[], originalChunks: AudioChunk[]): DataType.ContentBlock.Transcript[] {
+  private _alignSegments(segments: WhisperSegment[], originalChunks: AudioChunk[]): ContentBlock.Transcript[] {
     // Absolute zero for all relative timestamps in the segments.
     const zeroTimestamp = originalChunks.at(0)!.timestamp;
 

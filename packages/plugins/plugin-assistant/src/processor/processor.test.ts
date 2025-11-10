@@ -15,7 +15,7 @@ import { AiConversation, makeToolExecutionServiceFromFunctions, makeToolResolver
 import { TestHelpers, acquireReleaseResource } from '@dxos/effect';
 import { ComputeEventLogger, CredentialsService, QueueService, TracingService } from '@dxos/functions';
 import { FunctionInvocationServiceLayerTestMocked, TestDatabaseLayer } from '@dxos/functions-runtime/testing';
-import { type DataType } from '@dxos/schema';
+import { type Message } from '@dxos/types';
 
 import { AiChatProcessor, type AiChatServices } from './processor';
 
@@ -60,7 +60,7 @@ describe('Chat processor', () => {
     Effect.fn(
       function* ({ expect }) {
         const services = yield* Effect.runtime<AiChatServices>();
-        const queue = yield* QueueService.createQueue<DataType.Message.Message>();
+        const queue = yield* QueueService.createQueue<Message.Message>();
         const conversation = yield* acquireReleaseResource(() => new AiConversation(queue));
         const processor = new AiChatProcessor(conversation, async () => services);
         const result = yield* Effect.promise(() => processor.request({ message: 'Hello' }));

@@ -4,7 +4,7 @@
 
 import { useEffect, useMemo } from 'react';
 
-import { useCapabilities } from '@dxos/app-framework';
+import { useCapabilities } from '@dxos/app-framework/react';
 
 import { TranscriptionCapabilities } from '../capabilities';
 import { type Transcriber } from '../transcriber';
@@ -26,7 +26,12 @@ export const useTranscriber = ({
       return undefined;
     }
 
-    return getTranscriber({ audioStreamTrack, recorderConfig, transcriberConfig, onSegments });
+    return getTranscriber({
+      audioStreamTrack,
+      recorderConfig,
+      transcriberConfig,
+      onSegments,
+    });
   }, [getTranscriber, audioStreamTrack, recorderConfig, transcriberConfig, onSegments]);
 
   useEffect(() => {

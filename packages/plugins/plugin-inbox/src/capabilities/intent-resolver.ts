@@ -24,7 +24,7 @@ import { Filter, Obj, Ref } from '@dxos/echo';
 // import { failedInvariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { SpaceAction } from '@dxos/plugin-space/types';
-import { DataType } from '@dxos/schema';
+import { Message, Organization, Person } from '@dxos/types';
 
 import { Calendar, InboxAction, Mailbox } from '../types';
 
@@ -55,7 +55,7 @@ export default (context: PluginContext) =>
           // TODO(wittjosiah): Static to live object fails.
           //  Needs to be a live object because graph is live and the current message is included in the companion.
           const { '@type': _, ...messageWithoutType } = { ...message } as any;
-          const liveMessage = Obj.make(DataType.Message.Message, messageWithoutType);
+          const liveMessage = Obj.make(Message.Message, messageWithoutType);
           state[mailboxId] = liveMessage;
         } else {
           delete state[mailboxId];
@@ -73,7 +73,7 @@ export default (context: PluginContext) =>
           return;
         }
 
-        const { objects: existingContacts } = await space.db.query(Filter.type(DataType.Person.Person)).run();
+        const { objects: existingContacts } = await space.db.query(Filter.type(Person.Person)).run();
 
         // Check for existing contact
         const existingContact = existingContacts.find((contact) =>
@@ -85,7 +85,7 @@ export default (context: PluginContext) =>
           return;
         }
 
-        const newContact = Obj.make(DataType.Person.Person, {
+        const newContact = Obj.make(Person.Person, {
           emails: [{ value: email }],
         });
 
@@ -102,10 +102,7 @@ export default (context: PluginContext) =>
         }
 
         log.info('extracted email domain', { emailDomain });
-
-        const { objects: existingOrganisations } = await space.db
-          .query(Filter.type(DataType.Organization.Organization))
-          .run();
+        const { objects: existingOrganisations } = await space.db.query(Filter.type(Organization.Organization)).run();
         const matchingOrg = existingOrganisations.find((org) => {
           if (org.website) {
             try {
@@ -120,8 +117,8 @@ export default (context: PluginContext) =>
                 websiteDomain.endsWith(`.${emailDomain}`) ||
                 emailDomain.endsWith(`.${websiteDomain}`)
               );
-            } catch (e) {
-              log.warn('Error parsing website URL', { website: org.website, error: e });
+            } catch (err) {
+              log.warn('parsing website URL', { website: org.website, error: err });
               return false;
             }
           }
@@ -134,12 +131,12 @@ export default (context: PluginContext) =>
         }
 
         const intents: AnyIntentChain[] = [];
-        if (!space.properties.staticRecords.includes(DataType.Person.Person.typename)) {
+        if (!space.properties.staticRecords.includes(Person.Person.typename)) {
           log.info('adding record type for contacts');
           intents.push(
             createIntent(SpaceAction.UseStaticSchema, {
               space,
-              typename: DataType.Person.Person.typename,
+              typename: Person.Person.typename,
             }),
           );
         }

@@ -4,14 +4,15 @@
 
 import React from 'react';
 
-import { Capabilities, contributes, createSurface, useCapability } from '@dxos/app-framework';
+import { Capabilities, contributes, createSurface } from '@dxos/app-framework';
+import { useCapability } from '@dxos/app-framework/react';
 import { InvocationTraceContainer } from '@dxos/devtools';
 import { Obj } from '@dxos/echo';
 import { Script } from '@dxos/functions';
 import { SettingsStore } from '@dxos/local-storage';
 import { getSpace } from '@dxos/react-client/echo';
 import { StackItem } from '@dxos/react-ui-stack';
-import { type DataType } from '@dxos/schema';
+import { type AccessToken } from '@dxos/types';
 
 import {
   DEPLOYMENT_DIALOG,
@@ -83,7 +84,7 @@ export default () =>
       role: 'article',
       filter: (data): data is { companionTo: Script.Script } =>
         Obj.instanceOf(Script.Script, data.companionTo) && data.subject === 'logs',
-      component: ({ data, role }) => {
+      component: ({ data }) => {
         const space = getSpace(data.companionTo);
         return (
           <StackItem.Content>
@@ -95,7 +96,7 @@ export default () =>
     createSurface({
       id: DEPLOYMENT_DIALOG,
       role: 'dialog',
-      filter: (data): data is { props: { accessToken: DataType.AccessToken.AccessToken; scriptTemplates: any } } =>
+      filter: (data): data is { props: { accessToken: AccessToken.AccessToken; scriptTemplates: any } } =>
         data.component === DEPLOYMENT_DIALOG,
       component: ({ data }) => <DeploymentDialog {...data.props} />,
     }),

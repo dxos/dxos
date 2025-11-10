@@ -4,7 +4,7 @@
 
 import React, { useState } from 'react';
 
-import { Surface } from '@dxos/app-framework';
+import { Surface } from '@dxos/app-framework/react';
 import { useConfig } from '@dxos/react-client';
 import { Icon, Popover, useTranslation } from '@dxos/react-ui';
 
@@ -68,7 +68,7 @@ const EnvironmentLabel = () => {
 
   return (
     <StatusBar.Item>
-      <StatusBar.Text classNames='text-xs text-subdued border border-separator rounded-full px-1'>
+      <StatusBar.Text classNames='text-xs text-subdued border border-separator rounded-full pli-1'>
         <span title={edgeEnv}>{edgeEnv[0]}</span>
       </StatusBar.Text>
     </StatusBar.Item>

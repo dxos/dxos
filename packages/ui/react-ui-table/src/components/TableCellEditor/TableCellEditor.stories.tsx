@@ -10,7 +10,8 @@ import { faker } from '@dxos/random';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { withTheme } from '@dxos/react-ui/testing';
 import { Grid, type GridEditing, defaultRowSize } from '@dxos/react-ui-grid';
-import { DataType } from '@dxos/schema';
+import { View } from '@dxos/schema';
+import { Task } from '@dxos/types';
 
 import { useTestTableModel } from '../../testing';
 import { translations } from '../../translations';
@@ -32,7 +33,7 @@ const DefaultStory = ({ editing }: StoryProps) => {
   return (
     <div className='flex w-[300px] border border-separator' style={{ height: defaultRowSize }}>
       <Grid.Root id='test' editing={editing}>
-        <TableCellEditor model={model} schema={DataType.Task.Task} />
+        <TableCellEditor model={model} schema={Task.Task} />
       </Grid.Root>
     </div>
   );
@@ -45,15 +46,15 @@ const meta = {
   decorators: [
     withTheme,
     withClientProvider({
-      types: [DataType.View.View, DataType.Task.Task, Table.Table],
+      types: [View.View, Task.Task, Table.Table],
       createIdentity: true,
       createSpace: true,
       onCreateSpace: async ({ client, space }) => {
-        const { view } = await Table.makeView({ client, space, typename: DataType.Task.Task.typename });
+        const { view } = await Table.makeView({ client, space, typename: Task.Task.typename });
         space.db.add(view);
         Array.from({ length: 10 }).forEach(() => {
           space.db.add(
-            Obj.make(DataType.Task.Task, {
+            Obj.make(Task.Task, {
               title: faker.person.fullName(),
               status: faker.helpers.arrayElement(['todo', 'in-progress', 'done'] as const),
               description: faker.lorem.sentence(),

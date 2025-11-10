@@ -10,24 +10,17 @@ import { IconButton, type ThemedClassName, useTranslation } from '@dxos/react-ui
 import { mx } from '@dxos/react-ui-theme';
 
 import { meta } from '../../meta';
-import {
-  type JournalEntryType,
-  type JournalType,
-  createJournalEntry,
-  getDateString,
-  getJournalEntries,
-  parseDateString,
-} from '../../types';
-import { Outliner, type OutlinerController, type OutlinerProps } from '../Outliner';
+import { Journal, getDateString, parseDateString } from '../../types';
+import { OutlineComponent, type OutlineController, type OutlineProps } from '../Outline';
 
 // TODO(burdon): Only show one selected line entry.
 
 type JournalProps = ThemedClassName<{
-  journal: JournalType;
+  journal: Journal.Journal;
 }>;
 
 // TODO(burdon): Virtualize.
-export const Journal = ({ journal, classNames, ...props }: JournalProps) => {
+export const JournalComponent = ({ journal, classNames, ...props }: JournalProps) => {
   const { t } = useTranslation(meta.id);
   const date = new Date();
 
@@ -38,7 +31,7 @@ export const Journal = ({ journal, classNames, ...props }: JournalProps) => {
     }
 
     // TODO(burdon): CRDT issue (merge entries with same date?)
-    const entries = getJournalEntries(journal, date);
+    const entries = Journal.getEntries(journal, date);
     setShowAddEntry(entries.length === 0);
   }, [journal, journal?.entries.length, date]);
 
@@ -47,13 +40,13 @@ export const Journal = ({ journal, classNames, ...props }: JournalProps) => {
       return;
     }
 
-    const entry = createJournalEntry();
+    const entry = Journal.makeEntry();
     journal.entries.push(Ref.make(entry));
     setShowAddEntry(false);
   }, [journal, date]);
 
   return (
-    <div className={mx('flex flex-col w-full overflow-y-auto', classNames)}>
+    <div className={mx('flex flex-col is-full overflow-y-auto', classNames)}>
       {showAddEntry && (
         <div className='p-2'>
           <IconButton label={t('create entry label')} icon='ph--plus--regular' onClick={handleCreateEntry} />
@@ -72,8 +65,8 @@ const RECENT = 7 * 24 * 60 * 60 * 1_000;
 
 type JournalEntryProps = ThemedClassName<
   {
-    entry: JournalEntryType;
-  } & Pick<OutlinerProps, 'autoFocus'>
+    entry: Journal.JournalEntry;
+  } & Pick<OutlineProps, 'autoFocus'>
 >;
 
 const JournalEntry = ({ entry, classNames, ...props }: JournalEntryProps) => {
@@ -81,7 +74,7 @@ const JournalEntry = ({ entry, classNames, ...props }: JournalEntryProps) => {
   const date = parseDateString(entry.date);
   const isToday = getDateString() === entry.date;
   const isRecent = useMemo(() => Date.now() - new Date(entry.date).getTime() < RECENT, [entry.date]);
-  const outlinerRef = useRef<OutlinerController>(null);
+  const outlinerRef = useRef<OutlineController>(null);
   const [focused, setFocused] = useState(false);
 
   const handleFocus = useCallback(() => {
@@ -109,7 +102,7 @@ const JournalEntry = ({ entry, classNames, ...props }: JournalEntryProps) => {
         {isRecent && <div className='text-sm text-subdued'>{format(date, 'EEEE')}</div>}
         {isToday && <div className='text-xs'>{t('today label')}</div>}
       </div>
-      <Outliner
+      <OutlineComponent
         ref={outlinerRef}
         id={entry.id}
         text={entry.content.target}

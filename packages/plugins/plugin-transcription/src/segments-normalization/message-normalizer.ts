@@ -13,7 +13,7 @@ import { LifecycleState, Resource } from '@dxos/context';
 import { type Queue } from '@dxos/echo-db';
 import { type FunctionExecutor } from '@dxos/functions-runtime';
 import { log } from '@dxos/log';
-import { type DataType } from '@dxos/schema';
+import { type Message } from '@dxos/types';
 
 import { type MessageWithRangeId, type NormalizationOutput, sentenceNormalization } from './normalization';
 import { getActorId } from './utils';
@@ -23,7 +23,7 @@ const MAX_RANGE_ID_COUNT = 10;
 
 export type SegmentsNormalizerParams = {
   functionExecutor: FunctionExecutor;
-  queue: Queue<DataType.Message.Message>;
+  queue: Queue<Message.Message>;
   startingCursor: QueueCursor;
 };
 
@@ -36,7 +36,7 @@ export type QueueCursor = {
 // TODO(mykola): .
 export class MessageNormalizer extends Resource {
   private readonly _functionExecutor: FunctionExecutor;
-  private _queue: Queue<DataType.Message.Message>;
+  private _queue: Queue<Message.Message>;
   private _cursor: QueueCursor;
   private _messagesToProcess: MessageWithRangeId[] = [];
   private _normalizationTask?: DeferredTask;

@@ -7,8 +7,8 @@ import React from 'react';
 
 import { withTheme } from '@dxos/react-ui/testing';
 
-import { useApp } from '../components';
 import { IntentPlugin } from '../plugin-intent';
+import { useApp } from '../react';
 
 import { DebugPlugin } from './debug';
 import { GeneratorPlugin, createNumberPlugin } from './generator';

@@ -6,11 +6,12 @@ import { type ViewUpdate } from '@codemirror/view';
 import React, { type AnchorHTMLAttributes, type ReactNode, useMemo } from 'react';
 import { createRoot } from 'react-dom/client';
 
-import { LayoutAction, type PromiseIntentDispatcher, createIntent, useIntentDispatcher } from '@dxos/app-framework';
+import { LayoutAction, type PromiseIntentDispatcher, createIntent } from '@dxos/app-framework';
+import { useIntentDispatcher } from '@dxos/app-framework/react';
 import { debounceAndThrottle } from '@dxos/async';
 import { Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
-import { createDocAccessor, fullyQualifiedId } from '@dxos/react-client/echo';
+import { createDocAccessor } from '@dxos/react-client/echo';
 import { getSpace } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { Icon, ThemeProvider } from '@dxos/react-ui';
@@ -37,13 +38,13 @@ import {
   typewriter,
 } from '@dxos/react-ui-editor';
 import { defaultTx } from '@dxos/react-ui-theme';
-import { DataType } from '@dxos/schema';
+import { Text } from '@dxos/schema';
 import { isTruthy } from '@dxos/util';
 
 import { Markdown } from '../types';
 import { setFallbackName } from '../util';
 
-export type DocumentType = Markdown.Document | DataType.Text.Text | { id: string; text: string };
+export type DocumentType = Markdown.Document | Text.Text | { id: string; text: string };
 
 export type ExtensionsOptions = {
   id: string;
@@ -73,7 +74,7 @@ export const useExtensions = ({
   let target: Obj.Any | undefined;
   if (Obj.instanceOf(Markdown.Document, object)) {
     target = (object as Markdown.Document).content.target;
-  } else if (Obj.instanceOf(DataType.Text.Text, object)) {
+  } else if (Obj.instanceOf(Text.Text, object)) {
     target = object;
   }
 
@@ -114,7 +115,13 @@ export const useExtensions = ({
       [
         // TODO(burdon): Pass this in?
         // NOTE: Data extensions must be first so that automerge is updated before other extensions compute their state.
-        target && createDataExtensions({ id, text: createDocAccessor(target, ['content']), space, identity }),
+        target &&
+          createDataExtensions({
+            id,
+            text: createDocAccessor(target, ['content']),
+            space,
+            identity,
+          }),
 
         // TODO(burdon): Reconcile with effect in parent.
         Obj.instanceOf(Markdown.Document, object) &&
@@ -169,7 +176,7 @@ const createBaseExtensions = ({
                       part: 'main',
                       subject: [id],
                       options: {
-                        pivotId: object ? fullyQualifiedId(object) : id,
+                        pivotId: object && Obj.isObject(object) ? Obj.getDXN(object).toString() : id,
                       },
                     }),
                   );

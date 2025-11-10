@@ -9,15 +9,15 @@ import { Obj } from '@dxos/echo';
 import { faker } from '@dxos/random';
 import { withTheme } from '@dxos/react-ui/testing';
 import { Card } from '@dxos/react-ui-stack';
-import { DataType } from '@dxos/schema';
 import { IntrinsicCardContainer } from '@dxos/storybook-utils';
+import { Message } from '@dxos/types';
 
 import { MessageCard } from './MessageCard';
 
 faker.seed(1234);
 
-const createMockMessage = (): DataType.Message.Message =>
-  Obj.make(DataType.Message.Message, {
+const createMockMessage = (): Message.Message =>
+  Obj.make(Message.Message, {
     blocks: [
       {
         _tag: 'text',

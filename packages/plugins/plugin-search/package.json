@@ -43,6 +43,7 @@
     "@dxos/react-ui-searchlist": "workspace:*",
     "@dxos/react-ui-stack": "workspace:*",
     "@dxos/schema": "workspace:*",
+    "@dxos/types": "workspace:*",
     "@dxos/util": "workspace:*",
     "@preact-signals/safe-react": "^0.9.0",
     "exa-js": "^1.5.12",

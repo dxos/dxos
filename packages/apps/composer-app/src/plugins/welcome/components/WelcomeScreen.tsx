@@ -4,7 +4,8 @@
 
 import React, { useCallback, useRef, useState } from 'react';
 
-import { LayoutAction, createIntent, useIntentDispatcher } from '@dxos/app-framework';
+import { LayoutAction, createIntent } from '@dxos/app-framework';
+import { useIntentDispatcher } from '@dxos/app-framework/react';
 import { log } from '@dxos/log';
 import { ClientAction } from '@dxos/plugin-client/types';
 import { SpaceAction } from '@dxos/plugin-space/types';
@@ -65,7 +66,12 @@ export const WelcomeScreen = ({ hubUrl }: { hubUrl: string }) => {
       try {
         // Prevent multiple signups.
         pendingRef.current = true;
-        const login = await signup({ hubUrl, email, identity, redirectUrl: location.origin });
+        const login = await signup({
+          hubUrl,
+          email,
+          identity,
+          redirectUrl: location.origin,
+        });
         setState(login ? WelcomeState.LOGIN_SENT : WelcomeState.EMAIL_SENT);
       } catch (err) {
         log.catch(err);
@@ -131,9 +137,17 @@ export const WelcomeScreen = ({ hubUrl }: { hubUrl: string }) => {
         });
 
         if (spaceCredential) {
-          log.info('activate', { hubUrl, identity, referrer: spaceCredential.issuer });
+          log.info('activate', {
+            hubUrl,
+            identity,
+            referrer: spaceCredential.issuer,
+          });
           try {
-            await activateAccount({ hubUrl, identity, referrer: spaceCredential.issuer });
+            await activateAccount({
+              hubUrl,
+              identity,
+              referrer: spaceCredential.issuer,
+            });
           } catch (err) {
             log.catch(err);
           }
@@ -144,7 +158,12 @@ export const WelcomeScreen = ({ hubUrl }: { hubUrl: string }) => {
       }
     };
 
-    await dispatch(createIntent(SpaceAction.Join, { invitationCode: spaceInvitationCode, onDone: handleDone }));
+    await dispatch(
+      createIntent(SpaceAction.Join, {
+        invitationCode: spaceInvitationCode,
+        onDone: handleDone,
+      }),
+    );
     spaceInvitationCode && removeQueryParamByValue(spaceInvitationCode);
   };
 

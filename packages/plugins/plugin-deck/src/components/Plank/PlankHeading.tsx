@@ -4,7 +4,8 @@
 
 import React, { Fragment, type MouseEvent, memo, useCallback, useEffect, useMemo } from 'react';
 
-import { LayoutAction, Surface, createIntent, useAppGraph, useIntentDispatcher } from '@dxos/app-framework';
+import { LayoutAction, createIntent } from '@dxos/app-framework';
+import { Surface, useAppGraph, useIntentDispatcher } from '@dxos/app-framework/react';
 import { type Node } from '@dxos/plugin-graph';
 import { Icon, IconButton, Popover, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { StackItem, type StackItemSigilAction } from '@dxos/react-ui-stack';

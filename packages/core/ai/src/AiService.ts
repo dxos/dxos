@@ -7,8 +7,8 @@ import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
+import { type ModelName } from './defs';
 import { AiModelNotAvailableError } from './errors';
-import { type ModelName } from './model';
 
 export interface Service {
   readonly model: (model: ModelName) => Layer.Layer<LanguageModel.LanguageModel, AiModelNotAvailableError, never>;

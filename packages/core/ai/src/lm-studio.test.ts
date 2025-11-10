@@ -16,11 +16,11 @@ import * as Stream from 'effect/Stream';
 import { Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { DataType } from '@dxos/schema';
+import { Message } from '@dxos/types';
 
 import { parseResponse } from './AiParser';
 import { preprocessPrompt } from './AiPreprocessor';
-import { LMSTUDIO_ENDPOINT } from './AiServiceRouter';
+import { DEFAULT_LMSTUDIO_ENDPOINT } from './AiServiceRouter';
 
 /**
  * To start the LM Studio server:
@@ -33,8 +33,8 @@ describe.skip('lm-studio', () => {
     'streaming',
     Effect.fn(
       function* ({ expect }) {
-        const history: DataType.Message.Message[] = [
-          Obj.make(DataType.Message.Message, {
+        const history: Message.Message[] = [
+          Obj.make(Message.Message, {
             created: new Date().toISOString(),
             sender: { role: 'user' },
             blocks: [
@@ -60,7 +60,7 @@ describe.skip('lm-studio', () => {
           Effect.map(Chunk.toArray),
         );
 
-        const message = Obj.make(DataType.Message.Message, {
+        const message = Obj.make(Message.Message, {
           created: new Date().toISOString(),
           sender: { role: 'assistant' },
           blocks,
@@ -76,7 +76,7 @@ describe.skip('lm-studio', () => {
           // NOTE: Actual model name is ignored by server.
           OpenAiLanguageModel.model('google/gemma-3-27b'),
           OpenAiClient.layer({
-            apiUrl: LMSTUDIO_ENDPOINT,
+            apiUrl: DEFAULT_LMSTUDIO_ENDPOINT,
           }).pipe(Layer.provide(FetchHttpClient.layer)),
         ),
       ),

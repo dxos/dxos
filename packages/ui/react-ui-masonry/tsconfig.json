@@ -33,6 +33,9 @@
       "path": "../../sdk/schema"
     },
     {
+      "path": "../../sdk/types"
+    },
+    {
       "path": "../primitives/react-hooks"
     },
     {

@@ -5,7 +5,7 @@
 import { EditorView } from '@codemirror/view';
 import React, { forwardRef, useCallback, useEffect, useRef, useState } from 'react';
 
-import { Surface } from '@dxos/app-framework';
+import { Surface } from '@dxos/app-framework/react';
 import { type Obj, Ref, type Type } from '@dxos/echo';
 import { PublicKey } from '@dxos/react-client';
 import { type SpaceMember } from '@dxos/react-client/echo';
@@ -14,7 +14,7 @@ import { IconButton, useOnTransition, useThemeContext, useTranslation } from '@d
 import { createBasicExtensions, createThemeExtensions, useTextEditor } from '@dxos/react-ui-editor';
 import { hoverableControlItem, hoverableControls, hoverableFocusedWithinControls, mx } from '@dxos/react-ui-theme';
 import { MessageHeading, MessageRoot } from '@dxos/react-ui-thread';
-import { type DataType } from '@dxos/schema';
+import { type ContentBlock, type Message } from '@dxos/types';
 
 import { useOnEditAnalytics } from '../hooks';
 import { meta } from '../meta';
@@ -26,7 +26,7 @@ export const buttonGroupClassNames = 'flex flex-row items-center gap-0.5 pie-2';
 export const buttonClassNames = '!p-1 transition-opacity';
 
 export type MessageContainerProps = {
-  message: DataType.Message.Message;
+  message: Message.Message;
   members: SpaceMember[];
   editable?: boolean;
   onDelete?: (id: string) => void;
@@ -116,7 +116,7 @@ const TextboxBlock = ({
   isAuthor,
   editing,
 }: {
-  block: DataType.ContentBlock.Text;
+  block: ContentBlock.Text;
   editing?: boolean;
   isAuthor?: boolean;
   identity?: Identity;
@@ -158,7 +158,7 @@ const TextboxBlock = ({
   return <div role='none' ref={parentRef} className='mie-4' {...focusAttributes} />;
 };
 
-const ProposalBlock = ({ block }: { block: DataType.ContentBlock.Proposal }) => {
+const ProposalBlock = ({ block }: { block: ContentBlock.Proposal }) => {
   return (
     <div role='none' className='mie-4 italic'>
       {block.text}
@@ -176,7 +176,7 @@ const MessageBlockObjectTile = forwardRef<HTMLDivElement, { subject: Obj.Any }>(
   return (
     <div
       role='group'
-      className={mx('grid col-span-3 py-1 pr-4', hoverableControls, hoverableFocusedWithinControls)}
+      className={mx('grid col-span-3 plb-1 pr-4', hoverableControls, hoverableFocusedWithinControls)}
       ref={forwardedRef}
     >
       <Surface role='card' limit={1} data={{ subject }} fallback={title} />

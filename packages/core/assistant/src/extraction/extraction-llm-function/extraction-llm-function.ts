@@ -6,7 +6,6 @@ import { AiService } from '@dxos/ai';
 import { Obj } from '@dxos/echo';
 import { create } from '@dxos/echo/internal';
 import { type FunctionDefinition, defineFunction } from '@dxos/functions';
-import { DataType } from '@dxos/schema';
 import { Effect } from 'effect';
 
 import { AiSession } from '../../session';

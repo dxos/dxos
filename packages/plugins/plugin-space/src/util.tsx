@@ -20,10 +20,10 @@ import {
   type ReadableGraph,
   isGraphNode,
 } from '@dxos/plugin-graph';
-import { type QueryResult, type Space, SpaceState, fullyQualifiedId, getSpace, isSpace } from '@dxos/react-client/echo';
+import { type QueryResult, type Space, SpaceState, getSpace, isSpace } from '@dxos/react-client/echo';
 import { ATTENDABLE_PATH_SEPARATOR } from '@dxos/react-ui-attention';
 import { type TreeData } from '@dxos/react-ui-list';
-import { DataType, getTypenameFromQuery } from '@dxos/schema';
+import { Collection, StoredSchema, View, getTypenameFromQuery } from '@dxos/schema';
 
 import { meta } from './meta';
 import { type ObjectForm, SPACE_TYPE, SpaceAction } from './types';
@@ -66,7 +66,7 @@ const getCollectionGraphNodePartials = ({
   space,
   resolve,
 }: {
-  collection: DataType.Collection.Collection;
+  collection: Collection.Collection;
   space: Space;
   resolve: (typename: string) => Record<string, any>;
 }) => {
@@ -141,7 +141,7 @@ const getQueryCollectionNodePartials = ({
   space,
   resolve,
 }: {
-  collection: DataType.Collection.QueryCollection;
+  collection: Collection.QueryCollection;
   space: Space;
   resolve: (typename: string) => Record<string, any>;
 }) => {
@@ -178,7 +178,7 @@ const getViewGraphNodePartials = ({
   view,
   resolve,
 }: {
-  view: DataType.View.View;
+  view: View.View;
   resolve: (typename: string) => Record<string, any>;
 }) => {
   const presentation = view.presentation.target;
@@ -217,9 +217,9 @@ export const constructSpaceNode = ({
 }) => {
   const hasPendingMigration = checkPendingMigration(space);
   const collection =
-    space.state.get() === SpaceState.SPACE_READY && space.properties[DataType.Collection.Collection.typename]?.target;
+    space.state.get() === SpaceState.SPACE_READY && space.properties[Collection.Collection.typename]?.target;
   const partials =
-    space.state.get() === SpaceState.SPACE_READY && Obj.instanceOf(DataType.Collection.Collection, collection)
+    space.state.get() === SpaceState.SPACE_READY && Obj.instanceOf(Collection.Collection, collection)
       ? getCollectionGraphNodePartials({ collection, space, resolve })
       : {};
 
@@ -403,7 +403,7 @@ export const createStaticSchemaActions = ({
         );
       },
       properties: {
-        label: ['add view to schema label', { ns: Type.getTypename(DataType.StoredSchema) }],
+        label: ['add view to schema label', { ns: Type.getTypename(StoredSchema) }],
         icon: 'ph--plus--regular',
         disposition: 'list-item-primary',
         testId: 'spacePlugin.addViewToSchema',
@@ -416,7 +416,7 @@ export const createStaticSchemaActions = ({
         throw new Error('Not implemented');
       },
       properties: {
-        label: ['rename object label', { ns: Type.getTypename(DataType.StoredSchema) }],
+        label: ['rename object label', { ns: Type.getTypename(StoredSchema) }],
         icon: 'ph--pencil-simple-line--regular',
         disabled: true,
         disposition: 'list-item',
@@ -435,7 +435,7 @@ export const createStaticSchemaActions = ({
         }
       },
       properties: {
-        label: ['delete object label', { ns: Type.getTypename(DataType.StoredSchema) }],
+        label: ['delete object label', { ns: Type.getTypename(StoredSchema) }],
         icon: 'ph--trash--regular',
         disposition: 'list-item',
         disabled: !deletable,
@@ -468,13 +468,13 @@ export const createObjectNode = ({
   }
 
   const metadata = resolve(type);
-  const partials = Obj.instanceOf(DataType.Collection.Collection, object)
+  const partials = Obj.instanceOf(Collection.Collection, object)
     ? getCollectionGraphNodePartials({ collection: object, space, resolve })
-    : Obj.instanceOf(DataType.Collection.QueryCollection, object)
+    : Obj.instanceOf(Collection.QueryCollection, object)
       ? getQueryCollectionNodePartials({ collection: object, space, resolve })
-      : Obj.instanceOf(DataType.StoredSchema, object)
+      : Obj.instanceOf(StoredSchema, object)
         ? getSchemaGraphNodePartials()
-        : Obj.instanceOf(DataType.View.View, object)
+        : Obj.instanceOf(View.View, object)
           ? getViewGraphNodePartials({ view: object, resolve })
           : metadata.graphProps;
 
@@ -486,13 +486,13 @@ export const createObjectNode = ({
     metadata.label?.(object) || ['object name placeholder', { ns: type, default: 'New item' }];
 
   const selectable =
-    (!Obj.instanceOf(DataType.StoredSchema, object) &&
-      !Obj.instanceOf(DataType.Collection.QueryCollection, object) &&
-      !Obj.instanceOf(DataType.Collection.Collection, object)) ||
-    (navigable && Obj.instanceOf(DataType.Collection.Collection, object));
+    (!Obj.instanceOf(StoredSchema, object) &&
+      !Obj.instanceOf(Collection.QueryCollection, object) &&
+      !Obj.instanceOf(Collection.Collection, object)) ||
+    (navigable && Obj.instanceOf(Collection.Collection, object));
 
   return {
-    id: fullyQualifiedId(object),
+    id: Obj.getDXN(object).toString(),
     type,
     cacheable: ['label', 'icon', 'role'],
     data: object,
@@ -533,15 +533,15 @@ export const constructObjectActions = ({
   const typename = Obj.getTypename(object);
   invariant(typename, 'Object has no typename');
 
-  const getId = (id: string) => `${id}/${fullyQualifiedId(object)}`;
+  const getId = (id: string) => `${id}/${Obj.getDXN(object).toString()}`;
 
-  const queryCollection = Obj.instanceOf(DataType.Collection.QueryCollection, object) ? object : undefined;
+  const queryCollection = Obj.instanceOf(Collection.QueryCollection, object) ? object : undefined;
   const matchingObjectForm = queryCollection
     ? objectForms.find((form) => Type.getTypename(form.objectSchema) === getTypenameFromQuery(queryCollection.query))
     : undefined;
 
   const actions: NodeArg<ActionData>[] = [
-    ...(Obj.instanceOf(DataType.Collection.Collection, object)
+    ...(Obj.instanceOf(Collection.Collection, object)
       ? [
           {
             id: getId(SpaceAction.OpenCreateObject._tag),
@@ -558,7 +558,7 @@ export const constructObjectActions = ({
           },
         ]
       : []),
-    ...(Obj.instanceOf(DataType.StoredSchema, object)
+    ...(Obj.instanceOf(StoredSchema, object)
       ? [
           {
             id: getId(SpaceAction.AddObject._tag),
@@ -573,7 +573,7 @@ export const constructObjectActions = ({
               );
             },
             properties: {
-              label: ['add view to schema label', { ns: Type.getTypename(DataType.StoredSchema) }],
+              label: ['add view to schema label', { ns: Type.getTypename(StoredSchema) }],
               icon: 'ph--plus--regular',
               disposition: 'list-item-primary',
               testId: 'spacePlugin.addViewToSchema',
@@ -635,8 +635,8 @@ export const constructObjectActions = ({
       type: ACTION_TYPE,
       data: async () => {
         const collection = graph
-          .getConnections(fullyQualifiedId(object), 'inbound')
-          .find(({ data }) => Obj.instanceOf(DataType.Collection.Collection, data))?.data;
+          .getConnections(Obj.getDXN(object).toString(), 'inbound')
+          .find(({ data }) => Obj.instanceOf(Collection.Collection, data))?.data;
         await dispatch(createIntent(SpaceAction.RemoveObjects, { objects: [object], target: collection }));
       },
       properties: {
@@ -650,15 +650,15 @@ export const constructObjectActions = ({
       },
     },
     ...(navigable ||
-    (!Obj.instanceOf(DataType.Collection.Collection, object) &&
-      !Obj.instanceOf(DataType.Collection.QueryCollection, object) &&
-      !Obj.instanceOf(DataType.StoredSchema, object))
+    (!Obj.instanceOf(Collection.Collection, object) &&
+      !Obj.instanceOf(Collection.QueryCollection, object) &&
+      !Obj.instanceOf(StoredSchema, object))
       ? [
           {
             id: getId('copy-link'),
             type: ACTION_TYPE,
             data: async () => {
-              const url = `${window.location.origin}/${space.id}/${fullyQualifiedId(object)}`;
+              const url = `${window.location.origin}/${space.id}/${Obj.getDXN(object).toString()}`;
               await navigator.clipboard.writeText(url);
             },
             properties: {
@@ -675,7 +675,9 @@ export const constructObjectActions = ({
       id: getId(LayoutAction.Expose._tag),
       type: ACTION_TYPE,
       data: async () => {
-        await dispatch(createIntent(LayoutAction.Expose, { part: 'navigation', subject: fullyQualifiedId(object) }));
+        await dispatch(
+          createIntent(LayoutAction.Expose, { part: 'navigation', subject: Obj.getDXN(object).toString() }),
+        );
       },
       properties: {
         label: ['expose object label', { ns: meta.id }],

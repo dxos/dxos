@@ -4,7 +4,8 @@
 
 import React from 'react';
 
-import { createIntent, useIntentDispatcher } from '@dxos/app-framework';
+import { createIntent } from '@dxos/app-framework';
+import { useIntentDispatcher } from '@dxos/app-framework/react';
 import { useCredentials } from '@dxos/react-client/halo';
 import { Icon, IconButton, List, ListItem, Message, useTranslation } from '@dxos/react-ui';
 import { ControlGroup, ControlItem, ControlPage, ControlSection } from '@dxos/react-ui-form';

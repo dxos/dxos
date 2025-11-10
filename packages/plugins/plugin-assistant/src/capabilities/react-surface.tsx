@@ -5,7 +5,7 @@
 import React from 'react';
 
 import { Capabilities, contributes, createSurface } from '@dxos/app-framework';
-import { Blueprint } from '@dxos/blueprints';
+import { Blueprint, Prompt } from '@dxos/blueprints';
 import { getSpace } from '@dxos/client/echo';
 import { Sequence } from '@dxos/conductor';
 import { InvocationTraceContainer } from '@dxos/devtools';
@@ -13,7 +13,14 @@ import { Obj } from '@dxos/echo';
 import { SettingsStore } from '@dxos/local-storage';
 import { StackItem } from '@dxos/react-ui-stack';
 
-import { AssistantSettings, BlueprintArticle, ChatCompanion, ChatContainer, ChatDialog } from '../components';
+import {
+  AssistantSettings,
+  BlueprintArticle,
+  ChatCompanion,
+  ChatContainer,
+  ChatDialog,
+  PromptArticle,
+} from '../components';
 import { ASSISTANT_DIALOG, meta } from '../meta';
 import { Assistant } from '../types';
 
@@ -33,6 +40,7 @@ export default () =>
         Obj.instanceOf(Assistant.Chat, data.subject) && data.variant !== 'assistant-chat',
       component: ({ data, role }) => <ChatContainer role={role} chat={data.subject} />,
     }),
+    // TODO(wittjosiah): This is flashing when chat changes.
     createSurface({
       id: `${meta.id}/companion-chat`,
       role: 'article',
@@ -42,16 +50,18 @@ export default () =>
       component: ({ data, role }) => <ChatCompanion role={role} data={data} />,
     }),
     createSurface({
-      id: `${meta.id}/companion-logs`,
+      id: `${meta.id}/companion-invocations`,
       role: 'article',
       filter: (data): data is { companionTo: Sequence } =>
-        Obj.instanceOf(Sequence, data.companionTo) && data.subject === 'logs',
-      // eslint-disable-next-line unused-imports/no-unused-vars
-      component: ({ data, role }) => {
+        (Obj.instanceOf(Sequence, data.companionTo) || Obj.instanceOf(Prompt.Prompt, data.companionTo)) &&
+        data.subject === 'invocations',
+      component: ({ data }) => {
         const space = getSpace(data.companionTo);
+        // TODO(wittjosiah): Support invocation filtering for prompts.
+        const target = Obj.instanceOf(Prompt.Prompt, data.companionTo) ? undefined : data.companionTo;
         return (
           <StackItem.Content>
-            <InvocationTraceContainer space={space} target={data.companionTo} detailAxis='block' />
+            <InvocationTraceContainer space={space} target={target} detailAxis='block' />
           </StackItem.Content>
         );
       },
@@ -61,6 +71,12 @@ export default () =>
       role: 'article',
       filter: (data): data is { subject: Blueprint.Blueprint } => Obj.instanceOf(Blueprint.Blueprint, data.subject),
       component: ({ data }) => <BlueprintArticle object={data.subject} />,
+    }),
+    createSurface({
+      id: `${meta.id}/prompt`,
+      role: 'article',
+      filter: (data): data is { subject: Prompt.Prompt } => Obj.instanceOf(Prompt.Prompt, data.subject),
+      component: ({ data }) => <PromptArticle object={data.subject} />,
     }),
     createSurface({
       id: ASSISTANT_DIALOG,

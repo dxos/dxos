@@ -12,7 +12,7 @@ import React, { type FC, useEffect, useMemo, useState } from 'react';
 import { useResizeDetector } from 'react-resize-detector';
 
 import { debounce } from '@dxos/async';
-import { fullyQualifiedId } from '@dxos/react-client/echo';
+import { Obj } from '@dxos/echo';
 import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
@@ -220,7 +220,7 @@ export const Sketch = ({
       className={mx('is-full bs-full', classNames)}
     >
       <Tldraw
-        key={fullyQualifiedId(sketch)}
+        key={Obj.getDXN(sketch).toString()}
         store={adapter.store}
         hideUi={hideUi}
         inferDarkMode

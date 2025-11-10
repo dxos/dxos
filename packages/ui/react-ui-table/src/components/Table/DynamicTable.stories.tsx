@@ -132,7 +132,7 @@ export const WithEchoSchema: StoryObj = {
   render: () => {
     const client = useClient();
     const { space } = useClientProvider();
-    const schema = useSchema(client, space, Testing.Contact.typename);
+    const schema = useSchema(client, space, Testing.Person.typename);
     const objects = useQuery(space, schema ? Filter.type(schema) : Filter.nothing());
     if (!schema) {
       return <div>Loading schema...</div>;
@@ -142,13 +142,13 @@ export const WithEchoSchema: StoryObj = {
   },
   decorators: [
     withClientProvider({
-      types: [Testing.Contact],
+      types: [Testing.Person],
       createIdentity: true,
       createSpace: true,
       onCreateSpace: async ({ space }) => {
         Array.from({ length: 10 }).forEach(() => {
           space.db.add(
-            Obj.make(Testing.Contact, {
+            Obj.make(Testing.Person, {
               name: faker.person.fullName(),
               email: faker.internet.email(),
             }),

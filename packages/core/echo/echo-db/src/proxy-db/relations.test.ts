@@ -22,7 +22,7 @@ describe('Relations', () => {
     testBuilder = await new EchoTestBuilder().open();
     ({ db, graph } = await testBuilder.createDatabase());
 
-    graph.schemaRegistry.addSchema([TestingDeprecated.Contact, TestingDeprecated.HasManager]);
+    graph.schemaRegistry.addSchema([TestingDeprecated.Person, TestingDeprecated.HasManager]);
   });
 
   afterEach(async () => {
@@ -31,12 +31,12 @@ describe('Relations', () => {
 
   test('create relation between two objects', async () => {
     const alice = db.add(
-      live(TestingDeprecated.Contact, {
+      live(TestingDeprecated.Person, {
         name: 'Alice',
       }),
     );
     const bob = db.add(
-      live(TestingDeprecated.Contact, {
+      live(TestingDeprecated.Person, {
         name: 'Bob',
       }),
     );

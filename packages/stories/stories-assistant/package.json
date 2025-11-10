@@ -83,6 +83,7 @@
     "@dxos/react-ui-tabs": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
     "@dxos/schema": "workspace:*",
+    "@dxos/types": "workspace:*",
     "@dxos/util": "workspace:*",
     "@effect/ai": "0.29.1",
     "effect": "3.18.3"
