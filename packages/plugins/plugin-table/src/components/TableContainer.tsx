@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Rx } from '@effect-rx/rx-react';
+import { Atom } from '@effect-atom/atom-react';
 import * as Match from 'effect/Match';
 import type * as Schema from 'effect/Schema';
 import React, { useCallback, useMemo, useRef } from 'react';
@@ -53,7 +53,7 @@ export const TableContainer = ({ role, view }: TableContainerProps) => {
 
   const { graph } = useAppGraph();
   const customActions = useMemo(() => {
-    return Rx.make((get) => {
+    return Atom.make((get) => {
       const actions = get(graph.actions(Obj.getDXN(view).toString()));
       const nodes = actions.filter((action) => action.properties.disposition === 'toolbar');
       return {

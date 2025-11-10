@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { RegistryContext, type Rx, useRxValue } from '@effect-rx/rx-react';
+import { type Atom, RegistryContext, useAtomValue } from '@effect-atom/atom-react';
 import { useCallback, useContext, useEffect, useState } from 'react';
 
 import { type Edge, type Edges, Graph, type Node, type NodeArg, ROOT_ID } from '@dxos/app-graph';
@@ -43,11 +43,13 @@ export type ActionGraphProps = {
   edges: ActionGraphEdges;
 };
 
-export type MenuActions = { useGroupItems: (sourceNode?: MenuItemGroup) => MenuItem[] };
+export type MenuActions = {
+  useGroupItems: (sourceNode?: MenuItemGroup) => MenuItem[];
+};
 
-export const useMenuActions = (props: Rx.Rx<ActionGraphProps>): MenuActions => {
+export const useMenuActions = (props: Atom.Atom<ActionGraphProps>): MenuActions => {
   const registry = useContext(RegistryContext);
-  const menuGraphProps = useRxValue(props);
+  const menuGraphProps = useAtomValue(props);
 
   const [graph] = useState(
     new Graph({
@@ -64,7 +66,7 @@ export const useMenuActions = (props: Rx.Rx<ActionGraphProps>): MenuActions => {
 
   const useGroupItems = useCallback(
     (sourceNode?: MenuItemGroup) => {
-      const items = useRxValue(graph.connections(sourceNode?.id || ROOT_ID)) as MenuItem[];
+      const items = useAtomValue(graph.connections(sourceNode?.id || ROOT_ID)) as MenuItem[];
       return items;
     },
     [graph],

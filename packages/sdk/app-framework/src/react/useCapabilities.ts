@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { useRxValue } from '@effect-rx/rx-react';
+import { useAtomValue } from '@effect-atom/atom-react';
 
 import { invariant } from '@dxos/invariant';
 
@@ -16,7 +16,7 @@ import { usePluginManager } from './PluginManagerProvider';
  */
 export const useCapabilities = <T>(interfaceDef: InterfaceDef<T>) => {
   const manager = usePluginManager();
-  return useRxValue(manager.context.capabilities(interfaceDef));
+  return useAtomValue(manager.context.capabilities(interfaceDef));
 };
 
 /**

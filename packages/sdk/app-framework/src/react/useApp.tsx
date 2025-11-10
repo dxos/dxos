@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { RegistryContext } from '@effect-rx/rx-react';
+import { RegistryContext } from '@effect-atom/atom-react';
 import { effect } from '@preact/signals-core';
 import React, { type FC, useCallback, useEffect, useMemo } from 'react';
 
@@ -130,7 +130,7 @@ export const useApp = ({
     manager.context.contributeCapability({
       interface: Capabilities.RxRegistry,
       implementation: manager.registry,
-      module: 'dxos.org/app-framework/rx-registry',
+      module: 'dxos.org/app-framework/atom-registry',
     });
 
     await Promise.all([

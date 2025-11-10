@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Registry, Rx } from '@effect-rx/rx-react';
+import { Atom, Registry } from '@effect-atom/atom-react';
 import * as Function from 'effect/Function';
 import * as Option from 'effect/Option';
 import { describe, expect, onTestFinished, test } from 'vitest';
@@ -34,7 +34,7 @@ describe('GraphBuilder', () => {
           id: 'resolver',
           resolver: () => {
             console.log('resolver');
-            return Rx.make({ id: EXAMPLE_ID, type: EXAMPLE_TYPE, data: 1 });
+            return Atom.make({ id: EXAMPLE_ID, type: EXAMPLE_TYPE, data: 1 });
           },
         }),
       );
@@ -51,11 +51,11 @@ describe('GraphBuilder', () => {
     test('updates', async () => {
       const registry = Registry.make();
       const builder = new GraphBuilder({ registry });
-      const name = Rx.make('default');
+      const name = Atom.make('default');
       builder.addExtension(
         createExtension({
           id: 'resolver',
-          resolver: () => Rx.make((get) => ({ id: EXAMPLE_ID, type: EXAMPLE_TYPE, data: get(name) })),
+          resolver: () => Atom.make((get) => ({ id: EXAMPLE_ID, type: EXAMPLE_TYPE, data: get(name) })),
         }),
       );
       const graph = builder.graph;
@@ -82,14 +82,14 @@ describe('GraphBuilder', () => {
       builder.addExtension(
         createExtension({
           id: 'outbound-connector',
-          connector: () => Rx.make([{ id: 'child', type: EXAMPLE_TYPE, data: 2 }]),
+          connector: () => Atom.make([{ id: 'child', type: EXAMPLE_TYPE, data: 2 }]),
         }),
       );
       builder.addExtension(
         createExtension({
           id: 'inbound-connector',
           relation: 'inbound',
-          connector: () => Rx.make([{ id: 'parent', type: EXAMPLE_TYPE, data: 0 }]),
+          connector: () => Atom.make([{ id: 'parent', type: EXAMPLE_TYPE, data: 0 }]),
         }),
       );
 
@@ -111,11 +111,11 @@ describe('GraphBuilder', () => {
     test('updates', () => {
       const registry = Registry.make();
       const builder = new GraphBuilder({ registry });
-      const state = Rx.make(0);
+      const state = Atom.make(0);
       builder.addExtension(
         createExtension({
           id: 'connector',
-          connector: () => Rx.make((get) => [{ id: EXAMPLE_ID, type: EXAMPLE_TYPE, data: get(state) }]),
+          connector: () => Atom.make((get) => [{ id: EXAMPLE_ID, type: EXAMPLE_TYPE, data: get(state) }]),
         }),
       );
       const graph = builder.graph;
@@ -136,11 +136,11 @@ describe('GraphBuilder', () => {
     test('subscribes to updates', () => {
       const registry = Registry.make();
       const builder = new GraphBuilder({ registry });
-      const state = Rx.make(0);
+      const state = Atom.make(0);
       builder.addExtension(
         createExtension({
           id: 'connector',
-          connector: () => Rx.make((get) => [{ id: EXAMPLE_ID, type: EXAMPLE_TYPE, data: get(state) }]),
+          connector: () => Atom.make((get) => [{ id: EXAMPLE_ID, type: EXAMPLE_TYPE, data: get(state) }]),
         }),
       );
       const graph = builder.graph;
@@ -167,7 +167,7 @@ describe('GraphBuilder', () => {
       builder.addExtension(
         createExtension({
           id: 'connector',
-          connector: () => Rx.make([{ id: EXAMPLE_ID, type: EXAMPLE_TYPE }]),
+          connector: () => Atom.make([{ id: EXAMPLE_ID, type: EXAMPLE_TYPE }]),
         }),
       );
       const graph = builder.graph;
@@ -190,7 +190,7 @@ describe('GraphBuilder', () => {
       builder.addExtension(
         createExtension({
           id: 'connector-2',
-          connector: () => Rx.make([{ id: exampleId(2), type: EXAMPLE_TYPE }]),
+          connector: () => Atom.make([{ id: exampleId(2), type: EXAMPLE_TYPE }]),
         }),
       );
       expect(nodes).has.length(2);
@@ -200,14 +200,14 @@ describe('GraphBuilder', () => {
     test('removes', () => {
       const registry = Registry.make();
       const builder = new GraphBuilder({ registry });
-      const nodes = Rx.make([
+      const nodes = Atom.make([
         { id: exampleId(1), type: EXAMPLE_TYPE },
         { id: exampleId(2), type: EXAMPLE_TYPE },
       ]);
       builder.addExtension(
         createExtension({
           id: 'connector',
-          connector: () => Rx.make((get) => get(nodes)),
+          connector: () => Atom.make((get) => get(nodes)),
         }),
       );
       const graph = builder.graph;
@@ -232,13 +232,13 @@ describe('GraphBuilder', () => {
     test('nodes are updated when removed', () => {
       const registry = Registry.make();
       const builder = new GraphBuilder({ registry });
-      const name = Rx.make('removed');
+      const name = Atom.make('removed');
 
       builder.addExtension([
         createExtension({
           id: 'root',
           connector: (node) =>
-            Rx.make((get) =>
+            Atom.make((get) =>
               Function.pipe(
                 get(node),
                 Option.flatMap((node) => (node.id === 'root' ? Option.some(get(name)) : Option.none())),
@@ -280,7 +280,7 @@ describe('GraphBuilder', () => {
     test('sort edges', async () => {
       const registry = Registry.make();
       const builder = new GraphBuilder({ registry });
-      const nodes = Rx.make([
+      const nodes = Atom.make([
         { id: exampleId(1), type: EXAMPLE_TYPE, data: 1 },
         { id: exampleId(2), type: EXAMPLE_TYPE, data: 2 },
         { id: exampleId(3), type: EXAMPLE_TYPE, data: 3 },
@@ -288,7 +288,7 @@ describe('GraphBuilder', () => {
       builder.addExtension(
         createExtension({
           id: 'connector',
-          connector: () => Rx.make((get) => get(nodes)),
+          connector: () => Atom.make((get) => get(nodes)),
         }),
       );
       const graph = builder.graph;
@@ -323,14 +323,14 @@ describe('GraphBuilder', () => {
     test('updates are constrained', () => {
       const registry = Registry.make();
       const builder = new GraphBuilder({ registry });
-      const name = Rx.make('default');
-      const sub = Rx.make('default');
+      const name = Atom.make('default');
+      const sub = Atom.make('default');
 
       builder.addExtension([
         createExtension({
           id: 'root',
           connector: (node) =>
-            Rx.make((get) =>
+            Atom.make((get) =>
               Function.pipe(
                 get(node),
                 Option.flatMap((node) => (node.id === 'root' ? Option.some(get(name)) : Option.none())),
@@ -343,7 +343,7 @@ describe('GraphBuilder', () => {
         createExtension({
           id: 'connector1',
           connector: (node) =>
-            Rx.make((get) =>
+            Atom.make((get) =>
               Function.pipe(
                 get(node),
                 Option.flatMap((node) => (node.id === EXAMPLE_ID ? Option.some(get(sub)) : Option.none())),
@@ -355,7 +355,7 @@ describe('GraphBuilder', () => {
         createExtension({
           id: 'connector2',
           connector: (node) =>
-            Rx.make((get) =>
+            Atom.make((get) =>
               Function.pipe(
                 get(node),
                 Option.flatMap((node) => (node.id === EXAMPLE_ID ? Option.some(node.data) : Option.none())),
@@ -411,7 +411,7 @@ describe('GraphBuilder', () => {
       expect(dependentCount).to.equal(2);
 
       // Independent count should update if its state changes even if the parent is removed.
-      Rx.batch(() => {
+      Atom.batch(() => {
         registry.set(name, 'removed');
         registry.set(sub, 'batch');
       });
@@ -439,7 +439,7 @@ describe('GraphBuilder', () => {
         createExtension({
           id: 'connector',
           connector: (node) => {
-            return Rx.make((get) =>
+            return Atom.make((get) =>
               Function.pipe(
                 get(node),
                 Option.map((node) => (node.data ? node.data + 1 : 1)),
@@ -475,7 +475,7 @@ describe('GraphBuilder', () => {
         createExtension({
           id: 'connector',
           connector: (node) =>
-            Rx.make((get) =>
+            Atom.make((get) =>
               Function.pipe(
                 get(node),
                 Option.map((node) => (node.data ? node.data + 1 : 1)),

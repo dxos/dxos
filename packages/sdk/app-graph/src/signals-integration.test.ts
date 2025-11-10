@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Registry, Rx } from '@effect-rx/rx-react';
+import { Atom, Registry } from '@effect-atom/atom-react';
 import { signal } from '@preact/signals-core';
 import { afterEach, beforeEach, describe, expect, onTestFinished, test } from 'vitest';
 
@@ -26,7 +26,7 @@ describe('signals integration', () => {
     const registry = Registry.make();
     const state = signal<number>(0);
     const value = rxFromSignal(() => state.value);
-    const inline = Rx.make((get) => {
+    const inline = Atom.make((get) => {
       // NOTE: This will create a new rx instance each time.
       // This test is verifying that this behaves the same as using a stable rx instance.
       // The parent will remain subscribed to one instance until the new one is created.
@@ -138,7 +138,7 @@ describe('signals integration', () => {
           createExtension({
             id: 'outbound-connector',
             connector: () =>
-              Rx.make((get) => {
+              Atom.make((get) => {
                 const inner = get(innerRx) as any;
                 return inner ? [{ id: inner.id, type: EXAMPLE_TYPE, data: inner.name }] : [];
               }),
@@ -184,7 +184,7 @@ describe('signals integration', () => {
           connector: () => {
             const query = db.query(Filter.type(Type.Expando));
 
-            return Rx.make((get) => {
+            return Atom.make((get) => {
               const objects = get(rxFromQuery(query));
               return objects.map((object) => ({ id: object.id, type: EXAMPLE_TYPE, data: object.name }));
             });
