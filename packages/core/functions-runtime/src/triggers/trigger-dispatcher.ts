@@ -18,16 +18,11 @@ import * as Schedule from 'effect/Schedule';
 import { DXN, Filter, Obj, Query } from '@dxos/echo';
 import { DatabaseService } from '@dxos/echo-db';
 import { causeToError } from '@dxos/effect';
-import {
-  deserializeFunction,
-  ComputeEventLogger,
-  FunctionInvocationService,
-  QueueService,
-  TracingService,
-} from '@dxos/functions';
+import { ComputeEventLogger, FunctionInvocationService, QueueService, deserializeFunction } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { KEY_QUEUE_POSITION } from '@dxos/protocols';
+
 import { TracingServiceExt } from '../trace';
 import { Function, Trigger, type TriggerEvent } from '../types';
 

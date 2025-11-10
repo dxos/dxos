@@ -7,14 +7,8 @@ import * as ManagedRuntime from 'effect/ManagedRuntime';
 
 import { AiService } from '@dxos/ai';
 import { type SpaceId } from '@dxos/client/echo';
-import {
-  CredentialsService,
-  DatabaseService,
-  type FunctionDefinition,
-  FunctionInvocationService,
-  QueueService,
-} from '@dxos/functions';
-import { FunctionInvocationServiceLayerTest } from '@dxos/functions-runtime';
+import { CredentialsService, DatabaseService, type FunctionDefinition, QueueService } from '@dxos/functions';
+import { FunctionInvocationServiceLayerTest } from '@dxos/functions-runtime/testing';
 
 import { type FunctionsRuntimeProvider } from '../compute-graph-registry';
 

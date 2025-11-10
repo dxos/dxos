@@ -5,11 +5,10 @@
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
-import { type SpaceId } from '@dxos/client/echo';
 import { runAndForwardErrors } from '@dxos/effect';
-import { FunctionContext, type FunctionDefinition } from '@dxos/functions';
+import { type FunctionContext, type FunctionDefinition } from '@dxos/functions';
 
-import type { ServiceContainer, RuntimeServices } from '../services';
+import type { RuntimeServices, ServiceContainer } from '../services';
 
 /**
  * @deprecated Use `FunctionInvocationService`

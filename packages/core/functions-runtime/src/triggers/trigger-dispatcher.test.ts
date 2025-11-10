@@ -14,11 +14,11 @@ import * as Schema from 'effect/Schema';
 import { AiService } from '@dxos/ai';
 import { Filter, Obj, Query, Ref } from '@dxos/echo';
 import { defineFunction } from '@dxos/functions';
+import { serializeFunction } from '@dxos/functions';
+import { ComputeEventLogger, CredentialsService, DatabaseService, QueueService } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { DataType } from '@dxos/schema';
 
-import { serializeFunction } from '@dxos/functions';
-import { ComputeEventLogger, CredentialsService, DatabaseService, QueueService } from '@dxos/functions';
 import { FunctionInvocationServiceLayerTestMocked } from '../services/function-invocation-service';
 import { TestDatabaseLayer } from '../testing';
 import { TracingServiceExt } from '../trace';

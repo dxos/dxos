@@ -1,14 +1,13 @@
 //
 // Copyright 2025 DXOS.org
 //
-import * as Context from 'effect/Context';
+import type * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
 import { AiService } from '@dxos/ai';
 import { DatabaseService } from '@dxos/echo-db';
 import { CredentialsService, FunctionInvocationService, QueueService } from '@dxos/functions';
-
 import { type FunctionDefinition } from '@dxos/functions';
 
 import {

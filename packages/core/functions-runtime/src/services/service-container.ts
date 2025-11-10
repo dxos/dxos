@@ -8,9 +8,9 @@ import * as Layer from 'effect/Layer';
 import { AiService } from '@dxos/ai';
 import { DatabaseService } from '@dxos/echo-db';
 import {
+  ComputeEventLogger,
   ConfiguredCredentialsService,
   CredentialsService,
-  ComputeEventLogger,
   QueueService,
   TracingService,
 } from '@dxos/functions';
@@ -63,7 +63,8 @@ const DEFAULT_SERVICES: Partial<ServiceRecord> = {
 };
 
 /**
- * @deprecated
+ * Legacy service container for managing runtime services.
+ * @deprecated Use Effect layers directly instead of ServiceContainer.
  */
 export class ServiceContainer {
   private _services: Partial<ServiceRecord> = { ...DEFAULT_SERVICES };

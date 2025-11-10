@@ -69,6 +69,7 @@ export default defineConfig((env) => ({
     outDir: 'out/composer',
     sourcemap: true,
     minify: !isFalse(process.env.DX_MINIFY),
+    // Target modern browsers for better performance and smaller bundle sizes.
     target: ['chrome108', 'edge107', 'firefox104', 'safari16'],
     rollupOptions: {
       // NOTE: Set cache to `false` to help debug flaky builds.

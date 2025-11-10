@@ -5,17 +5,16 @@
 import { type DID } from 'iso-did/types';
 
 import { type Client } from '@dxos/client';
+import { type SpaceId } from '@dxos/client/echo';
 import { createEdgeIdentity } from '@dxos/client/edge';
+import { Obj } from '@dxos/echo';
 import { EdgeHttpClient } from '@dxos/edge-client';
+import { FUNCTIONS_META_KEY, Function, setUserFunctionIdInMetadata } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type UploadFunctionResponseBody } from '@dxos/protocols';
-import { type SpaceId } from '@dxos/client/echo';
-import { Obj } from '@dxos/echo';
 import { safeParseJson } from '@dxos/util';
-import * as Function from '../types/Function';
-import { FUNCTIONS_META_KEY, setUserFunctionIdInMetadata } from '@dxos/functions';
 
 export type UploadWorkerArgs = {
   client: Client;

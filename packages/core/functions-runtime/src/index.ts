@@ -6,5 +6,4 @@ export * from './executor';
 export * from './services';
 export * from './trace';
 export * from './triggers';
-export * as Trigger from './types/Trigger';
-export * as TriggerEvent from './types/TriggerEvent';
+export { Trigger, TriggerEvent } from './types';

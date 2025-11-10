@@ -8,10 +8,11 @@ import { describe, expect, test } from 'vitest';
 
 import { Client, Config } from '@dxos/client';
 import { createEdgeIdentity } from '@dxos/client/edge';
-import { Bundler } from '@dxos/functions-runtime/bundler';
-import { uploadWorkerFunction } from '@dxos/functions-runtime/edge';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
+
+import { Bundler } from '../bundler';
+import { uploadWorkerFunction } from '../edge';
 
 describe.runIf(process.env.DX_TEST_TAGS?.includes('functions-e2e'))('Functions deployment', () => {
   test('deploys FOREX (effect) function and invokes it via EDGE (main)', { timeout: 120_000 }, async () => {

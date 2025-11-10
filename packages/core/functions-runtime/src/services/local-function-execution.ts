@@ -8,17 +8,16 @@ import * as Layer from 'effect/Layer';
 import * as Schema from 'effect/Schema';
 
 import { AiService } from '@dxos/ai';
-import { todo } from '@dxos/debug';
 import { DatabaseService } from '@dxos/echo-db';
 import {
+  type ComputeEventLogger,
+  CredentialsService,
+  type FunctionContext,
+  type FunctionDefinition,
   FunctionError,
   FunctionNotFoundError,
-  CredentialsService,
-  ComputeEventLogger,
   QueueService,
-  TracingService,
-  FunctionContext,
-  type FunctionDefinition,
+  type TracingService,
 } from '@dxos/functions';
 import { log } from '@dxos/log';
 

@@ -119,6 +119,7 @@ class BundleCreationError extends BaseError.extend('BUNDLE_CREATION_ERROR', 'Bun
   }
 }
 
+// TODO(dmaretskyi): Consider using Unit.Kilobyte/Megabyte/Gigabyte from @dxos/util (note: uses 1000 vs 1024).
 const formatBytes = (bytes: number) => {
   if (bytes < 1024) return `${bytes}B`;
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(2)}KB`;

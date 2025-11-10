@@ -9,9 +9,8 @@ import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 
-import { ObjectId } from '@dxos/keys';
-
 import { TriggerStateNotFoundError } from '@dxos/functions';
+import { ObjectId } from '@dxos/keys';
 
 export const TriggerState = Schema.Struct({
   version: Schema.Literal('1'),

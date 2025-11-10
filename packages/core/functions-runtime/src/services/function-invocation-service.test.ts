@@ -8,7 +8,7 @@ import * as Layer from 'effect/Layer';
 import * as Schema from 'effect/Schema';
 
 import { AiService } from '@dxos/ai';
-import { defineFunction, FunctionInvocationService } from '@dxos/functions';
+import { FunctionInvocationService, defineFunction } from '@dxos/functions';
 
 import { TestDatabaseLayer } from '../testing';
 

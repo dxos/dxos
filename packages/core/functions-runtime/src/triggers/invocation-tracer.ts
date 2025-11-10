@@ -5,13 +5,12 @@
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
-import * as Schema from 'effect/Schema';
 
 import { Obj, Ref } from '@dxos/echo';
 import { type Queue } from '@dxos/echo-db';
+import { QueueService } from '@dxos/functions';
 import { DXN, ObjectId } from '@dxos/keys';
 
-import { QueueService } from '@dxos/functions';
 import {
   InvocationOutcome,
   InvocationTraceEndEvent,

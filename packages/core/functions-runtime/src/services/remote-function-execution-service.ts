@@ -6,13 +6,11 @@ import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
+import { type Client } from '@dxos/client';
+import { FunctionError } from '@dxos/functions';
 import type { SpaceId } from '@dxos/keys';
 
-import { FunctionError } from '@dxos/functions';
-import { getInvocationUrl } from '../url';
-import { type Client } from '@dxos/client';
 import { createEdgeClient } from '../edge';
-import { todo } from '@dxos/debug';
 
 /**
  * Allows calling into other functions.

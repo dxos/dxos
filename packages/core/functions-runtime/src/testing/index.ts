@@ -4,3 +4,7 @@
 
 export * from './services';
 export * from './layer';
+export {
+  FunctionInvocationServiceLayerTest,
+  FunctionInvocationServiceLayerTestMocked,
+} from '../services/function-invocation-service';
