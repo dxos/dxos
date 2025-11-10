@@ -6,7 +6,7 @@ import { readFile, readdir, rm, writeFile } from 'node:fs/promises';
 import { basename, dirname } from 'node:path';
 
 import type * as Swc from '@swc/core';
-import { type Format, type Platform, type Plugin, build } from 'esbuild';
+import { type Format, type Platform, type Plugin, build, formatMessages } from 'esbuild';
 import glsl from 'esbuild-plugin-glsl';
 import RawPlugin from 'esbuild-plugin-raw';
 import { yamlPlugin } from 'esbuild-plugin-yaml';
@@ -19,6 +19,7 @@ import { esmOutputToCjs } from './esm-output-to-cjs-plugin';
 import { fixRequirePlugin } from './fix-require-plugin';
 import { restrictRelativeImportsPlugin } from './plugin-restrict-relative-imports';
 import { SwcTransformPlugin } from './swc-transform-plugin';
+import { Function, Array, String } from 'effect';
 
 export interface EsbuildExecutorOptions {
   bundle: boolean;
@@ -151,6 +152,7 @@ export default async (options: EsbuildExecutorOptions): Promise<{ success: boole
           // The log transform was generating this warning.
           'this-is-undefined-in-esm': 'info',
         },
+        logLevel: 'silent',
         absPaths: ['log'],
         banner: {
           js: format === 'esm' && platform === 'node' ? CREATE_REQUIRE_BANNER : '',
@@ -212,6 +214,12 @@ export default async (options: EsbuildExecutorOptions): Promise<{ success: boole
       return result.errors;
     }),
   );
+
+  const formatted = await formatMessages(Function.pipe(errors, Array.flatten, Array.dedupe), {
+    kind: 'warning',
+    color: true,
+  });
+  console.log(formatted.filter((_) => _.trim().length > 0).join('\n'));
 
   if (options.watch) {
     await new Promise(() => {}); // Wait indefinitely.
