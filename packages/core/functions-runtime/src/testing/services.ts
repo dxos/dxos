@@ -5,19 +5,18 @@
 import type * as Context from 'effect/Context';
 
 import type { Space } from '@dxos/client/echo';
-import type { EchoDatabase, QueueFactory } from '@dxos/echo-db';
-import { assertArgument } from '@dxos/invariant';
-
+import { DatabaseService, type EchoDatabase, type QueueFactory } from '@dxos/echo-db';
 import {
   type ComputeEventLogger,
   ConfiguredCredentialsService,
   type CredentialsService,
-  DatabaseService,
   QueueService,
-  ServiceContainer,
   type ServiceCredential,
   type TracingService,
-} from '../services';
+} from '@dxos/functions';
+import { assertArgument } from '@dxos/invariant';
+
+import { ServiceContainer } from '../services';
 
 import { consoleLogger, noopLogger } from './logger';
 

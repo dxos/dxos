@@ -3081,18 +3081,6 @@ importers:
       effect:
         specifier: 3.18.3
         version: 3.18.3
-      esbuild:
-        specifier: 0.25.10
-        version: 0.25.10
-      esbuild-wasm:
-        specifier: ^0.16.14
-        version: 0.16.17
-      i18next:
-        specifier: ^24.2.1
-        version: 24.2.3(typescript@5.9.3)
-      iso-did:
-        specifier: ^1.6.0
-        version: 1.6.0
 
   packages/core/functions-runtime:
     dependencies:

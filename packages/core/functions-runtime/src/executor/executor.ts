@@ -7,8 +7,8 @@ import * as Schema from 'effect/Schema';
 
 import { type SpaceId } from '@dxos/client/echo';
 import { runAndForwardErrors } from '@dxos/effect';
+import { FunctionContext, type FunctionDefinition } from '@dxos/functions';
 
-import type { RuntimeFunctionContext, FunctionDefinition } from '../handler';
 import type { ServiceContainer, RuntimeServices } from '../services';
 
 /**
@@ -29,13 +29,7 @@ export class FunctionExecutor {
     const assertInput = functionDef.inputSchema.pipe(Schema.asserts);
     (assertInput as any)(input);
 
-    const context: RuntimeFunctionContext = {
-      space: undefined,
-      getService: this._services.getService.bind(this._services),
-      getSpace: async (_spaceId: SpaceId) => {
-        throw new Error('Not available. Use the database service instead.');
-      },
-    };
+    const context: FunctionContext = {};
 
     const result = functionDef.handler({ context, data: input });
 

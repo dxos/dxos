@@ -17,10 +17,11 @@ import {
   ComputeEventLogger,
   QueueService,
   TracingService,
+  FunctionContext,
+  type FunctionDefinition,
 } from '@dxos/functions';
 import { log } from '@dxos/log';
 
-import type { RuntimeFunctionContext, FunctionDefinition } from '../handler';
 import { RemoteFunctionExecutionService } from './remote-function-execution-service';
 import { type RuntimeServices } from './service-container';
 
@@ -89,13 +90,7 @@ const invokeFunction = (
       throw new FunctionError({ message: 'Invalid function input', context: { name: functionDef.name }, cause: e });
     }
 
-    const context: RuntimeFunctionContext = {
-      space: undefined,
-      getService: () => todo(),
-      getSpace: async (_spaceId: any) => {
-        throw new Error('Not available. Use the database service instead.');
-      },
-    };
+    const context: FunctionContext = {};
 
     log('invoking function', { name: functionDef.name, input });
 

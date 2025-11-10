@@ -7,16 +7,15 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import type * as Schema from 'effect/Schema';
 
-import type { EchoDatabaseImpl, QueueFactory } from '@dxos/echo-db';
+import { DatabaseService, type EchoDatabaseImpl, type QueueFactory } from '@dxos/echo-db';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
 import type { EchoHostIndexingConfig } from '@dxos/echo-pipeline';
 import { acquireReleaseResource } from '@dxos/effect';
+import { QueueService } from '@dxos/functions';
 import { PublicKey } from '@dxos/keys';
 import type { LevelDB } from '@dxos/kv-store';
 import { createTestLevel } from '@dxos/kv-store/testing';
 import { log } from '@dxos/log';
-
-import { DatabaseService, QueueService } from '../services';
 
 const testBuilder = acquireReleaseResource(() => new EchoTestBuilder());
 

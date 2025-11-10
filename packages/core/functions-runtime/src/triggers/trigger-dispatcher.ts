@@ -16,19 +16,18 @@ import * as Record from 'effect/Record';
 import * as Schedule from 'effect/Schedule';
 
 import { DXN, Filter, Obj, Query } from '@dxos/echo';
+import { DatabaseService } from '@dxos/echo-db';
 import { causeToError } from '@dxos/effect';
-import { invariant } from '@dxos/invariant';
-import { log } from '@dxos/log';
-import { KEY_QUEUE_POSITION } from '@dxos/protocols';
-
-import { deserializeFunction } from '../handler';
 import {
+  deserializeFunction,
   ComputeEventLogger,
-  DatabaseService,
   FunctionInvocationService,
   QueueService,
   TracingService,
-} from '../services';
+} from '@dxos/functions';
+import { invariant } from '@dxos/invariant';
+import { log } from '@dxos/log';
+import { KEY_QUEUE_POSITION } from '@dxos/protocols';
 import { TracingServiceExt } from '../trace';
 import { Function, Trigger, type TriggerEvent } from '../types';
 

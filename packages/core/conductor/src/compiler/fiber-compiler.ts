@@ -9,15 +9,16 @@ import * as Scope from 'effect/Scope';
 
 import { AiService } from '@dxos/ai';
 import { raise } from '@dxos/debug';
+import { Obj, Query } from '@dxos/echo';
+import { DatabaseService } from '@dxos/echo-db';
 import {
   ComputeEventLogger,
   CredentialsService,
-  DatabaseService,
   QueueService,
-  RemoteFunctionExecutionService,
   TracingService,
-} from '@dxos/functions-runtime';
-import { createDefectLogger } from '@dxos/functions-runtime';
+  createDefectLogger,
+} from '@dxos/functions';
+import { RemoteFunctionExecutionService } from '@dxos/functions-runtime';
 import { failedInvariant, invariant } from '@dxos/invariant';
 import { isNonNullable } from '@dxos/util';
 

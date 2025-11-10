@@ -9,11 +9,13 @@ import type * as Scope from 'effect/Scope';
 import { describe, expect, test } from 'vitest';
 
 import { todo } from '@dxos/debug';
-import { DXN, Obj, Ref } from '@dxos/echo';
-import { ObjectId, type RefResolver, setRefResolver } from '@dxos/echo/internal';
-import { Function, ServiceContainer, setUserFunctionIdInMetadata } from '@dxos/functions-runtime';
-import { type RemoteFunctionExecutionService, createEventLogger } from '@dxos/functions-runtime';
+import { Obj, Ref } from '@dxos/echo';
+import { ObjectId, type RefResolver, create, getMeta, setRefResolver } from '@dxos/echo/internal';
+import { ComputeEventLogger, Function, createEventLogger, setUserFunctionIdInMetadata } from '@dxos/functions';
+import { type RemoteFunctionExecutionService } from '@dxos/functions-runtime';
+import { createTestServices, ServiceContainer } from '@dxos/functions-runtime/testing';
 import { invariant } from '@dxos/invariant';
+import { DXN } from '@dxos/keys';
 import { LogLevel } from '@dxos/log';
 
 import { NODE_INPUT, NODE_OUTPUT } from '../nodes';
