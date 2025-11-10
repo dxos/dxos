@@ -4,6 +4,7 @@
 
 import * as Array from 'effect/Array';
 import * as EffectFunction from 'effect/Function';
+import * as Order from 'effect/Order';
 import * as Schema from 'effect/Schema';
 import { useState } from 'react';
 import React, { useCallback } from 'react';
@@ -19,7 +20,6 @@ import { List } from '@dxos/react-ui-list';
 import { ghostHover, mx } from '@dxos/react-ui-theme';
 
 import { meta } from '../../meta';
-import { Order } from 'effect';
 
 const grid = 'grid grid-cols-[1fr_1fr_auto] min-bs-[2.5rem]';
 

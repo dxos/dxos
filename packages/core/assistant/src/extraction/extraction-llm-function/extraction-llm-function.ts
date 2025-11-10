@@ -2,17 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
-import { AiService } from '@dxos/ai';
-import { Obj } from '@dxos/echo';
-import { create } from '@dxos/echo/internal';
 import { type FunctionDefinition, defineFunction } from '@dxos/functions';
-import { Effect } from 'effect';
 
-import { AiSession } from '../../session';
 import { ExtractionInput, ExtractionOutput } from '../extraction';
-import { ReferencedQuotes, insertReferences } from '../quotes';
-
-import PROMPT from './transcription-instructions.tpl?raw';
 
 export const extractionAnthropicFunction: FunctionDefinition<ExtractionInput, ExtractionOutput> = defineFunction({
   key: 'dxos.org/function/extraction/extract-entities',

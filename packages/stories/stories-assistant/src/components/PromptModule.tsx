@@ -6,15 +6,7 @@ import React, { useMemo } from 'react';
 
 import { Surface } from '@dxos/app-framework/react';
 import { Prompt } from '@dxos/blueprints';
-import { Filter, Obj, Query } from '@dxos/echo';
-import {
-  ComputeEventLogger,
-  DatabaseService,
-  Function,
-  FunctionInvocationService,
-  deserializeFunction,
-} from '@dxos/functions';
-import { InvocationTracer, TracingServiceExt } from '@dxos/functions-runtime';
+import { Filter } from '@dxos/echo';
 import { type Space, useQuery } from '@dxos/react-client/echo';
 
 export const PromptModule = ({ space }: { space: Space }) => {
