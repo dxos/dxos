@@ -1,7 +1,6 @@
 import { useAsyncEffect } from '@dxos/react-ui';
 import { useClient } from '@dxos/react-client';
 import { useState } from 'react';
-import { Function } from '@dxos/functions-runtime';
 import { getDeployedFunctions, incrementSemverPatch } from '@dxos/functions-runtime/edge';
 import * as Schema from 'effect/Schema';
 import React, { useCallback, useMemo } from 'react';
@@ -16,6 +15,7 @@ import { defaultButtonColors, ghostHover, mx } from '@dxos/react-ui-theme';
 import { Array, Function as EffectFunction } from 'effect';
 
 import { meta } from '../../meta';
+import { Function } from "@dxos/functions";
 
 const grid = 'grid grid-cols-[1fr_1fr_auto] min-bs-[2.5rem]';
 

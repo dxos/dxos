@@ -7,13 +7,14 @@ import * as Command from '@effect/cli/Command';
 import * as Effect from 'effect/Effect';
 
 import { Obj } from '@dxos/echo';
-import { DatabaseService, Function } from '@dxos/functions-runtime';
+import { DatabaseService } from '@dxos/functions-runtime';
 
 import { ClientService } from '../../../services';
 import { withDatabase } from '../../../util';
 import { Common } from '../../options';
 
 import { getDeployedFunctions } from '@dxos/functions-runtime/edge';
+import { Function } from "@dxos/functions";
 
 export const importCommand = Command.make(
   'import',

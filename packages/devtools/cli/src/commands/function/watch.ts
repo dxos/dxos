@@ -8,12 +8,13 @@ import { Args, Flags } from '@oclif/core';
 
 import { Trigger, debounce } from '@dxos/async';
 import { type Space } from '@dxos/client/echo';
-import { Function, Script } from '@dxos/functions-runtime';
 import { Bundler } from '@dxos/functions-runtime/bundler';
 import { DataType } from '@dxos/schema';
 
 import { BaseCommand } from '../../base';
 import { findFunctionByDeploymentId } from '../../util/function/lookup';
+import { Function } from "@dxos/functions";
+import { Script } from "@dxos/functions";
 
 const LOCAL_FUNCTIONS_RUNTIME_URL = 'http://127.0.0.1:3123';
 

@@ -6,8 +6,8 @@ import { describe, expect, test } from 'vitest';
 
 import { Client } from '@dxos/client';
 import { configPreset } from '@dxos/config';
-import { uploadWorkerFunction } from '@dxos/functions/edge';
-import { bundleFunction } from '@dxos/functions/native';
+import { uploadWorkerFunction } from '@dxos/functions-runtime/edge';
+import { bundleFunction } from '@dxos/functions-runtime/native';
 
 describe.runIf(process.env.DX_TEST_TAGS?.includes('functions-e2e'))('Functions deployment', () => {
   test('deployes inbox sync function', { timeout: 120_000 }, async () => {

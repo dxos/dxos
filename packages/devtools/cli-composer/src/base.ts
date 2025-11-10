@@ -9,7 +9,7 @@ import { AbstractBaseCommand } from '@dxos/cli-base';
 import { type Client } from '@dxos/client';
 import { ATTR_META, ATTR_TYPE, type ObjectMeta, getTypeAnnotation } from '@dxos/echo/internal';
 import { live } from '@dxos/echo/internal';
-import { Function, Trigger } from '@dxos/functions-runtime';
+import { Function, Trigger } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { isNonNullable } from '@dxos/util';
 

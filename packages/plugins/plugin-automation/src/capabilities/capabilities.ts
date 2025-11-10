@@ -6,15 +6,8 @@ import type * as ManagedRuntime from 'effect/ManagedRuntime';
 
 import { type AiService, type ToolExecutionService, type ToolResolverService } from '@dxos/ai';
 import { defineCapability } from '@dxos/app-framework';
-import type {
-  CredentialsService,
-  DatabaseService,
-  FunctionInvocationService,
-  InvocationTracer,
-  QueueService,
-  TriggerDispatcher,
-  TriggerStateStore,
-} from '@dxos/functions-runtime';
+import type { InvocationTracer, TriggerDispatcher, TriggerStateStore } from '@dxos/functions-runtime';
+import type { CredentialsService, DatabaseService, FunctionInvocationService, QueueService } from '@dxos/functions';
 import type { SpaceId } from '@dxos/keys';
 
 import { meta } from '../meta';

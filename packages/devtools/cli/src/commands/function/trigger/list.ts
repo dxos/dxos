@@ -7,9 +7,8 @@ import chalk from 'chalk';
 
 import { type TableOptions, table } from '@dxos/cli-base';
 import { Filter } from '@dxos/client/echo';
-import { Trigger } from '@dxos/functions-runtime';
-
 import { BaseCommand } from '../../../base';
+import { Trigger } from "@dxos/functions";
 
 export default class List extends BaseCommand<typeof List> {
   static override enableJsonFlag = true;

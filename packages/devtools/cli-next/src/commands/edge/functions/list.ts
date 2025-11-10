@@ -6,10 +6,11 @@ import * as Command from '@effect/cli/Command';
 import * as Effect from 'effect/Effect';
 
 import { Filter } from '@dxos/echo';
-import { DatabaseService, Function } from '@dxos/functions-runtime';
+import { DatabaseService } from '@dxos/functions-runtime';
 
 import { withDatabase } from '../../../util';
 import { Common } from '../../options';
+import { Function } from "@dxos/functions";
 
 export const list = Command.make('list', { spaceId: Common.spaceId }, ({ spaceId }) =>
   Effect.gen(function* () {

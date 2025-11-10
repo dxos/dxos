@@ -12,17 +12,14 @@ import { GenericToolkit, makeToolExecutionServiceFromFunctions, makeToolResolver
 import { Resource } from '@dxos/context';
 import { Query, Ref } from '@dxos/echo';
 import {
-  CredentialsService,
-  DatabaseService,
   FunctionImplementationResolver,
-  FunctionInvocationService,
   FunctionInvocationServiceLayer,
   InvocationTracer,
   LocalFunctionExecutionService,
-  QueueService,
   RemoteFunctionExecutionService,
   TriggerDispatcher,
 } from '@dxos/functions-runtime';
+import { CredentialsService, DatabaseService, FunctionInvocationService, QueueService } from '@dxos/functions';
 import { TriggerStateStore } from '@dxos/functions-runtime';
 import { invariant } from '@dxos/invariant';
 import { type SpaceId } from '@dxos/keys';
