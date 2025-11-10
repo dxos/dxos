@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Atom, Registry } from '@effect-atom/atom-react';
+import { Registry } from '@effect-atom/atom-react';
 import { untracked } from '@preact/signals-core';
 import * as Array from 'effect/Array';
 import * as Duration from 'effect/Duration';

@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Atom, Registry } from '@effect-atom/atom-react';
+import { Atom } from '@effect-atom/atom-react';
 import React, { type ChangeEvent, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { useCapabilities, useCapability } from '@dxos/app-framework/react';

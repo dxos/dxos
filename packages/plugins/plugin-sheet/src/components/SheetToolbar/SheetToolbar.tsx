@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Atom, Registry } from '@effect-atom/atom-react';
+import { Atom } from '@effect-atom/atom-react';
 import React, { type PropsWithChildren, useMemo } from 'react';
 
 import { useAppGraph } from '@dxos/app-framework/react';

@@ -95,7 +95,9 @@ export const createExtension = (extension: CreateExtensionOptions): BuilderExten
 
   const actions =
     _actions &&
-    Atom.family((node: Atom.Atom<Option.Option<Node>>) => _actions(node).pipe(Atom.withLabel(`graph-builder:_actions:${id}`)));
+    Atom.family((node: Atom.Atom<Option.Option<Node>>) =>
+      _actions(node).pipe(Atom.withLabel(`graph-builder:_actions:${id}`)),
+    );
 
   return [
     resolver ? { id: getId('resolver'), position, resolver } : undefined,

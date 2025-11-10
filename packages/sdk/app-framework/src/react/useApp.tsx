@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Atom, Registry, RegistryContext } from '@effect-atom/atom-react';
+import { RegistryContext } from '@effect-atom/atom-react';
 import { effect } from '@preact/signals-core';
 import React, { type FC, useCallback, useEffect, useMemo } from 'react';
 

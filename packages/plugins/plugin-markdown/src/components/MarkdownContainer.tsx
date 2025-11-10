@@ -3,7 +3,7 @@
 //
 
 import { type Extension } from '@codemirror/state';
-import { Atom, Registry } from '@effect-atom/atom-react';
+import { Atom } from '@effect-atom/atom-react';
 import React, { useMemo } from 'react';
 
 import { Capabilities } from '@dxos/app-framework';
