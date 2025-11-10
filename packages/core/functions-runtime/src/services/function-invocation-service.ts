@@ -9,7 +9,7 @@ import { AiService } from '@dxos/ai';
 import { DatabaseService } from '@dxos/echo-db';
 import { CredentialsService, FunctionInvocationService, QueueService } from '@dxos/functions';
 
-import { type FunctionDefinition } from '../handler';
+import { type FunctionDefinition } from '@dxos/functions';
 
 import {
   FunctionImplementationResolver,

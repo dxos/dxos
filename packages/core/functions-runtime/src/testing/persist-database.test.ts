@@ -8,7 +8,7 @@ import * as Effect from 'effect/Effect';
 import { Filter, Obj, Query, Type } from '@dxos/echo';
 import { DataType } from '@dxos/schema';
 
-import { DatabaseService } from '../services';
+import { DatabaseService } from '@dxos/echo-db';
 
 import { TestDatabaseLayer, testStoragePath } from './layer';
 

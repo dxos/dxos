@@ -17,14 +17,8 @@ import { defineFunction } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { DataType } from '@dxos/schema';
 
-import { serializeFunction } from '../handler';
-import {
-  ComputeEventLogger,
-  CredentialsService,
-  DatabaseService,
-  QueueService,
-  TracingService,
-} from '../services';
+import { serializeFunction } from '@dxos/functions';
+import { ComputeEventLogger, CredentialsService, DatabaseService, QueueService } from '@dxos/functions';
 import { FunctionInvocationServiceLayerTestMocked } from '../services/function-invocation-service';
 import { TestDatabaseLayer } from '../testing';
 import { TracingServiceExt } from '../trace';
