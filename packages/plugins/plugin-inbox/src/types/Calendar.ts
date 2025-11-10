@@ -11,10 +11,10 @@ import { Queue } from '@dxos/echo-db';
 import { ItemAnnotation } from '@dxos/schema';
 
 export const Calendar = Schema.Struct({
-  name: Schema.optional(Schema.String),
+  name: Schema.String.pipe(Schema.optional),
   queue: Type.Ref(Queue).pipe(FormAnnotation.set(false)),
   // Track the last synced update timestamp to handle out-of-order event updates.
-  lastSyncedUpdate: Schema.String.pipe(Schema.optional, FormAnnotation.set(false)),
+  lastSyncedUpdate: Schema.String.pipe(FormAnnotation.set(false), Schema.optional),
 }).pipe(
   Type.Obj({
     typename: 'dxos.org/type/Calendar',
@@ -23,9 +23,9 @@ export const Calendar = Schema.Struct({
   ItemAnnotation.set(true),
 );
 
-export type Calendar = Schema.Schema.Type<typeof Calendar>;
+export interface Calendar extends Schema.Schema.Type<typeof Calendar> {}
 
-type CalendarProps = Omit<Obj.MakeProps<typeof Calendar>, 'queue'> & {
+type CalendarProps = Omit<Obj.MakeProps<typeof Calendar>, 'queue' | 'lastSyncedUpdate'> & {
   space: Space;
 };
 
