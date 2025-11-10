@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Rx } from '@effect-rx/rx-react';
+import { Atom } from '@effect-atom/atom-react';
 import React from 'react';
 
 import { LayoutAction, createIntent } from '@dxos/app-framework';
@@ -99,5 +99,5 @@ const useSubjectMenuGroupItems = ({ subject, activeSpace }: PreviewProps): MenuA
     result.edges.push({ source: 'root', target });
   });
 
-  return useMenuActions(Rx.make(result));
+  return useMenuActions(Atom.make(result));
 };

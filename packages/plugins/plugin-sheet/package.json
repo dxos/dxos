@@ -103,7 +103,7 @@
     "@dxos/react-ui-types": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
     "@dxos/test-utils": "workspace:*",
-    "@effect-rx/rx-react": "0.42.4",
+    "@effect-atom/atom-react": "^0.3.4",
     "@effect/platform": "0.92.1",
     "@lezer/generator": "^1.7.1",
     "@tldraw/indices": "^2.0.0-alpha.14",
@@ -119,7 +119,7 @@
   "peerDependencies": {
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
-    "@effect-rx/rx-react": "^0.34.1",
+    "@effect-atom/atom-react": "^0.3.4",
     "@effect/platform": "^0.80.12",
     "effect": "^3.13.3",
     "react": "^19.0.0",

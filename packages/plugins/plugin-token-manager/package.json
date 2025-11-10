@@ -52,7 +52,7 @@
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
-    "@effect-rx/rx-react": "0.42.4",
+    "@effect-atom/atom-react": "^0.3.4",
     "@effect/platform": "0.92.1",
     "@types/react": "~19.2.2",
     "@types/react-dom": "~19.2.2",
@@ -64,7 +64,7 @@
   "peerDependencies": {
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
-    "@effect-rx/rx-react": "^0.34.1",
+    "@effect-atom/atom-react": "^0.3.4",
     "@effect/platform": "^0.80.12",
     "effect": "^3.13.3",
     "react": "^19.0.0",
