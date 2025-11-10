@@ -7,16 +7,16 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Obj } from '@dxos/echo';
 import {
   Function,
-  InvocationOutcome,
-  type InvocationTraceEvent,
   Script,
-  createInvocationSpans,
   getUserFunctionIdInMetadata,
 } from '@dxos/functions';
 import { type DXN } from '@dxos/keys';
 import { Filter, type Space, getSpace, useQuery, useQueue } from '@dxos/react-client/echo';
 
 import { getUuidFromDxn } from './utils';
+import { InvocationOutcome } from "@dxos/functions-runtime";
+import { InvocationTraceEvent } from "@dxos/functions-runtime";
+import { createInvocationSpans } from "@dxos/functions-runtime";
 
 /**
  * Maps invocation target identifiers to readable script names.
