@@ -82,7 +82,26 @@ const main = async () => {
 
   // Run tsc after cleaning.
   VERBOSE && console.log('Running tsc...');
-  const tsc = spawnSync(USE_TSGO ? 'tsgo' : 'tsc', [], { stdio: 'inherit' });
+  const tsc = spawnSync(USE_TSGO ? 'tsgo' : 'tsc', [], { encoding: 'utf-8' });
+  
+  // Process output to prepend repo root to relative paths.
+  const repoRoot = process.cwd();
+  const relativePathRegex = /^([a-zA-Z0-9_\-./]+\.[a-zA-Z0-9]+)(\(\d+,\d+\):)/gm;
+  
+  if (tsc.stdout) {
+    const processedStdout = tsc.stdout.replace(relativePathRegex, (match, filePath, location) => {
+      return `${resolve(repoRoot, filePath)}${location}`;
+    });
+    process.stdout.write(processedStdout);
+  }
+  
+  if (tsc.stderr) {
+    const processedStderr = tsc.stderr.replace(relativePathRegex, (match, filePath, location) => {
+      return `${resolve(repoRoot, filePath)}${location}`;
+    });
+    process.stderr.write(processedStderr);
+  }
+  
   VERBOSE && console.log(`tsc exited with status ${tsc.status}`);
   process.exit(tsc.status ?? 1);
 };
