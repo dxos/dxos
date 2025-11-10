@@ -219,7 +219,10 @@ export default async (options: EsbuildExecutorOptions): Promise<{ success: boole
     kind: 'warning',
     color: true,
   });
-  console.log(formatted.filter((_) => _.trim().length > 0).join('\n'));
+  const filtered = formatted.filter((_) => _.trim().length > 0);
+  if (filtered.length > 0) {
+    console.log(filtered.join('\n'));
+  }
 
   if (options.watch) {
     await new Promise(() => {}); // Wait indefinitely.

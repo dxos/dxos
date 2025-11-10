@@ -27,6 +27,7 @@
     "lint": "moon run :lint -- --fix",
     "lint-changed": "moon :lint --affected --remote -- --fix",
     "lockfile": "vite-node scripts/lockfile.ts",
+    "moonx": "./scripts/moonx",
     "pkg-inspect": "./scripts/pkg-inspect.mjs",
     "pre-ci": "./scripts/pre-ci.mjs",
     "prepare": "[ \"$HUSKY\" != \"0\" ] && husky install || true",
