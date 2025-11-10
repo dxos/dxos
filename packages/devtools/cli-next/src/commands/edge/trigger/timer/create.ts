@@ -9,11 +9,10 @@ import * as Effect from 'effect/Effect';
 import * as HashMap from 'effect/HashMap';
 
 import { Filter, Obj, Ref } from '@dxos/echo';
-import { DatabaseService, Function, Trigger, getUserFunctionIdInMetadata } from '@dxos/functions-runtime';
+import { DatabaseService, Function, Trigger, getUserFunctionIdInMetadata } from '@dxos/functions';
 
 import { withDatabase, withTypes } from '../../../../util';
 import { Common } from '../../../options';
-import { Enabled, Input } from '../options';
 
 import { Cron } from './options';
 

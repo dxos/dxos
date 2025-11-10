@@ -17,7 +17,7 @@ import {
   InvocationTraceEventType,
   InvocationTraceStartEvent,
 } from '../trace';
-import type { Trigger } from '../types';
+import type { Trigger } from '@dxos/functions';
 
 export type FunctionInvocationPayload = {
   data?: any;

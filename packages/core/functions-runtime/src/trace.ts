@@ -11,7 +11,7 @@ import { Queue } from '@dxos/echo-db';
 import { TracingService } from '@dxos/functions';
 import { log } from '@dxos/log';
 
-import { Trigger } from './types';
+import { Trigger } from '@dxos/functions';
 
 export enum InvocationOutcome {
   SUCCESS = 'success',

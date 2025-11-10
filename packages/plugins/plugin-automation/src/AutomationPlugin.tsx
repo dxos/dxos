@@ -3,7 +3,7 @@
 //
 
 import { Capabilities, Events, contributes, defineModule, definePlugin } from '@dxos/app-framework';
-import { Function, Trigger } from '@dxos/functions-runtime';
+import { Function, Trigger } from '@dxos/functions';
 import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
 
 import { AppGraphBuilder, ComputeRuntime, IntentResolver, ReactSurface } from './capabilities';

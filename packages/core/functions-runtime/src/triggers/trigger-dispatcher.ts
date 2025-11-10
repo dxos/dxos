@@ -24,7 +24,7 @@ import { log } from '@dxos/log';
 import { KEY_QUEUE_POSITION } from '@dxos/protocols';
 
 import { TracingServiceExt } from '../trace';
-import { Function, Trigger, type TriggerEvent } from '../types';
+import { Function, Trigger, type TriggerEvent } from '@dxos/functions';
 
 import { createInvocationPayload } from './input-builder';
 import { InvocationTracer } from './invocation-tracer';

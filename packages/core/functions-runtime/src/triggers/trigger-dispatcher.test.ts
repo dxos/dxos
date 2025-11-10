@@ -22,7 +22,7 @@ import { DataType } from '@dxos/schema';
 import { FunctionInvocationServiceLayerTestMocked } from '../services/function-invocation-service';
 import { TestDatabaseLayer } from '../testing';
 import { TracingServiceExt } from '../trace';
-import { Function, Trigger } from '../types';
+import { Function, Trigger } from '@dxos/functions';
 
 import { InvocationTracer } from './invocation-tracer';
 import { TriggerDispatcher } from './trigger-dispatcher';

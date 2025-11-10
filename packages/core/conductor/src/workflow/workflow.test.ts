@@ -13,7 +13,7 @@ import { Obj, Ref } from '@dxos/echo';
 import { ObjectId, type RefResolver, create, getMeta, setRefResolver } from '@dxos/echo/internal';
 import { ComputeEventLogger, Function, createEventLogger, setUserFunctionIdInMetadata } from '@dxos/functions';
 import { type RemoteFunctionExecutionService } from '@dxos/functions-runtime';
-import { createTestServices, ServiceContainer } from '@dxos/functions-runtime/testing';
+import { ServiceContainer } from '@dxos/functions-runtime';
 import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
 import { LogLevel } from '@dxos/log';

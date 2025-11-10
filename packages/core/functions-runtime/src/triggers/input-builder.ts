@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Trigger, type TriggerEvent } from '../types';
+import { type Trigger, type TriggerEvent } from '@dxos/functions';
 
 export const createInvocationPayload = (trigger: Trigger.Trigger, event: TriggerEvent.TriggerEvent): any => {
   if (!trigger.input) {

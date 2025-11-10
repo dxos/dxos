@@ -9,7 +9,7 @@ import * as Console from 'effect/Console';
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
-import { type Function } from '@dxos/functions-runtime';
+import { type Function } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 
 import { ClientService, CommandConfig } from '../../../../services';
