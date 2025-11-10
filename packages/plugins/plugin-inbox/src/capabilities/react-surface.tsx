@@ -17,7 +17,7 @@ import { View, getTypenameFromQuery } from '@dxos/schema';
 import { Message, Organization, Person } from '@dxos/types';
 
 import {
-  EventsContainer,
+  CalendarContainer,
   MailboxContainer,
   MailboxObjectSettings,
   MessageCard,
@@ -65,7 +65,7 @@ export default () =>
           <MessageContainer
             message={typeof message === 'string' ? undefined : message}
             space={space}
-            inMailbox={companionTo}
+            mailbox={companionTo}
             role={role}
           />
         );
@@ -75,7 +75,7 @@ export default () =>
       id: `${meta.id}/calendar`,
       role: 'article',
       filter: (data): data is { subject: Calendar.Calendar } => Obj.instanceOf(Calendar.Calendar, data.subject),
-      component: ({ data }) => <EventsContainer calendar={data.subject} />,
+      component: ({ data }) => <CalendarContainer calendar={data.subject} />,
     }),
     createSurface({
       id: `${meta.id}/message-card`,
