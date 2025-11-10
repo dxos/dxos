@@ -2251,6 +2251,9 @@ importers:
       '@dxos/functions':
         specifier: workspace:*
         version: link:../functions
+      '@dxos/functions-runtime':
+        specifier: workspace:*
+        version: link:../functions-runtime
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
@@ -5279,6 +5282,9 @@ importers:
       '@dxos/functions':
         specifier: workspace:*
         version: link:../../core/functions
+      '@dxos/functions-runtime':
+        specifier: workspace:*
+        version: link:../../core/functions-runtime
       '@dxos/graph':
         specifier: workspace:*
         version: link:../../common/graph
@@ -5993,6 +5999,9 @@ importers:
       '@dxos/functions':
         specifier: workspace:*
         version: link:../../core/functions
+      '@dxos/functions-runtime':
+        specifier: workspace:*
+        version: link:../../core/functions-runtime
       '@dxos/live-object':
         specifier: workspace:*
         version: link:../../core/echo/live-object
@@ -7605,6 +7614,9 @@ importers:
       '@dxos/functions':
         specifier: workspace:*
         version: link:../../core/functions
+      '@dxos/functions-runtime':
+        specifier: workspace:*
+        version: link:../../core/functions-runtime
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
@@ -8735,6 +8747,9 @@ importers:
       '@dxos/functions':
         specifier: workspace:*
         version: link:../../core/functions
+      '@dxos/functions-runtime':
+        specifier: workspace:*
+        version: link:../../core/functions-runtime
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
@@ -10417,6 +10432,9 @@ importers:
       '@dxos/functions':
         specifier: workspace:*
         version: link:../../core/functions
+      '@dxos/functions-runtime':
+        specifier: workspace:*
+        version: link:../../core/functions-runtime
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
@@ -11971,6 +11989,9 @@ importers:
       '@dxos/functions':
         specifier: workspace:*
         version: link:../../core/functions
+      '@dxos/functions-runtime':
+        specifier: workspace:*
+        version: link:../../core/functions-runtime
       '@dxos/graph':
         specifier: workspace:*
         version: link:../../common/graph
@@ -12862,6 +12883,9 @@ importers:
       '@dxos/functions':
         specifier: workspace:*
         version: link:../../core/functions
+      '@dxos/functions-runtime':
+        specifier: workspace:*
+        version: link:../../core/functions-runtime
       '@dxos/graph':
         specifier: workspace:*
         version: link:../../common/graph

@@ -16,10 +16,10 @@ import {
   DatabaseService,
   Function,
   FunctionInvocationService,
-  InvocationTracer,
   TracingService,
   deserializeFunction,
 } from '@dxos/functions';
+import { TracingServiceExt, InvocationTracer } from '@dxos/functions-runtime';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { TemplateEditor } from '@dxos/plugin-assistant';
@@ -62,7 +62,7 @@ export const PromptModule = ({ space }: { space: Space }) => {
       const result = yield* FunctionInvocationService.invokeFunction(functionDef, inputData).pipe(
         Effect.provide(
           ComputeEventLogger.layerFromTracing.pipe(
-            Layer.provideMerge(TracingService.layerQueue(trace.invocationTraceQueue)),
+            Layer.provideMerge(TracingServiceExt.layerQueue(trace.invocationTraceQueue)),
           ),
         ),
         Effect.exit,

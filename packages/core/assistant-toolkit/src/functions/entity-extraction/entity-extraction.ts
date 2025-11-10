@@ -19,6 +19,7 @@ import { trim } from '@dxos/util';
 
 import { makeGraphWriterHandler, makeGraphWriterToolkit } from '../../crud';
 import { contextQueueLayerFromResearchGraph } from '../research';
+import { FunctionInvocationServiceLayerTest, TestDatabaseLayer } from '@dxos/functions-runtime/testing';
 
 export default defineFunction({
   key: 'dxos.org/functions/entity-extraction',
@@ -84,7 +85,7 @@ export default defineFunction({
       ).pipe(
         Layer.provide(
           // TODO(dmaretskyi): This should be provided by environment.
-          Layer.mergeAll(FunctionInvocationService.layerTest()),
+          Layer.mergeAll(FunctionInvocationServiceLayerTest()),
         ),
       ),
     ),

@@ -12,14 +12,8 @@ import { makeToolExecutionServiceFromFunctions, makeToolResolverFromFunctions } 
 import { Blueprint } from '@dxos/blueprints';
 import { Obj } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect';
-import {
-  ComputeEventLogger,
-  CredentialsService,
-  DatabaseService,
-  FunctionInvocationService,
-  TracingService,
-} from '@dxos/functions';
-import { TestDatabaseLayer } from '@dxos/functions/testing';
+import { ComputeEventLogger, CredentialsService, DatabaseService, FunctionInvocationService, TracingService } from '@dxos/functions';
+import { TestDatabaseLayer, FunctionInvocationServiceLayerTest } from '@dxos/functions-runtime/testing';
 import { ObjectId } from '@dxos/keys';
 import { DataType } from '@dxos/schema';
 
@@ -36,7 +30,7 @@ const TestLayer = Layer.mergeAll(
   makeToolExecutionServiceFromFunctions(testToolkit, testToolkit.toLayer({}) as any),
   ComputeEventLogger.layerFromTracing,
 ).pipe(
-  Layer.provideMerge(FunctionInvocationService.layerTest({ functions: [entityExtraction] })),
+  Layer.provideMerge(FunctionInvocationServiceLayerTest({ functions: [entityExtraction] })),
   Layer.provideMerge(
     Layer.mergeAll(
       TestAiService(),

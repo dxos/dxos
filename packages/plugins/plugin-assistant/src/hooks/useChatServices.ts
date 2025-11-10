@@ -14,6 +14,7 @@ import { useClient } from '@dxos/react-client';
 
 import { type AiChatServices } from '../processor';
 import { type Assistant } from '../types';
+import { TracingServiceExt } from '@dxos/functions-runtime';
 
 export type UseChatServicesProps = {
   space?: Space;
@@ -39,7 +40,9 @@ export const useChatServices = ({
         Effect.gen(function* () {
           return yield* Effect.runtime<AiChatServices>().pipe(
             Effect.provide(
-              chat?.traceQueue?.target ? TracingService.layerQueue(chat.traceQueue?.target) : TracingService.layerNoop,
+              chat?.traceQueue?.target
+                ? TracingServiceExt.layerQueue(chat.traceQueue?.target)
+                : TracingService.layerNoop,
             ),
           );
         }),

@@ -45,22 +45,24 @@ export const loadFunctionObject: (space: Space, functionId: string) => Effect.Ef
     return functionObject;
   });
 
-export const upsertFunctionObject = Effect.fn(function* ({
-  space,
-  existingObject,
-  uploadResult,
-  filePath,
-  name,
-}: {
+export const upsertFunctionObject: (opts: {
   space: Space;
   existingObject: Function.Function | undefined;
   uploadResult: UploadFunctionResponseBody;
   filePath: string;
   name?: string;
+}) => Effect.Effect<Function.Function, never, CommandConfig> = Effect.fn(function* ({
+  space,
+  existingObject,
+  uploadResult,
+  filePath,
+  name,
 }) {
   const { verbose } = yield* CommandConfig;
-  let functionObject = existingObject;
-  if (!functionObject) {
+  let functionObject;
+  if (existingObject) {
+    functionObject = existingObject;
+  } else {
     functionObject = Function.make({
       name: path.basename(filePath, path.extname(filePath)),
       version: uploadResult.version,

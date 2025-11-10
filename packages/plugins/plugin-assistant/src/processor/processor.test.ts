@@ -20,10 +20,10 @@ import {
   QueueService,
   TracingService,
 } from '@dxos/functions';
-import { TestDatabaseLayer } from '@dxos/functions/testing';
 import { type DataType } from '@dxos/schema';
 
 import { AiChatProcessor, type AiChatServices } from './processor';
+import { FunctionInvocationServiceLayerTestMocked, TestDatabaseLayer } from '@dxos/functions-runtime/testing';
 
 const TestToolkit = Toolkit.make(
   Tool.make('random', {
@@ -45,7 +45,7 @@ const TestServicesLayer = Layer.mergeAll(
     // types: [],
   }),
   // CredentialsService.configuredLayer([{ service: 'exa.ai', apiKey: EXA_API_KEY }]),
-  FunctionInvocationService.layerTestMocked({ functions: [] }).pipe(
+  FunctionInvocationServiceLayerTestMocked({ functions: [] }).pipe(
     Layer.provideMerge(ComputeEventLogger.layerFromTracing),
     Layer.provideMerge(TracingService.layerNoop),
   ),

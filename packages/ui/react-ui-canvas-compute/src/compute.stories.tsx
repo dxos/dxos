@@ -8,7 +8,7 @@ import React, { type PropsWithChildren, useEffect, useMemo, useRef, useState } f
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { capabilities } from '@dxos/assistant-toolkit';
 import { type ComputeGraphModel, type ComputeNode, type GraphDiagnostic } from '@dxos/conductor';
-import { ServiceContainer } from '@dxos/functions';
+import { ServiceContainer } from '@dxos/functions-runtime';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { Select, Toolbar } from '@dxos/react-ui';
 import { withTheme } from '@dxos/react-ui/testing';

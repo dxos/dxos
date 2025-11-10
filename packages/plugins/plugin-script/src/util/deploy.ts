@@ -5,8 +5,8 @@
 import { type Client } from '@dxos/client';
 import { Obj, Ref } from '@dxos/echo';
 import { Function, type Script, getUserFunctionIdInMetadata, setUserFunctionIdInMetadata } from '@dxos/functions';
-import { Bundler } from '@dxos/functions/bundler';
-import { incrementSemverPatch, uploadWorkerFunction } from '@dxos/functions/edge';
+import { Bundler } from '@dxos/functions-runtime/bundler';
+import { incrementSemverPatch, uploadWorkerFunction } from '@dxos/functions-runtime/edge';
 import { log } from '@dxos/log';
 import { type Space } from '@dxos/react-client/echo';
 import { isNode } from '@dxos/util';

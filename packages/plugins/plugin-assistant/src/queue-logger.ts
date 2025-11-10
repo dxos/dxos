@@ -9,7 +9,7 @@ import {
   InvocationTraceEndEvent,
   InvocationTraceEventType,
   InvocationTraceStartEvent
-} from '@dxos/functions';
+} from '@dxos/functions-runtime';
 import { invariant } from '@dxos/invariant';
 import { QueueSubspaceTags } from '@dxos/keys';
 import { TraceEvent } from "@dxos/functions-runtime";

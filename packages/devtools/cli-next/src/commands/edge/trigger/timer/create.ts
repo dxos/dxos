@@ -13,6 +13,7 @@ import { DatabaseService, Function, Trigger, getUserFunctionIdInMetadata } from 
 
 import { withDatabase, withTypes } from '../../../../util';
 import { Common } from '../../../options';
+import { Enabled, Input } from '../options';
 
 import { Cron } from './options';
 

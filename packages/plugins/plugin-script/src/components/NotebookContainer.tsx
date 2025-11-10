@@ -16,9 +16,10 @@ import {
   ComputeEventLogger,
   type FunctionDefinition,
   FunctionInvocationService,
-  InvocationTracer,
   TracingService,
 } from '@dxos/functions';
+
+import { InvocationTracer } from '@dxos/functions-runtime';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { useComputeRuntimeCallback } from '@dxos/plugin-automation';
@@ -37,6 +38,7 @@ import { type Notebook } from '../types';
 
 import { NotebookMenu, NotebookStack, type NotebookStackProps } from './NotebookStack';
 import { type TypescriptEditorProps } from './TypescriptEditor';
+import { TracingServiceExt } from '@dxos/functions-runtime';
 
 const INCLUDE_BLUEPRINTS = ['dxos.org/blueprint/assistant', 'dxos.org/blueprint/markdown'];
 
@@ -238,7 +240,7 @@ const runPrompt = Effect.fn(function* ({
   const result = yield* FunctionInvocationService.invokeFunction(Agent.prompt, inputData).pipe(
     Effect.provide(
       ComputeEventLogger.layerFromTracing.pipe(
-        Layer.provideMerge(TracingService.layerQueue(trace.invocationTraceQueue)),
+        Layer.provideMerge(TracingServiceExt.layerQueue(trace.invocationTraceQueue)),
       ),
     ),
     Effect.exit,

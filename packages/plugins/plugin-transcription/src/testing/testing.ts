@@ -11,7 +11,7 @@ import { Filter, type Queue } from '@dxos/client/echo';
 import { Context } from '@dxos/context';
 import { type Key, Obj, Ref, Type } from '@dxos/echo';
 import { createQueueDXN } from '@dxos/echo/internal';
-import { FunctionExecutor, ServiceContainer } from '@dxos/functions';
+import { FunctionExecutor, ServiceContainer } from '@dxos/functions-runtime';
 import { IdentityDid } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { faker } from '@dxos/random';

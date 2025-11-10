@@ -47,6 +47,7 @@
     "@dxos/echo-db": "workspace:*",
     "@dxos/edge-client": "workspace:*",
     "@dxos/functions": "workspace:*",
+    "@dxos/functions-runtime": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/live-object": "workspace:*",

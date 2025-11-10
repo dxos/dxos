@@ -21,7 +21,12 @@ import {
   FunctionInvocationService,
   TracingService,
 } from '@dxos/functions';
-import { TestDatabaseLayer, testStoragePath } from '@dxos/functions/testing';
+import {
+  FunctionInvocationServiceLayerTestMocked,
+  TestDatabaseLayer,
+  testStoragePath,
+} from '@dxos/functions-runtime/testing';
+import { TracingServiceExt } from '@dxos/functions-runtime';
 import { DataType } from '@dxos/schema';
 
 import { LINEAR_ID_KEY, default as fetchLinearIssues } from './sync-issues';
@@ -41,9 +46,9 @@ const TestLayer = Layer.mergeAll(
         storagePath: testStoragePath({ name: 'feed-test-13' }),
       }),
       CredentialsService.layerConfig([{ service: 'linear.app', apiKey: Config.redacted('LINEAR_API_KEY') }]),
-      FunctionInvocationService.layerTestMocked({ functions: [fetchLinearIssues] }).pipe(
+      FunctionInvocationServiceLayerTestMocked({ functions: [fetchLinearIssues] }).pipe(
         Layer.provideMerge(ComputeEventLogger.layerFromTracing),
-        Layer.provideMerge(TracingService.layerLogInfo()),
+        Layer.provideMerge(TracingServiceExt.layerLogInfo()),
       ),
       FetchHttpClient.layer,
     ),
