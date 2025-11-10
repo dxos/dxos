@@ -140,13 +140,17 @@ type CalendarGridProps = ThemedClassName<{
 
 // TODO(burdon): Key nav.
 // TODO(burdon): Drag range.
-// TODO(burdon): Snap scrolling.
 const CalendarGrid = ({ classNames, grow, numRows = 7 }: CalendarGridProps) => {
   const { weekStartsOn, event, setIndex, selected, setSelected } = useCalendarContext(CalendarGrid.displayName);
   const { ref, height = 0 } = useResizeDetector();
   const listRef = useRef<List>(null);
   const today = useMemo(() => new Date(), []);
   const maxHeight = grow ? undefined : numRows * size;
+
+  useEffect(() => {
+    const index = differenceInWeeks(today, start);
+    listRef.current?.scrollToRow(index);
+  }, [listRef.current, start, today]);
 
   useEffect(() => {
     return event.on((event) => {
@@ -232,13 +236,13 @@ const CalendarGrid = ({ classNames, grow, numRows = 7 }: CalendarGridProps) => {
             ref={listRef}
             role='none'
             // TODO(burdon): Snap isn't working.
-            className='[&>div]:snap-y scrollbar-none'
+            className='[&>div]:snap-y scrollbar-none outline-none'
             width={days.length * size}
             height={maxHeight ?? height}
             rowCount={rows}
             rowHeight={size}
             rowRenderer={rowRenderer}
-            scrollToAlignment='center'
+            scrollToAlignment='start'
             onScroll={handleScroll}
           />
         )}
