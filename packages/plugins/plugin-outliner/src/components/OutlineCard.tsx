@@ -9,7 +9,7 @@ import { Card } from '@dxos/react-ui-stack';
 
 import { type Outline } from '../types';
 
-import { OutlineComponent } from './Outline';
+import { Outline } from './Outline';
 
 export const OutlineCard = ({ object }: SurfaceComponentProps<Outline.Outline>) => {
   if (!object.content.target) {
@@ -18,7 +18,7 @@ export const OutlineCard = ({ object }: SurfaceComponentProps<Outline.Outline>) 
 
   return (
     <Card.SurfaceRoot id={object.id} classNames='p-2'>
-      <OutlineComponent id={object.content.target.id} text={object.content.target} />
+      <Outline id={object.content.target.id} text={object.content.target} />
     </Card.SurfaceRoot>
   );
 };

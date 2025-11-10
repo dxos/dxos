@@ -25,10 +25,10 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {
   render: () => (
     <Calendar.Root>
-      <Calendar.Content>
+      <Calendar.Viewport>
         <Calendar.Header />
         <Calendar.Grid />
-      </Calendar.Content>
+      </Calendar.Viewport>
     </Calendar.Root>
   ),
 };
@@ -36,10 +36,10 @@ export const Default: Story = {
 export const Border: Story = {
   render: () => (
     <Calendar.Root>
-      <Calendar.Content classNames='bg-modalSurface border border-separator rounded'>
+      <Calendar.Viewport classNames='bg-modalSurface border border-separator rounded'>
         <Calendar.Header />
         <Calendar.Grid />
-      </Calendar.Content>
+      </Calendar.Viewport>
     </Calendar.Root>
   ),
 };
@@ -47,10 +47,10 @@ export const Border: Story = {
 export const Column: Story = {
   render: () => (
     <Calendar.Root>
-      <Calendar.Content classNames='absolute inset-0 flex bs-full justify-center'>
+      <Calendar.Viewport classNames='absolute inset-0 flex bs-full justify-center'>
         <Calendar.Header />
         <Calendar.Grid grow />
-      </Calendar.Content>
+      </Calendar.Viewport>
     </Calendar.Root>
   ),
 };

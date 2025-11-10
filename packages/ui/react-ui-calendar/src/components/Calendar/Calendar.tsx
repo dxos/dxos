@@ -9,8 +9,10 @@ import React, {
   type Dispatch,
   type PropsWithChildren,
   type SetStateAction,
+  forwardRef,
   useCallback,
   useEffect,
+  useImperativeHandle,
   useMemo,
   useRef,
   useState,
@@ -36,7 +38,7 @@ const size = 48;
 
 type CalendarEvent = {
   type: 'scroll';
-  index: number;
+  date: Date;
 };
 
 type CalendarContextValue = {
@@ -51,29 +53,49 @@ type CalendarContextValue = {
 const [CalendarContextProvider, useCalendarContext] = createContext<CalendarContextValue>('Calendar');
 
 //
+// Controller
+//
+
+type CalendarController = {
+  scrollTo: (date: Date) => void;
+};
+
+//
 // Root
 //
 
 type CalendarRootProps = PropsWithChildren<Partial<Pick<CalendarContextValue, 'weekStartsOn'>>>;
 
-const CalendarRoot = ({ children, weekStartsOn = 1 }: CalendarRootProps) => {
-  const event = useMemo(() => new Event<CalendarEvent>(), []);
-  const [selected, setSelected] = useState<Date | undefined>();
-  const [index, setIndex] = useState<number | undefined>();
+const CalendarRoot = forwardRef<CalendarController, CalendarRootProps>(
+  ({ children, weekStartsOn = 1 }, forwardedRef) => {
+    const event = useMemo(() => new Event<CalendarEvent>(), []);
+    const [selected, setSelected] = useState<Date | undefined>();
+    const [index, setIndex] = useState<number | undefined>();
 
-  return (
-    <CalendarContextProvider
-      weekStartsOn={weekStartsOn}
-      event={event}
-      index={index}
-      setIndex={setIndex}
-      selected={selected}
-      setSelected={setSelected}
-    >
-      {children}
-    </CalendarContextProvider>
-  );
-};
+    useImperativeHandle(
+      forwardedRef,
+      () => ({
+        scrollTo: (date: Date) => {
+          event.emit({ type: 'scroll', date });
+        },
+      }),
+      [event],
+    );
+
+    return (
+      <CalendarContextProvider
+        weekStartsOn={weekStartsOn}
+        event={event}
+        index={index}
+        setIndex={setIndex}
+        selected={selected}
+        setSelected={setSelected}
+      >
+        {children}
+      </CalendarContextProvider>
+    );
+  },
+);
 
 //
 // Header
@@ -88,8 +110,7 @@ const CalendarHeader = ({ classNames }: CalendarHeaderProps) => {
   const today = useMemo(() => new Date(), []);
 
   const handleToday = useCallback(() => {
-    const index = differenceInWeeks(today, start);
-    event.emit({ type: 'scroll', index });
+    event.emit({ type: 'scroll', date: today });
   }, [event, start, today]);
 
   return (
@@ -114,12 +135,12 @@ const CalendarHeader = ({ classNames }: CalendarHeaderProps) => {
 CalendarHeader.displayName = 'CalendarHeader';
 
 //
-// Content
+// Viewport
 //
 
-type CalendarContentProps = PropsWithChildren<ThemedClassName>;
+type CalendarViewportProps = PropsWithChildren<ThemedClassName>;
 
-const CalendarContent = ({ children, classNames }: CalendarContentProps) => {
+const CalendarViewport = ({ children, classNames }: CalendarViewportProps) => {
   return (
     <div role='none' className={mx('flex flex-col grow bg-inputSurface', classNames)} style={{ width: 7 * size }}>
       {children}
@@ -127,20 +148,21 @@ const CalendarContent = ({ children, classNames }: CalendarContentProps) => {
   );
 };
 
-CalendarContent.displayName = 'CalendarContent';
+CalendarViewport.displayName = 'CalendarContent';
 
 //
 // Grid
+// TODO(burdon): Key nav.
+// TODO(burdon): Drag range.
 //
 
 type CalendarGridProps = ThemedClassName<{
   grow?: boolean;
   numRows?: number;
+  onSelect?: (event: { date: Date }) => void;
 }>;
 
-// TODO(burdon): Key nav.
-// TODO(burdon): Drag range.
-const CalendarGrid = ({ classNames, grow, numRows = 7 }: CalendarGridProps) => {
+const CalendarGrid = ({ classNames, grow, numRows = 7, onSelect }: CalendarGridProps) => {
   const { weekStartsOn, event, setIndex, selected, setSelected } = useCalendarContext(CalendarGrid.displayName);
   const { ref, height = 0 } = useResizeDetector();
   const listRef = useRef<List>(null);
@@ -155,9 +177,11 @@ const CalendarGrid = ({ classNames, grow, numRows = 7 }: CalendarGridProps) => {
   useEffect(() => {
     return event.on((event) => {
       switch (event.type) {
-        case 'scroll':
-          listRef.current?.scrollToRow(event.index);
+        case 'scroll': {
+          const index = differenceInWeeks(event.date, start);
+          listRef.current?.scrollToRow(index);
           break;
+        }
       }
     });
   }, [event]);
@@ -170,9 +194,13 @@ const CalendarGrid = ({ classNames, grow, numRows = 7 }: CalendarGridProps) => {
     });
   }, []);
 
-  const handleDaySelect = useCallback((date: Date) => {
-    setSelected((current) => (isSameDay(date, current) ? undefined : date));
-  }, []);
+  const handleDaySelect = useCallback(
+    (date: Date) => {
+      setSelected((current) => (isSameDay(date, current) ? undefined : date));
+      onSelect?.({ date });
+    },
+    [onSelect],
+  );
 
   const handleScroll = useCallback<NonNullable<ListProps['onScroll']>>((info) => {
     setIndex(Math.round(info.scrollTop / size));
@@ -260,8 +288,8 @@ CalendarGrid.displayName = 'CalendarGrid';
 export const Calendar = {
   Root: CalendarRoot,
   Header: CalendarHeader,
-  Content: CalendarContent,
+  Viewport: CalendarViewport,
   Grid: CalendarGrid,
 };
 
-export type { CalendarRootProps, CalendarHeaderProps, CalendarContentProps, CalendarGridProps };
+export type { CalendarController, CalendarRootProps, CalendarHeaderProps, CalendarViewportProps, CalendarGridProps };

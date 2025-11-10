@@ -9,7 +9,7 @@ import { StackItem } from '@dxos/react-ui-stack';
 
 import { type Outline } from '../types';
 
-import { OutlineComponent } from './Outline';
+import { Outline } from './Outline';
 
 export const OutlinerContainer = ({ object }: SurfaceComponentProps<Outline.Outline>) => {
   if (!object.content.target) {
@@ -18,7 +18,7 @@ export const OutlinerContainer = ({ object }: SurfaceComponentProps<Outline.Outl
 
   return (
     <StackItem.Content>
-      <OutlineComponent id={object.content.target.id} text={object.content.target} classNames='container-max-width' />
+      <Outline id={object.content.target.id} text={object.content.target} classNames='container-max-width' />
     </StackItem.Content>
   );
 };

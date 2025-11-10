@@ -2,19 +2,41 @@
 // Copyright 2025 DXOS.org
 //
 
-import React from 'react';
+import React, { useCallback, useRef } from 'react';
 
 import { type SurfaceComponentProps } from '@dxos/app-framework/react';
+import { Calendar, type CalendarController } from '@dxos/react-ui-calendar';
 import { StackItem } from '@dxos/react-ui-stack';
+import { mx } from '@dxos/react-ui-theme';
 
 import { type Journal } from '../types';
 
-import { JournalComponent } from './Journal';
+import { Journal as JournalComponent, type JournalProps } from './Journal';
 
-export const JournalContainer = ({ object }: SurfaceComponentProps<Journal.Journal>) => {
+export const JournalContainer = ({
+  object,
+  showCalendar = true,
+}: SurfaceComponentProps<Journal.Journal, { showCalendar?: boolean }>) => {
+  const controllerRef = useRef<CalendarController>(null);
+
+  const handleSelect = useCallback<NonNullable<JournalProps['onSelect']>>(({ date }) => {
+    controllerRef.current?.scrollTo(date);
+  }, []);
+
   return (
     <StackItem.Content>
-      <JournalComponent journal={object} classNames='container-max-width' />
+      <div className={mx('grid', showCalendar && 'bs-full grid-cols-[min-content_1fr]')}>
+        {showCalendar && (
+          <Calendar.Root ref={controllerRef}>
+            <Calendar.Viewport>
+              <Calendar.Header />
+              <Calendar.Grid grow />
+            </Calendar.Viewport>
+          </Calendar.Root>
+        )}
+
+        <JournalComponent journal={object} classNames='container-max-width' onSelect={handleSelect} />
+      </div>
     </StackItem.Content>
   );
 };

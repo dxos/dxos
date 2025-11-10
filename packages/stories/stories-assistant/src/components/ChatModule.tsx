@@ -40,7 +40,7 @@ export const ChatModule = ({ space }: ComponentProps) => {
     <StackItem.Content toolbar>
       <Chat.Root chat={chat} processor={processor}>
         <Chat.Toolbar />
-        <Chat.Content classNames='relative container-max-width'>
+        <Chat.Viewport classNames='relative container-max-width'>
           <Toolbar.Root classNames='border-b border-subduedSeparator'>
             <div className='pli-1 grow truncate text-subdued'>{chat?.name}</div>
             <Popover.Root>
@@ -60,7 +60,7 @@ export const ChatModule = ({ space }: ComponentProps) => {
           <div role='none' className='p-4'>
             <Chat.Prompt {...chatProps} outline preset={preset?.id} online={online} onOnlineChange={setOnline} />
           </div>
-        </Chat.Content>
+        </Chat.Viewport>
       </Chat.Root>
     </StackItem.Content>
   );

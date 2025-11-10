@@ -140,12 +140,12 @@ const ChatRoot = ({ children, chat, processor, onEvent, ...props }: ChatRootProp
 ChatRoot.displayName = 'Chat.Root';
 
 //
-// Content
+// Viewport
 //
 
-type ChatContentProps = ThemedClassName<PropsWithChildren>;
+type ChatViewportProps = ThemedClassName<PropsWithChildren>;
 
-const ChatContent = ({ classNames, children }: ChatContentProps) => {
+const ChatViewport = ({ classNames, children }: ChatViewportProps) => {
   return (
     <div role='none' className={mx('flex flex-col bs-full is-full', classNames)}>
       {children}
@@ -441,10 +441,10 @@ ChatToolbar.displayName = 'Chat.Toolbar';
 
 export const Chat = {
   Root: ChatRoot,
-  Content: ChatContent,
+  Viewport: ChatViewport,
   Prompt: ChatPrompt,
   Thread: ChatThread,
   Toolbar: ChatToolbar,
 };
 
-export type { ChatRootProps, ChatContentProps, ChatThreadProps, ChatPromptProps, ChatToolbarProps, ChatEvent };
+export type { ChatRootProps, ChatViewportProps, ChatThreadProps, ChatPromptProps, ChatToolbarProps, ChatEvent };
