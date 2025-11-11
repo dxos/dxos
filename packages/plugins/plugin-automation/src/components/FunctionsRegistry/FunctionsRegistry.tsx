@@ -19,7 +19,7 @@ import { controlItemClasses } from '@dxos/react-ui-form';
 import { List } from '@dxos/react-ui-list';
 import { ghostHover, mx } from '@dxos/react-ui-theme';
 
-import { Obj } from '../../../../../core/echo/echo/src';
+import { Obj } from '@dxos/echo';
 import { meta } from '../../meta';
 
 const grid = 'grid grid-cols-[1fr_1fr_auto] min-bs-[2.5rem]';
