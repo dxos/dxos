@@ -12,7 +12,7 @@ import React, { useCallback } from 'react';
 import { Function } from '@dxos/functions';
 import { getDeployedFunctions } from '@dxos/functions-runtime/edge';
 import { useClient } from '@dxos/react-client';
-import { Filter, type Space, useQuery } from '@dxos/react-client/echo';
+import { Filter, type Space, Query, useQuery } from '@dxos/react-client/echo';
 import { useAsyncEffect } from '@dxos/react-ui';
 import { IconButton, useTranslation } from '@dxos/react-ui';
 import { controlItemClasses } from '@dxos/react-ui-form';
@@ -20,6 +20,7 @@ import { List } from '@dxos/react-ui-list';
 import { ghostHover, mx } from '@dxos/react-ui-theme';
 
 import { meta } from '../../meta';
+import { Obj } from '../../../../../core/echo/echo/src';
 
 const grid = 'grid grid-cols-[1fr_1fr_auto] min-bs-[2.5rem]';
 
@@ -35,8 +36,16 @@ export const FunctionsRegistry = ({ space }: FunctionsRegistryProps) => {
 
   const dbFunctions = useQuery(space, Filter.type(Function.Function));
 
-  const isImported = (func: Function.Function) =>
-    dbFunctions.some((f) => f.key === func.key && func.version === f.version && func.updated === f.updated);
+  const state = (func: Function.Function) => {
+    const dbFunction = dbFunctions.find((f) => f.key === func.key);
+    if (!dbFunction) {
+      return 'import';
+    }
+    if (dbFunction.version === func.version && dbFunction.updated === func.updated) {
+      return 'none';
+    }
+    return 'update';
+  };
 
   useAsyncEffect(async () => {
     setLoading(true);
@@ -53,9 +62,23 @@ export const FunctionsRegistry = ({ space }: FunctionsRegistryProps) => {
     Array.sort(Order.mapInput(Order.string, (_: Function.Function) => _.key ?? '')),
   );
 
-  const hanleImport = useCallback(
-    (func: Function.Function) => {
-      space.db.add(func);
+  const hanleImportOrUpdate = useCallback(
+    async (func: Function.Function) => {
+      const {
+        objects: [existingFunc],
+      } = await space.db.query(Query.type(Function.Function, { key: func.key })).run();
+      if (!existingFunc) {
+        space.db.add(func);
+        return;
+      }
+      existingFunc.version = func.version;
+      existingFunc.updated = func.updated;
+      existingFunc.name = func.name;
+      existingFunc.description = func.description;
+      // TODO(dmaretskyi): A workaround for an ECHO bug.
+      existingFunc.inputSchema = JSON.parse(JSON.stringify(func.inputSchema));
+      existingFunc.outputSchema = JSON.parse(JSON.stringify(func.outputSchema));
+      Obj.getMeta(existingFunc).keys = JSON.parse(JSON.stringify(Obj.getMeta(func).keys));
     },
     [space],
   );
@@ -89,10 +112,12 @@ export const FunctionsRegistry = ({ space }: FunctionsRegistryProps) => {
 
                   <IconButton
                     iconOnly
-                    icon='ph--download--regular'
-                    label={t('delete function button label')}
-                    disabled={isImported(func)}
-                    onClick={() => hanleImport(func)}
+                    icon={state(func) === 'update' ? 'ph--arrows-clockwise--regular' : 'ph--download--regular'}
+                    label={
+                      state(func) === 'update' ? t('update function button label') : t('import function button label')
+                    }
+                    disabled={state(func) === 'none'}
+                    onClick={() => hanleImportOrUpdate(func)}
                   />
                 </List.Item>
               ))}
