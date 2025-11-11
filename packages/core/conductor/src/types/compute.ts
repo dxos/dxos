@@ -101,7 +101,7 @@ export const ValueBag = Object.freeze({
  */
 export type ComputeFunction<I extends ValueRecord, O extends ValueRecord> = (
   input: ValueBag<I>,
-  node?: ComputeNode, // TODO(burdon): Why could node be undefined?
+  node?: ComputeNode, // TODO(burdon): Undefined?
 ) => ComputeEffect<ValueBag<O>>;
 
 export type ComputeRequirements = Services | Scope.Scope;
@@ -114,7 +114,6 @@ export type ComputeEffect<T> = Effect.Effect<T, ConductorError, ComputeRequireme
 /**
  * Lifts a compute function that takes all inputs together and returns all outputs together.
  */
-// TODO(burdon): Why could node be undefined?
 // TODO(dmaretskyi): output schema needs to be passed in in-case the node does not execute to know the output property names to propagate not-executed marker further.
 export const synchronizedComputeFunction =
   <I extends ValueRecord, O extends ValueRecord>(
@@ -129,12 +128,13 @@ export const synchronizedComputeFunction =
 
 // TODO(dmaretskyi): To effect schema.
 export type ComputeMeta = {
+  type: string;
   input: Schema.Schema.AnyNoContext;
   output: Schema.Schema.AnyNoContext;
 };
 
 /**
- *
+ * Executable node.
  */
 export type Executable<
   SI extends Schema.Schema.AnyNoContext = Schema.Schema.AnyNoContext,
@@ -146,15 +146,19 @@ export type Executable<
   exec?: ComputeFunction<Schema.Schema.Type<SI>, Schema.Schema.Type<SO>>;
 };
 
+export type NodeDef<SI extends Schema.Schema.AnyNoContext, SO extends Schema.Schema.AnyNoContext> = {
+  type: string;
+  input: SI;
+  output: SO;
+  exec?: ComputeFunction<Schema.Schema.Type<SI>, Schema.Schema.Type<SO>>;
+};
+
 /**
  * Type-safe constructor for function definition.
  */
 export const defineComputeNode = <SI extends Schema.Schema.AnyNoContext, SO extends Schema.Schema.AnyNoContext>({
+  type,
   input,
   output,
   exec,
-}: {
-  input: SI;
-  output: SO;
-  exec?: ComputeFunction<Schema.Schema.Type<SI>, Schema.Schema.Type<SO>>;
-}): Executable => ({ meta: { input, output }, exec });
+}: NodeDef<SI, SO>): Executable<SI, SO> => ({ meta: { type, input, output }, exec });
