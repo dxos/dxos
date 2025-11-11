@@ -12,15 +12,15 @@ import React, { useCallback } from 'react';
 import { Function } from '@dxos/functions';
 import { getDeployedFunctions } from '@dxos/functions-runtime/edge';
 import { useClient } from '@dxos/react-client';
-import { Filter, type Space, Query, useQuery } from '@dxos/react-client/echo';
+import { Filter, Query, type Space, useQuery } from '@dxos/react-client/echo';
 import { useAsyncEffect } from '@dxos/react-ui';
 import { IconButton, useTranslation } from '@dxos/react-ui';
 import { controlItemClasses } from '@dxos/react-ui-form';
 import { List } from '@dxos/react-ui-list';
 import { ghostHover, mx } from '@dxos/react-ui-theme';
 
-import { meta } from '../../meta';
 import { Obj } from '../../../../../core/echo/echo/src';
+import { meta } from '../../meta';
 
 const grid = 'grid grid-cols-[1fr_1fr_auto] min-bs-[2.5rem]';
 
