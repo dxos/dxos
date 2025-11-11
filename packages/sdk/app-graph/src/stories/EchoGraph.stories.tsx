@@ -30,9 +30,9 @@ import { getSize, mx } from '@dxos/react-ui-theme';
 import { byPosition, isNonNullable, safeParseInt } from '@dxos/util';
 
 import { type ExpandableGraph, ROOT_ID } from '../graph';
-import { GraphBuilder, createExtension, rxFromObservable, rxFromSignal } from '../graph-builder';
+import { GraphBuilder, atomFromObservable, createExtension } from '../graph-builder';
 import { type Node } from '../node';
-import { rxFromQuery } from '../testing';
+import { atomFromQuery } from '../testing';
 
 import { JsonTree } from './Tree';
 
@@ -65,14 +65,14 @@ const createGraph = (client: Client, registry: Registry.Registry): ExpandableGra
           get(node),
           Option.flatMap((node) => (node.id === ROOT_ID ? Option.some(node) : Option.none())),
           Option.map(() => {
-            const spaces = get(rxFromObservable(client.spaces)) ?? [];
+            const spaces = get(atomFromObservable(client.spaces)) ?? [];
             return spaces
-              .filter((space) => get(rxFromObservable(space.state)) === SpaceState.SPACE_READY)
+              .filter((space) => get(atomFromObservable(space.state)) === SpaceState.SPACE_READY)
               .map((space) => ({
                 id: space.id,
                 type: 'dxos.org/type/Space',
                 properties: {
-                  label: get(rxFromSignal(() => space.properties.name)),
+                  label: get(atomFromObservable(space.properties.name)),
                 },
                 data: space,
               }));
@@ -94,7 +94,7 @@ const createGraph = (client: Client, registry: Registry.Registry): ExpandableGra
             if (!query) {
               query = space.db.query(Query.type(Expando, { type: 'test' }));
             }
-            const objects = get(rxFromQuery(query));
+            const objects = get(atomFromQuery(query));
             return objects.map((object) => ({
               id: object.id,
               type: 'dxos.org/type/test',

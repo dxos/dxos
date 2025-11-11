@@ -13,7 +13,7 @@ import { type ExpandableGraph, GraphBuilder, ROOT_ID, flattenExtensions } from '
 // const KEY = `${meta.id}/app-graph`;
 
 export default async (context: PluginContext) => {
-  const registry = context.getCapability(Capabilities.RxRegistry);
+  const registry = context.getCapability(Capabilities.AtomRegistry);
   const builder = GraphBuilder.from(/* localStorage.getItem(KEY) ?? */ undefined, registry);
   // const interval = setInterval(() => {
   //   localStorage.setItem(KEY, builder.graph.pickle());
