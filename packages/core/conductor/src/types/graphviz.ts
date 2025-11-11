@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import type { ComputeEdge, ComputeGraph } from './graph';
+import type { ComputeEdge, ComputeGraph } from './compute-graph';
 
 export const computeGraphToGraphViz = (graph: ComputeGraph): string => {
   const lines: string[] = [];
