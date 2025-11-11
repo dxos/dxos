@@ -116,6 +116,6 @@ export class ServiceContainer {
       this._services.functionCallService ?? RemoteFunctionExecutionService.mock(),
     );
 
-    return Layer.mergeAll(ai, credentials, database, queues, tracing, eventLogger, functionCallService);
+    return Layer.mergeAll(ai, credentials, database, queues, tracing, eventLogger, functionCallService) as any;
   }
 }

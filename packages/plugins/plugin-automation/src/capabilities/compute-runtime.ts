@@ -15,6 +15,7 @@ import { CredentialsService, DatabaseService, QueueService } from '@dxos/functio
 import {
   FunctionImplementationResolver,
   FunctionInvocationServiceLayer,
+  FunctionInvocationServiceLayerWithLocalLoopbackExecutor,
   InvocationTracer,
   LocalFunctionExecutionService,
   RemoteFunctionExecutionService,
@@ -84,23 +85,19 @@ class ComputeRuntimeProviderImpl extends Resource implements AutomationCapabilit
           ),
           Layer.provideMerge(
             Layer.mergeAll(
-              FunctionInvocationServiceLayer.pipe(
+              FunctionInvocationServiceLayerWithLocalLoopbackExecutor.pipe(
+                Layer.provideMerge(FunctionImplementationResolver.layerTest({ functions })),
                 Layer.provideMerge(
-                  LocalFunctionExecutionService.layerLive.pipe(
-                    Layer.provideMerge(FunctionImplementationResolver.layerTest({ functions })),
-                    Layer.provideMerge(
-                      RemoteFunctionExecutionService.fromClient(
-                        client,
-                        // If agent is not enabled do not provide spaceId because space context will be unavailable on EDGE.
-                        client.config.get('runtime.client.edgeFeatures.agents') ? spaceId : undefined,
-                      ),
-                    ),
-                    Layer.provideMerge(serviceLayer),
-                    Layer.provideMerge(CredentialsService.layerFromDatabase()),
-                    Layer.provideMerge(space ? DatabaseService.layer(space.db) : DatabaseService.notAvailable),
-                    Layer.provideMerge(space ? QueueService.layer(space.queues) : QueueService.notAvailable),
+                  RemoteFunctionExecutionService.fromClient(
+                    client,
+                    // If agent is not enabled do not provide spaceId because space context will be unavailable on EDGE.
+                    client.config.get('runtime.client.edgeFeatures.agents') ? spaceId : undefined,
                   ),
                 ),
+                Layer.provideMerge(serviceLayer),
+                Layer.provideMerge(CredentialsService.layerFromDatabase()),
+                Layer.provideMerge(space ? DatabaseService.layer(space.db) : DatabaseService.notAvailable),
+                Layer.provideMerge(space ? QueueService.layer(space.queues) : QueueService.notAvailable),
               ),
             ),
           ),

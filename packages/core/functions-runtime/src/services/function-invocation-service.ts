@@ -42,6 +42,29 @@ export const FunctionInvocationServiceLayer = Layer.effect(
   }),
 );
 
+/**
+ * Initializes FunctionInvocationServiceLayer with a loopback executor to run functions locally.
+ */
+export const FunctionInvocationServiceLayerWithLocalLoopbackExecutor = Layer.effect(
+  FunctionInvocationService,
+  Effect.gen(function* () {
+    const functionInvocationService: Context.Tag.Service<FunctionInvocationService> =
+      yield* FunctionInvocationService.pipe(
+        Effect.provide(
+          FunctionInvocationServiceLayer.pipe(
+            Layer.provide(LocalFunctionExecutionService.layerLive),
+            Layer.provide(
+              Layer.succeed(FunctionInvocationService, {
+                invokeFunction: (...args) => functionInvocationService.invokeFunction(...args),
+              }),
+            ),
+          ),
+        ),
+      );
+    return functionInvocationService;
+  }),
+);
+
 // TODO(dmaretskyi): Don't provide `FunctionImplementationResolver`.
 /**
  * Layer for testing with optional function implementations.
@@ -55,8 +78,7 @@ export const FunctionInvocationServiceLayerTest = ({
   never,
   AiService.AiService | CredentialsService | DatabaseService | QueueService
 > =>
-  FunctionInvocationServiceLayer.pipe(
-    Layer.provide(LocalFunctionExecutionService.layerLive),
+  FunctionInvocationServiceLayerWithLocalLoopbackExecutor.pipe(
     Layer.provide(FunctionImplementationResolver.layerTest({ functions })),
     Layer.provide(RemoteFunctionExecutionService.layerMock),
   );
