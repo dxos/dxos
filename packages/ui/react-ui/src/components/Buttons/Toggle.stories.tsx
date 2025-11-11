@@ -8,11 +8,9 @@ import React from 'react';
 import { withTheme } from '../../testing';
 import { Icon } from '../Icon';
 
-import { Toggle } from './Toggle';
+import { Toggle, type ToggleProps } from './Toggle';
 
-type StorybookToggleProps = {};
-
-const DefaultStory = (props: StorybookToggleProps) => {
+const DefaultStory = (props: ToggleProps) => {
   return (
     <Toggle {...props}>
       <Icon icon='ph--text-b--regular' />
@@ -25,6 +23,9 @@ const meta = {
   component: Toggle,
   render: DefaultStory,
   decorators: [withTheme],
+  parameters: {
+    layout: 'centered',
+  },
 } satisfies Meta<typeof Toggle>;
 
 export default meta;

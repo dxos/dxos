@@ -3,5 +3,5 @@
 //
 
 export * from './withLayout';
-export * from './withSurfaceVariantsLayout';
+export * from './withLayoutVariants';
 export * from './withTheme';

@@ -11,7 +11,7 @@ import { type Type } from '@dxos/echo';
 import { type BaseObject, Expando, Format, Ref, type TypeAnnotation, getObjectDXN } from '@dxos/echo/internal';
 import { live } from '@dxos/echo/internal';
 import { Tooltip } from '@dxos/react-ui';
-import { withSurfaceVariantsLayout, withTheme } from '@dxos/react-ui/testing';
+import { withLayoutVariants, withTheme } from '@dxos/react-ui/testing';
 import { Testing } from '@dxos/schema/testing';
 
 import { translations } from '../../translations';
@@ -88,7 +88,7 @@ const meta = {
   title: 'ui/react-ui-form/Form',
   component: Form as any,
   render: DefaultStory,
-  decorators: [withTheme, withSurfaceVariantsLayout()],
+  decorators: [withTheme, withLayoutVariants()],
   parameters: {
     layout: 'fullscreen',
     translations,
