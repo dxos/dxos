@@ -291,9 +291,9 @@ CalendarGrid.displayName = 'CalendarGrid';
 
 export const Calendar = {
   Root: CalendarRoot,
-  Header: CalendarHeader,
   Viewport: CalendarViewport,
+  Header: CalendarHeader,
   Grid: CalendarGrid,
 };
 
-export type { CalendarController, CalendarRootProps, CalendarHeaderProps, CalendarViewportProps, CalendarGridProps };
+export type { CalendarController, CalendarRootProps, CalendarViewportProps, CalendarHeaderProps, CalendarGridProps };
