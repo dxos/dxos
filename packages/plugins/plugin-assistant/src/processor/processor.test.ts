@@ -13,14 +13,8 @@ import { AiService } from '@dxos/ai';
 import { AiServiceTestingPreset } from '@dxos/ai/testing';
 import { AiConversation, makeToolExecutionServiceFromFunctions, makeToolResolverFromFunctions } from '@dxos/assistant';
 import { TestHelpers, acquireReleaseResource } from '@dxos/effect';
-import {
-  ComputeEventLogger,
-  CredentialsService,
-  FunctionInvocationService,
-  QueueService,
-  TracingService,
-} from '@dxos/functions';
-import { TestDatabaseLayer } from '@dxos/functions/testing';
+import { CredentialsService, QueueService, TracingService } from '@dxos/functions';
+import { FunctionInvocationServiceLayerTestMocked, TestDatabaseLayer } from '@dxos/functions-runtime/testing';
 import { type Message } from '@dxos/types';
 
 import { AiChatProcessor, type AiChatServices } from './processor';
@@ -45,10 +39,7 @@ const TestServicesLayer = Layer.mergeAll(
     // types: [],
   }),
   // CredentialsService.configuredLayer([{ service: 'exa.ai', apiKey: EXA_API_KEY }]),
-  FunctionInvocationService.layerTestMocked({ functions: [] }).pipe(
-    Layer.provideMerge(ComputeEventLogger.layerFromTracing),
-    Layer.provideMerge(TracingService.layerNoop),
-  ),
+  FunctionInvocationServiceLayerTestMocked({ functions: [] }).pipe(Layer.provideMerge(TracingService.layerNoop)),
 );
 
 const TestLayer: Layer.Layer<AiChatServices, never, never> = Layer.mergeAll(
@@ -56,7 +47,6 @@ const TestLayer: Layer.Layer<AiChatServices, never, never> = Layer.mergeAll(
   makeToolResolverFromFunctions([], toolkit),
   makeToolExecutionServiceFromFunctions(toolkit, toolkit.toLayer({}) as any),
   CredentialsService.layerFromDatabase(),
-  ComputeEventLogger.layerFromTracing,
 ).pipe(Layer.provideMerge(TestServicesLayer), Layer.orDie);
 
 // TODO(burdon): Create actual test with mock LLM.

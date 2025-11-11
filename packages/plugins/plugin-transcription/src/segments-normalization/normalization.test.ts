@@ -10,7 +10,7 @@ import { Context } from '@dxos/context';
 import { Obj } from '@dxos/echo';
 import { createQueueDXN } from '@dxos/echo/internal';
 import { MemoryQueue } from '@dxos/echo-db';
-import { FunctionExecutor, ServiceContainer } from '@dxos/functions';
+import { FunctionExecutor, ServiceContainer } from '@dxos/functions-runtime';
 import { log } from '@dxos/log';
 import { type Actor, Message } from '@dxos/types';
 

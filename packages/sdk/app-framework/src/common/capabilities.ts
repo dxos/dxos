@@ -40,7 +40,7 @@ export namespace Capabilities {
   /**
    * @category Capability
    */
-  export const RxRegistry = defineCapability<Registry.Registry>('dxos.org/app-framework/capability/atom-registry');
+  export const AtomRegistry = defineCapability<Registry.Registry>('dxos.org/app-framework/capability/atom-registry');
 
   export type ReactContext = Readonly<{
     id: string;

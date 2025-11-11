@@ -341,9 +341,9 @@ export class Client {
    * Required before using the Client instance.
    */
   @synchronized
-  async initialize(): Promise<void> {
+  async initialize(): Promise<Client> {
     if (this._initialized) {
-      return;
+      return this;
     }
 
     log.trace('dxos.sdk.client.open', Trace.begin({ id: this._instanceId }));
@@ -368,6 +368,7 @@ export class Client {
 
     this._initialized = true;
     log.trace('dxos.sdk.client.open', Trace.end({ id: this._instanceId }));
+    return this;
   }
 
   private async _open(): Promise<void> {
@@ -495,6 +496,10 @@ export class Client {
     await this._ctx.dispose();
 
     this._initialized = false;
+  }
+
+  async [Symbol.asyncDispose]() {
+    await this.destroy();
   }
 
   private async _close(): Promise<void> {

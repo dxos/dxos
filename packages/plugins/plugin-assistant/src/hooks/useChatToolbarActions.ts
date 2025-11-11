@@ -29,7 +29,7 @@ export const useChatToolbarActions = ({ chat, companionTo }: ChatToolbarActionsP
     ? Query.select(Filter.ids(companionTo.id)).targetOf(Assistant.CompanionTo).source()
     : Query.select(Filter.nothing());
 
-  // TODO(wittjosiah): Query in react vs query in rx?
+  // TODO(wittjosiah): Query in react vs query in atom?
   const chats = useQuery(space, query);
 
   // Create stable reference for dependency array to avoid circular reference issues.

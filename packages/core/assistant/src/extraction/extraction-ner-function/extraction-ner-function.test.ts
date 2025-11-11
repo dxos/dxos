@@ -6,7 +6,7 @@ import { beforeAll, describe, test } from 'vitest';
 
 import { type EchoDatabase } from '@dxos/echo-db';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
-import { FunctionExecutor, ServiceContainer } from '@dxos/functions';
+import { FunctionExecutor, ServiceContainer } from '@dxos/functions-runtime';
 import { log } from '@dxos/log';
 import { Testing } from '@dxos/schema/testing';
 import { type Message, Organization, Person } from '@dxos/types';

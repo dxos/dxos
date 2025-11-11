@@ -18,14 +18,8 @@ import {
 import { Blueprint } from '@dxos/blueprints';
 import { Obj, Ref } from '@dxos/echo';
 import { TestHelpers, acquireReleaseResource } from '@dxos/effect';
-import {
-  ComputeEventLogger,
-  DatabaseService,
-  FunctionInvocationService,
-  QueueService,
-  TracingService,
-} from '@dxos/functions';
-import { TestDatabaseLayer } from '@dxos/functions/testing';
+import { DatabaseService, QueueService, TracingService } from '@dxos/functions';
+import { FunctionInvocationServiceLayerTestMocked, TestDatabaseLayer } from '@dxos/functions-runtime/testing';
 import { log } from '@dxos/log';
 import { Markdown } from '@dxos/plugin-markdown/types';
 import { Text } from '@dxos/schema';
@@ -96,13 +90,13 @@ describe('Design Blueprint', { timeout: 120_000 }, () => {
           Layer.provideMerge(TestDatabaseLayer({ types: [Text.Text, Markdown.Document, Blueprint.Blueprint] })),
           Layer.provideMerge(AiServiceTestingPreset('direct')),
           Layer.provideMerge(
-            FunctionInvocationService.layerTestMocked({ functions: [Document.read, Document.update] }).pipe(
-              Layer.provideMerge(ComputeEventLogger.layerFromTracing),
+            FunctionInvocationServiceLayerTestMocked({ functions: [Document.read, Document.update] }).pipe(
               Layer.provideMerge(TracingService.layerNoop),
             ),
           ),
         ),
       ),
+      TestHelpers.provideTestContext,
       TestHelpers.taggedTest('llm'),
     ),
   );

@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-export { rxFromSignal } from '@dxos/app-graph';
+export { atomFromSignal } from '@dxos/app-graph';
 
 export * from './components';
 export * from './hooks';

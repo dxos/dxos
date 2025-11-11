@@ -9,7 +9,7 @@ import React, { useMemo, useRef } from 'react';
 import { withTheme } from '@dxos/react-ui/testing';
 import { withAttention } from '@dxos/react-ui-attention/testing';
 
-import { EditorMenuProvider, type EditorMenuGroup } from '../components';
+import { type EditorMenuGroup, EditorMenuProvider } from '../components';
 import { deleteItem, hashtag, listItemToString, outliner, treeFacet } from '../extensions';
 import { str } from '../testing';
 

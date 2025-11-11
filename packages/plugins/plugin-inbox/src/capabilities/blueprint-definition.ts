@@ -7,22 +7,25 @@ import { Blueprint, Template } from '@dxos/blueprints';
 import { type FunctionDefinition } from '@dxos/functions';
 import { trim } from '@dxos/util';
 
-import { open, summarize, sync } from '../functions';
+import { calendar, email, open, summarize } from '../functions';
 
-export const ASSISTANT_BLUEPRINT_KEY = 'dxos.org/blueprint/inbox';
+export const INBOX_BLUEPRINT_KEY = 'dxos.org/blueprint/inbox';
+export const CALENDAR_BLUEPRINT_KEY = 'dxos.org/blueprint/calendar';
 
-const functions: FunctionDefinition[] = [open, summarize, sync];
+const inboxFunctions: FunctionDefinition[] = [open, summarize, email.sync];
+const calendarFunctions: FunctionDefinition[] = [calendar.sync];
 const tools: string[] = [];
 
 export default () => {
   return [
-    contributes(Capabilities.Functions, functions),
+    contributes(Capabilities.Functions, inboxFunctions),
+    contributes(Capabilities.Functions, calendarFunctions),
     contributes(
       Capabilities.BlueprintDefinition,
       Blueprint.make({
-        key: ASSISTANT_BLUEPRINT_KEY,
+        key: INBOX_BLUEPRINT_KEY,
         name: 'Inbox',
-        tools: Blueprint.toolDefinitions({ functions, tools }),
+        tools: Blueprint.toolDefinitions({ functions: inboxFunctions, tools }),
         instructions: Template.make({
           source: trim`
             You manage my email inbox.
@@ -31,7 +34,7 @@ export default () => {
             - Format the summary as a markdown document without extra comments like "Here is the summary of the mailbox:".
             - Use markdown formatting for headings and bullet points.
             - Format the summary as a list of key points and takeaways.
-            
+
             # References
             - Use references to objects in the form of:
             @dxn:queue:data:B6INSIBY3CBEF4M5VZRYBCMAHQMPYK5AJ:01K24XMVHSZHS97SG1VTVQDM5Z:01K24XPK464FSCKVQJAB2H662M
@@ -50,6 +53,19 @@ export default () => {
 
             Additional information can be included (indented).
           `,
+        }),
+      }),
+    ),
+    contributes(
+      Capabilities.BlueprintDefinition,
+      Blueprint.make({
+        key: CALENDAR_BLUEPRINT_KEY,
+        name: 'Calendar',
+        tools: Blueprint.toolDefinitions({ functions: calendarFunctions, tools }),
+        instructions: Template.make({
+          source: trim`
+              You manage my calendar.
+            `,
         }),
       }),
     ),

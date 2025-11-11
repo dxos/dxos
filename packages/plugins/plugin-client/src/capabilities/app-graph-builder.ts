@@ -8,7 +8,7 @@ import * as Option from 'effect/Option';
 
 import { createIntent } from '@dxos/app-framework';
 import { Capabilities, type PluginContext, contributes } from '@dxos/app-framework';
-import { ROOT_ID, createExtension, rxFromObservable } from '@dxos/plugin-graph';
+import { ROOT_ID, atomFromObservable, createExtension } from '@dxos/plugin-graph';
 import { ConnectionState } from '@dxos/react-client/mesh';
 
 import { meta } from '../meta';
@@ -58,8 +58,8 @@ export default (context: PluginContext) =>
             Option.flatMap((node) => (node.id === ROOT_ID ? Option.some(node) : Option.none())),
             Option.map(() => {
               const client = context.getCapability(ClientCapabilities.Client);
-              const identity = get(rxFromObservable(client.halo.identity));
-              const status = get(rxFromObservable(client.mesh.networkStatus));
+              const identity = get(atomFromObservable(client.halo.identity));
+              const status = get(atomFromObservable(client.mesh.networkStatus));
 
               return [
                 {

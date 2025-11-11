@@ -9,7 +9,7 @@ import { isArrayType } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
-import { type ComputeGraphModel, type ComputeMeta, type ComputeNode } from '../types';
+import { type ComputeGraphModel, type ComputeNode, type ComputeNodeMeta } from '../types';
 import { pickProperty } from '../util';
 
 /**
@@ -74,7 +74,7 @@ type TopologyNodeOutput = {
 export type TopologyNode = {
   id: string;
   graphNode: ComputeNode; // TODO(burdon): Rename computeNode.
-  meta: ComputeMeta;
+  meta: ComputeNodeMeta;
   inputs: TopologyNodeInput[];
   outputs: TopologyNodeOutput[];
 };
@@ -89,7 +89,7 @@ export type GraphDiagnostic = {
 
 export type CreateTopologyParams = {
   graph: ComputeGraphModel;
-  computeMetaResolver: (node: ComputeNode) => Promise<ComputeMeta>;
+  computeMetaResolver: (node: ComputeNode) => Promise<ComputeNodeMeta>;
 };
 
 /**

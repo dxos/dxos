@@ -2163,6 +2163,9 @@ importers:
       '@dxos/functions':
         specifier: workspace:*
         version: link:../functions
+      '@dxos/functions-runtime':
+        specifier: workspace:*
+        version: link:../functions-runtime
       '@dxos/graph':
         specifier: workspace:*
         version: link:../../common/graph
@@ -2257,6 +2260,9 @@ importers:
       '@dxos/functions':
         specifier: workspace:*
         version: link:../functions
+      '@dxos/functions-runtime':
+        specifier: workspace:*
+        version: link:../functions-runtime
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
@@ -2366,6 +2372,9 @@ importers:
       '@dxos/functions':
         specifier: workspace:*
         version: link:../functions
+      '@dxos/functions-runtime':
+        specifier: workspace:*
+        version: link:../functions-runtime
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
@@ -2451,6 +2460,9 @@ importers:
       '@dxos/functions':
         specifier: workspace:*
         version: link:../functions
+      '@dxos/functions-runtime':
+        specifier: workspace:*
+        version: link:../functions-runtime
       '@dxos/graph':
         specifier: workspace:*
         version: link:../../common/graph
@@ -3015,6 +3027,45 @@ importers:
       '@dxos/ai':
         specifier: workspace:*
         version: link:../ai
+      '@dxos/echo':
+        specifier: workspace:*
+        version: link:../echo/echo
+      '@dxos/echo-db':
+        specifier: workspace:*
+        version: link:../echo/echo-db
+      '@dxos/errors':
+        specifier: workspace:*
+        version: link:../../common/errors
+      '@dxos/invariant':
+        specifier: workspace:*
+        version: link:../../common/invariant
+      '@dxos/keys':
+        specifier: workspace:*
+        version: link:../../common/keys
+      '@dxos/log':
+        specifier: workspace:*
+        version: link:../../common/log
+      '@dxos/node-std':
+        specifier: workspace:*
+        version: link:../../common/node-std
+      '@dxos/schema':
+        specifier: workspace:*
+        version: link:../../sdk/schema
+      '@dxos/types':
+        specifier: workspace:*
+        version: link:../../sdk/types
+      '@effect/platform':
+        specifier: 0.92.1
+        version: 0.92.1(effect@3.18.3)
+      effect:
+        specifier: 3.18.3
+        version: 3.18.3
+
+  packages/core/functions-runtime:
+    dependencies:
+      '@dxos/ai':
+        specifier: workspace:*
+        version: link:../ai
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
@@ -3054,6 +3105,9 @@ importers:
       '@dxos/errors':
         specifier: workspace:*
         version: link:../../common/errors
+      '@dxos/functions':
+        specifier: workspace:*
+        version: link:../functions
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
@@ -3078,9 +3132,6 @@ importers:
       '@dxos/schema':
         specifier: workspace:*
         version: link:../../sdk/schema
-      '@dxos/types':
-        specifier: workspace:*
-        version: link:../../sdk/types
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
@@ -3090,6 +3141,9 @@ importers:
       effect:
         specifier: 3.18.3
         version: 3.18.3
+      esbuild:
+        specifier: 0.25.10
+        version: 0.25.10
       esbuild-wasm:
         specifier: ^0.16.14
         version: 0.16.17
@@ -3099,6 +3153,10 @@ importers:
       iso-did:
         specifier: ^1.6.0
         version: 1.6.0
+    devDependencies:
+      '@dxos/types':
+        specifier: workspace:*
+        version: link:../../sdk/types
 
   packages/core/halo/credentials:
     dependencies:
@@ -3710,6 +3768,9 @@ importers:
       '@dxos/functions':
         specifier: workspace:*
         version: link:../../core/functions
+      '@dxos/functions-runtime':
+        specifier: workspace:*
+        version: link:../../core/functions-runtime
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
@@ -4063,6 +4124,9 @@ importers:
       '@dxos/functions':
         specifier: workspace:*
         version: link:../../core/functions
+      '@dxos/functions-runtime':
+        specifier: workspace:*
+        version: link:../../core/functions-runtime
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
@@ -4250,6 +4314,9 @@ importers:
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
+      '@dxos/echo-db':
+        specifier: workspace:*
+        version: link:../../core/echo/echo-db
       '@dxos/edge-client':
         specifier: workspace:*
         version: link:../../core/mesh/edge-client
@@ -4262,6 +4329,9 @@ importers:
       '@dxos/functions':
         specifier: workspace:*
         version: link:../../core/functions
+      '@dxos/functions-runtime':
+        specifier: workspace:*
+        version: link:../../core/functions-runtime
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
@@ -4390,6 +4460,9 @@ importers:
       '@dxos/functions':
         specifier: workspace:*
         version: link:../../core/functions
+      '@dxos/functions-runtime':
+        specifier: workspace:*
+        version: link:../../core/functions-runtime
       '@dxos/graph':
         specifier: workspace:*
         version: link:../../common/graph
@@ -5237,6 +5310,9 @@ importers:
       '@dxos/functions':
         specifier: workspace:*
         version: link:../../core/functions
+      '@dxos/functions-runtime':
+        specifier: workspace:*
+        version: link:../../core/functions-runtime
       '@dxos/graph':
         specifier: workspace:*
         version: link:../../common/graph
@@ -5509,6 +5585,9 @@ importers:
       '@dxos/functions':
         specifier: workspace:*
         version: link:../../core/functions
+      '@dxos/functions-runtime':
+        specifier: workspace:*
+        version: link:../../core/functions-runtime
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
@@ -5957,6 +6036,9 @@ importers:
       '@dxos/functions':
         specifier: workspace:*
         version: link:../../core/functions
+      '@dxos/functions-runtime':
+        specifier: workspace:*
+        version: link:../../core/functions-runtime
       '@dxos/live-object':
         specifier: workspace:*
         version: link:../../core/echo/live-object
@@ -6895,6 +6977,9 @@ importers:
       '@dxos/functions':
         specifier: workspace:*
         version: link:../../core/functions
+      '@dxos/functions-runtime':
+        specifier: workspace:*
+        version: link:../../core/functions-runtime
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
@@ -7001,6 +7086,9 @@ importers:
         specifier: ^7.2.1
         version: 7.2.1
     devDependencies:
+      '@dxos/config':
+        specifier: workspace:*
+        version: link:../../sdk/config
       '@dxos/plugin-storybook-layout':
         specifier: workspace:*
         version: link:../plugin-storybook-layout
@@ -7324,6 +7412,9 @@ importers:
       '@dxos/functions':
         specifier: workspace:*
         version: link:../../core/functions
+      '@dxos/functions-runtime':
+        specifier: workspace:*
+        version: link:../../core/functions-runtime
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
@@ -7406,7 +7497,7 @@ importers:
         specifier: ^1.12.1
         version: 1.12.1
       '@radix-ui/react-context':
-        specifier: ^1.0.5
+        specifier: ^1.1.1
         version: 1.1.1(@types/react@19.2.2)(react@19.2.0)
       react-dropzone:
         specifier: ^14.2.3
@@ -7584,6 +7675,9 @@ importers:
       '@dxos/functions':
         specifier: workspace:*
         version: link:../../core/functions
+      '@dxos/functions-runtime':
+        specifier: workspace:*
+        version: link:../../core/functions-runtime
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
@@ -8732,6 +8826,9 @@ importers:
       '@dxos/functions':
         specifier: workspace:*
         version: link:../../core/functions
+      '@dxos/functions-runtime':
+        specifier: workspace:*
+        version: link:../../core/functions-runtime
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
@@ -9953,6 +10050,9 @@ importers:
       '@preact/signals-core':
         specifier: ^1.12.1
         version: 1.12.1
+      '@radix-ui/react-context':
+        specifier: ^1.1.1
+        version: 1.1.1(@types/react@19.2.2)(react@19.2.0)
       effect:
         specifier: 3.18.3
         version: 3.18.3
@@ -10441,6 +10541,9 @@ importers:
       '@dxos/functions':
         specifier: workspace:*
         version: link:../../core/functions
+      '@dxos/functions-runtime':
+        specifier: workspace:*
+        version: link:../../core/functions-runtime
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
@@ -11342,6 +11445,9 @@ importers:
       boolean:
         specifier: ^3.0.1
         version: 3.2.0
+      effect:
+        specifier: 3.18.3
+        version: 3.18.3
       js-yaml:
         specifier: ^4.1.0
         version: 4.1.0
@@ -12086,6 +12192,9 @@ importers:
       '@dxos/functions':
         specifier: workspace:*
         version: link:../../core/functions
+      '@dxos/functions-runtime':
+        specifier: workspace:*
+        version: link:../../core/functions-runtime
       '@dxos/graph':
         specifier: workspace:*
         version: link:../../common/graph
@@ -13056,6 +13165,9 @@ importers:
       '@dxos/functions':
         specifier: workspace:*
         version: link:../../core/functions
+      '@dxos/functions-runtime':
+        specifier: workspace:*
+        version: link:../../core/functions-runtime
       '@dxos/graph':
         specifier: workspace:*
         version: link:../../common/graph
@@ -14079,7 +14191,7 @@ importers:
         specifier: ^0.9.0
         version: 0.9.0(@babel/core@7.28.0)(@swc/helpers@0.5.17)(react@19.2.0)
       '@radix-ui/react-context':
-        specifier: ^1.0.5
+        specifier: ^1.1.1
         version: 1.1.1(@types/react@19.2.2)(react@19.2.0)
       d3:
         specifier: ^7.9.0

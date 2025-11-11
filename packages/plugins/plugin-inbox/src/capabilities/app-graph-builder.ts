@@ -9,7 +9,7 @@ import * as Option from 'effect/Option';
 import { Capabilities, type PluginContext, contributes } from '@dxos/app-framework';
 import { Obj } from '@dxos/echo';
 import { ATTENDABLE_PATH_SEPARATOR, PLANK_COMPANION_TYPE } from '@dxos/plugin-deck/types';
-import { ACTION_TYPE, createExtension, rxFromSignal } from '@dxos/plugin-graph';
+import { ACTION_TYPE, atomFromSignal, createExtension } from '@dxos/plugin-graph';
 import { kebabize } from '@dxos/util';
 
 import { meta } from '../meta';
@@ -34,7 +34,7 @@ export default (context: PluginContext) =>
             ),
             Option.map((mailbox) =>
               get(
-                rxFromSignal(() => [
+                atomFromSignal(() => [
                   {
                     id: `${Obj.getDXN(mailbox).toString()}-unfiltered`,
                     type: `${Mailbox.Mailbox.typename}-filter`,
@@ -86,7 +86,7 @@ export default (context: PluginContext) =>
             Option.flatMap((node) => (Obj.instanceOf(Mailbox.Mailbox, node.data) ? Option.some(node) : Option.none())),
             Option.map((node) => {
               const state = get(context.capabilities(InboxCapabilities.MailboxState))[0];
-              const message = get(rxFromSignal(() => state?.[node.id]));
+              const message = get(atomFromSignal(() => state?.[node.id]));
               return [
                 {
                   id: `${node.id}${ATTENDABLE_PATH_SEPARATOR}message`,

@@ -8,11 +8,11 @@ import React, { forwardRef, useEffect, useImperativeHandle, useMemo } from 'reac
 import { type Live } from '@dxos/live-object';
 import { useDynamicRef, useThemeContext, useTranslation } from '@dxos/react-ui';
 import {
+  type EditorMenuGroup,
   type EditorSelectionState,
   type EditorStateStore,
   type EditorToolbarState,
   type EditorViewMode,
-  type EditorMenuGroup,
   type UseTextEditorProps,
   createBasicExtensions,
   createMarkdownExtensions,

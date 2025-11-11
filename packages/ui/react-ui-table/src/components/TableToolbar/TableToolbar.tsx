@@ -18,7 +18,7 @@ import {
   createMenuAction,
   useMenuActions,
 } from '@dxos/react-ui-menu';
-import { rxFromSignal } from '@dxos/react-ui-menu';
+import { atomFromSignal } from '@dxos/react-ui-menu';
 
 import { translationKey } from '../../translations';
 
@@ -70,7 +70,7 @@ const createTableToolbarActions = ({
         label: ['save view label', { ns: translationKey }],
         testId: 'table.toolbar.save-view',
         iconOnly: false,
-        hidden: get(rxFromSignal(() => !state.viewDirty)),
+        hidden: get(atomFromSignal(() => !state.viewDirty)),
       });
       nodes.push(save);
     }

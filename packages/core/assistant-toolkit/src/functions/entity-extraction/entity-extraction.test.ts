@@ -12,14 +12,8 @@ import { makeToolExecutionServiceFromFunctions, makeToolResolverFromFunctions } 
 import { Blueprint } from '@dxos/blueprints';
 import { Obj } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect';
-import {
-  ComputeEventLogger,
-  CredentialsService,
-  DatabaseService,
-  FunctionInvocationService,
-  TracingService,
-} from '@dxos/functions';
-import { TestDatabaseLayer } from '@dxos/functions/testing';
+import { CredentialsService, DatabaseService, FunctionInvocationService, TracingService } from '@dxos/functions';
+import { FunctionInvocationServiceLayerTest, TestDatabaseLayer } from '@dxos/functions-runtime/testing';
 import { ObjectId } from '@dxos/keys';
 import { Message, Organization, Person } from '@dxos/types';
 
@@ -34,9 +28,8 @@ const TestLayer = Layer.mergeAll(
   AiService.model('@anthropic/claude-opus-4-0'),
   makeToolResolverFromFunctions([], testToolkit),
   makeToolExecutionServiceFromFunctions(testToolkit, testToolkit.toLayer({}) as any),
-  ComputeEventLogger.layerFromTracing,
 ).pipe(
-  Layer.provideMerge(FunctionInvocationService.layerTest({ functions: [entityExtraction] })),
+  Layer.provideMerge(FunctionInvocationServiceLayerTest({ functions: [entityExtraction] })),
   Layer.provideMerge(
     Layer.mergeAll(
       TestAiService(),

@@ -4,14 +4,9 @@
 
 import { describe, test } from 'vitest';
 
-import { createUrl, stripWhitespace, toMarkdown } from './util';
+import { stripWhitespace, toMarkdown } from './util';
 
 describe('util', () => {
-  test('createUrl', ({ expect }) => {
-    const url = createUrl(['https://example.com', 'foo', undefined, 'bar'], { q: 'test' }).toString();
-    expect(url).to.equal('https://example.com/foo/bar?q=test');
-  });
-
   test('stripNewlines', ({ expect }) => {
     const text = 'aaa\n \n \n \n\n \nbbb';
     expect(stripWhitespace(text)).to.equal('aaa\n\nbbb');

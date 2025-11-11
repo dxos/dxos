@@ -7,7 +7,7 @@ import React, { useState } from 'react';
 
 import { Icon, Input, Select, Toggle, Toolbar } from '../components';
 import { withTheme } from '../testing';
-import { withSurfaceVariantsLayout } from '../testing';
+import { withLayoutVariants } from '../testing';
 
 const DefaultStory = () => {
   const [checked, setChecked] = useState<boolean>(false);
@@ -84,7 +84,7 @@ const DefaultStory = () => {
 const meta = {
   title: 'ui/react-ui-core/Playground/Controls',
   render: DefaultStory,
-  decorators: [withTheme, withSurfaceVariantsLayout()],
+  decorators: [withTheme, withLayoutVariants()],
 } satisfies Meta<typeof Icon>;
 
 export default meta;

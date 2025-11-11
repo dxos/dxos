@@ -2,22 +2,22 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as HttpClient from '@effect/platform/HttpClient';
-import * as HttpClientRequest from '@effect/platform/HttpClientRequest';
 import * as Effect from 'effect/Effect';
-import * as Schedule from 'effect/Schedule';
 import * as Schema from 'effect/Schema';
 
 import { Obj, Type } from '@dxos/echo';
-import { withAuthorization } from '@dxos/functions';
-import { log } from '@dxos/log';
 import { Message } from '@dxos/types';
 
+import { createUrl, makeGoogleApiRequest } from '../google-api';
+
 import { LabelsResponse, MessageDetails, MessagesResponse } from './types';
-import { createUrl, getPart, normalizeText, parseFromHeader } from './util';
+import { getPart, normalizeText, parseFromHeader } from './util';
 
 // TODO(burdon): Evolve into general sync engine.
 
+/**
+ * NOTE: Google API bundles size is v. large and caused runtime issues.
+ */
 const API_URL = 'https://gmail.googleapis.com/gmail/v1';
 
 export const SYSTEM_LABELS = [
@@ -47,7 +47,7 @@ export const filterLabel = (label: string) => !SYSTEM_LABELS.includes(label);
  */
 export const listLabels = Effect.fn(function* (userId: string) {
   const url = createUrl([API_URL, 'users', userId, 'labels']).toString();
-  return yield* makeRequest(url).pipe(Effect.flatMap(Schema.decodeUnknown(LabelsResponse)));
+  return yield* makeGoogleApiRequest(url).pipe(Effect.flatMap(Schema.decodeUnknown(LabelsResponse)));
 });
 
 /**
@@ -61,7 +61,7 @@ export const listMessages = Effect.fn(function* (
   pageToken?: string | undefined,
 ) {
   const url = createUrl([API_URL, 'users', userId, 'messages'], { q, pageSize, pageToken }).toString();
-  return yield* makeRequest(url).pipe(Effect.flatMap(Schema.decodeUnknown(MessagesResponse)));
+  return yield* makeGoogleApiRequest(url).pipe(Effect.flatMap(Schema.decodeUnknown(MessagesResponse)));
 });
 
 /**
@@ -70,7 +70,7 @@ export const listMessages = Effect.fn(function* (
  */
 export const getMessage = Effect.fn(function* (userId: string, messageId: string) {
   const url = createUrl([API_URL, 'users', userId, 'messages', messageId]).toString();
-  return yield* makeRequest(url).pipe(Effect.flatMap(Schema.decodeUnknown(MessageDetails)));
+  return yield* makeGoogleApiRequest(url).pipe(Effect.flatMap(Schema.decodeUnknown(MessageDetails)));
 });
 
 /**
@@ -120,35 +120,3 @@ export const messageToObject = (last?: Message.Message) =>
       },
     );
   });
-
-/**
- * NOTE: Google API bundles size is v. large and caused runtime issues.
- */
-// TODO(burdon): Factor out.
-const makeRequest = Effect.fnUntraced(function* (url: string) {
-  const httpClient = yield* HttpClient.HttpClient.pipe(
-    Effect.map(withAuthorization({ service: 'gmail.com' }, 'Bearer')),
-  );
-
-  // TODO(wittjosiah): Without this, executing the request results in CORS errors when traced.
-  //  Is this an issue on Google's side or is it a bug in `@effect/platform`?
-  //  https://github.com/Effect-TS/effect/issues/4568
-  const httpClientWithTracerDisabled = httpClient.pipe(HttpClient.withTracerDisabledWhen(() => true));
-
-  const response = yield* HttpClientRequest.get(url).pipe(
-    HttpClientRequest.setHeader('accept', 'application/json'),
-    httpClientWithTracerDisabled.execute,
-    Effect.flatMap((res) => res.json),
-    Effect.timeout('1 second'),
-    Effect.retry(Schedule.exponential(1_000).pipe(Schedule.compose(Schedule.recurs(3)))),
-    Effect.scoped,
-  );
-
-  // TODO(burdon): Handle errors (esp. 401).
-  if ((response as any).error) {
-    // throw new Error((response as any).error);
-    log.catch((response as any).error);
-  }
-
-  return response;
-});
