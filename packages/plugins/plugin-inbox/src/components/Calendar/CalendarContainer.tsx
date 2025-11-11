@@ -30,12 +30,12 @@ export const CalendarContainer = ({ calendar }: CalendarContainerProps) => {
 
   return (
     <StackItem.Content>
-      <div className='grid grid-cols-[min-content_1fr]'>
+      <div role='none' className='grid grid-cols-[min-content_1fr]'>
         <NaturalCalendar.Root>
-          <NaturalCalendar.Content>
+          <NaturalCalendar.Viewport>
             <NaturalCalendar.Header />
-            <NaturalCalendar.Grid grow />
-          </NaturalCalendar.Content>
+            <NaturalCalendar.Grid />
+          </NaturalCalendar.Viewport>
         </NaturalCalendar.Root>
         <EventList events={objects} selected={selected?.id} onSelect={setSelected} />
       </div>
