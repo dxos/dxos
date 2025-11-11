@@ -8,9 +8,9 @@ import { useMemo } from 'react';
 
 import {
   type MenuAction,
+  atomFromSignal,
   createMenuAction,
   createMenuItemGroup,
-  rxFromSignal,
   useMenuActions,
 } from '@dxos/react-ui-menu';
 
@@ -51,7 +51,7 @@ export const useMessageToolbarActions = (
     () =>
       Atom.make((get) =>
         get(
-          rxFromSignal(() => {
+          atomFromSignal(() => {
             const nodes = [];
             const edges = [];
 
