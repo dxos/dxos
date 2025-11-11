@@ -150,6 +150,7 @@ export const convertToolMessagePart: (
           id: block.toolCallId,
           name: block.name,
           result: block.error ?? (block.result ? JSON.parse(block.result) : {}),
+          isFailure: block.error !== undefined,
         });
       default:
         return yield* Effect.fail(new PromptPreprocesorError({ message: `Invalid tool content block: ${block._tag}` }));
@@ -197,6 +198,7 @@ const convertAssistantMessagePart: (
           id: block.toolCallId,
           name: block.name,
           result: block.error ?? (block.result ? JSON.parse(block.result) : {}),
+          isFailure: block.error !== undefined,
         });
 
       case 'reference':
