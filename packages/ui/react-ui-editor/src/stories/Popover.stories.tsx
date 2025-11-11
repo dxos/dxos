@@ -63,6 +63,7 @@ const DefaultStory = ({ text, ...props }: StoryProps) => {
 
 const LinkStory = (args: StoryProps) => {
   const { space } = useClientProvider();
+
   const getMenu = useCallback<NonNullable<UsePopoverMenuProps['getMenu']>>(
     async ({ text, trigger }): Promise<PopoverMenuGroup[]> => {
       if (trigger === '/') {
@@ -84,7 +85,7 @@ const LinkStory = (args: StoryProps) => {
             id: object.id,
             label: object.name,
             icon: 'ph--user--regular',
-            onSelect: (view, head) => {
+            onSelect: ({ view, head }) => {
               const link = `[${object.name}](${Obj.getDXN(object)})`;
               if (text?.startsWith('@')) {
                 insertAtLineStart(view, head, `!${link}\n`);

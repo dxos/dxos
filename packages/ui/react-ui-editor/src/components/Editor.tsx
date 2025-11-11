@@ -2,12 +2,16 @@
 // Copyright 2025 DXOS.org
 //
 
+import { type Extension } from '@codemirror/state';
 import { createContext } from '@radix-ui/react-context';
-import React, { type PropsWithChildren, forwardRef, useCallback, useImperativeHandle, useState } from 'react';
+import React, { type PropsWithChildren, forwardRef, useCallback, useImperativeHandle, useMemo, useState } from 'react';
 
 import { invariant } from '@dxos/invariant';
+import { type ThemedClassName } from '@dxos/react-ui';
+import { mx } from '@dxos/react-ui-theme';
+import { isNonNullable } from '@dxos/util';
 
-import { PopoverMenuProvider } from '../extensions';
+import { PopoverMenuProvider, type UsePopoverMenuProps, usePopoverMenu } from '../extensions';
 
 import {
   type EditorController,
@@ -28,6 +32,7 @@ import {
 type EditorContextValue = {
   controller?: EditorController;
   setController: (controller: EditorController) => void;
+  extensions?: Extension[];
 } & Pick<NaturalEditorToolbarProps, 'state'>;
 
 const [EditorContextProvider, useEditorContext] = createContext<EditorContextValue>('Editor');
@@ -36,14 +41,22 @@ const [EditorContextProvider, useEditorContext] = createContext<EditorContextVal
 // Root
 //
 
-type EditorRootProps = PropsWithChildren<Pick<EditorToolbarState, 'viewMode'>>;
+export type EditorRootProps = PropsWithChildren<
+  Omit<UsePopoverMenuProps, 'viewRef'> & Pick<EditorToolbarState, 'viewMode'>
+>;
 
-const EditorRoot = forwardRef<EditorController, EditorRootProps>(({ children, viewMode }, forwardedRef) => {
+/**
+ * Root component for the Editor compound component.
+ * Provides context for all child components and manages the editor controller state.
+ */
+const EditorRoot = forwardRef<EditorController, EditorRootProps>(({ children, viewMode, ...props }, forwardedRef) => {
   const [controller, setController] = useState<EditorController>();
+  const state = useEditorToolbarState({ viewMode });
 
-  const toolbarState = useEditorToolbarState({ viewMode });
+  // TODO(burdon): Consider lighter-weight approach if PopoverMenuProvider is not needed.
+  const { groupsRef, extension, ...menuProps } = usePopoverMenu(props);
+  const extensions = useMemo(() => [extension], [extension]);
 
-  // TODO(burdon): Remove controller from NaturalEditor.
   useImperativeHandle(
     forwardedRef,
     () => ({
@@ -54,8 +67,10 @@ const EditorRoot = forwardRef<EditorController, EditorRootProps>(({ children, vi
   );
 
   return (
-    <EditorContextProvider controller={controller} setController={setController} state={toolbarState}>
-      {children}
+    <EditorContextProvider controller={controller} setController={setController} extensions={extensions} state={state}>
+      <PopoverMenuProvider view={controller?.view} groups={groupsRef.current} {...menuProps}>
+        {children}
+      </PopoverMenuProvider>
     </EditorContextProvider>
   );
 });
@@ -66,13 +81,17 @@ EditorRoot.displayName = 'Editor.Root';
 // Viewport
 //
 
-type EditorViewportProps = PropsWithChildren<{}>;
+export type EditorViewportProps = ThemedClassName<PropsWithChildren<{}>>;
 
-const EditorViewport = ({ children }: EditorViewportProps) => {
-  const _context = useEditorContext(EditorViewport.displayName);
-
-  // TODO(burdon): Move into root.
-  return <PopoverMenuProvider>{children}</PopoverMenuProvider>;
+/**
+ * Viewport component that wraps the toolbar and editor content area.
+ */
+const EditorViewport = ({ classNames, children }: EditorViewportProps) => {
+  return (
+    <div role='none' className={mx('grid grid-rows-[min-content_1fr] bs-full overflow-hidden', classNames)}>
+      {children}
+    </div>
+  );
 };
 
 EditorViewport.displayName = 'Editor.Viewport';
@@ -81,12 +100,21 @@ EditorViewport.displayName = 'Editor.Viewport';
 // Content
 //
 
-type EditorContentProps = NaturalEditorProps;
+export type EditorContentProps = Omit<NaturalEditorProps, 'ref'>;
 
-const EditorContent = (props: EditorContentProps) => {
-  const { setController } = useEditorContext(EditorContent.displayName);
+/**
+ * Content component that renders the actual CodeMirror editor.
+ * Automatically registers the editor controller with the context.
+ */
+const EditorContent = ({ extensions: providedExtensions, ...props }: EditorContentProps) => {
+  const { extensions: additionalExtensions = [], setController } = useEditorContext(EditorContent.displayName);
 
-  return <NaturalEditor {...props} ref={setController} />;
+  const extensions = useMemo(
+    () => [additionalExtensions, providedExtensions].filter(isNonNullable).flat(),
+    [providedExtensions, additionalExtensions],
+  );
+
+  return <NaturalEditor {...props} extensions={extensions} ref={setController} />;
 };
 
 EditorContent.displayName = 'Editor.Content';
@@ -95,11 +123,16 @@ EditorContent.displayName = 'Editor.Content';
 // Toolbar
 //
 
-type EditorToolbarProps = Omit<NaturalEditorToolbarProps, 'getView' | 'state'>;
+export type EditorToolbarProps = Omit<NaturalEditorToolbarProps, 'getView' | 'state'>;
 
+/**
+ * Toolbar component that provides editor formatting and control actions.
+ * Automatically connects to the editor view through context.
+ */
 const EditorToolbar = (props: EditorToolbarProps) => {
   const { controller, state } = useEditorContext(EditorToolbar.displayName);
 
+  // TODO(burdon): Fix invariant.
   const getView = useCallback(() => {
     invariant(controller?.view);
     return controller?.view;
@@ -114,6 +147,19 @@ EditorToolbar.displayName = 'Editor.Toolbar';
 // Editor
 //
 
+/**
+ * Compound editor component following the Radix UI pattern.
+ *
+ * @example
+ * ```tsx
+ * <Editor.Root>
+ *   <Editor.Toolbar />
+ *   <Editor.Viewport>
+ *     <Editor.Content extensions={[...]} />
+ *   </Editor.Viewport>
+ * </Editor.Root>
+ * ```
+ */
 export const Editor = {
   Root: EditorRoot,
   Viewport: EditorViewport,
@@ -121,4 +167,4 @@ export const Editor = {
   Toolbar: EditorToolbar,
 };
 
-export type { EditorController, EditorRootProps, EditorViewportProps, EditorContentProps, EditorToolbarProps };
+export type { EditorController };

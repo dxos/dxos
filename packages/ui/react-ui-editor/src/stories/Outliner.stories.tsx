@@ -37,7 +37,7 @@ const DefaultStory = ({ text }: StoryProps) => {
           {
             id: 'delete-row',
             label: 'Delete',
-            onSelect: (view: EditorView) => {
+            onSelect: ({ view }) => {
               deleteItem(view);
             },
           },
@@ -53,7 +53,7 @@ const DefaultStory = ({ text }: StoryProps) => {
       groups={commandGroups}
       onSelect={({ view, item }) => {
         if (item.onSelect) {
-          return item.onSelect(view, view.state.selection.main.head);
+          return item.onSelect({ view, head: view.state.selection.main.head });
         }
       }}
     >

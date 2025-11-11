@@ -77,7 +77,7 @@ export const Outline = forwardRef<OutlineController, OutlineProps>(
             {
               id: 'delete-row',
               label: t('delete row'),
-              onSelect: (view) => {
+              onSelect: ({ view }) => {
                 // TODO(burdon): Timeout hack since menu steals focus.
                 setTimeout(() => {
                   deleteItem(view);
@@ -93,7 +93,7 @@ export const Outline = forwardRef<OutlineController, OutlineProps>(
 
     const handleSelect = useCallback<NonNullable<PopoverMenuProviderProps['onSelect']>>(({ view, item }) => {
       if (view && item.onSelect) {
-        return item.onSelect(view, view.state.selection.main.head);
+        return item.onSelect({ view, head: view.state.selection.main.head });
       }
     }, []);
 

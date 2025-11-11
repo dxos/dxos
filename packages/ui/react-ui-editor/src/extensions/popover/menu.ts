@@ -19,7 +19,7 @@ export type PopoverMenuItem = {
   id: string;
   label: Label;
   icon?: string;
-  onSelect?: (view: EditorView, head: number) => MaybePromise<void>;
+  onSelect?: (event: { view: EditorView; head: number }) => MaybePromise<void>;
 };
 
 export const getMenuItem = (groups: PopoverMenuGroup[], id?: string): PopoverMenuItem | undefined => {
@@ -52,7 +52,7 @@ export const createMenuGroup = ({
   items: items.map((item, i) => ({
     id: `${id}-${i}`,
     label: item,
-    onSelect: (view, head) => insertAtCursor(view, head, item),
+    onSelect: ({ view, head }) => insertAtCursor(view, head, item),
   })),
 });
 

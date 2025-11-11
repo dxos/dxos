@@ -5,6 +5,7 @@
 import { type Decorator, type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useMemo } from 'react';
 
+import { faker } from '@dxos/random';
 import { useThemeContext } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { withAttention } from '@dxos/react-ui-attention/testing';
@@ -14,13 +15,16 @@ import {
   createMarkdownExtensions,
   createThemeExtensions,
   decorateMarkdown,
+  insertAtCursor,
 } from '../extensions';
 
-import { Editor } from './Editor';
+import { Editor, type EditorContentProps } from './Editor';
 
 // TODO(burdon): Create story variants.
 // TODO(burdon): Adapt Chat to use new Editor.
 // TODO(burdon): Factor out components (esp. Popover).
+
+faker.seed(1234);
 
 const initialValue = ['# Blue Monday', '', 'How does it **feel**?', ''].join('\n');
 
@@ -34,7 +38,7 @@ const withExtensions: Decorator = (Story, { args }) => {
       createMarkdownExtensions(),
       decorateMarkdown(),
     ],
-    [],
+    [themeMode],
   );
 
   return <Story args={{ ...args, extensions, initialValue }} />;
@@ -51,7 +55,7 @@ const meta = {
 
 export default meta;
 
-type Story = StoryObj<typeof meta>;
+type Story = StoryObj<EditorContentProps>;
 
 export const Default: Story = {
   render: (args) => (
@@ -70,11 +74,31 @@ export const WithToolbar: Story = {
   ),
 };
 
+const items = faker.helpers.multiple(faker.commerce.productName, { count: 10 }).sort();
+
 export const WithPopover: Story = {
   render: (args) => (
-    <Editor.Root>
-      <Editor.Toolbar />
+    <Editor.Root
+      trigger={['@']}
+      getMenu={({ text }) => {
+        return [
+          {
+            id: 'test',
+            items: items
+              .filter((item) => item.toLowerCase().includes(text.toLowerCase()))
+              .map((item, i) => ({
+                id: String(i),
+                label: item,
+                onSelect: ({ view, head }) => {
+                  insertAtCursor(view, head, item);
+                },
+              })),
+          },
+        ];
+      }}
+    >
       <Editor.Viewport>
+        <Editor.Toolbar />
         <Editor.Content {...args} />
       </Editor.Viewport>
     </Editor.Root>

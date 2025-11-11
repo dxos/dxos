@@ -108,7 +108,7 @@ export const usePopoverMenu = ({
   );
 
   const handleSelect = useCallback<NonNullable<UsePopoverMenu['onSelect']>>(({ view, item }) => {
-    void item.onSelect?.(view, view.state.selection.main.head);
+    void item.onSelect?.({ view, head: view.state.selection.main.head });
   }, []);
 
   const handleCancel = useCallback<NonNullable<UsePopoverMenu['onCancel']>>(({ view }) => {

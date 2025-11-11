@@ -63,7 +63,7 @@ export const useLinkQuery = (space: Space | undefined) => {
               id: object.id,
               label,
               icon: metadata.icon,
-              onSelect: (view, head) => {
+              onSelect: ({ view, head }) => {
                 const link = `[${label}](${Obj.getDXN(object)})`;
                 if (query?.startsWith('@')) {
                   insertAtLineStart(view, head, `!${link}\n`);

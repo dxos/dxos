@@ -28,6 +28,7 @@ export type EditorProps = ThemedClassName<
 /**
  * Minimal text editor.
  * NOTE: This shouold not be used with the automerge extension.
+ * @deprecated Use Editor.Content
  */
 export const Editor = forwardRef<EditorController, EditorProps>(
   ({ classNames, id, extensions, moveToEnd, value, onChange, ...props }, forwardedRef) => {
