@@ -14,13 +14,18 @@ export const SequenceStep = Schema.Struct({
   instructions: Schema.String,
   tools: Schema.optional(Schema.Array(ToolId)),
 });
+
 export interface SequenceStep extends Schema.Schema.Type<typeof SequenceStep> {}
 
 export const SequenceDefinition = Schema.Struct({
   steps: Schema.Array(SequenceStep.pipe(Schema.omit('id'))),
 });
+
 export interface SequenceDefinition extends Schema.Schema.Type<typeof SequenceDefinition> {}
 
+/**
+ * @deprecated
+ */
 export const Sequence = Schema.Struct({
   name: Schema.optional(Schema.String),
   steps: Schema.Array(SequenceStep),
