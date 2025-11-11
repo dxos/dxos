@@ -34,7 +34,7 @@ const Panel = ({
   </div>
 );
 
-export const withSurfaceVariantsLayout = ({
+export const withLayoutVariants = ({
   elevations = [
     { elevation: 'base', surface: 'bg-baseSurface' },
     { elevation: 'positioned', surface: 'bg-cardSurface' },

@@ -19,6 +19,9 @@ export type FlexProps = ThemedClassName<
   >
 >;
 
+/**
+ * @deprecated See radix-ui
+ */
 export const Flex = forwardRef<HTMLDivElement, FlexProps>(
   ({ classNames, children, column, scroll, grow, role = 'none', ...props }, forwardedRef) => {
     return (
