@@ -105,7 +105,7 @@ describe('Planning Blueprint', { timeout: 120_000 }, () => {
           TestDatabaseLayer({ types: [Text.Text, Markdown.Document, Blueprint.Blueprint] }),
           makeToolResolverFromFunctions([Tasks.read, Tasks.update], testToolkit),
           makeToolExecutionServiceFromFunctions(testToolkit, testToolkit.toLayer({}) as any),
-          AiService.model('@anthropic/claude-3-5-sonnet-20241022'),
+          AiService.model('@anthropic/@anthropic/claude-sonnet-4-5'),
         ).pipe(
           Layer.provideMerge(
             FunctionInvocationServiceLayerTestMocked({ functions: [Tasks.read, Tasks.update] }).pipe(

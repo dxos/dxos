@@ -67,7 +67,7 @@ const toolkitLayer = TestToolkit.toLayer({
 
 const TestLayer = Layer.mergeAll(
   toolkitLayer,
-  AiService.model('@anthropic/claude-3-5-sonnet-20241022'),
+  AiService.model('@anthropic/@anthropic/claude-sonnet-4-5'),
   TracingService.layerNoop,
   ToolResolverService.layerEmpty,
   ToolExecutionService.layerEmpty,

@@ -114,7 +114,7 @@ const AudioFile = ({
         //   client: new Edge AiServiceClient({
         //     endpoint: AI_SERVICE_ENDPOINT.REMOTE,
         //     defaultGenerationOptions: {
-        //       model: '@anthropic/claude-3-5-sonnet-20241022',
+        //       model: '@anthropic/@anthropic/claude-sonnet-4-5',
         //     },
         //   }),
         // },

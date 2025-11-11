@@ -20,10 +20,10 @@ const TestRouter = AiModelResolver.buildAiService.pipe(
   Layer.provide(
     AiModelResolver.resolver(
       Effect.gen(function* () {
-        const claudeSonnet = yield* AnthropicLanguageModel.model('claude-3-5-sonnet-20241022');
+        const claudeSonnet = yield* AnthropicLanguageModel.model('claude-4-5-sonnet');
         return (name) => {
           switch (name) {
-            case '@anthropic/claude-3-5-sonnet-20241022':
+            case '@anthropic/claude-sonnet-4-5':
               return claudeSonnet;
             default:
               return Layer.fail(new AiModelNotAvailableError(name));
@@ -66,7 +66,7 @@ describe('AiServiceRouter', () => {
         const model = yield* LanguageModel.LanguageModel;
         expect(model).toBeDefined();
       },
-      Effect.provide(AiService.model('@anthropic/claude-3-5-sonnet-20241022').pipe(Layer.provide(TestRouter))),
+      Effect.provide(AiService.model('@anthropic/claude-sonnet-4-5').pipe(Layer.provide(TestRouter))),
     ),
   );
 
