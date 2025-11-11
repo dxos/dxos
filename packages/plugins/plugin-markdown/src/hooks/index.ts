@@ -4,5 +4,5 @@
 
 export * from './useExtensions';
 export * from './useLinkQuery';
-export * from './usePopoverMenuOptions';
+export * from './useEditorMenOptions';
 export * from './useSelectCurrentThread';

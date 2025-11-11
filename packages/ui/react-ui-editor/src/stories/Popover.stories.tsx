@@ -14,18 +14,18 @@ import { withTheme } from '@dxos/react-ui/testing';
 import { Testing, type ValueGenerator, createObjectFactory } from '@dxos/schema/testing';
 
 import {
+  EditorMenuProvider,
   type PopoverMenuGroup,
   type PopoverMenuItem,
-  PopoverMenuProvider,
-  type UsePopoverMenuProps,
+  type UseEditorMenuProps,
   createMenuGroup,
   filterMenuGroups,
   formattingCommands,
   insertAtCursor,
   insertAtLineStart,
   linkSlashCommands,
-  usePopoverMenu,
-} from '../extensions';
+  useEditorMenu,
+} from '../components';
 import { str } from '../testing';
 
 import { EditorStory } from './components';
@@ -48,23 +48,23 @@ const placeholder = (trigger: string[]) =>
     )
     .build();
 
-type StoryProps = Omit<UsePopoverMenuProps, 'viewRef'> & { text: string };
+type StoryProps = Omit<UseEditorMenuProps, 'viewRef'> & { text: string };
 
 const DefaultStory = ({ text, ...props }: StoryProps) => {
   const [view, setView] = useState<EditorView | null>(null);
-  const { groupsRef, extension, ...menuProps } = usePopoverMenu(props);
+  const { groupsRef, extension, ...menuProps } = useEditorMenu(props);
 
   return (
-    <PopoverMenuProvider view={view} groups={groupsRef.current} {...menuProps}>
+    <EditorMenuProvider view={view} groups={groupsRef.current} {...menuProps}>
       <EditorStory ref={setView} text={text} extensions={extension} />
-    </PopoverMenuProvider>
+    </EditorMenuProvider>
   );
 };
 
 const LinkStory = (args: StoryProps) => {
   const { space } = useClientProvider();
 
-  const getMenu = useCallback<NonNullable<UsePopoverMenuProps['getMenu']>>(
+  const getMenu = useCallback<NonNullable<UseEditorMenuProps['getMenu']>>(
     async ({ text, trigger }): Promise<PopoverMenuGroup[]> => {
       if (trigger === '/') {
         return filterMenuGroups([linkSlashCommands], (item) =>

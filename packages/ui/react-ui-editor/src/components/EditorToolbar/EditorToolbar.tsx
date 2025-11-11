@@ -19,13 +19,13 @@ import {
 
 import { type EditorViewMode } from '../../types';
 
+import { createLists } from './actions';
 import { createBlocks } from './blocks';
 import { createFormatting } from './formatting';
 import { createHeadings } from './headings';
 import { createImageUpload } from './image';
-import { createLists } from './lists';
 import { createSearch } from './search';
-import { type EditorToolbarState } from './util';
+import { type EditorToolbarState } from './useEditorToolbar';
 import { createViewMode } from './view-mode';
 
 export type EditorToolbarFeatureFlags = Partial<{

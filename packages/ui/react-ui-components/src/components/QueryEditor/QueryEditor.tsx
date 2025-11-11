@@ -9,16 +9,16 @@ import { type ThemedClassName, updateRef, useThemeContext, useTranslation } from
 import {
   Editor,
   type EditorController,
+  EditorMenuProvider,
+  type EditorMenuProviderProps,
   type EditorProps,
   type Extension,
-  PopoverMenuProvider,
-  type PopoverMenuProviderProps,
-  type UsePopoverMenuProps,
+  type UseEditorMenuProps,
   createBasicExtensions,
   createMenuGroup,
   createThemeExtensions,
   keymap,
-  usePopoverMenu,
+  useEditorMenu,
 } from '@dxos/react-ui-editor';
 
 import { translationKey } from '../../translations';
@@ -30,7 +30,7 @@ export type QueryEditorProps = ThemedClassName<
   {
     value?: string;
     readonly?: boolean;
-  } & (CompletionOptions & Omit<EditorProps, 'initialValue'> & Pick<PopoverMenuProviderProps, 'numItems'>)
+  } & (CompletionOptions & Omit<EditorProps, 'initialValue'> & Pick<EditorMenuProviderProps, 'numItems'>)
 >;
 
 /**
@@ -44,12 +44,12 @@ export const QueryEditor = forwardRef<EditorController, QueryEditorProps>(
     }, [controller]);
 
     const getOptions = useMemo(() => completions({ db, tags }), [db, tags]);
-    const getMenu = useCallback<NonNullable<UsePopoverMenuProps['getMenu']>>(
+    const getMenu = useCallback<NonNullable<UseEditorMenuProps['getMenu']>>(
       async (context) => [createMenuGroup({ items: getOptions(context) })],
       [getOptions],
     );
 
-    const { groupsRef, extension, ...menuProps } = usePopoverMenu({
+    const { groupsRef, extension, ...menuProps } = useEditorMenu({
       // TODO(burdon): Handle trigger AND triggerKey.
       // trigger: ['#'],
       triggerKey: 'Ctrl-Space',
@@ -80,9 +80,9 @@ export const QueryEditor = forwardRef<EditorController, QueryEditorProps>(
     );
 
     return (
-      <PopoverMenuProvider view={controller?.view} groups={groupsRef.current} numItems={numItems} {...menuProps}>
+      <EditorMenuProvider view={controller?.view} groups={groupsRef.current} numItems={numItems} {...menuProps}>
         <Editor {...props} initialValue={value} extensions={extensions} moveToEnd ref={setController} />
-      </PopoverMenuProvider>
+      </EditorMenuProvider>
     );
   },
 );

@@ -2,9 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import { popoverRangeEffect } from '../../extensions';
-
 import { type PopoverMenuGroup } from './menu';
+import { popoverRangeEffect } from './popover';
 import { insertAtLineStart } from './util';
 
 export const formattingCommands: PopoverMenuGroup = {

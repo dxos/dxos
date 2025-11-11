@@ -9,8 +9,8 @@ import { createDocAccessor } from '@dxos/react-client/echo';
 import { type ThemedClassName, useThemeContext, useTranslation } from '@dxos/react-ui';
 import {
   type PopoverMenuGroup,
-  PopoverMenuProvider,
-  type PopoverMenuProviderProps,
+  EditorMenuProvider,
+  type EditorMenuProviderProps,
   type UseTextEditorProps,
   createBasicExtensions,
   createDataExtensions,
@@ -91,16 +91,16 @@ export const Outline = forwardRef<OutlineController, OutlineProps>(
       [t],
     );
 
-    const handleSelect = useCallback<NonNullable<PopoverMenuProviderProps['onSelect']>>(({ view, item }) => {
+    const handleSelect = useCallback<NonNullable<EditorMenuProviderProps['onSelect']>>(({ view, item }) => {
       if (view && item.onSelect) {
         return item.onSelect({ view, head: view.state.selection.main.head });
       }
     }, []);
 
     return (
-      <PopoverMenuProvider view={view} groups={commandGroups} onSelect={handleSelect}>
+      <EditorMenuProvider view={view} groups={commandGroups} onSelect={handleSelect}>
         <div ref={parentRef} className={mx(classNames)} {...focusAttributes} />
-      </PopoverMenuProvider>
+      </EditorMenuProvider>
     );
   },
 );

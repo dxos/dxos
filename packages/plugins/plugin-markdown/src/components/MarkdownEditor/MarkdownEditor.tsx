@@ -13,22 +13,22 @@ import { DXN } from '@dxos/keys';
 import { type Live } from '@dxos/live-object';
 import { useClient } from '@dxos/react-client';
 import {
+  EditorMenuProvider,
   type EditorToolbarState,
-  PopoverMenuProvider,
   type PreviewBlock,
   type PreviewOptions,
-  type UsePopoverMenu,
-  useEditorToolbarState,
-  usePopoverMenu,
+  useEditorMenu,
+  type useEditorMenu,
+  useEditorToolbar,
 } from '@dxos/react-ui-editor';
 import { isNonNullable } from '@dxos/util';
 
 import {
   type DocumentType,
   type ExtensionsOptions,
-  type UsePopoverMenuOptionsProps,
+  type UseEditorMenOptionsProps,
+  useEditorMenOptions,
   useExtensions,
-  usePopoverMenuOptions,
 } from '../../hooks';
 
 import {
@@ -50,7 +50,7 @@ type MarkdownEditorContextValue = {
   extensions: Extension[];
   previewBlocks: PreviewBlock[];
   toolbarState: Live<EditorToolbarState>;
-  popoverMenu: Omit<UsePopoverMenu, 'extension'>;
+  popoverMenu: Omit<useEditorMenu, 'extension'>;
 } & (Pick<ExtensionsOptions, 'viewMode'> &
   Pick<NaturalMarkdownToolbarProps, 'editorView' | 'onFileUpload' | 'onViewModeChange'>);
 
@@ -66,7 +66,7 @@ type MarkdownEditorRootProps = PropsWithChildren<
     object?: DocumentType;
     extensions?: Extension[];
   } & Pick<MarkdownEditorContextValue, 'id' | 'onFileUpload' | 'onViewModeChange' | 'viewMode'> &
-    Pick<UsePopoverMenuOptionsProps, 'slashCommandGroups' | 'onLinkQuery'> &
+    Pick<UseEditorMenOptionsProps, 'slashCommandGroups' | 'onLinkQuery'> &
     Pick<ExtensionsOptions, 'editorStateStore' | 'selectionManager' | 'settings'>
 >;
 
@@ -100,15 +100,15 @@ const MarkdownEditorRoot = ({
   );
 
   // Toolbar state.
-  const toolbarState = useEditorToolbarState({ viewMode });
+  const toolbarState = useEditorToolbar({ viewMode });
 
   // Context menu.
-  const menuOptions = usePopoverMenuOptions({
+  const menuOptions = useEditorMenOptions({
     editorView,
     slashCommandGroups,
     onLinkQuery,
   });
-  const { extension: menuExtension, ...menuProps } = usePopoverMenu(menuOptions);
+  const { extension: menuExtension, ...menuProps } = useEditorMenu(menuOptions);
 
   // Extensions.
   const coreExtensions = useExtensions({
@@ -163,7 +163,7 @@ const MarkdownEditorContent = (props: MarkdownEditorContentProps) => {
   } = useMarkdownEditorContext(MarkdownEditorContent.displayName);
 
   return (
-    <PopoverMenuProvider view={editorView} groups={groupsRef.current} {...menuProps}>
+    <EditorMenuProvider view={editorView} groups={groupsRef.current} {...menuProps}>
       <NaturalMarkdownEditorContent
         {...props}
         id={id}
@@ -172,7 +172,7 @@ const MarkdownEditorContent = (props: MarkdownEditorContentProps) => {
         viewMode={viewMode}
         ref={setEditorView}
       />
-    </PopoverMenuProvider>
+    </EditorMenuProvider>
   );
 };
 

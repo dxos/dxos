@@ -15,14 +15,14 @@ import {
   createMarkdownExtensions,
   createThemeExtensions,
   decorateMarkdown,
-  insertAtCursor,
-} from '../extensions';
+} from '../../extensions';
+import { insertAtCursor } from '../EditorMenuProvider';
 
 import { Editor, type EditorContentProps } from './Editor';
 
-// TODO(burdon): Create story variants.
-// TODO(burdon): Adapt Chat to use new Editor.
+// TODO(burdon): Adapt Chat and Markdown to use new Editor (plan first to check fit).
 // TODO(burdon): Factor out components (esp. Popover).
+// TODO(burdon): Remove redundent hooks.
 
 faker.seed(1234);
 

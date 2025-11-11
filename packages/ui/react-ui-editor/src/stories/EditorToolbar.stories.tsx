@@ -10,7 +10,7 @@ import { useThemeContext } from '@dxos/react-ui';
 import { withTheme } from '@dxos/react-ui/testing';
 import { attentionSurface, mx } from '@dxos/react-ui-theme';
 
-import { EditorToolbar, useEditorToolbarState } from '../components';
+import { EditorToolbar, useEditorToolbar } from '../components';
 import { editorWidth } from '../defaults';
 import {
   InputModeExtensions,
@@ -29,7 +29,7 @@ type StoryProps = { placeholder?: string } & UseTextEditorProps;
 
 const DefaultStory = ({ autoFocus, initialValue, placeholder }: StoryProps) => {
   const { themeMode } = useThemeContext();
-  const toolbarState = useEditorToolbarState({ viewMode: 'source' });
+  const toolbarState = useEditorToolbar({ viewMode: 'source' });
   const viewMode = toolbarState.viewMode;
   // TODO(wittjosiah): Provide way to change the input mode.
   const [editorInputMode, _setEditorInputMode] = useState<EditorInputMode>('default');

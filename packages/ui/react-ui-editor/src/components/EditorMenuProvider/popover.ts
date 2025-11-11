@@ -15,10 +15,8 @@ import {
 
 import { isNonNullable, isTruthy } from '@dxos/util';
 
+import { type PlaceholderOptions, modalStateField, placeholder } from '../../extensions';
 import { type Range } from '../../types';
-import { type PlaceholderOptions, placeholder } from '../autocomplete';
-
-import { modalStateField } from './modal';
 
 const DELIMITERS = [' ', ':'];
 

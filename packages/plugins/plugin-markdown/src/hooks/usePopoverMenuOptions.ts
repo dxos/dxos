@@ -8,7 +8,7 @@ import { useCallback, useMemo, useRef } from 'react';
 import { Domino, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import {
   type PopoverMenuGroup,
-  type UsePopoverMenuProps,
+  type UseEditorMenuProps,
   filterMenuGroups,
   formattingCommands,
   linkSlashCommands,
@@ -16,20 +16,20 @@ import {
 
 import { meta } from '../meta';
 
-export type UsePopoverMenuOptionsProps = {
+export type UseEditorMenOptionsProps = {
   editorView?: EditorView;
   slashCommandGroups?: PopoverMenuGroup[];
   onLinkQuery?: (query?: string) => Promise<PopoverMenuGroup[]>;
 };
 
-export const usePopoverMenuOptions = ({
+export const useEditorMenOptions = ({
   editorView,
   slashCommandGroups,
   onLinkQuery,
-}: UsePopoverMenuOptionsProps): UsePopoverMenuProps => {
+}: UseEditorMenOptionsProps): UseEditorMenuProps => {
   const { t } = useTranslation(meta.id);
 
-  const getMenu = useCallback<NonNullable<UsePopoverMenuProps['getMenu']>>(
+  const getMenu = useCallback<NonNullable<UseEditorMenuProps['getMenu']>>(
     ({ text, trigger }) => {
       switch (trigger) {
         case '@': {
@@ -48,7 +48,7 @@ export const usePopoverMenuOptions = ({
   );
 
   const viewRef = useRef(editorView);
-  return useMemo<UsePopoverMenuProps>(() => {
+  return useMemo<UseEditorMenuProps>(() => {
     const trigger = onLinkQuery ? ['/', '@'] : ['/'];
     const placeholder = {
       delay: 3_000,

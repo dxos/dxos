@@ -20,7 +20,7 @@ import {
 
 import { type PopoverMenuGroup, type PopoverMenuItem } from './menu';
 
-export type PopoverMenuProviderProps = PropsWithChildren<{
+export type EditorMenuProviderProps = PropsWithChildren<{
   view?: EditorView | null;
   groups?: PopoverMenuGroup[];
   currentItem?: string;
@@ -40,7 +40,7 @@ export type PopoverMenuProviderProps = PropsWithChildren<{
  * NOTE: We don't use DropdownMenu because the command menu needs to manage focus explicitly.
  * I.e., focus must remain in the editor while displaying the menu (for type-ahead).
  */
-export const PopoverMenuProvider = ({
+export const EditorMenuProvider = ({
   children,
   view,
   groups,
@@ -52,7 +52,7 @@ export const PopoverMenuProvider = ({
   onActivate,
   onSelect,
   onCancel,
-}: PopoverMenuProviderProps) => {
+}: EditorMenuProviderProps) => {
   const { tx } = useThemeContext();
   const triggerRef = useRef<HTMLButtonElement | null>(null);
   const [root, setRoot] = useState<HTMLDivElement | null>(null);

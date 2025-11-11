@@ -9,15 +9,8 @@ import React, { useMemo, useRef } from 'react';
 import { withTheme } from '@dxos/react-ui/testing';
 import { withAttention } from '@dxos/react-ui-attention/testing';
 
-import {
-  type PopoverMenuGroup,
-  PopoverMenuProvider,
-  deleteItem,
-  hashtag,
-  listItemToString,
-  outliner,
-  treeFacet,
-} from '../extensions';
+import { EditorMenuProvider, type PopoverMenuGroup } from '../components';
+import { deleteItem, hashtag, listItemToString, outliner, treeFacet } from '../extensions';
 import { str } from '../testing';
 
 import { EditorStory } from './components';
@@ -48,7 +41,7 @@ const DefaultStory = ({ text }: StoryProps) => {
   );
 
   return (
-    <PopoverMenuProvider
+    <EditorMenuProvider
       view={viewRef.current}
       groups={commandGroups}
       onSelect={({ view, item }) => {
@@ -69,7 +62,7 @@ const DefaultStory = ({ text }: StoryProps) => {
           return <pre className='p-1 overflow-auto text-xs text-green-800 dark:text-green-200'>{lines.join('\n')}</pre>;
         }}
       />
-    </PopoverMenuProvider>
+    </EditorMenuProvider>
   );
 };
 

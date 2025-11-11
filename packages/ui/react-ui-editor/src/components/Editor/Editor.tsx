@@ -11,19 +11,18 @@ import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 import { isNonNullable } from '@dxos/util';
 
-import { PopoverMenuProvider, type UsePopoverMenuProps, usePopoverMenu } from '../extensions';
-
 import {
   type EditorController,
   Editor as NaturalEditor,
   type EditorProps as NaturalEditorProps,
-} from './EditorContent';
+} from '../EditorContent';
+import { EditorMenuProvider, type UseEditorMenuProps, useEditorMenu } from '../EditorMenuProvider';
 import {
   type EditorToolbarState,
   EditorToolbar as NaturalEditorToolbar,
   type EditorToolbarProps as NaturalEditorToolbarProps,
-  useEditorToolbarState,
-} from './EditorToolbar';
+  useEditorToolbar,
+} from '../EditorToolbar';
 
 //
 // Context
@@ -42,7 +41,7 @@ const [EditorContextProvider, useEditorContext] = createContext<EditorContextVal
 //
 
 export type EditorRootProps = PropsWithChildren<
-  Omit<UsePopoverMenuProps, 'viewRef'> & Pick<EditorToolbarState, 'viewMode'>
+  Omit<UseEditorMenuProps, 'viewRef'> & Pick<EditorToolbarState, 'viewMode'>
 >;
 
 /**
@@ -51,10 +50,10 @@ export type EditorRootProps = PropsWithChildren<
  */
 const EditorRoot = forwardRef<EditorController, EditorRootProps>(({ children, viewMode, ...props }, forwardedRef) => {
   const [controller, setController] = useState<EditorController>();
-  const state = useEditorToolbarState({ viewMode });
+  const state = useEditorToolbar({ viewMode });
 
-  // TODO(burdon): Consider lighter-weight approach if PopoverMenuProvider is not needed.
-  const { groupsRef, extension, ...menuProps } = usePopoverMenu(props);
+  // TODO(burdon): Consider lighter-weight approach if EditorMenuProvider is not needed.
+  const { groupsRef, extension, ...menuProps } = useEditorMenu(props);
   const extensions = useMemo(() => [extension], [extension]);
 
   useImperativeHandle(
@@ -68,9 +67,9 @@ const EditorRoot = forwardRef<EditorController, EditorRootProps>(({ children, vi
 
   return (
     <EditorContextProvider controller={controller} setController={setController} extensions={extensions} state={state}>
-      <PopoverMenuProvider view={controller?.view} groups={groupsRef.current} {...menuProps}>
+      <EditorMenuProvider view={controller?.view} groups={groupsRef.current} {...menuProps}>
         {children}
-      </PopoverMenuProvider>
+      </EditorMenuProvider>
     </EditorContextProvider>
   );
 });

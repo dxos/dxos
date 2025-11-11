@@ -9,11 +9,12 @@ import { type RefObject, useCallback, useMemo, useRef, useState } from 'react';
 import { invariant } from '@dxos/invariant';
 import { type MaybePromise } from '@dxos/util';
 
+import { modalStateEffect } from '../../extensions';
+
+import { type EditorMenuProviderProps } from './EditorMenuProvider';
 import { type PopoverMenuGroup, type PopoverMenuItem } from './menu';
 import { filterMenuGroups, getMenuItem, getNextMenuItem, getPreviousMenuItem } from './menu';
-import { modalStateEffect } from './modal';
 import { type PopoverOptions, popover, popoverRangeEffect, popoverStateField } from './popover';
-import { type PopoverMenuProviderProps } from './PopoverMenuProvider';
 
 export type GetMenuContext = {
   state: EditorState;
@@ -22,34 +23,34 @@ export type GetMenuContext = {
   trigger?: string;
 };
 
-export type UsePopoverMenuProps = {
+export type UseEditorMenuProps = {
   filter?: boolean;
   getMenu?: (context: GetMenuContext) => MaybePromise<PopoverMenuGroup[]>;
 } & Pick<PopoverOptions, 'trigger' | 'triggerKey' | 'placeholder'>;
 
-export type UsePopoverMenu = {
+export type UseEditorMenu = {
   groupsRef: RefObject<PopoverMenuGroup[]>;
   extension: Extension;
-} & Pick<PopoverMenuProviderProps, 'currentItem' | 'open' | 'onOpenChange' | 'onActivate' | 'onSelect' | 'onCancel'>;
+} & Pick<EditorMenuProviderProps, 'currentItem' | 'open' | 'onOpenChange' | 'onActivate' | 'onSelect' | 'onCancel'>;
 
 /**
  * ```tsx
- * const { groupsRef, extension, ...menuProps } = usePopoverMenu();
+ * const { groupsRef, extension, ...menuProps } = useEditorMenu();
  * const { parentRef, viewRef } = useTextEditor({ extensions: [extension] });
  * return (
- *   <PopoverMenuProvider view={viewRef.current} groups={groupsRef.current} {...menuProps}>
+ *   <EditorMenuProvider view={viewRef.current} groups={groupsRef.current} {...menuProps}>
  *     <div ref={parentRef} />
- *   </PopoverMenuProvider>
+ *   </EditorMenuProvider>
  * );
  * ```
  */
-export const usePopoverMenu = ({
+export const useEditorMenu = ({
   trigger,
   triggerKey,
   placeholder,
   filter = true,
   getMenu,
-}: UsePopoverMenuProps): UsePopoverMenu => {
+}: UseEditorMenuProps): UseEditorMenu => {
   const groupsRef = useRef<PopoverMenuGroup[]>([]);
   const currentRef = useRef<PopoverMenuItem | null>(null);
   const [currentItem, setCurrentItem] = useState<string>();
@@ -59,7 +60,7 @@ export const usePopoverMenu = ({
   /**
    * Get filtered options.
    */
-  const getMenuOptions = useCallback<NonNullable<UsePopoverMenuProps['getMenu']>>(
+  const getMenuOptions = useCallback<NonNullable<UseEditorMenuProps['getMenu']>>(
     async ({ text, trigger, ...props }) => {
       const groups = (await getMenu?.({ text, trigger, ...props })) ?? [];
       return filter
@@ -71,7 +72,7 @@ export const usePopoverMenu = ({
     [getMenu, filter],
   );
 
-  const handleOpenChange = useCallback<NonNullable<UsePopoverMenu['onOpenChange']>>(
+  const handleOpenChange = useCallback<NonNullable<UseEditorMenu['onOpenChange']>>(
     async ({ view, open }) => {
       invariant(view);
       setOpen(open);
@@ -93,7 +94,7 @@ export const usePopoverMenu = ({
     [getMenuOptions],
   );
 
-  const handleActivate = useCallback<NonNullable<UsePopoverMenu['onActivate']>>(
+  const handleActivate = useCallback<NonNullable<UseEditorMenu['onActivate']>>(
     async ({ view, trigger }) => {
       const item = getMenuItem(groupsRef.current, currentItem);
       if (item) {
@@ -107,11 +108,11 @@ export const usePopoverMenu = ({
     [open, handleOpenChange],
   );
 
-  const handleSelect = useCallback<NonNullable<UsePopoverMenu['onSelect']>>(({ view, item }) => {
+  const handleSelect = useCallback<NonNullable<UseEditorMenu['onSelect']>>(({ view, item }) => {
     void item.onSelect?.({ view, head: view.state.selection.main.head });
   }, []);
 
-  const handleCancel = useCallback<NonNullable<UsePopoverMenu['onCancel']>>(({ view }) => {
+  const handleCancel = useCallback<NonNullable<UseEditorMenu['onCancel']>>(({ view }) => {
     // Delete trigger.
     const { range, trigger } = view.state.field(popoverStateField) ?? {};
     if (range && trigger) {
