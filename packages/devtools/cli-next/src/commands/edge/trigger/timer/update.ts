@@ -9,7 +9,10 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
 import { DXN, Filter, Obj, Ref } from '@dxos/echo';
-import { DatabaseService, Function, Trigger, getUserFunctionIdInMetadata } from '@dxos/functions';
+import { DatabaseService } from '@dxos/echo-db';
+import { Function } from '@dxos/functions';
+import { Trigger } from '@dxos/functions';
+import { getUserFunctionIdInMetadata } from '@dxos/functions';
 
 import { withDatabase } from '../../../../util';
 import { Common } from '../../../options';

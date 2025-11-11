@@ -78,10 +78,16 @@
       "path": "../../core/functions"
     },
     {
+      "path": "../../core/functions-runtime"
+    },
+    {
       "path": "../../sdk/app-framework"
     },
     {
       "path": "../../sdk/client"
+    },
+    {
+      "path": "../../sdk/config"
     },
     {
       "path": "../../sdk/react-client"

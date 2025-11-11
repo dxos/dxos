@@ -6,7 +6,8 @@ import * as Effect from 'effect/Effect';
 import type * as Scope from 'effect/Scope';
 
 import { raise } from '@dxos/debug';
-import type { ServiceContainer } from '@dxos/functions';
+import { ComputeEventLogger } from '@dxos/functions';
+import { type FunctionServices } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
 
@@ -31,8 +32,6 @@ export class TestRuntime {
     graphLoader: async (graphDxn: DXN) => this.getGraph(graphDxn).root,
     nodeResolver: async (node: ComputeNode) => this._nodes.get(node.type!)!,
   });
-
-  constructor(private readonly _serviceContainer: ServiceContainer) {}
 
   get graphs() {
     return this._graphs;
@@ -62,38 +61,37 @@ export class TestRuntime {
   runGraph<T extends ValueRecord = any>(
     graphDxn: string,
     input: ValueBag<any>,
-  ): Effect.Effect<ValueBag<T>, ConductorError, Scope.Scope> {
-    const serviceLayer = this._serviceContainer.createLayer();
+  ): Effect.Effect<ValueBag<T>, ConductorError, FunctionServices | Scope.Scope> {
     return Effect.gen(this, function* () {
       const program = yield* Effect.promise(() => this._workflowLoader.load(DXN.parse(graphDxn)));
       return yield* program.run(input);
-    }).pipe(Effect.withSpan('compute-graph'), Effect.provide(serviceLayer));
+    }).pipe(Effect.withSpan('compute-graph'), Effect.provide(ComputeEventLogger.layerFromTracing));
   }
 
   // TODO(dmaretskyi): Support cases where the are no or multiple "input" nodes.
   //  There can be a graph which starts evaluating from constant nodes.
-  async runFromInput(
+  runFromInput(
     graphDxn: string,
     inputNodeId: string,
     input: ValueBag<any>,
-  ): Promise<Record<string, Effect.Effect<ValueBag<any>, ConductorError, Scope.Scope>>> {
-    const serviceLayer = this._serviceContainer.createLayer();
+  ): Effect.Effect<Record<string, ValueBag<any>>, ConductorError, FunctionServices | Scope.Scope> {
+    return Effect.gen(this, function* () {
+      const workflow = yield* Effect.promise(() => this._workflowLoader.load(DXN.parse(graphDxn)));
+      const executor = new GraphExecutor({
+        computeNodeResolver: async (node: ComputeNode) => workflow.getResolvedNode(node.id)!,
+      });
 
-    const workflow = await this._workflowLoader.load(DXN.parse(graphDxn));
-    const executor = new GraphExecutor({
-      computeNodeResolver: async (node: ComputeNode) => workflow.getResolvedNode(node.id)!,
-    });
+      const graph = this._graphs.get(graphDxn) ?? raise(new Error(`Graph not found: ${graphDxn}`));
+      yield* Effect.promise(() => executor.load(graph));
 
-    const graph = this._graphs.get(graphDxn) ?? raise(new Error(`Graph not found: ${graphDxn}`));
-    await executor.load(graph);
+      executor.setOutputs(inputNodeId, Effect.succeed(input));
+      const dependantNodes = executor.getAllDependantNodes(inputNodeId);
+      const result: Record<string, ValueBag<any>> = {};
+      for (const nodeId of dependantNodes) {
+        result[nodeId] = yield* executor.computeInputs(nodeId);
+      }
 
-    executor.setOutputs(inputNodeId, Effect.succeed(input));
-    const dependantNodes = executor.getAllDependantNodes(inputNodeId);
-    const result: Record<string, Effect.Effect<ValueBag<any>, ConductorError, Scope.Scope>> = {};
-    for (const nodeId of dependantNodes) {
-      result[nodeId] = executor.computeInputs(nodeId).pipe(Effect.provide(serviceLayer));
-    }
-
-    return result;
+      return result;
+    }).pipe(Effect.withSpan('compute-graph'), Effect.provide(ComputeEventLogger.layerFromTracing));
   }
 }

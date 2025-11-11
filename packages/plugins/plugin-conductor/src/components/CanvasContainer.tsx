@@ -7,7 +7,8 @@ import React, { useEffect, useMemo, useRef } from 'react';
 import { type Config } from '@dxos/client';
 import { ComputeGraphModel } from '@dxos/conductor';
 import { Obj } from '@dxos/echo';
-import { DatabaseService, QueueService, ServiceContainer } from '@dxos/functions';
+import { DatabaseService, QueueService } from '@dxos/functions';
+import { ServiceContainer } from '@dxos/functions-runtime';
 import { useConfig } from '@dxos/react-client';
 import { type Space, getSpace } from '@dxos/react-client/echo';
 import {

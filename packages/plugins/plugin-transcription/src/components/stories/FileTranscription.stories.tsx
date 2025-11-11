@@ -12,7 +12,7 @@ import { Context } from '@dxos/context';
 import { Obj } from '@dxos/echo';
 import { createQueueDXN } from '@dxos/echo/internal';
 import { MemoryQueue } from '@dxos/echo-db';
-import { FunctionExecutor, ServiceContainer } from '@dxos/functions';
+import { FunctionExecutor, ServiceContainer } from '@dxos/functions-runtime';
 import { log } from '@dxos/log';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { PreviewPlugin } from '@dxos/plugin-preview';

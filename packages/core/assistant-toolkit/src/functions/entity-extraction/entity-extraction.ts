@@ -11,7 +11,8 @@ import * as Schema from 'effect/Schema';
 import { AiService } from '@dxos/ai';
 import { AiSession, makeToolExecutionServiceFromFunctions, makeToolResolverFromFunctions } from '@dxos/assistant';
 import { Filter, Obj, Ref } from '@dxos/echo';
-import { DatabaseService, FunctionInvocationService, defineFunction } from '@dxos/functions';
+import { DatabaseService, defineFunction } from '@dxos/functions';
+import { FunctionInvocationServiceLayerTest } from '@dxos/functions-runtime/testing';
 import { type DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { LegacyOrganization, Message, Organization, Person } from '@dxos/types';
@@ -84,7 +85,7 @@ export default defineFunction({
       ).pipe(
         Layer.provide(
           // TODO(dmaretskyi): This should be provided by environment.
-          Layer.mergeAll(FunctionInvocationService.layerTest()),
+          Layer.mergeAll(FunctionInvocationServiceLayerTest()),
         ),
       ),
     ),

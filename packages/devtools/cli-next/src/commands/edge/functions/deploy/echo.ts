@@ -13,7 +13,7 @@ import type * as Schema from 'effect/Schema';
 import { Filter, type Space, getMeta } from '@dxos/client/echo';
 import { Obj, Ref } from '@dxos/echo';
 import { Function, Script, getUserFunctionIdInMetadata, setUserFunctionIdInMetadata } from '@dxos/functions';
-import { incrementSemverPatch } from '@dxos/functions/edge';
+import { incrementSemverPatch } from '@dxos/functions-runtime/edge';
 import { type UploadFunctionResponseBody } from '@dxos/protocols';
 import { Collection, Text } from '@dxos/schema';
 
@@ -45,22 +45,24 @@ export const loadFunctionObject: (space: Space, functionId: string) => Effect.Ef
     return functionObject;
   });
 
-export const upsertFunctionObject = Effect.fn(function* ({
-  space,
-  existingObject,
-  uploadResult,
-  filePath,
-  name,
-}: {
+export const upsertFunctionObject: (opts: {
   space: Space;
   existingObject: Function.Function | undefined;
   uploadResult: UploadFunctionResponseBody;
   filePath: string;
   name?: string;
+}) => Effect.Effect<Function.Function, never, CommandConfig> = Effect.fn(function* ({
+  space,
+  existingObject,
+  uploadResult,
+  filePath,
+  name,
 }) {
   const { verbose } = yield* CommandConfig;
-  let functionObject = existingObject;
-  if (!functionObject) {
+  let functionObject;
+  if (existingObject) {
+    functionObject = existingObject;
+  } else {
     functionObject = Function.make({
       name: path.basename(filePath, path.extname(filePath)),
       version: uploadResult.version,

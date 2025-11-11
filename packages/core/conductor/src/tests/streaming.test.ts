@@ -2,52 +2,77 @@
 // Copyright 2025 DXOS.org
 //
 
+import { it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
 import * as Schema from 'effect/Schema';
 import * as Stream from 'effect/Stream';
-import { describe, test } from 'vitest';
+import { describe } from 'vitest';
 
-import { createTestServices } from '@dxos/functions/testing';
+import { TestAiService } from '@dxos/ai/testing';
+import { TestHelpers } from '@dxos/effect';
+import { CredentialsService, TracingService } from '@dxos/functions';
+import { FunctionInvocationServiceLayerTest, TestDatabaseLayer } from '@dxos/functions-runtime/testing';
 
 import { NODE_INPUT, NODE_OUTPUT } from '../nodes';
 import { TestRuntime } from '../testing';
 import { ComputeGraphModel, ValueBag, defineComputeNode, synchronizedComputeFunction } from '../types';
 import { StreamSchema } from '../util';
 
-const ENABLE_LOGGING = false;
+const TestLayer = Layer.empty.pipe(
+  Layer.provideMerge(FunctionInvocationServiceLayerTest()),
+  Layer.provideMerge(
+    Layer.mergeAll(
+      TestAiService(),
+      TestDatabaseLayer(),
+      CredentialsService.configuredLayer([]),
+      TracingService.layerNoop,
+    ),
+  ),
+);
 
 describe('Streaming pipelines', () => {
-  test('synchronous stream sum pipeline', async ({ expect }) => {
-    const runtime = new TestRuntime(createTestServices({ logging: { enabled: ENABLE_LOGGING } }));
-    runtime.registerNode('dxn:test:sum-aggregator', sumAggregator);
-    runtime.registerGraph('dxn:compute:stream-sum', streamSum());
+  it.scoped(
+    'synchronous stream sum pipeline',
+    Effect.fnUntraced(
+      function* ({ expect }) {
+        const runtime = new TestRuntime();
+        runtime.registerNode('dxn:test:sum-aggregator', sumAggregator);
+        runtime.registerGraph('dxn:compute:stream-sum', streamSum());
 
-    const { result } = await Effect.runPromise(
-      runtime
-        .runGraph('dxn:compute:stream-sum', ValueBag.make({ stream: Effect.succeed(Stream.range(1, 10)) }))
-        .pipe(Effect.flatMap(ValueBag.unwrap), Effect.scoped),
-    );
+        const { result } = yield* runtime
+          .runGraph('dxn:compute:stream-sum', ValueBag.make({ stream: Effect.succeed(Stream.range(1, 10)) }))
+          .pipe(Effect.flatMap(ValueBag.unwrap));
 
-    expect(result).toEqual(55);
-  });
+        expect(result).toEqual(55);
+      },
+      Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
+  );
 
-  test('asynchronous stream sum pipeline', async ({ expect }) => {
-    const runtime = new TestRuntime(createTestServices({ logging: { enabled: ENABLE_LOGGING } }));
-    runtime.registerNode('dxn:test:sum-aggregator', sumAggregator);
-    runtime.registerGraph('dxn:compute:stream-sum', streamSum());
+  it.scopedLive(
+    'asynchronous stream sum pipeline',
+    Effect.fnUntraced(
+      function* ({ expect }) {
+        const runtime = new TestRuntime();
+        runtime.registerNode('dxn:test:sum-aggregator', sumAggregator);
+        runtime.registerGraph('dxn:compute:stream-sum', streamSum());
 
-    const delayedStream = Stream.range(1, 10).pipe(
-      Stream.mapEffect((n) => Effect.succeed(n).pipe(Effect.delay('50 millis'))),
-    );
+        const delayedStream = Stream.range(1, 10).pipe(
+          Stream.mapEffect((n) => Effect.succeed(n).pipe(Effect.delay('50 millis'))),
+        );
 
-    const { result } = await Effect.runPromise(
-      runtime
-        .runGraph('dxn:compute:stream-sum', ValueBag.make({ stream: Effect.succeed(delayedStream) }))
-        .pipe(Effect.flatMap(ValueBag.unwrap), Effect.scoped),
-    );
+        const { result } = yield* runtime
+          .runGraph('dxn:compute:stream-sum', ValueBag.make({ stream: Effect.succeed(delayedStream) }))
+          .pipe(Effect.flatMap(ValueBag.unwrap));
 
-    expect(result).toEqual(55);
-  });
+        expect(result).toEqual(55);
+      },
+      Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
+  );
 });
 
 /**

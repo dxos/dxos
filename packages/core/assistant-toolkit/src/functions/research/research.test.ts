@@ -21,14 +21,13 @@ import { Blueprint } from '@dxos/blueprints';
 import { Filter, Obj, Query, Ref } from '@dxos/echo';
 import { TestHelpers, acquireReleaseResource } from '@dxos/effect';
 import {
-  ComputeEventLogger,
   CredentialsService,
   DatabaseService,
   FunctionInvocationService,
   QueueService,
   TracingService,
 } from '@dxos/functions';
-import { TestDatabaseLayer } from '@dxos/functions/testing';
+import { FunctionInvocationServiceLayerTest, TestDatabaseLayer } from '@dxos/functions-runtime/testing';
 import { invariant } from '@dxos/invariant';
 import { ObjectId } from '@dxos/keys';
 import { MarkdownBlueprint, MarkdownFunction } from '@dxos/plugin-markdown/toolkit';
@@ -52,10 +51,9 @@ const TestLayer = Layer.mergeAll(
     testToolkit,
   ),
   makeToolExecutionServiceFromFunctions(testToolkit, testToolkit.toLayer({}) as any),
-  ComputeEventLogger.layerFromTracing,
 ).pipe(
   Layer.provideMerge(
-    FunctionInvocationService.layerTest({
+    FunctionInvocationServiceLayerTest({
       functions: [research, createDocument, MarkdownFunction.create, MarkdownFunction.open, MarkdownFunction.update],
     }),
   ),

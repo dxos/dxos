@@ -5,7 +5,8 @@
 import * as Effect from 'effect/Effect';
 
 import { Filter } from '@dxos/echo';
-import { Trigger, TriggerDispatcher } from '@dxos/functions';
+import { Trigger } from '@dxos/functions';
+import { TriggerDispatcher } from '@dxos/functions-runtime';
 import { type Space, useQuery } from '@dxos/react-client/echo';
 import { useAsyncState } from '@dxos/react-ui';
 

@@ -9,15 +9,16 @@ import * as Scope from 'effect/Scope';
 
 import { AiService } from '@dxos/ai';
 import { raise } from '@dxos/debug';
+import { DatabaseService } from '@dxos/echo-db';
 import {
   ComputeEventLogger,
   CredentialsService,
-  DatabaseService,
+  FunctionInvocationService,
   QueueService,
-  RemoteFunctionExecutionService,
   TracingService,
+  createDefectLogger,
 } from '@dxos/functions';
-import { createDefectLogger } from '@dxos/functions';
+import { type FunctionServices } from '@dxos/functions';
 import { failedInvariant, invariant } from '@dxos/invariant';
 import { isNonNullable } from '@dxos/util';
 
@@ -342,7 +343,7 @@ export class GraphExecutor {
     return Effect.gen(this, function* () {
       invariant(this._topology, 'Graph not loaded');
       const node = this._topology.nodes.find((node) => node.id === nodeId) ?? failedInvariant();
-      const layer = yield* this._createServiceLayer();
+      const layer: Layer.Layer<FunctionServices> = yield* this._createServiceLayer();
       const entries = node.inputs.map(
         (input) => [input.name, this.computeInput(nodeId, input.name).pipe(Effect.provide(layer))] as const,
       );
@@ -363,7 +364,7 @@ export class GraphExecutor {
         Layer.succeed(CredentialsService, yield* CredentialsService),
         Layer.succeed(DatabaseService, yield* DatabaseService),
         Layer.succeed(QueueService, yield* QueueService),
-        Layer.succeed(RemoteFunctionExecutionService, yield* RemoteFunctionExecutionService),
+        Layer.succeed(FunctionInvocationService, yield* FunctionInvocationService),
         Layer.succeed(TracingService, yield* TracingService),
       );
     });

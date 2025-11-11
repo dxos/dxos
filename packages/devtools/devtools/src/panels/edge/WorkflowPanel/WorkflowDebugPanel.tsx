@@ -4,14 +4,15 @@
 
 import * as Effect from 'effect/Effect';
 import type * as Layer from 'effect/Layer';
-// import { Ollama } from 'ollama';
 import * as SchemaAST from 'effect/SchemaAST';
 import React, { forwardRef, useEffect, useMemo, useRef, useState } from 'react';
 
 import { type ComputeGraph, ValueBag, type WorkflowLoader } from '@dxos/conductor';
 import { EdgeHttpClient } from '@dxos/edge-client';
-import { RemoteFunctionExecutionService, createEventLogger } from '@dxos/functions';
-import { DatabaseService, QueueService, ServiceContainer, type Services } from '@dxos/functions';
+import { createEventLogger } from '@dxos/functions';
+import { DatabaseService, QueueService } from '@dxos/functions';
+import { type RuntimeServices, ServiceContainer } from '@dxos/functions-runtime';
+import { RemoteFunctionExecutionService } from '@dxos/functions-runtime';
 import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
 import { LogLevel, log } from '@dxos/log';
@@ -238,7 +239,7 @@ const RobotAvatar = () => (
   </Avatar.Root>
 );
 
-const createLocalExecutionContext = (space: Space): Layer.Layer<Services> => {
+const createLocalExecutionContext = (space: Space): Layer.Layer<RuntimeServices> => {
   return new ServiceContainer()
     .setServices({
       eventLogger: createEventLogger(LogLevel.INFO),
