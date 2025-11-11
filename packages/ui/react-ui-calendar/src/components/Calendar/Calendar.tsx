@@ -210,7 +210,7 @@ const CalendarGrid = ({ classNames, rows, onSelect }: CalendarGridProps) => {
     ({ key, index, style }) => {
       const getBgColor = (date: Date) => date.getMonth() % 2 === 0 && 'bg-inputSurface';
       return (
-        <div key={key} style={style} className='is-full grid grid-cols-[1fr_max-content_1fr]'>
+        <div key={key} style={style} className='is-full grid grid-cols-[1fr_max-content_1fr] snap-center'>
           <div className={mx(getBgColor(getDate(start, index, 0, weekStartsOn)))} />
           <div className='grid grid-cols-7' style={{ gridTemplateColumns: `repeat(7, ${size}px)` }}>
             {Array.from({ length: 7 }).map((_, i) => {
