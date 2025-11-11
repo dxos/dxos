@@ -7,7 +7,7 @@ import * as Function from 'effect/Function';
 import * as Option from 'effect/Option';
 
 import { Capabilities, LayoutAction, type PluginContext, chain, contributes, createIntent } from '@dxos/app-framework';
-import { ROOT_ID, createExtension, rxFromSignal } from '@dxos/plugin-graph';
+import { ROOT_ID, atomFromSignal, createExtension } from '@dxos/plugin-graph';
 
 import { meta } from '../meta';
 import { type FilesSettingsProps, LocalFilesAction } from '../types';
@@ -64,7 +64,7 @@ export default (context: PluginContext) =>
             Option.flatMap((node) => (node.id === ROOT_ID ? Option.some(node) : Option.none())),
             Option.flatMap(() => {
               const settingsStore = get(context.capabilities(Capabilities.SettingsStore))[0];
-              const settings = get(rxFromSignal(() => settingsStore?.getStore<FilesSettingsProps>(meta.id)?.value));
+              const settings = get(atomFromSignal(() => settingsStore?.getStore<FilesSettingsProps>(meta.id)?.value));
               return settings ? Option.some(settings) : Option.none();
             }),
             Option.map((settings) => {

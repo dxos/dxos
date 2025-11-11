@@ -9,7 +9,7 @@ import * as Option from 'effect/Option';
 import { Capabilities, type PluginContext, contributes, createIntent } from '@dxos/app-framework';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { ATTENDABLE_PATH_SEPARATOR, DECK_COMPANION_TYPE } from '@dxos/plugin-deck/types';
-import { ROOT_ID, createExtension, rxFromSignal } from '@dxos/plugin-graph';
+import { ROOT_ID, atomFromSignal, createExtension } from '@dxos/plugin-graph';
 import { parseId } from '@dxos/react-client/echo';
 
 import { meta } from '../meta';
@@ -25,7 +25,7 @@ export default (context: PluginContext) =>
             get(node),
             Option.flatMap((node) => (node.id === ROOT_ID ? Option.some(node) : Option.none())),
             Option.map((node) => {
-              const workspace = get(rxFromSignal(() => context.getCapability(Capabilities.Layout).workspace));
+              const workspace = get(atomFromSignal(() => context.getCapability(Capabilities.Layout).workspace));
               const client = context.getCapability(ClientCapabilities.Client);
               const { spaceId } = parseId(workspace);
               const space = spaceId ? client.spaces.get(spaceId) : null;
