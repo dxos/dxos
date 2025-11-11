@@ -44,6 +44,17 @@ import { gptNode } from './gpt';
 import { NODE_INPUT, NODE_OUTPUT, inputNode, outputNode } from './system';
 import { templateNode } from './template';
 
+export const isFalsy = (value: any) =>
+  value === 'false' ||
+  value === 'FALSE' ||
+  value === '0' ||
+  value === false ||
+  value === null ||
+  value === undefined ||
+  (Array.isArray(value) && value.length === 0);
+
+export const isTruthy = (value: any) => !isFalsy(value);
+
 /**
  * To prototype a new compute node, first add a new type and a dummy definition (e.g., VoidInput, VoidOutput).
  */
@@ -79,40 +90,6 @@ export type NodeType =
   | 'template'
   | 'text'
   | 'thread';
-
-export const isFalsy = (value: any) =>
-  value === 'false' ||
-  value === 'FALSE' ||
-  value === '0' ||
-  value === false ||
-  value === null ||
-  value === undefined ||
-  (Array.isArray(value) && value.length === 0);
-
-export const isTruthy = (value: any) => !isFalsy(value);
-
-// TODO(dmaretskyi): Separate into definition and implementation.
-/*
-const gpt = Executable.define({
-  name: 'gpt',
-  input: Schema.Struct({
-    prompt: Schema.String,
-  }),
-  output: Schema.Struct({
-    text: Schema.String,
-  }),
-})
-
-// All inputs & outputs are computed at the same time.
-const gptImpl1 = Executable.implementSynchronized(gpt, Effect.fnUntraced(function* ({ prompt }) {
-  ...
-}));
-
-// Inputs and outputs are computed independently.
-cosnt gptImpl2 = Executable.implementIndependent(gpt, Effect.fnUntraced(function* (valueBag) {
-  ...
-})
-*/
 
 // TODO(burdon): Extensible?
 export const registry: Record<NodeType, Executable> = {
@@ -247,7 +224,6 @@ export const registry: Record<NodeType, Executable> = {
     exec: synchronizedComputeFunction(({ id, items }) =>
       Effect.gen(function* () {
         items = Array.isArray(items) ? items : [items];
-
         const dxn = DXN.parse(id);
         switch (dxn.kind) {
           case DXN.kind.QUEUE: {
@@ -256,6 +232,7 @@ export const registry: Record<NodeType, Executable> = {
             yield* Effect.promise(() => queues.get(DXN.parse(id)).append(mappedItems));
             return {};
           }
+
           case DXN.kind.ECHO: {
             const { echoId, spaceId } = dxn.asEchoDXN() ?? failedInvariant();
             const { db } = yield* DatabaseService;
@@ -287,6 +264,7 @@ export const registry: Record<NodeType, Executable> = {
 
             return {};
           }
+
           default: {
             throw new Error(`Unsupported DXN: ${dxn.toString()}`);
           }
@@ -315,7 +293,7 @@ export const registry: Record<NodeType, Executable> = {
     input: Schema.Struct({ [DEFAULT_INPUT]: Schema.Boolean }),
     output: Schema.Struct({ [DEFAULT_OUTPUT]: Schema.Boolean }),
     exec: synchronizedComputeFunction(({ [DEFAULT_INPUT]: input }) =>
-      Effect.succeed({ [DEFAULT_OUTPUT]: !isTruthy(input) }),
+      Effect.succeed({ [DEFAULT_OUTPUT]: isFalsy(input) }),
     ),
   }),
 
@@ -366,9 +344,10 @@ export const registry: Record<NodeType, Executable> = {
         if (!node || !functionRef) {
           throw new Error(`Function not specified on ${node?.id}.`);
         }
+
         const { path } = yield* Effect.tryPromise({
           try: () => resolveFunctionPath(functionRef),
-          catch: (e) => e,
+          catch: (err) => err,
         });
 
         const outputSchema = node.outputSchema ? toEffectSchema(node.outputSchema) : AnyOutput;
@@ -402,9 +381,10 @@ export const registry: Record<NodeType, Executable> = {
     ),
   }),
 
+  // TODO(burdon): Fix.
   ['text-to-image' as const]: defineComputeNode({
     input: VoidInput,
-    output: VoidOutput, // TODO(burdon): Fix.
+    output: VoidOutput,
     exec: synchronizedComputeFunction(() =>
       Effect.gen(function* () {
         throw new Error('Not implemented');
@@ -412,12 +392,3 @@ export const registry: Record<NodeType, Executable> = {
     ),
   }),
 };
-
-// const textToImageTool: Tool = defineTool('testing', {
-//   name: 'text-to-image',
-//   type: ToolTypes.TextToImage,
-//   options: {
-//     // TODO(burdon): Testing.
-//     // model: '@testing/kitten-in-bubble',
-//   },
-// });
