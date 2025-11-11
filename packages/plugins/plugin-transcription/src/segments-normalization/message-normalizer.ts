@@ -11,11 +11,11 @@ import { effect } from '@preact/signals-core';
 import { DeferredTask, asyncTimeout } from '@dxos/async';
 import { LifecycleState, Resource } from '@dxos/context';
 import { type Queue } from '@dxos/echo-db';
-import { type FunctionExecutor } from '@dxos/functions';
+import { type FunctionExecutor } from '@dxos/functions-runtime';
 import { log } from '@dxos/log';
 import { type Message } from '@dxos/types';
 
-import { type MessageWithRangeId, sentenceNormalization } from './normalization';
+import { type MessageWithRangeId, type NormalizationOutput, sentenceNormalization } from './normalization';
 import { getActorId } from './utils';
 
 const PROCESSING_TIMEOUT = 20_000; // ms
@@ -81,7 +81,7 @@ export class MessageNormalizer extends Resource {
 
     try {
       // TODO(mykola): Executor should support timeout.
-      const response = await asyncTimeout(
+      const response: NormalizationOutput = await asyncTimeout(
         this._functionExecutor.invoke(sentenceNormalization, { messages }),
         PROCESSING_TIMEOUT,
       );

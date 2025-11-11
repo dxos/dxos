@@ -11,18 +11,15 @@ import { Capabilities, type PluginContext, contributes } from '@dxos/app-framewo
 import { GenericToolkit, makeToolExecutionServiceFromFunctions, makeToolResolverFromFunctions } from '@dxos/assistant';
 import { Resource } from '@dxos/context';
 import { Query, Ref } from '@dxos/echo';
+import { CredentialsService, DatabaseService, QueueService } from '@dxos/functions';
 import {
-  CredentialsService,
-  DatabaseService,
   FunctionImplementationResolver,
-  FunctionInvocationService,
+  FunctionInvocationServiceLayerWithLocalLoopbackExecutor,
   InvocationTracer,
-  LocalFunctionExecutionService,
-  QueueService,
   RemoteFunctionExecutionService,
   TriggerDispatcher,
-} from '@dxos/functions';
-import { TriggerStateStore } from '@dxos/functions';
+} from '@dxos/functions-runtime';
+import { TriggerStateStore } from '@dxos/functions-runtime';
 import { invariant } from '@dxos/invariant';
 import { type SpaceId } from '@dxos/keys';
 import { ClientCapabilities } from '@dxos/plugin-client';
@@ -86,23 +83,19 @@ class ComputeRuntimeProviderImpl extends Resource implements AutomationCapabilit
           ),
           Layer.provideMerge(
             Layer.mergeAll(
-              FunctionInvocationService.layer.pipe(
+              FunctionInvocationServiceLayerWithLocalLoopbackExecutor.pipe(
+                Layer.provideMerge(FunctionImplementationResolver.layerTest({ functions })),
                 Layer.provideMerge(
-                  LocalFunctionExecutionService.layerLive.pipe(
-                    Layer.provideMerge(FunctionImplementationResolver.layerTest({ functions })),
-                    Layer.provideMerge(
-                      RemoteFunctionExecutionService.fromClient(
-                        client.edge.baseUrl,
-                        // If agent is not enabled do not provide spaceId because space context will be unavailable on EDGE.
-                        client.config.get('runtime.client.edgeFeatures.agents') ? spaceId : undefined,
-                      ),
-                    ),
-                    Layer.provideMerge(serviceLayer),
-                    Layer.provideMerge(CredentialsService.layerFromDatabase()),
-                    Layer.provideMerge(space ? DatabaseService.layer(space.db) : DatabaseService.notAvailable),
-                    Layer.provideMerge(space ? QueueService.layer(space.queues) : QueueService.notAvailable),
+                  RemoteFunctionExecutionService.fromClient(
+                    client,
+                    // If agent is not enabled do not provide spaceId because space context will be unavailable on EDGE.
+                    client.config.get('runtime.client.edgeFeatures.agents') ? spaceId : undefined,
                   ),
                 ),
+                Layer.provideMerge(serviceLayer),
+                Layer.provideMerge(CredentialsService.layerFromDatabase()),
+                Layer.provideMerge(space ? DatabaseService.layer(space.db) : DatabaseService.notAvailable),
+                Layer.provideMerge(space ? QueueService.layer(space.queues) : QueueService.notAvailable),
               ),
             ),
           ),

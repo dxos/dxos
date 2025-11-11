@@ -14,8 +14,13 @@ import { AiService } from '@dxos/ai';
 import { AiServiceTestingPreset, EXA_API_KEY } from '@dxos/ai/testing';
 import { makeToolExecutionServiceFromFunctions, makeToolResolverFromFunctions } from '@dxos/assistant';
 import { TestHelpers } from '@dxos/effect';
-import { ComputeEventLogger, CredentialsService, FunctionInvocationService, TracingService } from '@dxos/functions';
-import { TestDatabaseLayer, testStoragePath } from '@dxos/functions/testing';
+import { CredentialsService, FunctionInvocationService } from '@dxos/functions';
+import { TracingServiceExt } from '@dxos/functions-runtime';
+import {
+  FunctionInvocationServiceLayerTestMocked,
+  TestDatabaseLayer,
+  testStoragePath,
+} from '@dxos/functions-runtime/testing';
 
 import { Discord, Linear } from '../functions';
 
@@ -23,7 +28,6 @@ const TestLayer = Layer.mergeAll(
   AiService.model('@anthropic/claude-opus-4-0'),
   makeToolResolverFromFunctions([], Toolkit.make()),
   makeToolExecutionServiceFromFunctions(Toolkit.make() as any, Layer.empty as any),
-  ComputeEventLogger.layerFromTracing,
 ).pipe(
   Layer.provideMerge(
     Layer.mergeAll(
@@ -38,9 +42,8 @@ const TestLayer = Layer.mergeAll(
         { service: 'discord.com', apiKey: Config.redacted('DISCORD_TOKEN') },
         { service: 'linear.app', apiKey: Config.redacted('LINEAR_API_KEY') },
       ]),
-      FunctionInvocationService.layerTestMocked({ functions: [Linear.sync, Discord.fetch] }).pipe(
-        Layer.provideMerge(ComputeEventLogger.layerFromTracing),
-        Layer.provideMerge(TracingService.layerLogInfo()),
+      FunctionInvocationServiceLayerTestMocked({ functions: [Linear.sync, Discord.fetch] }).pipe(
+        Layer.provideMerge(TracingServiceExt.layerLogInfo()),
       ),
       FetchHttpClient.layer,
     ),

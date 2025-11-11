@@ -70,6 +70,9 @@
       "path": "../functions"
     },
     {
+      "path": "../functions-runtime"
+    },
+    {
       "path": "../protocols"
     }
   ]

@@ -17,12 +17,18 @@ export const ComputeEventPayload = Schema.Union(
   Schema.Struct({
     type: Schema.Literal('begin-compute'),
     nodeId: Schema.String,
-    inputs: Schema.Record({ key: Schema.String, value: Schema.Any }),
+    /**
+     * Names of the inputs begin computed.
+     */
+    inputs: Schema.Array(Schema.String),
   }),
   Schema.Struct({
     type: Schema.Literal('end-compute'),
     nodeId: Schema.String,
-    outputs: Schema.Record({ key: Schema.String, value: Schema.Any }),
+    /**
+     * Names of the outputs computed.
+     */
+    outputs: Schema.Array(Schema.String),
   }),
   Schema.Struct({
     type: Schema.Literal('compute-input'),

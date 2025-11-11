@@ -295,6 +295,11 @@
         },
         {
           "type": "json",
+          "path": "packages/core/functions-runtime/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/core/halo/credentials/package.json",
           "jsonpath": "$.version"
         },

@@ -8,8 +8,9 @@ import { Args, Flags } from '@oclif/core';
 
 import { Trigger, debounce } from '@dxos/async';
 import { type Space } from '@dxos/client/echo';
-import { Function, Script } from '@dxos/functions';
-import { Bundler } from '@dxos/functions/bundler';
+import { Function } from '@dxos/functions';
+import { Script } from '@dxos/functions';
+import { Bundler } from '@dxos/functions-runtime/bundler';
 import { Text } from '@dxos/schema';
 
 import { BaseCommand } from '../../base';

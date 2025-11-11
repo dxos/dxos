@@ -5,20 +5,15 @@
 import * as Cause from 'effect/Cause';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
-import * as Layer from 'effect/Layer';
 import React, { useCallback, useMemo, useState } from 'react';
 
 import { Agent } from '@dxos/assistant-toolkit';
 import { Blueprint, Prompt } from '@dxos/blueprints';
 import { Filter, Obj, Query, Ref } from '@dxos/echo';
 import { QueryBuilder } from '@dxos/echo-query';
-import {
-  ComputeEventLogger,
-  type FunctionDefinition,
-  FunctionInvocationService,
-  InvocationTracer,
-  TracingService,
-} from '@dxos/functions';
+import { type FunctionDefinition, FunctionInvocationService } from '@dxos/functions';
+import { InvocationTracer } from '@dxos/functions-runtime';
+import { TracingServiceExt } from '@dxos/functions-runtime';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { useComputeRuntimeCallback } from '@dxos/plugin-automation';
@@ -245,11 +240,7 @@ const runPrompt = Effect.fn(function* ({
 
   // Invoke the function.
   const result = yield* FunctionInvocationService.invokeFunction(Agent.prompt, inputData).pipe(
-    Effect.provide(
-      ComputeEventLogger.layerFromTracing.pipe(
-        Layer.provideMerge(TracingService.layerQueue(trace.invocationTraceQueue)),
-      ),
-    ),
+    Effect.provide(TracingServiceExt.layerQueue(trace.invocationTraceQueue)),
     Effect.exit,
   );
 
