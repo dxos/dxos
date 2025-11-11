@@ -5,10 +5,10 @@
 import { toEffectSchema } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
 import { type DXN } from '@dxos/keys';
+import { Effect } from 'effect';
 
 import { type ComputeResolver, GraphExecutor, compileOrThrow } from '../compiler';
 import { NODE_INPUT, NODE_OUTPUT, type NodeType, inputNode, outputNode, registry } from '../nodes';
-import { executeFunction, resolveFunctionPath } from '../nodes/function';
 import {
   AnyInput,
   AnyOutput,
@@ -20,6 +20,7 @@ import {
 } from '../types';
 
 import { Workflow } from './workflow';
+import { FunctionInvocationService, FunctionDefinition } from '@dxos/functions';
 
 export type WorkflowLoaderParams = {
   nodeResolver: (node: ComputeNode) => Promise<Executable>;
@@ -130,11 +131,15 @@ export class WorkflowLoader {
       return cached;
     }
 
-    const { path } = await resolveFunctionPath(functionRef);
+    const funcionDef = FunctionDefinition.deserialize(await functionRef.load());
     const output = node.outputSchema ? toEffectSchema(node.outputSchema) : AnyOutput;
     const result: Executable = {
       meta: { input: node.inputSchema ? toEffectSchema(node.inputSchema) : AnyInput, output },
-      exec: synchronizedComputeFunction((input) => executeFunction(path, input, output)),
+      exec: synchronizedComputeFunction(
+        Effect.fnUntraced(function* (input) {
+          return yield* FunctionInvocationService.invokeFunction(funcionDef, input);
+        }),
+      ),
     };
 
     cache.loadedFunctionsMap.set(cacheKey, result);

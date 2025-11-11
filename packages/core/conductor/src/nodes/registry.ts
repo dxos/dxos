@@ -10,7 +10,7 @@ import { Filter, Ref, Type } from '@dxos/echo';
 import { ObjectId, getTypename, isInstanceOf, toEffectSchema } from '@dxos/echo/internal';
 import { live } from '@dxos/echo/internal';
 import { DatabaseService, Queue } from '@dxos/echo-db';
-import { QueueService } from '@dxos/functions';
+import { FunctionDefinition, FunctionInvocationService, QueueService } from '@dxos/functions';
 import { failedInvariant, invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
 import { View, getTypenameFromQuery } from '@dxos/schema';
@@ -39,7 +39,6 @@ import {
   synchronizedComputeFunction,
 } from '../types';
 
-import { executeFunction, resolveFunctionPath } from './function';
 import { gptNode } from './gpt';
 import { NODE_INPUT, NODE_OUTPUT, inputNode, outputNode } from './system';
 import { templateNode } from './template';
@@ -345,13 +344,9 @@ export const registry: Record<NodeType, Executable> = {
           throw new Error(`Function not specified on ${node?.id}.`);
         }
 
-        const { path } = yield* Effect.tryPromise({
-          try: () => resolveFunctionPath(functionRef),
-          catch: (err) => err,
-        });
-
-        const outputSchema = node.outputSchema ? toEffectSchema(node.outputSchema) : AnyOutput;
-        return executeFunction(path, input, outputSchema);
+        const func = yield* DatabaseService.load(functionRef);
+        const funcDefinition = FunctionDefinition.deserialize(func);
+        return yield* FunctionInvocationService.invokeFunction(funcDefinition, input);
       }),
     ),
   }),

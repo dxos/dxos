@@ -11,6 +11,7 @@ import {
   ComputeEventLogger,
   ConfiguredCredentialsService,
   CredentialsService,
+  FunctionInvocationService,
   QueueService,
   TracingService,
 } from '@dxos/functions';
@@ -28,6 +29,7 @@ const SERVICES = {
   credentials: CredentialsService,
   database: DatabaseService,
   eventLogger: ComputeEventLogger,
+  functionInvocationService: FunctionInvocationService,
   functionCallService: RemoteFunctionExecutionService,
   queues: QueueService,
   tracing: TracingService,

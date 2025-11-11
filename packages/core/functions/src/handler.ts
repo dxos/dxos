@@ -13,7 +13,13 @@ import { assertArgument } from '@dxos/invariant';
 import { Function } from './types';
 import { getUserFunctionIdInMetadata, setUserFunctionIdInMetadata } from './url';
 
-import { type ComputeEventLogger, type CredentialsService, type QueueService, type TracingService } from '.';
+import {
+  type ComputeEventLogger,
+  type CredentialsService,
+  type FunctionInvocationService,
+  type QueueService,
+  type TracingService,
+} from './services';
 
 // TODO(burdon): Model after http request. Ref Lambda/OpenFaaS.
 // https://docs.aws.amazon.com/lambda/latest/dg/typescript-handler.html
@@ -21,7 +27,7 @@ import { type ComputeEventLogger, type CredentialsService, type QueueService, ty
 // https://www.npmjs.com/package/aws-lambda
 
 /**
- * Union of all services tags.
+ * Services that are available to invoked functions.
  */
 export type Services =
   | AiService.AiService
@@ -29,7 +35,8 @@ export type Services =
   | DatabaseService
   | ComputeEventLogger
   | QueueService
-  | TracingService;
+  | TracingService
+  | FunctionInvocationService;
 
 /**
  * Function handler.
