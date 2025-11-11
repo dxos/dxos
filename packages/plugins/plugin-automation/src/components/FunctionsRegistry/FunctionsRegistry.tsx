@@ -9,6 +9,7 @@ import * as Schema from 'effect/Schema';
 import { useState } from 'react';
 import React, { useCallback } from 'react';
 
+import { Obj } from '@dxos/echo';
 import { Function } from '@dxos/functions';
 import { getDeployedFunctions } from '@dxos/functions-runtime/edge';
 import { useClient } from '@dxos/react-client';
@@ -19,7 +20,6 @@ import { controlItemClasses } from '@dxos/react-ui-form';
 import { List } from '@dxos/react-ui-list';
 import { ghostHover, mx } from '@dxos/react-ui-theme';
 
-import { Obj } from '@dxos/echo';
 import { meta } from '../../meta';
 
 const grid = 'grid grid-cols-[1fr_1fr_auto] min-bs-[2.5rem]';
