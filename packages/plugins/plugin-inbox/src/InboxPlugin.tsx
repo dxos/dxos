@@ -10,9 +10,10 @@ import { defineObjectForm } from '@dxos/plugin-space/types';
 import { Event, Message } from '@dxos/types';
 
 import {
-  ASSISTANT_BLUEPRINT_KEY,
   AppGraphBuilder,
   BlueprintDefinition,
+  CALENDAR_BLUEPRINT_KEY,
+  INBOX_BLUEPRINT_KEY,
   InboxState,
   IntentResolver,
   ReactSurface,
@@ -44,7 +45,7 @@ export const InboxPlugin = definePlugin(meta, () => [
         metadata: {
           icon: 'ph--tray--regular',
           iconHue: 'rose',
-          blueprints: [ASSISTANT_BLUEPRINT_KEY],
+          blueprints: [INBOX_BLUEPRINT_KEY],
         },
       }),
       contributes(Capabilities.Metadata, {
@@ -59,6 +60,7 @@ export const InboxPlugin = definePlugin(meta, () => [
         metadata: {
           icon: 'ph--calendar--regular',
           iconHue: 'rose',
+          blueprints: [CALENDAR_BLUEPRINT_KEY],
         },
       }),
       contributes(Capabilities.Metadata, {

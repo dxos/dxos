@@ -27,6 +27,7 @@ export namespace InboxAction {
 
   export class CreateCalendar extends Schema.TaggedClass<CreateCalendar>()(`${INBOX_ACTION}/create-calendar`, {
     input: Schema.Struct({
+      space: SpaceSchema,
       name: Schema.optional(Schema.String),
     }),
     output: Schema.Struct({

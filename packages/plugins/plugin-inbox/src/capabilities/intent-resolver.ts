@@ -43,8 +43,8 @@ export default (context: PluginContext) =>
     }),
     createResolver({
       intent: InboxAction.CreateCalendar,
-      resolve: () => ({
-        data: { object: Calendar.make() },
+      resolve: ({ name, space }) => ({
+        data: { object: Calendar.make({ name, space }) },
       }),
     }),
     createResolver({

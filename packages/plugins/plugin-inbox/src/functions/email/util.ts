@@ -58,16 +58,6 @@ export const normalizeText = (text: string): string => {
   return stripWhitespace(str);
 };
 
-// TODO(burdon): Reconcile with @dxos/util.
-export const createUrl = (parts: (string | undefined)[], params: Record<string, any> = {}): URL => {
-  const url = new URL(parts.filter(Boolean).join('/'));
-  Object.entries(params)
-    .filter(([_, value]) => value != null)
-    .forEach(([key, value]) => url.searchParams.set(key, value));
-
-  return url;
-};
-
 /**
  * Parses an email string in the format "Name <email@example.com>" into separate name and email components.
  */
