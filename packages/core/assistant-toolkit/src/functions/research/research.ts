@@ -22,7 +22,8 @@ import {
 } from '@dxos/assistant';
 import { Template } from '@dxos/blueprints';
 import { type DXN, Obj } from '@dxos/echo';
-import { DatabaseService, FunctionInvocationService, TracingService, defineFunction } from '@dxos/functions';
+import { DatabaseService, TracingService, defineFunction } from '@dxos/functions';
+import { FunctionInvocationServiceLayerTestMocked } from '@dxos/functions-runtime/testing';
 import { type Message, Person } from '@dxos/types';
 import { trim } from '@dxos/util';
 
@@ -154,7 +155,7 @@ export default defineFunction({
       ).pipe(
         Layer.provide(
           // TODO(dmaretskyi): This should be provided by environment.
-          Layer.mergeAll(FunctionInvocationService.layerTestMocked({ functions: [exaFunction, exaMockFunction] })),
+          Layer.mergeAll(FunctionInvocationServiceLayerTestMocked({ functions: [exaFunction, exaMockFunction] })),
         ),
       ),
     ),

@@ -20,14 +20,13 @@ import { PropertiesType } from '@dxos/client-protocol';
 import { Obj, Query, Ref } from '@dxos/echo';
 import { TestHelpers, acquireReleaseResource } from '@dxos/effect';
 import {
-  ComputeEventLogger,
   CredentialsService,
   DatabaseService,
   FunctionInvocationService,
   QueueService,
   TracingService,
 } from '@dxos/functions';
-import { TestDatabaseLayer } from '@dxos/functions/testing';
+import { FunctionInvocationServiceLayerTest, TestDatabaseLayer } from '@dxos/functions-runtime/testing';
 import { invariant } from '@dxos/invariant';
 import { ObjectId } from '@dxos/keys';
 import { Markdown } from '@dxos/plugin-markdown/types';
@@ -43,10 +42,9 @@ const TestLayer = Layer.mergeAll(
   AiService.model('@anthropic/claude-opus-4-0'),
   makeToolResolverFromFunctions([MarkdownFunction.create, MarkdownFunction.open, MarkdownFunction.update], testToolkit),
   makeToolExecutionServiceFromFunctions(testToolkit, testToolkit.toLayer({}) as any),
-  ComputeEventLogger.layerFromTracing,
 ).pipe(
   Layer.provideMerge(
-    FunctionInvocationService.layerTest({
+    FunctionInvocationServiceLayerTest({
       functions: [MarkdownFunction.create, MarkdownFunction.open, MarkdownFunction.update],
     }),
   ),

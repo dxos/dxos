@@ -69,7 +69,8 @@ export default defineConfig((env) => ({
     outDir: 'out/composer',
     sourcemap: true,
     minify: !isFalse(process.env.DX_MINIFY),
-    target: ['chrome89', 'edge89', 'firefox89', 'safari15'],
+    // Target modern browsers for better performance and smaller bundle sizes.
+    target: ['chrome108', 'edge107', 'firefox104', 'safari16'],
     rollupOptions: {
       // NOTE: Set cache to `false` to help debug flaky builds.
       // cache: false,
@@ -142,6 +143,11 @@ export default defineConfig((env) => ({
 
     react({
       tsDecorators: true,
+      useAtYourOwnRisk_mutateSwcOptions: (options) => {
+        // Disable syntax lowering. Prevents perfomance loss due to private properties polyfill.
+        options.jsc ??= {};
+        options.jsc.target = 'esnext';
+      },
       plugins: [
         [
           '@dxos/swc-log-plugin',

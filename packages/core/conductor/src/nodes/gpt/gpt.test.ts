@@ -8,8 +8,8 @@ import * as Effect from 'effect/Effect';
 import { Obj, Ref } from '@dxos/echo';
 import type { EchoDatabase, QueueFactory } from '@dxos/echo-db';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
-import { type ServiceContainer } from '@dxos/functions';
-import { createTestServices } from '@dxos/functions/testing';
+import { type ServiceContainer } from '@dxos/functions-runtime';
+import { createTestServices } from '@dxos/functions-runtime/testing';
 import { log } from '@dxos/log';
 import { Message } from '@dxos/types';
 
@@ -42,7 +42,7 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('gptNode', () => {
 
     it.effect(
       'gpt simple',
-      Effect.fn(function* () {
+      Effect.fnUntraced(function* () {
         const input: GptInput = {
           prompt: 'What is the meaning of life? Answer in 10 words or less.',
         };
@@ -60,7 +60,7 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('gptNode', () => {
 
     it.effect(
       'gpt with history',
-      Effect.fn(function* () {
+      Effect.fnUntraced(function* () {
         const conversation = queues.create();
         yield* Effect.promise(() =>
           conversation.append([

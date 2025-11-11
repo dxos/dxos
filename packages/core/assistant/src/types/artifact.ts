@@ -7,7 +7,7 @@ import * as Schema from 'effect/Schema';
 
 import { type ObjectNotFoundError, type Type } from '@dxos/echo';
 import { type ObjectId } from '@dxos/echo/internal';
-import { DatabaseService } from '@dxos/functions';
+import { DatabaseService } from '@dxos/echo-db';
 import { DXN, LOCAL_SPACE_TAG, type SpaceId } from '@dxos/keys';
 import { trim } from '@dxos/util';
 

@@ -13,8 +13,8 @@ import { AiService } from '@dxos/ai';
 import { AiServiceTestingPreset } from '@dxos/ai/testing';
 import { makeToolExecutionServiceFromFunctions, makeToolResolverFromFunctions } from '@dxos/assistant';
 import { TestHelpers } from '@dxos/effect';
-import { ComputeEventLogger, CredentialsService, FunctionInvocationService, TracingService } from '@dxos/functions';
-import { TestDatabaseLayer } from '@dxos/functions/testing';
+import { CredentialsService, FunctionInvocationService, TracingService } from '@dxos/functions';
+import { FunctionInvocationServiceLayerTestMocked, TestDatabaseLayer } from '@dxos/functions-runtime/testing';
 
 import { default as fetchMessages } from './fetch-messages';
 
@@ -22,7 +22,6 @@ const TestLayer = Layer.mergeAll(
   AiService.model('@anthropic/claude-opus-4-0'),
   makeToolResolverFromFunctions([], Toolkit.make()),
   makeToolExecutionServiceFromFunctions(Toolkit.make() as any, Layer.empty as any),
-  ComputeEventLogger.layerFromTracing,
 ).pipe(
   Layer.provideMerge(
     Layer.mergeAll(
@@ -30,9 +29,8 @@ const TestLayer = Layer.mergeAll(
       TestDatabaseLayer({}),
       CredentialsService.layerConfig([{ service: 'discord.com', apiKey: Config.redacted('DISCORD_TOKEN') }]),
       FetchHttpClient.layer,
-      FunctionInvocationService.layerTestMocked({ functions: [fetchMessages] }).pipe(
-        Layer.provideMerge(ComputeEventLogger.layerFromTracing),
-        Layer.provideMerge(TracingService.layerLogInfo()),
+      FunctionInvocationServiceLayerTestMocked({ functions: [fetchMessages] }).pipe(
+        Layer.provideMerge(TracingService.layerNoop),
       ),
     ),
   ),
@@ -53,6 +51,7 @@ describe('Feed', { timeout: 600_000 }, () => {
         console.log(messages);
       },
       Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
       TestHelpers.taggedTest('sync'),
     ),
   );

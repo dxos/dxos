@@ -4,7 +4,7 @@
 
 import React, { type FC, useMemo } from 'react';
 
-import { TraceEvent } from '@dxos/functions';
+import { TraceEvent } from '@dxos/functions-runtime';
 import { Filter, type Queue, useQuery } from '@dxos/react-client/echo';
 import { Callout } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
