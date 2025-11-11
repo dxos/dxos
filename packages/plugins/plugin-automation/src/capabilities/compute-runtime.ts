@@ -14,10 +14,8 @@ import { Query, Ref } from '@dxos/echo';
 import { CredentialsService, DatabaseService, QueueService } from '@dxos/functions';
 import {
   FunctionImplementationResolver,
-  FunctionInvocationServiceLayer,
   FunctionInvocationServiceLayerWithLocalLoopbackExecutor,
   InvocationTracer,
-  LocalFunctionExecutionService,
   RemoteFunctionExecutionService,
   TriggerDispatcher,
 } from '@dxos/functions-runtime';

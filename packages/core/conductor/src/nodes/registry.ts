@@ -7,7 +7,7 @@ import * as Schema from 'effect/Schema';
 import { JSONPath } from 'jsonpath-plus';
 
 import { Filter, Ref, Type } from '@dxos/echo';
-import { ObjectId, getTypename, isInstanceOf, toEffectSchema } from '@dxos/echo/internal';
+import { ObjectId, getTypename, isInstanceOf } from '@dxos/echo/internal';
 import { live } from '@dxos/echo/internal';
 import { DatabaseService, Queue } from '@dxos/echo-db';
 import { FunctionDefinition, FunctionInvocationService, QueueService } from '@dxos/functions';

@@ -10,9 +10,6 @@ import { Obj, Type } from '@dxos/echo';
 import { type DatabaseService } from '@dxos/echo-db';
 import { assertArgument } from '@dxos/invariant';
 
-import { Function } from './types';
-import { getUserFunctionIdInMetadata, setUserFunctionIdInMetadata } from './url';
-
 import {
   type ComputeEventLogger,
   type CredentialsService,
@@ -20,6 +17,8 @@ import {
   type QueueService,
   type TracingService,
 } from './services';
+import { Function } from './types';
+import { getUserFunctionIdInMetadata, setUserFunctionIdInMetadata } from './url';
 
 // TODO(burdon): Model after http request. Ref Lambda/OpenFaaS.
 // https://docs.aws.amazon.com/lambda/latest/dg/typescript-handler.html

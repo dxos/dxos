@@ -11,11 +11,11 @@ import { AiService } from '@dxos/ai';
 import { raise } from '@dxos/debug';
 import { DatabaseService } from '@dxos/echo-db';
 import {
-  type Services,
   ComputeEventLogger,
   CredentialsService,
   FunctionInvocationService,
   QueueService,
+  type Services,
   TracingService,
   createDefectLogger,
 } from '@dxos/functions';

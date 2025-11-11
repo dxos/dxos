@@ -18,8 +18,8 @@ import {
   FunctionInvocationService,
   FunctionNotFoundError,
   QueueService,
+  type Services,
   type TracingService,
-  Services,
 } from '@dxos/functions';
 import { log } from '@dxos/log';
 

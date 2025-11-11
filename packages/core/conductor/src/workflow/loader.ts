@@ -2,10 +2,12 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as Effect from 'effect/Effect';
+
 import { toEffectSchema } from '@dxos/echo/internal';
+import { FunctionDefinition, FunctionInvocationService } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { type DXN } from '@dxos/keys';
-import { Effect } from 'effect';
 
 import { type ComputeResolver, GraphExecutor, compileOrThrow } from '../compiler';
 import { NODE_INPUT, NODE_OUTPUT, type NodeType, inputNode, outputNode, registry } from '../nodes';
@@ -20,7 +22,6 @@ import {
 } from '../types';
 
 import { Workflow } from './workflow';
-import { FunctionInvocationService, FunctionDefinition } from '@dxos/functions';
 
 export type WorkflowLoaderParams = {
   nodeResolver: (node: ComputeNode) => Promise<Executable>;
