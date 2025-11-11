@@ -222,7 +222,24 @@ export type UploadFunctionRequest = {
   ownerPublicKey: string;
   entryPoint: string;
   assets: Record<string, Uint8Array>;
+  /**
+   * Runtime in Edge that will be used to run the function.
+   * Runtime cannot be changed once the function was deployed.
+   */
+  runtime: Runtime;
 };
+
+/**
+ * Note: Do not change the values of these enums, this values are stored in the FunctionVersions database.
+ */
+export enum Runtime {
+  // https://developers.cloudflare.com/cloudflare-for-platforms/workers-for-platforms/
+  WORKERS_FOR_PLATFORMS = 'WORKERS_FOR_PLATFORMS',
+  // https://developers.cloudflare.com/workers/runtime-apis/bindings/worker-loader/
+  WORKER_LOADER = 'WORKER_LOADER',
+  // Custom worker dispatcher for local testing.
+  TEST = 'TEST',
+}
 
 export type UploadFunctionResponseBody = {
   functionId: string;

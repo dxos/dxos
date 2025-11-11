@@ -2,8 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
+import * as HttpClient from '@effect/platform';
 import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
-import * as HttpClient from '@effect/platform/HttpClient';
 import * as Effect from 'effect/Effect';
 import * as Function from 'effect/Function';
 
@@ -267,6 +267,7 @@ export class EdgeHttpClient {
     formData.append('version', body.version);
     formData.append('ownerPublicKey', body.ownerPublicKey);
     formData.append('entryPoint', body.entryPoint);
+    formData.append('runtime', body.runtime);
     for (const [filename, content] of Object.entries(body.assets)) {
       formData.append(
         'assets',
