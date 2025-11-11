@@ -2,11 +2,12 @@
 
 ## Build, Test, Lint Commands
 
+- Project uses `moon` to run tasks, tests, lint etc. (moon run package-name:task-name).
 - Build all: `moon :build --quiet --no-bail`
 - Build package: `moon run package-name:build`
 - Run single test file: `moon run package-name:test -- path/to/test.test.ts`
 - Run all tests: `MOON_CONCURRENCY=4 moon run :test -- --no-file-parallelism`
-- Lint & fix: `moon run package-name:lint -- --fix`
+- Lint & fix: `moon run :lint -- --fix`
 - Check package tasks: see `moon.yml` in package directory
 
 ## Code Style

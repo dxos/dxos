@@ -15,7 +15,7 @@ import { Message } from '@dxos/types';
 
 import { ValueBag } from '../../types';
 
-import { type GptInput, gptNode } from './node';
+import { type GptInput, gptNode } from './gpt';
 
 const ENABLE_LOGGING = true;
 

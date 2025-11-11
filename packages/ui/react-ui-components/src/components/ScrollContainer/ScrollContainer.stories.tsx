@@ -36,13 +36,13 @@ const DefaultStory = (props: ScrollContainerRootProps) => {
         <div>{lines.length}</div>
       </Toolbar.Root>
       <ScrollContainer.Root {...props} ref={scroller}>
-        <ScrollContainer.Content>
+        <ScrollContainer.Viewport>
           {lines.map((line, index) => (
             <div key={index} className='p-2'>
               {line}
             </div>
           ))}
-        </ScrollContainer.Content>
+        </ScrollContainer.Viewport>
       </ScrollContainer.Root>
     </div>
   );

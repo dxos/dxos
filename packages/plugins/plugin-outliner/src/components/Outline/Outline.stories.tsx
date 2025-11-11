@@ -14,7 +14,7 @@ import { render } from '@dxos/storybook-utils';
 import { translations } from '../../translations';
 import { Outline } from '../../types';
 
-import { OutlineComponent } from './Outline';
+import { Outline as OutlineComponent } from './Outline';
 
 const meta = {
   title: 'plugins/plugin-outliner/Outline',

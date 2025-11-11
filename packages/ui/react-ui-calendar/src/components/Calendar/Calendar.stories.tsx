@@ -7,6 +7,8 @@ import React from 'react';
 
 import { withTheme } from '@dxos/react-ui/testing';
 
+import { translations } from '../../translations';
+
 import { Calendar } from './Calendar';
 
 const meta = {
@@ -15,6 +17,7 @@ const meta = {
   decorators: [withTheme],
   parameters: {
     layout: 'centered',
+    translations,
   },
 } satisfies Meta<typeof Calendar.Grid>;
 
@@ -25,10 +28,10 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {
   render: () => (
     <Calendar.Root>
-      <Calendar.Content>
+      <Calendar.Viewport>
         <Calendar.Header />
-        <Calendar.Grid />
-      </Calendar.Content>
+        <Calendar.Grid rows={6} />
+      </Calendar.Viewport>
     </Calendar.Root>
   ),
 };
@@ -36,21 +39,38 @@ export const Default: Story = {
 export const Border: Story = {
   render: () => (
     <Calendar.Root>
-      <Calendar.Content classNames='bg-modalSurface border border-separator rounded'>
+      <Calendar.Viewport classNames='bg-modalSurface border border-separator rounded'>
         <Calendar.Header />
-        <Calendar.Grid />
-      </Calendar.Content>
+        <Calendar.Grid rows={6} />
+      </Calendar.Viewport>
     </Calendar.Root>
   ),
 };
 
 export const Column: Story = {
   render: () => (
-    <Calendar.Root>
-      <Calendar.Content classNames='absolute inset-0 flex bs-full justify-center'>
-        <Calendar.Header />
-        <Calendar.Grid grow />
-      </Calendar.Content>
-    </Calendar.Root>
+    <div className='absolute inset-0 flex bs-full justify-center'>
+      <Calendar.Root>
+        <Calendar.Viewport>
+          <Calendar.Header />
+          <Calendar.Grid />
+        </Calendar.Viewport>
+      </Calendar.Root>
+    </div>
+  ),
+};
+
+export const Mobile: Story = {
+  render: () => (
+    <div className='absolute inset-0 flex bs-full justify-center'>
+      <div className='flex bs-full is-[400px] justify-center'>
+        <Calendar.Root>
+          <Calendar.Viewport classNames='is-full'>
+            <Calendar.Header />
+            <Calendar.Grid />
+          </Calendar.Viewport>
+        </Calendar.Root>
+      </div>
+    </div>
   ),
 };

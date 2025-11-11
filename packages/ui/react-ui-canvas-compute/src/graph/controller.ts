@@ -12,8 +12,8 @@ import { Event, synchronized } from '@dxos/async';
 import {
   type ComputeEdge,
   type ComputeGraphModel,
-  type ComputeMeta,
   type ComputeNode,
+  type ComputeNodeMeta,
   type GptInput,
   type GptOutput,
   type GraphDiagnostic,
@@ -212,7 +212,7 @@ export class ComputeGraphController extends Resource {
     });
   }
 
-  async getMeta(node: ComputeNode): Promise<ComputeMeta> {
+  async getMeta(node: ComputeNode): Promise<ComputeNodeMeta> {
     const { meta } = await resolveComputeNode(node);
     return meta;
   }

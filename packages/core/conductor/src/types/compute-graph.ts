@@ -51,6 +51,12 @@ export const ComputeNode = Schema.extend(
 
 export type ComputeNode = Schema.Schema.Type<typeof ComputeNode>;
 
+// TODO(dmaretskyi): To effect schema.
+export type ComputeNodeMeta = {
+  input: Schema.Schema.AnyNoContext;
+  output: Schema.Schema.AnyNoContext;
+};
+
 /**
  * GraphEdge.
  */

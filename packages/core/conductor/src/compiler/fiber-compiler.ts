@@ -25,8 +25,8 @@ import { ComputeNodeError, InvalidValueError } from '../errors';
 import {
   type ComputeEffect,
   type ComputeGraphModel,
-  type ComputeMeta,
   type ComputeNode,
+  type ComputeNodeMeta,
   type ComputeRequirements,
   type Executable,
   NotExecuted,
@@ -47,11 +47,11 @@ export type ValidateParams = {
   graph: ComputeGraphModel;
   inputNodeId: string;
   outputNodeId: string;
-  computeMetaResolver: (node: ComputeNode) => Promise<ComputeMeta>;
+  computeMetaResolver: (node: ComputeNode) => Promise<ComputeNodeMeta>;
 };
 
 export type ValidateResult = {
-  meta: ComputeMeta;
+  meta: ComputeNodeMeta;
   diagnostics: GraphDiagnostic[];
 };
 
@@ -170,11 +170,12 @@ export const compileOrThrow = async (params: CompileParams): Promise<Executable>
   if (result.diagnostics.length) {
     throw new Error(`Graph compilation failed:\n${formatDiagnostics(result.diagnostics)}`);
   }
+
   return result.executable;
 };
 
 type GraphExecutorParams = {
-  computeMetaResolver?: (node: ComputeNode) => Promise<ComputeMeta>;
+  computeMetaResolver?: (node: ComputeNode) => Promise<ComputeNodeMeta>;
   computeNodeResolver?: (node: ComputeNode) => Promise<Executable>;
 };
 
@@ -192,7 +193,7 @@ type GraphExecutorParams = {
 export class GraphExecutor {
   private readonly _computeCache = new Map<string, ComputeEffect<ValueBag<any>>>();
 
-  private readonly _computeMetaResolver: (node: ComputeNode) => Promise<ComputeMeta>;
+  private readonly _computeMetaResolver: (node: ComputeNode) => Promise<ComputeNodeMeta>;
   private readonly _computeNodeResolver: (node: ComputeNode) => Promise<Executable>;
 
   private _topology?: Topology = undefined;
@@ -236,7 +237,7 @@ export class GraphExecutor {
     return this._topology?.diagnostics ?? [];
   }
 
-  getMeta(nodeId: string): ComputeMeta {
+  getMeta(nodeId: string): ComputeNodeMeta {
     invariant(this._topology, 'Graph not loaded');
     const node = this._topology!.nodes.find((node) => node.id === nodeId) ?? failedInvariant();
     return node.meta;
