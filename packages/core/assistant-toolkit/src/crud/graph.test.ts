@@ -24,7 +24,7 @@ import { makeGraphWriterHandler, makeGraphWriterToolkit } from './graph';
 // import { type EchoTestBuilder } from '@dxos/echo-db/testing';
 
 const TestLayer = Function.pipe(
-  AiService.model('@anthropic/@anthropic/claude-sonnet-4-5'),
+  AiService.model('@anthropic/claude-sonnet-4-5'),
   Layer.provideMerge(DatabaseService.notAvailable),
   Layer.provideMerge(ToolResolverService.layerEmpty),
   Layer.provideMerge(ToolExecutionService.layerEmpty),

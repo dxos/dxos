@@ -80,9 +80,7 @@ describe('effect AI tool calls', () => {
         expect(messages.length).toBeGreaterThan(1);
       },
       Effect.provide(
-        AiService.model('@anthropic/@anthropic/claude-sonnet-4-5').pipe(
-          Layer.provideMerge(AiServiceTestingPreset('direct')),
-        ),
+        AiService.model('@anthropic/claude-sonnet-4-5').pipe(Layer.provideMerge(AiServiceTestingPreset('direct'))),
       ),
       TestHelpers.runIf(process.env.ANTHROPIC_API_KEY),
       TestHelpers.taggedTest('llm'),
