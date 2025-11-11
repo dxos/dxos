@@ -27,17 +27,8 @@ import { TracingServiceExt } from '../trace';
 import { InvocationTracer } from './invocation-tracer';
 import { TriggerDispatcher } from './trigger-dispatcher';
 import { TriggerStateStore } from './trigger-state-store';
-
-// Example function for testing
-const Example = {
-  reply: defineFunction({
-    key: 'example.org/function/reply',
-    name: 'reply',
-    inputSchema: Schema.Struct({ message: Schema.String }),
-    outputSchema: Schema.String,
-    handler: ({ data }) => `Reply: ${data.message}`,
-  }),
-};
+import { ObjectId } from '@dxos/keys';
+import { Example } from '@dxos/functions';
 
 const TestLayer = Fn.pipe(
   Layer.mergeAll(ComputeEventLogger.layerFromTracing, InvocationTracer.layerTest, TriggerStateStore.layerMemory),
