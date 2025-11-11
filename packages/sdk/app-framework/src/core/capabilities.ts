@@ -196,7 +196,7 @@ export class PluginContext {
    * Get the Atom reference to the available capabilities for a given interface.
    * Primarily useful for deriving other Atom values based on the capabilities or
    * for subscribing to changes in the capabilities.
-   * @returns An Rx reference to the available capabilities.
+   * @returns An atom reference to the available capabilities.
    */
   capabilities<T>(interfaceDef: InterfaceDef<T>): Atom.Atom<T[]> {
     // NOTE: This the type-checking for capabilities is done at the time of contribution.
@@ -207,7 +207,7 @@ export class PluginContext {
    * Get the Atom reference to the available capabilities for a given interface.
    * Primarily useful for deriving other Atom values based on the capability or
    * for subscribing to changes in the capability.
-   * @returns An Rx reference to the available capability.
+   * @returns An atom reference to the available capability.
    * @throws If no capability is found.
    */
   capability<T>(interfaceDef: InterfaceDef<T>): Atom.Atom<T> {

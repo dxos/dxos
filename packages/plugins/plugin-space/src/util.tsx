@@ -36,7 +36,7 @@ export const SHARED = 'shared-spaces';
 /**
  * Convert a query result to an Atom value of the objects.
  */
-export const rxFromQuery = <T extends AnyEchoObject>(query: QueryResult<T>): Atom.Atom<T[]> => {
+export const atomFromQuery = <T extends AnyEchoObject>(query: QueryResult<T>): Atom.Atom<T[]> => {
   return Atom.make((get) => {
     const unsubscribe = query.subscribe((result) => {
       get.setSelf(result.objects);

@@ -20,7 +20,7 @@ import { DXN, Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { ATTENDABLE_PATH_SEPARATOR, PLANK_COMPANION_TYPE } from '@dxos/plugin-deck/types';
-import { ROOT_ID, createExtension, rxFromSignal } from '@dxos/plugin-graph';
+import { ROOT_ID, atomFromSignal, createExtension } from '@dxos/plugin-graph';
 import { getActiveSpace } from '@dxos/plugin-space';
 import { SpaceAction } from '@dxos/plugin-space/types';
 import { Query, type Space, getSpace } from '@dxos/react-client/echo';
@@ -122,7 +122,7 @@ export default (context: PluginContext) =>
             Option.flatMap((node) => (Obj.isObject(node.data) ? Option.some(node.data) : Option.none())),
             Option.flatMap((object) => {
               const currentChatState = get(
-                rxFromSignal(
+                atomFromSignal(
                   () => context.getCapability(AssistantCapabilities.State).currentChat[Obj.getDXN(object).toString()],
                 ),
               );
@@ -134,7 +134,7 @@ export default (context: PluginContext) =>
               const space = getSpace(object);
               const currentChatDxn = DXN.tryParse(currentChatState);
               const currentChatRef = currentChatDxn ? space?.db.ref(currentChatDxn) : undefined;
-              const currentChat = get(rxFromSignal(() => currentChatRef?.target));
+              const currentChat = get(atomFromSignal(() => currentChatRef?.target));
               return currentChat ? Option.some({ object, currentChat }) : Option.none();
             }),
             Option.map(({ object, currentChat }) => {

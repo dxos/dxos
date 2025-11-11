@@ -9,7 +9,7 @@ import * as Option from 'effect/Option';
 import { Capabilities, type PluginContext, contributes } from '@dxos/app-framework';
 import { Obj } from '@dxos/echo';
 import { ATTENDABLE_PATH_SEPARATOR, DECK_COMPANION_TYPE, PLANK_COMPANION_TYPE } from '@dxos/plugin-deck/types';
-import { ROOT_ID, createExtension, rxFromSignal } from '@dxos/plugin-graph';
+import { ROOT_ID, atomFromSignal, createExtension } from '@dxos/plugin-graph';
 import { getActiveSpace, meta as spaceMeta } from '@dxos/plugin-space';
 
 import { meta } from '../meta';
@@ -30,7 +30,7 @@ export default (context: PluginContext) =>
               node.id === ROOT_ID || node.type === `${spaceMeta.id}/settings` ? Option.some(node) : Option.none(),
             ),
             Option.map((node) => {
-              const space = get(rxFromSignal(() => getActiveSpace(context)));
+              const space = get(atomFromSignal(() => getActiveSpace(context)));
               const [graph] = get(context.capabilities(Capabilities.AppGraph));
 
               return [

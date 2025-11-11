@@ -12,8 +12,8 @@ import {
   type ActionGraphProps,
   MenuProvider,
   ToolbarMenu,
+  atomFromSignal,
   createGapSeparator,
-  rxFromSignal,
   useMenuActions,
 } from '@dxos/react-ui-menu';
 
@@ -51,7 +51,7 @@ export const ScriptToolbar = ({ script, role, state }: ScriptToolbarProps) => {
 const createToolbarActions = ({ state, script, ...options }: CreateDeployOptions): Atom.Atom<ActionGraphProps> =>
   Atom.make((get) =>
     get(
-      rxFromSignal(() => {
+      atomFromSignal(() => {
         const templateSelect = createTemplateSelect(script);
         const format = createFormat(script);
         const gap = createGapSeparator();
