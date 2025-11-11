@@ -225,8 +225,9 @@ export type UploadFunctionRequest = {
   /**
    * Runtime in Edge that will be used to run the function.
    * Runtime cannot be changed once the function was deployed.
+   * @default Runtime.WORKERS_FOR_PLATFORMS
    */
-  runtime: Runtime;
+  runtime?: Runtime;
 };
 
 /**
@@ -237,7 +238,7 @@ export enum Runtime {
   WORKERS_FOR_PLATFORMS = 'WORKERS_FOR_PLATFORMS',
   // https://developers.cloudflare.com/workers/runtime-apis/bindings/worker-loader/
   WORKER_LOADER = 'WORKER_LOADER',
-  // Custom worker dispatcher for local testing.
+  // Local worker dispatcher for testing.
   TEST = 'TEST',
 }
 
