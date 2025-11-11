@@ -5,39 +5,17 @@
 import { it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Either from 'effect/Either';
-import * as Schema from 'effect/Schema';
-import { describe, test } from 'vitest';
-
-import { Ref } from '@dxos/echo';
-import { logCustomEvent } from '@dxos/functions';
-import { createTestServices } from '@dxos/functions-runtime/testing';
-import { DXN } from '@dxos/keys';
-import { mapValues } from '@dxos/util';
 import * as Layer from 'effect/Layer';
+import * as Schema from 'effect/Schema';
+import { describe } from 'vitest';
 
-import { AiService, ConsolePrinter, MemoizedAiService } from '@dxos/ai';
 import { TestAiService } from '@dxos/ai/testing';
-import {
-  AiConversation,
-  type ContextBinding,
-  GenerationObserver,
-  makeToolExecutionServiceFromFunctions,
-  makeToolResolverFromFunctions,
-} from '@dxos/assistant';
-import { Blueprint } from '@dxos/blueprints';
-import { Filter, Obj, Query } from '@dxos/echo';
-import { TestHelpers, acquireReleaseResource } from '@dxos/effect';
-import {
-  ComputeEventLogger,
-  CredentialsService,
-  DatabaseService,
-  FunctionInvocationService,
-  QueueService,
-  TracingService,
-} from '@dxos/functions';
+import { Ref } from '@dxos/echo';
+import { TestHelpers } from '@dxos/effect';
+import { logCustomEvent } from '@dxos/functions';
+import { ComputeEventLogger, CredentialsService, TracingService } from '@dxos/functions';
 import { FunctionInvocationServiceLayerTest, TestDatabaseLayer } from '@dxos/functions-runtime/testing';
-import { invariant } from '@dxos/invariant';
-import { ObjectId } from '@dxos/keys';
+import { DXN } from '@dxos/keys';
 
 import { NODE_INPUT, NODE_OUTPUT } from '../nodes';
 import { TestRuntime } from '../testing';

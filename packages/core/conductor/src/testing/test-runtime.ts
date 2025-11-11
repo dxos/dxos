@@ -9,6 +9,7 @@ import { raise } from '@dxos/debug';
 import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
 
+import { type Services } from '../../../functions/src';
 import { GraphExecutor } from '../compiler';
 import {
   type ComputeGraphModel,
@@ -19,7 +20,6 @@ import {
   type ValueRecord,
 } from '../types';
 import { WorkflowLoader } from '../workflow';
-import { type Services } from '../../../functions/src';
 
 export class TestRuntime {
   // TODO(burdon): Index by DXN; ComputeGraph instances.

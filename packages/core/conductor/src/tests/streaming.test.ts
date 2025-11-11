@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Schema from 'effect/Schema';
 import * as Stream from 'effect/Stream';
-import { describe, test } from 'vitest';
+import { describe } from 'vitest';
 
 import { TestAiService } from '@dxos/ai/testing';
 import { TestHelpers } from '@dxos/effect';

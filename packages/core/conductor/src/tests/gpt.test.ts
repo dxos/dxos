@@ -6,12 +6,10 @@ import { it } from '@effect/vitest';
 import * as Chunk from 'effect/Chunk';
 import * as Console from 'effect/Console';
 import * as Effect from 'effect/Effect';
-import * as Exit from 'effect/Exit';
 import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
-import * as Scope from 'effect/Scope';
 import * as Stream from 'effect/Stream';
-import { describe, test } from 'vitest';
+import { describe } from 'vitest';
 
 import { TestAiService } from '@dxos/ai/testing';
 import { TestHelpers } from '@dxos/effect';
@@ -21,7 +19,7 @@ import { log } from '@dxos/log';
 
 import { type GptOutput, NODE_INPUT, NODE_OUTPUT } from '../nodes';
 import { TestRuntime } from '../testing';
-import { ComputeGraphModel, ValueBag, type ValueEffect } from '../types';
+import { ComputeGraphModel, ValueBag } from '../types';
 
 const TestLayer = Layer.mergeAll(ComputeEventLogger.layerFromTracing).pipe(
   Layer.provideMerge(FunctionInvocationServiceLayerTest()),

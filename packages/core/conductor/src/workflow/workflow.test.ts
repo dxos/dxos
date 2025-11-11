@@ -3,26 +3,15 @@
 //
 
 import { it } from '@effect/vitest';
-import type * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
-import type * as Scope from 'effect/Scope';
-import { describe, expect, test } from 'vitest';
+import { describe } from 'vitest';
 
-import { TestHelpers } from '@dxos/effect';
-
-import { todo } from '@dxos/debug';
-import { Obj, Ref } from '@dxos/echo';
-import { ObjectId, type RefResolver, setRefResolver } from '@dxos/echo/internal';
 import { TestAiService } from '@dxos/ai/testing';
-import {
-  ComputeEventLogger,
-  CredentialsService,
-  Function,
-  TracingService,
-  setUserFunctionIdInMetadata,
-} from '@dxos/functions';
-import { type RemoteFunctionExecutionService } from '@dxos/functions-runtime';
+import { Obj, Ref } from '@dxos/echo';
+import { ObjectId } from '@dxos/echo/internal';
+import { TestHelpers } from '@dxos/effect';
+import { ComputeEventLogger, CredentialsService, TracingService } from '@dxos/functions';
 import { FunctionInvocationServiceLayerTest, TestDatabaseLayer } from '@dxos/functions-runtime/testing';
 import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
@@ -35,7 +24,6 @@ import {
   ComputeGraph,
   ComputeGraphModel,
   type ComputeNode,
-  type ComputeRequirements,
   type Executable,
   ValueBag,
   synchronizedComputeFunction,
