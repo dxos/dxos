@@ -244,9 +244,7 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
         // Invoke the function
         return yield* FunctionInvocationService.invokeFunction(functionDef, inputData).pipe(
           Effect.provide(
-            ComputeEventLogger.layerFromTracing.pipe(
-              Layer.provideMerge(TracingServiceExt.layerQueue(trace.invocationTraceQueue)),
-            ),
+            TracingServiceExt.layerQueue(trace.invocationTraceQueue),
           ),
         );
       }).pipe(Effect.exit);

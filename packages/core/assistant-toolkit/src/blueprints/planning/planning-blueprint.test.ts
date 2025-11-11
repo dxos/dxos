@@ -109,7 +109,6 @@ describe('Planning Blueprint', { timeout: 120_000 }, () => {
         ).pipe(
           Layer.provideMerge(
             FunctionInvocationServiceLayerTestMocked({ functions: [Tasks.read, Tasks.update] }).pipe(
-              Layer.provideMerge(ComputeEventLogger.layerFromTracing),
               Layer.provideMerge(TracingService.layerNoop),
             ),
           ),

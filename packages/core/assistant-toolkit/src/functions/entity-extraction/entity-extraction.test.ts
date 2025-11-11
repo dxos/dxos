@@ -34,7 +34,6 @@ const TestLayer = Layer.mergeAll(
   AiService.model('@anthropic/claude-opus-4-0'),
   makeToolResolverFromFunctions([], testToolkit),
   makeToolExecutionServiceFromFunctions(testToolkit, testToolkit.toLayer({}) as any),
-  ComputeEventLogger.layerFromTracing,
 ).pipe(
   Layer.provideMerge(FunctionInvocationServiceLayerTest({ functions: [entityExtraction] })),
   Layer.provideMerge(

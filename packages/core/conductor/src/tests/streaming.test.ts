@@ -19,7 +19,7 @@ import { TestRuntime } from '../testing';
 import { ComputeGraphModel, ValueBag, defineComputeNode, synchronizedComputeFunction } from '../types';
 import { StreamSchema } from '../util';
 
-const TestLayer = Layer.mergeAll(ComputeEventLogger.layerFromTracing).pipe(
+const TestLayer = Layer.empty.pipe(
   Layer.provideMerge(FunctionInvocationServiceLayerTest()),
   Layer.provideMerge(
     Layer.mergeAll(

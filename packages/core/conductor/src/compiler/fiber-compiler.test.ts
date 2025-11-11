@@ -31,7 +31,7 @@ import {
 
 const ENABLE_LOGGING = false;
 
-const TestLayer = Layer.mergeAll(ComputeEventLogger.layerFromTracing).pipe(
+const TestLayer = Layer.empty.pipe(
   Layer.provideMerge(FunctionInvocationServiceLayerTest()),
   Layer.provideMerge(
     Layer.mergeAll(

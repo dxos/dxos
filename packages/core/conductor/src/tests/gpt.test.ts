@@ -21,7 +21,7 @@ import { type GptOutput, NODE_INPUT, NODE_OUTPUT } from '../nodes';
 import { TestRuntime } from '../testing';
 import { ComputeGraphModel, ValueBag } from '../types';
 
-const TestLayer = Layer.mergeAll(ComputeEventLogger.layerFromTracing).pipe(
+const TestLayer = Layer.empty.pipe(
   Layer.provideMerge(FunctionInvocationServiceLayerTest()),
   Layer.provideMerge(
     Layer.mergeAll(

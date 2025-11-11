@@ -28,13 +28,12 @@ import { TriggerDispatcher } from './trigger-dispatcher';
 import { TriggerStateStore } from './trigger-state-store';
 
 const TestLayer = Fn.pipe(
-  Layer.mergeAll(ComputeEventLogger.layerFromTracing, InvocationTracer.layerTest, TriggerStateStore.layerMemory),
+  Layer.mergeAll(InvocationTracer.layerTest, TriggerStateStore.layerMemory),
   Layer.provideMerge(
     Layer.mergeAll(
       AiService.notAvailable,
       CredentialsService.layerConfig([]),
       FunctionInvocationServiceLayerTestMocked({ functions: [Example.reply] }).pipe(
-        Layer.provideMerge(ComputeEventLogger.layerFromTracing),
         Layer.provideMerge(TracingServiceExt.layerLogInfo()),
       ),
       FetchHttpClient.layer,

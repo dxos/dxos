@@ -22,7 +22,6 @@ const TestLayer = Layer.mergeAll(
   AiService.model('@anthropic/claude-opus-4-0'),
   makeToolResolverFromFunctions([], Toolkit.make()),
   makeToolExecutionServiceFromFunctions(Toolkit.make() as any, Layer.empty as any),
-  ComputeEventLogger.layerFromTracing,
 ).pipe(
   Layer.provideMerge(
     Layer.mergeAll(
@@ -31,7 +30,6 @@ const TestLayer = Layer.mergeAll(
       CredentialsService.layerConfig([{ service: 'discord.com', apiKey: Config.redacted('DISCORD_TOKEN') }]),
       FetchHttpClient.layer,
       FunctionInvocationServiceLayerTestMocked({ functions: [fetchMessages] }).pipe(
-        Layer.provideMerge(ComputeEventLogger.layerFromTracing),
         Layer.provideMerge(TracingService.layerNoop),
       ),
     ),

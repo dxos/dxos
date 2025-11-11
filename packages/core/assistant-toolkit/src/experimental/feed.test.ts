@@ -28,7 +28,6 @@ const TestLayer = Layer.mergeAll(
   AiService.model('@anthropic/claude-opus-4-0'),
   makeToolResolverFromFunctions([], Toolkit.make()),
   makeToolExecutionServiceFromFunctions(Toolkit.make() as any, Layer.empty as any),
-  ComputeEventLogger.layerFromTracing,
 ).pipe(
   Layer.provideMerge(
     Layer.mergeAll(
@@ -44,7 +43,6 @@ const TestLayer = Layer.mergeAll(
         { service: 'linear.app', apiKey: Config.redacted('LINEAR_API_KEY') },
       ]),
       FunctionInvocationServiceLayerTestMocked({ functions: [Linear.sync, Discord.fetch] }).pipe(
-        Layer.provideMerge(ComputeEventLogger.layerFromTracing),
         Layer.provideMerge(TracingServiceExt.layerLogInfo()),
       ),
       FetchHttpClient.layer,

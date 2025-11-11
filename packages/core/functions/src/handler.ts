@@ -11,7 +11,6 @@ import { type DatabaseService } from '@dxos/echo-db';
 import { assertArgument } from '@dxos/invariant';
 
 import {
-  type ComputeEventLogger,
   type CredentialsService,
   type FunctionInvocationService,
   type QueueService,
@@ -32,7 +31,6 @@ export type Services =
   | AiService.AiService
   | CredentialsService
   | DatabaseService
-  | ComputeEventLogger
   | QueueService
   | TracingService
   | FunctionInvocationService;

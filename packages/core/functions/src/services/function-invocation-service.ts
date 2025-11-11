@@ -11,7 +11,7 @@ import { type ComputeEventLogger, type TracingService } from '.';
 /**
  * Services that are provided at the function call site.
  */
-export type InvocationServices = TracingService | ComputeEventLogger;
+export type InvocationServices = TracingService;
 
 export class FunctionInvocationService extends Context.Tag('@dxos/functions/FunctionInvocationService')<
   FunctionInvocationService,

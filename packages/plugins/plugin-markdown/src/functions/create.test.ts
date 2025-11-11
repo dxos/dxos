@@ -43,7 +43,6 @@ const TestLayer = Layer.mergeAll(
   AiService.model('@anthropic/claude-opus-4-0'),
   makeToolResolverFromFunctions([MarkdownFunction.create, MarkdownFunction.open, MarkdownFunction.update], testToolkit),
   makeToolExecutionServiceFromFunctions(testToolkit, testToolkit.toLayer({}) as any),
-  ComputeEventLogger.layerFromTracing,
 ).pipe(
   Layer.provideMerge(
     FunctionInvocationServiceLayerTest({

@@ -9,7 +9,7 @@ import { raise } from '@dxos/debug';
 import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
 
-import { type Services } from '../../../functions/src';
+import { type Services, ComputeEventLogger } from '@dxos/functions';
 import { GraphExecutor } from '../compiler';
 import {
   type ComputeGraphModel,
@@ -66,7 +66,7 @@ export class TestRuntime {
     return Effect.gen(this, function* () {
       const program = yield* Effect.promise(() => this._workflowLoader.load(DXN.parse(graphDxn)));
       return yield* program.run(input);
-    }).pipe(Effect.withSpan('compute-graph'));
+    }).pipe(Effect.withSpan('compute-graph'), Effect.provide(ComputeEventLogger.layerFromTracing));
   }
 
   // TODO(dmaretskyi): Support cases where the are no or multiple "input" nodes.
@@ -93,6 +93,6 @@ export class TestRuntime {
       }
 
       return result;
-    });
+    }).pipe(Effect.withSpan('compute-graph'), Effect.provide(ComputeEventLogger.layerFromTracing));
   }
 }

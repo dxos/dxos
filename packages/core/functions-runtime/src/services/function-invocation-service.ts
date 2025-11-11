@@ -7,14 +7,10 @@ import * as Layer from 'effect/Layer';
 
 import { AiService } from '@dxos/ai';
 import { DatabaseService } from '@dxos/echo-db';
-import { CredentialsService, FunctionInvocationService, QueueService } from '@dxos/functions';
+import { type InvocationServices, CredentialsService, FunctionInvocationService, QueueService } from '@dxos/functions';
 import { type FunctionDefinition } from '@dxos/functions';
 
-import {
-  FunctionImplementationResolver,
-  type InvocationServices,
-  LocalFunctionExecutionService,
-} from './local-function-execution';
+import { FunctionImplementationResolver, LocalFunctionExecutionService } from './local-function-execution';
 import { RemoteFunctionExecutionService } from './remote-function-execution-service';
 
 /**

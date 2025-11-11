@@ -52,7 +52,6 @@ const TestLayer = Layer.mergeAll(
     testToolkit,
   ),
   makeToolExecutionServiceFromFunctions(testToolkit, testToolkit.toLayer({}) as any),
-  ComputeEventLogger.layerFromTracing,
 ).pipe(
   Layer.provideMerge(
     FunctionInvocationServiceLayerTest({

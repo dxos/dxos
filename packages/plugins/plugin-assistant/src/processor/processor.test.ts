@@ -40,7 +40,6 @@ const TestServicesLayer = Layer.mergeAll(
   }),
   // CredentialsService.configuredLayer([{ service: 'exa.ai', apiKey: EXA_API_KEY }]),
   FunctionInvocationServiceLayerTestMocked({ functions: [] }).pipe(
-    Layer.provideMerge(ComputeEventLogger.layerFromTracing),
     Layer.provideMerge(TracingService.layerNoop),
   ),
 );
@@ -50,7 +49,6 @@ const TestLayer: Layer.Layer<AiChatServices, never, never> = Layer.mergeAll(
   makeToolResolverFromFunctions([], toolkit),
   makeToolExecutionServiceFromFunctions(toolkit, toolkit.toLayer({}) as any),
   CredentialsService.layerFromDatabase(),
-  ComputeEventLogger.layerFromTracing,
 ).pipe(Layer.provideMerge(TestServicesLayer), Layer.orDie);
 
 // TODO(burdon): Create actual test with mock LLM.

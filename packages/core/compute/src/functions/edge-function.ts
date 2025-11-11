@@ -74,7 +74,7 @@ export class EdgeFunctionPlugin extends AsyncFunctionPlugin {
         const result = runtime.runPromise(
           Effect.gen(function* () {
             return yield* FunctionInvocationService.invokeFunction(functionDef, input);
-          }).pipe(Effect.provide(ComputeEventLogger.layerFromTracing), Effect.provide(TracingService.layerNoop)),
+          }).pipe(Effect.provide(TracingService.layerNoop)),
         );
         return result as any;
       };

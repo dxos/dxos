@@ -14,7 +14,7 @@ import { FunctionInvocationServiceLayerTest, TestDatabaseLayer } from '@dxos/fun
 
 import { ValueBag } from './compute';
 
-const TestLayer = Layer.mergeAll(ComputeEventLogger.layerFromTracing).pipe(
+const TestLayer = Layer.empty.pipe(
   Layer.provideMerge(FunctionInvocationServiceLayerTest()),
   Layer.provideMerge(
     Layer.mergeAll(

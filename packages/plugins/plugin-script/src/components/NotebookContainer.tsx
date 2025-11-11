@@ -242,9 +242,7 @@ const runPrompt = Effect.fn(function* ({
   // Invoke the function.
   const result = yield* FunctionInvocationService.invokeFunction(Agent.prompt, inputData).pipe(
     Effect.provide(
-      ComputeEventLogger.layerFromTracing.pipe(
-        Layer.provideMerge(TracingServiceExt.layerQueue(trace.invocationTraceQueue)),
-      ),
+      TracingServiceExt.layerQueue(trace.invocationTraceQueue),
     ),
     Effect.exit,
   );

@@ -11,6 +11,7 @@ import { AiService } from '@dxos/ai';
 import { DatabaseService } from '@dxos/echo-db';
 import {
   type ComputeEventLogger,
+  type InvocationServices,
   CredentialsService,
   type FunctionContext,
   type FunctionDefinition,
@@ -22,11 +23,6 @@ import {
   type TracingService,
 } from '@dxos/functions';
 import { log } from '@dxos/log';
-
-/**
- * Services that are provided at the function call site.
- */
-export type InvocationServices = TracingService | ComputeEventLogger;
 
 export class LocalFunctionExecutionService extends Context.Tag('@dxos/functions/LocalFunctionExecutionService')<
   LocalFunctionExecutionService,
