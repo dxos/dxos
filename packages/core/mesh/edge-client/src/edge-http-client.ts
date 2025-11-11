@@ -267,6 +267,7 @@ export class EdgeHttpClient {
     formData.append('version', body.version);
     formData.append('ownerPublicKey', body.ownerPublicKey);
     formData.append('entryPoint', body.entryPoint);
+    body.runtime && formData.append('runtime', body.runtime);
     for (const [filename, content] of Object.entries(body.assets)) {
       formData.append(
         'assets',
