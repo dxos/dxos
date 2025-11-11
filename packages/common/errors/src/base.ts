@@ -45,19 +45,20 @@ export class BaseError<Code extends string = string> extends Error {
     };
   }
 
-  #code: Code;
-  #context: Record<string, unknown>;
+  // NOTE: Errors go through odd transformations and the private fields seem to break.
+  code: Code;
+  context: Record<string, unknown>;
 
   constructor(code: Code, options?: BaseErrorOptions) {
     super(options?.message, { cause: options?.cause });
 
-    this.#code = code;
-    this.#context = options?.context ?? {};
+    this.code = code;
+    this.context = options?.context ?? {};
     Object.setPrototypeOf(this, new.target.prototype);
   }
 
   override get name() {
-    return this.#code;
+    return this.code;
   }
 
   /** Fallback message. */
@@ -65,16 +66,8 @@ export class BaseError<Code extends string = string> extends Error {
     return this.constructor.name;
   }
 
-  get code(): Code {
-    return this.#code;
-  }
-
   // For effect error matching.
   get _tag(): Code {
-    return this.#code;
-  }
-
-  get context() {
-    return this.#context;
+    return this.code;
   }
 }

@@ -1,0 +1,202 @@
+#!/usr/bin/env node
+
+import { spawn } from 'child_process';
+import { createInterface } from 'readline';
+import { stdout, stderr } from 'process';
+
+/**
+ * Moon output parser and progress display.
+ * Spawns moon as a child process and displays interactive progress.
+ */
+
+const state = {
+  completed: new Set(),
+  cached: new Set(),
+  failed: new Set(),
+  inProgress: new Set(),
+};
+
+const TASK_REGEX = /^▪▪▪▪ ([\w-]+:[\w-]+)/;
+const CACHED_REGEX = /\(cached,/;
+const TIMING_REGEX = /\((\d+[a-z]+ )?(\d+[a-z]+), ([a-f0-9]+)\)$/;
+const ERROR_REGEX = /ERROR|FAILED|✖/i;
+const ANSI_REGEX = /\x1B\[[0-9;]*m/g;
+
+/**
+ * Strip ANSI color codes from a string.
+ */
+function stripAnsi(str) {
+  return str.replace(ANSI_REGEX, '');
+}
+
+/**
+ * Parse a line from moon output.
+ */
+function parseLine(line) {
+  const cleanLine = stripAnsi(line);
+  const match = cleanLine.match(TASK_REGEX);
+  if (!match) {
+    // Check for errors in non-task lines.
+    if (ERROR_REGEX.test(line)) {
+      // Error output, but we need task context.
+      return null;
+    }
+    return null;
+  }
+
+  const taskName = match[1];
+
+  if (CACHED_REGEX.test(cleanLine)) {
+    return { type: 'cached', task: taskName };
+  }
+
+  if (TIMING_REGEX.test(cleanLine)) {
+    return { type: 'completed', task: taskName };
+  }
+
+  return { type: 'started', task: taskName };
+}
+
+/**
+ * Update task state based on parsed line.
+ */
+function updateState(parsed) {
+  if (!parsed) return;
+
+  const { type, task } = parsed;
+
+  switch (type) {
+    case 'started':
+      state.inProgress.add(task);
+      break;
+
+    case 'completed':
+      state.completed.add(task);
+      state.inProgress.delete(task);
+      break;
+
+    case 'cached':
+      state.cached.add(task);
+      state.inProgress.delete(task);
+      break;
+  }
+}
+
+/**
+ * Render the progress line.
+ * Simply writes a blank line followed by the status line.
+ */
+function renderProgress() {
+  const total = state.completed.size + state.cached.size + state.failed.size + state.inProgress.size;
+  const done = state.completed.size + state.cached.size;
+  const failed = state.failed.size;
+  const inProgress = Array.from(state.inProgress).slice(0, 2);
+
+  let segments = [];
+
+  // Tasks segment (blue background).
+  segments.push(`\x1b[44m\x1b[97m ${done}/${total} \x1b[0m\x1b[34m\x1b[0m`);
+
+  // Failed segment (red background).
+  if (failed > 0) {
+    segments.push(`\x1b[41m\x1b[97m ✗ ${failed} \x1b[0m\x1b[31m\x1b[0m`);
+  }
+
+  // In progress segment (dim gray background, full width).
+  const tasks = inProgress.join(', ');
+  const statusLine = segments.join('');
+
+  // Calculate how much space is left for tasks.
+  // Strip ANSI codes to get actual display width.
+  const statusWidth = statusLine.replace(/\x1B\[[0-9;]*m/g, '').length;
+  const termWidth = stdout.columns || 80;
+  const availableWidth = termWidth - statusWidth - 3; // -3 for leading space + icon
+
+  const truncated = tasks.length > availableWidth ? tasks.substring(0, availableWidth - 3) + '...' : tasks;
+  const padding = ' '.repeat(Math.max(0, termWidth - statusWidth - truncated.length - 3));
+
+  segments.push(`\x1b[100m\x1b[37m  ${truncated}${padding}\x1b[0m`);
+
+  // Write blank line + status.
+  stdout.write('\n' + segments.join(' ') + '\n');
+}
+
+// Get command line arguments (skip node and script path).
+const args = process.argv.slice(2);
+
+// Spawn moon process.
+const moon = spawn('moon', args, {
+  stdio: ['inherit', 'pipe', 'pipe'],
+  shell: false,
+  env: {
+    ...process.env,
+    MOON_COLOR: '3',
+  },
+});
+
+// Set up readline interfaces for stdout and stderr.
+const rlStdout = createInterface({
+  input: moon.stdout,
+  terminal: false,
+});
+
+const rlStderr = createInterface({
+  input: moon.stderr,
+  terminal: false,
+});
+
+// Initial render so we have 2 lines ready before first log comes in.
+renderProgress();
+
+/**
+ * Process a line from moon output.
+ */
+function processLine(line, isStderr = false) {
+  // 1. Parse.
+  const parsed = parseLine(line);
+  updateState(parsed);
+
+  // 2. Clear the 2 previous lines (blank line + status line).
+  stdout.write('\x1b[1A\r\x1b[K\x1b[1A\r\x1b[K');
+
+  // 3. Forward if needed (non-task lines).
+  if (!parsed) {
+    if (isStderr) {
+      stderr.write(line + '\n');
+    } else {
+      stdout.write(line + '\n');
+    }
+  }
+
+  // 4. Render status (always).
+  renderProgress();
+}
+
+// Process each line from stdout.
+rlStdout.on('line', (line) => processLine(line, false));
+
+// Process each line from stderr.
+rlStderr.on('line', (line) => processLine(line, true));
+
+// Handle moon process exit.
+moon.on('close', (code) => {
+  // Clear the 2 status lines and add a final newline.
+  stdout.write('\x1b[1A\r\x1b[K\x1b[1A\r\x1b[K\n');
+
+  process.exit(code);
+});
+
+// Handle errors.
+moon.on('error', (err) => {
+  stderr.write(`\nFailed to start moon: ${err.message}\n`);
+  process.exit(1);
+});
+
+// Forward signals to moon process.
+process.on('SIGINT', () => {
+  moon.kill('SIGINT');
+});
+
+process.on('SIGTERM', () => {
+  moon.kill('SIGTERM');
+});

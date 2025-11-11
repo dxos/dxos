@@ -168,6 +168,11 @@ const createNodeProject = ({ environment = 'node', retry, timeout, setupFiles = 
       // Add react plugin to enable SWC transfors.
       react({
         tsDecorators: true,
+        useAtYourOwnRisk_mutateSwcOptions: (options) => {
+          // Disable syntax lowering. Prevents perfomance loss due to private properties polyfill.
+          options.jsc ??= {};
+          options.jsc.target = 'esnext';
+        },
         plugins: [
           [
             '@dxos/swc-log-plugin',

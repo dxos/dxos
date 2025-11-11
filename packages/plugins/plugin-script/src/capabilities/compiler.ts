@@ -6,7 +6,7 @@
 import wasmUrl from 'esbuild-wasm/esbuild.wasm?url';
 
 import { contributes } from '@dxos/app-framework';
-import { initializeBundler } from '@dxos/functions/bundler';
+import { initializeBundler } from '@dxos/functions-runtime/bundler';
 
 import { Compiler } from '../compiler';
 

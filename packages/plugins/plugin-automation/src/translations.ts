@@ -22,6 +22,8 @@ export const translations = [
 
         'functions panel label': 'Functions',
         'functions verbose label': 'Manage deployed functions',
+        'functions registry verbose label': 'Functions registry',
+        'functions registry description': 'Import functions from the registry',
         'functions description': 'You can manage all the functions deployed from your space on EDGE here.',
         'function copy id': 'Copy Function ID',
         'no functions found': 'No functions found',

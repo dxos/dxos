@@ -9,6 +9,7 @@ import { useMemo } from 'react';
 import { useCapability } from '@dxos/app-framework/react';
 import { type Space } from '@dxos/client/echo';
 import { TracingService } from '@dxos/functions';
+import { TracingServiceExt } from '@dxos/functions-runtime';
 import { AutomationCapabilities } from '@dxos/plugin-automation';
 import { useClient } from '@dxos/react-client';
 
@@ -39,7 +40,9 @@ export const useChatServices = ({
         Effect.gen(function* () {
           return yield* Effect.runtime<AiChatServices>().pipe(
             Effect.provide(
-              chat?.traceQueue?.target ? TracingService.layerQueue(chat.traceQueue?.target) : TracingService.layerNoop,
+              chat?.traceQueue?.target
+                ? TracingServiceExt.layerQueue(chat.traceQueue?.target)
+                : TracingService.layerNoop,
             ),
           );
         }),
