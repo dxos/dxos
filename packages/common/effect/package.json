@@ -28,7 +28,7 @@
     "@dxos/invariant": "workspace:*",
     "@dxos/node-std": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@effect/opentelemetry": "^0.58.0",
+    "@effect/opentelemetry": "^0.59.0",
     "@opentelemetry/api": "^1.9.0",
     "jsonpath-plus": "10.2.0"
   },
@@ -40,7 +40,7 @@
     "@opentelemetry/sdk-node": "^0.203.0",
     "@opentelemetry/sdk-trace-node": "^2.1.0",
     "@opentelemetry/semantic-conventions": "^1.37.0",
-    "effect": "3.18.3"
+    "effect": "3.19.3"
   },
   "peerDependencies": {
     "effect": "^3.13.3"

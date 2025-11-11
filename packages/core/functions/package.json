@@ -34,8 +34,8 @@
     "@dxos/node-std": "workspace:*",
     "@dxos/schema": "workspace:*",
     "@dxos/types": "workspace:*",
-    "@effect/platform": "0.92.1",
-    "effect": "3.18.3"
+    "@effect/platform": "0.93.0",
+    "effect": "3.19.3"
   },
   "publishConfig": {
     "access": "public"

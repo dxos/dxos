@@ -12,7 +12,7 @@ jobs:
       matrix:
         packages:
           - name: effect
-            spec: 'effect "@effect/*"'
+            spec: 'effect "@effect/*" "@effect-atom/*" dfx'
           - name: vite
             spec: 'vite "@vite/*" "vitest*" vitest storybook "@storybook/*"'
           - name: typescript

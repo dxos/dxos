@@ -29,7 +29,7 @@
     "@dxos/log": "workspace:*",
     "@dxos/schema": "workspace:*",
     "@dxos/util": "workspace:*",
-    "effect": "3.18.3",
+    "effect": "3.19.3",
     "handlebars": "4.7.8"
   },
   "devDependencies": {},
