@@ -251,7 +251,7 @@ const CalendarGrid = ({ classNames, rows, onSelect }: CalendarGridProps) => {
       className={mx('flex flex-col bs-full is-full justify-center overflow-hidden bg-modalSurface', classNames)}
     >
       {/* Day labels */}
-      <div role='none' className='flex shink-0 justify-center bg-groupSurface'>
+      <div role='none' className='flex justify-center bg-groupSurface'>
         <div role='none' className='flex is-full grid grid-cols-7' style={{ width: defaultWidth }}>
           {days.map((date, i) => (
             <div key={i} role='none' className='flex justify-center p-2 text-sm font-thin'>
