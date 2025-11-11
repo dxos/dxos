@@ -168,10 +168,11 @@ const CalendarGrid = ({ classNames, rows, onSelect }: CalendarGridProps) => {
   const listRef = useRef<List>(null);
   const today = useMemo(() => new Date(), []);
 
+  const [initialized, setInitialized] = useState(false);
   useEffect(() => {
     const index = differenceInWeeks(today, start);
     listRef.current?.scrollToRow(index);
-  }, [listRef.current, start, today]);
+  }, [initialized, start, today]);
 
   useEffect(() => {
     return event.on((event) => {
@@ -250,8 +251,8 @@ const CalendarGrid = ({ classNames, rows, onSelect }: CalendarGridProps) => {
       className={mx('flex flex-col bs-full is-full justify-center overflow-hidden bg-modalSurface', classNames)}
     >
       {/* Day labels */}
-      <div role='none' className='flex justify-center bg-groupSurface'>
-        <div role='none' className='flex shink-0 is-full grid grid-cols-7' style={{ width: defaultWidth }}>
+      <div role='none' className='flex shink-0 justify-center bg-groupSurface'>
+        <div role='none' className='flex is-full grid grid-cols-7' style={{ width: defaultWidth }}>
           {days.map((date, i) => (
             <div key={i} role='none' className='flex justify-center p-2 text-sm font-thin'>
               {date}
@@ -260,7 +261,7 @@ const CalendarGrid = ({ classNames, rows, onSelect }: CalendarGridProps) => {
         </div>
       </div>
       {/* Grid */}
-      <div role='none' className='flex flex-col bs-full is-full justify-center' ref={containerRef}>
+      <div role='none' className='flex flex-col bs-full is-full justify-center overflow-hidden' ref={containerRef}>
         <List
           ref={listRef}
           role='none'
@@ -273,6 +274,7 @@ const CalendarGrid = ({ classNames, rows, onSelect }: CalendarGridProps) => {
           rowRenderer={rowRenderer}
           scrollToAlignment='start'
           onScroll={handleScroll}
+          onRowsRendered={() => setInitialized(true)}
         />
       </div>
     </div>
