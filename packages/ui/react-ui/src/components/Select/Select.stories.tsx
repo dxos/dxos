@@ -8,7 +8,7 @@ import React, { useState } from 'react';
 import { faker } from '@dxos/random';
 
 import { withTheme } from '../../testing';
-import { withSurfaceVariantsLayout } from '../../testing';
+import { withLayoutVariants } from '../../testing';
 
 import { Select } from './Select';
 
@@ -44,7 +44,7 @@ const DefaultStory = ({ items = [] }: StoryProps) => {
 const meta = {
   title: 'ui/react-ui-core/Select',
   render: DefaultStory,
-  decorators: [withTheme, withSurfaceVariantsLayout()],
+  decorators: [withTheme, withLayoutVariants()],
 } satisfies Meta<typeof DefaultStory>;
 
 export default meta;

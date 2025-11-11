@@ -3,4 +3,3 @@
 //
 
 export * from './Example';
-export * from './TemplateContainer';
