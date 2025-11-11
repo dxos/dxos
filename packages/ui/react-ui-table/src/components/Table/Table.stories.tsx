@@ -22,7 +22,7 @@ import { PublicKey } from '@dxos/react-client';
 import { type Space } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { withTheme } from '@dxos/react-ui/testing';
-import { ViewEditor } from '@dxos/react-ui-form';
+import { ViewEditor, translations as formTranslations } from '@dxos/react-ui-form';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { View, getSchemaFromPropertyDefinitions, getTypenameFromQuery } from '@dxos/schema';
 import { Testing, createObjectFactory } from '@dxos/schema/testing';
@@ -198,7 +198,7 @@ const meta = {
     controls: {
       disable: true,
     },
-    translations,
+    translations: [...translations, ...formTranslations],
   },
 } satisfies Meta<typeof TableComponent>;
 
@@ -229,7 +229,7 @@ export const StaticSchema: StoryObj = {
   ],
   parameters: {
     layout: 'fullscreen',
-    translations,
+    translations: [...translations, ...formTranslations],
   },
 };
 

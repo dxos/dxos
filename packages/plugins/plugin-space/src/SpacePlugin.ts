@@ -17,6 +17,7 @@ import {
 import { Ref, Tag, Type } from '@dxos/echo';
 import { AttentionEvents } from '@dxos/plugin-attention';
 import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
+import { translations as formTranslations } from '@dxos/react-ui-form';
 import { Collection, DataTypes, StoredSchema, createDefaultSchema } from '@dxos/schema';
 import { translations as shellTranslations } from '@dxos/shell/react';
 import {
@@ -94,7 +95,8 @@ export const SpacePlugin = definePlugin<SpacePluginOptions>(
       defineModule({
         id: `${meta.id}/module/translations`,
         activatesOn: Events.SetupTranslations,
-        activate: () => contributes(Capabilities.Translations, [...translations, ...shellTranslations]),
+        activate: () =>
+          contributes(Capabilities.Translations, [...translations, ...formTranslations, ...shellTranslations]),
       }),
       defineModule({
         id: `${meta.id}/module/metadata`,
