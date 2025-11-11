@@ -74,7 +74,6 @@ const DefaultStory = (props: StoryProps) => {
         name: 'Test',
         query: Query.select(Filter.type(TestSchema)),
         jsonSchema: Type.toJsonSchema(TestSchema),
-        presentation: Obj.make(Type.Expando, {}),
       });
 
       setSchema(testSchema);
@@ -102,7 +101,6 @@ const DefaultStory = (props: StoryProps) => {
         const newView = View.make({
           query,
           jsonSchema: newSchema.jsonSchema,
-          presentation: Obj.make(Type.Expando, {}),
         });
         view.projection = Obj.getSnapshot(newView).projection;
         setSchema(() => newSchema);

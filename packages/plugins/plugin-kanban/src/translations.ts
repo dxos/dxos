@@ -2,6 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
+import { Type } from '@dxos/echo';
 import { type Resource } from '@dxos/react-ui';
 import { Kanban } from '@dxos/react-ui-kanban/types';
 
@@ -10,7 +11,7 @@ import { meta } from './meta';
 export const translations = [
   {
     'en-US': {
-      [Kanban.Kanban.typename]: {
+      [Type.getTypename(Kanban.Kanban)]: {
         'typename label': 'Kanban',
         'typename label_zero': 'Kanbans',
         'typename label_one': 'Kanban',

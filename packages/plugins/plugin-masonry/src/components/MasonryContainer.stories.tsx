@@ -3,7 +3,7 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 
 import { IntentPlugin, SettingsPlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
@@ -29,16 +29,10 @@ faker.seed(0);
 const StorybookMasonry = () => {
   const spaces = useSpaces();
   const space = spaces[spaces.length - 1];
-  const views = useQuery(space, Filter.type(View.View));
-  const [view, setView] = useState<View.View>();
-  useEffect(() => {
-    if (views.length && !view) {
-      const view = views[0];
-      setView(view);
-    }
-  }, [views]);
+  const masonries = useQuery(space, Filter.type(Masonry.Masonry));
+  const masonry = masonries.at(0);
 
-  return view ? <MasonryContainer view={view} role='story' /> : null;
+  return masonry ? <MasonryContainer object={masonry} role='story' /> : null;
 };
 
 const meta = {
@@ -56,12 +50,12 @@ const meta = {
             const space = await client.spaces.create();
             await space.waitUntilReady();
 
-            const { view } = await Masonry.makeView({
+            const masonry = await Masonry.make({
               space,
               client,
               typename: Organization.Organization.typename,
             });
-            space.db.add(view);
+            space.db.add(masonry);
 
             const factory = createObjectFactory(space.db, faker as any);
             await factory([{ type: Organization.Organization, count: 64 }]);

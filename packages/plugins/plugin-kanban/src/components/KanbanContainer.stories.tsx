@@ -3,7 +3,7 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useMemo } from 'react';
 
 import { IntentPlugin, SettingsPlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
@@ -24,7 +24,7 @@ import { Kanban as KanbanComponent, useKanbanModel } from '@dxos/react-ui-kanban
 import { Kanban } from '@dxos/react-ui-kanban/types';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { defaultTx } from '@dxos/react-ui-theme';
-import { ProjectionModel, View, getTypenameFromQuery } from '@dxos/schema';
+import { View, getTypenameFromQuery } from '@dxos/schema';
 import { Organization, Person } from '@dxos/types';
 
 import { translations } from '../translations';
@@ -47,35 +47,17 @@ const StorybookKanban = () => {
   const client = useClient();
   const spaces = useSpaces();
   const space = spaces[spaces.length - 1];
-  const views = useQuery(space, Filter.type(View.View));
-  const [view, setView] = useState<View.View>();
-  const [projection, setProjection] = useState<ProjectionModel>();
-  const typename = view?.query ? getTypenameFromQuery(view.query.ast) : undefined;
+  const [kanban] = useQuery(space, Filter.type(Kanban.Kanban));
+  const typename = kanban?.view.target?.query ? getTypenameFromQuery(kanban.view.target.query.ast) : undefined;
   const schema = useSchema(client, space, typename);
-
-  useEffect(() => {
-    if (views.length && !view) {
-      const view = views[0];
-      setView(view);
-    }
-  }, [views]);
-
-  useEffect(() => {
-    if (view?.projection && schema) {
-      const jsonSchema = Type.toJsonSchema(schema);
-      setProjection(new ProjectionModel(jsonSchema, view.projection));
-    }
-    // TODO(ZaymonFC): Is there a better way to get notified about deep changes in the json schema?
-    //  @dmaretskyi? Once resolved, update in multiple places (e.g., storybooks).
-  }, [view?.projection, schema, JSON.stringify(schema ? Type.toJsonSchema(schema) : {})]);
+  const jsonSchema = useMemo(() => schema && Type.toJsonSchema(schema), [schema]);
 
   const objects = useQuery(space, schema ? Filter.type(schema) : Filter.nothing());
   const filteredObjects = useGlobalFilteredObjects(objects);
 
   const model = useKanbanModel({
-    view,
-    schema,
-    projection,
+    kanban,
+    jsonSchema,
     items: filteredObjects,
   });
 
@@ -101,15 +83,15 @@ const StorybookKanban = () => {
     (newQuery: QueryAST.Query) => {
       invariant(schema);
       invariant(Type.isMutable(schema));
-      invariant(view);
+      invariant(kanban.view.target);
 
       schema.updateTypename(getTypenameFromQuery(newQuery));
-      view.query.ast = newQuery;
+      kanban.view.target.query.ast = newQuery;
     },
-    [view, schema],
+    [kanban, schema],
   );
 
-  if (!schema || !view) {
+  if (!schema || !kanban.view.target) {
     return null;
   }
 
@@ -120,14 +102,14 @@ const StorybookKanban = () => {
         <ViewEditor
           registry={space?.db.schemaRegistry}
           schema={schema}
-          view={view}
+          view={kanban.view.target}
           onQueryChanged={handleUpdateQuery}
           onDelete={(fieldId: string) => {
             console.log('[ViewEditor]', 'onDelete', fieldId);
           }}
         />
         <SyntaxHighlighter language='json' className='text-xs'>
-          {JSON.stringify({ view, schema }, null, 2)}
+          {JSON.stringify({ view: kanban.view.target, schema }, null, 2)}
         </SyntaxHighlighter>
       </div>
     </div>
@@ -156,13 +138,13 @@ const meta = {
             await client.halo.createIdentity();
             const space = await client.spaces.create();
             await space.waitUntilReady();
-            const { view } = await Kanban.makeView({
+            const kanban = await Kanban.make({
               client,
               space,
               typename: Organization.Organization.typename,
               pivotFieldName: 'status',
             });
-            space.db.add(view);
+            space.db.add(kanban);
 
             // TODO(burdon): Replace with sdk/schema/testing.
             Array.from({ length: 80 }).map(() => {

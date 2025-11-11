@@ -9,7 +9,7 @@ import { Filter, Query } from '@dxos/echo';
 import { TypedObject } from '@dxos/echo/internal';
 import { createEchoSchema } from '@dxos/echo/testing';
 import { live } from '@dxos/live-object';
-import { View } from '@dxos/schema';
+import { ProjectionModel, View } from '@dxos/schema';
 
 import { Table } from '../types';
 
@@ -95,11 +95,11 @@ class Test extends TypedObject({ typename: 'example.com/type/Test', version: '0.
 
 const createTableModel = (props: Partial<TableModelProps> = {}): TableModel => {
   const schema = createEchoSchema(Test);
-  const table = Table.make();
   const view = View.make({
     query: Query.select(Filter.type(schema)),
     jsonSchema: schema.jsonSchema,
-    presentation: table,
   });
-  return new TableModel({ view, schema: schema.jsonSchema, ...props });
+  const table = Table.makeWithView({ view });
+  const projection = new ProjectionModel(schema.jsonSchema, view.projection);
+  return new TableModel({ table, projection, ...props });
 };

@@ -3,7 +3,6 @@
 //
 
 import { Capabilities, LayoutAction, type PluginContext, contributes, createIntent } from '@dxos/app-framework';
-import { Query } from '@dxos/echo';
 import { SPACES, SpaceCapabilities, SpaceEvents } from '@dxos/plugin-space';
 
 import README_CONTENT from '../content/README.md?raw';
@@ -11,7 +10,7 @@ import README_CONTENT from '../content/README.md?raw';
 const SPACE_ICON = 'house-line';
 
 export default async (context: PluginContext) => {
-  const { Filter, Obj, Ref } = await import('@dxos/echo');
+  const { Obj, Ref } = await import('@dxos/echo');
   const { ClientCapabilities } = await import('@dxos/plugin-client');
   const { Markdown } = await import('@dxos/plugin-markdown/types');
   const { Collection, StoredSchema } = await import('@dxos/schema');
@@ -33,9 +32,8 @@ export default async (context: PluginContext) => {
   defaultSpaceCollection?.objects.push(Ref.make(readme));
   defaultSpaceCollection?.objects.push(
     Ref.make(
-      Obj.make(Collection.QueryCollection, {
-        // NOTE: This is specifically Filter.typename due to current limitations in query collection parsing.
-        query: Query.select(Filter.typename(StoredSchema.typename)).ast,
+      Obj.make(Collection.System, {
+        key: StoredSchema.typename,
       }),
     ),
   );

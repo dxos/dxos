@@ -11,26 +11,26 @@ import { useClient } from '@dxos/react-client';
 import { getSpace, useQuery, useSchema } from '@dxos/react-client/echo';
 import { Card } from '@dxos/react-ui-stack';
 import {
-  Table,
+  Table as TableComponent,
   type TableController,
   type TableFeatures,
   TablePresentation,
   useTableModel,
 } from '@dxos/react-ui-table';
+import { type Table } from '@dxos/react-ui-table/types';
 import { getTypenameFromQuery } from '@dxos/schema';
-import { type View } from '@dxos/schema';
 
 export type TableCardProps = {
   role: string;
-  view: View.View;
+  object: Table.Table;
 };
 
-export const TableCard = ({ role, view }: TableCardProps) => {
+export const TableCard = ({ role, object }: TableCardProps) => {
   const tableRef = useRef<TableController>(null);
 
   const client = useClient();
-  const space = getSpace(view);
-  const typename = view.query ? getTypenameFromQuery(view.query.ast) : undefined;
+  const space = getSpace(object);
+  const typename = object.view.target?.query ? getTypenameFromQuery(object.view.target?.query.ast) : undefined;
   const schema = useSchema(client, space, typename);
   const queriedObjects = useQuery(space, schema ? Filter.type(schema) : Filter.nothing());
   const filteredObjects = useGlobalFilteredObjects(queriedObjects);
@@ -52,8 +52,8 @@ export const TableCard = ({ role, view }: TableCardProps) => {
   }, [schema]);
 
   const model = useTableModel({
-    view,
-    schema: jsonSchema,
+    table: object,
+    jsonSchema,
     features,
     rows: filteredObjects,
     onCellUpdate: (cell) => tableRef.current?.update?.(cell),
@@ -63,16 +63,16 @@ export const TableCard = ({ role, view }: TableCardProps) => {
 
   return (
     <Card.SurfaceRoot role={role}>
-      <Table.Root role={role}>
-        <Table.Main
-          key={Obj.getDXN(view).toString()}
+      <TableComponent.Root role={role}>
+        <TableComponent.Main
+          key={Obj.getDXN(object).toString()}
           ref={tableRef}
           client={client}
           model={model}
           presentation={presentation}
           schema={schema}
         />
-      </Table.Root>
+      </TableComponent.Root>
     </Card.SurfaceRoot>
   );
 };

@@ -8,7 +8,6 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { expect, userEvent, within } from 'storybook/test';
 
 import { Obj, Type } from '@dxos/echo';
-import { type JsonSchemaType } from '@dxos/echo/internal';
 import { type DxGrid } from '@dxos/lit-grid';
 import '@dxos/lit-ui/dx-tag-picker.pcss';
 import { faker } from '@dxos/random';
@@ -38,8 +37,7 @@ const generator: ValueGenerator = faker as any;
 const useTestModel = <S extends Type.Obj.Any>(schema: S, count: number) => {
   const client = useClient();
   const { space } = useClientProvider();
-  const [view, setView] = useState<View.View>();
-  const [jsonSchema, setJsonSchema] = useState<JsonSchemaType>();
+  const [table, setTable] = useState<Table.Table>();
 
   const features = useMemo<TableFeatures>(
     () => ({ schemaEditable: false, dataEditable: true, selection: { enabled: false } }),
@@ -51,18 +49,14 @@ const useTestModel = <S extends Type.Obj.Any>(schema: S, count: number) => {
       return;
     }
 
-    const {
-      jsonSchema,
-      schema: effectSchema,
-      view,
-    } = await Table.makeView({ client, space, typename: Type.getTypename(schema) });
-    setJsonSchema(jsonSchema);
-    setView(view);
-    space.db.add(view);
-    await space.db.schemaRegistry.register([effectSchema]);
+    const table = await Table.make({ client, space, typename: Type.getTypename(schema) });
+    setTable(table);
+    space.db.add(table);
+    await space.db.schemaRegistry.register([schema]);
   }, [client, space, schema]);
 
-  const model = useTableModel<TableRow>({ view, schema: jsonSchema, rows: [], features });
+  const jsonSchema = useMemo(() => Type.toJsonSchema(schema), [schema]);
+  const model = useTableModel<TableRow>({ table, jsonSchema, features });
 
   useEffect(() => {
     if (!model || !space) {

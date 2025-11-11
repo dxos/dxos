@@ -7,7 +7,7 @@ import * as Function from 'effect/Function';
 
 import { LayoutAction, type PromiseIntentDispatcher, chain, createIntent } from '@dxos/app-framework';
 import { Obj, Ref, Type } from '@dxos/echo';
-import { type AnyEchoObject, EXPANDO_TYPENAME } from '@dxos/echo/internal';
+import { EXPANDO_TYPENAME } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
 import { Migrations } from '@dxos/migrations';
 import {
@@ -23,7 +23,7 @@ import {
 import { type QueryResult, type Space, SpaceState, getSpace, isSpace } from '@dxos/react-client/echo';
 import { ATTENDABLE_PATH_SEPARATOR } from '@dxos/react-ui-attention';
 import { type TreeData } from '@dxos/react-ui-list';
-import { Collection, StoredSchema, View, getTypenameFromQuery } from '@dxos/schema';
+import { Collection, StoredSchema } from '@dxos/schema';
 
 import { meta } from './meta';
 import { type ObjectForm, SPACE_TYPE, SpaceAction } from './types';
@@ -36,7 +36,7 @@ export const SHARED = 'shared-spaces';
 /**
  * Convert a query result to an Atom value of the objects.
  */
-export const atomFromQuery = <T extends AnyEchoObject>(query: QueryResult<T>): Atom.Atom<T[]> => {
+export const atomFromQuery = <T extends Obj.Any>(query: QueryResult<T>): Atom.Atom<T[]> => {
   return Atom.make((get) => {
     const unsubscribe = query.subscribe((result) => {
       get.setSelf(result.objects);
@@ -136,28 +136,22 @@ const getCollectionGraphNodePartials = ({
   };
 };
 
-const getQueryCollectionNodePartials = ({
+const getSystemCollectionNodePartials = ({
   collection,
   space,
   resolve,
 }: {
-  collection: Collection.QueryCollection;
+  collection: Collection.System;
   space: Space;
   resolve: (typename: string) => Record<string, any>;
 }) => {
-  const typename = getTypenameFromQuery(collection.query);
-  const metadata = typename ? resolve(typename) : {};
+  const metadata = resolve(collection.key);
   return {
     icon: metadata.icon,
     iconHue: metadata.iconHue,
     acceptPersistenceClass: new Set(['echo']),
     acceptPersistenceKey: new Set([space.id]),
     role: 'branch',
-    canDrop: (source: TreeData) => {
-      return (
-        isGraphNode(source.item) && Obj.isObject(source.item.data) && Obj.getTypename(source.item.data) === typename
-      );
-    },
     onTransferStart: (child: Node<Obj.Any>, index?: number) => {
       // No-op. Objects are moved into query collections by being removed from their original collection.
     },
@@ -170,25 +164,6 @@ const getQueryCollectionNodePartials = ({
 const getSchemaGraphNodePartials = () => {
   return {
     role: 'branch',
-    canDrop: () => false,
-  };
-};
-
-const getViewGraphNodePartials = ({
-  view,
-  resolve,
-}: {
-  view: View.View;
-  resolve: (typename: string) => Record<string, any>;
-}) => {
-  const presentation = view.presentation.target;
-  const typename = presentation ? Obj.getTypename(presentation) : undefined;
-  const metadata = typename ? resolve(typename) : {};
-
-  return {
-    label: view.name || ['object name placeholder', { ns: typename, default: 'New view' }],
-    icon: metadata.icon,
-    iconHue: metadata.iconHue,
     canDrop: () => false,
   };
 };
@@ -470,13 +445,11 @@ export const createObjectNode = ({
   const metadata = resolve(type);
   const partials = Obj.instanceOf(Collection.Collection, object)
     ? getCollectionGraphNodePartials({ collection: object, space, resolve })
-    : Obj.instanceOf(Collection.QueryCollection, object)
-      ? getQueryCollectionNodePartials({ collection: object, space, resolve })
+    : Obj.instanceOf(Collection.System, object)
+      ? getSystemCollectionNodePartials({ collection: object, space, resolve })
       : Obj.instanceOf(StoredSchema, object)
         ? getSchemaGraphNodePartials()
-        : Obj.instanceOf(View.View, object)
-          ? getViewGraphNodePartials({ view: object, resolve })
-          : metadata.graphProps;
+        : metadata.graphProps;
 
   // TODO(wittjosiah): Obj.getLabel isn't triggering reactivity in some cases.
   //   e.g., create new collection with no name and rename it.
@@ -487,7 +460,7 @@ export const createObjectNode = ({
 
   const selectable =
     (!Obj.instanceOf(StoredSchema, object) &&
-      !Obj.instanceOf(Collection.QueryCollection, object) &&
+      !Obj.instanceOf(Collection.System, object) &&
       !Obj.instanceOf(Collection.Collection, object)) ||
     (navigable && Obj.instanceOf(Collection.Collection, object));
 
@@ -535,9 +508,9 @@ export const constructObjectActions = ({
 
   const getId = (id: string) => `${id}/${Obj.getDXN(object).toString()}`;
 
-  const queryCollection = Obj.instanceOf(Collection.QueryCollection, object) ? object : undefined;
-  const matchingObjectForm = queryCollection
-    ? objectForms.find((form) => Type.getTypename(form.objectSchema) === getTypenameFromQuery(queryCollection.query))
+  const systemCollection = Obj.instanceOf(Collection.System, object) ? object : undefined;
+  const matchingObjectForm = systemCollection
+    ? objectForms.find((form) => Type.getTypename(form.objectSchema) === systemCollection.key)
     : undefined;
 
   const actions: NodeArg<ActionData>[] = [
@@ -591,7 +564,7 @@ export const constructObjectActions = ({
                 await dispatch(
                   createIntent(SpaceAction.OpenCreateObject, {
                     target: space,
-                    typename: queryCollection ? getTypenameFromQuery(queryCollection.query) : undefined,
+                    typename: systemCollection ? systemCollection.key : undefined,
                   }),
                 );
               } else {
@@ -651,7 +624,7 @@ export const constructObjectActions = ({
     },
     ...(navigable ||
     (!Obj.instanceOf(Collection.Collection, object) &&
-      !Obj.instanceOf(Collection.QueryCollection, object) &&
+      !Obj.instanceOf(Collection.System, object) &&
       !Obj.instanceOf(StoredSchema, object))
       ? [
           {

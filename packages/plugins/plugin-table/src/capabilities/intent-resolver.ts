@@ -56,8 +56,8 @@ export default (context: PluginContext) =>
       intent: TableAction.Create,
       resolve: async ({ space, name, typename }) => {
         const client = context.getCapability(ClientCapabilities.Client);
-        const { view } = await Table.makeView({ client, space, typename, name });
-        return { data: { object: view } };
+        const table = await Table.make({ client, space, typename, name });
+        return { data: { object: table } };
       },
     }),
     createResolver({

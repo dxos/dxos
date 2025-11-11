@@ -5,6 +5,7 @@
 import * as Schema from 'effect/Schema';
 
 import { Obj, Type } from '@dxos/echo';
+import { SystemAnnotation } from '@dxos/schema';
 
 import * as Actor from './Actor';
 
@@ -23,6 +24,8 @@ export const Event = Schema.Struct({
     typename: 'dxos.org/type/Event',
     version: '0.1.0',
   }),
+  // TODO(wittjosiah): Remove.
+  SystemAnnotation.set(true),
 );
 
 export interface Event extends Schema.Schema.Type<typeof Event> {}

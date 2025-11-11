@@ -2,6 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
+import { Type } from '@dxos/echo';
 import { type Resource } from '@dxos/react-ui';
 
 import { meta } from './meta';
@@ -10,7 +11,7 @@ import { Map } from './types';
 export const translations = [
   {
     'en-US': {
-      [Map.Map.typename]: {
+      [Type.getTypename(Map.Map)]: {
         'typename label': 'Map',
         'typename label_zero': 'Maps',
         'typename label_one': 'Map',

@@ -3,6 +3,7 @@
 //
 
 import { Capabilities, Events, contributes, createIntent, defineModule, definePlugin } from '@dxos/app-framework';
+import { Type } from '@dxos/echo';
 import { ClientEvents } from '@dxos/plugin-client';
 import { SpaceCapabilities } from '@dxos/plugin-space';
 import { defineObjectForm } from '@dxos/plugin-space/types';
@@ -25,7 +26,7 @@ export const KanbanPlugin = definePlugin(meta, () => [
     activatesOn: Events.SetupMetadata,
     activate: () =>
       contributes(Capabilities.Metadata, {
-        id: Kanban.Kanban.typename,
+        id: Type.getTypename(Kanban.Kanban),
         metadata: {
           icon: 'ph--kanban--regular',
           iconHue: 'green',

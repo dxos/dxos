@@ -4,12 +4,16 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Filter, Obj, Query, QueryAST, Type } from '@dxos/echo';
+import { Filter, Obj, Query, QueryAST, Ref, Type } from '@dxos/echo';
 import { LabelAnnotation } from '@dxos/echo/internal';
 import { View, ViewAnnotation } from '@dxos/schema';
+import { type MakeOptional } from '@dxos/util';
 
-export const Graph = Schema.Struct({
+const GraphSchema = Schema.Struct({
   name: Schema.optional(Schema.String),
+
+  view: Type.Ref(View.View),
+
   query: Schema.Struct({
     raw: Schema.optional(Schema.String),
     ast: QueryAST.Query,
@@ -22,25 +26,22 @@ export const Graph = Schema.Struct({
   LabelAnnotation.set(['name']),
   ViewAnnotation.set(true),
 );
-
-export type Graph = Schema.Schema.Type<typeof Graph>;
+export interface Graph extends Schema.Schema.Type<typeof GraphSchema> {}
+export interface GraphEncoded extends Schema.Schema.Encoded<typeof GraphSchema> {}
+export const Graph: Schema.Schema<Graph, GraphEncoded> = GraphSchema;
 
 /**
  * Make a graph object.
  */
-export const make = (
-  props: Obj.MakeProps<typeof Graph> = { query: { raw: '', ast: Query.select(Filter.nothing()).ast } },
-) => Obj.make(Graph, props);
+export const makeWithView = (props: MakeOptional<Obj.MakeProps<typeof Graph>, 'query'>) =>
+  Obj.make(Graph, { query: { raw: '', ast: Query.select(Filter.nothing()).ast }, ...props });
 
-type MakeViewProps = Omit<View.MakeFromSpaceProps, 'presentation'> & {
-  presentation?: Omit<Obj.MakeProps<typeof Graph>, 'name'>;
-};
+type MakeProps = Partial<Omit<Obj.MakeProps<typeof Graph>, 'view'>> & View.MakeFromSpaceProps;
 
 /**
  * Make a graph as a view of a data set.
  */
-// TODO(burdon): Move to @dxos/schema.
-export const makeView = async ({ presentation, ...props }: MakeViewProps) => {
-  const graph = make(presentation);
-  return View.makeFromSpace({ ...props, presentation: graph });
+export const make = async ({ name, query, ...props }: MakeProps): Promise<Graph> => {
+  const { view } = await View.makeFromSpace(props);
+  return makeWithView({ name, view: Ref.make(view), query });
 };

@@ -37,7 +37,7 @@ export type ViewEditorProps = ThemedClassName<
   {
     schema: Schema.Schema.AnyNoContext;
     view: View.View;
-    mode?: 'schema' | 'query' | 'named-query';
+    mode?: 'schema' | 'query';
     registry?: SchemaRegistry;
     readonly?: boolean;
     showHeading?: boolean;
@@ -96,13 +96,9 @@ export const ViewEditor = forwardRef<ProjectionModel, ViewEditorProps>(
             : QueryAST.Query.annotations({ title: 'Query' }),
       });
 
-      if (mode === 'query' || mode === 'named-query') {
-        const name = Schema.Struct({
-          name: Schema.optional(Schema.String.annotations({ title: 'Name' })),
-        });
-
+      if (mode === 'query') {
         return Schema.Struct({
-          ...(mode === 'named-query' ? { ...name.fields, ...base.fields } : base.fields),
+          ...base.fields,
           target: Schema.optional(Schema.String.annotations({ title: 'Target Queue' })),
         }).pipe(Schema.mutable);
       }
@@ -114,11 +110,10 @@ export const ViewEditor = forwardRef<ProjectionModel, ViewEditorProps>(
     // TODO(burdon): Settings should have domain name owned by user.
     const viewValues = useMemo(
       () => ({
-        name: view.name,
         query: mode === 'schema' ? getTypenameFromQuery(view.query.ast) : view.query.ast,
         target: queueTarget,
       }),
-      [view.name, mode, view.query.ast, queueTarget],
+      [mode, view.query.ast, queueTarget],
     );
 
     const handleToggleField = useCallback(
@@ -140,11 +135,6 @@ export const ViewEditor = forwardRef<ProjectionModel, ViewEditorProps>(
       (values: any) => {
         invariant(!readonly);
         requestAnimationFrame(() => {
-          if ('name' in values && view.name !== values.name) {
-            view.name = values.name;
-            return;
-          }
-
           const query = mode === 'schema' ? Query.select(Filter.typename(values.query)).ast : values.query;
           onQueryChanged?.(query, values.target);
         });

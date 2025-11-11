@@ -13,7 +13,7 @@ import { ClientCapabilities } from '@dxos/plugin-client';
 import { type Space, getSpace, isSpace } from '@dxos/react-client/echo';
 import { type InputProps, SelectInput, useFormValues } from '@dxos/react-ui-form';
 import { Kanban } from '@dxos/react-ui-kanban/types';
-import { type Collection, View } from '@dxos/schema';
+import { type Collection } from '@dxos/schema';
 
 import { KanbanContainer, KanbanViewEditor } from '../components';
 import { meta } from '../meta';
@@ -24,17 +24,15 @@ export default () =>
     createSurface({
       id: meta.id,
       role: ['article', 'section'],
-      filter: (data): data is { subject: View.View } =>
-        Obj.instanceOf(View.View, data.subject) && Obj.instanceOf(Kanban.Kanban, data.subject.presentation.target),
-      component: ({ data, role }) => <KanbanContainer view={data.subject} role={role} />,
+      filter: (data): data is { subject: Kanban.Kanban } => Obj.instanceOf(Kanban.Kanban, data.subject),
+      component: ({ data, role }) => <KanbanContainer object={data.subject} role={role} />,
     }),
     createSurface({
       id: `${meta.id}/object-settings`,
       role: 'object-settings',
       position: 'hoist',
-      filter: (data): data is { subject: View.View } =>
-        Obj.instanceOf(View.View, data.subject) && Obj.instanceOf(Kanban.Kanban, data.subject.presentation.target),
-      component: ({ data }) => <KanbanViewEditor view={data.subject} />,
+      filter: (data): data is { subject: Kanban.Kanban } => Obj.instanceOf(Kanban.Kanban, data.subject),
+      component: ({ data }) => <KanbanViewEditor object={data.subject} />,
     }),
     createSurface({
       id: `${meta.id}/create-initial-schema-form-[pivot-column]`,

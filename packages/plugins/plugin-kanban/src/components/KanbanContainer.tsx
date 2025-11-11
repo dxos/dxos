@@ -11,19 +11,19 @@ import { EchoSchema, type TypedObject } from '@dxos/echo/internal';
 import { useGlobalFilteredObjects } from '@dxos/plugin-search';
 import { useClient } from '@dxos/react-client';
 import { getSpace, useQuery } from '@dxos/react-client/echo';
-import { Kanban, useKanbanModel } from '@dxos/react-ui-kanban';
+import { Kanban as KanbanComponent, useKanbanModel } from '@dxos/react-ui-kanban';
+import { type Kanban } from '@dxos/react-ui-kanban/types';
 import { StackItem } from '@dxos/react-ui-stack';
-import { ProjectionModel, type View, getTypenameFromQuery } from '@dxos/schema';
+import { getTypenameFromQuery } from '@dxos/schema';
 
 import { KanbanAction } from '../types';
 
-export const KanbanContainer = ({ view }: { view: View.View; role: string }) => {
+export const KanbanContainer = ({ object }: { object: Kanban.Kanban; role: string }) => {
   const client = useClient();
   const [cardSchema, setCardSchema] = useState<TypedObject<any, any>>();
-  const [projection, setProjection] = useState<ProjectionModel>();
-  const space = getSpace(view);
+  const space = getSpace(object);
   const { dispatchPromise: dispatch } = useIntentDispatcher();
-  const typename = view.query ? getTypenameFromQuery(view.query.ast) : undefined;
+  const typename = object.view.target?.query ? getTypenameFromQuery(object.view.target.query.ast) : undefined;
 
   const jsonSchema = useMemo(() => {
     if (!cardSchema) {
@@ -52,20 +52,12 @@ export const KanbanContainer = ({ view }: { view: View.View; role: string }) => 
     }
   }, [typename, space]);
 
-  useEffect(() => {
-    if (jsonSchema) {
-      setProjection(new ProjectionModel(jsonSchema, view.projection));
-    }
-    // TODO(ZaymonFC): Is there a better way to get notified about deep changes in the json schema?
-  }, [view.projection, JSON.stringify(jsonSchema)]);
-
   const objects = useQuery(space, cardSchema ? Filter.type(cardSchema) : Filter.nothing());
   const filteredObjects = useGlobalFilteredObjects(objects);
 
   const model = useKanbanModel({
-    view,
-    schema: cardSchema,
-    projection,
+    kanban: object,
+    jsonSchema,
     items: filteredObjects,
   });
 
@@ -90,7 +82,7 @@ export const KanbanContainer = ({ view }: { view: View.View; role: string }) => 
 
   return (
     <StackItem.Content>
-      {model && <Kanban model={model} onAddCard={handleAddCard} onRemoveCard={handleRemoveCard} />}
+      {model && <KanbanComponent model={model} onAddCard={handleAddCard} onRemoveCard={handleRemoveCard} />}
     </StackItem.Content>
   );
 };

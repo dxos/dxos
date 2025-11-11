@@ -14,8 +14,8 @@ export default (context: PluginContext) =>
       intent: ExplorerAction.CreateGraph,
       resolve: async ({ space, name, typename }) => {
         const client = context.getCapability(ClientCapabilities.Client);
-        const { view } = await Graph.makeView({ client, space, name, typename });
-        return { data: { object: view } };
+        const graph = await Graph.make({ client, space, name, typename });
+        return { data: { object: graph } };
       },
     }),
   );

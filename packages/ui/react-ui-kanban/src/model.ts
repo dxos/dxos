@@ -3,7 +3,6 @@
 //
 
 import { batch, effect, signal, untracked } from '@preact/signals-core';
-import type * as Schema from 'effect/Schema';
 
 import { Resource } from '@dxos/context';
 import { Obj } from '@dxos/echo';
@@ -13,7 +12,7 @@ import type { StackItemRearrangeHandler } from '@dxos/react-ui-stack';
 import { type ProjectionModel, type View } from '@dxos/schema';
 import { arrayMove } from '@dxos/util';
 
-import { Kanban } from './types';
+import { type Kanban } from './types';
 import { computeArrangement } from './util';
 
 export const UNCATEGORIZED_VALUE = '__uncategorized__' as const;
@@ -31,34 +30,34 @@ export type ArrangedCards<T extends BaseKanbanItem = { id: string }> = {
 }[];
 
 export type KanbanModelProps = {
-  view: View.View;
-  schema: Schema.Schema.AnyNoContext;
+  kanban: Kanban.Kanban;
   projection: ProjectionModel;
 };
 
 export class KanbanModel<T extends BaseKanbanItem = { id: string }> extends Resource {
-  private readonly _view: View.View;
-  private readonly _schema: Schema.Schema.AnyNoContext;
+  private readonly _kanban: Kanban.Kanban;
   private readonly _projection: ProjectionModel;
-  private _kanban?: Kanban.Kanban;
 
   private readonly _items = signal<T[]>([]);
   private readonly _cards = signal<ArrangedCards<T>>([]);
 
-  constructor({ view, schema, projection }: KanbanModelProps) {
+  constructor({ kanban, projection }: KanbanModelProps) {
     super();
-    this._view = view;
-    this._schema = schema;
+    this._kanban = kanban;
     this._projection = projection;
   }
 
   get id() {
-    return Obj.getDXN(this._view).toString();
+    return Obj.getDXN(this._kanban).toString();
   }
 
   get kanban(): Kanban.Kanban {
-    invariant(this._kanban, 'Kanban model not initialized');
     return this._kanban;
+  }
+
+  private get _view(): View.View {
+    invariant(this._kanban.view.target, 'Kanban model not initialized');
+    return this._kanban.view.target;
   }
 
   get projection(): ProjectionModel {
@@ -89,10 +88,6 @@ export class KanbanModel<T extends BaseKanbanItem = { id: string }> extends Reso
     });
   }
 
-  get schema() {
-    return this._schema;
-  }
-
   /**
    * @reactive Gets the current arrangement of kanban items.
    */
@@ -105,10 +100,7 @@ export class KanbanModel<T extends BaseKanbanItem = { id: string }> extends Reso
   //
 
   protected override async _open(): Promise<void> {
-    const presentation = this._view.presentation.target ?? (await this._view.presentation.load());
-    invariant(Obj.instanceOf(Kanban.Kanban, presentation));
-    this._kanban = presentation;
-
+    await this._kanban.view.load();
     this._computeArrangement();
     this.initializeEffects();
   }

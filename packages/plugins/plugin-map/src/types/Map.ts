@@ -4,12 +4,15 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Obj, Type } from '@dxos/echo';
+import { Obj, Ref, Type } from '@dxos/echo';
 import { LabelAnnotation } from '@dxos/echo/internal';
 import { View, ViewAnnotation } from '@dxos/schema';
 
-export const Map = Schema.Struct({
+const MapSchema = Schema.Struct({
   name: Schema.optional(Schema.String),
+
+  view: Type.Ref(View.View),
+
   center: Schema.optional(Type.Format.GeoPoint),
   zoom: Schema.optional(Schema.Number),
   // TODO(wittjosiah): Use GeoJSON format for rendering arbitrary data on the map.
@@ -23,22 +26,26 @@ export const Map = Schema.Struct({
   LabelAnnotation.set(['name']),
   ViewAnnotation.set(true),
 );
+export interface Map extends Schema.Schema.Type<typeof MapSchema> {}
+export interface MapEncoded extends Schema.Schema.Encoded<typeof MapSchema> {}
+export const Map: Schema.Schema<Map, MapEncoded> = MapSchema;
 
-export type Map = Schema.Schema.Type<typeof Map>;
+type MakeWithViewProps = Omit<Partial<Obj.MakeProps<typeof Map>>, 'view'> & {
+  view: View.View;
+};
 
 /**
  * Make a map object.
  */
-export const make = (props: Obj.MakeProps<typeof Map> = {}) => Obj.make(Map, props);
+export const makeWithView = ({ view, ...props }: MakeWithViewProps): Map =>
+  Obj.make(Map, { view: Ref.make(view), ...props });
 
-type MakeViewProps = Omit<View.MakeFromSpaceProps, 'presentation'> & {
-  presentation?: Omit<Obj.MakeProps<typeof Map>, 'name'>;
-};
+type MakeProps = Partial<Omit<Obj.MakeProps<typeof Map>, 'view'>> & View.MakeFromSpaceProps;
 
 /**
  * Make a map as a view of a data set.
  */
-export const makeView = async ({ presentation, ...props }: MakeViewProps) => {
-  const map = Obj.make(Map, presentation ?? {});
-  return View.makeFromSpace({ ...props, presentation: map });
+export const make = async ({ name, center, zoom, coordinates, ...props }: MakeProps): Promise<Map> => {
+  const { view } = await View.makeFromSpace(props);
+  return Obj.make(Map, { name, view: Ref.make(view), center, zoom, coordinates });
 };

@@ -18,14 +18,14 @@ export default (context: PluginContext) =>
       intent: KanbanAction.Create,
       resolve: async ({ space, name, typename, initialPivotColumn }) => {
         const client = context.getCapability(ClientCapabilities.Client);
-        const { view } = await Kanban.makeView({
+        const kanban = await Kanban.make({
           client,
           space,
           name,
           typename,
           pivotFieldName: initialPivotColumn,
         });
-        return { data: { object: view } };
+        return { data: { object: kanban } };
       },
     }),
     createResolver({

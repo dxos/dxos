@@ -9,7 +9,7 @@ export * from './useChatToolbarActions';
 export * from './useContextBinder';
 export * from './useContextObjects';
 export * from './useFlush';
-export * from './useItemTypes';
 export * from './useOnline';
 export * from './usePresets';
 export * from './useReferencesProvider';
+export * from './useTypes';

@@ -8,12 +8,11 @@ import { Capabilities, type PluginContext, contributes, createIntent, createReso
 import { Obj, Ref, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { ClientCapabilities } from '@dxos/plugin-client';
-import { CollectionAction } from '@dxos/plugin-space/types';
 import { ThreadCapabilities } from '@dxos/plugin-thread';
 import { ThreadAction } from '@dxos/plugin-thread/types';
 import { TranscriptAction } from '@dxos/plugin-transcription/types';
 import { Filter, Query, getSpace, parseId } from '@dxos/react-client/echo';
-import { Text } from '@dxos/schema';
+import { Collection, Text } from '@dxos/schema';
 import { type Message } from '@dxos/types';
 
 import { Meeting, MeetingAction } from '../types';
@@ -26,12 +25,7 @@ export default (context: PluginContext) =>
       intent: MeetingAction.onCreateSpace,
       resolve: ({ rootCollection }) =>
         Effect.gen(function* () {
-          const { dispatch } = context.getCapability(Capabilities.IntentDispatcher);
-          const { object: meetingCollection } = yield* dispatch(
-            createIntent(CollectionAction.CreateQueryCollection, {
-              typename: Type.getTypename(Meeting.Meeting),
-            }),
-          );
+          const meetingCollection = Collection.makeSystem({ key: Type.getTypename(Meeting.Meeting) });
           rootCollection.objects.push(Ref.make(meetingCollection));
         }),
     }),

@@ -109,7 +109,7 @@ const DefaultStory = () => {
   const {
     space,
     schema,
-    view,
+    table,
     tableRef,
     model,
     presentation,
@@ -119,7 +119,7 @@ const DefaultStory = () => {
     handleDeleteColumn,
   } = useTestTableModel();
 
-  if (!schema || !view) {
+  if (!schema || !table?.view.target) {
     return <div />;
   }
 
@@ -139,9 +139,14 @@ const DefaultStory = () => {
         </TableComponent.Root>
       </div>
       <div className='flex flex-col bs-full border-l border-separator overflow-y-auto'>
-        <StoryViewEditor view={view} schema={schema} space={space} handleDeleteColumn={handleDeleteColumn} />
+        <StoryViewEditor
+          view={table.view.target}
+          schema={schema}
+          space={space}
+          handleDeleteColumn={handleDeleteColumn}
+        />
         <SyntaxHighlighter language='json' className='text-xs'>
-          {JSON.stringify({ view, schema }, null, 2)}
+          {JSON.stringify({ view: table.view.target, schema }, null, 2)}
         </SyntaxHighlighter>
       </div>
     </div>
@@ -167,13 +172,14 @@ const meta = {
       createSpace: true,
       onCreateSpace: async ({ client, space }) => {
         const [schema] = await space.db.schemaRegistry.register([TestSchema]);
-        const { view } = await Table.makeView({ client, space, typename: schema.typename });
+        const table = await Table.make({ client, space, typename: schema.typename });
+        const view = table.view.target!;
         view.projection.fields = [
           view.projection.fields.find((field: any) => field.path === 'name')!,
           ...view.projection.fields.filter((field: any) => field.path !== 'name'),
         ];
 
-        space.db.add(view);
+        space.db.add(table);
 
         Array.from({ length: 10 }).map(() => {
           return space.db.add(
@@ -210,8 +216,8 @@ export const StaticSchema: StoryObj = {
       createIdentity: true,
       createSpace: true,
       onCreateSpace: async ({ client, space }) => {
-        const { view } = await Table.makeView({ client, space, typename: Testing.Person.typename });
-        space.db.add(view);
+        const table = await Table.make({ client, space, typename: Testing.Person.typename });
+        space.db.add(table);
 
         const factory = createObjectFactory(space.db, faker as any);
         await factory([
@@ -252,8 +258,8 @@ export const ArrayOfObjects: StoryObj = {
       createIdentity: true,
       createSpace: true,
       onCreateSpace: async ({ client, space }) => {
-        const { view } = await Table.makeView({ client, space, typename: ContactWithArrayOfEmails.typename });
-        space.db.add(view);
+        const table = await Table.make({ client, space, typename: ContactWithArrayOfEmails.typename });
+        space.db.add(table);
 
         const factory = createObjectFactory(space.db, faker as any);
         await factory([
@@ -306,8 +312,8 @@ export const Tags: Meta<StoryProps> = {
         const [storedSchema] = await space.db.schemaRegistry.register([schema]);
 
         // Initialize table.
-        const { view } = await Table.makeView({ client, space, typename });
-        space.db.add(view);
+        const table = await Table.make({ client, space, typename });
+        space.db.add(table);
 
         // Populate.
         Array.from({ length: 10 }).map(() => {

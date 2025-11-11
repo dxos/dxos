@@ -12,7 +12,7 @@ import { Icon, IconButton, Popover, Select, useTranslation } from '@dxos/react-u
 import { Listbox, SearchList } from '@dxos/react-ui-searchlist';
 import { Tabs } from '@dxos/react-ui-tabs';
 
-import { useActiveBlueprints, useBlueprintHandlers, useBlueprints, useContextObjects, useItemTypes } from '../../hooks';
+import { useActiveBlueprints, useBlueprintHandlers, useBlueprints, useContextObjects, useTypes } from '../../hooks';
 import { meta } from '../../meta';
 
 const panelClassNames = 'is-[calc(100dvw-.5rem)] sm:is-max md:is-72 max-is-[--text-content]';
@@ -153,7 +153,7 @@ const ObjectsPanel = ({ space, context }: Pick<ChatOptionsProps, 'space' | 'cont
   const { t } = useTranslation(meta.id);
 
   // Item types sorted by label.
-  const types = useItemTypes(space);
+  const types = useTypes(space);
   const typenames = useMemo(() => {
     const typenames = types.map((type) => {
       const typename = Type.getTypename(type);

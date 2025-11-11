@@ -23,15 +23,6 @@ export const translations = [
         'rename object label': 'Rename collection',
         'delete object label': 'Delete collection',
       },
-      [Type.getTypename(Collection.QueryCollection)]: {
-        'typename label': 'Smart Collection',
-        'typename label_zero': 'Smart Collections',
-        'typename label_one': 'Smart Collection',
-        'typename label_other': 'Smart Collections',
-        'object name placeholder': 'New smart collection',
-        'rename object label': 'Rename smart collection',
-        'delete object label': 'Delete smart collection',
-      },
       [StoredSchema.typename]: {
         'typename label': 'Record',
         'typename label_zero': 'Records',

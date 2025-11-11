@@ -4,12 +4,14 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Obj, Type } from '@dxos/echo';
-import { type JsonSchemaType, LabelAnnotation } from '@dxos/echo/internal';
+import { Obj, Ref, Type } from '@dxos/echo';
+import { LabelAnnotation } from '@dxos/echo/internal';
 import { View, ViewAnnotation } from '@dxos/schema';
 
-export const Kanban = Schema.Struct({
+const KanbanSchema = Schema.Struct({
   name: Schema.optional(Schema.String),
+
+  view: Type.Ref(View.View),
 
   /**
    * Order of columns by value and cards by id, derivative of the field selected by `columnPivotField` but can that be
@@ -22,24 +24,30 @@ export const Kanban = Schema.Struct({
       ids: Schema.Array(Type.ObjectId),
       hidden: Schema.optional(Schema.Boolean),
     }).pipe(Schema.mutable),
-  ).pipe(Schema.mutable, Schema.optional),
+  ).pipe(Schema.mutable),
 
   // TODO(wittjosiah): Consider Kanban supporting not being just a view but referencing arbitrary data directly.
 }).pipe(
   Type.Obj({
     typename: 'dxos.org/type/Kanban',
-    version: '0.1.0',
+    version: '0.2.0',
   }),
   LabelAnnotation.set(['name']),
   ViewAnnotation.set(true),
 );
+export interface Kanban extends Schema.Schema.Type<typeof KanbanSchema> {}
+export interface KanbanEncoded extends Schema.Schema.Encoded<typeof KanbanSchema> {}
+export const Kanban: Schema.Schema<Kanban, KanbanEncoded> = KanbanSchema;
 
-export type Kanban = Schema.Schema.Type<typeof Kanban>;
+type MakeWithViewProps = Omit<Partial<Obj.MakeProps<typeof Kanban>>, 'view'> & {
+  view: View.View;
+};
 
 /**
  * Make a kanban object.
  */
-export const make = (props: Obj.MakeProps<typeof Kanban> = {}) => Obj.make(Kanban, props);
+export const makeWithView = ({ view, ...props }: MakeWithViewProps): Kanban =>
+  Obj.make(Kanban, { arrangement: [], view: Ref.make(view), ...props });
 
 export const SettingsSchema = Schema.Struct({
   columnFieldId: Schema.String.annotations({
@@ -47,12 +55,12 @@ export const SettingsSchema = Schema.Struct({
   }),
 });
 
-type MakeViewProps = Omit<View.MakeFromSpaceProps, 'presentation'>;
+type MakeProps = Partial<Omit<Obj.MakeProps<typeof Kanban>, 'view'>> & View.MakeFromSpaceProps;
 
 /**
  * Make a kanban as a view of a data set.
  */
-export const makeView = async (props: MakeViewProps): Promise<{ jsonSchema: JsonSchemaType; view: View.View }> => {
-  const kanban = Obj.make(Kanban, {});
-  return View.makeFromSpace({ ...props, presentation: kanban });
+export const make = async ({ name, arrangement = [], ...props }: MakeProps): Promise<Kanban> => {
+  const { view } = await View.makeFromSpace(props);
+  return Obj.make(Kanban, { name, view: Ref.make(view), arrangement });
 };

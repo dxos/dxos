@@ -369,22 +369,4 @@ export namespace CollectionAction {
       object: Collection.Collection,
     }),
   }) {}
-
-  export const QueryCollectionForm = Schema.Struct({
-    name: Schema.optional(Schema.String),
-    typename: Schema.String.annotations({
-      [TypenameAnnotationId]: ['object-form'],
-    }),
-  });
-
-  export class CreateQueryCollection extends Schema.TaggedClass<CreateQueryCollection>()(
-    'dxos.org/plugin/collection/action/create-query-collection',
-    {
-      input: QueryCollectionForm,
-      output: Schema.Struct({
-        // TODO(wittjosiah): Remove cast.
-        object: EchoObjectSchema, // Collection.QueryCollection,
-      }),
-    },
-  ) {}
 }

@@ -11,7 +11,7 @@ import { useControlledState } from '@dxos/react-ui';
 import { useSelected } from '@dxos/react-ui-attention';
 import { type GeoMarker, type MapRootProps } from '@dxos/react-ui-geo';
 import { StackItem } from '@dxos/react-ui-stack';
-import { type View, getTypenameFromQuery } from '@dxos/schema';
+import { getTypenameFromQuery } from '@dxos/schema';
 import { getDeep } from '@dxos/util';
 
 import { type Map } from '../types';
@@ -25,15 +25,15 @@ export type MapControlType = 'globe' | 'map';
 export type MapContainerProps = {
   role?: string;
   type?: MapControlType;
-  view?: View.View;
-  map?: Map.Map;
+  object?: Map.Map;
 } & (GeoControlProps & Pick<MapRootProps, 'onChange'>);
 
-export const MapContainer = ({ role, type: typeParam = 'map', view, ...props }: MapContainerProps) => {
+export const MapContainer = ({ role, type: typeParam = 'map', object, ...props }: MapContainerProps) => {
   const [type, setType] = useControlledState(typeParam);
   const client = useClient();
-  const space = getSpace(view);
+  const space = getSpace(object);
 
+  const view = object?.view.target;
   const typename = view?.query ? getTypenameFromQuery(view.query.ast) : undefined;
   const schema = useSchema(client, space, typename);
   const objects = useQuery(space, schema ? Filter.type(schema) : Filter.nothing());

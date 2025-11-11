@@ -6,6 +6,7 @@ import * as Schema from 'effect/Schema';
 
 import { Obj, Type } from '@dxos/echo';
 import { JsonSchemaType, LabelAnnotation, Ref } from '@dxos/echo/internal';
+import { SystemAnnotation } from '@dxos/schema';
 
 import { Script } from './Script';
 
@@ -24,7 +25,6 @@ export const Function = Schema.Struct({
     description: 'Unique registration key for the blueprint',
   }),
 
-  // TODO(burdon): Rename to id/uri?
   name: Schema.NonEmptyString,
   version: Schema.String,
 
@@ -50,6 +50,7 @@ export const Function = Schema.Struct({
     version: '0.1.0',
   }),
   LabelAnnotation.set(['name']),
+  SystemAnnotation.set(true),
 );
 export interface Function extends Schema.Schema.Type<typeof Function> {}
 

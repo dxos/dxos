@@ -5,15 +5,15 @@
 import { createContext } from '@radix-ui/react-context';
 import React, { type FC } from 'react';
 
-import { Obj } from '@dxos/echo';
+import { type Obj } from '@dxos/echo';
 import { Toolbar, type ToolbarRootProps, useTranslation } from '@dxos/react-ui';
 import { Stack } from '@dxos/react-ui-stack';
-import { type ProjectionModel, View } from '@dxos/schema';
+import { type ProjectionModel } from '@dxos/schema';
 import { type Project as ProjectType } from '@dxos/types';
 
 import { meta } from '../meta';
 
-import { ViewColumn } from './ViewColumn';
+import { ProjectLane } from './ProjectLane';
 
 type ItemProps = { item: Obj.Any; projectionModel?: ProjectionModel };
 
@@ -50,13 +50,10 @@ type ProjectContentProps = {
 };
 
 const ProjectContent = ({ project }: ProjectContentProps) => {
-  // NOTE: This doesn’t encompass column types which the Project schema.
-  const views = project.collections.map((ref) => ref.target).filter((object) => Obj.instanceOf(View.View, object));
-
   return (
     <Stack orientation='horizontal' size='contain' rail={false}>
-      {views.map((view) => {
-        return <ViewColumn key={view.id} view={view} />;
+      {project.lanes.map((lane) => {
+        return <ProjectLane key={lane.view.dxn.toString()} lane={lane} />;
       })}
     </Stack>
   );

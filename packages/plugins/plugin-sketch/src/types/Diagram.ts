@@ -6,6 +6,7 @@ import * as Schema from 'effect/Schema';
 
 import { Obj, Ref, Type } from '@dxos/echo';
 import { FormAnnotation } from '@dxos/echo/internal';
+import { SystemAnnotation } from '@dxos/schema';
 
 export const TLDRAW_SCHEMA = 'tldraw.com/2';
 
@@ -19,6 +20,7 @@ export const Canvas = Schema.Struct({
     typename: 'dxos.org/type/Canvas',
     version: '0.1.0',
   }),
+  SystemAnnotation.set(true),
 );
 export interface Canvas extends Schema.Schema.Type<typeof Canvas> {}
 

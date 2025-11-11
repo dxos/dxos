@@ -15,15 +15,17 @@ export default (context: PluginContext) =>
       intent: MapAction.Create,
       resolve: async ({ space, name, typename, locationFieldName, center, zoom, coordinates }) => {
         const client = context.getCapability(ClientCapabilities.Client);
-        const { view } = await Map.makeView({
+        const map = await Map.make({
           client,
           space,
           name,
           typename,
           pivotFieldName: locationFieldName,
-          presentation: { center, zoom, coordinates },
+          center,
+          zoom,
+          coordinates,
         });
-        return { data: { object: view } };
+        return { data: { object: map } };
       },
     }),
     createResolver({

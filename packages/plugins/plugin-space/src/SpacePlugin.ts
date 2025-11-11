@@ -17,7 +17,7 @@ import {
 import { Ref, Tag, Type } from '@dxos/echo';
 import { AttentionEvents } from '@dxos/plugin-attention';
 import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
-import { Collection, DataTypes, StoredSchema, getTypenameFromQuery } from '@dxos/schema';
+import { Collection, DataTypes, StoredSchema } from '@dxos/schema';
 import { translations as shellTranslations } from '@dxos/shell/react';
 import {
   AnchoredTo,
@@ -110,20 +110,6 @@ export const SpacePlugin = definePlugin<SpacePluginOptions>(
             },
           }),
           contributes(Capabilities.Metadata, {
-            id: Type.getTypename(Collection.QueryCollection),
-            metadata: {
-              label: (object: Collection.QueryCollection) => [
-                'typename label',
-                {
-                  ns: getTypenameFromQuery(object.query),
-                  count: 2,
-                  defaultValue: 'New smart collection',
-                },
-              ],
-              icon: 'ph--funnel-simple--regular',
-            },
-          }),
-          contributes(Capabilities.Metadata, {
             id: Type.getTypename(StoredSchema),
             metadata: {
               icon: 'ph--database--regular',
@@ -166,15 +152,6 @@ export const SpacePlugin = definePlugin<SpacePluginOptions>(
               objectSchema: Collection.Collection,
               formSchema: Schema.Struct({ name: Schema.optional(Schema.String) }),
               getIntent: (props) => createIntent(CollectionAction.Create, props),
-            }),
-          ),
-          contributes(
-            SpaceCapabilities.ObjectForm,
-            defineObjectForm({
-              // TODO(wittjosiah): Remove cast.
-              objectSchema: Collection.QueryCollection as any,
-              formSchema: CollectionAction.QueryCollectionForm,
-              getIntent: (props) => createIntent(CollectionAction.CreateQueryCollection, props),
             }),
           ),
           contributes(

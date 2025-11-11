@@ -10,12 +10,12 @@ import * as Schema from 'effect/Schema';
 
 import { Capabilities, type PluginContext, contributes, createIntent } from '@dxos/app-framework';
 import { type QueryResult, type Space, SpaceState, getSpace, isSpace } from '@dxos/client/echo';
-import { DXN, Filter, Obj, Query, Type } from '@dxos/echo';
+import { DXN, Filter, Obj, Type } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { ATTENDABLE_PATH_SEPARATOR, PLANK_COMPANION_TYPE } from '@dxos/plugin-deck/types';
 import { ROOT_ID, atomFromObservable, atomFromSignal, createExtension } from '@dxos/plugin-graph';
-import { Collection, StoredSchema, View, getTypenameFromQuery } from '@dxos/schema';
+import { Collection, StoredSchema, View, ViewAnnotation, getTypenameFromQuery } from '@dxos/schema';
 import { isNonNullable } from '@dxos/util';
 
 import { getActiveSpace } from '../hooks';
@@ -167,7 +167,6 @@ export default (context: PluginContext) => {
             Option.getOrElse(() => []),
           ),
         ),
-      // resolver: ({ id }) => (id === SPACES ? spacesNode : undefined),
     }),
 
     // Create space nodes.
@@ -234,46 +233,6 @@ export default (context: PluginContext) => {
           ),
         );
       },
-      // resolver: ({ id }) => {
-      //   if (id.length !== SPACE_ID_LENGTH) {
-      //     return;
-      //   }
-
-      //   const client = context.requestCapability(ClientCapabilities.Client);
-      //   const spaces = toSignal(
-      //     (onChange) => client.spaces.subscribe(() => onChange()).unsubscribe,
-      //     () => client.spaces.get(),
-      //   );
-
-      //   const isReady = toSignal(
-      //     (onChange) => client.spaces.isReady.subscribe(() => onChange()).unsubscribe,
-      //     () => client.spaces.isReady.get(),
-      //   );
-
-      //   if (!spaces || !isReady) {
-      //     return;
-      //   }
-
-      //   const space = spaces.find((space) => space.id === id);
-      //   if (!space) {
-      //     return;
-      //   }
-
-      //   if (space.state.get() === SpaceState.SPACE_INACTIVE) {
-      //     return false;
-      //   } else if (space.state.get() !== SpaceState.SPACE_READY) {
-      //     return undefined;
-      //   } else {
-      //     const state = context.requestCapability(SpaceCapabilities.State);
-      //     return constructSpaceNode({
-      //       space,
-      //       navigable: state.navigableCollections,
-      //       personal: space === client.spaces.default,
-      //       namesCache: state.spaceNames,
-      //       resolve,
-      //     });
-      //   }
-      // },
     }),
 
     // Create space actions.
@@ -396,99 +355,31 @@ export default (context: PluginContext) => {
             Option.getOrElse(() => []),
           ),
         ),
-      // resolver: ({ id }) => {
-      //   if (id.length !== FQ_ID_LENGTH) {
-      //     return;
-      //   }
-
-      //   const [spaceId, objectId] = id.split(':');
-      //   if (spaceId.length !== SPACE_ID_LENGTH && objectId.length !== OBJECT_ID_LENGTH) {
-      //     return;
-      //   }
-
-      //   const client = context.requestCapability(ClientCapabilities.Client);
-      //   const space = client.spaces.get().find((space) => space.id === spaceId);
-      //   if (!space) {
-      //     return;
-      //   }
-
-      //   const spaceState = toSignal(
-      //     (onChange) => space.state.subscribe(() => onChange()).unsubscribe,
-      //     () => space.state.get(),
-      //     space.id,
-      //   );
-      //   if (spaceState !== SpaceState.SPACE_READY) {
-      //     return;
-      //   }
-
-      //   const [object] = memoizeQuery(space, Query.select(Filter.ids(objectId)));
-      //   if (!object) {
-      //     return;
-      //   }
-
-      //   if (isDeleted(object)) {
-      //     return false;
-      //   } else {
-      //     const state = context.requestCapability(SpaceCapabilities.State);
-      //     return createObjectNode({ object, space, resolve, navigable: state.navigableCollections });
-      //   }
-      // },
-    }),
-
-    // Create nodes for objects in a query collection.
-    createExtension({
-      id: `${meta.id}/query-collection-objects`,
-      connector: (node) => {
+      resolver: (id) => {
         let query: QueryResult<Type.Expando> | undefined;
-        return Atom.make((get) =>
-          Function.pipe(
-            get(node),
-            Option.flatMap((node) =>
-              Obj.instanceOf(Collection.QueryCollection, node.data) ? Option.some(node.data) : Option.none(),
-            ),
-            Option.flatMap((collection) => {
-              const space = getSpace(collection);
-              const typename = getTypenameFromQuery(collection.query);
-              return typename && space ? Option.some({ typename, space }) : Option.none();
-            }),
-            Option.map(({ typename, space }) => {
-              const state = context.getCapability(SpaceCapabilities.State);
-              if (!query) {
-                query = space.db.query(
-                  Query.without(
-                    Query.select(Filter.typename(typename)),
-                    // TODO(wittjosiah): This query is broader than it should be.
-                    //   It will return all objects in the collection, not just the ones of the given type.
-                    //   However this works fine for now because this query is only used for exclusions.
-                    Query.select(Filter.typename(typename))
-                      .referencedBy(Collection.Collection, 'objects')
-                      .reference('objects'),
-                  ),
-                );
-              }
-              return (
-                get(atomFromQuery(query))
-                  // TODO(wittjosiah): This should be the default sort order.
-                  .toSorted((a, b) => a.id.localeCompare(b.id))
-                  .map((object) =>
-                    get(
-                      atomFromSignal(() =>
-                        createObjectNode({
-                          object,
-                          space,
-                          resolve: resolve(get),
-                          droppable: false, // Cannot rearrange query collections.
-                          navigable: state.navigableCollections,
-                        }),
-                      ),
-                    ),
-                  )
-                  .filter(isNonNullable)
-              );
-            }),
-            Option.getOrElse(() => []),
-          ),
-        );
+        return Atom.make((get) => {
+          const client = context.getCapability(ClientCapabilities.Client);
+          const dxn = DXN.tryParse(id)?.asEchoDXN();
+          if (!dxn || !dxn.spaceId) {
+            return null;
+          }
+
+          const space = client.spaces.get(dxn.spaceId);
+          if (!space) {
+            return null;
+          }
+
+          if (!query) {
+            query = space.db.query(Filter.ids(dxn.echoId));
+          }
+
+          const object = get(atomFromQuery(query)).at(0);
+          if (!object) {
+            return null;
+          }
+
+          return createObjectNode({ object, space, resolve: resolve(get), disposition: 'hidden' });
+        });
       },
     }),
 
@@ -501,8 +392,7 @@ export default (context: PluginContext) => {
           Function.pipe(
             get(node),
             Option.flatMap((node) =>
-              Obj.instanceOf(Collection.QueryCollection, node.data) &&
-              getTypenameFromQuery(node.data.query) === StoredSchema.typename
+              Obj.instanceOf(Collection.System, node.data) && node.data.key === StoredSchema.typename
                 ? Option.some(node.data)
                 : Option.none(),
             ),
@@ -576,9 +466,14 @@ export default (context: PluginContext) => {
     createExtension({
       id: `${meta.id}/schema-views`,
       connector: (node) => {
-        let query: QueryResult<View.View> | undefined;
-        return Atom.make((get) =>
-          Function.pipe(
+        let query: QueryResult<Obj.Any> | undefined;
+        return Atom.make((get) => {
+          const schemas = get(context.capabilities(ClientCapabilities.Schema))
+            .flat()
+            .filter((schema) => ViewAnnotation.get(schema).pipe(Option.getOrElse(() => false)));
+          const filter = Filter.or(...schemas.map((schema) => Filter.type(schema)));
+
+          return Function.pipe(
             get(node),
             Option.flatMap((node) => {
               const space = getSpace(node.data) ?? (isSpace(node.properties.space) ? node.properties.space : undefined);
@@ -588,47 +483,32 @@ export default (context: PluginContext) => {
             }),
             Option.map(({ space, schema }) => {
               if (!query) {
-                // TODO(wittjosiah): Support filtering by nested properties (e.g. `query.typename`).
-                query = space.db.query(Filter.type(View.View));
+                // TODO(wittjosiah): Ideally this query would traverse the view reference & filter by the query ast.
+                // TODO(wittjosiah): Remove cast.
+                query = space.db.query(filter) as unknown as QueryResult<Obj.Any>;
               }
 
-              // TODO(wittjosiah): Remove cast.
+              // TODO(wittjosiah): Remove casts.
               const typename = Schema.isSchema(schema) ? Type.getTypename(schema as Type.Obj.Any) : schema.typename;
-              return (
-                get(atomFromQuery(query))
-                  .filter((view) => getTypenameFromQuery(view.query.ast) === typename)
-                  // Filter out Collection views from Projects.
-                  .filter((view) =>
-                    get(
-                      atomFromSignal(() => {
-                        const presentation = view.presentation.target;
-                        if (presentation) {
-                          const typename = Obj.getTypename(presentation);
-                          return typename !== Collection.Collection.typename;
-                        } else {
-                          return false;
-                        }
+              return get(atomFromQuery(query))
+                .filter((object) => getTypenameFromQuery((object as any).view.target?.ast) === typename)
+                .map((object) =>
+                  get(
+                    atomFromSignal(() =>
+                      createObjectNode({
+                        object,
+                        space,
+                        resolve: resolve(get),
+                        droppable: false,
                       }),
                     ),
-                  )
-                  .map((view) =>
-                    get(
-                      atomFromSignal(() =>
-                        createObjectNode({
-                          object: view,
-                          space,
-                          resolve: resolve(get),
-                          droppable: false,
-                        }),
-                      ),
-                    ),
-                  )
-                  .filter(isNonNullable)
-              );
+                  ),
+                )
+                .filter(isNonNullable);
             }),
             Option.getOrElse(() => []),
-          ),
-        );
+          );
+        });
       },
     }),
 
@@ -691,11 +571,8 @@ export default (context: PluginContext) => {
 
               let deletable =
                 !isSchema &&
-                // Don't allow the Records smart collection to be deleted.
-                !(
-                  Obj.instanceOf(Collection.QueryCollection, object) &&
-                  getTypenameFromQuery(object.query) === StoredSchema.typename
-                );
+                // Don't allow system collections to be deleted.
+                !Obj.instanceOf(Collection.System, object);
               if (isSchema && query) {
                 const views = get(atomFromQuery(query));
                 const filteredViews = get(

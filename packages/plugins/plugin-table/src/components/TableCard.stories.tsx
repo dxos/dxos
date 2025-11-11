@@ -27,14 +27,14 @@ faker.seed(1234);
 type StoryProps = { role: string };
 
 const DefaultStory = ({ role }: StoryProps) => {
-  const { schema, view } = useTestTableModel();
-  if (!schema || !view) {
+  const { schema, table } = useTestTableModel();
+  if (!schema || !table) {
     return <div />;
   }
 
   return (
     <CardContainer icon='ph--text-aa--regular' role={role}>
-      <TableCard role={role} view={view} />
+      <TableCard role={role} object={table} />
     </CardContainer>
   );
 };
@@ -75,8 +75,8 @@ const meta = {
         const [storedSchema] = await space.db.schemaRegistry.register([schema]);
 
         // Initialize table.
-        const { view } = await Table.makeView({ client, space, typename });
-        space.db.add(view);
+        const table = await Table.make({ client, space, typename });
+        space.db.add(table);
 
         // Populate.
         Array.from({ length: 10 }).map(() => {

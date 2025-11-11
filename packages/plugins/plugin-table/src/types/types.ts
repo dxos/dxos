@@ -5,6 +5,7 @@
 import * as Schema from 'effect/Schema';
 
 import { SpaceSchema } from '@dxos/react-client/echo';
+import { Table } from '@dxos/react-ui-table/types';
 import { TypenameAnnotationId, View } from '@dxos/schema';
 
 import { meta } from '../meta';
@@ -50,7 +51,7 @@ export namespace TableAction {
       CreateTableSchema,
     ),
     output: Schema.Struct({
-      object: View.View,
+      object: Table.Table,
     }),
   }) {}
 

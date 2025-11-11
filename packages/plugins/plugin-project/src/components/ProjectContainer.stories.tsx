@@ -78,64 +78,71 @@ const meta = {
             const tagDxn = Obj.getDXN(tag).toString();
 
             // Create a project.
-            const project = Project.make({ collections: [] });
+            const project = Project.make();
 
             // Create a view for Contacts.
             const personView = View.make({
-              name: 'Contacts',
               query: Query.select(Filter.type(Person.Person)),
               jsonSchema: Type.toJsonSchema(Person.Person),
-              presentation: project,
             });
 
             // Create a view for Organizations.
             const organizationView = View.make({
-              name: 'Organizations',
               query: Query.select(Filter.type(Organization.Organization)).select(Filter.tag(tagDxn)),
               jsonSchema: Type.toJsonSchema(Organization.Organization),
-              presentation: project,
             });
 
             // Create a view for Tasks.
             const taskView = View.make({
-              name: 'Tasks',
               query: Query.select(Filter.type(Task.Task)).select(Filter.tag(tagDxn)),
               jsonSchema: Type.toJsonSchema(Task.Task),
-              presentation: project,
             });
 
             // Create a view for Project-Projects.
             const projectView = View.make({
-              name: 'Projects (not the UI component)',
               query: Query.select(Filter.type(Project.Project)),
               jsonSchema: Type.toJsonSchema(Project.Project),
-              presentation: project,
             });
 
             // Create a view for Messages.
             const messageQueue = space.queues.create();
             const messageView = View.make({
-              name: 'Messages',
               query: Query.select(Filter.type(Message.Message)).options({
                 queues: [messageQueue.dxn.toString()],
               }),
               jsonSchema: Type.toJsonSchema(Message.Message),
-              presentation: project,
             });
 
             // Add views to project collections
-            project.collections.push(Ref.make(personView));
-            project.collections.push(Ref.make(organizationView));
-            project.collections.push(Ref.make(taskView));
-            project.collections.push(Ref.make(projectView));
-            project.collections.push(Ref.make(messageView));
+            project.lanes.push(
+              {
+                name: 'Contacts',
+                view: Ref.make(personView),
+                order: [],
+              },
+              {
+                name: 'Organizations',
+                view: Ref.make(organizationView),
+                order: [],
+              },
+              {
+                name: 'Tasks',
+                view: Ref.make(taskView),
+                order: [],
+              },
+              {
+                name: 'Projects',
+                view: Ref.make(projectView),
+                order: [],
+              },
+              {
+                name: 'Messages',
+                view: Ref.make(messageView),
+                order: [],
+              },
+            );
 
-            // Add views and project to space
-            space.db.add(personView);
-            space.db.add(organizationView);
-            space.db.add(taskView);
-            space.db.add(projectView);
-            space.db.add(messageView);
+            // Add project to space
             space.db.add(project);
 
             // Generate sample Organizations

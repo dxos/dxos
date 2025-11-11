@@ -14,7 +14,7 @@ import { Collection, type TypenameAnnotation, getTypenames } from '@dxos/schema'
 
 import { SpaceCapabilities } from '../capabilities';
 
-const OMIT = [Collection.Collection.typename, Type.getTypename(Collection.QueryCollection)];
+const OMIT = [Collection.Collection.typename, Type.getTypename(Collection.System)];
 
 export const useTypeOptions = ({ space, annotation }: { space?: Space; annotation: TypenameAnnotation[] }) => {
   const { t } = useTranslation();

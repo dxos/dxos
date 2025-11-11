@@ -18,7 +18,7 @@ export const DataTypes: (Type.Obj.Any | Type.Relation.Any)[] = [
 
   // System
   Collection.Collection,
-  Collection.QueryCollection,
+  Collection.System,
   Text.Text,
   View.View,
 ];

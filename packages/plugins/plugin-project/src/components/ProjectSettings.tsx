@@ -15,7 +15,7 @@ import { ViewEditor } from '@dxos/react-ui-form';
 import { List } from '@dxos/react-ui-list';
 import { cardChrome, cardText } from '@dxos/react-ui-stack';
 import { inputTextLabel, mx, subtleHover } from '@dxos/react-ui-theme';
-import { Collection, type ProjectionModel, View } from '@dxos/schema';
+import { type ProjectionModel, View } from '@dxos/schema';
 import { type Project, Task } from '@dxos/types';
 import { arrayMove } from '@dxos/util';
 
@@ -36,9 +36,11 @@ export const ProjectObjectSettings = ({ classNames, project }: ProjectObjectSett
   const { t } = useTranslation(meta.id);
   const client = useClient();
   const space = getSpace(project);
-  const views = project.collections.map((ref) => ref.target).filter((object) => Obj.instanceOf(View.View, object));
-  const [expandedId, setExpandedId] = useState<View.View['id']>();
-  const view = useMemo(() => views.find((view) => view.id === expandedId), [views, expandedId]);
+  const [expandedId, setExpandedId] = useState<string>();
+  const view = useMemo(
+    () => project.lanes.find((lane) => lane.view.dxn.toString() === expandedId)?.view.target,
+    [project.lanes, expandedId],
+  );
   const [schema, setSchema] = useState<Schema.Schema.AnyNoContext>(() => Schema.Struct({}));
   const projectionRef = useRef<ProjectionModel>(null);
   const tags = useQuery(space, Filter.type(Tag.Tag));
@@ -56,8 +58,8 @@ export const ProjectObjectSettings = ({ classNames, project }: ProjectObjectSett
   }, [client, space, view, schema]);
 
   const handleMove = useCallback(
-    (fromIndex: number, toIndex: number) => arrayMove(project.collections, fromIndex, toIndex),
-    [project.collections],
+    (fromIndex: number, toIndex: number) => arrayMove(project.lanes, fromIndex, toIndex),
+    [project.lanes],
   );
 
   const handleQueryChanged = useCallback(
@@ -77,7 +79,6 @@ export const ProjectObjectSettings = ({ classNames, project }: ProjectObjectSett
       const newView = View.make({
         query,
         jsonSchema: Type.toJsonSchema(newSchema),
-        presentation: Obj.make(Type.Expando, {}),
       });
       view.projection = Obj.getSnapshot(newView).projection;
 
@@ -96,20 +97,23 @@ export const ProjectObjectSettings = ({ classNames, project }: ProjectObjectSett
         setExpandedId(undefined);
       }
 
-      const index = project.collections.findIndex((ref) => ref.target === view);
-      project.collections.splice(index, 1);
+      const index = project.lanes.findIndex((lane) => lane.view.target === view);
+      project.lanes.splice(index, 1);
       space?.db.remove(view);
     },
-    [expandedId, project.collections, space],
+    [expandedId, project.lanes, space],
   );
 
   const handleAdd = useCallback(() => {
     const view = View.make({
       query: Query.select(Filter.type(Task.Task)),
       jsonSchema: Type.toJsonSchema(Task.Task),
-      presentation: Obj.make(Collection.Collection, { objects: [] }),
     });
-    project.collections.push(Ref.make(view));
+    project.lanes.push({
+      name: 'Tasks',
+      view: Ref.make(view),
+      order: [],
+    });
     setExpandedId(view.id);
   }, [project]);
 
@@ -117,39 +121,42 @@ export const ProjectObjectSettings = ({ classNames, project }: ProjectObjectSett
     <div role='none' className={mx('plb-cardSpacingBlock overflow-y-auto', classNames)}>
       <h2 className={mx(inputTextLabel, cardText)}>{t('views label')}</h2>
 
-      <List.Root<View.View> items={views} isItem={Schema.is(View.View)} getId={(view) => view.id} onMove={handleMove}>
-        {({ items: views }) => (
+      <List.Root<Project.Lane> items={project.lanes} getId={(lane) => lane.view.dxn.toString()} onMove={handleMove}>
+        {({ items: lanes }) => (
           <>
             <div role='list' className={mx(listGrid, cardChrome)}>
-              {views.map((view) => (
-                <List.Item<View.View>
-                  key={view.id}
-                  item={view}
+              {lanes.map((lane) => (
+                <List.Item<Project.Lane>
+                  key={lane.view.dxn.toString()}
+                  item={lane}
                   classNames={listItemGrid}
-                  aria-expanded={expandedId === view.id}
+                  aria-expanded={expandedId === lane.view.dxn.toString()}
                 >
                   <div role='none' className={mx(subtleHover, listItemGrid, 'rounded-sm cursor-pointer min-bs-10')}>
                     <List.ItemDragHandle />
-                    <List.ItemTitle onClick={() => handleToggleField(view)}>{view.name}</List.ItemTitle>
+                    <List.ItemTitle onClick={() => handleToggleField(lane.view.target!)}>{lane.name}</List.ItemTitle>
                     <List.ItemDeleteButton
                       label={t('delete view label')}
                       autoHide={false}
-                      onClick={() => handleDelete(view)}
+                      onClick={() => handleDelete(lane.view.target!)}
                       data-testid='view.delete'
                     />
                     <IconButton
                       iconOnly
                       variant='ghost'
                       label={t('toggle expand label', { ns: 'os' })}
-                      icon={expandedId === view.id ? 'ph--caret-down--regular' : 'ph--caret-right--regular'}
-                      onClick={() => handleToggleField(view)}
+                      icon={
+                        expandedId === lane.view.dxn.toString() ? 'ph--caret-down--regular' : 'ph--caret-right--regular'
+                      }
+                      onClick={() => handleToggleField(lane.view.target!)}
                     />
                   </div>
-                  {expandedId === view.id && view && (
+                  {expandedId === lane.view.dxn.toString() && view && (
                     <div role='none' className='col-span-5 mbs-1 mbe-1 border border-separator rounded-md'>
+                      {/* TODO(wittjosiah): Edit lane name. */}
                       <ViewEditor
                         ref={projectionRef}
-                        mode='named-query'
+                        mode='query'
                         schema={schema}
                         view={view}
                         registry={space?.db.schemaRegistry}

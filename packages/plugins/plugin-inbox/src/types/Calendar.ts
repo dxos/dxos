@@ -8,7 +8,6 @@ import { type Space } from '@dxos/client/echo';
 import { Obj, Ref, Type } from '@dxos/echo';
 import { FormAnnotation } from '@dxos/echo/internal';
 import { Queue } from '@dxos/echo-db';
-import { ItemAnnotation } from '@dxos/schema';
 
 export const Calendar = Schema.Struct({
   name: Schema.String.pipe(Schema.optional),
@@ -20,7 +19,6 @@ export const Calendar = Schema.Struct({
     typename: 'dxos.org/type/Calendar',
     version: '0.1.0',
   }),
-  ItemAnnotation.set(true),
 );
 
 export interface Calendar extends Schema.Schema.Type<typeof Calendar> {}

@@ -56,7 +56,6 @@ export const ViewEditor = ({ view }: ViewEditorProps) => {
       const newView = View.make({
         query,
         jsonSchema: Type.toJsonSchema(newSchema),
-        presentation: Obj.make(Type.Expando, {}),
       });
       view.projection = Obj.getSnapshot(newView).projection;
 

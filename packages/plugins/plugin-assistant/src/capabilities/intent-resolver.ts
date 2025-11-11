@@ -13,8 +13,8 @@ import { Sequence } from '@dxos/conductor';
 import { Filter, Key, Obj, Ref, Type } from '@dxos/echo';
 import { TracingService, serializeFunction } from '@dxos/functions';
 import { AutomationCapabilities } from '@dxos/plugin-automation';
-import { CollectionAction } from '@dxos/plugin-space/types';
 import { getSpace } from '@dxos/react-client/echo';
+import { Collection } from '@dxos/schema';
 import { type Message } from '@dxos/types';
 
 import { type AiChatServices, updateName } from '../processor';
@@ -30,21 +30,9 @@ export default (context: PluginContext) => [
       resolve: ({ space, rootCollection }) =>
         Effect.gen(function* () {
           const { dispatch } = context.getCapability(Capabilities.IntentDispatcher);
-          const { object: chatCollection } = yield* dispatch(
-            createIntent(CollectionAction.CreateQueryCollection, {
-              typename: Assistant.Chat.typename,
-            }),
-          );
-          const { object: blueprintCollection } = yield* dispatch(
-            createIntent(CollectionAction.CreateQueryCollection, {
-              typename: Blueprint.Blueprint.typename,
-            }),
-          );
-          const { object: promptCollection } = yield* dispatch(
-            createIntent(CollectionAction.CreateQueryCollection, {
-              typename: Type.getTypename(Prompt.Prompt),
-            }),
-          );
+          const chatCollection = Collection.makeSystem({ key: Assistant.Chat.typename });
+          const blueprintCollection = Collection.makeSystem({ key: Blueprint.Blueprint.typename });
+          const promptCollection = Collection.makeSystem({ key: Type.getTypename(Prompt.Prompt) });
           rootCollection.objects.push(
             Ref.make(chatCollection),
             Ref.make(blueprintCollection),

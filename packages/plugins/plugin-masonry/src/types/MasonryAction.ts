@@ -5,9 +5,11 @@
 import * as Schema from 'effect/Schema';
 
 import { SpaceSchema } from '@dxos/react-client/echo';
-import { TypenameAnnotationId, View } from '@dxos/schema';
+import { TypenameAnnotationId } from '@dxos/schema';
 
 import { meta } from '../meta';
+
+import * as Masonry from './Masonry';
 
 const MASONRY_ACTION = `${meta.id}/action`;
 
@@ -25,6 +27,6 @@ export const MasonryProps = Schema.Struct({
 export class CreateMasonry extends Schema.TaggedClass<CreateMasonry>()(`${MASONRY_ACTION}/create`, {
   input: Schema.extend(Schema.Struct({ space: SpaceSchema }), MasonryProps),
   output: Schema.Struct({
-    object: View.View,
+    object: Masonry.Masonry,
   }),
 }) {}

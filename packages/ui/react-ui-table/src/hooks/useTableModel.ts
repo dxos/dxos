@@ -10,15 +10,15 @@ import { Obj } from '@dxos/echo';
 import { type JsonSchemaType } from '@dxos/echo/internal';
 import { type Live } from '@dxos/live-object';
 import { useSelected, useSelectionActions } from '@dxos/react-ui-attention';
-import { type ProjectionModel, type View } from '@dxos/schema';
+import { ProjectionModel } from '@dxos/schema';
 import { isNonNullable } from '@dxos/util';
 
 import { TableModel, type TableModelProps, type TableRow, type TableRowAction } from '../model';
+import { type Table } from '../types';
 
 export type UseTableModelParams<T extends TableRow = TableRow> = {
-  view?: View.View;
-  schema?: JsonSchemaType;
-  projection?: ProjectionModel;
+  table?: Table.Table;
+  jsonSchema?: JsonSchemaType;
   rows?: Live<T>[];
   rowActions?: TableRowAction[];
   onSelectionChanged?: (selection: string[]) => void;
@@ -29,9 +29,8 @@ export type UseTableModelParams<T extends TableRow = TableRow> = {
 >;
 
 export const useTableModel = <T extends TableRow = TableRow>({
-  view,
-  schema,
-  projection,
+  table,
+  jsonSchema,
   rows,
   rowActions,
   features,
@@ -39,21 +38,22 @@ export const useTableModel = <T extends TableRow = TableRow>({
   onRowAction,
   ...props
 }: UseTableModelParams<T>): TableModel<T> | undefined => {
-  const selected = useSelected(view && Obj.getDXN(view).toString(), 'multi');
-  const initialSelection = useMemo(() => selected, [view]);
+  const selected = useSelected(table && Obj.getDXN(table).toString(), 'multi');
+  const initialSelection = useMemo(() => selected, [table]);
 
   const [model, setModel] = useState<TableModel<T>>();
+  const projection = table?.view.target?.projection;
   useEffect(() => {
-    if (!view || !schema) {
+    if (!table || !jsonSchema || !projection) {
       return;
     }
 
     let model: TableModel<T> | undefined;
     const t = setTimeout(async () => {
+      const projectionModel = new ProjectionModel(jsonSchema, projection);
       model = new TableModel<T>({
-        view,
-        schema,
-        projection,
+        table,
+        projection: projectionModel,
         features,
         rowActions,
         initialSelection,
@@ -68,7 +68,9 @@ export const useTableModel = <T extends TableRow = TableRow>({
       clearTimeout(t);
       void model?.close();
     };
-  }, [view, schema, projection, features, rowActions, initialSelection]); // TODO(burdon): Trigger if callbacks change?
+    // TODO(burdon): Trigger if callbacks change?
+    // TODO(ZaymonFC): Is there a better way to get notified about deep changes in the json schema?
+  }, [table, projection, JSON.stringify(jsonSchema), features, rowActions, initialSelection]);
 
   // Update data.
   useEffect(() => {

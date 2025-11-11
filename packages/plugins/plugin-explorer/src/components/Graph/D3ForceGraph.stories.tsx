@@ -5,6 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 
+import { Type } from '@dxos/echo';
 import { faker } from '@dxos/random';
 import { useClient } from '@dxos/react-client';
 import { type Space } from '@dxos/react-client/echo';
@@ -29,19 +30,19 @@ faker.seed(1);
 const DefaultStory = () => {
   const client = useClient();
   const [space, setSpace] = useState<Space>();
-  const [view, setView] = useState<View.View>();
+  const [graph, setGraph] = useState<Graph.Graph>();
 
   useAsyncEffect(async () => {
     const space = client.spaces.default;
     void generate(space, generator);
-    const { view } = await Graph.makeView({ client, space, name: 'Test', typename: Graph.Graph.typename });
-    space.db.add(view);
+    const graph = await Graph.make({ client, space, name: 'Test', typename: Type.getTypename(Graph.Graph) });
+    space.db.add(graph);
     setSpace(space);
-    setView(view);
+    setGraph(graph);
   }, []);
 
   const model = useGraphModel(space);
-  if (!model || !space || !view) {
+  if (!model || !space || !graph) {
     return null;
   }
 

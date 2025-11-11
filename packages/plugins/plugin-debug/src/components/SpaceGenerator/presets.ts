@@ -36,7 +36,7 @@ import {
   pointsToRect,
   rectToPoints,
 } from '@dxos/react-ui-canvas-editor';
-import { Collection, View } from '@dxos/schema';
+import { View } from '@dxos/schema';
 import { Message, Organization, Person, Project } from '@dxos/types';
 import { range, trim } from '@dxos/util';
 
@@ -172,38 +172,51 @@ export const generator = () => ({
           space.db.add(researchTrigger);
 
           const mailboxView = View.make({
-            name: 'Mailbox',
             query: Query.select(
               Filter.type(Message.Message, { properties: { labels: Filter.contains('investor') } }),
             ).options({
               queues: [mailbox.queue.dxn.toString()],
             }),
             jsonSchema: Type.toJsonSchema(Message.Message),
-            presentation: Obj.make(Collection.Collection, { objects: [] }),
           });
           const contactsView = View.make({
-            name: 'Contacts',
             query: contactsQuery,
             jsonSchema: Type.toJsonSchema(Person.Person),
-            presentation: Obj.make(Collection.Collection, { objects: [] }),
           });
           const organizationsView = View.make({
-            name: 'Organizations',
             query: organizationsQuery,
             jsonSchema: Type.toJsonSchema(Organization.Organization),
-            presentation: Obj.make(Collection.Collection, { objects: [] }),
           });
           const notesView = View.make({
-            name: 'Notes',
             query: notesQuery,
             jsonSchema: Type.toJsonSchema(Markdown.Document),
-            presentation: Obj.make(Collection.Collection, { objects: [] }),
           });
 
           return space.db.add(
             Project.make({
               name: 'Investor Research',
-              collections: [mailboxView, contactsView, organizationsView, notesView].map((view) => Ref.make(view)),
+              lanes: [
+                {
+                  name: 'Mailbox',
+                  view: Ref.make(mailboxView),
+                  order: [],
+                },
+                {
+                  name: 'Contacts',
+                  view: Ref.make(contactsView),
+                  order: [],
+                },
+                {
+                  name: 'Organizations',
+                  view: Ref.make(organizationsView),
+                  order: [],
+                },
+                {
+                  name: 'Notes',
+                  view: Ref.make(notesView),
+                  order: [],
+                },
+              ],
             }),
           );
         });

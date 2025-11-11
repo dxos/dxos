@@ -13,13 +13,13 @@ export default (context: PluginContext) =>
       intent: MasonryAction.CreateMasonry,
       resolve: async ({ space, name, typename }) => {
         const client = context.getCapability(ClientCapabilities.Client);
-        const { view } = await Masonry.makeView({
+        const masonry = await Masonry.make({
           client,
           space,
           name,
           typename,
         });
-        return { data: { object: view } };
+        return { data: { object: masonry } };
       },
     }),
   ]);

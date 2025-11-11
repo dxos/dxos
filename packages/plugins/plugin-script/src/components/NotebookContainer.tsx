@@ -63,24 +63,23 @@ export const NotebookContainer = ({ notebook, env }: NotebookContainerProps) => 
           const { name, filter } = builder.build(source);
           if (filter) {
             const ast = Query.select(filter).ast;
-            const view = cell.view?.target;
-            if (!view) {
-              const graph = Graph.make({ query: { ast } });
-              const { view } = await Graph.makeView({
+            const graph = cell.graph?.target;
+            if (!graph) {
+              const graph = await Graph.make({
                 space,
-                presentation: graph,
+                query: { ast },
               });
-              cell.view = Ref.make(view);
+              cell.graph = Ref.make(graph);
               cell.name = name;
             } else {
-              view.query.ast = ast;
+              graph.query.ast = ast;
             }
           }
         }
 
-        if (cell.name && cell.view?.target) {
-          const view = Obj.getSnapshot(cell.view?.target);
-          const query = Query.fromAst(view.query.ast);
+        if (cell.name && cell.graph?.target) {
+          const graph = Obj.getSnapshot(cell.graph?.target);
+          const query = Query.fromAst(graph.query.ast);
           const result = await space?.db.query(query).run();
           const objectIds = result?.objects?.map((obj) => obj.id);
           setQueryValues((prev) => ({ ...prev, [cell.name!]: objectIds }));
