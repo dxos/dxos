@@ -89,6 +89,9 @@
     "i18next": "^24.2.1",
     "iso-did": "^1.6.0"
   },
+  "devDependencies": {
+    "@dxos/types": "workspace:*"
+  },
   "publishConfig": {
     "access": "public"
   }

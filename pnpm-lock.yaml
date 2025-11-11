@@ -3153,6 +3153,10 @@ importers:
       iso-did:
         specifier: ^1.6.0
         version: 1.6.0
+    devDependencies:
+      '@dxos/types':
+        specifier: workspace:*
+        version: link:../../sdk/types
 
   packages/core/halo/credentials:
     dependencies:

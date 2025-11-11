@@ -56,6 +56,9 @@
       "path": "../../sdk/schema"
     },
     {
+      "path": "../../sdk/types"
+    },
+    {
       "path": "../ai"
     },
     {
