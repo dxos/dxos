@@ -105,7 +105,7 @@ type CalendarViewportProps = PropsWithChildren<ThemedClassName>;
 
 const CalendarViewport = ({ children, classNames }: CalendarViewportProps) => {
   return (
-    <div role='none' className={mx('flex flex-col items-center bg-inputSurface', classNames)}>
+    <div role='none' className={mx('flex flex-col items-center overflow-hidden bg-inputSurface', classNames)}>
       {children}
     </div>
   );
