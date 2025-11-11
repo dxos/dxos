@@ -47,12 +47,12 @@ export const ChatContainer = ({ space: spaceProp, chat, companionTo, onEvent }: 
     <StackItem.Content toolbar>
       <Chat.Root space={space} chat={chat} processor={processor} onEvent={onEvent}>
         <Chat.Toolbar companionTo={companionTo} />
-        <Chat.Content classNames='container-max-width'>
+        <Chat.Viewport classNames='container-max-width'>
           <Chat.Thread />
           <div role='none' className='p-4'>
             <Chat.Prompt {...chatProps} outline preset={preset?.id} online={online} onOnlineChange={setOnline} />
           </div>
-        </Chat.Content>
+        </Chat.Viewport>
       </Chat.Root>
     </StackItem.Content>
   );

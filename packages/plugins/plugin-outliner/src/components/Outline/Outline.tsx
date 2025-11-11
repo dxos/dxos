@@ -22,7 +22,7 @@ import {
   useTextEditor,
 } from '@dxos/react-ui-editor';
 import { mx } from '@dxos/react-ui-theme';
-import { type Text as TextType } from '@dxos/schema';
+import { type Text } from '@dxos/schema';
 
 import { meta } from '../../meta';
 
@@ -33,13 +33,13 @@ export type OutlineController = {
 export type OutlineProps = ThemedClassName<
   {
     id: string;
-    text: TextType.Text;
+    text: Text.Text;
     scrollable?: boolean;
     showSelected?: boolean;
   } & Pick<UseTextEditorProps, 'id' | 'autoFocus'>
 >;
 
-export const OutlineComponent = forwardRef<OutlineController, OutlineProps>(
+export const Outline = forwardRef<OutlineController, OutlineProps>(
   ({ classNames, text, id, autoFocus, scrollable = true, showSelected = true }, forwardedRef) => {
     const { t } = useTranslation(meta.id);
     const { themeMode } = useThemeContext();
