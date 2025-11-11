@@ -15,7 +15,7 @@ import { render } from '@dxos/storybook-utils';
 import { translations } from '../../translations';
 import { Journal, Outline } from '../../types';
 
-import { JournalComponent } from './Journal';
+import { Journal as JournalComponent } from './Journal';
 
 const meta = {
   title: 'plugins/plugin-outliner/Journal',

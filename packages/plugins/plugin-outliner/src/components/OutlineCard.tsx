@@ -7,18 +7,18 @@ import React from 'react';
 import { type SurfaceComponentProps } from '@dxos/app-framework/react';
 import { Card } from '@dxos/react-ui-stack';
 
-import { type Outline } from '../types';
+import { type Outline as OutlineType } from '../types';
 
-import { OutlineComponent } from './Outline';
+import { Outline } from './Outline';
 
-export const OutlineCard = ({ object }: SurfaceComponentProps<Outline.Outline>) => {
+export const OutlineCard = ({ object }: SurfaceComponentProps<OutlineType.Outline>) => {
   if (!object.content.target) {
     return null;
   }
 
   return (
     <Card.SurfaceRoot id={object.id} classNames='p-2'>
-      <OutlineComponent id={object.content.target.id} text={object.content.target} />
+      <Outline id={object.content.target.id} text={object.content.target} />
     </Card.SurfaceRoot>
   );
 };

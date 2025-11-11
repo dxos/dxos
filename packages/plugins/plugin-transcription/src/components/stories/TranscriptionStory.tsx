@@ -36,9 +36,9 @@ export const TranscriptionStory: FC<{
         />
       </Toolbar.Root>
       <ScrollContainer.Root pin>
-        <ScrollContainer.Content>
+        <ScrollContainer.Viewport>
           <TranscriptView space={space} model={model} />
-        </ScrollContainer.Content>
+        </ScrollContainer.Viewport>
       </ScrollContainer.Root>
     </div>
   );
