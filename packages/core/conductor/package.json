@@ -56,12 +56,12 @@
     "@dxos/schema": "workspace:*",
     "@dxos/types": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@effect/ai": "0.29.1",
-    "@effect/experimental": "0.56.0",
-    "@effect/platform": "0.92.1",
+    "@effect/ai": "0.32.1",
+    "@effect/experimental": "0.57.0",
+    "@effect/platform": "0.93.0",
     "@preact/signals-core": "^1.12.1",
     "chalk": "^4.1.2",
-    "effect": "3.18.3",
+    "effect": "3.19.3",
     "jsonpath-plus": "10.2.0"
   },
   "devDependencies": {

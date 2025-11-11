@@ -39,7 +39,7 @@
     "@dxos/node-std": "workspace:*",
     "@dxos/util": "workspace:*",
     "@preact/signals-core": "^1.12.1",
-    "effect": "3.18.3"
+    "effect": "3.19.3"
   },
   "devDependencies": {
     "@preact/signals-core": "^1.12.1"

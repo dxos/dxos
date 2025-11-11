@@ -78,7 +78,7 @@
     "@dxos/typings": "workspace:*",
     "@dxos/util": "workspace:*",
     "crc-32": "^1.2.2",
-    "effect": "3.18.3",
+    "effect": "3.19.3",
     "level-transcoder": "^1.0.1",
     "lodash.isequal": "^4.5.0"
   },

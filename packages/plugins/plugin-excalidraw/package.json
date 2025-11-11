@@ -46,7 +46,7 @@
     "@excalidraw/excalidraw": "^0.18.0",
     "@preact-signals/safe-react": "^0.9.0",
     "@preact/signals-core": "^1.12.1",
-    "effect": "3.18.3",
+    "effect": "3.19.3",
     "lodash.defaultsdeep": "^4.6.1",
     "react-resize-detector": "^11.0.1"
   },
