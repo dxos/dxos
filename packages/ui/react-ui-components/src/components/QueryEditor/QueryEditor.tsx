@@ -7,11 +7,11 @@ import React, { forwardRef, useCallback, useEffect, useMemo, useState } from 're
 
 import { type ThemedClassName, updateRef, useThemeContext, useTranslation } from '@dxos/react-ui';
 import {
-  Editor,
+  EditorContent,
+  type EditorContentProps,
   type EditorController,
   EditorMenuProvider,
   type EditorMenuProviderProps,
-  type EditorProps,
   type Extension,
   type UseEditorMenuProps,
   createBasicExtensions,
@@ -30,7 +30,7 @@ export type QueryEditorProps = ThemedClassName<
   {
     value?: string;
     readonly?: boolean;
-  } & (CompletionOptions & Omit<EditorProps, 'initialValue'> & Pick<EditorMenuProviderProps, 'numItems'>)
+  } & (CompletionOptions & Omit<EditorContentProps, 'initialValue'> & Pick<EditorMenuProviderProps, 'numItems'>)
 >;
 
 /**
@@ -81,7 +81,7 @@ export const QueryEditor = forwardRef<EditorController, QueryEditorProps>(
 
     return (
       <EditorMenuProvider view={controller?.view} groups={groupsRef.current} numItems={numItems} {...menuProps}>
-        <Editor {...props} initialValue={value} extensions={extensions} moveToEnd ref={setController} />
+        <EditorContent {...props} initialValue={value} extensions={extensions} moveToEnd ref={setController} />
       </EditorMenuProvider>
     );
   },

@@ -84,6 +84,7 @@ export const EditorStory = forwardRef<EditorView | null, StoryProps>(
 /**
  * Default story component.
  */
+// TODO(burdon): Replace with <Editor.Root>
 export const EditorComponent = forwardRef<EditorView | null, StoryProps>(
   (
     {

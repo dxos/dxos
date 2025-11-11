@@ -13,8 +13,8 @@ import { isNonNullable } from '@dxos/util';
 
 import {
   type EditorController,
-  Editor as NaturalEditor,
-  type EditorProps as NaturalEditorProps,
+  EditorContent as NaturalEditorContent,
+  type EditorContentProps as NaturalEditorContentProps,
 } from '../EditorContent';
 import { EditorMenuProvider, type UseEditorMenuProps, useEditorMenu } from '../EditorMenuProvider';
 import {
@@ -99,7 +99,7 @@ EditorViewport.displayName = 'Editor.Viewport';
 // Content
 //
 
-export type EditorContentProps = Omit<NaturalEditorProps, 'ref'>;
+export type EditorContentProps = Omit<NaturalEditorContentProps, 'ref'>;
 
 /**
  * Content component that renders the actual CodeMirror editor.
@@ -113,7 +113,7 @@ const EditorContent = ({ extensions: providedExtensions, ...props }: EditorConte
     [providedExtensions, additionalExtensions],
   );
 
-  return <NaturalEditor {...props} extensions={extensions} ref={setController} />;
+  return <NaturalEditorContent {...props} extensions={extensions} ref={setController} />;
 };
 
 EditorContent.displayName = 'Editor.Content';
@@ -151,10 +151,10 @@ EditorToolbar.displayName = 'Editor.Toolbar';
  *
  * @example
  * ```tsx
- * <Editor.Root>
- *   <Editor.Toolbar />
- *   <Editor.Viewport>
- *     <Editor.Content extensions={[...]} />
+ * EditorMenuGroup.Root>
+ *   EditorMenuGroup.Toolbar />
+ *   EditorMenuGroup.Viewport>
+ *     EditorMenuGroup.Content extensions={[...]} />
  *   </Editor.Viewport>
  * </Editor.Root>
  * ```

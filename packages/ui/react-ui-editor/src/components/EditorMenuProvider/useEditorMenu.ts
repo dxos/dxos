@@ -12,7 +12,7 @@ import { type MaybePromise } from '@dxos/util';
 import { modalStateEffect } from '../../extensions';
 
 import { type EditorMenuProviderProps } from './EditorMenuProvider';
-import { type PopoverMenuGroup, type PopoverMenuItem } from './menu';
+import { type EditorMenuGroup, type EditorMenuItem } from './menu';
 import { filterMenuGroups, getMenuItem, getNextMenuItem, getPreviousMenuItem } from './menu';
 import { type PopoverOptions, popover, popoverRangeEffect, popoverStateField } from './popover';
 
@@ -25,11 +25,11 @@ export type GetMenuContext = {
 
 export type UseEditorMenuProps = {
   filter?: boolean;
-  getMenu?: (context: GetMenuContext) => MaybePromise<PopoverMenuGroup[]>;
+  getMenu?: (context: GetMenuContext) => MaybePromise<EditorMenuGroup[]>;
 } & Pick<PopoverOptions, 'trigger' | 'triggerKey' | 'placeholder'>;
 
 export type UseEditorMenu = {
-  groupsRef: RefObject<PopoverMenuGroup[]>;
+  groupsRef: RefObject<EditorMenuGroup[]>;
   extension: Extension;
 } & Pick<EditorMenuProviderProps, 'currentItem' | 'open' | 'onOpenChange' | 'onActivate' | 'onSelect' | 'onCancel'>;
 
@@ -51,8 +51,8 @@ export const useEditorMenu = ({
   filter = true,
   getMenu,
 }: UseEditorMenuProps): UseEditorMenu => {
-  const groupsRef = useRef<PopoverMenuGroup[]>([]);
-  const currentRef = useRef<PopoverMenuItem | null>(null);
+  const groupsRef = useRef<EditorMenuGroup[]>([]);
+  const currentRef = useRef<EditorMenuItem | null>(null);
   const [currentItem, setCurrentItem] = useState<string>();
   const [open, setOpen] = useState(false);
   const [_, refresh] = useState({});

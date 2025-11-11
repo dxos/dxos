@@ -14,9 +14,9 @@ import { withTheme } from '@dxos/react-ui/testing';
 import { Testing, type ValueGenerator, createObjectFactory } from '@dxos/schema/testing';
 
 import {
+  type EditorMenuGroup,
+  type EditorMenuItem,
   EditorMenuProvider,
-  type PopoverMenuGroup,
-  type PopoverMenuItem,
   type UseEditorMenuProps,
   createMenuGroup,
   filterMenuGroups,
@@ -32,7 +32,7 @@ import { EditorStory } from './components';
 
 const generator: ValueGenerator = faker as any;
 
-const customCompletions: PopoverMenuGroup = createMenuGroup({
+const customCompletions: EditorMenuGroup = createMenuGroup({
   id: 'test',
   items: ['Hello world!', 'Hello DXOS', 'Hello Composer', 'https://dxos.org'],
 });
@@ -65,7 +65,7 @@ const LinkStory = (args: StoryProps) => {
   const { space } = useClientProvider();
 
   const getMenu = useCallback<NonNullable<UseEditorMenuProps['getMenu']>>(
-    async ({ text, trigger }): Promise<PopoverMenuGroup[]> => {
+    async ({ text, trigger }): Promise<EditorMenuGroup[]> => {
       if (trigger === '/') {
         return filterMenuGroups([linkSlashCommands], (item) =>
           text ? (item.label as string).toLowerCase().includes(text.toLowerCase()) : true,
@@ -81,7 +81,7 @@ const LinkStory = (args: StoryProps) => {
       const items = result.objects
         .filter((object) => object.name.toLowerCase().includes(name))
         .map(
-          (object): PopoverMenuItem => ({
+          (object): EditorMenuItem => ({
             id: object.id,
             label: object.name,
             icon: 'ph--user--regular',

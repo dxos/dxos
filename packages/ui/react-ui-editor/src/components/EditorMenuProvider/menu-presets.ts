@@ -2,11 +2,11 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type PopoverMenuGroup } from './menu';
+import { type EditorMenuGroup } from './menu';
 import { popoverRangeEffect } from './popover';
 import { insertAtLineStart } from './util';
 
-export const formattingCommands: PopoverMenuGroup = {
+export const formattingCommands: EditorMenuGroup = {
   id: 'markdown',
   label: 'Markdown',
   items: [
@@ -85,7 +85,7 @@ export const formattingCommands: PopoverMenuGroup = {
   ],
 };
 
-export const linkSlashCommands: PopoverMenuGroup = {
+export const linkSlashCommands: EditorMenuGroup = {
   id: 'link',
   label: 'Link',
   items: [

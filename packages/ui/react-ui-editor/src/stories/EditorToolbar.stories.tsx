@@ -29,6 +29,7 @@ type StoryProps = { placeholder?: string } & UseTextEditorProps;
 
 const DefaultStory = ({ autoFocus, initialValue, placeholder }: StoryProps) => {
   const { themeMode } = useThemeContext();
+
   const toolbarState = useEditorToolbar({ viewMode: 'source' });
   const viewMode = toolbarState.viewMode;
   // TODO(wittjosiah): Provide way to change the input mode.

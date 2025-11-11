@@ -11,7 +11,7 @@ import { ClientCapabilities } from '@dxos/plugin-client';
 import { SpaceCapabilities } from '@dxos/plugin-space';
 import { type Space } from '@dxos/react-client/echo';
 import { toLocalizedString, useTranslation } from '@dxos/react-ui';
-import { type PopoverMenuGroup, type PopoverMenuItem, insertAtCursor, insertAtLineStart } from '@dxos/react-ui-editor';
+import { type EditorMenuGroup, type EditorMenuItem, insertAtCursor, insertAtLineStart } from '@dxos/react-ui-editor';
 
 export const useLinkQuery = (space: Space | undefined) => {
   const { t } = useTranslation();
@@ -35,7 +35,7 @@ export const useLinkQuery = (space: Space | undefined) => {
   );
 
   const handleLinkQuery = useCallback(
-    async (query?: string): Promise<PopoverMenuGroup[]> => {
+    async (query?: string): Promise<EditorMenuGroup[]> => {
       const name = query?.startsWith('@') ? query.slice(1).toLowerCase() : (query?.toLowerCase() ?? '');
       const results = await space?.db.query(Query.select(filter)).run();
 
@@ -56,7 +56,7 @@ export const useLinkQuery = (space: Space | undefined) => {
         results?.objects
           .filter((object) => toLocalizedString(getLabel(object), t).toLowerCase().includes(name))
           // TODO(wittjosiah): Remove `any` type.
-          .map((object: any): PopoverMenuItem => {
+          .map((object: any): EditorMenuItem => {
             const metadata = resolve(Obj.getTypename(object)!);
             const label = toLocalizedString(getLabel(object), t);
             return {

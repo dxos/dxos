@@ -18,18 +18,18 @@ import {
   useTranslation,
 } from '@dxos/react-ui';
 
-import { type PopoverMenuGroup, type PopoverMenuItem } from './menu';
+import { type EditorMenuGroup, type EditorMenuItem } from './menu';
 
 export type EditorMenuProviderProps = PropsWithChildren<{
   view?: EditorView | null;
-  groups?: PopoverMenuGroup[];
+  groups?: EditorMenuGroup[];
   currentItem?: string;
   open?: boolean;
   defaultOpen?: boolean;
   numItems?: number;
   onOpenChange?: (event: { view: EditorView; open: boolean; trigger?: string }) => void;
   onActivate?: (event: { view: EditorView; trigger?: string }) => void;
-  onSelect?: (event: { view: EditorView; item: PopoverMenuItem }) => void;
+  onSelect?: (event: { view: EditorView; item: EditorMenuItem }) => void;
   onCancel?: (event: { view: EditorView }) => void;
 }>;
 
@@ -148,7 +148,7 @@ export const EditorMenuProvider = ({
 //
 
 type MenuProps = {
-  groups: PopoverMenuGroup[];
+  groups: EditorMenuGroup[];
 } & Pick<MenuGroupProps, 'currentItem' | 'onSelect'>;
 
 const Menu = ({ groups, currentItem, onSelect }: MenuProps) => {
@@ -166,7 +166,7 @@ const Menu = ({ groups, currentItem, onSelect }: MenuProps) => {
 };
 
 type MenuGroupProps = {
-  group: PopoverMenuGroup;
+  group: EditorMenuGroup;
   currentItem?: string;
 } & Pick<MenuItemProps, 'onSelect'>;
 
@@ -190,9 +190,9 @@ const MenuGroup = ({ group, currentItem, onSelect }: MenuGroupProps) => {
 };
 
 type MenuItemProps = {
-  item: PopoverMenuItem;
+  item: EditorMenuItem;
   current: boolean;
-  onSelect?: (item: PopoverMenuItem) => void;
+  onSelect?: (item: EditorMenuItem) => void;
 };
 
 const MenuItem = ({ item, current, onSelect }: MenuItemProps) => {

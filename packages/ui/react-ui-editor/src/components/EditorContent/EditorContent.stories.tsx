@@ -13,13 +13,13 @@ import { Text } from '@dxos/schema';
 
 import { automerge, createBasicExtensions, createThemeExtensions } from '../../extensions';
 
-import { Editor } from './Editor';
+import { EditorContent } from './EditorContent';
 
 const meta = {
   title: 'ui/react-ui-editor/EditorComponent',
-  component: Editor,
+  component: EditorContent,
   decorators: [withTheme, withLayout({ container: 'column' })],
-} satisfies Meta<typeof Editor>;
+} satisfies Meta<typeof EditorContent>;
 
 export default meta;
 
@@ -37,7 +37,7 @@ export const Default: Story = {
       [],
     );
 
-    return <Editor classNames='p-2' {...args} extensions={extensions} />;
+    return <EditorContent classNames='p-2' {...args} extensions={extensions} />;
   },
   args: {
     moveToEnd: true,
@@ -60,7 +60,7 @@ export const Automerge: Story = {
     );
 
     // TODO(burdon): Remove the need for initialValue.
-    return <Editor classNames='p-2' {...props} initialValue={value} extensions={extensions} />;
+    return <EditorContent classNames='p-2' {...props} initialValue={value} extensions={extensions} />;
   },
   args: {
     moveToEnd: true,

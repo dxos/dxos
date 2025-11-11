@@ -9,7 +9,7 @@ import React, { useMemo, useRef } from 'react';
 import { withTheme } from '@dxos/react-ui/testing';
 import { withAttention } from '@dxos/react-ui-attention/testing';
 
-import { EditorMenuProvider, type PopoverMenuGroup } from '../components';
+import { EditorMenuProvider, type EditorMenuGroup } from '../components';
 import { deleteItem, hashtag, listItemToString, outliner, treeFacet } from '../extensions';
 import { str } from '../testing';
 
@@ -22,7 +22,7 @@ type StoryProps = {
 const DefaultStory = ({ text }: StoryProps) => {
   const viewRef = useRef<EditorView>(null);
 
-  const commandGroups: PopoverMenuGroup[] = useMemo(
+  const commandGroups: EditorMenuGroup[] = useMemo(
     () => [
       {
         id: 'outliner-actions',

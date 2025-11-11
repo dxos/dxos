@@ -13,8 +13,8 @@ import { useThemeContext, useTranslation } from '@dxos/react-ui';
 import { QueryEditor, type QueryEditorProps } from '@dxos/react-ui-components';
 import {
   type BasicExtensionsOptions,
-  Editor,
-  type EditorProps,
+  EditorContent,
+  type EditorContentProps,
   createBasicExtensions,
   createDataExtensions,
   createMarkdownExtensions,
@@ -194,7 +194,7 @@ const NotebookTextEditor = ({
   extensions: extensionsParam,
   readOnly,
   ...props
-}: EditorProps & Pick<BasicExtensionsOptions, 'readOnly'>) => {
+}: EditorContentProps & Pick<BasicExtensionsOptions, 'readOnly'>) => {
   const { t } = useTranslation(meta.id);
   const { themeMode } = useThemeContext();
   const extensions = useMemo(() => {
@@ -210,5 +210,5 @@ const NotebookTextEditor = ({
     ].filter(isNonNullable);
   }, [extensionsParam]);
 
-  return <Editor {...props} extensions={extensions} moveToEnd />;
+  return <EditorContent {...props} extensions={extensions} moveToEnd />;
 };

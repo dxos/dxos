@@ -12,7 +12,7 @@ import {
   type EditorStateStore,
   type EditorToolbarState,
   type EditorViewMode,
-  type PopoverMenuGroup,
+  type EditorMenuGroup,
   type UseTextEditorProps,
   createBasicExtensions,
   createMarkdownExtensions,
@@ -37,10 +37,10 @@ export type MarkdownEditorContentProps = {
   role?: string;
   viewMode?: EditorViewMode;
   scrollPastEnd?: boolean;
-  slashCommandGroups?: PopoverMenuGroup[];
+  slashCommandGroups?: EditorMenuGroup[];
   editorStateStore?: EditorStateStore;
   toolbarState?: Live<EditorToolbarState>;
-  onLinkQuery?: (query?: string) => Promise<PopoverMenuGroup[]>;
+  onLinkQuery?: (query?: string) => Promise<EditorMenuGroup[]>;
 } & (Pick<UseTextEditorProps, 'initialValue' | 'extensions'> & Pick<MarkdownEditorToolbarProps, 'onFileUpload'>);
 
 export const MarkdownEditorContent = forwardRef<EditorView | null, MarkdownEditorContentProps>(

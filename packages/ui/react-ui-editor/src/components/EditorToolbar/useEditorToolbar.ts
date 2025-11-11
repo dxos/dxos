@@ -9,6 +9,7 @@ import { type Live, live } from '@dxos/live-object';
 import { type Formatting } from '../../extensions';
 import { type EditorViewMode } from '../../types';
 
+// TODO(burdon): Move to extensions.
 export type EditorToolbarState = { viewMode?: EditorViewMode } & Formatting;
 
 /**

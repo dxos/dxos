@@ -17,7 +17,7 @@ export type EditorController = {
   focus: () => void;
 };
 
-export type EditorProps = ThemedClassName<
+export type EditorContentProps = ThemedClassName<
   {
     moveToEnd?: boolean;
     value?: string;
@@ -30,7 +30,7 @@ export type EditorProps = ThemedClassName<
  * NOTE: This shouold not be used with the automerge extension.
  * @deprecated Use Editor.Content
  */
-export const Editor = forwardRef<EditorController, EditorProps>(
+export const EditorContent = forwardRef<EditorController, EditorContentProps>(
   ({ classNames, id, extensions, moveToEnd, value, onChange, ...props }, forwardedRef) => {
     const { parentRef, focusAttributes, view } = useTextEditor(
       () => ({

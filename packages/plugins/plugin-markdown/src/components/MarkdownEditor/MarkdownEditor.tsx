@@ -17,8 +17,8 @@ import {
   type EditorToolbarState,
   type PreviewBlock,
   type PreviewOptions,
+  type UseEditorMenu,
   useEditorMenu,
-  type useEditorMenu,
   useEditorToolbar,
 } from '@dxos/react-ui-editor';
 import { isNonNullable } from '@dxos/util';
@@ -26,8 +26,8 @@ import { isNonNullable } from '@dxos/util';
 import {
   type DocumentType,
   type ExtensionsOptions,
-  type UseEditorMenOptionsProps,
-  useEditorMenOptions,
+  type UseEditorMenuOptionsProps,
+  useEditorMenuOptions,
   useExtensions,
 } from '../../hooks';
 
@@ -50,7 +50,7 @@ type MarkdownEditorContextValue = {
   extensions: Extension[];
   previewBlocks: PreviewBlock[];
   toolbarState: Live<EditorToolbarState>;
-  popoverMenu: Omit<useEditorMenu, 'extension'>;
+  popoverMenu: Omit<UseEditorMenu, 'extension'>;
 } & (Pick<ExtensionsOptions, 'viewMode'> &
   Pick<NaturalMarkdownToolbarProps, 'editorView' | 'onFileUpload' | 'onViewModeChange'>);
 
@@ -66,7 +66,7 @@ type MarkdownEditorRootProps = PropsWithChildren<
     object?: DocumentType;
     extensions?: Extension[];
   } & Pick<MarkdownEditorContextValue, 'id' | 'onFileUpload' | 'onViewModeChange' | 'viewMode'> &
-    Pick<UseEditorMenOptionsProps, 'slashCommandGroups' | 'onLinkQuery'> &
+    Pick<UseEditorMenuOptionsProps, 'slashCommandGroups' | 'onLinkQuery'> &
     Pick<ExtensionsOptions, 'editorStateStore' | 'selectionManager' | 'settings'>
 >;
 
@@ -103,7 +103,7 @@ const MarkdownEditorRoot = ({
   const toolbarState = useEditorToolbar({ viewMode });
 
   // Context menu.
-  const menuOptions = useEditorMenOptions({
+  const menuOptions = useEditorMenuOptions({
     editorView,
     slashCommandGroups,
     onLinkQuery,

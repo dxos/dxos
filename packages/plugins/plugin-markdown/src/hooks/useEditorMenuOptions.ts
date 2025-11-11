@@ -7,7 +7,7 @@ import { useCallback, useMemo, useRef } from 'react';
 
 import { Domino, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import {
-  type PopoverMenuGroup,
+  type EditorMenuGroup,
   type UseEditorMenuProps,
   filterMenuGroups,
   formattingCommands,
@@ -16,17 +16,17 @@ import {
 
 import { meta } from '../meta';
 
-export type UseEditorMenOptionsProps = {
+export type UseEditorMenuOptionsProps = {
   editorView?: EditorView;
-  slashCommandGroups?: PopoverMenuGroup[];
-  onLinkQuery?: (query?: string) => Promise<PopoverMenuGroup[]>;
+  slashCommandGroups?: EditorMenuGroup[];
+  onLinkQuery?: (query?: string) => Promise<EditorMenuGroup[]>;
 };
 
-export const useEditorMenOptions = ({
+export const useEditorMenuOptions = ({
   editorView,
   slashCommandGroups,
   onLinkQuery,
-}: UseEditorMenOptionsProps): UseEditorMenuProps => {
+}: UseEditorMenuOptionsProps): UseEditorMenuProps => {
   const { t } = useTranslation(meta.id);
 
   const getMenu = useCallback<NonNullable<UseEditorMenuProps['getMenu']>>(

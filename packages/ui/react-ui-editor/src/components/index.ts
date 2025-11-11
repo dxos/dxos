@@ -4,7 +4,9 @@
 
 export * from './Editor';
 
-// TODO(burdon): Remove access.
-export * from './EditorContent';
+// export { type GetMenuContext } from './EditorMenuProvider';
+
+// TODO(burdon): Remove.
+export { EditorContent } from './EditorContent';
 export * from './EditorMenuProvider';
-export * from './EditorToolbar';
+export { EditorToolbar, type EditorToolbarState, useEditorToolbar } from './EditorToolbar';

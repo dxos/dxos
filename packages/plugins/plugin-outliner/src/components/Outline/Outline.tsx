@@ -8,7 +8,7 @@ import React, { forwardRef, useCallback, useImperativeHandle, useMemo } from 're
 import { createDocAccessor } from '@dxos/react-client/echo';
 import { type ThemedClassName, useThemeContext, useTranslation } from '@dxos/react-ui';
 import {
-  type PopoverMenuGroup,
+  type EditorMenuGroup,
   EditorMenuProvider,
   type EditorMenuProviderProps,
   type UseTextEditorProps,
@@ -69,7 +69,7 @@ export const Outline = forwardRef<OutlineController, OutlineProps>(
       [view],
     );
 
-    const commandGroups: PopoverMenuGroup[] = useMemo(
+    const commandGroups: EditorMenuGroup[] = useMemo(
       () => [
         {
           id: 'outliner-actions',

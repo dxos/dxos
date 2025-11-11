@@ -122,7 +122,7 @@ const DefaultStory = ({
     <div className='grid grid-cols-[1fr,360px] is-full bs-full'>
       <ComputeContext.Provider value={{ controller }}>
         <Container id={id} classNames={['flex grow overflow-hidden', !sidebar && 'col-span-2']}>
-          <Editor.Root<ComputeShape>
+          EditorMenuGroup.Root<ComputeShape>
             ref={editorRef}
             id={id}
             graph={graph}
@@ -133,8 +133,8 @@ const DefaultStory = ({
             autoZoom
             {...props}
           >
-            <Editor.Canvas>{children}</Editor.Canvas>
-            <Editor.UI showTools />
+            EditorMenuGroup.Canvas>{children}</Editor.Canvas>
+            EditorMenuGroup.UI showTools />
           </Editor.Root>
           <DiagnosticOverlay diagnostics={diagnostics} />
         </Container>
