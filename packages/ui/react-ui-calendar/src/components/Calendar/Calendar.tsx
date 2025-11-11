@@ -208,7 +208,7 @@ const CalendarGrid = ({ classNames, rows, onSelect }: CalendarGridProps) => {
 
   const rowRenderer = useCallback<ListRowRenderer>(
     ({ key, index, style }) => {
-      const getBgColor = (date: Date) => date.getMonth() % 2 === 0 && 'bg-inputSurface';
+      const getBgColor = (date: Date) => date.getMonth() % 2 === 0 && 'bg-modalSurface';
       return (
         <div key={key} style={style} className='is-full grid grid-cols-[1fr_max-content_1fr] snap-center'>
           <div className={mx(getBgColor(getDate(start, index, 0, weekStartsOn)))} />
@@ -246,10 +246,7 @@ const CalendarGrid = ({ classNames, rows, onSelect }: CalendarGridProps) => {
   );
 
   return (
-    <div
-      role='none'
-      className={mx('flex flex-col bs-full is-full justify-center overflow-hidden bg-modalSurface', classNames)}
-    >
+    <div role='none' className={mx('flex flex-col bs-full is-full justify-center overflow-hidden', classNames)}>
       {/* Day labels */}
       <div role='none' className='flex justify-center bg-groupSurface'>
         <div role='none' className='flex is-full grid grid-cols-7' style={{ width: defaultWidth }}>
