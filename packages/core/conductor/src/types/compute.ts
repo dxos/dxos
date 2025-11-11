@@ -127,8 +127,7 @@ export const synchronizedComputeFunction =
     });
 
 // TODO(dmaretskyi): To effect schema.
-export type ComputeMeta = {
-  type: string;
+export type ComputeNodeMeta = {
   input: Schema.Schema.AnyNoContext;
   output: Schema.Schema.AnyNoContext;
 };
@@ -140,14 +139,13 @@ export type Executable<
   SI extends Schema.Schema.AnyNoContext = Schema.Schema.AnyNoContext,
   SO extends Schema.Schema.AnyNoContext = Schema.Schema.AnyNoContext,
 > = {
-  meta: ComputeMeta;
+  meta: ComputeNodeMeta;
 
   /** Undefined for meta nodes like input/output. */
   exec?: ComputeFunction<Schema.Schema.Type<SI>, Schema.Schema.Type<SO>>;
 };
 
 export type NodeDef<SI extends Schema.Schema.AnyNoContext, SO extends Schema.Schema.AnyNoContext> = {
-  type: string;
   input: SI;
   output: SO;
   exec?: ComputeFunction<Schema.Schema.Type<SI>, Schema.Schema.Type<SO>>;
@@ -157,8 +155,7 @@ export type NodeDef<SI extends Schema.Schema.AnyNoContext, SO extends Schema.Sch
  * Type-safe constructor for function definition.
  */
 export const defineComputeNode = <SI extends Schema.Schema.AnyNoContext, SO extends Schema.Schema.AnyNoContext>({
-  type,
   input,
   output,
   exec,
-}: NodeDef<SI, SO>): Executable<SI, SO> => ({ meta: { type, input, output }, exec });
+}: NodeDef<SI, SO>): Executable<SI, SO> => ({ meta: { input, output }, exec });

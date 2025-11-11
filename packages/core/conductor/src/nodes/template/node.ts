@@ -18,7 +18,6 @@ export const TemplateOutput = Schema.Struct({ [DEFAULT_OUTPUT]: Schema.Any });
 export type TemplateOutput = Schema.Schema.Type<typeof TemplateOutput>;
 
 export const templateNode = defineComputeNode({
-  type: 'template',
   input: TemplateInput,
   output: TemplateOutput,
   exec: synchronizedComputeFunction((props = {}, node) => {

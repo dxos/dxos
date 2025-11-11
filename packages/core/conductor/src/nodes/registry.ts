@@ -131,32 +131,27 @@ export const registry: Record<NodeType, Executable> = {
   ['template' as const]: templateNode,
 
   ['audio' as const]: defineComputeNode({
-    type: 'audio',
     input: VoidInput,
     output: Schema.Struct({ [DEFAULT_OUTPUT]: Schema.String }),
   }),
 
   ['chat' as const]: defineComputeNode({
-    type: 'chat',
     input: VoidInput,
     output: Schema.Struct({ [DEFAULT_OUTPUT]: Schema.String }),
   }),
 
   ['constant' as const]: defineComputeNode({
-    type: 'constant',
     input: VoidInput,
     output: ConstantOutput,
     exec: (_, node) => Effect.succeed(ValueBag.make({ [DEFAULT_OUTPUT]: node!.value })),
   }),
 
   ['switch' as const]: defineComputeNode({
-    type: 'switch',
     input: VoidInput,
     output: Schema.Struct({ [DEFAULT_OUTPUT]: Schema.Boolean }),
   }),
 
   ['rng' as const]: defineComputeNode({
-    type: 'rng',
     input: VoidInput,
     output: Schema.Struct({ [DEFAULT_OUTPUT]: Schema.Number }),
     exec: () => Effect.succeed(ValueBag.make({ [DEFAULT_OUTPUT]: Math.random() })),
@@ -164,7 +159,6 @@ export const registry: Record<NodeType, Executable> = {
 
   // Creates a new queue.
   ['make-queue' as const]: defineComputeNode({
-    type: 'make-queue',
     input: Schema.Struct({}),
     output: Schema.Struct({ [DEFAULT_OUTPUT]: Type.Ref(Queue) }),
     exec: synchronizedComputeFunction(
@@ -183,32 +177,27 @@ export const registry: Record<NodeType, Executable> = {
   //
 
   ['beacon' as const]: defineComputeNode({
-    type: 'beacon',
     input: Schema.Struct({ [DEFAULT_INPUT]: Schema.Boolean }),
     output: VoidOutput,
   }),
 
   ['scope' as const]: defineComputeNode({
-    type: 'scope',
     input: Schema.Struct({ [DEFAULT_INPUT]: Schema.String }),
     output: VoidOutput,
   }),
 
   ['text' as const]: defineComputeNode({
-    type: 'text',
     input: DefaultInput,
     output: VoidOutput,
   }),
 
   ['json' as const]: defineComputeNode({
-    type: 'json',
     input: Schema.Struct({ [DEFAULT_INPUT]: Schema.Any }),
     output: Schema.Struct({ [DEFAULT_OUTPUT]: Schema.Any }),
     exec: synchronizedComputeFunction(({ [DEFAULT_INPUT]: input }) => Effect.succeed({ [DEFAULT_OUTPUT]: input })),
   }),
 
   ['json-transform' as const]: defineComputeNode({
-    type: 'json-transform',
     input: JsonTransformInput,
     output: Schema.Struct({ [DEFAULT_OUTPUT]: Schema.Any }),
     exec: synchronizedComputeFunction(({ [DEFAULT_INPUT]: input, expression }) => {
@@ -220,19 +209,16 @@ export const registry: Record<NodeType, Executable> = {
   }),
 
   ['surface' as const]: defineComputeNode({
-    type: 'surface',
     input: DefaultInput,
     output: VoidOutput,
   }),
 
   ['reducer' as const]: defineComputeNode({
-    type: 'reducer',
     input: ReducerInput,
     output: ReducerOutput,
   }),
 
   ['thread' as const]: defineComputeNode({
-    type: 'thread',
     input: VoidInput,
     output: Schema.Struct({
       id: ObjectId,
@@ -241,7 +227,6 @@ export const registry: Record<NodeType, Executable> = {
   }),
 
   ['queue' as const]: defineComputeNode({
-    type: 'queue',
     input: QueueInput,
     output: QueueOutput,
     exec: synchronizedComputeFunction(({ [DEFAULT_INPUT]: id }) =>
@@ -257,7 +242,6 @@ export const registry: Record<NodeType, Executable> = {
   }),
 
   ['append' as const]: defineComputeNode({
-    type: 'append',
     input: AppendInput,
     output: VoidOutput,
     exec: synchronizedComputeFunction(({ id, items }) =>
@@ -316,21 +300,18 @@ export const registry: Record<NodeType, Executable> = {
   //
 
   ['and' as const]: defineComputeNode({
-    type: 'and',
     input: Schema.Struct({ a: Schema.Boolean, b: Schema.Boolean }),
     output: Schema.Struct({ [DEFAULT_OUTPUT]: Schema.Boolean }),
     exec: synchronizedComputeFunction(({ a, b }) => Effect.succeed({ [DEFAULT_OUTPUT]: isTruthy(a) && isTruthy(b) })),
   }),
 
   ['or' as const]: defineComputeNode({
-    type: 'or',
     input: Schema.Struct({ a: Schema.Boolean, b: Schema.Boolean }),
     output: Schema.Struct({ [DEFAULT_OUTPUT]: Schema.Boolean }),
     exec: synchronizedComputeFunction(({ a, b }) => Effect.succeed({ [DEFAULT_OUTPUT]: isTruthy(a) || isTruthy(b) })),
   }),
 
   ['not' as const]: defineComputeNode({
-    type: 'not',
     input: Schema.Struct({ [DEFAULT_INPUT]: Schema.Boolean }),
     output: Schema.Struct({ [DEFAULT_OUTPUT]: Schema.Boolean }),
     exec: synchronizedComputeFunction(({ [DEFAULT_INPUT]: input }) =>
@@ -343,7 +324,6 @@ export const registry: Record<NodeType, Executable> = {
   //
 
   ['if' as const]: defineComputeNode({
-    type: 'if',
     input: Schema.Struct({ condition: Schema.Boolean, value: Schema.Any }),
     output: Schema.Struct({ true: Schema.optional(Schema.Any), false: Schema.optional(Schema.Any) }),
     exec: (input) =>
@@ -366,7 +346,6 @@ export const registry: Record<NodeType, Executable> = {
 
   // Ternary operator.
   ['if-else' as const]: defineComputeNode({
-    type: 'if-else',
     input: Schema.Struct({ condition: Schema.Boolean, true: Schema.Any, false: Schema.Any }),
     output: Schema.Struct({ [DEFAULT_OUTPUT]: Schema.Any }),
     exec: synchronizedComputeFunction(({ condition, true: trueValue, false: falseValue }) =>
@@ -379,7 +358,6 @@ export const registry: Record<NodeType, Executable> = {
   //
 
   ['function' as const]: defineComputeNode({
-    type: 'function',
     input: AnyInput,
     output: AnyOutput,
     exec: synchronizedComputeFunction((input, node) =>
@@ -402,7 +380,6 @@ export const registry: Record<NodeType, Executable> = {
   ['gpt' as const]: gptNode,
 
   ['gpt-realtime' as const]: defineComputeNode({
-    type: 'gpt-realtime',
     input: Schema.Struct({
       audio: Schema.Any,
     }),
@@ -416,7 +393,6 @@ export const registry: Record<NodeType, Executable> = {
 
   // TODO(burdon): Rename 'echo' (since we may have other dbs).
   ['database' as const]: defineComputeNode({
-    type: 'database',
     input: VoidInput,
     output: VoidOutput, // TODO(burdon): Fix.
     exec: synchronizedComputeFunction(() =>
@@ -427,7 +403,6 @@ export const registry: Record<NodeType, Executable> = {
   }),
 
   ['text-to-image' as const]: defineComputeNode({
-    type: 'text-to-image',
     input: VoidInput,
     output: VoidOutput, // TODO(burdon): Fix.
     exec: synchronizedComputeFunction(() =>

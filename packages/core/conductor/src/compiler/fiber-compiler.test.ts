@@ -119,7 +119,6 @@ describe('Graph as a fiber runtime', () => {
 //
 
 const sum = defineComputeNode({
-  type: 'dxn:test:sum',
   input: Schema.Struct({ a: Schema.Number, b: Schema.Number }),
   output: Schema.Struct({ result: Schema.Number }),
   exec: synchronizedComputeFunction(({ a, b }) =>
@@ -135,7 +134,6 @@ const sum = defineComputeNode({
 });
 
 const view = defineComputeNode({
-  type: 'dxn:test:viewer',
   input: Schema.Struct({ result: Schema.Number }),
   output: VoidOutput,
 });
