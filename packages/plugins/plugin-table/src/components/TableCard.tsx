@@ -5,7 +5,6 @@
 import React, { useMemo, useRef } from 'react';
 
 import { Filter, Obj, Type } from '@dxos/echo';
-import { EchoSchema } from '@dxos/echo/internal';
 import { useGlobalFilteredObjects } from '@dxos/plugin-search';
 import { useClient } from '@dxos/react-client';
 import { getSpace, useQuery, useSchema } from '@dxos/react-client/echo';
@@ -18,7 +17,7 @@ import {
   useTableModel,
 } from '@dxos/react-ui-table';
 import { type Table } from '@dxos/react-ui-table/types';
-import { getTypenameFromQuery } from '@dxos/schema';
+import { ProjectionModel, getTypenameFromQuery } from '@dxos/schema';
 
 export type TableCardProps = {
   role: string;
@@ -44,16 +43,17 @@ export const TableCard = ({ role, object }: TableCardProps) => {
     [],
   );
 
-  const jsonSchema = useMemo(() => {
-    if (schema instanceof EchoSchema) {
-      return schema.jsonSchema;
+  const projection = useMemo(() => {
+    if (schema && object?.view.target?.projection) {
+      const projection = new ProjectionModel(Type.toJsonSchema(schema), object.view.target.projection);
+      projection.normalizeView();
+      return projection;
     }
-    return schema ? Type.toJsonSchema(schema) : undefined;
-  }, [schema]);
+  }, [schema, object?.view.target?.projection]);
 
   const model = useTableModel({
     table: object,
-    jsonSchema,
+    projection,
     features,
     rows: filteredObjects,
     onCellUpdate: (cell) => tableRef.current?.update?.(cell),

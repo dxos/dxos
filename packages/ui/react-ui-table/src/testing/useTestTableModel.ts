@@ -5,18 +5,19 @@
 import type * as Schema from 'effect/Schema';
 import { type RefObject, useCallback, useMemo, useRef } from 'react';
 
-import { isMutable, toJsonSchema } from '@dxos/echo/internal';
+import { isMutable } from '@dxos/echo/internal';
 import { useGlobalFilteredObjects } from '@dxos/plugin-search';
 import { faker } from '@dxos/random';
 import { type Client, useClient } from '@dxos/react-client';
 import { Filter, type Space, useQuery, useSchema } from '@dxos/react-client/echo';
 import { useClientProvider } from '@dxos/react-client/testing';
-import { ProjectionModel, getTypenameFromQuery } from '@dxos/schema';
+import { type ProjectionModel, getTypenameFromQuery } from '@dxos/schema';
 
 import { type TableController } from '../components';
-import { useAddRow, useTableModel } from '../hooks';
+import { useAddRow, useProjectionModel, useTableModel } from '../hooks';
 import { type TableModel, TablePresentation } from '../model';
 import { Table } from '../types';
+import { getDebugName } from '@dxos/util';
 
 faker.seed(0); // NOTE(ZaymonFC): Required for smoke tests.
 
@@ -47,15 +48,7 @@ export const useTestTableModel = (): TestTableModel => {
   const table = tables.at(0);
   const typename = table?.view.target?.query ? getTypenameFromQuery(table.view.target.query.ast) : undefined;
   const schema = useSchema(client, space, typename);
-  const jsonSchema = useMemo(() => (schema ? toJsonSchema(schema) : undefined), [schema]);
-
-  const projection = useMemo(() => {
-    if (schema && table?.view.target?.projection) {
-      const projection = new ProjectionModel(toJsonSchema(schema), table.view.target.projection);
-      projection.normalizeView();
-      return projection;
-    }
-  }, [schema, table?.view.target?.projection]);
+  const projection = useProjectionModel(schema, table);
 
   const features = useMemo(
     () => ({
@@ -100,7 +93,7 @@ export const useTestTableModel = (): TestTableModel => {
 
   const model = useTableModel({
     table,
-    jsonSchema,
+    projection,
     features,
     rows: filteredObjects,
     onInsertRow: addRow,
@@ -113,7 +106,7 @@ export const useTestTableModel = (): TestTableModel => {
   const handleInsertRow = useCallback(() => {
     const insertResult = model?.insertRow();
     tableRef.current?.handleInsertRowResult?.(insertResult);
-  }, [model, tableRef.current]);
+  }, [model]);
 
   const handleSaveView = useCallback(() => {
     model?.saveView();
@@ -124,6 +117,8 @@ export const useTestTableModel = (): TestTableModel => {
       return new TablePresentation(model);
     }
   }, [model]);
+
+  console.log('test', getDebugName(model), getDebugName(projection));
 
   return {
     schema,

@@ -10,7 +10,6 @@ import React, { useCallback, useMemo, useRef } from 'react';
 import { LayoutAction, createIntent } from '@dxos/app-framework';
 import { useAppGraph, useIntentDispatcher } from '@dxos/app-framework/react';
 import { Filter, Obj, Query, Type } from '@dxos/echo';
-import { EchoSchema } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
 import { useGlobalFilteredObjects } from '@dxos/plugin-search';
 import { SpaceAction } from '@dxos/plugin-space/types';
@@ -29,7 +28,7 @@ import {
   useTableModel,
 } from '@dxos/react-ui-table';
 import { type Table } from '@dxos/react-ui-table/types';
-import { getTypenameFromQuery } from '@dxos/schema';
+import { ProjectionModel, getTypenameFromQuery } from '@dxos/schema';
 
 import { meta } from '../meta';
 
@@ -90,13 +89,6 @@ export const TableContainer = ({ role, object }: TableContainerProps) => {
     [],
   );
 
-  const jsonSchema = useMemo(() => {
-    if (schema instanceof EchoSchema) {
-      return schema.jsonSchema;
-    }
-    return schema ? Type.toJsonSchema(schema) : undefined;
-  }, [schema]);
-
   const handleCellUpdate = useCallback<Required<TableModelProps>['onCellUpdate']>((cell) => {
     tableRef.current?.update?.(cell);
   }, []);
@@ -129,9 +121,17 @@ export const TableContainer = ({ role, object }: TableContainerProps) => {
     [space],
   );
 
+  const projection = useMemo(() => {
+    if (schema && object?.view.target?.projection) {
+      const projection = new ProjectionModel(Type.toJsonSchema(schema), object.view.target.projection);
+      projection.normalizeView();
+      return projection;
+    }
+  }, [schema, object?.view.target?.projection]);
+
   const model = useTableModel({
     table: object,
-    jsonSchema,
+    projection,
     features,
     rows: filteredObjects,
     rowActions,

@@ -20,7 +20,7 @@ import { View } from '@dxos/schema';
 import { type ValueGenerator, createAsyncGenerator } from '@dxos/schema/testing';
 import { Organization, Person } from '@dxos/types';
 
-import { useTableModel } from '../../hooks';
+import { useProjectionModel, useTableModel } from '../../hooks';
 import { type TableFeatures, TablePresentation, type TableRow } from '../../model';
 import { translations } from '../../translations';
 import { Table } from '../../types';
@@ -55,8 +55,8 @@ const useTestModel = <S extends Type.Obj.Any>(schema: S, count: number) => {
     await space.db.schemaRegistry.register([schema]);
   }, [client, space, schema]);
 
-  const jsonSchema = useMemo(() => Type.toJsonSchema(schema), [schema]);
-  const model = useTableModel<TableRow>({ table, jsonSchema, features });
+  const projection = useProjectionModel(schema, table);
+  const model = useTableModel<TableRow>({ table, projection, features });
 
   useEffect(() => {
     if (!model || !space) {

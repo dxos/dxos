@@ -7,10 +7,9 @@ import orderBy from 'lodash.orderby';
 import { useEffect, useMemo, useState } from 'react';
 
 import { Obj } from '@dxos/echo';
-import { type JsonSchemaType } from '@dxos/echo/internal';
 import { type Live } from '@dxos/live-object';
 import { useSelected, useSelectionActions } from '@dxos/react-ui-attention';
-import { ProjectionModel } from '@dxos/schema';
+import { type ProjectionModel } from '@dxos/schema';
 import { isNonNullable } from '@dxos/util';
 
 import { TableModel, type TableModelProps, type TableRow, type TableRowAction } from '../model';
@@ -18,7 +17,7 @@ import { type Table } from '../types';
 
 export type UseTableModelParams<T extends TableRow = TableRow> = {
   table?: Table.Table;
-  jsonSchema?: JsonSchemaType;
+  projection?: ProjectionModel;
   rows?: Live<T>[];
   rowActions?: TableRowAction[];
   onSelectionChanged?: (selection: string[]) => void;
@@ -30,7 +29,7 @@ export type UseTableModelParams<T extends TableRow = TableRow> = {
 
 export const useTableModel = <T extends TableRow = TableRow>({
   table,
-  jsonSchema,
+  projection,
   rows,
   rowActions,
   features,
@@ -42,18 +41,16 @@ export const useTableModel = <T extends TableRow = TableRow>({
   const initialSelection = useMemo(() => selected, [table]);
 
   const [model, setModel] = useState<TableModel<T>>();
-  const projection = table?.view.target?.projection;
   useEffect(() => {
-    if (!table || !jsonSchema || !projection) {
+    if (!table || !projection) {
       return;
     }
 
     let model: TableModel<T> | undefined;
     const t = setTimeout(async () => {
-      const projectionModel = new ProjectionModel(jsonSchema, projection);
       model = new TableModel<T>({
         table,
-        projection: projectionModel,
+        projection,
         features,
         rowActions,
         initialSelection,
@@ -69,8 +66,7 @@ export const useTableModel = <T extends TableRow = TableRow>({
       void model?.close();
     };
     // TODO(burdon): Trigger if callbacks change?
-    // TODO(ZaymonFC): Is there a better way to get notified about deep changes in the json schema?
-  }, [table, projection, JSON.stringify(jsonSchema), features, rowActions, initialSelection]);
+  }, [table, projection, features, rowActions, initialSelection]);
 
   // Update data.
   useEffect(() => {
