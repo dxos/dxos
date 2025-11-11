@@ -11,6 +11,7 @@ import { Obj, Relation } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { createExtension } from '@dxos/plugin-graph';
 import { getSpace } from '@dxos/react-client/echo';
+import { SystemAnnotation } from '@dxos/schema';
 import { HasSubject } from '@dxos/types';
 
 import { meta } from '../meta';
@@ -26,8 +27,20 @@ export default (context: PluginContext) =>
           Function.pipe(
             get(node),
             Option.flatMap((node) => {
-              // TODO(burdon): Narrow types (e.g., Person, Organization, Event); use annotation?
-              return Obj.isObject(node.data) ? Option.some(node.data) : Option.none();
+              if (!Obj.isObject(node.data)) {
+                return Option.none();
+              }
+
+              const schema = Obj.getSchema(node.data);
+              const system = Option.fromNullable(schema).pipe(
+                Option.flatMap((schema) => SystemAnnotation.get(schema)),
+                Option.getOrElse(() => false),
+              );
+              if (system) {
+                return Option.none();
+              }
+
+              return Option.some(node.data);
             }),
             Option.map((object) => {
               const id = Obj.getDXN(object).toString();

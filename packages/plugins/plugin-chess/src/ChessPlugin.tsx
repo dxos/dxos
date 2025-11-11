@@ -3,7 +3,7 @@
 //
 
 import { Capabilities, Events, contributes, createIntent, defineModule, definePlugin } from '@dxos/app-framework';
-import { ClientEvents } from '@dxos/plugin-client';
+import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
 import { SpaceCapabilities } from '@dxos/plugin-space';
 import { defineObjectForm } from '@dxos/plugin-space/types';
 
@@ -42,6 +42,11 @@ export const ChessPlugin = definePlugin(meta, () => [
           getIntent: () => createIntent(ChessAction.Create),
         }),
       ),
+  }),
+  defineModule({
+    id: `${meta.id}/module/schema`,
+    activatesOn: ClientEvents.SetupSchema,
+    activate: () => contributes(ClientCapabilities.Schema, [Chess.Game]),
   }),
   defineModule({
     id: `${meta.id}/module/react-surface`,

@@ -4,7 +4,7 @@
 
 import { Capabilities, Events, contributes, createIntent, defineModule, definePlugin } from '@dxos/app-framework';
 import { Ref } from '@dxos/echo';
-import { ClientEvents } from '@dxos/plugin-client';
+import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
 import { SpaceCapabilities } from '@dxos/plugin-space';
 import { defineObjectForm } from '@dxos/plugin-space/types';
 import { Event, Message } from '@dxos/types';
@@ -91,6 +91,12 @@ export const InboxPlugin = definePlugin(meta, () => [
         }),
       ),
     ],
+  }),
+  defineModule({
+    id: `${meta.id}/module/schema`,
+    activatesOn: ClientEvents.SetupSchema,
+    activate: () =>
+      contributes(ClientCapabilities.Schema, [Calendar.Calendar, Event.Event, Mailbox.Mailbox, Message.Message]),
   }),
   defineModule({
     id: `${meta.id}/module/app-graph-builder`,

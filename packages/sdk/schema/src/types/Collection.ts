@@ -11,6 +11,8 @@ import { type Expando, FormAnnotation } from '@dxos/echo/internal';
 import { DatabaseService } from '@dxos/echo-db';
 import { invariant } from '@dxos/invariant';
 
+import { SystemAnnotation } from '../annotations';
+
 export const Collection = Schema.Struct({
   name: Schema.String.pipe(Schema.optional),
   objects: Schema.Array(Type.Ref(Type.Expando)).pipe(Schema.mutable, FormAnnotation.set(false)),
@@ -37,6 +39,7 @@ export const System = Schema.Struct({
     typename: 'dxos.org/type/SystemCollection',
     version: '0.1.0',
   }),
+  SystemAnnotation.set(true),
 );
 
 export type System = Schema.Schema.Type<typeof System>;

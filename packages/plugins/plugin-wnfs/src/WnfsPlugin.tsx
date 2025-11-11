@@ -13,7 +13,7 @@ import {
   defineModule,
   definePlugin,
 } from '@dxos/app-framework';
-import { ClientEvents } from '@dxos/plugin-client';
+import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
 import { MarkdownEvents } from '@dxos/plugin-markdown';
 import { SpaceCapabilities } from '@dxos/plugin-space';
 import { defineObjectForm } from '@dxos/plugin-space/types';
@@ -71,6 +71,11 @@ export const WnfsPlugin = definePlugin(meta, () => [
             ),
         }),
       ),
+  }),
+  defineModule({
+    id: `${meta.id}/module/schema`,
+    activatesOn: ClientEvents.SetupSchema,
+    activate: () => contributes(ClientCapabilities.Schema, [WnfsFile.File]),
   }),
   defineModule({
     id: `${meta.id}/module/file-uploader`,

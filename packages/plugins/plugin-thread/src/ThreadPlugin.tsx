@@ -118,9 +118,10 @@ export const ThreadPlugin = definePlugin(meta, () => [
     activate: () =>
       contributes(ClientCapabilities.Schema, [
         AnchoredTo.AnchoredTo,
-        Thread.Thread,
+        Channel.Channel,
         Message.Message,
         Message.MessageV1,
+        Thread.Thread,
       ]),
   }),
   defineModule({

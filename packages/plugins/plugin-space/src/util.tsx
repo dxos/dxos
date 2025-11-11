@@ -147,6 +147,7 @@ const getSystemCollectionNodePartials = ({
 }) => {
   const metadata = resolve(collection.key);
   return {
+    label: ['typename label', { ns: collection.key, count: 2 }],
     icon: metadata.icon,
     iconHue: metadata.iconHue,
     acceptPersistenceClass: new Set(['echo']),
@@ -586,42 +587,46 @@ export const constructObjectActions = ({
           },
         ]
       : []),
-    {
-      id: getId(SpaceAction.RenameObject._tag),
-      type: ACTION_TYPE,
-      data: async (params?: InvokeParams) => {
-        await dispatch(createIntent(SpaceAction.RenameObject, { object, caller: params?.caller }));
-      },
-      properties: {
-        label: ['rename object label', { ns: typename }],
-        icon: 'ph--pencil-simple-line--regular',
-        disposition: 'list-item',
-        // TODO(wittjosiah): Not working.
-        // keyBinding: {
-        //   macos: 'shift+F6',
-        // },
-        testId: 'spacePlugin.renameObject',
-      },
-    },
-    {
-      id: getId(SpaceAction.RemoveObjects._tag),
-      type: ACTION_TYPE,
-      data: async () => {
-        const collection = graph
-          .getConnections(Obj.getDXN(object).toString(), 'inbound')
-          .find(({ data }) => Obj.instanceOf(Collection.Collection, data))?.data;
-        await dispatch(createIntent(SpaceAction.RemoveObjects, { objects: [object], target: collection }));
-      },
-      properties: {
-        label: ['delete object label', { ns: typename }],
-        icon: 'ph--trash--regular',
-        disposition: 'list-item',
-        disabled: !deletable,
-        // TODO(wittjosiah): This is a browser shortcut.
-        // keyBinding: object instanceof CollectionType ? undefined : 'shift+meta+Backspace',
-        testId: 'spacePlugin.deleteObject',
-      },
-    },
+    ...(systemCollection
+      ? []
+      : [
+          {
+            id: getId(SpaceAction.RenameObject._tag),
+            type: ACTION_TYPE,
+            data: async (params?: InvokeParams) => {
+              await dispatch(createIntent(SpaceAction.RenameObject, { object, caller: params?.caller }));
+            },
+            properties: {
+              label: ['rename object label', { ns: typename }],
+              icon: 'ph--pencil-simple-line--regular',
+              disposition: 'list-item',
+              // TODO(wittjosiah): Not working.
+              // keyBinding: {
+              //   macos: 'shift+F6',
+              // },
+              testId: 'spacePlugin.renameObject',
+            },
+          },
+          {
+            id: getId(SpaceAction.RemoveObjects._tag),
+            type: ACTION_TYPE,
+            data: async () => {
+              const collection = graph
+                .getConnections(Obj.getDXN(object).toString(), 'inbound')
+                .find(({ data }) => Obj.instanceOf(Collection.Collection, data))?.data;
+              await dispatch(createIntent(SpaceAction.RemoveObjects, { objects: [object], target: collection }));
+            },
+            properties: {
+              label: ['delete object label', { ns: typename }],
+              icon: 'ph--trash--regular',
+              disposition: 'list-item',
+              disabled: !deletable,
+              // TODO(wittjosiah): This is a browser shortcut.
+              // keyBinding: object instanceof CollectionType ? undefined : 'shift+meta+Backspace',
+              testId: 'spacePlugin.deleteObject',
+            },
+          },
+        ]),
     ...(navigable ||
     (!Obj.instanceOf(Collection.Collection, object) &&
       !Obj.instanceOf(Collection.System, object) &&

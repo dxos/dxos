@@ -12,7 +12,7 @@ import {
   definePlugin,
 } from '@dxos/app-framework';
 import { AutomationEvents } from '@dxos/plugin-automation';
-import { ClientEvents } from '@dxos/plugin-client';
+import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
 import { MarkdownEvents } from '@dxos/plugin-markdown';
 import { SpaceCapabilities } from '@dxos/plugin-space';
 import { defineObjectForm } from '@dxos/plugin-space/types';
@@ -60,6 +60,11 @@ export const SheetPlugin = definePlugin(meta, () => [
           getIntent: (props) => createIntent(SheetAction.Create, { ...props }),
         }),
       ),
+  }),
+  defineModule({
+    id: `${meta.id}/module/schema`,
+    activatesOn: ClientEvents.SetupSchema,
+    activate: () => contributes(ClientCapabilities.Schema, [Sheet.Sheet]),
   }),
   defineModule({
     id: `${meta.id}/module/markdown`,

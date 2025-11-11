@@ -56,7 +56,7 @@ export const SketchPlugin = definePlugin(meta, () => [
   defineModule({
     id: `${meta.id}/module/schema`,
     activatesOn: ClientEvents.SetupSchema,
-    activate: () => contributes(ClientCapabilities.Schema, [Diagram.Canvas]),
+    activate: () => contributes(ClientCapabilities.Schema, [Diagram.Canvas, Diagram.Diagram]),
   }),
   defineModule({
     id: `${meta.id}/module/react-surface`,

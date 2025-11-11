@@ -4,7 +4,7 @@
 
 import { Capabilities, Events, contributes, createIntent, defineModule, definePlugin } from '@dxos/app-framework';
 import { Type } from '@dxos/echo';
-import { ClientEvents } from '@dxos/plugin-client';
+import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
 import { SpaceCapabilities } from '@dxos/plugin-space';
 import { defineObjectForm } from '@dxos/plugin-space/types';
 
@@ -49,6 +49,11 @@ export const MasonryPlugin = definePlugin(meta, () => [
           getIntent: (props, options) => createIntent(MasonryAction.CreateMasonry, { ...props, space: options.space }),
         }),
       ),
+  }),
+  defineModule({
+    id: `${meta.id}/module/schema`,
+    activatesOn: ClientEvents.SetupSchema,
+    activate: () => contributes(ClientCapabilities.Schema, [Masonry.Masonry]),
   }),
   defineModule({
     id: `${meta.id}/module/react-surface`,

@@ -317,7 +317,7 @@ export default (context: PluginContext) => {
         ),
     }),
 
-    // Create nodes for objects in a collection or by its fully qualified id.
+    // Create nodes for objects in a collection or by its DXN.
     createExtension({
       id: `${meta.id}/objects`,
       connector: (node) =>
@@ -383,7 +383,46 @@ export default (context: PluginContext) => {
       },
     }),
 
-    // Static schema records.
+    // Create object nodes for schema-based system collections.
+    createExtension({
+      id: `${meta.id}/system-collections`,
+      connector: (node) => {
+        const client = context.getCapability(ClientCapabilities.Client);
+        let query: QueryResult<Type.Expando> | undefined;
+        return Atom.make((get) =>
+          Function.pipe(
+            get(node),
+            Option.flatMap((node) =>
+              Obj.instanceOf(Collection.System, node.data) ? Option.some(node.data) : Option.none(),
+            ),
+            Option.flatMap((collection) => {
+              const space = getSpace(collection);
+              const schema = client.graph.schemaRegistry.schemas.find(
+                (schema) => Type.getTypename(schema) === collection.key,
+              );
+              return space && schema ? Option.some({ space, schema }) : Option.none();
+            }),
+            Option.map(({ space, schema }) => {
+              if (!query) {
+                query = space.db.query(Filter.type(schema));
+              }
+              return get(atomFromQuery(query))
+                .map((object) =>
+                  createObjectNode({
+                    object,
+                    space,
+                    resolve: resolve(get),
+                  }),
+                )
+                .filter(isNonNullable);
+            }),
+            Option.getOrElse(() => []),
+          ),
+        );
+      },
+    }),
+
+    // Create branch nodes for static schema record types.
     createExtension({
       id: `${meta.id}/static-schemas`,
       connector: (node) => {
@@ -414,7 +453,7 @@ export default (context: PluginContext) => {
       },
     }),
 
-    // Create static schema actions.
+    // Create actions for static schema record types.
     createExtension({
       id: `${meta.id}/static-schema-actions`,
       actions: (node) => {
@@ -462,7 +501,7 @@ export default (context: PluginContext) => {
       },
     }),
 
-    // Create nodes for schema views.
+    // Create nodes for views of record types.
     createExtension({
       id: `${meta.id}/schema-views`,
       connector: (node) => {
@@ -491,7 +530,9 @@ export default (context: PluginContext) => {
               // TODO(wittjosiah): Remove casts.
               const typename = Schema.isSchema(schema) ? Type.getTypename(schema as Type.Obj.Any) : schema.typename;
               return get(atomFromQuery(query))
-                .filter((object) => getTypenameFromQuery((object as any).view.target?.ast) === typename)
+                .filter((object) =>
+                  get(atomFromSignal(() => getTypenameFromQuery((object as any).view.target?.query.ast) === typename)),
+                )
                 .map((object) =>
                   get(
                     atomFromSignal(() =>
@@ -508,42 +549,6 @@ export default (context: PluginContext) => {
             }),
             Option.getOrElse(() => []),
           );
-        });
-      },
-    }),
-
-    // Create record nodes.
-    createExtension({
-      id: `${meta.id}/records`,
-      resolver: (id) => {
-        let query: QueryResult<Type.Expando> | undefined;
-        return Atom.make((get) => {
-          const client = context.getCapability(ClientCapabilities.Client);
-          const dxn = DXN.tryParse(id)?.asEchoDXN();
-          if (!dxn || !dxn.spaceId) {
-            return null;
-          }
-
-          const space = client.spaces.get(dxn.spaceId);
-          if (!space) {
-            return null;
-          }
-
-          if (!query) {
-            query = space.db.query(Filter.ids(dxn.echoId));
-          }
-
-          const object = get(atomFromQuery(query)).at(0);
-          if (!object) {
-            return null;
-          }
-
-          return createObjectNode({
-            object,
-            space,
-            resolve: resolve(get),
-            disposition: 'hidden',
-          });
         });
       },
     }),

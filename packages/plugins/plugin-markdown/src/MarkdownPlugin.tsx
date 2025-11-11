@@ -90,7 +90,7 @@ export const MarkdownPlugin = definePlugin(meta, () => [
   defineModule({
     id: `${meta.id}/module/schema`,
     activatesOn: ClientEvents.SetupSchema,
-    activate: () => contributes(ClientCapabilities.Schema, [Text.Text]),
+    activate: () => contributes(ClientCapabilities.Schema, [Markdown.Document, Text.Text]),
   }),
   defineModule({
     id: `${meta.id}/module/whitelist-schema`,

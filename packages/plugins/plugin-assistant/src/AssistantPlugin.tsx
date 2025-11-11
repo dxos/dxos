@@ -122,11 +122,14 @@ export const AssistantPlugin = definePlugin(meta, () => [
     activatesOn: ClientEvents.SetupSchema,
     activate: () =>
       contributes(ClientCapabilities.Schema, [
-        ServiceType,
+        Assistant.Chat,
         Assistant.CompanionTo,
-        ResearchGraph,
+        Blueprint.Blueprint,
         HasSubject.HasSubject,
         Prompt.Prompt,
+        ResearchGraph,
+        Sequence,
+        ServiceType,
       ]),
   }),
   defineModule({

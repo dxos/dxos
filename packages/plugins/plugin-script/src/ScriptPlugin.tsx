@@ -5,7 +5,7 @@
 import { Capabilities, Events, contributes, createIntent, defineModule, definePlugin } from '@dxos/app-framework';
 import { Ref } from '@dxos/echo';
 import { Script } from '@dxos/functions';
-import { ClientEvents } from '@dxos/plugin-client';
+import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
 import { SpaceCapabilities } from '@dxos/plugin-space';
 import { defineObjectForm } from '@dxos/plugin-space/types';
 
@@ -91,6 +91,12 @@ export const ScriptPlugin = definePlugin(meta, () => [
         }),
       ),
   }),
+  defineModule({
+    id: `${meta.id}/module/schema`,
+    activatesOn: ClientEvents.SetupSchema,
+    activate: () => contributes(ClientCapabilities.Schema, [Script.Script]),
+  }),
+
   defineModule({
     id: `${meta.id}/module/react-surface`,
     activatesOn: Events.SetupReactSurface,

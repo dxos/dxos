@@ -3,7 +3,7 @@
 //
 
 import { Capabilities, Events, contributes, createIntent, defineModule, definePlugin } from '@dxos/app-framework';
-import { ClientEvents } from '@dxos/plugin-client';
+import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
 import { SpaceCapabilities } from '@dxos/plugin-space';
 import { defineObjectForm } from '@dxos/plugin-space/types';
 import { translations as boardTranslations } from '@dxos/react-ui-board';
@@ -43,6 +43,11 @@ export const BoardPlugin = definePlugin(meta, () => [
           getIntent: () => createIntent(Board.Create),
         }),
       ),
+  }),
+  defineModule({
+    id: `${meta.id}/module/schema`,
+    activatesOn: ClientEvents.SetupSchema,
+    activate: () => contributes(ClientCapabilities.Schema, [Board.Board]),
   }),
   defineModule({
     id: `${meta.id}/module/react-surface`,
