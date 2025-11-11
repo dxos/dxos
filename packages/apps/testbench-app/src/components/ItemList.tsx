@@ -88,7 +88,7 @@ export const Item = ({ object, onDelete }: ItemProps<Obj.Any>) => {
             {property !== 'id' && type === 'string' && (
               <Input.Root>
                 <Input.Label classNames={labelProps}>{property}</Input.Label>
-                EditorMenuGroup object={object} prop={property} />
+                <Editor object={object} prop={property} />
               </Input.Root>
             )}
           </div>

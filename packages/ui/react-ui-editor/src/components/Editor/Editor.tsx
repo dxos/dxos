@@ -40,9 +40,7 @@ const [EditorContextProvider, useEditorContext] = createContext<EditorContextVal
 // Root
 //
 
-export type EditorRootProps = PropsWithChildren<
-  Omit<UseEditorMenuProps, 'viewRef'> & Pick<EditorToolbarState, 'viewMode'>
->;
+type EditorRootProps = PropsWithChildren<Omit<UseEditorMenuProps, 'viewRef'> & Pick<EditorToolbarState, 'viewMode'>>;
 
 /**
  * Root component for the Editor compound component.
@@ -80,7 +78,7 @@ EditorRoot.displayName = 'Editor.Root';
 // Viewport
 //
 
-export type EditorViewportProps = ThemedClassName<PropsWithChildren<{}>>;
+type EditorViewportProps = ThemedClassName<PropsWithChildren<{}>>;
 
 /**
  * Viewport component that wraps the toolbar and editor content area.
@@ -99,7 +97,7 @@ EditorViewport.displayName = 'Editor.Viewport';
 // Content
 //
 
-export type EditorContentProps = Omit<NaturalEditorContentProps, 'ref'>;
+type EditorContentProps = Omit<NaturalEditorContentProps, 'ref'>;
 
 /**
  * Content component that renders the actual CodeMirror editor.
@@ -122,7 +120,7 @@ EditorContent.displayName = 'Editor.Content';
 // Toolbar
 //
 
-export type EditorToolbarProps = Omit<NaturalEditorToolbarProps, 'getView' | 'state'>;
+type EditorToolbarProps = Omit<NaturalEditorToolbarProps, 'getView' | 'state'>;
 
 /**
  * Toolbar component that provides editor formatting and control actions.
@@ -166,4 +164,10 @@ export const Editor = {
   Toolbar: EditorToolbar,
 };
 
-export type { EditorController };
+export type {
+  EditorController,
+  EditorRootProps,
+  EditorViewportProps,
+  EditorContentProps,
+  // EditorToolbarProps, // TODO(burdon): Restore once removed deprecated props.
+};
