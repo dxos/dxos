@@ -7,6 +7,8 @@ import React from 'react';
 
 import { withTheme } from '@dxos/react-ui/testing';
 
+import { translations } from '../../translations';
+
 import { Calendar } from './Calendar';
 
 const meta = {
@@ -15,6 +17,7 @@ const meta = {
   decorators: [withTheme],
   parameters: {
     layout: 'centered',
+    translations,
   },
 } satisfies Meta<typeof Calendar.Grid>;
 
