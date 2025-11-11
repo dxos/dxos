@@ -406,9 +406,9 @@ export class GraphBuilder {
 
 /**
  * Creates an Atom.Atom<T> from a callback which accesses signals.
- * Will return a new rx instance each time.
+ * Will return a new atom instance each time.
  */
-export const rxFromSignal = <T>(cb: () => T): Atom.Atom<T> => {
+export const atomFromSignal = <T>(cb: () => T): Atom.Atom<T> => {
   return Atom.make((get) => {
     const dispose = effect(() => {
       get.setSelf(cb());
@@ -432,8 +432,8 @@ const observableFamily = Atom.family((observable: MulticastObservable<any>) => {
 
 /**
  * Creates an Atom.Atom<T> from a MulticastObservable<T>
- * Will return the same rx instance for the same observable.
+ * Will return the same atom instance for the same observable.
  */
-export const rxFromObservable = <T>(observable: MulticastObservable<T>): Atom.Atom<T> => {
+export const atomFromObservable = <T>(observable: MulticastObservable<T>): Atom.Atom<T> => {
   return observableFamily(observable) as Atom.Atom<T>;
 };

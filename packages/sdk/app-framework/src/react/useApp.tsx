@@ -128,7 +128,7 @@ export const useApp = ({
     });
 
     manager.context.contributeCapability({
-      interface: Capabilities.RxRegistry,
+      interface: Capabilities.AtomRegistry,
       implementation: manager.registry,
       module: 'dxos.org/app-framework/atom-registry',
     });
@@ -141,7 +141,7 @@ export const useApp = ({
 
     return () => {
       manager.context.removeCapability(Capabilities.PluginManager, manager);
-      manager.context.removeCapability(Capabilities.RxRegistry, manager.registry);
+      manager.context.removeCapability(Capabilities.AtomRegistry, manager.registry);
     };
   }, [manager]);
 

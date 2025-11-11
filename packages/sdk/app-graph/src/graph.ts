@@ -421,8 +421,8 @@ export class Graph implements WritableGraph {
 
   addNode({ nodes, edges, ...nodeArg }: NodeArg<any, Record<string, any>>): void {
     const { id, type, data = null, properties = {} } = nodeArg;
-    const nodeRx = this._node(id);
-    const node = this._registry.get(nodeRx);
+    const nodeAtom = this._node(id);
+    const node = this._registry.get(nodeAtom);
     Option.match(node, {
       onSome: (node) => {
         const typeChanged = node.type !== type;
@@ -442,14 +442,14 @@ export class Graph implements WritableGraph {
             data,
             properties: { ...node.properties, ...properties },
           });
-          this._registry.set(nodeRx, newNode);
+          this._registry.set(nodeAtom, newNode);
           this.onNodeChanged.emit({ id, node: newNode });
         }
       },
       onNone: () => {
         log('new node', { id, type, data, properties });
         const newNode = this._constructNode({ id, type, data, properties });
-        this._registry.set(nodeRx, newNode);
+        this._registry.set(nodeAtom, newNode);
         this.onNodeChanged.emit({ id, node: newNode });
       },
     });
@@ -474,9 +474,9 @@ export class Graph implements WritableGraph {
   }
 
   removeNode(id: string, edges = false): void {
-    const nodeRx = this._node(id);
+    const nodeAtom = this._node(id);
     // TODO(wittjosiah): Is there a way to mark these atom values for garbage collection?
-    this._registry.set(nodeRx, Option.none());
+    this._registry.set(nodeAtom, Option.none());
     this.onNodeChanged.emit({ id, node: Option.none() });
     // TODO(wittjosiah): Reset expanded and initialized flags?
 
@@ -499,27 +499,27 @@ export class Graph implements WritableGraph {
   }
 
   addEdge(edgeArg: Edge): void {
-    const sourceRx = this._edges(edgeArg.source);
-    const source = this._registry.get(sourceRx);
+    const sourceAtom = this._edges(edgeArg.source);
+    const source = this._registry.get(sourceAtom);
     if (!source.outbound.includes(edgeArg.target)) {
       log('add outbound edge', {
         source: edgeArg.source,
         target: edgeArg.target,
       });
-      this._registry.set(sourceRx, {
+      this._registry.set(sourceAtom, {
         inbound: source.inbound,
         outbound: [...source.outbound, edgeArg.target],
       });
     }
 
-    const targetRx = this._edges(edgeArg.target);
-    const target = this._registry.get(targetRx);
+    const targetAtom = this._edges(edgeArg.target);
+    const target = this._registry.get(targetAtom);
     if (!target.inbound.includes(edgeArg.source)) {
       log('add inbound edge', {
         source: edgeArg.source,
         target: edgeArg.target,
       });
-      this._registry.set(targetRx, {
+      this._registry.set(targetAtom, {
         inbound: [...target.inbound, edgeArg.source],
         outbound: target.outbound,
       });
@@ -533,27 +533,27 @@ export class Graph implements WritableGraph {
   }
 
   removeEdge(edgeArg: Edge, removeOrphans = false): void {
-    const sourceRx = this._edges(edgeArg.source);
-    const source = this._registry.get(sourceRx);
+    const sourceAtom = this._edges(edgeArg.source);
+    const source = this._registry.get(sourceAtom);
     if (source.outbound.includes(edgeArg.target)) {
-      this._registry.set(sourceRx, {
+      this._registry.set(sourceAtom, {
         inbound: source.inbound,
         outbound: source.outbound.filter((id) => id !== edgeArg.target),
       });
     }
 
-    const targetRx = this._edges(edgeArg.target);
-    const target = this._registry.get(targetRx);
+    const targetAtom = this._edges(edgeArg.target);
+    const target = this._registry.get(targetAtom);
     if (target.inbound.includes(edgeArg.source)) {
-      this._registry.set(targetRx, {
+      this._registry.set(targetAtom, {
         inbound: target.inbound.filter((id) => id !== edgeArg.source),
         outbound: target.outbound,
       });
     }
 
     if (removeOrphans) {
-      const source = this._registry.get(sourceRx);
-      const target = this._registry.get(targetRx);
+      const source = this._registry.get(sourceAtom);
+      const target = this._registry.get(targetAtom);
       if (source.outbound.length === 0 && source.inbound.length === 0 && edgeArg.source !== ROOT_ID) {
         this.removeNodes([edgeArg.source]);
       }
@@ -564,12 +564,12 @@ export class Graph implements WritableGraph {
   }
 
   sortEdges(id: string, relation: Relation, order: string[]): void {
-    const edgesRx = this._edges(id);
-    const edges = this._registry.get(edgesRx);
+    const edgesAtom = this._edges(id);
+    const edges = this._registry.get(edgesAtom);
     const unsorted = edges[relation].filter((id) => !order.includes(id)) ?? [];
     const sorted = order.filter((id) => edges[relation].includes(id)) ?? [];
     edges[relation].splice(0, edges[relation].length, ...[...sorted, ...unsorted]);
-    this._registry.set(edgesRx, edges);
+    this._registry.set(edgesAtom, edges);
   }
 
   traverse({ visitor, source = ROOT_ID, relation = 'outbound' }: GraphTraversalOptions, path: string[] = []): void {

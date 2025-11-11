@@ -8,7 +8,7 @@ import * as Option from 'effect/Option';
 
 import { Capabilities, LayoutAction, type PluginContext, contributes, createIntent } from '@dxos/app-framework';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
-import { ROOT_ID, createExtension, rxFromSignal } from '@dxos/plugin-graph';
+import { ROOT_ID, atomFromSignal, createExtension } from '@dxos/plugin-graph';
 
 import { meta } from '../meta';
 
@@ -112,7 +112,7 @@ export default (context: PluginContext) =>
                 properties: {
                   label: [
                     get(
-                      rxFromSignal(() =>
+                      atomFromSignal(() =>
                         state.sidebarState === 'expanded'
                           ? 'collapse navigation sidebar label'
                           : 'open navigation sidebar label',
@@ -131,7 +131,7 @@ export default (context: PluginContext) =>
               };
 
               return get(
-                rxFromSignal(() =>
+                atomFromSignal(() =>
                   !state.deck.solo ? [closeCurrent, closeOthers, closeAll, toggleSidebar] : [toggleSidebar],
                 ),
               );

@@ -8,11 +8,11 @@ import { Capabilities } from '../common';
 import { type PluginContext, contributes } from '../core';
 
 export default (context: PluginContext) => {
-  // TODO(wittjosiah): Replace with rx?
+  // TODO(wittjosiah): Replace with atom?
   const settingsStore = new RootSettingsStore();
 
   let previous: Capabilities.Settings[] = [];
-  const registry = context.getCapability(Capabilities.RxRegistry);
+  const registry = context.getCapability(Capabilities.AtomRegistry);
   const cancel = registry.subscribe(
     context.capabilities(Capabilities.Settings),
     (allSettings) => {
