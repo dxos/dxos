@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 import type * as Schema from 'effect/Schema';
 import type * as Scope from 'effect/Scope';
 
-import type { Services } from '@dxos/functions';
+import { type Services } from '@dxos/functions';
 import { mapValues } from '@dxos/util';
 
 import type { ComputeNode } from './graph';
@@ -113,6 +113,7 @@ export type ComputeEffect<T> = Effect.Effect<T, ConductorError, ComputeRequireme
 
 /**
  * Lifts a compute function that takes all inputs together and returns all outputs together.
+ * @internal
  */
 // TODO(dmaretskyi): output schema needs to be passed in in-case the node does not execute to know the output property names to propagate not-executed marker further.
 export const synchronizedComputeFunction =
@@ -145,6 +146,9 @@ export type Executable<
   exec?: ComputeFunction<Schema.Schema.Type<SI>, Schema.Schema.Type<SO>>;
 };
 
+/**
+ * @internal
+ */
 export type NodeDef<SI extends Schema.Schema.AnyNoContext, SO extends Schema.Schema.AnyNoContext> = {
   input: SI;
   output: SO;
@@ -153,6 +157,7 @@ export type NodeDef<SI extends Schema.Schema.AnyNoContext, SO extends Schema.Sch
 
 /**
  * Type-safe constructor for function definition.
+ * @internal
  */
 export const defineComputeNode = <SI extends Schema.Schema.AnyNoContext, SO extends Schema.Schema.AnyNoContext>({
   input,
