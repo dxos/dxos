@@ -9,9 +9,8 @@ import { defineCapability } from '@dxos/app-framework';
 import type { CredentialsService, DatabaseService, FunctionInvocationService, QueueService } from '@dxos/functions';
 import type { InvocationTracer, TriggerDispatcher, TriggerStateStore } from '@dxos/functions-runtime';
 import type { SpaceId } from '@dxos/keys';
-import { Services } from '@dxos/functions';
-
 import { meta } from '../meta';
+import { FunctionServices } from "@dxos/functions";
 
 export namespace AutomationCapabilities {
   /**

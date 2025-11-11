@@ -9,7 +9,7 @@ import { raise } from '@dxos/debug';
 import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
 
-import { type Services, ComputeEventLogger } from '@dxos/functions';
+import { ComputeEventLogger } from '@dxos/functions';
 import { GraphExecutor } from '../compiler';
 import {
   type ComputeGraphModel,
@@ -20,6 +20,7 @@ import {
   type ValueRecord,
 } from '../types';
 import { WorkflowLoader } from '../workflow';
+import { FunctionServices } from "@dxos/functions";
 
 export class TestRuntime {
   // TODO(burdon): Index by DXN; ComputeGraph instances.
@@ -62,7 +63,7 @@ export class TestRuntime {
   runGraph<T extends ValueRecord = any>(
     graphDxn: string,
     input: ValueBag<any>,
-  ): Effect.Effect<ValueBag<T>, ConductorError, Services | Scope.Scope> {
+  ): Effect.Effect<ValueBag<T>, ConductorError, FunctionServices | Scope.Scope> {
     return Effect.gen(this, function* () {
       const program = yield* Effect.promise(() => this._workflowLoader.load(DXN.parse(graphDxn)));
       return yield* program.run(input);
@@ -75,7 +76,7 @@ export class TestRuntime {
     graphDxn: string,
     inputNodeId: string,
     input: ValueBag<any>,
-  ): Effect.Effect<Record<string, ValueBag<any>>, ConductorError, Services | Scope.Scope> {
+  ): Effect.Effect<Record<string, ValueBag<any>>, ConductorError, FunctionServices | Scope.Scope> {
     return Effect.gen(this, function* () {
       const workflow = yield* Effect.promise(() => this._workflowLoader.load(DXN.parse(graphDxn)));
       const executor = new GraphExecutor({

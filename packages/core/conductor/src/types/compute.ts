@@ -6,10 +6,11 @@ import * as Effect from 'effect/Effect';
 import type * as Schema from 'effect/Schema';
 import type * as Scope from 'effect/Scope';
 
-import { type ComputeEventLogger, type Services } from '@dxos/functions';
+import { type ComputeEventLogger } from '@dxos/functions';
 import { mapValues } from '@dxos/util';
 
 import { type ComputeNode, type ComputeNodeMeta } from './compute-graph';
+import { FunctionServices } from '@dxos/functions';
 
 //
 // Errors
@@ -104,7 +105,7 @@ export type ComputeFunction<I extends ValueRecord, O extends ValueRecord> = (
   node?: ComputeNode, // TODO(burdon): Undefined?
 ) => ComputeEffect<ValueBag<O>>;
 
-export type ComputeRequirements = Services | ComputeEventLogger | Scope.Scope;
+export type ComputeRequirements = FunctionServices | ComputeEventLogger | Scope.Scope;
 
 /**
  * For results of compute functions.

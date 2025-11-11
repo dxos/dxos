@@ -15,7 +15,6 @@ import {
   CredentialsService,
   FunctionInvocationService,
   QueueService,
-  type Services,
   TracingService,
   createDefectLogger,
 } from '@dxos/functions';
@@ -43,6 +42,7 @@ import {
   type TopologyNodeConnector,
   createTopology,
 } from './topology';
+import { FunctionServices } from "@dxos/functions";
 
 export type ValidateParams = {
   graph: ComputeGraphModel;
@@ -343,7 +343,7 @@ export class GraphExecutor {
     return Effect.gen(this, function* () {
       invariant(this._topology, 'Graph not loaded');
       const node = this._topology.nodes.find((node) => node.id === nodeId) ?? failedInvariant();
-      const layer: Layer.Layer<Services> = yield* this._createServiceLayer();
+      const layer: Layer.Layer<FunctionServices> = yield* this._createServiceLayer();
       const entries = node.inputs.map(
         (input) => [input.name, this.computeInput(nodeId, input.name).pipe(Effect.provide(layer))] as const,
       );

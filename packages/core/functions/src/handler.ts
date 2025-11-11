@@ -25,14 +25,19 @@ import { getUserFunctionIdInMetadata, setUserFunctionIdInMetadata } from './url'
 // https://www.npmjs.com/package/aws-lambda
 
 /**
+ * Services that are provided at the function call site by the caller.
+ */
+export type InvocationServices = TracingService;
+
+/**
  * Services that are available to invoked functions.
  */
-export type Services =
+export type FunctionServices =
+  | InvocationServices
   | AiService.AiService
   | CredentialsService
   | DatabaseService
   | QueueService
-  | TracingService
   | FunctionInvocationService;
 
 /**
@@ -50,7 +55,7 @@ export type FunctionHandler<TData = {}, TOutput = any> = (params: {
    * This will be the payload from the trigger or other data passed into the function in a workflow.
    */
   data: TData;
-}) => TOutput | Promise<TOutput> | Effect.Effect<TOutput, any, Services>;
+}) => TOutput | Promise<TOutput> | Effect.Effect<TOutput, any, FunctionServices>;
 
 /**
  * Function context.

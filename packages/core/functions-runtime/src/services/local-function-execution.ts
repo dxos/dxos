@@ -19,10 +19,10 @@ import {
   FunctionInvocationService,
   FunctionNotFoundError,
   QueueService,
-  type Services,
   type TracingService,
 } from '@dxos/functions';
 import { log } from '@dxos/log';
+import { FunctionServices } from '@dxos/functions';
 
 export class LocalFunctionExecutionService extends Context.Tag('@dxos/functions/LocalFunctionExecutionService')<
   LocalFunctionExecutionService,
@@ -66,14 +66,14 @@ export class LocalFunctionExecutionService extends Context.Tag('@dxos/functions/
   static invokeFunction: <F extends FunctionDefinition.Any>(
     functionDef: F,
     input: FunctionDefinition.Input<F>,
-  ) => Effect.Effect<FunctionDefinition.Output<F>, never, Services | LocalFunctionExecutionService> =
+  ) => Effect.Effect<FunctionDefinition.Output<F>, never, FunctionServices | LocalFunctionExecutionService> =
     Effect.serviceFunctionEffect(LocalFunctionExecutionService, (_) => _.invokeFunction as any);
 }
 
 const invokeFunction = (
   functionDef: FunctionDefinition<any, any>,
   input: any,
-): Effect.Effect<unknown, never, Services> =>
+): Effect.Effect<unknown, never, FunctionServices> =>
   Effect.gen(function* () {
     // Assert input matches schema.
     try {
@@ -91,7 +91,7 @@ const invokeFunction = (
     const data = yield* Effect.gen(function* () {
       const result = functionDef.handler({ context, data: input });
       if (Effect.isEffect(result)) {
-        return yield* (result as Effect.Effect<unknown, unknown, Services>).pipe(Effect.orDie);
+        return yield* (result as Effect.Effect<unknown, unknown, FunctionServices>).pipe(Effect.orDie);
       } else if (
         typeof result === 'object' &&
         result !== null &&
