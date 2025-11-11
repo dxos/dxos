@@ -27,7 +27,7 @@ import { translationKey } from '../../translations';
 
 import { getDate, isSameDay } from './util';
 
-const rows = 50 * 100;
+const maxRows = 50 * 100;
 const start = new Date('1970-01-01');
 const size = 48;
 const defaultWidth = 7 * size;
@@ -161,10 +161,10 @@ type CalendarGridProps = ThemedClassName<{
   onSelect?: (event: { date: Date }) => void;
 }>;
 
-const CalendarGrid = ({ classNames, rows: numRows, onSelect }: CalendarGridProps) => {
+const CalendarGrid = ({ classNames, rows, onSelect }: CalendarGridProps) => {
   const { weekStartsOn, event, setIndex, selected, setSelected } = useCalendarContext(CalendarGrid.displayName);
-  const { ref, height = 0 } = useResizeDetector();
-  const maxHeight = numRows ? numRows * size : undefined;
+  const { ref: containerRef, width = 0, height = 0 } = useResizeDetector();
+  const maxHeight = rows ? rows * size : undefined;
   const listRef = useRef<List>(null);
   const today = useMemo(() => new Date(), []);
 
@@ -207,35 +207,41 @@ const CalendarGrid = ({ classNames, rows: numRows, onSelect }: CalendarGridProps
 
   const rowRenderer = useCallback<ListRowRenderer>(
     ({ key, index, style }) => {
+      const weekStart = getDate(start, index, 0, weekStartsOn);
+      const weekEnd = getDate(start, index, 6, weekStartsOn);
       return (
-        <div key={key} style={style} className='is-full grid grid-cols-7 snap-center'>
-          {Array.from({ length: 7 }).map((_, i) => {
-            const date = getDate(start, index, i, weekStartsOn);
-            const border = isSameDay(date, selected)
-              ? 'border-primary-500'
-              : isSameDay(date, today)
-                ? 'border-amber-500'
-                : undefined;
+        <div key={key} style={style} className='is-full grid grid-cols-[1fr_max-content_1fr]'>
+          <div className={mx(weekStart.getMonth() % 2 === 0 && 'bg-inputSurface')} />
+          <div className='grid grid-cols-7' style={{ gridTemplateColumns: `repeat(7, ${size}px)` }}>
+            {Array.from({ length: 7 }).map((_, i) => {
+              const date = getDate(start, index, i, weekStartsOn);
+              const border = isSameDay(date, selected)
+                ? 'border-primary-500'
+                : isSameDay(date, today)
+                  ? 'border-amber-500'
+                  : undefined;
 
-            return (
-              <div
-                key={i}
-                className={mx(
-                  'relative flex justify-center items-center cursor-pointer',
-                  date.getMonth() % 2 === 0 ? 'bg-modalSurface' : '',
-                )}
-                onClick={() => handleDaySelect(date)}
-              >
-                <span className='text-description'>{date.getDate()}</span>
-                {!border && date.getDate() === 1 && (
-                  <span className='absolute top-0 text-xs text-description'>{format(date, 'MMM')}</span>
-                )}
-                {border && (
-                  <div className={mx('absolute top-0 left-0 is-full bs-full border-2 rounded-full', border)} />
-                )}
-              </div>
-            );
-          })}
+              return (
+                <div
+                  key={i}
+                  className={mx(
+                    'relative flex justify-center items-center cursor-pointer',
+                    date.getMonth() % 2 === 0 && 'bg-inputSurface',
+                  )}
+                  onClick={() => handleDaySelect(date)}
+                >
+                  <span className='text-description'>{date.getDate()}</span>
+                  {!border && date.getDate() === 1 && (
+                    <span className='absolute top-0 text-xs text-description'>{format(date, 'MMM')}</span>
+                  )}
+                  {border && (
+                    <div className={mx('absolute top-0 left-0 is-full bs-full border-2 rounded-full', border)} />
+                  )}
+                </div>
+              );
+            })}
+          </div>
+          <div className={mx(weekEnd.getMonth() % 2 === 0 && 'bg-inputSurface')} />
         </div>
       );
     },
@@ -248,34 +254,30 @@ const CalendarGrid = ({ classNames, rows: numRows, onSelect }: CalendarGridProps
       className={mx('flex flex-col bs-full is-full justify-center overflow-hidden bg-modalSurface', classNames)}
     >
       {/* Day labels */}
-      <div className='flex justify-center bg-groupSurface'>
+      <div role='none' className='flex justify-center bg-groupSurface'>
         <div role='none' className='flex shink-0 is-full grid grid-cols-7' style={{ width: defaultWidth }}>
           {days.map((date, i) => (
-            <div key={i} className='flex justify-center p-2 text-sm font-thin'>
+            <div key={i} role='none' className='flex justify-center p-2 text-sm font-thin'>
               {date}
             </div>
           ))}
         </div>
       </div>
       {/* Grid */}
-      <div className='flex bs-full justify-center'>
-        <div role='none' ref={ref} className='flex bs-full bg-inputSurface' style={{ height: maxHeight }}>
-          {height > 0 && (
-            <List
-              ref={listRef}
-              role='none'
-              // TODO(burdon): Snap isn't working.
-              className='[&>div]:snap-y scrollbar-none outline-none'
-              width={defaultWidth}
-              height={maxHeight ?? height}
-              rowCount={rows}
-              rowHeight={size}
-              rowRenderer={rowRenderer}
-              scrollToAlignment='start'
-              onScroll={handleScroll}
-            />
-          )}
-        </div>
+      <div role='none' className='flex flex-col bs-full is-full justify-center' ref={containerRef}>
+        <List
+          ref={listRef}
+          role='none'
+          // TODO(burdon): Snap isn't working.
+          className='[&>div]:snap-y scrollbar-none outline-none'
+          width={width}
+          height={maxHeight ?? height}
+          rowCount={maxRows}
+          rowHeight={size}
+          rowRenderer={rowRenderer}
+          scrollToAlignment='start'
+          onScroll={handleScroll}
+        />
       </div>
     </div>
   );

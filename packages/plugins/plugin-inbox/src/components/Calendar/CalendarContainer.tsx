@@ -34,7 +34,7 @@ export const CalendarContainer = ({ calendar }: CalendarContainerProps) => {
         <NaturalCalendar.Root>
           <NaturalCalendar.Viewport>
             <NaturalCalendar.Header />
-            <NaturalCalendar.Grid grow />
+            <NaturalCalendar.Grid />
           </NaturalCalendar.Viewport>
         </NaturalCalendar.Root>
         <EventList events={objects} selected={selected?.id} onSelect={setSelected} />
