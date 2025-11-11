@@ -6,8 +6,8 @@ import * as Option from 'effect/Option';
 import { useEffect, useState } from 'react';
 
 import { type Type } from '@dxos/echo';
+import { SystemAnnotation } from '@dxos/echo/internal';
 import { type Space } from '@dxos/react-client/echo';
-import { SystemAnnotation } from '@dxos/schema';
 
 // TODO(burdon): Pass in filter.
 // TODO(wittjosiah): Factor out.

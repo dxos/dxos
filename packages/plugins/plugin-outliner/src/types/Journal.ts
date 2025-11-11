@@ -6,7 +6,8 @@ import { isAfter, isBefore, isEqual } from 'date-fns';
 import * as Schema from 'effect/Schema';
 
 import { Obj, Ref, Type } from '@dxos/echo';
-import { SystemAnnotation, Text } from '@dxos/schema';
+import { SystemAnnotation } from '@dxos/echo/internal';
+import { Text } from '@dxos/schema';
 
 import { getDateString, parseDateString } from './util';
 

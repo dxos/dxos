@@ -17,7 +17,7 @@ import {
 import { Ref, Tag, Type } from '@dxos/echo';
 import { AttentionEvents } from '@dxos/plugin-attention';
 import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
-import { Collection, DataTypes, StoredSchema } from '@dxos/schema';
+import { Collection, DataTypes, StoredSchema, createDefaultSchema } from '@dxos/schema';
 import { translations as shellTranslations } from '@dxos/shell/react';
 import {
   AnchoredTo,
@@ -165,12 +165,7 @@ export const SpacePlugin = definePlugin<SpacePluginOptions>(
                   : createIntent(SpaceAction.AddSchema, {
                       space: options.space,
                       name: props.name,
-                      // TODO(burdon): Import createDefaultSchema when it's exported from @dxos/schema
-                      schema: Schema.Struct({
-                        title: Schema.optional(Schema.String),
-                        status: Schema.optional(Schema.Literal('todo', 'in-progress', 'done')),
-                        description: Schema.optional(Schema.String),
-                      }),
+                      schema: createDefaultSchema(),
                     }),
             }),
           ),

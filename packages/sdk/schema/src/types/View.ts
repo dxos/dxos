@@ -17,6 +17,7 @@ import {
   ReferenceAnnotationId,
   type ReferenceAnnotationValue,
   type RuntimeSchemaRegistry,
+  SystemAnnotation,
   TypeEnum,
   toEffectSchema,
 } from '@dxos/echo/internal';
@@ -26,10 +27,8 @@ import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
 import { type Live } from '@dxos/live-object';
 
-import { SystemAnnotation } from '../annotations';
 import { FieldSchema, FieldSortType, ProjectionModel, getSchemaProperties } from '../projection';
-
-import { createDefaultSchema, getSchema } from './util';
+import { createDefaultSchema, getSchema } from '../util';
 
 export const Projection = Schema.Struct({
   /**

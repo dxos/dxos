@@ -5,7 +5,7 @@
 import * as Schema from 'effect/Schema';
 
 import { Obj, Type } from '@dxos/echo';
-import { SystemAnnotation } from '@dxos/schema';
+import { SystemAnnotation } from '@dxos/echo/internal';
 
 export const AccessToken = Schema.Struct({
   note: Schema.optional(

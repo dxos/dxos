@@ -6,9 +6,7 @@ import * as Schema from 'effect/Schema';
 
 import { Obj } from '@dxos/echo';
 import { Type } from '@dxos/echo';
-import { type ObjectId } from '@dxos/echo/internal';
-
-import { SystemAnnotation } from '../annotations';
+import { type ObjectId, SystemAnnotation } from '@dxos/echo/internal';
 
 export const Text = Schema.Struct({
   content: Schema.String,

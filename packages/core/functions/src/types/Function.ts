@@ -5,8 +5,7 @@
 import * as Schema from 'effect/Schema';
 
 import { Obj, Type } from '@dxos/echo';
-import { JsonSchemaType, LabelAnnotation, Ref } from '@dxos/echo/internal';
-import { SystemAnnotation } from '@dxos/schema';
+import { JsonSchemaType, LabelAnnotation, Ref, SystemAnnotation } from '@dxos/echo/internal';
 
 import { Script } from './Script';
 

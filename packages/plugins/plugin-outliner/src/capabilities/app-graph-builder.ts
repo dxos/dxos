@@ -8,10 +8,10 @@ import * as Option from 'effect/Option';
 
 import { Capabilities, type PluginContext, contributes, createIntent } from '@dxos/app-framework';
 import { Obj, Relation } from '@dxos/echo';
+import { SystemAnnotation } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
 import { createExtension } from '@dxos/plugin-graph';
 import { getSpace } from '@dxos/react-client/echo';
-import { SystemAnnotation } from '@dxos/schema';
 import { HasSubject } from '@dxos/types';
 
 import { meta } from '../meta';

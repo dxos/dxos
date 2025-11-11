@@ -5,9 +5,8 @@
 import * as Schema from 'effect/Schema';
 
 import { Obj, Type } from '@dxos/echo';
-import { GeneratorAnnotation, ObjectId, TypedObject } from '@dxos/echo/internal';
+import { GeneratorAnnotation, ObjectId, SystemAnnotation, TypedObject } from '@dxos/echo/internal';
 import { defineObjectMigration } from '@dxos/echo-db';
-import { SystemAnnotation } from '@dxos/schema';
 
 import * as Actor from './Actor';
 import * as ContentBlock from './ContentBlock';

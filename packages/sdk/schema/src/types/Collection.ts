@@ -7,11 +7,9 @@ import * as Schema from 'effect/Schema';
 
 import { PropertiesType } from '@dxos/client-protocol/types';
 import { Obj, Query, Ref, Type } from '@dxos/echo';
-import { type Expando, FormAnnotation } from '@dxos/echo/internal';
+import { type Expando, FormAnnotation, SystemAnnotation } from '@dxos/echo/internal';
 import { DatabaseService } from '@dxos/echo-db';
 import { invariant } from '@dxos/invariant';
-
-import { SystemAnnotation } from '../annotations';
 
 export const Collection = Schema.Struct({
   name: Schema.String.pipe(Schema.optional),
