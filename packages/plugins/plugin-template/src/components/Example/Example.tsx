@@ -43,6 +43,7 @@ ExampleContent.displayName = 'Example.Content';
 
 //
 // Example
+// https://www.radix-ui.com/primitives/docs/guides/composition
 //
 
 export const Example = {
