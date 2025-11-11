@@ -156,7 +156,8 @@ export const ProjectObjectSettings = ({ classNames, project }: ProjectObjectSett
                       {/* TODO(wittjosiah): Edit lane name. */}
                       <ViewEditor
                         ref={projectionRef}
-                        mode='query'
+                        mode='tag'
+                        readonly
                         schema={schema}
                         view={view}
                         registry={space?.db.schemaRegistry}

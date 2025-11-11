@@ -80,7 +80,7 @@ export const ViewEditor = ({ view }: ViewEditorProps) => {
       registry={space.db.schemaRegistry}
       schema={schema}
       view={view}
-      mode='query'
+      mode='tag'
       outerSpacing={false}
       tags={tags}
       types={types}

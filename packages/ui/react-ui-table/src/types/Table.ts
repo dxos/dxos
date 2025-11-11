@@ -6,20 +6,20 @@ import * as Match from 'effect/Match';
 import * as Schema from 'effect/Schema';
 
 import { Obj, Ref, Type } from '@dxos/echo';
-import { type JsonPath, LabelAnnotation, toEffectSchema } from '@dxos/echo/internal';
+import { FormAnnotation, type JsonPath, LabelAnnotation, toEffectSchema } from '@dxos/echo/internal';
 import { type SimpleType } from '@dxos/effect';
 import { View, ViewAnnotation, getSchemaProperties } from '@dxos/schema';
 
 const TableSchema = Schema.Struct({
   name: Schema.String.pipe(Schema.optional),
 
-  view: Type.Ref(View.View),
+  view: Type.Ref(View.View).pipe(FormAnnotation.set(false)),
 
   sizes: Schema.Record({
     // TODO(wittjosiah): Should be JsonPath.
     key: Schema.String,
     value: Schema.Number,
-  }).pipe(Schema.mutable),
+  }).pipe(Schema.mutable, FormAnnotation.set(false)),
 }).pipe(
   Type.Obj({
     typename: 'dxos.org/type/Table',
