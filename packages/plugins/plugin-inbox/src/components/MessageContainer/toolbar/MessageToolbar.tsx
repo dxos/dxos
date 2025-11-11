@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Rx } from '@effect-rx/rx-react';
+import { Atom } from '@effect-atom/atom-react';
 import { type Signal } from '@preact/signals-react';
 import { useMemo } from 'react';
 
@@ -49,7 +49,7 @@ export const useMessageToolbarActions = (
 ) => {
   const creator = useMemo(
     () =>
-      Rx.make((get) =>
+      Atom.make((get) =>
         get(
           rxFromSignal(() => {
             const nodes = [];

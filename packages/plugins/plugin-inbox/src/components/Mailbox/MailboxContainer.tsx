@@ -2,8 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Rx, useRxSet } from '@effect-rx/rx-react';
-import { useRxValue } from '@effect-rx/rx-react';
+import { Atom, useAtomSet, useAtomValue } from '@effect-atom/atom-react';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { LayoutAction, createIntent } from '@dxos/app-framework';
@@ -208,12 +207,12 @@ const useMailboxActions = ({
   sortDescending,
   filterVisible,
 }: {
-  sortDescending: Rx.Writable<boolean>;
-  filterVisible: Rx.Writable<boolean>;
+  sortDescending: Atom.Writable<boolean>;
+  filterVisible: Atom.Writable<boolean>;
 }) => {
   const menu = useMemo(
     () =>
-      Rx.make((context) =>
+      Atom.make((context) =>
         MenuBuilder.make()
           .root({
             label: ['mailbox toolbar title', { ns: meta.id }],
@@ -247,14 +246,14 @@ const useMailboxActions = ({
 // TODO(wittjosiah): Factor out.
 
 type RxState<T> = {
-  rx: Rx.Writable<T>;
+  rx: Atom.Writable<T>;
   value: T;
   set: (value: T | ((value: T) => T)) => void;
 };
 
 const useRxState = <T,>(initialValue: T): RxState<T> => {
-  const rx = useMemo(() => Rx.make(initialValue), [initialValue]);
-  const value = useRxValue(rx);
-  const set = useRxSet(rx);
+  const rx = useMemo(() => Atom.make(initialValue), [initialValue]);
+  const value = useAtomValue(rx);
+  const set = useAtomSet(rx);
   return useMemo(() => ({ rx, value, set }), [rx, value, set]);
 };
