@@ -14,10 +14,10 @@ export type OAuthPreset = {
 
 export const OAUTH_PRESETS: OAuthPreset[] = [
   {
-    label: 'Gmail',
-    note: 'Email read access.',
-    source: 'gmail.com',
+    label: 'Google',
+    note: 'Email & calendar  read access.',
+    source: 'google.com',
     provider: OAuthProvider.GOOGLE,
-    scopes: ['https://www.googleapis.com/auth/gmail.readonly'],
+    scopes: ['https://www.googleapis.com/auth/gmail.readonly', 'https://www.googleapis.com/auth/calendar.readonly'],
   },
 ];

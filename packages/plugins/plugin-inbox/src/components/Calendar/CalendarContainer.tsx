@@ -20,12 +20,14 @@ const byDate =
 
 export type CalendarContainerProps = {
   calendar: Calendar.Calendar;
+  role: string;
 };
 
 export const CalendarContainer = ({ calendar }: CalendarContainerProps) => {
   const [selected, setSelected] = useState<Event.Event>();
   const space = getSpace(calendar);
-  const objects = useQuery(space, Filter.type(Event.Event));
+  const queue = space?.queues.get(calendar.queue.dxn);
+  const objects = useQuery(queue, Filter.type(Event.Event));
   objects.sort(byDate());
 
   return (

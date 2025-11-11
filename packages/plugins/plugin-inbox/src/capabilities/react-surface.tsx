@@ -73,9 +73,9 @@ export default () =>
     }),
     createSurface({
       id: `${meta.id}/calendar`,
-      role: 'article',
+      role: ['article', 'section'],
       filter: (data): data is { subject: Calendar.Calendar } => Obj.instanceOf(Calendar.Calendar, data.subject),
-      component: ({ data }) => <CalendarContainer calendar={data.subject} />,
+      component: ({ data, role }) => <CalendarContainer calendar={data.subject} role={role} />,
     }),
     createSurface({
       id: `${meta.id}/message-card`,
