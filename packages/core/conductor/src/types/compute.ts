@@ -9,7 +9,7 @@ import type * as Scope from 'effect/Scope';
 import { type Services } from '@dxos/functions';
 import { mapValues } from '@dxos/util';
 
-import type { ComputeNode } from './graph';
+import { type ComputeNode, type ComputeNodeMeta } from './compute-graph';
 
 //
 // Errors
@@ -126,12 +126,6 @@ export const synchronizedComputeFunction =
       const output = yield* fn(input, node);
       return ValueBag.make<O>(output);
     });
-
-// TODO(dmaretskyi): To effect schema.
-export type ComputeNodeMeta = {
-  input: Schema.Schema.AnyNoContext;
-  output: Schema.Schema.AnyNoContext;
-};
 
 /**
  * Executable node.

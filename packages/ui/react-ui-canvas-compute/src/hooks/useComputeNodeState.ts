@@ -43,6 +43,7 @@ export const useComputeNodeState = (shape: ComputeShape): ComputeNodeState => {
       if (disposed) {
         return;
       }
+
       setMeta(meta);
     });
 

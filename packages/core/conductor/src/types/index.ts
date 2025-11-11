@@ -3,7 +3,7 @@
 //
 
 export * from './compute';
-export * from './graph';
+export * from './compute-graph';
 export * from './graphviz';
 export * from './model';
 export * from './schema';
