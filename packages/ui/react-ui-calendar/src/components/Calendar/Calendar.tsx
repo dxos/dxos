@@ -105,7 +105,7 @@ type CalendarViewportProps = PropsWithChildren<ThemedClassName>;
 
 const CalendarViewport = ({ children, classNames }: CalendarViewportProps) => {
   return (
-    <div role='none' className={mx('flex flex-col items-center bg-inputSurface', classNames)}>
+    <div role='none' className={mx('flex flex-col items-center overflow-hidden bg-inputSurface', classNames)}>
       {children}
     </div>
   );
@@ -168,10 +168,11 @@ const CalendarGrid = ({ classNames, rows, onSelect }: CalendarGridProps) => {
   const listRef = useRef<List>(null);
   const today = useMemo(() => new Date(), []);
 
+  const [initialized, setInitialized] = useState(false);
   useEffect(() => {
     const index = differenceInWeeks(today, start);
     listRef.current?.scrollToRow(index);
-  }, [listRef.current, start, today]);
+  }, [initialized, start, today]);
 
   useEffect(() => {
     return event.on((event) => {
@@ -207,9 +208,9 @@ const CalendarGrid = ({ classNames, rows, onSelect }: CalendarGridProps) => {
 
   const rowRenderer = useCallback<ListRowRenderer>(
     ({ key, index, style }) => {
-      const getBgColor = (date: Date) => date.getMonth() % 2 === 0 && 'bg-inputSurface';
+      const getBgColor = (date: Date) => date.getMonth() % 2 === 0 && 'bg-modalSurface';
       return (
-        <div key={key} style={style} className='is-full grid grid-cols-[1fr_max-content_1fr]'>
+        <div key={key} style={style} className='is-full grid grid-cols-[1fr_max-content_1fr] snap-center'>
           <div className={mx(getBgColor(getDate(start, index, 0, weekStartsOn)))} />
           <div className='grid grid-cols-7' style={{ gridTemplateColumns: `repeat(7, ${size}px)` }}>
             {Array.from({ length: 7 }).map((_, i) => {
@@ -245,13 +246,10 @@ const CalendarGrid = ({ classNames, rows, onSelect }: CalendarGridProps) => {
   );
 
   return (
-    <div
-      role='none'
-      className={mx('flex flex-col bs-full is-full justify-center overflow-hidden bg-modalSurface', classNames)}
-    >
+    <div role='none' className={mx('flex flex-col bs-full is-full justify-center overflow-hidden', classNames)}>
       {/* Day labels */}
       <div role='none' className='flex justify-center bg-groupSurface'>
-        <div role='none' className='flex shink-0 is-full grid grid-cols-7' style={{ width: defaultWidth }}>
+        <div role='none' className='flex is-full grid grid-cols-7' style={{ width: defaultWidth }}>
           {days.map((date, i) => (
             <div key={i} role='none' className='flex justify-center p-2 text-sm font-thin'>
               {date}
@@ -260,7 +258,7 @@ const CalendarGrid = ({ classNames, rows, onSelect }: CalendarGridProps) => {
         </div>
       </div>
       {/* Grid */}
-      <div role='none' className='flex flex-col bs-full is-full justify-center' ref={containerRef}>
+      <div role='none' className='flex flex-col bs-full is-full justify-center overflow-hidden' ref={containerRef}>
         <List
           ref={listRef}
           role='none'
@@ -273,6 +271,7 @@ const CalendarGrid = ({ classNames, rows, onSelect }: CalendarGridProps) => {
           rowRenderer={rowRenderer}
           scrollToAlignment='start'
           onScroll={handleScroll}
+          onRowsRendered={() => setInitialized(true)}
         />
       </div>
     </div>
