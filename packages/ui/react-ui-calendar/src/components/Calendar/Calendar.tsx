@@ -207,11 +207,12 @@ const CalendarGrid = ({ classNames, rows, onSelect }: CalendarGridProps) => {
 
   const rowRenderer = useCallback<ListRowRenderer>(
     ({ key, index, style }) => {
+      const getBgColor = (date: Date) => date.getMonth() % 2 === 0 && 'bg-inputSurface';
       const weekStart = getDate(start, index, 0, weekStartsOn);
       const weekEnd = getDate(start, index, 6, weekStartsOn);
       return (
         <div key={key} style={style} className='is-full grid grid-cols-[1fr_max-content_1fr]'>
-          <div className={mx(weekStart.getMonth() % 2 === 0 && 'bg-inputSurface')} />
+          <div className={mx(getBgColor(weekStart))} />
           <div className='grid grid-cols-7' style={{ gridTemplateColumns: `repeat(7, ${size}px)` }}>
             {Array.from({ length: 7 }).map((_, i) => {
               const date = getDate(start, index, i, weekStartsOn);
@@ -224,10 +225,7 @@ const CalendarGrid = ({ classNames, rows, onSelect }: CalendarGridProps) => {
               return (
                 <div
                   key={i}
-                  className={mx(
-                    'relative flex justify-center items-center cursor-pointer',
-                    date.getMonth() % 2 === 0 && 'bg-inputSurface',
-                  )}
+                  className={mx('relative flex justify-center items-center cursor-pointer', getBgColor(date))}
                   onClick={() => handleDaySelect(date)}
                 >
                   <span className='text-description'>{date.getDate()}</span>
@@ -241,7 +239,7 @@ const CalendarGrid = ({ classNames, rows, onSelect }: CalendarGridProps) => {
               );
             })}
           </div>
-          <div className={mx(weekEnd.getMonth() % 2 === 0 && 'bg-inputSurface')} />
+          <div className={mx(getBgColor(weekEnd))} />
         </div>
       );
     },
