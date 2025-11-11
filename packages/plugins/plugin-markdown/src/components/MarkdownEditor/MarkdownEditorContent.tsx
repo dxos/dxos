@@ -106,7 +106,9 @@ export const MarkdownEditorContent = forwardRef<EditorView | null, MarkdownEdito
     );
 
     useImperativeHandle<EditorView | null, EditorView | null>(forwardedRef, () => editorView, [editorView]);
+
     useSelectCurrentThread(editorView, id);
+
     useTest(editorView);
 
     return (

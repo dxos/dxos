@@ -3,10 +3,4 @@
 //
 
 export * from './EditorToolbar';
-export {
-  type EditorToolbarState,
-  type EditorToolbarActionGraphProps,
-  useEditorToolbarState,
-  createEditorAction,
-  createEditorActionGroup,
-} from './util';
+export { type EditorToolbarState, useEditorToolbarState, createEditorAction, createEditorActionGroup } from './util';

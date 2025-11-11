@@ -2,14 +2,11 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type EditorView } from '@codemirror/view';
-import { type Atom } from '@effect-atom/atom-react';
 import { useMemo } from 'react';
 
 import { type Action } from '@dxos/app-graph';
 import { type Live, live } from '@dxos/live-object';
 import {
-  type ActionGraphProps,
   type MenuActionProperties,
   type MenuItemGroup,
   type MenuSeparator,
@@ -22,23 +19,19 @@ import type { EditorAction, Formatting } from '../../extensions';
 import { translationKey } from '../../translations';
 import { type EditorViewMode } from '../../types';
 
+// TODO(burdon): Move (remove util).
+
 export type EditorToolbarState = { viewMode?: EditorViewMode } & Formatting;
 
 export const useEditorToolbarState = (initialState: Partial<EditorToolbarState> = {}): Live<EditorToolbarState> => {
   return useMemo(() => live<EditorToolbarState>(initialState), []);
 };
 
-export type EditorToolbarActionGraphProps = {
-  state: Live<EditorToolbarState>;
-  getView: () => EditorView;
-  // TODO(wittjosiah): Control positioning.
-  customActions?: Atom.Atom<ActionGraphProps>;
-};
-
 export type EditorToolbarItem = EditorAction | MenuItemGroup | MenuSeparator;
 
 export const createEditorAction = (id: string, props: Partial<MenuActionProperties>, invoke: () => void) => {
   const { label = [`${id} label`, { ns: translationKey }], ...rest } = props;
+
   return createMenuAction(id, invoke, {
     label,
     ...rest,
@@ -51,6 +44,7 @@ export const createEditorActionGroup = (
   icon?: string,
 ) => {
   const { label = [`${id} label`, { ns: translationKey }], ...rest } = props;
+
   return createMenuItemGroup(id, {
     label,
     icon,

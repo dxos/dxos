@@ -12,12 +12,6 @@ import { mx } from '@dxos/react-ui-theme';
 import { initialSync } from '../../extensions';
 import { type UseTextEditorProps, useTextEditor } from '../../hooks';
 
-// TODO(burdon): Convert to radix-style (support hooks inside).
-// <Editor.Root>
-//   <Editor.Toolbar />
-//   <Editor.TextEditor />
-// </Editor.Root>
-
 export type EditorController = {
   view: EditorView | null;
   focus: () => void;

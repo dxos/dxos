@@ -80,7 +80,7 @@ export const QueryEditor = forwardRef<EditorController, QueryEditorProps>(
     );
 
     return (
-      <PopoverMenuProvider numItems={numItems} view={controller?.view} groups={groupsRef.current} {...menuProps}>
+      <PopoverMenuProvider view={controller?.view} groups={groupsRef.current} numItems={numItems} {...menuProps}>
         <Editor {...props} initialValue={value} extensions={extensions} moveToEnd ref={setController} />
       </PopoverMenuProvider>
     );

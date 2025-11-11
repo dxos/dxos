@@ -21,7 +21,9 @@ const DefaultStory = () => {
       <IconButton icon='ph--play--regular' iconOnly label='play' onClick={() => sounds.play()} />
       <IconButton icon='ph--play--regular' iconOnly label='play' onClick={() => sounds.blip()} />
       <IconButton icon='ph--play--regular' iconOnly label='play' onClick={() => sounds.click()} />
-      <IconButton icon='ph--play--regular' iconOnly label='play' onClick={() => sounds.clack()} />
+      <IconButton icon='ph--play--regular' iconOnly label='play' onClick={() => sounds.laser()} />
+      <IconButton icon='ph--play--regular' iconOnly label='play' onClick={() => sounds.pling()} />
+      <IconButton icon='ph--play--regular' iconOnly label='play' onClick={() => sounds.notify()} />
     </Toolbar.Root>
   );
 };

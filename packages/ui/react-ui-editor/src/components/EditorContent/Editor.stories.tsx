@@ -12,10 +12,11 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Text } from '@dxos/schema';
 
 import { automerge, createBasicExtensions, createThemeExtensions } from '../../extensions';
-import { Editor } from '../Editor';
+
+import { Editor } from './Editor';
 
 const meta = {
-  title: 'ui/react-ui-editor/Editor',
+  title: 'ui/react-ui-editor/EditorComponent',
   component: Editor,
   decorators: [withTheme, withLayout({ container: 'column' })],
 } satisfies Meta<typeof Editor>;

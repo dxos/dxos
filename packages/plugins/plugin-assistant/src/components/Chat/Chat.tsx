@@ -16,7 +16,7 @@ import { useVoiceInput } from '@dxos/plugin-transcription';
 import { type Space, getSpace, useQueue } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { Input, type ThemedClassName, useDynamicRef, useTranslation } from '@dxos/react-ui';
-import { ChatEditor, type ChatEditorController, type ChatEditorProps, references } from '@dxos/react-ui-chat';
+import { ChatEditor, type ChatEditorController, type ChatEditorProps } from '@dxos/react-ui-chat';
 import { type MarkdownStreamController } from '@dxos/react-ui-components';
 import { MenuProvider, ToolbarMenu } from '@dxos/react-ui-menu';
 import { mx } from '@dxos/react-ui-theme';
@@ -224,7 +224,8 @@ const ChatPrompt = ({
   const referencesProvider = useReferencesProvider(space);
   const extensions = useMemo<Extension[]>(() => {
     return [
-      referencesProvider && references({ provider: referencesProvider }),
+      // TODO(burdon): Reconcile with referencesExtension.
+      // referencesProvider && references({ provider: referencesProvider }),
       Prec.highest(
         keymap.of(
           [
@@ -309,12 +310,15 @@ const ChatPrompt = ({
       <div role='none' className='flex gap-2'>
         <ChatStatusIndicator classNames='p-1' preset={preset} error={error} processing={streaming} />
 
+        {/* TODO(burdon): Popover. */}
+        {/* TODO(burdon): Remove custom component. */}
         <ChatEditor
           ref={editorRef}
           autoFocus
           lineWrapping
           classNames='col-span-2 pbs-0.5'
           placeholder={placeholder ?? t('prompt placeholder')}
+          // references={referencesProvider ? { provider: referencesProvider } : undefined}
           extensions={extensions}
           onSubmit={handleSubmit}
         />

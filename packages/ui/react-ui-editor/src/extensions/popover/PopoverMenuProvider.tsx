@@ -57,6 +57,7 @@ export const PopoverMenuProvider = ({
   const triggerRef = useRef<HTMLButtonElement | null>(null);
   const [root, setRoot] = useState<HTMLDivElement | null>(null);
   const viewRef = useDynamicRef(view);
+
   const [open, setOpen] = useControllableState({
     prop: openParam,
     defaultProp: defaultOpen,

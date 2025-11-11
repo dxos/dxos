@@ -25,6 +25,7 @@ export interface JournalEntry extends Schema.Schema.Type<typeof JournalEntry> {}
 export const Journal = Schema.Struct({
   id: Schema.String,
   name: Schema.optional(Schema.String),
+  // TODO(burdon): Convert map of references indexed by sortable ISO date.
   entries: Schema.mutable(Schema.Array(Type.Ref(JournalEntry))),
 }).pipe(
   Type.Obj({

@@ -18,6 +18,9 @@ const TRIAD_SEMITONES = [0, 4, 7] as const;
 export class Sounds {
   private sync?: Tone.PolySynth;
 
+  private masterVolume = -10; // dB
+  private pitchMultiplier = 1;
+
   constructor() {
     const volume = new Tone.Volume(0).toDestination();
 
@@ -105,5 +108,39 @@ export class Sounds {
     const now = Tone.now();
     lfo.start(now);
     transport.start(now).stop(now + 0.5);
+  }
+
+  laser() {
+    const synth = new Tone.Synth({
+      oscillator: { type: 'sawtooth' },
+      envelope: { attack: 0.01, decay: 0.1, sustain: 0, release: 0.1 },
+    }).toDestination();
+    synth.volume.value = this.masterVolume;
+    synth.frequency.exponentialRampTo(100 * this.pitchMultiplier, 0.2);
+    synth.triggerAttackRelease(800 * this.pitchMultiplier, '8n');
+  }
+
+  pling() {
+    const synth = new Tone.PolySynth(Tone.Synth).toDestination();
+    synth.volume.value = this.masterVolume;
+    const notes = ['C4', 'E4', 'G4', 'C5', 'E5', 'G5', 'C6'];
+    let time = 0;
+    notes.forEach((note) => {
+      const freq = Tone.Frequency(note).toFrequency() * this.pitchMultiplier;
+      synth.triggerAttackRelease(freq, '16n', `+${time}`);
+      time += 0.05;
+    });
+  }
+
+  notify() {
+    const synth = new Tone.Synth({
+      oscillator: { type: 'triangle' },
+      envelope: { attack: 0.005, decay: 0.1, sustain: 0.3, release: 0.5 },
+    }).toDestination();
+    synth.volume.value = this.masterVolume;
+    synth.triggerAttackRelease(880 * this.pitchMultiplier, '16n'); // A
+    setTimeout(() => {
+      synth.triggerAttackRelease(1320 * this.pitchMultiplier, '8n'); // E
+    }, 100);
   }
 }

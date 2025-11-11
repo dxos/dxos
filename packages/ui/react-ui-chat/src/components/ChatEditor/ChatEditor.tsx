@@ -12,7 +12,6 @@ import {
   type AutocompleteOptions,
   type BasicExtensionsOptions,
   type UseTextEditorProps,
-  autocomplete,
   createBasicExtensions,
   createThemeExtensions,
   useTextEditor,
@@ -20,7 +19,7 @@ import {
 import { mx } from '@dxos/react-ui-theme';
 import { isTruthy } from '@dxos/util';
 
-import { type ReferencesOptions, references as referencesExtension } from './references';
+import { type ReferencesOptions } from './references';
 
 export interface ChatEditorController {
   focus(): void;
@@ -37,6 +36,9 @@ export type ChatEditorProps = ThemedClassName<
     Pick<BasicExtensionsOptions, 'lineWrapping' | 'placeholder'>
 >;
 
+/**
+ * @deprecated Reconcile with plugin-assistant.
+ */
 export const ChatEditor = forwardRef<ChatEditorController, ChatEditorProps>(
   (
     { classNames, extensions, references, autoFocus, lineWrapping = false, placeholder, onSubmit, onSuggest, onCancel },
@@ -51,8 +53,11 @@ export const ChatEditor = forwardRef<ChatEditorController, ChatEditorProps>(
         extensions: [
           createThemeExtensions({ themeMode }),
           createBasicExtensions({ bracketMatching: false, lineWrapping, placeholder }),
-          autocomplete({ onSubmit, onSuggest, onCancel }),
-          references ? referencesExtension({ provider: references.provider }) : [],
+
+          // TODO(burdon): Replace with native.
+          // autocomplete({ onSubmit, onSuggest, onCancel }),
+          // references ? referencesExtension({ provider: references.provider }) : [],
+
           // TODO(burdon): Standardize.
           keymap.of([
             {
