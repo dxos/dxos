@@ -9,9 +9,11 @@ const PENTATONIC_SCALE = ['C', 'D', 'E', 'G', 'A'] as const;
 const TRIAD_SEMITONES = [0, 4, 7] as const;
 
 /**
- * https://tonejs.github.io/
+ * https://tonejs.github.io
+ * https://tonejs.github.io/docs/r13/AudioNode
  */
 // TODO(burdon): Create synth story.
+// TDOD(burdon): Waveform animation.
 // TODO(burdon): D3 animation with notes struck when balls collide.
 export class Sounds {
   private sync?: Tone.PolySynth;
@@ -50,5 +52,58 @@ export class Sounds {
   play() {
     const note = this.createNode();
     this.sync?.triggerAttackRelease(note, '4n');
+  }
+
+  blip() {
+    const click = new Tone.Oscillator({
+      type: 'square',
+      frequency: 880,
+    }).connect(new Tone.Gain(0.1).toDestination());
+
+    const now = Tone.now();
+    click.start(now);
+    click.stop(now + 0.02);
+  }
+
+  click() {
+    // Very short attack/decay.
+    const envelope = new Tone.AmplitudeEnvelope({
+      attack: 0.001,
+      decay: 0.02,
+      sustain: 0,
+      release: 0.005,
+    }).toDestination();
+
+    // Filter out low frequencies.
+    const filter = new Tone.Filter({ type: 'highpass', frequency: 1000 });
+
+    const now = Tone.now();
+    const noise = new Tone.Noise('white');
+    noise.connect(envelope).connect(filter);
+    noise.start(now);
+    envelope.triggerAttack(now);
+    noise.stop(now + 0.05);
+  }
+
+  clack() {
+    const synth = new Tone.Synth({
+      oscillator: { type: 'sine' },
+      envelope: { attack: 0.5, decay: 0.5, sustain: 0.3, release: 1 },
+    }).toDestination();
+
+    const lfo = new Tone.LFO({
+      frequency: 1.5,
+      min: 220,
+      max: 260,
+    }).connect(synth.frequency);
+
+    const transport = Tone.getTransport();
+    transport.scheduleRepeat((time) => {
+      synth.triggerAttackRelease(240, '1n', time);
+    }, '2n');
+
+    const now = Tone.now();
+    lfo.start(now);
+    transport.start(now).stop(now + 0.5);
   }
 }

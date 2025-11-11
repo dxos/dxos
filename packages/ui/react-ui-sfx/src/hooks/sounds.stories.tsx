@@ -19,6 +19,9 @@ const DefaultStory = () => {
   return (
     <Toolbar.Root>
       <IconButton icon='ph--play--regular' iconOnly label='play' onClick={() => sounds.play()} />
+      <IconButton icon='ph--play--regular' iconOnly label='play' onClick={() => sounds.blip()} />
+      <IconButton icon='ph--play--regular' iconOnly label='play' onClick={() => sounds.click()} />
+      <IconButton icon='ph--play--regular' iconOnly label='play' onClick={() => sounds.clack()} />
     </Toolbar.Root>
   );
 };
