@@ -17,6 +17,8 @@ export const translations = [
         'typename label_one': 'Map',
         'typename label_other': 'Maps',
         'object name placeholder': 'New map',
+        'rename object label': 'Rename map',
+        'delete object label': 'Delete map',
       },
       [meta.id]: {
         'plugin name': 'Maps',

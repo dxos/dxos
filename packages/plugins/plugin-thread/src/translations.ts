@@ -50,6 +50,7 @@ export const translations = [
         'comments label': 'Comments',
         'show all label': 'All comments',
         'show unresolved label': 'Unresolved comments',
+        'add comment label': 'Add comment',
 
         'channel companion label': 'Channel',
         'call panel label': 'Active Call',

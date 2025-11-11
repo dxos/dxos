@@ -17,6 +17,8 @@ export const translations = [
         'typename label_one': 'Kanban',
         'typename label_other': 'Kanbans',
         'object name placeholder': 'New kanban',
+        'rename object label': 'Rename kanban',
+        'delete object label': 'Delete kanban',
       },
       [meta.id]: {
         'plugin name': 'Kanban',
