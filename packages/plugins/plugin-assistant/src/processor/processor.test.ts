@@ -13,7 +13,7 @@ import { AiService } from '@dxos/ai';
 import { AiServiceTestingPreset } from '@dxos/ai/testing';
 import { AiConversation, makeToolExecutionServiceFromFunctions, makeToolResolverFromFunctions } from '@dxos/assistant';
 import { TestHelpers, acquireReleaseResource } from '@dxos/effect';
-import { ComputeEventLogger, CredentialsService, QueueService, TracingService } from '@dxos/functions';
+import { CredentialsService, QueueService, TracingService } from '@dxos/functions';
 import { FunctionInvocationServiceLayerTestMocked, TestDatabaseLayer } from '@dxos/functions-runtime/testing';
 import { type Message } from '@dxos/types';
 
@@ -39,9 +39,7 @@ const TestServicesLayer = Layer.mergeAll(
     // types: [],
   }),
   // CredentialsService.configuredLayer([{ service: 'exa.ai', apiKey: EXA_API_KEY }]),
-  FunctionInvocationServiceLayerTestMocked({ functions: [] }).pipe(
-    Layer.provideMerge(TracingService.layerNoop),
-  ),
+  FunctionInvocationServiceLayerTestMocked({ functions: [] }).pipe(Layer.provideMerge(TracingService.layerNoop)),
 );
 
 const TestLayer: Layer.Layer<AiChatServices, never, never> = Layer.mergeAll(

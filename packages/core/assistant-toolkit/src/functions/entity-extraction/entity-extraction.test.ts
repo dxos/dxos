@@ -12,13 +12,7 @@ import { makeToolExecutionServiceFromFunctions, makeToolResolverFromFunctions } 
 import { Blueprint } from '@dxos/blueprints';
 import { Obj } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect';
-import {
-  ComputeEventLogger,
-  CredentialsService,
-  DatabaseService,
-  FunctionInvocationService,
-  TracingService,
-} from '@dxos/functions';
+import { CredentialsService, DatabaseService, FunctionInvocationService, TracingService } from '@dxos/functions';
 import { FunctionInvocationServiceLayerTest, TestDatabaseLayer } from '@dxos/functions-runtime/testing';
 import { ObjectId } from '@dxos/keys';
 import { Message, Organization, Person } from '@dxos/types';

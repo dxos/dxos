@@ -13,7 +13,7 @@ import * as Layer from 'effect/Layer';
 import { AiService } from '@dxos/ai';
 import { Filter, Obj, Query, Ref } from '@dxos/echo';
 import { serializeFunction } from '@dxos/functions';
-import { ComputeEventLogger, CredentialsService, DatabaseService, QueueService } from '@dxos/functions';
+import { CredentialsService, DatabaseService, QueueService } from '@dxos/functions';
 import { Function, Trigger } from '@dxos/functions';
 import { Example } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';

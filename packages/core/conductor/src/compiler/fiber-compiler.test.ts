@@ -13,7 +13,7 @@ import { TestAiService } from '@dxos/ai/testing';
 import { Ref } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect';
 import { logCustomEvent } from '@dxos/functions';
-import { ComputeEventLogger, CredentialsService, TracingService } from '@dxos/functions';
+import { CredentialsService, TracingService } from '@dxos/functions';
 import { FunctionInvocationServiceLayerTest, TestDatabaseLayer } from '@dxos/functions-runtime/testing';
 import { DXN } from '@dxos/keys';
 

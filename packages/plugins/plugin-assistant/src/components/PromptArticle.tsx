@@ -5,14 +5,13 @@
 import * as Cause from 'effect/Cause';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
-import * as Layer from 'effect/Layer';
 import React, { useMemo } from 'react';
 
 import { type SurfaceComponentProps } from '@dxos/app-framework/react';
 import { Agent } from '@dxos/assistant-toolkit';
 import { type Prompt } from '@dxos/blueprints';
 import { Obj } from '@dxos/echo';
-import { ComputeEventLogger, FunctionInvocationService } from '@dxos/functions';
+import { FunctionInvocationService } from '@dxos/functions';
 import { InvocationTracer, TracingServiceExt } from '@dxos/functions-runtime';
 import { log } from '@dxos/log';
 import { useComputeRuntimeCallback } from '@dxos/plugin-automation';
@@ -55,9 +54,7 @@ export const PromptArticle = ({ object }: PromptArticleProps) => {
 
       // Invoke the function.
       const result = yield* FunctionInvocationService.invokeFunction(Agent.prompt, inputData).pipe(
-        Effect.provide(
-          TracingServiceExt.layerQueue(trace.invocationTraceQueue),
-        ),
+        Effect.provide(TracingServiceExt.layerQueue(trace.invocationTraceQueue)),
         Effect.exit,
       );
 

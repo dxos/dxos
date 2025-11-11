@@ -6,10 +6,11 @@ import * as Effect from 'effect/Effect';
 import type * as Scope from 'effect/Scope';
 
 import { raise } from '@dxos/debug';
+import { ComputeEventLogger } from '@dxos/functions';
+import { type FunctionServices } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
 
-import { ComputeEventLogger } from '@dxos/functions';
 import { GraphExecutor } from '../compiler';
 import {
   type ComputeGraphModel,
@@ -20,7 +21,6 @@ import {
   type ValueRecord,
 } from '../types';
 import { WorkflowLoader } from '../workflow';
-import { FunctionServices } from "@dxos/functions";
 
 export class TestRuntime {
   // TODO(burdon): Index by DXN; ComputeGraph instances.
@@ -32,8 +32,6 @@ export class TestRuntime {
     graphLoader: async (graphDxn: DXN) => this.getGraph(graphDxn).root,
     nodeResolver: async (node: ComputeNode) => this._nodes.get(node.type!)!,
   });
-
-  constructor() {}
 
   get graphs() {
     return this._graphs;

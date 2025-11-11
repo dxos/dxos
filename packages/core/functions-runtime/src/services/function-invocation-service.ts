@@ -7,7 +7,7 @@ import * as Layer from 'effect/Layer';
 
 import { AiService } from '@dxos/ai';
 import { DatabaseService } from '@dxos/echo-db';
-import { type InvocationServices, CredentialsService, FunctionInvocationService, QueueService } from '@dxos/functions';
+import { CredentialsService, FunctionInvocationService, type InvocationServices, QueueService } from '@dxos/functions';
 import { type FunctionDefinition } from '@dxos/functions';
 
 import { FunctionImplementationResolver, LocalFunctionExecutionService } from './local-function-execution';

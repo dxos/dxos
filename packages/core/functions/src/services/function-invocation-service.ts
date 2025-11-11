@@ -4,9 +4,7 @@
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 
-import { type InvocationServices, type FunctionDefinition } from '../handler';
-
-import { type ComputeEventLogger, type TracingService } from '.';
+import { type FunctionDefinition, type InvocationServices } from '../handler';
 
 export class FunctionInvocationService extends Context.Tag('@dxos/functions/FunctionInvocationService')<
   FunctionInvocationService,

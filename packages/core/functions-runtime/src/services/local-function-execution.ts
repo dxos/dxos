@@ -10,19 +10,17 @@ import * as Schema from 'effect/Schema';
 import { AiService } from '@dxos/ai';
 import { DatabaseService } from '@dxos/echo-db';
 import {
-  type ComputeEventLogger,
-  type InvocationServices,
   CredentialsService,
   type FunctionContext,
   type FunctionDefinition,
   FunctionError,
   FunctionInvocationService,
   FunctionNotFoundError,
+  type InvocationServices,
   QueueService,
-  type TracingService,
 } from '@dxos/functions';
+import { type FunctionServices } from '@dxos/functions';
 import { log } from '@dxos/log';
-import { FunctionServices } from '@dxos/functions';
 
 export class LocalFunctionExecutionService extends Context.Tag('@dxos/functions/LocalFunctionExecutionService')<
   LocalFunctionExecutionService,

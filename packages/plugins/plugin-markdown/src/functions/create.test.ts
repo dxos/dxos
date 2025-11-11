@@ -20,7 +20,6 @@ import { PropertiesType } from '@dxos/client-protocol';
 import { DXN, Obj, Query, Ref } from '@dxos/echo';
 import { TestHelpers, acquireReleaseResource } from '@dxos/effect';
 import {
-  ComputeEventLogger,
   CredentialsService,
   DatabaseService,
   FunctionInvocationService,

@@ -19,7 +19,7 @@ import { Blueprint, Template } from '@dxos/blueprints';
 import { Obj } from '@dxos/echo';
 import { Ref } from '@dxos/echo';
 import { TestHelpers, acquireReleaseResource } from '@dxos/effect';
-import { ComputeEventLogger, CredentialsService, DatabaseService, QueueService, TracingService } from '@dxos/functions';
+import { CredentialsService, DatabaseService, QueueService, TracingService } from '@dxos/functions';
 import { FunctionInvocationServiceLayerTest, TestDatabaseLayer } from '@dxos/functions-runtime/testing';
 import { ObjectId } from '@dxos/keys';
 import { Message, Organization, Person } from '@dxos/types';

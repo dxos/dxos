@@ -18,6 +18,7 @@ import {
   TracingService,
   createDefectLogger,
 } from '@dxos/functions';
+import { type FunctionServices } from '@dxos/functions';
 import { failedInvariant, invariant } from '@dxos/invariant';
 import { isNonNullable } from '@dxos/util';
 
@@ -42,7 +43,6 @@ import {
   type TopologyNodeConnector,
   createTopology,
 } from './topology';
-import { FunctionServices } from "@dxos/functions";
 
 export type ValidateParams = {
   graph: ComputeGraphModel;

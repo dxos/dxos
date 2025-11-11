@@ -18,7 +18,7 @@ import * as Schedule from 'effect/Schedule';
 import { DXN, Filter, Obj, Query } from '@dxos/echo';
 import { DatabaseService } from '@dxos/echo-db';
 import { causeToError } from '@dxos/effect';
-import { ComputeEventLogger, FunctionInvocationService, QueueService, deserializeFunction } from '@dxos/functions';
+import { FunctionInvocationService, QueueService, deserializeFunction } from '@dxos/functions';
 import { Function, Trigger, type TriggerEvent } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
@@ -243,9 +243,7 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
 
         // Invoke the function
         return yield* FunctionInvocationService.invokeFunction(functionDef, inputData).pipe(
-          Effect.provide(
-            TracingServiceExt.layerQueue(trace.invocationTraceQueue),
-          ),
+          Effect.provide(TracingServiceExt.layerQueue(trace.invocationTraceQueue)),
         );
       }).pipe(Effect.exit);
 

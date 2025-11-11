@@ -21,7 +21,6 @@ import { Blueprint } from '@dxos/blueprints';
 import { Filter, Obj, Query, Ref } from '@dxos/echo';
 import { TestHelpers, acquireReleaseResource } from '@dxos/effect';
 import {
-  ComputeEventLogger,
   CredentialsService,
   DatabaseService,
   FunctionInvocationService,
