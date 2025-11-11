@@ -64,7 +64,9 @@
     "effect": "3.18.3",
     "jsonpath-plus": "10.2.0"
   },
-  "devDependencies": {},
+  "devDependencies": {
+    "@dxos/functions-runtime": "workspace:*"
+  },
   "publishConfig": {
     "access": "public"
   }

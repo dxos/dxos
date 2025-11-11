@@ -13,6 +13,31 @@ import { logCustomEvent } from '@dxos/functions';
 import { createTestServices } from '@dxos/functions-runtime/testing';
 import { DXN } from '@dxos/keys';
 import { mapValues } from '@dxos/util';
+import * as Layer from 'effect/Layer';
+
+import { AiService, ConsolePrinter, MemoizedAiService } from '@dxos/ai';
+import { TestAiService } from '@dxos/ai/testing';
+import {
+  AiConversation,
+  type ContextBinding,
+  GenerationObserver,
+  makeToolExecutionServiceFromFunctions,
+  makeToolResolverFromFunctions,
+} from '@dxos/assistant';
+import { Blueprint } from '@dxos/blueprints';
+import { Filter, Obj, Query } from '@dxos/echo';
+import { TestHelpers, acquireReleaseResource } from '@dxos/effect';
+import {
+  ComputeEventLogger,
+  CredentialsService,
+  DatabaseService,
+  FunctionInvocationService,
+  QueueService,
+  TracingService,
+} from '@dxos/functions';
+import { FunctionInvocationServiceLayerTest, TestDatabaseLayer } from '@dxos/functions-runtime/testing';
+import { invariant } from '@dxos/invariant';
+import { ObjectId } from '@dxos/keys';
 
 import { NODE_INPUT, NODE_OUTPUT } from '../nodes';
 import { TestRuntime } from '../testing';
@@ -28,89 +53,115 @@ import {
 
 const ENABLE_LOGGING = false;
 
-describe('Graph as a fiber runtime', () => {
-  it.effect('simple adder node', ({ expect }) =>
-    Effect.gen(function* () {
-      const runtime = new TestRuntime(createTestServices({ logging: { enabled: ENABLE_LOGGING } }))
-        // Break line formatting.
-        .registerNode('dxn:test:sum', sum)
-        .registerGraph('dxn:test:g1', g1());
+const TestLayer = Layer.mergeAll(ComputeEventLogger.layerFromTracing).pipe(
+  Layer.provideMerge(FunctionInvocationServiceLayerTest()),
+  Layer.provideMerge(
+    Layer.mergeAll(
+      TestAiService(),
+      TestDatabaseLayer(),
+      CredentialsService.configuredLayer([]),
+      TracingService.layerNoop,
+    ),
+  ),
+);
 
-      const result = yield* runtime.runGraph('dxn:test:g1', ValueBag.make({ number1: 1, number2: 2 })).pipe(
-        Effect.withSpan('runGraph'),
-        Effect.scoped,
-        Effect.flatMap(ValueBag.unwrap),
-        Effect.withSpan('test'), // TODO(burdon): Why span here and not in other tests?
-      );
-      expect(result).toEqual({ sum: 3 });
-    }),
+describe('Graph as a fiber runtime', () => {
+  it.scoped(
+    'simple adder node',
+    Effect.fnUntraced(
+      function* ({ expect }) {
+        const runtime = new TestRuntime()
+          // Break line formatting.
+          .registerNode('dxn:test:sum', sum)
+          .registerGraph('dxn:test:g1', g1());
+
+        const result = yield* runtime.runGraph('dxn:test:g1', ValueBag.make({ number1: 1, number2: 2 })).pipe(
+          Effect.withSpan('runGraph'),
+          Effect.flatMap(ValueBag.unwrap),
+          Effect.withSpan('test'), // TODO(burdon): Why span here and not in other tests?
+        );
+        expect(result).toEqual({ sum: 3 });
+      },
+      Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
   );
 
-  test('composition', async ({ expect }) => {
-    const runtime = new TestRuntime(createTestServices({ logging: { enabled: ENABLE_LOGGING } }))
-      .registerNode('dxn:test:sum', sum)
-      .registerGraph('dxn:test:g1', g1())
-      .registerGraph('dxn:test:g2', g2a(DXN.parse('dxn:test:g1')));
+  it.scoped(
+    'composition',
+    Effect.fnUntraced(
+      function* ({ expect }) {
+        const runtime = new TestRuntime()
+          .registerNode('dxn:test:sum', sum)
+          .registerGraph('dxn:test:g1', g1())
+          .registerGraph('dxn:test:g2', g2a(DXN.parse('dxn:test:g1')));
 
-    const result = await Effect.runPromise(
-      runtime
-        .runGraph('dxn:test:g2', ValueBag.make({ a: 1, b: 2, c: 3 }))
-        .pipe(Effect.scoped, Effect.flatMap(ValueBag.unwrap)),
-    );
-    expect(result).toEqual({ result: 6 });
-  });
+        const result = yield* runtime
+          .runGraph('dxn:test:g2', ValueBag.make({ a: 1, b: 2, c: 3 }))
+          .pipe(Effect.flatMap(ValueBag.unwrap));
+        expect(result).toEqual({ result: 6 });
+      },
+      Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
+  );
 
   // TODO(burdon): Is the DXN part of the runtime registration of the graph or persistent?
-  test.skip('composition (with shortcut)', async ({ expect }) => {
-    const runtime = new TestRuntime(createTestServices({ logging: { enabled: ENABLE_LOGGING } }));
-    runtime
-      .registerNode('dxn:test:sum', sum)
-      .registerGraph('dxn:test:g1', g1())
-      .registerGraph('dxn:test:g2', g2b(runtime.getGraph(DXN.parse('dxn:test:g1')).root));
+  it.scoped.skip(
+    'composition (with shortcut)',
+    Effect.fnUntraced(
+      function* ({ expect }) {
+        const runtime = new TestRuntime();
+        runtime
+          .registerNode('dxn:test:sum', sum)
+          .registerGraph('dxn:test:g1', g1())
+          .registerGraph('dxn:test:g2', g2b(runtime.getGraph(DXN.parse('dxn:test:g1')).root));
 
-    const result = await Effect.runPromise(
-      runtime
-        .runGraph('dxn:test:g2', ValueBag.make({ a: 1, b: 2, c: 3 }))
-        .pipe(Effect.scoped, Effect.flatMap(ValueBag.unwrap)),
-    );
-    expect(result).toEqual({ result: 6 });
-  });
-
-  it.effect('runFromInput', ({ expect }) =>
-    Effect.gen(function* () {
-      const runtime = new TestRuntime(createTestServices({ logging: { enabled: ENABLE_LOGGING } }))
-        .registerNode('dxn:test:sum', sum)
-        .registerNode('dxn:test:viewer', view)
-        .registerGraph('dxn:test:g3', g3());
-
-      const result = yield* Effect.promise(() =>
-        runtime.runFromInput('dxn:test:g3', 'I', ValueBag.make({ a: 1, b: 2 })),
-      ).pipe(Effect.map((results) => mapValues(results, (eff) => eff.pipe(Effect.scoped))));
-
-      const v1 = yield* ValueBag.unwrap(yield* result.V1);
-      const v2 = yield* ValueBag.unwrap(yield* result.V2);
-      expect(v1).toEqual({ result: 3 });
-      expect(v2).toEqual({ result: 3 });
-    }),
+        const result = yield* runtime
+          .runGraph('dxn:test:g2', ValueBag.make({ a: 1, b: 2, c: 3 }))
+          .pipe(Effect.flatMap(ValueBag.unwrap));
+        expect(result).toEqual({ result: 6 });
+      },
+      Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
   );
 
-  it.effect('if-else', ({ expect }) =>
-    Effect.gen(function* () {
-      const runtime = new TestRuntime(createTestServices({ logging: { enabled: ENABLE_LOGGING } })).registerGraph(
-        'dxn:test:g4',
-        g4(),
-      );
+  it.scoped(
+    'runFromInput',
+    Effect.fnUntraced(
+      function* ({ expect }) {
+        const runtime = new TestRuntime()
+          .registerNode('dxn:test:sum', sum)
+          .registerNode('dxn:test:viewer', view)
+          .registerGraph('dxn:test:g3', g3());
 
-      const result = yield* runtime
-        .runGraph('dxn:test:g4', ValueBag.make({ condition: true, value: 1 }))
-        .pipe(
-          Effect.provide(createTestServices({ logging: { enabled: ENABLE_LOGGING } }).createLayer()),
-          Effect.scoped,
-        );
+        const { V1, V2 } = yield* runtime.runFromInput('dxn:test:g3', 'I', ValueBag.make({ a: 1, b: 2 }));
 
-      expect(yield* Effect.either(result.values.true)).toEqual(Either.right(1));
-      expect(yield* Effect.either(result.values.false)).toEqual(Either.left(NotExecuted));
-    }),
+        const v1 = yield* ValueBag.unwrap(V1);
+        const v2 = yield* ValueBag.unwrap(V2);
+        expect(v1).toEqual({ result: 3 });
+        expect(v2).toEqual({ result: 3 });
+      },
+      Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
+  );
+
+  it.scoped(
+    'if-else',
+    Effect.fnUntraced(
+      function* ({ expect }) {
+        const runtime = new TestRuntime().registerGraph('dxn:test:g4', g4());
+
+        const result = yield* runtime.runGraph('dxn:test:g4', ValueBag.make({ condition: true, value: 1 }));
+
+        expect(yield* Effect.either(result.values.true)).toEqual(Either.right(1));
+        expect(yield* Effect.either(result.values.false)).toEqual(Either.left(NotExecuted));
+      },
+      Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
   );
 });
 

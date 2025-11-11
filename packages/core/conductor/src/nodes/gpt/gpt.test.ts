@@ -42,7 +42,7 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('gptNode', () => {
 
     it.effect(
       'gpt simple',
-      Effect.fn(function* () {
+      Effect.fnUntraced(function* () {
         const input: GptInput = {
           prompt: 'What is the meaning of life? Answer in 10 words or less.',
         };
@@ -60,7 +60,7 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('gptNode', () => {
 
     it.effect(
       'gpt with history',
-      Effect.fn(function* () {
+      Effect.fnUntraced(function* () {
         const conversation = queues.create();
         yield* Effect.promise(() =>
           conversation.append([
