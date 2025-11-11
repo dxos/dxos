@@ -21,7 +21,7 @@ const MapSchema = Schema.Struct({
 }).pipe(
   Type.Obj({
     typename: 'dxos.org/type/Map',
-    version: '0.2.0',
+    version: '0.3.0',
   }),
   LabelAnnotation.set(['name']),
   ViewAnnotation.set(true),

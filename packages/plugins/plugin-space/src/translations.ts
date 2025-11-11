@@ -222,11 +222,17 @@ export const translations = [
         'archive space description':
           'Archiving a space will remove it from the sidebar and stop replicating updates, but will not delete the data. You can unarchive it by enabling archived spaces in the app settings.',
         'archive space label': 'Archive',
-        'backup space label': 'Backup',
+        'unarchive space label': 'Unarchive',
+
+        'space controls title': 'Space Controls',
+        'space controls description': 'Advanced controls for this space.',
+        'backup space title': 'Backup Space',
         'backup space description':
           'Download a backup of the space. Contains all data in the space in an unencrypted format.',
-        'download backup': 'Download backup',
-        'unarchive space label': 'Unarchive',
+        'download backup label': 'Download backup',
+        'repair space title': 'Repair Space',
+        'repair space description': 'Run repair operations on the space.',
+        'repair space label': 'Run repairs',
 
         'sync edge connected label': 'Edge connected',
         'sync edge disconnected label': 'Edge disconnected',

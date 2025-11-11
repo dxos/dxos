@@ -510,6 +510,10 @@ export default (context: PluginContext) => {
           const schemas = get(context.capabilities(ClientCapabilities.Schema))
             .flat()
             .filter((schema) => ViewAnnotation.get(schema).pipe(Option.getOrElse(() => false)));
+          console.log(
+            'schemas',
+            schemas.map((schema) => Type.getDXN(schema)?.toString()),
+          );
           const filter = Filter.or(...schemas.map((schema) => Filter.type(schema)));
 
           return Function.pipe(
@@ -531,7 +535,12 @@ export default (context: PluginContext) => {
               const typename = Schema.isSchema(schema) ? Type.getTypename(schema as Type.Obj.Any) : schema.typename;
               return get(atomFromQuery(query))
                 .filter((object) =>
-                  get(atomFromSignal(() => getTypenameFromQuery((object as any).view.target?.query.ast) === typename)),
+                  get(
+                    atomFromSignal(() => {
+                      console.log('object', object, Obj.getTypeDXN(object));
+                      return getTypenameFromQuery((object as any).view.target?.query.ast) === typename;
+                    }),
+                  ),
                 )
                 .map((object) =>
                   get(

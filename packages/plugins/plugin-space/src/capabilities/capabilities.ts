@@ -32,4 +32,8 @@ export namespace SpaceCapabilities {
 
   // TODO(burdon): Should this be view? Forms are UI concepts? (associated with a View/schema).
   export const ObjectForm = defineCapability<ObjectForm<any>>(`${meta.id}/capability/object-form`);
+
+  // TODO(wittjosiah): Replace with migrations, this is not a sustainable solution.
+  export type HandleRepair = (params: { space: Space }) => Promise<void>;
+  export const Repair = defineCapability<HandleRepair>(`${meta.id}/capability/repair`);
 }

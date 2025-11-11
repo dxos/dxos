@@ -19,6 +19,7 @@ import {
   Markdown,
   ReactRoot,
   ReactSurface,
+  Repair,
   ThreadState,
 } from './capabilities';
 import { THREAD_ITEM, meta } from './meta';
@@ -136,6 +137,11 @@ export const ThreadPlugin = definePlugin(meta, () => [
       contributes(SpaceCapabilities.onCreateSpace, ({ space, rootCollection }) =>
         createIntent(ThreadAction.onCreateSpace, { space, rootCollection }),
       ),
+  }),
+  defineModule({
+    id: `${meta.id}/module/repair`,
+    activatesOn: ClientEvents.SpacesReady,
+    activate: Repair,
   }),
   defineModule({
     id: `${meta.id}/module/markdown`,

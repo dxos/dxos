@@ -21,6 +21,7 @@ import {
   IntentResolver,
   LocalModelResolver,
   ReactSurface,
+  Repair,
   Settings,
   Toolkit,
 } from './capabilities';
@@ -139,6 +140,11 @@ export const AssistantPlugin = definePlugin(meta, () => [
       contributes(SpaceCapabilities.onCreateSpace, ({ rootCollection, space }) =>
         createIntent(AssistantAction.onCreateSpace, { rootCollection, space }),
       ),
+  }),
+  defineModule({
+    id: `${meta.id}/module/repair`,
+    activatesOn: ClientEvents.SpacesReady,
+    activate: Repair,
   }),
   defineModule({
     id: `${meta.id}/module/app-graph-builder`,

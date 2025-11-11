@@ -40,6 +40,7 @@ import {
   IntentResolver,
   ReactRoot,
   ReactSurface,
+  Repair,
   SchemaDefs,
   SpaceCapabilities,
   SpaceSettings,
@@ -255,6 +256,11 @@ export const SpacePlugin = definePlugin<SpacePluginOptions>(
           ClientEvents.SpacesReady,
         ),
         activate: SpacesReady,
+      }),
+      defineModule({
+        id: `${meta.id}/module/repair`,
+        activatesOn: ClientEvents.SpacesReady,
+        activate: Repair,
       }),
     ];
   },

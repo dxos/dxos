@@ -22,7 +22,7 @@ const MasonrySchema = Schema.Struct({
 }).pipe(
   Type.Obj({
     typename: 'dxos.org/type/Masonry',
-    version: '0.1.0',
+    version: '0.2.0',
   }),
   ViewAnnotation.set(true),
 );
