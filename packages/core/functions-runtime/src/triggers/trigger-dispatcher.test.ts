@@ -9,14 +9,13 @@ import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
 import * as Fn from 'effect/Function';
 import * as Layer from 'effect/Layer';
-import * as Schema from 'effect/Schema';
 
 import { AiService } from '@dxos/ai';
 import { Filter, Obj, Query, Ref } from '@dxos/echo';
-import { defineFunction } from '@dxos/functions';
 import { serializeFunction } from '@dxos/functions';
 import { ComputeEventLogger, CredentialsService, DatabaseService, QueueService } from '@dxos/functions';
 import { Function, Trigger } from '@dxos/functions';
+import { Example } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { Person, Task } from '@dxos/types';
 
@@ -27,8 +26,6 @@ import { TracingServiceExt } from '../trace';
 import { InvocationTracer } from './invocation-tracer';
 import { TriggerDispatcher } from './trigger-dispatcher';
 import { TriggerStateStore } from './trigger-state-store';
-import { ObjectId } from '@dxos/keys';
-import { Example } from '@dxos/functions';
 
 const TestLayer = Fn.pipe(
   Layer.mergeAll(ComputeEventLogger.layerFromTracing, InvocationTracer.layerTest, TriggerStateStore.layerMemory),
