@@ -36,6 +36,7 @@ export const EditorPreviewProvider = ({ children, onLookup }: EditorPreviewProvi
         link: { label, ref: refId },
         pending: true,
       }));
+
       triggerRef.current = dxTrigger;
       queueMicrotask(() => setOpen(true));
       void onLookup?.({ label, ref: refId }).then((target) =>

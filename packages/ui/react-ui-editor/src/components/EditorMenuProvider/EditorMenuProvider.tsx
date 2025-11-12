@@ -106,7 +106,9 @@ export const EditorMenuProvider = ({
 
   const menuGroups = groups?.filter((group) => group.items.length > 0) ?? [];
 
-  // TODO(burdon): Reconcile with PreviewPopover.tsx
+  // TODO(burdon): Reconcile with EditorPreviewProvider.tsx and Editor.Blocks.
+  //  Generalize EditorMenuProvider and popover for Menu or Popover (preview).
+  //  Create diagram.
   return (
     <Popover.Root modal={false} open={open} onOpenChange={setOpen}>
       <Popover.VirtualTrigger virtualRef={triggerRef} />
@@ -169,6 +171,10 @@ const Menu = ({ groups, currentItem, onSelect }: MenuProps) => {
   );
 };
 
+//
+// Menu Group
+//
+
 type MenuGroupProps = {
   group: EditorMenuGroup;
   currentItem?: string;
@@ -192,6 +198,10 @@ const MenuGroup = ({ group, currentItem, onSelect }: MenuGroupProps) => {
     </>
   );
 };
+
+//
+// Menu Item
+//
 
 type MenuItemProps = {
   item: EditorMenuItem;
