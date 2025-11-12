@@ -40,6 +40,15 @@ describe('QueryPlanner', () => {
             "mode": "only-non-deleted",
           },
           {
+            "_tag": "FilterStep",
+            "filter": {
+              "id": undefined,
+              "props": {},
+              "type": "object",
+              "typename": "dxn:type:dxos.org/type/Person:0.1.0",
+            },
+          },
+          {
             "_tag": "OrderStep",
             "order": [
               {
@@ -75,6 +84,15 @@ describe('QueryPlanner', () => {
           {
             "_tag": "FilterDeletedStep",
             "mode": "only-non-deleted",
+          },
+          {
+            "_tag": "FilterStep",
+            "filter": {
+              "id": undefined,
+              "props": {},
+              "type": "object",
+              "typename": "dxn:type:dxos.org/type/Person:0.1.0",
+            },
           },
           {
             "_tag": "OrderStep",
@@ -127,7 +145,7 @@ describe('QueryPlanner', () => {
                 },
               },
               "type": "object",
-              "typename": null,
+              "typename": "dxn:type:dxos.org/type/Person:0.1.0",
             },
           },
           {
@@ -334,7 +352,7 @@ describe('QueryPlanner', () => {
                 },
               },
               "type": "object",
-              "typename": null,
+              "typename": "dxn:type:dxos.org/type/Organization:0.1.0",
             },
           },
           {
@@ -433,6 +451,15 @@ describe('QueryPlanner', () => {
                     "_tag": "FilterDeletedStep",
                     "mode": "only-non-deleted",
                   },
+                  {
+                    "_tag": "FilterStep",
+                    "filter": {
+                      "id": undefined,
+                      "props": {},
+                      "type": "object",
+                      "typename": "dxn:type:dxos.org/type/Person:0.1.0",
+                    },
+                  },
                 ],
               },
               {
@@ -453,6 +480,15 @@ describe('QueryPlanner', () => {
                   {
                     "_tag": "FilterDeletedStep",
                     "mode": "only-non-deleted",
+                  },
+                  {
+                    "_tag": "FilterStep",
+                    "filter": {
+                      "id": undefined,
+                      "props": {},
+                      "type": "object",
+                      "typename": "dxn:type:dxos.org/type/Organization:0.1.0",
+                    },
                   },
                 ],
               },
@@ -508,7 +544,7 @@ describe('QueryPlanner', () => {
                     "id": undefined,
                     "props": {},
                     "type": "object",
-                    "typename": null,
+                    "typename": "dxn:type:dxos.org/type/Person:0.1.0",
                   },
                 },
                 {
@@ -569,7 +605,7 @@ describe('QueryPlanner', () => {
                     "id": undefined,
                     "props": {},
                     "type": "object",
-                    "typename": null,
+                    "typename": "dxn:type:dxos.org/type/Person:0.1.0",
                   },
                 },
               ],
@@ -624,7 +660,7 @@ describe('QueryPlanner', () => {
                 },
               },
               "type": "object",
-              "typename": null,
+              "typename": "dxn:type:dxos.org/type/Task:0.1.0",
             },
           },
           {
@@ -757,6 +793,26 @@ describe('QueryPlanner', () => {
             "mode": "only-non-deleted",
           },
           {
+            "_tag": "FilterStep",
+            "filter": {
+              "filters": [
+                {
+                  "id": undefined,
+                  "props": {},
+                  "type": "object",
+                  "typename": "dxn:type:dxos.org/type/Organization:0.1.0",
+                },
+                {
+                  "id": undefined,
+                  "props": {},
+                  "type": "object",
+                  "typename": "dxn:type:dxos.org/type/Person:0.1.0",
+                },
+              ],
+              "type": "or",
+            },
+          },
+          {
             "_tag": "OrderStep",
             "order": [
               {
@@ -805,6 +861,26 @@ describe('QueryPlanner', () => {
             "mode": "only-non-deleted",
           },
           {
+            "_tag": "FilterStep",
+            "filter": {
+              "filters": [
+                {
+                  "id": undefined,
+                  "props": {},
+                  "type": "object",
+                  "typename": "dxn:type:dxos.org/type/Organization:0.1.0",
+                },
+                {
+                  "id": undefined,
+                  "props": {},
+                  "type": "object",
+                  "typename": "dxn:type:dxos.org/type/Person:0.1.0",
+                },
+              ],
+              "type": "or",
+            },
+          },
+          {
             "_tag": "OrderStep",
             "order": [
               {
@@ -840,6 +916,15 @@ describe('QueryPlanner', () => {
           {
             "_tag": "FilterDeletedStep",
             "mode": "only-deleted",
+          },
+          {
+            "_tag": "FilterStep",
+            "filter": {
+              "id": undefined,
+              "props": {},
+              "type": "object",
+              "typename": "dxn:type:dxos.org/type/Task:0.1.0",
+            },
           },
           {
             "_tag": "OrderStep",
