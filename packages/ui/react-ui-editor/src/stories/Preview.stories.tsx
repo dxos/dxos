@@ -16,6 +16,7 @@ import { Card } from '@dxos/react-ui-stack';
 import { hoverableControlItem, hoverableControlItemTransition, hoverableControls } from '@dxos/react-ui-theme';
 import { trim } from '@dxos/util';
 
+import { type EditorController } from '../components';
 import {
   type PreviewBlock,
   type PreviewLinkRef,
@@ -184,9 +185,24 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
+const text = trim`
+  # Preview
+
+  This project is part of the [DXOS](dxn:queue:data:123) SDK.
+
+  ![DXOS](dxn:queue:data:123)
+
+  It consists of [ECHO](dxn:queue:data:echo), [HALO](dxn:queue:data:halo), and [MESH](dxn:queue:data:mesh).
+
+  ## Deep dive
+
+  ![ECHO](dxn:queue:data:echo)
+
+`;
+
 export const Default: Story = {
   render: () => {
-    const [view, setView] = useState<EditorView>();
+    const [controller, setController] = useState<EditorController | null>(null);
     const [previewBlocks, setPreviewBlocks] = useState<PreviewBlock[]>([]);
     const extensions = useMemo(() => {
       return [
@@ -202,34 +218,15 @@ export const Default: Story = {
       ];
     }, []);
 
-    const handleViewRef = useCallback((instance?: EditorView | null) => {
-      setView(instance ?? undefined);
-    }, []);
-
+    // TODO(burdon): Ranges must be sorted error (decorate.enter).
     return (
       <PreviewPopoverProvider onLookup={handlePreviewLookup}>
-        <EditorStory
-          ref={handleViewRef}
-          text={trim`
-            # Preview
-
-            This project is part of the [DXOS](dxn:queue:data:123) SDK.
-
-            ![DXOS](dxn:queue:data:123)
-
-            It consists of [ECHO](dxn:queue:data:echo), [HALO](dxn:queue:data:halo), and [MESH](dxn:queue:data:mesh).
-
-            ## Deep dive
-
-            ![ECHO](dxn:queue:data:echo)
-
-          `}
-          extensions={extensions}
-        />
+        <EditorStory ref={setController} text={text} extensions={extensions} />
         <PreviewCard />
-        {previewBlocks.map(({ link, el }) => (
-          <PreviewBlockComponent key={link.ref} link={link} el={el} view={view} />
-        ))}
+        {controller?.view &&
+          previewBlocks.map(({ link, el }) => (
+            <PreviewBlockComponent key={link.ref} link={link} el={el} view={controller.view!} />
+          ))}
       </PreviewPopoverProvider>
     );
   },

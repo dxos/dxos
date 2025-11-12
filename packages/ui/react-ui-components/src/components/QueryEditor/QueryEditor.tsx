@@ -5,7 +5,7 @@
 import { Prec } from '@codemirror/state';
 import React, { forwardRef, useCallback, useEffect, useMemo, useState } from 'react';
 
-import { type ThemedClassName, updateRef, useThemeContext, useTranslation } from '@dxos/react-ui';
+import { type ThemedClassName, setRef, useThemeContext, useTranslation } from '@dxos/react-ui';
 import {
   EditorContent,
   type EditorContentProps,
@@ -39,8 +39,9 @@ export type QueryEditorProps = ThemedClassName<
 export const QueryEditor = forwardRef<EditorController, QueryEditorProps>(
   ({ db, tags, value, readonly, numItems = 8, ...props }, forwardedRef) => {
     const [controller, setController] = useState<EditorController | null>(null);
+    // TODO(burdon): This is suspicious.
     useEffect(() => {
-      updateRef(forwardedRef, controller);
+      setRef(forwardedRef, controller);
     }, [controller]);
 
     const getOptions = useMemo(() => completions({ db, tags }), [db, tags]);

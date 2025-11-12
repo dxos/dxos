@@ -2,7 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type EditorView } from '@codemirror/view';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useCallback, useState } from 'react';
 
@@ -14,6 +13,7 @@ import { withTheme } from '@dxos/react-ui/testing';
 import { Testing, type ValueGenerator, createObjectFactory } from '@dxos/schema/testing';
 
 import {
+  type EditorController,
   type EditorMenuGroup,
   type EditorMenuItem,
   EditorMenuProvider,
@@ -51,12 +51,12 @@ const placeholder = (trigger: string[]) =>
 type StoryProps = Omit<UseEditorMenuProps, 'viewRef'> & { text: string };
 
 const DefaultStory = ({ text, ...props }: StoryProps) => {
-  const [view, setView] = useState<EditorView | null>(null);
+  const [controller, setController] = useState<EditorController | null>(null);
   const { groupsRef, extension, ...menuProps } = useEditorMenu(props);
 
   return (
-    <EditorMenuProvider view={view} groups={groupsRef.current} {...menuProps}>
-      <EditorStory ref={setView} text={text} extensions={extension} />
+    <EditorMenuProvider view={controller?.view} groups={groupsRef.current} {...menuProps}>
+      <EditorStory ref={setController} text={text} extensions={extension} />
     </EditorMenuProvider>
   );
 };

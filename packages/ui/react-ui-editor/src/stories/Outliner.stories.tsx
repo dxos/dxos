@@ -2,14 +2,13 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type EditorView } from '@codemirror/view';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React, { useMemo, useRef } from 'react';
+import React, { useMemo, useState } from 'react';
 
 import { withTheme } from '@dxos/react-ui/testing';
 import { withAttention } from '@dxos/react-ui-attention/testing';
 
-import { type EditorMenuGroup, EditorMenuProvider } from '../components';
+import { type EditorController, type EditorMenuGroup, EditorMenuProvider } from '../components';
 import { deleteItem, hashtag, listItemToString, outliner, treeFacet } from '../extensions';
 import { str } from '../testing';
 
@@ -20,8 +19,9 @@ type StoryProps = {
 };
 
 const DefaultStory = ({ text }: StoryProps) => {
-  const viewRef = useRef<EditorView>(null);
+  const [controller, setController] = useState<EditorController | null>(null);
 
+  const extensions = useMemo(() => [outliner(), hashtag()], []);
   const commandGroups: EditorMenuGroup[] = useMemo(
     () => [
       {
@@ -42,7 +42,7 @@ const DefaultStory = ({ text }: StoryProps) => {
 
   return (
     <EditorMenuProvider
-      view={viewRef.current}
+      view={controller?.view}
       groups={commandGroups}
       onSelect={({ view, item }) => {
         if (item.onSelect) {
@@ -51,9 +51,9 @@ const DefaultStory = ({ text }: StoryProps) => {
       }}
     >
       <EditorStory
-        ref={viewRef}
+        ref={setController}
         text={text}
-        extensions={[outliner(), hashtag()]}
+        extensions={extensions}
         debug='raw+tree'
         debugCustom={(view) => {
           const tree = view.state.facet(treeFacet);

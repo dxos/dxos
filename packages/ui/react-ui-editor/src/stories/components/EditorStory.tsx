@@ -3,19 +3,21 @@
 //
 
 import { type EditorView } from '@codemirror/view';
-import React, { type ReactNode, forwardRef, useEffect, useImperativeHandle, useMemo, useState } from 'react';
+import React, { type ReactNode, forwardRef, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react';
 
 import { createDocAccessor, createObject } from '@dxos/client/echo';
 import { Expando } from '@dxos/echo/internal';
 import { live } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
-import { useForwardedRef, useThemeContext } from '@dxos/react-ui';
+import { log } from '@dxos/log';
+import { useMergeRefs, useThemeContext } from '@dxos/react-ui';
 import { useAttentionAttributes } from '@dxos/react-ui-attention';
 import { JsonFilter } from '@dxos/react-ui-syntax-highlighter';
 import { mx } from '@dxos/react-ui-theme';
 import { isNonNullable } from '@dxos/util';
 
+import { type EditorController } from '../../components';
 import { editorGutter, editorSlots } from '../../defaults';
 import {
   type DebugNode,
@@ -46,21 +48,24 @@ export type StoryProps = Pick<UseTextEditorProps, 'id' | 'scrollTo' | 'selection
     onReady?: (view: EditorView) => void;
   };
 
-export const EditorStory = forwardRef<EditorView | null, StoryProps>(
-  ({ debug, debugCustom, text, extensions: _extensions, ...props }, forwardedRef) => {
+export const EditorStory = forwardRef<EditorController, StoryProps>(
+  ({ debug, debugCustom, text, extensions: extensionsParam, ...props }, forwardedRef) => {
+    const controllerRef = useRef<EditorController>(null);
+    const mergedRef = useMergeRefs([controllerRef, forwardedRef]);
+
     const attentionAttrs = useAttentionAttributes('test-panel');
     const [tree, setTree] = useState<DebugNode>();
     const [object] = useState(createObject(live(Expando, { content: text ?? '' })));
-    const viewRef = useForwardedRef(forwardedRef);
+
     const extensions = useMemo(
-      () => (debug ? [_extensions, debugTree(setTree)].filter(isNonNullable) : _extensions),
-      [debug, _extensions],
+      () => (debug ? [extensionsParam, debugTree(setTree)].filter(isNonNullable) : extensionsParam),
+      [debug, extensionsParam],
     );
 
-    const view = viewRef.current;
+    const view = controllerRef.current?.view;
     return (
       <div className={mx('is-full bs-full grid overflow-hidden', debug && 'grid-cols-2 lg:grid-cols-[1fr_600px]')}>
-        <EditorComponent ref={viewRef} object={object} text={text} extensions={extensions} {...props} />
+        <EditorComponent ref={mergedRef} object={object} text={text} extensions={extensions} {...props} />
 
         {debug && (
           <div
@@ -83,9 +88,10 @@ export const EditorStory = forwardRef<EditorView | null, StoryProps>(
 
 /**
  * Default story component.
+ * @deprecated
  */
 // TODO(burdon): Replace with <Editor.Root>
-export const EditorComponent = forwardRef<EditorView | null, StoryProps>(
+export const EditorComponent = forwardRef<EditorController, StoryProps>(
   (
     {
       id = defaultId,
@@ -124,7 +130,15 @@ export const EditorComponent = forwardRef<EditorView | null, StoryProps>(
       [id, object, extensions, themeMode],
     );
 
-    useImperativeHandle<EditorView | null, EditorView | null>(forwardedRef, () => view, [view]);
+    useImperativeHandle(forwardedRef, () => {
+      log.info('view updated', { id });
+      return {
+        get view() {
+          return view;
+        },
+        focus: () => view?.focus(),
+      };
+    }, [view, id]);
 
     useEffect(() => {
       if (view) {

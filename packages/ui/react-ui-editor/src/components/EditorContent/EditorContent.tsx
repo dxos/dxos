@@ -6,16 +6,17 @@ import { Transaction } from '@codemirror/state';
 import { EditorView } from '@codemirror/view';
 import React, { forwardRef, useEffect, useImperativeHandle } from 'react';
 
+import { log } from '@dxos/log';
 import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
 import { initialSync } from '../../extensions';
 import { type UseTextEditorProps, useTextEditor } from '../../hooks';
 
-export type EditorController = {
-  view: EditorView | null;
+export interface EditorController {
+  get view(): EditorView | null;
   focus: () => void;
-};
+}
 
 export type EditorContentProps = ThemedClassName<
   {
@@ -51,14 +52,15 @@ export const EditorContent = forwardRef<EditorController, EditorContentProps>(
     );
 
     // External controller.
-    useImperativeHandle(
-      forwardedRef,
-      () => ({
-        view,
+    useImperativeHandle(forwardedRef, () => {
+      log.info('view updated', { id });
+      return {
+        get view() {
+          return view;
+        },
         focus: () => view?.focus(),
-      }),
-      [view],
-    );
+      };
+    }, [view, id]);
 
     // Set initial value and cursor position.
     useEffect(() => {
