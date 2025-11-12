@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { createEditorAction } from './util';
+import { createEditorAction } from './actions';
 
 const createImageUploadAction = (onImageUpload: () => void) =>
   createEditorAction(

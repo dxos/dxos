@@ -9,7 +9,8 @@ import { type ToolbarMenuActionGroupProperties } from '@dxos/react-ui-menu';
 
 import { addBlockquote, addCodeblock, insertTable, removeBlockquote, removeCodeblock } from '../../extensions';
 
-import { type EditorToolbarState, createEditorAction, createEditorActionGroup } from './util';
+import { createEditorAction, createEditorActionGroup } from './actions';
+import { type EditorToolbarState } from './useEditorToolbar';
 
 const createBlockGroupAction = (value: string) =>
   createEditorActionGroup('block', {

@@ -16,14 +16,14 @@ import { useVoiceInput } from '@dxos/plugin-transcription';
 import { type Space, getSpace, useQueue } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { Input, type ThemedClassName, useDynamicRef, useTranslation } from '@dxos/react-ui';
-import { ChatEditor, type ChatEditorController, type ChatEditorProps, references } from '@dxos/react-ui-chat';
+import { ChatEditor, type ChatEditorController, type ChatEditorProps } from '@dxos/react-ui-chat';
 import { type MarkdownStreamController } from '@dxos/react-ui-components';
 import { MenuProvider, ToolbarMenu } from '@dxos/react-ui-menu';
 import { mx } from '@dxos/react-ui-theme';
 import { Message } from '@dxos/types';
 import { isTruthy } from '@dxos/util';
 
-import { useChatToolbarActions, useReferencesProvider } from '../../hooks';
+import { useChatToolbarActions } from '../../hooks';
 import { meta } from '../../meta';
 import { type AiChatProcessor } from '../../processor';
 import { type Assistant } from '../../types';
@@ -220,63 +220,46 @@ const ChatPrompt = ({
     },
   });
 
-  // TODO(burdon): Reconcile with object tags.
-  const referencesProvider = useReferencesProvider(space);
   const extensions = useMemo<Extension[]>(() => {
     return [
-      referencesProvider && references({ provider: referencesProvider }),
       Prec.highest(
-        keymap.of(
-          [
-            {
-              key: 'Mod-d',
-              preventDefault: true,
-              run: () => {
-                event.emit({ type: 'toggle-debug' });
-                return true;
-              },
+        keymap.of([
+          {
+            key: 'Mod-d',
+            preventDefault: true,
+            run: () => {
+              event.emit({ type: 'toggle-debug' });
+              return true;
             },
-            {
-              key: 'Mod-ArrowUp',
-              preventDefault: true,
-              run: () => {
-                event.emit({ type: 'nav-previous' });
-                return true;
-              },
+          },
+          {
+            key: 'Mod-ArrowUp',
+            preventDefault: true,
+            run: () => {
+              event.emit({ type: 'nav-previous' });
+              return true;
             },
-            {
-              key: 'Mod-ArrowDown',
-              preventDefault: true,
-              run: () => {
-                event.emit({ type: 'nav-next' });
-                return true;
-              },
+            shift: () => {
+              event.emit({ type: 'thread-open' });
+              return true;
             },
-            ...(expandable
-              ? [
-                  {
-                    key: 'Shift-Mod-ArrowUp',
-                    preventDefault: true,
-                    run: () => {
-                      event.emit({ type: 'thread-open' });
-                      return true;
-                    },
-                  },
-                  {
-                    key: 'Shift-Mod-ArrowDown',
-                    preventDefault: true,
-                    run: () => {
-                      event.emit({ type: 'thread-close' });
-                      return true;
-                    },
-                  },
-                ]
-              : []),
-          ].filter(isTruthy),
-        ),
+          },
+          {
+            key: 'Mod-ArrowDown',
+            preventDefault: true,
+            run: () => {
+              event.emit({ type: 'nav-next' });
+              return true;
+            },
+            shift: () => {
+              event.emit({ type: 'thread-close' });
+              return true;
+            },
+          },
+        ]),
       ),
     ].filter(isTruthy);
-  }, [event, expandable, referencesProvider]);
+  }, [event, expandable]);
 
   const handleSubmit = useCallback<NonNullable<ChatEditorProps['onSubmit']>>(
     (text) => {
@@ -300,15 +283,13 @@ const ChatPrompt = ({
       role='group'
       className={mx(
         'flex flex-col is-full density-fine',
-        outline && [
-          'p-2 bg-groupSurface border border-subduedSeparator transition transition-border [&:has(.cm-content:focus)]:border-separator rounded',
-        ],
+        outline &&
+          'bg-groupSurface border border-subduedSeparator transition transition-border [&:has(.cm-content:focus)]:border-separator rounded',
         classNames,
       )}
     >
-      <div role='none' className='flex gap-2'>
+      <div role='none' className='flex p-2 gap-2'>
         <ChatStatusIndicator classNames='p-1' preset={preset} error={error} processing={streaming} />
-
         <ChatEditor
           ref={editorRef}
           autoFocus
@@ -321,7 +302,7 @@ const ChatPrompt = ({
       </div>
 
       {space && settings && (
-        <div role='none' className='flex pbs-2 items-center overflow-hidden'>
+        <div role='none' className='flex items-center overflow-hidden'>
           <ChatOptions
             space={space}
             blueprintRegistry={processor.blueprintRegistry}
@@ -342,7 +323,7 @@ const ChatPrompt = ({
             processing={streaming}
             onEvent={handleEvent}
           >
-            {/* TODO(burdon): Move switch into dialog. */}
+            {/* TODO(burdon): Move offline switch into dialog. */}
             {online !== undefined && (
               <Input.Root>
                 <Input.Label srOnly>{t('online switch label')}</Input.Label>

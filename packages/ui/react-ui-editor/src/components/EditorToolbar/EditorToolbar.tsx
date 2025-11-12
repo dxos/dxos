@@ -2,10 +2,12 @@
 // Copyright 2024 DXOS.org
 //
 
+import { type EditorView } from '@codemirror/view';
 import { Atom } from '@effect-atom/atom-react';
 import React, { memo, useMemo } from 'react';
 
 import { atomFromSignal } from '@dxos/app-graph';
+import { type Live } from '@dxos/live-object';
 import { ElevationProvider, type ThemedClassName } from '@dxos/react-ui';
 import {
   type ActionGraphProps,
@@ -17,13 +19,13 @@ import {
 
 import { type EditorViewMode } from '../../types';
 
+import { createLists } from './actions';
 import { createBlocks } from './blocks';
 import { createFormatting } from './formatting';
 import { createHeadings } from './headings';
 import { createImageUpload } from './image';
-import { createLists } from './lists';
 import { createSearch } from './search';
-import { type EditorToolbarActionGraphProps } from './util';
+import { type EditorToolbarState } from './useEditorToolbar';
 import { createViewMode } from './view-mode';
 
 export type EditorToolbarFeatureFlags = Partial<{
@@ -37,6 +39,13 @@ export type EditorToolbarFeatureFlags = Partial<{
   onImageUpload: () => void;
   onViewModeChange: (mode: EditorViewMode) => void;
 }>;
+
+export type EditorToolbarActionGraphProps = {
+  state: Live<EditorToolbarState>;
+  getView: () => EditorView;
+  // TODO(wittjosiah): Control positioning.
+  customActions?: Atom.Atom<ActionGraphProps>;
+};
 
 export type EditorToolbarProps = ThemedClassName<
   {

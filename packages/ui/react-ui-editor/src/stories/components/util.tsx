@@ -19,8 +19,7 @@ import {
   linkTooltip,
   table,
 } from '../../extensions';
-import { str } from '../../testing';
-import { createRenderer } from '../../util';
+import { createRenderer, str } from '../../util';
 
 export const num = () => faker.number.int({ min: 0, max: 9999 }).toLocaleString();
 

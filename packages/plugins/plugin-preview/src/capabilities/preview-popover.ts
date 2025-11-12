@@ -29,7 +29,7 @@ const handlePreviewLookup = async (
 
 export default (context: PluginContext) => {
   // TODO(wittjosiah): Factor out lookup handlers to other plugins to make not ECHO-specific.
-  const handleDxAnchorActivate = async ({ refId, label, trigger }: DxAnchorActivate) => {
+  const handleAnchorActivate = async ({ refId, label, trigger }: DxAnchorActivate) => {
     const { dispatchPromise: dispatch } = context.getCapability(Capabilities.IntentDispatcher);
     const client = context.getCapability(ClientCapabilities.Client);
     const [layout] = context.getCapabilities(Capabilities.Layout);
@@ -58,7 +58,7 @@ export default (context: PluginContext) => {
     cleanup = addEventListener(
       document.defaultView,
       DX_ANCHOR_ACTIVATE as any,
-      handleDxAnchorActivate,
+      handleAnchorActivate,
       customEventOptions,
     );
   } else {

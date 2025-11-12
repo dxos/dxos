@@ -5,6 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 
+import { withPluginManager } from '@dxos/app-framework/testing';
 import { faker } from '@dxos/random';
 import { withTheme } from '@dxos/react-ui/testing';
 
@@ -19,7 +20,7 @@ const DefaultStory = (props: SearchResultsProps) => {
 
   return (
     <div className='flex grow justify-center overflow-hidden'>
-      <div className='flex w-[300px] m-4 overflow-hidden'>
+      <div className='flex is-[300px] m-4 overflow-hidden'>
         <SearchResults {...props} selected={selected} onSelect={setSelected} />
       </div>
     </div>
@@ -40,7 +41,7 @@ const meta = {
   title: 'plugins/plugin-search/SearchResults',
   component: SearchResults,
   render: DefaultStory,
-  decorators: [withTheme],
+  decorators: [withTheme, withPluginManager({ plugins: [] })],
   parameters: {
     layout: 'fullscreen',
   },

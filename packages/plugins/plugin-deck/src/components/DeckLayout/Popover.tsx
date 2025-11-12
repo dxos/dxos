@@ -80,10 +80,10 @@ export const PopoverContent = () => {
     <Popover.Portal>
       <Popover.Content
         side={layout.popoverSide}
-        onInteractOutside={handleClose}
-        onEscapeKeyDown={handleClose}
         sticky='always'
         hideWhenDetached
+        onInteractOutside={handleClose}
+        onEscapeKeyDown={handleClose}
       >
         <Popover.Viewport>
           <Surface role='card--popover' data={layout.popoverContent} limit={1} />

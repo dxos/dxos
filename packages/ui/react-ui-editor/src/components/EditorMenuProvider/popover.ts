@@ -15,10 +15,8 @@ import {
 
 import { isNonNullable, isTruthy } from '@dxos/util';
 
+import { type PlaceholderOptions, modalStateField, placeholder } from '../../extensions';
 import { type Range } from '../../types';
-import { type PlaceholderOptions, placeholder } from '../autocomplete';
-
-import { modalStateField } from './modal';
 
 const DELIMITERS = [' ', ':'];
 
@@ -107,8 +105,8 @@ const popoverKeymap = (options: PopoverOptions) => {
         key: trigger,
         run: (view: EditorView) => {
           // Determine if we should trigger the popover:
-          // 1. Empty lines or at the beginning of a line
-          // 2. When there's a preceding space
+          // 1. Empty lines or at the beginning of a line.
+          // 2. When there's a preceding space.
           const selection = view.state.selection.main;
           const line = view.state.doc.lineAt(selection.head);
           if (

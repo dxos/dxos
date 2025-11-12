@@ -9,11 +9,12 @@ import { type RefObject, useCallback, useMemo, useRef, useState } from 'react';
 import { invariant } from '@dxos/invariant';
 import { type MaybePromise } from '@dxos/util';
 
-import { type PopoverMenuGroup, type PopoverMenuItem } from './menu';
+import { modalStateEffect } from '../../extensions';
+
+import { type EditorMenuProviderProps } from './EditorMenuProvider';
+import { type EditorMenuGroup, type EditorMenuItem } from './menu';
 import { filterMenuGroups, getMenuItem, getNextMenuItem, getPreviousMenuItem } from './menu';
-import { modalStateEffect } from './modal';
 import { type PopoverOptions, popover, popoverRangeEffect, popoverStateField } from './popover';
-import { type PopoverMenuProviderProps } from './PopoverMenuProvider';
 
 export type GetMenuContext = {
   state: EditorState;
@@ -22,36 +23,36 @@ export type GetMenuContext = {
   trigger?: string;
 };
 
-export type UsePopoverMenuProps = {
+export type UseEditorMenuProps = {
   filter?: boolean;
-  getMenu?: (context: GetMenuContext) => MaybePromise<PopoverMenuGroup[]>;
+  getMenu?: (context: GetMenuContext) => MaybePromise<EditorMenuGroup[]>;
 } & Pick<PopoverOptions, 'trigger' | 'triggerKey' | 'placeholder'>;
 
-export type UsePopoverMenu = {
-  groupsRef: RefObject<PopoverMenuGroup[]>;
+export type UseEditorMenu = {
+  groupsRef: RefObject<EditorMenuGroup[]>;
   extension: Extension;
-} & Pick<PopoverMenuProviderProps, 'currentItem' | 'open' | 'onOpenChange' | 'onActivate' | 'onSelect' | 'onCancel'>;
+} & Pick<EditorMenuProviderProps, 'currentItem' | 'open' | 'onOpenChange' | 'onActivate' | 'onSelect' | 'onCancel'>;
 
 /**
  * ```tsx
- * const { groupsRef, extension, ...menuProps } = usePopoverMenu();
+ * const { groupsRef, extension, ...menuProps } = useEditorMenu();
  * const { parentRef, viewRef } = useTextEditor({ extensions: [extension] });
  * return (
- *   <PopoverMenuProvider view={viewRef.current} groups={groupsRef.current} {...menuProps}>
+ *   <EditorMenuProvider view={viewRef.current} groups={groupsRef.current} {...menuProps}>
  *     <div ref={parentRef} />
- *   </PopoverMenuProvider>
+ *   </EditorMenuProvider>
  * );
  * ```
  */
-export const usePopoverMenu = ({
+export const useEditorMenu = ({
   trigger,
   triggerKey,
   placeholder,
   filter = true,
   getMenu,
-}: UsePopoverMenuProps): UsePopoverMenu => {
-  const groupsRef = useRef<PopoverMenuGroup[]>([]);
-  const currentRef = useRef<PopoverMenuItem | null>(null);
+}: UseEditorMenuProps): UseEditorMenu => {
+  const groupsRef = useRef<EditorMenuGroup[]>([]);
+  const currentRef = useRef<EditorMenuItem | null>(null);
   const [currentItem, setCurrentItem] = useState<string>();
   const [open, setOpen] = useState(false);
   const [_, refresh] = useState({});
@@ -59,7 +60,7 @@ export const usePopoverMenu = ({
   /**
    * Get filtered options.
    */
-  const getMenuOptions = useCallback<NonNullable<UsePopoverMenuProps['getMenu']>>(
+  const getMenuOptions = useCallback<NonNullable<UseEditorMenuProps['getMenu']>>(
     async ({ text, trigger, ...props }) => {
       const groups = (await getMenu?.({ text, trigger, ...props })) ?? [];
       return filter
@@ -71,8 +72,9 @@ export const usePopoverMenu = ({
     [getMenu, filter],
   );
 
-  const handleOpenChange = useCallback<NonNullable<UsePopoverMenu['onOpenChange']>>(
+  const handleOpenChange = useCallback<NonNullable<UseEditorMenu['onOpenChange']>>(
     async ({ view, open }) => {
+      console.log(view, open);
       invariant(view);
       setOpen(open);
       if (!open) {
@@ -93,7 +95,7 @@ export const usePopoverMenu = ({
     [getMenuOptions],
   );
 
-  const handleActivate = useCallback<NonNullable<UsePopoverMenu['onActivate']>>(
+  const handleActivate = useCallback<NonNullable<UseEditorMenu['onActivate']>>(
     async ({ view, trigger }) => {
       const item = getMenuItem(groupsRef.current, currentItem);
       if (item) {
@@ -107,11 +109,11 @@ export const usePopoverMenu = ({
     [open, handleOpenChange],
   );
 
-  const handleSelect = useCallback<NonNullable<UsePopoverMenu['onSelect']>>(({ view, item }) => {
-    void item.onSelect?.(view, view.state.selection.main.head);
+  const handleSelect = useCallback<NonNullable<UseEditorMenu['onSelect']>>(({ view, item }) => {
+    void item.onSelect?.({ view, head: view.state.selection.main.head });
   }, []);
 
-  const handleCancel = useCallback<NonNullable<UsePopoverMenu['onCancel']>>(({ view }) => {
+  const handleCancel = useCallback<NonNullable<UseEditorMenu['onCancel']>>(({ view }) => {
     // Delete trigger.
     const { range, trigger } = view.state.field(popoverStateField) ?? {};
     if (range && trigger) {
