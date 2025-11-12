@@ -18,7 +18,7 @@ export const Fallback = () => {
         role='alert'
         className={mx(
           errorText,
-          'border border-error-400/50 rounded-md flex items-center justify-center p-8 font-normal text-lg',
+          'border border-roseFill rounded-md flex items-center justify-center p-8 font-normal text-lg',
         )}
       >
         {t('plugin error message')}

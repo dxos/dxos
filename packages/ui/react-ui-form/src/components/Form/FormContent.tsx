@@ -6,7 +6,7 @@ import * as Function from 'effect/Function';
 import * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
 import * as StringEffect from 'effect/String';
-import React, { forwardRef, useMemo } from 'react';
+import React, { Component, type PropsWithChildren, type ReactNode, forwardRef, useMemo } from 'react';
 
 import { createJsonPath, findNode, getDiscriminatedType, isDiscriminatedUnion } from '@dxos/effect';
 import { type ThemedClassName } from '@dxos/react-ui';
@@ -302,17 +302,18 @@ export const FormFields = forwardRef<HTMLDivElement, FormFieldsProps>(
         {properties
           .map((property) => {
             return (
-              <FormField
-                key={property.name}
-                property={property}
-                path={[...(path ?? []), property.name]}
-                readonly={readonly}
-                projection={projection}
-                onQueryRefOptions={onQueryRefOptions}
-                lookupComponent={lookupComponent}
-                Custom={Custom}
-                {...props}
-              />
+              <ErrorBoundary key={property.name} path={[...(path ?? []), property.name]}>
+                <FormField
+                  property={property}
+                  path={[...(path ?? []), property.name]}
+                  readonly={readonly}
+                  projection={projection}
+                  onQueryRefOptions={onQueryRefOptions}
+                  lookupComponent={lookupComponent}
+                  Custom={Custom}
+                  {...props}
+                />
+              </ErrorBoundary>
             );
           })
           .filter(isTruthy)}
@@ -320,3 +321,42 @@ export const FormFields = forwardRef<HTMLDivElement, FormFieldsProps>(
     );
   },
 );
+
+type ErrorState = {
+  error: Error | undefined;
+};
+
+type ErrorBoundaryProps = PropsWithChildren<{
+  path?: (string | number)[];
+}>;
+
+class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorState> {
+  static getDerivedStateFromError(error: Error): { error: Error } {
+    return { error };
+  }
+
+  override state = { error: undefined };
+
+  override componentDidUpdate(prevProps: ErrorBoundaryProps): void {
+    if (prevProps.path !== this.props.path) {
+      this.resetError();
+    }
+  }
+
+  override render(): ReactNode {
+    if (this.state.error) {
+      return (
+        <div className='flex gap-2 border border-roseFill font-mono text-sm'>
+          <span className='bg-roseFill text-surfaceText pli-1 font-thin'>ERROR</span>
+          {String(this.props.path?.join('.'))}
+        </div>
+      );
+    }
+
+    return this.props.children;
+  }
+
+  private resetError(): void {
+    this.setState({ error: undefined });
+  }
+}

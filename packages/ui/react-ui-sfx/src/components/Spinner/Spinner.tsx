@@ -26,7 +26,7 @@ export const Spinner = forwardRef<HTMLDivElement, SpinnerProps>(
           className={mx(
             'flex shrink-0 cursor-pointer',
             getSize(size),
-            state === 'error' ? 'bg-rose-700 border-2 border-rose-500' : 'bg-primary-500',
+            state === 'error' ? 'bg-rose-700 border-2 border-roseFill' : 'bg-primary-400',
             classNames,
           )}
           transition={{
