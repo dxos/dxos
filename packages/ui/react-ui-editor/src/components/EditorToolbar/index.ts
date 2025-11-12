@@ -3,10 +3,6 @@
 //
 
 export * from './EditorToolbar';
-export {
-  type EditorToolbarState,
-  type EditorToolbarActionGraphProps,
-  useEditorToolbarState,
-  createEditorAction,
-  createEditorActionGroup,
-} from './util';
+
+export { type EditorToolbarState, useEditorToolbar } from './useEditorToolbar';
+export { createEditorAction, createEditorActionGroup } from './actions';
