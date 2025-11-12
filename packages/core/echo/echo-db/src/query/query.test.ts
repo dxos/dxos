@@ -403,7 +403,7 @@ describe('Query', () => {
       await db.flush({ indexes: true });
 
       const assertQueries = async (db: EchoDatabase) => {
-        await assertQuery(db, Filter.type(ContactV1), [contactV1, contactV2]);
+        await assertQuery(db, Filter.type(ContactV1), [contactV1]);
         await assertQuery(db, Filter.type(ContactV1), [contactV1]);
         await assertQuery(db, Filter.type(ContactV2), [contactV2]);
         await assertQuery(db, Filter.typeDXN(DXN.parse('dxn:type:example.com/type/Person')), [contactV1, contactV2]);
