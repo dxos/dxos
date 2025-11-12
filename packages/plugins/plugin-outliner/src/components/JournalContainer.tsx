@@ -19,6 +19,8 @@ export const JournalContainer = ({
   showCalendar = true,
 }: SurfaceComponentProps<Journal.Journal, { showCalendar?: boolean }>) => {
   const controllerRef = useRef<CalendarController>(null);
+
+  // TODO(burdon): Instead of media query should check physical geometry of plank.
   const [isNotMobile] = useMediaQuery('md');
 
   const handleSelect = useCallback<NonNullable<JournalProps['onSelect']>>(({ date }) => {
