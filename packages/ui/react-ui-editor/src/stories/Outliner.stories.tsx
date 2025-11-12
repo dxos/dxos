@@ -10,7 +10,7 @@ import { withAttention } from '@dxos/react-ui-attention/testing';
 
 import { type EditorController, type EditorMenuGroup, EditorMenuProvider } from '../components';
 import { deleteItem, hashtag, listItemToString, outliner, treeFacet } from '../extensions';
-import { str } from '../testing';
+import { str } from '../util';
 
 import { EditorStory } from './components';
 

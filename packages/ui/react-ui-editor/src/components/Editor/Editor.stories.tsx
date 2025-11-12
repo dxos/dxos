@@ -20,8 +20,9 @@ import { createMenuGroup } from '../EditorMenuProvider';
 
 import { Editor, type EditorContentProps } from './Editor';
 
+// TODO(burdon): PreviewPopoverProvider (MarkdownStream, Preview story).
 // TODO(burdon): Adapt Markdown plugin to use new Editor (plan first to check fit).
-// TODO(burdon): Remove redundent hooks and simplify props.
+// TODO(burdon): Remove redundant hooks and simplify props.
 
 faker.seed(1234);
 

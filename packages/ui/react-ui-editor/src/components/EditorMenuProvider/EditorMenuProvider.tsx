@@ -55,7 +55,6 @@ export const EditorMenuProvider = ({
 }: EditorMenuProviderProps) => {
   const { tx } = useThemeContext();
   const triggerRef = useRef<HTMLButtonElement | null>(null);
-  const [root, setRoot] = useState<HTMLDivElement | null>(null);
 
   const viewRef = useDynamicRef(view);
   const [open, setOpen] = useControllableState({
@@ -67,6 +66,7 @@ export const EditorMenuProvider = ({
     },
   });
 
+  const [root, setRoot] = useState<HTMLDivElement | null>(null);
   useEffect(() => {
     if (!root) {
       return;
@@ -106,9 +106,12 @@ export const EditorMenuProvider = ({
 
   const menuGroups = groups?.filter((group) => group.items.length > 0) ?? [];
 
+  // TODO(burdon): Reconcile with PreviewPopover.tsx
   return (
     <Popover.Root modal={false} open={open} onOpenChange={setOpen}>
       <Popover.VirtualTrigger virtualRef={triggerRef} />
+
+      {/* Menu. */}
       <Popover.Portal>
         <Popover.Content
           align='start'
@@ -136,6 +139,7 @@ export const EditorMenuProvider = ({
         </Popover.Content>
       </Popover.Portal>
 
+      {/* Content */}
       <div ref={setRoot} role='none' className='contents'>
         {children}
       </div>

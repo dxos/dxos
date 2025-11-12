@@ -16,7 +16,7 @@ import { Card } from '@dxos/react-ui-stack';
 import { hoverableControlItem, hoverableControlItemTransition, hoverableControls } from '@dxos/react-ui-theme';
 import { trim } from '@dxos/util';
 
-import { type EditorController } from '../components';
+import { type EditorController, EditorPreviewProvider, useEditorPreview } from '../components';
 import {
   type PreviewBlock,
   type PreviewLinkRef,
@@ -25,7 +25,6 @@ import {
   image,
   preview,
 } from '../extensions';
-import { PreviewPopoverProvider, usePreviewPopover } from '../testing';
 
 import { EditorStory } from './components';
 
@@ -51,7 +50,7 @@ const useRefTarget = (link: PreviewLinkRef): PreviewLinkTarget | undefined => {
 };
 
 const PreviewCard = () => {
-  const { target } = usePreviewPopover('PreviewCard');
+  const { target } = useEditorPreview('PreviewCard');
   return (
     <Popover.Portal>
       <Popover.Content onOpenAutoFocus={(event) => event.preventDefault()}>
@@ -218,16 +217,17 @@ export const Default: Story = {
       ];
     }, []);
 
+    // TODO(burdon): Editor.Root
     // TODO(burdon): Ranges must be sorted error (decorate.enter).
     return (
-      <PreviewPopoverProvider onLookup={handlePreviewLookup}>
+      <EditorPreviewProvider onLookup={handlePreviewLookup}>
         <EditorStory ref={setController} text={text} extensions={extensions} />
         <PreviewCard />
         {controller?.view &&
           previewBlocks.map(({ link, el }) => (
             <PreviewBlockComponent key={link.ref} link={link} el={el} view={controller.view!} />
           ))}
-      </PreviewPopoverProvider>
+      </EditorPreviewProvider>
     );
   },
 };

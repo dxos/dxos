@@ -6,8 +6,8 @@ import { markdown, markdownLanguage } from '@codemirror/lang-markdown';
 import { EditorState } from '@codemirror/state';
 import { beforeEach, describe, test } from 'vitest';
 
-import { str } from '../../testing';
 import { type Range } from '../../types';
+import { str } from '../../util';
 
 import { type Item, listItemToString, outlinerTree, treeFacet } from './tree';
 

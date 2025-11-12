@@ -26,7 +26,7 @@ import {
   linkSlashCommands,
   useEditorMenu,
 } from '../components';
-import { str } from '../testing';
+import { str } from '../util';
 
 import { EditorStory } from './components';
 
