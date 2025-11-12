@@ -207,7 +207,7 @@ export const systemSememes = {
   },
   accentSurfaceText: {
     light: ['neutral', 0],
-    dark: ['neutral', 900],
+    dark: ['neutral', 0],
   },
   accentTextHover: {
     light: ['primary', 500],

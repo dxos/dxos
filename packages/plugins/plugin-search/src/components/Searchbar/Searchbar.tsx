@@ -2,66 +2,48 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { type KeyboardEvent, useEffect, useRef, useState } from 'react';
+import React, { type KeyboardEvent, useCallback, useRef } from 'react';
 
-import { Icon, Input, type TextInputProps } from '@dxos/react-ui';
+import { Input, type TextInputProps, type ThemedClassName, Toolbar, useControlledState } from '@dxos/react-ui';
 
-export type SearchbarProps = Pick<TextInputProps, 'variant' | 'placeholder'> & {
-  classes?: {
-    root?: string;
-    input?: string;
-  };
-  value?: string;
-  onChange?: (text?: string) => void;
-  onSubmit?: (text?: string) => void;
-  delay?: number;
-};
+export type SearchbarProps = ThemedClassName<
+  Pick<TextInputProps, 'variant' | 'placeholder'> & {
+    delay?: number;
+    value?: string;
+    onChange?: (text?: string) => void;
+    onSubmit?: (text?: string) => void;
+  }
+>;
 
-export const Searchbar = ({ classes, variant, placeholder, value, onChange, onSubmit }: SearchbarProps) => {
+export const Searchbar = ({ classNames, variant, placeholder, value, onChange, onSubmit }: SearchbarProps) => {
+  const [text, setText] = useControlledState(value, onChange);
   const inputRef = useRef<HTMLInputElement>(null);
-  const [text, setText] = useState(value);
-  useEffect(() => {
-    setText(value);
-  }, [value]);
-  const handleChange = (text?: string) => {
-    setText(text);
-    onChange?.(text);
-  };
 
-  const handleReset = () => {
-    handleChange(undefined);
-    inputRef.current?.focus();
-  };
-
-  const handleKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
-    switch (event.key) {
-      case 'Enter':
-        onSubmit?.(text);
-        break;
-      case 'Escape':
-        handleReset();
-        break;
-    }
-  };
+  const handleKeyDown = useCallback(
+    (event: KeyboardEvent<HTMLInputElement>) => {
+      switch (event.key) {
+        case 'Enter':
+          onSubmit?.(text);
+          break;
+      }
+    },
+    [text, onSubmit],
+  );
 
   return (
-    <div className='flex shrink-0is-full items-center pli-1 pbs-1'>
+    <Toolbar.Root classNames={classNames}>
       <Input.Root>
         <Input.TextInput
           ref={inputRef}
           placeholder={placeholder}
+          autoFocus
           variant={variant}
           value={text ?? ''}
-          classNames={['pl-3 pr-10', classes?.input]}
-          onChange={({ target }) => handleChange(target.value)}
+          classNames='pl-3 pr-10'
+          onChange={({ target }) => setText(target.value)}
           onKeyDown={handleKeyDown}
         />
-
-        {/* TODO(burdon): Margin should be density specific. */}
-        <div role='button' className='-ml-7 p-0 cursor-pointer' onClick={handleReset}>
-          <Icon icon='ph--magnifying-glass--regular' size={5} />
-        </div>
       </Input.Root>
-    </div>
+    </Toolbar.Root>
   );
 };

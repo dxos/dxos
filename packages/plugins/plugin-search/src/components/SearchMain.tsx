@@ -6,6 +6,7 @@ import React, { type FC, useState } from 'react';
 
 import { log } from '@dxos/log';
 import { useClient } from '@dxos/react-client';
+import { StackItem } from '@dxos/react-ui-stack';
 import { Filter, type Space, useQuery } from '@dxos/react-client/echo';
 import { type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { activeSurface, mx } from '@dxos/react-ui-theme';
@@ -17,39 +18,31 @@ import { meta } from '../meta';
 import { Searchbar } from './Searchbar';
 import { SearchResults } from './SearchResults';
 
-export const SearchMain: FC<ThemedClassName<{ space: Space }>> = ({ classNames, space }) => {
+export const SearchMain = ({ space }: { space: Space }) => {
   const { t } = useTranslation(meta.id);
   const client = useClient();
   const { setMatch } = useGlobalSearch();
   const [query, setQuery] = useState<string>();
-  // TODO(burdon): UX to select all spaces.
+  // TODO(burdon): Option to search across spaces.
   const allSpaces = false;
-
-  // TODO(burdon): Returns ALL objects (e.g., incl. Text objects that are fields of parent objects).
   const objects = useQuery(allSpaces ? client.spaces : space, Filter.everything());
   const results = useGlobalSearchResults(objects);
 
-  const {
-    runSearch,
-    results: webResults,
-    isLoading,
-  } = useWebSearch({
-    query,
-  });
-
-  const [selected, setSelected] = useState<string>();
+  const { runSearch, results: webResults, isLoading } = useWebSearch({ query });
 
   // TODO(burdon): Activate and/or filter current main (set context).
+  const [selected, setSelected] = useState<string>();
   const handleSelect = (id: string) => {
     setSelected((selected) => (selected === id ? undefined : id));
   };
 
   const allResults = [...results, ...webResults];
-  log.info('results', { results, webResults });
+  log('results', { results: results.length, webResults: webResults.length });
 
   return (
-    <div className={mx('flex flex-col grow bs-full overflow-hidden', classNames)}>
+    <StackItem.Content toolbar>
       <Searchbar
+        classNames='pli-2'
         placeholder={t('search placeholder')}
         onChange={(text) => {
           setQuery(text);
@@ -63,6 +56,6 @@ export const SearchMain: FC<ThemedClassName<{ space: Space }>> = ({ classNames, 
           <SearchResults items={allResults} selected={selected} onSelect={handleSelect} />
         </div>
       )}
-    </div>
+    </StackItem.Content>
   );
 };
