@@ -205,21 +205,21 @@ export const systemSememes = {
     light: ['primary', 550],
     dark: ['primary', 400],
   },
+  accentSurfaceText: {
+    light: ['neutral', 0],
+    dark: ['neutral', 900],
+  },
   accentTextHover: {
     light: ['primary', 500],
     dark: ['primary', 350],
-  },
-  neutralFocusIndicator: {
-    light: ['neutral', 300],
-    dark: ['neutral', 450],
   },
   accentFocusIndicator: {
     light: ['primary', 300],
     dark: ['primary', 450],
   },
-  accentSurfaceText: {
-    light: ['neutral', 0],
-    dark: ['neutral', 0],
+  neutralFocusIndicator: {
+    light: ['neutral', 300],
+    dark: ['neutral', 550],
   },
 } satisfies ColorSememes;
 
