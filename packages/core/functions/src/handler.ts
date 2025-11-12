@@ -8,7 +8,8 @@ import * as Schema from 'effect/Schema';
 import { type AiService } from '@dxos/ai';
 import { Obj, Type } from '@dxos/echo';
 import { type DatabaseService } from '@dxos/echo-db';
-import { assertArgument } from '@dxos/invariant';
+import { failedInvariant, assertArgument } from '@dxos/invariant';
+import { Context } from 'effect';
 
 import {
   type CredentialsService,
@@ -43,7 +44,7 @@ export type FunctionServices =
 /**
  * Function handler.
  */
-export type FunctionHandler<TData = {}, TOutput = any> = (params: {
+export type FunctionHandler<TData = {}, TOutput = any, S extends FunctionServices = never> = (params: {
   /**
    * Services and context available to the function.
    */
@@ -55,7 +56,7 @@ export type FunctionHandler<TData = {}, TOutput = any> = (params: {
    * This will be the payload from the trigger or other data passed into the function in a workflow.
    */
   data: TData;
-}) => TOutput | Promise<TOutput> | Effect.Effect<TOutput, any, FunctionServices>;
+}) => TOutput | Promise<TOutput> | Effect.Effect<TOutput, any, S>;
 
 /**
  * Function context.
@@ -66,14 +67,20 @@ export interface FunctionContext {
 
 const typeId = Symbol.for('@dxos/functions/FunctionDefinition');
 
-export type FunctionDefinition<T = any, O = any> = {
+export type FunctionDefinition<T = any, O = any, S extends FunctionServices = never> = {
   [typeId]: true;
   key: string;
   name: string;
   description?: string;
   inputSchema: Schema.Schema<T, any>;
   outputSchema?: Schema.Schema<O, any>;
-  handler: FunctionHandler<T, O>;
+
+  /**
+   * Keys of the required services.
+   */
+  services: readonly string[];
+
+  handler: FunctionHandler<T, O, S>;
   meta?: {
     /**
      * Tools that are projected from functions have this annotation.
@@ -94,13 +101,16 @@ export type FunctionProps<T, O> = {
   description?: string;
   inputSchema: Schema.Schema<T, any>;
   outputSchema?: Schema.Schema<O, any>;
-  handler: FunctionHandler<T, O>;
+  // TODO(dmaretskyi): This currently doesn't cause a compile-time error if the handler requests a service that is not specified
+  services?: readonly Context.Tag<any, any>[];
+
+  handler: FunctionHandler<T, O, FunctionServices>;
 };
 
 // TODO(dmaretskyi): Output type doesn't get typechecked.
 export const defineFunction: {
-  <I, O>(params: FunctionProps<I, O>): FunctionDefinition<I, O>;
-} = ({ key, name, description, inputSchema, outputSchema = Schema.Any, handler }) => {
+  <I, O>(params: FunctionProps<I, O>): FunctionDefinition<I, O, FunctionServices>;
+} = ({ key, name, description, inputSchema, outputSchema = Schema.Any, handler, services }) => {
   if (!Schema.isSchema(inputSchema)) {
     throw new Error('Input schema must be a valid schema');
   }
@@ -145,7 +155,18 @@ export const defineFunction: {
     inputSchema,
     outputSchema,
     handler: handlerWithSpan,
+    services: !services ? [] : getServiceKeys(services),
   } satisfies FunctionDefinition.Any;
+};
+
+const getServiceKeys = (services: readonly Context.Tag<any, any>[]) => {
+  return services.map((tag: any) => {
+    if (typeof tag.key === 'string') {
+      return tag.key;
+    }
+    console.log(tag);
+    failedInvariant();
+  });
 };
 
 export const FunctionDefinition = {
@@ -176,6 +197,7 @@ export const serializeFunction = (functionDef: FunctionDefinition<any, any>): Fu
     description: functionDef.description,
     inputSchema: Type.toJsonSchema(functionDef.inputSchema),
     outputSchema: !functionDef.outputSchema ? undefined : Type.toJsonSchema(functionDef.outputSchema),
+    services: functionDef.services,
   });
   if (functionDef.meta?.deployedFunctionId) {
     setUserFunctionIdInMetadata(Obj.getMeta(fn), functionDef.meta.deployedFunctionId);
@@ -194,6 +216,7 @@ export const deserializeFunction = (functionObj: Function.Function): FunctionDef
     outputSchema: !functionObj.outputSchema ? undefined : Type.toEffectSchema(functionObj.outputSchema),
     // TODO(dmaretskyi): This should throw error.
     handler: () => {},
+    services: functionObj.services ?? [],
     meta: {
       deployedFunctionId: getUserFunctionIdInMetadata(Obj.getMeta(functionObj)),
     },
