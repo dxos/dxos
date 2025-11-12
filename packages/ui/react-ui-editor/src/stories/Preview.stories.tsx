@@ -217,7 +217,7 @@ export const Default: Story = {
       ];
     }, []);
 
-    // TODO(burdon): Editor.Root
+    // TODO(burdon): Migrate to Editor.Root.
     // TODO(burdon): Ranges must be sorted error (decorate.enter).
     return (
       <EditorPreviewProvider onLookup={handlePreviewLookup}>

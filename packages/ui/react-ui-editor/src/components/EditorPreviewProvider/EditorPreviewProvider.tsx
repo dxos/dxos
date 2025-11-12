@@ -6,7 +6,7 @@ import { createContext } from '@radix-ui/react-context';
 import React, { type PropsWithChildren, type RefObject, useCallback, useEffect, useRef, useState } from 'react';
 
 import { addEventListener } from '@dxos/async';
-import { type DxAnchorActivate, Popover } from '@dxos/react-ui';
+import { DX_ANCHOR_ACTIVATE, type DxAnchorActivate, Popover } from '@dxos/react-ui';
 
 import { type PreviewLinkRef, type PreviewLinkTarget } from '../../extensions';
 
@@ -22,7 +22,10 @@ export type EditorPreviewProviderProps = PropsWithChildren<{
   onLookup?: (link: PreviewLinkRef) => Promise<PreviewLinkTarget | null | undefined>;
 }>;
 
-// TOOD(burdon): Reconcile with PreviewPlugin?
+/**
+ * NOTE: In Composer, the DeckPlugin provides the Popover.Root as part of the DeckLayout.
+ */
+// TOOD(burdon): Reconcile with PreviewPlugin.
 export const EditorPreviewProvider = ({ children, onLookup }: EditorPreviewProviderProps) => {
   const triggerRef = useRef<HTMLElement | null>(null);
   const [value, setValue] = useState<EditorPreviewPopoverValue>({});
@@ -56,7 +59,7 @@ export const EditorPreviewProvider = ({ children, onLookup }: EditorPreviewProvi
       return;
     }
 
-    return addEventListener(root, 'dx-anchor-activate' as any, handleActivate, {
+    return addEventListener(root, DX_ANCHOR_ACTIVATE as any, handleActivate, {
       capture: true,
       passive: false,
     });

@@ -9,6 +9,7 @@ import React, { Fragment, type PropsWithChildren, useCallback, useEffect, useRef
 import { addEventListener } from '@dxos/async';
 import { invariant } from '@dxos/invariant';
 import {
+  DX_ANCHOR_ACTIVATE,
   type DxAnchorActivate,
   Icon,
   Popover,
@@ -75,7 +76,7 @@ export const EditorMenuProvider = ({
     // Listen for trigger.
     return addEventListener(
       root,
-      'dx-anchor-activate' as any,
+      DX_ANCHOR_ACTIVATE as any,
       (event: DxAnchorActivate) => {
         const { trigger, refId } = event;
 
@@ -106,9 +107,6 @@ export const EditorMenuProvider = ({
 
   const menuGroups = groups?.filter((group) => group.items.length > 0) ?? [];
 
-  // TODO(burdon): Reconcile with EditorPreviewProvider.tsx and Editor.Blocks.
-  //  Generalize EditorMenuProvider and popover for Menu or Popover (preview).
-  //  Create diagram.
   return (
     <Popover.Root modal={false} open={open} onOpenChange={setOpen}>
       <Popover.VirtualTrigger virtualRef={triggerRef} />
