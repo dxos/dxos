@@ -11,14 +11,14 @@ import { ghostHover } from '@dxos/react-ui-theme';
 import { type SearchResult } from '../../types';
 
 export type SearchResultsProps = {
-  match?: RegExp;
   items: SearchResult[];
+  match?: RegExp;
   selected?: string;
   onSelect?: (id: string) => void;
 };
 
 // TODO(burdon): Key cursor up/down.
-export const SearchResults = ({ items, selected, onSelect }: SearchResultsProps) => {
+export const SearchResults = ({ items }: SearchResultsProps) => {
   return (
     <div className='flex flex-col grow overflow-y-auto'>
       <div className='flex flex-col p-2 gap-2'>
@@ -41,11 +41,7 @@ export const SearchItem = forwardRef<HTMLDivElement, SearchItemProps>((item, for
       classNames={['mx-2 mt-2 cursor-pointer', selected && '!bg-activeSurface', ghostHover]}
       onClick={() => onSelect?.(id)}
     >
-      {objectType && (
-        <>
-          <div className='text-xs text-neutral-400 ml-4'>{objectType}</div>
-        </>
-      )}
+      {objectType && <div className='text-xs text-neutral-400 ml-4'>{objectType}</div>}
       <Card.Heading>{label ?? 'Untitled'}</Card.Heading>
       {snippet && <Snippet text={snippet} match={match} />}
     </Card.StaticRoot>
