@@ -158,7 +158,7 @@ export type SchemaMeta = TypeMeta & { id: string };
  * Identifies a schema as a schema for a hidden system type.
  */
 export const SystemAnnotationId = Symbol.for('@dxos/schema/annotation/System');
-export const SystemAnnotation = createAnnotationHelper<boolean>(SystemAnnotationId)
+export const SystemAnnotation = createAnnotationHelper<boolean>(SystemAnnotationId);
 
 /**
  * Identifies label property or JSON path expression.

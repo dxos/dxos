@@ -12,12 +12,12 @@ import { type Client, useClient } from '@dxos/react-client';
 import { Filter, type Space, useQuery, useSchema } from '@dxos/react-client/echo';
 import { useClientProvider } from '@dxos/react-client/testing';
 import { type ProjectionModel, getTypenameFromQuery } from '@dxos/schema';
+import { getDebugName } from '@dxos/util';
 
 import { type TableController } from '../components';
 import { useAddRow, useProjectionModel, useTableModel } from '../hooks';
 import { type TableModel, TablePresentation } from '../model';
 import { Table } from '../types';
-import { getDebugName } from '@dxos/util';
 
 faker.seed(0); // NOTE(ZaymonFC): Required for smoke tests.
 
