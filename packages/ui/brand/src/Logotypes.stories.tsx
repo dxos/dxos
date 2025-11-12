@@ -34,24 +34,24 @@ export const Default: Story = {
       <div className='absolute flex is-full bs-full items-center justify-center'>
         <div className='flex grid grid-cols-2 gap-16'>
           <Cell>
-            <DXOSType className='w-[256px]' />
+            <DXOSType className='is-[256px]' />
           </Cell>
           <Cell dark>
-            <DXOSType className='w-[128px]' />
+            <DXOSType className='is-[128px]' />
           </Cell>
 
           <Cell>
-            <DXOSHorizontalType className='w-[256px]' />
+            <DXOSHorizontalType className='is-[256px]' />
           </Cell>
           <Cell dark>
-            <DXOSHorizontalType className='w-[128px]' />
+            <DXOSHorizontalType className='is-[128px]' />
           </Cell>
 
           <Cell>
-            <DXOSVerticalType className='w-[256px]' />
+            <DXOSVerticalType className='is-[256px]' />
           </Cell>
           <Cell dark>
-            <DXOSVerticalType className='w-[128px]' />
+            <DXOSVerticalType className='is-[128px]' />
           </Cell>
         </div>
       </div>

@@ -18,7 +18,7 @@ const MIN_GALLERY_HEIGHT = 250;
 
 const DEFAULT_GAP = 8;
 
-const maxImageSize = 'w-[2560px] h-[1440px]';
+const maxImageSize = 'is-[2560px] bs-[1440px]';
 
 /**
  * Props for the ResponsiveGrid component.
@@ -176,7 +176,7 @@ export const ResponsiveGrid = <T extends object = any>({
                     key={getId(item)}
                     {...{ 'data-grid-item': getId(item) }}
                     className={mx(
-                      'aspect-video max-bs-full max-is-full w-auto h-auto',
+                      'aspect-video max-bs-full max-is-full is-auto bs-auto',
                       debug && 'border border-primary-500',
                     )}
                   />

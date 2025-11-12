@@ -8,7 +8,7 @@ import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
 const trail = [
-  'absolute z-0 aspect-[2/1] w-16',
+  'absolute z-0 aspect-[2/1] is-16',
   'bg-[radial-gradient(at_100%_50%,_theme(colors.sky.500),_transparent_70%)]',
   '[offset-anchor:100%_50%] [offset-path:border-box]',
 ];

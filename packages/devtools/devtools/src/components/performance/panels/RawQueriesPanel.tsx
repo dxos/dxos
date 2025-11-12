@@ -23,7 +23,7 @@ export const RawQueriesPanel = ({ queries, ...props }: CustomPanelProps<{ querie
               <td className='p-1 overflow-hidden'>
                 <pre className='font-2xs font-thin'>{key}</pre>
               </td>
-              <td className='p-1 w-[80px] text-right'>{queries.get(key)!.toLocaleString()}</td>
+              <td className='p-1 is-[80px] text-right'>{queries.get(key)!.toLocaleString()}</td>
             </tr>
           ))}
         </tbody>

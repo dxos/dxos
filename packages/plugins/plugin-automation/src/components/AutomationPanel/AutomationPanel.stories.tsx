@@ -20,7 +20,7 @@ const DefaultStory = () => {
   const space = spaces[1];
 
   return (
-    <div className='w-96'>
+    <div className='is-96'>
       <AutomationPanel space={space} />
     </div>
   );

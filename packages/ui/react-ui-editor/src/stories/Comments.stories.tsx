@@ -72,7 +72,7 @@ export const Comments: Story = {
 };
 
 const Key: FC<{ char: string }> = ({ char }) => (
-  <span className='flex justify-center items-center w-[24px] h-[24px] rounded text-xs bg-neutral-200 text-black'>
+  <span className='flex justify-center items-center is-[24px] bs-[24px] rounded text-xs bg-neutral-200 text-black'>
     {char}
   </span>
 );
