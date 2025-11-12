@@ -2,14 +2,14 @@
 // Copyright 2023 DXOS.org
 //
 
+import type * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
 import { type AiService } from '@dxos/ai';
 import { Obj, Type } from '@dxos/echo';
 import { type DatabaseService } from '@dxos/echo-db';
-import { failedInvariant, assertArgument } from '@dxos/invariant';
-import { Context } from 'effect';
+import { assertArgument, failedInvariant } from '@dxos/invariant';
 
 import {
   type CredentialsService,

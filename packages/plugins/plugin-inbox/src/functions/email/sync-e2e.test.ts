@@ -2,15 +2,16 @@
 // Copyright 2025 DXOS.org
 //
 
-import { describe, expect, test } from 'vitest';
+import { describe, test } from 'vitest';
 
 import { Client } from '@dxos/client';
 import { configPreset } from '@dxos/config';
+import { Obj } from '@dxos/echo';
 import { FunctionsServiceClient } from '@dxos/functions-runtime/edge';
 import { bundleFunction } from '@dxos/functions-runtime/native';
-import { Mailbox } from '../../types';
-import { Obj } from '@dxos/echo';
 import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
+
+import { Mailbox } from '../../types';
 
 describe.runIf(process.env.DX_TEST_TAGS?.includes('functions-e2e'))('Functions deployment', () => {
   test('deployes inbox sync function', { timeout: 120_000 }, async () => {

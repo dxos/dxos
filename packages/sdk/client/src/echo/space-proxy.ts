@@ -6,13 +6,13 @@ import * as Schema from 'effect/Schema';
 import isEqualWith from 'lodash.isequalwith';
 
 import {
-  asyncTimeout,
   Event,
   MulticastObservable,
-  scheduleTaskInterval,
   Trigger,
+  asyncTimeout,
   scheduleMicroTask,
   scheduleTask,
+  scheduleTaskInterval,
   synchronized,
 } from '@dxos/async';
 import { type ClientServicesProvider, PropertiesType, type Space, type SpaceInternal } from '@dxos/client-protocol';
@@ -32,9 +32,9 @@ import {
   type EchoClient,
   type EchoDatabase,
   type EchoDatabaseImpl,
-  type SpaceSyncState,
   Filter,
   type QueueFactory,
+  type SpaceSyncState,
 } from '@dxos/echo-db';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey, type SpaceId } from '@dxos/keys';
@@ -591,7 +591,7 @@ export class SpaceProxy implements Space, CustomInspectable {
       throw new Error('Edge replication is disabled');
     }
 
-    return await new Promise<void>(async (resolve, reject) => {
+    return await new Promise<void>((resolve, reject) => {
       scheduleTask(
         ctx,
         () => {
@@ -627,7 +627,9 @@ export class SpaceProxy implements Space, CustomInspectable {
         1_000,
       );
 
-      checkSyncState(await this._db.getSyncState());
+      scheduleMicroTask(ctx, async () => {
+        checkSyncState(await this._db.getSyncState());
+      });
     });
   }
 

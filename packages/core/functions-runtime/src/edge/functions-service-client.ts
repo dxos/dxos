@@ -1,12 +1,18 @@
-import { type EdgeHttpClient } from '@dxos/edge-client';
-import { Client } from '@dxos/client';
-import { createEdgeClient } from './functions';
-import { type SpaceId, PublicKey } from '@dxos/keys';
-import { FunctionError, FUNCTIONS_META_KEY, Function } from '@dxos/functions';
+//
+// Copyright 2025 DXOS.org
+//
+
+import { type Client } from '@dxos/client';
 import { Obj } from '@dxos/echo';
+import { type EdgeHttpClient } from '@dxos/edge-client';
+import { FUNCTIONS_META_KEY, Function, FunctionError } from '@dxos/functions';
+import { type PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { safeParseJson } from '@dxos/util';
+
 import { FunctionServiceError } from '../errors';
+
+import { createEdgeClient } from './functions';
 
 export type FunctionDeployOptions = {
   name?: string;

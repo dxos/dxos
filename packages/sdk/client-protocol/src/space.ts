@@ -4,7 +4,7 @@
 
 import { type CleanupFn, type MulticastObservable } from '@dxos/async';
 import { type SpecificCredential } from '@dxos/credentials';
-import { type SpaceSyncState, type AnyLiveObject, type EchoDatabase, type QueueFactory } from '@dxos/echo-db';
+import { type AnyLiveObject, type EchoDatabase, type QueueFactory, type SpaceSyncState } from '@dxos/echo-db';
 import { type PublicKey, type SpaceId } from '@dxos/keys';
 import {
   type Contact,
