@@ -3,7 +3,7 @@
 //
 
 import { Capabilities, contributes, createResolver } from '@dxos/app-framework';
-import { Obj, Ref } from '@dxos/echo';
+import { Obj } from '@dxos/echo';
 import { Task } from '@dxos/types';
 
 import { Journal, Outline, OutlineAction } from '../types';
@@ -14,10 +14,7 @@ export default () =>
       intent: OutlineAction.CreateJournal,
       resolve: ({ name }) => ({
         data: {
-          object: Obj.make(Journal.Journal, {
-            name,
-            entries: [Ref.make(Journal.makeEntry())],
-          }),
+          object: Journal.make({ name }),
         },
       }),
     }),
@@ -25,7 +22,7 @@ export default () =>
       intent: OutlineAction.CreateOutline,
       resolve: ({ name }) => ({
         data: {
-          object: Outline.make(name),
+          object: Outline.make({ name }),
         },
       }),
     }),
