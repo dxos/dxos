@@ -37,9 +37,15 @@ describe.runIf(process.env.DX_TEST_TAGS?.includes('functions-e2e'))('Functions d
 
     const mailbox = space.db.add(Mailbox.make({ name: 'test', space }));
 
-    const result = await functionsServiceClient.invoke(func, {
-      mailboxId: mailbox.id,
-    });
+    const result = await functionsServiceClient.invoke(
+      func,
+      {
+        mailboxId: mailbox.id,
+      },
+      {
+        spaceId: space.id,
+      },
+    );
 
     console.log(result);
 
