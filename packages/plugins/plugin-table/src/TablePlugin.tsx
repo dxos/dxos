@@ -6,7 +6,7 @@ import { Capabilities, Events, contributes, createIntent, defineModule, definePl
 import { Type } from '@dxos/echo';
 import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
 import { SpaceCapabilities, SpaceEvents } from '@dxos/plugin-space';
-import { defineObjectForm } from '@dxos/plugin-space/types';
+import { type CreateObjectIntent } from '@dxos/plugin-space/types';
 import { translations as formTranslations } from '@dxos/react-ui-form';
 import { translations as tableTranslations } from '@dxos/react-ui-table';
 import { Table } from '@dxos/react-ui-table/types';
@@ -33,22 +33,11 @@ export const TablePlugin = definePlugin(meta, () => [
           icon: 'ph--table--regular',
           iconHue: 'green',
           comments: 'unanchored',
+          formSchema: CreateTableSchema,
+          createObjectIntent: ((props, options) =>
+            createIntent(TableAction.Create, { ...props, space: options.space })) satisfies CreateObjectIntent,
         },
       }),
-  }),
-  defineModule({
-    id: `${meta.id}/module/object-form`,
-    activatesOn: ClientEvents.SetupSchema,
-    activate: () =>
-      contributes(
-        SpaceCapabilities.ObjectForm,
-        defineObjectForm({
-          objectSchema: Table.Table,
-          formSchema: CreateTableSchema,
-          hidden: true,
-          getIntent: (props, options) => createIntent(TableAction.Create, { ...props, space: options.space }),
-        }),
-      ),
   }),
   defineModule({
     id: `${meta.id}/module/schema`,

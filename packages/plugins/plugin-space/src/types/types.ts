@@ -6,7 +6,7 @@ import * as Schema from 'effect/Schema';
 
 import { type AnyIntentChain } from '@dxos/app-framework';
 import { type Obj, Type } from '@dxos/echo';
-import { type BaseObject, EchoSchema, StoredSchema } from '@dxos/echo/internal';
+import { EchoSchema, StoredSchema } from '@dxos/echo/internal';
 import { type PublicKey } from '@dxos/react-client';
 // TODO(wittjosiah): This pulls in full client.
 import { EchoObjectSchema, ReactiveObjectSchema, type Space, SpaceSchema } from '@dxos/react-client/echo';
@@ -93,6 +93,8 @@ export interface TypedObjectSerializer<T extends Obj.Any = Type.Expando> {
   deserialize(params: { content: string; space: Space; newId?: boolean }): Promise<T>;
 }
 
+export type CreateObjectIntent = (props: any, options: { space: Space }) => AnyIntentChain;
+
 // TODO(burdon): Move to FormatEnum or SDK.
 export const IconAnnotationId = Symbol.for('@dxos/plugin-space/annotation/Icon');
 export const HueAnnotationId = Symbol.for('@dxos/plugin-space/annotation/Hue');
@@ -104,15 +106,6 @@ export const SpaceForm = Schema.Struct({
   // TODO(wittjosiah): Make optional with default value.
   edgeReplication: Schema.Boolean.annotations({ title: 'Enable EDGE Replication' }),
 });
-
-export type ObjectForm<T extends BaseObject = BaseObject> = {
-  objectSchema: Schema.Schema.AnyNoContext;
-  formSchema?: Schema.Schema<T, any>;
-  hidden?: boolean;
-  getIntent: (props: T, options: { space: Space }) => AnyIntentChain;
-};
-
-export const defineObjectForm = <T extends BaseObject>(form: ObjectForm<T>) => form;
 
 export const SPACE_ACTION = `${meta.id}/action`;
 
@@ -221,7 +214,7 @@ export namespace SpaceAction {
     name: Schema.optional(Schema.String),
     typename: Schema.optional(
       Schema.String.annotations({
-        [TypenameAnnotationId]: ['unused-static'],
+        [TypenameAnnotationId]: 'available-static',
       }),
     ),
   });

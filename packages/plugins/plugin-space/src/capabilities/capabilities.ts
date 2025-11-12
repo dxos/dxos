@@ -10,7 +10,7 @@ import { type Collection } from '@dxos/schema';
 import { type DeepReadonly, type Position } from '@dxos/util';
 
 import { meta } from '../meta';
-import { type ObjectForm, type PluginState } from '../types';
+import { type PluginState } from '../types';
 
 export namespace SpaceCapabilities {
   export const State = defineCapability<DeepReadonly<PluginState>>(`${meta.id}/capability/state`);
@@ -29,9 +29,6 @@ export namespace SpaceCapabilities {
     show?: boolean;
   }) => AnyIntentChain;
   export const OnSchemaAdded = defineCapability<OnSchemaAdded>(`${meta.id}/capability/on-schema-added`);
-
-  // TODO(burdon): Should this be view? Forms are UI concepts? (associated with a View/schema).
-  export const ObjectForm = defineCapability<ObjectForm<any>>(`${meta.id}/capability/object-form`);
 
   // TODO(wittjosiah): Replace with migrations, this is not a sustainable solution.
   export type HandleRepair = (params: { space: Space }) => Promise<void>;

@@ -4,8 +4,7 @@
 
 import { Capabilities, Events, contributes, createIntent, defineModule, definePlugin } from '@dxos/app-framework';
 import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
-import { SpaceCapabilities } from '@dxos/plugin-space';
-import { defineObjectForm } from '@dxos/plugin-space/types';
+import { type CreateObjectIntent } from '@dxos/plugin-space/types';
 
 import { BlueprintDefinition, CHESS_BLUEPRINT_KEY, IntentResolver, ReactSurface } from './capabilities';
 import { meta } from './meta';
@@ -28,20 +27,10 @@ export const ChessPlugin = definePlugin(meta, () => [
           icon: 'ph--shield-chevron--regular',
           iconHue: 'amber',
           blueprints: [CHESS_BLUEPRINT_KEY],
+          createObjectIntent: (() => createIntent(ChessAction.Create)) satisfies CreateObjectIntent,
+          addToCollectionOnCreate: true,
         },
       }),
-  }),
-  defineModule({
-    id: `${meta.id}/module/object-form`,
-    activatesOn: ClientEvents.SetupSchema,
-    activate: () =>
-      contributes(
-        SpaceCapabilities.ObjectForm,
-        defineObjectForm({
-          objectSchema: Chess.Game,
-          getIntent: () => createIntent(ChessAction.Create),
-        }),
-      ),
   }),
   defineModule({
     id: `${meta.id}/module/schema`,

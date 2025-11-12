@@ -26,7 +26,7 @@ import { type TreeData } from '@dxos/react-ui-list';
 import { Collection, StoredSchema } from '@dxos/schema';
 
 import { meta } from './meta';
-import { type ObjectForm, SPACE_TYPE, SpaceAction } from './types';
+import { SPACE_TYPE, SpaceAction } from './types';
 
 export const SPACES = `${meta.id}-spaces`;
 export const COMPOSER_SPACE_LOCK = `${meta.id}/lock`;
@@ -491,14 +491,14 @@ export const constructObjectActions = ({
   object,
   graph,
   dispatch,
-  objectForms,
+  resolve,
   deletable = true,
   navigable = false,
 }: {
   object: Obj.Any;
   graph: ReadableGraph;
   dispatch: PromiseIntentDispatcher;
-  objectForms: ObjectForm<any>[];
+  resolve: (typename: string) => Record<string, any>;
   deletable?: boolean;
   navigable?: boolean;
 }) => {
@@ -510,9 +510,9 @@ export const constructObjectActions = ({
   const getId = (id: string) => `${id}/${Obj.getDXN(object).toString()}`;
 
   const systemCollection = Obj.instanceOf(Collection.System, object) ? object : undefined;
-  const matchingObjectForm = systemCollection
-    ? objectForms.find((form) => Type.getTypename(form.objectSchema) === systemCollection.key)
-    : undefined;
+  const metadata = systemCollection ? resolve(systemCollection.key) : {};
+  const createObjectIntent = metadata.createObjectIntent;
+  const formSchema = metadata.formSchema;
 
   const actions: NodeArg<ActionData>[] = [
     ...(Obj.instanceOf(Collection.Collection, object)
@@ -555,13 +555,13 @@ export const constructObjectActions = ({
           },
         ]
       : []),
-    ...(matchingObjectForm
+    ...(createObjectIntent
       ? [
           {
             id: getId(SpaceAction.OpenCreateObject._tag),
             type: ACTION_TYPE,
             data: async () => {
-              if (matchingObjectForm.formSchema) {
+              if (formSchema) {
                 await dispatch(
                   createIntent(SpaceAction.OpenCreateObject, {
                     target: space,
@@ -571,7 +571,7 @@ export const constructObjectActions = ({
               } else {
                 await dispatch(
                   Function.pipe(
-                    matchingObjectForm.getIntent({}, { space }),
+                    createObjectIntent({}, { space }),
                     chain(SpaceAction.AddObject, { target: space, hidden: true }),
                     chain(LayoutAction.Open, { part: 'main' }),
                   ),

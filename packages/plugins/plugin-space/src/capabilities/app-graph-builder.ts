@@ -507,13 +507,10 @@ export default (context: PluginContext) => {
       connector: (node) => {
         let query: QueryResult<Obj.Any> | undefined;
         return Atom.make((get) => {
+          // TODO(wittjosiah): Use schemaRegistry query once it support atom reactivity.
           const schemas = get(context.capabilities(ClientCapabilities.Schema))
             .flat()
             .filter((schema) => ViewAnnotation.get(schema).pipe(Option.getOrElse(() => false)));
-          console.log(
-            'schemas',
-            schemas.map((schema) => Type.getDXN(schema)?.toString()),
-          );
           const filter = Filter.or(...schemas.map((schema) => Filter.type(schema)));
 
           return Function.pipe(
@@ -535,12 +532,7 @@ export default (context: PluginContext) => {
               const typename = Schema.isSchema(schema) ? Type.getTypename(schema as Type.Obj.Any) : schema.typename;
               return get(atomFromQuery(query))
                 .filter((object) =>
-                  get(
-                    atomFromSignal(() => {
-                      console.log('object', object, Obj.getTypeDXN(object));
-                      return getTypenameFromQuery((object as any).view.target?.query.ast) === typename;
-                    }),
-                  ),
+                  get(atomFromSignal(() => getTypenameFromQuery((object as any).view.target?.query.ast) === typename)),
                 )
                 .map((object) =>
                   get(
@@ -566,9 +558,15 @@ export default (context: PluginContext) => {
     createExtension({
       id: `${meta.id}/object-actions`,
       actions: (node) => {
-        let query: QueryResult<View.View> | undefined;
-        return Atom.make((get) =>
-          Function.pipe(
+        let query: QueryResult<Obj.Any> | undefined;
+        return Atom.make((get) => {
+          // TODO(wittjosiah): Use schemaRegistry query once it support atom reactivity.
+          const schemas = get(context.capabilities(ClientCapabilities.Schema))
+            .flat()
+            .filter((schema) => ViewAnnotation.get(schema).pipe(Option.getOrElse(() => false)));
+          const filter = Filter.or(...schemas.map((schema) => Filter.type(schema)));
+
+          return Function.pipe(
             get(node),
             Option.flatMap((node) => {
               const space = getSpace(node.data);
@@ -579,8 +577,9 @@ export default (context: PluginContext) => {
             Option.flatMap(({ space, object }) => {
               const isSchema = Obj.instanceOf(StoredSchema, object);
               if (!query && isSchema) {
-                // TODO(wittjosiah): Support filtering by nested properties (e.g. `query.typename`).
-                query = space.db.query(Filter.type(View.View));
+                // TODO(wittjosiah): Ideally this query would traverse the view reference & filter by the query ast.
+                // TODO(wittjosiah): Remove cast.
+                query = space.db.query(filter) as unknown as QueryResult<Obj.Any>;
               }
 
               let deletable =
@@ -588,10 +587,13 @@ export default (context: PluginContext) => {
                 // Don't allow system collections to be deleted.
                 !Obj.instanceOf(Collection.System, object);
               if (isSchema && query) {
-                const views = get(atomFromQuery(query));
+                const objects = get(atomFromQuery(query));
                 const filteredViews = get(
                   atomFromSignal(() =>
-                    views.filter((view) => getTypenameFromQuery(view.query.ast) === object.typename),
+                    objects.filter(
+                      (viewObject) =>
+                        getTypenameFromQuery((viewObject as any).view.target?.query.ast) === object.typename,
+                    ),
                   ),
                 );
                 deletable = filteredViews.length === 0;
@@ -600,7 +602,6 @@ export default (context: PluginContext) => {
               const [dispatcher] = get(context.capabilities(Capabilities.IntentDispatcher));
               const [appGraph] = get(context.capabilities(Capabilities.AppGraph));
               const [state] = get(context.capabilities(SpaceCapabilities.State));
-              const objectForms = get(context.capabilities(SpaceCapabilities.ObjectForm));
 
               if (!dispatcher || !appGraph || !state) {
                 return Option.none();
@@ -609,7 +610,7 @@ export default (context: PluginContext) => {
                   object,
                   graph: appGraph.graph,
                   dispatch: dispatcher.dispatchPromise,
-                  objectForms,
+                  resolve: resolve(get),
                   deletable,
                   navigable: get(atomFromSignal(() => state.navigableCollections)),
                 });
@@ -617,8 +618,8 @@ export default (context: PluginContext) => {
             }),
             Option.map((params) => constructObjectActions(params)),
             Option.getOrElse(() => []),
-          ),
-        );
+          );
+        });
       },
     }),
 

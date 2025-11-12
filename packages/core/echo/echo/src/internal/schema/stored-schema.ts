@@ -4,7 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { SchemaVersion, SystemAnnotation, Typename } from '../ast';
+import { SchemaVersion, Typename } from '../ast';
 import { JsonSchemaType } from '../json-schema';
 import { EchoObject } from '../object';
 
@@ -21,7 +21,6 @@ export const StoredSchema = Schema.Struct({
     typename: 'dxos.org/type/Schema',
     version: '0.1.0',
   }),
-  SystemAnnotation.set(true),
 );
 
 export type StoredSchema = Schema.Schema.Type<typeof StoredSchema>;

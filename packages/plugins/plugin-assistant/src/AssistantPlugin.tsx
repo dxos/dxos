@@ -9,7 +9,7 @@ import { Sequence } from '@dxos/conductor';
 import { Type } from '@dxos/echo';
 import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
 import { SpaceCapabilities, SpaceEvents } from '@dxos/plugin-space';
-import { defineObjectForm } from '@dxos/plugin-space/types';
+import { type CreateObjectIntent } from '@dxos/plugin-space/types';
 import { HasSubject } from '@dxos/types';
 
 import {
@@ -28,7 +28,7 @@ import {
 import { AssistantEvents } from './events';
 import { meta } from './meta';
 import { translations } from './translations';
-import { Assistant, AssistantAction, ServiceType } from './types';
+import { Assistant, AssistantAction } from './types';
 
 export const AssistantPlugin = definePlugin(meta, () => [
   defineModule({
@@ -58,6 +58,8 @@ export const AssistantPlugin = definePlugin(meta, () => [
         metadata: {
           icon: 'ph--atom--regular',
           iconHue: 'sky',
+          createObjectIntent: ((_, options) =>
+            createIntent(AssistantAction.CreateChat, { space: options.space })) satisfies CreateObjectIntent,
         },
       }),
       contributes(Capabilities.Metadata, {
@@ -65,6 +67,9 @@ export const AssistantPlugin = definePlugin(meta, () => [
         metadata: {
           icon: 'ph--blueprint--regular',
           iconHue: 'sky',
+          formSchema: AssistantAction.BlueprintForm,
+          createObjectIntent: ((props) =>
+            createIntent(AssistantAction.CreateBlueprint, props)) satisfies CreateObjectIntent,
         },
       }),
       contributes(Capabilities.Metadata, {
@@ -72,6 +77,7 @@ export const AssistantPlugin = definePlugin(meta, () => [
         metadata: {
           icon: 'ph--scroll--regular',
           iconHue: 'sky',
+          createObjectIntent: (() => createIntent(AssistantAction.CreatePrompt)) satisfies CreateObjectIntent,
         },
       }),
       contributes(Capabilities.Metadata, {
@@ -79,43 +85,10 @@ export const AssistantPlugin = definePlugin(meta, () => [
         metadata: {
           icon: 'ph--circuitry--regular',
           iconHue: 'sky',
+          createObjectIntent: (() => createIntent(AssistantAction.CreateSequence)) satisfies CreateObjectIntent,
+          addToCollectionOnCreate: true,
         },
       }),
-    ],
-  }),
-  defineModule({
-    id: `${meta.id}/module/object-form`,
-    activatesOn: ClientEvents.SetupSchema,
-    activate: () => [
-      contributes(
-        SpaceCapabilities.ObjectForm,
-        defineObjectForm({
-          objectSchema: Assistant.Chat,
-          getIntent: (_, options) => createIntent(AssistantAction.CreateChat, { space: options.space }),
-        }),
-      ),
-      contributes(
-        SpaceCapabilities.ObjectForm,
-        defineObjectForm({
-          objectSchema: Blueprint.Blueprint,
-          formSchema: AssistantAction.BlueprintForm,
-          getIntent: (props) => createIntent(AssistantAction.CreateBlueprint, props),
-        }),
-      ),
-      contributes(
-        SpaceCapabilities.ObjectForm,
-        defineObjectForm({
-          objectSchema: Prompt.Prompt,
-          getIntent: () => createIntent(AssistantAction.CreatePrompt),
-        }),
-      ),
-      contributes(
-        SpaceCapabilities.ObjectForm,
-        defineObjectForm({
-          objectSchema: Sequence,
-          getIntent: () => createIntent(AssistantAction.CreateSequence),
-        }),
-      ),
     ],
   }),
   defineModule({
@@ -130,7 +103,6 @@ export const AssistantPlugin = definePlugin(meta, () => [
         Prompt.Prompt,
         ResearchGraph,
         Sequence,
-        ServiceType,
       ]),
   }),
   defineModule({

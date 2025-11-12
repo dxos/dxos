@@ -16,7 +16,7 @@ export const CreateMap = Schema.Struct({
   name: Schema.optional(Schema.String),
   // TODO(wittjosiah): This should be a query input instead.
   typename: Schema.String.annotations({
-    [TypenameAnnotationId]: ['used-static', 'dynamic'],
+    [TypenameAnnotationId]: 'setup-in-space',
     title: 'Select pin record type',
   }),
   locationFieldName: Schema.String.pipe(

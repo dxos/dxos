@@ -26,7 +26,7 @@ export const ViewEditor = ({ view }: ViewEditorProps) => {
   const space = getSpace(view);
   const [schema, setSchema] = useState<Schema.Schema.AnyNoContext>(() => Schema.Struct({}));
   const tags = useQuery(space, Filter.type(Tag.Tag));
-  const types = useTypeOptions({ space, annotation: ['dynamic', 'limited-static', 'object-form'] });
+  const types = useTypeOptions({ space, annotation: 'setup-in-space' });
 
   useAsyncEffect(async () => {
     if (!view?.query || !space) {

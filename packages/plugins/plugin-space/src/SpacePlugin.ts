@@ -41,8 +41,6 @@ import {
   ReactRoot,
   ReactSurface,
   Repair,
-  SchemaDefs,
-  SpaceCapabilities,
   SpaceSettings,
   SpaceState,
   SpacesReady,
@@ -50,7 +48,7 @@ import {
 import { SpaceEvents } from './events';
 import { meta } from './meta';
 import { translations } from './translations';
-import { CollectionAction, SpaceAction, defineObjectForm } from './types';
+import { CollectionAction, type CreateObjectIntent, SpaceAction } from './types';
 
 export type SpacePluginOptions = {
   /**
@@ -110,6 +108,10 @@ export const SpacePlugin = definePlugin<SpacePluginOptions>(
               iconHue: 'neutral',
               // TODO(wittjosiah): Move out of metadata.
               loadReferences: async (collection: Collection.Collection) => await Ref.Array.loadAll(collection.objects),
+              formSchema: Schema.Struct({ name: Schema.optional(Schema.String) }),
+              createObjectIntent: ((props) =>
+                createIntent(CollectionAction.Create, props)) satisfies CreateObjectIntent,
+              addToCollectionOnCreate: true,
             },
           }),
           contributes(Capabilities.Metadata, {
@@ -117,6 +119,15 @@ export const SpacePlugin = definePlugin<SpacePluginOptions>(
             metadata: {
               icon: 'ph--database--regular',
               iconHue: 'green',
+              formSchema: SpaceAction.StoredSchemaForm,
+              createObjectIntent: ((props, options) =>
+                props.typename
+                  ? createIntent(SpaceAction.UseStaticSchema, { space: options.space, typename: props.typename })
+                  : createIntent(SpaceAction.AddSchema, {
+                      space: options.space,
+                      name: props.name,
+                      schema: createDefaultSchema(),
+                    })) satisfies CreateObjectIntent,
             },
           }),
           contributes(Capabilities.Metadata, {
@@ -146,41 +157,6 @@ export const SpacePlugin = definePlugin<SpacePluginOptions>(
         ],
       }),
       defineModule({
-        id: `${meta.id}/module/object-form`,
-        activatesOn: ClientEvents.SetupSchema,
-        activate: () => [
-          contributes(
-            SpaceCapabilities.ObjectForm,
-            defineObjectForm({
-              objectSchema: Collection.Collection,
-              formSchema: Schema.Struct({ name: Schema.optional(Schema.String) }),
-              getIntent: (props) => createIntent(CollectionAction.Create, props),
-            }),
-          ),
-          contributes(
-            SpaceCapabilities.ObjectForm,
-            defineObjectForm({
-              objectSchema: StoredSchema,
-              formSchema: SpaceAction.StoredSchemaForm,
-              getIntent: (props, options) =>
-                props.typename
-                  ? createIntent(SpaceAction.UseStaticSchema, { space: options.space, typename: props.typename })
-                  : createIntent(SpaceAction.AddSchema, {
-                      space: options.space,
-                      name: props.name,
-                      schema: createDefaultSchema(),
-                    }),
-            }),
-          ),
-        ],
-      }),
-      defineModule({
-        id: `${meta.id}/module/schema-defs`,
-        activatesOn: ClientEvents.ClientReady,
-        activatesBefore: [ClientEvents.SetupSchema],
-        activate: SchemaDefs,
-      }),
-      defineModule({
         id: `${meta.id}/module/schema`,
         activatesOn: ClientEvents.SetupSchema,
         activate: () =>
@@ -196,18 +172,6 @@ export const SpacePlugin = definePlugin<SpacePluginOptions>(
             Person.Person,
             Project.Project,
             Tag.Tag,
-            Task.Task,
-          ]),
-      }),
-      defineModule({
-        id: `${meta.id}/module/whitelist-schema`,
-        activatesOn: ClientEvents.SetupSchema,
-        activate: () =>
-          contributes(ClientCapabilities.SchemaWhiteList, [
-            Event.Event,
-            Organization.Organization,
-            Person.Person,
-            Project.Project,
             Task.Task,
           ]),
       }),

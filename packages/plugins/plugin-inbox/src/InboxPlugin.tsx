@@ -5,8 +5,7 @@
 import { Capabilities, Events, contributes, createIntent, defineModule, definePlugin } from '@dxos/app-framework';
 import { Ref } from '@dxos/echo';
 import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
-import { SpaceCapabilities } from '@dxos/plugin-space';
-import { defineObjectForm } from '@dxos/plugin-space/types';
+import { type CreateObjectIntent } from '@dxos/plugin-space/types';
 import { Event, Message } from '@dxos/types';
 
 import {
@@ -46,6 +45,9 @@ export const InboxPlugin = definePlugin(meta, () => [
           icon: 'ph--tray--regular',
           iconHue: 'rose',
           blueprints: [INBOX_BLUEPRINT_KEY],
+          createObjectIntent: ((_, options) =>
+            createIntent(InboxAction.CreateMailbox, { space: options.space })) satisfies CreateObjectIntent,
+          addToCollectionOnCreate: true,
         },
       }),
       contributes(Capabilities.Metadata, {
@@ -61,6 +63,8 @@ export const InboxPlugin = definePlugin(meta, () => [
           icon: 'ph--calendar--regular',
           iconHue: 'rose',
           blueprints: [CALENDAR_BLUEPRINT_KEY],
+          createObjectIntent: (() => createIntent(InboxAction.CreateCalendar)) satisfies CreateObjectIntent,
+          addToCollectionOnCreate: true,
         },
       }),
       contributes(Capabilities.Metadata, {
@@ -70,26 +74,6 @@ export const InboxPlugin = definePlugin(meta, () => [
           loadReferences: async (event: Event.Event) => await Ref.Array.loadAll(event.links ?? []),
         },
       }),
-    ],
-  }),
-  defineModule({
-    id: `${meta.id}/module/object-form`,
-    activatesOn: ClientEvents.SetupSchema,
-    activate: () => [
-      contributes(
-        SpaceCapabilities.ObjectForm,
-        defineObjectForm({
-          objectSchema: Mailbox.Mailbox,
-          getIntent: (_, options) => createIntent(InboxAction.CreateMailbox, { space: options.space }),
-        }),
-      ),
-      contributes(
-        SpaceCapabilities.ObjectForm,
-        defineObjectForm({
-          objectSchema: Calendar.Calendar,
-          getIntent: () => createIntent(InboxAction.CreateCalendar),
-        }),
-      ),
     ],
   }),
   defineModule({

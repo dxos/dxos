@@ -6,10 +6,8 @@ import type * as Schema from 'effect/Schema';
 import React, { useMemo } from 'react';
 
 import { Capabilities, contributes, createSurface } from '@dxos/app-framework';
-import { useCapabilities } from '@dxos/app-framework/react';
 import { Obj, Type } from '@dxos/echo';
 import { findAnnotation } from '@dxos/effect';
-import { ClientCapabilities } from '@dxos/plugin-client';
 import { type Space, getSpace, isSpace } from '@dxos/react-client/echo';
 import { type InputProps, SelectInput, useFormValues } from '@dxos/react-ui-form';
 import { Kanban } from '@dxos/react-ui-kanban/types';
@@ -53,16 +51,14 @@ export default () =>
         if (!space) {
           return null;
         }
+
         const { typename } = useFormValues();
-        // TODO(wittjosiah): Unify this schema lookup.
-        const schemaWhitelists = useCapabilities(ClientCapabilities.SchemaWhiteList);
-        const staticSchema = schemaWhitelists.flat().find((schema) => Type.getTypename(schema) === typename);
-        const [selectedSchema] = space?.db.schemaRegistry.query({ typename }).runSync();
+        const [selectedSchema] = space?.db.schemaRegistry
+          .query({ location: ['database', 'runtime'], typename })
+          .runSync();
 
         const singleSelectColumns = useMemo(() => {
-          const properties = staticSchema
-            ? Type.toJsonSchema(staticSchema).properties
-            : selectedSchema?.jsonSchema?.properties;
+          const properties = Type.toJsonSchema(selectedSchema).properties;
           if (!properties) {
             return [];
           }
@@ -75,7 +71,7 @@ export default () =>
           }, []);
 
           return columns;
-        }, [selectedSchema?.jsonSchema, staticSchema]);
+        }, [selectedSchema]);
 
         if (!typename) {
           return null;

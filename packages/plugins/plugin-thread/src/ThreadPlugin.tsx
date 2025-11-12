@@ -7,7 +7,7 @@ import { Ref, Type } from '@dxos/echo';
 import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
 import { MarkdownEvents } from '@dxos/plugin-markdown';
 import { SpaceCapabilities, SpaceEvents } from '@dxos/plugin-space';
-import { defineObjectForm } from '@dxos/plugin-space/types';
+import { type CreateObjectIntent } from '@dxos/plugin-space/types';
 import { translations as threadTranslations } from '@dxos/react-ui-thread';
 import { AnchoredTo, Message } from '@dxos/types';
 
@@ -65,6 +65,10 @@ export const ThreadPlugin = definePlugin(meta, () => [
         metadata: {
           icon: 'ph--hash--regular',
           iconHue: 'rose',
+          createObjectIntent: ((_, options) =>
+            createIntent(ThreadAction.CreateChannel, {
+              spaceId: options.space.id,
+            })) satisfies CreateObjectIntent,
         },
       }),
       contributes(Capabilities.Metadata, {
@@ -97,21 +101,6 @@ export const ThreadPlugin = definePlugin(meta, () => [
         },
       }),
     ],
-  }),
-  defineModule({
-    id: `${meta.id}/module/object-form`,
-    activatesOn: ClientEvents.SetupSchema,
-    activate: () =>
-      contributes(
-        SpaceCapabilities.ObjectForm,
-        defineObjectForm({
-          objectSchema: Channel.Channel,
-          getIntent: (_, options) =>
-            createIntent(ThreadAction.CreateChannel, {
-              spaceId: options.space.id,
-            }),
-        }),
-      ),
   }),
   defineModule({
     id: `${meta.id}/module/schema`,

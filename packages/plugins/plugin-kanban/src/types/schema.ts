@@ -27,7 +27,7 @@ export const CreateKanbanSchema = Schema.Struct({
   // TODO(wittjosiah): This should be a query input instead.
   typename: Schema.optional(
     Schema.String.annotations({
-      [TypenameAnnotationId]: ['used-static', 'dynamic'],
+      [TypenameAnnotationId]: 'setup-in-space',
       title: 'Select card record type (leave empty to start fresh)',
     }),
   ),

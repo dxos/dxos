@@ -4,8 +4,7 @@
 
 import { Capabilities, Events, contributes, createIntent, defineModule, definePlugin } from '@dxos/app-framework';
 import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
-import { SpaceCapabilities } from '@dxos/plugin-space';
-import { defineObjectForm } from '@dxos/plugin-space/types';
+import { type CreateObjectIntent } from '@dxos/plugin-space/types';
 import { translations as boardTranslations } from '@dxos/react-ui-board';
 
 import { IntentResolver, ReactSurface } from './capabilities';
@@ -29,20 +28,10 @@ export const BoardPlugin = definePlugin(meta, () => [
         metadata: {
           icon: 'ph--squares-four--regular',
           iconHue: 'green',
+          creatObjectIntent: (() => createIntent(Board.Create)) satisfies CreateObjectIntent,
+          addToCollectionOnCreate: true,
         },
       }),
-  }),
-  defineModule({
-    id: `${meta.id}/module/object-form`,
-    activatesOn: ClientEvents.SetupSchema,
-    activate: () =>
-      contributes(
-        SpaceCapabilities.ObjectForm,
-        defineObjectForm({
-          objectSchema: Board.Board,
-          getIntent: () => createIntent(Board.Create),
-        }),
-      ),
   }),
   defineModule({
     id: `${meta.id}/module/schema`,

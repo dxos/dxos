@@ -238,7 +238,7 @@ export default ({ createInvitationUrl }: ReactSurfaceOptions) =>
       component: ({ data: { schema, target }, ...inputProps }) => {
         const props = inputProps as any as InputProps;
         const space = isSpace(target) ? target : getSpace(target);
-        const annotation = findAnnotation<TypenameAnnotation[]>(schema.ast, TypenameAnnotationId)!;
+        const annotation = findAnnotation<TypenameAnnotation>(schema.ast, TypenameAnnotationId)!;
         const options = useTypeOptions({ space, annotation });
 
         return <SelectInput {...props} options={options} />;

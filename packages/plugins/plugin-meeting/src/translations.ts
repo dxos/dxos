@@ -12,7 +12,7 @@ export const translations = [
   {
     'en-US': {
       [Type.getTypename(Meeting.Meeting)]: {
-        'typename label': 'Meetings',
+        'typename label': 'Meeting',
         'typename label_zero': 'Meetings',
         'typename label_one': 'Meeting',
         'typename label_other': 'Meetings',

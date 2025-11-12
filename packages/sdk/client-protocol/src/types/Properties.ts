@@ -5,16 +5,12 @@
 import * as Schema from 'effect/Schema';
 
 import { Type } from '@dxos/echo';
-import { TypedObject } from '@dxos/echo/internal';
+import { SystemAnnotation } from '@dxos/echo/internal';
 import { Queue } from '@dxos/echo-db';
 
 export const TYPE_PROPERTIES = 'dxos.org/type/Properties';
 
-// TODO(burdon): Factor out (co-locate with TYPE_PROPERTIES).
-export class PropertiesType extends TypedObject({
-  typename: TYPE_PROPERTIES,
-  version: '0.1.0',
-})(
+export const PropertiesType = Schema.Struct(
   {
     name: Schema.optional(Schema.String),
     // TODO(wittjosiah): Make generic?
@@ -22,8 +18,15 @@ export class PropertiesType extends TypedObject({
     icon: Schema.optional(Schema.String),
     invocationTraceQueue: Schema.optional(Type.Ref(Queue)),
   },
-  { record: true },
-) {}
+  { key: Schema.String, value: Schema.Any },
+).pipe(
+  Type.Obj({
+    typename: TYPE_PROPERTIES,
+    version: '0.1.0',
+  }),
+  SystemAnnotation.set(true),
+);
+export type PropertiesType = Schema.Schema.Type<typeof PropertiesType>;
 
 // TODO(burdon): Remove? Use PropertiesType instead?
 export type PropertiesTypeProps = Pick<PropertiesType, 'name' | 'hue' | 'icon' | 'invocationTraceQueue'>;

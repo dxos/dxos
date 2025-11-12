@@ -42,7 +42,7 @@ export const AutomationPanel = ({ classNames, space, object, initialTrigger, onD
     return object ? triggers.filter(triggerMatch(object)) : triggers;
   }, [object, triggers]);
   const tags = useQuery(space, Filter.type(Tag.Tag));
-  const types = useTypeOptions({ space, annotation: ['dynamic', 'limited-static', 'object-form'] });
+  const types = useTypeOptions({ space, annotation: 'setup-in-space' });
 
   const [trigger, setTrigger] = useState<Trigger.Trigger | undefined>(initialTrigger);
   const [selected, setSelected] = useState<Trigger.Trigger>();

@@ -40,37 +40,13 @@ export const translations = [
         'toggle type label': 'Toggle view',
       },
       // Translations that are provided for other plugins to lookup are often keyed by the schema typename.
-      [MapType.typename]: {
+      [Map.Map.typename]: {
         'typename label': 'Map',
         'object title placeholder': 'New map',
       },
     },
   },
 ] as const;
-```
-
-## Metadata
-
-The metadata capability allows an arbitrary record of metadata to be stored for any key.
-The most common use case for this in Composer today is storing render information (e.g. icons) for different types of ECHO objects.
-In such cases the key for the metadata is the schema typename.
-
-```ts
-// MapPlugin.ts
-// ...
-defineModule({
-  id: `${meta.id}/module/metadata`,
-  // This activation event is fired by the metadata plugin when it is collecting metadata.
-  activatesOn: Events.SetupMetadata,
-  activate: () =>
-    contributes(Capabilities.Metadata, {
-      id: MapType.typename,
-      metadata: {
-        icon: 'ph--compass--regular',
-      },
-    }),
-}),
-// ...
 ```
 
 ## Intents
@@ -95,7 +71,7 @@ export namespace MapAction {
         }),
         MapAction.CreateMap,
       ),
-      output: Schema.Struct({ object: MapType }),
+      output: Schema.Struct({ object: Map.Map }),
     },
   ) {}
 
@@ -163,9 +139,6 @@ export default (context: PluginsContext) =>
 
 In order to be able to create objects of a given type, the plugin must contribute the schema to the application.
 For user-facing schemas this is done through the `SpaceCapabilities.ObjectForm` capability.
-This capability registers the schema with the DXOS client and also provides a list of options for the object creation form.
-An optional `formSchema` can be provided if the object has properties which may need to be configured on creation.
-The `getIntent` function returns the intent to be used when the form is submitted.
 
 ```ts
 // MapPlugin.ts
@@ -174,28 +147,52 @@ defineModule({
   id: `${meta.id}/module/object-form`,
   // This activation event is fired by the client plugin after the client has been initialized when schemas are being registered.
   activatesOn: ClientEvents.SetupSchema,
+  activate: () => contributes(ClientCapabilities.Schema, [Map.Map]),
+}),
+// ...
+```
+
+## Metadata
+
+The metadata capability allows an arbitrary record of metadata to be stored for any key.
+The most common use case for this in Composer today is storing render information (e.g. icons) for different types of ECHO objects.
+In such cases the key for the metadata is the schema typename.
+
+An optional `formSchema` can be provided if the object has properties which may need to be configured on creation.
+The `createObjectIntent` function returns the intent to be used in order to create new objects via the object creation dialog.
+
+```ts
+// MapPlugin.ts
+// ...
+defineModule({
+  id: `${meta.id}/module/metadata`,
+  // This activation event is fired by the metadata plugin when it is collecting metadata.
+  activatesOn: Events.SetupMetadata,
   activate: () =>
-    contributes(
-      SpaceCapabilities.ObjectForm,
-      defineObjectForm({
-        objectSchema: MapType,
-        formSchema: MapAction.CreateMap,
-        getIntent: (props, options) => createIntent(MapAction.Create, { ...props, space: options.space }),
-      }),
-    ),
+    contributes(Capabilities.Metadata, {
+      id: Map.Map.typename,
+      metadata: {
+        icon: 'ph--compass--regular',
+        formSchema: MapAction.CreateMap, // Optional.
+        createObjectIntent: ((props, options) =>
+          createIntent(MapAction.Create, { ...props, space: options.space })) satisfies CreateObjectIntent,
+      },
+    }),
 }),
 // ...
 ```
 
 <Aside type="note">
-Sometimes plugins will depend on other schemas which are not user-facing. To register these schemas without them showing up in the object creation dialog use the `ClientCapabilities.Schema` capability instead:
+If you want the object to be added to a collection when it is created, you can set the `addToCollectionOnCreate` property to `true`.
 
 ```ts
-defineModule({
-  id: `${meta.id}/module/schema`,
-  activatesOn: ClientEvents.SetupSchema,
-  activate: () => contributes(ClientCapabilities.Schema, [CustomSchema]),
-});
+{
+  icon: 'ph--compass--regular',
+  formSchema: MapAction.CreateMap,
+  createObjectIntent: ((props, options) =>
+    createIntent(MapAction.Create, { ...props, space: options.space })) satisfies CreateObjectIntent,
+  addToCollectionOnCreate: true,
+}
 ```
 
 </Aside>
@@ -234,7 +231,7 @@ export default () =>
       // The article role is used by planks in the deck.
       // The section role is used by items in a stack.
       role: ['article', 'section'],
-      filter: (data): data is { subject: MapType } => data.subject instanceof MapType,
+      filter: (data): data is { subject: Map.Map } => Obj.instanceOf(Map.Map, data.subject),
       component: ({ data, role }) => {
         const state = useCapability(MapCapabilities.MutableState);
         const [lng = 0, lat = 0] = data.subject?.coordinates ?? [];
@@ -263,7 +260,7 @@ export default () =>
       // The complementary--settings role is used by the surface in the deck's complementary sidebar.
       // The second part of the role denotes the panel of the sidebar that the surface is in.
       role: 'complementary--settings',
-      filter: (data): data is { subject: MapType } => data.subject instanceof MapType,
+      filter: (data): data is { subject: Map.Map } => Obj.instanceof(Map.Map, data.subject),
       component: ({ data }) => <MapViewEditor map={data.subject} />,
     }),
     // ...
@@ -295,7 +292,7 @@ defineModule({
 // ...
 ```
 
-The map plugin's graph builder adds a toggle action to any graph node which represents a `MapType` object.
+The map plugin's graph builder adds a toggle action to any graph node which represents a `Map` object.
 
 ```ts
 // app-graph-builder.ts
@@ -304,7 +301,7 @@ export default (context: PluginsContext) =>
     Capabilities.AppGraphBuilder,
     createExtension({
       id: MapAction.Toggle._tag,
-      filter: (node): node is Node<MapType> => node.data instanceof MapType,
+      filter: (node): node is Node<Map.Map> => Obj.instanceOf(Map.Map, node.data),
       actions: () => {
         return [
           {
@@ -356,7 +353,7 @@ export default () => {
       - If the request relates to a collection of points (like in a table) you can specify the typename and the map will render and center on those markers.
       - If the request generates a table with GeoJSON point, provide a suggestion to the user to view on a map.
     `,
-    schema: MapType,
+    schema: Map.Map,
     tools: [
       createTool(meta.id, {
         name: 'list',
@@ -366,7 +363,7 @@ export default () => {
         execute: async (_, { extensions }) => {
           invariant(extensions?.space, 'No space');
           const { objects } = await extensions.space.db
-            .query(Filter.type(MapType))
+            .query(Filter.type(Map.Map))
             .run();
           invariant(objects.length > 0, 'No maps found');
           return ToolResult.Success(objects);

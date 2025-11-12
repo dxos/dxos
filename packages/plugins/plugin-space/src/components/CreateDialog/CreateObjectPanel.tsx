@@ -3,9 +3,9 @@
 //
 
 import * as Option from 'effect/Option';
+import type * as Schema from 'effect/Schema';
 import React, { useCallback } from 'react';
 
-import { Type } from '@dxos/echo';
 import { type BaseObject, type TypeAnnotation, getTypeAnnotation } from '@dxos/echo/internal';
 import { type Space, type SpaceId } from '@dxos/react-client/echo';
 import { Icon, toLocalizedString, useDefaultValue, useTranslation } from '@dxos/react-ui';
@@ -17,25 +17,32 @@ import { type MaybePromise, isNonNullable } from '@dxos/util';
 
 import { useInputSurfaceLookup } from '../../hooks';
 import { meta } from '../../meta';
-import { type ObjectForm } from '../../types';
+import { type CreateObjectIntent } from '../../types';
 import { getSpaceDisplayName } from '../../util';
 
+export type Metadata = {
+  createObjectIntent: CreateObjectIntent;
+  formSchema?: Schema.Schema.AnyNoContext;
+  addToCollectionOnCreate?: boolean;
+  icon?: string;
+};
+
 export type CreateObjectPanelProps = {
-  forms: ObjectForm[];
+  schemas: Schema.Schema.AnyNoContext[];
   spaces: Space[];
   typename?: string;
   target?: Space | Collection.Collection;
   views?: boolean;
   initialFormValues?: Partial<BaseObject>;
   defaultSpaceId?: SpaceId;
-  resolve?: (typename: string) => Record<string, any>;
+  resolve?: (typename: string) => Metadata | undefined;
   onTargetChange?: (target: Space) => void;
   onTypenameChange?: (typename: string) => void;
-  onCreateObject?: (params: { form: ObjectForm; data?: Record<string, any> }) => MaybePromise<void>;
+  onCreateObject?: (params: { metadata: Metadata; data?: Record<string, any> }) => MaybePromise<void>;
 };
 
 export const CreateObjectPanel = ({
-  forms,
+  schemas,
   spaces,
   typename,
   target,
@@ -49,16 +56,16 @@ export const CreateObjectPanel = ({
 }: CreateObjectPanelProps) => {
   const { t } = useTranslation(meta.id);
   const initialFormValues = useDefaultValue(_initialFormValues, () => ({}));
-  const form = forms.find((form) => Type.getTypename(form.objectSchema) === typename);
-  const options: TypeAnnotation[] = forms
-    .filter((form) => {
+  const metadata = typename && resolve?.(typename);
+  const options: TypeAnnotation[] = schemas
+    .filter((schema) => {
       if (views == null) {
         return true;
       } else {
-        return views === ViewAnnotation.get(form.objectSchema).pipe(Option.getOrElse(() => false));
+        return views === ViewAnnotation.get(schema).pipe(Option.getOrElse(() => false));
       }
     })
-    .map((form) => getTypeAnnotation(form.objectSchema))
+    .map((schema) => getTypeAnnotation(schema))
     .filter(isNonNullable)
     .sort((a, b) => {
       const nameA = t('typename label', { ns: a.typename, defaultValue: a.typename });
@@ -68,39 +75,39 @@ export const CreateObjectPanel = ({
 
   const handleCreateObject = useCallback(
     async (props: Record<string, any>) => {
-      if (!form) {
+      if (!metadata) {
         return;
       }
-      await onCreateObject?.({ form, data: props });
+      await onCreateObject?.({ metadata, data: props });
     },
-    [onCreateObject, form],
+    [onCreateObject, metadata],
   );
 
   const handleSetTypename = useCallback(
     async (typename: string) => {
-      const form = forms.find((form) => getTypeAnnotation(form.objectSchema)?.typename === typename);
-      if (form && !form.formSchema) {
-        await onCreateObject?.({ form });
+      const metadata = resolve?.(typename);
+      if (metadata && !metadata.formSchema) {
+        await onCreateObject?.({ metadata });
       } else {
         onTypenameChange?.(typename);
       }
     },
-    [forms, onCreateObject],
+    [resolve, onCreateObject],
   );
 
   const inputSurfaceLookup = useInputSurfaceLookup({ target });
 
   // TODO(wittjosiah): These inputs should be rolled into a `Form` once it supports the necessary variants.
-  return !form ? (
+  return !metadata ? (
     <SelectSchema options={options} resolve={resolve} onChange={handleSetTypename} />
   ) : !target ? (
     <SelectSpace spaces={spaces} defaultSpaceId={defaultSpaceId} onChange={onTargetChange} />
-  ) : form.formSchema ? (
+  ) : metadata.formSchema ? (
     <div role='none' className={cardDialogOverflow}>
       <Form
         autoFocus
         values={initialFormValues}
-        schema={form.formSchema}
+        schema={metadata.formSchema}
         testId='create-object-form'
         onSave={handleCreateObject}
         lookupComponent={inputSurfaceLookup}
@@ -174,7 +181,7 @@ const SelectSchema = ({
             classNames='flex items-center gap-2'
           >
             <span className='flex gap-2 items-center grow truncate'>
-              <Icon icon={resolve?.(option.typename).icon ?? 'ph--placeholder--regular'} size={5} />
+              <Icon icon={resolve?.(option.typename)?.icon ?? 'ph--placeholder--regular'} size={5} />
               {t('typename label', { ns: option.typename, defaultValue: option.typename })}
             </span>
           </SearchList.Item>

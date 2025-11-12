@@ -4,23 +4,24 @@
 
 import * as Effect from 'effect/Effect';
 import * as Function from 'effect/Function';
-import React, { useCallback, useRef, useState } from 'react';
+import * as Option from 'effect/Option';
+import React, { useCallback, useMemo, useRef, useState } from 'react';
 
 import { Capabilities, LayoutAction, chain, createIntent } from '@dxos/app-framework';
-import { useCapabilities, useIntentDispatcher, usePluginManager } from '@dxos/app-framework/react';
-import { Obj, Query, Type } from '@dxos/echo';
+import { useIntentDispatcher, usePluginManager } from '@dxos/app-framework/react';
+import { Obj, Type } from '@dxos/echo';
+import { EntityKind, SystemAnnotation, getTypeAnnotation } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
 import { useClient } from '@dxos/react-client';
-import { type Space, getSpace, isLiveObject, isSpace, useQuery, useSpaces } from '@dxos/react-client/echo';
+import { type Space, getSpace, isLiveObject, isSpace, useSpaces } from '@dxos/react-client/echo';
 import { Dialog, IconButton, useTranslation } from '@dxos/react-ui';
 import { cardDialogContent, cardDialogHeader } from '@dxos/react-ui-stack';
-import { Collection, StoredSchema } from '@dxos/schema';
+import { type Collection, StoredSchema } from '@dxos/schema';
 
-import { SpaceCapabilities } from '../../capabilities';
 import { meta } from '../../meta';
 import { SpaceAction } from '../../types';
 
-import { CreateObjectPanel, type CreateObjectPanelProps } from './CreateObjectPanel';
+import { CreateObjectPanel, type CreateObjectPanelProps, type Metadata } from './CreateObjectPanel';
 
 export const CREATE_OBJECT_DIALOG = `${meta.id}/CreateObjectDialog`;
 
@@ -43,24 +44,36 @@ export const CreateObjectDialog = ({
   const manager = usePluginManager();
   const { t } = useTranslation(meta.id);
   const { dispatch } = useIntentDispatcher();
-  const forms = useCapabilities(SpaceCapabilities.ObjectForm);
   const [target, setTarget] = useState<Space | Collection.Collection | undefined>(initialTarget);
   const [typename, setTypename] = useState<string | undefined>(initialTypename);
   const client = useClient();
   const spaces = useSpaces();
-  const space = isSpace(target) ? target : getSpace(target);
-  const systemCollections = useQuery(space, Query.type(Collection.System));
-  const hiddenTypenames = systemCollections.map((collection) => collection.key);
   const closeRef = useRef<HTMLButtonElement | null>(null);
 
   const resolve = useCallback<NonNullable<CreateObjectPanelProps['resolve']>>(
-    (typename) =>
-      manager.context.getCapabilities(Capabilities.Metadata).find(({ id }) => id === typename)?.metadata ?? {},
+    (typename) => {
+      const metadata = manager.context
+        .getCapabilities(Capabilities.Metadata)
+        .find(({ id }) => id === typename)?.metadata;
+      return metadata?.createObjectIntent ? (metadata as Metadata) : undefined;
+    },
     [manager],
   );
 
+  const space = isSpace(target) ? target : getSpace(target);
+  // TODO(wittjosiah): Support database schemas.
+  const schemas = space?.db.schemaRegistry.query({ location: ['runtime'] }).runSync();
+  const userSchemas = useMemo(
+    () =>
+      schemas
+        ?.filter((schema) => getTypeAnnotation(schema)?.kind !== EntityKind.Relation)
+        .filter((schema) => !!resolve(Type.getTypename(schema)))
+        .filter((schema) => !SystemAnnotation.get(schema).pipe(Option.getOrElse(() => false))) ?? [],
+    [schemas],
+  );
+
   const handleCreateObject = useCallback<NonNullable<CreateObjectPanelProps['onCreateObject']>>(
-    ({ form, data = {} }) =>
+    ({ metadata, data = {} }) =>
       Effect.gen(function* () {
         if (!target) {
           // TODO(wittjosiah): UI feedback.
@@ -72,10 +85,10 @@ export const CreateObjectDialog = ({
 
         const space = isSpace(target) ? target : getSpace(target);
         invariant(space, 'Missing space');
-        const { object } = yield* dispatch(form.getIntent(data, { space }));
+        const { object } = yield* dispatch(metadata.createObjectIntent(data, { space }));
         if (isLiveObject(object) && !Obj.instanceOf(StoredSchema, object)) {
           // TODO(wittjosiah): Selection in navtree isn't working as expected when hidden typenames evals to true.
-          const hidden = form.hidden || hiddenTypenames.includes(Type.getTypename(form.objectSchema));
+          const hidden = !metadata.addToCollectionOnCreate;
           const addObjectIntent = createIntent(SpaceAction.AddObject, {
             target,
             object,
@@ -91,7 +104,7 @@ export const CreateObjectDialog = ({
           onCreateObject?.(object);
         }
       }).pipe(Effect.runPromise),
-    [dispatch, target, resolve, hiddenTypenames, _shouldNavigate],
+    [dispatch, target, resolve, _shouldNavigate],
   );
 
   return (
@@ -122,7 +135,7 @@ export const CreateObjectDialog = ({
       </div>
 
       <CreateObjectPanel
-        forms={forms}
+        schemas={userSchemas}
         spaces={spaces}
         target={target}
         views={views}

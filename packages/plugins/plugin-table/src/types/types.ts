@@ -15,7 +15,7 @@ export const CreateTableSchema = Schema.Struct({
   // TODO(wittjosiah): This should be a query input instead.
   typename: Schema.String.pipe(
     Schema.annotations({
-      [TypenameAnnotationId]: ['used-static', 'dynamic'],
+      [TypenameAnnotationId]: 'setup-in-space',
     }),
     Schema.optional,
   ),
