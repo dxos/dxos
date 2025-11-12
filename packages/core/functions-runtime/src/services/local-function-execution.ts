@@ -124,8 +124,8 @@ export class FunctionImplementationResolver extends Context.Tag('@dxos/functions
   FunctionImplementationResolver,
   {
     resolveFunctionImplementation<I, O>(
-      functionDef: FunctionDefinition<I, O>,
-    ): Effect.Effect<FunctionDefinition<I, O>, FunctionNotFoundError>;
+      functionDef: FunctionDefinition<I, O, FunctionServices>,
+    ): Effect.Effect<FunctionDefinition<I, O, FunctionServices>, FunctionNotFoundError>;
   }
 >() {
   static layerTest = ({ functions }: { functions: readonly FunctionDefinition.Any[] }) =>

@@ -44,7 +44,7 @@ export type FunctionServices =
 /**
  * Function handler.
  */
-export type FunctionHandler<TData = {}, TOutput = any, S extends FunctionServices = never> = (params: {
+export type FunctionHandler<TData = {}, TOutput = any, S extends FunctionServices = FunctionServices> = (params: {
   /**
    * Services and context available to the function.
    */
@@ -67,7 +67,7 @@ export interface FunctionContext {
 
 const typeId = Symbol.for('@dxos/functions/FunctionDefinition');
 
-export type FunctionDefinition<T = any, O = any, S extends FunctionServices = never> = {
+export type FunctionDefinition<T = any, O = any, S extends FunctionServices = FunctionServices> = {
   [typeId]: true;
   key: string;
   name: string;
@@ -94,6 +94,13 @@ export type FunctionDefinition<T = any, O = any, S extends FunctionServices = ne
     deployedFunctionId?: string;
   };
 };
+
+export declare namespace FunctionDefinition {
+  export type Any = FunctionDefinition<any, any, any>;
+  export type Input<T extends Any> = T extends FunctionDefinition<infer I, infer _O, infer _S> ? I : never;
+  export type Output<T extends Any> = T extends FunctionDefinition<infer _I, infer O, infer _S> ? O : never;
+  export type Services<T extends Any> = T extends FunctionDefinition<infer _I, infer _O, infer S> ? S : never;
+}
 
 export type FunctionProps<T, O> = {
   key: string;
@@ -183,11 +190,6 @@ export const FunctionDefinition = {
     return deserializeFunction(functionObj);
   },
 };
-export declare namespace FunctionDefinition {
-  export type Any = FunctionDefinition<any, any, any>;
-  export type Input<T extends FunctionDefinition> = T extends FunctionDefinition<infer I, any> ? I : never;
-  export type Output<T extends FunctionDefinition> = T extends FunctionDefinition<any, infer O> ? O : never;
-}
 
 export const serializeFunction = (functionDef: FunctionDefinition.Any): Function.Function => {
   const fn = Function.make({
