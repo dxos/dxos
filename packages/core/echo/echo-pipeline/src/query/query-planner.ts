@@ -144,9 +144,10 @@ export class QueryPlanner {
               },
             },
             ...this._generateDeletedHandlingSteps(context),
+            // TODO(dmaretskyi): Normally we could skip filtering by typename here, but since the index does not separate schema versions, we need to do additional filter to only select the correct version.
             {
               _tag: 'FilterStep',
-              filter: { ...filter, typename: null },
+              filter: { ...filter },
             },
           ]);
         } else {
@@ -236,6 +237,10 @@ export class QueryPlanner {
               },
             },
             ...this._generateDeletedHandlingSteps(context),
+            {
+              _tag: 'FilterStep',
+              filter: { ...filter },
+            },
           ]);
         } else {
           throw new QueryError({ message: 'Query too complex', context: { query: context.originalQuery } });
