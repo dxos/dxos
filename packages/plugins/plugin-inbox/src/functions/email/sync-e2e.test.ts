@@ -51,17 +51,5 @@ describe.runIf(process.env.DX_TEST_TAGS?.includes('functions-e2e'))('Functions d
       },
     );
     console.log(result);
-
-    // // Invoke deployed function via EDGE directly.
-    // const edgeClient = client.edge;
-    // invariant(edgeClient, 'edgeClient is required');
-    // edgeClient.setIdentity(createEdgeIdentity(client));
-
-    // const input = { from: 'USD', to: 'EUR' };
-    // const result = await edgeClient.invokeFunction({ functionId }, input);
-    // log.info('>>> result', { result, functionId });
-    // const resultNumber = Number(result);
-    // expect(resultNumber).toBeGreaterThan(0);
-    // expect(resultNumber).toBeLessThan(100);
   });
 });

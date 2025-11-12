@@ -36,12 +36,15 @@ export class BaseError<Code extends string = string> extends Error {
       }
 
       static wrap(options?: Omit<BaseErrorOptions, 'cause'> & { ifTypeDiffers?: boolean }) {
-        return (error: unknown) => {
+        const wrapFn = (error: unknown) => {
           if (options?.ifTypeDiffers === true && this.is(error)) {
             return error;
           }
-          return new this({ message, ...options, cause: error });
+          const newError = new this({ message, ...options, cause: error });
+          Error.captureStackTrace(newError, wrapFn); // Position stack-trace to start from the caller of `wrap`.
+          return newError;
         };
+        return wrapFn;
       }
 
       constructor(options?: BaseErrorOptions) {
