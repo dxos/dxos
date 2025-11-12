@@ -5,7 +5,7 @@
 
 import { type Facet, type LinearPhysicalLayer } from '@ch-ui/tokens';
 
-import { cardMaxInlineSize, cardMinInlineSize } from './sizes';
+import { cardDefInlineSize, cardMaxInlineSize, cardMinInlineSize } from './sizes';
 
 export const lengthsFacet = {
   physical: {
@@ -88,7 +88,7 @@ export const maxSizesFacet = {
     sememes: {
       prose: { root: ['size', 50] },
       containerMaxWidth: { root: ['size', 50] },
-      popoverMaxWidth: { root: ['size', cardMinInlineSize] },
+      popoverMaxWidth: { root: ['size', cardDefInlineSize] },
       cardMinWidth: { root: ['size', cardMinInlineSize] },
       cardMaxWidth: { root: ['size', cardMaxInlineSize] },
     },
