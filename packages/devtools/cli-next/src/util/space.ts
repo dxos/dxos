@@ -62,47 +62,20 @@ export const withTypes: (
     return yield* effect;
   });
 
-const isEdgePeerId = (peerId: string, spaceId: SpaceId) =>
-  peerId.startsWith(`${EdgeService.AUTOMERGE_REPLICATOR}:${spaceId}`);
-
 // TODO(dmaretsky): there a race condition with edge connection not showing up
 export const waitForSync = Effect.fn(function* (space: Space) {
   // TODO(wittjosiah): This should probably be prompted for.
   if (space.internal.data.edgeReplication !== EdgeReplicationSetting.ENABLED) {
     yield* Console.log('Edge replication is disabled, enabling...');
-    yield* Effect.tryPromise(() => space.internal.setEdgeReplicationPreference(EdgeReplicationSetting.ENABLED));
+    yield* Effect.promise(() => space.internal.setEdgeReplicationPreference(EdgeReplicationSetting.ENABLED));
   }
 
-  const ctx = yield* contextFromScope();
-  const synced = yield* Effect.makeLatch();
-  const handleSyncState = ({ peers = [] }: SpaceSyncState) =>
-    Effect.gen(function* () {
-      const syncState = peers.find((state) => isEdgePeerId(state.peerId, space.id));
-      yield* Console.log('syncing:', syncState ?? 'no connection to edge');
-
-      if (
-        syncState &&
-        syncState.missingOnRemote === 0 &&
-        syncState.missingOnLocal === 0 &&
-        syncState.differentDocuments === 0
-      ) {
-        yield* synced.open;
-      }
-    }).pipe(Effect.provide(Logger.pretty));
-
-  space.db.subscribeToSyncState(ctx, (syncState) => Effect.runSync(handleSyncState(syncState)));
-  // TODO(wittjosiah): This is not yet foolproof. Needs to wait for connection to edge to be established.
-  const syncState = yield* Effect.tryPromise(() => space.db.getSyncState());
-  yield* handleSyncState(syncState);
-
-  const fiber = yield* Effect.gen(function* () {
-    const syncState = yield* Effect.tryPromise(() => space.db.getSyncState());
-    yield* handleSyncState(syncState);
-  }).pipe(Effect.repeat({ schedule: Schedule.fixed('5 seconds') }), Effect.fork);
-
-  yield* synced.await;
+  yield* Effect.promise(() =>
+    space.internal.syncToEdge({
+      onProgress: (state) => console.log('syncing:', state ?? 'no connection to edge'),
+    }),
+  );
   yield* Console.log('Sync complete');
-  yield* Fiber.interrupt(fiber);
 });
 
 // TODO(burdon): Reconcile with @dxos/protocols

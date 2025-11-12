@@ -4,7 +4,7 @@
 
 import { type CleanupFn, type MulticastObservable } from '@dxos/async';
 import { type SpecificCredential } from '@dxos/credentials';
-import { type AnyLiveObject, type EchoDatabase, type QueueFactory } from '@dxos/echo-db';
+import { type SpaceSyncState, type AnyLiveObject, type EchoDatabase, type QueueFactory } from '@dxos/echo-db';
 import { type PublicKey, type SpaceId } from '@dxos/keys';
 import {
   type Contact,
@@ -46,6 +46,15 @@ export interface SpaceInternal {
   migrate(): Promise<void>;
 
   setEdgeReplicationPreference(setting: EdgeReplicationSetting): Promise<void>;
+
+  /**
+   * Waits until the space is fully synced with EDGE.
+   * @throws If the EDGE sync is disabled.
+   */
+  syncToEdge(opts?: {
+    onProgress: (state: SpaceSyncState.PeerState | undefined) => void;
+    timeout?: number;
+  }): Promise<void>;
 
   export(): Promise<SpaceArchive>;
 }
