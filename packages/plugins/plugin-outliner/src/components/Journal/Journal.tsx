@@ -13,8 +13,6 @@ import { meta } from '../../meta';
 import { Journal as JournalType, getDateString, parseDateString } from '../../types';
 import { Outline, type OutlineController, type OutlineProps } from '../Outline';
 
-// TODO(burdon): Only show one selected line entry.
-
 const RECENT = 7 * 24 * 60 * 60 * 1_000;
 
 // TODO(burdon): Convert to Radix format.
@@ -37,7 +35,7 @@ export const Journal = ({ classNames, journal, ...props }: JournalProps) => {
     }
 
     // TODO(burdon): CRDT issue (merge entries with same date?)
-    const entries = JournalType.getEntries(journal, date);
+    const entries = JournalType.getEntries(journal);
     setShowAddEntry(entries.length === 0);
   }, [journal, journal?.entries.length, date]);
 
@@ -47,7 +45,7 @@ export const Journal = ({ classNames, journal, ...props }: JournalProps) => {
     }
 
     const entry = JournalType.makeEntry();
-    journal.entries.push(Ref.make(entry));
+    journal.entries[getDateString(date)] = Ref.make(entry);
     setShowAddEntry(false);
   }, [journal, date]);
 
@@ -58,11 +56,9 @@ export const Journal = ({ classNames, journal, ...props }: JournalProps) => {
           <IconButton label={t('create entry label')} icon='ph--plus--regular' onClick={handleCreateEntry} />
         </div>
       )}
-      {Ref.Array.targets(journal?.entries ?? [])
-        .sort(({ date: a }, { date: b }) => (a < b ? 1 : a > b ? -1 : 0))
-        .map((entry, i) => (
-          <JournalEntry key={entry.id} entry={entry} classNames='p-2' {...props} autoFocus={i === 0} />
-        ))}
+      {JournalType.getEntries(journal).map((entry, i) => (
+        <JournalEntry key={entry.id} entry={entry} classNames='p-2' {...props} autoFocus={i === 0} />
+      ))}
     </div>
   );
 };
