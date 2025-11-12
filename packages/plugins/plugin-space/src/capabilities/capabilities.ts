@@ -19,8 +19,12 @@ export namespace SpaceCapabilities {
   export type SettingsSection = { id: string; label: Label; position?: Position };
   export const SettingsSection = defineCapability<SettingsSection>(`${meta.id}/capability/settings-section`);
 
-  export type onCreateSpace = (params: { space: Space; rootCollection: Collection.Collection }) => AnyIntentChain;
-  export const onCreateSpace = defineCapability<onCreateSpace>(`${meta.id}/capability/on-space-created`);
+  export type OnCreateSpace = (params: {
+    space: Space;
+    isDefault: boolean;
+    rootCollection: Collection.Collection;
+  }) => AnyIntentChain;
+  export const OnCreateSpace = defineCapability<OnCreateSpace>(`${meta.id}/capability/on-space-created`);
 
   export type OnSchemaAdded = (params: {
     space: Space;
@@ -31,6 +35,6 @@ export namespace SpaceCapabilities {
   export const OnSchemaAdded = defineCapability<OnSchemaAdded>(`${meta.id}/capability/on-schema-added`);
 
   // TODO(wittjosiah): Replace with migrations, this is not a sustainable solution.
-  export type HandleRepair = (params: { space: Space }) => Promise<void>;
+  export type HandleRepair = (params: { space: Space; isDefault: boolean }) => Promise<void>;
   export const Repair = defineCapability<HandleRepair>(`${meta.id}/capability/repair`);
 }

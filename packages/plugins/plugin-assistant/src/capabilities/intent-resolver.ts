@@ -26,7 +26,7 @@ import { AssistantCapabilities } from './capabilities';
 export default (context: PluginContext) => [
   contributes(Capabilities.IntentResolver, [
     createResolver({
-      intent: AssistantAction.onCreateSpace,
+      intent: AssistantAction.OnCreateSpace,
       resolve: ({ space, rootCollection }) =>
         Effect.gen(function* () {
           const { dispatch } = context.getCapability(Capabilities.IntentDispatcher);

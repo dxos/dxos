@@ -5,19 +5,19 @@
 import * as Schema from 'effect/Schema';
 
 import { Filter, Obj, Query, QueryAST, Ref, Type } from '@dxos/echo';
-import { LabelAnnotation } from '@dxos/echo/internal';
+import { FormAnnotation, LabelAnnotation } from '@dxos/echo/internal';
 import { View, ViewAnnotation } from '@dxos/schema';
 import { type MakeOptional } from '@dxos/util';
 
 const GraphSchema = Schema.Struct({
   name: Schema.optional(Schema.String),
 
-  view: Type.Ref(View.View),
+  view: Type.Ref(View.View).pipe(FormAnnotation.set(false)),
 
   query: Schema.Struct({
     raw: Schema.optional(Schema.String),
     ast: QueryAST.Query,
-  }).pipe(Schema.mutable),
+  }).pipe(Schema.mutable, FormAnnotation.set(false)),
 }).pipe(
   Type.Obj({
     typename: 'dxos.org/type/Graph',

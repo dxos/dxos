@@ -177,8 +177,8 @@ export const SpaceSettingsContainer = ({ space }: SpaceSettingsContainerProps) =
 
   const repairs = useCapabilities(SpaceCapabilities.Repair);
   const handleRepair = useCallback(async () => {
-    await Promise.all(repairs.map((repair) => repair({ space })));
-  }, [space, repairs]);
+    await Promise.all(repairs.map((repair) => repair({ space, isDefault: client.spaces.default === space })));
+  }, [client, space, repairs]);
 
   return (
     <StackItem.Content scrollable>

@@ -5,13 +5,13 @@
 import * as Schema from 'effect/Schema';
 
 import { Obj, Ref, Type } from '@dxos/echo';
-import { LabelAnnotation } from '@dxos/echo/internal';
+import { FormAnnotation, LabelAnnotation } from '@dxos/echo/internal';
 import { View, ViewAnnotation } from '@dxos/schema';
 
 const KanbanSchema = Schema.Struct({
   name: Schema.optional(Schema.String),
 
-  view: Type.Ref(View.View),
+  view: Type.Ref(View.View).pipe(FormAnnotation.set(false)),
 
   /**
    * Order of columns by value and cards by id, derivative of the field selected by `columnPivotField` but can that be
@@ -24,7 +24,7 @@ const KanbanSchema = Schema.Struct({
       ids: Schema.Array(Type.ObjectId),
       hidden: Schema.optional(Schema.Boolean),
     }).pipe(Schema.mutable),
-  ).pipe(Schema.mutable),
+  ).pipe(Schema.mutable, FormAnnotation.set(false)),
 
   // TODO(wittjosiah): Consider Kanban supporting not being just a view but referencing arbitrary data directly.
 }).pipe(

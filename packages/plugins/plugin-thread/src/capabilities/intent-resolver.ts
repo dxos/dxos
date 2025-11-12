@@ -23,9 +23,13 @@ import { ThreadCapabilities } from './capabilities';
 export default (context: PluginContext) =>
   contributes(Capabilities.IntentResolver, [
     createResolver({
-      intent: ThreadAction.onCreateSpace,
-      resolve: ({ space, rootCollection }) =>
+      intent: ThreadAction.OnCreateSpace,
+      resolve: ({ space, isDefault, rootCollection }) =>
         Effect.gen(function* () {
+          if (isDefault) {
+            return;
+          }
+
           const { dispatch } = context.getCapability(Capabilities.IntentDispatcher);
           const collection = Collection.makeSystem({ key: Type.getTypename(Channel.Channel) });
           rootCollection.objects.push(Ref.make(collection));

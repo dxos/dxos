@@ -5,25 +5,27 @@
 import * as Schema from 'effect/Schema';
 
 import { Obj, Ref, Type } from '@dxos/echo';
+import { FormAnnotation, LabelAnnotation } from '@dxos/echo/internal';
 import { View, ViewAnnotation } from '@dxos/schema';
 
 const MasonrySchema = Schema.Struct({
   name: Schema.String.pipe(Schema.optional),
 
-  view: Type.Ref(View.View),
+  view: Type.Ref(View.View).pipe(FormAnnotation.set(false)),
 
   arrangement: Schema.Array(
     Schema.Struct({
       ids: Schema.Array(Type.ObjectId),
       hidden: Schema.optional(Schema.Boolean),
     }).pipe(Schema.mutable),
-  ).pipe(Schema.mutable, Schema.optional),
+  ).pipe(Schema.mutable, FormAnnotation.set(false), Schema.optional),
   // TODO(wittjosiah): Consider Masonry supporting not being just a view but referencing arbitrary data directly.
 }).pipe(
   Type.Obj({
     typename: 'dxos.org/type/Masonry',
     version: '0.2.0',
   }),
+  LabelAnnotation.set(['name']),
   ViewAnnotation.set(true),
 );
 export interface Masonry extends Schema.Schema.Type<typeof MasonrySchema> {}

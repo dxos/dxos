@@ -22,9 +22,13 @@ import { MeetingCapabilities } from './capabilities';
 export default (context: PluginContext) =>
   contributes(Capabilities.IntentResolver, [
     createResolver({
-      intent: MeetingAction.onCreateSpace,
-      resolve: ({ rootCollection }) =>
+      intent: MeetingAction.OnCreateSpace,
+      resolve: ({ isDefault, rootCollection }) =>
         Effect.gen(function* () {
+          if (isDefault) {
+            return;
+          }
+
           const meetingCollection = Collection.makeSystem({ key: Type.getTypename(Meeting.Meeting) });
           rootCollection.objects.push(Ref.make(meetingCollection));
         }),

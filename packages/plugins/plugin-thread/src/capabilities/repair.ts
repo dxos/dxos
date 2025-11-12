@@ -11,7 +11,11 @@ import { Collection } from '@dxos/schema';
 import { Channel } from '../types';
 
 export default () =>
-  contributes(SpaceCapabilities.Repair, async ({ space }) => {
+  contributes(SpaceCapabilities.Repair, async ({ space, isDefault }) => {
+    if (isDefault) {
+      return;
+    }
+
     await ensureSystemCollection(space);
   });
 

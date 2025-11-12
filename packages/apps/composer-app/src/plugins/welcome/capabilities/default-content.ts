@@ -21,15 +21,8 @@ export default async (context: PluginContext) => {
 
   const space = client.spaces.default;
   space.properties.icon = SPACE_ICON;
-
-  const readme = Markdown.make({
-    name: 'README',
-    content: README_CONTENT,
-  });
-
   const defaultSpaceCollection = space.properties[Collection.Collection.typename].target;
 
-  defaultSpaceCollection?.objects.push(Ref.make(readme));
   defaultSpaceCollection?.objects.push(
     Ref.make(
       Obj.make(Collection.System, {
@@ -39,12 +32,18 @@ export default async (context: PluginContext) => {
   );
 
   await context.activatePromise(SpaceEvents.SpaceCreated);
-  const onCreateSpaceCallbacks = context.getCapabilities(SpaceCapabilities.onCreateSpace);
+  const onCreateSpaceCallbacks = context.getCapabilities(SpaceCapabilities.OnCreateSpace);
   await Promise.all(
     onCreateSpaceCallbacks
-      .map((onCreateSpace) => onCreateSpace({ space: space, rootCollection: defaultSpaceCollection }))
+      .map((onCreateSpace) => onCreateSpace({ space: space, isDefault: true, rootCollection: defaultSpaceCollection }))
       .map((intent) => dispatch(intent)),
   );
+
+  const readme = Markdown.make({
+    name: 'README',
+    content: README_CONTENT,
+  });
+  defaultSpaceCollection?.objects.push(Ref.make(readme));
 
   // Ensure the default content is in the graph and connected.
   // This will allow the expose action to work before the navtree renders for the first time.

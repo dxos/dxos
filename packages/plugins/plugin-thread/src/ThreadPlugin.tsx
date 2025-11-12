@@ -123,9 +123,7 @@ export const ThreadPlugin = definePlugin(meta, () => [
     id: `${meta.id}/module/on-space-created`,
     activatesOn: SpaceEvents.SpaceCreated,
     activate: () =>
-      contributes(SpaceCapabilities.onCreateSpace, ({ space, rootCollection }) =>
-        createIntent(ThreadAction.onCreateSpace, { space, rootCollection }),
-      ),
+      contributes(SpaceCapabilities.OnCreateSpace, (params) => createIntent(ThreadAction.OnCreateSpace, params)),
   }),
   defineModule({
     id: `${meta.id}/module/repair`,

@@ -26,7 +26,7 @@ import { TableAction } from '../types';
 export default (context: PluginContext) =>
   contributes(Capabilities.IntentResolver, [
     createResolver({
-      intent: TableAction.onCreateSpace,
+      intent: TableAction.OnCreateSpace,
       resolve: ({ space }) =>
         Effect.gen(function* () {
           const { dispatch } = context.getCapability(Capabilities.IntentDispatcher);
