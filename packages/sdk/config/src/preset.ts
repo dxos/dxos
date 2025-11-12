@@ -18,6 +18,13 @@ export const configPreset = ({ edge = 'main' }: ConfigPresetOptions = {}) =>
   new Config({
     version: 1,
     runtime: {
+      client: {
+        edgeFeatures: {
+          signaling: true,
+          echoReplicator: true,
+          feedReplicator: true,
+        },
+      },
       services: {
         edge: {
           url: Match.value(edge).pipe(

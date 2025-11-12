@@ -42,6 +42,12 @@ export const Function = Schema.Struct({
   inputSchema: Schema.optional(JsonSchemaType),
   outputSchema: Schema.optional(JsonSchemaType),
 
+  /**
+   * List of required services.
+   * Match the Context.Tag keys of the FunctionServices variants.
+   */
+  services: Schema.optional(Schema.Array(Schema.String)),
+
   // Local binding to a function name.
   binding: Schema.optional(Schema.String),
 }).pipe(

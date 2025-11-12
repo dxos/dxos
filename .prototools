@@ -7,7 +7,8 @@ pnpm = "10.13.1"
 # NOTE: Moon is also included in the npm packages at the repo root.
 #  This is only for compability purposes (i.e., supporting Cloudflare Pages deploys).
 #  It is expected that developers will be using moon via proto, but they should be kept in sync.
-moon = "latest"
+# NOTE: Make sure those versions match!
+moon = "1.41.7"
 
 [settings]
 auto-install = true

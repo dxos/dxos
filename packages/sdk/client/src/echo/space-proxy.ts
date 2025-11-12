@@ -5,7 +5,16 @@
 import * as Schema from 'effect/Schema';
 import isEqualWith from 'lodash.isequalwith';
 
-import { Event, MulticastObservable, Trigger, scheduleMicroTask, synchronized } from '@dxos/async';
+import {
+  Event,
+  MulticastObservable,
+  Trigger,
+  asyncTimeout,
+  scheduleMicroTask,
+  scheduleTask,
+  scheduleTaskInterval,
+  synchronized,
+} from '@dxos/async';
 import { type ClientServicesProvider, PropertiesType, type Space, type SpaceInternal } from '@dxos/client-protocol';
 import { Stream } from '@dxos/codec-protobuf/stream';
 import { Context, cancelWithContext } from '@dxos/context';
@@ -25,11 +34,12 @@ import {
   type EchoDatabaseImpl,
   Filter,
   type QueueFactory,
+  type SpaceSyncState,
 } from '@dxos/echo-db';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { decodeError } from '@dxos/protocols';
+import { EdgeService, decodeError } from '@dxos/protocols';
 import {
   type Contact,
   CreateEpochRequest,
@@ -41,7 +51,7 @@ import {
   type UpdateMemberRoleRequest,
 } from '@dxos/protocols/proto/dxos/client/services';
 import { QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
-import { type EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
+import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { type SpaceSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 import {
   type Credential,
@@ -144,6 +154,7 @@ export class SpaceProxy implements Space, CustomInspectable {
       removeMember: this._removeMember.bind(this),
       migrate: this._migrate.bind(this),
       setEdgeReplicationPreference: this._setEdgeReplicationPreference.bind(this),
+      syncToEdge: this._syncToEdge.bind(this),
       export: this._export.bind(this),
     };
 
@@ -279,6 +290,7 @@ export class SpaceProxy implements Space, CustomInspectable {
       emitMembersEvent,
       isFirstTimeInitializing,
       isReopening,
+      edgeReplication: space.edgeReplication,
     });
 
     this._data = space;
@@ -559,6 +571,66 @@ export class SpaceProxy implements Space, CustomInspectable {
       },
       { timeout: RPC_TIMEOUT },
     );
+    // TODO(dmaretskyi): Might cause a race-condition if the property is updated multiple times.
+    await asyncTimeout(
+      this._anySpaceUpdate.waitForCondition(() => {
+        return this._data.edgeReplication === setting;
+      }),
+      2_000,
+      'Waiting for the edge replication to be enabled',
+    );
+  }
+
+  private async _syncToEdge(opts?: {
+    timeout?: number;
+    onProgress: (state: SpaceSyncState.PeerState | undefined) => void;
+  }): Promise<void> {
+    await using ctx = Context.default();
+
+    if (this._data.edgeReplication !== EdgeReplicationSetting.ENABLED) {
+      throw new Error('Edge replication is disabled');
+    }
+
+    return await new Promise<void>((resolve, reject) => {
+      scheduleTask(
+        ctx,
+        () => {
+          reject(new Error('Timeout syncing to EDGE'));
+        },
+        opts?.timeout ?? 60_000,
+      );
+
+      const checkSyncState = (syncState: SpaceSyncState) => {
+        const edgePeer = syncState.peers?.find((state) => isEdgePeerId(state.peerId, this.id));
+
+        if (opts?.onProgress) {
+          opts.onProgress(edgePeer);
+        }
+
+        if (
+          edgePeer &&
+          edgePeer.missingOnRemote === 0 &&
+          edgePeer.missingOnLocal === 0 &&
+          edgePeer.differentDocuments === 0
+        ) {
+          resolve();
+        }
+      };
+
+      ctx.onDispose(this._db.subscribeToSyncState(ctx, checkSyncState));
+      // TODO(dmaretskyi): Still need polling, otherwise this gets stuck.
+      scheduleTaskInterval(
+        ctx,
+        async () => {
+          checkSyncState(await this._db.getSyncState());
+        },
+        1_000,
+      );
+
+      scheduleMicroTask(ctx, async () => {
+        checkSyncState(await this._db.getSyncState());
+      });
+    });
   }
 
   private _throwIfNotInitialized(): void {
@@ -596,3 +668,6 @@ export const SpaceSchema: Schema.Schema<Space> = Schema.Any.pipe(
   Schema.filter((space) => isSpace(space)),
   Schema.annotations({ title: 'Space' }),
 );
+
+const isEdgePeerId = (peerId: string, spaceId: SpaceId) =>
+  peerId.startsWith(`${EdgeService.AUTOMERGE_REPLICATOR}:${spaceId}`);

@@ -37,6 +37,7 @@ export default defineFunction({
   outputSchema: Schema.Struct({
     newMessages: Schema.Number,
   }),
+  services: [DatabaseService, QueueService],
   handler: ({
     // TODO(wittjosiah): Schema-based defaults are not yet supported.
     data: { mailboxId, userId = 'me', after = format(subDays(new Date(), 30), 'yyyy-MM-dd'), pageSize = 100 },

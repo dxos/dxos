@@ -165,12 +165,11 @@ export class TypedReactiveHandler implements ReactiveHandler<ProxyTarget> {
     options: InspectOptionsStylized,
     inspectFn: (value: any, options?: InspectOptionsStylized) => string,
   ): string {
-    return `Typed ${inspectFn(this, {
+    return inspectFn(this, {
       ...options,
-      compact: true,
       showHidden: false,
       customInspect: false,
-    })}`;
+    });
   }
 }
 

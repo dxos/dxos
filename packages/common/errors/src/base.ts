@@ -28,15 +28,25 @@ export class BaseError<Code extends string = string> extends Error {
    * @param message - Default error message.
    */
   static extend<Code extends string = string>(code: Code, message?: string) {
-    return class extends BaseError<Code> {
+    return class ExtendedError extends BaseError<Code> {
       static code = code;
 
       static is(error: unknown): error is BaseError {
         return typeof error === 'object' && error !== null && 'code' in error && error.code === code;
       }
 
-      static wrap(options?: Omit<BaseErrorOptions, 'cause'>) {
-        return (error: unknown) => new this({ message, ...options, cause: error });
+      static wrap(
+        options?: Omit<BaseErrorOptions, 'cause'> & { ifTypeDiffers?: boolean },
+      ): (error: unknown) => ExtendedError {
+        const wrapFn = (error: unknown) => {
+          if (options?.ifTypeDiffers === true && this.is(error)) {
+            return error as ExtendedError;
+          }
+          const newError: ExtendedError = new this({ message, ...options, cause: error });
+          Error.captureStackTrace(newError, wrapFn); // Position stack-trace to start from the caller of `wrap`.
+          return newError;
+        };
+        return wrapFn;
       }
 
       constructor(options?: BaseErrorOptions) {

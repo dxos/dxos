@@ -69,7 +69,7 @@ export class LocalFunctionExecutionService extends Context.Tag('@dxos/functions/
 }
 
 const invokeFunction = (
-  functionDef: FunctionDefinition<any, any>,
+  functionDef: FunctionDefinition.Any,
   input: any,
 ): Effect.Effect<unknown, never, FunctionServices> =>
   Effect.gen(function* () {
@@ -124,11 +124,11 @@ export class FunctionImplementationResolver extends Context.Tag('@dxos/functions
   FunctionImplementationResolver,
   {
     resolveFunctionImplementation<I, O>(
-      functionDef: FunctionDefinition<I, O>,
-    ): Effect.Effect<FunctionDefinition<I, O>, FunctionNotFoundError>;
+      functionDef: FunctionDefinition<I, O, FunctionServices>,
+    ): Effect.Effect<FunctionDefinition<I, O, FunctionServices>, FunctionNotFoundError>;
   }
 >() {
-  static layerTest = ({ functions }: { functions: readonly FunctionDefinition<any, any>[] }) =>
+  static layerTest = ({ functions }: { functions: readonly FunctionDefinition.Any[] }) =>
     Layer.succeed(FunctionImplementationResolver, {
       resolveFunctionImplementation: <I, O>(functionDef: FunctionDefinition<I, O>) => {
         const resolved = functions.find((f) => f.key === functionDef.key);

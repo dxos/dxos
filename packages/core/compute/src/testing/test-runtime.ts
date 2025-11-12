@@ -18,7 +18,7 @@ import { type FunctionsRuntimeProvider } from '../compute-graph-registry';
  */
 export const createMockedComputeRuntimeProvider = ({
   functions,
-}: { functions?: FunctionDefinition<any, any>[] } = {}): FunctionsRuntimeProvider => {
+}: { functions?: FunctionDefinition.Any[] } = {}): FunctionsRuntimeProvider => {
   return {
     getRuntime: (_spaceId: SpaceId) =>
       ManagedRuntime.make(

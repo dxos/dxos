@@ -21,12 +21,12 @@ import type { Version } from './version';
 /**
  * Entity kind.
  */
-export const EntityKindId = Symbol('@dxos/echo/EntityKind');
+export const EntityKindId = Symbol.for('@dxos/echo/EntityKind');
 
 /**
  * DXN to the object itself.
  */
-export const SelfDXNId = Symbol('@dxos/echo/DXN');
+export const SelfDXNId = Symbol.for('@dxos/echo/DXN');
 
 /**
  * Property name for self DXN when object is serialized to JSON.
@@ -36,7 +36,7 @@ export const ATTR_SELF_DXN = '@dxn';
 /**
  * DXN to the object type.
  */
-export const TypeId = Symbol('@dxos/echo/Type');
+export const TypeId = Symbol.for('@dxos/echo/Type');
 
 /**
  * Property name for typename when object is serialized to JSON.
@@ -46,12 +46,12 @@ export const ATTR_TYPE = '@type';
 /**
  * Reference to the object schema.
  */
-export const SchemaId = Symbol('@dxos/echo/Schema');
+export const SchemaId = Symbol.for('@dxos/echo/Schema');
 
 /**
  * Deletion marker.
  */
-export const DeletedId = Symbol('@dxos/echo/Deleted');
+export const DeletedId = Symbol.for('@dxos/echo/Deleted');
 
 /**
  * Property name for deleted when object is serialized to JSON.
@@ -61,7 +61,7 @@ export const ATTR_DELETED = '@deleted';
 /**
  * Metadata section.
  */
-export const MetaId = Symbol('@dxos/echo/Meta');
+export const MetaId = Symbol.for('@dxos/echo/Meta');
 
 /**
  * Property name for meta when object is serialized to JSON.
@@ -72,7 +72,7 @@ export const ATTR_META = '@meta';
  * Used to access relation source ref on live ECHO objects.
  * Reading this symbol must return `Live<EchoObject<any>>` or a DXN.
  */
-export const RelationSourceDXNId: unique symbol = Symbol('@dxos/echo/RelationSourceDXN');
+export const RelationSourceDXNId: unique symbol = Symbol.for('@dxos/echo/RelationSourceDXN');
 
 /**
  * Property name for relation source when object is serialized to JSON.
@@ -83,7 +83,7 @@ export const ATTR_RELATION_SOURCE = '@relationSource';
  * Used to access relation target ref on live ECHO objects.
  * Reading this symbol must return `Live<EchoObject<any>>` or a DXN.
  */
-export const RelationTargetDXNId: unique symbol = Symbol('@dxos/echo/RelationTargetDXN');
+export const RelationTargetDXNId: unique symbol = Symbol.for('@dxos/echo/RelationTargetDXN');
 
 /**
  * Property name for relation target when object is serialized to JSON.
@@ -94,18 +94,18 @@ export const ATTR_RELATION_TARGET = '@relationTarget';
  * Used to access relation source ref on live ECHO objects.
  * Reading this symbol must return `Live<EchoObject<any>>` or a DXN.
  */
-export const RelationSourceId: unique symbol = Symbol('@dxos/echo/RelationSource');
+export const RelationSourceId: unique symbol = Symbol.for('@dxos/echo/RelationSource');
 
 /**
  * Used to access relation target ref on live ECHO objects.
  * Reading this symbol must return `Live<EchoObject<any>>` or a DXN.
  */
-export const RelationTargetId: unique symbol = Symbol('@dxos/echo/RelationTarget');
+export const RelationTargetId: unique symbol = Symbol.for('@dxos/echo/RelationTarget');
 
 /**
  * Getter to get object version.
  */
-export const ObjectVersionId: unique symbol = Symbol('@dxos/echo/ObjectVersion');
+export const ObjectVersionId: unique symbol = Symbol.for('@dxos/echo/ObjectVersion');
 
 /**
  * Internal runtime representation of an object.
