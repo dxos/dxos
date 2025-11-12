@@ -184,12 +184,12 @@ export const FunctionDefinition = {
   },
 };
 export declare namespace FunctionDefinition {
-  export type Any = FunctionDefinition<any, any>;
+  export type Any = FunctionDefinition<any, any, any>;
   export type Input<T extends FunctionDefinition> = T extends FunctionDefinition<infer I, any> ? I : never;
   export type Output<T extends FunctionDefinition> = T extends FunctionDefinition<any, infer O> ? O : never;
 }
 
-export const serializeFunction = (functionDef: FunctionDefinition<any, any>): Function.Function => {
+export const serializeFunction = (functionDef: FunctionDefinition.Any): Function.Function => {
   const fn = Function.make({
     key: functionDef.key,
     name: functionDef.name,
