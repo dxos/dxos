@@ -2,13 +2,13 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { type FC, useState } from 'react';
+import React, { useState } from 'react';
 
 import { log } from '@dxos/log';
 import { useClient } from '@dxos/react-client';
-import { StackItem } from '@dxos/react-ui-stack';
 import { Filter, type Space, useQuery } from '@dxos/react-client/echo';
-import { type ThemedClassName, useTranslation } from '@dxos/react-ui';
+import { useTranslation } from '@dxos/react-ui';
+import { StackItem } from '@dxos/react-ui-stack';
 import { activeSurface, mx } from '@dxos/react-ui-theme';
 
 import { useGlobalSearch, useGlobalSearchResults } from '../hooks';
