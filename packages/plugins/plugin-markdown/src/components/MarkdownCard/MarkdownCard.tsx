@@ -72,7 +72,8 @@ const getInfo = (subject: Markdown.Document | Text.Text) => {
 // TODO(burdon): Factor out.
 const getTitle = (subject: Markdown.Document | Text.Text, fallback: string) => {
   if (Obj.instanceOf(Markdown.Document, subject)) {
-    return subject.name ?? subject.fallbackName ?? getFallbackName(subject.content?.target?.content ?? fallback);
+    const title = Obj.getLabel(subject);
+    return title ?? getFallbackName(subject.content?.target?.content ?? fallback);
   } else if (Obj.instanceOf(Text.Text, subject)) {
     return getFallbackName(subject.content);
   }

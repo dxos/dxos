@@ -22,7 +22,7 @@ import {
   staticCompletion,
   typeahead,
 } from '../extensions';
-import { str } from '../testing';
+import { str } from '../util';
 
 import {
   EditorStory,

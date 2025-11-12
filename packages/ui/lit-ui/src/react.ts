@@ -5,7 +5,7 @@
 import { type EventName, createComponent } from '@lit/react';
 import React, { type ComponentPropsWithRef } from 'react';
 
-import { type DxAnchorActivate } from '@dxos/react-ui-types';
+import { DX_ANCHOR_ACTIVATE, type DxAnchorActivate } from '@dxos/react-ui-types';
 
 import {
   type DxTagPickerItemClick,
@@ -20,7 +20,7 @@ export const DxAnchor = createComponent({
   elementClass: NaturalDxAnchor,
   react: React,
   events: {
-    onActivate: 'dx-anchor-activate' as EventName<DxAnchorActivate>,
+    onActivate: DX_ANCHOR_ACTIVATE as EventName<DxAnchorActivate>,
   },
 });
 

@@ -46,7 +46,7 @@ export type UseTextEditorProps = Pick<EditorStateConfig, 'extensions'> & {
   autoFocus?: boolean;
   scrollTo?: number;
   selection?: EditorSelection;
-  moveToEndOfLine?: boolean;
+  selectionEnd?: boolean;
   debug?: boolean;
 };
 
@@ -57,7 +57,7 @@ export const useTextEditor = (
   props: MaybeProvider<UseTextEditorProps> = {},
   deps: DependencyList = [],
 ): UseTextEditor => {
-  const { id, doc, initialValue, extensions, autoFocus, scrollTo, selection, moveToEndOfLine, debug } =
+  const { id, doc, initialValue, extensions, autoFocus, scrollTo, selection, selectionEnd, debug } =
     useMemo<UseTextEditorProps>(() => getProviderValue(props), deps ?? []);
 
   // NOTE: Increments by 2 in strict mode.
@@ -75,7 +75,7 @@ export const useTextEditor = (
         if (selection.anchor <= initialValue.length && (selection?.head ?? 0) <= initialValue.length) {
           initialSelection = selection;
         }
-      } else if (moveToEndOfLine && selection === undefined) {
+      } else if (selectionEnd && selection === undefined) {
         const index = initialValue?.indexOf('\n');
         const anchor = !index || index === -1 ? 0 : index;
         initialSelection = { anchor };
@@ -104,7 +104,7 @@ export const useTextEditor = (
       });
 
       // Move to end of line after document loaded (unless selection is specified).
-      if (moveToEndOfLine && !initialSelection) {
+      if (selectionEnd && !initialSelection) {
         const { to } = view.state.doc.lineAt(0);
         if (to) {
           view.dispatch({ selection: { anchor: to } });

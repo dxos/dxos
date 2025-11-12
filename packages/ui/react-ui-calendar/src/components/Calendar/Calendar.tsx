@@ -20,7 +20,7 @@ import { useResizeDetector } from 'react-resize-detector';
 import { List, type ListProps, type ListRowRenderer } from 'react-virtualized';
 
 import { Event } from '@dxos/async';
-import { IconButton, type ThemedClassName, useTranslation } from '@dxos/react-ui';
+import { Icon, IconButton, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
 import { translationKey } from '../../translations';
@@ -194,6 +194,13 @@ const CalendarGrid = ({ classNames, rows, onSelect }: CalendarGridProps) => {
     });
   }, []);
 
+  // TODO(burdon): Get info by range.
+  // TODO(burdon): Border marker for "all day events?"
+  const getNumAppointments = useCallback((_date: Date) => {
+    // return Math.floor(Math.random() * 10);
+    return 0;
+  }, []);
+
   const handleDaySelect = useCallback(
     (date: Date) => {
       setSelected((current) => (isSameDay(date, current) ? undefined : date));
@@ -210,11 +217,12 @@ const CalendarGrid = ({ classNames, rows, onSelect }: CalendarGridProps) => {
     ({ key, index, style }) => {
       const getBgColor = (date: Date) => date.getMonth() % 2 === 0 && 'bg-modalSurface';
       return (
-        <div key={key} style={style} className='is-full grid grid-cols-[1fr_max-content_1fr] snap-center'>
-          <div className={mx(getBgColor(getDate(start, index, 0, weekStartsOn)))} />
-          <div className='grid grid-cols-7' style={{ gridTemplateColumns: `repeat(7, ${size}px)` }}>
+        <div key={key} role='none' style={style} className='is-full grid grid-cols-[1fr_max-content_1fr] snap-center'>
+          <div role='none' className={mx(getBgColor(getDate(start, index, 0, weekStartsOn)))} />
+          <div role='none' className='grid grid-cols-7' style={{ gridTemplateColumns: `repeat(7, ${size}px)` }}>
             {Array.from({ length: 7 }).map((_, i) => {
               const date = getDate(start, index, i, weekStartsOn);
+              const num = getNumAppointments(date);
               const border = isSameDay(date, selected)
                 ? 'border-primary-500'
                 : isSameDay(date, today)
@@ -224,6 +232,7 @@ const CalendarGrid = ({ classNames, rows, onSelect }: CalendarGridProps) => {
               return (
                 <div
                   key={i}
+                  role='none'
                   className={mx('relative flex justify-center items-center cursor-pointer', getBgColor(date))}
                   onClick={() => handleDaySelect(date)}
                 >
@@ -232,7 +241,17 @@ const CalendarGrid = ({ classNames, rows, onSelect }: CalendarGridProps) => {
                     <span className='absolute top-0 text-xs text-description'>{format(date, 'MMM')}</span>
                   )}
                   {border && (
-                    <div className={mx('absolute top-0 left-0 is-full bs-full border-2 rounded-full', border)} />
+                    <div
+                      role='none'
+                      className={mx('absolute top-0 left-0 is-full bs-full border-2 rounded-full', border)}
+                    />
+                  )}
+                  {num > 0 && (
+                    <Icon
+                      classNames='absolute bottom-0'
+                      icon={num > 3 ? 'ph--dots-three--regular' : 'ph--dot--regular'}
+                      size={5}
+                    />
                   )}
                 </div>
               );
@@ -242,7 +261,7 @@ const CalendarGrid = ({ classNames, rows, onSelect }: CalendarGridProps) => {
         </div>
       );
     },
-    [handleDaySelect, selected, weekStartsOn],
+    [handleDaySelect, getNumAppointments, selected, weekStartsOn],
   );
 
   return (

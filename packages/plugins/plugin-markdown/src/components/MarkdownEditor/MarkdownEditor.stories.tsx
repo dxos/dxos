@@ -35,7 +35,6 @@ const DefaultStory = (props: StoryProps) => {
     return null;
   }
 
-  // TODO(burdon): Toolbar attention isn't working in this story.
   return (
     <div className='contents' {...attentionAttrs}>
       <StackItem.Content toolbar>

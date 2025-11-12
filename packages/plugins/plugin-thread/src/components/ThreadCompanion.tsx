@@ -21,7 +21,7 @@ import { CommentsContainer, type CommentsContainerProps } from '../components';
 import { meta } from '../meta';
 import { Thread, ThreadAction } from '../types';
 
-export const ThreadComplementary = ({ subject }: { subject: any }) => {
+export const ThreadCompanion = ({ subject }: { subject: any }) => {
   const { t } = useTranslation(meta.id);
   const { dispatchPromise: dispatch } = useIntentDispatcher();
   const identity = useIdentity();

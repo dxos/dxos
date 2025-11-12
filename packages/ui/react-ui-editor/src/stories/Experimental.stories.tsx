@@ -11,7 +11,7 @@ import { faker } from '@dxos/random';
 import { withTheme } from '@dxos/react-ui/testing';
 
 import { blast, defaultOptions, dropFile, typewriter } from '../extensions';
-import { str } from '../testing';
+import { str } from '../util';
 
 import { EditorStory, content } from './components';
 

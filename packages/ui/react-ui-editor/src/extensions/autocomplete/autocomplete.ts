@@ -14,34 +14,21 @@ import {
 } from '@codemirror/view';
 
 export type AutocompleteOptions = {
-  fireIfEmpty?: boolean;
-
-  /**
-   * Callback triggered when Enter is pressed.
-   * @param text The current text in the editor
-   * @returns true if the editor should reset the document.
-   */
-  onSubmit?: (text: string) => boolean | void;
-
   /**
    * Function that returns a list of suggestions based on the current text.
    * @param text The current text before the cursor
    * @returns Array of suggestion strings
    */
   onSuggest?: (text: string) => string[];
-
-  /**
-   * ESC pressed.
-   */
-  onCancel?: () => void;
 };
 
 /**
  * Creates an autocomplete extension that shows inline suggestions.
  * Pressing Tab will complete the suggestion.
+ *
+ * @deprecated Use typeahead.
  */
-// TODO(burdon): Reconcile with typeahead.
-export const autocomplete = ({ fireIfEmpty, onSubmit, onSuggest, onCancel }: AutocompleteOptions = {}): Extension => {
+export const autocomplete = ({ onSuggest }: AutocompleteOptions = {}): Extension => {
   const suggest = ViewPlugin.fromClass(
     class {
       _decorations: DecorationSet;
@@ -139,62 +126,6 @@ export const autocomplete = ({ fireIfEmpty, onSubmit, onSuggest, onCancel }: Aut
 
             const plugin = view.plugin(suggest);
             return plugin?.completeSuggestion(view) ?? false;
-          },
-        },
-        {
-          key: 'Enter',
-          preventDefault: true,
-          run: (view) => {
-            const text = view.state.doc.toString().trim();
-            if (onSubmit && (fireIfEmpty || text.length > 0)) {
-              const reset = onSubmit(text);
-
-              // Clear the document after calling onEnter.
-              if (reset) {
-                view.dispatch({
-                  changes: {
-                    from: 0,
-                    to: view.state.doc.length,
-                    insert: '',
-                  },
-                });
-              }
-            }
-
-            return true;
-          },
-        },
-        {
-          key: 'Shift-Enter',
-          preventDefault: true,
-          run: (view) => {
-            view.dispatch({
-              changes: {
-                from: view.state.selection.main.head,
-                insert: '\n',
-              },
-              selection: {
-                anchor: view.state.selection.main.head + 1,
-                head: view.state.selection.main.head + 1,
-              },
-            });
-            return true;
-          },
-        },
-        {
-          key: 'Escape',
-          preventDefault: true,
-          run: (view) => {
-            // Clear the entire document.
-            view.dispatch({
-              changes: {
-                from: 0,
-                to: view.state.doc.length,
-                insert: '',
-              },
-            });
-            onCancel?.();
-            return true;
           },
         },
       ]),
