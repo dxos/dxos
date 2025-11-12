@@ -12,7 +12,7 @@ import { Mailbox } from '../../types';
 
 describe.runIf(process.env.DX_TEST_TAGS?.includes('functions-e2e'))('Functions deployment', () => {
   test('deployes inbox sync function', { timeout: 120_000 }, async () => {
-    const config = configPreset({ edge: 'local' });
+    const config = configPreset({ edge: 'dev' });
 
     await using client = await new Client({ config, types: [Mailbox.Mailbox] }).initialize();
     await client.halo.createIdentity();
