@@ -59,6 +59,7 @@
     "@effect/language-service": "^0.42.0",
     "@effect/vitest": "~0.26.0",
     "@eslint/js": "^9.37.0",
+    "@moonrepo/cli": "1.41.7",
     "@octokit/rest": "^19.0.5",
     "@phosphor-icons/core": "^2.1.1",
     "@playwright/test": "1.54.1",
