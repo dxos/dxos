@@ -53,10 +53,10 @@ export default () =>
         }
 
         const { typename } = useFormValues();
-        const [selectedSchema] = space?.db.schemaRegistry
-          .query({ location: ['database', 'runtime'], typename })
-          .runSync();
-
+        const [selectedSchema] = useMemo(
+          () => space?.db.schemaRegistry.query({ location: ['database', 'runtime'], typename }).runSync(),
+          [space, typename],
+        );
         const singleSelectColumns = useMemo(() => {
           const properties = Type.toJsonSchema(selectedSchema).properties;
           if (!properties) {

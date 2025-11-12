@@ -3,7 +3,7 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React, { useCallback, useMemo } from 'react';
+import React, { useCallback } from 'react';
 
 import { IntentPlugin, SettingsPlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
@@ -20,7 +20,7 @@ import { useClient } from '@dxos/react-client';
 import { Filter, useQuery, useSchema, useSpaces } from '@dxos/react-client/echo';
 import { withTheme } from '@dxos/react-ui/testing';
 import { ViewEditor } from '@dxos/react-ui-form';
-import { Kanban as KanbanComponent, useKanbanModel } from '@dxos/react-ui-kanban';
+import { Kanban as KanbanComponent, useKanbanModel, useProjectionModel } from '@dxos/react-ui-kanban';
 import { Kanban } from '@dxos/react-ui-kanban/types';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { defaultTx } from '@dxos/react-ui-theme';
@@ -50,14 +50,14 @@ const StorybookKanban = () => {
   const [kanban] = useQuery(space, Filter.type(Kanban.Kanban));
   const typename = kanban?.view.target?.query ? getTypenameFromQuery(kanban.view.target.query.ast) : undefined;
   const schema = useSchema(client, space, typename);
-  const jsonSchema = useMemo(() => schema && Type.toJsonSchema(schema), [schema]);
 
   const objects = useQuery(space, schema ? Filter.type(schema) : Filter.nothing());
   const filteredObjects = useGlobalFilteredObjects(objects);
 
+  const projection = useProjectionModel(schema, kanban);
   const model = useKanbanModel({
     kanban,
-    jsonSchema,
+    projection,
     items: filteredObjects,
   });
 

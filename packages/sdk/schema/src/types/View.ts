@@ -77,7 +77,7 @@ export const ViewSchema = Schema.Struct({
 }).pipe(
   Type.Obj({
     typename: 'dxos.org/type/View',
-    version: '0.4.0',
+    version: '0.5.0',
   }),
   SystemAnnotation.set(true),
 );

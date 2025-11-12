@@ -2,16 +2,16 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 
 import { createIntent } from '@dxos/app-framework';
 import { useIntentDispatcher } from '@dxos/app-framework/react';
 import { Filter, Obj, Type } from '@dxos/echo';
-import { EchoSchema, type TypedObject } from '@dxos/echo/internal';
+import { type TypedObject } from '@dxos/echo/internal';
 import { useGlobalFilteredObjects } from '@dxos/plugin-search';
 import { useClient } from '@dxos/react-client';
 import { getSpace, useQuery } from '@dxos/react-client/echo';
-import { Kanban as KanbanComponent, useKanbanModel } from '@dxos/react-ui-kanban';
+import { Kanban as KanbanComponent, useKanbanModel, useProjectionModel } from '@dxos/react-ui-kanban';
 import { type Kanban } from '@dxos/react-ui-kanban/types';
 import { StackItem } from '@dxos/react-ui-stack';
 import { getTypenameFromQuery } from '@dxos/schema';
@@ -24,13 +24,6 @@ export const KanbanContainer = ({ object }: { object: Kanban.Kanban; role: strin
   const space = getSpace(object);
   const { dispatchPromise: dispatch } = useIntentDispatcher();
   const typename = object.view.target?.query ? getTypenameFromQuery(object.view.target.query.ast) : undefined;
-
-  const jsonSchema = useMemo(() => {
-    if (!cardSchema) {
-      return undefined;
-    }
-    return cardSchema instanceof EchoSchema ? cardSchema.jsonSchema : Type.toJsonSchema(cardSchema);
-  }, [cardSchema]);
 
   useEffect(() => {
     const staticSchema = client.graph.schemaRegistry.schemas.find((schema) => Type.getTypename(schema) === typename);
@@ -55,9 +48,10 @@ export const KanbanContainer = ({ object }: { object: Kanban.Kanban; role: strin
   const objects = useQuery(space, cardSchema ? Filter.type(cardSchema) : Filter.nothing());
   const filteredObjects = useGlobalFilteredObjects(objects);
 
+  const projection = useProjectionModel(cardSchema, object);
   const model = useKanbanModel({
     kanban: object,
-    jsonSchema,
+    projection,
     items: filteredObjects,
   });
 

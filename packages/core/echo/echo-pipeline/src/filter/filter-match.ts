@@ -309,33 +309,20 @@ const compareTypename = (expectedDXN: DXN, actualDXN: DXN): boolean => {
   if (expectedTypeDXN) {
     const actualTypeDXN = actualDXN.asTypeDXN();
     if (!actualTypeDXN) {
-      // console.log('compareTypename actualTypeDXN is null', expectedTypeDXN, actualDXN);
       return false;
     }
-    // console.log(
-    //   'compareTypename',
-    //   expectedTypeDXN,
-    //   actualTypeDXN,
-    //   actualTypeDXN.type !== expectedTypeDXN.type,
-    //   expectedTypeDXN.version !== undefined,
-    //   actualTypeDXN.version !== undefined,
-    //   actualTypeDXN.version !== expectedTypeDXN.version,
-    // );
     if (
       actualTypeDXN.type !== expectedTypeDXN.type ||
       (expectedTypeDXN.version !== undefined &&
         actualTypeDXN.version !== undefined &&
         actualTypeDXN.version !== expectedTypeDXN.version)
     ) {
-      // console.log('compareTypename false A', expectedTypeDXN, actualTypeDXN);
       return false;
     }
   } else {
     if (!DXN.equals(actualDXN, expectedDXN)) {
-      // console.log('compareTypename false B', expectedDXN, actualDXN);
       return false;
     }
   }
-  // console.log('compareTypename true', expectedDXN, actualDXN);
   return true;
 };

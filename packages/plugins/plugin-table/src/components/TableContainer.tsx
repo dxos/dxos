@@ -25,10 +25,11 @@ import {
   type TableRowAction,
   TableToolbar,
   useAddRow,
+  useProjectionModel,
   useTableModel,
 } from '@dxos/react-ui-table';
 import { type Table } from '@dxos/react-ui-table/types';
-import { ProjectionModel, getTypenameFromQuery } from '@dxos/schema';
+import { getTypenameFromQuery } from '@dxos/schema';
 
 import { meta } from '../meta';
 
@@ -121,14 +122,7 @@ export const TableContainer = ({ role, object }: TableContainerProps) => {
     [space],
   );
 
-  const projection = useMemo(() => {
-    if (schema && object?.view.target?.projection) {
-      const projection = new ProjectionModel(Type.toJsonSchema(schema), object.view.target.projection);
-      projection.normalizeView();
-      return projection;
-    }
-  }, [schema, object?.view.target?.projection]);
-
+  const projection = useProjectionModel(schema, object);
   const model = useTableModel({
     table: object,
     projection,

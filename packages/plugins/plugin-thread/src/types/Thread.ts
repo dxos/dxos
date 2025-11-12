@@ -23,6 +23,7 @@ const _Thread = Schema.Struct({
     typename: 'dxos.org/type/Thread',
     version: '0.1.0',
   }),
+  // TODO(wittjosiah): Remove.
   SystemAnnotation.set(true),
 );
 export interface Thread extends Schema.Schema.Type<typeof _Thread> {}

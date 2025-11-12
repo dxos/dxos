@@ -4,7 +4,7 @@
 
 import React, { useMemo, useRef } from 'react';
 
-import { Filter, Obj, Type } from '@dxos/echo';
+import { Filter, Obj } from '@dxos/echo';
 import { useGlobalFilteredObjects } from '@dxos/plugin-search';
 import { useClient } from '@dxos/react-client';
 import { getSpace, useQuery, useSchema } from '@dxos/react-client/echo';
@@ -14,10 +14,11 @@ import {
   type TableController,
   type TableFeatures,
   TablePresentation,
+  useProjectionModel,
   useTableModel,
 } from '@dxos/react-ui-table';
 import { type Table } from '@dxos/react-ui-table/types';
-import { ProjectionModel, getTypenameFromQuery } from '@dxos/schema';
+import { getTypenameFromQuery } from '@dxos/schema';
 
 export type TableCardProps = {
   role: string;
@@ -43,14 +44,7 @@ export const TableCard = ({ role, object }: TableCardProps) => {
     [],
   );
 
-  const projection = useMemo(() => {
-    if (schema && object?.view.target?.projection) {
-      const projection = new ProjectionModel(Type.toJsonSchema(schema), object.view.target.projection);
-      projection.normalizeView();
-      return projection;
-    }
-  }, [schema, object?.view.target?.projection]);
-
+  const projection = useProjectionModel(schema, object);
   const model = useTableModel({
     table: object,
     projection,

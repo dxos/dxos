@@ -4,14 +4,14 @@
 
 import React, { useCallback, useMemo } from 'react';
 
-import { Type } from '@dxos/echo';
-import { EchoSchema, FormatEnum } from '@dxos/echo/internal';
+import { FormatEnum } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
 import { useClient } from '@dxos/react-client';
 import { getSpace, useSchema } from '@dxos/react-client/echo';
 import { type CustomInputMap, Form, SelectInput } from '@dxos/react-ui-form';
+import { useProjectionModel } from '@dxos/react-ui-kanban';
 import { Kanban } from '@dxos/react-ui-kanban/types';
-import { ProjectionModel, getTypenameFromQuery } from '@dxos/schema';
+import { getTypenameFromQuery } from '@dxos/schema';
 
 type KanbanViewEditorProps = { object: Kanban.Kanban };
 
@@ -21,15 +21,7 @@ export const KanbanViewEditor = ({ object }: KanbanViewEditorProps) => {
   const view = object.view.target;
   const currentTypename = view?.query ? getTypenameFromQuery(view.query.ast) : undefined;
   const schema = useSchema(client, space, currentTypename);
-
-  const projection = useMemo(() => {
-    if (schema && view) {
-      const jsonSchema = schema instanceof EchoSchema ? schema.jsonSchema : Type.toJsonSchema(schema);
-      const projection = new ProjectionModel(jsonSchema, view.projection);
-      projection.normalizeView();
-      return projection;
-    }
-  }, [view?.projection, JSON.stringify(schema)]);
+  const projection = useProjectionModel(schema, object);
 
   const fieldProjections = projection?.getFieldProjections() || [];
   const selectFields = fieldProjections

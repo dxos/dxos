@@ -109,9 +109,7 @@ export const AssistantPlugin = definePlugin(meta, () => [
     id: `${meta.id}/module/on-space-created`,
     activatesOn: SpaceEvents.SpaceCreated,
     activate: () =>
-      contributes(SpaceCapabilities.OnCreateSpace, ({ rootCollection, space }) =>
-        createIntent(AssistantAction.OnCreateSpace, { rootCollection, space }),
-      ),
+      contributes(SpaceCapabilities.OnCreateSpace, (params) => createIntent(AssistantAction.OnCreateSpace, params)),
   }),
   defineModule({
     id: `${meta.id}/module/repair`,

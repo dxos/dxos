@@ -12,7 +12,6 @@ import { type Client, useClient } from '@dxos/react-client';
 import { Filter, type Space, useQuery, useSchema } from '@dxos/react-client/echo';
 import { useClientProvider } from '@dxos/react-client/testing';
 import { type ProjectionModel, getTypenameFromQuery } from '@dxos/schema';
-import { getDebugName } from '@dxos/util';
 
 import { type TableController } from '../components';
 import { useAddRow, useProjectionModel, useTableModel } from '../hooks';
@@ -117,8 +116,6 @@ export const useTestTableModel = (): TestTableModel => {
       return new TablePresentation(model);
     }
   }, [model]);
-
-  console.log('test', getDebugName(model), getDebugName(projection));
 
   return {
     schema,
