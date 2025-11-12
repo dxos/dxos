@@ -2,6 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
+import { type Instruction } from '@atlaskit/pragmatic-drag-and-drop-hitbox/tree-item';
 import { Atom } from '@effect-atom/atom-react';
 import * as Function from 'effect/Function';
 
@@ -153,12 +154,6 @@ const getSystemCollectionNodePartials = ({
     acceptPersistenceClass: new Set(['echo']),
     acceptPersistenceKey: new Set([space.id]),
     role: 'branch',
-    onTransferStart: (child: Node<Obj.Any>, index?: number) => {
-      // No-op. Objects are moved into query collections by being removed from their original collection.
-    },
-    onTransferEnd: (child: Node<Obj.Any>, destination: Node) => {
-      // No-op. Objects are moved out of query collections by being added to another collection.
-    },
   };
 };
 
@@ -429,6 +424,7 @@ export const createObjectNode = ({
   disposition,
   droppable = true,
   navigable = false,
+  systemCollectionChild = false,
   resolve,
 }: {
   space: Space;
@@ -436,6 +432,7 @@ export const createObjectNode = ({
   disposition?: string;
   droppable?: boolean;
   navigable?: boolean;
+  systemCollectionChild?: boolean;
   resolve: (typename: string) => Record<string, any>;
 }) => {
   const type = Obj.getTypename(object);
@@ -479,6 +476,20 @@ export const createObjectNode = ({
       persistenceClass: 'echo',
       persistenceKey: space?.id,
       selectable,
+      systemCollectionChild,
+      blockInstruction: (source: TreeData, instruction: Instruction) => {
+        if (source.item.properties.systemCollectionChild) {
+          // TODO(wittjosiah): Support reordering system collections.
+          // return !(systemCollectionChild && source.item.type === type && instruction.type.startsWith('reorder'));
+          return true;
+        }
+
+        if (Obj.instanceOf(Collection.System, object)) {
+          return !instruction.type.startsWith('reorder');
+        }
+
+        return systemCollectionChild;
+      },
       canDrop: (source: TreeData) => {
         return droppable && isGraphNode(source.item) && Obj.isObject(source.item.data);
       },

@@ -411,6 +411,7 @@ export default (context: PluginContext) => {
                   createObjectNode({
                     object,
                     space,
+                    systemCollectionChild: true,
                     resolve: resolve(get),
                   }),
                 )
