@@ -223,42 +223,40 @@ const ChatPrompt = ({
   const extensions = useMemo<Extension[]>(() => {
     return [
       Prec.highest(
-        keymap.of(
-          [
-            {
-              key: 'Mod-d',
-              preventDefault: true,
-              run: () => {
-                event.emit({ type: 'toggle-debug' });
-                return true;
-              },
+        keymap.of([
+          {
+            key: 'Mod-d',
+            preventDefault: true,
+            run: () => {
+              event.emit({ type: 'toggle-debug' });
+              return true;
             },
-            {
-              key: 'Mod-ArrowUp',
-              preventDefault: true,
-              run: () => {
-                event.emit({ type: 'nav-previous' });
-                return true;
-              },
-              shift: () => {
-                event.emit({ type: 'thread-open' });
-                return true;
-              },
+          },
+          {
+            key: 'Mod-ArrowUp',
+            preventDefault: true,
+            run: () => {
+              event.emit({ type: 'nav-previous' });
+              return true;
             },
-            {
-              key: 'Mod-ArrowDown',
-              preventDefault: true,
-              run: () => {
-                event.emit({ type: 'nav-next' });
-                return true;
-              },
-              shift: () => {
-                event.emit({ type: 'thread-close' });
-                return true;
-              },
+            shift: () => {
+              event.emit({ type: 'thread-open' });
+              return true;
             },
-          ].filter(isTruthy),
-        ),
+          },
+          {
+            key: 'Mod-ArrowDown',
+            preventDefault: true,
+            run: () => {
+              event.emit({ type: 'nav-next' });
+              return true;
+            },
+            shift: () => {
+              event.emit({ type: 'thread-close' });
+              return true;
+            },
+          },
+        ]),
       ),
     ].filter(isTruthy);
   }, [event, expandable]);
@@ -285,31 +283,26 @@ const ChatPrompt = ({
       role='group'
       className={mx(
         'flex flex-col is-full density-fine',
-        outline && [
-          'p-2 bg-groupSurface border border-subduedSeparator transition transition-border [&:has(.cm-content:focus)]:border-separator rounded',
-        ],
+        outline &&
+          'bg-groupSurface border border-subduedSeparator transition transition-border [&:has(.cm-content:focus)]:border-separator rounded',
         classNames,
       )}
     >
-      <div role='none' className='flex gap-2'>
+      <div role='none' className='flex p-2 gap-2'>
         <ChatStatusIndicator classNames='p-1' preset={preset} error={error} processing={streaming} />
-
-        {/* TODO(burdon): Popover. */}
-        {/* TODO(burdon): Remove custom component. */}
         <ChatEditor
           ref={editorRef}
           autoFocus
           lineWrapping
           classNames='col-span-2 pbs-0.5'
           placeholder={placeholder ?? t('prompt placeholder')}
-          // references={referencesProvider ? { provider: referencesProvider } : undefined}
           extensions={extensions}
           onSubmit={handleSubmit}
         />
       </div>
 
       {space && settings && (
-        <div role='none' className='flex pbs-2 items-center overflow-hidden'>
+        <div role='none' className='flex items-center overflow-hidden'>
           <ChatOptions
             space={space}
             blueprintRegistry={processor.blueprintRegistry}

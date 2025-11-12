@@ -15,6 +15,8 @@ import { type UseTextEditorProps, useTextEditor } from '../../hooks';
 
 export interface EditorController {
   get view(): EditorView | null;
+  getText: () => string;
+  setText: (text: string, focus?: boolean) => void;
   focus: () => void;
 }
 
@@ -53,10 +55,28 @@ export const EditorContent = forwardRef<EditorController, EditorContentProps>(
 
     // External controller.
     useImperativeHandle(forwardedRef, () => {
-      log.info('view updated', { id });
+      log('view updated', { id });
       return {
         get view() {
           return view;
+        },
+        getText: () => view?.state.doc.toString() ?? '',
+        setText: (text: string, focus?: boolean) => {
+          view?.dispatch({
+            changes: {
+              from: 0,
+              to: view?.state.doc.length ?? 0,
+              insert: text,
+            },
+            selection: {
+              anchor: text.length,
+              head: text.length,
+            },
+          });
+
+          if (focus) {
+            view?.focus();
+          }
         },
         focus: () => view?.focus(),
       };
@@ -70,6 +90,7 @@ export const EditorContent = forwardRef<EditorController, EditorContentProps>(
           changes: value ? [{ from: 0, to: view?.state.doc.length ?? 0, insert: value ?? '' }] : [],
           selection: moveToEnd ? { anchor: view?.state.doc.length ?? 0 } : undefined,
         });
+
         view?.focus();
       });
     }, [view, value, moveToEnd]);
