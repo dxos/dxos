@@ -60,7 +60,7 @@ const DefaultStory = (props: Partial<TriggerEditorProps>) => {
   }
 
   return (
-    <div role='none' className='w-[32rem] bs-fit border border-separator rounded-sm'>
+    <div role='none' className='is-[32rem] bs-fit border border-separator rounded-sm'>
       <TriggerEditor
         space={space}
         trigger={trigger}

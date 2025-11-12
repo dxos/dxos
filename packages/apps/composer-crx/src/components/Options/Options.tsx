@@ -19,7 +19,7 @@ export const Options = ({ classNames }: OptionsProps) => {
     <div className={mx('flex flex-col grow gap-4 overflow-y-auto bg-baseSurface', classNames)}>
       <div className='grid grid-cols-[8rem_1fr] p-4'>
         <a href='https://dxos.org/composer' target='_blank' rel='noreferrer'>
-          <Composer className='w-[8rem] h-[8rem]' />
+          <Composer className='is-[8rem] bs-[8rem]' />
         </a>
         <div className='grid grid-rows-[1fr_1fr]'>
           <div />

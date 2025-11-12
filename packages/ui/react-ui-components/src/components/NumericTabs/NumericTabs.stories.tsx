@@ -34,7 +34,7 @@ export const Default: Story = {
   render: () => {
     const [selected, setSelected] = useState(0);
     return (
-      <div className='flex flex-col w-[30rem] p-2 bg-attention rounded-lg'>
+      <div className='flex flex-col is-[30rem] p-2 bg-attention rounded-lg'>
         <ToggleContainer.Root classNames='grid grid-rows-[max-content_1fr]' open>
           <ToggleContainer.Header>
             <div className='pis-2'>{content[selected].title}</div>

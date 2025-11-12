@@ -86,7 +86,7 @@ const DefaultStory = () => {
       <div className='mb-2'>
         <input type='file' accept='image/*' onChange={onFileChange} />
       </div>
-      <div className='w-[50rem]' ref={parentRef} {...focusAttributes} />
+      <div className='is-[50rem]' ref={parentRef} {...focusAttributes} />
     </>
   );
 };

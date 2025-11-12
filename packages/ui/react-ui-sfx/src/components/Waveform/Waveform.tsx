@@ -25,10 +25,10 @@ const createRange = (n: number): Range =>
 const range = createRange(5);
 
 const sizes: Record<number, { range: Range; classNames: string; h: string }> = {
-  3: { range, classNames: 'w-3 h-3 gap-[1px]', h: 'w-[1px] h-[12px]' },
-  4: { range, classNames: 'w-4 h-4 gap-[1px]', h: 'w-[1.5px] h-[14px]' },
-  5: { range, classNames: 'w-5 h-5 gap-[2px]', h: 'w-[1.5px] h-[20px]' },
-  6: { range, classNames: 'w-6 h-6 gap-[2px]', h: 'w-[2px] h-[22px]' },
+  3: { range, classNames: 'is-3 bs-3 gap-[1px]', h: 'is-[1px] bs-[12px]' },
+  4: { range, classNames: 'is-4 bs-4 gap-[1px]', h: 'is-[1.5px] bs-[14px]' },
+  5: { range, classNames: 'is-5 bs-5 gap-[2px]', h: 'is-[1.5px] bs-[20px]' },
+  6: { range, classNames: 'is-6 bs-6 gap-[2px]', h: 'is-[2px] bs-[22px]' },
 };
 
 export type WaveformProps = ThemedClassName<{

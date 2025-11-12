@@ -24,7 +24,7 @@ const meta = {
 
 export default meta;
 
-const classNames = 'w-[20rem] p-2 border border-separator';
+const classNames = 'is-[20rem] p-2 border border-separator';
 
 type Story = StoryObj<typeof meta>;
 

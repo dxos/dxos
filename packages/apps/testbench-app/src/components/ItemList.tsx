@@ -41,7 +41,7 @@ export const ItemList = ({ objects, debug, ...props }: ItemListProps<Obj.Any>) =
   );
 };
 
-const labelProps = 'shrink-0 w-20 text-right text-primary-500 pli-2 plb-[2px]';
+const labelProps = 'shrink-0 is-20 text-right text-primary-500 pli-2 plb-[2px]';
 
 export type ItemProps<T> = {
   object: T;

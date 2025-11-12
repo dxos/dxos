@@ -11,7 +11,7 @@ import { Arrow, createPath } from './svg';
 import { testId } from './util';
 
 const DefaultStory = () => (
-  <svg className='border border-neutral-500 w-[30rem] h-[400px]'>
+  <svg className='border border-neutral-500 is-[30rem] bs-[400px]'>
     <defs>
       <Arrow id='arrow-start' classNames='fill-none stroke-red-500' dir='start' />
       <Arrow id='arrow-end' classNames='fill-none stroke-red-500' dir='end' />

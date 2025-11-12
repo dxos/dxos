@@ -19,7 +19,7 @@ const DefaultStory = (props: SearchResultsProps) => {
 
   return (
     <div className='flex grow justify-center overflow-hidden'>
-      <div className='flex w-[300px] m-4 overflow-hidden'>
+      <div className='flex is-[300px] m-4 overflow-hidden'>
         <SearchResults {...props} selected={selected} onSelect={setSelected} />
       </div>
     </div>
