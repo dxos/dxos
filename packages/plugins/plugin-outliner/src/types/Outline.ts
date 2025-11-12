@@ -19,7 +19,7 @@ export const Outline = Schema.Struct({
 
 export interface Outline extends Schema.Schema.Type<typeof Outline> {}
 
-export const make = (name?: string, content?: string): Outline => {
+export const make = ({ name, content }: { name?: string; content?: string } = {}): Outline => {
   return Obj.make(Outline, {
     name,
     content: Ref.make(TextType.make(content)),
