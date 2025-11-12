@@ -5,7 +5,7 @@
 import { openSearchPanel } from '@codemirror/search';
 import { type EditorView } from '@codemirror/view';
 
-import { createEditorAction } from './util';
+import { createEditorAction } from './actions';
 
 const createSearchAction = (getView: () => EditorView) =>
   createEditorAction(

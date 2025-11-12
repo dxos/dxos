@@ -15,7 +15,7 @@ import { withClientProvider } from '@dxos/react-client/testing';
 import { Popover } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { MarkdownStream } from '@dxos/react-ui-components';
-import { PreviewPopoverProvider, usePreviewPopover } from '@dxos/react-ui-editor/testing';
+import { EditorPreviewProvider, useEditorPreview } from '@dxos/react-ui-editor';
 import { Card } from '@dxos/react-ui-stack';
 import { render } from '@dxos/storybook-utils';
 import { type Message, Organization, Person } from '@dxos/types';
@@ -67,15 +67,15 @@ const DefaultStory = ({ generator = [], delay = 0, wait, ...props }: StoryProps)
   }
 
   return (
-    <PreviewPopoverProvider onLookup={async ({ label, ref }) => ({ label, text: ref })}>
+    <EditorPreviewProvider onLookup={async ({ label, ref }) => ({ label, text: ref })}>
       <ChatThread {...props} messages={queue?.objects} />
       <PreviewCard />
-    </PreviewPopoverProvider>
+    </EditorPreviewProvider>
   );
 };
 
 const PreviewCard = () => {
-  const { target } = usePreviewPopover('PreviewCard');
+  const { target } = useEditorPreview('PreviewCard');
 
   return (
     <Popover.Portal>

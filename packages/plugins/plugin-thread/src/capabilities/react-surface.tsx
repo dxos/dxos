@@ -15,7 +15,7 @@ import {
   CallSidebar,
   ChannelContainer,
   ChatContainer,
-  ThreadComplementary,
+  ThreadCompanion,
   ThreadSettings,
 } from '../components';
 import { meta } from '../meta';
@@ -65,7 +65,7 @@ export default () =>
       filter: (data): data is { companionTo: { threads: Ref.Ref<Thread.Thread>[] } } =>
         data.subject === 'comments' && Obj.isObject(data.companionTo),
       // TODO(wittjosiah): This isn't scrolling properly in a plank.
-      component: ({ data }) => <ThreadComplementary subject={data.companionTo} />,
+      component: ({ data }) => <ThreadCompanion subject={data.companionTo} />,
     }),
     createSurface({
       id: `${meta.id}/plugin-settings`,

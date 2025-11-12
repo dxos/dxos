@@ -25,8 +25,6 @@ export const JournalContainer = ({
     controllerRef.current?.scrollTo(date);
   }, []);
 
-  console.log(isNotMobile);
-
   return (
     <StackItem.Content>
       <div

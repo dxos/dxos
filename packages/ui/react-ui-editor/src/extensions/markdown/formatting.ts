@@ -18,8 +18,6 @@ import { type SyntaxNode, type SyntaxNodeRef } from '@lezer/common';
 
 import { debounceAndThrottle } from '@dxos/async';
 
-import { type EditorToolbarState } from '../../components';
-
 // Markdown refs:
 // https://github.github.com/gfm
 // https://docs.github.com/en/get-started/writing-on-github/getting-started-with-writing-and-formatting-on-github/basic-writing-and-formatting-syntax
@@ -1249,7 +1247,7 @@ export const getFormatting = (state: EditorState): Formatting => {
 /**
  * Hook provides an extension to compute the current formatting state.
  */
-export const formattingListener = (stateProvider: () => EditorToolbarState | undefined, delay = 100): Extension => {
+export const formattingListener = (stateProvider: () => Formatting | undefined, delay = 100): Extension => {
   return EditorView.updateListener.of(
     debounceAndThrottle((update: ViewUpdate) => {
       if (update.docChanged || update.selectionSet) {

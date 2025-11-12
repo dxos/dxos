@@ -9,7 +9,7 @@ import React from 'react';
 import { withTheme } from '@dxos/react-ui/testing';
 
 import { decorateMarkdown, image, linkTooltip, table } from '../extensions';
-import { str } from '../testing';
+import { str } from '../util';
 
 import { EditorStory, content, defaultExtensions, headings, renderLinkTooltip, text } from './components';
 

@@ -9,7 +9,8 @@ import { type ToolbarMenuActionGroupProperties } from '@dxos/react-ui-menu';
 
 import { type Formatting, Inline, addLink, removeLink, setStyle } from '../../extensions';
 
-import { type EditorToolbarState, createEditorAction, createEditorActionGroup } from './util';
+import { createEditorAction, createEditorActionGroup } from './actions';
+import { type EditorToolbarState } from './useEditorToolbar';
 
 const formats = {
   strong: 'ph--text-b--regular',
