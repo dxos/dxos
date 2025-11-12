@@ -7,6 +7,6 @@ export * from './Editor';
 // export { type GetMenuContext } from './EditorMenuProvider';
 
 // TODO(burdon): Remove once Editor is fully migrated.
-export { EditorContent } from './EditorContent';
+export { EditorContent, createEditorController } from './EditorContent';
 export * from './EditorMenuProvider';
 export { EditorToolbar, type EditorToolbarProps, type EditorToolbarState, useEditorToolbar } from './EditorToolbar';

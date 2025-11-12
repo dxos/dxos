@@ -34,31 +34,33 @@ export const Default: Story = {
   },
 };
 
+// TODO(burdon): Restore and reconcile with suggest/typeahead.
 export const WithSuggestions: Story = {
   args: {
     classNames,
     onSubmit: (text) => {
       log('onSubmit', { text });
     },
-    onSuggest: (text) => {
-      const trimmed = text.trim().toLowerCase();
-      if (trimmed.length < 2) {
-        return [];
-      }
+    // onSuggest: (text) => {
+    //   const trimmed = text.trim().toLowerCase();
+    //   if (trimmed.length < 2) {
+    //     return [];
+    //   }
 
-      const suggestions = [
-        'Create a kanban board',
-        'Create a new project',
-        'Find flights to Tokyo',
-        "Let's play chess",
-        'Show me Paris on a map',
-      ];
+    //   const suggestions = [
+    //     'Create a kanban board',
+    //     'Create a new project',
+    //     'Find flights to Tokyo',
+    //     "Let's play chess",
+    //     'Show me Paris on a map',
+    //   ];
 
-      return suggestions.filter((s) => s.toLowerCase().startsWith(text));
-    },
+    //   return suggestions.filter((s) => s.toLowerCase().startsWith(text));
+    // },
   },
 };
 
+// TODO(burdon): Replace.
 const references: ReferenceData[] = [
   {
     uri: 'dxn:echo:@:AAAAAAAA',

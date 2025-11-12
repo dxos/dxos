@@ -69,7 +69,7 @@ export const MarkdownEditorContent = forwardRef<EditorView | null, MarkdownEdito
           selection,
           // TODO(wittjosiah): Autofocus based on layout is racy.
           // autoFocus: layoutPlugin?.provides.layout ? layoutPlugin?.provides.layout.scrollIntoView === id : true,
-          moveToEndOfLine: true,
+          selectionEnd: true,
         }),
         initialValue,
         extensions: [

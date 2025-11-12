@@ -38,7 +38,7 @@ const DefaultStory = ({ autoFocus, initialValue, placeholder }: StoryProps) => {
     () => ({
       autoFocus,
       initialValue,
-      moveToEndOfLine: true,
+      selectionEnd: true,
       extensions: [
         editorInputMode ? InputModeExtensions[editorInputMode] : [],
         createBasicExtensions({ placeholder, lineWrapping: true, readOnly: viewMode === 'readonly', search: true }),

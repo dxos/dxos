@@ -41,19 +41,23 @@ export const getPreviousMenuItem = (groups: EditorMenuGroup[], id?: string): Edi
 export const createMenuGroup = ({
   id = 'menu',
   label,
+  filter,
   items,
 }: {
   id?: string;
   label?: Label;
+  filter?: string;
   items: string[];
 }): EditorMenuGroup => ({
   id,
   label,
-  items: items.map((item, i) => ({
-    id: `${id}-${i}`,
-    label: item,
-    onSelect: ({ view, head }) => insertAtCursor(view, head, item),
-  })),
+  items: items
+    .filter((item) => !filter || item.toLowerCase().includes(filter.toLowerCase()))
+    .map((item, i) => ({
+      id: `${id}-${i}`,
+      label: item,
+      onSelect: ({ view, head }) => insertAtCursor(view, head, item),
+    })),
 });
 
 export const filterMenuGroups = (

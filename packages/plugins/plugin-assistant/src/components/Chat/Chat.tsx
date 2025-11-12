@@ -323,7 +323,7 @@ const ChatPrompt = ({
             processing={streaming}
             onEvent={handleEvent}
           >
-            {/* TODO(burdon): Move switch into dialog. */}
+            {/* TODO(burdon): Move offline switch into dialog. */}
             {online !== undefined && (
               <Input.Root>
                 <Input.Label srOnly>{t('online switch label')}</Input.Label>

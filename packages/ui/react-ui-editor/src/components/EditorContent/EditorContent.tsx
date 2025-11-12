@@ -13,16 +13,10 @@ import { mx } from '@dxos/react-ui-theme';
 import { initialSync } from '../../extensions';
 import { type UseTextEditorProps, useTextEditor } from '../../hooks';
 
-export interface EditorController {
-  get view(): EditorView | null;
-  getText: () => string;
-  setText: (text: string, focus?: boolean) => void;
-  focus: () => void;
-}
+import { type EditorController, createEditorController } from './controller';
 
 export type EditorContentProps = ThemedClassName<
   {
-    moveToEnd?: boolean;
     value?: string;
     onChange?: (value: string) => void;
   } & UseTextEditorProps
@@ -34,11 +28,12 @@ export type EditorContentProps = ThemedClassName<
  * @deprecated Use Editor.Content
  */
 export const EditorContent = forwardRef<EditorController, EditorContentProps>(
-  ({ classNames, id, extensions, moveToEnd, value, onChange, ...props }, forwardedRef) => {
+  ({ classNames, id, extensions, selectionEnd, value, onChange, ...props }, forwardedRef) => {
     const { parentRef, focusAttributes, view } = useTextEditor(
       () => ({
         id,
         initialValue: value,
+        selectionEnd,
         extensions: [
           extensions ?? [],
           EditorView.updateListener.of(({ view, docChanged, transactions }) => {
@@ -50,37 +45,14 @@ export const EditorContent = forwardRef<EditorController, EditorContentProps>(
         ],
         ...props,
       }),
-      [id, extensions, onChange],
+      [id, extensions, onChange, selectionEnd],
     );
 
     // External controller.
     useImperativeHandle(forwardedRef, () => {
-      log('view updated', { id });
-      return {
-        get view() {
-          return view;
-        },
-        getText: () => view?.state.doc.toString() ?? '',
-        setText: (text: string, focus?: boolean) => {
-          view?.dispatch({
-            changes: {
-              from: 0,
-              to: view?.state.doc.length ?? 0,
-              insert: text,
-            },
-            selection: {
-              anchor: text.length,
-              head: text.length,
-            },
-          });
-
-          if (focus) {
-            view?.focus();
-          }
-        },
-        focus: () => view?.focus(),
-      };
-    }, [view, id]);
+      log.info('view updated', { id });
+      return createEditorController(view);
+    }, [id, view]);
 
     // Set initial value and cursor position.
     useEffect(() => {
@@ -88,12 +60,12 @@ export const EditorContent = forwardRef<EditorController, EditorContentProps>(
         view?.dispatch({
           annotations: initialSync,
           changes: value ? [{ from: 0, to: view?.state.doc.length ?? 0, insert: value ?? '' }] : [],
-          selection: moveToEnd ? { anchor: view?.state.doc.length ?? 0 } : undefined,
+          selection: selectionEnd ? { anchor: view?.state.doc.length ?? 0 } : undefined,
         });
 
         view?.focus();
       });
-    }, [view, value, moveToEnd]);
+    }, [view, value, selectionEnd]);
 
     return <div role='none' className={mx('is-full', classNames)} {...focusAttributes} ref={parentRef} />;
   },

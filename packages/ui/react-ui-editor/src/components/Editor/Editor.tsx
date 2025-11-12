@@ -15,6 +15,7 @@ import {
   type EditorController,
   EditorContent as NaturalEditorContent,
   type EditorContentProps as NaturalEditorContentProps,
+  noopController,
 } from '../EditorContent';
 import { EditorMenuProvider, type UseEditorMenuProps, useEditorMenu } from '../EditorMenuProvider';
 import {
@@ -46,31 +47,31 @@ type EditorRootProps = PropsWithChildren<Omit<UseEditorMenuProps, 'viewRef'> & P
  * Root component for the Editor compound component.
  * Provides context for all child components and manages the editor controller state.
  */
-const EditorRoot = forwardRef<EditorController, EditorRootProps>(({ children, viewMode, ...props }, forwardedRef) => {
-  const [controller, setController] = useState<EditorController>();
-  const state = useEditorToolbar({ viewMode });
+const EditorRoot = forwardRef<EditorController | null, EditorRootProps>(
+  ({ children, viewMode, ...props }, forwardedRef) => {
+    const state = useEditorToolbar({ viewMode });
 
-  // TODO(burdon): Consider lighter-weight approach if EditorMenuProvider is not needed.
-  const { groupsRef, extension, ...menuProps } = useEditorMenu(props);
-  const extensions = useMemo(() => [extension], [extension]);
+    const [controller, setController] = useState<EditorController>();
+    useImperativeHandle(forwardedRef, () => controller ?? noopController, [controller]);
 
-  useImperativeHandle(
-    forwardedRef,
-    () => ({
-      view: controller?.view ?? null,
-      focus: () => controller?.view?.focus(),
-    }),
-    [controller],
-  );
+    // TODO(burdon): Consider lighter-weight approach if EditorMenuProvider is not needed.
+    const { groupsRef, extension, ...menuProps } = useEditorMenu(props);
+    const extensions = useMemo(() => [extension], [extension]);
 
-  return (
-    <EditorContextProvider controller={controller} setController={setController} extensions={extensions} state={state}>
-      <EditorMenuProvider view={controller?.view} groups={groupsRef.current} {...menuProps}>
-        {children}
-      </EditorMenuProvider>
-    </EditorContextProvider>
-  );
-});
+    return (
+      <EditorContextProvider
+        controller={controller}
+        setController={setController}
+        extensions={extensions}
+        state={state}
+      >
+        <EditorMenuProvider view={controller?.view} groups={groupsRef.current} {...menuProps}>
+          {children}
+        </EditorMenuProvider>
+      </EditorContextProvider>
+    );
+  },
+);
 
 EditorRoot.displayName = 'Editor.Root';
 

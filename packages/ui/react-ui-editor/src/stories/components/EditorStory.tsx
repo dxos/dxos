@@ -17,7 +17,7 @@ import { JsonFilter } from '@dxos/react-ui-syntax-highlighter';
 import { mx } from '@dxos/react-ui-theme';
 import { isNonNullable } from '@dxos/util';
 
-import { type EditorController } from '../../components';
+import { type EditorController, createEditorController } from '../../components';
 import { editorGutter, editorSlots } from '../../defaults';
 import {
   type DebugNode,
@@ -130,15 +130,11 @@ export const EditorComponent = forwardRef<EditorController, StoryProps>(
       [id, object, extensions, themeMode],
     );
 
+    // External controller.
     useImperativeHandle(forwardedRef, () => {
       log.info('view updated', { id });
-      return {
-        get view() {
-          return view;
-        },
-        focus: () => view?.focus(),
-      };
-    }, [view, id]);
+      return createEditorController(view);
+    }, [id, view]);
 
     useEffect(() => {
       if (view) {

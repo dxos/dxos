@@ -82,7 +82,7 @@ export const QueryEditor = forwardRef<EditorController, QueryEditorProps>(
 
     return (
       <EditorMenuProvider view={controller?.view} groups={groupsRef.current} numItems={numItems} {...menuProps}>
-        <EditorContent {...props} initialValue={value} extensions={extensions} moveToEnd ref={setController} />
+        <EditorContent {...props} initialValue={value} extensions={extensions} selectionEnd ref={setController} />
       </EditorMenuProvider>
     );
   },

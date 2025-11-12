@@ -210,5 +210,5 @@ const NotebookTextEditor = ({
     ].filter(isNonNullable);
   }, [extensionsParam]);
 
-  return <EditorContent {...props} extensions={extensions} moveToEnd />;
+  return <EditorContent {...props} extensions={extensions} selectionEnd />;
 };

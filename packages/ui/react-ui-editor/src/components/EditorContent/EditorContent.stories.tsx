@@ -40,7 +40,7 @@ export const Default: Story = {
     return <EditorContent classNames='p-2' {...args} extensions={extensions} />;
   },
   args: {
-    moveToEnd: true,
+    selectionEnd: true,
     value: 'Hello world!',
     onChange: (value) => console.log(value),
   },
@@ -63,7 +63,7 @@ export const Automerge: Story = {
     return <EditorContent classNames='p-2' {...props} initialValue={value} extensions={extensions} />;
   },
   args: {
-    moveToEnd: true,
+    selectionEnd: true,
     value: 'Hello world!',
     onChange: (value) => console.log(value),
   },

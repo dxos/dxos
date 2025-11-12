@@ -19,7 +19,7 @@ import { invariant } from '@dxos/invariant';
 
 // TODO(dmaretskyi): Consider adding details renderer for when you hover over the reference.
 export type ReferenceData = {
-  uri: string;
+  uri: string; // TODO(burdon): Rename dxn.
   label: string;
 };
 
