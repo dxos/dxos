@@ -46,21 +46,21 @@ export const Default: Story = {
 export const Cors: Story = {
   args: {
     src: 'https://dxos.network/dxos-logotype-blue.png',
-    classNames: 'w-[20rem]',
+    classNames: 'is-[20rem]',
   },
 };
 
 export const Corners: Story = {
   args: {
     src: 'https://media.licdn.com/dms/image/v2/D4D0BAQEY4OiENeMR4A/company-logo_200_200/company-logo_200_200/0/1728648673877/moonfire_logo?e=1763596800&v=beta&t=_Jmhg-vu5uqUR88YiTbDFOC4ShlUbjk63_7-JQpgK9A',
-    classNames: 'w-[20rem]',
+    classNames: 'is-[20rem]',
   },
 };
 
 export const SVG: Story = {
   args: {
     src: 'https://dxos.network/bg-kube.svg',
-    classNames: 'w-[20rem]',
+    classNames: 'is-[20rem]',
   },
 };
 

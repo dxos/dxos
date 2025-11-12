@@ -47,7 +47,7 @@ export const TaskList = (props: TaskListProps) => {
             {tasks.filter(isNonNullable).map((task, index) => (
               <li
                 key={index}
-                className='flex items-center justify-between text-gray-700 max-is-md rounded p-1 h-8'
+                className='flex items-center justify-between text-gray-700 max-is-md rounded p-1 bs-8'
                 onMouseOver={() => {
                   setShowDeleteTask(index);
                 }}

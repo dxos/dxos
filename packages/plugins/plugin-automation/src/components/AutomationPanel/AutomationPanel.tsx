@@ -123,7 +123,7 @@ export const AutomationPanel = ({ classNames, space, object, initialTrigger, onD
 
                     <div className={'flex'}>
                       <List.ItemTitle
-                        classNames='pli-1 cursor-pointer w-0 shrink truncate'
+                        classNames='pli-1 cursor-pointer is-0 shrink truncate'
                         onClick={() => handleSelect(trigger)}
                       >
                         {getFunctionName(functions, trigger) ?? '∅'}

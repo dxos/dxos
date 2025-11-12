@@ -19,7 +19,7 @@ export const IconButton = ({
 } & Pick<HTMLAttributes<HTMLDivElement>, 'onClick'>) => {
   // TODO(burdon): Density aware.
   return (
-    <div className={mx('flex w-6 h-6 items-center justify-center select-none', classNames)} onClick={onClick}>
+    <div className={mx('flex is-6 bs-6 items-center justify-center select-none', classNames)} onClick={onClick}>
       <Icon icon={iconName} classNames='cursor-pointer' size={size} />
     </div>
   );

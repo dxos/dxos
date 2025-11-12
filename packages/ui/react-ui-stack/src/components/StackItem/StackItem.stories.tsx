@@ -12,7 +12,7 @@ import { StackItem, type StackItemRootProps } from './StackItem';
 
 const DefaultStory = (props: StackItemRootProps) => {
   return (
-    <StackItem.Root role='section' {...props} classNames='w-[20rem] border border-separator'>
+    <StackItem.Root role='section' {...props} classNames='is-[20rem] border border-separator'>
       <StackItem.Heading>
         <span className='sr-only'>Title</span>
         <div role='none' className='sticky -block-start-px bg-[--sticky-bg] p-1 is-full'>

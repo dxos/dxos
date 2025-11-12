@@ -33,7 +33,7 @@ const Sidebar = () => {
   const { pathname } = useLocation();
   const sections = useSections();
   return (
-    <div className='flex flex-col w-[180px] shrink-0 overflow-hidden overflow-y-auto border-r border-separator'>
+    <div className='flex flex-col is-[180px] shrink-0 overflow-hidden overflow-y-auto border-r border-separator'>
       <div className='flex flex-col gap-4 divide-y divide-separator'>
         {sections.map((section) => (
           <div key={section.id}>
