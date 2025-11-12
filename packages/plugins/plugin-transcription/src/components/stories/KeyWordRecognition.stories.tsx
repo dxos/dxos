@@ -86,7 +86,7 @@ const DefaultStory = ({ keywords }: StoryProps) => {
   }, [running, recognition]);
 
   return (
-    <div className={mx('flex flex-col gap-2 w-[30rem]')}>
+    <div className={mx('flex flex-col gap-2 is-[30rem]')}>
       <Toolbar.Root>
         <Toolbar.IconButton
           iconOnly

@@ -29,8 +29,8 @@ export const SpansPanel = ({ spans, ...props }: CustomPanelProps<{ spans?: Span[
               startTs && (
                 <tr key={id}>
                   <td className='p-1'>{methodName}</td>
-                  <td className='p-1 w-[80px] text-right'>{resourceId}</td>
-                  <td className='p-1 w-[80px] text-right'>
+                  <td className='p-1 is-[80px] text-right'>{resourceId}</td>
+                  <td className='p-1 is-[80px] text-right'>
                     <Duration duration={parseInt(endTs) - parseInt(startTs)} />
                   </td>
                 </tr>

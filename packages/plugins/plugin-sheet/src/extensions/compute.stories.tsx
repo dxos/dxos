@@ -63,7 +63,7 @@ const DefaultStory = ({ text }: EditorProps) => {
     [computeGraph, themeMode],
   );
 
-  return <div className='w-[40rem] overflow-hidden' ref={parentRef} {...focusAttributes} />;
+  return <div className='is-[40rem] overflow-hidden' ref={parentRef} {...focusAttributes} />;
 };
 
 const Grid = () => {
@@ -82,7 +82,7 @@ const Grid = () => {
   }
 
   return (
-    <div className='flex w-[40rem] overflow-hidden'>
+    <div className='flex is-[40rem] overflow-hidden'>
       <SheetProvider graph={graph} sheet={sheet}>
         <GridSheet />
       </SheetProvider>

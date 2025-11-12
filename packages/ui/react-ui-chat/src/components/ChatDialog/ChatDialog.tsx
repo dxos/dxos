@@ -14,7 +14,7 @@ const preventDefault = (event: Event) => event.preventDefault();
 // TODO(burdon): Factor out.
 const Endcap = ({ children }: PropsWithChildren) => {
   return (
-    <div className='grid w-[var(--rail-action)] h-[var(--rail-action)] items-center justify-center'>{children}</div>
+    <div className='grid is-[var(--rail-action)] bs-[var(--rail-action)] items-center justify-center'>{children}</div>
   );
 };
 

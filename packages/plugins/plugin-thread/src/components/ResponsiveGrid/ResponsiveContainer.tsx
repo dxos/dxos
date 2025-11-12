@@ -22,7 +22,7 @@ export const ResponsiveContainer = ({ children }: PropsWithChildren) => {
       {/* Absolute positioning layer for centering content. */}
       <div role='none' className='absolute inset-0 flex justify-center items-center'>
         {/* Content container that maintains given aspect ratio and proper scaling. */}
-        <div role='none' className={mx('max-bs-full max-is-full w-auto h-auto aspect-video')}>
+        <div role='none' className={mx('max-bs-full max-is-full is-auto bs-auto aspect-video')}>
           {children}
         </div>
       </div>

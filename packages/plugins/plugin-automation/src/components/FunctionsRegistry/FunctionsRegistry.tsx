@@ -92,7 +92,7 @@ export const FunctionsRegistry = ({ space }: FunctionsRegistryProps) => {
           getId={(func) => func.id}
         >
           {({ items }) => (
-            <div role='list' className='flex flex-col w-full'>
+            <div role='list' className='flex flex-col is-full'>
               {items?.map((func) => (
                 <List.Item<Function.Function>
                   key={func.id}

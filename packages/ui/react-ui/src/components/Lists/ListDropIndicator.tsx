@@ -18,7 +18,7 @@ const orientationStyles: Record<Orientation, HTMLAttributes<HTMLElement>['classN
   horizontal:
     'h-[--line-thickness] left-[calc(var(--line-inset)+var(--terminal-radius))] right-[--line-inset] before:left-[--terminal-inset]',
   vertical:
-    'w-[--line-thickness] top-[calc(var(--line-inset)+var(--terminal-radius))] bottom-[--line-inset] before:top-[--terminal-inset]',
+    'is-[--line-thickness] top-[calc(var(--line-inset)+var(--terminal-radius))] bottom-[--line-inset] before:top-[--terminal-inset]',
 };
 
 const edgeStyles: Record<Edge, HTMLAttributes<HTMLElement>['className']> = {

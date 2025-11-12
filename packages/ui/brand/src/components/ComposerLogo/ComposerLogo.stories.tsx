@@ -68,7 +68,7 @@ export const Default: Story = {
             <div className={mx('flex items-center -mt-[20px] text-neutral-700')}>
               <span className='ml-[210px] mt-[2px] mr-2'>Powered by DXOS</span>
               <div>
-                <DXOS className='w-[32px] h-[32px]' />
+                <DXOS className='is-[32px] bs-[32px]' />
               </div>
             </div>
           </div>
@@ -95,7 +95,7 @@ export const Colors: Story = {
 
     return (
       <div className='absolute inset-0 flex justify-center items-center'>
-        <div className='grid grid-cols-3 gap-20 w-[800px]'>
+        <div className='grid grid-cols-3 gap-20 is-[800px]'>
           {colors.map((classNames, i) => (
             <div key={i} className='flex justify-center items-center'>
               <ComposerLogo animate={false} size={160} classNames={classNames} />
@@ -115,13 +115,13 @@ export const Pacman: Story = {
           <div className='flex items-center p-4'>
             <div className='flex ml-8 mr-[100px]'>
               <div>
-                <Icon icon='ph--ghost--duotone' classNames='w-[180px] h-[180px] text-blue-500' />
+                <Icon icon='ph--ghost--duotone' classNames='is-[180px] bs-[180px] text-blue-500' />
               </div>
               <div>
-                <Icon icon='ph--ghost--duotone' classNames='w-[180px] h-[180px] text-purple-500' />
+                <Icon icon='ph--ghost--duotone' classNames='is-[180px] bs-[180px] text-purple-500' />
               </div>
               <div>
-                <Icon icon='ph--ghost--duotone' classNames='w-[180px] h-[180px] text-red-500' />
+                <Icon icon='ph--ghost--duotone' classNames='is-[180px] bs-[180px] text-red-500' />
               </div>
             </div>
 
@@ -130,7 +130,7 @@ export const Pacman: Story = {
             <div className='flex -ml-10'>
               {Array.from({ length: 6 }).map((_, i) => (
                 <div key={i} className='p-4'>
-                  <Icon icon='ph--square--duotone' classNames='w-6 h-6 text-yellow-200' />
+                  <Icon icon='ph--square--duotone' classNames='is-6 bs-6 text-yellow-200' />
                 </div>
               ))}
             </div>

@@ -43,7 +43,7 @@ const Root = () => {
   };
 
   return (
-    <Container classNames='w-[300px]'>
+    <Container classNames='is-[300px]'>
       <Popup onAdd={handleAdd} onSearch={handleSearch} onLaunch={handleLaunch} />
     </Container>
   );

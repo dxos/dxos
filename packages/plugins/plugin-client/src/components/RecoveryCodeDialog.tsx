@@ -60,7 +60,7 @@ const Code = ({ code }: { code: string }) => {
       <div className='grid grid-cols-4'>
         {words.map((word, i) => (
           <div key={i} className='flex items-center p-2 gap-2'>
-            <div className='w-4 text-xs text-center text-subdued'>{i + 1}</div>
+            <div className='is-4 text-xs text-center text-subdued'>{i + 1}</div>
             <div className='text-sm'>{word}</div>
           </div>
         ))}
