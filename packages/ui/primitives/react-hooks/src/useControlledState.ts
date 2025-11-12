@@ -12,18 +12,20 @@ import { type Dispatch, type SetStateAction, useEffect, useState } from 'react';
 export const useControlledState = <T>(
   controlledValue: T,
   onChange?: (value: T) => void,
-  ...deps: any[]
 ): [T, Dispatch<SetStateAction<T>>] => {
   const [value, setValue] = useState<T>(controlledValue);
   useEffect(() => {
     if (controlledValue !== undefined) {
       setValue(controlledValue);
     }
-  }, [controlledValue, ...deps]);
+  }, [controlledValue]);
 
   useEffect(() => {
-    onChange?.(value);
-  }, [value, onChange]);
+    if (value !== controlledValue) {
+      console.log(value, controlledValue);
+      // onChange?.(value);
+    }
+  }, [value, controlledValue, onChange]);
 
   return [value, setValue];
 };
