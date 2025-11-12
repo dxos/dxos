@@ -7,8 +7,8 @@ import { useCallback, useMemo, useRef } from 'react';
 
 import { Domino, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import {
-  type PopoverMenuGroup,
-  type UsePopoverMenuProps,
+  type EditorMenuGroup,
+  type UseEditorMenuProps,
   filterMenuGroups,
   formattingCommands,
   linkSlashCommands,
@@ -16,20 +16,20 @@ import {
 
 import { meta } from '../meta';
 
-export type UsePopoverMenuOptionsProps = {
+export type UseEditorMenuOptionsProps = {
   editorView?: EditorView;
-  slashCommandGroups?: PopoverMenuGroup[];
-  onLinkQuery?: (query?: string) => Promise<PopoverMenuGroup[]>;
+  slashCommandGroups?: EditorMenuGroup[];
+  onLinkQuery?: (query?: string) => Promise<EditorMenuGroup[]>;
 };
 
-export const usePopoverMenuOptions = ({
+export const useEditorMenuOptions = ({
   editorView,
   slashCommandGroups,
   onLinkQuery,
-}: UsePopoverMenuOptionsProps): UsePopoverMenuProps => {
+}: UseEditorMenuOptionsProps): UseEditorMenuProps => {
   const { t } = useTranslation(meta.id);
 
-  const getMenu = useCallback<NonNullable<UsePopoverMenuProps['getMenu']>>(
+  const getMenu = useCallback<NonNullable<UseEditorMenuProps['getMenu']>>(
     ({ text, trigger }) => {
       switch (trigger) {
         case '@': {
@@ -48,7 +48,7 @@ export const usePopoverMenuOptions = ({
   );
 
   const viewRef = useRef(editorView);
-  return useMemo<UsePopoverMenuProps>(() => {
+  return useMemo<UseEditorMenuProps>(() => {
     const trigger = onLinkQuery ? ['/', '@'] : ['/'];
     const placeholder = {
       delay: 3_000,

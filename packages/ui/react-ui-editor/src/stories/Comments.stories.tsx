@@ -12,9 +12,8 @@ import { log } from '@dxos/log';
 import { withTheme } from '@dxos/react-ui/testing';
 
 import { annotations, comments, createExternalCommentSync } from '../extensions';
-import { str } from '../testing';
 import { type Comment } from '../types';
-import { createRenderer } from '../util';
+import { createRenderer, str } from '../util';
 
 import { EditorStory, content, longText } from './components';
 

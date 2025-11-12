@@ -9,30 +9,30 @@ import { type MaybePromise } from '@dxos/util';
 
 import { insertAtCursor } from './util';
 
-export type PopoverMenuGroup = {
+export type EditorMenuGroup = {
   id: string;
   label?: Label;
-  items: PopoverMenuItem[];
+  items: EditorMenuItem[];
 };
 
-export type PopoverMenuItem = {
+export type EditorMenuItem = {
   id: string;
   label: Label;
   icon?: string;
-  onSelect?: (view: EditorView, head: number) => MaybePromise<void>;
+  onSelect?: (event: { view: EditorView; head: number }) => MaybePromise<void>;
 };
 
-export const getMenuItem = (groups: PopoverMenuGroup[], id?: string): PopoverMenuItem | undefined => {
+export const getMenuItem = (groups: EditorMenuGroup[], id?: string): EditorMenuItem | undefined => {
   return groups.flatMap((group) => group.items).find((item) => item.id === id);
 };
 
-export const getNextMenuItem = (groups: PopoverMenuGroup[], id?: string): PopoverMenuItem => {
+export const getNextMenuItem = (groups: EditorMenuGroup[], id?: string): EditorMenuItem => {
   const items = groups.flatMap((group) => group.items);
   const index = items.findIndex((item) => item.id === id);
   return index < items.length - 1 ? items[index + 1] : items[index];
 };
 
-export const getPreviousMenuItem = (groups: PopoverMenuGroup[], id?: string): PopoverMenuItem => {
+export const getPreviousMenuItem = (groups: EditorMenuGroup[], id?: string): EditorMenuItem => {
   const items = groups.flatMap((group) => group.items);
   const index = items.findIndex((item) => item.id === id);
   return index > 0 ? items[index - 1] : items[index];
@@ -41,25 +41,29 @@ export const getPreviousMenuItem = (groups: PopoverMenuGroup[], id?: string): Po
 export const createMenuGroup = ({
   id = 'menu',
   label,
+  filter,
   items,
 }: {
   id?: string;
   label?: Label;
+  filter?: string;
   items: string[];
-}): PopoverMenuGroup => ({
+}): EditorMenuGroup => ({
   id,
   label,
-  items: items.map((item, i) => ({
-    id: `${id}-${i}`,
-    label: item,
-    onSelect: (view, head) => insertAtCursor(view, head, item),
-  })),
+  items: items
+    .filter((item) => !filter || item.toLowerCase().includes(filter.toLowerCase()))
+    .map((item, i) => ({
+      id: `${id}-${i}`,
+      label: item,
+      onSelect: ({ view, head }) => insertAtCursor(view, head, item),
+    })),
 });
 
 export const filterMenuGroups = (
-  groups: PopoverMenuGroup[],
-  filter: (item: PopoverMenuItem) => boolean,
-): PopoverMenuGroup[] => {
+  groups: EditorMenuGroup[],
+  filter: (item: EditorMenuItem) => boolean,
+): EditorMenuGroup[] => {
   return groups.map((group) => ({
     ...group,
     items: group.items.filter(filter),

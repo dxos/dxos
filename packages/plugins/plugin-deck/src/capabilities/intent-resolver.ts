@@ -91,7 +91,6 @@ export default (context: PluginContext) =>
         Schema.is(LayoutAction.UpdateComplementary.fields.input)(data),
       resolve: ({ subject, options }) => {
         const layout = context.getCapability(DeckCapabilities.MutableDeckState);
-
         if (layout.complementarySidebarPanel !== subject) {
           layout.complementarySidebarPanel = subject;
         }

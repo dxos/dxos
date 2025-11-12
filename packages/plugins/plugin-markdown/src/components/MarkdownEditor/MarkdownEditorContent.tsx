@@ -8,11 +8,11 @@ import React, { forwardRef, useEffect, useImperativeHandle, useMemo } from 'reac
 import { type Live } from '@dxos/live-object';
 import { useDynamicRef, useThemeContext, useTranslation } from '@dxos/react-ui';
 import {
+  type EditorMenuGroup,
   type EditorSelectionState,
   type EditorStateStore,
   type EditorToolbarState,
   type EditorViewMode,
-  type PopoverMenuGroup,
   type UseTextEditorProps,
   createBasicExtensions,
   createMarkdownExtensions,
@@ -37,10 +37,10 @@ export type MarkdownEditorContentProps = {
   role?: string;
   viewMode?: EditorViewMode;
   scrollPastEnd?: boolean;
-  slashCommandGroups?: PopoverMenuGroup[];
+  slashCommandGroups?: EditorMenuGroup[];
   editorStateStore?: EditorStateStore;
   toolbarState?: Live<EditorToolbarState>;
-  onLinkQuery?: (query?: string) => Promise<PopoverMenuGroup[]>;
+  onLinkQuery?: (query?: string) => Promise<EditorMenuGroup[]>;
 } & (Pick<UseTextEditorProps, 'initialValue' | 'extensions'> & Pick<MarkdownEditorToolbarProps, 'onFileUpload'>);
 
 export const MarkdownEditorContent = forwardRef<EditorView | null, MarkdownEditorContentProps>(
@@ -69,7 +69,7 @@ export const MarkdownEditorContent = forwardRef<EditorView | null, MarkdownEdito
           selection,
           // TODO(wittjosiah): Autofocus based on layout is racy.
           // autoFocus: layoutPlugin?.provides.layout ? layoutPlugin?.provides.layout.scrollIntoView === id : true,
-          moveToEndOfLine: true,
+          selectionEnd: true,
         }),
         initialValue,
         extensions: [
@@ -106,7 +106,9 @@ export const MarkdownEditorContent = forwardRef<EditorView | null, MarkdownEdito
     );
 
     useImperativeHandle<EditorView | null, EditorView | null>(forwardedRef, () => editorView, [editorView]);
+
     useSelectCurrentThread(editorView, id);
+
     useTest(editorView);
 
     return (

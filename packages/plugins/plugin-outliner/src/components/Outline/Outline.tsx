@@ -8,9 +8,9 @@ import React, { forwardRef, useCallback, useImperativeHandle, useMemo } from 're
 import { createDocAccessor } from '@dxos/react-client/echo';
 import { type ThemedClassName, useThemeContext, useTranslation } from '@dxos/react-ui';
 import {
-  type PopoverMenuGroup,
-  PopoverMenuProvider,
-  type PopoverMenuProviderProps,
+  type EditorMenuGroup,
+  EditorMenuProvider,
+  type EditorMenuProviderProps,
   type UseTextEditorProps,
   createBasicExtensions,
   createDataExtensions,
@@ -69,7 +69,7 @@ export const Outline = forwardRef<OutlineController, OutlineProps>(
       [view],
     );
 
-    const commandGroups: PopoverMenuGroup[] = useMemo(
+    const commandGroups: EditorMenuGroup[] = useMemo(
       () => [
         {
           id: 'outliner-actions',
@@ -77,7 +77,7 @@ export const Outline = forwardRef<OutlineController, OutlineProps>(
             {
               id: 'delete-row',
               label: t('delete row'),
-              onSelect: (view) => {
+              onSelect: ({ view }) => {
                 // TODO(burdon): Timeout hack since menu steals focus.
                 setTimeout(() => {
                   deleteItem(view);
@@ -91,16 +91,16 @@ export const Outline = forwardRef<OutlineController, OutlineProps>(
       [t],
     );
 
-    const handleSelect = useCallback<NonNullable<PopoverMenuProviderProps['onSelect']>>(({ view, item }) => {
+    const handleSelect = useCallback<NonNullable<EditorMenuProviderProps['onSelect']>>(({ view, item }) => {
       if (view && item.onSelect) {
-        return item.onSelect(view, view.state.selection.main.head);
+        return item.onSelect({ view, head: view.state.selection.main.head });
       }
     }, []);
 
     return (
-      <PopoverMenuProvider view={view} groups={commandGroups} onSelect={handleSelect}>
+      <EditorMenuProvider view={view} groups={commandGroups} onSelect={handleSelect}>
         <div ref={parentRef} className={mx(classNames)} {...focusAttributes} />
-      </PopoverMenuProvider>
+      </EditorMenuProvider>
     );
   },
 );

@@ -10,7 +10,7 @@ import { withTheme } from '@dxos/react-ui/testing';
 import { mx } from '@dxos/react-ui-theme';
 
 import { editorWidth } from '../defaults';
-import { str } from '../testing';
+import { str } from '../util';
 
 import { EditorStory } from './components';
 

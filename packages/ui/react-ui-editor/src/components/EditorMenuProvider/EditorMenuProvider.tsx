@@ -9,6 +9,7 @@ import React, { Fragment, type PropsWithChildren, useCallback, useEffect, useRef
 import { addEventListener } from '@dxos/async';
 import { invariant } from '@dxos/invariant';
 import {
+  DX_ANCHOR_ACTIVATE,
   type DxAnchorActivate,
   Icon,
   Popover,
@@ -18,18 +19,18 @@ import {
   useTranslation,
 } from '@dxos/react-ui';
 
-import { type PopoverMenuGroup, type PopoverMenuItem } from './menu';
+import { type EditorMenuGroup, type EditorMenuItem } from './menu';
 
-export type PopoverMenuProviderProps = PropsWithChildren<{
+export type EditorMenuProviderProps = PropsWithChildren<{
   view?: EditorView | null;
-  groups?: PopoverMenuGroup[];
+  groups?: EditorMenuGroup[];
   currentItem?: string;
   open?: boolean;
   defaultOpen?: boolean;
   numItems?: number;
   onOpenChange?: (event: { view: EditorView; open: boolean; trigger?: string }) => void;
   onActivate?: (event: { view: EditorView; trigger?: string }) => void;
-  onSelect?: (event: { view: EditorView; item: PopoverMenuItem }) => void;
+  onSelect?: (event: { view: EditorView; item: EditorMenuItem }) => void;
   onCancel?: (event: { view: EditorView }) => void;
 }>;
 
@@ -40,7 +41,7 @@ export type PopoverMenuProviderProps = PropsWithChildren<{
  * NOTE: We don't use DropdownMenu because the command menu needs to manage focus explicitly.
  * I.e., focus must remain in the editor while displaying the menu (for type-ahead).
  */
-export const PopoverMenuProvider = ({
+export const EditorMenuProvider = ({
   children,
   view,
   groups,
@@ -52,10 +53,10 @@ export const PopoverMenuProvider = ({
   onActivate,
   onSelect,
   onCancel,
-}: PopoverMenuProviderProps) => {
+}: EditorMenuProviderProps) => {
   const { tx } = useThemeContext();
   const triggerRef = useRef<HTMLButtonElement | null>(null);
-  const [root, setRoot] = useState<HTMLDivElement | null>(null);
+
   const viewRef = useDynamicRef(view);
   const [open, setOpen] = useControllableState({
     prop: openParam,
@@ -66,6 +67,7 @@ export const PopoverMenuProvider = ({
     },
   });
 
+  const [root, setRoot] = useState<HTMLDivElement | null>(null);
   useEffect(() => {
     if (!root) {
       return;
@@ -74,7 +76,7 @@ export const PopoverMenuProvider = ({
     // Listen for trigger.
     return addEventListener(
       root,
-      'dx-anchor-activate' as any,
+      DX_ANCHOR_ACTIVATE as any,
       (event: DxAnchorActivate) => {
         const { trigger, refId } = event;
 
@@ -108,6 +110,8 @@ export const PopoverMenuProvider = ({
   return (
     <Popover.Root modal={false} open={open} onOpenChange={setOpen}>
       <Popover.VirtualTrigger virtualRef={triggerRef} />
+
+      {/* Menu. */}
       <Popover.Portal>
         <Popover.Content
           align='start'
@@ -135,6 +139,7 @@ export const PopoverMenuProvider = ({
         </Popover.Content>
       </Popover.Portal>
 
+      {/* Content */}
       <div ref={setRoot} role='none' className='contents'>
         {children}
       </div>
@@ -147,7 +152,7 @@ export const PopoverMenuProvider = ({
 //
 
 type MenuProps = {
-  groups: PopoverMenuGroup[];
+  groups: EditorMenuGroup[];
 } & Pick<MenuGroupProps, 'currentItem' | 'onSelect'>;
 
 const Menu = ({ groups, currentItem, onSelect }: MenuProps) => {
@@ -164,8 +169,12 @@ const Menu = ({ groups, currentItem, onSelect }: MenuProps) => {
   );
 };
 
+//
+// Menu Group
+//
+
 type MenuGroupProps = {
-  group: PopoverMenuGroup;
+  group: EditorMenuGroup;
   currentItem?: string;
 } & Pick<MenuItemProps, 'onSelect'>;
 
@@ -188,10 +197,14 @@ const MenuGroup = ({ group, currentItem, onSelect }: MenuGroupProps) => {
   );
 };
 
+//
+// Menu Item
+//
+
 type MenuItemProps = {
-  item: PopoverMenuItem;
+  item: EditorMenuItem;
   current: boolean;
-  onSelect?: (item: PopoverMenuItem) => void;
+  onSelect?: (item: EditorMenuItem) => void;
 };
 
 const MenuItem = ({ item, current, onSelect }: MenuItemProps) => {

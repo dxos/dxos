@@ -5,6 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 
+import { withPluginManager } from '@dxos/app-framework/testing';
 import { faker } from '@dxos/random';
 import { withTheme } from '@dxos/react-ui/testing';
 
@@ -40,7 +41,7 @@ const meta = {
   title: 'plugins/plugin-search/SearchResults',
   component: SearchResults,
   render: DefaultStory,
-  decorators: [withTheme],
+  decorators: [withTheme, withPluginManager({ plugins: [] })],
   parameters: {
     layout: 'fullscreen',
   },

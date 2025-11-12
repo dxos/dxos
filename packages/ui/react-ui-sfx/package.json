@@ -46,7 +46,8 @@
     "motion": "^12.0.6",
     "ogl": "^1.0.11",
     "react-resize-detector": "^11.0.1",
-    "three": "0.165.0"
+    "three": "0.165.0",
+    "tone": "^15.1.22"
   },
   "devDependencies": {
     "@dxos/brand": "workspace:*",

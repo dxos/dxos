@@ -2,7 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type EditorView } from '@codemirror/view';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useCallback, useState } from 'react';
 
@@ -14,25 +13,26 @@ import { withTheme } from '@dxos/react-ui/testing';
 import { Testing, type ValueGenerator, createObjectFactory } from '@dxos/schema/testing';
 
 import {
-  type PopoverMenuGroup,
-  type PopoverMenuItem,
-  PopoverMenuProvider,
-  type UsePopoverMenuProps,
+  type EditorController,
+  type EditorMenuGroup,
+  type EditorMenuItem,
+  EditorMenuProvider,
+  type UseEditorMenuProps,
   createMenuGroup,
   filterMenuGroups,
   formattingCommands,
   insertAtCursor,
   insertAtLineStart,
   linkSlashCommands,
-  usePopoverMenu,
-} from '../extensions';
-import { str } from '../testing';
+  useEditorMenu,
+} from '../components';
+import { str } from '../util';
 
 import { EditorStory } from './components';
 
 const generator: ValueGenerator = faker as any;
 
-const customCompletions: PopoverMenuGroup = createMenuGroup({
+const customCompletions: EditorMenuGroup = createMenuGroup({
   id: 'test',
   items: ['Hello world!', 'Hello DXOS', 'Hello Composer', 'https://dxos.org'],
 });
@@ -48,23 +48,24 @@ const placeholder = (trigger: string[]) =>
     )
     .build();
 
-type StoryProps = Omit<UsePopoverMenuProps, 'viewRef'> & { text: string };
+type StoryProps = Omit<UseEditorMenuProps, 'viewRef'> & { text: string };
 
 const DefaultStory = ({ text, ...props }: StoryProps) => {
-  const [view, setView] = useState<EditorView | null>(null);
-  const { groupsRef, extension, ...menuProps } = usePopoverMenu(props);
+  const [controller, setController] = useState<EditorController | null>(null);
+  const { groupsRef, extension, ...menuProps } = useEditorMenu(props);
 
   return (
-    <PopoverMenuProvider view={view} groups={groupsRef.current} {...menuProps}>
-      <EditorStory ref={setView} text={text} extensions={extension} />
-    </PopoverMenuProvider>
+    <EditorMenuProvider view={controller?.view} groups={groupsRef.current} {...menuProps}>
+      <EditorStory ref={setController} text={text} extensions={extension} />
+    </EditorMenuProvider>
   );
 };
 
 const LinkStory = (args: StoryProps) => {
   const { space } = useClientProvider();
-  const getMenu = useCallback<NonNullable<UsePopoverMenuProps['getMenu']>>(
-    async ({ text, trigger }): Promise<PopoverMenuGroup[]> => {
+
+  const getMenu = useCallback<NonNullable<UseEditorMenuProps['getMenu']>>(
+    async ({ text, trigger }): Promise<EditorMenuGroup[]> => {
       if (trigger === '/') {
         return filterMenuGroups([linkSlashCommands], (item) =>
           text ? (item.label as string).toLowerCase().includes(text.toLowerCase()) : true,
@@ -80,11 +81,11 @@ const LinkStory = (args: StoryProps) => {
       const items = result.objects
         .filter((object) => object.name.toLowerCase().includes(name))
         .map(
-          (object): PopoverMenuItem => ({
+          (object): EditorMenuItem => ({
             id: object.id,
             label: object.name,
             icon: 'ph--user--regular',
-            onSelect: (view, head) => {
+            onSelect: ({ view, head }) => {
               const link = `[${object.name}](${Obj.getDXN(object)})`;
               if (text?.startsWith('@')) {
                 insertAtLineStart(view, head, `!${link}\n`);
