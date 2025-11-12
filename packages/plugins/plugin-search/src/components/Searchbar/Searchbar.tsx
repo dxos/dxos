@@ -39,7 +39,6 @@ export const Searchbar = ({ classNames, variant, placeholder, value, onChange, o
           autoFocus
           variant={variant}
           value={text ?? ''}
-          classNames='pl-3 pr-10'
           onChange={({ target }) => setText(target.value)}
           onKeyDown={handleKeyDown}
         />
