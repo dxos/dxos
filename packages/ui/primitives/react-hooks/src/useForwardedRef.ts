@@ -21,19 +21,11 @@ export const useForwardedRef = <T>(forwardedRef: ForwardedRef<T>) => {
   return localRef;
 };
 
-export const setRef = <T>(ref: Ref<T>, value: T | null): void => {
-  if (!ref) {
-    return;
-  }
-
-  if (typeof ref === 'function') {
-    ref(value ?? null);
-  } else {
-    ref.current = value ?? null;
-  }
-};
-
-export function assignRef<T>(ref: Ref<T> | undefined | null, value: T | null): ReturnType<RefCallback<T>> {
+/**
+ * Sets a value on a React ref, handling both callback refs and ref objects.
+ * Returns a cleanup function if the ref is a callback ref.
+ */
+export function setRef<T>(ref: Ref<T> | undefined | null, value: T | null): ReturnType<RefCallback<T>> {
   if (typeof ref === 'function') {
     return ref(value);
   } else if (ref) {
@@ -42,25 +34,27 @@ export function assignRef<T>(ref: Ref<T> | undefined | null, value: T | null): R
 }
 
 /**
- * Merges multiple refs into a single one and memoizes the result to avoid refs execution on each render.
- * @param refs List of refs to merge.
- * @returns Merged ref.
+ * Merges multiple refs into a single ref callback.
+ * Returns a ref callback that synchronizes all provided refs and handles cleanup.
  */
-export function useMergeRefs<T>(refs: (Ref<T> | undefined)[]): Ref<T> {
-  return useMemo(() => mergeRefs(refs), refs);
-}
-
-export function mergeRefs<T>(refs: (Ref<T> | undefined)[]): Ref<T> {
+export const mergeRefs = <T>(refs: (Ref<T> | undefined)[]): Ref<T> => {
   return (value: T | null) => {
     const cleanups: (() => void)[] = [];
     for (const ref of refs) {
-      const cleanup = assignRef(ref, value);
-      const isCleanup = typeof cleanup === 'function';
-      cleanups.push(isCleanup ? cleanup : () => assignRef(ref, null));
+      const cleanup = setRef(ref, value);
+      cleanups.push(typeof cleanup === 'function' ? cleanup : () => setRef(ref, null));
     }
 
     return () => {
       for (const cleanup of cleanups) cleanup();
     };
   };
-}
+};
+
+/**
+ * Hook that merges multiple refs into a single stable ref callback.
+ * The returned ref is memoized and only changes when the refs array changes.
+ */
+export const useMergeRefs = <T>(refs: (Ref<T> | undefined)[]): Ref<T> => {
+  return useMemo(() => mergeRefs(refs), refs);
+};

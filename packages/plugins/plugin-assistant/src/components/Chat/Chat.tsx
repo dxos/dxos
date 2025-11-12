@@ -23,7 +23,7 @@ import { mx } from '@dxos/react-ui-theme';
 import { Message } from '@dxos/types';
 import { isTruthy } from '@dxos/util';
 
-import { useChatToolbarActions, useReferencesProvider } from '../../hooks';
+import { useChatToolbarActions } from '../../hooks';
 import { meta } from '../../meta';
 import { type AiChatProcessor } from '../../processor';
 import { type Assistant } from '../../types';
@@ -220,12 +220,8 @@ const ChatPrompt = ({
     },
   });
 
-  // TODO(burdon): Reconcile with object tags.
-  const referencesProvider = useReferencesProvider(space);
   const extensions = useMemo<Extension[]>(() => {
     return [
-      // TODO(burdon): Reconcile with referencesExtension.
-      // referencesProvider && references({ provider: referencesProvider }),
       Prec.highest(
         keymap.of(
           [
@@ -244,6 +240,10 @@ const ChatPrompt = ({
                 event.emit({ type: 'nav-previous' });
                 return true;
               },
+              shift: () => {
+                event.emit({ type: 'thread-open' });
+                return true;
+              },
             },
             {
               key: 'Mod-ArrowDown',
@@ -252,32 +252,16 @@ const ChatPrompt = ({
                 event.emit({ type: 'nav-next' });
                 return true;
               },
+              shift: () => {
+                event.emit({ type: 'thread-close' });
+                return true;
+              },
             },
-            ...(expandable
-              ? [
-                  {
-                    key: 'Shift-Mod-ArrowUp',
-                    preventDefault: true,
-                    run: () => {
-                      event.emit({ type: 'thread-open' });
-                      return true;
-                    },
-                  },
-                  {
-                    key: 'Shift-Mod-ArrowDown',
-                    preventDefault: true,
-                    run: () => {
-                      event.emit({ type: 'thread-close' });
-                      return true;
-                    },
-                  },
-                ]
-              : []),
           ].filter(isTruthy),
         ),
       ),
     ].filter(isTruthy);
-  }, [event, expandable, referencesProvider]);
+  }, [event, expandable]);
 
   const handleSubmit = useCallback<NonNullable<ChatEditorProps['onSubmit']>>(
     (text) => {

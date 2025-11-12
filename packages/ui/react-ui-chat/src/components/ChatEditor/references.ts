@@ -23,6 +23,10 @@ export type ReferenceData = {
   label: string;
 };
 
+/**
+ * @deprecated
+ */
+// TODO(burdon): Remove.
 export interface ReferencesProvider {
   getReferences({ query }: { query: string }): Promise<ReferenceData[]>;
   resolveReference({ uri }: { uri: string }): Promise<ReferenceData | null>;
@@ -45,7 +49,9 @@ export type ReferencesOptions = {
 
 /**
  * Lookup object references.
+ * @deprecated
  */
+// TODO(burdon): Remove.
 export const references = ({ provider, triggerCharacter = '@', debug = false }: ReferencesOptions): Extension => {
   invariant(triggerCharacter.length === 1);
 

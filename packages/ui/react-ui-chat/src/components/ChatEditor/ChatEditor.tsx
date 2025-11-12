@@ -2,9 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Extension } from '@codemirror/state';
+import { type Extension, Prec } from '@codemirror/state';
 import { keymap } from '@codemirror/view';
-import { useFocusFinders } from '@fluentui/react-tabster';
 import React, { forwardRef, useImperativeHandle } from 'react';
 
 import { type ThemedClassName, useThemeContext } from '@dxos/react-ui';
@@ -27,25 +26,27 @@ export interface ChatEditorController {
   setText(text: string): void;
 }
 
+// TODO(burdon): Replace AutocompleteOptions.
 export type ChatEditorProps = ThemedClassName<
   {
     extensions?: Extension;
     references?: ReferencesOptions;
-  } & AutocompleteOptions &
+  } & (AutocompleteOptions &
     Pick<UseTextEditorProps, 'id' | 'autoFocus'> &
-    Pick<BasicExtensionsOptions, 'lineWrapping' | 'placeholder'>
+    Pick<BasicExtensionsOptions, 'lineWrapping' | 'placeholder'>)
 >;
 
 /**
  * @deprecated Reconcile with plugin-assistant.
  */
+// TODO(burdon): Remove and use Editor.Root with Popover and Autocomplete in plugin-assistant.
 export const ChatEditor = forwardRef<ChatEditorController, ChatEditorProps>(
   (
-    { classNames, extensions, references, autoFocus, lineWrapping = false, placeholder, onSubmit, onSuggest, onCancel },
+    { classNames, extensions, autoFocus, lineWrapping = false, placeholder, onSubmit, onSuggest, onCancel },
     forwardRef,
   ) => {
     const { themeMode } = useThemeContext();
-    const { findNextFocusable, findPrevFocusable } = useFocusFinders();
+    // const { findNextFocusable, findPrevFocusable } = useFocusFinders();
     const { parentRef, view } = useTextEditor(
       () => ({
         debug: true,
@@ -54,29 +55,47 @@ export const ChatEditor = forwardRef<ChatEditorController, ChatEditorProps>(
           createThemeExtensions({ themeMode }),
           createBasicExtensions({ bracketMatching: false, lineWrapping, placeholder }),
 
-          // TODO(burdon): Replace with native.
           // autocomplete({ onSubmit, onSuggest, onCancel }),
           // references ? referencesExtension({ provider: references.provider }) : [],
-
           // TODO(burdon): Standardize.
-          keymap.of([
-            {
-              key: 'Tab',
-              preventDefault: true,
-              run: (view) => {
-                findNextFocusable(view.dom)?.focus();
-                return true;
+          Prec.highest(
+            keymap.of([
+              {
+                key: 'Enter',
+                preventDefault: true,
+                run: (view) => {
+                  const text = view.state.doc.toString().trim();
+                  if (onSubmit && text.length > 0) {
+                    const reset = onSubmit(text);
+                    if (reset) {
+                      // Clear the document after calling onEnter.
+                      view.dispatch({
+                        changes: {
+                          from: 0,
+                          to: view.state.doc.length,
+                          insert: '',
+                        },
+                      });
+                    }
+                  }
+
+                  return true;
+                },
               },
-            },
-            {
-              key: 'Shift-Tab',
-              preventDefault: true,
-              run: (view) => {
-                findPrevFocusable(view.dom)?.focus();
-                return true;
+              {
+                key: 'Tab',
+                preventDefault: true,
+                run: (_view) => {
+                  // findNextFocusable(view.dom)?.focus();
+                  return true;
+                },
+                shift: (_view) => {
+                  // findPrevFocusable(view.dom)?.focus();
+                  return true;
+                },
               },
-            },
-          ]),
+            ]),
+          ),
           extensions,
         ].filter(isTruthy),
       }),
