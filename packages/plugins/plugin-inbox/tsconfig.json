@@ -81,6 +81,9 @@
       "path": "../../core/functions-runtime"
     },
     {
+      "path": "../../core/protocols"
+    },
+    {
       "path": "../../sdk/app-framework"
     },
     {

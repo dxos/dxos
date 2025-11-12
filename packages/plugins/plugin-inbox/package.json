@@ -95,6 +95,7 @@
     "@dxos/config": "workspace:*",
     "@dxos/plugin-storybook-layout": "workspace:*",
     "@dxos/plugin-theme": "workspace:*",
+    "@dxos/protocols": "workspace:*",
     "@dxos/random": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",

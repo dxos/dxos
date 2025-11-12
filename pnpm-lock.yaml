@@ -7095,6 +7095,9 @@ importers:
       '@dxos/plugin-theme':
         specifier: workspace:*
         version: link:../plugin-theme
+      '@dxos/protocols':
+        specifier: workspace:*
+        version: link:../../core/protocols
       '@dxos/random':
         specifier: workspace:*
         version: link:../../common/random
