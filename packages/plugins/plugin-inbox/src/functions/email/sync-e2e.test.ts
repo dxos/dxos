@@ -6,39 +6,42 @@ import { describe, expect, test } from 'vitest';
 
 import { Client } from '@dxos/client';
 import { configPreset } from '@dxos/config';
-import { uploadWorkerFunction } from '@dxos/functions-runtime/edge';
+import { FunctionsServiceClient } from '@dxos/functions-runtime/edge';
 import { bundleFunction } from '@dxos/functions-runtime/native';
+import { Mailbox } from '../../types';
 
 describe.runIf(process.env.DX_TEST_TAGS?.includes('functions-e2e'))('Functions deployment', () => {
   test('deployes inbox sync function', { timeout: 120_000 }, async () => {
-    const config = configPreset({ edge: 'dev' });
+    const config = configPreset({ edge: 'local' });
 
-    await using client = await new Client({ config }).initialize();
+    await using client = await new Client({ config, types: [Mailbox.Mailbox] }).initialize();
     await client.halo.createIdentity();
 
     const space = await client.spaces.create();
     await space.waitUntilReady();
 
-    // Inline echo function source.
+    const functionsServiceClient = FunctionsServiceClient.fromClient(client);
 
-    // Bundle and upload.
     const artifact = await bundleFunction({
       entryPoint: new URL('./sync.ts', import.meta.url).pathname,
       verbose: true,
     });
 
-    const { functionId, meta, version } = await uploadWorkerFunction({
-      client,
-      ownerPublicKey: space.key,
+    const func = await functionsServiceClient.deploy({
       version: '0.0.1',
+      ownerPublicKey: space.key,
       entryPoint: artifact.entryPoint,
       assets: artifact.assets,
-      name: 'e2e-sync',
+    });
+    console.log(func);
+
+    const mailbox = space.db.add(Mailbox.make({ name: 'test', space }));
+
+    const result = await functionsServiceClient.invoke(func, {
+      mailboxId: mailbox.id,
     });
 
-    expect(functionId).toBeDefined();
-
-    console.log({ functionId, meta, version });
+    console.log(result);
 
     // // Invoke deployed function via EDGE directly.
     // const edgeClient = client.edge;
