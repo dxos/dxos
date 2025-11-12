@@ -31,7 +31,7 @@ const DefaultStory = ({ editing }: StoryProps) => {
   }
 
   return (
-    <div className='flex w-[300px] border border-separator' style={{ height: defaultRowSize }}>
+    <div className='flex is-[300px] border border-separator' style={{ height: defaultRowSize }}>
       <Grid.Root id='test' editing={editing}>
         <TableCellEditor model={model} schema={Task.Task} />
       </Grid.Root>

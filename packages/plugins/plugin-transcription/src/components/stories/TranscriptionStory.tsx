@@ -24,7 +24,7 @@ export const TranscriptionStory: FC<{
   const space = useSpace();
 
   return (
-    <div className='flex flex-col w-[30rem]'>
+    <div className='flex flex-col is-[30rem]'>
       {audioRef && <audio ref={audioRef} autoPlay />}
       <Toolbar.Root>
         <IconButton

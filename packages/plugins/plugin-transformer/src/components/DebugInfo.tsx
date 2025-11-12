@@ -45,7 +45,7 @@ export const DebugInfo: FC<Partial<DebugInfoProps>> = ({
           <div className='mb-2 text-green-600'>
             <strong>Status:</strong> Microphone is active
             {debug && audioLevel && (
-              <div className='mt-2 w-48 h-5 bg-gray-200 rounded relative'>
+              <div className='mt-2 is-48 bs-5 bg-gray-200 rounded relative'>
                 <div
                   className='bs-full bg-green-500 transition-all duration-100 rounded'
                   style={{ width: `${(audioLevel / 255) * 100}%` }}

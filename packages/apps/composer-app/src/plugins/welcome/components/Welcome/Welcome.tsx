@@ -121,9 +121,9 @@ export const Welcome = ({
                   <BifurcatedAction actions={actions} classNames='bg-neutral-775' />
                 </div>
                 <div className='flex items-center is-full my-4'>
-                  <div className='flex-grow h-px bg-subdued'></div>
+                  <div className='flex-grow bs-px bg-subdued'></div>
                   <span className='pli-4 text-sm text-subdued'>or</span>
-                  <div className='flex-grow h-px bg-subdued'></div>
+                  <div className='flex-grow bs-px bg-subdued'></div>
                 </div>
               </>
             )}
@@ -140,7 +140,7 @@ export const Welcome = ({
                     onKeyDown={handleEmailKeyDown}
                   />
                   <Input.DescriptionAndValidation>
-                    <Input.Validation classNames='flex h-4 pli-2 plb-1 text-rose-550'>
+                    <Input.Validation classNames='flex bs-4 pli-2 plb-1 text-rose-550'>
                       {error && t('email error')}
                     </Input.Validation>
                   </Input.DescriptionAndValidation>
@@ -207,7 +207,7 @@ export const Welcome = ({
           <a href='https://dxos.org' target='_blank' rel='noreferrer'>
             <div className='flex justify-center items-center text-sm gap-1 pr-3 pb-1 opacity-70'>
               <span className='text-subdued'>Powered by</span>
-              <DXOSHorizontalType className='fill-white w-[80px]' />
+              <DXOSHorizontalType className='fill-white is-[80px]' />
             </div>
           </a>
         </div>

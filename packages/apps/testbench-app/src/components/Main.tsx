@@ -220,19 +220,19 @@ export const Main = () => {
           {view === 'list' && <ItemList objects={objects} onDelete={handleObjectDelete} />}
           {view === 'debug' && <ItemList debug objects={objects} onDelete={handleObjectDelete} />}
         </div>
-        <div className='flex h-[32px] p-2 items-center relative text-xs'>
+        <div className='flex bs-[32px] p-2 items-center relative text-xs'>
           <div>{objects.length} objects</div>
           <div className='grow' />
           <StatusBar flushing={flushing} showStats={showStats} onShowStats={(show) => setShowStats(show)} />
           {showStats && (
-            <div className='z-20 absolute right-0 bottom-[32px] w-[450px] border-l border-t border-neutral-500 dark:border-neutral-800'>
+            <div className='z-20 absolute right-0 bottom-[32px] is-[450px] border-l border-t border-neutral-500 dark:border-neutral-800'>
               <StatsPanel stats={stats} onRefresh={refreshStats} />
             </div>
           )}
         </div>
       </div>
       {showDevTools && (
-        <div className='flex flex-col w-[120rem] bs-full bg-white dark:bg-black'>
+        <div className='flex flex-col is-[120rem] bs-full bg-white dark:bg-black'>
           <Suspense fallback={<></>}>
             <Devtools noRouter />
           </Suspense>

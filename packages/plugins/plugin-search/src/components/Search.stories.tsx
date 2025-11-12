@@ -26,7 +26,7 @@ const DefaultStory = ({ objects, ...props }: StoryProps) => {
 
   return (
     <div className='flex grow justify-center overflow-hidden'>
-      <div className='flex flex-col w-[300px] m-4 overflow-hidden'>
+      <div className='flex flex-col is-[300px] m-4 overflow-hidden'>
         <Searchbar variant='subdued' placeholder='Enter regular expression...' onChange={setMatch} {...props} />
         <SearchResults items={filteredItems} selected={selected} onSelect={setSelected} />
       </div>

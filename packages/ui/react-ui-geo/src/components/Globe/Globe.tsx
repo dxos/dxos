@@ -259,7 +259,7 @@ const GlobeDebug = ({ position = 'topleft' }: { position?: ControlPosition }) =>
   return (
     <div
       className={mx(
-        'z-10 absolute w-96 p-2 overflow-hidden border border-green-700 rounded',
+        'z-10 absolute is-96 p-2 overflow-hidden border border-green-700 rounded',
         controlPositions[position],
       )}
     >

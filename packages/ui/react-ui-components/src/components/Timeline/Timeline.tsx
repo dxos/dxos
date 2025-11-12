@@ -239,7 +239,7 @@ export const Timeline = forwardRef<ScrollController, TimelineProps>(
                     />
                   </div>
                   {showIcon && (
-                    <div className='flex shrink-0 w-6 justify-center'>
+                    <div className='flex shrink-0 is-6 justify-center'>
                       {commit.icon && (
                         <Icon icon={commit.icon} classNames={mx(commit.level && levelColors[commit.level])} size={4} />
                       )}
