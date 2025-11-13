@@ -43,8 +43,8 @@ export default (context: PluginContext) =>
     }),
     createResolver({
       intent: InboxAction.CreateCalendar,
-      resolve: ({ name, space }) => ({
-        data: { object: Calendar.make({ name, space }) },
+      resolve: ({ space, name }) => ({
+        data: { object: Calendar.make({ space, name }) },
       }),
     }),
     createResolver({
@@ -153,10 +153,8 @@ export default (context: PluginContext) =>
         throw new Error('Not implemented');
 
         // log.info('Run assistant', { mailbox });
-
         // const space = getSpace(mailbox) ?? failedInvariant();
         // const aiClient = null as any; // context.getCapability(AssistantCapabilities.AiClient);
-
         // const serviceContainer = new ServiceContainer().setServices({
         //   ai: AiService.AiService.make(aiClient.value),
         //   database: DatabaseService.make(space.db),
