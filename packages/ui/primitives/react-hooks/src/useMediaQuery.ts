@@ -6,12 +6,7 @@
 
 import { useEffect, useState } from 'react';
 
-export type UseMediaQueryOptions = {
-  fallback?: boolean | boolean[];
-  ssr?: boolean;
-};
-
-// TODO(thure): This should be derived from the same source of truth as the Tailwind theme config
+// TODO(thure): This should be derived from the same source of truth as the Tailwind theme config.
 const breakpointMediaQueries: Record<string, string> = {
   sm: '(min-width: 640px)',
   md: '(min-width: 768px)',
@@ -20,8 +15,13 @@ const breakpointMediaQueries: Record<string, string> = {
   '2xl': '(min-width: 1536px)',
 };
 
+export type UseMediaQueryOptions = {
+  fallback?: boolean | boolean[];
+  ssr?: boolean;
+};
+
 /**
- * React hook that tracks state of a CSS media query
+ * React hook that tracks state of a CSS media query.
  *
  * @param query the media query to match, or a recognized breakpoint token
  * @param options the media query options { fallback, ssr }

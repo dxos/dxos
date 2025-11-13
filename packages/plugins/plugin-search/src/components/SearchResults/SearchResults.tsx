@@ -5,6 +5,7 @@
 import React, { type FC, forwardRef } from 'react';
 
 import { Surface } from '@dxos/app-framework/react';
+import { Obj } from '@dxos/echo';
 import { Card } from '@dxos/react-ui-stack';
 import { ghostHover } from '@dxos/react-ui-theme';
 
@@ -18,13 +19,19 @@ export type SearchResultsProps = {
 };
 
 // TODO(burdon): Key cursor up/down.
+// TODO(burdon): Use stack (should be virtualized).
 export const SearchResults = ({ items }: SearchResultsProps) => {
   return (
-    <div className='flex flex-col grow overflow-y-auto'>
-      <div className='flex flex-col p-2 gap-2'>
-        {items.map((item) => (
-          <Surface key={item.id} role='card' data={{ subject: item.object }} limit={1} />
-        ))}
+    <div className='overflow-y-auto'>
+      <div className='flex flex-col'>
+        {items
+          // TODO(burdon): Hack to reduce noise from system objects.
+          .filter((item) => Obj.getLabel(item.object))
+          .map((item) => (
+            <div key={item.id} role='none' className='pli-2 first:pbs-2 pbe-2'>
+              <Surface role='card' data={{ subject: item.object }} limit={1} />
+            </div>
+          ))}
       </div>
     </div>
   );

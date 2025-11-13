@@ -11,8 +11,7 @@ import { useTranslation } from '@dxos/react-ui';
 import { StackItem } from '@dxos/react-ui-stack';
 import { activeSurface, mx } from '@dxos/react-ui-theme';
 
-import { useGlobalSearch, useGlobalSearchResults } from '../hooks';
-import { useWebSearch } from '../hooks/useWebSearch';
+import { useGlobalSearch, useGlobalSearchResults, useWebSearch } from '../hooks';
 import { meta } from '../meta';
 
 import { Searchbar } from './Searchbar';
