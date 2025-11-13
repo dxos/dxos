@@ -158,6 +158,7 @@ jobs:
           version: ${{ needs.draft_tauri.outputs.version }}
           working-directory: ./packages/apps/composer-app/src-tauri/
 
+      # TODO(wittjosiah): Having pnpm install run through moon was causing OOM issues.
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
         with:
@@ -257,6 +258,12 @@ jobs:
         with:
           version: ${{ needs.draft_tauri.outputs.version }}
           working-directory: ./packages/apps/composer-app/src-tauri/
+
+      # TODO(wittjosiah): Having pnpm install run through moon was causing OOM issues.
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          run_install: true
 
       - uses: moonrepo/setup-toolchain@v0
 
