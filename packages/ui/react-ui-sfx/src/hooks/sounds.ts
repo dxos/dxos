@@ -4,143 +4,125 @@
 
 import * as Tone from 'tone';
 
-const BASE_OCTAVE = 3;
-const PENTATONIC_SCALE = ['C', 'D', 'E', 'G', 'A'] as const;
-const TRIAD_SEMITONES = [0, 4, 7] as const;
+export interface Sound {
+  start: () => Promise<void>;
+  stop: () => Promise<void>;
+}
 
 /**
  * https://tonejs.github.io
  * https://tonejs.github.io/docs/r13/AudioNode
  */
-// TODO(burdon): Create synth story.
-// TDOD(burdon): Waveform animation.
-// TODO(burdon): D3 animation with notes struck when balls collide.
-export class Sounds {
-  private sync?: Tone.PolySynth;
+// TODO(burdon): Collaborative drum machine?
+export const createPattern = (): Sound => {
+  const kick = createKick();
+  const snare = createSnare();
 
-  private masterVolume = -10; // dB
-  private pitchMultiplier = 1;
+  const kickPattern = new Tone.Sequence(
+    (time, hit) => hit && kick.trigger(time),
+    [
+      ['C4', null, null, null],
+      ['C4', null, null, null],
+      ['C4', 'C4', 'C4', 'C4'],
+      ['C4', 'C4', 'C4', 'C4'],
+      ['C4', null, null, null],
+      ['C4', null, null, null],
+      ['C4', null, null, null],
+      ['C4', null, null, null],
+    ].flat(),
+    '16n',
+  );
 
-  constructor() {
-    const volume = new Tone.Volume(0).toDestination();
+  const snarePattern = new Tone.Sequence(
+    (time, hit) => hit && snare.trigger(time),
+    [
+      [null, null, null, null],
+      ['C4', null, null, null],
+      [null, null, null, null],
+      ['C4', null, null, null],
+      [null, null, null, null],
+      ['C4', null, null, null],
+      [null, null, null, null],
+      ['C4', null, null, null],
+    ].flat(),
+    '16n',
+  );
+  snarePattern.humanize = '128n';
 
-    // const reverb = new Tone.Reverb({ decay: 2.5, wet: 0.3 });
-    // const distortion = new Tone.Distortion({ distortion: 0.8, wet: 1.0 });
-    // const transport = Tone.getTransport();
+  return {
+    start: async () => {
+      await Tone.start();
 
-    this.sync = new Tone.PolySynth(Tone.Synth, {
-      oscillator: { type: 'triangle' },
-      envelope: { attack: 0.02, decay: 0.3, sustain: 0.1, release: 1.2 },
-    })
-      // .connect(reverb)
-      // .connect(distortion)
-      .connect(volume);
-  }
+      kickPattern.start(0);
+      snarePattern.start(0);
 
-  async init() {
-    await Tone.start();
-  }
+      Tone.getTransport().bpm.value = 130;
+      Tone.getTransport().start();
+    },
+    stop: async () => {
+      kickPattern.stop();
+      snarePattern.stop();
 
-  createNode() {
-    const chordBaseOctave = BASE_OCTAVE + 1;
-    const currentNoteIndex = 0;
-    const chordBaseIndex = currentNoteIndex % PENTATONIC_SCALE.length;
-    const rootNoteName = PENTATONIC_SCALE[chordBaseIndex];
-    const rootNoteStr = `${rootNoteName}${chordBaseOctave}`;
-    const semitoneOffset = TRIAD_SEMITONES[Math.floor(Math.random() * TRIAD_SEMITONES.length)];
-    const note = Tone.Frequency(rootNoteStr).transpose(semitoneOffset).toNote();
-    return note;
-  }
+      Tone.getTransport().stop();
+    },
+  };
+};
 
-  play() {
-    const note = this.createNode();
-    this.sync?.triggerAttackRelease(note, '4n');
-  }
+function createKick() {
+  const osc = new Tone.Oscillator({ type: 'sine' });
+  const gain = new Tone.Gain(1).toDestination();
 
-  blip() {
-    const click = new Tone.Oscillator({
-      type: 'square',
-      frequency: 880,
-    }).connect(new Tone.Gain(0.1).toDestination());
+  const env = new Tone.AmplitudeEnvelope({
+    attack: 0.0001,
+    decay: 0.16,
+    sustain: 0.0,
+    release: 0.1,
+  }).connect(gain);
 
-    const now = Tone.now();
-    click.start(now);
-    click.stop(now + 0.02);
-  }
+  const pitchEnv = new Tone.FrequencyEnvelope({
+    attack: 0.0001,
+    decay: 0.07,
+    sustain: 0,
+    release: 0.05,
+    baseFrequency: 20,
+    octaves: 4,
+  });
 
-  click() {
-    // Very short attack/decay.
-    const envelope = new Tone.AmplitudeEnvelope({
-      attack: 0.001,
-      decay: 0.02,
-      sustain: 0,
-      release: 0.005,
-    }).toDestination();
+  osc.connect(env);
+  pitchEnv.connect(osc.frequency);
+  osc.start();
 
-    // Filter out low frequencies.
-    const filter = new Tone.Filter({ type: 'highpass', frequency: 1000 });
+  return {
+    trigger: (time?: number | string) => {
+      env.triggerAttackRelease('16n', time);
+      pitchEnv.triggerAttackRelease('16n', time);
+    },
+  };
+}
 
-    const now = Tone.now();
-    const noise = new Tone.Noise('white');
-    noise.connect(envelope).connect(filter);
-    noise.start(now);
-    envelope.triggerAttack(now);
-    noise.stop(now + 0.05);
-  }
+function createSnare() {
+  const noise = new Tone.NoiseSynth({
+    noise: { type: 'white' },
+    envelope: { attack: 0.001, decay: 0.18, sustain: 0.1, release: 0.1 },
+  });
 
-  clack() {
-    const synth = new Tone.Synth({
-      oscillator: { type: 'sine' },
-      envelope: { attack: 0.5, decay: 0.5, sustain: 0.3, release: 1 },
-    }).toDestination();
+  const noiseFilter = new Tone.Filter({ type: 'highpass', frequency: 1800, rolloff: -24 });
+  noise.connect(noiseFilter);
 
-    const lfo = new Tone.LFO({
-      frequency: 1.5,
-      min: 220,
-      max: 260,
-    }).connect(synth.frequency);
+  const tone = new Tone.Oscillator('200hz', 'triangle');
+  const toneEnv = new Tone.AmplitudeEnvelope({ attack: 0.001, decay: 0.12, sustain: 0, release: 0.05 });
+  tone.connect(toneEnv);
 
-    const transport = Tone.getTransport();
-    transport.scheduleRepeat((time) => {
-      synth.triggerAttackRelease(240, '1n', time);
-    }, '2n');
+  const bus = new Tone.Gain().toDestination();
+  noiseFilter.connect(bus);
+  toneEnv.connect(bus);
 
-    const now = Tone.now();
-    lfo.start(now);
-    transport.start(now).stop(now + 0.5);
-  }
+  tone.start();
 
-  laser() {
-    const synth = new Tone.Synth({
-      oscillator: { type: 'sawtooth' },
-      envelope: { attack: 0.01, decay: 0.1, sustain: 0, release: 0.1 },
-    }).toDestination();
-    synth.volume.value = this.masterVolume;
-    synth.frequency.exponentialRampTo(100 * this.pitchMultiplier, 0.2);
-    synth.triggerAttackRelease(800 * this.pitchMultiplier, '8n');
-  }
-
-  pling() {
-    const synth = new Tone.PolySynth(Tone.Synth).toDestination();
-    synth.volume.value = this.masterVolume;
-    const notes = ['C4', 'E4', 'G4', 'C5', 'E5', 'G5', 'C6'];
-    let time = 0;
-    notes.forEach((note) => {
-      const freq = Tone.Frequency(note).toFrequency() * this.pitchMultiplier;
-      synth.triggerAttackRelease(freq, '16n', `+${time}`);
-      time += 0.05;
-    });
-  }
-
-  notify() {
-    const synth = new Tone.Synth({
-      oscillator: { type: 'triangle' },
-      envelope: { attack: 0.005, decay: 0.1, sustain: 0.3, release: 0.5 },
-    }).toDestination();
-    synth.volume.value = this.masterVolume;
-    synth.triggerAttackRelease(880 * this.pitchMultiplier, '16n'); // A
-    setTimeout(() => {
-      synth.triggerAttackRelease(1320 * this.pitchMultiplier, '8n'); // E
-    }, 100);
-  }
+  return {
+    trigger: (time?: number | string) => {
+      noise.triggerAttackRelease('16n', time);
+      toneEnv.triggerAttackRelease('16n', time);
+    },
+  };
 }

@@ -3,27 +3,43 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React, { useEffect, useMemo } from 'react';
+import React, { useEffect, useState } from 'react';
 
 import { IconButton, Toolbar } from '@dxos/react-ui';
 import { withTheme } from '@dxos/react-ui/testing';
 
-import { Sounds } from './sounds';
+import { createPattern } from './sounds';
 
 const DefaultStory = () => {
-  const sounds = useMemo(() => new Sounds(), []);
+  const [running, setRunning] = useState(false);
   useEffect(() => {
-    void sounds.init();
-  }, []);
+    if (!running) {
+      return;
+    }
+
+    const action = createPattern();
+    void action.start();
+    return () => void action.stop();
+  }, [running]);
 
   return (
     <Toolbar.Root>
-      <IconButton icon='ph--play--regular' iconOnly label='play' onClick={() => sounds.play()} />
-      <IconButton icon='ph--play--regular' iconOnly label='play' onClick={() => sounds.blip()} />
-      <IconButton icon='ph--play--regular' iconOnly label='play' onClick={() => sounds.click()} />
-      <IconButton icon='ph--play--regular' iconOnly label='play' onClick={() => sounds.laser()} />
-      <IconButton icon='ph--play--regular' iconOnly label='play' onClick={() => sounds.pling()} />
-      <IconButton icon='ph--play--regular' iconOnly label='play' onClick={() => sounds.notify()} />
+      <IconButton
+        icon='ph--play--regular'
+        iconOnly
+        variant='ghost'
+        size={16}
+        label='play'
+        onClick={() => setRunning(true)}
+      />
+      <IconButton
+        icon='ph--stop--regular'
+        iconOnly
+        variant='ghost'
+        size={16}
+        label='stop'
+        onClick={() => setRunning(false)}
+      />
     </Toolbar.Root>
   );
 };
