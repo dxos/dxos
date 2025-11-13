@@ -87,7 +87,7 @@ export const InboxPlugin = definePlugin(meta, () => [
         SpaceCapabilities.ObjectForm,
         defineObjectForm({
           objectSchema: Calendar.Calendar,
-          getIntent: () => createIntent(InboxAction.CreateCalendar),
+          getIntent: (_, options) => createIntent(InboxAction.CreateCalendar, { space: options.space }),
         }),
       ),
     ],
