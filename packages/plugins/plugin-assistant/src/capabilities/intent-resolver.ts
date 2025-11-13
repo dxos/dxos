@@ -30,9 +30,9 @@ export default (context: PluginContext) => [
       resolve: ({ space, rootCollection }) =>
         Effect.gen(function* () {
           const { dispatch } = context.getCapability(Capabilities.IntentDispatcher);
-          const chatCollection = Collection.makeSystem({ key: Assistant.Chat.typename });
-          const blueprintCollection = Collection.makeSystem({ key: Blueprint.Blueprint.typename });
-          const promptCollection = Collection.makeSystem({ key: Type.getTypename(Prompt.Prompt) });
+          const chatCollection = Collection.makeManaged({ key: Assistant.Chat.typename });
+          const blueprintCollection = Collection.makeManaged({ key: Blueprint.Blueprint.typename });
+          const promptCollection = Collection.makeManaged({ key: Type.getTypename(Prompt.Prompt) });
           rootCollection.objects.push(
             Ref.make(chatCollection),
             Ref.make(blueprintCollection),

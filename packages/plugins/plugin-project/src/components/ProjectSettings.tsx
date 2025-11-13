@@ -24,7 +24,7 @@ import { meta } from '../meta';
 const listGrid = 'grid grid-cols-[min-content_1fr_min-content_min-content_min-content]';
 const listItemGrid = 'grid grid-cols-subgrid col-span-5';
 
-const LaneFormSchema = Project.Lane.pipe(Schema.mutable, Schema.pick('name'));
+const ColumnFormSchema = Project.Column.pipe(Schema.mutable, Schema.pick('name'));
 
 // TODO(burdon): Standardize Object/Plugin settings.
 export type ProjectObjectSettingsProps = ThemedClassName<{
@@ -39,15 +39,22 @@ export const ProjectObjectSettings = ({ classNames, project }: ProjectObjectSett
   const client = useClient();
   const space = getSpace(project);
   const [expandedId, setExpandedId] = useState<string>();
-  const lane = useMemo(
-    () => project.lanes.find((lane) => lane.view.dxn.toString() === expandedId),
-    [project.lanes, expandedId],
+  const column = useMemo(
+    () => project.columns.find((column) => column.view.dxn.toString() === expandedId),
+    [project.columns, expandedId],
   );
-  const view = lane?.view.target;
+  const view = column?.view.target;
   const [schema, setSchema] = useState<Schema.Schema.AnyNoContext>(() => Schema.Struct({}));
   const projectionRef = useRef<ProjectionModel>(null);
   const tags = useQuery(space, Filter.type(Tag.Tag));
-  const types = useTypeOptions({ space, annotation: 'non-system' });
+  const types = useTypeOptions({
+    space,
+    annotation: {
+      location: ['database', 'runtime'],
+      kind: ['user'],
+      registered: ['registered', 'unregistered'],
+    },
+  });
 
   useAsyncEffect(async () => {
     if (!view?.query || !space) {
@@ -61,8 +68,8 @@ export const ProjectObjectSettings = ({ classNames, project }: ProjectObjectSett
   }, [client, space, view, schema]);
 
   const handleMove = useCallback(
-    (fromIndex: number, toIndex: number) => arrayMove(project.lanes, fromIndex, toIndex),
-    [project.lanes],
+    (fromIndex: number, toIndex: number) => arrayMove(project.columns, fromIndex, toIndex),
+    [project.columns],
   );
 
   const handleQueryChanged = useCallback(
@@ -90,24 +97,24 @@ export const ProjectObjectSettings = ({ classNames, project }: ProjectObjectSett
     [view, schema],
   );
 
-  const handleToggleField = useCallback((lane: Project.Lane) => {
+  const handleToggleField = useCallback((column: Project.Column) => {
     setExpandedId((prevExpandedId) =>
-      prevExpandedId === lane.view.dxn.toString() ? undefined : lane.view.dxn.toString(),
+      prevExpandedId === column.view.dxn.toString() ? undefined : column.view.dxn.toString(),
     );
   }, []);
 
   const handleDelete = useCallback(
-    async (lane: Project.Lane) => {
-      if (lane.view.dxn.toString() === expandedId) {
+    async (column: Project.Column) => {
+      if (column.view.dxn.toString() === expandedId) {
         setExpandedId(undefined);
       }
 
-      const index = project.lanes.findIndex((l) => l === lane);
-      const view = await lane.view.load();
-      project.lanes.splice(index, 1);
+      const index = project.columns.findIndex((l) => l === column);
+      const view = await column.view.load();
+      project.columns.splice(index, 1);
       space?.db.remove(view);
     },
-    [expandedId, project.lanes, space],
+    [expandedId, project.columns, space],
   );
 
   const handleAdd = useCallback(() => {
@@ -115,7 +122,7 @@ export const ProjectObjectSettings = ({ classNames, project }: ProjectObjectSett
       query: Query.select(Filter.type(Task.Task)),
       jsonSchema: Type.toJsonSchema(Task.Task),
     });
-    project.lanes.push({
+    project.columns.push({
       name: 'Tasks',
       view: Ref.make(view),
       order: [],
@@ -123,42 +130,42 @@ export const ProjectObjectSettings = ({ classNames, project }: ProjectObjectSett
     setExpandedId(view.id);
   }, [project]);
 
-  const handleLaneSave = useCallback(
-    (values: Schema.Schema.Type<typeof LaneFormSchema>) => {
-      if (lane) {
-        lane.name = values.name;
+  const handleColumnSave = useCallback(
+    (values: Schema.Schema.Type<typeof ColumnFormSchema>) => {
+      if (column) {
+        column.name = values.name;
       }
     },
-    [lane],
+    [column],
   );
 
   return (
     <div role='none' className={mx('plb-cardSpacingBlock overflow-y-auto', classNames)}>
       <h2 className={mx(inputTextLabel, cardText)}>{t('views label')}</h2>
 
-      <List.Root<Project.Lane>
-        items={project.lanes}
-        isItem={Schema.is(Project.Lane)}
-        getId={(lane) => lane.view.dxn.toString()}
+      <List.Root<Project.Column>
+        items={project.columns}
+        isItem={Schema.is(Project.Column)}
+        getId={(column) => column.view.dxn.toString()}
         onMove={handleMove}
       >
-        {({ items: lanes }) => (
+        {({ items: columns }) => (
           <>
             <div role='list' className={mx(listGrid, cardChrome)}>
-              {lanes.map((lane) => (
-                <List.Item<Project.Lane>
-                  key={lane.view.dxn.toString()}
-                  item={lane}
+              {columns.map((column) => (
+                <List.Item<Project.Column>
+                  key={column.view.dxn.toString()}
+                  item={column}
                   classNames={listItemGrid}
-                  aria-expanded={expandedId === lane.view.dxn.toString()}
+                  aria-expanded={expandedId === column.view.dxn.toString()}
                 >
                   <div role='none' className={mx(subtleHover, listItemGrid, 'rounded-sm cursor-pointer min-bs-10')}>
                     <List.ItemDragHandle />
-                    <List.ItemTitle onClick={() => handleToggleField(lane)}>{lane.name}</List.ItemTitle>
+                    <List.ItemTitle onClick={() => handleToggleField(column)}>{column.name}</List.ItemTitle>
                     <List.ItemDeleteButton
                       label={t('delete view label')}
                       autoHide={false}
-                      onClick={() => handleDelete(lane)}
+                      onClick={() => handleDelete(column)}
                       data-testid='view.delete'
                     />
                     <IconButton
@@ -166,14 +173,16 @@ export const ProjectObjectSettings = ({ classNames, project }: ProjectObjectSett
                       variant='ghost'
                       label={t('toggle expand label', { ns: 'os' })}
                       icon={
-                        expandedId === lane.view.dxn.toString() ? 'ph--caret-down--regular' : 'ph--caret-right--regular'
+                        expandedId === column.view.dxn.toString()
+                          ? 'ph--caret-down--regular'
+                          : 'ph--caret-right--regular'
                       }
-                      onClick={() => handleToggleField(lane)}
+                      onClick={() => handleToggleField(column)}
                     />
                   </div>
-                  {expandedId === lane.view.dxn.toString() && view && (
+                  {expandedId === column.view.dxn.toString() && view && (
                     <div role='none' className='col-span-5 mbs-1 mbe-1 border border-separator rounded-md'>
-                      <Form autoSave schema={LaneFormSchema} values={lane} onSave={handleLaneSave} />
+                      <Form autoSave schema={ColumnFormSchema} values={column} onSave={handleColumnSave} />
                       <ViewEditor
                         ref={projectionRef}
                         mode='tag'

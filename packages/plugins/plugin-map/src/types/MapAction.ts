@@ -4,8 +4,8 @@
 
 import * as Schema from 'effect/Schema';
 
+import { TypeInputOptionsAnnotation } from '@dxos/plugin-space/types';
 import { SpaceSchema } from '@dxos/react-client/echo';
-import { TypenameAnnotationId } from '@dxos/schema';
 
 import { meta } from '../meta';
 
@@ -15,10 +15,15 @@ import { LocationAnnotationId } from './types';
 export const CreateMap = Schema.Struct({
   name: Schema.optional(Schema.String),
   // TODO(wittjosiah): This should be a query input instead.
-  typename: Schema.String.annotations({
-    [TypenameAnnotationId]: 'setup-in-space',
-    title: 'Select pin record type',
-  }),
+  typename: Schema.String.pipe(
+    Schema.annotations({ title: 'Select pin type' }),
+    TypeInputOptionsAnnotation.set({
+      location: ['database', 'runtime'],
+      kind: ['user'],
+      registered: ['registered'],
+    }),
+    Schema.optional,
+  ),
   locationFieldName: Schema.String.pipe(
     Schema.annotations({
       [LocationAnnotationId]: true,

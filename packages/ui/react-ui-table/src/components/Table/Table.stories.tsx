@@ -172,8 +172,8 @@ const meta = {
       createSpace: true,
       onCreateSpace: async ({ client, space }) => {
         const [schema] = await space.db.schemaRegistry.register([TestSchema]);
-        const table = await Table.make({ client, space, typename: schema.typename });
-        const view = table.view.target!;
+        const { view, jsonSchema } = await View.makeFromSpace({ client, space, typename: schema.typename });
+        const table = Table.make({ view, jsonSchema });
         view.projection.fields = [
           view.projection.fields.find((field: any) => field.path === 'name')!,
           ...view.projection.fields.filter((field: any) => field.path !== 'name'),
@@ -216,7 +216,8 @@ export const StaticSchema: StoryObj = {
       createIdentity: true,
       createSpace: true,
       onCreateSpace: async ({ client, space }) => {
-        const table = await Table.make({ client, space, typename: Testing.Person.typename });
+        const { view, jsonSchema } = await View.makeFromSpace({ client, space, typename: Testing.Person.typename });
+        const table = Table.make({ view, jsonSchema });
         space.db.add(table);
 
         const factory = createObjectFactory(space.db, faker as any);
@@ -258,7 +259,12 @@ export const ArrayOfObjects: StoryObj = {
       createIdentity: true,
       createSpace: true,
       onCreateSpace: async ({ client, space }) => {
-        const table = await Table.make({ client, space, typename: ContactWithArrayOfEmails.typename });
+        const { view, jsonSchema } = await View.makeFromSpace({
+          client,
+          space,
+          typename: ContactWithArrayOfEmails.typename,
+        });
+        const table = Table.make({ view, jsonSchema });
         space.db.add(table);
 
         const factory = createObjectFactory(space.db, faker as any);
@@ -312,7 +318,8 @@ export const Tags: Meta<StoryProps> = {
         const [storedSchema] = await space.db.schemaRegistry.register([schema]);
 
         // Initialize table.
-        const table = await Table.make({ client, space, typename });
+        const { view, jsonSchema } = await View.makeFromSpace({ client, space, typename });
+        const table = Table.make({ view, jsonSchema });
         space.db.add(table);
 
         // Populate.

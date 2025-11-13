@@ -7,13 +7,13 @@ import * as Schema from 'effect/Schema';
 
 import { PropertiesType } from '@dxos/client-protocol/types';
 import { Obj, Query, Ref, Type } from '@dxos/echo';
-import { type Expando, FormAnnotation, SystemAnnotation } from '@dxos/echo/internal';
+import { type Expando, FormInputAnnotation, SystemTypeAnnotation } from '@dxos/echo/internal';
 import { DatabaseService } from '@dxos/echo-db';
 import { invariant } from '@dxos/invariant';
 
 export const Collection = Schema.Struct({
   name: Schema.String.pipe(Schema.optional),
-  objects: Schema.Array(Type.Ref(Type.Expando)).pipe(Schema.mutable, FormAnnotation.set(false)),
+  objects: Schema.Array(Type.Ref(Type.Expando)).pipe(Schema.mutable, FormInputAnnotation.set(false)),
 }).pipe(
   Type.Obj({
     typename: 'dxos.org/type/Collection',
@@ -30,19 +30,19 @@ export const make = (props: Partial<Obj.MakeProps<typeof Collection>> = {}) =>
  * System collections are used runtime collections of nodes in the app graph.
  * The purpose of this object is to allow them to be ordered within the root collection.
  */
-export const System = Schema.Struct({
+export const Managed = Schema.Struct({
   key: Schema.String,
 }).pipe(
   Type.Obj({
-    typename: 'dxos.org/type/SystemCollection',
+    typename: 'dxos.org/type/ManagedCollection',
     version: '0.1.0',
   }),
-  SystemAnnotation.set(true),
+  SystemTypeAnnotation.set(true),
 );
 
-export type System = Schema.Schema.Type<typeof System>;
+export type Managed = Schema.Schema.Type<typeof Managed>;
 
-export const makeSystem = (props: Obj.MakeProps<typeof System>) => Obj.make(System, props);
+export const makeManaged = (props: Obj.MakeProps<typeof Managed>) => Obj.make(Managed, props);
 
 type AddParams = {
   object: Obj.Any;

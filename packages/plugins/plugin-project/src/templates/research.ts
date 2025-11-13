@@ -43,7 +43,7 @@ export const createResearchProject = async (space: Space, name?: string): Promis
 
   return Project.make({
     name: name ?? 'Research',
-    lanes: [
+    columns: [
       {
         name: 'Mailbox',
         view: Ref.make(mailboxView),

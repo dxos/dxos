@@ -50,7 +50,7 @@ export const KanbanContainer = ({ object }: { object: Kanban.Kanban; role: strin
 
   const projection = useProjectionModel(cardSchema, object);
   const model = useKanbanModel({
-    kanban: object,
+    object,
     projection,
     items: filteredObjects,
   });

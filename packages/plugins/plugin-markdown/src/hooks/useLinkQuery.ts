@@ -8,7 +8,7 @@ import { useCallback, useMemo } from 'react';
 import { Capabilities } from '@dxos/app-framework';
 import { usePluginManager } from '@dxos/app-framework/react';
 import { Filter, Obj, Query, Type } from '@dxos/echo';
-import { EntityKind, SystemAnnotation, getTypeAnnotation } from '@dxos/echo/internal';
+import { EntityKind, SystemTypeAnnotation, getTypeAnnotation } from '@dxos/echo/internal';
 import { type Space } from '@dxos/react-client/echo';
 import { toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { type EditorMenuGroup, type EditorMenuItem, insertAtCursor, insertAtLineStart } from '@dxos/react-ui-editor';
@@ -28,7 +28,7 @@ export const useLinkQuery = (space: Space | undefined) => {
       Filter.or(
         ...(space?.db.schemaRegistry.query({ location: ['database', 'runtime'] }).runSync() ?? [])
           .filter((schema) => getTypeAnnotation(schema)?.kind !== EntityKind.Relation)
-          .filter((schema) => !SystemAnnotation.get(schema).pipe(Option.getOrElse(() => false)))
+          .filter((schema) => !SystemTypeAnnotation.get(schema).pipe(Option.getOrElse(() => false)))
           .map((schema) => Filter.typename(Type.getTypename(schema))),
       ),
     [space],

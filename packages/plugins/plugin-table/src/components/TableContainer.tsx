@@ -124,7 +124,7 @@ export const TableContainer = ({ role, object }: TableContainerProps) => {
 
   const projection = useProjectionModel(schema, object);
   const model = useTableModel({
-    table: object,
+    object,
     projection,
     features,
     rows: filteredObjects,

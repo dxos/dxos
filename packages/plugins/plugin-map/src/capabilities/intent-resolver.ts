@@ -4,6 +4,7 @@
 
 import { Capabilities, type PluginContext, contributes, createResolver } from '@dxos/app-framework';
 import { ClientCapabilities } from '@dxos/plugin-client';
+import { View } from '@dxos/schema';
 
 import { Map, MapAction } from '../types';
 
@@ -15,16 +16,8 @@ export default (context: PluginContext) =>
       intent: MapAction.Create,
       resolve: async ({ space, name, typename, locationFieldName, center, zoom, coordinates }) => {
         const client = context.getCapability(ClientCapabilities.Client);
-        const map = await Map.make({
-          client,
-          space,
-          name,
-          typename,
-          pivotFieldName: locationFieldName,
-          center,
-          zoom,
-          coordinates,
-        });
+        const { view } = await View.makeFromSpace({ client, space, typename, pivotFieldName: locationFieldName });
+        const map = Map.make({ name, center, zoom, coordinates, view });
         return { data: { object: map } };
       },
     }),

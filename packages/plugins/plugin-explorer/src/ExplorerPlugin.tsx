@@ -27,7 +27,7 @@ export const ExplorerPlugin = definePlugin(meta, () => [
         metadata: {
           icon: 'ph--graph--regular',
           iconHue: 'green',
-          formSchema: ExplorerAction.GraphProps,
+          inputSchema: ExplorerAction.GraphProps,
           createObjectIntent: ((props, options) =>
             createIntent(ExplorerAction.CreateGraph, { ...props, space: options.space })) satisfies CreateObjectIntent,
         },

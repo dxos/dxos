@@ -215,12 +215,12 @@ type Story = StoryObj<typeof storybook>;
 const MARKDOWN_DOCUMENT = trim`
   # Hello, world!
 
-  This is a test document that contains Markdown content. 
-  Markdown is a lightweight markup language for writing formatted text in plain text form. 
+  This is a test document that contains Markdown content.
+  Markdown is a lightweight markup language for writing formatted text in plain text form.
   Its goal is to be easy to read and write in raw form, easy to convert to HTML.
 
-  Markdown’s simplicity makes it highly adaptable: it can be written in any text editor, stored in plain .md files, and rendered into HTML, PDF, or other formats with converters. 
-  Because of this portability, it’s widely used in software documentation, static site generators, technical blogging, and collaborative platforms like GitHub and Notion. 
+  Markdown’s simplicity makes it highly adaptable: it can be written in any text editor, stored in plain .md files, and rendered into HTML, PDF, or other formats with converters.
+  Because of this portability, it’s widely used in software documentation, static site generators, technical blogging, and collaborative platforms like GitHub and Notion.
 
   Many applications extend the core syntax with extras (e.g., tables, task lists, math notation), but the core idea remains the same—clean, minimal markup that stays readable even without rendering.
 `;
@@ -443,13 +443,14 @@ export const WithMap: Story = {
     types: [View.View, Map.Map, Table.Table],
     onInit: async ({ space }) => {
       const [schema] = await space.db.schemaRegistry.register([createLocationSchema()]);
-      const table = await Table.make({ name: 'Table', space, typename: schema.typename });
-      const map = await Map.make({
-        name: 'Map',
+      const { view: tableView, jsonSchema } = await View.makeFromSpace({ space, typename: schema.typename });
+      const table = Table.make({ name: 'Table', view: tableView, jsonSchema });
+      const { view: mapView } = await View.makeFromSpace({
         space,
         typename: schema.typename,
         pivotFieldName: 'location',
       });
+      const map = Map.make({ name: 'Map', view: mapView });
       space.db.add(table);
       space.db.add(map);
     },
@@ -472,7 +473,7 @@ export const WithTrip: Story = {
     types: [Map.Map],
     onInit: async ({ space }) => {
       // TODO(burdon): Table.
-      const map = await Map.make({ space, name: 'Trip' });
+      const map = Map.make({ name: 'Trip' });
       space.db.add(map);
       space.db.add(
         Markdown.make({
@@ -498,8 +499,8 @@ export const WithTrip: Story = {
           content: trim`
             # Barcelona
 
-            Barcelona is the capital and most populous city of Catalonia, an autonomous community in northeastern Spain. 
-            It is located on the Mediterranean coast, on the banks of the Llobregat River, in the comarca of the Baix Llobregat. 
+            Barcelona is the capital and most populous city of Catalonia, an autonomous community in northeastern Spain.
+            It is located on the Mediterranean coast, on the banks of the Llobregat River, in the comarca of the Baix Llobregat.
             The city is known for its rich history, vibrant culture, and stunning architecture, including the Sagrada Familia, Park Güell, and Casa Batlló.
           `,
         }),
@@ -833,8 +834,8 @@ export const WithProject: Story = {
           }),
           output: Schema.Any,
           instructions: trim`
-            Research the organization provided as input. 
-            Absolutely, in all cases, create a research note for it at the end. 
+            Research the organization provided as input.
+            Absolutely, in all cases, create a research note for it at the end.
             NOTE: Do mocked reseach (set mockSearch to true).
 
             {{organization}}
@@ -885,7 +886,7 @@ export const WithProject: Story = {
       space.db.add(
         Project.make({
           name: 'Investor Research',
-          lanes: [
+          columns: [
             {
               name: 'Mailbox',
               view: Ref.make(mailboxView),

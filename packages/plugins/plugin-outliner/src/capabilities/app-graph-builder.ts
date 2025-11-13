@@ -8,7 +8,7 @@ import * as Option from 'effect/Option';
 
 import { Capabilities, type PluginContext, contributes, createIntent } from '@dxos/app-framework';
 import { Obj, Relation } from '@dxos/echo';
-import { SystemAnnotation } from '@dxos/echo/internal';
+import { SystemTypeAnnotation } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
 import { createExtension } from '@dxos/plugin-graph';
 import { getSpace } from '@dxos/react-client/echo';
@@ -33,7 +33,7 @@ export default (context: PluginContext) =>
 
               const schema = Obj.getSchema(node.data);
               const system = Option.fromNullable(schema).pipe(
-                Option.flatMap((schema) => SystemAnnotation.get(schema)),
+                Option.flatMap((schema) => SystemTypeAnnotation.get(schema)),
                 Option.getOrElse(() => false),
               );
               if (system) {

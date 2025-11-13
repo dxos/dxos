@@ -19,6 +19,9 @@ export default () =>
     await ensureSystemCollection(space);
   });
 
+/**
+ * Ensure the root collection has a system collection for Meetings.
+ */
 const ensureSystemCollection = async (space: Space) => {
   const rootCollection: Collection.Collection = await space.properties[Collection.Collection.typename]?.load();
   if (!rootCollection) {
@@ -27,14 +30,11 @@ const ensureSystemCollection = async (space: Space) => {
 
   const objects = await Promise.all(rootCollection.objects.map((ref) => ref.load()));
   const meetings = objects.find(
-    (object) => Obj.instanceOf(Collection.System, object) && object.key === Type.getTypename(Meeting.Meeting),
+    (object) => Obj.instanceOf(Collection.Managed, object) && object.key === Type.getTypename(Meeting.Meeting),
   );
   if (meetings) {
     return;
   }
 
-  const systemCollection = Collection.makeSystem({
-    key: Type.getTypename(Meeting.Meeting),
-  });
-  rootCollection.objects.push(Ref.make(systemCollection));
+  rootCollection.objects.push(Ref.make(Collection.makeManaged({ key: Type.getTypename(Meeting.Meeting) })));
 };

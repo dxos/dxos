@@ -15,7 +15,7 @@ import { type Space, SpaceState, getSpace, isLiveObject, isSpace, parseId, useSp
 import { Input } from '@dxos/react-ui';
 import { type InputProps, SelectInput } from '@dxos/react-ui-form';
 import { HuePicker, IconPicker } from '@dxos/react-ui-pickers';
-import { Collection, type TypenameAnnotation, TypenameAnnotationId, View, ViewAnnotation } from '@dxos/schema';
+import { Collection, View, ViewAnnotation } from '@dxos/schema';
 import { type JoinPanelProps } from '@dxos/shell/react';
 
 // TODO(burdon): Component name standard: NounVerbComponent.
@@ -49,7 +49,13 @@ import {
 } from '../components';
 import { useTypeOptions } from '../hooks';
 import { meta } from '../meta';
-import { HueAnnotationId, IconAnnotationId, type SpaceSettingsProps } from '../types';
+import {
+  HueAnnotationId,
+  IconAnnotationId,
+  type SpaceSettingsProps,
+  type TypeInputOptions,
+  TypeInputOptionsAnnotationId,
+} from '../types';
 
 import { SpaceCapabilities } from './capabilities';
 
@@ -225,20 +231,22 @@ export default ({ createInvitationUrl }: ReactSurfaceOptions) =>
         data,
       ): data is {
         prop: string;
-        schema: Schema.Schema<any>;
+        schema: Schema.Schema.Any;
         target: Space | Collection.Collection | undefined;
       } => {
         if (data.prop !== 'typename') {
           return false;
         }
 
-        const annotation = findAnnotation((data.schema as Schema.Schema.All).ast, TypenameAnnotationId);
+        // TODO(wittjosiah): This doesn't work here.
+        // const annotation = TypeInputOptionsAnnotation.get(data.schema as Schema.Schema.Any);
+        const annotation = findAnnotation((data.schema as Schema.Schema.All).ast, TypeInputOptionsAnnotationId);
         return !!annotation;
       },
       component: ({ data: { schema, target }, ...inputProps }) => {
         const props = inputProps as any as InputProps;
         const space = isSpace(target) ? target : getSpace(target);
-        const annotation = findAnnotation<TypenameAnnotation>(schema.ast, TypenameAnnotationId)!;
+        const annotation = findAnnotation<TypeInputOptions>(schema.ast, TypeInputOptionsAnnotationId)!;
         const options = useTypeOptions({ space, annotation });
 
         return <SelectInput {...props} options={options} />;

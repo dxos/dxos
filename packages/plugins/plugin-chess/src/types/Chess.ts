@@ -6,7 +6,7 @@ import { Chess as ChessJS } from 'chess.js';
 import * as Schema from 'effect/Schema';
 
 import { Obj, Type } from '@dxos/echo';
-import { FormAnnotation, LabelAnnotation } from '@dxos/echo/internal';
+import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/internal';
 import { log } from '@dxos/log';
 
 export const Game = Schema.Struct({
@@ -22,13 +22,13 @@ export const Game = Schema.Struct({
         description: 'DID of black player',
       }),
     ),
-  }).pipe(Schema.mutable, FormAnnotation.set(false), Schema.optional),
+  }).pipe(Schema.mutable, FormInputAnnotation.set(false), Schema.optional),
   pgn: Schema.String.annotations({
     description: 'Portable Game Notation.',
-  }).pipe(FormAnnotation.set(false), Schema.optional),
+  }).pipe(FormInputAnnotation.set(false), Schema.optional),
   fen: Schema.String.annotations({
     description: 'Forsyth-Edwards Notation.',
-  }).pipe(FormAnnotation.set(false), Schema.optional),
+  }).pipe(FormInputAnnotation.set(false), Schema.optional),
 }).pipe(
   Type.Obj({
     typename: 'dxos.org/type/Chess',

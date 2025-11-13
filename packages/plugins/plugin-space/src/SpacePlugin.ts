@@ -17,6 +17,7 @@ import {
 import { Ref, Tag, Type } from '@dxos/echo';
 import { AttentionEvents } from '@dxos/plugin-attention';
 import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
+import { translations as componentsTranslations } from '@dxos/react-ui-components';
 import { translations as formTranslations } from '@dxos/react-ui-form';
 import { Collection, DataTypes, StoredSchema, createDefaultSchema } from '@dxos/schema';
 import { translations as shellTranslations } from '@dxos/shell/react';
@@ -95,7 +96,12 @@ export const SpacePlugin = definePlugin<SpacePluginOptions>(
         id: `${meta.id}/module/translations`,
         activatesOn: Events.SetupTranslations,
         activate: () =>
-          contributes(Capabilities.Translations, [...translations, ...formTranslations, ...shellTranslations]),
+          contributes(Capabilities.Translations, [
+            ...translations,
+            ...componentsTranslations,
+            ...formTranslations,
+            ...shellTranslations,
+          ]),
       }),
       defineModule({
         id: `${meta.id}/module/metadata`,
@@ -108,7 +114,7 @@ export const SpacePlugin = definePlugin<SpacePluginOptions>(
               iconHue: 'neutral',
               // TODO(wittjosiah): Move out of metadata.
               loadReferences: async (collection: Collection.Collection) => await Ref.Array.loadAll(collection.objects),
-              formSchema: Schema.Struct({ name: Schema.optional(Schema.String) }),
+              inputSchema: Schema.Struct({ name: Schema.optional(Schema.String) }),
               createObjectIntent: ((props) =>
                 createIntent(CollectionAction.Create, props)) satisfies CreateObjectIntent,
               addToCollectionOnCreate: true,
@@ -119,7 +125,7 @@ export const SpacePlugin = definePlugin<SpacePluginOptions>(
             metadata: {
               icon: 'ph--database--regular',
               iconHue: 'green',
-              formSchema: SpaceAction.StoredSchemaForm,
+              inputSchema: SpaceAction.StoredSchemaForm,
               createObjectIntent: ((props, options) =>
                 props.typename
                   ? createIntent(SpaceAction.UseStaticSchema, { space: options.space, typename: props.typename })

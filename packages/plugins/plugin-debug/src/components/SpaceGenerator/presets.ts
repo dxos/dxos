@@ -195,7 +195,7 @@ export const generator = () => ({
           return space.db.add(
             Project.make({
               name: 'Investor Research',
-              lanes: [
+              columns: [
                 {
                   name: 'Mailbox',
                   view: Ref.make(mailboxView),

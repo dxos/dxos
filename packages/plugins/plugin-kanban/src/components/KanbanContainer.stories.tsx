@@ -47,16 +47,16 @@ const StorybookKanban = () => {
   const client = useClient();
   const spaces = useSpaces();
   const space = spaces[spaces.length - 1];
-  const [kanban] = useQuery(space, Filter.type(Kanban.Kanban));
-  const typename = kanban?.view.target?.query ? getTypenameFromQuery(kanban.view.target.query.ast) : undefined;
+  const [object] = useQuery(space, Filter.type(Kanban.Kanban));
+  const typename = object?.view.target?.query ? getTypenameFromQuery(object.view.target.query.ast) : undefined;
   const schema = useSchema(client, space, typename);
 
   const objects = useQuery(space, schema ? Filter.type(schema) : Filter.nothing());
   const filteredObjects = useGlobalFilteredObjects(objects);
 
-  const projection = useProjectionModel(schema, kanban);
+  const projection = useProjectionModel(schema, object);
   const model = useKanbanModel({
-    kanban,
+    object,
     projection,
     items: filteredObjects,
   });
@@ -83,15 +83,15 @@ const StorybookKanban = () => {
     (newQuery: QueryAST.Query) => {
       invariant(schema);
       invariant(Type.isMutable(schema));
-      invariant(kanban.view.target);
+      invariant(object.view.target);
 
       schema.updateTypename(getTypenameFromQuery(newQuery));
-      kanban.view.target.query.ast = newQuery;
+      object.view.target.query.ast = newQuery;
     },
-    [kanban, schema],
+    [object, schema],
   );
 
-  if (!schema || !kanban.view.target) {
+  if (!schema || !object.view.target) {
     return null;
   }
 
@@ -102,14 +102,14 @@ const StorybookKanban = () => {
         <ViewEditor
           registry={space?.db.schemaRegistry}
           schema={schema}
-          view={kanban.view.target}
+          view={object.view.target}
           onQueryChanged={handleUpdateQuery}
           onDelete={(fieldId: string) => {
             console.log('[ViewEditor]', 'onDelete', fieldId);
           }}
         />
         <SyntaxHighlighter language='json' className='text-xs'>
-          {JSON.stringify({ view: kanban.view.target, schema }, null, 2)}
+          {JSON.stringify({ view: object.view.target, schema }, null, 2)}
         </SyntaxHighlighter>
       </div>
     </div>
@@ -138,12 +138,13 @@ const meta = {
             await client.halo.createIdentity();
             const space = await client.spaces.create();
             await space.waitUntilReady();
-            const kanban = await Kanban.make({
+            const { view } = await View.makeFromSpace({
               client,
               space,
               typename: Organization.Organization.typename,
               pivotFieldName: 'status',
             });
+            const kanban = Kanban.make({ view });
             space.db.add(kanban);
 
             // TODO(burdon): Replace with sdk/schema/testing.

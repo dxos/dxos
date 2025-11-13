@@ -77,7 +77,7 @@ const defaultFeatures: TableFeatures = {
 export type InsertRowResult = 'draft' | 'final';
 
 export type TableModelProps<T extends TableRow = TableRow> = {
-  table: Table.Table;
+  object: Table.Table;
   projection: ProjectionModel;
   features?: Partial<TableFeatures>;
   sorting?: FieldSortType[];
@@ -94,7 +94,7 @@ export type TableModelProps<T extends TableRow = TableRow> = {
 };
 
 export class TableModel<T extends TableRow = TableRow> extends Resource {
-  private readonly _table: Table.Table;
+  private readonly _object: Table.Table;
   private readonly _projection: ProjectionModel;
 
   private readonly _visibleRange = signal<DxGridPlaneRange>({
@@ -120,7 +120,7 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
   private _columnMeta?: ReadonlySignal<DxGridAxisMeta>;
 
   constructor({
-    table,
+    object,
     projection,
     features = {},
     sorting = [],
@@ -135,7 +135,7 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
     onRowAction,
   }: TableModelProps<T>) {
     super();
-    this._table = table;
+    this._object = object;
     this._projection = projection;
     this._projection.normalizeView();
 
@@ -176,17 +176,17 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
   }
 
   public get id(): string {
-    return Obj.getDXN(this._table).toString();
+    return Obj.getDXN(this._object).toString();
   }
 
   public get view(): View.View {
-    const view = this._table.view.target;
+    const view = this._object.view.target;
     invariant(view, 'Table model not initialized');
     return view;
   }
 
   public get table(): Table.Table {
-    return this._table;
+    return this._object;
   }
 
   public get projection(): ProjectionModel {
@@ -246,7 +246,7 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
   //
 
   protected override async _open(): Promise<void> {
-    await this._table.view.load();
+    await this._object.view.load();
     this.initializeColumnMeta();
     this.initializeEffects();
     await this._selection.open(this._ctx);

@@ -5,7 +5,7 @@
 import * as Schema from 'effect/Schema';
 
 import { Obj, Type } from '@dxos/echo';
-import { JsonSchemaType, LabelAnnotation, Ref, SystemAnnotation } from '@dxos/echo/internal';
+import { JsonSchemaType, LabelAnnotation, Ref, SystemTypeAnnotation } from '@dxos/echo/internal';
 
 import { Script } from './Script';
 
@@ -49,7 +49,7 @@ export const Function = Schema.Struct({
     version: '0.1.0',
   }),
   LabelAnnotation.set(['name']),
-  SystemAnnotation.set(true),
+  SystemTypeAnnotation.set(true),
 );
 export interface Function extends Schema.Schema.Type<typeof Function> {}
 

@@ -29,7 +29,7 @@ export const KanbanPlugin = definePlugin(meta, () => [
         metadata: {
           icon: 'ph--kanban--regular',
           iconHue: 'green',
-          formSchema: CreateKanbanSchema,
+          inputSchema: CreateKanbanSchema,
           createObjectIntent: ((props, options) =>
             createIntent(KanbanAction.Create, { ...props, space: options.space })) satisfies CreateObjectIntent,
         },

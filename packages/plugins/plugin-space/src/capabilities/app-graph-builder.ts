@@ -393,7 +393,7 @@ export default (context: PluginContext) => {
           Function.pipe(
             get(node),
             Option.flatMap((node) =>
-              Obj.instanceOf(Collection.System, node.data) ? Option.some(node.data) : Option.none(),
+              Obj.instanceOf(Collection.Managed, node.data) ? Option.some(node.data) : Option.none(),
             ),
             Option.flatMap((collection) => {
               const space = getSpace(collection);
@@ -432,7 +432,7 @@ export default (context: PluginContext) => {
           Function.pipe(
             get(node),
             Option.flatMap((node) =>
-              Obj.instanceOf(Collection.System, node.data) && node.data.key === StoredSchema.typename
+              Obj.instanceOf(Collection.Managed, node.data) && node.data.key === StoredSchema.typename
                 ? Option.some(node.data)
                 : Option.none(),
             ),
@@ -594,7 +594,7 @@ export default (context: PluginContext) => {
               let deletable =
                 !isSchema &&
                 // Don't allow system collections to be deleted.
-                !Obj.instanceOf(Collection.System, object);
+                !Obj.instanceOf(Collection.Managed, object);
               if (isSchema && query) {
                 const objects = get(atomFromQuery(query));
                 const filteredViews = get(

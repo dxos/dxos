@@ -10,8 +10,10 @@ import { useClient } from '@dxos/react-client';
 import { getSpace, useSchema } from '@dxos/react-client/echo';
 import { type CustomInputMap, Form, SelectInput } from '@dxos/react-ui-form';
 import { useProjectionModel } from '@dxos/react-ui-kanban';
-import { Kanban } from '@dxos/react-ui-kanban/types';
+import { type Kanban } from '@dxos/react-ui-kanban/types';
 import { getTypenameFromQuery } from '@dxos/schema';
+
+import { SettingsSchema } from '../types';
 
 type KanbanViewEditorProps = { object: Kanban.Kanban };
 
@@ -48,7 +50,7 @@ export const KanbanViewEditor = ({ object }: KanbanViewEditorProps) => {
   return (
     <Form
       Custom={custom}
-      schema={Kanban.SettingsSchema}
+      schema={SettingsSchema}
       values={initialValues}
       onSave={handleSave}
       autoSave

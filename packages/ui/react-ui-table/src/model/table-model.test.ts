@@ -116,7 +116,7 @@ const createTableModel = (props: Partial<TableModelProps> = {}): TableModel => {
     query: Query.select(Filter.type(schema)),
     jsonSchema: schema.jsonSchema,
   });
-  const table = Table.makeWithView({ view });
+  const object = Table.make({ view });
   const projection = new ProjectionModel(schema.jsonSchema, view.projection);
-  return new TableModel({ table, projection, ...props });
+  return new TableModel({ object, projection, ...props });
 };

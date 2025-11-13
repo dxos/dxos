@@ -6,7 +6,7 @@ import { isAfter, isBefore, isEqual } from 'date-fns';
 import * as Schema from 'effect/Schema';
 
 import { Obj, Ref, Type } from '@dxos/echo';
-import { SystemAnnotation } from '@dxos/echo/internal';
+import { SystemTypeAnnotation } from '@dxos/echo/internal';
 import { Text } from '@dxos/schema';
 
 import { getDateString, parseDateString } from './util';
@@ -20,7 +20,7 @@ export const JournalEntry = Schema.Struct({
     typename: 'dxos.org/type/JournalEntry',
     version: '0.2.0',
   }),
-  SystemAnnotation.set(true),
+  SystemTypeAnnotation.set(true),
 );
 
 export interface JournalEntry extends Schema.Schema.Type<typeof JournalEntry> {}

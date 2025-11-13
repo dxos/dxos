@@ -142,7 +142,7 @@ const getSystemCollectionNodePartials = ({
   space,
   resolve,
 }: {
-  collection: Collection.System;
+  collection: Collection.Managed;
   space: Space;
   resolve: (typename: string) => Record<string, any>;
 }) => {
@@ -443,7 +443,7 @@ export const createObjectNode = ({
   const metadata = resolve(type);
   const partials = Obj.instanceOf(Collection.Collection, object)
     ? getCollectionGraphNodePartials({ collection: object, space, resolve })
-    : Obj.instanceOf(Collection.System, object)
+    : Obj.instanceOf(Collection.Managed, object)
       ? getSystemCollectionNodePartials({ collection: object, space, resolve })
       : Obj.instanceOf(StoredSchema, object)
         ? getSchemaGraphNodePartials()
@@ -458,7 +458,7 @@ export const createObjectNode = ({
 
   const selectable =
     (!Obj.instanceOf(StoredSchema, object) &&
-      !Obj.instanceOf(Collection.System, object) &&
+      !Obj.instanceOf(Collection.Managed, object) &&
       !Obj.instanceOf(Collection.Collection, object)) ||
     (navigable && Obj.instanceOf(Collection.Collection, object));
 
@@ -484,7 +484,7 @@ export const createObjectNode = ({
           return true;
         }
 
-        if (Obj.instanceOf(Collection.System, object)) {
+        if (Obj.instanceOf(Collection.Managed, object)) {
           return !instruction.type.startsWith('reorder');
         }
 
@@ -520,10 +520,10 @@ export const constructObjectActions = ({
 
   const getId = (id: string) => `${id}/${Obj.getDXN(object).toString()}`;
 
-  const systemCollection = Obj.instanceOf(Collection.System, object) ? object : undefined;
+  const systemCollection = Obj.instanceOf(Collection.Managed, object) ? object : undefined;
   const metadata = systemCollection ? resolve(systemCollection.key) : {};
   const createObjectIntent = metadata.createObjectIntent;
-  const formSchema = metadata.formSchema;
+  const inputSchema = metadata.inputSchema;
 
   const actions: NodeArg<ActionData>[] = [
     ...(Obj.instanceOf(Collection.Collection, object)
@@ -572,7 +572,7 @@ export const constructObjectActions = ({
             id: getId(SpaceAction.OpenCreateObject._tag),
             type: ACTION_TYPE,
             data: async () => {
-              if (formSchema) {
+              if (inputSchema) {
                 await dispatch(
                   createIntent(SpaceAction.OpenCreateObject, {
                     target: space,
@@ -640,7 +640,7 @@ export const constructObjectActions = ({
         ]),
     ...(navigable ||
     (!Obj.instanceOf(Collection.Collection, object) &&
-      !Obj.instanceOf(Collection.System, object) &&
+      !Obj.instanceOf(Collection.Managed, object) &&
       !Obj.instanceOf(StoredSchema, object))
       ? [
           {

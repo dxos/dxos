@@ -5,19 +5,18 @@
 import * as Schema from 'effect/Schema';
 
 import { Filter, Obj, Query, QueryAST, Ref, Type } from '@dxos/echo';
-import { FormAnnotation, LabelAnnotation } from '@dxos/echo/internal';
+import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/internal';
 import { View, ViewAnnotation } from '@dxos/schema';
-import { type MakeOptional } from '@dxos/util';
 
 const GraphSchema = Schema.Struct({
   name: Schema.optional(Schema.String),
 
-  view: Type.Ref(View.View).pipe(FormAnnotation.set(false)),
+  view: Type.Ref(View.View).pipe(FormInputAnnotation.set(false)),
 
   query: Schema.Struct({
     raw: Schema.optional(Schema.String),
     ast: QueryAST.Query,
-  }).pipe(Schema.mutable, FormAnnotation.set(false)),
+  }).pipe(Schema.mutable, FormInputAnnotation.set(false)),
 }).pipe(
   Type.Obj({
     typename: 'dxos.org/type/Graph',
@@ -30,18 +29,17 @@ export interface Graph extends Schema.Schema.Type<typeof GraphSchema> {}
 export interface GraphEncoded extends Schema.Schema.Encoded<typeof GraphSchema> {}
 export const Graph: Schema.Schema<Graph, GraphEncoded> = GraphSchema;
 
-/**
- * Make a graph object.
- */
-export const makeWithView = (props: MakeOptional<Obj.MakeProps<typeof Graph>, 'query'>) =>
-  Obj.make(Graph, { query: { raw: '', ast: Query.select(Filter.nothing()).ast }, ...props });
-
-type MakeProps = Partial<Omit<Obj.MakeProps<typeof Graph>, 'view'>> & View.MakeFromSpaceProps;
+type MakeProps = Omit<Partial<Obj.MakeProps<typeof Graph>>, 'view'> & {
+  view: View.View;
+};
 
 /**
  * Make a graph as a view of a data set.
  */
-export const make = async ({ name, query, ...props }: MakeProps): Promise<Graph> => {
-  const { view } = await View.makeFromSpace(props);
-  return makeWithView({ name, view: Ref.make(view), query });
+export const make = ({
+  name,
+  query = { raw: '', ast: Query.select(Filter.nothing()).ast },
+  view,
+}: MakeProps): Graph => {
+  return Obj.make(Graph, { name, view: Ref.make(view), query });
 };

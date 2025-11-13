@@ -7,7 +7,7 @@ import * as Layer from 'effect/Layer';
 import * as Schema from 'effect/Schema';
 
 import { Obj, Query, Ref, Type } from '@dxos/echo';
-import { SystemAnnotation } from '@dxos/echo/internal';
+import { SystemTypeAnnotation } from '@dxos/echo/internal';
 import { Queue } from '@dxos/echo-db';
 import { ContextQueueService, DatabaseService, QueueService } from '@dxos/functions';
 
@@ -21,7 +21,7 @@ export const ResearchGraph = Schema.Struct({
     typename: 'dxos.org/type/ResearchGraph',
     version: '0.1.0',
   }),
-  SystemAnnotation.set(true),
+  SystemTypeAnnotation.set(true),
 );
 
 export interface ResearchGraph extends Schema.Schema.Type<typeof ResearchGraph> {}

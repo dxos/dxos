@@ -45,7 +45,7 @@ const DefaultStory = () => {
       fields: ['fullName'],
     });
 
-    project.lanes.push({
+    project.columns.push({
       name: 'New Contacts',
       view: Ref.make(view),
       order: [],
@@ -83,7 +83,7 @@ const MutationsStory = () => {
       fields: ['fullName'],
     });
 
-    project.lanes.push({
+    project.columns.push({
       name: 'New Contacts',
       view: Ref.make(view),
       order: [],
@@ -150,7 +150,7 @@ const meta = {
           fields: ['fullName'],
         });
 
-        project.lanes.push({
+        project.columns.push({
           name: 'Contacts',
           view: Ref.make(view),
           order: [],

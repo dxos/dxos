@@ -4,8 +4,8 @@
 
 import * as Schema from 'effect/Schema';
 
+import { TypeInputOptionsAnnotation } from '@dxos/plugin-space/types';
 import { SpaceSchema } from '@dxos/react-client/echo';
-import { TypenameAnnotationId } from '@dxos/schema';
 
 import { meta } from '../meta';
 
@@ -16,10 +16,15 @@ const EXPLORER_ACTION = `${meta.id}/action`;
 export const GraphProps = Schema.Struct({
   name: Schema.optional(Schema.String),
   // TODO(wittjosiah): This should be a query input instead.
-  typename: Schema.String.annotations({
-    [TypenameAnnotationId]: 'setup-in-space',
-    title: 'Select graph record type',
-  }),
+  typename: Schema.String.pipe(
+    Schema.annotations({ title: 'Select type' }),
+    TypeInputOptionsAnnotation.set({
+      location: ['database', 'runtime'],
+      kind: ['user'],
+      registered: ['registered'],
+    }),
+    Schema.optional,
+  ),
 });
 
 export class CreateGraph extends Schema.TaggedClass<CreateGraph>()(`${EXPLORER_ACTION}/create-graph`, {

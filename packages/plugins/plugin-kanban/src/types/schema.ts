@@ -4,9 +4,10 @@
 
 import * as Schema from 'effect/Schema';
 
+import { TypeInputOptionsAnnotation } from '@dxos/plugin-space/types';
 import { SpaceSchema } from '@dxos/react-client/echo';
 import { Kanban } from '@dxos/react-ui-kanban/types';
-import { FieldSchema, TypenameAnnotationId, View } from '@dxos/schema';
+import { FieldSchema, View } from '@dxos/schema';
 
 import { meta } from '../meta';
 
@@ -22,14 +23,23 @@ import { meta } from '../meta';
 // TODO(wittjosiah): Factor out?
 export const PivotColumnAnnotationId = Symbol.for('@dxos/plugin-kanban/annotation/PivotColumn');
 
+export const SettingsSchema = Schema.Struct({
+  columnFieldId: Schema.String.annotations({
+    title: 'Column field identifier',
+  }),
+});
+
 export const CreateKanbanSchema = Schema.Struct({
   name: Schema.optional(Schema.String),
   // TODO(wittjosiah): This should be a query input instead.
-  typename: Schema.optional(
-    Schema.String.annotations({
-      [TypenameAnnotationId]: 'setup-in-space',
-      title: 'Select card record type (leave empty to start fresh)',
+  typename: Schema.String.pipe(
+    Schema.annotations({ title: 'Select card type' }),
+    TypeInputOptionsAnnotation.set({
+      location: ['database', 'runtime'],
+      kind: ['user'],
+      registered: ['registered'],
     }),
+    Schema.optional,
   ),
   initialPivotColumn: Schema.optional(
     Schema.String.annotations({

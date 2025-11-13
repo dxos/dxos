@@ -67,7 +67,7 @@ export const AssistantPlugin = definePlugin(meta, () => [
         metadata: {
           icon: 'ph--blueprint--regular',
           iconHue: 'sky',
-          formSchema: AssistantAction.BlueprintForm,
+          inputSchema: AssistantAction.BlueprintForm,
           createObjectIntent: ((props) =>
             createIntent(AssistantAction.CreateBlueprint, props)) satisfies CreateObjectIntent,
         },

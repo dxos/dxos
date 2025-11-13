@@ -5,7 +5,7 @@
 import * as Schema from 'effect/Schema';
 
 import { Type } from '@dxos/echo';
-import { FormAnnotation, LabelAnnotation } from '@dxos/echo/internal';
+import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/internal';
 import { Thread } from '@dxos/plugin-thread/types';
 import { Transcript } from '@dxos/plugin-transcription/types';
 import { Text } from '@dxos/schema';
@@ -24,32 +24,32 @@ const Meeting_ = Schema.Struct({
    * Used to generate a fallback name if one is not provided.
    */
   // TODO(wittjosiah): Remove. Rely on object meta.
-  created: Schema.String.annotations({ description: 'ISO timestamp' }).pipe(FormAnnotation.set(false)),
+  created: Schema.String.annotations({ description: 'ISO timestamp' }).pipe(FormInputAnnotation.set(false)),
 
   /**
    * List of dids of identities which joined some portion of the meeting.
    */
-  participants: Schema.mutable(Schema.Array(IdentityDidSchema)).pipe(FormAnnotation.set(false)),
+  participants: Schema.mutable(Schema.Array(IdentityDidSchema)).pipe(FormInputAnnotation.set(false)),
 
   /**
    * Transcript of the meeting.
    */
-  transcript: Type.Ref(Transcript.Transcript).pipe(FormAnnotation.set(false)),
+  transcript: Type.Ref(Transcript.Transcript).pipe(FormInputAnnotation.set(false)),
 
   /**
    * Markdown notes for the meeting.
    */
-  notes: Type.Ref(Text.Text).pipe(FormAnnotation.set(false)),
+  notes: Type.Ref(Text.Text).pipe(FormInputAnnotation.set(false)),
 
   /**
    * Generated summary of the meeting.
    */
-  summary: Type.Ref(Text.Text).pipe(FormAnnotation.set(false)),
+  summary: Type.Ref(Text.Text).pipe(FormInputAnnotation.set(false)),
 
   /**
    * Message thread for the meeting.
    */
-  thread: Type.Ref(Thread.Thread).pipe(FormAnnotation.set(false)),
+  thread: Type.Ref(Thread.Thread).pipe(FormInputAnnotation.set(false)),
 }).pipe(
   Type.Obj({
     typename: 'dxos.org/type/Meeting',

@@ -30,34 +30,34 @@ export type ArrangedCards<T extends BaseKanbanItem = { id: string }> = {
 }[];
 
 export type KanbanModelProps = {
-  kanban: Kanban.Kanban;
+  object: Kanban.Kanban;
   projection: ProjectionModel;
 };
 
 export class KanbanModel<T extends BaseKanbanItem = { id: string }> extends Resource {
-  private readonly _kanban: Kanban.Kanban;
+  private readonly _object: Kanban.Kanban;
   private readonly _projection: ProjectionModel;
 
   private readonly _items = signal<T[]>([]);
   private readonly _cards = signal<ArrangedCards<T>>([]);
 
-  constructor({ kanban, projection }: KanbanModelProps) {
+  constructor({ object, projection }: KanbanModelProps) {
     super();
-    this._kanban = kanban;
+    this._object = object;
     this._projection = projection;
   }
 
   get id() {
-    return Obj.getDXN(this._kanban).toString();
+    return Obj.getDXN(this._object).toString();
   }
 
-  get kanban(): Kanban.Kanban {
-    return this._kanban;
+  get object(): Kanban.Kanban {
+    return this._object;
   }
 
   private get _view(): View.View {
-    invariant(this._kanban.view.target, 'Kanban model not initialized');
-    return this._kanban.view.target;
+    invariant(this._object.view.target, 'Kanban model not initialized');
+    return this._object.view.target;
   }
 
   get projection(): ProjectionModel {
@@ -100,7 +100,7 @@ export class KanbanModel<T extends BaseKanbanItem = { id: string }> extends Reso
   //
 
   protected override async _open(): Promise<void> {
-    await this._kanban.view.load();
+    await this._object.view.load();
     this._computeArrangement();
     this.initializeEffects();
   }
@@ -163,7 +163,7 @@ export class KanbanModel<T extends BaseKanbanItem = { id: string }> extends Reso
 
       this._handleCardMove(sourceColumn, targetColumn, source, target, closestEdge as 'top' | 'bottom');
 
-      this.kanban.arrangement = nextArrangement.map(({ columnValue, cards }) => ({
+      this.object.arrangement = nextArrangement.map(({ columnValue, cards }) => ({
         columnValue,
         ids: cards.map(({ id }) => id),
       }));
@@ -191,7 +191,7 @@ export class KanbanModel<T extends BaseKanbanItem = { id: string }> extends Reso
 
     return untracked(() => {
       return computeArrangement<T>({
-        kanban: this.kanban,
+        object: this.object,
         items: this._items.value,
         pivotPath: this.columnFieldPath,
         selectOptions: options,

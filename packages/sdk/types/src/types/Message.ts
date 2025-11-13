@@ -5,7 +5,7 @@
 import * as Schema from 'effect/Schema';
 
 import { Obj, Type } from '@dxos/echo';
-import { GeneratorAnnotation, ObjectId, SystemAnnotation } from '@dxos/echo/internal';
+import { GeneratorAnnotation, ObjectId, SystemTypeAnnotation } from '@dxos/echo/internal';
 import { defineObjectMigration } from '@dxos/echo-db';
 
 import * as Actor from './Actor';
@@ -77,7 +77,7 @@ export const MessageV1 = Schema.Struct({
     typename: 'dxos.org/type/Message',
     version: '0.1.0',
   }),
-  SystemAnnotation.set(true),
+  SystemTypeAnnotation.set(true),
 );
 
 /** @deprecated */

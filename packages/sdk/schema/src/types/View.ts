@@ -17,7 +17,7 @@ import {
   ReferenceAnnotationId,
   type ReferenceAnnotationValue,
   type RuntimeSchemaRegistry,
-  SystemAnnotation,
+  SystemTypeAnnotation,
   TypeEnum,
   toEffectSchema,
 } from '@dxos/echo/internal';
@@ -79,7 +79,7 @@ export const ViewSchema = Schema.Struct({
     typename: 'dxos.org/type/View',
     version: '0.5.0',
   }),
-  SystemAnnotation.set(true),
+  SystemTypeAnnotation.set(true),
 );
 
 // TODO(burdon): Workaround for build issue: TS2742.

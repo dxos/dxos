@@ -51,7 +51,7 @@ export const WnfsPlugin = definePlugin(meta, () => [
           // TODO(wittjosiah): Would be nice if icon could change based on the type of the file.
           icon: 'ph--file--regular',
           iconHue: 'teal',
-          formSchema: WnfsAction.UploadFileSchema,
+          inputSchema: WnfsAction.UploadFileSchema,
           createObjectIntent: ((props, options) =>
             Function.pipe(
               createIntent(WnfsAction.Upload, { ...props, space: options.space }),

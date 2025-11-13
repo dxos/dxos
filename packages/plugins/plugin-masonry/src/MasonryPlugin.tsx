@@ -32,7 +32,7 @@ export const MasonryPlugin = definePlugin(meta, () => [
         metadata: {
           icon: 'ph--wall--regular',
           iconHue: 'green',
-          formSchema: MasonryAction.MasonryProps,
+          inputSchema: MasonryAction.MasonryProps,
           createObjectIntent: ((props, options) =>
             createIntent(MasonryAction.CreateMasonry, { ...props, space: options.space })) satisfies CreateObjectIntent,
         },

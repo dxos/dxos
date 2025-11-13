@@ -11,10 +11,12 @@ import { type PublicKey } from '@dxos/react-client';
 // TODO(wittjosiah): This pulls in full client.
 import { EchoObjectSchema, ReactiveObjectSchema, type Space, SpaceSchema } from '@dxos/react-client/echo';
 import { CancellableInvitationObservable, Invitation } from '@dxos/react-client/invitations';
-import { Collection, FieldSchema, TypenameAnnotationId, View } from '@dxos/schema';
+import { Collection, FieldSchema, View } from '@dxos/schema';
 import { type ComplexMap } from '@dxos/util';
 
 import { meta } from '../meta';
+
+import { TypeInputOptionsAnnotation } from './form';
 
 export const SPACE_DIRECTORY_HANDLE = `${meta.id}/directory`;
 
@@ -212,10 +214,14 @@ export namespace SpaceAction {
 
   export const StoredSchemaForm = Schema.Struct({
     name: Schema.optional(Schema.String),
-    typename: Schema.optional(
-      Schema.String.annotations({
-        [TypenameAnnotationId]: 'unused-non-system',
+    typename: Schema.String.pipe(
+      Schema.annotations({ title: 'Select type (leave blank to create a new type)' }),
+      TypeInputOptionsAnnotation.set({
+        location: ['runtime'],
+        kind: ['user'],
+        registered: ['unregistered'],
       }),
+      Schema.optional,
     ),
   });
 

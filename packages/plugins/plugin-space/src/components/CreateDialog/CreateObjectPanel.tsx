@@ -22,7 +22,7 @@ import { getSpaceDisplayName } from '../../util';
 
 export type Metadata = {
   createObjectIntent: CreateObjectIntent;
-  formSchema?: Schema.Schema.AnyNoContext;
+  inputSchema?: Schema.Schema.AnyNoContext;
   addToCollectionOnCreate?: boolean;
   icon?: string;
 };
@@ -86,7 +86,7 @@ export const CreateObjectPanel = ({
   const handleSetTypename = useCallback(
     async (typename: string) => {
       const metadata = resolve?.(typename);
-      if (metadata && !metadata.formSchema) {
+      if (metadata && !metadata.inputSchema) {
         await onCreateObject?.({ metadata });
       } else {
         onTypenameChange?.(typename);
@@ -102,12 +102,12 @@ export const CreateObjectPanel = ({
     <SelectSchema options={options} resolve={resolve} onChange={handleSetTypename} />
   ) : !target ? (
     <SelectSpace spaces={spaces} defaultSpaceId={defaultSpaceId} onChange={onTargetChange} />
-  ) : metadata.formSchema ? (
+  ) : metadata.inputSchema ? (
     <div role='none' className={cardDialogOverflow}>
       <Form
         autoFocus
         values={initialFormValues}
-        schema={metadata.formSchema}
+        schema={metadata.inputSchema}
         testId='create-object-form'
         onSave={handleCreateObject}
         lookupComponent={inputSurfaceLookup}

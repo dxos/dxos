@@ -59,21 +59,21 @@ export const makeDynamicTable = ({
 }: {
   jsonSchema: JsonSchemaType;
   properties?: TablePropertyDefinition[];
-}): { projection: ProjectionModel; table: Table.Table } => {
+}): { projection: ProjectionModel; object: Table.Table } => {
   const view = View.make({
     query: Query.select(Filter.everything()),
     jsonSchema,
     ...(properties && { fields: properties.map((property) => property.name) }),
   });
-  const table = Obj.make(Table.Table, { view: Ref.make(view), sizes: {} });
+  const object = Obj.make(Table.Table, { view: Ref.make(view), sizes: {} });
 
   const projection = new ProjectionModel(jsonSchema, view.projection);
   projection.normalizeView();
   if (properties && projection.fields) {
-    setProperties(view, projection, table, properties);
+    setProperties(view, projection, object, properties);
   }
 
-  return { projection, table };
+  return { projection, object };
 };
 
 const setProperties = (

@@ -6,7 +6,7 @@ import * as Schema from 'effect/Schema';
 
 import { Queue } from '@dxos/client/echo';
 import { type DXN, Obj, Ref, Type } from '@dxos/echo';
-import { SystemAnnotation } from '@dxos/echo/internal';
+import { SystemTypeAnnotation } from '@dxos/echo/internal';
 
 /**
  * Root transcript object created when the user starts a transcription.
@@ -26,7 +26,7 @@ export const Transcript = Schema.Struct({
     typename: 'dxos.org/type/Transcript',
     version: '0.1.0',
   }),
-  SystemAnnotation.set(true),
+  SystemTypeAnnotation.set(true),
 );
 
 export type Transcript = Schema.Schema.Type<typeof Transcript>;

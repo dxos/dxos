@@ -25,7 +25,7 @@ type MapViewEditorProps = { object: Map.Map };
 export const MapViewEditor = ({ object }: MapViewEditorProps) => {
   const client = useClient();
   const space = getSpace(object);
-  const view = object?.view.target;
+  const view = object?.view?.target;
   const typename = view?.query ? getTypenameFromQuery(view.query.ast) : undefined;
   const currentSchema = useSchema(client, space, typename);
 

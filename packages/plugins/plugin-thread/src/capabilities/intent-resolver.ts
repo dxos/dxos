@@ -31,7 +31,7 @@ export default (context: PluginContext) =>
           }
 
           const { dispatch } = context.getCapability(Capabilities.IntentDispatcher);
-          const collection = Collection.makeSystem({ key: Type.getTypename(Channel.Channel) });
+          const collection = Collection.makeManaged({ key: Type.getTypename(Channel.Channel) });
           rootCollection.objects.push(Ref.make(collection));
 
           const { object: channel } = yield* dispatch(

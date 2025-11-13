@@ -50,11 +50,8 @@ const meta = {
             const space = await client.spaces.create();
             await space.waitUntilReady();
 
-            const masonry = await Masonry.make({
-              space,
-              client,
-              typename: Organization.Organization.typename,
-            });
+            const { view } = await View.makeFromSpace({ client, space, typename: Organization.Organization.typename });
+            const masonry = Masonry.make({ view });
             space.db.add(masonry);
 
             const factory = createObjectFactory(space.db, faker as any);

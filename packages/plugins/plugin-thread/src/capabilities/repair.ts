@@ -19,6 +19,9 @@ export default () =>
     await ensureSystemCollection(space);
   });
 
+/**
+ * Ensure the root collection has a system collection for Channels.
+ */
 const ensureSystemCollection = async (space: Space) => {
   const rootCollection: Collection.Collection = await space.properties[Collection.Collection.typename]?.load();
   if (!rootCollection) {
@@ -27,14 +30,11 @@ const ensureSystemCollection = async (space: Space) => {
 
   const objects = await Promise.all(rootCollection.objects.map((ref) => ref.load()));
   const channels = objects.find(
-    (object) => Obj.instanceOf(Collection.System, object) && object.key === Type.getTypename(Channel.Channel),
+    (object) => Obj.instanceOf(Collection.Managed, object) && object.key === Type.getTypename(Channel.Channel),
   );
   if (channels) {
     return;
   }
 
-  const systemCollection = Collection.makeSystem({
-    key: Type.getTypename(Channel.Channel),
-  });
-  rootCollection.objects.push(Ref.make(systemCollection));
+  rootCollection.objects.push(Ref.make(Collection.makeManaged({ key: Type.getTypename(Channel.Channel) })));
 };

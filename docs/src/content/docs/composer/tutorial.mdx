@@ -158,7 +158,7 @@ The metadata capability allows an arbitrary record of metadata to be stored for 
 The most common use case for this in Composer today is storing render information (e.g. icons) for different types of ECHO objects.
 In such cases the key for the metadata is the schema typename.
 
-An optional `formSchema` can be provided if the object has properties which may need to be configured on creation.
+An optional `inputSchema` can be provided if the object has properties which may need to be configured on creation.
 The `createObjectIntent` function returns the intent to be used in order to create new objects via the object creation dialog.
 
 ```ts
@@ -173,7 +173,7 @@ defineModule({
       id: Map.Map.typename,
       metadata: {
         icon: 'ph--compass--regular',
-        formSchema: MapAction.CreateMap, // Optional.
+        inputSchema: MapAction.CreateMap, // Optional.
         createObjectIntent: ((props, options) =>
           createIntent(MapAction.Create, { ...props, space: options.space })) satisfies CreateObjectIntent,
       },
@@ -188,7 +188,7 @@ If you want the object to be added to a collection when it is created, you can s
 ```ts
 {
   icon: 'ph--compass--regular',
-  formSchema: MapAction.CreateMap,
+  inputSchema: MapAction.CreateMap,
   createObjectIntent: ((props, options) =>
     createIntent(MapAction.Create, { ...props, space: options.space })) satisfies CreateObjectIntent,
   addToCollectionOnCreate: true,

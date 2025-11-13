@@ -6,7 +6,7 @@ import * as Schema from 'effect/Schema';
 
 import { Obj } from '@dxos/echo';
 import { Type } from '@dxos/echo';
-import { type ObjectId, SystemAnnotation } from '@dxos/echo/internal';
+import { type ObjectId, SystemTypeAnnotation } from '@dxos/echo/internal';
 
 export const Text = Schema.Struct({
   content: Schema.String,
@@ -15,7 +15,7 @@ export const Text = Schema.Struct({
     typename: 'dxos.org/type/Text',
     version: '0.1.0',
   }),
-  SystemAnnotation.set(true),
+  SystemTypeAnnotation.set(true),
 );
 
 export interface Text extends Schema.Schema.Type<typeof Text> {}

@@ -5,7 +5,7 @@
 import * as Schema from 'effect/Schema';
 
 import { Obj, Type } from '@dxos/echo';
-import { SystemAnnotation } from '@dxos/echo/internal';
+import { SystemTypeAnnotation } from '@dxos/echo/internal';
 import { Message } from '@dxos/types';
 
 export const ThreadStatus = Schema.Union(
@@ -24,7 +24,7 @@ const _Thread = Schema.Struct({
     version: '0.1.0',
   }),
   // TODO(wittjosiah): Remove.
-  SystemAnnotation.set(true),
+  SystemTypeAnnotation.set(true),
 );
 export interface Thread extends Schema.Schema.Type<typeof _Thread> {}
 export interface ThreadEncoded extends Schema.Schema.Encoded<typeof _Thread> {}

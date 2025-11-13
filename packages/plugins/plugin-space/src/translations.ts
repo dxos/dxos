@@ -115,7 +115,7 @@ export const translations = [
         'rename collection label': 'Rename collection',
         'rename object label': 'Rename object',
         'duplicate object label': 'Duplicate object',
-
+        'object deleted label': 'Object deleted',
         'objects deleted label': 'Objects deleted',
         'go to object label': 'Open object',
         'found object label': 'Ready.',

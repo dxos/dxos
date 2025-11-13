@@ -48,7 +48,7 @@ export const ScriptPlugin = definePlugin(meta, () => [
           iconHue: 'sky',
           // TODO(wittjosiah): Move out of metadata.
           loadReferences: async (script: Script.Script) => await Ref.Array.loadAll([script.source]),
-          formSchema: ScriptAction.ScriptProps,
+          inputSchema: ScriptAction.ScriptProps,
           createObjectIntent: ((props, options) =>
             createIntent(ScriptAction.CreateScript, { ...props, space: options.space })) satisfies CreateObjectIntent,
           addToCollectionOnCreate: true,
@@ -59,7 +59,7 @@ export const ScriptPlugin = definePlugin(meta, () => [
         metadata: {
           icon: 'ph--notebook--regular',
           iconHue: 'sky',
-          formSchema: ScriptAction.NotebookProps,
+          inputSchema: ScriptAction.NotebookProps,
           createObjectIntent: ((props, options) =>
             createIntent(ScriptAction.CreateNotebook, { ...props, space: options.space })) satisfies CreateObjectIntent,
           addToCollectionOnCreate: true,

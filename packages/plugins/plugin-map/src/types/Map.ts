@@ -5,19 +5,19 @@
 import * as Schema from 'effect/Schema';
 
 import { Obj, Ref, Type } from '@dxos/echo';
-import { FormAnnotation, LabelAnnotation } from '@dxos/echo/internal';
+import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/internal';
 import { View, ViewAnnotation } from '@dxos/schema';
 
 const MapSchema = Schema.Struct({
   name: Schema.optional(Schema.String),
 
-  view: Type.Ref(View.View).pipe(FormAnnotation.set(false)),
+  view: Type.Ref(View.View).pipe(FormInputAnnotation.set(false), Schema.optional),
 
-  center: Type.Format.GeoPoint.pipe(FormAnnotation.set(false), Schema.optional),
-  zoom: Schema.Number.pipe(FormAnnotation.set(false), Schema.optional),
+  center: Type.Format.GeoPoint.pipe(FormInputAnnotation.set(false), Schema.optional),
+  zoom: Schema.Number.pipe(FormInputAnnotation.set(false), Schema.optional),
   // TODO(wittjosiah): Use GeoJSON format for rendering arbitrary data on the map.
   //   e.g., points, lines, polygons, etc.
-  coordinates: Schema.Array(Type.Format.GeoPoint).pipe(Schema.mutable, FormAnnotation.set(false), Schema.optional),
+  coordinates: Schema.Array(Type.Format.GeoPoint).pipe(Schema.mutable, FormInputAnnotation.set(false), Schema.optional),
 }).pipe(
   Type.Obj({
     typename: 'dxos.org/type/Map',
@@ -30,22 +30,13 @@ export interface Map extends Schema.Schema.Type<typeof MapSchema> {}
 export interface MapEncoded extends Schema.Schema.Encoded<typeof MapSchema> {}
 export const Map: Schema.Schema<Map, MapEncoded> = MapSchema;
 
-type MakeWithViewProps = Omit<Partial<Obj.MakeProps<typeof Map>>, 'view'> & {
-  view: View.View;
+type MakeProps = Omit<Partial<Obj.MakeProps<typeof Map>>, 'view'> & {
+  view?: View.View;
 };
-
-/**
- * Make a map object.
- */
-export const makeWithView = ({ view, ...props }: MakeWithViewProps): Map =>
-  Obj.make(Map, { view: Ref.make(view), ...props });
-
-type MakeProps = Partial<Omit<Obj.MakeProps<typeof Map>, 'view'>> & View.MakeFromSpaceProps;
 
 /**
  * Make a map as a view of a data set.
  */
-export const make = async ({ name, center, zoom, coordinates, ...props }: MakeProps): Promise<Map> => {
-  const { view } = await View.makeFromSpace(props);
-  return Obj.make(Map, { name, view: Ref.make(view), center, zoom, coordinates });
+export const make = ({ name, center, zoom, coordinates, view }: MakeProps): Map => {
+  return Obj.make(Map, { name, view: view && Ref.make(view), center, zoom, coordinates });
 };

@@ -6,6 +6,7 @@ import * as Effect from 'effect/Effect';
 
 import {
   Capabilities,
+  type Label,
   LayoutAction,
   type PluginContext,
   contributes,
@@ -92,13 +93,7 @@ export default ({ context, observability, createInvitationUrl }: IntentResolverO
         }
 
         // Create records smart collection.
-        collection.objects.push(
-          Ref.make(
-            Collection.makeSystem({
-              key: StoredSchema.typename,
-            }),
-          ),
-        );
+        collection.objects.push(Ref.make(Collection.makeManaged({ key: StoredSchema.typename })));
 
         // Allow other plugins to add default content.
         await context.activatePromise(SpaceEvents.SpaceCreated);
@@ -454,7 +449,7 @@ export default ({ context, observability, createInvitationUrl }: IntentResolverO
                   shouldNavigate: navigable
                     ? (object: Obj.Any) => {
                         const isCollection = Obj.instanceOf(Collection.Collection, object);
-                        const isSystemCollection = Obj.instanceOf(Collection.System, object);
+                        const isSystemCollection = Obj.instanceOf(Collection.Managed, object);
                         return (!isCollection && !isSystemCollection) || state.navigableCollections;
                       }
                     : () => false,
@@ -599,9 +594,9 @@ export default ({ context, observability, createInvitationUrl }: IntentResolverO
 
           // TODO(wittjosiah): Once we can compose translations outside of react, use count instead.
           //   ['deleted label', { ns: meta.id, typename: ['typename label', { ns: typename, count: objects.length }] }]
-          const undoMessageLabel =
+          const undoMessageLabel: Label =
             objects.length === 1
-              ? ['object deleted label', { ns: Obj.getTypename(objects[0]), defaultValue: 'Object deleted' }]
+              ? ['object deleted label', { ns: Obj.getTypename(objects[0]) ?? meta.id, defaultValue: 'Object deleted' }]
               : ['objects deleted label', { ns: meta.id }];
 
           return {

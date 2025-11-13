@@ -37,7 +37,7 @@ const generator: ValueGenerator = faker as any;
 const useTestModel = <S extends Type.Obj.Any>(schema: S, count: number) => {
   const client = useClient();
   const { space } = useClientProvider();
-  const [table, setTable] = useState<Table.Table>();
+  const [object, setObject] = useState<Table.Table>();
 
   const features = useMemo<TableFeatures>(
     () => ({ schemaEditable: false, dataEditable: true, selection: { enabled: false } }),
@@ -49,14 +49,15 @@ const useTestModel = <S extends Type.Obj.Any>(schema: S, count: number) => {
       return;
     }
 
-    const table = await Table.make({ client, space, typename: Type.getTypename(schema) });
-    setTable(table);
-    space.db.add(table);
+    const { view, jsonSchema } = await View.makeFromSpace({ client, space, typename: Type.getTypename(schema) });
+    const object = Table.make({ view, jsonSchema });
+    setObject(object);
+    space.db.add(object);
     await space.db.schemaRegistry.register([schema]);
   }, [client, space, schema]);
 
-  const projection = useProjectionModel(schema, table);
-  const model = useTableModel<TableRow>({ table, projection, features });
+  const projection = useProjectionModel(schema, object);
+  const model = useTableModel<TableRow>({ object, projection, features });
 
   useEffect(() => {
     if (!model || !space) {

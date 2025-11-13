@@ -10,7 +10,7 @@ import React, { useCallback, useMemo, useRef, useState } from 'react';
 import { Capabilities, LayoutAction, chain, createIntent } from '@dxos/app-framework';
 import { useIntentDispatcher, usePluginManager } from '@dxos/app-framework/react';
 import { Obj, Type } from '@dxos/echo';
-import { EntityKind, SystemAnnotation, getTypeAnnotation } from '@dxos/echo/internal';
+import { EntityKind, SystemTypeAnnotation, getTypeAnnotation } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
 import { useClient } from '@dxos/react-client';
 import { type Space, getSpace, isLiveObject, isSpace, useSpaces } from '@dxos/react-client/echo';
@@ -68,7 +68,7 @@ export const CreateObjectDialog = ({
       schemas
         ?.filter((schema) => getTypeAnnotation(schema)?.kind !== EntityKind.Relation)
         .filter((schema) => !!resolve(Type.getTypename(schema)))
-        .filter((schema) => !SystemAnnotation.get(schema).pipe(Option.getOrElse(() => false))) ?? [],
+        .filter((schema) => !SystemTypeAnnotation.get(schema).pipe(Option.getOrElse(() => false))) ?? [],
     [schemas],
   );
 

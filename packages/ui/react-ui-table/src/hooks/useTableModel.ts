@@ -16,7 +16,7 @@ import { TableModel, type TableModelProps, type TableRow, type TableRowAction } 
 import { type Table } from '../types';
 
 export type UseTableModelParams<T extends TableRow = TableRow> = {
-  table?: Table.Table;
+  object?: Table.Table;
   projection?: ProjectionModel;
   rows?: Live<T>[];
   rowActions?: TableRowAction[];
@@ -28,7 +28,7 @@ export type UseTableModelParams<T extends TableRow = TableRow> = {
 >;
 
 export const useTableModel = <T extends TableRow = TableRow>({
-  table,
+  object,
   projection,
   rows,
   rowActions,
@@ -37,19 +37,19 @@ export const useTableModel = <T extends TableRow = TableRow>({
   onRowAction,
   ...props
 }: UseTableModelParams<T>): TableModel<T> | undefined => {
-  const selected = useSelected(table && Obj.getDXN(table).toString(), 'multi');
-  const initialSelection = useMemo(() => selected, [table]);
+  const selected = useSelected(object && Obj.getDXN(object).toString(), 'multi');
+  const initialSelection = useMemo(() => selected, [object]);
 
   const [model, setModel] = useState<TableModel<T>>();
   useEffect(() => {
-    if (!table || !projection) {
+    if (!object || !projection) {
       return;
     }
 
     let model: TableModel<T> | undefined;
     const t = setTimeout(async () => {
       model = new TableModel<T>({
-        table,
+        object,
         projection,
         features,
         rowActions,
@@ -66,7 +66,7 @@ export const useTableModel = <T extends TableRow = TableRow>({
       void model?.close();
     };
     // TODO(burdon): Trigger if callbacks change?
-  }, [table, projection, features, rowActions, initialSelection]);
+  }, [object, projection, features, rowActions, initialSelection]);
 
   // Update data.
   useEffect(() => {

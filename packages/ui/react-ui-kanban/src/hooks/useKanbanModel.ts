@@ -11,26 +11,26 @@ import { type BaseKanbanItem, KanbanModel } from '../model';
 import { type Kanban } from '../types';
 
 export type UseKanbanModelProps<T extends BaseKanbanItem = { id: string }> = {
-  kanban?: Kanban.Kanban;
+  object?: Kanban.Kanban;
   projection?: ProjectionModel;
   items?: Live<T>[];
 };
 
 export const useKanbanModel = <T extends BaseKanbanItem = { id: string }>({
-  kanban,
+  object,
   projection,
   items,
   ...props
 }: UseKanbanModelProps<T>): KanbanModel<T> | undefined => {
   const [model, setModel] = useState<KanbanModel<T>>();
   useEffect(() => {
-    if (!kanban || !projection) {
+    if (!object || !projection) {
       return;
     }
 
     let model: KanbanModel<T> | undefined;
     const t = setTimeout(async () => {
-      model = new KanbanModel<T>({ kanban, projection, ...props });
+      model = new KanbanModel<T>({ object, projection, ...props });
       await model.open();
       setModel(model);
     });
@@ -40,7 +40,7 @@ export const useKanbanModel = <T extends BaseKanbanItem = { id: string }>({
       void model?.close();
     };
     // TODO(ZaymonFC): Is there a better way to get notified about deep changes in the json schema?
-  }, [kanban, projection]);
+  }, [object, projection]);
 
   // Update data.
   useEffect(() => {

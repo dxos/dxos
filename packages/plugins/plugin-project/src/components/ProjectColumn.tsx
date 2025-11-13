@@ -18,16 +18,16 @@ import { meta } from '../meta';
 
 import { useProject } from './Project';
 
-export type ViewColumnProps = {
-  lane: Project.Lane;
+export type ProjectColumnProps = {
+  column: Project.Column;
 };
 
 // TODO(thure): Duplicates a lot of the same boilerplate as Kanban columns; is there an opportunity to DRY these out?
 // TODO(wittjosiah): Support column DnD reordering.
 // TODO(wittjosiah): Support item DnD reordering (ordering needs to be stored on the view presentation collection).
-export const ProjectLane = ({ lane }: ViewColumnProps) => {
+export const ProjectColumn = ({ column }: ProjectColumnProps) => {
   const client = useClient();
-  const view = lane.view.target;
+  const view = column.view.target;
   const space = getSpace(view);
   const { t } = useTranslation(meta.id);
   const { Item } = useProject('ViewColumn');
@@ -67,7 +67,7 @@ export const ProjectLane = ({ lane }: ViewColumnProps) => {
       <StackItem.Root item={view} size={cardStackDefaultInlineSizeRem} focusIndicatorVariant='group'>
         <CardStack.Content classNames='density-fine' footer={false}>
           <StackItem.Heading classNames={[cardStackHeading, 'min-is-0 pli-cardSpacingChrome']} separateOnScroll>
-            <h3 className='grow truncate'>{lane.name ?? t('untitled view title')}</h3>
+            <h3 className='grow truncate'>{column.name ?? t('untitled view title')}</h3>
           </StackItem.Heading>
           <CardStack.Stack id={view.id} itemsCount={items.length}>
             {items.map((liveMarker) => {

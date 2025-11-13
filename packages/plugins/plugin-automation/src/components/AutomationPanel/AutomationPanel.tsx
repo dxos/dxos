@@ -42,7 +42,14 @@ export const AutomationPanel = ({ classNames, space, object, initialTrigger, onD
     return object ? triggers.filter(triggerMatch(object)) : triggers;
   }, [object, triggers]);
   const tags = useQuery(space, Filter.type(Tag.Tag));
-  const types = useTypeOptions({ space, annotation: 'setup-in-space' });
+  const types = useTypeOptions({
+    space,
+    annotation: {
+      location: ['database', 'runtime'],
+      kind: ['user'],
+      registered: ['registered'],
+    },
+  });
 
   const [trigger, setTrigger] = useState<Trigger.Trigger | undefined>(initialTrigger);
   const [selected, setSelected] = useState<Trigger.Trigger>();
@@ -191,8 +198,8 @@ const scriptMatch = (script: Script.Script) => (trigger: Trigger.Trigger) => {
 
 const projectMatch = (project: Project.Project) => {
   const viewQueries = EFn.pipe(
-    project.lanes,
-    Array.map((lane) => lane.view.target),
+    project.columns,
+    Array.map((column) => column.view.target),
     Array.filter(isNonNullable),
     Array.map((view) => Obj.getSnapshot(view).query.ast),
     Array.map((ast) => JSON.stringify(ast)),

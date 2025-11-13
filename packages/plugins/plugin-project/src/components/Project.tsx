@@ -13,7 +13,7 @@ import { type Project as ProjectType } from '@dxos/types';
 
 import { meta } from '../meta';
 
-import { ProjectLane } from './ProjectLane';
+import { ProjectColumn } from './ProjectColumn';
 
 type ItemProps = { item: Obj.Any; projectionModel?: ProjectionModel };
 
@@ -52,8 +52,8 @@ type ProjectContentProps = {
 const ProjectContent = ({ project }: ProjectContentProps) => {
   return (
     <Stack orientation='horizontal' size='contain' rail={false}>
-      {project.lanes.map((lane) => {
-        return <ProjectLane key={lane.view.dxn.toString()} lane={lane} />;
+      {project.columns.map((column) => {
+        return <ProjectColumn key={column.view.dxn.toString()} column={column} />;
       })}
     </Stack>
   );

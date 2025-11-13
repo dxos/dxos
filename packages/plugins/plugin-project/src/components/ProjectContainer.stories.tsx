@@ -114,7 +114,7 @@ const meta = {
             });
 
             // Add views to project collections
-            project.lanes.push(
+            project.columns.push(
               {
                 name: 'Contacts',
                 view: Ref.make(personView),

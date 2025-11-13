@@ -35,7 +35,7 @@ export const MapPlugin = definePlugin(meta, () => [
         metadata: {
           icon: 'ph--compass--regular',
           iconHue: 'green',
-          formSchema: MapAction.CreateMap,
+          inputSchema: MapAction.CreateMap,
           createIntent: ((props, options) =>
             createIntent(MapAction.Create, { ...props, space: options.space })) satisfies CreateObjectIntent,
         },

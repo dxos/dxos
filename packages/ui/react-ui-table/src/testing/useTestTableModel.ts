@@ -91,7 +91,7 @@ export const useTestTableModel = (): TestTableModel => {
   );
 
   const model = useTableModel({
-    table,
+    object: table,
     projection,
     features,
     rows: filteredObjects,

@@ -33,7 +33,7 @@ export const TablePlugin = definePlugin(meta, () => [
           icon: 'ph--table--regular',
           iconHue: 'green',
           comments: 'unanchored',
-          formSchema: CreateTableSchema,
+          inputSchema: CreateTableSchema,
           createObjectIntent: ((props, options) =>
             createIntent(TableAction.Create, { ...props, space: options.space })) satisfies CreateObjectIntent,
         },

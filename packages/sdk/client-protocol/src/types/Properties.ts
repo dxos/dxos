@@ -5,7 +5,7 @@
 import * as Schema from 'effect/Schema';
 
 import { Type } from '@dxos/echo';
-import { SystemAnnotation } from '@dxos/echo/internal';
+import { SystemTypeAnnotation } from '@dxos/echo/internal';
 import { Queue } from '@dxos/echo-db';
 
 export const TYPE_PROPERTIES = 'dxos.org/type/Properties';
@@ -24,7 +24,7 @@ export const PropertiesType = Schema.Struct(
     typename: TYPE_PROPERTIES,
     version: '0.1.0',
   }),
-  SystemAnnotation.set(true),
+  SystemTypeAnnotation.set(true),
 );
 export type PropertiesType = Schema.Schema.Type<typeof PropertiesType>;
 

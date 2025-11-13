@@ -3,5 +3,4 @@
 //
 
 export * from './icon';
-export * from './typename';
 export * from './view';

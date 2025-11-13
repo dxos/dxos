@@ -16,6 +16,9 @@ export default () =>
     await ensureSystemCollections(space);
   });
 
+/**
+ * Ensure the root collection has system collections for AI Chats, Blueprints, and Prompts.
+ */
 const ensureSystemCollections = async (space: Space) => {
   const rootCollection: Collection.Collection = await space.properties[Collection.Collection.typename]?.load();
   if (!rootCollection) {
@@ -24,32 +27,23 @@ const ensureSystemCollections = async (space: Space) => {
 
   const objects = await Promise.all(rootCollection.objects.map((ref) => ref.load()));
   const chats = objects.find(
-    (object) => Obj.instanceOf(Collection.System, object) && object.key === Assistant.Chat.typename,
+    (object) => Obj.instanceOf(Collection.Managed, object) && object.key === Assistant.Chat.typename,
   );
   if (!chats) {
-    const systemCollection = Collection.makeSystem({
-      key: Assistant.Chat.typename,
-    });
-    rootCollection.objects.push(Ref.make(systemCollection));
+    rootCollection.objects.push(Ref.make(Collection.makeManaged({ key: Assistant.Chat.typename })));
   }
 
   const blueprints = objects.find(
-    (object) => Obj.instanceOf(Collection.System, object) && object.key === Blueprint.Blueprint.typename,
+    (object) => Obj.instanceOf(Collection.Managed, object) && object.key === Blueprint.Blueprint.typename,
   );
   if (!blueprints) {
-    const systemCollection = Collection.makeSystem({
-      key: Blueprint.Blueprint.typename,
-    });
-    rootCollection.objects.push(Ref.make(systemCollection));
+    rootCollection.objects.push(Ref.make(Collection.makeManaged({ key: Blueprint.Blueprint.typename })));
   }
 
   const prompts = objects.find(
-    (object) => Obj.instanceOf(Collection.System, object) && object.key === Type.getTypename(Prompt.Prompt),
+    (object) => Obj.instanceOf(Collection.Managed, object) && object.key === Type.getTypename(Prompt.Prompt),
   );
   if (!prompts) {
-    const systemCollection = Collection.makeSystem({
-      key: Type.getTypename(Prompt.Prompt),
-    });
-    rootCollection.objects.push(Ref.make(systemCollection));
+    rootCollection.objects.push(Ref.make(Collection.makeManaged({ key: Type.getTypename(Prompt.Prompt) })));
   }
 };

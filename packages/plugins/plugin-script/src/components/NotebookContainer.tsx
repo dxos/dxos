@@ -22,7 +22,7 @@ import { getSpace } from '@dxos/react-client/echo';
 import { DropdownMenu, IconButton, Toolbar, useTranslation } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
 import { StackItem } from '@dxos/react-ui-stack';
-import { Text } from '@dxos/schema';
+import { Text, View } from '@dxos/schema';
 import { isNonNullable } from '@dxos/util';
 
 import { meta } from '../meta';
@@ -65,10 +65,8 @@ export const NotebookContainer = ({ notebook, env }: NotebookContainerProps) => 
             const ast = Query.select(filter).ast;
             const graph = cell.graph?.target;
             if (!graph) {
-              const graph = await Graph.make({
-                space,
-                query: { ast },
-              });
+              const { view } = await View.makeFromSpace({ space });
+              const graph = Graph.make({ query: { ast }, view });
               cell.graph = Ref.make(graph);
               cell.name = name;
             } else {

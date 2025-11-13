@@ -29,7 +29,7 @@ export default (context: PluginContext) =>
             return;
           }
 
-          const meetingCollection = Collection.makeSystem({ key: Type.getTypename(Meeting.Meeting) });
+          const meetingCollection = Collection.makeManaged({ key: Type.getTypename(Meeting.Meeting) });
           rootCollection.objects.push(Ref.make(meetingCollection));
         }),
     }),
