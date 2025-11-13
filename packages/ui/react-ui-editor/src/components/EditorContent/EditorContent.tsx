@@ -50,7 +50,7 @@ export const EditorContent = forwardRef<EditorController, EditorContentProps>(
 
     // External controller.
     useImperativeHandle(forwardedRef, () => {
-      log.info('view updated', { id });
+      log.info('view updated', { id, length: view?.state.doc.length });
       return createEditorController(view);
     }, [id, view]);
 

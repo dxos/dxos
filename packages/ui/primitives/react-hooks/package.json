@@ -28,6 +28,7 @@
     "@dxos/async": "workspace:*",
     "@dxos/log": "workspace:*",
     "@preact-signals/safe-react": "^0.9.0",
+    "@radix-ui/react-use-controllable-state": "^1.2.2",
     "alea": "^1.0.1",
     "lodash.defaultsdeep": "^4.6.1",
     "mini-virtual-list": "^0.3.2"
