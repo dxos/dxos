@@ -214,7 +214,7 @@ export namespace SpaceAction {
     name: Schema.optional(Schema.String),
     typename: Schema.optional(
       Schema.String.annotations({
-        [TypenameAnnotationId]: 'available-static',
+        [TypenameAnnotationId]: 'unused-non-system',
       }),
     ),
   });

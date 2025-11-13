@@ -21,7 +21,7 @@ export const Project = Schema.Struct({
   name: Schema.String.pipe(GeneratorAnnotation.set('commerce.productName'), Schema.optional),
   description: Schema.String.pipe(Schema.optional),
   image: Format.URL.pipe(Schema.annotations({ title: 'Image' }), Schema.optional),
-  lanes: Schema.Array(Lane).pipe(Schema.mutable),
+  lanes: Schema.Array(Lane.pipe(Schema.mutable)).pipe(Schema.mutable),
 }).pipe(
   Type.Obj({
     typename: 'dxos.org/type/Project',

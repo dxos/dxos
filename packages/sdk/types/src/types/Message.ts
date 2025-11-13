@@ -43,8 +43,6 @@ export const Message = Schema.Struct({
     typename: 'dxos.org/type/Message',
     version: '0.2.0',
   }),
-  // TODO(wittjosiah): Remove.
-  SystemAnnotation.set(true),
 );
 
 export interface Message extends Schema.Schema.Type<typeof Message> {}

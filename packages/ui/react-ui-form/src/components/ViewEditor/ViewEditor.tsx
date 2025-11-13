@@ -201,7 +201,6 @@ export const ViewEditor = forwardRef<ProjectionModel, ViewEditorProps>(
           autoSave
           schema={viewSchema}
           values={viewValues}
-          readonly={readonly ? 'disabled-input' : false}
           onSave={handleUpdate}
           outerSpacing={outerSpacing}
           Custom={custom}

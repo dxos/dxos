@@ -6,7 +6,7 @@ import { Type } from '@dxos/echo';
 import { StoredSchema } from '@dxos/echo/internal';
 import { type Resource } from '@dxos/react-ui';
 import { Collection, View } from '@dxos/schema';
-import { Event, Organization, Person, Project, Task } from '@dxos/types';
+import { Organization, Person, Project, Task } from '@dxos/types';
 
 import { meta } from './meta';
 
@@ -40,13 +40,6 @@ export const translations = [
         'object name placeholder': 'New view',
         'rename object label': 'Rename view',
         'delete object label': 'Delete view',
-      },
-      [Event.Event.typename]: {
-        'typename label': 'Event',
-        'typename label_zero': 'Events',
-        'typename label_one': 'Event',
-        'typename label_other': 'Events',
-        'object name placeholder': 'New event',
       },
       [Organization.Organization.typename]: {
         'typename label': 'Organization',

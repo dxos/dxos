@@ -16,7 +16,7 @@ import { EntityKind, SystemAnnotation, getTypeAnnotation } from '@dxos/echo/inte
  */
 export const TypenameAnnotationId = Symbol.for('@dxos/schema/annotation/Typename');
 // TODO(wittjosiah): Review these values.
-export const TypenameAnnotation = Schema.Literal('available-static', 'setup-in-space');
+export const TypenameAnnotation = Schema.Literal('non-system', 'unused-non-system', 'setup-in-space');
 export type TypenameAnnotation = Schema.Schema.Type<typeof TypenameAnnotation>;
 
 // TODO(wittjosiah): This is way to complicated and needs to be simplified.
@@ -42,7 +42,8 @@ export const getTypenames = ({
 
     const setup = space?.properties.staticRecords?.includes(Type.getTypename(schema));
     return Match.value(annotation).pipe(
-      Match.when('available-static', () => !setup),
+      Match.when('non-system', () => true),
+      Match.when('unused-non-system', () => !setup),
       Match.when('setup-in-space', () => setup),
       Match.exhaustive,
     );
@@ -51,7 +52,7 @@ export const getTypenames = ({
   const typenames = Array.from(
     new Set<string>([
       ...fixed.map((schema) => Type.getTypename(schema)),
-      ...(annotation === 'setup-in-space' ? dynamic.map((schema) => schema.typename) : []),
+      ...(annotation !== 'unused-non-system' ? dynamic.map((schema) => schema.typename) : []),
     ]),
   ).sort();
   return typenames;
