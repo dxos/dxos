@@ -63,7 +63,8 @@ export const InboxPlugin = definePlugin(meta, () => [
           icon: 'ph--calendar--regular',
           iconHue: 'rose',
           blueprints: [CALENDAR_BLUEPRINT_KEY],
-          createObjectIntent: (() => createIntent(InboxAction.CreateCalendar)) satisfies CreateObjectIntent,
+          createObjectIntent: ((_, options) =>
+            createIntent(InboxAction.CreateCalendar, { space: options.space })) satisfies CreateObjectIntent,
           addToCollectionOnCreate: true,
         },
       }),
