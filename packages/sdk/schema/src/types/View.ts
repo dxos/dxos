@@ -120,8 +120,8 @@ export const make = ({
   const projection = new ProjectionModel(jsonSchema, view.projection);
   projection.normalizeView();
   const schema = toEffectSchema(jsonSchema);
-  const shouldIncludeId = include?.find((field) => field === 'id') !== undefined;
-  const properties = getSchemaProperties(schema.ast, {}, shouldIncludeId);
+  const includeId = include?.find((field) => field === 'id') !== undefined;
+  const properties = getSchemaProperties(schema.ast, {}, { includeId });
   for (const property of properties) {
     if (include && !include.includes(property.name)) {
       continue;
@@ -185,8 +185,8 @@ export const makeWithReferences = async ({
 
   const projection = new ProjectionModel(jsonSchema, view.projection);
   const schema = toEffectSchema(jsonSchema);
-  const shouldIncludeId = fields?.find((field) => field === 'id') !== undefined;
-  const properties = getSchemaProperties(schema.ast, {}, shouldIncludeId);
+  const includeId = fields?.find((field) => field === 'id') !== undefined;
+  const properties = getSchemaProperties(schema.ast, {}, { includeId });
   for (const property of properties) {
     if (fields && !fields.includes(property.name)) {
       continue;

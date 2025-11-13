@@ -56,12 +56,13 @@ export type SchemaProperty<T extends BaseObject, V = any> = {
 export const getSchemaProperties = <T extends BaseObject>(
   ast: SchemaAST.AST,
   value: any = {},
-  includeId: boolean = false,
+  options: { includeId?: boolean; form?: boolean } = {},
 ): SchemaProperty<T>[] => {
+  const { includeId = false, form = false } = options;
   if (SchemaAST.isUnion(ast)) {
     const baseType = getDiscriminatedType(ast, value);
     if (baseType) {
-      return getSchemaProperties(baseType, value, includeId);
+      return getSchemaProperties(baseType, value, options);
     }
 
     return [];
@@ -76,7 +77,7 @@ export const getSchemaProperties = <T extends BaseObject>(
       return props;
     }
 
-    const processed = processProperty(name, prop);
+    const processed = processProperty(name, prop, form);
     if (processed) {
       props.push(processed);
     } else {
@@ -98,11 +99,15 @@ export const getSchemaProperties = <T extends BaseObject>(
         continue;
       }
 
-      const processed = processProperty(key as PropertyKey<T>, {
-        isOptional: true,
-        isReadonly: indexSignature.isReadonly,
-        type: indexSignature.type,
-      });
+      const processed = processProperty(
+        key as PropertyKey<T>,
+        {
+          isOptional: true,
+          isReadonly: indexSignature.isReadonly,
+          type: indexSignature.type,
+        },
+        form,
+      );
       if (processed) {
         knownProperties.push(processed);
       }
@@ -115,9 +120,10 @@ export const getSchemaProperties = <T extends BaseObject>(
 const processProperty = <T extends BaseObject>(
   name: PropertyKey<T>,
   prop: { type: SchemaAST.AST; isReadonly: boolean; isOptional: boolean },
+  form: boolean,
 ): SchemaProperty<T> | undefined => {
   // Annotations.
-  const form = findAnnotation<boolean>(prop.type, FormInputAnnotationId);
+  const formInput = findAnnotation<boolean>(prop.type, FormInputAnnotationId);
   const title = findAnnotation<string>(prop.type, SchemaAST.TitleAnnotationId);
   const description = findAnnotation<string>(prop.type, SchemaAST.DescriptionAnnotationId);
   const examples = findAnnotation<string[]>(prop.type, SchemaAST.ExamplesAnnotationId);
@@ -127,7 +133,7 @@ const processProperty = <T extends BaseObject>(
     OptionsAnnotationId,
   );
 
-  if (form === false) {
+  if (form && formInput === false) {
     return undefined;
   }
 
