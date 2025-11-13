@@ -424,7 +424,7 @@ export const createObjectNode = ({
   disposition,
   droppable = true,
   navigable = false,
-  systemCollectionChild = false,
+  managedCollectionChild = false,
   resolve,
 }: {
   space: Space;
@@ -432,7 +432,7 @@ export const createObjectNode = ({
   disposition?: string;
   droppable?: boolean;
   navigable?: boolean;
-  systemCollectionChild?: boolean;
+  managedCollectionChild?: boolean;
   resolve: (typename: string) => Record<string, any>;
 }) => {
   const type = Obj.getTypename(object);
@@ -476,11 +476,11 @@ export const createObjectNode = ({
       persistenceClass: 'echo',
       persistenceKey: space?.id,
       selectable,
-      systemCollectionChild,
+      managedCollectionChild,
       blockInstruction: (source: TreeData, instruction: Instruction) => {
-        if (source.item.properties.systemCollectionChild) {
+        if (source.item.properties.managedCollectionChild) {
           // TODO(wittjosiah): Support reordering system collections.
-          // return !(systemCollectionChild && source.item.type === type && instruction.type.startsWith('reorder'));
+          // return !(managedCollectionChild && source.item.type === type && instruction.type.startsWith('reorder'));
           return true;
         }
 
@@ -488,7 +488,7 @@ export const createObjectNode = ({
           return !instruction.type.startsWith('reorder');
         }
 
-        return systemCollectionChild;
+        return managedCollectionChild;
       },
       canDrop: (source: TreeData) => {
         return droppable && isGraphNode(source.item) && Obj.isObject(source.item.data);
@@ -520,8 +520,8 @@ export const constructObjectActions = ({
 
   const getId = (id: string) => `${id}/${Obj.getDXN(object).toString()}`;
 
-  const systemCollection = Obj.instanceOf(Collection.Managed, object) ? object : undefined;
-  const metadata = systemCollection ? resolve(systemCollection.key) : {};
+  const managedCollection = Obj.instanceOf(Collection.Managed, object) ? object : undefined;
+  const metadata = managedCollection ? resolve(managedCollection.key) : {};
   const createObjectIntent = metadata.createObjectIntent;
   const inputSchema = metadata.inputSchema;
 
@@ -576,7 +576,7 @@ export const constructObjectActions = ({
                 await dispatch(
                   createIntent(SpaceAction.OpenCreateObject, {
                     target: space,
-                    typename: systemCollection ? systemCollection.key : undefined,
+                    typename: managedCollection ? managedCollection.key : undefined,
                   }),
                 );
               } else {
@@ -598,7 +598,7 @@ export const constructObjectActions = ({
           },
         ]
       : []),
-    ...(systemCollection
+    ...(managedCollection
       ? []
       : [
           {
