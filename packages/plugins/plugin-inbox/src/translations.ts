@@ -4,7 +4,6 @@
 
 import { type Resource } from '@dxos/react-ui';
 import { translations as componentsTranslations } from '@dxos/react-ui-components';
-import { Event, Message } from '@dxos/types';
 
 import { meta } from './meta';
 import { Calendar, Mailbox } from './types';
@@ -20,13 +19,7 @@ export const translations = [
         'object name placeholder': 'New mailbox',
         'rename object label': 'Rename mailbox',
         'delete object label': 'Delete mailbox',
-      },
-      [Message.Message.typename]: {
-        'typename label': 'Message',
-        'typename label_zero': 'Messages',
-        'typename label_one': 'Message',
-        'typename label_other': 'Messages',
-        'object name placeholder': 'New message',
+        'object deleted label': 'Mailbox deleted',
       },
       [Calendar.Calendar.typename]: {
         'typename label': 'Calendar',
@@ -36,13 +29,7 @@ export const translations = [
         'object name placeholder': 'New calendar',
         'rename object label': 'Rename calendar',
         'delete object label': 'Delete calendar',
-      },
-      [Event.Event.typename]: {
-        'typename label': 'Event',
-        'typename label_zero': 'Events',
-        'typename label_one': 'Event',
-        'typename label_other': 'Events',
-        'object name placeholder': 'New event',
+        'object deleted label': 'Calendar deleted',
       },
       [meta.id]: {
         'plugin name': 'Inbox',

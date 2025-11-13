@@ -458,9 +458,15 @@ export default (context: PluginContext) => {
     createExtension({
       id: `${meta.id}/static-schema-actions`,
       actions: (node) => {
-        let query: QueryResult<View.View> | undefined;
-        return Atom.make((get) =>
-          Function.pipe(
+        let query: QueryResult<Obj.Any> | undefined;
+        return Atom.make((get) => {
+          // TODO(wittjosiah): Use schemaRegistry query once it support atom reactivity.
+          const schemas = get(context.capabilities(ClientCapabilities.Schema))
+            .flat()
+            .filter((schema) => ViewAnnotation.get(schema).pipe(Option.getOrElse(() => false)));
+          const filter = Filter.or(...schemas.map((schema) => Filter.type(schema)));
+
+          return Function.pipe(
             get(node),
             Option.flatMap((node) => {
               const space = isSpace(node.properties.space) ? node.properties.space : undefined;
@@ -468,16 +474,18 @@ export default (context: PluginContext) => {
             }),
             Option.map(({ space, schema }) => {
               if (!query) {
-                // TODO(wittjosiah): Support filtering by nested properties (e.g. `query.typename`).
-                query = space.db.query(Filter.type(View.View));
+                // TODO(wittjosiah): Ideally this query would traverse the view reference & filter by the query ast.
+                // TODO(wittjosiah): Remove cast.
+                query = space.db.query(filter) as unknown as QueryResult<Obj.Any>;
               }
 
-              const views = get(atomFromQuery(query));
+              const objects = get(atomFromQuery(query));
               const filteredViews = get(
                 atomFromSignal(() =>
-                  // TODO(wittjosiah): Remove cast.
-                  views.filter(
-                    (view) => getTypenameFromQuery(view.query.ast) === Type.getTypename(schema as Type.Obj.Any),
+                  objects.filter(
+                    (viewObject) =>
+                      getTypenameFromQuery((viewObject as any).view.target?.query.ast) ===
+                      Type.getTypename(schema as Type.Obj.Any),
                   ),
                 ),
               );
@@ -497,8 +505,8 @@ export default (context: PluginContext) => {
               });
             }),
             Option.getOrElse(() => []),
-          ),
-        );
+          );
+        });
       },
     }),
 

@@ -116,7 +116,7 @@ export const CreateObjectDialog = ({
           {t('create object dialog title', {
             object: t('typename label', {
               ns: typename,
-              defaultValue: views ? 'View' : 'Item',
+              defaultValue: views ? 'View' : 'Object',
             }),
           })}
         </Dialog.Title>

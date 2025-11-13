@@ -597,16 +597,17 @@ export default ({ context, observability, createInvitationUrl }: IntentResolverO
           });
           objects.forEach((obj) => space.db.remove(obj));
 
-          const undoMessageKey = objects.some((obj) => Obj.instanceOf(Collection.Collection, obj))
-            ? 'collection deleted label'
-            : objects.length > 1
-              ? 'objects deleted label'
-              : 'object deleted label';
+          // TODO(wittjosiah): Once we can compose translations outside of react, use count instead.
+          //   ['deleted label', { ns: meta.id, typename: ['typename label', { ns: typename, count: objects.length }] }]
+          const undoMessageLabel =
+            objects.length === 1
+              ? ['object deleted label', { ns: Obj.getTypename(objects[0]), defaultValue: 'Object deleted' }]
+              : ['objects deleted label', { ns: meta.id }];
 
           return {
             undoable: {
               // TODO(ZaymonFC): Pluralize if more than one object.
-              message: [undoMessageKey, { ns: meta.id }],
+              message: undoMessageLabel,
               data: { deletionData },
             },
             intents:

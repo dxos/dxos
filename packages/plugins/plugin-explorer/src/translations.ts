@@ -20,6 +20,7 @@ export const translations = [
         'object name placeholder': 'New explorer',
         'rename object label': 'Rename explorer',
         'delete object label': 'Delete explorer',
+        'object deleted label': 'Explorer deleted',
       },
       [meta.id]: {
         'plugin name': 'Explorer',

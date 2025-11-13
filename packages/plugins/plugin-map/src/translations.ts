@@ -19,10 +19,10 @@ export const translations = [
         'object name placeholder': 'New map',
         'rename object label': 'Rename map',
         'delete object label': 'Delete map',
+        'object deleted label': 'Map deleted',
       },
       [meta.id]: {
         'plugin name': 'Maps',
-        'delete object label': 'Delete',
         'toggle type label': 'Toggle view',
       },
     },

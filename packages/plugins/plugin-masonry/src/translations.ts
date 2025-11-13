@@ -19,6 +19,7 @@ export const translations = [
         'object name placeholder': 'New masonry',
         'rename object label': 'Rename masonry',
         'delete object label': 'Delete masonry',
+        'object deleted label': 'Masonry deleted',
       },
       [meta.id]: {
         'plugin name': 'Masonry',

@@ -336,7 +336,7 @@ export const createStaticSchemaNode = ({ schema, space }: { schema: Type.Obj.Any
     type: `${meta.id}/static-schema`,
     data: schema,
     properties: {
-      label: ['typename label', { ns: Type.getTypename(schema), default: Type.getTypename(schema) }],
+      label: ['typename label', { ns: Type.getTypename(schema), count: 2, default: Type.getTypename(schema) }],
       icon: 'ph--database--regular',
       iconHue: 'green',
       role: 'branch',
@@ -374,7 +374,7 @@ export const createStaticSchemaActions = ({
         );
       },
       properties: {
-        label: ['add view to schema label', { ns: Type.getTypename(StoredSchema) }],
+        label: ['add view to schema label', { ns: meta.id }],
         icon: 'ph--plus--regular',
         disposition: 'list-item-primary',
         testId: 'spacePlugin.addViewToSchema',
@@ -558,7 +558,7 @@ export const constructObjectActions = ({
               );
             },
             properties: {
-              label: ['add view to schema label', { ns: Type.getTypename(StoredSchema) }],
+              label: ['add view to schema label', { ns: meta.id }],
               icon: 'ph--plus--regular',
               disposition: 'list-item-primary',
               testId: 'spacePlugin.addViewToSchema',
@@ -590,7 +590,7 @@ export const constructObjectActions = ({
               }
             },
             properties: {
-              label: ['create object in smart collection label', { ns: meta.id }],
+              label: ['create object in system collection label', { ns: meta.id }],
               icon: 'ph--plus--regular',
               disposition: 'list-item-primary',
               testId: 'spacePlugin.createObject',

@@ -95,7 +95,7 @@ export const TableContainer = ({ role, object }: TableContainerProps) => {
   }, []);
 
   const rowActions = useMemo(
-    (): TableRowAction[] => [{ id: 'open', label: ['open record label', { ns: meta.id }] }],
+    (): TableRowAction[] => [{ id: 'open', label: ['open object label', { ns: meta.id }] }],
     [],
   );
 

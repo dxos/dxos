@@ -19,6 +19,7 @@ export const translations = [
         'object name placeholder': 'New meeting',
         'rename object label': 'Rename meeting',
         'delete object label': 'Delete meeting',
+        'object deleted label': 'Meeting deleted',
       },
       [meta.id]: {
         'plugin name': 'Meeting',
@@ -43,7 +44,7 @@ export const translations = [
         'transcript companion label': 'Meeting Transcript',
         'entity extraction label': 'Entity extraction',
         'entity extraction description':
-          'While transcribing, use the Assistant to detect and annotate mentions of known records such as people or organizations.',
+          'While transcribing, use the Assistant to detect and annotate mentions of known objects such as people or organizations.',
       },
     },
   },
