@@ -2,16 +2,26 @@
 // Copyright 2023 DXOS.org
 //
 
-import { useControllableState } from '@radix-ui/react-use-controllable-state';
-import { type Dispatch, type SetStateAction } from 'react';
+import { type Dispatch, type SetStateAction, useCallback, useEffect, useRef, useState } from 'react';
 
 /**
  * A stateful hook with a controlled value.
- * @deprecated Use Radix `useControllableState`.
+ * @deprecated Use Radix `useControllableState` (NOTE: `useControlledState` is not compatible with `useControllableState`)
  */
-// TODO(burdon): Remove and require default.
 export const useControlledState = <T>(
-  controlledValue: T,
-  onChange?: (value: T) => void,
-): [T, Dispatch<SetStateAction<T>>] =>
-  useControllableState<T>({ prop: controlledValue, defaultProp: undefined as unknown as T, onChange });
+  valueParam: T,
+  onChange?: Dispatch<SetStateAction<T>>,
+): [T, Dispatch<SetStateAction<T>>] => {
+  const [value, setControlledValue] = useState(valueParam);
+  useEffect(() => {
+    setControlledValue(valueParam);
+  }, [valueParam]);
+
+  const onChangeRef = useRef(onChange);
+  const setValue = useCallback<Dispatch<SetStateAction<T>>>((value) => {
+    setControlledValue(value);
+    onChangeRef.current?.(value);
+  }, []);
+
+  return [value, setValue];
+};
