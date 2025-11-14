@@ -36,10 +36,12 @@ export interface LogMethods {
   stack: (message?: string, context?: never, meta?: CallMetadata) => void;
 
   method: (arg0?: never, arg1?: never, meta?: CallMetadata) => MethodDecorator;
-  func: <F extends (...args: any[]) => any>(
+  function: <F extends (...args: any[]) => any>(
     name: string,
     fn: F,
-    opts?: { transformOutput?: (result: ReturnType<F>) => Promise<any> | any },
+    opts?: {
+      transformOutput?: (result: ReturnType<F>) => Promise<any> | any;
+    },
   ) => F;
 }
 
@@ -116,12 +118,12 @@ export const createLog = (): LogImp => {
     error: (...params) => processLog(LogLevel.ERROR, ...params),
     catch: (error: Error | any, context, meta) => processLog(LogLevel.ERROR, undefined, context, meta, error),
 
-    break: () => log.info('——————————————————————————————————————————————————'),
+    break: () => log.info('-'.repeat(80)),
     stack: (message, context, meta) =>
       processLog(LogLevel.INFO, `${message ?? 'Stack Dump'}\n${getFormattedStackTrace()}`, context, meta),
 
     method: createMethodLogDecorator(log),
-    func: createFunctionLogDecorator(log),
+    function: createFunctionLogDecorator(log),
   });
 
   return log;
