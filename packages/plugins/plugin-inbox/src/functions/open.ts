@@ -44,7 +44,7 @@ export default defineFunction({
     const queue = yield* QueueService.getQueue(dxn);
     yield* Effect.promise(() => queue?.queryObjects());
     const content = Function.pipe(
-      queue?.objects,
+      queue?.objects ?? [],
       Array.reverse,
       Array.drop(skip),
       Array.take(limit),
