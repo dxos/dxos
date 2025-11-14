@@ -47,7 +47,7 @@ jobs:
           curl -L -o cn https://cdn.crabnebula.app/download/crabnebula/cn-cli/latest/cn_linux
           chmod +x cn
           sudo mv cn /usr/local/bin/
-          
+
           # Verify installation
           cn --version
 
@@ -158,6 +158,12 @@ jobs:
           version: ${{ needs.draft_tauri.outputs.version }}
           working-directory: ./packages/apps/composer-app/src-tauri/
 
+      # TODO(wittjosiah): Having pnpm install run through moon was causing OOM issues.
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          run_install: true
+
       - uses: moonrepo/setup-toolchain@v0
 
       - name: Install Rust toolchain
@@ -180,7 +186,7 @@ jobs:
           security set-keychain-settings -t 3600 -u build.keychain
           security import certificate.p12 -k build.keychain -P "$APPLE_CERTIFICATE_PASSWORD" -T /usr/bin/codesign
           security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$KEYCHAIN_PASSWORD" build.keychain
-        
+
       - name: Verify Certificate
         if: matrix.os == 'depot-macos-latest'
         run: |
@@ -252,6 +258,12 @@ jobs:
         with:
           version: ${{ needs.draft_tauri.outputs.version }}
           working-directory: ./packages/apps/composer-app/src-tauri/
+
+      # TODO(wittjosiah): Having pnpm install run through moon was causing OOM issues.
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          run_install: true
 
       - uses: moonrepo/setup-toolchain@v0
 
