@@ -43,6 +43,7 @@ describe('log', () => {
       { expected: 0, filter: 'ERROR' },
       { expected: 2, filter: 'INFO' },
       { expected: 4, filter: 'DEBUG' },
+      { expected: 3, filter: 'foo:DEBUG,bar:INFO' },
       { expected: 1, filter: 'INFO,-foo:*' },
       { expected: 3, filter: 'DEBUG,-foo:INFO' },
     ];
