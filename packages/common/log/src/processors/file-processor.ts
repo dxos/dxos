@@ -14,6 +14,7 @@ import { getRelativeFilename } from './common';
 
 // Amount of time to retry writing after encountering EAGAIN before giving up.
 const EAGAIN_MAX_DURATION = 1000;
+
 /**
  * Create a file processor.
  * @param path - Path to log file to create or append to, or existing open file descriptor e.g. stdout.
@@ -38,6 +39,7 @@ export const createFileProcessor = ({
     if (!shouldLog(entry, filters)) {
       return;
     }
+
     if (typeof pathOrFd === 'number') {
       fd = pathOrFd;
     } else {

@@ -201,6 +201,7 @@ export abstract class AbstractBaseCommand<T extends typeof Command = any> extend
         default:
           pathOrFd = this.flags['json-logfile'];
       }
+
       log.addProcessor(
         createFileProcessor({
           pathOrFd,
@@ -209,6 +210,7 @@ export abstract class AbstractBaseCommand<T extends typeof Command = any> extend
           filters: process.env.JSON_LOG_FILTER ? parseFilter(process.env.JSON_LOG_FILTER) : [],
         }),
       );
+
       // TODO(nf): disable console log completely?
       log.config({ filter: LogLevel.ERROR });
     } else {

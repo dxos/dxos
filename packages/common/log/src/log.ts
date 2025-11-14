@@ -6,7 +6,14 @@ import { type LogConfig, LogLevel, type LogOptions } from './config';
 import { type LogContext, type LogProcessor } from './context';
 import { createFunctionLogDecorator, createMethodLogDecorator } from './decorators';
 import { type CallMetadata } from './meta';
-import { DEFAULT_PROCESSORS, getConfig } from './options';
+import { DEFAULT_PROCESSORS, createConfig } from './options';
+
+/**
+ * Accessible from browser console.
+ */
+declare global {
+  const DX_LOG: Log;
+}
 
 /**
  * Logging function.
@@ -24,70 +31,58 @@ export interface LogMethods {
   warn: LogFunction;
   error: LogFunction;
   catch: (error: Error | any, context?: LogContext, meta?: CallMetadata) => void;
+
   break: () => void;
   stack: (message?: string, context?: never, meta?: CallMetadata) => void;
+
   method: (arg0?: never, arg1?: never, meta?: CallMetadata) => MethodDecorator;
-  func: <F extends (...args: any[]) => any>(
+  function: <F extends (...args: any[]) => any>(
     name: string,
     fn: F,
-    opts?: { transformOutput?: (result: ReturnType<F>) => Promise<any> | any },
+    opts?: {
+      transformOutput?: (result: ReturnType<F>) => Promise<any> | any;
+    },
   ) => F;
 }
 
 /**
  * Properties accessible on the logging function.
+ * @internal
  */
-interface Log extends LogMethods, LogFunction {
-  config: (options: LogOptions) => void;
-  addProcessor: (processor: LogProcessor) => void;
-  runtimeConfig: LogConfig;
+export interface Log extends LogMethods, LogFunction {
+  readonly runtimeConfig: LogConfig;
+  config: (options: LogOptions) => Log;
+  addProcessor: (processor: LogProcessor) => Log;
 }
 
 interface LogImp extends Log {
   _config: LogConfig;
 }
 
-const createLog = (): LogImp => {
+/**
+ * @internal
+ */
+export const createLog = (): LogImp => {
   const log: LogImp = ((...params) => processLog(LogLevel.DEBUG, ...params)) as LogImp;
+  log._config = createConfig();
+  Object.defineProperty(log, 'runtimeConfig', {
+    get: () => log._config,
+  });
 
-  log._config = getConfig();
-  Object.defineProperty(log, 'runtimeConfig', { get: () => log._config });
+  log.config = (options) => {
+    log._config = createConfig(options);
+    return log;
+  };
 
-  log.addProcessor = (processor: LogProcessor) => {
+  log.addProcessor = (processor) => {
     if (DEFAULT_PROCESSORS.filter((p) => p === processor).length === 0) {
       DEFAULT_PROCESSORS.push(processor);
     }
     if (log._config.processors.filter((p) => p === processor).length === 0) {
       log._config.processors.push(processor);
     }
+    return log;
   };
-
-  // Set config.
-  log.config = (options: LogOptions) => {
-    log._config = getConfig(options);
-  };
-
-  // TODO(burdon): API to set context and separate error object.
-  //  E.g., log.warn('failed', { key: 123 }, err);
-
-  log.trace = (...params) => processLog(LogLevel.TRACE, ...params);
-  log.debug = (...params) => processLog(LogLevel.DEBUG, ...params);
-  log.verbose = (...params) => processLog(LogLevel.VERBOSE, ...params);
-  log.info = (...params) => processLog(LogLevel.INFO, ...params);
-  log.warn = (...params) => processLog(LogLevel.WARN, ...params);
-  log.error = (...params) => processLog(LogLevel.ERROR, ...params);
-
-  // Catch only shows error message, not stacktrace.
-  log.catch = (error: Error | any, context, meta) => processLog(LogLevel.ERROR, undefined, context, meta, error);
-
-  // Show break.
-  log.break = () => log.info('——————————————————————————————————————————————————');
-
-  log.stack = (message, context, meta) =>
-    processLog(LogLevel.INFO, `${message ?? 'Stack Dump'}\n${getFormattedStackTrace()}`, context, meta);
-
-  log.method = createMethodLogDecorator(log);
-  log.func = createFunctionLogDecorator(log);
 
   /**
    * Process the current log call.
@@ -99,8 +94,37 @@ const createLog = (): LogImp => {
     meta?: CallMetadata,
     error?: Error,
   ) => {
-    log._config.processors.forEach((processor) => processor(log._config, { level, message, context, meta, error }));
+    // TODO(burdon): Do filter match upstream here.
+    log._config.processors.forEach((processor) =>
+      processor(log._config, {
+        level,
+        message,
+        context,
+        meta,
+        error,
+      }),
+    );
   };
+
+  /**
+   * API.
+   */
+  Object.assign<Log, LogMethods>(log, {
+    trace: (...params) => processLog(LogLevel.TRACE, ...params),
+    debug: (...params) => processLog(LogLevel.DEBUG, ...params),
+    verbose: (...params) => processLog(LogLevel.VERBOSE, ...params),
+    info: (...params) => processLog(LogLevel.INFO, ...params),
+    warn: (...params) => processLog(LogLevel.WARN, ...params),
+    error: (...params) => processLog(LogLevel.ERROR, ...params),
+    catch: (error: Error | any, context, meta) => processLog(LogLevel.ERROR, undefined, context, meta, error),
+
+    break: () => log.info('-'.repeat(80)),
+    stack: (message, context, meta) =>
+      processLog(LogLevel.INFO, `${message ?? 'Stack Dump'}\n${getFormattedStackTrace()}`, context, meta),
+
+    method: createMethodLogDecorator(log),
+    function: createFunctionLogDecorator(log),
+  });
 
   return log;
 };
@@ -108,7 +132,7 @@ const createLog = (): LogImp => {
 /**
  * Global logging function.
  */
-export const log: Log = ((globalThis as any).dx_log ??= createLog());
+export const log: Log = ((globalThis as any).DX_LOG ??= createLog());
 
 const start = Date.now();
 let last = start;
@@ -127,13 +151,5 @@ export const debug = (label?: any, args?: any) => {
   console.groupEnd();
   last = Date.now();
 };
-
-/**
- * Accessible from browser console.
- */
-declare global {
-  // eslint-disable-next-line camelcase
-  const dx_log: Log;
-}
 
 const getFormattedStackTrace = () => new Error().stack!.split('\n').slice(3).join('\n');
