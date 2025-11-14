@@ -27,9 +27,19 @@ export interface LogEntry {
  */
 export type LogProcessor = (config: LogConfig, entry: LogEntry) => void;
 
-// TODO(burdon): Support filter out.
 const matchFilter = (filter: LogFilter, level: LogLevel, path: string) => {
-  return level >= filter.level && (!filter.pattern || path.includes(filter.pattern));
+  if (level < filter.level) {
+    return false;
+  }
+  if (!filter.pattern) {
+    return true;
+  }
+
+  if (filter.pattern.startsWith('-')) {
+    return !path.includes(filter.pattern.slice(1));
+  } else {
+    return path.includes(filter.pattern);
+  }
 };
 
 /**
