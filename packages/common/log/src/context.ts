@@ -27,18 +27,25 @@ export interface LogEntry {
  */
 export type LogProcessor = (config: LogConfig, entry: LogEntry) => void;
 
-const matchFilter = (filter: LogFilter, level: LogLevel, path: string) => {
-  if (level < filter.level) {
-    return false;
-  }
-  if (!filter.pattern) {
-    return true;
-  }
-
-  if (filter.pattern.startsWith('-')) {
-    return !path.includes(filter.pattern.slice(1));
+/**
+ * Returns true if the log entry matches the filter, false if should be excluded, or undefined if it doesn't match the level.
+ */
+const matchFilter = (filter: LogFilter, level: LogLevel, path?: string): boolean | undefined => {
+  if (filter.pattern?.startsWith('-')) {
+    // Exclude.
+    if (path?.includes(filter.pattern.slice(1))) {
+      if (!level || level >= filter.level) {
+        return false;
+      }
+    }
   } else {
-    return path.includes(filter.pattern);
+    // Include.
+    if (level >= filter.level) {
+      return true;
+    }
+    if (filter.pattern) {
+      return path?.includes(filter.pattern);
+    }
   }
 };
 
@@ -47,10 +54,18 @@ const matchFilter = (filter: LogFilter, level: LogLevel, path: string) => {
  */
 export const shouldLog = (entry: LogEntry, filters?: LogFilter[]): boolean => {
   if (filters === undefined) {
-    return true;
-  } else {
-    return filters.some((filter) => matchFilter(filter, entry.level, entry.meta?.F ?? ''));
+    return false;
   }
+
+  const results = filters
+    .map((filter) => matchFilter(filter, entry.level, entry.meta?.F))
+    .filter((result): result is boolean => result !== undefined);
+
+  if (results.length === 0) {
+    return false;
+  }
+
+  return results.every((result) => result);
 };
 
 export const getContextFromEntry = (entry: LogEntry): Record<string, any> | undefined => {
