@@ -69,7 +69,7 @@ export const Stack = forwardRef<HTMLDivElement, StackProps>(
       classNames,
       style,
       orientation = 'vertical',
-      rail = true,
+      rail = true, // TODO(burdon): Change default to false.
       size = 'intrinsic',
       onRearrange,
       itemsCount = Children.count(children),
