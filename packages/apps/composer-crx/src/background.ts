@@ -47,8 +47,6 @@ const getFilenameFromUrl = (url: string): string => {
  * Background worker.
  */
 const main = async () => {
-  log.info('background', { browser });
-
   onMessage('config', ({ data }) => {
     return { debug: data.debug ?? false };
   });
@@ -104,12 +102,10 @@ const main = async () => {
           body: formData,
         });
 
-        const result = await uploadRes.json();
-        log.info('Image service response', { result });
-
         // Store result URL and open extension popup.
         try {
           // Store the result URL in storage so popup can access it.
+          const result = await uploadRes.json();
           const resultUrl = result.url || '';
           if (resultUrl) {
             await browser.storage.local.set({ [THUMBNAIL_PROP]: resultUrl });
@@ -118,16 +114,14 @@ const main = async () => {
           // Open extension popup (only works in response to user action like context menu).
           try {
             await browser.action.openPopup();
-            log.info('Popup opened', { url: resultUrl });
-          } catch (popupErr: any) {
+          } catch {
             // If openPopup fails (e.g., popup already open), set badge to indicate result.
-            log.warn('Could not open popup, setting badge', { err: popupErr });
             await browser.action.setBadgeText({ text: '✓' });
-            await browser.action.setBadgeBackgroundColor({ color: '#00ff00' });
+            await browser.action.setBadgeBackgroundColor({ color: '#ff5500' });
             // Clear badge after 3 seconds.
             setTimeout(() => {
               void browser.action.setBadgeText({ text: '' });
-            }, 3000);
+            }, 3_000);
           }
         } catch (err) {
           log.error('Failed to open popup', { err });

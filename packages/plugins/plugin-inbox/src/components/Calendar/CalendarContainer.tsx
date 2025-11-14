@@ -32,13 +32,14 @@ export const CalendarContainer = ({ calendar }: CalendarContainerProps) => {
 
   return (
     <StackItem.Content>
-      <div role='none' className='grid grid-cols-[min-content_1fr]'>
+      <div role='none' className='grid grid-cols-[min-content_1fr] overflow-hidden'>
         <NaturalCalendar.Root>
           <NaturalCalendar.Viewport>
             <NaturalCalendar.Header />
             <NaturalCalendar.Grid />
           </NaturalCalendar.Viewport>
         </NaturalCalendar.Root>
+        {/* TODO(burdon): Integrate into Calendar viewport. */}
         <EventList events={objects} selected={selected?.id} onSelect={setSelected} />
       </div>
     </StackItem.Content>
