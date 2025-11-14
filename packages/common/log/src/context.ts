@@ -40,8 +40,8 @@ const matchFilter = (filter: LogFilter, level: LogLevel, path?: string): boolean
     }
   } else {
     // Include.
-    if (level >= filter.level) {
-      return true;
+    if (level < filter.level) {
+      return false;
     }
     if (filter.pattern) {
       return path?.includes(filter.pattern);
