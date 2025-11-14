@@ -123,7 +123,7 @@ export const createLog = (): LogImp => {
 /**
  * Global logging function.
  */
-export const log: Log = ((globalThis as any).dx_log ??= createLog());
+export const log: Log = ((globalThis as any).DX_LOG ??= createLog());
 
 const start = Date.now();
 let last = start;
@@ -147,7 +147,7 @@ export const debug = (label?: any, args?: any) => {
  * Accessible from browser console.
  */
 declare global {
-  const dx_log: Log;
+  const DX_LOG: Log;
 }
 
 const getFormattedStackTrace = () => new Error().stack!.split('\n').slice(3).join('\n');
