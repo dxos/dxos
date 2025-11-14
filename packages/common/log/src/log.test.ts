@@ -60,11 +60,12 @@ describe('log', () => {
           filter: test.filter,
         });
 
-      console.log(test.filter);
+      console.group(test.filter);
       log.info('line 1', {}, { F: 'foo.ts', L: 1, S: undefined });
       log.debug('line 2', {}, { F: 'foo.ts', L: 2, S: undefined });
       log.info('line 3', {}, { F: 'bar.ts', L: 3, S: undefined });
       log.debug('line 4', {}, { F: 'bar.ts', L: 4, S: undefined });
+      console.groupEnd();
 
       expect(count, test.filter).toBe(test.expected);
     }
