@@ -34,6 +34,7 @@ export const useTour = (
   options: TourOptions = {},
 ): [boolean, Dispatch<SetStateAction<boolean>>] => {
   const selection = useMemo(() => d3Selection(), []);
+  // TODO(burdon): Redo controlled state.
   const [running, setRunning] = useState(options.running ?? false);
   useEffect(() => {
     if (!running) {
