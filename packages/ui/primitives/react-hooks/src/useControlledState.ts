@@ -18,10 +18,13 @@ export const useControlledState = <T>(
   }, [valueParam]);
 
   const onChangeRef = useRef(onChange);
-  const setValue = useCallback<Dispatch<SetStateAction<T>>>((value) => {
-    setControlledValue(value);
-    onChangeRef.current?.(value);
-  }, []);
+  const setValue = useCallback<Dispatch<SetStateAction<T>>>(
+    (value) => {
+      setControlledValue(value);
+      onChangeRef.current?.(value);
+    },
+    [onChangeRef],
+  );
 
   return [value, setValue];
 };
