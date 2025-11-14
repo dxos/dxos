@@ -2,7 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as Array from 'effect/Array';
 import * as Effect from 'effect/Effect';
+import * as Function from 'effect/Function';
 import * as Schema from 'effect/Schema';
 
 import { ArtifactId } from '@dxos/assistant';
@@ -20,19 +22,36 @@ export default defineFunction({
     id: ArtifactId.annotations({
       description: 'The ID of the mailbox object.',
     }),
+    skip: Schema.Number.pipe(
+      Schema.annotations({
+        description: 'The number of messages to skip.',
+      }),
+      Schema.optional,
+    ),
+    limit: Schema.Number.pipe(
+      Schema.annotations({
+        description: 'The maximum number of messages to read. Do not provide a value unless directly asked.',
+      }),
+      Schema.optional,
+    ),
   }),
   outputSchema: Schema.Struct({
     content: Schema.String,
   }),
-  handler: Effect.fn(function* ({ data: { id } }) {
+  handler: Effect.fn(function* ({ data: { id, skip = 0, limit = 20 } }) {
     const mailbox = yield* DatabaseService.resolve(ArtifactId.toDXN(id), Mailbox.Mailbox);
     const { dxn } = yield* Effect.promise(() => mailbox.queue.load());
     const queue = yield* QueueService.getQueue(dxn);
     yield* Effect.promise(() => queue?.queryObjects());
-    const content = queue?.objects
-      .filter((message) => Obj.instanceOf(Message.Message, message))
-      .flatMap(renderMarkdown)
-      .join('\n\n');
+    const content = Function.pipe(
+      queue?.objects,
+      Array.reverse,
+      Array.drop(skip),
+      Array.take(limit),
+      Array.filter((message) => Obj.instanceOf(Message.Message, message)),
+      Array.flatMap(renderMarkdown),
+      Array.join('\n\n'),
+    );
     return { content };
   }),
 });
