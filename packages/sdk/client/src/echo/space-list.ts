@@ -9,6 +9,7 @@ import {
   CREATE_SPACE_TIMEOUT,
   type ClientServicesProvider,
   type Echo,
+  IMPORT_SPACE_TIMEOUT,
   PropertiesType,
   type Space,
 } from '@dxos/client-protocol';
@@ -324,7 +325,7 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
     invariant(this._serviceProvider.services.SpacesService, 'SpaceService is not available.');
     const { newSpaceId } = await this._serviceProvider.services.SpacesService.importSpace(
       { archive },
-      { timeout: CREATE_SPACE_TIMEOUT },
+      { timeout: IMPORT_SPACE_TIMEOUT },
     );
     invariant(SpaceId.isValid(newSpaceId), 'Invalid space ID');
     await this._spaceCreated.waitForCondition(() => {
