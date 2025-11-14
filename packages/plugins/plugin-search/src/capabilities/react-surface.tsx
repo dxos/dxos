@@ -28,9 +28,6 @@ export default () =>
       role: 'search-input',
       component: () => {
         const space = useActiveSpace();
-        if (!space) {
-          return null;
-        }
 
         return (
           <SearchContextProvider>
