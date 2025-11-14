@@ -105,7 +105,7 @@ const main = async () => {
         });
 
         const result = await uploadRes.json();
-        log.info('Image service response', { result });
+        log.info('image service response', { result });
 
         // Store result URL and open extension popup.
         try {
@@ -118,10 +118,9 @@ const main = async () => {
           // Open extension popup (only works in response to user action like context menu).
           try {
             await browser.action.openPopup();
-            log.info('Popup opened', { url: resultUrl });
-          } catch (popupErr: any) {
+          } catch (err: any) {
             // If openPopup fails (e.g., popup already open), set badge to indicate result.
-            log.warn('Could not open popup, setting badge', { err: popupErr });
+            log.warn('Could not open popup, setting badge', { err: err });
             await browser.action.setBadgeText({ text: '✓' });
             await browser.action.setBadgeBackgroundColor({ color: '#00ff00' });
             // Clear badge after 3 seconds.
@@ -130,7 +129,7 @@ const main = async () => {
             }, 3000);
           }
         } catch (err) {
-          log.error('Failed to open popup', { err });
+          log.catch(err);
         }
       } catch (err) {
         log.catch(err);
