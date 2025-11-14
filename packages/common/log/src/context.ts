@@ -27,6 +27,7 @@ export interface LogEntry {
  */
 export type LogProcessor = (config: LogConfig, entry: LogEntry) => void;
 
+// TODO(burdon): Support filter out.
 const matchFilter = (filter: LogFilter, level: LogLevel, path: string) => {
   return level >= filter.level && (!filter.pattern || path.includes(filter.pattern));
 };
