@@ -42,7 +42,7 @@ export const Popup = ({ classNames, onAdd, onSearch, onLaunch }: PopupProps) => 
 
   return (
     <div className={mx('flex flex-col gap-2 bg-baseSurface', classNames)}>
-      <Toolbar.Root>
+      <Toolbar.Root classNames='gap-2'>
         <IconButton icon='ph--arrow-square-out--regular' iconOnly label={t('button.launch')} onClick={onLaunch} />
         <Input.Root>
           <Input.TextInput
