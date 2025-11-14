@@ -6,7 +6,6 @@ import { Transaction } from '@codemirror/state';
 import { EditorView } from '@codemirror/view';
 import React, { forwardRef, useEffect, useImperativeHandle } from 'react';
 
-import { log } from '@dxos/log';
 import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
@@ -50,7 +49,6 @@ export const EditorContent = forwardRef<EditorController, EditorContentProps>(
 
     // External controller.
     useImperativeHandle(forwardedRef, () => {
-      log.info('view updated', { id, length: view?.state.doc.length });
       return createEditorController(view);
     }, [id, view]);
 

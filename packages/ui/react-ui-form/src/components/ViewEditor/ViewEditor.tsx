@@ -133,13 +133,12 @@ export const ViewEditor = forwardRef<ProjectionModel, ViewEditorProps>(
 
     const handleUpdate = useCallback(
       (values: any) => {
-        invariant(!readonly);
         requestAnimationFrame(() => {
           const query = mode === 'schema' ? Query.select(Filter.typename(values.query)).ast : values.query;
           onQueryChanged?.(query, values.target);
         });
       },
-      [onQueryChanged, readonly, view, queueTarget, mode],
+      [onQueryChanged, view, queueTarget, mode],
     );
 
     const handleDelete = useCallback(
