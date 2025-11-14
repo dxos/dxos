@@ -61,7 +61,11 @@ export const withRetryConfig = (
   });
 
 export const withLogging = <A extends HttpClientResponse.HttpClientResponse, E, R>(effect: Effect.Effect<A, E, R>) =>
-  effect.pipe(Effect.tap((res) => log.info('response', { status: res.status })));
+  effect.pipe(
+    Effect.tap((res) => {
+      log.info('response', { status: res.status });
+    }),
+  );
 
 /**
  *

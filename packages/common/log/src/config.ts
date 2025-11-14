@@ -19,6 +19,7 @@ export enum LogLevel {
 }
 
 export const levels: Record<string, LogLevel> = {
+  '*': LogLevel.TRACE,
   trace: LogLevel.TRACE,
   debug: LogLevel.DEBUG,
   verbose: LogLevel.VERBOSE,

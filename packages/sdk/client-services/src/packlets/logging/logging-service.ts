@@ -37,7 +37,7 @@ export class LoggingServiceImpl implements LoggingService {
   }
 
   async close(): Promise<void> {
-    const index = log.runtimeConfig.processors.findIndex((processor) => processor === this._logProcessor);
+    const index = log.runtimeConfig.processors.findIndex((processor: LogProcessor) => processor === this._logProcessor);
     log.runtimeConfig.processors.splice(index, 1);
   }
 

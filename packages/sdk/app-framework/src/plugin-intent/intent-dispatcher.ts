@@ -209,6 +209,7 @@ export const createDispatcher = (
     });
 
   const dispatch: IntentDispatcher = (intentChain, depth = 0) => {
+    log('dispatch', { intentChain: intentChain.all.map((i) => i.id), depth });
     return Effect.gen(function* () {
       if (depth > executionLimit) {
         return yield* Effect.fail(new CycleDetectedError());
@@ -216,8 +217,10 @@ export const createDispatcher = (
 
       const resultsRef = yield* Ref.make<AnyIntentResult[]>([]);
       for (const intent of intentChain.all) {
+        log('processing', { intent });
         const { data: prev } = (yield* resultsRef.get)[0] ?? {};
         const result = yield* handleIntent({ ...intent, data: { ...intent.data, ...prev } });
+        log('ok', { intent: intent.id, result });
         yield* Ref.update(resultsRef, (results) => [result, ...results]);
         if (result.intents) {
           for (const intent of result.intents) {
@@ -234,6 +237,7 @@ export const createDispatcher = (
           //     error: result.error.message,
           //   }),
           // );
+          log.error('failed', { intent: intent.id, error: result.error });
           return yield* Effect.fail(result.error);
         }
       }
@@ -263,6 +267,7 @@ export const createDispatcher = (
         );
       }
 
+      log('done', { intent: intentChain.all.map((i) => i.id), result: result.data });
       return result.data;
     });
   };

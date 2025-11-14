@@ -22,21 +22,34 @@ const IS_BROWSER = typeof window !== 'undefined' || typeof navigator !== 'undefi
 
 export const DEFAULT_PROCESSORS = [IS_BROWSER ? BROWSER_PROCESSOR : CONSOLE_PROCESSOR];
 
+const parseLogLevel = (level: string, defValue = LogLevel.WARN) => levels[level.toLowerCase()] ?? defValue;
+
+/**
+ * @internal
+ */
 export const parseFilter = (filter: string | string[] | LogLevel): LogFilter[] => {
   if (typeof filter === 'number') {
     return [{ level: filter }];
   }
 
-  const parseLogLevel = (level: string, defValue = LogLevel.WARN) => levels[level.toLowerCase()] ?? defValue;
-
   const lines = typeof filter === 'string' ? filter.split(/,\s*/) : filter;
   return lines.map((filter) => {
     const [pattern, level] = filter.split(':');
-    return level ? { level: parseLogLevel(level), pattern } : { level: parseLogLevel(pattern) };
+    return level
+      ? {
+          level: parseLogLevel(level),
+          pattern,
+        }
+      : {
+          level: parseLogLevel(pattern),
+        };
   });
 };
 
-export const getConfig = (options?: LogOptions): LogConfig => {
+/**
+ * @internal
+ */
+export const createConfig = (options?: LogOptions): LogConfig => {
   const nodeOptions: LogOptions | undefined =
     'process' in globalThis
       ? {
