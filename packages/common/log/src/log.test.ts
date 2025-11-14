@@ -61,10 +61,10 @@ describe('log', () => {
         });
 
       console.log(test.filter);
-      log.info('test 1', {}, { F: 'foo.ts', L: 0, S: undefined });
-      log.debug('test 2', {}, { F: 'foo.ts', L: 0, S: undefined });
-      log.info('test 3', {}, { F: 'bar.ts', L: 0, S: undefined });
-      log.debug('test 4', {}, { F: 'bar.ts', L: 0, S: undefined });
+      log.info('line 1', {}, { F: 'foo.ts', L: 1, S: undefined });
+      log.debug('line 2', {}, { F: 'foo.ts', L: 2, S: undefined });
+      log.info('line 3', {}, { F: 'bar.ts', L: 3, S: undefined });
+      log.debug('line 4', {}, { F: 'bar.ts', L: 4, S: undefined });
 
       expect(count, test.filter).toBe(test.expected);
     }
