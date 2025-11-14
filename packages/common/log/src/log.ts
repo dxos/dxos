@@ -9,6 +9,13 @@ import { type CallMetadata } from './meta';
 import { DEFAULT_PROCESSORS, createConfig } from './options';
 
 /**
+ * Accessible from browser console.
+ */
+declare global {
+  const DX_LOG: Log;
+}
+
+/**
  * Logging function.
  */
 type LogFunction = (message: string, context?: LogContext, meta?: CallMetadata) => void;
@@ -142,12 +149,5 @@ export const debug = (label?: any, args?: any) => {
   console.groupEnd();
   last = Date.now();
 };
-
-/**
- * Accessible from browser console.
- */
-declare global {
-  const DX_LOG: Log;
-}
 
 const getFormattedStackTrace = () => new Error().stack!.split('\n').slice(3).join('\n');

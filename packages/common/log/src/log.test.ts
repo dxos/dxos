@@ -38,7 +38,7 @@ describe('log', () => {
     });
   });
 
-  test.only('filters', ({ expect }) => {
+  test('filters', ({ expect }) => {
     const tests = [
       { expected: 0, filter: 'ERROR' },
       { expected: 2, filter: 'INFO' },
