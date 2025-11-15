@@ -6,9 +6,10 @@ import { useComputed, useSignal } from '@preact/signals-react';
 import React, { useCallback, useEffect, useMemo } from 'react';
 
 import { createIntent } from '@dxos/app-framework';
-import { useIntentDispatcher } from '@dxos/app-framework/react';
+import { type SurfaceComponentProps, useIntentDispatcher } from '@dxos/app-framework/react';
+import { getSpace } from '@dxos/client/echo';
 import { Obj } from '@dxos/echo';
-import { Filter, type Space, useQuery } from '@dxos/react-client/echo';
+import { Filter, useQuery } from '@dxos/react-client/echo';
 import { ElevationProvider, useTranslation } from '@dxos/react-ui';
 import { MenuProvider, ToolbarMenu } from '@dxos/react-ui-menu';
 import { StackItem } from '@dxos/react-ui-stack';
@@ -19,17 +20,14 @@ import { InboxAction, type Mailbox } from '../../types';
 
 import { Message } from './Message';
 import { type ViewMode } from './MessageHeader';
-import { useMessageToolbarActions } from './toolbar';
+import { useMessageToolbarActions } from './MessageToolbar';
 
-export type MessageContainerProps = {
-  space?: Space;
-  message?: MessageType.Message;
-  mailbox: Mailbox.Mailbox;
-  role?: string;
-};
-
-export const MessageContainer = ({ space, message, mailbox, role }: MessageContainerProps) => {
+export const MessageContainer = ({
+  object: message,
+  mailbox,
+}: SurfaceComponentProps<MessageType.Message, { mailbox: Mailbox.Mailbox }>) => {
   const { t } = useTranslation(meta.id);
+  const space = getSpace(message);
 
   const hasEnrichedContent = useMemo(() => {
     const textBlocks = message?.blocks.filter((block) => 'text' in block) ?? [];
@@ -82,7 +80,6 @@ export const MessageContainer = ({ space, message, mailbox, role }: MessageConta
         viewMode={viewMode.value}
         hasEnrichedContent={hasEnrichedContent}
         contactDxn={contactDxn.value}
-        role={role}
       />
     </StackItem.Content>
   );

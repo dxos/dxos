@@ -5,7 +5,7 @@
 import React, { useCallback, useMemo } from 'react';
 
 import { LayoutAction, createIntent } from '@dxos/app-framework';
-import { useIntentDispatcher } from '@dxos/app-framework/react';
+import { type SurfaceComponentProps, useIntentDispatcher } from '@dxos/app-framework/react';
 import { Obj } from '@dxos/echo';
 import { Trigger } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
@@ -17,7 +17,7 @@ import { Button, useTranslation } from '@dxos/react-ui';
 import { meta } from '../../meta';
 import { type Mailbox } from '../../types';
 
-export const MailboxObjectSettings = ({ object }: { object: Mailbox.Mailbox }) => {
+export const MailboxSettings = ({ object }: SurfaceComponentProps<Mailbox.Mailbox>) => {
   const { t } = useTranslation(meta.id);
   const { dispatchPromise: dispatch } = useIntentDispatcher();
   const space = useMemo(() => getSpace(object), [object]);

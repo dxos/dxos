@@ -23,7 +23,7 @@ import { InboxCapabilities } from '../../capabilities';
 import { meta } from '../../meta';
 import { InboxAction, type Mailbox } from '../../types';
 import { sortByCreated } from '../../util';
-import { POPOVER_SAVE_FILTER } from '../PopoverSaveFilter';
+import { POPOVER_SAVE_FILTER } from './PopoverSaveFilter';
 
 import { type MailboxActionHandler, Mailbox as MailboxComponent } from './Mailbox';
 import { MailboxEmpty } from './MailboxEmpty';

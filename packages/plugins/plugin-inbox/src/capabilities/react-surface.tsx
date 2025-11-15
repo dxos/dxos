@@ -19,9 +19,9 @@ import { Message, Organization, Person } from '@dxos/types';
 import {
   CalendarArticle,
   MailboxArticle,
-  MailboxObjectSettings,
+  MailboxSettings,
+  MessageArticle,
   MessageCard,
-  MessageContainer,
   POPOVER_SAVE_FILTER,
   PopoverSaveFilter,
   RelatedContacts,
@@ -55,13 +55,11 @@ export default () =>
         Obj.instanceOf(Mailbox.Mailbox, data.companionTo) &&
         (data.subject === 'message' || Obj.instanceOf(Message.Message, data.subject)),
       component: ({ data: { companionTo, subject: message }, role }) => {
-        const space = getSpace(companionTo);
         return (
-          <MessageContainer
-            message={typeof message === 'string' ? undefined : message}
-            space={space}
-            mailbox={companionTo}
+          <MessageArticle
             role={role}
+            object={typeof message === 'string' ? undefined : message}
+            mailbox={companionTo}
           />
         );
       },
@@ -95,7 +93,7 @@ export default () =>
       id: `${meta.id}/mailbox/companion/settings`,
       role: 'object-settings',
       filter: (data): data is { subject: Mailbox.Mailbox } => Obj.instanceOf(Mailbox.Mailbox, data.subject),
-      component: ({ data }) => <MailboxObjectSettings object={data.subject} />,
+      component: ({ data }) => <MailboxSettings object={data.subject} />,
     }),
 
     // TODO(wittjosiah): Generalize the mess below.

@@ -4,11 +4,11 @@
 
 import { lazy } from 'react';
 
-export * from './Mailbox';
-export * from './PopoverSaveFilter';
+export * from './MailboxSettings';
+export * from './MailboxArticle';
 export * from './Related';
 
-export const CalendarArticle = lazy(() => import('./Calendar'));
-export const MailboxArticle = lazy(() => import('./Mailbox'));
+export const CalendarArticle = lazy(() => import('./CalendarArticle'));
+export const MailboxArticle = lazy(() => import('./MailboxArticle'));
+export const MessageArticle = lazy(() => import('./MessageArticle'));
 export const MessageCard = lazy(() => import('./MessageCard'));
-export const MessageContainer = lazy(() => import('./MessageContainer'));
