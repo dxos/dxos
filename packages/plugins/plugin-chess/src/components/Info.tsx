@@ -139,7 +139,7 @@ const History = ({ classNames, model, min, max, onSelect }: HistoryProps) => {
   return (
     <div
       ref={scrollerRef}
-      className={mx('overflow-y-scroll', classNames)}
+      className={mx('overflow-y-auto', classNames)}
       style={{
         minHeight: min === undefined ? 'auto' : `${min * 24}px`,
         maxHeight: max === undefined ? 'auto' : `${max * 24}px`,
