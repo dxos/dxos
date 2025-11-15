@@ -4,26 +4,26 @@
 
 import { type Obj } from '@dxos/echo';
 
+// TOOD(burdon): Use effect literal.
+export const SurfaceCardRoles = ['card', 'card--popover', 'card--intrinsic', 'card--extrinsic', 'card--transclusion'];
+export type SurfaceCardRole = 'card' | 'card--popover' | 'card--intrinsic' | 'card--extrinsic' | 'card--transclusion';
+
+// TODO(burdon): Define all roles.
+export type SurfaceRole =
+  | 'item'
+  | 'article'
+  | 'complementary' // (for companion?)
+  | 'section'
+  | SurfaceCardRole;
+
 /**
  * Base type for surface components.
  */
 // TODO(burdon): Standardize PluginSettings and ObjectProperties.
-export type SurfaceComponentProps<T extends Obj.Any = Obj.Any, Props = {}> = {
-  role?:
-    | 'article'
-    | 'complementary' // (for companion?)
-    | 'section'
-    | 'card'
-    // Non-standard roles
-    | 'card--popover'
-    | 'card--intrinsic'
-    | 'card--extrinsic'
-    | 'card--transclusion';
+// TODO(burdon): Include attendableId?
+export type SurfaceComponentProps<Subject extends Obj.Any = Obj.Any, Props = {}, Role extends string = string> = {
+  role?: Role;
 
   /** The object being displayed. */
-  subject: T;
-
-  // TODO(burdon): Include attendableId?
-
-  /** Additional properties. */
+  subject: Subject;
 } & Props;

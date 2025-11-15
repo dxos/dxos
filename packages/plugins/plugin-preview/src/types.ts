@@ -4,7 +4,7 @@
 
 import { type PropsWithChildren } from 'react';
 
-import { type SurfaceComponentProps } from '@dxos/app-framework/react';
+import { type SurfaceCardRole, type SurfaceComponentProps } from '@dxos/app-framework/react';
 import { type Obj } from '@dxos/echo';
 import { type Space } from '@dxos/react-client/echo';
 
@@ -12,14 +12,18 @@ import { type Space } from '@dxos/react-client/echo';
  * @deprecated Use {@link SurfaceComponentProps} instead.
  */
 // TODO(burdon): Remove?
-export type PreviewProps<T extends Obj.Any = Obj.Any> = PropsWithChildren<
+export type PreviewProps<
+  Subject extends Obj.Any = Obj.Any,
+  Role extends SurfaceCardRole = SurfaceCardRole,
+> = PropsWithChildren<
   SurfaceComponentProps<
-    T,
+    Subject,
     {
       // TODO(burdon): Why is this required (why active?)
       activeSpace?: Space;
       // TODO(burdon): Remove in favor of intents?
       onSelect?: (obj: Obj.Any) => void;
-    }
+    },
+    Role
   >
 >;
