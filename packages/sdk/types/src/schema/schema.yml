@@ -1,0 +1,440 @@
+# Schema.org Type Hierarchy
+# https://schema.org/docs/schemas.html
+#
+# This file documents the complete hierarchy of schema.org types
+# Status: ✓ implemented, ○ planned, - not yet planned
+
+Thing:
+  description: The most generic type of item
+  url: https://schema.org/Thing
+  
+  Action:
+    description: An action performed by a direct agent and indirect participants
+    url: https://schema.org/Action
+    subtypes:
+      - AchieveAction
+      - AssessAction
+      - ConsumeAction
+      - ControlAction
+      - CreateAction
+      - FindAction
+      - InteractAction
+      - MoveAction
+      - OrganizeAction
+      - PlayAction
+      - SearchAction
+      - TradeAction
+      - TransferAction
+      - UpdateAction
+  
+  CreativeWork:
+    description: The most generic kind of creative work, including books, movies, photographs, software programs, etc.
+    url: https://schema.org/CreativeWork
+    subtypes:
+      - Article
+      - Blog
+      - Book
+      - Clip
+      - Comment:
+        description: A comment on an item
+      - Conversation
+      - Course
+      - CreativeWorkSeason
+      - CreativeWorkSeries
+      - Dataset:
+        description: A body of structured information describing some topic(s) of interest
+        subtypes:
+          - DataFeed:
+            description: A single feed providing structured information about one or more entities/topics
+      - DigitalDocument
+      - Drawing
+      - Episode
+      - Game
+      - HowTo
+      - HowToDirection
+      - HowToSection
+      - HowToStep
+      - HowToTip
+      - MediaObject:
+        description: A media object, such as an image, video, or audio object
+        subtypes:
+          - AudioObject
+          - DataDownload
+          - ImageObject
+          - LegislationObject
+          - MusicVideoObject
+          - TextObject:
+            description: A text file
+          - VideoObject
+      - Menu
+      - MenuSection
+      - Message
+      - Movie
+      - MusicComposition
+      - MusicPlaylist
+      - MusicRecording
+      - Painting
+      - Photograph
+      - Play
+      - Poster
+      - PublicationIssue
+      - PublicationVolume
+      - Quotation
+      - Review
+      - Sculpture
+      - SheetMusic
+      - ShortStory
+      - SoftwareApplication
+      - SoftwareSourceCode
+      - TVSeason
+      - TVSeries
+      - Thesis
+      - VisualArtwork
+      - WebContent
+      - WebPage
+      - WebPageElement
+      - WebSite
+  
+  Event:
+    description: An event happening at a certain time and location
+    url: https://schema.org/Event
+    subtypes:
+      - BusinessEvent
+      - ChildrensEvent
+      - ComedyEvent
+      - CourseInstance
+      - DanceEvent
+      - DeliveryEvent
+      - EducationEvent
+      - ExhibitionEvent
+      - Festival
+      - FoodEvent
+      - LiteraryEvent
+      - MusicEvent
+      - PublicationEvent
+      - SaleEvent
+      - ScreeningEvent
+      - SocialEvent
+      - SportsEvent
+      - TheaterEvent
+      - UserInteraction
+      - VisualArtsEvent
+  
+  Intangible:
+    description: A utility class for a number of intangible things
+    url: https://schema.org/Intangible
+    
+    subtypes:
+      - ActionAccessSpecification
+      - AlignmentObject
+      - Audience
+      - BedDetails
+      - Brand
+      - BroadcastChannel
+      - BroadcastFrequencySpecification
+      
+      - Class:
+        description: A class, also often called a Type
+      
+      - ComputerLanguage
+      - ConstraintNode
+      - DataFeedItem
+      
+      - DefinedTerm:
+        description: A word, name, acronym, phrase, etc. with a formal definition
+      
+      - Demand
+      - DigitalDocumentPermission
+      - EducationalOccupationalProgram
+      - EnergyConsumptionDetails
+      - EntryPoint
+      
+      - Enumeration:
+        description: Lists or enumerations dealing with status types
+        subtypes:
+          - ActionStatusType
+          - BoardingPolicyType
+          - BookFormatType
+          - BusinessEntityType
+          - ContactPointOption
+          - DayOfWeek
+          - DeliveryMethod
+          - DigitalDocumentPermissionType
+          - EventStatusType
+          - GamePlayMode
+          - GenderType
+          - ItemAvailability
+          - ItemListOrderType
+          - LegalForceStatus
+          - LegalValueLevel
+          - MediaManipulationRatingEnumeration
+          - MedicalAudienceType
+          - MedicalDevicePurpose
+          - MedicalEvidenceLevel
+          - MedicalImagingTechnique
+          - MedicalObservationalStudyDesign
+          - MedicalProcedureType
+          - MedicalSpecialty
+          - MedicalStudyStatus
+          - MedicalTrialDesign
+          - MedicineSystem
+          - MusicAlbumProductionType
+          - MusicAlbumReleaseType
+          - MusicReleaseFormatType
+          - OfferItemCondition
+          - OrderStatus
+          - PaymentMethod
+          - PhysicalActivityCategory
+          - PhysicalExam
+          - PriceComponentTypeEnumeration
+          - PriceTypeEnumeration
+          - QualitativeValue
+          - RefundTypeEnumeration
+          - ReservationStatusType
+          - RestrictedDiet
+          - ReturnFeesEnumeration
+          - ReturnMethodEnumeration
+          - RsvpResponseType
+          - SizeGroupEnumeration
+          - SizeSystemEnumeration
+          - Specialty
+          - StatusEnumeration
+          - WarrantyScope
+      
+      - FinancialIncentive
+      - FloorPlan
+      - GameServer
+      - GeospatialGeometry
+      - Grant
+      - HealthInsurancePlan
+      - HealthPlanCostSharingSpecification
+      - HealthPlanFormulary
+      - HealthPlanNetwork
+      - Invoice
+      
+      - ItemList:
+        description: A list of items of any sort
+      
+      - JobPosting
+      - Language
+      - ListItem
+      - MediaSubscription
+      - MemberProgram
+      - MemberProgramTier
+      - MenuItem
+      - MerchantReturnPolicy
+      - MerchantReturnPolicySeasonalOverride
+      - Observation
+      
+      - Occupation:
+        description: A profession, may involve prolonged training and/or a formal qualification
+      
+      - OccupationalExperienceRequirements
+      - Offer
+      
+      - Order:
+        description: An order is a confirmation of a transaction
+      
+      - OrderItem:
+        description: An order item is a line of an order
+      
+      - ParcelDelivery
+      - Permit
+      - ProgramMembership
+      - Property
+      - PropertyValueSpecification
+      
+      - Quantity:
+        description: Quantities such as distance, time, mass, weight, etc.
+        subtypes:
+          - Distance
+          - Duration
+          - Energy
+          - Mass
+      
+      - Rating
+      
+      - Reservation:
+        description: Describes a reservation for travel, dining or an event
+        subtypes:
+          - BoatReservation
+          - BusReservation
+          - EventReservation
+          - FlightReservation
+          - FoodEstablishmentReservation
+          - LodgingReservation
+          - RentalCarReservation
+          - ReservationPackage
+          - TaxiReservation
+          - TrainReservation
+      
+      - Role
+      
+      - Schedule:
+        description: A schedule defines a repeating time period
+      
+      - Seat
+      - Series
+      
+      - Service:
+        description: A service provided by an organization
+        subtypes:
+          - BroadcastService
+          - CableOrSatelliteService
+          - FinancialProduct
+          - FoodService
+          - GovernmentService
+          - TaxiService
+          - WebAPI
+      
+      - ServiceChannel
+      - SpeakableSpecification
+      - StatisticalPopulation
+      
+      - StructuredValue: ✓
+        description: Structured values are used when the value of a property has a more complex structure
+        url: https://schema.org/StructuredValue
+        
+        subtypes:
+          - CDCPMDRecord
+          
+          - ContactPoint:
+            description: A contact point for a person or organization
+            subtypes:
+              - PostalAddress:
+                description: The mailing address
+          
+          - DefinedRegion
+          - EngineSpecification
+          - ExchangeRateSpecification
+          - GeoCoordinates
+          
+          - GeoShape:
+            description: The geographic shape of a place
+          
+          - InteractionCounter
+          - MonetaryAmount
+          - NutritionInformation
+          - OfferShippingDetails
+          - OpeningHoursSpecification
+          - OwnershipInfo
+          - PostalCodeRangeSpecification
+          - PriceSpecification
+          
+          - PropertyValue:
+            description: A property-value pair
+          
+          - QuantitativeValue:
+            description: A point value or interval for product characteristics
+          
+          - QuantitativeValueDistribution
+          - RepaymentSpecification
+          - ServicePeriod
+          - ShippingConditions
+          - ShippingDeliveryTime
+          - ShippingRateSettings
+          - ShippingService
+          - TypeAndQuantityNode
+          - WarrantyPromise
+      
+      - Ticket
+      
+      - Trip:
+        description: A trip or journey
+  
+  Organization:
+    description: An organization such as a school, NGO, corporation, club, etc.
+    url: https://schema.org/Organization
+    subtypes:
+      - Airline
+      - Consortium
+      - Corporation
+      - EducationalOrganization
+      - FundingScheme
+      - GovernmentOrganization
+      - LibrarySystem
+      - LocalBusiness
+      - MedicalOrganization
+      - NewsMediaOrganization
+      - NGO
+      - OnlineBusiness
+      - PerformingGroup
+      - Project
+      - ResearchOrganization
+      - SearchRescueOrganization
+      - SportsOrganization
+      - WorkersUnion
+  
+  Person:
+    description: A person (alive, dead, undead, or fictional)
+    url: https://schema.org/Person
+  
+  Place: ✓
+    description: Entities that have a somewhat fixed, physical extension
+    url: https://schema.org/Place
+    
+    subtypes:
+      - Accommodation
+      
+      - AdministrativeArea:
+        description: A geographical region under administrative control
+        subtypes:
+          - City
+          - Country:
+            description: A country
+          - State
+      
+      - CivicStructure
+      - Landform
+      - LandmarksOrHistoricalBuildings
+      - LocalBusiness
+      - Residence
+      - TouristAttraction
+      - TouristDestination
+  
+  Product:
+    description: Any offered product or service
+    url: https://schema.org/Product
+    subtypes:
+      - IndividualProduct
+      - ProductCollection
+      - ProductGroup
+      - ProductModel
+      - SomeProducts
+      - Vehicle
+
+# Data Types (primitive types used throughout)
+DataType:
+  description: Basic data types
+  
+  Boolean:
+    description: Boolean value (true or false)
+  
+  Date:
+    description: A date value in ISO 8601 date format
+  
+  DateTime:
+    description: A combination of date and time in ISO 8601 format
+  
+  Number:
+    description: Data type representing Numbers
+    subtypes:
+      - Float:
+          description: Floating point number
+      - Integer:
+          description: Whole number
+  
+  Text:
+    description: Data type for text strings
+    subtypes:
+      - CssSelectorType:
+          description: CSS selector type
+      - PronounceableText:
+          description: Text that can be pronounced
+      - URL:
+          description: URL data type
+      - XPathType:
+          description: XPath type
+  
+  Time:
+    description: A point in time recurring on multiple days

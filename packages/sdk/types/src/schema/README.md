@@ -1,0 +1,49 @@
+# Schema.org
+
+Below is a select list of types from Schema.org.
+
+- DataType
+  - Boolean
+  - Date
+  - DateTime
+  - Number
+    - Float
+    - Integer
+  - Text
+    - URL
+  - Time
+
+- Thing
+  - Action
+  - CreativeWork
+    - Comment
+    - Dataset
+      - DataFeed
+    - MediaObject
+      - TextObject
+  - Event
+  - Intangible
+    - Class
+    - DefinedTerm
+    - Enumeration
+    - ItemList
+    - Occupation
+    - Order
+    - OrderItem
+    - Quantity
+    - Reservation
+    - Schedule
+    - Service
+    - StructuredValue
+      - ContactPoint
+        - PostalAddress
+      - GeoShape
+      - PropertyValue
+      - QuantitativeValue
+    - Trip
+  - Organization
+  - Person
+  - Place
+    - Country
+  - Product
+  - Reservation
