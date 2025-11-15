@@ -35,7 +35,7 @@ export const MailboxEmpty = ({ mailbox }: { mailbox: Mailbox.Mailbox }) => {
   }, [space, dispatch]);
 
   // TODO(ZaymonFC): This should be generalised to all tokens that can be used to source messages.
-  const gmailToken = tokens.find((t) => t.source.includes('gmail'));
+  const gmailToken = tokens.find((t) => t.source.includes('google'));
   if (!gmailToken) {
     return (
       <div className='flex flex-col items-center gap-4 p-8'>
