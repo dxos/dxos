@@ -50,8 +50,8 @@ export enum PresetName {
   CHAT_GPT = 'chat-gpt-text',
   // EMAIL_WITH_SUMMARY = 'email-gptSummary-table',
   OBJECT_CHANGE_QUEUE = 'objectChange-queue',
-  FOREX_FUNCTION_CALL = 'forex-function-call',
   TIMER_TICK_QUEUE = 'timerTick-queue',
+  FOREX_FUNCTION_CALL = 'forex-function-call',
   DISCORD_MESSAGES = 'discord-messages',
   // KANBAN_QUEUE = 'kanban-queue',
 }
@@ -64,18 +64,18 @@ export const generator = () => ({
       PresetName.DXOS_TEAM,
       async (space, n, cb) => {
         const objects = range(n, () => {
-          const tag = space.db.add(Tag.make({ label: 'Investor' }));
-          const tagDxn = Obj.getDXN(tag).toString();
-
           const org = space.db.add(Obj.make(Organization.Organization, { name: 'DXOS', website: 'https://dxos.org' }));
-
           const doc = space.db.add(
             Markdown.make({
               name: 'DXOS Research',
               content: 'DXOS builds Composer, an open-source AI-powered malleable application.',
             }),
           );
+
+          const tag = space.db.add(Tag.make({ label: 'Investor' }));
+          const tagDxn = Obj.getDXN(tag).toString();
           Obj.getMeta(doc).tags = [tagDxn];
+
           // space.db.add(
           //   Relation.make(HasSubject, {
           //     [Relation.Source]: doc,
@@ -88,7 +88,6 @@ export const generator = () => ({
           space.db.add(Obj.make(Person.Person, { fullName: 'Josiah', organization: Ref.make(org) }));
           space.db.add(Obj.make(Person.Person, { fullName: 'Dima', organization: Ref.make(org) }));
           space.db.add(Obj.make(Person.Person, { fullName: 'Mykola', organization: Ref.make(org) }));
-          space.db.add(Obj.make(Person.Person, { fullName: 'Will', organization: Ref.make(org) }));
 
           return doc;
         });
@@ -108,32 +107,34 @@ export const generator = () => ({
           const organizationsQuery = Query.select(Filter.type(Organization.Organization)).select(Filter.tag(tagDxn));
           const notesQuery = Query.select(Filter.type(Markdown.Document)).select(Filter.tag(tagDxn));
 
-          const emailSyncTrigger = Trigger.make({
-            enabled: true,
-            spec: {
-              kind: 'timer',
-              cron: '* * * * *', // Every minute.
-            },
-            function: Ref.make(serializeFunction(gmail.sync)),
-            input: {
-              mailboxId: Obj.getDXN(mailbox).toString(),
-            },
-          });
-          space.db.add(emailSyncTrigger);
+          space.db.add(
+            Trigger.make({
+              enabled: true,
+              spec: {
+                kind: 'timer',
+                cron: '* * * * *', // Every minute.
+              },
+              function: Ref.make(serializeFunction(gmail.sync)),
+              input: {
+                mailboxId: Obj.getDXN(mailbox).toString(),
+              },
+            }),
+          );
 
-          const contactExtractionTrigger = Trigger.make({
-            enabled: true,
-            // TODO(wittjosiah): Queue trigger doesn't support matching query of the column.
-            spec: {
-              kind: 'queue',
-              queue: mailbox.queue.dxn.toString(),
-            },
-            function: Ref.make(serializeFunction(EntityExtraction.extract)),
-            input: {
-              source: '{{event.item}}',
-            },
-          });
-          space.db.add(contactExtractionTrigger);
+          space.db.add(
+            Trigger.make({
+              enabled: true,
+              // TODO(wittjosiah): Queue trigger doesn't support matching query of the column.
+              spec: {
+                kind: 'queue',
+                queue: mailbox.queue.dxn.toString(),
+              },
+              function: Ref.make(serializeFunction(EntityExtraction.extract)),
+              input: {
+                source: '{{event.item}}',
+              },
+            }),
+          );
 
           const researchPrompt = space.db.add(
             Prompt.make({
@@ -155,21 +156,22 @@ export const generator = () => ({
             }),
           );
 
-          const researchTrigger = Trigger.make({
-            enabled: true,
-            spec: {
-              kind: 'subscription',
-              query: {
-                ast: organizationsQuery.ast,
+          space.db.add(
+            Trigger.make({
+              enabled: true,
+              spec: {
+                kind: 'subscription',
+                query: {
+                  ast: organizationsQuery.ast,
+                },
               },
-            },
-            function: Ref.make(serializeFunction(Agent.prompt)),
-            input: {
-              prompt: Ref.make(researchPrompt),
-              input: '{{event.subject}}',
-            },
-          });
-          space.db.add(researchTrigger);
+              function: Ref.make(serializeFunction(Agent.prompt)),
+              input: {
+                prompt: Ref.make(researchPrompt),
+                input: '{{event.subject}}',
+              },
+            }),
+          );
 
           const mailboxView = View.make({
             name: 'Mailbox',

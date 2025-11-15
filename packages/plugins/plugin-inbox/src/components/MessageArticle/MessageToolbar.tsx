@@ -14,8 +14,9 @@ import {
   useMenuActions,
 } from '@dxos/react-ui-menu';
 
-import { meta } from '../../../meta';
-import { type ViewMode } from '../MessageHeader';
+import { meta } from '../../meta';
+
+import { type ViewMode } from './MessageHeader';
 
 /**
  * Creates a view mode toggle action based on the current view mode

@@ -10,9 +10,9 @@ import { mx } from '@dxos/react-ui-theme';
 import { type Person } from '@dxos/types';
 
 import { CardRow, CardSubjectMenu, gridRow } from '../components';
-import { type PreviewProps } from '../types';
+import { type CardPreviewProps } from '../types';
 
-export const PersonCard = ({ children, role, subject, activeSpace, onSelect }: PreviewProps<Person.Person>) => {
+export const PersonCard = ({ children, role, subject, activeSpace, onSelect }: CardPreviewProps<Person.Person>) => {
   const { fullName, image, organization: { target: organization } = {}, emails = [] } = subject;
 
   return (
