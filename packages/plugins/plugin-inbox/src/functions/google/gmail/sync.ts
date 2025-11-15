@@ -19,13 +19,14 @@ import { DXN } from '@dxos/echo';
 import { DatabaseService, QueueService, defineFunction } from '@dxos/functions';
 import { type Message } from '@dxos/types';
 
-// TODO(burdon): Importing from types/index.ts pulls in @dxos/client dependencies.
-import * as Mailbox from '../../types/Mailbox';
+// TODO(burdon): Importing from types/index.ts pulls in @dxos/client dependencies due to SpaceSchema.
+import * as Mailbox from '../../../types/Mailbox';
+import { GoogleMail } from '../../apis';
 
-import { getMessage, listMessages, messageToObject } from './api';
+import { mapMessage } from './mapper';
 
 export default defineFunction({
-  key: 'dxos.org/function/inbox/gmail-sync',
+  key: 'dxos.org/function/inbox/google-mail-sync',
   name: 'Sync Gmail',
   description: 'Sync emails from Gmail to the mailbox.',
   inputSchema: Schema.Struct({
@@ -68,7 +69,7 @@ export default defineFunction({
           : `in:inbox after:${after}`;
         const pageToken = yield* Ref.get(nextPage);
         yield* Console.log('requesting messages', { q, pageToken });
-        const { messages, nextPageToken } = yield* listMessages(userId, q, pageSize, pageToken);
+        const { messages, nextPageToken } = yield* GoogleMail.listMessages(userId, q, pageSize, pageToken);
         yield* Ref.update(nextPage, () => nextPageToken);
 
         // Process messges.
@@ -77,8 +78,8 @@ export default defineFunction({
           Array.map((message) =>
             Function.pipe(
               // Retrieve details.
-              getMessage(userId, message.id),
-              Effect.flatMap(messageToObject(last)),
+              GoogleMail.getMessage(userId, message.id),
+              Effect.flatMap(mapMessage(last)),
             ),
           ),
           Effect.all,

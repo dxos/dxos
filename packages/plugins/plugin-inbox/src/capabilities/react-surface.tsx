@@ -17,8 +17,8 @@ import { View, getTypenameFromQuery } from '@dxos/schema';
 import { Message, Organization, Person } from '@dxos/types';
 
 import {
-  CalendarContainer,
-  MailboxContainer,
+  CalendarArticle,
+  MailboxArticle,
   MailboxObjectSettings,
   MessageCard,
   MessageContainer,
@@ -34,7 +34,7 @@ export default () =>
   contributes(Capabilities.ReactSurface, [
     createSurface({
       id: `${meta.id}/mailbox`,
-      role: ['article', 'section'],
+      role: ['article'],
       filter: (
         data,
       ): data is {
@@ -42,14 +42,9 @@ export default () =>
         subject: Mailbox.Mailbox;
         properties: { filter?: string };
       } => Obj.instanceOf(Mailbox.Mailbox, data.subject),
-      component: ({ data, role }) => {
+      component: ({ data }) => {
         return (
-          <MailboxContainer
-            mailbox={data.subject}
-            role={role}
-            attendableId={data.attendableId}
-            filter={data.properties?.filter}
-          />
+          <MailboxArticle object={data.subject} filter={data.properties?.filter} attendableId={data.attendableId} />
         );
       },
     }),
@@ -73,9 +68,9 @@ export default () =>
     }),
     createSurface({
       id: `${meta.id}/calendar`,
-      role: ['article', 'section'],
+      role: ['article'],
       filter: (data): data is { subject: Calendar.Calendar } => Obj.instanceOf(Calendar.Calendar, data.subject),
-      component: ({ data, role }) => <CalendarContainer calendar={data.subject} role={role} />,
+      component: ({ data }) => <CalendarArticle object={data.subject} />,
     }),
     createSurface({
       id: `${meta.id}/message-card`,
