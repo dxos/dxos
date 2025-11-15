@@ -22,7 +22,7 @@ import { getHashStyles, mx } from '@dxos/react-ui-theme';
 import { type Message } from '@dxos/types';
 import { trim } from '@dxos/util';
 
-import { filterLabel } from '../../functions/email/api';
+import { GoogleMail } from '../../functions/apis';
 import { getMessageProps } from '../../util';
 
 const ROW_SIZES = {
@@ -68,7 +68,8 @@ const renderMessageCell = (message: Message.Message, now: Date, current?: boolea
         <div class="message__snippet">${subject}</div>
         <div class="message__tags">
           ${((tags && Obj.getMeta(message).tags) ?? [])
-            .filter(filterLabel)
+            // TODO(burdon): Tags are no longer labels.
+            .filter((tagId: string) => !GoogleMail.isSystemLabel(tagId))
             .map((tagId: string) => ({ hue: getHashStyles(tagId).hue, ...tags![tagId] }))
             .filter(Boolean)
             .map(
@@ -93,7 +94,6 @@ export type MailboxActionHandler = (action: MailboxAction) => void;
 
 export type MailboxProps = {
   id: string;
-  role?: string;
   messages: Message.Message[];
   tags?: Tag.Map;
   currentMessageId?: string;
@@ -101,7 +101,7 @@ export type MailboxProps = {
   onAction?: MailboxActionHandler;
 };
 
-export const Mailbox = ({ id, role, messages, tags, currentMessageId, ignoreAttention, onAction }: MailboxProps) => {
+export const Mailbox = ({ id, messages, tags, currentMessageId, ignoreAttention, onAction }: MailboxProps) => {
   const { hasAttention } = useAttention(id);
   const [columnDefault, setColumnDefault] = useState(messageColumnDefault);
   const [_, setRow, rowRef] = useStateWithRef<number>(-1);
@@ -209,14 +209,7 @@ export const Mailbox = ({ id, role, messages, tags, currentMessageId, ignoreAtte
   }, [messages]);
 
   return (
-    <div
-      role='none'
-      className={mx(
-        'flex flex-col [&_.dx-grid]:grow',
-        role !== 'section' && '[&_.dx-grid]:bs-0',
-        role === 'story' && 'bs-full',
-      )}
-    >
+    <div role='none' className={mx('flex flex-col [&_.dx-grid]:grow')}>
       <Grid.Root id={`${id}__grid`}>
         <Grid.Content
           className={mx(

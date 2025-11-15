@@ -19,17 +19,17 @@ import { DXN } from '@dxos/echo';
 import { DatabaseService, QueueService, defineFunction } from '@dxos/functions';
 import { type Event } from '@dxos/types';
 
-// TODO(burdon): Importing from types/index.ts pulls in @dxos/client dependencies.
-import * as Calendar from '../../types/Calendar';
+// TODO(burdon): Importing from types/index.ts pulls in @dxos/client dependencies due to SpaceSchema.
+import * as Calendar from '../../../types/Calendar';
+import { GoogleCalendar } from '../../apis';
 
-import { eventToObject, listEventsByStartTime, listEventsByUpdated } from './api';
-import { type CalendarEvent } from './types';
+import { mapEvent } from './mapper';
 
 export default defineFunction({
-  key: 'dxos.org/function/inbox/calendar-sync',
+  key: 'dxos.org/function/inbox/google-calendar-sync',
   name: 'Sync Google Calendar',
   description:
-    'Sync events from Google Calendar. Initial sync uses startTime ordering for specified number of days. Subsequent syncs use updatedMin to catch all changes.',
+    'Sync events from Google Calendar. The initial sync uses startTime ordering for specified number of days. Subsequent syncs use updatedMin to catch all changes.',
   inputSchema: Schema.Struct({
     calendarId: ArtifactId,
     googleCalendarId: Schema.optional(Schema.String),
@@ -114,7 +114,7 @@ const performInitialSync = Effect.fn(function* (
   do {
     const pageToken = yield* Ref.get(nextPage);
     yield* Console.log('requesting events by start time', { timeMin, timeMax, pageToken });
-    const { items, nextPageToken } = yield* listEventsByStartTime(
+    const { items, nextPageToken } = yield* GoogleCalendar.listEventsByStartTime(
       googleCalendarId,
       timeMin,
       timeMax,
@@ -143,7 +143,12 @@ const performIncrementalSync = Effect.fn(function* (
   do {
     const pageToken = yield* Ref.get(nextPage);
     yield* Console.log('requesting events by updated time', { updatedMin, pageToken });
-    const { items, nextPageToken } = yield* listEventsByUpdated(googleCalendarId, updatedMin, pageSize, pageToken);
+    const { items, nextPageToken } = yield* GoogleCalendar.listEventsByUpdated(
+      googleCalendarId,
+      updatedMin,
+      pageSize,
+      pageToken,
+    );
     yield* Ref.update(nextPage, () => nextPageToken);
 
     yield* processEvents(items, newEvents, latestUpdate);
@@ -153,8 +158,9 @@ const performIncrementalSync = Effect.fn(function* (
 /**
  * Processes a batch of calendar events: tracks timestamps and transforms to DXOS objects.
  */
+// TODO(burdon): Don't store repeating events multiple times.
 const processEvents = Effect.fn(function* (
-  items: readonly CalendarEvent[],
+  items: readonly GoogleCalendar.Event[],
   newEvents: Ref.Ref<Event.Event[]>,
   latestUpdate: Ref.Ref<string | undefined>,
 ) {
@@ -164,6 +170,7 @@ const processEvents = Effect.fn(function* (
       if (event.updated && (!max || event.updated > max)) {
         return event.updated;
       }
+
       return max;
     }, '');
     if (maxUpdated) {
@@ -173,13 +180,13 @@ const processEvents = Effect.fn(function* (
 
   // Transform events to DXOS objects.
   // TODO(wittjosiah): Handle event updates vs new events.
-  //   - Set foreignId (event.id) in object meta to track Google Calendar event ID.
-  //   - Check if event already exists in queue using foreignId.
-  //   - For existing events: update the existing queue entry rather than appending a new one.
-  //   - For new events: append to queue as we do now.
+  //  - Set foreignId (event.id) in object meta to track Google Calendar event ID.
+  //  - Check if event already exists in queue using foreignId.
+  //  - For existing events: update the existing queue entry rather than appending a new one.
+  //  - For new events: append to queue as we do now.
   const eventObjects = yield* Function.pipe(
     items,
-    Array.map((event) => eventToObject()(event)),
+    Array.map((event) => mapEvent()(event)),
     Effect.all,
     Effect.map((objects) => Array.filter(objects, Predicate.isNotNullable)),
   );
