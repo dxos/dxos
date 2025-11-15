@@ -19,9 +19,9 @@ import { Message, Organization, Person } from '@dxos/types';
 import {
   CalendarArticle,
   MailboxArticle,
-  MailboxObjectSettings,
+  MailboxSettings,
+  MessageArticle,
   MessageCard,
-  MessageContainer,
   POPOVER_SAVE_FILTER,
   PopoverSaveFilter,
   RelatedContacts,
@@ -44,39 +44,30 @@ export default () =>
       } => Obj.instanceOf(Mailbox.Mailbox, data.subject),
       component: ({ data }) => {
         return (
-          <MailboxArticle object={data.subject} filter={data.properties?.filter} attendableId={data.attendableId} />
+          <MailboxArticle subject={data.subject} filter={data.properties?.filter} attendableId={data.attendableId} />
         );
       },
     }),
     createSurface({
       id: `${meta.id}/message`,
       role: ['article', 'section'],
-      filter: (data): data is { companionTo: Mailbox.Mailbox; subject: Message.Message | 'message' } =>
-        Obj.instanceOf(Mailbox.Mailbox, data.companionTo) &&
-        (data.subject === 'message' || Obj.instanceOf(Message.Message, data.subject)),
+      filter: (data): data is { companionTo: Mailbox.Mailbox; subject: Message.Message } =>
+        Obj.instanceOf(Mailbox.Mailbox, data.companionTo) && Obj.instanceOf(Message.Message, data.subject),
       component: ({ data: { companionTo, subject: message }, role }) => {
-        const space = getSpace(companionTo);
-        return (
-          <MessageContainer
-            message={typeof message === 'string' ? undefined : message}
-            space={space}
-            mailbox={companionTo}
-            role={role}
-          />
-        );
+        return <MessageArticle role={role as 'article' | 'section'} subject={message} mailbox={companionTo} />;
       },
     }),
     createSurface({
       id: `${meta.id}/calendar`,
       role: ['article'],
       filter: (data): data is { subject: Calendar.Calendar } => Obj.instanceOf(Calendar.Calendar, data.subject),
-      component: ({ data }) => <CalendarArticle object={data.subject} />,
+      component: ({ data }) => <CalendarArticle subject={data.subject} />,
     }),
     createSurface({
       id: `${meta.id}/message-card`,
       role: ['card', 'card--intrinsic', 'card--extrinsic', 'card--popover', 'card--transclusion'],
       filter: (data): data is { subject: Message.Message } => Obj.instanceOf(Message.Message, data?.subject),
-      component: ({ data: { subject: message }, role }) => <MessageCard message={message} role={role} />,
+      component: ({ data: { subject: message }, role }) => <MessageCard subject={message} role={role} />,
     }),
     createSurface({
       id: POPOVER_SAVE_FILTER,
@@ -95,7 +86,7 @@ export default () =>
       id: `${meta.id}/mailbox/companion/settings`,
       role: 'object-settings',
       filter: (data): data is { subject: Mailbox.Mailbox } => Obj.instanceOf(Mailbox.Mailbox, data.subject),
-      component: ({ data }) => <MailboxObjectSettings object={data.subject} />,
+      component: ({ data }) => <MailboxSettings subject={data.subject} />,
     }),
 
     // TODO(wittjosiah): Generalize the mess below.

@@ -8,7 +8,7 @@ import React, { useCallback } from 'react';
 import { LayoutAction, chain, createIntent } from '@dxos/app-framework';
 import { useIntentDispatcher } from '@dxos/app-framework/react';
 import { Obj } from '@dxos/echo';
-import { type PreviewProps } from '@dxos/plugin-preview';
+import { type CardPreviewProps } from '@dxos/plugin-preview';
 import { IconButton, useTranslation } from '@dxos/react-ui';
 import { Card } from '@dxos/react-ui-stack';
 import { Text } from '@dxos/schema';
@@ -17,7 +17,7 @@ import { meta } from '../../meta';
 import { Markdown } from '../../types';
 import { getContentSnippet, getFallbackName } from '../../util';
 
-export type MarkdownCardProps = PreviewProps<Markdown.Document | Text.Text>;
+export type MarkdownCardProps = CardPreviewProps<Markdown.Document | Text.Text>;
 
 export const MarkdownCard = ({ subject, role }: MarkdownCardProps) => {
   const { dispatchPromise: dispatch } = useIntentDispatcher();
