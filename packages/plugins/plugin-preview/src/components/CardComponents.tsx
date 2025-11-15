@@ -8,7 +8,7 @@ import { Button, Icon } from '@dxos/react-ui';
 import { Card, cardNoSpacing, cardSpacing } from '@dxos/react-ui-stack';
 import { mx } from '@dxos/react-ui-theme';
 
-import { type PreviewProps } from '../types';
+import { type CardPreviewProps } from '../types';
 
 import { CardSubjectMenu } from './CardSubjectMenu';
 
@@ -16,7 +16,7 @@ export const gridRow = 'is-full grid grid-cols-[1.5rem_1fr_min-content] gap-2 it
 
 // TODO(burdon): Standardize card grid for common rows.
 
-export const CardHeader = ({ label, subject, activeSpace }: { label?: string } & PreviewProps) => {
+export const CardHeader = ({ label, subject, activeSpace }: { label?: string } & CardPreviewProps) => {
   return (
     <div role='none' className={mx('flex items-center gap-2', cardSpacing)}>
       <Card.Heading classNames={cardNoSpacing}>{label}</Card.Heading>

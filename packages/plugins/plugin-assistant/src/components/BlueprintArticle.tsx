@@ -15,13 +15,13 @@ import { TemplateEditor } from './TemplateEditor';
 
 export type BlueprintArticleProps = SurfaceComponentProps<Blueprint.Blueprint>;
 
-export const BlueprintArticle = ({ object }: BlueprintArticleProps) => {
-  const { hasAttention } = useAttention(Obj.getDXN(object).toString());
+export const BlueprintArticle = ({ subject }: BlueprintArticleProps) => {
+  const { hasAttention } = useAttention(Obj.getDXN(subject).toString());
 
   return (
     <StackItem.Content toolbar>
       <Toolbar.Root disabled={!hasAttention} />
-      <TemplateEditor id={object.id} template={object.instructions} classNames='container-max-width' />
+      <TemplateEditor id={subject.id} template={subject.instructions} classNames='container-max-width' />
     </StackItem.Content>
   );
 };

@@ -2,13 +2,13 @@
 // Copyright 2023 DXOS.org
 //
 
-import { lazy } from 'react';
+import { type ComponentType, lazy } from 'react';
 
-export * from './Mailbox';
-export * from './PopoverSaveFilter';
+export * from './MailboxSettings';
+export * from './MailboxArticle';
 export * from './Related';
 
-export const CalendarArticle = lazy(() => import('./Calendar'));
-export const MailboxArticle = lazy(() => import('./Mailbox'));
-export const MessageCard = lazy(() => import('./MessageCard'));
-export const MessageContainer = lazy(() => import('./MessageContainer'));
+export const CalendarArticle: ComponentType<any> = lazy(() => import('./CalendarArticle'));
+export const MailboxArticle: ComponentType<any> = lazy(() => import('./MailboxArticle'));
+export const MessageArticle: ComponentType<any> = lazy(() => import('./MessageArticle'));
+export const MessageCard: ComponentType<any> = lazy(() => import('./MessageCard'));

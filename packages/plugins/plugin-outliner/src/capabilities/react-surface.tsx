@@ -19,7 +19,7 @@ export default () => [
       role: ['article', 'section'],
       filter: (data): data is { subject: Journal.Journal } => Obj.instanceOf(Journal.Journal, data.subject),
       component: ({ role, data }) => (
-        <JournalContainer role={role as SurfaceComponentProps['role']} object={data.subject} />
+        <JournalContainer role={role as SurfaceComponentProps['role']} subject={data.subject} />
       ),
     }),
     createSurface({
@@ -27,14 +27,14 @@ export default () => [
       role: ['article', 'section'],
       filter: (data): data is { subject: Outline.Outline } => Obj.instanceOf(Outline.Outline, data.subject),
       component: ({ role, data }) => (
-        <OutlineContainer role={role as SurfaceComponentProps['role']} object={data.subject} />
+        <OutlineContainer role={role as SurfaceComponentProps['role']} subject={data.subject} />
       ),
     }),
     createSurface({
       id: `${meta.id}/card/outline`,
       role: ['card'],
       filter: (data): data is { subject: Outline.Outline } => Obj.instanceOf(Outline.Outline, data.subject),
-      component: ({ data }) => <OutlineCard object={data.subject} />,
+      component: ({ data }) => <OutlineCard subject={data.subject} />,
     }),
   ]),
 ];

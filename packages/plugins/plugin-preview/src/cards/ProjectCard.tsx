@@ -9,9 +9,9 @@ import { Card } from '@dxos/react-ui-stack';
 import { type Project } from '@dxos/types';
 
 import { CardHeader } from '../components';
-import { type PreviewProps } from '../types';
+import { type CardPreviewProps } from '../types';
 
-export const ProjectCard = ({ subject, role, activeSpace }: PreviewProps<Project.Project>) => {
+export const ProjectCard = ({ subject, role, activeSpace }: CardPreviewProps<Project.Project>) => {
   const { name, image, description } = subject;
 
   return (

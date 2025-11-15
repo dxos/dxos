@@ -16,11 +16,11 @@ import { isNonNullable } from '@dxos/util';
 
 import { meta } from '../meta';
 
-export const RecordArticle = ({ object }: SurfaceComponentProps) => {
+export const RecordArticle = ({ subject }: SurfaceComponentProps) => {
   const { t } = useTranslation(meta.id);
-  const space = getSpace(object);
-  const data = useMemo(() => ({ subject: object }), [object]);
-  const related = useRelatedObjects(space, object, {
+  const space = getSpace(subject);
+  const data = useMemo(() => ({ subject }), [subject]);
+  const related = useRelatedObjects(space, subject, {
     references: true,
     relations: true,
   });
