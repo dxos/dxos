@@ -12,7 +12,7 @@ import { Event } from '@dxos/types';
 
 import { type Calendar } from '../../types';
 
-import { EventList } from './EventtList';
+import { EventList } from './EventList';
 
 const byDate =
   (direction = -1) =>
@@ -35,7 +35,8 @@ export const CalendarArticle = ({ object }: SurfaceComponentProps<Calendar.Calen
             <NaturalCalendar.Grid />
           </NaturalCalendar.Viewport>
         </NaturalCalendar.Root>
-        {/* TODO(burdon): Integrate into Calendar viewport. */}
+
+        {/* TODO(burdon): Integrate into Calendar viewport? */}
         <EventList events={objects} selected={selected?.id} onSelect={setSelected} />
       </div>
     </StackItem.Content>

@@ -18,7 +18,7 @@ export const Event = Schema.Struct({
   attendees: Schema.mutable(Schema.Array(Actor.Actor)),
   startDate: Schema.String, // TODO(burdon): Date.
   endDate: Schema.String,
-  links: Schema.mutable(Schema.Array(Type.Ref(Type.Expando))),
+  links: Schema.mutable(Schema.Array(Type.Ref(Type.Expando))), // TODO(burdon): ???
 }).pipe(
   Type.Obj({
     typename: 'dxos.org/type/Event',

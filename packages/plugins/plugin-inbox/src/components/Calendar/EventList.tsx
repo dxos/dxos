@@ -14,6 +14,11 @@ export type EventListProps = {
   onSelect?: (contact: Event.Event) => void;
 };
 
+// TODO(burdon): Event/Message Articles (in companion); with cards (1-UP).
+// TODO(burdon): Common virtualized list for Event/Message.
+// TODO(burdon): Common Actor reference (lookup on demand).
+
+// TODO(burdon): Virtualize (and reuse for email).
 export const EventList = ({ events = [], selected, onSelect }: EventListProps) => {
   return (
     <div className={mx('flex is-full overflow-y-auto')}>
@@ -23,7 +28,7 @@ export const EventList = ({ events = [], selected, onSelect }: EventListProps) =
             key={event.id}
             // TODO(burdon): Change bg-activeSurface to use data-active
             classNames={mx(
-              'flex flex-col cursor-pointer hover:bg-hoverSurface',
+              'flex flex-col cursor-pointer hover:bg-hoverOverlay',
               selected === event.id && 'bg-activeSurface',
             )}
             onClick={() => onSelect?.(event)}

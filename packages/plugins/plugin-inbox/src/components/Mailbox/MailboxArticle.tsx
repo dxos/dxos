@@ -60,7 +60,7 @@ export const MailboxArticle = ({
     filter ?? Filter.everything(),
   ) as Message.Message[];
   const sortedMessages = useMemo(
-    () => [...messages].sort(sortByCreated(sortDescending.value)),
+    () => [...messages].sort(sortByCreated('created', sortDescending.value)),
     [messages, sortDescending.value],
   );
 
