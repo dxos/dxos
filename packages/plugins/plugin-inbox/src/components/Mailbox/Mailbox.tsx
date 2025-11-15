@@ -93,7 +93,6 @@ export type MailboxActionHandler = (action: MailboxAction) => void;
 
 export type MailboxProps = {
   id: string;
-  role?: string;
   messages: Message.Message[];
   tags?: Tag.Map;
   currentMessageId?: string;
@@ -101,7 +100,7 @@ export type MailboxProps = {
   onAction?: MailboxActionHandler;
 };
 
-export const Mailbox = ({ id, role, messages, tags, currentMessageId, ignoreAttention, onAction }: MailboxProps) => {
+export const Mailbox = ({ id, messages, tags, currentMessageId, ignoreAttention, onAction }: MailboxProps) => {
   const { hasAttention } = useAttention(id);
   const [columnDefault, setColumnDefault] = useState(messageColumnDefault);
   const [_, setRow, rowRef] = useStateWithRef<number>(-1);
@@ -209,14 +208,7 @@ export const Mailbox = ({ id, role, messages, tags, currentMessageId, ignoreAtte
   }, [messages]);
 
   return (
-    <div
-      role='none'
-      className={mx(
-        'flex flex-col [&_.dx-grid]:grow',
-        role !== 'section' && '[&_.dx-grid]:bs-0',
-        role === 'story' && 'bs-full',
-      )}
-    >
+    <div role='none' className={mx('flex flex-col [&_.dx-grid]:grow')}>
       <Grid.Root id={`${id}__grid`}>
         <Grid.Content
           className={mx(

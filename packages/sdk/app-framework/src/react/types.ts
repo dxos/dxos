@@ -6,6 +6,7 @@ import { type Obj } from '@dxos/echo';
 
 // TODO(burdon): PluginSettings, ObjectSettings.
 // TODO(burdon): Base class for surface components.
+// TODO(burdon): Include attendableId?
 
 export type SurfaceComponentProps<T extends Obj.Any = Obj.Any, Props = {}> = {
   role?: 'article' | 'section' | 'card';
