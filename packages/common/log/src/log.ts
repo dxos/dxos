@@ -6,7 +6,7 @@ import { type LogConfig, LogLevel, type LogOptions } from './config';
 import { type LogContext, type LogProcessor } from './context';
 import { createFunctionLogDecorator, createMethodLogDecorator } from './decorators';
 import { type CallMetadata } from './meta';
-import { DEFAULT_PROCESSORS, createConfig } from './options';
+import { createConfig } from './options';
 
 /**
  * Accessible from browser console.
@@ -24,6 +24,9 @@ type LogFunction = (message: string, context?: LogContext, meta?: CallMetadata) 
  * Logging methods.
  */
 export interface LogMethods {
+  config: (options: LogOptions) => Log;
+  addProcessor: (processor: LogProcessor, addDefault?: boolean) => () => void;
+
   trace: LogFunction;
   debug: LogFunction;
   verbose: LogFunction;
@@ -31,9 +34,6 @@ export interface LogMethods {
   warn: LogFunction;
   error: LogFunction;
   catch: (error: Error | any, context?: LogContext, meta?: CallMetadata) => void;
-
-  break: () => void;
-  stack: (message?: string, context?: never, meta?: CallMetadata) => void;
 
   method: (arg0?: never, arg1?: never, meta?: CallMetadata) => MethodDecorator;
   function: <F extends (...args: any[]) => any>(
@@ -43,46 +43,47 @@ export interface LogMethods {
       transformOutput?: (result: ReturnType<F>) => Promise<any> | any;
     },
   ) => F;
+
+  break: () => void;
+  stack: (message?: string, context?: never, meta?: CallMetadata) => void;
 }
 
 /**
  * Properties accessible on the logging function.
  * @internal
  */
-export interface Log extends LogMethods, LogFunction {
+export interface Log extends LogFunction, LogMethods {
   readonly runtimeConfig: LogConfig;
-  config: (options: LogOptions) => Log;
-  addProcessor: (processor: LogProcessor) => Log;
-}
-
-interface LogImp extends Log {
-  _config: LogConfig;
 }
 
 /**
  * @internal
  */
+interface LogImp extends Log {
+  _id: string;
+  _config: LogConfig;
+}
+
+let logCount = 0;
+
+/**
+ * Create a logging function with properties.
+ * @internal
+ */
 export const createLog = (): LogImp => {
+  // Default function.
   const log: LogImp = ((...params) => processLog(LogLevel.DEBUG, ...params)) as LogImp;
-  log._config = createConfig();
+
+  // Add private properties.
+  Object.assign<LogImp, Partial<LogImp>>(log, {
+    _id: `log-${++logCount}`,
+    _config: createConfig(),
+  });
+
+  // TODO(burdon): Document.
   Object.defineProperty(log, 'runtimeConfig', {
     get: () => log._config,
   });
-
-  log.config = (options) => {
-    log._config = createConfig(options);
-    return log;
-  };
-
-  log.addProcessor = (processor) => {
-    if (DEFAULT_PROCESSORS.filter((p) => p === processor).length === 0) {
-      DEFAULT_PROCESSORS.push(processor);
-    }
-    if (log._config.processors.filter((p) => p === processor).length === 0) {
-      log._config.processors.push(processor);
-    }
-    return log;
-  };
 
   /**
    * Process the current log call.
@@ -94,7 +95,7 @@ export const createLog = (): LogImp => {
     meta?: CallMetadata,
     error?: Error,
   ) => {
-    // TODO(burdon): Do filter match upstream here.
+    // TODO(burdon): Do the filter matching upstream (here) rather than in each processor?
     log._config.processors.forEach((processor) =>
       processor(log._config, {
         level,
@@ -110,20 +111,47 @@ export const createLog = (): LogImp => {
    * API.
    */
   Object.assign<Log, LogMethods>(log, {
+    /**
+     * Update config.
+     * NOTE: Preserves any processors that were already added to this logger instance
+     * unless an explicit processor option is provided.
+     */
+    config: ({ processor, ...options }) => {
+      const config = createConfig(options);
+      // TODO(burdon): This could be buggy since the behavior is not reentrant.
+      const processors = processor ? config.processors : log._config.processors;
+      log._config = { ...config, processors };
+      return log;
+    },
+
+    /**
+     * Adds a processor to the logger.
+     */
+    addProcessor: (processor) => {
+      if (log._config.processors.filter((p) => p === processor).length === 0) {
+        log._config.processors.push(processor);
+      }
+
+      return () => {
+        log._config.processors = log._config.processors.filter((p) => p !== processor);
+      };
+    },
+
     trace: (...params) => processLog(LogLevel.TRACE, ...params),
     debug: (...params) => processLog(LogLevel.DEBUG, ...params),
     verbose: (...params) => processLog(LogLevel.VERBOSE, ...params),
     info: (...params) => processLog(LogLevel.INFO, ...params),
     warn: (...params) => processLog(LogLevel.WARN, ...params),
     error: (...params) => processLog(LogLevel.ERROR, ...params),
-    catch: (error: Error | any, context, meta) => processLog(LogLevel.ERROR, undefined, context, meta, error),
-
-    break: () => log.info('-'.repeat(80)),
-    stack: (message, context, meta) =>
-      processLog(LogLevel.INFO, `${message ?? 'Stack Dump'}\n${getFormattedStackTrace()}`, context, meta),
+    catch: (error, context, meta) => processLog(LogLevel.ERROR, undefined, context, meta, error),
 
     method: createMethodLogDecorator(log),
     function: createFunctionLogDecorator(log),
+
+    break: () => log.info('-'.repeat(80)),
+    stack: (message, context, meta) => {
+      return processLog(LogLevel.INFO, `${message ?? 'Stack Dump'}\n${getFormattedStackTrace()}`, context, meta);
+    },
   });
 
   return log;

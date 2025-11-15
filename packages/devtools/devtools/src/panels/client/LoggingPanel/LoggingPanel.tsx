@@ -32,14 +32,14 @@ export const LoggingPanel = () => {
   const [text, setText] = useState('');
   // TODO(burdon): Store in context.
   const [query, setQuery] = useState<QueryLogsRequest>({});
-  const onSearchChange = (text: string) => {
+  const handleSearchChange = useCallback((text: string) => {
     setText(text);
     if (!text) {
       setQuery({});
     }
 
     setQuery({ filters: parseFilter(text) });
-  };
+  }, []);
 
   // Logs.
   // TODO(wittjosiah): `useStream` probably doesn't make sense here.
@@ -55,7 +55,12 @@ export const LoggingPanel = () => {
 
   const properties: TablePropertyDefinition[] = useMemo(
     () => [
-      { name: 'timestamp', format: FormatEnum.DateTime, sort: 'desc' as const, size: 194 },
+      {
+        name: 'timestamp',
+        format: FormatEnum.DateTime,
+        sort: 'desc' as const,
+        size: 194,
+      },
       {
         name: 'level',
         format: FormatEnum.SingleSelect,
@@ -71,8 +76,15 @@ export const LoggingPanel = () => {
           ],
         },
       },
-      { name: 'file', format: FormatEnum.String, size: 160 },
-      { name: 'message', format: FormatEnum.String },
+      {
+        name: 'file',
+        format: FormatEnum.String,
+        size: 160,
+      },
+      {
+        name: 'message',
+        format: FormatEnum.String,
+      },
     ],
     [],
   );
@@ -121,11 +133,10 @@ export const LoggingPanel = () => {
     <PanelContainer
       toolbar={
         <Toolbar.Root>
-          {/* TODO(wittjosiah): Reset selection value when typing manually in the searchbar. */}
-          <Select items={presets} onValueChange={onSearchChange} />
-          <Searchbar placeholder='Filter (e.g., "info", "client:debug")' value={text} onChange={onSearchChange} />
-          <Toolbar.IconButton icon='ph--download--regular' onClick={handleDownload} label='Download logs' />
-          <Toolbar.IconButton icon='ph--trash--regular' onClick={() => setLogs([])} label='Clear logs' />
+          <Select items={presets} onValueChange={handleSearchChange} />
+          <Searchbar placeholder='Filter (e.g., "info", "client:debug")' value={text} onChange={handleSearchChange} />
+          <Toolbar.IconButton icon='ph--download--regular' iconOnly onClick={handleDownload} label='Download logs' />
+          <Toolbar.IconButton icon='ph--x--regular' iconOnly onClick={() => setLogs([])} label='Clear logs' />
         </Toolbar.Root>
       }
     >
