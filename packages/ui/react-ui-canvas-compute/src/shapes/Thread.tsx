@@ -42,7 +42,7 @@ export const ThreadComponent = ({ shape }: ShapeComponentProps<ThreadShape>) => 
 
   return (
     <Box shape={shape}>
-      <div ref={scrollRef} className='flex flex-col is-full overflow-y-scroll gap-2 p-2'>
+      <div ref={scrollRef} className='flex flex-col is-full overflow-y-auto gap-2 p-2'>
         {[...items].map((item, i) => (
           <ThreadItem key={i} item={item} />
         ))}
