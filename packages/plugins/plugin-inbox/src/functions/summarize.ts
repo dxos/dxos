@@ -26,6 +26,7 @@ import { trim } from '@dxos/util';
 /**
  * Summarize a mailbox.
  */
+// TODO(wittjosiah): This is consistently failing.
 export default defineFunction({
   key: 'dxos.org/function/inbox/email-summarize',
   name: 'Summarize',
@@ -82,7 +83,7 @@ export default defineFunction({
     },
     Effect.provide(
       Layer.mergeAll(
-        AiService.model('@anthropic/claude-sonnet-4-0'),
+        AiService.model('@anthropic/claude-sonnet-4-5'),
         ToolResolverService.layerEmpty,
         ToolExecutionService.layerEmpty,
         TracingService.layerNoop,
