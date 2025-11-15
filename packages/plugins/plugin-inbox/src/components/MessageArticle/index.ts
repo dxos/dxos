@@ -2,6 +2,6 @@
 // Copyright 2025 DXOS.org
 //
 
-import { MessageContainer } from './MessageContainer';
+import { MessageArticle } from './MessageArticle';
 
-export default MessageContainer;
+export default MessageArticle;

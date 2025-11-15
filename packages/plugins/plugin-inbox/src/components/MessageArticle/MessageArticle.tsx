@@ -22,7 +22,7 @@ import { Message } from './Message';
 import { type ViewMode } from './MessageHeader';
 import { useMessageToolbarActions } from './MessageToolbar';
 
-export const MessageContainer = ({
+export const MessageArticle = ({
   object: message,
   mailbox,
 }: SurfaceComponentProps<MessageType.Message, { mailbox: Mailbox.Mailbox }>) => {
