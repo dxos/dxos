@@ -19,11 +19,11 @@ import { DXN } from '@dxos/echo';
 import { DatabaseService, QueueService, defineFunction } from '@dxos/functions';
 import { type Event } from '@dxos/types';
 
-// TODO(burdon): Importing from types/index.ts pulls in @dxos/client dependencies.
+// TODO(burdon): Importing from types/index.ts pulls in @dxos/client dependencies due to SpaceSchema.
 import * as Calendar from '../../types/Calendar';
+import { GoogleCalendar } from '../apis';
 
-import { eventToObject, listEventsByStartTime, listEventsByUpdated } from './api';
-import { type CalendarEvent } from './types';
+import { eventToObject } from './mapper';
 
 export default defineFunction({
   key: 'dxos.org/function/inbox/calendar-sync',
@@ -114,7 +114,7 @@ const performInitialSync = Effect.fn(function* (
   do {
     const pageToken = yield* Ref.get(nextPage);
     yield* Console.log('requesting events by start time', { timeMin, timeMax, pageToken });
-    const { items, nextPageToken } = yield* listEventsByStartTime(
+    const { items, nextPageToken } = yield* GoogleCalendar.listEventsByStartTime(
       googleCalendarId,
       timeMin,
       timeMax,
@@ -143,7 +143,12 @@ const performIncrementalSync = Effect.fn(function* (
   do {
     const pageToken = yield* Ref.get(nextPage);
     yield* Console.log('requesting events by updated time', { updatedMin, pageToken });
-    const { items, nextPageToken } = yield* listEventsByUpdated(googleCalendarId, updatedMin, pageSize, pageToken);
+    const { items, nextPageToken } = yield* GoogleCalendar.listEventsByUpdated(
+      googleCalendarId,
+      updatedMin,
+      pageSize,
+      pageToken,
+    );
     yield* Ref.update(nextPage, () => nextPageToken);
 
     yield* processEvents(items, newEvents, latestUpdate);
@@ -153,8 +158,9 @@ const performIncrementalSync = Effect.fn(function* (
 /**
  * Processes a batch of calendar events: tracks timestamps and transforms to DXOS objects.
  */
+// TODO(burdon): Don't store repeating events multiple times.
 const processEvents = Effect.fn(function* (
-  items: readonly CalendarEvent[],
+  items: readonly GoogleCalendar.Event[],
   newEvents: Ref.Ref<Event.Event[]>,
   latestUpdate: Ref.Ref<string | undefined>,
 ) {
@@ -164,6 +170,7 @@ const processEvents = Effect.fn(function* (
       if (event.updated && (!max || event.updated > max)) {
         return event.updated;
       }
+
       return max;
     }, '');
     if (maxUpdated) {

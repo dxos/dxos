@@ -13,7 +13,9 @@ import * as Layer from 'effect/Layer';
 import { CredentialsService } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 
-import { getMessage, listLabels, listMessages, messageToObject } from './api';
+import { GoogleMail } from '../apis';
+
+import { messageToObject } from './mapper';
 
 const TestLayer = Layer.mergeAll(
   CredentialsService.layerConfig([
@@ -39,7 +41,7 @@ describe.runIf(process.env.ACCESS_TOKEN)('Gmail API', { timeout: 30_000 }, () =>
     'get labels',
     Effect.fnUntraced(function* ({ expect }) {
       const userId = 'rich@braneframe.com';
-      const labels = yield* listLabels(userId);
+      const labels = yield* GoogleMail.listLabels(userId);
       console.log(JSON.stringify(labels, null, 2));
       expect(labels).to.exist;
     }, Effect.provide(TestLayer)),
@@ -49,13 +51,14 @@ describe.runIf(process.env.ACCESS_TOKEN)('Gmail API', { timeout: 30_000 }, () =>
     'get messages',
     Effect.fnUntraced(function* ({ expect }) {
       const userId = 'rich@braneframe.com';
-      // const { messages } = yield* listMessages(userId, 'label:investor', 50);
-      const { messages } = yield* listMessages(userId, 'maline', 50);
+      const { messages } = yield* GoogleMail.listMessages(userId, 'label:investor', 50);
       invariant(messages);
 
       const objects = yield* Function.pipe(
         messages.slice(1, 2),
-        Array.map((message) => Function.pipe(getMessage(userId, message.id), Effect.flatMap(messageToObject()))),
+        Array.map((message) =>
+          Function.pipe(GoogleMail.getMessage(userId, message.id), Effect.flatMap(messageToObject())),
+        ),
         Effect.all,
       );
 

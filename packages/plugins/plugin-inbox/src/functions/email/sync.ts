@@ -21,8 +21,9 @@ import { type Message } from '@dxos/types';
 
 // TODO(burdon): Importing from types/index.ts pulls in @dxos/client dependencies.
 import * as Mailbox from '../../types/Mailbox';
+import { GoogleMail } from '../apis';
 
-import { getMessage, listMessages, messageToObject } from './api';
+import { messageToObject } from './mapper';
 
 export default defineFunction({
   key: 'dxos.org/function/inbox/gmail-sync',
@@ -67,7 +68,7 @@ export default defineFunction({
           : `in:inbox after:${after}`;
         const pageToken = yield* Ref.get(nextPage);
         yield* Console.log('requesting messages', { q, pageToken });
-        const { messages, nextPageToken } = yield* listMessages(userId, q, pageSize, pageToken);
+        const { messages, nextPageToken } = yield* GoogleMail.listMessages(userId, q, pageSize, pageToken);
         yield* Ref.update(nextPage, () => nextPageToken);
 
         // Process messges.
@@ -76,7 +77,7 @@ export default defineFunction({
           Array.map((message) =>
             Function.pipe(
               // Retrieve details.
-              getMessage(userId, message.id),
+              GoogleMail.getMessage(userId, message.id),
               Effect.flatMap(messageToObject(last)),
             ),
           ),

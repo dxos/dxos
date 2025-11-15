@@ -22,7 +22,7 @@ import { getHashStyles, mx } from '@dxos/react-ui-theme';
 import { type Message } from '@dxos/types';
 import { trim } from '@dxos/util';
 
-import { filterLabel } from '../../functions/email/api';
+import { GoogleMail } from '../../functions/apis';
 import { getMessageProps } from '../../util';
 
 const ROW_SIZES = {
@@ -68,7 +68,8 @@ const renderMessageCell = (message: Message.Message, now: Date, current?: boolea
         <div class="message__snippet">${subject}</div>
         <div class="message__tags">
           ${((tags && Obj.getMeta(message).tags) ?? [])
-            .filter(filterLabel)
+            // TODO(burdon): Tags are no longer labels.
+            .filter((tagId: string) => !GoogleMail.isSystemLabel(tagId))
             .map((tagId: string) => ({ hue: getHashStyles(tagId).hue, ...tags![tagId] }))
             .filter(Boolean)
             .map(

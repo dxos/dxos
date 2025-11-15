@@ -34,7 +34,7 @@ import { Mailbox as MailboxComponent } from './Mailbox';
 
 const DefaultStory = () => {
   const [messages] = useState(() => createMessages(100));
-  return <MailboxComponent role='story' id='story' messages={messages} ignoreAttention tags={TAGS_MAP} />;
+  return <MailboxComponent id='story' messages={messages} ignoreAttention tags={TAGS_MAP} />;
 };
 
 const WithCompanionStory = () => {
