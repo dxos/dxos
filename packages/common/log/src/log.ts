@@ -95,8 +95,7 @@ export const createLog = (): LogImp => {
     meta?: CallMetadata,
     error?: Error,
   ) => {
-    console.log('###', log._id, log._config.processors);
-    // TODO(burdon): Do filter match upstream here.
+    // TODO(burdon): Do the filter matching upstream (here) rather than in each processor?
     log._config.processors.forEach((processor) =>
       processor(log._config, {
         level,
@@ -129,7 +128,17 @@ export const createLog = (): LogImp => {
     },
 
     config: (options) => {
-      log._config = createConfig(options);
+      const newConfig = createConfig(options);
+
+      // Preserve any processors that were already added to this logger instance
+      // unless an explicit processor option is provided (via options or env).
+      const preserveExistingProcessors = newConfig.options.processor === undefined;
+
+      log._config = {
+        ...newConfig,
+        processors: preserveExistingProcessors ? log._config.processors : newConfig.processors,
+      };
+
       return log;
     },
 
@@ -142,9 +151,7 @@ export const createLog = (): LogImp => {
         log._config.processors.push(processor);
       }
 
-      console.log('add', log._id, log._config.processors);
       return () => {
-        console.log('remove', log._id, log._config.processors.length);
         log._config.processors = log._config.processors.filter((p) => p !== processor);
       };
     },
