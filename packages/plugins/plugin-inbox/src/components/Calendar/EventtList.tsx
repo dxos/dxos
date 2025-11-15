@@ -16,7 +16,7 @@ export type EventListProps = {
 
 export const EventList = ({ events = [], selected, onSelect }: EventListProps) => {
   return (
-    <div className={mx('flex is-full overflow-y-scroll')}>
+    <div className={mx('flex is-full overflow-y-auto')}>
       <List classNames={mx('is-full divide-y divide-separator')}>
         {events.map((event) => (
           <ListItem.Root
@@ -29,7 +29,7 @@ export const EventList = ({ events = [], selected, onSelect }: EventListProps) =
             onClick={() => onSelect?.(event)}
           >
             {event.name && <ListItem.Heading classNames='p-2'>{event.name}</ListItem.Heading>}
-            {/* TODO(burdon): Link to contact records. */}
+            {/* TODO(burdon): Link to contact records (lookup Actor). */}
             <div className='flex flex-col p-2'>
               {event.attendees.map(({ email }) => (
                 <div key='value' className='text-sm text-neutral-500'>

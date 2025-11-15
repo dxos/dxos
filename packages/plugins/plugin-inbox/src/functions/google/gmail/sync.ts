@@ -19,10 +19,11 @@ import { DatabaseService, QueueService, defineFunction } from '@dxos/functions';
 import { log } from '@dxos/log';
 import { type Message } from '@dxos/types';
 
-// TODO(burdon): Importing from types/index.ts pulls in @dxos/client dependencies.
-import * as Mailbox from '../../types/Mailbox';
+// TODO(burdon): Importing from types/index.ts pulls in @dxos/client dependencies due to SpaceSchema.
+import * as Mailbox from '../../../types/Mailbox';
+import { GoogleMail } from '../../apis';
 
-import { getMessage, listMessages, messageToObject } from './api';
+import { mapMessage } from './mapper';
 
 type DateChunk = {
   readonly start: Date;
@@ -44,7 +45,7 @@ const STREAMING_CONFIG = {
 } as const;
 
 export default defineFunction({
-  key: 'dxos.org/function/inbox/gmail-sync',
+  key: 'dxos.org/function/inbox/google-mail-sync',
   name: 'Sync Gmail',
   description: 'Sync emails from Gmail to the mailbox.',
   inputSchema: Schema.Struct({
@@ -150,7 +151,7 @@ const fetchMessagesForDateRange = (userId: string, dateChunk: DateChunk) => {
         pageToken: Option.getOrUndefined(state.pageToken),
       });
 
-      const { messages, nextPageToken } = yield* listMessages(
+      const { messages, nextPageToken } = yield* GoogleMail.listMessages(
         userId,
         query,
         STREAMING_CONFIG.maxResults,
@@ -194,7 +195,7 @@ const streamGmailMessagesToQueue = Effect.fn(function* (
       (messageId) =>
         Effect.gen(function* () {
           log('fetching message', { messageId });
-          return yield* getMessage(userId, messageId);
+          return yield* GoogleMail.getMessage(userId, messageId);
         }),
       {
         concurrency: STREAMING_CONFIG.messageFetchConcurrency,
@@ -202,7 +203,7 @@ const streamGmailMessagesToQueue = Effect.fn(function* (
       },
     ),
     // Convert to Message.Message objects.
-    Stream.mapEffect((gmailMessage) => messageToObject(lastMessage)(gmailMessage)),
+    Stream.mapEffect((gmailMessage) => mapMessage(lastMessage)(gmailMessage)),
     Stream.filter(Predicate.isNotNullable),
     // Batch messages for queue append.
     Stream.grouped(STREAMING_CONFIG.queueBatchSize),

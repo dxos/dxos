@@ -26,8 +26,6 @@ class LogError extends Error {
   }
 }
 
-/* eslint-disable prefer-arrow-functions/prefer-arrow-functions */
-
 describe('log', () => {
   let log!: Log;
 
@@ -43,31 +41,33 @@ describe('log', () => {
       { expected: 0, filter: 'ERROR' },
       { expected: 2, filter: 'INFO' },
       { expected: 4, filter: 'DEBUG' },
-      { expected: 3, filter: 'foo:DEBUG,bar:INFO' },
+      { expected: 2, filter: '-foo:*' },
       { expected: 1, filter: 'INFO,-foo:*' },
       { expected: 3, filter: 'DEBUG,-foo:INFO' },
+      { expected: 3, filter: 'foo:DEBUG,bar:INFO' },
     ];
 
     for (const test of tests) {
       let count = 0;
-      log
-        .addProcessor((config, entry) => {
-          if (shouldLog(entry, config.filters)) {
-            count++;
-          }
-        })
-        .config({
-          filter: test.filter,
-        });
+      const log = createLog();
+      const remove = log.addProcessor((config, entry) => {
+        if (shouldLog(entry, config.filters)) {
+          count++;
+        }
+      });
+      log.config({
+        filter: test.filter,
+      });
 
-      console.group(test.filter);
-      log.info('line 1', {}, { F: 'foo.ts', L: 1, S: undefined });
-      log.debug('line 2', {}, { F: 'foo.ts', L: 2, S: undefined });
-      log.info('line 3', {}, { F: 'bar.ts', L: 3, S: undefined });
-      log.debug('line 4', {}, { F: 'bar.ts', L: 4, S: undefined });
+      console.group(`Filter: "${test.filter}"`);
+      log.debug('line 1', {}, { F: 'foo.ts', L: 2, S: undefined });
+      log.info('line 2', {}, { F: 'foo.ts', L: 1, S: undefined });
+      log.debug('line 3', {}, { F: 'bar.ts', L: 4, S: undefined });
+      log.info('line 4', {}, { F: 'bar.ts', L: 3, S: undefined });
       console.groupEnd();
 
-      expect(count, test.filter).toBe(test.expected);
+      expect(count, `Filter: "${test.filter}"`).toBe(test.expected);
+      remove();
     }
   });
 
@@ -120,7 +120,7 @@ describe('log', () => {
     });
   });
 
-  test('error', function () {
+  test('error', () => {
     const myError = new Error('Test error', { cause: new Error('Cause') });
     log.catch(myError);
   });

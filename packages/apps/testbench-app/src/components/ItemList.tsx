@@ -24,7 +24,7 @@ export type ItemListProps<T> = { objects: T[] } & Pick<ItemProps<T>, 'debug' | '
 export const ItemList = ({ objects, debug, ...props }: ItemListProps<Obj.Any>) => {
   return (
     <div className='flex flex-col grow overflow-hidden'>
-      <div className='flex flex-col overflow-y-scroll pr-2'>
+      <div className='flex flex-col overflow-y-auto pr-2'>
         {objects
           .slice(0, MAX_RENDERED_COUNT)
           .map(
