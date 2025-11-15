@@ -45,7 +45,7 @@ const IconOnlyButton = forwardRef<HTMLButtonElement, IconButtonProps>(
 
 // TODO(burdon): Inherit size from container/density.
 const LabelledIconButton = forwardRef<HTMLButtonElement, IconButtonProps>(
-  ({ icon, size = 4, iconOnly, label, classNames, iconClassNames, caretDown, ...props }, forwardedRef) => {
+  ({ icon, size = 5, iconOnly, label, classNames, iconClassNames, caretDown, ...props }, forwardedRef) => {
     const { tx } = useThemeContext();
     return (
       <Button {...props} classNames={tx('iconButton.root', 'iconButton', { iconOnly }, classNames)} ref={forwardedRef}>
