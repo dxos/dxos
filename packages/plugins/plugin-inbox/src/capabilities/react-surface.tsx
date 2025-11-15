@@ -51,17 +51,10 @@ export default () =>
     createSurface({
       id: `${meta.id}/message`,
       role: ['article', 'section'],
-      filter: (data): data is { companionTo: Mailbox.Mailbox; subject: Message.Message | 'message' } =>
-        Obj.instanceOf(Mailbox.Mailbox, data.companionTo) &&
-        (data.subject === 'message' || Obj.instanceOf(Message.Message, data.subject)),
+      filter: (data): data is { companionTo: Mailbox.Mailbox; subject: Message.Message } =>
+        Obj.instanceOf(Mailbox.Mailbox, data.companionTo) && Obj.instanceOf(Message.Message, data.subject),
       component: ({ data: { companionTo, subject: message }, role }) => {
-        return (
-          <MessageArticle
-            role={role}
-            object={typeof message === 'string' ? undefined : message}
-            mailbox={companionTo}
-          />
-        );
+        return <MessageArticle role={role as 'article' | 'section'} object={message} mailbox={companionTo} />;
       },
     }),
     createSurface({

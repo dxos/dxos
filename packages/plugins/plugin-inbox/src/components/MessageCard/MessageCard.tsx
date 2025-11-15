@@ -4,6 +4,7 @@
 
 import React from 'react';
 
+import { type SurfaceComponentProps } from '@dxos/app-framework/react';
 import { type Tag } from '@dxos/echo';
 import { DxAvatar } from '@dxos/lit-ui/react';
 import { Card } from '@dxos/react-ui-stack';
@@ -11,12 +12,7 @@ import { type Message } from '@dxos/types';
 
 import { getMessageProps } from '../../util';
 
-export type MessageCardProps = {
-  message: Message.Message;
-  role?: string;
-};
-
-export const MessageCard = ({ message, role }: MessageCardProps) => {
+export const MessageCard = ({ object: message, role }: SurfaceComponentProps<Message.Message>) => {
   const { date, email, from, hue, subject, snippet } = getMessageProps(message, new Date(), true);
   return (
     <Card.SurfaceRoot role={role} classNames='grid grid-cols-[52px_1fr] grid-rows-[min-content_1fr] overflow-hidden'>

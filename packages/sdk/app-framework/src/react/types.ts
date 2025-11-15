@@ -4,11 +4,26 @@
 
 import { type Obj } from '@dxos/echo';
 
-// TODO(burdon): PluginSettings, ObjectSettings.
-// TODO(burdon): Base class for surface components.
-// TODO(burdon): Include attendableId?
-
+/**
+ * Base type for surface components.
+ */
+// TODO(burdon): Standardize PluginSettings and ObjectProperties.
 export type SurfaceComponentProps<T extends Obj.Any = Obj.Any, Props = {}> = {
-  role?: 'article' | 'section' | 'card';
+  role?:
+    | 'article'
+    | 'complementary' // (for companion?)
+    | 'section'
+    | 'card'
+    // Non-standard roles
+    | 'card--popover'
+    | 'card--intrinsic'
+    | 'card--extrinsic'
+    | 'card--transclusion';
+
+  /** The object being displayed. */
   object: T;
+
+  // TODO(burdon): Include attendableId?
+
+  /** Additional properties. */
 } & Props;
