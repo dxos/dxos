@@ -3,9 +3,10 @@
 //
 
 import { Capabilities, Events, contributes, createIntent, defineModule, definePlugin } from '@dxos/app-framework';
-import { ClientEvents } from '@dxos/plugin-client';
+import { Type } from '@dxos/echo';
+import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
 import { SpaceCapabilities, SpaceEvents } from '@dxos/plugin-space';
-import { defineObjectForm } from '@dxos/plugin-space/types';
+import { type CreateObjectIntent } from '@dxos/plugin-space/types';
 import { translations as formTranslations } from '@dxos/react-ui-form';
 import { translations as tableTranslations } from '@dxos/react-ui-table';
 import { Table } from '@dxos/react-ui-table/types';
@@ -27,33 +28,27 @@ export const TablePlugin = definePlugin(meta, () => [
     activatesOn: Events.SetupMetadata,
     activate: () =>
       contributes(Capabilities.Metadata, {
-        id: Table.Table.typename,
+        id: Type.getTypename(Table.Table),
         metadata: {
           icon: 'ph--table--regular',
           iconHue: 'green',
           comments: 'unanchored',
+          inputSchema: CreateTableSchema,
+          createObjectIntent: ((props, options) =>
+            createIntent(TableAction.Create, { ...props, space: options.space })) satisfies CreateObjectIntent,
         },
       }),
   }),
   defineModule({
-    id: `${meta.id}/module/object-form`,
+    id: `${meta.id}/module/schema`,
     activatesOn: ClientEvents.SetupSchema,
-    activate: () =>
-      contributes(
-        SpaceCapabilities.ObjectForm,
-        defineObjectForm({
-          objectSchema: Table.Table,
-          formSchema: CreateTableSchema,
-          hidden: true,
-          getIntent: (props, options) => createIntent(TableAction.Create, { ...props, space: options.space }),
-        }),
-      ),
+    activate: () => contributes(ClientCapabilities.Schema, [Table.Table]),
   }),
   defineModule({
     id: `${meta.id}/module/on-space-created`,
     activatesOn: SpaceEvents.SpaceCreated,
     activate: () =>
-      contributes(SpaceCapabilities.onCreateSpace, ({ space }) => createIntent(TableAction.onCreateSpace, { space })),
+      contributes(SpaceCapabilities.OnCreateSpace, (params) => createIntent(TableAction.OnCreateSpace, params)),
   }),
   defineModule({
     id: `${meta.id}/module/on-schema-added`,

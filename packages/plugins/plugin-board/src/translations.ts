@@ -18,6 +18,7 @@ export const translations = [
         'object name placeholder': 'New board',
         'rename object label': 'Rename board',
         'delete object label': 'Delete board',
+        'object deleted label': 'Board deleted',
       },
       [meta.id]: {
         'plugin name': 'Board',

@@ -14,7 +14,7 @@ import { meta } from '../meta';
 import { Chat } from './Assistant';
 
 // TODO(burdon): Name?
-export class onCreateSpace extends Schema.TaggedClass<onCreateSpace>()(`${meta.id}/on-space-created`, {
+export class OnCreateSpace extends Schema.TaggedClass<OnCreateSpace>()(`${meta.id}/on-space-created`, {
   input: Schema.Struct({
     space: SpaceSchema,
     rootCollection: Collection.Collection,

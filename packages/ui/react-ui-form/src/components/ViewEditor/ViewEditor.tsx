@@ -37,7 +37,7 @@ export type ViewEditorProps = ThemedClassName<
   {
     schema: Schema.Schema.AnyNoContext;
     view: View.View;
-    mode?: 'schema' | 'query' | 'named-query';
+    mode?: 'schema' | 'tag';
     registry?: SchemaRegistry;
     readonly?: boolean;
     showHeading?: boolean;
@@ -96,13 +96,9 @@ export const ViewEditor = forwardRef<ProjectionModel, ViewEditorProps>(
             : QueryAST.Query.annotations({ title: 'Query' }),
       });
 
-      if (mode === 'query' || mode === 'named-query') {
-        const name = Schema.Struct({
-          name: Schema.optional(Schema.String.annotations({ title: 'Name' })),
-        });
-
+      if (mode === 'tag') {
         return Schema.Struct({
-          ...(mode === 'named-query' ? { ...name.fields, ...base.fields } : base.fields),
+          ...base.fields,
           target: Schema.optional(Schema.String.annotations({ title: 'Target Queue' })),
         }).pipe(Schema.mutable);
       }
@@ -114,11 +110,10 @@ export const ViewEditor = forwardRef<ProjectionModel, ViewEditorProps>(
     // TODO(burdon): Settings should have domain name owned by user.
     const viewValues = useMemo(
       () => ({
-        name: view.name,
         query: mode === 'schema' ? getTypenameFromQuery(view.query.ast) : view.query.ast,
         target: queueTarget,
       }),
-      [view.name, mode, view.query.ast, queueTarget],
+      [mode, view.query.ast, queueTarget],
     );
 
     const handleToggleField = useCallback(
@@ -138,18 +133,12 @@ export const ViewEditor = forwardRef<ProjectionModel, ViewEditorProps>(
 
     const handleUpdate = useCallback(
       (values: any) => {
-        invariant(!readonly);
         requestAnimationFrame(() => {
-          if ('name' in values && view.name !== values.name) {
-            view.name = values.name;
-            return;
-          }
-
           const query = mode === 'schema' ? Query.select(Filter.typename(values.query)).ast : values.query;
           onQueryChanged?.(query, values.target);
         });
       },
-      [onQueryChanged, readonly, view, queueTarget, mode],
+      [onQueryChanged, view, queueTarget, mode],
     );
 
     const handleDelete = useCallback(
@@ -194,11 +183,12 @@ export const ViewEditor = forwardRef<ProjectionModel, ViewEditorProps>(
       [projectionModel],
     );
 
-    const custom = useMemo(() => (mode === 'query' ? customFields({ types, tags }) : undefined), [types, tags, mode]);
+    const custom = useMemo(() => (mode === 'tag' ? customFields({ types, tags }) : undefined), [types, tags, mode]);
 
     return (
       <div role='none' className={mx(classNames)}>
-        {schemaReadonly && mode === 'schema' && (
+        {/* If readonlyProp is set, then the callout is not needed. */}
+        {schemaReadonly && !readonly && (
           <Callout.Root valence='info' classNames={['mlb-cardSpacingBlock', outerSpacing && 'mli-cardSpacingInline']}>
             <Callout.Title>{t('system schema description')}</Callout.Title>
           </Callout.Root>
@@ -210,7 +200,6 @@ export const ViewEditor = forwardRef<ProjectionModel, ViewEditorProps>(
           autoSave
           schema={viewSchema}
           values={viewValues}
-          readonly={readonly ? 'disabled-input' : false}
           onSave={handleUpdate}
           outerSpacing={outerSpacing}
           Custom={custom}
@@ -243,7 +232,7 @@ export const ViewEditor = forwardRef<ProjectionModel, ViewEditorProps>(
                           role='none'
                           className={mx(subtleHover, listItemGrid, 'rounded-sm cursor-pointer min-bs-10')}
                         >
-                          <List.ItemDragHandle disabled={readonly} />
+                          <List.ItemDragHandle disabled={readonly || schemaReadonly} />
                           <List.ItemTitle
                             classNames={hidden && 'text-subdued'}
                             onClick={() => handleToggleField(field)}
@@ -258,7 +247,7 @@ export const ViewEditor = forwardRef<ProjectionModel, ViewEditorProps>(
                             disabled={readonly || (!hidden && projectionModel.fields.length <= 1)}
                             onClick={() => (hidden ? handleShow(field.path) : handleHide(field.id))}
                           />
-                          {mode === 'schema' && (
+                          {!readonly && (
                             <>
                               <List.ItemDeleteButton
                                 label={t('delete field label')}
@@ -279,7 +268,7 @@ export const ViewEditor = forwardRef<ProjectionModel, ViewEditorProps>(
                             </>
                           )}
                         </div>
-                        {expandedField === field.id && mode === 'schema' && (
+                        {expandedField === field.id && !readonly && (
                           <div role='none' className='col-span-5 mbs-1 mbe-1 border border-separator rounded-md'>
                             <FieldEditor
                               readonly={readonly || schemaReadonly ? 'disabled-input' : false}
@@ -299,11 +288,11 @@ export const ViewEditor = forwardRef<ProjectionModel, ViewEditorProps>(
           </List.Root>
         </div>
 
-        {!readonly && !expandedField && mode === 'schema' && (
+        {!readonly && !expandedField && (
           <div role='none' className={outerSpacing ? cardSpacing : 'mlb-cardSpacingBlock'}>
             <IconButton
               icon='ph--plus--regular'
-              label={t('add property button')}
+              label={t('add property button label')}
               onClick={readonly ? undefined : handleAdd}
               // TODO(burdon): Show field limit in ux (not tooltip).
               disabled={view.projection.fields.length >= VIEW_FIELD_LIMIT}

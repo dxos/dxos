@@ -12,10 +12,11 @@ import { meta } from '../meta';
 
 import { Meeting } from './Meeting';
 
-export class onCreateSpace extends Schema.TaggedClass<onCreateSpace>()(`${meta.id}/on-space-created`, {
+export class OnCreateSpace extends Schema.TaggedClass<OnCreateSpace>()(`${meta.id}/on-space-created`, {
   input: Schema.Struct({
     space: SpaceSchema,
     rootCollection: Collection.Collection,
+    isDefault: Schema.Boolean.pipe(Schema.optional),
   }),
   output: Schema.Void,
 }) {}

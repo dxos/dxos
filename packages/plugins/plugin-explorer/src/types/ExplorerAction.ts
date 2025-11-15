@@ -4,20 +4,27 @@
 
 import * as Schema from 'effect/Schema';
 
+import { TypeInputOptionsAnnotation } from '@dxos/plugin-space/types';
 import { SpaceSchema } from '@dxos/react-client/echo';
-import { TypenameAnnotationId, View } from '@dxos/schema';
 
 import { meta } from '../meta';
+
+import * as Graph from './Graph';
 
 const EXPLORER_ACTION = `${meta.id}/action`;
 
 export const GraphProps = Schema.Struct({
   name: Schema.optional(Schema.String),
   // TODO(wittjosiah): This should be a query input instead.
-  typename: Schema.String.annotations({
-    [TypenameAnnotationId]: ['used-static', 'dynamic'],
-    title: 'Select graph record type',
-  }),
+  typename: Schema.String.pipe(
+    Schema.annotations({ title: 'Select type' }),
+    TypeInputOptionsAnnotation.set({
+      location: ['database', 'runtime'],
+      kind: ['user'],
+      registered: ['registered'],
+    }),
+    Schema.optional,
+  ),
 });
 
 export class CreateGraph extends Schema.TaggedClass<CreateGraph>()(`${EXPLORER_ACTION}/create-graph`, {
@@ -25,6 +32,6 @@ export class CreateGraph extends Schema.TaggedClass<CreateGraph>()(`${EXPLORER_A
     space: SpaceSchema,
   }).pipe(Schema.extend(GraphProps)),
   output: Schema.Struct({
-    object: View.View,
+    object: Graph.Graph,
   }),
 }) {}

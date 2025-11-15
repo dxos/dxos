@@ -264,7 +264,7 @@ export const FormFields = forwardRef<HTMLDivElement, FormFieldsProps>(
   ) => {
     const values = useFormValues(path);
     const properties = useMemo(() => {
-      const props = getSchemaProperties(schema.ast, values);
+      const props = getSchemaProperties(schema.ast, values, { form: true });
 
       // Use projection-based field management when view and projection are available
       if (projection) {

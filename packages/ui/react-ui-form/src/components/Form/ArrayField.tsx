@@ -46,7 +46,9 @@ export const ArrayField = ({ property, readonly, path, inputProps, Custom, looku
       return {};
     }
 
-    return Object.fromEntries(getSchemaProperties(typeLiteral, {}).map((prop) => [prop.name, prop.defaultValue]));
+    return Object.fromEntries(
+      getSchemaProperties(typeLiteral, {}, { form: true }).map((prop) => [prop.name, prop.defaultValue]),
+    );
   };
 
   const getDefaultValue = () =>

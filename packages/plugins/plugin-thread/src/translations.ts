@@ -19,6 +19,7 @@ export const translations = [
         'object name placeholder': 'New channel',
         'rename object label': 'Rename channel',
         'delete object label': 'Delete channel',
+        'object deleted label': 'Channel deleted',
       },
       [meta.id]: {
         'plugin name': 'Chat',
@@ -50,6 +51,7 @@ export const translations = [
         'comments label': 'Comments',
         'show all label': 'All comments',
         'show unresolved label': 'Unresolved comments',
+        'add comment label': 'Add comment',
 
         'channel companion label': 'Channel',
         'call panel label': 'Active Call',

@@ -18,6 +18,7 @@ export const translations = [
         'object name placeholder': 'New journal',
         'rename object label': 'Rename journal',
         'delete object label': 'Delete journal',
+        'object deleted label': 'Journal deleted',
       },
       [Outline.Outline.typename]: {
         'typename label': 'Outline',
@@ -27,10 +28,11 @@ export const translations = [
         'object name placeholder': 'New outline',
         'rename object label': 'Rename outline',
         'delete object label': 'Delete outline',
+        'object deleted label': 'Outline deleted',
       },
       [meta.id]: {
         'plugin name': 'Outliner',
-        'delete object label': 'Delete item',
+        'delete object label': 'Delete object',
         'create outline label': 'Create outline',
         'create entry label': 'Create entry',
         'text placeholder': 'Enter text...',

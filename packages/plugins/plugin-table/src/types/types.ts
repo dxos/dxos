@@ -4,8 +4,10 @@
 
 import * as Schema from 'effect/Schema';
 
+import { TypeInputOptionsAnnotation } from '@dxos/plugin-space/types';
 import { SpaceSchema } from '@dxos/react-client/echo';
-import { TypenameAnnotationId, View } from '@dxos/schema';
+import { Table } from '@dxos/react-ui-table/types';
+import { View } from '@dxos/schema';
 
 import { meta } from '../meta';
 
@@ -13,8 +15,11 @@ export const CreateTableSchema = Schema.Struct({
   name: Schema.optional(Schema.String),
   // TODO(wittjosiah): This should be a query input instead.
   typename: Schema.String.pipe(
-    Schema.annotations({
-      [TypenameAnnotationId]: ['used-static', 'dynamic'],
+    Schema.annotations({ title: 'Select type' }),
+    TypeInputOptionsAnnotation.set({
+      location: ['database', 'runtime'],
+      kind: ['user'],
+      registered: ['registered'],
     }),
     Schema.optional,
   ),
@@ -25,7 +30,7 @@ export type CreateTableType = Schema.Schema.Type<typeof CreateTableSchema>;
 export namespace TableAction {
   const TABLE_ACTION = `${meta.id}/action`;
 
-  export class onCreateSpace extends Schema.TaggedClass<onCreateSpace>()(`${TABLE_ACTION}/on-space-created`, {
+  export class OnCreateSpace extends Schema.TaggedClass<OnCreateSpace>()(`${TABLE_ACTION}/on-space-created`, {
     input: Schema.Struct({
       space: SpaceSchema,
     }),
@@ -50,7 +55,7 @@ export namespace TableAction {
       CreateTableSchema,
     ),
     output: Schema.Struct({
-      object: View.View,
+      object: Table.Table,
     }),
   }) {}
 

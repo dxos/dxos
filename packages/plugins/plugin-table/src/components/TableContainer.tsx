@@ -9,8 +9,7 @@ import React, { useCallback, useMemo, useRef } from 'react';
 
 import { LayoutAction, createIntent } from '@dxos/app-framework';
 import { useAppGraph, useIntentDispatcher } from '@dxos/app-framework/react';
-import { Obj, Query, Type } from '@dxos/echo';
-import { EchoSchema } from '@dxos/echo/internal';
+import { Filter, Obj, Query, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { useGlobalFilteredObjects } from '@dxos/plugin-search';
 import { SpaceAction } from '@dxos/plugin-space/types';
@@ -18,7 +17,7 @@ import { useClient } from '@dxos/react-client';
 import { getSpace, useQuery, useSchema } from '@dxos/react-client/echo';
 import { StackItem } from '@dxos/react-ui-stack';
 import {
-  Table,
+  Table as TableComponent,
   type TableController,
   type TableFeatures,
   type TableModelProps,
@@ -26,27 +25,29 @@ import {
   type TableRowAction,
   TableToolbar,
   useAddRow,
+  useProjectionModel,
   useTableModel,
 } from '@dxos/react-ui-table';
+import { type Table } from '@dxos/react-ui-table/types';
 import { getTypenameFromQuery } from '@dxos/schema';
-import { type View } from '@dxos/schema';
 
 import { meta } from '../meta';
 
 export type TableContainerProps = {
   role: string;
-  view: View.View;
+  object: Table.Table;
 };
 
 // TODO(wittjosiah): Need to handle more complex queries by restricting add row.
-export const TableContainer = ({ role, view }: TableContainerProps) => {
+export const TableContainer = ({ role, object }: TableContainerProps) => {
   const { dispatchPromise: dispatch } = useIntentDispatcher();
   const tableRef = useRef<TableController>(null);
 
   const client = useClient();
-  const space = getSpace(view);
-  const query = Query.fromAst(Obj.getSnapshot(view).query.ast);
-  const typename = view.query ? getTypenameFromQuery(query.ast) : undefined;
+  const space = getSpace(object);
+  const view = object.view.target;
+  const query = view ? Query.fromAst(Obj.getSnapshot(view).query.ast) : Query.select(Filter.nothing());
+  const typename = object.view.target?.query ? getTypenameFromQuery(object.view.target.query.ast) : undefined;
   const schema = useSchema(client, space, typename);
   const queriedObjects = useQuery(space, query);
   const filteredObjects = useGlobalFilteredObjects(queriedObjects);
@@ -54,7 +55,7 @@ export const TableContainer = ({ role, view }: TableContainerProps) => {
   const { graph } = useAppGraph();
   const customActions = useMemo(() => {
     return Atom.make((get) => {
-      const actions = get(graph.actions(Obj.getDXN(view).toString()));
+      const actions = get(graph.actions(Obj.getDXN(object).toString()));
       const nodes = actions.filter((action) => action.properties.disposition === 'toolbar');
       return {
         nodes,
@@ -74,9 +75,10 @@ export const TableContainer = ({ role, view }: TableContainerProps) => {
 
   const handleDeleteColumn = useCallback(
     (fieldId: string) => {
+      invariant(view);
       void dispatch(createIntent(SpaceAction.DeleteField, { view, fieldId }));
     },
-    [dispatch],
+    [dispatch, view],
   );
 
   const features: Partial<TableFeatures> = useMemo(
@@ -88,19 +90,12 @@ export const TableContainer = ({ role, view }: TableContainerProps) => {
     [],
   );
 
-  const jsonSchema = useMemo(() => {
-    if (schema instanceof EchoSchema) {
-      return schema.jsonSchema;
-    }
-    return schema ? Type.toJsonSchema(schema) : undefined;
-  }, [schema]);
-
   const handleCellUpdate = useCallback<Required<TableModelProps>['onCellUpdate']>((cell) => {
     tableRef.current?.update?.(cell);
   }, []);
 
   const rowActions = useMemo(
-    (): TableRowAction[] => [{ id: 'open', label: ['open record label', { ns: meta.id }] }],
+    (): TableRowAction[] => [{ id: 'open', label: ['open object label', { ns: meta.id }] }],
     [],
   );
 
@@ -127,9 +122,10 @@ export const TableContainer = ({ role, view }: TableContainerProps) => {
     [space],
   );
 
+  const projection = useProjectionModel(schema, object);
   const model = useTableModel({
-    view,
-    schema: jsonSchema,
+    object,
+    projection,
     features,
     rows: filteredObjects,
     rowActions,
@@ -164,14 +160,14 @@ export const TableContainer = ({ role, view }: TableContainerProps) => {
   return (
     <StackItem.Content toolbar>
       <TableToolbar
-        attendableId={Obj.getDXN(view).toString()}
+        attendableId={Obj.getDXN(object).toString()}
         customActions={customActions}
         onAdd={handleInsertRow}
         onSave={handleSave}
       />
-      <Table.Root role={role}>
-        <Table.Main
-          key={Obj.getDXN(view).toString()}
+      <TableComponent.Root role={role}>
+        <TableComponent.Main
+          key={Obj.getDXN(object).toString()}
           ref={tableRef}
           client={client}
           model={model}
@@ -180,7 +176,7 @@ export const TableContainer = ({ role, view }: TableContainerProps) => {
           onCreate={handleCreate}
           onRowClick={handleRowClick}
         />
-      </Table.Root>
+      </TableComponent.Root>
     </StackItem.Content>
   );
 };

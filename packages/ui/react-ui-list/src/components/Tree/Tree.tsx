@@ -18,7 +18,14 @@ export type TreeProps<T extends HasId = any, O = any> = {
   Partial<Pick<TreegridRootProps, 'gridTemplateColumns' | 'classNames'>> &
   Pick<
     TreeItemProps<T>,
-    'draggable' | 'renderColumns' | 'canDrop' | 'canSelect' | 'onOpenChange' | 'onSelect' | 'levelOffset'
+    | 'draggable'
+    | 'renderColumns'
+    | 'blockInstruction'
+    | 'canDrop'
+    | 'canSelect'
+    | 'onOpenChange'
+    | 'onSelect'
+    | 'levelOffset'
   >;
 
 export const Tree = <T extends HasId = any, O = any>({
@@ -34,6 +41,7 @@ export const Tree = <T extends HasId = any, O = any>({
   classNames,
   levelOffset,
   renderColumns,
+  blockInstruction,
   canDrop,
   canSelect,
   onOpenChange,
@@ -63,6 +71,7 @@ export const Tree = <T extends HasId = any, O = any>({
             levelOffset={levelOffset}
             draggable={draggable}
             renderColumns={renderColumns}
+            blockInstruction={blockInstruction}
             canDrop={canDrop}
             canSelect={canSelect}
             onOpenChange={onOpenChange}

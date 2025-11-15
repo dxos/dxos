@@ -179,6 +179,13 @@ export const NavTreeContainer = memo(({ tab, popoverAnchorId, topbar }: NavTreeC
     [dispatch, layout.active, tab, navigationSidebarState, isLg],
   );
 
+  const blockInstruction = useCallback(
+    ({ instruction, source, target }: { instruction: Instruction; source: TreeData; target: TreeData }) => {
+      return target.item.properties.blockInstruction?.(source, instruction) ?? false;
+    },
+    [],
+  );
+
   const canDrop = useCallback(({ source, target }: { source: TreeData; target: TreeData }) => {
     return target.item.properties.canDrop?.(source) ?? false;
   }, []);
@@ -321,43 +328,45 @@ export const NavTreeContainer = memo(({ tab, popoverAnchorId, topbar }: NavTreeC
 
   const navTreeContextValue = useMemo(
     () => ({
-      useItems,
-      tab,
-      useActions,
-      loadDescendents,
-      renderItemEnd,
-      popoverAnchorId,
-      topbar,
-      getProps,
-      isCurrent,
-      isOpen,
+      blockInstruction,
       canDrop,
       canSelect,
+      getProps,
       isAlternateTree,
-      setAlternateTree,
-      onTabChange: handleTabChange,
+      isCurrent,
+      isOpen,
+      loadDescendents,
+      onBack: handleBack,
       onOpenChange: handleOpenChange,
       onSelect: handleSelect,
-      onBack: handleBack,
+      onTabChange: handleTabChange,
+      popoverAnchorId,
+      renderItemEnd,
+      setAlternateTree,
+      tab,
+      topbar,
+      useActions,
+      useItems,
     }),
     [
-      tab,
-      useActions,
-      loadDescendents,
-      renderItemEnd,
-      popoverAnchorId,
-      topbar,
-      getProps,
-      isCurrent,
-      isOpen,
+      blockInstruction,
       canDrop,
       canSelect,
-      isAlternateTree,
-      setAlternateTree,
-      handleTabChange,
+      getProps,
+      handleBack,
       handleOpenChange,
       handleSelect,
-      handleBack,
+      handleTabChange,
+      isAlternateTree,
+      isCurrent,
+      isOpen,
+      loadDescendents,
+      popoverAnchorId,
+      renderItemEnd,
+      setAlternateTree,
+      tab,
+      topbar,
+      useActions,
     ],
   );
 

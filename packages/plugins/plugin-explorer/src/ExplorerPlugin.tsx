@@ -3,9 +3,9 @@
 //
 
 import { Capabilities, Events, contributes, createIntent, defineModule, definePlugin } from '@dxos/app-framework';
+import { Type } from '@dxos/echo';
 import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
-import { SpaceCapabilities } from '@dxos/plugin-space';
-import { defineObjectForm } from '@dxos/plugin-space/types';
+import { type CreateObjectIntent } from '@dxos/plugin-space/types';
 
 import { IntentResolver, ReactSurface } from './capabilities';
 import { meta } from './meta';
@@ -23,26 +23,15 @@ export const ExplorerPlugin = definePlugin(meta, () => [
     activatesOn: Events.SetupMetadata,
     activate: () =>
       contributes(Capabilities.Metadata, {
-        id: Graph.Graph.typename,
+        id: Type.getTypename(Graph.Graph),
         metadata: {
           icon: 'ph--graph--regular',
           iconHue: 'green',
+          inputSchema: ExplorerAction.GraphProps,
+          createObjectIntent: ((props, options) =>
+            createIntent(ExplorerAction.CreateGraph, { ...props, space: options.space })) satisfies CreateObjectIntent,
         },
       }),
-  }),
-  defineModule({
-    id: `${meta.id}/module/object-form`,
-    activatesOn: ClientEvents.SetupSchema,
-    activate: () =>
-      contributes(
-        SpaceCapabilities.ObjectForm,
-        defineObjectForm({
-          objectSchema: Graph.Graph,
-          formSchema: ExplorerAction.GraphProps,
-          hidden: true,
-          getIntent: (props, options) => createIntent(ExplorerAction.CreateGraph, { ...props, space: options.space }),
-        }),
-      ),
   }),
   defineModule({
     id: `${meta.id}/module/schema`,

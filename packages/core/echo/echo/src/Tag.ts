@@ -4,7 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { LabelAnnotation } from './internal';
+import { LabelAnnotation, SystemTypeAnnotation } from './internal';
 import * as Obj from './Obj';
 import * as Type from './Type';
 
@@ -17,6 +17,7 @@ export const Tag = Schema.Struct({
     version: '0.1.0',
   }),
   LabelAnnotation.set(['label']),
+  SystemTypeAnnotation.set(true),
 );
 
 export type Tag = Schema.Schema.Type<typeof Tag>;

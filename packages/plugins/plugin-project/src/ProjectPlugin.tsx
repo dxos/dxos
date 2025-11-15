@@ -4,8 +4,7 @@
 
 import { Capabilities, Events, contributes, createIntent, defineModule, definePlugin } from '@dxos/app-framework';
 import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
-import { SpaceCapabilities } from '@dxos/plugin-space';
-import { defineObjectForm } from '@dxos/plugin-space/types';
+import { type CreateObjectIntent } from '@dxos/plugin-space/types';
 import { Project } from '@dxos/types';
 
 import { AppGraphBuilder, IntentResolver, ReactSurface } from './capabilities';
@@ -28,21 +27,11 @@ export const ProjectPlugin = definePlugin(meta, () => [
         metadata: {
           icon: 'ph--check-square-offset--regular',
           iconHue: 'purple',
+          createObjectIntent: ((_, options) =>
+            createIntent(ProjectAction.Create, { space: options.space })) satisfies CreateObjectIntent,
+          addToCollectionOnCreate: true,
         },
       }),
-  }),
-  defineModule({
-    id: `${meta.id}/module/object-form`,
-    activatesOn: ClientEvents.SetupSchema,
-    activate: () =>
-      contributes(
-        SpaceCapabilities.ObjectForm,
-        defineObjectForm({
-          objectSchema: Project.Project,
-
-          getIntent: (_, options) => createIntent(ProjectAction.Create, { space: options.space }),
-        }),
-      ),
   }),
   defineModule({
     id: `${meta.id}/module/schema`,

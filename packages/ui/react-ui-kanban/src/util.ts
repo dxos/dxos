@@ -8,12 +8,12 @@ import { type BaseKanbanItem, UNCATEGORIZED_VALUE } from './model';
 import { type Kanban } from './types';
 
 export const computeArrangement = <T extends BaseKanbanItem = { id: string }>({
-  kanban,
+  object,
   items,
   pivotPath,
   selectOptions,
 }: {
-  kanban: Kanban.Kanban;
+  object: Kanban.Kanban;
   items: T[];
   pivotPath?: string;
   selectOptions: SelectOption[];
@@ -23,7 +23,7 @@ export const computeArrangement = <T extends BaseKanbanItem = { id: string }>({
 
   const genColumns = function* (): Iterable<{ columnValue: string; ids: readonly string[] }> {
     // Start with uncategorized, using existing item arrangement if present.
-    yield kanban.arrangement?.find((col) => col.columnValue === UNCATEGORIZED_VALUE) ?? {
+    yield object.arrangement?.find((col) => col.columnValue === UNCATEGORIZED_VALUE) ?? {
       columnValue: UNCATEGORIZED_VALUE,
       ids: [] as const,
     };
@@ -34,7 +34,7 @@ export const computeArrangement = <T extends BaseKanbanItem = { id: string }>({
         continue;
       }
 
-      yield kanban.arrangement?.find((col) => col.columnValue === option.id) ?? {
+      yield object.arrangement?.find((col) => col.columnValue === option.id) ?? {
         columnValue: option.id,
         ids: [] as const,
       };

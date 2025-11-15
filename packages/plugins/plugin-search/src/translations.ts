@@ -16,7 +16,7 @@ export const translations = [
         'search dialog title': 'Open',
         'recently closed heading': 'Recently closed',
         'pending results message': 'Searching…',
-        'empty results message': 'No matching items in your spaces',
+        'empty results message': 'No matching objects in your spaces',
         'search label': 'Search',
       },
     },

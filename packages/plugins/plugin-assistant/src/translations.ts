@@ -23,6 +23,7 @@ export const translations = [
         'object name placeholder': 'New blueprint',
         'rename object label': 'Rename blueprint',
         'delete object label': 'Delete blueprint',
+        'object deleted label': 'Blueprint deleted',
       },
       [Type.getTypename(Prompt.Prompt)]: {
         'typename label': 'Prompt',
@@ -32,6 +33,7 @@ export const translations = [
         'object name placeholder': 'New prompt',
         'rename object label': 'Rename prompt',
         'delete object label': 'Delete prompt',
+        'object deleted label': 'Prompt deleted',
       },
       // TODO(burdon): From conductor.
       [Sequence.typename]: {
@@ -42,12 +44,14 @@ export const translations = [
         'object name placeholder': 'New sequence',
         'rename object label': 'Rename sequence',
         'delete object label': 'Delete sequence',
+        'object deleted label': 'Sequence deleted',
       },
       [Assistant.Chat.typename]: {
         'typename label': 'AI Chat',
         'object name placeholder': 'New AI Chat',
         'rename object label': 'Rename AI Chat',
         'delete object label': 'Delete AI Chat',
+        'object deleted label': 'AI Chat deleted',
       },
       // TODO(burdon): Reconcile with react-ui-chat.
       [meta.id]: {

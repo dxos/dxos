@@ -18,6 +18,7 @@ export const translations = [
         'object name placeholder': 'New circuit',
         'rename object label': 'Rename circuit',
         'delete object label': 'Delete circuit',
+        'object deleted label': 'Circuit deleted',
       },
       [meta.id]: {
         'plugin name': 'Conductor',

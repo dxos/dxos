@@ -102,8 +102,10 @@ export const createConfig = ({
       {
         ...config,
         // Prevent duplicate react-swc plugin.
-        plugins: config.plugins.filter((plugin) =>
-          Array.isArray(plugin) ? plugin.findIndex((p) => p.name === 'vite:react-swc') === -1 : true,
+        plugins: config.plugins?.filter((plugin) =>
+          Array.isArray(plugin)
+            ? plugin.findIndex((p) => p && 'name' in p && p?.name === 'vite:react-swc') === -1
+            : true,
         ),
       },
       {

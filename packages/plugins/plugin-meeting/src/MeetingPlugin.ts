@@ -23,6 +23,7 @@ import {
   MeetingSettings,
   MeetingState,
   ReactSurface,
+  Repair,
 } from './capabilities';
 import { meta } from './meta';
 import { translations } from './translations';
@@ -70,9 +71,12 @@ export const MeetingPlugin = definePlugin(meta, () => [
     id: `${meta.id}/module/on-space-created`,
     activatesOn: SpaceEvents.SpaceCreated,
     activate: () =>
-      contributes(SpaceCapabilities.onCreateSpace, ({ rootCollection, space }) =>
-        createIntent(MeetingAction.onCreateSpace, { rootCollection, space }),
-      ),
+      contributes(SpaceCapabilities.OnCreateSpace, (params) => createIntent(MeetingAction.OnCreateSpace, params)),
+  }),
+  defineModule({
+    id: `${meta.id}/module/repair`,
+    activatesOn: ClientEvents.SpacesReady,
+    activate: Repair,
   }),
   defineModule({
     id: `${meta.id}/module/react-surface`,

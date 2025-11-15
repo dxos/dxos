@@ -15,10 +15,10 @@ export const translations = [
         'object name placeholder': 'New file',
         'rename object label': 'Rename file',
         'delete object label': 'Delete file',
+        'object deleted label': 'File deleted',
       },
       [meta.id]: {
         'plugin name': 'Files',
-        'delete object label': 'Delete',
         'file input placeholder': 'Drop a file here, or click to select a file',
       },
     },

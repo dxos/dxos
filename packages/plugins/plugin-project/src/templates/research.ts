@@ -2,11 +2,11 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Filter, Obj, Query, Ref, Type } from '@dxos/echo';
+import { Filter, Query, Ref, Type } from '@dxos/echo';
 import { Mailbox } from '@dxos/plugin-inbox/types';
 import { Markdown } from '@dxos/plugin-markdown/types';
 import { type Space } from '@dxos/react-client/echo';
-import { Collection, View } from '@dxos/schema';
+import { View } from '@dxos/schema';
 import { Message, Organization, Person, Project } from '@dxos/types';
 
 export const createResearchProject = async (space: Space, name?: string): Promise<Project.Project | null> => {
@@ -17,40 +17,53 @@ export const createResearchProject = async (space: Space, name?: string): Promis
 
   const mailbox = mailboxes[0];
   const mailboxView = View.make({
-    name: 'Mailbox',
     query: Query.select(Filter.type(Message.Message)).options({
       queues: [mailbox.queue.dxn.toString()],
     }),
     jsonSchema: Type.toJsonSchema(Message.Message),
-    presentation: Obj.make(Collection.Collection, { objects: [] }),
   });
 
   const contactsQuery = Query.select(Filter.type(Person.Person));
   const contactsView = View.make({
-    name: 'Contacts',
     query: contactsQuery,
     jsonSchema: Type.toJsonSchema(Person.Person),
-    presentation: Obj.make(Collection.Collection, { objects: [] }),
   });
 
   const organizationsQuery = Query.select(Filter.type(Organization.Organization));
   const organizationsView = View.make({
-    name: 'Organizations',
     query: organizationsQuery,
     jsonSchema: Type.toJsonSchema(Organization.Organization),
-    presentation: Obj.make(Collection.Collection, { objects: [] }),
   });
 
   const notesQuery = Query.select(Filter.type(Markdown.Document));
   const notesView = View.make({
-    name: 'Notes',
     query: notesQuery,
     jsonSchema: Type.toJsonSchema(Markdown.Document),
-    presentation: Obj.make(Collection.Collection, { objects: [] }),
   });
 
   return Project.make({
     name: name ?? 'Research',
-    collections: [mailboxView, contactsView, organizationsView, notesView].map((view) => Ref.make(view)),
+    columns: [
+      {
+        name: 'Mailbox',
+        view: Ref.make(mailboxView),
+        order: [],
+      },
+      {
+        name: 'Contacts',
+        view: Ref.make(contactsView),
+        order: [],
+      },
+      {
+        name: 'Organizations',
+        view: Ref.make(organizationsView),
+        order: [],
+      },
+      {
+        name: 'Notes',
+        view: Ref.make(notesView),
+        order: [],
+      },
+    ],
   });
 };

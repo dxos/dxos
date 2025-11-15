@@ -58,7 +58,7 @@ const createTableToolbarActions = ({
       const add = createMenuAction<TableToolbarActionProperties>('add-row', onAdd, {
         type: 'add-row' as const,
         icon: 'ph--plus--regular',
-        label: ['add row', { ns: translationKey }],
+        label: ['add row label', { ns: translationKey }],
         testId: 'table.toolbar.add-row',
       });
       nodes.push(add);

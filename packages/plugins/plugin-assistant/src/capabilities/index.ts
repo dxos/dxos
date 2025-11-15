@@ -12,6 +12,7 @@ export const EdgeModelResolver = lazy(() => import('./edge-model-resolver'));
 export const IntentResolver = lazy(() => import('./intent-resolver'));
 export const LocalModelResolver = lazy(() => import('./local-model-resolver'));
 export const ReactSurface = lazy(() => import('./react-surface'));
+export const Repair = lazy(() => import('./repair'));
 export const Settings = lazy(() => import('./settings'));
 export const Toolkit = lazy(() => import('./toolkit'));
 

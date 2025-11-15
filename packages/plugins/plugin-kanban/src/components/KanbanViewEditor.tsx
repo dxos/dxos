@@ -4,30 +4,26 @@
 
 import React, { useCallback, useMemo } from 'react';
 
-import { Type } from '@dxos/echo';
-import { EchoSchema, FormatEnum } from '@dxos/echo/internal';
+import { FormatEnum } from '@dxos/echo/internal';
+import { invariant } from '@dxos/invariant';
 import { useClient } from '@dxos/react-client';
 import { getSpace, useSchema } from '@dxos/react-client/echo';
 import { type CustomInputMap, Form, SelectInput } from '@dxos/react-ui-form';
-import { Kanban } from '@dxos/react-ui-kanban/types';
-import { ProjectionModel, type View, getTypenameFromQuery } from '@dxos/schema';
+import { useProjectionModel } from '@dxos/react-ui-kanban';
+import { type Kanban } from '@dxos/react-ui-kanban/types';
+import { getTypenameFromQuery } from '@dxos/schema';
 
-type KanbanViewEditorProps = { view: View.View };
+import { SettingsSchema } from '../types';
 
-export const KanbanViewEditor = ({ view }: KanbanViewEditorProps) => {
+type KanbanViewEditorProps = { object: Kanban.Kanban };
+
+export const KanbanViewEditor = ({ object }: KanbanViewEditorProps) => {
   const client = useClient();
-  const space = getSpace(view);
-  const currentTypename = view.query ? getTypenameFromQuery(view.query.ast) : undefined;
+  const space = getSpace(object);
+  const view = object.view.target;
+  const currentTypename = view?.query ? getTypenameFromQuery(view.query.ast) : undefined;
   const schema = useSchema(client, space, currentTypename);
-
-  const projection = useMemo(() => {
-    if (schema) {
-      const jsonSchema = schema instanceof EchoSchema ? schema.jsonSchema : Type.toJsonSchema(schema);
-      const projection = new ProjectionModel(jsonSchema, view.projection);
-      projection.normalizeView();
-      return projection;
-    }
-  }, [view.projection, JSON.stringify(schema)]);
+  const projection = useProjectionModel(schema, object);
 
   const fieldProjections = projection?.getFieldProjections() || [];
   const selectFields = fieldProjections
@@ -36,14 +32,15 @@ export const KanbanViewEditor = ({ view }: KanbanViewEditorProps) => {
 
   const handleSave = useCallback(
     (values: Partial<{ columnFieldId: string }>) => {
+      invariant(view);
       view.projection.pivotFieldId = values.columnFieldId;
     },
     [view],
   );
 
   const initialValues = useMemo(
-    () => ({ columnFieldId: view.projection.pivotFieldId }),
-    [view.projection.pivotFieldId],
+    () => ({ columnFieldId: view?.projection.pivotFieldId }),
+    [view?.projection.pivotFieldId],
   );
   const custom: CustomInputMap = useMemo(
     () => ({ columnFieldId: (props) => <SelectInput {...props} options={selectFields} /> }),
@@ -53,7 +50,7 @@ export const KanbanViewEditor = ({ view }: KanbanViewEditorProps) => {
   return (
     <Form
       Custom={custom}
-      schema={Kanban.SettingsSchema}
+      schema={SettingsSchema}
       values={initialValues}
       onSave={handleSave}
       autoSave

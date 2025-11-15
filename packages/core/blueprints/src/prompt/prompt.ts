@@ -5,7 +5,7 @@
 import * as Schema from 'effect/Schema';
 
 import { Obj, type Ref, Type } from '@dxos/echo';
-import { FormAnnotation, JsonSchemaType, toJsonSchema } from '@dxos/echo/internal';
+import { FormInputAnnotation, JsonSchemaType, toJsonSchema } from '@dxos/echo/internal';
 
 import { Blueprint } from '../blueprint';
 import * as Template from '../template';
@@ -31,18 +31,18 @@ const Prompt_ = Schema.Struct({
   /**
    * Input schema of the prompt.
    */
-  input: JsonSchemaType.pipe(FormAnnotation.set(false)),
+  input: JsonSchemaType.pipe(FormInputAnnotation.set(false)),
 
   /**
    * Output schema of the prompt.
    */
-  output: JsonSchemaType.pipe(FormAnnotation.set(false)),
+  output: JsonSchemaType.pipe(FormInputAnnotation.set(false)),
 
   /**
    * Natural language instructions for the prompt.
    * These should provide concrete course of action for the AI to follow.
    */
-  instructions: Template.Template.pipe(FormAnnotation.set(false)),
+  instructions: Template.Template.pipe(FormInputAnnotation.set(false)),
 
   /**
    * Blueprints that the prompt may utilize.
@@ -52,7 +52,7 @@ const Prompt_ = Schema.Struct({
   /**
    * Additional context that the prompt may utilize.
    */
-  context: Schema.Array(Schema.Any).pipe(FormAnnotation.set(false)),
+  context: Schema.Array(Schema.Any).pipe(FormInputAnnotation.set(false)),
 }).pipe(
   Type.Obj({
     typename: 'dxos.org/type/Prompt',

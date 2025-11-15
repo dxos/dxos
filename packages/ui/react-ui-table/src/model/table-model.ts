@@ -28,14 +28,14 @@ import {
 } from '@dxos/react-ui-grid';
 import {
   type FieldSortType,
-  ProjectionModel,
+  type ProjectionModel,
   type PropertyType,
   type ValidationError,
   type View,
   validateSchema,
 } from '@dxos/schema';
 
-import { Table } from '../types';
+import { type Table } from '../types';
 import { touch } from '../util';
 import { extractTagIds } from '../util/tag';
 
@@ -77,9 +77,8 @@ const defaultFeatures: TableFeatures = {
 export type InsertRowResult = 'draft' | 'final';
 
 export type TableModelProps<T extends TableRow = TableRow> = {
-  view: View.View;
-  schema: JsonSchemaType;
-  projection?: ProjectionModel;
+  object: Table.Table;
+  projection: ProjectionModel;
   features?: Partial<TableFeatures>;
   sorting?: FieldSortType[];
   initialSelection?: string[];
@@ -95,9 +94,8 @@ export type TableModelProps<T extends TableRow = TableRow> = {
 };
 
 export class TableModel<T extends TableRow = TableRow> extends Resource {
-  private readonly _view: View.View;
+  private readonly _object: Table.Table;
   private readonly _projection: ProjectionModel;
-  private _table?: Table.Table;
 
   private readonly _visibleRange = signal<DxGridPlaneRange>({
     start: { row: 0, col: 0 },
@@ -122,8 +120,7 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
   private _columnMeta?: ReadonlySignal<DxGridAxisMeta>;
 
   constructor({
-    view,
-    schema,
+    object,
     projection,
     features = {},
     sorting = [],
@@ -138,8 +135,8 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
     onRowAction,
   }: TableModelProps<T>) {
     super();
-    this._view = view;
-    this._projection = projection ?? new ProjectionModel(schema, view.projection);
+    this._object = object;
+    this._projection = projection;
     this._projection.normalizeView();
 
     // TODO(ZaymonFC): Use our more robust config merging module?
@@ -150,7 +147,11 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
       'Single selection is not compatible with editable tables.',
     );
 
-    this._sorting = new TableSorting(this._rows, this._view, this._projection);
+    this._sorting = new TableSorting({
+      rows: this._rows,
+      getView: () => this.view,
+      projection: this._projection,
+    });
 
     if (sorting.length > 0) {
       const [sort] = sorting;
@@ -175,16 +176,17 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
   }
 
   public get id(): string {
-    return Obj.getDXN(this._view).toString();
+    return Obj.getDXN(this._object).toString();
   }
 
   public get view(): View.View {
-    return this._view;
+    const view = this._object.view.target;
+    invariant(view, 'Table model not initialized');
+    return view;
   }
 
   public get table(): Table.Table {
-    invariant(this._table, 'Model not initialized');
-    return this._table;
+    return this._object;
   }
 
   public get projection(): ProjectionModel {
@@ -244,10 +246,7 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
   //
 
   protected override async _open(): Promise<void> {
-    const presentation = this._view.presentation.target ?? (await this._view.presentation.load());
-    invariant(Obj.instanceOf(Table.Table, presentation));
-    this._table = presentation;
-
+    await this._object.view.load();
     this.initializeColumnMeta();
     this.initializeEffects();
     await this._selection.open(this._ctx);

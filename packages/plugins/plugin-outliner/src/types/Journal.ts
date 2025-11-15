@@ -6,19 +6,21 @@ import { isAfter, isBefore, isEqual } from 'date-fns';
 import * as Schema from 'effect/Schema';
 
 import { Obj, Ref, Type } from '@dxos/echo';
-import { Text as TextType } from '@dxos/schema';
+import { SystemTypeAnnotation } from '@dxos/echo/internal';
+import { Text } from '@dxos/schema';
 
 import { getDateString, parseDateString } from './util';
 
 export const JournalEntry = Schema.Struct({
   id: Schema.String,
   date: Schema.String,
-  content: Type.Ref(TextType.Text),
+  content: Type.Ref(Text.Text),
 }).pipe(
   Type.Obj({
     typename: 'dxos.org/type/JournalEntry',
     version: '0.2.0',
   }),
+  SystemTypeAnnotation.set(true),
 );
 
 export interface JournalEntry extends Schema.Schema.Type<typeof JournalEntry> {}
@@ -48,7 +50,7 @@ export const make = ({ name, entries }: Partial<Obj.MakeProps<typeof Journal>> =
 export const makeEntry = (date = new Date()): JournalEntry => {
   return Obj.make(JournalEntry, {
     date: getDateString(date),
-    content: Ref.make(TextType.make()),
+    content: Ref.make(Text.make()),
   });
 };
 

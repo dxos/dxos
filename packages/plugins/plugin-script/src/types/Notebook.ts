@@ -6,9 +6,10 @@ import * as Schema from 'effect/Schema';
 
 import { Prompt } from '@dxos/blueprints';
 import { Obj, Type } from '@dxos/echo';
-import { FormAnnotation } from '@dxos/echo/internal';
+import { FormInputAnnotation } from '@dxos/echo/internal';
 import { LabelAnnotation } from '@dxos/echo/internal';
-import { Text, View } from '@dxos/schema';
+import { Graph } from '@dxos/plugin-explorer/types';
+import { Text } from '@dxos/schema';
 
 export type CellType = 'markdown' | 'script' | 'query' | 'prompt' | 'view';
 
@@ -19,7 +20,7 @@ const Cell_ = Schema.Struct({
   // TODO(burdon): Union type.
   source: Schema.optional(Type.Ref(Text.Text)),
   prompt: Schema.optional(Type.Ref(Prompt.Prompt)),
-  view: Schema.optional(Type.Ref(View.View)),
+  graph: Schema.optional(Type.Ref(Graph.Graph)),
 }).pipe(Schema.mutable);
 export interface Cell extends Schema.Schema.Type<typeof Cell_> {}
 export interface Cell_Encoded extends Schema.Schema.Encoded<typeof Cell_> {}
@@ -27,7 +28,7 @@ export const Cell: Schema.Schema<Cell, Cell_Encoded> = Cell_;
 
 export const Notebook = Schema.Struct({
   name: Schema.String.pipe(Schema.optional),
-  cells: Cell.pipe(Schema.Array, Schema.mutable, FormAnnotation.set(false)),
+  cells: Cell.pipe(Schema.Array, Schema.mutable, FormInputAnnotation.set(false)),
 }).pipe(
   Type.Obj({
     typename: 'dxos.org/type/Notebook',

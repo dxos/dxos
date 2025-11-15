@@ -6,7 +6,7 @@ import * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
 
 import { Obj, QueryAST, Type } from '@dxos/echo';
-import { Expando, OptionsAnnotationId, Ref } from '@dxos/echo/internal';
+import { Expando, OptionsAnnotationId, Ref, SystemTypeAnnotation } from '@dxos/echo/internal';
 import { DXN } from '@dxos/keys';
 
 /**
@@ -131,6 +131,7 @@ const Trigger_ = Schema.Struct({
     typename: 'dxos.org/type/Trigger',
     version: '0.1.0',
   }),
+  SystemTypeAnnotation.set(true),
 );
 export interface Trigger extends Schema.Schema.Type<typeof Trigger_> {}
 export interface TriggerEncoded extends Schema.Schema.Encoded<typeof Trigger_> {}

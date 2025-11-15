@@ -26,7 +26,14 @@ export const ViewEditor = ({ view }: ViewEditorProps) => {
   const space = getSpace(view);
   const [schema, setSchema] = useState<Schema.Schema.AnyNoContext>(() => Schema.Struct({}));
   const tags = useQuery(space, Filter.type(Tag.Tag));
-  const types = useTypeOptions({ space, annotation: ['dynamic', 'limited-static', 'object-form'] });
+  const types = useTypeOptions({
+    space,
+    annotation: {
+      location: ['database', 'runtime'],
+      kind: ['user'],
+      registered: ['registered'],
+    },
+  });
 
   useAsyncEffect(async () => {
     if (!view?.query || !space) {
@@ -56,7 +63,6 @@ export const ViewEditor = ({ view }: ViewEditorProps) => {
       const newView = View.make({
         query,
         jsonSchema: Type.toJsonSchema(newSchema),
-        presentation: Obj.make(Type.Expando, {}),
       });
       view.projection = Obj.getSnapshot(newView).projection;
 
@@ -81,7 +87,7 @@ export const ViewEditor = ({ view }: ViewEditorProps) => {
       registry={space.db.schemaRegistry}
       schema={schema}
       view={view}
-      mode='query'
+      mode='tag'
       outerSpacing={false}
       tags={tags}
       types={types}

@@ -18,6 +18,7 @@ export const translations = [
         'object name placeholder': 'New document',
         'rename object label': 'Rename document',
         'delete object label': 'Delete document',
+        'object deleted label': 'Document deleted',
       },
       [meta.id]: {
         'plugin name': 'Editor',

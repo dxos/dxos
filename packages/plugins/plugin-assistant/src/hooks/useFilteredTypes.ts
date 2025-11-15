@@ -6,11 +6,12 @@ import * as Option from 'effect/Option';
 import { useEffect, useState } from 'react';
 
 import { type Type } from '@dxos/echo';
+import { EntityKind, SystemTypeAnnotation, getTypeAnnotation } from '@dxos/echo/internal';
 import { type Space } from '@dxos/react-client/echo';
-import { ItemAnnotation } from '@dxos/schema';
 
 // TODO(burdon): Pass in filter.
-export const useItemTypes = (space?: Space): Type.Obj.Any[] => {
+// TODO(wittjosiah): Factor out.
+export const useFilteredTypes = (space?: Space): Type.Obj.Any[] => {
   const [types, setTypes] = useState<Type.Obj.Any[]>([]);
   useEffect(() => {
     if (!space) {
@@ -21,9 +22,9 @@ export const useItemTypes = (space?: Space): Type.Obj.Any[] => {
       (query) => {
         const types = Array.from(
           new Set(
-            [...space.db.graph.schemaRegistry.schemas, ...query.results].filter((type) =>
-              Option.isSome(ItemAnnotation.get(type)),
-            ),
+            [...space.db.graph.schemaRegistry.schemas, ...query.results]
+              .filter((schema) => getTypeAnnotation(schema)?.kind !== EntityKind.Relation)
+              .filter((schema) => SystemTypeAnnotation.get(schema).pipe(Option.getOrElse(() => false))),
           ),
         );
 

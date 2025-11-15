@@ -9647,6 +9647,9 @@ importers:
         specifier: ^1.0.0
         version: 1.0.0(react@19.2.0)
     devDependencies:
+      '@atlaskit/pragmatic-drag-and-drop-hitbox':
+        specifier: ^1.0.3
+        version: 1.0.3
       '@babel/core':
         specifier: ^7.18.13
         version: 7.28.0

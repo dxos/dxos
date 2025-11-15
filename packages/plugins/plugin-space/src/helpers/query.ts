@@ -49,7 +49,7 @@ export const resolveSchemaWithClientAndSpace = (client: Client, space: Space, qu
 
     const query = space.db.schemaRegistry.query({ typename });
     const schemas = yield* Effect.promise(() => query.run());
-    return Array.head(schemas).pipe(Option.map((schema) => schema.snapshot));
+    return Array.head(schemas);
   });
 
   return resolveSchema(query, resolve).pipe(

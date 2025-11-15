@@ -3,9 +3,9 @@
 //
 
 import { Capabilities, Events, contributes, createIntent, defineModule, definePlugin } from '@dxos/app-framework';
-import { ClientEvents } from '@dxos/plugin-client';
-import { SpaceCapabilities } from '@dxos/plugin-space';
-import { defineObjectForm } from '@dxos/plugin-space/types';
+import { Type } from '@dxos/echo';
+import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
+import { type CreateObjectIntent } from '@dxos/plugin-space/types';
 import { translations as kanbanTranslations } from '@dxos/react-ui-kanban';
 import { Kanban } from '@dxos/react-ui-kanban/types';
 
@@ -25,26 +25,20 @@ export const KanbanPlugin = definePlugin(meta, () => [
     activatesOn: Events.SetupMetadata,
     activate: () =>
       contributes(Capabilities.Metadata, {
-        id: Kanban.Kanban.typename,
+        id: Type.getTypename(Kanban.Kanban),
         metadata: {
           icon: 'ph--kanban--regular',
           iconHue: 'green',
+          inputSchema: CreateKanbanSchema,
+          createObjectIntent: ((props, options) =>
+            createIntent(KanbanAction.Create, { ...props, space: options.space })) satisfies CreateObjectIntent,
         },
       }),
   }),
   defineModule({
-    id: `${meta.id}/module/object-form`,
+    id: `${meta.id}/module/schema`,
     activatesOn: ClientEvents.SetupSchema,
-    activate: () =>
-      contributes(
-        SpaceCapabilities.ObjectForm,
-        defineObjectForm({
-          objectSchema: Kanban.Kanban,
-          formSchema: CreateKanbanSchema,
-          hidden: true,
-          getIntent: (props, options) => createIntent(KanbanAction.Create, { ...props, space: options.space }),
-        }),
-      ),
+    activate: () => contributes(ClientCapabilities.Schema, [Kanban.Kanban]),
   }),
   defineModule({
     id: `${meta.id}/module/react-surface`,

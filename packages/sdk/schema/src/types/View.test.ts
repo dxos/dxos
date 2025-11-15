@@ -35,7 +35,6 @@ describe('Projection', () => {
     const view = await View.makeWithReferences({
       query: Query.select(Filter.type(schema)),
       jsonSchema,
-      presentation: Obj.make(Type.Expando, {}),
       registry,
     });
     assert(view.query.ast.type === 'select');
@@ -98,11 +97,9 @@ describe('Projection', () => {
       ),
     });
 
-    const presentation = Obj.make(Type.Expando, {});
     const view = View.make({
       query: Query.select(Filter.typename(schema.typename)),
       jsonSchema: schema.jsonSchema,
-      presentation,
       fields: ['name', 'email', 'salary'], // Explicitly define order.
     });
 
