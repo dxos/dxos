@@ -4,9 +4,9 @@
 
 import TurndownService from 'turndown';
 
-import { type MessageDetails } from './types';
+import { type GoogleMail } from '../../apis';
 
-export const getPart = (message: MessageDetails, part: string) =>
+export const getPart = (message: GoogleMail.Message, part: string) =>
   message.payload.parts?.find(({ mimeType }) => mimeType === part)?.body.data;
 
 /**

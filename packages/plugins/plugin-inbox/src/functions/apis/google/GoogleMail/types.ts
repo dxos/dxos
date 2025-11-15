@@ -24,30 +24,11 @@ export const LabelsResponse = Schema.Struct({
 export type LabelsResponse = Schema.Schema.Type<typeof LabelsResponse>;
 
 //
-// https://gmail.googleapis.com/gmail/v1/users/{userId}/messages
-// https://developers.google.com/workspace/gmail/api/reference/rest/v1/users.messages/list
-//
-
-export const Message = Schema.Struct({
-  id: Schema.String,
-  threadId: Schema.String,
-});
-
-export type Message = Schema.Schema.Type<typeof Message>;
-
-export const MessagesResponse = Schema.Struct({
-  messages: Schema.Array(Message),
-  nextPageToken: Schema.optional(Schema.String),
-});
-
-export type MessagesResponse = Schema.Schema.Type<typeof MessagesResponse>;
-
-//
 // https://gmail.googleapis.com/gmail/v1/users/{userId}/messages/{messageId}
 // https://developers.google.com/workspace/gmail/api/reference/rest/v1/users.messages/get
 //
 
-export const MessageDetails = Schema.Struct({
+export const Message = Schema.Struct({
   id: Schema.String,
   threadId: Schema.String,
   labelIds: Schema.Array(Schema.String),
@@ -80,4 +61,11 @@ export const MessageDetails = Schema.Struct({
   }),
 });
 
-export type MessageDetails = Schema.Schema.Type<typeof MessageDetails>;
+export type Message = Schema.Schema.Type<typeof Message>;
+
+export const ListMessagesResponse = Schema.Struct({
+  messages: Schema.Array(Message.pick('id', 'threadId')),
+  nextPageToken: Schema.optional(Schema.String),
+});
+
+export type ListMessagesResponse = Schema.Schema.Type<typeof ListMessagesResponse>;

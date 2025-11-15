@@ -2,6 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-import { CalendarContainer } from './CalendarContainer';
+import { CalendarArticle } from './CalendarArticle';
 
-export default CalendarContainer;
+export default CalendarArticle;

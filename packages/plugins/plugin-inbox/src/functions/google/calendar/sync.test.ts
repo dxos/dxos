@@ -10,7 +10,9 @@ import * as Layer from 'effect/Layer';
 
 import { CredentialsService } from '@dxos/functions';
 
-import { eventToObject, listEventsByStartTime, listEventsByUpdated } from './api';
+import { GoogleCalendar } from '../../apis';
+
+import { mapEvent } from './mapper';
 
 const TestLayer = Layer.mergeAll(
   CredentialsService.layerConfig([
@@ -37,8 +39,7 @@ describe.runIf(process.env.ACCESS_TOKEN)('Google Calendar API', { timeout: 30_00
       const calendarId = 'primary';
       const timeMin = new Date().toISOString();
       const timeMax = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString();
-      const { items } = yield* listEventsByStartTime(calendarId, timeMin, timeMax, 10);
-
+      const { items } = yield* GoogleCalendar.listEventsByStartTime(calendarId, timeMin, timeMax, 10);
       expect(items).to.exist;
       console.log(JSON.stringify(items, null, 2));
     }, Effect.provide(TestLayer)),
@@ -49,8 +50,7 @@ describe.runIf(process.env.ACCESS_TOKEN)('Google Calendar API', { timeout: 30_00
     Effect.fnUntraced(function* ({ expect }) {
       const calendarId = 'primary';
       const updatedMin = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
-      const { items } = yield* listEventsByUpdated(calendarId, updatedMin, 10);
-
+      const { items } = yield* GoogleCalendar.listEventsByUpdated(calendarId, updatedMin, 10);
       expect(items).to.exist;
       console.log(JSON.stringify(items, null, 2));
     }, Effect.provide(TestLayer)),
@@ -61,12 +61,11 @@ describe.runIf(process.env.ACCESS_TOKEN)('Google Calendar API', { timeout: 30_00
     Effect.fnUntraced(function* ({ expect }) {
       const calendarId = 'primary';
       const updatedMin = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
-      const { items } = yield* listEventsByUpdated(calendarId, updatedMin, 1);
-
+      const { items } = yield* GoogleCalendar.listEventsByUpdated(calendarId, updatedMin, 1);
       expect(items).to.exist;
       expect(items.length).toBeGreaterThan(0);
 
-      const event = yield* eventToObject()(items[0]);
+      const event = yield* mapEvent()(items[0]);
       expect(event).to.exist;
       console.log(JSON.stringify(event, null, 2));
     }, Effect.provide(TestLayer)),
