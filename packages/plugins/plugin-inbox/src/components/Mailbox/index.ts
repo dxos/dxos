@@ -2,8 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
-import { MailboxContainer } from './MailboxContainer';
+import { MailboxArticle } from './MailboxArticle';
 
 export { MailboxObjectSettings } from './MailboxObjectSettings';
 
-export default MailboxContainer;
+export default MailboxArticle;

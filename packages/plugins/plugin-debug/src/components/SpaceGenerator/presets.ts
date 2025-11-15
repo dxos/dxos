@@ -10,7 +10,7 @@ import { type ComputeGraphModel, NODE_INPUT } from '@dxos/conductor';
 import { DXN, Filter, Key, Obj, Query, Ref, Tag, Type } from '@dxos/echo';
 import { Trigger, serializeFunction } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
-import { email } from '@dxos/plugin-inbox';
+import { gmail } from '@dxos/plugin-inbox';
 import { Mailbox } from '@dxos/plugin-inbox/types';
 import { Markdown } from '@dxos/plugin-markdown/types';
 import { type Space } from '@dxos/react-client/echo';
@@ -114,7 +114,7 @@ export const generator = () => ({
               kind: 'timer',
               cron: '* * * * *', // Every minute.
             },
-            function: Ref.make(serializeFunction(email.sync)),
+            function: Ref.make(serializeFunction(gmail.sync)),
             input: {
               mailboxId: Obj.getDXN(mailbox).toString(),
             },

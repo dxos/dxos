@@ -4,6 +4,7 @@
 
 import React, { useState } from 'react';
 
+import { type SurfaceComponentProps } from '@dxos/app-framework/react';
 import { Filter, getSpace, useQuery } from '@dxos/react-client/echo';
 import { Calendar as NaturalCalendar } from '@dxos/react-ui-calendar';
 import { StackItem } from '@dxos/react-ui-stack';
@@ -18,15 +19,10 @@ const byDate =
   ({ startDate: a }: Event.Event, { startDate: b }: Event.Event) =>
     a < b ? -direction : a > b ? direction : 0;
 
-export type CalendarContainerProps = {
-  calendar: Calendar.Calendar;
-  role: string;
-};
-
-export const CalendarContainer = ({ calendar }: CalendarContainerProps) => {
+export const CalendarArticle = ({ object }: SurfaceComponentProps<Calendar.Calendar>) => {
   const [selected, setSelected] = useState<Event.Event>();
-  const space = getSpace(calendar);
-  const queue = space?.queues.get(calendar.queue.dxn);
+  const space = getSpace(object);
+  const queue = space?.queues.get(object.queue.dxn);
   const objects = useQuery(queue, Filter.type(Event.Event));
   objects.sort(byDate());
 

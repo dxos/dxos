@@ -7,12 +7,12 @@ import { Blueprint, Template } from '@dxos/blueprints';
 import { type FunctionDefinition } from '@dxos/functions';
 import { trim } from '@dxos/util';
 
-import { calendar, email, open, summarize } from '../functions';
+import { calendar, gmail, open, summarize } from '../functions';
 
 export const INBOX_BLUEPRINT_KEY = 'dxos.org/blueprint/inbox';
 export const CALENDAR_BLUEPRINT_KEY = 'dxos.org/blueprint/calendar';
 
-const inboxFunctions: FunctionDefinition[] = [open, summarize, email.sync];
+const inboxFunctions: FunctionDefinition[] = [open, summarize, gmail.sync];
 const calendarFunctions: FunctionDefinition[] = [calendar.sync];
 const tools: string[] = [];
 

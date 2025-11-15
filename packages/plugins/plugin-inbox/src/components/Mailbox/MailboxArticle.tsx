@@ -6,7 +6,7 @@ import { Atom, useAtomSet, useAtomValue } from '@effect-atom/atom-react';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { LayoutAction, createIntent } from '@dxos/app-framework';
-import { useCapability, useIntentDispatcher } from '@dxos/app-framework/react';
+import { type SurfaceComponentProps, useCapability, useIntentDispatcher } from '@dxos/app-framework/react';
 import { Obj, Tag } from '@dxos/echo';
 import { QueryBuilder } from '@dxos/echo-query';
 import { ATTENDABLE_PATH_SEPARATOR, DeckAction } from '@dxos/plugin-deck/types';
@@ -28,14 +28,11 @@ import { POPOVER_SAVE_FILTER } from '../PopoverSaveFilter';
 import { type MailboxActionHandler, Mailbox as MailboxComponent } from './Mailbox';
 import { MailboxEmpty } from './MailboxEmpty';
 
-export type MailboxContainerProps = {
-  mailbox: Mailbox.Mailbox;
-  attendableId?: string;
-  role?: string;
-  filter?: string;
-};
-
-export const MailboxContainer = ({ mailbox, attendableId, role, filter: filterParam }: MailboxContainerProps) => {
+export const MailboxArticle = ({
+  object: mailbox,
+  filter: filterParam,
+  attendableId,
+}: SurfaceComponentProps<Mailbox.Mailbox, { filter?: string; attendableId?: string }>) => {
   const { t } = useTranslation(meta.id);
   const id = attendableId ?? Obj.getDXN(mailbox).toString();
   const state = useCapability(InboxCapabilities.MailboxState);
@@ -190,7 +187,6 @@ export const MailboxContainer = ({ mailbox, attendableId, role, filter: filterPa
       {sortedMessages && sortedMessages.length > 0 ? (
         <MailboxComponent
           id={id}
-          role={role}
           messages={sortedMessages}
           tags={tagMap}
           currentMessageId={currentMessageId}
