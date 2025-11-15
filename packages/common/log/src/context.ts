@@ -28,23 +28,30 @@ export interface LogEntry {
 export type LogProcessor = (config: LogConfig, entry: LogEntry) => void;
 
 /**
- * Returns true if the log entry matches the filter, false if should be excluded, or undefined if it doesn't match the level.
+ * Returns:
+ * true if the log entry matches the filter,
+ * false if should be excluded, or
+ * undefined if it the filter doesn't match the level.
  */
 const matchFilter = (filter: LogFilter, level: LogLevel, path?: string): boolean | undefined => {
+  // TODO(burdon): Support regexp.
   if (filter.pattern?.startsWith('-')) {
     // Exclude.
     if (path?.includes(filter.pattern.slice(1))) {
-      if (!level || level >= filter.level) {
+      if (level >= filter.level) {
         return false;
       }
     }
   } else {
     // Include.
-    if (level < filter.level) {
-      return false;
-    }
-    if (filter.pattern) {
-      return path?.includes(filter.pattern);
+    if (filter.pattern?.length) {
+      if (path?.includes(filter.pattern)) {
+        return level >= filter.level;
+      }
+    } else {
+      if (level < filter.level) {
+        return false;
+      }
     }
   }
 };
@@ -61,11 +68,9 @@ export const shouldLog = (entry: LogEntry, filters?: LogFilter[]): boolean => {
     .map((filter) => matchFilter(filter, entry.level, entry.meta?.F))
     .filter((result): result is boolean => result !== undefined);
 
-  if (results.length === 0) {
-    return false;
-  }
-
-  return results.every((result) => result);
+  // Skip if any are explicitely false.
+  // console.log({ level: entry.level, path: entry.meta?.F }, filters, results, results.length);
+  return results.length === 0 || results.every((results) => results === true);
 };
 
 export const getContextFromEntry = (entry: LogEntry): Record<string, any> | undefined => {

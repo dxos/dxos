@@ -6,7 +6,7 @@ import { type LogConfig, LogLevel, type LogOptions } from './config';
 import { type LogContext, type LogProcessor } from './context';
 import { createFunctionLogDecorator, createMethodLogDecorator } from './decorators';
 import { type CallMetadata } from './meta';
-import { DEFAULT_PROCESSORS, createConfig } from './options';
+import { createConfig } from './options';
 
 /**
  * Accessible from browser console.
@@ -32,9 +32,6 @@ export interface LogMethods {
   error: LogFunction;
   catch: (error: Error | any, context?: LogContext, meta?: CallMetadata) => void;
 
-  break: () => void;
-  stack: (message?: string, context?: never, meta?: CallMetadata) => void;
-
   method: (arg0?: never, arg1?: never, meta?: CallMetadata) => MethodDecorator;
   function: <F extends (...args: any[]) => any>(
     name: string,
@@ -43,6 +40,12 @@ export interface LogMethods {
       transformOutput?: (result: ReturnType<F>) => Promise<any> | any;
     },
   ) => F;
+
+  break: () => void;
+  stack: (message?: string, context?: never, meta?: CallMetadata) => void;
+
+  config: (options: LogOptions) => Log;
+  addProcessor: (processor: LogProcessor, addDefault?: boolean) => () => void;
 }
 
 /**
@@ -51,42 +54,36 @@ export interface LogMethods {
  */
 export interface Log extends LogMethods, LogFunction {
   readonly runtimeConfig: LogConfig;
-  config: (options: LogOptions) => Log;
-  addProcessor: (processor: LogProcessor) => () => void;
-}
-
-interface LogImp extends Log {
-  _config: LogConfig;
 }
 
 /**
  * @internal
  */
+interface LogImp extends Log {
+  _id: string;
+  _config: LogConfig;
+}
+
+let logCount = 0;
+
+/**
+ * Create a logging function with properties.
+ * @internal
+ */
 export const createLog = (): LogImp => {
+  // Default function.
   const log: LogImp = ((...params) => processLog(LogLevel.DEBUG, ...params)) as LogImp;
-  log._config = createConfig();
+
+  // Add private properties.
+  Object.assign<LogImp, Partial<LogImp>>(log, {
+    _id: `log-${++logCount}`,
+    _config: createConfig(),
+  });
+
+  // TODO(burdon): Document.
   Object.defineProperty(log, 'runtimeConfig', {
     get: () => log._config,
   });
-
-  log.config = (options) => {
-    log._config = createConfig(options);
-    return log;
-  };
-
-  log.addProcessor = (processor, addDefault = true) => {
-    // TODO(burdon): What is this used for?
-    if (addDefault && DEFAULT_PROCESSORS.filter((p) => p === processor).length === 0) {
-      DEFAULT_PROCESSORS.push(processor);
-    }
-    if (log._config.processors.filter((p) => p === processor).length === 0) {
-      log._config.processors.push(processor);
-    }
-
-    return () => {
-      log._config.processors = log._config.processors.filter((p) => p !== processor);
-    };
-  };
 
   /**
    * Process the current log call.
@@ -98,6 +95,7 @@ export const createLog = (): LogImp => {
     meta?: CallMetadata,
     error?: Error,
   ) => {
+    console.log('###', log._id, log._config.processors);
     // TODO(burdon): Do filter match upstream here.
     log._config.processors.forEach((processor) =>
       processor(log._config, {
@@ -120,14 +118,36 @@ export const createLog = (): LogImp => {
     info: (...params) => processLog(LogLevel.INFO, ...params),
     warn: (...params) => processLog(LogLevel.WARN, ...params),
     error: (...params) => processLog(LogLevel.ERROR, ...params),
-    catch: (error: Error | any, context, meta) => processLog(LogLevel.ERROR, undefined, context, meta, error),
-
-    break: () => log.info('-'.repeat(80)),
-    stack: (message, context, meta) =>
-      processLog(LogLevel.INFO, `${message ?? 'Stack Dump'}\n${getFormattedStackTrace()}`, context, meta),
+    catch: (error, context, meta) => processLog(LogLevel.ERROR, undefined, context, meta, error),
 
     method: createMethodLogDecorator(log),
     function: createFunctionLogDecorator(log),
+
+    break: () => log.info('-'.repeat(80)),
+    stack: (message, context, meta) => {
+      return processLog(LogLevel.INFO, `${message ?? 'Stack Dump'}\n${getFormattedStackTrace()}`, context, meta);
+    },
+
+    config: (options) => {
+      log._config = createConfig(options);
+      return log;
+    },
+
+    addProcessor: (processor) => {
+      // TODO(burdon): What is this used for?
+      // if (addDefault && DEFAULT_PROCESSORS.filter((p) => p === processor).length === 0) {
+      //   DEFAULT_PROCESSORS.push(processor);
+      // }
+      if (log._config.processors.filter((p) => p === processor).length === 0) {
+        log._config.processors.push(processor);
+      }
+
+      console.log('add', log._id, log._config.processors);
+      return () => {
+        console.log('remove', log._id, log._config.processors.length);
+        log._config.processors = log._config.processors.filter((p) => p !== processor);
+      };
+    },
   });
 
   return log;

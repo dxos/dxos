@@ -12,15 +12,15 @@ import { BROWSER_PROCESSOR, CONSOLE_PROCESSOR, DEBUG_PROCESSOR } from './process
 /**
  * Processor variants.
  */
-export const processors: { [index: string]: LogProcessor } = {
+export const processors: Record<string, LogProcessor> = {
   [LogProcessorType.CONSOLE]: CONSOLE_PROCESSOR,
   [LogProcessorType.BROWSER]: BROWSER_PROCESSOR,
   [LogProcessorType.DEBUG]: DEBUG_PROCESSOR,
 };
 
-const IS_BROWSER = typeof window !== 'undefined' || typeof navigator !== 'undefined';
+const browser = typeof window !== 'undefined' || typeof navigator !== 'undefined';
 
-export const DEFAULT_PROCESSORS = [IS_BROWSER ? BROWSER_PROCESSOR : CONSOLE_PROCESSOR];
+export const DEFAULT_PROCESSORS = [browser ? BROWSER_PROCESSOR : CONSOLE_PROCESSOR];
 
 const parseLogLevel = (level: string, defValue = LogLevel.WARN) => levels[level.toLowerCase()] ?? defValue;
 
@@ -64,7 +64,7 @@ export const createConfig = (options?: LogOptions): LogConfig => {
     options: mergedOptions,
     filters: parseFilter(mergedOptions.filter ?? LogLevel.INFO),
     captureFilters: parseFilter(mergedOptions.captureFilter ?? LogLevel.WARN),
-    processors: mergedOptions.processor ? [processors[mergedOptions.processor]] : DEFAULT_PROCESSORS,
+    processors: mergedOptions.processor ? [processors[mergedOptions.processor]] : [...DEFAULT_PROCESSORS],
     prefix: mergedOptions.prefix,
   };
 };

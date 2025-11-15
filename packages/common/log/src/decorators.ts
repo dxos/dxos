@@ -6,7 +6,7 @@ import { inspect } from 'node:util';
 
 import chalk from 'chalk';
 
-import type { LogMethods } from './log';
+import { type LogMethods } from './log';
 import { type CallMetadata } from './meta';
 
 let nextPromiseId = 0;
