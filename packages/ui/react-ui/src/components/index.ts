@@ -11,7 +11,7 @@ export * from './Dialogs';
 export * from './Icon';
 export * from './Input';
 export * from './Link';
-export * from './Lists';
+export * from './List';
 export * from './Main';
 export * from './Menus';
 export * from './Message';

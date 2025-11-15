@@ -26,18 +26,18 @@ import { TemplateEditor } from './TemplateEditor';
 
 export type PromptArticleProps = SurfaceComponentProps<Prompt.Prompt>;
 
-export const PromptArticle = ({ object }: PromptArticleProps) => {
+export const PromptArticle = ({ subject }: PromptArticleProps) => {
   const { t } = useTranslation(meta.id);
-  const space = getSpace(object);
-  const { hasAttention } = useAttention(Obj.getDXN(object).toString());
+  const space = getSpace(subject);
+  const { hasAttention } = useAttention(Obj.getDXN(subject).toString());
 
   const inputData = useMemo(
     () =>
-      object && {
-        prompt: space?.db.ref(Obj.getDXN(object)),
+      subject && {
+        prompt: space?.db.ref(Obj.getDXN(subject)),
         input: {},
       },
-    [object, space],
+    [subject, space],
   );
 
   // TODO(wittjosiah): Factor out.
@@ -77,7 +77,7 @@ export const PromptArticle = ({ object }: PromptArticleProps) => {
       <Toolbar.Root disabled={!hasAttention} onClick={handleRun}>
         <Toolbar.IconButton iconOnly icon='ph--play--regular' label={t('run prompt label')} onClick={handleRun} />
       </Toolbar.Root>
-      <TemplateEditor id={object.id} template={object.instructions} classNames='container-max-width' />
+      <TemplateEditor id={subject.id} template={subject.instructions} classNames='container-max-width' />
     </StackItem.Content>
   );
 };

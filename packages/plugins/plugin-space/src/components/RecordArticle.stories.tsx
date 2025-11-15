@@ -33,7 +33,7 @@ const DefaultStory = () => {
     return null;
   }
 
-  return <RecordArticle object={object} />;
+  return <RecordArticle subject={object} />;
 };
 
 const meta = {

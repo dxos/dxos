@@ -11,10 +11,10 @@ import { Organization, Person, Task } from '@dxos/types';
 import { Project } from '@dxos/types';
 
 import { OrganizationCard, PersonCard, ProjectCard, TaskCard } from '../cards';
-import { type PreviewProps } from '../types';
+import { type CardPreviewProps } from '../types';
 
 type CardProps<T extends Obj.Any> = {
-  Component: FC<PreviewProps<T>>;
+  Component: FC<CardPreviewProps<T>>;
   subject: T;
   icon?: string;
   image?: boolean;

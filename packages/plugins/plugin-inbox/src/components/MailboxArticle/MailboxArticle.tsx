@@ -23,13 +23,13 @@ import { InboxCapabilities } from '../../capabilities';
 import { meta } from '../../meta';
 import { InboxAction, type Mailbox } from '../../types';
 import { sortByCreated } from '../../util';
-import { POPOVER_SAVE_FILTER } from '../PopoverSaveFilter';
 
 import { type MailboxActionHandler, Mailbox as MailboxComponent } from './Mailbox';
 import { MailboxEmpty } from './MailboxEmpty';
+import { POPOVER_SAVE_FILTER } from './PopoverSaveFilter';
 
 export const MailboxArticle = ({
-  object: mailbox,
+  subject: mailbox,
   filter: filterParam,
   attendableId,
 }: SurfaceComponentProps<Mailbox.Mailbox, { filter?: string; attendableId?: string }>) => {
@@ -60,7 +60,7 @@ export const MailboxArticle = ({
     filter ?? Filter.everything(),
   ) as Message.Message[];
   const sortedMessages = useMemo(
-    () => [...messages].sort(sortByCreated(sortDescending.value)),
+    () => [...messages].sort(sortByCreated('created', sortDescending.value)),
     [messages, sortDescending.value],
   );
 

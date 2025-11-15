@@ -8,9 +8,14 @@ import { Card } from '@dxos/react-ui-stack';
 import { type Organization } from '@dxos/types';
 
 import { CardHeader, CardLink } from '../components';
-import { type PreviewProps } from '../types';
+import { type CardPreviewProps } from '../types';
 
-export const OrganizationCard = ({ children, subject, role, activeSpace }: PreviewProps<Organization.Organization>) => {
+export const OrganizationCard = ({
+  children,
+  subject,
+  role,
+  activeSpace,
+}: CardPreviewProps<Organization.Organization>) => {
   const { name, image, description, website } = subject;
 
   return (
