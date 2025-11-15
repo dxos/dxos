@@ -12,7 +12,7 @@ import { type Space } from '@dxos/react-client/echo';
  * @deprecated Use {@link SurfaceComponentProps} instead.
  */
 // TODO(burdon): Remove?
-export type PreviewProps<
+export type CardPreviewProps<
   Subject extends Obj.Any = Obj.Any,
   Role extends SurfaceCardRole = SurfaceCardRole,
 > = PropsWithChildren<

@@ -60,7 +60,7 @@ export namespace Capabilities {
    */
   export const ReactRoot = defineCapability<ReactRoot>('dxos.org/app-framework/capability/react-root');
 
-  export type ReactSurface = SurfaceDefinition<any, string> | readonly SurfaceDefinition<any, string>[];
+  export type ReactSurface = SurfaceDefinition | readonly SurfaceDefinition[];
 
   /**
    * @category Capability

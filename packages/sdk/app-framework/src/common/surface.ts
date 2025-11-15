@@ -36,10 +36,7 @@ export type SurfaceProps<T extends Record<string, any> = Record<string, unknown>
 /**
  * NOTE: If `[key: string]: unknown` is included in shared types, when re-used other fields become unknown as well.
  */
-export type CoreSurfaceProps<
-  T extends Record<string, any> = Record<string, unknown>,
-  R extends string = string,
-> = PropsWithChildren<{
+export type CoreSurfaceProps<T extends Record<string, any> = Record<string, unknown>> = PropsWithChildren<{
   /**
    * ID for debugging.
    */
@@ -47,9 +44,8 @@ export type CoreSurfaceProps<
 
   /**
    * Role defines how the data should be rendered.
-   * See: https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Reference/Roles
    */
-  role: R;
+  role: string;
 
   /**
    * The data to be rendered by the surface.
@@ -63,35 +59,30 @@ export type CoreSurfaceProps<
   limit?: number | undefined;
 }>;
 
-export type SurfaceComponentProps<
-  T extends Record<string, any> = Record<string, any>,
-  R extends string = string,
-> = CoreSurfaceProps<T, R> & Record<string, any>;
+export type SurfaceComponentProps<T extends Record<string, any> = Record<string, any>> = CoreSurfaceProps<T> &
+  Record<string, any>;
 
 /**
  * React component used to render a surface once is has matched.
  */
-export type SurfaceComponent<
-  T extends Record<string, any> = Record<string, any>,
-  R extends string = string,
-> = ComponentType<SurfaceComponentProps<T, R>>;
+export type SurfaceComponent<T extends Record<string, any> = Record<string, any>> = ComponentType<
+  SurfaceComponentProps<T>
+>;
 
 /**
  * Definition of when a SurfaceComponent should be rendered.
  */
-export type SurfaceDefinition<T extends Record<string, any> = any, R extends string = string> = Readonly<{
+export type SurfaceDefinition<T extends Record<string, any> = any> = Readonly<{
   id: string;
-  role: R | R[];
+  role: string | string[];
   position?: Position;
-  component: SurfaceComponent<T, R>;
+  component: SurfaceComponent<T>;
   filter?: (data: Record<string, unknown>) => data is T;
 }>;
 
 /**
  * Creates a surface definition.
- * The role type is widened to `string` to ensure compatibility with ReactSurface capability type.
  */
-// TODO(burdon): Can we narrow R?
-export const createSurface = <T extends Record<string, any> = any, R extends string = string>(
-  definition: SurfaceDefinition<T, R>,
-): SurfaceDefinition<T, string> => definition as unknown as SurfaceDefinition<T, string>;
+export const createSurface = <T extends Record<string, any> = any>(
+  definition: SurfaceDefinition<T>,
+): SurfaceDefinition<T> => definition;

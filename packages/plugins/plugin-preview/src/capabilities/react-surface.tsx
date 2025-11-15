@@ -19,7 +19,7 @@ import { Organization, Person, Project, Task } from '@dxos/types';
 
 import { OrganizationCard, PersonCard, ProjectCard, TaskCard } from '../cards';
 import { meta } from '../meta';
-import { type PreviewProps } from '../types';
+import { type CardPreviewProps } from '../types';
 
 export default () =>
   contributes(Capabilities.ReactSurface, [
@@ -37,7 +37,7 @@ export default () =>
         const { dispatchPromise: dispatch } = useIntentDispatcher();
         const space = getSpace(data.subject);
         const activeSpace = useActiveSpace(); // TODO(burdon): Disambiguate with space?
-        const handleSelect = useCallback<NonNullable<PreviewProps['onSelect']>>(
+        const handleSelect = useCallback<NonNullable<CardPreviewProps['onSelect']>>(
           (object) =>
             dispatch(
               createIntent(LayoutAction.Open, {
