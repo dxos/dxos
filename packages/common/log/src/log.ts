@@ -24,6 +24,9 @@ type LogFunction = (message: string, context?: LogContext, meta?: CallMetadata) 
  * Logging methods.
  */
 export interface LogMethods {
+  config: (options: LogOptions) => Log;
+  addProcessor: (processor: LogProcessor, addDefault?: boolean) => () => void;
+
   trace: LogFunction;
   debug: LogFunction;
   verbose: LogFunction;
@@ -43,16 +46,13 @@ export interface LogMethods {
 
   break: () => void;
   stack: (message?: string, context?: never, meta?: CallMetadata) => void;
-
-  config: (options: LogOptions) => Log;
-  addProcessor: (processor: LogProcessor, addDefault?: boolean) => () => void;
 }
 
 /**
  * Properties accessible on the logging function.
  * @internal
  */
-export interface Log extends LogMethods, LogFunction {
+export interface Log extends LogFunction, LogMethods {
   readonly runtimeConfig: LogConfig;
 }
 
@@ -111,6 +111,32 @@ export const createLog = (): LogImp => {
    * API.
    */
   Object.assign<Log, LogMethods>(log, {
+    /**
+     * Update config.
+     * NOTE: Preserves any processors that were already added to this logger instance
+     * unless an explicit processor option is provided.
+     */
+    config: ({ processor, ...options }) => {
+      const config = createConfig(options);
+      // TODO(burdon): This could be buggy since the behavior is not reentrant.
+      const processors = processor ? config.processors : log._config.processors;
+      log._config = { ...config, processors };
+      return log;
+    },
+
+    /**
+     * Adds a processor to the logger.
+     */
+    addProcessor: (processor) => {
+      if (log._config.processors.filter((p) => p === processor).length === 0) {
+        log._config.processors.push(processor);
+      }
+
+      return () => {
+        log._config.processors = log._config.processors.filter((p) => p !== processor);
+      };
+    },
+
     trace: (...params) => processLog(LogLevel.TRACE, ...params),
     debug: (...params) => processLog(LogLevel.DEBUG, ...params),
     verbose: (...params) => processLog(LogLevel.VERBOSE, ...params),
@@ -125,35 +151,6 @@ export const createLog = (): LogImp => {
     break: () => log.info('-'.repeat(80)),
     stack: (message, context, meta) => {
       return processLog(LogLevel.INFO, `${message ?? 'Stack Dump'}\n${getFormattedStackTrace()}`, context, meta);
-    },
-
-    config: (options) => {
-      const newConfig = createConfig(options);
-
-      // Preserve any processors that were already added to this logger instance
-      // unless an explicit processor option is provided (via options or env).
-      const preserveExistingProcessors = newConfig.options.processor === undefined;
-
-      log._config = {
-        ...newConfig,
-        processors: preserveExistingProcessors ? log._config.processors : newConfig.processors,
-      };
-
-      return log;
-    },
-
-    addProcessor: (processor) => {
-      // TODO(burdon): What is this used for?
-      // if (addDefault && DEFAULT_PROCESSORS.filter((p) => p === processor).length === 0) {
-      //   DEFAULT_PROCESSORS.push(processor);
-      // }
-      if (log._config.processors.filter((p) => p === processor).length === 0) {
-        log._config.processors.push(processor);
-      }
-
-      return () => {
-        log._config.processors = log._config.processors.filter((p) => p !== processor);
-      };
     },
   });
 

@@ -50,7 +50,8 @@ export const parseFilter = (filter: string | string[] | LogLevel): LogFilter[] =
  * @internal
  */
 export const createConfig = (options?: LogOptions): LogConfig => {
-  const nodeOptions: LogOptions | undefined =
+  // Node only.
+  const envOptions: LogOptions | undefined =
     'process' in globalThis
       ? {
           file: process!.env.LOG_CONFIG,
@@ -59,7 +60,7 @@ export const createConfig = (options?: LogOptions): LogConfig => {
         }
       : undefined;
 
-  const mergedOptions: LogOptions = defaultsDeep({}, loadOptions(nodeOptions?.file), nodeOptions, options);
+  const mergedOptions: LogOptions = defaultsDeep({}, loadOptions(envOptions?.file), envOptions, options);
   return {
     options: mergedOptions,
     filters: parseFilter(mergedOptions.filter ?? LogLevel.INFO),

@@ -4,7 +4,7 @@
 
 import React, { useCallback, useEffect, useState } from 'react';
 
-import { type LogEntry, LogLevel, log, shortLevelName, shouldLog } from '@dxos/log';
+import { type LogConfig, type LogEntry, LogLevel, log, shortLevelName, shouldLog } from '@dxos/log';
 import { IconButton, Input, Toolbar } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
@@ -21,7 +21,7 @@ export const LoggingPanel = ({ maxLines = 100, ...props }: CustomPanelProps<{ ma
     }
 
     log.config({ filter: text });
-    const dispose = log.addProcessor((config, entry) => {
+    const dispose = log.addProcessor((config: LogConfig, entry: LogEntry) => {
       if (shouldLog(entry, config.filters)) {
         setEntries((entries) => [...entries, entry].slice(0, maxLines));
       }
