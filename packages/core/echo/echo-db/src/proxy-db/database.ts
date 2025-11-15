@@ -24,7 +24,6 @@ import {
   type FlushOptions,
   type LoadObjectOptions,
   type ObjectCore,
-  type ObjectPlacement,
 } from '../core-db';
 import {
   type AnyLiveObject,
@@ -36,8 +35,7 @@ import {
   isEchoObject,
 } from '../echo-handler';
 import { type Hypergraph } from '../hypergraph';
-import { type Queryable } from '../query';
-import { Filter, Query, type QueryFn, type QueryOptions } from '../query';
+import { Filter, Query } from '../query';
 
 import { EchoSchemaRegistry } from './echo-schema-registry';
 import type { ObjectMigration } from './object-migration';
