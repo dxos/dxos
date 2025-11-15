@@ -18,6 +18,8 @@ export const translations = [
         'add custom token': 'Custom Token',
         'delete token': 'Delete Token',
         'new integration label': 'New Integration',
+        'login hint label': 'Username',
+        'login hint placeholder': 'Enter your username',
       },
     },
   },
