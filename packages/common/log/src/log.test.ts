@@ -50,15 +50,14 @@ describe('log', () => {
 
     for (const test of tests) {
       let count = 0;
-      log
-        .addProcessor((config, entry) => {
-          if (shouldLog(entry, config.filters)) {
-            count++;
-          }
-        })
-        .config({
-          filter: test.filter,
-        });
+      log.addProcessor((config, entry) => {
+        if (shouldLog(entry, config.filters)) {
+          count++;
+        }
+      });
+      log.config({
+        filter: test.filter,
+      });
 
       console.group(test.filter);
       log.info('line 1', {}, { F: 'foo.ts', L: 1, S: undefined });

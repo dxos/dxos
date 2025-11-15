@@ -13,6 +13,7 @@ import { Panel, type PanelProps } from './Panel';
 import {
   DatabasePanel,
   EdgePanel,
+  LoggingPanel,
   MemoryPanel,
   NetworkPanel,
   PerformancePanel,
@@ -35,6 +36,7 @@ const PANEL_KEYS = [
   'queries',
   'rawQueries',
   'database',
+  'logging',
   'memory',
   'replicator',
   'replicatorMessages',
@@ -93,7 +95,12 @@ export const StatsPanel = ({ stats, onRefresh, children }: PropsWithChildren<Que
     localStorage?.setItem(`${LOCAL_STORAGE_KEY}/${id}`, String(open));
   };
 
-  // TODO(burdon): Add Surface debug.
+  const props = (id: PanelKey) => ({
+    id,
+    open: panelState[id],
+    onToggle: handleToggle,
+  });
+
   return (
     <div
       role='none'
@@ -115,6 +122,7 @@ export const StatsPanel = ({ stats, onRefresh, children }: PropsWithChildren<Que
           </Toggle>
         }
       />
+      <LoggingPanel {...props('logging')} />
       <MemoryPanel id='memory' memory={stats?.memory} />
       <NetworkPanel id='network' network={stats?.network} />
       <EdgePanel id='edge' open={panelState.edge} edge={stats?.edge} onToggle={handleToggle} />

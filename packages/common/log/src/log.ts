@@ -52,7 +52,7 @@ export interface LogMethods {
 export interface Log extends LogMethods, LogFunction {
   readonly runtimeConfig: LogConfig;
   config: (options: LogOptions) => Log;
-  addProcessor: (processor: LogProcessor) => Log;
+  addProcessor: (processor: LogProcessor) => () => void;
 }
 
 interface LogImp extends Log {
@@ -74,14 +74,18 @@ export const createLog = (): LogImp => {
     return log;
   };
 
-  log.addProcessor = (processor) => {
-    if (DEFAULT_PROCESSORS.filter((p) => p === processor).length === 0) {
+  log.addProcessor = (processor, addDefault = true) => {
+    // TODO(burdon): What is this used for?
+    if (addDefault && DEFAULT_PROCESSORS.filter((p) => p === processor).length === 0) {
       DEFAULT_PROCESSORS.push(processor);
     }
     if (log._config.processors.filter((p) => p === processor).length === 0) {
       log._config.processors.push(processor);
     }
-    return log;
+
+    return () => {
+      log._config.processors = log._config.processors.filter((p) => p !== processor);
+    };
   };
 
   /**

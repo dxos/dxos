@@ -135,7 +135,7 @@ export const ComplementarySidebar = ({ current }: ComplementarySidebarProps) => 
               key={getCompanionId(companion.id)}
               value={getCompanionId(companion.id)}
               classNames={[
-                'absolute data-[state="inactive"]:-z-[1]',
+                'absolute data-[state="inactive"]:-z-[1] overflow-hidden',
                 'inset-block-0 inline-start-0 is-[calc(100%-var(--r0-size))] lg:is-[--r1-size]',
                 'grid grid-cols-1 grid-rows-[var(--rail-size)_1fr_min-content] pbs-[env(safe-area-inset-top)]',
               ]}
@@ -164,10 +164,6 @@ type ComplementarySidebarPanelProps = {
   hoistStatusbar: boolean;
 };
 
-const ScrollArea = ({ children }: PropsWithChildren) => {
-  return <div className='flex flex-col grow overflow-x-hidden overflow-y-auto scrollbar-thin'>{children}</div>;
-};
-
 const ComplementarySidebarPanel = ({ companion, activeId, data, hoistStatusbar }: ComplementarySidebarPanelProps) => {
   const { t } = useTranslation(meta.id);
 
@@ -179,7 +175,7 @@ const ComplementarySidebarPanel = ({ companion, activeId, data, hoistStatusbar }
 
   return (
     <>
-      <div className='flex items-center p-1 gap-1 border-be border-subduedSeparator'>
+      <div role='none' className='flex items-center p-1 gap-1 border-be border-subduedSeparator'>
         <IconButton
           label={toLocalizedString(companion.properties.label, t)}
           icon={companion.properties.icon}
@@ -187,9 +183,11 @@ const ComplementarySidebarPanel = ({ companion, activeId, data, hoistStatusbar }
           tooltipSide='left'
           data-value={getCompanionId(companion.id)}
           classNames='bs-10 is-10'
-          variant='primary'
+          variant='default'
         />
-        <div className='pli-1'>{toLocalizedString(companion.properties.label, t)}</div>
+        <div role='none' className='pli-1'>
+          {toLocalizedString(companion.properties.label, t)}
+        </div>
       </div>
       <Wrapper>
         <Surface
@@ -209,4 +207,8 @@ const ComplementarySidebarPanel = ({ companion, activeId, data, hoistStatusbar }
       )}
     </>
   );
+};
+
+const ScrollArea = ({ children }: PropsWithChildren) => {
+  return <div className='flex flex-col grow overflow-x-hidden overflow-y-auto scrollbar-thin'>{children}</div>;
 };
