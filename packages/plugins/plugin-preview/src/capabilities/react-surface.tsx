@@ -5,7 +5,7 @@
 import React, { useCallback } from 'react';
 
 import { Capabilities, LayoutAction, contributes, createIntent, createSurface } from '@dxos/app-framework';
-import { Surface, type SurfaceCardRole, SurfaceCardRoles, useIntentDispatcher } from '@dxos/app-framework/react';
+import { Surface, SurfaceCardRole, useIntentDispatcher } from '@dxos/app-framework/react';
 import { getSchema, getSpace } from '@dxos/client/echo';
 import { Obj } from '@dxos/echo';
 import { type JsonPath, setValue } from '@dxos/echo/internal';
@@ -31,7 +31,7 @@ export default () =>
     // TODO(burdon): Infer Role type.
     createSurface<{ subject: Person.Person }>({
       id: `${meta.id}/schema-popover--contact`,
-      role: SurfaceCardRoles,
+      role: SurfaceCardRole.literals as any,
       filter: (data): data is { subject: Person.Person } => Obj.instanceOf(Person.Person, data.subject),
       component: ({ data, role }) => {
         const { dispatchPromise: dispatch } = useIntentDispatcher();
@@ -65,7 +65,7 @@ export default () =>
     }),
     createSurface({
       id: `${meta.id}/schema-popover--organization`,
-      role: SurfaceCardRoles,
+      role: SurfaceCardRole.literals as any,
       filter: (data): data is { subject: Organization.Organization } =>
         Obj.instanceOf(Organization.Organization, data.subject),
       component: ({ data, role }) => {
@@ -79,7 +79,7 @@ export default () =>
     }),
     createSurface({
       id: `${meta.id}/schema-popover--project`,
-      role: SurfaceCardRoles,
+      role: SurfaceCardRole.literals as any,
       filter: (data): data is { subject: Project.Project } => Obj.instanceOf(Project.Project, data.subject),
       component: ({ data, role }) => {
         const activeSpace = useActiveSpace();
@@ -88,7 +88,7 @@ export default () =>
     }),
     createSurface({
       id: `${meta.id}/schema-popover--task`,
-      role: SurfaceCardRoles,
+      role: SurfaceCardRole.literals as any,
       filter: (data): data is { subject: Task.Task } => Obj.instanceOf(Task.Task, data.subject),
       component: ({ data, role }) => {
         return <TaskCard subject={data.subject} role={role as SurfaceCardRole} />;
@@ -101,7 +101,7 @@ export default () =>
 
     createSurface({
       id: `${meta.id}/fallback-popover`,
-      role: SurfaceCardRoles,
+      role: SurfaceCardRole.literals as any,
       position: 'fallback',
       filter: (data): data is { subject: Obj.Any; projection?: ProjectionModel } => Obj.isObject(data.subject),
       component: ({ data, role }) => {

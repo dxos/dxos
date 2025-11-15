@@ -2,11 +2,19 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as Schema from 'effect/Schema';
+
 import { type Obj } from '@dxos/echo';
 
-// TOOD(burdon): Use effect literal.
-export const SurfaceCardRoles = ['card', 'card--popover', 'card--intrinsic', 'card--extrinsic', 'card--transclusion'];
-export type SurfaceCardRole = 'card' | 'card--popover' | 'card--intrinsic' | 'card--extrinsic' | 'card--transclusion';
+export const SurfaceCardRole = Schema.Literal(
+  'card',
+  'card--popover',
+  'card--intrinsic',
+  'card--extrinsic',
+  'card--transclusion',
+);
+
+export type SurfaceCardRole = Schema.Schema.Type<typeof SurfaceCardRole>;
 
 // TODO(burdon): Define all roles.
 export type SurfaceRole =
