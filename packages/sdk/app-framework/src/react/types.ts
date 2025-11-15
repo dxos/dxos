@@ -21,7 +21,7 @@ export type SurfaceComponentProps<T extends Obj.Any = Obj.Any, Props = {}> = {
     | 'card--transclusion';
 
   /** The object being displayed. */
-  object: T;
+  subject: T;
 
   // TODO(burdon): Include attendableId?
 

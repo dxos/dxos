@@ -11,14 +11,14 @@ import { type Outline as OutlineType } from '../types';
 
 import { Outline } from './Outline';
 
-export const OutlineCard = ({ object }: SurfaceComponentProps<OutlineType.Outline>) => {
-  if (!object.content.target) {
+export const OutlineCard = ({ subject }: SurfaceComponentProps<OutlineType.Outline>) => {
+  if (!subject.content.target) {
     return null;
   }
 
   return (
-    <Card.SurfaceRoot id={object.id} classNames='p-2'>
-      <Outline id={object.content.target.id} text={object.content.target} />
+    <Card.SurfaceRoot id={subject.id} classNames='p-2'>
+      <Outline id={subject.content.target.id} text={subject.content.target} />
     </Card.SurfaceRoot>
   );
 };

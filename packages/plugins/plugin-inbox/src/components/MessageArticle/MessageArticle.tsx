@@ -23,7 +23,7 @@ import { type ViewMode } from './MessageHeader';
 import { useMessageToolbarActions } from './MessageToolbar';
 
 export const MessageArticle = ({
-  object: message,
+  subject: message,
   mailbox,
 }: SurfaceComponentProps<MessageType.Message, { mailbox: Mailbox.Mailbox }>) => {
   const { t } = useTranslation(meta.id);

@@ -19,10 +19,10 @@ const byDate =
   ({ startDate: a }: Event.Event, { startDate: b }: Event.Event) =>
     a < b ? -direction : a > b ? direction : 0;
 
-export const CalendarArticle = ({ object }: SurfaceComponentProps<Calendar.Calendar>) => {
+export const CalendarArticle = ({ subject: calendar }: SurfaceComponentProps<Calendar.Calendar>) => {
   const [selected, setSelected] = useState<Event.Event>();
-  const space = getSpace(object);
-  const queue = space?.queues.get(object.queue.dxn);
+  const space = getSpace(calendar);
+  const queue = space?.queues.get(calendar.queue.dxn);
   const objects = useQuery(queue, Filter.type(Event.Event));
   objects.sort(byDate());
 

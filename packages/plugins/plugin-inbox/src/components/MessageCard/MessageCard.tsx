@@ -12,7 +12,7 @@ import { type Message } from '@dxos/types';
 
 import { getMessageProps } from '../../util';
 
-export const MessageCard = ({ object: message, role }: SurfaceComponentProps<Message.Message>) => {
+export const MessageCard = ({ subject: message, role }: SurfaceComponentProps<Message.Message>) => {
   const { date, email, from, hue, subject, snippet } = getMessageProps(message, new Date(), true);
   return (
     <Card.SurfaceRoot role={role} classNames='grid grid-cols-[52px_1fr] grid-rows-[min-content_1fr] overflow-hidden'>

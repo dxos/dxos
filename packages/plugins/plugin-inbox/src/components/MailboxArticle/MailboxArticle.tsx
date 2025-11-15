@@ -29,7 +29,7 @@ import { MailboxEmpty } from './MailboxEmpty';
 import { POPOVER_SAVE_FILTER } from './PopoverSaveFilter';
 
 export const MailboxArticle = ({
-  object: mailbox,
+  subject: mailbox,
   filter: filterParam,
   attendableId,
 }: SurfaceComponentProps<Mailbox.Mailbox, { filter?: string; attendableId?: string }>) => {
