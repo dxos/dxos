@@ -6,12 +6,12 @@ import * as Effect from 'effect/Effect';
 
 import { Event } from '@dxos/types';
 
-import { type GoogleCalendar } from '../apis';
+import { type GoogleCalendar } from '../../apis';
 
 /**
  * Transforms Google Calendar event to ECHO event object.
  */
-export const eventToObject = () =>
+export const mapEvent = () =>
   Effect.fn(function* (event: GoogleCalendar.Event) {
     // Skip cancelled events.
     if (event.status === 'cancelled') {

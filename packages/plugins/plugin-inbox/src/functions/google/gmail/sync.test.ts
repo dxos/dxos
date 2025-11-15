@@ -13,9 +13,9 @@ import * as Layer from 'effect/Layer';
 import { CredentialsService } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 
-import { GoogleMail } from '../apis';
+import { GoogleMail } from '../../apis';
 
-import { messageToObject } from './mapper';
+import { mapMessage } from './mapper';
 
 const TestLayer = Layer.mergeAll(
   CredentialsService.layerConfig([
@@ -56,9 +56,7 @@ describe.runIf(process.env.ACCESS_TOKEN)('Gmail API', { timeout: 30_000 }, () =>
 
       const objects = yield* Function.pipe(
         messages.slice(1, 2),
-        Array.map((message) =>
-          Function.pipe(GoogleMail.getMessage(userId, message.id), Effect.flatMap(messageToObject())),
-        ),
+        Array.map((message) => Function.pipe(GoogleMail.getMessage(userId, message.id), Effect.flatMap(mapMessage()))),
         Effect.all,
       );
 

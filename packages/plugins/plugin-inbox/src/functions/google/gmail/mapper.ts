@@ -7,14 +7,14 @@ import * as Effect from 'effect/Effect';
 import { Obj, Type } from '@dxos/echo';
 import { Message } from '@dxos/types';
 
-import { type GoogleMail } from '../apis';
+import { type GoogleMail } from '../../apis';
 
 import { getPart, normalizeText, parseFromHeader } from './util';
 
 /**
  * Transforms Gmail message to ECHO message object.
  */
-export const messageToObject = (last?: Message.Message) =>
+export const mapMessage = (last?: Message.Message) =>
   Effect.fn(function* (message: GoogleMail.Message) {
     // Skip the message if it's the same as the last message.
     const created = new Date(parseInt(message.internalDate)).toISOString();

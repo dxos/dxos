@@ -1,8 +1,9 @@
-import { defineCapability } from '@dxos/app-framework';
-import { type Message } from '@dxos/types';
 //
 // Copyright 2025 DXOS.org
 //
+
+import { defineCapability } from '@dxos/app-framework';
+import { type Message } from '@dxos/types';
 
 import { meta } from '../meta';
 

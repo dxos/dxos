@@ -20,16 +20,16 @@ import { DatabaseService, QueueService, defineFunction } from '@dxos/functions';
 import { type Event } from '@dxos/types';
 
 // TODO(burdon): Importing from types/index.ts pulls in @dxos/client dependencies due to SpaceSchema.
-import * as Calendar from '../../types/Calendar';
-import { GoogleCalendar } from '../apis';
+import * as Calendar from '../../../types/Calendar';
+import { GoogleCalendar } from '../../apis';
 
-import { eventToObject } from './mapper';
+import { mapEvent } from './mapper';
 
 export default defineFunction({
-  key: 'dxos.org/function/inbox/calendar-sync',
+  key: 'dxos.org/function/inbox/google-calendar-sync',
   name: 'Sync Google Calendar',
   description:
-    'Sync events from Google Calendar. Initial sync uses startTime ordering for specified number of days. Subsequent syncs use updatedMin to catch all changes.',
+    'Sync events from Google Calendar. The initial sync uses startTime ordering for specified number of days. Subsequent syncs use updatedMin to catch all changes.',
   inputSchema: Schema.Struct({
     calendarId: ArtifactId,
     googleCalendarId: Schema.optional(Schema.String),
@@ -180,13 +180,13 @@ const processEvents = Effect.fn(function* (
 
   // Transform events to DXOS objects.
   // TODO(wittjosiah): Handle event updates vs new events.
-  //   - Set foreignId (event.id) in object meta to track Google Calendar event ID.
-  //   - Check if event already exists in queue using foreignId.
-  //   - For existing events: update the existing queue entry rather than appending a new one.
-  //   - For new events: append to queue as we do now.
+  //  - Set foreignId (event.id) in object meta to track Google Calendar event ID.
+  //  - Check if event already exists in queue using foreignId.
+  //  - For existing events: update the existing queue entry rather than appending a new one.
+  //  - For new events: append to queue as we do now.
   const eventObjects = yield* Function.pipe(
     items,
-    Array.map((event) => eventToObject()(event)),
+    Array.map((event) => mapEvent()(event)),
     Effect.all,
     Effect.map((objects) => Array.filter(objects, Predicate.isNotNullable)),
   );

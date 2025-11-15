@@ -10,9 +10,9 @@ import * as Layer from 'effect/Layer';
 
 import { CredentialsService } from '@dxos/functions';
 
-import { GoogleCalendar } from '../apis';
+import { GoogleCalendar } from '../../apis';
 
-import { eventToObject } from './mapper';
+import { mapEvent } from './mapper';
 
 const TestLayer = Layer.mergeAll(
   CredentialsService.layerConfig([
@@ -65,7 +65,7 @@ describe.runIf(process.env.ACCESS_TOKEN)('Google Calendar API', { timeout: 30_00
       expect(items).to.exist;
       expect(items.length).toBeGreaterThan(0);
 
-      const event = yield* eventToObject()(items[0]);
+      const event = yield* mapEvent()(items[0]);
       expect(event).to.exist;
       console.log(JSON.stringify(event, null, 2));
     }, Effect.provide(TestLayer)),
