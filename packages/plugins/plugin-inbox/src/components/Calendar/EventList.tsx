@@ -5,7 +5,7 @@
 import { format } from 'date-fns';
 import React from 'react';
 
-import { Icon, type ThemedClassName } from '@dxos/react-ui';
+import { Icon, List, ListItem, type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 import { type Actor, type Event } from '@dxos/types';
 
@@ -22,11 +22,13 @@ export type EventListProps = {
 // TODO(burdon): Virtualize (and reuse for email).
 export const EventList = ({ events = [], selected, onSelect }: EventListProps) => {
   return (
-    <ul className={mx('is-full divide-y divide-separator overflow-y-auto')}>
+    <List classNames='is-full divide-y divide-separator overflow-y-auto'>
       {events.map((event) => (
-        <EventComponent key={event.id} event={event} />
+        <ListItem.Root key={event.id} classNames='p-2 hover:bg-hoverOverlay'>
+          <EventComponent event={event} />
+        </ListItem.Root>
       ))}
-    </ul>
+    </List>
   );
 };
 
@@ -34,11 +36,10 @@ const EventComponent = ({ event }: { event: Event.Event }) => {
   return (
     <li
       className="
-        flex flex-col gap-2 p-1
+        flex flex-col is-full gap-2
         md:grid md:grid-cols-[1fr_20rem] md:grid-rows-[auto_1fr]
         md:[grid-template-areas:'left-top_right''left-main_right']
         md:gap-2
-        hover:bg-hoverOverlay
       "
     >
       <div className='[grid-area:left-top]'>{event.name}</div>
@@ -49,6 +50,9 @@ const EventComponent = ({ event }: { event: Event.Event }) => {
     </li>
   );
 };
+
+// TODO(burdon): Factor out.
+//  Create library of common compponents for all types.
 
 const DateComponent = ({ date }: { date: string }) => {
   const formatted = format(new Date(date), 'PPpp');
