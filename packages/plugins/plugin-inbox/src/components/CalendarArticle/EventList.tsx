@@ -5,9 +5,11 @@
 import { type Locale, format, intervalToDuration } from 'date-fns';
 import React from 'react';
 
-import { Icon, List, ListItem, type ThemedClassName } from '@dxos/react-ui';
+import { Icon, IconButton, List, ListItem, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 import { type Actor, type Event } from '@dxos/types';
+
+import { meta } from '../../meta';
 
 // TODO(burdon): Event/Message Articles (in companion); with cards (1-UP).
 // TODO(burdon): Common Actor reference (lookup on demand).
@@ -77,9 +79,18 @@ const DateComponent = ({ start, end, locale }: { start: Date; end?: Date; locale
 };
 
 const ActorComponent = ({ actor, classNames }: ThemedClassName<{ actor: Actor.Actor }>) => {
+  const { t } = useTranslation(meta.id);
+
   return (
     <div role='none' className={mx('flex is-full items-center gap-2 overflow-hidden', classNames)}>
-      <Icon icon='ph--user--regular' classNames='cursor-pointer text-subdued' />
+      <IconButton
+        variant='ghost'
+        disabled={!actor.contact}
+        icon='ph--user--regular'
+        iconOnly
+        label={t('open profile button')}
+        classNames='cursor-pointer text-subdued'
+      />
       <div className='truncate text-description'>{actor.name ?? actor.email}</div>
     </div>
   );
