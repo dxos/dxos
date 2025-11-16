@@ -41,7 +41,7 @@ export const JournalContainer = ({
         {showCalendar && (
           <Calendar.Root ref={controllerRef}>
             <Calendar.Viewport>
-              <Calendar.Header />
+              <Calendar.Toolbar />
               <Calendar.Grid rows={isNotMobile ? undefined : 6} />
             </Calendar.Viewport>
           </Calendar.Root>
