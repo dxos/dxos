@@ -41,7 +41,7 @@ export const ChatModule = ({ space }: ComponentProps) => {
       <Chat.Root chat={chat} processor={processor}>
         <Chat.Toolbar />
         <Chat.Viewport classNames='relative container-max-width'>
-          <Toolbar.Root classNames='border-b border-subduedSeparator'>
+          <Toolbar.Root classNames='border-be border-subduedSeparator'>
             <div className='pli-1 grow truncate text-subdued'>{chat?.name}</div>
             <Popover.Root>
               <Popover.Trigger asChild>

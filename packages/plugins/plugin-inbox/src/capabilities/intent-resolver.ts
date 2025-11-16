@@ -64,6 +64,7 @@ export default (context: PluginContext) =>
     }),
     createResolver({
       intent: InboxAction.ExtractContact,
+      // TODO(burdon): Factor out function (and test separately).
       resolve: async ({ space, message }) => {
         log.info('extract contact', { message });
         const name = message.sender.name;
@@ -142,7 +143,6 @@ export default (context: PluginContext) =>
         }
 
         intents.push(createIntent(SpaceAction.AddObject, { object: newContact, target: space, hidden: true }));
-
         return { intents };
       },
     }),

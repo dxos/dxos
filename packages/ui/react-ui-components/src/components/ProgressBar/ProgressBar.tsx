@@ -148,7 +148,7 @@ const Node = ({ state = 'open', selected, classes, options = defaultOptions, onC
               width: width - radius,
             },
           }}
-          className={mx('absolute left-0 border-b border-subduedSeparator box-border', state === 'closed' && 'hidden')}
+          className={mx('absolute left-0 border-be border-subduedSeparator box-border', state === 'closed' && 'hidden')}
         />
         <motion.div
           transition={{

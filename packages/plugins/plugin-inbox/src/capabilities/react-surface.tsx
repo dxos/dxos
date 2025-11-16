@@ -14,10 +14,11 @@ import { ATTENDABLE_PATH_SEPARATOR, DeckAction } from '@dxos/plugin-deck/types';
 import { Filter, getSpace, useQuery, useQueue, useSpace } from '@dxos/react-client/echo';
 import { Table } from '@dxos/react-ui-table/types';
 import { View, getTypenameFromQuery } from '@dxos/schema';
-import { Message, Organization, Person } from '@dxos/types';
+import { Event, Message, Organization, Person } from '@dxos/types';
 
 import {
   CalendarArticle,
+  EventArticle,
   MailboxArticle,
   MailboxSettings,
   MessageArticle,
@@ -51,10 +52,19 @@ export default () =>
     createSurface({
       id: `${meta.id}/message`,
       role: ['article', 'section'],
-      filter: (data): data is { companionTo: Mailbox.Mailbox; subject: Message.Message } =>
-        Obj.instanceOf(Mailbox.Mailbox, data.companionTo) && Obj.instanceOf(Message.Message, data.subject),
-      component: ({ data: { companionTo, subject: message }, role }) => {
-        return <MessageArticle role={role as 'article' | 'section'} subject={message} mailbox={companionTo} />;
+      filter: (data): data is { subject: Message.Message; companionTo: Mailbox.Mailbox } =>
+        Obj.instanceOf(Message.Message, data.subject) && Obj.instanceOf(Mailbox.Mailbox, data.companionTo),
+      component: ({ data: { companionTo, subject }, role }) => {
+        return <MessageArticle role={role as 'article' | 'section'} subject={subject} mailbox={companionTo} />;
+      },
+    }),
+    createSurface({
+      id: `${meta.id}/event`,
+      role: ['article', 'section'],
+      filter: (data): data is { subject: Event.Event; companionTo: Calendar.Calendar } =>
+        Obj.instanceOf(Event.Event, data.subject) && Obj.instanceOf(Calendar.Calendar, data.companionTo),
+      component: ({ data: { companionTo, subject }, role }) => {
+        return <EventArticle role={role as 'article' | 'section'} subject={subject} mailbox={companionTo} />;
       },
     }),
     createSurface({
@@ -67,7 +77,7 @@ export default () =>
       id: `${meta.id}/message-card`,
       role: ['card', 'card--intrinsic', 'card--extrinsic', 'card--popover', 'card--transclusion'],
       filter: (data): data is { subject: Message.Message } => Obj.instanceOf(Message.Message, data?.subject),
-      component: ({ data: { subject: message }, role }) => <MessageCard subject={message} role={role} />,
+      component: ({ data: { subject }, role }) => <MessageCard subject={subject} role={role} />,
     }),
     createSurface({
       id: POPOVER_SAVE_FILTER,
