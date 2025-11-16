@@ -11,7 +11,7 @@ import { createEvents } from '../../testing';
 
 import { EventList } from './EventList';
 
-const meta = {
+const meta: Meta<typeof EventList> = {
   title: 'plugins/plugin-inbox/EventList',
   component: EventList,
   args: {
@@ -20,7 +20,7 @@ const meta = {
   parameters: {
     layout: 'fullscreen',
   },
-} satisfies Meta<typeof EventList>;
+};
 
 export default meta;
 
