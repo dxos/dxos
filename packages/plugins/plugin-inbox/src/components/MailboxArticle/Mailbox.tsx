@@ -209,7 +209,7 @@ export const Mailbox = ({ id, messages, tags, currentMessageId, ignoreAttention,
   }, [messages]);
 
   return (
-    <div role='none' className={mx('flex flex-col [&_.dx-grid]:grow')}>
+    <div role='none' className={mx('flex flex-col [&_.dx-grid]:grow overflow-hidden')}>
       <Grid.Root id={`${id}__grid`}>
         <Grid.Content
           className={mx(

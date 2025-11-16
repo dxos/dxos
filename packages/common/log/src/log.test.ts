@@ -40,8 +40,9 @@ describe('log', () => {
     const tests = [
       { expected: 0, filter: 'ERROR' },
       { expected: 2, filter: 'INFO' },
+      { expected: 1, filter: 'foo:INFO' },
       { expected: 4, filter: 'DEBUG' },
-      { expected: 2, filter: '-foo:*' },
+      { expected: 2, filter: 'DEBUG,-foo:*' },
       { expected: 1, filter: 'INFO,-foo:*' },
       { expected: 3, filter: 'DEBUG,-foo:INFO' },
       { expected: 3, filter: 'foo:DEBUG,bar:INFO' },
@@ -60,10 +61,10 @@ describe('log', () => {
       });
 
       console.group(`Filter: "${test.filter}"`);
-      log.debug('line 1', {}, { F: 'foo.ts', L: 2, S: undefined });
-      log.info('line 2', {}, { F: 'foo.ts', L: 1, S: undefined });
-      log.debug('line 3', {}, { F: 'bar.ts', L: 4, S: undefined });
-      log.info('line 4', {}, { F: 'bar.ts', L: 3, S: undefined });
+      log.debug('line 1', {}, { F: 'foo.ts', L: 1, S: undefined });
+      log.info('line 2', {}, { F: 'foo.ts', L: 2, S: undefined });
+      log.debug('line 3', {}, { F: 'bar.ts', L: 3, S: undefined });
+      log.info('line 4', {}, { F: 'bar.ts', L: 4, S: undefined });
       console.groupEnd();
 
       expect(count, `Filter: "${test.filter}"`).toBe(test.expected);

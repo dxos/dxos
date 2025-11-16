@@ -70,6 +70,7 @@ export const LoggingPanel = ({ maxLines = 100, ...props }: CustomPanelProps<{ ma
             <IconButton
               icon='ph--clipboard--regular'
               iconOnly
+              size={4}
               label='Copy'
               variant='ghost'
               classNames='cursor-pointer opacity-50 group-hover:opacity-100'

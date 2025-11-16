@@ -116,7 +116,7 @@ export const NotebookCell = ({ space, graph, dragging, cell, promptResults, env 
         <div className={mx('bs-full overflow-hidden grid', view && !dragging && 'grid-rows-[min-content_1fr]')}>
           <QueryEditor
             id={cell.id}
-            classNames={[editorStyles, 'border-b border-subduedSeparator']}
+            classNames={[editorStyles, 'border-be border-subduedSeparator']}
             db={space?.db}
             value={cell.source.target.content}
             onChange={handleQueryChange}
