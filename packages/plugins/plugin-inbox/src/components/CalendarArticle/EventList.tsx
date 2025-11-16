@@ -40,7 +40,7 @@ const EventComponent = ({ event }: { event: Event.Event }) => {
     <div
       className="
         flex flex-col is-full gap-2 overflow-hidden
-        @xl:grid md:grid-cols-[1fr_20rem] @xl:grid-rows-[auto_1fr]
+        @xl:grid @xl:grid-cols-[1fr_20rem] @xl:grid-rows-[auto_1fr]
         @xl:[grid-template-areas:'left-top_right''left-main_right']
         @xl:gap-x-4
       "
