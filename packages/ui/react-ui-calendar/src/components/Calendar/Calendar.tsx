@@ -146,8 +146,8 @@ const CalendarHeader = ({ classNames }: CalendarHeaderProps) => {
           onClick={handleToday}
         />
       </div>
-      <div className='flex justify-center p-2'>{format(selected ?? top, 'MMMM')}</div>
-      <div className='flex justify-end p-2'>{(selected ?? top).getFullYear()}</div>
+      <div className='flex justify-center p-2 text-description'>{format(selected ?? top, 'MMMM')}</div>
+      <div className='flex justify-end p-2 text-description'>{(selected ?? top).getFullYear()}</div>
     </div>
   );
 };
@@ -280,6 +280,7 @@ const CalendarGrid = ({ classNames, rows, onSelect }: CalendarGridProps) => {
           ))}
         </div>
       </div>
+
       {/* Grid */}
       <div role='none' className='flex flex-col bs-full is-full justify-center overflow-hidden' ref={containerRef}>
         <List
