@@ -49,8 +49,8 @@ const matchFilter = (filter: LogFilter, level: LogLevel, path?: string): boolean
         return level >= filter.level;
       }
     } else {
-      if (level < filter.level) {
-        return false;
+      if (level >= filter.level) {
+        return true;
       }
     }
   }
@@ -70,7 +70,7 @@ export const shouldLog = (entry: LogEntry, filters?: LogFilter[]): boolean => {
 
   // Skip if any are explicitely false.
   // console.log({ level: entry.level, path: entry.meta?.F }, filters, results, results.length);
-  return results.length === 0 || results.every((results) => results === true);
+  return results.length > 0 && !results.some((results) => results === false);
 };
 
 export const getContextFromEntry = (entry: LogEntry): Record<string, any> | undefined => {
