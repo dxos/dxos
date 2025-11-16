@@ -11,6 +11,7 @@ import * as Actor from './Actor';
 /**
  * https://schema.org/Event
  */
+// TODO(burdon): Location (string | Ref<Place>)
 export const Event = Schema.Struct({
   // TODO(burdon): Change to title.
   name: Schema.optional(Schema.String),
