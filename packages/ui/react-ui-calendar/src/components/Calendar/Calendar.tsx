@@ -130,11 +130,15 @@ const CalendarHeader = ({ classNames }: CalendarHeaderProps) => {
   }, [event, start, today]);
 
   return (
-    <div role='none' className={mx('shink-0 is-full grid grid-cols-3', classNames)} style={{ width: defaultWidth }}>
+    <div
+      role='none'
+      className={mx('shink-0 is-full grid grid-cols-3 items-center', classNames)}
+      style={{ width: defaultWidth }}
+    >
       <div className='flex justify-start'>
         <IconButton
           variant='ghost'
-          size={6}
+          size={5}
           icon='ph--calendar--regular'
           iconOnly
           classNames='aspect-square'
@@ -142,8 +146,8 @@ const CalendarHeader = ({ classNames }: CalendarHeaderProps) => {
           onClick={handleToday}
         />
       </div>
-      <span className='flex justify-center p-2'>{format(selected ?? top, 'MMMM')}</span>
-      <span className='flex justify-end p-2'>{(selected ?? top).getFullYear()}</span>
+      <div className='flex justify-center p-2'>{format(selected ?? top, 'MMMM')}</div>
+      <div className='flex justify-end p-2'>{(selected ?? top).getFullYear()}</div>
     </div>
   );
 };
