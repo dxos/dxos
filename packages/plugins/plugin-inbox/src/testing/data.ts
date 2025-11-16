@@ -2,6 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
+import { addMinutes, roundToNearestMinutes } from 'date-fns';
+
 import { Obj, Ref, Tag } from '@dxos/echo';
 import { IdentityDid } from '@dxos/keys';
 import { faker } from '@dxos/random';
@@ -38,13 +40,15 @@ export const createEvents = (count: number, space?: Space, options?: CreateOptio
 export const createEvent = (space?: Space, options: CreateOptions = { paragraphs: 5, links: 5 }): Event.Event => {
   const createActor = () => ({ email: faker.internet.email() });
   const owner = createActor();
+  const startDate = roundToNearestMinutes(faker.date.recent(), { nearestTo: 30 });
+  const endDate = addMinutes(startDate, faker.number.int({ min: 1, max: 10 }) * 15);
 
   return Obj.make(Event.Event, {
     name: faker.lorem.sentence(8),
     owner,
     attendees: [owner, ...faker.helpers.multiple(() => createActor(), { count: faker.number.int({ min: 1, max: 5 }) })],
-    startDate: faker.date.recent().toISOString(),
-    endDate: faker.date.recent().toISOString(),
+    startDate: startDate.toISOString(),
+    endDate: endDate.toISOString(),
     links: [],
   });
 };

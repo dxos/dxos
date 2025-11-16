@@ -35,6 +35,7 @@ export namespace InboxAction {
     }),
   }) {}
 
+  // TOOD(burdon): Generalize to SelectObject (Message, Event, etc.)
   export class SelectMessage extends Schema.TaggedClass<SelectMessage>()(`${INBOX_ACTION}/select-message`, {
     input: Schema.Struct({
       mailboxId: Schema.String,
