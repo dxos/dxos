@@ -13,7 +13,7 @@ import { log } from '@dxos/log';
 import { Input, Toolbar } from '@dxos/react-ui';
 
 import { Container, Popup, type PopupProps } from './components';
-import { HOME_URL, THUMBNAIL_PROP } from './defs';
+import { HOME_URL, THUMBNAIL_PROP } from './config';
 
 const Root = () => {
   const [thumbnailUrl, setThumbnailUrl] = useState<string | null>(null);
