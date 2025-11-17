@@ -36,8 +36,9 @@ import {
 import { SpaceCapabilities } from './capabilities';
 
 export default (context: PluginContext) => {
+  // TODO(wittjosiah): Using `get` and being reactive seems to cause a bug with Atom where disposed atoms are accessed.
   const resolve = (get: Atom.Context) => (typename: string) =>
-    get(context.capabilities(Capabilities.Metadata)).find(({ id }) => id === typename)?.metadata ?? {};
+    context.getCapabilities(Capabilities.Metadata).find(({ id }) => id === typename)?.metadata ?? {};
 
   const spacesNode = {
     id: SPACES,

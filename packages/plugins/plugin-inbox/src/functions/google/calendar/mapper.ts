@@ -4,7 +4,9 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Event } from '@dxos/types';
+import { Filter, Query, Ref } from '@dxos/echo';
+import { DatabaseService } from '@dxos/functions';
+import { Event, Person } from '@dxos/types';
 
 import { type GoogleCalendar } from '../../apis';
 
@@ -34,13 +36,19 @@ export const mapEvent = () =>
         }
       : undefined;
 
+    const { objects: contacts } = yield* DatabaseService.runQuery(Query.select(Filter.type(Person.Person)));
+
     // Parse attendees.
     const attendees = (event.attendees || [])
       .filter((a) => a.email)
-      .map((a) => ({
-        email: a.email!,
-        name: a.displayName,
-      }));
+      .map((a) => {
+        const contact = contacts.find(({ emails }) => emails?.findIndex(({ value }) => value === a.email) !== -1);
+        return {
+          email: a.email,
+          name: a.displayName,
+          contact: contact && Ref.make(contact),
+        };
+      });
 
     return Event.make({
       name: event.summary || '(No title)',

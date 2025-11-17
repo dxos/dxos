@@ -4,8 +4,9 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Obj, Type } from '@dxos/echo';
-import { Message } from '@dxos/types';
+import { Filter, Obj, Query, Ref, Type } from '@dxos/echo';
+import { DatabaseService } from '@dxos/functions';
+import { Message, Person } from '@dxos/types';
 
 import { type GoogleMail } from '../../apis';
 
@@ -14,47 +15,46 @@ import { getPart, normalizeText, parseFromHeader } from './util';
 /**
  * Transforms Gmail message to ECHO message object.
  */
-export const mapMessage = (last?: Message.Message) =>
-  Effect.fn(function* (message: GoogleMail.Message) {
-    // Skip the message if it's the same as the last message.
-    const created = new Date(parseInt(message.internalDate)).toISOString();
-    if (created === last?.created) {
-      return null;
-    }
+export const mapMessage = Effect.fn(function* (message: GoogleMail.Message) {
+  const created = new Date(parseInt(message.internalDate)).toISOString();
 
-    const from = message.payload.headers.find(({ name }) => name === 'From');
-    const sender = from && parseFromHeader(from.value);
-    const data = message.payload.body?.data ?? getPart(message, 'text/html') ?? getPart(message, 'text/plain');
+  const data = message.payload.body?.data ?? getPart(message, 'text/html') ?? getPart(message, 'text/plain');
+  const fromHeader = message.payload.headers.find(({ name }) => name === 'From');
+  const from = fromHeader && parseFromHeader(fromHeader.value);
+  const { objects: contacts } = yield* DatabaseService.runQuery(Query.select(Filter.type(Person.Person)));
+  const contact = from && contacts.find(({ emails }) => emails?.findIndex(({ value }) => value === from.email) !== -1);
+  const sender = { ...from, contact: contact && Ref.make(contact) };
 
-    // Skip the message if content or sender is missing.
-    // TODO(wittjosiah): This comparison should be done via foreignId probably.
-    if (!sender || !data) {
-      return null;
-    }
+  // Skip the message if content or sender is missing.
+  // TODO(wittjosiah): This comparison should be done via foreignId probably.
+  if (!sender || !data) {
+    return null;
+  }
 
-    // Normalize text.
-    const text = normalizeText(Buffer.from(data, 'base64').toString('utf-8'));
+  // Normalize text.
+  const text = normalizeText(Buffer.from(data, 'base64').toString('utf-8'));
 
-    return Obj.make(
-      Message.Message,
-      {
-        id: Type.ObjectId.random(),
-        created,
-        sender,
-        blocks: [
-          {
-            _tag: 'text',
-            text,
-          },
-        ],
-        properties: {
-          threadId: message.threadId,
-          snippet: message.snippet,
-          subject: message.payload.headers.find(({ name }) => name === 'Subject')?.value,
+  return Obj.make(
+    Message.Message,
+    {
+      id: Type.ObjectId.random(),
+      created,
+      sender,
+      blocks: [
+        {
+          _tag: 'text',
+          text,
         },
+      ],
+      properties: {
+        threadId: message.threadId,
+        snippet: message.snippet,
+        subject: message.payload.headers.find(({ name }) => name === 'Subject')?.value,
+        labels: message.labelIds,
       },
-      {
-        tags: [...message.labelIds],
-      },
-    );
-  });
+    },
+    {
+      keys: [{ id: message.id, source: 'gmail.com' }],
+    },
+  );
+});
