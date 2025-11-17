@@ -188,7 +188,7 @@ export const MailboxArticle = ({
         <MailboxComponent
           id={id}
           messages={sortedMessages}
-          tags={tagMap}
+          labels={mailbox.labels}
           currentMessageId={currentMessageId}
           onAction={handleAction}
         />
