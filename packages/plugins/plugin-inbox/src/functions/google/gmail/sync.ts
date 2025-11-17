@@ -19,6 +19,9 @@ import { DatabaseService, QueueService, defineFunction } from '@dxos/functions';
 import { log } from '@dxos/log';
 import { type Message } from '@dxos/types';
 
+// NOTE: While the integration is in test mode, only the emails listed in the following dashboard are supported:
+//   https://console.cloud.google.com/auth/audience?authuser=1&project=composer-app-454920
+
 // TODO(burdon): Importing from types/index.ts pulls in @dxos/client dependencies due to SpaceSchema.
 import * as Mailbox from '../../../types/Mailbox';
 import { GoogleMail } from '../../apis';
