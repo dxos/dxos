@@ -8,7 +8,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useMemo, useState } from 'react';
 
 import { IntentPlugin, SettingsPlugin } from '@dxos/app-framework';
-import { Surface, useCapability } from '@dxos/app-framework/react';
+import { Surface } from '@dxos/app-framework/react';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Obj } from '@dxos/echo';
 import { ClientPlugin } from '@dxos/plugin-client';
@@ -18,13 +18,12 @@ import { StorybookLayoutPlugin } from '@dxos/plugin-storybook-layout';
 import { ThemePlugin } from '@dxos/plugin-theme';
 import { Filter, useQuery, useSpace } from '@dxos/react-client/echo';
 import { withTheme } from '@dxos/react-ui/testing';
-import { useAttentionAttributes } from '@dxos/react-ui-attention';
+import { useAttentionAttributes, useSelected } from '@dxos/react-ui-attention';
 import { withAttention } from '@dxos/react-ui-attention/testing';
 import { defaultTx } from '@dxos/react-ui-theme';
 import { render } from '@dxos/storybook-utils';
 import { Message, Person } from '@dxos/types';
 
-import { InboxCapabilities } from '../../capabilities';
 import { InboxPlugin } from '../../InboxPlugin';
 import { LABELS, createMessages } from '../../testing';
 import { initializeMailbox } from '../../testing';
@@ -41,8 +40,8 @@ const WithCompanionStory = () => {
   const space = useSpace();
   const [mailbox] = useQuery(space, Filter.type(Mailbox.Mailbox));
 
-  const state = useCapability(InboxCapabilities.MailboxState);
-  const message = mailbox && state[Obj.getDXN(mailbox).toString()];
+  const selected = useSelected(Obj.getDXN(mailbox).toString(), 'single');
+  const message = useQuery(mailbox?.queue.target, selected ? Filter.ids(selected) : Filter.nothing())[0];
 
   const mailboxData = useMemo(() => ({ subject: mailbox }), [mailbox]);
   const companionData = useMemo(() => ({ subject: message ?? 'message', companionTo: mailbox }), [message, mailbox]);

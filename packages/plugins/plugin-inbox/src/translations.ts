@@ -37,6 +37,7 @@ export const translations = [
         'action delete': 'Delete',
         'action mark read': 'Mark as read',
         'message label': 'Message',
+        'event label': 'Event',
         'no integrations label': 'No integrations configured',
         'manage integrations button label': 'Manage Integrations',
         'inbox label': 'Inbox',

@@ -23,11 +23,11 @@ export type EventListProps = ThemedClassName<{
   onSelect?: (contact: Event.Event) => void;
 }>;
 
-export const EventList = ({ classNames, events = [] }: EventListProps) => {
+export const EventList = ({ classNames, events = [], onSelect }: EventListProps) => {
   return (
     <List classNames={mx('@container is-full divide-y divide-separator overflow-y-auto', classNames)}>
       {events.map((event) => (
-        <ListItem.Root key={event.id} classNames='p-2 hover:bg-hoverOverlay'>
+        <ListItem.Root key={event.id} classNames='p-2 hover:bg-hoverOverlay' onClick={() => onSelect?.(event)}>
           <EventComponent event={event} />
         </ListItem.Root>
       ))}
@@ -35,6 +35,7 @@ export const EventList = ({ classNames, events = [] }: EventListProps) => {
   );
 };
 
+// TODO(wittjosiah): Reconcile with EventCard.
 const EventComponent = ({ event }: { event: Event.Event }) => {
   return (
     <div
@@ -58,7 +59,7 @@ const EventComponent = ({ event }: { event: Event.Event }) => {
 //  Create library of common compponents for all types.
 // NOTE: Common layout (spacing) for icon/text for DateComponent and ActorComponent.
 
-const DateComponent = ({ start, end, locale }: { start: Date; end?: Date; locale?: Locale }) => {
+export const DateComponent = ({ start, end, locale }: { start: Date; end?: Date; locale?: Locale }) => {
   let { hours = 0, minutes = 0 } = (end && intervalToDuration({ start, end })) ?? {};
   // Prefer 90m over 1h 30m.
   if (hours === 1 && minutes !== 0) {
@@ -76,7 +77,7 @@ const DateComponent = ({ start, end, locale }: { start: Date; end?: Date; locale
   );
 };
 
-const ActorComponent = ({ actor, classNames }: ThemedClassName<{ actor: Actor.Actor }>) => {
+export const ActorComponent = ({ actor, classNames }: ThemedClassName<{ actor: Actor.Actor }>) => {
   return (
     <div role='none' className={mx('flex is-full items-center gap-2 overflow-hidden', classNames)}>
       <Icon icon='ph--user--regular' classNames='cursor-pointer text-subdued' />
@@ -85,7 +86,7 @@ const ActorComponent = ({ actor, classNames }: ThemedClassName<{ actor: Actor.Ac
   );
 };
 
-const ActorListComponent = ({ classNames, actors }: ThemedClassName<{ actors: Actor.Actor[] }>) => {
+export const ActorListComponent = ({ classNames, actors }: ThemedClassName<{ actors: Actor.Actor[] }>) => {
   return (
     <div role='none' className={mx('flex flex-col is-full', classNames)}>
       {actors.map((actor, idx) => (
