@@ -7,9 +7,10 @@ import * as Function from 'effect/Function';
 import * as Option from 'effect/Option';
 
 import { Capabilities, type PluginContext, contributes } from '@dxos/app-framework';
-import { getSpace } from '@dxos/client/echo';
-import { Obj } from '@dxos/echo';
+import { type QueryResult, getSpace } from '@dxos/client/echo';
+import { Filter, Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
+import { AttentionCapabilities } from '@dxos/plugin-attention';
 import { AutomationCapabilities, invokeFunctionWithTracing } from '@dxos/plugin-automation';
 import { ATTENDABLE_PATH_SEPARATOR, PLANK_COMPANION_TYPE } from '@dxos/plugin-deck/types';
 import { ACTION_TYPE, atomFromSignal, createExtension } from '@dxos/plugin-graph';
