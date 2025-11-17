@@ -3033,6 +3033,9 @@ importers:
       '@dxos/echo-db':
         specifier: workspace:*
         version: link:../echo/echo-db
+      '@dxos/effect':
+        specifier: workspace:*
+        version: link:../../common/effect
       '@dxos/errors':
         specifier: workspace:*
         version: link:../../common/errors

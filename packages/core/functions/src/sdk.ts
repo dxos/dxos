@@ -46,7 +46,7 @@ export type FunctionServices =
  */
 export type FunctionHandler<TData = {}, TOutput = any, S extends FunctionServices = FunctionServices> = (params: {
   /**
-   * Services and context available to the function.
+   * Context available to the function.
    */
   context: FunctionContext;
 
@@ -62,7 +62,7 @@ export type FunctionHandler<TData = {}, TOutput = any, S extends FunctionService
  * Function context.
  */
 export interface FunctionContext {
-  // TODO(dmaretskyi):
+  // TODO(dmaretskyi): Consider what we should put into context.
 }
 
 const typeId = Symbol.for('@dxos/functions/FunctionDefinition');

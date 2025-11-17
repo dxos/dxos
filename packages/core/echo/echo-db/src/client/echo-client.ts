@@ -80,11 +80,12 @@ export class EchoClient extends Resource {
    * Connects to the ECHO service.
    * Must be called before open.
    */
-  connectToService({ dataService, queryService, queueService }: ConnectToServiceParams): void {
+  connectToService({ dataService, queryService, queueService }: ConnectToServiceParams): this {
     invariant(this._lifecycleState === LifecycleState.CLOSED);
     this._dataService = dataService;
     this._queryService = queryService;
     this._queuesService = queueService;
+    return this;
   }
 
   disconnectFromService(): void {
