@@ -1,4 +1,4 @@
-import { type FunctionServices, type FunctionContext, type FunctionDefinition } from '../sdk';
+import { FunctionDefinition, type FunctionServices, type FunctionContext } from '../sdk';
 import { type FunctionProtocol } from '@dxos/protocols';
 import { Type } from '@dxos/echo';
 import { CredentialsService, DatabaseService, FunctionInvocationService, TracingService } from '../services';
@@ -15,6 +15,10 @@ import { AiService } from '@dxos/ai';
  * Wraps a function handler made with `defineFunction` to a protocol that the functions-runtime expects.
  */
 export const wrapFunctionHandler = (func: FunctionDefinition): FunctionProtocol.Func => {
+  if (!FunctionDefinition.isFunction(func)) {
+    throw new TypeError('Invalid function definition');
+  }
+
   return {
     meta: {
       key: func.key,
@@ -66,6 +70,7 @@ export const wrapFunctionHandler = (func: FunctionDefinition): FunctionProtocol.
         } else {
           throw new FunctionError({
             cause: error,
+            context: { func: func.key },
           });
         }
       }
