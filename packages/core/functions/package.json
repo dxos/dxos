@@ -32,6 +32,7 @@
     "@dxos/keys": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/node-std": "workspace:*",
+    "@dxos/protocols": "workspace:*",
     "@dxos/schema": "workspace:*",
     "@dxos/types": "workspace:*",
     "@effect/platform": "0.92.1",

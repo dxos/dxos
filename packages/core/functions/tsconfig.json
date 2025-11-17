@@ -39,6 +39,9 @@
     },
     {
       "path": "../echo/echo-db"
+    },
+    {
+      "path": "../protocols"
     }
   ]
 }

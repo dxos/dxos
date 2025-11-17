@@ -18,7 +18,7 @@ import {
   type TracingService,
 } from './services';
 import { Function } from './types';
-import { getUserFunctionIdInMetadata, setUserFunctionIdInMetadata } from './url';
+import { getUserFunctionIdInMetadata, setUserFunctionIdInMetadata } from './types';
 
 // TODO(burdon): Model after http request. Ref Lambda/OpenFaaS.
 // https://docs.aws.amazon.com/lambda/latest/dg/typescript-handler.html

@@ -7,3 +7,4 @@ export * from './example';
 export * from './sdk';
 export * from './services';
 export * from './types';
+export * as FunctionProtocol from './FunctionProtocol';

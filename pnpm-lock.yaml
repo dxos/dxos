@@ -3048,6 +3048,9 @@ importers:
       '@dxos/node-std':
         specifier: workspace:*
         version: link:../../common/node-std
+      '@dxos/protocols':
+        specifier: workspace:*
+        version: link:../protocols
       '@dxos/schema':
         specifier: workspace:*
         version: link:../../sdk/schema
