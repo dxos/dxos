@@ -30,9 +30,8 @@ export const wrapFunctionHandler = (func: FunctionDefinition): FunctionProtocol.
     },
     handler: async ({ data, context }) => {
       if (
-        !context.services.dataService ||
-        (!context.services.queryService &&
-          (func.services.includes(DatabaseService.key) || func.services.includes(QueueService.key)))
+        (func.services.includes(DatabaseService.key) || func.services.includes(QueueService.key)) &&
+        (!context.services.dataService || !context.services.queryService)
       ) {
         throw new FunctionError({
           message: 'Services not provided: dataService, queryService',
