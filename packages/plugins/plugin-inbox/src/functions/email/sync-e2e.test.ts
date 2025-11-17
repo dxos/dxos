@@ -14,6 +14,14 @@ import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata
 import { Mailbox } from '../../types';
 
 describe.runIf(process.env.DX_TEST_TAGS?.includes('functions-e2e'))('Functions deployment', () => {
+  test.only('bundle function', async () => {
+    const artifact = await bundleFunction({
+      entryPoint: new URL('./sync.ts', import.meta.url).pathname,
+      verbose: true,
+    });
+    console.log(artifact);
+  });
+
   test('deployes inbox sync function', { timeout: 120_000 }, async () => {
     const config = configPreset({ edge: 'local' });
 
