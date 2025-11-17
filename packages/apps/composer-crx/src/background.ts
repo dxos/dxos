@@ -7,10 +7,7 @@ import browser from 'webextension-polyfill';
 
 import { log } from '@dxos/log';
 
-import { THUMBNAIL_PROP } from './defs';
-
-// TODO(burdon): Configure.
-const IMAGE_SERVICE_URL = 'http://localhost:8787/thumbnail';
+import { IMAGE_SERVICE_URL, THUMBNAIL_PROP } from './defs';
 
 /**
  * Get content type from URL extension.
