@@ -69,6 +69,9 @@ export interface Context {
      * Available if the function is invoked in context of a space.
      */
     dataService?: DataProto.DataService;
+
+    // TODO(dmaretskyi): Add aiService.
+    // TODO(dmaretskyi): Add functionsService.
   };
 
   /**
