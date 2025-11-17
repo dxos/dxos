@@ -18,10 +18,18 @@ export enum MessageState {
   SPAM = 3,
 }
 
+export const Labels = Schema.Record({
+  key: Schema.String,
+  value: Schema.String,
+});
+
+export type Labels = Schema.Schema.Type<typeof Labels>;
+
 // TODO(burdon): Rename MessageBox? (not email specific).
 export const Mailbox = Schema.Struct({
   name: Schema.optional(Schema.String),
   queue: Type.Ref(Queue).pipe(FormAnnotation.set(false)),
+  labels: Labels.pipe(Schema.mutable, FormAnnotation.set(false), Schema.optional),
   // TODO(wittjosiah): Factor out to relation?
   filters: Schema.Array(
     Schema.Struct({
@@ -48,6 +56,7 @@ export const make = ({ space, ...props }: MailboxProps) => {
   const queue = space.queues.create();
   return Obj.make(Mailbox, {
     queue: Ref.fromDXN(queue.dxn),
+    labels: {},
     filters: [],
     ...props,
   });

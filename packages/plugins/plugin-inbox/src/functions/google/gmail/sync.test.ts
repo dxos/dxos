@@ -11,6 +11,7 @@ import * as Function from 'effect/Function';
 import * as Layer from 'effect/Layer';
 
 import { CredentialsService } from '@dxos/functions';
+import { TestDatabaseLayer } from '@dxos/functions-runtime/testing';
 import { invariant } from '@dxos/invariant';
 
 import { GoogleMail } from '../../apis';
@@ -47,22 +48,26 @@ describe.runIf(process.env.ACCESS_TOKEN)('Gmail API', { timeout: 30_000 }, () =>
     }, Effect.provide(TestLayer)),
   );
 
-  it.effect(
-    'get messages',
-    Effect.fnUntraced(function* ({ expect }) {
+  it.effect('get messages', ({ expect }) => {
+    return Effect.gen(function* () {
       const userId = 'rich@braneframe.com';
       const { messages } = yield* GoogleMail.listMessages(userId, 'label:investor', 50);
       invariant(messages);
 
       const objects = yield* Function.pipe(
         messages.slice(1, 2),
-        Array.map((message) => Function.pipe(GoogleMail.getMessage(userId, message.id), Effect.flatMap(mapMessage()))),
+        Array.map((message) =>
+          Function.pipe(
+            GoogleMail.getMessage(userId, message.id),
+            Effect.flatMap((message) => mapMessage(message)),
+          ),
+        ),
         Effect.all,
       );
 
       expect(objects).to.exist;
       console.log(JSON.stringify(objects, null, 2));
       console.log((objects?.[0]?.blocks?.[0] as any)?.text);
-    }, Effect.provide(TestLayer)),
-  );
+    }).pipe(Effect.provide(Layer.merge(TestLayer, TestDatabaseLayer())));
+  });
 });
