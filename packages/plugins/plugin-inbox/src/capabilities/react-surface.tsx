@@ -29,7 +29,7 @@ import {
   RelatedMessages,
 } from '../components';
 import { meta } from '../meta';
-import { Calendar, InboxAction, Mailbox } from '../types';
+import { Calendar, Mailbox } from '../types';
 
 export default () =>
   contributes(Capabilities.ReactSurface, [
@@ -136,7 +136,10 @@ export default () =>
                   subject: [Obj.getDXN(mailbox).toString()],
                   options: { workspace: space?.id },
                 }),
-                chain(InboxAction.SelectMessage, { mailboxId: Obj.getDXN(mailbox).toString(), message }),
+                chain(AttentionAction.Select, {
+                  contextId: Obj.getDXN(mailbox).toString(),
+                  selection: { mode: 'single', id: message.id },
+                }),
               ),
             );
           },

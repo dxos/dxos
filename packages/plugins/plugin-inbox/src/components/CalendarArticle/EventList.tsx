@@ -23,11 +23,11 @@ export type EventListProps = ThemedClassName<{
   onSelect?: (contact: Event.Event) => void;
 }>;
 
-export const EventList = ({ classNames, events = [] }: EventListProps) => {
+export const EventList = ({ classNames, events = [], onSelect }: EventListProps) => {
   return (
     <List classNames={mx('@container is-full divide-y divide-separator overflow-y-auto', classNames)}>
       {events.map((event) => (
-        <ListItem.Root key={event.id} classNames='p-2 hover:bg-hoverOverlay'>
+        <ListItem.Root key={event.id} classNames='p-2 hover:bg-hoverOverlay' onClick={() => onSelect?.(event)}>
           <EventComponent event={event} />
         </ListItem.Root>
       ))}

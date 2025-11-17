@@ -8,5 +8,5 @@ import { type SurfaceComponentProps } from '@dxos/app-framework/react';
 import { type Event } from '@dxos/types';
 
 export const EventArticle = ({ subject }: SurfaceComponentProps<Event.Event>) => {
-  return <div>EventArticle</div>;
+  return <div>{JSON.stringify(subject)}</div>;
 };
