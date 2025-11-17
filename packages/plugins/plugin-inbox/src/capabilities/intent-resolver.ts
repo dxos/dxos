@@ -24,11 +24,9 @@ import { Filter, Obj, Ref } from '@dxos/echo';
 // import { failedInvariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { SpaceAction } from '@dxos/plugin-space/types';
-import { Message, Organization, Person } from '@dxos/types';
+import { Organization, Person } from '@dxos/types';
 
 import { Calendar, InboxAction, Mailbox } from '../types';
-
-import { InboxCapabilities } from './capabilities';
 
 // TODO(dmaretskyi): Circular dep due to the assistant stories
 // import { AssistantCapabilities } from '@dxos/plugin-assistant';
@@ -46,21 +44,6 @@ export default (context: PluginContext) =>
       resolve: ({ space, name }) => ({
         data: { object: Calendar.make({ space, name }) },
       }),
-    }),
-    createResolver({
-      intent: InboxAction.SelectMessage,
-      resolve: ({ mailboxId, message }) => {
-        const state = context.getCapability(InboxCapabilities.MutableMailboxState);
-        if (message) {
-          // TODO(wittjosiah): Static to live object fails.
-          //  Needs to be a live object because graph is live and the current message is included in the companion.
-          const { '@type': _, ...messageWithoutType } = { ...message } as any;
-          const liveMessage = Obj.make(Message.Message, messageWithoutType);
-          state[mailboxId] = liveMessage;
-        } else {
-          delete state[mailboxId];
-        }
-      },
     }),
     createResolver({
       intent: InboxAction.ExtractContact,
