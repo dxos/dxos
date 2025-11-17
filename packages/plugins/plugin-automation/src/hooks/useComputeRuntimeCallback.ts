@@ -63,4 +63,6 @@ export const invokeFunctionWithTracing = <I, O>(functionDef: FunctionDefinition<
       // TODO(dmaretskyi): Might miss errors.
       exception: Exit.isFailure(result) ? Cause.prettyErrors(result.cause)[0] : undefined,
     });
+
+    return result;
   });
