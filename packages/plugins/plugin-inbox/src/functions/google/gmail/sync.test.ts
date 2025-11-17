@@ -56,7 +56,12 @@ describe.runIf(process.env.ACCESS_TOKEN)('Gmail API', { timeout: 30_000 }, () =>
 
       const objects = yield* Function.pipe(
         messages.slice(1, 2),
-        Array.map((message) => Function.pipe(GoogleMail.getMessage(userId, message.id), Effect.flatMap(mapMessage()))),
+        Array.map((message) =>
+          Function.pipe(
+            GoogleMail.getMessage(userId, message.id),
+            Effect.flatMap((message) => mapMessage(message)),
+          ),
+        ),
         Effect.all,
       );
 
