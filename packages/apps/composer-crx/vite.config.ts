@@ -101,6 +101,8 @@ export default defineConfig({
           default_title: 'Composer',
           default_popup: 'popup.html',
         },
+        permissions: ['contextMenus', 'activeTab', 'scripting', 'storage', 'notifications'],
+        host_permissions: ['<all_urls>'],
         content_security_policy: {
           extension_pages: "script-src 'self' 'wasm-unsafe-eval'; object-src 'self'",
         },

@@ -2,11 +2,13 @@
 // Copyright 2025 DXOS.org
 //
 
+import { addMinutes, roundToNearestMinutes } from 'date-fns';
+
 import { Obj, Ref, Tag } from '@dxos/echo';
 import { IdentityDid } from '@dxos/keys';
 import { faker } from '@dxos/random';
 import { type Space } from '@dxos/react-client/echo';
-import { Message, Person } from '@dxos/types';
+import { Event, Message, Person } from '@dxos/types';
 
 import { Mailbox } from '../types';
 import { sortByCreated } from '../util';
@@ -27,10 +29,38 @@ type CreateOptions = {
   links: number;
 };
 
+//
+// Create event
+//
+
+export const createEvents = (count: number, space?: Space, options?: CreateOptions) => {
+  return faker.helpers.multiple(() => createEvent(space, options), { count }).sort(sortByCreated('startDate'));
+};
+
+export const createEvent = (space?: Space, options: CreateOptions = { paragraphs: 5, links: 5 }): Event.Event => {
+  const createActor = () => ({ email: faker.internet.email() });
+  const owner = createActor();
+  const startDate = roundToNearestMinutes(faker.date.recent(), { nearestTo: 30 });
+  const endDate = addMinutes(startDate, faker.number.int({ min: 1, max: 10 }) * 15);
+
+  return Obj.make(Event.Event, {
+    name: faker.lorem.sentence(8),
+    owner,
+    attendees: [owner, ...faker.helpers.multiple(() => createActor(), { count: faker.number.int({ min: 1, max: 5 }) })],
+    startDate: startDate.toISOString(),
+    endDate: endDate.toISOString(),
+    links: [],
+  });
+};
+
+//
+// Create message
+//
+
 export const createMessages = (count: number, space?: Space, options?: CreateOptions) => {
   return faker.helpers
     .multiple(() => createMessage(space, options), { count })
-    .sort(sortByCreated(false))
+    .sort(sortByCreated('created'))
     .reverse();
 };
 
@@ -38,7 +68,7 @@ export const createMessages = (count: number, space?: Space, options?: CreateOpt
  * Creates a message with plain and enriched content blocks, where the enriched version
  * contains links to contacts and the plain version has the same content with links stripped.
  */
-export const createMessage = (space?: Space, options: CreateOptions = { paragraphs: 5, links: 5 }) => {
+export const createMessage = (space?: Space, options: CreateOptions = { paragraphs: 5, links: 5 }): Message.Message => {
   let text = faker.helpers
     .multiple(() => faker.lorem.paragraph(faker.number.int(3)), {
       count: options.paragraphs || 1,

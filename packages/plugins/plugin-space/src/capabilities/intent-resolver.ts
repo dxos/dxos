@@ -671,7 +671,6 @@ export default ({ context, observability, createInvitationUrl }: IntentResolverO
       resolve: async ({ object, target }) => {
         const space = isSpace(target) ? target : getSpace(target);
         invariant(space, 'Space not found.');
-
         const newObject = await cloneObject(object, resolve, space);
         return {
           intents: [createIntent(SpaceAction.AddObject, { object: newObject, target })],

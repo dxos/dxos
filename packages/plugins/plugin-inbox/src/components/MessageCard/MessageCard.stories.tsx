@@ -58,7 +58,7 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
   args: {
-    message: createMockMessage(),
     role: 'card--intrinsic',
+    subject: createMockMessage(),
   },
 };

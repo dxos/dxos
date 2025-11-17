@@ -76,6 +76,7 @@ const makeOtelLogProcessor = (logger: Logger): LogProcessor => {
     });
   };
 };
+
 log.addProcessor(makeOtelLogProcessor(logger));
 
 beforeAll(() => {

@@ -12,32 +12,46 @@ import { BROWSER_PROCESSOR, CONSOLE_PROCESSOR, DEBUG_PROCESSOR } from './process
 /**
  * Processor variants.
  */
-export const processors: { [index: string]: LogProcessor } = {
+export const processors: Record<string, LogProcessor> = {
   [LogProcessorType.CONSOLE]: CONSOLE_PROCESSOR,
   [LogProcessorType.BROWSER]: BROWSER_PROCESSOR,
   [LogProcessorType.DEBUG]: DEBUG_PROCESSOR,
 };
 
-const IS_BROWSER = typeof window !== 'undefined' || typeof navigator !== 'undefined';
+const browser = typeof window !== 'undefined' || typeof navigator !== 'undefined';
 
-export const DEFAULT_PROCESSORS = [IS_BROWSER ? BROWSER_PROCESSOR : CONSOLE_PROCESSOR];
+export const DEFAULT_PROCESSORS = [browser ? BROWSER_PROCESSOR : CONSOLE_PROCESSOR];
 
+const parseLogLevel = (level: string, defValue = LogLevel.WARN) => levels[level.toLowerCase()] ?? defValue;
+
+/**
+ * @internal
+ */
 export const parseFilter = (filter: string | string[] | LogLevel): LogFilter[] => {
   if (typeof filter === 'number') {
     return [{ level: filter }];
   }
 
-  const parseLogLevel = (level: string, defValue = LogLevel.WARN) => levels[level.toLowerCase()] ?? defValue;
-
   const lines = typeof filter === 'string' ? filter.split(/,\s*/) : filter;
   return lines.map((filter) => {
     const [pattern, level] = filter.split(':');
-    return level ? { level: parseLogLevel(level), pattern } : { level: parseLogLevel(pattern) };
+    return level
+      ? {
+          level: parseLogLevel(level),
+          pattern,
+        }
+      : {
+          level: parseLogLevel(pattern),
+        };
   });
 };
 
-export const getConfig = (options?: LogOptions): LogConfig => {
-  const nodeOptions: LogOptions | undefined =
+/**
+ * @internal
+ */
+export const createConfig = (options?: LogOptions): LogConfig => {
+  // Node only.
+  const envOptions: LogOptions | undefined =
     'process' in globalThis
       ? {
           file: process!.env.LOG_CONFIG,
@@ -46,12 +60,12 @@ export const getConfig = (options?: LogOptions): LogConfig => {
         }
       : undefined;
 
-  const mergedOptions: LogOptions = defaultsDeep({}, loadOptions(nodeOptions?.file), nodeOptions, options);
+  const mergedOptions: LogOptions = defaultsDeep({}, loadOptions(envOptions?.file), envOptions, options);
   return {
     options: mergedOptions,
     filters: parseFilter(mergedOptions.filter ?? LogLevel.INFO),
     captureFilters: parseFilter(mergedOptions.captureFilter ?? LogLevel.WARN),
-    processors: mergedOptions.processor ? [processors[mergedOptions.processor]] : DEFAULT_PROCESSORS,
+    processors: mergedOptions.processor ? [processors[mergedOptions.processor]] : [...DEFAULT_PROCESSORS],
     prefix: mergedOptions.prefix,
   };
 };

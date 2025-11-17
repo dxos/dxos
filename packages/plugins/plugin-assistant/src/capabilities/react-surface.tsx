@@ -70,13 +70,13 @@ export default () =>
       id: `${meta.id}/blueprint`,
       role: 'article',
       filter: (data): data is { subject: Blueprint.Blueprint } => Obj.instanceOf(Blueprint.Blueprint, data.subject),
-      component: ({ data }) => <BlueprintArticle object={data.subject} />,
+      component: ({ data }) => <BlueprintArticle subject={data.subject} />,
     }),
     createSurface({
       id: `${meta.id}/prompt`,
       role: 'article',
       filter: (data): data is { subject: Prompt.Prompt } => Obj.instanceOf(Prompt.Prompt, data.subject),
-      component: ({ data }) => <PromptArticle object={data.subject} />,
+      component: ({ data }) => <PromptArticle subject={data.subject} />,
     }),
     createSurface({
       id: ASSISTANT_DIALOG,

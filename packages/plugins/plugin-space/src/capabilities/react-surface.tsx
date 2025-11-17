@@ -87,14 +87,14 @@ export default ({ createInvitationUrl }: ReactSurfaceOptions) =>
       role: 'article',
       position: 'fallback',
       filter: (data): data is { subject: Obj.Any } => Obj.isObject(data.subject),
-      component: ({ data }) => <RecordArticle object={data.subject} />,
+      component: ({ data }) => <RecordArticle subject={data.subject} />,
     }),
     createSurface({
       id: `${meta.id}/collection-fallback`,
       role: 'article',
       position: 'fallback',
       filter: (data): data is { subject: Collection.Collection } => Obj.instanceOf(Collection.Collection, data.subject),
-      component: ({ data }) => <CollectionArticle object={data.subject} />,
+      component: ({ data }) => <CollectionArticle subject={data.subject} />,
     }),
     createSurface({
       id: `${meta.id}/plugin-settings`,
@@ -340,7 +340,7 @@ export default ({ createInvitationUrl }: ReactSurfaceOptions) =>
       id: `${meta.id}/collection-section`,
       role: 'section',
       filter: (data): data is { subject: Collection.Collection } => Obj.instanceOf(Collection.Collection, data.subject),
-      component: ({ data }) => <CollectionSection object={data.subject} />,
+      component: ({ data }) => <CollectionSection subject={data.subject} />,
     }),
     createSurface({
       id: `${meta.id}/status`,

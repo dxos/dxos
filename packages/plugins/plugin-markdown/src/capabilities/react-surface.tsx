@@ -5,7 +5,7 @@
 import React, { useCallback } from 'react';
 
 import { Capabilities, contributes, createSurface } from '@dxos/app-framework';
-import { useCapability } from '@dxos/app-framework/react';
+import { SurfaceCardRole, useCapability } from '@dxos/app-framework/react';
 import { Obj } from '@dxos/echo';
 import { SettingsStore } from '@dxos/local-storage';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
@@ -56,10 +56,10 @@ export default () =>
     }),
     createSurface({
       id: `${meta.id}/surface/preview`,
-      role: ['card--popover', 'card--intrinsic', 'card--extrinsic', 'card--transclusion', 'card'],
+      role: SurfaceCardRole.literals as any,
       filter: (data): data is { subject: Markdown.Document | Text.Text } =>
         Obj.instanceOf(Markdown.Document, data.subject) || Obj.instanceOf(Text.Text, data.subject),
-      component: ({ data, role }) => <MarkdownCard {...data} role={role} />,
+      component: ({ data, role }) => <MarkdownCard {...data} role={role as SurfaceCardRole} />,
     }),
   ]);
 

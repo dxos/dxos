@@ -4,6 +4,7 @@
 
 import { Type } from '@dxos/echo';
 import { type Resource } from '@dxos/react-ui';
+import { translations as geoTrnaslations } from '@dxos/react-ui-geo';
 
 import { meta } from './meta';
 import { Map } from './types';
@@ -27,4 +28,5 @@ export const translations = [
       },
     },
   },
+  ...geoTrnaslations,
 ] as const satisfies Resource[];

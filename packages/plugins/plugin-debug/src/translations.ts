@@ -16,7 +16,7 @@ export const translations = [
         'mutation period': 'Mutation period',
         'open devtools label': 'Open DevTools',
         'devtools label': 'DevTools',
-        'devtools overview label': 'DevTools Stats',
+        'devtools overview label': 'Stats',
         'debug label': 'Debug',
         'debug app graph label': 'App Graph',
         'settings show debug panel': 'Show Debug panel.',

@@ -5,7 +5,7 @@
 import React, { useCallback } from 'react';
 
 import { Capabilities, LayoutAction, contributes, createIntent, createSurface } from '@dxos/app-framework';
-import { Surface, useIntentDispatcher } from '@dxos/app-framework/react';
+import { Surface, SurfaceCardRole, useIntentDispatcher } from '@dxos/app-framework/react';
 import { getSchema, getSpace } from '@dxos/client/echo';
 import { Obj } from '@dxos/echo';
 import { type JsonPath, setValue } from '@dxos/echo/internal';
@@ -19,7 +19,7 @@ import { Organization, Person, Project, Task } from '@dxos/types';
 
 import { OrganizationCard, PersonCard, ProjectCard, TaskCard } from '../cards';
 import { meta } from '../meta';
-import { type PreviewProps } from '../types';
+import { type CardPreviewProps } from '../types';
 
 export default () =>
   contributes(Capabilities.ReactSurface, [
@@ -28,15 +28,16 @@ export default () =>
     // TODO(burdon): Create helpers and factor out.
     //
 
-    createSurface({
+    // TODO(burdon): Infer Role type.
+    createSurface<{ subject: Person.Person }>({
       id: `${meta.id}/schema-popover--contact`,
-      role: ['card--popover', 'card--intrinsic', 'card--transclusion', 'card--extrinsic', 'card'],
+      role: SurfaceCardRole.literals as any,
       filter: (data): data is { subject: Person.Person } => Obj.instanceOf(Person.Person, data.subject),
       component: ({ data, role }) => {
         const { dispatchPromise: dispatch } = useIntentDispatcher();
         const space = getSpace(data.subject);
         const activeSpace = useActiveSpace(); // TODO(burdon): Disambiguate with space?
-        const handleSelect = useCallback<NonNullable<PreviewProps['onSelect']>>(
+        const handleSelect = useCallback<NonNullable<CardPreviewProps['onSelect']>>(
           (object) =>
             dispatch(
               createIntent(LayoutAction.Open, {
@@ -51,7 +52,12 @@ export default () =>
         );
 
         return (
-          <PersonCard role={role} subject={data.subject} activeSpace={activeSpace} onSelect={handleSelect}>
+          <PersonCard
+            role={role as SurfaceCardRole}
+            subject={data.subject}
+            activeSpace={activeSpace}
+            onSelect={handleSelect}
+          >
             {role === 'card--popover' && <Surface role='related' data={data} />}
           </PersonCard>
         );
@@ -59,13 +65,13 @@ export default () =>
     }),
     createSurface({
       id: `${meta.id}/schema-popover--organization`,
-      role: ['card--popover', 'card--intrinsic', 'card--transclusion', 'card--extrinsic', 'card'],
+      role: SurfaceCardRole.literals as any,
       filter: (data): data is { subject: Organization.Organization } =>
         Obj.instanceOf(Organization.Organization, data.subject),
       component: ({ data, role }) => {
         const activeSpace = useActiveSpace();
         return (
-          <OrganizationCard role={role} subject={data.subject} activeSpace={activeSpace}>
+          <OrganizationCard role={role as SurfaceCardRole} subject={data.subject} activeSpace={activeSpace}>
             {role === 'card--popover' && <Surface role='related' data={data} />}
           </OrganizationCard>
         );
@@ -73,19 +79,19 @@ export default () =>
     }),
     createSurface({
       id: `${meta.id}/schema-popover--project`,
-      role: ['card--popover', 'card--intrinsic', 'card--transclusion', 'card--extrinsic', 'card'],
+      role: SurfaceCardRole.literals as any,
       filter: (data): data is { subject: Project.Project } => Obj.instanceOf(Project.Project, data.subject),
       component: ({ data, role }) => {
         const activeSpace = useActiveSpace();
-        return <ProjectCard subject={data.subject} role={role} activeSpace={activeSpace} />;
+        return <ProjectCard subject={data.subject} role={role as SurfaceCardRole} activeSpace={activeSpace} />;
       },
     }),
     createSurface({
       id: `${meta.id}/schema-popover--task`,
-      role: ['card--popover', 'card--intrinsic', 'card--transclusion', 'card--extrinsic', 'card'],
+      role: SurfaceCardRole.literals as any,
       filter: (data): data is { subject: Task.Task } => Obj.instanceOf(Task.Task, data.subject),
       component: ({ data, role }) => {
-        return <TaskCard subject={data.subject} role={role} />;
+        return <TaskCard subject={data.subject} role={role as SurfaceCardRole} />;
       },
     }),
 
@@ -95,7 +101,7 @@ export default () =>
 
     createSurface({
       id: `${meta.id}/fallback-popover`,
-      role: ['card--popover', 'card--intrinsic', 'card--transclusion', 'card--extrinsic', 'card'],
+      role: SurfaceCardRole.literals as any,
       position: 'fallback',
       filter: (data): data is { subject: Obj.Any; projection?: ProjectionModel } => Obj.isObject(data.subject),
       component: ({ data, role }) => {

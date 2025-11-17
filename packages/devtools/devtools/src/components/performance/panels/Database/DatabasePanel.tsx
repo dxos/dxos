@@ -34,6 +34,7 @@ export const DatabasePanel = ({ database, ...props }: CustomPanelProps<{ databas
       icon='ph--database--regular'
       title='Database'
       info={<div className='flex items-center gap-2'>{database?.spaces ?? 0} Space(s)</div>}
+      maxHeight={0}
     >
       <Table rows={rows} />
     </Panel>

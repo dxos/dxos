@@ -63,7 +63,6 @@ export const MapContainer = ({ role, type: typeParam = 'map', object, ...props }
     })
     .filter(Predicate.isNotNullable);
 
-  // TODO(burdon): Do something with selected items (ids). (Correlate against `rowsForType`).
   const selected = useSelected(typename, 'multi');
 
   return (

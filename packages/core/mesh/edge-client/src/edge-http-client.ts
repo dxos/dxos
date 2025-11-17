@@ -375,7 +375,7 @@ export class EdgeHttpClient {
   // Internal
   //
 
-  private async _fetch<T>(url: URL, args: EdgeHttpRequestArgs): Promise<T> {
+  private async _fetch<T>(url: URL, _args: EdgeHttpRequestArgs): Promise<T> {
     return Function.pipe(
       HttpClient.get(url),
       withLogging,

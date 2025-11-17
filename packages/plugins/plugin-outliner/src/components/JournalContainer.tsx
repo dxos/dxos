@@ -15,7 +15,7 @@ import { type Journal } from '../types';
 import { Journal as JournalComponent, type JournalProps } from './Journal';
 
 export const JournalContainer = ({
-  object,
+  subject,
   showCalendar = true,
 }: SurfaceComponentProps<Journal.Journal, { showCalendar?: boolean }>) => {
   const controllerRef = useRef<CalendarController>(null);
@@ -47,7 +47,7 @@ export const JournalContainer = ({
           </Calendar.Root>
         )}
 
-        <JournalComponent journal={object} classNames='container-max-width' onSelect={handleSelect} />
+        <JournalComponent journal={subject} classNames='container-max-width' onSelect={handleSelect} />
       </div>
     </StackItem.Content>
   );

@@ -42,7 +42,7 @@ export const QueueComponent = ({ shape }: ShapeComponentProps<QueueShape>) => {
 
   return (
     <Box shape={shape} status={`${items.length} items`} onAction={handleAction}>
-      <div className='flex flex-col is-full overflow-y-scroll divide-y divide-separator'>
+      <div className='flex flex-col is-full overflow-y-auto divide-y divide-separator'>
         {[...items].map((item, i) => (
           <QueueItem key={i} classNames='p-1 pli-2' item={item} />
         ))}

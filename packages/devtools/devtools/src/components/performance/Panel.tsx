@@ -14,8 +14,8 @@ export type PanelProps = {
   title: string;
   info?: JSX.Element;
   padding?: boolean;
+  maxHeight?: number;
   open?: boolean;
-  maxHeight?: boolean;
   onToggle?: (id: string, open: boolean) => void;
 };
 
@@ -29,8 +29,8 @@ export const Panel = ({
   title,
   info,
   padding = true,
+  maxHeight = 240,
   open = true,
-  maxHeight = true,
   onToggle,
 }: PropsWithChildren<PanelProps>) => {
   return (
@@ -40,17 +40,17 @@ export const Panel = ({
         onClick={() => onToggle?.(id, !open)}
       >
         <div className='flex items-center gap-2 plb-1'>
-          <Icon icon={icon} size={4} />
+          <Icon icon={icon} />
           <span className='truncate'>{title}</span>
         </div>
         {info}
       </div>
       {children && (
         <div
+          style={{ maxHeight: open ? (maxHeight ? `${maxHeight}px` : undefined) : 0 }}
           className={mx(
-            'flex is-full overflow-x-hidden overflow-y-scroll transition-max-height',
-            maxHeight && 'max-bs-[240px]',
-            !open && 'max-bs-0',
+            'flex flex-col is-full transition-all duration-200 ease-in-out',
+            maxHeight ? 'overflow-y-auto' : 'bs-full overflow-hidden',
             padding && 'pli-2',
             className,
           )}
