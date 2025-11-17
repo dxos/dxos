@@ -2,7 +2,6 @@
 // Copyright 2025 DXOS.org
 //
 
-import type { JsonSchemaType } from '@dxos/echo/internal';
 import type * as QueryProto from '@dxos/protocols/proto/dxos/echo/query';
 import type * as DataProto from '@dxos/protocols/proto/dxos/echo/service';
 
@@ -37,8 +36,14 @@ export interface Meta {
    * Required services.
    */
   readonly services: readonly string[];
-  readonly inputSchema: JsonSchemaType;
-  readonly outputSchema?: JsonSchemaType;
+  /**
+   * JSON schema format
+   */
+  readonly inputSchema: unknown;
+  /**
+   * JSON schema format.
+   */
+  readonly outputSchema?: unknown;
 }
 
 /**
