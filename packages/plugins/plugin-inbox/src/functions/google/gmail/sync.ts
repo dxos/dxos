@@ -54,6 +54,12 @@ export default defineFunction({
   inputSchema: Schema.Struct({
     mailboxId: ArtifactId,
     userId: Schema.String.pipe(Schema.optional),
+    tag: Schema.String.pipe(
+      Schema.annotations({
+        description: 'Gmail label to sync emails from. Defaults to inbox.',
+      }),
+      Schema.optional,
+    ),
     after: Schema.Union(Schema.Number, Schema.String).pipe(
       Schema.annotations({
         description: 'Date to start syncing from, either a unix timestamp or yyyy-MM-dd string.',
@@ -67,18 +73,20 @@ export default defineFunction({
   services: [DatabaseService, QueueService],
   handler: ({
     // TODO(wittjosiah): Schema-based defaults are not yet supported.
-    data: { mailboxId, userId = 'me', after = format(subDays(new Date(), 30), 'yyyy-MM-dd') },
+    data: { mailboxId, userId = 'me', tag = 'inbox', after = format(subDays(new Date(), 30), 'yyyy-MM-dd') },
   }) =>
     Effect.gen(function* () {
       log('syncing gmail', { mailboxId, userId, after });
 
       const mailbox = yield* DatabaseService.resolve(DXN.parse(mailboxId), Mailbox.Mailbox);
 
-      // Sync labels.
-      const { labels } = yield* GoogleMail.listLabels(userId);
-      labels.forEach((label) => {
-        (mailbox.labels ??= {})[label.id] = label.name;
-      });
+      const labelCount = yield* syncLabels(mailbox, userId).pipe(
+        Effect.catchAll((error) => {
+          log.catch(error);
+          return Effect.succeed(0);
+        }),
+      );
+      log('synced labels', { count: labelCount });
 
       const queue = yield* QueueService.getQueue<Message.Message>(mailbox.queue.dxn);
 
@@ -104,7 +112,7 @@ export default defineFunction({
       });
 
       // Stream messages oldest-first into queue.
-      const newMessagesCount = yield* streamGmailMessagesToQueue(startDate, queue, userId, existingGmailIds);
+      const newMessagesCount = yield* streamGmailMessagesToQueue(startDate, queue, userId, tag, existingGmailIds);
 
       log('sync complete', { newMessages: newMessagesCount });
 
@@ -117,6 +125,17 @@ export default defineFunction({
 //
 // Helper functions.
 //
+
+/**
+ * Sync labels.
+ */
+const syncLabels = Effect.fn(function* (mailbox: Mailbox.Mailbox, userId: string) {
+  const { labels } = yield* GoogleMail.listLabels(userId);
+  labels.forEach((label) => {
+    (mailbox.labels ??= {})[label.id] = label.name;
+  });
+  return labels.length;
+});
 
 /**
  * Generates date ranges from oldest to newest.
@@ -152,7 +171,7 @@ const generateDateRanges = (config: DateRangeConfig): Stream.Stream<DateChunk> =
 /**
  * Fetches message IDs for a specific date range, returning them from oldest to newest.
  */
-const fetchMessagesForDateRange = (userId: string, dateChunk: DateChunk) => {
+const fetchMessagesForDateRange = (userId: string, tag: string, dateChunk: DateChunk) => {
   return Stream.unfoldChunkEffect({ pageToken: Option.none<string>(), done: false }, (state) =>
     Effect.gen(function* () {
       if (state.done) {
@@ -160,7 +179,7 @@ const fetchMessagesForDateRange = (userId: string, dateChunk: DateChunk) => {
       }
 
       // Build query for date range.
-      const query = `in:inbox after:${format(dateChunk.start, 'yyyy/MM/dd')} before:${format(dateChunk.end, 'yyyy/MM/dd')}`;
+      const query = `in:${tag} after:${format(dateChunk.start, 'yyyy/MM/dd')} before:${format(dateChunk.end, 'yyyy/MM/dd')}`;
 
       log('fetching message IDs', {
         query,
@@ -194,6 +213,7 @@ const streamGmailMessagesToQueue = Effect.fn(function* (
   startDate: Date,
   queue: Queue<Message.Message>,
   userId: string,
+  tag: string,
   existingGmailIds: Set<string>,
 ) {
   const config: DateRangeConfig = {
@@ -206,7 +226,7 @@ const streamGmailMessagesToQueue = Effect.fn(function* (
   const count = yield* Function.pipe(
     generateDateRanges(config),
     // Sequential date range processing to maintain chronological order.
-    Stream.flatMap((dateChunk) => fetchMessagesForDateRange(userId, dateChunk), { concurrency: 1 }),
+    Stream.flatMap((dateChunk) => fetchMessagesForDateRange(userId, tag, dateChunk), { concurrency: 1 }),
     // Filter out message IDs that already exist in queue.
     Stream.filter((messageId) => {
       const isDuplicate = existingGmailIds.has(messageId);
