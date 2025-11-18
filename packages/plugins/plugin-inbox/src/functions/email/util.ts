@@ -3,6 +3,7 @@
 //
 
 import TurndownService from 'turndown';
+import { parseHTML } from 'linkedom';
 
 import { type MessageDetails } from './types';
 
@@ -34,7 +35,7 @@ export const turndown = new TurndownService({
     },
   });
 
-export const toMarkdown = (html: string): string => turndown.turndown(html);
+export const toMarkdown = (html: string): string => turndown.turndown(parseHTML(html).document.body);
 
 export const isHTML = (str: string): boolean => {
   return /<(\/?(p|div|span|ul|ol|li|a|strong|em|br|table|tr|td|h[1-6]))\b[^>]*>/i.test(str);

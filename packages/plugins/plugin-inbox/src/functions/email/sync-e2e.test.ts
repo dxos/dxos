@@ -6,12 +6,15 @@ import { describe, test } from 'vitest';
 
 import { Client } from '@dxos/client';
 import { configPreset } from '@dxos/config';
-import { Obj } from '@dxos/echo';
+import { Query, Obj } from '@dxos/echo';
 import { FunctionsServiceClient } from '@dxos/functions-runtime/edge';
 import { bundleFunction } from '@dxos/functions-runtime/native';
 import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
 
+import { failedInvariant } from '@dxos/invariant';
+
 import { Mailbox } from '../../types';
+import { AccessToken } from '@dxos/types';
 
 describe.runIf(process.env.DX_TEST_TAGS?.includes('functions-e2e'))('Functions deployment', () => {
   test('bundle function', async () => {
@@ -22,17 +25,26 @@ describe.runIf(process.env.DX_TEST_TAGS?.includes('functions-e2e'))('Functions d
     console.log(artifact);
   });
 
-  test('deployes inbox sync function', { timeout: 120_000 }, async () => {
+  test('deployes inbox sync function', { timeout: 120_000 }, async ({ expect }) => {
     const config = configPreset({ edge: 'local' });
 
-    await using client = await new Client({ config, types: [Mailbox.Mailbox] }).initialize();
+    await using client = await new Client({ config, types: [Mailbox.Mailbox, AccessToken.AccessToken] }).initialize();
     await client.halo.createIdentity();
 
     const space = await client.spaces.create();
     await space.waitUntilReady();
 
     const mailbox = space.db.add(Mailbox.make({ name: 'test', space }));
-    await space.db.flush();
+    space.db.add(
+      Obj.make(AccessToken.AccessToken, {
+        id: '01K9CDZRP1XHPN7C8NKPTZR38H',
+        note: 'Email read access.',
+        source: 'google.com',
+        token: process.env.GOOGLE_ACCESS_TOKEN ?? failedInvariant('GOOGLE_ACCESS_TOKEN is not set'),
+      }),
+    );
+    await space.db.flush({ indexes: true });
+
     await space.internal.setEdgeReplicationPreference(EdgeReplicationSetting.ENABLED);
     await space.internal.syncToEdge({ onProgress: (state) => console.log('sync', state ?? 'no connection to edge') });
 

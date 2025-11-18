@@ -79,6 +79,7 @@ export class FunctionsServiceClient {
           entryPoint: request.entryPoint,
           assets: request.assets,
         },
+        { retry: { count: 3 }, auth: true },
       );
       log.verbose('deploy result', { ...response });
 
