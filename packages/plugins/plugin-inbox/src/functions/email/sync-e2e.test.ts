@@ -14,7 +14,7 @@ import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata
 import { Mailbox } from '../../types';
 
 describe.runIf(process.env.DX_TEST_TAGS?.includes('functions-e2e'))('Functions deployment', () => {
-  test.only('bundle function', async () => {
+  test('bundle function', async () => {
     const artifact = await bundleFunction({
       entryPoint: new URL('./sync.ts', import.meta.url).pathname,
       verbose: true,

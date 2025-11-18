@@ -84,4 +84,9 @@ export interface Context {
    * @deprecated We need to remove this but ECHO keeps dragging this in.
    */
   spaceKey?: string;
+
+  /**
+   * Automerge URL of the space-root document.
+   */
+  spaceRootUrl?: string;
 }

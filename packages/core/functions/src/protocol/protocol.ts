@@ -7,7 +7,7 @@ import { FunctionError } from '../errors';
 import { SchemaAST, Schema, Effect, Layer } from 'effect';
 import { EchoClient } from '@dxos/echo-db';
 import { acquireReleaseResource } from '@dxos/effect';
-import { invariant } from '@dxos/invariant';
+import { failedInvariant, invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { AiService } from '@dxos/ai';
 
@@ -98,12 +98,21 @@ const createServiceLayer = (context: FunctionProtocol.Context): Layer.Layer<Func
 
       const db =
         client && context.spaceId
-          ? client.constructDatabase({
-              spaceId: context.spaceId,
-              spaceKey: PublicKey.ZERO, // TODO(dmaretskyi): This will likely result in objects being created
-              reactiveSchemaQuery: false,
-            })
+          ? yield* acquireReleaseResource(() =>
+              client.constructDatabase({
+                spaceId: context.spaceId ?? failedInvariant(),
+                spaceKey: PublicKey.fromHex(context.spaceKey ?? failedInvariant('spaceKey missing in context')),
+                reactiveSchemaQuery: false,
+              }),
+            )
           : undefined;
+
+      if (db) {
+        console.log('Setting space root', context.spaceRootUrl);
+        yield* Effect.promise(() =>
+          db!.setSpaceRoot(context.spaceRootUrl ?? failedInvariant('spaceRootUrl missing in context')),
+        );
+      }
 
       const queues = client && context.spaceId ? client.constructQueueFactory(context.spaceId) : undefined;
 
