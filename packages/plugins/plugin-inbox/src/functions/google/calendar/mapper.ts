@@ -42,7 +42,14 @@ export const mapEvent = () =>
     const attendees = (event.attendees || [])
       .filter((a) => a.email)
       .map((a) => {
-        const contact = contacts.find(({ emails }) => emails?.findIndex(({ value }) => value === a.email) !== -1);
+        const contact = contacts.find(({ emails }) => {
+          if (!emails) {
+            return false;
+          }
+
+          return emails.findIndex(({ value }) => value === a.email) !== -1;
+        });
+
         return {
           email: a.email,
           name: a.displayName,

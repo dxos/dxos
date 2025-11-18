@@ -22,7 +22,15 @@ export const mapMessage = Effect.fn(function* (message: GoogleMail.Message) {
   const fromHeader = message.payload.headers.find(({ name }) => name === 'From');
   const from = fromHeader && parseFromHeader(fromHeader.value);
   const { objects: contacts } = yield* DatabaseService.runQuery(Query.select(Filter.type(Person.Person)));
-  const contact = from && contacts.find(({ emails }) => emails?.findIndex(({ value }) => value === from.email) !== -1);
+  const contact =
+    from &&
+    contacts.find(({ emails }) => {
+      if (!emails) {
+        return false;
+      }
+
+      return emails.findIndex(({ value }) => value === from.email) !== -1;
+    });
   const sender = { ...from, contact: contact && Ref.make(contact) };
 
   // Skip the message if content or sender is missing.
