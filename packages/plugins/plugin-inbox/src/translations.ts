@@ -37,10 +37,12 @@ export const translations = [
         'action delete': 'Delete',
         'action mark read': 'Mark as read',
         'message label': 'Message',
+        'event label': 'Event',
         'no integrations label': 'No integrations configured',
         'manage integrations button label': 'Manage Integrations',
         'inbox label': 'Inbox',
 
+        'sync mailbox label': 'Sync mailbox',
         'mailbox sync label': 'Mailbox Sync',
         'mailbox object settings configure sync button label': 'Configure sync',
         'mailbox object settings configure subscription button label': 'Configure subscription',

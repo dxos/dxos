@@ -13,11 +13,14 @@ import * as Schema from 'effect/Schema';
 import * as Stream from 'effect/Stream';
 
 import { ArtifactId } from '@dxos/assistant';
-import { DXN } from '@dxos/echo';
+import { DXN, Obj } from '@dxos/echo';
 import type { Queue } from '@dxos/echo-db';
 import { DatabaseService, QueueService, defineFunction } from '@dxos/functions';
 import { log } from '@dxos/log';
 import { type Message } from '@dxos/types';
+
+// NOTE: While the integration is in test mode, only the emails listed in the following dashboard are supported:
+//   https://console.cloud.google.com/auth/audience?authuser=1&project=composer-app-454920
 
 // TODO(burdon): Importing from types/index.ts pulls in @dxos/client dependencies due to SpaceSchema.
 import * as Mailbox from '../../../types/Mailbox';
@@ -70,12 +73,11 @@ export default defineFunction({
 
       const mailbox = yield* DatabaseService.resolve(DXN.parse(mailboxId), Mailbox.Mailbox);
 
-      // TODO(wittjosiah): Consider syncing labels to space.
       // Sync labels.
-      // const { labels } = yield* listLabels(userId);
-      // labels.forEach((label) => {
-      //   (mailbox.tags ??= {})[label.id] = { label: label.name };
-      // });
+      const { labels } = yield* GoogleMail.listLabels(userId);
+      labels.forEach((label) => {
+        (mailbox.labels ??= {})[label.id] = label.name;
+      });
 
       const queue = yield* QueueService.getQueue<Message.Message>(mailbox.queue.dxn);
 
@@ -83,15 +85,25 @@ export default defineFunction({
       const objects = yield* Effect.tryPromise(() => queue.queryObjects());
       const lastMessage = objects.at(-1);
 
+      // Build deduplication set from recent messages to prevent duplicates across sync runs.
+      const recentMessages = objects.slice(-STREAMING_CONFIG.maxResults);
+      const existingGmailIds = new Set(
+        recentMessages.flatMap((msg) => {
+          const meta = Obj.getMeta(msg);
+          return meta.keys.filter((key) => key.source === 'gmail.com').map((key) => key.id);
+        }),
+      );
+
       const startDate = lastMessage ? new Date(lastMessage.created) : new Date(after);
 
       log('starting sync', {
         startDate: format(startDate, 'yyyy-MM-dd'),
         lastMessageId: lastMessage?.id,
+        existingGmailIds: existingGmailIds.size,
       });
 
       // Stream messages oldest-first into queue.
-      const newMessagesCount = yield* streamGmailMessagesToQueue(startDate, queue, userId, lastMessage);
+      const newMessagesCount = yield* streamGmailMessagesToQueue(startDate, queue, userId, existingGmailIds);
 
       log('sync complete', { newMessages: newMessagesCount });
 
@@ -115,7 +127,8 @@ const generateDateRanges = (config: DateRangeConfig): Stream.Stream<DateChunk> =
         return Option.none();
       }
 
-      const chunkEnd = addDays(currentStart, config.chunkDays);
+      // Gmail's 'after:' is inclusive and 'before:' is exclusive, so add 1 day to chunkEnd.
+      const chunkEnd = addDays(currentStart, config.chunkDays + 1);
       const actualEnd = chunkEnd > config.endDate ? config.endDate : chunkEnd;
 
       const chunk: DateChunk = {
@@ -128,7 +141,9 @@ const generateDateRanges = (config: DateRangeConfig): Stream.Stream<DateChunk> =
         end: format(chunk.end, 'yyyy-MM-dd'),
       });
 
-      return Option.some([Chunk.of(chunk), actualEnd]);
+      // Advance to the next day after actualEnd to avoid overlap between chunks.
+      const nextStart = addDays(actualEnd, 1);
+      return Option.some([Chunk.of(chunk), nextStart]);
     }),
   );
 };
@@ -178,11 +193,12 @@ const streamGmailMessagesToQueue = Effect.fn(function* (
   startDate: Date,
   queue: Queue<Message.Message>,
   userId: string,
-  lastMessage?: Message.Message,
+  existingGmailIds: Set<string>,
 ) {
   const config: DateRangeConfig = {
-    startDate: lastMessage ? new Date(lastMessage.created) : startDate,
-    endDate: new Date(),
+    startDate,
+    // Add 1 day to endDate to ensure messages from today are included.
+    endDate: addDays(new Date(), 1),
     chunkDays: STREAMING_CONFIG.dateChunkDays,
   };
 
@@ -190,6 +206,14 @@ const streamGmailMessagesToQueue = Effect.fn(function* (
     generateDateRanges(config),
     // Sequential date range processing to maintain chronological order.
     Stream.flatMap((dateChunk) => fetchMessagesForDateRange(userId, dateChunk), { concurrency: 1 }),
+    // Filter out message IDs that already exist in queue.
+    Stream.filter((messageId) => {
+      const isDuplicate = existingGmailIds.has(messageId);
+      if (isDuplicate) {
+        log('skipping duplicate message', { messageId });
+      }
+      return !isDuplicate;
+    }),
     // Parallel message fetching with bounded buffer.
     Stream.flatMap(
       (messageId) =>
@@ -203,7 +227,7 @@ const streamGmailMessagesToQueue = Effect.fn(function* (
       },
     ),
     // Convert to Message.Message objects.
-    Stream.mapEffect((gmailMessage) => mapMessage(lastMessage)(gmailMessage)),
+    Stream.mapEffect((gmailMessage) => mapMessage(gmailMessage)),
     Stream.filter(Predicate.isNotNullable),
     // Batch messages for queue append.
     Stream.grouped(STREAMING_CONFIG.queueBatchSize),

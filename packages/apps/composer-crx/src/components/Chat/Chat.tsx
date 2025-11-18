@@ -7,14 +7,10 @@ import { useAgentChat } from 'agents/ai-react';
 import { useAgent } from 'agents/react';
 import React, { useCallback, useMemo, useRef, useState } from 'react';
 
-import { combine } from '@dxos/async';
-import { invariant } from '@dxos/invariant';
 import { IconButton, Input, ScrollContainer, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
 import { translationKey } from '../../translations';
-
-combine();
 
 export type ChatProps = ThemedClassName<{
   host?: string;
@@ -26,7 +22,6 @@ export const Chat = ({ classNames, host, url }: ChatProps) => {
   const { t } = useTranslation(translationKey);
   const inputRef = useRef<HTMLInputElement>(null);
   const [text, setText] = useState('');
-  invariant(true);
 
   // Chat agent client.
   const agent = useAgent({
