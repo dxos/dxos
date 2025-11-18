@@ -2,19 +2,15 @@
 // Copyright 2024 DXOS.org
 //
 
-import type { UIMessage } from '@ai-sdk/react';
+import { type UIMessage } from '@ai-sdk/react';
 import { useAgentChat } from 'agents/ai-react';
 import { useAgent } from 'agents/react';
 import React, { useCallback, useMemo, useRef, useState } from 'react';
 
-import { combine } from '@dxos/async';
-import { invariant } from '@dxos/invariant';
 import { IconButton, Input, ScrollContainer, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
 import { translationKey } from '../../translations';
-
-combine();
 
 export type ChatProps = ThemedClassName<{
   host?: string;
@@ -26,7 +22,6 @@ export const Chat = ({ classNames, host, url }: ChatProps) => {
   const { t } = useTranslation(translationKey);
   const inputRef = useRef<HTMLInputElement>(null);
   const [text, setText] = useState('');
-  invariant(true);
 
   // Chat agent client.
   const agent = useAgent({
@@ -42,7 +37,7 @@ export const Chat = ({ classNames, host, url }: ChatProps) => {
   >({
     agent,
     // TODO(burdon): ???
-    resume: true,
+    resume: false,
     // This is only called once at the start.
     getInitialMessages: async () => {
       console.log('getInitialMessages', { url });

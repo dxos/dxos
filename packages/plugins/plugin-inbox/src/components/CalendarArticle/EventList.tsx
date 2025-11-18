@@ -5,9 +5,11 @@
 import { type Locale, format, intervalToDuration } from 'date-fns';
 import React from 'react';
 
-import { Icon, List, ListItem, type ThemedClassName } from '@dxos/react-ui';
+import { IconButton, List, ListItem, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 import { type Actor, type Event } from '@dxos/types';
+
+import { meta } from '../../meta';
 
 // TODO(burdon): Event/Message Articles (in companion); with cards (1-UP).
 // TODO(burdon): Common Actor reference (lookup on demand).
@@ -60,6 +62,7 @@ const EventComponent = ({ event }: { event: Event.Event }) => {
 // NOTE: Common layout (spacing) for icon/text for DateComponent and ActorComponent.
 
 export const DateComponent = ({ start, end, locale }: { start: Date; end?: Date; locale?: Locale }) => {
+  const { t } = useTranslation(meta.id);
   let { hours = 0, minutes = 0 } = (end && intervalToDuration({ start, end })) ?? {};
   // Prefer 90m over 1h 30m.
   if (hours === 1 && minutes !== 0) {
@@ -70,7 +73,14 @@ export const DateComponent = ({ start, end, locale }: { start: Date; end?: Date;
 
   return (
     <div className='flex items-center gap-2 overflow-hidden whitespace-nowrap'>
-      <Icon icon='ph--calendar--duotone' classNames='text-primary-500' />
+      <IconButton
+        variant='ghost'
+        icon='ph--calendar--duotone'
+        iconOnly
+        size={4}
+        label={t('open calendar button')}
+        classNames='cursor-pointer text-subdued !p-0'
+      />
       <div className='truncate text-description'>{format(start, 'PPp', { locale })}</div>
       {(hours || minutes) && <div className='text-description text-xs'>({duration})</div>}
     </div>
@@ -78,9 +88,19 @@ export const DateComponent = ({ start, end, locale }: { start: Date; end?: Date;
 };
 
 export const ActorComponent = ({ actor, classNames }: ThemedClassName<{ actor: Actor.Actor }>) => {
+  const { t } = useTranslation(meta.id);
+
   return (
     <div role='none' className={mx('flex is-full items-center gap-2 overflow-hidden', classNames)}>
-      <Icon icon='ph--user--regular' classNames='cursor-pointer text-subdued' />
+      <IconButton
+        variant='ghost'
+        disabled={!actor.contact}
+        icon='ph--user--duotone'
+        iconOnly
+        size={4}
+        label={t('open profile button')}
+        classNames='cursor-pointer text-subdued !p-0'
+      />
       <div className='truncate text-description'>{actor.name ?? actor.email}</div>
     </div>
   );
