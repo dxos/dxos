@@ -7,11 +7,11 @@ import React, { forwardRef, useEffect, useMemo, useRef, useState } from 'react';
 import { addEventListener } from '@dxos/async';
 import { LogLevel } from '@dxos/log';
 import { Icon, type ThemedClassName, useDynamicRef, useForwardedRef, useTranslation } from '@dxos/react-ui';
+import { ScrollContainer, type ScrollController } from '@dxos/react-ui';
 import { descriptionText, mx } from '@dxos/react-ui-theme';
 import { trim } from '@dxos/util';
 
 import { translationKey } from '../../translations';
-import { ScrollContainer, type ScrollController } from '../ScrollContainer';
 
 export type TimelineOptions = {
   lineHeight: number;

@@ -93,11 +93,11 @@ export default defineConfig({
         short_name: 'Composer',
         description: 'Composer browser extension.',
         icons: {
-          '48': 'assets/img/icon-dxos-48.png',
-          '128': 'assets/img/icon-dxos-128.png',
+          '48': 'assets/img/icon-48.png',
+          '128': 'assets/img/icon-128.png',
         },
         action: {
-          default_icon: 'assets/img/icon-dxos-48.png',
+          default_icon: 'assets/img/icon-48.png',
           default_title: 'Composer',
           default_popup: 'popup.html',
         },
