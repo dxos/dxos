@@ -5,6 +5,7 @@
 import type * as QueryProto from '@dxos/protocols/proto/dxos/echo/query';
 import type * as DataProto from '@dxos/protocols/proto/dxos/echo/service';
 import { type SpaceId } from '@dxos/keys';
+import { QueueService } from './queue';
 
 //
 // Function protocol definition
@@ -69,6 +70,12 @@ export interface Context {
      * Available if the function is invoked in context of a space.
      */
     dataService?: DataProto.DataService;
+
+    /**
+     * Queue service.
+     * Available if the function is invoked in context of a space.
+     */
+    queueService?: QueueService;
 
     // TODO(dmaretskyi): Add aiService.
     // TODO(dmaretskyi): Add functionsService.

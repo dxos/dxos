@@ -5,20 +5,8 @@
 import { ATTR_META, type ObjectId, type ObjectJSON } from '@dxos/echo/internal';
 import type { EdgeHttpClient } from '@dxos/edge-client';
 import type { SpaceId } from '@dxos/keys';
-import { KEY_QUEUE_POSITION, type QueryResult, type QueueQuery } from '@dxos/protocols';
+import { KEY_QUEUE_POSITION, type QueryResult, type QueueQuery, QueueService } from '@dxos/protocols';
 import { ComplexMap } from '@dxos/util';
-
-/**
- * Service for managing queues.
- */
-// TODO(burdon): Base type for all services?
-export interface QueueService {
-  queryQueue(subspaceTag: string, spaceId: SpaceId, query: QueueQuery): Promise<QueryResult>;
-
-  insertIntoQueue(subspaceTag: string, spaceId: SpaceId, queueId: ObjectId, objects: unknown[]): Promise<void>;
-
-  deleteFromQueue(subspaceTag: string, spaceId: SpaceId, queueId: ObjectId, objectIds: ObjectId[]): Promise<void>;
-}
 
 /**
  * Backed by Edge.

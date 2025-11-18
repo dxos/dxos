@@ -92,6 +92,7 @@ const createServiceLayer = (context: FunctionProtocol.Context): Layer.Layer<Func
           return new EchoClient().connectToService({
             dataService: context.services.dataService,
             queryService: context.services.queryService,
+            queueService: context.services.queueService,
           });
         });
       }
