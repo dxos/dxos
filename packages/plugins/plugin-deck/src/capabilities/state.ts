@@ -72,6 +72,11 @@ export const DeckStateFactory = () => {
     .prop({ key: 'activeDeck', type: LocalStorageStore.string() })
     .prop({ key: 'previousDeck', type: LocalStorageStore.string() });
 
+  // Don't allow fullscreen mode to be persisted to prevent getting stuck in it.
+  if (state.values.deck.fullscreen) {
+    state.values.deck.fullscreen = false;
+  }
+
   const layout = live<Capabilities.Layout>({
     get mode() {
       return getMode(state.values.deck);
