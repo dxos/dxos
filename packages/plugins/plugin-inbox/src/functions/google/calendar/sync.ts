@@ -6,7 +6,6 @@ import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
 import { addDays } from 'date-fns';
 import * as Array from 'effect/Array';
 import * as Chunk from 'effect/Chunk';
-import * as Console from 'effect/Console';
 import * as Effect from 'effect/Effect';
 import * as Function from 'effect/Function';
 import * as Predicate from 'effect/Predicate';
@@ -17,6 +16,7 @@ import * as Stream from 'effect/Stream';
 import { ArtifactId } from '@dxos/assistant';
 import { DXN } from '@dxos/echo';
 import { DatabaseService, QueueService, defineFunction } from '@dxos/functions';
+import { log } from '@dxos/log';
 import { type Event } from '@dxos/types';
 
 // TODO(burdon): Importing from types/index.ts pulls in @dxos/client dependencies due to SpaceSchema.
@@ -44,7 +44,7 @@ export default defineFunction({
     data: { calendarId, googleCalendarId = 'primary', syncPeriodDays = 365, pageSize = 100 },
   }) =>
     Effect.gen(function* () {
-      yield* Console.log('syncing google calendar', { calendarId, googleCalendarId, syncPeriodDays, pageSize });
+      log('syncing google calendar', { calendarId, googleCalendarId, syncPeriodDays, pageSize });
 
       const calendar = yield* DatabaseService.resolve(DXN.parse(calendarId), Calendar.Calendar);
       const queue = yield* QueueService.getQueue<Event.Event>(calendar.queue.dxn);
@@ -73,7 +73,7 @@ export default defineFunction({
       const lastUpdate = yield* Ref.get(latestUpdate);
       if (lastUpdate) {
         calendar.lastSyncedUpdate = lastUpdate;
-        yield* Console.log('updated lastSyncedUpdate', { lastUpdate });
+        log('updated lastSyncedUpdate', { lastUpdate });
       }
 
       // Append to queue.
@@ -88,7 +88,7 @@ export default defineFunction({
         );
       }
 
-      yield* Console.log('sync complete', { newEvents: queueEvents.length, isInitialSync });
+      log('sync complete', { newEvents: queueEvents.length, isInitialSync });
       return {
         newEvents: queueEvents.length,
       };
@@ -106,14 +106,14 @@ const performInitialSync = Effect.fn(function* (
   nextPage: Ref.Ref<string | undefined>,
   latestUpdate: Ref.Ref<string | undefined>,
 ) {
-  yield* Console.log('performing initial sync', { syncPeriodDays });
+  log('performing initial sync', { syncPeriodDays });
   const now = new Date();
   const timeMin = now.toISOString();
   const timeMax = addDays(now, syncPeriodDays).toISOString();
 
   do {
     const pageToken = yield* Ref.get(nextPage);
-    yield* Console.log('requesting events by start time', { timeMin, timeMax, pageToken });
+    log('requesting events by start time', { timeMin, timeMax, pageToken });
     const { items, nextPageToken } = yield* GoogleCalendar.listEventsByStartTime(
       googleCalendarId,
       timeMin,
@@ -138,11 +138,11 @@ const performIncrementalSync = Effect.fn(function* (
   nextPage: Ref.Ref<string | undefined>,
   latestUpdate: Ref.Ref<string | undefined>,
 ) {
-  yield* Console.log('performing incremental sync', { updatedMin });
+  log('performing incremental sync', { updatedMin });
 
   do {
     const pageToken = yield* Ref.get(nextPage);
-    yield* Console.log('requesting events by updated time', { updatedMin, pageToken });
+    log('requesting events by updated time', { updatedMin, pageToken });
     const { items, nextPageToken } = yield* GoogleCalendar.listEventsByUpdated(
       googleCalendarId,
       updatedMin,

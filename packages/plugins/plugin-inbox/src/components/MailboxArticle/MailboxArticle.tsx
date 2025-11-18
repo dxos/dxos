@@ -6,12 +6,14 @@ import { Atom, useAtomSet, useAtomValue } from '@effect-atom/atom-react';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { LayoutAction, createIntent } from '@dxos/app-framework';
-import { type SurfaceComponentProps, useCapability, useIntentDispatcher } from '@dxos/app-framework/react';
+import { type SurfaceComponentProps, useIntentDispatcher } from '@dxos/app-framework/react';
 import { Obj, Tag } from '@dxos/echo';
 import { QueryBuilder } from '@dxos/echo-query';
+import { AttentionAction } from '@dxos/plugin-attention/types';
 import { ATTENDABLE_PATH_SEPARATOR, DeckAction } from '@dxos/plugin-deck/types';
 import { Filter, getSpace, useQuery } from '@dxos/react-client/echo';
 import { ElevationProvider, IconButton, useTranslation } from '@dxos/react-ui';
+import { useSelected } from '@dxos/react-ui-attention';
 import { QueryEditor } from '@dxos/react-ui-components';
 import { type EditorController } from '@dxos/react-ui-editor';
 import { MenuBuilder, useMenuActions } from '@dxos/react-ui-menu';
@@ -19,9 +21,8 @@ import { MenuProvider, ToolbarMenu } from '@dxos/react-ui-menu';
 import { StackItem } from '@dxos/react-ui-stack';
 import { type Message } from '@dxos/types';
 
-import { InboxCapabilities } from '../../capabilities';
 import { meta } from '../../meta';
-import { InboxAction, type Mailbox } from '../../types';
+import { type Mailbox } from '../../types';
 import { sortByCreated } from '../../util';
 
 import { type MailboxActionHandler, Mailbox as MailboxComponent } from './Mailbox';
@@ -35,19 +36,18 @@ export const MailboxArticle = ({
 }: SurfaceComponentProps<Mailbox.Mailbox, { filter?: string; attendableId?: string }>) => {
   const { t } = useTranslation(meta.id);
   const id = attendableId ?? Obj.getDXN(mailbox).toString();
-  const state = useCapability(InboxCapabilities.MailboxState);
   const { dispatchPromise: dispatch } = useIntentDispatcher();
-  const currentMessageId = state[id]?.id;
+  const currentMessageId = useSelected(id, 'single');
 
   const filterEditorRef = useRef<EditorController>(null);
   const filterSaveButtonRef = useRef<HTMLButtonElement>(null);
 
   // Menu state.
-  const sortDescending = useRxState(true);
-  const filterVisible = useRxState(false);
+  const sortDescending = useAtomState(true);
+  const filterVisible = useAtomState(false);
   const menuActions = useMailboxActions({
-    sortDescending: sortDescending.rx,
-    filterVisible: filterVisible.rx,
+    sortDescending: sortDescending.atom,
+    filterVisible: filterVisible.atom,
   });
 
   // Filter and messages.
@@ -82,9 +82,9 @@ export const MailboxArticle = ({
         case 'current': {
           const message = sortedMessages.find((message) => message.id === action.messageId);
           void dispatch(
-            createIntent(InboxAction.SelectMessage, {
-              mailboxId: id,
-              message,
+            createIntent(AttentionAction.Select, {
+              contextId: id,
+              selection: { mode: 'single', id: message?.id },
             }),
           );
           void dispatch(
@@ -188,7 +188,7 @@ export const MailboxArticle = ({
         <MailboxComponent
           id={id}
           messages={sortedMessages}
-          tags={tagMap}
+          labels={mailbox.labels}
           currentMessageId={currentMessageId}
           onAction={handleAction}
         />
@@ -241,15 +241,15 @@ const useMailboxActions = ({
 
 // TODO(wittjosiah): Factor out.
 
-type RxState<T> = {
-  rx: Atom.Writable<T>;
+type AtomState<T> = {
+  atom: Atom.Writable<T>;
   value: T;
   set: (value: T | ((value: T) => T)) => void;
 };
 
-const useRxState = <T,>(initialValue: T): RxState<T> => {
-  const rx = useMemo(() => Atom.make(initialValue), [initialValue]);
-  const value = useAtomValue(rx);
-  const set = useAtomSet(rx);
-  return useMemo(() => ({ rx, value, set }), [rx, value, set]);
+const useAtomState = <T,>(initialValue: T): AtomState<T> => {
+  const atom = useMemo(() => Atom.make(initialValue), [initialValue]);
+  const value = useAtomValue(atom);
+  const set = useAtomSet(atom);
+  return useMemo(() => ({ atom, value, set }), [atom, value, set]);
 };

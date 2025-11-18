@@ -6,7 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useRef, useState } from 'react';
 
 import { withTheme } from '../../testing';
-import { Button } from '../Buttons';
+import { Button } from '../Button';
 
 import { DropdownMenu } from './DropdownMenu';
 
