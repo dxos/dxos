@@ -6,8 +6,10 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useEffect, useRef, useState } from 'react';
 
 import { faker } from '@dxos/random';
-import { Button, Toolbar } from '@dxos/react-ui';
-import { withLayout, withTheme } from '@dxos/react-ui/testing';
+
+import { withLayout, withTheme } from '../../testing';
+import { Button } from '../Button';
+import { Toolbar } from '../Toolbar';
 
 import { ScrollContainer, type ScrollContainerRootProps, type ScrollController } from './ScrollContainer';
 
@@ -49,7 +51,7 @@ const DefaultStory = (props: ScrollContainerRootProps) => {
 };
 
 const meta = {
-  title: 'ui/react-ui-components/ScrollContainer',
+  title: 'ui/react-ui-core/ScrollContainer',
   component: ScrollContainer.Root,
   render: DefaultStory,
   decorators: [withTheme, withLayout({ container: 'column', classNames: 'is-[30rem]' })],

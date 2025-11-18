@@ -4,14 +4,17 @@
 
 import { type Resource } from '@dxos/react-ui';
 
+export const translationKey = 'composer';
+
 export const translations = [
   {
     'en-US': {
-      composer: {
+      [translationKey]: {
         'composer.title': 'composer',
         'composer.description': 'DXOS.org',
-        'button.auth': 'Authenticate',
-        'input.placeholder': 'Search...',
+        'chat.placeholder': 'Ask or search for anything...',
+        'chat.clear.button': 'Clear',
+        'settings.devmode.label': 'Developer Mode',
       },
     },
   },
