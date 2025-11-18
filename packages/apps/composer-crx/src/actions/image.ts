@@ -6,7 +6,7 @@ import browser from 'webextension-polyfill';
 
 import { log } from '@dxos/log';
 
-import { IMAGE_SERVICE_THUMBNAIL_ENDPOINT, THUMBNAIL_PROP, getConfig } from '../config';
+import { THUMBNAIL_PROP, getConfig } from '../config';
 
 /**
  * Get content type from URL extension.
@@ -72,7 +72,7 @@ export const createThumbnail = async (imageUrl: string) => {
   formData.append(field, blob, filename);
   const config = await getConfig();
   // NOTE: Don't set Content-Type header: let browser set multipart/form-data with boundary.
-  const uploadRes = await fetch(new URL(IMAGE_SERVICE_THUMBNAIL_ENDPOINT, config.imageServiceUrl).toString(), {
+  const uploadRes = await fetch(new URL('/thumbnail', config.imageServiceUrl).toString(), {
     method: 'POST',
     body: formData,
   });

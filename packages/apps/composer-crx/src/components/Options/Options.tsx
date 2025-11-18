@@ -10,11 +10,12 @@ import { Input, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
 import { DEVELOPER_MODE_PROP } from '../../config';
+import { translationKey } from '../../translations';
 
 export type OptionsProps = ThemedClassName<{}>;
 
 export const Options = ({ classNames }: OptionsProps) => {
-  const { t } = useTranslation('composer');
+  const { t } = useTranslation(translationKey);
   const [developerMode, setDeveloperMode] = useState(false);
 
   useEffect(() => {
@@ -32,27 +33,29 @@ export const Options = ({ classNames }: OptionsProps) => {
   };
 
   return (
-    <div className={mx('flex flex-col grow gap-4 overflow-y-auto', classNames)}>
-      <div className='grid grid-cols-[8rem_1fr] p-4'>
+    <div className={mx('flex flex-col grow gap-4 overflow-hidden', classNames)}>
+      <div className='grid grid-cols-[8rem_1fr] p-4 overflow-y-auto'>
         <a href='https://dxos.org/composer' target='_blank' rel='noreferrer'>
           <Composer className='is-[8rem] bs-[8rem]' />
         </a>
-        <div className='grid grid-rows-[1fr_1fr]'>
-          <div />
-          <div>
-            <h1 className='text-2xl'>{t('composer.title')}</h1>
-            <p className='text-sm text-subdued'>{t('composer.description')}</p>
+        <div className='flex items-center'>
+          <div className='flex flex-col'>
+            <h1 className='text-[40px] poiret-one-regular'>{t('composer.title')}</h1>
+            <a target='_blank' href='https://dxos.org/composer' className='text-base text-subdued' rel='noreferrer'>
+              {t('composer.description')}
+            </a>
           </div>
         </div>
       </div>
 
-      <div className='flex flex-col p-4 gap-4'>
-        <div className='flex items-center gap-2'>
-          <Input.Root>
+      <div className='grid grid-cols-[8rem_1fr] p-4 overflow-y-auto'>
+        <div />
+        <Input.Root>
+          <div className='flex items-center gap-3'>
             <Input.Switch checked={developerMode} onCheckedChange={handleDeveloperModeChange} />
-            <Input.Label>Developer mode</Input.Label>
-          </Input.Root>
-        </div>
+            <Input.Label classNames='!font-base !m-0'>{t('settings.devmode.label')}</Input.Label>
+          </div>
+        </Input.Root>
       </div>
     </div>
   );

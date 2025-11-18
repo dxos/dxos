@@ -36,7 +36,9 @@
   ],
   "dependencies": {
     "@atlaskit/pragmatic-drag-and-drop-hitbox": "^1.0.3",
+    "@dxos/async": "workspace:*",
     "@dxos/debug": "workspace:*",
+    "@dxos/invariant": "workspace:*",
     "@dxos/lit-ui": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/react-hooks": "workspace:*",
