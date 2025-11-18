@@ -2,8 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import TurndownService from 'turndown';
 import { parseHTML } from 'linkedom';
+import TurndownService from 'turndown';
 
 import { type GoogleMail } from '../../apis';
 

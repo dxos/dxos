@@ -401,7 +401,7 @@ export class EdgeHttpClient {
     log('fetch', { url, request: args.body });
 
     let handledAuth = false;
-    let tryCount = 1;
+    const tryCount = 1;
     while (true) {
       let processingError: EdgeCallFailedError | undefined = undefined;
       try {

@@ -4,10 +4,11 @@
 
 import { describe, test } from 'vitest';
 
-import { wrapFunctionHandler } from './protocol';
-import replyFunc from '../example/reply';
-import fibFunc from '../example/fib';
 import { FunctionError } from '../errors';
+import fibFunc from '../example/fib';
+import replyFunc from '../example/reply';
+
+import { wrapFunctionHandler } from './protocol';
 
 describe('wrapFunctionHandler', () => {
   test('wraps reply function and executes handler', async ({ expect }) => {

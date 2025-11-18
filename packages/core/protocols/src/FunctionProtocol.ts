@@ -2,10 +2,11 @@
 // Copyright 2025 DXOS.org
 //
 
+import { type SpaceId } from '@dxos/keys';
 import type * as QueryProto from '@dxos/protocols/proto/dxos/echo/query';
 import type * as DataProto from '@dxos/protocols/proto/dxos/echo/service';
-import { type SpaceId } from '@dxos/keys';
-import { QueueService } from './queue';
+
+import { type QueueService } from './queue';
 
 //
 // Function protocol definition

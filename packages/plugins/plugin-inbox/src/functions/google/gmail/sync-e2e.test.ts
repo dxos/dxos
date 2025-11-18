@@ -6,15 +6,16 @@ import { describe, test } from 'vitest';
 
 import { Client } from '@dxos/client';
 import { configPreset } from '@dxos/config';
-import { Query, Obj } from '@dxos/echo';
+import { Obj } from '@dxos/echo';
 import { FunctionsServiceClient } from '@dxos/functions-runtime/edge';
 import { bundleFunction } from '@dxos/functions-runtime/native';
 import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
 
 import { failedInvariant } from '@dxos/invariant';
-
-import { Mailbox } from '../../types';
 import { AccessToken } from '@dxos/types';
+
+import { Mailbox } from '../../../types';
+import { failedInvariant } from '@dxos/invariant';
 
 describe.runIf(process.env.DX_TEST_TAGS?.includes('functions-e2e'))('Functions deployment', () => {
   test('bundle function', async () => {
@@ -26,7 +27,7 @@ describe.runIf(process.env.DX_TEST_TAGS?.includes('functions-e2e'))('Functions d
   });
 
   test('deployes inbox sync function', { timeout: 120_000 }, async ({ expect }) => {
-    const config = configPreset({ edge: 'local' });
+    const config = configPreset({ edge: 'dev' });
 
     await using client = await new Client({ config, types: [Mailbox.Mailbox, AccessToken.AccessToken] }).initialize();
     await client.halo.createIdentity();
@@ -37,7 +38,6 @@ describe.runIf(process.env.DX_TEST_TAGS?.includes('functions-e2e'))('Functions d
     const mailbox = space.db.add(Mailbox.make({ name: 'test', space }));
     space.db.add(
       Obj.make(AccessToken.AccessToken, {
-        id: '01K9CDZRP1XHPN7C8NKPTZR38H',
         note: 'Email read access.',
         source: 'google.com',
         token: process.env.GOOGLE_ACCESS_TOKEN ?? failedInvariant('GOOGLE_ACCESS_TOKEN is not set'),

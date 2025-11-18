@@ -6,12 +6,11 @@ import { Resource } from '@dxos/context';
 import { type Obj, type Relation } from '@dxos/echo';
 import { assertArgument, assertState } from '@dxos/invariant';
 import { DXN, ObjectId, type QueueSubspaceTag, QueueSubspaceTags, type SpaceId } from '@dxos/keys';
+import { type QueueService } from '@dxos/protocols';
 
 import { type Hypergraph } from '../hypergraph';
 
 import { QueueImpl } from './queue';
-import { type QueueService } from '@dxos/protocols'
-
 import { type Queue } from './types';
 
 export interface QueueAPI {

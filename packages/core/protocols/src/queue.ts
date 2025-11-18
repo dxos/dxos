@@ -2,8 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
-import type { ObjectId } from './types.js';
 import type { SpaceId } from '@dxos/keys';
+
+import type { ObjectId } from './types.js';
 
 export type QueueCursor = string & { __QueueCursor: never };
 

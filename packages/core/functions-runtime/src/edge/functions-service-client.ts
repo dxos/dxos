@@ -88,7 +88,7 @@ export class FunctionsServiceClient {
           keys: [{ source: FUNCTIONS_META_KEY, id: response.functionId }],
         },
         key: response.meta.key,
-        name: response.meta.name ?? '',
+        name: response.meta.name ?? 'Unnamed function',
         version: response.version,
         description: response.meta.description,
         inputSchema: response.meta.inputSchema,

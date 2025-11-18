@@ -3,7 +3,7 @@
 //
 
 import * as Effect from 'effect/Effect';
-import * as Scope from 'effect/Scope';
+import type * as Scope from 'effect/Scope';
 
 import type { Lifecycle } from '@dxos/context';
 

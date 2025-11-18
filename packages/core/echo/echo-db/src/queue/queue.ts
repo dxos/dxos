@@ -18,12 +18,11 @@ import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { assertArgument, failedInvariant } from '@dxos/invariant';
 import { type DXN, type ObjectId, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
+import { type QueueService } from '@dxos/protocols';
 
 import { Filter, Query, type QueryFn, type QueryOptions, QueryResult } from '../query';
 
 import { QueueQueryContext } from './queue-query-context';
-import { type QueueService } from '@dxos/protocols'
-
 import type { Queue } from './types';
 
 const TRACE_QUEUE_LOAD = false;

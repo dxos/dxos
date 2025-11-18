@@ -6,13 +6,13 @@ import { type Context, ContextDisposedError, LifecycleState, Resource } from '@d
 import { invariant } from '@dxos/invariant';
 import { type PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
+import { type QueueService } from '@dxos/protocols';
 import { type QueryService } from '@dxos/protocols/proto/dxos/echo/query';
 import { type DataService } from '@dxos/protocols/proto/dxos/echo/service';
 
 import { Hypergraph } from '../hypergraph';
 import { EchoDatabaseImpl } from '../proxy-db';
 import { QueueFactory } from '../queue';
-import { type QueueService } from '@dxos/protocols'
 
 import { IndexQuerySourceProvider, type LoadObjectParams } from './index-query-source-provider';
 

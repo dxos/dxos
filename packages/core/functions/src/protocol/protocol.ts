@@ -1,15 +1,24 @@
-import { FunctionDefinition, type FunctionServices, type FunctionContext } from '../sdk';
-import { type FunctionProtocol } from '@dxos/protocols';
+//
+// Copyright 2025 DXOS.org
+//
+
+import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
+import * as Schema from 'effect/Schema';
+import * as SchemaAST from 'effect/SchemaAST';
+
+import { AiService } from '@dxos/ai';
 import { Type } from '@dxos/echo';
-import { CredentialsService, DatabaseService, FunctionInvocationService, TracingService } from '../services';
-import { QueueService } from '../services';
-import { FunctionError } from '../errors';
-import { SchemaAST, Schema, Effect, Layer } from 'effect';
 import { EchoClient } from '@dxos/echo-db';
 import { acquireReleaseResource } from '@dxos/effect';
 import { failedInvariant, invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
-import { AiService } from '@dxos/ai';
+import { type FunctionProtocol } from '@dxos/protocols';
+
+import { FunctionError } from '../errors';
+import { FunctionDefinition, type FunctionServices } from '../sdk';
+import { CredentialsService, DatabaseService, FunctionInvocationService, TracingService } from '../services';
+import { QueueService } from '../services';
 
 /**
  * Wraps a function handler made with `defineFunction` to a protocol that the functions-runtime expects.

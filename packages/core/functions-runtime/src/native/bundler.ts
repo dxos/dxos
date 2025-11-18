@@ -5,6 +5,7 @@
 import { writeFile } from 'node:fs/promises';
 import * as fs from 'node:fs/promises';
 import { basename, join, relative } from 'node:path';
+import { dirname } from 'node:path';
 
 import * as Array from 'effect/Array';
 import * as Function from 'effect/Function';
@@ -14,8 +15,7 @@ import { type Message, build } from 'esbuild';
 
 import { BaseError } from '@dxos/errors';
 import { PublicKey } from '@dxos/keys';
-import { trim, Unit } from '@dxos/util';
-import { dirname } from 'node:path';
+import { Unit, trim } from '@dxos/util';
 
 type BundleOptions = {
   entryPoint: string;

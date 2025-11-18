@@ -4,10 +4,27 @@
 
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
+import * as ParseResult from 'effect/ParseResult';
 
 import { createUrl, makeGoogleApiRequest } from '../google-api';
 
-import { LabelsResponse, ListMessagesResponse, Message } from './types';
+import { ErrorResponse, GoogleError, LabelsResponse, ListMessagesResponse, Message } from './types';
+
+// TODO(dmaretskyi): There's probably a better way to do it by moving this into the oauth client
+const decodeAndHandleErrors =
+  <S extends Schema.Schema.Any>(schema: S) =>
+  (
+    data: unknown,
+  ): Effect.Effect<Schema.Schema.Type<S>, GoogleError | ParseResult.ParseError, Schema.Schema.Context<S>> =>
+    Schema.decodeUnknown(Schema.Union(schema, ErrorResponse))(data).pipe(
+      Effect.flatMap((response) => {
+        if ('error' in response) {
+          return Effect.fail(GoogleError.fromErrorResponse(response));
+        } else {
+          return Effect.succeed(response);
+        }
+      }),
+    );
 
 /**
  * NOTE: Google API bundles size is v. large and caused runtime issues.
@@ -41,7 +58,7 @@ export const isSystemLabel = (label: string): boolean => SYSTEM_LABELS.includes(
  */
 export const listLabels = Effect.fn(function* (userId: string) {
   const url = createUrl([API_URL, 'users', userId, 'labels']).toString();
-  return yield* makeGoogleApiRequest(url).pipe(Effect.flatMap(Schema.decodeUnknown(LabelsResponse)));
+  return yield* makeGoogleApiRequest(url).pipe(Effect.flatMap(decodeAndHandleErrors(LabelsResponse)));
 });
 
 /**
@@ -55,7 +72,7 @@ export const listMessages = Effect.fn(function* (
   pageToken?: string | undefined,
 ) {
   const url = createUrl([API_URL, 'users', userId, 'messages'], { q, pageSize, pageToken }).toString();
-  return yield* makeGoogleApiRequest(url).pipe(Effect.flatMap(Schema.decodeUnknown(ListMessagesResponse)));
+  return yield* makeGoogleApiRequest(url).pipe(Effect.flatMap(decodeAndHandleErrors(ListMessagesResponse)));
 });
 
 /**
@@ -64,5 +81,5 @@ export const listMessages = Effect.fn(function* (
  */
 export const getMessage = Effect.fn(function* (userId: string, messageId: string) {
   const url = createUrl([API_URL, 'users', userId, 'messages', messageId]).toString();
-  return yield* makeGoogleApiRequest(url).pipe(Effect.flatMap(Schema.decodeUnknown(Message)));
+  return yield* makeGoogleApiRequest(url).pipe(Effect.flatMap(decodeAndHandleErrors(Message)));
 });

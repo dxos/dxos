@@ -63,7 +63,7 @@ export const ObjectViewer = ({ object, id, onNavigate }: ObjectViewerProps) => {
   };
 
   const handleCopy = useCallback(() => {
-    navigator.clipboard.writeText(JSON.stringify(object, null, 2));
+    void navigator.clipboard.writeText(JSON.stringify(object, null, 2));
   }, [object]);
 
   return (
