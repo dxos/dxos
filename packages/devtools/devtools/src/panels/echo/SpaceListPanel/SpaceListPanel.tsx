@@ -93,9 +93,7 @@ export const SpaceListPanel = ({ onSelect }: { onSelect?: (space: SpaceData | un
       const space = spaces.find((space) => space.key.equals(spaceKey))!;
       await space.waitUntilReady();
       const backupBlob = await exportData(space);
-      const filename = space.properties.name?.replace(/\W/g, '_') || space.key.toHex();
-
-      download(backupBlob, `${filename}.json`);
+      download(backupBlob, `${new Date().toISOString()}-${space.id}.json`);
     },
     [download, spaces],
   );
