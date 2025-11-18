@@ -5,7 +5,7 @@
 import React, { useEffect, useState } from 'react';
 import browser from 'webextension-polyfill';
 
-import { Composer } from '@dxos/brand';
+import { Composer, DXOSHorizontalType } from '@dxos/brand';
 import { Input, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
@@ -33,16 +33,24 @@ export const Options = ({ classNames }: OptionsProps) => {
   };
 
   return (
-    <div className={mx('flex flex-col grow gap-4 overflow-hidden', classNames)}>
-      <div className='grid grid-cols-[8rem_1fr] p-4 overflow-y-auto'>
-        <a href='https://dxos.org/composer' target='_blank' rel='noreferrer'>
+    <div className={mx('flex flex-col grow overflow-hidden', classNames)}>
+      <div className='grid grid-cols-[8rem_1fr_12rem] p-4 overflow-yauto'>
+        <a href='https://dxos.org/composer' target='_blank' rel='noreferrer' className='flex justify-end -mie-4'>
           <Composer className='is-[8rem] bs-[8rem]' />
         </a>
-        <div className='flex items-center'>
-          <div className='flex flex-col'>
-            <h1 className='text-[40px] poiret-one-regular'>{t('composer.title')}</h1>
-            <a target='_blank' href='https://dxos.org/composer' className='text-base text-subdued' rel='noreferrer'>
-              {t('composer.description')}
+        <div className='flex flex-col justify-end'>
+          <h1 className='text-[64px] poiret-one-regular'>{t('composer.title')}</h1>
+        </div>
+        <div className='flex flex-col justify-start items-end'>
+          <div className='flex items-center gap-2 mbs-4 pie-4'>
+            <span className='text-subdued'>Powered by</span>
+            <a
+              target='_blank'
+              rel='noreferrer'
+              href='https://dxos.org'
+              className='text-base !text-subdued hover:opacity-50'
+            >
+              <DXOSHorizontalType className='bs-10 dark:fill-neutral-50' />
             </a>
           </div>
         </div>

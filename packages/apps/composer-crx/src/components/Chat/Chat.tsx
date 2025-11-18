@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import type { UIMessage } from '@ai-sdk/react';
+import { type UIMessage } from '@ai-sdk/react';
 import { useAgentChat } from 'agents/ai-react';
 import { useAgent } from 'agents/react';
 import React, { useCallback, useMemo, useRef, useState } from 'react';
@@ -42,7 +42,7 @@ export const Chat = ({ classNames, host, url }: ChatProps) => {
   >({
     agent,
     // TODO(burdon): ???
-    resume: true,
+    resume: false,
     // This is only called once at the start.
     getInitialMessages: async () => {
       console.log('getInitialMessages', { url });
