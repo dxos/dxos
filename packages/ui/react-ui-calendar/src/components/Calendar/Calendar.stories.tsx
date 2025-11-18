@@ -29,7 +29,7 @@ export const Default: Story = {
   render: () => (
     <Calendar.Root>
       <Calendar.Viewport>
-        <Calendar.Header />
+        <Calendar.Toolbar />
         <Calendar.Grid rows={6} />
       </Calendar.Viewport>
     </Calendar.Root>
@@ -40,7 +40,7 @@ export const Border: Story = {
   render: () => (
     <Calendar.Root>
       <Calendar.Viewport classNames='bg-modalSurface border border-separator rounded'>
-        <Calendar.Header />
+        <Calendar.Toolbar />
         <Calendar.Grid rows={6} />
       </Calendar.Viewport>
     </Calendar.Root>
@@ -52,7 +52,7 @@ export const Column: Story = {
     <div className='absolute inset-0 flex bs-full justify-center'>
       <Calendar.Root>
         <Calendar.Viewport>
-          <Calendar.Header />
+          <Calendar.Toolbar />
           <Calendar.Grid />
         </Calendar.Viewport>
       </Calendar.Root>
@@ -66,7 +66,7 @@ export const Mobile: Story = {
       <div className='flex bs-full is-[400px] justify-center'>
         <Calendar.Root>
           <Calendar.Viewport classNames='is-full'>
-            <Calendar.Header />
+            <Calendar.Toolbar />
             <Calendar.Grid />
           </Calendar.Viewport>
         </Calendar.Root>
