@@ -42,3 +42,21 @@ type MakeProps = Omit<Partial<Obj.MakeProps<typeof Masonry>>, 'view'> & {
 export const make = ({ name, arrangement = [], view }: MakeProps): Masonry => {
   return Obj.make(Masonry, { name, view: Ref.make(view), arrangement });
 };
+
+//
+// V1
+//
+
+export const MasonryV1 = Schema.Struct({
+  arrangement: Schema.Array(
+    Schema.Struct({
+      ids: Schema.Array(Type.ObjectId),
+      hidden: Schema.optional(Schema.Boolean),
+    }).pipe(Schema.mutable),
+  ).pipe(Schema.mutable, Schema.optional),
+}).pipe(
+  Type.Obj({
+    typename: 'dxos.org/type/Masonry',
+    version: '0.1.0',
+  }),
+);

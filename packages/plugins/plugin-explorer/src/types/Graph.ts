@@ -43,3 +43,21 @@ export const make = ({
 }: MakeProps): Graph => {
   return Obj.make(Graph, { name, view: Ref.make(view), query });
 };
+
+//
+// V1
+//
+
+export const GraphV1 = Schema.Struct({
+  name: Schema.optional(Schema.String),
+  query: Schema.Struct({
+    raw: Schema.optional(Schema.String),
+    ast: QueryAST.Query,
+  }).pipe(Schema.mutable),
+}).pipe(
+  Type.Obj({
+    typename: 'dxos.org/type/Graph',
+    version: '0.1.0',
+  }),
+  LabelAnnotation.set(['name']),
+);

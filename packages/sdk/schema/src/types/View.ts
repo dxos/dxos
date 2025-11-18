@@ -6,11 +6,13 @@ import * as Effect from 'effect/Effect';
 import * as Function from 'effect/Function';
 import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
+import * as SchemaAST from 'effect/SchemaAST';
 
 import { type Client } from '@dxos/client';
 import { type Space } from '@dxos/client/echo';
 import { Filter, Obj, Query, QueryAST, Type } from '@dxos/echo';
 import {
+  FormInputAnnotation,
   FormatEnum,
   JsonSchemaType,
   LabelAnnotation,
@@ -288,3 +290,32 @@ export const makeFromSpace = async ({
     }),
   };
 };
+
+//
+// V4
+//
+
+export const ViewSchemaV4 = Schema.Struct({
+  name: Schema.optional(
+    Schema.String.annotations({
+      title: 'Name',
+      [SchemaAST.ExamplesAnnotationId]: ['Contact'],
+    }),
+  ),
+  query: Schema.Struct({
+    raw: Schema.optional(Schema.String),
+    ast: QueryAST.Query,
+  }).pipe(Schema.mutable, FormInputAnnotation.set(false)),
+  sort: Schema.optional(Schema.Array(FieldSortType).pipe(FormInputAnnotation.set(false))),
+  projection: Projection.pipe(FormInputAnnotation.set(false)),
+  presentation: Type.Ref(Type.Expando).pipe(FormInputAnnotation.set(false)),
+}).pipe(
+  Type.Obj({
+    typename: 'dxos.org/type/View',
+    version: '0.4.0',
+  }),
+  LabelAnnotation.set(['name']),
+);
+export interface ViewV4 extends Schema.Schema.Type<typeof ViewSchemaV4> {}
+export interface ViewEncodedV4 extends Schema.Schema.Encoded<typeof ViewSchemaV4> {}
+export const ViewV4: Schema.Schema<ViewV4, ViewEncodedV4> = ViewSchemaV4;

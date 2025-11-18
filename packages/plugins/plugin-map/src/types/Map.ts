@@ -38,5 +38,28 @@ type MakeProps = Omit<Partial<Obj.MakeProps<typeof Map>>, 'view'> & {
  * Make a map as a view of a data set.
  */
 export const make = ({ name, center, zoom, coordinates, view }: MakeProps): Map => {
-  return Obj.make(Map, { name, view: view && Ref.make(view), center, zoom, coordinates });
+  return Obj.make(Map, {
+    name,
+    view: view && Ref.make(view),
+    center,
+    zoom,
+    coordinates,
+  });
 };
+
+//
+// V2
+//
+
+export const MapV2 = Schema.Struct({
+  name: Schema.optional(Schema.String),
+  center: Schema.optional(Type.Format.GeoPoint),
+  zoom: Schema.optional(Schema.Number),
+  coordinates: Schema.Array(Type.Format.GeoPoint).pipe(Schema.mutable, Schema.optional),
+}).pipe(
+  Type.Obj({
+    typename: 'dxos.org/type/Map',
+    version: '0.2.0',
+  }),
+  LabelAnnotation.set(['name']),
+);

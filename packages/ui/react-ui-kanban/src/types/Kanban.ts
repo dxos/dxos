@@ -49,3 +49,24 @@ type MakeProps = Omit<Partial<Obj.MakeProps<typeof Kanban>>, 'view'> & {
 export const make = ({ name, arrangement = [], view }: MakeProps): Kanban => {
   return Obj.make(Kanban, { name, view: Ref.make(view), arrangement });
 };
+
+//
+// V1
+//
+
+export const KanbanV1 = Schema.Struct({
+  name: Schema.optional(Schema.String),
+  arrangement: Schema.Array(
+    Schema.Struct({
+      columnValue: Schema.String,
+      ids: Schema.Array(Type.ObjectId),
+      hidden: Schema.optional(Schema.Boolean),
+    }).pipe(Schema.mutable),
+  ).pipe(Schema.mutable, Schema.optional),
+}).pipe(
+  Type.Obj({
+    typename: 'dxos.org/type/Kanban',
+    version: '0.1.0',
+  }),
+  LabelAnnotation.set(['name']),
+);

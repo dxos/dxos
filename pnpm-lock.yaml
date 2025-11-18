@@ -714,6 +714,9 @@ importers:
       '@dxos/debug':
         specifier: workspace:*
         version: link:../../common/debug
+      '@dxos/echo-db':
+        specifier: workspace:*
+        version: link:../../core/echo/echo-db
       '@dxos/live-object':
         specifier: workspace:*
         version: link:../../core/echo/live-object
@@ -726,6 +729,9 @@ importers:
       '@dxos/random':
         specifier: workspace:*
         version: link:../../common/random
+      '@dxos/react-ui-kanban':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-kanban
       '@dxos/react-ui-stack':
         specifier: workspace:*
         version: link:../../ui/react-ui-stack
@@ -741,9 +747,15 @@ importers:
       '@dxos/vite-plugin-import-source':
         specifier: workspace:*
         version: link:../../../tools/vite-plugin-import-source
+      '@effect/cli':
+        specifier: 0.71.0
+        version: 0.71.0(@effect/platform@0.92.1(effect@3.18.3))(@effect/printer-ansi@0.46.0(@effect/typeclass@0.37.0(effect@3.18.3))(effect@3.18.3))(@effect/printer@0.46.0(@effect/typeclass@0.37.0(effect@3.18.3))(effect@3.18.3))(effect@3.18.3)
       '@effect/platform':
         specifier: 0.92.1
         version: 0.92.1(effect@3.18.3)
+      '@effect/platform-node':
+        specifier: 0.98.3
+        version: 0.98.3(@effect/cluster@0.50.3(@effect/platform@0.92.1(effect@3.18.3))(@effect/rpc@0.71.0(@effect/platform@0.92.1(effect@3.18.3))(effect@3.18.3))(@effect/sql@0.46.0(@effect/experimental@0.56.0(@effect/platform@0.92.1(effect@3.18.3))(effect@3.18.3)(ioredis@5.3.2))(@effect/platform@0.92.1(effect@3.18.3))(effect@3.18.3))(@effect/workflow@0.11.3(@effect/platform@0.92.1(effect@3.18.3))(@effect/rpc@0.71.0(@effect/platform@0.92.1(effect@3.18.3))(effect@3.18.3))(effect@3.18.3))(effect@3.18.3))(@effect/platform@0.92.1(effect@3.18.3))(@effect/rpc@0.71.0(@effect/platform@0.92.1(effect@3.18.3))(effect@3.18.3))(@effect/sql@0.46.0(@effect/experimental@0.56.0(@effect/platform@0.92.1(effect@3.18.3))(effect@3.18.3)(ioredis@5.3.2))(@effect/platform@0.92.1(effect@3.18.3))(effect@3.18.3))(effect@3.18.3)
       '@sentry/vite-plugin':
         specifier: ^4.0.2
         version: 4.0.2(encoding@0.1.13)
@@ -11252,9 +11264,6 @@ importers:
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
-      '@dxos/config':
-        specifier: workspace:*
-        version: link:../config
       '@dxos/context':
         specifier: workspace:*
         version: link:../../common/context
@@ -11427,6 +11436,9 @@ importers:
 
   packages/sdk/config:
     dependencies:
+      '@dxos/client-protocol':
+        specifier: workspace:*
+        version: link:../client-protocol
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
@@ -11445,15 +11457,15 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
+      '@effect/platform':
+        specifier: 0.92.1
+        version: 0.92.1(effect@3.18.3)
       boolean:
         specifier: ^3.0.1
         version: 3.2.0
       effect:
         specifier: 3.18.3
         version: 3.18.3
-      js-yaml:
-        specifier: ^4.1.0
-        version: 4.1.0
       localforage:
         specifier: ^1.10.0
         version: 1.10.0
@@ -11466,10 +11478,10 @@ importers:
       pkg-up:
         specifier: ^3.1.0
         version: 3.1.0
+      yaml:
+        specifier: ^2.6.1
+        version: 2.7.1
     devDependencies:
-      '@types/js-yaml':
-        specifier: ^4.0.5
-        version: 4.0.9
       '@types/lodash.defaultsdeep':
         specifier: ^4.6.6
         version: 4.6.7

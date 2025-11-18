@@ -10,14 +10,13 @@ import * as Option from 'effect/Option';
 import * as Schedule from 'effect/Schedule';
 import type * as Schema from 'effect/Schema';
 
+import { ClientService } from '@dxos/client';
 import { type Space, SpaceId, type SpaceSyncState } from '@dxos/client/echo';
 import { contextFromScope } from '@dxos/effect';
 import { BaseError, type BaseErrorOptions } from '@dxos/errors';
 import { DatabaseService } from '@dxos/functions';
 import { EdgeService } from '@dxos/protocols';
 import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
-
-import { ClientService } from '../services';
 
 export const getSpace = (rawSpaceId: string) =>
   Effect.gen(function* () {

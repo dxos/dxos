@@ -70,3 +70,19 @@ export const make = ({ name, sizes = {}, view, jsonSchema }: MakeProps): Table =
 
   return table;
 };
+
+//
+// V1
+//
+
+export const TableV1 = Schema.Struct({
+  sizes: Schema.Record({
+    key: Schema.String,
+    value: Schema.Number,
+  }).pipe(Schema.mutable),
+}).pipe(
+  Type.Obj({
+    typename: 'dxos.org/type/Table',
+    version: '0.1.0',
+  }),
+);
