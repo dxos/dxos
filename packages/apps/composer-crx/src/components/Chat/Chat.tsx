@@ -41,15 +41,19 @@ export const Chat = ({ classNames, host, url }: ChatProps) => {
     UIMessage<{ createdAt: string; text: string }>
   >({
     agent,
-    // resume: true,
+    // TODO(burdon): ???
+    resume: true,
     // This is only called once at the start.
-    getInitialMessages: async () => [
-      // {
-      //   id: 'initial',
-      //   role: 'assistant',
-      //   parts: [{ type: 'text', text: `Current website: ${url}` }],
-      // },
-    ],
+    getInitialMessages: async () => {
+      console.log('getInitialMessages', { url });
+      return [
+        {
+          id: 'initial',
+          role: 'assistant',
+          parts: [{ type: 'text', text: `Current website: ${url}` }],
+        },
+      ];
+    },
   });
 
   const filteredMessages = useMemo(
