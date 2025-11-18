@@ -10,7 +10,8 @@ import { DXN, ObjectId, type QueueSubspaceTag, QueueSubspaceTags, type SpaceId }
 import { type Hypergraph } from '../hypergraph';
 
 import { QueueImpl } from './queue';
-import { type QueueService } from './queue-service';
+import { type QueueService } from '@dxos/protocols'
+
 import { type Queue } from './types';
 
 export interface QueueAPI {

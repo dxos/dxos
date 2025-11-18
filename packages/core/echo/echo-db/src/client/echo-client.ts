@@ -11,7 +11,8 @@ import { type DataService } from '@dxos/protocols/proto/dxos/echo/service';
 
 import { Hypergraph } from '../hypergraph';
 import { EchoDatabaseImpl } from '../proxy-db';
-import { QueueFactory, type QueueService } from '../queue';
+import { QueueFactory } from '../queue';
+import { type QueueService } from '@dxos/protocols'
 
 import { IndexQuerySourceProvider, type LoadObjectParams } from './index-query-source-provider';
 

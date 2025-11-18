@@ -22,7 +22,8 @@ import { log } from '@dxos/log';
 import { Filter, Query, type QueryFn, type QueryOptions, QueryResult } from '../query';
 
 import { QueueQueryContext } from './queue-query-context';
-import type { QueueService } from './queue-service';
+import { type QueueService } from '@dxos/protocols'
+
 import type { Queue } from './types';
 
 const TRACE_QUEUE_LOAD = false;
