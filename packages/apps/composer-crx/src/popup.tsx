@@ -17,6 +17,7 @@ import { THUMBNAIL_PROP, getConfig } from './config';
 
 const Root = () => {
   const [thumbnailUrl, setThumbnailUrl] = useState<string | null>(null);
+  const [tabUrl, setTabUrl] = useState<string | null>(null);
 
   // Load config.
   const [host, setHost] = useState<string | null>(null);
@@ -24,6 +25,16 @@ const Root = () => {
     void (async () => {
       const config = await getConfig();
       setHost(config.chatAgentUrl);
+    })();
+  }, []);
+
+  // Load current tab URL.
+  useEffect(() => {
+    void (async () => {
+      const [tab] = await browser.tabs.query({ active: true, currentWindow: true });
+      if (tab?.url) {
+        setTabUrl(tab.url.replace(/\/$/, ''));
+      }
     })();
   }, []);
 
@@ -80,7 +91,9 @@ const Root = () => {
 
   return (
     <ErrorBoundary>
-      <Container classNames='is-[500px]'>{host && <Chat host={host} onPing={handlePing} />}</Container>
+      <Container classNames='is-[500px]'>
+        {host && <Chat host={host} onPing={handlePing} url={tabUrl ?? undefined} />}
+      </Container>
     </ErrorBoundary>
   );
 };
@@ -88,7 +101,7 @@ const Root = () => {
 // TODO(burdon): Create card pop
 const Thumbnail = ({ url }: { url: string }) => {
   return (
-    <div className='flex flex-col gap-2 is-full'>
+    <div className='flex flex-col is-full'>
       <Toolbar.Root>
         <Input.Root>
           <Input.TextInput disabled value={url} />

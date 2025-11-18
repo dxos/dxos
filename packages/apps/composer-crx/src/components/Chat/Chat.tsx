@@ -5,7 +5,7 @@
 import type { UIMessage } from '@ai-sdk/react';
 import { useAgentChat } from 'agents/ai-react';
 import { useAgent } from 'agents/react';
-import React, { useCallback, useRef, useState } from 'react';
+import React, { useCallback, useMemo, useRef, useState } from 'react';
 
 import { combine } from '@dxos/async';
 import { invariant } from '@dxos/invariant';
@@ -19,9 +19,10 @@ combine();
 export type ChatProps = ThemedClassName<{
   host?: string;
   onPing?: () => Promise<string | null>;
+  url?: string;
 }>;
 
-export const Chat = ({ classNames, host }: ChatProps) => {
+export const Chat = ({ classNames, host, url }: ChatProps) => {
   const { t } = useTranslation(translationKey);
   const inputRef = useRef<HTMLInputElement>(null);
   const [text, setText] = useState('');
@@ -33,13 +34,28 @@ export const Chat = ({ classNames, host }: ChatProps) => {
     protocol: 'wss',
     host,
   });
-  const { messages, sendMessage, clearError, clearHistory, error } = useAgentChat<
+
+  // TODO(burdon): Get initial messages (currently the history only appears after the first message).
+  const { error, messages, sendMessage, stop, clearError, clearHistory } = useAgentChat<
     unknown,
     UIMessage<{ createdAt: string; text: string }>
   >({
     agent,
-    getInitialMessages: async () => [],
+    // resume: true,
+    // This is only called once at the start.
+    getInitialMessages: async () => [
+      // {
+      //   id: 'initial',
+      //   role: 'assistant',
+      //   parts: [{ type: 'text', text: `Current website: ${url}` }],
+      // },
+    ],
   });
+
+  const filteredMessages = useMemo(
+    () => messages.filter((message) => message.id !== 'initial' && message.role !== 'system'),
+    [messages],
+  );
 
   const handleSubmit = useCallback(async () => {
     const text = inputRef.current?.value?.trim();
@@ -47,16 +63,20 @@ export const Chat = ({ classNames, host }: ChatProps) => {
       return;
     }
 
-    console.log('submit', { text });
-    void clearError();
-    void sendMessage({ role: 'user', parts: [{ type: 'text', text }] }, {});
+    void sendMessage({
+      role: 'user',
+      parts: [{ type: 'text', text }],
+    });
+
     setText('');
-  }, [clearError, sendMessage]);
+  }, [sendMessage, url]);
 
   const handleClear = useCallback(async () => {
+    void stop();
+    void clearError();
+    void clearHistory();
     inputRef.current?.focus();
-    clearHistory();
-  }, [clearHistory]);
+  }, [clearError, clearHistory, stop]);
 
   return (
     <div className={mx('flex flex-col p-1 gap-2 overflow-hidden bg-baseSurface', classNames)}>
@@ -70,7 +90,7 @@ export const Chat = ({ classNames, host }: ChatProps) => {
             value={text}
             onChange={(ev) => setText(ev.target.value)}
             onKeyDown={(ev) => ev.key === 'Enter' && handleSubmit()}
-            classNames='is-full rounded-none text-lg'
+            classNames='is-full rounded-none text-lg !ring-sky-500'
           />
         </Input.Root>
         <div className='flex items-center absolute right-0 top-0 bottom-0 z-10'>
@@ -85,12 +105,12 @@ export const Chat = ({ classNames, host }: ChatProps) => {
       </div>
 
       {/* TODO(burdon): Replace with ChatThread. */}
-      {messages.length > 0 && (
+      {filteredMessages.length > 0 && (
         <ScrollContainer.Root pin classNames='max-bs-[480px]'>
           <ScrollContainer.Viewport classNames='scrollbar-none'>
-            {messages.map((message, i) => (
+            {filteredMessages.map((message, i) => (
               <div key={i} className={mx('flex', 'p-1 text-base', message.role === 'user' && 'justify-end mis-2')}>
-                <p className={mx(message.role === 'user' && 'bg-green-500 pli-2 plb-1 rounded')}>
+                <p className={mx(message.role === 'user' && 'bg-sky-500 pli-2 plb-1 rounded')}>
                   {message.parts
                     .filter(({ type }) => type === 'text')
                     .map((part, j) => (
