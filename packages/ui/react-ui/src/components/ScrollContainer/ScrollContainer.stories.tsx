@@ -51,7 +51,7 @@ const DefaultStory = (props: ScrollContainerRootProps) => {
 };
 
 const meta = {
-  title: 'ui/react-ui/ScrollContainer',
+  title: 'ui/react-ui-core/ScrollContainer',
   component: ScrollContainer.Root,
   render: DefaultStory,
   decorators: [withTheme, withLayout({ container: 'column', classNames: 'is-[30rem]' })],

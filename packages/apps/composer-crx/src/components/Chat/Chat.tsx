@@ -79,6 +79,7 @@ export const Chat = ({ classNames, host, url }: ChatProps) => {
     void stop();
     void clearError();
     void clearHistory();
+    setText('');
     inputRef.current?.focus();
   }, [clearError, clearHistory, stop]);
 
