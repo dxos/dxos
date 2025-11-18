@@ -7,8 +7,7 @@ import '@dxos-theme';
 import React, { type Dispatch, type FC, type RefObject, type SetStateAction } from 'react';
 
 import { useSpace } from '@dxos/react-client/echo';
-import { IconButton, Toolbar } from '@dxos/react-ui';
-import { ScrollContainer } from '@dxos/react-ui-components';
+import { IconButton, ScrollContainer, Toolbar } from '@dxos/react-ui';
 import { type Message } from '@dxos/types';
 
 import { type SerializationModel } from '../../model';
