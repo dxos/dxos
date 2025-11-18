@@ -27,7 +27,7 @@ export const MessageArticle = ({
   mailbox,
 }: SurfaceComponentProps<MessageType.Message, { mailbox: Mailbox.Mailbox }>) => {
   const { t } = useTranslation(meta.id);
-  const space = getSpace(message);
+  const space = getSpace(mailbox);
 
   const hasEnrichedContent = useMemo(() => {
     const textBlocks = message?.blocks.filter((block) => 'text' in block) ?? [];
