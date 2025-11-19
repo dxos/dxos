@@ -58,7 +58,8 @@ export const mapEvent: (event: GoogleCalendar.Event) => Effect.Effect<Event.Even
       });
 
     return Event.make({
-      title: event.summary || '(No title)',
+      title: event.summary,
+      description: event.description,
       owner: owner!,
       attendees,
       startDate,

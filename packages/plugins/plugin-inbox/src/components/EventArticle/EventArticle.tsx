@@ -8,18 +8,21 @@ import { Surface, type SurfaceComponentProps } from '@dxos/app-framework/react';
 import { Filter, Obj, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { getSpace, useQuery } from '@dxos/react-client/echo';
+import { StackItem } from '@dxos/react-ui-stack';
 import { Text } from '@dxos/schema';
-import { Event } from '@dxos/types';
+import { Event as EventType } from '@dxos/types';
 
 import { type Calendar } from '../../types';
+
+import { Event } from './Event';
 
 export const EventArticle = ({
   subject,
   calendar,
-}: SurfaceComponentProps<Event.Event> & { calendar: Calendar.Calendar }) => {
+}: SurfaceComponentProps<EventType.Event> & { calendar: Calendar.Calendar }) => {
   const id = Obj.getDXN(subject).toString();
   const space = getSpace(calendar);
-  const events = useQuery(space, Filter.type(Event.Event));
+  const events = useQuery(space, Filter.type(EventType.Event));
   const shadowedEvent = useMemo(
     () =>
       events.find((event) => {
@@ -46,10 +49,16 @@ export const EventArticle = ({
   }, [id, subject, space, shadowedEvent]);
 
   return (
-    <div>
-      <h1>{subject.title}</h1>
-      <button onClick={handleCreateNotes}>Create notes</button>
-      {notes && <Surface role='section' data={{ id, subject: notes }} limit={1} />}
-    </div>
+    <StackItem.Content toolbar>
+      <Event.Root event={subject}>
+        <Event.Toolbar />
+        <Event.Viewport>
+          <Event.Header onContactCreate={handleCreateNotes} />
+          <Event.Content />
+          {/* TODO(burdon): Suppress toolbar. */}
+          {notes && <Surface role='section' data={{ id, subject: notes }} limit={1} />}
+        </Event.Viewport>
+      </Event.Root>
+    </StackItem.Content>
   );
 };

@@ -32,7 +32,7 @@ export type ButtonStyleProps = Partial<{
 }>;
 
 export const buttonRoot: ComponentFunction<ButtonStyleProps> = (_props, ...etc) => {
-  return mx('dx-button dx-focus-ring group max-is-full [&>span]:truncate', ...etc);
+  return mx('dx-button dx-focus-ring group max-is-full [&_span]:truncate', ...etc);
 };
 
 export const buttonGroup: ComponentFunction<{ elevation?: Elevation }> = (_props, ...etc) => {
