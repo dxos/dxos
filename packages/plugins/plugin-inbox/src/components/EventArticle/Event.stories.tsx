@@ -6,6 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import { Event as EventType } from '@dxos/types';
 
 import { translations } from '../../translations';
 
@@ -31,5 +32,13 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
-  args: {},
+  args: {
+    event: EventType.make({
+      title: 'Event',
+      description: 'Description',
+      owner: {},
+      startDate: new Date('2025-11-19T12:00:00').toISOString(),
+      endDate: new Date('2025-11-19T13:00:00').toISOString(),
+    }),
+  },
 };
