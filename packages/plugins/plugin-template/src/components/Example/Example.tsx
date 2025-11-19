@@ -20,7 +20,7 @@ const [ExampleContextProvider, useExampleContext] = createContext<ExampleContext
 // Root
 //
 
-type ExampleRootProps = PropsWithChildren;
+type ExampleRootProps = PropsWithChildren<{}>;
 
 const ExampleRoot = ({ children }: ExampleRootProps) => {
   return <ExampleContextProvider>{children}</ExampleContextProvider>;
