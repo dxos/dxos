@@ -18,7 +18,7 @@ import { type Message as MessageType, Person } from '@dxos/types';
 import { meta } from '../../meta';
 import { InboxAction, type Mailbox } from '../../types';
 
-import { Message } from './Message';
+import { MessageContent } from './MessageContent';
 import { type ViewMode } from './MessageHeader';
 import { useMessageToolbarActions } from './MessageToolbar';
 
@@ -60,11 +60,9 @@ export const MessageArticle = ({
 
   const { dispatchPromise: dispatch } = useIntentDispatcher();
   const handleExtractContact = useCallback(() => {
-    if (!space || !message) {
-      return;
+    if (space && message) {
+      void dispatch(createIntent(InboxAction.ExtractContact, { space, message }));
     }
-
-    void dispatch(createIntent(InboxAction.ExtractContact, { space, message }));
   }, [space, message, dispatch]);
   const menu = useMessageToolbarActions(viewMode, existingContact, handleExtractContact);
 
@@ -79,7 +77,7 @@ export const MessageArticle = ({
           <ToolbarMenu />
         </MenuProvider>
       </ElevationProvider>
-      <Message
+      <MessageContent
         space={space}
         message={message}
         viewMode={viewMode.value}
