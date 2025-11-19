@@ -413,7 +413,7 @@ export class EdgeHttpClient {
         }
 
         const request = createRequest(args, this._authHeader);
-        log.info('call edge', { url, tryCount, authHeader: !!this._authHeader });
+        log('call edge', { url, tryCount, authHeader: !!this._authHeader });
         const response = await fetch(url, request);
 
         if (response.ok) {
@@ -452,7 +452,7 @@ export class EdgeHttpClient {
       }
 
       if (processingError?.isRetryable && (await shouldRetry(requestContext, processingError.retryAfterMs))) {
-        log.info('retrying edge request', { url, processingError });
+        log.verbose('retrying edge request', { url, processingError });
       } else {
         throw processingError!;
       }

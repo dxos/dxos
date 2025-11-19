@@ -13,6 +13,7 @@ import { DatabaseService } from '@dxos/functions';
 import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
 
 import { ClientService } from '../services';
+import { log } from '../../../../common/log/src';
 
 export const getSpace = (rawSpaceId: string) =>
   Effect.gen(function* () {
@@ -67,7 +68,7 @@ export const waitForSync = Effect.fn(function* (space: Space) {
 
   yield* Effect.promise(() =>
     space.internal.syncToEdge({
-      onProgress: (state) => console.log('syncing:', state ?? 'no connection to edge'),
+      onProgress: (state) => log.info('syncing', { state: state ?? 'no connection to edge' }),
     }),
   );
   yield* Console.log('Sync complete');
