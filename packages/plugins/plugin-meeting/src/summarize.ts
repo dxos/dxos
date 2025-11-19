@@ -19,7 +19,7 @@ import { Type } from '@dxos/echo';
 import { TracingService } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { Transcript } from '@dxos/plugin-transcription/types';
+import { Transcript } from '@dxos/types';
 import { trim } from '@dxos/util';
 
 import { type Meeting } from './types';

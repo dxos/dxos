@@ -9,7 +9,7 @@ import { MarkdownEvents } from '@dxos/plugin-markdown';
 import { SpaceCapabilities, SpaceEvents } from '@dxos/plugin-space';
 import { defineObjectForm } from '@dxos/plugin-space/types';
 import { translations as threadTranslations } from '@dxos/react-ui-thread';
-import { AnchoredTo, Message } from '@dxos/types';
+import { AnchoredTo, Message, Thread } from '@dxos/types';
 
 import {
   AppGraphBuilder,
@@ -23,7 +23,7 @@ import {
 } from './capabilities';
 import { THREAD_ITEM, meta } from './meta';
 import { translations } from './translations';
-import { Channel, Thread, ThreadAction } from './types';
+import { Channel, ThreadAction } from './types';
 
 // TODO(Zan): Every instance of `cursor` should be replaced with `anchor`.
 //  NOTE(burdon): Review/discuss CursorConverter semantics.
