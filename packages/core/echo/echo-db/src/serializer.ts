@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Filter } from '@dxos/echo';
+import { Filter, type Query } from '@dxos/echo';
 import { type EncodedReference, Reference, decodeReference, encodeReference } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
 import { deepMapValues, isNonNullable, stripUndefined } from '@dxos/util';
@@ -30,23 +30,26 @@ export type ImportOptions = {
 export class Serializer {
   static version = 1;
 
-  async export(database: EchoDatabase): Promise<SerializedSpace> {
-    const ids = database.coreDatabase.getAllObjectIds();
-
+  async export(database: EchoDatabase, query?: Query<any>): Promise<SerializedSpace> {
     const loadedObjects: Array<AnyLiveObject<any> | undefined> = [];
-    for (const chunk of chunkArray(ids, MAX_LOAD_OBJECT_CHUNK_SIZE)) {
-      const { objects } = await database.query(Filter.ids(...chunk)).run({ timeout: 60_000 });
+
+    if (query) {
+      const { objects } = await database.query(query).run();
       loadedObjects.push(...objects);
+    } else {
+      const ids = database.coreDatabase.getAllObjectIds();
+      for (const chunk of chunkArray(ids, MAX_LOAD_OBJECT_CHUNK_SIZE)) {
+        const { objects } = await database.query(Filter.ids(...chunk)).run({ timeout: 60_000 });
+        loadedObjects.push(...objects);
+      }
     }
 
     const data = {
+      version: Serializer.version,
+      timestamp: new Date().toISOString(),
       objects: loadedObjects.filter(isNonNullable).map((object) => {
         return this.exportObject(object as any);
       }),
-
-      version: Serializer.version,
-      timestamp: new Date().toISOString(),
-      spaceKey: database.spaceKey.toHex(),
     };
 
     return data;

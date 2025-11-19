@@ -40,10 +40,16 @@ export const MessageArticle = ({
 
   const viewMode = useSignal<ViewMode>(initialViewMode);
   const hasEmail = useComputed(() => !!message?.sender.email);
-  const contacts = useQuery(space, Filter.type(Person.Person));
+  // Don't bother querying the space if there is already a reference to the contact.
+  const isLinked = !!message?.sender.contact;
+  const contacts = useQuery(isLinked ? undefined : space, Filter.type(Person.Person));
   const existingContact = useSignal<Person.Person | undefined>(undefined);
   const contactDxn = useComputed(() =>
-    existingContact.value ? Obj.getDXN(existingContact.value)?.toString() : undefined,
+    message?.sender.contact
+      ? message.sender.contact.dxn.toString()
+      : existingContact.value
+        ? Obj.getDXN(existingContact.value)?.toString()
+        : undefined,
   );
 
   useEffect(() => {
