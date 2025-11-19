@@ -7,12 +7,11 @@ import * as Schema from 'effect/Schema';
 import { Type } from '@dxos/echo';
 import { EchoObjectSchema, SpaceSchema } from '@dxos/react-client/echo';
 import { Collection } from '@dxos/schema';
-import { Actor, AnchoredTo, Message } from '@dxos/types';
+import { Actor, AnchoredTo, Message, Thread } from '@dxos/types';
 
 import { meta } from '../meta';
 
 import * as Channel from './Channel';
-import * as Thread from './Thread';
 
 export namespace ThreadAction {
   export class onCreateSpace extends Schema.TaggedClass<onCreateSpace>()(`${meta.id}/action/on-space-created`, {

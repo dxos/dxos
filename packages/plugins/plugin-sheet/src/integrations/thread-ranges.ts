@@ -12,10 +12,10 @@ import { debounce } from '@dxos/async';
 import { type CellAddress, type CompleteCellRange, inRange } from '@dxos/compute';
 import { Obj, Relation } from '@dxos/echo';
 import { ATTENDABLE_PATH_SEPARATOR, DeckAction } from '@dxos/plugin-deck/types';
-import { Thread, ThreadAction } from '@dxos/plugin-thread/types';
+import { ThreadAction } from '@dxos/plugin-thread/types';
 import { Filter, Query, getSpace, useQuery } from '@dxos/react-client/echo';
 import { type DxGridElement, type GridContentProps } from '@dxos/react-ui-grid';
-import { AnchoredTo } from '@dxos/types';
+import { AnchoredTo, Thread } from '@dxos/types';
 
 import { useSheetContext } from '../components';
 import { meta } from '../meta';

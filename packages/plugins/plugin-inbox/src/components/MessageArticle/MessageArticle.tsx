@@ -17,11 +17,13 @@ import { InboxAction, type Mailbox } from '../../types';
 
 import { Message, type ViewMode } from './Message';
 
+export type MessageArticleProps = SurfaceComponentProps<MessageType.Message> & { mailbox: Mailbox.Mailbox };
+
 export const MessageArticle = ({
   role,
   subject: message,
   mailbox, // TODO(burdon): companionTo?
-}: SurfaceComponentProps<MessageType.Message, { mailbox: Mailbox.Mailbox }>) => {
+}: MessageArticleProps) => {
   const viewMode = useMemo<ViewMode>(() => {
     const textBlocks = message?.blocks.filter((block) => 'text' in block) ?? [];
     return textBlocks.length > 1 && !!textBlocks[1]?.text ? 'enriched' : 'plain-only';

@@ -11,14 +11,14 @@ import { type Outline as OutlineType } from '../types';
 
 import { Outline } from './Outline';
 
-export const OutlinerContainer = ({ subject }: SurfaceComponentProps<OutlineType.Outline>) => {
-  if (!subject.content.target) {
+export const OutlinerContainer = ({ subject: outline }: SurfaceComponentProps<OutlineType.Outline>) => {
+  if (!outline.content.target) {
     return null;
   }
 
   return (
     <StackItem.Content>
-      <Outline id={subject.content.target.id} text={subject.content.target} classNames='container-max-width' />
+      <Outline id={outline.content.target.id} text={outline.content.target} classNames='container-max-width' />
     </StackItem.Content>
   );
 };
