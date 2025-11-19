@@ -65,7 +65,7 @@ describe.runIf(process.env.ACCESS_TOKEN)('Google Calendar API', { timeout: 30_00
       expect(items).to.exist;
       expect(items.length).toBeGreaterThan(0);
 
-      const event = yield* mapEvent()(items[0]);
+      const event = yield* mapEvent(items[0]);
       expect(event).to.exist;
       console.log(JSON.stringify(event, null, 2));
     }).pipe(Effect.provide(Layer.merge(TestLayer, TestDatabaseLayer()))),

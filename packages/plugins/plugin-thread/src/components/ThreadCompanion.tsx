@@ -14,12 +14,12 @@ import { useAttended } from '@dxos/react-ui-attention';
 import { StackItem } from '@dxos/react-ui-stack';
 import { Tabs } from '@dxos/react-ui-tabs';
 import { mx } from '@dxos/react-ui-theme';
-import { AnchoredTo } from '@dxos/types';
+import { AnchoredTo, Thread } from '@dxos/types';
 
 import { ThreadCapabilities } from '../capabilities';
 import { CommentsContainer, type CommentsContainerProps } from '../components';
 import { meta } from '../meta';
-import { Thread, ThreadAction } from '../types';
+import { ThreadAction } from '../types';
 
 export const ThreadCompanion = ({ subject }: { subject: any }) => {
   const { t } = useTranslation(meta.id);

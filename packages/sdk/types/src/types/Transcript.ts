@@ -4,8 +4,8 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Queue } from '@dxos/client/echo';
 import { type DXN, Obj, Ref, Type } from '@dxos/echo';
+import { Queue } from '@dxos/echo-db';
 
 /**
  * Root transcript object created when the user starts a transcription.
