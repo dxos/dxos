@@ -58,7 +58,8 @@ export const mapEvent = () =>
       });
 
     return Event.make({
-      name: event.summary || '(No title)',
+      name: event.summary,
+      description: event.description,
       owner: owner!,
       attendees,
       startDate,

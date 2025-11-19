@@ -18,6 +18,7 @@ import { Event, Message, Organization, Person } from '@dxos/types';
 
 import {
   CalendarArticle,
+  EventArticle,
   EventCard,
   MailboxArticle,
   MailboxSettings,
@@ -59,15 +60,15 @@ export default () =>
       },
     }),
     // TODO(wittjosiah): Implement custom event surface.
-    // createSurface({
-    //   id: `${meta.id}/event`,
-    //   role: ['article', 'section'],
-    //   filter: (data): data is { subject: Event.Event; companionTo: Calendar.Calendar } =>
-    //     Obj.instanceOf(Event.Event, data.subject) && Obj.instanceOf(Calendar.Calendar, data.companionTo),
-    //   component: ({ data: { companionTo, subject }, role }) => {
-    //     return <EventArticle role={role as 'article' | 'section'} subject={subject} mailbox={companionTo} />;
-    //   },
-    // }),
+    createSurface({
+      id: `${meta.id}/event`,
+      role: ['article', 'section'],
+      filter: (data): data is { subject: Event.Event; companionTo: Calendar.Calendar } =>
+        Obj.instanceOf(Event.Event, data.subject) && Obj.instanceOf(Calendar.Calendar, data.companionTo),
+      component: ({ data: { companionTo, subject }, role }) => {
+        return <EventArticle role={role as 'article' | 'section'} subject={subject} mailbox={companionTo} />;
+      },
+    }),
     createSurface({
       id: `${meta.id}/calendar`,
       role: ['article'],

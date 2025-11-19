@@ -32,7 +32,8 @@ export const listEventsByStartTime = Effect.fn(function* (
     timeMax,
     maxResults: pageSize,
     pageToken,
-    singleEvents: true,
+    // Don't create individual instances of recurring events.
+    singleEvents: false,
     orderBy: 'startTime',
   }).toString();
   return yield* makeGoogleApiRequest(url).pipe(Effect.flatMap(Schema.decodeUnknown(ListEventsResponse)));
@@ -54,7 +55,8 @@ export const listEventsByUpdated = Effect.fn(function* (
     updatedMin,
     maxResults: pageSize,
     pageToken,
-    singleEvents: true,
+    // Don't create individual instances of recurring events.
+    singleEvents: false,
     orderBy: 'updated',
   }).toString();
   return yield* makeGoogleApiRequest(url).pipe(Effect.flatMap(Schema.decodeUnknown(ListEventsResponse)));

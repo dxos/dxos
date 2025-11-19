@@ -5,6 +5,7 @@
 import * as Schema from 'effect/Schema';
 
 import { Obj, Type } from '@dxos/echo';
+import { DescriptionAnnotation, LabelAnnotation } from '@dxos/echo/internal';
 
 import * as Actor from './Actor';
 
@@ -15,6 +16,7 @@ import * as Actor from './Actor';
 export const Event = Schema.Struct({
   // TODO(burdon): Change to title.
   name: Schema.optional(Schema.String),
+  description: Schema.optional(Schema.String),
   owner: Actor.Actor,
   attendees: Schema.mutable(Schema.Array(Actor.Actor)),
   startDate: Schema.String, // TODO(burdon): Date.
@@ -25,6 +27,8 @@ export const Event = Schema.Struct({
     typename: 'dxos.org/type/Event',
     version: '0.1.0',
   }),
+  LabelAnnotation.set(['name']),
+  DescriptionAnnotation.set('description'),
 );
 
 export interface Event extends Schema.Schema.Type<typeof Event> {}
