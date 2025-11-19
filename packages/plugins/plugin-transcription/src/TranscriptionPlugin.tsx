@@ -6,13 +6,12 @@ import { Capabilities, Events, contributes, defineModule, definePlugin } from '@
 import { Obj } from '@dxos/echo';
 import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
 import { getSpace } from '@dxos/react-client/echo';
-import { Message } from '@dxos/types';
+import { Message, Transcript } from '@dxos/types';
 
 import { BlueprintDefinition, IntentResolver, ReactSurface, Transcriber } from './capabilities';
 import { renderByline } from './components';
 import { meta } from './meta';
 import { translations } from './translations';
-import { Transcript } from './types';
 
 export const TranscriptionPlugin = definePlugin(meta, () => [
   defineModule({

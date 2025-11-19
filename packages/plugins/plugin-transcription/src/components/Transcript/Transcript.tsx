@@ -18,11 +18,10 @@ import {
   useTextEditor,
 } from '@dxos/react-ui-editor';
 import { mx } from '@dxos/react-ui-theme';
-import { type Message } from '@dxos/types';
+import { type Message, type Transcript } from '@dxos/types';
 import { isTruthy } from '@dxos/util';
 
 import { type SerializationModel } from '../../model';
-import { type Transcript } from '../../types';
 
 import { transcript } from './transcript-extension';
 

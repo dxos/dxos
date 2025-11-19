@@ -6,9 +6,7 @@ import { Obj, Ref } from '@dxos/echo';
 import { IdentityDid } from '@dxos/keys';
 import { faker } from '@dxos/random';
 import { type Identity } from '@dxos/react-client/halo';
-import { Message } from '@dxos/types';
-
-import { Thread } from '../types';
+import { Message, Thread } from '@dxos/types';
 
 export const createCommentThread = (identity: Identity): Thread.Thread => {
   return Thread.make({

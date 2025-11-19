@@ -18,12 +18,11 @@ import {
   type ThreadRootProps,
   threadLayout,
 } from '@dxos/react-ui-thread';
-import { Message } from '@dxos/types';
+import { Message, type Thread } from '@dxos/types';
 import { isNonNullable } from '@dxos/util';
 
 import { useStatus } from '../hooks';
 import { meta } from '../meta';
-import { type Thread } from '../types';
 import { getMessageMetadata } from '../util';
 
 import { command } from './command-extension';
