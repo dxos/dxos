@@ -7,6 +7,8 @@ import React from 'react';
 
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
+import { translations } from '../../translations';
+
 import { Event, type EventRootProps } from './Event';
 
 const DefaultStory = (props: EventRootProps) => {
@@ -14,12 +16,13 @@ const DefaultStory = (props: EventRootProps) => {
 };
 
 const meta = {
-  title: 'ui/plugin-inbox/Event',
+  title: 'plugins/plugin-inbox/Event',
   component: Event.Root,
   render: DefaultStory,
   decorators: [withTheme, withLayout({ container: 'column' })],
   parameters: {
     layout: 'fullscreen',
+    translations,
   },
 } satisfies Meta<typeof DefaultStory>;
 

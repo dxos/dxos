@@ -9,6 +9,8 @@ import React from 'react';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Message as MessageType } from '@dxos/types';
 
+import { translations } from '../../translations';
+
 import { Message, type MessageRootProps } from './Message';
 
 const DefaultStory = (props: MessageRootProps) => {
@@ -24,12 +26,13 @@ const DefaultStory = (props: MessageRootProps) => {
 };
 
 const meta = {
-  title: 'ui/plugin-inbox/Message',
+  title: 'plugins/plugin-inbox/Message',
   component: Message.Root,
   render: DefaultStory,
   decorators: [withTheme, withLayout({ container: 'column' })],
   parameters: {
     layout: 'fullscreen',
+    translations,
   },
 } satisfies Meta<typeof DefaultStory>;
 

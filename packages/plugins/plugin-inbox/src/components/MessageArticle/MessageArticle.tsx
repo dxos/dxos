@@ -10,21 +10,18 @@ import { type SurfaceComponentProps, useIntentDispatcher } from '@dxos/app-frame
 import { type Space, getSpace } from '@dxos/client/echo';
 import { type DXN, Obj } from '@dxos/echo';
 import { Filter, useQuery } from '@dxos/react-client/echo';
-import { ElevationProvider, useTranslation } from '@dxos/react-ui';
 import { StackItem } from '@dxos/react-ui-stack';
 import { type Message as MessageType, Person } from '@dxos/types';
 
-import { meta } from '../../meta';
 import { InboxAction, type Mailbox } from '../../types';
 
 import { Message, type ViewMode } from './Message';
 
 export const MessageArticle = ({
+  role,
   subject: message,
   mailbox, // TODO(burdon): companionTo?
 }: SurfaceComponentProps<MessageType.Message, { mailbox: Mailbox.Mailbox }>) => {
-  const { t } = useTranslation(meta.id);
-
   const viewMode = useMemo<ViewMode>(() => {
     const textBlocks = message?.blocks.filter((block) => 'text' in block) ?? [];
     return textBlocks.length > 1 && !!textBlocks[1]?.text ? 'enriched' : 'plain-only';
@@ -42,18 +39,15 @@ export const MessageArticle = ({
   }, [space, message, dispatch]);
 
   if (!message) {
-    return <p className='p-8 text-center text-description'>{t('no message message')}</p>;
+    return null;
   }
 
   return (
     <StackItem.Content classNames='relative' toolbar>
       <Message.Root attendableId={Obj.getDXN(mailbox).toString()} viewMode={viewMode} message={message} sender={sender}>
-        {/* TODO(burdon): Why? */}
-        <ElevationProvider elevation='positioned'>
-          <Message.Toolbar onContactCreate={handleContactCreate} />
-        </ElevationProvider>
-        <Message.Viewport>
-          <Message.Header />
+        <Message.Toolbar />
+        <Message.Viewport role={role}>
+          <Message.Header onContactCreate={handleContactCreate} />
           <Message.Content />
         </Message.Viewport>
       </Message.Root>

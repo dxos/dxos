@@ -10,6 +10,7 @@ import { type DXN } from '@dxos/echo';
 import {
   Avatar,
   DxAnchorActivate,
+  Icon,
   IconButton,
   type ThemedClassName,
   useThemeContext,
@@ -68,15 +69,39 @@ const MessageRoot = ({ children, viewMode: viewModeParam = 'plain', ...props }: 
 MessageRoot.displayName = 'Message.Root';
 
 //
+// Viewport
+//
+
+type MessageViewportProps = ThemedClassName<PropsWithChildren<{ role?: string }>>;
+
+const MessageViewport = ({ classNames, children, role }: MessageViewportProps) => {
+  return (
+    <div
+      role='none'
+      className={mx(
+        'overflow-hidden grid',
+        role === 'section' ? 'grid-rows-[min-content_min-content]' : 'grid-rows-[min-content_1fr]',
+        classNames,
+      )}
+    >
+      {children}
+    </div>
+  );
+};
+
+MessageViewport.displayName = 'Message.Viewport';
+
+//
 // Header
 //
 
-type MessageHeaderProps = ThemedClassName;
+type MessageHeaderProps = ThemedClassName<{ onContactCreate?: () => void }>;
 
-const MessageHeader = (_props: MessageHeaderProps) => {
+const MessageHeader = ({ onContactCreate }: MessageHeaderProps) => {
   const { t } = useTranslation(meta.id);
-  const { message, sender, viewMode } = useMessageContext(MessageHeader.displayName);
+  const { message, sender } = useMessageContext(MessageHeader.displayName);
 
+  // TOOD(burdon): Callback and hook.
   const buttonRef = useRef<HTMLButtonElement>(null);
   const handleSenderClick = useCallback(() => {
     if (sender.value) {
@@ -87,95 +112,77 @@ const MessageHeader = (_props: MessageHeaderProps) => {
           label: message.sender.name ?? 'never',
         }),
       );
+    } else {
+      onContactCreate?.();
     }
-  }, [sender.value, message.sender.name]);
+  }, [sender.value, message.sender.name, onContactCreate]);
 
   return (
-    <Avatar.Root>
-      <div className='grid grid-rows-2 border-be border-subduedSeparator'>
-        <div className='flex is-full'>
-          <Avatar.Label classNames='flex is-full items-center gap-1 pis-2'>
-            {/* TODO(burdon): Create dx-tag like border around h3 if link. */}
-            {/* TODO(burdon): Colors for prominent text fields (coordinate with mailbox.css). */}
-            <h3 className='text-lg truncate text-indigoText'>{message.sender.name || 'Unknown'}</h3>
-            {sender && (
-              <IconButton
-                ref={buttonRef}
-                variant='ghost'
-                icon='ph--caret-down--regular'
-                iconOnly
-                label={t('show user')}
-                size={4}
-                classNames='!p-0.5'
-                onClick={handleSenderClick}
-              />
-            )}
-          </Avatar.Label>
-          <span className='whitespace-nowrap text-sm text-description p-1 pie-2'>
+    <div className='p-1 flex flex-col gap-2 border-be border-subduedSeparator'>
+      <div className='grid grid-cols-[2rem_1fr] gap-1'>
+        <div className='flex pli-2 pbs-1.5 text-subdued'>
+          <Icon icon='ph--envelope-open--regular' />
+        </div>
+        <div className='flex flex-col gap-1 overflow-hidden'>
+          <h2 className='text-lg line-clamp-2'>{message.properties?.subject}</h2>
+          <div className='whitespace-nowrap text-sm text-description'>
             {message.created && formatDateTime(new Date(), new Date(message.created))}
-          </span>
-        </div>
-
-        <div className='flex is-full items-center'>
-          <div className='flex is-full pis-2 items-center'>
-            <span className='text-sm text-description truncate'>{message.sender.email}</span>
           </div>
-          {viewMode.value && (
-            <div className='pie-1'>
-              <span className='dx-tag' data-hue={viewMode.value === 'enriched' ? 'emerald' : 'neutral'}>
-                {viewMode.value === 'plain' && t('message header view mode plain')}
-                {viewMode.value === 'enriched' && t('message header view mode enriched')}
-                {viewMode.value === 'plain-only' && t('message header view mode plain only')}
-              </span>
-            </div>
-          )}
         </div>
-
-        <div className='p-2'>{message.properties?.subject}</div>
       </div>
-    </Avatar.Root>
+
+      {/* TODO(burdon): Factor out component. */}
+      <div className='grid grid-cols-[2rem_1fr] gap-1'>
+        <div className='flex items-center'>
+          <IconButton
+            ref={buttonRef}
+            variant='ghost'
+            disabled={!sender.value && !onContactCreate}
+            icon={sender.value ? 'ph--user--regular' : 'ph--user-plus--regular'}
+            iconOnly
+            size={4}
+            label={t('show user')}
+            onClick={handleSenderClick}
+          />
+        </div>
+        <Avatar.Root>
+          <Avatar.Label classNames='flex is-full items-center'>
+            {/* TODO(burdon): Standard color tokens. */}
+            <h3 className='truncate text-primaryText'>{message.sender.name || message.sender.email}</h3>
+          </Avatar.Label>
+        </Avatar.Root>
+      </div>
+    </div>
   );
 };
 
 MessageHeader.displayName = 'Message.Header';
 
 //
-// Viewport
-//
-
-type MessageViewportProps = ThemedClassName<PropsWithChildren>;
-
-const MessageViewport = ({ classNames, children }: MessageViewportProps) => {
-  return <div className={mx('flex flex-col', classNames)}>{children}</div>;
-};
-
-MessageViewport.displayName = 'Message.Viewport';
-
-//
 // Content
 //
 
-type MessageContentProps = ThemedClassName<{ role?: string }>;
+type MessageContentProps = ThemedClassName<{}>;
 
-const MessageContent = ({ classNames, role }: MessageContentProps) => {
+const MessageContent = ({ classNames }: MessageContentProps) => {
   const { message, viewMode } = useMessageContext(MessageContent.displayName);
   const { themeMode } = useThemeContext();
 
+  // If we're in plain-only mode or plain view, show the first block.
+  // Otherwise show enriched content (second block).
   const content = useMemo(() => {
     const textBlocks = message.blocks.filter((block) => 'text' in block);
-    // If we're in plain-only mode or plain view, show the first block.
     if (viewMode.value === 'plain-only' || viewMode.value === 'plain') {
       return textBlocks[0]?.text || '';
     }
 
-    // Otherwise show enriched content (second block).
     return textBlocks[1]?.text || '';
   }, [message.blocks, viewMode]);
 
   const extensions = useMemo(() => {
     return [
       createBasicExtensions({ readOnly: true, lineWrapping: true, search: true }),
-      createThemeExtensions({ themeMode, slots: {} }),
+      createThemeExtensions({ themeMode, slots: { scroll: { className: 'p-3' } } }),
       createMarkdownExtensions(),
       decorateMarkdown({
         skip: (node) => (node.name === 'Link' || node.name === 'Image') && node.url.startsWith('dxn:'),
@@ -190,20 +197,10 @@ const MessageContent = ({ classNames, role }: MessageContentProps) => {
   return (
     <div
       role='none'
-      className={mx(
-        'overflow-hidden grid',
-        role === 'section' ? 'grid-rows-[min-content_min-content]' : 'grid-rows-[min-content_1fr]',
-      )}
-    >
-      <div role='none' className={mx(role === 'section' ? 'contents' : 'p-2 overflow-hidden')}>
-        <div
-          role='none'
-          ref={parentRef}
-          className={mx(role !== 'section' && 'flex bs-full overflow-hidden', classNames)}
-          data-popover-collision-boundary={true}
-        />
-      </div>
-    </div>
+      ref={parentRef}
+      className={mx('flex overflow-hidden', classNames)}
+      data-popover-collision-boundary={true}
+    />
   );
 };
 
@@ -213,11 +210,11 @@ MessageContent.displayName = 'Message.Content';
 // Toolbar
 //
 
-type MessageToolbarProps = ThemedClassName<{ onContactCreate?: () => void }>;
+type MessageToolbarProps = ThemedClassName<{}>;
 
-export const MessageToolbar = ({ classNames, onContactCreate }: MessageToolbarProps) => {
-  const { attendableId, sender, viewMode } = useMessageContext(MessageToolbar.displayName);
-  const menu = useMessageToolbarActions({ viewMode, contact: sender, onContactCreate });
+export const MessageToolbar = ({ classNames }: MessageToolbarProps) => {
+  const { attendableId, viewMode } = useMessageContext(MessageToolbar.displayName);
+  const menu = useMessageToolbarActions({ viewMode });
 
   return (
     <MenuProvider {...menu} attendableId={attendableId}>

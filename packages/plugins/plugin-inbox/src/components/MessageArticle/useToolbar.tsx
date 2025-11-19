@@ -6,8 +6,13 @@ import { Atom } from '@effect-atom/atom-react';
 import { type Signal } from '@preact/signals-react';
 import { useMemo } from 'react';
 
-import { type DXN } from '@dxos/echo';
-import { atomFromSignal, createMenuAction, createMenuItemGroup, useMenuActions } from '@dxos/react-ui-menu';
+import {
+  atomFromSignal,
+  createGapSeparator,
+  createMenuAction,
+  createMenuItemGroup,
+  useMenuActions,
+} from '@dxos/react-ui-menu';
 
 import { meta } from '../../meta';
 
@@ -15,11 +20,9 @@ export type ViewMode = 'plain' | 'enriched' | 'plain-only';
 
 export type UseMessageToolbarActionsProps = {
   viewMode: Signal<ViewMode>;
-  contact: Signal<DXN | undefined>;
-  onContactCreate?: () => void;
 };
 
-export const useMessageToolbarActions = ({ viewMode, contact, onContactCreate }: UseMessageToolbarActionsProps) => {
+export const useMessageToolbarActions = ({ viewMode }: UseMessageToolbarActionsProps) => {
   const creator = useMemo(
     () =>
       Atom.make((get) =>
@@ -36,6 +39,10 @@ export const useMessageToolbarActions = ({ viewMode, contact, onContactCreate }:
                 }),
               );
             }
+
+            const gap = createGapSeparator();
+            nodes.push(gap.nodes[0]);
+            edges.push({ source: 'root', target: gap.nodes[0].id });
 
             {
               const action = createMenuAction(
@@ -59,23 +66,11 @@ export const useMessageToolbarActions = ({ viewMode, contact, onContactCreate }:
               edges.push({ source: 'root', target: action.id });
             }
 
-            if (onContactCreate) {
-              const action = createMenuAction('extractContact', onContactCreate, {
-                label: contact.value
-                  ? ['contact already exists label', { ns: meta.id }]
-                  : ['extract contact label', { ns: meta.id }],
-                icon: 'ph--user-plus--regular',
-                disabled: !!contact.value,
-              });
-              nodes.push(action);
-              edges.push({ source: 'root', target: action.id });
-            }
-
             return { nodes, edges };
           }),
         ),
       ),
-    [viewMode, contact, onContactCreate],
+    [viewMode],
   );
 
   return useMenuActions(creator);
