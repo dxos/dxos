@@ -33,6 +33,9 @@ importers:
 
   .:
     dependencies:
+      '@effect/ai':
+        specifier: ^0.31.1
+        version: 0.31.1(@effect/experimental@0.56.0(@effect/platform@0.92.1(effect@3.19.4))(effect@3.19.4)(ioredis@5.3.2))(@effect/platform@0.92.1(effect@3.19.4))(@effect/rpc@0.71.0(@effect/platform@0.92.1(effect@3.19.4))(effect@3.19.4))(effect@3.19.4)
       tslib:
         specifier: ^2.8.1
         version: 2.8.1
@@ -96,13 +99,13 @@ importers:
         version: 0.42.0
       '@effect/vitest':
         specifier: ~0.26.0
-        version: 0.26.0(effect@3.18.3)(vitest@3.2.4)
+        version: 0.26.0(effect@3.19.4)(vitest@3.2.4)
       '@eslint/js':
         specifier: ^9.37.0
         version: 9.37.0
       '@moonrepo/cli':
-        specifier: ^1.40.4
-        version: 1.40.5
+        specifier: 1.41.7
+        version: 1.41.7
       '@octokit/rest':
         specifier: ^19.0.5
         version: 19.0.5(encoding@0.1.13)
@@ -227,8 +230,8 @@ importers:
         specifier: ^1.4.7
         version: 1.4.7
       effect:
-        specifier: 3.18.3
-        version: 3.18.3
+        specifier: 3.19.4
+        version: 3.19.4
       esbuild:
         specifier: 0.25.10
         version: 0.25.10
@@ -432,16 +435,16 @@ importers:
     dependencies:
       '@astrojs/starlight':
         specifier: ^0.32.5
-        version: 0.32.6(astro@5.14.4(@types/node@22.10.2)(idb-keyval@6.2.1)(jiti@2.6.1)(rollup@3.23.0)(sass@1.51.0)(terser@5.19.2)(typescript@5.9.3)(yaml@2.7.1))
+        version: 0.32.6(astro@5.14.4(@types/node@22.10.2)(idb-keyval@6.2.1)(ioredis@5.3.2)(jiti@2.6.1)(rollup@3.23.0)(sass@1.51.0)(terser@5.19.2)(typescript@5.9.3)(yaml@2.7.1))
       astro:
         specifier: ^5.13.1
-        version: 5.14.4(@types/node@22.10.2)(idb-keyval@6.2.1)(jiti@2.6.1)(rollup@3.23.0)(sass@1.51.0)(terser@5.19.2)(typescript@5.9.3)(yaml@2.7.1)
+        version: 5.14.4(@types/node@22.10.2)(idb-keyval@6.2.1)(ioredis@5.3.2)(jiti@2.6.1)(rollup@3.23.0)(sass@1.51.0)(terser@5.19.2)(typescript@5.9.3)(yaml@2.7.1)
       sharp:
         specifier: ^0.32.5
         version: 0.32.6
       starlight-links-validator:
         specifier: ^0.14.3
-        version: 0.14.3(@astrojs/starlight@0.32.6(astro@5.14.4(@types/node@22.10.2)(idb-keyval@6.2.1)(jiti@2.6.1)(rollup@3.23.0)(sass@1.51.0)(terser@5.19.2)(typescript@5.9.3)(yaml@2.7.1)))
+        version: 0.14.3(@astrojs/starlight@0.32.6(astro@5.14.4(@types/node@22.10.2)(idb-keyval@6.2.1)(ioredis@5.3.2)(jiti@2.6.1)(rollup@3.23.0)(sass@1.51.0)(terser@5.19.2)(typescript@5.9.3)(yaml@2.7.1)))
     devDependencies:
       '@dxos/app-framework':
         specifier: workspace:*
@@ -3045,6 +3048,9 @@ importers:
       '@dxos/echo-db':
         specifier: workspace:*
         version: link:../echo/echo-db
+      '@dxos/effect':
+        specifier: workspace:*
+        version: link:../../common/effect
       '@dxos/errors':
         specifier: workspace:*
         version: link:../../common/errors
@@ -3060,6 +3066,9 @@ importers:
       '@dxos/node-std':
         specifier: workspace:*
         version: link:../../common/node-std
+      '@dxos/protocols':
+        specifier: workspace:*
+        version: link:../protocols
       '@dxos/schema':
         specifier: workspace:*
         version: link:../../sdk/schema
@@ -3285,7 +3294,7 @@ importers:
         version: link:../../../common/util
       '@effect/platform':
         specifier: ^0.92.1
-        version: 0.92.1(effect@3.18.3)
+        version: 0.92.1(effect@3.19.4)
       isomorphic-ws:
         specifier: ^5.0.0
         version: 5.0.0(ws@8.18.2)
@@ -6986,6 +6995,9 @@ importers:
       '@dxos/effect':
         specifier: workspace:*
         version: link:../../common/effect
+      '@dxos/errors':
+        specifier: workspace:*
+        version: link:../../common/errors
       '@dxos/functions':
         specifier: workspace:*
         version: link:../../core/functions
@@ -7091,6 +7103,9 @@ importers:
       js-yaml:
         specifier: ^4.1.0
         version: 4.1.0
+      linkedom:
+        specifier: ^0.18.5
+        version: 0.18.12(canvas@3.2.0)
       react-resize-detector:
         specifier: ^11.0.1
         version: 11.0.1(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
@@ -7107,6 +7122,9 @@ importers:
       '@dxos/plugin-theme':
         specifier: workspace:*
         version: link:../plugin-theme
+      '@dxos/protocols':
+        specifier: workspace:*
+        version: link:../../core/protocols
       '@dxos/random':
         specifier: workspace:*
         version: link:../../common/random
@@ -17400,6 +17418,14 @@ packages:
       '@effect/rpc': ^0.71.0
       effect: ^3.18.1
 
+  '@effect/ai@0.31.1':
+    resolution: {integrity: sha512-WFXlypbXwHEcBsg/B3+0l6Vi6yNoTgI68K3OpCJOTGKtFITfwxFoMJUB6poENTvFkIAhzQ9k3qU7VILRiX70Xg==}
+    peerDependencies:
+      '@effect/experimental': ^0.56.0
+      '@effect/platform': ^0.92.1
+      '@effect/rpc': ^0.71.0
+      effect: ^3.18.4
+
   '@effect/cli@0.71.0':
     resolution: {integrity: sha512-ZmJpUVyhMpIUsiurf4UmEWTURPhGHtZrLRXkMOqggkhIeVR1kSxn8EM+ZMXLlT/23gxbHN4ymj7BmBjxP1oodA==}
     peerDependencies:
@@ -18930,42 +18956,42 @@ packages:
     peerDependencies:
       three: '>= 0.159.0'
 
-  '@moonrepo/cli@1.40.5':
-    resolution: {integrity: sha512-5af3bOIRriY2VSqq1CKiGlg9u/WBbtCGX7VIHM36vsFyxTmdro4RLq2O16hX2ZGKD4n/ghCTyfLj/G+r0zJqXg==}
+  '@moonrepo/cli@1.41.7':
+    resolution: {integrity: sha512-zZdE/2m/V/33B3DZOhsuNwRPme+WZiEpggcK6N2og6FCezD/4AxNjc9uZNPBAj2qaDFl3Q+bgtfrHBjdKy4ilg==}
     hasBin: true
 
-  '@moonrepo/core-linux-arm64-gnu@1.40.5':
-    resolution: {integrity: sha512-aN8iTf5IWnjVXfy3s8CF3en6vttM9HkPNRrG09GJ2wPpBKc/BY2RSfWuYtmE3faNbA/XpNbnLXuU0G10npO8Tg==}
+  '@moonrepo/core-linux-arm64-gnu@1.41.7':
+    resolution: {integrity: sha512-Opa+jmNLYsHMRlJcmIn78kKY+76CT/93BvynxuMICPfaQqJTAR/5WPGre1omehGlkg5rbiVshsNTiaa+2bHzpA==}
     cpu: [arm64]
     os: [linux]
 
-  '@moonrepo/core-linux-arm64-musl@1.40.5':
-    resolution: {integrity: sha512-afarxb3QsYv+Qbo8a901yh15OKw4h1Gkosq1gnTIYmc67kCYt24VbAag6WcarT6HkZRReFZMIwoHpFwEyua1Ww==}
+  '@moonrepo/core-linux-arm64-musl@1.41.7':
+    resolution: {integrity: sha512-0ipCRwg75iFWfsjxIYY9IAm/cMoUy9iUk/qs2+JhruFeDrY6tCdV9Nyo8F2h45WC+/2qwZ7IMEdfWNPJT0TSyA==}
     cpu: [arm64]
     os: [linux]
 
-  '@moonrepo/core-linux-x64-gnu@1.40.5':
-    resolution: {integrity: sha512-E3UDB6MKat79ZL7HhtBmFdWVyK7k2vpP6JkWaFzl/KFjbD+d2XJ13bPk5701FcIrkKPXm4hCZ6Hv2pT4aDqfjQ==}
+  '@moonrepo/core-linux-x64-gnu@1.41.7':
+    resolution: {integrity: sha512-iHLaZF0ryKhFTf5G/dFrQHPEFII9p88pXXUl17U9tjfeziFyksbdkQrZhNv6sfbE0bDJGPA3H5TEMR93ZwXo/A==}
     cpu: [x64]
     os: [linux]
 
-  '@moonrepo/core-linux-x64-musl@1.40.5':
-    resolution: {integrity: sha512-SbvloFKoJ+D9Ss5GHcVh4jCcB+HUtmTi1bR9Bo/NqJVHHiYwcPBxsECXK29NS0MLlc8D9hYx8BSuCJlx5YbyeQ==}
+  '@moonrepo/core-linux-x64-musl@1.41.7':
+    resolution: {integrity: sha512-0nZMjOBBSGHNUSIGcCBrfxgKVmeZQjmXpeMVfO3YG9e2irFR2neHbNIud6vLapC+StgV2UbrKoExR+HRtoyzuA==}
     cpu: [x64]
     os: [linux]
 
-  '@moonrepo/core-macos-arm64@1.40.5':
-    resolution: {integrity: sha512-rzBwFtqrTRVABRozeIkm0VhkYlT0o/DB9Zwh1UPZgXGtmnnc0G/5EvdeBCSpFgw3PMmtOT3gMIztGUg6ohfZFw==}
+  '@moonrepo/core-macos-arm64@1.41.7':
+    resolution: {integrity: sha512-Z6okifZS8MA6aXFQ1q/Ej45aAq6i2riDgqWB9CmBVqV7JIdJMLP4++ir+FqGu9S0G34SFgspV0g+mrfFgR+/Nw==}
     cpu: [arm64]
     os: [darwin]
 
-  '@moonrepo/core-macos-x64@1.40.5':
-    resolution: {integrity: sha512-TRG1lagci9MlVQa3SDfzN9EQgHzts7HVSvm4HwJ/KXaQgHn5AkBXoPim9Y/EAdURJZr0SHleR+Ka+5BXeLTBZA==}
+  '@moonrepo/core-macos-x64@1.41.7':
+    resolution: {integrity: sha512-mOHO4/Ag331oVAxg1QNfaWCNfrKdy6HsUJXNY11ERvpNsi0Fh+qnZ+if3ZiC9jwUdwjw2MvtCRxrlXgtI/shrQ==}
     cpu: [x64]
     os: [darwin]
 
-  '@moonrepo/core-windows-x64-msvc@1.40.5':
-    resolution: {integrity: sha512-uAcFBqaoG3AzUaUV83g3bNi38YknGB2T0ak5eEvFKCVXJgAWDIzgeAWWtq6BWAltyXkJdS8VGFhdscp70oXtqw==}
+  '@moonrepo/core-windows-x64-msvc@1.41.7':
+    resolution: {integrity: sha512-p7CiKyWh4j1lhdF81vcacQmgPLV/di3nU5QXjg1lL2mF296HMx4H8sOlcxD/RieGfFW0Qfg5zIreugCHCNUCeA==}
     cpu: [x64]
     os: [win32]
 
@@ -26339,6 +26365,9 @@ packages:
   domutils@3.0.1:
     resolution: {integrity: sha512-z08c1l761iKhDFtfXO04C7kTdPBLi41zwOZl00WS8b5eiaebNpY00HKbztwBq+e3vyqWNwWF3mP9YLUeqIrF+Q==}
 
+  domutils@3.2.2:
+    resolution: {integrity: sha512-6kZKyUajlDuqlHKVX1w7gyslj9MPIXzIFiz/rGu35uC1wMi+kMhQwGhl4lt9unC9Vb9INnY9Z3/ZA3+FhASLaw==}
+
   dot-case@3.0.4:
     resolution: {integrity: sha512-Kv5nKlh6yRrdrGvxeJ2e5y2eRUpkUosIW4A2AS38zwSz27zu7ufDwQPi5Jhs3XAlGNetl3bmnGhQsMtkKJnj3w==}
 
@@ -26388,6 +26417,9 @@ packages:
 
   effect@3.18.3:
     resolution: {integrity: sha512-CmsQdMJdcBk+HigAtiNYb0Fp2xHtZmHjuCgYXDF74IGCCk+4EvQwQG4oHwG4XLFSqQ9eTIOIJ/+4FOYP05aBHg==}
+
+  effect@3.19.4:
+    resolution: {integrity: sha512-gApFffMwpDVgmw/FzCaYWt6zw4m0xAnQf5+cPS0+Sl85AxfeovJeEIsiEQVlk+ZvtBYcoPXxi65GIyruzanQ5g==}
 
   ejs@3.1.10:
     resolution: {integrity: sha512-UeJmFfOrAQS8OJWPZ4qtgHyWExa088/MtK5UEyoJGFH67cDEXkZSviOiKRCZ4Xij0zxI3JECgYs3oKx+AizQBA==}
@@ -27890,6 +27922,9 @@ packages:
   html-whitespace-sensitive-tag-names@3.0.1:
     resolution: {integrity: sha512-q+310vW8zmymYHALr1da4HyXUQ0zgiIwIicEfotYPWGN0OJVEN/58IJ3A4GBYcEq3LGAZqKb+ugvP0GNB9CEAA==}
 
+  htmlparser2@10.0.0:
+    resolution: {integrity: sha512-TwAZM+zE5Tq3lrEHvOlvwgj1XLWQCtaaibSN11Q+gGBAS7Y1uZSWwXXRe4iF6OXnaq1riyQAPFOBtYc77Mxq0g==}
+
   htmlparser2@8.0.2:
     resolution: {integrity: sha512-GYdjWKDkbRLkZ5geuHs5NY1puJ+PXwP7+fHPRz06Eirsb9ugf6d8kkXav6ADhcODhFFPMIXyxkxSuMf3D6NCFA==}
 
@@ -29054,6 +29089,15 @@ packages:
 
   lines-and-columns@1.2.4:
     resolution: {integrity: sha512-7ylylesZQ/PV29jhEDl3Ufjo6ZX7gCqJr5F7PKrqc93v7fzSymt1BpwEU8nAUXs8qzzvqhbjhK5QZg6Mt/HkBg==}
+
+  linkedom@0.18.12:
+    resolution: {integrity: sha512-jalJsOwIKuQJSeTvsgzPe9iJzyfVaEJiEXl+25EkKevsULHvMJzpNqwvj1jOESWdmgKDiXObyjOYwlUqG7wo1Q==}
+    engines: {node: '>=16'}
+    peerDependencies:
+      canvas: '>= 2'
+    peerDependenciesMeta:
+      canvas:
+        optional: true
 
   linkify-it@5.0.0:
     resolution: {integrity: sha512-5aHCbzQRADcdP+ATqnDuhhJ/MRIqDkZX5pyjFHRRysS8vZ5AbqGEoFIb6pYHPZ+L/OC2Lc+xT8uHVVR5CAK/wQ==}
@@ -33478,6 +33522,9 @@ packages:
     engines: {node: '>=0.8.0'}
     hasBin: true
 
+  uhyphen@0.2.0:
+    resolution: {integrity: sha512-qz3o9CHXmJJPGBdqzab7qAYuW8kQGKNEuoHFYrBwV6hWIMcpAmxDLXojcHfFr9US1Pe6zUswEIJIbLI610fuqA==}
+
   uint64be@2.0.2:
     resolution: {integrity: sha512-9QqdvpGQTXgxthP+lY4e/gIBy+RuqcBaC6JVwT5I3bDLgT/btL6twZMR0pI3/Fgah9G/pdwzIprE5gL6v9UvyQ==}
 
@@ -35010,12 +35057,12 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@astrojs/mdx@4.2.6(astro@5.14.4(@types/node@22.10.2)(idb-keyval@6.2.1)(jiti@2.6.1)(rollup@3.23.0)(sass@1.51.0)(terser@5.19.2)(typescript@5.9.3)(yaml@2.7.1))':
+  '@astrojs/mdx@4.2.6(astro@5.14.4(@types/node@22.10.2)(idb-keyval@6.2.1)(ioredis@5.3.2)(jiti@2.6.1)(rollup@3.23.0)(sass@1.51.0)(terser@5.19.2)(typescript@5.9.3)(yaml@2.7.1))':
     dependencies:
       '@astrojs/markdown-remark': 6.3.1
       '@mdx-js/mdx': 3.1.0(acorn@8.15.0)
       acorn: 8.15.0
-      astro: 5.14.4(@types/node@22.10.2)(idb-keyval@6.2.1)(jiti@2.6.1)(rollup@3.23.0)(sass@1.51.0)(terser@5.19.2)(typescript@5.9.3)(yaml@2.7.1)
+      astro: 5.14.4(@types/node@22.10.2)(idb-keyval@6.2.1)(ioredis@5.3.2)(jiti@2.6.1)(rollup@3.23.0)(sass@1.51.0)(terser@5.19.2)(typescript@5.9.3)(yaml@2.7.1)
       es-module-lexer: 1.7.0
       estree-util-visit: 2.0.0
       hast-util-to-html: 9.0.5
@@ -35043,16 +35090,16 @@ snapshots:
       stream-replace-string: 2.0.0
       zod: 3.24.4
 
-  '@astrojs/starlight@0.32.6(astro@5.14.4(@types/node@22.10.2)(idb-keyval@6.2.1)(jiti@2.6.1)(rollup@3.23.0)(sass@1.51.0)(terser@5.19.2)(typescript@5.9.3)(yaml@2.7.1))':
+  '@astrojs/starlight@0.32.6(astro@5.14.4(@types/node@22.10.2)(idb-keyval@6.2.1)(ioredis@5.3.2)(jiti@2.6.1)(rollup@3.23.0)(sass@1.51.0)(terser@5.19.2)(typescript@5.9.3)(yaml@2.7.1))':
     dependencies:
-      '@astrojs/mdx': 4.2.6(astro@5.14.4(@types/node@22.10.2)(idb-keyval@6.2.1)(jiti@2.6.1)(rollup@3.23.0)(sass@1.51.0)(terser@5.19.2)(typescript@5.9.3)(yaml@2.7.1))
+      '@astrojs/mdx': 4.2.6(astro@5.14.4(@types/node@22.10.2)(idb-keyval@6.2.1)(ioredis@5.3.2)(jiti@2.6.1)(rollup@3.23.0)(sass@1.51.0)(terser@5.19.2)(typescript@5.9.3)(yaml@2.7.1))
       '@astrojs/sitemap': 3.4.0
       '@pagefind/default-ui': 1.3.0
       '@types/hast': 3.0.4
       '@types/js-yaml': 4.0.9
       '@types/mdast': 4.0.4
-      astro: 5.14.4(@types/node@22.10.2)(idb-keyval@6.2.1)(jiti@2.6.1)(rollup@3.23.0)(sass@1.51.0)(terser@5.19.2)(typescript@5.9.3)(yaml@2.7.1)
-      astro-expressive-code: 0.40.2(astro@5.14.4(@types/node@22.10.2)(idb-keyval@6.2.1)(jiti@2.6.1)(rollup@3.23.0)(sass@1.51.0)(terser@5.19.2)(typescript@5.9.3)(yaml@2.7.1))
+      astro: 5.14.4(@types/node@22.10.2)(idb-keyval@6.2.1)(ioredis@5.3.2)(jiti@2.6.1)(rollup@3.23.0)(sass@1.51.0)(terser@5.19.2)(typescript@5.9.3)(yaml@2.7.1)
+      astro-expressive-code: 0.40.2(astro@5.14.4(@types/node@22.10.2)(idb-keyval@6.2.1)(ioredis@5.3.2)(jiti@2.6.1)(rollup@3.23.0)(sass@1.51.0)(terser@5.19.2)(typescript@5.9.3)(yaml@2.7.1))
       bcp-47: 2.1.0
       hast-util-from-html: 2.0.3
       hast-util-select: 6.0.4
@@ -37116,6 +37163,14 @@ snapshots:
       effect: 3.18.3
       find-my-way-ts: 0.1.6
 
+  '@effect/ai@0.31.1(@effect/experimental@0.56.0(@effect/platform@0.92.1(effect@3.19.4))(effect@3.19.4)(ioredis@5.3.2))(@effect/platform@0.92.1(effect@3.19.4))(@effect/rpc@0.71.0(@effect/platform@0.92.1(effect@3.19.4))(effect@3.19.4))(effect@3.19.4)':
+    dependencies:
+      '@effect/experimental': 0.56.0(@effect/platform@0.92.1(effect@3.19.4))(effect@3.19.4)(ioredis@5.3.2)
+      '@effect/platform': 0.92.1(effect@3.19.4)
+      '@effect/rpc': 0.71.0(@effect/platform@0.92.1(effect@3.19.4))(effect@3.19.4)
+      effect: 3.19.4
+      find-my-way-ts: 0.1.6
+
   '@effect/cli@0.71.0(@effect/platform@0.92.1(effect@3.18.3))(@effect/printer-ansi@0.46.0(@effect/typeclass@0.37.0(effect@3.18.3))(effect@3.18.3))(@effect/printer@0.46.0(@effect/typeclass@0.37.0(effect@3.18.3))(effect@3.18.3))(effect@3.18.3)':
     dependencies:
       '@effect/platform': 0.92.1(effect@3.18.3)
@@ -37138,6 +37193,14 @@ snapshots:
     dependencies:
       '@effect/platform': 0.92.1(effect@3.18.3)
       effect: 3.18.3
+      uuid: 11.1.0
+    optionalDependencies:
+      ioredis: 5.3.2
+
+  '@effect/experimental@0.56.0(@effect/platform@0.92.1(effect@3.19.4))(effect@3.19.4)(ioredis@5.3.2)':
+    dependencies:
+      '@effect/platform': 0.92.1(effect@3.19.4)
+      effect: 3.19.4
       uuid: 11.1.0
     optionalDependencies:
       ioredis: 5.3.2
@@ -37200,6 +37263,13 @@ snapshots:
       msgpackr: 1.11.4
       multipasta: 0.2.7
 
+  '@effect/platform@0.92.1(effect@3.19.4)':
+    dependencies:
+      effect: 3.19.4
+      find-my-way-ts: 0.1.6
+      msgpackr: 1.11.4
+      multipasta: 0.2.7
+
   '@effect/printer-ansi@0.46.0(@effect/typeclass@0.37.0(effect@3.18.3))(effect@3.18.3)':
     dependencies:
       '@effect/printer': 0.46.0(@effect/typeclass@0.37.0(effect@3.18.3))(effect@3.18.3)
@@ -37215,6 +37285,12 @@ snapshots:
     dependencies:
       '@effect/platform': 0.92.1(effect@3.18.3)
       effect: 3.18.3
+      msgpackr: 1.11.4
+
+  '@effect/rpc@0.71.0(@effect/platform@0.92.1(effect@3.19.4))(effect@3.19.4)':
+    dependencies:
+      '@effect/platform': 0.92.1(effect@3.19.4)
+      effect: 3.19.4
       msgpackr: 1.11.4
 
   '@effect/schema@0.75.5(effect@3.18.3)':
@@ -37233,9 +37309,9 @@ snapshots:
     dependencies:
       effect: 3.18.3
 
-  '@effect/vitest@0.26.0(effect@3.18.3)(vitest@3.2.4)':
+  '@effect/vitest@0.26.0(effect@3.19.4)(vitest@3.2.4)':
     dependencies:
-      effect: 3.18.3
+      effect: 3.19.4
       vitest: 3.2.4(@types/debug@4.1.12)(@types/node@22.10.2)(@vitest/browser@3.2.4)(@vitest/ui@3.2.4)(happy-dom@13.3.4)(jiti@2.6.1)(jsdom@27.0.0(canvas@3.2.0)(postcss@8.5.6))(terser@5.19.2)(yaml@2.7.1)
 
   '@effect/workflow@0.11.3(@effect/platform@0.92.1(effect@3.18.3))(@effect/rpc@0.71.0(@effect/platform@0.92.1(effect@3.18.3))(effect@3.18.3))(effect@3.18.3)':
@@ -38552,37 +38628,37 @@ snapshots:
       promise-worker-transferable: 1.0.4
       three: 0.165.0
 
-  '@moonrepo/cli@1.40.5':
+  '@moonrepo/cli@1.41.7':
     dependencies:
       detect-libc: 2.1.0
     optionalDependencies:
-      '@moonrepo/core-linux-arm64-gnu': 1.40.5
-      '@moonrepo/core-linux-arm64-musl': 1.40.5
-      '@moonrepo/core-linux-x64-gnu': 1.40.5
-      '@moonrepo/core-linux-x64-musl': 1.40.5
-      '@moonrepo/core-macos-arm64': 1.40.5
-      '@moonrepo/core-macos-x64': 1.40.5
-      '@moonrepo/core-windows-x64-msvc': 1.40.5
+      '@moonrepo/core-linux-arm64-gnu': 1.41.7
+      '@moonrepo/core-linux-arm64-musl': 1.41.7
+      '@moonrepo/core-linux-x64-gnu': 1.41.7
+      '@moonrepo/core-linux-x64-musl': 1.41.7
+      '@moonrepo/core-macos-arm64': 1.41.7
+      '@moonrepo/core-macos-x64': 1.41.7
+      '@moonrepo/core-windows-x64-msvc': 1.41.7
 
-  '@moonrepo/core-linux-arm64-gnu@1.40.5':
+  '@moonrepo/core-linux-arm64-gnu@1.41.7':
     optional: true
 
-  '@moonrepo/core-linux-arm64-musl@1.40.5':
+  '@moonrepo/core-linux-arm64-musl@1.41.7':
     optional: true
 
-  '@moonrepo/core-linux-x64-gnu@1.40.5':
+  '@moonrepo/core-linux-x64-gnu@1.41.7':
     optional: true
 
-  '@moonrepo/core-linux-x64-musl@1.40.5':
+  '@moonrepo/core-linux-x64-musl@1.41.7':
     optional: true
 
-  '@moonrepo/core-macos-arm64@1.40.5':
+  '@moonrepo/core-macos-arm64@1.41.7':
     optional: true
 
-  '@moonrepo/core-macos-x64@1.40.5':
+  '@moonrepo/core-macos-x64@1.41.7':
     optional: true
 
-  '@moonrepo/core-windows-x64-msvc@1.40.5':
+  '@moonrepo/core-windows-x64-msvc@1.41.7':
     optional: true
 
   '@msgpackr-extract/msgpackr-extract-darwin-arm64@3.0.3':
@@ -45075,12 +45151,12 @@ snapshots:
 
   astring@1.9.0: {}
 
-  astro-expressive-code@0.40.2(astro@5.14.4(@types/node@22.10.2)(idb-keyval@6.2.1)(jiti@2.6.1)(rollup@3.23.0)(sass@1.51.0)(terser@5.19.2)(typescript@5.9.3)(yaml@2.7.1)):
+  astro-expressive-code@0.40.2(astro@5.14.4(@types/node@22.10.2)(idb-keyval@6.2.1)(ioredis@5.3.2)(jiti@2.6.1)(rollup@3.23.0)(sass@1.51.0)(terser@5.19.2)(typescript@5.9.3)(yaml@2.7.1)):
     dependencies:
-      astro: 5.14.4(@types/node@22.10.2)(idb-keyval@6.2.1)(jiti@2.6.1)(rollup@3.23.0)(sass@1.51.0)(terser@5.19.2)(typescript@5.9.3)(yaml@2.7.1)
+      astro: 5.14.4(@types/node@22.10.2)(idb-keyval@6.2.1)(ioredis@5.3.2)(jiti@2.6.1)(rollup@3.23.0)(sass@1.51.0)(terser@5.19.2)(typescript@5.9.3)(yaml@2.7.1)
       rehype-expressive-code: 0.40.2
 
-  astro@5.14.4(@types/node@22.10.2)(idb-keyval@6.2.1)(jiti@2.6.1)(rollup@3.23.0)(sass@1.51.0)(terser@5.19.2)(typescript@5.9.3)(yaml@2.7.1):
+  astro@5.14.4(@types/node@22.10.2)(idb-keyval@6.2.1)(ioredis@5.3.2)(jiti@2.6.1)(rollup@3.23.0)(sass@1.51.0)(terser@5.19.2)(typescript@5.9.3)(yaml@2.7.1):
     dependencies:
       '@astrojs/compiler': 2.13.0
       '@astrojs/internal-helpers': 0.7.4
@@ -45134,7 +45210,7 @@ snapshots:
       ultrahtml: 1.6.0
       unifont: 0.6.0
       unist-util-visit: 5.0.0
-      unstorage: 1.17.1(idb-keyval@6.2.1)
+      unstorage: 1.17.1(idb-keyval@6.2.1)(ioredis@5.3.2)
       vfile: 6.0.3
       vite: 6.3.6(@types/node@22.10.2)(jiti@2.6.1)(sass@1.51.0)(terser@5.19.2)(yaml@2.7.1)
       vitefu: 1.1.1(vite@6.3.6(@types/node@22.10.2)(jiti@2.6.1)(sass@1.51.0)(terser@5.19.2)(yaml@2.7.1))
@@ -47180,6 +47256,12 @@ snapshots:
       domelementtype: 2.3.0
       domhandler: 5.0.3
 
+  domutils@3.2.2:
+    dependencies:
+      dom-serializer: 2.0.0
+      domelementtype: 2.3.0
+      domhandler: 5.0.3
+
   dot-case@3.0.4:
     dependencies:
       no-case: 3.0.4
@@ -47238,6 +47320,11 @@ snapshots:
   ee-first@1.1.1: {}
 
   effect@3.18.3:
+    dependencies:
+      '@standard-schema/spec': 1.0.0
+      fast-check: 3.23.1
+
+  effect@3.19.4:
     dependencies:
       '@standard-schema/spec': 1.0.0
       fast-check: 3.23.1
@@ -49322,6 +49409,13 @@ snapshots:
 
   html-whitespace-sensitive-tag-names@3.0.1: {}
 
+  htmlparser2@10.0.0:
+    dependencies:
+      domelementtype: 2.3.0
+      domhandler: 5.0.3
+      domutils: 3.2.2
+      entities: 6.0.1
+
   htmlparser2@8.0.2:
     dependencies:
       domelementtype: 2.3.0
@@ -50612,6 +50706,16 @@ snapshots:
   lilconfig@3.1.2: {}
 
   lines-and-columns@1.2.4: {}
+
+  linkedom@0.18.12(canvas@3.2.0):
+    dependencies:
+      css-select: 5.1.0
+      cssom: 0.5.0
+      html-escaper: 3.0.3
+      htmlparser2: 10.0.0
+      uhyphen: 0.2.0
+    optionalDependencies:
+      canvas: 3.2.0
 
   linkify-it@5.0.0:
     dependencies:
@@ -55234,9 +55338,9 @@ snapshots:
       automation-events: 7.1.9
       tslib: 2.8.1
 
-  starlight-links-validator@0.14.3(@astrojs/starlight@0.32.6(astro@5.14.4(@types/node@22.10.2)(idb-keyval@6.2.1)(jiti@2.6.1)(rollup@3.23.0)(sass@1.51.0)(terser@5.19.2)(typescript@5.9.3)(yaml@2.7.1))):
+  starlight-links-validator@0.14.3(@astrojs/starlight@0.32.6(astro@5.14.4(@types/node@22.10.2)(idb-keyval@6.2.1)(ioredis@5.3.2)(jiti@2.6.1)(rollup@3.23.0)(sass@1.51.0)(terser@5.19.2)(typescript@5.9.3)(yaml@2.7.1))):
     dependencies:
-      '@astrojs/starlight': 0.32.6(astro@5.14.4(@types/node@22.10.2)(idb-keyval@6.2.1)(jiti@2.6.1)(rollup@3.23.0)(sass@1.51.0)(terser@5.19.2)(typescript@5.9.3)(yaml@2.7.1))
+      '@astrojs/starlight': 0.32.6(astro@5.14.4(@types/node@22.10.2)(idb-keyval@6.2.1)(ioredis@5.3.2)(jiti@2.6.1)(rollup@3.23.0)(sass@1.51.0)(terser@5.19.2)(typescript@5.9.3)(yaml@2.7.1))
       '@types/picomatch': 3.0.1
       github-slugger: 2.0.0
       hast-util-from-html: 2.0.3
@@ -56239,6 +56343,8 @@ snapshots:
   uglify-js@3.19.3:
     optional: true
 
+  uhyphen@0.2.0: {}
+
   uint64be@2.0.2:
     dependencies:
       buffer-alloc: 1.2.0
@@ -56516,7 +56622,7 @@ snapshots:
       '@unrs/resolver-binding-win32-ia32-msvc': 1.11.1
       '@unrs/resolver-binding-win32-x64-msvc': 1.11.1
 
-  unstorage@1.17.1(idb-keyval@6.2.1):
+  unstorage@1.17.1(idb-keyval@6.2.1)(ioredis@5.3.2):
     dependencies:
       anymatch: 3.1.3
       chokidar: 4.0.3
@@ -56528,6 +56634,7 @@ snapshots:
       ufo: 1.6.1
     optionalDependencies:
       idb-keyval: 6.2.1
+      ioredis: 5.3.2
 
   unzip-stream@0.3.1:
     dependencies:
