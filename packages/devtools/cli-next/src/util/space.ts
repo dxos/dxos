@@ -12,8 +12,8 @@ import { BaseError, type BaseErrorOptions } from '@dxos/errors';
 import { DatabaseService } from '@dxos/functions';
 import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
 
-import { ClientService } from '../services';
 import { log } from '../../../../common/log/src';
+import { ClientService } from '../services';
 
 export const getSpace = (rawSpaceId: string) =>
   Effect.gen(function* () {
