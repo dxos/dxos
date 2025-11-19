@@ -7,6 +7,7 @@ import * as Schema from 'effect/Schema';
 import { Obj, Type } from '@dxos/echo';
 import { DescriptionAnnotation, FormAnnotation, LabelAnnotation } from '@dxos/echo/internal';
 import { Text } from '@dxos/schema';
+import { type MakeOptional } from '@dxos/util';
 
 import * as Actor from './Actor';
 import * as Thread from './Thread';
@@ -54,4 +55,5 @@ export const Event = Schema.Struct({
 
 export interface Event extends Schema.Schema.Type<typeof Event> {}
 
-export const make = (props: Obj.MakeProps<typeof Event>) => Obj.make(Event, props);
+export const make = ({ attendees = [], ...props }: MakeOptional<Obj.MakeProps<typeof Event>, 'attendees'>) =>
+  Obj.make(Event, { attendees, ...props });

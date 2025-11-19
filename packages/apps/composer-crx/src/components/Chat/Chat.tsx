@@ -79,7 +79,7 @@ export const Chat = ({ classNames, host, url }: ChatProps) => {
   }, [clearError, clearHistory, stop]);
 
   return (
-    <div className={mx('flex flex-col p-1 gap-2 overflow-hidden bg-baseSurface', classNames)}>
+    <div className={mx('flex flex-col gap-2 overflow-hidden bg-baseSurface', classNames)}>
       {/* TODO(burdon): Replace with chat from plugin-assistant. */}
       <div className='flex relative'>
         <Input.Root>
@@ -90,10 +90,10 @@ export const Chat = ({ classNames, host, url }: ChatProps) => {
             value={text}
             onChange={(ev) => setText(ev.target.value)}
             onKeyDown={(ev) => ev.key === 'Enter' && handleSubmit()}
-            classNames='is-full rounded-none text-lg !ring-sky-500'
+            classNames='pli-2 pbs-[4px] pbe-[4px] is-full rounded-none text-lg !ring-none !ring-sky-500'
           />
         </Input.Root>
-        <div className='flex items-center absolute right-0 top-0 bottom-0 z-10'>
+        <div className='flex items-center absolute right-1.5 top-0 bottom-0 z-10'>
           <IconButton
             variant='ghost'
             icon='ph--x--regular'
@@ -106,10 +106,10 @@ export const Chat = ({ classNames, host, url }: ChatProps) => {
 
       {/* TODO(burdon): Replace with ChatThread. */}
       {filteredMessages.length > 0 && (
-        <ScrollContainer.Root pin classNames='max-bs-[480px]'>
+        <ScrollContainer.Root pin classNames='max-bs-[480px] p-3'>
           <ScrollContainer.Viewport classNames='scrollbar-none'>
             {filteredMessages.map((message, i) => (
-              <div key={i} className={mx('flex', 'p-1 text-base', message.role === 'user' && 'justify-end mis-2')}>
+              <div key={i} className={mx('flex', 'text-base', message.role === 'user' && 'justify-end mlb-3')}>
                 <p className={mx(message.role === 'user' && 'bg-sky-500 pli-2 plb-1 rounded')}>
                   {message.parts
                     .filter(({ type }) => type === 'text')
