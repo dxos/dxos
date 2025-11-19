@@ -4,10 +4,45 @@
 
 import * as Schema from 'effect/Schema';
 
+import { BaseError } from '@dxos/errors';
+
 //
 // https://gmail.googleapis.com/gmail/v1/users/{userId}/labels
 // https://developers.google.com/workspace/gmail/api/reference/rest/v1/users.labels/list
 //
+
+export const ErrorResponse = Schema.Struct({
+  error: Schema.Struct({
+    code: Schema.Number,
+    message: Schema.String,
+    status: Schema.optional(Schema.String),
+    errors: Schema.optional(
+      Schema.Array(
+        Schema.Struct({
+          message: Schema.optional(Schema.String),
+          domain: Schema.optional(Schema.String),
+          reason: Schema.optional(Schema.String),
+          location: Schema.optional(Schema.String),
+          locationType: Schema.optional(Schema.String),
+        }),
+      ),
+    ),
+  }),
+});
+
+export interface ErrorResponse extends Schema.Schema.Type<typeof ErrorResponse> {}
+
+export class GoogleError extends BaseError.extend('GOOGLE_ERROR') {
+  errors?: ErrorResponse['error']['errors'] = undefined;
+
+  static fromErrorResponse(response: ErrorResponse) {
+    const error = new GoogleError({
+      message: `${response.error.code} ${response.error.status ?? ''}: ${response.error.message}`,
+    });
+    error.errors = response.error.errors;
+    return error;
+  }
+}
 
 export const Label = Schema.Struct({
   id: Schema.String,

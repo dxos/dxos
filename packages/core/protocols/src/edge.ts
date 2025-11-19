@@ -37,6 +37,11 @@ export type EdgeErrorData = { type: string } & Record<string, any>;
  * This is the shape of the error response from the Edge service,
  * when the error is gracefully handled, the Response will be an object with this shape and have status code 200.
  */
+// TODO(dmaretskyi): Refactor this type to just be { success: false, error: SerializedError }
+// reason -> error.message
+// cause -> error.cause
+// errorData.type -> error.code
+// ...errorData -> error.context
 export type EdgeFailure = {
   /**
    * Branded Type.
