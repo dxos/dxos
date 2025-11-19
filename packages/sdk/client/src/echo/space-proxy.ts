@@ -5,7 +5,13 @@
 import isEqualWith from 'lodash.isequalwith';
 
 import { Event, MulticastObservable, Trigger, scheduleMicroTask, synchronized } from '@dxos/async';
-import { type ClientServicesProvider, PropertiesType, type Space, type SpaceInternal } from '@dxos/client-protocol';
+import {
+  type ClientServicesProvider,
+  PropertiesType,
+  SPACE_TAG,
+  type Space,
+  type SpaceInternal,
+} from '@dxos/client-protocol';
 import { Stream } from '@dxos/codec-protobuf/stream';
 import { Context, cancelWithContext } from '@dxos/context';
 import { type SpecificCredential, checkCredentialType } from '@dxos/credentials';
@@ -58,7 +64,8 @@ const EPOCH_CREATION_TIMEOUT = 60_000;
 
 @trace.resource()
 export class SpaceProxy implements Space, CustomInspectable {
-  readonly __spaceBrand = true as const;
+  readonly [SPACE_TAG] = true as const;
+
   private _ctx = new Context();
 
   /**

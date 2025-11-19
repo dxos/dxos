@@ -52,8 +52,10 @@ export interface SpaceInternal {
   export(): Promise<SpaceArchive>;
 }
 
+export const SPACE_TAG = Symbol('dxos.client.protocol.Space');
+
 export interface Space {
-  readonly __spaceBrand?: true;
+  readonly [SPACE_TAG]: true;
 
   /**
    * Unique space identifier.
@@ -137,10 +139,10 @@ export interface Space {
   listen: (channel: string, callback: (message: GossipMessage) => void) => CleanupFn;
 }
 
-// TODO(burdon): Create lower-level definition and move to @dxos/echo.
 export const isSpace = (object: unknown): object is Space =>
-  typeof object === 'object' && object !== null && (object as Space).__spaceBrand === true;
+  typeof object === 'object' && object !== null && (object as Space)[SPACE_TAG] === true;
 
+// TODO(burdon): Create lower-level definition and move to @dxos/echo.
 export const SpaceSchema: Schema.Schema<Space> = Schema.Any.pipe(
   Schema.filter((space) => isSpace(space)),
   Schema.annotations({ title: 'Space' }),
