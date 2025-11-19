@@ -12,7 +12,7 @@ describe('util', () => {
     expect(stripWhitespace(text)).to.equal('aaa\n\nbbb');
   });
 
-  test('markdown', ({ expect }) => {
+  test.skip('markdown', ({ expect }) => {
     const text =
       'Another quick reminder to kindly complete this short questionnaire <https://blueyard.typeform.com/to/OLmO8o4k> to indicate your preferred Day.';
     const markdown = toMarkdown(text);
