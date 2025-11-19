@@ -99,8 +99,9 @@ export const Message = Schema.Struct({
 export type Message = Schema.Schema.Type<typeof Message>;
 
 export const ListMessagesResponse = Schema.Struct({
-  messages: Schema.Array(Message.pick('id', 'threadId')),
-  nextPageToken: Schema.optional(Schema.String),
+  resultSizeEstimate: Schema.Number,
+  messages: Schema.Array(Message.pick('id', 'threadId')).pipe(Schema.optional),
+  nextPageToken: Schema.String.pipe(Schema.optional),
 });
 
 export type ListMessagesResponse = Schema.Schema.Type<typeof ListMessagesResponse>;
