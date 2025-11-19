@@ -11,6 +11,9 @@
   ],
   "references": [
     {
+      "path": "../../common/effect"
+    },
+    {
       "path": "../../common/errors"
     },
     {
@@ -39,6 +42,9 @@
     },
     {
       "path": "../echo/echo-db"
+    },
+    {
+      "path": "../protocols"
     }
   ]
 }

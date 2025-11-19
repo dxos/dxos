@@ -2,6 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
+import { parseHTML } from 'linkedom';
 import TurndownService from 'turndown';
 
 import { type GoogleMail } from '../../apis';
@@ -34,7 +35,8 @@ export const turndown = new TurndownService({
     },
   });
 
-export const toMarkdown = (html: string): string => turndown.turndown(html);
+export const toMarkdown = (html: string): string =>
+  turndown.turndown(parseHTML(preprocessHtml(html), {}).document.body);
 
 export const isHTML = (str: string): boolean => {
   return /<(\/?(p|div|span|ul|ol|li|a|strong|em|br|table|tr|td|h[1-6]))\b[^>]*>/i.test(str);
@@ -72,4 +74,11 @@ export const parseFromHeader = (value: string): { name?: string; email: string }
       email: email.trim(),
     };
   }
+};
+
+const preprocessHtml = (html: string): string => {
+  // Ensure HTML has proper structure for linkedom parsing
+  // If the HTML is a fragment without html/body tags, wrap it
+  const wrappedHtml = html.trim().startsWith('<html') ? html : `<html><body>${html}</body></html>`;
+  return wrappedHtml;
 };

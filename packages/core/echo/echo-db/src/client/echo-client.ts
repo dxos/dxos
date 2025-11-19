@@ -6,12 +6,13 @@ import { type Context, ContextDisposedError, LifecycleState, Resource } from '@d
 import { invariant } from '@dxos/invariant';
 import { type PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
+import { type QueueService } from '@dxos/protocols';
 import { type QueryService } from '@dxos/protocols/proto/dxos/echo/query';
 import { type DataService } from '@dxos/protocols/proto/dxos/echo/service';
 
 import { Hypergraph } from '../hypergraph';
 import { EchoDatabaseImpl } from '../proxy-db';
-import { QueueFactory, type QueueService } from '../queue';
+import { QueueFactory } from '../queue';
 
 import { IndexQuerySourceProvider, type LoadObjectParams } from './index-query-source-provider';
 
@@ -80,11 +81,12 @@ export class EchoClient extends Resource {
    * Connects to the ECHO service.
    * Must be called before open.
    */
-  connectToService({ dataService, queryService, queueService }: ConnectToServiceParams): void {
+  connectToService({ dataService, queryService, queueService }: ConnectToServiceParams): this {
     invariant(this._lifecycleState === LifecycleState.CLOSED);
     this._dataService = dataService;
     this._queryService = queryService;
     this._queuesService = queueService;
+    return this;
   }
 
   disconnectFromService(): void {

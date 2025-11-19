@@ -68,7 +68,7 @@ export const FunctionInvocationServiceLayerWithLocalLoopbackExecutor = Layer.eff
 export const FunctionInvocationServiceLayerTest = ({
   functions = [],
 }: {
-  functions?: readonly FunctionDefinition<any, any>[];
+  functions?: readonly FunctionDefinition.Any[];
 } = {}): Layer.Layer<
   FunctionInvocationService,
   never,
@@ -88,7 +88,7 @@ export const FunctionInvocationServiceLayerTest = ({
 export const FunctionInvocationServiceLayerTestMocked = ({
   functions,
 }: {
-  functions?: readonly FunctionDefinition<any, any>[];
+  functions?: readonly FunctionDefinition.Any[];
 }): Layer.Layer<FunctionInvocationService> =>
   FunctionInvocationServiceLayerTest({ functions }).pipe(
     Layer.provide(AiService.notAvailable),

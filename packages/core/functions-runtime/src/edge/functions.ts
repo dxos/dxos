@@ -36,6 +36,9 @@ export const createEdgeClient = (client: Client): EdgeHttpClient => {
   return edgeClient;
 };
 
+/**
+ * @deprecated Use {@link FunctionsServiceClient} instead.
+ */
 export const uploadWorkerFunction = async ({
   client,
   version,
@@ -65,6 +68,9 @@ export const uploadWorkerFunction = async ({
   return response;
 };
 
+/**
+ * @deprecated Use {@link FunctionsServiceClient} instead.
+ */
 export const getDeployedFunctions = async (client: Client): Promise<Function.Function[]> => {
   const edgeClient = createEdgeClient(client);
   const result = await edgeClient.listFunctions();
@@ -90,6 +96,9 @@ export const getDeployedFunctions = async (client: Client): Promise<Function.Fun
   });
 };
 
+/**
+ * @deprecated Use {@link FunctionsServiceClient} instead.
+ */
 export const invokeFunction = async (
   edgeClient: EdgeHttpClient,
   fn: Function.Function,

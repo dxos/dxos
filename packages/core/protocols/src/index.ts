@@ -14,3 +14,4 @@ export * from './space-archive.js';
 export * from './storage.js';
 export * from './tracing.js';
 export type * from './types.js';
+export * as FunctionProtocol from './FunctionProtocol.js';
