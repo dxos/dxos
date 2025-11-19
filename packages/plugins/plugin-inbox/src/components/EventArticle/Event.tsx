@@ -115,7 +115,11 @@ type EventContentProps = ThemedClassName<{}>;
 
 const EventContent = ({ classNames }: EventContentProps) => {
   const { event } = useEventContext(EventContent.displayName);
-  return <div className={mx(classNames)}>{event.description}</div>;
+  return (
+    <div role='none' className={mx('p-3', classNames)}>
+      {event.description}
+    </div>
+  );
 };
 
 EventContent.displayName = 'Event.Content';
