@@ -8,3 +8,6 @@ packages:
   - '!**/build/**'
   - '!**/dist/**'
   - '!**/out/**'
+
+# Do not disable.
+strictPeerDependencies: true

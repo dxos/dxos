@@ -53,6 +53,7 @@
     "@dxos/echo-db": "workspace:*",
     "@dxos/echo-query": "workspace:*",
     "@dxos/effect": "workspace:*",
+    "@dxos/errors": "workspace:*",
     "@dxos/functions": "workspace:*",
     "@dxos/functions-runtime": "workspace:*",
     "@dxos/invariant": "workspace:*",
@@ -88,6 +89,7 @@
     "@preact/signals-react": "^3.3.0",
     "date-fns": "^3.3.1",
     "js-yaml": "^4.1.0",
+    "linkedom": "^0.18.5",
     "react-resize-detector": "^11.0.1",
     "turndown": "^7.2.1"
   },
@@ -95,6 +97,7 @@
     "@dxos/config": "workspace:*",
     "@dxos/plugin-storybook-layout": "workspace:*",
     "@dxos/plugin-theme": "workspace:*",
+    "@dxos/protocols": "workspace:*",
     "@dxos/random": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
