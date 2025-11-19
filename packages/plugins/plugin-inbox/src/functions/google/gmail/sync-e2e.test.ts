@@ -9,13 +9,11 @@ import { configPreset } from '@dxos/config';
 import { Obj } from '@dxos/echo';
 import { FunctionsServiceClient } from '@dxos/functions-runtime/edge';
 import { bundleFunction } from '@dxos/functions-runtime/native';
-import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
-
 import { failedInvariant } from '@dxos/invariant';
+import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { AccessToken } from '@dxos/types';
 
 import { Mailbox } from '../../../types';
-import { failedInvariant } from '@dxos/invariant';
 
 describe.runIf(process.env.DX_TEST_TAGS?.includes('functions-e2e'))('Functions deployment', () => {
   test('bundle function', async () => {
