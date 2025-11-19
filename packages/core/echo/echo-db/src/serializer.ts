@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Filter } from '@dxos/echo';
+import { Filter, type Query } from '@dxos/echo';
 import { type EncodedReference, Reference, decodeReference, encodeReference } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
 import { deepMapValues, isNonNullable, stripUndefined } from '@dxos/util';
@@ -10,7 +10,6 @@ import { deepMapValues, isNonNullable, stripUndefined } from '@dxos/util';
 import { ObjectCore } from './core-db';
 import { type AnyLiveObject, getObjectCore } from './echo-handler';
 import { type EchoDatabase } from './proxy-db';
-import { QueryResult } from './query';
 import type { SerializedObject, SerializedSpace } from './serialized-space';
 
 const MAX_LOAD_OBJECT_CHUNK_SIZE = 30;
@@ -31,16 +30,16 @@ export type ImportOptions = {
 export class Serializer {
   static version = 1;
 
-  async export(target: EchoDatabase | QueryResult<any>): Promise<SerializedSpace> {
+  async export(database: EchoDatabase, query?: Query<any>): Promise<SerializedSpace> {
     const loadedObjects: Array<AnyLiveObject<any> | undefined> = [];
 
-    if (target instanceof QueryResult) {
-      const { objects } = await target.run();
+    if (query) {
+      const { objects } = await database.query(query).run();
       loadedObjects.push(...objects);
     } else {
-      const ids = target.coreDatabase.getAllObjectIds();
+      const ids = database.coreDatabase.getAllObjectIds();
       for (const chunk of chunkArray(ids, MAX_LOAD_OBJECT_CHUNK_SIZE)) {
-        const { objects } = await target.query(Filter.ids(...chunk)).run({ timeout: 60_000 });
+        const { objects } = await database.query(Filter.ids(...chunk)).run({ timeout: 60_000 });
         loadedObjects.push(...objects);
       }
     }

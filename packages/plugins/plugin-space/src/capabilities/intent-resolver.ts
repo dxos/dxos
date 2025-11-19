@@ -334,8 +334,7 @@ export default ({ context, observability, createInvitationUrl }: IntentResolverO
     createResolver({
       intent: SpaceAction.Snapshot,
       resolve: async ({ space, query }) => {
-        const target = query ? space.db.query(Query.fromAst(query)) : space.db;
-        const backup = await new Serializer().export(target);
+        const backup = await new Serializer().export(space.db, query && Query.fromAst(query));
         return {
           data: {
             snapshot: new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' }),

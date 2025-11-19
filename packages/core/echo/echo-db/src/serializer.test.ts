@@ -95,7 +95,7 @@ describe('Serializer', () => {
         const { objects } = await db.query(Query.select(Filter.everything())).run();
         expect(objects).to.have.length(2);
 
-        data = await serializer.export(db.query(Query.select(Filter.props({ title: 'Hello' }))));
+        data = await serializer.export(db, Query.select(Filter.props({ title: 'Hello' })));
         expect(data.objects).to.have.length(1);
         expect(data.objects[0]).to.deep.include({
           '@id': obj1.id,
