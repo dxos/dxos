@@ -49,6 +49,7 @@ export const SpaceListPanel = ({ onSelect }: { onSelect?: (space: SpaceData | un
         objects: -1, // TODO(dmaretskyi): Fix this.
         members: space.members.get().length,
         startup: open && ready ? ready.getTime() - open.getTime() : -1,
+        isDefault: client.spaces.default === space,
         isOpen: space.isOpen,
       };
     });
@@ -147,6 +148,7 @@ export const SpaceListPanel = ({ onSelect }: { onSelect?: (space: SpaceData | un
       { name: 'objects', format: FormatEnum.Number, size: 120 },
       { name: 'members', format: FormatEnum.Number, size: 120 },
       { name: 'startup', format: FormatEnum.Number, size: 120 },
+      { name: 'isDefault', format: FormatEnum.Boolean, title: 'default?', size: 120 },
       { name: 'isOpen', format: FormatEnum.Boolean, title: 'open?', size: 120 },
     ],
     [],
