@@ -20,4 +20,16 @@ describe('util', () => {
       'Another quick reminder to kindly complete this short questionnaire to indicate your preferred Day.',
     );
   });
+
+  test('strip html (full)', ({ expect }) => {
+    const text = '<html><body><p>test</p></body></html>';
+    const markdown = toMarkdown(text);
+    expect(markdown).to.equal('test');
+  });
+
+  test('strip html', ({ expect }) => {
+    const text = '<p>test</p>';
+    const markdown = toMarkdown(text);
+    expect(markdown).to.equal('test');
+  });
 });

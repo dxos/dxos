@@ -101,8 +101,8 @@ importers:
         specifier: ^9.37.0
         version: 9.37.0
       '@moonrepo/cli':
-        specifier: ^1.40.4
-        version: 1.40.5
+        specifier: 1.41.7
+        version: 1.41.7
       '@octokit/rest':
         specifier: ^19.0.5
         version: 19.0.5(encoding@0.1.13)
@@ -3045,6 +3045,9 @@ importers:
       '@dxos/echo-db':
         specifier: workspace:*
         version: link:../echo/echo-db
+      '@dxos/effect':
+        specifier: workspace:*
+        version: link:../../common/effect
       '@dxos/errors':
         specifier: workspace:*
         version: link:../../common/errors
@@ -3060,6 +3063,9 @@ importers:
       '@dxos/node-std':
         specifier: workspace:*
         version: link:../../common/node-std
+      '@dxos/protocols':
+        specifier: workspace:*
+        version: link:../protocols
       '@dxos/schema':
         specifier: workspace:*
         version: link:../../sdk/schema
@@ -6986,6 +6992,9 @@ importers:
       '@dxos/effect':
         specifier: workspace:*
         version: link:../../common/effect
+      '@dxos/errors':
+        specifier: workspace:*
+        version: link:../../common/errors
       '@dxos/functions':
         specifier: workspace:*
         version: link:../../core/functions
@@ -7091,6 +7100,9 @@ importers:
       js-yaml:
         specifier: ^4.1.0
         version: 4.1.0
+      linkedom:
+        specifier: ^0.18.5
+        version: 0.18.12(canvas@3.2.0)
       react-resize-detector:
         specifier: ^11.0.1
         version: 11.0.1(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
@@ -7107,6 +7119,9 @@ importers:
       '@dxos/plugin-theme':
         specifier: workspace:*
         version: link:../plugin-theme
+      '@dxos/protocols':
+        specifier: workspace:*
+        version: link:../../core/protocols
       '@dxos/random':
         specifier: workspace:*
         version: link:../../common/random
@@ -9535,6 +9550,9 @@ importers:
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
+      '@dxos/echo-db':
+        specifier: workspace:*
+        version: link:../../core/echo/echo-db
       '@dxos/echo-signals':
         specifier: workspace:*
         version: link:../../core/echo/echo-signals
@@ -18930,42 +18948,42 @@ packages:
     peerDependencies:
       three: '>= 0.159.0'
 
-  '@moonrepo/cli@1.40.5':
-    resolution: {integrity: sha512-5af3bOIRriY2VSqq1CKiGlg9u/WBbtCGX7VIHM36vsFyxTmdro4RLq2O16hX2ZGKD4n/ghCTyfLj/G+r0zJqXg==}
+  '@moonrepo/cli@1.41.7':
+    resolution: {integrity: sha512-zZdE/2m/V/33B3DZOhsuNwRPme+WZiEpggcK6N2og6FCezD/4AxNjc9uZNPBAj2qaDFl3Q+bgtfrHBjdKy4ilg==}
     hasBin: true
 
-  '@moonrepo/core-linux-arm64-gnu@1.40.5':
-    resolution: {integrity: sha512-aN8iTf5IWnjVXfy3s8CF3en6vttM9HkPNRrG09GJ2wPpBKc/BY2RSfWuYtmE3faNbA/XpNbnLXuU0G10npO8Tg==}
+  '@moonrepo/core-linux-arm64-gnu@1.41.7':
+    resolution: {integrity: sha512-Opa+jmNLYsHMRlJcmIn78kKY+76CT/93BvynxuMICPfaQqJTAR/5WPGre1omehGlkg5rbiVshsNTiaa+2bHzpA==}
     cpu: [arm64]
     os: [linux]
 
-  '@moonrepo/core-linux-arm64-musl@1.40.5':
-    resolution: {integrity: sha512-afarxb3QsYv+Qbo8a901yh15OKw4h1Gkosq1gnTIYmc67kCYt24VbAag6WcarT6HkZRReFZMIwoHpFwEyua1Ww==}
+  '@moonrepo/core-linux-arm64-musl@1.41.7':
+    resolution: {integrity: sha512-0ipCRwg75iFWfsjxIYY9IAm/cMoUy9iUk/qs2+JhruFeDrY6tCdV9Nyo8F2h45WC+/2qwZ7IMEdfWNPJT0TSyA==}
     cpu: [arm64]
     os: [linux]
 
-  '@moonrepo/core-linux-x64-gnu@1.40.5':
-    resolution: {integrity: sha512-E3UDB6MKat79ZL7HhtBmFdWVyK7k2vpP6JkWaFzl/KFjbD+d2XJ13bPk5701FcIrkKPXm4hCZ6Hv2pT4aDqfjQ==}
+  '@moonrepo/core-linux-x64-gnu@1.41.7':
+    resolution: {integrity: sha512-iHLaZF0ryKhFTf5G/dFrQHPEFII9p88pXXUl17U9tjfeziFyksbdkQrZhNv6sfbE0bDJGPA3H5TEMR93ZwXo/A==}
     cpu: [x64]
     os: [linux]
 
-  '@moonrepo/core-linux-x64-musl@1.40.5':
-    resolution: {integrity: sha512-SbvloFKoJ+D9Ss5GHcVh4jCcB+HUtmTi1bR9Bo/NqJVHHiYwcPBxsECXK29NS0MLlc8D9hYx8BSuCJlx5YbyeQ==}
+  '@moonrepo/core-linux-x64-musl@1.41.7':
+    resolution: {integrity: sha512-0nZMjOBBSGHNUSIGcCBrfxgKVmeZQjmXpeMVfO3YG9e2irFR2neHbNIud6vLapC+StgV2UbrKoExR+HRtoyzuA==}
     cpu: [x64]
     os: [linux]
 
-  '@moonrepo/core-macos-arm64@1.40.5':
-    resolution: {integrity: sha512-rzBwFtqrTRVABRozeIkm0VhkYlT0o/DB9Zwh1UPZgXGtmnnc0G/5EvdeBCSpFgw3PMmtOT3gMIztGUg6ohfZFw==}
+  '@moonrepo/core-macos-arm64@1.41.7':
+    resolution: {integrity: sha512-Z6okifZS8MA6aXFQ1q/Ej45aAq6i2riDgqWB9CmBVqV7JIdJMLP4++ir+FqGu9S0G34SFgspV0g+mrfFgR+/Nw==}
     cpu: [arm64]
     os: [darwin]
 
-  '@moonrepo/core-macos-x64@1.40.5':
-    resolution: {integrity: sha512-TRG1lagci9MlVQa3SDfzN9EQgHzts7HVSvm4HwJ/KXaQgHn5AkBXoPim9Y/EAdURJZr0SHleR+Ka+5BXeLTBZA==}
+  '@moonrepo/core-macos-x64@1.41.7':
+    resolution: {integrity: sha512-mOHO4/Ag331oVAxg1QNfaWCNfrKdy6HsUJXNY11ERvpNsi0Fh+qnZ+if3ZiC9jwUdwjw2MvtCRxrlXgtI/shrQ==}
     cpu: [x64]
     os: [darwin]
 
-  '@moonrepo/core-windows-x64-msvc@1.40.5':
-    resolution: {integrity: sha512-uAcFBqaoG3AzUaUV83g3bNi38YknGB2T0ak5eEvFKCVXJgAWDIzgeAWWtq6BWAltyXkJdS8VGFhdscp70oXtqw==}
+  '@moonrepo/core-windows-x64-msvc@1.41.7':
+    resolution: {integrity: sha512-p7CiKyWh4j1lhdF81vcacQmgPLV/di3nU5QXjg1lL2mF296HMx4H8sOlcxD/RieGfFW0Qfg5zIreugCHCNUCeA==}
     cpu: [x64]
     os: [win32]
 
@@ -26339,6 +26357,9 @@ packages:
   domutils@3.0.1:
     resolution: {integrity: sha512-z08c1l761iKhDFtfXO04C7kTdPBLi41zwOZl00WS8b5eiaebNpY00HKbztwBq+e3vyqWNwWF3mP9YLUeqIrF+Q==}
 
+  domutils@3.2.2:
+    resolution: {integrity: sha512-6kZKyUajlDuqlHKVX1w7gyslj9MPIXzIFiz/rGu35uC1wMi+kMhQwGhl4lt9unC9Vb9INnY9Z3/ZA3+FhASLaw==}
+
   dot-case@3.0.4:
     resolution: {integrity: sha512-Kv5nKlh6yRrdrGvxeJ2e5y2eRUpkUosIW4A2AS38zwSz27zu7ufDwQPi5Jhs3XAlGNetl3bmnGhQsMtkKJnj3w==}
 
@@ -27890,6 +27911,9 @@ packages:
   html-whitespace-sensitive-tag-names@3.0.1:
     resolution: {integrity: sha512-q+310vW8zmymYHALr1da4HyXUQ0zgiIwIicEfotYPWGN0OJVEN/58IJ3A4GBYcEq3LGAZqKb+ugvP0GNB9CEAA==}
 
+  htmlparser2@10.0.0:
+    resolution: {integrity: sha512-TwAZM+zE5Tq3lrEHvOlvwgj1XLWQCtaaibSN11Q+gGBAS7Y1uZSWwXXRe4iF6OXnaq1riyQAPFOBtYc77Mxq0g==}
+
   htmlparser2@8.0.2:
     resolution: {integrity: sha512-GYdjWKDkbRLkZ5geuHs5NY1puJ+PXwP7+fHPRz06Eirsb9ugf6d8kkXav6ADhcODhFFPMIXyxkxSuMf3D6NCFA==}
 
@@ -29054,6 +29078,15 @@ packages:
 
   lines-and-columns@1.2.4:
     resolution: {integrity: sha512-7ylylesZQ/PV29jhEDl3Ufjo6ZX7gCqJr5F7PKrqc93v7fzSymt1BpwEU8nAUXs8qzzvqhbjhK5QZg6Mt/HkBg==}
+
+  linkedom@0.18.12:
+    resolution: {integrity: sha512-jalJsOwIKuQJSeTvsgzPe9iJzyfVaEJiEXl+25EkKevsULHvMJzpNqwvj1jOESWdmgKDiXObyjOYwlUqG7wo1Q==}
+    engines: {node: '>=16'}
+    peerDependencies:
+      canvas: '>= 2'
+    peerDependenciesMeta:
+      canvas:
+        optional: true
 
   linkify-it@5.0.0:
     resolution: {integrity: sha512-5aHCbzQRADcdP+ATqnDuhhJ/MRIqDkZX5pyjFHRRysS8vZ5AbqGEoFIb6pYHPZ+L/OC2Lc+xT8uHVVR5CAK/wQ==}
@@ -33477,6 +33510,9 @@ packages:
     resolution: {integrity: sha512-v3Xu+yuwBXisp6QYTcH4UbH+xYJXqnq2m/LtQVWKWzYc1iehYnLixoQDN9FH6/j9/oybfd6W9Ghwkl8+UMKTKQ==}
     engines: {node: '>=0.8.0'}
     hasBin: true
+
+  uhyphen@0.2.0:
+    resolution: {integrity: sha512-qz3o9CHXmJJPGBdqzab7qAYuW8kQGKNEuoHFYrBwV6hWIMcpAmxDLXojcHfFr9US1Pe6zUswEIJIbLI610fuqA==}
 
   uint64be@2.0.2:
     resolution: {integrity: sha512-9QqdvpGQTXgxthP+lY4e/gIBy+RuqcBaC6JVwT5I3bDLgT/btL6twZMR0pI3/Fgah9G/pdwzIprE5gL6v9UvyQ==}
@@ -38552,37 +38588,37 @@ snapshots:
       promise-worker-transferable: 1.0.4
       three: 0.165.0
 
-  '@moonrepo/cli@1.40.5':
+  '@moonrepo/cli@1.41.7':
     dependencies:
       detect-libc: 2.1.0
     optionalDependencies:
-      '@moonrepo/core-linux-arm64-gnu': 1.40.5
-      '@moonrepo/core-linux-arm64-musl': 1.40.5
-      '@moonrepo/core-linux-x64-gnu': 1.40.5
-      '@moonrepo/core-linux-x64-musl': 1.40.5
-      '@moonrepo/core-macos-arm64': 1.40.5
-      '@moonrepo/core-macos-x64': 1.40.5
-      '@moonrepo/core-windows-x64-msvc': 1.40.5
+      '@moonrepo/core-linux-arm64-gnu': 1.41.7
+      '@moonrepo/core-linux-arm64-musl': 1.41.7
+      '@moonrepo/core-linux-x64-gnu': 1.41.7
+      '@moonrepo/core-linux-x64-musl': 1.41.7
+      '@moonrepo/core-macos-arm64': 1.41.7
+      '@moonrepo/core-macos-x64': 1.41.7
+      '@moonrepo/core-windows-x64-msvc': 1.41.7
 
-  '@moonrepo/core-linux-arm64-gnu@1.40.5':
+  '@moonrepo/core-linux-arm64-gnu@1.41.7':
     optional: true
 
-  '@moonrepo/core-linux-arm64-musl@1.40.5':
+  '@moonrepo/core-linux-arm64-musl@1.41.7':
     optional: true
 
-  '@moonrepo/core-linux-x64-gnu@1.40.5':
+  '@moonrepo/core-linux-x64-gnu@1.41.7':
     optional: true
 
-  '@moonrepo/core-linux-x64-musl@1.40.5':
+  '@moonrepo/core-linux-x64-musl@1.41.7':
     optional: true
 
-  '@moonrepo/core-macos-arm64@1.40.5':
+  '@moonrepo/core-macos-arm64@1.41.7':
     optional: true
 
-  '@moonrepo/core-macos-x64@1.40.5':
+  '@moonrepo/core-macos-x64@1.41.7':
     optional: true
 
-  '@moonrepo/core-windows-x64-msvc@1.40.5':
+  '@moonrepo/core-windows-x64-msvc@1.41.7':
     optional: true
 
   '@msgpackr-extract/msgpackr-extract-darwin-arm64@3.0.3':
@@ -47180,6 +47216,12 @@ snapshots:
       domelementtype: 2.3.0
       domhandler: 5.0.3
 
+  domutils@3.2.2:
+    dependencies:
+      dom-serializer: 2.0.0
+      domelementtype: 2.3.0
+      domhandler: 5.0.3
+
   dot-case@3.0.4:
     dependencies:
       no-case: 3.0.4
@@ -49322,6 +49364,13 @@ snapshots:
 
   html-whitespace-sensitive-tag-names@3.0.1: {}
 
+  htmlparser2@10.0.0:
+    dependencies:
+      domelementtype: 2.3.0
+      domhandler: 5.0.3
+      domutils: 3.2.2
+      entities: 6.0.1
+
   htmlparser2@8.0.2:
     dependencies:
       domelementtype: 2.3.0
@@ -50612,6 +50661,16 @@ snapshots:
   lilconfig@3.1.2: {}
 
   lines-and-columns@1.2.4: {}
+
+  linkedom@0.18.12(canvas@3.2.0):
+    dependencies:
+      css-select: 5.1.0
+      cssom: 0.5.0
+      html-escaper: 3.0.3
+      htmlparser2: 10.0.0
+      uhyphen: 0.2.0
+    optionalDependencies:
+      canvas: 3.2.0
 
   linkify-it@5.0.0:
     dependencies:
@@ -56238,6 +56297,8 @@ snapshots:
 
   uglify-js@3.19.3:
     optional: true
+
+  uhyphen@0.2.0: {}
 
   uint64be@2.0.2:
     dependencies:

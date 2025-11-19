@@ -18,7 +18,7 @@ import { trim } from '@dxos/util';
 import { AiAssistantError } from '../errors';
 
 import { ArtifactDiffResolver } from './artifact-diff';
-import { type AiSessionRunParams } from './session';
+import { type AiSessionRunError, type AiSessionRunParams } from './session';
 
 /**
  * Formats the system prompt.
@@ -73,7 +73,10 @@ export const formatSystemPrompt = ({
  */
 // TODO(burdon): Move to AiPreprocessor.
 // TODO(burdon): Convert util below to `Effect.fn` (to preserve stack info)
-export const formatUserPrompt = ({ prompt, history = [] }: Pick<AiSessionRunParams<any>, 'prompt' | 'history'>) =>
+export const formatUserPrompt = ({
+  prompt,
+  history = [],
+}: Pick<AiSessionRunParams<any>, 'prompt' | 'history'>): Effect.Effect<Message.Message, AiSessionRunError> =>
   Effect.gen(function* () {
     const blocks: ContentBlock.Any[] = [];
 

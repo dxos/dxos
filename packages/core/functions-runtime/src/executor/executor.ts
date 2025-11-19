@@ -20,7 +20,7 @@ export class FunctionExecutor {
    * Invoke function.
    */
   // TODO(dmaretskyi): Invocation context: queue, space, etc...
-  async invoke<F extends FunctionDefinition<any, any>>(
+  async invoke<F extends FunctionDefinition.Any>(
     functionDef: F,
     input: F extends FunctionDefinition<infer I, infer _O> ? I : never,
   ): Promise<F extends FunctionDefinition<infer _I, infer O> ? O : never> {

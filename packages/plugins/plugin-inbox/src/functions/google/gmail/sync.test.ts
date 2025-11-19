@@ -23,7 +23,7 @@ const TestLayer = Layer.mergeAll(
     {
       service: 'gmail.com',
       // TODO(burdon): Rename `credential`.
-      apiKey: Config.redacted('ACCESS_TOKEN'),
+      apiKey: Config.redacted('GOOGLE_ACCESS_TOKEN'),
     },
   ]),
   FetchHttpClient.layer,
@@ -37,7 +37,7 @@ const TestLayer = Layer.mergeAll(
  * export ACCESS_TOKEN="xxx"
  * pnpm vitest api.test.ts
  */
-describe.runIf(process.env.ACCESS_TOKEN)('Gmail API', { timeout: 30_000 }, () => {
+describe.runIf(process.env.GOOGLE_ACCESS_TOKEN)('Gmail API', { timeout: 30_000 }, () => {
   it.effect(
     'get labels',
     Effect.fnUntraced(function* ({ expect }) {
