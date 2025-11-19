@@ -3039,6 +3039,9 @@ importers:
       '@dxos/ai':
         specifier: workspace:*
         version: link:../ai
+      '@dxos/context':
+        specifier: workspace:*
+        version: link:../../common/context
       '@dxos/echo':
         specifier: workspace:*
         version: link:../echo/echo
