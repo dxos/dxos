@@ -45,7 +45,7 @@ export const MessageArticle = ({
   }
 
   return (
-    <StackItem.Content classNames='relative' toolbar>
+    <StackItem.Content toolbar>
       <Message.Root attendableId={Obj.getDXN(mailbox).toString()} viewMode={viewMode} message={message} sender={sender}>
         <Message.Toolbar />
         <Message.Viewport role={role}>

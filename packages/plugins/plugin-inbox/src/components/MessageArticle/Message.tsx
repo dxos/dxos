@@ -4,18 +4,10 @@
 
 import { type Signal, useSignal } from '@preact/signals-react';
 import { createContext } from '@radix-ui/react-context';
-import React, { type PropsWithChildren, useCallback, useMemo, useRef } from 'react';
+import React, { type PropsWithChildren, useMemo } from 'react';
 
 import { type DXN } from '@dxos/echo';
-import {
-  Avatar,
-  DxAnchorActivate,
-  Icon,
-  IconButton,
-  type ThemedClassName,
-  useThemeContext,
-  useTranslation,
-} from '@dxos/react-ui';
+import { Icon, type ThemedClassName, useThemeContext } from '@dxos/react-ui';
 import {
   createBasicExtensions,
   createMarkdownExtensions,
@@ -28,8 +20,8 @@ import { MenuProvider, ToolbarMenu } from '@dxos/react-ui-menu';
 import { mx } from '@dxos/react-ui-theme';
 import { type Message as MessageType } from '@dxos/types';
 
-import { meta } from '../../meta';
 import { formatDateTime } from '../../util';
+import { UserIconButton } from '../UserIconButton';
 
 import { useMessageToolbarActions } from './useToolbar';
 
@@ -69,6 +61,25 @@ const MessageRoot = ({ children, viewMode: viewModeParam = 'plain', ...props }: 
 MessageRoot.displayName = 'Message.Root';
 
 //
+// Toolbar
+//
+
+type MessageToolbarProps = ThemedClassName<{}>;
+
+export const MessageToolbar = ({ classNames }: MessageToolbarProps) => {
+  const { attendableId, viewMode } = useMessageContext(MessageToolbar.displayName);
+  const menu = useMessageToolbarActions({ viewMode });
+
+  return (
+    <MenuProvider {...menu} attendableId={attendableId}>
+      <ToolbarMenu classNames={classNames} />
+    </MenuProvider>
+  );
+};
+
+MessageToolbar.displayName = 'Message.Toolbar';
+
+//
 // Viewport
 //
 
@@ -97,25 +108,9 @@ MessageViewport.displayName = 'Message.Viewport';
 
 type MessageHeaderProps = ThemedClassName<{ onContactCreate?: () => void }>;
 
+// TODO(burdon): Factor out header with event.
 const MessageHeader = ({ onContactCreate }: MessageHeaderProps) => {
-  const { t } = useTranslation(meta.id);
   const { message, sender } = useMessageContext(MessageHeader.displayName);
-
-  // TOOD(burdon): Callback and hook.
-  const buttonRef = useRef<HTMLButtonElement>(null);
-  const handleSenderClick = useCallback(() => {
-    if (sender.value) {
-      buttonRef.current?.dispatchEvent(
-        new DxAnchorActivate({
-          trigger: buttonRef.current,
-          refId: sender.value.toString(),
-          label: message.sender.name ?? 'never',
-        }),
-      );
-    } else {
-      onContactCreate?.();
-    }
-  }, [sender.value, message.sender.name, onContactCreate]);
 
   return (
     <div className='p-1 flex flex-col gap-2 border-be border-subduedSeparator'>
@@ -131,26 +126,10 @@ const MessageHeader = ({ onContactCreate }: MessageHeaderProps) => {
         </div>
       </div>
 
-      {/* TODO(burdon): Factor out component. */}
-      <div className='grid grid-cols-[2rem_1fr] gap-1'>
-        <div className='flex items-center'>
-          <IconButton
-            ref={buttonRef}
-            variant='ghost'
-            disabled={!sender.value && !onContactCreate}
-            icon={sender.value ? 'ph--user--regular' : 'ph--user-plus--regular'}
-            iconOnly
-            size={4}
-            label={t('show user')}
-            onClick={handleSenderClick}
-          />
-        </div>
-        <Avatar.Root>
-          <Avatar.Label classNames='flex is-full items-center'>
-            {/* TODO(burdon): Standard color tokens. */}
-            <h3 className='truncate text-primaryText'>{message.sender.name || message.sender.email}</h3>
-          </Avatar.Label>
-        </Avatar.Root>
+      {/* TODO(burdon): List From/CC. */}
+      <div className='grid grid-cols-[2rem_1fr] gap-1 items-center'>
+        <UserIconButton value={sender.value} onContactCreate={onContactCreate} />
+        <h3 className='truncate text-primaryText'>{message.sender.name || message.sender.email}</h3>
       </div>
     </div>
   );
@@ -205,25 +184,6 @@ const MessageContent = ({ classNames }: MessageContentProps) => {
 };
 
 MessageContent.displayName = 'Message.Content';
-
-//
-// Toolbar
-//
-
-type MessageToolbarProps = ThemedClassName<{}>;
-
-export const MessageToolbar = ({ classNames }: MessageToolbarProps) => {
-  const { attendableId, viewMode } = useMessageContext(MessageToolbar.displayName);
-  const menu = useMessageToolbarActions({ viewMode });
-
-  return (
-    <MenuProvider {...menu} attendableId={attendableId}>
-      <ToolbarMenu classNames={classNames} />
-    </MenuProvider>
-  );
-};
-
-MessageToolbar.displayName = 'Message.Toolbar';
 
 //
 // Message
