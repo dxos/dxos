@@ -9,4 +9,5 @@ packages:
   - '!**/dist/**'
   - '!**/out/**'
 
-strictPeerDependencies: false
+# Do not disable.
+strictPeerDependencies: true
