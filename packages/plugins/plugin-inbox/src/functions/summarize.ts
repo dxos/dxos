@@ -11,7 +11,7 @@ import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 
 import { AiService, ConsolePrinter, ToolExecutionService, ToolResolverService } from '@dxos/ai';
-import { AiSession, GenerationObserver } from '@dxos/assistant';
+import { AiSession, ArtifactId, GenerationObserver } from '@dxos/assistant';
 import {
   LocalSearchHandler,
   LocalSearchToolkit,
@@ -19,22 +19,37 @@ import {
   makeGraphWriterHandler,
   makeGraphWriterToolkit,
 } from '@dxos/assistant-toolkit';
-import { TracingService, defineFunction } from '@dxos/functions';
-import { Organization, Person, Project } from '@dxos/types';
+import { Obj } from '@dxos/echo';
+import { DatabaseService, QueueService, TracingService, defineFunction } from '@dxos/functions';
+import { Message, Organization, Person, Project } from '@dxos/types';
 import { trim } from '@dxos/util';
+
+import { Mailbox } from '../types';
+import { renderMarkdown } from '../util';
 
 /**
  * Summarize a mailbox.
  */
-// TODO(wittjosiah): This is consistently failing.
 export default defineFunction({
   key: 'dxos.org/function/inbox/email-summarize',
   name: 'Summarize',
   description: 'Summarize a mailbox.',
   inputSchema: Schema.Struct({
-    messages: Schema.String.annotations({
-      description: 'The contents of the mailbox.',
+    id: ArtifactId.annotations({
+      description: 'The ID of the mailbox object.',
     }),
+    skip: Schema.Number.pipe(
+      Schema.annotations({
+        description: 'The number of messages to skip.',
+      }),
+      Schema.optional,
+    ),
+    limit: Schema.Number.pipe(
+      Schema.annotations({
+        description: 'The maximum number of messages to read. Do not provide a value unless directly asked.',
+      }),
+      Schema.optional,
+    ),
   }),
   outputSchema: Schema.Struct({
     summary: Schema.String.annotations({
@@ -42,9 +57,23 @@ export default defineFunction({
     }),
   }),
   handler: Effect.fnUntraced(
-    function* ({ data: { messages } }) {
+    function* ({ data: { id, skip = 0, limit = 20 } }) {
+      const mailbox = yield* DatabaseService.resolve(ArtifactId.toDXN(id), Mailbox.Mailbox);
+      const queue = yield* QueueService.getQueue(mailbox.queue.dxn);
+      yield* Effect.promise(() => queue?.queryObjects());
+      const messages = Function.pipe(
+        queue?.objects ?? [],
+        Array.reverse,
+        Array.drop(skip),
+        Array.take(limit),
+        Array.filter((message) => Obj.instanceOf(Message.Message, message)),
+        Array.flatMap(renderMarkdown),
+        Array.join('\n\n'),
+      );
+
       const GraphWriterToolkit = makeGraphWriterToolkit({
-        schema: [Person.Person, Project.Project, Organization.Organization],
+        // TODO(wittjosiah): Anthropic does not support GeoPoint schema currently, causing legacy schemas to be needed.
+        schema: [Person.LegacyPerson, Project.Project, Organization.LegacyOrganization],
       });
       const GraphWriterHandler = makeGraphWriterHandler(GraphWriterToolkit);
 
