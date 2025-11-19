@@ -8,3 +8,5 @@ packages:
   - '!**/build/**'
   - '!**/dist/**'
   - '!**/out/**'
+
+strictPeerDependencies: false
