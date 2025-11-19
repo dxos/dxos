@@ -33,13 +33,14 @@ export type CreateEpochOptions = {
 export interface SpaceInternal {
   get data(): SpaceData;
 
-  // TODO(dmaretskyi): Return epoch info.
-  createEpoch(options?: CreateEpochOptions): Promise<void>;
-
   getCredentials(): Promise<Credential[]>;
 
   getEpochs(): Promise<SpecificCredential<Epoch>[]>;
 
+  // TODO(dmaretskyi): Return epoch info.
+  createEpoch(options?: CreateEpochOptions): Promise<void>;
+
+  // TOOD(burdon): Start to factor out credentials.
   removeMember(memberKey: PublicKey): Promise<void>;
 
   /**
@@ -47,9 +48,9 @@ export interface SpaceInternal {
    */
   migrate(): Promise<void>;
 
-  setEdgeReplicationPreference(setting: EdgeReplicationSetting): Promise<void>;
-
   export(): Promise<SpaceArchive>;
+
+  setEdgeReplicationPreference(setting: EdgeReplicationSetting): Promise<void>;
 }
 
 export const SPACE_TAG = Symbol('dxos.client.protocol.Space');
@@ -107,11 +108,11 @@ export interface Space {
   // TODO(wittjosiah): Remove. This should not be exposed.
   get internal(): SpaceInternal;
 
-  // TODO(wittjosiah): Rename activate/deactivate?
   /**
    * Activates the space enabling the use of the database and starts replication with peers.
    * The setting is persisted on the local device.
    */
+  // TODO(wittjosiah): Rename activate/deactivate?
   open(): Promise<void>;
 
   /**
@@ -140,7 +141,7 @@ export interface Space {
 }
 
 export const isSpace = (object: unknown): object is Space =>
-  typeof object === 'object' && object !== null && (object as Space)[SPACE_TAG] === true;
+  typeof object === 'object' && object != null && (object as Space)[SPACE_TAG] === true;
 
 // TODO(burdon): Create lower-level definition (HasId, db, etc.) and move to @dxos/echo.
 export const SpaceSchema: Schema.Schema<Space> = Schema.Any.pipe(

@@ -226,7 +226,6 @@ export class SpaceProxy implements Space, CustomInspectable {
   /**
    * @inheritdoc
    */
-  // TODO(burdon): Remove?
   get internal(): SpaceInternal {
     return this._internal;
   }
