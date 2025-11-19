@@ -3,6 +3,7 @@
 //
 
 import * as Schema from 'effect/Schema';
+
 import { BaseError } from '@dxos/errors';
 
 //

@@ -3,8 +3,8 @@
 //
 
 import * as Effect from 'effect/Effect';
+import type * as ParseResult from 'effect/ParseResult';
 import * as Schema from 'effect/Schema';
-import * as ParseResult from 'effect/ParseResult';
 
 import { createUrl, makeGoogleApiRequest } from '../google-api';
 
