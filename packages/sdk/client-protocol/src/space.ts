@@ -2,6 +2,8 @@
 // Copyright 2021 DXOS.org
 //
 
+import * as Schema from 'effect/Schema';
+
 import { type CleanupFn, type MulticastObservable } from '@dxos/async';
 import { type SpecificCredential } from '@dxos/credentials';
 import { type AnyLiveObject, type EchoDatabase, type QueueFactory } from '@dxos/echo-db';
@@ -50,8 +52,9 @@ export interface SpaceInternal {
   export(): Promise<SpaceArchive>;
 }
 
-// TODO(burdon): Separate public API form implementation (move comments here).
 export interface Space {
+  readonly __spaceBrand?: true;
+
   /**
    * Unique space identifier.
    */
@@ -133,3 +136,12 @@ export interface Space {
   postMessage: (channel: string, message: any) => Promise<void>;
   listen: (channel: string, callback: (message: GossipMessage) => void) => CleanupFn;
 }
+
+// TODO(burdon): Create lower-level definition and move to @dxos/echo.
+export const isSpace = (object: unknown): object is Space =>
+  typeof object === 'object' && object !== null && (object as Space).__spaceBrand === true;
+
+export const SpaceSchema: Schema.Schema<Space> = Schema.Any.pipe(
+  Schema.filter((space) => isSpace(space)),
+  Schema.annotations({ title: 'Space' }),
+);

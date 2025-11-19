@@ -2,7 +2,6 @@
 // Copyright 2021 DXOS.org
 //
 
-import * as Schema from 'effect/Schema';
 import isEqualWith from 'lodash.isequalwith';
 
 import { Event, MulticastObservable, Trigger, scheduleMicroTask, synchronized } from '@dxos/async';
@@ -57,9 +56,9 @@ import { InvitationsProxy } from '../invitations';
 
 const EPOCH_CREATION_TIMEOUT = 60_000;
 
-// TODO(burdon): This should not be used as part of the API (don't export).
 @trace.resource()
 export class SpaceProxy implements Space, CustomInspectable {
+  readonly __spaceBrand = true as const;
   private _ctx = new Context();
 
   /**
@@ -589,10 +588,3 @@ const shouldMembersUpdate = (prev: SpaceMember[] | undefined, next: SpaceMember[
 
   return !isEqualWith(prev, next, loadashEqualityFn);
 };
-
-export const isSpace = (object: unknown): object is Space => object instanceof SpaceProxy;
-
-export const SpaceSchema: Schema.Schema<Space> = Schema.Any.pipe(
-  Schema.filter((space) => isSpace(space)),
-  Schema.annotations({ title: 'Space' }),
-);

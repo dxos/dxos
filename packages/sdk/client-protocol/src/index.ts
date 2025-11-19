@@ -9,6 +9,6 @@ export type * from './halo';
 export * from './invitations';
 export * from './service-definitions';
 export type * from './shell';
-export type * from './space';
+export * from './space';
 export * from './timeouts';
 export * from './types';
