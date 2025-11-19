@@ -54,7 +54,7 @@ export default defineFunction({
   inputSchema: Schema.Struct({
     mailboxId: ArtifactId,
     userId: Schema.String.pipe(Schema.optional),
-    tag: Schema.String.pipe(
+    label: Schema.String.pipe(
       Schema.annotations({
         description: 'Gmail label to sync emails from. Defaults to inbox.',
       }),
@@ -72,7 +72,7 @@ export default defineFunction({
   }),
   handler: ({
     // TODO(wittjosiah): Schema-based defaults are not yet supported.
-    data: { mailboxId, userId = 'me', tag = 'inbox', after = format(subDays(new Date(), 30), 'yyyy-MM-dd') },
+    data: { mailboxId, userId = 'me', label = 'inbox', after = format(subDays(new Date(), 30), 'yyyy-MM-dd') },
   }) =>
     Effect.gen(function* () {
       log('syncing gmail', { mailboxId, userId, after });
@@ -111,7 +111,7 @@ export default defineFunction({
       });
 
       // Stream messages oldest-first into queue.
-      const newMessagesCount = yield* streamGmailMessagesToQueue(startDate, queue, userId, tag, existingGmailIds);
+      const newMessagesCount = yield* streamGmailMessagesToQueue(startDate, queue, userId, label, existingGmailIds);
 
       log('sync complete', { newMessages: newMessagesCount });
 
@@ -170,7 +170,7 @@ const generateDateRanges = (config: DateRangeConfig): Stream.Stream<DateChunk> =
 /**
  * Fetches message IDs for a specific date range, returning them from oldest to newest.
  */
-const fetchMessagesForDateRange = (userId: string, tag: string, dateChunk: DateChunk) => {
+const fetchMessagesForDateRange = (userId: string, label: string, dateChunk: DateChunk) => {
   return Stream.unfoldChunkEffect({ pageToken: Option.none<string>(), done: false }, (state) =>
     Effect.gen(function* () {
       if (state.done) {
@@ -178,7 +178,7 @@ const fetchMessagesForDateRange = (userId: string, tag: string, dateChunk: DateC
       }
 
       // Build query for date range.
-      const query = `in:${tag} after:${format(dateChunk.start, 'yyyy/MM/dd')} before:${format(dateChunk.end, 'yyyy/MM/dd')}`;
+      const query = `in:anywhere label:${label} after:${format(dateChunk.start, 'yyyy/MM/dd')} before:${format(dateChunk.end, 'yyyy/MM/dd')}`;
 
       log('fetching message IDs', {
         query,
@@ -193,7 +193,7 @@ const fetchMessagesForDateRange = (userId: string, tag: string, dateChunk: DateC
       );
 
       // Messages come newest-first from Gmail, reverse to get oldest-first.
-      const messageIds = (messages || []).map((m) => m.id).reverse();
+      const messageIds = (messages ?? []).map((m) => m.id).reverse();
 
       const nextState = {
         pageToken: Option.fromNullable(nextPageToken),
@@ -212,7 +212,7 @@ const streamGmailMessagesToQueue = Effect.fn(function* (
   startDate: Date,
   queue: Queue<Message.Message>,
   userId: string,
-  tag: string,
+  label: string,
   existingGmailIds: Set<string>,
 ) {
   const config: DateRangeConfig = {
@@ -225,7 +225,7 @@ const streamGmailMessagesToQueue = Effect.fn(function* (
   const count = yield* Function.pipe(
     generateDateRanges(config),
     // Sequential date range processing to maintain chronological order.
-    Stream.flatMap((dateChunk) => fetchMessagesForDateRange(userId, tag, dateChunk), { concurrency: 1 }),
+    Stream.flatMap((dateChunk) => fetchMessagesForDateRange(userId, label, dateChunk), { concurrency: 1 }),
     // Filter out message IDs that already exist in queue.
     Stream.filter((messageId) => {
       const isDuplicate = existingGmailIds.has(messageId);
