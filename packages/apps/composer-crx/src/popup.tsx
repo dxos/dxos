@@ -15,6 +15,9 @@ import { Input, Toolbar } from '@dxos/react-ui';
 import { Chat, type ChatProps, Container, ErrorBoundary } from './components';
 import { THUMBNAIL_PROP, getConfig } from './config';
 
+// NOTE: Keep width in sync with popup.html.
+const rootClasses = 'is-[500px]';
+
 const Root = () => {
   const [thumbnailUrl, setThumbnailUrl] = useState<string | null>(null);
   const [tabUrl, setTabUrl] = useState<string | null>(null);
@@ -91,7 +94,7 @@ const Root = () => {
 
   return (
     <ErrorBoundary>
-      <Container classNames='is-[500px]'>
+      <Container classNames={rootClasses}>
         {host && <Chat host={host} onPing={handlePing} url={tabUrl ?? undefined} />}
       </Container>
     </ErrorBoundary>
