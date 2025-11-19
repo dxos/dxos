@@ -78,6 +78,14 @@ export default defineFunction({
     Effect.gen(function* () {
       log('syncing gmail', { mailboxId, userId, after });
 
+      {
+        // Ensure required schema is registered in the runtime before resolving.
+        const { db } = yield* DatabaseService;
+        yield* Effect.sync(() => {
+          db.graph.schemaRegistry.addSchema([Mailbox.Mailbox]);
+        });
+      }
+
       const mailbox = yield* DatabaseService.resolve(DXN.parse(mailboxId), Mailbox.Mailbox);
 
       const labelCount = yield* syncLabels(mailbox, userId).pipe(
