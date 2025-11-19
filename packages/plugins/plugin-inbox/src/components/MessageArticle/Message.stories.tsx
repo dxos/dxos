@@ -2,15 +2,25 @@
 // Copyright 2023 DXOS.org
 //
 
+import { signal } from '@preact/signals-react';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import { Message as MessageType } from '@dxos/types';
 
-import { Message, type MessageRootProps } from './Message ';
+import { Message, type MessageRootProps } from './Message';
 
 const DefaultStory = (props: MessageRootProps) => {
-  return <Message.Root {...props} />;
+  return (
+    <Message.Root {...props}>
+      <Message.Toolbar />
+      <Message.Viewport>
+        <Message.Header />
+        <Message.Content />
+      </Message.Viewport>
+    </Message.Root>
+  );
 };
 
 const meta = {
@@ -28,5 +38,8 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
-  args: {},
+  args: {
+    message: MessageType.make({}),
+    sender: signal(undefined),
+  },
 };

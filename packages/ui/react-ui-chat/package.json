@@ -49,7 +49,7 @@
     "@preact-signals/safe-react": "^0.9.0",
     "@preact/signals-core": "^1.12.1",
     "@radix-ui/react-accordion": "1.2.3",
-    "@radix-ui/react-context": "^1.1.1"
+    "@radix-ui/react-context": "1.1.1"
   },
   "devDependencies": {
     "@dxos/echo": "workspace:*",

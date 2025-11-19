@@ -16,11 +16,13 @@ import { useEventToolbarActions } from './EventToolbar';
 export const EventArticle = ({ subject: event }: SurfaceComponentProps<Event.Event>) => {
   const menu = useEventToolbarActions(event);
 
-  <StackItem.Content classNames='relative' toolbar>
-    <ElevationProvider elevation='positioned'>
-      <MenuProvider {...menu} attendableId={Obj.getDXN(event).toString()}>
-        <ToolbarMenu />
-      </MenuProvider>
-    </ElevationProvider>
-  </StackItem.Content>;
+  return (
+    <StackItem.Content classNames='relative' toolbar>
+      <ElevationProvider elevation='positioned'>
+        <MenuProvider {...menu} attendableId={Obj.getDXN(event).toString()}>
+          <ToolbarMenu />
+        </MenuProvider>
+      </ElevationProvider>
+    </StackItem.Content>
+  );
 };

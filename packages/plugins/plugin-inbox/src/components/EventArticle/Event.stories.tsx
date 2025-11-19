@@ -7,7 +7,7 @@ import React from 'react';
 
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { Event, type EventRootProps } from './Event ';
+import { Event, type EventRootProps } from './Event';
 
 const DefaultStory = (props: EventRootProps) => {
   return <Event.Root {...props} />;
