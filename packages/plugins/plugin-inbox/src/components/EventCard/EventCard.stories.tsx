@@ -5,7 +5,6 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
-import { Obj } from '@dxos/echo';
 import { faker } from '@dxos/random';
 import { withTheme } from '@dxos/react-ui/testing';
 import { Card } from '@dxos/react-ui-stack';
@@ -17,7 +16,7 @@ import { EventCard } from './EventCard';
 faker.seed(1234);
 
 const createMockEvent = (): Event.Event =>
-  Obj.make(Event.Event, {
+  Event.make({
     startDate: new Date(Date.now() + 24 * 60 * 60 * 1_000).toISOString(),
     endDate: new Date(Date.now() + 24 * 60 * 60 * 2_000).toISOString(),
     attendees: [
@@ -30,7 +29,6 @@ const createMockEvent = (): Event.Event =>
       name: faker.person.fullName(),
       email: faker.internet.email(),
     },
-    links: [],
   });
 
 const meta = {

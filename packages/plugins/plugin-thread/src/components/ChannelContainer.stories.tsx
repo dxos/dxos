@@ -11,11 +11,11 @@ import { ClientCapabilities } from '@dxos/plugin-client';
 import { Query, useQuery, useSpace } from '@dxos/react-client/echo';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { render } from '@dxos/storybook-utils';
-import { Message } from '@dxos/types';
+import { Message, Thread } from '@dxos/types';
 
 import { createThreadPlugins } from '../testing';
 import { translations } from '../translations';
-import { Channel, Thread } from '../types';
+import { Channel } from '../types';
 
 import { ChannelContainer, type ChannelContainerProps } from './ChannelContainer';
 

@@ -21,7 +21,7 @@ export const EventCard = ({ subject: event, role }: SurfaceComponentProps<Event.
           @xl:gap-x-4
         "
     >
-      <div className='[grid-area:left-top] overflow-hidden'>{event.name}</div>
+      <div className='[grid-area:left-top] overflow-hidden'>{event.title}</div>
       <div className='[grid-area:left-main] overflow-hidden'>
         <DateComponent start={new Date(event.startDate)} end={new Date(event.endDate)} />
       </div>
