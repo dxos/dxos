@@ -60,7 +60,6 @@ export const MessageArticle = ({
 
     void dispatch(createIntent(InboxAction.ExtractContact, { space, message }));
   }, [space, message, dispatch]);
-
   const menu = useMessageToolbarActions(viewMode, existingContact, handleExtractContact);
 
   if (!message) {
