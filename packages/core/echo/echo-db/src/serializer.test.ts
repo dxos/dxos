@@ -82,6 +82,41 @@ describe('Serializer', () => {
       }
     });
 
+    test('query result', async () => {
+      const serializer = new Serializer();
+      let data: SerializedSpace;
+
+      {
+        const { db } = await builder.createDatabase();
+        const obj1 = db.add(Obj.make(Type.Expando, { title: 'Hello' }));
+        db.add(Obj.make(Type.Expando, { title: 'World' }));
+        await db.flush();
+
+        const { objects } = await db.query(Query.select(Filter.everything())).run();
+        expect(objects).to.have.length(2);
+
+        data = await serializer.export(db.query(Query.select(Filter.props({ title: 'Hello' }))));
+        expect(data.objects).to.have.length(1);
+        expect(data.objects[0]).to.deep.include({
+          '@id': obj1.id,
+          '@meta': { keys: [] },
+          title: 'Hello',
+        });
+      }
+
+      // Simulate JSON serialization.
+      data = JSON.parse(JSON.stringify(data));
+
+      {
+        const { db } = await builder.createDatabase();
+        await serializer.import(db, data);
+
+        const { objects } = await db.query(Query.select(Filter.everything())).run();
+        expect(objects).to.have.length(1);
+        expect(objects[0].title).to.eq('Hello');
+      }
+    });
+
     test('deleted objects', async () => {
       const serializer = new Serializer();
       const objValue = { value: 42 };

@@ -76,6 +76,7 @@ export class SpaceArchiveWriter extends Resource {
     const binary = this._archive.toUint8Array();
 
     return {
+      // TODO(wittjosiah): Factor out file name construction.
       filename: `${new Date().toISOString()}-${this._meta.spaceId}.tar`,
       contents: binary,
     };

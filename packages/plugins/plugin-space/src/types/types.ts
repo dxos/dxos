@@ -5,7 +5,7 @@
 import * as Schema from 'effect/Schema';
 
 import { type AnyIntentChain } from '@dxos/app-framework';
-import { type Obj, Type } from '@dxos/echo';
+import { type Obj, QueryAST, Type } from '@dxos/echo';
 import { type BaseObject, EchoSchema, StoredSchema } from '@dxos/echo/internal';
 import { type PublicKey } from '@dxos/react-client';
 // TODO(wittjosiah): This pulls in full client.
@@ -215,6 +215,16 @@ export namespace SpaceAction {
       version: Schema.optional(Schema.String),
     }),
     output: Schema.Boolean,
+  }) {}
+
+  export class Snapshot extends Schema.TaggedClass<Snapshot>()(`${SPACE_ACTION}/snapshot`, {
+    input: Schema.Struct({
+      space: SpaceSchema,
+      query: QueryAST.Query.pipe(Schema.optional),
+    }),
+    output: Schema.Struct({
+      snapshot: Schema.instanceOf(Blob),
+    }),
   }) {}
 
   export const StoredSchemaForm = Schema.Struct({

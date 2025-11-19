@@ -10,6 +10,7 @@ import { deepMapValues, isNonNullable, stripUndefined } from '@dxos/util';
 import { ObjectCore } from './core-db';
 import { type AnyLiveObject, getObjectCore } from './echo-handler';
 import { type EchoDatabase } from './proxy-db';
+import { QueryResult } from './query';
 import type { SerializedObject, SerializedSpace } from './serialized-space';
 
 const MAX_LOAD_OBJECT_CHUNK_SIZE = 30;
@@ -30,23 +31,26 @@ export type ImportOptions = {
 export class Serializer {
   static version = 1;
 
-  async export(database: EchoDatabase): Promise<SerializedSpace> {
-    const ids = database.coreDatabase.getAllObjectIds();
-
+  async export(target: EchoDatabase | QueryResult<any>): Promise<SerializedSpace> {
     const loadedObjects: Array<AnyLiveObject<any> | undefined> = [];
-    for (const chunk of chunkArray(ids, MAX_LOAD_OBJECT_CHUNK_SIZE)) {
-      const { objects } = await database.query(Filter.ids(...chunk)).run({ timeout: 60_000 });
+
+    if (target instanceof QueryResult) {
+      const { objects } = await target.run();
       loadedObjects.push(...objects);
+    } else {
+      const ids = target.coreDatabase.getAllObjectIds();
+      for (const chunk of chunkArray(ids, MAX_LOAD_OBJECT_CHUNK_SIZE)) {
+        const { objects } = await target.query(Filter.ids(...chunk)).run({ timeout: 60_000 });
+        loadedObjects.push(...objects);
+      }
     }
 
     const data = {
+      version: Serializer.version,
+      timestamp: new Date().toISOString(),
       objects: loadedObjects.filter(isNonNullable).map((object) => {
         return this.exportObject(object as any);
       }),
-
-      version: Serializer.version,
-      timestamp: new Date().toISOString(),
-      spaceKey: database.spaceKey.toHex(),
     };
 
     return data;
