@@ -12,7 +12,7 @@ import { meta } from '../../meta';
 export type UserIconButtonProps = ThemedClassName<{ value?: DXN; onContactCreate?: () => void }>;
 
 // TODO(burdon): Factor out.
-// TODO(burdon): Reconcile with Avatar if user.
+// TODO(burdon): Reconcile with Avatar if space member.
 export const UserIconButton = ({ value, onContactCreate }: UserIconButtonProps) => {
   const { t } = useTranslation(meta.id);
   const buttonRef = useRef<HTMLButtonElement>(null);

@@ -10,8 +10,7 @@ import { MenuProvider, ToolbarMenu } from '@dxos/react-ui-menu';
 import { mx } from '@dxos/react-ui-theme';
 import { type Actor, type Event as EventType } from '@dxos/types';
 
-import { formatDateTime } from '../../util';
-import { UserIconButton } from '../UserIconButton';
+import { DateComponent, UserIconButton } from '../common';
 
 import { useEventToolbarActions } from './useToolbar';
 
@@ -81,23 +80,20 @@ const EventHeader = ({ onContactCreate }: EventHeaderProps) => {
   const { event } = useEventContext(EventHeader.displayName);
 
   return (
-    <div className='p-1 flex flex-col gap-2 border-be border-subduedSeparator'>
-      <div className='grid grid-cols-[2rem_1fr] gap-1'>
-        <div className='flex pli-2 pbs-1.5 text-subdued'>
+    <div role='none' className='p-1 flex flex-col gap-2 border-be border-subduedSeparator'>
+      <div role='none' className='grid grid-cols-[2rem_1fr] gap-1'>
+        <div role='none' className='flex pli-2 pbs-1.5 text-subdued'>
           <Icon icon='ph--check--regular' />
         </div>
-        <div className='flex flex-col gap-1 overflow-hidden'>
+        <div role='none' className='flex flex-col gap-1 overflow-hidden'>
           <h2 className='text-lg line-clamp-2'>{event.title}</h2>
-          <div className='whitespace-nowrap text-sm text-description'>
-            {formatDateTime(new Date(), new Date(event.startDate))}
-          </div>
+          <DateComponent start={new Date(event.startDate)} end={new Date(event.endDate)} />
         </div>
       </div>
 
-      {/* TODO(burdon): List From/CC. */}
-      <div>
+      <div role='none'>
         {event.attendees.map((attendee) => (
-          <div key={attendee.email} className='grid grid-cols-[2rem_1fr] gap-1 items-center'>
+          <div key={attendee.email} role='none' className='grid grid-cols-[2rem_1fr] gap-1 items-center'>
             <UserIconButton value={attendee.contact?.dxn} onContactCreate={() => onContactCreate?.(attendee)} />
             <h3 className='truncate text-primaryText'>{attendee.name || attendee.email}</h3>
           </div>

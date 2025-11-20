@@ -42,10 +42,10 @@ export const translations = [
         'manage integrations button label': 'Manage Integrations',
         'inbox label': 'Inbox',
 
+        'sync mailbox label': 'Sync mailbox',
+
         'show contact label': 'Show contact',
         'create contact label': 'Create contact',
-
-        'sync mailbox label': 'Sync mailbox',
 
         'mailbox sync label': 'Mailbox Sync',
         'mailbox object settings configure sync button label': 'Configure sync',
