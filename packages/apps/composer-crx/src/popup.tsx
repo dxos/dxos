@@ -10,12 +10,13 @@ import { sendMessage } from 'webext-bridge/popup';
 import browser from 'webextension-polyfill';
 
 import { log } from '@dxos/log';
+import { mx } from '@dxos/react-ui-theme';
 
 import { Chat, type ChatProps, Container, ErrorBoundary, Thumbnail } from './components';
 import { THUMBNAIL_PROP, getConfig } from './config';
 
 // NOTE: Keep in sync with popup.html initial layout.
-const rootClasses = 'is-[500px]';
+const rootClasses = 'flex flex-col is-[500px] opacity-0 [animation:popup-fade-in_0.5s_ease-out_forwards]';
 
 /**
  * Root component.
@@ -86,18 +87,11 @@ const Root = () => {
     return null;
   };
 
-  if (thumbnailUrl) {
-    return (
-      <Container classNames='is-[300px]'>
-        <Thumbnail url={thumbnailUrl} />
-      </Container>
-    );
-  }
-
   return (
     <ErrorBoundary>
-      <Container classNames={rootClasses}>
-        {host && <Chat host={host} url={tabUrl ?? undefined} onPing={handlePing} />}
+      <Container classNames={mx(rootClasses)}>
+        {thumbnailUrl && <Thumbnail url={thumbnailUrl} />}
+        {!thumbnailUrl && host && <Chat host={host} url={tabUrl ?? undefined} onPing={handlePing} />}
       </Container>
     </ErrorBoundary>
   );

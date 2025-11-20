@@ -61,6 +61,7 @@ export default (context: PluginContext) =>
                   data: async () => {
                     const { dispatchPromise: dispatch } = context.getCapability(Capabilities.IntentDispatcher);
                     await dispatch(createIntent(SearchAction.OpenSearch));
+                    return false;
                   },
                   properties: {
                     label: ['search action label', { ns: meta.id }],

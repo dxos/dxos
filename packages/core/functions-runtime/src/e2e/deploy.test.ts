@@ -11,7 +11,7 @@ import { createEdgeIdentity } from '@dxos/client/edge';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
-import { Bundler } from '../bundler';
+import { bundleFunction } from '../bundler';
 import { uploadWorkerFunction } from '../edge';
 
 describe.runIf(process.env.DX_TEST_TAGS?.includes('functions-e2e'))('Functions deployment', () => {
@@ -36,8 +36,10 @@ describe.runIf(process.env.DX_TEST_TAGS?.includes('functions-e2e'))('Functions d
     const source = await readFile(new URL('../example/forex-effect.ts', import.meta.url), 'utf-8');
 
     // Bundle and upload.
-    const bundler = new Bundler({ platform: 'node', sandboxedModules: [], remoteModules: {} });
-    const buildResult = await bundler.bundle({ source });
+    const buildResult = await bundleFunction({
+      platform: 'node',
+      source,
+    });
     if ('error' in buildResult) {
       throw buildResult.error ?? new Error('Bundle creation failed');
     }
