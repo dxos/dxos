@@ -20,8 +20,12 @@ describe('Bundler', () => {
   test('Basic', async () => {
     const result = await bundleFunction({
       platform: 'node',
-      source: 'const x = 100',
-    }); // TODO(burdon): Test import.
+      source: `
+      export default function handler () {
+        return 100;
+      }
+    `,
+    });
     assert(!('error' in result), 'error should not exist');
     expect(result.asset).toBeDefined();
   });
@@ -32,7 +36,9 @@ describe('Bundler', () => {
       source: `
       import { Filter } from './runtime.js';
 
-      const query = Filter.typename('dxos.org/type/Example');
+      export default function handler () {
+        return Filter.typename('dxos.org/type/Example');
+      }
     `,
     });
     assert(!('error' in result), 'error should not exist');
@@ -55,7 +61,7 @@ describe('Bundler', () => {
   test('Error', async () => {
     const result = await bundleFunction({
       platform: 'node',
-      source: "import missing from './module'; missing();",
+      source: "import missing from './module'; export default () => missing();",
     });
     assert('error' in result, 'error should exist');
   });
