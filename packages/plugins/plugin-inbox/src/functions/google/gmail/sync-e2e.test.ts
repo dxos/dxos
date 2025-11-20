@@ -5,19 +5,19 @@
 import { describe, test } from 'vitest';
 
 import { Client } from '@dxos/client';
+import { type Space } from '@dxos/client/echo';
 import { configPreset } from '@dxos/config';
-import { Query, Ref, Obj } from '@dxos/echo';
+import { Obj, Query, Ref } from '@dxos/echo';
+import { Function } from '@dxos/functions';
+import { Trigger } from '@dxos/functions';
 import { FunctionsServiceClient } from '@dxos/functions-runtime/edge';
 import { bundleFunction } from '@dxos/functions-runtime/native';
 import { failedInvariant } from '@dxos/invariant';
 import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { AccessToken, Message } from '@dxos/types';
-import { Function } from '@dxos/functions';
-import { Trigger } from '@dxos/functions';
-import { Space } from '@dxos/client/echo';
 
-import { Mailbox } from '../../../types';
 import { log } from '../../../../../../common/log/src';
+import { Mailbox } from '../../../types';
 
 describe.runIf(process.env.DX_TEST_TAGS?.includes('functions-e2e'))('Functions deployment', () => {
   test('bundle function', async () => {
