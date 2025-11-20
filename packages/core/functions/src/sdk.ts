@@ -232,6 +232,7 @@ export const deserializeFunction = (functionObj: Function.Function): FunctionDef
     // TODO(dmaretskyi): This should throw error.
     handler: () => {},
     services: functionObj.services ?? [],
+    types: [],
     meta: {
       deployedFunctionId: getUserFunctionIdInMetadata(Obj.getMeta(functionObj)),
     },
