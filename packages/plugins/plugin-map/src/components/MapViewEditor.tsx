@@ -24,7 +24,7 @@ type MapViewEditorProps = { view: View.View };
 
 export const MapViewEditor = ({ view }: MapViewEditorProps) => {
   const client = useClient();
-  const space = getSpace();
+  const space = getSpace(view);
   const map = view.presentation.target as Map.Map | undefined;
   const typename = view.query ? getTypenameFromQuery(view.query.ast) : undefined;
   const currentSchema = useSchema(client, space, typename);
@@ -35,6 +35,7 @@ export const MapViewEditor = ({ view }: MapViewEditorProps) => {
     if (!space) {
       return;
     }
+
     const unsubscribe = space.db.schemaRegistry.query().subscribe(
       (query) => {
         const schemata = query.results;

@@ -47,7 +47,7 @@ export const Message = Schema.Struct({
 
 export interface Message extends Schema.Schema.Type<typeof Message> {}
 
-export const make = (sender: Actor.Actor | Actor.Role, blocks: ContentBlock.Any[]) => {
+export const make = (sender: Actor.Actor | Actor.Role, blocks: ContentBlock.Any[] = []) => {
   return Obj.make(Message, {
     created: new Date().toISOString(),
     sender: typeof sender === 'string' ? { role: sender } : sender,

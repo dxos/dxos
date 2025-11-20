@@ -29,11 +29,9 @@ import { type MailboxActionHandler, Mailbox as MailboxComponent } from './Mailbo
 import { MailboxEmpty } from './MailboxEmpty';
 import { POPOVER_SAVE_FILTER } from './PopoverSaveFilter';
 
-export const MailboxArticle = ({
-  subject: mailbox,
-  filter: filterParam,
-  attendableId,
-}: SurfaceComponentProps<Mailbox.Mailbox, { filter?: string; attendableId?: string }>) => {
+export type MailboxArticleProps = SurfaceComponentProps<Mailbox.Mailbox> & { filter?: string; attendableId?: string };
+
+export const MailboxArticle = ({ subject: mailbox, filter: filterParam, attendableId }: MailboxArticleProps) => {
   const { t } = useTranslation(meta.id);
   const id = attendableId ?? Obj.getDXN(mailbox).toString();
   const { dispatchPromise: dispatch } = useIntentDispatcher();

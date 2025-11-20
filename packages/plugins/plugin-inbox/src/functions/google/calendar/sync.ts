@@ -186,7 +186,7 @@ const processEvents = Effect.fn(function* (
   //  - For new events: append to queue as we do now.
   const eventObjects = yield* Function.pipe(
     items,
-    Array.map((event) => mapEvent()(event)),
+    Array.map((event) => mapEvent(event)),
     Effect.all,
     Effect.map((objects) => Array.filter(objects, Predicate.isNotNullable)),
   );

@@ -62,12 +62,12 @@ export const ToggleComplementarySidebarButton = ({
   const handleClick = useCallback(async () => {
     layoutContext.complementarySidebarState =
       layoutContext.complementarySidebarState === 'expanded' ? 'collapsed' : 'expanded';
-    const firstCompanion = companions[0];
-    if (layoutContext.complementarySidebarState === 'expanded' && !current && firstCompanion) {
+    const subject = layoutContext.complementarySidebarPanel ?? (companions[0] && getCompanionId(companions[0].id));
+    if (layoutContext.complementarySidebarState === 'expanded' && !current && subject) {
       await dispatch(
         createIntent(LayoutAction.UpdateComplementary, {
           part: 'complementary',
-          subject: getCompanionId(firstCompanion.id),
+          subject,
         }),
       );
     }

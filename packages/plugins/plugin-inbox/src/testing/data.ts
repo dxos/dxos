@@ -41,13 +41,12 @@ export const createEvent = (space?: Space, options: CreateOptions = { paragraphs
   const startDate = roundToNearestMinutes(faker.date.recent(), { nearestTo: 30 });
   const endDate = addMinutes(startDate, faker.number.int({ min: 1, max: 10 }) * 15);
 
-  return Obj.make(Event.Event, {
-    name: faker.lorem.sentence(8),
+  return Event.make({
+    title: faker.lorem.sentence(8),
     owner,
     attendees: [owner, ...faker.helpers.multiple(() => createActor(), { count: faker.number.int({ min: 1, max: 5 }) })],
     startDate: startDate.toISOString(),
     endDate: endDate.toISOString(),
-    links: [],
   });
 };
 

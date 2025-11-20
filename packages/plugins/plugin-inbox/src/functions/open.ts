@@ -13,6 +13,7 @@ import { DatabaseService, QueueService, defineFunction } from '@dxos/functions';
 import { Message } from '@dxos/types';
 
 import { Mailbox } from '../types';
+import { renderMarkdown } from '../util';
 
 export default defineFunction({
   key: 'dxos.org/function/inbox/email-open',
@@ -40,8 +41,7 @@ export default defineFunction({
   }),
   handler: Effect.fn(function* ({ data: { id, skip = 0, limit = 20 } }) {
     const mailbox = yield* DatabaseService.resolve(ArtifactId.toDXN(id), Mailbox.Mailbox);
-    const { dxn } = yield* Effect.promise(() => mailbox.queue.load());
-    const queue = yield* QueueService.getQueue(dxn);
+    const queue = yield* QueueService.getQueue(mailbox.queue.dxn);
     yield* Effect.promise(() => queue?.queryObjects());
     const content = Function.pipe(
       queue?.objects ?? [],
@@ -55,19 +55,3 @@ export default defineFunction({
     return { content };
   }),
 });
-
-const renderMarkdown = (message: Message.Message): string[] => {
-  const sender =
-    message.sender.contact?.target?.fullName ??
-    message.sender.name ??
-    message.sender.email ??
-    message.sender.identityDid;
-  const blocks = message.blocks.filter((block) => block._tag === 'text');
-  return [
-    // prettier-ignore
-    `###### ${sender}`,
-    `*${message.created}*`,
-    blocks.map((block) => block.text.trim()).join(' '),
-    '',
-  ];
-};

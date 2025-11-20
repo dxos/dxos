@@ -48,12 +48,13 @@ export default (context: PluginContext) =>
     createResolver({
       intent: InboxAction.ExtractContact,
       // TODO(burdon): Factor out function (and test separately).
-      resolve: async ({ space, message }) => {
-        log.info('extract contact', { message });
-        const name = message.sender.name;
-        const email = message.sender.email;
+      // TODO(burdon): Reconcile with dxos.org/functions/entity-extraction
+      resolve: async ({ space, actor }) => {
+        log.info('extract contact', { actor });
+        const name = actor.name;
+        const email = actor.email;
         if (!email) {
-          log.warn('email is required for contact extraction', { sender: message.sender });
+          log.warn('email is required for contact extraction', { actor });
           return;
         }
 
@@ -63,16 +64,12 @@ export default (context: PluginContext) =>
         const existingContact = existingContacts.find((contact) =>
           contact.emails?.some((contactEmail) => contactEmail.value === email),
         );
-
         if (existingContact) {
           log.info('Contact already exists', { email, existingContact });
           return;
         }
 
-        const newContact = Obj.make(Person.Person, {
-          emails: [{ value: email }],
-        });
-
+        const newContact = Obj.make(Person.Person, { emails: [{ value: email }] });
         if (name) {
           newContact.fullName = name;
         }
