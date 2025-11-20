@@ -13,7 +13,7 @@ import {
   createIntent,
   createResolver,
 } from '@dxos/app-framework';
-import { Filter, Obj, Query, Ref, Relation, Type } from '@dxos/echo';
+import { Obj, Query, Ref, Relation, Type } from '@dxos/echo';
 import { Serializer } from '@dxos/echo-db';
 import { DatabaseService } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';

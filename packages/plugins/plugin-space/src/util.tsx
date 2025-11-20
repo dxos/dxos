@@ -8,7 +8,7 @@ import * as Function from 'effect/Function';
 
 import { LayoutAction, type PromiseIntentDispatcher, chain, createIntent } from '@dxos/app-framework';
 import { Filter, Obj, Query, Ref, Type } from '@dxos/echo';
-import { type AnyEchoObject, EXPANDO_TYPENAME } from '@dxos/echo/internal';
+import { EXPANDO_TYPENAME } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
 import { Migrations } from '@dxos/migrations';
 import {

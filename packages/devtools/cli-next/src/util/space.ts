@@ -8,8 +8,7 @@ import * as Option from 'effect/Option';
 import type * as Schema from 'effect/Schema';
 
 import { ClientService } from '@dxos/client';
-import { type Space, SpaceId, type SpaceSyncState } from '@dxos/client/echo';
-import { contextFromScope } from '@dxos/effect';
+import { type Space, SpaceId } from '@dxos/client/echo';
 import { BaseError, type BaseErrorOptions } from '@dxos/errors';
 import { DatabaseService } from '@dxos/functions';
 import { log } from '@dxos/log';
