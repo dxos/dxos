@@ -17,7 +17,7 @@ import { type Space, getSpace, useQueue } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { Input, type ThemedClassName, useDynamicRef, useTranslation } from '@dxos/react-ui';
 import { ChatEditor, type ChatEditorController, type ChatEditorProps } from '@dxos/react-ui-chat';
-import { type MarkdownStreamController } from '@dxos/react-ui-components';
+import { type MarkdownStreamController } from '@dxos/react-ui-markdown';
 import { MenuProvider, ToolbarMenu } from '@dxos/react-ui-menu';
 import { mx } from '@dxos/react-ui-theme';
 import { Message } from '@dxos/types';
