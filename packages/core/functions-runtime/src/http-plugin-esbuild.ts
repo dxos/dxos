@@ -42,18 +42,17 @@ export const httpPlugin: Plugin = {
           throw new Error(`failed to fetch: ${response.status}`);
         }
 
-const text = yield* response.text;
-const extension = new URL(args.path).pathname.split('.').pop() || '';
-const loader = {
-  js: 'js',
-  jsx: 'jsx',
-  ts: 'ts',
-  tsx: 'tsx',
-  css: 'css',
-  json: 'json',
-  // Add more mappings as needed
-}[extension.toLowerCase()] as Loader || 'jsx';
-return { contents: text, loader };
+        const text = yield* response.text;
+        const extension = new URL(args.path).pathname.split('.').pop() || '';
+        const loader =
+          ({
+            js: 'js',
+            jsx: 'jsx',
+            ts: 'ts',
+            tsx: 'tsx',
+            // Add more mappings as needed
+          }[extension.toLowerCase()] as Loader) || 'jsx';
+        return { contents: text, loader };
       }).pipe(
         Effect.retry(
           Function.pipe(
