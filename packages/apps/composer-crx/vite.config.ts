@@ -99,7 +99,7 @@ export default defineConfig({
         action: {
           default_icon: 'assets/img/icon-48.png',
           default_title: 'Composer',
-          default_popup: 'popup5.html',
+          default_popup: 'popup.html',
         },
         permissions: ['contextMenus', 'activeTab', 'scripting', 'storage', 'notifications'],
         host_permissions: ['<all_urls>'],
