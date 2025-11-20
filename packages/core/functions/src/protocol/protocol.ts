@@ -100,8 +100,8 @@ export const wrapFunctionHandler = (func: FunctionDefinition): FunctionProtocol.
 class FunctionContext extends Resource {
   readonly context: FunctionProtocol.Context;
   readonly client: EchoClient | undefined;
-  readonly db: EchoDatabaseImpl | undefined;
-  readonly queues: QueueFactory | undefined;
+  db: EchoDatabaseImpl | undefined;
+  queues: QueueFactory | undefined;
 
   constructor(context: FunctionProtocol.Context) {
     super();
@@ -113,25 +113,23 @@ class FunctionContext extends Resource {
         queueService: context.services.queueService,
       });
     }
+  }
 
+  override async _open() {
+    await this.client?.open();
     this.db =
-      this.client && context.spaceId
+      this.client && this.context.spaceId
         ? this.client.constructDatabase({
-            spaceId: context.spaceId ?? failedInvariant(),
-            spaceKey: PublicKey.fromHex(context.spaceKey ?? failedInvariant('spaceKey missing in context')),
+            spaceId: this.context.spaceId ?? failedInvariant(),
+            spaceKey: PublicKey.fromHex(this.context.spaceKey ?? failedInvariant('spaceKey missing in context')),
             reactiveSchemaQuery: false,
           })
         : undefined;
 
-    this.queues = this.client && context.spaceId ? this.client.constructQueueFactory(context.spaceId) : undefined;
-  }
-
-  override async _open() {
-    this.client?.open();
-    if (this.db) {
-      await this.db.setSpaceRoot(this.context.spaceRootUrl ?? failedInvariant('spaceRootUrl missing in context'));
-    }
+    await this.db?.setSpaceRoot(this.context.spaceRootUrl ?? failedInvariant('spaceRootUrl missing in context'));
     await this.db?.open();
+    this.queues =
+      this.client && this.context.spaceId ? this.client.constructQueueFactory(this.context.spaceId) : undefined;
   }
 
   override async _close() {
