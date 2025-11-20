@@ -2,18 +2,13 @@
 // Copyright 2023 DXOS.org
 //
 
-import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
-import * as HttpClient from '@effect/platform/HttpClient';
-import * as Duration from 'effect/Duration';
-import * as Effect from 'effect/Effect';
-import * as Function from 'effect/Function';
-import * as Schedule from 'effect/Schedule';
-import { type BuildOptions, type BuildResult, type Loader, type Plugin, build, initialize } from 'esbuild-wasm';
+import { type BuildOptions, type BuildResult, type Plugin, build, initialize } from 'esbuild-wasm';
 
 import { subtleCrypto } from '@dxos/crypto';
-import { runAndForwardErrors } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
+
+import { httpPlugin } from '../http-plugin-esbuild';
 
 export type Import = {
   moduleUrl: string;
@@ -87,6 +82,7 @@ export class Bundler {
         bundle: true,
         format: 'esm',
         plugins: [
+          httpPlugin as unknown as Plugin,
           {
             name: 'memory',
             setup: (build) => {
@@ -130,7 +126,6 @@ export class Bundler {
               });
             },
           },
-          httpPlugin,
         ],
       });
 
@@ -245,51 +240,4 @@ const analyzeSourceFileImports = (code: string): ParsedImport[] => {
       quotes: capture[5],
     };
   });
-};
-
-const MAX_RETRIES = 5;
-const INITIAL_DELAY = 1_000;
-
-const httpPlugin: Plugin = {
-  name: 'http',
-  setup: (build) => {
-    // Intercept import paths starting with "http:" and "https:" so esbuild doesn't attempt to map them to a file system location.
-    // Tag them with the "http-url" namespace to associate them with this plugin.
-    build.onResolve({ filter: /^https?:\/\// }, (args) => ({
-      path: args.path,
-      namespace: 'http-url',
-    }));
-
-    // We also want to intercept all import paths inside downloaded files and resolve them against the original URL.
-    // All of these files will be in the "http-url" namespace.
-    // Make sure to keep the newly resolved URL in the "http-url" namespace so imports inside it will also be resolved as URLs recursively.
-    build.onResolve({ filter: /.*/, namespace: 'http-url' }, (args) => ({
-      path: new URL(args.path, args.importer).toString(),
-      namespace: 'http-url',
-    }));
-
-    // When a URL is loaded, we want to actually download the content from the internet.
-    // This has just enough logic to be able to handle the example import from unpkg.com but in reality this would probably need to be more complex.
-    build.onLoad({ filter: /.*/, namespace: 'http-url' }, async (args) => {
-      return Effect.gen(function* () {
-        const response = yield* HttpClient.get(args.path);
-        if (response.status !== 200) {
-          throw new Error(`failed to fetch: ${response.status}`);
-        }
-
-        const text = yield* response.text;
-        return { contents: text, loader: 'jsx' as Loader };
-      }).pipe(
-        Effect.retry(
-          Function.pipe(
-            Schedule.exponential(Duration.millis(INITIAL_DELAY)),
-            Schedule.jittered,
-            Schedule.intersect(Schedule.recurs(MAX_RETRIES - 1)),
-          ),
-        ),
-        Effect.provide(FetchHttpClient.layer),
-        runAndForwardErrors,
-      );
-    });
-  },
 };

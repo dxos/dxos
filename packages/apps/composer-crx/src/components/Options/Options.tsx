@@ -6,10 +6,11 @@ import React, { useEffect, useState } from 'react';
 import browser from 'webextension-polyfill';
 
 import { Composer, DXOSHorizontalType } from '@dxos/brand';
+import { SpaceId } from '@dxos/keys';
 import { Input, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
-import { DEVELOPER_MODE_PROP } from '../../config';
+import { DEVELOPER_MODE_PROP, SPACE_ID_PROP } from '../../config';
 import { translationKey } from '../../translations';
 
 export type OptionsProps = ThemedClassName<{}>;
@@ -17,6 +18,7 @@ export type OptionsProps = ThemedClassName<{}>;
 export const Options = ({ classNames }: OptionsProps) => {
   const { t } = useTranslation(translationKey);
   const [developerMode, setDeveloperMode] = useState(false);
+  const [spaceId, setSpaceId] = useState<string | null>(null);
 
   useEffect(() => {
     void (async () => {
@@ -26,10 +28,26 @@ export const Options = ({ classNames }: OptionsProps) => {
     })();
   }, []);
 
+  useEffect(() => {
+    void (async () => {
+      const result = await browser.storage.sync.get(SPACE_ID_PROP);
+      const stored = result?.[SPACE_ID_PROP];
+      if (SpaceId.isValid(stored)) {
+        setSpaceId(stored);
+      }
+    })();
+  }, []);
+
   const handleDeveloperModeChange = async (checked: boolean | 'indeterminate') => {
     const next = checked === 'indeterminate' ? false : Boolean(checked);
     setDeveloperMode(next);
     await browser.storage.sync.set({ [DEVELOPER_MODE_PROP]: next });
+  };
+
+  const handleSpaceIdChange = async (ev: React.ChangeEvent<HTMLInputElement>) => {
+    const next = ev.target.value;
+    setSpaceId(next);
+    await browser.storage.sync.set({ [SPACE_ID_PROP]: next });
   };
 
   return (
@@ -62,6 +80,16 @@ export const Options = ({ classNames }: OptionsProps) => {
           <div className='flex items-center gap-3'>
             <Input.Switch checked={developerMode} onCheckedChange={handleDeveloperModeChange} />
             <Input.Label classNames='!font-base !m-0'>{t('settings.devmode.label')}</Input.Label>
+          </div>
+        </Input.Root>
+      </div>
+
+      <div className='grid grid-cols-[8rem_1fr] p-4 overflow-y-auto'>
+        <div />
+        <Input.Root>
+          <div className='flex items-center gap-3'>
+            <Input.TextInput value={spaceId ?? ''} onChange={handleSpaceIdChange} />
+            <Input.Label classNames='!font-base !m-0'>{t('settings.spaceid.label')}</Input.Label>
           </div>
         </Input.Root>
       </div>

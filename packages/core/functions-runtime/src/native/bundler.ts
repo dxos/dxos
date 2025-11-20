@@ -17,6 +17,8 @@ import { BaseError } from '@dxos/errors';
 import { PublicKey } from '@dxos/keys';
 import { Unit, trim } from '@dxos/util';
 
+import { httpPlugin } from '../http-plugin-esbuild';
+
 type BundleOptions = {
   entryPoint: string;
   verbose?: boolean;
@@ -50,7 +52,12 @@ export const bundleFunction = async (options: BundleOptions): Promise<BundleResu
     loader: {
       '.wasm': 'copy',
     },
+    alias: {
+      'dxos:functions': './runtime.js',
+    },
     external: [
+      './runtime.js',
+      'node:async_hooks',
       'cloudflare:workers',
       'functions-service:user-script',
       'node:async_hooks',
@@ -60,6 +67,7 @@ export const bundleFunction = async (options: BundleOptions): Promise<BundleResu
       'node:events',
     ],
     plugins: [
+      httpPlugin,
       {
         name: 'entrypoint',
         setup: (build) => {
