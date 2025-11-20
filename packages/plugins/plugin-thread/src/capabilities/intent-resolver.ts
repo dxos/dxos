@@ -61,9 +61,6 @@ export default (context: PluginContext) =>
     createResolver({
       intent: ThreadAction.Create,
       resolve: ({ name, anchor: _anchor, subject }) => {
-        const space = getSpace(subject);
-        invariant(space, 'Space not found');
-
         const { state } = context.getCapability(ThreadCapabilities.MutableState);
         const subjectId = Obj.getDXN(subject).toString();
         const thread = Thread.make({ name });

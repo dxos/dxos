@@ -27,7 +27,7 @@ const getName = (doc: Markdown.Document, anchor: string): string | undefined => 
  * Construct plugins.
  */
 export const threads = (state: ThreadState, doc?: Markdown.Document, dispatch?: PromiseIntentDispatcher): Extension => {
-  const space = doc && getSpace(doc);
+  const space = getSpace(doc);
   if (!doc || !space || !dispatch) {
     // Include no-op comments extension here to ensure that the facets are always present when they are expected.
     // TODO(wittjosiah): The Editor should only look for these facets when comments are available.
