@@ -28,7 +28,7 @@ export const EventArticle = ({
   const [shadowedEvent, createShadowEvent] = useShadowObject(space, subject, EventType.Event);
   const notes = shadowedEvent?.notes?.target;
 
-  const handleCreateNote = useCallback(async () => {
+  const handleNoteCreate = useCallback(async () => {
     invariant(space);
     const event = createShadowEvent();
     const notes = await event.notes?.load();
@@ -49,7 +49,7 @@ export const EventArticle = ({
   return (
     <StackItem.Content toolbar>
       <Event.Root event={subject}>
-        <Event.Toolbar onCreateNote={handleCreateNote} />
+        <Event.Toolbar onNoteCreate={handleNoteCreate} />
         <Event.Viewport>
           <Event.Header onContactCreate={handleContactCreate} />
           <Event.Content />

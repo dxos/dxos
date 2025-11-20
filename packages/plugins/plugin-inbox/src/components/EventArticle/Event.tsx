@@ -12,7 +12,7 @@ import { type Actor, type Event as EventType } from '@dxos/types';
 
 import { DateComponent, UserIconButton } from '../common';
 
-import { useEventToolbarActions } from './useToolbar';
+import { type UseEventToolbarActionsProps, useEventToolbarActions } from './useToolbar';
 
 //
 // Context
@@ -41,7 +41,7 @@ EventRoot.displayName = 'Event.Root';
 // Toolbar
 //
 
-type EventToolbarProps = ThemedClassName<{ onCreateNote?: () => void }>;
+type EventToolbarProps = ThemedClassName<UseEventToolbarActionsProps>;
 
 const EventToolbar = ({ classNames, ...props }: EventToolbarProps) => {
   const { attendableId } = useEventContext(EventToolbar.displayName);
