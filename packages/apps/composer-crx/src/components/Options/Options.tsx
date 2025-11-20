@@ -13,6 +13,9 @@ import { mx } from '@dxos/react-ui-theme';
 import { DEVELOPER_MODE_PROP, SPACE_ID_PROP, SPACE_MODE_PROP } from '../../config';
 import { translationKey } from '../../translations';
 
+const propertiesGrid =
+  'grid grid-cols-[8rem_1fr_1fr_8rem] p-4 overflow-hidden items-center [&_label]:m-0 [&_label]:text-base';
+
 export type OptionsProps = ThemedClassName<{}>;
 
 export const Options = ({ classNames }: OptionsProps) => {
@@ -57,8 +60,6 @@ export const Options = ({ classNames }: OptionsProps) => {
     await browser.storage.sync.set({ [SPACE_ID_PROP]: next });
   };
 
-  const grid = 'grid grid-cols-[8rem_1fr_1fr_8rem] p-4 overflow-hidden items-center';
-
   return (
     <div className={mx('flex flex-col grow overflow-hidden', classNames)}>
       <div className='grid grid-cols-[8rem_1fr_12rem] p-4 overflow-yauto'>
@@ -83,28 +84,28 @@ export const Options = ({ classNames }: OptionsProps) => {
         </div>
       </div>
 
-      <div className={grid}>
+      <div className={propertiesGrid}>
         <div />
         <Input.Root>
-          <Input.Label classNames='!m-0 !text-base'>{t('settings.dev-mode.label')}</Input.Label>
+          <Input.Label>{t('settings.dev-mode.label')}</Input.Label>
           <div className='text-end'>
             <Input.Switch checked={developerMode} onCheckedChange={handleDeveloperModeChange} />
           </div>
         </Input.Root>
       </div>
-      <div className={grid}>
+      <div className={propertiesGrid}>
         <div />
         <Input.Root>
-          <Input.Label classNames='!m-0 !text-base'>{t('settings.space-mode.label')}</Input.Label>
+          <Input.Label>{t('settings.space-mode.label')}</Input.Label>
           <div className='text-end'>
             <Input.Switch checked={spaceMode} onCheckedChange={handleSpaceModeChange} />
           </div>
         </Input.Root>
       </div>
-      <div className={grid}>
+      <div className={propertiesGrid}>
         <div />
         <Input.Root>
-          <Input.Label classNames='!m-0 !text-base'>{t('settings.space-id.label')}</Input.Label>
+          <Input.Label>{t('settings.space-id.label')}</Input.Label>
           <div className='text-end'>
             <Input.TextInput value={spaceId ?? ''} onChange={handleSpaceIdChange} />
           </div>
