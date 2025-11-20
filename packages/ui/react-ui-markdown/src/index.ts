@@ -2,4 +2,4 @@
 // Copyright 2025 DXOS.org
 //
 
-console.log('!!');
+export * from './MarkdownViewer';
