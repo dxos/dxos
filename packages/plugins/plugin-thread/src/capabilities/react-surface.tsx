@@ -9,6 +9,7 @@ import { useCapability } from '@dxos/app-framework/react';
 import { Obj, type Ref } from '@dxos/echo';
 import { SettingsStore } from '@dxos/local-storage';
 import { getSpace } from '@dxos/react-client/echo';
+import { Thread } from '@dxos/types';
 
 import {
   CallDebugPanel,
@@ -19,7 +20,7 @@ import {
   ThreadSettings,
 } from '../components';
 import { meta } from '../meta';
-import { Channel, Thread, type ThreadSettingsProps } from '../types';
+import { Channel, type ThreadSettingsProps } from '../types';
 
 import { ThreadCapabilities } from './capabilities';
 

@@ -13,13 +13,12 @@ import { ClientCapabilities, ClientPlugin } from '@dxos/plugin-client';
 import { MarkdownPlugin } from '@dxos/plugin-markdown';
 import { SpacePlugin } from '@dxos/plugin-space';
 import { ThemePlugin } from '@dxos/plugin-theme';
-import { Channel, Thread } from '@dxos/plugin-thread/types';
-import { Transcript } from '@dxos/plugin-transcription/types';
+import { Channel } from '@dxos/plugin-thread/types';
 import { Query, useQuery, useSpace } from '@dxos/react-client/echo';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { defaultTx } from '@dxos/react-ui-theme';
 import { Text } from '@dxos/schema';
-import { Message } from '@dxos/types';
+import { Message, Thread, Transcript } from '@dxos/types';
 
 import { translations } from '../translations';
 import { Meeting } from '../types';

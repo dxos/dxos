@@ -6,7 +6,7 @@ import * as Schema from 'effect/Schema';
 
 import { type CleanupFn, type MulticastObservable } from '@dxos/async';
 import { type SpecificCredential } from '@dxos/credentials';
-import { type AnyLiveObject, type EchoDatabase, type QueueFactory } from '@dxos/echo-db';
+import { type AnyLiveObject, type EchoDatabase, type QueueFactory, type SpaceSyncState } from '@dxos/echo-db';
 import { type PublicKey, type SpaceId } from '@dxos/keys';
 import {
   type Contact,
@@ -43,14 +43,23 @@ export interface SpaceInternal {
   // TOOD(burdon): Start to factor out credentials.
   removeMember(memberKey: PublicKey): Promise<void>;
 
+  export(): Promise<SpaceArchive>;
+
   /**
    * Migrate space data to the latest version.
    */
   migrate(): Promise<void>;
 
-  export(): Promise<SpaceArchive>;
-
   setEdgeReplicationPreference(setting: EdgeReplicationSetting): Promise<void>;
+
+  /**
+   * Waits until the space is fully synced with EDGE.
+   * @throws If the EDGE sync is disabled.
+   */
+  syncToEdge(opts?: {
+    onProgress: (state: SpaceSyncState.PeerState | undefined) => void;
+    timeout?: number;
+  }): Promise<void>;
 }
 
 export const SPACE_TAG = Symbol('dxos.client.protocol.Space');
