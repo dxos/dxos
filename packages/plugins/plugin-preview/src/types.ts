@@ -16,14 +16,10 @@ export type CardPreviewProps<
   Subject extends Obj.Any = Obj.Any,
   Role extends SurfaceCardRole = SurfaceCardRole,
 > = PropsWithChildren<
-  SurfaceComponentProps<
-    Subject,
-    {
-      // TODO(burdon): Why is this required (why active?)
-      activeSpace?: Space;
-      // TODO(burdon): Remove in favor of intents?
-      onSelect?: (obj: Obj.Any) => void;
-    },
-    Role
-  >
+  SurfaceComponentProps<Subject, Role> & {
+    // TODO(burdon): Why is this required (why active?)
+    activeSpace?: Space;
+    // TODO(burdon): Remove in favor of intents?
+    onSelect?: (obj: Obj.Any) => void;
+  }
 >;

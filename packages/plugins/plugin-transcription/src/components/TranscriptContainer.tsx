@@ -8,10 +8,9 @@ import { getSpace } from '@dxos/client/echo';
 import { Obj } from '@dxos/echo';
 import { useMembers, useQueue } from '@dxos/react-client/echo';
 import { StackItem } from '@dxos/react-ui-stack';
-import { type Message } from '@dxos/types';
+import { type Message, type Transcript } from '@dxos/types';
 
 import { useQueueModelAdapter } from '../hooks';
-import { type Transcript } from '../types';
 
 import { TranscriptView, renderByline } from './Transcript';
 

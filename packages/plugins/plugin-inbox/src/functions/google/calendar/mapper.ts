@@ -9,11 +9,12 @@ import { DatabaseService } from '@dxos/functions';
 import { Event, Person } from '@dxos/types';
 
 import { type GoogleCalendar } from '../../apis';
+import { normalizeText } from '../../util';
 
 /**
  * Transforms Google Calendar event to ECHO event object.
  */
-export const mapEvent = () =>
+export const mapEvent: (event: GoogleCalendar.Event) => Effect.Effect<Event.Event | null, never, DatabaseService> =
   Effect.fn(function* (event: GoogleCalendar.Event) {
     // Skip cancelled events.
     if (event.status === 'cancelled') {
@@ -58,11 +59,11 @@ export const mapEvent = () =>
       });
 
     return Event.make({
-      name: event.summary || '(No title)',
+      title: event.summary,
+      description: event.description && normalizeText(event.description),
       owner: owner!,
       attendees,
       startDate,
       endDate,
-      links: [],
     });
   });

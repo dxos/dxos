@@ -15,10 +15,9 @@ import { useIdentity } from '@dxos/react-client/halo';
 import { useAsyncEffect } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { render } from '@dxos/storybook-utils';
-import { AnchoredTo, Message } from '@dxos/types';
+import { AnchoredTo, Message, Thread } from '@dxos/types';
 
 import { translations } from '../translations';
-import { Thread } from '../types';
 
 import { CommentsContainer } from './CommentsContainer';
 import { createCommentThread, createProposalThread } from './testing';

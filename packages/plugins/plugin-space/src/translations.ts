@@ -122,6 +122,7 @@ export const translations = [
         'show hidden spaces label': 'Show archived spaces',
         'save files to directory label': 'Save files to disk',
         'select path label': 'Select path',
+        'snapshot by schema label': 'Snapshot of objects',
         'rename collection label': 'Rename collection',
         'rename object label': 'Rename item',
         'duplicate object label': 'Duplicate item',

@@ -17,6 +17,8 @@ import * as Organization from './Organization';
 import * as Person from './Person';
 import * as Project from './Project';
 import * as Task from './Task';
+import * as Thread from './Thread';
+import * as Transcript from './Transcript';
 
 /**
  * Common data types.
@@ -44,6 +46,8 @@ export {
   Person,
   Project,
   Task,
+  Thread,
+  Transcript,
 
   //
   // Common relation types

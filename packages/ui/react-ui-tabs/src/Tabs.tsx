@@ -6,7 +6,14 @@ import { useArrowNavigationGroup, useFocusFinders, useFocusableGroup } from '@fl
 import { createContext } from '@radix-ui/react-context';
 import * as TabsPrimitive from '@radix-ui/react-tabs';
 import { useControllableState } from '@radix-ui/react-use-controllable-state';
-import React, { type ComponentPropsWithoutRef, type MouseEvent, useCallback, useLayoutEffect, useRef } from 'react';
+import React, {
+  Activity,
+  type ComponentPropsWithoutRef,
+  type MouseEvent,
+  useCallback,
+  useLayoutEffect,
+  useRef,
+} from 'react';
 
 import { Button, type ButtonProps, IconButton, type IconButtonProps, type ThemedClassName } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
@@ -254,10 +261,13 @@ const TabsIconTab = ({ value, classNames, onClick, ...props }: TabsIconTabProps)
 type TabsTabpanelProps = ThemedClassName<TabsPrimitive.TabsContentProps>;
 
 const TabsTabpanel = ({ classNames, children, ...props }: TabsTabpanelProps) => {
+  const { value: contextValue } = useTabsContext('TabsTab');
   return (
-    <TabsPrimitive.Content {...props} className={mx('dx-focus-ring-inset-over-all', classNames)}>
-      {children}
-    </TabsPrimitive.Content>
+    <Activity mode={contextValue === props.value ? 'visible' : 'hidden'}>
+      <TabsPrimitive.Content {...props} className={mx('dx-focus-ring-inset-over-all', classNames)}>
+        {children}
+      </TabsPrimitive.Content>
+    </Activity>
   );
 };
 

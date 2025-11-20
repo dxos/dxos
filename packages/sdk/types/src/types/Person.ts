@@ -51,12 +51,10 @@ const PersonSchema = Schema.Struct({
       value: Format.Email.pipe(GeneratorAnnotation.set('internet.email')),
     }),
   ).pipe(Schema.mutable, Schema.optional),
-  // TODO(burdon): Identities? (socials, DIDs, etc.)
-  // TODO(burdon): Add annotations.
-  // TODO(burdon): Record or array (for CRDT)?
   identities: Schema.Array(
     Schema.Struct({
       label: Schema.optional(Schema.String),
+      // TODO(burdon): Identity types? (socials, DIDs, etc.)
       value: Schema.String,
     }),
   ).pipe(Schema.mutable, Schema.optional),
@@ -66,7 +64,9 @@ const PersonSchema = Schema.Struct({
       // TODO(wittjosiah): Format.Phone.
       value: Schema.String,
     }),
-  ).pipe(Schema.mutable, Schema.optional),
+  )
+    .pipe(Schema.mutable, Schema.optional)
+    .annotations({ title: 'Phone Numbers' }),
   addresses: Schema.Array(
     Schema.Struct({
       label: Schema.optional(Schema.String),

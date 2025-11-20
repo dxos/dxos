@@ -10,11 +10,17 @@ import { sendMessage } from 'webext-bridge/popup';
 import browser from 'webextension-polyfill';
 
 import { log } from '@dxos/log';
-import { Input, Toolbar } from '@dxos/react-ui';
+import { mx } from '@dxos/react-ui-theme';
 
-import { Chat, type ChatProps, Container, ErrorBoundary } from './components';
+import { Chat, type ChatProps, Container, ErrorBoundary, Thumbnail } from './components';
 import { THUMBNAIL_PROP, getConfig } from './config';
 
+// NOTE: Keep in sync with popup.html initial layout.
+const rootClasses = 'flex flex-col is-[500px] opacity-0 [animation:popup-fade-in_0.5s_ease-out_forwards]';
+
+/**
+ * Root component.
+ */
 const Root = () => {
   const [thumbnailUrl, setThumbnailUrl] = useState<string | null>(null);
   const [tabUrl, setTabUrl] = useState<string | null>(null);
@@ -51,7 +57,7 @@ const Root = () => {
   }, []);
 
   // TODO(burdon): Change to event.
-  // TODO(burdon): Test to communicate with content script.
+  // TODO(burdon): Demo to communicate with content script.
   const handlePing: ChatProps['onPing'] = async () => {
     log.info('sending...');
     const [tab] = await browser.tabs.query({ active: true, currentWindow: true });
@@ -81,47 +87,13 @@ const Root = () => {
     return null;
   };
 
-  if (thumbnailUrl) {
-    return (
-      <Container classNames='is-[300px]'>
-        <Thumbnail url={thumbnailUrl} />
-      </Container>
-    );
-  }
-
   return (
     <ErrorBoundary>
-      <Container classNames='is-[500px]'>
-        {host && <Chat host={host} onPing={handlePing} url={tabUrl ?? undefined} />}
+      <Container classNames={mx(rootClasses)}>
+        {thumbnailUrl && <Thumbnail url={thumbnailUrl} />}
+        {!thumbnailUrl && host && <Chat host={host} url={tabUrl ?? undefined} onPing={handlePing} />}
       </Container>
     </ErrorBoundary>
-  );
-};
-
-// TODO(burdon): Create card pop
-const Thumbnail = ({ url }: { url: string }) => {
-  return (
-    <div className='flex flex-col is-full'>
-      <Toolbar.Root>
-        <Input.Root>
-          <Input.TextInput disabled value={url} />
-        </Input.Root>
-        <Toolbar.IconButton
-          icon='ph--clipboard--regular'
-          iconOnly
-          label='Clipboard'
-          onClick={async () => {
-            if (url) {
-              await navigator.clipboard.writeText(url);
-            }
-          }}
-        />
-      </Toolbar.Root>
-
-      <div className='flex justify-center'>
-        <img src={url} alt='Thumbnail' />
-      </div>
-    </div>
   );
 };
 

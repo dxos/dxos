@@ -77,6 +77,9 @@
       "path": "../../core/functions"
     },
     {
+      "path": "../../core/functions-runtime"
+    },
+    {
       "path": "../../core/halo/keyring"
     },
     {
