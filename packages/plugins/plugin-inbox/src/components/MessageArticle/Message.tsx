@@ -18,21 +18,18 @@ import {
 } from '@dxos/react-ui-editor';
 import { MenuProvider, ToolbarMenu } from '@dxos/react-ui-menu';
 import { mx } from '@dxos/react-ui-theme';
-import { type Message as MessageType } from '@dxos/types';
+import { type Actor, type Message as MessageType } from '@dxos/types';
 
 import { formatDateTime } from '../../util';
-import { UserIconButton } from '../UserIconButton';
+import { UserIconButton } from '../common';
 
-import { useMessageToolbarActions } from './useToolbar';
-
-export type ViewMode = 'plain' | 'enriched' | 'plain-only';
+import { type ViewMode, useMessageToolbarActions } from './useToolbar';
 
 //
 // Context
 //
 
 // TODO(burdon): Create pattern for 1-up.
-// TODO(burdon): When should we internalize vs externalize signals?
 type MessageContextValue = {
   attendableId?: string;
   viewMode: Signal<ViewMode>;
@@ -68,10 +65,10 @@ type MessageToolbarProps = ThemedClassName<{}>;
 
 export const MessageToolbar = ({ classNames }: MessageToolbarProps) => {
   const { attendableId, viewMode } = useMessageContext(MessageToolbar.displayName);
-  const menu = useMessageToolbarActions({ viewMode });
+  const actions = useMessageToolbarActions({ viewMode });
 
   return (
-    <MenuProvider {...menu} attendableId={attendableId}>
+    <MenuProvider {...actions} attendableId={attendableId}>
       <ToolbarMenu classNames={classNames} />
     </MenuProvider>
   );
@@ -106,30 +103,36 @@ MessageViewport.displayName = 'Message.Viewport';
 // Header
 //
 
-type MessageHeaderProps = ThemedClassName<{ onContactCreate?: () => void }>;
+type MessageHeaderProps = ThemedClassName<{
+  onContactCreate?: (actor: Actor.Actor) => void;
+}>;
 
-// TODO(burdon): Factor out header with event.
 const MessageHeader = ({ onContactCreate }: MessageHeaderProps) => {
   const { message, sender } = useMessageContext(MessageHeader.displayName);
 
   return (
-    <div className='p-1 flex flex-col gap-2 border-be border-subduedSeparator'>
-      <div className='grid grid-cols-[2rem_1fr] gap-1'>
-        <div className='flex pli-2 pbs-1.5 text-subdued'>
+    <div role='none' className='p-1 flex flex-col gap-2 border-be border-subduedSeparator'>
+      <div role='none' className='grid grid-cols-[2rem_1fr] gap-1'>
+        <div role='none' className='flex pli-2 pbs-1.5 text-subdued'>
           <Icon icon='ph--envelope-open--regular' />
         </div>
-        <div className='flex flex-col gap-1 overflow-hidden'>
+        <div role='none' className='flex flex-col gap-1 overflow-hidden'>
           <h2 className='text-lg line-clamp-2'>{message.properties?.subject}</h2>
-          <div className='whitespace-nowrap text-sm text-description'>
+          <div role='none' className='whitespace-nowrap text-sm text-description'>
             {message.created && formatDateTime(new Date(), new Date(message.created))}
           </div>
         </div>
       </div>
 
-      {/* TODO(burdon): List From/CC. */}
-      <div className='grid grid-cols-[2rem_1fr] gap-1 items-center'>
-        <UserIconButton value={sender.value} onContactCreate={onContactCreate} />
-        <h3 className='truncate text-primaryText'>{message.sender.name || message.sender.email}</h3>
+      {/* TODO(burdon): List other To/CC/BCC. */}
+      <div role='none'>
+        <div role='none' className='grid grid-cols-[2rem_1fr] gap-1 items-center'>
+          <UserIconButton
+            value={sender.value}
+            onContactCreate={() => onContactCreate?.({ email: message.sender.email })}
+          />
+          <h3 className='truncate text-primaryText'>{message.sender.name || message.sender.email}</h3>
+        </div>
       </div>
     </div>
   );
@@ -168,7 +171,6 @@ const MessageContent = ({ classNames }: MessageContentProps) => {
       }),
       preview(),
     ];
-    return [];
   }, [themeMode]);
 
   const { parentRef } = useTextEditor({ initialValue: content, extensions }, [content, extensions]);
