@@ -10,9 +10,9 @@ import { DeviceType, type Identity } from '@dxos/client/halo';
 import { type ConfigProto } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { TypedObject } from '@dxos/echo/internal';
-import { getInvocationUrl } from '@dxos/functions';
-import { Bundler } from '@dxos/functions/bundler';
-import { uploadWorkerFunction } from '@dxos/functions/edge';
+import { getInvocationUrl } from '@dxos/functions-runtime';
+import { bundleFunction } from '@dxos/functions-runtime/bundler';
+import { uploadWorkerFunction } from '@dxos/functions-runtime/edge';
 import { invariant } from '@dxos/invariant';
 import { type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -124,8 +124,10 @@ export class EdgeReplicant {
 
   @trace.span()
   async deployFunction({ source }: { source?: string } = {}): Promise<{ functionId: string; version: string }> {
-    const bundler = new Bundler({ platform: 'node', sandboxedModules: [], remoteModules: {} });
-    const buildResult = await bundler.bundle({ source: source ?? dataGenerator });
+    const buildResult = await bundleFunction({
+      platform: 'node',
+      source: source ?? dataGenerator,
+    });
 
     if (buildResult.error || !buildResult.bundle) {
       log.error('Bundle creation failed', { buildResult });
