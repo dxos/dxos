@@ -48,7 +48,7 @@ const EventComponent = ({ event }: { event: Event.Event }) => {
       "
     >
       <div className='[grid-area:left-top] overflow-hidden'>{event.title}</div>
-      <div className='[grid-area:left-main] overflow-hidden'>
+      <div role='none' className='[grid-area:left-main] overflow-hidden'>
         <DateComponent start={new Date(event.startDate)} end={new Date(event.endDate)} />
       </div>
       <ActorList classNames='[grid-area:right] overflow-hidden' actors={event.attendees} />
