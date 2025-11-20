@@ -8,7 +8,7 @@ import React, { type PropsWithChildren } from 'react';
 import { Icon, type ThemedClassName } from '@dxos/react-ui';
 import { MenuProvider, ToolbarMenu } from '@dxos/react-ui-menu';
 import { mx } from '@dxos/react-ui-theme';
-import { type Event as EventType } from '@dxos/types';
+import { type Actor, type Event as EventType } from '@dxos/types';
 
 import { formatDateTime } from '../../util';
 import { UserIconButton } from '../UserIconButton';
@@ -72,7 +72,7 @@ EventViewport.displayName = 'Event.Viewport';
 //
 
 type EventHeaderProps = {
-  onContactCreate?: () => void;
+  onContactCreate?: (actor: Actor.Actor) => void;
 };
 
 const EventHeader = ({ onContactCreate }: EventHeaderProps) => {
@@ -96,7 +96,7 @@ const EventHeader = ({ onContactCreate }: EventHeaderProps) => {
       <div>
         {event.attendees.map((attendee) => (
           <div key={attendee.email} className='grid grid-cols-[2rem_1fr] gap-1 items-center'>
-            <UserIconButton value={attendee.contact?.dxn} onContactCreate={onContactCreate} />
+            <UserIconButton value={attendee.contact?.dxn} onContactCreate={() => onContactCreate?.(attendee)} />
             <h3 className='truncate text-primaryText'>{attendee.name || attendee.email}</h3>
           </div>
         ))}

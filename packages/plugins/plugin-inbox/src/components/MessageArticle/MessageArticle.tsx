@@ -15,7 +15,7 @@ import { type Message as MessageType, Person } from '@dxos/types';
 
 import { InboxAction, type Mailbox } from '../../types';
 
-import { Message, type ViewMode } from './Message';
+import { Message, type MessageHeaderProps, type ViewMode } from './Message';
 
 export type MessageArticleProps = SurfaceComponentProps<MessageType.Message> & { mailbox: Mailbox.Mailbox };
 
@@ -33,16 +33,14 @@ export const MessageArticle = ({
   const sender = useSenderContact(space, message);
 
   const { dispatchPromise: dispatch } = useIntentDispatcher();
-  const handleContactCreate = useCallback(() => {
-    if (space && message) {
-      // TODO(burdon): Specify sender email.
-      void dispatch(createIntent(InboxAction.ExtractContact, { space, message }));
-    }
-  }, [space, message, dispatch]);
-
-  if (!message) {
-    return null;
-  }
+  const handleContactCreate = useCallback<NonNullable<MessageHeaderProps['onContactCreate']>>(
+    (actor) => {
+      if (space && actor) {
+        void dispatch(createIntent(InboxAction.ExtractContact, { space, actor }));
+      }
+    },
+    [space, dispatch],
+  );
 
   return (
     <StackItem.Content toolbar>

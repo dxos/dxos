@@ -18,7 +18,7 @@ import {
 } from '@dxos/react-ui-editor';
 import { MenuProvider, ToolbarMenu } from '@dxos/react-ui-menu';
 import { mx } from '@dxos/react-ui-theme';
-import { type Message as MessageType } from '@dxos/types';
+import { type Actor, type Message as MessageType } from '@dxos/types';
 
 import { formatDateTime } from '../../util';
 import { UserIconButton } from '../UserIconButton';
@@ -106,7 +106,9 @@ MessageViewport.displayName = 'Message.Viewport';
 // Header
 //
 
-type MessageHeaderProps = ThemedClassName<{ onContactCreate?: () => void }>;
+type MessageHeaderProps = ThemedClassName<{
+  onContactCreate?: (actor: Actor.Actor) => void;
+}>;
 
 // TODO(burdon): Factor out header with event.
 const MessageHeader = ({ onContactCreate }: MessageHeaderProps) => {
@@ -128,7 +130,10 @@ const MessageHeader = ({ onContactCreate }: MessageHeaderProps) => {
 
       {/* TODO(burdon): List From/CC. */}
       <div className='grid grid-cols-[2rem_1fr] gap-1 items-center'>
-        <UserIconButton value={sender.value} onContactCreate={onContactCreate} />
+        <UserIconButton
+          value={sender.value}
+          onContactCreate={() => onContactCreate?.({ email: message.sender.email })}
+        />
         <h3 className='truncate text-primaryText'>{message.sender.name || message.sender.email}</h3>
       </div>
     </div>
