@@ -23,6 +23,10 @@ export default async (context: PluginContext) => {
       };
       window.location.pathname = '/';
       return;
+    } else if (pathname.startsWith('/redirect')) {
+      // Allow other plugins to handle the redirect.
+      // TODO(wittjosiah): This sort of this could motivate introducing a router.
+      return;
     }
 
     const [_, nextDeck, nextSolo] = pathname.split('/');
