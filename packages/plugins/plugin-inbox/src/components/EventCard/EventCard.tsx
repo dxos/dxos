@@ -23,7 +23,7 @@ export const EventCard = ({ subject: event, role }: SurfaceComponentProps<Event.
     >
       <div className='[grid-area:left-top] overflow-hidden'>{event.title}</div>
       <div role='none' className='[grid-area:left-main] overflow-hidden'>
-        <DateComponent start={new Date(event.startDate)} end={new Date(event.endDate)} />
+        <DateComponent icon start={new Date(event.startDate)} end={new Date(event.endDate)} />
       </div>
       <ActorList classNames='[grid-area:right] overflow-hidden' actors={event.attendees} />
     </Card.SurfaceRoot>

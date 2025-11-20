@@ -16,10 +16,10 @@ import {
 import { meta } from '../../meta';
 
 export type UseEventToolbarActionsProps = {
-  onCreateNote?: () => void;
+  onNoteCreate?: () => void;
 };
 
-export const useEventToolbarActions = ({ onCreateNote }: UseEventToolbarActionsProps) => {
+export const useEventToolbarActions = ({ onNoteCreate }: UseEventToolbarActionsProps) => {
   const creator = useMemo(
     () =>
       Atom.make((get) =>
@@ -41,7 +41,7 @@ export const useEventToolbarActions = ({ onCreateNote }: UseEventToolbarActionsP
               const action = createMenuAction(
                 'createNote',
                 () => {
-                  onCreateNote?.();
+                  onNoteCreate?.();
                 },
                 {
                   label: ['event toolbar create note menu', { ns: meta.id }],
