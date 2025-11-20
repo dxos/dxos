@@ -8,7 +8,7 @@ import { assert, beforeAll, describe, expect, test } from 'vitest';
 
 import { isNode } from '@dxos/util';
 
-import { Bundler, initializeBundler } from './bundler';
+import { bundleFunction, initializeBundler } from './bundler';
 
 describe('Bundler', () => {
   beforeAll(async () => {
@@ -18,15 +18,17 @@ describe('Bundler', () => {
   });
 
   test('Basic', async () => {
-    const bundler = new Bundler({ platform: 'node', sandboxedModules: [], remoteModules: {} });
-    const result = await bundler.bundle({ source: 'const x = 100' }); // TODO(burdon): Test import.
+    const result = await bundleFunction({
+      platform: 'node',
+      source: 'const x = 100',
+    }); // TODO(burdon): Test import.
     assert(!('error' in result), 'error should not exist');
     expect(result.asset).toBeDefined();
   });
 
   test('Import', async () => {
-    const bundler = new Bundler({ platform: 'node', sandboxedModules: [], remoteModules: {} });
-    const result = await bundler.bundle({
+    const result = await bundleFunction({
+      platform: 'node',
       source: `
       import { Filter } from './runtime.js';
 
@@ -39,8 +41,8 @@ describe('Bundler', () => {
 
   // TODO(dmaretskyi): Flaky on CI.
   test.skip('HTTPS Import', async () => {
-    const bundler = new Bundler({ platform: 'node', sandboxedModules: [], remoteModules: {} });
-    const result = await bundler.bundle({
+    const result = await bundleFunction({
+      platform: 'node',
       source: `
       import { invariant } from 'https://esm.sh/@dxos/invariant';
       invariant(true);
@@ -51,8 +53,10 @@ describe('Bundler', () => {
   });
 
   test('Error', async () => {
-    const bundler = new Bundler({ platform: 'node', sandboxedModules: [], remoteModules: {} });
-    const result = await bundler.bundle({ source: "import missing from './module'; missing();" });
+    const result = await bundleFunction({
+      platform: 'node',
+      source: "import missing from './module'; missing();",
+    });
     assert('error' in result, 'error should exist');
   });
 });
