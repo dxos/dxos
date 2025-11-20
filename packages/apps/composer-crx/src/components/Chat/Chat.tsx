@@ -36,19 +36,9 @@ export const Chat = ({ classNames, host, url }: ChatProps) => {
     UIMessage<{ createdAt: string; text: string }>
   >({
     agent,
-    // TODO(burdon): ???
-    resume: false,
-    // This is only called once at the start.
-    getInitialMessages: async () => {
-      console.log('getInitialMessages', { url });
-      return [
-        {
-          id: 'initial',
-          role: 'assistant',
-          parts: [{ type: 'text', text: `Current website: ${url}` }],
-        },
-      ];
-    },
+    resume: true,
+    // TODO(burdon): This will replace the initial message history.
+    // getInitialMessages: async () => []
   });
 
   const filteredMessages = useMemo(
@@ -56,18 +46,47 @@ export const Chat = ({ classNames, host, url }: ChatProps) => {
     [messages],
   );
 
+  const currentUrl = useRef<string>(undefined);
   const handleSubmit = useCallback(async () => {
     const text = inputRef.current?.value?.trim();
     if (!text?.length) {
       return;
     }
 
-    void sendMessage({
-      role: 'user',
-      parts: [{ type: 'text', text }],
-    });
-
+    // TODO(burdon): Disable text input while processing.
     setText('');
+
+    // Update context.
+    if (currentUrl.current !== url) {
+      currentUrl.current = url;
+      await sendMessage({
+        role: 'system',
+        parts: [
+          {
+            type: 'text',
+            text: [
+              // TODO(burdon): Implement tool call to get the content of the website? Or do this on the server?
+              // TODO(burdon): Get current selection?
+              'You should assume that most questions are related to website that the user is currently looking at.',
+              // 'You should try to get the content of the website if you need to answer the question.',
+              `The current website is: ${url}`,
+            ].join('\n'),
+          },
+        ],
+      });
+    }
+
+    // User message.
+    await sendMessage(
+      {
+        role: 'user',
+        parts: [{ type: 'text', text }],
+      },
+      // TODO(burdon): Can pass additional headers/JSON body props to worker here.
+      {
+        metadata: { url: url ?? window.location.href },
+      },
+    );
   }, [sendMessage, url]);
 
   const handleClear = useCallback(async () => {
@@ -93,15 +112,17 @@ export const Chat = ({ classNames, host, url }: ChatProps) => {
             classNames='pli-2 pbs-[4px] pbe-[4px] is-full rounded-none text-lg !ring-none !ring-sky-500'
           />
         </Input.Root>
-        <div className='flex items-center absolute right-1.5 top-0 bottom-0 z-10'>
-          <IconButton
-            variant='ghost'
-            icon='ph--x--regular'
-            iconOnly
-            label={t('chat.clear.button')}
-            onClick={handleClear}
-          />
-        </div>
+        {filteredMessages.length > 0 && (
+          <div className='flex items-center absolute right-1.5 top-0 bottom-0 z-10'>
+            <IconButton
+              variant='ghost'
+              icon='ph--x--regular'
+              iconOnly
+              label={t('chat.clear.button')}
+              onClick={handleClear}
+            />
+          </div>
+        )}
       </div>
 
       {/* TODO(burdon): Replace with ChatThread. */}
@@ -110,7 +131,7 @@ export const Chat = ({ classNames, host, url }: ChatProps) => {
           <ScrollContainer.Viewport classNames='scrollbar-none'>
             {filteredMessages.map((message, i) => (
               <div key={i} className={mx('flex', 'text-base', message.role === 'user' && 'justify-end mlb-3')}>
-                <p className={mx(message.role === 'user' && 'bg-sky-500 pli-2 plb-1 rounded')}>
+                <p className={mx(message.role === 'user' ? 'bg-sky-500 pli-2 plb-1 rounded' : 'text-description')}>
                   {message.parts
                     .filter(({ type }) => type === 'text')
                     .map((part, j) => (
