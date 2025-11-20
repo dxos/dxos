@@ -5,11 +5,12 @@
 import { createContext } from '@radix-ui/react-context';
 import React, { type PropsWithChildren } from 'react';
 
-import { Icon, type ThemedClassName } from '@dxos/react-ui';
+import { Icon, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { MenuProvider, ToolbarMenu } from '@dxos/react-ui-menu';
 import { mx } from '@dxos/react-ui-theme';
 import { type Actor, type Event as EventType } from '@dxos/types';
 
+import { meta } from '../../meta';
 import { DateComponent, UserIconButton } from '../common';
 
 import { type UseEventToolbarActionsProps, useEventToolbarActions } from './useToolbar';
@@ -77,16 +78,25 @@ type EventHeaderProps = {
 };
 
 const EventHeader = ({ onContactCreate }: EventHeaderProps) => {
+  const { t } = useTranslation(meta.id);
   const { event } = useEventContext(EventHeader.displayName);
 
   return (
     <div role='none' className='p-1 flex flex-col gap-2 border-be border-subduedSeparator'>
       <div role='none' className='grid grid-cols-[2rem_1fr] gap-1'>
-        <div role='none' className='flex pli-2 pbs-1.5 text-subdued'>
+        <div role='none' className='flex pli-2 text-subdued bs-[28px] items-center'>
           <Icon icon='ph--check--regular' />
         </div>
         <div role='none' className='flex flex-col gap-1 overflow-hidden'>
-          <h2 className='text-lg line-clamp-2'>{event.title}</h2>
+          <h2 className='text-lg line-clamp-2'>{event.title ?? t('event untitled label')}</h2>
+        </div>
+      </div>
+
+      <div role='none' className='grid grid-cols-[2rem_1fr] gap-1'>
+        <div role='none' className='flex pli-2 text-subdued items-center'>
+          <Icon icon='ph--calendar--regular' />
+        </div>
+        <div role='none' className='flex flex-col gap-1 overflow-hidden'>
           <DateComponent start={new Date(event.startDate)} end={new Date(event.endDate)} />
         </div>
       </div>
@@ -113,11 +123,12 @@ type EventContentProps = ThemedClassName<{}>;
 
 const EventContent = ({ classNames }: EventContentProps) => {
   const { event } = useEventContext(EventContent.displayName);
-  return (
+
+  return event.description ? (
     <div role='none' className={mx('p-3', classNames)}>
       {event.description}
     </div>
-  );
+  ) : null;
 };
 
 EventContent.displayName = 'Event.Content';
