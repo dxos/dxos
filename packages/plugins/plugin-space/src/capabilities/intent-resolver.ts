@@ -44,7 +44,7 @@ import { COMPOSER_SPACE_LOCK, cloneObject, getNestedObjects } from '../util';
 import { SpaceCapabilities } from './capabilities';
 
 // TODO(wittjosiah): Remove.
-const SPACE_MAX_OBJECTS = 500;
+const SPACE_MAX_OBJECTS = 750;
 
 type IntentResolverOptions = {
   context: PluginContext;
