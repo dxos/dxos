@@ -13,6 +13,7 @@ import { mx } from '@dxos/react-ui-theme';
 import { DEVELOPER_MODE_PROP, SPACE_ID_PROP, SPACE_MODE_PROP } from '../../config';
 import { translationKey } from '../../translations';
 
+const headerGrid = 'grid grid-cols-[8rem_2fr_1fr_8rem] p-4 overflow-hidden';
 const propertiesGrid =
   'grid grid-cols-[8rem_1fr_1fr_8rem] p-4 overflow-hidden items-center [&_label]:m-0 [&_label]:text-base';
 
@@ -61,8 +62,8 @@ export const Options = ({ classNames }: OptionsProps) => {
   };
 
   return (
-    <div className={mx('flex flex-col grow overflow-hidden', classNames)}>
-      <div className='grid grid-cols-[8rem_1fr_12rem] p-4 overflow-yauto'>
+    <div className={mx('flex flex-col grow overflow-y-auto', classNames)}>
+      <div className={headerGrid}>
         <a href='https://dxos.org/composer' target='_blank' rel='noreferrer' className='flex justify-end -mie-4'>
           <Composer className='is-[8rem] bs-[8rem]' />
         </a>
@@ -70,7 +71,7 @@ export const Options = ({ classNames }: OptionsProps) => {
           <h1 className='text-[64px] poiret-one-regular'>{t('composer.title')}</h1>
         </div>
         <div className='flex flex-col justify-start items-end'>
-          <div className='flex items-center gap-2 mbs-4 pie-4'>
+          <div className='flex items-center gap-2 mbs-4'>
             <span className='text-subdued'>Powered by</span>
             <a
               target='_blank'
