@@ -9,8 +9,11 @@ import React, { useCallback, useMemo, useRef, useState } from 'react';
 
 import { IconButton, Input, ScrollContainer, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
+import { SpaceId } from '@dxos/keys';
 
 import { translationKey } from '../../translations';
+import { SPACE_ID_PROP } from '../../config';
+import browser from 'webextension-polyfill';
 
 export type ChatProps = ThemedClassName<{
   host?: string;
@@ -21,6 +24,7 @@ export type ChatProps = ThemedClassName<{
 export const Chat = ({ classNames, host, url }: ChatProps) => {
   const { t } = useTranslation(translationKey);
   const inputRef = useRef<HTMLInputElement>(null);
+  const spaceId = useRef<SpaceId | null>(null);
   const [text, setText] = useState('');
 
   // Chat agent client.
@@ -56,21 +60,34 @@ export const Chat = ({ classNames, host, url }: ChatProps) => {
     // TODO(burdon): Disable text input while processing.
     setText('');
 
+    const context: string[] = [];
+
     // Update context.
-    if (currentUrl.current !== url) {
+    if (currentUrl.current !== url || messages.length === 0) {
       currentUrl.current = url;
+      context.push(
+        // TODO(burdon): Implement tool call to get the content of the website? Or do this on the server?
+        // TODO(burdon): Get current selection?
+        'You should assume that most questions are related to website that the user is currently looking at.',
+        // 'You should try to get the content of the website if you need to answer the question.',
+        `The current website is: ${url}`,
+      );
+    }
+    const storedSpaceId = await browser.storage.sync.get(SPACE_ID_PROP);
+    if (storedSpaceId?.[SPACE_ID_PROP] !== spaceId.current || messages.length === 0) {
+      const value = storedSpaceId?.[SPACE_ID_PROP];
+      if (SpaceId.isValid(value)) {
+        spaceId.current = value;
+        context.push(`The configured space is: ${value} Use this space to retrieve information.`);
+      }
+    }
+    if (context.length > 0) {
       await sendMessage({
         role: 'system',
         parts: [
           {
             type: 'text',
-            text: [
-              // TODO(burdon): Implement tool call to get the content of the website? Or do this on the server?
-              // TODO(burdon): Get current selection?
-              'You should assume that most questions are related to website that the user is currently looking at.',
-              // 'You should try to get the content of the website if you need to answer the question.',
-              `The current website is: ${url}`,
-            ].join('\n'),
+            text: context.join('\n'),
           },
         ],
       });
