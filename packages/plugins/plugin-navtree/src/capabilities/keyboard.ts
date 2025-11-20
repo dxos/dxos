@@ -34,9 +34,7 @@ export default (context: PluginContext) => {
     if (shortcut && isAction(node)) {
       Keyboard.singleton.getContext(path.slice(0, -1).join('/')).bind({
         shortcut,
-        handler: () => {
-          void node.data({ parent: node, caller: KEY_BINDING });
-        },
+        handler: () => node.data({ parent: node, caller: KEY_BINDING }),
         data: node.properties.label,
       });
     }

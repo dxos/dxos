@@ -3,6 +3,7 @@
 //
 
 import { invariant } from '@dxos/invariant';
+import { type MaybePromise } from '@dxos/util';
 
 // TODO(burdon): Replace with hotkeys-js, react-hotkeys, and react-hotkeys-hook.
 
@@ -11,7 +12,7 @@ export type KeyHandler = (props: {
   shortcut: string;
   data?: any;
   event: KeyboardEvent;
-}) => boolean | void;
+}) => MaybePromise<boolean | void>;
 
 export type KeyBinding = {
   shortcut: string;
@@ -113,7 +114,7 @@ export class Keyboard {
     return Array.from(bindings.values());
   }
 
-  handleKeyDown(event: KeyboardEvent): void {
+  async handleKeyDown(event: KeyboardEvent): Promise<void> {
     const { altKey, ctrlKey, metaKey, shiftKey, key } = event;
 
     if (key !== 'Alt' && key !== 'Control' && key !== 'Meta' && key !== 'Shift') {
@@ -133,7 +134,7 @@ export class Keyboard {
         if (this._path.startsWith(path)) {
           const { data, handler, disableInput } = this.getContext(path).get(str) ?? {};
           if (handler && (!isInput || !disableInput)) {
-            const result = handler({ context: path, shortcut: str, data, event });
+            const result = await handler({ context: path, shortcut: str, data, event });
             if (result !== false) {
               // TODO(burdon): This doesn't prevent actions in markdown editor.
               //  Reference: https://codemirror.net/docs/ref/#view.KeyBinding
