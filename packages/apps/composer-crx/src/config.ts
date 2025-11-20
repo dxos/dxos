@@ -9,6 +9,7 @@ export const HOME_URL = 'https://labs.composer.space';
 export const DEVELOPER_MODE_PROP = 'developer-mode';
 export const THUMBNAIL_PROP = 'thumbnail-url';
 
+const DEV_CHAT_AGENT_URL = 'ws://localhost:8791';
 const MAIN_CHAT_AGENT_URL = 'wss://chat-agent-main.dxos.workers.dev';
 
 const DEV_IMAGE_SERVICE_URL = 'http://localhost:8787';
@@ -25,7 +26,7 @@ export const getConfig = async (): Promise<Config> => {
   const devmode = Boolean(storage?.[DEVELOPER_MODE_PROP]);
   return {
     devmode,
-    chatAgentUrl: MAIN_CHAT_AGENT_URL,
+    chatAgentUrl: devmode ? DEV_CHAT_AGENT_URL : MAIN_CHAT_AGENT_URL,
     imageServiceUrl: devmode ? DEV_IMAGE_SERVICE_URL : MAIN_IMAGE_SERVICE_URL,
   };
 };

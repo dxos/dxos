@@ -26,7 +26,7 @@ export const Chat = ({ classNames, host, url }: ChatProps) => {
   // Chat agent client.
   const agent = useAgent({
     agent: 'chat',
-    protocol: 'wss',
+    protocol: isSecureUrl(host ?? '') ? 'wss' : 'ws',
     host,
   });
 
@@ -163,4 +163,13 @@ export const Chat = ({ classNames, host, url }: ChatProps) => {
       )}
     </div>
   );
+};
+
+const isSecureUrl = (host: string) => {
+  try {
+    const url = new URL(host);
+    return url.protocol === 'https:' || url.protocol === 'wss:';
+  } catch (err) {
+    return false;
+  }
 };
