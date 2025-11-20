@@ -2,7 +2,6 @@
 // Copyright 2021 DXOS.org
 //
 
-import * as Schema from 'effect/Schema';
 import isEqualWith from 'lodash.isequalwith';
 
 import {
@@ -15,7 +14,13 @@ import {
   scheduleTaskInterval,
   synchronized,
 } from '@dxos/async';
-import { type ClientServicesProvider, PropertiesType, type Space, type SpaceInternal } from '@dxos/client-protocol';
+import {
+  type ClientServicesProvider,
+  PropertiesType,
+  SPACE_TAG,
+  type Space,
+  type SpaceInternal,
+} from '@dxos/client-protocol';
 import { Stream } from '@dxos/codec-protobuf/stream';
 import { Context, cancelWithContext } from '@dxos/context';
 import { type SpecificCredential, checkCredentialType } from '@dxos/credentials';
@@ -67,9 +72,10 @@ import { InvitationsProxy } from '../invitations';
 
 const EPOCH_CREATION_TIMEOUT = 60_000;
 
-// TODO(burdon): This should not be used as part of the API (don't export).
 @trace.resource()
 export class SpaceProxy implements Space, CustomInspectable {
+  readonly [SPACE_TAG] = true as const;
+
   private _ctx = new Context();
 
   /**
@@ -231,7 +237,6 @@ export class SpaceProxy implements Space, CustomInspectable {
   /**
    * @inheritdoc
    */
-  // TODO(burdon): Remove?
   get internal(): SpaceInternal {
     return this._internal;
   }
@@ -601,8 +606,7 @@ export class SpaceProxy implements Space, CustomInspectable {
       );
 
       const checkSyncState = (syncState: SpaceSyncState) => {
-        const edgePeer = syncState.peers?.find((state) => isEdgePeerId(state.peerId, this.id));
-
+        const edgePeer = syncState.peers?.find((state) => isEdgePeerId(this.id, state.peerId));
         if (opts?.onProgress) {
           opts.onProgress(edgePeer);
         }
@@ -662,12 +666,5 @@ const shouldMembersUpdate = (prev: SpaceMember[] | undefined, next: SpaceMember[
   return !isEqualWith(prev, next, loadashEqualityFn);
 };
 
-export const isSpace = (object: unknown): object is Space => object instanceof SpaceProxy;
-
-export const SpaceSchema: Schema.Schema<Space> = Schema.Any.pipe(
-  Schema.filter((space) => isSpace(space)),
-  Schema.annotations({ title: 'Space' }),
-);
-
-const isEdgePeerId = (peerId: string, spaceId: SpaceId) =>
+const isEdgePeerId = (spaceId: SpaceId, peerId: string) =>
   peerId.startsWith(`${EdgeService.AUTOMERGE_REPLICATOR}:${spaceId}`);

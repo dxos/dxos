@@ -48,6 +48,7 @@ export const SearchMain = ({ space }: { space?: Space }) => {
         }}
         onSubmit={runSearch}
       />
+
       {allResults.length > 0 && (
         <div className={mx('flex flex-col bs-full overflow-hidden')}>
           <SearchResults items={allResults} selected={selected} onSelect={handleSelect} />

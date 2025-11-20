@@ -2,14 +2,13 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type Locale, format, intervalToDuration } from 'date-fns';
 import React from 'react';
 
-import { IconButton, List, ListItem, type ThemedClassName, useTranslation } from '@dxos/react-ui';
+import { List, ListItem, type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
-import { type Actor, type Event } from '@dxos/types';
+import { type Event } from '@dxos/types';
 
-import { meta } from '../../meta';
+import { ActorList, DateComponent } from '../common';
 
 // TODO(burdon): Event/Message Articles (in companion); with cards (1-UP).
 // TODO(burdon): Common Actor reference (lookup on demand).
@@ -49,69 +48,10 @@ const EventComponent = ({ event }: { event: Event.Event }) => {
       "
     >
       <div className='[grid-area:left-top] overflow-hidden'>{event.title}</div>
-      <div className='[grid-area:left-main] overflow-hidden'>
-        <DateComponent start={new Date(event.startDate)} end={new Date(event.endDate)} />
+      <div role='none' className='[grid-area:left-main] overflow-hidden'>
+        <DateComponent icon start={new Date(event.startDate)} end={new Date(event.endDate)} />
       </div>
-      <ActorListComponent classNames='[grid-area:right] overflow-hidden' actors={event.attendees} />
-    </div>
-  );
-};
-
-// TODO(burdon): Factor out.
-//  Create library of common compponents for all types.
-// NOTE: Common layout (spacing) for icon/text for DateComponent and ActorComponent.
-
-export const DateComponent = ({ start, end, locale }: { start: Date; end?: Date; locale?: Locale }) => {
-  const { t } = useTranslation(meta.id);
-  let { hours = 0, minutes = 0 } = (end && intervalToDuration({ start, end })) ?? {};
-  // Prefer 90m over 1h 30m.
-  if (hours === 1 && minutes !== 0) {
-    hours = 0;
-    minutes += 60;
-  }
-  const duration = [hours > 0 && `${hours}h`, minutes > 0 && `${minutes}m`].filter(Boolean).join(' ');
-
-  return (
-    <div className='flex items-center gap-2 overflow-hidden whitespace-nowrap'>
-      <IconButton
-        variant='ghost'
-        icon='ph--calendar--duotone'
-        iconOnly
-        size={4}
-        label={t('open calendar button')}
-        classNames='cursor-pointer text-subdued !p-0'
-      />
-      <div className='truncate text-description'>{format(start, 'PPp', { locale })}</div>
-      {(hours || minutes) && <div className='text-description text-xs'>({duration})</div>}
-    </div>
-  );
-};
-
-export const ActorComponent = ({ actor, classNames }: ThemedClassName<{ actor: Actor.Actor }>) => {
-  const { t } = useTranslation(meta.id);
-
-  return (
-    <div role='none' className={mx('flex is-full items-center gap-2 overflow-hidden', classNames)}>
-      <IconButton
-        variant='ghost'
-        disabled={!actor.contact}
-        icon='ph--user--duotone'
-        iconOnly
-        size={4}
-        label={t('open profile button')}
-        classNames='cursor-pointer text-subdued !p-0'
-      />
-      <div className='truncate text-description'>{actor.name ?? actor.email}</div>
-    </div>
-  );
-};
-
-export const ActorListComponent = ({ classNames, actors }: ThemedClassName<{ actors: Actor.Actor[] }>) => {
-  return (
-    <div role='none' className={mx('flex flex-col is-full', classNames)}>
-      {actors.map((actor, idx) => (
-        <ActorComponent key={idx} actor={actor} />
-      ))}
+      <ActorList classNames='[grid-area:right] overflow-hidden' actors={event.attendees} />
     </div>
   );
 };

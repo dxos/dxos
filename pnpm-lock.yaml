@@ -7094,6 +7094,9 @@ importers:
       '@preact/signals-react':
         specifier: ^3.3.0
         version: 3.3.1(react@19.2.0)
+      '@radix-ui/react-context':
+        specifier: 1.1.1
+        version: 1.1.1(@types/react@19.2.2)(react@19.2.0)
       date-fns:
         specifier: ^3.3.1
         version: 3.6.0
@@ -7524,7 +7527,7 @@ importers:
         specifier: ^1.12.1
         version: 1.12.1
       '@radix-ui/react-context':
-        specifier: ^1.1.1
+        specifier: 1.1.1
         version: 1.1.1(@types/react@19.2.2)(react@19.2.0)
       react-dropzone:
         specifier: ^14.2.3
@@ -10081,7 +10084,7 @@ importers:
         specifier: ^1.12.1
         version: 1.12.1
       '@radix-ui/react-context':
-        specifier: ^1.1.1
+        specifier: 1.1.1
         version: 1.1.1(@types/react@19.2.2)(react@19.2.0)
       effect:
         specifier: 3.18.3
@@ -13649,7 +13652,7 @@ importers:
         specifier: 1.1.1
         version: 1.1.1(@types/react@19.2.2)(react@19.2.0)
       '@radix-ui/react-context':
-        specifier: ^1.1.1
+        specifier: 1.1.1
         version: 1.1.1(@types/react@19.2.2)(react@19.2.0)
       effect:
         specifier: 3.18.3
@@ -14230,7 +14233,7 @@ importers:
         specifier: ^0.9.0
         version: 0.9.0(@babel/core@7.28.0)(@swc/helpers@0.5.17)(react@19.2.0)
       '@radix-ui/react-context':
-        specifier: ^1.1.1
+        specifier: 1.1.1
         version: 1.1.1(@types/react@19.2.2)(react@19.2.0)
       d3:
         specifier: ^7.9.0

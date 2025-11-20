@@ -57,3 +57,22 @@ export const getMessageProps = (message: Message.Message, now: Date = new Date()
   const hue = toHue(hashString(from));
   return { id, text, date, from, email, subject, snippet, hue };
 };
+
+/**
+ * Markdown representation of a message.
+ */
+export const renderMarkdown = (message: Message.Message): string[] => {
+  const sender =
+    message.sender.contact?.target?.fullName ??
+    message.sender.name ??
+    message.sender.email ??
+    message.sender.identityDid;
+  const blocks = message.blocks.filter((block) => block._tag === 'text');
+  return [
+    // prettier-ignore
+    `###### ${sender}`,
+    `*${message.created}*`,
+    blocks.map((block) => block.text.trim()).join(' '),
+    '',
+  ];
+};
