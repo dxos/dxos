@@ -23,16 +23,13 @@ import { type Actor, type Message as MessageType } from '@dxos/types';
 import { formatDateTime } from '../../util';
 import { UserIconButton } from '../UserIconButton';
 
-import { useMessageToolbarActions } from './useToolbar';
-
-export type ViewMode = 'plain' | 'enriched' | 'plain-only';
+import { type ViewMode, useMessageToolbarActions } from './useToolbar';
 
 //
 // Context
 //
 
 // TODO(burdon): Create pattern for 1-up.
-// TODO(burdon): When should we internalize vs externalize signals?
 type MessageContextValue = {
   attendableId?: string;
   viewMode: Signal<ViewMode>;
@@ -173,7 +170,6 @@ const MessageContent = ({ classNames }: MessageContentProps) => {
       }),
       preview(),
     ];
-    return [];
   }, [themeMode]);
 
   const { parentRef } = useTextEditor({ initialValue: content, extensions }, [content, extensions]);

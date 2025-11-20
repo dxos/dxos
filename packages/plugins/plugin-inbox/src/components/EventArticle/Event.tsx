@@ -40,11 +40,11 @@ EventRoot.displayName = 'Event.Root';
 // Toolbar
 //
 
-type EventToolbarProps = ThemedClassName<{}>;
+type EventToolbarProps = ThemedClassName<{ onCreateNote?: () => void }>;
 
-const EventToolbar = ({ classNames }: EventToolbarProps) => {
+const EventToolbar = ({ classNames, onCreateNote }: EventToolbarProps) => {
   const { attendableId } = useEventContext(EventToolbar.displayName);
-  const menu = {};
+  const menu = {}; // TODO(burdon): Builder?
 
   return (
     <MenuProvider {...menu} attendableId={attendableId}>

@@ -15,7 +15,8 @@ import { type Message as MessageType, Person } from '@dxos/types';
 
 import { InboxAction, type Mailbox } from '../../types';
 
-import { Message, type MessageHeaderProps, type ViewMode } from './Message';
+import { Message, type MessageHeaderProps } from './Message';
+import { type ViewMode } from './useToolbar';
 
 export type MessageArticleProps = SurfaceComponentProps<MessageType.Message> & { mailbox: Mailbox.Mailbox };
 

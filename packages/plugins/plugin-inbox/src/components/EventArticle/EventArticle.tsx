@@ -25,13 +25,12 @@ export const EventArticle = ({
   const id = Obj.getDXN(subject).toString();
   const space = getSpace(calendar);
 
-  const [shadowedEvent, createEvent] = useShadowObject(subject, EventType.Event);
+  const [shadowedEvent, createShadowEvent] = useShadowObject(subject, EventType.Event);
   const notes = shadowedEvent?.notes?.target;
 
-  // TODO(burdon): Add to toolbar.
   const handleCreateNote = useCallback(async () => {
     invariant(space);
-    const event = createEvent();
+    const event = createShadowEvent();
     const notes = await event.notes?.load();
     if (!notes) {
       event.notes = Ref.make(Text.make());
@@ -51,7 +50,7 @@ export const EventArticle = ({
   return (
     <StackItem.Content toolbar>
       <Event.Root event={subject}>
-        <Event.Toolbar />
+        <Event.Toolbar onCreateNote={handleCreateNote} />
         <Event.Viewport>
           <Event.Header onContactCreate={handleContactCreate} />
           <Event.Content />
