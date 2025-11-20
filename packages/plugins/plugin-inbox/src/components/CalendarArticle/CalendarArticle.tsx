@@ -46,7 +46,7 @@ export const CalendarArticle = ({ subject: calendar }: SurfaceComponentProps<Cal
         }),
       );
     },
-    [singleSelect],
+    [singleSelect, dispatch, id],
   );
 
   return (
