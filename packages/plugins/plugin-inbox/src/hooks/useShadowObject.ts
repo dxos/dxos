@@ -4,18 +4,22 @@
 
 import { useCallback, useEffect, useState } from 'react';
 
+import { type Space } from '@dxos/client/echo';
 import { Filter, Obj, type Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
-import { getSpace, useQuery } from '@dxos/react-client/echo';
+import { useQuery } from '@dxos/react-client/echo';
 
 /**
  * Find a shadow object for the given object and type.
  * The subject may be a queued object, or an object form another space.
  */
 // TODO(burdon): Formalize.
-export const useShadowObject = <T extends Obj.Any>(subject: T, type: Type.Obj.Any): [T | undefined, () => T] => {
+export const useShadowObject = <T extends Obj.Any>(
+  space: Space | undefined,
+  subject: T,
+  type: Type.Obj.Any,
+): [T | undefined, () => T] => {
   const id = Obj.getDXN(subject).toString();
-  const space = getSpace(subject);
   const objects = useQuery(space, Filter.type(type));
 
   const [target, setTarget] = useState<T | undefined>();
@@ -35,7 +39,7 @@ export const useShadowObject = <T extends Obj.Any>(subject: T, type: Type.Obj.An
 
     const newObject = space.db.add(Obj.clone(subject));
     const meta = Obj.getMeta(newObject);
-    meta.keys.push({ source: 'echo', id });
+    meta.keys.push({ source: 'echo', id }); // TODO(burdon): Factor out const?
     setTarget(newObject);
     return newObject;
   }, [space, subject, target, id]);
