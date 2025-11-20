@@ -46,10 +46,6 @@ export type BundlerOptions = {
 
 let initialized: Promise<void>;
 export const initializeBundler = async (options: { wasmUrl: string }) => {
-  // @ts-ignore
-  window.__DXOS_FUNCTIONS_MODULES__ = {
-    '@dxos/functions': await import('@dxos/functions'),
-  };
   await (initialized ??= initialize({
     wasmURL: options.wasmUrl,
   }));
@@ -99,8 +95,8 @@ export class Bundler {
               build.onLoad({ filter: /^dxos:entrypoint$/, namespace: 'dxos:entrypoint' }, () => {
                 return {
                   contents: [
+                    `import { wrapFunctionHandler } from 'dxos:functions';`,
                     `import handler from 'memory:source.tsx';`,
-                    `const { wrapFunctionHandler } = window.__DXOS_FUNCTIONS_MODULES__['@dxos/functions'];`,
                     `export default wrapFunctionHandler(handler);`,
                   ].join('\n'),
                   loader: 'tsx',
@@ -154,7 +150,8 @@ export class Bundler {
         ],
       });
 
-      log('compile complete', result.metafile);
+      log.info('Bundling complete', result.metafile);
+      log.info('Output files', result.outputFiles);
 
       const entryPoint = 'index.js';
       return {
