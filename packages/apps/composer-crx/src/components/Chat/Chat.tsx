@@ -76,7 +76,7 @@ export const Chat = ({ classNames, host, url }: ChatProps) => {
     const storedSpaceId = await browser.storage.sync.get(SPACE_ID_PROP);
     if (storedSpaceId?.[SPACE_ID_PROP] !== spaceId.current || messages.length === 0) {
       const value = storedSpaceId?.[SPACE_ID_PROP];
-      if (SpaceId.isValid(value)) {
+      if (value && SpaceId.isValid(value)) {
         spaceId.current = value;
         context.push(`The configured space is: ${value} Use this space to retrieve information.`);
       }
