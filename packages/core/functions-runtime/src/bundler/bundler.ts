@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type BuildOptions, type BuildResult, type Plugin, build, initialize } from 'esbuild-wasm';
+import { type BuildOptions, type BuildResult, type Plugin, type PluginBuild, build, initialize } from 'esbuild-wasm';
 
 import { subtleCrypto } from '@dxos/crypto';
 import { invariant } from '@dxos/invariant';
@@ -46,6 +46,10 @@ export type BundlerOptions = {
 
 let initialized: Promise<void>;
 export const initializeBundler = async (options: { wasmUrl: string }) => {
+  // @ts-ignore
+  window.__DXOS_FUNCTIONS_MODULES__ = {
+    '@dxos/functions': await import('@dxos/functions'),
+  };
   await (initialized ??= initialize({
     wasmURL: options.wasmUrl,
   }));
@@ -72,17 +76,38 @@ export class Bundler {
     try {
       const result = await build({
         platform: options.platform,
-        conditions: ['workerd', 'browser'],
+        conditions: ['workerd', 'worker', 'browser'],
         metafile: true,
         write: false,
         entryPoints: {
-          // Gets mapped to `userFunc.js` by esbuild.
-          userFunc: 'memory:main.tsx',
+          // Keep output name stable as `index.js` to preserve API.
+          index: 'dxos:entrypoint',
         },
         bundle: true,
         format: 'esm',
+        external: ['./runtime.js', 'cloudflare:workers', 'functions-service:user-script'],
         plugins: [
-          httpPlugin as unknown as Plugin,
+          httpPlugin as any as Plugin,
+          {
+            // Provide a virtual entrypoint that wraps the user handler similar to the native bundler.
+            name: 'entrypoint',
+            setup: (build: PluginBuild) => {
+              build.onResolve({ filter: /^dxos:entrypoint$/ }, () => ({
+                path: 'dxos:entrypoint',
+                namespace: 'dxos:entrypoint',
+              }));
+              build.onLoad({ filter: /^dxos:entrypoint$/, namespace: 'dxos:entrypoint' }, () => {
+                return {
+                  contents: [
+                    `import handler from 'memory:source.tsx';`,
+                    `const { wrapFunctionHandler } = window.__DXOS_FUNCTIONS_MODULES__['@dxos/functions'];`,
+                    `export default wrapFunctionHandler(handler);`,
+                  ].join('\n'),
+                  loader: 'tsx',
+                };
+              });
+            },
+          },
           {
             name: 'memory',
             setup: (build) => {
@@ -90,7 +115,7 @@ export class Bundler {
                 return { path, external: true };
               });
 
-              build.onResolve({ filter: /^dxos:functions$/ }, ({ path }) => {
+              build.onResolve({ filter: /^dxos:functions$/ }, () => {
                 return { path: './runtime.js', external: true };
               });
 
@@ -99,7 +124,7 @@ export class Bundler {
               });
 
               build.onLoad({ filter: /.*/, namespace: 'memory' }, ({ path }) => {
-                if (path === 'main.tsx') {
+                if (path === 'source.tsx') {
                   return {
                     contents: source,
                     loader: 'tsx',
@@ -131,7 +156,7 @@ export class Bundler {
 
       log('compile complete', result.metafile);
 
-      const entryPoint = 'userFunc.js';
+      const entryPoint = 'index.js';
       return {
         timestamp: Date.now(),
         sourceHash,
