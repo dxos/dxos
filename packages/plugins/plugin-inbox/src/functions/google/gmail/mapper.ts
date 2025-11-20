@@ -9,8 +9,7 @@ import { DatabaseService } from '@dxos/functions';
 import { Message, Person } from '@dxos/types';
 
 import { type GoogleMail } from '../../apis';
-
-import { getPart, normalizeText, parseFromHeader } from './util';
+import { getPart, normalizeText, parseFromHeader } from '../../util';
 
 /**
  * Transforms Gmail message to ECHO message object.
