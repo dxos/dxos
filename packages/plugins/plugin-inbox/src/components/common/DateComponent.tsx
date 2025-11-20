@@ -9,7 +9,7 @@ import { IconButton, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '../../meta';
 
-export const DateComponent = ({ start, end }: { start: Date; end?: Date }) => {
+export const DateComponent = ({ start, end, icon }: { start: Date; end?: Date; icon?: boolean }) => {
   const { t } = useTranslation(meta.id);
   let { hours = 0, minutes = 0 } = (end && intervalToDuration({ start, end })) ?? {};
   // Prefer 90m over 1h 30m.
@@ -21,14 +21,16 @@ export const DateComponent = ({ start, end }: { start: Date; end?: Date }) => {
 
   return (
     <div className='flex items-center gap-2 overflow-hidden whitespace-nowrap'>
-      <IconButton
-        variant='ghost'
-        icon='ph--calendar--duotone'
-        iconOnly
-        size={4}
-        label={t('open calendar button')}
-        classNames='cursor-pointer text-subdued !p-0'
-      />
+      {icon && (
+        <IconButton
+          variant='ghost'
+          icon='ph--calendar--duotone'
+          iconOnly
+          size={4}
+          label={t('open calendar button')}
+          classNames='cursor-pointer text-subdued !p-0'
+        />
+      )}
       <div className='truncate text-description'>{format(start, 'PPp')}</div>
       {(hours || minutes) && <div className='text-description text-xs'>({duration})</div>}
     </div>

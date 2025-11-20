@@ -51,6 +51,7 @@ export const translations = [
         'mailbox object settings configure sync button label': 'Configure sync',
         'mailbox object settings configure subscription button label': 'Configure subscription',
 
+        'event untitled label': 'Untitled',
         'event toolbar create note menu': 'Create note',
 
         'message toolbar label': 'Message toolbar',

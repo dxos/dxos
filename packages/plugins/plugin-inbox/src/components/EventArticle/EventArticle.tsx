@@ -22,13 +22,13 @@ export const EventArticle = ({
   subject,
   calendar,
 }: SurfaceComponentProps<EventType.Event> & { calendar: Calendar.Calendar }) => {
+  const { dispatchPromise: dispatch } = useIntentDispatcher();
   const id = Obj.getDXN(subject).toString();
   const space = getSpace(calendar);
-
-  const [shadowedEvent, createShadowEvent] = useShadowObject(subject, EventType.Event);
+  const [shadowedEvent, createShadowEvent] = useShadowObject(space, subject, EventType.Event);
   const notes = shadowedEvent?.notes?.target;
 
-  const handleCreateNote = useCallback(async () => {
+  const handleNoteCreate = useCallback(async () => {
     invariant(space);
     const event = createShadowEvent();
     const notes = await event.notes?.load();
@@ -37,7 +37,6 @@ export const EventArticle = ({
     }
   }, [id, subject, space, shadowedEvent]);
 
-  const { dispatchPromise: dispatch } = useIntentDispatcher();
   const handleContactCreate = useCallback<NonNullable<EventHeaderProps['onContactCreate']>>(
     (actor) => {
       if (space && actor) {
@@ -50,7 +49,7 @@ export const EventArticle = ({
   return (
     <StackItem.Content toolbar>
       <Event.Root event={subject}>
-        <Event.Toolbar onCreateNote={handleCreateNote} />
+        <Event.Toolbar onNoteCreate={handleNoteCreate} />
         <Event.Viewport>
           <Event.Header onContactCreate={handleContactCreate} />
           <Event.Content />
