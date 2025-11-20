@@ -6,14 +6,14 @@ import { type UIMessage } from '@ai-sdk/react';
 import { useAgentChat } from 'agents/ai-react';
 import { useAgent } from 'agents/react';
 import React, { useCallback, useMemo, useRef, useState } from 'react';
+import browser from 'webextension-polyfill';
 
+import { SpaceId } from '@dxos/keys';
 import { IconButton, Input, ScrollContainer, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
-import { SpaceId } from '@dxos/keys';
 
-import { translationKey } from '../../translations';
 import { SPACE_ID_PROP } from '../../config';
-import browser from 'webextension-polyfill';
+import { translationKey } from '../../translations';
 
 export type ChatProps = ThemedClassName<{
   host?: string;

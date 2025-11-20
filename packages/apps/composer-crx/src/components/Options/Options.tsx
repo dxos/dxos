@@ -6,12 +6,12 @@ import React, { useEffect, useState } from 'react';
 import browser from 'webextension-polyfill';
 
 import { Composer, DXOSHorizontalType } from '@dxos/brand';
+import { SpaceId } from '@dxos/keys';
 import { Input, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
 import { DEVELOPER_MODE_PROP, SPACE_ID_PROP } from '../../config';
 import { translationKey } from '../../translations';
-import { SpaceId } from '@dxos/keys';
 
 export type OptionsProps = ThemedClassName<{}>;
 
