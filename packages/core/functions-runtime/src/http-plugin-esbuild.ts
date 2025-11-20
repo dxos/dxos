@@ -11,9 +11,12 @@ import * as Schedule from 'effect/Schedule';
 import { type Loader, type Plugin } from 'esbuild';
 
 import { runAndForwardErrors } from '@dxos/effect';
+import { BaseError } from '@dxos/errors';
 
 const MAX_RETRIES = 5;
 const INITIAL_DELAY = 1_000;
+
+export class HttpPluginError extends BaseError.extend('HTTP_PLUGIN_ERROR') {}
 
 export const httpPlugin: Plugin = {
   name: 'http',
@@ -39,7 +42,11 @@ export const httpPlugin: Plugin = {
       return Effect.gen(function* () {
         const response = yield* HttpClient.get(args.path);
         if (response.status !== 200) {
-          throw new Error(`failed to fetch: ${response.status}`);
+          yield* Effect.fail(
+            new HttpPluginError({
+              message: `failed to fetch ${args.path}, status: ${response.status}`,
+            }),
+          );
         }
 
         const text = yield* response.text;
