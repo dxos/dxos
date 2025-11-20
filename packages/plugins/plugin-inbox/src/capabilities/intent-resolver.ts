@@ -24,11 +24,9 @@ import { Filter, Obj, Ref } from '@dxos/echo';
 // import { failedInvariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { SpaceAction } from '@dxos/plugin-space/types';
-import { Message, Organization, Person } from '@dxos/types';
+import { Organization, Person } from '@dxos/types';
 
 import { Calendar, InboxAction, Mailbox } from '../types';
-
-import { InboxCapabilities } from './capabilities';
 
 // TODO(dmaretskyi): Circular dep due to the assistant stories
 // import { AssistantCapabilities } from '@dxos/plugin-assistant';
@@ -48,29 +46,15 @@ export default (context: PluginContext) =>
       }),
     }),
     createResolver({
-      intent: InboxAction.SelectMessage,
-      resolve: ({ mailboxId, message }) => {
-        const state = context.getCapability(InboxCapabilities.MutableMailboxState);
-        if (message) {
-          // TODO(wittjosiah): Static to live object fails.
-          //  Needs to be a live object because graph is live and the current message is included in the companion.
-          const { '@type': _, ...messageWithoutType } = { ...message } as any;
-          const liveMessage = Obj.make(Message.Message, messageWithoutType);
-          state[mailboxId] = liveMessage;
-        } else {
-          delete state[mailboxId];
-        }
-      },
-    }),
-    createResolver({
       intent: InboxAction.ExtractContact,
       // TODO(burdon): Factor out function (and test separately).
-      resolve: async ({ space, message }) => {
-        log.info('extract contact', { message });
-        const name = message.sender.name;
-        const email = message.sender.email;
+      // TODO(burdon): Reconcile with dxos.org/functions/entity-extraction
+      resolve: async ({ space, actor }) => {
+        log.info('extract contact', { actor });
+        const name = actor.name;
+        const email = actor.email;
         if (!email) {
-          log.warn('email is required for contact extraction', { sender: message.sender });
+          log.warn('email is required for contact extraction', { actor });
           return;
         }
 
@@ -80,16 +64,12 @@ export default (context: PluginContext) =>
         const existingContact = existingContacts.find((contact) =>
           contact.emails?.some((contactEmail) => contactEmail.value === email),
         );
-
         if (existingContact) {
           log.info('Contact already exists', { email, existingContact });
           return;
         }
 
-        const newContact = Obj.make(Person.Person, {
-          emails: [{ value: email }],
-        });
-
+        const newContact = Obj.make(Person.Person, { emails: [{ value: email }] });
         if (name) {
           newContact.fullName = name;
         }

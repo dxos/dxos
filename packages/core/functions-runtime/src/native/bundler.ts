@@ -5,6 +5,7 @@
 import { writeFile } from 'node:fs/promises';
 import * as fs from 'node:fs/promises';
 import { basename, join, relative } from 'node:path';
+import { dirname } from 'node:path';
 
 import * as Array from 'effect/Array';
 import * as Function from 'effect/Function';
@@ -14,7 +15,9 @@ import { type Message, build } from 'esbuild';
 
 import { BaseError } from '@dxos/errors';
 import { PublicKey } from '@dxos/keys';
-import { Unit } from '@dxos/util';
+import { Unit, trim } from '@dxos/util';
+
+import { httpPlugin } from '../http-plugin-esbuild';
 
 type BundleOptions = {
   entryPoint: string;
@@ -35,8 +38,8 @@ export const bundleFunction = async (options: BundleOptions): Promise<BundleResu
 
   const result = await build({
     entryPoints: {
-      // Gets mapped to `userFunc.js` by esbuild.
-      userFunc: options.entryPoint,
+      // Gets mapped to `index.js` by esbuild.
+      index: 'dxos:entrypoint',
     },
     bundle: true,
     format: 'esm',
@@ -49,7 +52,12 @@ export const bundleFunction = async (options: BundleOptions): Promise<BundleResu
     loader: {
       '.wasm': 'copy',
     },
+    alias: {
+      'dxos:functions': './runtime.js',
+    },
     external: [
+      './runtime.js',
+      'node:async_hooks',
       'cloudflare:workers',
       'functions-service:user-script',
       'node:async_hooks',
@@ -59,6 +67,24 @@ export const bundleFunction = async (options: BundleOptions): Promise<BundleResu
       'node:events',
     ],
     plugins: [
+      httpPlugin,
+      {
+        name: 'entrypoint',
+        setup: (build) => {
+          build.onResolve({ filter: /^dxos:entrypoint$/ }, () => ({
+            path: 'dxos:entrypoint',
+            namespace: 'dxos:entrypoint',
+          }));
+          build.onLoad({ filter: /^dxos:entrypoint$/, namespace: 'dxos:entrypoint' }, () => ({
+            contents: trim`
+              import { wrapFunctionHandler } from '@dxos/functions';
+              import { default as handler } from '${options.entryPoint}';
+              export default wrapFunctionHandler(handler);
+            `,
+            resolveDir: dirname(options.entryPoint),
+          }));
+        },
+      },
       {
         name: 'metafile',
         setup: (build) => {
@@ -105,7 +131,7 @@ export const bundleFunction = async (options: BundleOptions): Promise<BundleResu
         .sort((a, b) => b[1].bytes - a[1].bytes)
         .map(
           ([path, desc]) =>
-            `${formatBytes(desc.bytes).padEnd(10)} - ${relative(outdir, path)} ${basename(path) === 'userFunc.js' ? ' (entry point)' : ''}`,
+            `${formatBytes(desc.bytes).padEnd(10)} - ${relative(outdir, path)} ${basename(path) === 'index.js' ? ' (entry point)' : ''}`,
         )
         .join('\n'),
     );
@@ -130,7 +156,7 @@ export const bundleFunction = async (options: BundleOptions): Promise<BundleResu
   }
 
   // Must match esbuild entry point.
-  return { entryPoint: 'userFunc.js', assets };
+  return { entryPoint: 'index.js', assets };
 };
 
 class BundleCreationError extends BaseError.extend('BUNDLE_CREATION_ERROR', 'Bundle creation failed') {

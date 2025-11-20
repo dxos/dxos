@@ -9,6 +9,7 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
 import { CredentialsService } from '@dxos/functions';
+import { TestDatabaseLayer } from '@dxos/functions-runtime/testing';
 
 import { GoogleCalendar } from '../../apis';
 
@@ -56,18 +57,17 @@ describe.runIf(process.env.ACCESS_TOKEN)('Google Calendar API', { timeout: 30_00
     }, Effect.provide(TestLayer)),
   );
 
-  it.effect(
-    'transform event to object',
-    Effect.fnUntraced(function* ({ expect }) {
+  it.effect('transform event to object', ({ expect }) =>
+    Effect.gen(function* () {
       const calendarId = 'primary';
       const updatedMin = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
       const { items } = yield* GoogleCalendar.listEventsByUpdated(calendarId, updatedMin, 1);
       expect(items).to.exist;
       expect(items.length).toBeGreaterThan(0);
 
-      const event = yield* mapEvent()(items[0]);
+      const event = yield* mapEvent(items[0]);
       expect(event).to.exist;
       console.log(JSON.stringify(event, null, 2));
-    }, Effect.provide(TestLayer)),
+    }).pipe(Effect.provide(Layer.merge(TestLayer, TestDatabaseLayer()))),
   );
 });

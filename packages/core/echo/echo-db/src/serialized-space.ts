@@ -28,12 +28,6 @@ export type SerializedSpace = {
   timestamp?: string;
 
   /**
-   * Space key.
-   */
-  // TODO(mykola): Maybe remove this?
-  spaceKey?: string;
-
-  /**
    * List of objects included in the archive.
    */
   objects: SerializedObject[];

@@ -30,6 +30,9 @@
       "path": "../../common/effect"
     },
     {
+      "path": "../../common/errors"
+    },
+    {
       "path": "../../common/invariant"
     },
     {
@@ -79,6 +82,9 @@
     },
     {
       "path": "../../core/functions-runtime"
+    },
+    {
+      "path": "../../core/protocols"
     },
     {
       "path": "../../sdk/app-framework"

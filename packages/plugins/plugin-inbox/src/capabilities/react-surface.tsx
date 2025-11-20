@@ -19,6 +19,7 @@ import { Event, Message, Organization, Person } from '@dxos/types';
 import {
   CalendarArticle,
   EventArticle,
+  EventCard,
   MailboxArticle,
   MailboxSettings,
   MessageArticle,
@@ -29,7 +30,7 @@ import {
   RelatedMessages,
 } from '../components';
 import { meta } from '../meta';
-import { Calendar, InboxAction, Mailbox } from '../types';
+import { Calendar, Mailbox } from '../types';
 
 export default () =>
   contributes(Capabilities.ReactSurface, [
@@ -55,7 +56,7 @@ export default () =>
       filter: (data): data is { subject: Message.Message; companionTo: Mailbox.Mailbox } =>
         Obj.instanceOf(Message.Message, data.subject) && Obj.instanceOf(Mailbox.Mailbox, data.companionTo),
       component: ({ data: { companionTo, subject }, role }) => {
-        return <MessageArticle role={role as 'article' | 'section'} subject={subject} mailbox={companionTo} />;
+        return <MessageArticle role={role} subject={subject} mailbox={companionTo} />;
       },
     }),
     createSurface({
@@ -64,7 +65,7 @@ export default () =>
       filter: (data): data is { subject: Event.Event; companionTo: Calendar.Calendar } =>
         Obj.instanceOf(Event.Event, data.subject) && Obj.instanceOf(Calendar.Calendar, data.companionTo),
       component: ({ data: { companionTo, subject }, role }) => {
-        return <EventArticle role={role as 'article' | 'section'} subject={subject} mailbox={companionTo} />;
+        return <EventArticle role={role} subject={subject} calendar={companionTo} />;
       },
     }),
     createSurface({
@@ -78,6 +79,12 @@ export default () =>
       role: ['card', 'card--intrinsic', 'card--extrinsic', 'card--popover', 'card--transclusion'],
       filter: (data): data is { subject: Message.Message } => Obj.instanceOf(Message.Message, data?.subject),
       component: ({ data: { subject }, role }) => <MessageCard subject={subject} role={role} />,
+    }),
+    createSurface({
+      id: `${meta.id}/event-card`,
+      role: ['card', 'card--intrinsic', 'card--extrinsic', 'card--popover', 'card--transclusion'],
+      filter: (data): data is { subject: Event.Event } => Obj.instanceOf(Event.Event, data?.subject),
+      component: ({ data: { subject }, role }) => <EventCard subject={subject} role={role} />,
     }),
     createSurface({
       id: POPOVER_SAVE_FILTER,
@@ -136,7 +143,10 @@ export default () =>
                   subject: [Obj.getDXN(mailbox).toString()],
                   options: { workspace: space?.id },
                 }),
-                chain(InboxAction.SelectMessage, { mailboxId: Obj.getDXN(mailbox).toString(), message }),
+                chain(AttentionAction.Select, {
+                  contextId: Obj.getDXN(mailbox).toString(),
+                  selection: { mode: 'single', id: message.id },
+                }),
               ),
             );
           },

@@ -11,9 +11,9 @@ import { Filter, Obj, Query, Relation } from '@dxos/echo';
 import { type Markdown } from '@dxos/plugin-markdown/types';
 import { createDocAccessor, getSource, getSpace, getTextInRange } from '@dxos/react-client/echo';
 import { comments, createExternalCommentSync } from '@dxos/react-ui-editor';
-import { AnchoredTo } from '@dxos/types';
+import { AnchoredTo, Thread } from '@dxos/types';
 
-import { Thread, ThreadAction, type ThreadState } from '../types';
+import { ThreadAction, type ThreadState } from '../types';
 
 // TODO(burdon): Factor out.
 const getName = (doc: Markdown.Document, anchor: string): string | undefined => {
@@ -27,7 +27,7 @@ const getName = (doc: Markdown.Document, anchor: string): string | undefined => 
  * Construct plugins.
  */
 export const threads = (state: ThreadState, doc?: Markdown.Document, dispatch?: PromiseIntentDispatcher): Extension => {
-  const space = doc && getSpace(doc);
+  const space = getSpace(doc);
   if (!doc || !space || !dispatch) {
     // Include no-op comments extension here to ensure that the facets are always present when they are expected.
     // TODO(wittjosiah): The Editor should only look for these facets when comments are available.

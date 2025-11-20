@@ -117,11 +117,11 @@ CalendarViewport.displayName = 'CalendarContent';
 // Header
 //
 
-type CalendarHeaderProps = ThemedClassName;
+type CalendarToolbarProps = ThemedClassName;
 
-const CalendarHeader = ({ classNames }: CalendarHeaderProps) => {
+const CalendarToolbar = ({ classNames }: CalendarToolbarProps) => {
   const { t } = useTranslation(translationKey);
-  const { weekStartsOn, event, index, selected } = useCalendarContext(CalendarHeader.displayName);
+  const { weekStartsOn, event, index, selected } = useCalendarContext(CalendarToolbar.displayName);
   const top = useMemo(() => getDate(start, index ?? 0, 6, weekStartsOn), [index, weekStartsOn]);
   const today = useMemo(() => new Date(), []);
 
@@ -132,7 +132,7 @@ const CalendarHeader = ({ classNames }: CalendarHeaderProps) => {
   return (
     <div
       role='none'
-      className={mx('shink-0 is-full grid grid-cols-3 items-center', classNames)}
+      className={mx('shink-0 is-full grid grid-cols-3 items-center bg-barSurface', classNames)}
       style={{ width: defaultWidth }}
     >
       <div className='flex justify-start'>
@@ -152,7 +152,7 @@ const CalendarHeader = ({ classNames }: CalendarHeaderProps) => {
   );
 };
 
-CalendarHeader.displayName = 'CalendarHeader';
+CalendarToolbar.displayName = 'CalendarHeader';
 
 //
 // Grid
@@ -311,8 +311,8 @@ CalendarGrid.displayName = 'CalendarGrid';
 export const Calendar = {
   Root: CalendarRoot,
   Viewport: CalendarViewport,
-  Header: CalendarHeader,
+  Toolbar: CalendarToolbar,
   Grid: CalendarGrid,
 };
 
-export type { CalendarController, CalendarRootProps, CalendarViewportProps, CalendarHeaderProps, CalendarGridProps };
+export type { CalendarController, CalendarRootProps, CalendarViewportProps, CalendarToolbarProps, CalendarGridProps };

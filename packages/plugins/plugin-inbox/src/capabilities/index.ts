@@ -8,7 +8,5 @@ export const AppGraphBuilder = lazy(() => import('./app-graph-builder'));
 export const BlueprintDefinition = lazy(() => import('./blueprint-definition'));
 export const IntentResolver = lazy(() => import('./intent-resolver'));
 export const ReactSurface = lazy(() => import('./react-surface'));
-export const InboxState = lazy(() => import('./state'));
 
 export * from './blueprint-definition';
-export * from './capabilities';

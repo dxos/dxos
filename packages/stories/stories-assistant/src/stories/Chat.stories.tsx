@@ -37,7 +37,6 @@ import { TablePlugin } from '@dxos/plugin-table';
 import { ThreadPlugin } from '@dxos/plugin-thread';
 import { TokenManagerPlugin } from '@dxos/plugin-token-manager';
 import { TranscriptionPlugin } from '@dxos/plugin-transcription';
-import { Transcript } from '@dxos/plugin-transcription/types';
 import { useQuery, useSpace } from '@dxos/react-client/echo';
 import { useAsyncEffect, useSignalsMemo } from '@dxos/react-ui';
 import { withTheme } from '@dxos/react-ui/testing';
@@ -56,6 +55,7 @@ import {
   Person,
   Project,
   Task,
+  Transcript,
 } from '@dxos/types';
 import { isNonNullable, trim } from '@dxos/util';
 

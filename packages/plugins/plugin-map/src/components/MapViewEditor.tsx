@@ -35,6 +35,7 @@ export const MapViewEditor = ({ object }: MapViewEditorProps) => {
     if (!space) {
       return;
     }
+
     const unsubscribe = space.db.schemaRegistry.query().subscribe(
       (query) => {
         const schemata = query.results;

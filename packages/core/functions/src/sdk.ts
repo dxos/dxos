@@ -2,13 +2,14 @@
 // Copyright 2023 DXOS.org
 //
 
+import type * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
 import { type AiService } from '@dxos/ai';
 import { Obj, Type } from '@dxos/echo';
 import { type DatabaseService } from '@dxos/echo-db';
-import { assertArgument } from '@dxos/invariant';
+import { assertArgument, failedInvariant } from '@dxos/invariant';
 
 import {
   type CredentialsService,
@@ -17,7 +18,7 @@ import {
   type TracingService,
 } from './services';
 import { Function } from './types';
-import { getUserFunctionIdInMetadata, setUserFunctionIdInMetadata } from './url';
+import { getUserFunctionIdInMetadata, setUserFunctionIdInMetadata } from './types';
 
 // TODO(burdon): Model after http request. Ref Lambda/OpenFaaS.
 // https://docs.aws.amazon.com/lambda/latest/dg/typescript-handler.html
@@ -43,9 +44,9 @@ export type FunctionServices =
 /**
  * Function handler.
  */
-export type FunctionHandler<TData = {}, TOutput = any> = (params: {
+export type FunctionHandler<TData = {}, TOutput = any, S extends FunctionServices = FunctionServices> = (params: {
   /**
-   * Services and context available to the function.
+   * Context available to the function.
    */
   context: FunctionContext;
 
@@ -55,25 +56,31 @@ export type FunctionHandler<TData = {}, TOutput = any> = (params: {
    * This will be the payload from the trigger or other data passed into the function in a workflow.
    */
   data: TData;
-}) => TOutput | Promise<TOutput> | Effect.Effect<TOutput, any, FunctionServices>;
+}) => TOutput | Promise<TOutput> | Effect.Effect<TOutput, any, S>;
 
 /**
  * Function context.
  */
 export interface FunctionContext {
-  // TODO(dmaretskyi):
+  // TODO(dmaretskyi): Consider what we should put into context.
 }
 
 const typeId = Symbol.for('@dxos/functions/FunctionDefinition');
 
-export type FunctionDefinition<T = any, O = any> = {
+export type FunctionDefinition<T = any, O = any, S extends FunctionServices = FunctionServices> = {
   [typeId]: true;
   key: string;
   name: string;
   description?: string;
   inputSchema: Schema.Schema<T, any>;
   outputSchema?: Schema.Schema<O, any>;
-  handler: FunctionHandler<T, O>;
+
+  /**
+   * Keys of the required services.
+   */
+  services: readonly string[];
+
+  handler: FunctionHandler<T, O, S>;
   meta?: {
     /**
      * Tools that are projected from functions have this annotation.
@@ -88,19 +95,29 @@ export type FunctionDefinition<T = any, O = any> = {
   };
 };
 
+export declare namespace FunctionDefinition {
+  export type Any = FunctionDefinition<any, any, any>;
+  export type Input<T extends Any> = T extends FunctionDefinition<infer I, infer _O, infer _S> ? I : never;
+  export type Output<T extends Any> = T extends FunctionDefinition<infer _I, infer O, infer _S> ? O : never;
+  export type Services<T extends Any> = T extends FunctionDefinition<infer _I, infer _O, infer S> ? S : never;
+}
+
 export type FunctionProps<T, O> = {
   key: string;
   name: string;
   description?: string;
   inputSchema: Schema.Schema<T, any>;
   outputSchema?: Schema.Schema<O, any>;
-  handler: FunctionHandler<T, O>;
+  // TODO(dmaretskyi): This currently doesn't cause a compile-time error if the handler requests a service that is not specified
+  services?: readonly Context.Tag<any, any>[];
+
+  handler: FunctionHandler<T, O, FunctionServices>;
 };
 
 // TODO(dmaretskyi): Output type doesn't get typechecked.
 export const defineFunction: {
-  <I, O>(params: FunctionProps<I, O>): FunctionDefinition<I, O>;
-} = ({ key, name, description, inputSchema, outputSchema = Schema.Any, handler }) => {
+  <I, O>(params: FunctionProps<I, O>): FunctionDefinition<I, O, FunctionServices>;
+} = ({ key, name, description, inputSchema, outputSchema = Schema.Any, handler, services }) => {
   if (!Schema.isSchema(inputSchema)) {
     throw new Error('Input schema must be a valid schema');
   }
@@ -145,7 +162,18 @@ export const defineFunction: {
     inputSchema,
     outputSchema,
     handler: handlerWithSpan,
+    services: !services ? [] : getServiceKeys(services),
   } satisfies FunctionDefinition.Any;
+};
+
+const getServiceKeys = (services: readonly Context.Tag<any, any>[]) => {
+  return services.map((tag: any) => {
+    if (typeof tag.key === 'string') {
+      return tag.key;
+    }
+    console.log(tag);
+    failedInvariant();
+  });
 };
 
 export const FunctionDefinition = {
@@ -162,13 +190,8 @@ export const FunctionDefinition = {
     return deserializeFunction(functionObj);
   },
 };
-export declare namespace FunctionDefinition {
-  export type Any = FunctionDefinition<any, any>;
-  export type Input<T extends FunctionDefinition> = T extends FunctionDefinition<infer I, any> ? I : never;
-  export type Output<T extends FunctionDefinition> = T extends FunctionDefinition<any, infer O> ? O : never;
-}
 
-export const serializeFunction = (functionDef: FunctionDefinition<any, any>): Function.Function => {
+export const serializeFunction = (functionDef: FunctionDefinition.Any): Function.Function => {
   const fn = Function.make({
     key: functionDef.key,
     name: functionDef.name,
@@ -176,6 +199,7 @@ export const serializeFunction = (functionDef: FunctionDefinition<any, any>): Fu
     description: functionDef.description,
     inputSchema: Type.toJsonSchema(functionDef.inputSchema),
     outputSchema: !functionDef.outputSchema ? undefined : Type.toJsonSchema(functionDef.outputSchema),
+    services: functionDef.services,
   });
   if (functionDef.meta?.deployedFunctionId) {
     setUserFunctionIdInMetadata(Obj.getMeta(fn), functionDef.meta.deployedFunctionId);
@@ -194,6 +218,7 @@ export const deserializeFunction = (functionObj: Function.Function): FunctionDef
     outputSchema: !functionObj.outputSchema ? undefined : Type.toEffectSchema(functionObj.outputSchema),
     // TODO(dmaretskyi): This should throw error.
     handler: () => {},
+    services: functionObj.services ?? [],
     meta: {
       deployedFunctionId: getUserFunctionIdInMetadata(Obj.getMeta(functionObj)),
     },

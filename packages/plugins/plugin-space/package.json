@@ -44,6 +44,7 @@
     "@dxos/context": "workspace:*",
     "@dxos/display-name": "workspace:*",
     "@dxos/echo": "workspace:*",
+    "@dxos/echo-db": "workspace:*",
     "@dxos/echo-signals": "workspace:*",
     "@dxos/effect": "workspace:*",
     "@dxos/functions": "workspace:*",

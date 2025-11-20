@@ -14,10 +14,9 @@ import { type Journal } from '../types';
 
 import { Journal as JournalComponent, type JournalProps } from './Journal';
 
-export const JournalContainer = ({
-  subject,
-  showCalendar = true,
-}: SurfaceComponentProps<Journal.Journal, { showCalendar?: boolean }>) => {
+export type JournalContainerProps = SurfaceComponentProps<Journal.Journal> & { showCalendar?: boolean };
+
+export const JournalContainer = ({ subject: journal, showCalendar = true }: JournalContainerProps) => {
   const controllerRef = useRef<CalendarController>(null);
 
   // TODO(burdon): Instead of media query should check physical geometry of plank.
@@ -41,13 +40,13 @@ export const JournalContainer = ({
         {showCalendar && (
           <Calendar.Root ref={controllerRef}>
             <Calendar.Viewport>
-              <Calendar.Header />
+              <Calendar.Toolbar />
               <Calendar.Grid rows={isNotMobile ? undefined : 6} />
             </Calendar.Viewport>
           </Calendar.Root>
         )}
 
-        <JournalComponent journal={subject} classNames='container-max-width' onSelect={handleSelect} />
+        <JournalComponent journal={journal} classNames='container-max-width' onSelect={handleSelect} />
       </div>
     </StackItem.Content>
   );

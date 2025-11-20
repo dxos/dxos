@@ -10,7 +10,7 @@ tasks:
       - '--entryPoint=src/bundler/index.ts'
       - '--entryPoint=src/edge/index.ts'
       - '--entryPoint=src/index.ts'
-      - '--entryPoint=src/native/bundler.ts'
+      - '--entryPoint=src/native/index.ts'
       - '--entryPoint=src/testing/index.ts'
   # TODO(wittjosiah): Fix.
   # e2e:

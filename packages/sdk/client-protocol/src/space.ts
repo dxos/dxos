@@ -2,9 +2,11 @@
 // Copyright 2021 DXOS.org
 //
 
+import * as Schema from 'effect/Schema';
+
 import { type CleanupFn, type MulticastObservable } from '@dxos/async';
 import { type SpecificCredential } from '@dxos/credentials';
-import { type AnyLiveObject, type EchoDatabase, type QueueFactory } from '@dxos/echo-db';
+import { type AnyLiveObject, type EchoDatabase, type QueueFactory, type SpaceSyncState } from '@dxos/echo-db';
 import { type PublicKey, type SpaceId } from '@dxos/keys';
 import {
   type Contact,
@@ -31,14 +33,17 @@ export type CreateEpochOptions = {
 export interface SpaceInternal {
   get data(): SpaceData;
 
-  // TODO(dmaretskyi): Return epoch info.
-  createEpoch(options?: CreateEpochOptions): Promise<void>;
-
   getCredentials(): Promise<Credential[]>;
 
   getEpochs(): Promise<SpecificCredential<Epoch>[]>;
 
+  // TODO(dmaretskyi): Return epoch info.
+  createEpoch(options?: CreateEpochOptions): Promise<void>;
+
+  // TOOD(burdon): Start to factor out credentials.
   removeMember(memberKey: PublicKey): Promise<void>;
+
+  export(): Promise<SpaceArchive>;
 
   /**
    * Migrate space data to the latest version.
@@ -47,20 +52,30 @@ export interface SpaceInternal {
 
   setEdgeReplicationPreference(setting: EdgeReplicationSetting): Promise<void>;
 
-  export(): Promise<SpaceArchive>;
+  /**
+   * Waits until the space is fully synced with EDGE.
+   * @throws If the EDGE sync is disabled.
+   */
+  syncToEdge(opts?: {
+    onProgress: (state: SpaceSyncState.PeerState | undefined) => void;
+    timeout?: number;
+  }): Promise<void>;
 }
 
-// TODO(burdon): Separate public API form implementation (move comments here).
+export const SPACE_TAG = Symbol('dxos.client.protocol.Space');
+
 export interface Space {
-  /**
-   * Unique space identifier.
-   */
-  get id(): SpaceId;
+  readonly [SPACE_TAG]: true;
 
   /**
    * @deprecated Use `id`.
    */
   get key(): PublicKey;
+
+  /**
+   * Unique space identifier.
+   */
+  get id(): SpaceId;
 
   /**
    * Echo database.
@@ -72,12 +87,8 @@ export interface Space {
    */
   get queues(): QueueFactory;
 
+  // TODO(burdon): Replace with state?
   get isOpen(): boolean;
-
-  /**
-   * Properties object.
-   */
-  get properties(): AnyLiveObject<any>;
 
   /**
    * Current state of the space.
@@ -85,6 +96,11 @@ export interface Space {
    * Presence is available in `SpaceState.SPACE_CONTROL_ONLY` state.
    */
   get state(): MulticastObservable<SpaceState>;
+
+  /**
+   * Properties object.
+   */
+  get properties(): AnyLiveObject<any>;
 
   /**
    * Current state of space pipeline.
@@ -101,11 +117,11 @@ export interface Space {
   // TODO(wittjosiah): Remove. This should not be exposed.
   get internal(): SpaceInternal;
 
-  // TODO(wittjosiah): Rename activate/deactivate?
   /**
    * Activates the space enabling the use of the database and starts replication with peers.
    * The setting is persisted on the local device.
    */
+  // TODO(wittjosiah): Rename activate/deactivate?
   open(): Promise<void>;
 
   /**
@@ -123,13 +139,21 @@ export interface Space {
   createSnapshot(): Promise<SpaceSnapshot>;
 
   // TODO(burdon): Create invitation?
+  // TODO(burdon): Factor out membership, etc.
   share(options?: Partial<Invitation>): CancellableInvitation;
-
   admitContact(contact: Contact): Promise<void>;
-
   updateMemberRole(request: Omit<UpdateMemberRoleRequest, 'spaceKey'>): Promise<void>;
 
   // TODO(wittjosiah): Gather into messaging abstraction?
   postMessage: (channel: string, message: any) => Promise<void>;
   listen: (channel: string, callback: (message: GossipMessage) => void) => CleanupFn;
 }
+
+export const isSpace = (object: unknown): object is Space =>
+  typeof object === 'object' && object != null && (object as Space)[SPACE_TAG] === true;
+
+// TODO(burdon): Create lower-level definition (HasId, db, etc.) and move to @dxos/echo.
+export const SpaceSchema: Schema.Schema<Space> = Schema.Any.pipe(
+  Schema.filter((space) => isSpace(space)),
+  Schema.annotations({ title: 'Space' }),
+);

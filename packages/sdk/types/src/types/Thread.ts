@@ -6,7 +6,8 @@ import * as Schema from 'effect/Schema';
 
 import { Obj, Type } from '@dxos/echo';
 import { SystemTypeAnnotation } from '@dxos/echo/internal';
-import { Message } from '@dxos/types';
+
+import * as Message from './Message';
 
 export const ThreadStatus = Schema.Union(
   Schema.Literal('staged'),

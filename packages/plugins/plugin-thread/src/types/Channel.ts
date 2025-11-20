@@ -6,8 +6,7 @@ import * as Schema from 'effect/Schema';
 
 import { Obj, Ref, Type } from '@dxos/echo';
 import { FormInputAnnotation } from '@dxos/echo/internal';
-
-import * as Thread from './Thread';
+import { Thread } from '@dxos/types';
 
 const _Channel = Schema.Struct({
   name: Schema.optional(Schema.String),

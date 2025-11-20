@@ -8,7 +8,7 @@ import React from 'react';
 import { faker } from '@dxos/random';
 
 import { withTheme } from '../../testing';
-import { Button } from '../Buttons';
+import { Button } from '../Button';
 
 import { Tooltip } from './Tooltip';
 

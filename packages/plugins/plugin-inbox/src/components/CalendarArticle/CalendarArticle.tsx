@@ -2,11 +2,13 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { useState } from 'react';
+import React, { useCallback } from 'react';
 
 import { type SurfaceComponentProps } from '@dxos/app-framework/react';
+import { Obj } from '@dxos/echo';
 import { Filter, getSpace, useQuery } from '@dxos/react-client/echo';
 import { Toolbar, useTranslation } from '@dxos/react-ui';
+import { useSelected, useSelectionActions } from '@dxos/react-ui-attention';
 import { Calendar as NaturalCalendar } from '@dxos/react-ui-calendar';
 import { StackItem } from '@dxos/react-ui-stack';
 import { Event } from '@dxos/types';
@@ -23,11 +25,20 @@ const byDate =
 
 export const CalendarArticle = ({ subject: calendar }: SurfaceComponentProps<Calendar.Calendar>) => {
   const { t } = useTranslation(meta.id);
-  const [selected, setSelected] = useState<Event.Event>();
   const space = getSpace(calendar);
+  const id = Obj.getDXN(calendar).toString();
+  const { singleSelect } = useSelectionActions([id]);
+  const selected = useSelected(id, 'single');
   const queue = space?.queues.get(calendar.queue.dxn);
   const objects = useQuery(queue, Filter.type(Event.Event));
   objects.sort(byDate());
+
+  const handleSelect = useCallback(
+    (event: Event.Event) => {
+      singleSelect(event.id);
+    },
+    [singleSelect],
+  );
 
   return (
     <StackItem.Content classNames='@container overflow-hidden'>
@@ -35,7 +46,7 @@ export const CalendarArticle = ({ subject: calendar }: SurfaceComponentProps<Cal
         <div role='none' className='hidden @2xl:flex'>
           <NaturalCalendar.Root>
             <NaturalCalendar.Viewport classNames='grid grid-rows-[var(--toolbar-size)_1fr]'>
-              <NaturalCalendar.Header classNames='bs-full border-be border-subduedSeparator' />
+              <NaturalCalendar.Toolbar classNames='bs-full border-be border-subduedSeparator' />
               <NaturalCalendar.Grid />
             </NaturalCalendar.Viewport>
           </NaturalCalendar.Root>
@@ -46,7 +57,7 @@ export const CalendarArticle = ({ subject: calendar }: SurfaceComponentProps<Cal
           <Toolbar.Root classNames='border-be border-subduedSeparator'>
             <Toolbar.IconButton icon='ph--calendar--duotone' iconOnly variant='ghost' label={t('calendar')} />
           </Toolbar.Root>
-          <EventList events={objects} selected={selected?.id} onSelect={setSelected} />
+          <EventList events={objects} selected={selected} onSelect={handleSelect} />
         </div>
       </div>
     </StackItem.Content>
