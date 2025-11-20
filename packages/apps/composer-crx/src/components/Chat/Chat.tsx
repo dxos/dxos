@@ -15,6 +15,12 @@ import { mx } from '@dxos/react-ui-theme';
 import { SPACE_ID_PROP } from '../../config';
 import { translationKey } from '../../translations';
 
+type Metadata = {
+  hidden?: boolean;
+  // createdAt: string;
+  // text: string;
+};
+
 export type ChatProps = ThemedClassName<{
   host?: string;
   onPing?: () => Promise<string | null>;
@@ -24,7 +30,7 @@ export type ChatProps = ThemedClassName<{
 export const Chat = ({ classNames, host, url }: ChatProps) => {
   const { t } = useTranslation(translationKey);
   const inputRef = useRef<HTMLInputElement>(null);
-  const spaceId = useRef<SpaceId | null>(null);
+  const spaceIdRef = useRef<SpaceId | null>(null);
   const [text, setText] = useState('');
 
   // Chat agent client.
@@ -34,11 +40,9 @@ export const Chat = ({ classNames, host, url }: ChatProps) => {
     host,
   });
 
+  // TODO(burdon): Define tools (see generic params).
   // TODO(burdon): Get initial messages (currently the history only appears after the first message).
-  const { error, messages, sendMessage, stop, clearError, clearHistory } = useAgentChat<
-    unknown,
-    UIMessage<{ createdAt: string; text: string }>
-  >({
+  const { error, messages, sendMessage, stop, clearError, clearHistory } = useAgentChat<unknown, UIMessage<Metadata>>({
     agent,
     resume: true,
     // TODO(burdon): This will replace the initial message history.
@@ -46,7 +50,7 @@ export const Chat = ({ classNames, host, url }: ChatProps) => {
   });
 
   const filteredMessages = useMemo(
-    () => messages.filter((message) => message.id !== 'initial' && message.role !== 'system'),
+    () => messages.filter((message) => message.role !== 'system' && !message.metadata?.hidden),
     [messages],
   );
 
@@ -59,87 +63,50 @@ export const Chat = ({ classNames, host, url }: ChatProps) => {
 
     // TODO(burdon): Disable text input while processing.
     setText('');
-<<<<<<< HEAD
 
     // Update context.
-    if (currentUrl.current !== url) {
-      currentUrl.current = url;
-      await sendMessage({
-        role: 'system',
-        parts: [
+    // TODO(burdon): Get current selection?
+    {
+      const context: string[] = [];
+      if (currentUrl.current !== url || messages.length === 0) {
+        currentUrl.current = url;
+        context.push(
+          "Determine if the user's question relates to the website the user is currently viewing.",
+          `The current website is: ${url}`,
+        );
+      }
+
+      const spaceId = await browser.storage.sync.get(SPACE_ID_PROP);
+      const value = spaceId?.[SPACE_ID_PROP];
+      if (SpaceId.isValid(value) && (value !== spaceIdRef.current || messages.length === 0)) {
+        context.push(`Otherwise use the configured Space to retrieve information.`, `The Space ID is: ${value}`);
+        spaceIdRef.current = value;
+      }
+
+      if (context.length > 0) {
+        console.log('system:', JSON.stringify(context, null, 2));
+        await sendMessage(
           {
-            type: 'text',
-            text: [
-              // TODO(burdon): Implement tool call to get the content of the website? Or do this on the server?
-              // TODO(burdon): Get current selection?
-              'You should assume that most questions are related to website that the user is currently looking at.',
-              // 'You should try to get the content of the website if you need to answer the question.',
-              `The current website is: ${url}`,
-            ].join('\n'),
+            role: 'assistant',
+            parts: [
+              {
+                type: 'text',
+                text: ['<system-context>', ...context, '</system-context>'].join('\n'),
+              },
+            ],
           },
-        ],
-      });
-    }
-
-    // User message.
-    await sendMessage(
-      {
-        role: 'user',
-        parts: [{ type: 'text', text }],
-      },
-      // TODO(burdon): Can pass additional headers/JSON body props to worker here.
-      {
-        metadata: { url: url ?? window.location.href },
-      },
-    );
-||||||| 8952aa303e
-=======
-
-    const context: string[] = [];
-
-    // Update context.
-    if (currentUrl.current !== url || messages.length === 0) {
-      currentUrl.current = url;
-      context.push(
-        // TODO(burdon): Implement tool call to get the content of the website? Or do this on the server?
-        // TODO(burdon): Get current selection?
-        'You should assume that most questions are related to website that the user is currently looking at.',
-        // 'You should try to get the content of the website if you need to answer the question.',
-        `The current website is: ${url}`,
-      );
-    }
-    const storedSpaceId = await browser.storage.sync.get(SPACE_ID_PROP);
-    if (storedSpaceId?.[SPACE_ID_PROP] !== spaceId.current || messages.length === 0) {
-      const value = storedSpaceId?.[SPACE_ID_PROP];
-      if (value && SpaceId.isValid(value)) {
-        spaceId.current = value;
-        context.push(`The configured space is: ${value} Use this space to retrieve information.`);
+          {
+            metadata: { hidden: true },
+          },
+        );
       }
     }
-    if (context.length > 0) {
-      await sendMessage({
-        role: 'system',
-        parts: [
-          {
-            type: 'text',
-            text: context.join('\n'),
-          },
-        ],
-      });
-    }
 
     // User message.
-    await sendMessage(
-      {
-        role: 'user',
-        parts: [{ type: 'text', text }],
-      },
-      // TODO(burdon): Can pass additional headers/JSON body props to worker here.
-      {
-        metadata: { url: url ?? window.location.href },
-      },
-    );
->>>>>>> origin/main
+    await sendMessage({
+      role: 'user',
+      parts: [{ type: 'text', text }],
+    });
   }, [sendMessage, url]);
 
   const handleClear = useCallback(async () => {
@@ -222,7 +189,7 @@ const isSecureUrl = (host: string) => {
   try {
     const url = new URL(host);
     return url.protocol === 'https:' || url.protocol === 'wss:';
-  } catch (err) {
+  } catch {
     return false;
   }
 };

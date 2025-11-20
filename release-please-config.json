@@ -885,6 +885,11 @@
         },
         {
           "type": "json",
+          "path": "packages/ui/react-ui-markdown/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/ui/react-ui-masonry/package.json",
           "jsonpath": "$.version"
         },

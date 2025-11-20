@@ -14665,6 +14665,121 @@ importers:
         specifier: 7.1.9
         version: 7.1.9(@types/node@22.10.2)(jiti@2.6.1)(terser@5.19.2)(yaml@2.7.1)
 
+  packages/ui/react-ui-markdown:
+    dependencies:
+      '@codemirror/autocomplete':
+        specifier: ^6.19.0
+        version: 6.19.0
+      '@codemirror/language':
+        specifier: ^6.11.3
+        version: 6.11.3
+      '@codemirror/state':
+        specifier: ^6.5.2
+        version: 6.5.2
+      '@codemirror/view':
+        specifier: ^6.38.4
+        version: 6.38.5
+      '@dxos/async':
+        specifier: workspace:*
+        version: link:../../common/async
+      '@dxos/invariant':
+        specifier: workspace:*
+        version: link:../../common/invariant
+      '@dxos/log':
+        specifier: workspace:*
+        version: link:../../common/log
+      '@dxos/react-ui-editor':
+        specifier: workspace:*
+        version: link:../react-ui-editor
+      '@dxos/react-ui-syntax-highlighter':
+        specifier: workspace:*
+        version: link:../react-ui-syntax-highlighter
+      '@dxos/util':
+        specifier: workspace:*
+        version: link:../../common/util
+      '@lezer/common':
+        specifier: ^1.2.2
+        version: 1.2.2
+      '@lezer/highlight':
+        specifier: ^1.2.1
+        version: 1.2.1
+      '@lezer/markdown':
+        specifier: ^1.3.1
+        version: 1.3.1
+      '@lezer/xml':
+        specifier: ^1.0.6
+        version: 1.0.6
+      '@preact-signals/safe-react':
+        specifier: ^0.9.0
+        version: 0.9.0(@babel/core@7.28.0)(@swc/helpers@0.5.17)(react@19.2.0)
+      '@preact/signals-core':
+        specifier: ^1.12.1
+        version: 1.12.1
+      '@radix-ui/react-compose-refs':
+        specifier: 1.1.1
+        version: 1.1.1(@types/react@19.2.2)(react@19.2.0)
+      '@radix-ui/react-context':
+        specifier: 1.1.1
+        version: 1.1.1(@types/react@19.2.2)(react@19.2.0)
+      effect:
+        specifier: 3.18.3
+        version: 3.18.3
+      json5:
+        specifier: ^2.2.3
+        version: 2.2.3
+      motion:
+        specifier: ^12.0.6
+        version: 12.11.0(@emotion/is-prop-valid@1.2.0)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
+      react-markdown:
+        specifier: ^10.1.0
+        version: 10.1.0(@types/react@19.2.2)(react@19.2.0)
+      react-resize-detector:
+        specifier: ^11.0.1
+        version: 11.0.1(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
+      remark-gfm:
+        specifier: ^4.0.1
+        version: 4.0.1
+    devDependencies:
+      '@dxos/echo':
+        specifier: workspace:*
+        version: link:../../core/echo/echo
+      '@dxos/lit-ui':
+        specifier: workspace:*
+        version: link:../lit-ui
+      '@dxos/random':
+        specifier: workspace:*
+        version: link:../../common/random
+      '@dxos/react-client':
+        specifier: workspace:*
+        version: link:../../sdk/react-client
+      '@dxos/react-ui':
+        specifier: workspace:*
+        version: link:../react-ui
+      '@dxos/react-ui-theme':
+        specifier: workspace:*
+        version: link:../react-ui-theme
+      '@dxos/schema':
+        specifier: workspace:*
+        version: link:../../sdk/schema
+      '@dxos/storybook-utils':
+        specifier: workspace:*
+        version: link:../../common/storybook-utils
+      '@types/react':
+        specifier: ~19.2.2
+        version: 19.2.2
+      '@types/react-dom':
+        specifier: ~19.2.2
+        version: 19.2.2(@types/react@19.2.2)
+      react:
+        specifier: ~19.2.0
+        version: 19.2.0
+      react-dom:
+        specifier: ~19.2.0
+        version: 19.2.0(react@19.2.0)
+      vite:
+        specifier: 7.1.9
+        version: 7.1.9(@types/node@22.10.2)(jiti@2.6.1)(terser@5.19.2)(yaml@2.7.1)
+
   packages/ui/react-ui-masonry:
     dependencies:
       '@dxos/react-hooks':
@@ -49229,7 +49344,7 @@ snapshots:
 
   hast-util-to-jsx-runtime@2.3.6:
     dependencies:
-      '@types/estree': 1.0.7
+      '@types/estree': 1.0.8
       '@types/hast': 3.0.4
       '@types/unist': 3.0.3
       comma-separated-tokens: 2.0.2
