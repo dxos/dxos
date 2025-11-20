@@ -18,6 +18,7 @@ const API_URL = 'https://www.googleapis.com/calendar/v3';
 /**
  * Lists events on the specified calendar ordered by start time.
  * Used for initial sync to get all future events in chronological order.
+ * Returns expanded instances of recurring events which can be deduplicated by recurringEventId.
  * https://developers.google.com/calendar/api/v3/reference/events/list
  */
 export const listEventsByStartTime = Effect.fn(function* (
@@ -32,8 +33,9 @@ export const listEventsByStartTime = Effect.fn(function* (
     timeMax,
     maxResults: pageSize,
     pageToken,
-    // Don't create individual instances of recurring events.
-    singleEvents: false,
+    // NOTE: `singleEvents=false` is not compatible with `orderBy=startTime`.
+    //   Expanded instances can be deduplicated downstream by recurringEventId.
+    singleEvents: true,
     orderBy: 'startTime',
   }).toString();
   return yield* makeGoogleApiRequest(url).pipe(Effect.flatMap(Schema.decodeUnknown(ListEventsResponse)));
