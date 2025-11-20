@@ -35,7 +35,7 @@ export const useMessageToolbarActions = ({ viewMode }: UseMessageToolbarActionsP
             {
               nodes.push(
                 createMenuItemGroup('root', {
-                  label: ['mailbox toolbar label', { ns: meta.id }],
+                  label: ['message toolbar label', { ns: meta.id }],
                 }),
               );
             }
@@ -53,10 +53,10 @@ export const useMessageToolbarActions = ({ viewMode }: UseMessageToolbarActionsP
                 {
                   label: [
                     viewMode.value === 'plain'
-                      ? 'mailbox toolbar show enriched message'
+                      ? 'message toolbar show enriched message'
                       : viewMode.value === 'enriched'
-                        ? 'mailbox toolbar show plain message'
-                        : 'mailbox toolbar enriched message not available',
+                        ? 'message toolbar show plain message'
+                        : 'message toolbar enriched message not available',
                     { ns: meta.id },
                   ],
                   icon: viewMode.value === 'enriched' ? 'ph--article--regular' : 'ph--graph--regular',

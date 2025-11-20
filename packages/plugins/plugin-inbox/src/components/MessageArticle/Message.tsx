@@ -65,10 +65,10 @@ type MessageToolbarProps = ThemedClassName<{}>;
 
 export const MessageToolbar = ({ classNames }: MessageToolbarProps) => {
   const { attendableId, viewMode } = useMessageContext(MessageToolbar.displayName);
-  const menu = useMessageToolbarActions({ viewMode });
+  const actions = useMessageToolbarActions({ viewMode });
 
   return (
-    <MenuProvider {...menu} attendableId={attendableId}>
+    <MenuProvider {...actions} attendableId={attendableId}>
       <ToolbarMenu classNames={classNames} />
     </MenuProvider>
   );

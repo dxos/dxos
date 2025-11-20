@@ -13,6 +13,8 @@ import { type Actor, type Event as EventType } from '@dxos/types';
 import { formatDateTime } from '../../util';
 import { UserIconButton } from '../UserIconButton';
 
+import { useEventToolbarActions } from './useToolbar';
+
 //
 // Context
 //
@@ -42,12 +44,12 @@ EventRoot.displayName = 'Event.Root';
 
 type EventToolbarProps = ThemedClassName<{ onCreateNote?: () => void }>;
 
-const EventToolbar = ({ classNames, onCreateNote }: EventToolbarProps) => {
+const EventToolbar = ({ classNames, ...props }: EventToolbarProps) => {
   const { attendableId } = useEventContext(EventToolbar.displayName);
-  const menu = {}; // TODO(burdon): Builder?
+  const actions = useEventToolbarActions(props);
 
   return (
-    <MenuProvider {...menu} attendableId={attendableId}>
+    <MenuProvider {...actions} attendableId={attendableId}>
       <ToolbarMenu classNames={classNames} />
     </MenuProvider>
   );
