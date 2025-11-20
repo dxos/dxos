@@ -10,7 +10,7 @@ import { SpaceId } from '@dxos/keys';
 import { Input, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
-import { DEVELOPER_MODE_PROP, SPACE_ID_PROP, SPACE_MODE_PROP } from '../../config';
+import { DEVELOPER_MODE_PROP, SPACE_ID_PROP, SPACE_MODE_PROP, getProp } from '../../config';
 import { translationKey } from '../../translations';
 
 const headerGrid = 'grid grid-cols-[8rem_2fr_1fr_8rem] p-4 overflow-hidden';
@@ -27,16 +27,13 @@ export const Options = ({ classNames }: OptionsProps) => {
 
   useEffect(() => {
     void (async () => {
-      const result = await browser.storage.sync.get(DEVELOPER_MODE_PROP);
-      const stored = result?.[DEVELOPER_MODE_PROP];
-      setDeveloperMode(Boolean(stored));
+      setDeveloperMode(Boolean(await getProp(DEVELOPER_MODE_PROP)));
     })();
   }, []);
 
   useEffect(() => {
     void (async () => {
-      const result = await browser.storage.sync.get(SPACE_ID_PROP);
-      const stored = result?.[SPACE_ID_PROP];
+      const stored = await getProp(SPACE_ID_PROP);
       if (SpaceId.isValid(stored)) {
         setSpaceId(stored);
       }
@@ -45,20 +42,20 @@ export const Options = ({ classNames }: OptionsProps) => {
 
   const handleDeveloperModeChange = async (checked: boolean | 'indeterminate') => {
     const next = checked === 'indeterminate' ? false : Boolean(checked);
-    setDeveloperMode(next);
     await browser.storage.sync.set({ [DEVELOPER_MODE_PROP]: next });
+    setDeveloperMode(next);
   };
 
   const handleSpaceModeChange = async (checked: boolean | 'indeterminate') => {
     const next = checked === 'indeterminate' ? false : Boolean(checked);
-    setSpaceMode(next);
     await browser.storage.sync.set({ [SPACE_MODE_PROP]: next });
+    setSpaceMode(next);
   };
 
   const handleSpaceIdChange = async (ev: React.ChangeEvent<HTMLInputElement>) => {
     const next = ev.target.value;
-    setSpaceId(next);
     await browser.storage.sync.set({ [SPACE_ID_PROP]: next });
+    setSpaceId(next);
   };
 
   return (
