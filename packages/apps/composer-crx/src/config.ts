@@ -7,6 +7,7 @@ import browser from 'webextension-polyfill';
 export const HOME_URL = 'https://labs.composer.space';
 
 export const DEVELOPER_MODE_PROP = 'developer-mode';
+export const SPACE_MODE_PROP = 'space-mode';
 export const THUMBNAIL_PROP = 'thumbnail-url';
 export const SPACE_ID_PROP = 'space-id';
 

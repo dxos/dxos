@@ -10,15 +10,14 @@ import browser from 'webextension-polyfill';
 
 import { SpaceId } from '@dxos/keys';
 import { IconButton, Input, ScrollContainer, type ThemedClassName, useTranslation } from '@dxos/react-ui';
+import { MarkdownViewer } from '@dxos/react-ui-markdown';
 import { mx } from '@dxos/react-ui-theme';
 
-import { SPACE_ID_PROP } from '../../config';
+import { SPACE_ID_PROP, SPACE_MODE_PROP } from '../../config';
 import { translationKey } from '../../translations';
 
 type Metadata = {
   hidden?: boolean;
-  // createdAt: string;
-  // text: string;
 };
 
 export type ChatProps = ThemedClassName<{
@@ -68,6 +67,8 @@ export const Chat = ({ classNames, host, url }: ChatProps) => {
     // TODO(burdon): Get current selection?
     {
       const context: string[] = [];
+
+      // Update current url.
       if (currentUrl.current !== url || messages.length === 0) {
         currentUrl.current = url;
         context.push(
@@ -76,13 +77,17 @@ export const Chat = ({ classNames, host, url }: ChatProps) => {
         );
       }
 
-      const spaceId = await browser.storage.sync.get(SPACE_ID_PROP);
-      const value = spaceId?.[SPACE_ID_PROP];
-      if (SpaceId.isValid(value) && (value !== spaceIdRef.current || messages.length === 0)) {
-        context.push(`Otherwise use the configured Space to retrieve information.`, `The Space ID is: ${value}`);
-        spaceIdRef.current = value;
+      // Determine space mode.
+      const spaceMode = (await browser.storage.sync.get(SPACE_MODE_PROP))?.[SPACE_MODE_PROP];
+      const spaceId = (await browser.storage.sync.get(SPACE_ID_PROP))?.[SPACE_ID_PROP];
+      if (spaceMode && spaceId) {
+        if (SpaceId.isValid(spaceId) && (spaceId !== spaceIdRef.current || messages.length === 0)) {
+          context.push(`Otherwise use the configured Space to retrieve information.`, `The Space ID is: ${spaceId}`);
+          spaceIdRef.current = spaceId;
+        }
       }
 
+      // Send system message.
       if (context.length > 0) {
         console.log('system:', JSON.stringify(context, null, 2));
         await sendMessage(
@@ -152,11 +157,12 @@ export const Chat = ({ classNames, host, url }: ChatProps) => {
             {filteredMessages.map((message, i) => (
               <div key={i} className={mx('flex', 'text-base', message.role === 'user' && 'justify-end mlb-3')}>
                 <p className={mx(message.role === 'user' ? 'bg-sky-500 pli-2 plb-1 rounded' : 'text-description')}>
-                  {message.parts
-                    .filter(({ type }) => type === 'text')
-                    .map((part, j) => (
-                      <div key={j}>{(part as any).text}</div>
-                    ))}
+                  <MarkdownViewer
+                    content={message.parts
+                      .map((part) => (part.type === 'text' ? part.text : null))
+                      .filter(Boolean)
+                      .join('')}
+                  />
                 </p>
               </div>
             ))}
