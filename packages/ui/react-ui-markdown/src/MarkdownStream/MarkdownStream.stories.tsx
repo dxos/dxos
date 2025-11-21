@@ -2,6 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
+// TODO(burdon): Document why this is required.
 import '@dxos/lit-ui';
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
