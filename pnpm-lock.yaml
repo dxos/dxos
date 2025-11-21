@@ -13606,9 +13606,6 @@ importers:
       '@dxos/keys':
         specifier: workspace:*
         version: link:../../common/keys
-      '@dxos/lit-ui':
-        specifier: workspace:*
-        version: link:../lit-ui
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
@@ -13618,9 +13615,6 @@ importers:
       '@dxos/react-ui-editor':
         specifier: workspace:*
         version: link:../react-ui-editor
-      '@dxos/react-ui-markdown':
-        specifier: workspace:*
-        version: link:../react-ui-markdown
       '@dxos/react-ui-stack':
         specifier: workspace:*
         version: link:../react-ui-stack
@@ -13645,9 +13639,6 @@ importers:
       '@lezer/highlight':
         specifier: ^1.2.1
         version: 1.2.1
-      '@lezer/markdown':
-        specifier: ^1.3.1
-        version: 1.3.1
       '@lezer/xml':
         specifier: ^1.0.6
         version: 1.0.6
@@ -13672,22 +13663,22 @@ importers:
       motion:
         specifier: ^12.0.6
         version: 12.11.0(@emotion/is-prop-valid@1.2.0)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
-      react-markdown:
-        specifier: ^10.1.0
-        version: 10.1.0(@types/react@19.2.2)(react@19.2.0)
       react-resize-detector:
         specifier: ^11.0.1
         version: 11.0.1(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
-      remark-gfm:
-        specifier: ^4.0.1
-        version: 4.0.1
     devDependencies:
+      '@dxos/lit-ui':
+        specifier: workspace:*
+        version: link:../lit-ui
       '@dxos/random':
         specifier: workspace:*
         version: link:../../common/random
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../react-ui
+      '@dxos/react-ui-markdown':
+        specifier: workspace:*
+        version: link:../react-ui-markdown
       '@dxos/react-ui-theme':
         specifier: workspace:*
         version: link:../react-ui-theme
