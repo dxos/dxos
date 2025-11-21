@@ -111,7 +111,7 @@ registerErrorMessageContext('ALREADY_JOINED', AlreadyJoinedError);
 
 export class ConnectionResetError extends BaseError {
   constructor(message?: string, context?: any) {
-    super('CONNECTION_RESET', message, context);
+    super('CONNECTION_RESET', { message, context });
   }
 }
 
@@ -119,7 +119,7 @@ registerErrorMessageContext('CONNECTION_RESET', ConnectionResetError);
 
 export class TimeoutError extends BaseError {
   constructor(message?: string, context?: any) {
-    super('TIMEOUT', message, context);
+    super('TIMEOUT', { message, context });
   }
 }
 
@@ -128,7 +128,7 @@ registerErrorMessageContext('TIMEOUT', TimeoutError);
 // General protocol error.
 export class ProtocolError extends BaseError {
   constructor(message?: string, context?: any) {
-    super('PROTOCOL_ERROR', message, context);
+    super('PROTOCOL_ERROR', { message, context });
   }
 }
 
@@ -137,7 +137,7 @@ registerErrorMessageContext('PROTOCOL_ERROR', ProtocolError);
 // General connectivity errors.
 export class ConnectivityError extends BaseError {
   constructor(message?: string, context?: any) {
-    super('CONNECTIVITY_ERROR', message, context);
+    super('CONNECTIVITY_ERROR', { message, context });
   }
 }
 
@@ -145,7 +145,7 @@ registerErrorMessageContext('CONNECTIVITY_ERROR', ConnectivityError);
 
 export class RateLimitExceededError extends BaseError {
   constructor(message?: string, context?: any) {
-    super('RATE_LIMIT_EXCEEDED', message, context);
+    super('RATE_LIMIT_EXCEEDED', { message, context });
   }
 }
 
@@ -154,11 +154,11 @@ registerErrorMessageContext('RATE_LIMIT_EXCEEDED', RateLimitExceededError);
 // TODO(nf): Rename? the protocol isn't what's unknown...
 export class UnknownProtocolError extends BaseError {
   constructor(message?: string, innerError?: Error) {
-    super('UNKNOWN_PROTOCOL_ERROR', message, innerError);
+    super('UNKNOWN_PROTOCOL_ERROR', { message, cause: innerError });
   }
 }
 
-registerErrorMessageContext('UNKNOWN_PROTOCOL_ERROR', UnknownProtocolError);
+registerError('UNKNOWN_PROTOCOL_ERROR', (message, context) => new UnknownProtocolError(message, context));
 
 export class InvalidStorageVersionError extends DatabaseError {
   constructor(expected: number, actual: number) {
