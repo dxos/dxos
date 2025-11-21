@@ -2,5 +2,5 @@
 // Copyright 2024 DXOS.org
 //
 
-export * from './types';
-export type * from './util';
+export type * from './types';
+export * from './util';

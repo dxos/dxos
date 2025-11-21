@@ -11,7 +11,7 @@ import * as LiveObject from '@dxos/live-object';
 import { assumeType, deepMapValues } from '@dxos/util';
 
 import { live } from './internal';
-import * as EchoSchema from './internal';
+import * as EchoSchema from './internal'; // TODO(burdon): SUB DIVIDE.
 import type * as Ref from './Ref';
 import type * as Relation from './Relation';
 import * as Type from './Type';

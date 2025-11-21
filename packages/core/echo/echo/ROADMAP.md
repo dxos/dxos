@@ -13,7 +13,6 @@
 - [ ] Rename FormatEnum => Primitive?
 - [ ] Don't re-export effect?
 
-
 ## Issues
 
 - [ ] Build error when changing from TypedObject using Ref$: Type 'Task' does not satisfy the constraint 'WithId' (see echo-schema/testing/schema.ts)

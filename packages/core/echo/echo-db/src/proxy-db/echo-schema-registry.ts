@@ -60,13 +60,13 @@ export type EchoSchemaRegistryOptions = {
  */
 // TODO(burdon): Reconcile with RuntimeSchemaRegistry. Rename (no product name in types).
 export class EchoSchemaRegistry extends Resource implements SchemaRegistry {
-  private readonly _reactiveQuery: boolean;
-  private readonly _preloadSchemaOnOpen: boolean;
-
   private readonly _schemaById: Map<string, EchoSchema> = new Map();
   private readonly _schemaByType: Map<string, EchoSchema> = new Map();
   private readonly _unsubscribeById: Map<string, CleanupFn> = new Map();
   private readonly _schemaSubscriptionCallbacks: SchemaSubscriptionCallback[] = [];
+
+  private readonly _reactiveQuery: boolean;
+  private readonly _preloadSchemaOnOpen: boolean;
 
   constructor(
     private readonly _db: EchoDatabase,

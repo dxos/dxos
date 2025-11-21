@@ -19,12 +19,7 @@ import { type DataService, type SpaceSyncState } from '@dxos/protocols/proto/dxo
 import { defaultMap } from '@dxos/util';
 
 import type { SaveStateChangedEvent } from '../automerge';
-import {
-  CoreDatabase,
-  type FlushOptions,
-  type LoadObjectOptions,
-  type ObjectCore,
-} from '../core-db';
+import { CoreDatabase, type FlushOptions, type LoadObjectOptions, type ObjectCore } from '../core-db';
 import {
   type AnyLiveObject,
   EchoReactiveHandler,
@@ -64,6 +59,7 @@ export interface EchoDatabase extends Queryable {
   get graph(): Hypergraph;
   get schemaRegistry(): EchoSchemaRegistry;
 
+  /** @deprecated */
   get spaceKey(): PublicKey;
   get spaceId(): SpaceId;
 

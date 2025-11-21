@@ -2,13 +2,12 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type CleanupFn, type ReadOnlyEvent } from '@dxos/async';
-import { type Context } from '@dxos/context';
+import { type CleanupFn } from '@dxos/async';
 import { type DXN, type PublicKey, type SpaceId } from '@dxos/keys';
 import { type Live } from '@dxos/live-object';
 
 import { type BaseObject, type HasId } from './internal';
-import { type Filter, type Query } from './query';
+import { type Filter, type Query } from './Query';
 import type * as Ref from './Ref';
 
 export type QueryResultEntry<T> = {
@@ -130,20 +129,14 @@ export type AddOptions = {
 
 // TODO(burdon): Deconstruct into aspects.
 export interface Database extends Queryable {
-  get spaceKey(): PublicKey;
+  // get spaceKey(): PublicKey;
   get spaceId(): SpaceId;
 
-  get graph(): Hypergraph;
+  // TODO(burdon): Implement.
+  // get graph(): Hypergraph;
+  // get schemaRegistry(): EchoSchemaRegistry;
 
-  // TODO(burdon): Move into Hypergraph abstraction.
-  get schemaRegistry(): EchoSchemaRegistry;
-
-  toJSON(): object;
-
-  /**
-   * @deprecated Use `ref` instead.
-   */
-  getObjectById<T>(id: string, opts?: GetObjectByIdOptions): Live<T> | undefined;
+  // toJSON(): object;
 
   /**
    * Creates a reference to an existing object in the database.
@@ -175,52 +168,61 @@ export interface Database extends Queryable {
   remove<T extends BaseObject & HasId>(obj: T): void;
 
   /**
+   * Wait for all pending changes to be saved to disk.
+   */
+  // flush(opts?: FlushOptions): Promise<void>;
+
+  //
+  // REMOVE
+  //
+
+  /**
+   * Get the current sync state.
+   */
+  // getSyncState(): Promise<SpaceSyncState>;
+
+  /**
+   * Get notification about the sync progress with other peers.
+   */
+  // subscribeToSyncState(ctx: Context, cb: (state: SpaceSyncState) => void): CleanupFn;
+
+  /**
+   * Run migrations.
+   */
+  // runMigrations(migrations: ObjectMigration[]): Promise<void>;
+
+  /**
    * Insert new objects.
    * @deprecated Use `add` instead.
    */
   // TODO(burdon): Remove.
   // TODO(dmaretskyi): Support meta.
-  insert(data: unknown): Promise<unknown>;
+  // insert(data: unknown): Promise<unknown>;
 
   /**
    * Update objects.
    * @deprecated Directly mutate the object.
    */
   // TODO(burdon): Remove.
-  update(filter: Filter.Any, operation: unknown): Promise<void>;
+  // update(filter: Filter.Any, operation: unknown): Promise<void>;
 
   /**
-   * Wait for all pending changes to be saved to disk.
+   * @deprecated Use `ref` instead.
    */
-  flush(opts?: FlushOptions): Promise<void>;
-
-  /**
-   * Run migrations.
-   */
-  runMigrations(migrations: ObjectMigration[]): Promise<void>;
-
-  /**
-   * Get the current sync state.
-   */
-  getSyncState(): Promise<SpaceSyncState>;
-
-  /**
-   * Get notification about the sync progress with other peers.
-   */
-  subscribeToSyncState(ctx: Context, cb: (state: SpaceSyncState) => void): CleanupFn;
+  // getObjectById<T>(id: string, opts?: GetObjectByIdOptions): Live<T> | undefined;
 
   /**
    * Get notification about the data being saved to disk.
    */
-  readonly saveStateChanged: ReadOnlyEvent<SaveStateChangedEvent>;
+  // readonly saveStateChanged: ReadOnlyEvent<SaveStateChangedEvent>;
 
   /**
    * @deprecated
    */
-  readonly pendingBatch: ReadOnlyEvent<unknown>;
+  // readonly pendingBatch: ReadOnlyEvent<unknown>;
 
   /**
    * @deprecated
    */
-  readonly coreDatabase: CoreDatabase;
+  // readonly coreDatabase: CoreDatabase;
 }
