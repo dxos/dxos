@@ -8986,8 +8986,8 @@ importers:
         specifier: ^2.3.1
         version: 2.3.1(@codemirror/language@6.11.3)(@codemirror/state@6.5.2)(@codemirror/view@6.38.5)(@lezer/common@1.2.2)
       '@valtown/codemirror-ts':
-        specifier: ^2.2.0
-        version: 2.2.0(@codemirror/autocomplete@6.19.0)(@codemirror/lint@6.8.5)(@codemirror/view@6.38.5)
+        specifier: ^2.3.1
+        version: 2.3.1(@codemirror/autocomplete@6.19.0)(@codemirror/lint@6.8.5)(@codemirror/state@6.5.2)(@codemirror/view@6.38.5)
       codemirror:
         specifier: ^6.0.1
         version: 6.0.1
@@ -24079,11 +24079,12 @@ packages:
       '@codemirror/view': ^6
       '@lezer/common': ^1
 
-  '@valtown/codemirror-ts@2.2.0':
-    resolution: {integrity: sha512-p5PDt/T2rz83w6QoFQj8N0ojgfNIk/48k9u7VoyTyeBMZSz+kSHB00sKOFZ+OjCrUbl3cyGAmn/u+MInIxmfMQ==}
+  '@valtown/codemirror-ts@2.3.1':
+    resolution: {integrity: sha512-v5XiI4WA+bUy0XDgkrqZksqBWgIUeyLZuC94Px/rhXBph8ASmVXaimlGDtt0vH/9t8aDdIZYdr59r9H3oKMFOg==}
     peerDependencies:
       '@codemirror/autocomplete': ^6
       '@codemirror/lint': ^6
+      '@codemirror/state': ^6
       '@codemirror/view': ^6
 
   '@vercel/oidc@3.0.3':
@@ -44693,10 +44694,11 @@ snapshots:
       '@codemirror/view': 6.38.5
       '@lezer/common': 1.2.2
 
-  '@valtown/codemirror-ts@2.2.0(@codemirror/autocomplete@6.19.0)(@codemirror/lint@6.8.5)(@codemirror/view@6.38.5)':
+  '@valtown/codemirror-ts@2.3.1(@codemirror/autocomplete@6.19.0)(@codemirror/lint@6.8.5)(@codemirror/state@6.5.2)(@codemirror/view@6.38.5)':
     dependencies:
       '@codemirror/autocomplete': 6.19.0
       '@codemirror/lint': 6.8.5
+      '@codemirror/state': 6.5.2
       '@codemirror/view': 6.38.5
 
   '@vercel/oidc@3.0.3': {}
