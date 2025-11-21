@@ -2,7 +2,7 @@
 
 import eslint from '@eslint/js';
 import sortImports from '@trivago/prettier-plugin-sort-imports';
-import sortExports from 'eslint-plugin-sort-exports';
+// import sortExports from 'eslint-plugin-simple-import-sort';
 import reactPlugin from 'eslint-plugin-react';
 import importX from 'eslint-plugin-import-x';
 import arrowFunctions from 'eslint-plugin-prefer-arrow-functions';
@@ -96,8 +96,8 @@ export default tseslint.config(
     plugins: {
       'import-x': importX,
       'prefer-arrow-functions': arrowFunctions,
+      // 'simple-import-sort': sortExports,
       'sort-imports': sortImports,
-      'sort-exports': sortExports,
       'unused-imports': unusedImports,
     },
   },
@@ -248,6 +248,7 @@ export default tseslint.config(
           'newlines-between': 'always',
         },
       ],
+      // 'simple-import-sort/exports': 'error',
       'sort-imports': [
         'error',
         {

@@ -166,9 +166,9 @@ export const Editor = {
 };
 
 export type {
+  EditorContentProps,
   EditorController,
   EditorRootProps,
   EditorViewportProps,
-  EditorContentProps,
   // EditorToolbarProps, // TODO(burdon): Restore once removed deprecated props.
 };

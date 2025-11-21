@@ -2,7 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-export { SpaceId } from '@dxos/keys';
 export {
   isSpace,
   type Echo,
@@ -24,7 +23,6 @@ export {
   RefArray,
   type TypedObject,
 } from '@dxos/echo/internal';
-export { type Live, live, isLiveObject } from '@dxos/live-object';
 export {
   createObject,
   createSubscription,
@@ -43,6 +41,8 @@ export {
   type Selection,
   type SubscriptionHandle,
 } from '@dxos/echo-db';
+export { SpaceId } from '@dxos/keys';
+export { type Live, live, isLiveObject } from '@dxos/live-object';
 
 // TODO(dmaretskyi): Remove this export.
 export { decodeReference as internalDecodeReference } from '@dxos/echo-protocol';
