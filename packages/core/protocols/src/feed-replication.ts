@@ -12,6 +12,7 @@ export type FeedBlock = {
   }[];
   signature: Uint8Array;
 };
+
 export type GetMetadataProtocolMessage = {
   type: 'get-metadata';
   feedKey: string;
