@@ -48,7 +48,7 @@ export class SpaceInvitationProtocol implements InvitationProtocol {
     };
   }
 
-  checkCanInviteNewMembers(): ApiError | undefined {
+  checkCanInviteNewMembers(): Error | undefined {
     if (this._spaceKey == null) {
       return new InvalidInvitationError({ message: 'No spaceKey was provided for a space invitation.' });
     }

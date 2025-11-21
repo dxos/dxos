@@ -25,6 +25,7 @@
 
 ## Workflow
 
+- Never work on main, create a new git worktree for the branch you are working on.
 - Check `moon.yml` for available package tasks
 - Run linter at natural stopping points
 - Use Conventional Commits for PR titles
@@ -38,6 +39,6 @@
 - When the user asks you to submit a PR, make sure that:
   - `pnpm -w pre-ci` passes
   - `pnpm -w gh-actions --verify --watch` shows green CI
-  - The PR description is up-to-date
+  - The PR description is up-to-date and has a description of the changes and reasoning behind them.
   - Reference linear issues if available in PR description as "closes DX-123" or "part of DX-123"
 - Repeat the process if you made any new code changes

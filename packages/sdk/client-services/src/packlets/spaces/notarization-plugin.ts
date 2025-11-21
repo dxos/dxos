@@ -384,7 +384,7 @@ export class NotarizationPlugin extends Resource implements CredentialProcessor 
           peers: Array.from(this._extensions).map((extension) => extension.remotePeerId),
         });
         void ctx.dispose();
-        errors.throw(new TimeoutError({ message: 'Notarization timed out', context: { timeout } }));
+        errors.throw(new TimeoutError(timeout, 'Notarization timed out'));
       },
       timeout,
     );
