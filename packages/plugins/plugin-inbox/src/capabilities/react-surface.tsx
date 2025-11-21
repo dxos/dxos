@@ -6,11 +6,6 @@ import React from 'react';
 
 import { Capabilities, contributes, createSurface } from '@dxos/app-framework';
 import { Obj } from '@dxos/echo';
-import { AttentionAction } from '@dxos/plugin-attention/types';
-import { ATTENDABLE_PATH_SEPARATOR, DeckAction } from '@dxos/plugin-deck/types';
-import { Filter, getSpace, useQuery, useQueue, useSpace } from '@dxos/react-client/echo';
-import { Table } from '@dxos/react-ui-table/types';
-import { getTypenameFromQuery } from '@dxos/schema';
 import { Event, Message, Organization, Person } from '@dxos/types';
 
 import {
