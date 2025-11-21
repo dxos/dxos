@@ -107,8 +107,8 @@ export const RelatedToContact = ({ subject: contact }: SurfaceComponentProps<Per
 
   return (
     <>
-      <RelatedMessages messages={relatedMessages} onMessageClick={handleMessageClick} />;
-      <RelatedEvents recent={sortedRecentEvents} upcoming={sortedUpcomingEvents} onEventClick={handleEventClick} />;
+      <RelatedMessages messages={relatedMessages} onMessageClick={handleMessageClick} />
+      <RelatedEvents recent={sortedRecentEvents} upcoming={sortedUpcomingEvents} onEventClick={handleEventClick} />
     </>
   );
 };
