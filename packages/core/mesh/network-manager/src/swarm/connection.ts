@@ -185,16 +185,18 @@ export class Connection {
     this._protocol.stream.on('close', () => {
       log('protocol stream closed');
       this._protocolClosed.wake();
-      this.close({ error: new ProtocolError({ message: 'protocol stream closed' }) }).catch((err) => this.errors.raise(err));
+      this.close({ error: new ProtocolError({ message: 'protocol stream closed' }) }).catch((err) =>
+        this.errors.raise(err),
+      );
     });
 
     scheduleTask(
       this.connectedTimeoutContext,
       async () => {
         log.info(`timeout waiting ${TRANSPORT_CONNECTION_TIMEOUT / 1000}s for transport to connect, aborting`);
-        await this.abort(new TimeoutError({ message: `${TRANSPORT_CONNECTION_TIMEOUT / 1000}s for transport to connect` })).catch(
-          (err) => this.errors.raise(err),
-        );
+        await this.abort(
+          new TimeoutError({ message: `${TRANSPORT_CONNECTION_TIMEOUT / 1000}s for transport to connect` }),
+        ).catch((err) => this.errors.raise(err));
       },
       TRANSPORT_CONNECTION_TIMEOUT,
     );

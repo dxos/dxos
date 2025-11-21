@@ -176,7 +176,9 @@ export class RtcTransportProxy extends Resource implements Transport {
     } catch (error) {
       const type = signalEvent.payload.payload.data?.type;
       if (type === 'offer' || type === 'answer') {
-        this._raiseIfOpen(new ConnectivityError({ message: `Session establishment failed: ${type} couldn't be sent.` }));
+        this._raiseIfOpen(
+          new ConnectivityError({ message: `Session establishment failed: ${type} couldn't be sent.` }),
+        );
       }
     }
   }
