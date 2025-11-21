@@ -43,6 +43,7 @@ export const translations = [
         'inbox label': 'Inbox',
 
         'sync mailbox label': 'Sync mailbox',
+        'sync calendar label': 'Sync calendar',
 
         'show contact label': 'Show contact',
         'create contact label': 'Create contact',
