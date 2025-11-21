@@ -7,10 +7,15 @@ import type * as EffectSchema from 'effect/Schema';
 import { type EncodedReference } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
 import type * as Keys from '@dxos/keys';
+import { type ToMutable } from '@dxos/util';
 
-import { type ToMutable } from './internal';
-import * as EchoSchema from './internal';
+// TODO(dmaretskyi): Remove re-exports.
+export { SpaceId, ObjectId, DXN } from '@dxos/keys';
+
+import * as EchoSchema from './EchoSchema';
 import type * as RelationModule from './Relation';
+
+export { Format, JsonSchemaType as JsonSchema, toEffectSchema, toJsonSchema } from './EchoSchema';
 
 //
 // Kind
@@ -238,8 +243,3 @@ export type Meta = EchoSchema.TypeAnnotation;
 export const getMeta = (schema: Obj.Any | Relation.Any): Meta | undefined => {
   return EchoSchema.getTypeAnnotation(schema);
 };
-
-// TODO(dmaretskyi): Remove re-exports.
-export { SpaceId, ObjectId, DXN } from '@dxos/keys';
-
-export { Format, JsonSchemaType as JsonSchema, toEffectSchema, toJsonSchema } from './internal';

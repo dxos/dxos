@@ -12,6 +12,10 @@ export type MaybePromise<T> = T | Promise<T>;
 
 export type GuardedType<T> = T extends (value: any) => value is infer R ? R : never;
 
+export type ToMutable<T> = T extends object
+  ? { -readonly [K in keyof T]: T[K] extends readonly (infer U)[] ? U[] : T[K] }
+  : T;
+
 export type DeepReadonly<T> = {
   readonly [P in keyof T]: T[P] extends Record<string, any>
     ? DeepReadonly<T[P]>
