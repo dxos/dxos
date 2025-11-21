@@ -73,10 +73,47 @@ type BrowserOptions = {
   browserName: string;
   nodeExternal?: boolean;
   injectGlobals?: boolean;
+  playwrightOptions?: {
+    launch?: {
+      args?: string[];
+    };
+  };
 };
 
-const createBrowserProject = ({ browserName, nodeExternal = false, injectGlobals = true }: BrowserOptions) =>
-  defineProject({
+const createBrowserProject = ({
+  browserName,
+  nodeExternal = false,
+  injectGlobals = true,
+  playwrightOptions,
+}: BrowserOptions) => {
+  // Default Chromium flags to enable WebGPU support (requires GPU drivers on system).
+  // Based on: https://developer.chrome.com/blog/supercharge-web-ai-testing
+  const defaultChromiumArgs =
+    browserName === 'chromium'
+      ? [
+          '--no-sandbox',
+          '--headless=new',
+          '--use-angle=vulkan',
+          '--enable-features=Vulkan',
+          '--disable-vulkan-surface',
+          '--enable-unsafe-webgpu',
+        ]
+      : [];
+
+  // Merge default args with custom playwright options
+  const mergedPlaywrightOptions = playwrightOptions?.launch?.args
+    ? {
+        ...playwrightOptions,
+        launch: {
+          ...playwrightOptions.launch,
+          args: [...defaultChromiumArgs, ...playwrightOptions.launch.args],
+        },
+      }
+    : defaultChromiumArgs.length > 0
+      ? { launch: { args: defaultChromiumArgs } }
+      : undefined;
+
+  return defineProject({
     plugins: [
       nodeStdPlugin(),
       WasmPlugin(),
@@ -123,9 +160,11 @@ const createBrowserProject = ({ browserName, nodeExternal = false, injectGlobals
         provider: 'playwright',
         name: browserName,
         isolate: false,
-      },
+        ...(mergedPlaywrightOptions && { playwright: mergedPlaywrightOptions }),
+      } as any, // Type cast to allow provider-specific options like playwright.launch
     },
   });
+};
 
 type NodeOptions = {
   environment?: 'node' | 'jsdom' | 'happy-dom';
@@ -262,7 +301,8 @@ const normalizeBrowserOptions = (
     return options.map((browser) => ({ browserName: browser }));
   }
 
-  return options.browsers.map((browser) => ({ browserName: browser, ...options }));
+  const { browsers, ...sharedOptions } = options;
+  return browsers.map((browser) => ({ browserName: browser, ...sharedOptions }));
 };
 
 /**
