@@ -5,8 +5,9 @@
 import React from 'react';
 
 import { Filter, Obj } from '@dxos/echo';
+import { createDocAccessor } from '@dxos/echo-db';
 import { Markdown } from '@dxos/plugin-markdown/types';
-import { createDocAccessor, useQuery } from '@dxos/react-client/echo';
+import { useQuery } from '@dxos/react-client/echo';
 import { Toolbar, useThemeContext } from '@dxos/react-ui';
 import {
   EditorContent,

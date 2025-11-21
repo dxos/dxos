@@ -4,10 +4,10 @@
 
 import { Capabilities, Events, contributes, createIntent, defineModule, definePlugin } from '@dxos/app-framework';
 import { type Obj, Ref } from '@dxos/echo';
+import { createDocAccessor, getTextInRange } from '@dxos/echo-db';
 import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
 import { SpaceCapabilities } from '@dxos/plugin-space';
 import { defineObjectForm } from '@dxos/plugin-space/types';
-import { createDocAccessor, getTextInRange } from '@dxos/react-client/echo';
 import { translations as editorTranslations } from '@dxos/react-ui-editor';
 import { Text } from '@dxos/schema';
 

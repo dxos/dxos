@@ -6,9 +6,9 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useMemo, useState } from 'react';
 
 import { Client } from '@dxos/client';
-import { createDocAccessor } from '@dxos/client/echo';
 import { defaultFunctions } from '@dxos/compute';
 import { getRegisteredFunctionNames } from '@dxos/compute/testing';
+import { createDocAccessor } from '@dxos/echo-db';
 import { useAsyncEffect } from '@dxos/react-hooks';
 import { withTheme } from '@dxos/react-ui/testing';
 import { automerge } from '@dxos/react-ui-editor';

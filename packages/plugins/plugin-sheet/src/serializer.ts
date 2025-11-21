@@ -3,8 +3,8 @@
 //
 
 import { Obj } from '@dxos/echo';
+import { getObjectCore } from '@dxos/echo-db';
 import { type TypedObjectSerializer } from '@dxos/plugin-space/types';
-import { getObjectCore } from '@dxos/react-client/echo';
 
 import { Sheet } from './types';
 
