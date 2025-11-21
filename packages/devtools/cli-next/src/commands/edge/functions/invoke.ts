@@ -10,9 +10,8 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 
+import { ClientService } from '@dxos/client';
 import { createEdgeClient, getDeployedFunctions, invokeFunction } from '@dxos/functions-runtime/edge';
-
-import { ClientService } from '../../../services';
 
 export const invoke = Command.make(
   'invoke',

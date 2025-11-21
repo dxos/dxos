@@ -13,7 +13,7 @@ import {
   LabelAnnotation,
   PropertyMetaAnnotationId,
 } from '@dxos/echo/internal';
-import { IconAnnotation, ItemAnnotation } from '@dxos/schema';
+import { IconAnnotation } from '@dxos/schema';
 
 // TODO(burdon): Remove (specific to kanban demo).
 export const StatusOptions = [
@@ -74,7 +74,7 @@ const OrganizationSchema = Schema.Struct({
     GeneratorAnnotation.set('internet.url'),
     Schema.optional,
   ),
-}).pipe();
+});
 
 export const Organization = OrganizationSchema.pipe(
   Schema.extend(
@@ -84,7 +84,6 @@ export const Organization = OrganizationSchema.pipe(
   ),
   Schema.annotations({ title: 'Organization', description: 'An organization.' }),
   LabelAnnotation.set(['name']),
-  ItemAnnotation.set(true),
   IconAnnotation.set('ph--building--regular'),
   Type.Obj({
     typename: 'dxos.org/type/Organization',
@@ -101,7 +100,6 @@ export const make = (props: Partial<Obj.MakeProps<typeof Organization>> = {}) =>
 export const LegacyOrganization = OrganizationSchema.pipe(
   Schema.annotations({ title: 'Organization', description: 'An organization.' }),
   LabelAnnotation.set(['name']),
-  ItemAnnotation.set(true),
   IconAnnotation.set('ph--building--regular'),
   Type.Obj({
     typename: 'dxos.org/type/Organization',

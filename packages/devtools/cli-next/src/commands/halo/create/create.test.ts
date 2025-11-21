@@ -6,7 +6,8 @@ import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
-import { ClientService } from '../../../services';
+import { ClientService } from '@dxos/client';
+
 import { TestConsole, TestLayer } from '../../../testing';
 
 import { handler } from './create';

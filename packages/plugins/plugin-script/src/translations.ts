@@ -19,6 +19,7 @@ export const translations = [
         'object name placeholder': 'New script',
         'rename object label': 'Rename script',
         'delete object label': 'Delete script',
+        'object deleted label': 'Script deleted',
       },
       [Notebook.Notebook.typename]: {
         'typename label': 'Notebook',
@@ -28,6 +29,7 @@ export const translations = [
         'object name placeholder': 'New notebook',
         'rename object label': 'Rename notebook',
         'delete object label': 'Delete notebook',
+        'object deleted label': 'Notebook deleted',
       },
       [meta.id]: {
         'plugin name': 'Scripts',

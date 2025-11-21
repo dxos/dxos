@@ -8,9 +8,8 @@ import * as Command from '@effect/cli/Command';
 import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
 
+import { ClientService } from '@dxos/client';
 import { mountDevtoolsHooks } from '@dxos/client/devtools';
-
-import { ClientService } from '../../services';
 
 export const inspector = Command.make(
   'inspector',

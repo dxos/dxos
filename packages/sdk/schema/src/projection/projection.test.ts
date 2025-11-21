@@ -6,7 +6,7 @@ import * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
-import { Filter, Obj, Query, Type } from '@dxos/echo';
+import { Filter, Query, Type } from '@dxos/echo';
 import {
   EchoObject,
   EntityKind,
@@ -68,11 +68,9 @@ describe('ProjectionModel', () => {
     });
     const [mutable] = await registry.register([schema]);
 
-    const presentation = Obj.make(Type.Expando, {});
     const view = View.make({
       query: Query.select(Filter.type(mutable)),
       jsonSchema: mutable.jsonSchema,
-      presentation,
     });
     const projectionModel = new ProjectionModel(mutable.jsonSchema, view.projection);
     expect(projectionModel.fields).to.have.length(3);
@@ -156,11 +154,9 @@ describe('ProjectionModel', () => {
     }).pipe(Type.Obj({ typename, version: '0.1.0' }));
     const jsonSchema = toJsonSchema(schema);
 
-    const presentation = Obj.make(Type.Expando, {});
     const view = await View.makeWithReferences({
       query: Query.select(Filter.type(schema)),
       jsonSchema,
-      presentation,
       registry,
     });
 
@@ -209,11 +205,9 @@ describe('ProjectionModel', () => {
     });
 
     const [mutable] = await registry.register([schema]);
-    const presentation = Obj.make(Type.Expando, {});
     const view = View.make({
       query: Query.select(Filter.type(mutable)),
       jsonSchema: mutable.jsonSchema,
-      presentation,
     });
     const projectionModel = new ProjectionModel(mutable.jsonSchema, view.projection);
 
@@ -246,11 +240,9 @@ describe('ProjectionModel', () => {
     });
 
     const [mutable] = await registry.register([schema]);
-    const presentation = Obj.make(Type.Expando, {});
     const view = View.make({
       query: Query.select(Filter.type(mutable)),
       jsonSchema: mutable.jsonSchema,
-      presentation,
     });
     const projectionModel = new ProjectionModel(mutable.jsonSchema, view.projection);
 
@@ -297,11 +289,9 @@ describe('ProjectionModel', () => {
     });
 
     const [mutable] = await registry.register([schema]);
-    const presentation = Obj.make(Type.Expando, {});
     const view = View.make({
       query: Query.select(Filter.type(mutable)),
       jsonSchema: mutable.jsonSchema,
-      presentation,
     });
     const projectionModel = new ProjectionModel(mutable.jsonSchema, view.projection);
 
@@ -350,11 +340,9 @@ describe('ProjectionModel', () => {
     });
 
     const [mutable] = await registry.register([schema]);
-    const presentation = Obj.make(Type.Expando, {});
     const view = View.make({
       query: Query.select(Filter.type(mutable)),
       jsonSchema: mutable.jsonSchema,
-      presentation,
     });
     const projection = new ProjectionModel(mutable.jsonSchema, view.projection);
 
@@ -408,11 +396,9 @@ describe('ProjectionModel', () => {
     });
 
     const [mutable] = await registry.register([schema]);
-    const presentation = Obj.make(Type.Expando, {});
     const view = View.make({
       query: Query.select(Filter.type(mutable)),
       jsonSchema: mutable.jsonSchema,
-      presentation,
     });
     const projection = new ProjectionModel(mutable.jsonSchema, view.projection);
     const fieldId = getFieldId(view.projection, 'status');
@@ -520,11 +506,9 @@ describe('ProjectionModel', () => {
     });
 
     const [mutable] = await registry.register([schema]);
-    const presentation = Obj.make(Type.Expando, {});
     const view = View.make({
       query: Query.select(Filter.type(mutable)),
       jsonSchema: mutable.jsonSchema,
-      presentation,
     });
     const projection = new ProjectionModel(mutable.jsonSchema, view.projection);
     const fieldId = getFieldId(view.projection, 'tags');
@@ -659,11 +643,9 @@ describe('ProjectionModel', () => {
     const [mutable] = await registry.register([schema]);
 
     // Create view with only name and email fields.
-    const presentation = Obj.make(Type.Expando, {});
     const view = View.make({
       query: Query.select(Filter.type(mutable)),
       jsonSchema: mutable.jsonSchema,
-      presentation,
       fields: [
         'name',
         'email',
@@ -765,11 +747,9 @@ describe('ProjectionModel', () => {
     const [mutable] = await registry.register([schema]);
 
     // Create view with no explicit fields.
-    const presentation = Obj.make(Type.Expando, {});
     const view = View.make({
       query: Query.select(Filter.type(mutable)),
       jsonSchema: mutable.jsonSchema,
-      presentation,
       fields: [], // No fields specified.
     });
 
@@ -803,11 +783,9 @@ describe('ProjectionModel', () => {
     const [mutable] = await registry.register([initialSchema]);
 
     // Create empty view (no fields).
-    const presentation = Obj.make(Type.Expando, {});
     const view = View.make({
       query: Query.select(Filter.type(mutable)),
       jsonSchema: mutable.jsonSchema,
-      presentation,
       fields: [],
     });
 
@@ -846,11 +824,9 @@ describe('ProjectionModel', () => {
     });
 
     const [mutable] = await registry.register([schema]);
-    const presentation = Obj.make(Type.Expando, {});
     const view = View.make({
       query: Query.select(Filter.type(mutable)),
       jsonSchema: mutable.jsonSchema,
-      presentation,
     });
     let projectionModel = new ProjectionModel(mutable.jsonSchema, view.projection);
 
@@ -885,8 +861,7 @@ describe('ProjectionModel', () => {
     const schema = Testing.Organization;
     const jsonSchema = toJsonSchema(schema);
 
-    const presentation = Obj.make(Type.Expando, {});
-    const view = View.make({ query: Query.select(Filter.type(schema)), jsonSchema, presentation });
+    const view = View.make({ query: Query.select(Filter.type(schema)), jsonSchema });
     const projection = new ProjectionModel(jsonSchema, view.projection);
     const fieldId = getFieldId(view.projection, 'status');
     invariant(fieldId);
@@ -943,11 +918,9 @@ describe('ProjectionModel', () => {
 
     const jsonSchema = toJsonSchema(ContactWithArrayOfEmails);
 
-    const presentation = Obj.make(Type.Expando, {});
     const view = View.make({
       query: Query.select(Filter.type(ContactWithArrayOfEmails)),
       jsonSchema,
-      presentation,
     });
     const projection = new ProjectionModel(jsonSchema, view.projection);
 
@@ -988,11 +961,9 @@ describe('ProjectionModel', () => {
       });
 
       const [mutable] = await registry.register([schema]);
-      const presentation = Obj.make(Type.Expando, {});
       const view = View.make({
         query: Query.select(Filter.type(mutable)),
         jsonSchema: mutable.jsonSchema,
-        presentation,
       });
       const projection = new ProjectionModel(mutable.jsonSchema, view.projection);
       const fieldId = getFieldId(view.projection, fieldName);

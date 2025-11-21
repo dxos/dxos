@@ -3,8 +3,7 @@
 //
 
 import { computed, effect } from '@preact-signals/safe-react';
-import { useRef } from '@preact-signals/safe-react/react';
-import { type DependencyList, useEffect, useMemo } from 'react';
+import { type DependencyList, useEffect, useMemo, useRef } from 'react';
 
 /**
  * Like `useEffect` but also tracks signals inside of the callback.

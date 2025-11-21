@@ -11,9 +11,10 @@ import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
 import * as Yaml from 'yaml';
 
-import { Config } from '@dxos/client';
 import { DX_CONFIG, DX_DATA } from '@dxos/client-protocol';
 import { getProfilePath } from '@dxos/client-protocol';
+
+import { Config } from './config';
 
 export const memoryConfig = new Config({
   runtime: {
