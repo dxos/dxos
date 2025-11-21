@@ -24,9 +24,9 @@ type StoryProps = {
 };
 
 const DefaultStory = ({ editing }: StoryProps) => {
-  const { model, view } = useTestTableModel();
+  const { model, table } = useTestTableModel();
 
-  if (!model || !view) {
+  if (!model || !table) {
     return <div />;
   }
 
@@ -50,8 +50,9 @@ const meta = {
       createIdentity: true,
       createSpace: true,
       onCreateSpace: async ({ client, space }) => {
-        const { view } = await Table.makeView({ client, space, typename: Task.Task.typename });
-        space.db.add(view);
+        const { view, jsonSchema } = await View.makeFromSpace({ client, space, typename: Task.Task.typename });
+        const table = Table.make({ view, jsonSchema });
+        space.db.add(table);
         Array.from({ length: 10 }).forEach(() => {
           space.db.add(
             Obj.make(Task.Task, {

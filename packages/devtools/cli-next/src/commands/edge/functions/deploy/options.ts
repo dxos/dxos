@@ -5,11 +5,11 @@
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
+import { ClientService } from '@dxos/client';
 import { type Space } from '@dxos/client/echo';
 import { type Function } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 
-import { ClientService } from '../../../../services';
 import { getSpace } from '../../../../util';
 
 import { getNextVersion, loadFunctionObject } from './echo';

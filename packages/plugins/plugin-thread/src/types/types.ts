@@ -14,10 +14,11 @@ import { meta } from '../meta';
 import * as Channel from './Channel';
 
 export namespace ThreadAction {
-  export class onCreateSpace extends Schema.TaggedClass<onCreateSpace>()(`${meta.id}/action/on-space-created`, {
+  export class OnCreateSpace extends Schema.TaggedClass<OnCreateSpace>()(`${meta.id}/action/on-space-created`, {
     input: Schema.Struct({
       space: SpaceSchema,
       rootCollection: Collection.Collection,
+      isDefault: Schema.Boolean.pipe(Schema.optional),
     }),
     output: Schema.Void,
   }) {}

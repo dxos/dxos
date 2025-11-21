@@ -58,6 +58,7 @@ export type TreeItemProps<T extends HasId = any> = {
   last: boolean;
   draggable?: boolean;
   renderColumns?: ColumnRenderer<T>;
+  blockInstruction?: (params: { instruction: Instruction; source: TreeData; target: TreeData }) => boolean;
   canDrop?: (params: { source: TreeData; target: TreeData }) => boolean;
   canSelect?: (params: { item: T; path: string[] }) => boolean;
   onOpenChange?: (params: { item: T; path: string[]; open: boolean }) => void;
@@ -71,6 +72,7 @@ const RawTreeItem = <T extends HasId = any>({
   last,
   draggable: _draggable,
   renderColumns: Columns,
+  blockInstruction,
   canDrop,
   canSelect,
   onOpenChange,
@@ -149,7 +151,11 @@ const RawTreeItem = <T extends HasId = any>({
         },
         getIsSticky: () => true,
         onDrag: ({ self, source }) => {
-          const instruction = extractInstruction(self.data);
+          const desired = extractInstruction(self.data);
+          const block =
+            desired && blockInstruction?.({ instruction: desired, source: source.data as TreeData, target: data });
+          const instruction: Instruction | null =
+            block && desired.type !== 'instruction-blocked' ? { type: 'instruction-blocked', desired } : desired;
 
           if (source.data.id !== id) {
             if (instruction?.type === 'make-child' && isBranch && !open && !cancelExpandRef.current) {
@@ -180,7 +186,7 @@ const RawTreeItem = <T extends HasId = any>({
         },
       }),
     );
-  }, [_draggable, item, id, mode, path, open, canDrop]);
+  }, [_draggable, item, id, mode, path, open, blockInstruction, canDrop]);
 
   // Cancel expand on unmount.
   useEffect(() => () => cancelExpand(), [cancelExpand]);
@@ -279,6 +285,7 @@ const RawTreeItem = <T extends HasId = any>({
             last={index === items.length - 1}
             draggable={_draggable}
             renderColumns={Columns}
+            blockInstruction={blockInstruction}
             canDrop={canDrop}
             canSelect={canSelect}
             onOpenChange={onOpenChange}

@@ -130,7 +130,7 @@ test.describe('Table', () => {
     await table.grid.ready();
     const newColumnLabel = 'TEST LABEL';
 
-    await table.addColumn({ label: newColumnLabel, format: 'number' });
+    await table.addColumn({ label: newColumnLabel, format: 'Number' });
 
     await expect(page.getByRole('gridcell', { name: newColumnLabel })).toBeVisible();
     await page.close();

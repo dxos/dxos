@@ -19,6 +19,7 @@ export const translations = [
         'object name placeholder': 'New mailbox',
         'rename object label': 'Rename mailbox',
         'delete object label': 'Delete mailbox',
+        'object deleted label': 'Mailbox deleted',
       },
       [Calendar.Calendar.typename]: {
         'typename label': 'Calendar',
@@ -28,6 +29,7 @@ export const translations = [
         'object name placeholder': 'New calendar',
         'rename object label': 'Rename calendar',
         'delete object label': 'Delete calendar',
+        'object deleted label': 'Calendar deleted',
       },
       [meta.id]: {
         'plugin name': 'Inbox',

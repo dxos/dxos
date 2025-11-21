@@ -7,13 +7,12 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 import type * as Schema from 'effect/Schema';
 
+import { ClientService } from '@dxos/client';
 import { type Space, SpaceId } from '@dxos/client/echo';
 import { BaseError, type BaseErrorOptions } from '@dxos/errors';
 import { DatabaseService } from '@dxos/functions';
 import { log } from '@dxos/log';
 import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
-
-import { ClientService } from '../services';
 
 export const getSpace = (rawSpaceId: string) =>
   Effect.gen(function* () {

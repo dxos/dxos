@@ -74,7 +74,6 @@ const DefaultStory = (props: StoryProps) => {
         name: 'Test',
         query: Query.select(Filter.type(TestSchema)),
         jsonSchema: Type.toJsonSchema(TestSchema),
-        presentation: Obj.make(Type.Expando, {}),
       });
 
       setSchema(testSchema);
@@ -88,7 +87,7 @@ const DefaultStory = (props: StoryProps) => {
         return;
       }
 
-      if (props.mode === 'query') {
+      if (props.mode === 'tag') {
         const queue = target && DXN.tryParse(target) ? target : undefined;
         const query = queue ? Query.fromAst(newQuery).options({ queues: [queue] }) : Query.fromAst(newQuery);
         view.query.ast = query.ast;
@@ -102,12 +101,10 @@ const DefaultStory = (props: StoryProps) => {
         const newView = View.make({
           query,
           jsonSchema: newSchema.jsonSchema,
-          presentation: Obj.make(Type.Expando, {}),
         });
         view.projection = Obj.getSnapshot(newView).projection;
         setSchema(() => newSchema);
       } else {
-        console.log('updateViewQuery', { newQuery });
         view.query.ast = newQuery;
         schema.updateTypename(getTypenameFromQuery(newQuery));
       }
@@ -194,8 +191,8 @@ export const Readonly: Story = {
   },
 };
 
-export const QueryMode: Story = {
+export const TagQueryMode: Story = {
   args: {
-    mode: 'query',
+    mode: 'tag',
   },
 };

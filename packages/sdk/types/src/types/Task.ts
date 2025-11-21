@@ -12,7 +12,6 @@ import {
   LabelAnnotation,
   PropertyMetaAnnotationId,
 } from '@dxos/echo/internal';
-import { ItemAnnotation } from '@dxos/schema';
 // eslint-disable-next-line unused-imports/no-unused-imports
 import { View as _View } from '@dxos/schema';
 
@@ -95,7 +94,6 @@ export const Task = Schema.Struct({
     version: '0.2.0',
   }),
   LabelAnnotation.set(['title']),
-  ItemAnnotation.set(true),
 );
 
 export interface Task extends Schema.Schema.Type<typeof Task> {}

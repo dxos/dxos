@@ -22,7 +22,7 @@ import { getSpace } from '@dxos/react-client/echo';
 import { DropdownMenu, IconButton, Toolbar, useTranslation } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
 import { StackItem } from '@dxos/react-ui-stack';
-import { Text } from '@dxos/schema';
+import { Text, View } from '@dxos/schema';
 import { isNonNullable } from '@dxos/util';
 
 import { meta } from '../meta';
@@ -63,24 +63,21 @@ export const NotebookContainer = ({ notebook, env }: NotebookContainerProps) => 
           const { name, filter } = builder.build(source);
           if (filter) {
             const ast = Query.select(filter).ast;
-            const view = cell.view?.target;
-            if (!view) {
-              const graph = Graph.make({ query: { ast } });
-              const { view } = await Graph.makeView({
-                space,
-                presentation: graph,
-              });
-              cell.view = Ref.make(view);
+            const graph = cell.graph?.target;
+            if (!graph) {
+              const { view } = await View.makeFromSpace({ space });
+              const graph = Graph.make({ query: { ast }, view });
+              cell.graph = Ref.make(graph);
               cell.name = name;
             } else {
-              view.query.ast = ast;
+              graph.query.ast = ast;
             }
           }
         }
 
-        if (cell.name && cell.view?.target) {
-          const view = Obj.getSnapshot(cell.view?.target);
-          const query = Query.fromAst(view.query.ast);
+        if (cell.name && cell.graph?.target) {
+          const graph = Obj.getSnapshot(cell.graph?.target);
+          const query = Query.fromAst(graph.query.ast);
           const result = await space?.db.query(query).run();
           const objectIds = result?.objects?.map((obj) => obj.id);
           setQueryValues((prev) => ({ ...prev, [cell.name!]: objectIds }));

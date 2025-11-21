@@ -18,6 +18,7 @@ export const translations = [
         'object name placeholder': 'New game',
         'rename object label': 'Rename game',
         'delete object label': 'Delete game',
+        'object deleted label': 'Game deleted',
       },
       [meta.id]: {
         'plugin name': 'Chess',
