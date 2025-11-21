@@ -14,12 +14,10 @@ export const useActorContact = (space?: Space, actor?: Actor.Actor): Signal<DXN 
   // Don't bother querying the space if there is already a reference to the contact.
   const isLinked = !!actor?.contact;
   const contacts = useQuery(isLinked ? undefined : space, Filter.type(Person.Person));
-  // TODO(burdon): Remove hasEmail check?
-  const hasEmail = useComputed(() => !!actor?.email);
   const existingContact = useSignal<Person.Person | undefined>(undefined);
   useEffect(() => {
     existingContact.value = contacts.find((contact) => contact.emails?.find((email) => email.value === actor?.email));
-  }, [contacts, actor?.email, hasEmail, existingContact]);
+  }, [contacts, actor?.email, existingContact]);
 
   return useComputed(() =>
     actor?.contact ? actor.contact.dxn : existingContact.value ? Obj.getDXN(existingContact.value) : undefined,
