@@ -289,7 +289,7 @@ export class Muxer {
     });
 
     // don't return until close is complete or timeout
-    await asyncTimeout(this._dispose(err), GRACEFUL_CLOSE_TIMEOUT, new TimeoutError('gracefully closing muxer'));
+    await asyncTimeout(this._dispose(err), GRACEFUL_CLOSE_TIMEOUT, new TimeoutError({ message: 'gracefully closing muxer' }));
   }
 
   // force close without confirmation
