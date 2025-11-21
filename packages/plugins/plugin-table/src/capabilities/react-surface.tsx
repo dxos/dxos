@@ -7,7 +7,6 @@ import React from 'react';
 import { Capabilities, contributes, createSurface } from '@dxos/app-framework';
 import { Obj } from '@dxos/echo';
 import { Table } from '@dxos/react-ui-table/types';
-import { View } from '@dxos/schema';
 
 import { TableCard, TableContainer } from '../components';
 import { meta } from '../meta';
@@ -17,15 +16,13 @@ export default () =>
     createSurface({
       id: `${meta.id}/table`,
       role: ['article', 'section', 'slide'],
-      filter: (data): data is { subject: View.View } =>
-        Obj.instanceOf(View.View, data.subject) && Obj.instanceOf(Table.Table, data.subject.presentation.target),
-      component: ({ data, role }) => <TableContainer view={data.subject} role={role} />,
+      filter: (data): data is { subject: Table.Table } => Obj.instanceOf(Table.Table, data.subject),
+      component: ({ data, role }) => <TableContainer object={data.subject} role={role} />,
     }),
     createSurface({
       id: `${meta.id}/table-card`,
       role: ['card--intrinsic', 'card--extrinsic', 'card--popover', 'card--transclusion', 'card'],
-      filter: (data): data is { subject: View.View } =>
-        Obj.instanceOf(View.View, data.subject) && Obj.instanceOf(Table.Table, data.subject.presentation.target),
-      component: ({ data, role }) => <TableCard view={data.subject} role={role} />,
+      filter: (data): data is { subject: Table.Table } => Obj.instanceOf(Table.Table, data.subject),
+      component: ({ data, role }) => <TableCard object={data.subject} role={role} />,
     }),
   ]);

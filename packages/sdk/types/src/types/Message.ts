@@ -5,7 +5,7 @@
 import * as Schema from 'effect/Schema';
 
 import { Obj, Type } from '@dxos/echo';
-import { GeneratorAnnotation, ObjectId, TypedObject } from '@dxos/echo/internal';
+import { GeneratorAnnotation, ObjectId, SystemTypeAnnotation } from '@dxos/echo/internal';
 import { defineObjectMigration } from '@dxos/echo-db';
 
 import * as Actor from './Actor';
@@ -64,7 +64,7 @@ export enum MessageV1State {
 }
 
 /** @deprecated */
-export class MessageV1 extends TypedObject({ typename: 'dxos.org/type/Message', version: '0.1.0' })({
+export const MessageV1 = Schema.Struct({
   timestamp: Schema.String,
   state: Schema.optional(Schema.Enums(MessageV1State)),
   sender: Actor.Actor,
@@ -72,7 +72,13 @@ export class MessageV1 extends TypedObject({ typename: 'dxos.org/type/Message', 
   parts: Schema.optional(Schema.mutable(Schema.Array(Type.Ref(Type.Expando)))),
   properties: Schema.optional(Schema.mutable(Schema.Record({ key: Schema.String, value: Schema.Any }))),
   context: Schema.optional(Type.Ref(Type.Expando)),
-}) {}
+}).pipe(
+  Type.Obj({
+    typename: 'dxos.org/type/Message',
+    version: '0.1.0',
+  }),
+  SystemTypeAnnotation.set(true),
+);
 
 /** @deprecated */
 export const MessageV1ToV2 = defineObjectMigration({

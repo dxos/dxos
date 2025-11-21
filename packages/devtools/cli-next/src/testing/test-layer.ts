@@ -4,7 +4,9 @@
 import * as Function from 'effect/Function';
 import * as Layer from 'effect/Layer';
 
-import { ClientService, CommandConfig, ConfigService } from '../services';
+import { ClientService, ConfigService } from '@dxos/client';
+
+import { CommandConfig } from '../services';
 
 import { TestConsole } from './test-console';
 

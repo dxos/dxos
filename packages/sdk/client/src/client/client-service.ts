@@ -6,10 +6,10 @@ import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
-import { Client } from '@dxos/client';
+import { ConfigService } from '@dxos/config';
 
-import { CommandConfig } from './command-config';
-import { ConfigService } from './config-service';
+import { Client } from './client';
+// import { CommandConfig } from './command-config';
 
 // TODO(wittjosiah): Factor out.
 // TODO(dmaretskyi): For CLI its better to make this lazy to not load client in commands that do not require it.
@@ -17,15 +17,16 @@ export class ClientService extends Context.Tag('ClientService')<ClientService, C
   static layer = Layer.scoped(
     ClientService,
     Effect.gen(function* () {
-      const verbose = yield* CommandConfig.isVerbose;
+      // TODO(wittjosiah): Use effect config instead?
+      // const verbose = yield* CommandConfig.isVerbose;
       const config = yield* ConfigService;
       const client = new Client({ config });
       yield* Effect.tryPromise(() => client.initialize());
       yield* Effect.addFinalizer(() =>
         Effect.gen(function* () {
-          if (verbose) {
-            yield* Effect.log('Shutting down...');
-          }
+          // if (verbose) {
+          //   yield* Effect.log('Shutting down...');
+          // }
 
           // Make the finalizer effect interruptible.
           yield* Effect.interruptible(
@@ -37,11 +38,11 @@ export class ClientService extends Context.Tag('ClientService')<ClientService, C
               // Cloudflare socket? (detected via `lsof -i`)
               // 192.168.1.150:56747 -> 172.67.201.139:443
               Effect.tryPromise(() => client.destroy()).pipe(
-                Effect.tap(() => {
-                  if (verbose) {
-                    return Effect.log('OK');
-                  }
-                }),
+                // Effect.tap(() => {
+                //   if (verbose) {
+                //     return Effect.log('OK');
+                //   }
+                // }),
                 Effect.orDie,
               ),
 

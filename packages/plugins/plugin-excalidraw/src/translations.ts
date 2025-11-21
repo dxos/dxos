@@ -18,6 +18,7 @@ export const translations = [
         'object name placeholder': 'New excalidraw',
         'rename object label': 'Rename excalidraw',
         'delete object label': 'Delete excalidraw',
+        'object deleted label': 'Excalidraw deleted',
       },
       [meta.id]: {
         'plugin name': 'Sketch',

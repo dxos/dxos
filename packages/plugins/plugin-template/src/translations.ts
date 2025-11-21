@@ -18,6 +18,7 @@ export const translations = [
         'object name placeholder': 'New template',
         'rename object label': 'Rename template',
         'delete object label': 'Delete template',
+        'object deleted label': 'Template deleted',
       },
       [meta.id]: {
         'plugin name': 'Template',

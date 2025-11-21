@@ -4,10 +4,14 @@
 
 import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
+import * as Function from 'effect/Function';
+import * as Layer from 'effect/Layer';
 
-import { TestLayer } from '../testing';
+import { ConfigService } from '@dxos/config';
 
 import { ClientService } from './client-service';
+
+const TestLayer = Function.pipe(ClientService.layer, Layer.provideMerge(ConfigService.layerMemory));
 
 describe('ClientService', () => {
   it('should initialize', async () => {
