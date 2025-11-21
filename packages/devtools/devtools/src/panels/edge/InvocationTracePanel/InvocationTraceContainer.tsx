@@ -179,10 +179,8 @@ export const InvocationTraceContainer = ({
 
 const Selected: FC<{ span: InvocationSpan }> = ({ span }) => {
   const [activeTab, setActiveTab] = useState('input');
-  log.info('hello', { span });
 
   const queue = span.invocationTraceQueue?.target;
-  log.info('queue', { queue });
   const objects = useQuery(queue, Filter.everything());
 
   const contents = Array.head(objects).pipe(
@@ -254,16 +252,6 @@ const SpanExceptionPanel = ({ exception }: { exception: TraceEventException }) =
       <div>Stack: {exception.stack}</div>
     </div>
   );
-};
-
-const parseJsonString = (str: string): any => {
-  try {
-    // Handle double-quoted strings by removing outer quotes.
-    const cleaned = str.replace(/^"+|"+$/g, '');
-    return JSON.parse(cleaned);
-  } catch {
-    return null;
-  }
 };
 
 export default InvocationTraceContainer;
