@@ -102,7 +102,7 @@ export const RelatedToContact = ({ subject: contact }: SurfaceComponentProps<Per
         ),
       );
     },
-    [dispatch, space, mailbox],
+    [dispatch, space, calendar],
   );
 
   return (
