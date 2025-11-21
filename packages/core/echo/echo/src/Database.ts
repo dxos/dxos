@@ -1,7 +1,15 @@
-import { type CleanupFn } from '@dxos/async';
-import { type DXN, type SpaceId, type PublicKey } from '@dxos/keys';
-import { Query, Filter } from './query';
-import * as Ref from './Ref';
+//
+// Copyright 2025 DXOS.org
+//
+
+import { type CleanupFn, type ReadOnlyEvent } from '@dxos/async';
+import { type Context } from '@dxos/context';
+import { type DXN, type PublicKey, type SpaceId } from '@dxos/keys';
+import { type Live } from '@dxos/live-object';
+
+import { type BaseObject, type HasId } from './internal';
+import { type Filter, type Query } from './query';
+import type * as Ref from './Ref';
 
 export type QueryResultEntry<T> = {
   id: string;
@@ -53,9 +61,10 @@ export interface QueryResult<T> {
   readonly query: Query<T>;
   readonly results: QueryResultEntry<T>[];
   readonly objects: T[];
+
   run(opts?: QueryRunOptions): Promise<OneShotQueryResult<T>>;
-  first(opts?: QueryRunOptions): Promise<T>;
   runSync(): QueryResultEntry<T>[];
+  first(opts?: QueryRunOptions): Promise<T>;
   subscribe(callback?: (query: QueryResult<T>) => void, opts?: QuerySubscriptionOptions): CleanupFn;
 }
 
@@ -118,12 +127,15 @@ export type AddOptions = {
   placeIn?: ObjectPlacement;
 };
 
+// TODO(burdon): Deconstruct into aspects.
 export interface Database extends Queryable {
-  get graph(): Hypergraph;
-  get schemaRegistry(): EchoSchemaRegistry;
-
   get spaceKey(): PublicKey;
   get spaceId(): SpaceId;
+
+  get graph(): Hypergraph;
+
+  // TODO(burdon): Move into Hypergraph abstraction.
+  get schemaRegistry(): EchoSchemaRegistry;
 
   toJSON(): object;
 
@@ -162,6 +174,21 @@ export interface Database extends Queryable {
   remove<T extends BaseObject & HasId>(obj: T): void;
 
   /**
+   * Insert new objects.
+   * @deprecated Use `add` instead.
+   */
+  // TODO(burdon): Remove.
+  // TODO(dmaretskyi): Support meta.
+  insert(data: unknown): Promise<unknown>;
+
+  /**
+   * Update objects.
+   * @deprecated Directly mutate the object.
+   */
+  // TODO(burdon): Remove.
+  update(filter: Filter.Any, operation: unknown): Promise<void>;
+
+  /**
    * Wait for all pending changes to be saved to disk.
    */
   flush(opts?: FlushOptions): Promise<void>;
@@ -195,19 +222,4 @@ export interface Database extends Queryable {
    * @deprecated
    */
   readonly coreDatabase: CoreDatabase;
-
-  /**
-   * Update objects.
-   * @deprecated Directly mutate the object.
-   */
-  // TODO(burdon): Remove.
-  update(filter: Filter.Any, operation: unknown): Promise<void>;
-
-  /**
-   * Insert new objects.
-   * @deprecated Use `add` instead.
-   */
-  // TODO(burdon): Remove.
-  // TODO(dmaretskyi): Support meta.
-  insert(data: unknown): Promise<unknown>;
 }
