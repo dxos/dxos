@@ -51,7 +51,7 @@ export const DynamicTable = ({
     [name, properties, _jsonSchema, schema],
   );
 
-  const { object } = useMemo(() => makeDynamicTable({ jsonSchema, properties }), [jsonSchema, properties]);
+  const { object, projection } = useMemo(() => makeDynamicTable({ jsonSchema, properties }), [jsonSchema, properties]);
 
   const tableRef = useRef<TableController>(null);
   const handleCellUpdate = useCallback((cell: any) => {
@@ -71,18 +71,18 @@ export const DynamicTable = ({
       }) as const,
   );
 
-  const projection = useMemo(() => {
-    if (schema && object?.view.target?.projection) {
-      const projection = new ProjectionModel(jsonSchema, object.view.target.projection);
-      projection.normalizeView();
-      return projection;
+  const projectionModel = useMemo(() => {
+    if (jsonSchema && projection) {
+      const model = new ProjectionModel(jsonSchema, projection);
+      model.normalizeView();
+      return model;
     }
-  }, [schema, object?.view.target?.projection]);
+  }, [jsonSchema, projection]);
 
   const model = useTableModel({
     rows,
     object,
-    projection,
+    projection: projectionModel,
     features,
     rowActions,
     onCellUpdate: handleCellUpdate,
