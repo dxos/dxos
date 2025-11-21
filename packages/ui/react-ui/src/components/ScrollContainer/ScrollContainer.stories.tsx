@@ -45,6 +45,7 @@ const DefaultStory = (props: ScrollContainerRootProps) => {
             </div>
           ))}
         </ScrollContainer.Viewport>
+        <ScrollContainer.ScrollDownButton />
       </ScrollContainer.Root>
     </div>
   );

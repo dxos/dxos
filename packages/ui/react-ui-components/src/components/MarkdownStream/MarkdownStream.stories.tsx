@@ -2,6 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
+// TODO(burdon): Document why this is required.
 import '@dxos/lit-ui';
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
@@ -101,7 +102,7 @@ const DefaultStory = ({ content = '', streamOptions = defaultStreamOptions, ...p
 };
 
 const meta = {
-  title: 'ui/react-ui-components/MarkdownStream',
+  title: 'ui/react-ui-markdown/MarkdownStream',
   render: DefaultStory,
   decorators: [withTheme, withLayout({ container: 'column' })],
 } satisfies Meta<typeof DefaultStory>;

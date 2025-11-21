@@ -19,9 +19,6 @@
       "path": "../../common/invariant"
     },
     {
-      "path": "../../common/keys"
-    },
-    {
       "path": "../../common/log"
     },
     {
@@ -34,28 +31,13 @@
       "path": "../../common/util"
     },
     {
-      "path": "../../core/ai"
-    },
-    {
-      "path": "../../core/assistant"
-    },
-    {
       "path": "../../core/echo/echo"
-    },
-    {
-      "path": "../../core/echo/echo-query"
-    },
-    {
-      "path": "../../sdk/client-protocol"
     },
     {
       "path": "../../sdk/react-client"
     },
     {
       "path": "../../sdk/schema"
-    },
-    {
-      "path": "../../sdk/types"
     },
     {
       "path": "../lit-ui"
@@ -65,12 +47,6 @@
     },
     {
       "path": "../react-ui-editor"
-    },
-    {
-      "path": "../react-ui-markdown"
-    },
-    {
-      "path": "../react-ui-stack"
     },
     {
       "path": "../react-ui-syntax-highlighter"

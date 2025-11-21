@@ -17,6 +17,7 @@ export const ReactiveObjectSchema: Schema.Schema<Live<any>> = Schema.Any.pipe(
   Schema.annotations({ title: 'Live' }),
 );
 
+// TODO(burdon): Rename (remove "Echo").
 export const EchoObjectSchema: Schema.Schema<AnyLiveObject<any>> = Schema.Any.pipe(
   Schema.filter((obj) => Obj.isObject(obj)),
   Schema.annotations({ title: 'EchoObject' }),

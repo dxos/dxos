@@ -9,8 +9,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { faker } from '@dxos/random';
 import { Icon, Input, Toolbar } from '@dxos/react-ui';
 import { withTheme } from '@dxos/react-ui/testing';
-
-import { MarkdownViewer } from '../MarkdownViewer';
+import { MarkdownViewer } from '@dxos/react-ui-markdown';
 
 import { ToggleContainer, type ToggleContainerRootProps } from './ToggleContainer';
 
