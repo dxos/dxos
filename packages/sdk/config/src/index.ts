@@ -8,6 +8,7 @@ export * as defs from '@dxos/protocols/proto/dxos/config';
 export { type Config as ConfigProto } from '@dxos/protocols/proto/dxos/config';
 
 export * from './config';
+export * from './config-service';
 export * from './loaders';
 export * from './savers';
 export * from './plugin';

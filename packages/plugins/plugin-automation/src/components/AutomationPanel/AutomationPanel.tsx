@@ -17,8 +17,8 @@ import { Clipboard, IconButton, Input, Separator, type ThemedClassName, useTrans
 import { ControlItem, controlItemClasses } from '@dxos/react-ui-form';
 import { List } from '@dxos/react-ui-list';
 import { ghostHover, mx } from '@dxos/react-ui-theme';
-import { View } from '@dxos/schema';
 import { Project } from '@dxos/types';
+import { isNonNullable } from '@dxos/util';
 
 import { meta } from '../../meta';
 import { TriggerEditor, type TriggerEditorProps } from '../TriggerEditor';
@@ -42,7 +42,14 @@ export const AutomationPanel = ({ classNames, space, object, initialTrigger, onD
     return object ? triggers.filter(triggerMatch(object)) : triggers;
   }, [object, triggers]);
   const tags = useQuery(space, Filter.type(Tag.Tag));
-  const types = useTypeOptions({ space, annotation: ['dynamic', 'limited-static', 'object-form'] });
+  const types = useTypeOptions({
+    space,
+    annotation: {
+      location: ['database', 'runtime'],
+      kind: ['user'],
+      registered: ['registered'],
+    },
+  });
 
   const [trigger, setTrigger] = useState<Trigger.Trigger | undefined>(initialTrigger);
   const [selected, setSelected] = useState<Trigger.Trigger>();
@@ -191,9 +198,9 @@ const scriptMatch = (script: Script.Script) => (trigger: Trigger.Trigger) => {
 
 const projectMatch = (project: Project.Project) => {
   const viewQueries = EFn.pipe(
-    project.collections,
-    Array.map((collection) => collection.target),
-    Array.filter(Schema.is(View.View)),
+    project.columns,
+    Array.map((column) => column.view.target),
+    Array.filter(isNonNullable),
     Array.map((view) => Obj.getSnapshot(view).query.ast),
     Array.map((ast) => JSON.stringify(ast)),
   );

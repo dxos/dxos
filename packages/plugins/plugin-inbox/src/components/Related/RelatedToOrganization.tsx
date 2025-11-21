@@ -14,7 +14,7 @@ import { AttentionAction } from '@dxos/plugin-attention/types';
 import { ATTENDABLE_PATH_SEPARATOR, DeckAction } from '@dxos/plugin-deck/types';
 import { getSpace, useQuery, useSpace } from '@dxos/react-client/echo';
 import { Table } from '@dxos/react-ui-table/types';
-import { View, getTypenameFromQuery } from '@dxos/schema';
+import { getTypenameFromQuery } from '@dxos/schema';
 import { type Organization, Person } from '@dxos/types';
 
 import { RelatedContacts } from './RelatedContacts';
@@ -30,17 +30,13 @@ export const RelatedToOrganization = ({ subject: organization }: SurfaceComponen
     typeof contact.organization === 'string' ? false : contact.organization?.target === organization,
   );
 
-  const currentSpaceViews = useQuery(space, Filter.type(View.View));
-  const defaultSpaceViews = useQuery(defaultSpace, Filter.type(View.View));
+  const currentSpaceViews = useQuery(space, Filter.type(Table.Table));
+  const defaultSpaceViews = useQuery(defaultSpace, Filter.type(Table.Table));
   const currentSpaceContactTable = currentSpaceViews.find(
-    (view) =>
-      getTypenameFromQuery(view.query.ast) === Person.Person.typename &&
-      Obj.instanceOf(Table.Table, view.presentation.target),
+    (table) => getTypenameFromQuery(table.view.target?.query.ast) === Person.Person.typename,
   );
   const defaultSpaceContactTable = defaultSpaceViews.find(
-    (view) =>
-      getTypenameFromQuery(view.query.ast) === Person.Person.typename &&
-      Obj.instanceOf(Table.Table, view.presentation.target),
+    (table) => getTypenameFromQuery(table.view.target?.query.ast) === Person.Person.typename,
   );
 
   // TODO(wittjosiah): Generalized way of handling related objects navigation.

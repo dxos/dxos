@@ -6,9 +6,8 @@ import * as Command from '@effect/cli/Command';
 import * as Console from 'effect/Console';
 import * as Effect from 'effect/Effect';
 
+import { ClientService } from '@dxos/client';
 import { getDeployedFunctions } from '@dxos/functions-runtime/edge';
-
-import { ClientService } from '../../../services';
 
 export const search = Command.make(
   'search',

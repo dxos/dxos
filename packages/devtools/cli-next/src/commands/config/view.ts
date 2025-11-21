@@ -5,7 +5,7 @@
 import * as Command from '@effect/cli/Command';
 import * as Effect from 'effect/Effect';
 
-import { ConfigService } from '../../services';
+import { ConfigService } from '@dxos/client';
 
 export const view = Command.make(
   'view',

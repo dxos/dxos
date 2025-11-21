@@ -76,9 +76,10 @@ export default defineFunction({
     data: { mailboxId, userId = 'me', label = 'inbox', after = format(subDays(new Date(), 30), 'yyyy-MM-dd') },
   }) =>
     Effect.gen(function* () {
-      log('syncing gmail', { mailboxId, userId, after });
+      log.info('syncing gmail', { mailboxId, userId, after });
 
-      {
+      const skip = true;
+      if (!skip) {
         // Ensure required schema is registered in the runtime before resolving.
         const { db } = yield* DatabaseService;
         yield* Effect.sync(() => {

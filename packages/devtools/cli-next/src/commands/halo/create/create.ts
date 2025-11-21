@@ -8,9 +8,8 @@ import * as Console from 'effect/Console';
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
+import { ClientService } from '@dxos/client';
 import { invariant } from '@dxos/invariant';
-
-import { ClientService } from '../../../services';
 
 export const handler = Effect.fn(function* ({
   agent,

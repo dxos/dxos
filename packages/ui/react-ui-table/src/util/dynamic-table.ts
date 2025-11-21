@@ -4,7 +4,7 @@
 
 import type * as Schema from 'effect/Schema';
 
-import { Filter, Obj, Query } from '@dxos/echo';
+import { Filter, Obj, Query, Ref } from '@dxos/echo';
 import { getTypename, toJsonSchema } from '@dxos/echo/internal';
 import type { JsonSchemaType } from '@dxos/echo/internal';
 import {
@@ -59,22 +59,21 @@ export const makeDynamicTable = ({
 }: {
   jsonSchema: JsonSchemaType;
   properties?: TablePropertyDefinition[];
-}): { projection: ProjectionModel; view: View.View } => {
-  const table = Obj.make(Table.Table, { sizes: {} });
+}): { projection: ProjectionModel; object: Table.Table } => {
   const view = View.make({
     query: Query.select(Filter.everything()),
     jsonSchema,
-    presentation: table,
     ...(properties && { fields: properties.map((property) => property.name) }),
   });
+  const object = Obj.make(Table.Table, { view: Ref.make(view), sizes: {} });
 
   const projection = new ProjectionModel(jsonSchema, view.projection);
   projection.normalizeView();
   if (properties && projection.fields) {
-    setProperties(view, projection, table, properties);
+    setProperties(view, projection, object, properties);
   }
 
-  return { projection, view };
+  return { projection, object };
 };
 
 const setProperties = (

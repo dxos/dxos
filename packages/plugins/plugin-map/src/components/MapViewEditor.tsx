@@ -10,7 +10,7 @@ import { FormatEnum } from '@dxos/echo/internal';
 import { useClient } from '@dxos/react-client';
 import { getSpace, useSchema } from '@dxos/react-client/echo';
 import { type CustomInputMap, Form, SelectInput } from '@dxos/react-ui-form';
-import { type View, getTypenameFromQuery } from '@dxos/schema';
+import { getTypenameFromQuery } from '@dxos/schema';
 
 import { type Map } from '../types';
 
@@ -20,13 +20,13 @@ export const MapSettingsSchema = Schema.Struct({
   coordinateColumn: Schema.optional(Schema.String.annotations({ title: 'Coordinate column' })),
 });
 
-type MapViewEditorProps = { view: View.View };
+type MapViewEditorProps = { object: Map.Map };
 
-export const MapViewEditor = ({ view }: MapViewEditorProps) => {
+export const MapViewEditor = ({ object }: MapViewEditorProps) => {
   const client = useClient();
-  const space = getSpace(view);
-  const map = view.presentation.target as Map.Map | undefined;
-  const typename = view.query ? getTypenameFromQuery(view.query.ast) : undefined;
+  const space = getSpace(object);
+  const view = object?.view?.target;
+  const typename = view?.query ? getTypenameFromQuery(view.query.ast) : undefined;
   const currentSchema = useSchema(client, space, typename);
 
   const [allSchemata, setAllSchemata] = useState<Type.Schema[]>([]);
@@ -72,15 +72,15 @@ export const MapViewEditor = ({ view }: MapViewEditorProps) => {
 
   const onSave = useCallback(
     (values: Partial<{ coordinateColumn: string }>) => {
-      if (map && values.coordinateColumn) {
+      if (view && values.coordinateColumn) {
         view.projection.pivotFieldId = values.coordinateColumn;
       }
     },
-    [map],
+    [view],
   );
 
   const initialValues = useMemo(
-    () => ({ coordinateSource: typename, coordinateColumn: view.projection.pivotFieldId }),
+    () => ({ coordinateSource: typename, coordinateColumn: view?.projection.pivotFieldId }),
     [view],
   );
 
@@ -92,7 +92,7 @@ export const MapViewEditor = ({ view }: MapViewEditorProps) => {
     [schemaOptions, locationFields],
   );
 
-  if (!space || !map) {
+  if (!space || !object) {
     return null;
   }
 

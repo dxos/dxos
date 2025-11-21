@@ -5,11 +5,11 @@
 import * as Schema from 'effect/Schema';
 
 import { Obj, Ref, Type } from '@dxos/echo';
-import { Text as TextType } from '@dxos/schema';
+import { Text } from '@dxos/schema';
 
 export const Outline = Schema.Struct({
   name: Schema.optional(Schema.String),
-  content: Type.Ref(TextType.Text),
+  content: Type.Ref(Text.Text),
 }).pipe(
   Type.Obj({
     typename: 'dxos.org/type/Outline',
@@ -22,6 +22,6 @@ export interface Outline extends Schema.Schema.Type<typeof Outline> {}
 export const make = ({ name, content }: { name?: string; content?: string } = {}): Outline => {
   return Obj.make(Outline, {
     name,
-    content: Ref.make(TextType.make(content)),
+    content: Ref.make(Text.make(content)),
   });
 };
