@@ -5,7 +5,7 @@
 import { EditorSelection } from '@codemirror/state';
 import React, { forwardRef, useCallback, useImperativeHandle, useMemo } from 'react';
 
-import { createDocAccessor } from '@dxos/react-client/echo';
+import { createDocAccessor } from '@dxos/echo-db';
 import { type ThemedClassName, useThemeContext, useTranslation } from '@dxos/react-ui';
 import {
   type EditorMenuGroup,

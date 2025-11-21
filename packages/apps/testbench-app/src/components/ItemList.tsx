@@ -4,8 +4,8 @@
 
 import React from 'react';
 
-import { createDocAccessor } from '@dxos/client/echo';
 import { Obj } from '@dxos/echo';
+import { createDocAccessor } from '@dxos/echo-db';
 import { IconButton, Input, useThemeContext } from '@dxos/react-ui';
 import {
   automerge,

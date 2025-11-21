@@ -121,7 +121,6 @@ export const requireTypeReference = (schema: Schema.Schema.AnyNoContext): Refere
   return typeReference;
 };
 
-// TODO(burdon): Can we use `Schema.is`?
 /**
  * Checks if the object is an instance of the schema.
  * Only typename is compared, the schema version is ignored.
@@ -131,6 +130,7 @@ export const requireTypeReference = (schema: Schema.Schema.AnyNoContext): Refere
  *  - Object was created with a different version of this schema.
  *  - Object was created with a different schema (maybe dynamic) that has the same typename.
  */
+// TODO(burdon): Can we use `Schema.is`?
 export const isInstanceOf = <Schema extends Schema.Schema.AnyNoContext>(
   schema: Schema,
   object: any,

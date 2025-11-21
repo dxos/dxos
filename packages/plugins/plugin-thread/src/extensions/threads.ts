@@ -8,8 +8,9 @@ import { computed, effect } from '@preact/signals-core';
 
 import { type PromiseIntentDispatcher, createIntent } from '@dxos/app-framework';
 import { Filter, Obj, Query, Relation } from '@dxos/echo';
+import { createDocAccessor, getTextInRange } from '@dxos/echo-db';
 import { type Markdown } from '@dxos/plugin-markdown/types';
-import { createDocAccessor, getSource, getSpace, getTextInRange } from '@dxos/react-client/echo';
+import { getSource, getSpace } from '@dxos/react-client/echo';
 import { comments, createExternalCommentSync } from '@dxos/react-ui-editor';
 import { AnchoredTo, Thread } from '@dxos/types';
 

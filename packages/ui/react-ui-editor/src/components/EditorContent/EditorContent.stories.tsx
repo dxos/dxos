@@ -6,7 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 import { useMemo } from 'react';
 
-import { createDocAccessor, createObject } from '@dxos/client/echo';
+import { createDocAccessor, createObject } from '@dxos/echo-db';
 import { useThemeContext } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Text } from '@dxos/schema';

@@ -934,7 +934,6 @@ interface DecodedValueAtPath {
 }
 
 /** @deprecated Use {@link @dxos/echo#AnyLiveObject} instead. */
-// TODO(burdon): Any shouldn't be generic (use namespace).
 export type AnyLiveObject<T extends BaseObject = any> = Live<T> & BaseObject & HasId;
 
 /**
