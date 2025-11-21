@@ -140,10 +140,10 @@ export class Messenger {
         log('message not delivered', { messageId: reliablePayload.messageId });
         this._onAckCallbacks.delete(reliablePayload.messageId!);
         timeoutHit(
-          new ProtocolTimeoutError(
-            'signaling message not delivered',
-            new TimeoutError(MESSAGE_TIMEOUT, 'Message not delivered'),
-          ),
+          new ProtocolTimeoutError({
+            message: 'signaling message not delivered',
+            cause: new TimeoutError(MESSAGE_TIMEOUT, 'Message not delivered'),
+          }),
         );
         void messageContext.dispose();
         this._monitor.recordReliableMessage({ sendAttempts, sent: false });
