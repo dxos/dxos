@@ -9,8 +9,8 @@ import * as Console from 'effect/Console';
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
-import { type Function } from '@dxos/functions';
-import { createEdgeClient } from '@dxos/functions-runtime/edge';
+import { Function } from '@dxos/functions';
+import { FunctionsServiceClient } from '@dxos/functions-runtime/edge';
 import { invariant } from '@dxos/invariant';
 
 import { ClientService, CommandConfig } from '../../../../services';
@@ -18,8 +18,9 @@ import { waitForSync } from '../../../../util';
 import { Common } from '../../../options';
 
 import { bundle } from './bundle';
-import { DATA_TYPES, upsertComposerScript, upsertFunctionObject } from './echo';
+import { DATA_TYPES, upsertComposerScript } from './echo';
 import { parseOptions } from './options';
+import { PublicKey } from '@dxos/keys';
 
 export const deploy = Command.make(
   'deploy',
@@ -52,7 +53,7 @@ export const deploy = Command.make(
     const identity = client.halo.identity.get();
     invariant(identity, 'Identity not available');
 
-    const { entryPoint, assets } = yield* bundle({ entryPoint: options.entryPoint });
+    const artifact = yield* bundle({ entryPoint: options.entryPoint });
 
     if (options.dryRun) {
       yield* Console.log('Dry run, not uploading function.');
@@ -61,23 +62,28 @@ export const deploy = Command.make(
 
     const { space, ownerPublicKey, functionId, existingObject, name, version } = yield* parseOptions(options);
 
-    const edgeClient = createEdgeClient(client);
-    const uploadResult = yield* Effect.tryPromise(() =>
-      edgeClient.uploadFunction({ functionId }, { ownerPublicKey, name, version, entryPoint, assets }),
+    const functionsServiceClient = FunctionsServiceClient.fromClient(client);
+    const func = yield* Effect.tryPromise(() =>
+      functionsServiceClient.deploy({
+        functionId,
+        ownerPublicKey: PublicKey.fromHex(ownerPublicKey),
+        name,
+        version,
+        entryPoint: artifact.entryPoint,
+        assets: artifact.assets,
+      }),
     );
 
-    const functionObject = yield* Option.all([space, existingObject]).pipe(
-      Option.map(([space, existingObject]) =>
-        upsertFunctionObject({
-          space,
-          existingObject,
-          uploadResult,
-          filePath: options.entryPoint,
-          name,
-        }).pipe(Effect.map(Option.some)),
-      ),
-      Option.getOrElse(() => Effect.succeed(Option.none<Function.Function>())),
-    );
+    let functionObject: Function.Function | undefined = undefined;
+    if (Option.isSome(existingObject)) {
+      functionObject = existingObject.value;
+      Function.setFrom(functionObject, func);
+    } else if (Option.isSome(space)) {
+      functionObject = space.value.db.add(func);
+    }
+    if (Option.isSome(space)) {
+      yield* Effect.promise(() => space.value.db.flush({ indexes: true }));
+    }
 
     if (options.script) {
       yield* Option.all([space, functionObject]).pipe(
@@ -89,11 +95,12 @@ export const deploy = Command.make(
     }
 
     if (json) {
-      yield* Console.log(JSON.stringify(uploadResult, null, 2));
+      yield* Console.log(JSON.stringify(func, null, 2));
     } else {
       yield* Console.log('Function uploaded successfully!');
-      yield* Console.log(`Function ID: ${uploadResult.functionId}`);
-      yield* Console.log(`Version: ${uploadResult.version}`);
+      yield* Console.log(`Key: ${func.key}`);
+      yield* Console.log(`Version: ${func.version}`);
+      yield* Console.log(`Function ID: ${func.functionId}`);
     }
 
     yield* Option.match(space, {

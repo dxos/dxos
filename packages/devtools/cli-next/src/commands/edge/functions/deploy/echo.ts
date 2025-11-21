@@ -45,6 +45,9 @@ export const loadFunctionObject: (space: Space, functionId: string) => Effect.Ef
     return functionObject;
   });
 
+/**
+ * @deprecated
+ */
 export const upsertFunctionObject: (opts: {
   space: Space;
   existingObject: Function.Function | undefined;

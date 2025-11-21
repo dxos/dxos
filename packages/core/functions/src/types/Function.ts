@@ -8,6 +8,7 @@ import { Obj, Type } from '@dxos/echo';
 import { JsonSchemaType, LabelAnnotation, Ref } from '@dxos/echo/internal';
 
 import { Script } from './Script';
+import { setUserFunctionIdInMetadata } from './url';
 
 /**
  * Function deployment.
@@ -60,3 +61,19 @@ export const Function = Schema.Struct({
 export interface Function extends Schema.Schema.Type<typeof Function> {}
 
 export const make = (props: Obj.MakeProps<typeof Function>) => Obj.make(Function, props);
+
+/**
+ * Copies properties from source to target.
+ * @param target - Target object to copy properties to.
+ * @param source - Source object to copy properties from.
+ */
+export const setFrom = (target: Function, source: Function) => {
+  target.key = source.key ?? target.key;
+  target.name = source.name ?? target.name;
+  target.version = source.version;
+  target.description = source.description;
+  // TODO(dmaretskyi): A workaround for an ECHO bug.
+  target.inputSchema = JSON.parse(JSON.stringify(source.inputSchema));
+  target.outputSchema = JSON.parse(JSON.stringify(source.outputSchema));
+  Obj.getMeta(target).keys = JSON.parse(JSON.stringify(Obj.getMeta(source).keys));
+};

@@ -71,14 +71,7 @@ export const FunctionsRegistry = ({ space }: FunctionsRegistryProps) => {
         space.db.add(func);
         return;
       }
-      existingFunc.version = func.version;
-      existingFunc.updated = func.updated;
-      existingFunc.name = func.name;
-      existingFunc.description = func.description;
-      // TODO(dmaretskyi): A workaround for an ECHO bug.
-      existingFunc.inputSchema = JSON.parse(JSON.stringify(func.inputSchema));
-      existingFunc.outputSchema = JSON.parse(JSON.stringify(func.outputSchema));
-      Obj.getMeta(existingFunc).keys = JSON.parse(JSON.stringify(Obj.getMeta(func).keys));
+      Function.setFrom(existingFunc, func);
     },
     [space],
   );
