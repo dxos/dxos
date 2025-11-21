@@ -45,7 +45,9 @@ import { focus } from './focus';
 
 export const filterChars = (chars: RegExp) => {
   return EditorState.transactionFilter.of((transaction) => {
-    if (!transaction.docChanged) return transaction;
+    if (!transaction.docChanged) {
+      return transaction;
+    }
 
     const changes: ChangeSpec[] = [];
     transaction.changes.iterChanges((fromA, toA, fromB, toB, text) => {
@@ -63,6 +65,7 @@ export const filterChars = (chars: RegExp) => {
     if (changes.length) {
       return [transaction, { changes, sequential: true } as TransactionSpec];
     }
+
     return transaction;
   });
 };
@@ -191,7 +194,7 @@ export type ThemeExtensionsOptions = {
 
 export const grow: ThemeExtensionsOptions['slots'] = {
   editor: {
-    className: 'is-full bs-full',
+    className: 'bs-full is-full',
   },
 } as const;
 
