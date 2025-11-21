@@ -4,10 +4,10 @@
 
 export { SpaceId } from '@dxos/keys';
 export {
+  isSpace,
   type Echo,
   type Space,
   SpaceSchema,
-  isSpace,
   PropertiesType,
   type PropertiesTypeProps,
 } from '@dxos/client-protocol';
@@ -26,22 +26,22 @@ export {
 } from '@dxos/echo/internal';
 export { type Live, live, isLiveObject } from '@dxos/live-object';
 export {
+  createObject,
+  createSubscription,
+  getSource,
+  getTarget,
+  getVersion,
   type EchoDatabase,
   Filter,
   type Hypergraph,
-  ObjectVersion,
   type ObjectMigration,
+  ObjectVersion,
   Query,
   type Queryable,
   type QueryResult,
   Queue,
   type Selection,
   type SubscriptionHandle,
-  createObject,
-  createSubscription,
-  getSource,
-  getTarget,
-  getVersion,
 } from '@dxos/echo-db';
 
 // TODO(dmaretskyi): Remove this export.
@@ -54,18 +54,18 @@ export { SpaceMember as HaloSpaceMember } from '@dxos/protocols/proto/dxos/halo/
 export { TextKind } from '@dxos/protocols/proto/dxos/echo/model/text';
 export { type SpaceSyncState } from '@dxos/protocols/proto/dxos/echo/service';
 
+export { importSpace } from './import';
 export {
   createEmptyEdgeSyncState,
+  parseId,
+  getSpace,
+  getSyncSummary,
   FQ_ID_LENGTH,
   OBJECT_ID_LENGTH,
   SPACE_ID_LENGTH,
   EchoObjectSchema,
   ReactiveObjectSchema,
-  getSpace,
-  getSyncSummary,
-  parseId,
   type Progress,
   type PeerSyncState,
   type SpaceSyncStateMap,
 } from './util';
-export { importSpace } from './import';
