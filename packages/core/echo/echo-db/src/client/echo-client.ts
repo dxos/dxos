@@ -56,6 +56,8 @@ export type ConstructDatabaseParams = {
  */
 export class EchoClient extends Resource {
   private readonly _graph: Hypergraph;
+
+  // TODO(burdon): This already exists in Hypergraph.
   private readonly _databases = new Map<SpaceId, EchoDatabaseImpl>();
 
   private _dataService: DataService | undefined = undefined;

@@ -14,6 +14,7 @@ import type * as Ref from './Ref';
 export type QueryResultEntry<T> = {
   id: string;
 
+  // TODO(burdon): Rename DatabaseId?
   spaceId: SpaceId;
 
   /**
@@ -206,7 +207,7 @@ export interface Database extends Queryable {
   /**
    * Get notification about the sync progress with other peers.
    */
-  subscribeToSyncState(ctx: Context, callback: (state: SpaceSyncState) => void): CleanupFn;
+  subscribeToSyncState(ctx: Context, cb: (state: SpaceSyncState) => void): CleanupFn;
 
   /**
    * Get notification about the data being saved to disk.
