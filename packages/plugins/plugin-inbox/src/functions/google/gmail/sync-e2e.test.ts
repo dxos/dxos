@@ -28,6 +28,16 @@ describe.runIf(process.env.DX_TEST_TAGS?.includes('functions-e2e'))('Functions d
     console.log(artifact);
   });
 
+  test.only('deploy function', { timeout: 120_000 }, async () => {
+    const { client, space, mailbox, functionsServiceClient } = await setup();
+    const artifact = await bundleFunction({
+      entryPoint: new URL('./sync.ts', import.meta.url).pathname,
+      verbose: true,
+    });
+    const func = await deployFunction(space, functionsServiceClient, new URL('./sync.ts', import.meta.url).pathname);
+    console.log(func);
+  });
+
   test('inbox sync function (invoke)', { timeout: 120_000 }, async ({ expect }) => {
     const { client, space, mailbox, functionsServiceClient } = await setup();
     await sync(space);
@@ -90,7 +100,7 @@ describe.runIf(process.env.DX_TEST_TAGS?.includes('functions-e2e'))('Functions d
 });
 
 const setup = async () => {
-  const config = configPreset({ edge: 'dev' });
+  const config = configPreset({ edge: 'main' });
 
   const client = await new Client({
     config,
@@ -100,19 +110,19 @@ const setup = async () => {
 
   const space = await client.spaces.create();
   await space.waitUntilReady();
-  await space.internal.setEdgeReplicationPreference(EdgeReplicationSetting.ENABLED);
+  // await space.internal.setEdgeReplicationPreference(EdgeReplicationSetting.ENABLED);
 
-  const mailbox = space.db.add(Mailbox.make({ name: 'test', space }));
-  space.db.add(
-    Obj.make(AccessToken.AccessToken, {
-      note: 'Email read access.',
-      source: 'google.com',
-      token: process.env.GOOGLE_ACCESS_TOKEN ?? failedInvariant('GOOGLE_ACCESS_TOKEN is not set'),
-    }),
-  );
+  // const mailbox = space.db.add(Mailbox.make({ name: 'test', space }));
+  // space.db.add(
+  //   Obj.make(AccessToken.AccessToken, {
+  //     note: 'Email read access.',
+  //     source: 'google.com',
+  //     token: process.env.GOOGLE_ACCESS_TOKEN ?? failedInvariant('GOOGLE_ACCESS_TOKEN is not set'),
+  //   }),
+  // );
   const functionsServiceClient = FunctionsServiceClient.fromClient(client);
 
-  return { client, space, mailbox, functionsServiceClient };
+  return { client, space, functionsServiceClient };
 };
 
 const sync = async (space: Space) => {
