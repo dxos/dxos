@@ -8,7 +8,7 @@ import { assert, beforeAll, describe, expect, test } from 'vitest';
 
 import { isNode } from '@dxos/util';
 
-import { Bundler, initializeBundler } from './bundler';
+import { bundleFunction, initializeBundler } from './bundler';
 
 describe('Bundler', () => {
   beforeAll(async () => {
@@ -18,19 +18,27 @@ describe('Bundler', () => {
   });
 
   test('Basic', async () => {
-    const bundler = new Bundler({ platform: 'node', sandboxedModules: [], remoteModules: {} });
-    const result = await bundler.bundle({ source: 'const x = 100' }); // TODO(burdon): Test import.
+    const result = await bundleFunction({
+      platform: 'node',
+      source: `
+      export default function handler () {
+        return 100;
+      }
+    `,
+    });
     assert(!('error' in result), 'error should not exist');
     expect(result.asset).toBeDefined();
   });
 
   test('Import', async () => {
-    const bundler = new Bundler({ platform: 'node', sandboxedModules: [], remoteModules: {} });
-    const result = await bundler.bundle({
+    const result = await bundleFunction({
+      platform: 'node',
       source: `
       import { Filter } from './runtime.js';
 
-      const query = Filter.typename('dxos.org/type/Example');
+      export default function handler () {
+        return Filter.typename('dxos.org/type/Example');
+      }
     `,
     });
     assert(!('error' in result), 'error should not exist');
@@ -39,8 +47,8 @@ describe('Bundler', () => {
 
   // TODO(dmaretskyi): Flaky on CI.
   test.skip('HTTPS Import', async () => {
-    const bundler = new Bundler({ platform: 'node', sandboxedModules: [], remoteModules: {} });
-    const result = await bundler.bundle({
+    const result = await bundleFunction({
+      platform: 'node',
       source: `
       import { invariant } from 'https://esm.sh/@dxos/invariant';
       invariant(true);
@@ -51,8 +59,10 @@ describe('Bundler', () => {
   });
 
   test('Error', async () => {
-    const bundler = new Bundler({ platform: 'node', sandboxedModules: [], remoteModules: {} });
-    const result = await bundler.bundle({ source: "import missing from './module'; missing();" });
+    const result = await bundleFunction({
+      platform: 'node',
+      source: "import missing from './module'; export default () => missing();",
+    });
     assert('error' in result, 'error should exist');
   });
 });

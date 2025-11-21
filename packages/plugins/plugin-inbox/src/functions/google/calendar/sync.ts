@@ -33,7 +33,8 @@ export default defineFunction({
   inputSchema: Schema.Struct({
     calendarId: ArtifactId,
     googleCalendarId: Schema.optional(Schema.String),
-    syncPeriodDays: Schema.optional(Schema.Number),
+    syncBackDays: Schema.optional(Schema.Number),
+    syncForwardDays: Schema.optional(Schema.Number),
     pageSize: Schema.optional(Schema.Number),
   }),
   outputSchema: Schema.Struct({
@@ -41,13 +42,14 @@ export default defineFunction({
   }),
   handler: ({
     // TODO(wittjosiah): Schema-based defaults are not yet supported.
-    data: { calendarId, googleCalendarId = 'primary', syncPeriodDays = 365, pageSize = 100 },
+    data: { calendarId, googleCalendarId = 'primary', syncBackDays = 30, syncForwardDays = 365, pageSize = 100 },
   }) =>
     Effect.gen(function* () {
       log('syncing google calendar', {
         calendarId,
         googleCalendarId,
-        syncPeriodDays,
+        syncBackDays,
+        syncForwardDays,
         pageSize,
       });
 
@@ -62,7 +64,15 @@ export default defineFunction({
       // Determine sync strategy and execute.
       const isInitialSync = !calendar.lastSyncedUpdate;
       if (isInitialSync) {
-        yield* performInitialSync(googleCalendarId, syncPeriodDays, pageSize, newEvents, nextPage, latestUpdate);
+        yield* performInitialSync(
+          googleCalendarId,
+          syncBackDays,
+          syncForwardDays,
+          pageSize,
+          newEvents,
+          nextPage,
+          latestUpdate,
+        );
       } else {
         yield* performIncrementalSync(
           googleCalendarId,
@@ -107,16 +117,17 @@ export default defineFunction({
  */
 const performInitialSync = Effect.fn(function* (
   googleCalendarId: string,
-  syncPeriodDays: number,
+  syncBackDays: number,
+  syncForwardDays: number,
   pageSize: number,
   newEvents: Ref.Ref<Event.Event[]>,
   nextPage: Ref.Ref<string | undefined>,
   latestUpdate: Ref.Ref<string | undefined>,
 ) {
-  log('performing initial sync', { syncPeriodDays });
+  log('performing initial sync', { syncBackDays, syncForwardDays });
   const now = new Date();
-  const timeMin = now.toISOString();
-  const timeMax = addDays(now, syncPeriodDays).toISOString();
+  const timeMin = addDays(now, -syncBackDays).toISOString();
+  const timeMax = addDays(now, syncForwardDays).toISOString();
 
   // Track recurring events we've already seen to avoid duplicates.
   const seenRecurringEventIds = yield* Ref.make<Set<string>>(new Set());

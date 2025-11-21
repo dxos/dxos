@@ -5,8 +5,9 @@
 import { next as A } from '@automerge/automerge';
 import * as Schema from 'effect/Schema';
 
-import { type Space, createDocAccessor } from '@dxos/client/echo';
+import { type Space } from '@dxos/client/echo';
 import { EchoObject, Ref } from '@dxos/echo/internal';
+import { createDocAccessor } from '@dxos/echo-db';
 import { faker } from '@dxos/random';
 
 import { SpaceObjectGenerator, TestObjectGenerator } from './generator';

@@ -5,9 +5,9 @@
 import { next as A } from '@automerge/automerge';
 
 import { Context } from '@dxos/context';
+import { type DocAccessor } from '@dxos/echo-db';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { type DocAccessor } from '@dxos/react-client/echo';
 import { isNonNullable } from '@dxos/util';
 
 import { decode, encode, getDeep, rebasePath } from './util';

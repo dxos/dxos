@@ -4,8 +4,10 @@
 
 import React, { useCallback } from 'react';
 
-import { type SurfaceComponentProps } from '@dxos/app-framework/react';
+import { createIntent } from '@dxos/app-framework';
+import { type SurfaceComponentProps, useIntentDispatcher } from '@dxos/app-framework/react';
 import { Obj } from '@dxos/echo';
+import { ATTENDABLE_PATH_SEPARATOR, DeckAction } from '@dxos/plugin-deck/types';
 import { Filter, getSpace, useQuery } from '@dxos/react-client/echo';
 import { Toolbar, useTranslation } from '@dxos/react-ui';
 import { useSelected, useSelectionActions } from '@dxos/react-ui-attention';
@@ -25,6 +27,7 @@ const byDate =
 
 export const CalendarArticle = ({ subject: calendar }: SurfaceComponentProps<Calendar.Calendar>) => {
   const { t } = useTranslation(meta.id);
+  const { dispatchPromise: dispatch } = useIntentDispatcher();
   const space = getSpace(calendar);
   const id = Obj.getDXN(calendar).toString();
   const { singleSelect } = useSelectionActions([id]);
@@ -36,8 +39,14 @@ export const CalendarArticle = ({ subject: calendar }: SurfaceComponentProps<Cal
   const handleSelect = useCallback(
     (event: Event.Event) => {
       singleSelect(event.id);
+      void dispatch(
+        createIntent(DeckAction.ChangeCompanion, {
+          primary: id,
+          companion: `${id}${ATTENDABLE_PATH_SEPARATOR}event`,
+        }),
+      );
     },
-    [singleSelect],
+    [singleSelect, dispatch, id],
   );
 
   return (

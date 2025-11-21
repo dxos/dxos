@@ -18,7 +18,7 @@ import { atomFromQuery } from '@dxos/plugin-space';
 import { type Event, type Message } from '@dxos/types';
 import { kebabize } from '@dxos/util';
 
-import { gmail } from '../functions';
+import { calendar, gmail } from '../functions';
 import { meta } from '../meta';
 import { Calendar, Mailbox } from '../types';
 
@@ -179,7 +179,7 @@ export default (context: PluginContext) =>
       },
     }),
     createExtension({
-      id: `${meta.id}/sync`,
+      id: `${meta.id}/sync-mailbox`,
       actions: (node) =>
         Atom.make((get) =>
           Function.pipe(
@@ -204,6 +204,43 @@ export default (context: PluginContext) =>
                     },
                     properties: {
                       label: ['sync mailbox label', { ns: meta.id }],
+                      icon: 'ph--arrows-clockwise--regular',
+                      disposition: 'list-item',
+                    },
+                  },
+                ]),
+              ),
+            ),
+            Option.getOrElse(() => []),
+          ),
+        ),
+    }),
+    createExtension({
+      id: `${meta.id}/sync-calendar`,
+      actions: (node) =>
+        Atom.make((get) =>
+          Function.pipe(
+            get(node),
+            Option.flatMap((node) =>
+              Obj.instanceOf(Calendar.Calendar, node.data) ? Option.some(node.data) : Option.none(),
+            ),
+            Option.map((object) =>
+              get(
+                atomFromSignal(() => [
+                  {
+                    id: `${Obj.getDXN(object).toString()}-sync`,
+                    type: ACTION_TYPE,
+                    data: async () => {
+                      const space = getSpace(object);
+                      invariant(space);
+                      const computeRuntime = context.getCapability(AutomationCapabilities.ComputeRuntime);
+                      const runtime = computeRuntime.getRuntime(space.id);
+                      await runtime.runPromise(
+                        invokeFunctionWithTracing(calendar.sync, { calendarId: Obj.getDXN(object).toString() }),
+                      );
+                    },
+                    properties: {
+                      label: ['sync calendar label', { ns: meta.id }],
                       icon: 'ph--arrows-clockwise--regular',
                       disposition: 'list-item',
                     },
