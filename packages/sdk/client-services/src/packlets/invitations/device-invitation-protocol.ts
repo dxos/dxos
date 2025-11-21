@@ -71,7 +71,7 @@ export class DeviceInvitationProtocol implements InvitationProtocol {
     try {
       const identity = this._getIdentity();
       if (identity) {
-        return new AlreadyJoinedError('Currently only one identity per client is supported.');
+        return new AlreadyJoinedError({ message: 'Currently only one identity per client is supported.' });
       }
     } catch {
       // No identity.

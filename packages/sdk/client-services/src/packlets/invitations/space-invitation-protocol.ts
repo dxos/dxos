@@ -50,14 +50,14 @@ export class SpaceInvitationProtocol implements InvitationProtocol {
 
   checkCanInviteNewMembers(): ApiError | undefined {
     if (this._spaceKey == null) {
-      return new InvalidInvitationError('No spaceKey was provided for a space invitation.');
+      return new InvalidInvitationError({ message: 'No spaceKey was provided for a space invitation.' });
     }
     const space = this._spaceManager.spaces.get(this._spaceKey);
     if (space == null) {
       return new SpaceNotFoundError(this._spaceKey);
     }
     if (!space?.inner.spaceState.hasMembershipManagementPermission(this._signingContext.identityKey)) {
-      return new AuthorizationError('No member management permission.');
+      return new AuthorizationError({ message: 'No member management permission.' });
     }
     return undefined;
   }
@@ -148,10 +148,10 @@ export class SpaceInvitationProtocol implements InvitationProtocol {
 
   checkInvitation(invitation: Partial<Invitation>): InvalidInvitationError | AlreadyJoinedError | undefined {
     if (invitation.spaceKey == null) {
-      return new InvalidInvitationError('No spaceKey was provided for a space invitation.');
+      return new InvalidInvitationError({ message: 'No spaceKey was provided for a space invitation.' });
     }
     if (this._spaceManager.spaces.has(invitation.spaceKey)) {
-      return new AlreadyJoinedError('Already joined space.');
+      return new AlreadyJoinedError({ message: 'Already joined space.' });
     }
   }
 
@@ -184,7 +184,7 @@ export class SpaceInvitationProtocol implements InvitationProtocol {
     invariant(credential.subject.id.equals(this._signingContext.identityKey));
 
     if (this._spaceManager.spaces.has(assertion.spaceKey)) {
-      throw new AlreadyJoinedError('Already joined space.');
+      throw new AlreadyJoinedError({ message: 'Already joined space.' });
     }
 
     // Create local space.

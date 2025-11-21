@@ -72,7 +72,7 @@ export class MetagraphClient implements Metagraph {
   constructor(private readonly _config: Config) {
     // TODO(burdon): Add URL field.
     // TODO(burdon): Rename dxns config field.
-    this._serverUrl = this._config.get('runtime.services.dxns.server') ?? raise(new ApiError('Invalid DXNS server.'));
+    this._serverUrl = this._config.get('runtime.services.dxns.server') ?? raise(new ApiError({ message: 'Invalid DXNS server.' }));
   }
 
   get modules(): ServiceApi<Module> {

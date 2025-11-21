@@ -21,6 +21,7 @@
 - Testing: place tests near modules as `module.test.ts`, use vitest with `describe`/`test` (not `it`), prefer `test('foo', ({ expect }) => ...)`
 - JSDoc comments for public functions, all comments end with period
 - React: arrow function components, TailwindCSS for styles, proper event handler types
+- Remember to remove/update TODOs as you go.
 
 ## Workflow
 
@@ -28,3 +29,14 @@
 - Run linter at natural stopping points
 - Use Conventional Commits for PR titles
 - Confirm work complete before final build/lint check
+
+## Submitting PRs
+
+- Use `gh` CLI to create and manage PRs
+- After you have completed your work, run `pnpm -w pre-ci` to run a series of code-quality checks.
+- At the end you can monitor the CI status with `pnpm -w gh-actions --verify --watch`
+- When the user asks you to submit a PR, make sure that:
+  - `pnpm -w pre-ci` passes
+  - `pnpm -w gh-actions --verify --watch` shows green CI
+  - The PR description is up-to-date
+- Repeat the process if you made any new code changes
