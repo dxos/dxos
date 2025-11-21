@@ -5,9 +5,9 @@
 import { type EditorView } from '@codemirror/view';
 import React, { type ReactNode, forwardRef, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react';
 
-import { createDocAccessor, createObject } from '@dxos/client/echo';
 import { Expando } from '@dxos/echo/internal';
 import { live } from '@dxos/echo/internal';
+import { createDocAccessor, createObject } from '@dxos/echo-db';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';

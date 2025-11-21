@@ -43,7 +43,7 @@ const Editor = ({ source, autoFocus, space, identity }: EditorProps) => {
       extensions: [
         createBasicExtensions({ placeholder: 'Type here...', search: true }),
         createThemeExtensions({ themeMode, slots: editorSlots }),
-        createDataExtensions({ id: 'test', text: source, space, identity }),
+        createDataExtensions({ id: 'test', text: source, messenger: space, identity }),
       ],
       autoFocus,
     }),

@@ -119,7 +119,7 @@ export const useExtensions = ({
           createDataExtensions({
             id,
             text: createDocAccessor(target, ['content']),
-            space,
+            messenger: space,
             identity,
           }),
 

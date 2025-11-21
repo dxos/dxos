@@ -42,7 +42,7 @@ export const ScriptContainer = ({ role, script, settings = { editorInputMode: 'v
             createDataExtensions({
               id: script.id,
               text: createDocAccessor(script.source.target, ['content']),
-              space,
+              messenger: space,
               identity,
             }),
           ]
