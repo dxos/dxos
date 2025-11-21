@@ -32,7 +32,7 @@ export class DeviceInvitationProtocol implements InvitationProtocol {
     };
   }
 
-  checkCanInviteNewMembers(): ApiError | undefined {
+  checkCanInviteNewMembers(): Error | undefined {
     return undefined;
   }
 
