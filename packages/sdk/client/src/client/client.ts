@@ -29,7 +29,14 @@ import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type QueueService } from '@dxos/protocols';
-import { ApiError, AuthorizationError, InvalidConfigError, RemoteServiceConnectionError, RemoteServiceConnectionTimeout, trace as Trace } from '@dxos/protocols';
+import {
+  ApiError,
+  AuthorizationError,
+  InvalidConfigError,
+  RemoteServiceConnectionError,
+  RemoteServiceConnectionTimeout,
+  trace as Trace,
+} from '@dxos/protocols';
 import { type QueryStatusResponse, SystemStatus } from '@dxos/protocols/proto/dxos/client/services';
 import { type ProtoRpcPeer, createProtoRpcPeer } from '@dxos/rpc';
 import { createIFramePort } from '@dxos/rpc-tunnel';

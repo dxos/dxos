@@ -2,18 +2,20 @@
 // Copyright 2021 DXOS.org
 //
 
+import { BaseError } from '@dxos/errors';
 import { PublicKey } from '@dxos/keys';
 
 import type { ObjectId } from '../types.js';
 
-import { BaseError } from '@dxos/errors';
-import { ApiError, DatabaseError, SystemError } from './base-errors.js';
 import { registerError, registerErrorMessageContext, registerErrorNoArgs } from './helpers.js';
 
 /**
  * Thrown when request was terminated because the RPC endpoint has been closed.
  */
-export class RpcClosedError extends BaseError.extend('RPC_CLOSED', 'Request was terminated because the RPC endpoint is closed.') {}
+export class RpcClosedError extends BaseError.extend(
+  'RPC_CLOSED',
+  'Request was terminated because the RPC endpoint is closed.',
+) {}
 
 registerErrorNoArgs('RPC_CLOSED', RpcClosedError);
 
@@ -93,7 +95,10 @@ export class UnknownProtocolError extends BaseError.extend('UNKNOWN_PROTOCOL_ERR
 
 registerError(UnknownProtocolError.code, (message, context) => new UnknownProtocolError({ message, context }));
 
-export class InvalidStorageVersionError extends BaseError.extend('INVALID_STORAGE_VERSION', 'Invalid storage version.') {
+export class InvalidStorageVersionError extends BaseError.extend(
+  'INVALID_STORAGE_VERSION',
+  'Invalid storage version.',
+) {
   constructor(expected: number, actual: number) {
     super({ context: { expected, actual } });
   }

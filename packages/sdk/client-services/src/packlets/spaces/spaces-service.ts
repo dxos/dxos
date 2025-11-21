@@ -104,9 +104,12 @@ export class SpacesServiceImpl implements SpacesService {
       throw new SpaceNotFoundError(request.spaceKey);
     }
     if (!space.spaceState.hasMembershipManagementPermission(identity.identityKey)) {
-      throw new AuthorizationError({ message: 'No member management permission.', context: {
-        spaceKey: space.key,
-        role: space.spaceState.getMemberRole(identity.identityKey),
+      throw new AuthorizationError({
+        message: 'No member management permission.',
+        context: {
+          spaceKey: space.key,
+          role: space.spaceState.getMemberRole(identity.identityKey),
+        },
       });
     }
     const credentials = await createAdmissionCredentials(
@@ -369,8 +372,8 @@ export class SpacesServiceImpl implements SpacesService {
   private _requireIdentity() {
     if (!this._identityManager.identity) {
       throw new IdentityNotInitializedError({
-        'This device has no HALO identity available. See https://docs.dxos.org/guide/platform/halo',
-      );
+        message: 'This device has no HALO identity available. See https://docs.dxos.org/guide/platform/halo',
+      });
     }
     return this._identityManager.identity;
   }

@@ -2,11 +2,10 @@
 // Copyright 2023 DXOS.org
 //
 
+import { BaseError } from '@dxos/errors';
 import { invariant } from '@dxos/invariant';
 
 import { type Error as SerializedErrorProto } from '../proto/gen/dxos/error.js';
-
-import { BaseError } from '@dxos/errors';
 
 export const reconstructError = (error: SerializedErrorProto) => {
   const { name, message, context } = error;

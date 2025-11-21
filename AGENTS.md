@@ -39,4 +39,5 @@
   - `pnpm -w pre-ci` passes
   - `pnpm -w gh-actions --verify --watch` shows green CI
   - The PR description is up-to-date
+  - Reference linear issues if available in PR description as "closes DX-123" or "part of DX-123"
 - Repeat the process if you made any new code changes
