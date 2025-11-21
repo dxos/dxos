@@ -75,6 +75,8 @@ export const translations = [
         'message header view mode plain only': 'Plain',
 
         'related contacts title': 'Related contacts',
+        'recent events title': 'Recent events',
+        'upcoming events title': 'Upcoming events',
         'related messages title': 'Recent messages',
       },
     },
