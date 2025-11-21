@@ -6,8 +6,14 @@ import React from 'react';
 
 import { log } from '@dxos/log';
 import { ToggleContainer } from '@dxos/react-ui-components';
+import {
+  PromptWidget,
+  ReferenceWidget,
+  SelectWidget,
+  SuggestionWidget,
+  SummaryWidget,
+} from '@dxos/react-ui-components';
 import { type XmlWidgetProps, type XmlWidgetRegistry, getXmlTextChild } from '@dxos/react-ui-editor';
-import { PromptWidget, ReferenceWidget, SelectWidget, SuggestionWidget, SummaryWidget } from '@dxos/react-ui-markdown';
 import { Json } from '@dxos/react-ui-syntax-highlighter';
 import { ContentBlock, type Message } from '@dxos/types';
 

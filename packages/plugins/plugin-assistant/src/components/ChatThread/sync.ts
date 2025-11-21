@@ -4,8 +4,8 @@
 
 import { type DXN } from '@dxos/echo';
 import { log } from '@dxos/log';
+import { type MarkdownStreamController } from '@dxos/react-ui-components';
 import { type StateDispatch, type XmlWidgetStateManager } from '@dxos/react-ui-editor';
-import { type MarkdownStreamController } from '@dxos/react-ui-markdown';
 import { type ContentBlock, type Message } from '@dxos/types';
 
 /**
