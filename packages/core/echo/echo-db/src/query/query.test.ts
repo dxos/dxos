@@ -471,6 +471,33 @@ describe('Query', () => {
       expect(objects).toEqual([hasManager]);
     });
 
+    test('relations with deleted endpoints get removed from the list', async () => {
+      const { db } = await builder.createDatabase({ types: [TestingDeprecated.Contact, TestingDeprecated.HasManager] });
+
+      const alice = db.add(
+        live(TestingDeprecated.Contact, {
+          name: 'Alice',
+        }),
+      );
+      const bob = db.add(
+        live(TestingDeprecated.Contact, {
+          name: 'Bob',
+        }),
+      );
+      const hasManager = db.add(
+        live(TestingDeprecated.HasManager, {
+          [RelationSourceId]: bob,
+          [RelationTargetId]: alice,
+          since: '2022',
+        }),
+      );
+      db.remove(bob);
+      await db.flush({ indexes: true });
+
+      const { objects } = await db.query(Filter.type(TestingDeprecated.HasManager)).run();
+      expect(objects).toEqual([]);
+    });
+
     test('tags', async () => {
       const { db } = await builder.createDatabase();
 
