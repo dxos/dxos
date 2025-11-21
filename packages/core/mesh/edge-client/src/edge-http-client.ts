@@ -354,6 +354,12 @@ export class EdgeHttpClient {
     return this._call(new URL(`/test/functions/${spaceId}/triggers/crons`, this.baseUrl), { method: 'GET' });
   }
 
+  public async forceRunCronTrigger(spaceId: SpaceId, triggerId: ObjectId) {
+    return this._call(new URL(`/test/functions/${spaceId}/triggers/crons/${triggerId}/run`, this.baseUrl), {
+      method: 'POST',
+    });
+  }
+
   //
   // Import/Export space.
   //

@@ -10,8 +10,9 @@ import React, { type FC, useCallback, useMemo, useState } from 'react';
 
 import { Filter, type Obj } from '@dxos/echo';
 import { FormatEnum } from '@dxos/echo/internal';
-import { type InvocationSpan } from '@dxos/functions-runtime';
+import { TraceEventException, type InvocationSpan } from '@dxos/functions-runtime';
 import { TraceEvent } from '@dxos/functions-runtime';
+import { DXN } from '@dxos/keys';
 import { type Space, useQuery, useSpace } from '@dxos/react-client/echo';
 import { Toolbar } from '@dxos/react-ui';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
@@ -28,6 +29,7 @@ import { useFunctionNameResolver, useInvocationSpans } from './hooks';
 import { LogPanel } from './LogPanel';
 import { RawDataPanel } from './RawDataPanel';
 import { formatDuration } from './utils';
+import { log } from '@dxos/log';
 
 export type InvocationTraceContainerProps = {
   space?: Space;
@@ -105,7 +107,12 @@ export const InvocationTraceContainer = ({
   const rows = useMemo(() => {
     return invocationSpans.map((invocation) => {
       const status = invocation.outcome;
-      const targetDxn = invocation.invocationTarget?.dxn;
+      // Handle both Ref objects and encoded references.
+      const targetDxn =
+        invocation.invocationTarget?.dxn ??
+        (invocation.invocationTarget && '/' in invocation.invocationTarget
+          ? DXN.parse((invocation.invocationTarget as any)['/'])
+          : undefined);
 
       // TODO(burdon): Use InvocationTraceStartEvent.
       return {
@@ -115,7 +122,11 @@ export const InvocationTraceContainer = ({
         time: new Date(invocation.timestamp),
         duration: formatDuration(invocation.duration),
         status,
-        queue: invocation.invocationTraceQueue?.dxn.toString() ?? 'unknown',
+        queue:
+          invocation.invocationTraceQueue?.dxn?.toString() ??
+          (invocation.invocationTraceQueue && '/' in invocation.invocationTraceQueue
+            ? (invocation.invocationTraceQueue as any)['/']
+            : 'unknown'),
         _original: invocation,
       };
     });
@@ -168,11 +179,8 @@ export const InvocationTraceContainer = ({
 
 const Selected: FC<{ span: InvocationSpan }> = ({ span }) => {
   const [activeTab, setActiveTab] = useState('input');
-  const data = useMemo(() => parseJsonString((span?.input as any)?.bodyText), [span]);
 
-  const dxn = span?.invocationTraceQueue ? span.invocationTraceQueue.dxn : undefined;
-  const space = useSpace(dxn?.asQueueDXN()?.spaceId);
-  const queue = dxn && space?.queues.get(dxn);
+  const queue = span.invocationTraceQueue?.target;
   const objects = useQuery(queue, Filter.everything());
 
   const contents = Array.head(objects).pipe(
@@ -182,6 +190,8 @@ const Selected: FC<{ span: InvocationSpan }> = ({ span }) => {
     Match.when(Schema.is(TraceEvent), () => 'logs'),
     Match.orElse(() => 'execution-graph'),
   );
+
+  const isLogQueue = 'logs' === contents;
 
   return (
     <div className='grid grid-cols-1 grid-rows-[min-content_1fr] bs-full min-bs-0 border-separator'>
@@ -193,27 +203,33 @@ const Selected: FC<{ span: InvocationSpan }> = ({ span }) => {
       >
         <Tabs.Tablist classNames='border-be border-separator'>
           <Tabs.Tab value='input'>Input</Tabs.Tab>
-          {contents === 'logs' && <Tabs.Tab value='logs'>Logs</Tabs.Tab>}
-          {contents === 'logs' && <Tabs.Tab value='exceptions'>Exceptions</Tabs.Tab>}
-          {contents === 'logs' && <Tabs.Tab value='raw'>Raw</Tabs.Tab>}
+          {isLogQueue && <Tabs.Tab value='logs'>Logs</Tabs.Tab>}
+          {isLogQueue && <Tabs.Tab value='exceptions'>Exceptions</Tabs.Tab>}
+          {isLogQueue && <Tabs.Tab value='raw'>Raw</Tabs.Tab>}
+          {span.exception && <Tabs.Tab value='exception'>Exception</Tabs.Tab>}
           {contents === 'execution-graph' && <Tabs.Tab value='execution-graph'>Execution Graph</Tabs.Tab>}
         </Tabs.Tablist>
         <Tabs.Tabpanel value='input'>
-          <SyntaxHighlighter language='json'>{JSON.stringify(data, null, 2)}</SyntaxHighlighter>
+          <SyntaxHighlighter language='json'>{JSON.stringify(span.input, null, 2)}</SyntaxHighlighter>
         </Tabs.Tabpanel>
-        {contents === 'logs' && (
+        {isLogQueue && (
           <Tabs.Tabpanel value='logs'>
             <LogPanel queue={queue} />
           </Tabs.Tabpanel>
         )}
-        {contents === 'logs' && (
+        {isLogQueue && (
           <Tabs.Tabpanel value='exceptions'>
             <ExceptionPanel queue={queue} />
           </Tabs.Tabpanel>
         )}
-        {contents === 'logs' && (
+        {isLogQueue && (
           <Tabs.Tabpanel value='raw' classNames='min-bs-0 min-is-0 is-full overflow-auto'>
             <RawDataPanel classNames='text-xs' span={span} queue={queue} />
+          </Tabs.Tabpanel>
+        )}
+        {span.exception && (
+          <Tabs.Tabpanel value='exception'>
+            <SpanExceptionPanel exception={span.exception} />
           </Tabs.Tabpanel>
         )}
         {contents === 'execution-graph' && (
@@ -226,14 +242,16 @@ const Selected: FC<{ span: InvocationSpan }> = ({ span }) => {
   );
 };
 
-const parseJsonString = (str: string): any => {
-  try {
-    // Handle double-quoted strings by removing outer quotes.
-    const cleaned = str.replace(/^"+|"+$/g, '');
-    return JSON.parse(cleaned);
-  } catch {
-    return null;
-  }
+const SpanExceptionPanel = ({ exception }: { exception: TraceEventException }) => {
+  return (
+    <div className='text-xs whitespace-pre-wrap m-4'>
+      <div>Timestamp: {exception.timestamp}</div>
+      <div>Message: {exception.message}</div>
+      <div>Name: {exception.name}</div>
+      <div />
+      <div>Stack: {exception.stack}</div>
+    </div>
+  );
 };
 
 export default InvocationTraceContainer;
