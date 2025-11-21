@@ -45,6 +45,7 @@ export const translations = [
         'inbox label': 'Inbox',
 
         'sync mailbox label': 'Sync mailbox',
+        'sync calendar label': 'Sync calendar',
 
         'show contact label': 'Show contact',
         'create contact label': 'Create contact',
@@ -76,6 +77,8 @@ export const translations = [
         'message header view mode plain only': 'Plain',
 
         'related contacts title': 'Related contacts',
+        'recent events title': 'Recent events',
+        'upcoming events title': 'Upcoming events',
         'related messages title': 'Recent messages',
       },
     },

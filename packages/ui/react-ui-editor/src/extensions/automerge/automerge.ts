@@ -8,7 +8,7 @@ import { next as A } from '@automerge/automerge';
 import { type Extension, StateField, Transaction } from '@codemirror/state';
 import { EditorView, ViewPlugin } from '@codemirror/view';
 
-import { DocAccessor } from '@dxos/client/echo';
+import { DocAccessor } from '@dxos/echo-db';
 
 import { Cursor } from '../../util';
 import { initialSync } from '../state';

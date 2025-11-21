@@ -23,10 +23,11 @@ import { vscodeDarkStyle, vscodeLightStyle } from '@uiw/codemirror-theme-vscode'
 import defaultsDeep from 'lodash.defaultsdeep';
 import merge from 'lodash.merge';
 
-import { type DocAccessor, type Space } from '@dxos/client/echo';
-import { type Identity } from '@dxos/client/halo';
 import { generateName } from '@dxos/display-name';
+import { type DocAccessor } from '@dxos/echo-db';
 import { log } from '@dxos/log';
+import { type Messenger } from '@dxos/protocols';
+import { type Identity } from '@dxos/protocols/proto/dxos/client/services';
 import { type ThemeMode } from '@dxos/react-ui';
 import { type HuePalette } from '@dxos/react-ui-theme';
 import { hexToHue, isTruthy } from '@dxos/util';
@@ -44,7 +45,9 @@ import { focus } from './focus';
 
 export const filterChars = (chars: RegExp) => {
   return EditorState.transactionFilter.of((transaction) => {
-    if (!transaction.docChanged) return transaction;
+    if (!transaction.docChanged) {
+      return transaction;
+    }
 
     const changes: ChangeSpec[] = [];
     transaction.changes.iterChanges((fromA, toA, fromB, toB, text) => {
@@ -62,6 +65,7 @@ export const filterChars = (chars: RegExp) => {
     if (changes.length) {
       return [transaction, { changes, sequential: true } as TransactionSpec];
     }
+
     return transaction;
   });
 };
@@ -190,7 +194,7 @@ export type ThemeExtensionsOptions = {
 
 export const grow: ThemeExtensionsOptions['slots'] = {
   editor: {
-    className: 'is-full bs-full',
+    className: 'bs-full is-full',
   },
 } as const;
 
@@ -244,24 +248,24 @@ export const createThemeExtensions = ({
 export type DataExtensionsProps<T> = {
   id: string;
   text?: DocAccessor<T>;
-  space?: Space;
+  messenger?: Messenger;
   identity?: Identity | null;
 };
 
-// TODO(burdon): Move out of react-ui-editor (remove echo deps).
-export const createDataExtensions = <T>({ id, text, space, identity }: DataExtensionsProps<T>): Extension[] => {
+// TODO(burdon): Move out of react-ui-editor?
+export const createDataExtensions = <T>({ id, text, messenger, identity }: DataExtensionsProps<T>): Extension[] => {
   const extensions: Extension[] = [];
   if (text) {
     extensions.push(automerge(text));
   }
 
-  if (space && identity) {
+  if (messenger && identity) {
     const peerId = identity?.identityKey.toHex();
     const hue = (identity?.profile?.data?.hue as HuePalette | undefined) ?? hexToHue(peerId ?? '0');
     extensions.push(
       awareness(
         new SpaceAwarenessProvider({
-          space,
+          messenger,
           channel: `awareness.${id}`,
           peerId: identity.identityKey.toHex(),
           info: {

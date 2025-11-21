@@ -2,12 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Effect from 'effect/Effect';
-import * as Function from 'effect/Function';
-import React, { useCallback } from 'react';
+import React from 'react';
 
-import { Capabilities, LayoutAction, chain, contributes, createIntent, createSurface } from '@dxos/app-framework';
-import { useIntentDispatcher } from '@dxos/app-framework/react';
+import { Capabilities, contributes, createSurface } from '@dxos/app-framework';
 import { Obj } from '@dxos/echo';
 import { AttentionAction } from '@dxos/plugin-attention/types';
 import { ATTENDABLE_PATH_SEPARATOR, DeckAction } from '@dxos/plugin-deck/types';
@@ -26,8 +23,8 @@ import {
   MessageCard,
   POPOVER_SAVE_FILTER,
   PopoverSaveFilter,
-  RelatedContacts,
-  RelatedMessages,
+  RelatedToContact,
+  RelatedToOrganization,
 } from '../components';
 import { meta } from '../meta';
 import { Calendar, Mailbox } from '../types';
@@ -111,120 +108,13 @@ export default () =>
       id: `${meta.id}/contact-related`,
       role: 'related',
       filter: (data): data is { subject: Person.Person } => Obj.instanceOf(Person.Person, data.subject),
-      component: ({ data: { subject: contact } }) => {
-        const { dispatchPromise: dispatch } = useIntentDispatcher();
-        const space = useSpace();
-        const [mailbox] = useQuery(space, Filter.type(Mailbox.Mailbox));
-        const queue = useQueue<Message.Message>(mailbox?.queue.dxn);
-        const messages = queue?.objects ?? [];
-        const related = messages
-          .filter(
-            (message) =>
-              contact.emails?.some((email) => email.value === message.sender.email) ||
-              message.sender.contact?.target === contact,
-          )
-          .filter((message) => message.properties?.subject)
-          .toSorted((a, b) => new Date(b.created).getTime() - new Date(a.created).getTime())
-          .slice(0, 5);
-
-        const handleMessageClick = useCallback(
-          (message: Message.Message) => {
-            void dispatch(
-              Function.pipe(
-                createIntent(LayoutAction.UpdatePopover, {
-                  part: 'popover',
-                  options: {
-                    state: false,
-                    anchorId: '',
-                  },
-                }),
-                chain(LayoutAction.Open, {
-                  part: 'main',
-                  subject: [Obj.getDXN(mailbox).toString()],
-                  options: { workspace: space?.id },
-                }),
-                chain(AttentionAction.Select, {
-                  contextId: Obj.getDXN(mailbox).toString(),
-                  selection: { mode: 'single', id: message.id },
-                }),
-              ),
-            );
-          },
-          [dispatch, space, mailbox],
-        );
-
-        return <RelatedMessages messages={related} onMessageClick={handleMessageClick} />;
-      },
+      component: ({ data: { subject } }) => <RelatedToContact subject={subject} />,
     }),
     createSurface({
       id: `${meta.id}/organization-related`,
       role: 'related',
       filter: (data): data is { subject: Organization.Organization } =>
         Obj.instanceOf(Organization.Organization, data.subject),
-      component: ({ data: { subject: organization } }) => {
-        const { dispatch } = useIntentDispatcher();
-        const space = getSpace(organization);
-        const defaultSpace = useSpace();
-        const currentSpaceContacts = useQuery(space, Filter.type(Person.Person));
-        const defaultSpaceContacts = useQuery(
-          defaultSpace === space ? undefined : defaultSpace,
-          Filter.type(Person.Person),
-        );
-        const contacts = [...(currentSpaceContacts ?? []), ...(defaultSpaceContacts ?? [])];
-        const related = contacts.filter((contact) =>
-          typeof contact.organization === 'string' ? false : contact.organization?.target === organization,
-        );
-
-        const currentSpaceViews = useQuery(space, Filter.type(Table.Table));
-        const defaultSpaceViews = useQuery(defaultSpace, Filter.type(Table.Table));
-        const currentSpaceContactTable = currentSpaceViews.find(
-          (table) => getTypenameFromQuery(table.view.target?.query.ast) === Person.Person.typename,
-        );
-        const defaultSpaceContactTable = defaultSpaceViews.find(
-          (table) => getTypenameFromQuery(table.view.target?.query.ast) === Person.Person.typename,
-        );
-
-        // TODO(wittjosiah): Generalized way of handling related objects navigation.
-        const handleContactClick = useCallback(
-          (contact: Person.Person) =>
-            Effect.gen(function* () {
-              const view = currentSpaceContacts.includes(contact) ? currentSpaceContactTable : defaultSpaceContactTable;
-              yield* dispatch(
-                createIntent(LayoutAction.UpdatePopover, {
-                  part: 'popover',
-                  options: {
-                    state: false,
-                    anchorId: '',
-                  },
-                }),
-              );
-              if (view) {
-                const id = Obj.getDXN(view).toString();
-                yield* dispatch(
-                  createIntent(LayoutAction.Open, {
-                    part: 'main',
-                    subject: [id],
-                    options: { workspace: space?.id },
-                  }),
-                );
-                yield* dispatch(
-                  createIntent(DeckAction.ChangeCompanion, {
-                    primary: id,
-                    companion: [id, 'selected-objects'].join(ATTENDABLE_PATH_SEPARATOR),
-                  }),
-                );
-                yield* dispatch(
-                  createIntent(AttentionAction.Select, {
-                    contextId: id,
-                    selection: { mode: 'multi', ids: [contact.id] },
-                  }),
-                );
-              }
-            }).pipe(Effect.runPromise),
-          [dispatch, currentSpaceContacts, currentSpaceContactTable, defaultSpaceContactTable, space, defaultSpace],
-        );
-
-        return <RelatedContacts contacts={related} onContactClick={handleContactClick} />;
-      },
+      component: ({ data: { subject } }) => <RelatedToOrganization subject={subject} />,
     }),
   ]);

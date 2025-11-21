@@ -53,6 +53,7 @@
     "@dxos/esbuild-plugins": "workspace:*",
     "@dxos/feed-store": "workspace:*",
     "@dxos/functions": "workspace:*",
+    "@dxos/functions-runtime": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/keyring": "workspace:*",
     "@dxos/keys": "workspace:*",

@@ -6,7 +6,7 @@ import { defaultHighlightStyle, syntaxHighlighting } from '@codemirror/language'
 import React from 'react';
 
 import { type Template } from '@dxos/blueprints';
-import { createDocAccessor } from '@dxos/react-client/echo';
+import { createDocAccessor } from '@dxos/echo-db';
 import { type ThemedClassName, useThemeContext, useTranslation } from '@dxos/react-ui';
 import {
   createBasicExtensions,

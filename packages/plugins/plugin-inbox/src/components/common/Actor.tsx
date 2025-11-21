@@ -2,6 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
+import * as Array from 'effect/Array';
 import React from 'react';
 
 import { IconButton, type ThemedClassName, useTranslation } from '@dxos/react-ui';
@@ -32,7 +33,8 @@ export const ActorComponent = ({ actor, classNames }: ThemedClassName<{ actor: A
 export const ActorList = ({ classNames, actors }: ThemedClassName<{ actors: Actor.Actor[] }>) => {
   return (
     <div role='none' className={mx('flex flex-col is-full', classNames)}>
-      {actors.map((actor, idx) => (
+      {/* TODO(wittjosiah): Accordion to show all. */}
+      {Array.take(actors, 8).map((actor, idx) => (
         <ActorComponent key={idx} actor={actor} />
       ))}
     </div>
