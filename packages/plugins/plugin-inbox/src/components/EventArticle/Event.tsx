@@ -5,14 +5,16 @@
 import { createContext } from '@radix-ui/react-context';
 import React, { type PropsWithChildren } from 'react';
 
+import { getSpace } from '@dxos/react-client/echo';
 import { Icon, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { MenuProvider, ToolbarMenu } from '@dxos/react-ui-menu';
 import { mx } from '@dxos/react-ui-theme';
 import { type Actor, type Event as EventType } from '@dxos/types';
 
 import { meta } from '../../meta';
-import { DateComponent, UserIconButton } from '../common';
+import { DateComponent } from '../common';
 
+import { EventAttendee } from './EventAttendee';
 import { type UseEventToolbarActionsProps, useEventToolbarActions } from './useToolbar';
 
 //
@@ -80,6 +82,7 @@ type EventHeaderProps = {
 const EventHeader = ({ onContactCreate }: EventHeaderProps) => {
   const { t } = useTranslation(meta.id);
   const { event } = useEventContext(EventHeader.displayName);
+  const space = getSpace(event);
 
   return (
     <div role='none' className='p-1 flex flex-col gap-2 border-be border-subduedSeparator'>
@@ -103,10 +106,7 @@ const EventHeader = ({ onContactCreate }: EventHeaderProps) => {
 
       <div role='none'>
         {event.attendees.map((attendee) => (
-          <div key={attendee.email} role='none' className='grid grid-cols-[2rem_1fr] gap-1 items-center'>
-            <UserIconButton value={attendee.contact?.dxn} onContactCreate={() => onContactCreate?.(attendee)} />
-            <h3 className='truncate text-primaryText'>{attendee.name || attendee.email}</h3>
-          </div>
+          <EventAttendee key={attendee.email} attendee={attendee} space={space} onContactCreate={onContactCreate} />
         ))}
       </div>
     </div>
