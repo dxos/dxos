@@ -12,13 +12,7 @@ import { invariant } from '@dxos/invariant';
 import { type Keyring } from '@dxos/keyring';
 import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import {
-  AlreadyJoinedError,
-  type ApiError,
-  AuthorizationError,
-  InvalidInvitationError,
-  SpaceNotFoundError,
-} from '@dxos/protocols';
+import { AlreadyJoinedError, AuthorizationError, InvalidInvitationError, SpaceNotFoundError } from '@dxos/protocols';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import { type ProfileDocument, SpaceMember } from '@dxos/protocols/proto/dxos/halo/credentials';
 import {
