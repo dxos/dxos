@@ -4,17 +4,61 @@
 
 import '@dxos-theme';
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { sendMessage } from 'webext-bridge/popup';
 import browser from 'webextension-polyfill';
 
 import { log } from '@dxos/log';
+import { mx } from '@dxos/react-ui-theme';
 
-import { Container, Popup, type PopupProps } from './components';
+import { Chat, type ChatProps, Container, ErrorBoundary, Thumbnail } from './components';
+import { THUMBNAIL_PROP, getConfig } from './config';
 
+// NOTE: Keep in sync with popup.html initial layout.
+const rootClasses = 'flex flex-col is-[500px] opacity-0 [animation:popup-fade-in_0.5s_ease-out_forwards]';
+
+/**
+ * Root component.
+ */
 const Root = () => {
-  const handleAdd: PopupProps['onAdd'] = async () => {
+  const [thumbnailUrl, setThumbnailUrl] = useState<string | null>(null);
+  const [tabUrl, setTabUrl] = useState<string | null>(null);
+
+  // Load config.
+  const [host, setHost] = useState<string | null>(null);
+  useEffect(() => {
+    void (async () => {
+      const config = await getConfig();
+      setHost(config.chatAgentUrl);
+    })();
+  }, []);
+
+  // Load current tab URL.
+  useEffect(() => {
+    void (async () => {
+      const [tab] = await browser.tabs.query({ active: true, currentWindow: true });
+      if (tab?.url) {
+        setTabUrl(tab.url.replace(/\/$/, ''));
+      }
+    })();
+  }, []);
+
+  // Load thumbnail URL from storage when popup opens then clear it.
+  useEffect(() => {
+    void (async () => {
+      const result = await browser.storage.local.get(THUMBNAIL_PROP);
+      const thumbnailUrl = result?.[THUMBNAIL_PROP] as string;
+      if (thumbnailUrl) {
+        setThumbnailUrl(thumbnailUrl);
+        await browser.storage.local.remove(THUMBNAIL_PROP);
+      }
+    })();
+  }, []);
+
+  // TODO(burdon): Change to event.
+  // TODO(burdon): Demo to communicate with content script.
+  const handlePing: ChatProps['onPing'] = async () => {
     log.info('sending...');
     const [tab] = await browser.tabs.query({ active: true, currentWindow: true });
     if (!tab?.id) {
@@ -23,7 +67,17 @@ const Root = () => {
     }
 
     try {
-      const result = await sendMessage('ping', { debug: true }, { context: 'content-script', tabId: tab.id });
+      const result = await sendMessage(
+        'ping',
+        {
+          debug: true,
+        },
+        {
+          context: 'content-script',
+          tabId: tab.id,
+        },
+      );
+
       log.info('result', { result });
       return result;
     } catch (err) {
@@ -33,19 +87,13 @@ const Root = () => {
     return null;
   };
 
-  const handleSearch: PopupProps['onSearch'] = async (text) => {
-    log.info('search', { text });
-    return null;
-  };
-
-  const handleLaunch: PopupProps['onLaunch'] = async () => {
-    window.open('https://labs.composer.space');
-  };
-
   return (
-    <Container classNames='w-[300px]'>
-      <Popup onAdd={handleAdd} onSearch={handleSearch} onLaunch={handleLaunch} />
-    </Container>
+    <ErrorBoundary>
+      <Container classNames={mx(rootClasses)}>
+        {thumbnailUrl && <Thumbnail url={thumbnailUrl} />}
+        {!thumbnailUrl && host && <Chat host={host} url={tabUrl ?? undefined} onPing={handlePing} />}
+      </Container>
+    </ErrorBoundary>
   );
 };
 

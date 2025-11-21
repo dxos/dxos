@@ -2,18 +2,20 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { useCallback } from 'react';
+import * as Schema from 'effect/Schema';
+import React, { useCallback, useState } from 'react';
 
 import { createIntent } from '@dxos/app-framework';
 import { useIntentDispatcher } from '@dxos/app-framework/react';
-import { type QueryAST, Type } from '@dxos/echo';
-import { invariant } from '@dxos/invariant';
+import { DXN, Filter, Obj, Query, type QueryAST, Tag, Type } from '@dxos/echo';
 import { useClient } from '@dxos/react-client';
-import { getSpace, useSchema } from '@dxos/react-client/echo';
+import { getSpace, useQuery } from '@dxos/react-client/echo';
+import { useAsyncEffect } from '@dxos/react-ui';
 import { ViewEditor as NaturalViewEditor } from '@dxos/react-ui-form';
-import { getTypenameFromQuery } from '@dxos/schema';
-import { type View } from '@dxos/schema';
+import { View } from '@dxos/schema';
 
+import { resolveSchemaWithClientAndSpace } from '../helpers';
+import { useTypeOptions } from '../hooks';
 import { SpaceAction } from '../types';
 
 export type ViewEditorProps = { view: View.View };
@@ -22,16 +24,43 @@ export const ViewEditor = ({ view }: ViewEditorProps) => {
   const { dispatchPromise: dispatch } = useIntentDispatcher();
   const client = useClient();
   const space = getSpace(view);
-  const typename = view.query ? getTypenameFromQuery(view.query.ast) : undefined;
-  const schema = useSchema(client, space, typename);
+  const [schema, setSchema] = useState<Schema.Schema.AnyNoContext>(() => Schema.Struct({}));
+  const tags = useQuery(space, Filter.type(Tag.Tag));
+  const types = useTypeOptions({ space, annotation: ['dynamic', 'limited-static', 'object-form'] });
 
-  const handleUpdateQuery = useCallback(
-    (newQuery: QueryAST.Query) => {
-      invariant(schema);
-      invariant(Type.isMutable(schema));
+  useAsyncEffect(async () => {
+    if (!view?.query || !space) {
+      return;
+    }
 
-      view.query.ast = newQuery;
-      schema.updateTypename(getTypenameFromQuery(newQuery));
+    const foundSchema = await resolveSchemaWithClientAndSpace(client, space, view.query.ast);
+    if (foundSchema && foundSchema !== schema) {
+      setSchema(() => foundSchema);
+    }
+  }, [client, space, view, schema]);
+
+  const handleQueryChanged = useCallback(
+    async (newQuery: QueryAST.Query, target?: string) => {
+      if (!view || !space) {
+        return;
+      }
+
+      const queue = target && DXN.tryParse(target) ? target : undefined;
+      const query = queue ? Query.fromAst(newQuery).options({ queues: [queue] }) : Query.fromAst(newQuery);
+      view.query.ast = query.ast;
+      const newSchema = await resolveSchemaWithClientAndSpace(client, space, query.ast);
+      if (!newSchema) {
+        return;
+      }
+
+      const newView = View.make({
+        query,
+        jsonSchema: Type.toJsonSchema(newSchema),
+        presentation: Obj.make(Type.Expando, {}),
+      });
+      view.projection = Obj.getSnapshot(newView).projection;
+
+      setSchema(() => newSchema);
     },
     [view, schema],
   );
@@ -52,9 +81,12 @@ export const ViewEditor = ({ view }: ViewEditorProps) => {
       registry={space.db.schemaRegistry}
       schema={schema}
       view={view}
-      onQueryChanged={Type.isMutable(schema) ? handleUpdateQuery : undefined}
-      onDelete={Type.isMutable(schema) ? handleDelete : undefined}
+      mode='query'
       outerSpacing={false}
+      tags={tags}
+      types={types}
+      onQueryChanged={handleQueryChanged}
+      onDelete={Type.isMutable(schema) ? handleDelete : undefined}
     />
   );
 };

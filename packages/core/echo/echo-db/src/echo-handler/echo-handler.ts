@@ -882,7 +882,7 @@ export const throwIfCustomClass = (prop: KeyPath[number], value: any) => {
 
   const proto = Object.getPrototypeOf(value);
   if (typeof value === 'object' && proto !== Object.prototype) {
-    throw new Error(`class instances are not supported: setting ${proto} on ${String(prop)}`);
+    throw new Error(`class instances are not supported: setting ${value} on ${String(prop)}`);
   }
 };
 

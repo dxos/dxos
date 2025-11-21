@@ -49,17 +49,18 @@ export const EdgePanel = ({ edge, ...props }: CustomPanelProps<{ edge?: QueryEdg
       icon='ph--cloud--regular'
       title='Edge'
       info={<div className='flex items-center gap-2'> {edgeStatus?.problems.length === 0 ? '✅' : '❌'}</div>}
+      maxHeight={0}
     >
-      <div className='flex flex-col w-full gap-2 text-xs'>
+      <div className='flex flex-col is-full gap-2 text-xs'>
         <div className='flex items-center gap-2'>
           <IconButton icon='ph--arrow-clockwise--regular' label={'refresh'} onClick={handleRefresh} />
           <IconButton icon='ph--copy--regular' label={'copy raw'} onClick={handleCopyRaw} />
         </div>
         <Table rows={rows} />
-        {edgeStatus?.problems.length && (
+        {(edgeStatus?.problems?.length ?? 0) > 0 && (
           <div className='flex flex-col'>
             <span>Problems ⚠️:</span>
-            {edgeStatus.problems.map((problem, index) => (
+            {edgeStatus?.problems?.map((problem, index) => (
               <span key={index}>
                 {index + 1}. {problem}
               </span>

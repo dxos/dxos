@@ -2,38 +2,96 @@
 // Copyright 2024 DXOS.org
 //
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
+import browser from 'webextension-polyfill';
 
-import { Composer } from '@dxos/brand';
-import { IconButton, type ThemedClassName, useTranslation } from '@dxos/react-ui';
+import { Composer, DXOSHorizontalType } from '@dxos/brand';
+import { SpaceId } from '@dxos/keys';
+import { Input, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
+
+import { DEVELOPER_MODE_PROP, SPACE_ID_PROP } from '../../config';
+import { translationKey } from '../../translations';
 
 export type OptionsProps = ThemedClassName<{}>;
 
 export const Options = ({ classNames }: OptionsProps) => {
-  const { t } = useTranslation('composer');
+  const { t } = useTranslation(translationKey);
+  const [developerMode, setDeveloperMode] = useState(false);
+  const [spaceId, setSpaceId] = useState<string | null>(null);
 
-  const handleAuth = () => {};
+  useEffect(() => {
+    void (async () => {
+      const result = await browser.storage.sync.get(DEVELOPER_MODE_PROP);
+      const stored = result?.[DEVELOPER_MODE_PROP];
+      setDeveloperMode(Boolean(stored));
+    })();
+  }, []);
+
+  useEffect(() => {
+    void (async () => {
+      const result = await browser.storage.sync.get(SPACE_ID_PROP);
+      const stored = result?.[SPACE_ID_PROP];
+      if (SpaceId.isValid(stored)) {
+        setSpaceId(stored);
+      }
+    })();
+  }, []);
+
+  const handleDeveloperModeChange = async (checked: boolean | 'indeterminate') => {
+    const next = checked === 'indeterminate' ? false : Boolean(checked);
+    setDeveloperMode(next);
+    await browser.storage.sync.set({ [DEVELOPER_MODE_PROP]: next });
+  };
+
+  const handleSpaceIdChange = async (ev: React.ChangeEvent<HTMLInputElement>) => {
+    const next = ev.target.value;
+    setSpaceId(next);
+    await browser.storage.sync.set({ [SPACE_ID_PROP]: next });
+  };
 
   return (
-    <div className={mx('flex flex-col grow gap-4 overflow-y-auto bg-baseSurface', classNames)}>
-      <div className='grid grid-cols-[8rem_1fr] p-4'>
-        <a href='https://dxos.org/composer' target='_blank' rel='noreferrer'>
-          <Composer className='w-[8rem] h-[8rem]' />
+    <div className={mx('flex flex-col grow overflow-hidden', classNames)}>
+      <div className='grid grid-cols-[8rem_1fr_12rem] p-4 overflow-yauto'>
+        <a href='https://dxos.org/composer' target='_blank' rel='noreferrer' className='flex justify-end -mie-4'>
+          <Composer className='is-[8rem] bs-[8rem]' />
         </a>
-        <div className='grid grid-rows-[1fr_1fr]'>
-          <div />
-          <div>
-            <h1 className='text-2xl'>{t('composer.title')}</h1>
-            <p className='text-sm text-subdued'>{t('composer.description')}</p>
+        <div className='flex flex-col justify-end'>
+          <h1 className='text-[64px] poiret-one-regular'>{t('composer.title')}</h1>
+        </div>
+        <div className='flex flex-col justify-start items-end'>
+          <div className='flex items-center gap-2 mbs-4 pie-4'>
+            <span className='text-subdued'>Powered by</span>
+            <a
+              target='_blank'
+              rel='noreferrer'
+              href='https://dxos.org'
+              className='text-base !text-subdued hover:opacity-50'
+            >
+              <DXOSHorizontalType className='bs-10 dark:fill-neutral-50' />
+            </a>
           </div>
         </div>
       </div>
 
-      <div className='flex flex-col gap-4'>
-        <div className='flex justify-center'>
-          <IconButton icon='ph--user--regular' label={t('button.auth')} onClick={handleAuth} />
-        </div>
+      <div className='grid grid-cols-[8rem_1fr] p-4 overflow-y-auto'>
+        <div />
+        <Input.Root>
+          <div className='flex items-center gap-3'>
+            <Input.Switch checked={developerMode} onCheckedChange={handleDeveloperModeChange} />
+            <Input.Label classNames='!font-base !m-0'>{t('settings.devmode.label')}</Input.Label>
+          </div>
+        </Input.Root>
+      </div>
+
+      <div className='grid grid-cols-[8rem_1fr] p-4 overflow-y-auto'>
+        <div />
+        <Input.Root>
+          <div className='flex items-center gap-3'>
+            <Input.TextInput value={spaceId ?? ''} onChange={handleSpaceIdChange} />
+            <Input.Label classNames='!font-base !m-0'>{t('settings.spaceid.label')}</Input.Label>
+          </div>
+        </Input.Root>
       </div>
     </div>
   );

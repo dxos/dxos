@@ -22,12 +22,13 @@ import { Config, SaveConfig } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { raise } from '@dxos/debug';
 import { getTypename } from '@dxos/echo/internal';
-import { EchoClient, type Hypergraph, type QueueService, QueueServiceImpl } from '@dxos/echo-db';
+import { EchoClient, type Hypergraph, QueueServiceImpl } from '@dxos/echo-db';
 import { MockQueueService } from '@dxos/echo-db';
 import { EdgeHttpClient } from '@dxos/edge-client';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
+import { type QueueService } from '@dxos/protocols';
 import { ApiError, trace as Trace } from '@dxos/protocols';
 import { type QueryStatusResponse, SystemStatus } from '@dxos/protocols/proto/dxos/client/services';
 import { type ProtoRpcPeer, createProtoRpcPeer } from '@dxos/rpc';
@@ -341,9 +342,9 @@ export class Client {
    * Required before using the Client instance.
    */
   @synchronized
-  async initialize(): Promise<void> {
+  async initialize(): Promise<Client> {
     if (this._initialized) {
-      return;
+      return this;
     }
 
     log.trace('dxos.sdk.client.open', Trace.begin({ id: this._instanceId }));
@@ -368,6 +369,7 @@ export class Client {
 
     this._initialized = true;
     log.trace('dxos.sdk.client.open', Trace.end({ id: this._instanceId }));
+    return this;
   }
 
   private async _open(): Promise<void> {
@@ -495,6 +497,10 @@ export class Client {
     await this._ctx.dispose();
 
     this._initialized = false;
+  }
+
+  async [Symbol.asyncDispose]() {
+    await this.destroy();
   }
 
   private async _close(): Promise<void> {

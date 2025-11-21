@@ -4,14 +4,14 @@
 
 import React from 'react';
 
-import { type ArticleComponentProps } from '@dxos/app-framework/react';
+import { type SurfaceComponentProps } from '@dxos/app-framework/react';
 import { useTranslation } from '@dxos/react-ui';
 import { baseSurface, descriptionMessage, mx } from '@dxos/react-ui-theme';
 import { type Collection } from '@dxos/schema';
 
 import { meta } from '../meta';
 
-export const CollectionArticle = ({ object }: ArticleComponentProps<Collection.Collection>) => {
+export const CollectionArticle = ({ subject }: SurfaceComponentProps<Collection.Collection>) => {
   const { t } = useTranslation(meta.id);
 
   return (
@@ -24,7 +24,7 @@ export const CollectionArticle = ({ object }: ArticleComponentProps<Collection.C
         role='alert'
         className={mx(descriptionMessage, 'rounded-md p-8 font-normal text-lg max-is-[24rem] break-words')}
       >
-        {object.name ?? t('unnamed collection label')}
+        {subject.name ?? t('unnamed collection label')}
       </p>
     </div>
   );

@@ -138,7 +138,7 @@ const DefaultStory = () => {
           />
         </TableComponent.Root>
       </div>
-      <div className='flex flex-col h-full border-l border-separator overflow-y-auto'>
+      <div className='flex flex-col bs-full border-l border-separator overflow-y-auto'>
         <StoryViewEditor view={view} schema={schema} space={space} handleDeleteColumn={handleDeleteColumn} />
         <SyntaxHighlighter language='json' className='text-xs'>
           {JSON.stringify({ view, schema }, null, 2)}

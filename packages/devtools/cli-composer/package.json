@@ -28,6 +28,7 @@
     "@dxos/debug": "workspace:*",
     "@dxos/echo": "workspace:*",
     "@dxos/functions": "workspace:*",
+    "@dxos/functions-runtime": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/live-object": "workspace:*",
     "@dxos/log": "workspace:*",

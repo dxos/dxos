@@ -73,7 +73,7 @@ export const BaseObjectSettings = ({ classNames, children, object }: BaseObjectS
         for (const path of changedPaths) {
           if (path === 'tags') {
             const meta = Obj.getMeta(object);
-            meta.tags = tags.map((tag: Ref.Ref<Tag.Tag>) => tag.dxn.toString());
+            meta.tags = tags?.map((tag: Ref.Ref<Tag.Tag>) => tag.dxn.toString()) ?? [];
             continue;
           }
 

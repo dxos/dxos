@@ -19,7 +19,18 @@ import { AttentionEvents } from '@dxos/plugin-attention';
 import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
 import { Collection, DataTypes, StoredSchema, getTypenameFromQuery } from '@dxos/schema';
 import { translations as shellTranslations } from '@dxos/shell/react';
-import { Event, Organization, Person, Project, Task } from '@dxos/types';
+import {
+  AnchoredTo,
+  Employer,
+  Event,
+  HasConnection,
+  HasRelationship,
+  HasSubject,
+  Organization,
+  Person,
+  Project,
+  Task,
+} from '@dxos/types';
 
 import {
   AppGraphBuilder,
@@ -197,7 +208,21 @@ export const SpacePlugin = definePlugin<SpacePluginOptions>(
       defineModule({
         id: `${meta.id}/module/schema`,
         activatesOn: ClientEvents.SetupSchema,
-        activate: () => contributes(ClientCapabilities.Schema, [Tag.Tag, ...DataTypes]),
+        activate: () =>
+          contributes(ClientCapabilities.Schema, [
+            Tag.Tag,
+            Event.Event,
+            Organization.Organization,
+            Person.Person,
+            Project.Project,
+            Task.Task,
+            AnchoredTo.AnchoredTo,
+            Employer.Employer,
+            HasConnection.HasConnection,
+            HasRelationship.HasRelationship,
+            HasSubject.HasSubject,
+            ...DataTypes,
+          ]),
       }),
       defineModule({
         id: `${meta.id}/module/whitelist-schema`,

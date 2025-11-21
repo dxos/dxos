@@ -17,15 +17,9 @@ import {
 import { Blueprint } from '@dxos/blueprints';
 import { Obj, Ref } from '@dxos/echo';
 import { TestHelpers, acquireReleaseResource } from '@dxos/effect';
-import {
-  ComputeEventLogger,
-  DatabaseService,
-  FunctionImplementationResolver,
-  FunctionInvocationService,
-  QueueService,
-  TracingService,
-} from '@dxos/functions';
-import { TestDatabaseLayer } from '@dxos/functions/testing';
+import { DatabaseService, QueueService, TracingService } from '@dxos/functions';
+import { FunctionImplementationResolver } from '@dxos/functions-runtime';
+import { FunctionInvocationServiceLayerTestMocked, TestDatabaseLayer } from '@dxos/functions-runtime/testing';
 import { log } from '@dxos/log';
 import { Markdown } from '@dxos/plugin-markdown/types';
 import { Text } from '@dxos/schema';
@@ -114,8 +108,7 @@ describe('Planning Blueprint', { timeout: 120_000 }, () => {
           AiService.model('@anthropic/claude-3-5-sonnet-20241022'),
         ).pipe(
           Layer.provideMerge(
-            FunctionInvocationService.layerTestMocked({ functions: [Tasks.read, Tasks.update] }).pipe(
-              Layer.provideMerge(ComputeEventLogger.layerFromTracing),
+            FunctionInvocationServiceLayerTestMocked({ functions: [Tasks.read, Tasks.update] }).pipe(
               Layer.provideMerge(TracingService.layerNoop),
             ),
           ),
@@ -124,6 +117,7 @@ describe('Planning Blueprint', { timeout: 120_000 }, () => {
           Layer.provideMerge(AiServiceTestingPreset('direct')),
         ),
       ),
+      TestHelpers.provideTestContext,
       TestHelpers.taggedTest('llm'),
     ),
   );

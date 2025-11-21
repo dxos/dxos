@@ -176,7 +176,7 @@ const MessageBlockObjectTile = forwardRef<HTMLDivElement, { subject: Obj.Any }>(
   return (
     <div
       role='group'
-      className={mx('grid col-span-3 py-1 pr-4', hoverableControls, hoverableFocusedWithinControls)}
+      className={mx('grid col-span-3 plb-1 pr-4', hoverableControls, hoverableFocusedWithinControls)}
       ref={forwardedRef}
     >
       <Surface role='card' limit={1} data={{ subject }} fallback={title} />

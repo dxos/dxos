@@ -2,7 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Function, type Script, getInvocationUrl, getUserFunctionIdInMetadata } from '@dxos/functions';
+import { type Function, type Script, getUserFunctionIdInMetadata } from '@dxos/functions';
+import { getInvocationUrl } from '@dxos/functions-runtime';
 import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type Credential } from '@dxos/protocols/proto/dxos/halo/credentials';

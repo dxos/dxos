@@ -4,7 +4,7 @@
 
 import { type Extension, Prec } from '@codemirror/state';
 import { keymap } from '@codemirror/view';
-import { useRxValue } from '@effect-rx/rx-react';
+import { useAtomValue } from '@effect-atom/atom-react';
 import { createContext } from '@radix-ui/react-context';
 import * as Array from 'effect/Array';
 import * as Option from 'effect/Option';
@@ -16,14 +16,14 @@ import { useVoiceInput } from '@dxos/plugin-transcription';
 import { type Space, getSpace, useQueue } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { Input, type ThemedClassName, useDynamicRef, useTranslation } from '@dxos/react-ui';
-import { ChatEditor, type ChatEditorController, type ChatEditorProps, references } from '@dxos/react-ui-chat';
+import { ChatEditor, type ChatEditorController, type ChatEditorProps } from '@dxos/react-ui-chat';
 import { type MarkdownStreamController } from '@dxos/react-ui-components';
 import { MenuProvider, ToolbarMenu } from '@dxos/react-ui-menu';
 import { mx } from '@dxos/react-ui-theme';
 import { Message } from '@dxos/types';
 import { isTruthy } from '@dxos/util';
 
-import { useChatToolbarActions, useReferencesProvider } from '../../hooks';
+import { useChatToolbarActions } from '../../hooks';
 import { meta } from '../../meta';
 import { type AiChatProcessor } from '../../processor';
 import { type Assistant } from '../../types';
@@ -68,8 +68,8 @@ type ChatRootProps = PropsWithChildren<
 
 const ChatRoot = ({ children, chat, processor, onEvent, ...props }: ChatRootProps) => {
   const [debug, setDebug] = useState(false);
-  const pending = useRxValue(processor.messages);
-  const streaming = useRxValue(processor.streaming);
+  const pending = useAtomValue(processor.messages);
+  const streaming = useAtomValue(processor.streaming);
   const lastPrompt = useRef<string | undefined>(undefined);
 
   // Messages.
@@ -140,12 +140,12 @@ const ChatRoot = ({ children, chat, processor, onEvent, ...props }: ChatRootProp
 ChatRoot.displayName = 'Chat.Root';
 
 //
-// Content
+// Viewport
 //
 
-type ChatContentProps = ThemedClassName<PropsWithChildren>;
+type ChatViewportProps = ThemedClassName<PropsWithChildren>;
 
-const ChatContent = ({ classNames, children }: ChatContentProps) => {
+const ChatViewport = ({ classNames, children }: ChatViewportProps) => {
   return (
     <div role='none' className={mx('flex flex-col bs-full is-full', classNames)}>
       {children}
@@ -185,9 +185,9 @@ const ChatPrompt = ({
   const { t } = useTranslation(meta.id);
   const { space, processor, event } = useChatContext(ChatPrompt.displayName);
 
-  const error = useRxValue(processor.error).pipe(Option.getOrUndefined);
-  const streaming = useRxValue(processor.streaming);
-  const active = useRxValue(processor.active);
+  const error = useAtomValue(processor.error).pipe(Option.getOrUndefined);
+  const streaming = useAtomValue(processor.streaming);
+  const active = useAtomValue(processor.active);
   const activeRef = useDynamicRef(active);
 
   const editorRef = useRef<ChatEditorController>(null);
@@ -220,63 +220,46 @@ const ChatPrompt = ({
     },
   });
 
-  // TODO(burdon): Reconcile with object tags.
-  const referencesProvider = useReferencesProvider(space);
   const extensions = useMemo<Extension[]>(() => {
     return [
-      referencesProvider && references({ provider: referencesProvider }),
       Prec.highest(
-        keymap.of(
-          [
-            {
-              key: 'Mod-d',
-              preventDefault: true,
-              run: () => {
-                event.emit({ type: 'toggle-debug' });
-                return true;
-              },
+        keymap.of([
+          {
+            key: 'Mod-d',
+            preventDefault: true,
+            run: () => {
+              event.emit({ type: 'toggle-debug' });
+              return true;
             },
-            {
-              key: 'Mod-ArrowUp',
-              preventDefault: true,
-              run: () => {
-                event.emit({ type: 'nav-previous' });
-                return true;
-              },
+          },
+          {
+            key: 'Mod-ArrowUp',
+            preventDefault: true,
+            run: () => {
+              event.emit({ type: 'nav-previous' });
+              return true;
             },
-            {
-              key: 'Mod-ArrowDown',
-              preventDefault: true,
-              run: () => {
-                event.emit({ type: 'nav-next' });
-                return true;
-              },
+            shift: () => {
+              event.emit({ type: 'thread-open' });
+              return true;
             },
-            ...(expandable
-              ? [
-                  {
-                    key: 'Shift-Mod-ArrowUp',
-                    preventDefault: true,
-                    run: () => {
-                      event.emit({ type: 'thread-open' });
-                      return true;
-                    },
-                  },
-                  {
-                    key: 'Shift-Mod-ArrowDown',
-                    preventDefault: true,
-                    run: () => {
-                      event.emit({ type: 'thread-close' });
-                      return true;
-                    },
-                  },
-                ]
-              : []),
-          ].filter(isTruthy),
-        ),
+          },
+          {
+            key: 'Mod-ArrowDown',
+            preventDefault: true,
+            run: () => {
+              event.emit({ type: 'nav-next' });
+              return true;
+            },
+            shift: () => {
+              event.emit({ type: 'thread-close' });
+              return true;
+            },
+          },
+        ]),
       ),
     ].filter(isTruthy);
-  }, [event, expandable, referencesProvider]);
+  }, [event, expandable]);
 
   const handleSubmit = useCallback<NonNullable<ChatEditorProps['onSubmit']>>(
     (text) => {
@@ -300,15 +283,13 @@ const ChatPrompt = ({
       role='group'
       className={mx(
         'flex flex-col is-full density-fine',
-        outline && [
-          'p-2 bg-groupSurface border border-subduedSeparator transition transition-border [&:has(.cm-content:focus)]:border-separator rounded',
-        ],
+        outline &&
+          'bg-groupSurface border border-subduedSeparator transition transition-border [&:has(.cm-content:focus)]:border-separator rounded',
         classNames,
       )}
     >
-      <div role='none' className='flex gap-2'>
+      <div role='none' className='flex p-2 gap-2'>
         <ChatStatusIndicator classNames='p-1' preset={preset} error={error} processing={streaming} />
-
         <ChatEditor
           ref={editorRef}
           autoFocus
@@ -321,7 +302,7 @@ const ChatPrompt = ({
       </div>
 
       {space && settings && (
-        <div role='none' className='flex pbs-2 items-center overflow-hidden'>
+        <div role='none' className='flex items-center overflow-hidden'>
           <ChatOptions
             space={space}
             blueprintRegistry={processor.blueprintRegistry}
@@ -342,7 +323,7 @@ const ChatPrompt = ({
             processing={streaming}
             onEvent={handleEvent}
           >
-            {/* TODO(burdon): Move switch into dialog. */}
+            {/* TODO(burdon): Move offline switch into dialog. */}
             {online !== undefined && (
               <Input.Root>
                 <Input.Label srOnly>{t('online switch label')}</Input.Label>
@@ -367,7 +348,7 @@ type ChatThreadProps = Omit<NaturalChatThreadProps, 'identity' | 'messages' | 't
 const ChatThread = (props: ChatThreadProps) => {
   const { debug, event, messages, processor } = useChatContext(ChatThread.displayName);
   const identity = useIdentity();
-  const error = useRxValue(processor.error).pipe(Option.getOrUndefined);
+  const error = useAtomValue(processor.error).pipe(Option.getOrUndefined);
 
   const controllerRef = useRef<MarkdownStreamController | null>(null);
   useEffect(() => {
@@ -441,10 +422,10 @@ ChatToolbar.displayName = 'Chat.Toolbar';
 
 export const Chat = {
   Root: ChatRoot,
-  Content: ChatContent,
+  Viewport: ChatViewport,
   Prompt: ChatPrompt,
   Thread: ChatThread,
   Toolbar: ChatToolbar,
 };
 
-export type { ChatRootProps, ChatContentProps, ChatThreadProps, ChatPromptProps, ChatToolbarProps, ChatEvent };
+export type { ChatRootProps, ChatViewportProps, ChatThreadProps, ChatPromptProps, ChatToolbarProps, ChatEvent };

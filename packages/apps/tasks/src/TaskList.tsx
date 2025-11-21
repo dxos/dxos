@@ -35,19 +35,19 @@ export const TaskList = (props: TaskListProps) => {
   return (
     <div className='p-2'>
       <button
-        className='float-right bg-white hover:bg-gray-100 text-gray-800 font-semibold py-2 px-4 border border-gray-400 rounded shadow active:bg-gray-200'
+        className='float-right bg-white hover:bg-gray-100 text-gray-800 font-semibold plb-2 pli-4 border border-gray-400 rounded shadow active:bg-gray-200'
         onClick={onInviteClick}
       >
         Share
       </button>
-      <div className='max-w-sm mx-auto'>
+      <div className='max-is-sm mx-auto'>
         <h1 className='mt-3 text-3xl font-bold leading-tight text-gray-900 mb-2'>Task List</h1>
         {tasks && (
           <ul className='mb-2'>
             {tasks.filter(isNonNullable).map((task, index) => (
               <li
                 key={index}
-                className='flex items-center justify-between text-gray-700 max-w-md rounded p-1 h-8'
+                className='flex items-center justify-between text-gray-700 max-is-md rounded p-1 bs-8'
                 onMouseOver={() => {
                   setShowDeleteTask(index);
                 }}
@@ -65,7 +65,7 @@ export const TaskList = (props: TaskListProps) => {
                   {editingTask === index ? (
                     <span className='flex justify-between'>
                       <input
-                        className='border-none p-0 flex-grow bg-transparent w-full'
+                        className='border-none p-0 flex-grow bg-transparent is-full'
                         type='text'
                         value={task.title}
                         onChange={(e) => {
@@ -85,7 +85,7 @@ export const TaskList = (props: TaskListProps) => {
                 </div>
                 {showDeleteTask === index && (
                   <button
-                    className='bg-white rounded ml-2 p-0 px-2 hover:bg-gray-100 hover:cursor-pointer shadow border border-gray-400 active:bg-gray-200'
+                    className='bg-white rounded ml-2 p-0 pli-2 hover:bg-gray-100 hover:cursor-pointer shadow border border-gray-400 active:bg-gray-200'
                     onClick={() => onTaskRemove?.(task)}
                   >
                     Delete
@@ -97,7 +97,7 @@ export const TaskList = (props: TaskListProps) => {
         )}
         <div className='flex items-center justify-between'>
           <input
-            className='mr-2 rounded shadow flex-grow py-2 px-4'
+            className='mr-2 rounded shadow flex-grow plb-2 pli-4'
             type='text'
             value={newTaskTitle}
             onChange={(e) => {
@@ -110,7 +110,7 @@ export const TaskList = (props: TaskListProps) => {
             }}
           />
           <button
-            className='bg-white hover:bg-gray-100 text-gray-800 font-semibold py-2 px-4 border border-gray-400 rounded shadow active:bg-gray-200'
+            className='bg-white hover:bg-gray-100 text-gray-800 font-semibold plb-2 pli-4 border border-gray-400 rounded shadow active:bg-gray-200'
             onClick={newTask}
           >
             Add Task

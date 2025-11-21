@@ -8,7 +8,8 @@ import { type ToolbarMenuActionGroupProperties } from '@dxos/react-ui-menu';
 import { translationKey } from '../../translations';
 import { type EditorViewMode } from '../../types';
 
-import { type EditorToolbarState, createEditorAction, createEditorActionGroup } from './util';
+import { createEditorAction, createEditorActionGroup } from './actions';
+import { type EditorToolbarState } from './useEditorToolbar';
 
 const createViewModeGroupAction = (value: string) =>
   createEditorActionGroup(

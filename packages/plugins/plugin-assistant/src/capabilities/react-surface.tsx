@@ -40,6 +40,7 @@ export default () =>
         Obj.instanceOf(Assistant.Chat, data.subject) && data.variant !== 'assistant-chat',
       component: ({ data, role }) => <ChatContainer role={role} chat={data.subject} />,
     }),
+    // TODO(wittjosiah): This is flashing when chat changes.
     createSurface({
       id: `${meta.id}/companion-chat`,
       role: 'article',
@@ -69,13 +70,13 @@ export default () =>
       id: `${meta.id}/blueprint`,
       role: 'article',
       filter: (data): data is { subject: Blueprint.Blueprint } => Obj.instanceOf(Blueprint.Blueprint, data.subject),
-      component: ({ data }) => <BlueprintArticle object={data.subject} />,
+      component: ({ data }) => <BlueprintArticle subject={data.subject} />,
     }),
     createSurface({
       id: `${meta.id}/prompt`,
       role: 'article',
       filter: (data): data is { subject: Prompt.Prompt } => Obj.instanceOf(Prompt.Prompt, data.subject),
-      component: ({ data }) => <PromptArticle object={data.subject} />,
+      component: ({ data }) => <PromptArticle subject={data.subject} />,
     }),
     createSurface({
       id: ASSISTANT_DIALOG,

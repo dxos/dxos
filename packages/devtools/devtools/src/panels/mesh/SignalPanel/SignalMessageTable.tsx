@@ -139,7 +139,7 @@ const ToggleConnection: FC<{
     iconOnly
     size={6}
     label='Toggle connection'
-    classNames='mli-2 p-0 px-2 items-center'
+    classNames='mli-2 p-0 pli-2 items-center'
     onClick={onToggleConnection}
   />
 );

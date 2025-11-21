@@ -81,7 +81,7 @@ export const FunctionsPanel = ({ space }: FunctionsPanelProps) => {
       {functions.length > 0 && (
         <List.Root<Function.Function> items={functions} isItem={Schema.is(Function.Function)} getId={(func) => func.id}>
           {({ items }) => (
-            <div role='list' className='flex flex-col w-full'>
+            <div role='list' className='flex flex-col is-full'>
               {items?.map((func) => (
                 <List.Item<Function.Function>
                   key={func.id}

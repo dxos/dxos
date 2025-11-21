@@ -11,10 +11,11 @@ import * as Schema from 'effect/Schema';
 import { AiService } from '@dxos/ai';
 import { AiSession, makeToolExecutionServiceFromFunctions, makeToolResolverFromFunctions } from '@dxos/assistant';
 import { Filter, Obj, Ref } from '@dxos/echo';
-import { DatabaseService, FunctionInvocationService, defineFunction } from '@dxos/functions';
+import { DatabaseService, defineFunction } from '@dxos/functions';
+import { FunctionInvocationServiceLayerTest } from '@dxos/functions-runtime/testing';
 import { type DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { LegacyOrganization, Message, Organization, Person } from '@dxos/types';
+import { type Actor, LegacyOrganization, Message, Organization, Person } from '@dxos/types';
 import { trim } from '@dxos/util';
 
 import { makeGraphWriterHandler, makeGraphWriterToolkit } from '../../crud';
@@ -38,8 +39,9 @@ export default defineFunction({
     ),
   }),
   handler: Effect.fnUntraced(
-    function* ({ data: { source, instructions } }) {
-      const contact = yield* extractContact(source);
+    function* ({ data: { source: message, instructions } }) {
+      const tags = Obj.getMeta(message)?.tags;
+      const contact = yield* extractContact(message.sender, tags);
       let organization: Organization.Organization | null = null;
 
       if (contact && !contact.organization) {
@@ -58,7 +60,7 @@ export default defineFunction({
             The extracted organization URL must match the sender's email domain.
             ${instructions ? '<user_intructions>' + instructions + '</user_intructions>' : ''},
           `,
-          prompt: JSON.stringify({ source, contact }),
+          prompt: JSON.stringify({ source: message, contact }),
           toolkit,
         });
 
@@ -67,7 +69,7 @@ export default defineFunction({
         } else if (created.length === 1) {
           organization = yield* DatabaseService.resolve(created[0], Organization.Organization);
           Obj.getMeta(organization).tags ??= [];
-          Obj.getMeta(organization).tags!.push(...(Obj.getMeta(source)?.tags ?? []));
+          Obj.getMeta(organization).tags!.push(...(tags ?? []));
           contact.organization = Ref.make(organization);
         }
       }
@@ -84,18 +86,18 @@ export default defineFunction({
       ).pipe(
         Layer.provide(
           // TODO(dmaretskyi): This should be provided by environment.
-          Layer.mergeAll(FunctionInvocationService.layerTest()),
+          Layer.mergeAll(FunctionInvocationServiceLayerTest()),
         ),
       ),
     ),
   ),
 });
 
-const extractContact = Effect.fn('extractContact')(function* (message: Message.Message) {
-  const name = message.sender.name;
-  const email = message.sender.email;
+const extractContact = Effect.fn('extractContact')(function* (actor: Actor.Actor, tags?: string[]) {
+  const name = actor.name;
+  const email = actor.email;
   if (!email) {
-    log.warn('email is required for contact extraction', { sender: message.sender });
+    log.warn('email is required for contact extraction', { actor });
     return undefined;
   }
 
@@ -113,9 +115,7 @@ const extractContact = Effect.fn('extractContact')(function* (message: Message.M
   }
 
   const newContact = Obj.make(Person.Person, {
-    [Obj.Meta]: {
-      tags: Obj.getMeta(message)?.tags,
-    },
+    [Obj.Meta]: { tags },
     emails: [{ value: email }],
   });
   yield* DatabaseService.add(newContact);

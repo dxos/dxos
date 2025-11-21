@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { useCallback } from 'react';
+import React from 'react';
 
 import { Filter } from '@dxos/echo';
 import {
@@ -15,7 +15,7 @@ import {
   usePresets,
 } from '@dxos/plugin-assistant';
 import { useQuery } from '@dxos/react-client/echo';
-import { IconButton, Popover } from '@dxos/react-ui';
+import { IconButton, Popover, Toolbar } from '@dxos/react-ui';
 import { StackItem } from '@dxos/react-ui-stack';
 
 import { ExecutionGraphModule } from './ExecutionGraphModule';
@@ -30,15 +30,8 @@ export const ChatModule = ({ space }: ComponentProps) => {
 
   const blueprintRegistry = useBlueprintRegistry();
   const services = useChatServices({ space, chat });
-  const processor = useChatProcessor({ chat, preset, services, blueprintRegistry });
+  const processor = useChatProcessor({ space, chat, preset, services, blueprintRegistry });
 
-  const handleUpdateName = useCallback(() => {
-    if (chat) {
-      void processor?.updateName(chat);
-    }
-  }, [processor, chat]);
-
-  // TODO(burdon): Allow undefined chat (create on first submission).
   if (!chat || !processor) {
     return null;
   }
@@ -47,10 +40,9 @@ export const ChatModule = ({ space }: ComponentProps) => {
     <StackItem.Content toolbar>
       <Chat.Root chat={chat} processor={processor}>
         <Chat.Toolbar />
-
-        {/* TODO(burdon): Optionally extend menu. */}
-        {false && (
-          <div role='none' className='flex items-center gap-2 pie-2'>
+        <Chat.Viewport classNames='relative container-max-width'>
+          <Toolbar.Root classNames='border-be border-subduedSeparator'>
+            <div className='pli-1 grow truncate text-subdued'>{chat?.name}</div>
             <Popover.Root>
               <Popover.Trigger asChild>
                 <IconButton icon='ph--sort-ascending--regular' label='Logs' variant='ghost' />
@@ -62,18 +54,13 @@ export const ChatModule = ({ space }: ComponentProps) => {
                 </Popover.Content>
               </Popover.Portal>
             </Popover.Root>
-            <div className='truncate text-subdued'>{chat?.name ?? 'no name'}</div>
-            <IconButton icon='ph--arrow-clockwise--regular' iconOnly label='Update name' onClick={handleUpdateName} />
-          </div>
-        )}
+          </Toolbar.Root>
 
-        {/* TODO(burdon): Why add relative here? */}
-        <Chat.Content classNames='relative container-max-width'>
           <Chat.Thread />
           <div role='none' className='p-4'>
             <Chat.Prompt {...chatProps} outline preset={preset?.id} online={online} onOnlineChange={setOnline} />
           </div>
-        </Chat.Content>
+        </Chat.Viewport>
       </Chat.Root>
     </StackItem.Content>
   );

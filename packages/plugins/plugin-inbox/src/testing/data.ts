@@ -2,35 +2,62 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Obj, Ref, Tag } from '@dxos/echo';
-import { IdentityDid } from '@dxos/keys';
+import { addMinutes, roundToNearestMinutes } from 'date-fns';
+
+import { Obj, Ref } from '@dxos/echo';
+import { IdentityDid, ObjectId } from '@dxos/keys';
 import { faker } from '@dxos/random';
 import { type Space } from '@dxos/react-client/echo';
-import { Message, Person } from '@dxos/types';
+import { Event, Message, Person } from '@dxos/types';
 
 import { Mailbox } from '../types';
 import { sortByCreated } from '../util';
 
-export const TAGS: Tag.Tag[] = [
-  Tag.make({ label: 'important', hue: 'green' }),
-  Tag.make({ label: 'investor', hue: 'purple' }),
-  Tag.make({ label: 'team', hue: 'green' }),
-  Tag.make({ label: 'eng', hue: 'cyan' }),
-  Tag.make({ label: 'work', hue: 'emerald' }),
-  Tag.make({ label: 'personal', hue: 'pink' }),
-];
-
-export const TAGS_MAP = TAGS.reduce((acc, tag) => ({ ...acc, [tag.id]: { label: tag.label, hue: tag.hue } }), {});
+export const LABELS: Mailbox.Labels = {
+  [ObjectId.random().toString()]: 'important',
+  [ObjectId.random().toString()]: 'investor',
+  [ObjectId.random().toString()]: 'team',
+  [ObjectId.random().toString()]: 'eng',
+  [ObjectId.random().toString()]: 'work',
+  [ObjectId.random().toString()]: 'personal',
+};
 
 type CreateOptions = {
   paragraphs: number;
   links: number;
 };
 
+//
+// Create event
+//
+
+export const createEvents = (count: number, space?: Space, options?: CreateOptions) => {
+  return faker.helpers.multiple(() => createEvent(space, options), { count }).sort(sortByCreated('startDate'));
+};
+
+export const createEvent = (space?: Space, options: CreateOptions = { paragraphs: 5, links: 5 }): Event.Event => {
+  const createActor = () => ({ email: faker.internet.email() });
+  const owner = createActor();
+  const startDate = roundToNearestMinutes(faker.date.recent(), { nearestTo: 30 });
+  const endDate = addMinutes(startDate, faker.number.int({ min: 1, max: 10 }) * 15);
+
+  return Event.make({
+    title: faker.lorem.sentence(8),
+    owner,
+    attendees: [owner, ...faker.helpers.multiple(() => createActor(), { count: faker.number.int({ min: 1, max: 5 }) })],
+    startDate: startDate.toISOString(),
+    endDate: endDate.toISOString(),
+  });
+};
+
+//
+// Create message
+//
+
 export const createMessages = (count: number, space?: Space, options?: CreateOptions) => {
   return faker.helpers
     .multiple(() => createMessage(space, options), { count })
-    .sort(sortByCreated(false))
+    .sort(sortByCreated('created'))
     .reverse();
 };
 
@@ -38,7 +65,7 @@ export const createMessages = (count: number, space?: Space, options?: CreateOpt
  * Creates a message with plain and enriched content blocks, where the enriched version
  * contains links to contacts and the plain version has the same content with links stripped.
  */
-export const createMessage = (space?: Space, options: CreateOptions = { paragraphs: 5, links: 5 }) => {
+export const createMessage = (space?: Space, options: CreateOptions = { paragraphs: 5, links: 5 }): Message.Message => {
   let text = faker.helpers
     .multiple(() => faker.lorem.paragraph(faker.number.int(3)), {
       count: options.paragraphs || 1,
@@ -68,32 +95,24 @@ export const createMessage = (space?: Space, options: CreateOptions = { paragrap
     text = enrichedText.replace(/\[(.*?)\]\[.*?\]/g, '$1');
   }
 
-  return Obj.make(
-    Message.Message,
-    {
-      created: faker.date.recent().toISOString(),
-      sender: {
-        identityDid: IdentityDid.random(),
-        email: faker.internet.email(),
-        name: faker.person.fullName(),
-      },
-      // First block plain text (with links stripped), second block enriched text (with links).
-      blocks: [
-        { _tag: 'text', text },
-        { _tag: 'text', text: enrichedText },
-      ],
-      properties: {
-        subject: faker.helpers.arrayElement(['', 'Re: ']) + faker.lorem.sentence(8),
-        snippet: text,
-      },
+  return Obj.make(Message.Message, {
+    created: faker.date.recent().toISOString(),
+    sender: {
+      identityDid: IdentityDid.random(),
+      email: faker.internet.email(),
+      name: faker.person.fullName(),
     },
-    {
-      tags: faker.helpers.randomSubset(
-        TAGS.map((tag) => tag.id),
-        { min: 0, max: TAGS.length },
-      ),
+    // First block plain text (with links stripped), second block enriched text (with links).
+    blocks: [
+      { _tag: 'text', text },
+      { _tag: 'text', text: enrichedText },
+    ],
+    properties: {
+      subject: faker.helpers.arrayElement(['', 'Re: ']) + faker.lorem.sentence(8),
+      snippet: text,
+      labels: faker.helpers.randomSubset(Object.keys(LABELS), { min: 0, max: Object.keys(LABELS).length }),
     },
-  );
+  });
 };
 
 /**

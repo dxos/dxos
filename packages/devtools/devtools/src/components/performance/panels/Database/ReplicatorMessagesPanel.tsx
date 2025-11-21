@@ -58,6 +58,7 @@ export const ReplicatorMessagesPanel = ({ database, ...props }: CustomPanelProps
           </span>
         </div>
       }
+      maxHeight={0}
     >
       <Table rows={rows} />
     </Panel>

@@ -16,5 +16,7 @@ export default () => {
     currentChat: {},
   });
 
+  state.prop({ key: 'currentChat', type: LocalStorageStore.json<Record<string, string | undefined>>() });
+
   return contributes(AssistantCapabilities.State, state.values, () => state.close());
 };

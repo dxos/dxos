@@ -10,8 +10,7 @@ import * as Option from 'effect/Option';
 import { Template } from '@dxos/blueprints';
 import { Obj } from '@dxos/echo';
 import { type ObjectId } from '@dxos/echo/internal';
-import { ObjectVersion } from '@dxos/echo-db';
-import { DatabaseService } from '@dxos/functions';
+import { DatabaseService, ObjectVersion } from '@dxos/echo-db';
 import { log } from '@dxos/log';
 import { type ContentBlock, Message } from '@dxos/types';
 import { trim } from '@dxos/util';
@@ -19,7 +18,7 @@ import { trim } from '@dxos/util';
 import { AiAssistantError } from '../errors';
 
 import { ArtifactDiffResolver } from './artifact-diff';
-import { type AiSessionRunParams } from './session';
+import { type AiSessionRunError, type AiSessionRunParams } from './session';
 
 /**
  * Formats the system prompt.
@@ -74,7 +73,10 @@ export const formatSystemPrompt = ({
  */
 // TODO(burdon): Move to AiPreprocessor.
 // TODO(burdon): Convert util below to `Effect.fn` (to preserve stack info)
-export const formatUserPrompt = ({ prompt, history = [] }: Pick<AiSessionRunParams<any>, 'prompt' | 'history'>) =>
+export const formatUserPrompt = ({
+  prompt,
+  history = [],
+}: Pick<AiSessionRunParams<any>, 'prompt' | 'history'>): Effect.Effect<Message.Message, AiSessionRunError> =>
   Effect.gen(function* () {
     const blocks: ContentBlock.Any[] = [];
 

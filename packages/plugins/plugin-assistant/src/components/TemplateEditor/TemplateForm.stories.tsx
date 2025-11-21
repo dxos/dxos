@@ -39,7 +39,7 @@ const DefaultStory = () => {
   });
 
   return (
-    <div role='none' className='flex w-[40rem] border border-separator overflow-hidden'>
+    <div role='none' className='flex is-[40rem] border border-separator overflow-hidden'>
       <TemplateForm id={blueprint.id} template={blueprint.instructions} />
     </div>
   );

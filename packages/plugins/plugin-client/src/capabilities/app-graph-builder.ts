@@ -2,13 +2,13 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Rx } from '@effect-rx/rx-react';
+import { Atom } from '@effect-atom/atom-react';
 import * as Function from 'effect/Function';
 import * as Option from 'effect/Option';
 
 import { createIntent } from '@dxos/app-framework';
 import { Capabilities, type PluginContext, contributes } from '@dxos/app-framework';
-import { ROOT_ID, createExtension, rxFromObservable } from '@dxos/plugin-graph';
+import { ROOT_ID, atomFromObservable, createExtension } from '@dxos/plugin-graph';
 import { ConnectionState } from '@dxos/react-client/mesh';
 
 import { meta } from '../meta';
@@ -22,7 +22,7 @@ export default (context: PluginContext) =>
     createExtension({
       id: meta.id,
       actions: (node) =>
-        Rx.make((get) =>
+        Atom.make((get) =>
           Function.pipe(
             get(node),
             Option.flatMap((node) => (node.id === ROOT_ID ? Option.some(node) : Option.none())),
@@ -52,14 +52,14 @@ export default (context: PluginContext) =>
           ),
         ),
       connector: (node) =>
-        Rx.make((get) =>
+        Atom.make((get) =>
           Function.pipe(
             get(node),
             Option.flatMap((node) => (node.id === ROOT_ID ? Option.some(node) : Option.none())),
             Option.map(() => {
               const client = context.getCapability(ClientCapabilities.Client);
-              const identity = get(rxFromObservable(client.halo.identity));
-              const status = get(rxFromObservable(client.mesh.networkStatus));
+              const identity = get(atomFromObservable(client.halo.identity));
+              const status = get(atomFromObservable(client.mesh.networkStatus));
 
               return [
                 {

@@ -13,9 +13,7 @@ import { IconButton, Input, type ThemedClassName, useTranslation } from '@dxos/r
 import { type EncodedTrackName, type GlobalState } from '../calls';
 import { meta } from '../meta';
 
-export type CallDebugPanelProps = ThemedClassName<{
-  state?: GlobalState;
-}>;
+export type CallDebugPanelProps = ThemedClassName<{ state?: GlobalState }>;
 
 export const CallDebugPanel = ({ state }: CallDebugPanelProps) => {
   const { t } = useTranslation(meta.id);
@@ -73,24 +71,24 @@ export const CallDebugPanel = ({ state }: CallDebugPanelProps) => {
       open={open}
       onToggle={handleToggle}
       title={t('meeting status title')}
-      maxHeight={false}
       info={<div className='flex items-center gap-2'> {state?.call.joined ? 'Active' : 'Inactive'}</div>}
+      maxHeight={0}
     >
-      <div className='flex flex-col w-full gap-2 text-xs'>
-        <div className='flex items-center gap-2'>
+      <div className='flex flex-col is-full text-xs'>
+        <div className='flex items-center gap-2 items-center'>
           <Input.Root>
-            <Input.Label classNames={'text-sm'}>{t('show webrtc stats title')}</Input.Label>
-            <Input.Checkbox checked={showDetailedWebRTCStats} onCheckedChange={handleShowDetailedWebRTCStats} />
+            <Input.Switch checked={showDetailedWebRTCStats} onCheckedChange={handleShowDetailedWebRTCStats} />
+            <Input.Label>{t('show webrtc stats title')}</Input.Label>
           </Input.Root>
         </div>
-        <div className='flex items-center gap-2'>
+        <div className='flex items-center gap-2 items-center'>
           <Input.Root>
-            <Input.Label classNames={'text-sm'}>{t('show calls history title')}</Input.Label>
-            <Input.Checkbox checked={showServiceHistory} onCheckedChange={handleToggleServiceHistory} />
+            <Input.Switch checked={showServiceHistory} onCheckedChange={handleToggleServiceHistory} />
+            <Input.Label>{t('show calls history title')}</Input.Label>
           </Input.Root>
         </div>
-        <div className='flex items-center gap-2'>
-          <IconButton classNames={'text-sm'} icon='ph--copy--regular' label={'copy raw'} onClick={handleCopyRaw} />
+        <div className='flex items-center gap-2 items-center'>
+          <IconButton icon='ph--copy--regular' label={'copy raw'} onClick={handleCopyRaw} />
         </div>
         <Table rows={rows} />
         {showDetailedWebRTCStats && <JsonView data={{ stats }} />}
@@ -160,7 +158,7 @@ export type TableProps = {
 
 export const Table = ({ rows }: TableProps) => {
   return (
-    <div className='w-full text-xs font-mono'>
+    <div className='is-full text-xs font-mono'>
       {rows.map(([prefix, label, value, unit], i) => (
         <div key={i} className='grid grid-cols-[3fr_1fr_1fr_1fr]'>
           <div className='p-1'>{prefix}</div>

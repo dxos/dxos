@@ -5,20 +5,20 @@
 import { Prec } from '@codemirror/state';
 import React, { forwardRef, useCallback, useEffect, useMemo, useState } from 'react';
 
-import { type ThemedClassName, updateRef, useThemeContext, useTranslation } from '@dxos/react-ui';
+import { type ThemedClassName, setRef, useThemeContext, useTranslation } from '@dxos/react-ui';
 import {
-  Editor,
+  EditorContent,
+  type EditorContentProps,
   type EditorController,
-  type EditorProps,
+  EditorMenuProvider,
+  type EditorMenuProviderProps,
   type Extension,
-  PopoverMenuProvider,
-  type PopoverMenuProviderProps,
-  type UsePopoverMenuProps,
+  type UseEditorMenuProps,
   createBasicExtensions,
   createMenuGroup,
   createThemeExtensions,
   keymap,
-  usePopoverMenu,
+  useEditorMenu,
 } from '@dxos/react-ui-editor';
 
 import { translationKey } from '../../translations';
@@ -30,7 +30,7 @@ export type QueryEditorProps = ThemedClassName<
   {
     value?: string;
     readonly?: boolean;
-  } & (CompletionOptions & Omit<EditorProps, 'initialValue'> & Pick<PopoverMenuProviderProps, 'numItems'>)
+  } & (CompletionOptions & Omit<EditorContentProps, 'initialValue'> & Pick<EditorMenuProviderProps, 'numItems'>)
 >;
 
 /**
@@ -39,17 +39,18 @@ export type QueryEditorProps = ThemedClassName<
 export const QueryEditor = forwardRef<EditorController, QueryEditorProps>(
   ({ db, tags, value, readonly, numItems = 8, ...props }, forwardedRef) => {
     const [controller, setController] = useState<EditorController | null>(null);
+    // TODO(burdon): This is suspicious.
     useEffect(() => {
-      updateRef(forwardedRef, controller);
+      setRef(forwardedRef, controller);
     }, [controller]);
 
     const getOptions = useMemo(() => completions({ db, tags }), [db, tags]);
-    const getMenu = useCallback<NonNullable<UsePopoverMenuProps['getMenu']>>(
+    const getMenu = useCallback<NonNullable<UseEditorMenuProps['getMenu']>>(
       async (context) => [createMenuGroup({ items: getOptions(context) })],
       [getOptions],
     );
 
-    const { groupsRef, extension, ...menuProps } = usePopoverMenu({
+    const { groupsRef, extension, ...menuProps } = useEditorMenu({
       // TODO(burdon): Handle trigger AND triggerKey.
       // trigger: ['#'],
       triggerKey: 'Ctrl-Space',
@@ -80,9 +81,9 @@ export const QueryEditor = forwardRef<EditorController, QueryEditorProps>(
     );
 
     return (
-      <PopoverMenuProvider numItems={numItems} view={controller?.view} groups={groupsRef.current} {...menuProps}>
-        <Editor {...props} initialValue={value} extensions={extensions} moveToEnd ref={setController} />
-      </PopoverMenuProvider>
+      <EditorMenuProvider view={controller?.view} groups={groupsRef.current} numItems={numItems} {...menuProps}>
+        <EditorContent {...props} initialValue={value} extensions={extensions} selectionEnd ref={setController} />
+      </EditorMenuProvider>
     );
   },
 );

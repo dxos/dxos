@@ -30,12 +30,23 @@ export const Function = Schema.Struct({
 
   description: Schema.optional(Schema.String),
 
+  /**
+   * ISO date string of the last deployment.
+   */
+  updated: Schema.optional(Schema.String),
+
   // Reference to a source script if it exists within ECHO.
   // TODO(burdon): Don't ref ScriptType directly (core).
   source: Schema.optional(Ref(Script)),
 
   inputSchema: Schema.optional(JsonSchemaType),
   outputSchema: Schema.optional(JsonSchemaType),
+
+  /**
+   * List of required services.
+   * Match the Context.Tag keys of the FunctionServices variants.
+   */
+  services: Schema.optional(Schema.Array(Schema.String)),
 
   // Local binding to a function name.
   binding: Schema.optional(Schema.String),

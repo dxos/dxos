@@ -6,7 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
 import { withTheme } from '../../testing';
-import { Button } from '../Buttons';
+import { Button } from '../Button';
 
 import { Breadcrumb, type BreadcrumbRootProps } from './Breadcrumb';
 

@@ -2,23 +2,37 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as Schema from 'effect/Schema';
+
 import { type Obj } from '@dxos/echo';
 
-// TODO(burdon): PluginSettings, ObjectSettings.
+export const SurfaceCardRole = Schema.Literal(
+  'card',
+  'card--popover',
+  'card--intrinsic',
+  'card--extrinsic',
+  'card--transclusion',
+);
 
-// TODO(burdon): subject?
-export type ArticleComponentProps<T extends Obj.Any = Obj.Any> = {
-  object: T;
-};
+export type SurfaceCardRole = Schema.Schema.Type<typeof SurfaceCardRole>;
 
-export type CompanionComponentProps<T extends Obj.Any = Obj.Any> = {
-  object: T;
-};
+// TODO(burdon): Define all roles.
+export type SurfaceRole =
+  | 'item'
+  | 'article'
+  | 'complementary' // (for companion?)
+  | 'section'
+  | SurfaceCardRole;
 
-export type SectionComponentProps<T extends Obj.Any = Obj.Any> = {
-  object: T;
-};
+/**
+ * Base type for surface components.
+ */
+// TODO(burdon): Standardize PluginSettings and ObjectProperties.
+// TODO(burdon): Include attendableId?
+// TODO(burdon): companionTo?
+export type SurfaceComponentProps<Subject extends Obj.Any = Obj.Any, Role extends string = string> = {
+  role?: Role;
 
-export type CardComponentProps<T extends Obj.Any = Obj.Any> = {
-  object: T;
+  /** The primary object being displayed. */
+  subject: Subject;
 };

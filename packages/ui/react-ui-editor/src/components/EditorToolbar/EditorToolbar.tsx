@@ -2,10 +2,12 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Rx } from '@effect-rx/rx-react';
+import { type EditorView } from '@codemirror/view';
+import { Atom } from '@effect-atom/atom-react';
 import React, { memo, useMemo } from 'react';
 
-import { rxFromSignal } from '@dxos/app-graph';
+import { atomFromSignal } from '@dxos/app-graph';
+import { type Live } from '@dxos/live-object';
 import { ElevationProvider, type ThemedClassName } from '@dxos/react-ui';
 import {
   type ActionGraphProps,
@@ -17,13 +19,13 @@ import {
 
 import { type EditorViewMode } from '../../types';
 
+import { createLists } from './actions';
 import { createBlocks } from './blocks';
 import { createFormatting } from './formatting';
 import { createHeadings } from './headings';
 import { createImageUpload } from './image';
-import { createLists } from './lists';
 import { createSearch } from './search';
-import { type EditorToolbarActionGraphProps } from './util';
+import { type EditorToolbarState } from './useEditorToolbar';
 import { createViewMode } from './view-mode';
 
 export type EditorToolbarFeatureFlags = Partial<{
@@ -37,6 +39,13 @@ export type EditorToolbarFeatureFlags = Partial<{
   onImageUpload: () => void;
   onViewModeChange: (mode: EditorViewMode) => void;
 }>;
+
+export type EditorToolbarActionGraphProps = {
+  state: Live<EditorToolbarState>;
+  getView: () => EditorView;
+  // TODO(wittjosiah): Control positioning.
+  customActions?: Atom.Atom<ActionGraphProps>;
+};
 
 export type EditorToolbarProps = ThemedClassName<
   {
@@ -89,8 +98,8 @@ const createToolbarActions = ({
   getView,
   customActions,
   ...features
-}: ToolbarActionsProps): Rx.Rx<ActionGraphProps> => {
-  return Rx.make((get) => {
+}: ToolbarActionsProps): Atom.Atom<ActionGraphProps> => {
+  return Atom.make((get) => {
     const graph: ActionGraphProps = {
       nodes: [],
       edges: [],
@@ -103,19 +112,19 @@ const createToolbarActions = ({
     };
 
     if (features?.showHeadings ?? true) {
-      addSubGraph(graph, get(rxFromSignal(() => createHeadings(state, getView))));
+      addSubGraph(graph, get(atomFromSignal(() => createHeadings(state, getView))));
     }
     if (features?.showFormatting ?? true) {
-      addSubGraph(graph, get(rxFromSignal(() => createFormatting(state, getView))));
+      addSubGraph(graph, get(atomFromSignal(() => createFormatting(state, getView))));
     }
     if (features?.showLists ?? true) {
-      addSubGraph(graph, get(rxFromSignal(() => createLists(state, getView))));
+      addSubGraph(graph, get(atomFromSignal(() => createLists(state, getView))));
     }
     if (features?.showBlocks ?? true) {
-      addSubGraph(graph, get(rxFromSignal(() => createBlocks(state, getView))));
+      addSubGraph(graph, get(atomFromSignal(() => createBlocks(state, getView))));
     }
     if (features?.onImageUpload) {
-      addSubGraph(graph, get(rxFromSignal(() => createImageUpload(features.onImageUpload!))));
+      addSubGraph(graph, get(atomFromSignal(() => createImageUpload(features.onImageUpload!))));
     }
 
     addSubGraph(graph, createGapSeparator());
@@ -124,10 +133,10 @@ const createToolbarActions = ({
       addSubGraph(graph, get(customActions));
     }
     if (features?.showSearch ?? true) {
-      addSubGraph(graph, get(rxFromSignal(() => createSearch(getView))));
+      addSubGraph(graph, get(atomFromSignal(() => createSearch(getView))));
     }
     if (features?.onViewModeChange) {
-      addSubGraph(graph, get(rxFromSignal(() => createViewMode(state, features.onViewModeChange!))));
+      addSubGraph(graph, get(atomFromSignal(() => createViewMode(state, features.onViewModeChange!))));
     }
 
     return graph;

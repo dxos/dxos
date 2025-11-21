@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Rx } from '@effect-rx/rx-react';
+import { Atom } from '@effect-atom/atom-react';
 import React, { type PropsWithChildren, useMemo } from 'react';
 
 import { useAppGraph } from '@dxos/app-framework/react';
@@ -11,8 +11,8 @@ import {
   type ActionGraphProps,
   MenuProvider,
   ToolbarMenu,
+  atomFromSignal,
   createGapSeparator,
-  rxFromSignal,
   useMenuActions,
 } from '@dxos/react-ui-menu';
 
@@ -27,11 +27,11 @@ const createToolbarActions = (
   model: SheetModel,
   state: ToolbarState,
   cursorFallbackRange?: CompleteCellRange,
-  customActions?: Rx.Rx<ActionGraphProps>,
-): Rx.Rx<ActionGraphProps> => {
-  return Rx.make((get) => {
-    const align = get(rxFromSignal(() => createAlign(model, state, cursorFallbackRange)));
-    const style = get(rxFromSignal(() => createStyle(model, state, cursorFallbackRange)));
+  customActions?: Atom.Atom<ActionGraphProps>,
+): Atom.Atom<ActionGraphProps> => {
+  return Atom.make((get) => {
+    const align = get(atomFromSignal(() => createAlign(model, state, cursorFallbackRange)));
+    const style = get(atomFromSignal(() => createStyle(model, state, cursorFallbackRange)));
     const gap = createGapSeparator();
 
     const graph: ActionGraphProps = {
@@ -59,7 +59,7 @@ export const SheetToolbar = ({ id }: SheetToolbarProps) => {
 
   const { graph } = useAppGraph();
   const customActions = useMemo(() => {
-    return Rx.make((get) => {
+    return Atom.make((get) => {
       const actions = get(graph.actions(id));
       const nodes = actions.filter((action) => action.properties.disposition === 'toolbar');
       return {

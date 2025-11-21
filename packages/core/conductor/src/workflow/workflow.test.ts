@@ -2,19 +2,19 @@
 // Copyright 2025 DXOS.org
 //
 
-import type * as Context from 'effect/Context';
+import { it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
-import type * as Layer from 'effect/Layer';
-import type * as Scope from 'effect/Scope';
-import { describe, expect, test } from 'vitest';
+import * as Layer from 'effect/Layer';
+import { describe } from 'vitest';
 
-import { todo } from '@dxos/debug';
-import { DXN, Obj, Ref } from '@dxos/echo';
-import { ObjectId, type RefResolver, setRefResolver } from '@dxos/echo/internal';
-import { Function, ServiceContainer, setUserFunctionIdInMetadata } from '@dxos/functions';
-import { type RemoteFunctionExecutionService, createEventLogger } from '@dxos/functions';
+import { TestAiService } from '@dxos/ai/testing';
+import { Obj, Ref } from '@dxos/echo';
+import { ObjectId } from '@dxos/echo/internal';
+import { TestHelpers } from '@dxos/effect';
+import { ComputeEventLogger, CredentialsService, TracingService } from '@dxos/functions';
+import { FunctionInvocationServiceLayerTest, TestDatabaseLayer } from '@dxos/functions-runtime/testing';
 import { invariant } from '@dxos/invariant';
-import { LogLevel } from '@dxos/log';
+import { DXN } from '@dxos/keys';
 
 import { NODE_INPUT, NODE_OUTPUT } from '../nodes';
 import {
@@ -24,7 +24,6 @@ import {
   ComputeGraph,
   ComputeGraphModel,
   type ComputeNode,
-  type ComputeRequirements,
   type Executable,
   ValueBag,
   synchronizedComputeFunction,
@@ -32,139 +31,149 @@ import {
 
 import { WorkflowLoader, type WorkflowLoaderParams } from './loader';
 
+const TestLayer = Layer.mergeAll(ComputeEventLogger.layerFromTracing).pipe(
+  Layer.provideMerge(FunctionInvocationServiceLayerTest()),
+  Layer.provideMerge(
+    Layer.mergeAll(
+      TestAiService(),
+      TestDatabaseLayer(),
+      CredentialsService.configuredLayer([]),
+      TracingService.layerNoop,
+    ),
+  ),
+);
+
 describe('workflow', () => {
-  test('run', async () => {
-    const graph = createSimpleTransformGraph((input) => input.num1 + input.num2);
-    const workflowLoader = new WorkflowLoader(createResolver(graph));
-    const workflow = await workflowLoader.load(graph.graphDxn);
-    const result = await execute(workflow.run(makeInput({ num1: 2, num2: 3 })));
-    expect(result).toEqual(5);
-  });
+  it.scoped(
+    'run',
+    Effect.fnUntraced(
+      function* ({ expect }) {
+        const graph = createSimpleTransformGraph((input) => input.num1 + input.num2);
+        const workflowLoader = new WorkflowLoader(createResolver(graph));
+        const workflow = yield* Effect.promise(() => workflowLoader.load(graph.graphDxn));
+        const result = yield* executeEffect(workflow.run(makeInput({ num1: 2, num2: 3 })));
+        expect(result).toEqual(5);
+      },
+      Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
+  );
 
-  test('runFromInput', async () => {
-    let sideEffect = 0;
-    const graph = createGraphFromTransformMap('sum', {
-      sum: (input) => input.num1 + input.num2,
-      product: (input) => (sideEffect = input.num1 * input.num2),
-    });
-    const workflowLoader = new WorkflowLoader(createResolver(graph));
-    const workflow = await workflowLoader.load(graph.graphDxn);
-    const input = makeInput({ num1: 2, num2: 3 });
-    expect(() => workflow.run(input)).toThrow(/.*Ambiguous workflow.*entrypoint.*/);
-    expect(await execute(workflow.runFrom('sum', input))).toEqual(5);
-    expect(await execute(workflow.runFrom('product', input))).toBeUndefined();
-    expect(sideEffect).toEqual(6);
-  });
+  it.scoped(
+    'runFromInput',
+    Effect.fnUntraced(
+      function* ({ expect }) {
+        let sideEffect = 0;
+        const graph = createGraphFromTransformMap('sum', {
+          sum: (input) => input.num1 + input.num2,
+          product: (input) => (sideEffect = input.num1 * input.num2),
+        });
+        const workflowLoader = new WorkflowLoader(createResolver(graph));
+        const workflow = yield* Effect.promise(() => workflowLoader.load(graph.graphDxn));
+        const input = makeInput({ num1: 2, num2: 3 });
+        expect(() => workflow.run(input)).toThrow(/.*Ambiguous workflow.*entrypoint.*/);
+        expect(yield* executeEffect(workflow.runFrom('sum', input))).toEqual(5);
+        expect(yield* executeEffect(workflow.runFrom('product', input))).toBeUndefined();
+        expect(sideEffect).toEqual(6);
+      },
+      Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
+  );
 
-  test('workflow without outputs is allowed', async () => {
-    let sumSideEffect = 0;
-    let productSideEffect = 0;
-    const graph = createGraphFromTransformMap(null, {
-      sum: (input) => (sumSideEffect = input.num1 + input.num2),
-      product: (input) => (productSideEffect = input.num1 * input.num2),
-    });
-    const workflowLoader = new WorkflowLoader(createResolver(graph));
-    const workflow = await workflowLoader.load(graph.graphDxn);
-    const input = makeInput({ num1: 2, num2: 3 });
-    expect(() => workflow.run(input)).throws();
-    expect(await execute(workflow.runFrom('sum', input))).toBeUndefined();
-    expect(sumSideEffect).toEqual(5);
-    expect(await execute(workflow.runFrom('product', input))).toBeUndefined();
-    expect(productSideEffect).toEqual(6);
-  });
+  it.scoped(
+    'workflow without outputs is allowed',
+    Effect.fnUntraced(
+      function* ({ expect }) {
+        let sumSideEffect = 0;
+        let productSideEffect = 0;
+        const graph = createGraphFromTransformMap(null, {
+          sum: (input) => (sumSideEffect = input.num1 + input.num2),
+          product: (input) => (productSideEffect = input.num1 * input.num2),
+        });
+        const workflowLoader = new WorkflowLoader(createResolver(graph));
+        const workflow = yield* Effect.promise(() => workflowLoader.load(graph.graphDxn));
+        const input = makeInput({ num1: 2, num2: 3 });
+        expect(() => workflow.run(input)).throws();
+        expect(yield* executeEffect(workflow.runFrom('sum', input))).toBeUndefined();
+        expect(sumSideEffect).toEqual(5);
+        expect(yield* executeEffect(workflow.runFrom('product', input))).toBeUndefined();
+        expect(productSideEffect).toEqual(6);
+      },
+      Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
+  );
 
-  test('workflow as executable', async () => {
-    const graph = createSimpleTransformGraph((input) => input.num1 + input.num2);
-    const workflowLoader = new WorkflowLoader(createResolver(graph));
-    const workflow = await workflowLoader.load(graph.graphDxn);
-    const executable = await workflow.asExecutable();
-    const result = await execute(executable.exec!(makeInput({ num1: 2, num2: 3 })));
-    expect(result).toEqual(5);
-  });
+  it.scoped(
+    'workflow as executable',
+    Effect.fnUntraced(
+      function* ({ expect }) {
+        const graph = createSimpleTransformGraph((input) => input.num1 + input.num2);
+        const workflowLoader = new WorkflowLoader(createResolver(graph));
+        const workflow = yield* Effect.promise(() => workflowLoader.load(graph.graphDxn));
+        const executable = yield* Effect.promise(() => workflow.asExecutable());
+        const result = yield* executeEffect(executable.exec!(makeInput({ num1: 2, num2: 3 })));
+        expect(result).toEqual(5);
+      },
+      Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
+  );
 
   describe('subgraph', () => {
-    test('subgraph compute', async () => {
-      const subgraph = createSimpleTransformGraph((input) => input.num1 + input.num2);
-      const graph = createSubgraphTransform(subgraph.graphDxn);
-      const workflowLoader = new WorkflowLoader(createResolver(graph, subgraph));
-      const workflow = await workflowLoader.load(graph.graphDxn);
-      const result = await execute(workflow.run(makeInput({ num1: 2, num2: 3 })));
-      expect(result).toEqual(5);
-    });
+    it.scoped(
+      'subgraph compute',
+      Effect.fnUntraced(
+        function* ({ expect }) {
+          const subgraph = createSimpleTransformGraph((input) => input.num1 + input.num2);
+          const graph = createSubgraphTransform(subgraph.graphDxn);
+          const workflowLoader = new WorkflowLoader(createResolver(graph, subgraph));
+          const workflow = yield* Effect.promise(() => workflowLoader.load(graph.graphDxn));
+          const result = yield* executeEffect(workflow.run(makeInput({ num1: 2, num2: 3 })));
+          expect(result).toEqual(5);
+        },
+        Effect.provide(TestLayer),
+        TestHelpers.provideTestContext,
+      ),
+    );
 
-    test('failed subgraph resolution fails loading', async () => {
-      const subgraph = createSimpleTransformGraph((input) => input.num1 + input.num2);
-      const graph = createSubgraphTransform(subgraph.graphDxn);
-      const workflowLoader = new WorkflowLoader(createResolver(graph));
-      await expect(workflowLoader.load(graph.graphDxn)).rejects.toThrowError();
-    });
+    it.scoped(
+      'failed subgraph resolution fails loading',
+      Effect.fnUntraced(
+        function* ({ expect }) {
+          const subgraph = createSimpleTransformGraph((input) => input.num1 + input.num2);
+          const graph = createSubgraphTransform(subgraph.graphDxn);
+          const workflowLoader = new WorkflowLoader(createResolver(graph));
+          yield* Effect.promise(() => expect(workflowLoader.load(graph.graphDxn)).rejects.toThrowError());
+        },
+        Effect.provide(TestLayer),
+        TestHelpers.provideTestContext,
+      ),
+    );
   });
 
   describe('function', () => {
-    test('function resolved before execution', async () => {
-      const functionId = '1234';
-      const { fnObject, functionRef, resolveCount } = createFunction();
-      setUserFunctionIdInMetadata(Obj.getMeta(fnObject), functionId);
-      const graph = createFunctionTransform(functionRef);
-      const workflowLoader = new WorkflowLoader(createResolver(graph));
-      const workflow = await workflowLoader.load(graph.graphDxn);
-      expect(resolveCount()).toEqual(1);
-
-      const services = createTestExecutionContext({
-        functions: {
-          callFunction: (deployedFunctionId, { input }: any) =>
-            Effect.sync(() => {
-              expect(deployedFunctionId).toEqual(`/${functionId}`);
-              return { result: Math.pow(input.num1, input.num2) } as any;
-            }),
+    it.scoped(
+      'function node without function reference fails to load',
+      Effect.fnUntraced(
+        function* ({ expect }) {
+          const graph = createFunctionTransform(null);
+          const workflowLoader = new WorkflowLoader(createResolver(graph));
+          yield* Effect.promise(() => expect(workflowLoader.load(graph.graphDxn)).rejects.toThrowError());
         },
-      });
-
-      const result = await execute(workflow.run(makeInput({ num1: 2, num2: 8 })), services);
-      expect(resolveCount()).toEqual(1);
-      expect(result).toEqual(256);
-    });
-
-    test('function node without function reference fails to load', async () => {
-      const graph = createFunctionTransform(null);
-      const workflowLoader = new WorkflowLoader(createResolver(graph));
-      await expect(workflowLoader.load(graph.graphDxn)).rejects.toThrowError();
-    });
-
-    test('function without deployment reference fails to load', async () => {
-      const { functionRef } = createFunction();
-      const graph = createFunctionTransform(functionRef);
-      const workflowLoader = new WorkflowLoader(createResolver(graph));
-      await expect(workflowLoader.load(graph.graphDxn)).rejects.toThrowError();
-    });
-
-    const createFunction = () => {
-      const functionDxn = DXN.fromLocalObjectId(ObjectId.random());
-      const functionRef = Ref.fromDXN(functionDxn);
-      const fnObject = Function.make({ name: 'foo', version: '0.0.1' });
-      let resolveCounter = 0;
-      const refResolver: RefResolver = {
-        resolve: async (dxn) => refResolver.resolveSync(dxn, true),
-        resolveSync: () => {
-          resolveCounter++;
-          return fnObject;
-        },
-        resolveSchema: () => todo(),
-      };
-      setRefResolver(functionRef, refResolver);
-      return { fnObject, functionRef, resolveCount: () => resolveCounter };
-    };
+        Effect.provide(TestLayer),
+        TestHelpers.provideTestContext,
+      ),
+    );
   });
 
-  const execute = (effect: ComputeEffect<any>, services: TestEffectLayers = createTestExecutionContext()) => {
-    return Effect.runPromise(
-      effect.pipe(
-        Effect.withSpan('runTestWorkflow'),
-        Effect.flatMap(ValueBag.unwrap),
-        Effect.provide(services),
-        Effect.scoped,
-      ),
-    ).then((r) => r.result);
+  const executeEffect = (effect: ComputeEffect<any>) => {
+    return effect.pipe(
+      Effect.withSpan('runTestWorkflow'),
+      Effect.flatMap(ValueBag.unwrap),
+      Effect.map((r) => r.result),
+    );
   };
 
   const makeInput = (input: any) => ValueBag.make({ input });
@@ -246,19 +255,6 @@ describe('workflow', () => {
     };
   };
 });
-
-const createTestExecutionContext = (mocks?: {
-  functions?: Context.Tag.Service<RemoteFunctionExecutionService>;
-}): TestEffectLayers => {
-  return new ServiceContainer()
-    .setServices({
-      eventLogger: createEventLogger(LogLevel.INFO),
-      functionCallService: mocks?.functions,
-    })
-    .createLayer();
-};
-
-type TestEffectLayers = Layer.Layer<Exclude<ComputeRequirements, Scope.Scope>>;
 
 type Transform = (input: any) => any;
 

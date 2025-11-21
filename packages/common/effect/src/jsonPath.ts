@@ -17,6 +17,7 @@ const PROP_REGEX = /^\w+$/;
 /**
  * https://www.ietf.org/archive/id/draft-goessner-dispatch-jsonpath-00.html
  */
+// TODO(burdon): Keys could be arbitrary strings.
 export const JsonPath = Schema.String.pipe(Schema.pattern(PATH_REGEX)).annotations({
   title: 'JSON path',
   description: 'JSON path to a property',

@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Rx } from '@effect-rx/rx-react';
+import { Atom } from '@effect-atom/atom-react';
 import * as Function from 'effect/Function';
 import * as Option from 'effect/Option';
 
@@ -16,14 +16,14 @@ import {
 } from '@dxos/app-framework';
 import { Prompt } from '@dxos/blueprints';
 import { Sequence } from '@dxos/conductor';
-import { Obj } from '@dxos/echo';
+import { DXN, Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { ATTENDABLE_PATH_SEPARATOR, PLANK_COMPANION_TYPE } from '@dxos/plugin-deck/types';
-import { ROOT_ID, createExtension, rxFromSignal } from '@dxos/plugin-graph';
+import { ROOT_ID, atomFromSignal, createExtension } from '@dxos/plugin-graph';
 import { getActiveSpace } from '@dxos/plugin-space';
 import { SpaceAction } from '@dxos/plugin-space/types';
-import { Query, type Space } from '@dxos/react-client/echo';
+import { Query, type Space, getSpace } from '@dxos/react-client/echo';
 
 import { ASSISTANT_DIALOG, meta } from '../meta';
 import { Assistant, AssistantAction } from '../types';
@@ -35,7 +35,7 @@ export default (context: PluginContext) =>
     createExtension({
       id: `${meta.id}/root`,
       actions: (node) =>
-        Rx.make((get) =>
+        Atom.make((get) =>
           Function.pipe(
             get(node),
             Option.flatMap((node) => {
@@ -66,7 +66,7 @@ export default (context: PluginContext) =>
     createExtension({
       id: `${meta.id}/assistant`,
       actions: (node) =>
-        Rx.make((get) =>
+        Atom.make((get) =>
           Function.pipe(
             get(node),
             Option.flatMap((node) => (node.id === ROOT_ID ? Option.some(node) : Option.none())),
@@ -116,17 +116,28 @@ export default (context: PluginContext) =>
     createExtension({
       id: `${meta.id}/companion-chat`,
       connector: (node) => {
-        return Rx.make((get) =>
+        return Atom.make((get) =>
           Function.pipe(
             get(node),
             Option.flatMap((node) => (Obj.isObject(node.data) ? Option.some(node.data) : Option.none())),
-            Option.map((object) => {
-              const currentChat = get(
-                rxFromSignal(
+            Option.flatMap((object) => {
+              const currentChatState = get(
+                atomFromSignal(
                   () => context.getCapability(AssistantCapabilities.State).currentChat[Obj.getDXN(object).toString()],
                 ),
               );
+              // If no state, continue to allow chat initialization.
+              if (!currentChatState) {
+                return Option.some({ object, currentChat: undefined });
+              }
 
+              const space = getSpace(object);
+              const currentChatDxn = DXN.tryParse(currentChatState);
+              const currentChatRef = currentChatDxn ? space?.db.ref(currentChatDxn) : undefined;
+              const currentChat = get(atomFromSignal(() => currentChatRef?.target));
+              return currentChat ? Option.some({ object, currentChat }) : Option.none();
+            }),
+            Option.map(({ object, currentChat }) => {
               return [
                 {
                   id: [Obj.getDXN(object).toString(), 'assistant-chat'].join(ATTENDABLE_PATH_SEPARATOR),
@@ -150,7 +161,7 @@ export default (context: PluginContext) =>
     createExtension({
       id: `${meta.id}/invocations`,
       connector: (node) =>
-        Rx.make((get) =>
+        Atom.make((get) =>
           Function.pipe(
             get(node),
             Option.flatMap((node) =>

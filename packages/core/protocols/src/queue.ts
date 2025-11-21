@@ -2,6 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
+import type { SpaceId } from '@dxos/keys';
+
 import type { ObjectId } from './types.js';
 
 export type QueueCursor = string & { __QueueCursor: never };
@@ -36,3 +38,14 @@ export type QueryResult = {
  * Position of an object in the queue that it is in.
  */
 export const KEY_QUEUE_POSITION = 'dxos.org/key/queue-position';
+
+/**
+ * Service for managing queues.
+ */
+export interface QueueService {
+  queryQueue(subspaceTag: string, spaceId: SpaceId, query: QueueQuery): Promise<QueryResult>;
+
+  insertIntoQueue(subspaceTag: string, spaceId: SpaceId, queueId: ObjectId, objects: unknown[]): Promise<void>;
+
+  deleteFromQueue(subspaceTag: string, spaceId: SpaceId, queueId: ObjectId, objectIds: ObjectId[]): Promise<void>;
+}

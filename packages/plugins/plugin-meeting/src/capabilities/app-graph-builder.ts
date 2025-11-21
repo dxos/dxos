@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Rx } from '@effect-rx/rx-react';
+import { Atom } from '@effect-atom/atom-react';
 import * as Function from 'effect/Function';
 import * as Option from 'effect/Option';
 
@@ -11,7 +11,7 @@ import { Obj, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { ATTENDABLE_PATH_SEPARATOR, DeckAction, PLANK_COMPANION_TYPE } from '@dxos/plugin-deck/types';
-import { createExtension, rxFromObservable, rxFromSignal } from '@dxos/plugin-graph';
+import { atomFromObservable, atomFromSignal, createExtension } from '@dxos/plugin-graph';
 import { COMPOSER_SPACE_LOCK } from '@dxos/plugin-space';
 import { SpaceAction } from '@dxos/plugin-space/types';
 import { ThreadCapabilities } from '@dxos/plugin-thread';
@@ -29,7 +29,7 @@ export default (context: PluginContext) =>
     createExtension({
       id: `${meta.id}/share-call-link`,
       actions: (node) =>
-        Rx.make((get) =>
+        Atom.make((get) =>
           Function.pipe(
             get(node),
             Option.flatMap((node) =>
@@ -37,7 +37,7 @@ export default (context: PluginContext) =>
             ),
             Option.flatMap((channel) => {
               const space = getSpace(channel);
-              const state = space && get(rxFromObservable(space.state));
+              const state = space && get(atomFromObservable(space.state));
               return space && state === SpaceState.SPACE_READY && !space.properties[COMPOSER_SPACE_LOCK]
                 ? Option.some(channel)
                 : Option.none();
@@ -71,20 +71,20 @@ export default (context: PluginContext) =>
     createExtension({
       id: `${meta.id}/call-thread`,
       connector: (node) => {
-        return Rx.make((get) =>
+        return Atom.make((get) =>
           Function.pipe(
             get(node),
             Option.map((node) => node.data),
             Option.filter(Obj.instanceOf(Channel.Channel)),
             Option.flatMap((channel) => {
               const state = context.getCapability(MeetingCapabilities.State);
-              const meeting = get(rxFromSignal(() => state.activeMeeting));
+              const meeting = get(atomFromSignal(() => state.activeMeeting));
               return meeting ? Option.some({ channel, meeting }) : Option.none();
             }),
             Option.map(({ channel, meeting }) => {
               const callManager = context.getCapability(ThreadCapabilities.CallManager);
               const joined = get(
-                rxFromSignal(() => callManager.joined && callManager.roomId === Obj.getDXN(channel).toString()),
+                atomFromSignal(() => callManager.joined && callManager.roomId === Obj.getDXN(channel).toString()),
               );
               if (!joined) {
                 return [];
@@ -94,7 +94,7 @@ export default (context: PluginContext) =>
                 {
                   id: `${Obj.getDXN(channel).toString()}${ATTENDABLE_PATH_SEPARATOR}meeting-thread`,
                   type: PLANK_COMPANION_TYPE,
-                  data: get(rxFromSignal(() => meeting.thread.target)),
+                  data: get(atomFromSignal(() => meeting.thread.target)),
                   properties: {
                     label: ['meeting thread label', { ns: meta.id }],
                     icon: 'ph--chat-text--regular',
@@ -113,7 +113,7 @@ export default (context: PluginContext) =>
     createExtension({
       id: `${meta.id}/call-companion`,
       connector: (node) =>
-        Rx.make((get) =>
+        Atom.make((get) =>
           Function.pipe(
             get(node),
             Option.flatMap((node) =>
@@ -122,13 +122,13 @@ export default (context: PluginContext) =>
             Option.flatMap((channel) => {
               const callManager = context.getCapability(ThreadCapabilities.CallManager);
               const isCallActive = get(
-                rxFromSignal(() => callManager.joined && callManager.roomId === Obj.getDXN(channel).toString()),
+                atomFromSignal(() => callManager.joined && callManager.roomId === Obj.getDXN(channel).toString()),
               );
               return isCallActive ? Option.some(channel) : Option.none();
             }),
             Option.map((channel) => {
               const state = context.getCapability(MeetingCapabilities.State);
-              const data = get(rxFromSignal(() => state.activeMeeting ?? 'meeting'));
+              const data = get(atomFromSignal(() => state.activeMeeting ?? 'meeting'));
 
               return [
                 {
@@ -152,7 +152,7 @@ export default (context: PluginContext) =>
     createExtension({
       id: `${meta.id}/call-transcript`,
       actions: (node) =>
-        Rx.make((get) =>
+        Atom.make((get) =>
           Function.pipe(
             get(node),
             Option.flatMap((node) =>
@@ -160,7 +160,7 @@ export default (context: PluginContext) =>
             ),
             Option.map((channel) => {
               const state = context.getCapability(MeetingCapabilities.State);
-              const enabled = get(rxFromSignal(() => state.transcriptionManager?.enabled ?? false));
+              const enabled = get(atomFromSignal(() => state.transcriptionManager?.enabled ?? false));
               return [
                 {
                   id: `${Obj.getDXN(channel).toString()}/action/start-stop-transcription`,
@@ -215,7 +215,7 @@ export default (context: PluginContext) =>
           ),
         ),
       connector: (node) =>
-        Rx.make((get) =>
+        Atom.make((get) =>
           Function.pipe(
             get(node),
             Option.flatMap((node) =>
@@ -223,7 +223,7 @@ export default (context: PluginContext) =>
             ),
             Option.flatMap((channel) => {
               const state = context.getCapability(MeetingCapabilities.State);
-              const meeting = get(rxFromSignal(() => state.activeMeeting));
+              const meeting = get(atomFromSignal(() => state.activeMeeting));
               return meeting ? Option.some({ channel, meeting }) : Option.none();
             }),
             Option.map(({ channel, meeting }) => {
@@ -231,7 +231,7 @@ export default (context: PluginContext) =>
                 {
                   id: `${Obj.getDXN(channel).toString()}${ATTENDABLE_PATH_SEPARATOR}transcript`,
                   type: PLANK_COMPANION_TYPE,
-                  data: get(rxFromSignal(() => meeting.transcript.target)),
+                  data: get(atomFromSignal(() => meeting.transcript.target)),
                   properties: {
                     label: ['transcript companion label', { ns: meta.id }],
                     icon: 'ph--subtitles--regular',
@@ -249,7 +249,7 @@ export default (context: PluginContext) =>
     createExtension({
       id: `${meta.id}/meeting-transcript-companion`,
       connector: (node) =>
-        Rx.make((get) =>
+        Atom.make((get) =>
           Function.pipe(
             get(node),
             Option.flatMap((node) =>
@@ -260,7 +260,7 @@ export default (context: PluginContext) =>
                 {
                   id: `${Obj.getDXN(meeting).toString()}${ATTENDABLE_PATH_SEPARATOR}transcript`,
                   type: PLANK_COMPANION_TYPE,
-                  data: get(rxFromSignal(() => meeting.transcript.target)),
+                  data: get(atomFromSignal(() => meeting.transcript.target)),
                   properties: {
                     label: ['transcript companion label', { ns: meta.id }],
                     icon: 'ph--subtitles--regular',

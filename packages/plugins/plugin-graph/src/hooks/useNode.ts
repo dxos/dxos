@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { useRxValue } from '@effect-rx/rx-react';
+import { useAtomValue } from '@effect-atom/atom-react';
 import * as Option from 'effect/Option';
 
 import { type Node, type ReadableGraph, type Relation } from '@dxos/app-graph';
@@ -17,13 +17,13 @@ import { type Node, type ReadableGraph, type Relation } from '@dxos/app-graph';
  */
 // TODO(wittjosiah): Factor out to @dxos/app-graph/react.
 export const useNode = <T = any>(graph: ReadableGraph, id?: string): Node<T> | undefined => {
-  return Option.getOrElse(useRxValue(graph.node(id ?? '')), () => undefined);
+  return Option.getOrElse(useAtomValue(graph.node(id ?? '')), () => undefined);
 };
 
 export const useConnections = (graph: ReadableGraph, id?: string, relation?: Relation): Node[] => {
-  return useRxValue(graph.connections(id ?? '', relation));
+  return useAtomValue(graph.connections(id ?? '', relation));
 };
 
 export const useActions = (graph: ReadableGraph, id?: string): Node[] => {
-  return useRxValue(graph.actions(id ?? ''));
+  return useAtomValue(graph.actions(id ?? ''));
 };

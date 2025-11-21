@@ -18,7 +18,7 @@ import {
   Toggle,
   type ToggleGroupItemProps,
   type ToggleProps,
-} from '../Buttons';
+} from '../Button';
 import { Link, type LinkProps } from '../Link';
 import { Separator, type SeparatorProps } from '../Separator';
 

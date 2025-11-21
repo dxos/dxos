@@ -37,18 +37,27 @@ export const translations = [
         'action delete': 'Delete',
         'action mark read': 'Mark as read',
         'message label': 'Message',
+        'event label': 'Event',
         'no integrations label': 'No integrations configured',
         'manage integrations button label': 'Manage Integrations',
         'inbox label': 'Inbox',
+
+        'sync mailbox label': 'Sync mailbox',
+
+        'show contact label': 'Show contact',
+        'create contact label': 'Create contact',
 
         'mailbox sync label': 'Mailbox Sync',
         'mailbox object settings configure sync button label': 'Configure sync',
         'mailbox object settings configure subscription button label': 'Configure subscription',
 
-        'mailbox toolbar label': 'Message toolbar',
-        'mailbox toolbar show enriched message': 'Show enriched message',
-        'mailbox toolbar show plain message': 'Show plain message',
-        'mailbox toolbar enriched message not available': 'Enriched message not available',
+        'event untitled label': 'Untitled',
+        'event toolbar create note menu': 'Create note',
+
+        'message toolbar label': 'Message toolbar',
+        'message toolbar show enriched message': 'Show enriched message',
+        'message toolbar show plain message': 'Show plain message',
+        'message toolbar enriched message not available': 'Enriched message not available',
 
         'mailbox toolbar title': 'Mailbox toolbar',
         'mailbox toolbar sort': 'Sort messages',

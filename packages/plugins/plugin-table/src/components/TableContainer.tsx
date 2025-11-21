@@ -2,14 +2,14 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Rx } from '@effect-rx/rx-react';
+import { Atom } from '@effect-atom/atom-react';
 import * as Match from 'effect/Match';
 import type * as Schema from 'effect/Schema';
 import React, { useCallback, useMemo, useRef } from 'react';
 
 import { LayoutAction, createIntent } from '@dxos/app-framework';
 import { useAppGraph, useIntentDispatcher } from '@dxos/app-framework/react';
-import { Filter, Obj, Type } from '@dxos/echo';
+import { Obj, Query, Type } from '@dxos/echo';
 import { EchoSchema } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
 import { useGlobalFilteredObjects } from '@dxos/plugin-search';
@@ -38,20 +38,22 @@ export type TableContainerProps = {
   view: View.View;
 };
 
+// TODO(wittjosiah): Need to handle more complex queries by restricting add row.
 export const TableContainer = ({ role, view }: TableContainerProps) => {
   const { dispatchPromise: dispatch } = useIntentDispatcher();
   const tableRef = useRef<TableController>(null);
 
   const client = useClient();
   const space = getSpace(view);
-  const typename = view.query ? getTypenameFromQuery(view.query.ast) : undefined;
+  const query = Query.fromAst(Obj.getSnapshot(view).query.ast);
+  const typename = view.query ? getTypenameFromQuery(query.ast) : undefined;
   const schema = useSchema(client, space, typename);
-  const queriedObjects = useQuery(space, schema ? Filter.type(schema) : Filter.nothing());
+  const queriedObjects = useQuery(space, query);
   const filteredObjects = useGlobalFilteredObjects(queriedObjects);
 
   const { graph } = useAppGraph();
   const customActions = useMemo(() => {
-    return Rx.make((get) => {
+    return Atom.make((get) => {
       const actions = get(graph.actions(Obj.getDXN(view).toString()));
       const nodes = actions.filter((action) => action.properties.disposition === 'toolbar');
       return {
@@ -105,13 +107,12 @@ export const TableContainer = ({ role, view }: TableContainerProps) => {
   const handleRowAction = useCallback(
     (actionId: string, data: any) =>
       Match.value(actionId).pipe(
-        Match.when('open', () => {
-          invariant(typename);
-          void dispatch(createIntent(LayoutAction.Open, { part: 'main', subject: [Obj.getDXN(data).toString()] }));
-        }),
+        Match.when('open', () =>
+          dispatch(createIntent(LayoutAction.Open, { part: 'main', subject: [Obj.getDXN(data).toString()] })),
+        ),
         Match.orElseAbsurd,
       ),
-    [dispatch, typename],
+    [dispatch],
   );
 
   const handleRowOrderChange = useCallback(() => {

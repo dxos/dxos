@@ -30,6 +30,9 @@
       "path": "../../common/effect"
     },
     {
+      "path": "../../common/errors"
+    },
+    {
       "path": "../../common/invariant"
     },
     {
@@ -78,10 +81,19 @@
       "path": "../../core/functions"
     },
     {
+      "path": "../../core/functions-runtime"
+    },
+    {
+      "path": "../../core/protocols"
+    },
+    {
       "path": "../../sdk/app-framework"
     },
     {
       "path": "../../sdk/client"
+    },
+    {
+      "path": "../../sdk/config"
     },
     {
       "path": "../../sdk/react-client"
@@ -100,6 +112,9 @@
     },
     {
       "path": "../../ui/react-ui-attention"
+    },
+    {
+      "path": "../../ui/react-ui-calendar"
     },
     {
       "path": "../../ui/react-ui-components"

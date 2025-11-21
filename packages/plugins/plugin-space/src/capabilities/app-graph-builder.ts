@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Rx } from '@effect-rx/rx-react';
+import { Atom } from '@effect-atom/atom-react';
 import * as Array from 'effect/Array';
 import * as Function from 'effect/Function';
 import * as Option from 'effect/Option';
@@ -14,7 +14,7 @@ import { DXN, Filter, Obj, Query, Type } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { ATTENDABLE_PATH_SEPARATOR, PLANK_COMPANION_TYPE } from '@dxos/plugin-deck/types';
-import { ROOT_ID, createExtension, rxFromObservable, rxFromSignal } from '@dxos/plugin-graph';
+import { ROOT_ID, atomFromObservable, atomFromSignal, createExtension } from '@dxos/plugin-graph';
 import { Collection, StoredSchema, View, getTypenameFromQuery } from '@dxos/schema';
 import { isNonNullable } from '@dxos/util';
 
@@ -24,20 +24,21 @@ import { SPACE_TYPE, SpaceAction, type SpaceSettingsProps } from '../types';
 import {
   SHARED,
   SPACES,
+  atomFromQuery,
   constructObjectActions,
   constructSpaceActions,
   constructSpaceNode,
   createObjectNode,
   createStaticSchemaActions,
   createStaticSchemaNode,
-  rxFromQuery,
 } from '../util';
 
 import { SpaceCapabilities } from './capabilities';
 
 export default (context: PluginContext) => {
-  const resolve = (get: Rx.Context) => (typename: string) =>
-    get(context.capabilities(Capabilities.Metadata)).find(({ id }) => id === typename)?.metadata ?? {};
+  // TODO(wittjosiah): Using `get` and being reactive seems to cause a bug with Atom where disposed atoms are accessed.
+  const resolve = (get: Atom.Context) => (typename: string) =>
+    context.getCapabilities(Capabilities.Metadata).find(({ id }) => id === typename)?.metadata ?? {};
 
   const spacesNode = {
     id: SPACES,
@@ -82,7 +83,7 @@ export default (context: PluginContext) => {
       id: `${meta.id}/primary-actions`,
       position: 'hoist',
       actions: (node) =>
-        Rx.make((get) =>
+        Atom.make((get) =>
           Function.pipe(
             get(node),
             Option.flatMap((node) => (node.id === ROOT_ID ? Option.some(node) : Option.none())),
@@ -159,7 +160,7 @@ export default (context: PluginContext) => {
       id: `${meta.id}/root`,
       position: 'hoist',
       connector: (node) =>
-        Rx.make((get) =>
+        Atom.make((get) =>
           Function.pipe(
             get(node),
             Option.flatMap((node) => (node.id === ROOT_ID ? Option.some(node) : Option.none())),
@@ -175,18 +176,18 @@ export default (context: PluginContext) => {
       id: SPACES,
       connector: (node) => {
         let query: QueryResult<Type.Expando> | undefined;
-        return Rx.make((get) =>
+        return Atom.make((get) =>
           Function.pipe(
             get(node),
             Option.flatMap((node) => (node.id === SPACES ? Option.some(node) : Option.none())),
             Option.map(() => {
               const state = context.getCapability(SpaceCapabilities.State);
               const client = context.getCapability(ClientCapabilities.Client);
-              const spacesRx = rxFromObservable(client.spaces);
-              const isReadyRx = rxFromObservable(client.spaces.isReady);
+              const spacesAtom = atomFromObservable(client.spaces);
+              const isReadyAtom = atomFromObservable(client.spaces.isReady);
 
-              const spaces = get(spacesRx);
-              const isReady = get(isReadyRx);
+              const spaces = get(spacesAtom);
+              const isReady = get(isReadyAtom);
 
               if (!spaces || !isReady) {
                 return [];
@@ -201,9 +202,9 @@ export default (context: PluginContext) => {
                 if (!query) {
                   query = client.spaces.default.db.query(Filter.type(Type.Expando, { key: SHARED }));
                 }
-                const [spacesOrder] = get(rxFromQuery(query));
+                const [spacesOrder] = get(atomFromQuery(query));
                 return get(
-                  rxFromSignal(() => {
+                  atomFromSignal(() => {
                     const order: string[] = spacesOrder?.order ?? [];
                     const orderMap = new Map(order.map((id, index) => [id, index]));
                     return [
@@ -280,7 +281,7 @@ export default (context: PluginContext) => {
     createExtension({
       id: `${meta.id}/actions`,
       actions: (node) =>
-        Rx.make((get) =>
+        Atom.make((get) =>
           Function.pipe(
             get(node),
             Option.flatMap((node) =>
@@ -312,7 +313,7 @@ export default (context: PluginContext) => {
     createExtension({
       id: `${meta.id}/root-collection`,
       connector: (node) =>
-        Rx.make((get) =>
+        Atom.make((get) =>
           Function.pipe(
             get(node),
             Option.flatMap((node) =>
@@ -320,13 +321,13 @@ export default (context: PluginContext) => {
             ),
             Option.map((space) => {
               const state = context.getCapability(SpaceCapabilities.State);
-              const spaceState = get(rxFromObservable(space.state));
+              const spaceState = get(atomFromObservable(space.state));
               if (spaceState !== SpaceState.SPACE_READY) {
                 return [];
               }
 
               const collection = get(
-                rxFromSignal(
+                atomFromSignal(
                   () => space.properties[Collection.Collection.typename]?.target as Collection.Collection | undefined,
                 ),
               );
@@ -335,7 +336,7 @@ export default (context: PluginContext) => {
               }
 
               return get(
-                rxFromSignal(() =>
+                atomFromSignal(() =>
                   Function.pipe(
                     collection.objects,
                     Array.map((object) => object.target),
@@ -362,7 +363,7 @@ export default (context: PluginContext) => {
     createExtension({
       id: `${meta.id}/objects`,
       connector: (node) =>
-        Rx.make((get) =>
+        Atom.make((get) =>
           Function.pipe(
             get(node),
             Option.flatMap((node) =>
@@ -373,7 +374,7 @@ export default (context: PluginContext) => {
               const space = getSpace(collection);
 
               return get(
-                rxFromSignal(() =>
+                atomFromSignal(() =>
                   Function.pipe(
                     collection.objects,
                     Array.map((object) => object.target),
@@ -440,7 +441,7 @@ export default (context: PluginContext) => {
       id: `${meta.id}/query-collection-objects`,
       connector: (node) => {
         let query: QueryResult<Type.Expando> | undefined;
-        return Rx.make((get) =>
+        return Atom.make((get) =>
           Function.pipe(
             get(node),
             Option.flatMap((node) =>
@@ -467,12 +468,12 @@ export default (context: PluginContext) => {
                 );
               }
               return (
-                get(rxFromQuery(query))
+                get(atomFromQuery(query))
                   // TODO(wittjosiah): This should be the default sort order.
                   .toSorted((a, b) => a.id.localeCompare(b.id))
                   .map((object) =>
                     get(
-                      rxFromSignal(() =>
+                      atomFromSignal(() =>
                         createObjectNode({
                           object,
                           space,
@@ -497,7 +498,7 @@ export default (context: PluginContext) => {
       id: `${meta.id}/static-schemas`,
       connector: (node) => {
         const client = context.getCapability(ClientCapabilities.Client);
-        return Rx.make((get) =>
+        return Atom.make((get) =>
           Function.pipe(
             get(node),
             Option.flatMap((node) =>
@@ -511,7 +512,7 @@ export default (context: PluginContext) => {
               return space?.properties.staticRecords ? Option.some(space) : Option.none();
             }),
             Option.map((space) => {
-              return get(rxFromSignal(() => (space.properties.staticRecords ?? []) as string[]))
+              return get(atomFromSignal(() => (space.properties.staticRecords ?? []) as string[]))
                 .map((typename) =>
                   client.graph.schemaRegistry.schemas.find((schema) => Type.getTypename(schema) === typename),
                 )
@@ -529,7 +530,7 @@ export default (context: PluginContext) => {
       id: `${meta.id}/static-schema-actions`,
       actions: (node) => {
         let query: QueryResult<View.View> | undefined;
-        return Rx.make((get) =>
+        return Atom.make((get) =>
           Function.pipe(
             get(node),
             Option.flatMap((node) => {
@@ -542,9 +543,9 @@ export default (context: PluginContext) => {
                 query = space.db.query(Filter.type(View.View));
               }
 
-              const views = get(rxFromQuery(query));
+              const views = get(atomFromQuery(query));
               const filteredViews = get(
-                rxFromSignal(() =>
+                atomFromSignal(() =>
                   // TODO(wittjosiah): Remove cast.
                   views.filter(
                     (view) => getTypenameFromQuery(view.query.ast) === Type.getTypename(schema as Type.Obj.Any),
@@ -577,7 +578,7 @@ export default (context: PluginContext) => {
       id: `${meta.id}/schema-views`,
       connector: (node) => {
         let query: QueryResult<View.View> | undefined;
-        return Rx.make((get) =>
+        return Atom.make((get) =>
           Function.pipe(
             get(node),
             Option.flatMap((node) => {
@@ -594,21 +595,37 @@ export default (context: PluginContext) => {
 
               // TODO(wittjosiah): Remove cast.
               const typename = Schema.isSchema(schema) ? Type.getTypename(schema as Type.Obj.Any) : schema.typename;
-              return get(rxFromQuery(query))
-                .filter((view) => getTypenameFromQuery(view.query.ast) === typename)
-                .map((view) =>
-                  get(
-                    rxFromSignal(() =>
-                      createObjectNode({
-                        object: view,
-                        space,
-                        resolve: resolve(get),
-                        droppable: false,
+              return (
+                get(atomFromQuery(query))
+                  .filter((view) => getTypenameFromQuery(view.query.ast) === typename)
+                  // Filter out Collection views from Projects.
+                  .filter((view) =>
+                    get(
+                      atomFromSignal(() => {
+                        const presentation = view.presentation.target;
+                        if (presentation) {
+                          const typename = Obj.getTypename(presentation);
+                          return typename !== Collection.Collection.typename;
+                        } else {
+                          return false;
+                        }
                       }),
                     ),
-                  ),
-                )
-                .filter(isNonNullable);
+                  )
+                  .map((view) =>
+                    get(
+                      atomFromSignal(() =>
+                        createObjectNode({
+                          object: view,
+                          space,
+                          resolve: resolve(get),
+                          droppable: false,
+                        }),
+                      ),
+                    ),
+                  )
+                  .filter(isNonNullable)
+              );
             }),
             Option.getOrElse(() => []),
           ),
@@ -621,7 +638,7 @@ export default (context: PluginContext) => {
       id: `${meta.id}/records`,
       resolver: (id) => {
         let query: QueryResult<Type.Expando> | undefined;
-        return Rx.make((get) => {
+        return Atom.make((get) => {
           const client = context.getCapability(ClientCapabilities.Client);
           const dxn = DXN.tryParse(id)?.asEchoDXN();
           if (!dxn || !dxn.spaceId) {
@@ -637,12 +654,17 @@ export default (context: PluginContext) => {
             query = space.db.query(Filter.ids(dxn.echoId));
           }
 
-          const object = get(rxFromQuery(query)).at(0);
+          const object = get(atomFromQuery(query)).at(0);
           if (!object) {
             return null;
           }
 
-          return createObjectNode({ object, space, resolve: resolve(get), disposition: 'hidden' });
+          return createObjectNode({
+            object,
+            space,
+            resolve: resolve(get),
+            disposition: 'hidden',
+          });
         });
       },
     }),
@@ -652,7 +674,7 @@ export default (context: PluginContext) => {
       id: `${meta.id}/object-actions`,
       actions: (node) => {
         let query: QueryResult<View.View> | undefined;
-        return Rx.make((get) =>
+        return Atom.make((get) =>
           Function.pipe(
             get(node),
             Option.flatMap((node) => {
@@ -676,9 +698,11 @@ export default (context: PluginContext) => {
                   getTypenameFromQuery(object.query) === StoredSchema.typename
                 );
               if (isSchema && query) {
-                const views = get(rxFromQuery(query));
+                const views = get(atomFromQuery(query));
                 const filteredViews = get(
-                  rxFromSignal(() => views.filter((view) => getTypenameFromQuery(view.query.ast) === object.typename)),
+                  atomFromSignal(() =>
+                    views.filter((view) => getTypenameFromQuery(view.query.ast) === object.typename),
+                  ),
                 );
                 deletable = filteredViews.length === 0;
               }
@@ -697,7 +721,7 @@ export default (context: PluginContext) => {
                   dispatch: dispatcher.dispatchPromise,
                   objectForms,
                   deletable,
-                  navigable: get(rxFromSignal(() => state.navigableCollections)),
+                  navigable: get(atomFromSignal(() => state.navigableCollections)),
                 });
               }
             }),
@@ -712,7 +736,7 @@ export default (context: PluginContext) => {
     createExtension({
       id: `${meta.id}/selected-objects`,
       connector: (node) =>
-        Rx.make((get) =>
+        Atom.make((get) =>
           Function.pipe(
             get(node),
             Option.flatMap((node) => (Obj.instanceOf(View.View, node.data) ? Option.some(node) : Option.none())),
@@ -737,7 +761,7 @@ export default (context: PluginContext) => {
     createExtension({
       id: `${meta.id}/settings`,
       connector: (node) =>
-        Rx.make((get) =>
+        Atom.make((get) =>
           Function.pipe(
             get(node),
             Option.flatMap((node) => (Obj.isObject(node.data) ? Option.some(node) : Option.none())),

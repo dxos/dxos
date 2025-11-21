@@ -5,7 +5,7 @@
 import React, { useMemo } from 'react';
 
 import { Surface } from '@dxos/app-framework/react';
-import { type ArticleComponentProps } from '@dxos/app-framework/react';
+import { type SurfaceComponentProps } from '@dxos/app-framework/react';
 import { Filter, type Obj, Ref, Relation } from '@dxos/echo';
 import { type Space, getSpace, useQuery } from '@dxos/react-client/echo';
 import { useTranslation } from '@dxos/react-ui';
@@ -16,11 +16,11 @@ import { isNonNullable } from '@dxos/util';
 
 import { meta } from '../meta';
 
-export const RecordArticle = ({ object }: ArticleComponentProps) => {
+export const RecordArticle = ({ subject }: SurfaceComponentProps) => {
   const { t } = useTranslation(meta.id);
-  const space = getSpace(object);
-  const data = useMemo(() => ({ subject: object }), [object]);
-  const related = useRelatedObjects(space, object, {
+  const space = getSpace(subject);
+  const data = useMemo(() => ({ subject }), [subject]);
+  const related = useRelatedObjects(space, subject, {
     references: true,
     relations: true,
   });
@@ -29,7 +29,7 @@ export const RecordArticle = ({ object }: ArticleComponentProps) => {
   return (
     <StackItem.Content>
       <div role='none' className={mx('flex flex-col gap-4 p-4 is-full overflow-y-auto')}>
-        <div role='none' className={mx('flex card-min-width card-max-width')}>
+        <div role='none' className={mx('flex is-full card-max-width')}>
           <Surface role='section' data={data} limit={1} />
         </div>
 
@@ -69,7 +69,6 @@ const useRelatedObjects = (
     const related: Obj.Any[] = [];
 
     // TODO(burdon): Change Person => Organization to relations.
-    // TODO(burdon): Filter relation types.
     if (options.references) {
       const getReferences = (obj: Obj.Any): Ref.Any[] => {
         return Object.getOwnPropertyNames(obj)

@@ -6,10 +6,9 @@ import React, { useEffect } from 'react';
 
 import { Obj, Relation } from '@dxos/echo';
 import { Callout, Icon, Trans, useTranslation } from '@dxos/react-ui';
-import { type AnchoredTo } from '@dxos/types';
+import { type AnchoredTo, type Thread } from '@dxos/types';
 
 import { meta } from '../meta';
-import { type Thread } from '../types';
 
 import { CommentsThreadContainer, type CommentsThreadContainerProps } from './CommentsThreadContainer';
 

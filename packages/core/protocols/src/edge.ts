@@ -37,6 +37,11 @@ export type EdgeErrorData = { type: string } & Record<string, any>;
  * This is the shape of the error response from the Edge service,
  * when the error is gracefully handled, the Response will be an object with this shape and have status code 200.
  */
+// TODO(dmaretskyi): Refactor this type to just be { success: false, error: SerializedError }
+// reason -> error.message
+// cause -> error.cause
+// errorData.type -> error.code
+// ...errorData -> error.context
 export type EdgeFailure = {
   /**
    * Branded Type.
@@ -222,7 +227,25 @@ export type UploadFunctionRequest = {
   ownerPublicKey: string;
   entryPoint: string;
   assets: Record<string, Uint8Array>;
+  /**
+   * Runtime in Edge that will be used to run the function.
+   * Runtime cannot be changed once the function was deployed.
+   * @default Runtime.WORKERS_FOR_PLATFORMS
+   */
+  runtime?: Runtime;
 };
+
+/**
+ * Note: Do not change the values of these enums, this values are stored in the FunctionVersions database.
+ */
+export enum Runtime {
+  // https://developers.cloudflare.com/cloudflare-for-platforms/workers-for-platforms/
+  WORKERS_FOR_PLATFORMS = 'WORKERS_FOR_PLATFORMS',
+  // https://developers.cloudflare.com/workers/runtime-apis/bindings/worker-loader/
+  WORKER_LOADER = 'WORKER_LOADER',
+  // Local worker dispatcher for testing.
+  TEST = 'TEST',
+}
 
 export type UploadFunctionResponseBody = {
   functionId: string;

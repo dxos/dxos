@@ -13,7 +13,8 @@ import * as Schema from 'effect/Schema';
 import { AiToolNotFoundError, ToolExecutionService, ToolResolverService } from '@dxos/ai';
 import { todo } from '@dxos/debug';
 import { Query } from '@dxos/echo';
-import { DatabaseService, Function, FunctionDefinition, FunctionInvocationService } from '@dxos/functions';
+import { DatabaseService } from '@dxos/echo-db';
+import { Function, FunctionDefinition, FunctionInvocationService } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 
 /**
@@ -28,7 +29,7 @@ import { invariant } from '@dxos/invariant';
  * Requires `DatabaseService` in the environment.
  */
 export const makeToolResolverFromFunctions = (
-  functions: FunctionDefinition<any, any>[],
+  functions: FunctionDefinition.Any[],
   toolkit: Toolkit.Toolkit<any>,
 ): Layer.Layer<ToolResolverService, never, DatabaseService> => {
   return Layer.effect(
@@ -105,10 +106,10 @@ export const makeToolExecutionServiceFromFunctions = (
 
 class FunctionToolAnnotation extends Context.Tag('@dxos/assistant/FunctionToolAnnotation')<
   FunctionToolAnnotation,
-  { definition: FunctionDefinition<any, any> }
+  { definition: FunctionDefinition.Any }
 >() {}
 
-const toolCache = new WeakMap<FunctionDefinition<any, any>, Tool.Any>();
+const toolCache = new WeakMap<FunctionDefinition.Any, Tool.Any>();
 
 /**
  * Projects a `FunctionDefinition` into an `AiTool`.
@@ -118,12 +119,13 @@ const toolCache = new WeakMap<FunctionDefinition<any, any>, Tool.Any>();
  * @param meta.deployedFunctionId Backend deployment ID used for remote invocation when present.
  *    This is the EDGE service's function deployment identifier (not the ECHO object ID/DXN and not `FunctionDefinition.key`).
  */
-const projectFunctionToTool = (fn: FunctionDefinition<any, any>): Tool.Any => {
+const projectFunctionToTool = (fn: FunctionDefinition.Any): Tool.Any => {
   if (toolCache.has(fn)) {
     return toolCache.get(fn)!;
   }
 
   // TODO(burdon): Use and map function.key?
+  // TODO(dmaretskyi): Use function key instead.
   const tool = Tool.make(makeToolName(fn.name), {
     description: fn.description,
     parameters: createStructFieldsFromSchema(fn.inputSchema),

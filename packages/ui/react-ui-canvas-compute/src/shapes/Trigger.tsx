@@ -86,7 +86,7 @@ export const TriggerComponent = ({ shape }: TriggerComponentProps) => {
 const TriggerKindSelect = ({ value, onValueChange }: Pick<SelectRootProps, 'value' | 'onValueChange'>) => {
   return (
     <Select.Root value={value} onValueChange={onValueChange}>
-      <Select.TriggerButton variant='ghost' classNames='w-full !px-0' />
+      <Select.TriggerButton variant='ghost' classNames='is-full !pli-0' />
       <Select.Portal>
         <Select.Content>
           <Select.ScrollUpButton />

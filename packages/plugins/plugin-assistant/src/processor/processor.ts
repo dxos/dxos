@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Registry, Rx } from '@effect-rx/rx-react';
+import { Atom, Registry } from '@effect-atom/atom-react';
 import * as Cause from 'effect/Cause';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
@@ -77,7 +77,7 @@ export type AiRequest = {
  * Handles streaming responses from the conversation.
  */
 export class AiChatProcessor {
-  private readonly _rx: Registry.Registry;
+  private readonly _registry: Registry.Registry;
 
   /** External observer. */
   private readonly _observer: GenerationObserver;
@@ -89,19 +89,19 @@ export class AiChatProcessor {
   private _lastRequest: AiRequest | undefined;
 
   /** Pending messages (incl. the current user request). */
-  private readonly _pending = Rx.make<Message.Message[]>([]);
+  private readonly _pending = Atom.make<Message.Message[]>([]);
 
   /** Currently streaming message (from the AI service). */
-  private readonly _streaming = Rx.make<Option.Option<Message.Message>>(Option.none());
+  private readonly _streaming = Atom.make<Option.Option<Message.Message>>(Option.none());
 
   /** Streaming state. */
-  public readonly streaming = Rx.make<boolean>((get) => Option.isSome(get(this._streaming)));
+  public readonly streaming = Atom.make<boolean>((get) => Option.isSome(get(this._streaming)));
 
   /** Active state. */
-  public readonly active = Rx.make(false);
+  public readonly active = Atom.make(false);
 
   /** Array of Messages (incl. the current message being streamed). */
-  public readonly messages = Rx.make<Message.Message[]>((get) =>
+  public readonly messages = Atom.make<Message.Message[]>((get) =>
     Option.match(get(this._streaming), {
       onNone: () => get(this._pending),
       onSome: (streaming) => [...get(this._pending), streaming],
@@ -109,7 +109,7 @@ export class AiChatProcessor {
   );
 
   /** Last error. */
-  public readonly error = Rx.make<Option.Option<Error>>(Option.none());
+  public readonly error = Atom.make<Option.Option<Error>>(Option.none());
 
   constructor(
     private readonly _conversation: AiConversation,
@@ -118,7 +118,7 @@ export class AiChatProcessor {
     private readonly _options: AiChatProcessorOptions = defaultOptions,
   ) {
     // Initialize registries and defaults before using in other logic.
-    this._rx = this._options.observableRegistry ?? Registry.make();
+    this._registry = this._options.observableRegistry ?? Registry.make();
     this._observer = GenerationObserver.make({
       onBlock: this._onBlock,
       onMessage: this._onMessage,
@@ -151,8 +151,8 @@ export class AiChatProcessor {
 
     try {
       this._lastRequest = requestParam;
-      this._rx.set(this.error, Option.none());
-      this._rx.set(this.active, true);
+      this._registry.set(this.error, Option.none());
+      this._registry.set(this.active, true);
 
       // Create request.
       const request = this._conversation.createRequest({
@@ -180,15 +180,15 @@ export class AiChatProcessor {
         throwCause(response.cause);
       }
 
-      this._rx.set(this.error, Option.none());
+      this._registry.set(this.error, Option.none());
       this._lastRequest = undefined;
       this._fiber = undefined;
     } catch (error) {
       log.error('request failed', { error });
-      this._rx.set(this.error, Option.some(new Error('AI service error', { cause: error })));
+      this._registry.set(this.error, Option.some(new Error('AI service error', { cause: error })));
     } finally {
       this._fiber = undefined;
-      this._rx.set(this.active, false);
+      this._registry.set(this.active, false);
     }
   }
 
@@ -205,7 +205,7 @@ export class AiChatProcessor {
     );
 
     this._fiber = undefined;
-    this._rx.set(this.active, false);
+    this._registry.set(this.active, false);
   }
 
   /**
@@ -251,14 +251,14 @@ export class AiChatProcessor {
 
   private _onMessage = Effect.fn(
     function* (this: AiChatProcessor, message: Message.Message) {
-      this._rx.set(this._streaming, Option.none());
-      this._rx.update(this._pending, (pending) => [...pending, message]);
+      this._registry.set(this._streaming, Option.none());
+      this._registry.update(this._pending, (pending) => [...pending, message]);
     }.bind(this),
   );
 
   private _onBlock = Effect.fn(
     function* (this: AiChatProcessor, block: ContentBlock.Any) {
-      this._rx.update(this._streaming, (streaming) => {
+      this._registry.update(this._streaming, (streaming) => {
         const blocks = streaming.pipe(
           Option.map((streaming) => streaming.blocks.filter((b: ContentBlock.Any) => !b.pending)),
           Option.getOrElse(() => []),

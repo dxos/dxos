@@ -76,7 +76,7 @@ export const ResponsiveGridItem = <T extends object = any>({
   return (
     <div
       className={mx(
-        'relative w-full h-full group',
+        'relative is-full bs-full group',
         'rounded-md outline outline-2 outline-neutral-900 transition-[outline-color] duration-500',
         speakingIndicator ? 'outline-green-500' : !video && 'outline-separator',
         classNames,
@@ -106,7 +106,10 @@ export const ResponsiveGridItem = <T extends object = any>({
           {/* {self && <Icon icon='ph--asterisk--regular' size={pinned ? 5 : 4} />} */}
           {screenshare && <Icon icon='ph--broadcast--regular' size={pinned ? 5 : 4} />}
           <div
-            className={mx('bg-neutral-800 text-neutral-100 py-0.5 truncate rounded', pinned ? 'px-2' : 'px-1 text-xs')}
+            className={mx(
+              'bg-neutral-800 text-neutral-100 plb-0.5 truncate rounded',
+              pinned ? 'pli-2' : 'pli-1 text-xs',
+            )}
           >
             {name}
           </div>

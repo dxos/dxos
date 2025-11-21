@@ -2,28 +2,37 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type Dispatch, type SetStateAction, useEffect, useState } from 'react';
+import { type Dispatch, type SetStateAction, useCallback, useEffect, useRef, useState } from 'react';
+
+import { useDynamicRef } from './useDynamicRef';
 
 /**
  * A stateful hook with a controlled value.
- * NOTE: Be careful not to provide an inlinde default array.
- * @deprecated Use Radix `useControllableState`.
+ * @deprecated Use Radix `useControllableState` (NOTE: `useControlledState` is not compatible with `useControllableState`)
  */
 export const useControlledState = <T>(
-  controlledValue: T,
+  valueParam: T,
   onChange?: (value: T) => void,
-  ...deps: any[]
 ): [T, Dispatch<SetStateAction<T>>] => {
-  const [value, setValue] = useState<T>(controlledValue);
+  const [value, setControlledValue] = useState(valueParam);
   useEffect(() => {
-    if (controlledValue !== undefined) {
-      setValue(controlledValue);
-    }
-  }, [controlledValue, ...deps]);
+    setControlledValue(valueParam);
+  }, [valueParam]);
 
-  useEffect(() => {
-    onChange?.(value);
-  }, [value, onChange]);
+  const onChangeRef = useRef(onChange);
+  const valueRef = useDynamicRef(valueParam);
+  const setValue = useCallback<Dispatch<SetStateAction<T>>>(
+    (nextValue) => {
+      const value = isFunction(nextValue) ? nextValue(valueRef.current) : nextValue;
+      setControlledValue(value);
+      onChangeRef.current?.(value);
+    },
+    [valueRef, onChangeRef],
+  );
 
   return [value, setValue];
 };
+
+function isFunction(value: unknown): value is (...args: any[]) => any {
+  return typeof value === 'function';
+}

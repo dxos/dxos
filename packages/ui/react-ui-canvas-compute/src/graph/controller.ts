@@ -12,8 +12,8 @@ import { Event, synchronized } from '@dxos/async';
 import {
   type ComputeEdge,
   type ComputeGraphModel,
-  type ComputeMeta,
   type ComputeNode,
+  type ComputeNodeMeta,
   type GptInput,
   type GptOutput,
   type GraphDiagnostic,
@@ -23,7 +23,7 @@ import {
 } from '@dxos/conductor';
 import { Resource } from '@dxos/context';
 import { type ComputeEventLogger, type ComputeEventPayload } from '@dxos/functions';
-import { type ServiceContainer } from '@dxos/functions';
+import { type ServiceContainer } from '@dxos/functions-runtime';
 import { log } from '@dxos/log';
 import { type CanvasGraphModel } from '@dxos/react-ui-canvas-editor';
 import { type ContentBlock } from '@dxos/types';
@@ -212,7 +212,7 @@ export class ComputeGraphController extends Resource {
     });
   }
 
-  async getMeta(node: ComputeNode): Promise<ComputeMeta> {
+  async getMeta(node: ComputeNode): Promise<ComputeNodeMeta> {
     const { meta } = await resolveComputeNode(node);
     return meta;
   }

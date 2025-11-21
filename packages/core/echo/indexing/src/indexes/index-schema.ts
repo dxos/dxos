@@ -60,6 +60,10 @@ export class IndexSchema extends Resource implements Index {
     }
   }
 
+  /**
+   * Find all objects that match the given filter.
+   * Note that the schema index does not discern schema versions.
+   */
   @trace.span({ showInBrowserTimeline: true })
   async find(filter: IndexQuery): Promise<FindResult[]> {
     // TODO(burdon): Handle inversion.

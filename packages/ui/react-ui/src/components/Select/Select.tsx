@@ -8,7 +8,7 @@ import React, { forwardRef } from 'react';
 import { useElevationContext, useThemeContext } from '../../hooks';
 import { useSafeCollisionPadding } from '../../hooks/useSafeCollisionPadding';
 import { type ThemedClassName } from '../../util';
-import { Button, type ButtonProps } from '../Buttons';
+import { Button, type ButtonProps } from '../Button';
 import { Icon } from '../Icon';
 
 type SelectRootProps = SelectPrimitive.SelectProps;
@@ -39,7 +39,7 @@ const SelectTriggerButton = forwardRef<HTMLButtonElement, SelectTriggerButtonPro
       <SelectPrimitive.Trigger asChild ref={forwardedRef}>
         <Button {...props}>
           <SelectPrimitive.Value placeholder={placeholder}>{children}</SelectPrimitive.Value>
-          <span className='w-1 flex-1' />
+          <span className='is-1 flex-1' />
           <SelectPrimitive.Icon asChild>
             <Icon size={3} icon='ph--caret-down--bold' />
           </SelectPrimitive.Icon>
@@ -158,7 +158,7 @@ const SelectOption = forwardRef<HTMLDivElement, SelectItemProps>(({ children, cl
   return (
     <SelectPrimitive.Item {...props} className={tx('select.item', 'option', {}, classNames)} ref={forwardedRef}>
       <SelectPrimitive.ItemText>{children}</SelectPrimitive.ItemText>
-      <span className='grow w-1' />
+      <span className='grow is-1' />
       {/* <SelectPrimitive.ItemIndicator className={tx('select.itemIndicator', 'option__indicator', {})}> */}
       <Icon icon='ph--check--regular' />
       {/* </SelectPrimitive.ItemIndicator> */}

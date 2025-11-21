@@ -1,22 +1,21 @@
 /* Main component classes */
 
 @layer utilities {
-
   .dx-main-content-padding {
     @apply pis-0 scroll-ps-0 pie-0 scroll-pe-0;
 
     @media (min-width: theme('screens.lg')) {
-      &[data-sidebar-inline-start-state="collapsed"] {
+      &[data-sidebar-inline-start-state='collapsed'] {
         @apply pis-[--l0-size] scroll-ps-[--l0-size];
       }
-      &[data-sidebar-inline-start-state="expanded"] {
+      &[data-sidebar-inline-start-state='expanded'] {
         @apply pis-[--nav-sidebar-size] scroll-ps-[--nav-sidebar-size];
       }
 
-      &[data-sidebar-inline-end-state="collapsed"] {
+      &[data-sidebar-inline-end-state='collapsed'] {
         @apply pie-[--r0-size] scroll-pe-[--r0-size];
       }
-      &[data-sidebar-inline-end-state="expanded"] {
+      &[data-sidebar-inline-end-state='expanded'] {
         @apply pie-[--complementary-sidebar-size] scroll-pe-[--complementary-sidebar-size];
       }
     }
@@ -31,35 +30,36 @@
     @apply is-[calc(100dvw)-2*var(--main-spacing)] transition-[inline-size] ease-in-out-symmetric duration-200;
 
     @media (min-width: theme('screens.lg')) {
-
-      &[data-sidebar-inline-start-state="closed"][data-sidebar-inline-end-state="closed"] {
+      &[data-sidebar-inline-start-state='closed'][data-sidebar-inline-end-state='closed'] {
         inline-size: calc(100dvw - 2 * var(--main-spacing));
       }
-      &[data-sidebar-inline-start-state="collapsed"][data-sidebar-inline-end-state="closed"] {
+      &[data-sidebar-inline-start-state='collapsed'][data-sidebar-inline-end-state='closed'] {
         inline-size: calc(100dvw - var(--l0-size) - 2 * var(--main-spacing));
       }
-      &[data-sidebar-inline-start-state="expanded"][data-sidebar-inline-end-state="closed"] {
+      &[data-sidebar-inline-start-state='expanded'][data-sidebar-inline-end-state='closed'] {
         inline-size: calc(100dvw - var(--nav-sidebar-size) - 2 * var(--main-spacing));
       }
 
-      &[data-sidebar-inline-start-state="closed"][data-sidebar-inline-end-state="collapsed"] {
+      &[data-sidebar-inline-start-state='closed'][data-sidebar-inline-end-state='collapsed'] {
         inline-size: calc(100dvw - var(--r0-size) - 2 * var(--main-spacing));
       }
-      &[data-sidebar-inline-start-state="collapsed"][data-sidebar-inline-end-state="collapsed"] {
+      &[data-sidebar-inline-start-state='collapsed'][data-sidebar-inline-end-state='collapsed'] {
         inline-size: calc(100dvw - var(--l0-size) - var(--r0-size) - 2 * var(--main-spacing));
       }
-      &[data-sidebar-inline-start-state="expanded"][data-sidebar-inline-end-state="collapsed"] {
+      &[data-sidebar-inline-start-state='expanded'][data-sidebar-inline-end-state='collapsed'] {
         inline-size: calc(100dvw - var(--nav-sidebar-size) - var(--r0-size) - 2 * var(--main-spacing));
       }
 
-      &[data-sidebar-inline-start-state="closed"][data-sidebar-inline-end-state="expanded"] {
+      &[data-sidebar-inline-start-state='closed'][data-sidebar-inline-end-state='expanded'] {
         inline-size: calc(100dvw - var(--complementary-sidebar-size) - 2 * var(--main-spacing));
       }
-      &[data-sidebar-inline-start-state="collapsed"][data-sidebar-inline-end-state="expanded"] {
+      &[data-sidebar-inline-start-state='collapsed'][data-sidebar-inline-end-state='expanded'] {
         inline-size: calc(100dvw - var(--l0-size) - var(--complementary-sidebar-size) - 2 * var(--main-spacing));
       }
-      &[data-sidebar-inline-start-state="expanded"][data-sidebar-inline-end-state="expanded"] {
-        inline-size: calc(100dvw - var(--nav-sidebar-size) - var(--complementary-sidebar-size) - 2 * var(--main-spacing));
+      &[data-sidebar-inline-start-state='expanded'][data-sidebar-inline-end-state='expanded'] {
+        inline-size: calc(
+          100dvw - var(--nav-sidebar-size) - var(--complementary-sidebar-size) - 2 * var(--main-spacing)
+        );
       }
     }
   }
@@ -67,11 +67,9 @@
   .dx-main-bounce-layout {
     @apply fixed inset-0 z-0 overflow-auto overscroll-auto;
   }
-
 }
 
 @layer dx-components {
-
   .dx-main-sidebar {
     @apply fixed overscroll-contain overflow-x-hidden overflow-y-auto;
     @apply duration-200 ease-in-out-symmetric;
@@ -79,8 +77,8 @@
     @apply sidebar-surface backdrop-blur-md dark:backdrop-blur-lg;
 
     transition-property: inset-inline-start, inset-inline-end, inline-size;
-    inset-block-start: max(.5rem, env(safe-area-inset-top));
-    inset-block-end: max(.5rem, env(safe-area-inset-bottom));
+    inset-block-start: max(0.5rem, env(safe-area-inset-top));
+    inset-block-end: max(0.5rem, env(safe-area-inset-bottom));
     inline-size: calc(100dvw - 3rem);
     z-index: 7;
 
@@ -88,16 +86,16 @@
       @apply block-start-0 block-end-0 rounded-none border-lb-0;
     }
 
-    &[data-resizing="false"] {
+    &[data-resizing='false'] {
       @apply duration-200;
     }
 
-    &[data-side="is"] {
+    &[data-side='is'] {
       @apply -inline-start-[100vw] border-ie-landmarkLine border-subduedSeparator;
       z-index: 8;
 
-      &[data-state="expanded"] {
-        inset-inline-start: max(.5rem, env(safe-area-inset-left));
+      &[data-state='expanded'] {
+        inset-inline-start: max(0.5rem, env(safe-area-inset-left));
         @media (min-width: theme('screens.lg')) {
           @apply inline-start-0;
         }
@@ -110,20 +108,20 @@
       @media (min-width: theme('screens.lg')) {
         @apply border-is-0;
 
-        &[data-state="collapsed"] {
+        &[data-state='collapsed'] {
           @apply is-[--l0-size] inline-start-0;
         }
-        &[data-state="expanded"] {
+        &[data-state='expanded'] {
           @apply is-[--nav-sidebar-size];
         }
       }
     }
 
-    &[data-side="ie"] {
+    &[data-side='ie'] {
       @apply -inline-end-[100vw] border-is-landmarkLine border-separator;
 
-      &[data-state="expanded"] {
-        inset-inline-end: max(.5rem, env(safe-area-inset-right));
+      &[data-state='expanded'] {
+        inset-inline-end: max(0.5rem, env(safe-area-inset-right));
         @media (min-width: theme('screens.lg')) {
           @apply inline-end-0;
         }
@@ -135,10 +133,10 @@
 
       @media (min-width: theme('screens.lg')) {
         @apply border-ie-0;
-        &[data-state="collapsed"] {
+        &[data-state='collapsed'] {
           @apply is-[--r0-size] inline-end-0;
         }
-        &[data-state="expanded"] {
+        &[data-state='expanded'] {
           @apply is-[--complementary-sidebar-size];
         }
       }
@@ -151,7 +149,7 @@
     @apply opacity-0 hidden;
     z-index: 6;
 
-    &[data-state="open"] {
+    &[data-state='open'] {
       @apply opacity-100 block;
 
       @media (min-width: theme('screens.lg')) {

@@ -6,7 +6,7 @@ import { EditorSelection, EditorState } from '@codemirror/state';
 import { EditorView } from '@codemirror/view';
 import { describe, test } from 'vitest';
 
-import { str } from '../../testing';
+import { str } from '../../util';
 import { createMarkdownExtensions } from '../markdown';
 
 import { indentItemLess, indentItemMore, moveItemDown, moveItemUp } from './commands';

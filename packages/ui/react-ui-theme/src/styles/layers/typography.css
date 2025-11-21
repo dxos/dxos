@@ -1,6 +1,11 @@
+/**
+ * Typography configuration.
+ */
+
 @import '@fontsource-variable/jetbrains-mono/wght-italic.css';
 @import '@fontsource-variable/jetbrains-mono/wght.css';
 @import '@fontsource-variable/inter/slnt.css';
+@import '@fontsource/poiret-one';
 
 @layer utilities {
   /* Font weights & `italic` handling */

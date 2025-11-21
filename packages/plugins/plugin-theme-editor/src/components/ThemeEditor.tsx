@@ -2,15 +2,15 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Rx } from '@effect-rx/rx-react';
+import { Atom } from '@effect-atom/atom-react';
 import React, { useMemo, useState } from 'react';
 
 import {
   MenuProvider,
   ToolbarMenu,
+  atomFromSignal,
   createGapSeparator,
   createMenuAction,
-  rxFromSignal,
   useMenuActions,
 } from '@dxos/react-ui-menu';
 import { StackItem } from '@dxos/react-ui-stack';
@@ -22,9 +22,9 @@ import { reset, saveAndRender } from '../util';
 import { JsonEditor } from './JsonEditor';
 
 const toolbarCreator = (handleFormat: () => void) =>
-  Rx.make((get) =>
+  Atom.make((get) =>
     get(
-      rxFromSignal(() => {
+      atomFromSignal(() => {
         const renderAction = createMenuAction('render', () => saveAndRender(), {
           label: ['render label', { ns: meta.id }],
           icon: 'ph--play--regular',

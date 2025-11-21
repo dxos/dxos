@@ -150,24 +150,24 @@ export const FormCellEditor = ({
     setLocalEditing(nextOpen);
   }, []);
 
-  const createSchema = useMemo(() => {
+  const refSchema = useMemo(() => {
     if (fieldProjection.props.format === FormatEnum.Ref && fieldProjection.props.referenceSchema) {
       const { schema: refSchema } = getSchema({
         typename: fieldProjection.props.referenceSchema,
       });
-      if (!refSchema) {
-        return null;
-      }
-      const omit = Schema.omit<any, any, ['id']>('id');
-      return omit(refSchema);
+      return refSchema;
     }
     return null;
   }, [fieldProjection.props.format, fieldProjection.props.referenceSchema, getSchema]);
 
+  const createSchema = useMemo(() => {
+    return refSchema ? Schema.omit<any, any, ['id']>('id')(refSchema) : null;
+  }, [refSchema]);
+
   const handleCreate = useCallback(
     (values: any) => {
-      if (schema && onCreate) {
-        const objectWithId = onCreate(schema, values);
+      if (refSchema && onCreate) {
+        const objectWithId = onCreate(refSchema, values);
         if (objectWithId) {
           const ref = Ref.make(objectWithId);
           const path = fieldProjection.field.path;
@@ -179,7 +179,7 @@ export const FormCellEditor = ({
       setLocalEditing(false);
       onSave?.();
     },
-    [fieldProjection.field.path, onSave, contextEditing, originalRow, createSchema, onCreate],
+    [fieldProjection.field.path, onSave, contextEditing, originalRow, refSchema, onCreate],
   );
 
   if (!editing) {

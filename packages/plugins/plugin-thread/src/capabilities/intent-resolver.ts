@@ -12,10 +12,10 @@ import { ATTENDABLE_PATH_SEPARATOR, DeckAction } from '@dxos/plugin-deck/types';
 import { ObservabilityAction } from '@dxos/plugin-observability/types';
 import { CollectionAction, SpaceAction } from '@dxos/plugin-space/types';
 import { Ref, getSpace } from '@dxos/react-client/echo';
-import { AnchoredTo, Message } from '@dxos/types';
+import { AnchoredTo, Message, Thread } from '@dxos/types';
 
 import { meta } from '../meta';
-import { Channel, Thread, ThreadAction } from '../types';
+import { Channel, ThreadAction } from '../types';
 
 import { ThreadCapabilities } from './capabilities';
 
@@ -61,9 +61,6 @@ export default (context: PluginContext) =>
     createResolver({
       intent: ThreadAction.Create,
       resolve: ({ name, anchor: _anchor, subject }) => {
-        const space = getSpace(subject);
-        invariant(space, 'Space not found');
-
         const { state } = context.getCapability(ThreadCapabilities.MutableState);
         const subjectId = Obj.getDXN(subject).toString();
         const thread = Thread.make({ name });

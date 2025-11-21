@@ -191,7 +191,7 @@ const StoryThread: FC<{
           variant='ghost'
           icon='ph--check--regular'
           iconOnly
-          classNames='px-1'
+          classNames='pli-1'
           label='Resolve'
           onClick={onResolve}
         />

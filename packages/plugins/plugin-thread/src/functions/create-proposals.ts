@@ -13,9 +13,7 @@ import { createDocAccessor } from '@dxos/echo-db';
 import { DatabaseService, defineFunction } from '@dxos/functions';
 import { DXN } from '@dxos/keys';
 import { Markdown } from '@dxos/plugin-markdown/types';
-import { AnchoredTo, Message } from '@dxos/types';
-
-import { Thread } from '../types';
+import { AnchoredTo, Message, Thread } from '@dxos/types';
 
 export default defineFunction({
   key: 'dxos.org/function/thread/create-proposals',

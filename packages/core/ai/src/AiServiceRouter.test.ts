@@ -13,7 +13,7 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
 import * as AiService from './AiService';
-import { AiModelResolver, LMSTUDIO_ENDPOINT } from './AiServiceRouter';
+import { AiModelResolver, DEFAULT_LMSTUDIO_ENDPOINT } from './AiServiceRouter';
 import { AiModelNotAvailableError } from './errors';
 
 const TestRouter = AiModelResolver.buildAiService.pipe(
@@ -38,7 +38,7 @@ const TestRouter = AiModelResolver.buildAiService.pipe(
         const gemma = yield* OpenAiLanguageModel.model('google/gemma-3-27b').pipe(
           Effect.provide(
             OpenAiClient.layer({
-              apiUrl: LMSTUDIO_ENDPOINT,
+              apiUrl: DEFAULT_LMSTUDIO_ENDPOINT,
             }),
           ),
         );

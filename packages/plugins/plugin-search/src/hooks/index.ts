@@ -3,5 +3,7 @@
 //
 
 export * from './sync';
+
 export * from './useGlobalSearch';
 export * from './useSearchResults';
+export * from './useWebSearch';

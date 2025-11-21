@@ -4,7 +4,6 @@
 
 import { format, formatDistance, isThisWeek, isToday } from 'date-fns';
 
-import { type Obj } from '@dxos/echo';
 import { type Message } from '@dxos/types';
 import { toHue } from '@dxos/util';
 
@@ -20,9 +19,9 @@ export const hashString = (str?: string): number => {
 
 // TODO(burdon): Factor out sort pattern with getters.
 export const sortByCreated =
-  (descending = false) =>
-  ({ created: a }: Obj.Obj<Message.Message>, { created: b }: Obj.Obj<Message.Message>) =>
-    descending ? b.localeCompare(a) : a.localeCompare(b);
+  <T, K extends Extract<keyof T, string>>(prop: K, descending = false) =>
+  (a: T & Record<K, string>, b: T & Record<K, string>) =>
+    descending ? b[prop].localeCompare(a[prop]) : a[prop].localeCompare(b[prop]);
 
 export const formatDateTime = (date: Date, now: Date, compact = false) =>
   isToday(date)
@@ -55,7 +54,25 @@ export const getMessageProps = (message: Message.Message, now: Date = new Date()
   const email = message.sender?.email;
   const subject = message.properties?.subject;
   const snippet = message.properties?.snippet ?? textBlocks[0]?.text;
-
   const hue = toHue(hashString(from));
   return { id, text, date, from, email, subject, snippet, hue };
+};
+
+/**
+ * Markdown representation of a message.
+ */
+export const renderMarkdown = (message: Message.Message): string[] => {
+  const sender =
+    message.sender.contact?.target?.fullName ??
+    message.sender.name ??
+    message.sender.email ??
+    message.sender.identityDid;
+  const blocks = message.blocks.filter((block) => block._tag === 'text');
+  return [
+    // prettier-ignore
+    `###### ${sender}`,
+    `*${message.created}*`,
+    blocks.map((block) => block.text.trim()).join(' '),
+    '',
+  ];
 };

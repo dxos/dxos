@@ -5,7 +5,7 @@
 import React, { useEffect, useRef } from 'react';
 
 import { clientServiceBundle } from '@dxos/client-protocol';
-import { type BundleResult } from '@dxos/functions/bundler';
+import { type BundleResult } from '@dxos/functions-runtime/bundler';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { useClient } from '@dxos/react-client';
@@ -60,7 +60,7 @@ export const FrameContainer = ({ containerUrl, result, debug = true }: FrameCont
           <div
             className={mx(
               baseSurface,
-              'flex absolute right-2 bottom-2 w-[30rem] h-[200px] ring rounded',
+              'flex absolute right-2 bottom-2 is-[30rem] bs-[200px] ring rounded',
               'z-20 overflow-x-hidden overflow-y-auto',
             )}
           >

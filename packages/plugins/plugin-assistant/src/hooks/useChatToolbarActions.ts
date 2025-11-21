@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Rx } from '@effect-rx/rx-react';
+import { Atom } from '@effect-atom/atom-react';
 import * as Effect from 'effect/Effect';
 import { useMemo } from 'react';
 
@@ -10,7 +10,6 @@ import { createIntent } from '@dxos/app-framework';
 import { useIntentDispatcher } from '@dxos/app-framework/react';
 import { Filter, Obj, Query } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
-import { SpaceAction } from '@dxos/plugin-space/types';
 import { useQuery } from '@dxos/react-client/echo';
 import { MenuBuilder, useMenuActions } from '@dxos/react-ui-menu';
 
@@ -30,13 +29,13 @@ export const useChatToolbarActions = ({ chat, companionTo }: ChatToolbarActionsP
     ? Query.select(Filter.ids(companionTo.id)).targetOf(Assistant.CompanionTo).source()
     : Query.select(Filter.nothing());
 
-  // TODO(wittjosiah): Query in react vs query in rx?
+  // TODO(wittjosiah): Query in react vs query in atom?
   const chats = useQuery(space, query);
 
   // Create stable reference for dependency array to avoid circular reference issues.
   return useMenuActions(
     useMemo(() => {
-      return Rx.make(() => {
+      return Atom.make(() => {
         const builder = MenuBuilder.make()
           .root({
             label: ['chat toolbar title', { ns: meta.id }],
@@ -49,35 +48,12 @@ export const useChatToolbarActions = ({ chat, companionTo }: ChatToolbarActionsP
               type: 'new',
             },
             () =>
-              Effect.gen(function* () {
-                // TODO(burdon): Defer creation until first message.
-                invariant(space);
-                const { object } = yield* dispatch(createIntent(AssistantAction.CreateChat, { space }));
-                yield* dispatch(
-                  createIntent(SpaceAction.AddObject, {
-                    object,
-                    target: space,
-                    hidden: true,
-                  }),
-                );
-                if (companionTo) {
-                  yield* dispatch(
-                    createIntent(SpaceAction.AddRelation, {
-                      space,
-                      schema: Assistant.CompanionTo,
-                      source: object,
-                      target: companionTo,
-                    }),
-                  );
-
-                  yield* dispatch(
-                    createIntent(AssistantAction.SetCurrentChat, {
-                      companionTo,
-                      chat: object,
-                    }),
-                  );
-                }
-              }).pipe(Effect.runPromise),
+              dispatch(
+                createIntent(AssistantAction.SetCurrentChat, {
+                  companionTo,
+                  chat: undefined,
+                }),
+              ).pipe(Effect.runPromise),
           )
           .action(
             'rename',

@@ -10,17 +10,21 @@ import { IconButton, type ThemedClassName, useTranslation } from '@dxos/react-ui
 import { mx } from '@dxos/react-ui-theme';
 
 import { meta } from '../../meta';
-import { Journal, getDateString, parseDateString } from '../../types';
-import { Outliner, type OutlinerController, type OutlinerProps } from '../Outliner';
+import { Journal as JournalType, getDateString, parseDateString } from '../../types';
+import { Outline, type OutlineController, type OutlineProps } from '../Outline';
 
-// TODO(burdon): Only show one selected line entry.
+const RECENT = 7 * 24 * 60 * 60 * 1_000;
 
-type JournalProps = ThemedClassName<{
-  journal: Journal.Journal;
-}>;
+// TODO(burdon): Convert to Radix format.
+
+export type JournalProps = ThemedClassName<
+  {
+    journal: JournalType.Journal;
+  } & Pick<JournalEntryProps, 'onSelect'>
+>;
 
 // TODO(burdon): Virtualize.
-export const JournalComponent = ({ journal, classNames, ...props }: JournalProps) => {
+export const Journal = ({ classNames, journal, ...props }: JournalProps) => {
   const { t } = useTranslation(meta.id);
   const date = new Date();
 
@@ -31,7 +35,7 @@ export const JournalComponent = ({ journal, classNames, ...props }: JournalProps
     }
 
     // TODO(burdon): CRDT issue (merge entries with same date?)
-    const entries = Journal.getEntries(journal, date);
+    const entries = JournalType.getEntries(journal);
     setShowAddEntry(entries.length === 0);
   }, [journal, journal?.entries.length, date]);
 
@@ -40,46 +44,44 @@ export const JournalComponent = ({ journal, classNames, ...props }: JournalProps
       return;
     }
 
-    const entry = Journal.makeEntry();
-    journal.entries.push(Ref.make(entry));
+    const entry = JournalType.makeEntry();
+    journal.entries[getDateString(date)] = Ref.make(entry);
     setShowAddEntry(false);
   }, [journal, date]);
 
   return (
-    <div className={mx('flex flex-col w-full overflow-y-auto', classNames)}>
+    <div className={mx('flex flex-col is-full overflow-y-auto', classNames)}>
       {showAddEntry && (
         <div className='p-2'>
           <IconButton label={t('create entry label')} icon='ph--plus--regular' onClick={handleCreateEntry} />
         </div>
       )}
-      {Ref.Array.targets(journal?.entries ?? [])
-        .sort(({ date: a }, { date: b }) => (a < b ? 1 : a > b ? -1 : 0))
-        .map((entry, i) => (
-          <JournalEntry key={entry.id} entry={entry} classNames='p-2' {...props} autoFocus={i === 0} />
-        ))}
+      {JournalType.getEntries(journal).map((entry, i) => (
+        <JournalEntry key={entry.id} entry={entry} classNames='p-2' {...props} autoFocus={i === 0} />
+      ))}
     </div>
   );
 };
 
-const RECENT = 7 * 24 * 60 * 60 * 1_000;
-
 type JournalEntryProps = ThemedClassName<
   {
-    entry: Journal.JournalEntry;
-  } & Pick<OutlinerProps, 'autoFocus'>
+    entry: JournalType.JournalEntry;
+    onSelect?: (event: { date: Date }) => void;
+  } & Pick<OutlineProps, 'autoFocus'>
 >;
 
-const JournalEntry = ({ entry, classNames, ...props }: JournalEntryProps) => {
+const JournalEntry = ({ classNames, entry, onSelect, ...props }: JournalEntryProps) => {
   const { t } = useTranslation(meta.id);
   const date = parseDateString(entry.date);
   const isToday = getDateString() === entry.date;
   const isRecent = useMemo(() => Date.now() - new Date(entry.date).getTime() < RECENT, [entry.date]);
-  const outlinerRef = useRef<OutlinerController>(null);
+  const outlinerRef = useRef<OutlineController>(null);
   const [focused, setFocused] = useState(false);
 
   const handleFocus = useCallback(() => {
     outlinerRef.current?.focus();
-  }, []);
+    onSelect?.({ date });
+  }, [date, onSelect]);
 
   if (!entry.content.target) {
     return null;
@@ -102,7 +104,7 @@ const JournalEntry = ({ entry, classNames, ...props }: JournalEntryProps) => {
         {isRecent && <div className='text-sm text-subdued'>{format(date, 'EEEE')}</div>}
         {isToday && <div className='text-xs'>{t('today label')}</div>}
       </div>
-      <Outliner
+      <Outline
         ref={outlinerRef}
         id={entry.id}
         text={entry.content.target}

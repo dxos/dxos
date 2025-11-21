@@ -139,7 +139,7 @@ const History = ({ classNames, model, min, max, onSelect }: HistoryProps) => {
   return (
     <div
       ref={scrollerRef}
-      className={mx('overflow-y-scroll', classNames)}
+      className={mx('overflow-y-auto', classNames)}
       style={{
         minHeight: min === undefined ? 'auto' : `${min * 24}px`,
         maxHeight: max === undefined ? 'auto' : `${max * 24}px`,
@@ -186,7 +186,7 @@ type PlayerIndicatorProps = PropsWithChildren<{
 const PlayerIndicator = ({ children, model, player, icon }: PlayerIndicatorProps) => {
   const turn = player === (model.game.turn() === 'w' ? 'white' : 'black');
   return (
-    <div className='grid grid-cols-[2rem_1fr_2rem] gap-2 bs-[--rail-size] pis-1 pie-1 flex items-center overflow-hidden'>
+    <div className='grid grid-cols-[2rem_1fr_2rem] gap-2 bs-[--rail-size] pli-1 flex items-center overflow-hidden'>
       <div className='place-items-center'>
         <Icon
           icon={turn ? 'ph--circle--fill' : 'ph--circle--thin'}

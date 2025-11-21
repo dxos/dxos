@@ -1,15 +1,18 @@
 # Composer CRX
 
+NOTE: The extension uses `@crxjs/vite-plugin` and the manifest is generated from the vite config (`vite.config.ts`).
+
 ## Development
 
 ```sh
 moon run composer-crx:serve
 ```
 
-Open: 
-- http://localhost:5173/popup.html
+Then click "load unpacked" (`packages/apps/composer-crx/dist`) or "Update" from `chrome://extensions` (popup and content script will hot reload).
 
-Bundle then load the unpacked extension from Chrome:
+See "Inspect views" for background worker logs.
+
+## Bundling
 
 ```sh
 moon run composer-crx:bundle

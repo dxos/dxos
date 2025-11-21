@@ -2,14 +2,14 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Rx } from '@effect-rx/rx-react';
+import { Atom } from '@effect-atom/atom-react';
 import * as Function from 'effect/Function';
 import * as Option from 'effect/Option';
 
 import { Capabilities, type PluginContext, contributes } from '@dxos/app-framework';
 import { Obj } from '@dxos/echo';
 import { ATTENDABLE_PATH_SEPARATOR, DECK_COMPANION_TYPE, PLANK_COMPANION_TYPE } from '@dxos/plugin-deck/types';
-import { ROOT_ID, createExtension, rxFromSignal } from '@dxos/plugin-graph';
+import { ROOT_ID, atomFromSignal, createExtension } from '@dxos/plugin-graph';
 import { getActiveSpace, meta as spaceMeta } from '@dxos/plugin-space';
 
 import { meta } from '../meta';
@@ -23,14 +23,14 @@ export default (context: PluginContext) =>
     createExtension({
       id: `${meta.id}/devtools`,
       connector: (node) =>
-        Rx.make((get) =>
+        Atom.make((get) =>
           Function.pipe(
             get(node),
             Option.flatMap((node) =>
               node.id === ROOT_ID || node.type === `${spaceMeta.id}/settings` ? Option.some(node) : Option.none(),
             ),
             Option.map((node) => {
-              const space = get(rxFromSignal(() => getActiveSpace(context)));
+              const space = get(atomFromSignal(() => getActiveSpace(context)));
               const [graph] = get(context.capabilities(Capabilities.AppGraph));
 
               return [
@@ -381,7 +381,7 @@ export default (context: PluginContext) =>
     createExtension({
       id: `${meta.id}/debug-object`,
       connector: (node) =>
-        Rx.make((get) =>
+        Atom.make((get) =>
           Function.pipe(
             get(node),
             Option.flatMap((node) => (Obj.isObject(node.data) ? Option.some(node) : Option.none())),
@@ -407,7 +407,7 @@ export default (context: PluginContext) =>
     createExtension({
       id: `${meta.id}/devtools-overview`,
       connector: (node) =>
-        Rx.make((get) =>
+        Atom.make((get) =>
           Function.pipe(
             get(node),
             Option.flatMap((node) => (node.id === ROOT_ID ? Option.some(node) : Option.none())),

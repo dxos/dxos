@@ -86,7 +86,7 @@ const DefaultStory = ({ keywords }: StoryProps) => {
   }, [running, recognition]);
 
   return (
-    <div className={mx('flex flex-col gap-2 w-[30rem]')}>
+    <div className={mx('flex flex-col gap-2 is-[30rem]')}>
       <Toolbar.Root>
         <Toolbar.IconButton
           iconOnly
@@ -101,7 +101,7 @@ const DefaultStory = ({ keywords }: StoryProps) => {
           <span
             key={index}
             className={mx(
-              'px-3 py-1 m-2 rounded border',
+              'pli-3 plb-1 m-2 rounded border',
               word.matched ? 'bg-red-200 text-red-800 border-red-300' : 'bg-gray-200 text-gray-600 border-gray-300',
             )}
           >

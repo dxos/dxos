@@ -80,10 +80,17 @@ type EdgeHttpRequestArgs = {
    * @deprecated Use only for debugging.
    */
   rawResponse?: boolean;
+
+  /**
+   * Force authentication.
+   * This should be used for requests with large bodies to avoid sending the body twice.
+   * The client will call /auth endpoint to generate the auth header.
+   */
+  auth?: boolean;
 };
 
-export type EdgeHttpGetArgs = Pick<EdgeHttpRequestArgs, 'context' | 'retry'>;
-export type EdgeHttpPostArgs = Pick<EdgeHttpRequestArgs, 'context' | 'retry' | 'body'>;
+export type EdgeHttpGetArgs = Pick<EdgeHttpRequestArgs, 'context' | 'retry' | 'auth'>;
+export type EdgeHttpPostArgs = Pick<EdgeHttpRequestArgs, 'context' | 'retry' | 'body' | 'auth'>;
 
 export class EdgeHttpClient {
   private readonly _baseUrl: string;
@@ -267,6 +274,7 @@ export class EdgeHttpClient {
     formData.append('version', body.version);
     formData.append('ownerPublicKey', body.ownerPublicKey);
     formData.append('entryPoint', body.entryPoint);
+    body.runtime && formData.append('runtime', body.runtime);
     for (const [filename, content] of Object.entries(body.assets)) {
       formData.append(
         'assets',
@@ -374,7 +382,7 @@ export class EdgeHttpClient {
   // Internal
   //
 
-  private async _fetch<T>(url: URL, args: EdgeHttpRequestArgs): Promise<T> {
+  private async _fetch<T>(url: URL, _args: EdgeHttpRequestArgs): Promise<T> {
     return Function.pipe(
       HttpClient.get(url),
       withLogging,
@@ -393,10 +401,19 @@ export class EdgeHttpClient {
     log('fetch', { url, request: args.body });
 
     let handledAuth = false;
+    const tryCount = 1;
     while (true) {
       let processingError: EdgeCallFailedError | undefined = undefined;
       try {
+        if (!this._authHeader && args.auth) {
+          const response = await fetch(new URL(`/auth`, this.baseUrl));
+          if (response.status === 401) {
+            this._authHeader = await this._handleUnauthorized(response);
+          }
+        }
+
         const request = createRequest(args, this._authHeader);
+        log('call edge', { url, tryCount, authHeader: !!this._authHeader });
         const response = await fetch(url, request);
 
         if (response.ok) {
@@ -435,7 +452,7 @@ export class EdgeHttpClient {
       }
 
       if (processingError?.isRetryable && (await shouldRetry(requestContext, processingError.retryAfterMs))) {
-        log('retrying edge request', { url, processingError });
+        log.verbose('retrying edge request', { url, processingError });
       } else {
         throw processingError!;
       }

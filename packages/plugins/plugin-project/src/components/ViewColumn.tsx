@@ -6,14 +6,14 @@ import type * as Schema from 'effect/Schema';
 import React, { useMemo, useState } from 'react';
 
 import { Obj, Query, Type } from '@dxos/echo';
+import { getQueryTarget, resolveSchemaWithClientAndSpace } from '@dxos/plugin-space';
 import { useClient } from '@dxos/react-client';
-import { Filter, getSpace, useQuery } from '@dxos/react-client/echo';
+import { Filter, getSpace, isSpace, useQuery } from '@dxos/react-client/echo';
 import { useAsyncEffect, useTranslation } from '@dxos/react-ui';
 import { Card, CardStack, StackItem, cardStackDefaultInlineSizeRem, cardStackHeading } from '@dxos/react-ui-stack';
 import { ProjectionModel } from '@dxos/schema';
 import { type View } from '@dxos/schema';
 
-import { getQueryTarget, resolveSchemaWithClientAndSpace } from '../helpers';
 import { meta } from '../meta';
 
 import { useProject } from './Project';
@@ -26,9 +26,9 @@ export type ViewColumnProps = {
 // TODO(wittjosiah): Support column DnD reordering.
 // TODO(wittjosiah): Support item DnD reordering (ordering needs to be stored on the view presentation collection).
 export const ViewColumn = ({ view }: ViewColumnProps) => {
+  const { t } = useTranslation(meta.id);
   const client = useClient();
   const space = getSpace(view);
-  const { t } = useTranslation(meta.id);
   const { Item } = useProject('ViewColumn');
   const [schema, setSchema] = useState<Schema.Schema.AnyNoContext>();
   const query = useMemo(() => {
@@ -52,6 +52,10 @@ export const ViewColumn = ({ view }: ViewColumnProps) => {
 
   const queryTarget = getQueryTarget(query.ast, space);
   const items = useQuery(queryTarget, query);
+  const sortedItems = useMemo(() => {
+    // TODO(burdon): Hack to reverse queue.
+    return isSpace(queryTarget) ? items : [...items.reverse()];
+  }, [queryTarget, items]);
   const projectionModel = useMemo(
     () => (schema ? new ProjectionModel(Type.toJsonSchema(schema), view.projection) : undefined),
     [schema, view.projection],
@@ -68,8 +72,8 @@ export const ViewColumn = ({ view }: ViewColumnProps) => {
           <StackItem.Heading classNames={[cardStackHeading, 'min-is-0 pli-cardSpacingChrome']} separateOnScroll>
             <h3 className='grow truncate'>{view.name ?? t('untitled view title')}</h3>
           </StackItem.Heading>
-          <CardStack.Stack id={view.id} itemsCount={items.length}>
-            {items.map((liveMarker) => {
+          <CardStack.Stack id={view.id} itemsCount={sortedItems.length}>
+            {sortedItems.map((liveMarker) => {
               const item = liveMarker as unknown as Obj.Any;
               return (
                 <CardStack.Item asChild key={item.id}>

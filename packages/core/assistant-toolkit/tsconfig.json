@@ -72,6 +72,9 @@
       "path": "../functions"
     },
     {
+      "path": "../functions-runtime"
+    },
+    {
       "path": "../mesh/edge-client"
     }
   ]

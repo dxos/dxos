@@ -4,14 +4,15 @@
 
 import * as Effect from 'effect/Effect';
 import type * as Layer from 'effect/Layer';
-// import { Ollama } from 'ollama';
 import * as SchemaAST from 'effect/SchemaAST';
 import React, { forwardRef, useEffect, useMemo, useRef, useState } from 'react';
 
 import { type ComputeGraph, ValueBag, type WorkflowLoader } from '@dxos/conductor';
 import { EdgeHttpClient } from '@dxos/edge-client';
-import { RemoteFunctionExecutionService, createEventLogger } from '@dxos/functions';
-import { DatabaseService, QueueService, ServiceContainer, type Services } from '@dxos/functions';
+import { createEventLogger } from '@dxos/functions';
+import { DatabaseService, QueueService } from '@dxos/functions';
+import { type RuntimeServices, ServiceContainer } from '@dxos/functions-runtime';
+import { RemoteFunctionExecutionService } from '@dxos/functions-runtime';
 import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
 import { LogLevel, log } from '@dxos/log';
@@ -152,7 +153,7 @@ export const WorkflowDebugPanel = (props: WorkflowDebugPanelProps) => {
   };
 
   return (
-    <div className={mx('flex flex-col w-full h-full overflow-hidden', props.classNames)}>
+    <div className={mx('flex flex-col is-full bs-full overflow-hidden', props.classNames)}>
       <MessageThread ref={scrollerRef} history={history} />
 
       <Toolbar.Root>
@@ -196,7 +197,7 @@ const MessageThread = forwardRef<HTMLDivElement, MessageThreadProps>(
     }
 
     return (
-      <div ref={forwardedRef} className='flex flex-col gap-6 h-full p-2 overflow-x-hidden overflow-y-auto'>
+      <div ref={forwardedRef} className='flex flex-col gap-6 bs-full p-2 overflow-x-hidden overflow-y-auto'>
         {history.map((message, i) => (
           <div key={i} className='grid grid-cols-[2rem_1fr_2rem]'>
             <div className='p-1'>{message.type === 'response' && <RobotAvatar />}</div>
@@ -212,7 +213,7 @@ const MessageThread = forwardRef<HTMLDivElement, MessageThreadProps>(
 
 const MessageItem = ({ classNames, message }: ThemedClassName<{ message: Message }>) => {
   const { type, text, data, error } = message;
-  const wrapper = 'p-1 px-2 rounded-md bg-hoverSurface overflow-auto';
+  const wrapper = 'p-1 pli-2 rounded-md bg-hoverSurface overflow-auto';
   return (
     <div className={mx('flex', type === 'request' ? 'ml-[1rem] justify-end' : 'mr-[1rem]', classNames)}>
       {error && <div className={mx(wrapper, 'whitespace-pre', errorText)}>{String(error)}</div>}
@@ -238,7 +239,7 @@ const RobotAvatar = () => (
   </Avatar.Root>
 );
 
-const createLocalExecutionContext = (space: Space): Layer.Layer<Services> => {
+const createLocalExecutionContext = (space: Space): Layer.Layer<RuntimeServices> => {
   return new ServiceContainer()
     .setServices({
       eventLogger: createEventLogger(LogLevel.INFO),

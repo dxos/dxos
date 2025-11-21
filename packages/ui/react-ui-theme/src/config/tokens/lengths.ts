@@ -5,6 +5,8 @@
 
 import { type Facet, type LinearPhysicalLayer } from '@ch-ui/tokens';
 
+import { cardDefInlineSize, cardMaxInlineSize, cardMinInlineSize } from './sizes';
+
 export const lengthsFacet = {
   physical: {
     namespace: 'dx-',
@@ -86,10 +88,9 @@ export const maxSizesFacet = {
     sememes: {
       prose: { root: ['size', 50] },
       containerMaxWidth: { root: ['size', 50] },
-      cardMinWidth: { root: ['size', 18] },
-      cardMaxWidth: { root: ['size', 22] },
-      // This should align with cardDefaultInlineSize
-      popoverMaxWidth: { root: ['size', 18] },
+      popoverMaxWidth: { root: ['size', cardDefInlineSize] },
+      cardMinWidth: { root: ['size', cardMinInlineSize] },
+      cardMaxWidth: { root: ['size', cardMaxInlineSize] },
     },
   },
 } satisfies Facet;

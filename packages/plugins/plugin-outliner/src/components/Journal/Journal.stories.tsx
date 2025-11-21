@@ -13,9 +13,9 @@ import { Text as TextType } from '@dxos/schema';
 import { render } from '@dxos/storybook-utils';
 
 import { translations } from '../../translations';
-import { Journal, Outline } from '../../types';
+import { Journal, Outline, getDateString } from '../../types';
 
-import { JournalComponent } from './Journal';
+import { Journal as JournalComponent } from './Journal';
 
 const meta = {
   title: 'plugins/plugin-outliner/Journal',
@@ -54,15 +54,13 @@ export const Default: Story = {
   },
 };
 
+const dates = [new Date(Date.now() - 5 * 24 * 60 * 60 * 1_000), new Date(2025, 0, 1)];
+
 export const Jounals: Story = {
   args: {
     journal: Obj.make(Journal.Journal, {
       name: 'Journal 1',
-      entries: [
-        Ref.make(Journal.makeEntry()),
-        Ref.make(Journal.makeEntry(new Date(Date.now() - 5 * 24 * 60 * 60 * 1_000))),
-        Ref.make(Journal.makeEntry(new Date(2025, 0, 1))),
-      ],
+      entries: dates.reduce((acc, date) => ({ ...acc, [getDateString(date)]: Ref.make(Journal.makeEntry(date)) }), {}),
     }),
   },
 };
@@ -90,7 +88,7 @@ const FocusContainer = ({ id }: { id: string }) => {
 export const Test: StoryObj = {
   render: () => {
     return (
-      <div className='flex flex-col w-full justify-center items-center gap-2 m-4'>
+      <div className='flex flex-col is-full justify-center items-center gap-2 m-4'>
         <FocusContainer id='test-1' />
         <FocusContainer id='test-2' />
       </div>

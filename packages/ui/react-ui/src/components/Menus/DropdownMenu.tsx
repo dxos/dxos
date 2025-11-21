@@ -43,7 +43,7 @@ const DROPDOWN_MENU_NAME = 'DropdownMenu';
 
 type ScopedProps<P> = P & { __scopeDropdownMenu?: Scope };
 const [createDropdownMenuContext, createDropdownMenuScope] = createContextScope(DROPDOWN_MENU_NAME, [createMenuScope]);
-const useMenuScope = createMenuScope();
+const useMenuScope: (scope?: Scope) => any = createMenuScope();
 
 type DropdownMenuContextValue = {
   triggerId: string;
@@ -638,7 +638,9 @@ export const DropdownMenu = {
   SubContent: DropdownMenuSubContent,
 };
 
-const useDropdownMenuMenuScope = useMenuScope;
+type DropdownMenuScope = Scope;
+
+const useDropdownMenuMenuScope: (scope?: DropdownMenuScope) => any = useMenuScope;
 
 export { createDropdownMenuScope, useDropdownMenuContext, useDropdownMenuMenuScope };
 

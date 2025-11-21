@@ -33,13 +33,13 @@ const DefaultStory = ({ items = [], ...props }: ListRootProps<TestItemType>) => 
     <List.Root<TestItemType> dragPreview items={items} getId={(item) => item.id} onMove={handleMove} {...props}>
       {({ items }) => (
         <>
-          <div className='flex flex-col w-full'>
+          <div className='flex flex-col is-full'>
             <div role='none' className={grid}>
               <div />
               <div className='flex items-center text-sm'>Items</div>
             </div>
 
-            <div role='list' className='w-full h-full overflow-auto'>
+            <div role='list' className='is-full bs-full overflow-auto'>
               {items?.map((item) => (
                 <List.Item<TestItemType> key={item.id} item={item} classNames={mx(grid, ghostHover)}>
                   <List.ItemDragHandle />
@@ -73,7 +73,7 @@ const SimpleStory = ({ items = [], ...props }: ListRootProps<TestItemType>) => {
   return (
     <List.Root<TestItemType> dragPreview items={items} {...props}>
       {({ items }) => (
-        <div role='list' className='w-full h-full overflow-auto'>
+        <div role='list' className='is-full bs-full overflow-auto'>
           {items?.map((item) => (
             <List.Item<TestItemType> key={item.id} item={item} classNames={mx(grid, ghostHover)}>
               <List.ItemDragHandle />

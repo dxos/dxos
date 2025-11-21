@@ -3,17 +3,16 @@
 //
 
 import { Capabilities, Events, contributes, createIntent, defineModule, definePlugin } from '@dxos/app-framework';
-import { Ref } from '@dxos/echo';
 import { ClientEvents } from '@dxos/plugin-client';
 import { SpaceCapabilities } from '@dxos/plugin-space';
 import { defineObjectForm } from '@dxos/plugin-space/types';
 import { Event, Message } from '@dxos/types';
 
 import {
-  ASSISTANT_BLUEPRINT_KEY,
   AppGraphBuilder,
   BlueprintDefinition,
-  InboxState,
+  CALENDAR_BLUEPRINT_KEY,
+  INBOX_BLUEPRINT_KEY,
   IntentResolver,
   ReactSurface,
 } from './capabilities';
@@ -22,14 +21,6 @@ import { translations } from './translations';
 import { Calendar, InboxAction, Mailbox } from './types';
 
 export const InboxPlugin = definePlugin(meta, () => [
-  defineModule({
-    id: `${meta.id}/module/state`,
-    // TODO(wittjosiah): Does not integrate with settings store.
-    //   Should this be a different event?
-    //   Should settings store be renamed to be more generic?
-    activatesOn: Events.SetupSettings,
-    activate: InboxState,
-  }),
   defineModule({
     id: `${meta.id}/module/translations`,
     activatesOn: Events.SetupTranslations,
@@ -44,7 +35,7 @@ export const InboxPlugin = definePlugin(meta, () => [
         metadata: {
           icon: 'ph--tray--regular',
           iconHue: 'rose',
-          blueprints: [ASSISTANT_BLUEPRINT_KEY],
+          blueprints: [INBOX_BLUEPRINT_KEY],
         },
       }),
       contributes(Capabilities.Metadata, {
@@ -59,13 +50,14 @@ export const InboxPlugin = definePlugin(meta, () => [
         metadata: {
           icon: 'ph--calendar--regular',
           iconHue: 'rose',
+          blueprints: [CALENDAR_BLUEPRINT_KEY],
         },
       }),
       contributes(Capabilities.Metadata, {
         id: Event.Event.typename,
         metadata: {
-          // TODO(wittjosiah): Move out of metadata.
-          loadReferences: async (event: Event.Event) => await Ref.Array.loadAll(event.links ?? []),
+          icon: 'ph--calendar-dot--regular',
+          iconHue: 'rose',
         },
       }),
     ],
@@ -85,7 +77,7 @@ export const InboxPlugin = definePlugin(meta, () => [
         SpaceCapabilities.ObjectForm,
         defineObjectForm({
           objectSchema: Calendar.Calendar,
-          getIntent: () => createIntent(InboxAction.CreateCalendar),
+          getIntent: (_, options) => createIntent(InboxAction.CreateCalendar, { space: options.space }),
         }),
       ),
     ],

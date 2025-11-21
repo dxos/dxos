@@ -4,10 +4,11 @@
 
 import path from 'node:path';
 
-import { describe, test } from 'vitest';
+import { beforeEach, describe, test } from 'vitest';
 
 import { LogLevel } from './config';
-import { log } from './log';
+import { shouldLog } from './context';
+import { type Log, createLog } from './log';
 
 class LogError extends Error {
   constructor(
@@ -25,13 +26,52 @@ class LogError extends Error {
   }
 }
 
-log.config({
-  filter: LogLevel.DEBUG,
-});
-
-/* eslint-disable prefer-arrow-functions/prefer-arrow-functions */
-
 describe('log', () => {
+  let log!: Log;
+
+  beforeEach(() => {
+    log = createLog();
+    log.config({
+      filter: LogLevel.DEBUG,
+    });
+  });
+
+  test('filters', ({ expect }) => {
+    const tests = [
+      { expected: 0, filter: 'ERROR' },
+      { expected: 2, filter: 'INFO' },
+      { expected: 1, filter: 'foo:INFO' },
+      { expected: 4, filter: 'DEBUG' },
+      { expected: 2, filter: 'DEBUG,-foo:*' },
+      { expected: 1, filter: 'INFO,-foo:*' },
+      { expected: 3, filter: 'DEBUG,-foo:INFO' },
+      { expected: 3, filter: 'foo:DEBUG,bar:INFO' },
+    ];
+
+    for (const test of tests) {
+      let count = 0;
+      const log = createLog();
+      const remove = log.addProcessor((config, entry) => {
+        if (shouldLog(entry, config.filters)) {
+          count++;
+        }
+      });
+      log.config({
+        filter: test.filter,
+      });
+
+      console.group(`Filter: "${test.filter}"`);
+      log.debug('line 1', {}, { F: 'foo.ts', L: 1, S: undefined });
+      log.info('line 2', {}, { F: 'foo.ts', L: 2, S: undefined });
+      log.debug('line 3', {}, { F: 'bar.ts', L: 3, S: undefined });
+      log.info('line 4', {}, { F: 'bar.ts', L: 4, S: undefined });
+      console.groupEnd();
+
+      expect(count, `Filter: "${test.filter}"`).toBe(test.expected);
+      remove();
+    }
+  });
+
   test('throws an error', () => {
     try {
       throw new LogError('Test failed', { value: 1 });
@@ -54,16 +94,6 @@ describe('log', () => {
     } catch (err: any) {
       log.catch(err);
     }
-  });
-
-  test('config', () => {
-    log.config({
-      filter: LogLevel.INFO,
-    });
-
-    log.debug('Debug level log message');
-    log.info('Info level log message');
-    log.warn('Warn level log message');
   });
 
   test('config file', () => {
@@ -91,7 +121,7 @@ describe('log', () => {
     });
   });
 
-  test('error', function () {
+  test('error', () => {
     const myError = new Error('Test error', { cause: new Error('Cause') });
     log.catch(myError);
   });

@@ -73,7 +73,7 @@ export class CreateSequence extends Schema.TaggedClass<CreateSequence>()(`${meta
 export class SetCurrentChat extends Schema.TaggedClass<SetCurrentChat>()(`${meta.id}/action/set-current-chat`, {
   input: Schema.Struct({
     companionTo: EchoObjectSchema,
-    chat: Chat,
+    chat: Chat.pipe(Schema.optional),
   }),
   output: Schema.Void,
 }) {}

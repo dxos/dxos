@@ -47,7 +47,7 @@ const DefaultStory = ({ items, ...props }: StoryProps) => {
   }, [running]);
 
   return (
-    <Flex column classNames='w-[400px] gap-8 overflow-hidden'>
+    <Flex column classNames='is-[400px] gap-8 overflow-hidden'>
       <Toolbar.Root>
         <Toolbar.Button onClick={() => setRunning(true)}>Start</Toolbar.Button>
         <Toolbar.Button onClick={() => setRunning(false)}>Stop</Toolbar.Button>

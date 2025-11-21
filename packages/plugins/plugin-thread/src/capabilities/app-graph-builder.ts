@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Rx } from '@effect-rx/rx-react';
+import { Atom } from '@effect-atom/atom-react';
 import * as Function from 'effect/Function';
 import * as Option from 'effect/Option';
 
@@ -10,7 +10,7 @@ import { Capabilities, type PluginContext, contributes, createIntent } from '@dx
 import { Obj } from '@dxos/echo';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
 import { ATTENDABLE_PATH_SEPARATOR, DECK_COMPANION_TYPE, PLANK_COMPANION_TYPE } from '@dxos/plugin-deck/types';
-import { ROOT_ID, createExtension, rxFromSignal } from '@dxos/plugin-graph';
+import { ROOT_ID, atomFromSignal, createExtension } from '@dxos/plugin-graph';
 
 import { meta } from '../meta';
 import { Channel, ThreadAction } from '../types';
@@ -28,14 +28,14 @@ export default (context: PluginContext) => {
     createExtension({
       id: `${meta.id}/active-call`,
       connector: (node) =>
-        Rx.make((get) =>
+        Atom.make((get) =>
           Function.pipe(
             get(node),
             Option.flatMap((node) => (node.id === ROOT_ID ? Option.some(node) : Option.none())),
             Option.map((node) => {
               const [call] = get(context.capabilities(ThreadCapabilities.CallManager));
               return get(
-                rxFromSignal(() =>
+                atomFromSignal(() =>
                   call?.joined
                     ? [
                         {
@@ -63,7 +63,7 @@ export default (context: PluginContext) => {
     createExtension({
       id: `${meta.id}/channel-chat-companion`,
       connector: (node) => {
-        return Rx.make((get) => {
+        return Atom.make((get) => {
           return Function.pipe(
             get(node),
             Option.flatMap((node) =>
@@ -72,7 +72,7 @@ export default (context: PluginContext) => {
             Option.map((channel) => {
               const callManager = context.getCapability(ThreadCapabilities.CallManager);
               const joined = get(
-                rxFromSignal(() => callManager.joined && callManager.roomId === Obj.getDXN(channel).toString()),
+                atomFromSignal(() => callManager.joined && callManager.roomId === Obj.getDXN(channel).toString()),
               );
               if (!joined) {
                 return [];
@@ -100,7 +100,7 @@ export default (context: PluginContext) => {
     createExtension({
       id: `${meta.id}/comments-companion`,
       connector: (node) =>
-        Rx.make((get) =>
+        Atom.make((get) =>
           Function.pipe(
             get(node),
             Option.flatMap((node) => {
@@ -130,7 +130,7 @@ export default (context: PluginContext) => {
     createExtension({
       id: `${meta.id}/comment-toolbar`,
       actions: (node) =>
-        Rx.make((get) =>
+        Atom.make((get) =>
           Function.pipe(
             get(node),
             Option.flatMap((node) => {
@@ -144,7 +144,7 @@ export default (context: PluginContext) => {
               const selectionManager = context.getCapability(AttentionCapabilities.Selection);
               const toolbar = get(context.capabilities(ThreadCapabilities.State))[0]?.state.toolbar ?? {};
               const disabled = get(
-                rxFromSignal(() => {
+                atomFromSignal(() => {
                   const metadata = resolve(Obj.getTypename(object)!);
                   const selection = selectionManager.getSelection(
                     Obj.getDXN(object).toString(),

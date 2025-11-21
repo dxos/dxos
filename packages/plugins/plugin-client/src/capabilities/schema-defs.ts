@@ -8,7 +8,7 @@ import { type Type } from '@dxos/echo';
 import { ClientCapabilities } from './capabilities';
 
 export default (context: PluginContext) => {
-  const registry = context.getCapability(Capabilities.RxRegistry);
+  const registry = context.getCapability(Capabilities.AtomRegistry);
   const client = context.getCapability(ClientCapabilities.Client);
 
   // TODO(wittjosiah): Unregister schemas when they are disabled.

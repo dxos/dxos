@@ -8,8 +8,9 @@ import { Args, Flags } from '@oclif/core';
 
 import { Trigger, debounce } from '@dxos/async';
 import { type Space } from '@dxos/client/echo';
-import { Function, Script } from '@dxos/functions';
-import { Bundler } from '@dxos/functions/bundler';
+import { Function } from '@dxos/functions';
+import { Script } from '@dxos/functions';
+import { bundleFunction } from '@dxos/functions-runtime/bundler';
 import { Text } from '@dxos/schema';
 
 import { BaseCommand } from '../../base';
@@ -48,8 +49,10 @@ export default class Watch extends BaseCommand<typeof Watch> {
         }
 
         const source = fs.readFileSync(this.args.file, 'utf-8');
-        const bundler = new Bundler({ platform: 'browser', sandboxedModules: [], remoteModules: {} });
-        const bundleResult = await bundler.bundle({ source });
+        const bundleResult = await bundleFunction({
+          platform: 'browser',
+          source,
+        });
         if ('error' in bundleResult) {
           this._logWithTime('Source bundling failed, waiting for new changes...');
           return;

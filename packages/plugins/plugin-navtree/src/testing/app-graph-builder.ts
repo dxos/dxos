@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Rx } from '@effect-rx/rx-react';
+import { Atom } from '@effect-atom/atom-react';
 import * as Function from 'effect/Function';
 import * as Option from 'effect/Option';
 
@@ -28,7 +28,7 @@ export const storybookGraphBuilders = (context: PluginContext): BuilderExtension
     createExtension({
       id: 'app-menu',
       actions: (node) =>
-        Rx.make((get) =>
+        Atom.make((get) =>
           Function.pipe(
             get(node),
             Option.flatMap((node) => (node.id === ROOT_ID ? Option.some(node) : Option.none())),
@@ -55,7 +55,7 @@ export const storybookGraphBuilders = (context: PluginContext): BuilderExtension
     createExtension({
       id: 'user-account',
       connector: (node) =>
-        Rx.make((get) =>
+        Atom.make((get) =>
           Function.pipe(
             get(node),
             Option.flatMap((node) => (node.id === ROOT_ID ? Option.some(node) : Option.none())),
@@ -112,7 +112,7 @@ export const storybookGraphBuilders = (context: PluginContext): BuilderExtension
       id: 'spaces-root',
       position: 'hoist',
       connector: (node) =>
-        Rx.make((get) =>
+        Atom.make((get) =>
           Function.pipe(
             get(node),
             Option.flatMap((node) => (node.id === ROOT_ID ? Option.some(node) : Option.none())),
@@ -138,7 +138,7 @@ export const storybookGraphBuilders = (context: PluginContext): BuilderExtension
     createExtension({
       id: 'spaces',
       connector: (node) => {
-        const count = Rx.make((get) => {
+        const count = Atom.make((get) => {
           let value = 3;
           const interval = setInterval(() => {
             if (value >= 10) {
@@ -153,7 +153,7 @@ export const storybookGraphBuilders = (context: PluginContext): BuilderExtension
           return value;
         });
 
-        return Rx.make((get) =>
+        return Atom.make((get) =>
           Function.pipe(
             get(node),
             Option.flatMap((node) => (node.id === 'spaces-root' ? Option.some(node) : Option.none())),
@@ -179,7 +179,7 @@ export const storybookGraphBuilders = (context: PluginContext): BuilderExtension
     createExtension({
       id: 'space-actions',
       actions: (node) =>
-        Rx.make((get) =>
+        Atom.make((get) =>
           Function.pipe(
             get(node),
             Option.flatMap((node) => (node.type === 'space' ? Option.some(node) : Option.none())),
@@ -205,7 +205,7 @@ export const storybookGraphBuilders = (context: PluginContext): BuilderExtension
     createExtension({
       id: 'objects',
       connector: (node) => {
-        const count = Rx.make((get) => {
+        const count = Atom.make((get) => {
           let value = 3;
           const interval = setInterval(() => {
             if (value >= 20) {
@@ -220,7 +220,7 @@ export const storybookGraphBuilders = (context: PluginContext): BuilderExtension
           return value;
         });
 
-        return Rx.make((get) =>
+        return Atom.make((get) =>
           Function.pipe(
             get(node),
             Option.flatMap((node) => (node.type === 'space' ? Option.some(node) : Option.none())),
@@ -245,7 +245,7 @@ export const storybookGraphBuilders = (context: PluginContext): BuilderExtension
     createExtension({
       id: 'object-actions',
       actions: (node) =>
-        Rx.make((get) =>
+        Atom.make((get) =>
           Function.pipe(
             get(node),
             Option.flatMap((node) => (node.type === 'object' ? Option.some(node) : Option.none())),

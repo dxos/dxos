@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type Registry, RegistryContext, Rx, useRxValue } from '@effect-rx/rx-react';
+import { Atom, type Registry, RegistryContext, useAtomValue } from '@effect-atom/atom-react';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Function from 'effect/Function';
 import * as Option from 'effect/Option';
@@ -30,9 +30,9 @@ import { getSize, mx } from '@dxos/react-ui-theme';
 import { byPosition, isNonNullable, safeParseInt } from '@dxos/util';
 
 import { type ExpandableGraph, ROOT_ID } from '../graph';
-import { GraphBuilder, createExtension, rxFromObservable, rxFromSignal } from '../graph-builder';
+import { GraphBuilder, atomFromObservable, createExtension } from '../graph-builder';
 import { type Node } from '../node';
-import { rxFromQuery } from '../testing';
+import { atomFromQuery } from '../testing';
 
 import { JsonTree } from './Tree';
 
@@ -60,18 +60,20 @@ const createGraph = (client: Client, registry: Registry.Registry): ExpandableGra
   const spaceBuilderExtension = createExtension({
     id: 'space',
     connector: (node) =>
-      Rx.make((get) =>
+      Atom.make((get) =>
         Function.pipe(
           get(node),
           Option.flatMap((node) => (node.id === ROOT_ID ? Option.some(node) : Option.none())),
           Option.map(() => {
-            const spaces = get(rxFromObservable(client.spaces)) ?? [];
+            const spaces = get(atomFromObservable(client.spaces)) ?? [];
             return spaces
-              .filter((space) => get(rxFromObservable(space.state)) === SpaceState.SPACE_READY)
+              .filter((space) => get(atomFromObservable(space.state)) === SpaceState.SPACE_READY)
               .map((space) => ({
                 id: space.id,
                 type: 'dxos.org/type/Space',
-                properties: { label: get(rxFromSignal(() => space.properties.name)) },
+                properties: {
+                  label: get(atomFromObservable(space.properties.name)),
+                },
                 data: space,
               }));
           }),
@@ -84,7 +86,7 @@ const createGraph = (client: Client, registry: Registry.Registry): ExpandableGra
     id: 'object',
     connector: (node) => {
       let query: QueryResult<Live<Expando>> | undefined;
-      return Rx.make((get) =>
+      return Atom.make((get) =>
         Function.pipe(
           get(node),
           Option.flatMap((node) => (isSpace(node.data) ? Option.some(node.data) : Option.none())),
@@ -92,7 +94,7 @@ const createGraph = (client: Client, registry: Registry.Registry): ExpandableGra
             if (!query) {
               query = space.db.query(Query.type(Expando, { type: 'test' }));
             }
-            const objects = get(rxFromQuery(query));
+            const objects = get(atomFromQuery(query));
             return objects.map((object) => ({
               id: object.id,
               type: 'dxos.org/type/test',
@@ -159,7 +161,12 @@ const runAction = async (client: Client, action: Action) => {
     }
 
     case Action.ADD_OBJECT:
-      getRandomSpace(client)?.db.add(Obj.make(Type.Expando, { type: 'test', name: faker.commerce.productName() }));
+      getRandomSpace(client)?.db.add(
+        Obj.make(Type.Expando, {
+          type: 'test',
+          name: faker.commerce.productName(),
+        }),
+      );
       break;
 
     case Action.REMOVE_OBJECT: {
@@ -214,7 +221,7 @@ const Controls = ({ children }: PropsWithChildren) => {
             <Input.TextInput
               autoComplete='off'
               size={5}
-              classNames='w-[100px] text-right pie-[22px]'
+              classNames='is-[100px] text-right pie-[22px]'
               placeholder='Interval'
               value={actionInterval}
               onChange={({ target: { value } }) => setActionInterval(value)}
@@ -258,7 +265,7 @@ const meta = {
       },
     }),
   ],
-} satisfies Meta<typeof Registry>;
+} satisfies Meta;
 
 export default meta;
 
@@ -269,7 +276,7 @@ export const JsonView: Story = {
     const client = useClient();
     const registry = useContext(RegistryContext);
     const graph = useMemo(() => createGraph(client, registry), [client, registry]);
-    const data = useRxValue(graph.json());
+    const data = useAtomValue(graph.json());
 
     return (
       <>
@@ -289,7 +296,7 @@ export const TreeView: Story = {
 
     const useItems = useCallback(
       (node?: Node, options?: { disposition?: string; sort?: boolean }) => {
-        const connections = useRxValue(graph.connections(node?.id ?? ROOT_ID));
+        const connections = useAtomValue(graph.connections(node?.id ?? ROOT_ID));
         return options?.sort ? connections.toSorted((a, b) => byPosition(a.properties, b.properties)) : connections;
       },
       [graph],

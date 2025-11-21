@@ -14,7 +14,7 @@ const preventDefault = (event: Event) => event.preventDefault();
 // TODO(burdon): Factor out.
 const Endcap = ({ children }: PropsWithChildren) => {
   return (
-    <div className='grid w-[var(--rail-action)] h-[var(--rail-action)] items-center justify-center'>{children}</div>
+    <div className='grid is-[var(--rail-action)] bs-[var(--rail-action)] items-center justify-center'>{children}</div>
   );
 };
 
@@ -47,14 +47,14 @@ type ChatDialogRootProps = PropsWithChildren<{
 
 const ChatDialogRoot = ({
   children,
-  open: _open = false,
+  open: openParam = false,
   expanded: expandedParam = false,
   onOpenChange,
   onExpandedChange,
   onEscape,
 }: ChatDialogRootProps) => {
   const [size, setSize] = useState<Size>('min-content');
-  const [open, setOpen] = useControlledState<boolean>(_open, onOpenChange);
+  const [open, setOpen] = useControlledState<boolean>(openParam, onOpenChange);
   const [expanded, setExpanded] = useControlledState<boolean>(expandedParam, onExpandedChange);
 
   // NOTE: We set the min size to 5rem (80px), and the header and prompt bar to 40px (i.e., the rail-size) each.
@@ -108,7 +108,7 @@ const ChatDialogHeader = ({ classNames, title }: ChatDialogHeaderProps) => {
         </Dialog.Close>
       </Endcap>
       <Dialog.Title
-        classNames='flex w-full justify-center text-sm text-subdued select-none cursor-pointer'
+        classNames='flex is-full justify-center text-sm text-subdued select-none cursor-pointer'
         onClick={() => setExpanded((expanded) => !expanded)}
       >
         {title}
@@ -144,7 +144,7 @@ const ChatDialogContent = ({ children, classNames }: ChatDialogContentProps) => 
   return (
     <div
       className={mx(
-        'flex flex-col overflow-y-auto border-t border-b border-subduedSeparator',
+        'flex flex-col overflow-y-auto border-t border-be border-subduedSeparator',
         'transition-[block-size] ease-in-out duration-0 [&:not([data-dx-resizing="true"])]:duration-200',
         classNames,
       )}

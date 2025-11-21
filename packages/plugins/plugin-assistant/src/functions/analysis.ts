@@ -17,6 +17,6 @@ export default defineFunction({
   }),
   outputSchema: Schema.Void,
   handler: Effect.fn(function* ({ context, data: { enable } }) {
-    log.info('analysis mode', { space: context.space?.id, enable });
+    log.info('analysis mode', { enable });
   }),
 });

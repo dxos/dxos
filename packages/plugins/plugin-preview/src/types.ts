@@ -4,12 +4,22 @@
 
 import { type PropsWithChildren } from 'react';
 
+import { type SurfaceCardRole, type SurfaceComponentProps } from '@dxos/app-framework/react';
 import { type Obj } from '@dxos/echo';
 import { type Space } from '@dxos/react-client/echo';
 
-export type PreviewProps<T extends Obj.Any = Obj.Any> = PropsWithChildren<{
-  role?: string;
-  subject: T;
-  activeSpace?: Space; // TODO(burdon): Why "active" space?
-  onSelect?: (obj: Obj.Any) => void;
-}>;
+/**
+ * @deprecated Use {@link SurfaceComponentProps} instead.
+ */
+// TODO(burdon): Remove?
+export type CardPreviewProps<
+  Subject extends Obj.Any = Obj.Any,
+  Role extends SurfaceCardRole = SurfaceCardRole,
+> = PropsWithChildren<
+  SurfaceComponentProps<Subject, Role> & {
+    // TODO(burdon): Why is this required (why active?)
+    activeSpace?: Space;
+    // TODO(burdon): Remove in favor of intents?
+    onSelect?: (obj: Obj.Any) => void;
+  }
+>;

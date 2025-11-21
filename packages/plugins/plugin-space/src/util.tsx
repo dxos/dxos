@@ -2,11 +2,11 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Rx } from '@effect-rx/rx-react';
+import { Atom } from '@effect-atom/atom-react';
 import * as Function from 'effect/Function';
 
 import { LayoutAction, type PromiseIntentDispatcher, chain, createIntent } from '@dxos/app-framework';
-import { Obj, Ref, Type } from '@dxos/echo';
+import { Filter, Obj, Query, Ref, Type } from '@dxos/echo';
 import { type AnyEchoObject, EXPANDO_TYPENAME } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
 import { Migrations } from '@dxos/migrations';
@@ -34,10 +34,10 @@ export const COMPOSER_SPACE_LOCK = `${meta.id}/lock`;
 export const SHARED = 'shared-spaces';
 
 /**
- * Convert a query result to an Rx value of the objects.
+ * Convert a query result to an Atom value of the objects.
  */
-export const rxFromQuery = <T extends AnyEchoObject>(query: QueryResult<T>): Rx.Rx<T[]> => {
-  return Rx.make((get) => {
+export const atomFromQuery = <T extends AnyEchoObject>(query: QueryResult<T>): Atom.Atom<T[]> => {
+  return Atom.make((get) => {
     const unsubscribe = query.subscribe((result) => {
       get.setSelf(result.objects);
     });
@@ -442,6 +442,30 @@ export const createStaticSchemaActions = ({
         testId: 'spacePlugin.deleteObject',
       },
     },
+    {
+      id: getId(SpaceAction.Snapshot._tag),
+      type: ACTION_TYPE,
+      data: async () => {
+        const result = await dispatch(
+          createIntent(SpaceAction.Snapshot, {
+            space,
+            query: Query.select(Filter.type(schema)).ast,
+          }),
+        );
+        if (result.data?.snapshot) {
+          await downloadBlob(
+            result.data.snapshot,
+            // TODO(wittjosiah): Factor out file name construction.
+            `${new Date().toISOString()}-${space.id}-${Type.getTypename(schema)}.json`,
+          );
+        }
+      },
+      properties: {
+        label: ['snapshot by schema label', { ns: meta.id }],
+        icon: 'ph--camera--regular',
+        disposition: 'list-item',
+      },
+    },
   ];
 
   return actions;
@@ -579,6 +603,30 @@ export const constructObjectActions = ({
               testId: 'spacePlugin.addViewToSchema',
             },
           },
+          {
+            id: getId(SpaceAction.Snapshot._tag),
+            type: ACTION_TYPE,
+            data: async () => {
+              const result = await dispatch(
+                createIntent(SpaceAction.Snapshot, {
+                  space,
+                  query: Query.select(Filter.type(Type.toEffectSchema(object.jsonSchema))).ast,
+                }),
+              );
+              if (result.data?.snapshot) {
+                await downloadBlob(
+                  result.data.snapshot,
+                  // TODO(wittjosiah): Factor out file name construction.
+                  `${new Date().toISOString()}-${space.id}-${object.typename}.json`,
+                );
+              }
+            },
+            properties: {
+              label: ['snapshot by schema label', { ns: meta.id }],
+              icon: 'ph--camera--regular',
+              disposition: 'list-item',
+            },
+          },
         ]
       : []),
     ...(matchingObjectForm
@@ -689,6 +737,20 @@ export const constructObjectActions = ({
   ];
 
   return actions;
+};
+
+// TODO(wittjosiah): Factor out.
+const downloadBlob = async (blob: Blob, filename: string) => {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+
+  document.body.appendChild(a);
+  a.click();
+
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
 };
 
 /**

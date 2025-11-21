@@ -14,27 +14,29 @@ import { ATTENDABLE_PATH_SEPARATOR, DeckAction } from '@dxos/plugin-deck/types';
 import { Filter, getSpace, useQuery, useQueue, useSpace } from '@dxos/react-client/echo';
 import { Table } from '@dxos/react-ui-table/types';
 import { View, getTypenameFromQuery } from '@dxos/schema';
-import { Message, Organization, Person } from '@dxos/types';
+import { Event, Message, Organization, Person } from '@dxos/types';
 
 import {
-  EventsContainer,
-  MailboxContainer,
-  MailboxObjectSettings,
+  CalendarArticle,
+  EventArticle,
+  EventCard,
+  MailboxArticle,
+  MailboxSettings,
+  MessageArticle,
   MessageCard,
-  MessageContainer,
   POPOVER_SAVE_FILTER,
   PopoverSaveFilter,
   RelatedContacts,
   RelatedMessages,
 } from '../components';
 import { meta } from '../meta';
-import { Calendar, InboxAction, Mailbox } from '../types';
+import { Calendar, Mailbox } from '../types';
 
 export default () =>
   contributes(Capabilities.ReactSurface, [
     createSurface({
       id: `${meta.id}/mailbox`,
-      role: ['article', 'section'],
+      role: ['article'],
       filter: (
         data,
       ): data is {
@@ -42,46 +44,47 @@ export default () =>
         subject: Mailbox.Mailbox;
         properties: { filter?: string };
       } => Obj.instanceOf(Mailbox.Mailbox, data.subject),
-      component: ({ data, role }) => {
+      component: ({ data }) => {
         return (
-          <MailboxContainer
-            mailbox={data.subject}
-            role={role}
-            attendableId={data.attendableId}
-            filter={data.properties?.filter}
-          />
+          <MailboxArticle subject={data.subject} filter={data.properties?.filter} attendableId={data.attendableId} />
         );
       },
     }),
     createSurface({
       id: `${meta.id}/message`,
       role: ['article', 'section'],
-      filter: (data): data is { companionTo: Mailbox.Mailbox; subject: Message.Message | 'message' } =>
-        Obj.instanceOf(Mailbox.Mailbox, data.companionTo) &&
-        (data.subject === 'message' || Obj.instanceOf(Message.Message, data.subject)),
-      component: ({ data: { companionTo, subject: message }, role }) => {
-        const space = getSpace(companionTo);
-        return (
-          <MessageContainer
-            message={typeof message === 'string' ? undefined : message}
-            space={space}
-            inMailbox={companionTo}
-            role={role}
-          />
-        );
+      filter: (data): data is { subject: Message.Message; companionTo: Mailbox.Mailbox } =>
+        Obj.instanceOf(Message.Message, data.subject) && Obj.instanceOf(Mailbox.Mailbox, data.companionTo),
+      component: ({ data: { companionTo, subject }, role }) => {
+        return <MessageArticle role={role} subject={subject} mailbox={companionTo} />;
+      },
+    }),
+    createSurface({
+      id: `${meta.id}/event`,
+      role: ['article', 'section'],
+      filter: (data): data is { subject: Event.Event; companionTo: Calendar.Calendar } =>
+        Obj.instanceOf(Event.Event, data.subject) && Obj.instanceOf(Calendar.Calendar, data.companionTo),
+      component: ({ data: { companionTo, subject }, role }) => {
+        return <EventArticle role={role} subject={subject} calendar={companionTo} />;
       },
     }),
     createSurface({
       id: `${meta.id}/calendar`,
-      role: 'article',
+      role: ['article'],
       filter: (data): data is { subject: Calendar.Calendar } => Obj.instanceOf(Calendar.Calendar, data.subject),
-      component: ({ data }) => <EventsContainer calendar={data.subject} />,
+      component: ({ data }) => <CalendarArticle subject={data.subject} />,
     }),
     createSurface({
       id: `${meta.id}/message-card`,
       role: ['card', 'card--intrinsic', 'card--extrinsic', 'card--popover', 'card--transclusion'],
       filter: (data): data is { subject: Message.Message } => Obj.instanceOf(Message.Message, data?.subject),
-      component: ({ data: { subject: message }, role }) => <MessageCard message={message} role={role} />,
+      component: ({ data: { subject }, role }) => <MessageCard subject={subject} role={role} />,
+    }),
+    createSurface({
+      id: `${meta.id}/event-card`,
+      role: ['card', 'card--intrinsic', 'card--extrinsic', 'card--popover', 'card--transclusion'],
+      filter: (data): data is { subject: Event.Event } => Obj.instanceOf(Event.Event, data?.subject),
+      component: ({ data: { subject }, role }) => <EventCard subject={subject} role={role} />,
     }),
     createSurface({
       id: POPOVER_SAVE_FILTER,
@@ -100,7 +103,7 @@ export default () =>
       id: `${meta.id}/mailbox/companion/settings`,
       role: 'object-settings',
       filter: (data): data is { subject: Mailbox.Mailbox } => Obj.instanceOf(Mailbox.Mailbox, data.subject),
-      component: ({ data }) => <MailboxObjectSettings object={data.subject} />,
+      component: ({ data }) => <MailboxSettings subject={data.subject} />,
     }),
 
     // TODO(wittjosiah): Generalize the mess below.
@@ -140,7 +143,10 @@ export default () =>
                   subject: [Obj.getDXN(mailbox).toString()],
                   options: { workspace: space?.id },
                 }),
-                chain(InboxAction.SelectMessage, { mailboxId: Obj.getDXN(mailbox).toString(), message }),
+                chain(AttentionAction.Select, {
+                  contextId: Obj.getDXN(mailbox).toString(),
+                  selection: { mode: 'single', id: message.id },
+                }),
               ),
             );
           },

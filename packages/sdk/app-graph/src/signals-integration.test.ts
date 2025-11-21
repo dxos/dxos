@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Registry, Rx } from '@effect-rx/rx-react';
+import { Atom, Registry } from '@effect-atom/atom-react';
 import { signal } from '@preact/signals-core';
 import { afterEach, beforeEach, describe, expect, onTestFinished, test } from 'vitest';
 
@@ -14,25 +14,25 @@ import { EchoTestBuilder } from '@dxos/echo-db/testing';
 import { registerSignalsRuntime } from '@dxos/echo-signals';
 
 import { ROOT_ID } from './graph';
-import { GraphBuilder, createExtension, rxFromSignal } from './graph-builder';
-import { rxFromQuery } from './testing';
+import { GraphBuilder, atomFromSignal, createExtension } from './graph-builder';
+import { atomFromQuery } from './testing';
 
 registerSignalsRuntime();
 
 const EXAMPLE_TYPE = 'dxos.org/type/example';
 
 describe('signals integration', () => {
-  test('creating rx from signal', () => {
+  test('creating atom from signal', () => {
     const registry = Registry.make();
     const state = signal<number>(0);
-    const value = rxFromSignal(() => state.value);
-    const inline = Rx.make((get) => {
-      // NOTE: This will create a new rx instance each time.
-      // This test is verifying that this behaves the same as using a stable rx instance.
+    const value = atomFromSignal(() => state.value);
+    const inline = Atom.make((get) => {
+      // NOTE: This will create a new atom instance each time.
+      // This test is verifying that this behaves the same as using a stable atom instance.
       // The parent will remain subscribed to one instance until the new one is created.
       // The old one will then be garbage collected because it is no longer referenced.
-      const rx = rxFromSignal(() => get(value));
-      return get(rx);
+      const atom = atomFromSignal(() => get(value));
+      return get(atom);
     });
 
     let count = 0;
@@ -72,7 +72,7 @@ describe('signals integration', () => {
       await dbBuilder.close();
     });
 
-    test('rx references are loaded lazily and receive signal notifications', async () => {
+    test('atom references are loaded lazily and receive signal notifications', async () => {
       const registry = Registry.make();
       await using peer = await dbBuilder.createPeer();
 
@@ -89,23 +89,24 @@ describe('signals integration', () => {
       {
         await using db = await peer.openLastDatabase();
         const outer = (await db.query(Filter.ids(outerId)).first()) as any;
-        const innerRx = rxFromSignal(() => outer.inner.target);
-
+        const innerAtom = atomFromSignal(() => outer.inner.target);
         const loaded = new Trigger();
+
         let count = 0;
-        const cancel = registry.subscribe(innerRx, (inner) => {
+        const cancel = registry.subscribe(innerAtom, (inner) => {
           count++;
           if (inner) {
             loaded.wake();
           }
         });
+
         onTestFinished(() => cancel());
 
-        expect(registry.get(innerRx)).to.eq(undefined);
+        expect(registry.get(innerAtom)).to.eq(undefined);
         expect(count).to.eq(1);
 
         await loaded.wait();
-        expect(registry.get(innerRx)).to.include({ name: 'inner' });
+        expect(registry.get(innerAtom)).to.include({ name: 'inner' });
         expect(count).to.eq(2);
       }
     });
@@ -129,8 +130,8 @@ describe('signals integration', () => {
       {
         await using db = await peer.openLastDatabase();
         const outer = (await db.query(Filter.ids(outerId)).first()) as any;
-        const innerRx = rxFromSignal(() => outer.inner.target);
-        const inner = registry.get(innerRx);
+        const innerAtom = atomFromSignal(() => outer.inner.target);
+        const inner = registry.get(innerAtom);
         expect(inner).to.eq(undefined);
 
         const builder = new GraphBuilder({ registry });
@@ -138,8 +139,8 @@ describe('signals integration', () => {
           createExtension({
             id: 'outbound-connector',
             connector: () =>
-              Rx.make((get) => {
-                const inner = get(innerRx) as any;
+              Atom.make((get) => {
+                const inner = get(innerAtom) as any;
                 return inner ? [{ id: inner.id, type: EXAMPLE_TYPE, data: inner.name }] : [];
               }),
           }),
@@ -184,8 +185,8 @@ describe('signals integration', () => {
           connector: () => {
             const query = db.query(Filter.type(Type.Expando));
 
-            return Rx.make((get) => {
-              const objects = get(rxFromQuery(query));
+            return Atom.make((get) => {
+              const objects = get(atomFromQuery(query));
               return objects.map((object) => ({ id: object.id, type: EXAMPLE_TYPE, data: object.name }));
             });
           },

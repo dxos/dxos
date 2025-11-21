@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Registry, Rx } from '@effect-rx/rx-react';
+import { Atom, Registry } from '@effect-atom/atom-react';
 import * as Function from 'effect/Function';
 import * as Option from 'effect/Option';
 import * as Record from 'effect/Record';
@@ -16,7 +16,9 @@ import { type MakeOptional, isNonNullable } from '@dxos/util';
 import { type Action, type ActionGroup, type Node, type NodeArg, type Relation } from './node';
 
 const graphSymbol = Symbol('graph');
-type DeepWriteable<T> = { -readonly [K in keyof T]: T[K] extends object ? DeepWriteable<T[K]> : T[K] };
+type DeepWriteable<T> = {
+  -readonly [K in keyof T]: T[K] extends object ? DeepWriteable<T[K]> : T[K];
+};
 type NodeInternal = DeepWriteable<Node> & { [graphSymbol]: Graph };
 
 /**
@@ -79,32 +81,32 @@ export interface ReadableGraph {
    */
   toJSON(id?: string): object;
 
-  json(id?: string): Rx.Rx<any>;
+  json(id?: string): Atom.Atom<any>;
 
   /**
-   * Get the rx key for the node with the given id.
+   * Get the atom key for the node with the given id.
    */
-  node(id: string): Rx.Rx<Option.Option<Node>>;
+  node(id: string): Atom.Atom<Option.Option<Node>>;
 
   /**
-   * Get the rx key for the node with the given id.
+   * Get the atom key for the node with the given id.
    */
-  nodeOrThrow(id: string): Rx.Rx<Node>;
+  nodeOrThrow(id: string): Atom.Atom<Node>;
 
   /**
-   * Get the rx key for the connections of the node with the given id.
+   * Get the atom key for the connections of the node with the given id.
    */
-  connections(id: string, relation?: Relation): Rx.Rx<Node[]>;
+  connections(id: string, relation?: Relation): Atom.Atom<Node[]>;
 
   /**
-   * Get the rx key for the actions of the node with the given id.
+   * Get the atom key for the actions of the node with the given id.
    */
-  actions(id: string): Rx.Rx<(Action | ActionGroup)[]>;
+  actions(id: string): Atom.Atom<(Action | ActionGroup)[]>;
 
   /**
-   * Get the rx key for the edges of the node with the given id.
+   * Get the atom key for the edges of the node with the given id.
    */
-  edges(id: string): Rx.Rx<Edges>;
+  edges(id: string): Atom.Atom<Edges>;
 
   /**
    * Alias for `getNodeOrThrow(ROOT_ID)`.
@@ -228,7 +230,10 @@ export interface WritableGraph extends ExpandableGraph {
  * The Graph represents the user interface information architecture of the application constructed via plugins.
  */
 export class Graph implements WritableGraph {
-  readonly onNodeChanged = new Event<{ id: string; node: Option.Option<Node> }>();
+  readonly onNodeChanged = new Event<{
+    id: string;
+    node: Option.Option<Node>;
+  }>();
 
   private readonly _onExpand?: (id: string, relation: Relation) => void;
   private readonly _onInitialize?: (id: string) => Promise<void>;
@@ -239,51 +244,59 @@ export class Graph implements WritableGraph {
   private readonly _initialized = Record.empty<string, boolean>();
   private readonly _initialEdges = Record.empty<string, Edges>();
   private readonly _initialNodes = Record.fromEntries([
-    [ROOT_ID, this._constructNode({ id: ROOT_ID, type: ROOT_TYPE, data: null, properties: {} })],
+    [
+      ROOT_ID,
+      this._constructNode({
+        id: ROOT_ID,
+        type: ROOT_TYPE,
+        data: null,
+        properties: {},
+      }),
+    ],
   ]);
 
   /** @internal */
-  readonly _node = Rx.family<string, Rx.Writable<Option.Option<Node>>>((id) => {
+  readonly _node = Atom.family<string, Atom.Writable<Option.Option<Node>>>((id) => {
     const initial = Option.flatten(Record.get(this._initialNodes, id));
-    return Rx.make<Option.Option<Node>>(initial).pipe(Rx.keepAlive, Rx.withLabel(`graph:node:${id}`));
+    return Atom.make<Option.Option<Node>>(initial).pipe(Atom.keepAlive, Atom.withLabel(`graph:node:${id}`));
   });
 
-  private readonly _nodeOrThrow = Rx.family<string, Rx.Rx<Node>>((id) => {
-    return Rx.make((get) => {
+  private readonly _nodeOrThrow = Atom.family<string, Atom.Atom<Node>>((id) => {
+    return Atom.make((get) => {
       const node = get(this._node(id));
       invariant(Option.isSome(node), `Node not available: ${id}`);
       return node.value;
     });
   });
 
-  private readonly _edges = Rx.family<string, Rx.Writable<Edges>>((id) => {
+  private readonly _edges = Atom.family<string, Atom.Writable<Edges>>((id) => {
     const initial = Record.get(this._initialEdges, id).pipe(Option.getOrElse(() => ({ inbound: [], outbound: [] })));
-    return Rx.make<Edges>(initial).pipe(Rx.keepAlive, Rx.withLabel(`graph:edges:${id}`));
+    return Atom.make<Edges>(initial).pipe(Atom.keepAlive, Atom.withLabel(`graph:edges:${id}`));
   });
 
-  // NOTE: Currently the argument to the family needs to be referentially stable for the rx to be referentially stable.
-  // TODO(wittjosiah): Rx feature request, support for something akin to `ComplexMap` to allow for complex arguments.
-  private readonly _connections = Rx.family<string, Rx.Rx<Node[]>>((key) => {
-    return Rx.make((get) => {
+  // NOTE: Currently the argument to the family needs to be referentially stable for the atom to be referentially stable.
+  // TODO(wittjosiah): Atom feature request, support for something akin to `ComplexMap` to allow for complex arguments.
+  private readonly _connections = Atom.family<string, Atom.Atom<Node[]>>((key) => {
+    return Atom.make((get) => {
       const [id, relation] = key.split('$');
       const edges = get(this._edges(id));
       return edges[relation as Relation]
         .map((id) => get(this._node(id)))
         .filter(Option.isSome)
         .map((o) => o.value);
-    }).pipe(Rx.withLabel(`graph:connections:${key}`));
+    }).pipe(Atom.withLabel(`graph:connections:${key}`));
   });
 
-  private readonly _actions = Rx.family<string, Rx.Rx<(Action | ActionGroup)[]>>((id) => {
-    return Rx.make((get) => {
+  private readonly _actions = Atom.family<string, Atom.Atom<(Action | ActionGroup)[]>>((id) => {
+    return Atom.make((get) => {
       return get(this._connections(`${id}$outbound`)).filter(
         (node) => node.type === ACTION_TYPE || node.type === ACTION_GROUP_TYPE,
       );
-    }).pipe(Rx.withLabel(`graph:actions:${id}`));
+    }).pipe(Atom.withLabel(`graph:actions:${id}`));
   });
 
-  private readonly _json = Rx.family<string, Rx.Rx<any>>((id) => {
-    return Rx.make((get) => {
+  private readonly _json = Atom.family<string, Atom.Atom<any>>((id) => {
+    return Atom.make((get) => {
       const toJSON = (node: Node, seen: string[] = []): any => {
         const nodes = get(this.connections(node.id));
         const obj: Record<string, any> = {
@@ -307,7 +320,7 @@ export class Graph implements WritableGraph {
 
       const root = get(this.nodeOrThrow(id));
       return toJSON(root);
-    }).pipe(Rx.withLabel(`graph:json:${id}`));
+    }).pipe(Atom.withLabel(`graph:json:${id}`));
   });
 
   constructor({ registry, nodes, edges, onInitialize, onExpand, onRemoveNode }: GraphParams = {}) {
@@ -337,15 +350,15 @@ export class Graph implements WritableGraph {
     return this._json(id);
   }
 
-  node(id: string): Rx.Rx<Option.Option<Node>> {
+  node(id: string): Atom.Atom<Option.Option<Node>> {
     return this._node(id);
   }
 
-  nodeOrThrow(id: string): Rx.Rx<Node> {
+  nodeOrThrow(id: string): Atom.Atom<Node> {
     return this._nodeOrThrow(id);
   }
 
-  connections(id: string, relation: Relation = 'outbound'): Rx.Rx<Node[]> {
+  connections(id: string, relation: Relation = 'outbound'): Atom.Atom<Node[]> {
     return this._connections(`${id}$${relation}`);
   }
 
@@ -353,7 +366,7 @@ export class Graph implements WritableGraph {
     return this._actions(id);
   }
 
-  edges(id: string): Rx.Rx<Edges> {
+  edges(id: string): Atom.Atom<Edges> {
     return this._edges(id);
   }
 
@@ -401,38 +414,48 @@ export class Graph implements WritableGraph {
   }
 
   addNodes(nodes: NodeArg<any, Record<string, any>>[]): void {
-    Rx.batch(() => {
+    Atom.batch(() => {
       nodes.map((node) => this.addNode(node));
     });
   }
 
   addNode({ nodes, edges, ...nodeArg }: NodeArg<any, Record<string, any>>): void {
     const { id, type, data = null, properties = {} } = nodeArg;
-    const nodeRx = this._node(id);
-    const node = this._registry.get(nodeRx);
+    const nodeAtom = this._node(id);
+    const node = this._registry.get(nodeAtom);
     Option.match(node, {
       onSome: (node) => {
         const typeChanged = node.type !== type;
         const dataChanged = node.data !== data;
         const propertiesChanged = Object.keys(properties).some((key) => node.properties[key] !== properties[key]);
-        log('existing node', { id, typeChanged, dataChanged, propertiesChanged });
+        log('existing node', {
+          id,
+          typeChanged,
+          dataChanged,
+          propertiesChanged,
+        });
         if (typeChanged || dataChanged || propertiesChanged) {
           log('updating node', { id, type, data, properties });
-          const newNode = Option.some({ ...node, type, data, properties: { ...node.properties, ...properties } });
-          this._registry.set(nodeRx, newNode);
+          const newNode = Option.some({
+            ...node,
+            type,
+            data,
+            properties: { ...node.properties, ...properties },
+          });
+          this._registry.set(nodeAtom, newNode);
           this.onNodeChanged.emit({ id, node: newNode });
         }
       },
       onNone: () => {
         log('new node', { id, type, data, properties });
         const newNode = this._constructNode({ id, type, data, properties });
-        this._registry.set(nodeRx, newNode);
+        this._registry.set(nodeAtom, newNode);
         this.onNodeChanged.emit({ id, node: newNode });
       },
     });
 
     if (nodes) {
-      // Rx.batch(() => {
+      // Atom.batch(() => {
       this.addNodes(nodes);
       const _edges = nodes.map((node) => ({ source: id, target: node.id }));
       this.addEdges(_edges);
@@ -445,15 +468,15 @@ export class Graph implements WritableGraph {
   }
 
   removeNodes(ids: string[], edges = false): void {
-    Rx.batch(() => {
+    Atom.batch(() => {
       ids.map((id) => this.removeNode(id, edges));
     });
   }
 
   removeNode(id: string, edges = false): void {
-    const nodeRx = this._node(id);
-    // TODO(wittjosiah): Is there a way to mark these rx values for garbage collection?
-    this._registry.set(nodeRx, Option.none());
+    const nodeAtom = this._node(id);
+    // TODO(wittjosiah): Is there a way to mark these atom values for garbage collection?
+    this._registry.set(nodeAtom, Option.none());
     this.onNodeChanged.emit({ id, node: Option.none() });
     // TODO(wittjosiah): Reset expanded and initialized flags?
 
@@ -470,55 +493,67 @@ export class Graph implements WritableGraph {
   }
 
   addEdges(edges: Edge[]): void {
-    Rx.batch(() => {
+    Atom.batch(() => {
       edges.map((edge) => this.addEdge(edge));
     });
   }
 
   addEdge(edgeArg: Edge): void {
-    const sourceRx = this._edges(edgeArg.source);
-    const source = this._registry.get(sourceRx);
+    const sourceAtom = this._edges(edgeArg.source);
+    const source = this._registry.get(sourceAtom);
     if (!source.outbound.includes(edgeArg.target)) {
-      log('add outbound edge', { source: edgeArg.source, target: edgeArg.target });
-      this._registry.set(sourceRx, { inbound: source.inbound, outbound: [...source.outbound, edgeArg.target] });
+      log('add outbound edge', {
+        source: edgeArg.source,
+        target: edgeArg.target,
+      });
+      this._registry.set(sourceAtom, {
+        inbound: source.inbound,
+        outbound: [...source.outbound, edgeArg.target],
+      });
     }
 
-    const targetRx = this._edges(edgeArg.target);
-    const target = this._registry.get(targetRx);
+    const targetAtom = this._edges(edgeArg.target);
+    const target = this._registry.get(targetAtom);
     if (!target.inbound.includes(edgeArg.source)) {
-      log('add inbound edge', { source: edgeArg.source, target: edgeArg.target });
-      this._registry.set(targetRx, { inbound: [...target.inbound, edgeArg.source], outbound: target.outbound });
+      log('add inbound edge', {
+        source: edgeArg.source,
+        target: edgeArg.target,
+      });
+      this._registry.set(targetAtom, {
+        inbound: [...target.inbound, edgeArg.source],
+        outbound: target.outbound,
+      });
     }
   }
 
   removeEdges(edges: Edge[], removeOrphans = false): void {
-    Rx.batch(() => {
+    Atom.batch(() => {
       edges.map((edge) => this.removeEdge(edge, removeOrphans));
     });
   }
 
   removeEdge(edgeArg: Edge, removeOrphans = false): void {
-    const sourceRx = this._edges(edgeArg.source);
-    const source = this._registry.get(sourceRx);
+    const sourceAtom = this._edges(edgeArg.source);
+    const source = this._registry.get(sourceAtom);
     if (source.outbound.includes(edgeArg.target)) {
-      this._registry.set(sourceRx, {
+      this._registry.set(sourceAtom, {
         inbound: source.inbound,
         outbound: source.outbound.filter((id) => id !== edgeArg.target),
       });
     }
 
-    const targetRx = this._edges(edgeArg.target);
-    const target = this._registry.get(targetRx);
+    const targetAtom = this._edges(edgeArg.target);
+    const target = this._registry.get(targetAtom);
     if (target.inbound.includes(edgeArg.source)) {
-      this._registry.set(targetRx, {
+      this._registry.set(targetAtom, {
         inbound: target.inbound.filter((id) => id !== edgeArg.source),
         outbound: target.outbound,
       });
     }
 
     if (removeOrphans) {
-      const source = this._registry.get(sourceRx);
-      const target = this._registry.get(targetRx);
+      const source = this._registry.get(sourceAtom);
+      const target = this._registry.get(targetAtom);
       if (source.outbound.length === 0 && source.inbound.length === 0 && edgeArg.source !== ROOT_ID) {
         this.removeNodes([edgeArg.source]);
       }
@@ -529,12 +564,12 @@ export class Graph implements WritableGraph {
   }
 
   sortEdges(id: string, relation: Relation, order: string[]): void {
-    const edgesRx = this._edges(id);
-    const edges = this._registry.get(edgesRx);
+    const edgesAtom = this._edges(id);
+    const edges = this._registry.get(edgesAtom);
     const unsorted = edges[relation].filter((id) => !order.includes(id)) ?? [];
     const sorted = order.filter((id) => edges[relation].includes(id)) ?? [];
     edges[relation].splice(0, edges[relation].length, ...[...sorted, ...unsorted]);
-    this._registry.set(edgesRx, edges);
+    this._registry.set(edgesAtom, edges);
   }
 
   traverse({ visitor, source = ROOT_ID, relation = 'outbound' }: GraphTraversalOptions, path: string[] = []): void {
@@ -599,6 +634,11 @@ export class Graph implements WritableGraph {
 
   /** @internal */
   _constructNode(node: NodeArg<any>): Option.Option<Node> {
-    return Option.some({ [graphSymbol]: this, data: null, properties: {}, ...node });
+    return Option.some({
+      [graphSymbol]: this,
+      data: null,
+      properties: {},
+      ...node,
+    });
   }
 }

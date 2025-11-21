@@ -19,10 +19,14 @@ import { invariant } from '@dxos/invariant';
 
 // TODO(dmaretskyi): Consider adding details renderer for when you hover over the reference.
 export type ReferenceData = {
-  uri: string;
+  uri: string; // TODO(burdon): Rename dxn.
   label: string;
 };
 
+/**
+ * @deprecated
+ */
+// TODO(burdon): Remove.
 export interface ReferencesProvider {
   getReferences({ query }: { query: string }): Promise<ReferenceData[]>;
   resolveReference({ uri }: { uri: string }): Promise<ReferenceData | null>;
@@ -45,7 +49,9 @@ export type ReferencesOptions = {
 
 /**
  * Lookup object references.
+ * @deprecated
  */
+// TODO(burdon): Remove.
 export const references = ({ provider, triggerCharacter = '@', debug = false }: ReferencesOptions): Extension => {
   invariant(triggerCharacter.length === 1);
 

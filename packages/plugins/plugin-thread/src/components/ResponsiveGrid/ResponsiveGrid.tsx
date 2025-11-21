@@ -18,7 +18,7 @@ const MIN_GALLERY_HEIGHT = 250;
 
 const DEFAULT_GAP = 8;
 
-const maxImageSize = 'w-[2560px] h-[1440px]';
+const maxImageSize = 'is-[2560px] bs-[1440px]';
 
 /**
  * Props for the ResponsiveGrid component.
@@ -136,13 +136,13 @@ export const ResponsiveGrid = <T extends object = any>({
   );
 
   return (
-    <div ref={containerRef} className={mx('relative w-full h-full', classNames)}>
+    <div ref={containerRef} className={mx('relative is-full bs-full', classNames)}>
       {/* Placeholder elements to calculate layout. */}
       <div className='absolute inset-0 flex flex-col grow gap-2'>
         {/* Pinned item. */}
         {pinnedItem && (
           <div
-            className={mx('flex grow-[2] shrink overflow-hidden justify-center items-center', hideGallery && 'h-full')}
+            className={mx('flex grow-[2] shrink overflow-hidden justify-center items-center', hideGallery && 'bs-full')}
             style={hideGallery ? {} : { height: dividerHeight }}
           >
             <SoloItem id={getId(pinnedItem)} debug={debug} />
@@ -157,7 +157,7 @@ export const ResponsiveGrid = <T extends object = any>({
             style={hideGallery ? {} : { minHeight: MIN_GALLERY_HEIGHT }}
           >
             {mainItems.length === 1 && (
-              <div style={{ width: cellWidth }} className='flex h-full'>
+              <div style={{ width: cellWidth }} className='flex bs-full'>
                 <SoloItem id={getId(mainItems[0])} debug={debug} />
               </div>
             )}
@@ -176,7 +176,7 @@ export const ResponsiveGrid = <T extends object = any>({
                     key={getId(item)}
                     {...{ 'data-grid-item': getId(item) }}
                     className={mx(
-                      'aspect-video max-h-full max-w-full w-auto h-auto',
+                      'aspect-video max-bs-full max-is-full is-auto bs-auto',
                       debug && 'border border-primary-500',
                     )}
                   />

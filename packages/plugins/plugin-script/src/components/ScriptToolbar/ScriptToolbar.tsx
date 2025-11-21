@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Rx } from '@effect-rx/rx-react';
+import { Atom } from '@effect-atom/atom-react';
 import React, { useMemo } from 'react';
 
 import { Obj } from '@dxos/echo';
@@ -12,8 +12,8 @@ import {
   type ActionGraphProps,
   MenuProvider,
   ToolbarMenu,
+  atomFromSignal,
   createGapSeparator,
-  rxFromSignal,
   useMenuActions,
 } from '@dxos/react-ui-menu';
 
@@ -48,10 +48,10 @@ export const ScriptToolbar = ({ script, role, state }: ScriptToolbarProps) => {
   );
 };
 
-const createToolbarActions = ({ state, script, ...options }: CreateDeployOptions): Rx.Rx<ActionGraphProps> =>
-  Rx.make((get) =>
+const createToolbarActions = ({ state, script, ...options }: CreateDeployOptions): Atom.Atom<ActionGraphProps> =>
+  Atom.make((get) =>
     get(
-      rxFromSignal(() => {
+      atomFromSignal(() => {
         const templateSelect = createTemplateSelect(script);
         const format = createFormat(script);
         const gap = createGapSeparator();

@@ -11,7 +11,7 @@ import { mx } from '@dxos/react-ui-theme';
 import { Task } from '@dxos/types';
 
 import { CardSubjectMenu } from '../components';
-import { type PreviewProps } from '../types';
+import { type CardPreviewProps } from '../types';
 
 // TODO(thure): Should this move upstream as a helper? Is there an easier way to get options?
 const getActiveStatusOption = (status?: string) => {
@@ -26,7 +26,7 @@ const getActiveStatusOption = (status?: string) => {
   return options.find(({ id }) => id === status);
 };
 
-export const TaskCard = ({ subject, role, activeSpace }: PreviewProps<Task.Task>) => {
+export const TaskCard = ({ subject, role, activeSpace }: CardPreviewProps<Task.Task>) => {
   const { title, status } = subject;
   const statusOption = getActiveStatusOption(status);
 

@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Rx } from '@effect-rx/rx-react';
+import { Atom } from '@effect-atom/atom-react';
 import React from 'react';
 
 import { LayoutAction, createIntent } from '@dxos/app-framework';
@@ -20,7 +20,7 @@ import {
 } from '@dxos/react-ui-menu';
 
 import { meta } from '../meta';
-import { type PreviewProps } from '../types';
+import { type CardPreviewProps } from '../types';
 
 /**
  * Generic menu for objects; builds menu with common actions.
@@ -30,7 +30,7 @@ export const CardSubjectMenu = ({
   subject,
   activeSpace,
   ...props
-}: PreviewProps & Omit<IconButtonProps, 'icon' | 'label'>) => {
+}: CardPreviewProps & Omit<IconButtonProps, 'icon' | 'label'>) => {
   const { t } = useTranslation(meta.id);
   const menuProps = useSubjectMenuGroupItems({ subject, activeSpace });
 
@@ -55,7 +55,7 @@ export const CardSubjectMenu = ({
   );
 };
 
-const useSubjectMenuGroupItems = ({ subject, activeSpace }: PreviewProps): MenuActions => {
+const useSubjectMenuGroupItems = ({ subject, activeSpace }: CardPreviewProps): MenuActions => {
   const { dispatchPromise: dispatch } = useIntentDispatcher();
   const result: ActionGraphProps = { edges: [], nodes: [] };
 
@@ -99,5 +99,5 @@ const useSubjectMenuGroupItems = ({ subject, activeSpace }: PreviewProps): MenuA
     result.edges.push({ source: 'root', target });
   });
 
-  return useMenuActions(Rx.make(result));
+  return useMenuActions(Atom.make(result));
 };

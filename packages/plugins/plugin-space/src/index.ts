@@ -6,6 +6,7 @@ export { SpaceCapabilities } from './capabilities';
 export { SpaceEvents } from './events';
 
 export * from './components';
+export * from './helpers';
 export * from './hooks';
 export * from './meta';
 export * from './SpacePlugin';

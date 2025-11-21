@@ -7,7 +7,7 @@
 export const theme = {
   root: 'bg-attention leading-relaxed font-mono',
 
-  padding: 'px-40 py-16 gap-8',
+  padding: 'pli-40 plb-16 gap-8',
 
   nodes: {
     h1: 'text-[80px] text-accentText',

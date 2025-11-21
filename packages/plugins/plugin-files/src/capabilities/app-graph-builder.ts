@@ -2,12 +2,12 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Rx } from '@effect-rx/rx-react';
+import { Atom } from '@effect-atom/atom-react';
 import * as Function from 'effect/Function';
 import * as Option from 'effect/Option';
 
 import { Capabilities, LayoutAction, type PluginContext, chain, contributes, createIntent } from '@dxos/app-framework';
-import { ROOT_ID, createExtension, rxFromSignal } from '@dxos/plugin-graph';
+import { ROOT_ID, atomFromSignal, createExtension } from '@dxos/plugin-graph';
 
 import { meta } from '../meta';
 import { type FilesSettingsProps, LocalFilesAction } from '../types';
@@ -21,7 +21,7 @@ export default (context: PluginContext) =>
     createExtension({
       id: `${meta.id}/export`,
       actions: (node) =>
-        Rx.make((get) =>
+        Atom.make((get) =>
           Function.pipe(
             get(node),
             Option.flatMap((node) => (node.id === ROOT_ID ? Option.some(node) : Option.none())),
@@ -58,13 +58,13 @@ export default (context: PluginContext) =>
     createExtension({
       id: `${meta.id}/root`,
       connector: (node) =>
-        Rx.make((get) =>
+        Atom.make((get) =>
           Function.pipe(
             get(node),
             Option.flatMap((node) => (node.id === ROOT_ID ? Option.some(node) : Option.none())),
             Option.flatMap(() => {
               const settingsStore = get(context.capabilities(Capabilities.SettingsStore))[0];
-              const settings = get(rxFromSignal(() => settingsStore?.getStore<FilesSettingsProps>(meta.id)?.value));
+              const settings = get(atomFromSignal(() => settingsStore?.getStore<FilesSettingsProps>(meta.id)?.value));
               return settings ? Option.some(settings) : Option.none();
             }),
             Option.map((settings) => {
@@ -93,7 +93,7 @@ export default (context: PluginContext) =>
     createExtension({
       id: `${meta.id}/files`,
       actions: (node) =>
-        Rx.make((get) =>
+        Atom.make((get) =>
           Function.pipe(
             get(node),
             Option.flatMap((node) => (node.id === meta.id ? Option.some(node) : Option.none())),
@@ -136,7 +136,7 @@ export default (context: PluginContext) =>
           ),
         ),
       connector: (node) =>
-        Rx.make((get) =>
+        Atom.make((get) =>
           Function.pipe(
             get(node),
             Option.flatMap((node) => (node.id === meta.id ? Option.some(node) : Option.none())),
@@ -162,7 +162,7 @@ export default (context: PluginContext) =>
     createExtension({
       id: `${meta.id}/sub-files`,
       connector: (node) =>
-        Rx.make((get) =>
+        Atom.make((get) =>
           Function.pipe(
             get(node),
             Option.flatMap((node) => (isLocalDirectory(node.data) ? Option.some(node.data.children) : Option.none())),
@@ -186,7 +186,7 @@ export default (context: PluginContext) =>
     createExtension({
       id: `${meta.id}/actions`,
       actions: (node) =>
-        Rx.make((get) =>
+        Atom.make((get) =>
           Function.pipe(
             get(node),
             Option.flatMap((node) => (isLocalEntity(node.data) ? Option.some(node.data) : Option.none())),

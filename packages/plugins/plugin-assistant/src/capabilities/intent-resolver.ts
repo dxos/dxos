@@ -6,11 +6,12 @@ import * as Effect from 'effect/Effect';
 
 import { Capabilities, type PluginContext, contributes, createIntent, createResolver } from '@dxos/app-framework';
 import { AiContextBinder, AiConversation } from '@dxos/assistant';
+import { Agent } from '@dxos/assistant-toolkit';
 import { Blueprint, Prompt, Template } from '@dxos/blueprints';
 import { type Queue } from '@dxos/client/echo';
 import { Sequence } from '@dxos/conductor';
 import { Filter, Key, Obj, Ref, Type } from '@dxos/echo';
-import { TracingService } from '@dxos/functions';
+import { TracingService, serializeFunction } from '@dxos/functions';
 import { AutomationCapabilities } from '@dxos/plugin-automation';
 import { CollectionAction } from '@dxos/plugin-space/types';
 import { getSpace } from '@dxos/react-client/echo';
@@ -49,6 +50,9 @@ export default (context: PluginContext) => [
             Ref.make(blueprintCollection),
             Ref.make(promptCollection),
           );
+
+          // TODO(wittjosiah): Remove once function registry is avaiable.
+          space.db.add(serializeFunction(Agent.prompt));
 
           // Create default chat.
           const { object: chat } = yield* dispatch(createIntent(AssistantAction.CreateChat, { space }));
@@ -136,7 +140,7 @@ export default (context: PluginContext) => [
       resolve: ({ companionTo, chat }) =>
         Effect.gen(function* () {
           const state = context.getCapability(AssistantCapabilities.MutableState);
-          state.currentChat[Obj.getDXN(companionTo).toString()] = chat;
+          state.currentChat[Obj.getDXN(companionTo).toString()] = chat && Obj.getDXN(chat).toString();
         }),
     }),
   ]),

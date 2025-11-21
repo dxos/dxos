@@ -44,7 +44,7 @@ export const ObjectForm = ({ object, schema }: ObjectFormProps) => {
       for (const path of changedPaths) {
         if (path === 'tags') {
           const meta = Obj.getMeta(object);
-          meta.tags = tags.map((tag: Ref.Ref<Tag.Tag>) => tag.dxn.toString());
+          meta.tags = tags?.map((tag: Ref.Ref<Tag.Tag>) => tag.dxn.toString()) ?? [];
           continue;
         }
 

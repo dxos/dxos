@@ -13,6 +13,7 @@ import {
   createResolver,
 } from '@dxos/app-framework';
 import { Filter, Obj, Query, Ref, Relation, Type } from '@dxos/echo';
+import { Serializer } from '@dxos/echo-db';
 import { DatabaseService } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { Migrations } from '@dxos/migrations';
@@ -43,7 +44,7 @@ import { COMPOSER_SPACE_LOCK, cloneObject, getNestedObjects } from '../util';
 import { SpaceCapabilities } from './capabilities';
 
 // TODO(wittjosiah): Remove.
-const SPACE_MAX_OBJECTS = 500;
+const SPACE_MAX_OBJECTS = 750;
 
 type IntentResolverOptions = {
   context: PluginContext;
@@ -327,6 +328,17 @@ export default ({ context, observability, createInvitationUrl }: IntentResolverO
                 ]
               : []),
           ],
+        };
+      },
+    }),
+    createResolver({
+      intent: SpaceAction.Snapshot,
+      resolve: async ({ space, query }) => {
+        const backup = await new Serializer().export(space.db, query && Query.fromAst(query));
+        return {
+          data: {
+            snapshot: new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' }),
+          },
         };
       },
     }),
@@ -676,7 +688,6 @@ export default ({ context, observability, createInvitationUrl }: IntentResolverO
       resolve: async ({ object, target }) => {
         const space = isSpace(target) ? target : getSpace(target);
         invariant(space, 'Space not found.');
-
         const newObject = await cloneObject(object, resolve, space);
         return {
           intents: [createIntent(SpaceAction.AddObject, { object: newObject, target })],

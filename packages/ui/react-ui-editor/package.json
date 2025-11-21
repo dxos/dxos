@@ -20,12 +20,6 @@
       "types": "./dist/types/src/types/index.d.ts",
       "browser": "./dist/lib/browser/types/index.mjs",
       "node": "./dist/lib/node-esm/types/index.mjs"
-    },
-    "./testing": {
-      "source": "./src/testing/index.ts",
-      "types": "./dist/types/src/testing/index.d.ts",
-      "browser": "./dist/lib/browser/testing/index.mjs",
-      "node": "./dist/lib/node-esm/testing/index.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
@@ -110,7 +104,7 @@
     "@dxos/react-ui-theme": "workspace:*",
     "@dxos/schema": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
-    "@effect-rx/rx-react": "0.42.4",
+    "@effect-atom/atom-react": "^0.3.4",
     "@effect/platform": "0.92.1",
     "@types/chai": "^4.2.15",
     "@types/chai-dom": "^1.11.0",
@@ -137,7 +131,7 @@
     "@dxos/react-client": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
-    "@effect-rx/rx-react": "^0.34.1",
+    "@effect-atom/atom-react": "^0.3.4",
     "@effect/platform": "^0.80.12",
     "effect": "^3.13.3",
     "react": "^19.0.0",
