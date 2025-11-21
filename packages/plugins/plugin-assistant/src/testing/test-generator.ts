@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import { Obj } from '@dxos/echo';
 import { ContextQueueService, DatabaseService } from '@dxos/functions';
 import { faker } from '@dxos/random';
-import { renderObjectLink } from '@dxos/react-ui-components';
+import { renderObjectLink } from '@dxos/react-ui-markdown';
 import { type Actor, type ContentBlock, Message, Organization } from '@dxos/types';
 import { trim } from '@dxos/util';
 
