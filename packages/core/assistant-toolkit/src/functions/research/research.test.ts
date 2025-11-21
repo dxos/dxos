@@ -19,7 +19,8 @@ import {
 } from '@dxos/assistant';
 import { Blueprint } from '@dxos/blueprints';
 import { Filter, Obj, Query, Ref } from '@dxos/echo';
-import { TestHelpers, acquireReleaseResource } from '@dxos/effect';
+import { acquireReleaseResource } from '@dxos/effect';
+import { TestHelpers } from '@dxos/effect/testing';
 import {
   CredentialsService,
   DatabaseService,
