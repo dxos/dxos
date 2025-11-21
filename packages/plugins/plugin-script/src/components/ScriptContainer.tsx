@@ -4,8 +4,9 @@
 
 import React, { useMemo } from 'react';
 
+import { createDocAccessor } from '@dxos/echo-db';
 import { type Script } from '@dxos/functions';
-import { createDocAccessor, getSpace } from '@dxos/react-client/echo';
+import { getSpace } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { createDataExtensions, listener, stackItemContentEditorClassNames } from '@dxos/react-ui-editor';
 import { StackItem } from '@dxos/react-ui-stack';

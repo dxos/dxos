@@ -10,8 +10,8 @@ import { LayoutAction, type PromiseIntentDispatcher, createIntent } from '@dxos/
 import { useIntentDispatcher } from '@dxos/app-framework/react';
 import { debounceAndThrottle } from '@dxos/async';
 import { Obj } from '@dxos/echo';
+import { createDocAccessor } from '@dxos/echo-db';
 import { invariant } from '@dxos/invariant';
-import { createDocAccessor } from '@dxos/react-client/echo';
 import { getSpace } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { Icon, ThemeProvider } from '@dxos/react-ui';

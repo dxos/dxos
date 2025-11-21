@@ -10,7 +10,8 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useEffect, useState } from 'react';
 
 import { Obj, Ref, Type } from '@dxos/echo';
-import { DocAccessor, Query, type Space, createDocAccessor, useQuery, useSpace } from '@dxos/react-client/echo';
+import { DocAccessor, createDocAccessor } from '@dxos/echo-db';
+import { Query, type Space, useQuery, useSpace } from '@dxos/react-client/echo';
 import { type Identity, useIdentity } from '@dxos/react-client/halo';
 import { type ClientRepeatedComponentProps, ClientRepeater } from '@dxos/react-client/testing';
 import { useThemeContext } from '@dxos/react-ui';
