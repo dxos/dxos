@@ -3,7 +3,7 @@
 //
 
 import { Capabilities, contributes } from '@dxos/app-framework';
-import { createDocAccessor, getRangeFromCursor, getTarget } from '@dxos/react-client/echo';
+import { createDocAccessor, getRangeFromCursor, getTarget } from '@dxos/echo-db';
 import { type AnchoredTo } from '@dxos/types';
 
 import { Markdown } from '../types';
