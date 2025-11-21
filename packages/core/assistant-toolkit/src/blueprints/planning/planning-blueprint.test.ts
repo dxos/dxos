@@ -16,7 +16,8 @@ import {
 } from '@dxos/assistant';
 import { Blueprint } from '@dxos/blueprints';
 import { Obj, Ref } from '@dxos/echo';
-import { TestHelpers, acquireReleaseResource } from '@dxos/effect';
+import { acquireReleaseResource } from '@dxos/effect';
+import { TestHelpers } from '@dxos/effect/testing';
 import { DatabaseService, QueueService, TracingService } from '@dxos/functions';
 import { FunctionImplementationResolver } from '@dxos/functions-runtime';
 import { FunctionInvocationServiceLayerTestMocked, TestDatabaseLayer } from '@dxos/functions-runtime/testing';

@@ -17,7 +17,8 @@ import {
 } from '@dxos/assistant';
 import { Blueprint } from '@dxos/blueprints';
 import { Obj, Ref } from '@dxos/echo';
-import { TestHelpers, acquireReleaseResource } from '@dxos/effect';
+import { acquireReleaseResource } from '@dxos/effect';
+import { TestHelpers } from '@dxos/effect/testing';
 import { DatabaseService, QueueService, TracingService } from '@dxos/functions';
 import { FunctionInvocationServiceLayerTestMocked, TestDatabaseLayer } from '@dxos/functions-runtime/testing';
 import { log } from '@dxos/log';
@@ -52,7 +53,7 @@ describe('Design Blueprint', { timeout: 120_000 }, () => {
 
         {
           const prompt = trim`
-            I want to design a new feature for our product. 
+            I want to design a new feature for our product.
 
             We need to add a user profile system with the following requirements:
             1. Users should be able to create and edit their profiles
@@ -72,7 +73,7 @@ describe('Design Blueprint', { timeout: 120_000 }, () => {
 
         {
           const prompt = trim`
-            I want this to be built on top of Durable Objects and SQLite database. 
+            I want this to be built on top of Durable Objects and SQLite database.
             Adjust the spec to reflect this.
           `;
 

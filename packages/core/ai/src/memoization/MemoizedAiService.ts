@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
-import { TestContextService } from '@dxos/effect';
+import { TestContextService } from '@dxos/effect/testing';
 
 import * as AiService from '../AiService';
 

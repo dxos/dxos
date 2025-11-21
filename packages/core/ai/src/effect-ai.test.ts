@@ -25,7 +25,7 @@ import * as Schema from 'effect/Schema';
 import * as Stream from 'effect/Stream';
 
 import { AiParser } from '@dxos/ai';
-import { TestHelpers } from '@dxos/effect';
+import { TestHelpers } from '@dxos/effect/testing';
 import { log } from '@dxos/log';
 import { trim } from '@dxos/util';
 

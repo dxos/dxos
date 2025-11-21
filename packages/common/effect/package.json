@@ -13,11 +13,21 @@
       "types": "./dist/types/src/index.d.ts",
       "browser": "./dist/lib/browser/index.mjs",
       "node": "./dist/lib/node-esm/index.mjs"
+    },
+    "./testing": {
+      "source": "./src/testing.ts",
+      "types": "./dist/types/src/testing.d.ts",
+      "browser": "./dist/lib/browser/testing.mjs",
+      "node": "./dist/lib/node-esm/testing.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
   "typesVersions": {
-    "*": {}
+    "*": {
+      "testing": [
+        "./dist/types/src/testing.d.ts"
+      ]
+    }
   },
   "files": [
     "dist",

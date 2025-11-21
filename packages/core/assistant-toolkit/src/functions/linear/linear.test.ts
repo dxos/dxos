@@ -13,7 +13,7 @@ import { AiService } from '@dxos/ai';
 import { AiServiceTestingPreset } from '@dxos/ai/testing';
 import { makeToolExecutionServiceFromFunctions, makeToolResolverFromFunctions } from '@dxos/assistant';
 import { Obj, Query } from '@dxos/echo';
-import { TestHelpers } from '@dxos/effect';
+import { TestHelpers } from '@dxos/effect/testing';
 import { CredentialsService, DatabaseService, FunctionInvocationService } from '@dxos/functions';
 import { TracingServiceExt } from '@dxos/functions-runtime';
 import {

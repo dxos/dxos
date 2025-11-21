@@ -86,14 +86,14 @@ export const TypescriptEditor = ({
 
         // https://github.com/val-town/codemirror-ts
         env && [
-          tsFacet.of({ env, path: `/src/${id}.ts` }),
+          tsFacet.of({ env, path: `./src/${id}.ts` }),
           tsSync(),
           tsLinter(),
           tsHover({ renderTooltip: createTooltipRenderer(themeMode) }),
         ],
       ].filter(isNonNullable),
     }),
-    [id, extensions, themeMode, inputMode, selection, scrollTo],
+    [id, extensions, themeMode, inputMode, selection, scrollTo, env],
   );
 
   // TODO(brudon): Use react-ui-editor's Editor component.
