@@ -2,6 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
+export * from './annotations';
 export * from './json-schema-normalize';
 export * from './json-schema-type';
 export * from './json-schema';

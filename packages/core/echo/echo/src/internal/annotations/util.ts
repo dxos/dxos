@@ -115,8 +115,10 @@ export const isInstanceOf = <Schema extends Schema.Schema.AnyNoContext>(
 };
 
 /**
+ * @see JSONSchemaAnnotationId
  * @returns JSON-schema annotation so that the schema can be serialized with correct parameters.
  */
+// TODO(burdon): Required type.
 export const makeTypeJsonSchemaAnnotation = (options: {
   identifier?: string;
   kind: EntityKind;
