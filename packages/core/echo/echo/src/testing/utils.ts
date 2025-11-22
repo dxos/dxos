@@ -8,30 +8,13 @@ import type * as SchemaAST from 'effect/SchemaAST';
 import { registerSignalsRuntime } from '@dxos/echo-signals';
 import { deepMapValues } from '@dxos/util';
 
-registerSignalsRuntime();
-
-// TODO(burdon): Move to util.
-export const updateCounter = (touch: () => void) => {
-  let updateCount = -1;
-  const unsubscribe = effect(() => {
-    touch();
-    updateCount++;
-  });
-
-  return {
-    // https://github.com/tc39/proposal-explicit-resource-management
-    [Symbol.dispose]: unsubscribe,
-    get count() {
-      return updateCount;
-    },
-  };
-};
+registerSignalsRuntime(); // TODO: Move to tests.
 
 /**
  * Converts AST to a format that can be compared with test matchers.
  */
 export const prepareAstForCompare = (obj: SchemaAST.AST): any =>
-  deepMapValues(obj, (value: any, recurse) => {
+  deepMapValues(obj, (value: any, recurse: any) => {
     if (typeof value === 'function') {
       return null;
     }
@@ -47,8 +30,26 @@ export const prepareAstForCompare = (obj: SchemaAST.AST): any =>
         clone[sym.toString()] = clone[sym];
         delete clone[sym];
       }
+
       return recurse(clone);
     }
 
     return recurse(value);
   });
+
+// TODO(burdon): Use @dxos/util.
+export const updateCounter = (touch: () => void) => {
+  let updateCount = -1;
+  const unsubscribe = effect(() => {
+    touch();
+    updateCount++;
+  });
+
+  return {
+    // https://github.com/tc39/proposal-explicit-resource-management
+    [Symbol.dispose]: unsubscribe,
+    get count() {
+      return updateCount;
+    },
+  };
+};

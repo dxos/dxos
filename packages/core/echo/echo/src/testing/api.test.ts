@@ -9,7 +9,7 @@ import { raise } from '@dxos/debug';
 import { FormatAnnotation, FormatEnum } from '@dxos/echo/internal';
 import { type Live } from '@dxos/live-object';
 
-import { Key, Obj, Ref, Relation, Type } from '../index';
+import { Key, Obj, Ref, Relation, Type } from '../..';
 
 // TODO(burdon): Factor out standard test types.
 namespace Testing {

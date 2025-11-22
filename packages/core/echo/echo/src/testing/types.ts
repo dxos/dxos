@@ -9,7 +9,6 @@ import * as Type from '../Type';
 /**
  * @deprecated
  */
-// TOOD(burdon): Reconcile with @dxos/schema.
 export namespace Testing {
   export const Person = Schema.Struct({
     name: Schema.String,
