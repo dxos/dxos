@@ -3,12 +3,9 @@
 //
 
 import { type Database, Filter, Query } from '@dxos/echo';
-import { type PublicKey, type SpaceId } from '@dxos/keys';
-import { type Live } from '@dxos/live-object';
+import { type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { QueryOptions as QueryOptionsProto } from '@dxos/protocols/proto/dxos/echo/filter';
-
-import { type QueryResult } from './query-result';
+import { type QueryOptions as QueryOptionsProto } from '@dxos/protocols/proto/dxos/echo/filter';
 
 export { Filter, Query };
 

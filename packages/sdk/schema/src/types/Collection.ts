@@ -6,14 +6,14 @@ import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
 import { PropertiesType } from '@dxos/client-protocol/types';
-import { Obj, Query, QueryAST, Ref, Type } from '@dxos/echo';
-import { type Expando, FormAnnotation } from '@dxos/echo/internal';
+import { Annotation, Obj, Query, QueryAST, Ref, Type } from '@dxos/echo';
+import { type Expando } from '@dxos/echo/internal';
 import { DatabaseService } from '@dxos/echo-db';
 import { invariant } from '@dxos/invariant';
 
 export const Collection = Schema.Struct({
   name: Schema.String.pipe(Schema.optional),
-  objects: Type.Ref(Type.Expando).pipe(Schema.Array, Schema.mutable, FormAnnotation.set(false)),
+  objects: Type.Ref(Type.Expando).pipe(Schema.Array, Schema.mutable, Annotation.FormAnnotation.set(false)),
 }).pipe(
   Type.Obj({
     typename: 'dxos.org/type/Collection',
@@ -29,7 +29,7 @@ export const make = (props: Partial<Obj.MakeProps<typeof Collection>> = {}) =>
 // TODO(wittjosiah): Remove. Use View instead.
 const QueryCollection_ = Schema.Struct({
   name: Schema.String.pipe(Schema.optional),
-  query: QueryAST.Query.pipe(FormAnnotation.set(false)),
+  query: QueryAST.Query.pipe(Annotation.FormAnnotation.set(false)),
 }).pipe(
   Type.Obj({
     typename: 'dxos.org/type/QueryCollection',

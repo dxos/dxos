@@ -12,11 +12,11 @@ import {
   Ref,
   RelationSourceId,
   RelationTargetId,
-  getSchemaTypename,
-  live,
-  getTypeAnnotation,
   getSchema,
+  getSchemaTypename,
+  getTypeAnnotation,
   getTypeReference,
+  live,
 } from '@dxos/echo/internal';
 import { TestingDeprecated, updateCounter } from '@dxos/echo/testing';
 import { MeshEchoReplicator } from '@dxos/echo-pipeline';
@@ -27,7 +27,7 @@ import {
   testAutomergeReplicatorFactory,
 } from '@dxos/echo-pipeline/testing';
 import { registerSignalsRuntime } from '@dxos/echo-signals';
-import { DXN, ObjectId, PublicKey } from '@dxos/keys';
+import { DXN, type ObjectId, PublicKey } from '@dxos/keys';
 import { TestBuilder as TeleportTestBuilder, TestPeer as TeleportTestPeer } from '@dxos/teleport/testing';
 import { deferAsync } from '@dxos/util';
 

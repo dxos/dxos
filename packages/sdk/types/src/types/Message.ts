@@ -4,8 +4,8 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Obj, Type } from '@dxos/echo';
-import { GeneratorAnnotation, ObjectId, TypedObject } from '@dxos/echo/internal';
+import { Annotation, Obj, Type } from '@dxos/echo';
+import { ObjectId, TypedObject } from '@dxos/echo/internal';
 import { defineObjectMigration } from '@dxos/echo-db';
 
 import * as Actor from './Actor';
@@ -23,7 +23,7 @@ export const Message = Schema.Struct({
   parentMessage: Schema.optional(ObjectId),
   created: Schema.String.pipe(
     Schema.annotations({ description: 'ISO date string when the message was sent.' }),
-    GeneratorAnnotation.set('date.iso8601'),
+    Annotation.GeneratorAnnotation.set('date.iso8601'),
   ),
   sender: Schema.mutable(Actor.Actor).pipe(Schema.annotations({ description: 'Identity of the message sender.' })),
   blocks: Schema.mutable(Schema.Array(ContentBlock.Any)).annotations({

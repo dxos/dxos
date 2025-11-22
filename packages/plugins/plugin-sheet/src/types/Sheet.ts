@@ -5,8 +5,7 @@
 import * as Schema from 'effect/Schema';
 
 import { addressFromA1Notation, isFormula } from '@dxos/compute';
-import { Obj, Type } from '@dxos/echo';
-import { FormAnnotation } from '@dxos/echo/internal';
+import { Annotation, Obj, Type } from '@dxos/echo';
 
 import { addressToIndex, initialize, mapFormulaRefsToIndices } from './util';
 
@@ -46,7 +45,7 @@ export const Sheet = Schema.Struct({
   // Sparse map of cells referenced by index.
   cells: Schema.Record({ key: Schema.String, value: Schema.mutable(CellValue) }).pipe(
     Schema.mutable,
-    FormAnnotation.set(false),
+    Annotation.FormAnnotation.set(false),
   ),
 
   // Ordered row indices.
@@ -58,13 +57,13 @@ export const Sheet = Schema.Struct({
   // Row metadata referenced by index.
   rowMeta: Schema.Record({ key: Schema.String, value: Schema.mutable(RowColumnMeta) }).pipe(
     Schema.mutable,
-    FormAnnotation.set(false),
+    Annotation.FormAnnotation.set(false),
   ),
 
   // Column metadata referenced by index.
   columnMeta: Schema.Record({ key: Schema.String, value: Schema.mutable(RowColumnMeta) }).pipe(
     Schema.mutable,
-    FormAnnotation.set(false),
+    Annotation.FormAnnotation.set(false),
   ),
 
   // Cell formatting referenced by indexed range.

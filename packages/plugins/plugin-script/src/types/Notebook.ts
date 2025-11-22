@@ -5,9 +5,7 @@
 import * as Schema from 'effect/Schema';
 
 import { Prompt } from '@dxos/blueprints';
-import { Obj, Type } from '@dxos/echo';
-import { FormAnnotation } from '@dxos/echo/internal';
-import { LabelAnnotation } from '@dxos/echo/internal';
+import { Annotation, Obj, Type } from '@dxos/echo';
 import { Text, View } from '@dxos/schema';
 
 export type CellType = 'markdown' | 'script' | 'query' | 'prompt' | 'view';
@@ -27,13 +25,13 @@ export const Cell: Schema.Schema<Cell, Cell_Encoded> = Cell_;
 
 export const Notebook = Schema.Struct({
   name: Schema.String.pipe(Schema.optional),
-  cells: Cell.pipe(Schema.Array, Schema.mutable, FormAnnotation.set(false)),
+  cells: Cell.pipe(Schema.Array, Schema.mutable, Annotation.FormAnnotation.set(false)),
 }).pipe(
   Type.Obj({
     typename: 'dxos.org/type/Notebook',
     version: '0.1.0',
   }),
-  LabelAnnotation.set(['name']),
+  Annotation.LabelAnnotation.set(['name']),
 );
 
 export type Notebook = Schema.Schema.Type<typeof Notebook>;

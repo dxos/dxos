@@ -464,6 +464,9 @@ importers:
       '@dxos/echo-signals':
         specifier: workspace:*
         version: link:../packages/core/echo/echo-signals
+      '@dxos/live-object':
+        specifier: workspace:*
+        version: link:../packages/core/echo/live-object
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../packages/sdk/react-client
@@ -13379,6 +13382,9 @@ importers:
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
+      '@dxos/keys':
+        specifier: workspace:*
+        version: link:../../common/keys
       '@dxos/live-object':
         specifier: workspace:*
         version: link:../../core/echo/live-object

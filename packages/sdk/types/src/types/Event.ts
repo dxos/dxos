@@ -4,8 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Obj, Type } from '@dxos/echo';
-import { DescriptionAnnotation, FormAnnotation, LabelAnnotation } from '@dxos/echo/internal';
+import { Annotation, Obj, Type } from '@dxos/echo';
 import { Text } from '@dxos/schema';
 import { type MakeOptional } from '@dxos/util';
 
@@ -28,29 +27,29 @@ export const Event = Schema.Struct({
   /**
    * Transcript of the meeting.
    */
-  transcript: Type.Ref(Transcript.Transcript).pipe(FormAnnotation.set(false), Schema.optional),
+  transcript: Type.Ref(Transcript.Transcript).pipe(Annotation.FormAnnotation.set(false), Schema.optional),
 
   /**
    * Markdown notes for the meeting.
    */
-  notes: Type.Ref(Text.Text).pipe(FormAnnotation.set(false), Schema.optional),
+  notes: Type.Ref(Text.Text).pipe(Annotation.FormAnnotation.set(false), Schema.optional),
 
   /**
    * Generated summary of the meeting.
    */
-  summary: Type.Ref(Text.Text).pipe(FormAnnotation.set(false), Schema.optional),
+  summary: Type.Ref(Text.Text).pipe(Annotation.FormAnnotation.set(false), Schema.optional),
 
   /**
    * Message thread for the meeting.
    */
-  thread: Type.Ref(Thread.Thread).pipe(FormAnnotation.set(false), Schema.optional),
+  thread: Type.Ref(Thread.Thread).pipe(Annotation.FormAnnotation.set(false), Schema.optional),
 }).pipe(
   Type.Obj({
     typename: 'dxos.org/type/Event',
     version: '0.1.0',
   }),
-  LabelAnnotation.set(['title']),
-  DescriptionAnnotation.set('description'),
+  Annotation.LabelAnnotation.set(['title']),
+  Annotation.DescriptionAnnotation.set('description'),
 );
 
 export interface Event extends Schema.Schema.Type<typeof Event> {}

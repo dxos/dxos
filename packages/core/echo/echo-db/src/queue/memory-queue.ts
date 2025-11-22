@@ -5,7 +5,7 @@
 import { type Obj, type Relation } from '@dxos/echo';
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { invariant } from '@dxos/invariant';
-import { ObjectId, DXN, SpaceId } from '@dxos/keys';
+import { DXN, ObjectId, SpaceId } from '@dxos/keys';
 
 import { type Queue } from './types';
 

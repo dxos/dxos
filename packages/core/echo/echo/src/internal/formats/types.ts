@@ -58,7 +58,7 @@ export const FormatAnnotation = createAnnotationHelper<FormatEnum>(FormatAnnotat
 export const getFormatAnnotation = (node: SchemaAST.AST): FormatEnum | undefined =>
   Function.pipe(SchemaAST.getAnnotation<FormatEnum>(FormatAnnotationId)(node), Option.getOrUndefined);
 
-// TODO(burdon): Rename to FormatType and change to discriminated union.
+// TODO(burdon): Rename to TypeFormat and change to discriminated union.
 export enum FormatEnum {
   None = 'none',
   String = 'string',

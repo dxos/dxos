@@ -4,7 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Database, type Obj, type Relation } from '@dxos/echo';
+import { type Database, type Obj, type Relation } from '@dxos/echo';
 import { EntityKind, type TypeAnnotation, TypeAnnotationId } from '@dxos/echo/internal';
 import { type DXN, type ObjectId } from '@dxos/keys';
 

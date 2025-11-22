@@ -4,8 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Obj, Ref, Type } from '@dxos/echo';
-import { FormAnnotation, LabelAnnotation } from '@dxos/echo/internal';
+import { Annotation, Obj, Ref, Type } from '@dxos/echo';
 import { Queue } from '@dxos/echo-db';
 
 import { LLM_PROVIDERS } from './defs';
@@ -15,15 +14,15 @@ import { LLM_PROVIDERS } from './defs';
  */
 export const Chat = Schema.Struct({
   name: Schema.String.pipe(Schema.optional),
-  queue: Type.Ref(Queue).pipe(FormAnnotation.set(false)),
+  queue: Type.Ref(Queue).pipe(Annotation.FormAnnotation.set(false)),
   // TODO(dmaretskyi): Eventually this and the message queue will be the same.
-  traceQueue: Type.Ref(Queue).pipe(FormAnnotation.set(false), Schema.optional),
+  traceQueue: Type.Ref(Queue).pipe(Annotation.FormAnnotation.set(false), Schema.optional),
 }).pipe(
   Type.Obj({
     typename: 'dxos.org/type/assistant/Chat',
     version: '0.2.0',
   }),
-  LabelAnnotation.set(['name']),
+  Annotation.LabelAnnotation.set(['name']),
 );
 
 export interface Chat extends Schema.Schema.Type<typeof Chat> {}

@@ -4,14 +4,13 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Obj, Type } from '@dxos/echo';
-import { FormAnnotation } from '@dxos/echo/internal';
+import { Annotation, Obj, Type } from '@dxos/echo';
 
 export const File = Schema.Struct({
   name: Schema.String.pipe(Schema.optional),
-  type: Schema.String.pipe(FormAnnotation.set(false)),
-  cid: Schema.String.pipe(FormAnnotation.set(false)),
-  timestamp: Schema.String.pipe(FormAnnotation.set(false), Schema.optional),
+  type: Schema.String.pipe(Annotation.FormAnnotation.set(false)),
+  cid: Schema.String.pipe(Annotation.FormAnnotation.set(false)),
+  timestamp: Schema.String.pipe(Annotation.FormAnnotation.set(false), Schema.optional),
 }).pipe(
   Type.Obj({
     typename: 'dxos.org/type/File',

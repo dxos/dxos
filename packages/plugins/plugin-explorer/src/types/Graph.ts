@@ -4,8 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Filter, Obj, Query, QueryAST, Type } from '@dxos/echo';
-import { LabelAnnotation, ViewAnnotation } from '@dxos/echo/internal';
+import { Annotation, Filter, Obj, Query, QueryAST, Type } from '@dxos/echo';
 import { View } from '@dxos/schema';
 
 export const Graph = Schema.Struct({
@@ -19,8 +18,8 @@ export const Graph = Schema.Struct({
     typename: 'dxos.org/type/Graph',
     version: '0.1.0',
   }),
-  LabelAnnotation.set(['name']),
-  ViewAnnotation.set(true),
+  Annotation.LabelAnnotation.set(['name']),
+  Annotation.ViewAnnotation.set(true),
 );
 
 export type Graph = Schema.Schema.Type<typeof Graph>;

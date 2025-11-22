@@ -5,7 +5,7 @@
 import { DeferredTask } from '@dxos/async';
 import { Event } from '@dxos/async';
 import { Context } from '@dxos/context';
-import { Database, Obj, type Ref, type Relation } from '@dxos/echo';
+import { type Database, Obj, type Ref, type Relation } from '@dxos/echo';
 import {
   type HasId,
   type ObjectJSON,
@@ -16,9 +16,9 @@ import {
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { assertArgument, failedInvariant } from '@dxos/invariant';
 import { type DXN, type ObjectId, type SpaceId } from '@dxos/keys';
+import { defineHiddenProperty } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { type QueueService } from '@dxos/protocols';
-import { defineHiddenProperty } from '@dxos/live-object';
 
 import { Filter, Query, QueryResult } from '../query';
 

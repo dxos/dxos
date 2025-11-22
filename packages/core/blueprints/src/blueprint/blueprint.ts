@@ -5,8 +5,7 @@
 import * as Schema from 'effect/Schema';
 
 import { ToolId } from '@dxos/ai';
-import { Obj, Type } from '@dxos/echo';
-import { LabelAnnotation } from '@dxos/echo/internal';
+import { Annotation, Obj, Type } from '@dxos/echo';
 import { type FunctionDefinition } from '@dxos/functions';
 
 import * as Template from '../template';
@@ -60,7 +59,7 @@ export const Blueprint = Schema.Struct({
     typename: 'dxos.org/type/Blueprint',
     version: '0.1.0',
   }),
-  LabelAnnotation.set(['name']),
+  Annotation.LabelAnnotation.set(['name']),
 );
 
 /**

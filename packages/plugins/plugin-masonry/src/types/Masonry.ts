@@ -4,8 +4,8 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Obj, Type } from '@dxos/echo';
-import { type JsonSchemaType, ViewAnnotation, toEffectSchema } from '@dxos/echo/internal';
+import { Annotation, Obj, Type } from '@dxos/echo';
+import { type JsonSchemaType, toEffectSchema } from '@dxos/echo/internal';
 import { View } from '@dxos/schema';
 
 export const Masonry = Schema.Struct({
@@ -21,7 +21,7 @@ export const Masonry = Schema.Struct({
     typename: 'dxos.org/type/Masonry',
     version: '0.1.0',
   }),
-  ViewAnnotation.set(true),
+  Annotation.ViewAnnotation.set(true),
 );
 
 export type Masonry = Schema.Schema.Type<typeof Masonry>;

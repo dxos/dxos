@@ -4,8 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Obj, Type } from '@dxos/echo';
-import { LabelAnnotation, ViewAnnotation } from '@dxos/echo/internal';
+import { Annotation, Obj, Type } from '@dxos/echo';
 import { View } from '@dxos/schema';
 
 export const Map = Schema.Struct({
@@ -20,8 +19,8 @@ export const Map = Schema.Struct({
     typename: 'dxos.org/type/Map',
     version: '0.2.0',
   }),
-  LabelAnnotation.set(['name']),
-  ViewAnnotation.set(true),
+  Annotation.LabelAnnotation.set(['name']),
+  Annotation.ViewAnnotation.set(true),
 );
 
 export type Map = Schema.Schema.Type<typeof Map>;

@@ -5,8 +5,8 @@
 import * as Option from 'effect/Option';
 import React, { useCallback } from 'react';
 
-import { Type } from '@dxos/echo';
-import { type BaseObject, type TypeAnnotation, ViewAnnotation, getTypeAnnotation } from '@dxos/echo/internal';
+import { Annotation, Type } from '@dxos/echo';
+import { type BaseObject, type TypeAnnotation } from '@dxos/echo/internal';
 import { type Space, type SpaceId } from '@dxos/react-client/echo';
 import { Icon, toLocalizedString, useDefaultValue, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
@@ -55,10 +55,10 @@ export const CreateObjectPanel = ({
       if (views == null) {
         return true;
       } else {
-        return views === ViewAnnotation.get(form.objectSchema).pipe(Option.getOrElse(() => false));
+        return views === Annotation.ViewAnnotation.get(form.objectSchema).pipe(Option.getOrElse(() => false));
       }
     })
-    .map((form) => getTypeAnnotation(form.objectSchema))
+    .map((form) => Annotation.getTypeAnnotation(form.objectSchema))
     .filter(isNonNullable)
     .sort((a, b) => {
       const nameA = t('typename label', { ns: a.typename, defaultValue: a.typename });
@@ -78,7 +78,7 @@ export const CreateObjectPanel = ({
 
   const handleSetTypename = useCallback(
     async (typename: string) => {
-      const form = forms.find((form) => getTypeAnnotation(form.objectSchema)?.typename === typename);
+      const form = forms.find((form) => Annotation.getTypeAnnotation(form.objectSchema)?.typename === typename);
       if (form && !form.formSchema) {
         await onCreateObject?.({ form });
       } else {

@@ -4,15 +4,14 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Obj, Ref, Type } from '@dxos/echo';
-import { FormAnnotation } from '@dxos/echo/internal';
+import { Annotation, Obj, Ref, Type } from '@dxos/echo';
 import { Thread } from '@dxos/types';
 
 const _Channel = Schema.Struct({
   name: Schema.optional(Schema.String),
-  defaultThread: Type.Ref(Thread.Thread).pipe(FormAnnotation.set(false)),
+  defaultThread: Type.Ref(Thread.Thread).pipe(Annotation.FormAnnotation.set(false)),
   // TODO(wittjosiah): Should be an "ordered collection".
-  threads: Type.Ref(Thread.Thread).pipe(Schema.Array, Schema.mutable, FormAnnotation.set(false)),
+  threads: Type.Ref(Thread.Thread).pipe(Schema.Array, Schema.mutable, Annotation.FormAnnotation.set(false)),
 }).pipe(Type.Obj({ typename: 'dxos.org/type/Channel', version: '0.1.0' }));
 export interface Channel extends Schema.Schema.Type<typeof _Channel> {}
 export interface ChannelEncoded extends Schema.Schema.Encoded<typeof _Channel> {}

@@ -4,8 +4,8 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Obj, Type } from '@dxos/echo';
-import { Format, GeneratorAnnotation, LabelAnnotation, PropertyMeta } from '@dxos/echo/internal';
+import { Annotation, Obj, Type } from '@dxos/echo';
+import { Format, PropertyMeta } from '@dxos/echo/internal';
 import { ItemAnnotation } from '@dxos/schema';
 
 import * as Geo from './Geo';
@@ -22,7 +22,7 @@ import * as Organization from './Organization';
 const PersonSchema = Schema.Struct({
   fullName: Schema.String.pipe(
     Schema.annotations({ title: 'Full Name' }),
-    GeneratorAnnotation.set({
+    Annotation.GeneratorAnnotation.set({
       generator: 'person.fullName',
       probability: 1,
     }),
@@ -48,7 +48,7 @@ const PersonSchema = Schema.Struct({
   emails: Schema.Array(
     Schema.Struct({
       label: Schema.optional(Schema.String),
-      value: Format.Email.pipe(GeneratorAnnotation.set('internet.email')),
+      value: Format.Email.pipe(Annotation.GeneratorAnnotation.set('internet.email')),
     }),
   ).pipe(Schema.mutable, Schema.optional),
   identities: Schema.Array(
@@ -76,13 +76,13 @@ const PersonSchema = Schema.Struct({
   urls: Schema.Array(
     Schema.Struct({
       label: Schema.optional(Schema.String),
-      value: Format.URL.pipe(GeneratorAnnotation.set('internet.url')),
+      value: Format.URL.pipe(Annotation.GeneratorAnnotation.set('internet.url')),
     }),
   ).pipe(Schema.mutable, Schema.optional),
   // TODO(burdon): Support date or create String type for ISO Date.
   birthday: Schema.String.pipe(
     Schema.annotations({ title: 'Birthday' }),
-    GeneratorAnnotation.set('date.iso8601'),
+    Annotation.GeneratorAnnotation.set('date.iso8601'),
     Schema.optional,
   ),
   // TODO(burdon): Move to base object?

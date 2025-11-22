@@ -4,8 +4,8 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Obj, Type } from '@dxos/echo';
-import { JsonSchemaType, LabelAnnotation, Ref } from '@dxos/echo/internal';
+import { Annotation, Obj, Type } from '@dxos/echo';
+import { JsonSchemaType, Ref } from '@dxos/echo/internal';
 
 import { Script } from './Script';
 
@@ -55,7 +55,7 @@ export const Function = Schema.Struct({
     typename: 'dxos.org/type/Function',
     version: '0.1.0',
   }),
-  LabelAnnotation.set(['name']),
+  Annotation.LabelAnnotation.set(['name']),
 );
 export interface Function extends Schema.Schema.Type<typeof Function> {}
 

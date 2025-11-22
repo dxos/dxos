@@ -5,9 +5,8 @@
 import * as Match from 'effect/Match';
 import * as Schema from 'effect/Schema';
 
-import { Obj, Type } from '@dxos/echo';
+import { Annotation, Obj, Type } from '@dxos/echo';
 import { JsonPath, type JsonSchemaType, toEffectSchema } from '@dxos/echo/internal';
-import { ViewAnnotation } from '@dxos/echo/internal';
 import { type SimpleType } from '@dxos/effect';
 import { View, getSchemaProperties } from '@dxos/schema';
 
@@ -21,7 +20,7 @@ export const Table = Schema.Struct({
     typename: 'dxos.org/type/Table',
     version: '0.1.0',
   }),
-  ViewAnnotation.set(true),
+  Annotation.ViewAnnotation.set(true),
 );
 
 export type Table = Schema.Schema.Type<typeof Table>;

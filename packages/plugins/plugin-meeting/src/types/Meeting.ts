@@ -4,8 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Type } from '@dxos/echo';
-import { FormAnnotation, LabelAnnotation } from '@dxos/echo/internal';
+import { Annotation, Type } from '@dxos/echo';
 import { Text } from '@dxos/schema';
 import { Thread, Transcript } from '@dxos/types';
 
@@ -23,38 +22,38 @@ const Meeting_ = Schema.Struct({
    * Used to generate a fallback name if one is not provided.
    */
   // TODO(wittjosiah): Remove. Rely on object meta.
-  created: Schema.String.annotations({ description: 'ISO timestamp' }).pipe(FormAnnotation.set(false)),
+  created: Schema.String.annotations({ description: 'ISO timestamp' }).pipe(Annotation.FormAnnotation.set(false)),
 
   /**
    * List of dids of identities which joined some portion of the meeting.
    */
-  participants: Schema.mutable(Schema.Array(IdentityDidSchema)).pipe(FormAnnotation.set(false)),
+  participants: Schema.mutable(Schema.Array(IdentityDidSchema)).pipe(Annotation.FormAnnotation.set(false)),
 
   /**
    * Transcript of the meeting.
    */
-  transcript: Type.Ref(Transcript.Transcript).pipe(FormAnnotation.set(false)),
+  transcript: Type.Ref(Transcript.Transcript).pipe(Annotation.FormAnnotation.set(false)),
 
   /**
    * Markdown notes for the meeting.
    */
-  notes: Type.Ref(Text.Text).pipe(FormAnnotation.set(false)),
+  notes: Type.Ref(Text.Text).pipe(Annotation.FormAnnotation.set(false)),
 
   /**
    * Generated summary of the meeting.
    */
-  summary: Type.Ref(Text.Text).pipe(FormAnnotation.set(false)),
+  summary: Type.Ref(Text.Text).pipe(Annotation.FormAnnotation.set(false)),
 
   /**
    * Message thread for the meeting.
    */
-  thread: Type.Ref(Thread.Thread).pipe(FormAnnotation.set(false)),
+  thread: Type.Ref(Thread.Thread).pipe(Annotation.FormAnnotation.set(false)),
 }).pipe(
   Type.Obj({
     typename: 'dxos.org/type/Meeting',
     version: '0.1.0',
   }),
-  LabelAnnotation.set(['name']),
+  Annotation.LabelAnnotation.set(['name']),
 );
 export interface Meeting extends Schema.Schema.Type<typeof Meeting_> {}
 export interface MeetingEncoded extends Schema.Schema.Encoded<typeof Meeting_> {}

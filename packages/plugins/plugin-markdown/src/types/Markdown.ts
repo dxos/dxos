@@ -4,8 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Obj, Ref, Type } from '@dxos/echo';
-import { DescriptionAnnotation, FormAnnotation, LabelAnnotation } from '@dxos/echo/internal';
+import { Annotation, Obj, Ref, Type } from '@dxos/echo';
 import { EditorInputMode, EditorViewMode } from '@dxos/react-ui-editor/types';
 import { ItemAnnotation, Text } from '@dxos/schema';
 
@@ -15,15 +14,15 @@ import { ItemAnnotation, Text } from '@dxos/schema';
 export const Document = Schema.Struct({
   name: Schema.optional(Schema.String),
   description: Schema.optional(Schema.String),
-  fallbackName: Schema.String.pipe(FormAnnotation.set(false), Schema.optional),
-  content: Type.Ref(Text.Text).pipe(FormAnnotation.set(false)),
+  fallbackName: Schema.optional(Schema.String.pipe(Annotation.FormAnnotation.set(false))),
+  content: Type.Ref(Text.Text).pipe(Annotation.FormAnnotation.set(false)),
 }).pipe(
   Type.Obj({
     typename: 'dxos.org/type/Document',
     version: '0.1.0',
   }),
-  LabelAnnotation.set(['name', 'fallbackName']),
-  DescriptionAnnotation.set('description'),
+  Annotation.LabelAnnotation.set(['name', 'fallbackName']),
+  Annotation.DescriptionAnnotation.set('description'),
   ItemAnnotation.set(true),
 );
 

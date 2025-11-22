@@ -15,7 +15,6 @@ import { type DatabaseDirectory } from '@dxos/echo-protocol';
 import { DXN, PublicKey } from '@dxos/keys';
 import { createTestLevel } from '@dxos/kv-store/testing';
 import { log } from '@dxos/log';
-import { QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
 import { faker } from '@dxos/random';
 import { range } from '@dxos/util';
 

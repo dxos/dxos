@@ -4,8 +4,8 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Obj, Type } from '@dxos/echo';
-import { type JsonSchemaType, LabelAnnotation, ViewAnnotation } from '@dxos/echo/internal';
+import { Annotation, Obj, Type } from '@dxos/echo';
+import { type JsonSchemaType } from '@dxos/echo/internal';
 import { View } from '@dxos/schema';
 
 export const Kanban = Schema.Struct({
@@ -30,8 +30,8 @@ export const Kanban = Schema.Struct({
     typename: 'dxos.org/type/Kanban',
     version: '0.1.0',
   }),
-  LabelAnnotation.set(['name']),
-  ViewAnnotation.set(true),
+  Annotation.LabelAnnotation.set(['name']),
+  Annotation.ViewAnnotation.set(true),
 );
 
 export type Kanban = Schema.Schema.Type<typeof Kanban>;

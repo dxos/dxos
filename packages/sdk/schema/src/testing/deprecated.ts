@@ -4,8 +4,8 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Type } from '@dxos/echo';
-import { FieldLookupAnnotationId, GeneratorAnnotation, LabelAnnotation } from '@dxos/echo/internal';
+import { Annotation, Type } from '@dxos/echo';
+import { FieldLookupAnnotationId } from '@dxos/echo/internal';
 
 import { IconAnnotation } from '../annotations';
 
@@ -36,17 +36,20 @@ export namespace Testing {
 
   export const OrganizationSchema = Schema.Struct({
     id: Type.ObjectId,
-    name: Schema.String.pipe(GeneratorAnnotation.set('company.name')),
+    name: Schema.String.pipe(Annotation.GeneratorAnnotation.set('company.name')),
     description: Schema.optional(Schema.String),
     image: Schema.optional(
       Type.Format.URL.pipe(Schema.annotations({ title: 'Preview image' }), GeneratorAnnotation.set('image.url')),
     ),
     website: Schema.optional(
-      Type.Format.URL.pipe(Schema.annotations({ title: 'Website' }), GeneratorAnnotation.set('internet.url')),
+      Type.Format.URL.pipe(
+        Schema.annotations({ title: 'Website' }),
+        Annotation.GeneratorAnnotation.set('internet.url'),
+      ),
     ),
   }).pipe(
     Schema.annotations({ title: 'Organization' }),
-    LabelAnnotation.set(['name']),
+    Annotation.LabelAnnotation.set(['name']),
     IconAnnotation.set('ph--building--regular'),
   );
 
@@ -67,11 +70,11 @@ export namespace Testing {
 
   export const PersonSchema = Schema.Struct({
     id: Type.ObjectId,
-    name: Schema.String.pipe(GeneratorAnnotation.set('person.fullName')),
+    name: Schema.String.pipe(Annotation.GeneratorAnnotation.set('person.fullName')),
     image: Schema.optional(
       Type.Format.URL.pipe(Schema.annotations({ title: 'Preview image' }), GeneratorAnnotation.set('image.url')),
     ),
-    email: Schema.optional(Type.Format.Email.pipe(GeneratorAnnotation.set('internet.email'))),
+    email: Schema.optional(Type.Format.Email.pipe(Annotation.GeneratorAnnotation.set('internet.email'))),
     organization: Schema.optional(
       Type.Ref(Organization).annotations({
         [FieldLookupAnnotationId]: 'name',
@@ -79,7 +82,7 @@ export namespace Testing {
     ),
   }).pipe(
     Schema.annotations({ title: 'Person' }),
-    LabelAnnotation.set(['name']),
+    Annotation.LabelAnnotation.set(['name']),
     IconAnnotation.set('ph--user--regular'),
   );
 
@@ -97,12 +100,12 @@ export namespace Testing {
 
   export const ProjectSchema = Schema.Struct({
     id: Type.ObjectId,
-    name: Schema.String.pipe(GeneratorAnnotation.set('commerce.productName')),
+    name: Schema.String.pipe(Annotation.GeneratorAnnotation.set('commerce.productName')),
     description: Schema.optional(Schema.String),
-    image: Schema.optional(Type.Format.URL.pipe(GeneratorAnnotation.set('image.url'))),
+    image: Schema.optional(Type.Format.URL.pipe(Annotation.GeneratorAnnotation.set('image.url'))),
   }).pipe(
     Schema.annotations({ title: 'Project' }),
-    LabelAnnotation.set(['name']),
+    Annotation.LabelAnnotation.set(['name']),
     IconAnnotation.set('ph--kanban--regular'),
   );
 
@@ -123,7 +126,7 @@ export namespace Testing {
     created: Schema.String,
     title: Schema.String,
     content: Schema.String,
-  }).pipe(Schema.annotations({ title: 'Message' }), LabelAnnotation.set(['name']));
+  }).pipe(Schema.annotations({ title: 'Message' }), Annotation.LabelAnnotation.set(['name']));
 
   export const Message = MessageSchema.pipe(
     Type.Obj({

@@ -7,7 +7,7 @@ import * as Function from 'effect/Function';
 
 import { Event } from '@dxos/async';
 import { Context } from '@dxos/context';
-import { Database, Obj } from '@dxos/echo';
+import { type Database, Obj } from '@dxos/echo';
 import { type BaseObject } from '@dxos/echo/internal';
 import { filterMatchObjectJSON } from '@dxos/echo-pipeline/filter';
 import { type QueryAST } from '@dxos/echo-protocol';

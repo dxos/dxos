@@ -5,8 +5,7 @@
 import * as Schema from 'effect/Schema';
 
 import { type Space } from '@dxos/client/echo';
-import { Obj, Ref, Type } from '@dxos/echo';
-import { FormAnnotation } from '@dxos/echo/internal';
+import { Annotation, Obj, Ref, Type } from '@dxos/echo';
 import { Queue } from '@dxos/echo-db';
 import { ItemAnnotation } from '@dxos/schema';
 
@@ -28,15 +27,15 @@ export type Labels = Schema.Schema.Type<typeof Labels>;
 // TODO(burdon): Rename MessageBox? (not email specific).
 export const Mailbox = Schema.Struct({
   name: Schema.optional(Schema.String),
-  queue: Type.Ref(Queue).pipe(FormAnnotation.set(false)),
-  labels: Labels.pipe(Schema.mutable, FormAnnotation.set(false), Schema.optional),
+  queue: Type.Ref(Queue).pipe(Annotation.FormAnnotation.set(false)),
+  labels: Labels.pipe(Schema.mutable, Annotation.FormAnnotation.set(false), Schema.optional),
   // TODO(wittjosiah): Factor out to relation?
   filters: Schema.Array(
     Schema.Struct({
       name: Schema.String,
       filter: Schema.String,
     }),
-  ).pipe(FormAnnotation.set(false)),
+  ).pipe(Annotation.FormAnnotation.set(false)),
 }).pipe(
   Type.Obj({
     typename: 'dxos.org/type/Mailbox',

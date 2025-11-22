@@ -3,14 +3,14 @@
 //
 
 export {
+  DescriptionAnnotation,
   FormAnnotation,
   GeneratorAnnotation,
   LabelAnnotation,
-  DescriptionAnnotation,
   ViewAnnotation,
+  getDescription,
   getLabel,
   getLabelForObject,
-  setLabel,
-  getDescription,
   setDescription,
+  setLabel,
 } from './internal/ast/annotations';
