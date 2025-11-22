@@ -3,7 +3,7 @@
 //
 
 import { DEFAULT_INPUT, DEFAULT_OUTPUT } from '@dxos/conductor';
-import { live } from '@dxos/echo/internal';
+import { Obj } from '@dxos/echo';
 import { AbstractGraphBuilder, AbstractGraphModel, Graph } from '@dxos/graph';
 import { ObjectId } from '@dxos/keys';
 import { isLiveObject } from '@dxos/live-object';
@@ -23,7 +23,7 @@ export class CanvasGraphModel<S extends Shape = Shape> extends AbstractGraphMode
     }
 
     return new CanvasGraphModel<S>(
-      live(Graph, {
+      Obj.make(Graph, {
         nodes: graph?.nodes ?? [],
         edges: graph?.edges ?? [],
       }),

@@ -5,8 +5,7 @@
 import { type EditorView } from '@codemirror/view';
 import React, { type ReactNode, forwardRef, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react';
 
-import { Type } from '@dxos/echo';
-import { live } from '@dxos/echo/internal';
+import { Obj, Type } from '@dxos/echo';
 import { createDocAccessor, createObject } from '@dxos/echo-db';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
@@ -55,7 +54,7 @@ export const EditorStory = forwardRef<EditorController, StoryProps>(
 
     const attentionAttrs = useAttentionAttributes('test-panel');
     const [tree, setTree] = useState<DebugNode>();
-    const [object] = useState(createObject(live(Type.Expando, { content: text ?? '' })));
+    const [object] = useState(createObject(Obj.make(Type.Expando, { content: text ?? '' })));
 
     const extensions = useMemo(
       () => (debug ? [extensionsParam, debugTree(setTree)].filter(isNonNullable) : extensionsParam),

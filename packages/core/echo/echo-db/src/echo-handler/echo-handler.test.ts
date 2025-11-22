@@ -21,7 +21,6 @@ import {
   isDeleted,
 } from '@dxos/echo/internal';
 import { EchoObject, Ref, type Ref$, foreignKey, getTypeReference } from '@dxos/echo/internal';
-import { live } from '@dxos/echo/internal';
 import { TestingDeprecated, prepareAstForCompare } from '@dxos/echo/testing';
 import { Reference, decodeReference, encodeReference } from '@dxos/echo-protocol';
 import { registerSignalsRuntime } from '@dxos/echo-signals';
@@ -372,7 +371,7 @@ describe('Reactive Object with ECHO database', () => {
     graph.schemaRegistry.addSchema([TestingDeprecated.Person, TestingDeprecated.HasManager]);
     const alice = db.add(Obj.make(TestingDeprecated.Person, { name: 'Alice' }));
     const bob = db.add(Obj.make(TestingDeprecated.Person, { name: 'Bob' }));
-    const manager = db.add(live(TestingDeprecated.HasManager, { [RelationTargetId]: bob, [RelationSourceId]: alice }));
+    const manager = db.add(Obj.make(TestingDeprecated.HasManager, { [RelationTargetId]: bob, [RelationSourceId]: alice }));
     const objData: any = Obj.toJSON(manager as any);
     expect(objData).to.deep.contain({
       id: manager.id,

@@ -5,8 +5,8 @@
 import { untracked } from '@preact/signals-core';
 import * as Schema from 'effect/Schema';
 
-import { live } from '@dxos/echo/internal';
-import { type Live } from '@dxos/live-object';
+import { Obj } from '@dxos/echo';
+import { live, type Live } from '@dxos/live-object';
 import { ComplexMap } from '@dxos/util';
 
 // NOTE: Chosen from RFC 1738’s `safe` characters: http://www.faqs.org/rfcs/rfc1738.html
@@ -66,7 +66,7 @@ export class AttentionManager {
       return object;
     }
 
-    const newObject = live(AttentionSchema, { hasAttention: false, isAncestor: false, isRelated: false });
+    const newObject = Obj.make(AttentionSchema, { hasAttention: false, isAncestor: false, isRelated: false });
     this._map.set(key, newObject);
     return newObject;
   }

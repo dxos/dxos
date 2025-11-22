@@ -8,7 +8,7 @@ import * as Schema from 'effect/Schema';
 import { AbstractBaseCommand } from '@dxos/cli-base';
 import { type Client } from '@dxos/client';
 import { ATTR_META, ATTR_TYPE, type ObjectMeta, getTypeAnnotation } from '@dxos/echo/internal';
-import { live } from '@dxos/echo/internal';
+import { Obj } from '@dxos/echo';
 import { Function, Trigger } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { isNonNullable } from '@dxos/util';
@@ -92,7 +92,7 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Abstra
         //   this.log(JSON.stringify({ object, meta }, undefined, 2));
         // }
 
-        return live(type, object, meta);
+        return Obj.make(type, object, meta);
       }
     }
 

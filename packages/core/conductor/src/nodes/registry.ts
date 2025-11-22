@@ -8,7 +8,7 @@ import { JSONPath } from 'jsonpath-plus';
 
 import { Filter, Ref, Type } from '@dxos/echo';
 import { ObjectId, getTypename, isInstanceOf } from '@dxos/echo/internal';
-import { live } from '@dxos/echo/internal';
+import { Obj } from '@dxos/echo';
 import { DatabaseService, Queue } from '@dxos/echo-db';
 import { FunctionDefinition, FunctionInvocationService, QueueService } from '@dxos/functions';
 import { failedInvariant, invariant } from '@dxos/invariant';
@@ -254,7 +254,7 @@ export const registry: Record<NodeType, Executable> = {
               for (const item of items) {
                 const { id: _id, '@type': _type, ...rest } = item as any;
                 // TODO(dmaretskyi): Forbid type on create.
-                db.add(live(schema, rest));
+                db.add(Obj.make(schema, rest));
               }
               yield* Effect.promise(() => db.flush());
             } else {

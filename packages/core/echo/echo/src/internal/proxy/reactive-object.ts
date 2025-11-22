@@ -24,12 +24,11 @@ import { TypedReactiveHandler, prepareTypedTarget } from './typed-handler';
  * Creates a reactive object from a plain Javascript object.
  * Optionally provides a TS-effect schema.
  *
- * @depreacted Use `Obj.make`.
+ * @internal
  */
 // TODO(dmaretskyi): Deep mutability.
 // TODO(dmaretskyi): Invert generics (generic over schema) to have better error messages.
 // TODO(dmaretskyi): Could mutate original object making it unusable.
-// TODO(burdon): Use Schema.make() to handle defaults?
 export const live: {
   <T extends BaseObject>(obj: T): Live<T>;
   <T extends BaseObject>(

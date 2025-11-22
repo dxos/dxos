@@ -11,8 +11,10 @@ export * from './types';
 
 // TODO(burdon): Restrict access to internal.
 //  1. Remove from outisde of echo-db; promote toe echo/db types; serach: from '@dxos/echo/internal';
+//    - [x] ObjectId => @dxos/keys
 //    - [x] LabelAnnotation => Annotation.LabelAnnotation
 //    - [x] Expando => Type.Expando
+//    - [x] live => Obj.make
 
 //    - [ ] JsonSchema defs
 //    - [ ] FormatEnum => TypeFormat
@@ -22,9 +24,7 @@ export * from './types';
 //    - [ ] BaseSchema
 
 //  2. Audit usage from @dxos/echo-db
-//    - [ ] live ?
 
-// TODO(burdon): Remove.
 export { live } from './proxy';
 export { type BaseSchema, EchoSchema, ImmutableSchema, RuntimeSchemaRegistry, isMutable } from './schema';
 export { type BaseObject, type HasId } from './types';

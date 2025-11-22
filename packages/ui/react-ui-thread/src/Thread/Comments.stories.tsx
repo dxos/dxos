@@ -5,8 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { type FC, useEffect, useMemo, useRef, useState } from 'react';
 
-import { Type } from '@dxos/echo';
-import { live } from '@dxos/echo/internal';
+import { Obj, Type } from '@dxos/echo';
 import { createDocAccessor, createObject } from '@dxos/echo-db';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -144,7 +143,7 @@ const StoryThread: FC<{
 
   const handleCreateMessage = () => {
     if (messageRef.current?.length) {
-      const message = live(Type.Expando, {
+      const message = Obj.make(Type.Expando, {
         timestamp: new Date().toISOString(),
         sender: { identityKey: authorId },
         text: messageRef.current,
@@ -239,7 +238,7 @@ type StoryProps = {
 };
 
 const DefaultStory = ({ text, autoCreate }: StoryProps) => {
-  const [item] = useState(createObject(live(Type.Expando, { content: text ?? '' })));
+  const [item] = useState(createObject(Obj.make(Type.Expando, { content: text ?? '' })));
   const [threads, setThreads] = useState<StoryCommentThread[]>([]);
   const [selected, setSelected] = useState<string>();
 

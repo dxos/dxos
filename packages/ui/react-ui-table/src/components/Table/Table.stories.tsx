@@ -15,7 +15,7 @@ import {
   LabelAnnotation,
   PropertyMetaAnnotationId,
 } from '@dxos/echo/internal';
-import { live } from '@dxos/echo/internal';
+
 import { invariant } from '@dxos/invariant';
 import { faker } from '@dxos/random';
 import { PublicKey } from '@dxos/react-client';
@@ -312,7 +312,7 @@ export const Tags: Meta<StoryProps> = {
         // Populate.
         Array.from({ length: 10 }).map(() => {
           return space.db.add(
-            live(storedSchema, {
+            Obj.make(storedSchema, {
               single: faker.helpers.arrayElement([...selectOptionIds, undefined]),
               multiple: faker.helpers.randomSubset(selectOptionIds),
             }),

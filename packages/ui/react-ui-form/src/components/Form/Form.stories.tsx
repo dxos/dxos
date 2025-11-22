@@ -7,9 +7,8 @@ import * as Schema from 'effect/Schema';
 import React, { useCallback, useState } from 'react';
 
 import { ContactType } from '@dxos/client/testing';
-import { Type } from '@dxos/echo';
+import { Obj, Type } from '@dxos/echo';
 import { type BaseObject, Format, Ref, type TypeAnnotation, getObjectDXN } from '@dxos/echo/internal';
-import { live } from '@dxos/echo/internal';
 import { Tooltip } from '@dxos/react-ui';
 import { withLayoutVariants, withTheme } from '@dxos/react-ui/testing';
 import { Testing } from '@dxos/schema/testing';
@@ -286,8 +285,8 @@ const RefSchema = Schema.Struct({
 
 type RefSchema = Schema.Schema.Type<typeof RefSchema>;
 
-const contact1 = live(ContactType, { identifiers: [] });
-const contact2 = live(ContactType, { identifiers: [] });
+const contact1 = Obj.make(ContactType, { identifiers: [] });
+const contact2 = Obj.make(ContactType, { identifiers: [] });
 
 export const Refs: StoryObj<StoryProps<RefSchema>> = {
   render: RefStory,
