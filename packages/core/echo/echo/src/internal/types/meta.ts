@@ -21,17 +21,6 @@ export const ATTR_META = '@meta';
 export const MetaId = Symbol.for('@dxos/echo/Meta');
 
 //
-// Keys
-//
-
-export const foreignKey = (source: string, id: string): ForeignKey => ({ source, id });
-export const foreignKeyEquals = (a: ForeignKey, b: ForeignKey) => a.source === b.source && a.id === b.id;
-
-// TODO(dmaretskyi): Move to echo-schema.
-export const compareForeignKeys: Comparator<AnyProperties> = (a: AnyProperties, b: AnyProperties) =>
-  intersection(getMeta(a).keys, getMeta(b).keys, foreignKeyEquals).length > 0;
-
-//
 // ObjectMeta
 //
 
@@ -52,22 +41,26 @@ export const ObjectMetaSchema = Schema.mutable(
 );
 export type ObjectMeta = Schema.Schema.Type<typeof ObjectMetaSchema>;
 
-/**
- * Get metadata from object.
- * Only callable on the object root.
- * @deprecated Use {@link getMeta}.
- */
-// TODO(dmaretskyi): Remove.
-export const getObjectMeta = (obj: any): ObjectMeta => {
-  return getMeta(obj);
-};
-
 /*
  * Get metadata from object.
  * Only callable on the object root.
+ *
+ * @internal (use Obj.getMeta or Relation.getMeta)
  */
+// TODO(burdon): Refine type to BaseObj.
 export const getMeta = (obj: AnyProperties): ObjectMeta => {
   const metadata = (obj as any)[MetaId];
   invariant(metadata, 'ObjectMeta not found.');
   return metadata;
 };
+
+//
+// Foreign keys
+//
+
+export const foreignKey = (source: string, id: string): ForeignKey => ({ source, id });
+export const foreignKeyEquals = (a: ForeignKey, b: ForeignKey) => a.source === b.source && a.id === b.id;
+
+// TODO(dmaretskyi): Move to echo-schema.
+export const compareForeignKeys: Comparator<AnyProperties> = (a: AnyProperties, b: AnyProperties) =>
+  intersection(getMeta(a).keys, getMeta(b).keys, foreignKeyEquals).length > 0;

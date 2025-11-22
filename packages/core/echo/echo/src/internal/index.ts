@@ -11,6 +11,10 @@ export * from './types';
 
 // TODO(burdon): Restrict access to internal.
 //  1. Remove from outisde of echo-db; promote toe echo/db types; serach: from '@dxos/echo/internal';
+//  - [x] completely restructure @dxos/echo src/internal
+//  - [x] Remove import "." and ".."! (MUST CREATE LINT RULE).
+//  - [x] Remove @deprecated from internal methods and mark @internal (e.g., getSchemaDXN).
+//      (Internal methods should not use the Obj/Type APIs.)
 //  - [x] import ObjectId => @dxos/keys
 //  - [x] import LabelAnnotation => Annotation.LabelAnnotation
 //  - [x] import Expando => Type.Expando
@@ -19,12 +23,10 @@ export * from './types';
 //  - [x] Rename {EchoObject, EchoRelation} => {EchoObjecSchema, EchoRelationSchema}
 //  - [x] Rename BaseObject => AnyProperties
 //  - [x] Created Entity.Any (=> AnyEchoObject).
-//  - [x] Remove import "." and ".."! (MUST CREATE LINT RULE).
-//    - [ ] Rename AnyEchoObject => AnyEntity?
-//  - [ ] Remove @deprecated from internal methods and mark @internal (e.g., getSchemaDXN).
-//    (Internal methods should not use the Obj/Type APIs.)
 
+//  - [ ] Rename AnyEchoObject => AnyEntity?
 //  - [ ] Remove echo-db/AnyLiveObject<T> => Obj.Obj<T>
+//  - [ ] Promote parts of src/internal/ref to Ref.ts
 
 //  - [ ] Remove WithId => AnyEchoObject
 //  - [ ] Remove WithMeta => AnyEchoObject
@@ -35,6 +37,7 @@ export * from './types';
 //  - [ ] JsonSchema defs
 //  - [ ] FormatEnum => TypeFormat
 //  - [ ] JsonPath, JsonProp, getValue, setValue => Json.Path?
+//  - [ ] Standardize '@automerge/automerge' imports.
 
 //  - Datatbase.query() options?
 

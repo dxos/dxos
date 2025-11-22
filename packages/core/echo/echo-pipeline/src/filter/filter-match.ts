@@ -151,8 +151,8 @@ export const filterMatchObjectJSON = (filter: QueryAST.Filter, obj: ObjectJSON):
       return tags.some((tag) => tag === filter.tag);
     }
 
+    // TODO: Implement text search.
     case 'text-search': {
-      // TODO: Implement text search
       return false;
     }
 

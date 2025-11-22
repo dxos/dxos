@@ -7,8 +7,8 @@ import * as Schema from 'effect/Schema';
 import React, { useCallback, useState } from 'react';
 
 import { ContactType } from '@dxos/client/testing';
-import { Obj, Type } from '@dxos/echo';
-import { Format, Ref, type TypeAnnotation, getObjectDXN } from '@dxos/echo/internal';
+import { Obj, Ref, Type } from '@dxos/echo';
+import { Format, type TypeAnnotation, getObjectDXN } from '@dxos/echo/internal';
 import { Tooltip } from '@dxos/react-ui';
 import { withLayoutVariants, withTheme } from '@dxos/react-ui/testing';
 import { Testing } from '@dxos/schema/testing';

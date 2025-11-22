@@ -5,8 +5,9 @@
 import { useMemo } from 'react';
 
 import { type ComputeEdge, ComputeGraphModel, type ComputeNode, DEFAULT_INPUT, DEFAULT_OUTPUT } from '@dxos/conductor';
-import { ObjectId, Ref } from '@dxos/echo/internal';
+import { Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
+import { ObjectId } from '@dxos/keys';
 import { getSpace } from '@dxos/react-client/echo';
 import { type CanvasGraphModel, type Connection, type GraphMonitor } from '@dxos/react-ui-canvas-editor';
 import { isNonNullable } from '@dxos/util';

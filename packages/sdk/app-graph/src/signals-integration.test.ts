@@ -7,9 +7,7 @@ import { signal } from '@preact/signals-core';
 import { afterEach, beforeEach, describe, expect, onTestFinished, test } from 'vitest';
 
 import { Trigger } from '@dxos/async';
-import { Obj, Type } from '@dxos/echo';
-import { Ref } from '@dxos/echo/internal';
-import { Filter } from '@dxos/echo-db';
+import { Filter, Obj, Ref, Type } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
 import { registerSignalsRuntime } from '@dxos/echo-signals';
 

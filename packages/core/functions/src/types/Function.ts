@@ -4,8 +4,8 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Annotation, Obj, Type } from '@dxos/echo';
-import { JsonSchemaType, Ref } from '@dxos/echo/internal';
+import { Annotation, Obj, Ref, Type } from '@dxos/echo';
+import { JsonSchemaType } from '@dxos/echo/internal';
 
 import { Script } from './Script';
 
@@ -37,7 +37,7 @@ export const Function = Schema.Struct({
 
   // Reference to a source script if it exists within ECHO.
   // TODO(burdon): Don't ref ScriptType directly (core).
-  source: Schema.optional(Ref(Script)),
+  source: Schema.optional(Ref.Ref(Script)),
 
   inputSchema: Schema.optional(JsonSchemaType),
   outputSchema: Schema.optional(JsonSchemaType),

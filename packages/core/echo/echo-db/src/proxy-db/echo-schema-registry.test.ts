@@ -12,7 +12,6 @@ import {
   StoredSchema,
   type TypeAnnotation,
   TypeAnnotationId,
-  getSchemaTypename,
   toJsonSchema,
 } from '@dxos/echo/internal';
 
@@ -188,7 +187,7 @@ describe('schema registry', () => {
     await peer.reload();
     {
       await using db = await peer.openLastDatabase();
-      const query = db.schemaRegistry.query({ typename: getSchemaTypename(Contact) });
+      const query = db.schemaRegistry.query({ typename: Type.getTypename(Contact) });
       const schema = await new Promise<EchoSchema>((resolve) => {
         const immediate = query.runSync();
         if (immediate.length > 0) {
@@ -203,7 +202,7 @@ describe('schema registry', () => {
         });
         ctx.onTestFinished(unsubscribe);
       });
-      expect(getSchemaTypename(schema)).toEqual(getSchemaTypename(Contact));
+      expect(Type.getTypename(schema)).toEqual(Type.getTypename(Contact));
     }
   });
 });

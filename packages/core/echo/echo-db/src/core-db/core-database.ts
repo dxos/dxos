@@ -19,8 +19,7 @@ import {
 import { Stream } from '@dxos/codec-protobuf/stream';
 import { Context, ContextDisposedError } from '@dxos/context';
 import { raise } from '@dxos/debug';
-import { type Database } from '@dxos/echo';
-import { Ref } from '@dxos/echo/internal';
+import { type Database, Ref } from '@dxos/echo';
 import {
   type DatabaseDirectory,
   type ObjectStructure,

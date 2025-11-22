@@ -8,9 +8,7 @@ import { afterEach, beforeEach, describe, expect, onTestFinished, test } from 'v
 
 import { Trigger, asyncTimeout } from '@dxos/async';
 import { Config } from '@dxos/config';
-import { Obj } from '@dxos/echo';
-import { Ref } from '@dxos/echo/internal';
-import { Filter } from '@dxos/echo-db';
+import { Obj, Ref, Filter } from '@dxos/echo';
 import { type Runtime } from '@dxos/protocols/proto/dxos/config';
 import { isNode } from '@dxos/util';
 

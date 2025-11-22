@@ -35,7 +35,7 @@ import { Filter } from '../query';
 import { EchoTestBuilder, createTmpPath } from '../testing';
 
 import { createDocAccessor } from './doc-accessor';
-import { createObject, isEchoObject } from './echo-handler';
+import { type AnyLiveObject, createObject, isEchoObject } from './echo-handler';
 import { getObjectCore } from './echo-handler';
 import { getDatabaseFromObject } from './util';
 
@@ -51,9 +51,6 @@ const TEST_OBJECT: TestingDeprecated.TestSchema = {
     field: 'bar',
   },
 };
-
-const x: Obj.Any = Obj.make(TestingDeprecated.TestSchema, { number: 42 });
-console.log(x);
 
 test('id property name is reserved', () => {
   const invalidSchema = Schema.Struct({ id: Schema.Number });

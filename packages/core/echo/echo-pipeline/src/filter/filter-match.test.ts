@@ -4,8 +4,8 @@
 
 import { describe, expect, test } from 'vitest';
 
-import { Filter, Type } from '@dxos/echo';
-import { EXPANDO_TYPENAME, Ref } from '@dxos/echo/internal';
+import { Filter, Ref, Type } from '@dxos/echo';
+import { EXPANDO_TYPENAME } from '@dxos/echo/internal';
 import { ObjectStructure } from '@dxos/echo-protocol';
 import { DXN, ObjectId, SpaceId } from '@dxos/keys';
 
@@ -56,8 +56,9 @@ describe('filterMatch', () => {
   });
 
   test('contains', () => {
-    expect(filterMatchObject(Filter.type(Type.Expando, { properties: { label: Filter.contains('test') } }).ast, OBJECT_1)).to
-      .be.true;
+    expect(
+      filterMatchObject(Filter.type(Type.Expando, { properties: { label: Filter.contains('test') } }).ast, OBJECT_1),
+    ).to.be.true;
     expect(
       filterMatchObject(
         Filter.type(Type.Expando, { fields: Filter.contains({ label: 'label', value: 'test' }) }).ast,

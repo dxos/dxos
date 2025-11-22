@@ -83,12 +83,12 @@ export type MakeProps<T extends Type.Obj.Any> = NoInfer<Props<Schema.Schema.Type
 
 export const Meta: unique symbol = MetaId as any;
 
-const DEFAULT_META: ObjectMeta = {
+const defaultMeta: ObjectMeta = {
   keys: [],
 };
 
 /**
- * Creates new object.
+ * Creates a new object of the given types.
  * @param schema - Object schema.
  * @param props - Object properties.
  * @param meta - Object metadata (deprecated) -- pass with Obj.Meta.
@@ -109,7 +109,7 @@ export const make = <S extends Type.Obj.Any>(
 
   // Set default fields on meta on creation.
   if (props[MetaId] != null) {
-    meta = { ...structuredClone(DEFAULT_META), ...props[MetaId] };
+    meta = { ...structuredClone(defaultMeta), ...props[MetaId] };
     delete props[MetaId];
   }
 
@@ -117,11 +117,14 @@ export const make = <S extends Type.Obj.Any>(
   const filterUndefined = Object.fromEntries(Object.entries(props).filter(([_, v]) => v !== undefined));
 
   return createLiveObject<Schema.Schema.Type<S>>(schema, filterUndefined as any, {
-    keys: [],
+    ...defaultMeta,
     ...meta,
   });
 };
 
+/**
+ * Determine if object is an ECHO object.
+ */
 export const isObject = (obj: unknown): obj is Any => {
   assumeType<InternalObjectProps>(obj);
   return typeof obj === 'object' && obj !== null && obj[EntityKindId] === EntityKind.Object;

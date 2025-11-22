@@ -6,7 +6,7 @@ import * as Schema from 'effect/Schema';
 import { afterEach, beforeEach, expect, test } from 'vitest';
 
 import { Obj, Type } from '@dxos/echo';
-import { getSchema, getSchemaDXN, getSchemaVersion, getTypename } from '@dxos/echo/internal';
+import { getSchema, getSchemaDXN, getTypename } from '@dxos/echo/internal';
 import { JsonPath } from '@dxos/effect';
 import { DXN } from '@dxos/keys';
 
@@ -72,7 +72,7 @@ test('migrate 1 object', async () => {
     DXN.fromTypenameAndVersion('example.com/type/Person', '0.2.0').toString(),
   );
   expect(getTypename(objects[0])).to.eq('example.com/type/Person');
-  expect(getSchemaVersion(getSchema(objects[0])!)).to.eq('0.2.0');
+  expect(Type.getVersion(getSchema(objects[0])!)).to.eq('0.2.0');
   expect(objects[0].name).to.eq('John Doe');
 });
 
@@ -122,7 +122,7 @@ test('chained migrations', async () => {
   const { objects } = await db.query(Filter.type(ContactV3)).run();
   expect(objects).to.have.length(1);
   expect(getTypename(objects[0])).to.eq('example.com/type/Person');
-  expect(getSchemaVersion(getSchema(objects[0])!)).to.eq('0.3.0');
+  expect(Type.getVersion(getSchema(objects[0])!)).to.eq('0.3.0');
   expect(objects[0].name).to.eq('John Doe');
   expect(objects[0].email).to.eq('john.doe@example.com');
 });

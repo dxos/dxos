@@ -28,8 +28,9 @@ export const SchemaId = Symbol.for('@dxos/echo/Schema');
 
 /**
  * Returns the schema for the given object if one is defined.
+ *
+ * @internal
  */
-// TODO(burdon): Reconcile with `getTypename`.
 // TODO(dmaretskyi): For echo objects, this always returns the root schema.
 export const getSchema = (obj: unknown | undefined): Schema.Schema.AnyNoContext | undefined => {
   if (obj) {
@@ -38,7 +39,7 @@ export const getSchema = (obj: unknown | undefined): Schema.Schema.AnyNoContext 
 };
 
 /**
- * Internal use only.
+ * @internal
  */
 export const setSchema = (obj: any, schema: Schema.Schema.AnyNoContext): void => {
   Object.defineProperty(obj, SchemaId, {
@@ -53,6 +54,8 @@ export const setSchema = (obj: any, schema: Schema.Schema.AnyNoContext): void =>
  * Gets the typename of the object without the version.
  * Returns only the name portion, not the DXN.
  * @example "example.org/type/Contact"
+ *
+ * @internal (use Type.getTypename)
  */
 export const getTypename = (obj: AnyProperties): string | undefined => {
   const schema = getSchema(obj);
@@ -66,7 +69,7 @@ export const getTypename = (obj: AnyProperties): string | undefined => {
 };
 
 /**
- * @internal
+ * @internal (use Type.setTypename)
  */
 // TODO(dmaretskyi): Rename setTypeDXN.
 export const setTypename = (obj: any, typename: DXN): void => {
@@ -83,6 +86,8 @@ export const setTypename = (obj: any, typename: DXN): void => {
  * @returns Object type as {@link DXN}.
  * @returns undefined if the object doesn't have a type.
  * @example `dxn:example.com/type/Person:1.0.0`
+ *
+ * @internal (use Type.getTypeDXN)
  */
 export const getType = (obj: AnyProperties): DXN | undefined => {
   if (!obj) {

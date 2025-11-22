@@ -3,7 +3,6 @@
 //
 
 import { Obj } from '@dxos/echo';
-import { Ref as RefImpl } from '@dxos/echo/internal';
 import { type EchoDatabase } from '@dxos/echo-db';
 
 import { Contact, Organization, Project, Task } from './test-schema';

@@ -6,8 +6,7 @@ import * as Schema from 'effect/Schema';
 import React, { useEffect } from 'react';
 
 import { VoidInput } from '@dxos/conductor';
-import { Filter, Query } from '@dxos/echo';
-import { Ref } from '@dxos/echo/internal';
+import { Filter, Query, Ref } from '@dxos/echo';
 import { Trigger, TriggerEvent } from '@dxos/functions';
 import { DXN, ObjectId, SpaceId } from '@dxos/keys';
 import { useSpace } from '@dxos/react-client/echo';

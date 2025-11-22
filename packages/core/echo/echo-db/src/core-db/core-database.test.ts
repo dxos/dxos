@@ -6,8 +6,8 @@ import { effect } from '@preact/signals-core';
 import { describe, expect, test } from 'vitest';
 
 import { Trigger } from '@dxos/async';
-import { Filter, Obj, Type } from '@dxos/echo';
-import { Ref, getType } from '@dxos/echo/internal';
+import { Filter, Obj, Ref, Type } from '@dxos/echo';
+// import { getType } from '@dxos/echo/internal';
 import { Testing } from '@dxos/echo/testing';
 import { type DatabaseDirectory, SpaceDocVersion, createIdFromSpaceKey } from '@dxos/echo-protocol';
 import { registerSignalsRuntime } from '@dxos/echo-signals';
@@ -372,7 +372,7 @@ describe('CoreDatabase', () => {
       });
 
       expect(contact.name).to.eq('Bar');
-      expect(getType(contact)?.toString()).to.eq('dxn:type:example.com/type/Task:0.1.0');
+      expect(Obj.getTypeDXN(contact)?.toString()).to.eq('dxn:type:example.com/type/Task:0.1.0');
     });
   });
 });
