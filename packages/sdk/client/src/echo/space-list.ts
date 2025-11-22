@@ -279,7 +279,7 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
       return this._value?.find(({ key }) => key.equals(spaceIdOrKey));
     } else {
       if (!SpaceId.isValid(spaceIdOrKey)) {
-        throw new ApiError('Invalid space id.');
+        throw new ApiError({ message: 'Invalid space id.' });
       }
 
       return this._value?.find(({ id }) => id === spaceIdOrKey);
@@ -339,7 +339,7 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
 
   join(invitation: Invitation | string) {
     if (!this._invitationProxy) {
-      throw new ApiError('Client not open.');
+      throw new ApiError({ message: 'Client not open.' });
     }
 
     log('accept invitation', invitation);

@@ -20,7 +20,7 @@ import { type ConnectionLimiter } from './connection-limiter';
 
 export class ConnectionDisplacedError extends SystemError {
   constructor() {
-    super('Connection displaced by remote initiator.');
+    super({ message: 'Connection displaced by remote initiator.' });
   }
 }
 

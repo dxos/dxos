@@ -76,7 +76,7 @@ export class Teleport {
             return;
           }
           log.info('abort teleport due to onTimeout in ControlExtension');
-          this.abort(new TimeoutError('control extension')).catch((err) => log.catch(err));
+          this.abort(new TimeoutError({ message: 'control extension' })).catch((err) => log.catch(err));
         },
       },
       this.localPeerId,

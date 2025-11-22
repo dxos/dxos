@@ -331,7 +331,7 @@ export class DataSpace {
   @trace.span({ showInBrowserTimeline: true })
   async initializeDataPipeline(): Promise<void> {
     if (this._state !== SpaceState.SPACE_CONTROL_ONLY) {
-      throw new SystemError('Invalid operation');
+      throw new SystemError({ message: 'Invalid operation' });
     }
 
     this._state = SpaceState.SPACE_INITIALIZING;

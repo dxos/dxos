@@ -91,14 +91,17 @@ export class MetadataStore {
       log('loaded', { size: dataSize, checksum, name: file.filename });
 
       if (fileLength < dataSize + 8) {
-        throw new DataCorruptionError('Metadata size is smaller than expected.', { fileLength, dataSize });
+        throw new DataCorruptionError({
+          message: 'Metadata size is smaller than expected.',
+          context: { fileLength, dataSize },
+        });
       }
 
       const data = await file.read(8, dataSize);
 
       const calculatedChecksum = CRC32.buf(data);
       if (calculatedChecksum !== checksum) {
-        throw new DataCorruptionError('Metadata checksum is invalid.');
+        throw new DataCorruptionError({ message: 'Metadata checksum is invalid.' });
       }
 
       return codec.decode(data);

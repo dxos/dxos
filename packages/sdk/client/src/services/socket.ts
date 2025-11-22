@@ -44,7 +44,7 @@ export const fromSocket = async (url: string, authenticationToken?: string): Pro
         if (error.message.includes('401')) {
           log.warn('websocket authentication failed');
         }
-        closed.emit(new ApiError('websocket error'));
+        closed.emit(new ApiError({ message: 'websocket error' }));
       });
       await dxRpcClient.open();
     },
