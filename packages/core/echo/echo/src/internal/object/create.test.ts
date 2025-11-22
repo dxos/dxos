@@ -14,7 +14,7 @@ import { RelationSourceId, RelationTargetId } from '../entities';
 import { Testing } from '../testing';
 import { getSchema, getType, isInstanceOf } from '../types';
 
-import { create } from './create';
+import { createObject } from './create';
 import { objectToJSON } from './json-serializer';
 
 describe('create (static version)', () => {
@@ -32,7 +32,7 @@ describe('create (static version)', () => {
   });
 
   test('create static object', () => {
-    const contact = create(Testing.Person, {
+    const contact = createObject(Testing.Person, {
       name: 'Bot',
       email: 'bot@example.com',
     });
@@ -46,7 +46,7 @@ describe('create (static version)', () => {
   });
 
   test('JSON encoding', () => {
-    const contact = create(Testing.Person, {
+    const contact = createObject(Testing.Person, {
       name: 'Bot',
       email: 'bot@example.com',
     });
@@ -65,15 +65,15 @@ describe('create (static version)', () => {
   });
 
   test('JSON encoding with relation', () => {
-    const contactA = create(Testing.Person, {
+    const contactA = createObject(Testing.Person, {
       name: 'Bot',
       email: 'bot@example.com',
     });
-    const contactB = create(Testing.Person, {
+    const contactB = createObject(Testing.Person, {
       name: 'Bot',
       email: 'bot@example.com',
     });
-    const hasManager = create(Testing.HasManager, {
+    const hasManager = createObject(Testing.HasManager, {
       [RelationSourceId]: contactA,
       [RelationTargetId]: contactB,
     });
@@ -91,7 +91,7 @@ describe('create (static version)', () => {
   });
 
   test('getSchema', () => {
-    const contact = create(Testing.Person, {
+    const contact = createObject(Testing.Person, {
       name: 'Bot',
       email: 'bot@example.com',
     });
@@ -100,7 +100,7 @@ describe('create (static version)', () => {
   });
 
   test('inspect', () => {
-    const contact = create(Testing.Person, {
+    const contact = createObject(Testing.Person, {
       name: 'Bot',
       email: 'bot@example.com',
     });

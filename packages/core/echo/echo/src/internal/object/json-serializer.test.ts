@@ -22,17 +22,17 @@ import {
   getTypename,
 } from '../types';
 
-import { create } from './create';
+import { createObject } from './create';
 import { objectFromJSON, objectToJSON } from './json-serializer';
 
 describe('Object JSON serializer', () => {
   test('should serialize and deserialize object', async () => {
-    const contact = create(Testing.Person, {
+    const contact = createObject(Testing.Person, {
       name: 'John Doe',
     });
     getMeta(contact).keys.push({ id: '12345', source: 'crm.example.com' });
 
-    const task = create(Testing.Task, {
+    const task = createObject(Testing.Task, {
       title: 'Polish my shoes',
       assignee: Ref.make(contact),
     });
@@ -91,9 +91,7 @@ describe('Object JSON serializer', () => {
   });
 
   test('serialize with unresolved schema', async () => {
-    const contact = create(Testing.Person, {
-      name: 'John Doe',
-    });
+    const contact = createObject(Testing.Person, { name: 'John Doe' });
     const contactJson = objectToJSON(contact);
     const contactFromJson: any = await objectFromJSON(contactJson);
 

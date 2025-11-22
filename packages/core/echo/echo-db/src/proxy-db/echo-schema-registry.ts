@@ -14,7 +14,7 @@ import {
   StoredSchema,
   TypeAnnotationId,
   TypeIdentifierAnnotationId,
-  create,
+  createObject,
   getTypeAnnotation,
   getTypeIdentifierAnnotation,
   makeTypeJsonSchemaAnnotation,
@@ -380,7 +380,7 @@ export class EchoSchemaRegistry extends Resource implements SchemaRegistry {
 
     const meta = getTypeAnnotation(schema);
     invariant(meta, 'use Schema.Struct({}).pipe(Type.Obj()) or class syntax to create a valid schema');
-    const schemaToStore = create(StoredSchema, { ...meta, jsonSchema: toJsonSchema(Schema.Struct({})) });
+    const schemaToStore = createObject(StoredSchema, { ...meta, jsonSchema: toJsonSchema(Schema.Struct({})) });
     const typeId = `dxn:echo:@:${schemaToStore.id}`;
     schemaToStore.jsonSchema = toJsonSchema(
       schema.annotations({

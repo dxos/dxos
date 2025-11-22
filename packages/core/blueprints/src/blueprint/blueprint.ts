@@ -60,8 +60,6 @@ export const Blueprint = Schema.Struct({
     typename: 'dxos.org/type/Blueprint',
     version: '0.1.0',
   }),
-
-  // TODO(burdon): Move to Type.Obj def?
   LabelAnnotation.set(['name']),
 );
 

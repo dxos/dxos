@@ -9,11 +9,24 @@ export * from './json-schema';
 export * from './ref';
 export * from './types';
 
+// TODO(burdon): Restrict access to internal.
+//  1. Remove from outisde of echo-db.
+//    LabelAnnotation
+//    HasId
+//    JsonPath, JsonProp, getValue, setValue
+//    live => @dxos/live-object
+//    FormatEnum
+//    Expando => Type.Expando
+//    AnyEchoObject
+//    JsonSchema defs
+//    BaseSchema
+//  2. Audit usage within echo-db
+
 export { live } from './proxy';
 export { type BaseSchema, EchoSchema, ImmutableSchema, RuntimeSchemaRegistry, isMutable } from './schema';
 export { type BaseObject, type HasId } from './types';
 export {
-  create,
+  createObject,
   createQueueDXN,
   isDeleted,
   objectFromJSON,

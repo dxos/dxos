@@ -9,8 +9,8 @@ import * as Option from 'effect/Option';
 
 import { Template } from '@dxos/blueprints';
 import { Obj } from '@dxos/echo';
-import { type ObjectId } from '@dxos/echo/internal';
 import { DatabaseService, ObjectVersion } from '@dxos/echo-db';
+import { type ObjectId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type ContentBlock, Message } from '@dxos/types';
 import { trim } from '@dxos/util';

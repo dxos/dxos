@@ -5,7 +5,7 @@
 import * as Schema from 'effect/Schema';
 import { describe, expect, test } from 'vitest';
 
-import { TypedObject, create } from '../object';
+import { TypedObject, createObject } from '../object';
 import { Ref } from '../ref';
 import { Testing } from '../testing';
 import { foreignKey, getMeta, getSchema, isInstanceOf } from '../types';
@@ -67,11 +67,11 @@ describe('complex schema validations', () => {
   });
 
   test('nesting static objects with schema in the live object', () => {
-    const contact1 = create(Testing.Person, {
+    const contact1 = createObject(Testing.Person, {
       name: 'Robert Smith',
       email: 'robert@example.com',
     } as any);
-    const contact2 = create(Testing.Person, {
+    const contact2 = createObject(Testing.Person, {
       name: 'Katy Perry',
       email: 'katy@example.com',
     } as any);

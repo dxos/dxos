@@ -3,9 +3,11 @@
 //
 
 import { Ref as RefImpl, live } from '@dxos/echo/internal';
-import type { EchoDatabase } from '@dxos/echo-db';
+import { type EchoDatabase } from '@dxos/echo-db';
 
 import { Contact, Organization, Project, Task } from './test-schema';
+
+// TODO(burdon): Remove and use standard test data.
 
 export const seedTestData = (db: EchoDatabase) => {
   const contactRich = db.add(

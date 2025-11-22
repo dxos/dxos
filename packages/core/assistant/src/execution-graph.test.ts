@@ -6,7 +6,7 @@ import { describe, expect, it } from '@effect/vitest';
 
 import { AgentStatus } from '@dxos/ai';
 import { Obj } from '@dxos/echo';
-import { ObjectId } from '@dxos/echo/internal';
+import { ObjectId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type ContentBlock, Message } from '@dxos/types';
 

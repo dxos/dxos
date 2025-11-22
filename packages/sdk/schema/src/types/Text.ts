@@ -4,9 +4,8 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Obj } from '@dxos/echo';
-import { Type } from '@dxos/echo';
-import { type ObjectId } from '@dxos/echo/internal';
+import { Obj, Type } from '@dxos/echo';
+import { type ObjectId } from '@dxos/keys';
 
 export const Text = Schema.Struct({
   content: Schema.String,

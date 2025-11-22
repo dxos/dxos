@@ -8,7 +8,7 @@ import { describe, expect, test } from 'vitest';
 import { DXN, ObjectId } from '@dxos/keys';
 
 import { EchoObject } from '../entities';
-import { create } from '../object';
+import { createObject } from '../object';
 import { getObjectDXN } from '../types';
 
 import { Ref, getReferenceAst } from './ref';
@@ -51,8 +51,8 @@ describe('Ref', () => {
 
   // TODO(dmaretskyi): Figure out how to expose this in the API.
   test.skip('encode with inlined target', () => {
-    const task = create(Task, { title: 'Fix bugs' });
-    const contact = create(Contact, { name: 'John Doe', tasks: [Ref.make(task)] });
+    const task = createObject(Task, { title: 'Fix bugs' });
+    const contact = createObject(Contact, { name: 'John Doe', tasks: [Ref.make(task)] });
 
     const json = JSON.parse(JSON.stringify(contact));
     expect(json).toEqual({
@@ -72,8 +72,8 @@ describe('Ref', () => {
   });
 
   test('encode without inlining target', () => {
-    const task = create(Task, { title: 'Fix bugs' });
-    const contact = create(Contact, { name: 'John Doe', tasks: [Ref.make(task).noInline()] });
+    const task = createObject(Task, { title: 'Fix bugs' });
+    const contact = createObject(Contact, { name: 'John Doe', tasks: [Ref.make(task).noInline()] });
 
     const json = JSON.parse(JSON.stringify(contact));
     expect(json).toEqual({

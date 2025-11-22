@@ -4,7 +4,8 @@
 
 import * as Schema from 'effect/Schema';
 
-import { EntityKind, ObjectId, Ref, TypeAnnotationId } from '@dxos/echo/internal';
+import { EntityKind, Ref, TypeAnnotationId } from '@dxos/echo/internal';
+import { ObjectId } from '@dxos/keys';
 
 /** @deprecated */
 export const Contact = Schema.Struct({

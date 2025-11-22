@@ -12,8 +12,9 @@ import {
   registry,
 } from '@dxos/conductor';
 import { raise } from '@dxos/debug';
-import { ObjectId, toJsonSchema } from '@dxos/echo/internal';
+import { toJsonSchema } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
+import { ObjectId } from '@dxos/keys';
 
 import { type ComputeShape, type ConstantShape, type TemplateShape } from '../shapes';
 

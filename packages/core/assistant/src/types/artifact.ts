@@ -6,9 +6,8 @@ import type * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
 import { type ObjectNotFoundError, type Type } from '@dxos/echo';
-import { type ObjectId } from '@dxos/echo/internal';
 import { DatabaseService } from '@dxos/echo-db';
-import { DXN, LOCAL_SPACE_TAG, type SpaceId } from '@dxos/keys';
+import { DXN, LOCAL_SPACE_TAG, type ObjectId, type SpaceId } from '@dxos/keys';
 import { trim } from '@dxos/util';
 
 /**

@@ -37,7 +37,6 @@ export type HasTypename = {};
 /**
  * Canonical type for all ECHO objects.
  */
-// TODO(burdon): Reconcile with Obj.Any, Relation.Any.
 export interface AnyEchoObject extends HasId, HasTypename {}
 
 // TODO(dmaretskyi): Remove; this type effectively disables type safety due to `any`.

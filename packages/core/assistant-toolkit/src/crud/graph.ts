@@ -11,17 +11,15 @@ import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
 
-import { Obj, type Relation } from '@dxos/echo';
-import { Filter, Query } from '@dxos/echo';
+import { Filter, Obj, Query, type Relation } from '@dxos/echo';
 import {
   EntityKind,
-  ObjectId,
   ReferenceAnnotationId,
   RelationSourceDXNId,
   RelationSourceId,
   RelationTargetDXNId,
   RelationTargetId,
-  create,
+  createObject,
   getEntityKind,
   getSchemaDXN,
   getSchemaTypename,
@@ -32,7 +30,7 @@ import { type EchoDatabase, type Queue } from '@dxos/echo-db';
 import { isEncodedReference } from '@dxos/echo-protocol';
 import { mapAst } from '@dxos/effect';
 import { ContextQueueService, DatabaseService } from '@dxos/functions';
-import { DXN } from '@dxos/keys';
+import { DXN, ObjectId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { deepMapValues, isNonNullable, trim } from '@dxos/util';
 
@@ -332,7 +330,7 @@ export const sanitizeObjects = async (
       }
     }
     if (!skip) {
-      const obj = create(schema, data);
+      const obj = createObject(schema, data);
       enitties.set(obj.id, obj);
       return [obj];
     }

@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import type { Config } from '@dxos/config';
+import { type Config } from '@dxos/config';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 

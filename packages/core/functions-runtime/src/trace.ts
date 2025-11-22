@@ -6,10 +6,10 @@ import * as Layer from 'effect/Layer';
 import * as Schema from 'effect/Schema';
 
 import { type Obj, type Ref, Type } from '@dxos/echo';
-import { ObjectId } from '@dxos/echo/internal';
 import { Queue } from '@dxos/echo-db';
 import { TracingService } from '@dxos/functions';
 import { Trigger } from '@dxos/functions';
+import { ObjectId } from '@dxos/keys';
 import { log } from '@dxos/log';
 
 export enum InvocationOutcome {

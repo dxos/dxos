@@ -6,7 +6,7 @@ import React from 'react';
 import { createRoot } from 'react-dom/client';
 
 import { Filter, Type } from '@dxos/echo';
-import { live } from '@dxos/echo/internal';
+import { live } from '@dxos/live-object';
 import { ClientProvider } from '@dxos/react-client';
 import { Expando, useQuery, useSpaces } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
