@@ -19,7 +19,8 @@ import {
 import { Stream } from '@dxos/codec-protobuf/stream';
 import { Context, ContextDisposedError } from '@dxos/context';
 import { raise } from '@dxos/debug';
-import { type ObjectId, Ref } from '@dxos/echo/internal';
+import { type Database } from '@dxos/echo';
+import { Ref } from '@dxos/echo/internal';
 import {
   type DatabaseDirectory,
   type ObjectStructure,
@@ -29,6 +30,7 @@ import {
 } from '@dxos/echo-protocol';
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { invariant } from '@dxos/invariant';
+import { type ObjectId } from '@dxos/keys';
 import { type DXN, type PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import type { QueryService } from '@dxos/protocols/proto/dxos/echo/query';
@@ -47,7 +49,6 @@ import {
 } from './automerge-doc-loader';
 import { ObjectCore } from './object-core';
 import { getInlineAndLinkChanges } from './util';
-import { type Database } from '@dxos/echo';
 
 export type InitRootProxyFn = (core: ObjectCore) => void;
 

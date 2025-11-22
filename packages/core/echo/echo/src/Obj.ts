@@ -5,21 +5,47 @@
 import * as Function from 'effect/Function';
 import * as Schema from 'effect/Schema';
 
+import { type ForeignKey } from '@dxos/echo-protocol';
 import { assertArgument, invariant } from '@dxos/invariant';
-import { type DXN } from '@dxos/keys';
-import * as LiveObject from '@dxos/live-object';
+import { type DXN, type ObjectId } from '@dxos/keys';
+import { type Live, getSnapshot as getSnapshot$ } from '@dxos/live-object';
 import { assumeType, deepMapValues } from '@dxos/util';
 
-import { live } from './internal';
-import * as EchoSchema from './internal'; // TODO(burdon): SUB DIVIDE.
-import type * as Ref from './Ref';
+import {
+  EntityKind,
+  EntityKindId,
+  type HasId,
+  type InternalObjectProps,
+  MetaId,
+  type ObjectJSON,
+  type ObjectMeta,
+  ObjectVersionId,
+  type VersionType,
+  VersionTypeId,
+  getDescription as getDescription$,
+  getLabel as getLabel$,
+  getObjectDXN,
+  getSchema,
+  getSchemaTypename,
+  getType,
+  getTypeAnnotation,
+  isInstanceOf,
+  live,
+  objectFromJSON,
+  objectToJSON,
+  setDescription as setDescription$,
+  setLabel as setLabel$,
+} from './internal';
+import * as Ref from './Ref';
 import type * as Relation from './Relation';
 import * as Type from './Type';
+
+export { getSchema, type VersionType, VersionTypeId };
 
 /**
  * NOTE: Don't export: Obj.Any and Obj.Obj form the public API.
  */
-interface BaseObj extends EchoSchema.HasId, Type.OfKind<EchoSchema.EntityKind.Object> {}
+interface BaseObj extends HasId, Type.OfKind<EntityKind.Object> {}
 
 /**
  * Object type with specific properties.
@@ -49,15 +75,15 @@ export const Any = Schema.Struct({}).pipe(
   }),
 );
 
-type Props<T = any> = { id?: EchoSchema.ObjectId } & Type.Properties<T>;
+type Props<T = any> = { id?: ObjectId } & Type.Properties<T>;
 
 export type MakeProps<T extends Type.Obj.Any> = NoInfer<Props<Schema.Schema.Type<T>>> & {
-  [Meta]?: Partial<EchoSchema.ObjectMeta>;
+  [Meta]?: Partial<ObjectMeta>;
 };
 
-export const Meta: unique symbol = EchoSchema.MetaId as any;
+export const Meta: unique symbol = MetaId as any;
 
-const DEFAULT_META: EchoSchema.ObjectMeta = {
+const DEFAULT_META: ObjectMeta = {
   keys: [],
 };
 
@@ -77,18 +103,14 @@ const DEFAULT_META: EchoSchema.ObjectMeta = {
 export const make = <S extends Type.Obj.Any>(
   schema: S,
   props: MakeProps<S>,
-  meta?: Partial<EchoSchema.ObjectMeta>,
-): LiveObject.Live<Schema.Schema.Type<S>> => {
-  assertArgument(
-    EchoSchema.getTypeAnnotation(schema)?.kind === EchoSchema.EntityKind.Object,
-    'schema',
-    'Expected an object schema',
-  );
+  meta?: Partial<ObjectMeta>,
+): Live<Schema.Schema.Type<S>> => {
+  assertArgument(getTypeAnnotation(schema)?.kind === EntityKind.Object, 'schema', 'Expected an object schema');
 
-  if (props[EchoSchema.MetaId] != null) {
+  if (props[MetaId] != null) {
     // Set default fields on meta on creation.
-    meta = { ...structuredClone(DEFAULT_META), ...props[EchoSchema.MetaId] };
-    delete props[EchoSchema.MetaId];
+    meta = { ...structuredClone(DEFAULT_META), ...props[MetaId] };
+    delete props[MetaId];
   }
 
   const filterUndefined = Object.fromEntries(Object.entries(props).filter(([_, v]) => v !== undefined));
@@ -97,8 +119,8 @@ export const make = <S extends Type.Obj.Any>(
 };
 
 export const isObject = (obj: unknown): obj is Any => {
-  assumeType<EchoSchema.InternalObjectProps>(obj);
-  return typeof obj === 'object' && obj !== null && obj[EchoSchema.EntityKindId] === EchoSchema.EntityKind.Object;
+  assumeType<InternalObjectProps>(obj);
+  return typeof obj === 'object' && obj !== null && obj[EntityKindId] === EntityKind.Object;
 };
 
 /**
@@ -121,18 +143,16 @@ export const instanceOf: {
   ...args: [schema: Type.Relation.Any | Type.Obj.Any, value: unknown] | [schema: Type.Relation.Any | Type.Obj.Any]
 ) => {
   if (args.length === 1) {
-    return (obj: unknown) => EchoSchema.isInstanceOf(args[0], obj);
+    return (obj: unknown) => isInstanceOf(args[0], obj);
   }
 
-  return EchoSchema.isInstanceOf(args[0], args[1]);
+  return isInstanceOf(args[0], args[1]);
 }) as any;
-
-export const getSchema = EchoSchema.getSchema;
 
 // TODO(dmaretskyi): Allow returning undefined.
 export const getDXN = (obj: Any | Relation.Any): DXN => {
   assertArgument(!Schema.isSchema(obj), 'obj', 'Object should not be a schema.');
-  const dxn = EchoSchema.getObjectDXN(obj);
+  const dxn = getObjectDXN(obj);
   invariant(dxn != null, 'Invalid object.');
   return dxn;
 };
@@ -142,7 +162,7 @@ export const getDXN = (obj: Any | Relation.Any): DXN => {
  * @example dxn:example.com/type/Person:1.0.0
  */
 // TODO(burdon): Expando does not have a type.
-export const getTypeDXN = EchoSchema.getType;
+export const getTypeDXN = getType;
 
 /**
  * @returns The typename of the object's type.
@@ -152,15 +172,15 @@ export const getTypename = (obj: Any | Relation.Any): string | undefined => {
   const schema = getSchema(obj);
   if (schema == null) {
     // Try to extract typename from DXN.
-    return EchoSchema.getType(obj)?.asTypeDXN()?.type;
+    return getType(obj)?.asTypeDXN()?.type;
   }
 
-  return EchoSchema.getSchemaTypename(schema);
+  return getSchemaTypename(schema);
 };
 
 // TODO(dmaretskyi): Allow returning undefined.
-export const getMeta = (obj: Any | Relation.Any): EchoSchema.ObjectMeta => {
-  const meta = EchoSchema.getMeta(obj);
+export const getMeta = (obj: Any | Relation.Any): ObjectMeta => {
+  const meta = getMeta(obj);
   invariant(meta != null, 'Invalid object.');
   return meta;
 };
@@ -169,10 +189,10 @@ export const getMeta = (obj: Any | Relation.Any): EchoSchema.ObjectMeta => {
  * @returns Foreign keys for the object from the specified source.
  */
 export const getKeys: {
-  (obj: Any | Relation.Any, source: string): EchoSchema.ForeignKey[];
-  (source: string): (obj: Any | Relation.Any) => EchoSchema.ForeignKey[];
-} = Function.dual(2, (obj: Any | Relation.Any, source?: string): EchoSchema.ForeignKey[] => {
-  const meta = EchoSchema.getMeta(obj);
+  (obj: Any | Relation.Any, source: string): ForeignKey[];
+  (source: string): (obj: Any | Relation.Any) => ForeignKey[];
+} = Function.dual(2, (obj: Any | Relation.Any, source?: string): ForeignKey[] => {
+  const meta = getMeta(obj);
   invariant(meta != null, 'Invalid object.');
   return meta.keys.filter((key) => key.source === source);
 });
@@ -183,7 +203,7 @@ export const getKeys: {
  * @param source
  */
 export const deleteKeys = (obj: Any | Relation.Any, source: string) => {
-  const meta = EchoSchema.getMeta(obj);
+  const meta = getMeta(obj);
   for (let i = 0; i < meta.keys.length; i++) {
     if (meta.keys[i].source === source) {
       meta.keys.splice(i, 1);
@@ -194,7 +214,7 @@ export const deleteKeys = (obj: Any | Relation.Any, source: string) => {
 
 // TODO(dmaretskyi): Default to `false`.
 export const isDeleted = (obj: Any | Relation.Any): boolean => {
-  const deleted = EchoSchema.isDeleted(obj);
+  const deleted = isDeleted(obj);
   invariant(typeof deleted === 'boolean', 'Invalid object.');
   return deleted;
 };
@@ -202,28 +222,28 @@ export const isDeleted = (obj: Any | Relation.Any): boolean => {
 export const getLabel = (obj: Any | Relation.Any): string | undefined => {
   const schema = getSchema(obj);
   if (schema != null) {
-    return EchoSchema.getLabel(schema, obj);
+    return getLabel$(schema, obj);
   }
 };
 
 export const setLabel = (obj: Any | Relation.Any, label: string) => {
   const schema = getSchema(obj);
   if (schema != null) {
-    EchoSchema.setLabel(schema, obj, label);
+    setLabel$(schema, obj, label);
   }
 };
 
 export const getDescription = (obj: Any | Relation.Any): string | undefined => {
   const schema = getSchema(obj);
   if (schema != null) {
-    return EchoSchema.getDescription(schema, obj);
+    return getDescription$(schema, obj);
   }
 };
 
 export const setDescription = (obj: Any | Relation.Any, description: string) => {
   const schema = getSchema(obj);
   if (schema != null) {
-    EchoSchema.setDescription(schema, obj, description);
+    setDescription$(schema, obj, description);
   }
 };
 
@@ -278,7 +298,7 @@ export const sort = (...comparators: Comparator[]): Comparator => {
 /**
  * JSON representation of an object.
  */
-export type JSON = EchoSchema.ObjectJSON;
+export type JSON = ObjectJSON;
 
 /**
  * Converts object to its JSON representation.
@@ -286,7 +306,7 @@ export type JSON = EchoSchema.ObjectJSON;
  * The same algorithm is used when calling the standard `JSON.stringify(obj)` function.
  */
 // TODO(burdon): Base util type for Obj/Relation?
-export const toJSON = (obj: Any | Relation.Any): JSON => EchoSchema.objectToJSON(obj);
+export const toJSON = (obj: Any | Relation.Any): JSON => objectToJSON(obj);
 
 /**
  * Creates an object from its json representation, performing schema validation.
@@ -298,12 +318,12 @@ export const toJSON = (obj: Any | Relation.Any): JSON => EchoSchema.objectToJSON
  * @param options.dxn - Override object DXN. Changes the result of `Obj.getDXN`.
  */
 export const fromJSON: (json: unknown, options?: { refResolver?: Ref.Resolver; dxn?: DXN }) => Promise<Any> =
-  EchoSchema.objectFromJSON as any;
+  objectFromJSON as any;
 
 /**
  * Returns an immutable snapshot of an object.
  */
-export const getSnapshot: <T extends Any>(obj: Obj<T>) => T = LiveObject.getSnapshot;
+export const getSnapshot: <T extends Any>(obj: Obj<T>) => T = getSnapshot$;
 
 export type CloneOptions = {
   /**
@@ -323,7 +343,7 @@ export const clone = <T extends Any | Relation.Any>(obj: T, opts?: CloneOptions)
   const schema = getSchema(obj);
   invariant(schema != null, 'Object should have a schema');
   const props: any = deepMapValues(data, (value, recurse) => {
-    if (EchoSchema.Ref.isRef(value)) {
+    if (Ref.isRef(value)) {
       return value;
     }
     return recurse(value);
@@ -332,17 +352,14 @@ export const clone = <T extends Any | Relation.Any>(obj: T, opts?: CloneOptions)
     props.id = id;
   }
   const meta = getMeta(obj);
-  props[EchoSchema.MetaId] = deepMapValues(meta, (value, recurse) => {
-    if (EchoSchema.Ref.isRef(value)) {
+  props[MetaId] = deepMapValues(meta, (value, recurse) => {
+    if (Ref.isRef(value)) {
       return value;
     }
     return recurse(value);
   });
   return make(schema, props);
 };
-
-export const VersionTypeId = EchoSchema.VersionTypeId;
-export type VersionType = typeof VersionTypeId;
 
 /**
  * Represent object version.
@@ -379,7 +396,7 @@ export const isVersion = (obj: unknown): obj is Version => {
  * Returns the version of the object.
  */
 export const version = (obj: Any | Relation.Any): Version => {
-  const version = (obj as any)[EchoSchema.ObjectVersionId];
+  const version = (obj as any)[ObjectVersionId];
   if (version === undefined) {
     return unversioned;
   }

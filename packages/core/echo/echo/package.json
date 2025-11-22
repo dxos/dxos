@@ -27,6 +27,12 @@
       "browser": "./dist/lib/browser/Obj.mjs",
       "node": "./dist/lib/node-esm/Obj.mjs"
     },
+    "./Query": {
+      "source": "./src/query/index.ts",
+      "types": "./dist/types/src/Query/index.d.ts",
+      "browser": "./dist/lib/browser/Query/index.mjs",
+      "node": "./dist/lib/node-esm/Query/index.mjs"
+    },
     "./Relation": {
       "source": "./src/Relation.ts",
       "types": "./dist/types/src/Relation.d.ts",
@@ -44,12 +50,6 @@
       "types": "./dist/types/src/internal/index.d.ts",
       "browser": "./dist/lib/browser/internal/index.mjs",
       "node": "./dist/lib/node-esm/internal/index.mjs"
-    },
-    "./query": {
-      "source": "./src/query/index.ts",
-      "types": "./dist/types/src/query/index.d.ts",
-      "browser": "./dist/lib/browser/query/index.mjs",
-      "node": "./dist/lib/node-esm/query/index.mjs"
     },
     "./testing": {
       "source": "./src/testing/index.ts",

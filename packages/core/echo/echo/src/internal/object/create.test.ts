@@ -1,0 +1,116 @@
+//
+// Copyright 2025 DXOS.org
+//
+
+import { inspect } from 'util';
+
+import * as Schema from 'effect/Schema';
+import { describe, expect, test } from 'vitest';
+
+import { DXN } from '@dxos/keys';
+
+import { getSchemaDXN } from '../ast';
+import { RelationSourceId, RelationTargetId } from '../entities';
+import { Testing } from '../testing';
+import { getSchema, getType, isInstanceOf } from '../types';
+
+import { create } from './create';
+import { objectToJSON } from './json-serializer';
+
+describe('create (static version)', () => {
+  test('defaults', ({ expect }) => {
+    const Contact = Schema.Struct({
+      name: Schema.String.pipe(
+        Schema.optional,
+        Schema.withConstructorDefault(() => 'Anonymous'),
+      ),
+      email: Schema.String.pipe(Schema.optional),
+    });
+
+    const obj = Contact.make({});
+    expect(obj.name).toBe('Anonymous');
+  });
+
+  test('create static object', () => {
+    const contact = create(Testing.Person, {
+      name: 'Bot',
+      email: 'bot@example.com',
+    });
+
+    expect(contact.id).toBeDefined();
+    expect(contact.name).toBe('Bot');
+    expect(contact.email).toBe('bot@example.com');
+    expect((contact as any)['@type']).toBeUndefined();
+    expect(getType(contact)?.toString()).toBe(getSchemaDXN(Testing.Person)!.toString());
+    expect(isInstanceOf(Testing.Person, contact)).toBe(true);
+  });
+
+  test('JSON encoding', () => {
+    const contact = create(Testing.Person, {
+      name: 'Bot',
+      email: 'bot@example.com',
+    });
+
+    const json = JSON.parse(JSON.stringify(contact));
+    expect(json).toEqual({
+      id: contact.id,
+      '@type': DXN.fromTypenameAndVersion(Testing.Person.typename, Testing.Person.version).toString(),
+      '@meta': {
+        keys: [],
+      },
+      name: 'Bot',
+      email: 'bot@example.com',
+    });
+    expect(objectToJSON(contact)).toStrictEqual(json);
+  });
+
+  test('JSON encoding with relation', () => {
+    const contactA = create(Testing.Person, {
+      name: 'Bot',
+      email: 'bot@example.com',
+    });
+    const contactB = create(Testing.Person, {
+      name: 'Bot',
+      email: 'bot@example.com',
+    });
+    const hasManager = create(Testing.HasManager, {
+      [RelationSourceId]: contactA,
+      [RelationTargetId]: contactB,
+    });
+
+    const json = JSON.parse(JSON.stringify(hasManager));
+    expect(json).toEqual({
+      id: hasManager.id,
+      '@type': DXN.fromTypenameAndVersion(Testing.HasManager.typename, Testing.HasManager.version).toString(),
+      '@relationSource': DXN.fromLocalObjectId(contactA.id).toString(),
+      '@relationTarget': DXN.fromLocalObjectId(contactB.id).toString(),
+      '@meta': {
+        keys: [],
+      },
+    });
+  });
+
+  test('getSchema', () => {
+    const contact = create(Testing.Person, {
+      name: 'Bot',
+      email: 'bot@example.com',
+    });
+
+    expect(getSchema(contact)).toBe(Testing.Person);
+  });
+
+  test('inspect', () => {
+    const contact = create(Testing.Person, {
+      name: 'Bot',
+      email: 'bot@example.com',
+    });
+
+    // console.log(contact);
+
+    const text = inspect(contact);
+    expect(text).toContain('Bot');
+    expect(text).toContain('bot@example.com');
+    expect(text).toContain('example.com/type/Person');
+    expect(text).toContain('0.1.0');
+  });
+});

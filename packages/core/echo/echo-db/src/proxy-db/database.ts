@@ -7,7 +7,7 @@ import { inspect } from 'node:util';
 import { type CleanupFn, Event, type ReadOnlyEvent, synchronized } from '@dxos/async';
 import { type Context, LifecycleState, Resource } from '@dxos/context';
 import { inspectObject } from '@dxos/debug';
-import { Ref } from '@dxos/echo';
+import { type Database, Ref } from '@dxos/echo';
 import { type BaseObject, type HasId, assertObjectModelShape, setRefResolver } from '@dxos/echo/internal';
 import { getSchema, getType } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
@@ -48,14 +48,14 @@ export type AddOptions = {
    *
    * @default 'linked-doc'
    */
-  placeIn?: ObjectPlacement;
+  placeIn?: Database.ObjectPlacement;
 };
 
 /**
  * Database API.
  */
 // TODO(burdon): Reconcile with current `Echo` def.
-export interface EchoDatabase extends Queryable {
+export interface EchoDatabase extends Database.Queryable {
   get graph(): Hypergraph;
   get schemaRegistry(): EchoSchemaRegistry;
 
@@ -85,7 +85,7 @@ export interface EchoDatabase extends Queryable {
   /**
    * Query objects.
    */
-  query: QueryFn;
+  query: Database.QueryFn;
 
   /**
    * Adds object to the database.
@@ -286,12 +286,12 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
   }
 
   // Odd way to define methods types from a typedef.
-  declare query: QueryFn;
+  declare query: Database.QueryFn;
   static {
     this.prototype.query = this.prototype._query;
   }
 
-  private _query(query: Query.Any | Filter.Any, options?: QueryOptions) {
+  private _query(query: Query.Any | Filter.Any, options?: Database.QueryOptions) {
     query = Filter.is(query) ? Query.select(query) : query;
     return this._coreDatabase.graph.query(query, {
       ...options,

@@ -8,7 +8,7 @@ import type * as Schema from 'effect/Schema';
 import { registerSignalsRuntime } from '@dxos/echo-signals';
 import { assertArgument } from '@dxos/invariant';
 
-import { EchoSchema, StoredSchema, getSchemaTypename, live, toJsonSchema } from '../EchoSchema';
+import { EchoSchema, StoredSchema, getSchemaTypename, live, toJsonSchema } from '../internal';
 
 // NOTE: Registration is done here is this is the module that calls out to `effect`.
 registerSignalsRuntime();

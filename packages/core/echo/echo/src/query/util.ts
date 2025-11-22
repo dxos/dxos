@@ -10,11 +10,6 @@ import { DXN } from '@dxos/keys';
 
 import { getTypeReference } from '../internal';
 
-// TODO(burdon): Factor out.
-export type Intersection<Types extends readonly unknown[]> = Types extends [infer First, ...infer Rest]
-  ? First & Intersection<Rest>
-  : unknown;
-
 /**
  * @param input schema or a typename string
  * @return type DXN

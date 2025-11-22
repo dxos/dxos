@@ -11,7 +11,6 @@ import { type Context, Resource } from '@dxos/context';
 import { Type } from '@dxos/echo';
 import {
   EchoSchema,
-  type ObjectId,
   StoredSchema,
   TypeAnnotationId,
   TypeIdentifierAnnotationId,
@@ -22,7 +21,7 @@ import {
   toJsonSchema,
 } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
-import { DXN } from '@dxos/keys';
+import { DXN, type ObjectId } from '@dxos/keys';
 import { log } from '@dxos/log';
 
 import { getObjectCore } from '../echo-handler';

@@ -9,12 +9,13 @@ import type * as Types from 'effect/Types';
 import { type ForeignKey, type QueryAST } from '@dxos/echo-protocol';
 import { assertArgument } from '@dxos/invariant';
 import { DXN, ObjectId } from '@dxos/keys';
+import { type Intersection } from '@dxos/util';
 
 import type * as Obj from '../Obj';
 import * as Ref from '../Ref';
 import type * as Type from '../Type';
 
-import { type Intersection, getTypeDXNFromSpecifier } from './util';
+import { getTypeDXNFromSpecifier } from './util';
 
 export interface Filter<T> {
   // TODO(dmaretskyi): See new effect-schema approach to variance.

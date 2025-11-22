@@ -4,11 +4,11 @@
 
 import { type CleanupFn, Event } from '@dxos/async';
 import { StackTrace } from '@dxos/debug';
+import { type Database } from '@dxos/echo';
 import { type BaseObject } from '@dxos/echo/internal';
 import { type QueryAST } from '@dxos/echo-protocol';
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { invariant } from '@dxos/invariant';
-import { type PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { trace } from '@dxos/tracing';
 import { isNonNullable } from '@dxos/util';
@@ -16,7 +16,6 @@ import { isNonNullable } from '@dxos/util';
 import { prohibitSignalActions } from '../guarded-scope';
 
 import { type Query } from './api';
-import { type Database } from '@dxos/echo';
 
 // TODO(burdon): Multi-sort option.
 export type Sort<T extends BaseObject> = (a: T, b: T) => -1 | 0 | 1;

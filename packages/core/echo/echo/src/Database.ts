@@ -7,10 +7,10 @@ import { type DXN, type PublicKey, type SpaceId } from '@dxos/keys';
 import { type Live } from '@dxos/live-object';
 
 import { type BaseObject, type HasId } from './internal';
-import { type Filter, type Query } from './Query';
+import { type Filter, type Query } from './query';
 import type * as Ref from './Ref';
 
-export type QueryResultEntry<T> = {
+export type QueryResultEntry<T extends BaseObject = BaseObject> = {
   id: string;
 
   // TODO(burdon): Rename DatabaseId?
@@ -45,7 +45,7 @@ export type QueryResultEntry<T> = {
   };
 };
 
-export type OneShotQueryResult<T> = {
+export type OneShotQueryResult<T extends BaseObject = BaseObject> = {
   results: QueryResultEntry<T>[];
   objects: T[];
 };
@@ -57,7 +57,7 @@ export type QuerySubscriptionOptions = {
   fire?: boolean;
 };
 
-export interface QueryResult<T> {
+export interface QueryResult<T extends BaseObject = BaseObject> {
   readonly query: Query<T>;
   readonly results: QueryResultEntry<T>[];
   readonly objects: T[];
