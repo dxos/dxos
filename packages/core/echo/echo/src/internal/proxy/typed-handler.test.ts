@@ -19,7 +19,7 @@ describe('complex schema validations', () => {
 
   test('any', () => {
     const schema = Schema.Struct({ field: Schema.Any });
-    const object = createObject(schema, { field: { nested: { value: 100 } } });
+    const object = createLiveObject(schema, { field: { nested: { value: 100 } } });
     expect(() => setValue(object, 'field', { any: 'value' })).not.to.throw();
   });
 
@@ -32,7 +32,7 @@ describe('complex schema validations', () => {
 
   test('object', () => {
     const schema = Schema.Struct({ field: Schema.optional(Schema.Object) });
-    const object = createObject(schema, { field: { nested: { value: 100 } } });
+    const object = createLiveObject(schema, { field: { nested: { value: 100 } } });
     expect(() => setValue(object, 'field', { any: 'value' })).not.to.throw();
   });
 
@@ -40,15 +40,15 @@ describe('complex schema validations', () => {
     class Foo extends TypedObject({ typename: 'example.com/type/Foo', version: '0.1.0' })({ field: Schema.String }) {}
     class Bar extends TypedObject({ typename: 'example.com/type/Bar', version: '0.1.0' })({ fooRef: Ref(Foo) }) {}
     const field = 'hello';
-    expect(() => createObject(Bar, { fooRef: { id: '1', field } as any })).to.throw();
-    expect(() => createObject(Bar, { fooRef: undefined as any })).to.throw(); // Unresolved reference.
-    const bar = createObject(Bar, { fooRef: Ref.make(createObject(Foo, { field })) });
+    expect(() => createLiveObject(Bar, { fooRef: { id: '1', field } as any })).to.throw();
+    expect(() => createLiveObject(Bar, { fooRef: undefined as any })).to.throw(); // Unresolved reference.
+    const bar = createLiveObject(Bar, { fooRef: Ref.make(createLiveObject(Foo, { field })) });
     expect(bar.fooRef.target?.field).to.eq(field);
   });
 
   test('index signatures', () => {
     const schema = Schema.Struct({}, { key: Schema.String, value: Schema.Number });
-    const object = createObject(schema, { unknownField: 1 });
+    const object = createLiveObject(schema, { unknownField: 1 });
     expect(() => setValue(object, 'field', '42')).to.throw();
     expect(() => setValue(object, 'unknown_field', 42)).not.to.throw();
   });
@@ -59,7 +59,7 @@ describe('complex schema validations', () => {
       object: Schema.optional(Schema.suspend(() => Schema.Union(Schema.Null, Schema.Struct({ field: Schema.Number })))),
     });
 
-    const object = createObject(schema, { array: [1, 2, null], object: { field: 3 } });
+    const object = createLiveObject(schema, { array: [1, 2, null], object: { field: 3 } });
     expect(() => setValue(object, 'object', { field: 4 })).not.to.throw();
     expect(() => setValue(object.object, 'field', 4)).not.to.throw();
     expect(() => setValue(object.array, '0', 4)).not.to.throw();
@@ -86,16 +86,18 @@ describe('complex schema validations', () => {
   });
 
   test('creating an object with data from another object', () => {
-    const contact = createObject(Testing.Person, {
+    const contact = createLiveObject(Testing.Person, {
       name: 'Robert Smith',
       email: 'robert@example.com',
     });
+
     const TestSchema = Schema.Struct({
       value: Schema.Unknown,
     });
-    const data = createObject(TestSchema, {
+    const data = createLiveObject(TestSchema, {
       value: contact,
     });
+
     expect((data.value as any).name).to.eq('Robert Smith');
   });
 });

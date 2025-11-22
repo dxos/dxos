@@ -19,7 +19,10 @@ export * from './types';
 //  - [x] Rename {EchoObject, EchoRelation} => {EchoObjecSchema, EchoRelationSchema}
 //  - [x] Rename BaseObject => AnyProperties
 //  - [x] Created Entity.Any (=> AnyEchoObject).
+//  - [x] Remove import "." and ".."! (MUST CREATE LINT RULE).
 //    - [ ] Rename AnyEchoObject => AnyEntity?
+//  - [ ] Remove @deprecated from internal methods and mark @internal (e.g., getSchemaDXN).
+//    (Internal methods should not use the Obj/Type APIs.)
 
 //  - [ ] Remove echo-db/AnyLiveObject<T> => Obj.Obj<T>
 

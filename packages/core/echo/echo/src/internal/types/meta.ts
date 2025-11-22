@@ -8,7 +8,7 @@ import { ForeignKey } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
 import { type Comparator, intersection } from '@dxos/util';
 
-import { type AnyProperties } from './types';
+import { type AnyProperties } from './base';
 
 /**
  * Property name for meta when object is serialized to JSON.

@@ -6,11 +6,11 @@
       "sharedworker"
     ]
   },
-  "include": [
-    "src"
-  ],
   "exclude": [
     "src/tests"
+  ],
+  "include": [
+    "src"
   ],
   "references": [
     {

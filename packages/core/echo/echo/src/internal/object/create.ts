@@ -49,6 +49,7 @@ type CreateData<T> = T extends { id: string } ? Omit<T, 'id' | typeof EntityKind
  *
  * @internal
  */
+// TODO(burdon): Rename createEntity.
 // TODO(burdon): Handle defaults (see Schema.make).
 // TODO(dmaretskyi): Use `Obj.make` and `Relation.make` from '@dxos/echo' instead.
 export const createObject = <S extends Schema.Schema.AnyNoContext>(

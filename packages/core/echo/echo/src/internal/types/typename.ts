@@ -9,7 +9,7 @@ import { DXN } from '@dxos/keys';
 
 import { getSchemaTypename } from '../ast';
 
-import { type AnyProperties } from './types';
+import { type AnyProperties } from './base';
 
 /**
  * Property name for typename when object is serialized to JSON.

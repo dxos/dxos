@@ -11,9 +11,9 @@ import { getDeep, setDeep } from '@dxos/util';
 
 import { getSchemaDXN } from '../ast';
 
+import { type WithMeta } from './base';
 import { ATTR_META, type ObjectMeta } from './meta';
 import { getType, getTypename } from './typename';
-import { type WithMeta } from './types';
 
 /**
  * Utility to split meta property from raw object.

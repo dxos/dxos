@@ -286,7 +286,8 @@ export const GeneratorAnnotation = createAnnotationHelper<GeneratorAnnotationVal
  *
  * For non-stored schema returns `dxn:type:`.
  * For stored schema returns `dxn:echo:`.
- * @deprecated Use `Type.getDXN`.
+ *
+ * @internal
  */
 export const getSchemaDXN = (schema: Schema.Schema.All): DXN | undefined => {
   assertArgument(Schema.isSchema(schema), 'schema', 'invalid schema');
