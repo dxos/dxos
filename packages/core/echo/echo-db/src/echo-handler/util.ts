@@ -2,8 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
+import { Obj } from '@dxos/echo';
 import { type AnyProperties } from '@dxos/echo/internal';
-import { getMeta } from '@dxos/echo/internal';
 import { type ForeignKey, Reference } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
 import { type Live, getProxyTarget } from '@dxos/live-object';
@@ -38,7 +38,7 @@ export const findObjectWithForeignKey = <T extends AnyProperties>(
   foreignKey: ForeignKey,
 ) => {
   return objects.find((result) => {
-    return getMeta(result).keys.find(({ source, id }) => source === foreignKey.source && id === foreignKey.id);
+    return Obj.getMeta(result).keys.find(({ source, id }) => source === foreignKey.source && id === foreignKey.id);
   });
 };
 

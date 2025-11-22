@@ -5,7 +5,7 @@
 import type * as Schema from 'effect/Schema';
 
 import { Filter, Obj, Query } from '@dxos/echo';
-import { getTypename, toJsonSchema } from '@dxos/echo/internal';
+import { toJsonSchema } from '@dxos/echo/internal';
 import type { JsonSchemaType } from '@dxos/echo/internal';
 import {
   ProjectionModel,
@@ -45,7 +45,7 @@ export const getBaseSchema = ({
     const schema = getSchemaFromPropertyDefinitions(typename, properties);
     return { typename: schema.typename, jsonSchema: schema.jsonSchema };
   } else if (schema) {
-    return { typename: getTypename(schema)!, jsonSchema: toJsonSchema(schema) };
+    return { typename: Obj.getTypename(schema)!, jsonSchema: toJsonSchema(schema) };
   } else if (typename && jsonSchema) {
     return { typename, jsonSchema };
   } else {

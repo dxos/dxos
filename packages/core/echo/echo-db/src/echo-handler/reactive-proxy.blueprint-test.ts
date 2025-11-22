@@ -5,8 +5,8 @@
 import type * as Schema from 'effect/Schema';
 import { afterAll, beforeAll, describe, expect, test } from 'vitest';
 
-import { Type } from '@dxos/echo';
-import { getSchema, getType, getTypeReference } from '@dxos/echo/internal';
+import { Obj, Type } from '@dxos/echo';
+import { getTypeReference } from '@dxos/echo/internal';
 import { TestingDeprecated, updateCounter } from '@dxos/echo/testing';
 import { registerSignalsRuntime } from '@dxos/echo-signals';
 import { getProxyHandler } from '@dxos/live-object';
@@ -160,7 +160,7 @@ export const reactiveProxyTests = (testConfigFactory: TestConfigurationFactory):
 
       test('getTypeReference', async () => {
         const obj = await createObject({ number: 42 });
-        expect(getType(obj)?.toString()).to.deep.eq(getTypeReference(getSchema(obj))?.toDXN().toString());
+        expect(Obj.getTypeDXN(obj)?.toString()).to.deep.eq(getTypeReference(Obj.getSchema(obj))?.toDXN().toString());
       });
 
       test('can assign arrays with objects', async () => {

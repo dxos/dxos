@@ -17,7 +17,7 @@ import { type Live } from '@dxos/live-object';
 import type { AnyLiveObject } from './echo-handler';
 
 //
-// TODO(burdon): DELETE.
+// TODO(burdon): REMOVE
 //
 
 /**

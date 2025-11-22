@@ -16,12 +16,13 @@ import { EchoTestBuilder } from '../testing';
 import type { EchoDatabase } from './database';
 
 describe('Relations', () => {
-  let testBuilder: EchoTestBuilder, db: EchoDatabase, graph: Hypergraph;
+  let testBuilder: EchoTestBuilder;
+  let db: EchoDatabase;
+  let graph: Hypergraph;
 
   beforeEach(async () => {
     testBuilder = await new EchoTestBuilder().open();
     ({ db, graph } = await testBuilder.createDatabase());
-
     graph.schemaRegistry.addSchema([TestingDeprecated.Person, TestingDeprecated.HasManager]);
   });
 

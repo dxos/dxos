@@ -12,6 +12,7 @@ import { type HasId } from './internal';
 import type * as Obj from './Obj';
 import { type Filter, type Query } from './query';
 import type * as Ref from './Ref';
+import type * as Relation from './Relation';
 
 export type QueryResultEntry<T extends Obj.Any = Obj.Any> = {
   id: string;
@@ -146,24 +147,24 @@ export type AddOptions = {
   placeIn?: ObjectPlacement;
 };
 
-// TODO(burdon): Deconstruct into aspects.
+/**
+ * ECHO Database interface.
+ */
 export interface Database extends Queryable {
   get spaceId(): SpaceId;
 
-  // TODO(burdon): Implement.
+  // TODO(burdon): Move hypergraph def here.
   // get graph(): Hypergraph;
-  // get schemaRegistry(): EchoSchemaRegistry;
 
   /**
    * Creates a reference to an existing object in the database.
    *
    * NOTE: The reference may be dangling if the object is not present in the database.
-   *
-   * ## Difference from `Ref.fromDXN`
-   *
+   * NOTE: Difference from `Ref.fromDXN`
    * `Ref.fromDXN(dxn)` returns an unhydrated reference. The `.load` and `.target` APIs will not work.
    * `db.ref(dxn)` is preferable in cases with access to the database.
    */
+  // TODO(burdon): Rename makeRef.
   ref<T extends Obj.Any = Obj.Any>(dxn: DXN): Ref.Ref<T>;
 
   /**
@@ -174,12 +175,11 @@ export interface Database extends Queryable {
   /**
    * Adds object to the database.
    */
-  // TODO(dmaretskyi): Lock to Obj.Any | Relation.Any.
-  add<T extends Obj.Any>(obj: Live<T>, opts?: AddOptions): Live<T & HasId>;
+  add<T extends Obj.Any | Relation.Any>(obj: Live<T>, opts?: AddOptions): Live<T & HasId>;
 
   /**
    * Removes object from the database.
    */
-  // TODO(dmaretskyi): Lock to Obj.Any | Relation.Any.
-  remove<T extends Obj.Any & HasId>(obj: T): void;
+  // TODO(burdon): Return true if removed.
+  remove<T extends Obj.Any | Relation.Any>(obj: T): void;
 }

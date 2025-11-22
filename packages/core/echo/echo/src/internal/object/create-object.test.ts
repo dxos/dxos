@@ -12,7 +12,7 @@ import { DXN } from '@dxos/keys';
 import { getSchemaDXN, isInstanceOf } from '../annotations';
 import { RelationSourceId, RelationTargetId } from '../entities';
 import { Testing } from '../testing';
-import { getSchema, getType } from '../types';
+import { getSchema, getTypeDXN } from '../types';
 
 import { createObject } from './create-object';
 import { objectToJSON } from './json-serializer';
@@ -41,7 +41,7 @@ describe('create (static version)', () => {
     expect(contact.name).toBe('Bot');
     expect(contact.email).toBe('bot@example.com');
     expect((contact as any)['@type']).toBeUndefined();
-    expect(getType(contact)?.toString()).toBe(getSchemaDXN(Testing.Person)!.toString());
+    expect(getTypeDXN(contact)?.toString()).toBe(getSchemaDXN(Testing.Person)!.toString());
     expect(isInstanceOf(Testing.Person, contact)).toBe(true);
   });
 

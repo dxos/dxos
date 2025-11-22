@@ -6,9 +6,8 @@ import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 import { JSONPath } from 'jsonpath-plus';
 
-import { Filter, Ref, Type } from '@dxos/echo';
-import { ObjectId, getTypename, isInstanceOf } from '@dxos/echo/internal';
-import { Obj } from '@dxos/echo';
+import { Filter, Obj, Ref, Type } from '@dxos/echo';
+import { ObjectId, isInstanceOf } from '@dxos/echo/internal';
 import { DatabaseService, Queue } from '@dxos/echo-db';
 import { FunctionDefinition, FunctionInvocationService, QueueService } from '@dxos/functions';
 import { failedInvariant, invariant } from '@dxos/invariant';
@@ -258,7 +257,7 @@ export const registry: Record<NodeType, Executable> = {
               }
               yield* Effect.promise(() => db.flush());
             } else {
-              throw new Error(`Unsupported ECHO container type: ${getTypename(container)}`);
+              throw new Error(`Unsupported ECHO container type: ${Obj.getTypename(container)}`);
             }
 
             return {};

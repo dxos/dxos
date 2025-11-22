@@ -7,9 +7,8 @@ import { inspect } from 'node:util';
 import { type CleanupFn, Event, type ReadOnlyEvent, synchronized } from '@dxos/async';
 import { type Context, LifecycleState, Resource } from '@dxos/context';
 import { inspectObject } from '@dxos/debug';
-import { type Database, Ref } from '@dxos/echo';
+import { type Database, Obj, Ref } from '@dxos/echo';
 import { type AnyProperties, type HasId, assertObjectModelShape, setRefResolver } from '@dxos/echo/internal';
-import { getSchema, getType } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
 import { DXN, type PublicKey, type SpaceId } from '@dxos/keys';
 import { type Live, getProxyTarget, isLiveObject } from '@dxos/live-object';
@@ -272,7 +271,7 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
   // TODO(dmaretskyi): Lock to Obj.Any | Relation.Any.
   add<T extends AnyProperties>(obj: T, opts?: Database.AddOptions): Live<T & HasId> {
     if (!isEchoObject(obj)) {
-      const schema = getSchema(obj);
+      const schema = Obj.getSchema(obj);
       if (schema != null) {
         if (!this.schemaRegistry.hasSchema(schema) && !this.graph.schemaRegistry.hasSchema(schema)) {
           throw createSchemaNotRegisteredError(schema);
@@ -321,7 +320,7 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
           data: output,
           type: migration.toType,
         });
-        const postMigrationType = getType(object);
+        const postMigrationType = Obj.getType(object);
         invariant(postMigrationType != null && DXN.equals(postMigrationType, migration.toType));
 
         await migration.onMigration({ before: object, object, db: this });

@@ -28,8 +28,8 @@ import {
   getObjectDXN,
   getSchema,
   getSchemaTypename,
-  getType,
   getTypeAnnotation,
+  getTypeDXN as getTypeDXN$,
   isInstanceOf,
   objectFromJSON,
   objectToJSON,
@@ -168,8 +168,8 @@ export const getDXN = (obj: Any | Relation.Any): DXN => {
  * @returns The DXN of the object's type.
  * @example dxn:example.com/type/Person:1.0.0
  */
-// TODO(burdon): Expando does not have a type.
-export const getTypeDXN = getType;
+// TODO(burdon): Return type for expando.
+export const getTypeDXN = getTypeDXN$;
 
 /**
  * @returns The typename of the object's type.
@@ -179,7 +179,7 @@ export const getTypename = (obj: Any | Relation.Any): string | undefined => {
   const schema = getSchema(obj);
   if (schema == null) {
     // Try to extract typename from DXN.
-    return getType(obj)?.asTypeDXN()?.type;
+    return getTypeDXN$(obj)?.asTypeDXN()?.type;
   }
 
   return getSchemaTypename(schema);

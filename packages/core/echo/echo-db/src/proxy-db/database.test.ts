@@ -8,8 +8,6 @@ import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import { Trigger, asyncTimeout, sleep } from '@dxos/async';
 import { Obj, Query, Ref, Type } from '@dxos/echo';
-import { getSchema, getTypename } from '@dxos/echo/internal';
-import { getMeta, getType } from '@dxos/echo/internal';
 import { Testing, updateCounter } from '@dxos/echo/testing';
 import { registerSignalsRuntime } from '@dxos/echo-signals';
 import { PublicKey } from '@dxos/keys';
@@ -224,13 +222,13 @@ describe('Database', () => {
     const { db } = await builder.createDatabase();
 
     const obj = Obj.make(Type.Expando, {});
-    expectObjects(getMeta(obj).keys, []);
-    getMeta(obj).keys.push({ source: 'test', id: 'test-key' });
-    expectObjects(getMeta(obj).keys, [{ source: 'test', id: 'test-key' }]);
+    expectObjects(Obj.getMeta(obj).keys, []);
+    Obj.getMeta(obj).keys.push({ source: 'test', id: 'test-key' });
+    expectObjects(Obj.getMeta(obj).keys, [{ source: 'test', id: 'test-key' }]);
 
     db.add(obj);
     await db.flush();
-    expectObjects(getMeta(obj).keys, [{ source: 'test', id: 'test-key' }]);
+    expectObjects(Obj.getMeta(obj).keys, [{ source: 'test', id: 'test-key' }]);
   });
 
   test('creating objects', async () => {
@@ -240,9 +238,9 @@ describe('Database', () => {
     expect(task.title).to.eq('test');
     expect(task.id).to.exist;
     expect(() => getObjectCore(task)).to.throw();
-    expect(getSchema(task)?.ast).to.eq(Testing.Task.ast);
-    expect(getType(task)?.toString()).to.eq('dxn:type:example.com/type/Task:0.1.0');
-    expect(getTypename(task)).to.eq('example.com/type/Task');
+    expect(Obj.getSchema(task)?.ast).to.eq(Testing.Task.ast);
+    expect(Obj.getTypeDXN(task)?.toString()).to.eq('dxn:type:example.com/type/Task:0.1.0');
+    expect(Obj.getTypename(task)).to.eq('example.com/type/Task');
 
     db.add(task);
     await db.flush();
@@ -304,8 +302,8 @@ describe('Database', () => {
       const { objects } = await db.query(Filter.type(Testing.Container)).run();
       const [container] = objects;
       expect(container.objects).to.have.length(2);
-      expect(getTypename(container.objects![0].target!)).to.equal(Type.getTypename(Testing.Task));
-      expect(getTypename(container.objects![1].target!)).to.equal(Type.getTypename(Testing.Person));
+      expect(Obj.getTypename(container.objects![0].target!)).to.equal(Type.getTypename(Testing.Task));
+      expect(Obj.getTypename(container.objects![1].target!)).to.equal(Type.getTypename(Testing.Person));
     }
   });
 
@@ -314,10 +312,10 @@ describe('Database', () => {
 
     task.title = 'test';
     expect(task.title).to.eq('test');
-    expect(getMeta(task).keys).to.have.length(0);
+    expect(Obj.getMeta(task).keys).to.have.length(0);
 
-    getMeta(task).keys.push({ source: 'example', id: 'test' });
-    expect(getMeta(task).keys).to.have.length(1);
+    Obj.getMeta(task).keys.push({ source: 'example', id: 'test' });
+    expect(Obj.getMeta(task).keys).to.have.length(1);
   });
 
   test('clone', async () => {
@@ -368,7 +366,7 @@ describe('Database', () => {
       }),
     );
 
-    expect(getTypename(task.subTasks![0].target!)).to.eq('example.com/type/Task');
+    expect(Obj.getTypename(task.subTasks![0].target!)).to.eq('example.com/type/Task');
     expect(JSON.parse(JSON.stringify(task.subTasks![0].target))['@type']).to.eq('dxn:type:example.com/type/Task:0.1.0');
   });
 

@@ -3,7 +3,7 @@
 //
 
 import { Obj } from '@dxos/echo';
-import { FormatEnum, getSchema } from '@dxos/echo/internal';
+import { FormatEnum } from '@dxos/echo/internal';
 import { Graph, GraphModel, type GraphNode, createEdgeId } from '@dxos/graph';
 import { log } from '@dxos/log';
 
@@ -23,7 +23,7 @@ export const createGraph = <T extends Obj.Any>(objects: T[]): GraphModel<GraphNo
 
   // Find references.
   objects.forEach((object) => {
-    const schema = getSchema(object);
+    const schema = Obj.getSchema(object);
     if (!schema) {
       log('no schema for object', { id: object.id.slice(0, 8) });
       return;

@@ -5,7 +5,7 @@
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import { Obj, Query, Type } from '@dxos/echo';
-import { Ref, getSchema } from '@dxos/echo/internal';
+import { Ref } from '@dxos/echo/internal';
 import { Testing } from '@dxos/echo/testing';
 import { PublicKey } from '@dxos/keys';
 import { createTestLevel } from '@dxos/kv-store/testing';
@@ -224,7 +224,7 @@ describe('Serializer', () => {
         } = await db.query(Filter.type(Testing.Person)).run();
         expect(contact.name).to.eq(name);
         expect(Obj.instanceOf(Testing.Person, contact)).to.be.true;
-        expect(getSchema(contact)).to.eq(Testing.Person);
+        expect(Obj.getSchema(contact)).to.eq(Testing.Person);
       }
     });
 

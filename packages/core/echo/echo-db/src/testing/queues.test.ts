@@ -6,7 +6,7 @@ import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import { Event } from '@dxos/async';
 import { Filter, Obj, Query, Relation, Type } from '@dxos/echo';
-import { Ref, getSchema } from '@dxos/echo/internal';
+import { Ref } from '@dxos/echo/internal';
 import { Testing } from '@dxos/echo/testing';
 import { DXN, SpaceId } from '@dxos/keys';
 import { KEY_QUEUE_POSITION } from '@dxos/protocols';
@@ -71,7 +71,7 @@ describe('queues', (ctx) => {
         .resolve(DXN.fromQueue('data', spaceId, queue.dxn.asQueueDXN()!.queueId, obj.id));
       expect(resolved?.id).toEqual(obj.id);
       expect(resolved?.name).toEqual('john');
-      expect(getSchema(resolved)).toEqual(Testing.Person);
+      expect(Obj.getSchema(resolved)).toEqual(Testing.Person);
     }
 
     {
@@ -80,7 +80,7 @@ describe('queues', (ctx) => {
         .resolve(DXN.fromLocalObjectId(obj.id));
       expect(resolved?.id).toEqual(obj.id);
       expect(resolved?.name).toEqual('john');
-      expect(getSchema(resolved)).toEqual(Testing.Person);
+      expect(Obj.getSchema(resolved)).toEqual(Testing.Person);
     }
   });
 

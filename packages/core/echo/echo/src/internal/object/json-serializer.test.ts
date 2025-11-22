@@ -18,7 +18,7 @@ import {
   TypeId,
   getMeta,
   getSchema,
-  getType,
+  getTypeDXN,
   getTypename,
 } from '../types';
 
@@ -72,7 +72,7 @@ describe('Object JSON serializer', () => {
         },
       ],
     });
-    expect(getType(contactFromJson)?.toString()).toBe(getSchemaDXN(Testing.Person)!.toString());
+    expect(getTypeDXN(contactFromJson)?.toString()).toBe(getSchemaDXN(Testing.Person)!.toString());
     expect(getTypename(contactFromJson)).toBe(getSchemaTypename(Testing.Person));
     expect(getObjectDXN(contactFromJson)?.toString()).toEqual(getObjectDXN(contact)?.toString());
     expect(getSchema(contactFromJson)).toEqual(Testing.Person);
@@ -100,6 +100,6 @@ describe('Object JSON serializer', () => {
     expect(getSchema(contactFromJson)).toBeUndefined();
     expect(getTypename(contactFromJson)).toEqual(getSchemaTypename(Testing.Person));
     expect(getObjectDXN(contactFromJson)).toEqual(getObjectDXN(contact));
-    expect(getType(contactFromJson)).toEqual(getSchemaDXN(Testing.Person));
+    expect(getTypeDXN(contactFromJson)).toEqual(getSchemaDXN(Testing.Person));
   });
 });

@@ -34,7 +34,7 @@ import {
   MetaId,
   ObjectMetaSchema,
   TypeId,
-  getType,
+  getTypeDXN,
   setSchema,
   setTypename,
 } from '../types';
@@ -48,7 +48,7 @@ type SerializedObject<T extends { id: string }> = { [K in keyof T]: DeepReplaceR
  * Converts object to it's JSON representation.
  */
 export const objectToJSON = <T extends AnyEchoObject>(obj: T): SerializedObject<T> => {
-  const typename = getType(obj)?.toString();
+  const typename = getTypeDXN(obj)?.toString();
   invariant(typename && typeof typename === 'string');
   return typedJsonSerializer.call(obj);
 };

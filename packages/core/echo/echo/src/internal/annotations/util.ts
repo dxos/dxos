@@ -10,7 +10,7 @@ import { Reference } from '@dxos/echo-protocol';
 import { assertArgument } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
 
-import { EntityKind, getType, getTypename } from '../types';
+import { EntityKind, getTypeDXN, getTypename } from '../types';
 
 import { getSchemaDXN } from './annotations';
 
@@ -96,7 +96,7 @@ export const isInstanceOf = <Schema extends Schema.Schema.AnyNoContext>(
     throw new Error('Schema must have an object annotation.');
   }
 
-  const type = getType(object);
+  const type = getTypeDXN(object);
   if (type && DXN.equals(type, schemaDXN)) {
     return true;
   }

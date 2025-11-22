@@ -6,7 +6,7 @@ import { Args } from '@oclif/core';
 
 import { FLAG_SPACE_KEYS } from '@dxos/cli-base';
 import { Filter, type Space, compareForeignKeys } from '@dxos/client/echo';
-import { getTypename } from '@dxos/echo/internal';
+import { Obj } from '@dxos/echo';
 import { diff } from '@dxos/util';
 
 import { BaseCommand } from '../../base.js';
@@ -44,11 +44,11 @@ export default class Import extends BaseCommand<typeof Import> {
         const obj = this.parseObject(this.schemaMap, object);
 
         // Merge based on FKs (need to query by FK).
-        const { objects } = await space.db.query(Filter.typename(getTypename(obj)!)).run();
+        const { objects } = await space.db.query(Filter.typename(Obj.getTypename(obj)!)).run();
         const { added, updated } = diff(objects, [obj], compareForeignKeys);
         added.forEach((obj) => {
           if (this.flags.verbose) {
-            this.log('Adding: ', getTypename(obj));
+            this.log('Adding: ', Obj.getTypename(obj));
           }
           if (this.flags['dry-run']) {
             this.log(JSON.stringify(obj, undefined, 2));
@@ -59,7 +59,7 @@ export default class Import extends BaseCommand<typeof Import> {
         });
         updated.forEach((obj) => {
           if (this.flags.verbose) {
-            this.log('Updating: ', getTypename(obj));
+            this.log('Updating: ', Obj.getTypename(obj));
           }
           if (this.flags['dry-run']) {
             // TODO(burdon): API Issue (is this safe)?

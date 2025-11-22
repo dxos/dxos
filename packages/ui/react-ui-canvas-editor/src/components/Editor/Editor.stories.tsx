@@ -6,8 +6,8 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Schema from 'effect/Schema';
 import React, { type PropsWithChildren, useRef, useState } from 'react';
 
-import { Filter } from '@dxos/echo';
-import { getSchemaTypename, getTypename } from '@dxos/echo/internal';
+import { Filter, Obj } from '@dxos/echo';
+import { getSchemaTypename } from '@dxos/echo/internal';
 import { type Live } from '@dxos/live-object';
 import { faker } from '@dxos/random';
 import { useClientProvider, withClientProvider } from '@dxos/react-client/testing';
@@ -53,7 +53,7 @@ const DefaultStory = ({ id = 'test', init, sidebar, children, ...props }: Render
     // Load objects.
     const { objects } = await space.db.query(Filter.everything()).run();
     const model = await doLayout(
-      createGraph(objects.filter((object: Live<any>) => types.some((type) => type.typename === getTypename(object)))),
+      createGraph(objects.filter((object: Live<any>) => types.some((type) => type.typename === Obj.getTypename(object)))),
     );
     setGraph(model);
   }, [space, init]);

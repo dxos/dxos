@@ -8,7 +8,7 @@ import { afterEach, beforeEach, describe, expect, onTestFinished, test } from 'v
 
 import { Trigger, asyncTimeout, sleep } from '@dxos/async';
 import { Obj, Order, Type } from '@dxos/echo';
-import { Ref, RelationSourceId, RelationTargetId, getMeta } from '@dxos/echo/internal';
+import { Ref, RelationSourceId, RelationTargetId } from '@dxos/echo/internal';
 import { TestingDeprecated } from '@dxos/echo/testing';
 import { type DatabaseDirectory } from '@dxos/echo-protocol';
 import { DXN, PublicKey } from '@dxos/keys';
@@ -162,7 +162,7 @@ describe('Query', () => {
 
     test('filter by foreign keys', async () => {
       const obj = Obj.make(Type.Expando, { value: 100 });
-      getMeta(obj).keys.push({ id: 'test-id', source: 'test-source' });
+      Obj.getMeta(obj).keys.push({ id: 'test-id', source: 'test-source' });
       db.add(obj);
 
       await db.flush({ indexes: true });
@@ -174,7 +174,7 @@ describe('Query', () => {
 
     test('filter by foreign keys without flushing index', async () => {
       const obj = Obj.make(Type.Expando, { value: 100 });
-      getMeta(obj).keys.push({ id: 'test-id', source: 'test-source' });
+      Obj.getMeta(obj).keys.push({ id: 'test-id', source: 'test-source' });
       db.add(obj);
 
       const { objects } = await db

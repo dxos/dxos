@@ -6,7 +6,7 @@ import type { InspectOptionsStylized, inspect as inspectFn } from 'node:util';
 
 import { type CustomInspectFunction, inspectCustom } from '@dxos/debug';
 
-import { ATTR_META, ATTR_TYPE, type AnyEchoObject, MetaId, getType } from '../types';
+import { ATTR_META, ATTR_TYPE, type AnyEchoObject, MetaId, getTypeDXN } from '../types';
 
 /*
  * @internal
@@ -36,7 +36,7 @@ const typedObjectInspectFunction: CustomInspectFunction<AnyEchoObject> = functio
   return inspect(
     {
       id,
-      [ATTR_TYPE]: getType(this),
+      [ATTR_TYPE]: getTypeDXN(this),
       ...props,
       [ATTR_META]: (this as any)[MetaId], // TODO(dmaretskyi): Couldn't use getMeta since that throw's if the object has no meta.
     },

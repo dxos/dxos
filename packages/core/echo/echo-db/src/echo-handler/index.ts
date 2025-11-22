@@ -14,7 +14,7 @@ export {
 } from './echo-handler';
 export { type ProxyTarget } from './echo-proxy-target';
 export * from './edit-history';
-// export * from './relations';
+export * from './relations';
 export * from './util';
 export * from './version';
 export * from './subscription';

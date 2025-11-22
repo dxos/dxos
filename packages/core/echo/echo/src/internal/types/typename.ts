@@ -63,7 +63,7 @@ export const getTypename = (obj: AnyProperties): string | undefined => {
     // Try to extract typename from DXN.
     return getSchemaTypename(schema);
   } else {
-    const type = getType(obj);
+    const type = getTypeDXN(obj);
     return type?.asTypeDXN()?.type;
   }
 };
@@ -89,7 +89,7 @@ export const setTypename = (obj: any, typename: DXN): void => {
  *
  * @internal (use Obj.getTypeDXN)
  */
-export const getType = (obj: AnyProperties): DXN | undefined => {
+export const getTypeDXN = (obj: AnyProperties): DXN | undefined => {
   if (!obj) {
     return undefined;
   }
