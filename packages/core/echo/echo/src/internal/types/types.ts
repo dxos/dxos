@@ -7,6 +7,8 @@ import * as SchemaAST from 'effect/SchemaAST';
 
 import { type ObjectId } from '@dxos/keys';
 
+import { type EntityKind, type OfKind } from '../ast';
+
 import { type ATTR_META, type ObjectMeta } from './meta';
 import { type EntityKindId } from './model';
 
@@ -19,6 +21,11 @@ import { type EntityKindId } from './model';
 // TODO(dmaretskyi): Rename AnyProperties.
 // TODO(dmaretskyi): Prefer `Record<string, unknown>` over `any`.
 export type BaseObject = Record<string, any>;
+
+/**
+ * @internal
+ */
+export interface BaseObj extends HasId, OfKind<EntityKind.Object> {}
 
 /**
  * Marker interface for object with an `id`.

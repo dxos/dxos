@@ -24,6 +24,8 @@ export * from './types';
 //    - [ ] AnyEchoObject
 //    - [ ] BaseSchema
 
+//    - Datatbase.query() options?
+
 //  2. Audit usage from @dxos/echo-db
 //  3. Reconcile THREE (FFS) variants of testing data.
 

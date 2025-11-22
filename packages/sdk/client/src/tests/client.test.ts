@@ -15,7 +15,8 @@ import { type Runtime } from '@dxos/protocols/proto/dxos/config';
 import { isNode } from '@dxos/util';
 
 import { Client } from '../client';
-import { MessageType, TestBuilder, TextV0Type, ThreadType, performInvitation } from '../testing';
+import { TestBuilder, performInvitation } from '../testing';
+import { MessageType, TextV0Type, ThreadType } from './data';
 
 describe('Client', () => {
   const dataRoot = '/tmp/dxos/client/storage';

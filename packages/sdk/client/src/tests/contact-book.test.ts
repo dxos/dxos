@@ -12,7 +12,8 @@ import { type Contact, Invitation } from '@dxos/protocols/proto/dxos/client/serv
 import { range } from '@dxos/util';
 
 import { Client } from '../client';
-import { TestBuilder, TextV0Type, performInvitation, waitForSpace } from '../testing';
+import { TestBuilder, performInvitation, waitForSpace } from '../testing';
+import { TextV0Type } from './data';
 
 describe('ContactBook', () => {
   describe('joinBySpaceKey', () => {

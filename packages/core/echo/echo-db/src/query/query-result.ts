@@ -4,7 +4,7 @@
 
 import { type CleanupFn, Event } from '@dxos/async';
 import { StackTrace } from '@dxos/debug';
-import { type Database } from '@dxos/echo';
+import { type Database, type Obj } from '@dxos/echo';
 import { type BaseObject } from '@dxos/echo/internal';
 import { type QueryAST } from '@dxos/echo-protocol';
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
@@ -56,8 +56,7 @@ export interface QueryContext<T extends BaseObject = BaseObject> {
 /**
  * Predicate based query.
  */
-// TODO(dmaretskyi): Change to Obj.Any
-export class QueryResult<T extends BaseObject = BaseObject> implements Database.QueryResult<T> {
+export class QueryResult<T extends Obj.Any = Obj.Any> implements Database.QueryResult<T> {
   private readonly _signal = compositeRuntime.createSignal();
   private readonly _event = new Event<QueryResult<T>>();
   private readonly _diagnostic: QueryDiagnostic;

@@ -12,9 +12,9 @@ import { type Live, getSnapshot as getSnapshot$ } from '@dxos/live-object';
 import { assumeType, deepMapValues } from '@dxos/util';
 
 import {
+  type BaseObj,
   EntityKind,
   EntityKindId,
-  type HasId,
   type InternalObjectProps,
   MetaId,
   type ObjectJSON,
@@ -41,11 +41,6 @@ import type * as Relation from './Relation';
 import * as Type from './Type';
 
 export { getSchema, type VersionType, VersionTypeId };
-
-/**
- * NOTE: Don't export: Obj.Any and Obj.Obj form the public API.
- */
-interface BaseObj extends HasId, Type.OfKind<EntityKind.Object> {}
 
 /**
  * Object type with specific properties.

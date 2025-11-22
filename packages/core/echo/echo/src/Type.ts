@@ -6,7 +6,7 @@ import type * as EffectSchema from 'effect/Schema';
 
 import { type EncodedReference } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
-import { type DXN, type ObjectId } from '@dxos/keys';
+import { type DXN } from '@dxos/keys';
 import { type ToMutable } from '@dxos/util';
 
 import {
@@ -17,8 +17,9 @@ import {
   type EchoRelationOptions,
   type EchoSchema,
   EntityKind,
-  EntityKindId,
   Expando as Expando$,
+  KindId,
+  type OfKind,
   Ref as Ref$,
   type TypeAnnotation,
   type TypeMeta,
@@ -31,25 +32,16 @@ import {
 } from './internal';
 import type * as RelationModule from './Relation';
 
-export { toEffectSchema };
+export { KindId, OfKind, toEffectSchema };
 
 //
 // Kind
 //
 
-export const KindId: unique symbol = EntityKindId as any;
-export type KindId = typeof KindId;
+// export const KindId: unique symbol = EntityKindId as any;
+// export type KindId = typeof KindId;
 
 export const Kind = EntityKind;
-
-/**
- * Assigns a kind to an Object or Relation instance.
- */
-// NOTE: Needed to make `isRelation` and `isObject` checks work.
-export interface OfKind<Kind extends EntityKind> {
-  readonly id: ObjectId;
-  readonly [KindId]: Kind;
-}
 
 /**
  * Base ECHO schema type.

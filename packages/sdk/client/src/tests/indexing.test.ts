@@ -16,7 +16,9 @@ import { log } from '@dxos/log';
 import { StorageType, createStorage } from '@dxos/random-access-storage';
 
 import { Client } from '../client';
-import { ContactType, DocumentType, TestBuilder, TextV0Type } from '../testing';
+import { TestBuilder } from '../testing';
+
+import { ContactType, DocumentType, TextV0Type } from './data';
 
 describe('Index queries', () => {
   const createObjects = () => ({
@@ -77,8 +79,8 @@ describe('Index queries', () => {
     return objectsInDataBase;
   };
 
-  const matchObjects = async (query: QueryResult<any>, objects: AnyLiveObject<any>[]) => {
-    const receivedIndexedObject = new Trigger<AnyLiveObject<any>[]>();
+  const matchObjects = async (query: QueryResult<any>, objects: Obj.Any[]) => {
+    const receivedIndexedObject = new Trigger<Obj.Any[]>();
     const unsubscribe = query.subscribe(
       (query) => {
         const indexResults = query.results;

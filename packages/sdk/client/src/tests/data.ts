@@ -12,18 +12,30 @@ import { Ref, TypedObject } from '@dxos/echo/internal';
 //
 
 /** @deprecated */
-export class TextV0Type extends TypedObject({ typename: 'dxos.org/TextV0', version: '0.1.0' })({
+// @ts-ignore - Type inference issue with declaration files.
+export class TextV0Type extends TypedObject({
+  typename: 'dxos.org/TextV0',
+  version: '0.1.0',
+})({
   content: Schema.String,
 }) {}
 
 /** @deprecated */
-export class DocumentType extends TypedObject({ typename: 'braneframe.com/Document', version: '0.1.0' })({
+// @ts-ignore - Type inference issue with declaration files.
+export class DocumentType extends TypedObject({
+  typename: 'braneframe.com/Document',
+  version: '0.1.0',
+})({
   title: Schema.optional(Schema.String), // TODO(burdon): Change to name.
   content: Ref(TextV0Type),
 }) {}
 
 /** @deprecated */
-export class ContactType extends TypedObject({ typename: 'braneframe.com/Contact', version: '0.1.0' })({
+// @ts-ignore - Type inference issue with declaration files.
+export class ContactType extends TypedObject({
+  typename: 'braneframe.com/Contact',
+  version: '0.1.0',
+})({
   name: Schema.optional(Schema.String),
   identifiers: Schema.mutable(
     Schema.Array(
@@ -36,6 +48,7 @@ export class ContactType extends TypedObject({ typename: 'braneframe.com/Contact
 }) {}
 
 /** @deprecated */
+// @ts-ignore - Type inference issue with declaration files.
 const BlockSchema = Schema.Struct({
   timestamp: Schema.String,
   content: Schema.optional(Ref(TextV0Type)),
@@ -48,7 +61,11 @@ export interface BlockType extends Schema.Schema.Type<typeof BlockSchema> {}
 export const BlockType: Schema.Schema<BlockType, Schema.Schema.Encoded<typeof BlockSchema>> = BlockSchema;
 
 /** @deprecated */
-export class MessageType extends TypedObject({ typename: 'braneframe.com/Message', version: '0.1.0' })({
+// @ts-ignore - Type inference issue with declaration files.
+export class MessageType extends TypedObject({
+  typename: 'braneframe.com/Message',
+  version: '0.1.0',
+})({
   type: Schema.optional(Schema.String),
   date: Schema.optional(Schema.String),
   subject: Schema.optional(Schema.String),
@@ -65,7 +82,11 @@ export class MessageType extends TypedObject({ typename: 'braneframe.com/Message
 }) {}
 
 /** @deprecated */
-export class ThreadType extends TypedObject({ typename: 'braneframe.com/Thread', version: '0.1.0' })({
+// @ts-ignore - Type inference issue with declaration files.
+export class ThreadType extends TypedObject({
+  typename: 'braneframe.com/Thread',
+  version: '0.1.0',
+})({
   title: Schema.optional(Schema.String),
   messages: Schema.mutable(Schema.Array(Ref(MessageType))),
   context: Schema.optional(

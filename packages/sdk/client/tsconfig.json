@@ -9,6 +9,9 @@
   "include": [
     "src"
   ],
+  "exclude": [
+    "src/tests"
+  ],
   "references": [
     {
       "path": "../../common/async"

@@ -22,13 +22,12 @@ import { SpaceState, getSpace } from '../echo';
 import { CreateEpochRequest } from '../halo';
 import {
   type CreateInitializedClientsOptions,
-  DocumentType,
   TestBuilder,
-  TextV0Type,
   createInitializedClientsWithContext,
   testSpaceAutomerge,
   waitForSpace,
 } from '../testing';
+import { DocumentType, TextV0Type } from './data';
 
 describe('Spaces', () => {
   test.skip('creates a default space', async () => {
