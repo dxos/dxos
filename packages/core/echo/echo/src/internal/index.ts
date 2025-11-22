@@ -25,6 +25,7 @@ export * from './types';
 //    - [ ] BaseSchema
 
 //  2. Audit usage from @dxos/echo-db
+//  3. Reconcile THREE (FFS) variants of testing data.
 
 export { live } from './proxy';
 export { type BaseSchema, EchoSchema, ImmutableSchema, RuntimeSchemaRegistry, isMutable } from './schema';
