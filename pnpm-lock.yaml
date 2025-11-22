@@ -2565,6 +2565,9 @@ importers:
       '@dxos/node-std':
         specifier: workspace:*
         version: link:../../../common/node-std
+      '@dxos/protocols':
+        specifier: workspace:*
+        version: link:../../protocols
       '@dxos/util':
         specifier: workspace:*
         version: link:../../../common/util

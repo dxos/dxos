@@ -6,6 +6,7 @@ import { type CleanupFn } from '@dxos/async';
 import { type QueryAST } from '@dxos/echo-protocol';
 import { type DXN, type PublicKey, type SpaceId } from '@dxos/keys';
 import { type Live } from '@dxos/live-object';
+import { type QueryOptions as QueryOptionsProto } from '@dxos/protocols/proto/dxos/echo/filter';
 
 import { type BaseObject, type HasId } from './internal';
 import { type Filter, type Query } from './query';
@@ -92,6 +93,16 @@ export type QueryOptions = {
    * Return only the first `limit` results.
    */
   limit?: number;
+
+  /**
+   * Query only local spaces, or remote on agent.
+   * @default `QueryOptions.DataLocation.LOCAL`
+   *
+   * Options:
+   *   - proto3_optional = true
+   */
+  // TODO(burdon): Remove?
+  dataLocation?: QueryOptionsProto.DataLocation;
 };
 
 /**
