@@ -14,4 +14,4 @@ export {
   getTypeAnnotation,
   setDescription,
   setLabel,
-} from './internal/ast/annotations';
+} from './internal/annotations';

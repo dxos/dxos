@@ -20,7 +20,7 @@ import {
   symbolIsProxy,
 } from '@dxos/live-object';
 
-import { getSchemaDXN } from '../ast';
+import { getSchemaDXN } from '../annotations';
 import { DeletedId } from '../entities';
 import { SchemaValidator } from '../object';
 import { SchemaId, TypeId } from '../types';

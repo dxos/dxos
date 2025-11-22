@@ -7,8 +7,14 @@ import * as SchemaAST from 'effect/SchemaAST';
 
 import { invariant } from '@dxos/invariant';
 
-import { type TypeAnnotation, TypeAnnotationId, type TypeMeta, TypenameSchema, VersionSchema } from '../ast';
-import { makeTypeJsonSchemaAnnotation } from '../json-schema';
+import {
+  type TypeAnnotation,
+  TypeAnnotationId,
+  type TypeMeta,
+  TypenameSchema,
+  VersionSchema,
+  makeTypeJsonSchemaAnnotation,
+} from '../annotations';
 import { EntityKind, type HasId } from '../types';
 
 import { type TypedObjectFields, type TypedObjectOptions, makeTypedEntityClass } from './common';

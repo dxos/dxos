@@ -17,12 +17,12 @@ import { DXN, ObjectId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { clearUndefined, orderKeys, removeProperties } from '@dxos/util';
 
-import { type TypeAnnotation, TypeAnnotationId, TypeIdentifierAnnotationId } from '../ast';
+import { type TypeAnnotation, TypeAnnotationId, TypeIdentifierAnnotationId } from '../annotations';
 import { Expando } from '../entities';
 import { type JsonSchemaReferenceInfo, Ref, createEchoReferenceSchema } from '../ref';
 import { EntityKind, EntityKindSchema } from '../types';
 
-import { CustomAnnotations, DecodedAnnotations, EchoAnnotations } from './annotations';
+import { CustomAnnotations, DecodedAnnotations, EchoAnnotations, makeTypeJsonSchemaAnnotation } from './annotations';
 import {
   ECHO_ANNOTATIONS_NS_DEPRECATED_KEY,
   ECHO_ANNOTATIONS_NS_KEY,
@@ -30,7 +30,6 @@ import {
   type JsonSchemaType,
   getNormalizedEchoAnnotations,
 } from './json-schema-type';
-import { makeTypeJsonSchemaAnnotation } from './util';
 
 // TODO(burdon): Are these values stored (can they be changed?)
 export enum PropType {

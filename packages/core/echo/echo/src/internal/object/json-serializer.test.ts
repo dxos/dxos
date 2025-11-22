@@ -6,7 +6,7 @@ import { describe, expect, test } from 'vitest';
 
 import { DXN } from '@dxos/keys';
 
-import { getSchemaDXN, getSchemaTypename } from '../ast';
+import { getSchemaDXN, getSchemaTypename } from '../annotations';
 import { RelationSourceId, RelationTargetId, getObjectDXN } from '../entities';
 import { Ref, StaticRefResolver } from '../ref';
 import { Testing } from '../testing';

@@ -13,7 +13,7 @@ import {
   isValidProxyTarget,
 } from '@dxos/live-object';
 
-import { getTypeAnnotation } from '../ast';
+import { getTypeAnnotation } from '../annotations';
 import { Expando } from '../entities';
 import { attachTypedJsonSerializer } from '../object';
 import { type AnyProperties, EntityKindId, MetaId, type ObjectMeta, ObjectMetaSchema } from '../types';

@@ -16,7 +16,6 @@ import {
   EntityKindId,
   type MetaId,
   type ObjectMeta,
-  type ObjectVersionId,
   type SchemaId,
   TypeId,
   type Version,
@@ -44,6 +43,11 @@ export const SelfDXNId = Symbol.for('@dxos/echo/DXN');
  * Property name for self DXN when object is serialized to JSON.
  */
 export const ATTR_SELF_DXN = '@dxn';
+
+/**
+ * Object version.
+ */
+export const ObjectVersionId: unique symbol = Symbol.for('@dxos/echo/ObjectVersion');
 
 /**
  * Deletion marker.

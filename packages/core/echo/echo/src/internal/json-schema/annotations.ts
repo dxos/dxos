@@ -4,7 +4,7 @@
 
 import * as SchemaAST from 'effect/SchemaAST';
 
-import { GeneratorAnnotationId, LabelAnnotationId, PropertyMetaAnnotationId } from '../ast';
+import { GeneratorAnnotationId, LabelAnnotationId, PropertyMetaAnnotationId } from '../annotations';
 import { CurrencyAnnotationId, FormatAnnotationId } from '../formats';
 import { type JsonSchemaEchoAnnotations, type JsonSchemaType } from '../json-schema';
 

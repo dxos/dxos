@@ -12,7 +12,8 @@ import { type InternalObjectProps, SelfDXNId } from './model';
 
 /**
  * Returns a DXN for an object or schema.
- * @deprecated Use `Obj.getDXN`.
+ *
+ * @internal
  */
 export const getObjectDXN = (object: any): DXN | undefined => {
   invariant(!Schema.isSchema(object), 'schema not allowed in this function');

@@ -18,6 +18,18 @@ import { TypeMeta } from './types';
 import { createAnnotationHelper } from './util';
 
 /**
+ * @internal
+ */
+export const FIELD_PATH_ANNOTATION = 'path';
+
+/**
+ * Sets the path for the field.
+ * @param path Data source path in the json path format. This is the field path in the source object.
+ */
+// TODO(burdon): Field, vs. path vs. property.
+export const FieldPath = (path: string) => PropertyMeta(FIELD_PATH_ANNOTATION, path);
+
+/**
  * ECHO identifier (for a stored schema).
  * Must be a `dxn:echo:` URI.
  */
@@ -81,13 +93,13 @@ export const getTypeAnnotation = (schema: Schema.Schema.All): TypeAnnotation | u
 export const getEntityKind = (schema: Schema.Schema.All): EntityKind | undefined => getTypeAnnotation(schema)?.kind;
 
 /**
- * @deprecated Use {@link Type.getTypename} instead.
+ * @internal
  * @returns Schema typename (without dxn: prefix or version number).
  */
 export const getSchemaTypename = (schema: Schema.Schema.All): string | undefined => getTypeAnnotation(schema)?.typename;
 
 /**
- * @deprecated Use {@link Type.getVersion} instead.
+ * @internal
  * @returns Schema version in semver format.
  */
 export const getSchemaVersion = (schema: Schema.Schema.All): string | undefined => getTypeAnnotation(schema)?.version;

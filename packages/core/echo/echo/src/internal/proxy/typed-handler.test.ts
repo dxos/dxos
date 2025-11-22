@@ -5,7 +5,7 @@
 import * as Schema from 'effect/Schema';
 import { describe, expect, test } from 'vitest';
 
-import { isInstanceOf } from '../ast';
+import { isInstanceOf } from '../annotations';
 import { TypedObject, createObject } from '../object';
 import { Ref } from '../ref';
 import { Testing } from '../testing';

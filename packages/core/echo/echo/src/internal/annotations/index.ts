@@ -3,6 +3,5 @@
 //
 
 export * from './annotations';
-export * from './field';
 export * from './types';
 export * from './util';

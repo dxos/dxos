@@ -9,7 +9,7 @@ import { describe, expect, test } from 'vitest';
 
 import { DXN } from '@dxos/keys';
 
-import { getSchemaDXN, isInstanceOf } from '../ast';
+import { getSchemaDXN, isInstanceOf } from '../annotations';
 import { RelationSourceId, RelationTargetId } from '../entities';
 import { Testing } from '../testing';
 import { getSchema, getType } from '../types';

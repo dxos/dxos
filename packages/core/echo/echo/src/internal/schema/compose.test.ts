@@ -5,7 +5,7 @@
 import * as Schema from 'effect/Schema';
 import { describe, test } from 'vitest';
 
-import { FieldPath } from '../ast';
+import { FieldPath } from '../annotations';
 import { FormatAnnotation, FormatEnum } from '../formats';
 import { ECHO_ANNOTATIONS_NS_KEY, toJsonSchema } from '../json-schema';
 import { TypedObject } from '../object';

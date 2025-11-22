@@ -8,7 +8,7 @@ import type * as Types from 'effect/Types';
 
 import { type ToMutable } from '@dxos/util';
 
-import { type TypeMeta } from '../ast';
+import { type TypeMeta } from '../annotations';
 import { type HasId } from '../types';
 
 // TODO(burdon): Define Schema type for `typename` and use consistently for all DXN-like properties.

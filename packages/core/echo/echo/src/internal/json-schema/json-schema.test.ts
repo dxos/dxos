@@ -20,7 +20,7 @@ import {
   PropertyMeta,
   getTypeAnnotation,
   getTypeIdentifierAnnotation,
-} from '../ast';
+} from '../annotations';
 import { EchoObjectSchema } from '../entities';
 import { Email, FormatAnnotation, FormatEnum } from '../formats';
 import { JsonSchemaType, getNormalizedEchoAnnotations, getSchemaProperty, setSchemaProperty } from '../json-schema';

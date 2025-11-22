@@ -9,7 +9,7 @@ import { assertArgument, failedInvariant } from '@dxos/invariant';
 import { ObjectId } from '@dxos/keys';
 import { defineHiddenProperty } from '@dxos/live-object';
 
-import { getSchemaDXN, getTypeAnnotation } from '../ast';
+import { getSchemaDXN, getTypeAnnotation } from '../annotations';
 import {
   RelationSourceDXNId,
   RelationSourceId,

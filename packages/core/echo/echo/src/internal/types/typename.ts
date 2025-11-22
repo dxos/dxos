@@ -7,7 +7,7 @@ import type * as Schema from 'effect/Schema';
 import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
 
-import { getSchemaTypename } from '../ast';
+import { getSchemaTypename } from '../annotations';
 
 import { type AnyProperties } from './base';
 

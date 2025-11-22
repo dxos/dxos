@@ -4,7 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { TypenameSchema, VersionSchema } from '../ast';
+import { TypenameSchema, VersionSchema } from '../annotations';
 import { EchoObjectSchema } from '../entities';
 import { JsonSchemaType } from '../json-schema';
 

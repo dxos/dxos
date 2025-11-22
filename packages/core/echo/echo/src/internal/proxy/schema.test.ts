@@ -7,7 +7,7 @@ import * as SchemaAST from 'effect/SchemaAST';
 import { describe, expect, test } from 'vitest';
 
 import { createEchoSchema } from '../../testing';
-import { PropertyMeta, getPropertyMetaAnnotation, getTypeAnnotation } from '../ast';
+import { PropertyMeta, getPropertyMetaAnnotation, getTypeAnnotation } from '../annotations';
 import { TypedObject } from '../object';
 
 // TODO(dmaretskyi): Comment.
