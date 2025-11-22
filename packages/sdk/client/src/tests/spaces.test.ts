@@ -10,7 +10,7 @@ import { TYPE_PROPERTIES } from '@dxos/client-protocol';
 import { performInvitation } from '@dxos/client-services/testing';
 import { Context } from '@dxos/context';
 import { Filter, Obj, Type } from '@dxos/echo';
-import { type Expando, type HasId, Ref } from '@dxos/echo/internal';
+import { type HasId, Ref } from '@dxos/echo/internal';
 import { getObjectCore } from '@dxos/echo-db';
 import { SpaceId } from '@dxos/keys';
 import { type Live } from '@dxos/live-object';
@@ -477,7 +477,7 @@ describe('Spaces', () => {
     {
       const done = new Trigger();
       await waitForObject(guestSpace, hostRoot);
-      const guestRoot: Expando = guestSpace.db.getObjectById(hostRoot.id)!;
+      const guestRoot: Type.Expando = guestSpace.db.getObjectById(hostRoot.id)!;
       expect(guestRoot).toBeDefined();
 
       const unsub = getObjectCore(guestRoot).updates.on(() => {
@@ -565,7 +565,7 @@ describe('Spaces', () => {
     });
   };
 
-  const createObject = <T extends {}>(props: T): Live<Expando> => {
+  const createObject = <T extends {}>(props: T): Live<Type.Expando> => {
     return Obj.make(Type.Expando, props);
   };
 

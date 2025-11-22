@@ -7,8 +7,8 @@ import * as Schema from 'effect/Schema';
 import React, { useCallback, useState } from 'react';
 
 import { ContactType } from '@dxos/client/testing';
-import { type Type } from '@dxos/echo';
-import { type BaseObject, Expando, Format, Ref, type TypeAnnotation, getObjectDXN } from '@dxos/echo/internal';
+import { Type } from '@dxos/echo';
+import { type BaseObject, Format, Ref, type TypeAnnotation, getObjectDXN } from '@dxos/echo/internal';
 import { live } from '@dxos/echo/internal';
 import { Tooltip } from '@dxos/react-ui';
 import { withLayoutVariants, withTheme } from '@dxos/react-ui/testing';
@@ -281,7 +281,7 @@ const RefSchema = Schema.Struct({
   contact: Ref(ContactType).annotations({ title: 'Contact Reference' }),
   optionalContact: Schema.optional(Ref(ContactType).annotations({ title: 'Optional Contact Reference' })),
   refArray: Schema.optional(Schema.Array(Ref(ContactType))),
-  unknownExpando: Schema.optional(Ref(Expando).annotations({ title: 'Optional Ref to an Expando (DXN Input)' })),
+  unknownExpando: Schema.optional(Ref(Type.Expando).annotations({ title: 'Optional Ref to an Expando (DXN Input)' })),
 });
 
 type RefSchema = Schema.Schema.Type<typeof RefSchema>;

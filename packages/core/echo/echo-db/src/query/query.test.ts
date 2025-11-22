@@ -8,7 +8,7 @@ import { afterEach, beforeEach, describe, expect, onTestFinished, test } from 'v
 
 import { Trigger, asyncTimeout, sleep } from '@dxos/async';
 import { Obj, Order, Type } from '@dxos/echo';
-import { Expando, Ref, RelationSourceId, RelationTargetId, getMeta } from '@dxos/echo/internal';
+import { Ref, RelationSourceId, RelationTargetId, getMeta } from '@dxos/echo/internal';
 import { live } from '@dxos/echo/internal';
 import { TestingDeprecated } from '@dxos/echo/testing';
 import { type DatabaseDirectory } from '@dxos/echo-protocol';
@@ -39,7 +39,7 @@ const createTestObject = (props: ObjectProps = {}) => {
 };
 
 const createTestObjects = () => {
-  return new Array<Expando>()
+  return new Array<Type.Expando>()
     .concat(range(1).map(() => createTestObject()))
     .concat(
       range(3).map(() =>
@@ -120,17 +120,17 @@ describe('Query', () => {
 
     test('filter by type', async () => {
       {
-        const { objects } = await db.query(Query.select(Filter.type(Expando, { value: undefined }))).run();
+        const { objects } = await db.query(Query.select(Filter.type(Type.Expando, { value: undefined }))).run();
         expect(objects).to.have.length(1);
       }
 
       {
-        const { objects } = await db.query(Query.select(Filter.type(Expando, { value: 100 }))).run();
+        const { objects } = await db.query(Query.select(Filter.type(Type.Expando, { value: 100 }))).run();
         expect(objects).to.have.length(3);
       }
 
       {
-        const { objects } = await db.query(Query.select(Filter.type(Expando, { value: 400 }))).run();
+        const { objects } = await db.query(Query.select(Filter.type(Type.Expando, { value: 400 }))).run();
         expect(objects).to.have.length(0);
       }
     });
@@ -148,35 +148,39 @@ describe('Query', () => {
     });
 
     test('filter expando', async () => {
-      const { objects } = await db.query(Query.select(Filter.type(Expando, { value: 100 }))).run();
+      const { objects } = await db.query(Query.select(Filter.type(Type.Expando, { value: 100 }))).run();
       expect(objects).to.have.length(3);
     });
 
     test('filter by reference', async () => {
-      const objA = db.add(live(Expando, { value: 100 }));
-      const objB = db.add(live(Expando, { value: 200, ref: Ref.make(objA) }));
+      const objA = db.add(live(Type.Expando, { value: 100 }));
+      const objB = db.add(live(Type.Expando, { value: 200, ref: Ref.make(objA) }));
       await db.flush({ indexes: true });
 
-      const { objects } = await db.query(Filter.type(Expando, { ref: Ref.make(objA) })).run();
+      const { objects } = await db.query(Filter.type(Type.Expando, { ref: Ref.make(objA) })).run();
       expect(objects).toEqual([objB]);
     });
 
     test('filter by foreign keys', async () => {
-      const obj = live(Expando, { value: 100 });
+      const obj = live(Type.Expando, { value: 100 });
       getMeta(obj).keys.push({ id: 'test-id', source: 'test-source' });
       db.add(obj);
 
       await db.flush({ indexes: true });
-      const { objects } = await db.query(Filter.foreignKeys(Expando, [{ id: 'test-id', source: 'test-source' }])).run();
+      const { objects } = await db
+        .query(Filter.foreignKeys(Type.Expando, [{ id: 'test-id', source: 'test-source' }]))
+        .run();
       expect(objects).toEqual([obj]);
     });
 
     test('filter by foreign keys without flushing index', async () => {
-      const obj = live(Expando, { value: 100 });
+      const obj = live(Type.Expando, { value: 100 });
       getMeta(obj).keys.push({ id: 'test-id', source: 'test-source' });
       db.add(obj);
 
-      const { objects } = await db.query(Filter.foreignKeys(Expando, [{ id: 'test-id', source: 'test-source' }])).run();
+      const { objects } = await db
+        .query(Filter.foreignKeys(Type.Expando, [{ id: 'test-id', source: 'test-source' }]))
+        .run();
       expect(objects).toEqual([obj]);
     });
 
@@ -187,7 +191,7 @@ describe('Query', () => {
 
     test('options', async () => {
       {
-        const { objects } = await db.query(Query.select(Filter.type(Expando, { value: 100 }))).run();
+        const { objects } = await db.query(Query.select(Filter.type(Type.Expando, { value: 100 }))).run();
         expect(objects).to.have.length(3);
         for (const object of objects) {
           db.remove(object);
@@ -380,13 +384,13 @@ describe('Query', () => {
   // TODO(burdon): Flakey.
   test.skip('map over refs in query result', async () => {
     const { db } = await builder.createDatabase();
-    const folder = db.add(live(Expando, { name: 'folder', objects: [] as any[] }));
+    const folder = db.add(live(Type.Expando, { name: 'folder', objects: [] as any[] }));
     const objects = range(3).map(() => createTestObject());
     for (const object of objects) {
       folder.objects.push(Ref.make(object as any));
     }
 
-    const queryResult = await db.query(Filter.type(Expando, { name: 'folder' })).run();
+    const queryResult = await db.query(Filter.type(Type.Expando, { name: 'folder' })).run();
     const result = queryResult.objects.flatMap(({ objects }) => objects.map((o: Ref<any>) => o.target));
 
     for (const i in objects) {
@@ -433,7 +437,7 @@ describe('Query', () => {
 
       const _contact = db.add(live(TestingDeprecated.Person, {}));
       const _task = db.add(live(TestingDeprecated.Task, {}));
-      const expando = db.add(live(Expando, { name: 'expando' }));
+      const expando = db.add(live(Type.Expando, { name: 'expando' }));
 
       const query = db.query(
         Query.select(Filter.not(Filter.or(Filter.type(TestingDeprecated.Person), Filter.type(TestingDeprecated.Task)))),
@@ -446,11 +450,11 @@ describe('Query', () => {
     test('filter by refs', async () => {
       const { db } = await builder.createDatabase();
 
-      const a = db.add(live(Expando, { name: 'a' }));
-      const b = db.add(live(Expando, { name: 'b', owner: Ref.make(a) }));
-      const _c = db.add(live(Expando, { name: 'c' }));
+      const a = db.add(live(Type.Expando, { name: 'a' }));
+      const b = db.add(live(Type.Expando, { name: 'b', owner: Ref.make(a) }));
+      const _c = db.add(live(Type.Expando, { name: 'c' }));
 
-      const { objects } = await db.query(Query.select(Filter.type(Expando, { owner: Ref.make(a) }))).run();
+      const { objects } = await db.query(Query.select(Filter.type(Type.Expando, { owner: Ref.make(a) }))).run();
       expect(objects).toEqual([b]);
     });
 
@@ -562,11 +566,11 @@ describe('Query', () => {
     });
 
     test('traverse outbound array references', async () => {
-      db.add(live(Expando, { name: 'Contacts', objects: [Ref.make(alice)] }));
+      db.add(live(Type.Expando, { name: 'Contacts', objects: [Ref.make(alice)] }));
       await db.flush({ indexes: true });
 
       const { objects } = await db
-        .query(Query.select(Filter.type(Expando, { name: 'Contacts' })).reference('objects'))
+        .query(Query.select(Filter.type(Type.Expando, { name: 'Contacts' })).reference('objects'))
         .run();
       expect(objects).toMatchObject([{ name: 'Alice' }]);
     });
@@ -589,11 +593,11 @@ describe('Query', () => {
     });
 
     test('traverse inbound array references', async () => {
-      db.add(live(Expando, { name: 'Contacts', objects: [Ref.make(alice)] }));
+      db.add(live(Type.Expando, { name: 'Contacts', objects: [Ref.make(alice)] }));
       await db.flush({ indexes: true });
 
       const { objects } = await db
-        .query(Query.select(Filter.type(TestingDeprecated.Person)).referencedBy(Expando, 'objects'))
+        .query(Query.select(Filter.type(TestingDeprecated.Person)).referencedBy(Type.Expando, 'objects'))
         .run();
       expect(objects).toMatchObject([{ name: 'Contacts' }]);
     });
@@ -706,7 +710,7 @@ describe('Query', () => {
     });
 
     test('fires only once when new objects are added', async () => {
-      const query = db.query(Query.select(Filter.type(Expando, { value: 100 })));
+      const query = db.query(Query.select(Filter.type(Type.Expando, { value: 100 })));
       expect(query.runSync()).to.have.length(3);
 
       let count = 0;
@@ -724,7 +728,7 @@ describe('Query', () => {
     });
 
     test('fires only once when objects are removed', async () => {
-      const query = db.query(Query.select(Filter.type(Expando, { value: 100 })));
+      const query = db.query(Query.select(Filter.type(Type.Expando, { value: 100 })));
       expect(query.runSync()).to.have.length(3);
 
       let count = 0;
@@ -739,7 +743,7 @@ describe('Query', () => {
     });
 
     test('does not fire on object updates', async () => {
-      const query = db.query(Query.select(Filter.type(Expando, { value: 100 })));
+      const query = db.query(Query.select(Filter.type(Type.Expando, { value: 100 })));
       expect(query.runSync()).to.have.length(3);
 
       let updateCount = 0;
@@ -752,7 +756,7 @@ describe('Query', () => {
     });
 
     test('can unsubscribe and resubscribe', async () => {
-      const query = db.query(Query.select(Filter.type(Expando, { value: 100 })));
+      const query = db.query(Query.select(Filter.type(Type.Expando, { value: 100 })));
 
       let count = 0;
       let lastCount = 0;
@@ -795,8 +799,8 @@ describe('Query', () => {
     });
 
     test('multiple queries do not influence each other', async () => {
-      const query1 = db.query(Query.select(Filter.type(Expando, { value: 100 })));
-      const query2 = db.query(Query.select(Filter.type(Expando, { value: 100 })));
+      const query1 = db.query(Query.select(Filter.type(Type.Expando, { value: 100 })));
+      const query2 = db.query(Query.select(Filter.type(Type.Expando, { value: 100 })));
 
       let count1 = 0;
       let count2 = 0;
@@ -876,12 +880,12 @@ describe('Query', () => {
       const { db } = await builder.createDatabase();
 
       // Create 10 test objects: 1, 2, 3, ..., 10.
-      const objects = Array.from({ length: 10 }, (_, i) => db.add(live(Expando, { value: i + 1 })));
+      const objects = Array.from({ length: 10 }, (_, i) => db.add(live(Type.Expando, { value: i + 1 })));
       await db.flush({ indexes: true, updates: true });
 
       // Track all updates to observe the bug.
       const updates: number[][] = [];
-      const unsub = db.query(Query.select(Filter.type(Expando))).subscribe(
+      const unsub = db.query(Query.select(Filter.type(Type.Expando))).subscribe(
         (query) => {
           const values = [...query.objects.map((obj) => obj.value)].sort((a, b) => a - b);
           updates.push(values);

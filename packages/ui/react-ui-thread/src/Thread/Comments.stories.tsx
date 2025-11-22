@@ -5,7 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { type FC, useEffect, useMemo, useRef, useState } from 'react';
 
-import { Expando } from '@dxos/echo/internal';
+import { Type } from '@dxos/echo';
 import { live } from '@dxos/echo/internal';
 import { createDocAccessor, createObject } from '@dxos/echo-db';
 import { PublicKey } from '@dxos/keys';
@@ -44,7 +44,7 @@ const authorId = PublicKey.random().toHex();
 
 const Editor: FC<{
   id?: string;
-  item: Expando;
+  item: Type.Expando;
   comments: Comment[];
   selected?: string;
   onCreateComment: CommentsOptions['onCreate'];
@@ -144,7 +144,7 @@ const StoryThread: FC<{
 
   const handleCreateMessage = () => {
     if (messageRef.current?.length) {
-      const message = live(Expando, {
+      const message = live(Type.Expando, {
         timestamp: new Date().toISOString(),
         sender: { identityKey: authorId },
         text: messageRef.current,
@@ -239,7 +239,7 @@ type StoryProps = {
 };
 
 const DefaultStory = ({ text, autoCreate }: StoryProps) => {
-  const [item] = useState(createObject(live(Expando, { content: text ?? '' })));
+  const [item] = useState(createObject(live(Type.Expando, { content: text ?? '' })));
   const [threads, setThreads] = useState<StoryCommentThread[]>([]);
   const [selected, setSelected] = useState<string>();
 

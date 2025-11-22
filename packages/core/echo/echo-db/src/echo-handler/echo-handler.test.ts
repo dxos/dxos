@@ -20,7 +20,7 @@ import {
   getType,
   isDeleted,
 } from '@dxos/echo/internal';
-import { EchoObject, Expando, Ref, type Ref$, foreignKey, getTypeReference } from '@dxos/echo/internal';
+import { EchoObject, Ref, type Ref$, foreignKey, getTypeReference } from '@dxos/echo/internal';
 import { live } from '@dxos/echo/internal';
 import { TestingDeprecated, prepareAstForCompare } from '@dxos/echo/testing';
 import { Reference, decodeReference, encodeReference } from '@dxos/echo-protocol';
@@ -210,7 +210,7 @@ describe('Reactive Object with ECHO database', () => {
   test('proxies are initialized when a plain object is inserted into the database', async () => {
     const { db } = await builder.createDatabase();
 
-    const obj = db.add(Obj.make(Expando, { string: 'foo' }));
+    const obj = db.add(Obj.make(Type.Expando, { string: 'foo' }));
     expect(obj.id).to.be.a('string');
     expect(obj.string).to.eq('foo');
     expect(getSchema(obj)).to.eq(undefined);
@@ -661,7 +661,7 @@ describe('Reactive Object with ECHO database', () => {
       let id: string;
       {
         const db = await peer.openDatabase(spaceKey, root.url);
-        const obj = db.add(Obj.make(Expando, { string: 'foo' }));
+        const obj = db.add(Obj.make(Type.Expando, { string: 'foo' }));
         id = obj.id;
         getMeta(obj).keys.push(metaKey);
         await db.flush();
@@ -679,8 +679,8 @@ describe('Reactive Object with ECHO database', () => {
     test('json serialization with references', async () => {
       const { db } = await builder.createDatabase();
 
-      const org = db.add(Obj.make(Expando, { name: 'DXOS' }));
-      const employee = db.add(Obj.make(Expando, { name: 'John', worksAt: Ref.make(org) }));
+      const org = db.add(Obj.make(Type.Expando, { name: 'DXOS' }));
+      const employee = db.add(Obj.make(Type.Expando, { name: 'John', worksAt: Ref.make(org) }));
 
       const employeeJson = JSON.parse(JSON.stringify(employee));
       expect(employeeJson).to.deep.eq({

@@ -4,7 +4,8 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Expando, Ref, TypedObject } from '@dxos/echo/internal';
+import { Type } from '@dxos/echo';
+import { Ref, TypedObject } from '@dxos/echo/internal';
 
 //
 // TODO(burdon): Remove.
@@ -38,7 +39,7 @@ export class ContactType extends TypedObject({ typename: 'braneframe.com/Contact
 const BlockSchema = Schema.Struct({
   timestamp: Schema.String,
   content: Schema.optional(Ref(TextV0Type)),
-  object: Schema.optional(Ref(Expando)),
+  object: Schema.optional(Ref(Type.Expando)),
 });
 
 /** @deprecated */
@@ -52,7 +53,7 @@ export class MessageType extends TypedObject({ typename: 'braneframe.com/Message
   date: Schema.optional(Schema.String),
   subject: Schema.optional(Schema.String),
   blocks: Schema.mutable(Schema.Array(BlockSchema)),
-  links: Schema.optional(Schema.Array(Ref(Expando))),
+  links: Schema.optional(Schema.Array(Ref(Type.Expando))),
   read: Schema.optional(Schema.Boolean),
   context: Schema.optional(
     Schema.Struct({

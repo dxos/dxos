@@ -7,8 +7,8 @@ import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { Trigger, TriggerState, asyncTimeout } from '@dxos/async';
 import { type ClientServicesProvider, PropertiesType, type Space } from '@dxos/client-protocol';
-import { Obj } from '@dxos/echo';
-import { Expando, Ref } from '@dxos/echo/internal';
+import { Obj, Type } from '@dxos/echo';
+import { Ref } from '@dxos/echo/internal';
 import { type AnyLiveObject, Filter, type QueryResult } from '@dxos/echo-db';
 import { type PublicKey } from '@dxos/keys';
 import { createTestLevel } from '@dxos/kv-store/testing';
@@ -53,9 +53,9 @@ describe('Index queries', () => {
       }),
     ],
     expandos: [
-      Obj.make(Expando, { org: 'DXOS' }), //
-      Obj.make(Expando, { name: 'Mykola' }),
-      Obj.make(Expando, { height: 185 }),
+      Obj.make(Type.Expando, { org: 'DXOS' }), //
+      Obj.make(Type.Expando, { name: 'Mykola' }),
+      Obj.make(Type.Expando, { height: 185 }),
     ],
   });
 
@@ -277,7 +277,7 @@ describe('Index queries', () => {
     }
   });
 
-  test('query Expando objects', async () => {
+  test('query Type.Expando objects', async () => {
     const builder = new TestBuilder();
     onTestFinished(async () => await builder.destroy());
     const client = await initClient(builder.createLocalClientServices());
@@ -286,7 +286,7 @@ describe('Index queries', () => {
     const { expandos } = createObjects();
 
     await addObjects(space, expandos);
-    const query = space.db.query(Filter.type(Expando));
+    const query = space.db.query(Filter.type(Type.Expando));
     await matchObjects(query, expandos);
   });
 

@@ -5,7 +5,7 @@
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import { Obj, Query, Type } from '@dxos/echo';
-import { Expando, Ref, getSchema } from '@dxos/echo/internal';
+import { Ref, getSchema } from '@dxos/echo/internal';
 import { Testing } from '@dxos/echo/testing';
 import { PublicKey } from '@dxos/keys';
 import { createTestLevel } from '@dxos/kv-store/testing';
@@ -162,18 +162,18 @@ describe('Serializer', () => {
           title: 'Main task',
           subtasks: [
             Ref.make(
-              Obj.make(Expando, {
+              Obj.make(Type.Expando, {
                 title: 'Subtask 1',
               }),
             ),
             Ref.make(
-              Obj.make(Expando, {
+              Obj.make(Type.Expando, {
                 title: 'Subtask 2',
               }),
             ),
           ],
           previous: Ref.make(
-            Obj.make(Expando, {
+            Obj.make(Type.Expando, {
               title: 'Previous task',
             }),
           ),
