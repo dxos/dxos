@@ -82,9 +82,9 @@
     "@dxos/protocols": "workspace:*",
     "@dxos/schema": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@effect/platform": "0.92.1",
-    "effect": "3.18.3",
-    "esbuild": "0.25.10",
+    "@effect/platform": "catalog:",
+    "effect": "catalog:",
+    "esbuild": "catalog:",
     "esbuild-wasm": "^0.16.14",
     "i18next": "^24.2.1",
     "iso-did": "^1.6.0"

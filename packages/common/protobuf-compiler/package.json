@@ -39,7 +39,7 @@
     "@types/mocha": "^10.0.7",
     "expect": "^27.0.2",
     "mocha": "^10.6.0",
-    "typescript": "^5.9.3"
+    "typescript": "catalog:"
   },
   "peerDependencies": {
     "typescript": "^5.9.2"

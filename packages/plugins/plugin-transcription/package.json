@@ -98,12 +98,12 @@
     "@dxos/storybook-utils": "workspace:*",
     "@dxos/test-utils": "workspace:*",
     "@effect-atom/atom-react": "^0.3.4",
-    "@effect/platform": "0.92.1",
+    "@effect/platform": "catalog:",
     "@types/dom-speech-recognition": "^0.0.6",
-    "@types/react": "~19.2.2",
-    "effect": "3.18.3",
-    "react": "~19.2.0",
-    "react-dom": "~19.2.0",
+    "@types/react": "catalog:",
+    "effect": "catalog:",
+    "react": "catalog:",
+    "react-dom": "catalog:",
     "tailwindcss": "~3.4.1"
   },
   "peerDependencies": {

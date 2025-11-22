@@ -84,7 +84,7 @@
     "debug": "^4.3.4",
     "js-yaml": "^4.1.0",
     "localforage": "^1.10.0",
-    "uuid": "^9.0.0"
+    "uuid": "catalog:"
   },
   "devDependencies": {
     "@sentry/types": "^8.8.0",

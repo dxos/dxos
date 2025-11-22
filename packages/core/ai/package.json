@@ -77,13 +77,13 @@
     "@dxos/schema": "workspace:*",
     "@dxos/types": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@effect/ai": "0.29.1",
-    "@effect/ai-anthropic": "0.21.1",
-    "@effect/ai-openai": "0.32.1",
-    "@effect/experimental": "0.56.0",
-    "@effect/platform": "^0.92.1",
-    "@effect/platform-node": "^0.98.3",
-    "@effect/workflow": "^0.11.3",
+    "@effect/ai": "catalog:",
+    "@effect/ai-anthropic": "catalog:",
+    "@effect/ai-openai": "catalog:",
+    "@effect/experimental": "catalog:",
+    "@effect/platform": "catalog:",
+    "@effect/platform-node": "catalog:",
+    "@effect/workflow": "catalog:",
     "diff": "^8.0.2",
     "json-stable-stringify": "^1.3.0",
     "parjs": "^1.3.9",
@@ -91,7 +91,7 @@
   },
   "devDependencies": {
     "@types/parsimmon": "^1.10.9",
-    "effect": "3.18.3"
+    "effect": "catalog:"
   },
   "peerDependencies": {
     "effect": "^3.13.3"

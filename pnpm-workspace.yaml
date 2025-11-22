@@ -11,3 +11,58 @@ packages:
 
 # Do not disable.
 strictPeerDependencies: true
+
+catalog:
+  # React ecosystem
+  react: ~19.2.0
+  react-dom: ~19.2.0
+  '@types/react': ~19.2.2
+  '@types/react-dom': ~19.2.2
+  
+  # Effect ecosystem
+  effect: 3.18.3
+  '@effect/ai': 0.29.1
+  '@effect/ai-anthropic': 0.21.1
+  '@effect/ai-openai': 0.32.1
+  '@effect/cli': 0.71.0
+  '@effect/cluster': 0.50.3
+  '@effect/experimental': 0.56.0
+  '@effect/opentelemetry': ^0.58.0
+  '@effect/platform': 0.92.1
+  '@effect/platform-browser': 0.72.0
+  '@effect/platform-node': 0.98.3
+  '@effect/printer': 0.46.0
+  '@effect/printer-ansi': 0.46.0
+  '@effect/rpc': 0.71.0
+  '@effect/schema': ^0.75.5
+  '@effect/sql': 0.46.0
+  '@effect/typeclass': 0.37.0
+  '@effect/workflow': 0.11.3
+  
+  # Build and development tools
+  esbuild: 0.25.10
+  typescript: ^5.9.3
+  '@swc/core': 1.13.5
+  '@swc/types': ^0.1.25
+  '@types/node': 22.10.2
+  
+  # Testing framework
+  vitest: ^3.2.4
+  '@vitest/browser': ^3.2.4
+  '@vitest/coverage-v8': ^3.2.4
+  '@vitest/expect': ^3.2.4
+  '@vitest/runner': ^3.2.4
+  '@vitest/snapshot': ^3.2.4
+  '@vitest/spy': ^3.2.4
+  '@vitest/ui': ^3.2.4
+  '@vitest/utils': ^3.2.4
+  
+  # Automerge CRDT
+  '@automerge/automerge': 3.1.1
+  '@automerge/automerge-repo': 2.4.0
+  
+  # Utility libraries
+  lodash.defaultsdeep: ^4.6.1
+  lodash.isequal: ^4.5.0
+  lodash.isequalwith: ^4.4.0
+  uuid: ^9.0.0

@@ -51,7 +51,7 @@
     "@dxos/random-access-storage": "workspace:*",
     "@dxos/util": "workspace:*",
     "@dxos/vendor-hypercore": "workspace:*",
-    "lodash.defaultsdeep": "^4.6.1",
+    "lodash.defaultsdeep": "catalog:",
     "race-as-promised": "^0.0.3",
     "streamx": "^2.12.5"
   },

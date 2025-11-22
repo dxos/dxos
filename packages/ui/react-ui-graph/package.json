@@ -50,7 +50,7 @@
     "d3-force": "~3.0.0",
     "immutability-helper": "^3.0.2",
     "js-clipper": "1.0.1",
-    "lodash.defaultsdeep": "^4.6.1",
+    "lodash.defaultsdeep": "catalog:",
     "react-resize-detector": "^11.0.1",
     "topojson-client": "^3.1.0"
   },
@@ -64,13 +64,13 @@
     "@dxos/storybook-utils": "workspace:*",
     "@types/d3": "^7.4.3",
     "@types/lodash.defaultsdeep": "^4.6.6",
-    "@types/react": "~19.2.2",
-    "@types/react-dom": "~19.2.2",
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
     "@types/topojson-client": "^3.1.4",
     "@types/topojson-specification": "^1.0.5",
     "postcss": "^8.4.41",
-    "react": "~19.2.0",
-    "react-dom": "~19.2.0"
+    "react": "catalog:",
+    "react-dom": "catalog:"
   },
   "peerDependencies": {
     "@dxos/react-ui": "workspace:*",

@@ -49,17 +49,17 @@
     "@radix-ui/react-primitive": "2.0.2",
     "@radix-ui/react-slot": "1.1.2",
     "@radix-ui/react-use-controllable-state": "1.1.0",
-    "effect": "3.18.3"
+    "effect": "catalog:"
   },
   "devDependencies": {
     "@dxos/random": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
-    "@types/react": "~19.2.2",
-    "@types/react-dom": "~19.2.2",
-    "react": "~19.2.0",
-    "react-dom": "~19.2.0",
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
+    "react": "catalog:",
+    "react-dom": "catalog:",
     "vite": "7.1.9"
   },
   "peerDependencies": {

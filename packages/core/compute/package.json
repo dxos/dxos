@@ -53,8 +53,8 @@
     "@dxos/util": "workspace:*",
     "@dxos/vendor-hyperformula": "workspace:*",
     "@preact/signals-core": "^1.12.1",
-    "effect": "3.18.3",
-    "lodash.defaultsdeep": "^4.6.1"
+    "effect": "catalog:",
+    "lodash.defaultsdeep": "catalog:"
   },
   "devDependencies": {
     "@dxos/echo": "workspace:*",

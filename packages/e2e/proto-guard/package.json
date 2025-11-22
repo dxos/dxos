@@ -37,7 +37,7 @@
     "@dxos/log": "workspace:*",
     "@dxos/node-std": "workspace:*",
     "@dxos/protocols": "workspace:*",
-    "lodash.isequal": "^4.5.0",
+    "lodash.isequal": "catalog:",
     "pkg-up": "^3.1.0",
     "yargs": "~16.2.0"
   },

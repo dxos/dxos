@@ -37,11 +37,11 @@
     "@dxos/storybook-utils": "workspace:*",
     "@dxos/util": "workspace:*",
     "@types/jsonpath": "^0.2.4",
-    "@types/react": "~19.2.2",
-    "@types/react-dom": "~19.2.2",
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
     "@types/react-syntax-highlighter": "^15.5.13",
-    "react": "~19.2.0",
-    "react-dom": "~19.2.0",
+    "react": "catalog:",
+    "react-dom": "catalog:",
     "vite": "7.1.9"
   },
   "peerDependencies": {

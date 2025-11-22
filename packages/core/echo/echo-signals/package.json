@@ -59,7 +59,7 @@
   },
   "devDependencies": {
     "preact": "^10.26.9",
-    "react": "~19.2.0"
+    "react": "catalog:"
   },
   "optionalDependencies": {
     "preact": "^10.26.9",

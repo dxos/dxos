@@ -58,7 +58,7 @@
     "@radix-ui/react-context": "1.1.1",
     "bind-event-listener": "^3.0.0",
     "d3": "^7.9.0",
-    "lodash.defaultsdeep": "^4.6.1",
+    "lodash.defaultsdeep": "catalog:",
     "react-hotkeys-hook": "^4.6.1"
   },
   "devDependencies": {
@@ -71,11 +71,11 @@
     "@dxos/storybook-utils": "workspace:*",
     "@types/d3": "^7.4.3",
     "@types/lodash.defaultsdeep": "^4.6.6",
-    "@types/react": "~19.2.2",
-    "@types/react-dom": "~19.2.2",
-    "effect": "3.18.3",
-    "react": "~19.2.0",
-    "react-dom": "~19.2.0",
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
+    "effect": "catalog:",
+    "react": "catalog:",
+    "react-dom": "catalog:",
     "vite": "7.1.9"
   },
   "peerDependencies": {

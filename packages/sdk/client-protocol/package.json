@@ -47,7 +47,7 @@
     "@dxos/protocols": "workspace:*",
     "@dxos/rpc": "workspace:*",
     "base-x": "~3.0.9",
-    "effect": "3.18.3"
+    "effect": "catalog:"
   },
   "peerDependencies": {
     "effect": "^3.13.3"

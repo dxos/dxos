@@ -42,13 +42,13 @@
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
-    "@types/react": "~19.2.2",
-    "@types/react-dom": "~19.2.2",
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
     "@types/react-virtualized": "^9.22.3",
     "@types/react-window": "^2.0.0",
-    "effect": "3.18.3",
-    "react": "~19.2.0",
-    "react-dom": "~19.2.0",
+    "effect": "catalog:",
+    "react": "catalog:",
+    "react-dom": "catalog:",
     "vite": "7.1.9"
   },
   "peerDependencies": {

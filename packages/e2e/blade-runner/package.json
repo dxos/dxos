@@ -35,8 +35,8 @@
     "run-tests": "moon run blade-runner:build && node ./dist/lib/node-esm/main.mjs"
   },
   "dependencies": {
-    "@automerge/automerge": "3.1.2",
-    "@automerge/automerge-repo": "2.4.0",
+    "@automerge/automerge": "catalog:",
+    "@automerge/automerge-repo": "catalog:",
     "@automerge/automerge-repo-network-websocket": "2.4.0",
     "@automerge/automerge-repo-storage-indexeddb": "2.4.0",
     "@dxos/async": "workspace:*",
@@ -75,8 +75,8 @@
     "@dxos/util": "workspace:*",
     "chartjs-node-canvas": "^5.0.0",
     "debug": "^4.3.4",
-    "effect": "3.18.3",
-    "esbuild": "0.25.10",
+    "effect": "catalog:",
+    "esbuild": "catalog:",
     "esbuild-plugin-wasm": "^1.1.0",
     "ioredis": "^5.3.2",
     "isomorphic-ws": "^5.0.0",
@@ -86,7 +86,7 @@
     "plotly.js-dist-min": "^2.25.1",
     "redis": "^4.6.6",
     "seedrandom": "^3.0.5",
-    "uuid": "^9.0.0",
+    "uuid": "catalog:",
     "websocket-stream": "^5.5.2",
     "ws": "^8.14.2",
     "yargs": "~16.2.0"
