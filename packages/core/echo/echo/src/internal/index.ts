@@ -16,6 +16,7 @@ export * from './types';
 //    - [x] Expando => Type.Expando
 //    - [x] live => Obj.make
 
+//    - [ ] QueryFn, QueryOptions => Database
 //    - [ ] JsonSchema defs
 //    - [ ] FormatEnum => TypeFormat
 //    - [ ] JsonPath, JsonProp, getValue, setValue => Json.Path?
