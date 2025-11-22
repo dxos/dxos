@@ -8,7 +8,7 @@ import React, { useCallback, useState } from 'react';
 
 import { ContactType } from '@dxos/client/testing';
 import { Obj, Type } from '@dxos/echo';
-import { type BaseObject, Format, Ref, type TypeAnnotation, getObjectDXN } from '@dxos/echo/internal';
+import { Format, Ref, type TypeAnnotation, getObjectDXN } from '@dxos/echo/internal';
 import { Tooltip } from '@dxos/react-ui';
 import { withLayoutVariants, withTheme } from '@dxos/react-ui/testing';
 import { Testing } from '@dxos/schema/testing';
@@ -19,17 +19,12 @@ import { TestLayout, TestPanel } from '../testing';
 import { SelectInput } from './Defaults';
 import { Form, type FormProps } from './Form';
 
-type StoryProps<T extends BaseObject> = {
+type StoryProps<T extends Obj.Any> = {
   debug?: boolean;
   schema: Type.Obj.Any;
 } & FormProps<T>;
 
-const DefaultStory = <T extends BaseObject = any>({
-  debug,
-  schema,
-  values: initialValues,
-  ...props
-}: StoryProps<T>) => {
+const DefaultStory = <T extends Obj.Any = any>({ debug, schema, values: initialValues, ...props }: StoryProps<T>) => {
   const [values, setValues] = useState(initialValues);
   const handleSave = useCallback<NonNullable<FormProps<T>['onSave']>>((values) => {
     setValues(values);
@@ -50,7 +45,7 @@ const DefaultStory = <T extends BaseObject = any>({
   return <Form<T> schema={schema} values={values} onSave={handleSave} {...props} />;
 };
 
-const RefStory = <T extends BaseObject = any>(props: StoryProps<T>) => {
+const RefStory = <T extends Obj.Any = any>(props: StoryProps<T>) => {
   const onQueryRefOptions = useCallback((typeInfo: TypeAnnotation) => {
     switch (typeInfo.typename) {
       case Testing.Person.typename:

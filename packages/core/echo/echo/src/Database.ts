@@ -8,11 +8,12 @@ import { type DXN, type PublicKey, type SpaceId } from '@dxos/keys';
 import { type Live } from '@dxos/live-object';
 import { type QueryOptions as QueryOptionsProto } from '@dxos/protocols/proto/dxos/echo/filter';
 
-import { type BaseObject, type HasId } from './internal';
+import { type HasId } from './internal';
+import type * as Obj from './Obj';
 import { type Filter, type Query } from './query';
 import type * as Ref from './Ref';
 
-export type QueryResultEntry<T extends BaseObject = BaseObject> = {
+export type QueryResultEntry<T extends Obj.Any = Obj.Any> = {
   id: string;
 
   // TODO(burdon): Rename DatabaseId?
@@ -47,7 +48,7 @@ export type QueryResultEntry<T extends BaseObject = BaseObject> = {
   };
 };
 
-export type OneShotQueryResult<T extends BaseObject = BaseObject> = {
+export type OneShotQueryResult<T extends Obj.Any = Obj.Any> = {
   results: QueryResultEntry<T>[];
   objects: T[];
 };
@@ -59,7 +60,7 @@ export type QuerySubscriptionOptions = {
   fire?: boolean;
 };
 
-export interface QueryResult<T extends BaseObject = BaseObject> {
+export interface QueryResult<T extends Obj.Any = Obj.Any> {
   readonly query: Query<T>;
   readonly results: QueryResultEntry<T>[];
   readonly objects: T[];
@@ -163,7 +164,7 @@ export interface Database extends Queryable {
    * `Ref.fromDXN(dxn)` returns an unhydrated reference. The `.load` and `.target` APIs will not work.
    * `db.ref(dxn)` is preferable in cases with access to the database.
    */
-  ref<T extends BaseObject = any>(dxn: DXN): Ref.Ref<T>;
+  ref<T extends Obj.Any = Obj.Any>(dxn: DXN): Ref.Ref<T>;
 
   /**
    * Query objects.
@@ -174,11 +175,11 @@ export interface Database extends Queryable {
    * Adds object to the database.
    */
   // TODO(dmaretskyi): Lock to Obj.Any | Relation.Any.
-  add<T extends BaseObject>(obj: Live<T>, opts?: AddOptions): Live<T & HasId>;
+  add<T extends Obj.Any>(obj: Live<T>, opts?: AddOptions): Live<T & HasId>;
 
   /**
    * Removes object from the database.
    */
   // TODO(dmaretskyi): Lock to Obj.Any | Relation.Any.
-  remove<T extends BaseObject & HasId>(obj: T): void;
+  remove<T extends Obj.Any & HasId>(obj: T): void;
 }

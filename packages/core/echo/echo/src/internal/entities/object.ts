@@ -13,10 +13,10 @@ import { makeTypeJsonSchemaAnnotation } from '../json-schema';
 import { type EchoTypeSchema, makeEchoTypeSchema } from './entity';
 
 /**
+ * Schema for Obj entity types.
  * Pipeable function to add ECHO object annotations to a schema.
  */
-// TODO(dmaretskyi): Rename EchoObjectSchema (use import namespace).
-export const EchoObject: {
+export const EchoObjectSchema: {
   // TODO(burdon): Tighten Self type to Schema.TypeLiteral or Schema.Struct to facilitate definition of `make` method.
   // (meta: TypeMeta): <Self extends Schema.Struct<Fields>, Fields extends Schema.Struct.Fields>(self: Self) => EchoObjectSchema<Self, Fields>;
   (meta: TypeMeta): <Self extends Schema.Schema.Any>(self: Self) => EchoTypeSchema<Self>;

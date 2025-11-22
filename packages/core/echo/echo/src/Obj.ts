@@ -12,7 +12,7 @@ import { type Live, getSnapshot as getSnapshot$ } from '@dxos/live-object';
 import { assumeType, deepMapValues } from '@dxos/util';
 
 import {
-  type BaseObj,
+  type AnyEchoObject,
   EntityKind,
   EntityKindId,
   type InternalObjectProps,
@@ -22,6 +22,7 @@ import {
   ObjectVersionId,
   type VersionType,
   VersionTypeId,
+  createLiveObject,
   getDescription as getDescription$,
   getLabel as getLabel$,
   getObjectDXN,
@@ -30,7 +31,6 @@ import {
   getType,
   getTypeAnnotation,
   isInstanceOf,
-  live,
   objectFromJSON,
   objectToJSON,
   setDescription as setDescription$,
@@ -41,6 +41,11 @@ import type * as Relation from './Relation';
 import * as Type from './Type';
 
 export { getSchema, type VersionType, VersionTypeId };
+
+/**
+ * Base interface for all objects..
+ */
+interface BaseObj extends AnyEchoObject, Type.OfKind<EntityKind.Object> {}
 
 /**
  * Object type with specific properties.
@@ -102,15 +107,19 @@ export const make = <S extends Type.Obj.Any>(
 ): Live<Schema.Schema.Type<S>> => {
   assertArgument(getTypeAnnotation(schema)?.kind === EntityKind.Object, 'schema', 'Expected an object schema');
 
+  // Set default fields on meta on creation.
   if (props[MetaId] != null) {
-    // Set default fields on meta on creation.
     meta = { ...structuredClone(DEFAULT_META), ...props[MetaId] };
     delete props[MetaId];
   }
 
+  // Filter undefined values.
   const filterUndefined = Object.fromEntries(Object.entries(props).filter(([_, v]) => v !== undefined));
 
-  return live<Schema.Schema.Type<S>>(schema, filterUndefined as any, { keys: [], ...meta });
+  return createLiveObject<Schema.Schema.Type<S>>(schema, filterUndefined as any, {
+    keys: [],
+    ...meta,
+  });
 };
 
 export const isObject = (obj: unknown): obj is Any => {

@@ -6,7 +6,8 @@ import * as Schema from 'effect/Schema';
 
 import { type MulticastObservable } from '@dxos/async';
 import { type SpecificCredential } from '@dxos/credentials';
-import { type AnyLiveObject, type EchoDatabase, type QueueFactory, type SpaceSyncState } from '@dxos/echo-db';
+import { type Obj } from '@dxos/echo';
+import { type EchoDatabase, type QueueFactory, type SpaceSyncState } from '@dxos/echo-db';
 import { type PublicKey, type SpaceId } from '@dxos/keys';
 import { type Messenger } from '@dxos/protocols';
 import {
@@ -100,7 +101,7 @@ export interface Space extends Messenger {
   /**
    * Properties object.
    */
-  get properties(): AnyLiveObject<any>;
+  get properties(): Obj.Any;
 
   /**
    * Current state of space pipeline.

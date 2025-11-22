@@ -14,23 +14,24 @@ import React, {
 } from 'react';
 
 import { raise } from '@dxos/debug';
-import { type BaseObject, getValue } from '@dxos/echo/internal';
+import { type Obj } from '@dxos/echo';
+import { getValue } from '@dxos/echo/internal';
 import { type SimpleType, createJsonPath } from '@dxos/effect';
 
 import { type FormHandler, type FormOptions, useForm } from '../../hooks';
 
-type FormContextValue<T extends BaseObject> = FormHandler<T>;
+type FormContextValue<T extends Obj.Any> = FormHandler<T>;
 
 const FormContext = createContext<FormContextValue<any> | undefined>(undefined);
 
-export const useFormContext = <T extends BaseObject>(): FormContextValue<T> => {
+export const useFormContext = <T extends Obj.Any>(): FormContextValue<T> => {
   return useContext(FormContext) ?? raise(new Error('Missing FormContext'));
 };
 
 export const useFormValues = (path: (string | number)[] = []): any => {
   const { values: formValues } = useFormContext();
   const jsonPath = createJsonPath(path);
-  return getValue(formValues, jsonPath) as BaseObject;
+  return getValue(formValues, jsonPath) as Obj.Any;
 };
 
 export type FormInputStateProps = {

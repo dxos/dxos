@@ -5,7 +5,7 @@
 import { Event } from '@dxos/async';
 import { type Stream } from '@dxos/codec-protobuf/stream';
 import { Context } from '@dxos/context';
-import { type Database } from '@dxos/echo';
+import { type Database, type Obj } from '@dxos/echo';
 import { type QueryAST } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
 import { SpaceId } from '@dxos/keys';
@@ -19,7 +19,6 @@ import {
 } from '@dxos/protocols/proto/dxos/echo/query';
 import { isNonNullable } from '@dxos/util';
 
-import { type AnyLiveObject } from '../echo-handler';
 import { getObjectCore } from '../echo-handler';
 import { OBJECT_DIAGNOSTICS, type QuerySourceProvider } from '../hypergraph';
 import { type QuerySource, getTargetSpacesForQuery } from '../query';
@@ -31,7 +30,7 @@ export type LoadObjectParams = {
 };
 
 export interface ObjectLoader {
-  loadObject(params: LoadObjectParams): Promise<AnyLiveObject<any> | undefined>;
+  loadObject(params: LoadObjectParams): Promise<Obj.Obj<any> | undefined>;
 }
 
 export type IndexQueryProviderParams = {

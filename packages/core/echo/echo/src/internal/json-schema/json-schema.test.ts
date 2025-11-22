@@ -22,7 +22,7 @@ import {
   getTypeAnnotation,
   getTypeIdentifierAnnotation,
 } from '../ast';
-import { EchoObject } from '../entities';
+import { EchoObjectSchema } from '../entities';
 import { Email, FormatAnnotation, FormatEnum } from '../formats';
 import { JsonSchemaType, getNormalizedEchoAnnotations, getSchemaProperty, setSchemaProperty } from '../json-schema';
 import { Ref, createSchemaReference, getReferenceAst, getSchemaReference } from '../ref';
@@ -372,7 +372,7 @@ describe('effect-to-json', () => {
       id: ObjectId,
       name: Schema.String,
     }).pipe(
-      EchoObject({
+      EchoObjectSchema({
         typename: 'example.com/type/Organization',
         version: '0.1.0',
       }),
@@ -724,7 +724,7 @@ describe('json-to-effect', () => {
   test('object nested inside another struct', () => {
     const Contact = Schema.Struct({
       name: Schema.String,
-    }).pipe(EchoObject({ typename: 'example.com/type/Person', version: '0.1.0' }));
+    }).pipe(EchoObjectSchema({ typename: 'example.com/type/Person', version: '0.1.0' }));
     const input = Schema.Struct({
       contact: Contact,
     });

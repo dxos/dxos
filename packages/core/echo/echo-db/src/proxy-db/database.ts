@@ -8,7 +8,7 @@ import { type CleanupFn, Event, type ReadOnlyEvent, synchronized } from '@dxos/a
 import { type Context, LifecycleState, Resource } from '@dxos/context';
 import { inspectObject } from '@dxos/debug';
 import { type Database, Ref } from '@dxos/echo';
-import { type BaseObject, type HasId, assertObjectModelShape, setRefResolver } from '@dxos/echo/internal';
+import { type AnyProperties, type HasId, assertObjectModelShape, setRefResolver } from '@dxos/echo/internal';
 import { getSchema, getType } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
 import { DXN, type PublicKey, type SpaceId } from '@dxos/keys';
@@ -49,7 +49,7 @@ export interface EchoDatabase extends Database.Database {
   /**
    * @deprecated Use `ref` instead.
    */
-  getObjectById<T extends BaseObject = any>(id: string, opts?: Database.GetObjectByIdOptions): Live<T> | undefined;
+  getObjectById<T extends AnyProperties = any>(id: string, opts?: Database.GetObjectByIdOptions): Live<T> | undefined;
 
   /**
    * Wait for all pending changes to be saved to disk.
@@ -231,7 +231,7 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
     return object;
   }
 
-  ref<T extends BaseObject = any>(dxn: DXN): Ref.Ref<T> {
+  ref<T extends AnyProperties = any>(dxn: DXN): Ref.Ref<T> {
     const ref = Ref.fromDXN(dxn);
     setRefResolver(ref, this.graph.createRefResolver({ context: { space: this.spaceId } }));
     return ref;
@@ -270,7 +270,7 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
    * Add reactive object.
    */
   // TODO(dmaretskyi): Lock to Obj.Any | Relation.Any.
-  add<T extends BaseObject>(obj: T, opts?: Database.AddOptions): Live<T & HasId> {
+  add<T extends AnyProperties>(obj: T, opts?: Database.AddOptions): Live<T & HasId> {
     if (!isEchoObject(obj)) {
       const schema = getSchema(obj);
       if (schema != null) {
@@ -298,7 +298,7 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
   /**
    * Remove reactive object.
    */
-  remove<T extends BaseObject>(obj: T): void {
+  remove<T extends AnyProperties>(obj: T): void {
     invariant(isEchoObject(obj));
     return this._coreDatabase.removeCore(getObjectCore(obj));
   }
@@ -341,7 +341,7 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
   /**
    * @internal
    */
-  async _loadObjectById<T extends BaseObject>(
+  async _loadObjectById<T extends AnyProperties>(
     objectId: string,
     options: LoadObjectOptions = {},
   ): Promise<AnyLiveObject<T> | undefined> {

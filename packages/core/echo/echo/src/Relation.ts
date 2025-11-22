@@ -13,9 +13,9 @@ import { assumeType } from '@dxos/util';
 import {
   ATTR_RELATION_SOURCE,
   ATTR_RELATION_TARGET,
+  type AnyEchoObject,
   EntityKind,
   EntityKindId,
-  type HasId,
   type InternalObjectProps,
   MetaId,
   type ObjectMeta,
@@ -23,9 +23,9 @@ import {
   RelationSourceId,
   RelationTargetDXNId,
   RelationTargetId,
+  createLiveObject,
   getObjectDXN,
   getTypeAnnotation,
-  live,
 } from './internal';
 import * as Obj from './Obj';
 import * as Type from './Type';
@@ -34,9 +34,9 @@ import * as Type from './Type';
  * NOTE: Don't export: Relation.Relation and Relation.Any form the public API.
  */
 interface BaseRelation<Source, Target>
-  extends HasId,
-    Type.Relation.Endpoints<Source, Target>,
-    Type.OfKind<EntityKind.Relation> {}
+  extends AnyEchoObject,
+    Type.OfKind<EntityKind.Relation>,
+    Type.Relation.Endpoints<Source, Target> {}
 
 /**
  * Relation type with specific properties.
@@ -95,7 +95,7 @@ export const make = <S extends Type.Relation.Any>(
   (props as any)[RelationSourceDXNId] = sourceDXN;
   (props as any)[RelationTargetDXNId] = targetDXN;
 
-  return live<Schema.Schema.Type<S>>(schema, props as any, meta);
+  return createLiveObject<Schema.Schema.Type<S>>(schema, props as any, meta);
 };
 
 export const isRelation = (value: unknown): value is Any => {

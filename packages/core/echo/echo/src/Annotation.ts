@@ -11,6 +11,7 @@ export {
   getDescription,
   getLabel,
   getLabelForObject,
+  getTypeAnnotation,
   setDescription,
   setLabel,
 } from './internal/ast/annotations';

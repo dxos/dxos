@@ -4,7 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { EchoObject, EchoRelation } from '../entities';
+import { EchoObjectSchema, EchoRelationSchema } from '../entities';
 import { TypedObject } from '../object';
 import { Ref, type Ref$ } from '../ref';
 
@@ -28,7 +28,7 @@ export namespace Testing {
   const TestNestedSchema = Schema.mutable(Schema.Struct({ field: Schema.String }));
   export type TestNestedSchema = Schema.Schema.Type<typeof TestNestedSchema>;
   export const TestNestedType = TestNestedSchema.pipe(
-    EchoObject({ typename: 'example.com/type/TestNested', version: '0.1.0' }),
+    EchoObjectSchema({ typename: 'example.com/type/TestNested', version: '0.1.0' }),
   );
 
   //
@@ -66,7 +66,7 @@ export namespace Testing {
 
   // TODO(burdon): Why do we use need this rather then TestSchemaType?
   export const TestType = TestSchema.pipe(
-    EchoObject({
+    EchoObjectSchema({
       typename: 'example.com/type/Test',
       version: '0.1.0',
     }),
@@ -134,7 +134,7 @@ export namespace Testing {
   export const HasManager = Schema.Struct({
     since: Schema.optional(Schema.String),
   }).pipe(
-    EchoRelation({
+    EchoRelationSchema({
       typename: 'example.com/type/HasManager',
       version: '0.1.0',
       source: Person,

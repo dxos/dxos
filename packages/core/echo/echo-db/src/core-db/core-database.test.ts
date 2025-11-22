@@ -18,7 +18,7 @@ import { openAndClose } from '@dxos/test-utils';
 import { range } from '@dxos/util';
 
 import { type DocHandleProxy, type RepoProxy } from '../automerge';
-import { type AnyLiveObject, getObjectCore } from '../echo-handler';
+import { getObjectCore } from '../echo-handler';
 import { type EchoDatabase, type EchoDatabaseImpl } from '../proxy-db';
 import { Query } from '../query';
 import { EchoTestBuilder, createTmpPath } from '../testing';
@@ -385,7 +385,7 @@ const getDocHandles = (db: EchoDatabase): DocumentHandles => ({
 const getObjectDocHandle = (obj: any) => getObjectCore(obj).docHandle!;
 
 const createClientDbInSpaceWithObject = async (
-  object: AnyLiveObject<any>,
+  object: Obj.Any,
   onDocumentSavedInSpace?: (handles: DocumentHandles) => void,
 ): Promise<EchoDatabaseImpl> => {
   const tmpPath = createTmpPath();

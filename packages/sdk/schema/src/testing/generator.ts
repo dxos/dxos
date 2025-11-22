@@ -8,7 +8,6 @@ import * as SchemaAST from 'effect/SchemaAST';
 
 import { Obj, type Type } from '@dxos/echo';
 import {
-  type BaseObject,
   FormatEnum,
   GeneratorAnnotationId,
   type GeneratorAnnotationValue,
@@ -86,7 +85,7 @@ export const createProps = <S extends Schema.Schema.AnyNoContext>(
 /**
  * Generate value for property.
  */
-const createValue = <T extends BaseObject>(
+const createValue = <T extends Obj.Any>(
   generator: ValueGenerator,
   schema: Schema.Schema<T>,
   property: SchemaProperty<T>,
@@ -134,7 +133,7 @@ const createValue = <T extends BaseObject>(
 /**
  * Set references.
  */
-export const createReferences = <T extends BaseObject>(schema: Schema.Schema<T>, db: EchoDatabase) => {
+export const createReferences = <T extends Obj.Any>(schema: Schema.Schema<T>, db: EchoDatabase) => {
   return async (obj: T): Promise<T> => {
     for (const property of getSchemaProperties<T>(schema.ast)) {
       if (!property.optional || randomBoolean()) {
@@ -164,16 +163,15 @@ export const createReactiveObject = <S extends Schema.Schema.AnyNoContext>(type:
 };
 
 export const addToDatabase = (db: EchoDatabase) => {
-  // TODO(dmaretskyi): Fix DB types.
-  return <T extends BaseObject>(obj: Live<T>): AnyLiveObject<T> => db.add(obj as any) as any;
+  return <T extends Obj.Any>(obj: Live<T>): T => db.add(obj as any) as any;
 };
 
 export const logObject = (message: string) => (obj: any) => log.info(message, { obj });
 
-export const createObjectArray = <T extends BaseObject>(n: number): Type.Properties<T>[] =>
+export const createObjectArray = <T extends Obj.Any>(n: number): Type.Properties<T>[] =>
   Array.from({ length: n }, () => ({}) as Type.Properties<T>);
 
-export const createArrayPipeline = <T extends BaseObject>(
+export const createArrayPipeline = <T extends Obj.Any>(
   n: number,
   pipeline: (obj: Type.Properties<T>) => Effect.Effect<Live<T>, never, never>,
 ) => {
@@ -191,7 +189,7 @@ export type CreateOptions = {
 /**
  * Create an object creation pipeline.
  */
-export const createObjectPipeline = <T extends BaseObject>(
+export const createObjectPipeline = <T extends Obj.Any>(
   generator: ValueGenerator,
   type: Schema.Schema<T>,
   { db, force }: CreateOptions,
@@ -219,7 +217,7 @@ export const createObjectPipeline = <T extends BaseObject>(
   }
 };
 
-export type ObjectGenerator<T extends BaseObject> = {
+export type ObjectGenerator<T extends Obj.Any> = {
   createObject: () => Live<T>;
   createObjects: (n: number) => Live<T>[];
 };
@@ -239,12 +237,12 @@ export const createGenerator = <S extends Schema.Schema.AnyNoContext>(
   };
 };
 
-export type AsyncObjectGenerator<T extends BaseObject> = {
+export type AsyncObjectGenerator<T extends Obj.Any> = {
   createObject: () => Promise<Live<T>>;
   createObjects: (n: number) => Promise<Live<T>[]>;
 };
 
-export const createAsyncGenerator = <T extends BaseObject>(
+export const createAsyncGenerator = <T extends Obj.Any>(
   generator: ValueGenerator,
   type: Schema.Schema<T>,
   options: CreateOptions = {},

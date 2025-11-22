@@ -5,8 +5,8 @@
 import * as Option from 'effect/Option';
 import React, { useCallback } from 'react';
 
-import { Annotation, Type } from '@dxos/echo';
-import { type BaseObject, type TypeAnnotation } from '@dxos/echo/internal';
+import { Annotation, type Obj, Type } from '@dxos/echo';
+import { type TypeAnnotation } from '@dxos/echo/internal';
 import { type Space, type SpaceId } from '@dxos/react-client/echo';
 import { Icon, toLocalizedString, useDefaultValue, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
@@ -26,7 +26,7 @@ export type CreateObjectPanelProps = {
   typename?: string;
   target?: Space | Collection.Collection;
   views?: boolean;
-  initialFormValues?: Partial<BaseObject>;
+  initialFormValues?: Partial<Obj.Any>;
   defaultSpaceId?: SpaceId;
   resolve?: (typename: string) => Record<string, any>;
   onTargetChange?: (target: Space) => void;

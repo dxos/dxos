@@ -5,8 +5,9 @@
 import * as Schema from 'effect/Schema';
 
 import { type AnyIntentChain } from '@dxos/app-framework';
-import { type Obj, QueryAST, Type } from '@dxos/echo';
-import { type BaseObject, EchoSchema, StoredSchema } from '@dxos/echo/internal';
+import { type Obj, Type } from '@dxos/echo';
+import { EchoSchema, StoredSchema } from '@dxos/echo/internal';
+import { QueryAST } from '@dxos/echo-protocol';
 import { type PublicKey } from '@dxos/react-client';
 // TODO(wittjosiah): This pulls in full client.
 import { EchoObjectSchema, ReactiveObjectSchema, type Space, SpaceSchema } from '@dxos/react-client/echo';
@@ -105,14 +106,14 @@ export const SpaceForm = Schema.Struct({
   edgeReplication: Schema.Boolean.annotations({ title: 'Enable EDGE Replication' }),
 });
 
-export type ObjectForm<T extends BaseObject = BaseObject> = {
+export type ObjectForm<T extends Obj.Any = Obj.Any> = {
   objectSchema: Schema.Schema.AnyNoContext;
   formSchema?: Schema.Schema<T, any>;
   hidden?: boolean;
   getIntent: (props: T, options: { space: Space }) => AnyIntentChain;
 };
 
-export const defineObjectForm = <T extends BaseObject>(form: ObjectForm<T>) => form;
+export const defineObjectForm = <T extends Obj.Any>(form: ObjectForm<T>) => form;
 
 export const SPACE_ACTION = `${meta.id}/action`;
 

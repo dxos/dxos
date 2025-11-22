@@ -20,7 +20,7 @@ import {
   getType,
   isDeleted,
 } from '@dxos/echo/internal';
-import { EchoObject, Ref, type Ref$, foreignKey, getTypeReference } from '@dxos/echo/internal';
+import { EchoObjectSchema, Ref, type Ref$, foreignKey, getTypeReference } from '@dxos/echo/internal';
 import { TestingDeprecated, prepareAstForCompare } from '@dxos/echo/testing';
 import { Reference, decodeReference, encodeReference } from '@dxos/echo-protocol';
 import { registerSignalsRuntime } from '@dxos/echo-signals';
@@ -35,7 +35,7 @@ import { Filter } from '../query';
 import { EchoTestBuilder, createTmpPath } from '../testing';
 
 import { createDocAccessor } from './doc-accessor';
-import { type AnyLiveObject, createObject, isEchoObject } from './echo-handler';
+import { createObject, isEchoObject } from './echo-handler';
 import { getObjectCore } from './echo-handler';
 import { getDatabaseFromObject } from './util';
 
@@ -47,8 +47,13 @@ const TEST_OBJECT: TestingDeprecated.TestSchema = {
   boolean: true,
   null: null,
   stringArray: ['1', '2', '3'],
-  object: { field: 'bar' },
+  object: {
+    field: 'bar',
+  },
 };
+
+const x: Obj.Any = Obj.make(TestingDeprecated.TestSchema, { number: 42 });
+console.log(x);
 
 test('id property name is reserved', () => {
   const invalidSchema = Schema.Struct({ id: Schema.Number });
@@ -59,7 +64,7 @@ test('id property name is reserved', () => {
 for (const schema of [undefined, TestingDeprecated.TestType, TestingDeprecated.TestSchemaType]) {
   const createTestObject = (
     props: Partial<TestingDeprecated.TestSchemaWithClass> = {},
-  ): AnyLiveObject<TestingDeprecated.TestSchemaWithClass> => {
+  ): Obj.Obj<TestingDeprecated.TestSchemaWithClass> => {
     if (schema) {
       return createObject(Obj.make(schema, props));
     } else {
@@ -76,7 +81,7 @@ for (const schema of [undefined, TestingDeprecated.TestType, TestingDeprecated.T
     test('inspect', () => {
       const obj = createTestObject({ string: 'bar' });
       const str = inspect(obj, { colors: false });
-      expect(str.startsWith(`${schema == null ? '' : 'Typed'}EchoObject`)).to.be.true;
+      expect(str.startsWith(`${schema == null ? '' : 'Typed'}EchoObjectSchema`)).to.be.true;
       expect(str.includes("string: 'bar'")).to.be.true;
       if (schema) {
         expect(str.includes(`id: '${obj.id}'`)).to.be.true;
@@ -116,11 +121,12 @@ describe('without database', () => {
       ref: Schema.optional(Schema.suspend((): Ref$<TestSchema> => Ref(TestSchema))),
     }).pipe(Schema.mutable),
   }).pipe(
-    EchoObject({
+    EchoObjectSchema({
       typename: 'example.com/type/Test',
       version: '0.1.0',
     }),
   );
+
   interface TestSchema extends Schema.Schema.Type<typeof TestSchema> {}
 
   test('get schema on object', () => {
@@ -371,7 +377,9 @@ describe('Reactive Object with ECHO database', () => {
     graph.schemaRegistry.addSchema([TestingDeprecated.Person, TestingDeprecated.HasManager]);
     const alice = db.add(Obj.make(TestingDeprecated.Person, { name: 'Alice' }));
     const bob = db.add(Obj.make(TestingDeprecated.Person, { name: 'Bob' }));
-    const manager = db.add(Obj.make(TestingDeprecated.HasManager, { [RelationTargetId]: bob, [RelationSourceId]: alice }));
+    const manager = db.add(
+      Obj.make(TestingDeprecated.HasManager, { [RelationTargetId]: bob, [RelationSourceId]: alice }),
+    );
     const objData: any = Obj.toJSON(manager as any);
     expect(objData).to.deep.contain({
       id: manager.id,
@@ -399,7 +407,7 @@ describe('Reactive Object with ECHO database', () => {
     const Organization = Schema.Struct({
       name: Schema.String,
     }).pipe(
-      EchoObject({
+      EchoObjectSchema({
         typename: 'example.com/type/Organization',
         version: '0.1.0',
       }),
@@ -410,7 +418,7 @@ describe('Reactive Object with ECHO database', () => {
       organization: Ref(Organization),
       previousEmployment: Schema.optional(Schema.Array(Ref(Organization))),
     }).pipe(
-      EchoObject({
+      EchoObjectSchema({
         typename: 'example.com/type/Person',
         version: '0.1.0',
       }),

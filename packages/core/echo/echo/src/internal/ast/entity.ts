@@ -6,7 +6,7 @@ import * as Schema from 'effect/Schema';
 
 import { type ObjectId } from '@dxos/keys';
 
-import { EntityKindId } from '../types';
+import { EntityKindId, type HasId } from '../types';
 
 /**
  * Kinds of entities stored in ECHO: objects and relations.
@@ -25,7 +25,7 @@ export type KindId = typeof KindId;
  * Assigns a kind to an Object or Relation instance.
  */
 // NOTE: Needed to make `isRelation` and `isObject` checks work.
-export interface OfKind<Kind extends EntityKind> {
+export interface OfKind<Kind extends EntityKind> extends HasId {
   readonly id: ObjectId;
   readonly [KindId]: Kind;
 }

@@ -15,7 +15,7 @@ import { DXN, ObjectId } from '@dxos/keys';
 
 import { ReferenceAnnotationId, getSchemaDXN, getTypeAnnotation, getTypeIdentifierAnnotation } from '../ast';
 import { type JsonSchemaType } from '../json-schema';
-import type { BaseObject, WithId } from '../types';
+import type { AnyProperties, WithId } from '../types';
 
 /**
  * The `$id` and `$ref` fields for an ECHO reference schema.
@@ -101,7 +101,6 @@ export interface RefFn {
   /**
    * Constructs a reference that points to the given object.
    */
-  // TODO(burdon): Tighten type of T?
   make: <T extends WithId>(object: T) => Ref<T>;
 
   /**
@@ -211,7 +210,7 @@ Ref.isRefSchemaAST = (ast: SchemaAST.AST): boolean => {
   return SchemaAST.getAnnotation(ast, ReferenceAnnotationId).pipe(Option.isSome);
 };
 
-Ref.make = <T extends BaseObject>(obj: T): Ref<T> => {
+Ref.make = <T extends AnyProperties>(obj: T): Ref<T> => {
   if (typeof obj !== 'object' || obj === null) {
     throw new TypeError('Expected: ECHO object.');
   }
@@ -317,12 +316,12 @@ export interface RefResolver {
    * @param load If true the resolver should attempt to load the object from disk.
    * @param onLoad Callback to call when the object is loaded.
    */
-  resolveSync(dxn: DXN, load: boolean, onLoad?: () => void): BaseObject | undefined;
+  resolveSync(dxn: DXN, load: boolean, onLoad?: () => void): AnyProperties | undefined;
 
   /**
    * Resolver ref asynchronously.
    */
-  resolve(dxn: DXN): Promise<BaseObject | undefined>;
+  resolve(dxn: DXN): Promise<AnyProperties | undefined>;
 
   // TODO(dmaretskyi): Combine with `resolve`.
   resolveSchema(dxn: DXN): Promise<Schema.Schema.AnyNoContext | undefined>;
@@ -461,7 +460,7 @@ export const setRefResolver = (ref: Ref<any>, resolver: RefResolver) => {
 /**
  * Internal API for getting the saved target on a reference.
  */
-export const getRefSavedTarget = (ref: Ref<any>): BaseObject | undefined => {
+export const getRefSavedTarget = (ref: Ref<any>): AnyProperties | undefined => {
   invariant(ref instanceof RefImpl, 'Ref is not an instance of RefImpl');
   return ref._getSavedTarget();
 };
@@ -484,10 +483,10 @@ export const refFromEncodedReference = (encodedReference: EncodedReference, reso
 };
 
 export class StaticRefResolver implements RefResolver {
-  public objects = new Map<ObjectId, BaseObject>();
+  public objects = new Map<ObjectId, AnyProperties>();
   public schemas = new Map<DXN.String, Schema.Schema.AnyNoContext>();
 
-  addObject(obj: BaseObject): this {
+  addObject(obj: AnyProperties): this {
     this.objects.set(obj.id, obj);
     return this;
   }
@@ -499,7 +498,7 @@ export class StaticRefResolver implements RefResolver {
     return this;
   }
 
-  resolveSync(dxn: DXN, _load: boolean, _onLoad?: () => void): BaseObject | undefined {
+  resolveSync(dxn: DXN, _load: boolean, _onLoad?: () => void): AnyProperties | undefined {
     const id = dxn?.asEchoDXN()?.echoId;
     if (id == null) {
       return undefined;
@@ -508,7 +507,7 @@ export class StaticRefResolver implements RefResolver {
     return this.objects.get(id);
   }
 
-  async resolve(dxn: DXN): Promise<BaseObject | undefined> {
+  async resolve(dxn: DXN): Promise<AnyProperties | undefined> {
     const id = dxn?.asEchoDXN()?.echoId;
     if (id == null) {
       return undefined;

@@ -8,7 +8,7 @@ import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import { Filter, Obj, Query, Type } from '@dxos/echo';
 import {
-  EchoObject,
+  EchoObjectSchema,
   EntityKind,
   Format,
   FormatEnum,
@@ -939,7 +939,7 @@ describe('ProjectionModel', () => {
           }),
         ),
       ),
-    }).pipe(EchoObject({ typename: 'dxos.org/type/ContactWithArrayOfEmails', version: '0.1.0' }));
+    }).pipe(EchoObjectSchema({ typename: 'dxos.org/type/ContactWithArrayOfEmails', version: '0.1.0' }));
 
     const jsonSchema = toJsonSchema(ContactWithArrayOfEmails);
 

@@ -3,7 +3,7 @@
 //
 
 // @ts-ignore
-import { EchoObject, Filter, ObjectId, S, create, defineFunction } from 'dxos:functions';
+import { EchoObjectSchema, Filter, ObjectId, S, create, defineFunction } from 'dxos:functions';
 // @ts-ignore
 import {
   FetchHttpClient,
@@ -215,7 +215,7 @@ const MessageType = S.Struct({
     ),
   ),
 }).pipe(
-  EchoObject({
+  EchoObjectSchema({
     typename: 'dxos.org/type/Message',
     version: '0.2.0',
   }),

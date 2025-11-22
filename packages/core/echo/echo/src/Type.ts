@@ -12,9 +12,9 @@ import { type ToMutable } from '@dxos/util';
 import {
   type ATTR_RELATION_SOURCE,
   type ATTR_RELATION_TARGET,
-  EchoObject,
-  EchoRelation,
-  type EchoRelationOptions,
+  EchoObjectSchema,
+  EchoRelationSchema,
+  type EchoRelationSchemaOptions,
   type EchoSchema,
   EntityKind,
   Expando as Expando$,
@@ -81,7 +81,7 @@ export interface obj<Self extends EffectSchema.Schema.Any>
  */
 export const Obj: {
   (opts: TypeMeta): <Self extends EffectSchema.Schema.Any>(self: Self) => obj<Self>;
-} = EchoObject as any;
+} = EchoObjectSchema as any;
 
 /**
  * Object schema type definitions.
@@ -145,9 +145,9 @@ export interface relation<
 // TODO(dmaretskyi): I have to redefine the type here so that the definition uses symbols from @dxos/echo/Relation.
 export const Relation: {
   <Source extends EffectSchema.Schema.AnyNoContext, Target extends EffectSchema.Schema.AnyNoContext>(
-    opts: EchoRelationOptions<Source, Target>,
+    opts: EchoRelationSchemaOptions<Source, Target>,
   ): <Self extends EffectSchema.Schema.Any>(self: Self) => relation<Self, Source, Target>;
-} = EchoRelation as any;
+} = EchoRelationSchema as any;
 
 /**
  * Relation schema type definitions.

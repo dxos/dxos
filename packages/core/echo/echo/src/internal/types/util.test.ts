@@ -6,12 +6,12 @@ import { describe, test } from 'vitest';
 
 import { type JsonPath } from '@dxos/effect';
 
-import { type BaseObject } from './types';
+import { type AnyProperties } from './types';
 import { getValue, setValue } from './util';
 
 describe('Types', () => {
   test('checks sanity', async ({ expect }) => {
-    const obj: BaseObject = {};
+    const obj: AnyProperties = {};
     expect(obj).to.exist;
   });
 });

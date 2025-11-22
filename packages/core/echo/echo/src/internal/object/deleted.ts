@@ -2,12 +2,12 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type BaseObject, DeletedId } from '../types';
+import { type AnyProperties, DeletedId } from '../types';
 
 /**
  * @returns `true` if the object has been marked as deleted.
  */
-export const isDeleted = (obj: BaseObject): boolean => {
+export const isDeleted = (obj: AnyProperties): boolean => {
   if ((obj as any)[DeletedId] === undefined) {
     // TODO(dmaretskyi): Return to prior behavior of throwing.
     // throw new Error('Object does not support deletion marker');

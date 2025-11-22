@@ -29,13 +29,13 @@ export const ATTR_RELATION_SOURCE = '@relationSource';
 
 /**
  * Used to access relation source ref on live ECHO objects.
- * Reading this symbol must return `Live<EchoObject<any>>` or a DXN.
+ * Reading this symbol must return `Live<EchoObjectSchema<any>>` or a DXN.
  */
 export const RelationSourceId: unique symbol = Symbol.for('@dxos/echo/RelationSource');
 
 /**
  * Used to access relation source ref on live ECHO objects.
- * Reading this symbol must return `Live<EchoObject<any>>` or a DXN.
+ * Reading this symbol must return `Live<EchoObjectSchema<any>>` or a DXN.
  */
 export const RelationSourceDXNId: unique symbol = Symbol.for('@dxos/echo/RelationSourceDXN');
 
@@ -46,13 +46,13 @@ export const ATTR_RELATION_TARGET = '@relationTarget';
 
 /**
  * Used to access relation target ref on live ECHO objects.
- * Reading this symbol must return `Live<EchoObject<any>>` or a DXN.
+ * Reading this symbol must return `Live<EchoObjectSchema<any>>` or a DXN.
  */
 export const RelationTargetId: unique symbol = Symbol.for('@dxos/echo/RelationTarget');
 
 /**
  * Used to access relation target ref on live ECHO objects.
- * Reading this symbol must return `Live<EchoObject<any>>` or a DXN.
+ * Reading this symbol must return `Live<EchoObjectSchema<any>>` or a DXN.
  */
 export const RelationTargetDXNId: unique symbol = Symbol.for('@dxos/echo/RelationTargetDXN');
 
@@ -75,7 +75,7 @@ export type RelationSourceTargetRefs<Source = any, Target = any> = {
 export type RelationSource<R> = R extends RelationSourceTargetRefs<infer Source, infer _Target> ? Source : never;
 export type RelationTarget<R> = R extends RelationSourceTargetRefs<infer _Source, infer Target> ? Target : never;
 
-export type EchoRelationOptions<
+export type EchoRelationSchemaOptions<
   TSource extends Schema.Schema.AnyNoContext,
   TTarget extends Schema.Schema.AnyNoContext,
 > = TypeMeta & {
@@ -83,18 +83,26 @@ export type EchoRelationOptions<
   target: TTarget;
 };
 
-// TODO(dmaretskyi): Rename EchoRelationSchema (use import namespace).
-export const EchoRelation = <Source extends Schema.Schema.AnyNoContext, Target extends Schema.Schema.AnyNoContext>(
-  options: EchoRelationOptions<Source, Target>,
-) => {
-  assertArgument(Schema.isSchema(options.source), 'source');
-  assertArgument(Schema.isSchema(options.target), 'target');
-  const sourceDXN = getDXNForRelationSchemaRef(options.source);
-  const targetDXN = getDXNForRelationSchemaRef(options.target);
-  if (getEntityKind(options.source) !== EntityKind.Object) {
+/**
+ * Schema for Relation entity types.
+ */
+export const EchoRelationSchema = <
+  Source extends Schema.Schema.AnyNoContext,
+  Target extends Schema.Schema.AnyNoContext,
+>({
+  source,
+  target,
+  typename,
+  version,
+}: EchoRelationSchemaOptions<Source, Target>) => {
+  assertArgument(Schema.isSchema(source), 'source');
+  assertArgument(Schema.isSchema(target), 'target');
+  const sourceDXN = getDXNForRelationSchemaRef(source);
+  const targetDXN = getDXNForRelationSchemaRef(target);
+  if (getEntityKind(source) !== EntityKind.Object) {
     raise(new Error('Source schema must be an echo object schema.'));
   }
-  if (getEntityKind(options.target) !== EntityKind.Object) {
+  if (getEntityKind(target) !== EntityKind.Object) {
     raise(new Error('Target schema must be an echo object schema.'));
   }
 
@@ -111,8 +119,8 @@ export const EchoRelation = <Source extends Schema.Schema.AnyNoContext, Target e
       ...self.ast.annotations,
       [TypeAnnotationId]: {
         kind: EntityKind.Relation,
-        typename: options.typename,
-        version: options.version,
+        typename,
+        version,
         sourceSchema: sourceDXN,
         targetSchema: targetDXN,
       } satisfies TypeAnnotation,
@@ -120,14 +128,14 @@ export const EchoRelation = <Source extends Schema.Schema.AnyNoContext, Target e
 
       [SchemaAST.JSONSchemaAnnotationId]: makeTypeJsonSchemaAnnotation({
         kind: EntityKind.Relation,
-        typename: options.typename,
-        version: options.version,
+        typename,
+        version,
         relationSource: sourceDXN,
         relationTarget: targetDXN,
       }),
     });
 
-    return makeEchoTypeSchema<Self>(/* self.fields, */ ast, options.typename, options.version);
+    return makeEchoTypeSchema<Self>(/* self.fields, */ ast, typename, version);
   };
 };
 

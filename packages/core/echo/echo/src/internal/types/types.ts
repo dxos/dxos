@@ -7,25 +7,7 @@ import * as SchemaAST from 'effect/SchemaAST';
 
 import { type ObjectId } from '@dxos/keys';
 
-import { type EntityKind, type OfKind } from '../ast';
-
 import { type ATTR_META, type ObjectMeta } from './meta';
-import { type EntityKindId } from './model';
-
-/**
- * Base type for all data objects (reactive, ECHO, and other raw objects).
- * NOTE: This describes the base type for all database objects.
- * It is stricter than `T extends {}` or `T extends object`.
- * @deprecated use Obj.Any
- */
-// TODO(dmaretskyi): Rename AnyProperties.
-// TODO(dmaretskyi): Prefer `Record<string, unknown>` over `any`.
-export type BaseObject = Record<string, any>;
-
-/**
- * @internal
- */
-export interface BaseObj extends HasId, OfKind<EntityKind.Object> {}
 
 /**
  * Marker interface for object with an `id`.
@@ -44,20 +26,26 @@ export type HasTypename = {};
 /**
  * Canonical type for all ECHO objects.
  */
+// TODO(burdon): Rename to AnyEntity? (rename all "object" to "entity")?
 export interface AnyEchoObject extends HasId, HasTypename {}
 
-// TODO(dmaretskyi): Remove; this type effectively disables type safety due to `any`.
-export type WithId<T extends BaseObject = BaseObject> = T & HasId;
-
-export type ExcludeId<T extends BaseObject> = Omit<T, 'id'>;
-
 /**
- * Properties that are required for object creation.
+ * Base type for all data objects (reactive, ECHO, and other raw objects).
+ * NOTE: This describes the base type for all database objects.
+ * It is stricter than `T extends {}` or `T extends object`.
+ *
+ * @internal
  */
-// TODO(dmaretskyi): Rename `MakeProps`?
-export type CreationProps<T extends BaseObject> = Omit<T, 'id' | typeof EntityKindId>;
+// TODO(dmaretskyi): Rename AnyProperties.
+// TODO(dmaretskyi): Prefer `Record<string, unknown>` over `any`.
+export type AnyProperties = Record<string, any>;
 
-export type PropertyKey<T extends BaseObject> = Extract<keyof ExcludeId<T>, string>;
+// TODO(dmaretskyi): Remove; this type effectively disables type safety due to `any`.
+export type WithId<T extends AnyProperties = AnyProperties> = T & HasId;
+
+export type ExcludeId<T extends AnyProperties> = Omit<T, 'id'>;
+
+export type PropertyKey<T extends AnyProperties> = Extract<keyof ExcludeId<T>, string>;
 
 // TODO(dmaretskyi): Remove. This should be using the symbol type.
 export type WithMeta = { [ATTR_META]?: ObjectMeta };

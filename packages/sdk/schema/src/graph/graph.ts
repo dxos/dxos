@@ -3,8 +3,7 @@
 //
 
 import { Obj } from '@dxos/echo';
-import { type BaseObject, FormatEnum, getSchema } from '@dxos/echo/internal';
-import { type AnyLiveObject } from '@dxos/echo-db';
+import { FormatEnum, getSchema } from '@dxos/echo/internal';
 import { Graph, GraphModel, type GraphNode, createEdgeId } from '@dxos/graph';
 import { log } from '@dxos/log';
 
@@ -14,14 +13,12 @@ import { getSchemaProperties } from '../projection';
  * Creates a new reactive graph from a set of ECHO objects.
  * References are mapped onto graph edges.
  */
-export const createGraph = <T extends BaseObject>(
-  objects: AnyLiveObject<T>[],
-): GraphModel<GraphNode.Required<AnyLiveObject<T>>> => {
-  const graph = new GraphModel<GraphNode.Required<AnyLiveObject<T>>>(Obj.make(Graph, { nodes: [], edges: [] }));
+export const createGraph = <T extends Obj.Any>(objects: T[]): GraphModel<GraphNode.Required<T>> => {
+  const graph = new GraphModel<GraphNode.Required<T>>(Obj.make(Graph, { nodes: [], edges: [] }));
 
   // Map objects.
   objects.forEach((object) => {
-    graph.addNode({ id: object.id, type: object.typename, data: object });
+    graph.addNode({ id: object.id, type: Obj.getTypename(object), data: object });
   });
 
   // Find references.
@@ -36,7 +33,7 @@ export const createGraph = <T extends BaseObject>(
     for (const prop of getSchemaProperties(schema.ast, object)) {
       if (prop.format === FormatEnum.Ref) {
         const source = object;
-        const target = object[prop.name]?.target;
+        const target = (object as any)[prop.name]?.target;
         if (target) {
           graph.addEdge({
             id: createEdgeId({ source: source.id, target: target.id, relation: String(prop.name) }),

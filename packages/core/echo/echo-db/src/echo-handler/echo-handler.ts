@@ -15,7 +15,7 @@ import {
   ATTR_RELATION_SOURCE,
   ATTR_RELATION_TARGET,
   ATTR_TYPE,
-  type BaseObject,
+  type AnyProperties,
   DeletedId,
   EchoSchema,
   EntityKind,
@@ -121,6 +121,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     if (isRootDataObject(target)) {
       keys.push(PROPERTY_ID);
     }
+
     return keys;
   }
 
@@ -129,6 +130,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     if (isRootDataObject(target) && p === PROPERTY_ID) {
       return { enumerable: true, configurable: true, writable: false };
     }
+
     return typeof value === 'object' ? Reflect.getOwnPropertyDescriptor(value, p) : undefined;
   }
 
@@ -840,7 +842,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     const typename = schema ? getTypeAnnotation(schema)?.typename : undefined;
 
     return {
-      header: (config?: any) => getHeader(typename ?? 'EchoObject', target[symbolInternals].core.id, config),
+      header: (config?: any) => getHeader(typename ?? 'EchoObjectSchema', target[symbolInternals].core.id, config),
       hasBody: () => true,
       body: () => {
         let data = deepMapValues(this._getReified(target), (value, recurse) => {
@@ -887,9 +889,9 @@ export const throwIfCustomClass = (prop: KeyPath[number], value: any) => {
 };
 
 // TODO(burdon): Move ProxyTarget def to echo-schema and make AnyLiveObject inherit?
-export const getObjectCore = <T extends BaseObject>(obj: Live<T>): ObjectCore => {
+export const getObjectCore = <T extends AnyProperties>(obj: Live<T>): ObjectCore => {
   if (!(obj as any as ProxyTarget)[symbolInternals]) {
-    throw new Error('object is not an EchoObject');
+    throw new Error('object is not an EchoObjectSchema');
   }
 
   const { core } = (obj as any as ProxyTarget)[symbolInternals];
@@ -915,7 +917,7 @@ export const isRootDataObject = (target: ProxyTarget) => {
 };
 
 /**
- * @returns True if `value` is part of another EchoObject but not the root data object.
+ * @returns True if `value` is part of another EchoObjectSchema but not the root data object.
  */
 const isEchoObjectField = (value: any) => {
   return (
@@ -934,13 +936,13 @@ interface DecodedValueAtPath {
 }
 
 /** @deprecated Use {@link @dxos/echo#AnyLiveObject} instead. */
-export type AnyLiveObject<T extends BaseObject = any> = Live<T> & BaseObject & HasId;
+export type AnyLiveObject<T extends AnyProperties = any> = Live<T> & HasId & AnyProperties;
 
 /**
  * @returns True if `value` is a reactive object with an EchoHandler backend.
  */
 // TODO(dmaretskyi): Reconcile with `isTypedObjectProxy`.
-export const isEchoObject = (value: any): value is AnyLiveObject<any> => {
+export const isEchoObject = (value: any): value is Obj.Any => {
   if (!isLiveObject(value)) {
     return false;
   }
@@ -977,7 +979,7 @@ export const isTypedObjectProxy = (value: any): value is Live<any> => {
  * @internal
  */
 // TODO(burdon): Document lifecycle.
-export const createObject = <T extends BaseObject>(obj: T): AnyLiveObject<T> => {
+export const createObject = <T extends Obj.Any>(obj: T): Obj.Obj<T> => {
   assertArgument(!isEchoObject(obj), 'obj', 'Object is already an ECHO object');
   const schema = getSchema(obj);
   if (schema != null) {
@@ -1042,7 +1044,7 @@ const metaNotEmpty = (meta: ObjectMeta) => meta.keys.length > 0 || (meta.tags &&
  * @internal
  */
 // TODO(burdon): Call and remove subscriptions.
-export const destroyObject = <T extends BaseObject>(proxy: AnyLiveObject<T>) => {
+export const destroyObject = <T extends AnyProperties>(proxy: AnyLiveObject<T>) => {
   invariant(isEchoObject(proxy));
   const target: ProxyTarget = getProxyTarget(proxy);
   const internals: ObjectInternals = target[symbolInternals];

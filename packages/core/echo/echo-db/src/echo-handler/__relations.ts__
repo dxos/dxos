@@ -2,9 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Obj, type Relation } from '@dxos/echo';
+import { type Obj, Relation } from '@dxos/echo';
 import {
-  type BaseObject,
+  type AnyProperties,
   EntityKind,
   EntityKindId,
   RelationSourceId,
@@ -16,15 +16,19 @@ import { type Live } from '@dxos/live-object';
 
 import type { AnyLiveObject } from './echo-handler';
 
+//
+// TODO(burdon): DELETE.
+//
+
 /**
  * @deprecated Use {@link @dxos/echo#Relation.Any} instead.
  */
-export type AnyLiveRelation<T extends BaseObject> = Live<T> & (Obj.Any | Relation.Any) & RelationSourceTargetRefs;
+export type AnyLiveRelation<T extends AnyProperties> = Live<T> & (Obj.Any | Relation.Any) & RelationSourceTargetRefs;
 
 /**
  * @deprecated Use {@link @dxos/echo#Relation.isRelation} instead.
  */
-export const isRelation = <T extends BaseObject>(object: AnyLiveObject<T>): object is AnyLiveRelation<T> => {
+export const isRelation = <T extends AnyProperties>(object: AnyLiveObject<T>): object is AnyLiveRelation<T> => {
   const kind = (object as any)[EntityKindId];
   if (kind === undefined) {
     throw new TypeError('Provided value is not a valid ECHO object or relation');
@@ -38,7 +42,7 @@ export const isRelation = <T extends BaseObject>(object: AnyLiveObject<T>): obje
  * @throws If the object is not a relation.
  */
 export const getSource = (relation: AnyLiveObject<any>): AnyLiveObject<any> => {
-  invariant(isRelation(relation));
+  invariant(Relation.isRelation(relation));
   const obj = relation[RelationSourceId];
   invariant(obj !== undefined);
   return obj;
@@ -50,7 +54,7 @@ export const getSource = (relation: AnyLiveObject<any>): AnyLiveObject<any> => {
  * @deprecated Use {@link @dxos/echo#Relation.getTarget} instead.
  */
 export const getTarget = (relation: AnyLiveObject<any>): AnyLiveObject<any> => {
-  invariant(isRelation(relation));
+  invariant(Relation.isRelation(relation));
   const obj = relation[RelationTargetId];
   invariant(obj !== undefined);
   return obj;

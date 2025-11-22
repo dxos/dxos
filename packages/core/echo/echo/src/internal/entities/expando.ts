@@ -4,12 +4,12 @@
 
 import * as Schema from 'effect/Schema';
 
-import { EchoObject } from './object';
+import { EchoObjectSchema } from './object';
 
 export const EXPANDO_TYPENAME = 'dxos.org/type/Expando';
 
 const ExpandoSchema = Schema.Struct({}, { key: Schema.String, value: Schema.Any }).pipe(
-  EchoObject({
+  EchoObjectSchema({
     typename: EXPANDO_TYPENAME,
     version: '0.1.0',
   }),

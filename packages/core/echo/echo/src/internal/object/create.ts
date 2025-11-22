@@ -24,7 +24,7 @@ type CreateData<T> = T extends { id: string } ? Omit<T, 'id' | typeof EntityKind
  * This static version creates plain JavaScript objects that are not reactive/observable.
  * For reactive objects that automatically update UI when changed, use the regular live() function.
  *
- * @param schema - The Effect schema that defines the object's structure and type, piped into EchoObject
+ * @param schema - The Effect schema that defines the object's structure and type, piped into EchoObjectSchema
  * @param data - The data to initialize the object with. The id and @type fields are handled automatically.
  * @returns A new non-reactive object instance conforming to the schema
  * @throws {Error} If the schema is not an object schema
@@ -46,6 +46,8 @@ type CreateData<T> = T extends { id: string } ? Omit<T, 'id' | typeof EntityKind
  *   email: "john@example.com",
  * })
  * ```
+ *
+ * @internal
  */
 // TODO(burdon): Handle defaults (see Schema.make).
 // TODO(dmaretskyi): Use `Obj.make` and `Relation.make` from '@dxos/echo' instead.

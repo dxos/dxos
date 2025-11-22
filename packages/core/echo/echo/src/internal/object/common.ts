@@ -4,7 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { type BaseObject, getTypename } from '../types';
+import { type AnyProperties, getTypename } from '../types';
 
 // TODO(dmaretskyi): Rename to represent commonality between objects and relations (e.g. `entity`).
 export type TypedObjectOptions = {
@@ -56,7 +56,7 @@ export const makeTypedEntityClass = (
     static readonly pipe = baseSchema.pipe.bind(baseSchema);
 
     // TODO(burdon): Comment required.
-    static [Symbol.hasInstance](obj: BaseObject) {
+    static [Symbol.hasInstance](obj: AnyProperties) {
       return obj != null && getTypename(obj) === typename;
     }
 

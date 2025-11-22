@@ -7,7 +7,7 @@ import { describe, expect, test } from 'vitest';
 
 import { DXN, ObjectId } from '@dxos/keys';
 
-import { EchoObject } from '../entities';
+import { EchoObjectSchema } from '../entities';
 import { createObject } from '../object';
 import { getObjectDXN } from '../types';
 
@@ -16,7 +16,7 @@ import { Ref, getReferenceAst } from './ref';
 const Task = Schema.Struct({
   title: Schema.optional(Schema.String),
 }).pipe(
-  EchoObject({
+  EchoObjectSchema({
     typename: 'example.com/type/Task',
     version: '0.1.0',
   }),
@@ -29,7 +29,7 @@ const Contact = Schema.Struct({
   email: Schema.optional(Schema.String),
   tasks: Schema.mutable(Schema.Array(Ref(Task))),
 }).pipe(
-  EchoObject({
+  EchoObjectSchema({
     typename: 'example.com/type/Person',
     version: '0.1.0',
   }),

@@ -9,7 +9,7 @@ import { DXN } from '@dxos/keys';
 
 import { getSchemaTypename } from '../ast';
 
-import { type BaseObject } from './types';
+import { type AnyProperties } from './types';
 
 /**
  * Property name for typename when object is serialized to JSON.
@@ -54,7 +54,7 @@ export const setSchema = (obj: any, schema: Schema.Schema.AnyNoContext) => {
  * Returns only the name portion, not the DXN.
  * @example "example.org/type/Contact"
  */
-export const getTypename = (obj: BaseObject): string | undefined => {
+export const getTypename = (obj: AnyProperties): string | undefined => {
   const schema = getSchema(obj);
   if (schema != null) {
     // Try to extract typename from DXN.
@@ -84,7 +84,7 @@ export const setTypename = (obj: any, typename: DXN) => {
  * @returns undefined if the object doesn't have a type.
  * @example `dxn:example.com/type/Person:1.0.0`
  */
-export const getType = (obj: BaseObject): DXN | undefined => {
+export const getType = (obj: AnyProperties): DXN | undefined => {
   if (!obj) {
     return undefined;
   }

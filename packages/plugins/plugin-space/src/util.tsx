@@ -7,7 +7,7 @@ import * as Function from 'effect/Function';
 
 import { LayoutAction, type PromiseIntentDispatcher, chain, createIntent } from '@dxos/app-framework';
 import { Filter, Obj, Query, Ref, Type } from '@dxos/echo';
-import { type AnyEchoObject, EXPANDO_TYPENAME } from '@dxos/echo/internal';
+import { EXPANDO_TYPENAME } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
 import { Migrations } from '@dxos/migrations';
 import {
@@ -36,7 +36,7 @@ export const SHARED = 'shared-spaces';
 /**
  * Convert a query result to an Atom value of the objects.
  */
-export const atomFromQuery = <T extends AnyEchoObject>(query: QueryResult<T>): Atom.Atom<T[]> => {
+export const atomFromQuery = <T extends Obj.Any>(query: QueryResult<T>): Atom.Atom<T[]> => {
   return Atom.make((get) => {
     const unsubscribe = query.subscribe((result) => {
       get.setSelf(result.objects);

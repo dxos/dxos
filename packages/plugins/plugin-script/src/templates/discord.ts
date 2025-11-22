@@ -3,7 +3,7 @@
 //
 
 // @ts-ignore
-import { DXN, EchoObject, Filter, ObjectId, S, create, defineFunction } from 'dxos:functions';
+import { DXN, EchoObjectSchema, Filter, ObjectId, S, create, defineFunction } from 'dxos:functions';
 // @ts-ignore
 import { FetchHttpClient } from 'https://esm.sh/@effect/platform@0.89.0?deps=effect@3.17.0&bundle=false';
 import {
@@ -28,7 +28,7 @@ const MessageSchema = S.Struct({
   created: S.String,
   content: S.String,
 }).pipe(
-  EchoObject({
+  EchoObjectSchema({
     typename: 'example.com/type/Message',
     version: '0.1.0',
   }),

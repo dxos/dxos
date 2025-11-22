@@ -20,7 +20,7 @@ export const ReactiveObjectSchema: Schema.Schema<Live<any>> = Schema.Any.pipe(
 
 export const EchoObjectSchema: Schema.Schema<AnyLiveObject<any>> = Schema.Any.pipe(
   Schema.filter((obj) => Obj.isObject(obj)),
-  Schema.annotations({ title: 'EchoObject' }),
+  Schema.annotations({ title: 'EchoObjectSchema' }),
 );
 
 /**

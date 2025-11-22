@@ -8,7 +8,7 @@ import { ForeignKey } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
 import { type Comparator, intersection } from '@dxos/util';
 
-import { type BaseObject } from './types';
+import { type AnyProperties } from './types';
 
 /**
  * Property name for meta when object is serialized to JSON.
@@ -28,7 +28,7 @@ export const foreignKey = (source: string, id: string): ForeignKey => ({ source,
 export const foreignKeyEquals = (a: ForeignKey, b: ForeignKey) => a.source === b.source && a.id === b.id;
 
 // TODO(dmaretskyi): Move to echo-schema.
-export const compareForeignKeys: Comparator<BaseObject> = (a: BaseObject, b: BaseObject) =>
+export const compareForeignKeys: Comparator<AnyProperties> = (a: AnyProperties, b: AnyProperties) =>
   intersection(getMeta(a).keys, getMeta(b).keys, foreignKeyEquals).length > 0;
 
 //
@@ -66,7 +66,7 @@ export const getObjectMeta = (obj: any): ObjectMeta => {
  * Get metadata from object.
  * Only callable on the object root.
  */
-export const getMeta = (obj: BaseObject): ObjectMeta => {
+export const getMeta = (obj: AnyProperties): ObjectMeta => {
   const metadata = (obj as any)[MetaId];
   invariant(metadata, 'ObjectMeta not found.');
   return metadata;

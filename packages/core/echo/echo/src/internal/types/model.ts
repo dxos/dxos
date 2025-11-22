@@ -33,6 +33,11 @@ import { type Version } from './version';
 export const EntityKindId = Symbol.for('@dxos/echo/EntityKind');
 
 /**
+ * Getter to get object version.
+ */
+export const ObjectVersionId: unique symbol = Symbol.for('@dxos/echo/ObjectVersion');
+
+/**
  * DXN to the object itself.
  */
 export const SelfDXNId = Symbol.for('@dxos/echo/DXN');
@@ -51,11 +56,6 @@ export const DeletedId = Symbol.for('@dxos/echo/Deleted');
  * Property name for deleted when object is serialized to JSON.
  */
 export const ATTR_DELETED = '@deleted';
-
-/**
- * Getter to get object version.
- */
-export const ObjectVersionId: unique symbol = Symbol.for('@dxos/echo/ObjectVersion');
 
 /**
  * Internal runtime representation of an object.
@@ -100,8 +100,9 @@ export interface ObjectMetaJSON {
   tags?: string[];
 }
 
-// NOTE: Keep as `function` to avoid type inference issues.
-
+/**
+ * NOTE: Keep as `function` to avoid type inference issues.
+ */
 export function assertObjectModelShape(obj: unknown): asserts obj is InternalObjectProps {
   invariant(typeof obj === 'object' && obj !== null, 'Invalid object model: not an object');
   assumeType<InternalObjectProps>(obj);
