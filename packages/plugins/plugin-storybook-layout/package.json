@@ -24,7 +24,7 @@
     "@dxos/app-framework": "workspace:*",
     "@dxos/live-object": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@preact-signals/safe-react": "^0.9.0"
+    "@preact-signals/safe-react": "catalog:"
   },
   "devDependencies": {
     "@dxos/react-ui": "workspace:*",
@@ -34,7 +34,7 @@
     "effect": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:",
-    "vite": "7.1.9"
+    "vite": "catalog:"
   },
   "peerDependencies": {
     "@dxos/react-ui": "workspace:*",

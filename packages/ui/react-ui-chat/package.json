@@ -24,11 +24,11 @@
     "src"
   ],
   "dependencies": {
-    "@codemirror/autocomplete": "^6.19.0",
-    "@codemirror/language": "^6.11.3",
-    "@codemirror/search": "^6.5.11",
-    "@codemirror/state": "^6.5.2",
-    "@codemirror/view": "^6.38.4",
+    "@codemirror/autocomplete": "catalog:",
+    "@codemirror/language": "catalog:",
+    "@codemirror/search": "catalog:",
+    "@codemirror/state": "catalog:",
+    "@codemirror/view": "catalog:",
     "@dxos/async": "workspace:*",
     "@dxos/debug": "workspace:*",
     "@dxos/echo": "workspace:*",
@@ -45,11 +45,11 @@
     "@dxos/react-ui-theme": "workspace:*",
     "@dxos/react-ui-types": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@fluentui/react-tabster": "^9.24.2",
-    "@preact-signals/safe-react": "^0.9.0",
-    "@preact/signals-core": "^1.12.1",
-    "@radix-ui/react-accordion": "1.2.3",
-    "@radix-ui/react-context": "1.1.1"
+    "@fluentui/react-tabster": "catalog:",
+    "@preact-signals/safe-react": "catalog:",
+    "@preact/signals-core": "catalog:",
+    "@radix-ui/react-accordion": "catalog:",
+    "@radix-ui/react-context": "catalog:"
   },
   "devDependencies": {
     "@dxos/echo": "workspace:*",
@@ -61,7 +61,7 @@
     "effect": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:",
-    "vite": "7.1.9"
+    "vite": "catalog:"
   },
   "peerDependencies": {
     "@dxos/react-ui": "workspace:*",

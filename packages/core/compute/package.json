@@ -52,7 +52,7 @@
     "@dxos/schema": "workspace:*",
     "@dxos/util": "workspace:*",
     "@dxos/vendor-hyperformula": "workspace:*",
-    "@preact/signals-core": "^1.12.1",
+    "@preact/signals-core": "catalog:",
     "effect": "catalog:",
     "lodash.defaultsdeep": "catalog:"
   },
@@ -60,8 +60,8 @@
     "@dxos/echo": "workspace:*",
     "@dxos/echo-db": "workspace:*",
     "@dxos/random": "workspace:*",
-    "@tldraw/indices": "^2.0.0-alpha.14",
-    "@types/lodash.defaultsdeep": "^4.6.6"
+    "@tldraw/indices": "catalog:",
+    "@types/lodash.defaultsdeep": "catalog:"
   },
   "peerDependencies": {
     "effect": "^3.13.3"

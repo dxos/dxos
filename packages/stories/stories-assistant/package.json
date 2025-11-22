@@ -118,7 +118,7 @@
     "effect": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:",
-    "vite": "7.1.9"
+    "vite": "catalog:"
   },
   "peerDependencies": {
     "@dxos/react-ui": "workspace:*",

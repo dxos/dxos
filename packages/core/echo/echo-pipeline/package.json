@@ -77,16 +77,16 @@
     "@dxos/tracing": "workspace:*",
     "@dxos/typings": "workspace:*",
     "@dxos/util": "workspace:*",
-    "crc-32": "^1.2.2",
+    "crc-32": "catalog:",
     "effect": "catalog:",
-    "level-transcoder": "^1.0.1",
+    "level-transcoder": "catalog:",
     "lodash.isequal": "catalog:"
   },
   "devDependencies": {
     "@dxos/test-utils": "workspace:*",
-    "@types/lodash.isequal": "^4.5.0",
-    "fast-check": "^3.19.0",
-    "get-port-please": "^3.1.1"
+    "@types/lodash.isequal": "catalog:",
+    "fast-check": "catalog:",
+    "get-port-please": "catalog:"
   },
   "publishConfig": {
     "access": "public"

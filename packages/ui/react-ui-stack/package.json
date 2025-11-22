@@ -41,9 +41,9 @@
     "src"
   ],
   "dependencies": {
-    "@atlaskit/pragmatic-drag-and-drop": "^1.4.0",
-    "@atlaskit/pragmatic-drag-and-drop-auto-scroll": "^2.1.0",
-    "@atlaskit/pragmatic-drag-and-drop-hitbox": "^1.0.3",
+    "@atlaskit/pragmatic-drag-and-drop": "catalog:",
+    "@atlaskit/pragmatic-drag-and-drop-auto-scroll": "catalog:",
+    "@atlaskit/pragmatic-drag-and-drop-hitbox": "catalog:",
     "@dxos/echo": "workspace:*",
     "@dxos/keyboard": "workspace:*",
     "@dxos/live-object": "workspace:*",
@@ -51,16 +51,16 @@
     "@dxos/react-ui-dnd": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@fluentui/react-tabster": "^9.24.2",
-    "@preact-signals/safe-react": "^0.9.0",
-    "@radix-ui/primitive": "1.1.1",
-    "@radix-ui/react-compose-refs": "1.1.1",
-    "@radix-ui/react-context": "1.1.1",
-    "@radix-ui/react-menu": "2.1.6",
-    "@radix-ui/react-primitive": "2.0.2",
-    "@radix-ui/react-slot": "1.1.2",
+    "@fluentui/react-tabster": "catalog:",
+    "@preact-signals/safe-react": "catalog:",
+    "@radix-ui/primitive": "catalog:",
+    "@radix-ui/react-compose-refs": "catalog:",
+    "@radix-ui/react-context": "catalog:",
+    "@radix-ui/react-menu": "catalog:",
+    "@radix-ui/react-primitive": "catalog:",
+    "@radix-ui/react-slot": "catalog:",
     "@radix-ui/react-use-controllable-state": "1.1.0",
-    "react-resize-detector": "^11.0.1"
+    "react-resize-detector": "catalog:"
   },
   "devDependencies": {
     "@dxos/app-graph": "workspace:*",
@@ -75,7 +75,7 @@
     "@types/react-dom": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:",
-    "vite": "7.1.9"
+    "vite": "catalog:"
   },
   "peerDependencies": {
     "@dxos/client": "workspace:*",

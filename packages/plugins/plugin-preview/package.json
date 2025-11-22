@@ -47,8 +47,8 @@
     "@dxos/schema": "workspace:*",
     "@dxos/types": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@effect-atom/atom-react": "^0.3.4",
-    "@preact-signals/safe-react": "^0.9.0"
+    "@effect-atom/atom-react": "catalog:",
+    "@preact-signals/safe-react": "catalog:"
   },
   "devDependencies": {
     "@dxos/random": "workspace:*",
@@ -56,7 +56,7 @@
     "effect": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:",
-    "vite": "7.1.9"
+    "vite": "catalog:"
   },
   "peerDependencies": {
     "effect": "^3.13.3",

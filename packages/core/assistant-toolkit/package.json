@@ -50,8 +50,8 @@
     "@effect/ai-anthropic": "catalog:",
     "@effect/experimental": "catalog:",
     "@effect/platform": "catalog:",
-    "dfx": "^0.126.0",
-    "exa-js": "^1.5.12"
+    "dfx": "catalog:",
+    "exa-js": "catalog:"
   },
   "devDependencies": {
     "effect": "catalog:",

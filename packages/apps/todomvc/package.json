@@ -18,22 +18,22 @@
     "@dxos/react-client": "workspace:*",
     "@dxos/shell": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@sentry/react": "^7.100.1",
-    "classnames": "^2.3.2",
+    "@sentry/react": "catalog:",
+    "classnames": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:",
-    "react-router-dom": "^6.4.0",
-    "todomvc-app-css": "^2.4.2",
-    "todomvc-common": "^1.0.5"
+    "react-router-dom": "catalog:",
+    "todomvc-app-css": "catalog:",
+    "todomvc-common": "catalog:"
   },
   "devDependencies": {
     "@dxos/async": "workspace:*",
     "@dxos/test-utils": "workspace:*",
-    "@sentry/vite-plugin": "^4.0.2",
+    "@sentry/vite-plugin": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
-    "vite": "7.1.9",
-    "vite-plugin-top-level-await": "^1.6.0",
-    "vite-plugin-wasm": "^3.5.0"
+    "vite": "catalog:",
+    "vite-plugin-top-level-await": "catalog:",
+    "vite-plugin-wasm": "catalog:"
   }
 }

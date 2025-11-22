@@ -19,8 +19,8 @@
   "devDependencies": {
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
-    "@vitejs/plugin-react": "^5.0.0",
-    "noise-protocol": "3.0.1",
-    "vite": "7.1.9"
+    "@vitejs/plugin-react": "catalog:",
+    "noise-protocol": "catalog:",
+    "vite": "catalog:"
   }
 }

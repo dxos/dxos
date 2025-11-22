@@ -30,7 +30,7 @@
     "@dxos/schema": "workspace:*",
     "@dxos/util": "workspace:*",
     "effect": "catalog:",
-    "handlebars": "4.7.8"
+    "handlebars": "catalog:"
   },
   "devDependencies": {},
   "peerDependencies": {

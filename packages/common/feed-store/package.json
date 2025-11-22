@@ -52,13 +52,13 @@
     "@dxos/util": "workspace:*",
     "@dxos/vendor-hypercore": "workspace:*",
     "lodash.defaultsdeep": "catalog:",
-    "race-as-promised": "^0.0.3",
-    "streamx": "^2.12.5"
+    "race-as-promised": "catalog:",
+    "streamx": "catalog:"
   },
   "devDependencies": {
     "@dxos/keys": "workspace:*",
     "@dxos/random": "workspace:*",
-    "@types/lodash.defaultsdeep": "^4.6.6"
+    "@types/lodash.defaultsdeep": "catalog:"
   },
   "optionalDependencies": {
     "@dxos/random": "workspace:*"

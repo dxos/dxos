@@ -102,7 +102,7 @@
     "@dxos/protocols": "workspace:*",
     "@dxos/react-hooks": "workspace:*",
     "@dxos/util": "workspace:*",
-    "react-error-boundary": "^4.0.13"
+    "react-error-boundary": "catalog:"
   },
   "devDependencies": {
     "@dxos/random": "workspace:*",
@@ -115,7 +115,7 @@
     "@types/react-dom": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:",
-    "typedoc": "0.28.1"
+    "typedoc": "catalog:"
   },
   "peerDependencies": {
     "react": "^19.0.0",

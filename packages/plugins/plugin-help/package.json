@@ -53,9 +53,9 @@
     "@dxos/plugin-space": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@fluentui/react-tabster": "^9.24.2",
-    "@preact-signals/safe-react": "^0.9.0",
-    "react-joyride": "^2.7.2"
+    "@fluentui/react-tabster": "catalog:",
+    "@preact-signals/safe-react": "catalog:",
+    "react-joyride": "catalog:"
   },
   "devDependencies": {
     "@dxos/plugin-storybook-layout": "workspace:*",
@@ -63,16 +63,16 @@
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
-    "@effect-atom/atom-react": "^0.3.4",
+    "@effect-atom/atom-react": "catalog:",
     "@effect/platform": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
     "effect": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:",
-    "react-floater": "0.7.9",
-    "type-fest": "4.10.1",
-    "vite": "7.1.9"
+    "react-floater": "catalog:",
+    "type-fest": "catalog:",
+    "vite": "catalog:"
   },
   "peerDependencies": {
     "@dxos/react-ui": "workspace:*",

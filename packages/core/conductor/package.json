@@ -59,10 +59,10 @@
     "@effect/ai": "catalog:",
     "@effect/experimental": "catalog:",
     "@effect/platform": "catalog:",
-    "@preact/signals-core": "^1.12.1",
+    "@preact/signals-core": "catalog:",
     "chalk": "^4.1.2",
     "effect": "catalog:",
-    "jsonpath-plus": "10.2.0"
+    "jsonpath-plus": "catalog:"
   },
   "devDependencies": {
     "@dxos/functions-runtime": "workspace:*"

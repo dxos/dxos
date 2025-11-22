@@ -24,16 +24,16 @@
     "src"
   ],
   "dependencies": {
-    "@codemirror/autocomplete": "^6.19.0",
-    "@codemirror/state": "^6.5.2",
-    "@codemirror/view": "^6.38.4",
+    "@codemirror/autocomplete": "catalog:",
+    "@codemirror/state": "catalog:",
+    "@codemirror/view": "catalog:",
     "@dxos/lit-grid": "workspace:*",
     "@dxos/react-ui-editor": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@lit/react": "^1.0.8",
-    "@preact-signals/safe-react": "^0.9.0",
-    "@radix-ui/react-context": "1.1.1",
-    "@radix-ui/react-popper": "1.2.2",
+    "@lit/react": "catalog:",
+    "@preact-signals/safe-react": "catalog:",
+    "@radix-ui/react-context": "catalog:",
+    "@radix-ui/react-popper": "catalog:",
     "@radix-ui/react-use-controllable-state": "1.1.0"
   },
   "devDependencies": {
@@ -46,7 +46,7 @@
     "@types/react-dom": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:",
-    "vite": "7.1.9"
+    "vite": "catalog:"
   },
   "peerDependencies": {
     "@dxos/react-ui": "workspace:*",

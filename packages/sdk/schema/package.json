@@ -50,10 +50,10 @@
     "@dxos/random": "workspace:*",
     "@dxos/util": "workspace:*",
     "@effect/schema": "catalog:",
-    "@preact/signals-core": "^1.12.1",
-    "date-fns": "^3.3.1",
+    "@preact/signals-core": "catalog:",
+    "date-fns": "catalog:",
     "effect": "catalog:",
-    "jsonpath": "^1.1.1"
+    "jsonpath": "catalog:"
   },
   "devDependencies": {
     "@dxos/echo-signals": "workspace:*",
@@ -61,9 +61,9 @@
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-syntax-highlighter": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
-    "@types/jsonpath": "^0.2.4",
-    "fast-check": "^3.19.0",
-    "vite": "7.1.9"
+    "@types/jsonpath": "catalog:",
+    "fast-check": "catalog:",
+    "vite": "catalog:"
   },
   "peerDependencies": {
     "effect": "^3.13.3"

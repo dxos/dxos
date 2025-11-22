@@ -32,7 +32,7 @@
     "@dxos/live-object": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@preact/signals-core": "^1.12.1",
+    "@preact/signals-core": "catalog:",
     "effect": "catalog:"
   },
   "devDependencies": {

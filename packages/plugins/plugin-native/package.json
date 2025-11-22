@@ -32,16 +32,16 @@
     "@dxos/plugin-navtree": "workspace:*",
     "@dxos/util": "workspace:*",
     "@effect/platform": "catalog:",
-    "@tauri-apps/api": "^2.8.0",
-    "@tauri-apps/plugin-os": "^2.3.1",
-    "@tauri-apps/plugin-process": "^2.3.0",
-    "@tauri-apps/plugin-shell": "^2.3.1",
-    "@tauri-apps/plugin-updater": "^2.9.0",
+    "@tauri-apps/api": "catalog:",
+    "@tauri-apps/plugin-os": "catalog:",
+    "@tauri-apps/plugin-process": "catalog:",
+    "@tauri-apps/plugin-shell": "catalog:",
+    "@tauri-apps/plugin-updater": "catalog:",
     "effect": "catalog:"
   },
   "devDependencies": {
     "@dxos/react-ui": "workspace:*",
-    "vite": "7.1.9"
+    "vite": "catalog:"
   },
   "peerDependencies": {
     "@dxos/react-ui": "workspace:*",

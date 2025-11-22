@@ -43,24 +43,24 @@
     "@dxos/react-ui-form": "workspace:*",
     "@dxos/react-ui-stack": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@excalidraw/excalidraw": "^0.18.0",
-    "@preact-signals/safe-react": "^0.9.0",
-    "@preact/signals-core": "^1.12.1",
+    "@excalidraw/excalidraw": "catalog:",
+    "@preact-signals/safe-react": "catalog:",
+    "@preact/signals-core": "catalog:",
     "effect": "catalog:",
     "lodash.defaultsdeep": "catalog:",
-    "react-resize-detector": "^11.0.1"
+    "react-resize-detector": "catalog:"
   },
   "devDependencies": {
     "@dxos/random": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
-    "@types/lodash.defaultsdeep": "^4.6.6",
+    "@types/lodash.defaultsdeep": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:",
-    "vite": "7.1.9"
+    "vite": "catalog:"
   },
   "peerDependencies": {
     "@dxos/react-ui": "workspace:*",

@@ -53,9 +53,9 @@
     "src"
   ],
   "dependencies": {
-    "@codemirror/autocomplete": "^6.19.0",
-    "@codemirror/state": "^6.5.2",
-    "@codemirror/view": "^6.38.4",
+    "@codemirror/autocomplete": "catalog:",
+    "@codemirror/state": "catalog:",
+    "@codemirror/view": "catalog:",
     "@dxos/async": "workspace:*",
     "@dxos/context": "workspace:*",
     "@dxos/debug": "workspace:*",
@@ -83,15 +83,15 @@
     "@dxos/schema": "workspace:*",
     "@dxos/types": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@fluentui/react-tabster": "^9.24.2",
-    "@preact-signals/safe-react": "^0.9.0",
-    "@preact/signals-core": "^1.12.1",
-    "@radix-ui/react-context": "1.1.1",
-    "@radix-ui/react-primitive": "2.0.2",
-    "@radix-ui/react-slot": "1.1.2",
+    "@fluentui/react-tabster": "catalog:",
+    "@preact-signals/safe-react": "catalog:",
+    "@preact/signals-core": "catalog:",
+    "@radix-ui/react-context": "catalog:",
+    "@radix-ui/react-primitive": "catalog:",
+    "@radix-ui/react-slot": "catalog:",
     "@radix-ui/react-use-controllable-state": "1.1.0",
-    "date-fns": "^3.3.1",
-    "lodash.orderby": "^4.6.0"
+    "date-fns": "catalog:",
+    "lodash.orderby": "catalog:"
   },
   "devDependencies": {
     "@dxos/echo-signals": "workspace:*",
@@ -102,16 +102,16 @@
     "@dxos/react-ui-theme": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
     "@dxos/test-utils": "workspace:*",
-    "@effect-atom/atom-react": "^0.3.4",
+    "@effect-atom/atom-react": "catalog:",
     "@effect/platform": "catalog:",
-    "@types/lodash.orderby": "^4.6.9",
+    "@types/lodash.orderby": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
     "effect": "catalog:",
-    "fast-check": "^3.19.0",
+    "fast-check": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:",
-    "vite": "7.1.9"
+    "vite": "catalog:"
   },
   "peerDependencies": {
     "@dxos/react-ui": "workspace:*",

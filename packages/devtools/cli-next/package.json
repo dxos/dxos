@@ -41,12 +41,12 @@
     "@effect/workflow": "catalog:",
     "effect": "catalog:",
     "esbuild": "catalog:",
-    "wtfnode": "^0.10.0",
+    "wtfnode": "catalog:",
     "yaml": "^2.5.0"
   },
   "devDependencies": {
     "@types/node": "catalog:",
-    "@types/wtfnode": "^0.10.0",
+    "@types/wtfnode": "catalog:",
     "typescript": "catalog:",
     "vitest": "catalog:"
   },

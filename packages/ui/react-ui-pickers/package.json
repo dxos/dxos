@@ -27,11 +27,11 @@
     "@dxos/log": "workspace:*",
     "@dxos/react-ui-types": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@emoji-mart/data": "^1.1.2",
-    "@emoji-mart/react": "^1.1.1",
-    "@preact-signals/safe-react": "^0.9.0",
+    "@emoji-mart/data": "catalog:",
+    "@emoji-mart/react": "catalog:",
+    "@preact-signals/safe-react": "catalog:",
     "@radix-ui/react-use-controllable-state": "1.1.0",
-    "react-resize-detector": "^11.0.1"
+    "react-resize-detector": "catalog:"
   },
   "devDependencies": {
     "@dxos/react-ui": "workspace:*",
@@ -41,7 +41,7 @@
     "@types/react-dom": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:",
-    "vite": "7.1.9"
+    "vite": "catalog:"
   },
   "peerDependencies": {
     "@dxos/react-ui": "workspace:*",

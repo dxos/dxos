@@ -46,7 +46,7 @@
     "@dxos/node-std": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "@dxos/rpc": "workspace:*",
-    "base-x": "~3.0.9",
+    "base-x": "catalog:",
     "effect": "catalog:"
   },
   "peerDependencies": {

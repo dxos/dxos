@@ -84,13 +84,13 @@
     "@effect/platform": "catalog:",
     "@effect/platform-node": "catalog:",
     "@effect/workflow": "catalog:",
-    "diff": "^8.0.2",
-    "json-stable-stringify": "^1.3.0",
-    "parjs": "^1.3.9",
-    "parsimmon": "^1.18.1"
+    "diff": "catalog:",
+    "json-stable-stringify": "catalog:",
+    "parjs": "catalog:",
+    "parsimmon": "catalog:"
   },
   "devDependencies": {
-    "@types/parsimmon": "^1.10.9",
+    "@types/parsimmon": "catalog:",
     "effect": "catalog:"
   },
   "peerDependencies": {

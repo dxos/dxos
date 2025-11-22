@@ -53,8 +53,8 @@
     "src"
   ],
   "dependencies": {
-    "@preact/signals": "^2.3.1",
-    "@preact/signals-core": "^1.12.1",
+    "@preact/signals": "catalog:",
+    "@preact/signals-core": "catalog:",
     "@preact/signals-react": "^3.3.0"
   },
   "devDependencies": {

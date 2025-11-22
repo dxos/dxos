@@ -50,13 +50,13 @@
     "@dxos/protocols": "workspace:*",
     "@dxos/rpc": "workspace:*",
     "@dxos/util": "workspace:*",
-    "randombytes": "^2.1.0"
+    "randombytes": "catalog:"
   },
   "devDependencies": {
     "@dxos/async": "workspace:*",
-    "@types/randombytes": "^2.0.0",
-    "@types/varint": "6.0.0",
-    "varint": "6.0.0"
+    "@types/randombytes": "catalog:",
+    "@types/varint": "catalog:",
+    "varint": "catalog:"
   },
   "publishConfig": {
     "access": "public"

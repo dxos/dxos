@@ -33,13 +33,13 @@
     "@dxos/react-client": "workspace:*",
     "@dxos/react-hooks": "workspace:*",
     "@dxos/util": "workspace:*",
-    "assert": "^2.0.0",
-    "use-subscription": "^1.8.0"
+    "assert": "catalog:",
+    "use-subscription": "catalog:"
   },
   "devDependencies": {
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
-    "@types/use-subscription": "^1.0.0",
+    "@types/use-subscription": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:"
   },
