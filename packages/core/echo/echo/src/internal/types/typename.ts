@@ -40,7 +40,7 @@ export const getSchema = (obj: unknown | undefined): Schema.Schema.AnyNoContext 
 /**
  * Internal use only.
  */
-export const setSchema = (obj: any, schema: Schema.Schema.AnyNoContext) => {
+export const setSchema = (obj: any, schema: Schema.Schema.AnyNoContext): void => {
   Object.defineProperty(obj, SchemaId, {
     value: schema,
     writable: false,
@@ -69,7 +69,7 @@ export const getTypename = (obj: AnyProperties): string | undefined => {
  * @internal
  */
 // TODO(dmaretskyi): Rename setTypeDXN.
-export const setTypename = (obj: any, typename: DXN) => {
+export const setTypename = (obj: any, typename: DXN): void => {
   invariant(typename instanceof DXN, 'Invalid type.');
   Object.defineProperty(obj, TypeId, {
     value: typename,

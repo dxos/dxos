@@ -5,10 +5,11 @@
 import * as Schema from 'effect/Schema';
 import { describe, expect, test } from 'vitest';
 
+import { isInstanceOf } from '../ast';
 import { TypedObject, createObject } from '../object';
 import { Ref } from '../ref';
 import { Testing } from '../testing';
-import { foreignKey, getMeta, getSchema, isInstanceOf } from '../types';
+import { foreignKey, getMeta, getSchema } from '../types';
 
 import { createLiveObject } from './reactive-object';
 

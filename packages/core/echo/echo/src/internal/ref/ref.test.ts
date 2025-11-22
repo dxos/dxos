@@ -7,9 +7,8 @@ import { describe, expect, test } from 'vitest';
 
 import { DXN, ObjectId } from '@dxos/keys';
 
-import { EchoObjectSchema } from '../entities';
+import { EchoObjectSchema, getObjectDXN } from '../entities';
 import { createObject } from '../object';
-import { getObjectDXN } from '../types';
 
 import { Ref, getReferenceAst } from './ref';
 

@@ -10,7 +10,6 @@ import { assertArgument, invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
 
 import {
-  EntityKind,
   type TypeAnnotation,
   TypeAnnotationId,
   type TypeMeta,
@@ -19,6 +18,7 @@ import {
   getTypeIdentifierAnnotation,
 } from '../ast';
 import { makeTypeJsonSchemaAnnotation } from '../json-schema';
+import { EntityKind } from '../types';
 
 import { type EchoTypeSchema, makeEchoTypeSchema } from './entity';
 

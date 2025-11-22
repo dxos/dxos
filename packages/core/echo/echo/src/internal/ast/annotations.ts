@@ -12,9 +12,9 @@ import { assertArgument } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
 import { type Primitive } from '@dxos/util';
 
-import { getSchema } from '../types';
+import { EntityKind, getSchema } from '../types';
 
-import { EntityKind } from './entity';
+import { TypeMeta } from './types';
 import { createAnnotationHelper } from './util';
 
 /**
@@ -30,40 +30,38 @@ export const getTypeIdentifierAnnotation = (schema: Schema.Schema.All) =>
   )(schema.ast);
 
 /**
- * ECHO type.
+ * Entity type.
  */
 export const TypeAnnotationId = Symbol.for('@dxos/schema/annotation/Type');
-
-// TODO(burdon): Create echo-schema Format types.
-// TODO(burdon): Reconcile with "short" DXN.
-export const Typename = Schema.String.pipe(Schema.pattern(/^[a-zA-Z]\w+\.[a-zA-Z]\w{1,}\/[\w/_-]+$/));
-export const SchemaVersion = Schema.String.pipe(Schema.pattern(/^\d+.\d+.\d+$/));
 
 /**
  * Payload stored under {@link TypeAnnotationId}.
  */
-// TODO(dmaretskyi): Rename getTypeAnnotation to represent commonality between objects and relations (e.g. `entity`).
-export const TypeAnnotation = Schema.Struct({
-  kind: Schema.Enums(EntityKind),
-  typename: Typename,
-  version: SchemaVersion,
+export const TypeAnnotation = Schema.extend(
+  TypeMeta,
+  Schema.Struct({
+    kind: Schema.Enums(EntityKind),
+    // kind: Schema.Enums(EntityKind),
+    // typename: Typename,
+    // version: VersionSchema,
 
-  /**
-   * If this is a relation, the schema of the source object.
-   * Must be present if entity kind is {@link EntityKind.Relation}.
-   */
-  sourceSchema: Schema.optional(DXN.Schema),
+    /**
+     * If this is a relation, the schema of the source object.
+     * Must be present if entity kind is {@link EntityKind.Relation}.
+     */
+    sourceSchema: Schema.optional(DXN.Schema),
 
-  /**
-   * If this is a relation, the schema of the target object.
-   * Must be present if entity kind is {@link EntityKind.Relation}.
-   */
-  targetSchema: Schema.optional(DXN.Schema),
-});
+    /**
+     * If this is a relation, the schema of the target object.
+     * Must be present if entity kind is {@link EntityKind.Relation}.
+     */
+    targetSchema: Schema.optional(DXN.Schema),
+  }),
+);
 
 export interface TypeAnnotation extends Schema.Schema.Type<typeof TypeAnnotation> {}
 
-export type TypeMeta = Pick<TypeAnnotation, 'typename' | 'version'>;
+// export type TypeMeta = Pick<TypeAnnotation, 'typename' | 'version'>;
 
 /**
  * @returns {@link TypeAnnotation} from a schema.
@@ -304,16 +302,4 @@ export const getSchemaDXN = (schema: Schema.Schema.All): DXN | undefined => {
   }
 
   return DXN.fromTypenameAndVersion(objectAnnotation.typename, objectAnnotation.version);
-};
-
-/**
- * If property is optional returns the nested property, otherwise returns the property.
- */
-// TODO(wittjosiah): Is there a way to do this as a generic?
-export const unwrapOptional = (property: SchemaAST.PropertySignature) => {
-  if (!property.isOptional || !SchemaAST.isUnion(property.type)) {
-    return property;
-  }
-
-  return property.type.types[0];
 };

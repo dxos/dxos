@@ -7,9 +7,9 @@ import * as SchemaAST from 'effect/SchemaAST';
 
 import { invariant } from '@dxos/invariant';
 
-import { EntityKind, SchemaVersion, type TypeAnnotation, TypeAnnotationId, type TypeMeta, Typename } from '../ast';
+import { type TypeAnnotation, TypeAnnotationId, type TypeMeta, TypenameSchema, VersionSchema } from '../ast';
 import { makeTypeJsonSchemaAnnotation } from '../json-schema';
-import { type HasId } from '../types';
+import { EntityKind, type HasId } from '../types';
 
 import { type TypedObjectFields, type TypedObjectOptions, makeTypedEntityClass } from './common';
 
@@ -46,8 +46,8 @@ export const TypedObject = ({
   version: versionParam,
   disableValidation,
 }: TypedObjectProps) => {
-  const typename = Typename.make(typenameParam, { disableValidation });
-  const version = SchemaVersion.make(versionParam, { disableValidation });
+  const typename = TypenameSchema.make(typenameParam, { disableValidation });
+  const version = VersionSchema.make(versionParam, { disableValidation });
 
   /**
    * Return class definition factory.

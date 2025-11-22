@@ -42,7 +42,7 @@ export * from './types';
 //  3. Reconcile THREE (FFS) variants of testing data.
 
 export { createLiveObject } from './proxy';
-export { type BaseSchema, EchoSchema, ImmutableSchema, RuntimeSchemaRegistry, isMutable } from './schema';
+export { type BaseSchema, EchoSchema, StoredSchema, ImmutableSchema, RuntimeSchemaRegistry, isMutable } from './schema';
 export { type AnyProperties, type HasId } from './types';
 export {
   createObject,

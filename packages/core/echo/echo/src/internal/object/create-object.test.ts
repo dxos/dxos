@@ -9,12 +9,12 @@ import { describe, expect, test } from 'vitest';
 
 import { DXN } from '@dxos/keys';
 
-import { getSchemaDXN } from '../ast';
+import { getSchemaDXN, isInstanceOf } from '../ast';
 import { RelationSourceId, RelationTargetId } from '../entities';
 import { Testing } from '../testing';
-import { getSchema, getType, isInstanceOf } from '../types';
+import { getSchema, getType } from '../types';
 
-import { createObject } from './create';
+import { createObject } from './create-object';
 import { objectToJSON } from './json-serializer';
 
 describe('create (static version)', () => {

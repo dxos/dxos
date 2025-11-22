@@ -17,15 +17,10 @@ import { DXN, ObjectId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { clearUndefined, orderKeys, removeProperties } from '@dxos/util';
 
-import {
-  EntityKind,
-  EntityKindSchema,
-  type TypeAnnotation,
-  TypeAnnotationId,
-  TypeIdentifierAnnotationId,
-} from '../ast';
+import { type TypeAnnotation, TypeAnnotationId, TypeIdentifierAnnotationId } from '../ast';
 import { Expando } from '../entities';
 import { type JsonSchemaReferenceInfo, Ref, createEchoReferenceSchema } from '../ref';
+import { EntityKind, EntityKindSchema } from '../types';
 
 import { CustomAnnotations, DecodedAnnotations, EchoAnnotations } from './annotations';
 import {

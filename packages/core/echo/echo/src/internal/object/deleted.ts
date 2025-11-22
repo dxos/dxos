@@ -2,7 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type AnyProperties, DeletedId } from '../types';
+import { DeletedId } from '../entities';
+import { type AnyProperties } from '../types';
 
 /**
  * @returns `true` if the object has been marked as deleted.

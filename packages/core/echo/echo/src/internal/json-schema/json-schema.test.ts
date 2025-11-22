@@ -14,7 +14,6 @@ import { log } from '@dxos/log';
 import { Testing, prepareAstForCompare } from '../../testing';
 import * as Type from '../../Type';
 import {
-  EntityKind,
   FieldLookupAnnotationId,
   GeneratorAnnotation,
   LabelAnnotation,
@@ -26,7 +25,8 @@ import { EchoObjectSchema } from '../entities';
 import { Email, FormatAnnotation, FormatEnum } from '../formats';
 import { JsonSchemaType, getNormalizedEchoAnnotations, getSchemaProperty, setSchemaProperty } from '../json-schema';
 import { Ref, createSchemaReference, getReferenceAst, getSchemaReference } from '../ref';
-import { StoredSchema } from '../types';
+import { StoredSchema } from '../schema';
+import { EntityKind } from '../types';
 
 import { toEffectSchema, toJsonSchema } from './json-schema';
 

@@ -5,7 +5,7 @@
 import { assertArgument } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
 
-import { EntityKind } from '../ast';
+import { EntityKind } from '../types';
 
 /**
  * @returns JSON-schema annotation so that the schema can be serialized with correct parameters.

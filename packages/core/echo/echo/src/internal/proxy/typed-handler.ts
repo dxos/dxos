@@ -21,8 +21,9 @@ import {
 } from '@dxos/live-object';
 
 import { getSchemaDXN } from '../ast';
+import { DeletedId } from '../entities';
 import { SchemaValidator } from '../object';
-import { DeletedId, SchemaId, TypeId } from '../types';
+import { SchemaId, TypeId } from '../types';
 
 const symbolSignal = Symbol('signal');
 const symbolPropertySignal = Symbol('property-signal');

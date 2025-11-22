@@ -3,7 +3,7 @@
 //
 
 export * from './common';
-export * from './create';
+export * from './create-object';
 export * from './ids';
 export * from './json-serializer';
 export * from './typed-object';

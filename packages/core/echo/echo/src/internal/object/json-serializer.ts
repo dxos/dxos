@@ -11,29 +11,29 @@ import { DXN, ObjectId } from '@dxos/keys';
 import { defineHiddenProperty } from '@dxos/live-object';
 import { assumeType, deepMapValues, visitValues } from '@dxos/util';
 
-import { EntityKind } from '../ast';
 import {
+  ATTR_DELETED,
   ATTR_RELATION_SOURCE,
   ATTR_RELATION_TARGET,
+  ATTR_SELF_DXN,
+  type ObjectJSON,
   RelationSourceDXNId,
   RelationSourceId,
   RelationTargetDXNId,
   RelationTargetId,
+  SelfDXNId,
+  assertObjectModelShape,
 } from '../entities';
 import { Ref, type RefResolver, refFromEncodedReference, setRefResolver } from '../ref';
 import {
-  ATTR_DELETED,
   ATTR_META,
-  ATTR_SELF_DXN,
   ATTR_TYPE,
   type AnyEchoObject,
+  EntityKind,
   EntityKindId,
   MetaId,
-  type ObjectJSON,
   ObjectMetaSchema,
-  SelfDXNId,
   TypeId,
-  assertObjectModelShape,
   getType,
   setSchema,
   setTypename,

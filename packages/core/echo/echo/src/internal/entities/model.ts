@@ -9,7 +9,19 @@ import { invariant } from '@dxos/invariant';
 import { DXN, ObjectId } from '@dxos/keys';
 import { assumeType } from '@dxos/util';
 
-import { EntityKind } from '../ast';
+import {
+  type ATTR_META,
+  type ATTR_TYPE,
+  EntityKind,
+  EntityKindId,
+  type MetaId,
+  type ObjectMeta,
+  type ObjectVersionId,
+  type SchemaId,
+  TypeId,
+  type Version,
+} from '../types';
+
 import {
   type ATTR_RELATION_SOURCE,
   type ATTR_RELATION_TARGET,
@@ -17,25 +29,11 @@ import {
   RelationSourceId,
   RelationTargetDXNId,
   RelationTargetId,
-} from '../entities';
-
-import { type ATTR_META, type MetaId, type ObjectMeta } from './meta';
-import { type ATTR_TYPE, type SchemaId, TypeId } from './typename';
-import { type Version } from './version';
+} from './relation';
 
 //
 // Defines the internal model of the echo object.
 //
-
-/**
- * Entity kind.
- */
-export const EntityKindId = Symbol.for('@dxos/echo/EntityKind');
-
-/**
- * Getter to get object version.
- */
-export const ObjectVersionId: unique symbol = Symbol.for('@dxos/echo/ObjectVersion');
 
 /**
  * DXN to the object itself.
@@ -60,6 +58,8 @@ export const ATTR_DELETED = '@deleted';
 /**
  * Internal runtime representation of an object.
  * The fields are accessed through getter functions.
+ *
+ * @internal
  */
 export interface InternalObjectProps {
   id: ObjectId;
@@ -84,6 +84,7 @@ export interface InternalObjectProps {
 
 /**
  * JSON representation of an object or relation.
+ * @internal
  */
 export interface ObjectJSON {
   id: string;
@@ -95,6 +96,9 @@ export interface ObjectJSON {
   [ATTR_RELATION_TARGET]?: DXN.String;
 }
 
+/**
+ * @internal
+ */
 export interface ObjectMetaJSON {
   keys: ForeignKey[];
   tags?: string[];

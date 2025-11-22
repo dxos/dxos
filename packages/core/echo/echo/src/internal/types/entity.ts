@@ -6,7 +6,12 @@ import * as Schema from 'effect/Schema';
 
 import { type ObjectId } from '@dxos/keys';
 
-import { EntityKindId, type HasId } from '../types';
+import { type HasId } from './base';
+
+/**
+ * Entity kind.
+ */
+export const EntityKindId = Symbol.for('@dxos/echo/EntityKind');
 
 /**
  * Kinds of entities stored in ECHO: objects and relations.

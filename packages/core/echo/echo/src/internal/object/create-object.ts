@@ -9,9 +9,16 @@ import { assertArgument, failedInvariant } from '@dxos/invariant';
 import { ObjectId } from '@dxos/keys';
 import { defineHiddenProperty } from '@dxos/live-object';
 
-import { EntityKind, getSchemaDXN, getTypeAnnotation } from '../ast';
-import { RelationSourceDXNId, RelationSourceId, RelationTargetDXNId, RelationTargetId } from '../entities';
-import { EntityKindId, MetaId, assertObjectModelShape, getObjectDXN, setSchema, setTypename } from '../types';
+import { getSchemaDXN, getTypeAnnotation } from '../ast';
+import {
+  RelationSourceDXNId,
+  RelationSourceId,
+  RelationTargetDXNId,
+  RelationTargetId,
+  assertObjectModelShape,
+  getObjectDXN,
+} from '../entities';
+import { EntityKind, EntityKindId, MetaId, setSchema, setTypename } from '../types';
 
 import { attachedTypedObjectInspector } from './inspect';
 import { attachTypedJsonSerializer } from './json-serializer';

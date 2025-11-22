@@ -7,7 +7,8 @@ import { describe, test } from 'vitest';
 
 import { EchoObjectSchema } from '../entities';
 
-import { LabelAnnotation, SchemaVersion, Typename, getLabel } from './annotations';
+import { LabelAnnotation, getLabel } from './annotations';
+import { TypenameSchema, VersionSchema } from './types';
 
 // TODO(dmaretskyi): Use one of the testing schemas.
 const TestObject = Schema.Struct({
@@ -31,23 +32,23 @@ describe('annotations', () => {
   describe('Typename', () => {
     test('should validate typename', ({ expect }) => {
       // Valid.
-      expect(Typename.make('dxos.org/type/foo')).to.exist;
-      expect(Typename.make('dxos.org/type/foo-bar')).to.exist;
-      expect(Typename.make('dxos.org/type/foo_bar')).to.exist;
+      expect(TypenameSchema.make('dxos.org/type/foo')).to.exist;
+      expect(TypenameSchema.make('dxos.org/type/foo-bar')).to.exist;
+      expect(TypenameSchema.make('dxos.org/type/foo_bar')).to.exist;
 
       // Invalid.
-      expect(() => Typename.make('dxn:dxos.org')).to.throw();
-      expect(() => Typename.make('2dxos.org')).to.throw();
-      expect(() => Typename.make('dxos org')).to.throw();
+      expect(() => TypenameSchema.make('dxn:dxos.org')).to.throw();
+      expect(() => TypenameSchema.make('2dxos.org')).to.throw();
+      expect(() => TypenameSchema.make('dxos org')).to.throw();
     });
 
     test('should validate version', ({ expect }) => {
       // Valid.
-      expect(SchemaVersion.make('0.1.0')).to.exist;
+      expect(VersionSchema.make('0.1.0')).to.exist;
 
       // Invalid.
-      expect(() => SchemaVersion.make('0.1.x')).to.throw();
-      expect(() => SchemaVersion.make('0.1.0-alpha')).to.throw();
+      expect(() => VersionSchema.make('0.1.x')).to.throw();
+      expect(() => VersionSchema.make('0.1.0-alpha')).to.throw();
     });
   });
 
