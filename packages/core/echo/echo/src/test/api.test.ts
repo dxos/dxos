@@ -7,12 +7,13 @@ import { describe, test } from 'vitest';
 
 import { raise } from '@dxos/debug';
 import { FormatAnnotation, FormatEnum } from '@dxos/echo/internal';
+import { type Live } from '@dxos/live-object';
 
-import { type Live, Obj, Ref, Relation, Type } from '../index';
+import { Key, Obj, Ref, Relation, Type } from '../index';
 
 namespace Testing {
   export const Organization = Schema.Struct({
-    id: Type.ObjectId,
+    id: Key.ObjectId,
     name: Schema.String,
   }).pipe(
     Type.Obj({

@@ -4,7 +4,8 @@
 
 import * as Schema from 'effect/Schema';
 
-import { EchoObject, EchoRelation, TypedObject } from '../object';
+import { EchoObject, EchoRelation } from '../entities';
+import { TypedObject } from '../object';
 import { Ref, type Ref$ } from '../ref';
 
 /**

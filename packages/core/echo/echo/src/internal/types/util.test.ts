@@ -6,7 +6,8 @@ import { describe, test } from 'vitest';
 
 import { type JsonPath } from '@dxos/effect';
 
-import { type BaseObject, getValue, setValue } from './types';
+import { type BaseObject } from './types';
+import { getValue, setValue } from './util';
 
 describe('Types', () => {
   test('checks sanity', async ({ expect }) => {

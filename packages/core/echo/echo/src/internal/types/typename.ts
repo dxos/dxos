@@ -2,14 +2,52 @@
 // Copyright 2024 DXOS.org
 //
 
+import type * as Schema from 'effect/Schema';
+
 import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
 
 import { getSchemaTypename } from '../ast';
-import { type BaseObject } from '../types';
 
-import { getSchema } from './accessors';
-import { TypeId } from './model';
+import { type BaseObject } from './types';
+
+/**
+ * Property name for typename when object is serialized to JSON.
+ */
+export const ATTR_TYPE = '@type';
+
+/**
+ * DXN to the object type.
+ */
+export const TypeId = Symbol.for('@dxos/echo/Type');
+
+/**
+ * Reference to the object schema.
+ */
+export const SchemaId = Symbol.for('@dxos/echo/Schema');
+
+/**
+ * Returns the schema for the given object if one is defined.
+ */
+// TODO(burdon): Reconcile with `getTypename`.
+// TODO(dmaretskyi): For echo objects, this always returns the root schema.
+export const getSchema = (obj: unknown | undefined): Schema.Schema.AnyNoContext | undefined => {
+  if (obj) {
+    return (obj as any)[SchemaId];
+  }
+};
+
+/**
+ * Internal use only.
+ */
+export const setSchema = (obj: any, schema: Schema.Schema.AnyNoContext) => {
+  Object.defineProperty(obj, SchemaId, {
+    value: schema,
+    writable: false,
+    enumerable: false,
+    configurable: false,
+  });
+};
 
 /**
  * Gets the typename of the object without the version.

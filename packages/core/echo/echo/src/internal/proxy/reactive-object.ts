@@ -14,8 +14,9 @@ import {
 } from '@dxos/live-object';
 
 import { getTypeAnnotation } from '../ast';
-import { EntityKindId, Expando, MetaId, type ObjectMeta, ObjectMetaSchema, attachTypedJsonSerializer } from '../object';
-import type { BaseObject, CreationProps } from '../types';
+import { Expando } from '../entities';
+import { attachTypedJsonSerializer } from '../object';
+import { type BaseObject, type CreationProps, EntityKindId, MetaId, type ObjectMeta, ObjectMetaSchema } from '../types';
 
 import { TypedReactiveHandler, prepareTypedTarget } from './typed-handler';
 

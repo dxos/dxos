@@ -7,12 +7,15 @@ import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
 
+import { type JsonPath, getField } from '@dxos/effect';
 import { assertArgument } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
 import { type Primitive } from '@dxos/util';
 
-import { createAnnotationHelper } from './annotation-helper';
-import { EntityKind } from './entity-kind';
+import { getSchema } from '../types';
+
+import { EntityKind } from './entity';
+import { createAnnotationHelper } from './util';
 
 /**
  * If property is optional returns the nested property, otherwise returns the property.
@@ -25,6 +28,10 @@ export const unwrapOptional = (property: SchemaAST.PropertySignature) => {
 
   return property.type.types[0];
 };
+
+//
+// Type
+//
 
 /**
  * ECHO identifier (for a stored schema).
@@ -168,11 +175,101 @@ export const LabelAnnotationId = Symbol.for('@dxos/schema/annotation/Label');
 export const LabelAnnotation = createAnnotationHelper<string[]>(LabelAnnotationId);
 
 /**
+ * @deprecated Use {@link Obj.getLabel} instead.
+ * Returns the label for a given object based on {@link LabelAnnotationId}.
+ */
+export const getLabelForObject = (obj: unknown | undefined): string | undefined => {
+  const schema = getSchema(obj);
+  if (schema) {
+    return getLabel(schema, obj);
+  }
+};
+
+/**
+ * Returns the label for a given object based on {@link LabelAnnotationId}.
+ */
+// TODO(burdon): Convert to JsonPath?
+export const getLabel = <S extends Schema.Schema.Any>(schema: S, object: Schema.Schema.Type<S>): string | undefined => {
+  const annotation = LabelAnnotation.get(schema).pipe(Option.getOrElse(() => ['name']));
+  for (const accessor of annotation) {
+    assertArgument(
+      typeof accessor === 'string',
+      'accessor',
+      'Label annotation must be a string or an array of strings',
+    );
+    const value = getField(object, accessor as JsonPath);
+    switch (typeof value) {
+      case 'string':
+      case 'number':
+      case 'boolean':
+      case 'bigint':
+      case 'symbol':
+        return value.toString();
+      case 'undefined':
+      case 'object':
+      case 'function':
+        continue;
+    }
+  }
+
+  return undefined;
+};
+
+/**
+ * Sets the label for a given object based on {@link LabelAnnotationId}.
+ */
+export const setLabel = <S extends Schema.Schema.Any>(schema: S, object: Schema.Schema.Type<S>, label: string) => {
+  const annotation = LabelAnnotation.get(schema).pipe(
+    Option.map((field) => field[0]),
+    Option.getOrElse(() => 'name'),
+  );
+  object[annotation] = label;
+};
+
+/**
  * Identifies description property or JSON path expression.
  * A string representing field accessor.
  */
 export const DescriptionAnnotationId = Symbol.for('@dxos/schema/annotation/Description');
 export const DescriptionAnnotation = createAnnotationHelper<string>(DescriptionAnnotationId);
+
+/**
+ * Returns the label for a given object based on {@link LabelAnnotationId}.
+ */
+// TODO(burdon): Convert to JsonPath?
+export const getDescription = <S extends Schema.Schema.Any>(
+  schema: S,
+  object: Schema.Schema.Type<S>,
+): string | undefined => {
+  const accessor = DescriptionAnnotation.get(schema).pipe(Option.getOrElse(() => 'description'));
+  assertArgument(typeof accessor === 'string', 'accessor', 'Description annotation must be a string');
+  const value = getField(object, accessor as JsonPath);
+  switch (typeof value) {
+    case 'string':
+    case 'number':
+    case 'boolean':
+    case 'bigint':
+    case 'symbol':
+      return value.toString();
+    case 'undefined':
+    case 'object':
+    case 'function':
+    default:
+      return undefined;
+  }
+};
+
+/**
+ * Sets the description for a given object based on {@link DescriptionAnnotationId}.
+ */
+export const setDescription = <S extends Schema.Schema.Any>(
+  schema: S,
+  object: Schema.Schema.Type<S>,
+  description: string,
+) => {
+  const accessor = DescriptionAnnotation.get(schema).pipe(Option.getOrElse(() => 'description'));
+  object[accessor] = description;
+};
 
 /**
  * Identifies if a property should be included in a form or not.

@@ -6,34 +6,55 @@ import type * as EffectSchema from 'effect/Schema';
 
 import { type EncodedReference } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
-import type * as Keys from '@dxos/keys';
+import { type DXN, type ObjectId } from '@dxos/keys';
+import { type ToMutable } from '@dxos/util';
 
-import { type ToMutable } from './internal';
-import * as EchoSchema from './internal';
+import {
+  type ATTR_RELATION_SOURCE,
+  type ATTR_RELATION_TARGET,
+  EchoObject,
+  EchoRelation,
+  type EchoRelationOptions,
+  type EchoSchema,
+  EntityKind,
+  EntityKindId,
+  Expando as Expando$,
+  Ref as Ref$,
+  type TypeAnnotation,
+  type TypeMeta,
+  getSchemaDXN,
+  getSchemaTypename,
+  getSchemaVersion,
+  getTypeAnnotation,
+  isMutable as isMutable$,
+  toEffectSchema,
+} from './internal';
 import type * as RelationModule from './Relation';
+
+export { toEffectSchema };
 
 //
 // Kind
 //
 
-export const KindId: unique symbol = EchoSchema.EntityKindId as any;
+export const KindId: unique symbol = EntityKindId as any;
 export type KindId = typeof KindId;
 
-export const Kind = EchoSchema.EntityKind;
+export const Kind = EntityKind;
 
 /**
  * Assigns a kind to an Object or Relation instance.
  */
 // NOTE: Needed to make `isRelation` and `isObject` checks work.
-export interface OfKind<Kind extends EchoSchema.EntityKind> {
-  readonly id: Keys.ObjectId;
+export interface OfKind<Kind extends EntityKind> {
+  readonly id: ObjectId;
   readonly [KindId]: Kind;
 }
 
 /**
  * Base ECHO schema type.
  */
-export type Schema = EchoSchema.EchoSchema;
+export type Schema = EchoSchema;
 
 /**
  * Returns all properties of an object or relation except for the id and kind.
@@ -55,10 +76,10 @@ interface ObjJsonProps {
  * See Effect's note on interface types.
  */
 export interface obj<Self extends EffectSchema.Schema.Any>
-  extends EchoSchema.TypeMeta,
+  extends TypeMeta,
     EffectSchema.AnnotableClass<
       obj<Self>,
-      OfKind<EchoSchema.EntityKind.Object> & ToMutable<EffectSchema.Schema.Type<Self>>,
+      OfKind<EntityKind.Object> & ToMutable<EffectSchema.Schema.Type<Self>>,
       EffectSchema.Simplify<ObjJsonProps & ToMutable<EffectSchema.Schema.Encoded<Self>>>,
       EffectSchema.Schema.Context<Self>
     > {}
@@ -67,8 +88,8 @@ export interface obj<Self extends EffectSchema.Schema.Any>
  * Object schema.
  */
 export const Obj: {
-  (opts: EchoSchema.TypeMeta): <Self extends EffectSchema.Schema.Any>(self: Self) => obj<Self>;
-} = EchoSchema.EchoObject as any;
+  (opts: TypeMeta): <Self extends EffectSchema.Schema.Any>(self: Self) => obj<Self>;
+} = EchoObject as any;
 
 /**
  * Object schema type definitions.
@@ -88,13 +109,13 @@ export declare namespace Obj {
 //
 
 // TODO(burdon): We're using Expando in many places as a base type.
-export interface Expando extends OfKind<EchoSchema.EntityKind.Object> {
+export interface Expando extends OfKind<EntityKind.Object> {
   [key: string]: any;
 }
 
 type ExpandoEncoded = EffectSchema.Simplify<ObjJsonProps & { [key: string]: any }>;
 
-export const Expando: EffectSchema.Schema<Expando, ExpandoEncoded, never> = EchoSchema.Expando as any;
+export const Expando: EffectSchema.Schema<Expando, ExpandoEncoded, never> = Expando$ as any;
 
 //
 // Relation
@@ -102,8 +123,8 @@ export const Expando: EffectSchema.Schema<Expando, ExpandoEncoded, never> = Echo
 
 interface RelationJsonProps {
   id: string;
-  [EchoSchema.ATTR_RELATION_SOURCE]: string;
-  [EchoSchema.ATTR_RELATION_TARGET]: string;
+  [ATTR_RELATION_SOURCE]: string;
+  [ATTR_RELATION_TARGET]: string;
 }
 
 /**
@@ -116,10 +137,10 @@ export interface relation<
   Self extends EffectSchema.Schema.Any,
   SourceSchema extends EffectSchema.Schema.Any,
   TargetSchema extends EffectSchema.Schema.Any,
-> extends EchoSchema.TypeMeta,
+> extends TypeMeta,
     EffectSchema.AnnotableClass<
       relation<Self, SourceSchema, TargetSchema>,
-      OfKind<EchoSchema.EntityKind.Relation> &
+      OfKind<EntityKind.Relation> &
         Relation.Endpoints<EffectSchema.Schema.Type<SourceSchema>, EffectSchema.Schema.Type<TargetSchema>> &
         ToMutable<EffectSchema.Schema.Type<Self>>,
       EffectSchema.Simplify<RelationJsonProps & ToMutable<EffectSchema.Schema.Encoded<Self>>>,
@@ -132,9 +153,9 @@ export interface relation<
 // TODO(dmaretskyi): I have to redefine the type here so that the definition uses symbols from @dxos/echo/Relation.
 export const Relation: {
   <Source extends EffectSchema.Schema.AnyNoContext, Target extends EffectSchema.Schema.AnyNoContext>(
-    opts: EchoSchema.EchoRelationOptions<Source, Target>,
+    opts: EchoRelationOptions<Source, Target>,
   ): <Self extends EffectSchema.Schema.Any>(self: Self) => relation<Self, Source, Target>;
-} = EchoSchema.EchoRelation as any;
+} = EchoRelation as any;
 
 /**
  * Relation schema type definitions.
@@ -174,22 +195,21 @@ export namespace Relation {
  * See Effect's note on interface types.
  */
 export interface ref<TargetSchema extends EffectSchema.Schema.Any>
-  extends EchoSchema.Ref$<EffectSchema.Schema.Type<TargetSchema>> {}
+  extends Ref$<EffectSchema.Schema.Type<TargetSchema>> {}
 
 /**
  * Ref schema.
  */
-export const Ref: <S extends Obj.Any>(schema: S) => ref<S> = EchoSchema.Ref;
+export const Ref = Ref$;
 
-export interface Ref<T> extends EffectSchema.SchemaClass<EchoSchema.Ref<T>, EncodedReference> {}
+export interface Ref<T> extends EffectSchema.SchemaClass<Ref$<T>, EncodedReference> {}
 
-// TODO(buurdon): Move to Ref?
 export namespace Ref {
   /**
    * Type that represents an arbitrary schema type of a reference.
    * NOTE: This is not an instance type.
    */
-  export type Any = EffectSchema.Schema<EchoSchema.Ref<any>, EncodedReference>;
+  export type Any = EffectSchema.Schema<Ref$<any>, EncodedReference>;
 }
 
 /**
@@ -198,8 +218,8 @@ export namespace Ref {
  * @example "dxn:example.com/type/Person:0.1.0"
  * @example "dxn:echo:SSSSSSSSSS:XXXXXXXXXXXXX"
  */
-export const getDXN = (schema: Obj.Any | Relation.Any): Keys.DXN | undefined => {
-  return EchoSchema.getSchemaDXN(schema);
+export const getDXN = (schema: Obj.Any | Relation.Any): DXN | undefined => {
+  return getSchemaDXN(schema);
 };
 
 /**
@@ -207,7 +227,7 @@ export const getDXN = (schema: Obj.Any | Relation.Any): Keys.DXN | undefined => 
  * @returns The typename of the schema. Example: `example.com/type/Person`.
  */
 export const getTypename = (schema: Obj.Any | Relation.Any): string => {
-  const typename = EchoSchema.getSchemaTypename(schema);
+  const typename = getSchemaTypename(schema);
   invariant(typeof typename === 'string' && !typename.startsWith('dxn:'), 'Invalid typename');
   return typename;
 };
@@ -217,7 +237,7 @@ export const getTypename = (schema: Obj.Any | Relation.Any): string => {
  * @example 0.1.0
  */
 export const getVersion = (schema: Obj.Any | Relation.Any): string => {
-  const version = EchoSchema.getSchemaVersion(schema);
+  const version = getSchemaVersion(schema);
   invariant(typeof version === 'string' && version.match(/^\d+\.\d+\.\d+$/), 'Invalid version');
   return version;
 };
@@ -225,21 +245,16 @@ export const getVersion = (schema: Obj.Any | Relation.Any): string => {
 /**
  * @returns True if the schema is mutable.
  */
-export const isMutable = EchoSchema.isMutable;
+export const isMutable = isMutable$;
 
 /**
  * ECHO type metadata.
  */
-export type Meta = EchoSchema.TypeAnnotation;
+export type Meta = TypeAnnotation;
 
 /**
  * Gets the meta data of the schema.
  */
 export const getMeta = (schema: Obj.Any | Relation.Any): Meta | undefined => {
-  return EchoSchema.getTypeAnnotation(schema);
+  return getTypeAnnotation(schema);
 };
-
-// TODO(dmaretskyi): Remove re-exports.
-export { SpaceId, ObjectId, DXN } from '@dxos/keys';
-
-export { Format, JsonSchemaType as JsonSchema, toEffectSchema, toJsonSchema } from './internal';

@@ -10,14 +10,12 @@ import { describe, expect, test } from 'vitest';
 import { DXN } from '@dxos/keys';
 
 import { getSchemaDXN } from '../ast';
+import { RelationSourceId, RelationTargetId } from '../entities';
 import { Testing } from '../testing';
-import { isInstanceOf } from '../types';
+import { getSchema, getType, isInstanceOf } from '../types';
 
-import { getSchema } from './accessors';
 import { create } from './create';
 import { objectToJSON } from './json-serializer';
-import { RelationSourceId, RelationTargetId } from './model';
-import { getType } from './typename';
 
 describe('create (static version)', () => {
   test('defaults', ({ expect }) => {

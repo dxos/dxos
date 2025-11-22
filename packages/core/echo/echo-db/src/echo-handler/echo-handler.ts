@@ -39,7 +39,6 @@ import {
   StoredSchema,
   TypeId,
   assertObjectModelShape,
-  defineHiddenProperty,
   getEntityKind,
   getMeta,
   getRefSavedTarget,
@@ -52,6 +51,7 @@ import {
 import { DATA_NAMESPACE, type ObjectStructure, PROPERTY_ID, Reference, encodeReference } from '@dxos/echo-protocol';
 import { assertArgument, invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
+import { defineHiddenProperty } from '@dxos/live-object';
 import {
   type Live,
   type ReactiveHandler,

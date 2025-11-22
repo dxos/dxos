@@ -2,8 +2,9 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type BaseObject, ObjectId } from '@dxos/echo/internal';
+import { type BaseObject } from '@dxos/echo/internal';
 import { assertArgument, invariant } from '@dxos/invariant';
+import { ObjectId } from '@dxos/keys';
 
 import { ObjectCore } from '../core-db';
 

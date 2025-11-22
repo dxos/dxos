@@ -5,12 +5,13 @@
 import * as Schema from 'effect/Schema';
 
 import { SchemaVersion, Typename } from '../ast';
+import { EchoObject } from '../entities';
 import { JsonSchemaType } from '../json-schema';
-import { EchoObject } from '../object';
 
 /**
  * Persistent representation of a schema.
  */
+// TODO(burdon): Move.
 export const StoredSchema = Schema.Struct({
   name: Schema.optional(Schema.String),
   typename: Typename,

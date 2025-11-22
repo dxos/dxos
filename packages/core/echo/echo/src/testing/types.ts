@@ -4,7 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Type } from '..';
+import * as Type from '../Type';
 
 /**
  * @deprecated

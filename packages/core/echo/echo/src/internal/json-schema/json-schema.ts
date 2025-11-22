@@ -17,19 +17,25 @@ import { DXN, ObjectId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { clearUndefined, orderKeys, removeProperties } from '@dxos/util';
 
-import { type TypeAnnotation, TypeAnnotationId, TypeIdentifierAnnotationId } from '../ast';
-import { EntityKind, EntityKindSchema } from '../ast';
+import {
+  EntityKind,
+  EntityKindSchema,
+  type TypeAnnotation,
+  TypeAnnotationId,
+  TypeIdentifierAnnotationId,
+} from '../ast';
+import { Expando } from '../entities';
+import { type JsonSchemaReferenceInfo, Ref, createEchoReferenceSchema } from '../ref';
+
+import { CustomAnnotations, DecodedAnnotations, EchoAnnotations } from './annotations';
 import {
   ECHO_ANNOTATIONS_NS_DEPRECATED_KEY,
   ECHO_ANNOTATIONS_NS_KEY,
   type JsonSchemaEchoAnnotations,
   type JsonSchemaType,
   getNormalizedEchoAnnotations,
-} from '../json-schema';
-import { Expando, makeTypeJsonSchemaAnnotation } from '../object';
-import { type JsonSchemaReferenceInfo, Ref, createEchoReferenceSchema } from '../ref';
-
-import { CustomAnnotations, DecodedAnnotations, EchoAnnotations } from './annotations';
+} from './json-schema-type';
+import { makeTypeJsonSchemaAnnotation } from './util';
 
 // TODO(burdon): Are these values stored (can they be changed?)
 export enum PropType {
@@ -346,6 +352,7 @@ const refToEffectSchema = (root: any): Schema.Schema.AnyNoContext => {
   if (!('reference' in root)) {
     return Ref(Expando);
   }
+
   const reference: JsonSchemaReferenceInfo = root.reference;
   if (typeof reference !== 'object') {
     throw new Error('Invalid reference field in ref schema');

@@ -5,13 +5,12 @@
 import { DeferredTask } from '@dxos/async';
 import { Event } from '@dxos/async';
 import { Context } from '@dxos/context';
-import { Obj, type Ref, type Relation } from '@dxos/echo';
+import { Database, Obj, type Ref, type Relation } from '@dxos/echo';
 import {
   type HasId,
   type ObjectJSON,
   SelfDXNId,
   assertObjectModelShape,
-  defineHiddenProperty,
   setRefResolverOnData,
 } from '@dxos/echo/internal';
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
@@ -19,8 +18,9 @@ import { assertArgument, failedInvariant } from '@dxos/invariant';
 import { type DXN, type ObjectId, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type QueueService } from '@dxos/protocols';
+import { defineHiddenProperty } from '@dxos/live-object';
 
-import { Filter, Query, type QueryFn, type QueryOptions, QueryResult } from '../query';
+import { Filter, Query, QueryResult } from '../query';
 
 import { QueueQueryContext } from './queue-query-context';
 import type { Queue } from './types';
@@ -211,12 +211,12 @@ export class QueueImpl<T extends Obj.Any | Relation.Any = Obj.Any | Relation.Any
   }
 
   // Odd way to define method's types from a typedef.
-  declare query: QueryFn;
+  declare query: Database.QueryFn;
   static {
     this.prototype.query = this.prototype._query;
   }
 
-  private _query(queryOrFilter: Query.Any | Filter.Any, options?: QueryOptions) {
+  private _query(queryOrFilter: Query.Any | Filter.Any, options?: Database.QueryOptions) {
     assertArgument(options === undefined, 'options', 'not supported');
     queryOrFilter = Filter.is(queryOrFilter) ? Query.select(queryOrFilter) : queryOrFilter;
     return new QueryResult(new QueueQueryContext(this), queryOrFilter);

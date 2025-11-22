@@ -7,15 +7,23 @@ import { describe, expect, test } from 'vitest';
 import { DXN } from '@dxos/keys';
 
 import { EntityKind, getSchemaDXN, getSchemaTypename } from '../ast';
+import { RelationSourceId, RelationTargetId } from '../entities';
 import { Ref, StaticRefResolver } from '../ref';
 import { Testing } from '../testing';
+import {
+  ATTR_TYPE,
+  EntityKindId,
+  MetaId,
+  TypeId,
+  getMeta,
+  getObjectDXN,
+  getSchema,
+  getType,
+  getTypename,
+} from '../types';
 
-import { getObjectDXN, getSchema } from './accessors';
 import { create } from './create';
 import { objectFromJSON, objectToJSON } from './json-serializer';
-import { getMeta } from './meta';
-import { ATTR_TYPE, EntityKindId, MetaId, RelationSourceId, RelationTargetId, TypeId } from './model';
-import { getType, getTypename } from './typename';
 
 describe('Object JSON serializer', () => {
   test('should serialize and deserialize object', async () => {

@@ -5,7 +5,8 @@
 import { Event } from '@dxos/async';
 import { type Stream } from '@dxos/codec-protobuf/stream';
 import { Context } from '@dxos/context';
-import type { QueryAST } from '@dxos/echo-protocol';
+import { type Database } from '@dxos/echo';
+import { type QueryAST } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
 import { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -21,8 +22,7 @@ import { isNonNullable } from '@dxos/util';
 import { type AnyLiveObject } from '../echo-handler';
 import { getObjectCore } from '../echo-handler';
 import { OBJECT_DIAGNOSTICS, type QuerySourceProvider } from '../hypergraph';
-import { type QueryResultEntry, type QuerySource } from '../query';
-import { getTargetSpacesForQuery } from '../query/util';
+import { type QuerySource, getTargetSpacesForQuery } from '../query';
 
 export type LoadObjectParams = {
   spaceId: SpaceId;
@@ -63,7 +63,7 @@ export class IndexQuerySource implements QuerySource {
   changed = new Event<void>();
 
   private _query?: QueryAST.Query = undefined;
-  private _results?: QueryResultEntry[] = [];
+  private _results?: Database.QueryResultEntry<any>[] = [];
   private _stream?: Stream<QueryResponse>;
 
   constructor(private readonly _params: IndexQuerySourceParams) {}
@@ -75,11 +75,11 @@ export class IndexQuerySource implements QuerySource {
     this._closeStream();
   }
 
-  getResults(): QueryResultEntry[] {
+  getResults(): Database.QueryResultEntry[] {
     return this._results ?? [];
   }
 
-  async run(query: QueryAST.Query): Promise<QueryResultEntry[]> {
+  async run(query: QueryAST.Query): Promise<Database.QueryResultEntry[]> {
     this._query = query;
     return new Promise((resolve, reject) => {
       this._queryIndex(query, QueryReactivity.ONE_SHOT, resolve, reject);
@@ -101,7 +101,7 @@ export class IndexQuerySource implements QuerySource {
   private _queryIndex(
     query: QueryAST.Query,
     queryType: QueryReactivity,
-    onResult: (results: QueryResultEntry[]) => void,
+    onResult: (results: Database.QueryResultEntry[]) => void,
     onError?: (error: Error) => void,
   ): void {
     const queryId = nextQueryId++;
@@ -189,7 +189,7 @@ export class IndexQuerySource implements QuerySource {
     ctx: Context,
     queryStartTimestamp: number,
     result: RemoteQueryResult,
-  ): Promise<QueryResultEntry | null> {
+  ): Promise<Database.QueryResultEntry | null> {
     if (!OBJECT_DIAGNOSTICS.has(result.id)) {
       OBJECT_DIAGNOSTICS.set(result.id, {
         objectId: result.id,
@@ -214,10 +214,9 @@ export class IndexQuerySource implements QuerySource {
     }
 
     const core = getObjectCore(object);
-    const queryResult: QueryResultEntry = {
+    const queryResult: Database.QueryResultEntry = {
       id: object.id,
       spaceId: core.database!.spaceId,
-      spaceKey: core.database!.spaceKey,
       object,
       match: { rank: result.rank },
       resolution: { source: 'index', time: Date.now() - queryStartTimestamp },

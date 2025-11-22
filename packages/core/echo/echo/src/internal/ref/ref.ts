@@ -22,7 +22,6 @@ import type { BaseObject, WithId } from '../types';
  */
 export const JSON_SCHEMA_ECHO_REF_ID = '/schemas/echo/ref';
 
-// TODO(burdon): Define return type.
 export const getSchemaReference = (property: JsonSchemaType): { typename: string } | undefined => {
   const { $id, reference: { schema: { $ref } = {} } = {} } = property;
   if ($id === JSON_SCHEMA_ECHO_REF_ID && $ref) {
@@ -73,7 +72,9 @@ export const RefTypeId: unique symbol = Symbol('@dxos/echo/internal/Ref');
  */
 export interface Ref$<T extends WithId> extends Schema.SchemaClass<Ref<T>, EncodedReference> {}
 
-// Type of the `Ref` function and extra methods attached to it.
+/**
+ * Type of the `Ref` function and extra methods attached to it.
+ */
 export interface RefFn {
   <S extends Schema.Schema.Any>(schema: S): Ref$<Schema.Schema.Type<S>>;
 
@@ -108,6 +109,7 @@ export interface RefFn {
    */
   fromDXN: (dxn: DXN) => Ref<any>;
 }
+
 /**
  * Schema builder for references.
  */
@@ -242,7 +244,7 @@ export const createEchoReferenceSchema = (
   echoId: string | undefined,
   typename: string | undefined,
   version: string | undefined,
-  schemaName?: string,
+  schemaName?: string, // TODO(burdon): Not used.
 ): Schema.SchemaClass<Ref<any>, EncodedReference> => {
   if (!echoId && !typename) {
     throw new TypeError('Either echoId or typename must be provided.');

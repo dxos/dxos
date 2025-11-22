@@ -19,7 +19,8 @@ import {
 import { Stream } from '@dxos/codec-protobuf/stream';
 import { Context, ContextDisposedError } from '@dxos/context';
 import { raise } from '@dxos/debug';
-import { type ObjectId, Ref } from '@dxos/echo/internal';
+import { type Database } from '@dxos/echo';
+import { Ref } from '@dxos/echo/internal';
 import {
   type DatabaseDirectory,
   type ObjectStructure,
@@ -29,6 +30,7 @@ import {
 } from '@dxos/echo-protocol';
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { invariant } from '@dxos/invariant';
+import { type ObjectId } from '@dxos/keys';
 import { type DXN, type PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import type { QueryService } from '@dxos/protocols/proto/dxos/echo/query';
@@ -63,8 +65,6 @@ export type CoreDatabaseParams = {
  */
 const THROTTLED_UPDATE_FREQUENCY = 10;
 
-export type ObjectPlacement = 'root-doc' | 'linked-doc';
-
 export type AddCoreOptions = {
   /**
    * Where to place the object in the Automerge document tree.
@@ -74,7 +74,7 @@ export type AddCoreOptions = {
    *
    * @default 'linked-doc'
    */
-  placeIn?: ObjectPlacement;
+  placeIn?: Database.ObjectPlacement;
 };
 
 const TRACE_LOADING = false;

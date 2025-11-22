@@ -6,18 +6,17 @@ import { Event } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { StackTrace } from '@dxos/debug';
 import { type Obj, Ref, type Relation } from '@dxos/echo';
-import { Filter, Query } from '@dxos/echo';
+import { type Database, Filter, Query } from '@dxos/echo';
 import {
   type BaseObject,
   type BaseSchema,
   ImmutableSchema,
-  type ObjectId,
   RuntimeSchemaRegistry,
   setRefResolver,
 } from '@dxos/echo/internal';
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { failedInvariant } from '@dxos/invariant';
-import { DXN, type QueueSubspaceTag, type SpaceId } from '@dxos/keys';
+import { DXN, type ObjectId, type QueueSubspaceTag, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { trace } from '@dxos/tracing';
 import { entry } from '@dxos/util';
@@ -28,8 +27,6 @@ import { type EchoDatabase, type EchoDatabaseImpl } from './proxy-db';
 import {
   GraphQueryContext,
   type QueryContext,
-  type QueryFn,
-  type QueryOptions,
   QueryResult,
   type QuerySource,
   SpaceQuerySource,
@@ -165,12 +162,12 @@ export class Hypergraph {
   }
 
   // Odd way to define methods types from a typedef.
-  declare query: QueryFn;
+  declare query: Database.QueryFn;
   static {
     this.prototype.query = this.prototype._query;
   }
 
-  private _query(query: Query.Any | Filter.Any, options?: QueryOptions) {
+  private _query(query: Query.Any | Filter.Any, options?: Database.QueryOptions) {
     query = Filter.is(query) ? Query.select(query) : query;
     return new QueryResult(this._createLiveObjectQueryContext(), normalizeQuery(query, options));
   }

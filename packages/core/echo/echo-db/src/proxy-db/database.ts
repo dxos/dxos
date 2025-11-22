@@ -7,7 +7,7 @@ import { inspect } from 'node:util';
 import { type CleanupFn, Event, type ReadOnlyEvent, synchronized } from '@dxos/async';
 import { type Context, LifecycleState, Resource } from '@dxos/context';
 import { inspectObject } from '@dxos/debug';
-import { Ref } from '@dxos/echo';
+import { type Database, Ref } from '@dxos/echo';
 import { type BaseObject, type HasId, assertObjectModelShape, setRefResolver } from '@dxos/echo/internal';
 import { getSchema, getType } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
@@ -19,13 +19,7 @@ import { type DataService, type SpaceSyncState } from '@dxos/protocols/proto/dxo
 import { defaultMap } from '@dxos/util';
 
 import type { SaveStateChangedEvent } from '../automerge';
-import {
-  CoreDatabase,
-  type FlushOptions,
-  type LoadObjectOptions,
-  type ObjectCore,
-  type ObjectPlacement,
-} from '../core-db';
+import { CoreDatabase, type FlushOptions, type LoadObjectOptions, type ObjectCore } from '../core-db';
 import {
   type AnyLiveObject,
   EchoReactiveHandler,
@@ -36,8 +30,7 @@ import {
   isEchoObject,
 } from '../echo-handler';
 import { type Hypergraph } from '../hypergraph';
-import { type Queryable } from '../query';
-import { Filter, Query, type QueryFn, type QueryOptions } from '../query';
+import { Filter, Query } from '../query';
 
 import { EchoSchemaRegistry } from './echo-schema-registry';
 import type { ObjectMigration } from './object-migration';
@@ -55,21 +48,21 @@ export type AddOptions = {
    *
    * @default 'linked-doc'
    */
-  placeIn?: ObjectPlacement;
+  placeIn?: Database.ObjectPlacement;
 };
 
 /**
  * Database API.
  */
-// TODO(burdon): Reconcile with current `Echo` def.
-export interface EchoDatabase extends Queryable {
+export interface EchoDatabase extends Database.Database {
   get graph(): Hypergraph;
   get schemaRegistry(): EchoSchemaRegistry;
 
+  /** @deprecated */
   get spaceKey(): PublicKey;
-  get spaceId(): SpaceId;
+  // get spaceId(): SpaceId;
 
-  toJSON(): object;
+  // toJSON(): object;
 
   /**
    * @deprecated Use `ref` instead.
@@ -86,24 +79,24 @@ export interface EchoDatabase extends Queryable {
    * `Ref.fromDXN(dxn)` returns an unhydrated reference. The `.load` and `.target` APIs will not work.
    * `db.ref(dxn)` is preferable in cases with access to the database.
    */
-  ref<T extends BaseObject = any>(dxn: DXN): Ref.Ref<T>;
+  // ref<T extends BaseObject = any>(dxn: DXN): Ref.Ref<T>;
 
   /**
    * Query objects.
    */
-  query: QueryFn;
+  // query: Database.QueryFn;
 
   /**
    * Adds object to the database.
    */
   // TODO(dmaretskyi): Lock to Obj.Any | Relation.Any.
-  add<T extends BaseObject>(obj: Live<T>, opts?: AddOptions): Live<T & HasId>;
+  // add<T extends BaseObject>(obj: Live<T>, opts?: AddOptions): Live<T & HasId>;
 
   /**
    * Removes object from the database.
    */
   // TODO(dmaretskyi): Lock to Obj.Any | Relation.Any.
-  remove<T extends BaseObject & HasId>(obj: T): void;
+  // remove<T extends BaseObject & HasId>(obj: T): void;
 
   /**
    * Wait for all pending changes to be saved to disk.
@@ -292,12 +285,12 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
   }
 
   // Odd way to define methods types from a typedef.
-  declare query: QueryFn;
+  declare query: Database.QueryFn;
   static {
     this.prototype.query = this.prototype._query;
   }
 
-  private _query(query: Query.Any | Filter.Any, options?: QueryOptions) {
+  private _query(query: Query.Any | Filter.Any, options?: Database.QueryOptions) {
     query = Filter.is(query) ? Query.select(query) : query;
     return this._coreDatabase.graph.query(query, {
       ...options,

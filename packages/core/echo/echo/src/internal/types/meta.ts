@@ -8,9 +8,28 @@ import { ForeignKey } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
 import { type Comparator, intersection } from '@dxos/util';
 
-import { type BaseObject } from '../types';
+import { type BaseObject } from './types';
 
-import { MetaId } from './model';
+/**
+ * Property name for meta when object is serialized to JSON.
+ */
+export const ATTR_META = '@meta';
+
+/**
+ * Metadata section.
+ */
+export const MetaId = Symbol.for('@dxos/echo/Meta');
+
+//
+// Keys
+//
+
+export const foreignKey = (source: string, id: string): ForeignKey => ({ source, id });
+export const foreignKeyEquals = (a: ForeignKey, b: ForeignKey) => a.source === b.source && a.id === b.id;
+
+// TODO(dmaretskyi): Move to echo-schema.
+export const compareForeignKeys: Comparator<BaseObject> = (a: BaseObject, b: BaseObject) =>
+  intersection(getMeta(a).keys, getMeta(b).keys, foreignKeyEquals).length > 0;
 
 //
 // ObjectMeta
@@ -33,9 +52,6 @@ export const ObjectMetaSchema = Schema.mutable(
 );
 export type ObjectMeta = Schema.Schema.Type<typeof ObjectMetaSchema>;
 
-export const foreignKey = (source: string, id: string): ForeignKey => ({ source, id });
-export const foreignKeyEquals = (a: ForeignKey, b: ForeignKey) => a.source === b.source && a.id === b.id;
-
 /**
  * Get metadata from object.
  * Only callable on the object root.
@@ -55,7 +71,3 @@ export const getMeta = (obj: BaseObject): ObjectMeta => {
   invariant(metadata, 'ObjectMeta not found.');
   return metadata;
 };
-
-// TODO(dmaretskyi): Move to echo-schema.
-export const compareForeignKeys: Comparator<BaseObject> = (a: BaseObject, b: BaseObject) =>
-  intersection(getMeta(a).keys, getMeta(b).keys, foreignKeyEquals).length > 0;

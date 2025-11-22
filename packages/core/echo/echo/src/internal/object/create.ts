@@ -10,20 +10,11 @@ import { ObjectId } from '@dxos/keys';
 import { defineHiddenProperty } from '@dxos/live-object';
 
 import { EntityKind, getSchemaDXN, getTypeAnnotation } from '../ast';
+import { RelationSourceDXNId, RelationSourceId, RelationTargetDXNId, RelationTargetId } from '../entities';
+import { EntityKindId, MetaId, assertObjectModelShape, getObjectDXN, setSchema, setTypename } from '../types';
 
-import { getObjectDXN, setSchema } from './accessors';
 import { attachedTypedObjectInspector } from './inspect';
 import { attachTypedJsonSerializer } from './json-serializer';
-import {
-  EntityKindId,
-  MetaId,
-  RelationSourceDXNId,
-  RelationSourceId,
-  RelationTargetDXNId,
-  RelationTargetId,
-  assertObjectModelShape,
-} from './model';
-import { setTypename } from './typename';
 
 // Make `id` optional.
 type CreateData<T> = T extends { id: string } ? Omit<T, 'id' | typeof EntityKindId> & { id?: string } : T;
@@ -56,7 +47,7 @@ type CreateData<T> = T extends { id: string } ? Omit<T, 'id' | typeof EntityKind
  * })
  * ```
  */
-// TODO(burdon): Rename make.
+// TODO(burdon): Rename makeObject.
 // TODO(burdon): Handle defaults (see Schema.make).
 // TODO(dmaretskyi): Use `Obj.make` and `Relation.make` from '@dxos/echo' instead.
 export const create = <S extends Schema.Schema.AnyNoContext>(

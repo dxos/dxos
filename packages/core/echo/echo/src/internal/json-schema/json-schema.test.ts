@@ -11,8 +11,8 @@ import { type JsonProp, findAnnotation } from '@dxos/effect';
 import { ObjectId } from '@dxos/keys';
 import { log } from '@dxos/log';
 
-import { Type } from '../..';
 import { Testing, prepareAstForCompare } from '../../testing';
+import * as Type from '../../Type';
 import {
   EntityKind,
   FieldLookupAnnotationId,
@@ -22,11 +22,11 @@ import {
   getTypeAnnotation,
   getTypeIdentifierAnnotation,
 } from '../ast';
+import { EchoObject } from '../entities';
 import { Email, FormatAnnotation, FormatEnum } from '../formats';
 import { JsonSchemaType, getNormalizedEchoAnnotations, getSchemaProperty, setSchemaProperty } from '../json-schema';
-import { EchoObject } from '../object';
 import { Ref, createSchemaReference, getReferenceAst, getSchemaReference } from '../ref';
-import { StoredSchema } from '../schema';
+import { StoredSchema } from '../types';
 
 import { toEffectSchema, toJsonSchema } from './json-schema';
 

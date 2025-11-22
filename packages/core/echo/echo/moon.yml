@@ -9,8 +9,8 @@ tasks:
     args:
       - '--entryPoint=src/index.ts'
       - '--entryPoint=src/testing/index.ts'
-      - '--entryPoint=src/internal/index.ts'
-      - '--entryPoint=src/query/index.ts'
+      # - '--entryPoint=src/internal/index.ts'
+      # - '--entryPoint=src/query/index.ts'
       - '--platform=browser'
       - '--platform=node'
       - '--injectGlobals'

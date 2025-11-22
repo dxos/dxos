@@ -10,6 +10,9 @@
   ],
   "references": [
     {
+      "path": "../../../common/context"
+    },
+    {
       "path": "../../../common/debug"
     },
     {

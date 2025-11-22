@@ -5,7 +5,7 @@
 import * as Schema from 'effect/Schema';
 import { describe, test } from 'vitest';
 
-import { toJsonSchema } from '../json';
+import { toJsonSchema } from '../json-schema';
 
 import { Format } from './format';
 import { FormatEnum, TypeEnum, getTypeEnum } from './types';

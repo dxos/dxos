@@ -2,9 +2,9 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type BaseObject, type ForeignKey } from '@dxos/echo/internal';
+import { type BaseObject } from '@dxos/echo/internal';
 import { getMeta } from '@dxos/echo/internal';
-import { Reference } from '@dxos/echo-protocol';
+import { type ForeignKey, Reference } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
 import { type Live, getProxyTarget } from '@dxos/live-object';
 
@@ -18,7 +18,6 @@ export const getDatabaseFromObject = (obj: Live<any>): EchoDatabase | undefined 
     return undefined;
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
   const target = getProxyTarget(obj) as ProxyTarget;
   return target[symbolInternals].database;
 };

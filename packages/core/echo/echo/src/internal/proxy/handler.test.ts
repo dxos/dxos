@@ -11,8 +11,8 @@ import type { Live } from '@dxos/live-object';
 import { objectData } from '@dxos/live-object';
 import { isNode } from '@dxos/util';
 
-import { ATTR_META } from '..';
 import { Testing, updateCounter } from '../testing';
+import { ATTR_META } from '../types';
 
 import { live } from './reactive-object';
 

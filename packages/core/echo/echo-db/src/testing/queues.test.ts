@@ -11,7 +11,7 @@ import { Testing } from '@dxos/echo/testing';
 import { DXN, SpaceId } from '@dxos/keys';
 import { KEY_QUEUE_POSITION } from '@dxos/protocols';
 
-import type { Queue } from '../queue';
+import { type Queue } from '../queue';
 
 import { EchoTestBuilder } from './echo-test-builder';
 
@@ -194,7 +194,7 @@ describe('queues', (ctx) => {
 
       const result = await queue.query(Query.select(Filter.everything())).run();
       expect(result.objects).toHaveLength(3);
-      expect(result.objects.map((o) => (o as Testing.Person).name).sort()).toEqual(['alice', 'jane', 'john']);
+      expect(result.objects.map((obj) => (obj as Testing.Person).name).sort()).toEqual(['alice', 'jane', 'john']);
     });
 
     test('one shot query contacts', async ({ expect }) => {
@@ -297,8 +297,7 @@ describe('queues', (ctx) => {
       // Wait for update.
       await calledOnce;
       expect(query.objects).toHaveLength(2);
-      expect(query.objects.map((o) => o.name).sort()).toEqual(['jane', 'john']);
-
+      expect(query.objects.map((obj) => obj.name).sort()).toEqual(['jane', 'john']);
       sub();
     });
   });

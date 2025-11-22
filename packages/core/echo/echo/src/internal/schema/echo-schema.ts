@@ -9,9 +9,9 @@ import { invariant } from '@dxos/invariant';
 import { type ObjectId } from '@dxos/keys';
 
 import { type SchemaMeta, SchemaMetaSymbol, type TypeAnnotation, getTypeAnnotation } from '../ast';
-import { toEffectSchema, toJsonSchema } from '../json';
-import { type JsonSchemaType } from '../json-schema';
+import { type JsonSchemaType, toEffectSchema, toJsonSchema } from '../json-schema';
 import { type TypedObject, type TypedObjectPrototype } from '../object';
+import { StoredSchema } from '../types';
 
 import {
   addFieldsToSchema,
@@ -21,7 +21,6 @@ import {
   updateFieldsInSchema,
 } from './manipulation';
 import { getSnapshot } from './snapshot';
-import { StoredSchema } from './stored-schema';
 
 /**
  * Base schema type.

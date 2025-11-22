@@ -8,10 +8,10 @@ import * as SchemaAST from 'effect/SchemaAST';
 import { invariant } from '@dxos/invariant';
 
 import { EntityKind, SchemaVersion, type TypeAnnotation, TypeAnnotationId, type TypeMeta, Typename } from '../ast';
+import { makeTypeJsonSchemaAnnotation } from '../json-schema';
 import { type HasId } from '../types';
 
 import { type TypedObjectFields, type TypedObjectOptions, makeTypedEntityClass } from './common';
-import { makeTypeJsonSchemaAnnotation } from './entity';
 
 /**
  * Definition for an object type that can be stored in an ECHO database.

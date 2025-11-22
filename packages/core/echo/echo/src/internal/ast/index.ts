@@ -3,6 +3,6 @@
 //
 
 export * from './annotations';
-export * from './annotation-helper';
-export * from './types';
-export * from './entity-kind';
+export * from './entity';
+export * from './field';
+export * from './util';

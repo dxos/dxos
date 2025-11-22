@@ -5,7 +5,9 @@
 import * as Schema from 'effect/Schema';
 import { describe, expect, test } from 'vitest';
 
-import { EchoObject, TypedObject, getSchema } from '..';
+import { EchoObject } from '../entities';
+import { TypedObject } from '../object';
+import { getSchema } from '../types';
 
 import { live } from './reactive-object';
 

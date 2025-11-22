@@ -1,15 +1,10 @@
 //
-// NOTE: Those types must match the ones defined at @dxos/echo. We duplicated them murely due to technical constrains.
-//
-
-/**
- * Getter to get object version.
- */
-//
 // Copyright 2025 DXOS.org
 //
 
 export const VersionTypeId: unique symbol = Symbol('@dxos/echo/Version');
+
+export type VersionType = typeof VersionTypeId;
 
 /**
  * Represent object version.

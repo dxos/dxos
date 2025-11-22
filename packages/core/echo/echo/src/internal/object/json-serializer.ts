@@ -12,30 +12,32 @@ import { defineHiddenProperty } from '@dxos/live-object';
 import { assumeType, deepMapValues, visitValues } from '@dxos/util';
 
 import { EntityKind } from '../ast';
-import { Ref, type RefResolver, refFromEncodedReference, setRefResolver } from '../ref';
-import { type AnyEchoObject } from '../types';
-
-import { setSchema } from './accessors';
-import { ObjectMetaSchema } from './meta';
 import {
-  ATTR_DELETED,
-  ATTR_META,
   ATTR_RELATION_SOURCE,
   ATTR_RELATION_TARGET,
-  ATTR_SELF_DXN,
-  ATTR_TYPE,
-  EntityKindId,
-  MetaId,
-  type ObjectJSON,
   RelationSourceDXNId,
   RelationSourceId,
   RelationTargetDXNId,
   RelationTargetId,
+} from '../entities';
+import { Ref, type RefResolver, refFromEncodedReference, setRefResolver } from '../ref';
+import {
+  ATTR_DELETED,
+  ATTR_META,
+  ATTR_SELF_DXN,
+  ATTR_TYPE,
+  type AnyEchoObject,
+  EntityKindId,
+  MetaId,
+  type ObjectJSON,
+  ObjectMetaSchema,
   SelfDXNId,
   TypeId,
   assertObjectModelShape,
-} from './model';
-import { getType, setTypename } from './typename';
+  getType,
+  setSchema,
+  setTypename,
+} from '../types';
 
 type DeepReplaceRef<T> =
   T extends Ref<any> ? EncodedReference : T extends object ? { [K in keyof T]: DeepReplaceRef<T[K]> } : T;
@@ -55,7 +57,6 @@ export const objectToJSON = <T extends AnyEchoObject>(obj: T): SerializedObject<
  * Creates an object from it's json representation.
  * Performs schema validation.
  * References and schema will be resolvable if the `refResolver` is provided.
- *
  * The function need to be async to support resolving the schema as well as the relation endpoints.
  */
 export const objectFromJSON = async (

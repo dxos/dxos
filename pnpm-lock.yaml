@@ -2541,6 +2541,9 @@ importers:
 
   packages/core/echo/echo:
     dependencies:
+      '@dxos/context':
+        specifier: workspace:*
+        version: link:../../../common/context
       '@dxos/debug':
         specifier: workspace:*
         version: link:../../../common/debug
