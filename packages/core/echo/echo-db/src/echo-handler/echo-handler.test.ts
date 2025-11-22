@@ -15,9 +15,6 @@ import {
   RelationSourceId,
   RelationTargetId,
   createQueueDXN,
-  getMeta,
-  getType,
-  isDeleted,
 } from '@dxos/echo/internal';
 import { EchoObjectSchema, Ref, type Ref$, foreignKey, getTypeReference } from '@dxos/echo/internal';
 import { TestingDeprecated, prepareAstForCompare } from '@dxos/echo/testing';
@@ -214,7 +211,7 @@ describe('Reactive Object with ECHO database', () => {
     const obj = db.add(Obj.make(Type.Expando, { string: 'foo' }));
     expect(obj.id).to.be.a('string');
     expect(obj.string).to.eq('foo');
-    expect(getSchema(obj)).to.eq(undefined);
+    expect(Obj.getSchema(obj)).to.eq(undefined);
   });
 
   test('instantiating reactive objects after a restart', async () => {
@@ -247,7 +244,7 @@ describe('Reactive Object with ECHO database', () => {
       expect(obj.id).to.eq(id);
       expect(obj.string).to.eq('foo');
 
-      expect(getSchema(obj)).to.eq(TestingDeprecated.TestType);
+      expect(Obj.getSchema(obj)).to.eq(TestingDeprecated.TestType);
     }
   });
 
@@ -282,7 +279,7 @@ describe('Reactive Object with ECHO database', () => {
       expect(obj.string).to.eq('foo');
 
       peer.client.graph.schemaRegistry.addSchema([TestingDeprecated.TestType]);
-      expect(getSchema(obj)).to.eq(TestingDeprecated.TestType);
+      expect(Obj.getSchema(obj)).to.eq(TestingDeprecated.TestType);
     }
   });
 
@@ -559,7 +556,7 @@ describe('Reactive Object with ECHO database', () => {
 
   describe('isDeleted', () => {
     test.skip('throws when accessing meta of a non-reactive-proxy', async () => {
-      expect(() => isDeleted({})).to.throw();
+      expect(() => Obj.isDeleted({} as any)).to.throw();
     });
 
     test('returns false for a non-echo reactive-proxy', async () => {
@@ -570,49 +567,49 @@ describe('Reactive Object with ECHO database', () => {
     test('returns false for a non-deleted object', async () => {
       const { db } = await builder.createDatabase();
       const obj = db.add(Obj.make(Type.Expando, { string: 'foo' }));
-      expect(isDeleted(obj)).to.be.false;
+      expect(Obj.isDeleted(obj)).to.be.false;
     });
 
     test('returns true for a deleted object', async () => {
       const { db } = await builder.createDatabase();
       const obj = db.add(Obj.make(Type.Expando, { string: 'foo' }));
       db.remove(obj);
-      expect(isDeleted(obj)).to.be.true;
+      expect(Obj.isDeleted(obj)).to.be.true;
     });
   });
 
   describe('meta', () => {
     test('throws when accessing meta of a non-reactive-proxy', async () => {
-      expect(() => getMeta({})).to.throw();
+      expect(() => Obj.getMeta({} as any)).to.throw();
     });
 
     test('can set meta on a non-ECHO object', async () => {
       const obj = Obj.make(Type.Expando, { string: 'foo' });
-      expect(getMeta(obj)).to.deep.eq({ keys: [] });
+      expect(Obj.getMeta(obj)).to.deep.eq({ keys: [] });
       const testKey = { source: 'test', id: 'hello' };
-      getMeta(obj).keys.push(testKey);
-      expect(getMeta(obj)).to.deep.eq({ keys: [testKey] });
-      expect(() => getMeta(obj).keys.push(1 as any)).to.throw();
+      Obj.getMeta(obj).keys.push(testKey);
+      expect(Obj.getMeta(obj)).to.deep.eq({ keys: [testKey] });
+      expect(() => Obj.getMeta(obj).keys.push(1 as any)).to.throw();
     });
 
     test('meta taken from reactive object when saving to echo', async () => {
       const testKey = { source: 'test', id: 'hello' };
       const reactiveObject = Obj.make(Type.Expando, {});
-      getMeta(reactiveObject).keys.push(testKey);
+      Obj.getMeta(reactiveObject).keys.push(testKey);
 
       const { db } = await builder.createDatabase();
       const obj = db.add(reactiveObject);
-      expect(getMeta(obj).keys).to.deep.eq([testKey]);
+      expect(Obj.getMeta(obj).keys).to.deep.eq([testKey]);
     });
 
     test('meta updates', async () => {
       const { db } = await builder.createDatabase();
       const obj = db.add({ string: 'test-1' });
 
-      expect(getMeta(obj).keys).to.deep.eq([]);
+      expect(Obj.getMeta(obj as any).keys).to.deep.eq([]);
       const key = { source: 'example.com', id: '123' };
-      getMeta(obj).keys.push(key);
-      expect(getMeta(obj).keys).to.deep.eq([key]);
+      Obj.getMeta(obj as any).keys.push(key);
+      expect(Obj.getMeta(obj as any).keys).to.deep.eq([key]);
     });
 
     test('object with meta pushed to array', async () => {
@@ -629,7 +626,7 @@ describe('Reactive Object with ECHO database', () => {
       const obj = db.add(Obj.make(TestType, { objects: [] }));
       const objectWithMeta = Obj.make(NestedType, { field: 42 }, { keys: [key] });
       obj.objects.push(Ref.make(objectWithMeta));
-      expect(getMeta(obj.objects[0]!.target!).keys).to.deep.eq([key]);
+      expect(Obj.getMeta(obj.objects[0]!.target!).keys).to.deep.eq([key]);
     });
 
     test('push key to object created with', async () => {
@@ -639,8 +636,8 @@ describe('Reactive Object with ECHO database', () => {
       const { db, graph } = await builder.createDatabase();
       graph.schemaRegistry.addSchema([TestType]);
       const obj = db.add(Obj.make(TestType, { field: 1 }, { keys: [foreignKey('example.com', '123')] }));
-      getMeta(obj).keys.push(foreignKey('example.com', '456'));
-      expect(getMeta(obj).keys.length).to.eq(2);
+      Obj.getMeta(obj).keys.push(foreignKey('example.com', '456'));
+      expect(Obj.getMeta(obj).keys.length).to.eq(2);
     });
 
     test('can get type reference of unregistered schema', async () => {
@@ -648,7 +645,7 @@ describe('Reactive Object with ECHO database', () => {
       const obj = db.add(Obj.make(Type.Expando, { field: 1 }));
       const typeReference = getTypeReference(TestingDeprecated.TestSchema)!;
       getObjectCore(obj).setType(typeReference);
-      expect(getType(obj)).to.deep.eq(typeReference);
+      expect(Obj.getTypeDXN(obj)).to.deep.eq(typeReference);
     });
 
     test('meta persistence', async () => {
@@ -666,7 +663,7 @@ describe('Reactive Object with ECHO database', () => {
         const db = await peer.openDatabase(spaceKey, root.url);
         const obj = db.add(Obj.make(Type.Expando, { string: 'foo' }));
         id = obj.id;
-        getMeta(obj).keys.push(metaKey);
+        Obj.getMeta(obj).keys.push(metaKey);
         await db.flush();
         await peer.close();
       }
@@ -675,7 +672,7 @@ describe('Reactive Object with ECHO database', () => {
         const peer = await builder.createPeer({ kv: createTestLevel(tmpPath) });
         const db = await peer.openDatabase(spaceKey, root.url);
         const obj = (await db.query(Filter.ids(id)).first()) as AnyLiveObject<TestingDeprecated.TestSchema>;
-        expect(getMeta(obj).keys).to.deep.eq([metaKey]);
+        expect(Obj.getMeta(obj).keys).to.deep.eq([metaKey]);
       }
     });
 
@@ -858,6 +855,6 @@ describe('Reactive Object with ECHO database', () => {
     expect(Obj.getMeta(existing).keys).to.deep.eq([foreignKey1, foreignKey2]);
 
     // Verify the original object still has its keys
-    expect(getMeta(newObj).keys).to.have.length(2);
+    expect(Obj.getMeta(newObj).keys).to.have.length(2);
   });
 });

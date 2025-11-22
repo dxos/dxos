@@ -40,9 +40,7 @@ import {
   TypeId,
   assertObjectModelShape,
   getEntityKind,
-  getMeta,
   getRefSavedTarget,
-  getSchema,
   getTypeAnnotation,
   isInstanceOf,
   requireTypeReference,
@@ -967,7 +965,7 @@ export const isTypedObjectProxy = (value: any): value is Live<any> => {
     return true;
   }
 
-  const schema = getSchema(value);
+  const schema = Obj.getSchema(value);
   if (schema != null) {
     return !!getTypeAnnotation(schema);
   }
@@ -982,7 +980,7 @@ export const isTypedObjectProxy = (value: any): value is Live<any> => {
 // TODO(burdon): Document lifecycle.
 export const createObject = <T extends AnyProperties>(obj: T): AnyLiveObject<T> => {
   assertArgument(!isEchoObject(obj), 'obj', 'Object is already an ECHO object');
-  const schema = getSchema(obj);
+  const schema = Obj.getSchema(obj);
   if (schema != null) {
     validateSchema(schema);
   }
@@ -991,7 +989,7 @@ export const createObject = <T extends AnyProperties>(obj: T): AnyLiveObject<T> 
   const core = new ObjectCore();
   if (isLiveObject(obj)) {
     // Already an echo-schema reactive object.
-    const meta = getProxyTarget<ObjectMeta>(getMeta(obj));
+    const meta = getProxyTarget<ObjectMeta>(Obj.getMeta(obj));
 
     // TODO(burdon): Requires comment.
     const slot = getProxySlot(obj);
