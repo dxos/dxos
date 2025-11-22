@@ -27,12 +27,6 @@
       "browser": "./dist/lib/browser/Obj.mjs",
       "node": "./dist/lib/node-esm/Obj.mjs"
     },
-    "./Query": {
-      "source": "./src/query/index.ts",
-      "types": "./dist/types/src/Query/index.d.ts",
-      "browser": "./dist/lib/browser/Query/index.mjs",
-      "node": "./dist/lib/node-esm/Query/index.mjs"
-    },
     "./Relation": {
       "source": "./src/Relation.ts",
       "types": "./dist/types/src/Relation.d.ts",

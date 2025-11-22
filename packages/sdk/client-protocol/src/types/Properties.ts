@@ -10,22 +10,36 @@ import { Queue } from '@dxos/echo-db';
 
 export const TYPE_PROPERTIES = 'dxos.org/type/Properties';
 
-// TODO(burdon): Factor out (co-locate with TYPE_PROPERTIES).
-export class PropertiesType extends TypedObject({
+const PropertiesTypeBase = TypedObject({
   typename: TYPE_PROPERTIES,
   version: '0.1.0',
 })(
   {
+    //
+    // User properties.
+    //
+
     name: Schema.optional(Schema.String),
-    // TODO(wittjosiah): Make generic?
-    hue: Schema.optional(Schema.String),
     icon: Schema.optional(Schema.String),
+    hue: Schema.optional(Schema.String),
+
+    //
+    // System properties.
+    //
+
     invocationTraceQueue: Schema.optional(Type.Ref(Queue)),
   },
   {
     record: true,
   },
-) {}
+) as unknown as Schema.SchemaClass<any>;
 
-// TODO(burdon): Remove? Use PropertiesType instead?
-export type PropertiesTypeProps = Pick<PropertiesType, 'name' | 'hue' | 'icon' | 'invocationTraceQueue'>;
+/**
+ * Special properties for Space.
+ */
+export class PropertiesType extends PropertiesTypeBase {}
+
+export type PropertiesTypeProps = Pick<
+  InstanceType<typeof PropertiesType>,
+  'name' | 'icon' | 'hue' | 'invocationTraceQueue'
+>;

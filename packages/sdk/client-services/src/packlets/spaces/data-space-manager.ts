@@ -15,7 +15,8 @@ import {
   createAdmissionCredentials,
   getCredentialAssertion,
 } from '@dxos/credentials';
-import { ObjectId, getTypeReference } from '@dxos/echo/internal';
+import { getTypeReference } from '@dxos/echo/internal';
+import { ObjectId } from '@dxos/keys';
 import {
   AuthStatus,
   CredentialServerExtension,
