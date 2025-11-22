@@ -6,7 +6,7 @@ import { getCredentialAssertion } from '@dxos/credentials';
 import { invariant } from '@dxos/invariant';
 import { type Keyring } from '@dxos/keyring';
 import { type PublicKey } from '@dxos/keys';
-import { AlreadyJoinedError, type ApiError } from '@dxos/protocols';
+import { AlreadyJoinedError } from '@dxos/protocols';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import type { DeviceProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
 import {
