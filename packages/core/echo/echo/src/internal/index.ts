@@ -10,6 +10,14 @@ export * from './ref';
 export * from './types';
 
 export { live } from './proxy';
-export { ImmutableSchema, RuntimeSchemaRegistry, type BaseSchema, EchoSchema, isMutable } from './schema';
+export { type BaseSchema, EchoSchema, ImmutableSchema, RuntimeSchemaRegistry, isMutable } from './schema';
 export { type BaseObject, type HasId } from './types';
-export { create, createQueueDXN, isDeleted, objectToJSON, objectFromJSON, SchemaValidator } from './object';
+export {
+  create,
+  createQueueDXN,
+  isDeleted,
+  objectToJSON,
+  objectFromJSON,
+  setRefResolverOnData,
+  SchemaValidator,
+} from './object';

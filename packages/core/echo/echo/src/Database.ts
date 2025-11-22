@@ -5,6 +5,7 @@
 import { type CleanupFn } from '@dxos/async';
 import { type DXN, type PublicKey, type SpaceId } from '@dxos/keys';
 import { type Live } from '@dxos/live-object';
+import { type QueryAST } from '@dxos/echo-protocol';
 
 import { type BaseObject, type HasId } from './internal';
 import { type Filter, type Query } from './query';
@@ -73,7 +74,7 @@ export type QueryRunOptions = {
 };
 
 /**
- * @deprecated Use `Query.options` instead.
+ * @deprecated Use `QueryAST.QueryOptions` instead.
  */
 export type QueryOptions = {
   /**
@@ -98,8 +99,14 @@ export type QueryOptions = {
  */
 export interface QueryFn {
   // TODO(dmaretskyi): Remove query options.
-  <Q extends Query.Any>(query: Q, options?: QueryOptions | undefined): QueryResult<Query.Type<Q>>;
-  <F extends Filter.Any>(filter: F, options?: QueryOptions | undefined): QueryResult<Filter.Type<F>>;
+  <Q extends Query.Any>(
+    query: Q,
+    options?: (QueryAST.QueryOptions & QueryOptions) | undefined,
+  ): QueryResult<Query.Type<Q>>;
+  <F extends Filter.Any>(
+    filter: F,
+    options?: (QueryAST.QueryOptions & QueryOptions) | undefined,
+  ): QueryResult<Filter.Type<F>>;
 }
 
 /**
@@ -148,7 +155,7 @@ export interface Database extends Queryable {
    * `Ref.fromDXN(dxn)` returns an unhydrated reference. The `.load` and `.target` APIs will not work.
    * `db.ref(dxn)` is preferable in cases with access to the database.
    */
-  ref<T>(dxn: DXN): Ref.Ref<T>;
+  ref<T extends BaseObject = any>(dxn: DXN): Ref.Ref<T>;
 
   /**
    * Query objects.

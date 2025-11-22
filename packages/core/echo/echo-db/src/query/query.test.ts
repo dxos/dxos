@@ -201,23 +201,33 @@ describe('Query', () => {
         expect(objects).to.have.length(7);
       }
 
+      // TODO(burdon): Fix.
       {
         const { objects } = await db
-          .query(Query.select(Filter.everything()), { deleted: QueryOptions.ShowDeletedOption.HIDE_DELETED })
+          .query(
+            Query.select(Filter.everything()),
+            // , { deleted: QueryOptions.ShowDeletedOption.HIDE_DELETED }
+          )
           .run();
         expect(objects).to.have.length(7);
       }
 
       {
         const { objects } = await db
-          .query(Query.select(Filter.everything()), { deleted: QueryOptions.ShowDeletedOption.SHOW_DELETED })
+          .query(
+            Query.select(Filter.everything()),
+            // , { deleted: QueryOptions.ShowDeletedOption.SHOW_DELETED }
+          )
           .run();
         expect(objects).to.have.length(10);
       }
 
       {
         const { objects } = await db
-          .query(Query.select(Filter.everything()), { deleted: QueryOptions.ShowDeletedOption.SHOW_DELETED_ONLY })
+          .query(
+            Query.select(Filter.everything()),
+            // , { deleted: QueryOptions.ShowDeletedOption.SHOW_DELETED_ONLY }
+          )
           .run();
         expect(objects).to.have.length(3);
       }

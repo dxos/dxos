@@ -7,13 +7,13 @@ import * as Function from 'effect/Function';
 
 import { Event } from '@dxos/async';
 import { Context } from '@dxos/context';
-import { Obj } from '@dxos/echo';
-import type { BaseObject } from '@dxos/echo/internal';
+import { Database, Obj } from '@dxos/echo';
+import { type BaseObject } from '@dxos/echo/internal';
 import { filterMatchObjectJSON } from '@dxos/echo-pipeline/filter';
-import type { QueryAST } from '@dxos/echo-protocol';
+import { type QueryAST } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
 
-import { type QueryContext, type QueryResultEntry, isSimpleSelectionQuery } from '../query';
+import { type QueryContext, isSimpleSelectionQuery } from '../query';
 
 import { type QueueImpl } from './queue';
 
@@ -33,7 +33,7 @@ export class QueueQueryContext implements QueryContext {
   /**
    * One-shot run.
    */
-  async run(query: QueryAST.Query): Promise<QueryResultEntry<BaseObject>[]> {
+  async run(query: QueryAST.Query): Promise<Database.QueryResultEntry<BaseObject>[]> {
     const trivial = isSimpleSelectionQuery(query);
     if (!trivial) {
       throw new Error('Query not supported.');
@@ -91,7 +91,7 @@ export class QueueQueryContext implements QueryContext {
   /**
    * Synchronously get the results.
    */
-  getResults(): QueryResultEntry<BaseObject>[] {
+  getResults(): Database.QueryResultEntry<BaseObject>[] {
     invariant(this.#filter);
 
     const spaceId = this.#queue.dxn.asQueueDXN()!.spaceId;

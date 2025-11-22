@@ -54,16 +54,15 @@ export type AddOptions = {
 /**
  * Database API.
  */
-// TODO(burdon): Reconcile with current `Echo` def.
-export interface EchoDatabase extends Database.Queryable {
+export interface EchoDatabase extends Database.Database {
   get graph(): Hypergraph;
   get schemaRegistry(): EchoSchemaRegistry;
 
   /** @deprecated */
   get spaceKey(): PublicKey;
-  get spaceId(): SpaceId;
+  // get spaceId(): SpaceId;
 
-  toJSON(): object;
+  // toJSON(): object;
 
   /**
    * @deprecated Use `ref` instead.
@@ -80,24 +79,24 @@ export interface EchoDatabase extends Database.Queryable {
    * `Ref.fromDXN(dxn)` returns an unhydrated reference. The `.load` and `.target` APIs will not work.
    * `db.ref(dxn)` is preferable in cases with access to the database.
    */
-  ref<T extends BaseObject = any>(dxn: DXN): Ref.Ref<T>;
+  // ref<T extends BaseObject = any>(dxn: DXN): Ref.Ref<T>;
 
   /**
    * Query objects.
    */
-  query: Database.QueryFn;
+  // query: Database.QueryFn;
 
   /**
    * Adds object to the database.
    */
   // TODO(dmaretskyi): Lock to Obj.Any | Relation.Any.
-  add<T extends BaseObject>(obj: Live<T>, opts?: AddOptions): Live<T & HasId>;
+  // add<T extends BaseObject>(obj: Live<T>, opts?: AddOptions): Live<T & HasId>;
 
   /**
    * Removes object from the database.
    */
   // TODO(dmaretskyi): Lock to Obj.Any | Relation.Any.
-  remove<T extends BaseObject & HasId>(obj: T): void;
+  // remove<T extends BaseObject & HasId>(obj: T): void;
 
   /**
    * Wait for all pending changes to be saved to disk.
