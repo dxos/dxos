@@ -18,13 +18,15 @@ import {
   assertObjectModelShape,
   getObjectDXN,
 } from '../entities';
-import { EntityKind, EntityKindId, MetaId, setSchema, setTypename } from '../types';
+import { EntityKind, EntityKindId, type KindId, MetaId, setSchema, setTypename } from '../types';
 
 import { attachedTypedObjectInspector } from './inspect';
 import { attachTypedJsonSerializer } from './json-serializer';
 
-// Make `id` optional.
-type CreateData<T> = T extends { id: string } ? Omit<T, 'id' | typeof EntityKindId> & { id?: string } : T;
+/**
+ * @internal
+ */
+export type CreateObjectProps<T> = T extends { id: string } ? Omit<T, 'id' | KindId> & { id?: string } : T;
 
 /**
  * Creates a new object instance from a schema and data, without signal reactivity.
@@ -47,46 +49,47 @@ type CreateData<T> = T extends { id: string } ? Omit<T, 'id' | typeof EntityKind
  *   version: '0.1.0',
  * }))
  *
- * // Creates a non-reactive contact object
- * const contact = create(Contact, {
+ * const contact = createObject(Contact, {
  *   name: "John",
  *   email: "john@example.com",
  * })
  * ```
  *
- * @internal
+ * @internal (Used for testing).
  */
-// TODO(burdon): Rename createEntity.
-// TODO(burdon): Handle defaults (see Schema.make).
-// TODO(dmaretskyi): Use `Obj.make` and `Relation.make` from '@dxos/echo' instead.
 export const createObject = <S extends Schema.Schema.AnyNoContext>(
   schema: S,
-  data: CreateData<Schema.Schema.Type<S>>,
-): CreateData<Schema.Schema.Type<S>> & { id: string } => {
+  props: CreateObjectProps<Schema.Schema.Type<S>>,
+): CreateObjectProps<Schema.Schema.Type<S>> & { id: string } => {
   const annotation = getTypeAnnotation(schema);
   if (!annotation) {
-    throw new Error('Schema is not an object schema');
+    throw new Error('Schema is not an ECHO schema');
   }
-  assertArgument(!('@type' in data), 'data', '@type is not allowed');
-  assertArgument(!(RelationSourceDXNId in data), 'data', 'Relation source DXN is not allowed in the constructor');
-  assertArgument(!(RelationTargetDXNId in data), 'data', 'Relation target DXN is not allowed in the constructor');
+  assertArgument(!('@type' in props), 'data', '@type is not allowed');
+  assertArgument(!(RelationSourceDXNId in props), 'data', 'Relation source DXN is not allowed in the constructor');
+  assertArgument(!(RelationTargetDXNId in props), 'data', 'Relation target DXN is not allowed in the constructor');
   assertArgument(
-    RelationSourceId in data === RelationTargetId in data,
+    RelationSourceId in props === RelationTargetId in props,
     'data',
     'Relation source and target must be provided together',
   );
 
-  const obj = { ...data, id: data.id ?? ObjectId.random() };
-  const kind = RelationSourceId in data ? EntityKind.Relation : EntityKind.Object;
+  // Raw object.
+  const obj = { ...props, id: props.id ?? ObjectId.random() };
+
+  // Metadata.
+  const kind = RelationSourceId in props ? EntityKind.Relation : EntityKind.Object;
   defineHiddenProperty(obj, EntityKindId, kind);
-  setTypename(obj, getSchemaDXN(schema) ?? failedInvariant('Missing schema DXN'));
+  defineHiddenProperty(obj, MetaId, { keys: [] });
   setSchema(obj, schema);
+  setTypename(obj, getSchemaDXN(schema) ?? failedInvariant('Missing schema DXN'));
   attachTypedJsonSerializer(obj);
   attachedTypedObjectInspector(obj);
-  defineHiddenProperty(obj, MetaId, { keys: [] });
+
+  // Relation.
   if (kind === EntityKind.Relation) {
-    const sourceDXN = getObjectDXN(data[RelationSourceId]) ?? raise(new Error('Unresolved relation source'));
-    const targetDXN = getObjectDXN(data[RelationTargetId]) ?? raise(new Error('Unresolved relation target'));
+    const sourceDXN = getObjectDXN(props[RelationSourceId]) ?? raise(new Error('Unresolved relation source'));
+    const targetDXN = getObjectDXN(props[RelationTargetId]) ?? raise(new Error('Unresolved relation target'));
     defineHiddenProperty(obj, RelationSourceDXNId, sourceDXN);
     defineHiddenProperty(obj, RelationTargetDXNId, targetDXN);
   }

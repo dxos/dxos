@@ -92,6 +92,7 @@ export class TypedReactiveHandler implements ReactiveHandler<ProxyTarget> {
 
   get(target: ProxyTarget, prop: string | symbol, receiver: any): any {
     switch (prop) {
+      // TODO(burdon): Remove?
       case objectData: {
         target[symbolSignal].notifyRead();
         return toJSON(target);
@@ -172,6 +173,7 @@ export class TypedReactiveHandler implements ReactiveHandler<ProxyTarget> {
       showHidden: false,
       customInspect: false,
     });
+
     return `Typed ${inspected}`;
   }
 }
@@ -179,6 +181,7 @@ export class TypedReactiveHandler implements ReactiveHandler<ProxyTarget> {
 /**
  * @deprecated Use `Obj.toJSON` instead.
  */
+// TODO(burdon): Remove?
 const toJSON = (target: ProxyTarget): any => {
   return { '@type': 'TypedReactiveObject', ...target };
 };

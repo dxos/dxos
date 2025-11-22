@@ -11,7 +11,7 @@ import { type JsonProp, findAnnotation } from '@dxos/effect';
 import { ObjectId } from '@dxos/keys';
 import { log } from '@dxos/log';
 
-import { Testing, prepareAstForCompare } from '../../testing';
+import { TestSchema, prepareAstForCompare } from '../../testing';
 import * as Type from '../../Type';
 import {
   FieldLookupAnnotationId,
@@ -159,7 +159,7 @@ describe('effect-to-json', () => {
   });
 
   test('annotations', () => {
-    const TestSchema = Schema.Struct({
+    const TempSchema = Schema.Struct({
       name: Schema.String.annotations({ description: 'Person name', title: 'Name' }),
       email: Schema.String.pipe(FormatAnnotation.set(FormatEnum.Email)).annotations({
         description: 'Email address',
@@ -170,7 +170,8 @@ describe('effect-to-json', () => {
         version: '0.1.0',
       }),
     );
-    const jsonSchema = toJsonSchema(TestSchema);
+
+    const jsonSchema = toJsonSchema(TempSchema);
     expect(jsonSchema).to.deep.eq({
       $schema: 'http://json-schema.org/draft-07/schema#',
       $id: 'dxn:type:example.com/type/Person',
@@ -197,8 +198,16 @@ describe('effect-to-json', () => {
   });
 
   test('handles suspend -- Contact schema serialization', () => {
-    const schema = toJsonSchema(Testing.Person);
-    expect(Object.keys(schema.properties!)).toEqual(['id', 'name', 'username', 'email', 'tasks', 'address']);
+    const schema = toJsonSchema(TestSchema.Person);
+    expect(Object.keys(schema.properties!)).toEqual([
+      'id',
+      'name',
+      'username',
+      'email',
+      'tasks',
+      'employer',
+      'address',
+    ]);
   });
 
   test('reference property by ref', () => {
@@ -313,7 +322,7 @@ describe('effect-to-json', () => {
 
   test('reference with title annotation', () => {
     const schema = Schema.Struct({
-      contact: Ref(Testing.Person).annotations({ title: 'Custom Title' }),
+      contact: Ref(TestSchema.Person).annotations({ title: 'Custom Title' }),
     });
 
     // log.info('schema before', { ast: schema.ast });
@@ -336,13 +345,13 @@ describe('effect-to-json', () => {
   });
 
   test('relation schema', () => {
-    const schema = Testing.HasManager;
+    const schema = TestSchema.EmployedBy;
     const jsonSchema = toJsonSchema(schema);
     expect(jsonSchema).toEqual({
-      $id: 'dxn:type:example.com/type/HasManager',
+      $id: 'dxn:type:example.com/type/EmployedBy',
       $schema: 'http://json-schema.org/draft-07/schema#',
       entityKind: 'relation',
-      typename: 'example.com/type/HasManager',
+      typename: 'example.com/type/EmployedBy',
       version: '0.1.0',
       relationSource: {
         // TODO(dmaretskyi): Should those point to specific schema version?
@@ -350,19 +359,22 @@ describe('effect-to-json', () => {
       },
       relationTarget: {
         // TODO(dmaretskyi): Should those point to specific schema version?
-        $ref: 'dxn:type:example.com/type/Person',
+        $ref: 'dxn:type:example.com/type/Organization',
       },
       type: 'object',
       properties: {
         id: {
           type: 'string',
         },
+        role: {
+          type: 'string',
+        },
         since: {
           type: 'string',
         },
       },
-      propertyOrder: ['since', 'id'],
-      required: ['id'],
+      propertyOrder: ['role', 'since', 'id'],
+      required: ['role', 'id'],
       additionalProperties: false,
     });
   });
@@ -586,7 +598,7 @@ describe('json-to-effect', () => {
   });
 
   test('relation schema roundtrip', () => {
-    const schema = Testing.HasManager;
+    const schema = TestSchema.HasManager;
     const jsonSchema = toJsonSchema(schema);
     const effectSchema = toEffectSchema(jsonSchema);
     expect(prepareAstForCompare(effectSchema.ast)).to.deep.eq(prepareAstForCompare(schema.ast));
@@ -689,10 +701,8 @@ describe('json-to-effect', () => {
   });
 
   test('schema with optional referece', () => {
-    const TestSchema = Schema.Struct({
-      contact: Schema.optional(Ref(Testing.Person)),
-    });
-    const jsonSchema = toJsonSchema(TestSchema);
+    const TempSchema = Schema.Struct({ contact: Schema.optional(Ref(TestSchema.Person)) });
+    const jsonSchema = toJsonSchema(TempSchema);
     expect(jsonSchema).toMatchInlineSnapshot(`
       {
         "$schema": "http://json-schema.org/draft-07/schema#",
@@ -718,7 +728,7 @@ describe('json-to-effect', () => {
     `);
 
     const effectSchema = toEffectSchema(jsonSchema);
-    expect(prepareAstForCompare(effectSchema.ast)).to.deep.eq(prepareAstForCompare(TestSchema.ast));
+    expect(prepareAstForCompare(effectSchema.ast)).to.deep.eq(prepareAstForCompare(TempSchema.ast));
   });
 
   test('object nested inside another struct', () => {
@@ -776,7 +786,7 @@ describe('json-to-effect', () => {
 
 describe('reference', () => {
   test('reference annotation', () => {
-    const schema = Ref(Testing.Person);
+    const schema = Ref(TestSchema.Person);
     const jsonSchema = toJsonSchema(schema);
     expect(jsonSchema).toEqual({
       $id: '/schemas/echo/ref',
@@ -792,7 +802,7 @@ describe('reference', () => {
   });
 
   test('title annotation', () => {
-    const schema = Ref(Testing.Person).annotations({ title: 'My custom title' });
+    const schema = Ref(TestSchema.Person).annotations({ title: 'My custom title' });
     const jsonSchema = toJsonSchema(schema);
     expect(jsonSchema).toEqual({
       $schema: 'http://json-schema.org/draft-07/schema#',
@@ -813,7 +823,7 @@ describe('reference', () => {
   });
 
   test('description annotation', () => {
-    const schema = Ref(Testing.Person).annotations({ description: 'My custom description' });
+    const schema = Ref(TestSchema.Person).annotations({ description: 'My custom description' });
     const jsonSchema = toJsonSchema(schema);
     expect(jsonSchema).toEqual({
       $schema: 'http://json-schema.org/draft-07/schema#',
@@ -837,13 +847,13 @@ describe('reference', () => {
   });
 
   test('serialize and deserialize', () => {
-    const schema = Ref(Testing.Person);
+    const schema = Ref(TestSchema.Person);
     const jsonSchema = toJsonSchema(schema);
     const deserializedSchema = toEffectSchema(jsonSchema);
     const refAst = getReferenceAst(deserializedSchema.ast);
     expect(refAst).toEqual({
-      typename: Testing.Person.typename,
-      version: Testing.Person.version,
+      typename: TestSchema.Person.typename,
+      version: TestSchema.Person.version,
     });
   });
 });

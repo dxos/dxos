@@ -23,9 +23,9 @@ import {
   RelationSourceId,
   RelationTargetDXNId,
   RelationTargetId,
-  createLiveObject,
   getObjectDXN,
   getTypeAnnotation,
+  makeObject,
 } from './internal';
 import * as Obj from './Obj';
 import * as Type from './Type';
@@ -60,6 +60,7 @@ export const Any = Schema.Struct({}).pipe(
 // TODO(dmaretskyi): Has to be `unique symbol`.
 export const Source: unique symbol = RelationSourceId as any;
 export type Source = typeof Source;
+
 export const Target: unique symbol = RelationTargetId as any;
 export type Target = typeof Target;
 
@@ -95,7 +96,7 @@ export const make = <S extends Type.Relation.Any>(
   (props as any)[RelationSourceDXNId] = sourceDXN;
   (props as any)[RelationTargetDXNId] = targetDXN;
 
-  return createLiveObject<Schema.Schema.Type<S>>(schema, props as any, meta);
+  return makeObject<Schema.Schema.Type<S>>(schema, props as any, meta);
 };
 
 export const isRelation = (value: unknown): value is Any => {

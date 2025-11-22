@@ -3,12 +3,35 @@
 //
 
 import { effect } from '@preact/signals-core';
+import type * as Schema from 'effect/Schema';
 import type * as SchemaAST from 'effect/SchemaAST';
 
 import { registerSignalsRuntime } from '@dxos/echo-signals';
+import { assertArgument } from '@dxos/invariant';
 import { deepMapValues } from '@dxos/util';
 
-registerSignalsRuntime(); // TODO: Move to tests.
+import { EchoSchema, StoredSchema, getSchemaTypename, makeObject, toJsonSchema } from '../internal';
+
+registerSignalsRuntime();
+
+/**
+ * Create a reactive mutable schema that updates when the JSON schema is updated.
+ */
+// TODO(dmaretskyi): Should be replaced by registration of typed object.
+export const createEchoSchema = (schema: Schema.Schema.AnyNoContext, version = '0.1.0'): EchoSchema => {
+  const jsonSchema = toJsonSchema(schema);
+  const typename = getSchemaTypename(schema);
+  assertArgument(typename, 'typename', 'Schema does not have a typename.');
+  const echoSchema = new EchoSchema(makeObject(StoredSchema, { typename, version, jsonSchema }));
+
+  // TODO(burdon): Unsubscribe is never called.
+  effect(() => {
+    const _ = echoSchema.jsonSchema;
+    echoSchema._invalidate();
+  });
+
+  return echoSchema;
+};
 
 /**
  * Converts AST to a format that can be compared with test matchers.

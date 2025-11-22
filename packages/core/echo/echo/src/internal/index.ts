@@ -13,13 +13,14 @@ export * from './types';
 //  1. Remove from outisde of echo-db; promote toe echo/db types; serach: from '@dxos/echo/internal';
 //  - [x] completely restructure @dxos/echo src/internal
 //  - [x] Remove import "." and ".."! (MUST CREATE LINT RULE).
+//  - [x] Unify FOUR different nests of test schema.
 //  - [x] Remove @deprecated from internal methods and mark @internal (e.g., getSchemaDXN).
 //      (Internal methods should not use the Obj/Type APIs.)
 //  - [x] import ObjectId => @dxos/keys
 //  - [x] import LabelAnnotation => Annotation.LabelAnnotation
 //  - [x] import Expando => Type.Expando
 //  - [x] live => Obj.make
-//  - [x] Rename live => createLiveObject
+//  - [x] Rename live => makeObject
 //  - [x] Rename {EchoObject, EchoRelation} => {EchoObjecSchema, EchoRelationSchema}
 //  - [x] Rename BaseObject => AnyProperties
 //  - [x] Created Entity.Any (=> AnyEchoObject).
@@ -42,9 +43,8 @@ export * from './types';
 //  - Datatbase.query() options?
 
 //  2. Audit usage from @dxos/echo-db
-//  3. Reconcile AT LEAST FOUR DIFFERENT variants of testing data (FFS!)
 
-export { createLiveObject } from './proxy';
+export { makeObject } from './proxy';
 export { type BaseSchema, EchoSchema, StoredSchema, ImmutableSchema, RuntimeSchemaRegistry, isMutable } from './schema';
 export { type AnyProperties, type HasId } from './types';
 export {

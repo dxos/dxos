@@ -9,10 +9,11 @@ import { describe, expect, test } from 'vitest';
 
 import { DXN } from '@dxos/keys';
 
+import { Relation } from '../../index';
+import { TestSchema } from '../../testing';
 import { getSchemaDXN, isInstanceOf } from '../annotations';
-import { RelationSourceId, RelationTargetId } from '../entities';
-import { Testing } from '../testing';
-import { getSchema, getTypeDXN } from '../types';
+import { ATTR_RELATION_SOURCE, ATTR_RELATION_TARGET } from '../entities';
+import { ATTR_META, ATTR_TYPE, getSchema, getTypeDXN } from '../types';
 
 import { createObject } from './create-object';
 import { objectToJSON } from './json-serializer';
@@ -32,7 +33,7 @@ describe('create (static version)', () => {
   });
 
   test('create static object', () => {
-    const contact = createObject(Testing.Person, {
+    const contact = createObject(TestSchema.Person, {
       name: 'Bot',
       email: 'bot@example.com',
     });
@@ -41,12 +42,12 @@ describe('create (static version)', () => {
     expect(contact.name).toBe('Bot');
     expect(contact.email).toBe('bot@example.com');
     expect((contact as any)['@type']).toBeUndefined();
-    expect(getTypeDXN(contact)?.toString()).toBe(getSchemaDXN(Testing.Person)!.toString());
-    expect(isInstanceOf(Testing.Person, contact)).toBe(true);
+    expect(getTypeDXN(contact)?.toString()).toBe(getSchemaDXN(TestSchema.Person)!.toString());
+    expect(isInstanceOf(TestSchema.Person, contact)).toBe(true);
   });
 
   test('JSON encoding', () => {
-    const contact = createObject(Testing.Person, {
+    const contact = createObject(TestSchema.Person, {
       name: 'Bot',
       email: 'bot@example.com',
     });
@@ -54,7 +55,7 @@ describe('create (static version)', () => {
     const json = JSON.parse(JSON.stringify(contact));
     expect(json).toEqual({
       id: contact.id,
-      '@type': DXN.fromTypenameAndVersion(Testing.Person.typename, Testing.Person.version).toString(),
+      '@type': DXN.fromTypenameAndVersion(TestSchema.Person.typename, TestSchema.Person.version).toString(),
       '@meta': {
         keys: [],
       },
@@ -65,42 +66,43 @@ describe('create (static version)', () => {
   });
 
   test('JSON encoding with relation', () => {
-    const contactA = createObject(Testing.Person, {
-      name: 'Bot',
-      email: 'bot@example.com',
+    const person1 = createObject(TestSchema.Person, {
+      name: 'Alice',
+      email: 'alice@example.com',
     });
-    const contactB = createObject(Testing.Person, {
-      name: 'Bot',
-      email: 'bot@example.com',
-    });
-    const hasManager = createObject(Testing.HasManager, {
-      [RelationSourceId]: contactA,
-      [RelationTargetId]: contactB,
+    const person2 = createObject(TestSchema.Person, {
+      name: 'Bob',
+      email: 'bob@example.com',
     });
 
-    const json = JSON.parse(JSON.stringify(hasManager));
+    const manager = createObject(TestSchema.HasManager, {
+      [Relation.Source]: person1 as any,
+      [Relation.Target]: person2 as any,
+    });
+
+    const json = JSON.parse(JSON.stringify(manager));
     expect(json).toEqual({
-      id: hasManager.id,
-      '@type': DXN.fromTypenameAndVersion(Testing.HasManager.typename, Testing.HasManager.version).toString(),
-      '@relationSource': DXN.fromLocalObjectId(contactA.id).toString(),
-      '@relationTarget': DXN.fromLocalObjectId(contactB.id).toString(),
-      '@meta': {
+      id: manager.id,
+      [ATTR_TYPE]: DXN.fromTypenameAndVersion(TestSchema.HasManager.typename, TestSchema.HasManager.version).toString(),
+      [ATTR_RELATION_SOURCE]: DXN.fromLocalObjectId(person1.id).toString(),
+      [ATTR_RELATION_TARGET]: DXN.fromLocalObjectId(person2.id).toString(),
+      [ATTR_META]: {
         keys: [],
       },
     });
   });
 
   test('getSchema', () => {
-    const contact = createObject(Testing.Person, {
+    const contact = createObject(TestSchema.Person, {
       name: 'Bot',
       email: 'bot@example.com',
     });
 
-    expect(getSchema(contact)).toBe(Testing.Person);
+    expect(getSchema(contact)).toBe(TestSchema.Person);
   });
 
   test('inspect', () => {
-    const contact = createObject(Testing.Person, {
+    const contact = createObject(TestSchema.Person, {
       name: 'Bot',
       email: 'bot@example.com',
     });

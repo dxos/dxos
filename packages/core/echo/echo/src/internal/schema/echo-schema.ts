@@ -356,7 +356,7 @@ export class EchoSchema<A = any, I = any> extends EchoSchemaConstructor() implem
   /**
    * Rebuilds this schema if it is dirty.
    */
-  _rebuild(): void {
+  private _rebuild(): void {
     if (this._isDirty || this._schema == null) {
       this._schema = toEffectSchema(getSnapshot(this._storedSchema.jsonSchema));
       this._isDirty = false;

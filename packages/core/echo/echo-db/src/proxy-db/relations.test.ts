@@ -32,7 +32,7 @@ describe('Relations', () => {
     const user1 = db.add(Obj.make(TestingDeprecated.Person, { name: 'Alice' }));
     const user2 = db.add(Obj.make(TestingDeprecated.Person, { name: 'Bob' }));
 
-    const supervisor = db.add(
+    const manager = db.add(
       Relation.make(TestingDeprecated.HasManager, {
         [Relation.Source]: user1,
         [Relation.Target]: user2,
@@ -40,10 +40,10 @@ describe('Relations', () => {
       }),
     );
 
-    expect(Relation.isRelation(supervisor)).to.be.true;
-    expect(Relation.getSource(supervisor) === user1).to.be.true;
-    expect(Relation.getTarget(supervisor) === user2).to.be.true;
-    expect(supervisor.since).to.equal('2022');
+    expect(Relation.isRelation(manager)).to.be.true;
+    expect(Relation.getSource(manager) === user1).to.be.true;
+    expect(Relation.getTarget(manager) === user2).to.be.true;
+    expect(manager.since).to.equal('2022');
 
     await db.flush({ indexes: true });
     await testBuilder.lastPeer!.reload();
@@ -51,13 +51,13 @@ describe('Relations', () => {
       const db = await testBuilder.lastPeer!.openLastDatabase();
       const { objects } = await db.query(Query.select(Filter.everything())).run();
 
-      const supervisor = objects.find((obj) => Relation.isRelation(obj));
-      expect(supervisor).toBeDefined();
+      const manager = objects.find((obj) => Relation.isRelation(obj));
+      expect(manager).toBeDefined();
 
-      expect(Relation.isRelation(supervisor)).to.be.true;
-      expect(Relation.getSource(supervisor).name).toEqual('Alice');
-      expect(Relation.getTarget(supervisor).name).toEqual('Bob');
-      expect(supervisor.since).to.equal('2022');
+      expect(Relation.isRelation(manager)).to.be.true;
+      expect(Relation.getSource(manager).name).toEqual('Alice');
+      expect(Relation.getTarget(manager).name).toEqual('Bob');
+      expect(manager.since).to.equal('2022');
     }
   });
 });

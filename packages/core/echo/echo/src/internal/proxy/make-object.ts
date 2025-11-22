@@ -16,14 +16,14 @@ import {
 import { getTypeAnnotation } from '../annotations';
 import { Expando } from '../entities';
 import { attachTypedJsonSerializer } from '../object';
-import { type AnyProperties, EntityKindId, MetaId, type ObjectMeta, ObjectMetaSchema } from '../types';
+import { type AnyProperties, EntityKindId, type KindId, MetaId, type ObjectMeta, ObjectMetaSchema } from '../types';
 
 import { TypedReactiveHandler, prepareTypedTarget } from './typed-handler';
 
 /**
- * Properties that are required for object creation.
+ * @internal
  */
-export type MakeProps<T extends AnyProperties> = Omit<T, 'id' | typeof EntityKindId>;
+export type MakeObjectProps<T extends AnyProperties> = Omit<T, 'id' | KindId>;
 
 /**
  * Creates a reactive object from a plain Javascript object.
@@ -31,20 +31,19 @@ export type MakeProps<T extends AnyProperties> = Omit<T, 'id' | typeof EntityKin
  *
  * @internal
  */
-// TODO(burdon): Rename make.
 // TODO(dmaretskyi): Deep mutability.
 // TODO(dmaretskyi): Invert generics (generic over schema) to have better error messages.
 // TODO(dmaretskyi): Could mutate original object making it unusable.
-export const createLiveObject: {
+export const makeObject: {
   <T extends AnyProperties>(obj: T): Live<T>;
   <T extends AnyProperties>(
     schema: Schema.Schema<T, any, never>,
-    obj: NoInfer<MakeProps<T>>,
+    obj: NoInfer<MakeObjectProps<T>>,
     meta?: ObjectMeta,
   ): Live<T>;
 } = <T extends AnyProperties>(
   objOrSchema: Schema.Schema<T, any> | T,
-  obj?: MakeProps<T>,
+  obj?: MakeObjectProps<T>,
   meta?: ObjectMeta,
 ): Live<T> => {
   // TODO(dmaretskyi): Remove Expando special case.

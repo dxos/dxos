@@ -9,7 +9,7 @@ import { EchoObjectSchema } from '../entities';
 import { TypedObject } from '../object';
 import { getSchema } from '../types';
 
-import { createLiveObject } from './reactive-object';
+import { makeObject } from './make-object';
 
 const Organization = Schema.Struct({
   name: Schema.String,
@@ -44,13 +44,13 @@ const TEST_ORG: Omit<Organization, 'id'> = { name: 'Test' };
 
 describe('EchoObjectSchema class DSL', () => {
   test('can get object schema', async () => {
-    const obj = createLiveObject(Organization, TEST_ORG);
+    const obj = makeObject(Organization, TEST_ORG);
     expect(getSchema(obj)).to.deep.eq(Organization);
   });
 
   describe('class options', () => {
     test('can assign undefined to partial fields', async () => {
-      const person = createLiveObject(Contact, { name: 'John' });
+      const person = makeObject(Contact, { name: 'John' });
       person.name = undefined;
       person.recordField = 'hello';
       expect(person.name).to.be.undefined;
@@ -70,13 +70,13 @@ describe('EchoObjectSchema class DSL', () => {
     );
 
     {
-      const object = createLiveObject(schema, {});
+      const object = makeObject(schema, {});
       (object.meta ??= {}).test = 100;
       expect(object.meta.test).to.eq(100);
     }
 
     {
-      const object = createLiveObject(schema, {});
+      const object = makeObject(schema, {});
       object.meta = { test: { value: 300 } };
       expect(object.meta.test.value).to.eq(300);
     }
@@ -97,7 +97,7 @@ describe('EchoObjectSchema class DSL', () => {
         meta: Schema.optional(Schema.mutable(Schema.Record({ key: Schema.String, value: Schema.Any }))),
       }) {}
 
-      const object = createLiveObject(Test2, {});
+      const object = makeObject(Test2, {});
       (object.meta ??= {}).test = 100;
       expect(object.meta.test).to.eq(100);
     }

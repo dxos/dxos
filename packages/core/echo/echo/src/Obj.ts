@@ -22,7 +22,6 @@ import {
   ObjectVersionId,
   type VersionType,
   VersionTypeId,
-  createLiveObject,
   getDescription as getDescription$,
   getLabel as getLabel$,
   getObjectDXN,
@@ -31,6 +30,7 @@ import {
   getTypeAnnotation,
   getTypeDXN as getTypeDXN$,
   isInstanceOf,
+  makeObject,
   objectFromJSON,
   objectToJSON,
   setDescription as setDescription$,
@@ -116,7 +116,7 @@ export const make = <S extends Type.Obj.Any>(
   // Filter undefined values.
   const filterUndefined = Object.fromEntries(Object.entries(props).filter(([_, v]) => v !== undefined));
 
-  return createLiveObject<Schema.Schema.Type<S>>(schema, filterUndefined as any, {
+  return makeObject<Schema.Schema.Type<S>>(schema, filterUndefined as any, {
     ...defaultMeta,
     ...meta,
   });

@@ -81,7 +81,7 @@ export interface RefFn {
   /**
    * @returns True if the object is a reference.
    */
-  isRef: (obj: any) => obj is Ref<any>;
+  isRef: (obj: unknown) => obj is Ref<any>;
 
   /**
    * @returns True if the reference points to the given object id.
@@ -101,6 +101,7 @@ export interface RefFn {
   /**
    * Constructs a reference that points to the given object.
    */
+  // TODO(burdon): Narrow to Obj.Any?
   make: <T extends WithId>(object: T) => Ref<T>;
 
   /**

@@ -8,8 +8,6 @@ import type * as Obj from './Obj';
 export type Ref<T> = Ref$<T>;
 export type Any = Ref$<Obj.Any>;
 
-export const Ref = Ref$;
-
 export const Array = RefArray;
 
 /**
