@@ -33,27 +33,9 @@ import { type Hypergraph } from '../hypergraph';
 import { Filter, Query } from '../query';
 
 import { EchoSchemaRegistry } from './echo-schema-registry';
-import type { ObjectMigration } from './object-migration';
+import { type ObjectMigration } from './object-migration';
 
-export type GetObjectByIdOptions = {
-  deleted?: boolean;
-};
-
-export type AddOptions = {
-  /**
-   * Where to place the object in the Automerge document tree.
-   * Root document is always loaded with the space.
-   * Linked documents are loaded lazily.
-   * Placing large number of objects in the root document may slow down the initial load.
-   *
-   * @default 'linked-doc'
-   */
-  placeIn?: Database.ObjectPlacement;
-};
-
-/**
- * Database API.
- */
+// TODO(burdon): Remove and progressively push methods to Database.Database.
 export interface EchoDatabase extends Database.Database {
   get graph(): Hypergraph;
   get schemaRegistry(): EchoSchemaRegistry;
@@ -67,36 +49,7 @@ export interface EchoDatabase extends Database.Database {
   /**
    * @deprecated Use `ref` instead.
    */
-  getObjectById<T extends BaseObject = any>(id: string, opts?: GetObjectByIdOptions): Live<T> | undefined;
-
-  /**
-   * Creates a reference to an existing object in the database.
-   *
-   * NOTE: The reference may be dangling if the object is not present in the database.
-   *
-   * ## Difference from `Ref.fromDXN`
-   *
-   * `Ref.fromDXN(dxn)` returns an unhydrated reference. The `.load` and `.target` APIs will not work.
-   * `db.ref(dxn)` is preferable in cases with access to the database.
-   */
-  // ref<T extends BaseObject = any>(dxn: DXN): Ref.Ref<T>;
-
-  /**
-   * Query objects.
-   */
-  // query: Database.QueryFn;
-
-  /**
-   * Adds object to the database.
-   */
-  // TODO(dmaretskyi): Lock to Obj.Any | Relation.Any.
-  // add<T extends BaseObject>(obj: Live<T>, opts?: AddOptions): Live<T & HasId>;
-
-  /**
-   * Removes object from the database.
-   */
-  // TODO(dmaretskyi): Lock to Obj.Any | Relation.Any.
-  // remove<T extends BaseObject & HasId>(obj: T): void;
+  getObjectById<T extends BaseObject = any>(id: string, opts?: Database.GetObjectByIdOptions): Live<T> | undefined;
 
   /**
    * Wait for all pending changes to be saved to disk.
@@ -317,7 +270,7 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
    * Add reactive object.
    */
   // TODO(dmaretskyi): Lock to Obj.Any | Relation.Any.
-  add<T extends BaseObject>(obj: T, opts?: AddOptions): Live<T & HasId> {
+  add<T extends BaseObject>(obj: T, opts?: Database.AddOptions): Live<T & HasId> {
     if (!isEchoObject(obj)) {
       const schema = getSchema(obj);
       if (schema != null) {

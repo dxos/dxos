@@ -3,7 +3,7 @@
 //
 
 import type { MulticastObservable } from '@dxos/async';
-import type { Queryable } from '@dxos/echo-db';
+import type { Database } from '@dxos/echo';
 import type { PublicKey, SpaceId } from '@dxos/keys';
 import type { Invitation, SpaceArchive } from '@dxos/protocols/proto/dxos/client/services';
 
@@ -15,7 +15,7 @@ import type { PropertiesTypeProps } from './types';
  * Public database API.
  */
 // TODO(wittjosiah): Rename Database (not product name).
-export interface Echo extends MulticastObservable<Space[]>, Queryable {
+export interface Echo extends MulticastObservable<Space[]>, Database.Queryable {
   /**
    * Observable which indicates when the default space is available.
    */

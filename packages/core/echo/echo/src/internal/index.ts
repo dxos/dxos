@@ -16,8 +16,9 @@ export {
   create,
   createQueueDXN,
   isDeleted,
-  objectToJSON,
   objectFromJSON,
+  objectToJSON,
   setRefResolverOnData,
   SchemaValidator,
+  TypedObject,
 } from './object';

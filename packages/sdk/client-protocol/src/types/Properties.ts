@@ -22,7 +22,9 @@ export class PropertiesType extends TypedObject({
     icon: Schema.optional(Schema.String),
     invocationTraceQueue: Schema.optional(Type.Ref(Queue)),
   },
-  { record: true },
+  {
+    record: true,
+  },
 ) {}
 
 // TODO(burdon): Remove? Use PropertiesType instead?

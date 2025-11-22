@@ -9,9 +9,8 @@ import * as Option from 'effect/Option';
 import type * as Schema from 'effect/Schema';
 import type * as Types from 'effect/Types';
 
-import { type Live } from '@dxos/live-object';
 import {
-  Database,
+  type Database,
   type Filter,
   Obj,
   ObjectNotFoundError,
@@ -22,7 +21,8 @@ import {
 } from '@dxos/echo';
 import { promiseWithCauseCapture } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
-import type { DXN } from '@dxos/keys';
+import { type DXN } from '@dxos/keys';
+import { type Live } from '@dxos/live-object';
 
 import type { FlushOptions } from './core-db';
 import type {
@@ -31,7 +31,6 @@ import type {
   SchemaRegistryPreparedQuery,
   SchemaRegistryQuery,
 } from './proxy-db';
-import type { QueryResult } from './query';
 
 export class DatabaseService extends Context.Tag('@dxos/functions/DatabaseService')<
   DatabaseService,

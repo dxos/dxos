@@ -4,7 +4,7 @@
 
 export * from './errors';
 
-// TODO(burdon): Separate package?
+// TODO(burdon): Separate namesapces?
 export * from './query';
 
 export * as Database from './Database';
