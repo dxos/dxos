@@ -24,6 +24,8 @@ describe('proxy', () => {
   });
 });
 
+// TODO(burdon): Create new tests.
+
 /*
 const TEST_OBJECT: TestSchema.TestSchema = {
   string: 'foo',
