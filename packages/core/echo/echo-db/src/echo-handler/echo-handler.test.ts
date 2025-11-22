@@ -16,7 +16,6 @@ import {
   RelationTargetId,
   createQueueDXN,
   getMeta,
-  getSchema,
   getType,
   isDeleted,
 } from '@dxos/echo/internal';
@@ -128,7 +127,7 @@ describe('without database', () => {
 
   test('get schema on object', () => {
     const obj = createObject(Obj.make(TestSchema, { nested: { name: 'foo', arr: [] } }));
-    const schema = getSchema(obj);
+    const schema = Obj.getSchema(obj);
     expect(schema).to.exist;
     expect(prepareAstForCompare(schema!.ast)).to.deep.eq(prepareAstForCompare(TestSchema.ast));
   });
@@ -137,7 +136,7 @@ describe('without database', () => {
   test.skip('get schema on nested object', () => {
     const obj = createObject(Obj.make(TestSchema, { nested: { name: 'foo', arr: [] } }));
     const NestedSchema = TestingDeprecated.TestSchema.pipe(Schema.pluck('nested'), Schema.typeSchema);
-    expect(prepareAstForCompare(getSchema(obj.nested)!.ast)).to.deep.eq(prepareAstForCompare(NestedSchema.ast));
+    expect(prepareAstForCompare(Obj.getSchema(obj.nested)!.ast)).to.deep.eq(prepareAstForCompare(NestedSchema.ast));
   });
 
   test('create', () => {
@@ -191,7 +190,7 @@ describe('Reactive Object with ECHO database', () => {
     const returnObj = db.add(obj);
     expect(returnObj.id).to.be.a('string');
     expect(returnObj.string).to.eq('foo');
-    expect(getSchema(returnObj)).to.eq(TestingDeprecated.TestType);
+    expect(Obj.getSchema(returnObj)).to.eq(TestingDeprecated.TestType);
     expect(returnObj === obj).to.be.true;
   });
 
