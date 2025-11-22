@@ -18,22 +18,6 @@ import { EntityKind } from './entity';
 import { createAnnotationHelper } from './util';
 
 /**
- * If property is optional returns the nested property, otherwise returns the property.
- */
-// TODO(wittjosiah): Is there a way to do this as a generic?
-export const unwrapOptional = (property: SchemaAST.PropertySignature) => {
-  if (!property.isOptional || !SchemaAST.isUnion(property.type)) {
-    return property;
-  }
-
-  return property.type.types[0];
-};
-
-//
-// Type
-//
-
-/**
  * ECHO identifier (for a stored schema).
  * Must be a `dxn:echo:` URI.
  */
@@ -158,7 +142,6 @@ export const getReferenceAnnotation = (schema: Schema.Schema.AnyNoContext) =>
  * SchemaMeta.
  */
 export const SchemaMetaSymbol = Symbol.for('@dxos/schema/SchemaMeta');
-
 export type SchemaMeta = TypeMeta & { id: string };
 
 /**
@@ -320,4 +303,16 @@ export const getSchemaDXN = (schema: Schema.Schema.All): DXN | undefined => {
   }
 
   return DXN.fromTypenameAndVersion(objectAnnotation.typename, objectAnnotation.version);
+};
+
+/**
+ * If property is optional returns the nested property, otherwise returns the property.
+ */
+// TODO(wittjosiah): Is there a way to do this as a generic?
+export const unwrapOptional = (property: SchemaAST.PropertySignature) => {
+  if (!property.isOptional || !SchemaAST.isUnion(property.type)) {
+    return property;
+  }
+
+  return property.type.types[0];
 };
