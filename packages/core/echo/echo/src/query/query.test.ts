@@ -24,7 +24,7 @@ describe('query api', () => {
 
       log('query', { ast: getAllPeople.ast });
       Schema.validateSync(QueryAST.Query)(getAllPeople.ast);
-      console.log('getAllPeople', JSON.stringify(getAllPeople.ast, null, 2));
+      log('getAllPeople', { ast: getAllPeople.ast });
     });
 
     test('get all people ordered by name', () => {
@@ -32,7 +32,7 @@ describe('query api', () => {
 
       log('query', { ast: getAllPeopleOrderedByName.ast });
       Schema.validateSync(QueryAST.Query)(getAllPeopleOrderedByName.ast);
-      console.log('getAllPeopleOrderedByName', JSON.stringify(getAllPeopleOrderedByName.ast, null, 2));
+      log('getAllPeopleOrderedByName', { ast: getAllPeopleOrderedByName.ast });
     });
 
     test('get all people named Fred', () => {
@@ -40,7 +40,7 @@ describe('query api', () => {
 
       log('query', { ast: PeopleNamedFred.ast });
       Schema.validateSync(QueryAST.Query)(PeopleNamedFred.ast);
-      console.log('PeopleNamedFred', JSON.stringify(PeopleNamedFred.ast, null, 2));
+      log('PeopleNamedFred', { ast: PeopleNamedFred.ast });
     });
 
     test('get all people with field of "label" set to "Research"', () => {
@@ -50,7 +50,7 @@ describe('query api', () => {
 
       log('query', { ast: PeopleWithFieldLabelSetToResearch.ast });
       Schema.validateSync(QueryAST.Query)(PeopleWithFieldLabelSetToResearch.ast);
-      console.log('PeopleWithFieldLabelSetToResearch', JSON.stringify(PeopleWithFieldLabelSetToResearch.ast, null, 2));
+      log('PeopleWithFieldLabelSetToResearch', { ast: PeopleWithFieldLabelSetToResearch.ast });
     });
 
     test('get all orgs with property "label" set to "Research"', () => {
@@ -60,10 +60,7 @@ describe('query api', () => {
 
       log('query', { ast: OrgsWithPropertyLabelSetToResearch.ast });
       Schema.validateSync(QueryAST.Query)(OrgsWithPropertyLabelSetToResearch.ast);
-      console.log(
-        'OrgsWithPropertyLabelSetToResearch',
-        JSON.stringify(OrgsWithPropertyLabelSetToResearch.ast, null, 2),
-      );
+      log('OrgsWithPropertyLabelSetToResearch', { ast: OrgsWithPropertyLabelSetToResearch.ast });
     });
 
     test('get all orgs Fred worked for since 2020', () => {
@@ -74,10 +71,7 @@ describe('query api', () => {
 
       log('query', { ast: OrganizationsFredWorkedForSince2020.ast });
       Schema.validateSync(QueryAST.Query)(OrganizationsFredWorkedForSince2020.ast);
-      console.log(
-        'OrganizationsFredWorkedForSince2020',
-        JSON.stringify(OrganizationsFredWorkedForSince2020.ast, null, 2),
-      );
+      log('OrganizationsFredWorkedForSince2020', { ast: OrganizationsFredWorkedForSince2020.ast });
     });
 
     test('get all tasks for Fred', () => {
@@ -86,7 +80,7 @@ describe('query api', () => {
 
       log('query', { ast: TasksForFred.ast });
       Schema.validateSync(QueryAST.Query)(TasksForFred.ast);
-      console.log('TasksForFred', JSON.stringify(TasksForFred.ast, null, 2));
+      log('TasksForFred', { ast: TasksForFred.ast });
     });
 
     test('get all tasks for employees of Cyberdyne', () => {
@@ -97,7 +91,7 @@ describe('query api', () => {
 
       log('query', { ast: TasksForEmployeesOfCyberdyne.ast });
       Schema.validateSync(QueryAST.Query)(TasksForEmployeesOfCyberdyne.ast);
-      console.log('TasksForEmployeesOfCyberdyne', JSON.stringify(TasksForEmployeesOfCyberdyne.ast, null, 2));
+      log('TasksForEmployeesOfCyberdyne', { ast: TasksForEmployeesOfCyberdyne.ast });
     });
 
     test('get all people or orgs', () => {
@@ -108,7 +102,7 @@ describe('query api', () => {
 
       log('query', { ast: PeopleOrOrganizations.ast });
       Schema.validateSync(QueryAST.Query)(PeopleOrOrganizations.ast);
-      console.log('PeopleOrOrganizations', JSON.stringify(PeopleOrOrganizations.ast, null, 2));
+      log('PeopleOrOrganizations', { ast: PeopleOrOrganizations.ast });
     });
 
     test('get all people not in orgs', () => {
@@ -119,7 +113,7 @@ describe('query api', () => {
 
       log('query', { ast: PeopleNotInOrganizations.ast });
       Schema.validateSync(QueryAST.Query)(PeopleNotInOrganizations.ast);
-      console.log('PeopleNotInOrganizations', JSON.stringify(PeopleNotInOrganizations.ast, null, 2));
+      log('PeopleNotInOrganizations', { ast: PeopleNotInOrganizations.ast });
     });
 
     test('get assignees of all tasks created after 2020', () => {
@@ -129,10 +123,7 @@ describe('query api', () => {
 
       log('query', { ast: AssigneesOfAllTasksCreatedAfter2020.ast });
       Schema.validateSync(QueryAST.Query)(AssigneesOfAllTasksCreatedAfter2020.ast);
-      console.log(
-        'AssigneesOfAllTasksCreatedAfter2020',
-        JSON.stringify(AssigneesOfAllTasksCreatedAfter2020.ast, null, 2),
-      );
+      log('AssigneesOfAllTasksCreatedAfter2020', { ast: AssigneesOfAllTasksCreatedAfter2020.ast });
     });
 
     test('untyped full-text search', () => {
@@ -194,7 +185,7 @@ describe('query api', () => {
         type: 'object',
         typename: 'dxn:type:dxos.org/type/Task:0.1.0',
       });
-      console.log('tasksByFred', JSON.stringify(tasksByFred.ast, null, 2));
+      log('tasksByFred', { ast: tasksByFred.ast });
     });
 
     test('select orgs and people', () => {

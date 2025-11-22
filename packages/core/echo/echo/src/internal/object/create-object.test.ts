@@ -105,8 +105,6 @@ describe('create (static version)', () => {
       email: 'bot@example.com',
     });
 
-    // console.log(contact);
-
     const text = inspect(contact);
     expect(text).toContain('Bot');
     expect(text).toContain('bot@example.com');
