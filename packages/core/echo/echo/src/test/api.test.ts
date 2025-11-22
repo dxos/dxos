@@ -11,6 +11,7 @@ import { type Live } from '@dxos/live-object';
 
 import { Key, Obj, Ref, Relation, Type } from '../index';
 
+// TODO(burdon): Factor out standard test types.
 namespace Testing {
   export const Organization = Schema.Struct({
     id: Key.ObjectId,

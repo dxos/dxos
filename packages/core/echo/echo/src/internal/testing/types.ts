@@ -141,5 +141,6 @@ export namespace Testing {
       target: Person,
     }),
   );
+
   export interface HasManager extends Schema.Schema.Type<typeof HasManager> {}
 }

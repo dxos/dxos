@@ -42,7 +42,7 @@ export * from './types';
 //  - Datatbase.query() options?
 
 //  2. Audit usage from @dxos/echo-db
-//  3. Reconcile THREE (FFS) variants of testing data.
+//  3. Reconcile AT LEAST FOUR DIFFERENT variants of testing data (FFS!)
 
 export { createLiveObject } from './proxy';
 export { type BaseSchema, EchoSchema, StoredSchema, ImmutableSchema, RuntimeSchemaRegistry, isMutable } from './schema';

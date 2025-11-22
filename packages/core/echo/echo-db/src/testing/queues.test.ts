@@ -119,22 +119,19 @@ describe('queues', (ctx) => {
     const queue = queues.create();
 
     {
-      const obj = Obj.make(Testing.Person, {
-        name: 'john',
-      });
-      const obj2 = Obj.make(Testing.Person, {
-        name: 'jane',
-      });
+      const obj1 = Obj.make(Testing.Person, { name: 'john' });
+      const obj2 = Obj.make(Testing.Person, { name: 'jane' });
       const relation = Relation.make(Testing.WorksFor, {
-        [Relation.Source]: obj,
+        [Relation.Source]: obj1,
         [Relation.Target]: obj2,
       });
-      await queue.append([obj, obj2, relation]);
+
+      await queue.append([obj1, obj2, relation]);
     }
 
     {
-      const [obj, obj2, relation] = await queue.queryObjects();
-      expect((obj as Testing.Person).name).toEqual('john');
+      const [obj1, obj2, relation] = await queue.queryObjects();
+      expect((obj1 as Testing.Person).name).toEqual('john');
       expect((obj2 as Testing.Person).name).toEqual('jane');
       expect(Relation.getSource(relation as Testing.WorksFor).name).toEqual('john');
       expect(Relation.getTarget(relation as Testing.WorksFor).name).toEqual('jane');

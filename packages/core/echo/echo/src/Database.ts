@@ -8,11 +8,10 @@ import { type DXN, type PublicKey, type SpaceId } from '@dxos/keys';
 import { type Live } from '@dxos/live-object';
 import { type QueryOptions as QueryOptionsProto } from '@dxos/protocols/proto/dxos/echo/filter';
 
-import { type HasId } from './internal';
+import { type AnyProperties, type HasId } from './internal';
 import type * as Obj from './Obj';
 import { type Filter, type Query } from './query';
 import type * as Ref from './Ref';
-import type * as Relation from './Relation';
 
 export type QueryResultEntry<T extends Obj.Any = Obj.Any> = {
   id: string;
@@ -175,11 +174,13 @@ export interface Database extends Queryable {
   /**
    * Adds object to the database.
    */
-  add<T extends Obj.Any | Relation.Any>(obj: Live<T>, opts?: AddOptions): Live<T & HasId>;
+  // TODO(burdon): Restrict to Entity.Any (Obj.Any | Relation.Any).
+  add<T extends AnyProperties>(obj: Live<T>, opts?: AddOptions): Live<T & HasId>;
 
   /**
    * Removes object from the database.
    */
+  // TODO(burdon): Restrict to Entity.Any (Obj.Any | Relation.Any).
   // TODO(burdon): Return true if removed.
-  remove<T extends Obj.Any | Relation.Any>(obj: T): void;
+  remove<T extends AnyProperties>(obj: T): void;
 }
