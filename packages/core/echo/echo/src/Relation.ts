@@ -31,6 +31,11 @@ import * as Obj from './Obj';
 import * as Type from './Type';
 
 /**
+ * Export common entity defs.
+ */
+export * from './Entity';
+
+/**
  * NOTE: Don't export: Relation.Relation and Relation.Any form the public API.
  */
 interface BaseRelation<Source, Target>
@@ -65,6 +70,7 @@ export type Target = typeof Target;
 
 type MakeProps<T extends Any> = {
   id?: ObjectId;
+  [MetaId]?: ObjectMeta;
   [Source]: T[Source];
   [Target]: T[Target];
 } & Type.Properties<T>;
