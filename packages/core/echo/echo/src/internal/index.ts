@@ -15,7 +15,7 @@ export * from './types';
 //  - [x] Remove import "." and ".."! (MUST CREATE LINT RULE).
 //  - [x] Unify FOUR different nests of test schema.
 //  - [x] Remove @deprecated from internal methods and mark @internal (e.g., getSchemaDXN).
-//      (Internal methods should not use the Obj/Type APIs.)
+//    - NOTE: Internal methods should not use the import * from Obj/Type APIs.
 //  - [x] import ObjectId => @dxos/keys
 //  - [x] import LabelAnnotation => Annotation.LabelAnnotation
 //  - [x] import Expando => Type.Expando
@@ -24,25 +24,24 @@ export * from './types';
 //  - [x] Rename {EchoObject, EchoRelation} => {EchoObjecSchema, EchoRelationSchema}
 //  - [x] Rename BaseObject => AnyProperties
 //  - [x] Created Entity.Any (=> AnyEchoObject).
-
+//  - [x] TypeFormat => TypeFormat
+//
 //  - [ ] Rename AnyEchoObject => AnyEntity?
 //  - [ ] Remove echo-db/AnyLiveObject<T> => Obj.Obj<T>
 //  - [ ] Promote parts of src/internal/ref to Ref.ts
-
+//
 //  - [ ] Remove WithId => AnyEchoObject
 //  - [ ] Remove WithMeta => AnyEchoObject
-
+//
 //  - [ ] HasId
 //  - [ ] BaseSchema
 //  - [ ] QueryFn, QueryOptions => Database
 //  - [ ] JsonSchema defs
-//  - [ ] TypeFormat => TypeFormat
 //  - [ ] JsonPath, JsonProp, getValue, setValue => Json.Path?
-//  - [ ] Standardize '@automerge/automerge' imports.
-
-//  - Datatbase.query() options?
-
+//  - [ ] Standardize '@automerge/automerge' imports (A vs. next).
+//
 //  2. Audit usage from @dxos/echo-db
+//  - [ ] Datatbase.query() options?
 
 export { makeObject } from './proxy';
 export { type BaseSchema, EchoSchema, StoredSchema, ImmutableSchema, RuntimeSchemaRegistry, isMutable } from './schema';
