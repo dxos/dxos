@@ -7,10 +7,10 @@ import { type LintSource, linter } from '@codemirror/lint';
 import { type Extension } from '@codemirror/state';
 import Ajv, { type ValidateFunction } from 'ajv';
 
-import { type JsonSchemaType } from '@dxos/echo/internal';
+import { type JsonSchema } from '@dxos/echo';
 
 export type JsonExtensionsOptions = {
-  schema?: JsonSchemaType;
+  schema?: JsonSchema.JsonSchema;
 };
 
 export const createJsonExtensions = ({ schema }: JsonExtensionsOptions = {}): Extension => {

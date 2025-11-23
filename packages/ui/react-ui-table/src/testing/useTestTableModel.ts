@@ -4,7 +4,8 @@
 
 import { useCallback, useMemo, useRef } from 'react';
 
-import { isMutable, toJsonSchema } from '@dxos/echo/internal';
+import { JsonSchema } from '@dxos/echo';
+import { isMutable } from '@dxos/echo/internal';
 import { useGlobalFilteredObjects } from '@dxos/plugin-search';
 import { faker } from '@dxos/random';
 import { useClient } from '@dxos/react-client';
@@ -30,11 +31,11 @@ export const useTestTableModel = () => {
   const view = useMemo(() => views.at(0), [views]);
   const typename = view?.query ? getTypenameFromQuery(view.query.ast) : undefined;
   const schema = useSchema(client, space, typename);
-  const jsonSchema = useMemo(() => (schema ? toJsonSchema(schema) : undefined), [schema]);
+  const jsonSchema = useMemo(() => (schema ? JsonSchema.toJsonSchema(schema) : undefined), [schema]);
 
   const projection = useMemo(() => {
     if (schema && view?.projection) {
-      const projection = new ProjectionModel(toJsonSchema(schema), view.projection);
+      const projection = new ProjectionModel(JsonSchema.toJsonSchema(schema), view.projection);
       projection.normalizeView();
       return projection;
     }

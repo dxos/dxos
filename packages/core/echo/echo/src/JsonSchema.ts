@@ -2,14 +2,15 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type JsonSchemaType, toJsonSchema } from './internal/json-schema';
+import type * as Schema from 'effect/Schema';
+
+import { JsonSchemaType } from './internal';
+
+export { toEffectSchema, toJsonSchema } from './internal';
 
 /**
  * Serializable JsonSchema type definition.
  */
 export type JsonSchema = JsonSchemaType;
 
-/**
- * Create a JsonSchema object from an Effect Schema object.
- */
-export const make: typeof toJsonSchema = toJsonSchema;
+export const JsonSchema: Schema.Schema<JsonSchemaType> = JsonSchemaType;

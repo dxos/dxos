@@ -8,8 +8,8 @@ import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 import React, { forwardRef, useCallback, useImperativeHandle, useMemo, useState } from 'react';
 
-import { QueryAST } from '@dxos/echo';
-import { EchoSchema, Format, type JsonProp, isMutable, toJsonSchema } from '@dxos/echo/internal';
+import { JsonSchema, QueryAST } from '@dxos/echo';
+import { EchoSchema, Format, type JsonProp, isMutable } from '@dxos/echo/internal';
 import { Filter, Query, type SchemaRegistry } from '@dxos/echo-db';
 import { invariant } from '@dxos/invariant';
 import { Callout, IconButton, Input, type ThemedClassName, useTranslation } from '@dxos/react-ui';
@@ -72,7 +72,7 @@ export const ViewEditor = forwardRef<ProjectionModel, ViewEditorProps>(
     const { t } = useTranslation(translationKey);
     const projectionModel = useMemo(() => {
       // Use reactive and mutable version of json schema when schema is mutable.
-      const jsonSchema = schema instanceof EchoSchema ? schema.jsonSchema : toJsonSchema(schema);
+      const jsonSchema = schema instanceof EchoSchema ? schema.jsonSchema : JsonSchema.toJsonSchema(schema);
       return new ProjectionModel(jsonSchema, view.projection);
     }, [schema, JSON.stringify(view.projection)]);
     useImperativeHandle(forwardedRef, () => projectionModel, [projectionModel]);

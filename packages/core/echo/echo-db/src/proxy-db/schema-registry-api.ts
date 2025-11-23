@@ -6,7 +6,8 @@ import type * as Schema from 'effect/Schema';
 import type * as Types from 'effect/Types';
 
 import { type CleanupFn } from '@dxos/async';
-import { type EchoSchema, type JsonSchemaType } from '@dxos/echo/internal';
+import { type JsonSchema } from '@dxos/echo';
+import { type EchoSchema } from '@dxos/echo/internal';
 import { type ObjectId } from '@dxos/keys';
 
 export type SchemaSubscriptionCallback = (schema: EchoSchema[]) => void;
@@ -137,7 +138,7 @@ export type RegisterSchemaInput =
   | {
       typename: string;
       version: string;
-      jsonSchema: JsonSchemaType;
+      jsonSchema: JsonSchema.JsonSchema;
       /**
        * Display name of the schema.
        */

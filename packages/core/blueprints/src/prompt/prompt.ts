@@ -4,8 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Annotation, Obj, type Ref, Type } from '@dxos/echo';
-import { JsonSchemaType, toJsonSchema } from '@dxos/echo/internal';
+import { Annotation, JsonSchema, Obj, type Ref, Type } from '@dxos/echo';
 
 import { Blueprint } from '../blueprint';
 import * as Template from '../template';
@@ -31,12 +30,12 @@ const Prompt_ = Schema.Struct({
   /**
    * Input schema of the prompt.
    */
-  input: JsonSchemaType.pipe(Annotation.FormAnnotation.set(false)),
+  input: JsonSchema.JsonSchema.pipe(Annotation.FormAnnotation.set(false)),
 
   /**
    * Output schema of the prompt.
    */
-  output: JsonSchemaType.pipe(Annotation.FormAnnotation.set(false)),
+  output: JsonSchema.JsonSchema.pipe(Annotation.FormAnnotation.set(false)),
 
   /**
    * Natural language instructions for the prompt.
@@ -76,8 +75,8 @@ export const make = (params: {
   Obj.make(Prompt, {
     name: params.name,
     description: params.description,
-    input: toJsonSchema(params.input ?? Schema.Void),
-    output: toJsonSchema(params.output ?? Schema.Void),
+    input: JsonSchema.toJsonSchema(params.input ?? Schema.Void),
+    output: JsonSchema.toJsonSchema(params.output ?? Schema.Void),
     instructions: Template.make({ source: params.instructions }),
     blueprints: params.blueprints ?? [],
     context: params.context ?? [],

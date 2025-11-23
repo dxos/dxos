@@ -5,8 +5,8 @@
 import * as Match from 'effect/Match';
 import * as Schema from 'effect/Schema';
 
-import { Annotation, Obj, Type } from '@dxos/echo';
-import { JsonPath, type JsonSchemaType, toEffectSchema } from '@dxos/echo/internal';
+import { Annotation, JsonSchema, Obj, Type } from '@dxos/echo';
+import { JsonPath } from '@dxos/echo/internal';
 import { type SimpleType } from '@dxos/effect';
 import { View, getSchemaProperties } from '@dxos/schema';
 
@@ -38,15 +38,15 @@ export const makeView = async ({
   sizes,
   ...props
 }: MakeViewProps): Promise<{
-  jsonSchema: JsonSchemaType;
+  jsonSchema: JsonSchema.JsonSchema;
   view: View.View;
-  schema: ReturnType<typeof toEffectSchema>;
+  schema: ReturnType<typeof JsonSchema.toEffectSchema>;
 }> => {
   const table = Obj.make(Table, { sizes: {} });
   const { jsonSchema, view } = await View.makeFromSpace({ ...props, presentation: table });
 
   // Preset sizes.
-  const schema = toEffectSchema(jsonSchema);
+  const schema = JsonSchema.toEffectSchema(jsonSchema);
   const shouldIncludeId = props.fields?.find((field) => field === 'id') !== undefined;
   const properties = getSchemaProperties(schema.ast, {}, shouldIncludeId);
   for (const property of properties) {

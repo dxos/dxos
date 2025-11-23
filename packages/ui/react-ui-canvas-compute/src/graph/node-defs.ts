@@ -12,7 +12,7 @@ import {
   registry,
 } from '@dxos/conductor';
 import { raise } from '@dxos/debug';
-import { toJsonSchema } from '@dxos/echo/internal';
+import { JsonSchema } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { ObjectId } from '@dxos/keys';
 
@@ -69,7 +69,7 @@ const nodeFactory: Record<NodeType | 'trigger', (shape: ComputeShape) => Compute
   ['switch' as const]: () => createNode('switch'),
   ['template' as const]: (shape) => {
     const node = createNode('template', { valueType: (shape as TemplateShape).valueType, value: shape.text });
-    node.inputSchema = toJsonSchema(getTemplateInputSchema(node));
+    node.inputSchema = JsonSchema.toJsonSchema(getTemplateInputSchema(node));
     return node;
   },
   ['text' as const]: () => createNode('text'),

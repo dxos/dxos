@@ -4,8 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Annotation, Obj, Type } from '@dxos/echo';
-import { JsonSchemaType } from '@dxos/echo/internal';
+import { Annotation, type JsonSchema, Obj, Type } from '@dxos/echo';
 
 import { Script } from './Script';
 
@@ -39,8 +38,8 @@ export const Function = Schema.Struct({
   // TODO(burdon): Don't ref ScriptType directly (core).
   source: Schema.optional(Type.Ref(Script)),
 
-  inputSchema: Schema.optional(JsonSchemaType),
-  outputSchema: Schema.optional(JsonSchemaType),
+  inputSchema: Schema.optional(JsonSchema),
+  outputSchema: Schema.optional(JsonSchema),
 
   /**
    * List of required services.

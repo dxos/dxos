@@ -6,7 +6,7 @@ import * as Schema from 'effect/Schema';
 import React, { useRef } from 'react';
 
 import { ComputeValueType, TemplateOutput, VoidInput, getTemplateInputSchema } from '@dxos/conductor';
-import { toJsonSchema } from '@dxos/echo/internal';
+import { JsonSchema } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import {
   type ShapeComponentProps,
@@ -51,7 +51,7 @@ const TextInputComponent = ({ shape, title, ...props }: TextInputComponentProps)
       const schema = getTemplateInputSchema(node);
 
       node.value = value;
-      node.inputSchema = toJsonSchema(schema);
+      node.inputSchema = JsonSchema.toJsonSchema(schema);
     }
   };
 
@@ -59,7 +59,7 @@ const TextInputComponent = ({ shape, title, ...props }: TextInputComponentProps)
     invariant(Schema.is(ComputeValueType)(newType), 'Invalid type');
 
     node.valueType = newType;
-    node.inputSchema = toJsonSchema(getTemplateInputSchema(node));
+    node.inputSchema = JsonSchema.toJsonSchema(getTemplateInputSchema(node));
   };
 
   return (

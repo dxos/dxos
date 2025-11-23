@@ -7,8 +7,7 @@ import type * as Schema from 'effect/Schema';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { expect, userEvent, within } from 'storybook/test';
 
-import { Obj, Type } from '@dxos/echo';
-import { type JsonSchemaType } from '@dxos/echo/internal';
+import { JsonSchema, Obj, Type } from '@dxos/echo';
 import { type DxGrid } from '@dxos/lit-grid';
 import '@dxos/lit-ui/dx-tag-picker.pcss';
 import { faker } from '@dxos/random';
@@ -39,7 +38,7 @@ const useTestModel = <S extends Type.Obj.Any>(schema: S, count: number) => {
   const client = useClient();
   const { space } = useClientProvider();
   const [view, setView] = useState<View.View>();
-  const [jsonSchema, setJsonSchema] = useState<JsonSchemaType>();
+  const [jsonSchema, setJsonSchema] = useState<JsonSchema.JsonSchema>();
 
   const features = useMemo<TableFeatures>(
     () => ({ schemaEditable: false, dataEditable: true, selection: { enabled: false } }),

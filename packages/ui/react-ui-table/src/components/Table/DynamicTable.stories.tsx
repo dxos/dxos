@@ -5,8 +5,8 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useMemo, useState } from 'react';
 
-import { Obj } from '@dxos/echo';
-import { FormatEnum, type JsonSchemaType } from '@dxos/echo/internal';
+import { JsonSchema, Obj } from '@dxos/echo';
+import { FormatEnum } from '@dxos/echo/internal';
 import { faker } from '@dxos/random';
 import { useClient } from '@dxos/react-client';
 import { Filter, useQuery, useSchema } from '@dxos/react-client/echo';
@@ -101,7 +101,7 @@ export const WithClickToSelect: StoryObj = {
 
 export const WithJsonSchema: StoryObj = {
   render: () => {
-    const schema = useMemo<JsonSchemaType>(
+    const schema = useMemo<JsonSchema.JsonSchema>(
       () => ({
         type: 'object',
         properties: {

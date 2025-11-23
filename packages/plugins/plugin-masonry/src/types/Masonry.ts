@@ -4,8 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Annotation, Obj, Type } from '@dxos/echo';
-import { type JsonSchemaType, toEffectSchema } from '@dxos/echo/internal';
+import { Annotation, JsonSchema, Obj, Type } from '@dxos/echo';
 import { View } from '@dxos/schema';
 
 export const Masonry = Schema.Struct({
@@ -36,15 +35,15 @@ export type MakeViewProps = Omit<View.MakeFromSpaceProps, 'presentation'>;
 export const makeView = async ({
   ...props
 }: MakeViewProps): Promise<{
-  jsonSchema: JsonSchemaType;
+  jsonSchema: JsonSchema.JsonSchema;
   view: View.View;
-  schema: ReturnType<typeof toEffectSchema>;
+  schema: ReturnType<typeof JsonSchema.toEffectSchema>;
 }> => {
   const masonry = Obj.make(Masonry, {});
   const { jsonSchema, view } = await View.makeFromSpace({ ...props, presentation: masonry });
 
   // Preset sizes.
-  const schema = toEffectSchema(jsonSchema);
+  const schema = JsonSchema.toEffectSchema(jsonSchema);
 
   return { jsonSchema, schema, view };
 };

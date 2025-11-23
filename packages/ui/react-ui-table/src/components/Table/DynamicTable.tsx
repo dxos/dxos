@@ -5,7 +5,7 @@
 import type * as Schema from 'effect/Schema';
 import React, { useCallback, useMemo, useRef } from 'react';
 
-import { type JsonSchemaType } from '@dxos/echo/internal';
+import { type JsonSchema } from '@dxos/echo';
 import { type ThemedClassName, useDefaultValue } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
@@ -19,7 +19,7 @@ type DynamicTableProps = ThemedClassName<{
   name?: string; // TODO(burdon): Remove?
   rows: any[];
   properties?: TablePropertyDefinition[];
-  jsonSchema?: JsonSchemaType;
+  jsonSchema?: JsonSchema.JsonSchema;
   schema?: Schema.Schema.AnyNoContext;
   features?: Partial<TableFeatures>;
   rowActions?: TableRowAction[];

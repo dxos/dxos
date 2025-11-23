@@ -10,7 +10,7 @@ export * from './ref';
 export * from './types';
 
 // TODO(burdon): Restrict access to internal.
-//  1. Remove from outisde of echo-db; promote toe echo/db types; serach: from '@dxos/echo/internal';
+//  1. Remove from outisde of @dxos/echo-db; promote toe echo/db types; serach: from '@dxos/echo/internal';
 //  - [x] completely restructure @dxos/echo src/internal
 //  - [x] Remove import "." and ".."! (MUST CREATE LINT RULE).
 //  - [x] Unify FOUR different nests of test schema.

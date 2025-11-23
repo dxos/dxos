@@ -29,10 +29,11 @@ import {
   getTypeAnnotation,
   isMutable as isMutable$,
   toEffectSchema,
+  toJsonSchema,
 } from './internal';
 import type * as Relation$ from './Relation';
 
-export { KindId, OfKind, toEffectSchema };
+export { KindId, OfKind, toEffectSchema, toJsonSchema };
 
 //
 // Kind

@@ -7,6 +7,8 @@ import * as Schema from 'effect/Schema';
 import { EntityKind, Ref, TypeAnnotationId } from '@dxos/echo/internal';
 import { ObjectId } from '@dxos/keys';
 
+// TODO(burdon): Replace with @dxos/echo/testing TestSchema.
+
 /** @deprecated */
 export const Contact = Schema.Struct({
   id: ObjectId,
