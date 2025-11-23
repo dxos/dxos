@@ -6,7 +6,8 @@ import * as Schema from 'effect/Schema';
 import React, { useCallback, useRef } from 'react';
 
 import { AnyOutput, FunctionInput } from '@dxos/conductor';
-import { Ref, getSnapshot, isInstanceOf } from '@dxos/echo/internal';
+import { Type } from '@dxos/echo';
+import { getSnapshot, isInstanceOf } from '@dxos/echo/internal';
 import { Function, Script } from '@dxos/functions';
 import { useClient } from '@dxos/react-client';
 import { Filter, parseId } from '@dxos/react-client/echo';
@@ -64,13 +65,13 @@ const TextInputComponent = ({ shape, title, ...props }: TextInputComponentProps)
 
       const {
         objects: [fn],
-      } = await space.db.query(Filter.type(Function.Function, { source: Ref.make(object) })).run();
+      } = await space.db.query(Filter.type(Function.Function, { source: Type.Ref.make(object) })).run();
       if (!fn) {
         return;
       }
 
       node.value = value;
-      node.function = Ref.make(fn);
+      node.function = Type.Ref.make(fn);
       node.inputSchema = getSnapshot(fn.inputSchema);
       node.outputSchema = getSnapshot(fn.outputSchema);
     },

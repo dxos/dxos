@@ -12,7 +12,7 @@ import { hideBin } from 'yargs/helpers';
 import { Client } from '@dxos/client';
 import { live } from '@dxos/client/echo';
 import { Obj, Type } from '@dxos/echo';
-import { Ref, TypedObject } from '@dxos/echo/internal';
+import { TypedObject } from '@dxos/echo/internal';
 import { log } from '@dxos/log';
 import { STORAGE_VERSION } from '@dxos/protocols';
 import { CreateEpochRequest } from '@dxos/protocols/proto/dxos/client/services';
@@ -120,7 +120,7 @@ const main = async () => {
     const [dynamicSchema] = await space.db.schemaRegistry.register([TestType]);
     client.addTypes([TestType]);
     const object = space.db.add(Obj.make(dynamicSchema, {}));
-    dynamicSchema.addFields({ name: Schema.String, todo: Ref(Todo) });
+    dynamicSchema.addFields({ name: Schema.String, todo: Type.Ref(Todo) });
     object.name = 'Test';
     object.todo = Obj.make(Todo, { name: 'Test todo' });
     await space.db.flush();

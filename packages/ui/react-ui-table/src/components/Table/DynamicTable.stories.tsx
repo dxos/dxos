@@ -5,7 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useMemo, useState } from 'react';
 
-import { JsonSchema, Obj } from '@dxos/echo';
+import { type JsonSchema, Obj } from '@dxos/echo';
 import { FormatEnum } from '@dxos/echo/internal';
 import { faker } from '@dxos/random';
 import { useClient } from '@dxos/react-client';

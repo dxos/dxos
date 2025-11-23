@@ -7,7 +7,7 @@ import type * as Schema from 'effect/Schema';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { expect, userEvent, within } from 'storybook/test';
 
-import { JsonSchema, Obj, Type } from '@dxos/echo';
+import { type JsonSchema, Obj, Type } from '@dxos/echo';
 import { type DxGrid } from '@dxos/lit-grid';
 import '@dxos/lit-ui/dx-tag-picker.pcss';
 import { faker } from '@dxos/random';

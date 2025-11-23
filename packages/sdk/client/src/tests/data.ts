@@ -5,7 +5,7 @@
 import * as Schema from 'effect/Schema';
 
 import { Type } from '@dxos/echo';
-import { Ref, TypedObject } from '@dxos/echo/internal';
+import { TypedObject } from '@dxos/echo/internal';
 
 //
 // TODO(burdon): Remove.
@@ -27,7 +27,7 @@ export class DocumentType extends TypedObject({
   version: '0.1.0',
 })({
   title: Schema.optional(Schema.String), // TODO(burdon): Change to name.
-  content: Ref(TextV0Type),
+  content: Type.Ref(TextV0Type),
 }) {}
 
 /** @deprecated */
@@ -51,8 +51,8 @@ export class ContactType extends TypedObject({
 // @ts-ignore - Type inference issue with declaration files.
 const BlockSchema = Schema.Struct({
   timestamp: Schema.String,
-  content: Schema.optional(Ref(TextV0Type)),
-  object: Schema.optional(Ref(Type.Expando)),
+  content: Schema.optional(Type.Ref(TextV0Type)),
+  object: Schema.optional(Type.Ref(Type.Expando)),
 });
 
 /** @deprecated */
@@ -70,7 +70,7 @@ export class MessageType extends TypedObject({
   date: Schema.optional(Schema.String),
   subject: Schema.optional(Schema.String),
   blocks: Schema.mutable(Schema.Array(BlockSchema)),
-  links: Schema.optional(Schema.Array(Ref(Type.Expando))),
+  links: Schema.optional(Schema.Array(Type.Ref(Type.Expando))),
   read: Schema.optional(Schema.Boolean),
   context: Schema.optional(
     Schema.Struct({
@@ -88,7 +88,7 @@ export class ThreadType extends TypedObject({
   version: '0.1.0',
 })({
   title: Schema.optional(Schema.String),
-  messages: Schema.mutable(Schema.Array(Ref(MessageType))),
+  messages: Schema.mutable(Schema.Array(Type.Ref(MessageType))),
   context: Schema.optional(
     Schema.Struct({
       space: Schema.optional(Schema.String),
