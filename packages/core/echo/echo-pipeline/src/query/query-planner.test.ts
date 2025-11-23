@@ -163,7 +163,7 @@ describe('QueryPlanner', () => {
   test('get all orgs Fred worked for since 2020', () => {
     const query = Query.select(Filter.type(TestSchema.Person, { id: '01JVS9YYT5VMVJW0GGTM1YHCCH' }))
       .sourceOf(TestSchema.EmployedBy, {
-        since: Filter.gt('2020'),
+        since: Filter.gt<string | undefined>('2020'),
       })
       .target();
 
@@ -628,7 +628,7 @@ describe('QueryPlanner', () => {
   test('get assignees of all tasks created after 2020', () => {
     const query = Query.select(
       Filter.type(TestSchema.Task, {
-        createdAt: Filter.gt('2020'),
+        deadline: Filter.gt<string | undefined>('2020'),
       }),
     ).reference('assignee');
 

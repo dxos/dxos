@@ -120,7 +120,7 @@ describe('queues', () => {
 
     {
       const obj1 = Obj.make(TestSchema.Person, { name: 'john' });
-      const obj2 = Obj.make(TestSchema.Person, { name: 'jane' });
+      const obj2 = Obj.make(TestSchema.Organization, { name: 'DXOS' });
       const relation = Relation.make(TestSchema.EmployedBy, {
         [Relation.Source]: obj1,
         [Relation.Target]: obj2,
@@ -132,9 +132,9 @@ describe('queues', () => {
     {
       const [obj1, obj2, relation] = await queue.queryObjects();
       expect((obj1 as TestSchema.Person).name).toEqual('john');
-      expect((obj2 as TestSchema.Person).name).toEqual('jane');
+      expect((obj2 as TestSchema.Organization).name).toEqual('DXOS');
       expect(Relation.getSource(relation as TestSchema.EmployedBy).name).toEqual('john');
-      expect(Relation.getTarget(relation as TestSchema.EmployedBy).name).toEqual('jane');
+      expect(Relation.getTarget(relation as TestSchema.EmployedBy).name).toEqual('DXOS');
     }
   });
 

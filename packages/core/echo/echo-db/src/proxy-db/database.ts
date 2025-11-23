@@ -320,7 +320,7 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
           data: output,
           type: migration.toType,
         });
-        const postMigrationType = Obj.getType(object);
+        const postMigrationType = Obj.getTypeDXN(object);
         invariant(postMigrationType != null && DXN.equals(postMigrationType, migration.toType));
 
         await migration.onMigration({ before: object, object, db: this });

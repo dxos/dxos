@@ -57,7 +57,6 @@ export const Any = Schema.Struct({}).pipe(
   }),
 );
 
-// TODO(dmaretskyi): Has to be `unique symbol`.
 export const Source: unique symbol = RelationSourceId as any;
 export type Source = typeof Source;
 

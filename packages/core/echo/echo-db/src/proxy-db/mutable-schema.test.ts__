@@ -14,7 +14,6 @@ import {
   TypeAnnotationId,
   TypeIdentifierAnnotationId,
   getSchema,
-  getType,
   getTypeReference,
   getTypename,
 } from '@dxos/echo/internal';

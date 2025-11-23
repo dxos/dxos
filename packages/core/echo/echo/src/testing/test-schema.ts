@@ -80,6 +80,7 @@ export namespace TestSchema {
 
   export const Task = Schema.Struct({
     title: Schema.optional(Schema.String),
+    deadline: Schema.optional(Schema.String),
     completed: Schema.optional(Schema.Boolean),
     assignee: Schema.optional(Type.Ref(Person)),
     previous: Schema.optional(Schema.suspend((): Type.Ref<Task> => Type.Ref(Task))),

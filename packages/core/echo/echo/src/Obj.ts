@@ -77,14 +77,14 @@ export const Any = Schema.Struct({}).pipe(
 
 type Props<T = any> = { id?: ObjectId } & Type.Properties<T>;
 
-export type MakeProps<T extends Type.Obj.Any> = NoInfer<Props<Schema.Schema.Type<T>>> & {
-  [Meta]?: Partial<ObjectMeta>;
+const defaultMeta: ObjectMeta = {
+  keys: [],
 };
 
 export const Meta: unique symbol = MetaId as any;
 
-const defaultMeta: ObjectMeta = {
-  keys: [],
+export type MakeProps<T extends Type.Obj.Any> = NoInfer<Props<Schema.Schema.Type<T>>> & {
+  [Meta]?: Partial<ObjectMeta>;
 };
 
 /**
