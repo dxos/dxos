@@ -14,10 +14,12 @@ import type * as Obj from './Obj';
 import { type Filter, type Query } from './query';
 import type * as Ref from './Ref';
 
+/**
+ * Individual query result entry.
+ */
 export type QueryResultEntry<T extends Entity.Any = Entity.Any> = {
   id: string;
 
-  // TODO(burdon): Rename DatabaseId?
   spaceId: SpaceId;
 
   /**
