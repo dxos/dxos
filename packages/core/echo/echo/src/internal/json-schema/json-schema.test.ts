@@ -22,7 +22,7 @@ import {
   getTypeIdentifierAnnotation,
 } from '../annotations';
 import { EchoObjectSchema } from '../entities';
-import { Email, FormatAnnotation, FormatEnum } from '../formats';
+import { Email, FormatAnnotation, TypeFormat } from '../formats';
 import { JsonSchemaType, getNormalizedEchoAnnotations, getSchemaProperty, setSchemaProperty } from '../json-schema';
 import { Ref, createSchemaReference, getReferenceAst, getSchemaReference } from '../ref';
 import { StoredSchema } from '../schema';
@@ -161,7 +161,7 @@ describe('effect-to-json', () => {
   test('annotations', () => {
     const TempSchema = Schema.Struct({
       name: Schema.String.annotations({ description: 'Person name', title: 'Name' }),
-      email: Schema.String.pipe(FormatAnnotation.set(FormatEnum.Email)).annotations({
+      email: Schema.String.pipe(FormatAnnotation.set(TypeFormat.Email)).annotations({
         description: 'Email address',
       }),
     }).pipe(
@@ -510,7 +510,7 @@ describe('json-to-effect', () => {
         object: Schema.Struct({ id: Schema.String, field: Ref(Organization) }),
         echoObject: Ref(Organization),
         echoObjectArray: Schema.Array(Ref(Organization)),
-        email: Schema.String.pipe(FormatAnnotation.set(FormatEnum.Email)),
+        email: Schema.String.pipe(FormatAnnotation.set(TypeFormat.Email)),
         null: Schema.Null,
       } as const;
 
@@ -582,8 +582,8 @@ describe('json-to-effect', () => {
   });
 
   test('symbol annotations get compared', () => {
-    const schema1 = Schema.String.pipe(FormatAnnotation.set(FormatEnum.Email));
-    const schema2 = Schema.String.pipe(FormatAnnotation.set(FormatEnum.Currency));
+    const schema1 = Schema.String.pipe(FormatAnnotation.set(TypeFormat.Email));
+    const schema2 = Schema.String.pipe(FormatAnnotation.set(TypeFormat.Currency));
     expect(prepareAstForCompare(schema1.ast)).not.to.deep.eq(prepareAstForCompare(schema2.ast));
   });
 

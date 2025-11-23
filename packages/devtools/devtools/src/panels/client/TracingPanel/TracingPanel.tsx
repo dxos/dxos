@@ -5,7 +5,7 @@
 import * as Tabs from '@radix-ui/react-tabs';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { FormatEnum } from '@dxos/echo/internal';
+import { Format } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { type Span } from '@dxos/protocols/proto/dxos/tracing';
 import { useClient } from '@dxos/react-client';
@@ -95,10 +95,10 @@ export const TracingPanel = () => {
 
   const resourceProperties: TablePropertyDefinition[] = useMemo(
     () => [
-      { name: 'name', format: FormatEnum.JSON, size: 200 },
-      { name: 'logs', format: FormatEnum.Number, size: 120 },
-      { name: 'spans', format: FormatEnum.Number, size: 120 },
-      { name: 'info', format: FormatEnum.JSON },
+      { name: 'name', format: Format.TypeFormat.JSON, size: 200 },
+      { name: 'logs', format: Format.TypeFormat.Number, size: 120 },
+      { name: 'spans', format: Format.TypeFormat.Number, size: 120 },
+      { name: 'info', format: Format.TypeFormat.JSON },
     ],
     [],
   );

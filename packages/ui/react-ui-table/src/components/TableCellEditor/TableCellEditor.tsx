@@ -9,7 +9,7 @@ import React, { useCallback, useMemo, useRef, useState } from 'react';
 
 import { debounce } from '@dxos/async';
 import type { Client } from '@dxos/client';
-import { FormatEnum, TypeEnum } from '@dxos/echo/internal';
+import { Format, TypeEnum } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
 import { type DxGridAxis, type DxGridPosition } from '@dxos/lit-grid';
 import {
@@ -74,9 +74,9 @@ export const TableValueEditor = ({
 
   if (
     fieldProjection?.props.type === TypeEnum.Array ||
-    fieldProjection?.props.format === FormatEnum.SingleSelect ||
-    fieldProjection?.props.format === FormatEnum.Ref
-    // TODO(thure): Support `FormatEnum.MultiSelect`
+    fieldProjection?.props.format === Format.TypeFormat.SingleSelect ||
+    fieldProjection?.props.format === Format.TypeFormat.Ref
+    // TODO(thure): Support `Format.MultiSelect`
   ) {
     return (
       <FormCellEditor

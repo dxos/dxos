@@ -4,7 +4,7 @@
 
 import React, { type FC, useMemo } from 'react';
 
-import { FormatEnum } from '@dxos/echo/internal';
+import { Format } from '@dxos/echo';
 import { type PublicKey } from '@dxos/keys';
 import { useDevtools, useStream } from '@dxos/react-client/devtools';
 import { DynamicTable, type TableFeatures, type TablePropertyDefinition } from '@dxos/react-ui-table';
@@ -38,8 +38,8 @@ export const FeedTable: FC<FeedTableProps> = ({ onSelect }) => {
 
   const properties: TablePropertyDefinition[] = useMemo(
     () => [
-      { name: 'feedKey', format: FormatEnum.DID },
-      { name: 'progress', format: FormatEnum.String, size: 600 },
+      { name: 'feedKey', format: Format.TypeFormat.DID },
+      { name: 'progress', format: Format.TypeFormat.String, size: 600 },
     ],
     [],
   );

@@ -5,7 +5,7 @@
 import bytes from 'bytes';
 import React, { useMemo } from 'react';
 
-import { FormatEnum } from '@dxos/echo/internal';
+import { Format } from '@dxos/echo';
 import { PublicKey } from '@dxos/keys';
 import { type ConnectionInfo } from '@dxos/protocols/proto/dxos/devtools/swarm';
 import { useDevtools, useStream } from '@dxos/react-client/devtools';
@@ -17,10 +17,10 @@ import { PanelContainer } from '../../../components';
 
 // Extend with table-specific properties
 type TableSwarmConnection = {
-  id: string; // String ID for table
-  swarmId: PublicKey; // Original ID
-  swarmTopic: PublicKey; // Original topic
-  isActive: string; // For SingleSelect
+  id: string; // String ID for table.
+  swarmId: PublicKey; // Original ID.
+  swarmTopic: PublicKey; // Original topic.
+  isActive: string; // For SingleSelect.
   label?: string;
   session?: string;
   remotePeer?: string;
@@ -45,12 +45,25 @@ const stateOptions = [
 ];
 
 const properties: TablePropertyDefinition[] = [
-  { name: 'swarmId', format: FormatEnum.DID, title: 'swarm', size: 160 },
-  { name: 'swarmTopic', format: FormatEnum.DID, title: 'topic', size: 160 },
-  { name: 'label', format: FormatEnum.String },
+  {
+    name: 'swarmId',
+    format: Format.TypeFormat.TypeFormat.DID,
+    title: 'swarm',
+    size: 160,
+  },
+  {
+    name: 'swarmTopic',
+    format: Format.TypeFormat.TypeFormat.DID,
+    title: 'topic',
+    size: 160,
+  },
+  {
+    name: 'label',
+    format: Format.TypeFormat.String,
+  },
   {
     name: 'isActive',
-    format: FormatEnum.SingleSelect,
+    format: Format.TypeFormat.TypeFormat.SingleSelect,
     size: 100,
     title: 'active',
     config: {
@@ -60,21 +73,51 @@ const properties: TablePropertyDefinition[] = [
       ],
     },
   },
-  { name: 'session', format: FormatEnum.DID },
-  { name: 'remotePeer', format: FormatEnum.DID, size: 160, title: 'remote peer' },
-  { name: 'identity', format: FormatEnum.DID, size: 160 },
+  {
+    name: 'session',
+    format: Format.TypeFormat.DID,
+  },
+  {
+    name: 'remotePeer',
+    format: Format.TypeFormat.TypeFormat.DID,
+    size: 160,
+    title: 'remote peer',
+  },
+  {
+    name: 'identity',
+    format: Format.TypeFormat.TypeFormat.DID,
+    size: 160,
+  },
   {
     name: 'state',
-    format: FormatEnum.SingleSelect,
+    format: Format.TypeFormat.TypeFormat.SingleSelect,
     size: 160,
     config: {
       options: stateOptions,
     },
   },
-  { name: 'buffer', format: FormatEnum.JSON, title: 'buffer (r/w)', size: 160 },
-  { name: 'transportDetails', format: FormatEnum.JSON, title: 'details' },
-  { name: 'statsDisplay', format: FormatEnum.JSON, title: 'stats' },
-  { name: 'closeReason', format: FormatEnum.JSON, title: 'close reason', size: 400 },
+  {
+    name: 'buffer',
+    format: Format.TypeFormat.TypeFormat.JSON,
+    title: 'buffer (r/w)',
+    size: 160,
+  },
+  {
+    name: 'transportDetails',
+    format: Format.TypeFormat.TypeFormat.JSON,
+    title: 'details',
+  },
+  {
+    name: 'statsDisplay',
+    format: Format.TypeFormat.TypeFormat.JSON,
+    title: 'stats',
+  },
+  {
+    name: 'closeReason',
+    format: Format.TypeFormat.TypeFormat.JSON,
+    title: 'close reason',
+    size: 400,
+  },
 ];
 
 export const SwarmPanel = () => {

@@ -6,8 +6,8 @@ import * as Schema from 'effect/Schema';
 import React, { useCallback, useRef } from 'react';
 
 import { AnyOutput, FunctionInput } from '@dxos/conductor';
-import { Type } from '@dxos/echo';
-import { getSnapshot, isInstanceOf } from '@dxos/echo/internal';
+import { Obj, Type } from '@dxos/echo';
+import { getSnapshot } from '@dxos/echo/internal';
 import { Function, Script } from '@dxos/functions';
 import { useClient } from '@dxos/react-client';
 import { Filter, parseId } from '@dxos/react-client/echo';
@@ -59,7 +59,7 @@ const TextInputComponent = ({ shape, title, ...props }: TextInputComponentProps)
 
       const space = client.spaces.get(spaceId);
       const object = space?.db.getObjectById(objectId);
-      if (!space || !isInstanceOf(Script.Script, object)) {
+      if (!space || !Obj.isInstanceOf(Script.Script, object)) {
         return;
       }
 

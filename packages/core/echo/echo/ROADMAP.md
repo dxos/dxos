@@ -10,7 +10,7 @@
 - [ ] Effect team design review.
 - [ ] @category annotations to group types in the API.
 - [ ] TSdoc and LLM training for function generation.
-- [ ] Rename FormatEnum => Primitive?
+- [ ] Rename TypeFormat => Primitive?
 - [ ] Don't re-export effect?
 
 ## Issues

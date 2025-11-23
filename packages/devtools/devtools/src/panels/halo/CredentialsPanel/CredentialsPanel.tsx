@@ -4,7 +4,7 @@
 
 import React, { useMemo } from 'react';
 
-import { FormatEnum } from '@dxos/echo/internal';
+import { Format } from '@dxos/echo';
 import { type Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { type Space } from '@dxos/react-client/echo';
 import { Toolbar } from '@dxos/react-ui';
@@ -21,10 +21,10 @@ export const CredentialsPanel = (props: { space?: Space }) => {
 
   const properties: TablePropertyDefinition[] = useMemo(
     () => [
-      { name: 'id', format: FormatEnum.DID, tooltip: true, size: 120 },
-      { name: 'issuer', format: FormatEnum.DID, tooltip: true, size: 120 },
-      { name: 'type', format: FormatEnum.String, size: 380 },
-      { name: 'issuanceDate', format: FormatEnum.DateTime, title: 'issued', size: 194 },
+      { name: 'id', format: Format.TypeFormat.TypeFormat.DID, tooltip: true, size: 120 },
+      { name: 'issuer', format: Format.TypeFormat.TypeFormat.DID, tooltip: true, size: 120 },
+      { name: 'type', format: Format.TypeFormat.TypeFormat.String, size: 380 },
+      { name: 'issuanceDate', format: Format.TypeFormat.TypeFormat.DateTime, title: 'issued', size: 194 },
     ],
     [],
   );

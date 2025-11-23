@@ -6,7 +6,7 @@ import * as Schema from 'effect/Schema';
 
 import { JsonPath, type JsonProp } from '@dxos/effect';
 
-import { FormatAnnotation, FormatEnum } from '../formats';
+import { FormatAnnotation, TypeFormat } from '../formats';
 import { EntityKindSchema } from '../types';
 
 //
@@ -206,7 +206,7 @@ const _JsonSchemaType = Schema.Struct({
   /**
    * Regex pattern for strings.
    */
-  pattern: Schema.optional(Schema.String.pipe(FormatAnnotation.set(FormatEnum.Regex))),
+  pattern: Schema.optional(Schema.String.pipe(FormatAnnotation.set(TypeFormat.Regex))),
 
   /**
    * Serialized from {@link FormatAnnotationId}.

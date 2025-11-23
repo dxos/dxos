@@ -94,7 +94,7 @@ export interface TypedObjectSerializer<T extends Obj.Any = Type.Expando> {
   deserialize(params: { content: string; space: Space; newId?: boolean }): Promise<T>;
 }
 
-// TODO(burdon): Move to FormatEnum or SDK.
+// TODO(burdon): Move to TypeFormat or SDK.
 export const IconAnnotationId = Symbol.for('@dxos/plugin-space/annotation/Icon');
 export const HueAnnotationId = Symbol.for('@dxos/plugin-space/annotation/Hue');
 

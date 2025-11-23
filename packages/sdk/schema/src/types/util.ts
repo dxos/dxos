@@ -7,9 +7,9 @@ import * as Schema from 'effect/Schema';
 import { Type } from '@dxos/echo';
 import {
   FormatAnnotation,
-  FormatEnum,
   PropertyMetaAnnotationId,
   type RuntimeSchemaRegistry,
+  TypeFormat,
 } from '@dxos/echo/internal';
 import { type EchoSchemaRegistry } from '@dxos/echo-db';
 import { type DXN, PublicKey } from '@dxos/keys';
@@ -19,7 +19,7 @@ export const createDefaultSchema = () =>
     title: Schema.optional(Schema.String).annotations({ title: 'Title' }),
     status: Schema.optional(
       Schema.Literal('todo', 'in-progress', 'done')
-        .pipe(FormatAnnotation.set(FormatEnum.SingleSelect))
+        .pipe(FormatAnnotation.set(TypeFormat.SingleSelect))
         .annotations({
           title: 'Status',
           [PropertyMetaAnnotationId]: {

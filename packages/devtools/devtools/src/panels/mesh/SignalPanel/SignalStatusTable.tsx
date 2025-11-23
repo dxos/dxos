@@ -7,7 +7,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 
 import { scheduleTaskInterval } from '@dxos/async';
 import { Context } from '@dxos/context';
-import { FormatEnum } from '@dxos/echo/internal';
+import { Format } from '@dxos/echo';
 import { type SignalStatus } from '@dxos/messaging';
 import { type SubscribeToSignalStatusResponse } from '@dxos/protocols/proto/dxos/devtools/host';
 import { SignalState } from '@dxos/protocols/proto/dxos/mesh/signal';
@@ -55,12 +55,12 @@ const getStateLabel = (state: SignalState): string => {
 const tableProperties: TablePropertyDefinition[] = [
   {
     name: 'host',
-    format: FormatEnum.String,
+    format: Format.TypeFormat.TypeFormat.String,
     size: 240,
   },
   {
     name: 'status',
-    format: FormatEnum.SingleSelect,
+    format: Format.TypeFormat.TypeFormat.SingleSelect,
     size: 140,
     config: {
       options: Object.values(signalStateLabels).map((label) => ({
@@ -72,7 +72,7 @@ const tableProperties: TablePropertyDefinition[] = [
   },
   {
     name: 'connected',
-    format: FormatEnum.String,
+    format: Format.TypeFormat.TypeFormat.String,
     size: 240,
   },
 ];

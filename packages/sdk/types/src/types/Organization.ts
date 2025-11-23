@@ -8,7 +8,7 @@ import { Obj, Type } from '@dxos/echo';
 import {
   Format,
   FormatAnnotation,
-  FormatEnum,
+  TypeFormat,
   GeneratorAnnotation,
   LabelAnnotation,
   PropertyMetaAnnotationId,
@@ -47,7 +47,7 @@ const OrganizationSchema = Schema.Struct({
   ),
   // TODO(wittjosiah): Remove (change to relation).
   status: Schema.Literal('prospect', 'qualified', 'active', 'commit', 'reject').pipe(
-    FormatAnnotation.set(FormatEnum.SingleSelect),
+    FormatAnnotation.set(TypeFormat.SingleSelect),
     GeneratorAnnotation.set({
       generator: 'helpers.arrayElement',
       args: [['prospect', 'qualified', 'active', 'commit', 'reject']],

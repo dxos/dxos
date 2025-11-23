@@ -6,11 +6,11 @@ import * as Schema from 'effect/Schema';
 import React from 'react';
 
 import { type AnyCapability, Capabilities, contributes, createSurface } from '@dxos/app-framework';
-import { type Obj, Type } from '@dxos/echo';
+import { Format, type Obj, Type } from '@dxos/echo';
 import { JsonFilter } from '@dxos/react-ui-syntax-highlighter';
 
 export const MapSchema = Schema.Struct({
-  coordinates: Type.Format.GeoPoint,
+  coordinates: Format.TypeFormat.GeoPoint,
 }).pipe(
   Type.Obj({
     typename: 'example.com/type/Map',

@@ -5,15 +5,8 @@
 import * as Schema from 'effect/Schema';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
-import { Obj, Type } from '@dxos/echo';
-import {
-  EchoSchema,
-  EntityKind,
-  StoredSchema,
-  type TypeAnnotation,
-  TypeAnnotationId,
-  toJsonSchema,
-} from '@dxos/echo/internal';
+import { JsonSchema, Obj, Type } from '@dxos/echo';
+import { EchoSchema, EntityKind, StoredSchema, type TypeAnnotation, TypeAnnotationId } from '@dxos/echo/internal';
 
 import { Filter } from '../query';
 import { EchoTestBuilder } from '../testing';
@@ -160,7 +153,7 @@ describe('schema registry', () => {
     const schemaToStore = Obj.make(StoredSchema, {
       typename: 'example.com/type/Test',
       version: '0.1.0',
-      jsonSchema: toJsonSchema(Schema.Struct({ field: Schema.Number })),
+      jsonSchema: JsonSchema.toJsonSchema(Schema.Struct({ field: Schema.Number })),
     });
     expect(registry.hasSchema(new EchoSchema(schemaToStore))).to.be.false;
     const storedSchema = db.add(schemaToStore);

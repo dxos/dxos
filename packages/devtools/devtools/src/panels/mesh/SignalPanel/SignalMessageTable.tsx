@@ -4,7 +4,7 @@
 
 import React, { type FC, useEffect, useMemo, useState } from 'react';
 
-import { FormatEnum } from '@dxos/echo/internal';
+import { Format } from '@dxos/echo';
 import { ConnectionState } from '@dxos/protocols/proto/dxos/client/services';
 import { type SignalResponse } from '@dxos/protocols/proto/dxos/devtools/host';
 import { PublicKey, useClient } from '@dxos/react-client';
@@ -38,14 +38,14 @@ const views: View<SignalResponse>[] = [
     properties: [
       {
         name: 'receivedAt',
-        format: FormatEnum.DateTime,
+        format: Format.TypeFormat.TypeFormat.DateTime,
         title: 'received',
         sort: 'desc',
         size: 194,
       },
       {
         name: 'response',
-        format: FormatEnum.SingleSelect,
+        format: Format.TypeFormat.TypeFormat.SingleSelect,
         size: 100,
         config: {
           options: [
@@ -54,9 +54,9 @@ const views: View<SignalResponse>[] = [
           ],
         },
       },
-      { name: 'peer', format: FormatEnum.DID },
-      { name: 'since', format: FormatEnum.DateTime, size: 194 },
-      { name: 'topic', format: FormatEnum.DID },
+      { name: 'peer', format: Format.TypeFormat.DID },
+      { name: 'since', format: Format.TypeFormat.TypeFormat.DateTime, size: 194 },
+      { name: 'topic', format: Format.TypeFormat.DID },
     ],
     dataTransform: (response: SignalResponse) => ({
       id: `${response.receivedAt?.getTime()}-${Math.random()}`,
@@ -79,14 +79,14 @@ const views: View<SignalResponse>[] = [
     properties: [
       {
         name: 'receivedAt',
-        format: FormatEnum.DateTime,
+        format: Format.TypeFormat.TypeFormat.DateTime,
         title: 'received',
         size: 194,
       },
-      { name: 'author', format: FormatEnum.DID },
-      { name: 'recipient', format: FormatEnum.DID },
-      { name: 'message', format: FormatEnum.DID },
-      { name: 'topic', format: FormatEnum.DID },
+      { name: 'author', format: Format.TypeFormat.DID },
+      { name: 'recipient', format: Format.TypeFormat.DID },
+      { name: 'message', format: Format.TypeFormat.DID },
+      { name: 'topic', format: Format.TypeFormat.DID },
     ],
     dataTransform: (response: SignalResponse) => ({
       id: `${response.receivedAt?.getTime()}-${Math.random()}`,
@@ -107,13 +107,13 @@ const views: View<SignalResponse>[] = [
     properties: [
       {
         name: 'receivedAt',
-        format: FormatEnum.DateTime,
+        format: Format.TypeFormat.TypeFormat.DateTime,
         title: 'received',
         size: 194,
       },
-      { name: 'author', format: FormatEnum.DID },
-      { name: 'recipient', format: FormatEnum.DID },
-      { name: 'message', format: FormatEnum.DID },
+      { name: 'author', format: Format.TypeFormat.DID },
+      { name: 'recipient', format: Format.TypeFormat.DID },
+      { name: 'message', format: Format.TypeFormat.DID },
     ],
     dataTransform: (response: SignalResponse) => ({
       id: `${response.receivedAt?.getTime()}-${Math.random()}`,

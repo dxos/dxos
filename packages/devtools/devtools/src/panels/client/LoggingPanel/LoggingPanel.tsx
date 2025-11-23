@@ -4,7 +4,7 @@
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { FormatEnum } from '@dxos/echo/internal';
+import { Format } from '@dxos/echo';
 import { levels, parseFilter } from '@dxos/log';
 import { type LogEntry, LogLevel, type QueryLogsRequest } from '@dxos/protocols/proto/dxos/client/services';
 import { useClient } from '@dxos/react-client';
@@ -57,13 +57,13 @@ export const LoggingPanel = () => {
     () => [
       {
         name: 'timestamp',
-        format: FormatEnum.DateTime,
+        format: Format.TypeFormat.DateTime,
         sort: 'desc' as const,
         size: 194,
       },
       {
         name: 'level',
-        format: FormatEnum.SingleSelect,
+        format: Format.TypeFormat.SingleSelect,
         size: 100,
         config: {
           options: [
@@ -78,12 +78,12 @@ export const LoggingPanel = () => {
       },
       {
         name: 'file',
-        format: FormatEnum.String,
+        format: Format.TypeFormat.String,
         size: 160,
       },
       {
         name: 'message',
-        format: FormatEnum.String,
+        format: Format.TypeFormat.String,
       },
     ],
     [],

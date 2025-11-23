@@ -39,9 +39,6 @@ export { KindId, OfKind, toEffectSchema, toJsonSchema };
 // Kind
 //
 
-// export const KindId: unique symbol = EntityKindId as any;
-// export type KindId = typeof KindId;
-
 export const Kind = EntityKind;
 
 /**
@@ -179,6 +176,7 @@ export namespace Relation {
 
 //
 // Ref
+// TODO(burdon): Reconcile Type.Ref with Ref.Ref.
 //
 
 /**

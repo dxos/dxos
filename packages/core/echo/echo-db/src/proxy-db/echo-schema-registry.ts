@@ -8,7 +8,7 @@ import type * as Types from 'effect/Types';
 
 import { type CleanupFn, Event } from '@dxos/async';
 import { type Context, Resource } from '@dxos/context';
-import { Type } from '@dxos/echo';
+import { JsonSchema, Type } from '@dxos/echo';
 import {
   EchoSchema,
   StoredSchema,
@@ -18,7 +18,6 @@ import {
   getTypeAnnotation,
   getTypeIdentifierAnnotation,
   makeTypeJsonSchemaAnnotation,
-  toJsonSchema,
 } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
 import { DXN, type ObjectId } from '@dxos/keys';
@@ -380,9 +379,12 @@ export class EchoSchemaRegistry extends Resource implements SchemaRegistry {
 
     const meta = getTypeAnnotation(schema);
     invariant(meta, 'use Schema.Struct({}).pipe(Type.Obj()) or class syntax to create a valid schema');
-    const schemaToStore = createObject(StoredSchema, { ...meta, jsonSchema: toJsonSchema(Schema.Struct({})) });
+    const schemaToStore = createObject(StoredSchema, {
+      ...meta,
+      jsonSchema: JsonSchema.toJsonSchema(Schema.Struct({})),
+    });
     const typeId = `dxn:echo:@:${schemaToStore.id}`;
-    schemaToStore.jsonSchema = toJsonSchema(
+    schemaToStore.jsonSchema = JsonSchema.toJsonSchema(
       schema.annotations({
         [TypeAnnotationId]: meta,
         [TypeIdentifierAnnotationId]: typeId,

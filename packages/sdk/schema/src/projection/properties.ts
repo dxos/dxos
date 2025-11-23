@@ -11,11 +11,11 @@ import * as String from 'effect/String';
 import { type Obj } from '@dxos/echo';
 import {
   FormAnnotationId,
-  FormatEnum,
   type JsonSchemaType,
   OptionsAnnotationId,
   type OptionsAnnotationType,
   type PropertyKey,
+  TypeFormat,
   getFormatAnnotation,
   getSchemaReference,
 } from '@dxos/echo/internal';
@@ -41,7 +41,7 @@ export type SchemaProperty<T extends Obj.Any, V = any> = {
   readonly: boolean;
   type: SimpleType;
   array?: boolean;
-  format?: FormatEnum;
+  format?: TypeFormat;
   title?: string;
   description?: string;
   examples?: string[];
@@ -159,7 +159,7 @@ const processProperty = <T extends Obj.Any>(
     if (typename) {
       // TODO(burdon): Special handling for refs? type = 'ref'?
       type = 'object';
-      format = FormatEnum.Ref;
+      format = TypeFormat.Ref;
     }
   } else {
     const any = findNode(prop.type, SchemaAST.isAnyKeyword);
@@ -193,7 +193,7 @@ const processProperty = <T extends Obj.Any>(
                 const { typename } = getSchemaReference(jsonSchema) ?? {};
                 if (typename) {
                   type = 'object';
-                  format = FormatEnum.Ref;
+                  format = TypeFormat.Ref;
                   array = true;
                 }
               } else {

@@ -7,9 +7,9 @@ import { type ReadonlySignal, computed, effect, signal } from '@preact/signals-c
 import { Resource } from '@dxos/context';
 import { Obj, Ref } from '@dxos/echo';
 import {
-  FormatEnum,
   type JsonProp,
   type JsonSchemaType,
+  TypeFormat,
   getSchema,
   getValue,
   setValue,
@@ -470,7 +470,7 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
 
     const { props } = this._projection.getFieldProjection(field.id);
     switch (props.format) {
-      case FormatEnum.Ref: {
+      case TypeFormat.Ref: {
         if (!field.referencePath) {
           return ''; // TODO(burdon): Show error.
         }
@@ -553,7 +553,7 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
     const transformedValue = editorTextToCellValue(props, value);
 
     // Special handling for Ref format to preserve existing behavior
-    if (props.format === FormatEnum.Ref && !isLiveObject(value)) {
+    if (props.format === TypeFormat.Ref && !isLiveObject(value)) {
       return;
     }
 
@@ -668,7 +668,7 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
 
 const editorTextToCellValue = (props: PropertyType, value: any): any => {
   switch (props.format) {
-    case FormatEnum.Ref: {
+    case TypeFormat.Ref: {
       if (isLiveObject(value)) {
         return Ref.make(value);
       } else {
@@ -676,7 +676,7 @@ const editorTextToCellValue = (props: PropertyType, value: any): any => {
       }
     }
 
-    case FormatEnum.SingleSelect: {
+    case TypeFormat.SingleSelect: {
       const ids = extractTagIds(value);
       if (ids && ids.length > 0) {
         return ids[0];
@@ -685,7 +685,7 @@ const editorTextToCellValue = (props: PropertyType, value: any): any => {
       }
     }
 
-    case FormatEnum.MultiSelect: {
+    case TypeFormat.MultiSelect: {
       const ids = extractTagIds(value);
       return ids || value;
     }

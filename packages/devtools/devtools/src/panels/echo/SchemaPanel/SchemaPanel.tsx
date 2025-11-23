@@ -8,7 +8,7 @@ import * as SchemaAST from 'effect/SchemaAST';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 import {
-  FormatEnum,
+  TypeFormat,
   getEntityKind,
   getSchemaDXN,
   getSchemaTypename,
@@ -90,11 +90,11 @@ export const SchemaPanel = (props: { space?: Space }) => {
 
   const dataProperties = useMemo(
     () => [
-      { name: 'typename', format: FormatEnum.String },
-      { name: 'version', format: FormatEnum.String, size: 100 },
+      { name: 'typename', format: TypeFormat.String },
+      { name: 'version', format: TypeFormat.String, size: 100 },
       {
         name: 'kind',
-        format: FormatEnum.SingleSelect,
+        format: TypeFormat.SingleSelect,
         size: 100,
         config: {
           options: [

@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { FormatEnum, GeoLocation, TypeEnum } from '@dxos/echo/internal';
+import { Format, GeoLocation, TypeEnum } from '@dxos/echo/internal';
 import { type ValidationError } from '@dxos/schema';
 
 /**
@@ -13,7 +13,7 @@ import { type ValidationError } from '@dxos/schema';
  */
 export type ParseProps = {
   type?: TypeEnum;
-  format?: FormatEnum;
+  format?: TypeFormat;
   value: any;
 };
 
@@ -57,31 +57,31 @@ export const parseValue = ({ type, format, value }: ParseProps) => {
   }
 
   switch (format) {
-    case FormatEnum.Boolean:
+    case Format.TypeFormat.Boolean:
       return parseScalar(TypeEnum.Boolean);
 
-    case FormatEnum.Number:
-    case FormatEnum.Percent:
-    case FormatEnum.Currency:
+    case Format.TypeFormat.Number:
+    case Format.TypeFormat.Percent:
+    case Format.TypeFormat.Currency:
       return parseScalar(TypeEnum.Number);
 
-    case FormatEnum.String:
-    case FormatEnum.Markdown: {
+    case Format.TypeFormat.String:
+    case Format.TypeFormat.Markdown: {
       return parseScalar(TypeEnum.String);
     }
 
-    case FormatEnum.Ref:
-      throw new Error(`unexpected format: ${FormatEnum.Ref}`);
+    case Format.TypeFormat.TypeFormat.Ref:
+      throw new Error(`unexpected format: ${Format.TypeFormat.Ref}`);
 
-    case FormatEnum.DateTime:
-    case FormatEnum.Date:
-    case FormatEnum.Time:
-    case FormatEnum.Timestamp: {
+    case Format.TypeFormat.DateTime:
+    case Format.TypeFormat.Date:
+    case Format.TypeFormat.Time:
+    case Format.TypeFormat.Timestamp: {
       const date = new Date(value as string | number);
       return isNaN(date.getTime()) ? null : date;
     }
 
-    case FormatEnum.GeoPoint: {
+    case Format.TypeFormat.TypeFormat.GeoPoint: {
       // Parse string in format "lat,long" to GeoPoint [longitude, latitude].
       if (typeof value === 'string') {
         // Only keep digits, decimal points, minus signs, and commas.
@@ -108,23 +108,23 @@ export const parseValue = ({ type, format, value }: ParseProps) => {
 // TODO(burdon): Type and format.
 export type CellClassesForFieldTypeProps = {
   type?: TypeEnum;
-  format?: FormatEnum;
+  format?: TypeFormat;
 };
 
 export const cellClassesForFieldType = ({ type, format }: CellClassesForFieldTypeProps): string[] | undefined => {
   switch (format || type) {
-    case FormatEnum.Markdown:
+    case Format.TypeFormat.Markdown:
       return undefined;
-    case FormatEnum.Time:
-    case FormatEnum.Timestamp:
-    case FormatEnum.DateTime:
-    case FormatEnum.Date:
-    case FormatEnum.Duration:
+    case Format.TypeFormat.Time:
+    case Format.TypeFormat.Timestamp:
+    case Format.TypeFormat.DateTime:
+    case Format.TypeFormat.Date:
+    case Format.TypeFormat.Duration:
       return ['font-mono', 'text-right'];
-    case FormatEnum.Currency:
+    case Format.TypeFormat.Currency:
       return ['text-right'];
-    case FormatEnum.JSON:
-    case FormatEnum.DID:
+    case Format.TypeFormat.JSON:
+    case Format.TypeFormat.DID:
       return ['font-mono'];
     case TypeEnum.Number:
     case TypeEnum.Boolean:

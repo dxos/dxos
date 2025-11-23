@@ -36,7 +36,7 @@ export * from './types';
 //  - [ ] BaseSchema
 //  - [ ] QueryFn, QueryOptions => Database
 //  - [ ] JsonSchema defs
-//  - [ ] FormatEnum => TypeFormat
+//  - [ ] TypeFormat => TypeFormat
 //  - [ ] JsonPath, JsonProp, getValue, setValue => Json.Path?
 //  - [ ] Standardize '@automerge/automerge' imports.
 

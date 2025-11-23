@@ -7,8 +7,7 @@ import React, { useCallback, useMemo, useState } from 'react';
 
 import { Capabilities, contributes, createSurface } from '@dxos/app-framework';
 import { useCapability } from '@dxos/app-framework/react';
-import { Obj, Type } from '@dxos/echo';
-import { FormatEnum } from '@dxos/echo/internal';
+import { Format, Obj, Type } from '@dxos/echo';
 import { findAnnotation } from '@dxos/effect';
 import { useClient } from '@dxos/react-client';
 import { type Space, getSpace, isSpace } from '@dxos/react-client/echo';
@@ -127,7 +126,7 @@ export default () =>
 
           // Look for properties that use the LatLng format enum
           const properties = Object.entries(jsonSchema.properties).reduce<string[]>((acc, [key, value]) => {
-            if (typeof value === 'object' && value?.format === FormatEnum.GeoPoint) {
+            if (typeof value === 'object' && value?.format === Format.TypeFormat.GeoPoint) {
               acc.push(key);
             }
             return acc;

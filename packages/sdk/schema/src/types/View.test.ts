@@ -5,8 +5,8 @@
 import * as Schema from 'effect/Schema';
 import { afterEach, assert, beforeEach, describe, test } from 'vitest';
 
-import { Filter, Obj, Query, Ref, Type } from '@dxos/echo';
-import { FormatEnum, RuntimeSchemaRegistry, StoredSchema, TypeEnum } from '@dxos/echo/internal';
+import { Filter, Format, Obj, Query, Ref, Type } from '@dxos/echo';
+import { RuntimeSchemaRegistry, StoredSchema, TypeEnum } from '@dxos/echo/internal';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
 import { log } from '@dxos/log';
 import { ProjectionModel } from '@dxos/schema';
@@ -51,7 +51,7 @@ describe('Projection', () => {
       expect(props).to.deep.eq({
         property: 'name',
         type: TypeEnum.String,
-        format: FormatEnum.String,
+        format: Format.TypeFormat.TypeFormat.String,
       });
     }
 
@@ -60,7 +60,7 @@ describe('Projection', () => {
       expect(props).to.deep.eq({
         property: 'organization',
         type: TypeEnum.Ref,
-        format: FormatEnum.Ref,
+        format: Format.TypeFormat.TypeFormat.Ref,
         referencePath: 'name',
         referenceSchema: 'example.com/type/Organization',
       });

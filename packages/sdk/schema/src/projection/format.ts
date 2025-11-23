@@ -6,12 +6,12 @@ import * as Schema from 'effect/Schema';
 
 import {
   DecimalPrecision,
-  FormatEnum,
   JsonProp,
   type JsonSchemaType,
   type SelectOption,
   SelectOptionSchema,
   TypeEnum,
+  TypeFormat,
 } from '@dxos/echo/internal';
 
 /**
@@ -40,7 +40,7 @@ export const BasePropertySchema = Schema.Struct({
 
 export type BaseProperty = Schema.Schema.Type<typeof BasePropertySchema>;
 
-const extend = <Fields extends Schema.Struct.Fields>(format: FormatEnum, type: TypeEnum, fields?: Fields) =>
+const extend = <Fields extends Schema.Struct.Fields>(format: TypeFormat, type: TypeEnum, fields?: Fields) =>
   Schema.extend(
     BasePropertySchema,
     Schema.Struct({
@@ -54,7 +54,7 @@ const extend = <Fields extends Schema.Struct.Fields>(format: FormatEnum, type: T
 
 interface FormatSchemaCommon extends BaseProperty {
   type: TypeEnum;
-  format: FormatEnum;
+  format: TypeFormat;
   multipleOf?: number;
   currency?: string;
   referenceSchema?: string;
@@ -66,12 +66,12 @@ interface FormatSchemaCommon extends BaseProperty {
  * Map of schema definitions.
  */
 // TODO(burdon): Translations?
-export const formatToSchema: Record<FormatEnum, Schema.Schema<FormatSchemaCommon>> = {
-  [FormatEnum.None]: Schema.extend(
+export const formatToSchema: Record<TypeFormat, Schema.Schema<FormatSchemaCommon>> = {
+  [TypeFormat.None]: Schema.extend(
     BasePropertySchema,
     Schema.Struct({
       type: Schema.Enums(TypeEnum),
-      format: Schema.Literal(FormatEnum.None) as Schema.Schema<FormatEnum>,
+      format: Schema.Literal(TypeFormat.None) as Schema.Schema<TypeFormat>,
     }),
   ).pipe(Schema.mutable),
 
@@ -79,10 +79,10 @@ export const formatToSchema: Record<FormatEnum, Schema.Schema<FormatSchemaCommon
   // Scalars
   //
 
-  [FormatEnum.String]: extend(FormatEnum.String, TypeEnum.String),
-  [FormatEnum.Number]: extend(FormatEnum.Number, TypeEnum.Number),
-  [FormatEnum.Boolean]: extend(FormatEnum.Boolean, TypeEnum.Boolean),
-  [FormatEnum.Ref]: extend(FormatEnum.Ref, TypeEnum.Ref, {
+  [TypeFormat.String]: extend(TypeFormat.String, TypeEnum.String),
+  [TypeFormat.Number]: extend(TypeFormat.Number, TypeEnum.Number),
+  [TypeFormat.Boolean]: extend(TypeFormat.Boolean, TypeEnum.Boolean),
+  [TypeFormat.Ref]: extend(TypeFormat.Ref, TypeEnum.Ref, {
     referenceSchema: Schema.NonEmptyString.annotations({
       title: 'Record type',
       description: 'Name of the record type',
@@ -99,29 +99,29 @@ export const formatToSchema: Record<FormatEnum, Schema.Schema<FormatSchemaCommon
   // Strings
   //
 
-  [FormatEnum.DID]: extend(FormatEnum.DID, TypeEnum.String),
-  [FormatEnum.DXN]: extend(FormatEnum.DXN, TypeEnum.String),
-  [FormatEnum.Email]: extend(FormatEnum.Email, TypeEnum.String),
-  [FormatEnum.Formula]: extend(FormatEnum.Formula, TypeEnum.String),
-  [FormatEnum.Hostname]: extend(FormatEnum.Hostname, TypeEnum.String),
-  [FormatEnum.JSON]: extend(FormatEnum.JSON, TypeEnum.String),
-  [FormatEnum.Markdown]: extend(FormatEnum.Markdown, TypeEnum.String),
-  [FormatEnum.Regex]: extend(FormatEnum.Regex, TypeEnum.String),
-  [FormatEnum.URL]: extend(FormatEnum.URL, TypeEnum.String),
-  [FormatEnum.UUID]: extend(FormatEnum.UUID, TypeEnum.String),
+  [TypeFormat.DID]: extend(TypeFormat.DID, TypeEnum.String),
+  [TypeFormat.DXN]: extend(TypeFormat.DXN, TypeEnum.String),
+  [TypeFormat.Email]: extend(TypeFormat.Email, TypeEnum.String),
+  [TypeFormat.Formula]: extend(TypeFormat.Formula, TypeEnum.String),
+  [TypeFormat.Hostname]: extend(TypeFormat.Hostname, TypeEnum.String),
+  [TypeFormat.JSON]: extend(TypeFormat.JSON, TypeEnum.String),
+  [TypeFormat.Markdown]: extend(TypeFormat.Markdown, TypeEnum.String),
+  [TypeFormat.Regex]: extend(TypeFormat.Regex, TypeEnum.String),
+  [TypeFormat.URL]: extend(TypeFormat.URL, TypeEnum.String),
+  [TypeFormat.UUID]: extend(TypeFormat.UUID, TypeEnum.String),
 
   //
   // Select
   //
 
-  [FormatEnum.SingleSelect]: extend(FormatEnum.SingleSelect, TypeEnum.String, {
+  [TypeFormat.SingleSelect]: extend(TypeFormat.SingleSelect, TypeEnum.String, {
     options: Schema.Array(SelectOptionSchema).annotations({
       title: 'Options',
       description: 'Available choices',
     }),
   }),
 
-  [FormatEnum.MultiSelect]: extend(FormatEnum.MultiSelect, TypeEnum.Object, {
+  [TypeFormat.MultiSelect]: extend(TypeFormat.MultiSelect, TypeEnum.Object, {
     options: Schema.Array(SelectOptionSchema).annotations({
       title: 'Options',
       description: 'Available choices',
@@ -132,7 +132,7 @@ export const formatToSchema: Record<FormatEnum, Schema.Schema<FormatSchemaCommon
   // Numbers
   //
 
-  [FormatEnum.Currency]: extend(FormatEnum.Currency, TypeEnum.Number, {
+  [TypeFormat.Currency]: extend(TypeFormat.Currency, TypeEnum.Number, {
     multipleOf: Schema.optional(DecimalPrecision),
     currency: Schema.optional(
       Schema.String.annotations({
@@ -141,27 +141,27 @@ export const formatToSchema: Record<FormatEnum, Schema.Schema<FormatSchemaCommon
       }),
     ),
   }),
-  [FormatEnum.Integer]: extend(FormatEnum.Integer, TypeEnum.Number),
-  [FormatEnum.Percent]: extend(FormatEnum.Percent, TypeEnum.Number, {
+  [TypeFormat.Integer]: extend(TypeFormat.Integer, TypeEnum.Number),
+  [TypeFormat.Percent]: extend(TypeFormat.Percent, TypeEnum.Number, {
     multipleOf: Schema.optional(DecimalPrecision),
   }),
-  [FormatEnum.Timestamp]: extend(FormatEnum.Timestamp, TypeEnum.Number),
+  [TypeFormat.Timestamp]: extend(TypeFormat.Timestamp, TypeEnum.Number),
 
   //
   // Dates
   //
 
-  [FormatEnum.DateTime]: extend(FormatEnum.DateTime, TypeEnum.String),
-  [FormatEnum.Date]: extend(FormatEnum.Date, TypeEnum.String),
-  [FormatEnum.Time]: extend(FormatEnum.Time, TypeEnum.String),
-  [FormatEnum.Duration]: extend(FormatEnum.Duration, TypeEnum.String),
+  [TypeFormat.DateTime]: extend(TypeFormat.DateTime, TypeEnum.String),
+  [TypeFormat.Date]: extend(TypeFormat.Date, TypeEnum.String),
+  [TypeFormat.Time]: extend(TypeFormat.Time, TypeEnum.String),
+  [TypeFormat.Duration]: extend(TypeFormat.Duration, TypeEnum.String),
 
   //
   // Objects
   //
 
   // TODO(wittjosiah): Doesn't align with getSimpleType where Tuples are treated as objects.
-  [FormatEnum.GeoPoint]: extend(FormatEnum.GeoPoint, TypeEnum.Array, {
+  [TypeFormat.GeoPoint]: extend(TypeFormat.GeoPoint, TypeEnum.Array, {
     // TODO(wittjosiah): If this is an array or tuple then it shows up in the form.
     items: Schema.Any,
     minItems: Schema.Literal(2),
@@ -175,83 +175,83 @@ export const formatToSchema: Record<FormatEnum, Schema.Schema<FormatSchemaCommon
  * It is mapped to/from the View's Field AND Schema properties via the ViewProjection.
  */
 export const PropertySchema = Schema.Union(
-  formatToSchema[FormatEnum.None],
-  formatToSchema[FormatEnum.String],
-  formatToSchema[FormatEnum.Number],
-  formatToSchema[FormatEnum.Boolean],
-  formatToSchema[FormatEnum.Ref],
+  formatToSchema[TypeFormat.None],
+  formatToSchema[TypeFormat.String],
+  formatToSchema[TypeFormat.Number],
+  formatToSchema[TypeFormat.Boolean],
+  formatToSchema[TypeFormat.Ref],
 
   //
   // Strings
   //
 
-  formatToSchema[FormatEnum.DID],
-  formatToSchema[FormatEnum.DXN],
-  formatToSchema[FormatEnum.Email],
-  formatToSchema[FormatEnum.Formula],
-  formatToSchema[FormatEnum.Hostname],
-  formatToSchema[FormatEnum.JSON],
-  formatToSchema[FormatEnum.Markdown],
-  formatToSchema[FormatEnum.Regex],
-  formatToSchema[FormatEnum.URL],
-  formatToSchema[FormatEnum.UUID],
-  formatToSchema[FormatEnum.SingleSelect],
-  formatToSchema[FormatEnum.MultiSelect],
+  formatToSchema[TypeFormat.DID],
+  formatToSchema[TypeFormat.DXN],
+  formatToSchema[TypeFormat.Email],
+  formatToSchema[TypeFormat.Formula],
+  formatToSchema[TypeFormat.Hostname],
+  formatToSchema[TypeFormat.JSON],
+  formatToSchema[TypeFormat.Markdown],
+  formatToSchema[TypeFormat.Regex],
+  formatToSchema[TypeFormat.URL],
+  formatToSchema[TypeFormat.UUID],
+  formatToSchema[TypeFormat.SingleSelect],
+  formatToSchema[TypeFormat.MultiSelect],
 
   //
   // Numbers
   //
 
-  formatToSchema[FormatEnum.Currency],
-  formatToSchema[FormatEnum.Integer],
-  formatToSchema[FormatEnum.Percent],
-  formatToSchema[FormatEnum.Timestamp],
+  formatToSchema[TypeFormat.Currency],
+  formatToSchema[TypeFormat.Integer],
+  formatToSchema[TypeFormat.Percent],
+  formatToSchema[TypeFormat.Timestamp],
 
   //
   // Dates
   //
 
-  formatToSchema[FormatEnum.DateTime],
-  formatToSchema[FormatEnum.Date],
-  formatToSchema[FormatEnum.Time],
-  formatToSchema[FormatEnum.Duration],
+  formatToSchema[TypeFormat.DateTime],
+  formatToSchema[TypeFormat.Date],
+  formatToSchema[TypeFormat.Time],
+  formatToSchema[TypeFormat.Duration],
 
   //
   // Objects
   //
 
-  formatToSchema[FormatEnum.GeoPoint],
+  formatToSchema[TypeFormat.GeoPoint],
 );
 
 export interface PropertyType extends Schema.Simplify<Schema.Schema.Type<typeof PropertySchema>> {}
 
-export const formatToAdditionalPropertyAttributes: Record<FormatEnum, Partial<JsonSchemaType>> = {
-  [FormatEnum.None]: {},
-  [FormatEnum.String]: {},
-  [FormatEnum.Number]: {},
-  [FormatEnum.Boolean]: {},
-  [FormatEnum.Ref]: {},
-  [FormatEnum.DID]: {},
-  [FormatEnum.DXN]: {},
-  [FormatEnum.Email]: {},
-  [FormatEnum.Formula]: {},
-  [FormatEnum.Hostname]: {},
-  [FormatEnum.JSON]: {},
-  [FormatEnum.Markdown]: {},
-  [FormatEnum.Regex]: {},
-  [FormatEnum.URL]: {},
-  [FormatEnum.UUID]: {},
-  [FormatEnum.SingleSelect]: {},
-  [FormatEnum.MultiSelect]: {},
-  [FormatEnum.Currency]: {},
-  [FormatEnum.Integer]: {},
-  [FormatEnum.Percent]: {},
-  [FormatEnum.Timestamp]: {},
-  [FormatEnum.DateTime]: {},
-  [FormatEnum.Date]: {},
-  [FormatEnum.Time]: {},
-  [FormatEnum.Duration]: {},
-  [FormatEnum.GeoPoint]: {
+export const formatToAdditionalPropertyAttributes: Record<TypeFormat, Partial<JsonSchemaType>> = {
+  [TypeFormat.None]: {},
+  [TypeFormat.String]: {},
+  [TypeFormat.Number]: {},
+  [TypeFormat.Boolean]: {},
+  [TypeFormat.Ref]: {},
+  [TypeFormat.DID]: {},
+  [TypeFormat.DXN]: {},
+  [TypeFormat.Email]: {},
+  [TypeFormat.Formula]: {},
+  [TypeFormat.Hostname]: {},
+  [TypeFormat.JSON]: {},
+  [TypeFormat.Markdown]: {},
+  [TypeFormat.Regex]: {},
+  [TypeFormat.URL]: {},
+  [TypeFormat.UUID]: {},
+  [TypeFormat.SingleSelect]: {},
+  [TypeFormat.MultiSelect]: {},
+  [TypeFormat.Currency]: {},
+  [TypeFormat.Integer]: {},
+  [TypeFormat.Percent]: {},
+  [TypeFormat.Timestamp]: {},
+  [TypeFormat.DateTime]: {},
+  [TypeFormat.Date]: {},
+  [TypeFormat.Time]: {},
+  [TypeFormat.Duration]: {},
+  [TypeFormat.GeoPoint]: {
     items: [
       { title: 'Longitude', type: TypeEnum.Number },
       { title: 'Latitude', type: TypeEnum.Number },
@@ -262,10 +262,10 @@ export const formatToAdditionalPropertyAttributes: Record<FormatEnum, Partial<Js
   },
 };
 
-export const getFormatSchema = (format?: FormatEnum): Schema.Schema.AnyNoContext => {
+export const getFormatSchema = (format?: TypeFormat): Schema.Schema.AnyNoContext => {
   if (format === undefined) {
-    return formatToSchema[FormatEnum.None];
+    return formatToSchema[TypeFormat.None];
   }
 
-  return formatToSchema[format] ?? formatToSchema[FormatEnum.None];
+  return formatToSchema[format] ?? formatToSchema[TypeFormat.None];
 };

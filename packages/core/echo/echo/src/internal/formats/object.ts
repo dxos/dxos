@@ -6,7 +6,7 @@ import * as Schema from 'effect/Schema';
 
 import { clamp } from '@dxos/util';
 
-import { FormatAnnotation, FormatEnum } from './types';
+import { FormatAnnotation, TypeFormat } from './types';
 
 /**
  * GeoJSON Format
@@ -27,7 +27,7 @@ export const GeoPoint = Schema.Tuple(
     title: 'Height ASL (m)',
   }),
 ).pipe(
-  FormatAnnotation.set(FormatEnum.GeoPoint),
+  FormatAnnotation.set(TypeFormat.GeoPoint),
   Schema.annotations({
     title: 'GeoPoint',
     description: 'GeoJSON Position',

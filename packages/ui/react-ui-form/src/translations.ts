@@ -35,7 +35,7 @@ export const translations = [
         // TODO(burdon): Factor out?
         'save button': 'Save',
 
-        // FormatEnum
+        // TypeFormat
         'format boolean': 'Boolean',
         'format currency': 'Currency',
         'format date': 'Date',

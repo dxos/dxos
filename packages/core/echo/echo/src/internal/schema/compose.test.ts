@@ -6,7 +6,7 @@ import * as Schema from 'effect/Schema';
 import { describe, test } from 'vitest';
 
 import { FieldPath } from '../annotations';
-import { FormatAnnotation, FormatEnum } from '../formats';
+import { FormatAnnotation, TypeFormat } from '../formats';
 import { ECHO_ANNOTATIONS_NS_KEY, toJsonSchema } from '../json-schema';
 import { TypedObject } from '../object';
 
@@ -20,7 +20,7 @@ describe('schema composition', () => {
     }) {}
 
     const OverlaySchema = Schema.Struct({
-      email: Schema.String.pipe(FieldPath('$.email'), FormatAnnotation.set(FormatEnum.Email)),
+      email: Schema.String.pipe(FieldPath('$.email'), FormatAnnotation.set(TypeFormat.Email)),
     });
 
     const baseSchema = toJsonSchema(BaseType);
@@ -29,7 +29,7 @@ describe('schema composition', () => {
     expect(composedSchema.properties).to.deep.eq({
       email: {
         type: 'string',
-        format: FormatEnum.Email,
+        format: TypeFormat.Email,
         // TODO(dmaretskyi): Should use the new field.
         [ECHO_ANNOTATIONS_NS_KEY]: {
           meta: {

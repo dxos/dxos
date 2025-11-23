@@ -6,7 +6,7 @@ import { signal } from '@preact/signals-core';
 import * as Predicate from 'effect/Predicate';
 
 import { Obj } from '@dxos/echo';
-import { FormatEnum, TypeEnum, getValue } from '@dxos/echo/internal';
+import { Format, TypeEnum, getValue } from '@dxos/echo/internal';
 import { cellClassesForFieldType, formatForDisplay } from '@dxos/react-ui-form';
 import {
   type DxGridCellValue,
@@ -120,12 +120,12 @@ export class TablePresentation<T extends TableRow = TableRow> {
         }
 
         switch (props.format) {
-          case FormatEnum.Boolean:
-          case FormatEnum.SingleSelect:
-          case FormatEnum.MultiSelect: {
+          case Format.TypeFormat.Boolean:
+          case Format.TypeFormat.SingleSelect:
+          case Format.TypeFormat.MultiSelect: {
             return '';
           }
-          case FormatEnum.Ref: {
+          case Format.TypeFormat.Ref: {
             if (!field.referencePath) {
               return ''; // TODO(burdon): Show error.
             }
@@ -201,7 +201,7 @@ export class TablePresentation<T extends TableRow = TableRow> {
     }
 
     // References.
-    if (props.format === FormatEnum.Ref && props.referenceSchema) {
+    if (props.format === Format.TypeFormat.Ref && props.referenceSchema) {
       const targetObj = getValue(obj, field.path)?.target;
       if (targetObj) {
         const dxn = Obj.getDXN(targetObj)?.toString();
@@ -210,7 +210,7 @@ export class TablePresentation<T extends TableRow = TableRow> {
     }
 
     // Booleans.
-    if (props.format === FormatEnum.Boolean) {
+    if (props.format === Format.TypeFormat.Boolean) {
       const value = getValue(obj, field.path);
       cell.accessoryHtml = tableControls.switch.render({
         colIndex,
@@ -221,7 +221,7 @@ export class TablePresentation<T extends TableRow = TableRow> {
     }
 
     // Single-Selects.
-    if (props.format === FormatEnum.SingleSelect) {
+    if (props.format === Format.TypeFormat.SingleSelect) {
       const value = getValue(obj, field.path);
       const options = this.model.projection.getFieldProjection(field.id).props.options;
       if (options) {
@@ -233,7 +233,7 @@ export class TablePresentation<T extends TableRow = TableRow> {
     }
 
     // Multi-Selects.
-    if (props.format === FormatEnum.MultiSelect) {
+    if (props.format === Format.TypeFormat.MultiSelect) {
       const values = getValue(obj, field.path) as string[] | undefined;
       const options = this.model.projection.getFieldProjection(field.id).props.options;
       if (options && values && values.length > 0) {

@@ -2,8 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Obj } from '@dxos/echo';
-import { FormatEnum } from '@dxos/echo/internal';
+import { Format, Obj } from '@dxos/echo';
 import { Graph, GraphModel, type GraphNode, createEdgeId } from '@dxos/graph';
 import { log } from '@dxos/log';
 
@@ -31,7 +30,7 @@ export const createGraph = <T extends Obj.Any>(objects: T[]): GraphModel<GraphNo
 
     // Parse schema to follow referenced objects.
     for (const prop of getSchemaProperties(schema.ast, object)) {
-      if (prop.format === FormatEnum.Ref) {
+      if (prop.format === Format.TypeFormat.Ref) {
         const source = object;
         const target = (object as any)[prop.name]?.target;
         if (target) {

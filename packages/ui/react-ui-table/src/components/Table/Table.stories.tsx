@@ -10,10 +10,10 @@ import { Obj, type QueryAST, Type } from '@dxos/echo';
 import {
   EchoObject,
   FormatAnnotation,
-  FormatEnum,
   GeneratorAnnotation,
   LabelAnnotation,
   PropertyMetaAnnotationId,
+  TypeFormat,
 } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
 import { faker } from '@dxos/random';
@@ -39,7 +39,7 @@ const TestSchema = Schema.Struct({
   urgent: Schema.optional(Schema.Boolean).annotations({ title: 'Urgent' }),
   status: Schema.optional(
     Schema.Literal('todo', 'in-progress', 'done')
-      .pipe(FormatAnnotation.set(FormatEnum.SingleSelect))
+      .pipe(FormatAnnotation.set(TypeFormat.SingleSelect))
       .annotations({
         title: 'Status',
         [PropertyMetaAnnotationId]: {
@@ -293,12 +293,12 @@ export const Tags: Meta<StoryProps> = {
         const schema = getSchemaFromPropertyDefinitions(typename, [
           {
             name: 'single',
-            format: FormatEnum.SingleSelect,
+            format: TypeFormat.SingleSelect,
             config: { options: selectOptions },
           },
           {
             name: 'multiple',
-            format: FormatEnum.MultiSelect,
+            format: TypeFormat.MultiSelect,
             config: { options: selectOptions },
           },
         ]);

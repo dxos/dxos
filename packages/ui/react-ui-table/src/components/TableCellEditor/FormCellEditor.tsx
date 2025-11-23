@@ -6,7 +6,7 @@ import * as Schema from 'effect/Schema';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { Filter, Obj, Ref } from '@dxos/echo';
-import { FormatEnum, type TypeAnnotation, getValue } from '@dxos/echo/internal';
+import { Format, type TypeAnnotation, getValue } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
 import { getSnapshot } from '@dxos/live-object';
 import { type Client } from '@dxos/react-client';
@@ -151,7 +151,7 @@ export const FormCellEditor = ({
   }, []);
 
   const refSchema = useMemo(() => {
-    if (fieldProjection.props.format === FormatEnum.Ref && fieldProjection.props.referenceSchema) {
+    if (fieldProjection.props.format === Format.TypeFormat.Ref && fieldProjection.props.referenceSchema) {
       const { schema: refSchema } = getSchema({
         typename: fieldProjection.props.referenceSchema,
       });

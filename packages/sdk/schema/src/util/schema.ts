@@ -6,10 +6,10 @@ import * as Schema from 'effect/Schema';
 
 import {
   type EchoSchema,
-  FormatEnum,
   type JsonSchemaType,
   type SelectOptionSchema,
   TypeEnum,
+  TypeFormat,
   TypedObject,
   formatToType,
 } from '@dxos/echo/internal';
@@ -21,7 +21,7 @@ export type SelectOptionType = typeof SelectOptionSchema.Type;
 export type SchemaPropertyDefinition = {
   // TODO(ZaymonFC): change `name` to `path`.
   name: string;
-  format: FormatEnum;
+  format: TypeFormat;
   config?: { options?: SelectOptionType[] };
 };
 
@@ -49,15 +49,15 @@ export const getSchemaFromPropertyDefinitions = (
 
   for (const prop of properties) {
     if (prop.config?.options) {
-      if (prop.format === FormatEnum.SingleSelect) {
+      if (prop.format === TypeFormat.SingleSelect) {
         makeSingleSelectAnnotations(schema.jsonSchema.properties![prop.name], [...prop.config.options]);
       }
-      if (prop.format === FormatEnum.MultiSelect) {
+      if (prop.format === TypeFormat.MultiSelect) {
         makeMultiSelectAnnotations(schema.jsonSchema.properties![prop.name], [...prop.config.options]);
       }
     }
 
-    if (prop.format === FormatEnum.GeoPoint) {
+    if (prop.format === TypeFormat.GeoPoint) {
       schema.jsonSchema.properties![prop.name].type = TypeEnum.Object;
     }
 
@@ -76,7 +76,7 @@ export const makeSingleSelectAnnotations = (
   options: Array<{ id: string; title?: string; color?: string }>,
 ) => {
   jsonProperty.enum = options.map(({ id }) => id);
-  jsonProperty.format = FormatEnum.SingleSelect;
+  jsonProperty.format = TypeFormat.SingleSelect;
   jsonProperty.annotations = {
     meta: {
       singleSelect: {
@@ -99,7 +99,7 @@ export const makeMultiSelectAnnotations = (
   // TODO(ZaymonFC): Is this how do we encode an array of enums?
   jsonProperty.type = 'object';
   jsonProperty.items = { type: 'string', enum: options.map(({ id }) => id) };
-  jsonProperty.format = FormatEnum.MultiSelect;
+  jsonProperty.format = TypeFormat.MultiSelect;
   jsonProperty.annotations = {
     meta: {
       multiSelect: {

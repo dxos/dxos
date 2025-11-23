@@ -16,7 +16,7 @@ import {
   RelationTargetId,
   createQueueDXN,
 } from '@dxos/echo/internal';
-import { EchoObjectSchema, Ref, type Ref$, foreignKey, getTypeReference } from '@dxos/echo/internal';
+import { EchoObjectSchema, type Ref$, foreignKey, getTypeReference } from '@dxos/echo/internal';
 import { TestSchema, prepareAstForCompare } from '@dxos/echo/testing';
 import { Reference, decodeReference, encodeReference } from '@dxos/echo-protocol';
 import { registerSignalsRuntime } from '@dxos/echo-signals';
@@ -200,8 +200,8 @@ describe('Reactive Object with ECHO database', () => {
     graph.schemaRegistry.addSchema([TestSchema]);
     const objectHost = db.add(Obj.make(TestSchema, { field: [] }));
     const object = db.add(Obj.make(TestSchema, { field: 'foo' }));
-    objectHost.field?.push({ hosted: Ref.make(object) });
-    Obj.make(TestSchema, { field: [Obj.make(TestSchema, { field: Ref.make(objectHost) })] });
+    objectHost.field?.push({ hosted: Type.Ref.make(object) });
+    Obj.make(TestSchema, { field: [Obj.make(TestSchema, { field: Type.Ref.make(objectHost) })] });
     expect(objectHost.field[0].hosted).not.to.be.undefined;
   });
 

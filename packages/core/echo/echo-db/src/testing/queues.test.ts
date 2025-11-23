@@ -5,8 +5,7 @@
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import { Event } from '@dxos/async';
-import { Filter, Obj, Query, Relation, Type } from '@dxos/echo';
-import { Ref } from '@dxos/echo/internal';
+import { Filter, Obj, Query, type Ref, Relation, Type } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
 import { DXN, SpaceId } from '@dxos/keys';
 import { KEY_QUEUE_POSITION } from '@dxos/protocols';
@@ -31,7 +30,7 @@ describe('queues', () => {
     const obj = db.add(
       Obj.make(Type.Expando, {
         // TODO(dmaretskyi): Support Ref.make
-        queue: Ref.fromDXN(queues.create().dxn) as Ref<Queue>,
+        queue: Type.Ref.fromDXN(queues.create().dxn) as Ref.Ref<Queue>,
       }),
     );
 

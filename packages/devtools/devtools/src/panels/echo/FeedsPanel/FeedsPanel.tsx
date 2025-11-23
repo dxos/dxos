@@ -5,7 +5,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 
 import { generateName } from '@dxos/display-name';
-import { FormatEnum } from '@dxos/echo/internal';
+import { Format } from '@dxos/echo';
 import { type PublicKey } from '@dxos/keys';
 import { type Contact } from '@dxos/protocols/proto/dxos/client/services';
 import {
@@ -84,10 +84,10 @@ export const FeedsPanel = (props: { space?: Space }) => {
 
   const properties: TablePropertyDefinition[] = useMemo(
     () => [
-      { name: 'type', format: FormatEnum.String },
-      { name: 'issuer', format: FormatEnum.String },
-      { name: 'feedKey', format: FormatEnum.JSON, size: 180 },
-      { name: 'seq', format: FormatEnum.Number, size: 80 },
+      { name: 'type', format: Format.TypeFormat.String },
+      { name: 'issuer', format: Format.TypeFormat.String },
+      { name: 'feedKey', format: Format.TypeFormat.JSON, size: 180 },
+      { name: 'seq', format: Format.TypeFormat.Number, size: 80 },
     ],
     [],
   );

@@ -4,7 +4,7 @@
 
 import React, { useMemo } from 'react';
 
-import { FormatEnum } from '@dxos/echo/internal';
+import { Format } from '@dxos/echo';
 import { SpaceMember, useMembers } from '@dxos/react-client/echo';
 import { type Space } from '@dxos/react-client/echo';
 import { Toolbar } from '@dxos/react-ui';
@@ -21,11 +21,11 @@ export const MembersPanel = (props: { space?: Space }) => {
 
   const properties: TablePropertyDefinition[] = useMemo(
     () => [
-      { name: 'identityKey', format: FormatEnum.DID },
-      { name: 'displayName', format: FormatEnum.String },
+      { name: 'identityKey', format: Format.TypeFormat.DID },
+      { name: 'displayName', format: Format.TypeFormat.String },
       {
         name: 'status',
-        format: FormatEnum.SingleSelect,
+        format: Format.TypeFormat.SingleSelect,
         config: {
           options: [
             { id: 'online', title: 'online', color: 'green' },

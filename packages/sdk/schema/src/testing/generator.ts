@@ -8,11 +8,11 @@ import * as SchemaAST from 'effect/SchemaAST';
 
 import { Obj, type Type } from '@dxos/echo';
 import {
-  FormatEnum,
   GeneratorAnnotationId,
   type GeneratorAnnotationValue,
   type JsonSchemaType,
   Ref,
+  TypeFormat,
   type TypedObject,
   getSchemaReference,
   getTypename,
@@ -137,7 +137,7 @@ export const createReferences = <T extends Obj.Any>(schema: Schema.Schema<T>, db
   return async (obj: T): Promise<T> => {
     for (const property of getSchemaProperties<T>(schema.ast)) {
       if (!property.optional || randomBoolean()) {
-        if (property.format === FormatEnum.Ref) {
+        if (property.format === TypeFormat.Ref) {
           const jsonSchema = findAnnotation<JsonSchemaType>(property.ast, SchemaAST.JSONSchemaAnnotationId);
           if (jsonSchema) {
             const { typename } = getSchemaReference(jsonSchema) ?? {};

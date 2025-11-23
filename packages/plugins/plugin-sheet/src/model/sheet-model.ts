@@ -23,7 +23,7 @@ import {
 } from '@dxos/compute';
 import { Resource } from '@dxos/context';
 import { Obj } from '@dxos/echo';
-import { FormatEnum, TypeEnum } from '@dxos/echo/internal';
+import { Format, TypeEnum } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -46,14 +46,14 @@ import { type Sheet, type SheetAction } from '../types';
 // https://hyperformula.handsontable.com/guide/types-of-values.html
 //  - https://github.com/handsontable/hyperformula/blob/master/src/Cell.ts (CellValueType)
 //  - https://github.com/handsontable/hyperformula/blob/master/src/interpreter/InterpreterValue.ts (NumberType)
-const typeMap: Record<string, { type: TypeEnum; format?: FormatEnum }> = {
+const typeMap: Record<string, { type: TypeEnum; format?: TypeFormat }> = {
   BOOLEAN: { type: TypeEnum.Boolean },
   NUMBER_RAW: { type: TypeEnum.Number },
-  NUMBER_PERCENT: { type: TypeEnum.Number, format: FormatEnum.Percent },
-  NUMBER_CURRENCY: { type: TypeEnum.Number, format: FormatEnum.Currency },
-  NUMBER_DATETIME: { type: TypeEnum.String, format: FormatEnum.DateTime },
-  NUMBER_DATE: { type: TypeEnum.String, format: FormatEnum.Date },
-  NUMBER_TIME: { type: TypeEnum.String, format: FormatEnum.Time },
+  NUMBER_PERCENT: { type: TypeEnum.Number, format: Format.TypeFormat.Percent },
+  NUMBER_CURRENCY: { type: TypeEnum.Number, format: Format.TypeFormat.Currency },
+  NUMBER_DATETIME: { type: TypeEnum.String, format: Format.TypeFormat.DateTime },
+  NUMBER_DATE: { type: TypeEnum.String, format: Format.TypeFormat.Date },
+  NUMBER_TIME: { type: TypeEnum.String, format: Format.TypeFormat.Time },
 };
 
 const getTopLeft = (range: CellRange): CellAddress => {
@@ -361,7 +361,7 @@ export class SheetModel extends Resource {
   /**
    * Get value type.
    */
-  getValueDescription(cell: CellAddress): { type: TypeEnum; format?: FormatEnum } | undefined {
+  getValueDescription(cell: CellAddress): { type: TypeEnum; format?: TypeFormat } | undefined {
     invariant(this._node);
     const addr = toSimpleCellAddress(this._node.sheetId, cell);
     const type = this._node.graph.hf.getCellValueDetailedType(addr);

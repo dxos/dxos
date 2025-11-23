@@ -4,7 +4,7 @@
 
 import React, { type FC, useMemo } from 'react';
 
-import { FormatEnum } from '@dxos/echo/internal';
+import { Format } from '@dxos/echo';
 import { TraceEvent } from '@dxos/functions-runtime';
 import { Filter, type Queue, useQuery } from '@dxos/react-client/echo';
 import { DynamicTable, type TablePropertyDefinition } from '@dxos/react-ui-table';
@@ -19,11 +19,17 @@ export const LogPanel: FC<LogPanelProps> = ({ queue }) => {
   // Define properties for the DynamicTable
   const properties: TablePropertyDefinition[] = useMemo(
     () => [
-      { name: 'time', title: 'Started', format: FormatEnum.DateTime, sort: 'desc' as const, size: 194 },
+      {
+        name: 'time',
+        title: 'Started',
+        format: Format.TypeFormat.TypeFormat.DateTime,
+        sort: 'desc' as const,
+        size: 194,
+      },
       {
         name: 'level',
         title: 'Level',
-        format: FormatEnum.SingleSelect,
+        format: Format.TypeFormat.TypeFormat.SingleSelect,
         size: 100,
         config: {
           options: [
@@ -35,8 +41,8 @@ export const LogPanel: FC<LogPanelProps> = ({ queue }) => {
           ],
         },
       },
-      { name: 'message', title: 'Message', format: FormatEnum.String },
-      { name: 'context', title: 'Context', format: FormatEnum.JSON, size: 500 },
+      { name: 'message', title: 'Message', format: Format.TypeFormat.String },
+      { name: 'context', title: 'Context', format: Format.TypeFormat.TypeFormat.JSON, size: 500 },
     ],
     [],
   );

@@ -13,13 +13,13 @@ import { type Space } from '@dxos/client/echo';
 import { Filter, Obj, Query, QueryAST, Ref, Type } from '@dxos/echo';
 import {
   FormAnnotation,
-  FormatEnum,
   JsonSchemaType,
   LabelAnnotation,
   ReferenceAnnotationId,
   type ReferenceAnnotationValue,
   type RuntimeSchemaRegistry,
   TypeEnum,
+  TypeFormat,
   toEffectSchema,
 } from '@dxos/echo/internal';
 import { type EchoSchemaRegistry } from '@dxos/echo-db';
@@ -219,7 +219,7 @@ export const makeWithReferences = async ({
       continue;
     }
 
-    if (property.format !== FormatEnum.Ref) {
+    if (property.format !== TypeFormat.Ref) {
       continue;
     }
 
@@ -251,7 +251,7 @@ export const makeWithReferences = async ({
           props: {
             property: property.name as JsonProp,
             type: TypeEnum.Ref,
-            format: FormatEnum.Ref,
+            format: TypeFormat.Ref,
             referenceSchema: Type.getTypename(referenceSchema),
             title: property.title,
           },
