@@ -2,6 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
+export * from '@dxos/keys';
+
 export * from './errors';
 
 // TODO(burdon): Separate namesapces for Query/Filter/Order?
