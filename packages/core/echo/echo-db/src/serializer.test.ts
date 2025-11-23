@@ -6,7 +6,7 @@ import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import { Obj, Query, Type } from '@dxos/echo';
 import { Ref } from '@dxos/echo/internal';
-import { Testing } from '@dxos/echo/testing';
+import { TestSchema } from '@dxos/echo/testing';
 import { PublicKey } from '@dxos/keys';
 import { createTestLevel } from '@dxos/kv-store/testing';
 import { openAndClose } from '@dxos/test-utils';
@@ -30,15 +30,15 @@ describe('Serializer', () => {
     test('export typed object', async () => {
       const serializer = new Serializer();
       const { db, graph } = await builder.createDatabase();
-      graph.schemaRegistry.addSchema([Testing.Task]);
+      graph.schemaRegistry.addSchema([TestSchema.Task]);
 
-      const task = db.add(Obj.make(Testing.Task, { title: 'Testing' }));
+      const task = db.add(Obj.make(TestSchema.Task, { title: 'Testing' }));
       const data = serializer.exportObject(task);
 
       expect(data).to.deep.include({
         '@id': task.id,
         '@meta': { keys: [] },
-        '@type': { '/': `dxn:type:${Type.getTypename(Testing.Task)}:${Type.getVersion(Testing.Task)}` },
+        '@type': { '/': `dxn:type:${Type.getTypename(TestSchema.Task)}:${Type.getVersion(TestSchema.Task)}` },
         title: 'Testing',
       });
     });
@@ -202,8 +202,8 @@ describe('Serializer', () => {
 
       {
         const { db, graph } = await builder.createDatabase();
-        graph.schemaRegistry.addSchema([Testing.Person]);
-        const contact = Obj.make(Testing.Person, { name });
+        graph.schemaRegistry.addSchema([TestSchema.Person]);
+        const contact = Obj.make(TestSchema.Person, { name });
         db.add(contact);
         await db.flush();
         data = await new Serializer().export(db);
@@ -214,17 +214,17 @@ describe('Serializer', () => {
 
       {
         const { db, graph } = await builder.createDatabase();
-        graph.schemaRegistry.addSchema([Testing.Person]);
+        graph.schemaRegistry.addSchema([TestSchema.Person]);
 
         await new Serializer().import(db, data);
         expect((await db.query(Query.select(Filter.everything())).run()).objects).to.have.length(1);
 
         const {
           objects: [contact],
-        } = await db.query(Filter.type(Testing.Person)).run();
+        } = await db.query(Filter.type(TestSchema.Person)).run();
         expect(contact.name).to.eq(name);
-        expect(Obj.instanceOf(Testing.Person, contact)).to.be.true;
-        expect(Obj.getSchema(contact)).to.eq(Testing.Person);
+        expect(Obj.instanceOf(TestSchema.Person, contact)).to.be.true;
+        expect(Obj.getSchema(contact)).to.eq(TestSchema.Person);
       }
     });
 

@@ -7,14 +7,14 @@ import { afterAll, beforeAll, describe, expect, test } from 'vitest';
 
 import { Obj, Type } from '@dxos/echo';
 import { getTypeReference } from '@dxos/echo/internal';
-import { TestingDeprecated, updateCounter } from '@dxos/echo/testing';
+import { TestSchema, updateCounter } from '@dxos/echo/testing';
 import { registerSignalsRuntime } from '@dxos/echo-signals';
 import { getProxyHandler } from '@dxos/live-object';
 import { log } from '@dxos/log';
 
 registerSignalsRuntime();
 
-const TEST_OBJECT: TestingDeprecated.TestSchema = {
+const TEST_OBJECT: TestSchema.TestSchema = {
   string: 'foo',
   number: 42,
   boolean: true,
@@ -33,13 +33,13 @@ export interface TestConfiguration {
   allowObjectAssignments?: boolean;
   beforeAllCb?: () => Promise<void>;
   afterAllCb?: () => Promise<void>;
-  createObjectFn: (props?: Partial<TestingDeprecated.TestSchema>) => Promise<TestingDeprecated.TestSchema>;
+  createObjectFn: (props?: Partial<TestSchema.TestSchema>) => Promise<TestSchema.TestSchema>;
 }
 
 export type TestConfigurationFactory = (schema: Schema.Schema.AnyNoContext) => TestConfiguration | null;
 
 export const reactiveProxyTests = (testConfigFactory: TestConfigurationFactory): void => {
-  for (const schema of [Type.Expando, TestingDeprecated.TestSchemaType]) {
+  for (const schema of [Type.Expando, TestSchema.TestSchemaType]) {
     const testConfig = testConfigFactory(schema);
     if (testConfig == null) {
       continue;
@@ -97,7 +97,6 @@ export const reactiveProxyTests = (testConfigFactory: TestConfigurationFactory):
         const plainObject = { field: 'bar' };
         obj.object = plainObject;
         expect(obj.object.field).to.eq('bar');
-
         expect(obj.object).to.deep.eq(plainObject);
 
         obj.object.field = 'baz';
@@ -108,7 +107,6 @@ export const reactiveProxyTests = (testConfigFactory: TestConfigurationFactory):
         const obj = await createObject();
 
         obj.object = { field: 'bar' };
-        // eslint-disable-next-line no-self-compare
         expect(obj.object === obj.object).to.be.true;
       });
 
@@ -193,7 +191,7 @@ export const reactiveProxyTests = (testConfigFactory: TestConfigurationFactory):
         const obj = await createObject();
 
         obj.objectArray = [{ field: 'bar' }];
-        // eslint-disable-next-line no-self-compare
+
         expect(obj.objectArray === obj.objectArray).to.be.true;
       });
 

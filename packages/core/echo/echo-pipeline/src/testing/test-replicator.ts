@@ -30,7 +30,7 @@ export class TestReplicationNetwork extends Resource {
     this._latency = options.latency;
   }
 
-  protected override async _close(ctx: Context): Promise<void> {
+  protected override async _close(_ctx: Context): Promise<void> {
     for (const replicator of this._replicators) {
       for (const connection of replicator.connections) {
         void connection.writable.abort();
@@ -167,11 +167,11 @@ export class TestReplicatorConnection implements ReplicatorConnection {
     return false;
   }
 
-  async shouldAdvertise(params: ShouldAdvertiseParams): Promise<boolean> {
+  async shouldAdvertise(_params: ShouldAdvertiseParams): Promise<boolean> {
     return true;
   }
 
-  shouldSyncCollection(params: ShouldSyncCollectionParams): boolean {
+  shouldSyncCollection(_params: ShouldSyncCollectionParams): boolean {
     return true;
   }
 }
@@ -194,5 +194,6 @@ export const brokenAutomergeReplicatorFactory: AutomergeReplicatorFactory = (par
   params[1]!.onSyncMessage = () => {
     throw new Error();
   };
+
   return testAutomergeReplicatorFactory(params);
 };

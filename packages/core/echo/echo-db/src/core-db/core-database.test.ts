@@ -7,7 +7,7 @@ import { describe, expect, test } from 'vitest';
 
 import { Trigger } from '@dxos/async';
 import { Filter, Obj, Ref, Type } from '@dxos/echo';
-import { Testing } from '@dxos/echo/testing';
+import { TestSchema } from '@dxos/echo/testing';
 import { type DatabaseDirectory, SpaceDocVersion, createIdFromSpaceKey } from '@dxos/echo-protocol';
 import { registerSignalsRuntime } from '@dxos/echo-signals';
 import { ObjectId } from '@dxos/keys';
@@ -362,8 +362,8 @@ describe('CoreDatabase', () => {
       const testBuilder = new EchoTestBuilder();
       await openAndClose(testBuilder);
       const { db, graph } = await testBuilder.createDatabase();
-      graph.schemaRegistry.addSchema([Testing.Person]);
-      const contact = db.add(Obj.make(Testing.Person, { name: 'Foo' }));
+      graph.schemaRegistry.addSchema([TestSchema.Person]);
+      const contact = db.add(Obj.make(TestSchema.Person, { name: 'Foo' }));
 
       await db._coreDatabase.atomicReplaceObject(contact.id, {
         type: DXN.parse('dxn:type:example.com/type/Task:0.1.0'),

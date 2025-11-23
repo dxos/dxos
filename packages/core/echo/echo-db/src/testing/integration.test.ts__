@@ -6,23 +6,20 @@ import * as Schema from 'effect/Schema';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import { Trigger, asyncTimeout } from '@dxos/async';
-import { Obj, Type } from '@dxos/echo';
+import { Obj, Relation, Type } from '@dxos/echo';
 import {
   Expando,
   Ref,
-  RelationSourceId,
-  RelationTargetId,
   getSchema,
   getSchemaTypename,
   getTypeAnnotation,
   getTypeReference,
-  live,
+  makeObject,
 } from '@dxos/echo/internal';
-import { TestingDeprecated, updateCounter } from '@dxos/echo/testing';
+import { TestSchema, updateCounter } from '@dxos/echo/testing';
 import { MeshEchoReplicator } from '@dxos/echo-pipeline';
 import {
   TestReplicationNetwork,
-  TestSchema,
   brokenAutomergeReplicatorFactory,
   testAutomergeReplicatorFactory,
 } from '@dxos/echo-pipeline/testing';
@@ -31,7 +28,6 @@ import { DXN, type ObjectId, PublicKey } from '@dxos/keys';
 import { TestBuilder as TeleportTestBuilder, TestPeer as TeleportTestPeer } from '@dxos/teleport/testing';
 import { deferAsync } from '@dxos/util';
 
-import { getSource, getTarget } from '../echo-handler/relations';
 import { Filter, Query } from '../query';
 
 import { EchoTestBuilder, createDataAssertion } from './echo-test-builder';
@@ -336,7 +332,7 @@ describe('Integration tests', () => {
 
     await teleportConnections[0].whenOpen(true);
     await using db1 = await peer1.createDatabase(spaceKey);
-    db1.add(live(Expando, {}));
+    db1.add(makeObject(Expando, {}));
     await teleportConnections[0].whenOpen(false);
   });
 
@@ -410,24 +406,24 @@ describe('Integration tests', () => {
         reactiveSchemaQuery: false,
         preloadSchemaOnOpen: false,
       });
-      db.graph.schemaRegistry.addSchema([TestingDeprecated.Person, TestingDeprecated.HasManager]);
+      db.graph.schemaRegistry.addSchema([TestSchema.Person, TestSchema.HasManager]);
 
       let relationId!: ObjectId;
       {
         const alice = db.add(
-          live(TestingDeprecated.Person, {
+          makeObject(TestSchema.Person, {
             name: 'Alice',
           }),
         );
         const bob = db.add(
-          live(TestingDeprecated.Person, {
+          makeObject(TestSchema.Person, {
             name: 'Bob',
           }),
         );
         const hasManager = db.add(
-          live(TestingDeprecated.HasManager, {
-            [RelationSourceId]: bob,
-            [RelationTargetId]: alice,
+          makeObject(TestSchema.HasManager, {
+            [Relation.Source]: bob,
+            [Relation.Target]: alice,
             since: '2022',
           }),
         );
@@ -441,8 +437,8 @@ describe('Integration tests', () => {
         const {
           objects: [obj],
         } = await db.query(Filter.ids(relationId)).run();
-        expect(getSource(obj).name).toEqual('Bob');
-        expect(getTarget(obj).name).toEqual('Alice');
+        expect(Relation.getSource(obj).name).toEqual('Bob');
+        expect(Relation.getTarget(obj).name).toEqual('Alice');
       }
     });
   });
@@ -463,7 +459,7 @@ describe('Integration tests', () => {
         const [stored] = await db.schemaRegistry.register([TestSchema]);
         schemaDxn = DXN.fromLocalObjectId(stored.id).toString();
 
-        const object = db.add(live(stored, { field: 'test' }));
+        const object = db.add(makeObject(stored, { field: 'test' }));
         expect(getSchema(object)).to.eq(stored);
 
         db.add({ text: 'Expando object' }); // Add Expando object to test filtering
@@ -515,9 +511,9 @@ describe('Integration tests', () => {
         reactiveSchemaQuery: false,
         preloadSchemaOnOpen: false,
       });
-      const [schema] = await db.schemaRegistry.register([TestingDeprecated.Person]);
+      const [schema] = await db.schemaRegistry.register([TestSchema.Person]);
       typeDXN = getTypeReference(schema)!.toDXN();
-      db.add(live(schema, { name: 'Bob' }));
+      db.add(makeObject(schema, { name: 'Bob' }));
       await db.flush({ indexes: true });
     }
 
@@ -528,7 +524,7 @@ describe('Integration tests', () => {
         objects: [obj],
       } = await db.query(Query.select(Filter.typeDXN(typeDXN))).run();
       expect(getSchema(obj)).toBeDefined();
-      expect(getSchemaTypename(getSchema(obj)!)).toEqual(TestingDeprecated.Person.typename);
+      expect(getSchemaTypename(getSchema(obj)!)).toEqual(TestSchema.Person.typename);
     }
   });
 });

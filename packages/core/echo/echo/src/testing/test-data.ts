@@ -2,33 +2,36 @@
 // Copyright 2025 DXOS.org
 //
 
-import { getSchemaDXN } from '@dxos/echo/internal';
 import { DatabaseDirectory, ObjectStructure } from '@dxos/echo-protocol';
 import { DXN, ObjectId, PublicKey } from '@dxos/keys';
 
-import * as TestSchema from './test-schema';
+import { Type } from '../index';
+
+import { TestSchema } from './test-schema';
 
 const spaceKey = PublicKey.random();
 
+// TODO(burdon): Use Obj.make.
+
 export const PEOPLE = {
-  fred: DatabaseDirectory.make({
-    spaceKey: spaceKey.toHex(),
-    objects: {
-      [ObjectId.random()]: ObjectStructure.makeObject({
-        type: getSchemaDXN(TestSchema.Person)!.toString(),
-        data: {
-          name: 'Fred',
-        },
-      }),
-    },
-  }),
   alice: DatabaseDirectory.make({
     spaceKey: spaceKey.toHex(),
     objects: {
       [ObjectId.random()]: ObjectStructure.makeObject({
-        type: getSchemaDXN(TestSchema.Person)!.toString(),
+        type: Type.getDXN(TestSchema.Person)!.toString(),
         data: {
           name: 'Alice',
+        },
+      }),
+    },
+  }),
+  bob: DatabaseDirectory.make({
+    spaceKey: spaceKey.toHex(),
+    objects: {
+      [ObjectId.random()]: ObjectStructure.makeObject({
+        type: Type.getDXN(TestSchema.Person)!.toString(),
+        data: {
+          name: 'Bob',
         },
       }),
     },
@@ -36,26 +39,26 @@ export const PEOPLE = {
 };
 
 export const ORGS = {
-  cyberdyne: DatabaseDirectory.make({
+  dxos: DatabaseDirectory.make({
     spaceKey: spaceKey.toHex(),
     objects: {
       [ObjectId.random()]: ObjectStructure.makeObject({
-        type: getSchemaDXN(TestSchema.Organization)!.toString(),
+        type: Type.getDXN(TestSchema.Organization)!.toString(),
         data: {
-          name: 'Cyberdyne Systems',
-          founded: '1984',
+          name: 'DXOS',
+          founded: '2023',
         },
       }),
     },
   }),
-  aperture: DatabaseDirectory.make({
+  cyberdyne: DatabaseDirectory.make({
     spaceKey: spaceKey.toHex(),
     objects: {
       [ObjectId.random()]: ObjectStructure.makeObject({
-        type: getSchemaDXN(TestSchema.Organization)!.toString(),
+        type: Type.getDXN(TestSchema.Organization)!.toString(),
         data: {
-          name: 'Aperture Science',
-          founded: '1953',
+          name: 'Cyberdyne Systems',
+          founded: '1984',
         },
       }),
     },
@@ -67,8 +70,8 @@ export const WORKS_FOR = {
     spaceKey: spaceKey.toHex(),
     objects: {
       [ObjectId.random()]: ObjectStructure.makeRelation({
-        type: getSchemaDXN(TestSchema.WorksFor)!.toString(),
-        source: { '/': DXN.fromLocalObjectId(Object.keys(PEOPLE.fred.objects!)[0]).toString() },
+        type: Type.getDXN(TestSchema.EmployedBy)!.toString(),
+        source: { '/': DXN.fromLocalObjectId(Object.keys(PEOPLE.bob.objects!)[0]).toString() },
         target: { '/': DXN.fromLocalObjectId(Object.keys(ORGS.cyberdyne.objects!)[0]).toString() },
         data: {
           since: '2020',
@@ -81,9 +84,9 @@ export const WORKS_FOR = {
     spaceKey: spaceKey.toHex(),
     objects: {
       [ObjectId.random()]: ObjectStructure.makeRelation({
-        type: getSchemaDXN(TestSchema.WorksFor)!.toString(),
+        type: Type.getDXN(TestSchema.EmployedBy)!.toString(),
         source: { '/': DXN.fromLocalObjectId(Object.keys(PEOPLE.alice.objects!)[0]).toString() },
-        target: { '/': DXN.fromLocalObjectId(Object.keys(ORGS.aperture.objects!)[0]).toString() },
+        target: { '/': DXN.fromLocalObjectId(Object.keys(ORGS.dxos.objects!)[0]).toString() },
         data: {
           since: '2018',
           position: 'Research Scientist',
@@ -98,13 +101,13 @@ export const TASKS = {
     spaceKey: spaceKey.toHex(),
     objects: {
       [ObjectId.random()]: ObjectStructure.makeObject({
-        type: getSchemaDXN(TestSchema.Task)!.toString(),
+        type: Type.getDXN(TestSchema.Task)!.toString(),
         data: {
           title: 'Complete project documentation',
           description: 'Write comprehensive documentation for the new system',
           status: 'in-progress',
           dueDate: '2023-12-31',
-          assignee: { '/': DXN.fromLocalObjectId(Object.keys(PEOPLE.fred.objects!)[0]).toString() },
+          assignee: { '/': DXN.fromLocalObjectId(Object.keys(PEOPLE.bob.objects!)[0]).toString() },
         },
       }),
     },
@@ -113,7 +116,7 @@ export const TASKS = {
     spaceKey: spaceKey.toHex(),
     objects: {
       [ObjectId.random()]: ObjectStructure.makeObject({
-        type: getSchemaDXN(TestSchema.Task)!.toString(),
+        type: Type.getDXN(TestSchema.Task)!.toString(),
         data: {
           title: 'Run experiments',
           description: 'Conduct series of experiments on the portal device',

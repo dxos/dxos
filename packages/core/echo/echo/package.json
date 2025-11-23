@@ -15,30 +15,6 @@
       "browser": "./dist/lib/browser/index.mjs",
       "node": "./dist/lib/node-esm/index.mjs"
     },
-    "./Type": {
-      "source": "./src/Type.ts",
-      "types": "./dist/types/src/Type.d.ts",
-      "browser": "./dist/lib/browser/Type.mjs",
-      "node": "./dist/lib/node-esm/Type.mjs"
-    },
-    "./Obj": {
-      "source": "./src/Obj.ts",
-      "types": "./dist/types/src/Obj.d.ts",
-      "browser": "./dist/lib/browser/Obj.mjs",
-      "node": "./dist/lib/node-esm/Obj.mjs"
-    },
-    "./Relation": {
-      "source": "./src/Relation.ts",
-      "types": "./dist/types/src/Relation.d.ts",
-      "browser": "./dist/lib/browser/Relation.mjs",
-      "node": "./dist/lib/node-esm/Relation.mjs"
-    },
-    "./Ref": {
-      "source": "./src/Ref.ts",
-      "types": "./dist/types/src/Ref.d.ts",
-      "browser": "./dist/lib/browser/Ref.mjs",
-      "node": "./dist/lib/node-esm/Ref.mjs"
-    },
     "./internal": {
       "source": "./src/internal/index.ts",
       "types": "./dist/types/src/internal/index.d.ts",
@@ -55,17 +31,8 @@
   "types": "dist/types/src/index.d.ts",
   "typesVersions": {
     "*": {
-      "Type": [
-        "dist/types/src/Type.d.ts"
-      ],
-      "Obj": [
-        "dist/types/src/Obj.d.ts"
-      ],
-      "Relation": [
-        "dist/types/src/Relation.d.ts"
-      ],
-      "Ref": [
-        "dist/types/src/Ref.d.ts"
+      "internal": [
+        "dist/types/src/internal/index.d.ts"
       ],
       "testing": [
         "dist/types/src/testing/index.d.ts"
