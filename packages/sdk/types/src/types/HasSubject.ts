@@ -5,10 +5,10 @@
 import * as Schema from 'effect/Schema';
 
 import { Obj, Type } from '@dxos/echo';
+import { ObjectId } from '@dxos/keys';
 
 export const HasSubject = Schema.Struct({
-  id: Type.ObjectId,
-  completedAt: Type.Format.DateTime,
+  id: ObjectId,
 }).pipe(
   Type.Relation({
     typename: 'dxos.org/relation/HasSubject',

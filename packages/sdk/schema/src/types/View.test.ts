@@ -51,7 +51,7 @@ describe('Projection', () => {
       expect(props).to.deep.eq({
         property: 'name',
         type: TypeEnum.String,
-        format: Format.TypeFormat.TypeFormat.String,
+        format: Format.TypeFormat.String,
       });
     }
 
@@ -60,7 +60,7 @@ describe('Projection', () => {
       expect(props).to.deep.eq({
         property: 'organization',
         type: TypeEnum.Ref,
-        format: Format.TypeFormat.TypeFormat.Ref,
+        format: Format.TypeFormat.Ref,
         referencePath: 'name',
         referenceSchema: 'example.com/type/Organization',
       });
@@ -92,8 +92,8 @@ describe('Projection', () => {
       jsonSchema: Type.toJsonSchema(
         Schema.Struct({
           name: Schema.optional(Schema.String).annotations({ title: 'Name' }),
-          email: Schema.optional(Type.Format.Email),
-          salary: Schema.optional(Type.Format.Currency({ code: 'usd', decimals: 2 })),
+          email: Schema.optional(Format.Email),
+          salary: Schema.optional(Format.Currency({ code: 'usd', decimals: 2 })),
         }),
       ),
     });

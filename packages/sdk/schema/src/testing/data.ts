@@ -4,7 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Filter, type Live, Obj, Query, Type } from '@dxos/echo';
+import { Filter, Format, Obj, Query, Type } from '@dxos/echo';
 import { TypedObject } from '@dxos/echo/internal';
 
 import { StoredSchema, View } from '../types';
@@ -21,7 +21,7 @@ export class TestSchema extends TypedObject({
       }),
     ),
   ),
-  email: Type.Format.Email.pipe(Schema.optional),
+  email: Format.Email.pipe(Schema.optional),
   // TODO(burdon): Define transforms for objects?
   // address: Schema.optional(
   //   Schema.Struct({

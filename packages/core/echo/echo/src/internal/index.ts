@@ -12,7 +12,7 @@ export * from './types';
 // TODO(burdon): Restrict access to internal.
 //  1. Remove from outisde of @dxos/echo-db; promote toe echo/db types; serach: from '@dxos/echo/internal';
 //  - [x] completely restructure @dxos/echo src/internal
-//  - [x] Remove import "." and ".."! (MUST CREATE LINT RULE).
+//  - [x] Remove import "." and ".."! (create lint rule).
 //  - [x] Unify FOUR different nests of test schema.
 //  - [x] Remove @deprecated from internal methods and mark @internal (e.g., getSchemaDXN).
 //    - NOTE: Internal methods should not use the import * from Obj/Type APIs.
@@ -27,7 +27,7 @@ export * from './types';
 //  - [x] TypeFormat => TypeFormat
 //  - [ ] Entity type for Obj | Relation
 //
-//  - [ ] Rename AnyEchoObject => AnyEntity?
+//  - [ ] Rename AnyEchoObject => AnyEntity? (or accept that Object != Obj from naming perspective.)
 //  - [ ] Remove echo-db/AnyLiveObject<T> => Obj.Obj<T>
 //  - [ ] Promote parts of src/internal/ref to Ref.ts
 //
@@ -43,6 +43,7 @@ export * from './types';
 //
 //  2. Audit usage from @dxos/echo-db
 //  - [ ] Datatbase.query() options?
+//  - [ ] Expando type.
 
 export { makeObject } from './proxy';
 export { type BaseSchema, EchoSchema, StoredSchema, ImmutableSchema, RuntimeSchemaRegistry, isMutable } from './schema';

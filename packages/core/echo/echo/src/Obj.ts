@@ -181,7 +181,7 @@ export const getDXN = (obj: Any | Relation.Any): DXN => {
  * @returns The DXN of the object's type.
  * @example dxn:example.com/type/Person:1.0.0
  */
-// TODO(burdon): Return type for expando.
+// TODO(burdon): Must define and return type for expando.
 export const getTypeDXN = getTypeDXN$;
 
 /**
@@ -367,6 +367,7 @@ export const version = (obj: Any): Version => {
   if (version === undefined) {
     return unversioned;
   }
+
   return version;
 };
 
@@ -434,7 +435,7 @@ export const toJSON = (obj: Any): JSON => objectToJSON(obj);
  * Creates an object from its json representation, performing schema validation.
  * References and schemas will be resolvable if the `refResolver` is provided.
  *
- * The function need to be async to support resolving the schema as well as the relation endpoints.
+ * The function must be async to support resolving the schema as well as the relation endpoints.
  *
  * @param options.refResolver - Resolver for references. Produces hydrated references that can be resolved.
  * @param options.dxn - Override object DXN. Changes the result of `Obj.getDXN`.

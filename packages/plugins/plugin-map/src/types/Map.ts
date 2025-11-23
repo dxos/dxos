@@ -4,16 +4,16 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Annotation, Obj, Type } from '@dxos/echo';
+import { Annotation, Format, Obj, Type } from '@dxos/echo';
 import { View } from '@dxos/schema';
 
 export const Map = Schema.Struct({
   name: Schema.optional(Schema.String),
-  center: Schema.optional(Type.Format.GeoPoint),
+  center: Schema.optional(Format.GeoPoint),
   zoom: Schema.optional(Schema.Number),
   // TODO(wittjosiah): Use GeoJSON format for rendering arbitrary data on the map.
   //   e.g., points, lines, polygons, etc.
-  coordinates: Schema.Array(Type.Format.GeoPoint).pipe(Schema.mutable, Schema.optional),
+  coordinates: Schema.Array(Format.GeoPoint).pipe(Schema.mutable, Schema.optional),
 }).pipe(
   Type.Obj({
     typename: 'dxos.org/type/Map',
