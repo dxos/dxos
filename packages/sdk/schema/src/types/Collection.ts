@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
-import { PropertiesType } from '@dxos/client-protocol/types';
+import { SpaceProperties } from '@dxos/client-protocol/types';
 import { Annotation, Obj, Query, QueryAST, Ref, Type } from '@dxos/echo';
 import { DatabaseService } from '@dxos/echo-db';
 import { invariant } from '@dxos/invariant';
@@ -54,7 +54,7 @@ export const add = Effect.fn(function* ({ object, target, hidden }: AddParams) {
   } else if (hidden) {
     yield* DatabaseService.add(object);
   } else {
-    const { objects } = yield* DatabaseService.runQuery(Query.type(PropertiesType));
+    const { objects } = yield* DatabaseService.runQuery(Query.type(SpaceProperties));
     invariant(objects.length === 1, 'Space properties not found');
     const properties: Type.Expando = objects[0];
 

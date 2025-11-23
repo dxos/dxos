@@ -6,7 +6,7 @@ import { type Doc } from '@automerge/automerge';
 import { type AutomergeUrl, type DocHandle, type DocumentId, interpretAsDocumentId } from '@automerge/automerge-repo';
 
 import { Event, synchronized, trackLeaks } from '@dxos/async';
-import { PropertiesType, TYPE_PROPERTIES } from '@dxos/client-protocol';
+import { SpaceProperties, TYPE_PROPERTIES } from '@dxos/client-protocol';
 import { Context, LifecycleState, Resource, cancelWithContext } from '@dxos/context';
 import {
   type CredentialSigner,
@@ -16,7 +16,6 @@ import {
   getCredentialAssertion,
 } from '@dxos/credentials';
 import { getTypeReference } from '@dxos/echo/internal';
-import { ObjectId } from '@dxos/keys';
 import {
   AuthStatus,
   CredentialServerExtension,
@@ -43,6 +42,7 @@ import type { EdgeConnection, EdgeHttpClient } from '@dxos/edge-client';
 import { type FeedStore, writeMessages } from '@dxos/feed-store';
 import { assertArgument, assertState, failedInvariant, invariant } from '@dxos/invariant';
 import { type Keyring } from '@dxos/keyring';
+import { ObjectId } from '@dxos/keys';
 import { PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { AlreadyJoinedError, trace as Trace } from '@dxos/protocols';
@@ -363,7 +363,7 @@ export class DataSpaceManager extends Resource {
     // TODO(dmaretskyi): Better API for low-level data access.
     const properties: ObjectStructure = {
       system: {
-        type: encodeReference(getTypeReference(PropertiesType)!),
+        type: encodeReference(getTypeReference(SpaceProperties)!),
       },
       data: {
         [DEFAULT_SPACE_KEY]: this._signingContext.identityKey.toHex(),

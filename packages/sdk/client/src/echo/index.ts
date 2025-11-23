@@ -3,14 +3,7 @@
 //
 
 export { SpaceId } from '@dxos/keys';
-export {
-  isSpace,
-  type Echo,
-  type Space,
-  SpaceSchema,
-  PropertiesType,
-  type PropertiesTypeProps,
-} from '@dxos/client-protocol';
+export { isSpace, type Echo, type Space, SpaceSchema, SpaceProperties } from '@dxos/client-protocol';
 export { type Live, live, isLiveObject } from '@dxos/live-object';
 export {
   createObject,

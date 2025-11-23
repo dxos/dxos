@@ -5,7 +5,7 @@
 import * as Toolkit from '@effect/ai/Toolkit';
 import * as Effect from 'effect/Effect';
 
-import { PropertiesType } from '@dxos/client-protocol';
+import { SpaceProperties } from '@dxos/client-protocol';
 import { Obj, Ref } from '@dxos/echo';
 import { DatabaseService } from '@dxos/functions';
 import { Collection } from '@dxos/schema';
@@ -16,7 +16,7 @@ export const WithProperties = <A, E, R>(effect: Effect.Effect<A, E, R>): Effect.
     Effect.gen(function* () {
       // TODO(wittjosiah): Remove cast.
       yield* DatabaseService.add(
-        Obj.make(PropertiesType as any, {
+        Obj.make(SpaceProperties as any, {
           [Collection.Collection.typename]: Ref.make(Collection.make()),
         }) as any,
       );

@@ -9,7 +9,7 @@ import type { Invitation, SpaceArchive } from '@dxos/protocols/proto/dxos/client
 
 import type { AuthenticatingInvitation } from './invitations';
 import type { Space } from './space';
-import type { PropertiesType } from './types';
+import type { SpaceProperties } from './types';
 
 /**
  * Public database API.
@@ -51,7 +51,7 @@ export interface Echo extends MulticastObservable<Space[]>, Database.Queryable {
   /**
    * Creates a new space.
    */
-  create(meta?: PropertiesType): Promise<Space>;
+  create(props?: SpaceProperties): Promise<Space>;
 
   /**
    * Creates a space from the given archive.

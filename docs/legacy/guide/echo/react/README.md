@@ -16,6 +16,7 @@ This section describes how to create, join, and invite peers to [ECHO Spaces](..
 To create a space, call the `client.spaces.create()` API:
 
 :::apidoc[@dxos/react-client.Echo.create]
+
 ### create(\[meta])
 
 Creates a new space.
@@ -24,7 +25,7 @@ Returns: `Promise<Space>`
 
 Arguments:
 
-`meta`: <code>PropertiesTypeProps</code>
+`meta`: <code>SpaceProperties</code>
 :::
 
 ```tsx{11} file=./snippets/create-spaces.tsx#L5-
@@ -57,6 +58,7 @@ root.render(
 These hooks are available from package [`@dxos/react-client`](https://www.npmjs.com/package/@dxos/react-client) and re-render reactively.
 
 :::apidoc[@dxos/react-client.useSpace]
+
 ### useSpace(\[spaceKeyLike])
 
 Get a specific Space using its key.
@@ -72,6 +74,7 @@ Arguments:
 :::
 
 :::apidoc[@dxos/react-client.useSpaces]
+
 ### useSpaces(options)
 
 Get all Spaces available to current user.

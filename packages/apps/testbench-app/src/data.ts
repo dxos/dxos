@@ -21,6 +21,7 @@ export const Item = Schema.Struct({
     version: '0.1.0',
   }),
 );
+
 export type Item = Schema.Schema.Type<typeof Item>;
 
 export const Document = Schema.Struct({
@@ -32,4 +33,5 @@ export const Document = Schema.Struct({
     version: '0.1.0',
   }),
 );
+
 export type Document = Schema.Schema.Type<typeof Document>;

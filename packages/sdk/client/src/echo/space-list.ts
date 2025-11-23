@@ -10,8 +10,8 @@ import {
   type ClientServicesProvider,
   type Echo,
   IMPORT_SPACE_TIMEOUT,
-  PropertiesType,
   type Space,
+  SpaceProperties,
 } from '@dxos/client-protocol';
 import { type Config } from '@dxos/config';
 import { Context } from '@dxos/context';
@@ -298,7 +298,7 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
     return space;
   }
 
-  async create(meta?: PropertiesType): Promise<Space> {
+  async create(meta?: SpaceProperties): Promise<Space> {
     invariant(this._serviceProvider.services.SpacesService, 'SpacesService is not available.');
     const traceId = PublicKey.random().toHex();
     log.trace('dxos.sdk.echo-proxy.create-space', Trace.begin({ id: traceId }));
@@ -310,7 +310,7 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
     const spaceProxy = this._findProxy(space);
 
     await spaceProxy._databaseInitialized.wait({ timeout: CREATE_SPACE_TIMEOUT });
-    spaceProxy.db.add(Obj.make(PropertiesType, meta ?? {}), { placeIn: 'root-doc' });
+    spaceProxy.db.add(Obj.make(SpaceProperties, meta ?? {}), { placeIn: 'root-doc' });
     await spaceProxy.db.flush();
     await spaceProxy._initializationComplete.wait();
 

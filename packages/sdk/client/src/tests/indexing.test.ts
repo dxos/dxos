@@ -6,7 +6,7 @@ import isEqual from 'lodash.isequal';
 import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { Trigger, TriggerState, asyncTimeout } from '@dxos/async';
-import { type ClientServicesProvider, PropertiesType, type Space } from '@dxos/client-protocol';
+import { type ClientServicesProvider, SpaceProperties, type Space } from '@dxos/client-protocol';
 import { Obj, Type, Ref } from '@dxos/echo';
 import { type AnyLiveObject, Filter, type QueryResult } from '@dxos/echo-db';
 import { type PublicKey } from '@dxos/keys';
@@ -271,7 +271,7 @@ describe('Index queries', () => {
 
     {
       const query = space.db.query(
-        Filter.not(Filter.or(Filter.type(ContactType), Filter.type(DocumentType), Filter.type(PropertiesType))),
+        Filter.not(Filter.or(Filter.type(ContactType), Filter.type(DocumentType), Filter.type(SpaceProperties))),
       );
       const ids = (await query.run()).objects.map(({ id }) => id);
       expect(ids.every((id) => !excludedIds.includes(id))).to.be.true;
