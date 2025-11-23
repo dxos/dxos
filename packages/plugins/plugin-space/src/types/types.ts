@@ -98,6 +98,7 @@ export interface TypedObjectSerializer<T extends Obj.Any = Type.Expando> {
 export const IconAnnotationId = Symbol.for('@dxos/plugin-space/annotation/Icon');
 export const HueAnnotationId = Symbol.for('@dxos/plugin-space/annotation/Hue');
 
+// TODO(burdon): Use PropertiesTypeBase.
 export const SpaceForm = Schema.Struct({
   name: Schema.optional(Schema.String.annotations({ title: 'Name' })),
   icon: Schema.optional(Schema.String.annotations({ title: 'Icon', [IconAnnotationId]: true })),

@@ -101,7 +101,7 @@ export interface Space extends Messenger {
   /**
    * Properties object.
    */
-  get properties(): Obj.Any;
+  get properties(): Obj.Any; // TODO(burdon): Type.
 
   /**
    * Current state of space pipeline.

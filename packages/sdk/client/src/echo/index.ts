@@ -11,25 +11,10 @@ export {
   PropertiesType,
   type PropertiesTypeProps,
 } from '@dxos/client-protocol';
-export {
-  compareForeignKeys,
-  createQueueDXN,
-  getMeta,
-  getSchema,
-  getType,
-  getTypename,
-  Expando,
-  type ObjectMeta,
-  Ref,
-  RefArray,
-  type TypedObject,
-} from '@dxos/echo/internal';
 export { type Live, live, isLiveObject } from '@dxos/live-object';
 export {
   createObject,
   createSubscription,
-  getSource,
-  getTarget,
   getVersion,
   type EchoDatabase,
   Filter,

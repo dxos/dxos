@@ -6,13 +6,14 @@ import { Event } from '@dxos/async';
 import { type Space } from '@dxos/client-protocol';
 import { todo } from '@dxos/debug';
 import { type Database } from '@dxos/echo';
+import { type Obj } from '@dxos/echo';
 import { type QuerySource, type QuerySourceProvider } from '@dxos/echo-db';
 import { type QueryAST } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
 import { PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { QUERY_CHANNEL } from '@dxos/protocols';
-import { type EchoObjectSchema as EchoObjectProto } from '@dxos/protocols/proto/dxos/echo/object';
+import { type EchoObject as EchoObjectProto } from '@dxos/protocols/proto/dxos/echo/object';
 import { QueryReactivity, type QueryRequest, type QueryResponse } from '@dxos/protocols/proto/dxos/echo/query';
 import { type GossipMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/gossip';
 
@@ -166,10 +167,9 @@ export class AgentQuerySource implements QuerySource {
   }
 }
 
-const getEchoObjectFromSnapshot = (objSnapshot: EchoObjectProto): AnyLiveObject<any> | undefined => {
+const getEchoObjectFromSnapshot = (objSnapshot: EchoObjectProto): Obj.Any | undefined => {
   invariant(objSnapshot.genesis, 'Genesis is undefined.');
   invariant(objSnapshot.snapshot, 'Genesis model type is undefined.');
-
   return todo();
 
   // if (objSnapshot.genesis.modelType === DocumentModel.meta.type) {

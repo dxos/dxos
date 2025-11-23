@@ -17,7 +17,7 @@ import { type DiagnosticMetadata, TRACE_PROCESSOR, type TraceProcessor } from '@
 import { joinTables } from '@dxos/util';
 
 import { type Client } from '../client';
-import { SpaceState, getMeta } from '../echo';
+import { SpaceState } from '../echo';
 
 // Didn't want to add a dependency on feed store.
 type FeedWrapper = unknown;
@@ -77,8 +77,6 @@ export interface DevtoolsHook {
   Ref: typeof Ref;
   Query: typeof Query;
   Filter: typeof Filter;
-
-  getMeta: typeof getMeta;
 }
 
 export type MountOptions = {
@@ -170,7 +168,6 @@ export const mountDevtoolsHooks = ({ client, host }: MountOptions) => {
     Relation,
     Query,
     Filter,
-    getMeta,
   };
 
   if (client) {
