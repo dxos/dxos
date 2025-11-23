@@ -65,16 +65,16 @@ export const instanceOf: {
   ...args: [schema: Type.Relation.Any | Type.Obj.Any, value: unknown] | [schema: Type.Relation.Any | Type.Obj.Any]
 ) => {
   if (args.length === 1) {
-    return (obj: unknown) => isInstanceOf(args[0], obj);
+    return (entity: unknown) => isInstanceOf(args[0], entity);
   }
 
   return isInstanceOf(args[0], args[1]);
 }) as any;
 
 // TODO(dmaretskyi): Allow returning undefined.
-export const getDXN = (obj: Any | Relation.Any): DXN => {
-  assertArgument(!Schema.isSchema(obj), 'obj', 'Object should not be a schema.');
-  const dxn = getObjectDXN(obj);
+export const getDXN = (entity: Any | Relation.Any): DXN => {
+  assertArgument(!Schema.isSchema(entity), 'obj', 'Object should not be a schema.');
+  const dxn = getObjectDXN(entity);
   invariant(dxn != null, 'Invalid object.');
   return dxn;
 };
@@ -90,11 +90,11 @@ export const getTypeDXN = getTypeDXN$;
  * @returns The typename of the object's type.
  * @example `example.com/type/Person`
  */
-export const getTypename = (obj: Any): string | undefined => {
-  const schema = getSchema(obj);
+export const getTypename = (entity: Any): string | undefined => {
+  const schema = getSchema(entity);
   if (schema == null) {
     // Try to extract typename from DXN.
-    return getTypeDXN$(obj)?.asTypeDXN()?.type;
+    return getTypeDXN$(entity)?.asTypeDXN()?.type;
   }
 
   return getSchemaTypename(schema);
@@ -107,8 +107,8 @@ export const getTypename = (obj: Any): string | undefined => {
 export const Meta: unique symbol = MetaId as any;
 
 // TODO(dmaretskyi): Allow returning undefined.
-export const getMeta = (obj: Any): ObjectMeta => {
-  const meta = getMeta(obj);
+export const getMeta = (entity: Any): ObjectMeta => {
+  const meta = getMeta(entity);
   invariant(meta != null, 'Invalid object.');
   return meta;
 };
@@ -140,14 +140,14 @@ export const deleteKeys = (entity: Any, source: string) => {
   }
 };
 
-export const addTag = (obj: Any, tag: string) => {
-  const meta = getMeta(obj);
+export const addTag = (entity: Any, tag: string) => {
+  const meta = getMeta(entity);
   meta.tags ??= [];
   meta.tags.push(tag);
 };
 
-export const removeTag = (obj: Any, tag: string) => {
-  const meta = getMeta(obj);
+export const removeTag = (entity: Any, tag: string) => {
+  const meta = getMeta(entity);
   if (!meta.tags) {
     return;
   }
@@ -160,8 +160,8 @@ export const removeTag = (obj: Any, tag: string) => {
 };
 
 // TODO(dmaretskyi): Default to `false`.
-export const isDeleted = (obj: Any): boolean => {
-  const deleted = isDeleted(obj);
+export const isDeleted = (entity: Any): boolean => {
+  const deleted = isDeleted(entity);
   invariant(typeof deleted === 'boolean', 'Invalid object.');
   return deleted;
 };
@@ -170,31 +170,31 @@ export const isDeleted = (obj: Any): boolean => {
 // Annotations
 //
 
-export const getLabel = (obj: Any): string | undefined => {
-  const schema = getSchema(obj);
+export const getLabel = (entity: Any): string | undefined => {
+  const schema = getSchema(entity);
   if (schema != null) {
-    return getLabel$(schema, obj);
+    return getLabel$(schema, entity);
   }
 };
 
-export const setLabel = (obj: Any, label: string) => {
-  const schema = getSchema(obj);
+export const setLabel = (entity: Any, label: string) => {
+  const schema = getSchema(entity);
   if (schema != null) {
-    setLabel$(schema, obj, label);
+    setLabel$(schema, entity, label);
   }
 };
 
-export const getDescription = (obj: Any): string | undefined => {
-  const schema = getSchema(obj);
+export const getDescription = (entity: Any): string | undefined => {
+  const schema = getSchema(entity);
   if (schema != null) {
-    return getDescription$(schema, obj);
+    return getDescription$(schema, entity);
   }
 };
 
-export const setDescription = (obj: Any, description: string) => {
-  const schema = getSchema(obj);
+export const setDescription = (entity: Any, description: string) => {
+  const schema = getSchema(entity);
   if (schema != null) {
-    setDescription$(schema, obj, description);
+    setDescription$(schema, entity, description);
   }
 };
 
@@ -212,7 +212,7 @@ export type JSON = ObjectJSON;
  *
  * The same algorithm is used when calling the standard `JSON.stringify(obj)` function.
  */
-export const toJSON = (obj: Any): JSON => objectToJSON(obj);
+export const toJSON = (entity: Any): JSON => objectToJSON(entity);
 
 /**
  * Creates an object from its json representation, performing schema validation.
@@ -290,15 +290,15 @@ const unversioned: Version = {
 /**
  * Checks that `obj` is a version object.
  */
-export const isVersion = (obj: unknown): obj is Version => {
-  return obj != null && typeof obj === 'object' && VersionTypeId in obj;
+export const isVersion = (entity: unknown): entity is Version => {
+  return entity != null && typeof entity === 'object' && VersionTypeId in entity;
 };
 
 /**
  * Returns the version of the object.
  */
-export const version = (obj: Any): Version => {
-  const version = (obj as any)[ObjectVersionId];
+export const version = (entity: Any): Version => {
+  const version = (entity as any)[ObjectVersionId];
   if (version === undefined) {
     return unversioned;
   }
