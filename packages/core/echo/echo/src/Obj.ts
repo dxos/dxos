@@ -130,6 +130,19 @@ export const isObject = (obj: unknown): obj is Any => {
   return typeof obj === 'object' && obj !== null && obj[EntityKindId] === EntityKind.Object;
 };
 
+// TODO(dmaretskyi): Default to `false`.
+export const isDeleted = (obj: Any): boolean => {
+  const deleted = isDeleted(obj);
+  invariant(typeof deleted === 'boolean', 'Invalid object.');
+  return deleted;
+};
+
+// TODO(burdon): Methods below are generic to Obj and Relation.
+
+//
+// Type
+//
+
 /**
  * Test if object or relation is an instance of a schema.
  * @example
@@ -175,7 +188,7 @@ export const getTypeDXN = getTypeDXN$;
  * @returns The typename of the object's type.
  * @example `example.com/type/Person`
  */
-export const getTypename = (obj: Any | Relation.Any): string | undefined => {
+export const getTypename = (obj: Any): string | undefined => {
   const schema = getSchema(obj);
   if (schema == null) {
     // Try to extract typename from DXN.
@@ -185,8 +198,12 @@ export const getTypename = (obj: Any | Relation.Any): string | undefined => {
   return getSchemaTypename(schema);
 };
 
+//
+// Meta
+//
+
 // TODO(dmaretskyi): Allow returning undefined.
-export const getMeta = (obj: Any | Relation.Any): ObjectMeta => {
+export const getMeta = (obj: Any): ObjectMeta => {
   const meta = getMeta(obj);
   invariant(meta != null, 'Invalid object.');
   return meta;
@@ -196,9 +213,9 @@ export const getMeta = (obj: Any | Relation.Any): ObjectMeta => {
  * @returns Foreign keys for the object from the specified source.
  */
 export const getKeys: {
-  (obj: Any | Relation.Any, source: string): ForeignKey[];
-  (source: string): (obj: Any | Relation.Any) => ForeignKey[];
-} = Function.dual(2, (obj: Any | Relation.Any, source?: string): ForeignKey[] => {
+  (obj: Any, source: string): ForeignKey[];
+  (source: string): (obj: Any) => ForeignKey[];
+} = Function.dual(2, (obj: Any, source?: string): ForeignKey[] => {
   const meta = getMeta(obj);
   invariant(meta != null, 'Invalid object.');
   return meta.keys.filter((key) => key.source === source);
@@ -209,7 +226,7 @@ export const getKeys: {
  * @param obj
  * @param source
  */
-export const deleteKeys = (obj: Any | Relation.Any, source: string) => {
+export const deleteKeys = (obj: Any, source: string) => {
   const meta = getMeta(obj);
   for (let i = 0; i < meta.keys.length; i++) {
     if (meta.keys[i].source === source) {
@@ -219,48 +236,17 @@ export const deleteKeys = (obj: Any | Relation.Any, source: string) => {
   }
 };
 
-// TODO(dmaretskyi): Default to `false`.
-export const isDeleted = (obj: Any | Relation.Any): boolean => {
-  const deleted = isDeleted(obj);
-  invariant(typeof deleted === 'boolean', 'Invalid object.');
-  return deleted;
-};
+//
+// Tags
+//
 
-export const getLabel = (obj: Any | Relation.Any): string | undefined => {
-  const schema = getSchema(obj);
-  if (schema != null) {
-    return getLabel$(schema, obj);
-  }
-};
-
-export const setLabel = (obj: Any | Relation.Any, label: string) => {
-  const schema = getSchema(obj);
-  if (schema != null) {
-    setLabel$(schema, obj, label);
-  }
-};
-
-export const getDescription = (obj: Any | Relation.Any): string | undefined => {
-  const schema = getSchema(obj);
-  if (schema != null) {
-    return getDescription$(schema, obj);
-  }
-};
-
-export const setDescription = (obj: Any | Relation.Any, description: string) => {
-  const schema = getSchema(obj);
-  if (schema != null) {
-    setDescription$(schema, obj, description);
-  }
-};
-
-export const addTag = (obj: Any | Relation.Any, tag: string) => {
+export const addTag = (obj: Any, tag: string) => {
   const meta = getMeta(obj);
   meta.tags ??= [];
   meta.tags.push(tag);
 };
 
-export const removeTag = (obj: Any | Relation.Any, tag: string) => {
+export const removeTag = (obj: Any, tag: string) => {
   const meta = getMeta(obj);
   if (!meta.tags) {
     return;
@@ -272,6 +258,42 @@ export const removeTag = (obj: Any | Relation.Any, tag: string) => {
     }
   }
 };
+
+//
+// Annotations
+//
+
+export const getLabel = (obj: Any): string | undefined => {
+  const schema = getSchema(obj);
+  if (schema != null) {
+    return getLabel$(schema, obj);
+  }
+};
+
+export const setLabel = (obj: Any, label: string) => {
+  const schema = getSchema(obj);
+  if (schema != null) {
+    setLabel$(schema, obj, label);
+  }
+};
+
+export const getDescription = (obj: Any): string | undefined => {
+  const schema = getSchema(obj);
+  if (schema != null) {
+    return getDescription$(schema, obj);
+  }
+};
+
+export const setDescription = (obj: Any, description: string) => {
+  const schema = getSchema(obj);
+  if (schema != null) {
+    setDescription$(schema, obj, description);
+  }
+};
+
+//
+// Sorting
+//
 
 const compare = (a?: string, b?: string) => {
   if (a == null) {
@@ -302,71 +324,9 @@ export const sort = (...comparators: Comparator[]): Comparator => {
   };
 };
 
-/**
- * JSON representation of an object.
- */
-export type JSON = ObjectJSON;
-
-/**
- * Converts object to its JSON representation.
- *
- * The same algorithm is used when calling the standard `JSON.stringify(obj)` function.
- */
-// TODO(burdon): Base util type for Obj/Relation?
-export const toJSON = (obj: Any | Relation.Any): JSON => objectToJSON(obj);
-
-/**
- * Creates an object from its json representation, performing schema validation.
- * References and schemas will be resolvable if the `refResolver` is provided.
- *
- * The function need to be async to support resolving the schema as well as the relation endpoints.
- *
- * @param options.refResolver - Resolver for references. Produces hydrated references that can be resolved.
- * @param options.dxn - Override object DXN. Changes the result of `Obj.getDXN`.
- */
-export const fromJSON: (json: unknown, options?: { refResolver?: Ref.Resolver; dxn?: DXN }) => Promise<Any> =
-  objectFromJSON as any;
-
-/**
- * Returns an immutable snapshot of an object.
- */
-export const getSnapshot: <T extends Any>(obj: Obj<T>) => T = getSnapshot$;
-
-export type CloneOptions = {
-  /**
-   * Retain the original object's ID.
-   * @default false
-   */
-  retainId?: boolean;
-};
-
-/**
- * Clones an object or relation.
- * This does not clone referenced objects, only the properties in the object.
- * @returns A new object with the same schema and properties.
- */
-export const clone = <T extends Any | Relation.Any>(obj: T, opts?: CloneOptions): T => {
-  const { id, ...data } = obj;
-  const schema = getSchema(obj);
-  invariant(schema != null, 'Object should have a schema');
-  const props: any = deepMapValues(data, (value, recurse) => {
-    if (Ref.isRef(value)) {
-      return value;
-    }
-    return recurse(value);
-  });
-  if (opts?.retainId) {
-    props.id = id;
-  }
-  const meta = getMeta(obj);
-  props[MetaId] = deepMapValues(meta, (value, recurse) => {
-    if (Ref.isRef(value)) {
-      return value;
-    }
-    return recurse(value);
-  });
-  return make(schema, props);
-};
+//
+// Version
+//
 
 /**
  * Represent object version.
@@ -402,7 +362,7 @@ export const isVersion = (obj: unknown): obj is Version => {
 /**
  * Returns the version of the object.
  */
-export const version = (obj: Any | Relation.Any): Version => {
+export const version = (obj: Any): Version => {
   const version = (obj as any)[ObjectVersionId];
   if (version === undefined) {
     return unversioned;
@@ -452,4 +412,79 @@ export const decodeVersion = (version: string): Version => {
   const parsed = JSON.parse(version);
   parsed[VersionTypeId] = {};
   return parsed;
+};
+
+//
+// JSON
+//
+
+/**
+ * JSON representation of an object.
+ */
+export type JSON = ObjectJSON;
+
+/**
+ * Converts object to its JSON representation.
+ *
+ * The same algorithm is used when calling the standard `JSON.stringify(obj)` function.
+ */
+export const toJSON = (obj: Any): JSON => objectToJSON(obj);
+
+/**
+ * Creates an object from its json representation, performing schema validation.
+ * References and schemas will be resolvable if the `refResolver` is provided.
+ *
+ * The function need to be async to support resolving the schema as well as the relation endpoints.
+ *
+ * @param options.refResolver - Resolver for references. Produces hydrated references that can be resolved.
+ * @param options.dxn - Override object DXN. Changes the result of `Obj.getDXN`.
+ */
+export const fromJSON: (json: unknown, options?: { refResolver?: Ref.Resolver; dxn?: DXN }) => Promise<Any> =
+  objectFromJSON as any;
+
+//
+// Snapshot
+//
+
+/**
+ * Returns an immutable snapshot of an object.
+ */
+export const getSnapshot: <T extends Any>(obj: Obj<T>) => T = getSnapshot$;
+
+export type CloneOptions = {
+  /**
+   * Retain the original object's ID.
+   * @default false
+   */
+  retainId?: boolean;
+};
+
+/**
+ * Clones an object or relation.
+ * This does not clone referenced objects, only the properties in the object.
+ * @returns A new object with the same schema and properties.
+ */
+export const clone = <T extends Any>(obj: T, opts?: CloneOptions): T => {
+  const { id, ...data } = obj;
+  const schema = getSchema(obj);
+  invariant(schema != null, 'Object should have a schema');
+  const props: any = deepMapValues(data, (value, recurse) => {
+    if (Ref.isRef(value)) {
+      return value;
+    }
+    return recurse(value);
+  });
+
+  if (opts?.retainId) {
+    props.id = id;
+  }
+  const meta = getMeta(obj);
+  props[MetaId] = deepMapValues(meta, (value, recurse) => {
+    if (Ref.isRef(value)) {
+      return value;
+    }
+    return recurse(value);
+  });
+
+  return make(schema, props);
 };

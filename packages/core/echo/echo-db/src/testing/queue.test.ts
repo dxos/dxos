@@ -44,11 +44,8 @@ describe('queues', () => {
     const db = await peer.createDatabase();
     const queues = peer.client.constructQueueFactory(db.spaceId);
     const queue = queues.create();
-    await queue.append([
-      Obj.make(TestSchema.Person, {
-        name: 'john',
-      }),
-    ]);
+
+    await queue.append([Obj.make(TestSchema.Person, { name: 'john' })]);
     const obj = queue.objects[0];
     expect(Obj.getDXN(obj)?.toString()).toEqual(queue.dxn.extend([obj.id]).toString());
   });
@@ -59,9 +56,7 @@ describe('queues', () => {
     const queues = peer.client.constructQueueFactory(spaceId);
     const queue = queues.create();
 
-    const obj = Obj.make(TestSchema.Person, {
-      name: 'john',
-    });
+    const obj = Obj.make(TestSchema.Person, { name: 'john' });
     await queue.append([obj]);
 
     {
@@ -88,13 +83,11 @@ describe('queues', () => {
     const spaceId = SpaceId.random();
     const queues = peer.client.constructQueueFactory(spaceId);
     const queue = queues.create();
+
     await queue.append([
-      Obj.make(TestSchema.Person, {
-        name: 'john',
-      }),
-      Obj.make(TestSchema.Person, {
-        name: 'jane',
-      }),
+      // prettier-ignore
+      Obj.make(TestSchema.Person, { name: 'john' }),
+      Obj.make(TestSchema.Person, { name: 'jane' }),
     ]);
 
     {
@@ -123,6 +116,7 @@ describe('queues', () => {
       const relation = Relation.make(TestSchema.EmployedBy, {
         [Relation.Source]: obj1,
         [Relation.Target]: obj2,
+        role: 'CIO',
       });
 
       await queue.append([obj1, obj2, relation]);
@@ -144,19 +138,12 @@ describe('queues', () => {
     const queue = queues.create();
 
     {
-      const contact = db.add(
-        Obj.make(TestSchema.Person, {
-          name: 'alice',
-        }),
-      );
-
-      const org = Obj.make(TestSchema.Organization, {
-        name: 'DXOS',
-      });
-
+      const contact = db.add(Obj.make(TestSchema.Person, { name: 'alice' }));
+      const org = Obj.make(TestSchema.Organization, { name: 'DXOS' });
       const relation = Relation.make(TestSchema.EmployedBy, {
         [Relation.Source]: contact,
         [Relation.Target]: org,
+        role: 'CTO',
       });
 
       await queue.append([org, relation]);

@@ -8,12 +8,13 @@ import { type DXN, type PublicKey, type SpaceId } from '@dxos/keys';
 import { type Live } from '@dxos/live-object';
 import { type QueryOptions as QueryOptionsProto } from '@dxos/protocols/proto/dxos/echo/filter';
 
+import type * as Entity from './Entity';
 import { type AnyProperties, type HasId } from './internal';
 import type * as Obj from './Obj';
 import { type Filter, type Query } from './query';
 import type * as Ref from './Ref';
 
-export type QueryResultEntry<T extends Obj.Any = Obj.Any> = {
+export type QueryResultEntry<T extends Entity.Any = Entity.Any> = {
   id: string;
 
   // TODO(burdon): Rename DatabaseId?
@@ -48,7 +49,7 @@ export type QueryResultEntry<T extends Obj.Any = Obj.Any> = {
   };
 };
 
-export type OneShotQueryResult<T extends Obj.Any = Obj.Any> = {
+export type OneShotQueryResult<T extends Entity.Any = Entity.Any> = {
   results: QueryResultEntry<T>[];
   objects: T[];
 };
@@ -60,7 +61,7 @@ export type QuerySubscriptionOptions = {
   fire?: boolean;
 };
 
-export interface QueryResult<T extends Obj.Any = Obj.Any> {
+export interface QueryResult<T extends Entity.Any = Entity.Any> {
   readonly query: Query<T>;
   readonly results: QueryResultEntry<T>[];
   readonly objects: T[];

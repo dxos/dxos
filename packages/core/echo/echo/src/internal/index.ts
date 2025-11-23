@@ -25,6 +25,7 @@ export * from './types';
 //  - [x] Rename BaseObject => AnyProperties
 //  - [x] Created Entity.Any (=> AnyEchoObject).
 //  - [x] TypeFormat => TypeFormat
+//  - [ ] Entity type for Obj | Relation
 //
 //  - [ ] Rename AnyEchoObject => AnyEntity?
 //  - [ ] Remove echo-db/AnyLiveObject<T> => Obj.Obj<T>

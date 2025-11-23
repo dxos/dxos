@@ -5,7 +5,7 @@
 import { DeferredTask } from '@dxos/async';
 import { Event } from '@dxos/async';
 import { Context } from '@dxos/context';
-import { type Database, Obj, type Ref, type Relation } from '@dxos/echo';
+import { type Database, Entity, Obj, type Ref, type Relation } from '@dxos/echo';
 import {
   type HasId,
   type ObjectJSON,
@@ -172,7 +172,7 @@ export class QueueImpl<T extends Obj.Any | Relation.Any = Obj.Any | Relation.Any
     this._signal.notifyWrite();
     this.updated.emit();
 
-    const json = items.map((item) => Obj.toJSON(item));
+    const json = items.map((item) => Entity.toJSON(item));
 
     try {
       for (let i = 0; i < json.length; i += QUEUE_APPEND_BATCH_SIZE) {

@@ -15,6 +15,6 @@ export default defineClientConfig({
           brandLink.parentNode.replaceChild(newLink, brandLink);
         }
       }
-    })
+    });
   },
 });

@@ -21,7 +21,7 @@ import { type Stream } from '@dxos/codec-protobuf/stream';
 import { Config, SaveConfig } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { raise } from '@dxos/debug';
-import { Obj } from '@dxos/echo';
+import { Type } from '@dxos/echo';
 import { EchoClient, type Hypergraph, QueueServiceImpl } from '@dxos/echo-db';
 import { MockQueueService } from '@dxos/echo-db';
 import { EdgeHttpClient } from '@dxos/edge-client';
@@ -241,8 +241,8 @@ export class Client {
    * Add schema types to the client.
    */
   // TODO(burdon): Check if already registered (and remove downstream checks).
-  addTypes(types: Schema.Schema.AnyNoContext[]): this {
-    log('addTypes', { schema: types.map((type) => Obj.getTypename(type)) });
+  addTypes(types: Type.Obj.Any[]): this {
+    log('addTypes', { schema: types.map((type) => Type.getTypename(type)) });
 
     // TODO(dmaretskyi): Uncomment after release.
     // if (!this._initialized) {

@@ -7,8 +7,7 @@ import * as Function from 'effect/Function';
 
 import { Event } from '@dxos/async';
 import { Context } from '@dxos/context';
-import { type Database, Obj } from '@dxos/echo';
-import { type AnyProperties } from '@dxos/echo/internal';
+import { type Database, Entity } from '@dxos/echo';
 import { filterMatchObjectJSON } from '@dxos/echo-pipeline/filter';
 import { type QueryAST } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
@@ -33,7 +32,7 @@ export class QueueQueryContext implements QueryContext {
   /**
    * One-shot run.
    */
-  async run(query: QueryAST.Query): Promise<Database.QueryResultEntry<AnyProperties>[]> {
+  async run(query: QueryAST.Query): Promise<Database.QueryResultEntry[]> {
     const trivial = isSimpleSelectionQuery(query);
     if (!trivial) {
       throw new Error('Query not supported.');
@@ -52,7 +51,7 @@ export class QueueQueryContext implements QueryContext {
     return objects.map((object) => ({
       id: object.id,
       spaceId,
-      object,
+      object: object,
     }));
   }
 
@@ -91,14 +90,14 @@ export class QueueQueryContext implements QueryContext {
   /**
    * Synchronously get the results.
    */
-  getResults(): Database.QueryResultEntry<AnyProperties>[] {
+  getResults(): Database.QueryResultEntry[] {
     invariant(this.#filter);
 
     const spaceId = this.#queue.dxn.asQueueDXN()!.spaceId;
     return Function.pipe(
       this.#queue.getObjectsSync(),
       // TODO(dmaretskyi): We end-up marshaling objects from JSON and back.
-      Array.filter((obj) => filterMatchObjectJSON(this.#filter!, Obj.toJSON(obj))),
+      Array.filter((obj) => filterMatchObjectJSON(this.#filter!, Entity.toJSON(obj))),
       Array.map((object) => ({
         id: object.id,
         spaceId,
