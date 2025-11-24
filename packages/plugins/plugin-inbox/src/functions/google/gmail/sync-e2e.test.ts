@@ -100,7 +100,7 @@ describe.runIf(process.env.DX_TEST_TAGS?.includes('functions-e2e'))('Functions d
 });
 
 const setup = async () => {
-  const config = configPreset({ edge: 'main' });
+  const config = configPreset({ edge: 'local' });
 
   const client = await new Client({
     config,
