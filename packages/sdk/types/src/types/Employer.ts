@@ -10,7 +10,6 @@ import { Organization } from './Organization';
 import { Person } from './Person';
 
 export const Employer = Schema.Struct({
-  id: Type.ObjectId,
   role: Schema.optional(Schema.String),
   active: Schema.optional(Schema.Boolean),
   startDate: Schema.optional(Schema.String),

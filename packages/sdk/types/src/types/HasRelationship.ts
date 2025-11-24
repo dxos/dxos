@@ -9,7 +9,6 @@ import { Obj, Type } from '@dxos/echo';
 import { Person } from './Person';
 
 export const HasRelationship = Schema.Struct({
-  id: Type.ObjectId,
   kind: Schema.String.annotations({
     description: 'The kind of relationship.',
     examples: ['friend', 'colleague', 'family', 'parent', 'spouse'],

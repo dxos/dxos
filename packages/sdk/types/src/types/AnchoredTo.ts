@@ -7,7 +7,6 @@ import * as Schema from 'effect/Schema';
 import { Obj, Type } from '@dxos/echo';
 
 export const AnchoredTo = Schema.Struct({
-  id: Type.ObjectId,
   anchor: Schema.optional(Schema.String),
 }).pipe(
   Type.Relation({

@@ -5,15 +5,12 @@
 import * as Schema from 'effect/Schema';
 
 import { Filter, Format, Obj, Query, Type } from '@dxos/echo';
-import { TypedObject } from '@dxos/echo/internal';
 
 import { StoredSchema, View } from '../types';
 
-export class TestSchema extends TypedObject({
-  typename: 'example.com/type/Test',
-  version: '0.1.0',
-})({
-  id: Type.ObjectId,
+/** @deprecated */
+// TODO(wittjosiah): Remove.
+export const TestSchema = Schema.Struct({
   name: Schema.optional(
     Schema.String.pipe(
       Schema.annotations({
@@ -38,27 +35,32 @@ export class TestSchema extends TypedObject({
   // ),
   admin: Schema.optional(Schema.Boolean),
   rating: Schema.optional(Schema.Number),
-}) {}
+}).pipe(
+  Type.Obj({
+    typename: 'example.com/type/Test',
+    version: '0.1.0',
+  }),
+);
 
 export type TestType = Schema.Schema.Type<typeof TestSchema>;
 
-export const testSchema: Live<StoredSchema> = Obj.make(StoredSchema, {
+export const testSchema = Obj.make(StoredSchema, {
   typename: 'example.com/type/Test',
   version: '0.1.0',
   jsonSchema: Type.toJsonSchema(TestSchema),
 });
 
-export const testView: Live<View.View> = View.make({
+export const testView = View.make({
   name: 'Test',
   query: Query.select(Filter.type(TestSchema)),
   jsonSchema: Type.toJsonSchema(TestSchema),
 });
 
-export const testData: TestType = {
-  id: Type.ObjectId.random(),
+export const testData = Obj.make(TestSchema, {
+  id: Obj.ID.random(),
   name: 'Tester',
   email: 'test@example.com',
   // address: {
   //   zip: '11205',
   // },
-};
+});

@@ -41,9 +41,9 @@ export interface EchoDatabase extends Database.Database {
 
   /** @deprecated */
   get spaceKey(): PublicKey;
-  // get spaceId(): SpaceId;
+  get spaceId(): SpaceId;
 
-  // toJSON(): object;
+  toJSON(): object;
 
   /**
    * @deprecated Use `ref` instead.

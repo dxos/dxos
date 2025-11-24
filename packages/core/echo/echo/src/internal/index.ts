@@ -2,6 +2,9 @@
 // Copyright 2024 DXOS.org
 //
 
+// TODO(wittjosiah): Fold into a namespace.
+export { JsonPath, splitJsonPath, JsonProp } from '@dxos/effect';
+
 export * from './annotations';
 export * from './entities';
 export * from './formats';

@@ -16,7 +16,7 @@ import { DXN } from '@dxos/keys';
 export type SchemaFieldDescription = {
   property: string;
   type: TypeEnum;
-  format?: TypeFormat;
+  format?: Format.TypeFormat;
 };
 
 /**
@@ -35,7 +35,7 @@ export const mapSchemaToFields = (schema: Schema.Schema<any, any>): SchemaFieldD
 /**
  * @deprecated
  */
-const toFieldValueType = (type: SchemaAST.AST): { format?: TypeFormat; type: TypeEnum } => {
+const toFieldValueType = (type: SchemaAST.AST): { format?: Format.TypeFormat; type: TypeEnum } => {
   if (SchemaAST.isTypeLiteral(type)) {
     return { type: TypeEnum.Ref, format: Format.TypeFormat.Ref };
   } else if (SchemaAST.isNumberKeyword(type)) {

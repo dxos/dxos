@@ -74,6 +74,8 @@ export type MakeProps<T extends Type.Obj.Any> = {
   [MetaId]?: ObjectMeta;
 } & NoInfer<Props<Schema.Schema.Type<T>>>;
 
+export const Meta = MetaId;
+
 /**
  * Creates a new object of the given types.
  * @param schema - Object schema.

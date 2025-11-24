@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 import type * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
 
-import { Obj, type Type } from '@dxos/echo';
+import { Obj, Type } from '@dxos/echo';
 import {
   GeneratorAnnotationId,
   type GeneratorAnnotationValue,
@@ -15,7 +15,6 @@ import {
   TypeFormat,
   type TypedObject,
   getSchemaReference,
-  getTypename,
 } from '@dxos/echo/internal';
 import { type AnyLiveObject, type EchoDatabase, Filter, Query } from '@dxos/echo-db';
 import { findAnnotation } from '@dxos/effect';
@@ -72,13 +71,16 @@ export const createProps = <S extends Schema.Schema.AnyNoContext>(
   return (
     data: Type.Properties<Schema.Schema.Type<S>> = {} as Type.Properties<Schema.Schema.Type<S>>,
   ): Type.Properties<Schema.Schema.Type<S>> => {
-    return getSchemaProperties<S>(schema.ast).reduce<Type.Properties<Schema.Schema.Type<S>>>((obj, property) => {
-      if ((obj as any)[property.name] === undefined) {
-        (obj as any)[property.name] = createValue(generator, schema, property, force);
-      }
+    return getSchemaProperties<Schema.Schema.Type<S>>(schema.ast).reduce<Type.Properties<Schema.Schema.Type<S>>>(
+      (obj, property) => {
+        if ((obj as any)[property.name] === undefined) {
+          (obj as any)[property.name] = createValue(generator, schema, property, force);
+        }
 
-      return obj;
-    }, data);
+        return obj;
+      },
+      data,
+    );
   };
 };
 
@@ -122,7 +124,7 @@ const createValue = <T extends Obj.Any>(
         case 'object':
           return {};
         default: {
-          const prop = [getTypename(schema), property.name].filter(Boolean).join('.');
+          const prop = [Type.getTypename(schema), property.name].filter(Boolean).join('.');
           throw new Error(`Required property: ${prop}:${property.type}`);
         }
       }
@@ -144,7 +146,7 @@ export const createReferences = <T extends Obj.Any>(schema: Schema.Schema<T>, db
             invariant(typename);
             // TODO(burdon): Filter.typename doesn't currently work for mutable objects.
             const { objects: allObjects } = await db.query(Query.select(Filter.everything())).run();
-            const objects = allObjects.filter((obj) => getTypename(obj) === typename);
+            const objects = allObjects.filter((obj) => Obj.getTypename(obj) === typename);
             if (objects.length) {
               const object = randomElement(objects);
               (obj as any)[property.name] = Ref.make(object);

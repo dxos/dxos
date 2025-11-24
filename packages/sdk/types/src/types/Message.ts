@@ -18,7 +18,6 @@ import * as ContentBlock from './ContentBlock';
 //  - Read receipts need to be per space member.
 //  - Read receipts don't need to be added to schema until they being implemented.
 export const Message = Schema.Struct({
-  id: ObjectId,
   // TODO(dmaretskyi): Consider adding a channelId too.
   parentMessage: Schema.optional(ObjectId),
   created: Schema.String.pipe(

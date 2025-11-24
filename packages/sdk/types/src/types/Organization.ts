@@ -8,10 +8,10 @@ import { Obj, Type } from '@dxos/echo';
 import {
   Format,
   FormatAnnotation,
-  TypeFormat,
   GeneratorAnnotation,
   LabelAnnotation,
   PropertyMetaAnnotationId,
+  TypeFormat,
 } from '@dxos/echo/internal';
 import { IconAnnotation } from '@dxos/schema';
 
@@ -28,7 +28,6 @@ export const StatusOptions = [
  * https://schema.org/Organization
  */
 const OrganizationSchema = Schema.Struct({
-  id: Type.ObjectId,
   name: Schema.String.pipe(
     Schema.annotations({ title: 'Name' }),
     GeneratorAnnotation.set({
