@@ -4,7 +4,15 @@
 
 import * as Schema from 'effect/Schema';
 
+<<<<<<< HEAD
 import { Annotation, Obj, Type } from '@dxos/echo';
+||||||| 87517e966b
+import { Obj, Type } from '@dxos/echo';
+import { DescriptionAnnotation, FormAnnotation, LabelAnnotation } from '@dxos/echo/internal';
+=======
+import { Obj, Type } from '@dxos/echo';
+import { DescriptionAnnotation, FormInputAnnotation, LabelAnnotation } from '@dxos/echo/internal';
+>>>>>>> origin/main
 import { Text } from '@dxos/schema';
 import { type MakeOptional } from '@dxos/util';
 
@@ -27,22 +35,46 @@ export const Event = Schema.Struct({
   /**
    * Transcript of the meeting.
    */
+<<<<<<< HEAD
   transcript: Type.Ref(Transcript.Transcript).pipe(Annotation.FormInputAnnotation.set(false), Schema.optional),
+||||||| 87517e966b
+  transcript: Type.Ref(Transcript.Transcript).pipe(FormAnnotation.set(false), Schema.optional),
+=======
+  transcript: Type.Ref(Transcript.Transcript).pipe(FormInputAnnotation.set(false), Schema.optional),
+>>>>>>> origin/main
 
   /**
    * Markdown notes for the meeting.
    */
+<<<<<<< HEAD
   notes: Type.Ref(Text.Text).pipe(Annotation.FormInputAnnotation.set(false), Schema.optional),
+||||||| 87517e966b
+  notes: Type.Ref(Text.Text).pipe(FormAnnotation.set(false), Schema.optional),
+=======
+  notes: Type.Ref(Text.Text).pipe(FormInputAnnotation.set(false), Schema.optional),
+>>>>>>> origin/main
 
   /**
    * Generated summary of the meeting.
    */
+<<<<<<< HEAD
   summary: Type.Ref(Text.Text).pipe(Annotation.FormInputAnnotation.set(false), Schema.optional),
+||||||| 87517e966b
+  summary: Type.Ref(Text.Text).pipe(FormAnnotation.set(false), Schema.optional),
+=======
+  summary: Type.Ref(Text.Text).pipe(FormInputAnnotation.set(false), Schema.optional),
+>>>>>>> origin/main
 
   /**
    * Message thread for the meeting.
    */
+<<<<<<< HEAD
   thread: Type.Ref(Thread.Thread).pipe(Annotation.FormInputAnnotation.set(false), Schema.optional),
+||||||| 87517e966b
+  thread: Type.Ref(Thread.Thread).pipe(FormAnnotation.set(false), Schema.optional),
+=======
+  thread: Type.Ref(Thread.Thread).pipe(FormInputAnnotation.set(false), Schema.optional),
+>>>>>>> origin/main
 }).pipe(
   Type.Obj({
     typename: 'dxos.org/type/Event',

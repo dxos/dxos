@@ -11,6 +11,7 @@ export * from './types';
 
 // TODO(burdon): Restrict access to internal.
 //  1. Remove from outisde of @dxos/echo-db; promote toe echo/db types; serach: from '@dxos/echo/internal';
+//  - [ ] Restrict import { X } from '@dxos/echo/internal' // TODO(burdon): Only for echo-db.
 //  - [x] completely restructure @dxos/echo src/internal
 //  - [x] Remove import "." and ".."! (create lint rule).
 //  - [x] Unify FOUR different nests of test schema.
@@ -29,7 +30,7 @@ export * from './types';
 //  - [x] JsonSchemaType defs
 //  - [ ] Fix commented out tests.
 //  - [ ] DISCUSS: Standradize $ suffix to disambuguate imports (GPT recommended).
-//
+
 //  2. Clean-up
 //  - [ ] Promote parts of src/internal/ref to Ref.ts
 //  - [ ] Rename AnyEchoObject => AnyEntity? (or accept that Object != Obj from naming perspective.)

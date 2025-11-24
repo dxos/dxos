@@ -97,10 +97,12 @@ export class InvitationGuestExtension
       await cancelWithContext(this._ctx, this._remoteOptionsTrigger.wait({ timeout: OPTIONS_TIMEOUT }));
       log.verbose('options received');
       if (this._remoteOptions?.role !== InvitationOptions.Role.HOST) {
-        throw new InvalidInvitationExtensionRoleError(undefined, {
-          expected: InvitationOptions.Role.HOST,
-          remoteOptions: this._remoteOptions,
-          remotePeerId: context.remotePeerId,
+        throw new InvalidInvitationExtensionRoleError({
+          context: {
+            expected: InvitationOptions.Role.HOST,
+            remoteOptions: this._remoteOptions,
+            remotePeerId: context.remotePeerId,
+          },
         });
       }
 

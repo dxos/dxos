@@ -4,7 +4,17 @@
 
 import type * as Schema from 'effect/Schema';
 
+<<<<<<< HEAD
 import { Filter, JsonSchema, Obj, Query, Ref } from '@dxos/echo';
+||||||| 87517e966b
+import { Filter, Obj, Query } from '@dxos/echo';
+import { getTypename, toJsonSchema } from '@dxos/echo/internal';
+import type { JsonSchemaType } from '@dxos/echo/internal';
+=======
+import { Filter, Obj, Query, Ref } from '@dxos/echo';
+import { getTypename, toJsonSchema } from '@dxos/echo/internal';
+import type { JsonSchemaType } from '@dxos/echo/internal';
+>>>>>>> origin/main
 import {
   ProjectionModel,
   type SchemaPropertyDefinition,

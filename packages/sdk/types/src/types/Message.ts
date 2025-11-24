@@ -4,7 +4,15 @@
 
 import * as Schema from 'effect/Schema';
 
+<<<<<<< HEAD
 import { Annotation, Obj, Type } from '@dxos/echo';
+||||||| 87517e966b
+import { Obj, Type } from '@dxos/echo';
+import { GeneratorAnnotation, ObjectId, TypedObject } from '@dxos/echo/internal';
+=======
+import { Obj, Type } from '@dxos/echo';
+import { GeneratorAnnotation, ObjectId, SystemTypeAnnotation } from '@dxos/echo/internal';
+>>>>>>> origin/main
 import { defineObjectMigration } from '@dxos/echo-db';
 import { ObjectId } from '@dxos/keys';
 
@@ -72,6 +80,7 @@ export const MessageV1 = Schema.Struct({
   parts: Schema.optional(Schema.mutable(Schema.Array(Type.Ref(Type.Expando)))),
   properties: Schema.optional(Schema.mutable(Schema.Record({ key: Schema.String, value: Schema.Any }))),
   context: Schema.optional(Type.Ref(Type.Expando)),
+<<<<<<< HEAD
 }).pipe(
   Type.Obj({
     typename: 'dxos.org/type/Message',
@@ -79,6 +88,17 @@ export const MessageV1 = Schema.Struct({
   }),
   Annotation.SystemTypeAnnotation.set(true),
 );
+||||||| 87517e966b
+}) {}
+=======
+}).pipe(
+  Type.Obj({
+    typename: 'dxos.org/type/Message',
+    version: '0.1.0',
+  }),
+  SystemTypeAnnotation.set(true),
+);
+>>>>>>> origin/main
 
 /** @deprecated */
 export const MessageV1ToV2 = defineObjectMigration({

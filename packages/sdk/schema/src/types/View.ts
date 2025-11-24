@@ -12,7 +12,15 @@ import { type Client } from '@dxos/client';
 import { type Space } from '@dxos/client/echo';
 import { Filter, Obj, Query, QueryAST, Type } from '@dxos/echo';
 import {
+<<<<<<< HEAD
   FormInputAnnotation,
+||||||| 87517e966b
+  FormAnnotation,
+  FormatEnum,
+=======
+  FormInputAnnotation,
+  FormatEnum,
+>>>>>>> origin/main
   JsonSchemaType,
   LabelAnnotation,
   ReferenceAnnotationId,

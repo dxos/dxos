@@ -4,7 +4,14 @@
 
 import * as Schema from 'effect/Schema';
 
+<<<<<<< HEAD
 import { Annotation, Format, Obj, Type } from '@dxos/echo';
+||||||| 87517e966b
+import { Obj, Type } from '@dxos/echo';
+=======
+import { Obj, Type } from '@dxos/echo';
+import { SystemTypeAnnotation } from '@dxos/echo/internal';
+>>>>>>> origin/main
 
 export const AccessToken = Schema.Struct({
   note: Schema.optional(
@@ -30,7 +37,12 @@ export const AccessToken = Schema.Struct({
   Schema.annotations({
     description: 'A credential or token for accessing a service.',
   }),
+<<<<<<< HEAD
   Annotation.SystemTypeAnnotation.set(true),
+||||||| 87517e966b
+=======
+  SystemTypeAnnotation.set(true),
+>>>>>>> origin/main
 );
 
 export interface AccessToken extends Schema.Schema.Type<typeof AccessToken> {}
