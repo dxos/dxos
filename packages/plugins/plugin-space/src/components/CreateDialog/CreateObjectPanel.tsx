@@ -6,15 +6,7 @@ import * as Option from 'effect/Option';
 import type * as Schema from 'effect/Schema';
 import React, { useCallback } from 'react';
 
-<<<<<<< HEAD
-import { Annotation, type Obj, Type } from '@dxos/echo';
-import { type TypeAnnotation } from '@dxos/echo/internal';
-||||||| 87517e966b
-import { Type } from '@dxos/echo';
-import { type BaseObject, type TypeAnnotation, ViewAnnotation, getTypeAnnotation } from '@dxos/echo/internal';
-=======
-import { type BaseObject, type TypeAnnotation, getTypeAnnotation } from '@dxos/echo/internal';
->>>>>>> main
+import { Annotation, type Obj } from '@dxos/echo';
 import { type Space, type SpaceId } from '@dxos/react-client/echo';
 import { Icon, toLocalizedString, useDefaultValue, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
@@ -65,27 +57,15 @@ export const CreateObjectPanel = ({
   const { t } = useTranslation(meta.id);
   const initialFormValues = useDefaultValue(_initialFormValues, () => ({}));
   const metadata = typename && resolve?.(typename);
-  const options: TypeAnnotation[] = schemas
+  const options: Annotation.TypeAnnotation[] = schemas
     .filter((schema) => {
       if (views == null) {
         return true;
       } else {
-<<<<<<< HEAD
-        return views === Annotation.ViewAnnotation.get(form.objectSchema).pipe(Option.getOrElse(() => false));
-||||||| 87517e966b
-        return views === ViewAnnotation.get(form.objectSchema).pipe(Option.getOrElse(() => false));
-=======
         return views === ViewAnnotation.get(schema).pipe(Option.getOrElse(() => false));
->>>>>>> main
       }
     })
-<<<<<<< HEAD
-    .map((form) => Annotation.getTypeAnnotation(form.objectSchema))
-||||||| 87517e966b
-    .map((form) => getTypeAnnotation(form.objectSchema))
-=======
-    .map((schema) => getTypeAnnotation(schema))
->>>>>>> main
+    .map((schema) => Annotation.getTypeAnnotation(schema))
     .filter(isNonNullable)
     .sort((a, b) => {
       const nameA = t('typename label', { ns: a.typename, defaultValue: a.typename });
@@ -105,19 +85,9 @@ export const CreateObjectPanel = ({
 
   const handleSetTypename = useCallback(
     async (typename: string) => {
-<<<<<<< HEAD
-      const form = forms.find((form) => Annotation.getTypeAnnotation(form.objectSchema)?.typename === typename);
-      if (form && !form.formSchema) {
-        await onCreateObject?.({ form });
-||||||| 87517e966b
-      const form = forms.find((form) => getTypeAnnotation(form.objectSchema)?.typename === typename);
-      if (form && !form.formSchema) {
-        await onCreateObject?.({ form });
-=======
       const metadata = resolve?.(typename);
       if (metadata && !metadata.inputSchema) {
         await onCreateObject?.({ metadata });
->>>>>>> main
       } else {
         onTypenameChange?.(typename);
       }
@@ -190,7 +160,7 @@ const SelectSchema = ({
   resolve,
   onChange,
 }: {
-  options: TypeAnnotation[];
+  options: Annotation.TypeAnnotation[];
   onChange: (type: string) => void;
 } & Pick<CreateObjectPanelProps, 'resolve'>) => {
   const { t } = useTranslation(meta.id);

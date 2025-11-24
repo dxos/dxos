@@ -4,18 +4,8 @@
 
 import * as Schema from 'effect/Schema';
 
-<<<<<<< HEAD
-import { Annotation, Obj, Type } from '@dxos/echo';
-import { Format, PropertyMeta } from '@dxos/echo/internal';
-import { ItemAnnotation } from '@dxos/schema';
-||||||| 87517e966b
-import { Obj, Type } from '@dxos/echo';
-import { Format, GeneratorAnnotation, LabelAnnotation, PropertyMeta } from '@dxos/echo/internal';
-import { ItemAnnotation } from '@dxos/schema';
-=======
-import { Obj, Type } from '@dxos/echo';
-import { Format, GeneratorAnnotation, LabelAnnotation, PropertyMeta } from '@dxos/echo/internal';
->>>>>>> main
+import { Annotation, Format, Obj, Type } from '@dxos/echo';
+import { PropertyMeta } from '@dxos/echo/internal';
 
 import * as Geo from './Geo';
 import * as Organization from './Organization';
@@ -116,7 +106,7 @@ export const Person = PersonSchema.pipe(
     version: '0.1.0',
   }),
   Schema.annotations({ title: 'Person' }),
-  LabelAnnotation.set(['preferredName', 'fullName', 'nickname']),
+  Annotation.LabelAnnotation.set(['preferredName', 'fullName', 'nickname']),
 );
 
 export interface Person extends Schema.Schema.Type<typeof Person> {}
@@ -132,5 +122,5 @@ export const LegacyPerson = PersonSchema.pipe(
     version: '0.1.0',
   }),
   Schema.annotations({ title: 'Person' }),
-  LabelAnnotation.set(['preferredName', 'fullName', 'nickname']),
+  Annotation.LabelAnnotation.set(['preferredName', 'fullName', 'nickname']),
 );

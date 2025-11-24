@@ -4,17 +4,9 @@
 
 import * as Schema from 'effect/Schema';
 
-<<<<<<< HEAD
 import { Annotation, Obj, Type } from '@dxos/echo';
-import { ObjectId, TypedObject } from '@dxos/echo/internal';
-||||||| 87517e966b
-import { Obj, Type } from '@dxos/echo';
-import { GeneratorAnnotation, ObjectId, TypedObject } from '@dxos/echo/internal';
-=======
-import { Obj, Type } from '@dxos/echo';
-import { GeneratorAnnotation, ObjectId, SystemTypeAnnotation } from '@dxos/echo/internal';
->>>>>>> main
 import { defineObjectMigration } from '@dxos/echo-db';
+import { ObjectId } from '@dxos/keys';
 
 import * as Actor from './Actor';
 import * as ContentBlock from './ContentBlock';
@@ -85,7 +77,7 @@ export const MessageV1 = Schema.Struct({
     typename: 'dxos.org/type/Message',
     version: '0.1.0',
   }),
-  SystemTypeAnnotation.set(true),
+  Annotation.SystemTypeAnnotation.set(true),
 );
 
 /** @deprecated */

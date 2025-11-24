@@ -6,14 +6,8 @@ import * as Function from 'effect/Function';
 import React, { type ChangeEvent, useCallback, useMemo, useState } from 'react';
 
 import { LayoutAction, chain, createIntent } from '@dxos/app-framework';
-<<<<<<< HEAD
-import { useIntentDispatcher } from '@dxos/app-framework/react';
-import { SpaceProperties } from '@dxos/client-protocol';
-||||||| 87517e966b
-import { useIntentDispatcher } from '@dxos/app-framework/react';
-=======
 import { useCapabilities, useIntentDispatcher } from '@dxos/app-framework/react';
->>>>>>> main
+import { SpaceProperties } from '@dxos/client-protocol/types';
 import { log } from '@dxos/log';
 import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { useClient } from '@dxos/react-client';

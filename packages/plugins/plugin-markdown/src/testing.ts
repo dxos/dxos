@@ -5,7 +5,7 @@
 import * as Toolkit from '@effect/ai/Toolkit';
 import * as Effect from 'effect/Effect';
 
-import { SpaceProperties } from '@dxos/client-protocol';
+import { SpaceProperties } from '@dxos/client-protocol/types';
 import { Obj, Ref } from '@dxos/echo';
 import { DatabaseService } from '@dxos/functions';
 import { Collection } from '@dxos/schema';

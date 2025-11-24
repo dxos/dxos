@@ -7,14 +7,7 @@ import type * as Schema from 'effect/Schema';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { expect, userEvent, within } from 'storybook/test';
 
-<<<<<<< HEAD
-import { type JsonSchema, Obj, Type } from '@dxos/echo';
-||||||| 87517e966b
 import { Obj, Type } from '@dxos/echo';
-import { type JsonSchemaType } from '@dxos/echo/internal';
-=======
-import { Obj, Type } from '@dxos/echo';
->>>>>>> main
 import { type DxGrid } from '@dxos/lit-grid';
 import '@dxos/lit-ui/dx-tag-picker.pcss';
 import { faker } from '@dxos/random';
@@ -44,15 +37,7 @@ const generator: ValueGenerator = faker as any;
 const useTestModel = <S extends Type.Obj.Any>(schema: S, count: number) => {
   const client = useClient();
   const { space } = useClientProvider();
-<<<<<<< HEAD
-  const [view, setView] = useState<View.View>();
-  const [jsonSchema, setJsonSchema] = useState<JsonSchema.JsonSchema>();
-||||||| 87517e966b
-  const [view, setView] = useState<View.View>();
-  const [jsonSchema, setJsonSchema] = useState<JsonSchemaType>();
-=======
   const [object, setObject] = useState<Table.Table>();
->>>>>>> main
 
   const features = useMemo<TableFeatures>(
     () => ({ schemaEditable: false, dataEditable: true, selection: { enabled: false } }),

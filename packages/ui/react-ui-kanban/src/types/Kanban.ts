@@ -4,15 +4,14 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Annotation, type JsonSchema, Obj, Ref, Type } from '@dxos/echo';
-import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/internal';
-import { View, ViewAnnotation } from '@dxos/schema';
+import { Annotation, Obj, Ref, Type } from '@dxos/echo';
 import { ObjectId } from '@dxos/keys';
+import { View, ViewAnnotation } from '@dxos/schema';
 
 const KanbanSchema = Schema.Struct({
   name: Schema.optional(Schema.String),
 
-  view: Type.Ref(View.View).pipe(FormInputAnnotation.set(false)),
+  view: Type.Ref(View.View).pipe(Annotation.FormInputAnnotation.set(false)),
 
   /**
    * Order of columns by value and cards by id, derivative of the field selected by `columnPivotField` but can that be
@@ -25,7 +24,7 @@ const KanbanSchema = Schema.Struct({
       ids: Schema.Array(ObjectId),
       hidden: Schema.optional(Schema.Boolean),
     }).pipe(Schema.mutable),
-  ).pipe(Schema.mutable, FormInputAnnotation.set(false)),
+  ).pipe(Schema.mutable, Annotation.FormInputAnnotation.set(false)),
 
   // TODO(wittjosiah): Consider Kanban supporting not being just a view but referencing arbitrary data directly.
 }).pipe(
@@ -33,7 +32,7 @@ const KanbanSchema = Schema.Struct({
     typename: 'dxos.org/type/Kanban',
     version: '0.2.0',
   }),
-  LabelAnnotation.set(['name']),
+  Annotation.LabelAnnotation.set(['name']),
   ViewAnnotation.set(true),
 );
 
@@ -70,63 +69,6 @@ export const KanbanV1 = Schema.Struct({
     typename: 'dxos.org/type/Kanban',
     version: '0.1.0',
   }),
-<<<<<<< HEAD
   Annotation.LabelAnnotation.set(['name']),
-  Annotation.ViewAnnotation.set(true),
-||||||| 87517e966b
-  LabelAnnotation.set(['name']),
   ViewAnnotation.set(true),
-=======
-  LabelAnnotation.set(['name']),
->>>>>>> main
 );
-<<<<<<< HEAD
-
-export type Kanban = Schema.Schema.Type<typeof Kanban>;
-
-/**
- * Make a kanban object.
- */
-export const make = (props: Obj.MakeProps<typeof Kanban> = {}) => Obj.make(Kanban, props);
-
-export const SettingsSchema = Schema.Struct({
-  columnFieldId: Schema.String.annotations({
-    title: 'Column field identifier',
-  }),
-});
-
-type MakeViewProps = Omit<View.MakeFromSpaceProps, 'presentation'>;
-
-/**
- * Make a kanban as a view of a data set.
- */
-export const makeView = async (props: MakeViewProps): Promise<{ jsonSchema: JsonSchema; view: View.View }> => {
-  const kanban = Obj.make(Kanban, {});
-  return View.makeFromSpace({ ...props, presentation: kanban });
-};
-||||||| 87517e966b
-
-export type Kanban = Schema.Schema.Type<typeof Kanban>;
-
-/**
- * Make a kanban object.
- */
-export const make = (props: Obj.MakeProps<typeof Kanban> = {}) => Obj.make(Kanban, props);
-
-export const SettingsSchema = Schema.Struct({
-  columnFieldId: Schema.String.annotations({
-    title: 'Column field identifier',
-  }),
-});
-
-type MakeViewProps = Omit<View.MakeFromSpaceProps, 'presentation'>;
-
-/**
- * Make a kanban as a view of a data set.
- */
-export const makeView = async (props: MakeViewProps): Promise<{ jsonSchema: JsonSchemaType; view: View.View }> => {
-  const kanban = Obj.make(Kanban, {});
-  return View.makeFromSpace({ ...props, presentation: kanban });
-};
-=======
->>>>>>> main

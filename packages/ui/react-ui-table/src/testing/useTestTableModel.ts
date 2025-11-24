@@ -5,14 +5,7 @@
 import type * as Schema from 'effect/Schema';
 import { type RefObject, useCallback, useMemo, useRef } from 'react';
 
-<<<<<<< HEAD
-import { JsonSchema } from '@dxos/echo';
 import { isMutable } from '@dxos/echo/internal';
-||||||| 87517e966b
-import { isMutable, toJsonSchema } from '@dxos/echo/internal';
-=======
-import { isMutable } from '@dxos/echo/internal';
->>>>>>> main
 import { useGlobalFilteredObjects } from '@dxos/plugin-search';
 import { faker } from '@dxos/random';
 import { type Client, useClient } from '@dxos/react-client';
@@ -25,13 +18,13 @@ import { useAddRow, useProjectionModel, useTableModel } from '../hooks';
 import { type TableModel, TablePresentation } from '../model';
 import { Table } from '../types';
 
-faker.seed(0); // NOTE(ZaymonFC): Required for smoke tests.
+faker.seed(0); // TODO(burdon): Move see to tests.
 
 export type TestTableModel = {
   schema: Schema.Schema.AnyNoContext | undefined;
   table: Table.Table | undefined;
-  projection: ProjectionModel | undefined;
   tableRef: RefObject<TableController | null>;
+  projection: ProjectionModel | undefined;
   model: TableModel | undefined;
   presentation: TablePresentation | undefined;
   space: Space | undefined;
@@ -54,29 +47,7 @@ export const useTestTableModel = (): TestTableModel => {
   const table = tables.at(0);
   const typename = table?.view.target?.query ? getTypenameFromQuery(table.view.target.query.ast) : undefined;
   const schema = useSchema(client, space, typename);
-<<<<<<< HEAD
-  const jsonSchema = useMemo(() => (schema ? JsonSchema.toJsonSchema(schema) : undefined), [schema]);
-
-  const projection = useMemo(() => {
-    if (schema && view?.projection) {
-      const projection = new ProjectionModel(JsonSchema.toJsonSchema(schema), view.projection);
-      projection.normalizeView();
-      return projection;
-    }
-  }, [schema, view?.projection]);
-||||||| 87517e966b
-  const jsonSchema = useMemo(() => (schema ? toJsonSchema(schema) : undefined), [schema]);
-
-  const projection = useMemo(() => {
-    if (schema && view?.projection) {
-      const projection = new ProjectionModel(toJsonSchema(schema), view.projection);
-      projection.normalizeView();
-      return projection;
-    }
-  }, [schema, view?.projection]);
-=======
   const projection = useProjectionModel(schema, table);
->>>>>>> main
 
   const features = useMemo(
     () => ({
@@ -149,8 +120,8 @@ export const useTestTableModel = (): TestTableModel => {
   return {
     schema,
     table,
-    projection,
     tableRef,
+    projection,
     model,
     presentation,
     space,

@@ -6,14 +6,7 @@ import { effect } from '@preact/signals-core';
 import orderBy from 'lodash.orderby';
 import { useEffect, useMemo, useState } from 'react';
 
-<<<<<<< HEAD
-import { type JsonSchema, Obj } from '@dxos/echo';
-||||||| 87517e966b
 import { Obj } from '@dxos/echo';
-import { type JsonSchemaType } from '@dxos/echo/internal';
-=======
-import { Obj } from '@dxos/echo';
->>>>>>> main
 import { type Live } from '@dxos/live-object';
 import { useSelected, useSelectionActions } from '@dxos/react-ui-attention';
 import { type ProjectionModel } from '@dxos/schema';
@@ -23,15 +16,7 @@ import { TableModel, type TableModelProps, type TableRow, type TableRowAction } 
 import { type Table } from '../types';
 
 export type UseTableModelParams<T extends TableRow = TableRow> = {
-<<<<<<< HEAD
-  view?: View.View;
-  schema?: JsonSchema.JsonSchema;
-||||||| 87517e966b
-  view?: View.View;
-  schema?: JsonSchemaType;
-=======
   object?: Table.Table;
->>>>>>> main
   projection?: ProjectionModel;
   rows?: Live<T>[];
   rowActions?: TableRowAction[];

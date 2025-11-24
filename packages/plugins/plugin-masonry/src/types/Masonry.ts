@@ -4,18 +4,10 @@
 
 import * as Schema from 'effect/Schema';
 
-<<<<<<< HEAD
-import { Annotation, JsonSchema, Obj, Type } from '@dxos/echo';
-import { View } from '@dxos/schema';
-||||||| 87517e966b
-import { Obj, Type } from '@dxos/echo';
-import { type JsonSchemaType, ViewAnnotation, toEffectSchema } from '@dxos/echo/internal';
-import { View } from '@dxos/schema';
-=======
 import { Obj, Ref, Type } from '@dxos/echo';
 import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/internal';
+import { ObjectId } from '@dxos/keys';
 import { View, ViewAnnotation } from '@dxos/schema';
->>>>>>> main
 
 const MasonrySchema = Schema.Struct({
   name: Schema.String.pipe(Schema.optional),
@@ -24,7 +16,7 @@ const MasonrySchema = Schema.Struct({
 
   arrangement: Schema.Array(
     Schema.Struct({
-      ids: Schema.Array(Type.ObjectId),
+      ids: Schema.Array(ObjectId),
       hidden: Schema.optional(Schema.Boolean),
     }).pipe(Schema.mutable),
   ).pipe(Schema.mutable, FormInputAnnotation.set(false), Schema.optional),
@@ -59,7 +51,7 @@ export const make = ({ name, arrangement = [], view }: MakeProps): Masonry => {
 export const MasonryV1 = Schema.Struct({
   arrangement: Schema.Array(
     Schema.Struct({
-      ids: Schema.Array(Type.ObjectId),
+      ids: Schema.Array(ObjectId),
       hidden: Schema.optional(Schema.Boolean),
     }).pipe(Schema.mutable),
   ).pipe(Schema.mutable, Schema.optional),
@@ -68,64 +60,4 @@ export const MasonryV1 = Schema.Struct({
     typename: 'dxos.org/type/Masonry',
     version: '0.1.0',
   }),
-<<<<<<< HEAD
-  Annotation.ViewAnnotation.set(true),
-||||||| 87517e966b
-  ViewAnnotation.set(true),
-=======
->>>>>>> main
 );
-<<<<<<< HEAD
-
-export type Masonry = Schema.Schema.Type<typeof Masonry>;
-
-/**
- * Make a masonry object.
- */
-export const make = (props: Obj.MakeProps<typeof Masonry> = {}) => Obj.make(Masonry, props);
-
-export type MakeViewProps = Omit<View.MakeFromSpaceProps, 'presentation'>;
-
-export const makeView = async ({
-  ...props
-}: MakeViewProps): Promise<{
-  jsonSchema: JsonSchema.JsonSchema;
-  view: View.View;
-  schema: ReturnType<typeof JsonSchema.toEffectSchema>;
-}> => {
-  const masonry = Obj.make(Masonry, {});
-  const { jsonSchema, view } = await View.makeFromSpace({ ...props, presentation: masonry });
-
-  // Preset sizes.
-  const schema = JsonSchema.toEffectSchema(jsonSchema);
-
-  return { jsonSchema, schema, view };
-};
-||||||| 87517e966b
-
-export type Masonry = Schema.Schema.Type<typeof Masonry>;
-
-/**
- * Make a masonry object.
- */
-export const make = (props: Obj.MakeProps<typeof Masonry> = {}) => Obj.make(Masonry, props);
-
-export type MakeViewProps = Omit<View.MakeFromSpaceProps, 'presentation'>;
-
-export const makeView = async ({
-  ...props
-}: MakeViewProps): Promise<{
-  jsonSchema: JsonSchemaType;
-  view: View.View;
-  schema: ReturnType<typeof toEffectSchema>;
-}> => {
-  const masonry = Obj.make(Masonry, {});
-  const { jsonSchema, view } = await View.makeFromSpace({ ...props, presentation: masonry });
-
-  // Preset sizes.
-  const schema = toEffectSchema(jsonSchema);
-
-  return { jsonSchema, schema, view };
-};
-=======
->>>>>>> main

@@ -4,15 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
-<<<<<<< HEAD
 import { Annotation, Obj, Ref, Type } from '@dxos/echo';
-||||||| 87517e966b
-import { Obj, Ref, Type } from '@dxos/echo';
-import { FormAnnotation } from '@dxos/echo/internal';
-=======
-import { Obj, Ref, Type } from '@dxos/echo';
-import { FormInputAnnotation, SystemTypeAnnotation } from '@dxos/echo/internal';
->>>>>>> main
 
 export const TLDRAW_SCHEMA = 'tldraw.com/2';
 
@@ -26,25 +18,21 @@ export const Canvas = Schema.Struct({
     typename: 'dxos.org/type/Canvas',
     version: '0.1.0',
   }),
-  SystemTypeAnnotation.set(true),
+  Annotation.SystemTypeAnnotation.set(true),
 );
+
 export interface Canvas extends Schema.Schema.Type<typeof Canvas> {}
 
 export const Diagram = Schema.Struct({
   name: Schema.String.pipe(Schema.optional),
-<<<<<<< HEAD
-  canvas: Type.Ref(Canvas).pipe(Annotation.FormAnnotation.set(false)),
-||||||| 87517e966b
-  canvas: Type.Ref(Canvas).pipe(FormAnnotation.set(false)),
-=======
-  canvas: Type.Ref(Canvas).pipe(FormInputAnnotation.set(false)),
->>>>>>> main
+  canvas: Type.Ref(Canvas).pipe(Annotation.FormInputAnnotation.set(false)),
 }).pipe(
   Type.Obj({
     typename: 'dxos.org/type/Diagram',
     version: '0.1.0',
   }),
 );
+
 export interface Diagram extends Schema.Schema.Type<typeof Diagram> {}
 
 export type DiagramProps = Omit<Obj.MakeProps<typeof Diagram>, 'canvas'> & {
