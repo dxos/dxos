@@ -7,7 +7,7 @@ import * as Schema from 'effect/Schema';
 
 import { type ForeignKey } from '@dxos/echo-protocol';
 import { assertArgument, invariant } from '@dxos/invariant';
-import { type DXN } from '@dxos/keys';
+import { type DXN, ObjectId } from '@dxos/keys';
 
 import {
   MetaId,
@@ -44,6 +44,10 @@ export type Any = Obj.Any | Relation.Any;
 //
 // Type
 //
+
+// TODO(burdon): To discuss: prefer over ObjectId or Key.ObjectId or Type.ID?
+export const ID = ObjectId;
+export type ID = ObjectId;
 
 /**
  * Test if object or relation is an instance of a schema.

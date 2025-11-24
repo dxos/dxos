@@ -5,7 +5,6 @@
 import * as Schema from 'effect/Schema';
 
 import { Annotation, Obj, Ref, Type } from '@dxos/echo';
-import { ObjectId } from '@dxos/keys';
 import { View, ViewAnnotation } from '@dxos/schema';
 
 const KanbanSchema = Schema.Struct({
@@ -21,7 +20,7 @@ const KanbanSchema = Schema.Struct({
   arrangement: Schema.Array(
     Schema.Struct({
       columnValue: Schema.String,
-      ids: Schema.Array(ObjectId),
+      ids: Schema.Array(Obj.ID),
       hidden: Schema.optional(Schema.Boolean),
     }).pipe(Schema.mutable),
   ).pipe(Schema.mutable, Annotation.FormInputAnnotation.set(false)),
@@ -60,7 +59,7 @@ export const KanbanV1 = Schema.Struct({
   arrangement: Schema.Array(
     Schema.Struct({
       columnValue: Schema.String,
-      ids: Schema.Array(ObjectId),
+      ids: Schema.Array(Obj.ID),
       hidden: Schema.optional(Schema.Boolean),
     }).pipe(Schema.mutable),
   ).pipe(Schema.mutable, Schema.optional),
