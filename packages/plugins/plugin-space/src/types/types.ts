@@ -5,17 +5,27 @@
 import * as Schema from 'effect/Schema';
 
 import { type AnyIntentChain } from '@dxos/app-framework';
+<<<<<<< HEAD
 import { type Obj, Type } from '@dxos/echo';
 import { EchoSchema, StoredSchema } from '@dxos/echo/internal';
 import { QueryAST } from '@dxos/echo-protocol';
+||||||| 87517e966b
+import { type Obj, QueryAST, Type } from '@dxos/echo';
+import { type BaseObject, EchoSchema, StoredSchema } from '@dxos/echo/internal';
+=======
+import { type Obj, QueryAST, Type } from '@dxos/echo';
+import { EchoSchema, StoredSchema } from '@dxos/echo/internal';
+>>>>>>> main
 import { type PublicKey } from '@dxos/react-client';
 // TODO(wittjosiah): This pulls in full client.
 import { EchoObjectSchema, ReactiveObjectSchema, type Space, SpaceSchema } from '@dxos/react-client/echo';
 import { CancellableInvitationObservable, Invitation } from '@dxos/react-client/invitations';
-import { Collection, FieldSchema, TypenameAnnotationId, View } from '@dxos/schema';
+import { Collection, FieldSchema, View } from '@dxos/schema';
 import { type ComplexMap } from '@dxos/util';
 
 import { meta } from '../meta';
+
+import { TypeInputOptionsAnnotation } from './form';
 
 export const SPACE_DIRECTORY_HANDLE = `${meta.id}/directory`;
 
@@ -94,10 +104,19 @@ export interface TypedObjectSerializer<T extends Obj.Any = Type.Expando> {
   deserialize(params: { content: string; space: Space; newId?: boolean }): Promise<T>;
 }
 
+<<<<<<< HEAD
 // TODO(burdon): Move to TypeFormat or SDK.
+||||||| 87517e966b
+// TODO(burdon): Move to FormatEnum or SDK.
+=======
+export type CreateObjectIntent = (props: any, options: { space: Space }) => AnyIntentChain;
+
+// TODO(burdon): Move to FormatEnum or SDK.
+>>>>>>> main
 export const IconAnnotationId = Symbol.for('@dxos/plugin-space/annotation/Icon');
 export const HueAnnotationId = Symbol.for('@dxos/plugin-space/annotation/Hue');
 
+<<<<<<< HEAD
 export type ObjectForm<T extends Obj.Any = Obj.Any> = {
   objectSchema: Schema.Schema.AnyNoContext;
   formSchema?: Schema.Schema<T, any>;
@@ -107,6 +126,34 @@ export type ObjectForm<T extends Obj.Any = Obj.Any> = {
 
 export const defineObjectForm = <T extends Obj.Any>(form: ObjectForm<T>) => form;
 
+||||||| 87517e966b
+export const SpaceForm = Schema.Struct({
+  name: Schema.optional(Schema.String.annotations({ title: 'Name' })),
+  icon: Schema.optional(Schema.String.annotations({ title: 'Icon', [IconAnnotationId]: true })),
+  hue: Schema.optional(Schema.String.annotations({ title: 'Color', [HueAnnotationId]: true })),
+  // TODO(wittjosiah): Make optional with default value.
+  edgeReplication: Schema.Boolean.annotations({ title: 'Enable EDGE Replication' }),
+});
+
+export type ObjectForm<T extends BaseObject = BaseObject> = {
+  objectSchema: Schema.Schema.AnyNoContext;
+  formSchema?: Schema.Schema<T, any>;
+  hidden?: boolean;
+  getIntent: (props: T, options: { space: Space }) => AnyIntentChain;
+};
+
+export const defineObjectForm = <T extends BaseObject>(form: ObjectForm<T>) => form;
+
+=======
+export const SpaceForm = Schema.Struct({
+  name: Schema.optional(Schema.String.annotations({ title: 'Name' })),
+  icon: Schema.optional(Schema.String.annotations({ title: 'Icon', [IconAnnotationId]: true })),
+  hue: Schema.optional(Schema.String.annotations({ title: 'Color', [HueAnnotationId]: true })),
+  // TODO(wittjosiah): Make optional with default value.
+  edgeReplication: Schema.Boolean.annotations({ title: 'Enable EDGE Replication' }),
+});
+
+>>>>>>> main
 export const SPACE_ACTION = `${meta.id}/action`;
 
 export namespace SpaceAction {
@@ -222,10 +269,14 @@ export namespace SpaceAction {
 
   export const StoredSchemaForm = Schema.Struct({
     name: Schema.optional(Schema.String),
-    typename: Schema.optional(
-      Schema.String.annotations({
-        [TypenameAnnotationId]: ['unused-static'],
+    typename: Schema.String.pipe(
+      Schema.annotations({ title: 'Select type (leave blank to create a new type)' }),
+      TypeInputOptionsAnnotation.set({
+        location: ['runtime'],
+        kind: ['user'],
+        registered: ['unregistered'],
       }),
+      Schema.optional,
     ),
   });
 
@@ -372,22 +423,4 @@ export namespace CollectionAction {
       object: Collection.Collection,
     }),
   }) {}
-
-  export const QueryCollectionForm = Schema.Struct({
-    name: Schema.optional(Schema.String),
-    typename: Schema.String.annotations({
-      [TypenameAnnotationId]: ['object-form'],
-    }),
-  });
-
-  export class CreateQueryCollection extends Schema.TaggedClass<CreateQueryCollection>()(
-    'dxos.org/plugin/collection/action/create-query-collection',
-    {
-      input: QueryCollectionForm,
-      output: Schema.Struct({
-        // TODO(wittjosiah): Remove cast.
-        object: EchoObjectSchema, // Collection.QueryCollection,
-      }),
-    },
-  ) {}
 }

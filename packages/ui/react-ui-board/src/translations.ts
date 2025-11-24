@@ -12,8 +12,8 @@ export const translations = [
       [translationKey]: {
         'button center': 'Center board',
         'button zoom': 'Toggle zoom',
-        'button add': 'Add item',
-        'button delete': 'Remove item',
+        'button add': 'Add object',
+        'button delete': 'Remove object',
       },
     },
   },

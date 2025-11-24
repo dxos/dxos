@@ -160,7 +160,7 @@ export const FieldEditor = ({
           {...props}
           options={
             referenceSchema
-              ? getSchemaProperties(referenceSchema.ast)
+              ? getSchemaProperties(referenceSchema.ast, {}, { form: true })
                   .sort(sortProperties)
                   .map((p) => ({ value: p.name }))
               : []

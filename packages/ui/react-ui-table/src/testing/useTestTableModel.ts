@@ -2,35 +2,59 @@
 // Copyright 2025 DXOS.org
 //
 
-import { useCallback, useMemo, useRef } from 'react';
+import type * as Schema from 'effect/Schema';
+import { type RefObject, useCallback, useMemo, useRef } from 'react';
 
+<<<<<<< HEAD
 import { JsonSchema } from '@dxos/echo';
 import { isMutable } from '@dxos/echo/internal';
+||||||| 87517e966b
+import { isMutable, toJsonSchema } from '@dxos/echo/internal';
+=======
+import { isMutable } from '@dxos/echo/internal';
+>>>>>>> main
 import { useGlobalFilteredObjects } from '@dxos/plugin-search';
 import { faker } from '@dxos/random';
-import { useClient } from '@dxos/react-client';
-import { Filter, useQuery, useSchema } from '@dxos/react-client/echo';
+import { type Client, useClient } from '@dxos/react-client';
+import { Filter, type Space, useQuery, useSchema } from '@dxos/react-client/echo';
 import { useClientProvider } from '@dxos/react-client/testing';
-import { ProjectionModel, View, getTypenameFromQuery } from '@dxos/schema';
+import { type ProjectionModel, getTypenameFromQuery } from '@dxos/schema';
 
 import { type TableController } from '../components';
-import { useAddRow, useTableModel } from '../hooks';
-import { TablePresentation } from '../model';
+import { useAddRow, useProjectionModel, useTableModel } from '../hooks';
+import { type TableModel, TablePresentation } from '../model';
+import { Table } from '../types';
 
 faker.seed(0); // NOTE(ZaymonFC): Required for smoke tests.
+
+export type TestTableModel = {
+  schema: Schema.Schema.AnyNoContext | undefined;
+  table: Table.Table | undefined;
+  projection: ProjectionModel | undefined;
+  tableRef: RefObject<TableController | null>;
+  model: TableModel | undefined;
+  presentation: TablePresentation | undefined;
+  space: Space | undefined;
+  client: Client | undefined;
+  handleInsertRow: () => void;
+  handleSaveView: () => void;
+  handleDeleteRows: (rowIndex: number, objects: any[]) => void;
+  handleDeleteColumn: (fieldId: string) => void;
+};
 
 /**
  * Custom hook to create and manage a test table model for storybook demonstrations.
  * Provides table data, schema, and handlers for table operations.
  */
-export const useTestTableModel = () => {
+export const useTestTableModel = (): TestTableModel => {
   const client = useClient();
   const { space } = useClientProvider();
 
-  const views = useQuery(space, Filter.type(View.View));
-  const view = useMemo(() => views.at(0), [views]);
-  const typename = view?.query ? getTypenameFromQuery(view.query.ast) : undefined;
+  const tables = useQuery(space, Filter.type(Table.Table));
+  const table = tables.at(0);
+  const typename = table?.view.target?.query ? getTypenameFromQuery(table.view.target.query.ast) : undefined;
   const schema = useSchema(client, space, typename);
+<<<<<<< HEAD
   const jsonSchema = useMemo(() => (schema ? JsonSchema.toJsonSchema(schema) : undefined), [schema]);
 
   const projection = useMemo(() => {
@@ -40,6 +64,19 @@ export const useTestTableModel = () => {
       return projection;
     }
   }, [schema, view?.projection]);
+||||||| 87517e966b
+  const jsonSchema = useMemo(() => (schema ? toJsonSchema(schema) : undefined), [schema]);
+
+  const projection = useMemo(() => {
+    if (schema && view?.projection) {
+      const projection = new ProjectionModel(toJsonSchema(schema), view.projection);
+      projection.normalizeView();
+      return projection;
+    }
+  }, [schema, view?.projection]);
+=======
+  const projection = useProjectionModel(schema, table);
+>>>>>>> main
 
   const features = useMemo(
     () => ({
@@ -83,8 +120,7 @@ export const useTestTableModel = () => {
   );
 
   const model = useTableModel({
-    view,
-    schema: jsonSchema,
+    object: table,
     projection,
     features,
     rows: filteredObjects,
@@ -98,7 +134,7 @@ export const useTestTableModel = () => {
   const handleInsertRow = useCallback(() => {
     const insertResult = model?.insertRow();
     tableRef.current?.handleInsertRowResult?.(insertResult);
-  }, [model, tableRef.current]);
+  }, [model]);
 
   const handleSaveView = useCallback(() => {
     model?.saveView();
@@ -112,7 +148,7 @@ export const useTestTableModel = () => {
 
   return {
     schema,
-    view,
+    table,
     projection,
     tableRef,
     model,

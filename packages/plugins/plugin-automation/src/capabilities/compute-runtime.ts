@@ -116,10 +116,12 @@ const InvocationTracerLive = Layer.unwrapEffect(
       objects: [properties],
     } = yield* DatabaseService.runQuery(Query.type(SpaceProperties));
     invariant(properties);
-    if (!properties.invocationTraceQueue) {
+    // TODO(burdon): Check ref target has loaded?
+    if (!properties.invocationTraceQueue || !properties.invocationTraceQueue.target) {
       const queue = yield* QueueService.createQueue({ subspaceTag: 'trace' });
       properties.invocationTraceQueue = Ref.fromDXN(queue.dxn);
     }
+
     const queue = properties.invocationTraceQueue.target;
     invariant(queue);
     return InvocationTracer.layerLive({ invocationTraceQueue: queue });

@@ -155,10 +155,10 @@ export const SchemaMetaSymbol = Symbol.for('@dxos/schema/SchemaMeta');
 export type SchemaMeta = TypeMeta & { id: string };
 
 /**
- * Identifies a schema as a view.
+ * Identifies a schema as a schema for a hidden system type.
  */
-export const ViewAnnotationId = Symbol.for('@dxos/schema/annotation/View');
-export const ViewAnnotation = createAnnotationHelper<boolean>(ViewAnnotationId);
+export const SystemTypeAnnotationId = Symbol.for('@dxos/schema/annotation/SystemType');
+export const SystemTypeAnnotation = createAnnotationHelper<boolean>(SystemTypeAnnotationId);
 
 /**
  * Identifies label property or JSON path expression.
@@ -268,8 +268,8 @@ export const setDescription = <S extends Schema.Schema.Any>(
  * Identifies if a property should be included in a form or not.
  * By default, all properties are included in forms, so this is opt-out.
  */
-export const FormAnnotationId = Symbol.for('@dxos/schema/annotation/Form');
-export const FormAnnotation = createAnnotationHelper<boolean>(FormAnnotationId);
+export const FormInputAnnotationId = Symbol.for('@dxos/schema/annotation/FormInput');
+export const FormInputAnnotation = createAnnotationHelper<boolean>(FormInputAnnotationId);
 
 /**
  * Default field to be used on referenced schema to lookup the value.

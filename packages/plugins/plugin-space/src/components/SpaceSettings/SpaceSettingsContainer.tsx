@@ -6,8 +6,14 @@ import * as Function from 'effect/Function';
 import React, { type ChangeEvent, useCallback, useMemo, useState } from 'react';
 
 import { LayoutAction, chain, createIntent } from '@dxos/app-framework';
+<<<<<<< HEAD
 import { useIntentDispatcher } from '@dxos/app-framework/react';
 import { SpaceProperties } from '@dxos/client-protocol';
+||||||| 87517e966b
+import { useIntentDispatcher } from '@dxos/app-framework/react';
+=======
+import { useCapabilities, useIntentDispatcher } from '@dxos/app-framework/react';
+>>>>>>> main
 import { log } from '@dxos/log';
 import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { useClient } from '@dxos/react-client';
@@ -25,6 +31,7 @@ import {
 import { HuePicker, IconPicker } from '@dxos/react-ui-pickers';
 import { StackItem } from '@dxos/react-ui-stack';
 
+import { SpaceCapabilities } from '../../capabilities';
 import { meta } from '../../meta';
 import { SpaceAction } from '../../types';
 
@@ -168,6 +175,11 @@ export const SpaceSettingsContainer = ({ space }: SpaceSettingsContainerProps) =
     download(new Blob([archive.contents as Uint8Array<ArrayBuffer>]), archive.filename);
   }, [space, download]);
 
+  const repairs = useCapabilities(SpaceCapabilities.Repair);
+  const handleRepair = useCallback(async () => {
+    await Promise.all(repairs.map((repair) => repair({ space, isDefault: client.spaces.default === space })));
+  }, [client, space, repairs]);
+
   return (
     <StackItem.Content scrollable>
       <ControlPage>
@@ -187,12 +199,25 @@ export const SpaceSettingsContainer = ({ space }: SpaceSettingsContainerProps) =
             Custom={customElements}
           />
         </ControlSection>
-        <ControlItemInput
-          title={t('backup space label', { ns: meta.id })}
-          description={t('backup space description', { ns: meta.id })}
+        <ControlSection
+          title={t('space controls title', { ns: meta.id })}
+          description={t('space controls description', { ns: meta.id })}
         >
-          <Button onClick={handleBackup}>{t('download backup')}</Button>
-        </ControlItemInput>
+          <div role='none' className='container-max-width grid grid-cols-1 md:grid-cols-[1fr_min-content]'>
+            <ControlItemInput
+              title={t('backup space title', { ns: meta.id })}
+              description={t('backup space description', { ns: meta.id })}
+            >
+              <Button onClick={handleBackup}>{t('download backup label')}</Button>
+            </ControlItemInput>
+            <ControlItemInput
+              title={t('repair space title', { ns: meta.id })}
+              description={t('repair space description', { ns: meta.id })}
+            >
+              <Button onClick={handleRepair}>{t('repair space label')}</Button>
+            </ControlItemInput>
+          </div>
+        </ControlSection>
       </ControlPage>
     </StackItem.Content>
   );

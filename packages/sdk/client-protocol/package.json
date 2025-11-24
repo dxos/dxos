@@ -37,7 +37,6 @@
   ],
   "dependencies": {
     "@dxos/async": "workspace:*",
-    "@dxos/config": "workspace:*",
     "@dxos/context": "workspace:*",
     "@dxos/credentials": "workspace:*",
     "@dxos/echo": "workspace:*",

@@ -4,7 +4,15 @@
 
 import * as Schema from 'effect/Schema';
 
+<<<<<<< HEAD
 import { Annotation, JsonSchema, Obj, type Ref, Type } from '@dxos/echo';
+||||||| 87517e966b
+import { Obj, type Ref, Type } from '@dxos/echo';
+import { FormAnnotation, JsonSchemaType, toJsonSchema } from '@dxos/echo/internal';
+=======
+import { Obj, type Ref, Type } from '@dxos/echo';
+import { FormInputAnnotation, JsonSchemaType, toJsonSchema } from '@dxos/echo/internal';
+>>>>>>> main
 
 import { Blueprint } from '../blueprint';
 import * as Template from '../template';
@@ -30,18 +38,36 @@ const Prompt_ = Schema.Struct({
   /**
    * Input schema of the prompt.
    */
+<<<<<<< HEAD
   input: JsonSchema.JsonSchema.pipe(Annotation.FormAnnotation.set(false)),
+||||||| 87517e966b
+  input: JsonSchemaType.pipe(FormAnnotation.set(false)),
+=======
+  input: JsonSchemaType.pipe(FormInputAnnotation.set(false)),
+>>>>>>> main
 
   /**
    * Output schema of the prompt.
    */
+<<<<<<< HEAD
   output: JsonSchema.JsonSchema.pipe(Annotation.FormAnnotation.set(false)),
+||||||| 87517e966b
+  output: JsonSchemaType.pipe(FormAnnotation.set(false)),
+=======
+  output: JsonSchemaType.pipe(FormInputAnnotation.set(false)),
+>>>>>>> main
 
   /**
    * Natural language instructions for the prompt.
    * These should provide concrete course of action for the AI to follow.
    */
+<<<<<<< HEAD
   instructions: Template.Template.pipe(Annotation.FormAnnotation.set(false)),
+||||||| 87517e966b
+  instructions: Template.Template.pipe(FormAnnotation.set(false)),
+=======
+  instructions: Template.Template.pipe(FormInputAnnotation.set(false)),
+>>>>>>> main
 
   /**
    * Blueprints that the prompt may utilize.
@@ -51,7 +77,13 @@ const Prompt_ = Schema.Struct({
   /**
    * Additional context that the prompt may utilize.
    */
+<<<<<<< HEAD
   context: Schema.Array(Schema.Any).pipe(Annotation.FormAnnotation.set(false)),
+||||||| 87517e966b
+  context: Schema.Array(Schema.Any).pipe(FormAnnotation.set(false)),
+=======
+  context: Schema.Array(Schema.Any).pipe(FormInputAnnotation.set(false)),
+>>>>>>> main
 }).pipe(
   Type.Obj({
     typename: 'dxos.org/type/Prompt',

@@ -9,9 +9,9 @@ import { type Live } from '@dxos/live-object';
 import { type QueryOptions as QueryOptionsProto } from '@dxos/protocols/proto/dxos/echo/filter';
 
 import type * as Entity from './Entity';
-import { type AnyProperties, type HasId } from './internal';
+import type { AnyProperties, HasId } from './internal';
 import type * as Obj from './Obj';
-import { type Filter, type Query } from './query';
+import type { Filter, Query } from './query';
 import type * as Ref from './Ref';
 
 /**
@@ -164,10 +164,9 @@ export interface Database extends Queryable {
    * NOTE: The reference may be dangling if the object is not present in the database.
    * NOTE: Difference from `Ref.fromDXN`
    * `Ref.fromDXN(dxn)` returns an unhydrated reference. The `.load` and `.target` APIs will not work.
-   * `db.ref(dxn)` is preferable in cases with access to the database.
+   * `db.makeRef(dxn)` is preferable in cases with access to the database.
    */
-  // TODO(burdon): Rename makeRef.
-  ref<T extends Obj.Any = Obj.Any>(dxn: DXN): Ref.Ref<T>;
+  makeRef<T extends Obj.Any = Obj.Any>(dxn: DXN): Ref.Ref<T>;
 
   /**
    * Query objects.

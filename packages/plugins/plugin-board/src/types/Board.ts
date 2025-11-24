@@ -14,8 +14,8 @@ import { meta } from '../meta';
  */
 export const Board = Schema.Struct({
   name: Schema.String.pipe(Schema.optional),
-  items: Type.Ref(Type.Expando).pipe(Schema.Array, Schema.mutable, Annotation.FormAnnotation.set(false)),
-  layout: BoardLayout.pipe(Schema.mutable, Annotation.FormAnnotation.set(false)),
+  items: Type.Ref(Type.Expando).pipe(Schema.Array, Schema.mutable, Annotation.FormInputAnnotation.set(false)),
+  layout: BoardLayout.pipe(Schema.mutable, Annotation.FormInputAnnotation.set(false)),
 }).pipe(
   Type.Obj({
     typename: 'dxos.org/type/Board',

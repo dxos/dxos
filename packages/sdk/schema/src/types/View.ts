@@ -10,14 +10,15 @@ import * as SchemaAST from 'effect/SchemaAST';
 
 import { type Client } from '@dxos/client';
 import { type Space } from '@dxos/client/echo';
-import { Filter, Obj, Query, QueryAST, Ref, Type } from '@dxos/echo';
+import { Filter, Obj, Query, QueryAST, Type } from '@dxos/echo';
 import {
-  FormAnnotation,
+  FormInputAnnotation,
   JsonSchemaType,
   LabelAnnotation,
   ReferenceAnnotationId,
   type ReferenceAnnotationValue,
   type RuntimeSchemaRegistry,
+  SystemTypeAnnotation,
   TypeEnum,
   TypeFormat,
   toEffectSchema,
@@ -29,26 +30,25 @@ import { DXN } from '@dxos/keys';
 import { type Live } from '@dxos/live-object';
 
 import { FieldSchema, FieldSortType, ProjectionModel, getSchemaProperties } from '../projection';
-
-import { createDefaultSchema, getSchema } from './util';
+import { createDefaultSchema, getSchema } from '../util';
 
 export const Projection = Schema.Struct({
   /**
    * Optional schema override used to customize the underlying schema.
    */
-  schema: Schema.optional(JsonSchemaType),
+  schema: JsonSchemaType.pipe(Schema.optional),
 
   /**
    * UX metadata associated with displayed fields (in table, form, etc.)
    */
   // TODO(wittjosiah): Should this just be an array of JsonPath?
-  fields: Schema.mutable(Schema.Array(FieldSchema)),
+  fields: Schema.Array(FieldSchema).pipe(Schema.mutable),
 
   /**
    * The id for the field used to pivot the view.
    * E.g., the field to use for kanban columns or the field to use for map coordinates.
    */
-  pivotFieldId: Schema.optional(Schema.String),
+  pivotFieldId: Schema.String.pipe(Schema.optional),
 }).pipe(Schema.mutable);
 
 export type Projection = Schema.Schema.Type<typeof Projection>;
@@ -59,46 +59,30 @@ export type Projection = Schema.Schema.Type<typeof Projection>;
  */
 export const ViewSchema = Schema.Struct({
   /**
-   * Name of the view.
-   */
-  name: Schema.optional(
-    Schema.String.annotations({
-      title: 'Name',
-      [SchemaAST.ExamplesAnnotationId]: ['Contact'],
-    }),
-  ),
-
-  /**
    * Query used to retrieve data.
    * Can be a user-provided query grammar string or a query AST.
    */
   query: Schema.Struct({
     raw: Schema.optional(Schema.String),
     ast: QueryAST.Query,
-  }).pipe(Schema.mutable, FormAnnotation.set(false)),
+  }).pipe(Schema.mutable),
 
   /**
    * @deprecated Prefer ordering in query.
    */
-  sort: Schema.optional(Schema.Array(FieldSortType).pipe(FormAnnotation.set(false))),
+  sort: Schema.Array(FieldSortType).pipe(Schema.optional),
 
   /**
    * Projection of the data returned from the query.
    */
-  projection: Projection.pipe(FormAnnotation.set(false)),
-
-  /**
-   * Reference to the custom view object which is used to store data specific to rendering.
-   */
-  presentation: Type.Ref(Type.Expando).pipe(FormAnnotation.set(false)),
-})
-  .pipe(LabelAnnotation.set(['name']))
-  .pipe(
-    Type.Obj({
-      typename: 'dxos.org/type/View',
-      version: '0.4.0',
-    }),
-  );
+  projection: Projection,
+}).pipe(
+  Type.Obj({
+    typename: 'dxos.org/type/View',
+    version: '0.5.0',
+  }),
+  SystemTypeAnnotation.set(true),
+);
 
 // TODO(burdon): Workaround for build issue: TS2742.
 //  See "import { View as _View } ..."
@@ -112,7 +96,6 @@ export type MakeProps = {
   queryRaw?: string;
   jsonSchema: JsonSchemaType; // Base schema.
   overrideSchema?: JsonSchemaType; // Override schema.
-  presentation: Obj.Any;
   fields?: string[];
   pivotFieldName?: string;
 };
@@ -121,30 +104,26 @@ export type MakeProps = {
  * Create view from provided schema.
  */
 export const make = ({
-  name,
   query,
   queryRaw,
   jsonSchema,
   overrideSchema,
-  presentation,
   fields: include,
   pivotFieldName,
 }: MakeProps): Live<View> => {
   const view = Obj.make(View, {
-    name,
     query: { raw: queryRaw, ast: query.ast },
     projection: {
       schema: overrideSchema,
       fields: [],
     },
-    presentation: Ref.make(presentation),
   });
 
   const projection = new ProjectionModel(jsonSchema, view.projection);
   projection.normalizeView();
   const schema = toEffectSchema(jsonSchema);
-  const shouldIncludeId = include?.find((field) => field === 'id') !== undefined;
-  const properties = getSchemaProperties(schema.ast, {}, shouldIncludeId);
+  const includeId = include?.find((field) => field === 'id') !== undefined;
+  const properties = getSchemaProperties(schema.ast, {}, { includeId });
   for (const property of properties) {
     if (include && !include.includes(property.name)) {
       continue;
@@ -188,32 +167,28 @@ export type MakeWithReferencesProps = MakeProps & {
  * Referenced schemas are resolved in the provided registries.
  */
 export const makeWithReferences = async ({
-  name,
   query,
   queryRaw,
   jsonSchema,
   overrideSchema,
-  presentation,
   fields,
   pivotFieldName,
   registry,
   echoRegistry,
 }: MakeWithReferencesProps): Promise<Live<View>> => {
   const view = make({
-    name,
     query,
     queryRaw,
     jsonSchema,
     overrideSchema,
-    presentation,
     fields,
     pivotFieldName,
   });
 
   const projection = new ProjectionModel(jsonSchema, view.projection);
   const schema = toEffectSchema(jsonSchema);
-  const shouldIncludeId = fields?.find((field) => field === 'id') !== undefined;
-  const properties = getSchemaProperties(schema.ast, {}, shouldIncludeId);
+  const includeId = fields?.find((field) => field === 'id') !== undefined;
+  const properties = getSchemaProperties(schema.ast, {}, { includeId });
   for (const property of properties) {
     if (fields && !fields.includes(property.name)) {
       continue;
@@ -315,3 +290,32 @@ export const makeFromSpace = async ({
     }),
   };
 };
+
+//
+// V4
+//
+
+export const ViewSchemaV4 = Schema.Struct({
+  name: Schema.optional(
+    Schema.String.annotations({
+      title: 'Name',
+      [SchemaAST.ExamplesAnnotationId]: ['Contact'],
+    }),
+  ),
+  query: Schema.Struct({
+    raw: Schema.optional(Schema.String),
+    ast: QueryAST.Query,
+  }).pipe(Schema.mutable, FormInputAnnotation.set(false)),
+  sort: Schema.optional(Schema.Array(FieldSortType).pipe(FormInputAnnotation.set(false))),
+  projection: Projection.pipe(FormInputAnnotation.set(false)),
+  presentation: Type.Ref(Type.Expando).pipe(FormInputAnnotation.set(false)),
+}).pipe(
+  Type.Obj({
+    typename: 'dxos.org/type/View',
+    version: '0.4.0',
+  }),
+  LabelAnnotation.set(['name']),
+);
+export interface ViewV4 extends Schema.Schema.Type<typeof ViewSchemaV4> {}
+export interface ViewEncodedV4 extends Schema.Schema.Encoded<typeof ViewSchemaV4> {}
+export const ViewV4: Schema.Schema<ViewV4, ViewEncodedV4> = ViewSchemaV4;

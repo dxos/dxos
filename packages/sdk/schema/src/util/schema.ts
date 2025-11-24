@@ -4,16 +4,21 @@
 
 import * as Schema from 'effect/Schema';
 
+import { Format, Type } from '@dxos/echo';
 import {
   type EchoSchema,
+  FormatAnnotation,
   type JsonSchemaType,
+  PropertyMetaAnnotationId,
+  type RuntimeSchemaRegistry,
   type SelectOptionSchema,
   TypeEnum,
-  TypeFormat,
   TypedObject,
   formatToType,
 } from '@dxos/echo/internal';
 import { createEchoSchema } from '@dxos/echo/testing';
+import { type EchoSchemaRegistry } from '@dxos/echo-db';
+import { type DXN, PublicKey } from '@dxos/keys';
 
 export type SelectOptionType = typeof SelectOptionSchema.Type;
 
@@ -21,8 +26,55 @@ export type SelectOptionType = typeof SelectOptionSchema.Type;
 export type SchemaPropertyDefinition = {
   // TODO(ZaymonFC): change `name` to `path`.
   name: string;
-  format: TypeFormat;
+  format: Format.TypeFormat;
   config?: { options?: SelectOptionType[] };
+};
+
+export const createDefaultSchema = () =>
+  Schema.Struct({
+    title: Schema.optional(Schema.String).annotations({ title: 'Title' }),
+    status: Schema.optional(
+      Schema.Literal('todo', 'in-progress', 'done')
+        .pipe(FormatAnnotation.set(Format.TypeFormat.SingleSelect))
+        .annotations({
+          title: 'Status',
+          [PropertyMetaAnnotationId]: {
+            singleSelect: {
+              options: [
+                { id: 'todo', title: 'Todo', color: 'indigo' },
+                { id: 'in-progress', title: 'In Progress', color: 'purple' },
+                { id: 'done', title: 'Done', color: 'amber' },
+              ],
+            },
+          },
+        }),
+    ),
+    description: Schema.optional(Schema.String).annotations({ title: 'Description' }),
+  }).pipe(
+    Type.Obj({
+      typename: `example.com/type/${PublicKey.random().truncate()}`,
+      version: '0.1.0',
+    }),
+  );
+
+export const getSchema = async (
+  dxn: DXN,
+  registry?: RuntimeSchemaRegistry,
+  echoRegistry?: EchoSchemaRegistry,
+): Promise<Type.Obj.Any | undefined> => {
+  const staticSchema = registry?.getSchemaByDXN(dxn);
+  if (staticSchema) {
+    return staticSchema;
+  }
+
+  const typeDxn = dxn.asTypeDXN();
+  if (!typeDxn) {
+    return;
+  }
+
+  const { type, version } = typeDxn;
+  const echoSchema = await echoRegistry?.query({ typename: type, version }).firstOrUndefined();
+  return echoSchema?.snapshot;
 };
 
 // TODO(burdon): Factor out.
@@ -49,15 +101,15 @@ export const getSchemaFromPropertyDefinitions = (
 
   for (const prop of properties) {
     if (prop.config?.options) {
-      if (prop.format === TypeFormat.SingleSelect) {
+      if (prop.format === Format.TypeFormat.SingleSelect) {
         makeSingleSelectAnnotations(schema.jsonSchema.properties![prop.name], [...prop.config.options]);
       }
-      if (prop.format === TypeFormat.MultiSelect) {
+      if (prop.format === Format.TypeFormat.MultiSelect) {
         makeMultiSelectAnnotations(schema.jsonSchema.properties![prop.name], [...prop.config.options]);
       }
     }
 
-    if (prop.format === TypeFormat.GeoPoint) {
+    if (prop.format === Format.TypeFormat.GeoPoint) {
       schema.jsonSchema.properties![prop.name].type = TypeEnum.Object;
     }
 
@@ -76,7 +128,7 @@ export const makeSingleSelectAnnotations = (
   options: Array<{ id: string; title?: string; color?: string }>,
 ) => {
   jsonProperty.enum = options.map(({ id }) => id);
-  jsonProperty.format = TypeFormat.SingleSelect;
+  jsonProperty.format = Format.TypeFormat.SingleSelect;
   jsonProperty.annotations = {
     meta: {
       singleSelect: {
@@ -99,7 +151,7 @@ export const makeMultiSelectAnnotations = (
   // TODO(ZaymonFC): Is this how do we encode an array of enums?
   jsonProperty.type = 'object';
   jsonProperty.items = { type: 'string', enum: options.map(({ id }) => id) };
-  jsonProperty.format = TypeFormat.MultiSelect;
+  jsonProperty.format = Format.TypeFormat.MultiSelect;
   jsonProperty.annotations = {
     meta: {
       multiSelect: {

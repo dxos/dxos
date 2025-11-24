@@ -52,7 +52,6 @@ export const testView: Live<View.View> = View.make({
   name: 'Test',
   query: Query.select(Filter.type(TestSchema)),
   jsonSchema: Type.toJsonSchema(TestSchema),
-  presentation: Obj.make(Type.Expando, {}),
 });
 
 export const testData: TestType = {

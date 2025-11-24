@@ -6,12 +6,12 @@ import * as Args from '@effect/cli/Args';
 import * as Command from '@effect/cli/Command';
 import * as Effect from 'effect/Effect';
 
+import { ClientService } from '@dxos/client';
 import { Obj } from '@dxos/echo';
 import { DatabaseService } from '@dxos/echo-db';
 import { Function } from '@dxos/functions';
 import { getDeployedFunctions } from '@dxos/functions-runtime/edge';
 
-import { ClientService } from '../../../services';
 import { withDatabase } from '../../../util';
 import { Common } from '../../options';
 

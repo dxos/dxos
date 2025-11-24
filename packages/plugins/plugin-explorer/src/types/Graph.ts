@@ -5,9 +5,48 @@
 import * as Schema from 'effect/Schema';
 
 import { Annotation, Filter, Obj, Query, QueryAST, Type } from '@dxos/echo';
-import { View } from '@dxos/schema';
+import { View, ViewAnnotation } from '@dxos/schema';
 
-export const Graph = Schema.Struct({
+const GraphSchema = Schema.Struct({
+  name: Schema.optional(Schema.String),
+  view: Type.Ref(View.View).pipe(Annotation.FormInputAnnotation.set(false)),
+  query: Schema.Struct({
+    raw: Schema.optional(Schema.String),
+    ast: QueryAST.Query,
+  }).pipe(Schema.mutable, Annotation.FormInputAnnotation.set(false)),
+}).pipe(
+  Type.Obj({
+    typename: 'dxos.org/type/Graph',
+    version: '0.2.0',
+  }),
+  Annotation.LabelAnnotation.set(['name']),
+  ViewAnnotation.set(true),
+);
+
+export interface Graph extends Schema.Schema.Type<typeof GraphSchema> {}
+export interface GraphEncoded extends Schema.Schema.Encoded<typeof GraphSchema> {}
+export const Graph: Schema.Schema<Graph, GraphEncoded> = GraphSchema;
+
+type MakeProps = Omit<Partial<Obj.MakeProps<typeof Graph>>, 'view'> & {
+  view: View.View;
+};
+
+/**
+ * Make a graph as a view of a data set.
+ */
+export const make = ({
+  name,
+  query = { raw: '', ast: Query.select(Filter.nothing()).ast },
+  view,
+}: MakeProps): Graph => {
+  return Obj.make(Graph, { name, view: Type.Ref.make(view), query });
+};
+
+//
+// V1
+//
+
+export const GraphV1 = Schema.Struct({
   name: Schema.optional(Schema.String),
   query: Schema.Struct({
     raw: Schema.optional(Schema.String),
@@ -19,27 +58,4 @@ export const Graph = Schema.Struct({
     version: '0.1.0',
   }),
   Annotation.LabelAnnotation.set(['name']),
-  Annotation.ViewAnnotation.set(true),
 );
-
-export type Graph = Schema.Schema.Type<typeof Graph>;
-
-/**
- * Make a graph object.
- */
-export const make = (
-  props: Obj.MakeProps<typeof Graph> = { query: { raw: '', ast: Query.select(Filter.nothing()).ast } },
-) => Obj.make(Graph, props);
-
-type MakeViewProps = Omit<View.MakeFromSpaceProps, 'presentation'> & {
-  presentation?: Omit<Obj.MakeProps<typeof Graph>, 'name'>;
-};
-
-/**
- * Make a graph as a view of a data set.
- */
-// TODO(burdon): Move to @dxos/schema.
-export const makeView = async ({ presentation, ...props }: MakeViewProps) => {
-  const graph = make(presentation);
-  return View.makeFromSpace({ ...props, presentation: graph });
-};

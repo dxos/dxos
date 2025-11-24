@@ -5,7 +5,15 @@
 import * as Schema from 'effect/Schema';
 
 import { addressFromA1Notation, isFormula } from '@dxos/compute';
+<<<<<<< HEAD
 import { Annotation, Obj, Type } from '@dxos/echo';
+||||||| 87517e966b
+import { Obj, Type } from '@dxos/echo';
+import { FormAnnotation } from '@dxos/echo/internal';
+=======
+import { Obj, Type } from '@dxos/echo';
+import { FormInputAnnotation } from '@dxos/echo/internal';
+>>>>>>> main
 
 import { addressToIndex, initialize, mapFormulaRefsToIndices } from './util';
 
@@ -45,29 +53,47 @@ export const Sheet = Schema.Struct({
   // Sparse map of cells referenced by index.
   cells: Schema.Record({ key: Schema.String, value: Schema.mutable(CellValue) }).pipe(
     Schema.mutable,
+<<<<<<< HEAD
     Annotation.FormAnnotation.set(false),
+||||||| 87517e966b
+    FormAnnotation.set(false),
+=======
+    FormInputAnnotation.set(false),
+>>>>>>> main
   ),
 
   // Ordered row indices.
-  rows: Schema.Array(Schema.String).pipe(Schema.mutable, FormAnnotation.set(false)),
+  rows: Schema.Array(Schema.String).pipe(Schema.mutable, FormInputAnnotation.set(false)),
 
   // Ordered column indices.
-  columns: Schema.Array(Schema.String).pipe(Schema.mutable, FormAnnotation.set(false)),
+  columns: Schema.Array(Schema.String).pipe(Schema.mutable, FormInputAnnotation.set(false)),
 
   // Row metadata referenced by index.
   rowMeta: Schema.Record({ key: Schema.String, value: Schema.mutable(RowColumnMeta) }).pipe(
     Schema.mutable,
+<<<<<<< HEAD
     Annotation.FormAnnotation.set(false),
+||||||| 87517e966b
+    FormAnnotation.set(false),
+=======
+    FormInputAnnotation.set(false),
+>>>>>>> main
   ),
 
   // Column metadata referenced by index.
   columnMeta: Schema.Record({ key: Schema.String, value: Schema.mutable(RowColumnMeta) }).pipe(
     Schema.mutable,
+<<<<<<< HEAD
     Annotation.FormAnnotation.set(false),
+||||||| 87517e966b
+    FormAnnotation.set(false),
+=======
+    FormInputAnnotation.set(false),
+>>>>>>> main
   ),
 
   // Cell formatting referenced by indexed range.
-  ranges: Schema.Array(Range).pipe(Schema.mutable, FormAnnotation.set(false)),
+  ranges: Schema.Array(Range).pipe(Schema.mutable, FormInputAnnotation.set(false)),
 }).pipe(
   Type.Obj({
     typename: 'dxos.org/type/Sheet',

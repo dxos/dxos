@@ -124,11 +124,12 @@ export type EchoDatabaseParams = {
  * Implements EchoDatabase interface.
  */
 export class EchoDatabaseImpl extends Resource implements EchoDatabase {
-  private readonly _schemaRegistry: EchoSchemaRegistry;
   /**
    * @internal
    */
-  _coreDatabase: CoreDatabase;
+  readonly _coreDatabase: CoreDatabase;
+
+  private readonly _schemaRegistry: EchoSchemaRegistry;
 
   private _rootUrl: string | undefined = undefined;
 
@@ -186,7 +187,7 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
     return this._coreDatabase.graph;
   }
 
-  // TODO(burdon): Rename.
+  // TODO(burdon): Move into hypergraph.
   get schemaRegistry(): EchoSchemaRegistry {
     return this._schemaRegistry;
   }
@@ -196,6 +197,7 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
     if (this._rootUrl !== undefined) {
       await this._coreDatabase.open({ rootUrl: this._rootUrl });
     }
+
     await this._schemaRegistry.open();
   }
 
@@ -230,7 +232,7 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
     return object;
   }
 
-  ref<T extends AnyProperties = any>(dxn: DXN): Ref.Ref<T> {
+  makeRef<T extends AnyProperties = any>(dxn: DXN): Ref.Ref<T> {
     const ref = Ref.fromDXN(dxn);
     setRefResolver(ref, this.graph.createRefResolver({ context: { space: this.spaceId } }));
     return ref;

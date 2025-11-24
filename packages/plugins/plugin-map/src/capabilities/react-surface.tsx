@@ -13,7 +13,7 @@ import { useClient } from '@dxos/react-client';
 import { type Space, getSpace, isSpace } from '@dxos/react-client/echo';
 import { type InputProps, SelectInput, useFormValues } from '@dxos/react-ui-form';
 import { type LatLngLiteral } from '@dxos/react-ui-geo';
-import { type Collection, View } from '@dxos/schema';
+import { type Collection } from '@dxos/schema';
 
 import { MapContainer, MapViewEditor } from '../components';
 import { meta } from '../meta';
@@ -41,34 +41,7 @@ export default () =>
           <MapContainer
             role={role}
             type={state.type}
-            map={data.subject}
-            center={center}
-            zoom={zoom}
-            onChange={handleChange}
-          />
-        );
-      },
-    }),
-    createSurface({
-      id: `${meta.id}/surface/map-view`,
-      role: ['article', 'section'],
-      filter: (data): data is { subject: View.View } =>
-        Obj.instanceOf(View.View, data.subject) && Obj.instanceOf(Map.Map, data.subject.presentation.target),
-      component: ({ data, role }) => {
-        const state = useCapability(MapCapabilities.MutableState);
-        const [center, setCenter] = useState<LatLngLiteral | undefined>(undefined);
-        const [zoom, setZoom] = useState<number | undefined>(undefined);
-
-        const handleChange = useCallback(({ center, zoom }: { center: LatLngLiteral; zoom: number }) => {
-          setCenter(center);
-          setZoom(zoom);
-        }, []);
-
-        return (
-          <MapContainer
-            role={role}
-            type={state.type}
-            view={data.subject}
+            object={data.subject}
             center={center}
             zoom={zoom}
             onChange={handleChange}
@@ -89,9 +62,8 @@ export default () =>
       id: `${meta.id}/surface/object-settings`,
       role: 'object-settings',
       position: 'hoist',
-      filter: (data): data is { subject: View.View } =>
-        Obj.instanceOf(View.View, data.subject) && Obj.instanceOf(Map.Map, data.subject.presentation.target),
-      component: ({ data }) => <MapViewEditor view={data.subject} />,
+      filter: (data): data is { subject: Map.Map } => Obj.instanceOf(Map.Map, data.subject),
+      component: ({ data }) => <MapViewEditor object={data.subject} />,
     }),
     createSurface({
       // TODO(burdon): Why this title?

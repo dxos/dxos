@@ -7,7 +7,14 @@ import type * as Schema from 'effect/Schema';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { expect, userEvent, within } from 'storybook/test';
 
+<<<<<<< HEAD
 import { type JsonSchema, Obj, Type } from '@dxos/echo';
+||||||| 87517e966b
+import { Obj, Type } from '@dxos/echo';
+import { type JsonSchemaType } from '@dxos/echo/internal';
+=======
+import { Obj, Type } from '@dxos/echo';
+>>>>>>> main
 import { type DxGrid } from '@dxos/lit-grid';
 import '@dxos/lit-ui/dx-tag-picker.pcss';
 import { faker } from '@dxos/random';
@@ -20,7 +27,7 @@ import { View } from '@dxos/schema';
 import { type ValueGenerator, createAsyncGenerator } from '@dxos/schema/testing';
 import { Organization, Person } from '@dxos/types';
 
-import { useTableModel } from '../../hooks';
+import { useProjectionModel, useTableModel } from '../../hooks';
 import { type TableFeatures, TablePresentation, type TableRow } from '../../model';
 import { translations } from '../../translations';
 import { Table } from '../../types';
@@ -37,8 +44,15 @@ const generator: ValueGenerator = faker as any;
 const useTestModel = <S extends Type.Obj.Any>(schema: S, count: number) => {
   const client = useClient();
   const { space } = useClientProvider();
+<<<<<<< HEAD
   const [view, setView] = useState<View.View>();
   const [jsonSchema, setJsonSchema] = useState<JsonSchema.JsonSchema>();
+||||||| 87517e966b
+  const [view, setView] = useState<View.View>();
+  const [jsonSchema, setJsonSchema] = useState<JsonSchemaType>();
+=======
+  const [object, setObject] = useState<Table.Table>();
+>>>>>>> main
 
   const features = useMemo<TableFeatures>(
     () => ({ schemaEditable: false, dataEditable: true, selection: { enabled: false } }),
@@ -50,18 +64,15 @@ const useTestModel = <S extends Type.Obj.Any>(schema: S, count: number) => {
       return;
     }
 
-    const {
-      jsonSchema,
-      schema: effectSchema,
-      view,
-    } = await Table.makeView({ client, space, typename: Type.getTypename(schema) });
-    setJsonSchema(jsonSchema);
-    setView(view);
-    space.db.add(view);
-    await space.db.schemaRegistry.register([effectSchema]);
+    const { view, jsonSchema } = await View.makeFromSpace({ client, space, typename: Type.getTypename(schema) });
+    const object = Table.make({ view, jsonSchema });
+    setObject(object);
+    space.db.add(object);
+    await space.db.schemaRegistry.register([schema]);
   }, [client, space, schema]);
 
-  const model = useTableModel<TableRow>({ view, schema: jsonSchema, rows: [], features });
+  const projection = useProjectionModel(schema, object);
+  const model = useTableModel<TableRow>({ object, projection, features });
 
   useEffect(() => {
     if (!model || !space) {

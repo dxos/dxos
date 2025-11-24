@@ -10,8 +10,9 @@ import { Obj, Relation, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { ATTENDABLE_PATH_SEPARATOR, DeckAction } from '@dxos/plugin-deck/types';
 import { ObservabilityAction } from '@dxos/plugin-observability/types';
-import { CollectionAction, SpaceAction } from '@dxos/plugin-space/types';
+import { SpaceAction } from '@dxos/plugin-space/types';
 import { Ref, getSpace } from '@dxos/react-client/echo';
+import { Collection } from '@dxos/schema';
 import { AnchoredTo, Message, Thread } from '@dxos/types';
 
 import { meta } from '../meta';
@@ -22,13 +23,15 @@ import { ThreadCapabilities } from './capabilities';
 export default (context: PluginContext) =>
   contributes(Capabilities.IntentResolver, [
     createResolver({
-      intent: ThreadAction.onCreateSpace,
-      resolve: ({ space, rootCollection }) =>
+      intent: ThreadAction.OnCreateSpace,
+      resolve: ({ space, isDefault, rootCollection }) =>
         Effect.gen(function* () {
+          if (isDefault) {
+            return;
+          }
+
           const { dispatch } = context.getCapability(Capabilities.IntentDispatcher);
-          const { object: collection } = yield* dispatch(
-            createIntent(CollectionAction.CreateQueryCollection, { typename: Type.getTypename(Channel.Channel) }),
-          );
+          const collection = Collection.makeManaged({ key: Type.getTypename(Channel.Channel) });
           rootCollection.objects.push(Ref.make(collection));
 
           const { object: channel } = yield* dispatch(

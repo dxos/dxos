@@ -133,7 +133,7 @@ export default (context: PluginContext) =>
 
               const space = getSpace(object);
               const currentChatDxn = DXN.tryParse(currentChatState);
-              const currentChatRef = currentChatDxn ? space?.db.ref(currentChatDxn) : undefined;
+              const currentChatRef = currentChatDxn ? space?.db.makeRef(currentChatDxn) : undefined;
               const currentChat = get(atomFromSignal(() => currentChatRef?.target));
               return currentChat ? Option.some({ object, currentChat }) : Option.none();
             }),

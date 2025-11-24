@@ -39,6 +39,7 @@ export * from './types';
 //  - [ ] HasId
 //  - [ ] BaseSchema
 //  - [ ] JsonPath, JsonProp, getValue, setValue => Json.Path?
+//  - [ ] Move EchoSchemaRegistry into hypergraph
 //
 //  3. Audit usage from @dxos/echo-db
 //  - [ ] QueryFn, QueryOptions => Database

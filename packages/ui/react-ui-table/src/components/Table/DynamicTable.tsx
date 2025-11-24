@@ -8,6 +8,7 @@ import React, { useCallback, useMemo, useRef } from 'react';
 import { type JsonSchema } from '@dxos/echo';
 import { type ThemedClassName, useDefaultValue } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
+import { ProjectionModel } from '@dxos/schema';
 
 import { useTableModel } from '../../hooks';
 import { type TableFeatures, TablePresentation, type TableRowAction } from '../../model';
@@ -50,7 +51,7 @@ export const DynamicTable = ({
     [name, properties, _jsonSchema, schema],
   );
 
-  const { projection, view } = useMemo(() => makeDynamicTable({ jsonSchema, properties }), [jsonSchema, properties]);
+  const { object, projection } = useMemo(() => makeDynamicTable({ jsonSchema, properties }), [jsonSchema, properties]);
 
   const tableRef = useRef<TableController>(null);
   const handleCellUpdate = useCallback((cell: any) => {
@@ -70,11 +71,18 @@ export const DynamicTable = ({
       }) as const,
   );
 
+  const projectionModel = useMemo(() => {
+    if (jsonSchema && projection) {
+      const model = new ProjectionModel(jsonSchema, projection);
+      model.normalizeView();
+      return model;
+    }
+  }, [jsonSchema, projection]);
+
   const model = useTableModel({
     rows,
-    view,
-    schema: jsonSchema,
-    projection,
+    object,
+    projection: projectionModel,
     features,
     rowActions,
     onCellUpdate: handleCellUpdate,

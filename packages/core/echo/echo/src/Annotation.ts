@@ -4,10 +4,9 @@
 
 export {
   DescriptionAnnotation,
-  FormAnnotation,
+  FormInputAnnotation,
   GeneratorAnnotation,
   LabelAnnotation,
-  ViewAnnotation,
   getDescription,
   getLabel,
   getLabelForObject,

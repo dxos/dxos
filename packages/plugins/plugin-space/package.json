@@ -90,6 +90,7 @@
     "react-qr-rounded": "^1.0.0"
   },
   "devDependencies": {
+    "@atlaskit/pragmatic-drag-and-drop-hitbox": "^1.0.3",
     "@babel/core": "^7.18.13",
     "@dxos/lit-ui": "workspace:*",
     "@dxos/random": "workspace:*",

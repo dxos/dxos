@@ -2,8 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { useCallback } from '@preact-signals/safe-react/react';
-import { type Dispatch, type RefObject, type SetStateAction, useEffect, useRef, useState } from 'react';
+import { type Dispatch, type RefObject, type SetStateAction, useCallback, useEffect, useRef, useState } from 'react';
 
 /**
  * Like `useState` but with an additional dynamic value.

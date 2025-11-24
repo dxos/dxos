@@ -24,6 +24,7 @@
   "include": [
     "demos",
     "script-frame",
+    "scripts",
     "src"
   ],
   "references": [
@@ -62,6 +63,9 @@
     },
     {
       "path": "../../core/echo/echo"
+    },
+    {
+      "path": "../../core/echo/echo-db"
     },
     {
       "path": "../../core/echo/echo-signals"
@@ -257,6 +261,9 @@
     },
     {
       "path": "../../ui/react-ui-editor"
+    },
+    {
+      "path": "../../ui/react-ui-kanban"
     },
     {
       "path": "../../ui/react-ui-stack"

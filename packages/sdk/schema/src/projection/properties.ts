@@ -8,14 +8,12 @@ import * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
 import * as String from 'effect/String';
 
-import { type Obj } from '@dxos/echo';
+import { Format, type JsonSchema, type Obj } from '@dxos/echo';
 import {
-  FormAnnotationId,
-  type JsonSchemaType,
+  FormInputAnnotationId,
   OptionsAnnotationId,
   type OptionsAnnotationType,
   type PropertyKey,
-  TypeFormat,
   getFormatAnnotation,
   getSchemaReference,
 } from '@dxos/echo/internal';
@@ -41,7 +39,7 @@ export type SchemaProperty<T extends Obj.Any, V = any> = {
   readonly: boolean;
   type: SimpleType;
   array?: boolean;
-  format?: TypeFormat;
+  format?: Format.TypeFormat;
   title?: string;
   description?: string;
   examples?: string[];
@@ -56,12 +54,13 @@ export type SchemaProperty<T extends Obj.Any, V = any> = {
 export const getSchemaProperties = <T extends Obj.Any>(
   ast: SchemaAST.AST,
   value: any = {},
-  includeId: boolean = false,
+  options: { includeId?: boolean; form?: boolean } = {},
 ): SchemaProperty<T>[] => {
+  const { includeId = false, form = false } = options;
   if (SchemaAST.isUnion(ast)) {
     const baseType = getDiscriminatedType(ast, value);
     if (baseType) {
-      return getSchemaProperties(baseType, value, includeId);
+      return getSchemaProperties(baseType, value, options);
     }
 
     return [];
@@ -76,7 +75,7 @@ export const getSchemaProperties = <T extends Obj.Any>(
       return props;
     }
 
-    const processed = processProperty(name, prop);
+    const processed = processProperty(name, prop, form);
     if (processed) {
       props.push(processed);
     } else {
@@ -98,11 +97,15 @@ export const getSchemaProperties = <T extends Obj.Any>(
         continue;
       }
 
-      const processed = processProperty(key as PropertyKey<T>, {
-        isOptional: true,
-        isReadonly: indexSignature.isReadonly,
-        type: indexSignature.type,
-      });
+      const processed = processProperty(
+        key as PropertyKey<T>,
+        {
+          isOptional: true,
+          isReadonly: indexSignature.isReadonly,
+          type: indexSignature.type,
+        },
+        form,
+      );
       if (processed) {
         knownProperties.push(processed);
       }
@@ -115,9 +118,10 @@ export const getSchemaProperties = <T extends Obj.Any>(
 const processProperty = <T extends Obj.Any>(
   name: PropertyKey<T>,
   prop: { type: SchemaAST.AST; isReadonly: boolean; isOptional: boolean },
+  form: boolean,
 ): SchemaProperty<T> | undefined => {
   // Annotations.
-  const form = findAnnotation<boolean>(prop.type, FormAnnotationId);
+  const formInput = findAnnotation<boolean>(prop.type, FormInputAnnotationId);
   const title = findAnnotation<string>(prop.type, SchemaAST.TitleAnnotationId);
   const description = findAnnotation<string>(prop.type, SchemaAST.DescriptionAnnotationId);
   const examples = findAnnotation<string[]>(prop.type, SchemaAST.ExamplesAnnotationId);
@@ -127,7 +131,7 @@ const processProperty = <T extends Obj.Any>(
     OptionsAnnotationId,
   );
 
-  if (form === false) {
+  if (form && formInput === false) {
     return undefined;
   }
 
@@ -153,13 +157,13 @@ const processProperty = <T extends Obj.Any>(
   let baseType = findNode(prop.type, isSimpleType);
 
   // First check if reference.
-  const jsonSchema = findAnnotation<JsonSchemaType>(prop.type, SchemaAST.JSONSchemaAnnotationId);
+  const jsonSchema = findAnnotation<JsonSchema.JsonSchema>(prop.type, SchemaAST.JSONSchemaAnnotationId);
   if (jsonSchema && '$id' in jsonSchema) {
     const { typename } = getSchemaReference(jsonSchema) ?? {};
     if (typename) {
       // TODO(burdon): Special handling for refs? type = 'ref'?
       type = 'object';
-      format = TypeFormat.Ref;
+      format = Format.TypeFormat.Ref;
     }
   } else {
     const any = findNode(prop.type, SchemaAST.isAnyKeyword);
@@ -188,12 +192,12 @@ const processProperty = <T extends Obj.Any>(
             baseType = findNode(tupleType.type, isSimpleType);
 
             if (baseType) {
-              const jsonSchema = findAnnotation<JsonSchemaType>(baseType, SchemaAST.JSONSchemaAnnotationId);
+              const jsonSchema = findAnnotation<JsonSchema.JsonSchema>(baseType, SchemaAST.JSONSchemaAnnotationId);
               if (jsonSchema && '$id' in jsonSchema) {
                 const { typename } = getSchemaReference(jsonSchema) ?? {};
                 if (typename) {
                   type = 'object';
-                  format = TypeFormat.Ref;
+                  format = Format.TypeFormat.Ref;
                   array = true;
                 }
               } else {
