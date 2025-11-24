@@ -15,7 +15,7 @@ import { invariant } from '@dxos/invariant';
 const GLOBALS = 'globals.d.ts';
 
 const defaultOptions: ts.CompilerOptions = {
-  lib: ['es2022'],
+  lib: ['DOM', 'es2022'],
   target: ts.ScriptTarget.ES2022,
 };
 

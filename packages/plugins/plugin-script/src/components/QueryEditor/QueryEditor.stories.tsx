@@ -5,10 +5,10 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useCallback, useMemo, useState } from 'react';
 
-// import { QuerySandbox } from '@dxos/echo-query';
+import { QuerySandbox } from '@dxos/echo-query';
 import { createDocAccessor } from '@dxos/react-client/echo';
 import { createObject } from '@dxos/react-client/echo';
-import { Toolbar } from '@dxos/react-ui';
+import { Toolbar, useAsyncEffect } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { createDataExtensions } from '@dxos/react-ui-editor';
 import { StackItem } from '@dxos/react-ui-stack';
@@ -24,18 +24,17 @@ const SCRIPT = trim`
 const DefaultStory = (props: QueryEditorProps) => {
   const object = useMemo(() => createObject({ content: SCRIPT }), []);
   const [result, setResult] = useState<object | undefined>({});
-  // TODO(wittjosiah): Get QuerySsandbox working in browser.
-  // const [sandbox, setSandbox] = useState<QuerySandbox>();
+  const [sandbox, setSandbox] = useState<QuerySandbox>();
 
-  // useAsyncEffect(async () => {
-  //   const sandbox = new QuerySandbox();
-  //   await sandbox.open();
-  //   setSandbox(sandbox);
+  useAsyncEffect(async () => {
+    const sandbox = new QuerySandbox();
+    await sandbox.open();
+    setSandbox(sandbox);
 
-  //   return () => {
-  //     void sandbox.close();
-  //   };
-  // }, []);
+    return () => {
+      void sandbox.close();
+    };
+  }, []);
 
   const extensions = useMemo(
     () => [createDataExtensions({ id: object.id, text: createDocAccessor(object, ['content']) })],
@@ -44,7 +43,7 @@ const DefaultStory = (props: QueryEditorProps) => {
 
   const handleRun = useCallback(async () => {
     try {
-      // const result = sandbox?.eval(object.content);
+      const result = sandbox?.eval(object.content);
 
       setResult({
         timestamp: Date.now(),
@@ -56,7 +55,7 @@ const DefaultStory = (props: QueryEditorProps) => {
         error: String(err),
       });
     }
-  }, [object]);
+  }, [object, sandbox]);
 
   return (
     <StackItem.Content toolbar>

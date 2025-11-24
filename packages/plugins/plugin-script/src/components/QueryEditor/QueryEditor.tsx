@@ -3,6 +3,7 @@
 //
 
 import React, { useState } from 'react';
+import { ScriptTarget } from 'typescript';
 
 import queryApi from '@dxos/echo-query/api.d.ts?raw';
 import { useAsyncEffect } from '@dxos/react-ui';
@@ -30,7 +31,10 @@ export const QueryEditor = (props: QueryEditorProps) => {
   const [compiler, setCompiler] = useState<Compiler>();
 
   useAsyncEffect(async () => {
-    const compiler = new Compiler();
+    const compiler = new Compiler({
+      lib: ['ES5'],
+      target: ScriptTarget.ES2022,
+    });
     await compiler.initialize(GLOBALS);
     setCompiler(compiler);
   }, []);
