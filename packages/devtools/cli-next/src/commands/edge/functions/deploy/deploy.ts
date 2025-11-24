@@ -23,11 +23,12 @@ import { bundle } from './bundle';
 import { DATA_TYPES, upsertComposerScript } from './echo';
 import { parseOptions } from './options';
 import { PublicKey } from '@dxos/keys';
+import { existsSync, fstatSync } from 'node:fs';
 
 export const deploy = Command.make(
   'deploy',
   {
-    entryPoint: Args.text({ name: 'entryPoint' }).pipe(Args.withDescription('The file to deploy.')),
+    entryPoint: Args.file({ name: 'entryPoint' }).pipe(Args.withDescription('The file to deploy.')),
     // TODO(burdon): Human readable name?
     name: Options.text('name').pipe(Options.withDescription('The name of the function.'), Options.optional),
     version: Options.text('version').pipe(
@@ -54,6 +55,11 @@ export const deploy = Command.make(
     client.addTypes(DATA_TYPES);
     const identity = client.halo.identity.get();
     invariant(identity, 'Identity not available');
+
+    if (!existsSync(options.entryPoint)) {
+      yield* Console.error(`File not found: ${options.entryPoint}`);
+      process.exit(1);
+    }
 
     const artifact = yield* bundle({ entryPoint: resolve(options.entryPoint) });
 
