@@ -34,14 +34,14 @@ jobs:
           detached: true
 
       - name: Checkout DXOS
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0
           lfs: true
           path: dxos
 
       - name: Checkout EDGE
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0
           lfs: true
