@@ -3,23 +3,24 @@
 //
 
 import * as Effect from 'effect/Effect';
-import type * as Schema from 'effect/Schema';
 import React, { useCallback, useRef } from 'react';
 
 import { LayoutAction, createIntent } from '@dxos/app-framework';
 import { useIntentDispatcher } from '@dxos/app-framework/react';
+import { SpaceProperties, type SpacePropertiesSchema } from '@dxos/client-protocol';
 import { Dialog, IconButton, useTranslation } from '@dxos/react-ui';
-import { Form } from '@dxos/react-ui-form';
+import { Form, type FormProps } from '@dxos/react-ui-form';
 import { cardDialogContent, cardDialogHeader } from '@dxos/react-ui-stack';
 
 import { useInputSurfaceLookup } from '../../hooks';
 import { meta } from '../../meta';
-import { SpaceAction, SpaceForm } from '../../types';
+import { SpaceAction } from '../../types';
 
 export const CREATE_SPACE_DIALOG = `${meta.id}/CreateSpaceDialog`;
 
-type FormValues = Schema.Schema.Type<typeof SpaceForm>;
-const initialValues: FormValues = { edgeReplication: true };
+const initialValues: SpacePropertiesSchema = {
+  edgeReplication: true,
+};
 
 export const CreateSpaceDialog = () => {
   const closeRef = useRef<HTMLButtonElement | null>(null);
@@ -28,10 +29,10 @@ export const CreateSpaceDialog = () => {
 
   const inputSurfaceLookup = useInputSurfaceLookup();
 
-  const handleCreateSpace = useCallback(
-    async (data: FormValues) => {
+  const handleSave = useCallback<NonNullable<FormProps<SpaceProperties>['onSave']>>(
+    async (values) => {
       const program = Effect.gen(function* () {
-        const { space } = yield* dispatch(createIntent(SpaceAction.Create, data));
+        const { space } = yield* dispatch(createIntent(SpaceAction.Create, values));
         yield* dispatch(
           createIntent(LayoutAction.SwitchWorkspace, {
             part: 'workspace',
@@ -73,11 +74,11 @@ export const CreateSpaceDialog = () => {
         <Form
           testId='create-space-form'
           autoFocus
-          values={initialValues}
-          schema={SpaceForm}
-          lookupComponent={inputSurfaceLookup}
-          onSave={handleCreateSpace}
           outerSpacing='scroll-fields'
+          schema={SpaceProperties}
+          values={initialValues}
+          lookupComponent={inputSurfaceLookup}
+          onSave={handleSave}
         />
       </div>
     </Dialog.Content>

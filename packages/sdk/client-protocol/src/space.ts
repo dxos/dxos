@@ -5,7 +5,6 @@
 import * as Schema from 'effect/Schema';
 
 import { type MulticastObservable } from '@dxos/async';
-import { type SpaceProperties } from '@dxos/client-protocol';
 import { type SpecificCredential } from '@dxos/credentials';
 import { type Obj } from '@dxos/echo';
 import { type EchoDatabase, type QueueFactory, type SpaceSyncState } from '@dxos/echo-db';
@@ -26,6 +25,7 @@ import { type SpaceSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 import { type Credential, type Epoch } from '@dxos/protocols/proto/dxos/halo/credentials';
 
 import { type CancellableInvitation } from './invitations';
+import { type SpaceProperties } from './types';
 
 export type CreateEpochOptions = {
   migration?: CreateEpochRequest.Migration;

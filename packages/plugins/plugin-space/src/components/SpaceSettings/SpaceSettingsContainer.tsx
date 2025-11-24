@@ -3,11 +3,11 @@
 //
 
 import * as Function from 'effect/Function';
-import * as Schema from 'effect/Schema';
 import React, { type ChangeEvent, useCallback, useMemo, useState } from 'react';
 
 import { LayoutAction, chain, createIntent } from '@dxos/app-framework';
 import { useIntentDispatcher } from '@dxos/app-framework/react';
+import { SpaceProperties } from '@dxos/client-protocol';
 import { log } from '@dxos/log';
 import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { useClient } from '@dxos/react-client';
@@ -19,21 +19,14 @@ import {
   ControlPage,
   ControlSection,
   Form,
+  type FormProps,
   type InputComponent,
 } from '@dxos/react-ui-form';
 import { HuePicker, IconPicker } from '@dxos/react-ui-pickers';
 import { StackItem } from '@dxos/react-ui-stack';
 
 import { meta } from '../../meta';
-import { SpaceAction, SpaceForm } from '../../types';
-
-const FormSchema = SpaceForm.pipe(
-  Schema.extend(
-    Schema.Struct({
-      archived: Schema.Boolean.annotations({ title: 'Archive Space' }),
-    }),
-  ),
-);
+import { SpaceAction } from '../../types';
 
 export type SpaceSettingsContainerProps = {
   space: Space;
@@ -48,6 +41,7 @@ export const SpaceSettingsContainer = ({ space }: SpaceSettingsContainerProps) =
   const [edgeReplication, setEdgeReplication] = useState(
     space.internal.data.edgeReplication === EdgeReplicationSetting.ENABLED,
   );
+
   const toggleEdgeReplication = useCallback(
     async (next: boolean) => {
       setEdgeReplication(next);
@@ -61,19 +55,19 @@ export const SpaceSettingsContainer = ({ space }: SpaceSettingsContainerProps) =
     [space],
   );
 
-  const handleSave = useCallback(
-    (properties: Schema.Schema.Type<typeof FormSchema>) => {
-      void toggleEdgeReplication(properties.edgeReplication);
-      if (properties.name !== space.properties.name) {
-        space.properties.name = properties.name;
+  const handleSave = useCallback<NonNullable<FormProps<SpaceProperties>['onSave']>>(
+    (values) => {
+      void toggleEdgeReplication(values.edgeReplication ?? false);
+      if (values.name !== space.properties.name) {
+        space.properties.name = values.name;
       }
-      if (properties.icon !== space.properties.icon) {
-        space.properties.icon = properties.icon;
+      if (values.icon !== space.properties.icon) {
+        space.properties.icon = values.icon;
       }
-      if (properties.hue !== space.properties.hue) {
-        space.properties.hue = properties.hue;
+      if (values.hue !== space.properties.hue) {
+        space.properties.hue = values.hue;
       }
-      if (properties.archived && !archived) {
+      if (values.archived && !archived) {
         void dispatch(
           Function.pipe(
             createIntent(SpaceAction.Close, { space }),
@@ -83,7 +77,7 @@ export const SpaceSettingsContainer = ({ space }: SpaceSettingsContainerProps) =
             }),
           ),
         );
-      } else if (!properties.archived && archived) {
+      } else if (!values.archived && archived) {
         void dispatch(createIntent(SpaceAction.Open, { space }));
       }
     },
@@ -184,13 +178,13 @@ export const SpaceSettingsContainer = ({ space }: SpaceSettingsContainerProps) =
           })}
         >
           <Form
-            schema={FormSchema}
-            values={values}
             autoSave
-            onSave={handleSave}
-            Custom={customElements}
             outerSpacing={false}
             classNames='container-max-width grid grid-cols-1 md:grid-cols-[1fr_min-content]'
+            schema={SpaceProperties}
+            values={values}
+            onSave={handleSave}
+            Custom={customElements}
           />
         </ControlSection>
         <ControlItemInput

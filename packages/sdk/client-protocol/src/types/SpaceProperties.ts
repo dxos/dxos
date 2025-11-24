@@ -7,7 +7,7 @@ import * as Schema from 'effect/Schema';
 import { Type } from '@dxos/echo';
 import { Queue } from '@dxos/echo-db';
 
-export const SpaceProperties = Schema.Struct({
+export const SpacePropertiesSchema = Schema.Struct({
   //
   // User properties.
   //
@@ -20,8 +20,14 @@ export const SpaceProperties = Schema.Struct({
   // System properties.
   //
 
+  archived: Schema.optional(Schema.Boolean.annotations({ title: 'Archive Space' })),
+  edgeReplication: Schema.optional(Schema.Boolean),
   invocationTraceQueue: Schema.optional(Type.Ref(Queue)), // TODO(burdon): Rename.
-}).pipe(
+});
+
+export interface SpacePropertiesSchema extends Schema.Schema.Type<typeof SpacePropertiesSchema> {}
+
+export const SpaceProperties = SpacePropertiesSchema.pipe(
   Type.Obj({
     // TODO(burdon): Rename SpaceProperties.
     typename: 'dxos.org/type/Properties',
