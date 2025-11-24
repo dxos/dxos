@@ -44,7 +44,7 @@ describe('TestObjectGenerator', () => {
 
     // Create org object.
     const organization = await generator.createObject({ types: [TestSchemaType.organization] });
-    expect(Obj.getType(organization)).to.exist;
+    expect(Obj.getTypeDXN(organization)).to.exist;
 
     // Expect at least one person object with a linked org reference.
     const objects = await generator.createObjects({ [TestSchemaType.contact]: 10 });
@@ -60,14 +60,14 @@ describe('TestObjectGenerator', () => {
       const generator = createSpaceObjectGenerator(space);
       await generator.addSchemas();
       const organization = await generator.createObject({ types: [TestSchemaType.organization] });
-      schemaId.push(Obj.getType(organization)!.toString());
+      schemaId.push(Obj.getTypeDXN(organization)!.toString());
     }
 
     {
       const generator = createSpaceObjectGenerator(space);
       await generator.addSchemas();
       const organization = await generator.createObject({ types: [TestSchemaType.organization] });
-      schemaId.push(Obj.getType(organization)!.toString());
+      schemaId.push(Obj.getTypeDXN(organization)!.toString());
     }
 
     expect(schemaId[0]).not.to.be.undefined;
@@ -79,7 +79,7 @@ describe('TestObjectGenerator', () => {
     const generator = createSpaceObjectGenerator(space);
     await generator.addSchemas();
     const document = await generator.createObject({ types: [TestSchemaType.document] });
-    expect(Obj.getType(document)).to.exist;
+    expect(Obj.getTypeDXN(document)).to.exist;
 
     const beforeChangesCount = A.getAllChanges(getObjectCore(document).docHandle!.doc()).length;
 
@@ -107,8 +107,8 @@ describe('TestObjectGenerator', () => {
     const { space } = await setupTest();
     const generator = new SpaceObjectGenerator<Types>(
       space,
-      { 
-        [Types.task]: Task
+      {
+        [Types.task]: Task,
       },
       {
         [Types.task]: () => ({ name: 'Default' }),
@@ -124,7 +124,7 @@ describe('TestObjectGenerator', () => {
     await generator.addSchemas();
 
     const todo = await generator.createObject({ types: [Types.task] });
-    expect(Obj.getType(todo)).to.exist;
+    expect(Obj.getTypeDXN(todo)).to.exist;
   });
 
   test('references', async () => {
@@ -144,7 +144,7 @@ describe('TestObjectGenerator', () => {
   test('create project', async () => {
     const generator = createTestObjectGenerator();
     const project = await generator.createObject({ types: [TestSchemaType.project] });
-    expect(Obj.getType(project)).to.exist;
+    expect(Obj.getTypeDXN(project)).to.exist;
   });
 
   test('create object with not type', async () => {

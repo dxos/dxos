@@ -6,7 +6,7 @@ import { next as A } from '@automerge/automerge';
 import * as Schema from 'effect/Schema';
 
 import { type Space } from '@dxos/client/echo';
-import { Ref } from '@dxos/echo';
+import { Ref, Type } from '@dxos/echo';
 import { EchoObjectSchema } from '@dxos/echo/internal';
 import { createDocAccessor } from '@dxos/echo-db';
 import { faker } from '@dxos/random';
@@ -50,7 +50,7 @@ const testSchemas = (): TestSchemaMap<TestSchemaType> => {
   const contact = Schema.Struct({
     name: Schema.String.annotations({ description: 'name of the person' }),
     email: Schema.optional(Schema.String),
-    org: Schema.optional(Ref(organization)),
+    org: Schema.optional(Type.Ref(organization)),
     lat: Schema.optional(Schema.Number),
     lng: Schema.optional(Schema.Number),
   }).pipe(EchoObjectSchema({ typename: TestSchemaType.contact, version: '0.1.0' }));
@@ -63,7 +63,7 @@ const testSchemas = (): TestSchemaMap<TestSchemaType> => {
     status: Schema.String,
     priority: Schema.Number,
     active: Schema.Boolean,
-    org: Schema.optional(Ref(organization)),
+    org: Schema.optional(Type.Ref(organization)),
   }).pipe(EchoObjectSchema({ typename: TestSchemaType.project, version: '0.1.0' }));
 
   return {

@@ -21,6 +21,8 @@ import {
   KindId,
   type OfKind,
   Ref as Ref$,
+  type RefFn,
+  type RefSchema,
   type TypeAnnotation,
   type TypeMeta,
   getSchemaDXN,
@@ -185,12 +187,12 @@ export namespace Relation {
  * This typedef avoids `TS4023` error (name from external module cannot be used named).
  * See Effect's note on interface types.
  */
-export interface ref<TargetSchema extends Schema$.Schema.Any> extends Ref$<Schema$.Schema.Type<TargetSchema>> {}
+export interface ref<TargetSchema extends Schema$.Schema.Any> extends RefSchema<Schema$.Schema.Type<TargetSchema>> {}
 
 /**
  * Ref schema.
  */
-export const Ref = Ref$;
+export const Ref: RefFn = Ref$;
 
 export interface Ref<T> extends Schema$.SchemaClass<Ref$<T>, EncodedReference> {}
 

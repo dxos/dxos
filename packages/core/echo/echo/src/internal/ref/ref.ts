@@ -70,13 +70,13 @@ export const RefTypeId: unique symbol = Symbol('@dxos/echo/internal/Ref');
 /**
  * Reference Schema.
  */
-export interface Ref$<T extends WithId> extends Schema.SchemaClass<Ref<T>, EncodedReference> {}
+export interface RefSchema<T extends WithId> extends Schema.SchemaClass<Ref<T>, EncodedReference> {}
 
 /**
  * Type of the `Ref` function and extra methods attached to it.
  */
 export interface RefFn {
-  <S extends Schema.Schema.Any>(schema: S): Ref$<Schema.Schema.Type<S>>;
+  <S extends Schema.Schema.Any>(schema: S): RefSchema<Schema.Schema.Type<S>>;
 
   /**
    * @returns True if the object is a reference.
@@ -91,7 +91,7 @@ export interface RefFn {
   /**
    * @returns True if the schema is a reference schema.
    */
-  isRefSchema: (schema: Schema.Schema<any, any>) => schema is Ref$<any>;
+  isRefSchema: (schema: Schema.Schema<any, any>) => schema is RefSchema<any>;
 
   /**
    * @returns True if the schema AST is a reference schema.
@@ -113,7 +113,7 @@ export interface RefFn {
 /**
  * Schema builder for references.
  */
-export const Ref: RefFn = <S extends Schema.Schema.Any>(schema: S): Ref$<Schema.Schema.Type<S>> => {
+export const Ref: RefFn = <S extends Schema.Schema.Any>(schema: S): RefSchema<Schema.Schema.Type<S>> => {
   assertArgument(Schema.isSchema(schema), 'schema', 'Must call with an instance of effect-schema');
 
   const annotation = getTypeAnnotation(schema);
@@ -203,7 +203,7 @@ Ref.isRef = (obj: any): obj is Ref<any> => {
 
 Ref.hasObjectId = (id: ObjectId) => (ref: Ref<any>) => ref.dxn.isLocalObjectId() && ref.dxn.parts[1] === id;
 
-Ref.isRefSchema = (schema: Schema.Schema<any, any>): schema is Ref$<any> => {
+Ref.isRefSchema = (schema: Schema.Schema<any, any>): schema is RefSchema<any> => {
   return Ref.isRefSchemaAST(schema.ast);
 };
 

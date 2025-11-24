@@ -149,7 +149,10 @@ export const mountDevtoolsHooks = ({ client, host }: MountOptions) => {
 
     // TODO(dmaretskyi): Joins across multiple diagnostics.
     fetchDiagnostics: async (id, instanceTag) => {
-      const { data, error } = await TRACE_PROCESSOR.diagnosticsChannel.fetch({ id, instanceTag });
+      const { data, error } = await TRACE_PROCESSOR.diagnosticsChannel.fetch({
+        id,
+        instanceTag,
+      });
       if (error) {
         log.error(`Error fetching diagnostic ${id}: ${error}`);
         return;
@@ -180,7 +183,9 @@ export const mountDevtoolsHooks = ({ client, host }: MountOptions) => {
             .get()
             .flatMap((space) => [
               [space.id, space],
-              ...(space.state.get() === SpaceState.SPACE_READY ? ([[space.properties.name, space]] as const) : []),
+              ...(space.state.get() === SpaceState.SPACE_READY && space.properties.name
+                ? ([[space.properties.name, space]] as const)
+                : []),
               [space.key.toHex(), space],
             ]),
         ),
@@ -232,7 +237,9 @@ export const mountDevtoolsHooks = ({ client, host }: MountOptions) => {
       log.info('begin profile export', { storageConfig });
       const archive = await exportProfileData({ storage, level });
 
-      log.info('done profile export', { storageEntries: archive.storage.length });
+      log.info('done profile export', {
+        storageEntries: archive.storage.length,
+      });
 
       downloadFile(cbor.encode(archive), 'application/octet-stream', 'profile.dxprofile');
     };
@@ -255,7 +262,10 @@ export const mountDevtoolsHooks = ({ client, host }: MountOptions) => {
       const level = await createLevel(storageConfig);
 
       const archive = decodeProfileArchive(data);
-      log.info('begin profile import', { storageConfig, storageEntries: archive.storage.length });
+      log.info('begin profile import', {
+        storageConfig,
+        storageEntries: archive.storage.length,
+      });
 
       await importProfileData({ storage, level }, archive);
 

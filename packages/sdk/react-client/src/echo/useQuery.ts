@@ -4,7 +4,8 @@
 
 import { useMemo, useSyncExternalStore } from 'react';
 
-import { type Echo, Filter, type Live, Query, type Queryable, type Space, isSpace } from '@dxos/client/echo';
+import { type Echo, type Live, type Space, isSpace } from '@dxos/client/echo';
+import { type Database, Filter, Query } from '@dxos/echo';
 
 const EMPTY_ARRAY: never[] = [];
 
@@ -13,13 +14,13 @@ const noop = () => {};
 // TODO(dmaretskyi): Queries are fully serializable, so we can remove `deps` argument.
 interface UseQueryFn {
   <Q extends Query.Any>(
-    spaceOrEcho: Space | Echo | Queryable | undefined,
+    spaceOrEcho: Space | Echo | Database.Queryable | undefined,
     query: Q,
     deps?: any[],
   ): Live<Query.Type<Q>>[];
 
   <F extends Filter.Any>(
-    spaceOrEcho: Space | Echo | Queryable | undefined,
+    spaceOrEcho: Space | Echo | Database.Queryable | undefined,
     filter: F,
     deps?: any[],
   ): Live<Filter.Type<F>>[];
@@ -31,7 +32,7 @@ interface UseQueryFn {
 // TODO(burdon): Sort?
 export const useQuery: UseQueryFn = (
   // TODO(burdon): CRITICAL: Remove Space and just requre Queryable.
-  resource: Space | Echo | Queryable | undefined,
+  resource: Space | Echo | Database.Queryable | undefined,
   queryOrFilter: Query.Any | Filter.Any,
   deps?: any[],
 ): Live<unknown>[] => {
