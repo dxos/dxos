@@ -6,7 +6,6 @@ import * as Schema from 'effect/Schema';
 
 import { Obj, Ref, Type } from '@dxos/echo';
 import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/internal';
-import { ObjectId } from '@dxos/keys';
 import { View, ViewAnnotation } from '@dxos/schema';
 
 const MasonrySchema = Schema.Struct({
@@ -16,7 +15,7 @@ const MasonrySchema = Schema.Struct({
 
   arrangement: Schema.Array(
     Schema.Struct({
-      ids: Schema.Array(ObjectId),
+      ids: Schema.Array(Obj.ID),
       hidden: Schema.optional(Schema.Boolean),
     }).pipe(Schema.mutable),
   ).pipe(Schema.mutable, FormInputAnnotation.set(false), Schema.optional),
@@ -51,7 +50,7 @@ export const make = ({ name, arrangement = [], view }: MakeProps): Masonry => {
 export const MasonryV1 = Schema.Struct({
   arrangement: Schema.Array(
     Schema.Struct({
-      ids: Schema.Array(ObjectId),
+      ids: Schema.Array(Obj.ID),
       hidden: Schema.optional(Schema.Boolean),
     }).pipe(Schema.mutable),
   ).pipe(Schema.mutable, Schema.optional),

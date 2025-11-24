@@ -7,6 +7,7 @@ import * as Schema from 'effect/Schema';
 import { Type } from '@dxos/echo';
 import { Queue } from '@dxos/echo-db';
 
+// TODO(burdon): Is separate schema def required for forms? Can it be extracted from SpaceProperties?
 export const SpacePropertiesSchema = Schema.Struct({
   //
   // User properties.
