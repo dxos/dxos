@@ -19,6 +19,7 @@ import {
   type CreateSpaceResponseBody,
   EdgeAuthChallengeError,
   EdgeCallFailedError,
+  type EdgeFailure,
   type EdgeStatus,
   type ExecuteWorkflowResponseBody,
   type ExportBundleRequest,
@@ -430,13 +431,13 @@ export class EdgeHttpClient {
           continue;
         }
 
-        const body =
+        const body: EdgeFailure =
           response.headers.get('Content-Type') === 'application/json' ? await response.clone().json() : undefined;
 
         invariant(!body?.success, 'Expected body to not be a failure response or undefined.');
 
-        if (body?.errorData?.type === 'auth_challenge' && typeof body?.errorData?.challenge === 'string') {
-          processingError = new EdgeAuthChallengeError(body.errorData.challenge, body.errorData);
+        if (body?.data?.type === 'auth_challenge' && typeof body?.data?.challenge === 'string') {
+          processingError = new EdgeAuthChallengeError(body.data.challenge, body.data);
         } else if (body?.success === false) {
           processingError = EdgeCallFailedError.fromUnsuccessfulResponse(response, body);
         } else {
