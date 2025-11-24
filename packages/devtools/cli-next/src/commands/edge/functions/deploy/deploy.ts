@@ -9,13 +9,14 @@ import * as Console from 'effect/Console';
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
-import { Function } from '@dxos/functions';
+import { Function, FUNCTIONS_META_KEY } from '@dxos/functions';
 import { FunctionsServiceClient } from '@dxos/functions-runtime/edge';
 import { invariant } from '@dxos/invariant';
 
 import { ClientService, CommandConfig } from '../../../../services';
 import { waitForSync } from '../../../../util';
 import { Common } from '../../../options';
+import { Obj } from '@dxos/echo';
 
 import { bundle } from './bundle';
 import { DATA_TYPES, upsertComposerScript } from './echo';
@@ -74,22 +75,23 @@ export const deploy = Command.make(
       }),
     );
 
-    let functionObject: Function.Function | undefined = undefined;
+    let functionObject: Function.Function;
     if (Option.isSome(existingObject)) {
       functionObject = existingObject.value;
       Function.setFrom(functionObject, func);
     } else if (Option.isSome(space)) {
       functionObject = space.value.db.add(func);
+    } else {
+      functionObject = func;
     }
+
     if (Option.isSome(space)) {
       yield* Effect.promise(() => space.value.db.flush({ indexes: true }));
     }
 
     if (options.script) {
-      yield* Option.all([space, functionObject]).pipe(
-        Option.map(([space, functionObject]) =>
-          upsertComposerScript({ space, functionObject, filePath: options.entryPoint, name }),
-        ),
+      yield* space.pipe(
+        Option.map((space) => upsertComposerScript({ space, functionObject, filePath: options.entryPoint, name })),
         Option.getOrElse(() => Effect.succeed(undefined)),
       );
     }
@@ -100,7 +102,7 @@ export const deploy = Command.make(
       yield* Console.log('Function uploaded successfully!');
       yield* Console.log(`Key: ${func.key}`);
       yield* Console.log(`Version: ${func.version}`);
-      yield* Console.log(`Function ID: ${func.functionId}`);
+      yield* Console.log(`Function ID: ${Obj.getKeys(functionObject, FUNCTIONS_META_KEY).at(0)?.id}`);
     }
 
     yield* Option.match(space, {
