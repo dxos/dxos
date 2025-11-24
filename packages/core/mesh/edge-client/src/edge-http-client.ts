@@ -76,12 +76,6 @@ type EdgeHttpRequestArgs = {
   json?: boolean;
 
   /**
-   * Do not expect a standard EDGE JSON response with a `success` field.
-   * @deprecated Use only for debugging.
-   */
-  rawResponse?: boolean;
-
-  /**
    * Force authentication.
    * This should be used for requests with large bodies to avoid sending the body twice.
    * The client will call /auth endpoint to generate the auth header.
@@ -325,7 +319,6 @@ export class EdgeHttpClient {
       ...args,
       body: input,
       method: 'POST',
-      rawResponse: true,
     });
   }
 
@@ -424,9 +417,6 @@ export class EdgeHttpClient {
 
         if (response.ok) {
           const body = await response.clone().json();
-          if (args.rawResponse) {
-            return body as any;
-          }
           invariant(body, 'Expected body to be present');
           if (!('success' in body)) {
             return body;
