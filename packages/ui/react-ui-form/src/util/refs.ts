@@ -4,7 +4,8 @@
 
 import type * as SchemaAST from 'effect/SchemaAST';
 
-import { Format, ReferenceAnnotationId } from '@dxos/echo/internal';
+import { Format } from '@dxos/echo';
+import { ReferenceAnnotationId } from '@dxos/echo/internal';
 import { findAnnotation } from '@dxos/effect';
 import { type SchemaProperty } from '@dxos/schema';
 

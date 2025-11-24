@@ -6,11 +6,10 @@ import { useFocusFinders } from '@fluentui/react-tabster';
 import type * as Schema from 'effect/Schema';
 import React, { type ReactElement, useCallback, useEffect, useRef } from 'react';
 
-import { type Obj } from '@dxos/echo';
 import { type PropertyKey } from '@dxos/echo/internal';
 import { type ThemedClassName } from '@dxos/react-ui';
 import { cardDialogOverflow, cardSpacing } from '@dxos/react-ui-stack';
-import { type ProjectionModel, type SchemaProperty } from '@dxos/schema';
+import { type BaseObjectProps, type ProjectionModel, type SchemaProperty } from '@dxos/schema';
 
 import { type FormHandler, type FormOptions } from '../../hooks';
 
@@ -19,7 +18,7 @@ import { FormFields, type FormFieldsProps } from './FormContent';
 import { FormProvider } from './FormContext';
 import { type InputComponent, type InputProps } from './Input';
 
-export type PropsFilter<T extends Obj.Any> = (props: SchemaProperty<T>[]) => SchemaProperty<T>[];
+export type PropsFilter<T extends BaseObjectProps> = (props: SchemaProperty<T>[]) => SchemaProperty<T>[];
 
 export type ComponentLookup = (args: {
   prop: string;
@@ -29,7 +28,7 @@ export type ComponentLookup = (args: {
 
 export type CustomInputMap = Partial<Record<string, InputComponent>>;
 
-export type FormProps<T extends Obj.Any> = ThemedClassName<{
+export type FormProps<T extends BaseObjectProps> = ThemedClassName<{
   id?: string;
   values: Partial<T>;
   // TODO(burdon): Autofocus first input.
@@ -46,7 +45,7 @@ export type FormProps<T extends Obj.Any> = ThemedClassName<{
   // TODO(wittjosiah): This needs to support different ref field options per field.
   FormFieldsProps;
 
-export const Form = <T extends Obj.Any>({
+export const Form = <T extends BaseObjectProps>({
   classNames,
   id,
   testId,

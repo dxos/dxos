@@ -2,7 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Format, GeoLocation, TypeEnum } from '@dxos/echo/internal';
+import { Format } from '@dxos/echo';
+import { GeoLocation, TypeEnum } from '@dxos/echo/internal';
 import { type ValidationError } from '@dxos/schema';
 
 /**
@@ -13,7 +14,7 @@ import { type ValidationError } from '@dxos/schema';
  */
 export type ParseProps = {
   type?: TypeEnum;
-  format?: TypeFormat;
+  format?: Format.TypeFormat;
   value: any;
 };
 
@@ -70,7 +71,7 @@ export const parseValue = ({ type, format, value }: ParseProps) => {
       return parseScalar(TypeEnum.String);
     }
 
-    case Format.TypeFormat.TypeFormat.Ref:
+    case Format.TypeFormat.Ref:
       throw new Error(`unexpected format: ${Format.TypeFormat.Ref}`);
 
     case Format.TypeFormat.DateTime:
@@ -81,7 +82,7 @@ export const parseValue = ({ type, format, value }: ParseProps) => {
       return isNaN(date.getTime()) ? null : date;
     }
 
-    case Format.TypeFormat.TypeFormat.GeoPoint: {
+    case Format.TypeFormat.GeoPoint: {
       // Parse string in format "lat,long" to GeoPoint [longitude, latitude].
       if (typeof value === 'string') {
         // Only keep digits, decimal points, minus signs, and commas.
@@ -108,7 +109,7 @@ export const parseValue = ({ type, format, value }: ParseProps) => {
 // TODO(burdon): Type and format.
 export type CellClassesForFieldTypeProps = {
   type?: TypeEnum;
-  format?: TypeFormat;
+  format?: Format.TypeFormat;
 };
 
 export const cellClassesForFieldType = ({ type, format }: CellClassesForFieldTypeProps): string[] | undefined => {

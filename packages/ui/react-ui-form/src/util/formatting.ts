@@ -4,11 +4,12 @@
 
 import { format as formatDate } from 'date-fns/format';
 
-import { Format, GeoLocation, TypeEnum } from '@dxos/echo/internal';
+import { Format } from '@dxos/echo';
+import { GeoLocation, TypeEnum } from '@dxos/echo/internal';
 
 type ValueFormatProps = {
   type: TypeEnum;
-  format?: TypeFormat | undefined;
+  format?: Format.TypeFormat | undefined;
   value: any;
   locale?: string | undefined;
 };

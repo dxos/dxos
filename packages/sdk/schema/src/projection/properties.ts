@@ -8,7 +8,7 @@ import * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
 import * as String from 'effect/String';
 
-import { Format, type JsonSchema, type Obj } from '@dxos/echo';
+import { Format, type JsonSchema } from '@dxos/echo';
 import {
   FormInputAnnotationId,
   OptionsAnnotationId,
@@ -29,10 +29,14 @@ import {
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
+// TODO(wittjosiah): Remove?
+/** @deprecated */
+export type BaseObjectProps = Record<string, any>;
+
 /**
  * Flattened representation of AST node.
  */
-export type SchemaProperty<T extends Obj.Any, V = any> = {
+export type SchemaProperty<T extends BaseObjectProps, V = any> = {
   name: PropertyKey<T>;
   ast: SchemaAST.AST;
   optional: boolean;
@@ -51,7 +55,7 @@ export type SchemaProperty<T extends Obj.Any, V = any> = {
  * Get properties from the given AST node (typically from a Schema object).
  * Handle discriminated unions.
  */
-export const getSchemaProperties = <T extends Obj.Any>(
+export const getSchemaProperties = <T extends BaseObjectProps>(
   ast: SchemaAST.AST,
   value: any = {},
   options: { includeId?: boolean; form?: boolean } = {},
@@ -115,7 +119,7 @@ export const getSchemaProperties = <T extends Obj.Any>(
   return knownProperties;
 };
 
-const processProperty = <T extends Obj.Any>(
+const processProperty = <T extends BaseObjectProps>(
   name: PropertyKey<T>,
   prop: { type: SchemaAST.AST; isReadonly: boolean; isOptional: boolean },
   form: boolean,
@@ -238,5 +242,7 @@ const processProperty = <T extends Obj.Any>(
   };
 };
 
-export const sortProperties = <T extends Obj.Any>({ name: a }: SchemaProperty<T>, { name: b }: SchemaProperty<T>) =>
-  a.localeCompare(b);
+export const sortProperties = <T extends BaseObjectProps>(
+  { name: a }: SchemaProperty<T>,
+  { name: b }: SchemaProperty<T>,
+) => a.localeCompare(b);

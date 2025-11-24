@@ -6,18 +6,17 @@ import type * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { type Obj } from '@dxos/echo';
 import { getValue, setValue } from '@dxos/echo/internal';
 import { type JsonPath, type SimpleType, createJsonPath, fromEffectValidationPath } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { type ValidationError, validateSchema } from '@dxos/schema';
+import { type BaseObjectProps, type ValidationError, validateSchema } from '@dxos/schema';
 import { type MaybePromise } from '@dxos/util';
 
 /**
  * Return type from `useForm` hook.
  */
-export type FormHandler<T extends Obj.Any> = {
+export type FormHandler<T extends BaseObjectProps> = {
   //
   // Form state management.
   //
@@ -45,7 +44,7 @@ export type FormHandler<T extends Obj.Any> = {
 /**
  * Hook options.
  */
-export interface FormOptions<T extends Obj.Any> {
+export interface FormOptions<T extends BaseObjectProps> {
   /**
    * Effect schema (Type literal).
    */
@@ -86,7 +85,7 @@ export interface FormOptions<T extends Obj.Any> {
  * Creates a hook for managing form state, including values, validation, and submission.
  * Deeply integrated with `@dxos/schema` for schema-based validation.
  */
-export const useForm = <T extends Obj.Any>({
+export const useForm = <T extends BaseObjectProps>({
   schema,
   initialValues,
   onValuesChanged,
@@ -277,7 +276,7 @@ export const useForm = <T extends Obj.Any>({
   );
 };
 
-const createKeySet = <T extends Obj.Any, V>(obj: T, value: V): Record<JsonPath, V> => {
+const createKeySet = <T extends BaseObjectProps, V>(obj: T, value: V): Record<JsonPath, V> => {
   invariant(obj);
   return Object.keys(obj).reduce((acc, key) => ({ ...acc, [key]: value }), {} as Record<JsonPath, V>);
 };

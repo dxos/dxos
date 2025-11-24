@@ -6,12 +6,11 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Schema from 'effect/Schema';
 import React, { useCallback, useState } from 'react';
 
-import { ContactType } from '@dxos/client/testing';
-import { Obj, Ref, Type } from '@dxos/echo';
-import { Format, type TypeAnnotation, getObjectDXN } from '@dxos/echo/internal';
+import { type Annotation, Format, Obj, Ref, Type } from '@dxos/echo';
+import { TestSchema } from '@dxos/echo/testing';
 import { Tooltip } from '@dxos/react-ui';
 import { withLayoutVariants, withTheme } from '@dxos/react-ui/testing';
-import { Testing } from '@dxos/schema/testing';
+import { type BaseObjectProps } from '@dxos/schema';
 
 import { translations } from '../../translations';
 import { TestLayout, TestPanel } from '../testing';
@@ -19,12 +18,12 @@ import { TestLayout, TestPanel } from '../testing';
 import { SelectInput } from './Defaults';
 import { Form, type FormProps } from './Form';
 
-type StoryProps<T extends Obj.Any> = {
+type StoryProps<T extends BaseObjectProps> = {
   debug?: boolean;
   schema: Type.Obj.Any;
 } & FormProps<T>;
 
-const DefaultStory = <T extends Obj.Any = any>({ debug, schema, values: initialValues, ...props }: StoryProps<T>) => {
+const DefaultStory = <T extends BaseObjectProps>({ debug, schema, values: initialValues, ...props }: StoryProps<T>) => {
   const [values, setValues] = useState(initialValues);
   const handleSave = useCallback<NonNullable<FormProps<T>['onSave']>>((values) => {
     setValues(values);
@@ -45,13 +44,13 @@ const DefaultStory = <T extends Obj.Any = any>({ debug, schema, values: initialV
   return <Form<T> schema={schema} values={values} onSave={handleSave} {...props} />;
 };
 
-const RefStory = <T extends Obj.Any = any>(props: StoryProps<T>) => {
-  const onQueryRefOptions = useCallback((typeInfo: TypeAnnotation) => {
+const RefStory = <T extends BaseObjectProps>(props: StoryProps<T>) => {
+  const onQueryRefOptions = useCallback((typeInfo: Annotation.TypeAnnotation) => {
     switch (typeInfo.typename) {
-      case Testing.Person.typename:
+      case TestSchema.Person.typename:
         return [
-          { dxn: getObjectDXN(contact1)!, label: 'John Coltraine' },
-          { dxn: getObjectDXN(contact2)!, label: 'Erykah Badu' },
+          { dxn: Obj.getDXN(contact1)!, label: 'John Coltraine' },
+          { dxn: Obj.getDXN(contact2)!, label: 'Erykah Badu' },
         ];
       default:
         return [];
@@ -116,7 +115,7 @@ export const Default: Story = {
 export const Organization: Story = {
   args: {
     debug: true,
-    schema: Testing.OrganizationSchema,
+    schema: TestSchema.Organization,
     values: {
       name: 'DXOS',
       website: 'https://dxos.org',
@@ -128,7 +127,7 @@ export const Organization: Story = {
 export const OrganizationAutoSave: Story = {
   args: {
     debug: true,
-    schema: Testing.OrganizationSchema,
+    schema: TestSchema.Organization,
     values: {
       name: 'DXOS',
       website: 'https://dxos.org',
@@ -144,7 +143,7 @@ export const OrganizationAutoSave: Story = {
 export const Person: Story = {
   args: {
     debug: true,
-    schema: Testing.Person,
+    schema: TestSchema.Person,
     values: {
       name: 'Bot',
     },
@@ -272,16 +271,18 @@ export const Enum: StoryObj<StoryProps<ColorType>> = {
 //
 
 const RefSchema = Schema.Struct({
-  contact: Ref(ContactType).annotations({ title: 'Contact Reference' }),
-  optionalContact: Schema.optional(Ref(ContactType).annotations({ title: 'Optional Contact Reference' })),
-  refArray: Schema.optional(Schema.Array(Ref(ContactType))),
-  unknownExpando: Schema.optional(Ref(Type.Expando).annotations({ title: 'Optional Ref to an Expando (DXN Input)' })),
+  contact: Type.Ref(TestSchema.Person).annotations({ title: 'Contact Reference' }),
+  optionalContact: Schema.optional(Type.Ref(TestSchema.Person).annotations({ title: 'Optional Contact Reference' })),
+  refArray: Schema.optional(Schema.Array(Type.Ref(TestSchema.Person))),
+  unknownExpando: Schema.optional(
+    Type.Ref(Type.Expando).annotations({ title: 'Optional Ref to an Expando (DXN Input)' }),
+  ),
 });
 
 type RefSchema = Schema.Schema.Type<typeof RefSchema>;
 
-const contact1 = Obj.make(ContactType, { identifiers: [] });
-const contact2 = Obj.make(ContactType, { identifiers: [] });
+const contact1 = Obj.make(TestSchema.Person, {});
+const contact2 = Obj.make(TestSchema.Person, {});
 
 export const Refs: StoryObj<StoryProps<RefSchema>> = {
   render: RefStory,
