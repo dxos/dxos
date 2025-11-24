@@ -8,6 +8,7 @@ import * as Options from '@effect/cli/Options';
 import * as Console from 'effect/Console';
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
+import { resolve } from 'node:path';
 
 import { Function, FUNCTIONS_META_KEY } from '@dxos/functions';
 import { FunctionsServiceClient } from '@dxos/functions-runtime/edge';
@@ -54,7 +55,7 @@ export const deploy = Command.make(
     const identity = client.halo.identity.get();
     invariant(identity, 'Identity not available');
 
-    const artifact = yield* bundle({ entryPoint: options.entryPoint });
+    const artifact = yield* bundle({ entryPoint: resolve(options.entryPoint) });
 
     if (options.dryRun) {
       yield* Console.log('Dry run, not uploading function.');
