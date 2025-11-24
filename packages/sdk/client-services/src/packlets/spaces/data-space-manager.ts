@@ -15,7 +15,7 @@ import {
   createAdmissionCredentials,
   getCredentialAssertion,
 } from '@dxos/credentials';
-import { ObjectId, getTypeReference } from '@dxos/echo/internal';
+import { getTypeReference } from '@dxos/echo/internal';
 import {
   AuthStatus,
   CredentialServerExtension,
@@ -42,7 +42,7 @@ import type { EdgeConnection, EdgeHttpClient } from '@dxos/edge-client';
 import { type FeedStore, writeMessages } from '@dxos/feed-store';
 import { assertArgument, assertState, failedInvariant, invariant } from '@dxos/invariant';
 import { type Keyring } from '@dxos/keyring';
-import { PublicKey, type SpaceId } from '@dxos/keys';
+import { ObjectId, PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { AlreadyJoinedError, trace as Trace } from '@dxos/protocols';
 import { Invitation, SpaceState } from '@dxos/protocols/proto/dxos/client/services';

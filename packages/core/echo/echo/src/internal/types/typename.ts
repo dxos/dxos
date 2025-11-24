@@ -89,6 +89,7 @@ export const setTypename = (obj: any, typename: DXN): void => {
  *
  * @internal (use Obj.getTypeDXN)
  */
+// TODO(burdon): Narrow type.
 export const getTypeDXN = (obj: AnyProperties): DXN | undefined => {
   if (!obj) {
     return undefined;

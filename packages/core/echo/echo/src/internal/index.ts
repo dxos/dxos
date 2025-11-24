@@ -51,16 +51,19 @@ export * from './types';
 //  - [ ] Expando type.
 //  - [ ] Standardize '@automerge/automerge' imports (A vs. next).
 
-export { makeObject } from './proxy';
-export { type BaseSchema, EchoSchema, StoredSchema, ImmutableSchema, RuntimeSchemaRegistry, isMutable } from './schema';
-export { type AnyProperties, type HasId } from './types';
-export {
-  createObject,
-  createQueueDXN,
-  isDeleted,
-  objectFromJSON,
-  objectToJSON,
-  setRefResolverOnData,
-  SchemaValidator,
-  TypedObject,
-} from './object';
+// export {
+//   createObject,
+//   createQueueDXN,
+//   isDeleted,
+//   objectFromJSON,
+//   objectToJSON,
+//   setRefResolverOnData,
+//   SchemaValidator,
+//   TypedObject,
+// } from './object';
+// export { makeObject } from './proxy';
+// export { type BaseSchema, EchoSchema, StoredSchema, ImmutableSchema, RuntimeSchemaRegistry, isMutable } from './schema';
+
+export * from './object';
+export * from './proxy';
+export * from './schema';

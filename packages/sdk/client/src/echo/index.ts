@@ -14,22 +14,16 @@ export {
 export {
   compareForeignKeys,
   createQueueDXN,
-  getMeta,
-  getSchema,
-  getType,
-  getTypename,
-  Expando,
   type ObjectMeta,
   Ref,
   RefArray,
   type TypedObject,
 } from '@dxos/echo/internal';
+export { Entity, Relation, Type, Database } from '@dxos/echo';
 export { type Live, live, isLiveObject } from '@dxos/live-object';
 export {
   createObject,
   createSubscription,
-  getSource,
-  getTarget,
   getVersion,
   type EchoDatabase,
   Filter,
@@ -37,12 +31,21 @@ export {
   type ObjectMigration,
   ObjectVersion,
   Query,
-  type Queryable,
-  type QueryResult,
   Queue,
   type Selection,
   type SubscriptionHandle,
 } from '@dxos/echo-db';
+
+// Compatibility exports - prefer using Entity/Type/Database namespaces directly.
+import { Entity, Relation, Database as Database$, Type as Type$ } from '@dxos/echo';
+export const getMeta = Entity.getMeta;
+export const getSchema = Entity.getSchema;
+export const getTypename = Entity.getTypename;
+export const getSource = Relation.getSource;
+export const getTarget = Relation.getTarget;
+export type Queryable = Database$.Queryable;
+export type QueryResult<T extends Entity.Any = Entity.Any> = Database$.QueryResult<T>;
+export type Expando = Type$.Expando;
 
 // TODO(dmaretskyi): Remove this export.
 export { decodeReference as internalDecodeReference } from '@dxos/echo-protocol';

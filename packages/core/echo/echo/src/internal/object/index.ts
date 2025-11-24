@@ -4,8 +4,8 @@
 
 export * from './common';
 export * from './create-object';
+export * from './deleted';
 export * from './ids';
 export * from './json-serializer';
-export * from './typed-object';
-export * from './deleted';
 export * from './schema-validator';
+export * from './typed-object';

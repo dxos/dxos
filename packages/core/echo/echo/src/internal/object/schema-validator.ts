@@ -46,7 +46,7 @@ export class SchemaValidator {
       }
 
       return type.ast.annotations[annotation] != null;
-    } catch (err) {
+    } catch {
       return false;
     }
   }
@@ -238,4 +238,5 @@ export const checkIdNotPresentOnSchema = (schema: Schema.Schema<any, any, any>) 
   }
 };
 
+// TODO(burdon): Reconcile with JsonPath.
 type KeyPath = readonly (string | number)[];

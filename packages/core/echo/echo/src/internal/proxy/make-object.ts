@@ -21,16 +21,16 @@ import { type AnyProperties, EntityKindId, type KindId, MetaId, type ObjectMeta,
 import { TypedReactiveHandler, prepareTypedTarget } from './typed-handler';
 
 /**
- * @internal
+ *
  */
+// TODO(burdon): Make internal
 export type MakeObjectProps<T extends AnyProperties> = Omit<T, 'id' | KindId>;
 
 /**
  * Creates a reactive object from a plain Javascript object.
  * Optionally provides a TS-effect schema.
- *
- * @internal
  */
+// TODO(burdon): Make internal
 // TODO(dmaretskyi): Deep mutability.
 // TODO(dmaretskyi): Invert generics (generic over schema) to have better error messages.
 // TODO(dmaretskyi): Could mutate original object making it unusable.

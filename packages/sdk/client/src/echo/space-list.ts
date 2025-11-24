@@ -18,7 +18,8 @@ import { Context } from '@dxos/context';
 import { getCredentialAssertion } from '@dxos/credentials';
 import { failUndefined, inspectObject } from '@dxos/debug';
 import { Obj } from '@dxos/echo';
-import { type EchoClient, Filter, Query, type QueryFn, type QueryOptions } from '@dxos/echo-db';
+import { type EchoClient, Filter, Query } from '@dxos/echo-db';
+import { type Database } from '@dxos/echo';
 import { failedInvariant, invariant } from '@dxos/invariant';
 import { PublicKey, SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -352,12 +353,12 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
   }
 
   // Odd way to define methods types from a typedef.
-  declare query: QueryFn;
+  declare query: Database.QueryFn;
   static {
     this.prototype.query = this.prototype._query;
   }
 
-  private _query(query: Query.Any | Filter.Any, options?: QueryOptions) {
+  private _query(query: Query.Any | Filter.Any, options?: Database.QueryOptions) {
     query = Filter.is(query) ? Query.select(query) : query;
     return this._echoClient.graph.query(query, options);
   }

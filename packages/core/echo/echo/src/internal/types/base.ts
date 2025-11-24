@@ -24,21 +24,19 @@ export interface HasId {
 export type HasTypename = {};
 
 /**
- * Canonical type for all ECHO objects.
- */
-// TODO(burdon): Remove and move BaseObj here?
-export interface AnyEchoObject extends HasId, HasTypename {}
-
-/**
  * Base type for all data objects (reactive, ECHO, and other raw objects).
  * NOTE: This describes the base type for all database objects.
  * It is stricter than `T extends {}` or `T extends object`.
- *
- * @internal
  */
-// TODO(dmaretskyi): Rename AnyProperties.
-// TODO(dmaretskyi): Prefer `Record<string, unknown>` over `any`.
+// TODO(burdon): Make internal.
+// TODO(burdon): Replace with Record<string, unknown>.
 export type AnyProperties = Record<string, any>;
+
+/**
+ * Canonical type for all ECHO objects.
+ */
+// TODO(burdon): Remove and move BaseObj here?
+export interface AnyEchoObject extends HasId, HasTypename, AnyProperties {}
 
 // TODO(dmaretskyi): Remove; this type effectively disables type safety due to `any`.
 export type WithId<T extends AnyProperties = AnyProperties> = T & HasId;

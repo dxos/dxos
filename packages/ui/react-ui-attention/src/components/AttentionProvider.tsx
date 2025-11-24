@@ -27,7 +27,7 @@ const [AttentionContextProvider, useAttentionContext] = createContext<AttentionC
   path: [],
 });
 
-const UNKNOWN_ATTENDABLE: Attention = { hasAttention: false, isAncestor: false, isRelated: false };
+const UNKNOWN_ATTENDABLE = { hasAttention: false, isAncestor: false, isRelated: false } as Attention;
 
 const useAttention = (attendableId?: string): Attention => {
   const { attention, path } = useAttentionContext(ATTENTION_NAME);
