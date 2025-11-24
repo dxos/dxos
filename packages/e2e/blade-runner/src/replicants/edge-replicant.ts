@@ -125,7 +125,7 @@ export class EdgeReplicant {
   @trace.span()
   async deployFunction({ source }: { source?: string } = {}): Promise<{ functionId: string; version: string }> {
     const buildResult = await bundleFunction({
-      platform: 'node',
+      skipWasmInitCheck: true,
       source: source ?? dataGenerator,
     });
 

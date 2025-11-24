@@ -37,7 +37,7 @@ describe.runIf(process.env.DX_TEST_TAGS?.includes('functions-e2e'))('Functions d
 
     // Bundle and upload.
     const buildResult = await bundleFunction({
-      platform: 'node',
+      skipWasmInitCheck: true,
       source,
     });
     if ('error' in buildResult) {
