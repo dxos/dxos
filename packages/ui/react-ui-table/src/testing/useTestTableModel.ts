@@ -35,21 +35,6 @@ export type TestTableModel = {
   handleDeleteColumn: (fieldId: string) => void;
 };
 
-export type TestTableModel = {
-  schema: Schema.Schema.AnyNoContext | undefined;
-  table: Table.Table | undefined;
-  projection: ProjectionModel | undefined;
-  tableRef: RefObject<TableController | null>;
-  model: TableModel | undefined;
-  presentation: TablePresentation | undefined;
-  space: Space | undefined;
-  client: Client | undefined;
-  handleInsertRow: () => void;
-  handleSaveView: () => void;
-  handleDeleteRows: (rowIndex: number, objects: any[]) => void;
-  handleDeleteColumn: (fieldId: string) => void;
-};
-
 /**
  * Custom hook to create and manage a test table model for storybook demonstrations.
  * Provides table data, schema, and handlers for table operations.
@@ -134,15 +119,7 @@ export const useTestTableModel = (): TestTableModel => {
 
   return {
     schema,
-<<<<<<< HEAD
     table,
-||||||| 87517e966b
-    view,
-    projection,
-=======
-    table,
-    projection,
->>>>>>> origin/main
     tableRef,
     projection,
     model,

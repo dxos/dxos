@@ -4,22 +4,10 @@
 
 import * as Schema from 'effect/Schema';
 
-<<<<<<< HEAD
 import { Format, Type } from '@dxos/echo';
-||||||| 87517e966b
-=======
-import { Type } from '@dxos/echo';
->>>>>>> origin/main
 import {
   type EchoSchema,
-<<<<<<< HEAD
   FormatAnnotation,
-||||||| 87517e966b
-  FormatEnum,
-=======
-  FormatAnnotation,
-  FormatEnum,
->>>>>>> origin/main
   type JsonSchemaType,
   PropertyMetaAnnotationId,
   type RuntimeSchemaRegistry,
@@ -42,7 +30,6 @@ export type SchemaPropertyDefinition = {
   config?: { options?: SelectOptionType[] };
 };
 
-<<<<<<< HEAD
 export const createDefaultSchema = () =>
   Schema.Struct({
     title: Schema.optional(Schema.String).annotations({ title: 'Title' }),
@@ -90,56 +77,6 @@ export const getSchema = async (
   return echoSchema?.snapshot;
 };
 
-||||||| 87517e966b
-=======
-export const createDefaultSchema = () =>
-  Schema.Struct({
-    title: Schema.optional(Schema.String).annotations({ title: 'Title' }),
-    status: Schema.optional(
-      Schema.Literal('todo', 'in-progress', 'done')
-        .pipe(FormatAnnotation.set(FormatEnum.SingleSelect))
-        .annotations({
-          title: 'Status',
-          [PropertyMetaAnnotationId]: {
-            singleSelect: {
-              options: [
-                { id: 'todo', title: 'Todo', color: 'indigo' },
-                { id: 'in-progress', title: 'In Progress', color: 'purple' },
-                { id: 'done', title: 'Done', color: 'amber' },
-              ],
-            },
-          },
-        }),
-    ),
-    description: Schema.optional(Schema.String).annotations({ title: 'Description' }),
-  }).pipe(
-    Type.Obj({
-      typename: `example.com/type/${PublicKey.random().truncate()}`,
-      version: '0.1.0',
-    }),
-  );
-
-export const getSchema = async (
-  dxn: DXN,
-  registry?: RuntimeSchemaRegistry,
-  echoRegistry?: EchoSchemaRegistry,
-): Promise<Type.Obj.Any | undefined> => {
-  const staticSchema = registry?.getSchemaByDXN(dxn);
-  if (staticSchema) {
-    return staticSchema;
-  }
-
-  const typeDxn = dxn.asTypeDXN();
-  if (!typeDxn) {
-    return;
-  }
-
-  const { type, version } = typeDxn;
-  const echoSchema = await echoRegistry?.query({ typename: type, version }).firstOrUndefined();
-  return echoSchema?.snapshot;
-};
-
->>>>>>> origin/main
 // TODO(burdon): Factor out.
 export const getSchemaFromPropertyDefinitions = (
   typename: string,

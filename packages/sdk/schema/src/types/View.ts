@@ -12,15 +12,7 @@ import { type Client } from '@dxos/client';
 import { type Space } from '@dxos/client/echo';
 import { Filter, Obj, Query, QueryAST, Type } from '@dxos/echo';
 import {
-<<<<<<< HEAD
   FormInputAnnotation,
-||||||| 87517e966b
-  FormAnnotation,
-  FormatEnum,
-=======
-  FormInputAnnotation,
-  FormatEnum,
->>>>>>> origin/main
   JsonSchemaType,
   LabelAnnotation,
   ReferenceAnnotationId,
@@ -65,7 +57,7 @@ export type Projection = Schema.Schema.Type<typeof Projection>;
  * Views are generated or user-defined projections of a schema's properties.
  * They are used to configure the visual representation of the data.
  */
-export const ViewSchema = Schema.Struct({
+const ViewSchema = Schema.Struct({
   /**
    * Query used to retrieve data.
    * Can be a user-provided query grammar string or a query AST.

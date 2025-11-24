@@ -4,15 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
-<<<<<<< HEAD
 import { Annotation, Obj, Type } from '@dxos/echo';
-||||||| 87517e966b
-import { Obj, Type } from '@dxos/echo';
-import { FormAnnotation, LabelAnnotation } from '@dxos/echo/internal';
-=======
-import { Obj, Type } from '@dxos/echo';
-import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/internal';
->>>>>>> origin/main
 import { BoardLayout, defaultLayout } from '@dxos/react-ui-board';
 
 import { meta } from '../meta';
@@ -22,16 +14,8 @@ import { meta } from '../meta';
  */
 export const Board = Schema.Struct({
   name: Schema.String.pipe(Schema.optional),
-<<<<<<< HEAD
   items: Type.Ref(Type.Expando).pipe(Schema.Array, Schema.mutable, Annotation.FormInputAnnotation.set(false)),
   layout: BoardLayout.pipe(Schema.mutable, Annotation.FormInputAnnotation.set(false)),
-||||||| 87517e966b
-  items: Type.Ref(Type.Expando).pipe(Schema.Array, Schema.mutable, FormAnnotation.set(false)),
-  layout: BoardLayout.pipe(Schema.mutable, FormAnnotation.set(false)),
-=======
-  items: Type.Ref(Type.Expando).pipe(Schema.Array, Schema.mutable, FormInputAnnotation.set(false)),
-  layout: BoardLayout.pipe(Schema.mutable, FormInputAnnotation.set(false)),
->>>>>>> origin/main
 }).pipe(
   Type.Obj({
     typename: 'dxos.org/type/Board',

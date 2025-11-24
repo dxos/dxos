@@ -5,30 +5,14 @@
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
-<<<<<<< HEAD
 import { SpaceProperties } from '@dxos/client-protocol/types';
 import { Annotation, Obj, Query, Ref, Type } from '@dxos/echo';
-||||||| 87517e966b
-import { PropertiesType } from '@dxos/client-protocol/types';
-import { Obj, Query, QueryAST, Ref, Type } from '@dxos/echo';
-import { type Expando, FormAnnotation } from '@dxos/echo/internal';
-=======
-import { PropertiesType } from '@dxos/client-protocol/types';
-import { Obj, Query, Ref, Type } from '@dxos/echo';
-import { type Expando, FormInputAnnotation, SystemTypeAnnotation } from '@dxos/echo/internal';
->>>>>>> origin/main
 import { DatabaseService } from '@dxos/echo-db';
 import { invariant } from '@dxos/invariant';
 
 export const Collection = Schema.Struct({
   name: Schema.String.pipe(Schema.optional),
-<<<<<<< HEAD
   objects: Schema.Array(Type.Ref(Type.Expando)).pipe(Schema.mutable, Annotation.FormInputAnnotation.set(false)),
-||||||| 87517e966b
-  objects: Type.Ref(Type.Expando).pipe(Schema.Array, Schema.mutable, FormAnnotation.set(false)),
-=======
-  objects: Schema.Array(Type.Ref(Type.Expando)).pipe(Schema.mutable, FormInputAnnotation.set(false)),
->>>>>>> origin/main
 }).pipe(
   Type.Obj({
     typename: 'dxos.org/type/Collection',
@@ -52,12 +36,7 @@ export const Managed = Schema.Struct({
     typename: 'dxos.org/type/ManagedCollection',
     version: '0.1.0',
   }),
-<<<<<<< HEAD
   Annotation.SystemTypeAnnotation.set(true),
-||||||| 87517e966b
-=======
-  SystemTypeAnnotation.set(true),
->>>>>>> origin/main
 );
 
 export type Managed = Schema.Schema.Type<typeof Managed>;

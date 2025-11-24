@@ -6,14 +6,7 @@ import * as Option from 'effect/Option';
 import type * as Schema from 'effect/Schema';
 import React, { useCallback } from 'react';
 
-<<<<<<< HEAD
 import { Annotation, type Obj } from '@dxos/echo';
-||||||| 87517e966b
-import { Type } from '@dxos/echo';
-import { type BaseObject, type TypeAnnotation, ViewAnnotation, getTypeAnnotation } from '@dxos/echo/internal';
-=======
-import { type BaseObject, type TypeAnnotation, getTypeAnnotation } from '@dxos/echo/internal';
->>>>>>> origin/main
 import { type Space, type SpaceId } from '@dxos/react-client/echo';
 import { Icon, toLocalizedString, useDefaultValue, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
@@ -63,32 +56,16 @@ export const CreateObjectPanel = ({
 }: CreateObjectPanelProps) => {
   const { t } = useTranslation(meta.id);
   const initialFormValues = useDefaultValue(_initialFormValues, () => ({}));
-<<<<<<< HEAD
   const metadata = typename && resolve?.(typename);
   const options: Annotation.TypeAnnotation[] = schemas
     .filter((schema) => {
-||||||| 87517e966b
-  const form = forms.find((form) => Type.getTypename(form.objectSchema) === typename);
-  const options: TypeAnnotation[] = forms
-    .filter((form) => {
-=======
-  const metadata = typename && resolve?.(typename);
-  const options: TypeAnnotation[] = schemas
-    .filter((schema) => {
->>>>>>> origin/main
       if (views == null) {
         return true;
       } else {
         return views === ViewAnnotation.get(schema).pipe(Option.getOrElse(() => false));
       }
     })
-<<<<<<< HEAD
     .map((schema) => Annotation.getTypeAnnotation(schema))
-||||||| 87517e966b
-    .map((form) => getTypeAnnotation(form.objectSchema))
-=======
-    .map((schema) => getTypeAnnotation(schema))
->>>>>>> origin/main
     .filter(isNonNullable)
     .sort((a, b) => {
       const nameA = t('typename label', { ns: a.typename, defaultValue: a.typename });
