@@ -98,6 +98,7 @@ export const make = <S extends Type.Relation.Any>(
 
   const sourceDXN = getObjectDXN(props[Source]) ?? raise(new Error('Unresolved relation source'));
   const targetDXN = getObjectDXN(props[Target]) ?? raise(new Error('Unresolved relation target'));
+
   (props as any)[RelationSourceDXNId] = sourceDXN;
   (props as any)[RelationTargetDXNId] = targetDXN;
 
