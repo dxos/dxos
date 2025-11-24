@@ -110,19 +110,19 @@ const setup = async () => {
 
   const space = await client.spaces.create();
   await space.waitUntilReady();
-  // await space.internal.setEdgeReplicationPreference(EdgeReplicationSetting.ENABLED);
+  await space.internal.setEdgeReplicationPreference(EdgeReplicationSetting.ENABLED);
 
-  // const mailbox = space.db.add(Mailbox.make({ name: 'test', space }));
-  // space.db.add(
-  //   Obj.make(AccessToken.AccessToken, {
-  //     note: 'Email read access.',
-  //     source: 'google.com',
-  //     token: process.env.GOOGLE_ACCESS_TOKEN ?? failedInvariant('GOOGLE_ACCESS_TOKEN is not set'),
-  //   }),
-  // );
+  const mailbox = space.db.add(Mailbox.make({ name: 'test', space }));
+  space.db.add(
+    Obj.make(AccessToken.AccessToken, {
+      note: 'Email read access.',
+      source: 'google.com',
+      token: process.env.GOOGLE_ACCESS_TOKEN ?? failedInvariant('GOOGLE_ACCESS_TOKEN is not set'),
+    }),
+  );
   const functionsServiceClient = FunctionsServiceClient.fromClient(client);
 
-  return { client, space, functionsServiceClient };
+  return { client, space, mailbox, functionsServiceClient };
 };
 
 const sync = async (space: Space) => {
@@ -147,7 +147,7 @@ const deployFunction = async (space: Space, functionsServiceClient: FunctionsSer
 };
 
 const checkEmails = async (mailbox: Mailbox.Mailbox) => {
-  const { objects: messages } = await mailbox.queue.target?.query(Query.type(Message.Message)).run();
+  const { objects: messages } = await mailbox.queue.target!.query(Query.type(Message.Message)).run();
   console.log(`Found ${messages.length} messages in mailbox`);
   return messages;
 };

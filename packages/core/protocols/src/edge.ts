@@ -40,8 +40,8 @@ export type EdgeErrorData = { type: string } & Record<string, any>;
 // TODO(dmaretskyi): Refactor this type to just be { success: false, error: SerializedError }
 // reason -> error.message
 // cause -> error.cause
-// errorData.type -> error.code
-// ...errorData -> error.context
+// data.type -> error.code
+// ...data -> error.context
 export type EdgeFailure = {
   /**
    * Branded Type.
@@ -50,11 +50,11 @@ export type EdgeFailure = {
   /**
    * An explanation of why the call failed. Used mostly for logging and monitoring.
    */
-  reason: string;
+  message: string;
   /**
    * Cause Error captured on the EDGE service to aid debugging on the client.
    */
-  cause?: SerializedError;
+  error?: SerializedError;
   /**
    * Information that can be used to retry the request such that it will succeed, for example:
    * 1. { type: 'auth_required', challenge: string }
@@ -62,16 +62,16 @@ export type EdgeFailure = {
    * 2. { type: 'user_confirmation_required', dialog: { title: string, message: string, confirmation_payload: string } }
    *    Requires showing a confirmation dialog to a user and retrying the request with confirmation_payload included
    *    if the user confirms.
-   * When errorData is returned simply retrying the request won't have any effect.
-   * EdgeHttpClient should parse well-known errorData into Error types and throw.
+   * When data is returned simply retrying the request won't have any effect.
+   * EdgeHttpClient should parse well-known data into Error types and throw.
    */
-  errorData?: EdgeErrorData;
+  data?: EdgeErrorData;
 };
 
 /**
  * Represents a body response from the Edge service.
  */
-export type EdgeBody<T> = EdgeSuccess<T> | EdgeFailure;
+export type EdgeEnvelope<T> = EdgeSuccess<T> | EdgeFailure;
 
 /**
  * Use this to create a response from the Edge service.
@@ -92,21 +92,32 @@ export const EdgeResponse = Object.freeze({
     );
   },
   failure: ({
-    reason,
-    cause,
-    errorData,
+    message,
+    error,
+    errorEncoded,
+    data,
     shouldRetryAfter,
     status = 500,
   }: {
     /**
      * An explanation of why the call failed. Used mostly for logging and monitoring.
      */
-    reason: string;
+    message: string;
     /**
      * Error that caused the failure.
      * Useful for debugging.
+     *
+     * Use only one of the fields `error` or `errorEncoded`.s
      */
-    cause?: Error;
+    error?: Error;
+    /**
+     * Encoded Error that caused the failure.
+     * Useful for debugging.
+     *
+     * Use only one of the fields `error` or `errorEncoded`.
+     */
+    errorEncoded?: SerializedError;
+
     /**
      * Information that can be used to retry the request such that it will succeed, for example:
      * 1. { type: 'auth_required', challenge: string }
@@ -114,10 +125,10 @@ export const EdgeResponse = Object.freeze({
      * 2. { type: 'user_confirmation_required', dialog: { title: string, message: string, confirmation_payload: string } }
      *    Requires showing a confirmation dialog to a user and retrying the request with confirmation_payload included
      *    if the user confirms.
-     * When errorData is returned simply retrying the request won't have any effect.
-     * EdgeHttpClient should parse well-known errorData into Error types and throw.
+     * When data is returned simply retrying the request won't have any effect.
+     * EdgeHttpClient should parse well-known data into Error types and throw.
      */
-    errorData?: EdgeErrorData;
+    data?: EdgeErrorData;
     /**
      * If provided, this request will be marked as retryable and the client will wait for the specified number of milliseconds before retrying.
      * If not provided, the client will not retry the request.
@@ -138,9 +149,9 @@ export const EdgeResponse = Object.freeze({
     return new Response(
       JSON.stringify({
         success: false,
-        reason,
-        errorData,
-        cause: cause ? ErrorCodec.encode(cause) : undefined,
+        message,
+        data,
+        error: error ? ErrorCodec.encode(error) : errorEncoded,
       } satisfies EdgeFailure),
       {
         status,
