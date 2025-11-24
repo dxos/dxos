@@ -101,16 +101,16 @@ export const mapToKeyValues = (spec: MappingSpec, values: any) => {
  */
 export const validateConfig = (config: ConfigProto): ConfigProto => {
   if (!('version' in config)) {
-    throw new InvalidConfigError('Version not specified');
+    throw new InvalidConfigError({ message: 'Version not specified' });
   }
 
   if (config?.version !== 1) {
-    throw new InvalidConfigError(`Invalid config version: ${config.version}`);
+    throw new InvalidConfigError({ message: `Invalid config version: ${config.version}` });
   }
 
   const error = configRootType.protoType.verify(config);
   if (error) {
-    throw new InvalidConfigError(error);
+    throw new InvalidConfigError({ message: String(error) });
   }
 
   return config;
