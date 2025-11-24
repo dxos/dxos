@@ -2,5 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
-// TODO(burdon): Export namespace.
-export * from './query';
+export { QueryAST } from "@dxos/echo-protocol";
+
+export * from "./filter";
+export * from "./order";
+export * from "./query";

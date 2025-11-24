@@ -4,9 +4,8 @@
 
 import { describe, expect, test } from 'vitest';
 
-import type { ObjectId } from '@dxos/echo/internal';
 import { Reference, encodeReference } from '@dxos/echo-protocol';
-import { DXN, PublicKey } from '@dxos/keys';
+import { DXN, type ObjectId, PublicKey } from '@dxos/keys';
 import { objectPointerCodec } from '@dxos/protocols';
 
 import { TestData } from '../testing';

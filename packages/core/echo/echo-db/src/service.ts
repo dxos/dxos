@@ -10,8 +10,8 @@ import type * as Schema from 'effect/Schema';
 import type * as Types from 'effect/Types';
 
 import {
+  type Database,
   type Filter,
-  type Live,
   Obj,
   ObjectNotFoundError,
   type Query,
@@ -21,7 +21,8 @@ import {
 } from '@dxos/echo';
 import { promiseWithCauseCapture } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
-import type { DXN } from '@dxos/keys';
+import { type DXN } from '@dxos/keys';
+import { type Live } from '@dxos/live-object';
 
 import type { FlushOptions } from './core-db';
 import type {
@@ -30,7 +31,6 @@ import type {
   SchemaRegistryPreparedQuery,
   SchemaRegistryQuery,
 } from './proxy-db';
-import type { OneShotQueryResult, QueryResult } from './query';
 
 export class DatabaseService extends Context.Tag('@dxos/functions/DatabaseService')<
   DatabaseService,
@@ -148,11 +148,13 @@ export class DatabaseService extends Context.Tag('@dxos/functions/DatabaseServic
    * Creates a `QueryResult` object that can be subscribed to.
    */
   static query: {
-    <Q extends Query.Any>(query: Q): Effect.Effect<QueryResult<Live<Query.Type<Q>>>, never, DatabaseService>;
-    <F extends Filter.Any>(filter: F): Effect.Effect<QueryResult<Live<Filter.Type<F>>>, never, DatabaseService>;
+    <Q extends Query.Any>(query: Q): Effect.Effect<Database.QueryResult<Live<Query.Type<Q>>>, never, DatabaseService>;
+    <F extends Filter.Any>(
+      filter: F,
+    ): Effect.Effect<Database.QueryResult<Live<Filter.Type<F>>>, never, DatabaseService>;
   } = (queryOrFilter: Query.Any | Filter.Any) =>
     DatabaseService.pipe(
-      Effect.map(({ db }) => db.query(queryOrFilter as any)),
+      Effect.map(({ db }) => db.query(queryOrFilter as any) as Database.QueryResult<Live<any>>),
       Effect.withSpan('DatabaseService.query'),
     );
 
@@ -160,8 +162,12 @@ export class DatabaseService extends Context.Tag('@dxos/functions/DatabaseServic
    * Executes the query once and returns the results.
    */
   static runQuery: {
-    <Q extends Query.Any>(query: Q): Effect.Effect<OneShotQueryResult<Live<Query.Type<Q>>>, never, DatabaseService>;
-    <F extends Filter.Any>(filter: F): Effect.Effect<OneShotQueryResult<Live<Filter.Type<F>>>, never, DatabaseService>;
+    <Q extends Query.Any>(
+      query: Q,
+    ): Effect.Effect<Database.OneShotQueryResult<Live<Query.Type<Q>>>, never, DatabaseService>;
+    <F extends Filter.Any>(
+      filter: F,
+    ): Effect.Effect<Database.OneShotQueryResult<Live<Filter.Type<F>>>, never, DatabaseService>;
   } = (queryOrFilter: Query.Any | Filter.Any) =>
     DatabaseService.query(queryOrFilter as any).pipe(
       Effect.flatMap((queryResult) => promiseWithCauseCapture(() => queryResult.run())),

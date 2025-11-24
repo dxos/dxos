@@ -4,20 +4,21 @@
 
 import * as Schema from 'effect/Schema';
 
-import { SchemaVersion, Typename } from '../ast';
+import { TypenameSchema, VersionSchema } from '../annotations';
+import { EchoObjectSchema } from '../entities';
 import { JsonSchemaType } from '../json-schema';
-import { EchoObject } from '../object';
 
 /**
  * Persistent representation of a schema.
  */
+// TODO(burdon): Move.
 export const StoredSchema = Schema.Struct({
   name: Schema.optional(Schema.String),
-  typename: Typename,
-  version: SchemaVersion,
+  typename: TypenameSchema,
+  version: VersionSchema,
   jsonSchema: JsonSchemaType,
 }).pipe(
-  EchoObject({
+  EchoObjectSchema({
     typename: 'dxos.org/type/Schema',
     version: '0.1.0',
   }),

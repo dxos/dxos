@@ -4,8 +4,8 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Obj, Type } from '@dxos/echo';
-import { JsonSchemaType, LabelAnnotation, Ref, SystemTypeAnnotation } from '@dxos/echo/internal';
+import { Annotation, JsonSchema, Obj, Type } from '@dxos/echo';
+import { SystemTypeAnnotation } from '@dxos/echo/internal';
 
 import { Script } from './Script';
 
@@ -36,10 +36,10 @@ export const Function = Schema.Struct({
 
   // Reference to a source script if it exists within ECHO.
   // TODO(burdon): Don't ref ScriptType directly (core).
-  source: Schema.optional(Ref(Script)),
+  source: Schema.optional(Type.Ref(Script)),
 
-  inputSchema: Schema.optional(JsonSchemaType),
-  outputSchema: Schema.optional(JsonSchemaType),
+  inputSchema: Schema.optional(JsonSchema.JsonSchema),
+  outputSchema: Schema.optional(JsonSchema.JsonSchema),
 
   /**
    * List of required services.
@@ -54,7 +54,7 @@ export const Function = Schema.Struct({
     typename: 'dxos.org/type/Function',
     version: '0.1.0',
   }),
-  LabelAnnotation.set(['name']),
+  Annotation.LabelAnnotation.set(['name']),
   SystemTypeAnnotation.set(true),
 );
 export interface Function extends Schema.Schema.Type<typeof Function> {}

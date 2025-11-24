@@ -8,21 +8,19 @@ import type * as Types from 'effect/Types';
 
 import { type CleanupFn, Event } from '@dxos/async';
 import { type Context, Resource } from '@dxos/context';
-import { Type } from '@dxos/echo';
+import { JsonSchema, Type } from '@dxos/echo';
 import {
   EchoSchema,
-  type ObjectId,
   StoredSchema,
   TypeAnnotationId,
   TypeIdentifierAnnotationId,
-  create,
+  createObject,
   getTypeAnnotation,
   getTypeIdentifierAnnotation,
   makeTypeJsonSchemaAnnotation,
-  toJsonSchema,
 } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
-import { DXN } from '@dxos/keys';
+import { DXN, type ObjectId } from '@dxos/keys';
 import { log } from '@dxos/log';
 
 import { getObjectCore } from '../echo-handler';
@@ -60,13 +58,13 @@ export type EchoSchemaRegistryOptions = {
  */
 // TODO(burdon): Reconcile with RuntimeSchemaRegistry. Rename (no product name in types).
 export class EchoSchemaRegistry extends Resource implements SchemaRegistry {
-  private readonly _reactiveQuery: boolean;
-  private readonly _preloadSchemaOnOpen: boolean;
-
   private readonly _schemaById: Map<string, EchoSchema> = new Map();
   private readonly _schemaByType: Map<string, EchoSchema> = new Map();
   private readonly _unsubscribeById: Map<string, CleanupFn> = new Map();
   private readonly _schemaSubscriptionCallbacks: SchemaSubscriptionCallback[] = [];
+
+  private readonly _reactiveQuery: boolean;
+  private readonly _preloadSchemaOnOpen: boolean;
 
   constructor(
     private readonly _db: EchoDatabase,
@@ -381,9 +379,12 @@ export class EchoSchemaRegistry extends Resource implements SchemaRegistry {
 
     const meta = getTypeAnnotation(schema);
     invariant(meta, 'use Schema.Struct({}).pipe(Type.Obj()) or class syntax to create a valid schema');
-    const schemaToStore = create(StoredSchema, { ...meta, jsonSchema: toJsonSchema(Schema.Struct({})) });
+    const schemaToStore = createObject(StoredSchema, {
+      ...meta,
+      jsonSchema: JsonSchema.toJsonSchema(Schema.Struct({})),
+    });
     const typeId = `dxn:echo:@:${schemaToStore.id}`;
-    schemaToStore.jsonSchema = toJsonSchema(
+    schemaToStore.jsonSchema = JsonSchema.toJsonSchema(
       schema.annotations({
         [TypeAnnotationId]: meta,
         [TypeIdentifierAnnotationId]: typeId,

@@ -8,9 +8,8 @@ import * as SchemaAST from 'effect/SchemaAST';
 import { invariant } from '@dxos/invariant';
 import { type ObjectId } from '@dxos/keys';
 
-import { type SchemaMeta, SchemaMetaSymbol, type TypeAnnotation, getTypeAnnotation } from '../ast';
-import { toEffectSchema, toJsonSchema } from '../json';
-import { type JsonSchemaType } from '../json-schema';
+import { type SchemaMeta, SchemaMetaSymbol, type TypeAnnotation, getTypeAnnotation } from '../annotations';
+import { type JsonSchemaType, toEffectSchema, toJsonSchema } from '../json-schema';
 import { type TypedObject, type TypedObjectPrototype } from '../object';
 
 import {
@@ -364,7 +363,7 @@ export class EchoSchema<A = any, I = any> extends EchoSchemaConstructor() implem
     }
   }
 
-  private _getSchema(): Schema.Schema.AnyNoContext {
+  _getSchema(): Schema.Schema.AnyNoContext {
     this._rebuild();
     return this._schema!;
   }

@@ -2,84 +2,17 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Filter, Query } from '@dxos/echo';
-import { type PublicKey, type SpaceId } from '@dxos/keys';
-import { type Live } from '@dxos/live-object';
+import { type Database, Filter, Query } from '@dxos/echo';
+import { type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { QueryOptions as QueryOptionsProto } from '@dxos/protocols/proto/dxos/echo/filter';
-
-import { type QueryResult } from './query-result';
+import { type QueryOptions as QueryOptionsProto } from '@dxos/protocols/proto/dxos/echo/filter';
 
 export { Filter, Query };
 
-/**
- * `query` API function declaration.
- */
-export interface QueryFn {
-  // TODO(dmaretskyi): Remove query options.
-  <Q extends Query.Any>(query: Q, options?: QueryOptions | undefined): QueryResult<Live<Query.Type<Q>>>;
-  <F extends Filter.Any>(filter: F, options?: QueryOptions | undefined): QueryResult<Live<Filter.Type<F>>>;
-}
-
-/**
- * Common interface for Database and Queue.
- */
-export interface Queryable {
-  query: QueryFn;
-}
-
-/**
- * @deprecated Use `Query.options` instead.
- */
-export type QueryOptions = {
-  /**
-   * @deprecated Use `spaceIds` instead.
-   */
-  spaces?: PublicKey[];
-
-  /**
-   * Query only in specific spaces.
-   */
-  // TODO(dmaretskyi): Change this to SpaceId.
-  spaceIds?: string[];
-
-  /**
-   * Controls how deleted items are filtered.
-   *
-   * Options:
-   *   - proto3_optional = true
-   */
-  deleted?: QueryOptionsProto.ShowDeletedOption;
-
-  /**
-   * Query only local spaces, or remote on agent.
-   * @default `QueryOptions.DataLocation.LOCAL`
-   *
-   * Options:
-   *   - proto3_optional = true
-   */
-  dataLocation?: QueryOptionsProto.DataLocation;
-
-  /**
-   * Specify which references are to inline in the result.
-   */
-  include?: QueryJoinSpec;
-
-  /**
-   * Return only the first `limit` results.
-   */
-  limit?: number;
-};
-
-export interface QueryJoinSpec extends Record<string, true | QueryJoinSpec> {}
-
-export const optionsToProto = (options: QueryOptions): QueryOptionsProto => {
+export const optionsToProto = (options: Database.QueryOptions): QueryOptionsProto => {
   return {
     spaces: options.spaces,
     spaceIds: options.spaceIds,
-    deleted: options.deleted,
-    dataLocation: options.dataLocation,
-    include: options.include,
     limit: options.limit,
   };
 };
@@ -90,7 +23,7 @@ type NormalizeQueryOptions = {
 
 export const normalizeQuery = (
   queryParam: unknown | undefined,
-  userOptions: QueryOptions | undefined,
+  userOptions: Database.QueryOptions | undefined,
   opts?: NormalizeQueryOptions,
 ) => {
   let query: Query.Any;
@@ -113,14 +46,6 @@ export const normalizeQuery = (
   if (userOptions) {
     query = query.options({
       spaceIds: userOptions.spaceIds ?? (opts?.defaultSpaceId ? [opts.defaultSpaceId] : undefined),
-      deleted:
-        userOptions?.deleted === undefined
-          ? undefined
-          : userOptions?.deleted === QueryOptionsProto.ShowDeletedOption.SHOW_DELETED
-            ? 'include'
-            : userOptions?.deleted === QueryOptionsProto.ShowDeletedOption.HIDE_DELETED
-              ? 'exclude'
-              : 'only',
     });
   }
 

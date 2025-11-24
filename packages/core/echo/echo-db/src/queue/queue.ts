@@ -5,22 +5,22 @@
 import { DeferredTask } from '@dxos/async';
 import { Event } from '@dxos/async';
 import { Context } from '@dxos/context';
-import { Obj, type Ref, type Relation } from '@dxos/echo';
+import { type Database, Entity, Obj, type Ref, type Relation } from '@dxos/echo';
 import {
   type HasId,
   type ObjectJSON,
   SelfDXNId,
   assertObjectModelShape,
-  defineHiddenProperty,
   setRefResolverOnData,
 } from '@dxos/echo/internal';
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { assertArgument, failedInvariant } from '@dxos/invariant';
 import { type DXN, type ObjectId, type SpaceId } from '@dxos/keys';
+import { defineHiddenProperty } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { type QueueService } from '@dxos/protocols';
 
-import { Filter, Query, type QueryFn, type QueryOptions, QueryResult } from '../query';
+import { Filter, Query, QueryResult } from '../query';
 
 import { QueueQueryContext } from './queue-query-context';
 import type { Queue } from './types';
@@ -172,7 +172,7 @@ export class QueueImpl<T extends Obj.Any | Relation.Any = Obj.Any | Relation.Any
     this._signal.notifyWrite();
     this.updated.emit();
 
-    const json = items.map((item) => Obj.toJSON(item));
+    const json = items.map((item) => Entity.toJSON(item));
 
     try {
       for (let i = 0; i < json.length; i += QUEUE_APPEND_BATCH_SIZE) {
@@ -211,12 +211,12 @@ export class QueueImpl<T extends Obj.Any | Relation.Any = Obj.Any | Relation.Any
   }
 
   // Odd way to define method's types from a typedef.
-  declare query: QueryFn;
+  declare query: Database.QueryFn;
   static {
     this.prototype.query = this.prototype._query;
   }
 
-  private _query(queryOrFilter: Query.Any | Filter.Any, options?: QueryOptions) {
+  private _query(queryOrFilter: Query.Any | Filter.Any, options?: Database.QueryOptions) {
     assertArgument(options === undefined, 'options', 'not supported');
     queryOrFilter = Filter.is(queryOrFilter) ? Query.select(queryOrFilter) : queryOrFilter;
     return new QueryResult(new QueueQueryContext(this), queryOrFilter);

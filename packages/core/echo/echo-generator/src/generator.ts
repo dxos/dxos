@@ -6,7 +6,7 @@ import type * as Schema from 'effect/Schema';
 
 import { Filter, type Space } from '@dxos/client/echo';
 import { Obj } from '@dxos/echo';
-import { EchoSchema, getSchema, getTypeAnnotation } from '@dxos/echo/internal';
+import { EchoSchema, getTypeAnnotation } from '@dxos/echo/internal';
 import { type AnyLiveObject } from '@dxos/echo-db';
 import { invariant } from '@dxos/invariant';
 import { type Live, isLiveObject, live } from '@dxos/live-object';
@@ -129,7 +129,7 @@ export class SpaceObjectGenerator<T extends string> extends TestObjectGenerator<
 
   async mutateObject(object: AnyLiveObject<any>, params: MutationsProviderParams): Promise<void> {
     invariant(this._mutations, 'Mutations not defined.');
-    const type = getTypeAnnotation(getSchema(object)!)!.typename as T;
+    const type = getTypeAnnotation(Obj.getSchema(object)!)!.typename as T;
     invariant(type && this._mutations?.[type], 'Invalid object type.');
 
     await this._mutations![type](object, params);

@@ -3,7 +3,7 @@
 //
 
 export * from './ast';
-export * from './jsonPath';
+export * from './json-path';
 export * from './url';
 export * from './context';
 export * from './errors';

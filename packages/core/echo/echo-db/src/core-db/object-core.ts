@@ -9,7 +9,7 @@ import { type DocHandleChangePayload } from '@automerge/automerge-repo';
 
 import { Event } from '@dxos/async';
 import { inspectCustom } from '@dxos/debug';
-import { EntityKind, ObjectId, type ObjectMeta } from '@dxos/echo/internal';
+import { EntityKind, type ObjectMeta } from '@dxos/echo/internal';
 import {
   type DatabaseDirectory,
   type ObjectStructure,
@@ -19,7 +19,7 @@ import {
   isEncodedReference,
 } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
-import { DXN } from '@dxos/keys';
+import { DXN, ObjectId } from '@dxos/keys';
 import { isLiveObject } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { defer, getDeep, setDeep, throwUnhandledError } from '@dxos/util';

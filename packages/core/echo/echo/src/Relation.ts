@@ -6,22 +6,42 @@ import * as Schema from 'effect/Schema';
 
 import { raise } from '@dxos/debug';
 import { assertArgument, invariant } from '@dxos/invariant';
-import { DXN } from '@dxos/keys';
+import { DXN, type ObjectId } from '@dxos/keys';
 import { type Live } from '@dxos/live-object';
 import { assumeType } from '@dxos/util';
 
-import { live } from './internal';
-import * as EchoSchema from './internal';
+import {
+  ATTR_RELATION_SOURCE,
+  ATTR_RELATION_TARGET,
+  type AnyEchoObject,
+  EntityKind,
+  EntityKindId,
+  type InternalObjectProps,
+  MetaId,
+  type ObjectMeta,
+  RelationSourceDXNId,
+  RelationSourceId,
+  RelationTargetDXNId,
+  RelationTargetId,
+  getObjectDXN,
+  getTypeAnnotation,
+  makeObject,
+} from './internal';
 import * as Obj from './Obj';
 import * as Type from './Type';
+
+/**
+ * Export common entity defs.
+ */
+export * from './Entity';
 
 /**
  * NOTE: Don't export: Relation.Relation and Relation.Any form the public API.
  */
 interface BaseRelation<Source, Target>
-  extends EchoSchema.HasId,
-    Type.Relation.Endpoints<Source, Target>,
-    Type.OfKind<EchoSchema.EntityKind.Relation> {}
+  extends AnyEchoObject,
+    Type.OfKind<EntityKind.Relation>,
+    Type.Relation.Endpoints<Source, Target> {}
 
 /**
  * Relation type with specific properties.
@@ -42,14 +62,15 @@ export const Any = Schema.Struct({}).pipe(
   }),
 );
 
-// TODO(dmaretskyi): Has to be `unique symbol`.
-export const Source: unique symbol = EchoSchema.RelationSourceId as any;
+export const Source: unique symbol = RelationSourceId as any;
 export type Source = typeof Source;
-export const Target: unique symbol = EchoSchema.RelationTargetId as any;
+
+export const Target: unique symbol = RelationTargetId as any;
 export type Target = typeof Target;
 
 type MakeProps<T extends Any> = {
-  id?: EchoSchema.ObjectId;
+  id?: ObjectId;
+  [MetaId]?: ObjectMeta;
   [Source]: T[Source];
   [Target]: T[Target];
 } & Type.Properties<T>;
@@ -66,37 +87,34 @@ type MakeProps<T extends Any> = {
 export const make = <S extends Type.Relation.Any>(
   schema: S,
   props: NoInfer<MakeProps<Schema.Schema.Type<S>>>,
-  meta?: EchoSchema.ObjectMeta,
-): Live<Schema.Schema.Type<S> & Type.OfKind<EchoSchema.EntityKind.Relation>> => {
-  assertArgument(
-    EchoSchema.getTypeAnnotation(schema)?.kind === EchoSchema.EntityKind.Relation,
-    'schema',
-    'Expected a relation schema',
-  );
+  meta?: ObjectMeta,
+): Live<Schema.Schema.Type<S> & Type.OfKind<EntityKind.Relation>> => {
+  assertArgument(getTypeAnnotation(schema)?.kind === EntityKind.Relation, 'schema', 'Expected a relation schema');
 
-  if (props[EchoSchema.MetaId] != null) {
-    meta = props[EchoSchema.MetaId] as any;
-    delete props[EchoSchema.MetaId];
+  if (props[MetaId] != null) {
+    meta = props[MetaId] as any;
+    delete props[MetaId];
   }
 
-  const sourceDXN = EchoSchema.getObjectDXN(props[Source]) ?? raise(new Error('Unresolved relation source'));
-  const targetDXN = EchoSchema.getObjectDXN(props[Target]) ?? raise(new Error('Unresolved relation target'));
-  (props as any)[EchoSchema.RelationSourceDXNId] = sourceDXN;
-  (props as any)[EchoSchema.RelationTargetDXNId] = targetDXN;
+  const sourceDXN = getObjectDXN(props[Source]) ?? raise(new Error('Unresolved relation source'));
+  const targetDXN = getObjectDXN(props[Target]) ?? raise(new Error('Unresolved relation target'));
 
-  return live<Schema.Schema.Type<S>>(schema, props as any, meta);
+  (props as any)[RelationSourceDXNId] = sourceDXN;
+  (props as any)[RelationTargetDXNId] = targetDXN;
+
+  return makeObject<Schema.Schema.Type<S>>(schema, props as any, meta);
 };
 
 export const isRelation = (value: unknown): value is Any => {
   if (typeof value !== 'object' || value === null) {
     return false;
   }
-  if (EchoSchema.ATTR_RELATION_SOURCE in value || EchoSchema.ATTR_RELATION_TARGET in value) {
+  if (ATTR_RELATION_SOURCE in value || ATTR_RELATION_TARGET in value) {
     return true;
   }
 
-  const kind = (value as any)[EchoSchema.EntityKindId];
-  return kind === EchoSchema.EntityKind.Relation;
+  const kind = (value as any)[EntityKindId];
+  return kind === EntityKind.Relation;
 };
 
 /**
@@ -105,8 +123,8 @@ export const isRelation = (value: unknown): value is Any => {
  */
 export const getSourceDXN = (value: Any): DXN => {
   assertArgument(isRelation(value), 'Expected a relation');
-  assumeType<EchoSchema.InternalObjectProps>(value);
-  const dxn = (value as EchoSchema.InternalObjectProps)[EchoSchema.RelationSourceDXNId];
+  assumeType<InternalObjectProps>(value);
+  const dxn = (value as InternalObjectProps)[RelationSourceDXNId];
   invariant(dxn instanceof DXN);
   return dxn;
 };
@@ -117,8 +135,8 @@ export const getSourceDXN = (value: Any): DXN => {
  */
 export const getTargetDXN = (value: Any): DXN => {
   assertArgument(isRelation(value), 'Expected a relation');
-  assumeType<EchoSchema.InternalObjectProps>(value);
-  const dxn = (value as EchoSchema.InternalObjectProps)[EchoSchema.RelationTargetDXNId];
+  assumeType<InternalObjectProps>(value);
+  const dxn = (value as InternalObjectProps)[RelationTargetDXNId];
   invariant(dxn instanceof DXN);
   return dxn;
 };
@@ -129,8 +147,8 @@ export const getTargetDXN = (value: Any): DXN => {
  */
 export const getSource = <T extends Any>(relation: T): Type.Relation.Source<T> => {
   assertArgument(isRelation(relation), 'Expected a relation');
-  assumeType<EchoSchema.InternalObjectProps>(relation);
-  const obj = (relation as EchoSchema.InternalObjectProps)[EchoSchema.RelationSourceId];
+  assumeType<InternalObjectProps>(relation);
+  const obj = (relation as InternalObjectProps)[RelationSourceId];
   invariant(obj !== undefined, `Invalid source: ${relation.id}`);
   return obj as Type.Relation.Source<T>;
 };
@@ -141,8 +159,8 @@ export const getSource = <T extends Any>(relation: T): Type.Relation.Source<T> =
  */
 export const getTarget = <T extends Any>(relation: T): Type.Relation.Target<T> => {
   assertArgument(isRelation(relation), 'Expected a relation');
-  assumeType<EchoSchema.InternalObjectProps>(relation);
-  const obj = (relation as EchoSchema.InternalObjectProps)[EchoSchema.RelationTargetId];
+  assumeType<InternalObjectProps>(relation);
+  const obj = (relation as InternalObjectProps)[RelationTargetId];
   invariant(obj !== undefined, `Invalid target: ${relation.id}`);
   return obj as Type.Relation.Target<T>;
 };

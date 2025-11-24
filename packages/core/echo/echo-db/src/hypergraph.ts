@@ -6,30 +6,26 @@ import { Event } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { StackTrace } from '@dxos/debug';
 import { type Obj, Ref, type Relation } from '@dxos/echo';
-import { Filter, Query } from '@dxos/echo';
+import { type Database, Filter, Query } from '@dxos/echo';
 import {
-  type BaseObject,
+  type AnyProperties,
   type BaseSchema,
   ImmutableSchema,
-  type ObjectId,
   RuntimeSchemaRegistry,
   setRefResolver,
 } from '@dxos/echo/internal';
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { failedInvariant } from '@dxos/invariant';
-import { DXN, type QueueSubspaceTag, type SpaceId } from '@dxos/keys';
+import { DXN, type ObjectId, type QueueSubspaceTag, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { trace } from '@dxos/tracing';
 import { entry } from '@dxos/util';
 
 import { type ItemsUpdatedEvent } from './core-db';
-import { type AnyLiveObject } from './echo-handler';
 import { type EchoDatabase, type EchoDatabaseImpl } from './proxy-db';
 import {
   GraphQueryContext,
   type QueryContext,
-  type QueryFn,
-  type QueryOptions,
   QueryResult,
   type QuerySource,
   SpaceQuerySource,
@@ -67,7 +63,7 @@ export interface RefResolverOptions {
    * Middleware to change the resolved object before returning it.
    * @deprecated On track to be removed.
    */
-  middleware?: (obj: BaseObject) => BaseObject;
+  middleware?: (obj: AnyProperties) => AnyProperties;
 }
 
 /**
@@ -81,7 +77,7 @@ export class Hypergraph {
   private readonly _owningObjects = new Map<SpaceId, unknown>();
   private readonly _schemaRegistry = new RuntimeSchemaRegistry();
   private readonly _updateEvent = new Event<ItemsUpdatedEvent>();
-  private readonly _resolveEvents = new Map<SpaceId, Map<string, Event<AnyLiveObject<any>>>>();
+  private readonly _resolveEvents = new Map<SpaceId, Map<string, Event<Obj.Any>>>();
   private readonly _queryContexts = new Set<GraphQueryContext>();
   private readonly _querySourceProviders: QuerySourceProvider[] = [];
 
@@ -165,12 +161,12 @@ export class Hypergraph {
   }
 
   // Odd way to define methods types from a typedef.
-  declare query: QueryFn;
+  declare query: Database.QueryFn;
   static {
     this.prototype.query = this.prototype._query;
   }
 
-  private _query(query: Query.Any | Filter.Any, options?: QueryOptions) {
+  private _query(query: Query.Any | Filter.Any, options?: Database.QueryOptions) {
     query = Filter.is(query) ? Query.select(query) : query;
     return new QueryResult(this._createLiveObjectQueryContext(), normalizeQuery(query, options));
   }
@@ -186,7 +182,7 @@ export class Hypergraph {
    * `graph.ref(dxn)` is preferable in cases with access to the database.
    *
    */
-  ref<T extends BaseObject = any>(dxn: DXN): Ref.Ref<T> {
+  ref<T extends AnyProperties = any>(dxn: DXN): Ref.Ref<T> {
     const ref = Ref.fromDXN(dxn);
     setRefResolver(ref, this.createRefResolver({}));
     return ref;
@@ -281,8 +277,8 @@ export class Hypergraph {
   private _resolveSync(
     dxn: DXN,
     context: RefResolutionContext,
-    onResolve?: (obj: AnyLiveObject<BaseObject>) => void,
-  ): AnyLiveObject<BaseObject> | undefined {
+    onResolve?: (obj: Obj.Any) => void,
+  ): Obj.Any | undefined {
     if (!dxn.asEchoDXN()) {
       throw new Error('Unsupported DXN kind');
     }

@@ -3,6 +3,7 @@
 //
 
 export * from './clone';
+export * from './doc-accessor';
 export {
   createObject,
   EchoReactiveHandler,
@@ -11,10 +12,8 @@ export {
   isEchoObject,
   type AnyLiveObject,
 } from './echo-handler';
-export { type ProxyTarget } from './echo-proxy-target';
 export * from './edit-history';
-export * from './relations';
+export { type ProxyTarget } from './echo-proxy-target';
+export * from './subscription';
 export * from './util';
 export * from './version';
-export * from './subscription';
-export * from './doc-accessor';
