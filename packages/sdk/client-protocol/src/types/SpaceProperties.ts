@@ -16,7 +16,7 @@ export const SpacePropertiesSchema = Schema.Struct({
 
   archived: Schema.optional(Schema.Boolean.annotations({ title: 'Archive Space' })),
   edgeReplication: Schema.optional(Schema.Boolean), // TODO(burdon): Change to mode (no booleans?)
-  invocationTraceQueue: Schema.optional(Type.Ref(Queue)), // TODO(burdon): Rename.
+  invocationTraceQueue: Schema.optional(Type.Ref(Queue)),
 
   //
   // User properties.
