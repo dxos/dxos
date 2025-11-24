@@ -26,7 +26,7 @@ export type HasTypename = {};
 /**
  * Canonical type for all ECHO objects.
  */
-// TODO(burdon): Rename to AnyEntity? (rename all "object" to "entity")?
+// TODO(burdon): Remove and move BaseObj here?
 export interface AnyEchoObject extends HasId, HasTypename {}
 
 /**

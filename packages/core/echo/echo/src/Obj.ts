@@ -32,6 +32,7 @@ export * from './Entity';
 /**
  * Base interface for all objects..
  */
+// TODO(burdon): Push to impl and extend from Relation (then remove Entity?)
 interface BaseObj extends AnyEchoObject, Type.OfKind<EntityKind.Object> {}
 
 /**
