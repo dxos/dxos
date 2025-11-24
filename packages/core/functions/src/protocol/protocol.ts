@@ -80,14 +80,8 @@ export const wrapFunctionHandler = (func: FunctionDefinition): FunctionProtocol.
 
         return result;
       } catch (error) {
-        if (FunctionError.is(error)) {
-          throw error;
-        } else {
-          throw new FunctionError({
-            cause: error,
-            context: { func: func.key },
-          });
-        }
+        // TODO(dmaretskyi): We might do error wrapping here and add extra context.
+        throw error;
       }
     },
   };
