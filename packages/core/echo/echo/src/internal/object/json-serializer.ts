@@ -22,7 +22,7 @@ import {
   RelationTargetDXNId,
   RelationTargetId,
   SelfDXNId,
-  assertObjectModelShape,
+  assertObjectModel,
 } from '../entities';
 import { Ref, type RefResolver, refFromEncodedReference, setRefResolver } from '../ref';
 import {
@@ -124,7 +124,7 @@ export const objectFromJSON = async (
     defineHiddenProperty(obj, SelfDXNId, dxn);
   }
 
-  assertObjectModelShape(obj);
+  assertObjectModel(obj);
   invariant((obj as any)[ATTR_TYPE] === undefined, 'Invalid object model');
   invariant((obj as any)[ATTR_META] === undefined, 'Invalid object model');
   invariant((obj as any)[ATTR_DELETED] === undefined, 'Invalid object model');

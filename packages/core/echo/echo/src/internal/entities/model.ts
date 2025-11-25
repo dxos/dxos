@@ -45,11 +45,6 @@ export const ATTR_SELF_DXN = '@dxn';
 export const SelfDXNId = Symbol.for('@dxos/echo/DXN');
 
 /**
- * Object version.
- */
-export const ObjectVersionId: unique symbol = Symbol.for('@dxos/echo/ObjectVersion');
-
-/**
  * Property name for deleted when object is serialized to JSON.
  */
 export const ATTR_DELETED = '@deleted';
@@ -57,7 +52,14 @@ export const ATTR_DELETED = '@deleted';
 /**
  * Deletion marker.
  */
-export const DeletedId = Symbol.for('@dxos/echo/Deleted');
+export const ObjectDeletedId = Symbol.for('@dxos/echo/Deleted');
+
+/**
+ * Object version.
+ */
+// TODO(burdon): Document why "unique symbol".
+// TODO(burdon): "@dxos/echo/object/version" ("@dxos/echo/object/deleted", etc.)
+export const ObjectVersionId: unique symbol = Symbol.for('@dxos/echo/ObjectVersion');
 
 /**
  * Internal runtime representation of an object.
@@ -77,13 +79,13 @@ export interface InternalObjectProps {
    */
   readonly [SchemaId]?: Schema.Schema.AnyNoContext;
   readonly [EntityKindId]: EntityKind;
-  readonly [DeletedId]?: boolean;
   readonly [MetaId]?: ObjectMeta;
+  readonly [ObjectDeletedId]?: boolean;
+  readonly [ObjectVersionId]?: Version;
   readonly [RelationSourceDXNId]?: DXN;
   readonly [RelationTargetDXNId]?: DXN;
   readonly [RelationSourceId]?: InternalObjectProps;
   readonly [RelationTargetId]?: InternalObjectProps;
-  readonly [ObjectVersionId]?: Version;
 }
 
 /**
@@ -110,7 +112,7 @@ export interface ObjectJSON {
 /**
  * NOTE: Keep as `function` to avoid type inference issues.
  */
-export function assertObjectModelShape(obj: unknown): asserts obj is InternalObjectProps {
+export function assertObjectModel(obj: unknown): asserts obj is InternalObjectProps {
   invariant(typeof obj === 'object' && obj !== null, 'Invalid object model: not an object');
   assumeType<InternalObjectProps>(obj);
   invariant(ObjectId.isValid(obj.id), 'Invalid object model: invalid id');
@@ -119,6 +121,7 @@ export function assertObjectModelShape(obj: unknown): asserts obj is InternalObj
     obj[EntityKindId] === EntityKind.Object || obj[EntityKindId] === EntityKind.Relation,
     'Invalid object model: invalid entity kind',
   );
+
   if (obj[EntityKindId] === EntityKind.Relation) {
     invariant(obj[RelationSourceDXNId] instanceof DXN, 'Invalid object model: invalid relation source');
     invariant(obj[RelationTargetDXNId] instanceof DXN, 'Invalid object model: invalid relation target');

@@ -21,7 +21,7 @@ import {
 } from '@dxos/live-object';
 
 import { getSchemaDXN } from '../annotations';
-import { DeletedId } from '../entities';
+import { ObjectDeletedId } from '../entities';
 import { SchemaValidator } from '../object';
 import { SchemaId, TypeId } from '../types';
 
@@ -70,7 +70,7 @@ export class TypedReactiveHandler implements ReactiveHandler<ProxyTarget> {
       defineHiddenProperty(target, symbolPropertySignal, compositeRuntime.createSignal());
     }
 
-    defineHiddenProperty(target, DeletedId, false);
+    defineHiddenProperty(target, ObjectDeletedId, false);
 
     for (const key of Object.getOwnPropertyNames(target)) {
       const descriptor = Object.getOwnPropertyDescriptor(target, key)!;

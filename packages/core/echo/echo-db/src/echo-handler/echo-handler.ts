@@ -16,7 +16,7 @@ import {
   ATTR_RELATION_TARGET,
   ATTR_TYPE,
   type AnyProperties,
-  DeletedId,
+  ObjectDeletedId,
   EchoSchema,
   EntityKind,
   EntityKindId,
@@ -38,7 +38,7 @@ import {
   SelfDXNId,
   StoredSchema,
   TypeId,
-  assertObjectModelShape,
+  assertObjectModel,
   getEntityKind,
   getRefSavedTarget,
   getTypeAnnotation,
@@ -188,7 +188,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
           return this.getTypeReference(target)?.toDXN();
         case MetaId:
           return this.getMeta(target);
-        case DeletedId:
+        case ObjectDeletedId:
           return this.isDeleted(target);
         case ObjectVersionId:
           return this._getVersion(target);
@@ -202,7 +202,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
         case RelationTargetId:
         case TypeId:
         case MetaId:
-        case DeletedId:
+        case ObjectDeletedId:
           return undefined;
       }
     }
@@ -1076,7 +1076,7 @@ export const initEchoReactiveObjectRootProxy = (core: ObjectCore, database?: Ech
   core.updates.on(() => target[symbolInternals].signal.notifyWrite());
 
   const obj = createProxy<ProxyTarget>(target, EchoReactiveHandler.instance) as any;
-  assertObjectModelShape(obj);
+  assertObjectModel(obj);
   return obj;
 };
 

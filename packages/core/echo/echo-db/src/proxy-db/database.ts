@@ -8,7 +8,7 @@ import { type CleanupFn, Event, type ReadOnlyEvent, synchronized } from '@dxos/a
 import { type Context, LifecycleState, Resource } from '@dxos/context';
 import { inspectObject } from '@dxos/debug';
 import { type Database, Obj, Ref } from '@dxos/echo';
-import { type AnyProperties, assertObjectModelShape, setRefResolver } from '@dxos/echo/internal';
+import { type AnyProperties, assertObjectModel, setRefResolver } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
 import { DXN, type PublicKey, type SpaceId } from '@dxos/keys';
 import { type Live, getProxyTarget, isLiveObject } from '@dxos/live-object';
@@ -281,7 +281,7 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
 
       obj = createObject(obj);
     }
-    assertObjectModelShape(obj);
+    assertObjectModel(obj);
 
     // TODO(burdon): Check if already added to db?
     invariant(isEchoObject(obj));

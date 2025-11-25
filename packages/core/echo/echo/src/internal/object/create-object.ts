@@ -15,7 +15,7 @@ import {
   RelationSourceId,
   RelationTargetDXNId,
   RelationTargetId,
-  assertObjectModelShape,
+  assertObjectModel,
   getObjectDXN,
 } from '../entities';
 import { EntityKind, EntityKindId, type KindId, MetaId, setSchema, setTypename } from '../types';
@@ -90,6 +90,6 @@ export const createObject = <S extends Schema.Schema.AnyNoContext>(
     defineHiddenProperty(obj, RelationTargetDXNId, targetDXN);
   }
 
-  assertObjectModelShape(obj);
+  assertObjectModel(obj);
   return obj;
 };

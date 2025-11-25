@@ -6,13 +6,7 @@ import { DeferredTask } from '@dxos/async';
 import { Event } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { type Database, Obj, type Ref, type Relation } from '@dxos/echo';
-import {
-  type HasId,
-  type ObjectJSON,
-  SelfDXNId,
-  assertObjectModelShape,
-  setRefResolverOnData,
-} from '@dxos/echo/internal';
+import { type HasId, type ObjectJSON, SelfDXNId, assertObjectModel, setRefResolverOnData } from '@dxos/echo/internal';
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { assertArgument, failedInvariant } from '@dxos/invariant';
 import { type DXN, type ObjectId, type SpaceId } from '@dxos/keys';
@@ -157,7 +151,7 @@ export class QueueImpl<T extends Obj.Any | Relation.Any = Obj.Any | Relation.Any
    * Insert into queue with optimistic update.
    */
   async append(items: T[]): Promise<void> {
-    items.forEach((item) => assertObjectModelShape(item));
+    items.forEach((item) => assertObjectModel(item));
 
     for (const item of items) {
       setRefResolverOnData(item, this._refResolver);
