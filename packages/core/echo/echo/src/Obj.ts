@@ -30,6 +30,7 @@ import {
   getSchemaTypename,
   getTypeAnnotation,
   getTypeDXN as getTypeDXN$,
+  isDeleted as isDeleted$,
   isInstanceOf,
   makeObject,
   objectFromJSON,
@@ -309,7 +310,7 @@ export const removeTag = (entity: AnyEntity, tag: string) => {
 
 // TODO(dmaretskyi): Default to `false`.
 export const isDeleted = (entity: AnyEntity): boolean => {
-  const deleted = isDeleted(entity);
+  const deleted = isDeleted$(entity);
   invariant(typeof deleted === 'boolean', 'Invalid object.');
   return deleted;
 };
