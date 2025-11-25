@@ -19,10 +19,10 @@
 - [x] Created Entity.Any (=> AnyEchoObject).
 - [x] TypeFormat => TypeFormat
 - [x] JsonSchemaType defs
-- [ ] Fix commented out tests.
 - [ ] Reconcile types/version with entities/model/version
 - [ ] Fix database.add() input/output types and search for "Obj.Any = db.add" (also QueryResult types).
-- [ ] TODO(burdon): FIX!!!
+- [ ] Resolve "TODO(burdon): FIX!!!"
+- [ ] Pass all tests
 
 2. Clean-up
 
