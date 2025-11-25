@@ -2,20 +2,19 @@
 // Copyright 2025 DXOS.org
 //
 
-import type { Obj, Relation } from '@dxos/echo';
+import { type Entity } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { type DXN } from '@dxos/keys';
 
 import { type Client } from '../client';
 import { type Space } from '../echo';
 
-// TODO(burdon): Type check?
 // TOOD(burdon): Move to client class?
 // TODO(dmaretskyi): Align with `graph.createRefResolver` API.
 /**
  * @deprecated Use `db.makeRef(dxn)` or `graph.makeRef(dxn)` instead.
  */
-export const resolveRef = <T extends Obj.Any | Relation.Any = Obj.Any | Relation.Any>(
+export const resolveRef = <T extends Entity.Any = Entity.Any>(
   client: Client,
   dxn: DXN,
   defaultSpace?: Space,
@@ -27,7 +26,7 @@ export const resolveRef = <T extends Obj.Any | Relation.Any = Obj.Any | Relation
       return undefined;
     }
 
-    return space.db.getObjectById<T>(echoDxn.echoId);
+    return space.db.getObjectById(echoDxn.echoId) as T; // TODO(burdon): Type check?
   }
 
   const queueDxn = dxn?.asQueueDXN();

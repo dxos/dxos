@@ -11,7 +11,7 @@ import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
 
-import { Filter, Obj, Query, type Relation, Type } from '@dxos/echo';
+import { Filter, Obj, Query, Type } from '@dxos/echo';
 import {
   ReferenceAnnotationId,
   RelationSourceDXNId,
@@ -224,7 +224,7 @@ export const sanitizeObjects = async (
 
   const idMap = new Map<string, string>();
   const existingIds = new Set<ObjectId>();
-  const enitties = new Map<ObjectId, Obj.Any | Relation.Any>();
+  const enitties = new Map<ObjectId, E.Any>();
 
   const resolveId = (id: string): DXN | undefined => {
     if (ObjectId.isValid(id)) {

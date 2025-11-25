@@ -157,7 +157,7 @@ export class AiContextBinder extends Resource {
     ]);
   }
 
-  private _reduce(items: (Obj.Any | Relation.Any)[]): Bindings {
+  private _reduce(items: (ObEj.Any | Relation.Any)[]): Bindings {
     return Function.pipe(
       items,
       Array.filter(Obj.instanceOf(ContextBinding)),

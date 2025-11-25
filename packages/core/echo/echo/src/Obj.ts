@@ -178,7 +178,6 @@ export const clone = <T extends Any>(obj: T, opts?: CloneOptions): T => {
 //
 
 type AnyEntity = Any | Relation.Any;
-type AnyEntityType = Type.Obj.Any | Type.Relation.Any;
 
 //
 // Type
@@ -202,9 +201,9 @@ export type ID = ObjectId;
  * ```
  */
 export const instanceOf: {
-  <S extends AnyEntityType>(schema: S): (value: unknown) => value is Schema.Schema.Type<S>;
-  <S extends AnyEntityType>(schema: S, value: unknown): value is Schema.Schema.Type<S>;
-} = ((...args: [schema: AnyEntityType, value: unknown] | [schema: AnyEntityType]) => {
+  <S extends Type.Entity.Any>(schema: S): (value: unknown) => value is Schema.Schema.Type<S>;
+  <S extends Type.Entity.Any>(schema: S, value: unknown): value is Schema.Schema.Type<S>;
+} = ((...args: [schema: Type.Entity.Any, value: unknown] | [schema: Type.Entity.Any]) => {
   if (args.length === 1) {
     return (entity: unknown) => isInstanceOf(args[0], entity);
   }

@@ -4,7 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { type Database, type Obj, type Relation } from '@dxos/echo';
+import { type Database, type Entity } from '@dxos/echo';
 import { EntityKind, type TypeAnnotation, TypeAnnotationId } from '@dxos/echo/internal';
 import { type DXN, type ObjectId } from '@dxos/keys';
 
@@ -13,7 +13,7 @@ import { type DXN, type ObjectId } from '@dxos/keys';
 /**
  * Client-side view onto an EDGE queue.
  */
-export interface Queue<T extends Obj.Any | Relation.Any = Obj.Any | Relation.Any> extends Database.Queryable {
+export interface Queue<T extends Entity.Any = Entity.Any> extends Database.Queryable {
   readonly dxn: DXN;
 
   toJSON(): any;

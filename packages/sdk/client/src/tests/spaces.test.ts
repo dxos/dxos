@@ -6,7 +6,7 @@ import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { Trigger, asyncTimeout, latch, sleep } from '@dxos/async';
 import { type Space } from '@dxos/client-protocol';
-import { TYPE_PROPERTIES } from '@dxos/client-protocol';
+import { SpaceProperties } from '@dxos/client-protocol';
 import { performInvitation } from '@dxos/client-services/testing';
 import { Context } from '@dxos/context';
 import { Filter, Obj, Ref, Type } from '@dxos/echo';
@@ -435,7 +435,8 @@ describe('Spaces', () => {
     spaceA.db.query(Filter.everything()).subscribe(
       ({ objects }) => {
         expect(objects).to.have.length(2);
-        expect(objects.some((obj) => getObjectCore(obj).getType()?.objectId === TYPE_PROPERTIES)).to.be.true;
+        expect(objects.some((obj) => getObjectCore(obj).getType()?.objectId === Type.getTypename(SpaceProperties))).to
+          .be.true;
         expect(objects.some((obj) => obj === objA)).to.be.true;
         inc();
       },
@@ -445,7 +446,8 @@ describe('Spaces', () => {
     spaceB.db.query(Filter.everything()).subscribe(
       ({ objects }) => {
         expect(objects).to.have.length(2);
-        expect(objects.some((obj) => getObjectCore(obj).getType()?.objectId === TYPE_PROPERTIES)).to.be.true;
+        expect(objects.some((obj) => getObjectCore(obj).getType()?.objectId === Type.getTypename(SpaceProperties))).to
+          .be.true;
         expect(objects.some((obj) => obj === objB)).to.be.true;
         inc();
       },

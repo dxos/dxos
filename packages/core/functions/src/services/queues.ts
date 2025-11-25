@@ -6,7 +6,7 @@ import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
-import type { Obj, Relation } from '@dxos/echo';
+import type { Entity } from '@dxos/echo';
 import type { Queue, QueueAPI, QueueFactory } from '@dxos/echo-db';
 import type { DXN, QueueSubspaceTag } from '@dxos/keys';
 
@@ -53,22 +53,19 @@ export class QueueService extends Context.Tag('@dxos/functions/QueueService')<
   /**
    * Gets a queue by its DXN.
    */
-  static getQueue = <T extends Obj.Any | Relation.Any = Obj.Any | Relation.Any>(
-    dxn: DXN,
-  ): Effect.Effect<Queue<T>, never, QueueService> => QueueService.pipe(Effect.map(({ queues }) => queues.get<T>(dxn)));
+  static getQueue = <T extends Entity.Any = Entity.Any>(dxn: DXN): Effect.Effect<Queue<T>, never, QueueService> =>
+    QueueService.pipe(Effect.map(({ queues }) => queues.get<T>(dxn)));
 
   /**
    * Creates a new queue.
    */
-  static createQueue = <T extends Obj.Any | Relation.Any = Obj.Any | Relation.Any>(options?: {
+  static createQueue = <T extends Entity.Any = Entity.Any>(options?: {
     subspaceTag?: QueueSubspaceTag;
   }): Effect.Effect<Queue<T>, never, QueueService> =>
     QueueService.pipe(Effect.map(({ queues }) => queues.create<T>(options)));
 
-  static append = <T extends Obj.Any | Relation.Any = Obj.Any | Relation.Any>(
-    queue: Queue<T>,
-    objects: T[],
-  ): Effect.Effect<void> => Effect.promise(() => queue.append(objects));
+  static append = <T extends Entity.Any = Entity.Any>(queue: Queue<T>, objects: T[]): Effect.Effect<void> =>
+    Effect.promise(() => queue.append(objects));
 }
 
 /**

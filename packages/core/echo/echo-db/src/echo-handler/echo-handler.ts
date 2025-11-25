@@ -563,7 +563,6 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
 
   arrayUnshift(target: Live<ProxyTarget>, path: KeyPath, ...items: any[]): number {
     const validatedItems = this._validateForArray(target, path, items, 0);
-
     const fullPath = this._getPropertyMountPath(target, path);
     const encodedItems = this._encodeForArray(target, validatedItems);
 
@@ -573,8 +572,8 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
       invariant(Array.isArray(array));
       newLength = array.unshift(...encodedItems);
     });
-    invariant(newLength !== -1);
 
+    invariant(newLength !== -1);
     return newLength;
   }
 

@@ -10,7 +10,7 @@ import * as View from './View';
 
 export { Collection, Text, View };
 
-export const DataTypes: (Type.Obj.Any | Type.Relation.Any)[] = [
+export const DataTypes: Type.Entity.Any[] = [
   Type.PersistentType,
 
   // System

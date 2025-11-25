@@ -20,7 +20,6 @@ import { defaultMap } from '@dxos/util';
 import type { SaveStateChangedEvent } from '../automerge';
 import { CoreDatabase, type FlushOptions, type LoadObjectOptions, type ObjectCore } from '../core-db';
 import {
-  type AnyLiveObject,
   EchoReactiveHandler,
   type ProxyTarget,
   createObject,
@@ -48,7 +47,7 @@ export interface EchoDatabase extends Database.Database {
   /**
    * @deprecated Use `ref` instead.
    */
-  getObjectById<T extends AnyProperties = any>(id: string, opts?: Database.GetObjectByIdOptions): Live<T> | undefined;
+  getObjectById(id: string, opts?: Database.GetObjectByIdOptions): Obj.Any | undefined;
 
   /**
    * Wait for all pending changes to be saved to disk.
@@ -137,7 +136,7 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
    * Mapping `object core` -> `root proxy` (User facing proxies).
    * @internal
    */
-  readonly _rootProxies = new Map<ObjectCore, AnyLiveObject<any>>();
+  readonly _rootProxies = new Map<ObjectCore, Obj.Any>();
 
   readonly saveStateChanged: ReadOnlyEvent<SaveStateChangedEvent>;
 
@@ -221,15 +220,13 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
     }
   }
 
-  getObjectById(id: string, { deleted = false } = {}): AnyLiveObject<any> | undefined {
+  getObjectById(id: string, { deleted = false } = {}): Obj.Any | undefined {
     const core = this._coreDatabase.getObjectCoreById(id);
     if (!core || (core.isDeleted() && !deleted)) {
       return undefined;
     }
 
-    const object = defaultMap(this._rootProxies, core, () => initEchoReactiveObjectRootProxy(core, this));
-    invariant(isLiveObject(object));
-    return object;
+    return defaultMap(this._rootProxies, core, () => initEchoReactiveObjectRootProxy(core, this));
   }
 
   makeRef<T extends AnyProperties = any>(dxn: DXN): Ref.Ref<T> {
@@ -340,10 +337,7 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
   /**
    * @internal
    */
-  async _loadObjectById<T extends AnyProperties>(
-    objectId: string,
-    options: LoadObjectOptions = {},
-  ): Promise<AnyLiveObject<T> | undefined> {
+  async _loadObjectById(objectId: string, options: LoadObjectOptions = {}): Promise<Obj.Any | undefined> {
     const core = await this._coreDatabase.loadObjectCoreById(objectId, options);
     if (!core || core?.isDeleted()) {
       return undefined;

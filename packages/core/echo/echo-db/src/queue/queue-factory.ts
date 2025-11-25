@@ -3,7 +3,7 @@
 //
 
 import { Resource } from '@dxos/context';
-import { type Obj, type Relation } from '@dxos/echo';
+import { type Entity } from '@dxos/echo';
 import { assertArgument, assertState } from '@dxos/invariant';
 import { DXN, ObjectId, type QueueSubspaceTag, QueueSubspaceTags, type SpaceId } from '@dxos/keys';
 import { type QueueService } from '@dxos/protocols';
@@ -14,14 +14,12 @@ import { QueueImpl } from './queue';
 import { type Queue } from './types';
 
 export interface QueueAPI {
-  get<T extends Obj.Any | Relation.Any = Obj.Any | Relation.Any>(dxn: DXN): Queue<T>;
-  create<T extends Obj.Any | Relation.Any = Obj.Any | Relation.Any>(options?: {
-    subspaceTag?: QueueSubspaceTag;
-  }): Queue<T>;
+  get<T extends Entity.Any = Entity.Any>(dxn: DXN): Queue<T>;
+  create<T extends Entity.Any = Entity.Any>(options?: { subspaceTag?: QueueSubspaceTag }): Queue<T>;
 }
 
 export class QueueFactory extends Resource implements QueueAPI {
-  private readonly _queues = new Map<DXN.String, Queue<Obj.Any | Relation.Any>>();
+  private readonly _queues = new Map<DXN.String, Queue<Entity.Any>>();
   private _service?: QueueService = undefined;
 
   constructor(
@@ -35,7 +33,7 @@ export class QueueFactory extends Resource implements QueueAPI {
     this._service = service;
   }
 
-  get<T extends Obj.Any | Relation.Any>(dxn: DXN): Queue<T> {
+  get<T extends Entity.Any>(dxn: DXN): Queue<T> {
     assertArgument(dxn instanceof DXN, 'dxn', 'dxn must be a DXN');
     assertState(this._service, 'Service not set');
 
@@ -54,7 +52,7 @@ export class QueueFactory extends Resource implements QueueAPI {
     return newQueue as Queue<T>;
   }
 
-  create<T extends Obj.Any | Relation.Any>({
+  create<T extends Entity.Any>({
     subspaceTag = QueueSubspaceTags.DATA,
   }: { subspaceTag?: QueueSubspaceTag } = {}): Queue<T> {
     const dxn = DXN.fromQueue(subspaceTag, this._spaceId, ObjectId.random());

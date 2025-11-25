@@ -177,6 +177,7 @@ export const mountDevtoolsHooks = ({ client, host }: MountOptions) => {
   };
 
   if (client) {
+    hook.halo = client.halo;
     hook.spaces = createAccessor({
       getAll: () => client.spaces.get(),
       getByKey: (key) => client.spaces.get().find((space) => space.key.equals(key)),
@@ -186,12 +187,13 @@ export const mountDevtoolsHooks = ({ client, host }: MountOptions) => {
             .get()
             .flatMap((space) => [
               [space.id, space],
-              ...(space.state.get() === SpaceState.SPACE_READY ? ([[space.properties.name, space]] as const) : []),
+              ...(space.state.get() === SpaceState.SPACE_READY
+                ? ([[space.properties.name ?? '', space]] as const)
+                : []),
               [space.key.toHex(), space],
             ]),
         ),
     });
-    hook.halo = client.halo;
 
     hook.get = async (dxn) => {
       if (typeof dxn === 'string') {

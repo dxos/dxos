@@ -10,5 +10,4 @@ import type * as Relation from './Relation';
  * However, we generally refer to Obj and Relation instances as "objects",
  * and many API methods accept both Obj.Any and Relation.Any (i.e., Entity.Any) instances.
  */
-// TODO(burdon): Replace Obj.Any | Relation.Any with Entity.Any throughout.
 export type Any = Obj.Any | Relation.Any;

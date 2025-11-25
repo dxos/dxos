@@ -13,8 +13,8 @@ import {
   DEFAULT_CLIENT_CHANNEL,
   type Echo,
   type Halo,
-  PropertiesType,
   STATUS_TIMEOUT,
+  SpaceProperties,
   clientServiceBundle,
 } from '@dxos/client-protocol';
 import { type Stream } from '@dxos/codec-protobuf/stream';
@@ -140,7 +140,7 @@ export class Client {
       log.config({ filter, prefix });
     }
 
-    this._echoClient.graph.schemaRegistry.addSchema([PropertiesType]);
+    this._echoClient.graph.schemaRegistry.addSchema([SpaceProperties]);
     if (options.types) {
       this.addTypes(options.types);
     }

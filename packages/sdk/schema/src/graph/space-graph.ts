@@ -6,7 +6,7 @@ import { batch, effect } from '@preact/signals-core';
 
 import { type CleanupFn } from '@dxos/async';
 import { type Space } from '@dxos/client-protocol';
-import { Filter, Obj, Query, Ref, Relation, Type } from '@dxos/echo';
+import { type Entity, Filter, Obj, Query, Ref, Relation, Type } from '@dxos/echo';
 import { type Queue } from '@dxos/echo-db';
 import { AbstractGraphBuilder, type Graph, type GraphEdge, type GraphNode, ReactiveGraphModel } from '@dxos/graph';
 import { invariant } from '@dxos/invariant';
@@ -50,8 +50,8 @@ export class SpaceGraphModel extends ReactiveGraphModel<SpaceGraphNode, SpaceGra
   private _space?: Space;
   private _queue?: Queue;
   private _schema?: Type.Schema[];
-  private _objects?: (Obj.Any | Relation.Any)[];
-  private _queueItems?: (Obj.Any | Relation.Any)[];
+  private _objects?: Entity.Any[];
+  private _queueItems?: Entity.Any[];
   private _schemaSubscription?: CleanupFn;
   private _objectSubscription?: CleanupFn;
   private _queueSubscription?: CleanupFn;
@@ -65,7 +65,7 @@ export class SpaceGraphModel extends ReactiveGraphModel<SpaceGraphNode, SpaceGra
     return new SpaceGraphModel(graph);
   }
 
-  get objects(): (Obj.Any | Relation.Any)[] {
+  get objects(): Entity.Any[] {
     return this._objects ?? [];
   }
 

@@ -7,7 +7,7 @@ import { describe, test } from 'vitest';
 
 import { raise } from '@dxos/debug';
 
-import { Obj, Ref, Relation, Type } from '../index';
+import { type Entity, Obj, Ref, Relation, Type } from '../index';
 
 import { TestSchema } from './test-schema';
 
@@ -79,7 +79,7 @@ describe('Experimental API review', () => {
 
   // TODO(burdon): Implement test.
   test.skip('type narrowing', () => {
-    const any: Obj.Any | Relation.Any = null as any;
+    const any: Entity.Any = null as any;
 
     {
       if (Obj.isObject(any)) {

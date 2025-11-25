@@ -183,6 +183,17 @@ export namespace Relation {
 }
 
 //
+// Entity
+//
+
+export namespace Entity {
+  /**
+   * Type.Obj.Any | Type.Relation.Any.
+   */
+  export type Any = Obj.Any | Relation.Any;
+}
+
+//
 // Ref
 // TODO(burdon): Reconcile Type.Ref with Ref.Ref.
 //
@@ -216,7 +227,7 @@ export namespace Ref {
  * @example "dxn:example.com/type/Person:0.1.0"
  * @example "dxn:echo:SSSSSSSSSS:XXXXXXXXXXXXX"
  */
-export const getDXN = (schema: Obj.Any | Relation.Any): DXN | undefined => {
+export const getDXN = (schema: Entity.Any): DXN | undefined => {
   return getSchemaDXN(schema);
 };
 
@@ -224,7 +235,7 @@ export const getDXN = (schema: Obj.Any | Relation.Any): DXN | undefined => {
  * @param schema - Schema to get the typename from.
  * @returns The typename of the schema. Example: `example.com/type/Person`.
  */
-export const getTypename = (schema: Obj.Any | Relation.Any): string => {
+export const getTypename = (schema: Entity.Any): string => {
   const typename = getSchemaTypename(schema);
   invariant(typeof typename === 'string' && !typename.startsWith('dxn:'), 'Invalid typename');
   return typename;
@@ -234,7 +245,7 @@ export const getTypename = (schema: Obj.Any | Relation.Any): string => {
  * Gets the version of the schema.
  * @example 0.1.0
  */
-export const getVersion = (schema: Obj.Any | Relation.Any): string => {
+export const getVersion = (schema: Entity.Any): string => {
   const version = getSchemaVersion(schema);
   invariant(typeof version === 'string' && version.match(/^\d+\.\d+\.\d+$/), 'Invalid version');
   return version;
@@ -253,6 +264,6 @@ export type Meta = TypeAnnotation;
 /**
  * Gets the meta data of the schema.
  */
-export const getMeta = (schema: Obj.Any | Relation.Any): Meta | undefined => {
+export const getMeta = (schema: Entity.Any): Meta | undefined => {
   return getTypeAnnotation(schema);
 };

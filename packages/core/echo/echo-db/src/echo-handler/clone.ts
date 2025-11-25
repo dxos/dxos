@@ -86,6 +86,7 @@ const cloneInner = <T extends Obj.Any>(obj: T, id: string): T => {
       doc[key] = automergeSnapshot[key];
     }
   });
+
   return proxy as any;
 };
 
@@ -94,5 +95,6 @@ const getObjectDoc = (core: ObjectCore): any => {
   for (const key of core.mountPath) {
     value = (value as any)?.[key];
   }
+
   return value;
 };

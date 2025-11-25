@@ -5,7 +5,7 @@
 import { Event } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { StackTrace } from '@dxos/debug';
-import { type Database, type Entity, Filter, type Obj, Query, Ref, type Relation } from '@dxos/echo';
+import { type Database, type Entity, Filter, type Obj, Query, Ref } from '@dxos/echo';
 import {
   type AnyProperties,
   type BaseSchema,
@@ -317,10 +317,7 @@ export class Hypergraph {
     }
   }
 
-  private async _resolveAsync(
-    dxn: DXN,
-    context: RefResolutionContext,
-  ): Promise<Obj.Any | Relation.Any | Queue | undefined> {
+  private async _resolveAsync(dxn: DXN, context: RefResolutionContext): Promise<Entity.Any | Queue | undefined> {
     const beginTime = TRACE_REF_RESOLUTION ? performance.now() : 0;
     let status: string = '';
     try {
@@ -383,10 +380,7 @@ export class Hypergraph {
     }
   }
 
-  private async _resolveDatabaseObjectAsync(
-    spaceId: SpaceId,
-    objectId: ObjectId,
-  ): Promise<Obj.Any | Relation.Any | undefined> {
+  private async _resolveDatabaseObjectAsync(spaceId: SpaceId, objectId: ObjectId): Promise<Entity.Any | undefined> {
     const db = this._databases.get(spaceId);
     if (!db) {
       return undefined;
@@ -410,7 +404,7 @@ export class Hypergraph {
     subspaceTag: QueueSubspaceTag,
     queueId: ObjectId,
     objectId: ObjectId,
-  ): Promise<Obj.Any | Relation.Any | undefined> {
+  ): Promise<Entity.Any | undefined> {
     const queueFactory = this._queueFactories.get(spaceId);
     if (!queueFactory) {
       return undefined;

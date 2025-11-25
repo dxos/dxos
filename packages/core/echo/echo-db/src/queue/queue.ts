@@ -5,7 +5,7 @@
 import { DeferredTask } from '@dxos/async';
 import { Event } from '@dxos/async';
 import { Context } from '@dxos/context';
-import { type Database, Obj, type Ref, type Relation } from '@dxos/echo';
+import { type Database, type Entity, Obj, type Ref } from '@dxos/echo';
 import { type HasId, type ObjectJSON, SelfDXNId, assertObjectModel, setRefResolverOnData } from '@dxos/echo/internal';
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { assertArgument, failedInvariant } from '@dxos/invariant';
@@ -30,7 +30,7 @@ const POLLING_INTERVAL = 1_000;
 /**
  * Client-side view onto an EDGE queue.
  */
-export class QueueImpl<T extends Obj.Any | Relation.Any = Obj.Any | Relation.Any> implements Queue<T> {
+export class QueueImpl<T extends Entity.Any = Entity.Any> implements Queue<T> {
   private readonly _signal = compositeRuntime.createSignal();
 
   public readonly updated = new Event();
@@ -240,7 +240,7 @@ export class QueueImpl<T extends Obj.Any | Relation.Any = Obj.Any | Relation.Any
     return objects as ObjectJSON[];
   }
 
-  async hydrateObject(obj: ObjectJSON): Promise<Obj.Any | Relation.Any> {
+  async hydrateObject(obj: ObjectJSON): Promise<Entity.Any> {
     const decoded = await Obj.fromJSON(obj, {
       refResolver: this._refResolver,
       dxn: this._dxn.extend([(obj as any).id]),
@@ -307,7 +307,7 @@ export class QueueImpl<T extends Obj.Any | Relation.Any = Obj.Any | Relation.Any
   }
 }
 
-const objectSetChanged = (before: (Obj.Any | Relation.Any)[], after: (Obj.Any | Relation.Any)[]) => {
+const objectSetChanged = (before: Entity.Any[], after: Entity.Any[]) => {
   if (before.length !== after.length) {
     return true;
   }

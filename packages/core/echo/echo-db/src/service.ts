@@ -11,12 +11,12 @@ import type * as Types from 'effect/Types';
 
 import {
   type Database,
+  type Entity,
   type Filter,
   Obj,
   ObjectNotFoundError,
   type Query,
   type Ref,
-  type Relation,
   type Type,
 } from '@dxos/echo';
 import { promiseWithCauseCapture } from '@dxos/effect';
@@ -61,13 +61,13 @@ export class DatabaseService extends Context.Tag('@dxos/functions/DatabaseServic
    */
   static resolve: {
     // No type check.
-    (dxn: DXN): Effect.Effect<Obj.Any | Relation.Any, never, DatabaseService>;
+    (dxn: DXN): Effect.Effect<Entity.Any, never, DatabaseService>;
     // Check matches schema.
-    <S extends Type.Obj.Any | Type.Relation.Any>(
+    <S extends Type.Entity.Any>(
       dxn: DXN,
       schema: S,
     ): Effect.Effect<Schema.Schema.Type<S>, ObjectNotFoundError, DatabaseService>;
-  } = (<S extends Type.Obj.Any | Type.Relation.Any>(
+  } = (<S extends Type.Entity.Any>(
     dxn: DXN,
     schema?: S,
   ): Effect.Effect<Schema.Schema.Type<S>, ObjectNotFoundError, DatabaseService> =>
@@ -118,13 +118,13 @@ export class DatabaseService extends Context.Tag('@dxos/functions/DatabaseServic
   /**
    * @link EchoDatabase.add
    */
-  static add = <T extends Obj.Any | Relation.Any>(obj: T): Effect.Effect<T, never, DatabaseService> =>
+  static add = <T extends Entity.Any>(obj: T): Effect.Effect<T, never, DatabaseService> =>
     DatabaseService.pipe(Effect.map(({ db }) => db.add(obj)));
 
   /**
    * @link EchoDatabase.remove
    */
-  static remove = <T extends Obj.Any | Relation.Any>(obj: T): Effect.Effect<void, never, DatabaseService> =>
+  static remove = <T extends Entity.Any>(obj: T): Effect.Effect<void, never, DatabaseService> =>
     DatabaseService.pipe(Effect.map(({ db }) => db.remove(obj)));
 
   /**
@@ -136,10 +136,8 @@ export class DatabaseService extends Context.Tag('@dxos/functions/DatabaseServic
   /**
    * @link EchoDatabase.getObjectById
    */
-  static getObjectById = <T extends Obj.Any | Relation.Any>(
-    id: string,
-  ): Effect.Effect<Live<T> | undefined, never, DatabaseService> => {
-    return DatabaseService.pipe(Effect.map(({ db }) => db.getObjectById(id)));
+  static getObjectById = <T extends Entity.Any>(id: string): Effect.Effect<T | undefined, never, DatabaseService> => {
+    return DatabaseService.pipe(Effect.map(({ db }) => db.getObjectById(id) as T | undefined));
   };
 
   // TODO(dmaretskyi): Change API to `yield* DatabaseService.query(...).first` and `yield* DatabaseService.query(...).objects`.
