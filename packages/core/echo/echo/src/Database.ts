@@ -8,7 +8,7 @@ import { type DXN, type PublicKey, type SpaceId } from '@dxos/keys';
 import { type Live } from '@dxos/live-object';
 import { type QueryOptions as QueryOptionsProto } from '@dxos/protocols/proto/dxos/echo/filter';
 
-import type { AnyProperties, HasId } from './internal';
+import type { AnyProperties } from './internal';
 import type * as Obj from './Obj';
 import type { Filter, Query } from './query';
 import type * as Ref from './Ref';
@@ -184,7 +184,7 @@ export interface Database extends Queryable {
    * Adds object to the database.
    */
   // TODO(burdon): Narrow to Entity.Any.
-  add<T extends AnyProperties>(obj: Live<T>, opts?: AddOptions): Obj.Obj<T & HasId>;
+  add<T extends AnyProperties>(obj: Live<T>, opts?: AddOptions): Obj.Obj<T>;
 
   /**
    * Removes object from the database.

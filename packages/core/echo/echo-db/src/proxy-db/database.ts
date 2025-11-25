@@ -8,7 +8,7 @@ import { type CleanupFn, Event, type ReadOnlyEvent, synchronized } from '@dxos/a
 import { type Context, LifecycleState, Resource } from '@dxos/context';
 import { inspectObject } from '@dxos/debug';
 import { type Database, Obj, Ref } from '@dxos/echo';
-import { type AnyProperties, type HasId, assertObjectModelShape, setRefResolver } from '@dxos/echo/internal';
+import { type AnyProperties, assertObjectModelShape, setRefResolver } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
 import { DXN, type PublicKey, type SpaceId } from '@dxos/keys';
 import { type Live, getProxyTarget, isLiveObject } from '@dxos/live-object';
@@ -270,7 +270,7 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
   /**
    * Add reactive object.
    */
-  add<T extends AnyProperties>(obj: Live<T>, opts?: Database.AddOptions): Obj.Obj<T & HasId> {
+  add<T extends AnyProperties>(obj: Live<T>, opts?: Database.AddOptions): Obj.Obj<T> {
     if (!isEchoObject(obj)) {
       const schema = Obj.getSchema(obj);
       if (schema != null) {
