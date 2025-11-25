@@ -44,7 +44,7 @@ export const mapMessage = Effect.fn(function* (message: GoogleMail.Message) {
   return Obj.make(
     Message.Message,
     {
-      id: Type.ObjectId.random(),
+      id: Obj.ID.random(),
       created,
       sender,
       blocks: [

@@ -9,8 +9,11 @@ import { Obj, Type } from '@dxos/echo';
 import { Organization } from './Organization';
 import { Person } from './Person';
 
+/**
+ * Employer relation.
+ */
 export const Employer = Schema.Struct({
-  id: Type.ObjectId,
+  id: Obj.ID, // TODO(burdon): Remove.
   role: Schema.optional(Schema.String),
   active: Schema.optional(Schema.Boolean),
   startDate: Schema.optional(Schema.String),
@@ -31,3 +34,6 @@ export const Employer = Schema.Struct({
 export interface Employer extends Schema.Schema.Type<typeof Employer> {}
 
 export const make = (props: Obj.MakeProps<typeof Employer>) => Obj.make(Employer, props);
+
+const xxx: Type.Obj.Any = Employer;
+console.log(xxx);

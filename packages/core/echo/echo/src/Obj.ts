@@ -79,6 +79,7 @@ type Props<T = any> = {
   [MetaId]?: ObjectMeta;
 } & Type.Properties<T>;
 
+// TODO(burdon): Should we allow the caller to set the id?
 export type MakeProps<T extends Type.Obj.Any> = {
   id?: ObjectId;
   [MetaId]?: ObjectMeta;

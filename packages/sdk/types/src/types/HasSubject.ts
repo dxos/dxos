@@ -7,7 +7,7 @@ import * as Schema from 'effect/Schema';
 import { Obj, Type } from '@dxos/echo';
 
 export const HasSubject = Schema.Struct({
-  id: Type.ObjectId,
+  id: Obj.ID,
   completedAt: Type.Format.DateTime,
 }).pipe(
   Type.Relation({

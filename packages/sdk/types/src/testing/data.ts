@@ -56,12 +56,10 @@ const createContact = ({
 };
 
 const createTranscriptMessage = (sender: Person.Person, blocks: string[]) => {
-  return Obj.make(Message.Message, {
+  return Message.make({
     sender: {
       name: sender.fullName,
     },
-    // don't care about timestamps
-    created: getDate(0),
     blocks: blocks.map(
       (block) =>
         ({
@@ -264,7 +262,7 @@ export const createTestData = () => {
 
   const emails: Message.Message[] = [
     // Recent emails.
-    Obj.make(Message.Message, {
+    Message.make(Message, {
       blocks: [
         {
           _tag: 'text',
@@ -272,7 +270,6 @@ export const createTestData = () => {
         },
       ],
       sender: { contact: Ref.make(contacts.david) },
-      created: getDate(0),
       properties: { subject: 'Q3 Financial Review' },
     }),
 

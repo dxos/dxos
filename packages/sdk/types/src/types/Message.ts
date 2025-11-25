@@ -5,22 +5,23 @@
 import * as Schema from 'effect/Schema';
 
 import { Obj, Type } from '@dxos/echo';
-import { GeneratorAnnotation, ObjectId, SystemTypeAnnotation } from '@dxos/echo/internal';
+import { GeneratorAnnotation, SystemTypeAnnotation } from '@dxos/echo/internal';
 import { defineObjectMigration } from '@dxos/echo-db';
 
 import * as Actor from './Actor';
 import * as ContentBlock from './ContentBlock';
 
 /**
- * Message.
+ * Message object.
  */
 // TODO(wittjosiah): Add read status:
 //  - Read receipts need to be per space member.
 //  - Read receipts don't need to be added to schema until they being implemented.
 export const Message = Schema.Struct({
-  id: ObjectId,
+  id: Obj.ID, // TODO(burdon): Remove.
   // TODO(dmaretskyi): Consider adding a channelId too.
-  parentMessage: Schema.optional(ObjectId),
+  parentMessage: Schema.optional(Obj.ID),
+  // TODO(burdon): Rename sent (don't clash with metadata for created).
   created: Schema.String.pipe(
     Schema.annotations({ description: 'ISO date string when the message was sent.' }),
     GeneratorAnnotation.set('date.iso8601'),
@@ -47,11 +48,23 @@ export const Message = Schema.Struct({
 
 export interface Message extends Schema.Schema.Type<typeof Message> {}
 
-export const make = (sender: Actor.Actor | Actor.Role, blocks: ContentBlock.Any[] = []) => {
+// TODO(burdon): REMOVE.
+const xxx: Type.Obj.Any = Message;
+console.log(xxx);
+
+// TODO(burdon): Create type from MakeProps.
+export const make = ({
+  sender,
+  blocks = [],
+  properties,
+}: Omit<Obj.MakeProps<typeof Message>, 'sender'> & {
+  sender: Actor.Actor | Actor.Role;
+}) => {
   return Obj.make(Message, {
     created: new Date().toISOString(),
     sender: typeof sender === 'string' ? { role: sender } : sender,
     blocks,
+    properties,
   });
 };
 
