@@ -150,8 +150,8 @@ describe('queues', () => {
     }
 
     {
-      const [jane, relation] = await queue.queryObjects();
-      expect((jane as TestSchema.Person).name).toEqual('alice');
+      const [org, relation] = await queue.queryObjects();
+      expect((org as TestSchema.Organization).name).toEqual('DXOS');
       expect(Relation.getSource(relation as TestSchema.EmployedBy).name).toEqual('alice');
       expect(Relation.getTarget(relation as TestSchema.EmployedBy).name).toEqual('DXOS');
     }

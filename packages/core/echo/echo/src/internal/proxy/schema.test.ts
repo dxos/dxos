@@ -96,7 +96,7 @@ describe('dynamic schema', () => {
   test('updates typename', async ({ expect }) => {
     // Create schema with some fields and annotations.
     const registered = createEchoSchema(EmptySchemaType);
-    const originalVersion = registered.storedSchema.version;
+    const originalVersion = registered.persistentSchema.version;
     registered.addFields({
       name: Schema.String.pipe(PropertyMeta('test', { maxLength: 10 })),
       age: Schema.Number,
@@ -112,7 +112,7 @@ describe('dynamic schema', () => {
     expect(registered.jsonSchema.typename).toBe(newTypename1);
 
     // Version preservation check.
-    expect(registered.storedSchema.version).toBe(originalVersion);
+    expect(registered.persistentSchema.version).toBe(originalVersion);
 
     // Field preservation check.
     const properties = registered.getProperties();

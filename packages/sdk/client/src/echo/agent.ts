@@ -5,8 +5,8 @@
 import { Event } from '@dxos/async';
 import { type Space } from '@dxos/client-protocol';
 import { todo } from '@dxos/debug';
-import { type AnyLiveObject, type QuerySource, type QuerySourceProvider } from '@dxos/echo-db';
 import { type Database } from '@dxos/echo';
+import { type AnyLiveObject, type QuerySource, type QuerySourceProvider } from '@dxos/echo-db';
 import { type QueryAST } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
 import { PublicKey, type SpaceId } from '@dxos/keys';

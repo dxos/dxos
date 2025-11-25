@@ -7,7 +7,7 @@ import * as Schema from 'effect/Schema';
 import { type Space } from '@dxos/client-protocol';
 import { Obj } from '@dxos/echo';
 import { type AnyLiveObject, type SpaceSyncState, getDatabaseFromObject } from '@dxos/echo-db';
-import { type SpaceId, type ObjectId } from '@dxos/keys';
+import { type ObjectId, type SpaceId } from '@dxos/keys';
 import { type Live, isLiveObject } from '@dxos/live-object';
 
 import { SpaceProxy } from './space-proxy';

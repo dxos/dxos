@@ -6,9 +6,8 @@ import * as Schema from 'effect/Schema';
 
 import { Obj, Type } from '@dxos/echo';
 import {
-  FormatAnnotation,
   Format,
-  
+  FormatAnnotation,
   GeneratorAnnotation,
   LabelAnnotation,
   PropertyMetaAnnotationId,

@@ -6,13 +6,7 @@ import { computed, untracked } from '@preact/signals-core';
 import * as Schema from 'effect/Schema';
 
 import { Format } from '@dxos/echo';
-import {
-  type JsonProp,
-  type JsonSchemaType,
-  TypeEnum,
-  formatToType,
-  typeToFormat,
-} from '@dxos/echo/internal';
+import { type JsonProp, type JsonSchemaType, TypeEnum, formatToType, typeToFormat } from '@dxos/echo/internal';
 import { createSchemaReference, getSchemaReference } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
 import { type Live, getSnapshot } from '@dxos/live-object';

@@ -37,10 +37,6 @@ export const clone = <T extends Obj.Any>(obj: T, { retainId = true, additional =
     'retainId must be true when additional is not empty',
   );
 
-  const x: Obj.Any = null as any;
-  x.id;
-  console.log(obj.id);
-
   const clone = cloneInner(obj, retainId ? obj.id : ObjectId.random());
   const clones: T[] = [clone];
   for (const innerObj of additional) {

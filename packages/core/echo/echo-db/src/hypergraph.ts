@@ -5,7 +5,7 @@
 import { Event } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { StackTrace } from '@dxos/debug';
-import { type Database, type Entity, Filter, type Obj, Query, Ref, type Relation } from '@dxos/echo';
+import { type Database, type Entity, Filter, type Obj, Query, type QueryAST, Ref, type Relation } from '@dxos/echo';
 import {
   type AnyProperties,
   type BaseSchema,
@@ -165,7 +165,7 @@ export class Hypergraph {
     this.prototype.query = this.prototype._query;
   }
 
-  private _query(query: Query.Any | Filter.Any, options?: Database.QueryOptions) {
+  private _query(query: Query.Any | Filter.Any, options?: Database.QueryOptions & QueryAST.QueryOptions) {
     query = Filter.is(query) ? Query.select(query) : query;
     return new QueryResultImpl(this._createLiveObjectQueryContext(), normalizeQuery(query, options));
   }

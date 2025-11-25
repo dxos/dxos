@@ -204,34 +204,18 @@ describe('Query', () => {
         expect(objects).to.have.length(7);
       }
 
-      // TODO(burdon): Fix.
       {
-        const { objects } = await db
-          .query(
-            Query.select(Filter.everything()),
-            // , { deleted: QueryOptions.ShowDeletedOption.HIDE_DELETED }
-          )
-          .run();
+        const { objects } = await db.query(Query.select(Filter.everything()), { deleted: 'exclude' }).run();
         expect(objects).to.have.length(7);
       }
 
       {
-        const { objects } = await db
-          .query(
-            Query.select(Filter.everything()),
-            // , { deleted: QueryOptions.ShowDeletedOption.SHOW_DELETED }
-          )
-          .run();
+        const { objects } = await db.query(Query.select(Filter.everything()), { deleted: 'include' }).run();
         expect(objects).to.have.length(10);
       }
 
       {
-        const { objects } = await db
-          .query(
-            Query.select(Filter.everything()),
-            // , { deleted: QueryOptions.ShowDeletedOption.SHOW_DELETED_ONLY }
-          )
-          .run();
+        const { objects } = await db.query(Query.select(Filter.everything()), { deleted: 'only' }).run();
         expect(objects).to.have.length(3);
       }
     });
