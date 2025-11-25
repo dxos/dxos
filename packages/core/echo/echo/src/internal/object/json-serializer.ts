@@ -42,7 +42,9 @@ import {
 type DeepReplaceRef<T> =
   T extends Ref<any> ? EncodedReference : T extends object ? { [K in keyof T]: DeepReplaceRef<T[K]> } : T;
 
-type SerializedObject<T extends { id: string }> = { [K in keyof T]: DeepReplaceRef<T[K]> } & ObjectJSON;
+type SerializedObject<T extends { id: string }> = {
+  [K in keyof T]: DeepReplaceRef<T[K]>;
+} & ObjectJSON;
 
 /**
  * Converts object to it's JSON representation.
@@ -83,7 +85,6 @@ export const objectFromJSON = async (
   }
 
   invariant(ObjectId.isValid(obj.id), 'Invalid object id');
-
   setTypename(obj, type);
   if (schema) {
     setSchema(obj, schema);
@@ -95,7 +96,6 @@ export const objectFromJSON = async (
     const sourceDxn: DXN = DXN.parse(jsonData[ATTR_RELATION_SOURCE] ?? raise(new TypeError('Missing relation source')));
     const targetDxn: DXN = DXN.parse(jsonData[ATTR_RELATION_TARGET] ?? raise(new TypeError('Missing relation target')));
 
-    // TODO(dmaretskyi): Async!
     const source = (await refResolver?.resolve(sourceDxn)) as AnyEchoObject | undefined;
     const target = (await refResolver?.resolve(targetDxn)) as AnyEchoObject | undefined;
 
@@ -123,11 +123,11 @@ export const objectFromJSON = async (
 
   assertObjectModelShape(obj);
   invariant((obj as any)[ATTR_TYPE] === undefined, 'Invalid object model');
-  invariant((obj as any)[ATTR_SELF_DXN] === undefined, 'Invalid object model');
+  invariant((obj as any)[ATTR_META] === undefined, 'Invalid object model');
   invariant((obj as any)[ATTR_DELETED] === undefined, 'Invalid object model');
+  invariant((obj as any)[ATTR_SELF_DXN] === undefined, 'Invalid object model');
   invariant((obj as any)[ATTR_RELATION_SOURCE] === undefined, 'Invalid object model');
   invariant((obj as any)[ATTR_RELATION_TARGET] === undefined, 'Invalid object model');
-  invariant((obj as any)[ATTR_META] === undefined, 'Invalid object model');
   return obj;
 };
 
@@ -136,30 +136,31 @@ const decodeGeneric = (jsonData: unknown, options: { refResolver?: RefResolver }
     [ATTR_TYPE]: _type,
     [ATTR_META]: _meta,
     [ATTR_DELETED]: _deleted,
+    [ATTR_SELF_DXN]: _selfDxn,
     [ATTR_RELATION_SOURCE]: _relationSource,
     [ATTR_RELATION_TARGET]: _relationTarget,
-    [ATTR_SELF_DXN]: _selfDxn,
     ...props
   } = jsonData as any;
 
-  return deepMapValues(props, (value, recurse) => {
+  return deepMapValues(props, (value, visitor) => {
     if (isEncodedReference(value)) {
       return refFromEncodedReference(value, options.refResolver);
     }
-    return recurse(value);
+
+    return visitor(value);
   });
 };
 
 export const setRefResolverOnData = (obj: AnyEchoObject, refResolver: RefResolver) => {
-  const go = (value: unknown) => {
+  const visitor = (value: unknown) => {
     if (Ref.isRef(value)) {
       setRefResolver(value, refResolver);
     } else {
-      visitValues(value, go);
+      visitValues(value, visitor);
     }
   };
 
-  go(obj);
+  visitor(obj);
 };
 
 export const attachTypedJsonSerializer = (obj: any) => {
@@ -188,6 +189,10 @@ const typedJsonSerializer = function (this: any) {
     result[ATTR_TYPE] = this[TypeId].toString();
   }
 
+  if (this[MetaId]) {
+    result[ATTR_META] = serializeMeta(this[MetaId]);
+  }
+
   if (this[SelfDXNId]) {
     result[ATTR_SELF_DXN] = this[SelfDXNId].toString();
   }
@@ -201,10 +206,6 @@ const typedJsonSerializer = function (this: any) {
     const targetDXN = this[RelationTargetDXNId];
     invariant(targetDXN instanceof DXN);
     result[ATTR_RELATION_TARGET] = targetDXN.toString();
-  }
-
-  if (this[MetaId]) {
-    result[ATTR_META] = serializeMeta(this[MetaId]);
   }
 
   Object.assign(result, serializeData(rest));
