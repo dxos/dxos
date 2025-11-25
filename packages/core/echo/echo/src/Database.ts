@@ -184,12 +184,12 @@ export interface Database extends Queryable {
    * Adds object to the database.
    */
   // TODO(burdon): Narrow to Entity.Any.
-  add<T extends AnyProperties>(obj: Live<T>, opts?: AddOptions): Live<T & HasId>;
+  add<T extends AnyProperties>(obj: Live<T>, opts?: AddOptions): Obj.Obj<T & HasId>;
 
   /**
    * Removes object from the database.
    */
   // TODO(burdon): Narrow to Entity.Any.
-  // TODO(burdon): Return true if removed.
+  // TODO(burdon): Return true if removed (currently throws if not present).
   remove<T extends AnyProperties>(obj: T): void;
 }

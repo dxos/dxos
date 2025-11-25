@@ -270,8 +270,7 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
   /**
    * Add reactive object.
    */
-  // TODO(dmaretskyi): Lock to Obj.Any | Relation.Any.
-  add<T extends AnyProperties>(obj: T, opts?: Database.AddOptions): Live<T & HasId> {
+  add<T extends AnyProperties>(obj: Live<T>, opts?: Database.AddOptions): Obj.Obj<T & HasId> {
     if (!isEchoObject(obj)) {
       const schema = Obj.getSchema(obj);
       if (schema != null) {
@@ -292,8 +291,7 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
     EchoReactiveHandler.instance.setDatabase(target, this);
     EchoReactiveHandler.instance.saveRefs(target);
     this._coreDatabase.addCore(getObjectCore(obj), opts);
-
-    return obj as any;
+    return obj;
   }
 
   /**

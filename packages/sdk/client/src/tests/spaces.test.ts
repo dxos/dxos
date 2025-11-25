@@ -9,8 +9,7 @@ import { type Space } from '@dxos/client-protocol';
 import { TYPE_PROPERTIES } from '@dxos/client-protocol';
 import { performInvitation } from '@dxos/client-services/testing';
 import { Context } from '@dxos/context';
-import { Filter, Obj, Type } from '@dxos/echo';
-import { type Expando, type HasId, Ref } from '@dxos/echo/internal';
+import { Filter, Obj, Ref, Type } from '@dxos/echo';
 import { getObjectCore } from '@dxos/echo-db';
 import { SpaceId } from '@dxos/keys';
 import { type Live } from '@dxos/live-object';
@@ -284,29 +283,26 @@ describe('Spaces', () => {
     await client1.halo.createIdentity({ displayName: 'test-user' });
 
     const space1 = await client1.spaces.create();
-
-    const { id } = space1.db.add(createObject({ data: 'test' }));
+    const obj = space1.db.add(createObject({ data: 'test' }));
     await space1.db.flush();
 
     const space2 = await waitForSpace(client2, space1.key, { ready: true });
-    await waitForObject(space2, { id });
+    await waitForObject(space2, obj);
 
     await space1.close();
     // Since updates are throttled we need to wait for the state to change.
-    await waitForSpaceState(space2, SpaceState.SPACE_INACTIVE, 1000);
+    await waitForSpaceState(space2, SpaceState.SPACE_INACTIVE, 1_000);
 
     await space1.open();
+    await waitForSpaceState(space2, SpaceState.SPACE_READY, 1_000);
+    expect(space2.db.getObjectById(obj.id)).to.exist;
 
-    await waitForSpaceState(space2, SpaceState.SPACE_READY, 1000);
-    expect(space2.db.getObjectById(id)).to.exist;
-
-    space2.db.getObjectById(id)!.data = 'test2';
+    space2.db.getObjectById(obj.id)!.data = 'test2';
     await space2.db.flush();
   });
 
   test('text replicates between clients', async () => {
     const [host, guest] = await createInitializedClients(2);
-
     [host, guest].forEach(registerTypes);
 
     const [hostSpace, guestSpace] = await createSharedSpace(host, guest);
@@ -323,7 +319,6 @@ describe('Spaces', () => {
 
   test('collection-sync replicates missing documents', async () => {
     const [host, guest] = await createInitializedClients(2, { storage: true });
-
     [host, guest].forEach(registerTypes);
 
     const hostSpace = await host.spaces.create();
@@ -344,7 +339,6 @@ describe('Spaces', () => {
 
   test('peer gains access to new documents', async () => {
     const [host, guest] = await createInitializedClients(2);
-
     [host, guest].forEach(registerTypes);
 
     // Create a shared space to have an active connection.
@@ -364,7 +358,6 @@ describe('Spaces', () => {
 
   test('peers do not gain access to documents from another space', async () => {
     const [alice, bob] = await createInitializedClients(3);
-
     [alice, bob].forEach(registerTypes);
 
     const bobPersonalDoc = bob.spaces.get()[0].db.add(createDocument());
@@ -379,7 +372,6 @@ describe('Spaces', () => {
 
   test('peers do not gain transitive access to documents from another space', async () => {
     const [alice, bob, eve] = await createInitializedClients(3);
-
     [alice, bob, eve].forEach(registerTypes);
 
     // Eve should not gain transitive access to the document created by bob in space A
@@ -397,7 +389,6 @@ describe('Spaces', () => {
 
   test('share two spaces between clients', async () => {
     const [host, guest] = await createInitializedClients(2);
-
     [host, guest].forEach(registerTypes);
 
     {
@@ -477,7 +468,7 @@ describe('Spaces', () => {
     {
       const done = new Trigger();
       await waitForObject(guestSpace, hostRoot);
-      const guestRoot: Expando = guestSpace.db.getObjectById(hostRoot.id)!;
+      const guestRoot: Type.Expando = guestSpace.db.getObjectById(hostRoot.id)!;
       expect(guestRoot).toBeDefined();
 
       const unsub = getObjectCore(guestRoot).updates.on(() => {
@@ -565,11 +556,11 @@ describe('Spaces', () => {
     });
   };
 
-  const createObject = <T extends {}>(props: T): Live<Expando> => {
+  const createObject = <T extends {}>(props: T): Live<Type.Expando> => {
     return Obj.make(Type.Expando, props);
   };
 
-  const waitForObject = async (space: Space, object: HasId) => {
+  const waitForObject = async (space: Space, object: Obj.Any) => {
     await expect.poll(() => space.db.getObjectById(object.id)).not.toEqual(undefined);
   };
 

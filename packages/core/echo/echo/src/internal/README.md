@@ -1,6 +1,6 @@
 ## Refactor
 
-1. Remove from outisde of @dxos/echo-db; promote toe echo/db types; serach: from '@dxos/echo/internal';
+1. Remove access from outisde of @dxos/echo-db
 
 - [x] completely restructure @dxos/echo src/internal
 - [x] Remove import "." and ".."! (create lint rule).
@@ -19,19 +19,17 @@
 - [x] Created Entity.Any (=> AnyEchoObject).
 - [x] TypeFormat => TypeFormat
 - [x] JsonSchemaType defs
-- [ ] Narrow QueryResult and match Schema and Object generics.
-- [ ] Narrow Database, Query generic types.
-- [ ] Reconcile Type.Ref with Ref.Ref
 - [ ] Fix commented out tests.
-- [ ] Directly import JSONPath, etc. from @dxos/effect.
-- [ ] DISCUSS: Standradize $ suffix to disambuguate imports (GPT recommended).
+- [ ] Remove echo-db/AnyLiveObject<T> => Obj.Obj<T>
 
 2. Clean-up
 
-- [ ] Restrict import { X } from '@dxos/echo/internal' TODO(burdon): Only for echo-db.
+- [ ] Narrow QueryResult and match Schema and Object generics.
+- [ ] Directly import JSONPath, etc. from @dxos/effect.
+- [ ] DISCUSS: Standradize $ suffix to disambuguate imports (GPT recommended).
+- [ ] Reconcile Type.Ref with Ref.Ref
 - [ ] Promote parts of src/internal/ref to Ref.ts
 - [ ] Rename AnyEchoObject => AnyEntity? (or accept that Object != Obj from naming perspective.)
-- [ ] Remove echo-db/AnyLiveObject<T> => Obj.Obj<T>
 - [ ] Remove WithId => AnyEchoObject
 - [ ] Remove WithMeta => AnyEchoObject
 - [ ] HasId
