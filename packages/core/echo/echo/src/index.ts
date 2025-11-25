@@ -6,7 +6,7 @@ export * from '@dxos/keys';
 
 export * from './errors';
 
-// TODO(burdon): Separate namesapces for Query/Filter/Order?
+// TODO(burdon): Separate namesapces for Query (Query.Query, Query.Filter, etc.)
 export * from './query';
 
 export * as Annotation from './Annotation';
