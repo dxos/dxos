@@ -53,6 +53,7 @@
     "@preact/signals-core": "^1.12.1",
     "date-fns": "^3.3.1",
     "effect": "3.18.3",
+    "json-schema-library": "^10.5.1",
     "jsonpath": "^1.1.1"
   },
   "devDependencies": {
