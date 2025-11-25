@@ -9,8 +9,12 @@ import { TypedObject } from '@dxos/echo/internal';
 
 import { View } from '../types';
 
-export class TestSchema extends TypedObject({
-  typename: 'example.com/type/Test',
+/**
+ * @deprecated Use (@dxos/echo/testing)
+ */
+// TODO(burdon): REMOVE
+export class Example extends TypedObject({
+  typename: 'example.com/type/Example',
   version: '0.1.0',
 })({
   name: Schema.optional(
@@ -39,18 +43,18 @@ export class TestSchema extends TypedObject({
   rating: Schema.optional(Schema.Number),
 }) {}
 
-export type TestType = Schema.Schema.Type<typeof TestSchema>;
+export type TestType = Schema.Schema.Type<typeof Example>;
 
 export const testSchema: Type.PersistentType = Obj.make(Type.PersistentType, {
   typename: 'example.com/type/Test',
   version: '0.1.0',
-  jsonSchema: Type.toJsonSchema(TestSchema),
+  jsonSchema: Type.toJsonSchema(Example),
 });
 
 export const testView: View.View = View.make({
   name: 'Test',
-  query: Query.select(Filter.type(TestSchema)),
-  jsonSchema: Type.toJsonSchema(TestSchema),
+  query: Query.select(Filter.type(Example)),
+  jsonSchema: Type.toJsonSchema(Example),
 });
 
 export const testData: TestType = {

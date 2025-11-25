@@ -24,7 +24,7 @@ import { EchoTestBuilder } from '@dxos/echo-db/testing';
 import { registerSignalsRuntime } from '@dxos/echo-signals';
 import { invariant } from '@dxos/invariant';
 
-import { Testing } from '../testing';
+import { TestSchema } from '../testing';
 import { View } from '../types';
 
 import { createFieldId } from './field';
@@ -141,14 +141,14 @@ describe('ProjectionModel', () => {
 
   test('gets and updates references', async ({ expect }) => {
     const registry = new RuntimeSchemaRegistry();
-    registry.addSchema([Testing.Organization]);
+    registry.addSchema([TestSchema.Organization]);
 
     const typename = 'example.com/type/Person';
     const schema = Schema.Struct({
       name: Schema.String.annotations({ title: 'Name' }),
       email: Format.Email,
       salary: Format.Currency({ code: 'usd', decimals: 2 }),
-      organization: Ref(Testing.Organization),
+      organization: Ref(TestSchema.Organization),
     }).pipe(Type.Obj({ typename, version: '0.1.0' }));
     const jsonSchema = toJsonSchema(schema);
 
@@ -856,7 +856,7 @@ describe('ProjectionModel', () => {
 
   // TODO(burdon): Fix.
   test.skip('create view from static organization schema', async ({ expect }) => {
-    const schema = Testing.Organization;
+    const schema = TestSchema.Organization;
     const jsonSchema = toJsonSchema(schema);
 
     const view = View.make({ query: Query.select(Filter.type(schema)), jsonSchema });

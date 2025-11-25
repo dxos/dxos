@@ -12,7 +12,8 @@ import { IconAnnotation } from '../annotations';
 /**
  * @deprecated Use (@dxos/echo/testing)
  */
-export namespace Testing {
+// TODO(burdon): REMOVE
+export namespace TestSchema {
   //
   // Document
   //

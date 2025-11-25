@@ -11,7 +11,7 @@ import { EchoTestBuilder } from '@dxos/echo-db/testing';
 import { log } from '@dxos/log';
 import { ProjectionModel } from '@dxos/schema';
 
-import { Testing } from '../testing';
+import { TestSchema } from '../testing';
 
 import * as View from './View';
 
@@ -27,10 +27,10 @@ describe('Projection', () => {
   });
 
   test('create view from schema', async ({ expect }) => {
-    const schema = Testing.Person;
+    const schema = TestSchema.Person;
     const jsonSchema = Type.toJsonSchema(schema);
     const registry = new RuntimeSchemaRegistry();
-    registry.addSchema([Testing.Person, Testing.Organization]);
+    registry.addSchema([TestSchema.Person, TestSchema.Organization]);
 
     const view = await View.makeWithReferences({
       query: Query.select(Filter.type(schema)),
@@ -67,21 +67,21 @@ describe('Projection', () => {
   });
 
   test('static schema definitions with references', async ({ expect }) => {
-    const organization = Obj.make(Testing.Organization, {
+    const organization = Obj.make(TestSchema.Organization, {
       name: 'DXOS',
       website: 'https://dxos.org',
     });
-    const contact = Obj.make(Testing.Person, {
+    const contact = Obj.make(TestSchema.Person, {
       name: 'Alice',
       organization: Ref.make(organization),
     });
     log('schema', {
-      organization: Type.toJsonSchema(Testing.Organization),
-      contact: Type.toJsonSchema(Testing.Person),
+      organization: Type.toJsonSchema(TestSchema.Organization),
+      contact: Type.toJsonSchema(TestSchema.Person),
     });
     log('objects', { organization, contact });
-    expect(Obj.getTypename(organization)).to.eq(Testing.Organization.typename);
-    expect(Obj.getTypename(contact)).to.eq(Testing.Person.typename);
+    expect(Obj.getTypename(organization)).to.eq(TestSchema.Organization.typename);
+    expect(Obj.getTypename(contact)).to.eq(TestSchema.Person.typename);
   });
 
   test('maintains field order during initialization', async ({ expect }) => {

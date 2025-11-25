@@ -20,13 +20,13 @@
 - [x] TypeFormat => TypeFormat
 - [x] JsonSchemaType defs
 - [ ] Fix commented out tests.
-- [ ] Remove echo-db/AnyLiveObject<T> => Obj.Obj<T>
 - [ ] Reconcile types/version with entities/model/version
-- [ ] Fix database.add() input/output types and search for "Obj.Any = db.add"
+- [ ] Fix database.add() input/output types and search for "Obj.Any = db.add" (also QueryResult types).
 - [ ] TODO(burdon): FIX!!!
 
 2. Clean-up
 
+- [ ] Remove echo-db/AnyLiveObject<T> => Obj.Obj<T>
 - [ ] Narrow QueryResult and match Schema and Object generics.
 - [ ] Directly import JSONPath, etc. from @dxos/effect.
 - [ ] DISCUSS: Standradize $ suffix to disambuguate imports (GPT recommended).
