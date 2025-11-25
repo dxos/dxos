@@ -300,6 +300,11 @@
         },
         {
           "type": "json",
+          "path": "packages/core/functions-runtime-cloudflare/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/core/halo/credentials/package.json",
           "jsonpath": "$.version"
         },

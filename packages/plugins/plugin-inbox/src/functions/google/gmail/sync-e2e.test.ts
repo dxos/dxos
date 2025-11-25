@@ -28,7 +28,7 @@ describe.runIf(process.env.DX_TEST_TAGS?.includes('functions-e2e'))('Functions d
     console.log(artifact);
   });
 
-  test.only('deploy function', { timeout: 120_000 }, async () => {
+  test('deploy function', { timeout: 120_000 }, async () => {
     const { client, space, mailbox, functionsServiceClient } = await setup();
     const artifact = await bundleFunction({
       entryPoint: new URL('./sync.ts', import.meta.url).pathname,

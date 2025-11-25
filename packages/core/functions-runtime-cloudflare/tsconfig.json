@@ -2,6 +2,7 @@
   "extends": "../../../tsconfig.base.json",
   "compilerOptions": {
     "types": [
+      "@cloudflare/workers-types/2023-07-01",
       "@dxos/typings"
     ]
   },
@@ -11,13 +12,10 @@
   ],
   "references": [
     {
-      "path": "../../common/async"
+      "path": "../../common/codec-protobuf"
     },
     {
       "path": "../../common/context"
-    },
-    {
-      "path": "../../common/crypto"
     },
     {
       "path": "../../common/debug"
@@ -35,25 +33,13 @@
       "path": "../../common/keys"
     },
     {
-      "path": "../../common/kv-store"
-    },
-    {
       "path": "../../common/log"
     },
     {
       "path": "../../common/node-std"
     },
     {
-      "path": "../../common/util"
-    },
-    {
       "path": "../../sdk/client"
-    },
-    {
-      "path": "../../sdk/client-protocol"
-    },
-    {
-      "path": "../../sdk/schema"
     },
     {
       "path": "../../sdk/types"
@@ -74,13 +60,7 @@
       "path": "../echo/echo-protocol"
     },
     {
-      "path": "../echo/live-object"
-    },
-    {
       "path": "../functions"
-    },
-    {
-      "path": "../functions-runtime-cloudflare"
     },
     {
       "path": "../mesh/edge-client"

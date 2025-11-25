@@ -78,10 +78,11 @@ export const bundleFunction = async (options: BundleOptions): Promise<BundleResu
           build.onLoad({ filter: /^dxos:entrypoint$/, namespace: 'dxos:entrypoint' }, () => ({
             contents: trim`
               import { wrapFunctionHandler } from '@dxos/functions';
+              import { wrapFunctionForCloudflare } from '@dxos/functions-runtime-cloudflare';
               import { default as handler } from '${options.entryPoint}';
-              export default wrapFunctionHandler(handler);
+              export default wrapFunctionForCloudflare(wrapFunctionHandler(handler));
             `,
-            resolveDir: dirname(options.entryPoint),
+            resolveDir: new URL('.', import.meta.url).pathname,
           }));
         },
       },

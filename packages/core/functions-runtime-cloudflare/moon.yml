@@ -1,0 +1,24 @@
+type: library
+language: typescript
+tags:
+  - ts-build
+  - ts-test
+  - pack
+tasks:
+  compile:
+    args:
+      - '--entryPoint=src/bundler/index.ts'
+      - '--entryPoint=src/edge/index.ts'
+      - '--entryPoint=src/index.ts'
+      - '--entryPoint=src/native/index.ts'
+      - '--entryPoint=src/testing/index.ts'
+  e2e:
+    env:
+      DX_TEST_TAGS: functions-e2e
+    command: vitest run -c vitest.config.ts --reporter=verbose src/e2e/*.test.ts
+    deps:
+      - ^:build
+      - ^:compile
+    inputs:
+      - src/e2e/**
+      - vitest.config.ts

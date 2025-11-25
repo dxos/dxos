@@ -1,0 +1,57 @@
+{
+  "name": "@dxos/functions-runtime-cloudflare",
+  "version": "0.8.3",
+  "description": "Functions runtime for Cloudflare.",
+  "homepage": "https://dxos.org",
+  "bugs": "https://github.com/dxos/dxos/issues",
+  "license": "MIT",
+  "author": "info@dxos.org",
+  "sideEffects": false,
+  "type": "module",
+  "exports": {
+    ".": {
+      "source": "./src/index.ts",
+      "types": "./dist/types/src/index.d.ts",
+      "browser": "./dist/lib/browser/index.mjs",
+      "node": "./dist/lib/node-esm/index.mjs"
+    }
+  },
+  "types": "dist/types/src/index.d.ts",
+  "files": [
+    "dist",
+    "schema",
+    "src"
+  ],
+  "scripts": {},
+  "dependencies": {
+    "@dxos/ai": "workspace:*",
+    "@dxos/client": "workspace:*",
+    "@dxos/codec-protobuf": "workspace:*",
+    "@dxos/context": "workspace:*",
+    "@dxos/debug": "workspace:*",
+    "@dxos/echo": "workspace:*",
+    "@dxos/echo-db": "workspace:*",
+    "@dxos/echo-pipeline": "workspace:*",
+    "@dxos/echo-protocol": "workspace:*",
+    "@dxos/edge-client": "workspace:*",
+    "@dxos/effect": "workspace:*",
+    "@dxos/errors": "workspace:*",
+    "@dxos/functions": "workspace:*",
+    "@dxos/invariant": "workspace:*",
+    "@dxos/keys": "workspace:*",
+    "@dxos/log": "workspace:*",
+    "@dxos/node-std": "workspace:*",
+    "@dxos/protocols": "workspace:*",
+    "@effect/platform": "0.92.1",
+    "effect": "3.18.3",
+    "esbuild": "0.25.10",
+    "iso-did": "^1.6.0"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "4.20251106.1",
+    "@dxos/types": "workspace:*"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}
