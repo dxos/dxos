@@ -94,7 +94,7 @@ export default ({ context, observability, createInvitationUrl }: IntentResolverO
         }
 
         // Create records smart collection.
-        collection.objects.push(Ref.make(Collection.makeManaged({ key: Type.PersistentType.typename })));
+        collection.objects.push(Ref.make(Collection.makeManaged({ key: Type.getTypename(Type.PersistentType) })));
 
         // Allow other plugins to add default content.
         await context.activatePromise(SpaceEvents.SpaceCreated);

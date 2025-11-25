@@ -6,7 +6,7 @@ import * as Schema from 'effect/Schema';
 import { afterEach, assert, beforeEach, describe, test } from 'vitest';
 
 import { Filter, Obj, Query, Ref, Type } from '@dxos/echo';
-import { Format, RuntimeSchemaRegistry, StoredSchema, TypeEnum } from '@dxos/echo/internal';
+import { Format, PersistentSchema, RuntimeSchemaRegistry, TypeEnum } from '@dxos/echo/internal';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
 import { log } from '@dxos/log';
 import { ProjectionModel } from '@dxos/schema';
@@ -85,7 +85,7 @@ describe('Projection', () => {
   });
 
   test('maintains field order during initialization', async ({ expect }) => {
-    const schema = Obj.make(StoredSchema, {
+    const schema = Obj.make(PersistentSchema, {
       typename: 'example.com/type/Person',
       version: '0.1.0',
       jsonSchema: Type.toJsonSchema(

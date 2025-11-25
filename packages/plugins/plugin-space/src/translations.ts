@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { StoredSchema } from '@dxos/echo/internal';
+import { Type } from '@dxos/echo';
 import { type Resource } from '@dxos/react-ui';
 import { Collection } from '@dxos/schema';
 import { Event, Message, Organization, Person, Project, Task } from '@dxos/types';
@@ -23,7 +23,7 @@ export const translations = [
         'delete object label': 'Delete collection',
         'object deleted label': 'Collection deleted',
       },
-      [StoredSchema.typename]: {
+      [Type.getTypename(Type.PersistentType)]: {
         'typename label': 'Type',
         'typename label_zero': 'Types',
         'typename label_one': 'Type',

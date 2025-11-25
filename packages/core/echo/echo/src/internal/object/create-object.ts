@@ -9,7 +9,7 @@ import { assertArgument, failedInvariant } from '@dxos/invariant';
 import { ObjectId } from '@dxos/keys';
 import { defineHiddenProperty } from '@dxos/live-object';
 
-import { getSchemaDXN, getTypeAnnotation } from '../annotations';
+import { getSchemaDXN, getTypeAnnotation, setTypename } from '../annotations';
 import {
   RelationSourceDXNId,
   RelationSourceId,
@@ -18,7 +18,7 @@ import {
   assertObjectModel,
   getObjectDXN,
 } from '../entities';
-import { EntityKind, EntityKindId, type KindId, MetaId, setSchema, setTypename } from '../types';
+import { EntityKind, EntityKindId, type KindId, MetaId, setSchema } from '../types';
 
 import { attachedTypedObjectInspector } from './inspect';
 import { attachTypedJsonSerializer } from './json-serializer';

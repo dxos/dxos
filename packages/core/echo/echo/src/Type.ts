@@ -20,10 +20,10 @@ import {
   Expando as Expando$,
   KindId,
   type OfKind,
+  PersistentSchema,
   Ref as Ref$,
   type RefFn,
   type RefSchema,
-  StoredSchema,
   type TypeAnnotation,
   type TypeMeta,
   getEntityKind,
@@ -38,7 +38,7 @@ import {
 import type * as Relation$ from './Relation';
 
 // TODO(burdon): Remove toEffectSchema, toJsonSchema (moved to JsonSchema export).
-export { KindId, OfKind, StoredSchema as PersistentType, EchoSchema as RuntimeType, toEffectSchema, toJsonSchema };
+export { KindId, OfKind, PersistentSchema as PersistentType, EchoSchema as RuntimeType, toEffectSchema, toJsonSchema };
 
 //
 // Kind

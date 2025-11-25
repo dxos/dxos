@@ -10,7 +10,7 @@ import { registerSignalsRuntime } from '@dxos/echo-signals';
 import { assertArgument } from '@dxos/invariant';
 import { deepMapValues } from '@dxos/util';
 
-import { EchoSchema, StoredSchema, getSchemaTypename, makeObject, toJsonSchema } from '../internal';
+import { EchoSchema, PersistentSchema, getSchemaTypename, makeObject, toJsonSchema } from '../internal';
 
 registerSignalsRuntime();
 
@@ -22,7 +22,7 @@ export const createEchoSchema = (schema: Schema.Schema.AnyNoContext, version = '
   const jsonSchema = toJsonSchema(schema);
   const typename = getSchemaTypename(schema);
   assertArgument(typename, 'typename', 'Schema does not have a typename.');
-  const echoSchema = new EchoSchema(makeObject(StoredSchema, { typename, version, jsonSchema }));
+  const echoSchema = new EchoSchema(makeObject(PersistentSchema, { typename, version, jsonSchema }));
 
   // TODO(burdon): Unsubscribe is never called.
   effect(() => {

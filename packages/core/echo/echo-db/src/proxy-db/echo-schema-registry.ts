@@ -11,7 +11,7 @@ import { type Context, Resource } from '@dxos/context';
 import { JsonSchema, Type } from '@dxos/echo';
 import {
   EchoSchema,
-  StoredSchema,
+  PersistentSchema,
   TypeAnnotationId,
   TypeIdentifierAnnotationId,
   createObject,
@@ -79,13 +79,13 @@ export class EchoSchemaRegistry extends Resource implements SchemaRegistry {
     // Preloading schema is required for ECHO to operate.
     // TODO(dmaretskyi): Does this change with strong object deps.
     if (this._preloadSchemaOnOpen) {
-      const { objects } = await this._db.query(Filter.type(StoredSchema)).run();
+      const { objects } = await this._db.query(Filter.type(PersistentSchema)).run();
 
       objects.forEach((object) => this._registerSchema(object));
     }
 
     if (this._reactiveQuery) {
-      const unsubscribe = this._db.query(Filter.type(StoredSchema)).subscribe(({ objects }) => {
+      const unsubscribe = this._db.query(Filter.type(PersistentSchema)).subscribe(({ objects }) => {
         const currentObjectIds = new Set(objects.map((o) => o.id));
         const newObjects = objects.filter((object) => !this._schemaById.has(object.id));
         const removedObjects = [...this._schemaById.keys()].filter((oid) => !currentObjectIds.has(oid));
@@ -160,7 +160,7 @@ export class EchoSchemaRegistry extends Resource implements SchemaRegistry {
               return true;
             }
             case 'database': {
-              if (!validateStoredSchemaIntegrity(object.schema.storedSchema)) {
+              if (!validateStoredSchemaIntegrity(object.schema.persistentSchema)) {
                 return false;
               }
 
@@ -211,7 +211,7 @@ export class EchoSchemaRegistry extends Resource implements SchemaRegistry {
       changes,
       getResultsSync() {
         const objects = self._db
-          .query(Filter.type(StoredSchema))
+          .query(Filter.type(PersistentSchema))
           .runSync()
           .map((result) => result.object)
           .filter((object) => object != null);
@@ -233,7 +233,7 @@ export class EchoSchemaRegistry extends Resource implements SchemaRegistry {
         return results;
       },
       async getResults() {
-        const { objects } = await self._db.query(Filter.type(StoredSchema)).run();
+        const { objects } = await self._db.query(Filter.type(PersistentSchema)).run();
 
         return filterOrderResults([
           ...self._db.graph.schemaRegistry.schemas.map((schema) => {
@@ -283,7 +283,7 @@ export class EchoSchemaRegistry extends Resource implements SchemaRegistry {
         );
         results.push(schema);
         if (input.name) {
-          schema.storedSchema.name = input.name;
+          schema.persistentSchema.name = input.name;
         }
       } else {
         throw new TypeError('Invalid schema');
@@ -318,7 +318,7 @@ export class EchoSchemaRegistry extends Resource implements SchemaRegistry {
       return undefined;
     }
 
-    if (!Schema.is(StoredSchema)(typeObject)) {
+    if (!Schema.is(PersistentSchema)(typeObject)) {
       log.warn('type object is not a stored schema', { id: typeObject?.id });
       return undefined;
     }
@@ -329,9 +329,9 @@ export class EchoSchemaRegistry extends Resource implements SchemaRegistry {
   /**
    * @internal
    *
-   * Registers a StoredSchema object if necessary and returns a EchoSchema object.
+   * Registers a PersistentSchema object if necessary and returns a EchoSchema object.
    */
-  _registerSchema(schema: StoredSchema): EchoSchema {
+  _registerSchema(schema: PersistentSchema): EchoSchema {
     const existing = this._schemaById.get(schema.id);
     if (existing != null) {
       return existing;
@@ -342,7 +342,7 @@ export class EchoSchemaRegistry extends Resource implements SchemaRegistry {
     return registered;
   }
 
-  private _register(schema: StoredSchema): EchoSchema {
+  private _register(schema: PersistentSchema): EchoSchema {
     const existing = this._schemaById.get(schema.id);
     if (existing != null) {
       return existing;
@@ -379,7 +379,7 @@ export class EchoSchemaRegistry extends Resource implements SchemaRegistry {
 
     const meta = getTypeAnnotation(schema);
     invariant(meta, 'use Schema.Struct({}).pipe(Type.Obj()) or class syntax to create a valid schema');
-    const schemaToStore = createObject(StoredSchema, {
+    const schemaToStore = createObject(PersistentSchema, {
       ...meta,
       jsonSchema: JsonSchema.toJsonSchema(Schema.Struct({})),
     });
@@ -397,8 +397,8 @@ export class EchoSchemaRegistry extends Resource implements SchemaRegistry {
       }),
     );
 
-    const storedSchema = this._db.add(schemaToStore);
-    const result = this._register(storedSchema);
+    const persistentSchema = this._db.add(schemaToStore);
+    const result = this._register(persistentSchema);
 
     this._notifySchemaListChanged();
     result._rebuild();
@@ -439,7 +439,7 @@ const coerceArray = <T>(arr: T | T[] | undefined): T[] => {
   return Array.isArray(arr) ? arr : [arr];
 };
 
-const validateStoredSchemaIntegrity = (schema: StoredSchema) => {
+const validateStoredSchemaIntegrity = (schema: PersistentSchema) => {
   if (!schema.jsonSchema.$id && !schema.jsonSchema.$id?.startsWith('dxn:')) {
     log.warn('Schema is missing $id or has invalid $id', { schema });
     return false;

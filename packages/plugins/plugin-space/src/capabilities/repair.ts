@@ -47,11 +47,11 @@ const ensureSystemCollection = async (space: Space) => {
 
   const objects = await Promise.all(rootCollection.objects.map((ref) => ref.load()));
   const records = objects.find(
-    (object) => Obj.instanceOf(Collection.Managed, object) && object.key === Type.PersistentType.typename,
+    (object) => Obj.instanceOf(Collection.Managed, object) && object.key === Type.getTypename(Type.PersistentType),
   );
   if (records) {
     return;
   }
 
-  rootCollection.objects.push(Ref.make(Collection.makeManaged({ key: Type.PersistentType.typename })));
+  rootCollection.objects.push(Ref.make(Collection.makeManaged({ key: Type.getTypename(Type.PersistentType) })));
 };

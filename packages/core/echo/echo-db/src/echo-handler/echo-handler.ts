@@ -16,16 +16,17 @@ import {
   ATTR_RELATION_TARGET,
   ATTR_TYPE,
   type AnyProperties,
-  ObjectDeletedId,
   EchoSchema,
   EntityKind,
   EntityKindId,
   type HasId,
   MetaId,
+  ObjectDeletedId,
   type ObjectJSON,
   type ObjectMeta,
   ObjectMetaSchema,
   ObjectVersionId,
+  PersistentSchema,
   Ref,
   RefImpl,
   RelationSourceDXNId,
@@ -36,7 +37,6 @@ import {
   SchemaMetaSymbol,
   SchemaValidator,
   SelfDXNId,
-  StoredSchema,
   TypeId,
   assertObjectModel,
   getEntityKind,
@@ -263,7 +263,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
    */
   private _getTypename(target: ProxyTarget): string | undefined {
     const schema = this.getSchema(target);
-    // Special handling for EchoSchema. objectId is StoredSchema objectId, not a typename.
+    // Special handling for EchoSchema. objectId is persistentSchema objectId, not a typename.
     if (schema && typeof schema === 'object' && SchemaMetaSymbol in schema) {
       return (schema as any)[SchemaMetaSymbol].typename;
     }
@@ -358,8 +358,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
   private _handleStoredSchema(target: ProxyTarget, object: any): any {
     // Object instanceof StoredEchoSchema requires database to lookup schema.
     const database = target[symbolInternals].database;
-    // TODO(dmaretskyi): isInstanceOf(StoredSchema, object)
-    if (database && isInstanceOf(StoredSchema, object)) {
+    if (database && isInstanceOf(PersistentSchema, object)) {
       return database.schemaRegistry._registerSchema(object);
     }
 
@@ -428,7 +427,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     }
 
     // DynamicEchoSchema is a utility-wrapper around the object we actually store in automerge, unwrap it
-    const unwrappedValue = value instanceof EchoSchema ? value.storedSchema : value;
+    const unwrappedValue = value instanceof EchoSchema ? value.persistentSchema : value;
     const propertySchema = SchemaValidator.getPropertySchema(rootObjectSchema, path, (path) => {
       return target[symbolInternals].core.getDecoded([getNamespace(target), ...path]);
     });
@@ -648,7 +647,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
    * @param proxy - the proxy that was passed to the method
    */
   createRef(target: ProxyTarget, proxy: any): Reference {
-    let otherEchoObj = proxy instanceof EchoSchema ? proxy.storedSchema : proxy;
+    let otherEchoObj = proxy instanceof EchoSchema ? proxy.persistentSchema : proxy;
     otherEchoObj = !isEchoObject(otherEchoObj) ? createObject(otherEchoObj) : otherEchoObj;
     const otherObjId = otherEchoObj.id;
     invariant(typeof otherObjId === 'string' && otherObjId.length > 0);

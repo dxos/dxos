@@ -11,7 +11,7 @@ import { defaultMap } from '@dxos/util';
 
 import { getSchemaTypename, getSchemaVersion } from '../annotations';
 
-import { StoredSchema } from './stored-schema';
+import { PersistentSchema } from './persistent-schema';
 
 /**
  * Runtime registry of static schema objects (i.e., not Dynamic .
@@ -21,7 +21,7 @@ export class RuntimeSchemaRegistry {
   private readonly _registry = new Map<string, Schema.Schema.AnyNoContext[]>();
 
   constructor() {
-    this._registry.set(StoredSchema.typename, [StoredSchema]);
+    this._registry.set(getSchemaTypename(PersistentSchema)!, [PersistentSchema]);
   }
 
   get schemas(): Schema.Schema.AnyNoContext[] {

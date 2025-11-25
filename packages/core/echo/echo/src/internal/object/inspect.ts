@@ -6,7 +6,8 @@ import type { InspectOptionsStylized, inspect as inspectFn } from 'node:util';
 
 import { type CustomInspectFunction, inspectCustom } from '@dxos/debug';
 
-import { ATTR_META, ATTR_TYPE, type AnyEchoObject, MetaId, getTypeDXN } from '../types';
+import { getTypeDXN } from '../annotations';
+import { ATTR_META, ATTR_TYPE, type AnyEchoObject, MetaId } from '../types';
 
 /*
  * @internal
