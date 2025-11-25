@@ -16,7 +16,7 @@ import { withAttention } from '@dxos/react-ui-attention/testing';
 import { Form, TupleInput } from '@dxos/react-ui-form';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { createGraph } from '@dxos/schema';
-import { Testing, type TypeSpec, type ValueGenerator, createObjectFactory } from '@dxos/schema/testing';
+import { TestSchema, type TypeSpec, type ValueGenerator, createObjectFactory } from '@dxos/schema/testing';
 
 import { doLayout } from '../../layout';
 import { Container, DragTest, useSelection } from '../../testing';
@@ -26,7 +26,7 @@ import { Editor, type EditorController, type EditorRootProps } from './Editor';
 
 const generator: ValueGenerator = faker as any;
 
-const types = [Testing.Organization, Testing.Project, Testing.Person];
+const types = [TestSchema.Organization, TestSchema.Project, TestSchema.Person];
 
 // TODO(burdon): Ref expando breaks the form.
 const RectangleShapeWithoutRef = Schema.omit<any, any, ['object']>('object')(RectangleShape);
@@ -142,7 +142,7 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {
   args: {
     init: true,
-    spec: [{ type: Testing.Organization, count: 1 }],
+    spec: [{ type: TestSchema.Organization, count: 1 }],
   },
 };
 
@@ -160,9 +160,9 @@ export const Query: Story = {
     sidebar: 'selected',
     init: true,
     spec: [
-      { type: Testing.Organization, count: 4 },
-      { type: Testing.Project, count: 0 },
-      { type: Testing.Person, count: 16 },
+      { type: TestSchema.Organization, count: 4 },
+      { type: TestSchema.Project, count: 0 },
+      { type: TestSchema.Person, count: 16 },
     ],
   },
 };

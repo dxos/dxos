@@ -19,7 +19,7 @@ import { IconButton, Toolbar } from '@dxos/react-ui';
 import { withTheme } from '@dxos/react-ui/testing';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { defaultTx } from '@dxos/react-ui-theme';
-import { Testing } from '@dxos/schema/testing';
+import { TestSchema } from '@dxos/schema/testing';
 import { type Message, Organization, Person } from '@dxos/types';
 
 import { useQueueModelAdapter } from '../../hooks';
@@ -184,7 +184,7 @@ const meta = {
     withPluginManager({
       plugins: [
         ClientPlugin({
-          types: [TestItem, Testing.DocumentType, Person.Person, Organization.Organization],
+          types: [TestItem, TestSchema.DocumentType, Person.Person, Organization.Organization],
           onClientInitialized: async ({ client }) => {
             await client.halo.createIdentity();
           },

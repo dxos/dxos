@@ -16,7 +16,7 @@ import { IdentityDid } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { faker } from '@dxos/random';
 import { type Space, useQueue } from '@dxos/react-client/echo';
-import { Testing } from '@dxos/schema/testing';
+import { TestSchema } from '@dxos/schema/testing';
 import { type ContentBlock, Message, Organization, Person } from '@dxos/types';
 import { seedTestData } from '@dxos/types/testing';
 
@@ -122,7 +122,7 @@ class EntityExtractionMessageBuilder extends AbstractMessageBuilder {
         Filter.or(
           Filter.type(Person.Person),
           Filter.type(Organization.Organization),
-          Filter.type(Testing.DocumentType),
+          Filter.type(TestSchema.DocumentType),
         ),
       )
       .run();

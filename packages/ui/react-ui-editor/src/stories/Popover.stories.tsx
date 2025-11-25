@@ -10,7 +10,7 @@ import { faker } from '@dxos/random';
 import { useClientProvider, withClientProvider } from '@dxos/react-client/testing';
 import { Domino } from '@dxos/react-ui';
 import { withTheme } from '@dxos/react-ui/testing';
-import { Testing, type ValueGenerator, createObjectFactory } from '@dxos/schema/testing';
+import { TestSchema, type ValueGenerator, createObjectFactory } from '@dxos/schema/testing';
 
 import {
   type EditorController,
@@ -77,7 +77,7 @@ const LinkStory = (args: StoryProps) => {
       }
 
       const name = text?.startsWith('@') ? text.slice(1).toLowerCase() : (text?.toLowerCase() ?? '');
-      const result = await space?.db.query(Query.type(Testing.Person)).run();
+      const result = await space?.db.query(Query.type(TestSchema.Person)).run();
       const items = result.objects
         .filter((object) => object.name.toLowerCase().includes(name))
         .map(
@@ -143,11 +143,11 @@ export const Link: Story = {
     withClientProvider({
       createSpace: true,
       onInitialized: async (client) => {
-        client.addTypes([Testing.Person]);
+        client.addTypes([TestSchema.Person]);
       },
       onCreateSpace: async ({ space }) => {
         const createObjects = createObjectFactory(space.db, generator);
-        await createObjects([{ type: Testing.Person, count: 10 }]);
+        await createObjects([{ type: TestSchema.Person, count: 10 }]);
         await space.db.flush({ indexes: true });
       },
     }),
