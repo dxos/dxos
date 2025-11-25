@@ -5,16 +5,8 @@
 import { type ReadonlySignal, computed, effect, signal } from '@preact/signals-core';
 
 import { Resource } from '@dxos/context';
-import { Obj, Ref } from '@dxos/echo';
-import {
-  Format,
-  type JsonProp,
-  type JsonSchemaType,
-  getSchema,
-  getValue,
-  setValue,
-  toEffectSchema,
-} from '@dxos/echo/internal';
+import { Format, Obj, Ref } from '@dxos/echo';
+import { type JsonProp, type JsonSchemaType, getValue, setValue, toEffectSchema } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
 import { ObjectId } from '@dxos/keys';
 import { getSnapshot, isLiveObject } from '@dxos/live-object';
@@ -526,7 +518,7 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
       const snapshot = getSnapshot(currentRow);
       setValue(snapshot, field.path, transformedValue);
 
-      const schema = getSchema(currentRow);
+      const schema = Obj.getSchema(currentRow);
       invariant(schema);
 
       const validationResult = validateSchema(schema, snapshot);

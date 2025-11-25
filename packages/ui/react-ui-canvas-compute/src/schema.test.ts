@@ -5,7 +5,7 @@
 import * as Schema from 'effect/Schema';
 import { describe, test } from 'vitest';
 
-import { live } from '@dxos/echo/internal';
+import { Obj } from '@dxos/echo';
 import { BaseGraphNode, Graph } from '@dxos/graph';
 import {
   Polygon,
@@ -29,7 +29,7 @@ describe('compute', () => {
     expect(Schema.is(Shape)(node)).toBe(true);
     expect(Schema.is(BaseGraphNode)(node)).toBe(true);
 
-    const graph = live(Graph, { nodes: [], edges: [] });
+    const graph = Obj.make(Graph, { nodes: [], edges: [] });
     graph.nodes.push(node); // Throws.
 
     // model.createNode(node);

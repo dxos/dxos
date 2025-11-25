@@ -5,17 +5,8 @@
 import type { State as AmState } from '@automerge/automerge';
 import React, { useCallback, useMemo, useState } from 'react';
 
-import { type DXN } from '@dxos/echo';
-import {
-  Format,
-  getObjectDXN,
-  getSchema,
-  getSchemaVersion,
-  getType,
-  getTypename,
-  isDeleted,
-} from '@dxos/echo/internal';
-import { type AnyLiveObject, Filter, Query, checkoutVersion, getEditHistory } from '@dxos/echo-db';
+import { type DXN, Filter, Format, Obj, Query, Type } from '@dxos/echo';
+import { type AnyLiveObject, checkoutVersion, getEditHistory } from '@dxos/echo-db';
 import { type Space, useQuery } from '@dxos/react-client/echo';
 import { Toolbar } from '@dxos/react-ui';
 import { DynamicTable, type TableFeatures } from '@dxos/react-ui-table';
@@ -34,7 +25,7 @@ const textFilter = (text?: string) => {
   const matcher = new RegExp(text, 'i');
   return (item: AnyLiveObject<any>) => {
     let match = false;
-    match ||= !!getType(item)?.toString().match(matcher);
+    match ||= !!Obj.getTypename(item)?.match(matcher);
     match ||= !!String((item as any).title ?? '').match(matcher);
     return match;
   };
@@ -118,10 +109,10 @@ export const ObjectsPanel = (props: { space?: Space }) => {
   const dataRows = useMemo(() => {
     return items.filter(textFilter(filter)).map((item) => ({
       id: item.id,
-      type: getTypename(item),
-      version: getSchema(item) ? getSchemaVersion(getSchema(item)!) : undefined,
-      deleted: isDeleted(item) ? 'DELETED' : ' ',
-      schemaAvailable: getSchema(item) ? 'YES' : 'NO',
+      type: Obj.getTypename(item),
+      version: Obj.getSchema(item) ? Type.getVersion(Obj.getSchema(item)!) : undefined,
+      deleted: Obj.isDeleted(item) ? 'DELETED' : ' ',
+      schemaAvailable: Obj.getSchema(item) ? 'YES' : 'NO',
       _original: item, // Store the original item for selection
     }));
   }, [items, filter]);
@@ -216,7 +207,7 @@ export const ObjectsPanel = (props: { space?: Space }) => {
             {selected ? (
               <ObjectViewer
                 object={selectedVersionObject ?? selected}
-                id={getObjectDXN(selected)?.toString()}
+                id={Obj.getDXN(selected)?.toString()}
                 onNavigate={onNavigate}
               />
             ) : (

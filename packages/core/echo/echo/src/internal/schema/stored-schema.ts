@@ -4,8 +4,9 @@
 
 import * as Schema from 'effect/Schema';
 
+// TODO(wittjosiah): If this doesn't import from Type, the type isn't portable.
+import * as Type from '../../Type';
 import { TypenameSchema, VersionSchema } from '../annotations';
-import { EchoObjectSchema } from '../entities';
 import { JsonSchemaType } from '../json-schema';
 
 /**
@@ -18,7 +19,7 @@ export const StoredSchema = Schema.Struct({
   version: VersionSchema,
   jsonSchema: JsonSchemaType,
 }).pipe(
-  EchoObjectSchema({
+  Type.Obj({
     typename: 'dxos.org/type/Schema',
     version: '0.1.0',
   }),

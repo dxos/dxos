@@ -3,7 +3,8 @@
 //
 
 import { Capabilities, contributes } from '@dxos/app-framework';
-import { createDocAccessor, getRangeFromCursor, getTarget } from '@dxos/echo-db';
+import { Relation } from '@dxos/echo';
+import { createDocAccessor, getRangeFromCursor } from '@dxos/echo-db';
 import { type AnchoredTo } from '@dxos/types';
 
 import { Markdown } from '../types';
@@ -12,9 +13,9 @@ export default () =>
   contributes(Capabilities.AnchorSort, {
     key: Markdown.Document.typename,
     sort: (anchorA: AnchoredTo.AnchoredTo, anchorB: AnchoredTo.AnchoredTo) => {
-      const doc = getTarget(anchorA) as Markdown.Document;
+      const doc = Relation.getTarget(anchorA) as Markdown.Document;
       const accessor = doc.content.target ? createDocAccessor(doc.content.target, ['content']) : undefined;
-      if (doc !== getTarget(anchorB) || !accessor) {
+      if (doc !== Relation.getTarget(anchorB) || !accessor) {
         return 0;
       }
 

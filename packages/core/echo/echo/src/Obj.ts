@@ -8,7 +8,7 @@ import * as Schema from 'effect/Schema';
 import { type ForeignKey } from '@dxos/echo-protocol';
 import { assertArgument, invariant } from '@dxos/invariant';
 import { type DXN, ObjectId } from '@dxos/keys';
-import { type Live, getSnapshot as getSnapshot$ } from '@dxos/live-object';
+import { getSnapshot as getSnapshot$ } from '@dxos/live-object';
 import { assumeType, deepMapValues } from '@dxos/util';
 
 import {
@@ -100,7 +100,7 @@ export const make = <S extends Type.Obj.Any>(
   schema: S,
   props: MakeProps<S>,
   meta?: Partial<ObjectMeta>,
-): Live<Schema.Schema.Type<S>> => {
+): Obj<Schema.Schema.Type<S>> => {
   assertArgument(getTypeAnnotation(schema)?.kind === EntityKind.Object, 'schema', 'Expected an object schema');
 
   // Set default fields on meta on creation.

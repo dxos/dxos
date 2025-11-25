@@ -19,7 +19,7 @@ import { AttentionEvents } from '@dxos/plugin-attention';
 import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
 import { translations as componentsTranslations } from '@dxos/react-ui-components';
 import { translations as formTranslations } from '@dxos/react-ui-form';
-import { Collection, DataTypes, StoredSchema, createDefaultSchema } from '@dxos/schema';
+import { Collection, DataTypes, createDefaultSchema } from '@dxos/schema';
 import { translations as shellTranslations } from '@dxos/shell/react';
 import {
   AnchoredTo,
@@ -121,7 +121,7 @@ export const SpacePlugin = definePlugin<SpacePluginOptions>(
             },
           }),
           contributes(Capabilities.Metadata, {
-            id: Type.getTypename(StoredSchema),
+            id: Type.PersistentType.typename,
             metadata: {
               icon: 'ph--database--regular',
               iconHue: 'green',

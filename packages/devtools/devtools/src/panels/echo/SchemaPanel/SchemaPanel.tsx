@@ -7,15 +7,7 @@ import type * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
-import {
-  Format,
-  getEntityKind,
-  getSchemaDXN,
-  getSchemaTypename,
-  getSchemaVersion,
-  toJsonSchema,
-} from '@dxos/echo/internal';
-import { DXN } from '@dxos/keys';
+import { DXN, Format, Type } from '@dxos/echo';
 import { type Space } from '@dxos/react-client/echo';
 import { Toolbar } from '@dxos/react-ui';
 import { DynamicTable, type TableFeatures } from '@dxos/react-ui-table';
@@ -34,7 +26,7 @@ const textFilter = (text?: string) => {
   const matcher = new RegExp(text, 'i');
   return (item: Schema.Schema.AnyNoContext) => {
     let match = false;
-    match ||= !!getSchemaDXN(item)?.toString().match(matcher);
+    match ||= !!Type.getDXN(item)?.toString().match(matcher);
     match ||= !!SchemaAST.getTitleAnnotation(item.ast).pipe(Option.getOrUndefined)?.match(matcher);
     match ||= !!SchemaAST.getDescriptionAnnotation(item.ast).pipe(Option.getOrUndefined)?.match(matcher);
     return match;
@@ -69,7 +61,7 @@ export const SchemaPanel = (props: { space?: Space }) => {
   const [selected, setSelected] = useState<Schema.Schema.AnyNoContext>();
 
   const onNavigate = (dxn: DXN) => {
-    const selectedSchema = schema.find((item) => getSchemaDXN(item) && DXN.equals(getSchemaDXN(item)!, dxn));
+    const selectedSchema = schema.find((item) => Type.getDXN(item) && DXN.equals(Type.getDXN(item)!, dxn));
     if (selectedSchema) {
       setSelected(() => selectedSchema);
       return;
@@ -77,7 +69,7 @@ export const SchemaPanel = (props: { space?: Space }) => {
 
     const typeDXN = dxn.asTypeDXN();
     if (typeDXN && typeDXN.version === undefined) {
-      const latestSchema = schema.find((item) => getSchemaDXN(item)?.toString().startsWith(dxn.toString()));
+      const latestSchema = schema.find((item) => Type.getDXN(item)?.toString().startsWith(dxn.toString()));
       if (latestSchema) {
         setSelected(() => latestSchema);
       }
@@ -111,10 +103,10 @@ export const SchemaPanel = (props: { space?: Space }) => {
     return schema
       .filter(textFilter(filter))
       .map((item) => ({
-        id: getSchemaDXN(item),
-        typename: getSchemaTypename(item) ?? '',
-        version: getSchemaVersion(item) ?? '',
-        kind: getEntityKind(item),
+        id: Type.getDXN(item),
+        typename: Type.getTypename(item) ?? '',
+        version: Type.getVersion(item) ?? '',
+        kind: Type.getKind(item),
 
         _original: item, // Store the original item for selection
       }))
@@ -164,8 +156,8 @@ export const SchemaPanel = (props: { space?: Space }) => {
           <div className={mx('p-1 min-bs-0 bs-full overflow-auto')}>
             {selected ? (
               <ObjectViewer
-                object={toJsonSchema(selected)}
-                id={getSchemaDXN(selected)?.toString()}
+                object={Type.toJsonSchema(selected)}
+                id={Type.getDXN(selected)?.toString()}
                 onNavigate={onNavigate}
               />
             ) : (

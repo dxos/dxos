@@ -15,7 +15,7 @@ import { log } from '@dxos/log';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { ATTENDABLE_PATH_SEPARATOR, PLANK_COMPANION_TYPE } from '@dxos/plugin-deck/types';
 import { ROOT_ID, atomFromObservable, atomFromSignal, createExtension } from '@dxos/plugin-graph';
-import { Collection, StoredSchema, View, ViewAnnotation, getTypenameFromQuery } from '@dxos/schema';
+import { Collection, View, ViewAnnotation, getTypenameFromQuery } from '@dxos/schema';
 import { isNonNullable } from '@dxos/util';
 
 import { getActiveSpace } from '../hooks';
@@ -433,7 +433,7 @@ export default (context: PluginContext) => {
           Function.pipe(
             get(node),
             Option.flatMap((node) =>
-              Obj.instanceOf(Collection.Managed, node.data) && node.data.key === StoredSchema.typename
+              Obj.instanceOf(Collection.Managed, node.data) && node.data.key === Type.PersistentType.typename
                 ? Option.some(node.data)
                 : Option.none(),
             ),
@@ -527,7 +527,7 @@ export default (context: PluginContext) => {
             get(node),
             Option.flatMap((node) => {
               const space = getSpace(node.data) ?? (isSpace(node.properties.space) ? node.properties.space : undefined);
-              return space && (Obj.instanceOf(StoredSchema, node.data) || Schema.isSchema(node.data))
+              return space && (Obj.instanceOf(Type.PersistentType, node.data) || Schema.isSchema(node.data))
                 ? Option.some({ space, schema: node.data })
                 : Option.none();
             }),
@@ -585,7 +585,7 @@ export default (context: PluginContext) => {
                 : Option.none();
             }),
             Option.flatMap(({ space, object }) => {
-              const isSchema = Obj.instanceOf(StoredSchema, object);
+              const isSchema = Obj.instanceOf(Type.PersistentType, object);
               if (!query && isSchema) {
                 // TODO(wittjosiah): Ideally this query would traverse the view reference & filter by the query ast.
                 // TODO(wittjosiah): Remove cast.

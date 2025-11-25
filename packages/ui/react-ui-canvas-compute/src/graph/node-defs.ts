@@ -12,7 +12,7 @@ import {
   registry,
 } from '@dxos/conductor';
 import { raise } from '@dxos/debug';
-import { JsonSchema } from '@dxos/echo';
+import { JsonSchema, Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 
 import { type ComputeShape, type ConstantShape, type TemplateShape } from '../shapes';
@@ -77,7 +77,7 @@ const nodeFactory: Record<NodeType | 'trigger', (shape: ComputeShape) => Compute
 };
 
 const createNode = (type: string, props?: Partial<ComputeNode>): ComputeNode => ({
-  id: ID.random(),
+  id: Obj.ID.random(),
   type,
   ...props,
 });

@@ -116,6 +116,8 @@ export type PropertyMetaAnnotation = {
   [name: string]: PropertyMetaValue;
 };
 
+// TODO(wittjosiah): Align with other annotations.
+// TODO(wittjosiah): Why is this separate from FormatAnnotation?
 export const PropertyMeta = (name: string, value: PropertyMetaValue) => {
   return <A, I, R>(self: Schema.Schema<A, I, R>): Schema.Schema<A, I, R> => {
     const existingMeta = self.ast.annotations[PropertyMetaAnnotationId] as PropertyMetaAnnotation;

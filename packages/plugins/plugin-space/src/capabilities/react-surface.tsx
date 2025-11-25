@@ -8,7 +8,7 @@ import React, { useCallback } from 'react';
 
 import { Capabilities, contributes, createSurface } from '@dxos/app-framework';
 import { Surface, useCapability, useLayout } from '@dxos/app-framework/react';
-import { type Live, Obj, type Ref } from '@dxos/echo';
+import { Obj, type Ref } from '@dxos/echo';
 import { findAnnotation } from '@dxos/effect';
 import { SettingsStore } from '@dxos/local-storage';
 import { type Space, SpaceState, getSpace, isLiveObject, isSpace, parseId, useSpace } from '@dxos/react-client/echo';
@@ -255,7 +255,7 @@ export default ({ createInvitationUrl }: ReactSurfaceOptions) =>
     createSurface({
       id: `${meta.id}/object-settings`,
       role: 'object-settings',
-      filter: (data): data is { subject: Live<{ view: Ref.Ref<View.View> }> } => {
+      filter: (data): data is { subject: { view: Ref.Ref<View.View> } } => {
         if (!Obj.isObject(data.subject)) {
           return false;
         }

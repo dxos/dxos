@@ -24,7 +24,7 @@ import {
 import { type Space, SpaceState, getSpace, isSpace } from '@dxos/react-client/echo';
 import { ATTENDABLE_PATH_SEPARATOR } from '@dxos/react-ui-attention';
 import { type TreeData } from '@dxos/react-ui-list';
-import { Collection, StoredSchema } from '@dxos/schema';
+import { Collection } from '@dxos/schema';
 
 import { meta } from './meta';
 import { SPACE_TYPE, SpaceAction } from './types';
@@ -387,7 +387,7 @@ export const createStaticSchemaActions = ({
         throw new Error('Not implemented');
       },
       properties: {
-        label: ['rename object label', { ns: Type.getTypename(StoredSchema) }],
+        label: ['rename object label', { ns: Type.getTypename(Type.PersistentType) }],
         icon: 'ph--pencil-simple-line--regular',
         disabled: true,
         disposition: 'list-item',
@@ -406,7 +406,7 @@ export const createStaticSchemaActions = ({
         }
       },
       properties: {
-        label: ['delete object label', { ns: Type.getTypename(StoredSchema) }],
+        label: ['delete object label', { ns: Type.getTypename(Type.PersistentType) }],
         icon: 'ph--trash--regular',
         disposition: 'list-item',
         disabled: !deletable,
@@ -469,7 +469,7 @@ export const createObjectNode = ({
     ? getCollectionGraphNodePartials({ collection: object, space, resolve })
     : Obj.instanceOf(Collection.Managed, object)
       ? getSystemCollectionNodePartials({ collection: object, space, resolve })
-      : Obj.instanceOf(StoredSchema, object)
+      : Obj.instanceOf(Type.PersistentType, object)
         ? getSchemaGraphNodePartials()
         : metadata.graphProps;
 
@@ -481,7 +481,7 @@ export const createObjectNode = ({
     metadata.label?.(object) || ['object name placeholder', { ns: type, default: 'New item' }];
 
   const selectable =
-    (!Obj.instanceOf(StoredSchema, object) &&
+    (!Obj.instanceOf(Type.PersistentType, object) &&
       !Obj.instanceOf(Collection.Managed, object) &&
       !Obj.instanceOf(Collection.Collection, object)) ||
     (navigable && Obj.instanceOf(Collection.Collection, object));
@@ -567,7 +567,7 @@ export const constructObjectActions = ({
           },
         ]
       : []),
-    ...(Obj.instanceOf(StoredSchema, object)
+    ...(Obj.instanceOf(Type.PersistentType, object)
       ? [
           {
             id: getId(SpaceAction.AddObject._tag),
@@ -689,7 +689,7 @@ export const constructObjectActions = ({
     ...(navigable ||
     (!Obj.instanceOf(Collection.Collection, object) &&
       !Obj.instanceOf(Collection.Managed, object) &&
-      !Obj.instanceOf(StoredSchema, object))
+      !Obj.instanceOf(Type.PersistentType, object))
       ? [
           {
             id: getId('copy-link'),

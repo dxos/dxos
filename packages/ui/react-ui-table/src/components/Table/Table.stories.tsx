@@ -6,16 +6,8 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Schema from 'effect/Schema';
 import React, { useCallback } from 'react';
 
-import { Obj, type QueryAST, Type } from '@dxos/echo';
-import {
-  EchoObject,
-  FormatAnnotation,
-  Format,
-  GeneratorAnnotation,
-  LabelAnnotation,
-  PropertyMetaAnnotationId,
-} from '@dxos/echo/internal';
-import { live } from '@dxos/echo/internal';
+import { Annotation, Format, Obj, type QueryAST, Type } from '@dxos/echo';
+import { PropertyMetaAnnotationId } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
 import { faker } from '@dxos/random';
 import { PublicKey } from '@dxos/react-client';
@@ -40,7 +32,7 @@ const TestSchema = Schema.Struct({
   urgent: Schema.optional(Schema.Boolean).annotations({ title: 'Urgent' }),
   status: Schema.optional(
     Schema.Literal('todo', 'in-progress', 'done')
-      .pipe(FormatAnnotation.set(Format.TypeFormat.SingleSelect))
+      .pipe(Format.FormatAnnotation.set(Format.TypeFormat.SingleSelect))
       .annotations({
         title: 'Status',
         [PropertyMetaAnnotationId]: {
@@ -60,7 +52,7 @@ const TestSchema = Schema.Struct({
   }),
 }).pipe(
   Type.Obj({ typename: `example.com/type/${PublicKey.random().truncate()}`, version: '0.1.0' }),
-  LabelAnnotation.set(['name']),
+  Annotation.LabelAnnotation.set(['name']),
 );
 interface TestSchema extends Schema.Schema.Type<typeof TestSchema> {}
 
@@ -235,7 +227,7 @@ export const StaticSchema: StoryObj = {
 };
 
 const ContactWithArrayOfEmails = Schema.Struct({
-  name: Schema.String.pipe(GeneratorAnnotation.set('person.fullName')),
+  name: Schema.String.pipe(Annotation.GeneratorAnnotation.set('person.fullName')),
   emails: Schema.optional(
     Schema.Array(
       Schema.Struct({
@@ -245,7 +237,7 @@ const ContactWithArrayOfEmails = Schema.Struct({
     ),
   ),
 }).pipe(
-  EchoObject({
+  Type.Obj({
     typename: 'dxos.org/type/ContactWithArrayOfEmails',
     version: '0.1.0',
   }),
@@ -325,7 +317,7 @@ export const Tags: Meta<StoryProps> = {
         // Populate.
         Array.from({ length: 10 }).map(() => {
           return space.db.add(
-            live(storedSchema, {
+            Obj.make(storedSchema, {
               single: faker.helpers.arrayElement([...selectOptionIds, undefined]),
               multiple: faker.helpers.randomSubset(selectOptionIds),
             }),

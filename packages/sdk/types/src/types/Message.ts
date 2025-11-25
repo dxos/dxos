@@ -54,7 +54,7 @@ export const make = ({
   sender,
   blocks = [],
   properties,
-}: MakeOptional<Omit<Obj.MakeProps<typeof Message>, 'sender'>, 'created'> & {
+}: MakeOptional<Omit<Obj.MakeProps<typeof Message>, 'sender'>, 'created' | 'blocks'> & {
   sender: Actor.Actor | Actor.Role;
 }) => {
   return Obj.make(Message, {

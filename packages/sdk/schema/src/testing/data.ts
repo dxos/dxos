@@ -6,9 +6,8 @@ import * as Schema from 'effect/Schema';
 
 import { Filter, Format, Obj, Query, Type } from '@dxos/echo';
 import { TypedObject } from '@dxos/echo/internal';
-import { type Live } from '@dxos/live-object';
 
-import { StoredSchema, View } from '../types';
+import { View } from '../types';
 
 export class TestSchema extends TypedObject({
   typename: 'example.com/type/Test',
@@ -42,13 +41,13 @@ export class TestSchema extends TypedObject({
 
 export type TestType = Schema.Schema.Type<typeof TestSchema>;
 
-export const testSchema: Live<StoredSchema> = Obj.make(StoredSchema, {
+export const testSchema: Type.PersistentType = Obj.make(Type.PersistentType, {
   typename: 'example.com/type/Test',
   version: '0.1.0',
   jsonSchema: Type.toJsonSchema(TestSchema),
 });
 
-export const testView: Live<View.View> = View.make({
+export const testView: View.View = View.make({
   name: 'Test',
   query: Query.select(Filter.type(TestSchema)),
   jsonSchema: Type.toJsonSchema(TestSchema),

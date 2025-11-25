@@ -15,7 +15,7 @@ import {
   EchoObjectSchema,
   EchoRelationSchema,
   type EchoRelationSchemaOptions,
-  type EchoSchema,
+  EchoSchema,
   EntityKind,
   Expando as Expando$,
   KindId,
@@ -23,8 +23,10 @@ import {
   Ref as Ref$,
   type RefFn,
   type RefSchema,
+  StoredSchema,
   type TypeAnnotation,
   type TypeMeta,
+  getEntityKind,
   getSchemaDXN,
   getSchemaTypename,
   getSchemaVersion,
@@ -36,7 +38,7 @@ import {
 import type * as Relation$ from './Relation';
 
 // TODO(burdon): Remove toEffectSchema, toJsonSchema (moved to JsonSchema export).
-export { KindId, OfKind, toEffectSchema, toJsonSchema };
+export { KindId, OfKind, StoredSchema as PersistentType, EchoSchema as RuntimeType, toEffectSchema, toJsonSchema };
 
 //
 // Kind
@@ -53,6 +55,8 @@ export type Schema = EchoSchema;
  * Returns all properties of an object or relation except for the id and kind.
  */
 export type Properties<T = any> = Omit<T, 'id' | KindId | Relation$.Source | Relation$.Target>;
+
+export const getKind = getEntityKind;
 
 //
 // Obj
