@@ -33,7 +33,6 @@
 - [ ] Rename AnyEchoObject => AnyEntity? (or accept that Object != Obj from naming perspective.)
 - [ ] Remove WithId => AnyEchoObject
 - [ ] Remove WithMeta => AnyEchoObject
-- [ ] HasId
 - [ ] BaseSchema
 - [ ] JsonPath, JsonProp, getValue, setValue => Json.Path?
 - [ ] Move EchoSchemaRegistry into hypergraph

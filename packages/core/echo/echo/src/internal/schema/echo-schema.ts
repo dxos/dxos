@@ -27,6 +27,7 @@ import { getSnapshot } from './snapshot';
  */
 // TODO(burdon): Merge with ImmutableSchema.
 export interface BaseSchema<A = any, I = any> extends TypedObject<A, I> {
+  // TODO(burdon): Different from mutable?
   get readonly(): boolean;
   // TODO(burdon): Change to external function.
   get mutable(): EchoSchema<A, I>;
