@@ -8,6 +8,36 @@ import * as Type from '../Type';
 
 export namespace TestSchema {
   //
+  // Example
+  //
+
+  const Nested = Schema.Struct({ field: Schema.String });
+
+  export const Example = Schema.Struct({
+    string: Schema.String,
+    number: Schema.Number,
+    boolean: Schema.Boolean,
+    null: Schema.Null,
+    undefined: Schema.Undefined,
+    stringArray: Schema.mutable(Schema.Array(Schema.String)),
+    twoDimNumberArray: Schema.mutable(Schema.Array(Schema.mutable(Schema.Array(Schema.Number)))),
+    nested: Nested,
+    nestedArray: Schema.mutable(Schema.Array(Nested)),
+    nestedNullableArray: Schema.mutable(Schema.Array(Schema.Union(Nested, Schema.Null))),
+    reference: Schema.suspend((): Type.Ref<Example> => Type.Ref(Example)),
+    referenceArray: Schema.mutable(Schema.Array(Schema.suspend((): Type.Ref<Example> => Type.Ref(Example)))),
+    other: Schema.Any,
+  }).pipe(
+    Schema.partial,
+    Type.Obj({
+      typename: 'example.com/type/Example',
+      version: '0.1.0',
+    }),
+  );
+
+  export interface Example extends Schema.Schema.Type<typeof Example> {}
+
+  //
   // Message
   //
 

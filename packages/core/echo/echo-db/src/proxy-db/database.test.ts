@@ -90,8 +90,7 @@ describe('Database', () => {
     await openAndClose(testBuilder);
     const { db } = await testBuilder.createDatabase();
 
-    // TODO(burdon): Require create for expando?
-    const obj1 = db.add({ name: 'Test' });
+    const obj1 = db.add(Obj.make(Type.Expando, { name: 'Test' }));
     await db.flush();
     // TODO(burdon): Should fail?
     const obj2 = db.add(obj1);
@@ -106,7 +105,7 @@ describe('Database', () => {
     await openAndClose(testBuilder);
     const { db } = await testBuilder.createDatabase();
 
-    const obj = db.add({ name: 'Test' });
+    const obj = db.add(Obj.make(Type.Expando, { name: 'Test' }));
     await db.flush();
 
     db.remove(obj);
@@ -165,8 +164,8 @@ describe('Database', () => {
   test('query by ID', async () => {
     const { db } = await builder.createDatabase();
 
-    const obj1 = db.add({ name: 'Object 1' });
-    const obj2 = db.add({ name: 'Object 2' });
+    const obj1 = db.add(Obj.make(Type.Expando, { name: 'Object 1' }));
+    const obj2 = db.add(Obj.make(Type.Expando, { name: 'Object 2' }));
     await db.flush({ indexes: true });
 
     {
@@ -190,7 +189,7 @@ describe('Database', () => {
       const db = await peer.createDatabase(spaceKey);
       rootUrl = db.rootUrl!;
 
-      ({ id } = db.add({ name: 'Object 1' }));
+      ({ id } = db.add(Obj.make(Type.Expando, { name: 'Object 1' })));
       await db.flush();
     }
 
