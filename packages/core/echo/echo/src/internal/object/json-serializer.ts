@@ -116,10 +116,7 @@ export const objectFromJSON = async (
 
   if (typeof jsonData[ATTR_META] === 'object') {
     const meta = await ObjectMetaSchema.pipe(Schema.decodeUnknownPromise)(jsonData[ATTR_META]);
-
-    // Defensive programming.
     invariant(Array.isArray(meta.keys));
-
     defineHiddenProperty(obj, MetaId, meta);
   }
 
@@ -224,6 +221,7 @@ const serializeData = (data: unknown) => {
       // TODO(dmaretskyi): Should this be configurable?
       return value.noInline().encode();
     }
+
     return recurse(value);
   });
 };
