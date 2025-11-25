@@ -26,7 +26,7 @@ import {
   getLabel as getLabel$,
   getMeta as getMeta$,
   getObjectDXN,
-  getSchema,
+  getSchema as getSchema$,
   getSchemaTypename,
   getTypeAnnotation,
   getTypeDXN as getTypeDXN$,
@@ -40,8 +40,6 @@ import {
 import * as Ref from './Ref';
 import type * as Relation from './Relation';
 import * as Type from './Type';
-
-export { getSchema };
 
 interface BaseObj extends AnyEchoObject, Type.OfKind<EntityKind.Object> {}
 
@@ -152,7 +150,7 @@ export type CloneOptions = {
  */
 export const clone = <T extends Any>(obj: T, opts?: CloneOptions): T => {
   const { id, ...data } = obj;
-  const schema = getSchema(obj);
+  const schema = getSchema$(obj);
   invariant(schema != null, 'Object should have a schema');
   const props: any = deepMapValues(data, (value, recurse) => {
     if (Ref.isRef(value)) {
@@ -230,11 +228,16 @@ export const getDXN = (entity: AnyEntity): DXN => {
 export const getTypeDXN = getTypeDXN$;
 
 /**
+ * Get the schema of the object.
+ */
+export const getSchema = getSchema$;
+
+/**
  * @returns The typename of the object's type.
  * @example `example.com/type/Person`
  */
 export const getTypename = (entity: AnyEntity): string | undefined => {
-  const schema = getSchema(entity);
+  const schema = getSchema$(entity);
   if (schema == null) {
     // Try to extract typename from DXN.
     return getTypeDXN$(entity)?.asTypeDXN()?.type;
@@ -315,28 +318,28 @@ export const isDeleted = (entity: AnyEntity): boolean => {
 //
 
 export const getLabel = (entity: AnyEntity): string | undefined => {
-  const schema = getSchema(entity);
+  const schema = getSchema$(entity);
   if (schema != null) {
     return getLabel$(schema, entity);
   }
 };
 
 export const setLabel = (entity: AnyEntity, label: string) => {
-  const schema = getSchema(entity);
+  const schema = getSchema$(entity);
   if (schema != null) {
     setLabel$(schema, entity, label);
   }
 };
 
 export const getDescription = (entity: AnyEntity): string | undefined => {
-  const schema = getSchema(entity);
+  const schema = getSchema$(entity);
   if (schema != null) {
     return getDescription$(schema, entity);
   }
 };
 
 export const setDescription = (entity: AnyEntity, description: string) => {
-  const schema = getSchema(entity);
+  const schema = getSchema$(entity);
   if (schema != null) {
     setDescription$(schema, entity, description);
   }

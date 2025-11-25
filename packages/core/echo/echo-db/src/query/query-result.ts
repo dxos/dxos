@@ -4,7 +4,8 @@
 
 import { type CleanupFn, Event } from '@dxos/async';
 import { StackTrace } from '@dxos/debug';
-import { type Database, type Type } from '@dxos/echo';
+import { type Database } from '@dxos/echo';
+import { type AnyProperties } from '@dxos/echo/internal';
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
@@ -20,19 +21,19 @@ import { type QueryContext } from './query-context';
  * Predicate based query.
  */
 // TODO(burdon): Narrow types (Entity.Any).
-export class QueryResultImpl<TSchema extends Type.Schema = Type.Schema> implements Database.QueryResult<TSchema> {
+export class QueryResultImpl<T extends AnyProperties = AnyProperties> implements Database.QueryResult<T> {
   private readonly _signal = compositeRuntime.createSignal();
-  private readonly _event = new Event<Database.QueryResult<TSchema>>();
+  private readonly _event = new Event<Database.QueryResult<T>>();
   private readonly _diagnostic: QueryDiagnostic;
 
   private _isActive = false;
-  private _resultCache?: Database.QueryResultEntry<TSchema>[] = undefined;
-  private _objectCache?: TSchema[] = undefined;
+  private _resultCache?: Database.QueryResultEntry<T>[] = undefined;
+  private _objectCache?: T[] = undefined;
   private _subscribers: number = 0;
 
   constructor(
-    private readonly _queryContext: QueryContext<TSchema>,
-    private readonly _query: Query<TSchema>,
+    private readonly _queryContext: QueryContext<T>,
+    private readonly _query: Query<T>,
   ) {
     this._queryContext.changed.on(() => {
       if (this._recomputeResult()) {
@@ -56,18 +57,18 @@ export class QueryResultImpl<TSchema extends Type.Schema = Type.Schema> implemen
     log('construct', { filter: this._query.ast });
   }
 
-  get query(): Query<TSchema> {
+  get query(): Query<T> {
     return this._query;
   }
 
-  get results(): Database.QueryResultEntry<TSchema>[] {
+  get results(): Database.QueryResultEntry<T>[] {
     this._checkQueryIsRunning();
     this._signal.notifyRead();
     this._ensureCachePresent();
     return this._resultCache!;
   }
 
-  get objects(): TSchema[] {
+  get objects(): T[] {
     this._checkQueryIsRunning();
     this._signal.notifyRead();
     this._ensureCachePresent();
@@ -78,7 +79,7 @@ export class QueryResultImpl<TSchema extends Type.Schema = Type.Schema> implemen
    * Execute the query once and return the results.
    * Does not subscribe to updates.
    */
-  async run(opts: { timeout?: number } = { timeout: 30_000 }): Promise<Database.OneShotQueryResult<TSchema>> {
+  async run(opts: { timeout?: number } = { timeout: 30_000 }): Promise<Database.OneShotQueryResult<T>> {
     const filteredResults = await this._queryContext.run(this._query.ast, { timeout: opts.timeout });
     return {
       results: filteredResults,
@@ -86,7 +87,7 @@ export class QueryResultImpl<TSchema extends Type.Schema = Type.Schema> implemen
     };
   }
 
-  async first(opts?: { timeout?: number }): Promise<TSchema> {
+  async first(opts?: { timeout?: number }): Promise<T> {
     const { objects } = await this.run(opts);
     if (objects.length === 0) {
       throw new Error('No objects found');
@@ -100,7 +101,7 @@ export class QueryResultImpl<TSchema extends Type.Schema = Type.Schema> implemen
    * WARNING: This method will only return the data already cached and may return incomplete results.
    * Use `this.run()` for a complete list of results stored on-disk.
    */
-  runSync(): Database.QueryResultEntry<TSchema>[] {
+  runSync(): Database.QueryResultEntry<T>[] {
     this._ensureCachePresent();
     return this._resultCache!;
   }
@@ -111,10 +112,7 @@ export class QueryResultImpl<TSchema extends Type.Schema = Type.Schema> implemen
    * Does not update when the object properties change.
    */
   // TODO(burdon): Change to SubscriptionHandle (make uniform).
-  subscribe(
-    callback?: (query: Database.QueryResult<TSchema>) => void,
-    opts?: Database.QuerySubscriptionOptions,
-  ): CleanupFn {
+  subscribe(callback?: (query: Database.QueryResult<T>) => void, opts?: Database.QuerySubscriptionOptions): CleanupFn {
     invariant(!(!callback && opts?.fire), 'Cannot fire without a callback.');
 
     log('subscribe', { filter: this._query.ast, active: this._isActive });
@@ -176,7 +174,7 @@ export class QueryResultImpl<TSchema extends Type.Schema = Type.Schema> implemen
     return changed;
   }
 
-  private _uniqueObjects(results: Database.QueryResultEntry<TSchema>[]): TSchema[] {
+  private _uniqueObjects(results: Database.QueryResultEntry<T>[]): T[] {
     const seen = new Set<unknown>();
     return results
       .map((result) => result.object)

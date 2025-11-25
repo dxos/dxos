@@ -19,7 +19,7 @@ import type * as Ref from './Ref';
  * Individual query result entry.
  */
 // TODO(burdon): Narrow types (Entity.Any: requires Any to extend AnyProperties).
-export type QueryResultEntry<TEntity extends AnyProperties = AnyProperties> = {
+export type QueryResultEntry<T extends AnyProperties = AnyProperties> = {
   id: string;
 
   spaceId: SpaceId;
@@ -27,7 +27,7 @@ export type QueryResultEntry<TEntity extends AnyProperties = AnyProperties> = {
   /**
    * May not be present for remote results.
    */
-  object?: TEntity;
+  object?: T;
 
   match?: {
     // TODO(dmaretskyi): text positional info.
@@ -54,9 +54,9 @@ export type QueryResultEntry<TEntity extends AnyProperties = AnyProperties> = {
 };
 
 // TODO(burdon): Narrow types (Entity.Any).
-export type OneShotQueryResult<TEntity extends AnyProperties = AnyProperties> = {
-  results: QueryResultEntry<TEntity>[];
-  objects: TEntity[];
+export type OneShotQueryResult<T extends AnyProperties = AnyProperties> = {
+  results: QueryResultEntry<T>[];
+  objects: T[];
 };
 
 export type QuerySubscriptionOptions = {
@@ -67,16 +67,16 @@ export type QuerySubscriptionOptions = {
 };
 
 // TODO(burdon): Narrow types.
-export interface QueryResult<TEntity extends AnyProperties = AnyProperties> {
-  readonly query: Query<TEntity>;
-  readonly results: QueryResultEntry<TEntity>[];
-  readonly objects: TEntity[];
+export interface QueryResult<T extends AnyProperties = AnyProperties> {
+  readonly query: Query<T>;
+  readonly results: QueryResultEntry<T>[];
+  readonly objects: T[];
 
-  run(opts?: QueryRunOptions): Promise<OneShotQueryResult<TEntity>>;
-  runSync(): QueryResultEntry<TEntity>[];
-  first(opts?: QueryRunOptions): Promise<TEntity>;
+  run(opts?: QueryRunOptions): Promise<OneShotQueryResult<T>>;
+  runSync(): QueryResultEntry<T>[];
+  first(opts?: QueryRunOptions): Promise<T>;
 
-  subscribe(callback?: (query: QueryResult<TEntity>) => void, opts?: QuerySubscriptionOptions): CleanupFn;
+  subscribe(callback?: (query: QueryResult<T>) => void, opts?: QuerySubscriptionOptions): CleanupFn;
 }
 
 export type QueryRunOptions = {

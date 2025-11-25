@@ -13,7 +13,7 @@ import { type Space } from '../echo';
 // TOOD(burdon): Move to client class?
 // TODO(dmaretskyi): Align with `graph.createRefResolver` API.
 /**
- * @deprecated Use `db.ref(dxn)` or `graph.ref(dxn)` instead.
+ * @deprecated Use `db.makeRef(dxn)` or `graph.makeRef(dxn)` instead.
  */
 export const resolveRef = <T extends Obj.Any | Relation.Any = Obj.Any | Relation.Any>(
   client: Client,

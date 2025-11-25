@@ -7,9 +7,8 @@ import * as Schema from 'effect/Schema';
 import React, { useCallback, useState } from 'react';
 
 import { ContactType } from '@dxos/client/testing';
-import { type Type } from '@dxos/echo';
-import { type AnyProperties, Expando, Format, Ref, type TypeAnnotation, getObjectDXN } from '@dxos/echo/internal';
-import { live } from '@dxos/echo/internal';
+import { Format, Obj, Ref, Type } from '@dxos/echo';
+import { type AnyProperties, type TypeAnnotation } from '@dxos/echo/internal';
 import { Tooltip } from '@dxos/react-ui';
 import { withLayoutVariants, withTheme } from '@dxos/react-ui/testing';
 import { Testing } from '@dxos/schema/testing';
@@ -56,8 +55,8 @@ const RefStory = <T extends AnyProperties = any>(props: StoryProps<T>) => {
     switch (typeInfo.typename) {
       case Testing.Person.typename:
         return [
-          { dxn: getObjectDXN(contact1)!, label: 'John Coltraine' },
-          { dxn: getObjectDXN(contact2)!, label: 'Erykah Badu' },
+          { dxn: Obj.getDXN(contact1), label: 'John Coltraine' },
+          { dxn: Obj.getDXN(contact2), label: 'Erykah Badu' },
         ];
       default:
         return [];
@@ -278,16 +277,18 @@ export const Enum: StoryObj<StoryProps<ColorType>> = {
 //
 
 const RefSchema = Schema.Struct({
-  contact: Ref(ContactType).annotations({ title: 'Contact Reference' }),
-  optionalContact: Schema.optional(Ref(ContactType).annotations({ title: 'Optional Contact Reference' })),
-  refArray: Schema.optional(Schema.Array(Ref(ContactType))),
-  unknownExpando: Schema.optional(Ref(Expando).annotations({ title: 'Optional Ref to an Expando (DXN Input)' })),
+  contact: Type.Ref(ContactType).annotations({ title: 'Contact Reference' }),
+  optionalContact: Schema.optional(Type.Ref(ContactType).annotations({ title: 'Optional Contact Reference' })),
+  refArray: Schema.optional(Schema.Array(Type.Ref(ContactType))),
+  unknownExpando: Schema.optional(
+    Type.Ref(Type.Expando).annotations({ title: 'Optional Ref to an Expando (DXN Input)' }),
+  ),
 });
 
 type RefSchema = Schema.Schema.Type<typeof RefSchema>;
 
-const contact1 = live(ContactType, { identifiers: [] });
-const contact2 = live(ContactType, { identifiers: [] });
+const contact1 = Obj.make(ContactType, { identifiers: [] });
+const contact2 = Obj.make(ContactType, { identifiers: [] });
 
 export const Refs: StoryObj<StoryProps<RefSchema>> = {
   render: RefStory,

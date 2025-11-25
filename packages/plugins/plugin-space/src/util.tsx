@@ -7,7 +7,7 @@ import { Atom } from '@effect-atom/atom-react';
 import * as Function from 'effect/Function';
 
 import { LayoutAction, type PromiseIntentDispatcher, chain, createIntent } from '@dxos/app-framework';
-import { Filter, Obj, Query, Ref, Type } from '@dxos/echo';
+import { type Database, Filter, Obj, Query, Ref, Type } from '@dxos/echo';
 import { EXPANDO_TYPENAME } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
 import { Migrations } from '@dxos/migrations';
@@ -21,7 +21,7 @@ import {
   type ReadableGraph,
   isGraphNode,
 } from '@dxos/plugin-graph';
-import { type QueryResult, type Space, SpaceState, getSpace, isSpace } from '@dxos/react-client/echo';
+import { type Space, SpaceState, getSpace, isSpace } from '@dxos/react-client/echo';
 import { ATTENDABLE_PATH_SEPARATOR } from '@dxos/react-ui-attention';
 import { type TreeData } from '@dxos/react-ui-list';
 import { Collection, StoredSchema } from '@dxos/schema';
@@ -37,7 +37,7 @@ export const SHARED = 'shared-spaces';
 /**
  * Convert a query result to an Atom value of the objects.
  */
-export const atomFromQuery = <T extends Obj.Any>(query: QueryResult<T>): Atom.Atom<T[]> => {
+export const atomFromQuery = <T extends Obj.Any>(query: Database.QueryResult<T>): Atom.Atom<T[]> => {
   return Atom.make((get) => {
     const unsubscribe = query.subscribe((result) => {
       get.setSelf(result.objects);
