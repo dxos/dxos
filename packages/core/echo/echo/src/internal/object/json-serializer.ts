@@ -40,7 +40,13 @@ import {
 } from '../types';
 
 type DeepReplaceRef<T> =
-  T extends Ref<any> ? EncodedReference : T extends object ? { [K in keyof T]: DeepReplaceRef<T[K]> } : T;
+  T extends Ref<any>
+    ? EncodedReference
+    : T extends object
+      ? {
+          [K in keyof T]: DeepReplaceRef<T[K]>;
+        }
+      : T;
 
 type SerializedObject<T extends { id: string }> = {
   [K in keyof T]: DeepReplaceRef<T[K]>;
