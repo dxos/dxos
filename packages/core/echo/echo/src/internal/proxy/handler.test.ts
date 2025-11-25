@@ -7,10 +7,12 @@ import { inspect } from 'node:util';
 import { describe, expect, test } from 'vitest';
 
 import { registerSignalsRuntime } from '@dxos/echo-signals';
+import { type Live, objectData } from '@dxos/live-object';
 import { isNode } from '@dxos/util';
 
 import { TestSchema, updateCounter } from '../../testing';
 import { createObject } from '../object';
+import { ATTR_META } from '../types';
 
 import { makeObject } from './make-object';
 
@@ -24,23 +26,20 @@ describe('proxy', () => {
   });
 });
 
-// TODO(burdon): Create new tests.
-
-/*
-const TEST_OBJECT: TestSchema.TestSchema = {
+const TEST_OBJECT: TestSchema.ExampleSchema = {
   string: 'foo',
   number: 42,
   boolean: true,
   null: null,
   stringArray: ['1', '2', '3'],
-  object: { field: 'bar' },
+  nested: {
+    field: 'bar',
+  },
 };
-*/
 
-/*
-for (const schema of [undefined, TestSchema.TestClass]) {
-  const createObject = (props: Partial<TestSchema.TestClass> = {}): Live<TestSchema.TestClass> => {
-    return schema == null ? (makeObject(props) as TestSchema.TestClass) : makeObject(schema, props);
+for (const schema of [undefined, TestSchema.ExampleSchema]) {
+  const createObject = (props: Partial<TestSchema.ExampleSchema> = {}): Live<TestSchema.ExampleSchema> => {
+    return schema == null ? (makeObject(props) as TestSchema.ExampleSchema) : makeObject(schema, props);
   };
 
   describe(`Non-echo specific proxy properties${schema == null ? '' : ' with schema'}`, () => {
@@ -119,7 +118,6 @@ for (const schema of [undefined, TestSchema.TestClass]) {
     });
   });
 }
-*/
 
 describe('getters', () => {
   test('add getter to object', () => {

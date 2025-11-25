@@ -83,18 +83,17 @@ for (const schema of [Type.Expando, TestSchema.Example]) {
       }
     });
 
-    // TODO(burdon): FIX!!!
-    // test('throws when assigning a class instances', () => {
-    //   expect(() => {
-    //     createTestObject().classInstance = new TestSchema.TestClass();
-    //   }).to.throw();
-    // });
+    test('throws when assigning a class instances', () => {
+      expect(() => {
+        createTestObject().classInstance = new TestSchema.TestClass();
+      }).to.throw();
+    });
 
-    // test('throws when creates with a class instances', () => {
-    //   expect(() => {
-    //     createTestObject({ classInstance: new TestSchema.TestClass() });
-    //   }).to.throw();
-    // });
+    test('throws when creates with a class instances', () => {
+      expect(() => {
+        createTestObject({ classInstance: new TestSchema.TestClass() });
+      }).to.throw();
+    });
 
     test('removes undefined fields on creation', () => {
       const obj = createTestObject({ undefined });
