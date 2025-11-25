@@ -87,6 +87,7 @@ export const AnthropicResolver = AiModelResolver.fromModelMap(
       '@anthropic/claude-3-5-haiku-20241022': yield* AnthropicLanguageModel.model('claude-3-5-haiku-20241022'),
       '@anthropic/claude-3-5-sonnet-20241022': yield* AnthropicLanguageModel.model('claude-3-5-sonnet-20241022'),
       '@anthropic/claude-opus-4-0': yield* AnthropicLanguageModel.model('claude-opus-4-0'),
+      '@anthropic/claude-opus-4-5': yield* AnthropicLanguageModel.model('claude-opus-4-5'),
       '@anthropic/claude-haiku-4-5': yield* AnthropicLanguageModel.model('claude-haiku-4-5'),
       '@anthropic/claude-sonnet-4-0': yield* AnthropicLanguageModel.model('claude-sonnet-4-0'),
       '@anthropic/claude-sonnet-4-5': yield* AnthropicLanguageModel.model('claude-sonnet-4-5'),
