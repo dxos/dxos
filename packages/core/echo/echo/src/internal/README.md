@@ -21,6 +21,7 @@
 - [x] JsonSchemaType defs
 - [ ] Fix commented out tests.
 - [ ] Remove echo-db/AnyLiveObject<T> => Obj.Obj<T>
+- [ ] Reconcile types/version with entities/model/version
 
 2. Clean-up
 
