@@ -14,14 +14,14 @@ export * from './types';
 
 // TODO(burdon): Restrict access to internal.
 //  1. Remove from outisde of @dxos/echo-db; promote toe echo/db types; serach: from '@dxos/echo/internal';
-//  - [ ] Restrict import { X } from '@dxos/echo/internal' // TODO(burdon): Only for echo-db.
 //  - [x] completely restructure @dxos/echo src/internal
 //  - [x] Remove import "." and ".."! (create lint rule).
 //  - [x] Unify FOUR different nests of test schema.
 //  - [x] Remove @deprecated from internal methods and mark @internal (e.g., getSchemaDXN).
 //    - NOTE: Internal methods should not use the import * from Obj/Type APIs.
 //  - [x] import ObjectId => @dxos/keys
-//  - [x] Relation extends Obj
+//  - [x] Entity.Any = Obj.Any | Relation.Any
+//    - NOTE: Relation does not extend (in not polymorphic with) Obj.
 //  - [x] import LabelAnnotation => Annotation.LabelAnnotation
 //  - [x] import Expando => Type.Expando
 //  - [x] live => Obj.make
@@ -31,10 +31,12 @@ export * from './types';
 //  - [x] Created Entity.Any (=> AnyEchoObject).
 //  - [x] TypeFormat => TypeFormat
 //  - [x] JsonSchemaType defs
+//  - [ ] Reconcile Type.Ref with Ref.Ref
 //  - [ ] Fix commented out tests.
 //  - [ ] DISCUSS: Standradize $ suffix to disambuguate imports (GPT recommended).
 
 //  2. Clean-up
+//  - [ ] Restrict import { X } from '@dxos/echo/internal' // TODO(burdon): Only for echo-db.
 //  - [ ] Promote parts of src/internal/ref to Ref.ts
 //  - [ ] Rename AnyEchoObject => AnyEntity? (or accept that Object != Obj from naming perspective.)
 //  - [ ] Remove echo-db/AnyLiveObject<T> => Obj.Obj<T>

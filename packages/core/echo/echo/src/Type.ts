@@ -35,6 +35,7 @@ import {
 } from './internal';
 import type * as Relation$ from './Relation';
 
+// TODO(burdon): Remove toEffectSchema, toJsonSchema (moved to JsonSchema export).
 export { KindId, OfKind, toEffectSchema, toJsonSchema };
 
 //
@@ -143,6 +144,7 @@ export interface relation<
  * Relation schema.
  */
 // TODO(dmaretskyi): I have to redefine the type here so that the definition uses symbols from @dxos/echo/Relation.
+// TODO(burdon): Remove?
 export const Relation: {
   <Source extends Schema$.Schema.AnyNoContext, Target extends Schema$.Schema.AnyNoContext>(
     opts: EchoRelationSchemaOptions<Source, Target>,

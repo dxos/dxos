@@ -43,21 +43,19 @@ import * as Type from './Type';
 export { getSchema };
 
 /**
- * Base interface for all objects..
  * @internal
  */
-export interface BaseObj extends AnyEchoObject, Type.OfKind<EntityKind.Object> {}
+interface BaseObj extends AnyEchoObject, Type.OfKind<EntityKind.Object> {}
+
+/**
+ * Base type for all Obj objects.
+ */
+export interface Any extends BaseObj {}
 
 /**
  * Object type with specific properties.
  */
 export type Obj<Props> = BaseObj & Props;
-
-/**
- * Base type for all ECHO objects.
- * This type does not define any properties.
- */
-export interface Any extends BaseObj {}
 
 /**
  * Object with arbitrary properties.

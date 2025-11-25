@@ -4,7 +4,7 @@
 
 import { type CleanupFn, Event } from '@dxos/async';
 import { StackTrace } from '@dxos/debug';
-import { type Database, type Obj } from '@dxos/echo';
+import { type Database, type Entity } from '@dxos/echo';
 import { type AnyProperties } from '@dxos/echo/internal';
 import { type QueryAST } from '@dxos/echo-protocol';
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
@@ -20,7 +20,7 @@ import { type Query } from './api';
 // TODO(burdon): Multi-sort option.
 export type Sort<T extends AnyProperties> = (a: T, b: T) => -1 | 0 | 1;
 
-export interface QueryContext<T extends Obj.Any = Obj.Any> {
+export interface QueryContext<T extends Entity.Any = Entity.Any> {
   getResults(): Database.QueryResultEntry<T>[];
 
   // TODO(dmaretskyi): Update info?
@@ -56,7 +56,7 @@ export interface QueryContext<T extends Obj.Any = Obj.Any> {
 /**
  * Predicate based query.
  */
-export class QueryResult<T extends Obj.Any = Obj.Any> implements Database.QueryResult<T> {
+export class QueryResult<T extends Entity.Any = Entity.Any> implements Database.QueryResult<T> {
   private readonly _signal = compositeRuntime.createSignal();
   private readonly _event = new Event<QueryResult<T>>();
   private readonly _diagnostic: QueryDiagnostic;

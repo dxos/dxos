@@ -31,7 +31,6 @@ import * as Obj from './Obj';
 import * as Type from './Type';
 
 /**
- * NOTE: Don't export: Relation.Relation and Relation.Any form the public API.
  * @internal
  */
 interface BaseRelation<Source, Target>
@@ -45,15 +44,14 @@ interface BaseRelation<Source, Target>
 //     Type.Relation.Endpoints<Source, Target> {}
 
 /**
- * Relation type with specific properties.
- */
-// TODO(burdon): Source and target cannot be relations.
-export type Relation<Source extends Obj.Any, Target extends Obj.Any, Props> = BaseRelation<Source, Target> & Props;
-
-/**
- * Base type for all ECHO relations.
+ * Base type for all Relations objects.
  */
 export interface Any extends BaseRelation<Obj.Any, Obj.Any> {}
+
+/**
+ * Relation type with specific source and target types.
+ */
+export type Relation<Source extends Obj.Any, Target extends Obj.Any, Props> = BaseRelation<Source, Target> & Props;
 
 export const Any = Schema.Struct({}).pipe(
   Type.Relation({
