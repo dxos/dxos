@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Database, Filter, Query } from '@dxos/echo';
+import { type Database, Filter, Query, type QueryAST } from '@dxos/echo';
 import { type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type QueryOptions as QueryOptionsProto } from '@dxos/protocols/proto/dxos/echo/filter';
@@ -23,7 +23,7 @@ type NormalizeQueryOptions = {
 
 export const normalizeQuery = (
   queryParam: unknown | undefined,
-  userOptions: Database.QueryOptions | undefined,
+  userOptions: (Database.QueryOptions & QueryAST.QueryOptions) | undefined,
   opts?: NormalizeQueryOptions,
 ) => {
   let query: Query.Any;
@@ -46,6 +46,7 @@ export const normalizeQuery = (
   if (userOptions) {
     query = query.options({
       spaceIds: userOptions.spaceIds ?? (opts?.defaultSpaceId ? [opts.defaultSpaceId] : undefined),
+      deleted: userOptions.deleted,
     });
   }
 

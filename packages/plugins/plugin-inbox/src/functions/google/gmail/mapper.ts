@@ -4,7 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Filter, Obj, Query, Ref, Type } from '@dxos/echo';
+import { Filter, Obj, Query, Ref } from '@dxos/echo';
 import { DatabaseService } from '@dxos/functions';
 import { Message, Person } from '@dxos/types';
 
