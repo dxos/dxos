@@ -4,25 +4,25 @@
 
 import * as Schema from 'effect/Schema';
 
-// TODO(wittjosiah): If this doesn't import from Type, the type isn't portable.
-import * as Type from '../../Type';
 import { TypenameSchema, VersionSchema } from '../annotations';
+import { EchoObjectSchema } from '../entities';
 import { JsonSchemaType } from '../json-schema';
 
 /**
  * Persistent representation of a schema.
  */
 // TODO(burdon): Move.
-export const StoredSchema = Schema.Struct({
+const PersistentEchoSchema = Schema.Struct({
   name: Schema.optional(Schema.String),
   typename: TypenameSchema,
   version: VersionSchema,
   jsonSchema: JsonSchemaType,
 }).pipe(
-  Type.Obj({
+  EchoObjectSchema({
     typename: 'dxos.org/type/Schema',
     version: '0.1.0',
   }),
 );
-
-export type StoredSchema = Schema.Schema.Type<typeof StoredSchema>;
+export interface PersistentSchema extends Schema.Schema.Type<typeof PersistentEchoSchema> {}
+export interface PersistentSchemaEncoded extends Schema.Schema.Encoded<typeof PersistentEchoSchema> {}
+export const PersistentSchema: Schema.Schema<PersistentSchema, PersistentSchemaEncoded> = PersistentEchoSchema;

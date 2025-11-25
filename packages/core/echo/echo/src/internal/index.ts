@@ -12,7 +12,7 @@ export * from './json-schema';
 export * from './ref';
 export * from './types';
 
-// TODO(burdon): Required to defeat moon cache (otherwise SchemaValidator is not found despite being exported below).
+// TODO(wittjosiah): Required to ensure types are portable.
 export * from './object';
 export * from './proxy';
 export * from './schema';
@@ -28,4 +28,11 @@ export {
   TypedObject,
 } from './object';
 export { makeObject } from './proxy';
-export { type BaseSchema, EchoSchema, ImmutableSchema, RuntimeSchemaRegistry, StoredSchema, isMutable } from './schema';
+export {
+  type BaseSchema,
+  EchoSchema,
+  ImmutableSchema,
+  RuntimeSchemaRegistry,
+  PersistentSchema,
+  isMutable,
+} from './schema';

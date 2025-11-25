@@ -4,6 +4,6 @@
 
 export * from './echo-schema';
 export * from './manipulation';
+export * from './persistent-schema';
 export * from './runtime-schema-registry';
-export * from './stored-schema';
 export * from './snapshot';

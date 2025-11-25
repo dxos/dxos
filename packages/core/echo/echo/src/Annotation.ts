@@ -11,7 +11,6 @@ export {
   TypeAnnotation,
   getDescription,
   getLabel,
-  getLabelForObject,
   getTypeAnnotation,
   setDescription,
   setLabel,

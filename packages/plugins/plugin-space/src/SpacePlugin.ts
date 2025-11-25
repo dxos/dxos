@@ -121,7 +121,7 @@ export const SpacePlugin = definePlugin<SpacePluginOptions>(
             },
           }),
           contributes(Capabilities.Metadata, {
-            id: Type.PersistentType.typename,
+            id: Type.getTypename(Type.PersistentType),
             metadata: {
               icon: 'ph--database--regular',
               iconHue: 'green',

@@ -433,7 +433,7 @@ export default (context: PluginContext) => {
           Function.pipe(
             get(node),
             Option.flatMap((node) =>
-              Obj.instanceOf(Collection.Managed, node.data) && node.data.key === Type.PersistentType.typename
+              Obj.instanceOf(Collection.Managed, node.data) && node.data.key === Type.getTypename(Type.PersistentType)
                 ? Option.some(node.data)
                 : Option.none(),
             ),

@@ -6,22 +6,12 @@ import { describe, expect, test } from 'vitest';
 
 import { DXN } from '@dxos/keys';
 
-import { makeObject } from '..';
 import { TestSchema } from '../../testing';
-import { getSchemaDXN, getSchemaTypename } from '../annotations';
+import { getSchemaDXN, getSchemaTypename, getTypeDXN, getTypename } from '../annotations';
 import { RelationSourceId, RelationTargetId, getObjectDXN } from '../entities';
+import { makeObject } from '../proxy';
 import { Ref, StaticRefResolver } from '../ref';
-import {
-  ATTR_TYPE,
-  EntityKind,
-  EntityKindId,
-  MetaId,
-  TypeId,
-  getMeta,
-  getSchema,
-  getTypeDXN,
-  getTypename,
-} from '../types';
+import { ATTR_TYPE, EntityKind, EntityKindId, MetaId, TypeId, getMeta, getSchema } from '../types';
 
 import { createObject } from './create-object';
 import { objectFromJSON, objectToJSON } from './json-serializer';

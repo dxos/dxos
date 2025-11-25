@@ -23,7 +23,9 @@ export default async (context: PluginContext) => {
   space.properties.icon = SPACE_ICON;
   const defaultSpaceCollection = space.properties[Collection.Collection.typename].target;
 
-  defaultSpaceCollection?.objects.push(Ref.make(Collection.makeManaged({ key: Type.PersistentType.typename })));
+  defaultSpaceCollection?.objects.push(
+    Ref.make(Collection.makeManaged({ key: Type.getTypename(Type.PersistentType) })),
+  );
 
   await context.activatePromise(SpaceEvents.SpaceCreated);
   const onCreateSpaceCallbacks = context.getCapabilities(SpaceCapabilities.OnCreateSpace);

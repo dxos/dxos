@@ -11,9 +11,9 @@ import { DXN } from '@dxos/keys';
 
 import { Relation } from '../../index';
 import { TestSchema } from '../../testing';
-import { getSchemaDXN, isInstanceOf } from '../annotations';
+import { getSchemaDXN, getTypeDXN, isInstanceOf } from '../annotations';
 import { ATTR_RELATION_SOURCE, ATTR_RELATION_TARGET } from '../entities';
-import { ATTR_META, ATTR_TYPE, getSchema, getTypeDXN } from '../types';
+import { ATTR_META, ATTR_TYPE, getSchema } from '../types';
 
 import { createObject } from './create-object';
 import { objectToJSON } from './json-serializer';

@@ -7,14 +7,14 @@ import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
 
+import { Reference } from '@dxos/echo-protocol';
 import { type JsonPath, getField } from '@dxos/effect';
-import { assertArgument } from '@dxos/invariant';
+import { assertArgument, invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
 import { type Primitive } from '@dxos/util';
 
-import { EntityKind, getSchema } from '../types';
+import { type AnyProperties, EntityKind, TypeId, getSchema } from '../types';
 
-import { TypeMeta } from './types';
 import { createAnnotationHelper } from './util';
 
 /**
@@ -40,6 +40,35 @@ export const getTypeIdentifierAnnotation = (schema: Schema.Schema.All) =>
     SchemaAST.getAnnotation<string>(TypeIdentifierAnnotationId),
     Option.getOrElse(() => undefined),
   )(schema.ast);
+
+/**
+ * Fully qualified globally unique typename.
+ * Example: `dxos.org/type/Person`
+ */
+// TODO(burdon): Reconcile with short DXN format.
+// TODO(burdon): Change type => schema throughout.
+export const TypenameSchema = Schema.String.pipe(Schema.pattern(/^[a-zA-Z]\w+\.[a-zA-Z]\w{1,}\/[\w/_-]+$/)).annotations(
+  {
+    description: 'Fully qualified globally unique typename',
+    example: 'dxos.org/type/Person',
+  },
+);
+
+/**
+ * Semantic version format: `major.minor.patch`
+ * Example: `1.0.0`
+ */
+export const VersionSchema = Schema.String.pipe(Schema.pattern(/^\d+.\d+.\d+$/)).annotations({
+  description: 'Semantic version format: `major.minor.patch`',
+  example: '1.0.0',
+});
+
+export const TypeMeta = Schema.Struct({
+  typename: TypenameSchema,
+  version: VersionSchema,
+});
+
+export interface TypeMeta extends Schema.Schema.Type<typeof TypeMeta> {}
 
 /**
  * Entity type.
@@ -105,6 +134,101 @@ export const getSchemaTypename = (schema: Schema.Schema.All): string | undefined
 export const getSchemaVersion = (schema: Schema.Schema.All): string | undefined => getTypeAnnotation(schema)?.version;
 
 /**
+ * Gets the typename of the object without the version.
+ * Returns only the name portion, not the DXN.
+ * @example "example.org/type/Contact"
+ *
+ * @internal (use Obj.getTypename)
+ */
+export const getTypename = (obj: AnyProperties): string | undefined => {
+  const schema = getSchema(obj);
+  if (schema != null) {
+    // Try to extract typename from DXN.
+    return getSchemaTypename(schema);
+  } else {
+    const type = getTypeDXN(obj);
+    return type?.asTypeDXN()?.type;
+  }
+};
+
+/**
+ * @internal (use Type.setTypename)
+ */
+// TODO(dmaretskyi): Rename setTypeDXN.
+export const setTypename = (obj: any, typename: DXN): void => {
+  invariant(typename instanceof DXN, 'Invalid type.');
+  Object.defineProperty(obj, TypeId, {
+    value: typename,
+    writable: false,
+    enumerable: false,
+    configurable: false,
+  });
+};
+
+/**
+ * @returns Object type as {@link DXN}.
+ * @returns undefined if the object doesn't have a type.
+ * @example `dxn:example.com/type/Person:1.0.0`
+ *
+ * @internal (use Obj.getTypeDXN)
+ */
+// TODO(burdon): Narrow type.
+export const getTypeDXN = (obj: AnyProperties): DXN | undefined => {
+  if (!obj) {
+    return undefined;
+  }
+
+  const type = (obj as any)[TypeId];
+  if (!type) {
+    return undefined;
+  }
+
+  invariant(type instanceof DXN, 'Invalid object.');
+  return type;
+};
+
+/**
+ * Checks if the object is an instance of the schema.
+ * Only typename is compared, the schema version is ignored.
+ *
+ * The following cases are considered to mean that the object is an instance of the schema:
+ *  - Object was created with this exact schema.
+ *  - Object was created with a different version of this schema.
+ *  - Object was created with a different schema (maybe dynamic) that has the same typename.
+ */
+// TODO(burdon): Can we use `Schema.is`?
+export const isInstanceOf = <Schema extends Schema.Schema.AnyNoContext>(
+  schema: Schema,
+  object: any,
+): object is Schema.Schema.Type<Schema> => {
+  if (object == null) {
+    return false;
+  }
+
+  const schemaDXN = getSchemaDXN(schema);
+  if (!schemaDXN) {
+    throw new Error('Schema must have an object annotation.');
+  }
+
+  const type = getTypeDXN(object);
+  if (type && DXN.equals(type, schemaDXN)) {
+    return true;
+  }
+
+  const typename = getTypename(object);
+  if (!typename) {
+    return false;
+  }
+
+  const typeDXN = schemaDXN.asTypeDXN();
+  if (!typeDXN) {
+    return false;
+  }
+
+  return typeDXN.type === typename;
+};
+
+/**
  * PropertyMeta (metadata for dynamic schema properties).
  * For user-defined annotations.
  */
@@ -168,17 +292,6 @@ export const SystemTypeAnnotation = createAnnotationHelper<boolean>(SystemTypeAn
  */
 export const LabelAnnotationId = Symbol.for('@dxos/schema/annotation/Label');
 export const LabelAnnotation = createAnnotationHelper<string[]>(LabelAnnotationId);
-
-/**
- * @deprecated Use {@link Obj.getLabel} instead.
- * Returns the label for a given object based on {@link LabelAnnotationId}.
- */
-export const getLabelForObject = (obj: unknown | undefined): string | undefined => {
-  const schema = getSchema(obj);
-  if (schema) {
-    return getLabel(schema, obj);
-  }
-};
 
 /**
  * Returns the label for a given object based on {@link LabelAnnotationId}.
@@ -315,4 +428,36 @@ export const getSchemaDXN = (schema: Schema.Schema.All): DXN | undefined => {
   }
 
   return DXN.fromTypenameAndVersion(objectAnnotation.typename, objectAnnotation.version);
+};
+
+/**
+ * Returns a reference that will be used to point to a schema.
+ * @deprecated Use {@link getSchemaDXN} instead.
+ */
+export const getTypeReference = (schema: Schema.Schema.All | undefined): Reference | undefined => {
+  if (!schema) {
+    return undefined;
+  }
+
+  const schemaDXN = getSchemaDXN(schema);
+  if (!schemaDXN) {
+    return undefined;
+  }
+  return Reference.fromDXN(schemaDXN);
+};
+
+/**
+ * Returns a reference that will be used to point to a schema.
+ * @throws If it is not possible to reference this schema.
+ *
+ * @deprecated Use {@link getSchemaDXN} instead.
+ */
+export const requireTypeReference = (schema: Schema.Schema.AnyNoContext): Reference => {
+  const typeReference = getTypeReference(schema);
+  if (typeReference == null) {
+    // TODO(burdon): Catalog user-facing errors (this is too verbose).
+    throw new Error('Schema must be defined via TypedObject.');
+  }
+
+  return typeReference;
 };
