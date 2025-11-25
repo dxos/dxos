@@ -15,6 +15,7 @@ export const TypeInputOptions = Schema.Struct({
   kind: Schema.Array(Schema.Literal('system', 'user')),
   registered: Schema.Array(Schema.Literal('registered', 'unregistered')),
 });
+
 export type TypeInputOptions = Schema.Schema.Type<typeof TypeInputOptions>;
 
 /**

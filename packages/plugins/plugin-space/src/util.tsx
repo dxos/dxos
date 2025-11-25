@@ -54,7 +54,7 @@ export const getSpaceDisplayName = (
   { personal, namesCache = {} }: { personal?: boolean; namesCache?: Record<string, string> } = {},
 ): string | [string, { ns: string }] => {
   return space.state.get() === SpaceState.SPACE_READY && (space.properties.name?.length ?? 0) > 0
-    ? space.properties.name
+    ? space.properties.name!
     : namesCache[space.id]
       ? namesCache[space.id]
       : personal

@@ -7,7 +7,7 @@ import { inspect } from 'node:util';
 import { type CleanupFn, Event, type ReadOnlyEvent, synchronized } from '@dxos/async';
 import { type Context, LifecycleState, Resource } from '@dxos/context';
 import { inspectObject } from '@dxos/debug';
-import { type Database, Obj, type QueryAST, Ref } from '@dxos/echo';
+import { type Database, Obj, type QueryAST, Ref, type Type } from '@dxos/echo';
 import { type AnyProperties, assertObjectModel, setRefResolver } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
 import { DXN, type PublicKey, type SpaceId } from '@dxos/keys';
@@ -47,7 +47,7 @@ export interface EchoDatabase extends Database.Database {
   /**
    * @deprecated Use `ref` instead.
    */
-  getObjectById(id: string, opts?: Database.GetObjectByIdOptions): Obj.Any | undefined;
+  getObjectById<T extends Obj.Any = Type.Expando>(id: string, opts?: Database.GetObjectByIdOptions): T | undefined;
 
   /**
    * Wait for all pending changes to be saved to disk.
@@ -220,7 +220,8 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
     }
   }
 
-  getObjectById(id: string, { deleted = false } = {}): Obj.Any | undefined {
+  // TODO(burdon): Type check.
+  getObjectById<T extends Obj.Any = Type.Expando>(id: string, { deleted = false } = {}): T | undefined {
     const core = this._coreDatabase.getObjectCoreById(id);
     if (!core || (core.isDeleted() && !deleted)) {
       return undefined;

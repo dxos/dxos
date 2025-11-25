@@ -20,7 +20,7 @@ import { getSize, mx } from '@dxos/react-ui-theme';
 import { byPosition, isNonNullable, safeParseInt } from '@dxos/util';
 
 import { type ExpandableGraph, ROOT_ID } from '../graph';
-import { GraphBuilder, atomFromObservable, createExtension } from '../graph-builder';
+import { GraphBuilder, atomFromObservable, atomFromSignal, createExtension } from '../graph-builder';
 import { type Node } from '../node';
 import { atomFromQuery } from '../testing';
 
@@ -62,7 +62,7 @@ const createGraph = (client: Client, registry: Registry.Registry): ExpandableGra
                 id: space.id,
                 type: 'dxos.org/type/Space',
                 properties: {
-                  label: get(atomFromObservable(space.properties.name)),
+                  label: get(atomFromSignal(() => space.properties.name)),
                 },
                 data: space,
               }));

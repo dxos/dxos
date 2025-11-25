@@ -12,27 +12,27 @@ export * from './json-schema';
 export * from './ref';
 export * from './types';
 
-// TODO(wittjosiah): Required to ensure types are portable.
+// TODO(wittjosiah): Required to ensure types are portable (need to export all types required for downstream inference).
 export * from './object';
 export * from './proxy';
 export * from './schema';
 
-export {
-  createObject,
-  createQueueDXN,
-  isDeleted,
-  objectFromJSON,
-  objectToJSON,
-  setRefResolverOnData,
-  SchemaValidator,
-  TypedObject,
-} from './object';
-export { makeObject } from './proxy';
-export {
-  type BaseSchema,
-  EchoSchema,
-  ImmutableSchema,
-  RuntimeSchemaRegistry,
-  PersistentSchema,
-  isMutable,
-} from './schema';
+// export {
+//   createObject,
+//   createQueueDXN,
+//   isDeleted,
+//   objectFromJSON,
+//   objectToJSON,
+//   setRefResolverOnData,
+//   SchemaValidator,
+//   TypedObject,
+// } from './object';
+// export { makeObject } from './proxy';
+// export {
+//   type BaseSchema,
+//   EchoSchema,
+//   ImmutableSchema,
+//   RuntimeSchemaRegistry,
+//   PersistentSchema,
+//   isMutable,
+// } from './schema';

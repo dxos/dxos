@@ -27,6 +27,12 @@
       "browser": "./dist/lib/browser/testing/index.mjs",
       "node": "./dist/lib/node-esm/testing/index.mjs"
     },
+    "./Entity": {
+      "source": "./src/Entity.ts",
+      "types": "./dist/types/src/Entity.d.ts",
+      "browser": "./dist/lib/browser/Entity.mjs",
+      "node": "./dist/lib/node-esm/Entity.mjs"
+    },
     "./Obj": {
       "source": "./src/Obj.ts",
       "types": "./dist/types/src/Obj.d.ts",
@@ -55,8 +61,14 @@
   "types": "dist/types/src/index.d.ts",
   "typesVersions": {
     "*": {
-      "Type": [
-        "dist/types/src/Type.d.ts"
+      "internal": [
+        "dist/types/src/internal/index.d.ts"
+      ],
+      "testing": [
+        "dist/types/src/testing/index.d.ts"
+      ],
+      "Entity": [
+        "dist/types/src/Entity.d.ts"
       ],
       "Obj": [
         "dist/types/src/Obj.d.ts"
@@ -67,11 +79,8 @@
       "Ref": [
         "dist/types/src/Ref.d.ts"
       ],
-      "internal": [
-        "dist/types/src/internal/index.d.ts"
-      ],
-      "testing": [
-        "dist/types/src/testing/index.d.ts"
+      "Type": [
+        "dist/types/src/Type.d.ts"
       ]
     }
   },

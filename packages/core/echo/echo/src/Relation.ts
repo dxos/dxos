@@ -30,6 +30,10 @@ import {
 import * as Obj from './Obj';
 import * as Type from './Type';
 
+/**
+ * Base type for all ECHO relations.
+ * @private
+ */
 interface BaseRelation<Source, Target>
   extends AnyEchoObject,
     Type.OfKind<EntityKind.Relation>,

@@ -41,6 +41,10 @@ import * as Ref from './Ref';
 import type * as Relation from './Relation';
 import * as Type from './Type';
 
+/**
+ * Base type for all ECHO objects.
+ * @private
+ */
 interface BaseObj extends AnyEchoObject, Type.OfKind<EntityKind.Object> {}
 
 /**
@@ -192,8 +196,6 @@ export type ID = ObjectId;
  * @example
  * ```ts
  * const john = Obj.make(Person, { name: 'John' });
- * const johnIsPerson = Obj.instanceOf(Person)(john);
- *
  * const isPerson = Obj.instanceOf(Person);
  * if (isPerson(john)) {
  *   // john is Person

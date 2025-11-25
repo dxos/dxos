@@ -7,9 +7,7 @@ import * as Schema from 'effect/Schema';
 import { Annotation, Type } from '@dxos/echo';
 import { Queue } from '@dxos/echo-db';
 
-// TODO(burdon): Pipe Schem.optional, or partial to entire struct to make everything optional?
-// TODO(burdon): Is separate schema def required for forms? Can it be extracted from SpaceProperties?
-export const SpaceProperties = Schema.Struct(
+export const SpacePropertiesSchema = Schema.Struct(
   {
     //
     // System properties.
@@ -27,8 +25,17 @@ export const SpaceProperties = Schema.Struct(
     icon: Schema.optional(Schema.String),
     hue: Schema.optional(Schema.String),
   },
-  { key: Schema.String, value: Schema.Any },
-).pipe(
+  {
+    key: Schema.String,
+    value: Schema.Any,
+  },
+);
+
+export type SpacePropertiesSchema = Schema.Schema.Type<typeof SpacePropertiesSchema>;
+
+// TODO(burdon): Pipe Schem.optional, or partial to entire struct to make everything optional?
+// TODO(burdon): Is separate schema def required for forms? Can it be extracted from SpaceProperties?
+export const SpaceProperties = SpacePropertiesSchema.pipe(
   Type.Obj({
     // TODO(burdon): Rename SpaceProperties.
     typename: 'dxos.org/type/Properties',

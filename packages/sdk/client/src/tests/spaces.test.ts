@@ -257,7 +257,7 @@ describe('Spaces', () => {
     await waitForSpaceState(space, SpaceState.SPACE_READY, 1000);
     expect(space.db.getObjectById(id)).to.exist;
 
-    space.db.getObjectById(id)!.data = 'test2';
+    space.db.getObjectById<Type.Expando>(id)!.data = 'test2';
     await space.db.flush();
   });
 
@@ -297,7 +297,7 @@ describe('Spaces', () => {
     await waitForSpaceState(space2, SpaceState.SPACE_READY, 1_000);
     expect(space2.db.getObjectById(obj.id)).to.exist;
 
-    space2.db.getObjectById(obj.id)!.data = 'test2';
+    space2.db.getObjectById<Type.Expando>(obj.id)!.data = 'test2';
     await space2.db.flush();
   });
 
@@ -529,6 +529,7 @@ describe('Spaces', () => {
     onTestFinished(async () => {
       await context.dispose();
     });
+
     return createInitializedClientsWithContext(context, count, options);
   };
 
@@ -543,7 +544,7 @@ describe('Spaces', () => {
   };
 
   const getDocumentText = (space: Space, documentId: string): string => {
-    return (space.db.getObjectById(documentId) as DocumentType).content.target!.content;
+    return space.db.getObjectById<DocumentType>(documentId)!.content.target!.content;
   };
 
   const registerTypes = (client: Client) => {

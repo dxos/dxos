@@ -10,7 +10,7 @@ import * as Schema from 'effect/Schema';
 
 import { Blueprint } from '@dxos/blueprints';
 import { Resource } from '@dxos/context';
-import { DXN, Filter, Obj, Query, type Ref, type Relation, Type } from '@dxos/echo';
+import { DXN, type Entity, Filter, Obj, Query, type Ref, Type } from '@dxos/echo';
 import { type Queue } from '@dxos/echo-db';
 import { invariant } from '@dxos/invariant';
 import { ComplexSet } from '@dxos/util';
@@ -157,7 +157,7 @@ export class AiContextBinder extends Resource {
     ]);
   }
 
-  private _reduce(items: (ObEj.Any | Relation.Any)[]): Bindings {
+  private _reduce(items: Entity.Any[]): Bindings {
     return Function.pipe(
       items,
       Array.filter(Obj.instanceOf(ContextBinding)),

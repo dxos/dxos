@@ -16,8 +16,6 @@ import { type DXN, type ObjectId } from '@dxos/keys';
 export interface Queue<T extends Entity.Any = Entity.Any> extends Database.Queryable {
   readonly dxn: DXN;
 
-  toJSON(): any;
-
   /**
    * Appends objects to the queue.
    */

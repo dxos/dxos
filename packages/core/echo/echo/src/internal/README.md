@@ -39,6 +39,7 @@
 
 3. Audit usage from @dxos/echo-db
 
+- [ ] Ability to extract Struct from Type.Obj
 - [ ] created/updated system props (const { created } = Obj.getTimestamps)?
 - [ ] QueryFn, QueryOptions => Database
 - [ ] Datatbase.query() options?
