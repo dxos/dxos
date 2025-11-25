@@ -55,8 +55,8 @@ const RefStory = <T extends AnyProperties = any>(props: StoryProps<T>) => {
     switch (typeInfo.typename) {
       case Testing.Person.typename:
         return [
-          { dxn: Obj.getDXN(contact1), label: 'John Coltraine' },
-          { dxn: Obj.getDXN(contact2), label: 'Erykah Badu' },
+          { dxn: Obj.getDXN(contact1), label: 'Alice' },
+          { dxn: Obj.getDXN(contact2), label: 'Bob' },
         ];
       default:
         return [];

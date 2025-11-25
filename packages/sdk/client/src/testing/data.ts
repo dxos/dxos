@@ -7,7 +7,7 @@ import * as Schema from 'effect/Schema';
 import { Expando, Ref, TypedObject } from '@dxos/echo/internal';
 
 //
-// TODO(burdon): Remove.
+// TODO(burdon): Remove (use @dxos/echo/testing).
 //
 
 /** @deprecated */
