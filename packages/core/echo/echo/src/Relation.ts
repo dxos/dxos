@@ -30,28 +30,15 @@ import {
 import * as Obj from './Obj';
 import * as Type from './Type';
 
-/**
- * @internal
- */
 interface BaseRelation<Source, Target>
   extends AnyEchoObject,
     Type.OfKind<EntityKind.Relation>,
     Type.Relation.Endpoints<Source, Target> {}
 
-// TODO(burdon): Extends Obj.Any to make polymorphic; otherwise Obj methods require Obj.Any | Relation.Any?
-// export interface BaseRelation<Source = Obj.Any, Target = Obj.Any>
-//   extends Obj.Any,
-//     Type.Relation.Endpoints<Source, Target> {}
-
 /**
  * Base type for all Relations objects.
  */
 export interface Any extends BaseRelation<Obj.Any, Obj.Any> {}
-
-/**
- * Relation type with specific source and target types.
- */
-export type Relation<Source extends Obj.Any, Target extends Obj.Any, Props> = BaseRelation<Source, Target> & Props;
 
 export const Any = Schema.Struct({}).pipe(
   Type.Relation({
@@ -61,6 +48,11 @@ export const Any = Schema.Struct({}).pipe(
     target: Obj.Any,
   }),
 );
+
+/**
+ * Relation type with specific source and target types.
+ */
+export type Relation<Source extends Obj.Any, Target extends Obj.Any, Props> = BaseRelation<Source, Target> & Props;
 
 export const Source: unique symbol = RelationSourceId as any;
 export type Source = typeof Source;

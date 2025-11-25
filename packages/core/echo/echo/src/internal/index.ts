@@ -35,6 +35,9 @@ export * from './types';
 //  - [ ] Fix commented out tests.
 //  - [ ] DISCUSS: Standradize $ suffix to disambuguate imports (GPT recommended).
 
+// NOTE
+//  - Marking types as @internal (even for unexported types) erases type information.
+
 //  2. Clean-up
 //  - [ ] Restrict import { X } from '@dxos/echo/internal' // TODO(burdon): Only for echo-db.
 //  - [ ] Promote parts of src/internal/ref to Ref.ts
