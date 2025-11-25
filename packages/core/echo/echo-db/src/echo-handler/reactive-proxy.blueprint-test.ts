@@ -14,7 +14,7 @@ import { log } from '@dxos/log';
 
 registerSignalsRuntime();
 
-const TEST_OBJECT = Obj.make(TestSchema.Example, {
+const TEST_OBJECT: TestSchema.ExampleSchema = {
   string: 'foo',
   number: 42,
   boolean: true,
@@ -23,7 +23,7 @@ const TEST_OBJECT = Obj.make(TestSchema.Example, {
   nested: {
     field: 'bar',
   },
-});
+};
 
 // TODO(dmaretskyi): Come up with a test fixture pattern?
 export interface TestConfiguration {
@@ -123,19 +123,19 @@ export const reactiveProxyTests = (testConfigFactory: TestConfigurationFactory):
       });
 
       test('can work with complex types', async () => {
-        const circle: any = { type: 'circle', radius: 42 };
+        const circle: any = { field: 'circle' };
         const obj = await createObject({ nestedNullableArray: [circle] });
         expect(obj.nestedNullableArray![0]).to.deep.eq(circle);
 
         obj.nestedNullableArray?.push(null);
         expect(obj.nestedNullableArray).to.deep.eq([circle, null]);
 
-        const square: any = { type: 'square', side: 24 };
+        const square: any = { field: 'square' };
         obj.nestedNullableArray?.push(square);
         expect(obj.nestedNullableArray).to.deep.eq([circle, null, square]);
 
-        (obj.nestedNullableArray![2] as any).side = 33;
-        expect((obj.nestedNullableArray![2] as any).side).to.eq(33);
+        (obj.nestedNullableArray![2] as any).field = 'rectangle';
+        expect((obj.nestedNullableArray![2] as any).field).to.eq('rectangle');
       });
 
       test('validation failures', async (ctx) => {

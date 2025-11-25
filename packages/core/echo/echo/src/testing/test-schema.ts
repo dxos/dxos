@@ -15,7 +15,7 @@ export namespace TestSchema {
     field: Schema.String,
   }).pipe(Schema.mutable);
 
-  export const Example = Schema.Struct({
+  export const ExampleSchema = Schema.Struct({
     string: Schema.String,
     number: Schema.Number,
     boolean: Schema.Boolean,
@@ -29,8 +29,11 @@ export namespace TestSchema {
     reference: Schema.suspend((): Type.Ref<Example> => Type.Ref(Example)),
     referenceArray: Schema.mutable(Schema.Array(Schema.suspend((): Type.Ref<Example> => Type.Ref(Example)))),
     other: Schema.Any,
-  }).pipe(
-    Schema.partial,
+  }).pipe(Schema.partial);
+
+  export interface ExampleSchema extends Schema.Schema.Type<typeof ExampleSchema> {}
+
+  export const Example = ExampleSchema.pipe(
     Type.Obj({
       typename: 'example.com/type/Example',
       version: '0.1.0',

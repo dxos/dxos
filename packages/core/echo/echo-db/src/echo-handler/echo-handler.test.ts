@@ -38,7 +38,7 @@ import { getDatabaseFromObject } from './util';
 
 registerSignalsRuntime();
 
-const TEST_OBJECT = Obj.make(TestSchema.Example, {
+const TEST_OBJECT: TestSchema.ExampleSchema = {
   string: 'foo',
   number: 42,
   boolean: true,
@@ -47,7 +47,7 @@ const TEST_OBJECT = Obj.make(TestSchema.Example, {
   nested: {
     field: 'bar',
   },
-});
+};
 
 test('id property name is reserved', () => {
   const invalidSchema = Schema.Struct({ id: Schema.Number });
