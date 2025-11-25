@@ -7,6 +7,7 @@ import * as Schema from 'effect/Schema';
 import { Obj, Type } from '@dxos/echo';
 import { GeneratorAnnotation, SystemTypeAnnotation } from '@dxos/echo/internal';
 import { defineObjectMigration } from '@dxos/echo-db';
+import { type MakeOptional } from '@dxos/util';
 
 import * as Actor from './Actor';
 import * as ContentBlock from './ContentBlock';
@@ -18,7 +19,7 @@ import * as ContentBlock from './ContentBlock';
 //  - Read receipts need to be per space member.
 //  - Read receipts don't need to be added to schema until they being implemented.
 export const Message = Schema.Struct({
-  id: Obj.ID, // TODO(burdon): Remove.
+  id: Obj.ID, // TODO(burdon): Remove (from all types in this package).
   // TODO(dmaretskyi): Consider adding a channelId too.
   parentMessage: Schema.optional(Obj.ID),
   // TODO(burdon): Rename sent (don't clash with metadata for created).
@@ -48,20 +49,16 @@ export const Message = Schema.Struct({
 
 export interface Message extends Schema.Schema.Type<typeof Message> {}
 
-// TODO(burdon): REMOVE.
-const xxx: Type.Obj.Any = Message;
-console.log(xxx);
-
-// TODO(burdon): Create type from MakeProps.
 export const make = ({
+  created,
   sender,
   blocks = [],
   properties,
-}: Omit<Obj.MakeProps<typeof Message>, 'sender'> & {
+}: MakeOptional<Omit<Obj.MakeProps<typeof Message>, 'sender'>, 'created'> & {
   sender: Actor.Actor | Actor.Role;
 }) => {
   return Obj.make(Message, {
-    created: new Date().toISOString(),
+    created: created ?? new Date().toISOString(),
     sender: typeof sender === 'string' ? { role: sender } : sender,
     blocks,
     properties,

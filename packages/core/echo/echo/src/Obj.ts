@@ -76,13 +76,13 @@ const defaultMeta: ObjectMeta = {
 
 type Props<T = any> = {
   id?: ObjectId;
-  [MetaId]?: ObjectMeta;
+  [Meta]?: Partial<ObjectMeta>;
 } & Type.Properties<T>;
 
 // TODO(burdon): Should we allow the caller to set the id?
 export type MakeProps<T extends Type.Obj.Any> = {
   id?: ObjectId;
-  [MetaId]?: ObjectMeta;
+  [Meta]?: Partial<ObjectMeta>;
 } & NoInfer<Props<Schema.Schema.Type<T>>>;
 
 /**

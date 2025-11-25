@@ -53,6 +53,7 @@ export * from './types';
 //  - [ ] Move EchoSchemaRegistry into hypergraph
 //
 //  3. Audit usage from @dxos/echo-db
+//  - [ ] created/updated system props (const { created } = Obj.getTimestamps)?
 //  - [ ] QueryFn, QueryOptions => Database
 //  - [ ] Datatbase.query() options?
 //  - [ ] Expando type.

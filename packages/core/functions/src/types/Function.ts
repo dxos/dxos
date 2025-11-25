@@ -57,6 +57,7 @@ export const Function = Schema.Struct({
   Annotation.LabelAnnotation.set(['name']),
   SystemTypeAnnotation.set(true),
 );
+
 export interface Function extends Schema.Schema.Type<typeof Function> {}
 
 export const make = (props: Obj.MakeProps<typeof Function>) => Obj.make(Function, props);

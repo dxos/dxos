@@ -262,7 +262,7 @@ export const createTestData = () => {
 
   const emails: Message.Message[] = [
     // Recent emails.
-    Message.make(Message, {
+    Message.make({
       blocks: [
         {
           _tag: 'text',
@@ -270,10 +270,11 @@ export const createTestData = () => {
         },
       ],
       sender: { contact: Ref.make(contacts.david) },
+      created: getDate(0),
       properties: { subject: 'Q3 Financial Review' },
     }),
 
-    Obj.make(Message.Message, {
+    Message.make({
       blocks: [
         {
           _tag: 'text',
@@ -285,7 +286,7 @@ export const createTestData = () => {
       properties: { subject: 'Board Feedback and Next Steps' },
     }),
 
-    Obj.make(Message.Message, {
+    Message.make({
       blocks: [
         {
           _tag: 'text',
@@ -297,7 +298,7 @@ export const createTestData = () => {
       properties: { subject: 'New Feature Ready for Testing' },
     }),
 
-    Obj.make(Message.Message, {
+    Message.make({
       blocks: [
         {
           _tag: 'text',
@@ -309,7 +310,7 @@ export const createTestData = () => {
       properties: { subject: 'URGENT: Bitcoin Wallet Verification Required' },
     }),
 
-    Obj.make(Message.Message, {
+    Message.make({
       blocks: [
         {
           _tag: 'text',
@@ -321,7 +322,7 @@ export const createTestData = () => {
       properties: { subject: 'Potential Strategic Partnership' },
     }),
 
-    Obj.make(Message.Message, {
+    Message.make({
       blocks: [
         {
           _tag: 'text',
@@ -333,7 +334,7 @@ export const createTestData = () => {
       properties: { subject: 'New Hires Starting Next Week' },
     }),
 
-    Obj.make(Message.Message, {
+    Message.make({
       blocks: [
         {
           _tag: 'text',
@@ -345,7 +346,7 @@ export const createTestData = () => {
       properties: { subject: 'Security Incident Report' },
     }),
 
-    Obj.make(Message.Message, {
+    Message.make({
       blocks: [
         {
           _tag: 'text',
@@ -357,7 +358,7 @@ export const createTestData = () => {
       properties: { subject: 'Acquisition Target Concerns' },
     }),
 
-    Obj.make(Message.Message, {
+    Message.make({
       blocks: [
         {
           _tag: 'text',
@@ -369,7 +370,7 @@ export const createTestData = () => {
       properties: { subject: 'Quarterly Tax Filings' },
     }),
 
-    Obj.make(Message.Message, {
+    Message.make({
       blocks: [
         {
           _tag: 'text',
@@ -381,7 +382,7 @@ export const createTestData = () => {
       properties: { subject: 'Speaking Opportunity: International Tech Summit' },
     }),
 
-    Obj.make(Message.Message, {
+    Message.make({
       blocks: [
         {
           _tag: 'text',
@@ -393,7 +394,7 @@ export const createTestData = () => {
       properties: { subject: 'MANDATORY: Security Update Required' },
     }),
 
-    Obj.make(Message.Message, {
+    Message.make({
       blocks: [
         {
           _tag: 'text',
@@ -405,7 +406,7 @@ export const createTestData = () => {
       properties: { subject: 'Q2 Customer Satisfaction Results' },
     }),
 
-    Obj.make(Message.Message, {
+    Message.make({
       blocks: [
         {
           _tag: 'text',
@@ -417,7 +418,7 @@ export const createTestData = () => {
       properties: { subject: 'Annual Company Retreat Planning' },
     }),
 
-    Obj.make(Message.Message, {
+    Message.make({
       blocks: [
         {
           _tag: 'text',
@@ -429,7 +430,7 @@ export const createTestData = () => {
       properties: { subject: 'Competitor Price Change - Strategic Response Needed' },
     }),
 
-    Obj.make(Message.Message, {
+    Message.make({
       blocks: [
         {
           _tag: 'text',
@@ -441,7 +442,7 @@ export const createTestData = () => {
       properties: { subject: 'Privacy Policy Update - Final Review' },
     }),
 
-    Obj.make(Message.Message, {
+    Message.make({
       blocks: [
         {
           _tag: 'text',
@@ -453,7 +454,7 @@ export const createTestData = () => {
       properties: { subject: 'Series C Funding Update - Oversubscribed' },
     }),
 
-    Obj.make(Message.Message, {
+    Message.make({
       blocks: [
         {
           _tag: 'text',
@@ -465,7 +466,7 @@ export const createTestData = () => {
       properties: { subject: 'Product Roadmap Finalized' },
     }),
 
-    Obj.make(Message.Message, {
+    Message.make({
       blocks: [
         {
           _tag: 'text',
@@ -477,7 +478,7 @@ export const createTestData = () => {
       properties: { subject: 'CONFIDENTIAL: Acquisition Offer Received' },
     }),
 
-    Obj.make(Message.Message, {
+    Message.make({
       blocks: [
         {
           _tag: 'text',
@@ -489,7 +490,7 @@ export const createTestData = () => {
       properties: { subject: 'Annual Audit Preparation' },
     }),
 
-    Obj.make(Message.Message, {
+    Message.make({
       blocks: [
         {
           _tag: 'text',

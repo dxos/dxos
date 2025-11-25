@@ -25,12 +25,14 @@ import { Filter, Query } from './api';
 
 faker.seed(1);
 
-type ObjectProps = {
-  value?: number;
-  [Obj.Meta]?: { tags?: string[] };
-};
-
 const tags = ['red', 'green', 'blue'];
+
+Obj.make(Type.Expando, { foo: 100 });
+
+type ObjectProps = {
+  [Obj.Meta]?: { tags?: string[] };
+  value?: number;
+};
 
 const createTestObject = (props: ObjectProps = {}) => {
   return Obj.make(Type.Expando, { title: faker.commerce.productName(), ...props });

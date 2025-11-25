@@ -5,9 +5,8 @@
 import { type EditorView } from '@codemirror/view';
 import React, { type ReactNode, forwardRef, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react';
 
-import { Expando } from '@dxos/echo/internal';
-import { live } from '@dxos/echo/internal';
-import { createDocAccessor, createObject } from '@dxos/echo-db';
+import { Obj, Type } from '@dxos/echo';
+import { createDocAccessor } from '@dxos/echo-db';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -41,7 +40,7 @@ export type StoryProps = Pick<UseTextEditorProps, 'id' | 'scrollTo' | 'selection
     debug?: DebugMode;
     debugCustom?: (view: EditorView) => ReactNode;
     text?: string;
-    object?: Expando;
+    object?: Type.Expando;
     readOnly?: boolean;
     placeholder?: string;
     lineNumbers?: boolean;
@@ -55,7 +54,7 @@ export const EditorStory = forwardRef<EditorController, StoryProps>(
 
     const attentionAttrs = useAttentionAttributes('test-panel');
     const [tree, setTree] = useState<DebugNode>();
-    const [object] = useState(createObject(live(Expando, { content: text ?? '' })));
+    const [object] = useState(Obj.make(Type.Expando, { content: text ?? '' }));
 
     const extensions = useMemo(
       () => (debug ? [extensionsParam, debugTree(setTree)].filter(isNonNullable) : extensionsParam),
