@@ -31,21 +31,23 @@ import * as Obj from './Obj';
 import * as Type from './Type';
 
 /**
- * Export common entity defs.
- */
-export * from './Entity';
-
-/**
  * NOTE: Don't export: Relation.Relation and Relation.Any form the public API.
+ * @internal
  */
 interface BaseRelation<Source, Target>
   extends AnyEchoObject,
     Type.OfKind<EntityKind.Relation>,
     Type.Relation.Endpoints<Source, Target> {}
 
+// TODO(burdon): Extends Obj.Any to make polymorphic; otherwise Obj methods require Obj.Any | Relation.Any?
+// export interface BaseRelation<Source = Obj.Any, Target = Obj.Any>
+//   extends Obj.Any,
+//     Type.Relation.Endpoints<Source, Target> {}
+
 /**
  * Relation type with specific properties.
  */
+// TODO(burdon): Source and target cannot be relations.
 export type Relation<Source extends Obj.Any, Target extends Obj.Any, Props> = BaseRelation<Source, Target> & Props;
 
 /**
@@ -55,7 +57,7 @@ export interface Any extends BaseRelation<Obj.Any, Obj.Any> {}
 
 export const Any = Schema.Struct({}).pipe(
   Type.Relation({
-    typename: 'dxos.org/types/Any',
+    typename: 'dxos.org/type/Any',
     version: '0.1.0',
     source: Obj.Any,
     target: Obj.Any,

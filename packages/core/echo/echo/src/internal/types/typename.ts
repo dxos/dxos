@@ -31,6 +31,7 @@ export const SchemaId = Symbol.for('@dxos/echo/Schema');
  *
  * @internal (Use Obj.getSchema)
  */
+// TODO(burdon): Narrow type.
 // TODO(dmaretskyi): For echo objects, this always returns the root schema.
 export const getSchema = (obj: unknown | undefined): Schema.Schema.AnyNoContext | undefined => {
   if (obj) {

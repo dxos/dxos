@@ -15,11 +15,17 @@
       "browser": "./dist/lib/browser/index.mjs",
       "node": "./dist/lib/node-esm/index.mjs"
     },
-    "./Type": {
-      "source": "./src/Type.ts",
-      "types": "./dist/types/src/Type.d.ts",
-      "browser": "./dist/lib/browser/Type.mjs",
-      "node": "./dist/lib/node-esm/Type.mjs"
+    "./internal": {
+      "source": "./src/internal/index.ts",
+      "types": "./dist/types/src/internal/index.d.ts",
+      "browser": "./dist/lib/browser/internal/index.mjs",
+      "node": "./dist/lib/node-esm/internal/index.mjs"
+    },
+    "./testing": {
+      "source": "./src/testing/index.ts",
+      "types": "./dist/types/src/testing/index.d.ts",
+      "browser": "./dist/lib/browser/testing/index.mjs",
+      "node": "./dist/lib/node-esm/testing/index.mjs"
     },
     "./Obj": {
       "source": "./src/Obj.ts",
@@ -39,17 +45,11 @@
       "browser": "./dist/lib/browser/Ref.mjs",
       "node": "./dist/lib/node-esm/Ref.mjs"
     },
-    "./internal": {
-      "source": "./src/internal/index.ts",
-      "types": "./dist/types/src/internal/index.d.ts",
-      "browser": "./dist/lib/browser/internal/index.mjs",
-      "node": "./dist/lib/node-esm/internal/index.mjs"
-    },
-    "./testing": {
-      "source": "./src/testing/index.ts",
-      "types": "./dist/types/src/testing/index.d.ts",
-      "browser": "./dist/lib/browser/testing/index.mjs",
-      "node": "./dist/lib/node-esm/testing/index.mjs"
+    "./Type": {
+      "source": "./src/Type.ts",
+      "types": "./dist/types/src/Type.d.ts",
+      "browser": "./dist/lib/browser/Type.mjs",
+      "node": "./dist/lib/node-esm/Type.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",

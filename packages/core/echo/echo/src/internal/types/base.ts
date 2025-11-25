@@ -29,14 +29,14 @@ export type HasTypename = {};
  * It is stricter than `T extends {}` or `T extends object`.
  */
 // TODO(burdon): Make internal.
-// TODO(burdon): Replace with Record<string, unknown>.
+// TODO(burdon): Prefer Record<string, unknown>.
+// TODO(burdon): Exclude "id", etc. from keys.
 export type AnyProperties = Record<string, any>;
 
 /**
  * Canonical type for all ECHO objects.
  */
-// TODO(burdon): Remove and move BaseObj here?
-export interface AnyEchoObject extends HasId, HasTypename, AnyProperties {}
+export interface AnyEchoObject extends HasId, HasTypename {}
 
 // TODO(dmaretskyi): Remove; this type effectively disables type safety due to `any`.
 export type WithId<T extends AnyProperties = AnyProperties> = T & HasId;

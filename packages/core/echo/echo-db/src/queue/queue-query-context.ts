@@ -7,7 +7,7 @@ import * as Function from 'effect/Function';
 
 import { Event } from '@dxos/async';
 import { Context } from '@dxos/context';
-import { type Database, Entity } from '@dxos/echo';
+import { type Database, Obj } from '@dxos/echo';
 import { filterMatchObjectJSON } from '@dxos/echo-pipeline/filter';
 import { type QueryAST } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
@@ -97,7 +97,7 @@ export class QueueQueryContext implements QueryContext {
     return Function.pipe(
       this.#queue.getObjectsSync(),
       // TODO(dmaretskyi): We end-up marshaling objects from JSON and back.
-      Array.filter((obj) => filterMatchObjectJSON(this.#filter!, Entity.toJSON(obj))),
+      Array.filter((obj) => filterMatchObjectJSON(this.#filter!, Obj.toJSON(obj))),
       Array.map((object) => ({
         id: object.id,
         spaceId,

@@ -21,7 +21,7 @@ export * from './types';
 //  - [x] Remove @deprecated from internal methods and mark @internal (e.g., getSchemaDXN).
 //    - NOTE: Internal methods should not use the import * from Obj/Type APIs.
 //  - [x] import ObjectId => @dxos/keys
-//  - [x] Entity type for Obj | Relation
+//  - [x] Relation extends Obj
 //  - [x] import LabelAnnotation => Annotation.LabelAnnotation
 //  - [x] import Expando => Type.Expando
 //  - [x] live => Obj.make
@@ -51,19 +51,20 @@ export * from './types';
 //  - [ ] Expando type.
 //  - [ ] Standardize '@automerge/automerge' imports (A vs. next).
 
-// export {
-//   createObject,
-//   createQueueDXN,
-//   isDeleted,
-//   objectFromJSON,
-//   objectToJSON,
-//   setRefResolverOnData,
-//   SchemaValidator,
-//   TypedObject,
-// } from './object';
-// export { makeObject } from './proxy';
-// export { type BaseSchema, EchoSchema, StoredSchema, ImmutableSchema, RuntimeSchemaRegistry, isMutable } from './schema';
+export {
+  createObject,
+  createQueueDXN,
+  isDeleted,
+  objectFromJSON,
+  objectToJSON,
+  setRefResolverOnData,
+  SchemaValidator,
+  TypedObject,
+} from './object';
+export { makeObject } from './proxy';
+export { type BaseSchema, EchoSchema, StoredSchema, ImmutableSchema, RuntimeSchemaRegistry, isMutable } from './schema';
 
+// TODO(burdon): Remove.
 export * from './object';
 export * from './proxy';
 export * from './schema';

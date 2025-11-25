@@ -24,6 +24,7 @@ import { getTypeDXNFromSpecifier } from './util';
 // TODO(dmaretskyi): Filter only properties that are references (or optional references, or unions that include references).
 type RefPropKey<T> = keyof T & string;
 
+// TODO(burdon): Narrow T to Obj.Any
 export interface Query<T> {
   // TODO(dmaretskyi): See new effect-schema approach to variance.
   '~Query': { value: T };

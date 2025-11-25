@@ -8,7 +8,6 @@ import { type DXN, type PublicKey, type SpaceId } from '@dxos/keys';
 import { type Live } from '@dxos/live-object';
 import { type QueryOptions as QueryOptionsProto } from '@dxos/protocols/proto/dxos/echo/filter';
 
-import type * as Entity from './Entity';
 import type { AnyProperties, HasId } from './internal';
 import type * as Obj from './Obj';
 import type { Filter, Query } from './query';
@@ -17,7 +16,7 @@ import type * as Ref from './Ref';
 /**
  * Individual query result entry.
  */
-export type QueryResultEntry<T extends Entity.Any = Entity.Any> = {
+export type QueryResultEntry<T extends Obj.Any = Obj.Any> = {
   id: string;
 
   spaceId: SpaceId;
@@ -51,7 +50,7 @@ export type QueryResultEntry<T extends Entity.Any = Entity.Any> = {
   };
 };
 
-export type OneShotQueryResult<T extends Entity.Any = Entity.Any> = {
+export type OneShotQueryResult<T extends Obj.Any = Obj.Any> = {
   results: QueryResultEntry<T>[];
   objects: T[];
 };
@@ -63,7 +62,7 @@ export type QuerySubscriptionOptions = {
   fire?: boolean;
 };
 
-export interface QueryResult<T extends Entity.Any = Entity.Any> {
+export interface QueryResult<T extends Obj.Any = Obj.Any> {
   readonly query: Query<T>;
   readonly results: QueryResultEntry<T>[];
   readonly objects: T[];
@@ -112,8 +111,9 @@ export type QueryOptions = {
 /**
  * `query` API function declaration.
  */
+// TODO(burdon): Reconcile Query and Filter (should only have one root type).
+// TODO(dmaretskyi): Remove query options.
 export interface QueryFn {
-  // TODO(dmaretskyi): Remove query options.
   <Q extends Query.Any>(
     query: Q,
     options?: (QueryAST.QueryOptions & QueryOptions) | undefined,
@@ -176,13 +176,13 @@ export interface Database extends Queryable {
   /**
    * Adds object to the database.
    */
-  // TODO(burdon): Restrict to Entity.Any (Obj.Any | Relation.Any).
+  // TODO(burdon): Narrow to Obj.Any.
   add<T extends AnyProperties>(obj: Live<T>, opts?: AddOptions): Live<T & HasId>;
 
   /**
    * Removes object from the database.
    */
-  // TODO(burdon): Restrict to Entity.Any (Obj.Any | Relation.Any).
+  // TODO(burdon): Narrow to Obj.Any.
   // TODO(burdon): Return true if removed.
   remove<T extends AnyProperties>(obj: T): void;
 }

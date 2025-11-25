@@ -28,6 +28,7 @@ export type CloneOptions<T extends Obj.Any> = {
  * Returns new unbound clone of the object.
  * @deprecated
  */
+// TODO(burdon): Remove?
 export const clone = <T extends Obj.Any>(obj: T, { retainId = true, additional = [] }: CloneOptions<T> = {}): T => {
   assertArgument(isEchoObject(obj), 'obj', 'expect obj to be an EchoObjectSchema');
   assertArgument(
@@ -35,9 +36,6 @@ export const clone = <T extends Obj.Any>(obj: T, { retainId = true, additional =
     'retainId',
     'retainId must be true when additional is not empty',
   );
-
-  const id = obj.id;
-  console.log(id);
 
   const clone = cloneInner(obj, retainId ? obj.id : ObjectId.random());
   const clones: T[] = [clone];

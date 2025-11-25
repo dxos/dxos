@@ -77,6 +77,7 @@ describe('Experimental API review', () => {
     expect(Obj.versionValid(version)).to.be.false;
   });
 
+  // TODO(burdon): Implement test.
   test.skip('type narrowing', () => {
     const any: Obj.Any | Relation.Any = null as any;
 

@@ -11,7 +11,6 @@ export * from './query';
 
 export * as Annotation from './Annotation';
 export * as Database from './Database';
-export * as Entity from './Entity';
 export * as Format from './Format';
 export * as JsonSchema from './JsonSchema';
 export * as Key from './Key';

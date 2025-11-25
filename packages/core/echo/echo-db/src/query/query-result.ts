@@ -20,7 +20,7 @@ import { type Query } from './api';
 // TODO(burdon): Multi-sort option.
 export type Sort<T extends AnyProperties> = (a: T, b: T) => -1 | 0 | 1;
 
-export interface QueryContext<T extends AnyProperties = AnyProperties> {
+export interface QueryContext<T extends Obj.Any = Obj.Any> {
   getResults(): Database.QueryResultEntry<T>[];
 
   // TODO(dmaretskyi): Update info?

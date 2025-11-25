@@ -54,9 +54,8 @@ export type CreateObjectProps<T> = T extends { id: string } ? Omit<T, 'id' | Kin
  *   email: "john@example.com",
  * })
  * ```
- *
- * @internal (Used for testing).
  */
+// TODO(burdon): Make internal.
 export const createObject = <S extends Schema.Schema.AnyNoContext>(
   schema: S,
   props: CreateObjectProps<Schema.Schema.Type<S>>,
