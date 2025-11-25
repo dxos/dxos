@@ -6,5 +6,4 @@ export * from './base';
 export * from './entity';
 export * from './meta';
 export * from './typename';
-export * from './util';
 export * from './version';

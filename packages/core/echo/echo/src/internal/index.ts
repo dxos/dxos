@@ -3,7 +3,7 @@
 //
 
 // TODO(burdon): Import directly (not part of ECHO API).
-export { JsonPath, JsonProp, splitJsonPath } from '@dxos/effect';
+export { JsonPath, JsonProp, getValue, setValue, splitJsonPath } from '@dxos/effect';
 
 export * from './annotations';
 export * from './entities';
@@ -12,7 +12,7 @@ export * from './json-schema';
 export * from './ref';
 export * from './types';
 
-// TODO(burdon): Required to defeat moon cache (otherwise SchemaValidator is not found).
+// TODO(burdon): Required to defeat moon cache (otherwise SchemaValidator is not found despite being exported below).
 export * from './object';
 export * from './proxy';
 export * from './schema';

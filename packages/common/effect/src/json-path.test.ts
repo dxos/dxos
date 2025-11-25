@@ -4,7 +4,7 @@
 
 import { describe, expect, test } from 'vitest';
 
-import { type JsonPath, createJsonPath, getField, isJsonPath, splitJsonPath } from './json-path';
+import { type JsonPath, createJsonPath, getField, getValue, isJsonPath, setValue, splitJsonPath } from './json-path';
 
 describe('createJsonPath', () => {
   test('supported path subset', () => {
@@ -97,5 +97,44 @@ describe('createJsonPath', () => {
   test('getField', () => {
     expect(getField({ a: { b: { c: 1 } } }, 'a.b.c' as JsonPath)).toBe(1);
     expect(getField({ a: 'foo' }, 'a' as JsonPath)).toBe('foo');
+  });
+});
+
+describe('Types', () => {
+  test('checks sanity', async ({ expect }) => {
+    const obj = {};
+    expect(obj).to.exist;
+  });
+});
+
+describe('get/set deep', () => {
+  test('get/set operations', ({ expect }) => {
+    const obj = {
+      name: 'test',
+      items: ['a', 'b', 'c'],
+      nested: {
+        prop: 'value',
+        arr: [1, 2, 3],
+      },
+    };
+
+    // Basic property access.
+    expect(getValue(obj, 'name' as JsonPath)).toBe('test');
+
+    // Array index access.
+    expect(getValue(obj, 'items[1]' as JsonPath)).toBe('b');
+
+    // Nested property access.
+    expect(getValue(obj, 'nested.prop' as JsonPath)).toBe('value');
+
+    // Nested array access.
+    expect(getValue(obj, 'nested.arr[2]' as JsonPath)).toBe(3);
+
+    // Setting values.
+    const updated1 = setValue(obj, 'items[1]' as JsonPath, 'x');
+    expect(updated1.items[1]).toBe('x');
+
+    const updated2 = setValue(obj, 'nested.arr[0]' as JsonPath, 99);
+    expect(updated2.nested.arr[0]).toBe(99);
   });
 });

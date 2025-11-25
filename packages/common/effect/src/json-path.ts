@@ -7,6 +7,7 @@ import * as Schema from 'effect/Schema';
 import { JSONPath } from 'jsonpath-plus';
 
 import { invariant } from '@dxos/invariant';
+import { getDeep, setDeep } from '@dxos/util';
 
 export type JsonProp = string & { __JsonPath: true; __JsonProp: true };
 export type JsonPath = string & { __JsonPath: true };
@@ -96,7 +97,29 @@ export const splitJsonPath = (path: JsonPath): string[] => {
 /**
  * Applies a JsonPath to an object.
  */
+// TODO(burdon): Reconcile with getValue.
 export const getField = (object: any, path: JsonPath): any => {
   // By default, JSONPath returns an array of results.
   return JSONPath({ path, json: object })[0];
+};
+
+/**
+ * Get value from object using JsonPath.
+ */
+export const getValue = <T extends object>(obj: T, path: JsonPath): any => {
+  return getDeep(
+    obj,
+    splitJsonPath(path).map((p) => p.replace(/[[\]]/g, '')),
+  );
+};
+
+/**
+ * Set value on object using JsonPath.
+ */
+export const setValue = <T extends object>(obj: T, path: JsonPath, value: any): T => {
+  return setDeep(
+    obj,
+    splitJsonPath(path).map((p) => p.replace(/[[\]]/g, '')),
+    value,
+  );
 };
