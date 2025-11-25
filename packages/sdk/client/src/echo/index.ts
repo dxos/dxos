@@ -31,7 +31,6 @@ export {
   type ObjectMigration,
   ObjectVersion,
   Query,
-  type QueryResult,
   Queue,
   type Selection,
   type SubscriptionHandle,

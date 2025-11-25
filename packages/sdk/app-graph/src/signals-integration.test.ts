@@ -187,7 +187,11 @@ describe('signals integration', () => {
 
             return Atom.make((get) => {
               const objects = get(atomFromQuery(query));
-              return objects.map((object) => ({ id: object.id, type: EXAMPLE_TYPE, data: object.name }));
+              return objects.map((object) => ({
+                id: object.id,
+                type: EXAMPLE_TYPE,
+                data: object.name,
+              }));
             });
           },
         }),

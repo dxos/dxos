@@ -179,9 +179,6 @@ export declare namespace Filter {
   };
 }
 
-/**
- * @internal
- */
 // TODO(dmaretskyi): Separate object instead of statics for better devex with type errors.
 export class FilterClass implements Filter<any> {
   private static variance: Filter<any>['~Filter'] = {} as Filter<any>['~Filter'];

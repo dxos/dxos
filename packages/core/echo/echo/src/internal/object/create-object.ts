@@ -23,9 +23,6 @@ import { EntityKind, EntityKindId, type KindId, MetaId, setSchema, setTypename }
 import { attachedTypedObjectInspector } from './inspect';
 import { attachTypedJsonSerializer } from './json-serializer';
 
-/**
- * @internal
- */
 export type CreateObjectProps<T> = T extends { id: string } ? Omit<T, 'id' | KindId> & { id?: string } : T;
 
 /**

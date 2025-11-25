@@ -5,8 +5,7 @@
 import { Event } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { StackTrace } from '@dxos/debug';
-import { type Obj, Ref, type Relation } from '@dxos/echo';
-import { type Database, Filter, Query } from '@dxos/echo';
+import { type Database, type Entity, Filter, type Obj, Query, Ref, type Relation } from '@dxos/echo';
 import {
   type AnyProperties,
   type BaseSchema,
@@ -26,7 +25,7 @@ import { type EchoDatabase, type EchoDatabaseImpl } from './proxy-db';
 import {
   GraphQueryContext,
   type QueryContext,
-  QueryResult,
+  QueryResultImpl,
   type QuerySource,
   SpaceQuerySource,
   normalizeQuery,
@@ -168,7 +167,7 @@ export class Hypergraph {
 
   private _query(query: Query.Any | Filter.Any, options?: Database.QueryOptions) {
     query = Filter.is(query) ? Query.select(query) : query;
-    return new QueryResult(this._createLiveObjectQueryContext(), normalizeQuery(query, options));
+    return new QueryResultImpl(this._createLiveObjectQueryContext(), normalizeQuery(query, options));
   }
 
   /**
@@ -395,7 +394,7 @@ export class Hypergraph {
     const {
       objects: [obj],
     } = await db.query(Filter.ids(objectId)).run();
-    return obj;
+    return obj as Entity.Any; // TODO(burdon): Remove cast.
   }
 
   private _resolveQueueSync(spaceId: SpaceId, subspaceTag: QueueSubspaceTag, queueId: ObjectId): Queue | undefined {
@@ -478,6 +477,7 @@ export class Hypergraph {
         this._queryContexts.delete(context);
       },
     });
+
     for (const database of this._databases.values()) {
       context.addQuerySource(new SpaceQuerySource(database));
     }

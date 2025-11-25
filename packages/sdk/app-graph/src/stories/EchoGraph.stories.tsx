@@ -8,18 +8,8 @@ import * as Function from 'effect/Function';
 import * as Option from 'effect/Option';
 import React, { type PropsWithChildren, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 
-import {
-  Expando,
-  Filter,
-  type Live,
-  Query,
-  type QueryResult,
-  type Space,
-  SpaceState,
-  isSpace,
-  live,
-} from '@dxos/client/echo';
-import { Obj, Type } from '@dxos/echo';
+import { Filter, type Live, Query, type Space, SpaceState, isSpace, live } from '@dxos/client/echo';
+import { type Database, Obj, Type } from '@dxos/echo';
 import { faker } from '@dxos/random';
 import { type Client, useClient } from '@dxos/react-client';
 import { withClientProvider } from '@dxos/react-client/testing';
@@ -85,16 +75,17 @@ const createGraph = (client: Client, registry: Registry.Registry): ExpandableGra
   const objectBuilderExtension = createExtension({
     id: 'object',
     connector: (node) => {
-      let query: QueryResult<Live<Expando>> | undefined;
+      let result: Database.QueryResult<Type.Expando> | undefined;
       return Atom.make((get) =>
         Function.pipe(
           get(node),
           Option.flatMap((node) => (isSpace(node.data) ? Option.some(node.data) : Option.none())),
           Option.map((space) => {
-            if (!query) {
-              query = space.db.query(Query.type(Expando, { type: 'test' }));
+            if (!result) {
+              result = space.db.query(Query.type(Type.Expando, { type: 'test' }));
             }
-            const objects = get(atomFromQuery(query));
+
+            const objects = get(atomFromQuery(result));
             return objects.map((object) => ({
               id: object.id,
               type: 'dxos.org/type/test',
@@ -116,7 +107,6 @@ const createGraph = (client: Client, registry: Registry.Registry): ExpandableGra
   });
   graph.expand(ROOT_ID);
   (window as any).graph = graph;
-
   return graph;
 };
 
@@ -136,7 +126,7 @@ const getRandomSpace = (client: Client): Space | undefined => {
 const getSpaceWithObjects = async (client: Client): Promise<Space | undefined> => {
   const readySpaces = client.spaces.get().filter((space) => space.state.get() === SpaceState.SPACE_READY);
   const spaceQueries = await Promise.all(
-    readySpaces.map((space) => space.db.query(Filter.type(Expando, { type: 'test' })).run()),
+    readySpaces.map((space) => space.db.query(Filter.type(Type.Expando, { type: 'test' })).run()),
   );
   const spaces = readySpaces.filter((space, index) => spaceQueries[index].objects.length > 0);
   return spaces[Math.floor(Math.random() * spaces.length)];
@@ -172,7 +162,7 @@ const runAction = async (client: Client, action: Action) => {
     case Action.REMOVE_OBJECT: {
       const space = await getSpaceWithObjects(client);
       if (space) {
-        const { objects } = await space.db.query(Filter.type(Expando, { type: 'test' })).run();
+        const { objects } = await space.db.query(Filter.type(Type.Expando, { type: 'test' })).run();
         space.db.remove(objects[Math.floor(Math.random() * objects.length)]);
       }
       break;
@@ -181,7 +171,7 @@ const runAction = async (client: Client, action: Action) => {
     case Action.RENAME_OBJECT: {
       const space = await getSpaceWithObjects(client);
       if (space) {
-        const { objects } = await space.db.query(Filter.type(Expando, { type: 'test' })).run();
+        const { objects } = await space.db.query(Filter.type(Type.Expando, { type: 'test' })).run();
         objects[Math.floor(Math.random() * objects.length)].name = faker.commerce.productName();
       }
       break;

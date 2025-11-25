@@ -62,8 +62,6 @@ export const DeletedId = Symbol.for('@dxos/echo/Deleted');
 /**
  * Internal runtime representation of an object.
  * The fields are accessed through getter functions.
- *
- * @internal
  */
 export interface InternalObjectProps {
   id: ObjectId;

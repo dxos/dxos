@@ -20,7 +20,7 @@ import { defineHiddenProperty } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { type QueueService } from '@dxos/protocols';
 
-import { Filter, Query, QueryResult } from '../query';
+import { Filter, Query, QueryResultImpl } from '../query';
 
 import { QueueQueryContext } from './queue-query-context';
 import type { Queue } from './types';
@@ -219,7 +219,7 @@ export class QueueImpl<T extends Obj.Any | Relation.Any = Obj.Any | Relation.Any
   private _query(queryOrFilter: Query.Any | Filter.Any, options?: Database.QueryOptions) {
     assertArgument(options === undefined, 'options', 'not supported');
     queryOrFilter = Filter.is(queryOrFilter) ? Query.select(queryOrFilter) : queryOrFilter;
-    return new QueryResult(new QueueQueryContext(this), queryOrFilter);
+    return new QueryResultImpl(new QueueQueryContext(this), queryOrFilter);
   }
 
   /**

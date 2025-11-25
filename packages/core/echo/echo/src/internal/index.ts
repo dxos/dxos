@@ -31,8 +31,10 @@ export * from './types';
 //  - [x] Created Entity.Any (=> AnyEchoObject).
 //  - [x] TypeFormat => TypeFormat
 //  - [x] JsonSchemaType defs
+//  - [ ] Narrow QueryResult and match Schema and Object generics.
 //  - [ ] Reconcile Type.Ref with Ref.Ref
 //  - [ ] Fix commented out tests.
+//  - [ ] Narrow Database, Query generic types.
 //  - [ ] DISCUSS: Standradize $ suffix to disambuguate imports (GPT recommended).
 
 // NOTE

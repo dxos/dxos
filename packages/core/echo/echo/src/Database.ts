@@ -8,16 +8,18 @@ import { type DXN, type PublicKey, type SpaceId } from '@dxos/keys';
 import { type Live } from '@dxos/live-object';
 import { type QueryOptions as QueryOptionsProto } from '@dxos/protocols/proto/dxos/echo/filter';
 
-import type * as Entity from './Entity';
 import type { AnyProperties, HasId } from './internal';
 import type * as Obj from './Obj';
 import type { Filter, Query } from './query';
 import type * as Ref from './Ref';
 
+// TODO(burdon): Move types to Query namespace.
+
 /**
  * Individual query result entry.
  */
-export type QueryResultEntry<T extends Entity.Any = Entity.Any> = {
+// TODO(burdon): Narrow types (Entity.Any: requires Any to extend AnyProperties).
+export type QueryResultEntry<TEntity extends AnyProperties = AnyProperties> = {
   id: string;
 
   spaceId: SpaceId;
@@ -25,7 +27,7 @@ export type QueryResultEntry<T extends Entity.Any = Entity.Any> = {
   /**
    * May not be present for remote results.
    */
-  object?: T;
+  object?: TEntity;
 
   match?: {
     // TODO(dmaretskyi): text positional info.
@@ -51,9 +53,10 @@ export type QueryResultEntry<T extends Entity.Any = Entity.Any> = {
   };
 };
 
-export type OneShotQueryResult<T extends Entity.Any = Entity.Any> = {
-  results: QueryResultEntry<T>[];
-  objects: T[];
+// TODO(burdon): Narrow types (Entity.Any).
+export type OneShotQueryResult<TEntity extends AnyProperties = AnyProperties> = {
+  results: QueryResultEntry<TEntity>[];
+  objects: TEntity[];
 };
 
 export type QuerySubscriptionOptions = {
@@ -63,15 +66,17 @@ export type QuerySubscriptionOptions = {
   fire?: boolean;
 };
 
-export interface QueryResult<T extends Entity.Any = Entity.Any> {
-  readonly query: Query<T>;
-  readonly results: QueryResultEntry<T>[];
-  readonly objects: T[];
+// TODO(burdon): Narrow types.
+export interface QueryResult<TEntity extends AnyProperties = AnyProperties> {
+  readonly query: Query<TEntity>;
+  readonly results: QueryResultEntry<TEntity>[];
+  readonly objects: TEntity[];
 
-  run(opts?: QueryRunOptions): Promise<OneShotQueryResult<T>>;
-  runSync(): QueryResultEntry<T>[];
-  first(opts?: QueryRunOptions): Promise<T>;
-  subscribe(callback?: (query: QueryResult<T>) => void, opts?: QuerySubscriptionOptions): CleanupFn;
+  run(opts?: QueryRunOptions): Promise<OneShotQueryResult<TEntity>>;
+  runSync(): QueryResultEntry<TEntity>[];
+  first(opts?: QueryRunOptions): Promise<TEntity>;
+
+  subscribe(callback?: (query: QueryResult<TEntity>) => void, opts?: QuerySubscriptionOptions): CleanupFn;
 }
 
 export type QueryRunOptions = {
@@ -119,6 +124,7 @@ export interface QueryFn {
     query: Q,
     options?: (QueryAST.QueryOptions & QueryOptions) | undefined,
   ): QueryResult<Query.Type<Q>>;
+
   <F extends Filter.Any>(
     filter: F,
     options?: (QueryAST.QueryOptions & QueryOptions) | undefined,
@@ -167,7 +173,6 @@ export interface Database extends Queryable {
    * `Ref.fromDXN(dxn)` returns an unhydrated reference. The `.load` and `.target` APIs will not work.
    * `db.makeRef(dxn)` is preferable in cases with access to the database.
    */
-  // TODO(burdon): Don't support references to Relations.
   makeRef<T extends Obj.Any = Obj.Any>(dxn: DXN): Ref.Ref<T>;
 
   /**

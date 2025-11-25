@@ -7,9 +7,9 @@ import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { Trigger, TriggerState, asyncTimeout } from '@dxos/async';
 import { type ClientServicesProvider, PropertiesType, type Space } from '@dxos/client-protocol';
-import { Obj } from '@dxos/echo';
+import { type Database, Obj } from '@dxos/echo';
 import { Expando, Ref } from '@dxos/echo/internal';
-import { type AnyLiveObject, Filter, type QueryResult } from '@dxos/echo-db';
+import { type AnyLiveObject, Filter } from '@dxos/echo-db';
 import { type PublicKey } from '@dxos/keys';
 import { createTestLevel } from '@dxos/kv-store/testing';
 import { log } from '@dxos/log';
@@ -77,7 +77,8 @@ describe('Index queries', () => {
     return objectsInDataBase;
   };
 
-  const matchObjects = async (query: QueryResult, objects: AnyLiveObject<any>[]) => {
+  // TODO(burdon): Remove AnyLiveObject.
+  const matchObjects = async (query: Database.QueryResult, objects: AnyLiveObject<any>[]) => {
     const receivedIndexedObject = new Trigger<AnyLiveObject<any>[]>();
     const unsubscribe = query.subscribe(
       (query) => {
@@ -119,6 +120,7 @@ describe('Index queries', () => {
 
     const { contacts } = createObjects();
     await addObjects(space, contacts);
+
     await matchObjects(space.db.query(Filter.type(ContactType)), contacts);
   });
 

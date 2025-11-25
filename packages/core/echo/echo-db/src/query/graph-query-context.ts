@@ -17,13 +17,12 @@ import { type AnyLiveObject } from '../echo-handler';
 import { prohibitSignalActions } from '../guarded-scope';
 import { type EchoDatabaseImpl } from '../proxy-db';
 
-import { type QueryContext } from './query-result';
+import { type QueryContext } from './query-context';
 import { getTargetSpacesForQuery, isSimpleSelectionQuery } from './util';
 
 export type GraphQueryContextParams = {
   // TODO(dmaretskyi): Make async.
   onStart: () => void;
-
   onStop: () => void;
 };
 
