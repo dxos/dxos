@@ -21,9 +21,8 @@ import { SpaceState, getSpace } from '../echo';
 import { CreateEpochRequest } from '../halo';
 import {
   type CreateInitializedClientsOptions,
-  DocumentType,
   TestBuilder,
-  TextV0Type,
+  TestSchema,
   createInitializedClientsWithContext,
   testSpaceAutomerge,
   waitForSpace,
@@ -311,7 +310,7 @@ describe('Spaces', () => {
     await hostSpace.db.flush();
     await waitForObject(guestSpace, hostDocument);
 
-    const text = Obj.make(TextV0Type, { content: 'Hello, world!' });
+    const text = Obj.make(TestSchema.TextV0Type, { content: 'Hello, world!' });
     hostDocument.content = Ref.make(text);
 
     await expect.poll(() => getDocumentText(guestSpace, hostDocument.id)).toEqual('Hello, world!');
@@ -398,7 +397,7 @@ describe('Spaces', () => {
       await hostSpace.db.flush();
       await waitForObject(guestSpace, hostDocument);
 
-      const text = Obj.make(TextV0Type, { content: 'Hello, world!' });
+      const text = Obj.make(TestSchema.TextV0Type, { content: 'Hello, world!' });
       hostDocument.content = Ref.make(text);
 
       await expect.poll(() => getDocumentText(guestSpace, hostDocument.id)).toEqual('Hello, world!');
@@ -411,7 +410,7 @@ describe('Spaces', () => {
       await hostSpace.db.flush();
       await waitForObject(guestSpace, hostDocument);
 
-      const text = Obj.make(TextV0Type, { content: 'Hello, world!' });
+      const text = Obj.make(TestSchema.TextV0Type, { content: 'Hello, world!' });
       hostDocument.content = Ref.make(text);
 
       await expect.poll(() => getDocumentText(guestSpace, hostDocument.id)).toEqual('Hello, world!');
@@ -544,16 +543,16 @@ describe('Spaces', () => {
   };
 
   const getDocumentText = (space: Space, documentId: string): string => {
-    return space.db.getObjectById<DocumentType>(documentId)!.content.target!.content;
+    return space.db.getObjectById<TestSchema.DocumentType>(documentId)!.content.target!.content;
   };
 
   const registerTypes = (client: Client) => {
-    client.addTypes([DocumentType, TextV0Type]);
+    client.addTypes([TestSchema.DocumentType, TestSchema.TextV0Type]);
   };
 
-  const createDocument = (): Live<DocumentType> => {
-    const text = Obj.make(TextV0Type, { content: 'Hello, world!' });
-    return Obj.make(DocumentType, {
+  const createDocument = (): Live<TestSchema.DocumentType> => {
+    const text = Obj.make(TestSchema.TextV0Type, { content: 'Hello, world!' });
+    return Obj.make(TestSchema.DocumentType, {
       title: 'Test document',
       content: Ref.make(text),
     });

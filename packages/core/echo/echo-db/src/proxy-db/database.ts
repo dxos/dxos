@@ -268,6 +268,7 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
   /**
    * Add reactive object.
    */
+  // TODO(burdon): Narrow type.
   add<T extends AnyProperties>(obj: Live<T>, opts?: Database.AddOptions): Obj.Obj<T> {
     if (!isEchoObject(obj)) {
       const schema = Obj.getSchema(obj);

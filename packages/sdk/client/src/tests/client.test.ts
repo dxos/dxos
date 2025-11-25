@@ -15,7 +15,7 @@ import { type Runtime } from '@dxos/protocols/proto/dxos/config';
 import { isNode } from '@dxos/util';
 
 import { Client } from '../client';
-import { MessageType, TestBuilder, TextV0Type, ThreadType, performInvitation } from '../testing';
+import { TestBuilder, TestSchema, performInvitation } from '../testing';
 
 describe('Client', () => {
   const dataRoot = '/tmp/dxos/client/storage';
@@ -174,11 +174,11 @@ describe('Client', () => {
 
     const client1 = new Client({
       services: testBuilder.createLocalClientServices(),
-      types: [MessageType, ThreadType, TextV0Type],
+      types: [TestSchema.MessageType, TestSchema.ThreadType, TestSchema.TextV0Type],
     });
     const client2 = new Client({
       services: testBuilder.createLocalClientServices(),
-      types: [MessageType, ThreadType, TextV0Type],
+      types: [TestSchema.MessageType, TestSchema.ThreadType, TestSchema.TextV0Type],
     });
 
     await client1.initialize();
@@ -189,14 +189,14 @@ describe('Client', () => {
     await client2.halo.createIdentity();
     onTestFinished(() => client2.destroy());
 
-    const threadQueried = new Trigger<ThreadType>();
+    const threadQueried = new Trigger<TestSchema.ThreadType>();
 
     // Create space and invite second client.
     const space1 = await client1.spaces.create();
     await space1.waitUntilReady();
     const spaceKey = space1.key;
 
-    const query = space1.db.query(Filter.type(ThreadType));
+    const query = space1.db.query(Filter.type(TestSchema.ThreadType));
     query.subscribe(
       ({ objects }) => {
         if (objects.length === 1) {
@@ -210,15 +210,20 @@ describe('Client', () => {
     // Create Thread on second client.
     const space2 = client2.spaces.get(spaceKey)!;
     await space2.waitUntilReady();
-    const thread2 = space2.db.add(Obj.make(ThreadType, { messages: [] }));
+    const thread2 = space2.db.add(Obj.make(TestSchema.ThreadType, { messages: [] }));
     await space2.db.flush();
 
     const thread1 = await threadQueried.wait({ timeout: 2_000 });
 
     const text = 'Hello world';
     const message = space2.db.add(
-      Obj.make(MessageType, {
-        blocks: [{ timestamp: new Date().toISOString(), content: Ref.make(Obj.make(TextV0Type, { content: text })) }],
+      Obj.make(TestSchema.MessageType, {
+        blocks: [
+          {
+            timestamp: new Date().toISOString(),
+            content: Ref.make(Obj.make(TestSchema.TextV0Type, { content: text })),
+          },
+        ],
       }),
     );
     thread2.messages.push(Ref.make(message));

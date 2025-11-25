@@ -13,7 +13,7 @@ export const getSpaceDisplayName = (space: Space, { personal }: { personal?: boo
   return space.state.get() === SpaceState.SPACE_READY && (space.properties.name?.length ?? 0) > 0
     ? space.properties.name!
     : personal
-      ? 'Personal Space'
+      ? 'Personal Space' // TODO(burdon): From translations.
       : 'New space';
 };
 

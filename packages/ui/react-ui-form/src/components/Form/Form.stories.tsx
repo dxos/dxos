@@ -6,7 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Schema from 'effect/Schema';
 import React, { useCallback, useState } from 'react';
 
-import { ContactType } from '@dxos/client/testing';
+import { TestSchema } from '@dxos/client/testing';
 import { Format, Obj, Ref, Type } from '@dxos/echo';
 import { type AnyProperties, type TypeAnnotation } from '@dxos/echo/internal';
 import { Tooltip } from '@dxos/react-ui';
@@ -277,9 +277,11 @@ export const Enum: StoryObj<StoryProps<ColorType>> = {
 //
 
 const RefSchema = Schema.Struct({
-  contact: Type.Ref(ContactType).annotations({ title: 'Contact Reference' }),
-  optionalContact: Schema.optional(Type.Ref(ContactType).annotations({ title: 'Optional Contact Reference' })),
-  refArray: Schema.optional(Schema.Array(Type.Ref(ContactType))),
+  contact: Type.Ref(TestSchema.ContactType).annotations({ title: 'Contact Reference' }),
+  optionalContact: Schema.optional(
+    Type.Ref(TestSchema.ContactType).annotations({ title: 'Optional Contact Reference' }),
+  ),
+  refArray: Schema.optional(Schema.Array(Type.Ref(TestSchema.ContactType))),
   unknownExpando: Schema.optional(
     Type.Ref(Type.Expando).annotations({ title: 'Optional Ref to an Expando (DXN Input)' }),
   ),
@@ -287,8 +289,8 @@ const RefSchema = Schema.Struct({
 
 type RefSchema = Schema.Schema.Type<typeof RefSchema>;
 
-const contact1 = Obj.make(ContactType, { identifiers: [] });
-const contact2 = Obj.make(ContactType, { identifiers: [] });
+const contact1 = Obj.make(TestSchema.ContactType, { identifiers: [] });
+const contact2 = Obj.make(TestSchema.ContactType, { identifiers: [] });
 
 export const Refs: StoryObj<StoryProps<RefSchema>> = {
   render: RefStory,

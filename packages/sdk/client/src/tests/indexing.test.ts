@@ -16,37 +16,37 @@ import { log } from '@dxos/log';
 import { StorageType, createStorage } from '@dxos/random-access-storage';
 
 import { Client } from '../client';
-import { ContactType, DocumentType, TestBuilder, TextV0Type } from '../testing';
+import { TestBuilder, TestSchema } from '../testing';
 
 describe('Index queries', () => {
   const createObjects = () => ({
     contacts: [
-      Obj.make(ContactType, {
+      Obj.make(TestSchema.ContactType, {
         name: 'Alice',
         identifiers: [],
       }),
-      Obj.make(ContactType, {
+      Obj.make(TestSchema.ContactType, {
         name: 'Bob',
         identifiers: [],
       }),
-      Obj.make(ContactType, {
+      Obj.make(TestSchema.ContactType, {
         name: 'Catherine',
         identifiers: [],
       }),
     ],
     documents: [
-      Obj.make(DocumentType, {
+      Obj.make(TestSchema.DocumentType, {
         title: 'DXOS Design Doc',
         content: Ref.make(
-          Obj.make(TextV0Type, {
+          Obj.make(TestSchema.TextV0Type, {
             content: 'Very important design document',
           }),
         ),
       }),
-      Obj.make(DocumentType, {
+      Obj.make(TestSchema.DocumentType, {
         title: 'ECHO Architecture',
         content: Ref.make(
-          Obj.make(TextV0Type, {
+          Obj.make(TestSchema.TextV0Type, {
             content: 'Very important architecture document',
           }),
         ),
@@ -62,7 +62,10 @@ describe('Index queries', () => {
   const TIMEOUT = 1_000;
 
   const initClient = async (services: ClientServicesProvider) => {
-    const client = new Client({ services, types: [ContactType, DocumentType, TextV0Type] });
+    const client = new Client({
+      services,
+      types: [TestSchema.ContactType, TestSchema.DocumentType, TestSchema.TextV0Type],
+    });
     await client.initialize();
     return client;
   };
@@ -121,7 +124,7 @@ describe('Index queries', () => {
     const { contacts } = createObjects();
     await addObjects(space, contacts);
 
-    await matchObjects(space.db.query(Filter.type(ContactType)), contacts);
+    await matchObjects(space.db.query(Filter.type(TestSchema.ContactType)), contacts);
   });
 
   test('indexes persists between client restarts', async () => {
@@ -141,7 +144,7 @@ describe('Index queries', () => {
       spaceKey = space.key;
 
       await addObjects(space, contacts);
-      await matchObjects(space.db.query(Filter.type(ContactType)), contacts);
+      await matchObjects(space.db.query(Filter.type(TestSchema.ContactType)), contacts);
 
       await client.destroy();
     }
@@ -153,7 +156,7 @@ describe('Index queries', () => {
       const space = client.spaces.get(spaceKey)!;
       await space.waitUntilReady();
 
-      await matchObjects(space.db.query(Filter.type(ContactType)), contacts);
+      await matchObjects(space.db.query(Filter.type(TestSchema.ContactType)), contacts);
     }
   });
 
@@ -172,7 +175,7 @@ describe('Index queries', () => {
       spaceKey = space.key;
 
       await addObjects(space, contacts);
-      await matchObjects(space.db.query(Filter.type(ContactType)), contacts);
+      await matchObjects(space.db.query(Filter.type(TestSchema.ContactType)), contacts);
 
       await client.destroy();
     }
@@ -187,7 +190,7 @@ describe('Index queries', () => {
       const space = client.spaces.get(spaceKey)!;
       await asyncTimeout(space.waitUntilReady(), TIMEOUT);
 
-      await matchObjects(space.db.query(Filter.type(ContactType)), contacts);
+      await matchObjects(space.db.query(Filter.type(TestSchema.ContactType)), contacts);
     }
   });
 
@@ -207,7 +210,7 @@ describe('Index queries', () => {
       spaceKey = space.key;
 
       await addObjects(space, contacts);
-      await matchObjects(space.db.query(Filter.type(ContactType)), contacts);
+      await matchObjects(space.db.query(Filter.type(TestSchema.ContactType)), contacts);
 
       await client.destroy();
     }
@@ -224,7 +227,7 @@ describe('Index queries', () => {
       await asyncTimeout(space.waitUntilReady(), TIMEOUT);
 
       await client.services.services.QueryService?.reindex();
-      await matchObjects(space.db.query(Filter.type(ContactType)), contacts);
+      await matchObjects(space.db.query(Filter.type(TestSchema.ContactType)), contacts);
     }
   });
 
@@ -238,19 +241,21 @@ describe('Index queries', () => {
 
     {
       await addObjects(space, contacts);
-      await matchObjects(space.db.query(Filter.type(ContactType)), contacts);
+      await matchObjects(space.db.query(Filter.type(TestSchema.ContactType)), contacts);
     }
 
     // TODO(burdon): Do we support text matching?
     {
-      const query = space.db.query(Filter.type(DocumentType));
+      const query = space.db.query(Filter.type(TestSchema.DocumentType));
       await addObjects(space, documents);
       await matchObjects(query, documents);
       expect((await query.run()).objects.length).to.equal(2);
     }
 
     {
-      const query = space.db.query(Filter.or(Filter.type(ContactType), Filter.type(DocumentType)));
+      const query = space.db.query(
+        Filter.or(Filter.type(TestSchema.ContactType), Filter.type(TestSchema.DocumentType)),
+      );
       await matchObjects(query, [...contacts, ...documents]);
       expect((await query.run()).objects.length).to.equal(5);
     }
@@ -272,7 +277,13 @@ describe('Index queries', () => {
 
     {
       const query = space.db.query(
-        Filter.not(Filter.or(Filter.type(ContactType), Filter.type(DocumentType), Filter.type(SpaceProperties))),
+        Filter.not(
+          Filter.or(
+            Filter.type(TestSchema.ContactType),
+            Filter.type(TestSchema.DocumentType),
+            Filter.type(SpaceProperties),
+          ),
+        ),
       );
       const ids = (await query.run()).objects.map(({ id }) => id);
       expect(ids.every((id) => !excludedIds.includes(id))).to.be.true;
@@ -302,7 +313,7 @@ describe('Index queries', () => {
     const echoContacts = await addObjects(space, contacts);
     await addObjects(space, documents);
 
-    const query = space.db.query(Filter.or(Filter.type(ContactType), Filter.type(DocumentType)));
+    const query = space.db.query(Filter.or(Filter.type(TestSchema.ContactType), Filter.type(TestSchema.DocumentType)));
     const queriedEverything = new Trigger();
     const receivedDeleteUpdate = new Trigger();
     const unsub = query.subscribe((query) => {
