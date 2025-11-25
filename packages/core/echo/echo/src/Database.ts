@@ -13,7 +13,7 @@ import type * as Obj from './Obj';
 import type { Filter, Query } from './query';
 import type * as Ref from './Ref';
 
-// TODO(burdon): Move types to Query namespace.
+// TODO(burdon): Create QueryResult namespace.
 
 /**
  * Individual query result entry.

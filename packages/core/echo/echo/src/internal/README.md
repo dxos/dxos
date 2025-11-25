@@ -22,6 +22,8 @@
 - [ ] Fix commented out tests.
 - [ ] Remove echo-db/AnyLiveObject<T> => Obj.Obj<T>
 - [ ] Reconcile types/version with entities/model/version
+- [ ] Fix database.add() input/output types and search for "Obj.Any = db.add"
+- [ ] TODO(burdon): FIX!!!
 
 2. Clean-up
 

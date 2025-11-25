@@ -14,6 +14,7 @@ import { Filter, FilterClass } from './filter';
 import { type Order } from './order';
 import { getTypeDXNFromSpecifier } from './util';
 
+// TODO(burdon): Query namespace (and move Filter, Order into Query namespace).
 // TODO(dmaretskyi): Split up into interfaces for objects and relations so they can have separate verbs.
 // TODO(dmaretskyi): Undirected relation traversals.
 // TODO(wittjosiah): Make Filter & Query pipeable.

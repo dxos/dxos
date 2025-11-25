@@ -80,7 +80,7 @@ for (const schema of [Type.Expando, TestSchema.Example]) {
       }
     });
 
-    // TODO(burdon): Restore.
+    // TODO(burdon): FIX!!!
     // test('throws when assigning a class instances', () => {
     //   expect(() => {
     //     createTestObject().classInstance = new TestSchema.TestClass();

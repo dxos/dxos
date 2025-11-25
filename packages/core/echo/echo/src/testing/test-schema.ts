@@ -11,7 +11,9 @@ export namespace TestSchema {
   // Example
   //
 
-  const Nested = Schema.Struct({ field: Schema.String });
+  const Nested = Schema.Struct({
+    field: Schema.String,
+  }).pipe(Schema.mutable);
 
   export const Example = Schema.Struct({
     string: Schema.String,
@@ -21,7 +23,7 @@ export namespace TestSchema {
     undefined: Schema.Undefined,
     stringArray: Schema.mutable(Schema.Array(Schema.String)),
     twoDimNumberArray: Schema.mutable(Schema.Array(Schema.mutable(Schema.Array(Schema.Number)))),
-    nested: Nested,
+    nested: Schema.mutable(Nested),
     nestedArray: Schema.mutable(Schema.Array(Nested)),
     nestedNullableArray: Schema.mutable(Schema.Array(Schema.Union(Nested, Schema.Null))),
     reference: Schema.suspend((): Type.Ref<Example> => Type.Ref(Example)),
