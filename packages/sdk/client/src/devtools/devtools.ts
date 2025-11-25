@@ -17,10 +17,13 @@ import { type DiagnosticMetadata, TRACE_PROCESSOR, type TraceProcessor } from '@
 import { joinTables } from '@dxos/util';
 
 import { type Client } from '../client';
-import { SpaceState, getMeta } from '../echo';
+import { SpaceState } from '../echo';
 
 // Didn't want to add a dependency on feed store.
 type FeedWrapper = unknown;
+
+// TODO(burdon): Remove.
+const getMeta = Obj.getMeta;
 
 exposeModule('@automerge/automerge', A);
 

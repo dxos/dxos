@@ -77,7 +77,7 @@ describe('Index queries', () => {
     return objectsInDataBase;
   };
 
-  const matchObjects = async (query: QueryResult<any>, objects: AnyLiveObject<any>[]) => {
+  const matchObjects = async (query: QueryResult, objects: AnyLiveObject<any>[]) => {
     const receivedIndexedObject = new Trigger<AnyLiveObject<any>[]>();
     const unsubscribe = query.subscribe(
       (query) => {
