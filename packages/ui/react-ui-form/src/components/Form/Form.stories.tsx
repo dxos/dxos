@@ -8,7 +8,7 @@ import React, { useCallback, useState } from 'react';
 
 import { ContactType } from '@dxos/client/testing';
 import { type Type } from '@dxos/echo';
-import { type BaseObject, Expando, Format, Ref, type TypeAnnotation, getObjectDXN } from '@dxos/echo/internal';
+import { type AnyProperties, Expando, Format, Ref, type TypeAnnotation, getObjectDXN } from '@dxos/echo/internal';
 import { live } from '@dxos/echo/internal';
 import { Tooltip } from '@dxos/react-ui';
 import { withLayoutVariants, withTheme } from '@dxos/react-ui/testing';
@@ -20,12 +20,12 @@ import { TestLayout, TestPanel } from '../testing';
 import { SelectInput } from './Defaults';
 import { Form, type FormProps } from './Form';
 
-type StoryProps<T extends BaseObject> = {
+type StoryProps<T extends AnyProperties> = {
   debug?: boolean;
   schema: Type.Obj.Any;
 } & FormProps<T>;
 
-const DefaultStory = <T extends BaseObject = any>({
+const DefaultStory = <T extends AnyProperties = any>({
   debug,
   schema,
   values: initialValues,
@@ -51,7 +51,7 @@ const DefaultStory = <T extends BaseObject = any>({
   return <Form<T> schema={schema} values={values} onSave={handleSave} {...props} />;
 };
 
-const RefStory = <T extends BaseObject = any>(props: StoryProps<T>) => {
+const RefStory = <T extends AnyProperties = any>(props: StoryProps<T>) => {
   const onQueryRefOptions = useCallback((typeInfo: TypeAnnotation) => {
     switch (typeInfo.typename) {
       case Testing.Person.typename:

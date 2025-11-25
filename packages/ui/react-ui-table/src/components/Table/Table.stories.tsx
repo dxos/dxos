@@ -10,7 +10,7 @@ import { Obj, type QueryAST, Type } from '@dxos/echo';
 import {
   EchoObject,
   FormatAnnotation,
-  FormatEnum,
+  Format,
   GeneratorAnnotation,
   LabelAnnotation,
   PropertyMetaAnnotationId,
@@ -40,7 +40,7 @@ const TestSchema = Schema.Struct({
   urgent: Schema.optional(Schema.Boolean).annotations({ title: 'Urgent' }),
   status: Schema.optional(
     Schema.Literal('todo', 'in-progress', 'done')
-      .pipe(FormatAnnotation.set(FormatEnum.SingleSelect))
+      .pipe(FormatAnnotation.set(Format.TypeFormat.SingleSelect))
       .annotations({
         title: 'Status',
         [PropertyMetaAnnotationId]: {
@@ -306,12 +306,12 @@ export const Tags: Meta<StoryProps> = {
         const schema = getSchemaFromPropertyDefinitions(typename, [
           {
             name: 'single',
-            format: FormatEnum.SingleSelect,
+            format: Format.TypeFormat.SingleSelect,
             config: { options: selectOptions },
           },
           {
             name: 'multiple',
-            format: FormatEnum.MultiSelect,
+            format: Format.TypeFormat.MultiSelect,
             config: { options: selectOptions },
           },
         ]);

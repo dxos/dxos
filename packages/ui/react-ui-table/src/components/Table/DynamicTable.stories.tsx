@@ -6,7 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useMemo, useState } from 'react';
 
 import { Obj } from '@dxos/echo';
-import { FormatEnum, type JsonSchemaType } from '@dxos/echo/internal';
+import { Format, type JsonSchemaType } from '@dxos/echo/internal';
 import { faker } from '@dxos/random';
 import { useClient } from '@dxos/react-client';
 import { Filter, useQuery, useSchema } from '@dxos/react-client/echo';
@@ -25,8 +25,8 @@ faker.seed(0);
 const useTestPropertiesAndObjects = () => {
   const properties = useMemo<SchemaPropertyDefinition[]>(
     () => [
-      { name: 'name', format: FormatEnum.String },
-      { name: 'age', format: FormatEnum.Number },
+      { name: 'name', format: Format.TypeFormat.String },
+      { name: 'age', format: Format.TypeFormat.Number },
     ],
     [],
   );

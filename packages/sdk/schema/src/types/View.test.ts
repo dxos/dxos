@@ -6,7 +6,7 @@ import * as Schema from 'effect/Schema';
 import { afterEach, assert, beforeEach, describe, test } from 'vitest';
 
 import { Filter, Obj, Query, Ref, Type } from '@dxos/echo';
-import { FormatEnum, RuntimeSchemaRegistry, StoredSchema, TypeEnum } from '@dxos/echo/internal';
+import { Format, RuntimeSchemaRegistry, StoredSchema, TypeEnum } from '@dxos/echo/internal';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
 import { log } from '@dxos/log';
 import { ProjectionModel } from '@dxos/schema';
@@ -50,7 +50,7 @@ describe('Projection', () => {
       expect(props).to.deep.eq({
         property: 'name',
         type: TypeEnum.String,
-        format: FormatEnum.String,
+        format: Format.TypeFormat.String,
       });
     }
 
@@ -59,7 +59,7 @@ describe('Projection', () => {
       expect(props).to.deep.eq({
         property: 'organization',
         type: TypeEnum.Ref,
-        format: FormatEnum.Ref,
+        format: Format.TypeFormat.Ref,
         referencePath: 'name',
         referenceSchema: 'example.com/type/Organization',
       });
@@ -91,8 +91,8 @@ describe('Projection', () => {
       jsonSchema: Type.toJsonSchema(
         Schema.Struct({
           name: Schema.optional(Schema.String).annotations({ title: 'Name' }),
-          email: Schema.optional(Type.Format.Email),
-          salary: Schema.optional(Type.Format.Currency({ code: 'usd', decimals: 2 })),
+          email: Schema.optional(Format.Email),
+          salary: Schema.optional(Format.Currency({ code: 'usd', decimals: 2 })),
         }),
       ),
     });

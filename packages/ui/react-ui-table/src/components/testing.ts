@@ -5,7 +5,7 @@
 import * as Schema from 'effect/Schema';
 import { useEffect } from 'react';
 
-import { FormatEnum, ObjectId, TypeEnum, TypedObject, setValue } from '@dxos/echo/internal';
+import { Format, ObjectId, TypeEnum, TypedObject, setValue } from '@dxos/echo/internal';
 import { live } from '@dxos/live-object';
 import { faker } from '@dxos/random';
 import { type ProjectionModel } from '@dxos/schema';
@@ -88,7 +88,7 @@ export const useSimulator = ({ items, projection, insertInterval, updateInterval
 
         if (format) {
           switch (format) {
-            case FormatEnum.Currency: {
+            case Format.TypeFormat.Currency: {
               item[path] = Math.floor(Math.random() * 1000);
               break;
             }

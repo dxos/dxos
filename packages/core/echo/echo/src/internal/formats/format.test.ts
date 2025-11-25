@@ -8,7 +8,7 @@ import { describe, test } from 'vitest';
 import { toJsonSchema } from '../json-schema';
 
 import { Format } from './format';
-import { TypeFormat, TypeEnum, getTypeEnum } from './types';
+import { TypeEnum, TypeFormat, getTypeEnum } from './types';
 
 describe('formats', () => {
   test('annotations', ({ expect }) => {

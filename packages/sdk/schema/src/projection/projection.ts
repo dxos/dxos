@@ -5,8 +5,8 @@
 import { computed, untracked } from '@preact/signals-core';
 import * as Schema from 'effect/Schema';
 
+import { Format } from '@dxos/echo';
 import {
-  FormatEnum,
   type JsonProp,
   type JsonSchemaType,
   TypeEnum,
@@ -122,8 +122,8 @@ export class ProjectionModel {
     invariant(field, `invalid field: ${fieldId}`);
     invariant(field.path.indexOf('.') === -1);
 
-    const jsonProperty: JsonSchemaType = this._baseSchema.properties[field.path] ?? { format: FormatEnum.None };
-    const { type: schemaType, format: schemaFormat = FormatEnum.None, annotations, ...rest } = jsonProperty;
+    const jsonProperty: JsonSchemaType = this._baseSchema.properties[field.path] ?? { format: Format.TypeFormat.None };
+    const { type: schemaType, format: schemaFormat = Format.TypeFormat.None, annotations, ...rest } = jsonProperty;
 
     const unwrappedProperty =
       'allOf' in jsonProperty && jsonProperty.allOf?.length ? jsonProperty.allOf[0] : jsonProperty;
@@ -133,19 +133,19 @@ export class ProjectionModel {
     const format =
       (() => {
         if (referenceSchema) {
-          return FormatEnum.Ref;
-        } else if (schemaFormat === FormatEnum.None) {
+          return Format.TypeFormat.Ref;
+        } else if (schemaFormat === Format.TypeFormat.None) {
           return typeToFormat[type];
         } else {
-          return schemaFormat as FormatEnum;
+          return schemaFormat as Format.TypeFormat;
         }
-      })() ?? FormatEnum.None;
+      })() ?? Format.TypeFormat.None;
 
     const getOptions = () => {
-      if (format === FormatEnum.SingleSelect) {
+      if (format === Format.TypeFormat.SingleSelect) {
         return annotations?.meta?.singleSelect?.options;
       }
-      if (format === FormatEnum.MultiSelect) {
+      if (format === Format.TypeFormat.MultiSelect) {
         return annotations?.meta?.multiSelect?.options;
       }
     };
@@ -283,11 +283,11 @@ export class ProjectionModel {
         }
 
         if (options) {
-          if (format === FormatEnum.SingleSelect) {
+          if (format === Format.TypeFormat.SingleSelect) {
             makeSingleSelectAnnotations(jsonProperty, options);
           }
 
-          if (format === FormatEnum.MultiSelect) {
+          if (format === Format.TypeFormat.MultiSelect) {
             makeMultiSelectAnnotations(jsonProperty, options);
           }
         }

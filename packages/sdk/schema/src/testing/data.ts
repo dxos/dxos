@@ -4,8 +4,9 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Filter, type Live, Obj, Query, Type } from '@dxos/echo';
+import { Filter, Format, Obj, Query, Type } from '@dxos/echo';
 import { TypedObject } from '@dxos/echo/internal';
+import { type Live } from '@dxos/live-object';
 
 import { StoredSchema, View } from '../types';
 
@@ -13,7 +14,6 @@ export class TestSchema extends TypedObject({
   typename: 'example.com/type/Test',
   version: '0.1.0',
 })({
-  id: Type.ObjectId,
   name: Schema.optional(
     Schema.String.pipe(
       Schema.annotations({
@@ -21,7 +21,7 @@ export class TestSchema extends TypedObject({
       }),
     ),
   ),
-  email: Type.Format.Email.pipe(Schema.optional),
+  email: Format.Email.pipe(Schema.optional),
   // TODO(burdon): Define transforms for objects?
   // address: Schema.optional(
   //   Schema.Struct({
@@ -55,7 +55,7 @@ export const testView: Live<View.View> = View.make({
 });
 
 export const testData: TestType = {
-  id: Type.ObjectId.random(),
+  id: Obj.ID.random(),
   name: 'Tester',
   email: 'test@example.com',
   // address: {

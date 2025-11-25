@@ -7,7 +7,7 @@ import React, { useCallback, useMemo, useState } from 'react';
 
 import { type DXN } from '@dxos/echo';
 import {
-  FormatEnum,
+  Format,
   getObjectDXN,
   getSchema,
   getSchemaVersion,
@@ -89,12 +89,12 @@ export const ObjectsPanel = (props: { space?: Space }) => {
 
   const dataProperties = useMemo(
     () => [
-      { name: 'id', format: FormatEnum.DID },
-      { name: 'type', format: FormatEnum.String },
-      { name: 'version', format: FormatEnum.String, size: 100 },
+      { name: 'id', format: Format.TypeFormat.DID },
+      { name: 'type', format: Format.TypeFormat.String },
+      { name: 'version', format: Format.TypeFormat.String, size: 100 },
       {
         name: 'deleted',
-        format: FormatEnum.SingleSelect,
+        format: Format.TypeFormat.SingleSelect,
         size: 100,
         config: {
           options: [{ id: 'DELETED', title: 'DELETED', color: 'red' }],
@@ -102,7 +102,7 @@ export const ObjectsPanel = (props: { space?: Space }) => {
       },
       {
         name: 'schemaAvailable',
-        format: FormatEnum.SingleSelect,
+        format: Format.TypeFormat.SingleSelect,
         size: 180,
         config: {
           options: [
@@ -139,11 +139,11 @@ export const ObjectsPanel = (props: { space?: Space }) => {
 
   const historyProperties = useMemo(
     () => [
-      { name: 'hash', format: FormatEnum.JSON },
-      { name: 'actor', format: FormatEnum.JSON, size: 380 },
+      { name: 'hash', format: Format.TypeFormat.JSON },
+      { name: 'actor', format: Format.TypeFormat.JSON, size: 380 },
       // Uncomment when time and message are used
-      // { name: 'time', format: FormatEnum.Number },
-      // { name: 'message', format: FormatEnum.String },
+      // { name: 'time', format: Format.TypeFormat.Number },
+      // { name: 'message', format: Format.TypeFormat.String },
     ],
     [],
   );

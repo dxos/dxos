@@ -7,7 +7,8 @@ import * as Schema from 'effect/Schema';
 import { Obj, Type } from '@dxos/echo';
 import {
   FormatAnnotation,
-  FormatEnum,
+  Format,
+  
   GeneratorAnnotation,
   LabelAnnotation,
   PropertyMetaAnnotationId,
@@ -31,7 +32,7 @@ export const Task = Schema.Struct({
   ),
   priority: Schema.optional(
     Schema.Literal('none', 'low', 'medium', 'high', 'urgent').pipe(
-      FormatAnnotation.set(FormatEnum.SingleSelect),
+      FormatAnnotation.set(Format.TypeFormat.SingleSelect),
       GeneratorAnnotation.set({
         generator: 'helpers.arrayElement',
         args: [['none', 'low', 'medium', 'high', 'urgent']],
@@ -54,7 +55,7 @@ export const Task = Schema.Struct({
   ),
   status: Schema.optional(
     Schema.Literal('todo', 'in-progress', 'done').pipe(
-      FormatAnnotation.set(FormatEnum.SingleSelect),
+      FormatAnnotation.set(Format.TypeFormat.SingleSelect),
       GeneratorAnnotation.set({
         generator: 'helpers.arrayElement',
         args: [['todo', 'in-progress', 'done']],

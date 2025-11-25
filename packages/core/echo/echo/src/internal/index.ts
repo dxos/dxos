@@ -27,7 +27,7 @@ export * from './types';
 //  - [x] live => Obj.make
 //  - [x] Rename live => makeObject
 //  - [x] Rename {EchoObject, EchoRelation} => {EchoObjecSchema, EchoRelationSchema}
-//  - [x] Rename BaseObject => AnyProperties
+//  - [x] Rename AnyProperties => AnyProperties
 //  - [x] Created Entity.Any (=> AnyEchoObject).
 //  - [x] TypeFormat => TypeFormat
 //  - [x] JsonSchemaType defs

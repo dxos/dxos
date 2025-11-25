@@ -7,7 +7,7 @@ import React from 'react';
 
 import { IntentPlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { FormatEnum } from '@dxos/echo/internal';
+import { Format } from '@dxos/echo/internal';
 import { live } from '@dxos/echo/internal';
 import { faker } from '@dxos/random';
 import { withClientProvider } from '@dxos/react-client/testing';
@@ -63,12 +63,12 @@ const meta = {
         const schema = getSchemaFromPropertyDefinitions(typename, [
           {
             name: 'single',
-            format: FormatEnum.SingleSelect,
+            format: Format.TypeFormat.SingleSelect,
             config: { options: selectOptions },
           },
           {
             name: 'multiple',
-            format: FormatEnum.MultiSelect,
+            format: Format.TypeFormat.MultiSelect,
             config: { options: selectOptions },
           },
         ]);
