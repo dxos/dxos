@@ -73,7 +73,10 @@ for (const schema of [Type.Expando, TestSchema.Example]) {
     test('inspect', () => {
       const obj = createTestObject({ string: 'bar' });
       const str = inspect(obj, { colors: false });
-      expect(str.startsWith(`${schema == null ? '' : 'Typed'}EchoObjectSchema`)).to.be.true;
+      expect(
+        str.startsWith(`${schema == null ? '' : 'Typed'}EchoObject`),
+        `${Type.getTypename(schema)} failed to serialize`,
+      ).to.be.true;
       expect(str.includes("string: 'bar'")).to.be.true;
       if (schema) {
         expect(str.includes(`id: '${obj.id}'`)).to.be.true;
@@ -170,8 +173,9 @@ describe('Reactive Object with ECHO database', () => {
   });
 
   test('throws if schema was not annotated as echo object', async () => {
+    const NonEchoSchema = Schema.Struct({ field: Schema.String });
     const { graph } = await builder.createDatabase();
-    expect(() => graph.schemaRegistry.addSchema([TestSchema.Example])).to.throw();
+    expect(() => graph.schemaRegistry.addSchema([NonEchoSchema])).to.throw();
   });
 
   test('throws if schema was not registered in Hypergraph', async () => {
@@ -299,7 +303,7 @@ describe('Reactive Object with ECHO database', () => {
       db.add(Obj.make(TestSchema.Example, { string: 'foo' }));
 
       {
-        const queryResult = await db.query(Filter.typename('example.com/type/Test')).run();
+        const queryResult = await db.query(Filter.typename('example.com/type/Example')).run();
         expect(queryResult.objects.length).to.eq(1);
       }
 
@@ -343,7 +347,7 @@ describe('Reactive Object with ECHO database', () => {
       expect(objData).to.deep.contain({
         ...TEST_OBJECT,
         id: obj.id,
-        '@type': 'dxn:type:example.com/type/Test:0.1.0',
+        '@type': 'dxn:type:example.com/type/Example:0.1.0',
         '@meta': { keys: [] },
       });
     }
@@ -432,7 +436,7 @@ describe('Reactive Object with ECHO database', () => {
       // Fully serialized before added to db.
       {
         const obj = JSON.parse(JSON.stringify(obj1));
-        expect(obj.nested['/']).to.eq(DXN.fromLocalObjectId(obj1.reference!.target!.id).toString());
+        expect(obj.reference['/']).to.eq(DXN.fromLocalObjectId(obj1.reference!.target!.id).toString());
       }
 
       const obj2 = db.add(obj1);
@@ -440,7 +444,7 @@ describe('Reactive Object with ECHO database', () => {
       // References serialized as IPLD.
       {
         const obj = JSON.parse(JSON.stringify(obj2));
-        expect(decodeReference(obj.nested).objectId).to.eq(obj2.reference?.target?.id);
+        expect(decodeReference(obj.reference).objectId).to.eq(obj2.reference?.target?.id);
       }
 
       // Load refs.
