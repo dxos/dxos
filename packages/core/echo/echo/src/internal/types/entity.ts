@@ -11,7 +11,7 @@ import { type HasId } from './base';
 /**
  * Entity kind.
  */
-export const EntityKindId = Symbol.for('@dxos/echo/EntityKind');
+const EntityKindId = Symbol.for('@dxos/echo/EntityKind');
 
 /**
  * Kinds of entities stored in ECHO: objects and relations.

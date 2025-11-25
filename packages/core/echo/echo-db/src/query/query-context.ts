@@ -3,16 +3,15 @@
 //
 
 import { type Event } from '@dxos/async';
-import { type Database } from '@dxos/echo';
+import { type Database, type Entity } from '@dxos/echo';
 import { type AnyProperties } from '@dxos/echo/internal';
 import { type QueryAST } from '@dxos/echo-protocol';
 
 // TODO(burdon): Multi-sort option.
 export type Sort<T extends AnyProperties> = (a: T, b: T) => -1 | 0 | 1;
 
-// TODO(burdon): Narrow types (Entity.Any: requires Any to extend AnyProperties).
-export interface QueryContext<T extends AnyProperties = AnyProperties> {
-  getResults(): Database.QueryResultEntry<T>[];
+export interface QueryContext<T extends AnyProperties = AnyProperties, O extends Entity.Entity<T> = Entity.Entity<T>> {
+  getResults(): Database.QueryResultEntry<O>[];
 
   // TODO(dmaretskyi): Update info?
   changed: Event<void>;
@@ -20,7 +19,7 @@ export interface QueryContext<T extends AnyProperties = AnyProperties> {
   /**
    * One-shot query.
    */
-  run(query: QueryAST.Query, opts?: Database.QueryRunOptions): Promise<Database.QueryResultEntry<T>[]>;
+  run(query: QueryAST.Query, opts?: Database.QueryRunOptions): Promise<Database.QueryResultEntry<O>[]>;
 
   /**
    * Set the filter and trigger continuous updates.

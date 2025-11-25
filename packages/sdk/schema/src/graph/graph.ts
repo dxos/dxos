@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Format, Obj } from '@dxos/echo';
+import { type Entity, Format, Obj } from '@dxos/echo';
 import { Graph, GraphModel, type GraphNode, createEdgeId } from '@dxos/graph';
 import { log } from '@dxos/log';
 
@@ -12,7 +12,7 @@ import { getSchemaProperties } from '../projection';
  * Creates a new reactive graph from a set of ECHO objects.
  * References are mapped onto graph edges.
  */
-export const createGraph = <T extends Obj.Any>(objects: T[]): GraphModel<GraphNode.Required<T>> => {
+export const createGraph = <T extends Entity.Any>(objects: T[]): GraphModel<GraphNode.Required<T>> => {
   const graph = new GraphModel<GraphNode.Required<T>>(Obj.make(Graph, { nodes: [], edges: [] }));
 
   // Map objects.

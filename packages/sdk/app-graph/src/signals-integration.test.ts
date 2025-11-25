@@ -79,8 +79,8 @@ describe('signals integration', () => {
       let outerId: string;
       {
         await using db = await peer.createDatabase();
-        const inner = db.add({ name: 'inner' });
-        const outer = db.add({ inner: Ref.make(inner) });
+        const inner = db.add(Obj.make(Type.Expando, { name: 'inner' }));
+        const outer = db.add(Obj.make(Type.Expando, { inner: Ref.make(inner) }));
         outerId = outer.id;
         await db.flush();
       }
@@ -118,8 +118,8 @@ describe('signals integration', () => {
       let outerId, innerId: string;
       {
         await using db = await peer.createDatabase();
-        const inner = db.add({ name: 'inner' });
-        const outer = db.add({ inner: Ref.make(inner) });
+        const inner = db.add(Obj.make(Type.Expando, { name: 'inner' }));
+        const outer = db.add(Obj.make(Type.Expando, { inner: Ref.make(inner) }));
         innerId = inner.id;
         outerId = outer.id;
         await db.flush();

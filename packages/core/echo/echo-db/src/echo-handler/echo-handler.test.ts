@@ -365,10 +365,8 @@ describe('Reactive Object with ECHO database', () => {
     graph.schemaRegistry.addSchema([TestSchema.Person, TestSchema.HasManager]);
     const alice = db.add(Obj.make(TestSchema.Person, { name: 'Alice' }));
     const bob = db.add(Obj.make(TestSchema.Person, { name: 'Bob' }));
-    const manager: Obj.Any = db.add(
-      Relation.make(TestSchema.HasManager, { [Relation.Target]: bob, [Relation.Source]: alice }),
-    );
-    const objData: any = Obj.toJSON(manager as any);
+    const manager = db.add(Relation.make(TestSchema.HasManager, { [Relation.Target]: bob, [Relation.Source]: alice }));
+    const objData = Obj.toJSON(manager);
     expect(objData).to.deep.contain({
       id: manager.id,
       [ATTR_RELATION_SOURCE]: DXN.fromLocalObjectId(alice.id).toString(),
@@ -599,12 +597,12 @@ describe('Reactive Object with ECHO database', () => {
 
     test('meta updates', async () => {
       const { db } = await builder.createDatabase();
-      const obj = db.add({ string: 'test-1' });
+      const obj = db.add(Obj.make(Type.Expando, { string: 'test-1' }));
 
-      expect(Obj.getMeta(obj as any).keys).to.deep.eq([]);
+      expect(Obj.getMeta(obj).keys).to.deep.eq([]);
       const key = { source: 'example.com', id: '123' };
-      Obj.getMeta(obj as any).keys.push(key);
-      expect(Obj.getMeta(obj as any).keys).to.deep.eq([key]);
+      Obj.getMeta(obj).keys.push(key);
+      expect(Obj.getMeta(obj).keys).to.deep.eq([key]);
     });
 
     test('object with meta pushed to array', async () => {

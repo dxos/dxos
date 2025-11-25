@@ -7,11 +7,11 @@ import { inspect } from 'node:util';
 import { type CleanupFn, Event, type ReadOnlyEvent, synchronized } from '@dxos/async';
 import { type Context, LifecycleState, Resource } from '@dxos/context';
 import { inspectObject } from '@dxos/debug';
-import { type Database, Obj, type QueryAST, Ref, type Type } from '@dxos/echo';
+import { type Database, type Entity, Obj, type QueryAST, Ref, type Type } from '@dxos/echo';
 import { type AnyProperties, assertObjectModel, setRefResolver } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
 import { DXN, type PublicKey, type SpaceId } from '@dxos/keys';
-import { type Live, getProxyTarget, isLiveObject } from '@dxos/live-object';
+import { getProxyTarget, isLiveObject } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { type QueryService } from '@dxos/protocols/proto/dxos/echo/query';
 import { type DataService, type SpaceSyncState } from '@dxos/protocols/proto/dxos/echo/service';
@@ -47,7 +47,10 @@ export interface EchoDatabase extends Database.Database {
   /**
    * @deprecated Use `ref` instead.
    */
-  getObjectById<T extends Obj.Any = Type.Expando>(id: string, opts?: Database.GetObjectByIdOptions): T | undefined;
+  getObjectById<T extends Obj.Any = Obj.Obj<AnyProperties>>(
+    id: string,
+    opts?: Database.GetObjectByIdOptions,
+  ): T | undefined;
 
   /**
    * Wait for all pending changes to be saved to disk.
@@ -268,9 +271,7 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
   /**
    * Add reactive object.
    */
-  // TODO(burdon): Narrow type; make return type agree.
-  //  Search for "Obj.Any = db.add"
-  add<T extends AnyProperties>(obj: Live<T>, opts?: Database.AddOptions): Obj.Obj<T> {
+  add<T extends Entity.Any = Entity.Any>(obj: T, opts?: Database.AddOptions): T {
     if (!isEchoObject(obj)) {
       const schema = Obj.getSchema(obj);
       if (schema != null) {
@@ -287,7 +288,7 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
     invariant(isEchoObject(obj));
     this._rootProxies.set(getObjectCore(obj), obj);
 
-    const target = getProxyTarget(obj) as ProxyTarget;
+    const target = getProxyTarget(obj) as ProxyTarget & Entity.Any;
     EchoReactiveHandler.instance.setDatabase(target, this);
     EchoReactiveHandler.instance.saveRefs(target);
     this._coreDatabase.addCore(getObjectCore(obj), opts);
@@ -297,7 +298,7 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
   /**
    * Remove reactive object.
    */
-  remove<T extends AnyProperties>(obj: T): void {
+  remove<T extends Entity.Any = Entity.Any>(obj: T): void {
     invariant(isEchoObject(obj));
     return this._coreDatabase.removeCore(getObjectCore(obj));
   }

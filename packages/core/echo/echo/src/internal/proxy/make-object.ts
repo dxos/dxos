@@ -16,7 +16,7 @@ import {
 import { getTypeAnnotation } from '../annotations';
 import { Expando } from '../entities';
 import { attachTypedJsonSerializer } from '../object';
-import { type AnyProperties, EntityKindId, type KindId, MetaId, type ObjectMeta, ObjectMetaSchema } from '../types';
+import { type AnyProperties, KindId, MetaId, type ObjectMeta, ObjectMetaSchema } from '../types';
 
 import { TypedReactiveHandler, prepareTypedTarget } from './typed-handler';
 
@@ -73,7 +73,7 @@ const createReactiveObject = <T extends AnyProperties>(
       setIdOnTarget(obj);
     }
     if (annotation) {
-      defineHiddenProperty(obj, EntityKindId, annotation.kind);
+      defineHiddenProperty(obj, KindId, annotation.kind);
     }
     initMeta(obj, meta);
     prepareTypedTarget(obj, schema);

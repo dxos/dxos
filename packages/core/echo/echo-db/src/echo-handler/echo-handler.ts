@@ -18,8 +18,8 @@ import {
   type AnyProperties,
   EchoSchema,
   EntityKind,
-  EntityKindId,
   type HasId,
+  KindId,
   MetaId,
   ObjectDeletedId,
   type ObjectJSON,
@@ -169,7 +169,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
             return DXN.fromLocalObjectId(target[symbolInternals].core.id);
           }
         }
-        case EntityKindId: {
+        case KindId: {
           return target[symbolInternals].core.getKind();
         }
         case RelationSourceDXNId: {
@@ -195,7 +195,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
       }
     } else {
       switch (prop) {
-        case EntityKindId:
+        case KindId:
         case RelationSourceDXNId:
         case RelationTargetDXNId:
         case RelationSourceId:

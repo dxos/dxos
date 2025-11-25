@@ -11,6 +11,8 @@ import { assertArgument } from '@dxos/invariant';
 import { DXN, ObjectId } from '@dxos/keys';
 import { type Intersection } from '@dxos/util';
 
+import type * as Entity from '../Entity';
+import { type AnyProperties } from '../internal';
 import type * as Obj from '../Obj';
 import * as Ref from '../Ref';
 import type * as Type from '../Type';
@@ -33,8 +35,8 @@ interface FilterAPI {
   /**
    * Filter that matches all objects.
    */
-  // TODO(dmaretskyi): `Obj.Any` would be more type-safe, but causes annoying errors in existing code
-  everything(): Filter<Obj.AnyProps>;
+  // TODO(dmaretskyi): `Entity.Any` would be more type-safe, but causes annoying errors in existing code
+  everything(): Filter<Entity.Entity<AnyProperties>>;
 
   /**
    * Filter that matches no objects.
@@ -46,7 +48,7 @@ interface FilterAPI {
    * Filter by object IDs.
    */
   // TODO(dmaretskyi): Rename to `Filter.id`.
-  ids(...id: ObjectId[]): Filter<Obj.AnyProps>;
+  ids(...id: ObjectId[]): Filter<Entity.Entity<AnyProperties>>;
 
   /**
    * Filter by type.

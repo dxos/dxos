@@ -10,7 +10,7 @@ import * as Schema from 'effect/Schema';
 
 import { Capabilities, type PluginContext, contributes, createIntent } from '@dxos/app-framework';
 import { type Space, SpaceState, getSpace, isSpace } from '@dxos/client/echo';
-import { DXN, type Database, Filter, Obj, Type } from '@dxos/echo';
+import { DXN, type Database, type Entity, Filter, Obj, Type } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { ATTENDABLE_PATH_SEPARATOR, PLANK_COMPANION_TYPE } from '@dxos/plugin-deck/types';
@@ -357,7 +357,7 @@ export default (context: PluginContext) => {
           ),
         ),
       resolver: (id) => {
-        let query: Database.QueryResult<Type.Expando> | undefined;
+        let query: Database.QueryResult<Entity.Any> | undefined;
         return Atom.make((get) => {
           const client = context.getCapability(ClientCapabilities.Client);
           const dxn = DXN.tryParse(id)?.asEchoDXN();
@@ -375,7 +375,7 @@ export default (context: PluginContext) => {
           }
 
           const object = get(atomFromQuery(query)).at(0);
-          if (!object) {
+          if (!Obj.isObject(object)) {
             return null;
           }
 

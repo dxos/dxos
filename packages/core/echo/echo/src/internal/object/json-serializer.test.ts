@@ -11,7 +11,7 @@ import { getSchemaDXN, getSchemaTypename, getTypeDXN, getTypename } from '../ann
 import { RelationSourceId, RelationTargetId, getObjectDXN } from '../entities';
 import { makeObject } from '../proxy';
 import { Ref, StaticRefResolver } from '../ref';
-import { ATTR_TYPE, EntityKind, EntityKindId, MetaId, TypeId, getMeta, getSchema } from '../types';
+import { ATTR_TYPE, EntityKind, KindId, MetaId, TypeId, getMeta, getSchema } from '../types';
 
 import { createObject } from './create-object';
 import { objectFromJSON, objectToJSON } from './json-serializer';
@@ -50,7 +50,7 @@ describe('Object JSON serializer', () => {
     expect(contactFromJson.id).toBe(contact.id);
     expect(contactFromJson.name).toBe('Alice');
     expect((contactFromJson as any)[TypeId]).toEqual(getSchemaDXN(TestSchema.Person));
-    expect((contactFromJson as any)[EntityKindId]).toBe(EntityKind.Object);
+    expect((contactFromJson as any)[KindId]).toBe(EntityKind.Object);
     expect((contactFromJson as any)[RelationSourceId]).toBeUndefined();
     expect((contactFromJson as any)[RelationTargetId]).toBeUndefined();
     expect((contactFromJson as any)[MetaId]).toEqual({
@@ -72,7 +72,7 @@ describe('Object JSON serializer', () => {
     expect(taskFromJson.assignee!.target).toEqual(contact);
     expect(await taskFromJson.assignee!.load()).toEqual(contact);
     expect((taskFromJson as any)[TypeId]).toEqual(getSchemaDXN(TestSchema.Task));
-    expect((taskFromJson as any)[EntityKindId]).toBe(EntityKind.Object);
+    expect((taskFromJson as any)[KindId]).toBe(EntityKind.Object);
     expect((taskFromJson as any)[RelationSourceId]).toBeUndefined();
     expect((taskFromJson as any)[RelationTargetId]).toBeUndefined();
     expect((taskFromJson as any)[MetaId]).toEqual({ keys: [] });
