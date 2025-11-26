@@ -72,6 +72,7 @@ export const setFrom = (target: Function, source: Function) => {
   target.name = source.name ?? target.name;
   target.version = source.version;
   target.description = source.description;
+  target.updated = source.updated;
   // TODO(dmaretskyi): A workaround for an ECHO bug.
   target.inputSchema = JSON.parse(JSON.stringify(source.inputSchema));
   target.outputSchema = JSON.parse(JSON.stringify(source.outputSchema));
