@@ -30,6 +30,7 @@
 
 - [ ] TODO(wittjosiah): Find a simpler way to define this type.
 - [ ] TODO(wittjosiah): Should be Type.obj<...> or equivalent.
+- [ ] Fix Obj.instanceOf(Type.Expando...
 - [ ] Ref.Array.targets doesn't satisfy Obj.Any because it uses AnyEchoObject.
 - [ ] Add Relation.MakeProps
 - [ ] Schema registry should return Type.Entity.Any instead of Schema.Schema.AnyNoContext.
