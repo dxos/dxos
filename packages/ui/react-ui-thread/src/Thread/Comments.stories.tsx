@@ -6,7 +6,6 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { type FC, useEffect, useMemo, useRef, useState } from 'react';
 
 import { Expando } from '@dxos/echo/internal';
-import { createDocAccessor } from '@dxos/echo-db';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { faker } from '@dxos/random';
@@ -16,7 +15,6 @@ import {
   type Comment,
   type CommentsOptions,
   type Range,
-  automerge,
   comments,
   createBasicExtensions,
   createThemeExtensions,
@@ -71,7 +69,6 @@ const Editor: FC<{
       extensions: [
         createBasicExtensions(),
         createThemeExtensions({ themeMode }),
-        automerge(createDocAccessor(item, ['content'])),
         comments({
           id,
           onCreate: onCreateComment,
