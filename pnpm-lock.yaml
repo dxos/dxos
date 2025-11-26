@@ -3184,27 +3184,12 @@ importers:
 
   packages/core/functions-runtime-cloudflare:
     dependencies:
-      '@dxos/ai':
-        specifier: workspace:*
-        version: link:../ai
-      '@dxos/async':
-        specifier: workspace:*
-        version: link:../../common/async
-      '@dxos/client':
-        specifier: workspace:*
-        version: link:../../sdk/client
-      '@dxos/client-protocol':
-        specifier: workspace:*
-        version: link:../../sdk/client-protocol
       '@dxos/codec-protobuf':
         specifier: workspace:*
         version: link:../../common/codec-protobuf
       '@dxos/context':
         specifier: workspace:*
         version: link:../../common/context
-      '@dxos/crypto':
-        specifier: workspace:*
-        version: link:../../common/crypto
       '@dxos/debug':
         specifier: workspace:*
         version: link:../../common/debug
@@ -3214,33 +3199,15 @@ importers:
       '@dxos/echo-db':
         specifier: workspace:*
         version: link:../echo/echo-db
-      '@dxos/echo-pipeline':
-        specifier: workspace:*
-        version: link:../echo/echo-pipeline
       '@dxos/echo-protocol':
         specifier: workspace:*
         version: link:../echo/echo-protocol
-      '@dxos/edge-client':
-        specifier: workspace:*
-        version: link:../mesh/edge-client
-      '@dxos/effect':
-        specifier: workspace:*
-        version: link:../../common/effect
-      '@dxos/errors':
-        specifier: workspace:*
-        version: link:../../common/errors
-      '@dxos/functions':
-        specifier: workspace:*
-        version: link:../functions
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
       '@dxos/keys':
         specifier: workspace:*
         version: link:../../common/keys
-      '@dxos/kv-store':
-        specifier: workspace:*
-        version: link:../../common/kv-store
       '@dxos/live-object':
         specifier: workspace:*
         version: link:../echo/live-object
@@ -3259,18 +3226,9 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
-      '@effect/platform':
-        specifier: 0.92.1
-        version: 0.92.1(effect@3.18.3)
       effect:
         specifier: 3.18.3
         version: 3.18.3
-      esbuild:
-        specifier: 0.25.10
-        version: 0.25.10
-      iso-did:
-        specifier: ^1.6.0
-        version: 1.6.0
     devDependencies:
       '@cloudflare/workers-types':
         specifier: 4.20251106.1
