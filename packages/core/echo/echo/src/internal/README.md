@@ -24,7 +24,7 @@
 - [x] Fix failing tests.
 - [x] Reconcile types/version with entities/model/version
 - [x] Type.Expando => Obj.Any
-- [ ] Narrow QueryResult and match Schema and Object generics.
+- [x] Narrow QueryResult and match Schema and Object generics.
 
 2. Clean-up
 

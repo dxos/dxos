@@ -126,7 +126,7 @@ export const make = <S extends Schema.Schema.AnyNoContext>(
  */
 export const isObject = (obj: unknown): obj is Any => {
   assumeType<InternalObjectProps>(obj);
-  return typeof obj === 'object' && obj !== null && Entity.KindId in obj && obj[Entity.KindId] === Entity.Kind.Object;
+  return typeof obj === 'object' && obj !== null && obj[Entity.KindId] === Entity.Kind.Object;
 };
 
 //
@@ -200,10 +200,10 @@ export const instanceOf: {
   <S extends Type.Entity.Any>(schema: S, value: unknown): value is Schema.Schema.Type<S>;
 } = ((...args: [schema: Type.Entity.Any, value: unknown] | [schema: Type.Entity.Any]) => {
   if (args.length === 1) {
-    return (entity: unknown) => isInstanceOf(args[0] as any, entity);
+    return (entity: unknown) => isInstanceOf(args[0], entity);
   }
 
-  return isInstanceOf(args[0] as any, args[1]);
+  return isInstanceOf(args[0], args[1]);
 }) as any;
 
 // TODO(dmaretskyi): Allow returning undefined.
