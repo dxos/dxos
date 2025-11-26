@@ -6,7 +6,7 @@ import { batch, effect } from '@preact/signals-core';
 
 import { type CleanupFn } from '@dxos/async';
 import { type Space } from '@dxos/client-protocol';
-import { Filter, Obj, Query, Ref, Relation, Type } from '@dxos/echo';
+import { type Entity, Filter, Obj, Query, Ref, Relation, Type } from '@dxos/echo';
 import { type Queue } from '@dxos/echo-db';
 import { AbstractGraphBuilder, type Graph, type GraphEdge, type GraphNode, ReactiveGraphModel } from '@dxos/graph';
 import { invariant } from '@dxos/invariant';
@@ -49,9 +49,9 @@ export class SpaceGraphModel extends ReactiveGraphModel<SpaceGraphNode, SpaceGra
 
   private _space?: Space;
   private _queue?: Queue;
-  private _schema?: Type.Schema[];
-  private _objects?: (Obj.Any | Relation.Any)[];
-  private _queueItems?: (Obj.Any | Relation.Any)[];
+  private _schema?: Type.RuntimeType[];
+  private _objects?: Entity.Unknown[];
+  private _queueItems?: Entity.Unknown[];
   private _schemaSubscription?: CleanupFn;
   private _objectSubscription?: CleanupFn;
   private _queueSubscription?: CleanupFn;
@@ -65,7 +65,7 @@ export class SpaceGraphModel extends ReactiveGraphModel<SpaceGraphNode, SpaceGra
     return new SpaceGraphModel(graph);
   }
 
-  get objects(): (Obj.Any | Relation.Any)[] {
+  get objects(): Entity.Unknown[] {
     return this._objects ?? [];
   }
 
@@ -106,7 +106,7 @@ export class SpaceGraphModel extends ReactiveGraphModel<SpaceGraphNode, SpaceGra
     const schemaaQuery = space.db.schemaRegistry.query({});
     const schemas = await schemaaQuery.run();
 
-    const onSchemaUpdate = ({ results }: { results: Type.Schema[] }) => (this._schema = results);
+    const onSchemaUpdate = ({ results }: { results: Type.RuntimeType[] }) => (this._schema = results);
     this._schemaSubscription = schemaaQuery.subscribe(onSchemaUpdate);
     onSchemaUpdate({ results: schemas });
     this._subscribe();
@@ -242,7 +242,7 @@ export class SpaceGraphModel extends ReactiveGraphModel<SpaceGraphNode, SpaceGra
         });
 
         this._options?.onCreateEdge?.(edge, object);
-      } else {
+      } else if (Obj.isObject(object)) {
         const typename = Obj.getTypename(object);
         if (typename) {
           let node: SpaceGraphNode | undefined = currentNodes.find((node) => node.id === object.id);

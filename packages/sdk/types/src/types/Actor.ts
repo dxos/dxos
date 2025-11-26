@@ -16,6 +16,7 @@ export type Role = Schema.Schema.Type<typeof Role>;
  * https://schema.org/actor
  */
 export const Actor = Schema.Struct({
+  role: Schema.optional(Role),
   contact: Schema.optional(Type.Ref(Person.Person)),
   identityDid: Schema.optional(Schema.String),
   /** @deprecated */
@@ -23,7 +24,6 @@ export const Actor = Schema.Struct({
   // TODO(burdon): Generalize to handle/identifier?
   email: Schema.optional(Schema.String),
   name: Schema.optional(Schema.String),
-  role: Schema.optional(Role),
 });
 
 export interface Actor extends Schema.Schema.Type<typeof Actor> {}

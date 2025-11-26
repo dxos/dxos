@@ -28,7 +28,7 @@ export const PromptArticle = ({ subject }: PromptArticleProps) => {
   const inputData = useMemo(
     () =>
       subject && {
-        prompt: space?.db.ref(Obj.getDXN(subject)),
+        prompt: space?.db.makeRef(Obj.getDXN(subject)),
         input: {},
       },
     [subject, space],

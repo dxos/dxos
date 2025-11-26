@@ -464,6 +464,9 @@ importers:
       '@dxos/echo-signals':
         specifier: workspace:*
         version: link:../packages/core/echo/echo-signals
+      '@dxos/live-object':
+        specifier: workspace:*
+        version: link:../packages/core/echo/live-object
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../packages/sdk/react-client
@@ -2541,6 +2544,9 @@ importers:
 
   packages/core/echo/echo:
     dependencies:
+      '@dxos/context':
+        specifier: workspace:*
+        version: link:../../../common/context
       '@dxos/debug':
         specifier: workspace:*
         version: link:../../../common/debug
@@ -2571,6 +2577,9 @@ importers:
       '@dxos/node-std':
         specifier: workspace:*
         version: link:../../../common/node-std
+      '@dxos/protocols':
+        specifier: workspace:*
+        version: link:../../protocols
       '@dxos/util':
         specifier: workspace:*
         version: link:../../../common/util
@@ -9568,6 +9577,9 @@ importers:
       '@dxos/client':
         specifier: workspace:*
         version: link:../../sdk/client
+      '@dxos/client-protocol':
+        specifier: workspace:*
+        version: link:../../sdk/client-protocol
       '@dxos/context':
         specifier: workspace:*
         version: link:../../common/context
@@ -9580,6 +9592,9 @@ importers:
       '@dxos/echo-db':
         specifier: workspace:*
         version: link:../../core/echo/echo-db
+      '@dxos/echo-protocol':
+        specifier: workspace:*
+        version: link:../../core/echo/echo-protocol
       '@dxos/echo-signals':
         specifier: workspace:*
         version: link:../../core/echo/echo-signals
@@ -13391,6 +13406,9 @@ importers:
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
+      '@dxos/keys':
+        specifier: workspace:*
+        version: link:../../common/keys
       '@dxos/live-object':
         specifier: workspace:*
         version: link:../../core/echo/live-object

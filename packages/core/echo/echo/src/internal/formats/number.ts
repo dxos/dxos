@@ -4,7 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { FormatAnnotation, FormatEnum } from './types';
+import { FormatAnnotation, TypeFormat } from './types';
 
 const encodeMultipleOf = (divisor: number) => 1 / Math.pow(10, divisor);
 
@@ -37,7 +37,7 @@ export type CurrencyAnnotation = {
 export const Currency = ({ decimals, code }: CurrencyAnnotation = { decimals: 2 }) =>
   Schema.Number.pipe(
     encodeMultiple(decimals),
-    FormatAnnotation.set(FormatEnum.Currency),
+    FormatAnnotation.set(TypeFormat.Currency),
     Schema.annotations({
       title: 'Currency',
       description: 'Currency value',
@@ -55,7 +55,7 @@ export type PercentAnnotation = {
 export const Integer = () =>
   Schema.Number.pipe(
     Schema.int(),
-    FormatAnnotation.set(FormatEnum.Integer),
+    FormatAnnotation.set(TypeFormat.Integer),
     Schema.annotations({
       title: 'Integer',
       description: 'Integer value',
@@ -69,7 +69,7 @@ export const Integer = () =>
 export const Percent = ({ decimals }: PercentAnnotation = { decimals: 2 }) =>
   Schema.Number.pipe(
     encodeMultiple(decimals),
-    FormatAnnotation.set(FormatEnum.Percent),
+    FormatAnnotation.set(TypeFormat.Percent),
     Schema.annotations({
       title: 'Percent',
       description: 'Percentage value',
@@ -81,7 +81,7 @@ export const Percent = ({ decimals }: PercentAnnotation = { decimals: 2 }) =>
  * https://en.wikipedia.org/wiki/Unix_time
  */
 export const Timestamp = Schema.Number.pipe(
-  FormatAnnotation.set(FormatEnum.Timestamp),
+  FormatAnnotation.set(TypeFormat.Timestamp),
   Schema.annotations({
     title: 'Timestamp',
     description: 'Unix timestamp',

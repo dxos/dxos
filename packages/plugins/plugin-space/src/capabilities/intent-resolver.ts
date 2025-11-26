@@ -26,7 +26,7 @@ import { Invitation, InvitationEncoder } from '@dxos/react-client/invitations';
 import { ATTENDABLE_PATH_SEPARATOR } from '@dxos/react-ui-attention';
 import { iconValues } from '@dxos/react-ui-pickers';
 import { hues } from '@dxos/react-ui-theme';
-import { Collection, ProjectionModel, StoredSchema, getTypenameFromQuery } from '@dxos/schema';
+import { Collection, ProjectionModel, getTypenameFromQuery } from '@dxos/schema';
 
 import {
   CREATE_OBJECT_DIALOG,
@@ -94,7 +94,7 @@ export default ({ context, observability, createInvitationUrl }: IntentResolverO
         }
 
         // Create records smart collection.
-        collection.objects.push(Ref.make(Collection.makeManaged({ key: StoredSchema.typename })));
+        collection.objects.push(Ref.make(Collection.makeManaged({ key: Type.getTypename(Type.PersistentType) })));
 
         // Allow other plugins to add default content.
         await context.activatePromise(SpaceEvents.SpaceCreated);
@@ -635,16 +635,16 @@ export default ({ context, observability, createInvitationUrl }: IntentResolverO
             Obj.instanceOf(Collection.Collection, deletionData.parentCollection)
           ) {
             // Restore the object to the space.
-            const restoredObjects = deletionData.objects.map((obj: Type.Expando) => space.db.add(obj));
+            const restoredObjects = deletionData.objects.map((obj: Obj.Any) => space.db.add(obj));
 
             // Restore nested objects to the space.
-            deletionData.nestedObjectsList.flat().forEach((obj: Type.Expando) => {
+            deletionData.nestedObjectsList.flat().forEach((obj: Obj.Any) => {
               space.db.add(obj);
             });
 
             deletionData.indices.forEach((index: number, i: number) => {
               if (index !== -1) {
-                deletionData.parentCollection.objects.splice(index, 0, Ref.make(restoredObjects[i] as Type.Expando));
+                deletionData.parentCollection.objects.splice(index, 0, Ref.make(restoredObjects[i] as Obj.Any));
               }
             });
 

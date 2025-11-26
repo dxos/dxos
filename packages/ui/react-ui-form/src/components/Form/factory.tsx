@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { FormatEnum } from '@dxos/echo/internal';
+import { Format } from '@dxos/echo/internal';
 import { type SimpleType } from '@dxos/effect';
 
 import { GeoPointInput } from './custom';
@@ -12,11 +12,14 @@ import { type InputComponent } from './Input';
 /**
  * Get property input component.
  */
-export const getInputComponent = (type: SimpleType, format?: FormatEnum | string): InputComponent | undefined => {
+export const getInputComponent = (
+  type: SimpleType,
+  format?: Format.TypeFormat | string,
+): InputComponent | undefined => {
   switch (format) {
-    case FormatEnum.GeoPoint:
+    case Format.TypeFormat.GeoPoint:
       return GeoPointInput;
-    case FormatEnum.Markdown:
+    case Format.TypeFormat.Markdown:
       return MarkdownInput;
   }
 

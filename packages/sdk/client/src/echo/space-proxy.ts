@@ -16,10 +16,10 @@ import {
 } from '@dxos/async';
 import {
   type ClientServicesProvider,
-  PropertiesType,
   SPACE_TAG,
   type Space,
   type SpaceInternal,
+  SpaceProperties,
 } from '@dxos/client-protocol';
 import { Stream } from '@dxos/codec-protobuf/stream';
 import { Context, cancelWithContext } from '@dxos/context';
@@ -32,8 +32,8 @@ import {
   todo,
   warnAfterTimeout,
 } from '@dxos/debug';
+import { type Obj } from '@dxos/echo';
 import {
-  type AnyLiveObject,
   type EchoClient,
   type EchoDatabase,
   type EchoDatabaseImpl,
@@ -128,7 +128,7 @@ export class SpaceProxy implements Space, CustomInspectable {
 
   private _databaseOpen = false;
   private _error: Error | undefined = undefined;
-  private _properties?: AnyLiveObject<any> = undefined;
+  private _properties?: Obj.Obj<SpaceProperties> = undefined;
 
   constructor(
     private _clientServices: ClientServicesProvider,
@@ -203,7 +203,7 @@ export class SpaceProxy implements Space, CustomInspectable {
   }
 
   @trace.info({ depth: 2 })
-  get properties(): AnyLiveObject<any> {
+  get properties(): Obj.Obj<SpaceProperties> {
     this._throwIfNotInitialized();
     invariant(this._properties, 'Properties not available');
     return this._properties;
@@ -377,7 +377,7 @@ export class SpaceProxy implements Space, CustomInspectable {
     // TODO(wittjosiah): Transfer subscriptions from cached properties to the new properties object.
     {
       const unsubscribe = this._db
-        .query(Filter.type(PropertiesType), { dataLocation: QueryOptions.DataLocation.LOCAL })
+        .query(Filter.type(SpaceProperties), { dataLocation: QueryOptions.DataLocation.LOCAL })
         .subscribe(
           (query) => {
             if (query.objects.length === 1) {

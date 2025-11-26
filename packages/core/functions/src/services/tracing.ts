@@ -8,7 +8,7 @@ import * as Layer from 'effect/Layer';
 
 import { AgentStatus } from '@dxos/ai';
 import { Obj } from '@dxos/echo';
-import type { ObjectId } from '@dxos/echo/internal';
+import { type ObjectId } from '@dxos/keys';
 import { Message } from '@dxos/types';
 
 /**

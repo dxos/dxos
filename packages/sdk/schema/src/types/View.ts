@@ -13,7 +13,7 @@ import { type Space } from '@dxos/client/echo';
 import { Filter, Obj, Query, QueryAST, Type } from '@dxos/echo';
 import {
   FormInputAnnotation,
-  FormatEnum,
+  Format,
   JsonSchemaType,
   LabelAnnotation,
   ReferenceAnnotationId,
@@ -84,10 +84,9 @@ export const ViewSchema = Schema.Struct({
   SystemTypeAnnotation.set(true),
 );
 
-// TODO(burdon): Workaround for build issue: TS2742.
-//  See "import { View as _View } ..."
 export interface View extends Schema.Schema.Type<typeof ViewSchema> {}
 export interface ViewEncoded extends Schema.Schema.Encoded<typeof ViewSchema> {}
+// TODO(wittjosiah): Should be Type.obj<...> or equivalent.
 export const View: Schema.Schema<View, ViewEncoded> = ViewSchema;
 
 export type MakeProps = {
@@ -194,7 +193,7 @@ export const makeWithReferences = async ({
       continue;
     }
 
-    if (property.format !== FormatEnum.Ref) {
+    if (property.format !== Format.TypeFormat.Ref) {
       continue;
     }
 
@@ -226,7 +225,7 @@ export const makeWithReferences = async ({
           props: {
             property: property.name as JsonProp,
             type: TypeEnum.Ref,
-            format: FormatEnum.Ref,
+            format: Format.TypeFormat.Ref,
             referenceSchema: Type.getTypename(referenceSchema),
             title: property.title,
           },
@@ -308,7 +307,7 @@ export const ViewSchemaV4 = Schema.Struct({
   }).pipe(Schema.mutable, FormInputAnnotation.set(false)),
   sort: Schema.optional(Schema.Array(FieldSortType).pipe(FormInputAnnotation.set(false))),
   projection: Projection.pipe(FormInputAnnotation.set(false)),
-  presentation: Type.Ref(Type.Expando).pipe(FormInputAnnotation.set(false)),
+  presentation: Type.Ref(Obj.Any).pipe(FormInputAnnotation.set(false)),
 }).pipe(
   Type.Obj({
     typename: 'dxos.org/type/View',

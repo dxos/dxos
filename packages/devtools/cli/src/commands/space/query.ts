@@ -6,8 +6,7 @@ import { Flags, ux } from '@oclif/core';
 
 import { TABLE_FLAGS, type TableFlags, table } from '@dxos/cli-base';
 import { ARG_SPACE_KEYS } from '@dxos/cli-base';
-import { Filter } from '@dxos/client/echo';
-import { getTypename } from '@dxos/echo/internal';
+import { Filter, Obj } from '@dxos/echo';
 
 import { BaseCommand } from '../../base';
 
@@ -43,7 +42,7 @@ export default class Query extends BaseCommand<typeof Query> {
             truncate: true,
           },
           type: {
-            get: (row) => getTypename(row),
+            get: (row) => Obj.getTypename(row),
           },
           data: {
             extended: true,

@@ -64,7 +64,7 @@ export declare namespace GraphEdge {
 //
 
 export const Graph = Schema.Struct({
-  id: Schema.optional(Schema.String),
+  id: Schema.optional(Schema.String), // TODO(burdon): ObjectId.
   nodes: Schema.mutable(Schema.Array(BaseGraphNode)),
   edges: Schema.mutable(Schema.Array(BaseGraphEdge)),
 });

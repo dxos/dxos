@@ -21,7 +21,7 @@ import { StorybookLayoutPlugin } from '@dxos/plugin-storybook-layout';
 import { ThemePlugin } from '@dxos/plugin-theme';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { defaultTx } from '@dxos/react-ui-theme';
-import { Testing } from '@dxos/schema/testing';
+import { TestSchema } from '@dxos/schema/testing';
 import { type Actor, Message, Organization, Person } from '@dxos/types';
 import { seedTestData } from '@dxos/types/testing';
 
@@ -193,7 +193,7 @@ const meta = {
     withPluginManager({
       plugins: [
         ClientPlugin({
-          types: [TestItem, Person.Person, Organization.Organization, Testing.DocumentType],
+          types: [TestItem, Person.Person, Organization.Organization, TestSchema.DocumentType],
           onClientInitialized: async ({ client }) => {
             await client.halo.createIdentity();
             await client.spaces.waitUntilReady();

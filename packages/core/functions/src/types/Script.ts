@@ -4,8 +4,8 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Obj, Ref, Type } from '@dxos/echo';
-import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/internal';
+import { Annotation, Obj, Ref, Type } from '@dxos/echo';
+import { FormInputAnnotation } from '@dxos/echo/internal';
 import { Text } from '@dxos/schema';
 
 /**
@@ -23,7 +23,7 @@ export const Script = Schema.Struct({
     typename: 'dxos.org/type/Script',
     version: '0.1.0',
   }),
-  LabelAnnotation.set(['name']),
+  Annotation.LabelAnnotation.set(['name']),
 );
 export interface Script extends Schema.Schema.Type<typeof Script> {}
 

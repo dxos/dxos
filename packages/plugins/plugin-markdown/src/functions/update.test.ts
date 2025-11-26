@@ -16,7 +16,7 @@ import {
   makeToolResolverFromFunctions,
 } from '@dxos/assistant';
 import { Blueprint } from '@dxos/blueprints';
-import { PropertiesType } from '@dxos/client-protocol';
+import { SpaceProperties } from '@dxos/client-protocol';
 import { Obj, Query, Ref } from '@dxos/echo';
 import { TestHelpers, acquireReleaseResource } from '@dxos/effect';
 import {
@@ -54,7 +54,7 @@ const TestLayer = Layer.mergeAll(
       TestDatabaseLayer({
         spaceKey: 'fixed',
         indexing: { vector: true },
-        types: [PropertiesType, Collection.Collection, Blueprint.Blueprint, Markdown.Document, HasSubject.HasSubject],
+        types: [SpaceProperties, Collection.Collection, Blueprint.Blueprint, Markdown.Document, HasSubject.HasSubject],
       }),
       CredentialsService.configuredLayer([]),
       TracingService.layerNoop,

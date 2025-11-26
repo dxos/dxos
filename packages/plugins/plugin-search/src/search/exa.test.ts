@@ -6,7 +6,7 @@ import { describe, test } from 'vitest';
 
 import { EXA_API_KEY } from '@dxos/ai/testing';
 import { log } from '@dxos/log';
-import { Testing } from '@dxos/schema/testing';
+import { TestSchema } from '@dxos/schema/testing';
 
 import { search } from './exa';
 
@@ -15,7 +15,7 @@ describe.skip('Search', () => {
     test.skip('contacts', { timeout: 60_000 }, async () => {
       const objects = await search({
         query: 'top executives at google',
-        schema: [Testing.Person],
+        schema: [TestSchema.Person],
         exaApiKey: EXA_API_KEY,
       });
 
@@ -25,7 +25,7 @@ describe.skip('Search', () => {
     test.skip('contacts projects and orgs', { timeout: 60_000 }, async () => {
       const objects = await search({
         query: 'top executives at google',
-        schema: [Testing.Person, Testing.Project, Testing.Organization],
+        schema: [TestSchema.Person, TestSchema.Project, TestSchema.Organization],
         exaApiKey: EXA_API_KEY,
       });
 
@@ -35,7 +35,7 @@ describe.skip('Search', () => {
     test('a19z org, projects they invest in and team', { timeout: 60_000 }, async () => {
       const objects = await search({
         query: 'a19z org, projects they invest in and team',
-        schema: [Testing.Project, Testing.Organization, Testing.Person],
+        schema: [TestSchema.Project, TestSchema.Organization, TestSchema.Person],
         exaApiKey: EXA_API_KEY,
       });
 
@@ -45,7 +45,7 @@ describe.skip('Search', () => {
     test('companies building CRDTs', { timeout: 60_000 }, async () => {
       const objects = await search({
         query: 'companies building CRDTs',
-        schema: [Testing.Project, Testing.Organization, Testing.Person],
+        schema: [TestSchema.Project, TestSchema.Organization, TestSchema.Person],
         exaApiKey: EXA_API_KEY,
       });
 
@@ -57,7 +57,7 @@ describe.skip('Search', () => {
     test('composer context-based search', { timeout: 60_000 }, async () => {
       const objects = await search({
         context: COMPOSER_DXOS_DOC,
-        schema: [Testing.Project, Testing.Organization, Testing.Person],
+        schema: [TestSchema.Project, TestSchema.Organization, TestSchema.Person],
         exaApiKey: EXA_API_KEY,
       });
 
@@ -67,7 +67,7 @@ describe.skip('Search', () => {
     test.only('edge architecture', { timeout: 60_000 }, async () => {
       const objects = await search({
         context: EDGE_ARCHITECTURE_DOC,
-        schema: [Testing.Project, Testing.Organization, Testing.Person],
+        schema: [TestSchema.Project, TestSchema.Organization, TestSchema.Person],
         exaApiKey: EXA_API_KEY,
       });
 

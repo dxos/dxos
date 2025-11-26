@@ -5,16 +5,8 @@
 import * as Schema from 'effect/Schema';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
-import { Obj, Type } from '@dxos/echo';
-import {
-  EchoSchema,
-  EntityKind,
-  StoredSchema,
-  type TypeAnnotation,
-  TypeAnnotationId,
-  getSchemaTypename,
-  toJsonSchema,
-} from '@dxos/echo/internal';
+import { JsonSchema, Obj, Type } from '@dxos/echo';
+import { EchoSchema, EntityKind, PersistentSchema, type TypeAnnotation, TypeAnnotationId } from '@dxos/echo/internal';
 
 import { Filter } from '../query';
 import { EchoTestBuilder } from '../testing';
@@ -122,7 +114,7 @@ describe('schema registry', () => {
   test('get all raw stored schemas', async () => {
     const { db, registry } = await setupTest();
     const schemas = await registry.register([Organization, Contact]);
-    const retrieved = (await db.query(Filter.type(StoredSchema)).run()).objects;
+    const retrieved = (await db.query(Filter.type(PersistentSchema)).run()).objects;
     expect(retrieved.length).to.eq(schemas.length);
     for (const schema of retrieved) {
       expect(schemas.find((s) => s.id === schema.id)).not.to.undefined;
@@ -158,14 +150,14 @@ describe('schema registry', () => {
 
   test('is registered if was stored in db', async () => {
     const { db, registry } = await setupTest();
-    const schemaToStore = Obj.make(StoredSchema, {
+    const schemaToStore = Obj.make(PersistentSchema, {
       typename: 'example.com/type/Test',
       version: '0.1.0',
-      jsonSchema: toJsonSchema(Schema.Struct({ field: Schema.Number })),
+      jsonSchema: JsonSchema.toJsonSchema(Schema.Struct({ field: Schema.Number })),
     });
     expect(registry.hasSchema(new EchoSchema(schemaToStore))).to.be.false;
-    const storedSchema = db.add(schemaToStore);
-    expect(registry.hasSchema(new EchoSchema(storedSchema))).to.be.true;
+    const persistentSchema = db.add(schemaToStore);
+    expect(registry.hasSchema(new EchoSchema(persistentSchema))).to.be.true;
   });
 
   test('schema is invalidated on update', async () => {
@@ -188,7 +180,7 @@ describe('schema registry', () => {
     await peer.reload();
     {
       await using db = await peer.openLastDatabase();
-      const query = db.schemaRegistry.query({ typename: getSchemaTypename(Contact) });
+      const query = db.schemaRegistry.query({ typename: Type.getTypename(Contact) });
       const schema = await new Promise<EchoSchema>((resolve) => {
         const immediate = query.runSync();
         if (immediate.length > 0) {
@@ -203,7 +195,7 @@ describe('schema registry', () => {
         });
         ctx.onTestFinished(unsubscribe);
       });
-      expect(getSchemaTypename(schema)).toEqual(getSchemaTypename(Contact));
+      expect(Type.getTypename(schema)).toEqual(Type.getTypename(Contact));
     }
   });
 });

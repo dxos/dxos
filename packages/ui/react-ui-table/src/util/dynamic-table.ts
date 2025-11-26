@@ -4,9 +4,7 @@
 
 import type * as Schema from 'effect/Schema';
 
-import { Filter, Obj, Query, Ref } from '@dxos/echo';
-import { getTypename, toJsonSchema } from '@dxos/echo/internal';
-import type { JsonSchemaType } from '@dxos/echo/internal';
+import { Filter, type JsonSchema, Obj, Query, Ref, Type } from '@dxos/echo';
 import {
   ProjectionModel,
   type SchemaPropertyDefinition,
@@ -38,14 +36,14 @@ export const getBaseSchema = ({
 }: {
   typename?: string;
   properties?: TablePropertyDefinition[];
-  jsonSchema?: JsonSchemaType;
+  jsonSchema?: JsonSchema.JsonSchema;
   schema?: Schema.Schema.AnyNoContext;
-}): { typename: string; jsonSchema: JsonSchemaType } => {
+}): { typename: string; jsonSchema: JsonSchema.JsonSchema } => {
   if (typename && properties) {
     const schema = getSchemaFromPropertyDefinitions(typename, properties);
     return { typename: schema.typename, jsonSchema: schema.jsonSchema };
   } else if (schema) {
-    return { typename: getTypename(schema)!, jsonSchema: toJsonSchema(schema) };
+    return { typename: Type.getTypename(schema)!, jsonSchema: Type.toJsonSchema(schema) };
   } else if (typename && jsonSchema) {
     return { typename, jsonSchema };
   } else {
@@ -57,7 +55,7 @@ export const makeDynamicTable = ({
   jsonSchema,
   properties,
 }: {
-  jsonSchema: JsonSchemaType;
+  jsonSchema: JsonSchema.JsonSchema;
   properties?: TablePropertyDefinition[];
 }): { projection: ProjectionModel; object: Table.Table } => {
   const view = View.make({

@@ -4,7 +4,7 @@
 
 import React, { useCallback, useMemo } from 'react';
 
-import { FormatEnum } from '@dxos/echo/internal';
+import { Format } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
 import { useClient } from '@dxos/react-client';
 import { getSpace, useSchema } from '@dxos/react-client/echo';
@@ -27,7 +27,7 @@ export const KanbanViewEditor = ({ object }: KanbanViewEditorProps) => {
 
   const fieldProjections = projection?.getFieldProjections() || [];
   const selectFields = fieldProjections
-    .filter((field) => field.props.format === FormatEnum.SingleSelect)
+    .filter((field) => field.props.format === Format.TypeFormat.SingleSelect)
     .map(({ field }) => ({ value: field.id, label: field.path }));
 
   const handleSave = useCallback(
