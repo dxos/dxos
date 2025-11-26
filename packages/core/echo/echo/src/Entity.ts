@@ -4,7 +4,9 @@
 
 import type { ObjectId } from '@dxos/keys';
 
-import { EntityKind, EntityKindSchema, KindId as KindId$, getEntityKind } from './internal';
+import { EntityKind, EntityKindSchema, KindId, getEntityKind } from './internal';
+
+export { KindId };
 
 // NOTE: Relation does not extend Obj so that, for example, we can prevent Relations from being used as source and target objects.
 //  However, we generally refer to Obj and Relation instances as "objects",
@@ -13,9 +15,6 @@ import { EntityKind, EntityKindSchema, KindId as KindId$, getEntityKind } from '
 export const Kind = EntityKind;
 export type Kind = EntityKind;
 export const KindSchema = EntityKindSchema;
-
-export const KindId: unique symbol = KindId$ as any;
-export type KindId = typeof KindId;
 
 /**
  * Assigns a kind to an Object or Relation instance.

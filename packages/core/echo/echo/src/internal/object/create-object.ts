@@ -9,7 +9,6 @@ import { assertArgument, failedInvariant } from '@dxos/invariant';
 import { ObjectId } from '@dxos/keys';
 import { defineHiddenProperty } from '@dxos/live-object';
 
-import type * as Entity from '../../Entity';
 import { getSchemaDXN, getTypeAnnotation, setTypename } from '../annotations';
 import {
   RelationSourceDXNId,
@@ -24,7 +23,7 @@ import { EntityKind, KindId, MetaId, setSchema } from '../types';
 import { attachedTypedObjectInspector } from './inspect';
 import { attachTypedJsonSerializer } from './json-serializer';
 
-export type CreateObjectProps<T> = T extends { id: string } ? Omit<T, 'id' | Entity.KindId> & { id?: string } : T;
+export type CreateObjectProps<T> = T extends { id: string } ? Omit<T, 'id' | KindId> & { id?: string } : T;
 
 /**
  * Creates a new object instance from a schema and data, without signal reactivity.
