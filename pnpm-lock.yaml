@@ -265,6 +265,9 @@ importers:
       eslint-plugin-react:
         specifier: ^7.37.5
         version: 7.37.5(eslint@9.37.0(jiti@2.6.1))
+      eslint-plugin-sort-exports:
+        specifier: ^0.9.1
+        version: 0.9.1(eslint@9.37.0(jiti@2.6.1))
       eslint-plugin-storybook:
         specifier: 10.0.7
         version: 10.0.7(eslint@9.37.0(jiti@2.6.1))(storybook@10.0.7(@testing-library/dom@10.4.1)(prettier@3.6.2)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)(vite@7.1.9(@types/node@22.10.2)(jiti@2.6.1)(terser@5.19.2)(yaml@2.7.1)))(typescript@5.9.3)
@@ -714,6 +717,9 @@ importers:
       '@dxos/debug':
         specifier: workspace:*
         version: link:../../common/debug
+      '@dxos/echo-db':
+        specifier: workspace:*
+        version: link:../../core/echo/echo-db
       '@dxos/live-object':
         specifier: workspace:*
         version: link:../../core/echo/live-object
@@ -726,6 +732,9 @@ importers:
       '@dxos/random':
         specifier: workspace:*
         version: link:../../common/random
+      '@dxos/react-ui-kanban':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-kanban
       '@dxos/react-ui-stack':
         specifier: workspace:*
         version: link:../../ui/react-ui-stack
@@ -741,9 +750,15 @@ importers:
       '@dxos/vite-plugin-import-source':
         specifier: workspace:*
         version: link:../../../tools/vite-plugin-import-source
+      '@effect/cli':
+        specifier: 0.71.0
+        version: 0.71.0(@effect/platform@0.92.1(effect@3.18.3))(@effect/printer-ansi@0.46.0(@effect/typeclass@0.37.0(effect@3.18.3))(effect@3.18.3))(@effect/printer@0.46.0(@effect/typeclass@0.37.0(effect@3.18.3))(effect@3.18.3))(effect@3.18.3)
       '@effect/platform':
         specifier: 0.92.1
         version: 0.92.1(effect@3.18.3)
+      '@effect/platform-node':
+        specifier: 0.98.3
+        version: 0.98.3(@effect/cluster@0.50.3(@effect/platform@0.92.1(effect@3.18.3))(@effect/rpc@0.71.0(@effect/platform@0.92.1(effect@3.18.3))(effect@3.18.3))(@effect/sql@0.46.0(@effect/experimental@0.56.0(@effect/platform@0.92.1(effect@3.18.3))(effect@3.18.3)(ioredis@5.3.2))(@effect/platform@0.92.1(effect@3.18.3))(effect@3.18.3))(@effect/workflow@0.11.3(@effect/platform@0.92.1(effect@3.18.3))(@effect/rpc@0.71.0(@effect/platform@0.92.1(effect@3.18.3))(effect@3.18.3))(effect@3.18.3))(effect@3.18.3))(@effect/platform@0.92.1(effect@3.18.3))(@effect/rpc@0.71.0(@effect/platform@0.92.1(effect@3.18.3))(effect@3.18.3))(@effect/sql@0.46.0(@effect/experimental@0.56.0(@effect/platform@0.92.1(effect@3.18.3))(effect@3.18.3)(ioredis@5.3.2))(@effect/platform@0.92.1(effect@3.18.3))(effect@3.18.3))(effect@3.18.3)
       '@sentry/vite-plugin':
         specifier: ^4.0.2
         version: 4.0.2(encoding@0.1.13)
@@ -3217,6 +3232,9 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
+      effect:
+        specifier: 3.18.3
+        version: 3.18.3
     devDependencies:
       '@cloudflare/workers-types':
         specifier: 4.20251106.1
@@ -8266,6 +8284,9 @@ importers:
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
+      '@dxos/echo-db':
+        specifier: workspace:*
+        version: link:../../core/echo/echo-db
       '@dxos/effect':
         specifier: workspace:*
         version: link:../../common/effect
@@ -8899,6 +8920,9 @@ importers:
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
+      '@dxos/echo-db':
+        specifier: workspace:*
+        version: link:../../core/echo/echo-db
       '@dxos/echo-protocol':
         specifier: workspace:*
         version: link:../../core/echo/echo-protocol
@@ -9053,9 +9077,6 @@ importers:
         specifier: ^5.9.3
         version: 5.9.3
     devDependencies:
-      '@dxos/echo-db':
-        specifier: workspace:*
-        version: link:../../core/echo/echo-db
       '@dxos/random':
         specifier: workspace:*
         version: link:../../common/random
@@ -9255,6 +9276,9 @@ importers:
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
+      '@dxos/echo-db':
+        specifier: workspace:*
+        version: link:../../core/echo/echo-db
       '@dxos/functions':
         specifier: workspace:*
         version: link:../../core/functions
@@ -9732,6 +9756,9 @@ importers:
         specifier: ^1.0.0
         version: 1.0.0(react@19.2.0)
     devDependencies:
+      '@atlaskit/pragmatic-drag-and-drop-hitbox':
+        specifier: ^1.0.3
+        version: 1.0.3
       '@babel/core':
         specifier: ^7.18.13
         version: 7.28.0
@@ -11334,9 +11361,6 @@ importers:
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
-      '@dxos/config':
-        specifier: workspace:*
-        version: link:../config
       '@dxos/context':
         specifier: workspace:*
         version: link:../../common/context
@@ -11509,6 +11533,9 @@ importers:
 
   packages/sdk/config:
     dependencies:
+      '@dxos/client-protocol':
+        specifier: workspace:*
+        version: link:../client-protocol
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
@@ -11527,15 +11554,15 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
+      '@effect/platform':
+        specifier: 0.92.1
+        version: 0.92.1(effect@3.18.3)
       boolean:
         specifier: ^3.0.1
         version: 3.2.0
       effect:
         specifier: 3.18.3
         version: 3.18.3
-      js-yaml:
-        specifier: ^4.1.0
-        version: 4.1.0
       localforage:
         specifier: ^1.10.0
         version: 1.10.0
@@ -11548,10 +11575,10 @@ importers:
       pkg-up:
         specifier: ^3.1.0
         version: 3.1.0
+      yaml:
+        specifier: ^2.6.1
+        version: 2.7.1
     devDependencies:
-      '@types/js-yaml':
-        specifier: ^4.0.5
-        version: 4.0.9
       '@types/lodash.defaultsdeep':
         specifier: ^4.6.6
         version: 4.6.7
@@ -13861,6 +13888,9 @@ importers:
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
+      '@dxos/echo-db':
+        specifier: workspace:*
+        version: link:../../core/echo/echo-db
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
@@ -26768,6 +26798,11 @@ packages:
     engines: {node: '>=4'}
     peerDependencies:
       eslint: ^3 || ^4 || ^5 || ^6 || ^7 || ^8 || ^9.7
+
+  eslint-plugin-sort-exports@0.9.1:
+    resolution: {integrity: sha512-2w6jHusdF2K60bcGKpa9HEinETwNzVrvplZipVculCfu3ZDd5IW3xL54XVEnVkGIPJnp/LitFCg7owL4DOtuHg==}
+    peerDependencies:
+      eslint: '>=5.0.0'
 
   eslint-plugin-storybook@10.0.7:
     resolution: {integrity: sha512-qOQq9KdT1jsBgT3qsxUH2n67aj1WR8D1XCoER8Q6yuVlS5TimNwk1mZeWkXVf/o4RQQT6flT2y5cG2gPLZPvJA==}
@@ -47796,6 +47831,11 @@ snapshots:
       semver: 6.3.1
       string.prototype.matchall: 4.0.12
       string.prototype.repeat: 1.0.0
+
+  eslint-plugin-sort-exports@0.9.1(eslint@9.37.0(jiti@2.6.1)):
+    dependencies:
+      eslint: 9.37.0(jiti@2.6.1)
+      minimatch: 9.0.5
 
   eslint-plugin-storybook@10.0.7(eslint@9.37.0(jiti@2.6.1))(storybook@10.0.7(@testing-library/dom@10.4.1)(prettier@3.6.2)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)(vite@7.1.9(@types/node@22.10.2)(jiti@2.6.1)(terser@5.19.2)(yaml@2.7.1)))(typescript@5.9.3):
     dependencies:

@@ -3,11 +3,11 @@
 //
 
 import { DeferredTask, Event, sleep } from '@dxos/async';
-import { type Space } from '@dxos/client/echo';
-import { type GossipMessage } from '@dxos/client/mesh';
 import { Context } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
+import { type Messenger } from '@dxos/protocols';
+import { type GossipMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/gossip';
 
 import { type AwarenessInfo, type AwarenessPosition, type AwarenessProvider, type AwarenessState } from './awareness';
 
@@ -23,7 +23,7 @@ type ProtocolMessage =
 const DEBOUNCE_INTERVAL = 100; // ms
 
 export type AwarenessProviderParams = {
-  space: Space;
+  messenger: Messenger;
   channel: string;
   peerId: string;
   info: AwarenessInfo;
@@ -35,7 +35,7 @@ export type AwarenessProviderParams = {
 export class SpaceAwarenessProvider implements AwarenessProvider {
   private readonly _remoteStates = new Map<string, AwarenessState>();
 
-  private readonly _space: Space;
+  private readonly _messenger: Messenger;
   private readonly _channel: string;
   private readonly _peerId: string;
   private readonly _info: AwarenessInfo;
@@ -46,18 +46,18 @@ export class SpaceAwarenessProvider implements AwarenessProvider {
 
   public readonly remoteStateChange = new Event<void>();
 
-  constructor(params: AwarenessProviderParams) {
-    this._space = params.space;
-    this._channel = params.channel;
-    this._peerId = params.peerId;
-    this._info = params.info;
+  constructor({ messenger, channel, peerId, info }: AwarenessProviderParams) {
+    this._messenger = messenger;
+    this._channel = channel;
+    this._peerId = peerId;
+    this._info = info;
   }
 
   open(): void {
     this._ctx = new Context();
     this._postTask = new DeferredTask(this._ctx, async () => {
       if (this._localState) {
-        await this._space.postMessage(this._channel, {
+        await this._messenger.postMessage(this._channel, {
           kind: 'post',
           state: this._localState,
         } satisfies ProtocolMessage);
@@ -69,7 +69,7 @@ export class SpaceAwarenessProvider implements AwarenessProvider {
     });
 
     this._ctx.onDispose(
-      this._space.listen(this._channel, (message: GossipMessage) => {
+      this._messenger.listen(this._channel, (message: GossipMessage) => {
         switch (message.payload.kind) {
           case 'query': {
             this._handleQueryMessage();
@@ -83,7 +83,7 @@ export class SpaceAwarenessProvider implements AwarenessProvider {
       }),
     );
 
-    void this._space
+    void this._messenger
       .postMessage(this._channel, {
         kind: 'query',
       } satisfies ProtocolMessage)

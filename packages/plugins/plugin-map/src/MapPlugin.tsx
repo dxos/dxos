@@ -3,9 +3,9 @@
 //
 
 import { Capabilities, Events, contributes, createIntent, defineModule, definePlugin } from '@dxos/app-framework';
-import { ClientEvents } from '@dxos/plugin-client';
-import { SpaceCapabilities } from '@dxos/plugin-space';
-import { defineObjectForm } from '@dxos/plugin-space/types';
+import { Type } from '@dxos/echo';
+import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
+import { type CreateObjectIntent } from '@dxos/plugin-space/types';
 
 import { AppGraphBuilder, BlueprintDefinition, IntentResolver, MapState, ReactSurface } from './capabilities';
 import { meta } from './meta';
@@ -31,26 +31,20 @@ export const MapPlugin = definePlugin(meta, () => [
     activatesOn: Events.SetupMetadata,
     activate: () =>
       contributes(Capabilities.Metadata, {
-        id: Map.Map.typename,
+        id: Type.getTypename(Map.Map),
         metadata: {
           icon: 'ph--compass--regular',
           iconHue: 'green',
+          inputSchema: MapAction.CreateMap,
+          createIntent: ((props, options) =>
+            createIntent(MapAction.Create, { ...props, space: options.space })) satisfies CreateObjectIntent,
         },
       }),
   }),
   defineModule({
-    id: `${meta.id}/module/object-form`,
+    id: `${meta.id}/module/schema`,
     activatesOn: ClientEvents.SetupSchema,
-    activate: () =>
-      contributes(
-        SpaceCapabilities.ObjectForm,
-        defineObjectForm({
-          objectSchema: Map.Map,
-          formSchema: MapAction.CreateMap,
-          hidden: true,
-          getIntent: (props, options) => createIntent(MapAction.Create, { ...props, space: options.space }),
-        }),
-      ),
+    activate: () => contributes(ClientCapabilities.Schema, [Map.Map]),
   }),
   defineModule({
     id: `${meta.id}/module/react-surface`,

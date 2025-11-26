@@ -18,7 +18,7 @@ import { ClientCapabilities } from '@dxos/plugin-client';
 import { SpaceAction } from '@dxos/plugin-space/types';
 import { getSpace } from '@dxos/react-client/echo';
 import { Table } from '@dxos/react-ui-table/types';
-import { getTypenameFromQuery } from '@dxos/schema';
+import { View, getTypenameFromQuery } from '@dxos/schema';
 import { Task } from '@dxos/types';
 
 import { TableAction } from '../types';
@@ -26,7 +26,7 @@ import { TableAction } from '../types';
 export default (context: PluginContext) =>
   contributes(Capabilities.IntentResolver, [
     createResolver({
-      intent: TableAction.onCreateSpace,
+      intent: TableAction.OnCreateSpace,
       resolve: ({ space }) =>
         Effect.gen(function* () {
           const { dispatch } = context.getCapability(Capabilities.IntentDispatcher);
@@ -56,8 +56,9 @@ export default (context: PluginContext) =>
       intent: TableAction.Create,
       resolve: async ({ space, name, typename }) => {
         const client = context.getCapability(ClientCapabilities.Client);
-        const { view } = await Table.makeView({ client, space, typename, name });
-        return { data: { object: view } };
+        const { view, jsonSchema } = await View.makeFromSpace({ client, space, typename });
+        const table = Table.make({ name, view, jsonSchema });
+        return { data: { object: table } };
       },
     }),
     createResolver({

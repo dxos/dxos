@@ -2,17 +2,16 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Signal, useComputed, useSignal } from '@preact/signals-react';
-import React, { useCallback, useEffect, useMemo } from 'react';
+import React, { useCallback, useMemo } from 'react';
 
 import { createIntent } from '@dxos/app-framework';
 import { type SurfaceComponentProps, useIntentDispatcher } from '@dxos/app-framework/react';
-import { type Space, getSpace } from '@dxos/client/echo';
-import { type DXN, Obj } from '@dxos/echo';
-import { Filter, useQuery } from '@dxos/react-client/echo';
+import { getSpace } from '@dxos/client/echo';
+import { Obj } from '@dxos/echo';
 import { StackItem } from '@dxos/react-ui-stack';
-import { type Message as MessageType, Person } from '@dxos/types';
+import { type Message as MessageType } from '@dxos/types';
 
+import { useActorContact } from '../../hooks';
 import { InboxAction, type Mailbox } from '../../types';
 
 import { Message, type MessageHeaderProps } from './Message';
@@ -31,7 +30,7 @@ export const MessageArticle = ({
   }, [message]);
 
   const space = getSpace(mailbox);
-  const sender = useSenderContact(space, message);
+  const sender = useActorContact(space, message.sender);
 
   const { dispatchPromise: dispatch } = useIntentDispatcher();
   const handleContactCreate = useCallback<NonNullable<MessageHeaderProps['onContactCreate']>>(
@@ -53,28 +52,5 @@ export const MessageArticle = ({
         </Message.Viewport>
       </Message.Root>
     </StackItem.Content>
-  );
-};
-
-// TODO(burdon): Factor out lazy update pattern.
-const useSenderContact = (space?: Space, message?: MessageType.Message): Signal<DXN | undefined> => {
-  // Don't bother querying the space if there is already a reference to the contact.
-  const isLinked = !!message?.sender.contact;
-  const contacts = useQuery(isLinked ? undefined : space, Filter.type(Person.Person));
-  // TODO(burdon): Remove hasEmail check?
-  const hasEmail = useComputed(() => !!message?.sender.email);
-  const existingContact = useSignal<Person.Person | undefined>(undefined);
-  useEffect(() => {
-    existingContact.value = contacts.find((contact) =>
-      contact.emails?.find((email) => email.value === message?.sender.email),
-    );
-  }, [contacts, message?.sender.email, hasEmail, existingContact]);
-
-  return useComputed(() =>
-    message?.sender.contact
-      ? message.sender.contact.dxn
-      : existingContact.value
-        ? Obj.getDXN(existingContact.value)
-        : undefined,
   );
 };

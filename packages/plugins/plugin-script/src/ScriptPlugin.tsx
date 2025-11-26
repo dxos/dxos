@@ -5,9 +5,8 @@
 import { Capabilities, Events, contributes, createIntent, defineModule, definePlugin } from '@dxos/app-framework';
 import { Ref } from '@dxos/echo';
 import { Script } from '@dxos/functions';
-import { ClientEvents } from '@dxos/plugin-client';
-import { SpaceCapabilities } from '@dxos/plugin-space';
-import { defineObjectForm } from '@dxos/plugin-space/types';
+import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
+import { type CreateObjectIntent } from '@dxos/plugin-space/types';
 
 import {
   AppGraphBuilder,
@@ -49,6 +48,10 @@ export const ScriptPlugin = definePlugin(meta, () => [
           iconHue: 'sky',
           // TODO(wittjosiah): Move out of metadata.
           loadReferences: async (script: Script.Script) => await Ref.Array.loadAll([script.source]),
+          inputSchema: ScriptAction.ScriptProps,
+          createObjectIntent: ((props, options) =>
+            createIntent(ScriptAction.CreateScript, { ...props, space: options.space })) satisfies CreateObjectIntent,
+          addToCollectionOnCreate: true,
         },
       }),
       contributes(Capabilities.Metadata, {
@@ -56,6 +59,10 @@ export const ScriptPlugin = definePlugin(meta, () => [
         metadata: {
           icon: 'ph--notebook--regular',
           iconHue: 'sky',
+          inputSchema: ScriptAction.NotebookProps,
+          createObjectIntent: ((props, options) =>
+            createIntent(ScriptAction.CreateNotebook, { ...props, space: options.space })) satisfies CreateObjectIntent,
+          addToCollectionOnCreate: true,
         },
       }),
     ],
@@ -66,31 +73,11 @@ export const ScriptPlugin = definePlugin(meta, () => [
     activate: AppGraphBuilder,
   }),
   defineModule({
-    id: `${meta.id}/module/script/object-form`,
+    id: `${meta.id}/module/schema`,
     activatesOn: ClientEvents.SetupSchema,
-    activate: () =>
-      contributes(
-        SpaceCapabilities.ObjectForm,
-        defineObjectForm({
-          objectSchema: Script.Script,
-          formSchema: ScriptAction.ScriptProps,
-          getIntent: (props, options) => createIntent(ScriptAction.CreateScript, { ...props, space: options.space }),
-        }),
-      ),
+    activate: () => contributes(ClientCapabilities.Schema, [Script.Script]),
   }),
-  defineModule({
-    id: `${meta.id}/module/notebook/object-form`,
-    activatesOn: ClientEvents.SetupSchema,
-    activate: () =>
-      contributes(
-        SpaceCapabilities.ObjectForm,
-        defineObjectForm({
-          objectSchema: Notebook.Notebook,
-          formSchema: ScriptAction.NotebookProps,
-          getIntent: (props, options) => createIntent(ScriptAction.CreateNotebook, { ...props, space: options.space }),
-        }),
-      ),
-  }),
+
   defineModule({
     id: `${meta.id}/module/react-surface`,
     activatesOn: Events.SetupReactSurface,

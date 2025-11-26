@@ -10,11 +10,12 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 import { resolve } from 'node:path';
 
+import { ClientService } from '@dxos/client';
 import { Function, FUNCTIONS_META_KEY } from '@dxos/functions';
 import { FunctionsServiceClient } from '@dxos/functions-runtime/edge';
 import { invariant } from '@dxos/invariant';
 
-import { ClientService, CommandConfig } from '../../../../services';
+import { CommandConfig } from '../../../../services';
 import { waitForSync } from '../../../../util';
 import { Common } from '../../../options';
 import { Obj } from '@dxos/echo';

@@ -4,8 +4,7 @@
 
 import { Capabilities, Events, contributes, createIntent, defineModule, definePlugin } from '@dxos/app-framework';
 import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
-import { SpaceCapabilities } from '@dxos/plugin-space';
-import { defineObjectForm } from '@dxos/plugin-space/types';
+import { type CreateObjectIntent } from '@dxos/plugin-space/types';
 
 import { AppGraphBuilder, IntentResolver, ReactSurface } from './capabilities';
 import { meta } from './meta';
@@ -27,6 +26,8 @@ export const OutlinerPlugin = definePlugin(meta, () => [
         metadata: {
           icon: 'ph--calendar-check--regular',
           iconHue: 'indigo',
+          createObjectIntent: (() => createIntent(OutlineAction.CreateJournal)) satisfies CreateObjectIntent,
+          addToCollectionOnCreate: true,
         },
       }),
       contributes(Capabilities.Metadata, {
@@ -34,28 +35,10 @@ export const OutlinerPlugin = definePlugin(meta, () => [
         metadata: {
           icon: 'ph--tree-structure--regular',
           iconHue: 'indigo',
+          createObjectIntent: (() => createIntent(OutlineAction.CreateOutline)) satisfies CreateObjectIntent,
+          addToCollectionOnCreate: true,
         },
       }),
-    ],
-  }),
-  defineModule({
-    id: `${meta.id}/module/object-form`,
-    activatesOn: ClientEvents.SetupSchema,
-    activate: () => [
-      contributes(
-        SpaceCapabilities.ObjectForm,
-        defineObjectForm({
-          objectSchema: Journal.Journal,
-          getIntent: () => createIntent(OutlineAction.CreateJournal),
-        }),
-      ),
-      contributes(
-        SpaceCapabilities.ObjectForm,
-        defineObjectForm({
-          objectSchema: Outline.Outline,
-          getIntent: () => createIntent(OutlineAction.CreateOutline),
-        }),
-      ),
     ],
   }),
   defineModule({
