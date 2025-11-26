@@ -9,8 +9,8 @@ import { log } from '@dxos/log';
 import { EdgeResponse } from '@dxos/protocols';
 import type { EdgeFunctionEnv, FunctionProtocol } from '@dxos/protocols';
 
-import { FUNCTION_ROUTE_HEADER, type FunctionMetadata, FunctionRouteValue } from './common';
-import { ServiceContainer } from './internal/service-container';
+import { ServiceContainer } from './internal';
+import { FUNCTION_ROUTE_HEADER, type FunctionMetadata, FunctionRouteValue } from './types';
 
 /**
  * Wraps a user function in a Cloudflare-compatible handler.

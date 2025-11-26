@@ -3,3 +3,4 @@
 //
 
 export { wrapHandlerForCloudflare } from './bootloader';
+export * from './types';

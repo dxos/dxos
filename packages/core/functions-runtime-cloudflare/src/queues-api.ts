@@ -6,7 +6,7 @@ import type { HasId } from '@dxos/echo/internal';
 import type { DXN, SpaceId } from '@dxos/keys';
 import type { QueryResult } from '@dxos/protocols';
 
-import type { ServiceContainer } from './internal/service-container';
+import type { ServiceContainer } from './internal';
 
 // TODO(dmaretskyi): Temporary API to get the queues working.
 // TODO(dmaretskyi): To be replaced with integrating queues into echo.

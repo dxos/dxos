@@ -8,7 +8,7 @@ import { invariant } from '@dxos/invariant';
 import { type SpaceId } from '@dxos/keys';
 import { type EdgeFunctionEnv } from '@dxos/protocols';
 
-import { ServiceContainer } from './internal/service-container';
+import { ServiceContainer } from './internal';
 import { SpaceProxy } from './space-proxy';
 
 type Services = {

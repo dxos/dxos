@@ -7,7 +7,7 @@ import { type CoreDatabase, type EchoClient, type EchoDatabase } from '@dxos/ech
 import { invariant } from '@dxos/invariant';
 import { PublicKey, type SpaceId } from '@dxos/keys';
 
-import type { ServiceContainer } from './internal/service-container';
+import type { ServiceContainer } from './internal';
 import { type QueuesAPI, QueuesAPIImpl } from './queues-api';
 
 /**
