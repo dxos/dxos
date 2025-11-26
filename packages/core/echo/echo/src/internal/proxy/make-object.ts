@@ -17,6 +17,7 @@ import { getTypeAnnotation } from '../annotations';
 import { Expando } from '../entities';
 import { attachTypedJsonSerializer } from '../object';
 import { type AnyProperties, KindId, MetaId, type ObjectMeta, ObjectMetaSchema } from '../types';
+import * as Entity from '../../Entity';
 
 import { TypedReactiveHandler, prepareTypedTarget } from './typed-handler';
 
@@ -24,7 +25,7 @@ import { TypedReactiveHandler, prepareTypedTarget } from './typed-handler';
  *
  */
 // TODO(burdon): Make internal
-export type MakeObjectProps<T extends AnyProperties> = Omit<T, 'id' | KindId>;
+export type MakeObjectProps<T extends AnyProperties> = Omit<T, 'id' | Entity.KindId>;
 
 /**
  * Creates a reactive object from a plain Javascript object.

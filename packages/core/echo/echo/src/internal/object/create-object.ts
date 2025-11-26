@@ -19,11 +19,12 @@ import {
   getObjectDXN,
 } from '../entities';
 import { EntityKind, KindId, MetaId, setSchema } from '../types';
+import * as Entity from '../../Entity';
 
 import { attachedTypedObjectInspector } from './inspect';
 import { attachTypedJsonSerializer } from './json-serializer';
 
-export type CreateObjectProps<T> = T extends { id: string } ? Omit<T, 'id' | KindId> & { id?: string } : T;
+export type CreateObjectProps<T> = T extends { id: string } ? Omit<T, 'id' | Entity.KindId> & { id?: string } : T;
 
 /**
  * Creates a new object instance from a schema and data, without signal reactivity.

@@ -47,10 +47,7 @@ export interface EchoDatabase extends Database.Database {
   /**
    * @deprecated Use `ref` instead.
    */
-  getObjectById<T extends Obj.Any = Obj.Obj<AnyProperties>>(
-    id: string,
-    opts?: Database.GetObjectByIdOptions,
-  ): T | undefined;
+  getObjectById<T extends Obj.Any = Obj.Arbitrary>(id: string, opts?: Database.GetObjectByIdOptions): T | undefined;
 
   /**
    * Wait for all pending changes to be saved to disk.
@@ -271,7 +268,7 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
   /**
    * Add reactive object.
    */
-  add<T extends Entity.Any = Entity.Any>(obj: T, opts?: Database.AddOptions): T {
+  add<T extends Entity.Any>(obj: T, opts?: Database.AddOptions): T {
     if (!isEchoObject(obj)) {
       const schema = Obj.getSchema(obj);
       if (schema != null) {

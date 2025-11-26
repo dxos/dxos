@@ -976,7 +976,7 @@ export const isTypedObjectProxy = (value: any): value is Live<any> => {
  * @internal
  */
 // TODO(burdon): Document lifecycle.
-export const createObject = <T extends AnyProperties>(obj: T): AnyLiveObject<T> => {
+export const createObject = <T extends Obj.Any>(obj: T): AnyLiveObject<T> => {
   assertArgument(!isEchoObject(obj), 'obj', 'Object is already an ECHO object');
   const schema = Obj.getSchema(obj);
   if (schema != null) {

@@ -28,6 +28,7 @@ import {
 } from './internal';
 import * as Obj from './Obj';
 import * as Type from './Type';
+import type * as Entity from './Entity';
 
 /**
  * Base type for all ECHO relations.
@@ -36,7 +37,7 @@ import * as Type from './Type';
 interface BaseRelation<Source, Target>
   extends AnyEchoObject,
     Type.Relation.Endpoints<Source, Target>,
-    Type.OfKind<EntityKind.Relation> {}
+    Entity.OfKind<EntityKind.Relation> {}
 
 /**
  * Base type for all Relations objects.
@@ -83,7 +84,7 @@ export const make = <S extends Type.Relation.Any>(
   schema: S,
   props: NoInfer<MakeProps<Schema.Schema.Type<S>>>,
   meta?: ObjectMeta,
-): Live<Schema.Schema.Type<S> & Type.OfKind<EntityKind.Relation>> => {
+): Live<Schema.Schema.Type<S> & Entity.OfKind<EntityKind.Relation>> => {
   assertArgument(getTypeAnnotation(schema)?.kind === EntityKind.Relation, 'schema', 'Expected a relation schema');
 
   if (props[MetaId] != null) {
