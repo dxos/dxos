@@ -5,9 +5,9 @@
 import * as Schema from 'effect/Schema';
 import { describe, test } from 'vitest';
 
-import { Obj } from '@dxos/echo';
-import { BaseGraphNode, Graph } from '@dxos/graph';
+import { BaseGraphNode, type Graph } from '@dxos/graph';
 import {
+  CanvasGraphModel,
   Polygon,
   Shape,
   createEllipse,
@@ -21,7 +21,7 @@ import { ComputeShape, createFunction, createSwitch } from './shapes';
 
 describe('compute', () => {
   test('model', ({ expect }) => {
-    // const model = CanvasGraphModel.create<ComputeShape>();
+    const model = CanvasGraphModel.create<ComputeShape>();
     const node = createSwitch({ id: 'x', center: { x: 0, y: 0 }, size: { width: 80, height: 80 } });
     console.log(JSON.stringify(node, null, 2));
     expect(Schema.is(ComputeShape)(node)).toBe(true);
@@ -29,11 +29,11 @@ describe('compute', () => {
     expect(Schema.is(Shape)(node)).toBe(true);
     expect(Schema.is(BaseGraphNode)(node)).toBe(true);
 
-    const graph = Obj.make(Graph, { nodes: [], edges: [] });
-    graph.nodes.push(node); // Throws.
+    const graph: Graph = { nodes: [], edges: [] };
+    graph.nodes.push(node);
 
-    // model.createNode(node);
-    // console.log(JSON.stringify(model, null, 2));
+    model.createNode(node);
+    console.log(JSON.stringify(model, null, 2));
   });
 });
 
