@@ -14,8 +14,7 @@ import type * as Type from './Type';
  */
 export type Entity<T extends AnyProperties> = {
   readonly [Type.KindId]: EntityKind;
-} & AnyEchoObject &
-  T;
+} & (AnyEchoObject & T);
 
 /**
  * Any Obj or Relation.
