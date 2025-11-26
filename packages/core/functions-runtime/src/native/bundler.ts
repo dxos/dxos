@@ -52,11 +52,7 @@ export const bundleFunction = async (options: BundleOptions): Promise<BundleResu
     loader: {
       '.wasm': 'copy',
     },
-    alias: {
-      'dxos:functions': './runtime.js',
-    },
     external: [
-      './runtime.js',
       'node:async_hooks',
       'cloudflare:workers',
       'functions-service:user-script',
@@ -80,7 +76,14 @@ export const bundleFunction = async (options: BundleOptions): Promise<BundleResu
               import { wrapFunctionHandler } from '@dxos/functions';
               import { wrapHandlerForCloudflare } from '@dxos/functions-runtime-cloudflare';
               import { default as handler } from '${options.entryPoint}';
-              export default wrapHandlerForCloudflare(wrapFunctionHandler(handler));
+              export default {
+                fetch: async (...args) => {
+                  //
+                  // Wrapper to make the function cloudflare-compatible.
+                  //
+                  return wrapHandlerForCloudflare(wrapFunctionHandler(handler))(...args);
+                },
+              };
             `,
             resolveDir: new URL('.', import.meta.url).pathname,
           }));
