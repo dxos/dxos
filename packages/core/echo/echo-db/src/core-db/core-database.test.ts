@@ -6,18 +6,18 @@ import { effect } from '@preact/signals-core';
 import { describe, expect, test } from 'vitest';
 
 import { Trigger } from '@dxos/async';
-import { Filter, Obj, Type } from '@dxos/echo';
-import { Expando, ObjectId, Ref, getType } from '@dxos/echo/internal';
-import { Testing } from '@dxos/echo/testing';
+import { type Entity, Filter, Obj, Ref, Type } from '@dxos/echo';
+import { TestSchema } from '@dxos/echo/testing';
 import { type DatabaseDirectory, SpaceDocVersion, createIdFromSpaceKey } from '@dxos/echo-protocol';
 import { registerSignalsRuntime } from '@dxos/echo-signals';
+import { ObjectId } from '@dxos/keys';
 import { DXN, PublicKey } from '@dxos/keys';
 import { createTestLevel } from '@dxos/kv-store/testing';
 import { openAndClose } from '@dxos/test-utils';
 import { range } from '@dxos/util';
 
 import { type DocHandleProxy, type RepoProxy } from '../automerge';
-import { type AnyLiveObject, getObjectCore } from '../echo-handler';
+import { getObjectCore } from '../echo-handler';
 import { type EchoDatabase, type EchoDatabaseImpl } from '../proxy-db';
 import { Query } from '../query';
 import { EchoTestBuilder, createTmpPath } from '../testing';
@@ -55,7 +55,7 @@ describe('CoreDatabase', () => {
 
       const document = Obj.make(Type.Expando, { text: Ref.make(createTextObject('Hello, world!')) });
       const db = await createClientDbInSpaceWithObject(document);
-      const loadedDocument = await db.query(Query.type(Expando, { id: document.id })).first();
+      const loadedDocument = await db.query(Query.type(Type.Expando, { id: document.id })).first();
       expect(loadedDocument).not.to.be.undefined;
 
       let isFirstInvocation = true;
@@ -76,7 +76,7 @@ describe('CoreDatabase', () => {
     test('reference access triggers document loading', async () => {
       const textObject = createTextObject('Hello, world!');
       const db = await createClientDbInSpaceWithObject(textObject);
-      await db.query(Query.type(Expando, { id: textObject.id })).first({ timeout: 1000 });
+      await db.query(Query.type(Type.Expando, { id: textObject.id })).first({ timeout: 1000 });
     });
 
     test("separate-doc object is treated as inline if it's both linked and inline", async () => {
@@ -115,7 +115,7 @@ describe('CoreDatabase', () => {
       const oldObject = Obj.make(Type.Expando, { title: 'Hello' });
       const db = await createClientDbInSpaceWithObject(oldObject);
       const newRootDocHandle = createTestRootDoc(db.coreDatabase._repo);
-      const beforeUpdate = await db.query(Query.type(Expando, { id: oldObject.id })).first();
+      const beforeUpdate = await db.query(Query.type(Type.Expando, { id: oldObject.id })).first();
       expect(beforeUpdate).not.to.be.undefined;
       await db.coreDatabase.updateSpaceState({ rootUrl: newRootDocHandle.url });
       const afterUpdate = db.getObjectById(oldObject.id);
@@ -129,7 +129,7 @@ describe('CoreDatabase', () => {
       newRootDocHandle.change((newDoc: any) => {
         newDoc.links = getDocHandles(db).spaceRootHandle.doc().links;
       });
-      const beforeUpdate = await db.query(Query.type(Expando, { id: originalObj.id })).first();
+      const beforeUpdate = await db.query(Query.type(Type.Expando, { id: originalObj.id })).first();
       expect(getObjectDocHandle(beforeUpdate).url).to.eq(
         getDocHandles(db).spaceRootHandle.doc().links?.[beforeUpdate.id].toString(),
       );
@@ -155,7 +155,7 @@ describe('CoreDatabase', () => {
         newDoc.links = getDocHandles(db).spaceRootHandle.doc().links;
       });
 
-      await db.query(Query.type(Expando, { id: loadedDocumentId })).run({ timeout: 1000 });
+      await db.query(Query.type(Type.Expando, { id: loadedDocumentId })).run({ timeout: 1000 });
 
       // trigger loading but don't wait for it to finish
       db.getObjectById(partiallyLoadedDocumentId);
@@ -178,7 +178,7 @@ describe('CoreDatabase', () => {
       const newRootDocHandle = createTestRootDoc(db.coreDatabase._repo);
 
       for (const id of ids) {
-        await db.query(Query.type(Expando, { id })).run();
+        await db.query(Query.type(Type.Expando, { id })).run();
       }
 
       newRootDocHandle.change((newDoc: any) => {
@@ -209,7 +209,9 @@ describe('CoreDatabase', () => {
       const id1 = ObjectId.random();
       const id2 = ObjectId.random();
       const beforeUpdate = addObjectToDoc(oldRootDocHandle, { id: id1, title: 'test' });
-      expect((await db.query(Query.type(Expando, { id: beforeUpdate.id })).first()).title).to.eq(beforeUpdate.title);
+      expect((await db.query(Query.type(Type.Expando, { id: beforeUpdate.id })).first()).title).to.eq(
+        beforeUpdate.title,
+      );
 
       const newRootDocHandle = createTestRootDoc(db.coreDatabase._repo);
       newRootDocHandle.change((newDoc: any) => {
@@ -249,7 +251,7 @@ describe('CoreDatabase', () => {
       const rootObject = [linksToRemove, loadedLinks, partiallyLoadedLinks]
         .flatMap((v: any[]) => v)
         .reduce(
-          (acc: Expando, obj: any) => {
+          (acc: Entity.Any, obj: any) => {
             acc[obj.id] = Ref.make(obj);
             return acc;
           },
@@ -281,15 +283,16 @@ describe('CoreDatabase', () => {
         expect(db.getObjectById(obj.id)).to.be.undefined;
       }
       for (const obj of objectsToAdd) {
-        expect(getObjectDocHandle(await db.query(Query.type(Expando, { id: obj.id })).first()).url).to.eq(
+        expect(getObjectDocHandle(await db.query(Query.type(Type.Expando, { id: obj.id })).first()).url).to.eq(
           newRootDocHandle.url,
         );
       }
       for (const obj of [...loadedLinks]) {
-        expect(getObjectDocHandle(await db.query(Query.type(Expando, { id: obj.id })).first())).not.to.be.undefined;
+        expect(getObjectDocHandle(await db.query(Query.type(Type.Expando, { id: obj.id })).first())).not.to.be
+          .undefined;
       }
       for (const obj of partiallyLoadedLinks) {
-        await db.query(Query.type(Expando, { id: obj.id })).first();
+        await db.query(Query.type(Type.Expando, { id: obj.id })).first();
       }
     });
 
@@ -359,8 +362,8 @@ describe('CoreDatabase', () => {
       const testBuilder = new EchoTestBuilder();
       await openAndClose(testBuilder);
       const { db, graph } = await testBuilder.createDatabase();
-      graph.schemaRegistry.addSchema([Testing.Person]);
-      const contact = db.add(Obj.make(Testing.Person, { name: 'Foo' }));
+      graph.schemaRegistry.addSchema([TestSchema.Person]);
+      const contact = db.add(Obj.make(TestSchema.Person, { name: 'Foo' }));
 
       await db._coreDatabase.atomicReplaceObject(contact.id, {
         type: DXN.parse('dxn:type:example.com/type/Task:0.1.0'),
@@ -368,7 +371,7 @@ describe('CoreDatabase', () => {
       });
 
       expect(contact.name).to.eq('Bar');
-      expect(getType(contact)?.toString()).to.eq('dxn:type:example.com/type/Task:0.1.0');
+      expect(Obj.getTypeDXN(contact)?.toString()).to.eq('dxn:type:example.com/type/Task:0.1.0');
     });
   });
 });
@@ -381,7 +384,7 @@ const getDocHandles = (db: EchoDatabase): DocumentHandles => ({
 const getObjectDocHandle = (obj: any) => getObjectCore(obj).docHandle!;
 
 const createClientDbInSpaceWithObject = async (
-  object: AnyLiveObject<any>,
+  object: Entity.Any,
   onDocumentSavedInSpace?: (handles: DocumentHandles) => void,
 ): Promise<EchoDatabaseImpl> => {
   const tmpPath = createTmpPath();
@@ -400,9 +403,7 @@ const createClientDbInSpaceWithObject = async (
   return peer2.openDatabase(spaceKey, db1.rootUrl!);
 };
 
-const createTextObject = (content: string = ''): AnyLiveObject<{ content: string }> => {
-  return Obj.make(Expando, { content }) as AnyLiveObject<{ content: string }>;
-};
+const createTextObject = (content: string = '') => Obj.make(Type.Expando, { content });
 
 interface DocumentHandles {
   spaceRootHandle: DocHandleProxy<DatabaseDirectory>;

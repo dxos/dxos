@@ -3,10 +3,11 @@
 //
 
 import { EditorView } from '@codemirror/view';
+import type * as Schema from 'effect/Schema';
 import React, { forwardRef, useCallback, useEffect, useRef, useState } from 'react';
 
 import { Surface } from '@dxos/app-framework/react';
-import { type Obj, Ref, type Type } from '@dxos/echo';
+import { type Obj, Ref } from '@dxos/echo';
 import { PublicKey } from '@dxos/react-client';
 import { type SpaceMember } from '@dxos/react-client/echo';
 import { type Identity, useIdentity } from '@dxos/react-client/halo';
@@ -26,7 +27,8 @@ export const buttonGroupClassNames = 'flex flex-row items-center gap-0.5 pie-2';
 export const buttonClassNames = '!p-1 transition-opacity';
 
 export type MessageContainerProps = {
-  message: Message.Message;
+  // TODO(wittjosiah): Find a simpler way to define this type.
+  message: Obj.Obj<Schema.Schema.Type<typeof Message.Message>>;
   members: SpaceMember[];
   editable?: boolean;
   onDelete?: (id: string) => void;
@@ -101,13 +103,13 @@ export const MessageContainer = ({
       {textBlock && <TextboxBlock block={textBlock} isAuthor={userIsAuthor} editing={editing} />}
       {proposalBlock && <ProposalBlock block={proposalBlock} />}
       {Ref.Array.targets(references).map((reference, index) => (
-        <MessagePart key={index} part={reference} />
+        <MessagePart key={index} part={reference as Obj.Any} />
       ))}
     </MessageRoot>
   );
 };
 
-const MessagePart = ({ part }: { part: Type.Expando }) => {
+const MessagePart = ({ part }: { part: Obj.Any }) => {
   return <MessageBlockObjectTile subject={part} />;
 };
 

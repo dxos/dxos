@@ -13,15 +13,15 @@ import {
   DEFAULT_CLIENT_CHANNEL,
   type Echo,
   type Halo,
-  PropertiesType,
   STATUS_TIMEOUT,
+  SpaceProperties,
   clientServiceBundle,
 } from '@dxos/client-protocol';
 import { type Stream } from '@dxos/codec-protobuf/stream';
 import { Config, SaveConfig } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { raise } from '@dxos/debug';
-import { getTypename } from '@dxos/echo/internal';
+import { Type } from '@dxos/echo';
 import { EchoClient, type Hypergraph, QueueServiceImpl } from '@dxos/echo-db';
 import { MockQueueService } from '@dxos/echo-db';
 import { EdgeHttpClient } from '@dxos/edge-client';
@@ -140,7 +140,7 @@ export class Client {
       log.config({ filter, prefix });
     }
 
-    this._echoClient.graph.schemaRegistry.addSchema([PropertiesType]);
+    this._echoClient.graph.schemaRegistry.addSchema([SpaceProperties]);
     if (options.types) {
       this.addTypes(options.types);
     }
@@ -249,7 +249,7 @@ export class Client {
    */
   // TODO(burdon): Check if already registered (and remove downstream checks).
   addTypes(types: Schema.Schema.AnyNoContext[]): this {
-    log('addTypes', { schema: types.map((type) => getTypename(type)) });
+    log('addTypes', { schema: types.map((type) => Type.getTypename(type)) });
 
     // TODO(dmaretskyi): Uncomment after release.
     // if (!this._initialized) {

@@ -6,7 +6,7 @@ import React, { useCallback } from 'react';
 
 import { Capabilities, LayoutAction, contributes, createIntent, createSurface } from '@dxos/app-framework';
 import { Surface, SurfaceCardRole, useIntentDispatcher } from '@dxos/app-framework/react';
-import { getSchema, getSpace } from '@dxos/client/echo';
+import { getSpace } from '@dxos/client/echo';
 import { Obj } from '@dxos/echo';
 import { type JsonPath, setValue } from '@dxos/echo/internal';
 import { useActiveSpace } from '@dxos/plugin-space';
@@ -105,7 +105,7 @@ export default () =>
       position: 'fallback',
       filter: (data): data is { subject: Obj.Any; projection?: ProjectionModel } => Obj.isObject(data.subject),
       component: ({ data, role }) => {
-        const schema = getSchema(data.subject);
+        const schema = Obj.getSchema(data.subject);
         const { t } = useTranslation(meta.id);
         if (!schema) {
           // TODO(burdon): Use Alert.

@@ -6,7 +6,7 @@ import * as Schema from 'effect/Schema';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { Type } from '@dxos/echo';
-import { FormatEnum } from '@dxos/echo/internal';
+import { Format } from '@dxos/echo/internal';
 import { useClient } from '@dxos/react-client';
 import { getSpace, useSchema } from '@dxos/react-client/echo';
 import { type CustomInputMap, Form, SelectInput } from '@dxos/react-ui-form';
@@ -29,7 +29,7 @@ export const MapViewEditor = ({ object }: MapViewEditorProps) => {
   const typename = view?.query ? getTypenameFromQuery(view.query.ast) : undefined;
   const currentSchema = useSchema(client, space, typename);
 
-  const [allSchemata, setAllSchemata] = useState<Type.Schema[]>([]);
+  const [allSchemata, setAllSchemata] = useState<Type.RuntimeType[]>([]);
 
   useEffect(() => {
     if (!space) {
@@ -61,7 +61,7 @@ export const MapViewEditor = ({ object }: MapViewEditorProps) => {
     }
 
     const columns = Object.entries(jsonSchema.properties).reduce<string[]>((acc, [key, value]) => {
-      if (typeof value === 'object' && value?.format === FormatEnum.GeoPoint) {
+      if (typeof value === 'object' && value?.format === Format.TypeFormat.GeoPoint) {
         acc.push(key);
       }
       return acc;

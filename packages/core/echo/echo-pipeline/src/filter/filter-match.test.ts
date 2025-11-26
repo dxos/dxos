@@ -4,8 +4,8 @@
 
 import { describe, expect, test } from 'vitest';
 
-import { Filter } from '@dxos/echo';
-import { EXPANDO_TYPENAME, Expando, Ref } from '@dxos/echo/internal';
+import { Filter, Ref, Type } from '@dxos/echo';
+import { EXPANDO_TYPENAME } from '@dxos/echo/internal';
 import { ObjectStructure } from '@dxos/echo-protocol';
 import { DXN, ObjectId, SpaceId } from '@dxos/keys';
 
@@ -23,32 +23,32 @@ describe('filterMatch', () => {
   });
 
   test('properties', () => {
-    expect(filterMatchObject(Filter.type(Expando, { title: 'test' }).ast, OBJECT_1)).to.be.true;
-    expect(filterMatchObject(Filter.type(Expando, { value: 100 }).ast, OBJECT_1)).to.be.true;
-    expect(filterMatchObject(Filter.type(Expando, { complete: false }).ast, OBJECT_1)).to.be.false;
-    expect(filterMatchObject(Filter.type(Expando, { missing: undefined }).ast, OBJECT_1)).to.be.true;
-    expect(filterMatchObject(Filter.type(Expando, { properties: { subject: 'test' } }).ast, OBJECT_1)).to.be.true;
-    expect(filterMatchObject(Filter.type(Expando, { array: Filter.contains('two') }).ast, OBJECT_1)).to.be.true;
+    expect(filterMatchObject(Filter.type(Type.Expando, { title: 'test' }).ast, OBJECT_1)).to.be.true;
+    expect(filterMatchObject(Filter.type(Type.Expando, { value: 100 }).ast, OBJECT_1)).to.be.true;
+    expect(filterMatchObject(Filter.type(Type.Expando, { complete: false }).ast, OBJECT_1)).to.be.false;
+    expect(filterMatchObject(Filter.type(Type.Expando, { missing: undefined }).ast, OBJECT_1)).to.be.true;
+    expect(filterMatchObject(Filter.type(Type.Expando, { properties: { subject: 'test' } }).ast, OBJECT_1)).to.be.true;
+    expect(filterMatchObject(Filter.type(Type.Expando, { array: Filter.contains('two') }).ast, OBJECT_1)).to.be.true;
   });
 
   test('and', () => {
-    const filter1 = Filter.type(Expando, { title: 'test' });
-    const filter2 = Filter.type(Expando, { value: 100 });
-    const filter3 = Filter.type(Expando, { complete: true });
+    const filter1 = Filter.type(Type.Expando, { title: 'test' });
+    const filter2 = Filter.type(Type.Expando, { value: 100 });
+    const filter3 = Filter.type(Type.Expando, { complete: true });
 
     expect(filterMatchObject(Filter.and(filter1, filter2, filter3).ast, OBJECT_1)).to.be.true;
   });
 
   test('or', () => {
-    const filter1 = Filter.type(Expando, { value: 200 });
-    const filter2 = Filter.type(Expando, { title: 'test' });
-    const filter3 = Filter.type(Expando, { complete: false });
+    const filter1 = Filter.type(Type.Expando, { value: 200 });
+    const filter2 = Filter.type(Type.Expando, { title: 'test' });
+    const filter3 = Filter.type(Type.Expando, { complete: false });
 
     expect(filterMatchObject(Filter.or(filter1, filter2, filter3).ast, OBJECT_1)).to.be.true;
   });
 
   test('not', () => {
-    const filter1 = Filter.type(Expando, { title: 'test' });
+    const filter1 = Filter.type(Type.Expando, { title: 'test' });
     const filter2 = Filter.not(filter1);
 
     expect(filterMatchObject(filter1.ast, OBJECT_1)).to.be.true;
@@ -56,19 +56,20 @@ describe('filterMatch', () => {
   });
 
   test('contains', () => {
-    expect(filterMatchObject(Filter.type(Expando, { properties: { label: Filter.contains('test') } }).ast, OBJECT_1)).to
-      .be.true;
+    expect(
+      filterMatchObject(Filter.type(Type.Expando, { properties: { label: Filter.contains('test') } }).ast, OBJECT_1),
+    ).to.be.true;
     expect(
       filterMatchObject(
-        Filter.type(Expando, { fields: Filter.contains({ label: 'label', value: 'test' }) }).ast,
+        Filter.type(Type.Expando, { fields: Filter.contains({ label: 'label', value: 'test' }) }).ast,
         OBJECT_1,
       ),
     ).to.be.true;
   });
 
   test('complex', () => {
-    const filter1 = Filter.type(Expando, { title: 'bad' });
-    const filter2 = Filter.type(Expando, { value: 0 });
+    const filter1 = Filter.type(Type.Expando, { title: 'bad' });
+    const filter2 = Filter.type(Type.Expando, { value: 0 });
     expect(filterMatchObject(Filter.not(Filter.or(filter1, filter2)).ast, OBJECT_1)).to.be.true;
   });
 
@@ -79,7 +80,7 @@ describe('filterMatch', () => {
   });
 
   test('refs', () => {
-    const filter = Filter.type(Expando, { parent: Ref.fromDXN(DXN.fromLocalObjectId(OBJECT_1.id)) });
+    const filter = Filter.type(Type.Expando, { parent: Ref.fromDXN(DXN.fromLocalObjectId(OBJECT_1.id)) });
     expect(filterMatchObject(filter.ast, OBJECT_1)).to.be.false;
     expect(filterMatchObject(filter.ast, OBJECT_2)).to.be.false;
     expect(filterMatchObject(filter.ast, OBJECT_3)).to.be.true;

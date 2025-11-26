@@ -4,7 +4,7 @@
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { type EchoSchema, FormatEnum, FormatEnums, formatToType } from '@dxos/echo/internal';
+import { type EchoSchema, Format, FormatEnums, formatToType } from '@dxos/echo/internal';
 import { type SchemaRegistry } from '@dxos/echo-db';
 import { log } from '@dxos/log';
 import { useAsyncEffect, useTranslation } from '@dxos/react-ui';
@@ -140,7 +140,7 @@ export const FieldEditor = ({
       ['format' satisfies keyof PropertyType]: (props) => (
         <SelectInput
           {...props}
-          options={FormatEnums.filter((value) => value !== FormatEnum.None).map((value) => ({
+          options={FormatEnums.filter((value) => value !== Format.TypeFormat.None).map((value) => ({
             value,
             label: t(`format ${value}`),
           }))}

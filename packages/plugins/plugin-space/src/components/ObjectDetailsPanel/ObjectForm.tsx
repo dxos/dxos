@@ -28,7 +28,7 @@ export const ObjectForm = ({ object, schema }: ObjectFormProps) => {
   );
 
   const meta = Obj.getMeta(object);
-  const tags = (meta.tags ?? []).map((tag) => space?.db.ref(DXN.parse(tag))).filter(isNonNullable);
+  const tags = (meta.tags ?? []).map((tag) => space?.db.makeRef(DXN.parse(tag))).filter(isNonNullable);
   const values = useMemo(() => ({ tags, ...object }), [object, tags]);
 
   const handleCreateTag = useCallback((values: Schema.Schema.Type<typeof TagSchema>) => {

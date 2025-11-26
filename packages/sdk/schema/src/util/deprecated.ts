@@ -6,7 +6,7 @@ import type * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
 
 import { QueryAST } from '@dxos/echo';
-import { FormatEnum, TypeEnum } from '@dxos/echo/internal';
+import { Format, TypeEnum } from '@dxos/echo/internal';
 import { visit } from '@dxos/effect';
 import { DXN } from '@dxos/keys';
 
@@ -16,7 +16,7 @@ import { DXN } from '@dxos/keys';
 export type SchemaFieldDescription = {
   property: string;
   type: TypeEnum;
-  format?: FormatEnum;
+  format?: Format.TypeFormat;
 };
 
 /**
@@ -35,9 +35,9 @@ export const mapSchemaToFields = (schema: Schema.Schema<any, any>): SchemaFieldD
 /**
  * @deprecated
  */
-const toFieldValueType = (type: SchemaAST.AST): { format?: FormatEnum; type: TypeEnum } => {
+const toFieldValueType = (type: SchemaAST.AST): { format?: Format.TypeFormat; type: TypeEnum } => {
   if (SchemaAST.isTypeLiteral(type)) {
-    return { type: TypeEnum.Ref, format: FormatEnum.Ref };
+    return { type: TypeEnum.Ref, format: Format.TypeFormat.Ref };
   } else if (SchemaAST.isNumberKeyword(type)) {
     return { type: TypeEnum.Number };
   } else if (SchemaAST.isBooleanKeyword(type)) {
@@ -58,13 +58,13 @@ const toFieldValueType = (type: SchemaAST.AST): { format?: FormatEnum; type: Typ
     const identifier = SchemaAST.getIdentifierAnnotation(type);
     if (identifier._tag === 'Some') {
       if (identifier.value === 'DateFromString') {
-        return { type: TypeEnum.String, format: FormatEnum.Date };
+        return { type: TypeEnum.String, format: Format.TypeFormat.Date };
       }
     }
   }
 
   // TODO(burdon): Better fallback?
-  return { type: TypeEnum.String, format: FormatEnum.JSON };
+  return { type: TypeEnum.String, format: Format.TypeFormat.JSON };
 };
 
 // TODO(wittjosiah): This needs to be cleaned up.

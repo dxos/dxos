@@ -9,7 +9,10 @@ import { ProjectionModel } from '@dxos/schema';
 
 import { type Kanban } from '../types';
 
-export const useProjectionModel = <S extends Type.Obj.Any>(schema: S | undefined, kanban: Kanban.Kanban | undefined) =>
+export const useProjectionModel = <S extends Type.Entity.Any>(
+  schema: S | undefined,
+  kanban: Kanban.Kanban | undefined,
+) =>
   useMemo(() => {
     if (schema && kanban?.view.target?.projection) {
       const projection = new ProjectionModel(Type.toJsonSchema(schema), kanban.view.target.projection);

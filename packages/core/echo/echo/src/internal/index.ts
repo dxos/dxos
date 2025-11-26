@@ -2,21 +2,37 @@
 // Copyright 2024 DXOS.org
 //
 
-export { JsonPath, splitJsonPath, JsonProp } from '@dxos/effect';
+// TODO(burdon): Import directly (not part of ECHO API).
+export { JsonPath, JsonProp, getValue, setValue, splitJsonPath } from '@dxos/effect';
 
-// TODO(dmaretskyi): Remove.
-export { ObjectId } from '@dxos/keys';
-export { ForeignKey } from '@dxos/echo-protocol';
-
-export * from './ast';
+export * from './annotations';
+export * from './entities';
 export * from './formats';
-export * from './json';
 export * from './json-schema';
-export * from './object';
-export * from './types';
-export { defineHiddenProperty } from '@dxos/live-object';
-export * from './projection';
-// TODO(dmaretskyi): Remove
-export { live } from './proxy/reactive-object';
 export * from './ref';
+export * from './types';
+
+// TODO(wittjosiah): Required to ensure types are portable (need to export all types required for downstream inference).
+export * from './object';
+export * from './proxy';
 export * from './schema';
+
+// export {
+//   createObject,
+//   createQueueDXN,
+//   isDeleted,
+//   objectFromJSON,
+//   objectToJSON,
+//   setRefResolverOnData,
+//   SchemaValidator,
+//   TypedObject,
+// } from './object';
+// export { makeObject } from './proxy';
+// export {
+//   type BaseSchema,
+//   EchoSchema,
+//   ImmutableSchema,
+//   RuntimeSchemaRegistry,
+//   PersistentSchema,
+//   isMutable,
+// } from './schema';

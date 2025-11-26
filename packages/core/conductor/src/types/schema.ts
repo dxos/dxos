@@ -4,7 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { ObjectId } from '@dxos/echo/internal';
+import { ObjectId } from '@dxos/keys';
 import { Message } from '@dxos/types';
 
 //

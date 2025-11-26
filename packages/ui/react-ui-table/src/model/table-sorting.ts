@@ -5,7 +5,7 @@
 import { type ReadonlySignal, type Signal, computed, signal } from '@preact/signals-core';
 import orderBy from 'lodash.orderby';
 
-import { FormatEnum, TypeEnum, getValue } from '@dxos/echo/internal';
+import { Format, TypeEnum, getValue } from '@dxos/echo/internal';
 import { formatForDisplay } from '@dxos/react-ui-form';
 import {
   type FieldSortType,
@@ -211,7 +211,7 @@ export class TableSorting<T extends TableRow> {
      * For single select fields, the sort value is determined by the index of the option in the
      * options array. This ensures sort order matches the configured option order.
      */
-    if (format === FormatEnum.SingleSelect) {
+    if (format === Format.TypeFormat.SingleSelect) {
       const options = props.options;
       if (!options) {
         return undefined;
@@ -224,7 +224,7 @@ export class TableSorting<T extends TableRow> {
     // TODO(ZaymonFC): Should we format this returned value for display based on the referenced prop format?
     //   Right now we're going to be sorting based on the raw values.
     //   Maybe we need to recurse this function with the referenced prop format and field?
-    if (format === FormatEnum.Ref && field.referencePath) {
+    if (format === Format.TypeFormat.Ref && field.referencePath) {
       const refValue = getValue(value.target, field.referencePath);
       return refValue;
     }

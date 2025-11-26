@@ -28,8 +28,8 @@ import { View } from '@dxos/schema';
  */
 const migrateViewType = Effect.fn(function* (
   db: EchoDatabase,
-  currentSchema: Type.Obj.Any,
-  targetSchema: Type.Obj.Any,
+  currentSchema: Type.Entity.Any,
+  targetSchema: Type.Entity.Any,
 ) {
   log.info('migrating', {
     currentSchema: Type.getDXN(currentSchema)?.toString(),

@@ -9,7 +9,7 @@ import { Event, HasConnection, HasRelationship, LegacyOrganization, LegacyPerson
 /**
  * Data types for research.
  */
-export const ResearchDataTypes: (Type.Obj.Any | Type.Relation.Any)[] = [
+export const ResearchDataTypes: Type.Entity.Any[] = [
   // Objects
   Event.Event,
   LegacyOrganization,

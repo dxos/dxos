@@ -7,11 +7,17 @@ import * as SchemaAST from 'effect/SchemaAST';
 
 import { invariant } from '@dxos/invariant';
 
-import { EntityKind, SchemaVersion, type TypeAnnotation, TypeAnnotationId, type TypeMeta, Typename } from '../ast';
-import { type HasId } from '../types';
+import {
+  type TypeAnnotation,
+  TypeAnnotationId,
+  type TypeMeta,
+  TypenameSchema,
+  VersionSchema,
+  makeTypeJsonSchemaAnnotation,
+} from '../annotations';
+import { EntityKind, type HasId } from '../types';
 
 import { type TypedObjectFields, type TypedObjectOptions, makeTypedEntityClass } from './common';
-import { makeTypeJsonSchemaAnnotation } from './entity';
 
 /**
  * Definition for an object type that can be stored in an ECHO database.
@@ -46,8 +52,8 @@ export const TypedObject = ({
   version: versionParam,
   disableValidation,
 }: TypedObjectProps) => {
-  const typename = Typename.make(typenameParam, { disableValidation });
-  const version = SchemaVersion.make(versionParam, { disableValidation });
+  const typename = TypenameSchema.make(typenameParam, { disableValidation });
+  const version = VersionSchema.make(versionParam, { disableValidation });
 
   /**
    * Return class definition factory.

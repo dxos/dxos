@@ -101,7 +101,13 @@ export default async (context: PluginContext) => {
           subscriptions.add(
             scheduledEffect(
               () => ({ name: space.properties.name }),
-              ({ name }) => (state.spaceNames[space.id] = name),
+              ({ name }) => {
+                if (!name) {
+                  delete state.spaceNames[space.id];
+                } else {
+                  state.spaceNames[space.id] = name;
+                }
+              },
             ),
           );
         });

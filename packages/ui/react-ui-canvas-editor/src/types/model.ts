@@ -3,9 +3,8 @@
 //
 
 import { DEFAULT_INPUT, DEFAULT_OUTPUT } from '@dxos/conductor';
-import { ObjectId } from '@dxos/echo/internal';
-import { live } from '@dxos/echo/internal';
-import { AbstractGraphBuilder, AbstractGraphModel, Graph } from '@dxos/graph';
+import { Obj } from '@dxos/echo';
+import { AbstractGraphBuilder, AbstractGraphModel, type Graph } from '@dxos/graph';
 import { isLiveObject } from '@dxos/live-object';
 import { type MakeOptional } from '@dxos/util';
 
@@ -22,12 +21,10 @@ export class CanvasGraphModel<S extends Shape = Shape> extends AbstractGraphMode
       return new CanvasGraphModel<S>(graph as Graph);
     }
 
-    return new CanvasGraphModel<S>(
-      live(Graph, {
-        nodes: graph?.nodes ?? [],
-        edges: graph?.edges ?? [],
-      }),
-    );
+    return new CanvasGraphModel<S>({
+      nodes: graph?.nodes ?? [],
+      edges: graph?.edges ?? [],
+    });
   }
 
   override get builder() {
@@ -39,7 +36,7 @@ export class CanvasGraphModel<S extends Shape = Shape> extends AbstractGraphMode
   }
 
   createNode({ id, ...rest }: MakeOptional<S, 'id'>): S {
-    const node: S = { id: id ?? ObjectId.random(), ...rest } as S;
+    const node: S = { id: id ?? Obj.ID.random(), ...rest } as S;
     this.addNode(node);
     return node;
   }
@@ -53,7 +50,7 @@ export class CanvasGraphModel<S extends Shape = Shape> extends AbstractGraphMode
     ...rest
   }: MakeOptional<Connection, 'id'>): Connection {
     const edge: Connection = {
-      id: id ?? ObjectId.random(),
+      id: id ?? Obj.ID.random(),
       source,
       target,
       output,

@@ -28,6 +28,7 @@ const TableSchema = Schema.Struct({
   LabelAnnotation.set(['name']),
   ViewAnnotation.set(true),
 );
+
 export interface Table extends Schema.Schema.Type<typeof TableSchema> {}
 export interface TableEncoded extends Schema.Schema.Encoded<typeof TableSchema> {}
 export const Table: Schema.Schema<Table, TableEncoded> = TableSchema;

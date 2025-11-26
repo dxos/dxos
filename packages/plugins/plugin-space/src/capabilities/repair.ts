@@ -3,9 +3,9 @@
 //
 
 import { contributes } from '@dxos/app-framework';
-import { Obj, Ref } from '@dxos/echo';
+import { Obj, Ref, Type } from '@dxos/echo';
 import { type Space } from '@dxos/react-client/echo';
-import { Collection, StoredSchema } from '@dxos/schema';
+import { Collection } from '@dxos/schema';
 
 import { SpaceCapabilities } from './capabilities';
 
@@ -47,11 +47,11 @@ const ensureSystemCollection = async (space: Space) => {
 
   const objects = await Promise.all(rootCollection.objects.map((ref) => ref.load()));
   const records = objects.find(
-    (object) => Obj.instanceOf(Collection.Managed, object) && object.key === StoredSchema.typename,
+    (object) => Obj.instanceOf(Collection.Managed, object) && object.key === Type.getTypename(Type.PersistentType),
   );
   if (records) {
     return;
   }
 
-  rootCollection.objects.push(Ref.make(Collection.makeManaged({ key: StoredSchema.typename })));
+  rootCollection.objects.push(Ref.make(Collection.makeManaged({ key: Type.getTypename(Type.PersistentType) })));
 };

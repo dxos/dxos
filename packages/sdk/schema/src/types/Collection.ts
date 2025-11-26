@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
-import { PropertiesType } from '@dxos/client-protocol/types';
+import { SpaceProperties } from '@dxos/client-protocol/types';
 import { Obj, Query, Ref, Type } from '@dxos/echo';
 import { type Expando, FormInputAnnotation, SystemTypeAnnotation } from '@dxos/echo/internal';
 import { DatabaseService } from '@dxos/echo-db';
@@ -13,7 +13,7 @@ import { invariant } from '@dxos/invariant';
 
 export const Collection = Schema.Struct({
   name: Schema.String.pipe(Schema.optional),
-  objects: Schema.Array(Type.Ref(Type.Expando)).pipe(Schema.mutable, FormInputAnnotation.set(false)),
+  objects: Schema.Array(Type.Ref(Obj.Any)).pipe(Schema.mutable, FormInputAnnotation.set(false)),
 }).pipe(
   Type.Obj({
     typename: 'dxos.org/type/Collection',
@@ -56,7 +56,7 @@ export const add = Effect.fn(function* ({ object, target, hidden }: AddParams) {
   } else if (hidden) {
     yield* DatabaseService.add(object);
   } else {
-    const { objects } = yield* DatabaseService.runQuery(Query.type(PropertiesType));
+    const { objects } = yield* DatabaseService.runQuery(Query.type(SpaceProperties));
     invariant(objects.length === 1, 'Space properties not found');
     const properties: Expando = objects[0];
 
