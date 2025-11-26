@@ -3,15 +3,7 @@
 //
 
 import * as Schema from 'effect/Schema';
-
-import { type ObjectId } from '@dxos/keys';
-
-import { type HasId } from './base';
-
-/**
- * Entity kind.
- */
-const EntityKindId = Symbol.for('@dxos/echo/EntityKind');
+import * as Entity from '../../Entity';
 
 /**
  * Kinds of entities stored in ECHO: objects and relations.
@@ -23,14 +15,7 @@ export enum EntityKind {
 
 export const EntityKindSchema = Schema.Enums(EntityKind);
 
-export const KindId: unique symbol = EntityKindId as any;
-export type KindId = typeof KindId;
-
 /**
- * Assigns a kind to an Object or Relation instance.
+ * Entity kind symbol.
  */
-// NOTE: Needed to make `isRelation` and `isObject` checks work.
-export interface OfKind<Kind extends EntityKind> extends HasId {
-  readonly id: ObjectId;
-  readonly [KindId]: Kind;
-}
+export const KindId: Entity.KindId = Symbol.for('@dxos/echo/EntityKind') as Entity.KindId;

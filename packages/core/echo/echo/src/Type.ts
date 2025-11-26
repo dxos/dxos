@@ -18,8 +18,6 @@ import {
   EchoSchema,
   EntityKind,
   Expando as Expando$,
-  KindId,
-  type OfKind,
   PersistentSchema,
   Ref as Ref$,
   type RefFn,
@@ -35,10 +33,15 @@ import {
   toEffectSchema,
   toJsonSchema,
 } from './internal';
+import * as internal from './internal';
 import type * as Relation$ from './Relation';
+import type * as Entity$ from './Entity';
+
+export const KindId = internal.KindId;
+export type KindId = Entity$.KindId;
 
 // TODO(burdon): Remove toEffectSchema, toJsonSchema (moved to JsonSchema export).
-export { KindId, OfKind, PersistentSchema as PersistentType, EchoSchema as RuntimeType, toEffectSchema, toJsonSchema };
+export { PersistentSchema as PersistentType, EchoSchema as RuntimeType, toEffectSchema, toJsonSchema };
 
 //
 // Kind
@@ -61,7 +64,6 @@ export const getKind = getEntityKind;
 //
 // Entity
 //
-
 export namespace Entity {
   /**
    * Type.Obj.Any | Type.Relation.Any.
@@ -87,7 +89,7 @@ export interface obj<Self extends Schema$.Schema.Any>
   extends TypeMeta,
     Schema$.AnnotableClass<
       obj<Self>,
-      OfKind<EntityKind.Object> & ToMutable<Schema$.Schema.Type<Self>>,
+      Entity$.OfKind<EntityKind.Object> & ToMutable<Schema$.Schema.Type<Self>>,
       Schema$.Simplify<ObjJsonProps & ToMutable<Schema$.Schema.Encoded<Self>>>,
       Schema$.Schema.Context<Self>
     > {}
@@ -117,7 +119,7 @@ export declare namespace Obj {
 //
 
 // TODO(burdon): We're using Expando in many places as a base type.
-export interface Expando extends OfKind<EntityKind.Object> {
+export interface Expando extends Entity$.OfKind<EntityKind.Object> {
   [key: string]: any;
 }
 
@@ -148,7 +150,7 @@ export interface relation<
 > extends TypeMeta,
     Schema$.AnnotableClass<
       relation<Self, SourceSchema, TargetSchema>,
-      OfKind<EntityKind.Relation> &
+      Entity$.OfKind<EntityKind.Relation> &
         Relation.Endpoints<Schema$.Schema.Type<SourceSchema>, Schema$.Schema.Type<TargetSchema>> &
         ToMutable<Schema$.Schema.Type<Self>>,
       Schema$.Simplify<RelationJsonProps & ToMutable<Schema$.Schema.Encoded<Self>>>,

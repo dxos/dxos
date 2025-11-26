@@ -36,7 +36,7 @@ interface FilterAPI {
    * Filter that matches all objects.
    */
   // TODO(dmaretskyi): `Entity.Any` would be more type-safe, but causes annoying errors in existing code
-  everything(): Filter<Entity.Entity<AnyProperties>>;
+  everything(): Filter<Entity.Arbitrary>;
 
   /**
    * Filter that matches no objects.
@@ -48,7 +48,7 @@ interface FilterAPI {
    * Filter by object IDs.
    */
   // TODO(dmaretskyi): Rename to `Filter.id`.
-  ids(...id: ObjectId[]): Filter<Entity.Entity<AnyProperties>>;
+  ids(...id: ObjectId[]): Filter<Entity.Arbitrary>;
 
   /**
    * Filter by type.
@@ -61,12 +61,12 @@ interface FilterAPI {
   /**
    * Filter by non-qualified typename.
    */
-  typename(typename: string): Filter<Obj.AnyProps>;
+  typename(typename: string): Filter<Obj.Arbitrary>;
 
   /**
    * Filter by fully qualified type DXN.
    */
-  typeDXN(dxn: DXN): Filter<Obj.AnyProps>;
+  typeDXN(dxn: DXN): Filter<Obj.Arbitrary>;
 
   /**
    * Filter by tag.

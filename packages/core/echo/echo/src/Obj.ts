@@ -11,11 +11,8 @@ import { type DXN, ObjectId } from '@dxos/keys';
 import { getSnapshot as getSnapshot$ } from '@dxos/live-object';
 import { assumeType, deepMapValues } from '@dxos/util';
 
-import type * as Entity from './Entity';
+import * as Entity from './Entity';
 import {
-  type AnyEchoObject,
-  type AnyProperties,
-  EntityKind,
   type InternalObjectProps,
   MetaId,
   type ObjectJSON,
@@ -37,6 +34,7 @@ import {
   objectToJSON,
   setDescription as setDescription$,
   setLabel as setLabel$,
+  EntityKind,
 } from './internal';
 import * as Ref from './Ref';
 import * as Type from './Type';
@@ -45,7 +43,9 @@ import * as Type from './Type';
  * Base type for all ECHO objects.
  * @private
  */
-interface BaseObj extends AnyEchoObject, Type.OfKind<EntityKind.Object> {}
+interface BaseObj extends Entity.OfKind<EntityKind.Object> {
+  readonly id: ObjectId;
+}
 
 /**
  * Base type for all Obj objects.
@@ -69,8 +69,13 @@ export type Obj<Props> = BaseObj & Props;
  *
  * NOTE: Due to how typescript works, this type is not assignable to a specific schema type.
  * In that case, use `Obj.instanceOf` to check if an object is of a specific type.
+ *
+ * This type is very permissive and allows accessing any property on the object.
+ * We should move to Obj.Any that is not permissive and requires explicit instanceof checks..
  */
-export interface AnyProps extends BaseObj, AnyProperties {}
+export interface Arbitrary extends BaseObj {
+  [key: string]: any;
+}
 
 const defaultMeta: ObjectMeta = {
   keys: [],
@@ -127,7 +132,7 @@ export const make = <S extends Type.Obj.Any>(
  */
 export const isObject = (obj: unknown): obj is Any => {
   assumeType<InternalObjectProps>(obj);
-  return typeof obj === 'object' && obj !== null && Type.KindId in obj && obj[Type.KindId] === EntityKind.Object;
+  return typeof obj === 'object' && obj !== null && Type.KindId in obj && obj[Entity.KindId] === EntityKind.Object;
 };
 
 //
@@ -249,7 +254,7 @@ export const Meta: unique symbol = MetaId as any;
 
 // TODO(burdon): Narrow type.
 // TODO(dmaretskyi): Allow returning undefined.
-export const getMeta = (entity: AnyProperties): ObjectMeta => {
+export const getMeta = (entity: Entity.Any): ObjectMeta => {
   const meta = getMeta$(entity);
   invariant(meta != null, 'Invalid object.');
   return meta;
