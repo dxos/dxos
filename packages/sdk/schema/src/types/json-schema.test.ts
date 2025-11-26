@@ -9,6 +9,8 @@ import { describe, test } from 'vitest';
 import { JsonSchema as JsonSchemaUtil } from '@dxos/echo';
 import { type JsonPath, createJsonPath } from '@dxos/effect';
 
+// TODO(burdon): Should JsonPath start with "$"
+
 const TestSchema = Schema.Struct({
   name: Schema.String,
   age: Schema.optional(Schema.Number),
@@ -16,13 +18,11 @@ const TestSchema = Schema.Struct({
     Schema.Array(
       Schema.Struct({
         id: Schema.String,
-        type: Schema.Literal('email', 'phone'),
+        type: Schema.Literal('email', 'phone', 'other'),
       }),
     ),
   ),
 });
-
-// TODO(burdon): Should JsonPath start with "$"
 
 describe('json-schema', () => {
   test.only('encode/decode', ({ expect }) => {
@@ -52,10 +52,10 @@ describe('json-schema', () => {
 
     // Traverse and collect paths.
     const paths: string[] = [];
-    console.log('path'.padEnd(50), 'type'.padEnd(10), 'optional');
+    console.log('path'.padEnd(32), 'type'.padEnd(8), 'optional');
     traverseJsonSchema(jsonSchema, (schema, context) => {
       paths.push(context.path);
-      console.log(context.path.padEnd(50), String(schema.type ?? '').padEnd(10), isSchemaOptional(context));
+      console.log(context.path.padEnd(32), schema.type.padEnd(8), isSchemaOptional(context));
     });
 
     // Root path is empty JsonPath.
@@ -89,14 +89,6 @@ export type ContextualVisitorCallback = (schema: JsonSchema, context: SchemaCont
  * Recursive traversal.
  * https://github.com/sagold/json-schema-library
  */
-export function traverseJsonSchema(schema: JsonSchema, callback: ContextualVisitorCallback): void;
-export function traverseJsonSchema(
-  schema: JsonSchema,
-  callback: ContextualVisitorCallback,
-  segments: (string | number)[],
-  parentSchema: JsonSchema | null,
-  propertyNameOrIndex: string | number | null,
-): void;
 export function traverseJsonSchema(
   schema: JsonSchema,
   callback: ContextualVisitorCallback,
