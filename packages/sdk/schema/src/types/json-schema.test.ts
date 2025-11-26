@@ -7,6 +7,7 @@ import { type JsonSchema } from 'json-schema-library';
 import { describe, test } from 'vitest';
 
 import { JsonSchema as JsonSchemaUtil } from '@dxos/echo';
+import { type JsonPath, createJsonPath } from '@dxos/effect';
 
 const TestSchema = Schema.Struct({
   name: Schema.String,
@@ -14,34 +15,58 @@ const TestSchema = Schema.Struct({
   identities: Schema.mutable(
     Schema.Array(
       Schema.Struct({
+        id: Schema.String,
         type: Schema.Literal('email', 'phone'),
-        value: Schema.String,
       }),
     ),
   ),
 });
 
-// TODO(burdon): Convert to path.
+// TODO(burdon): Should JsonPath start with "$"
 
 describe('json-schema', () => {
-  test.only('encode/decode', () => {
+  test.only('encode/decode', ({ expect }) => {
     const jsonSchema = JsonSchemaUtil.toJsonSchema(TestSchema);
 
     // New property.
     addNewProperty({
       root: jsonSchema,
-      path: '#',
+      path: '' as JsonPath,
       name: 'website',
-      schema: {
-        type: 'string',
-      },
+      schema: JsonSchemaUtil.toJsonSchema(Schema.String),
       optional: false,
     });
 
-    // Traverse.
-    traverseJsonSchema(jsonSchema, (schema, context) => {
-      console.log(context.path.padEnd(50), schema.type.padEnd(10), isSchemaOptional(context));
+    // New property.
+    addNewProperty({
+      root: jsonSchema,
+      path: 'identities[0]' as JsonPath,
+      name: 'value',
+      schema: JsonSchemaUtil.toJsonSchema(
+        Schema.Struct({
+          data: Schema.String,
+        }),
+      ),
+      optional: false,
     });
+
+    // Traverse and collect paths.
+    const paths: string[] = [];
+    console.log('path'.padEnd(50), 'type'.padEnd(10), 'optional');
+    traverseJsonSchema(jsonSchema, (schema, context) => {
+      paths.push(context.path);
+      console.log(context.path.padEnd(50), String(schema.type ?? '').padEnd(10), isSchemaOptional(context));
+    });
+
+    // Root path is empty JsonPath.
+    expect(paths).toContain('');
+    // Direct properties on the root object.
+    expect(paths).toContain('name');
+    expect(paths).toContain('age');
+    expect(paths).toContain('identities');
+    // Nested properties through array items.
+    expect(paths).toContain('identities[0].type');
+    expect(paths).toContain('identities[0].value');
 
     // console.log(JSON.stringify(json, null, 2));
   });
@@ -50,7 +75,7 @@ describe('json-schema', () => {
 export type SchemaContext = {
   parentSchema: JsonSchema | null;
   propertyNameOrIndex: string | number | null;
-  path: string;
+  path: JsonPath;
 };
 
 /**
@@ -64,17 +89,25 @@ export type ContextualVisitorCallback = (schema: JsonSchema, context: SchemaCont
  * Recursive traversal.
  * https://github.com/sagold/json-schema-library
  */
+export function traverseJsonSchema(schema: JsonSchema, callback: ContextualVisitorCallback): void;
 export function traverseJsonSchema(
   schema: JsonSchema,
   callback: ContextualVisitorCallback,
-  path: string = '#',
+  segments: (string | number)[],
+  parentSchema: JsonSchema | null,
+  propertyNameOrIndex: string | number | null,
+): void;
+export function traverseJsonSchema(
+  schema: JsonSchema,
+  callback: ContextualVisitorCallback,
+  segments: (string | number)[] = [],
   parentSchema: JsonSchema | null = null,
   propertyNameOrIndex: string | number | null = null,
 ): void {
   const context: SchemaContext = {
     parentSchema,
     propertyNameOrIndex,
-    path,
+    path: createJsonPath(segments),
   };
 
   const result = callback(schema, context);
@@ -87,7 +120,7 @@ export function traverseJsonSchema(
     for (const key in schema.properties) {
       if (Object.prototype.hasOwnProperty.call(schema.properties, key)) {
         const subSchema = schema.properties[key] as JsonSchema;
-        traverseJsonSchema(subSchema, callback, `${path}/properties/${key}`, schema, key);
+        traverseJsonSchema(subSchema, callback, [...segments, key], schema, key);
       }
     }
   }
@@ -97,11 +130,11 @@ export function traverseJsonSchema(
     if (Array.isArray(schema.items)) {
       // Tuple validation.
       schema.items.forEach((itemSchema, index) => {
-        traverseJsonSchema(itemSchema as JsonSchema, callback, `${path}/items/${index}`, schema, index);
+        traverseJsonSchema(itemSchema as JsonSchema, callback, [...segments, index], schema, index);
       });
     } else {
-      // List validation.
-      traverseJsonSchema(schema.items as JsonSchema, callback, `${path}/items`, schema, 'items');
+      // List validation: use index 0 as canonical element path.
+      traverseJsonSchema(schema.items as JsonSchema, callback, [...segments, 0], schema, 0);
     }
   }
 
@@ -110,7 +143,7 @@ export function traverseJsonSchema(
   for (const keyword of combinators) {
     if (schema[keyword] && Array.isArray(schema[keyword])) {
       (schema[keyword] as JsonSchema[]).forEach((subSchema, index) => {
-        traverseJsonSchema(subSchema, callback, `${path}/${keyword}/${index}`, schema, index);
+        traverseJsonSchema(subSchema, callback, segments, schema, index);
       });
     }
   }
