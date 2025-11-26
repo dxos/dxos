@@ -3,7 +3,7 @@
 //
 
 import { type Entity, Format, Obj } from '@dxos/echo';
-import { Graph, GraphModel, type GraphNode, createEdgeId } from '@dxos/graph';
+import { GraphModel, type GraphNode, createEdgeId } from '@dxos/graph';
 import { log } from '@dxos/log';
 
 import { getSchemaProperties } from '../projection';
@@ -13,7 +13,7 @@ import { getSchemaProperties } from '../projection';
  * References are mapped onto graph edges.
  */
 export const createGraph = <T extends Entity.Any>(objects: T[]): GraphModel<GraphNode.Required<T>> => {
-  const graph = new GraphModel<GraphNode.Required<T>>(Obj.make(Graph, { nodes: [], edges: [] }));
+  const graph = new GraphModel<GraphNode.Required<T>>({ nodes: [], edges: [] });
 
   // Map objects.
   objects.forEach((object) => {

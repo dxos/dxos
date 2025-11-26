@@ -4,7 +4,7 @@
 
 import { DEFAULT_INPUT, DEFAULT_OUTPUT } from '@dxos/conductor';
 import { Obj } from '@dxos/echo';
-import { AbstractGraphBuilder, AbstractGraphModel, Graph } from '@dxos/graph';
+import { AbstractGraphBuilder, AbstractGraphModel, type Graph } from '@dxos/graph';
 import { isLiveObject } from '@dxos/live-object';
 import { type MakeOptional } from '@dxos/util';
 
@@ -21,12 +21,10 @@ export class CanvasGraphModel<S extends Shape = Shape> extends AbstractGraphMode
       return new CanvasGraphModel<S>(graph as Graph);
     }
 
-    return new CanvasGraphModel<S>(
-      Obj.make(Graph, {
-        nodes: graph?.nodes ?? [],
-        edges: graph?.edges ?? [],
-      }),
-    );
+    return new CanvasGraphModel<S>({
+      nodes: graph?.nodes ?? [],
+      edges: graph?.edges ?? [],
+    });
   }
 
   override get builder() {
