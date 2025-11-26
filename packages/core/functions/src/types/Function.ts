@@ -8,7 +8,6 @@ import { Obj, Type } from '@dxos/echo';
 import { JsonSchemaType, LabelAnnotation, Ref } from '@dxos/echo/internal';
 
 import { Script } from './Script';
-import { setUserFunctionIdInMetadata } from './url';
 
 /**
  * Function deployment.
@@ -74,7 +73,7 @@ export const setFrom = (target: Function, source: Function) => {
   target.description = source.description;
   target.updated = source.updated;
   // TODO(dmaretskyi): A workaround for an ECHO bug.
-  target.inputSchema = JSON.parse(JSON.stringify(source.inputSchema));
-  target.outputSchema = JSON.parse(JSON.stringify(source.outputSchema));
+  target.inputSchema = source.inputSchema ? JSON.parse(JSON.stringify(source.inputSchema)) : undefined;
+  target.outputSchema = source.outputSchema ? JSON.parse(JSON.stringify(source.outputSchema)) : undefined;
   Obj.getMeta(target).keys = JSON.parse(JSON.stringify(Obj.getMeta(source).keys));
 };
