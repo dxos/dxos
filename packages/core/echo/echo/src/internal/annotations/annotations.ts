@@ -16,6 +16,7 @@ import { type Primitive } from '@dxos/util';
 import { type AnyProperties, EntityKind, TypeId, getSchema } from '../types';
 
 import { createAnnotationHelper } from './util';
+import * as Obj from '../../Obj';
 
 /**
  * @internal
@@ -140,7 +141,7 @@ export const getSchemaVersion = (schema: Schema.Schema.All): string | undefined 
  *
  * @internal (use Obj.getTypename)
  */
-export const getTypename = (obj: AnyProperties): string | undefined => {
+export const getTypename = (obj: Obj.Any): string | undefined => {
   const schema = getSchema(obj);
   if (schema != null) {
     // Try to extract typename from DXN.
