@@ -10,10 +10,10 @@ import React, { type FC, useCallback, useMemo, useState } from 'react';
 
 import { Filter, type Obj } from '@dxos/echo';
 import { FormatEnum } from '@dxos/echo/internal';
-import { TraceEventException, type InvocationSpan } from '@dxos/functions-runtime';
+import { type InvocationSpan, type TraceEventException } from '@dxos/functions-runtime';
 import { TraceEvent } from '@dxos/functions-runtime';
 import { DXN } from '@dxos/keys';
-import { type Space, useQuery, useSpace } from '@dxos/react-client/echo';
+import { type Space, useQuery } from '@dxos/react-client/echo';
 import { Toolbar } from '@dxos/react-ui';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { DynamicTable, type TableFeatures, type TablePropertyDefinition } from '@dxos/react-ui-table';
@@ -29,7 +29,6 @@ import { useFunctionNameResolver, useInvocationSpans } from './hooks';
 import { LogPanel } from './LogPanel';
 import { RawDataPanel } from './RawDataPanel';
 import { formatDuration } from './utils';
-import { log } from '@dxos/log';
 
 export type InvocationTraceContainerProps = {
   space?: Space;
