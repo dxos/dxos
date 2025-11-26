@@ -1,6 +1,10 @@
 /**
  * Formats an error with its cause chain.
  */
+//
+// Copyright 2025 DXOS.org
+//
+
 export const formatErrorWithCauses = (error: Error): string => {
   const lines: string[] = [];
   let current: Error | undefined = error;
