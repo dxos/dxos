@@ -54,58 +54,42 @@ test('id property name is reserved', () => {
   expect(() => createObject(Obj.make(invalidSchema, { id: 42 } as any))).to.throw();
 });
 
-// Pass undefined to test untyped proxy.
-for (const schema of [Type.Expando, TestSchema.Example]) {
-  const createTestObject = (props: Partial<TestSchema.Example> = {}): Obj.Obj<TestSchema.Example> => {
-    if (schema) {
-      return createObject(Obj.make(schema, props));
-    } else {
-      return createObject(Obj.make(Type.Expando, props));
-    }
-  };
-
-  describe(`ECHO specific proxy properties${schema == null ? '' : ' with schema'}`, () => {
-    test('has id', () => {
-      const obj = createTestObject({ string: 'bar' });
-      expect(obj.id).not.to.be.undefined;
-    });
-
-    test('inspect', () => {
-      const obj = createTestObject({ string: 'bar' });
-      const str = inspect(obj, { colors: false });
-      expect(
-        str.startsWith(`${schema == null ? '' : 'Typed'}EchoObject`),
-        `${Type.getTypename(schema)} failed to serialize`,
-      ).to.be.true;
-      expect(str.includes("string: 'bar'")).to.be.true;
-      if (schema) {
-        expect(str.includes(`id: '${obj.id}'`)).to.be.true;
-      }
-    });
-
-    test('throws when assigning a class instances', () => {
-      expect(() => {
-        createTestObject().classInstance = new TestSchema.TestClass();
-      }).to.throw();
-    });
-
-    test('throws when creates with a class instances', () => {
-      expect(() => {
-        createTestObject({ classInstance: new TestSchema.TestClass() });
-      }).to.throw();
-    });
-
-    test('removes undefined fields on creation', () => {
-      const obj = createTestObject({ undefined });
-      expect(obj).to.deep.eq({ id: obj.id });
-    });
-
-    test('isEchoObject', () => {
-      const obj = createTestObject({ string: 'bar' });
-      expect(isEchoObject(obj)).to.be.true;
-    });
+describe('ECHO specific proxy properties with schema', () => {
+  test('has id', () => {
+    const obj = createObject(Obj.make(TestSchema.Example, { string: 'bar' }));
+    expect(obj.id).not.to.be.undefined;
   });
-}
+
+  test('inspect', () => {
+    const obj = createObject(Obj.make(TestSchema.Example, { id: '01KB0G0HR8BSPH11XJS85BGSWF', string: 'bar' }));
+    const str = inspect(obj, { colors: false });
+    expect(str).toMatchInlineSnapshot(
+      `"TypedEchoObject(example.com/type/Example) { string: 'bar', id: '01KB0G0HR8BSPH11XJS85BGSWF' }"`,
+    );
+  });
+
+  test('throws when assigning a class instances', () => {
+    expect(() => {
+      createObject(Obj.make(TestSchema.Example, {})).classInstance = new TestSchema.TestClass();
+    }).to.throw();
+  });
+
+  test('throws when creates with a class instances', () => {
+    expect(() => {
+      createObject(Obj.make(TestSchema.Example, { classInstance: new TestSchema.TestClass() }));
+    }).to.throw();
+  });
+
+  test('removes undefined fields on creation', () => {
+    const obj = createObject(Obj.make(TestSchema.Example, { undefined }));
+    expect(obj).to.deep.eq({ id: obj.id });
+  });
+
+  test('isEchoObject', () => {
+    const obj = createObject(Obj.make(TestSchema.Example, { string: 'bar' }));
+    expect(isEchoObject(obj)).to.be.true;
+  });
+});
 
 describe('without database', () => {
   const TestSchema = Schema.Struct({
@@ -638,7 +622,7 @@ describe('Reactive Object with ECHO database', () => {
       const obj = db.add(Obj.make(Type.Expando, { field: 1 }));
       const typeReference = getTypeReference(TestSchema.Example)!;
       getObjectCore(obj).setType(typeReference);
-      expect(Obj.getTypeDXN(obj)).to.deep.eq(typeReference);
+      expect(Obj.getTypeDXN(obj)).to.deep.eq(Type.getDXN(TestSchema.Example));
     });
 
     test('meta persistence', async () => {
