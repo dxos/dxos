@@ -3,13 +3,10 @@
 //
 
 import * as Schema from 'effect/Schema';
-import { type JsonSchema } from 'json-schema-library';
 import { describe, test } from 'vitest';
 
-import { JsonSchema as JsonSchemaUtil } from '@dxos/echo';
+import { JsonSchema } from '@dxos/echo';
 import { type JsonPath, createJsonPath } from '@dxos/effect';
-
-// TODO(burdon): Should JsonPath start with "$"
 
 const TestSchema = Schema.Struct({
   name: Schema.String,
@@ -24,25 +21,47 @@ const TestSchema = Schema.Struct({
   ),
 });
 
+interface TestSchema extends Schema.Schema.Type<typeof TestSchema> {}
+
 describe('json-schema', () => {
-  test.only('encode/decode', ({ expect }) => {
-    const jsonSchema = JsonSchemaUtil.toJsonSchema(TestSchema);
+  /**
+   * 1. The Effect AST is structural — not canonical.
+   *    Effect’s Schema is primarily a combinator algebra.
+   *    Each combinator wraps an AST node, but there is no normalization pass.
+   * 2. Multiple semantically‐equivalent schemas → different ASTs.
+   * 3. JSON Schema equivalence ≠ AST equivalence.
+   */
+  // test('JSON schema normalization', ({ expect: _expect }) => {
+  //   const s1 = JSONSchema.make(TestSchema as any); // TODO(burdon): Fix cast.
+  //   console.log(JSON.stringify(s1, null, 2));
+
+  //   const s2 = JsonSchema.toJsonSchema(TestSchema);
+  //   console.log(JSON.stringify(s2, null, 2));
+  // });
+
+  test('path', () => {
+    const path = createJsonPath(['identities', 0, 'type']);
+    console.log(path.toString());
+  });
+
+  test('encode/decode', ({ expect }) => {
+    const jsonSchema = JsonSchema.toJsonSchema(TestSchema);
 
     // New property.
-    addNewProperty({
+    addProperty({
       root: jsonSchema,
-      path: '' as JsonPath,
+      path: createJsonPath([]),
       name: 'website',
-      schema: JsonSchemaUtil.toJsonSchema(Schema.String),
+      schema: JsonSchema.toJsonSchema(Schema.String),
       optional: false,
     });
 
     // New property.
-    addNewProperty({
+    addProperty({
       root: jsonSchema,
-      path: 'identities[0]' as JsonPath,
+      path: createJsonPath(['identities', 0]),
       name: 'value',
-      schema: JsonSchemaUtil.toJsonSchema(
+      schema: JsonSchema.toJsonSchema(
         Schema.Struct({
           data: Schema.String,
         }),
@@ -54,8 +73,11 @@ describe('json-schema', () => {
     const paths: string[] = [];
     console.log('path'.padEnd(32), 'type'.padEnd(8), 'optional');
     traverseJsonSchema(jsonSchema, (schema, context) => {
-      paths.push(context.path);
-      console.log(context.path.padEnd(32), schema.type.padEnd(8), isSchemaOptional(context));
+      const pathString = context.path.toString();
+      const typeString = String((schema as any).type ?? '');
+
+      paths.push(pathString);
+      console.log(pathString.padEnd(32), typeString.padEnd(8), isSchemaOptional(context));
     });
 
     // Root path is empty JsonPath.
@@ -73,7 +95,7 @@ describe('json-schema', () => {
 });
 
 export type SchemaContext = {
-  parentSchema: JsonSchema | null;
+  parentSchema: JsonSchema.JsonSchema | null;
   propertyNameOrIndex: string | number | null;
   path: JsonPath;
 };
@@ -83,17 +105,17 @@ export type SchemaContext = {
  * @param schema The current sub-schema being visited.
  * @param context Information about the schema's position (parent, key/index, pointer).
  */
-export type ContextualVisitorCallback = (schema: JsonSchema, context: SchemaContext) => boolean | void;
+export type ContextualVisitorCallback = (schema: JsonSchema.JsonSchema, context: SchemaContext) => boolean | void;
 
 /**
  * Recursive traversal.
  * https://github.com/sagold/json-schema-library
  */
 export function traverseJsonSchema(
-  schema: JsonSchema,
+  schema: JsonSchema.JsonSchema,
   callback: ContextualVisitorCallback,
   segments: (string | number)[] = [],
-  parentSchema: JsonSchema | null = null,
+  parentSchema: JsonSchema.JsonSchema | null = null,
   propertyNameOrIndex: string | number | null = null,
 ): void {
   const context: SchemaContext = {
@@ -108,33 +130,39 @@ export function traverseJsonSchema(
   }
 
   // Check for Object properties.
-  if (schema.properties && typeof schema.properties === 'object') {
-    for (const key in schema.properties) {
-      if (Object.prototype.hasOwnProperty.call(schema.properties, key)) {
-        const subSchema = schema.properties[key] as JsonSchema;
-        traverseJsonSchema(subSchema, callback, [...segments, key], schema, key);
+  if (schema && typeof schema === 'object') {
+    if (schema.properties && typeof schema.properties === 'object') {
+      for (const key in schema.properties) {
+        if (Object.prototype.hasOwnProperty.call(schema.properties, key)) {
+          const subSchema = schema.properties[key];
+          traverseJsonSchema(subSchema, callback, [...segments, key], schema, key);
+        }
       }
     }
   }
 
   // Check for Array items (list or tuple validation).
-  if (schema.items) {
-    if (Array.isArray(schema.items)) {
-      // Tuple validation.
-      schema.items.forEach((itemSchema, index) => {
-        traverseJsonSchema(itemSchema as JsonSchema, callback, [...segments, index], schema, index);
-      });
-    } else {
-      // List validation: use index 0 as canonical element path.
-      traverseJsonSchema(schema.items as JsonSchema, callback, [...segments, 0], schema, 0);
+  if (schema && typeof schema === 'object') {
+    if (schema.items) {
+      if (Array.isArray(schema.items)) {
+        // Tuple validation.
+        schema.items.forEach((itemSchema: JsonSchema.JsonSchema, index: number) => {
+          traverseJsonSchema(itemSchema, callback, [...segments, index], schema, index);
+        });
+      } else {
+        // List validation: use index 0 as canonical element path.
+        const itemSchema = schema.items as JsonSchema.JsonSchema;
+        traverseJsonSchema(itemSchema, callback, [...segments, 0], schema, 0);
+      }
     }
   }
 
   // Handle complex logic (oneOf, anyOf, allOf) - These elements are typically always "required" in context.
   const combinators = ['oneOf', 'anyOf', 'allOf'] as const;
   for (const keyword of combinators) {
-    if (schema[keyword] && Array.isArray(schema[keyword])) {
-      (schema[keyword] as JsonSchema[]).forEach((subSchema, index) => {
+    const combinatorSchemas = schema[keyword];
+    if (combinatorSchemas && Array.isArray(combinatorSchemas)) {
+      combinatorSchemas.forEach((subSchema, index) => {
         traverseJsonSchema(subSchema, callback, segments, schema, index);
       });
     }
@@ -185,10 +213,10 @@ export function isSchemaOptional(context: SchemaContext): boolean {
 }
 
 export type AddNewPropertyParams = {
-  root: JsonSchema;
-  path: string;
+  root: JsonSchema.JsonSchema;
+  path: JsonPath;
   name: string;
-  schema: JsonSchema;
+  schema: JsonSchema.JsonSchema;
   optional: boolean;
 };
 
@@ -196,7 +224,13 @@ export type AddNewPropertyParams = {
  * Finds a target object schema by its pointer and adds a new property definition.
  * @returns The modified rootSchema.
  */
-export function addNewProperty({ root, path, name, schema: schema, optional }: AddNewPropertyParams): JsonSchema {
+export function addProperty({
+  root,
+  path,
+  name,
+  schema: schema,
+  optional,
+}: AddNewPropertyParams): JsonSchema.JsonSchema {
   const callback: ContextualVisitorCallback = (parent, context) => {
     // Check if the current schema is the target schema.
     if (context.path === path) {

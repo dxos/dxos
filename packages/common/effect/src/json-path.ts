@@ -12,7 +12,10 @@ import { getDeep, setDeep } from '@dxos/util';
 export type JsonProp = string & { __JsonPath: true; __JsonProp: true };
 export type JsonPath = string & { __JsonPath: true };
 
+// TODO(burdon): Start with "$."?
+
 const PATH_REGEX = /^($|[a-zA-Z_$][\w$]*(?:\.[a-zA-Z_$][\w$]*|\[\d+\](?:\.)?)*$)/;
+
 const PROP_REGEX = /^\w+$/;
 
 /**

@@ -55,11 +55,9 @@ export const ATTR_DELETED = '@deleted';
 export const ObjectDeletedId = Symbol.for('@dxos/echo/Deleted');
 
 /**
- * Object version.
+ * Object version accessor symbol.
  */
-// TODO(burdon): Document why "unique symbol".
-// TODO(burdon): "@dxos/echo/object/version" ("@dxos/echo/object/deleted", etc.)
-export const ObjectVersionId: unique symbol = Symbol.for('@dxos/echo/ObjectVersion');
+export const ObjectVersionId: unique symbol = Symbol.for('@dxos/echo/Version');
 
 /**
  * Internal runtime representation of an object.
