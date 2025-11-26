@@ -3,7 +3,7 @@
 //
 
 import * as Schema from 'effect/Schema';
-import { afterEach, beforeEach, describe, expect, test } from 'vitest';
+import { afterEach, assert, beforeEach, describe, expect, test } from 'vitest';
 
 import { Trigger, asyncTimeout } from '@dxos/async';
 import { Obj, Relation, Type } from '@dxos/echo';
@@ -150,8 +150,8 @@ describe('Integration tests', () => {
     let outerId: string;
     {
       await using db = await peer.createDatabase();
-      const inner = db.add({ name: 'inner' });
-      const outer = db.add({ inner: Ref.make(inner) });
+      const inner = db.add(Obj.make(Type.Expando, { name: 'inner' }));
+      const outer = db.add(Obj.make(Type.Expando, { inner: Ref.make(inner) }));
       outerId = outer.id;
       await db.flush();
     }
@@ -183,8 +183,8 @@ describe('Integration tests', () => {
     {
       await using db = await peer.createDatabase(spaceKey);
       rootUrl = db.rootUrl!;
-      const inner = db.add({ name: 'inner' });
-      const outer = db.add({ inner: Ref.make(inner) });
+      const inner = db.add(Obj.make(Type.Expando, { name: 'inner' }));
+      const outer = db.add(Obj.make(Type.Expando, { inner: Ref.make(inner) }));
       outerId = outer.id;
       await db.flush();
     }
@@ -324,7 +324,7 @@ describe('Integration tests', () => {
 
     await teleportConnections[0].whenOpen(true);
     await using db1 = await peer1.createDatabase(spaceKey);
-    db1.add(makeObject(Expando, {}));
+    db1.add(Obj.make(Expando, {}));
     await teleportConnections[0].whenOpen(false);
   });
 
@@ -412,8 +412,8 @@ describe('Integration tests', () => {
             name: 'Bob',
           }),
         );
-        const hasManager: Obj.Any = db.add(
-          makeObject(TestSchema.HasManager, {
+        const hasManager = db.add(
+          Relation.make(TestSchema.HasManager, {
             [Relation.Source]: bob,
             [Relation.Target]: alice,
           }),
@@ -423,15 +423,19 @@ describe('Integration tests', () => {
       }
 
       await peer.reload();
-      // TODO(burdon): FIX!!!
-      // {
-      //   await using db = await peer.openLastDatabase({ reactiveSchemaQuery: false, preloadSchemaOnOpen: false });
-      //   const {
-      //     objects: [obj],
-      //   } = await db.query(Filter.ids(relationId)).run();
-      //   expect(Relation.getSource(obj as Relation.Any).name).toEqual('Bob');
-      //   expect(Relation.getTarget(obj as Relation.Any).name).toEqual('Alice');
-      // }
+      {
+        await using db = await peer.openLastDatabase({ reactiveSchemaQuery: false, preloadSchemaOnOpen: false });
+        const {
+          objects: [obj],
+        } = await db.query(Filter.ids(relationId)).run();
+        assert(Relation.isRelation(obj), 'Query did not return a relation');
+        const source = Relation.getSource(obj);
+        const target = Relation.getTarget(obj);
+        assert(Obj.instanceOf(TestSchema.Person, source), 'Relation source is not a person');
+        assert(Obj.instanceOf(TestSchema.Person, target), 'Relation target is not a person');
+        expect(source.name).toEqual('Bob');
+        expect(target.name).toEqual('Alice');
+      }
     });
   });
 
@@ -454,7 +458,7 @@ describe('Integration tests', () => {
         const object = db.add(makeObject(stored, { field: 'test' }));
         expect(Obj.getSchema(object)).to.eq(stored);
 
-        db.add({ text: 'Expando object' }); // Add Expando object to test filtering
+        db.add(Obj.make(Type.Expando, { text: 'Expando object' })); // Add Expando object to test filtering
         await db.flush({ indexes: true });
       }
 

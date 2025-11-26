@@ -15,7 +15,6 @@ import {
   ATTR_RELATION_TARGET,
   type AnyEchoObject,
   EntityKind,
-  EntityKindId,
   type InternalObjectProps,
   MetaId,
   type ObjectMeta,
@@ -36,8 +35,8 @@ import * as Type from './Type';
  */
 interface BaseRelation<Source, Target>
   extends AnyEchoObject,
-    Type.OfKind<EntityKind.Relation>,
-    Type.Relation.Endpoints<Source, Target> {}
+    Type.Relation.Endpoints<Source, Target>,
+    Type.OfKind<EntityKind.Relation> {}
 
 /**
  * Base type for all Relations objects.
@@ -109,7 +108,7 @@ export const isRelation = (value: unknown): value is Any => {
     return true;
   }
 
-  const kind = (value as any)[EntityKindId];
+  const kind = (value as any)[Type.KindId];
   return kind === EntityKind.Relation;
 };
 

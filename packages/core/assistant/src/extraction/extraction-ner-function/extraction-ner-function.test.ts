@@ -8,7 +8,7 @@ import { type EchoDatabase } from '@dxos/echo-db';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
 import { FunctionExecutor, ServiceContainer } from '@dxos/functions-runtime';
 import { log } from '@dxos/log';
-import { Testing } from '@dxos/schema/testing';
+import { TestSchema } from '@dxos/schema/testing';
 import { type Message, Organization, Person } from '@dxos/types';
 import { createTestData } from '@dxos/types/testing';
 import { range } from '@dxos/util';
@@ -25,12 +25,12 @@ describe.skip('NER EntityExtraction', () => {
     transcriptJosiah: Message.Message[];
     transcriptWoflram: Message.Message[];
     transcriptMessages: Message.Message[];
-    documents: Testing.DocumentType[];
+    documents: TestSchema.DocumentType[];
     contacts: Record<string, Person.Person>;
     organizations: Record<string, Organization.Organization>;
   };
 
-  const TYPES = [Organization.Organization, Person.Person, Testing.Person, Testing.DocumentType];
+  const TYPES = [Organization.Organization, Person.Person, TestSchema.Person, TestSchema.DocumentType];
 
   beforeAll(async () => {
     // TODO(dmaretskyi): Helper to scaffold this from a config.

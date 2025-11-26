@@ -59,6 +59,17 @@ export type Properties<T = any> = Omit<T, 'id' | KindId | Relation$.Source | Rel
 export const getKind = getEntityKind;
 
 //
+// Entity
+//
+
+export namespace Entity {
+  /**
+   * Type.Obj.Any | Type.Relation.Any.
+   */
+  export type Any = Obj.Any | Relation.Any;
+}
+
+//
 // Obj
 //
 
@@ -180,17 +191,6 @@ export namespace Relation {
     [Relation$.Source]: Source;
     [Relation$.Target]: Target;
   };
-}
-
-//
-// Entity
-//
-
-export namespace Entity {
-  /**
-   * Type.Obj.Any | Type.Relation.Any.
-   */
-  export type Any = Obj.Any | Relation.Any;
 }
 
 //

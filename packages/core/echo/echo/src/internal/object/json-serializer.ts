@@ -31,7 +31,7 @@ import {
   ATTR_TYPE,
   type AnyEchoObject,
   EntityKind,
-  EntityKindId,
+  KindId,
   MetaId,
   ObjectMetaSchema,
   TypeId,
@@ -104,13 +104,13 @@ export const objectFromJSON = async (
     const source = (await refResolver?.resolve(sourceDxn)) as AnyEchoObject | undefined;
     const target = (await refResolver?.resolve(targetDxn)) as AnyEchoObject | undefined;
 
-    defineHiddenProperty(obj, EntityKindId, EntityKind.Relation);
+    defineHiddenProperty(obj, KindId, EntityKind.Relation);
     defineHiddenProperty(obj, RelationSourceDXNId, sourceDxn);
     defineHiddenProperty(obj, RelationTargetDXNId, targetDxn);
     defineHiddenProperty(obj, RelationSourceId, source);
     defineHiddenProperty(obj, RelationTargetId, target);
   } else {
-    defineHiddenProperty(obj, EntityKindId, EntityKind.Object);
+    defineHiddenProperty(obj, KindId, EntityKind.Object);
   }
 
   if (typeof jsonData[ATTR_META] === 'object') {

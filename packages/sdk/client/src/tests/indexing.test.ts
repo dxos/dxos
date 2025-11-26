@@ -7,7 +7,7 @@ import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { Trigger, TriggerState, asyncTimeout } from '@dxos/async';
 import { type ClientServicesProvider, type Space, SpaceProperties } from '@dxos/client-protocol';
-import { type Database, Obj } from '@dxos/echo';
+import { type Database, type Entity, Obj, Type } from '@dxos/echo';
 import { Expando, Ref } from '@dxos/echo/internal';
 import { type AnyLiveObject, Filter } from '@dxos/echo-db';
 import { type PublicKey } from '@dxos/keys';
@@ -70,7 +70,7 @@ describe('Index queries', () => {
     return client;
   };
 
-  const addObjects = async <T extends {}>(space: Space, objects: AnyLiveObject<T>[]) => {
+  const addObjects = async <T extends {}>(space: Space, objects: Obj.Obj<T>[]) => {
     await space.waitUntilReady();
     const objectsInDataBase = objects.map((object) => {
       return space.db.add(object);
@@ -81,7 +81,10 @@ describe('Index queries', () => {
   };
 
   // TODO(burdon): Remove AnyLiveObject.
-  const matchObjects = async (query: Database.QueryResult, objects: AnyLiveObject<any>[]) => {
+  const matchObjects = async <T extends Entity.Any = Entity.Any>(
+    query: Database.QueryResult<T>,
+    objects: AnyLiveObject<any>[],
+  ) => {
     const receivedIndexedObject = new Trigger<AnyLiveObject<any>[]>();
     const unsubscribe = query.subscribe(
       (query) => {
@@ -299,7 +302,7 @@ describe('Index queries', () => {
     const { expandos } = createObjects();
 
     await addObjects(space, expandos);
-    const query = space.db.query(Filter.type(Expando));
+    const query = space.db.query(Filter.type(Type.Expando));
     await matchObjects(query, expandos);
   });
 

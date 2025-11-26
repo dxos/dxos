@@ -7,7 +7,7 @@ import * as Function from 'effect/Function';
 
 import { Event } from '@dxos/async';
 import { Context } from '@dxos/context';
-import { type Database, Obj } from '@dxos/echo';
+import { type Database, type Entity, Obj } from '@dxos/echo';
 import { filterMatchObjectJSON } from '@dxos/echo-pipeline/filter';
 import { type QueryAST } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
@@ -16,7 +16,7 @@ import { type QueryContext, isSimpleSelectionQuery } from '../query';
 
 import { type QueueImpl } from './queue';
 
-export class QueueQueryContext implements QueryContext {
+export class QueueQueryContext<T extends Entity.Any = Entity.Any> implements QueryContext<T> {
   readonly #queue: QueueImpl;
   #runCtx: Context | null = null;
 
@@ -25,14 +25,14 @@ export class QueueQueryContext implements QueryContext {
 
   readonly changed = new Event();
 
-  constructor(queue: QueueImpl) {
+  constructor(queue: QueueImpl<T>) {
     this.#queue = queue;
   }
 
   /**
    * One-shot run.
    */
-  async run(query: QueryAST.Query): Promise<Database.QueryResultEntry[]> {
+  async run(query: QueryAST.Query): Promise<Database.QueryResultEntry<T>[]> {
     const trivial = isSimpleSelectionQuery(query);
     if (!trivial) {
       throw new Error('Query not supported.');
@@ -51,7 +51,7 @@ export class QueueQueryContext implements QueryContext {
     return objects.map((object) => ({
       id: object.id,
       spaceId,
-      object: object,
+      object: object as T,
     }));
   }
 
@@ -90,7 +90,7 @@ export class QueueQueryContext implements QueryContext {
   /**
    * Synchronously get the results.
    */
-  getResults(): Database.QueryResultEntry[] {
+  getResults(): Database.QueryResultEntry<T>[] {
     invariant(this.#filter);
 
     const spaceId = this.#queue.dxn.asQueueDXN()!.spaceId;
@@ -101,7 +101,7 @@ export class QueueQueryContext implements QueryContext {
       Array.map((object) => ({
         id: object.id,
         spaceId,
-        object,
+        object: object as T,
       })),
     );
   }

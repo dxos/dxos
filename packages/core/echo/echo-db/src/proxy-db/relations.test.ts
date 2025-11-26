@@ -20,7 +20,7 @@ describe('Relations', () => {
   beforeEach(async () => {
     testBuilder = await new EchoTestBuilder().open();
     ({ db, graph } = await testBuilder.createDatabase());
-    graph.schemaRegistry.addSchema([TestSchema.Person, TestSchema.HasManager]);
+    graph.schemaRegistry.addSchema([TestSchema.Person, TestSchema.Organization, TestSchema.EmployedBy]);
   });
 
   afterEach(async () => {
@@ -49,7 +49,7 @@ describe('Relations', () => {
       const db = await testBuilder.lastPeer!.openLastDatabase();
       const { objects } = await db.query(Query.select(Filter.everything())).run();
 
-      const manager: TestSchema.EmployedBy | undefined = objects.find((obj) => Relation.isRelation(obj));
+      const manager = objects.find((obj) => Obj.instanceOf(TestSchema.EmployedBy, obj));
       assert(manager, 'manager not found');
 
       expect(Relation.isRelation(manager)).to.be.true;

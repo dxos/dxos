@@ -4,8 +4,7 @@
 
 import { type CleanupFn, Event } from '@dxos/async';
 import { StackTrace } from '@dxos/debug';
-import { type Database } from '@dxos/echo';
-import { type AnyProperties } from '@dxos/echo/internal';
+import { type Database, type Entity } from '@dxos/echo';
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
@@ -20,8 +19,7 @@ import { type QueryContext } from './query-context';
 /**
  * Predicate based query.
  */
-// TODO(burdon): Narrow types (Entity.Any).
-export class QueryResultImpl<T extends AnyProperties = AnyProperties> implements Database.QueryResult<T> {
+export class QueryResultImpl<T extends Entity.Any = Entity.Any> implements Database.QueryResult<T> {
   private readonly _signal = compositeRuntime.createSignal();
   private readonly _event = new Event<Database.QueryResult<T>>();
   private readonly _diagnostic: QueryDiagnostic;

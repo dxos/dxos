@@ -28,7 +28,7 @@ export namespace TestSchema {
 
   export interface DocumentType extends Schema.Schema.Type<typeof DocumentType> {}
 
-  export class ContactType extends TypedObject({ typename: 'braneframe.com/Contact', version: '0.1.0' })({
+  export const ContactType = Schema.Struct({
     name: Schema.optional(Schema.String),
     identifiers: Schema.mutable(
       Schema.Array(
@@ -38,7 +38,7 @@ export namespace TestSchema {
         }),
       ),
     ),
-  }) {}
+  }).pipe(Type.Obj({ typename: 'braneframe.com/Contact', version: '0.1.0' }));
 
   const BlockSchema = Schema.Struct({
     timestamp: Schema.String,

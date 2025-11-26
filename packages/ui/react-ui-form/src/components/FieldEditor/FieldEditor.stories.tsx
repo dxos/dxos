@@ -9,7 +9,7 @@ import { createEchoSchema } from '@dxos/echo/testing';
 import { log } from '@dxos/log';
 import { withTheme } from '@dxos/react-ui/testing';
 import { ProjectionModel } from '@dxos/schema';
-import { TestSchema, testView } from '@dxos/schema/testing';
+import { Example, testView } from '@dxos/schema/testing';
 
 import { translations } from '../../translations';
 import { FIELD_EDITOR_DEBUG_SYMBOL, TestLayout, TestPanel } from '../testing';
@@ -71,7 +71,7 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
   args: {
-    projection: new ProjectionModel(createEchoSchema(TestSchema).jsonSchema, testView.projection),
+    projection: new ProjectionModel(createEchoSchema(Example).jsonSchema, testView.projection),
     field: testView.projection.fields[0],
   },
   parameters: { controls: { disabled: true } },

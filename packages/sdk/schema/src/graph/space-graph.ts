@@ -242,7 +242,7 @@ export class SpaceGraphModel extends ReactiveGraphModel<SpaceGraphNode, SpaceGra
         });
 
         this._options?.onCreateEdge?.(edge, object);
-      } else {
+      } else if (Obj.isObject(object)) {
         const typename = Obj.getTypename(object);
         if (typename) {
           let node: SpaceGraphNode | undefined = currentNodes.find((node) => node.id === object.id);

@@ -5,11 +5,9 @@
 import { type CleanupFn } from '@dxos/async';
 import { type QueryAST } from '@dxos/echo-protocol';
 import { type DXN, type PublicKey, type SpaceId } from '@dxos/keys';
-import { type Live } from '@dxos/live-object';
 import { type QueryOptions as QueryOptionsProto } from '@dxos/protocols/proto/dxos/echo/filter';
 
-import type { AnyProperties } from './internal';
-import type * as Obj from './Obj';
+import type * as Entity from './Entity';
 import type { Filter, Query } from './query';
 import type * as Ref from './Ref';
 
@@ -18,8 +16,7 @@ import type * as Ref from './Ref';
 /**
  * Individual query result entry.
  */
-// TODO(burdon): Narrow types (Entity.Any: requires Any to extend AnyProperties).
-export type QueryResultEntry<T extends AnyProperties = AnyProperties> = {
+export type QueryResultEntry<T extends Entity.Any = Entity.Any> = {
   id: string;
 
   spaceId: SpaceId;
@@ -53,8 +50,7 @@ export type QueryResultEntry<T extends AnyProperties = AnyProperties> = {
   };
 };
 
-// TODO(burdon): Narrow types (Entity.Any).
-export type OneShotQueryResult<T extends AnyProperties = AnyProperties> = {
+export type OneShotQueryResult<T extends Entity.Any = Entity.Any> = {
   results: QueryResultEntry<T>[];
   objects: T[];
 };
@@ -67,7 +63,7 @@ export type QuerySubscriptionOptions = {
 };
 
 // TODO(burdon): Narrow types.
-export interface QueryResult<T extends AnyProperties = AnyProperties> {
+export interface QueryResult<T extends Entity.Any = Entity.Any> {
   readonly query: Query<T>;
   readonly results: QueryResultEntry<T>[];
   readonly objects: T[];
@@ -173,7 +169,7 @@ export interface Database extends Queryable {
    * `Ref.fromDXN(dxn)` returns an unhydrated reference. The `.load` and `.target` APIs will not work.
    * `db.makeRef(dxn)` is preferable in cases with access to the database.
    */
-  makeRef<T extends Obj.Any = Obj.Any>(dxn: DXN): Ref.Ref<T>;
+  makeRef<T extends Entity.Any = Entity.Any>(dxn: DXN): Ref.Ref<T>;
 
   /**
    * Query objects.
@@ -183,13 +179,11 @@ export interface Database extends Queryable {
   /**
    * Adds object to the database.
    */
-  // TODO(burdon): Narrow to Entity.Any.
-  add<T extends AnyProperties>(obj: Live<T>, opts?: AddOptions): Obj.Obj<T>;
+  add<T extends Entity.Any = Entity.Any>(obj: T, opts?: AddOptions): T;
 
   /**
    * Removes object from the database.
    */
-  // TODO(burdon): Narrow to Entity.Any.
   // TODO(burdon): Return true if removed (currently throws if not present).
-  remove<T extends AnyProperties>(obj: T): void;
+  remove(obj: Entity.Any): void;
 }

@@ -388,7 +388,7 @@ export class Hypergraph {
     const {
       objects: [obj],
     } = await db.query(Filter.ids(objectId)).run();
-    return obj as Entity.Any; // TODO(burdon): Remove cast.
+    return obj;
   }
 
   private _resolveQueueSync(spaceId: SpaceId, subspaceTag: QueueSubspaceTag, queueId: ObjectId): Queue | undefined {

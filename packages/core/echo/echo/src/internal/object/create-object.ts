@@ -18,7 +18,7 @@ import {
   assertObjectModel,
   getObjectDXN,
 } from '../entities';
-import { EntityKind, EntityKindId, type KindId, MetaId, setSchema } from '../types';
+import { EntityKind, KindId, MetaId, setSchema } from '../types';
 
 import { attachedTypedObjectInspector } from './inspect';
 import { attachTypedJsonSerializer } from './json-serializer';
@@ -56,7 +56,7 @@ export type CreateObjectProps<T> = T extends { id: string } ? Omit<T, 'id' | Kin
 export const createObject = <S extends Schema.Schema.AnyNoContext>(
   schema: S,
   props: CreateObjectProps<Schema.Schema.Type<S>>,
-): CreateObjectProps<Schema.Schema.Type<S>> & { id: string } => {
+): CreateObjectProps<Schema.Schema.Type<S>> & { id: string; [KindId]: EntityKind } => {
   const annotation = getTypeAnnotation(schema);
   if (!annotation) {
     throw new Error('Schema is not an ECHO schema');
@@ -75,7 +75,7 @@ export const createObject = <S extends Schema.Schema.AnyNoContext>(
 
   // Metadata.
   const kind = RelationSourceId in props ? EntityKind.Relation : EntityKind.Object;
-  defineHiddenProperty(obj, EntityKindId, kind);
+  defineHiddenProperty(obj, KindId, kind);
   defineHiddenProperty(obj, MetaId, { keys: [] });
   setSchema(obj, schema);
   setTypename(obj, getSchemaDXN(schema) ?? failedInvariant('Missing schema DXN'));

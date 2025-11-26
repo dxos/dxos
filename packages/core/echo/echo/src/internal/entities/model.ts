@@ -13,7 +13,7 @@ import {
   type ATTR_META,
   type ATTR_TYPE,
   EntityKind,
-  EntityKindId,
+  KindId,
   type MetaId,
   type ObjectMeta,
   type SchemaId,
@@ -78,7 +78,7 @@ export interface InternalObjectProps {
    * Returns the schema for the object.
    */
   readonly [SchemaId]?: Schema.Schema.AnyNoContext;
-  readonly [EntityKindId]: EntityKind;
+  readonly [KindId]: EntityKind;
   readonly [MetaId]?: ObjectMeta;
   readonly [ObjectDeletedId]?: boolean;
   readonly [ObjectVersionId]?: Version;
@@ -118,11 +118,11 @@ export function assertObjectModel(obj: unknown): asserts obj is InternalObjectPr
   invariant(ObjectId.isValid(obj.id), 'Invalid object model: invalid id');
   invariant(obj[TypeId] === undefined || obj[TypeId] instanceof DXN, 'Invalid object model: invalid type');
   invariant(
-    obj[EntityKindId] === EntityKind.Object || obj[EntityKindId] === EntityKind.Relation,
+    obj[KindId] === EntityKind.Object || obj[KindId] === EntityKind.Relation,
     'Invalid object model: invalid entity kind',
   );
 
-  if (obj[EntityKindId] === EntityKind.Relation) {
+  if (obj[KindId] === EntityKind.Relation) {
     invariant(obj[RelationSourceDXNId] instanceof DXN, 'Invalid object model: invalid relation source');
     invariant(obj[RelationTargetDXNId] instanceof DXN, 'Invalid object model: invalid relation target');
     invariant(!(obj[RelationSourceId] instanceof DXN), 'Invalid object model: source pointer is a DXN');

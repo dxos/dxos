@@ -13,7 +13,7 @@ import { Filter, useQuery, useSchema } from '@dxos/react-client/echo';
 import { useClientProvider, withClientProvider } from '@dxos/react-client/testing';
 import { withTheme } from '@dxos/react-ui/testing';
 import { type SchemaPropertyDefinition } from '@dxos/schema';
-import { Testing } from '@dxos/schema/testing';
+import { TestSchema } from '@dxos/schema/testing';
 
 import { type TableFeatures } from '../../model';
 import { translations } from '../../translations';
@@ -132,7 +132,7 @@ export const WithEchoSchema: StoryObj = {
   render: () => {
     const client = useClient();
     const { space } = useClientProvider();
-    const schema = useSchema(client, space, Testing.Person.typename);
+    const schema = useSchema(client, space, TestSchema.Person.typename);
     const objects = useQuery(space, schema ? Filter.type(schema) : Filter.nothing());
     if (!schema) {
       return <div>Loading schema...</div>;
@@ -142,13 +142,13 @@ export const WithEchoSchema: StoryObj = {
   },
   decorators: [
     withClientProvider({
-      types: [Testing.Person],
+      types: [TestSchema.Person],
       createIdentity: true,
       createSpace: true,
       onCreateSpace: async ({ space }) => {
         Array.from({ length: 10 }).forEach(() => {
           space.db.add(
-            Obj.make(Testing.Person, {
+            Obj.make(TestSchema.Person, {
               name: faker.person.fullName(),
               email: faker.internet.email(),
             }),

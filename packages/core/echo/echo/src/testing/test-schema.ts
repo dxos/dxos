@@ -15,7 +15,15 @@ export namespace TestSchema {
     field: Schema.String,
   }).pipe(Schema.mutable);
 
-  export const Example = Schema.Struct({
+  export class TestClass {
+    field = 'value';
+    toJSON() {
+      return { field: this.field };
+    }
+  }
+
+  /** @deprecated Use another test schema or create a specific local test schema. */
+  export const ExampleSchema = Schema.Struct({
     string: Schema.String,
     number: Schema.Number,
     boolean: Schema.Boolean,
@@ -28,15 +36,22 @@ export namespace TestSchema {
     nestedNullableArray: Schema.mutable(Schema.Array(Schema.Union(Nested, Schema.Null))),
     reference: Schema.suspend((): Type.Ref<Example> => Type.Ref(Example)),
     referenceArray: Schema.mutable(Schema.Array(Schema.suspend((): Type.Ref<Example> => Type.Ref(Example)))),
+    classInstance: Schema.instanceOf(TestClass),
     other: Schema.Any,
-  }).pipe(
-    Schema.partial,
+  }).pipe(Schema.partial, Schema.mutable);
+
+  /** @deprecated Use another test schema or create a specific local test schema. */
+  export interface ExampleSchema extends Schema.Schema.Type<typeof ExampleSchema> {}
+
+  /** @deprecated Use another test schema or create a specific local test schema. */
+  export const Example = ExampleSchema.pipe(
     Type.Obj({
       typename: 'example.com/type/Example',
       version: '0.1.0',
     }),
   );
 
+  /** @deprecated Use another test schema or create a specific local test schema. */
   export interface Example extends Schema.Schema.Type<typeof Example> {}
 
   //
