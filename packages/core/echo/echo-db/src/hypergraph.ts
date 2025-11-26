@@ -5,7 +5,7 @@
 import { Event } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { StackTrace } from '@dxos/debug';
-import { type Database, type Entity, Filter, type Obj, Query, type QueryAST, Ref } from '@dxos/echo';
+import { type Database, type Entity, Filter, Query, type QueryAST, Ref } from '@dxos/echo';
 import {
   type AnyProperties,
   type BaseSchema,
@@ -76,7 +76,7 @@ export class Hypergraph {
   private readonly _owningObjects = new Map<SpaceId, unknown>();
   private readonly _schemaRegistry = new RuntimeSchemaRegistry();
   private readonly _updateEvent = new Event<ItemsUpdatedEvent>();
-  private readonly _resolveEvents = new Map<SpaceId, Map<string, Event<Obj.Any>>>();
+  private readonly _resolveEvents = new Map<SpaceId, Map<string, Event<Entity.Arbitrary>>>();
   private readonly _queryContexts = new Set<GraphQueryContext>();
   private readonly _querySourceProviders: QuerySourceProvider[] = [];
 
@@ -276,8 +276,8 @@ export class Hypergraph {
   private _resolveSync(
     dxn: DXN,
     context: RefResolutionContext,
-    onResolve?: (obj: Obj.Any) => void,
-  ): Obj.Any | undefined {
+    onResolve?: (obj: Entity.Arbitrary) => void,
+  ): Entity.Arbitrary | undefined {
     if (!dxn.asEchoDXN()) {
       throw new Error('Unsupported DXN kind');
     }

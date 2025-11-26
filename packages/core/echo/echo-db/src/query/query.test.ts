@@ -7,7 +7,7 @@ import * as Schema from 'effect/Schema';
 import { afterEach, beforeEach, describe, expect, onTestFinished, test } from 'vitest';
 
 import { Trigger, asyncTimeout, sleep } from '@dxos/async';
-import { Obj, Order, Ref, Relation, Type } from '@dxos/echo';
+import { type Entity, Obj, Order, Ref, Relation, Type } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
 import { type DatabaseDirectory } from '@dxos/echo-protocol';
 import { DXN, PublicKey } from '@dxos/keys';
@@ -39,7 +39,7 @@ const createTestObject = (props: ObjectProps = {}) => {
 };
 
 const createTestObjects = () => {
-  return new Array<Type.Expando>()
+  return new Array<Entity.Arbitrary>()
     .concat(range(1).map(() => createTestObject()))
     .concat(
       range(3).map(() =>

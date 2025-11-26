@@ -7,7 +7,7 @@ import { inspect } from 'node:util';
 import { type CleanupFn, Event, type ReadOnlyEvent, synchronized } from '@dxos/async';
 import { type Context, LifecycleState, Resource } from '@dxos/context';
 import { inspectObject } from '@dxos/debug';
-import { type Database, type Entity, Obj, type QueryAST, Ref, type Type } from '@dxos/echo';
+import { type Database, type Entity, Obj, type QueryAST, Ref } from '@dxos/echo';
 import { type AnyProperties, assertObjectModel, setRefResolver } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
 import { DXN, type PublicKey, type SpaceId } from '@dxos/keys';
@@ -224,7 +224,7 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
   }
 
   // TODO(burdon): Type check.
-  getObjectById<T extends Obj.Any = Type.Expando>(id: string, { deleted = false } = {}): T | undefined {
+  getObjectById<T extends Entity.Any = Entity.Arbitrary>(id: string, { deleted = false } = {}): T | undefined {
     const core = this._coreDatabase.getObjectCoreById(id);
     if (!core || (core.isDeleted() && !deleted)) {
       return undefined;

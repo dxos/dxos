@@ -256,7 +256,7 @@ describe('Spaces', () => {
     await waitForSpaceState(space, SpaceState.SPACE_READY, 1000);
     expect(space.db.getObjectById(id)).to.exist;
 
-    space.db.getObjectById<Type.Expando>(id)!.data = 'test2';
+    space.db.getObjectById(id)!.data = 'test2';
     await space.db.flush();
   });
 
@@ -296,7 +296,7 @@ describe('Spaces', () => {
     await waitForSpaceState(space2, SpaceState.SPACE_READY, 1_000);
     expect(space2.db.getObjectById(obj.id)).to.exist;
 
-    space2.db.getObjectById<Type.Expando>(obj.id)!.data = 'test2';
+    space2.db.getObjectById(obj.id)!.data = 'test2';
     await space2.db.flush();
   });
 
@@ -469,7 +469,7 @@ describe('Spaces', () => {
     {
       const done = new Trigger();
       await waitForObject(guestSpace, hostRoot);
-      const guestRoot: Type.Expando = guestSpace.db.getObjectById(hostRoot.id)!;
+      const guestRoot = guestSpace.db.getObjectById(hostRoot.id)!;
       expect(guestRoot).toBeDefined();
 
       const unsub = getObjectCore(guestRoot).updates.on(() => {
@@ -558,7 +558,7 @@ describe('Spaces', () => {
     });
   };
 
-  const createObject = <T extends {}>(props: T): Live<Type.Expando> => {
+  const createObject = <T extends {}>(props: T) => {
     return Obj.make(Type.Expando, props);
   };
 

@@ -11,11 +11,10 @@ import { type DXN, ObjectId } from '@dxos/keys';
 import { getSnapshot as getSnapshot$ } from '@dxos/live-object';
 import { assumeType, deepMapValues } from '@dxos/util';
 
-import type * as Entity from './Entity';
+import * as Entity from './Entity';
 import {
   type AnyEchoObject,
   type AnyProperties,
-  EntityKind,
   type InternalObjectProps,
   MetaId,
   type ObjectJSON,
@@ -45,7 +44,7 @@ import * as Type from './Type';
  * Base type for all ECHO objects.
  * @private
  */
-interface BaseObj extends AnyEchoObject, Type.OfKind<EntityKind.Object> {}
+interface BaseObj extends AnyEchoObject, Entity.OfKind<typeof Entity.Kind.Object> {}
 
 /**
  * Base type for all Obj objects.
@@ -105,7 +104,7 @@ export const make = <S extends Schema.Schema.AnyNoContext>(
   props: MakeProps<S>,
   meta?: Partial<ObjectMeta>,
 ): Obj<Schema.Schema.Type<S>> => {
-  assertArgument(getTypeAnnotation(schema)?.kind === EntityKind.Object, 'schema', 'Expected an object schema');
+  assertArgument(getTypeAnnotation(schema)?.kind === Entity.Kind.Object, 'schema', 'Expected an object schema');
 
   // Set default fields on meta on creation.
   if (props[MetaId] != null) {
@@ -127,7 +126,7 @@ export const make = <S extends Schema.Schema.AnyNoContext>(
  */
 export const isObject = (obj: unknown): obj is Any => {
   assumeType<InternalObjectProps>(obj);
-  return typeof obj === 'object' && obj !== null && Type.KindId in obj && obj[Type.KindId] === EntityKind.Object;
+  return typeof obj === 'object' && obj !== null && Entity.KindId in obj && obj[Entity.KindId] === Entity.Kind.Object;
 };
 
 //

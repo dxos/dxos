@@ -9,6 +9,7 @@ import { invariant } from '@dxos/invariant';
 import { type DXN } from '@dxos/keys';
 import { type ToMutable } from '@dxos/util';
 
+import * as Entity$ from './Entity';
 import {
   type ATTR_RELATION_SOURCE,
   type ATTR_RELATION_TARGET,
@@ -16,10 +17,8 @@ import {
   EchoRelationSchema,
   type EchoRelationSchemaOptions,
   EchoSchema,
-  EntityKind,
   Expando as Expando$,
-  KindId,
-  type OfKind,
+  type ExpandoEncoded,
   PersistentSchema,
   type PersistentSchemaEncoded,
   Ref as Ref$,
@@ -27,7 +26,6 @@ import {
   type RefSchema,
   type TypeAnnotation,
   type TypeMeta,
-  getEntityKind,
   getSchemaDXN,
   getSchemaTypename,
   getSchemaVersion,
@@ -39,25 +37,12 @@ import {
 import type * as Relation$ from './Relation';
 
 // TODO(burdon): Remove toEffectSchema, toJsonSchema (moved to JsonSchema export).
-export { KindId, OfKind, toEffectSchema, toJsonSchema };
-
-//
-// Kind
-//
-
-export const Kind = EntityKind;
-
-/**
- * Base ECHO schema type.
- */
-export type Schema = EchoSchema;
+export { toEffectSchema, toJsonSchema };
 
 /**
  * Returns all properties of an object or relation except for the id and kind.
  */
-export type Properties<T = any> = Omit<T, 'id' | KindId | Relation$.Source | Relation$.Target>;
-
-export const getKind = getEntityKind;
+export type Properties<T = any> = Omit<T, 'id' | Entity$.KindId | Relation$.Source | Relation$.Target>;
 
 //
 // Entity
@@ -88,13 +73,13 @@ export interface obj<Self extends Schema$.Schema.Any>
   extends TypeMeta,
     Schema$.AnnotableClass<
       obj<Self>,
-      OfKind<EntityKind.Object> & ToMutable<Schema$.Schema.Type<Self>>,
+      Entity$.OfKind<typeof Entity$.Kind.Object> & ToMutable<Schema$.Schema.Type<Self>>,
       Schema$.Simplify<ObjJsonProps & ToMutable<Schema$.Schema.Encoded<Self>>>,
       Schema$.Schema.Context<Self>
     > {}
 
 const ObjAny: obj<Schema$.Schema.AnyNoContext> = Schema$.Any.pipe(
-  Schema$.filter((obj) => obj[KindId] === EntityKind.Object),
+  Schema$.filter((obj) => obj[Entity$.KindId] === Entity$.Kind.Object),
   Schema$.annotations({ title: 'Object' }),
 ) as any;
 
@@ -129,14 +114,8 @@ export declare namespace Obj {
 // Expando
 //
 
-// TODO(burdon): We're using Expando in many places as a base type.
-export interface Expando extends OfKind<EntityKind.Object> {
-  [key: string]: any;
-}
-
-type ExpandoEncoded = Schema$.Simplify<ObjJsonProps & { [key: string]: any }>;
-
-export const Expando: obj<Schema$.Schema<Expando, ExpandoEncoded, never>> = Expando$ as any;
+export const Expando: obj<Schema$.Schema<Expando$, ExpandoEncoded>> = Expando$ as any;
+export type Expando = obj<Schema$.Schema<Expando$, ExpandoEncoded>>;
 
 //
 // Schema
@@ -170,7 +149,7 @@ export interface relation<
 > extends TypeMeta,
     Schema$.AnnotableClass<
       relation<Self, SourceSchema, TargetSchema>,
-      OfKind<EntityKind.Relation> &
+      Entity$.OfKind<typeof Entity$.Kind.Relation> &
         Relation.Endpoints<Schema$.Schema.Type<SourceSchema>, Schema$.Schema.Type<TargetSchema>> &
         ToMutable<Schema$.Schema.Type<Self>>,
       Schema$.Simplify<RelationJsonProps & ToMutable<Schema$.Schema.Encoded<Self>>>,

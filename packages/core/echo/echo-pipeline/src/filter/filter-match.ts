@@ -2,7 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import { ATTR_META, EXPANDO_TYPENAME, type ObjectJSON } from '@dxos/echo/internal';
+import { Type } from '@dxos/echo';
+import { ATTR_META, type ObjectJSON } from '@dxos/echo/internal';
 import { ObjectStructure, type QueryAST, decodeReference, isEncodedReference } from '@dxos/echo-protocol';
 import { DXN, type ObjectId, type SpaceId } from '@dxos/keys';
 
@@ -25,7 +26,7 @@ export const filterMatchObject = (filter: QueryAST.Filter, obj: MatchedObject): 
         if (!obj.doc.system?.type?.['/']) {
           // Objects with no type are considered to be expando objects.
           const expectedDXN = DXN.parse(filter.typename).asTypeDXN();
-          if (expectedDXN?.type !== EXPANDO_TYPENAME) {
+          if (expectedDXN?.type !== Type.Expando.typename) {
             return false;
           }
         } else {
@@ -102,7 +103,7 @@ export const filterMatchObjectJSON = (filter: QueryAST.Filter, obj: ObjectJSON):
         if (!obj['@type']) {
           // Objects with no type are considered to be expando objects
           const expectedDXN = DXN.parse(filter.typename).asTypeDXN();
-          if (expectedDXN?.type !== EXPANDO_TYPENAME) {
+          if (expectedDXN?.type !== Type.Expando.typename) {
             return false;
           }
         } else {

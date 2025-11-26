@@ -10,6 +10,7 @@ import { DXN, type ObjectId } from '@dxos/keys';
 import { type Live } from '@dxos/live-object';
 import { assumeType } from '@dxos/util';
 
+import * as Entity from './Entity';
 import {
   ATTR_RELATION_SOURCE,
   ATTR_RELATION_TARGET,
@@ -36,7 +37,7 @@ import * as Type from './Type';
 interface BaseRelation<Source, Target>
   extends AnyEchoObject,
     Type.Relation.Endpoints<Source, Target>,
-    Type.OfKind<EntityKind.Relation> {}
+    Entity.OfKind<EntityKind.Relation> {}
 
 /**
  * Base type for all Relations objects.
@@ -83,7 +84,7 @@ export const make = <S extends Type.Relation.Any>(
   schema: S,
   props: NoInfer<MakeProps<Schema.Schema.Type<S>>>,
   meta?: ObjectMeta,
-): Live<Schema.Schema.Type<S> & Type.OfKind<EntityKind.Relation>> => {
+): Live<Schema.Schema.Type<S> & Entity.OfKind<typeof Entity.Kind.Relation>> => {
   assertArgument(getTypeAnnotation(schema)?.kind === EntityKind.Relation, 'schema', 'Expected a relation schema');
 
   if (props[MetaId] != null) {
@@ -108,7 +109,7 @@ export const isRelation = (value: unknown): value is Any => {
     return true;
   }
 
-  const kind = (value as any)[Type.KindId];
+  const kind = (value as any)[Entity.KindId];
   return kind === EntityKind.Relation;
 };
 

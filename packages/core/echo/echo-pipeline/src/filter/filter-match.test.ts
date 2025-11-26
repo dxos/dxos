@@ -5,7 +5,6 @@
 import { describe, expect, test } from 'vitest';
 
 import { Filter, Ref, Type } from '@dxos/echo';
-import { EXPANDO_TYPENAME } from '@dxos/echo/internal';
 import { ObjectStructure } from '@dxos/echo-protocol';
 import { DXN, ObjectId, SpaceId } from '@dxos/keys';
 
@@ -91,7 +90,7 @@ const OBJECT_1: MatchedObject = {
   id: ObjectId.make('01JVS9YYT5VMVJW0GGTM1YHCCH'),
   spaceId: SpaceId.make('B2NJDFNVZIW77OQSXUBNAD7BUMBD3G5PO'),
   doc: ObjectStructure.makeObject({
-    type: DXN.fromTypenameAndVersion(EXPANDO_TYPENAME, '0.1.0').toString(),
+    type: DXN.fromTypenameAndVersion(Type.Expando.typename, '0.1.0').toString(),
     data: {
       title: 'test',
       value: 100,
@@ -107,7 +106,7 @@ const OBJECT_2: MatchedObject = {
   id: ObjectId.make('01JT5TD6K9FFJ3VNM5FGMS5C0Q'),
   spaceId: SpaceId.make('B2NJDFNVZIW77OQSXUBNAD7BUMBD3G5PO'),
   doc: ObjectStructure.makeObject({
-    type: DXN.fromTypenameAndVersion(EXPANDO_TYPENAME, '0.1.0').toString(),
+    type: DXN.fromTypenameAndVersion(Type.Expando.typename, '0.1.0').toString(),
     data: { title: 'test', value: 100, complete: true },
     deleted: true,
   }),
@@ -117,7 +116,7 @@ const OBJECT_3: MatchedObject = {
   id: ObjectId.make('01JT5TD6K9FFJ3VNM5FGMS5C0Q'),
   spaceId: SpaceId.make('B2NJDFNVZIW77OQSXUBNAD7BUMBD3G5PO'),
   doc: ObjectStructure.makeObject({
-    type: DXN.fromTypenameAndVersion(EXPANDO_TYPENAME, '0.1.0').toString(),
+    type: DXN.fromTypenameAndVersion(Type.Expando.typename, '0.1.0').toString(),
     data: { title: 'test', value: 100, complete: true, parent: { '/': DXN.fromLocalObjectId(OBJECT_1.id).toString() } },
   }),
 };

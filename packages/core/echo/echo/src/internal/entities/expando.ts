@@ -6,11 +6,9 @@ import * as Schema from 'effect/Schema';
 
 import { EchoObjectSchema } from './object';
 
-export const EXPANDO_TYPENAME = 'dxos.org/type/Expando';
-
 const ExpandoSchema = Schema.Struct({}, { key: Schema.String, value: Schema.Any }).pipe(
   EchoObjectSchema({
-    typename: EXPANDO_TYPENAME,
+    typename: 'dxos.org/type/Expando',
     version: '0.1.0',
   }),
 );
@@ -18,7 +16,6 @@ const ExpandoSchema = Schema.Struct({}, { key: Schema.String, value: Schema.Any 
 /**
  * Expando object is an object with an arbitrary set of properties.
  */
-// TODO(dmaretskyi): Can we consider expando a top-type, i.e. have a ref to expando potentially be a valid ref to any object?
 export interface Expando extends Schema.Schema.Type<typeof ExpandoSchema> {}
-
-export const Expando: Schema.Schema<Expando> = ExpandoSchema;
+export interface ExpandoEncoded extends Schema.Schema.Encoded<typeof ExpandoSchema> {}
+export const Expando: Schema.Schema<Expando, ExpandoEncoded> = ExpandoSchema;

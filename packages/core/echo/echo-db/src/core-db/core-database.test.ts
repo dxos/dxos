@@ -6,7 +6,7 @@ import { effect } from '@preact/signals-core';
 import { describe, expect, test } from 'vitest';
 
 import { Trigger } from '@dxos/async';
-import { Filter, Obj, Ref, Type } from '@dxos/echo';
+import { type Entity, Filter, Obj, Ref, Type } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
 import { type DatabaseDirectory, SpaceDocVersion, createIdFromSpaceKey } from '@dxos/echo-protocol';
 import { registerSignalsRuntime } from '@dxos/echo-signals';
@@ -251,7 +251,7 @@ describe('CoreDatabase', () => {
       const rootObject = [linksToRemove, loadedLinks, partiallyLoadedLinks]
         .flatMap((v: any[]) => v)
         .reduce(
-          (acc: Type.Expando, obj: any) => {
+          (acc: Entity.Arbitrary, obj: any) => {
             acc[obj.id] = Ref.make(obj);
             return acc;
           },
@@ -384,7 +384,7 @@ const getDocHandles = (db: EchoDatabase): DocumentHandles => ({
 const getObjectDocHandle = (obj: any) => getObjectCore(obj).docHandle!;
 
 const createClientDbInSpaceWithObject = async (
-  object: Obj.Any,
+  object: Entity.Arbitrary,
   onDocumentSavedInSpace?: (handles: DocumentHandles) => void,
 ): Promise<EchoDatabaseImpl> => {
   const tmpPath = createTmpPath();

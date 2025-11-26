@@ -7,7 +7,7 @@ import { describe, test } from 'vitest';
 
 import { raise } from '@dxos/debug';
 
-import { type Entity, Obj, Ref, Relation, Type } from '../index';
+import { Entity, Obj, Ref, Relation, Type } from '../index';
 
 import { TestSchema } from './test-schema';
 
@@ -20,7 +20,7 @@ describe('Experimental API review', () => {
     expect(Type.getTypename(type)).to.eq('example.com/type/Person');
     expect(Type.getVersion(type)).to.eq('0.1.0');
     expect(Type.getMeta(type)).to.deep.eq({
-      kind: Type.Kind.Object,
+      kind: Entity.Kind.Object,
       typename: 'example.com/type/Person',
       version: '0.1.0',
     });

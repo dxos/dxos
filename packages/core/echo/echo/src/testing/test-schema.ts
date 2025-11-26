@@ -187,7 +187,7 @@ export namespace TestSchema {
   }
 
   export const Container = Schema.Struct({
-    objects: Schema.mutable(Schema.Array(Type.Ref(Type.Obj.Any))),
+    objects: Schema.mutable(Schema.Array(Type.Ref(Type.Expando))),
     records: Schema.mutable(
       Schema.Array(
         Schema.partial(
