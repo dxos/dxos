@@ -5,7 +5,6 @@
 import { writeFile } from 'node:fs/promises';
 import * as fs from 'node:fs/promises';
 import { basename, join, relative } from 'node:path';
-import { dirname } from 'node:path';
 
 import * as Array from 'effect/Array';
 import * as Function from 'effect/Function';
@@ -73,11 +72,12 @@ export const bundleFunction = async (options: BundleOptions): Promise<BundleResu
           }));
           build.onLoad({ filter: /^dxos:entrypoint$/, namespace: 'dxos:entrypoint' }, () => ({
             contents: trim`
-              import { wrapFunctionHandler } from '@dxos/functions';
-              import { wrapHandlerForCloudflare } from '@dxos/functions-runtime-cloudflare';
-              import { default as handler } from '${options.entryPoint}';
               export default {
                 fetch: async (...args) => {
+                  const { wrapFunctionHandler } = await import('@dxos/functions');
+                  const { wrapHandlerForCloudflare } = await import('@dxos/functions-runtime-cloudflare');
+                  const { default: handler } = await import('${options.entryPoint}');
+
                   //
                   // Wrapper to make the function cloudflare-compatible.
                   //
