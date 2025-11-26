@@ -21,7 +21,7 @@
 - [x] JsonSchemaType defs
 - [x] Fix database.add() input/output types and search for "Obj.Any = db.add" (also QueryResult types).
 - [x] TODO(burdon): FIX!!!
-- [ ] Fix failing tests.
+- [x] Fix failing tests.
 - [ ] Reconcile types/version with entities/model/version
 - [ ] Type.Expando => Type.Obj.Any
 - [ ] Narrow QueryResult and match Schema and Object generics.
