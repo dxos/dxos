@@ -1,4 +1,8 @@
 //
+// Copyright 2025 example.com
+//
+
+//
 // Copyright 2025 DXOS.org
 //
 
@@ -27,7 +31,7 @@ describe('QueryPlanner', () => {
               "_tag": "TypeSelector",
               "inverted": false,
               "typename": [
-                "dxn:type:dxos.org/type/Person:0.1.0",
+                "dxn:type:example.com/type/Person:0.1.0",
               ],
             },
             "spaces": [
@@ -44,7 +48,7 @@ describe('QueryPlanner', () => {
               "id": undefined,
               "props": {},
               "type": "object",
-              "typename": "dxn:type:dxos.org/type/Person:0.1.0",
+              "typename": "dxn:type:example.com/type/Person:0.1.0",
             },
           },
           {
@@ -73,7 +77,7 @@ describe('QueryPlanner', () => {
               "_tag": "TypeSelector",
               "inverted": false,
               "typename": [
-                "dxn:type:dxos.org/type/Person:0.1.0",
+                "dxn:type:example.com/type/Person:0.1.0",
               ],
             },
             "spaces": [
@@ -90,7 +94,7 @@ describe('QueryPlanner', () => {
               "id": undefined,
               "props": {},
               "type": "object",
-              "typename": "dxn:type:dxos.org/type/Person:0.1.0",
+              "typename": "dxn:type:example.com/type/Person:0.1.0",
             },
           },
           {
@@ -121,7 +125,7 @@ describe('QueryPlanner', () => {
               "_tag": "TypeSelector",
               "inverted": false,
               "typename": [
-                "dxn:type:dxos.org/type/Person:0.1.0",
+                "dxn:type:example.com/type/Person:0.1.0",
               ],
             },
             "spaces": [
@@ -144,7 +148,7 @@ describe('QueryPlanner', () => {
                 },
               },
               "type": "object",
-              "typename": "dxn:type:dxos.org/type/Person:0.1.0",
+              "typename": "dxn:type:example.com/type/Person:0.1.0",
             },
           },
           {
@@ -193,7 +197,7 @@ describe('QueryPlanner', () => {
               "id": undefined,
               "props": {},
               "type": "object",
-              "typename": "dxn:type:dxos.org/type/Person:0.1.0",
+              "typename": "dxn:type:example.com/type/Person:0.1.0",
             },
           },
           {
@@ -219,7 +223,7 @@ describe('QueryPlanner', () => {
                 },
               },
               "type": "object",
-              "typename": "dxn:type:dxos.org/type/WorksFor:0.1.0",
+              "typename": "dxn:type:example.com/type/EmployedBy:0.1.0",
             },
           },
           {
@@ -278,7 +282,7 @@ describe('QueryPlanner', () => {
               "id": undefined,
               "props": {},
               "type": "object",
-              "typename": "dxn:type:dxos.org/type/Person:0.1.0",
+              "typename": "dxn:type:example.com/type/Person:0.1.0",
             },
           },
           {
@@ -298,7 +302,7 @@ describe('QueryPlanner', () => {
             "filter": {
               "props": {},
               "type": "object",
-              "typename": "dxn:type:dxos.org/type/Task:0.1.0",
+              "typename": "dxn:type:example.com/type/Task:0.1.0",
             },
           },
           {
@@ -330,7 +334,7 @@ describe('QueryPlanner', () => {
               "_tag": "TypeSelector",
               "inverted": false,
               "typename": [
-                "dxn:type:dxos.org/type/Organization:0.1.0",
+                "dxn:type:example.com/type/Organization:0.1.0",
               ],
             },
             "spaces": [
@@ -353,7 +357,7 @@ describe('QueryPlanner', () => {
                 },
               },
               "type": "object",
-              "typename": "dxn:type:dxos.org/type/Organization:0.1.0",
+              "typename": "dxn:type:example.com/type/Organization:0.1.0",
             },
           },
           {
@@ -373,7 +377,7 @@ describe('QueryPlanner', () => {
               "id": undefined,
               "props": {},
               "type": "object",
-              "typename": "dxn:type:dxos.org/type/WorksFor:0.1.0",
+              "typename": "dxn:type:example.com/type/EmployedBy:0.1.0",
             },
           },
           {
@@ -404,7 +408,7 @@ describe('QueryPlanner', () => {
             "filter": {
               "props": {},
               "type": "object",
-              "typename": "dxn:type:dxos.org/type/Task:0.1.0",
+              "typename": "dxn:type:example.com/type/Task:0.1.0",
             },
           },
           {
@@ -441,7 +445,7 @@ describe('QueryPlanner', () => {
                       "_tag": "TypeSelector",
                       "inverted": false,
                       "typename": [
-                        "dxn:type:dxos.org/type/Person:0.1.0",
+                        "dxn:type:example.com/type/Person:0.1.0",
                       ],
                     },
                     "spaces": [
@@ -458,7 +462,7 @@ describe('QueryPlanner', () => {
                       "id": undefined,
                       "props": {},
                       "type": "object",
-                      "typename": "dxn:type:dxos.org/type/Person:0.1.0",
+                      "typename": "dxn:type:example.com/type/Person:0.1.0",
                     },
                   },
                 ],
@@ -471,7 +475,7 @@ describe('QueryPlanner', () => {
                       "_tag": "TypeSelector",
                       "inverted": false,
                       "typename": [
-                        "dxn:type:dxos.org/type/Organization:0.1.0",
+                        "dxn:type:example.com/type/Organization:0.1.0",
                       ],
                     },
                     "spaces": [
@@ -488,7 +492,7 @@ describe('QueryPlanner', () => {
                       "id": undefined,
                       "props": {},
                       "type": "object",
-                      "typename": "dxn:type:dxos.org/type/Organization:0.1.0",
+                      "typename": "dxn:type:example.com/type/Organization:0.1.0",
                     },
                   },
                 ],
@@ -528,7 +532,7 @@ describe('QueryPlanner', () => {
                     "_tag": "TypeSelector",
                     "inverted": false,
                     "typename": [
-                      "dxn:type:dxos.org/type/Person:0.1.0",
+                      "dxn:type:example.com/type/Person:0.1.0",
                     ],
                   },
                   "spaces": [
@@ -545,7 +549,7 @@ describe('QueryPlanner', () => {
                     "id": undefined,
                     "props": {},
                     "type": "object",
-                    "typename": "dxn:type:dxos.org/type/Person:0.1.0",
+                    "typename": "dxn:type:example.com/type/Person:0.1.0",
                   },
                 },
                 {
@@ -565,7 +569,7 @@ describe('QueryPlanner', () => {
                     "id": undefined,
                     "props": {},
                     "type": "object",
-                    "typename": "dxn:type:dxos.org/type/WorksFor:0.1.0",
+                    "typename": "dxn:type:example.com/type/EmployedBy:0.1.0",
                   },
                 },
                 {
@@ -589,7 +593,7 @@ describe('QueryPlanner', () => {
                     "_tag": "TypeSelector",
                     "inverted": false,
                     "typename": [
-                      "dxn:type:dxos.org/type/Person:0.1.0",
+                      "dxn:type:example.com/type/Person:0.1.0",
                     ],
                   },
                   "spaces": [
@@ -606,7 +610,7 @@ describe('QueryPlanner', () => {
                     "id": undefined,
                     "props": {},
                     "type": "object",
-                    "typename": "dxn:type:dxos.org/type/Person:0.1.0",
+                    "typename": "dxn:type:example.com/type/Person:0.1.0",
                   },
                 },
               ],
@@ -642,7 +646,7 @@ describe('QueryPlanner', () => {
               "_tag": "TypeSelector",
               "inverted": false,
               "typename": [
-                "dxn:type:dxos.org/type/Task:0.1.0",
+                "dxn:type:example.com/type/Task:0.1.0",
               ],
             },
             "spaces": [
@@ -658,14 +662,14 @@ describe('QueryPlanner', () => {
             "filter": {
               "id": undefined,
               "props": {
-                "createdAt": {
+                "deadline": {
                   "operator": "gt",
                   "type": "compare",
                   "value": "2020",
                 },
               },
               "type": "object",
-              "typename": "dxn:type:dxos.org/type/Task:0.1.0",
+              "typename": "dxn:type:example.com/type/Task:0.1.0",
             },
           },
           {
@@ -721,7 +725,7 @@ describe('QueryPlanner', () => {
               "id": undefined,
               "props": {},
               "type": "object",
-              "typename": "dxn:type:dxos.org/type/Person:0.1.0",
+              "typename": "dxn:type:example.com/type/Person:0.1.0",
             },
           },
           {
@@ -785,8 +789,8 @@ describe('QueryPlanner', () => {
               "_tag": "TypeSelector",
               "inverted": false,
               "typename": [
-                "dxn:type:dxos.org/type/Organization:0.1.0",
-                "dxn:type:dxos.org/type/Person:0.1.0",
+                "dxn:type:example.com/type/Organization:0.1.0",
+                "dxn:type:example.com/type/Person:0.1.0",
               ],
             },
             "spaces": [
@@ -805,13 +809,13 @@ describe('QueryPlanner', () => {
                   "id": undefined,
                   "props": {},
                   "type": "object",
-                  "typename": "dxn:type:dxos.org/type/Organization:0.1.0",
+                  "typename": "dxn:type:example.com/type/Organization:0.1.0",
                 },
                 {
                   "id": undefined,
                   "props": {},
                   "type": "object",
-                  "typename": "dxn:type:dxos.org/type/Person:0.1.0",
+                  "typename": "dxn:type:example.com/type/Person:0.1.0",
                 },
               ],
               "type": "or",
@@ -853,8 +857,8 @@ describe('QueryPlanner', () => {
               "_tag": "TypeSelector",
               "inverted": true,
               "typename": [
-                "dxn:type:dxos.org/type/Organization:0.1.0",
-                "dxn:type:dxos.org/type/Person:0.1.0",
+                "dxn:type:example.com/type/Organization:0.1.0",
+                "dxn:type:example.com/type/Person:0.1.0",
               ],
             },
             "spaces": [
@@ -873,13 +877,13 @@ describe('QueryPlanner', () => {
                   "id": undefined,
                   "props": {},
                   "type": "object",
-                  "typename": "dxn:type:dxos.org/type/Organization:0.1.0",
+                  "typename": "dxn:type:example.com/type/Organization:0.1.0",
                 },
                 {
                   "id": undefined,
                   "props": {},
                   "type": "object",
-                  "typename": "dxn:type:dxos.org/type/Person:0.1.0",
+                  "typename": "dxn:type:example.com/type/Person:0.1.0",
                 },
               ],
               "type": "or",
@@ -911,7 +915,7 @@ describe('QueryPlanner', () => {
               "_tag": "TypeSelector",
               "inverted": false,
               "typename": [
-                "dxn:type:dxos.org/type/Task:0.1.0",
+                "dxn:type:example.com/type/Task:0.1.0",
               ],
             },
             "spaces": [
@@ -928,7 +932,7 @@ describe('QueryPlanner', () => {
               "id": undefined,
               "props": {},
               "type": "object",
-              "typename": "dxn:type:dxos.org/type/Task:0.1.0",
+              "typename": "dxn:type:example.com/type/Task:0.1.0",
             },
           },
           {
