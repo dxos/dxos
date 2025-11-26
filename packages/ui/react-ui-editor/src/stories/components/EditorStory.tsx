@@ -7,7 +7,6 @@ import type * as Schema from 'effect/Schema';
 import React, { type ReactNode, forwardRef, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react';
 
 import { Obj, Type } from '@dxos/echo';
-import { createDocAccessor } from '@dxos/echo-db';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -23,7 +22,6 @@ import {
   type DebugNode,
   type ThemeExtensionsOptions,
   createBasicExtensions,
-  createDataExtensions,
   createMarkdownExtensions,
   createThemeExtensions,
   debugTree,
@@ -119,7 +117,6 @@ export const EditorComponent = forwardRef<EditorController, StoryProps>(
         selection,
         initialValue: text,
         extensions: [
-          createDataExtensions({ id, text: createDocAccessor(object, ['content']) }),
           createBasicExtensions({ readOnly, placeholder, lineNumbers, scrollPastEnd: true, search: true }),
           createMarkdownExtensions(),
           createThemeExtensions({ themeMode, syntaxHighlighting: true, slots }),
