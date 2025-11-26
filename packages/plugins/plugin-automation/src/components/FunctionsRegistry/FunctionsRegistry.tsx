@@ -9,7 +9,6 @@ import * as Schema from 'effect/Schema';
 import { useState } from 'react';
 import React, { useCallback } from 'react';
 
-import { Obj } from '@dxos/echo';
 import { Function } from '@dxos/functions';
 import { getDeployedFunctions } from '@dxos/functions-runtime/edge';
 import { useClient } from '@dxos/react-client';
