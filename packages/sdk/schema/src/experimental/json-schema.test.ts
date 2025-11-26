@@ -89,8 +89,54 @@ describe('json-schema', () => {
     // Nested properties through array items.
     expect(paths).toContain('identities[0].type');
     expect(paths).toContain('identities[0].value');
+  });
 
-    // console.log(JSON.stringify(json, null, 2));
+  test.only('AST equivalence', ({ expect }) => {
+    {
+      const schema1 = Schema.mutable(
+        Schema.partial(
+          Schema.Struct({
+            x: Schema.Number,
+            y: Schema.String,
+          }),
+        ),
+      );
+
+      const schema2 = Schema.Struct({
+        x: Schema.optional(Schema.Number),
+        y: Schema.optional(Schema.String),
+      }).pipe(Schema.mutable);
+
+      const schema3 = Schema.Struct({
+        x: Schema.Number,
+        y: Schema.String,
+      }).pipe(Schema.partial, Schema.mutable);
+
+      const schema4 = Schema.extend(
+        schema1.pipe(Schema.omit('y')),
+        Schema.mutable(
+          Schema.Struct({
+            y: Schema.optional(Schema.String),
+          }),
+        ),
+      );
+
+      expect(schema2.ast).toEqual(schema1.ast);
+      expect(schema3.ast).toEqual(schema1.ast);
+      expect(schema4.ast).toEqual(schema1.ast);
+    }
+
+    {
+      const schema1 = Schema.Struct({
+        x: Schema.Number.annotations({ title: 'foo', description: 'bar' }),
+      });
+
+      const schema2 = Schema.Struct({
+        x: Schema.Number.pipe(Schema.annotations({ description: 'bar', title: 'foo' })),
+      });
+
+      expect(schema1.ast).toEqual(schema2.ast);
+    }
   });
 });
 
