@@ -24,9 +24,11 @@
 - [ ] Fix failing tests.
 - [ ] Reconcile types/version with entities/model/version
 - [ ] Type.Expando => Type.Obj.Any
+- [ ] Add Relation.MakeProps
 
 2. Clean-up
 
+- [ ] Schema registry should return Type.Entity.Any instead of Schema.Schema.AnyNoContext.
 - [ ] Remove echo-db/AnyLiveObject<T> => Obj.Obj<T>
 - [ ] Narrow QueryResult and match Schema and Object generics.
 - [ ] Directly import JSONPath, etc. from @dxos/effect.

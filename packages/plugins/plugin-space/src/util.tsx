@@ -5,6 +5,7 @@
 import { type Instruction } from '@atlaskit/pragmatic-drag-and-drop-hitbox/tree-item';
 import { Atom } from '@effect-atom/atom-react';
 import * as Function from 'effect/Function';
+import type * as Schema from 'effect/Schema';
 
 import { LayoutAction, type PromiseIntentDispatcher, chain, createIntent } from '@dxos/app-framework';
 import { type Database, type Entity, Filter, Obj, Query, Ref, Type } from '@dxos/echo';
@@ -330,7 +331,13 @@ export const constructSpaceActions = ({
   return actions;
 };
 
-export const createStaticSchemaNode = ({ schema, space }: { schema: Type.Obj.Any; space: Space }) => {
+export const createStaticSchemaNode = ({
+  schema,
+  space,
+}: {
+  schema: Schema.Schema.AnyNoContext;
+  space: Space;
+}): Node => {
   return {
     id: `${space.id}/${Type.getTypename(schema)}`,
     type: `${meta.id}/static-schema`,

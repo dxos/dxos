@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import type * as Schema$ from 'effect/Schema';
+import * as Schema$ from 'effect/Schema';
 
 import { type EncodedReference } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
@@ -21,6 +21,7 @@ import {
   KindId,
   type OfKind,
   PersistentSchema,
+  type PersistentSchemaEncoded,
   Ref as Ref$,
   type RefFn,
   type RefSchema,
@@ -38,7 +39,7 @@ import {
 import type * as Relation$ from './Relation';
 
 // TODO(burdon): Remove toEffectSchema, toJsonSchema (moved to JsonSchema export).
-export { KindId, OfKind, PersistentSchema as PersistentType, EchoSchema as RuntimeType, toEffectSchema, toJsonSchema };
+export { KindId, OfKind, toEffectSchema, toJsonSchema };
 
 //
 // Kind
@@ -92,12 +93,24 @@ export interface obj<Self extends Schema$.Schema.Any>
       Schema$.Schema.Context<Self>
     > {}
 
+const ObjAny: obj<Schema$.Schema.AnyNoContext> = Schema$.Any.pipe(
+  Schema$.filter((obj) => obj[KindId] === EntityKind.Object),
+  Schema$.annotations({ title: 'Object' }),
+) as any;
+
 /**
  * Object schema.
  */
 export const Obj: {
   (opts: TypeMeta): <Self extends Schema$.Schema.Any>(self: Self) => obj<Self>;
-} = EchoObjectSchema as any;
+
+  /**
+   * Schema representing any object type.
+   * Use this with Type.Ref() to create references to any object.
+   * @example Type.Ref(Type.Obj.Any)
+   */
+  Any: obj<Schema$.Schema.AnyNoContext>;
+} = Object.assign(EchoObjectSchema, { Any: ObjAny }) as any;
 
 /**
  * Object schema type definitions.
@@ -109,7 +122,7 @@ export declare namespace Obj {
    */
   // TODO(dmaretskyi): If schema was covariant, we could specify props in here, like `id: ObjectId`.
   // TODO(burdon): This erases the ECHO type info (e.g., id, typename).
-  export type Any = Schema$.Schema.AnyNoContext;
+  export type Any = obj<Schema$.Schema.AnyNoContext>;
 }
 
 //
@@ -123,7 +136,16 @@ export interface Expando extends OfKind<EntityKind.Object> {
 
 type ExpandoEncoded = Schema$.Simplify<ObjJsonProps & { [key: string]: any }>;
 
-export const Expando: Schema$.Schema<Expando, ExpandoEncoded, never> = Expando$ as any;
+export const Expando: obj<Schema$.Schema<Expando, ExpandoEncoded, never>> = Expando$ as any;
+
+//
+// Schema
+//
+
+export const PersistentType: obj<Schema$.Schema<PersistentSchema, PersistentSchemaEncoded>> = PersistentSchema as any;
+export type PersistentType = obj<Schema$.Schema<PersistentSchema, PersistentSchemaEncoded>>;
+
+export { EchoSchema as RuntimeType };
 
 //
 // Relation

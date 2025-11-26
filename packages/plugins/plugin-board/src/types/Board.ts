@@ -15,7 +15,7 @@ import { meta } from '../meta';
  */
 export const Board = Schema.Struct({
   name: Schema.String.pipe(Schema.optional),
-  items: Type.Ref(Type.Expando).pipe(Schema.Array, Schema.mutable, FormInputAnnotation.set(false)),
+  items: Type.Ref(Type.Obj.Any).pipe(Schema.Array, Schema.mutable, FormInputAnnotation.set(false)),
   layout: BoardLayout.pipe(Schema.mutable, FormInputAnnotation.set(false)),
 }).pipe(
   Type.Obj({

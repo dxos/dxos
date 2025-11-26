@@ -88,7 +88,7 @@ export const ViewSchema = Schema.Struct({
 //  See "import { View as _View } ..."
 export interface View extends Schema.Schema.Type<typeof ViewSchema> {}
 export interface ViewEncoded extends Schema.Schema.Encoded<typeof ViewSchema> {}
-export const View: Schema.Schema<View, ViewEncoded> = ViewSchema;
+export const View: Type.obj<Schema.Schema<View, ViewEncoded>> = ViewSchema;
 
 export type MakeProps = {
   name?: string;
@@ -308,7 +308,7 @@ export const ViewSchemaV4 = Schema.Struct({
   }).pipe(Schema.mutable, FormInputAnnotation.set(false)),
   sort: Schema.optional(Schema.Array(FieldSortType).pipe(FormInputAnnotation.set(false))),
   projection: Projection.pipe(FormInputAnnotation.set(false)),
-  presentation: Type.Ref(Type.Expando).pipe(FormInputAnnotation.set(false)),
+  presentation: Type.Ref(Type.Obj.Any).pipe(FormInputAnnotation.set(false)),
 }).pipe(
   Type.Obj({
     typename: 'dxos.org/type/View',

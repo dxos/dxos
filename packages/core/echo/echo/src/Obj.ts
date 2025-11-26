@@ -82,7 +82,7 @@ type Props<T = any> = {
 } & Type.Properties<T>;
 
 // TODO(burdon): Should we allow the caller to set the id?
-export type MakeProps<T extends Type.Obj.Any> = {
+export type MakeProps<T extends Schema.Schema.AnyNoContext> = {
   id?: ObjectId;
   [Meta]?: Partial<ObjectMeta>;
 } & NoInfer<Props<Schema.Schema.Type<T>>>;
@@ -100,7 +100,7 @@ export type MakeProps<T extends Type.Obj.Any> = {
  * const obj = Obj.make(Person, { [Obj.Meta]: { keys: [...] }, name: 'John' });
  * ```
  */
-export const make = <S extends Type.Obj.Any>(
+export const make = <S extends Schema.Schema.AnyNoContext>(
   schema: S,
   props: MakeProps<S>,
   meta?: Partial<ObjectMeta>,
@@ -174,7 +174,7 @@ export const clone = <T extends Any>(obj: T, opts?: CloneOptions): T => {
     return recurse(value);
   });
 
-  return make(schema, props);
+  return make(schema as Type.Obj.Any, props);
 };
 
 //
@@ -201,10 +201,10 @@ export const instanceOf: {
   <S extends Type.Entity.Any>(schema: S, value: unknown): value is Schema.Schema.Type<S>;
 } = ((...args: [schema: Type.Entity.Any, value: unknown] | [schema: Type.Entity.Any]) => {
   if (args.length === 1) {
-    return (entity: unknown) => isInstanceOf(args[0], entity);
+    return (entity: unknown) => isInstanceOf(args[0] as any, entity);
   }
 
-  return isInstanceOf(args[0], args[1]);
+  return isInstanceOf(args[0] as any, args[1]);
 }) as any;
 
 // TODO(dmaretskyi): Allow returning undefined.

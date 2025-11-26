@@ -20,7 +20,7 @@ import { Form, type FormProps } from './Form';
 
 type StoryProps<T extends AnyProperties> = {
   debug?: boolean;
-  schema: Type.Obj.Any;
+  schema: Schema.Schema.AnyNoContext;
 } & FormProps<T>;
 
 const DefaultStory = <T extends AnyProperties = any>({

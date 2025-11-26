@@ -43,18 +43,18 @@ export namespace TestSchema {
   const BlockSchema = Schema.Struct({
     timestamp: Schema.String,
     content: Schema.optional(Type.Ref(TextV0Type)),
-    object: Schema.optional(Type.Ref(Type.Expando)),
+    object: Schema.optional(Type.Ref(Type.Obj.Any)),
   });
 
   export interface BlockType extends Schema.Schema.Type<typeof BlockSchema> {}
   export const BlockType: Schema.Schema<BlockType, Schema.Schema.Encoded<typeof BlockSchema>> = BlockSchema;
 
-  export class MessageType extends TypedObject({ typename: 'braneframe.com/Message', version: '0.1.0' })({
+  export const MessageType = Schema.Struct({
     type: Schema.optional(Schema.String),
     date: Schema.optional(Schema.String),
     subject: Schema.optional(Schema.String),
     blocks: Schema.mutable(Schema.Array(BlockSchema)),
-    links: Schema.optional(Schema.Array(Type.Ref(Type.Expando))),
+    links: Schema.optional(Schema.Array(Type.Ref(Type.Obj.Any))),
     read: Schema.optional(Schema.Boolean),
     context: Schema.optional(
       Schema.Struct({
@@ -63,9 +63,15 @@ export namespace TestSchema {
         object: Schema.optional(Schema.String),
       }),
     ),
-  }) {}
+  }).pipe(
+    Type.Obj({
+      typename: 'braneframe.com/Message',
+      version: '0.1.0',
+    }),
+  );
+  export type MessageType = Schema.Schema.Type<typeof MessageType>;
 
-  export class ThreadType extends TypedObject({ typename: 'braneframe.com/Thread', version: '0.1.0' })({
+  export const ThreadType = Schema.Struct({
     title: Schema.optional(Schema.String),
     messages: Schema.mutable(Schema.Array(Type.Ref(MessageType))),
     context: Schema.optional(
@@ -75,5 +81,11 @@ export namespace TestSchema {
         object: Schema.optional(Schema.String),
       }),
     ),
-  }) {}
+  }).pipe(
+    Type.Obj({
+      typename: 'braneframe.com/Thread',
+      version: '0.1.0',
+    }),
+  );
+  export type ThreadType = Schema.Schema.Type<typeof ThreadType>;
 }

@@ -5,7 +5,6 @@
 import * as Schema from 'effect/Schema';
 
 import { Filter, Format, Obj, Query, Type } from '@dxos/echo';
-import { TypedObject } from '@dxos/echo/internal';
 
 import { View } from '../types';
 
@@ -13,10 +12,7 @@ import { View } from '../types';
  * @deprecated Use (@dxos/echo/testing)
  */
 // TODO(burdon): REMOVE
-export class Example extends TypedObject({
-  typename: 'example.com/type/Example',
-  version: '0.1.0',
-})({
+export const Example = Schema.Struct({
   name: Schema.optional(
     Schema.String.pipe(
       Schema.annotations({
@@ -41,11 +37,16 @@ export class Example extends TypedObject({
   // ),
   admin: Schema.optional(Schema.Boolean),
   rating: Schema.optional(Schema.Number),
-}) {}
+}).pipe(
+  Type.Obj({
+    typename: 'example.com/type/Example',
+    version: '0.1.0',
+  }),
+);
 
-export type TestType = Schema.Schema.Type<typeof Example>;
+export type Example = Schema.Schema.Type<typeof Example>;
 
-export const testSchema: Type.PersistentType = Obj.make(Type.PersistentType, {
+export const testSchema = Obj.make(Type.PersistentType, {
   typename: 'example.com/type/Test',
   version: '0.1.0',
   jsonSchema: Type.toJsonSchema(Example),
@@ -56,12 +57,3 @@ export const testView: View.View = View.make({
   query: Query.select(Filter.type(Example)),
   jsonSchema: Type.toJsonSchema(Example),
 });
-
-export const testData: TestType = {
-  id: Obj.ID.random(),
-  name: 'Tester',
-  email: 'test@example.com',
-  // address: {
-  //   zip: '11205',
-  // },
-};
