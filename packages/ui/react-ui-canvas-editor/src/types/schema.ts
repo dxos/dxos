@@ -62,3 +62,5 @@ export const CanvasBoardType = Schema.Struct({
     version: '0.1.0',
   }),
 );
+
+export type CanvasBoardType = Schema.Schema.Type<typeof CanvasBoardType>;
