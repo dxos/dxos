@@ -38,7 +38,7 @@ export const SHARED = 'shared-spaces';
 /**
  * Convert a query result to an Atom value of the objects.
  */
-export const atomFromQuery = <T extends Entity.Any>(query: Database.QueryResult<T>): Atom.Atom<T[]> => {
+export const atomFromQuery = <T extends Entity.Unknown>(query: Database.QueryResult<T>): Atom.Atom<T[]> => {
   return Atom.make((get) => {
     const unsubscribe = query.subscribe((result) => {
       get.setSelf(result.objects);

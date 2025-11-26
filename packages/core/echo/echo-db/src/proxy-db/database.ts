@@ -224,7 +224,7 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
   }
 
   // TODO(burdon): Type check.
-  getObjectById<T extends Entity.Any = Entity.Arbitrary>(id: string, { deleted = false } = {}): T | undefined {
+  getObjectById<T extends Entity.Unknown = Entity.Any>(id: string, { deleted = false } = {}): T | undefined {
     const core = this._coreDatabase.getObjectCoreById(id);
     if (!core || (core.isDeleted() && !deleted)) {
       return undefined;
@@ -271,7 +271,7 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
   /**
    * Add reactive object.
    */
-  add<T extends Entity.Any = Entity.Any>(obj: T, opts?: Database.AddOptions): T {
+  add<T extends Entity.Unknown = Entity.Unknown>(obj: T, opts?: Database.AddOptions): T {
     if (!isEchoObject(obj)) {
       const schema = Obj.getSchema(obj);
       if (schema != null) {
@@ -288,7 +288,7 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
     invariant(isEchoObject(obj));
     this._rootProxies.set(getObjectCore(obj), obj);
 
-    const target = getProxyTarget(obj) as ProxyTarget & Entity.Any;
+    const target = getProxyTarget(obj) as ProxyTarget & Entity.Unknown;
     EchoReactiveHandler.instance.setDatabase(target, this);
     EchoReactiveHandler.instance.saveRefs(target);
     this._coreDatabase.addCore(getObjectCore(obj), opts);
@@ -298,7 +298,7 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
   /**
    * Remove reactive object.
    */
-  remove<T extends Entity.Any = Entity.Any>(obj: T): void {
+  remove<T extends Entity.Unknown = Entity.Unknown>(obj: T): void {
     invariant(isEchoObject(obj));
     return this._coreDatabase.removeCore(getObjectCore(obj));
   }

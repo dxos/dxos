@@ -81,7 +81,7 @@ describe('Index queries', () => {
   };
 
   // TODO(burdon): Remove AnyLiveObject.
-  const matchObjects = async <T extends Entity.Any = Entity.Any>(
+  const matchObjects = async <T extends Entity.Unknown = Entity.Unknown>(
     query: Database.QueryResult<T>,
     objects: AnyLiveObject<any>[],
   ) => {

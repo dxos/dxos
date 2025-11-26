@@ -13,7 +13,7 @@ import { type DXN, type ObjectId } from '@dxos/keys';
 /**
  * Client-side view onto an EDGE queue.
  */
-export interface Queue<T extends Entity.Any = Entity.Any> extends Database.Queryable {
+export interface Queue<T extends Entity.Unknown = Entity.Unknown> extends Database.Queryable {
   readonly dxn: DXN;
 
   /**

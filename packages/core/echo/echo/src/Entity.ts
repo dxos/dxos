@@ -10,7 +10,7 @@ export { KindId };
 
 // NOTE: Relation does not extend Obj so that, for example, we can prevent Relations from being used as source and target objects.
 //  However, we generally refer to Obj and Relation instances as "objects",
-//  and many API methods accept both Obj.Any and Relation.Any (i.e., Entity.Any) instances.
+//  and many API methods accept both Obj.Any and Relation.Any (i.e., Entity.Unknown) instances.
 
 export const Kind = EntityKind;
 export type Kind = EntityKind;
@@ -31,9 +31,9 @@ export interface OfKind<K extends Kind> {
 export type Entity<Props> = OfKind<Kind> & Props;
 
 /**
- * Any Obj or Relation.
+ * Unknown Obj or Relation.
  */
-export interface Any extends OfKind<Kind> {}
+export interface Unknown extends OfKind<Kind> {}
 
 /**
  * Object with arbitrary properties.
@@ -44,7 +44,7 @@ export interface Any extends OfKind<Kind> {}
  * This type is very permissive and allows accessing any property on the object.
  * We should move to Obj.Any that is not permissive and requires explicit instanceof checks..
  */
-export interface Arbitrary extends OfKind<Kind> {
+export interface Any extends OfKind<Kind> {
   [key: string]: unknown;
 }
 

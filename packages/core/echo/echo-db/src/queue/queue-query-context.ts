@@ -16,7 +16,7 @@ import { type QueryContext, isSimpleSelectionQuery } from '../query';
 
 import { type QueueImpl } from './queue';
 
-export class QueueQueryContext<T extends Entity.Any = Entity.Any> implements QueryContext<T> {
+export class QueueQueryContext<T extends Entity.Unknown = Entity.Unknown> implements QueryContext<T> {
   readonly #queue: QueueImpl;
   #runCtx: Context | null = null;
 

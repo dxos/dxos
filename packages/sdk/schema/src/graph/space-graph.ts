@@ -50,8 +50,8 @@ export class SpaceGraphModel extends ReactiveGraphModel<SpaceGraphNode, SpaceGra
   private _space?: Space;
   private _queue?: Queue;
   private _schema?: Type.RuntimeType[];
-  private _objects?: Entity.Any[];
-  private _queueItems?: Entity.Any[];
+  private _objects?: Entity.Unknown[];
+  private _queueItems?: Entity.Unknown[];
   private _schemaSubscription?: CleanupFn;
   private _objectSubscription?: CleanupFn;
   private _queueSubscription?: CleanupFn;
@@ -65,7 +65,7 @@ export class SpaceGraphModel extends ReactiveGraphModel<SpaceGraphNode, SpaceGra
     return new SpaceGraphModel(graph);
   }
 
-  get objects(): Entity.Any[] {
+  get objects(): Entity.Unknown[] {
     return this._objects ?? [];
   }
 

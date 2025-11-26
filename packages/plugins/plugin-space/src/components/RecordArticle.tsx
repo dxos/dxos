@@ -36,7 +36,7 @@ export const RecordArticle = ({ subject }: SurfaceComponentProps) => {
         {related.length > 0 && (
           <div role='none' className={mx('flex flex-col gap-1', singleColumn ? 'card-max-width' : 'is-full')}>
             <label className='mbs-2 text-sm text-description'>{t('related objects label')}</label>
-            <Masonry.Root<Entity.Any>
+            <Masonry.Root<Entity.Unknown>
               items={related}
               render={Card}
               columnCount={singleColumn ? 1 : undefined}
@@ -49,7 +49,7 @@ export const RecordArticle = ({ subject }: SurfaceComponentProps) => {
   );
 };
 
-const Card = ({ data: subject }: { data: Entity.Any }) => {
+const Card = ({ data: subject }: { data: Entity.Unknown }) => {
   const data = useMemo(() => ({ subject }), [subject]);
   return <Surface role='card' data={data} limit={1} />;
 };
@@ -66,11 +66,11 @@ const useRelatedObjects = (
       return [];
     }
 
-    const related: Entity.Any[] = [];
+    const related: Entity.Unknown[] = [];
 
     // TODO(burdon): Change Person => Organization to relations.
     if (options.references) {
-      const getReferences = (obj: Entity.Any): Ref.Any[] => {
+      const getReferences = (obj: Entity.Unknown): Ref.Any[] => {
         return Object.getOwnPropertyNames(obj)
           .map((name) => obj[name as keyof Obj.Any])
           .filter((value) => Ref.isRef(value)) as Ref.Any[];

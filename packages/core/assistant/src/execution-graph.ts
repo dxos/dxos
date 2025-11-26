@@ -65,7 +65,7 @@ export class ExecutionGraph {
   /**
    * Adds events to the graph.
    */
-  addEvents(events: Entity.Any[]) {
+  addEvents(events: Entity.Unknown[]) {
     const sortedEvents = this.sortObjectsByCreated(events);
     for (const event of sortedEvents) {
       if (Obj.instanceOf(Message.Message, event)) {

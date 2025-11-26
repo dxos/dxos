@@ -53,18 +53,19 @@ export class QueueService extends Context.Tag('@dxos/functions/QueueService')<
   /**
    * Gets a queue by its DXN.
    */
-  static getQueue = <T extends Entity.Any = Entity.Any>(dxn: DXN): Effect.Effect<Queue<T>, never, QueueService> =>
-    QueueService.pipe(Effect.map(({ queues }) => queues.get<T>(dxn)));
+  static getQueue = <T extends Entity.Unknown = Entity.Unknown>(
+    dxn: DXN,
+  ): Effect.Effect<Queue<T>, never, QueueService> => QueueService.pipe(Effect.map(({ queues }) => queues.get<T>(dxn)));
 
   /**
    * Creates a new queue.
    */
-  static createQueue = <T extends Entity.Any = Entity.Any>(options?: {
+  static createQueue = <T extends Entity.Unknown = Entity.Unknown>(options?: {
     subspaceTag?: QueueSubspaceTag;
   }): Effect.Effect<Queue<T>, never, QueueService> =>
     QueueService.pipe(Effect.map(({ queues }) => queues.create<T>(options)));
 
-  static append = <T extends Entity.Any = Entity.Any>(queue: Queue<T>, objects: T[]): Effect.Effect<void> =>
+  static append = <T extends Entity.Unknown = Entity.Unknown>(queue: Queue<T>, objects: T[]): Effect.Effect<void> =>
     Effect.promise(() => queue.append(objects));
 }
 

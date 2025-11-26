@@ -156,7 +156,7 @@ export class AiContextBinder extends Resource {
     ]);
   }
 
-  private _reduce(items: Entity.Any[]): Bindings {
+  private _reduce(items: Entity.Unknown[]): Bindings {
     return Function.pipe(
       items,
       Array.filter(Obj.instanceOf(ContextBinding)),

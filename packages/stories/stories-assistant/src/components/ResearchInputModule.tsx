@@ -28,7 +28,7 @@ export const ResearchInputModule = ({ space }: ComponentProps) => {
 };
 
 type DebugCardProps = {
-  object: Entity.Any;
+  object: Entity.Unknown;
 };
 
 const DebugCard = ({ object }: DebugCardProps) => {

@@ -39,7 +39,7 @@ const createTestObject = (props: ObjectProps = {}) => {
 };
 
 const createTestObjects = () => {
-  return new Array<Entity.Arbitrary>()
+  return new Array<Entity.Any>()
     .concat(range(1).map(() => createTestObject()))
     .concat(
       range(3).map(() =>

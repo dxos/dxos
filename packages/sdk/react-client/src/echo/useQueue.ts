@@ -24,7 +24,10 @@ export type UseQueueOptions = {
 // TODO(dmaretskyi): Move into client package.
 // TODO(dmaretskyi): Consider passing the space into the hook to support queue DXNs without space id.
 // TODO(ZaymonFC): If queue is unchanged returned object should be refferentially stable on poll.
-export const useQueue = <T extends Entity.Any>(queueDxn?: DXN, options: UseQueueOptions = {}): Queue<T> | undefined => {
+export const useQueue = <T extends Entity.Unknown>(
+  queueDxn?: DXN,
+  options: UseQueueOptions = {},
+): Queue<T> | undefined => {
   const client = useClient();
   const mountedRef = useRef(true);
 

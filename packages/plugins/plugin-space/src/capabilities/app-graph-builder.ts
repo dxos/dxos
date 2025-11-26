@@ -358,7 +358,7 @@ export default (context: PluginContext) => {
           ),
         ),
       resolver: (id) => {
-        let query: Database.QueryResult<Entity.Any> | undefined;
+        let query: Database.QueryResult<Entity.Unknown> | undefined;
         return Atom.make((get) => {
           const client = context.getCapability(ClientCapabilities.Client);
           const dxn = DXN.tryParse(id)?.asEchoDXN();

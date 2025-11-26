@@ -224,7 +224,7 @@ export const sanitizeObjects = async (
 
   const idMap = new Map<string, string>();
   const existingIds = new Set<ObjectId>();
-  const enitties = new Map<ObjectId, Entity.Any>();
+  const enitties = new Map<ObjectId, Entity.Unknown>();
 
   const resolveId = (id: string): DXN | undefined => {
     if (ObjectId.isValid(id)) {

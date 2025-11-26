@@ -61,7 +61,7 @@ export class DatabaseService extends Context.Tag('@dxos/functions/DatabaseServic
    */
   static resolve: {
     // No type check.
-    (dxn: DXN): Effect.Effect<Entity.Any, never, DatabaseService>;
+    (dxn: DXN): Effect.Effect<Entity.Unknown, never, DatabaseService>;
     // Check matches schema.
     <S extends Type.Entity.Any>(
       dxn: DXN,
@@ -118,13 +118,13 @@ export class DatabaseService extends Context.Tag('@dxos/functions/DatabaseServic
   /**
    * @link EchoDatabase.add
    */
-  static add = <T extends Entity.Any>(obj: T): Effect.Effect<T, never, DatabaseService> =>
+  static add = <T extends Entity.Unknown>(obj: T): Effect.Effect<T, never, DatabaseService> =>
     DatabaseService.pipe(Effect.map(({ db }) => db.add(obj)));
 
   /**
    * @link EchoDatabase.remove
    */
-  static remove = <T extends Entity.Any>(obj: T): Effect.Effect<void, never, DatabaseService> =>
+  static remove = <T extends Entity.Unknown>(obj: T): Effect.Effect<void, never, DatabaseService> =>
     DatabaseService.pipe(Effect.map(({ db }) => db.remove(obj)));
 
   /**
@@ -136,7 +136,9 @@ export class DatabaseService extends Context.Tag('@dxos/functions/DatabaseServic
   /**
    * @link EchoDatabase.getObjectById
    */
-  static getObjectById = <T extends Entity.Any>(id: string): Effect.Effect<T | undefined, never, DatabaseService> => {
+  static getObjectById = <T extends Entity.Unknown>(
+    id: string,
+  ): Effect.Effect<T | undefined, never, DatabaseService> => {
     return DatabaseService.pipe(Effect.map(({ db }) => db.getObjectById(id) as T | undefined));
   };
 

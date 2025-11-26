@@ -30,7 +30,7 @@ const POLLING_INTERVAL = 1_000;
 /**
  * Client-side view onto an EDGE queue.
  */
-export class QueueImpl<T extends Entity.Any = Entity.Any> implements Queue<T> {
+export class QueueImpl<T extends Entity.Unknown = Entity.Unknown> implements Queue<T> {
   private readonly _signal = compositeRuntime.createSignal();
 
   public readonly updated = new Event();
@@ -240,7 +240,7 @@ export class QueueImpl<T extends Entity.Any = Entity.Any> implements Queue<T> {
     return objects as ObjectJSON[];
   }
 
-  async hydrateObject(obj: ObjectJSON): Promise<Entity.Any> {
+  async hydrateObject(obj: ObjectJSON): Promise<Entity.Unknown> {
     const decoded = await Obj.fromJSON(obj, {
       refResolver: this._refResolver,
       dxn: this._dxn.extend([(obj as any).id]),
@@ -307,7 +307,7 @@ export class QueueImpl<T extends Entity.Any = Entity.Any> implements Queue<T> {
   }
 }
 
-const objectSetChanged = (before: Entity.Any[], after: Entity.Any[]) => {
+const objectSetChanged = (before: Entity.Unknown[], after: Entity.Unknown[]) => {
   if (before.length !== after.length) {
     return true;
   }

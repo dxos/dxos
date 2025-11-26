@@ -76,7 +76,7 @@ export class Hypergraph {
   private readonly _owningObjects = new Map<SpaceId, unknown>();
   private readonly _schemaRegistry = new RuntimeSchemaRegistry();
   private readonly _updateEvent = new Event<ItemsUpdatedEvent>();
-  private readonly _resolveEvents = new Map<SpaceId, Map<string, Event<Entity.Arbitrary>>>();
+  private readonly _resolveEvents = new Map<SpaceId, Map<string, Event<Entity.Any>>>();
   private readonly _queryContexts = new Set<GraphQueryContext>();
   private readonly _querySourceProviders: QuerySourceProvider[] = [];
 
@@ -276,8 +276,8 @@ export class Hypergraph {
   private _resolveSync(
     dxn: DXN,
     context: RefResolutionContext,
-    onResolve?: (obj: Entity.Arbitrary) => void,
-  ): Entity.Arbitrary | undefined {
+    onResolve?: (obj: Entity.Any) => void,
+  ): Entity.Any | undefined {
     if (!dxn.asEchoDXN()) {
       throw new Error('Unsupported DXN kind');
     }
@@ -317,7 +317,7 @@ export class Hypergraph {
     }
   }
 
-  private async _resolveAsync(dxn: DXN, context: RefResolutionContext): Promise<Entity.Any | Queue | undefined> {
+  private async _resolveAsync(dxn: DXN, context: RefResolutionContext): Promise<Entity.Unknown | Queue | undefined> {
     const beginTime = TRACE_REF_RESOLUTION ? performance.now() : 0;
     let status: string = '';
     try {
@@ -380,7 +380,7 @@ export class Hypergraph {
     }
   }
 
-  private async _resolveDatabaseObjectAsync(spaceId: SpaceId, objectId: ObjectId): Promise<Entity.Any | undefined> {
+  private async _resolveDatabaseObjectAsync(spaceId: SpaceId, objectId: ObjectId): Promise<Entity.Unknown | undefined> {
     const db = this._databases.get(spaceId);
     if (!db) {
       return undefined;
@@ -404,7 +404,7 @@ export class Hypergraph {
     subspaceTag: QueueSubspaceTag,
     queueId: ObjectId,
     objectId: ObjectId,
-  ): Promise<Entity.Any | undefined> {
+  ): Promise<Entity.Unknown | undefined> {
     const queueFactory = this._queueFactories.get(spaceId);
     if (!queueFactory) {
       return undefined;

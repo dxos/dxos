@@ -16,7 +16,7 @@ import type * as Ref from './Ref';
 /**
  * Individual query result entry.
  */
-export type QueryResultEntry<T extends Entity.Any = Entity.Any> = {
+export type QueryResultEntry<T extends Entity.Unknown = Entity.Unknown> = {
   id: string;
 
   spaceId: SpaceId;
@@ -50,7 +50,7 @@ export type QueryResultEntry<T extends Entity.Any = Entity.Any> = {
   };
 };
 
-export type OneShotQueryResult<T extends Entity.Any = Entity.Any> = {
+export type OneShotQueryResult<T extends Entity.Unknown = Entity.Unknown> = {
   results: QueryResultEntry<T>[];
   objects: T[];
 };
@@ -63,7 +63,7 @@ export type QuerySubscriptionOptions = {
 };
 
 // TODO(burdon): Narrow types.
-export interface QueryResult<T extends Entity.Any = Entity.Any> {
+export interface QueryResult<T extends Entity.Unknown = Entity.Unknown> {
   readonly query: Query<T>;
   readonly results: QueryResultEntry<T>[];
   readonly objects: T[];
@@ -169,7 +169,7 @@ export interface Database extends Queryable {
    * `Ref.fromDXN(dxn)` returns an unhydrated reference. The `.load` and `.target` APIs will not work.
    * `db.makeRef(dxn)` is preferable in cases with access to the database.
    */
-  makeRef<T extends Entity.Any = Entity.Any>(dxn: DXN): Ref.Ref<T>;
+  makeRef<T extends Entity.Unknown = Entity.Unknown>(dxn: DXN): Ref.Ref<T>;
 
   /**
    * Query objects.
@@ -179,11 +179,11 @@ export interface Database extends Queryable {
   /**
    * Adds object to the database.
    */
-  add<T extends Entity.Any = Entity.Any>(obj: T, opts?: AddOptions): T;
+  add<T extends Entity.Unknown = Entity.Unknown>(obj: T, opts?: AddOptions): T;
 
   /**
    * Removes object from the database.
    */
   // TODO(burdon): Return true if removed (currently throws if not present).
-  remove(obj: Entity.Any): void;
+  remove(obj: Entity.Unknown): void;
 }

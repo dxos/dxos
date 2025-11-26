@@ -251,7 +251,7 @@ describe('CoreDatabase', () => {
       const rootObject = [linksToRemove, loadedLinks, partiallyLoadedLinks]
         .flatMap((v: any[]) => v)
         .reduce(
-          (acc: Entity.Arbitrary, obj: any) => {
+          (acc: Entity.Any, obj: any) => {
             acc[obj.id] = Ref.make(obj);
             return acc;
           },
@@ -384,7 +384,7 @@ const getDocHandles = (db: EchoDatabase): DocumentHandles => ({
 const getObjectDocHandle = (obj: any) => getObjectCore(obj).docHandle!;
 
 const createClientDbInSpaceWithObject = async (
-  object: Entity.Arbitrary,
+  object: Entity.Any,
   onDocumentSavedInSpace?: (handles: DocumentHandles) => void,
 ): Promise<EchoDatabaseImpl> => {
   const tmpPath = createTmpPath();

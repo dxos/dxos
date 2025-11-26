@@ -9,7 +9,7 @@ import { DXN, ObjectId, SpaceId } from '@dxos/keys';
 
 import { type Queue } from './types';
 
-export type MemoryQueueOptions<T extends Entity.Any> = {
+export type MemoryQueueOptions<T extends Entity.Unknown> = {
   spaceId?: SpaceId;
   queueId?: string;
   dxn?: DXN;
@@ -20,8 +20,8 @@ export type MemoryQueueOptions<T extends Entity.Any> = {
  * In-memory queue.
  * @deprecated Use the actual queue with a mock service.
  */
-export class MemoryQueue<T extends Entity.Any> implements Queue<T> {
-  static make<T extends Entity.Any>({ spaceId, queueId, dxn, objects }: MemoryQueueOptions<T>): MemoryQueue<T> {
+export class MemoryQueue<T extends Entity.Unknown> implements Queue<T> {
+  static make<T extends Entity.Unknown>({ spaceId, queueId, dxn, objects }: MemoryQueueOptions<T>): MemoryQueue<T> {
     if (!dxn) {
       dxn = new DXN(DXN.kind.QUEUE, [spaceId ?? SpaceId.random(), queueId ?? ObjectId.random()]);
     } else {

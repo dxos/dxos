@@ -79,7 +79,7 @@ describe('Experimental API review', () => {
 
   // TODO(burdon): Implement test.
   test.skip('type narrowing', () => {
-    const any: Entity.Any = null as any;
+    const any: Entity.Unknown = null as any;
 
     {
       if (Obj.isObject(any)) {

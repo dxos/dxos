@@ -19,7 +19,7 @@ import { type QueryContext } from './query-context';
 /**
  * Predicate based query.
  */
-export class QueryResultImpl<T extends Entity.Any = Entity.Any> implements Database.QueryResult<T> {
+export class QueryResultImpl<T extends Entity.Unknown = Entity.Unknown> implements Database.QueryResult<T> {
   private readonly _signal = compositeRuntime.createSignal();
   private readonly _event = new Event<Database.QueryResult<T>>();
   private readonly _diagnostic: QueryDiagnostic;

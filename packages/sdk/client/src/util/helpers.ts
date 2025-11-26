@@ -14,7 +14,7 @@ import { type Space } from '../echo';
 /**
  * @deprecated Use `db.makeRef(dxn)` or `graph.makeRef(dxn)` instead.
  */
-export const resolveRef = <T extends Entity.Any = Entity.Any>(
+export const resolveRef = <T extends Entity.Unknown = Entity.Unknown>(
   client: Client,
   dxn: DXN,
   defaultSpace?: Space,

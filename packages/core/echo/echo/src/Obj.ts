@@ -207,7 +207,7 @@ export const instanceOf: {
 }) as any;
 
 // TODO(dmaretskyi): Allow returning undefined.
-export const getDXN = (entity: Entity.Any): DXN => {
+export const getDXN = (entity: Entity.Unknown): DXN => {
   assertArgument(!Schema.isSchema(entity), 'obj', 'Object should not be a schema.');
   const dxn = getObjectDXN(entity);
   invariant(dxn != null, 'Invalid object.');
@@ -230,7 +230,7 @@ export const getSchema = getSchema$;
  * @returns The typename of the object's type.
  * @example `example.com/type/Person`
  */
-export const getTypename = (entity: Entity.Any): string | undefined => {
+export const getTypename = (entity: Entity.Unknown): string | undefined => {
   const schema = getSchema$(entity);
   if (schema == null) {
     // Try to extract typename from DXN.
@@ -258,9 +258,9 @@ export const getMeta = (entity: AnyProperties): ObjectMeta => {
  * @returns Foreign keys for the object from the specified source.
  */
 export const getKeys: {
-  (entity: Entity.Any, source: string): ForeignKey[];
-  (source: string): (entity: Entity.Any) => ForeignKey[];
-} = Function.dual(2, (entity: Entity.Any, source?: string): ForeignKey[] => {
+  (entity: Entity.Unknown, source: string): ForeignKey[];
+  (source: string): (entity: Entity.Unknown) => ForeignKey[];
+} = Function.dual(2, (entity: Entity.Unknown, source?: string): ForeignKey[] => {
   const meta = getMeta(entity);
   invariant(meta != null, 'Invalid object.');
   return meta.keys.filter((key) => key.source === source);
@@ -271,7 +271,7 @@ export const getKeys: {
  * @param entity
  * @param source
  */
-export const deleteKeys = (entity: Entity.Any, source: string) => {
+export const deleteKeys = (entity: Entity.Unknown, source: string) => {
   const meta = getMeta(entity);
   for (let i = 0; i < meta.keys.length; i++) {
     if (meta.keys[i].source === source) {
@@ -281,13 +281,13 @@ export const deleteKeys = (entity: Entity.Any, source: string) => {
   }
 };
 
-export const addTag = (entity: Entity.Any, tag: string) => {
+export const addTag = (entity: Entity.Unknown, tag: string) => {
   const meta = getMeta(entity);
   meta.tags ??= [];
   meta.tags.push(tag);
 };
 
-export const removeTag = (entity: Entity.Any, tag: string) => {
+export const removeTag = (entity: Entity.Unknown, tag: string) => {
   const meta = getMeta(entity);
   if (!meta.tags) {
     return;
@@ -301,7 +301,7 @@ export const removeTag = (entity: Entity.Any, tag: string) => {
 };
 
 // TODO(dmaretskyi): Default to `false`.
-export const isDeleted = (entity: Entity.Any): boolean => {
+export const isDeleted = (entity: Entity.Unknown): boolean => {
   const deleted = isDeleted$(entity);
   invariant(typeof deleted === 'boolean', 'Invalid object.');
   return deleted;
@@ -311,28 +311,28 @@ export const isDeleted = (entity: Entity.Any): boolean => {
 // Annotations
 //
 
-export const getLabel = (entity: Entity.Any): string | undefined => {
+export const getLabel = (entity: Entity.Unknown): string | undefined => {
   const schema = getSchema$(entity);
   if (schema != null) {
     return getLabel$(schema, entity);
   }
 };
 
-export const setLabel = (entity: Entity.Any, label: string) => {
+export const setLabel = (entity: Entity.Unknown, label: string) => {
   const schema = getSchema$(entity);
   if (schema != null) {
     setLabel$(schema, entity, label);
   }
 };
 
-export const getDescription = (entity: Entity.Any): string | undefined => {
+export const getDescription = (entity: Entity.Unknown): string | undefined => {
   const schema = getSchema$(entity);
   if (schema != null) {
     return getDescription$(schema, entity);
   }
 };
 
-export const setDescription = (entity: Entity.Any, description: string) => {
+export const setDescription = (entity: Entity.Unknown, description: string) => {
   const schema = getSchema$(entity);
   if (schema != null) {
     setDescription$(schema, entity, description);
@@ -353,7 +353,7 @@ export type JSON = ObjectJSON;
  *
  * The same algorithm is used when calling the standard `JSON.stringify(obj)` function.
  */
-export const toJSON = (entity: Entity.Any): JSON => objectToJSON(entity);
+export const toJSON = (entity: Entity.Unknown): JSON => objectToJSON(entity);
 
 /**
  * Creates an object from its json representation, performing schema validation.
@@ -383,12 +383,13 @@ const compare = (a?: string, b?: string) => {
   return a.localeCompare(b);
 };
 
-export type Comparator = (a: Entity.Any, b: Entity.Any) => number;
+export type Comparator = (a: Entity.Unknown, b: Entity.Unknown) => number;
 
-export const sortByLabel: Comparator = (a: Entity.Any, b: Entity.Any) => compare(getLabel(a), getLabel(b));
-export const sortByTypename: Comparator = (a: Entity.Any, b: Entity.Any) => compare(getTypename(a), getTypename(b));
+export const sortByLabel: Comparator = (a: Entity.Unknown, b: Entity.Unknown) => compare(getLabel(a), getLabel(b));
+export const sortByTypename: Comparator = (a: Entity.Unknown, b: Entity.Unknown) =>
+  compare(getTypename(a), getTypename(b));
 export const sort = (...comparators: Comparator[]): Comparator => {
-  return (a: Entity.Any, b: Entity.Any) => {
+  return (a: Entity.Unknown, b: Entity.Unknown) => {
     for (const comparator of comparators) {
       const result = comparator(a, b);
       if (result !== 0) {
@@ -443,7 +444,7 @@ export const isVersion = (entity: unknown): entity is Version => {
 /**
  * Returns the version of the object.
  */
-export const version = (entity: Entity.Any): Version => {
+export const version = (entity: Entity.Unknown): Version => {
   const version = (entity as any)[ObjectVersionId];
   if (version === undefined) {
     return unversioned;
