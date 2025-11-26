@@ -36,10 +36,7 @@ describe.runIf(process.env.DX_TEST_TAGS?.includes('functions-e2e'))('Functions d
     const source = await readFile(new URL('../example/forex-effect.ts', import.meta.url), 'utf-8');
 
     // Bundle and upload.
-    const buildResult = await bundleFunction({
-      skipWasmInitCheck: true,
-      source,
-    });
+    const buildResult = await bundleFunction({ source });
     if ('error' in buildResult) {
       throw buildResult.error ?? new Error('Bundle creation failed');
     }

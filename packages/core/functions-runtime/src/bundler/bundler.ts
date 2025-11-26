@@ -7,6 +7,7 @@ import { type BuildResult, type Plugin, type PluginBuild, build, initialize } fr
 import { subtleCrypto } from '@dxos/crypto';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
+import { isNode } from '@dxos/util';
 
 import { httpPlugin } from '../http-plugin-esbuild';
 
@@ -21,12 +22,6 @@ export type BundleOptions = {
    * Source code to bundle.
    */
   source: string;
-
-  /**
-   * @deprecated Remove.
-   * @default false
-   */
-  skipWasmInitCheck?: boolean;
 };
 
 export type BundleResult =
@@ -45,6 +40,10 @@ export type BundleResult =
     };
 
 let initialized: Promise<void>;
+/**
+ * Initializes the bundler.
+ * Must be called before using the bundler in browser.
+ */
 export const initializeBundler = async (options: { wasmUrl: string }) => {
   await (initialized ??= initialize({
     wasmURL: options.wasmUrl,
@@ -52,12 +51,15 @@ export const initializeBundler = async (options: { wasmUrl: string }) => {
 };
 
 /**
- * In-browser ESBuild bundler implemented as a function (parity with native bundler API style).
+ * ESBuild bundler implemented as a function (parity with native bundler API style).
+ * 
+ * This is browser friendly version of the bundler.
+ * Bundles source code directly, does not really on filesystem APIs.
  */
-export const bundleFunction = async ({ source, skipWasmInitCheck }: BundleOptions): Promise<BundleResult> => {
+export const bundleFunction = async ({ source }: BundleOptions): Promise<BundleResult> => {
   const sourceHash = Buffer.from(await subtleCrypto.digest('SHA-256', Buffer.from(source)));
 
-  if (skipWasmInitCheck !== true) {
+  if (!isNode()) {
     invariant(initialized, 'Compiler not initialized.');
     await initialized;
   }

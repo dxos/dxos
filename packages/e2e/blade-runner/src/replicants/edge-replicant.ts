@@ -124,10 +124,7 @@ export class EdgeReplicant {
 
   @trace.span()
   async deployFunction({ source }: { source?: string } = {}): Promise<{ functionId: string; version: string }> {
-    const buildResult = await bundleFunction({
-      skipWasmInitCheck: true,
-      source: source ?? dataGenerator,
-    });
+    const buildResult = await bundleFunction({ source: source ?? dataGenerator });
 
     if (buildResult.error || !buildResult.bundle) {
       log.error('Bundle creation failed', { buildResult });
