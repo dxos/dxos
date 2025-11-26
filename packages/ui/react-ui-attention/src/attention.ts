@@ -3,42 +3,22 @@
 //
 
 import { untracked } from '@preact/signals-core';
-import * as Schema from 'effect/Schema';
 
-import { Obj, Type } from '@dxos/echo';
-import { type Live } from '@dxos/live-object';
+import { type Live, live } from '@dxos/live-object';
 import { ComplexMap } from '@dxos/util';
 
 // NOTE: Chosen from RFC 1738's `safe` characters: http://www.faqs.org/rfcs/rfc1738.html
 export const ATTENDABLE_PATH_SEPARATOR = '~';
 
-const AttentionSchemaBase = Schema.mutable(
-  Schema.Struct({
-    hasAttention: Schema.Boolean,
-    isAncestor: Schema.Boolean,
-    isRelated: Schema.Boolean,
-  }),
-);
+export type Attention = {
+  hasAttention: boolean;
+  isAncestor: boolean;
+  isRelated: boolean;
+};
 
-export const AttentionSchema = AttentionSchemaBase.pipe(
-  Type.Obj({
-    typename: 'dxos.org/type/Attention',
-    version: '0.1.0',
-  }),
-);
-
-export type Attention = Schema.Schema.Type<typeof AttentionSchema>;
-
-const CurrentStateSchema = Schema.mutable(
-  Schema.Struct({
-    current: Schema.Array(Schema.String),
-  }),
-).pipe(
-  Type.Obj({
-    typename: 'dxos.org/type/AttentionState',
-    version: '0.1.0',
-  }),
-);
+export type CurrentState = {
+  current: string[];
+};
 
 // TODO(wittjosiah): Use mosaic path utility?
 const stringKey = (key: string[]) => key.join(',');
@@ -48,10 +28,11 @@ const stringKey = (key: string[]) => key.join(',');
  */
 // TODO(wittjosiah): Write unit tests.
 export class AttentionManager {
+  // TODO(wittjosiah): Migrate to Effect Atom.
   // Each attention path is associated with an attention object.
   // The lookup is not a reactive object to ensure that attention for each path is subscribable independently.
   private readonly _map = new ComplexMap<string[], Live<Attention>>(stringKey);
-  private readonly _state = Obj.make(CurrentStateSchema, { current: [] });
+  private readonly _state = live<CurrentState>({ current: [] });
 
   constructor(initial: string[] = []) {
     if (initial.length > 0) {
@@ -84,7 +65,7 @@ export class AttentionManager {
       return object;
     }
 
-    const newObject = Obj.make(AttentionSchema, { hasAttention: false, isAncestor: false, isRelated: false });
+    const newObject = live<Attention>({ hasAttention: false, isAncestor: false, isRelated: false });
     this._map.set(key, newObject);
     return newObject;
   }
