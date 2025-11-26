@@ -78,7 +78,7 @@ const decodeRequest = async (request: Request) => {
     return { data, trigger: { ...trigger, ...rest } };
   } catch (err) {
     log.catch(err);
-    return { data: { bodyText, ...rest }, rest };
+    return { data: { bodyText, ...rest } };
   }
 };
 
