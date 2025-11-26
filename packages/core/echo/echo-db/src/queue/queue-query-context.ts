@@ -7,7 +7,7 @@ import * as Function from 'effect/Function';
 
 import { Event } from '@dxos/async';
 import { Context } from '@dxos/context';
-import { type Database, type Entity, Obj } from '@dxos/echo';
+import { type Entity, Obj, type QueryResult } from '@dxos/echo';
 import { filterMatchObjectJSON } from '@dxos/echo-pipeline/filter';
 import { type QueryAST } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
@@ -32,7 +32,7 @@ export class QueueQueryContext<T extends Entity.Unknown = Entity.Unknown> implem
   /**
    * One-shot run.
    */
-  async run(query: QueryAST.Query): Promise<Database.QueryResultEntry<T>[]> {
+  async run(query: QueryAST.Query): Promise<QueryResult.Entry<T>[]> {
     const trivial = isSimpleSelectionQuery(query);
     if (!trivial) {
       throw new Error('Query not supported.');
@@ -90,7 +90,7 @@ export class QueueQueryContext<T extends Entity.Unknown = Entity.Unknown> implem
   /**
    * Synchronously get the results.
    */
-  getResults(): Database.QueryResultEntry<T>[] {
+  getResults(): QueryResult.Entry<T>[] {
     invariant(this.#filter);
 
     const spaceId = this.#queue.dxn.asQueueDXN()!.spaceId;

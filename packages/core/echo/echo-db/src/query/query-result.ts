@@ -4,7 +4,7 @@
 
 import { type CleanupFn, Event } from '@dxos/async';
 import { StackTrace } from '@dxos/debug';
-import { type Database, type Entity } from '@dxos/echo';
+import { type Entity, type QueryResult } from '@dxos/echo';
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
@@ -19,13 +19,13 @@ import { type QueryContext } from './query-context';
 /**
  * Predicate based query.
  */
-export class QueryResultImpl<T extends Entity.Unknown = Entity.Unknown> implements Database.QueryResult<T> {
+export class QueryResultImpl<T extends Entity.Unknown = Entity.Unknown> implements QueryResult.QueryResult<T> {
   private readonly _signal = compositeRuntime.createSignal();
-  private readonly _event = new Event<Database.QueryResult<T>>();
+  private readonly _event = new Event<QueryResult.QueryResult<T>>();
   private readonly _diagnostic: QueryDiagnostic;
 
   private _isActive = false;
-  private _resultCache?: Database.QueryResultEntry<T>[] = undefined;
+  private _resultCache?: QueryResult.Entry<T>[] = undefined;
   private _objectCache?: T[] = undefined;
   private _subscribers: number = 0;
 
@@ -59,7 +59,7 @@ export class QueryResultImpl<T extends Entity.Unknown = Entity.Unknown> implemen
     return this._query;
   }
 
-  get results(): Database.QueryResultEntry<T>[] {
+  get results(): QueryResult.Entry<T>[] {
     this._checkQueryIsRunning();
     this._signal.notifyRead();
     this._ensureCachePresent();
@@ -77,7 +77,7 @@ export class QueryResultImpl<T extends Entity.Unknown = Entity.Unknown> implemen
    * Execute the query once and return the results.
    * Does not subscribe to updates.
    */
-  async run(opts: { timeout?: number } = { timeout: 30_000 }): Promise<Database.OneShotQueryResult<T>> {
+  async run(opts: { timeout?: number } = { timeout: 30_000 }): Promise<QueryResult.OneShotResult<T>> {
     const filteredResults = await this._queryContext.run(this._query.ast, { timeout: opts.timeout });
     return {
       results: filteredResults,
@@ -99,7 +99,7 @@ export class QueryResultImpl<T extends Entity.Unknown = Entity.Unknown> implemen
    * WARNING: This method will only return the data already cached and may return incomplete results.
    * Use `this.run()` for a complete list of results stored on-disk.
    */
-  runSync(): Database.QueryResultEntry<T>[] {
+  runSync(): QueryResult.Entry<T>[] {
     this._ensureCachePresent();
     return this._resultCache!;
   }
@@ -110,7 +110,7 @@ export class QueryResultImpl<T extends Entity.Unknown = Entity.Unknown> implemen
    * Does not update when the object properties change.
    */
   // TODO(burdon): Change to SubscriptionHandle (make uniform).
-  subscribe(callback?: (query: Database.QueryResult<T>) => void, opts?: Database.QuerySubscriptionOptions): CleanupFn {
+  subscribe(callback?: (query: QueryResult.QueryResult<T>) => void, opts?: QueryResult.SubscriptionOptions): CleanupFn {
     invariant(!(!callback && opts?.fire), 'Cannot fire without a callback.');
 
     log('subscribe', { filter: this._query.ast, active: this._isActive });
@@ -172,7 +172,7 @@ export class QueryResultImpl<T extends Entity.Unknown = Entity.Unknown> implemen
     return changed;
   }
 
-  private _uniqueObjects(results: Database.QueryResultEntry<T>[]): T[] {
+  private _uniqueObjects(results: QueryResult.Entry<T>[]): T[] {
     const seen = new Set<unknown>();
     return results
       .map((result) => result.object)
