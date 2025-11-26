@@ -66,7 +66,7 @@ export interface Env {
  *
  * NOTE: Currently unused in functions.
  */
-interface ExecutionContext {}
+export interface ExecutionContext {}
 
 /**
  * Database API for other CF services like functions.

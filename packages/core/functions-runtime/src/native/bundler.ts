@@ -78,9 +78,9 @@ export const bundleFunction = async (options: BundleOptions): Promise<BundleResu
           build.onLoad({ filter: /^dxos:entrypoint$/, namespace: 'dxos:entrypoint' }, () => ({
             contents: trim`
               import { wrapFunctionHandler } from '@dxos/functions';
-              import { wrapFunctionForCloudflare } from '@dxos/functions-runtime-cloudflare';
+              import { wrapHandlerForCloudflare } from '@dxos/functions-runtime-cloudflare';
               import { default as handler } from '${options.entryPoint}';
-              export default wrapFunctionForCloudflare(wrapFunctionHandler(handler));
+              export default wrapHandlerForCloudflare(wrapFunctionHandler(handler));
             `,
             resolveDir: new URL('.', import.meta.url).pathname,
           }));

@@ -8,7 +8,7 @@ import type { EdgeFunctionEnv, QueryResult, QueueQuery } from '@dxos/protocols';
 
 export class QueueServiceImpl implements QueueServiceProto {
   constructor(
-    protected _ctx: unknown,
+    protected _ctx: EdgeFunctionEnv.ExecutionContext,
     private readonly _queueService: EdgeFunctionEnv.QueueService,
   ) {}
   queryQueue(subspaceTag: string, spaceId: SpaceId, { queueId, ...query }: QueueQuery): Promise<QueryResult> {

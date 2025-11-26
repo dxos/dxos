@@ -22,7 +22,7 @@ import { queryToDataServiceRequest } from './adapter';
 
 export class QueryServiceImpl implements QueryServiceProto {
   constructor(
-    private readonly _executionContext: unknown,
+    private readonly _executionContext: EdgeFunctionEnv.ExecutionContext,
     private readonly _dataService: EdgeFunctionEnv.DataService,
   ) {}
 

@@ -23,7 +23,7 @@ type Services = {
 export class FunctionsClient extends Resource {
   private readonly _serviceContainer;
   private readonly _echoClient;
-  private readonly _executionContext: unknown = {};
+  private readonly _executionContext: EdgeFunctionEnv.ExecutionContext = {};
 
   private readonly _spaces = new Map<SpaceId, SpaceProxy>();
 
