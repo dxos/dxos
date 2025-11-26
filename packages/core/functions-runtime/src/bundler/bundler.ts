@@ -52,9 +52,10 @@ export const initializeBundler = async (options: { wasmUrl: string }) => {
 
 /**
  * ESBuild bundler implemented as a function (parity with native bundler API style).
+ * Bundles source code directly, does not really on filesystem or Node APIs.
  * 
- * This is browser friendly version of the bundler.
- * Bundles source code directly, does not really on filesystem APIs.
+ * This is browser friendly version of the bundler, but it could also be used in Node environment.
+ * `initializeBundler` should be called before using it in browser, not required in Node.
  */
 export const bundleFunction = async ({ source }: BundleOptions): Promise<BundleResult> => {
   const sourceHash = Buffer.from(await subtleCrypto.digest('SHA-256', Buffer.from(source)));
