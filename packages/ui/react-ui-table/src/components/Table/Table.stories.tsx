@@ -6,16 +6,8 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Schema from 'effect/Schema';
 import React, { useCallback } from 'react';
 
-import { Obj, type QueryAST, Type } from '@dxos/echo';
-import {
-  EchoObject,
-  FormatAnnotation,
-  FormatEnum,
-  GeneratorAnnotation,
-  LabelAnnotation,
-  PropertyMetaAnnotationId,
-} from '@dxos/echo/internal';
-import { live } from '@dxos/echo/internal';
+import { Annotation, Format, Obj, type QueryAST, Type } from '@dxos/echo';
+import { PropertyMetaAnnotationId } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
 import { faker } from '@dxos/random';
 import { PublicKey } from '@dxos/react-client';
@@ -25,7 +17,7 @@ import { withTheme } from '@dxos/react-ui/testing';
 import { ViewEditor, translations as formTranslations } from '@dxos/react-ui-form';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { View, getSchemaFromPropertyDefinitions, getTypenameFromQuery } from '@dxos/schema';
-import { Testing, createObjectFactory } from '@dxos/schema/testing';
+import { TestSchema, createObjectFactory } from '@dxos/schema/testing';
 
 import { useTestTableModel } from '../../testing';
 import { translations } from '../../translations';
@@ -34,13 +26,13 @@ import { TableToolbar } from '../TableToolbar';
 
 import { Table as TableComponent } from './Table';
 
-const TestSchema = Schema.Struct({
+const Example = Schema.Struct({
   // TODO(wittjosiah): Should be title. Currently name to work with default label.
   name: Schema.optional(Schema.String).annotations({ title: 'Title' }),
   urgent: Schema.optional(Schema.Boolean).annotations({ title: 'Urgent' }),
   status: Schema.optional(
     Schema.Literal('todo', 'in-progress', 'done')
-      .pipe(FormatAnnotation.set(FormatEnum.SingleSelect))
+      .pipe(Format.FormatAnnotation.set(Format.TypeFormat.SingleSelect))
       .annotations({
         title: 'Status',
         [PropertyMetaAnnotationId]: {
@@ -55,14 +47,14 @@ const TestSchema = Schema.Struct({
       }),
   ),
   description: Schema.optional(Schema.String).annotations({ title: 'Description' }),
-  parent: Schema.optional(Schema.suspend((): Type.Ref<TestSchema> => Type.Ref(TestSchema))).annotations({
+  parent: Schema.optional(Schema.suspend((): Type.Ref<Example> => Type.Ref(Example))).annotations({
     title: 'Parent',
   }),
 }).pipe(
   Type.Obj({ typename: `example.com/type/${PublicKey.random().truncate()}`, version: '0.1.0' }),
-  LabelAnnotation.set(['name']),
+  Annotation.LabelAnnotation.set(['name']),
 );
-interface TestSchema extends Schema.Schema.Type<typeof TestSchema> {}
+interface Example extends Schema.Schema.Type<typeof Example> {}
 
 const StoryViewEditor = ({
   view,
@@ -171,7 +163,7 @@ const meta = {
       createIdentity: true,
       createSpace: true,
       onCreateSpace: async ({ client, space }) => {
-        const [schema] = await space.db.schemaRegistry.register([TestSchema]);
+        const [schema] = await space.db.schemaRegistry.register([Example]);
         const { view, jsonSchema } = await View.makeFromSpace({ client, space, typename: schema.typename });
         const table = Table.make({ view, jsonSchema });
         view.projection.fields = [
@@ -216,14 +208,14 @@ export const StaticSchema: StoryObj = {
       createIdentity: true,
       createSpace: true,
       onCreateSpace: async ({ client, space }) => {
-        const { view, jsonSchema } = await View.makeFromSpace({ client, space, typename: Testing.Person.typename });
+        const { view, jsonSchema } = await View.makeFromSpace({ client, space, typename: TestSchema.Person.typename });
         const table = Table.make({ view, jsonSchema });
         space.db.add(table);
 
         const factory = createObjectFactory(space.db, faker as any);
         await factory([
-          { type: Testing.Person, count: 10 },
-          // { type: Testing.Organization, count: 1 },
+          { type: TestSchema.Person, count: 10 },
+          // { type: TestSchema.Organization, count: 1 },
         ]);
       },
     }),
@@ -235,7 +227,7 @@ export const StaticSchema: StoryObj = {
 };
 
 const ContactWithArrayOfEmails = Schema.Struct({
-  name: Schema.String.pipe(GeneratorAnnotation.set('person.fullName')),
+  name: Schema.String.pipe(Annotation.GeneratorAnnotation.set('person.fullName')),
   emails: Schema.optional(
     Schema.Array(
       Schema.Struct({
@@ -245,7 +237,7 @@ const ContactWithArrayOfEmails = Schema.Struct({
     ),
   ),
 }).pipe(
-  EchoObject({
+  Type.Obj({
     typename: 'dxos.org/type/ContactWithArrayOfEmails',
     version: '0.1.0',
   }),
@@ -255,7 +247,7 @@ export const ArrayOfObjects: StoryObj = {
   render: DefaultStory,
   decorators: [
     withClientProvider({
-      types: [View.View, Table.Table, Testing.Person, Testing.Organization, ContactWithArrayOfEmails],
+      types: [View.View, Table.Table, TestSchema.Person, TestSchema.Organization, ContactWithArrayOfEmails],
       createIdentity: true,
       createSpace: true,
       onCreateSpace: async ({ client, space }) => {
@@ -269,8 +261,8 @@ export const ArrayOfObjects: StoryObj = {
 
         const factory = createObjectFactory(space.db, faker as any);
         await factory([
-          // { type: Testing.Person, count: 10 },
-          // { type: Testing.Organization, count: 1 },
+          // { type: TestSchema.Person, count: 10 },
+          // { type: TestSchema.Organization, count: 1 },
           { type: ContactWithArrayOfEmails, count: 10 },
         ]);
       },
@@ -306,12 +298,12 @@ export const Tags: Meta<StoryProps> = {
         const schema = getSchemaFromPropertyDefinitions(typename, [
           {
             name: 'single',
-            format: FormatEnum.SingleSelect,
+            format: Format.TypeFormat.SingleSelect,
             config: { options: selectOptions },
           },
           {
             name: 'multiple',
-            format: FormatEnum.MultiSelect,
+            format: Format.TypeFormat.MultiSelect,
             config: { options: selectOptions },
           },
         ]);
@@ -325,7 +317,7 @@ export const Tags: Meta<StoryProps> = {
         // Populate.
         Array.from({ length: 10 }).map(() => {
           return space.db.add(
-            live(storedSchema, {
+            Obj.make(storedSchema, {
               single: faker.helpers.arrayElement([...selectOptionIds, undefined]),
               multiple: faker.helpers.randomSubset(selectOptionIds),
             }),

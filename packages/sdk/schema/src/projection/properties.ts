@@ -8,10 +8,10 @@ import * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
 import * as String from 'effect/String';
 
+import { Format } from '@dxos/echo';
 import {
-  type BaseObject,
+  type AnyProperties,
   FormInputAnnotationId,
-  FormatEnum,
   type JsonSchemaType,
   OptionsAnnotationId,
   type OptionsAnnotationType,
@@ -34,14 +34,14 @@ import { log } from '@dxos/log';
 /**
  * Flattened representation of AST node.
  */
-export type SchemaProperty<T extends BaseObject, V = any> = {
+export type SchemaProperty<T extends AnyProperties, V = any> = {
   name: PropertyKey<T>;
   ast: SchemaAST.AST;
   optional: boolean;
   readonly: boolean;
   type: SimpleType;
   array?: boolean;
-  format?: FormatEnum;
+  format?: Format.TypeFormat;
   title?: string;
   description?: string;
   examples?: string[];
@@ -53,7 +53,7 @@ export type SchemaProperty<T extends BaseObject, V = any> = {
  * Get properties from the given AST node (typically from a Schema object).
  * Handle discriminated unions.
  */
-export const getSchemaProperties = <T extends BaseObject>(
+export const getSchemaProperties = <T extends AnyProperties>(
   ast: SchemaAST.AST,
   value: any = {},
   options: { includeId?: boolean; form?: boolean } = {},
@@ -117,7 +117,7 @@ export const getSchemaProperties = <T extends BaseObject>(
   return knownProperties;
 };
 
-const processProperty = <T extends BaseObject>(
+const processProperty = <T extends AnyProperties>(
   name: PropertyKey<T>,
   prop: { type: SchemaAST.AST; isReadonly: boolean; isOptional: boolean },
   form: boolean,
@@ -165,7 +165,7 @@ const processProperty = <T extends BaseObject>(
     if (typename) {
       // TODO(burdon): Special handling for refs? type = 'ref'?
       type = 'object';
-      format = FormatEnum.Ref;
+      format = Format.TypeFormat.Ref;
     }
   } else {
     const any = findNode(prop.type, SchemaAST.isAnyKeyword);
@@ -199,7 +199,7 @@ const processProperty = <T extends BaseObject>(
                 const { typename } = getSchemaReference(jsonSchema) ?? {};
                 if (typename) {
                   type = 'object';
-                  format = FormatEnum.Ref;
+                  format = Format.TypeFormat.Ref;
                   array = true;
                 }
               } else {
@@ -240,5 +240,7 @@ const processProperty = <T extends BaseObject>(
   };
 };
 
-export const sortProperties = <T extends BaseObject>({ name: a }: SchemaProperty<T>, { name: b }: SchemaProperty<T>) =>
-  a.localeCompare(b);
+export const sortProperties = <T extends AnyProperties>(
+  { name: a }: SchemaProperty<T>,
+  { name: b }: SchemaProperty<T>,
+) => a.localeCompare(b);

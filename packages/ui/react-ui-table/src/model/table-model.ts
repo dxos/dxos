@@ -5,16 +5,8 @@
 import { type ReadonlySignal, computed, effect, signal } from '@preact/signals-core';
 
 import { Resource } from '@dxos/context';
-import { Obj, Ref } from '@dxos/echo';
-import {
-  FormatEnum,
-  type JsonProp,
-  type JsonSchemaType,
-  getSchema,
-  getValue,
-  setValue,
-  toEffectSchema,
-} from '@dxos/echo/internal';
+import { Format, Obj, Ref } from '@dxos/echo';
+import { type JsonProp, type JsonSchemaType, getValue, setValue, toEffectSchema } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
 import { ObjectId } from '@dxos/keys';
 import { getSnapshot, isLiveObject } from '@dxos/live-object';
@@ -469,7 +461,7 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
 
     const { props } = this._projection.getFieldProjection(field.id);
     switch (props.format) {
-      case FormatEnum.Ref: {
+      case Format.TypeFormat.Ref: {
         if (!field.referencePath) {
           return ''; // TODO(burdon): Show error.
         }
@@ -526,7 +518,7 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
       const snapshot = getSnapshot(currentRow);
       setValue(snapshot, field.path, transformedValue);
 
-      const schema = getSchema(currentRow);
+      const schema = Obj.getSchema(currentRow);
       invariant(schema);
 
       const validationResult = validateSchema(schema, snapshot);
@@ -552,7 +544,7 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
     const transformedValue = editorTextToCellValue(props, value);
 
     // Special handling for Ref format to preserve existing behavior
-    if (props.format === FormatEnum.Ref && !isLiveObject(value)) {
+    if (props.format === Format.TypeFormat.Ref && !isLiveObject(value)) {
       return;
     }
 
@@ -667,7 +659,7 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
 
 const editorTextToCellValue = (props: PropertyType, value: any): any => {
   switch (props.format) {
-    case FormatEnum.Ref: {
+    case Format.TypeFormat.Ref: {
       if (isLiveObject(value)) {
         return Ref.make(value);
       } else {
@@ -675,7 +667,7 @@ const editorTextToCellValue = (props: PropertyType, value: any): any => {
       }
     }
 
-    case FormatEnum.SingleSelect: {
+    case Format.TypeFormat.SingleSelect: {
       const ids = extractTagIds(value);
       if (ids && ids.length > 0) {
         return ids[0];
@@ -684,7 +676,7 @@ const editorTextToCellValue = (props: PropertyType, value: any): any => {
       }
     }
 
-    case FormatEnum.MultiSelect: {
+    case Format.TypeFormat.MultiSelect: {
       const ids = extractTagIds(value);
       return ids || value;
     }

@@ -5,8 +5,7 @@
 import { effect, untracked } from '@preact/signals-core';
 
 import { Capabilities, type PluginContext, contributes } from '@dxos/app-framework';
-import { type Live } from '@dxos/echo';
-import { live } from '@dxos/live-object';
+import { type Live, live } from '@dxos/live-object';
 import { Path } from '@dxos/react-ui-list';
 
 import { meta } from '../meta';

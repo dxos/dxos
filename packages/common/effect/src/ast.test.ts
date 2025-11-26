@@ -21,7 +21,7 @@ import {
   isSimpleType,
   visit,
 } from './ast';
-import { type JsonPath, type JsonProp } from './jsonPath';
+import { type JsonPath, type JsonProp } from './json-path';
 
 const ZipCode = Schema.String.pipe(
   Schema.pattern(/^\d{5}$/, {

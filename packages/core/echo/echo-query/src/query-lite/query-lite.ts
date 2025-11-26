@@ -141,7 +141,7 @@ class FilterClass implements Echo.Filter<any> {
     });
   }
 
-  static text(text: string, options?: Echo.Query.TextSearchOptions): Echo.Filter<any> {
+  static text(text: string, options?: Echo.Filter.TextSearchOptions): Echo.Filter<any> {
     return new FilterClass({
       type: 'text-search',
       text,

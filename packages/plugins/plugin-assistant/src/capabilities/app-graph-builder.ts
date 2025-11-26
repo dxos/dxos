@@ -120,7 +120,7 @@ export default (context: PluginContext) =>
           Function.pipe(
             get(node),
             Option.flatMap((node) => (Obj.isObject(node.data) ? Option.some(node.data) : Option.none())),
-            Option.flatMap((object) => {
+            Option.flatMap((object): Option.Option<{ object: Obj.Any; currentChat: Obj.Any | undefined }> => {
               const currentChatState = get(
                 atomFromSignal(
                   () => context.getCapability(AssistantCapabilities.State).currentChat[Obj.getDXN(object).toString()],
@@ -133,9 +133,9 @@ export default (context: PluginContext) =>
 
               const space = getSpace(object);
               const currentChatDxn = DXN.tryParse(currentChatState);
-              const currentChatRef = currentChatDxn ? space?.db.ref(currentChatDxn) : undefined;
+              const currentChatRef = currentChatDxn ? space?.db.makeRef(currentChatDxn) : undefined;
               const currentChat = get(atomFromSignal(() => currentChatRef?.target));
-              return currentChat ? Option.some({ object, currentChat }) : Option.none();
+              return Obj.isObject(currentChat) ? Option.some({ object, currentChat }) : Option.none();
             }),
             Option.map(({ object, currentChat }) => {
               return [

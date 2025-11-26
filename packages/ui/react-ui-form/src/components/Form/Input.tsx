@@ -4,7 +4,7 @@
 
 import React, { type FC } from 'react';
 
-import { type FormatEnum } from '@dxos/echo/internal';
+import { type Format } from '@dxos/echo/internal';
 import { type SimpleType } from '@dxos/effect';
 import { Icon, Input, Tooltip } from '@dxos/react-ui';
 import { labelSpacing } from '@dxos/react-ui-stack';
@@ -17,7 +17,7 @@ import { type FormInputStateProps } from './FormContext';
  */
 export type InputProps = {
   type: SimpleType;
-  format?: FormatEnum;
+  format?: Format.TypeFormat;
   label: string;
   placeholder?: string;
   inputOnly?: boolean;

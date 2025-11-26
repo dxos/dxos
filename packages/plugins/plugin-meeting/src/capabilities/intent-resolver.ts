@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import { Capabilities, type PluginContext, contributes, createIntent, createResolver } from '@dxos/app-framework';
-import { Obj, Ref, Type } from '@dxos/echo';
+import { DXN, Obj, Ref, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { ThreadCapabilities } from '@dxos/plugin-thread';
@@ -81,7 +81,7 @@ export default (context: PluginContext) =>
         const enabled = !!transcriptionEnabled;
         if (space && transcriptDxn) {
           // NOTE: Must set queue before enabling transcription.
-          const queue = space.queues.get<Message.Message>(Type.DXN.parse(transcriptDxn));
+          const queue = space.queues.get<Message.Message>(DXN.parse(transcriptDxn));
           state.transcriptionManager?.setQueue(queue);
         }
 

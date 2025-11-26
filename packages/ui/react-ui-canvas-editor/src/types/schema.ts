@@ -5,7 +5,8 @@
 import * as Schema from 'effect/Schema';
 
 import { ComputeGraph } from '@dxos/conductor';
-import { Ref, TypedObject } from '@dxos/echo/internal';
+import { Type } from '@dxos/echo';
+import { Ref } from '@dxos/echo/internal';
 import { BaseGraphEdge, BaseGraphNode, Graph } from '@dxos/graph';
 
 // TODO(burdon): Consider interop with TLDraw and GeoJSON standards?
@@ -46,10 +47,7 @@ export const Layout = Schema.Struct({
 export type Layout = Schema.Schema.Type<typeof Layout>;
 
 // TODO(wittjosiah): Rename WorkflowType?
-export class CanvasBoardType extends TypedObject({
-  typename: 'dxos.org/type/CanvasBoard',
-  version: '0.1.0',
-})({
+export const CanvasBoardType = Schema.Struct({
   name: Schema.optional(Schema.String),
 
   computeGraph: Schema.optional(Ref(ComputeGraph)),
@@ -58,4 +56,11 @@ export class CanvasBoardType extends TypedObject({
    * Graph of shapes positioned on the canvas.
    */
   layout: Graph,
-}) {}
+}).pipe(
+  Type.Obj({
+    typename: 'dxos.org/type/CanvasBoard',
+    version: '0.1.0',
+  }),
+);
+
+export type CanvasBoardType = Schema.Schema.Type<typeof CanvasBoardType>;

@@ -5,9 +5,10 @@
 import { type Instruction } from '@atlaskit/pragmatic-drag-and-drop-hitbox/tree-item';
 import { Atom } from '@effect-atom/atom-react';
 import * as Function from 'effect/Function';
+import type * as Schema from 'effect/Schema';
 
 import { LayoutAction, type PromiseIntentDispatcher, chain, createIntent } from '@dxos/app-framework';
-import { Filter, Obj, Query, Ref, Type } from '@dxos/echo';
+import { type Database, type Entity, Filter, Obj, Query, Ref, Type } from '@dxos/echo';
 import { EXPANDO_TYPENAME } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
 import { Migrations } from '@dxos/migrations';
@@ -21,10 +22,10 @@ import {
   type ReadableGraph,
   isGraphNode,
 } from '@dxos/plugin-graph';
-import { type QueryResult, type Space, SpaceState, getSpace, isSpace } from '@dxos/react-client/echo';
+import { type Space, SpaceState, getSpace, isSpace } from '@dxos/react-client/echo';
 import { ATTENDABLE_PATH_SEPARATOR } from '@dxos/react-ui-attention';
 import { type TreeData } from '@dxos/react-ui-list';
-import { Collection, StoredSchema } from '@dxos/schema';
+import { Collection } from '@dxos/schema';
 
 import { meta } from './meta';
 import { SPACE_TYPE, SpaceAction } from './types';
@@ -37,7 +38,7 @@ export const SHARED = 'shared-spaces';
 /**
  * Convert a query result to an Atom value of the objects.
  */
-export const atomFromQuery = <T extends Obj.Any>(query: QueryResult<T>): Atom.Atom<T[]> => {
+export const atomFromQuery = <T extends Entity.Unknown>(query: Database.QueryResult<T>): Atom.Atom<T[]> => {
   return Atom.make((get) => {
     const unsubscribe = query.subscribe((result) => {
       get.setSelf(result.objects);
@@ -54,7 +55,7 @@ export const getSpaceDisplayName = (
   { personal, namesCache = {} }: { personal?: boolean; namesCache?: Record<string, string> } = {},
 ): string | [string, { ns: string }] => {
   return space.state.get() === SpaceState.SPACE_READY && (space.properties.name?.length ?? 0) > 0
-    ? space.properties.name
+    ? space.properties.name!
     : namesCache[space.id]
       ? namesCache[space.id]
       : personal
@@ -330,7 +331,13 @@ export const constructSpaceActions = ({
   return actions;
 };
 
-export const createStaticSchemaNode = ({ schema, space }: { schema: Type.Obj.Any; space: Space }) => {
+export const createStaticSchemaNode = ({
+  schema,
+  space,
+}: {
+  schema: Schema.Schema.AnyNoContext;
+  space: Space;
+}): Node => {
   return {
     id: `${space.id}/${Type.getTypename(schema)}`,
     type: `${meta.id}/static-schema`,
@@ -387,7 +394,7 @@ export const createStaticSchemaActions = ({
         throw new Error('Not implemented');
       },
       properties: {
-        label: ['rename object label', { ns: Type.getTypename(StoredSchema) }],
+        label: ['rename object label', { ns: Type.getTypename(Type.PersistentType) }],
         icon: 'ph--pencil-simple-line--regular',
         disabled: true,
         disposition: 'list-item',
@@ -406,7 +413,7 @@ export const createStaticSchemaActions = ({
         }
       },
       properties: {
-        label: ['delete object label', { ns: Type.getTypename(StoredSchema) }],
+        label: ['delete object label', { ns: Type.getTypename(Type.PersistentType) }],
         icon: 'ph--trash--regular',
         disposition: 'list-item',
         disabled: !deletable,
@@ -469,7 +476,7 @@ export const createObjectNode = ({
     ? getCollectionGraphNodePartials({ collection: object, space, resolve })
     : Obj.instanceOf(Collection.Managed, object)
       ? getSystemCollectionNodePartials({ collection: object, space, resolve })
-      : Obj.instanceOf(StoredSchema, object)
+      : Obj.instanceOf(Type.PersistentType, object)
         ? getSchemaGraphNodePartials()
         : metadata.graphProps;
 
@@ -481,7 +488,7 @@ export const createObjectNode = ({
     metadata.label?.(object) || ['object name placeholder', { ns: type, default: 'New item' }];
 
   const selectable =
-    (!Obj.instanceOf(StoredSchema, object) &&
+    (!Obj.instanceOf(Type.PersistentType, object) &&
       !Obj.instanceOf(Collection.Managed, object) &&
       !Obj.instanceOf(Collection.Collection, object)) ||
     (navigable && Obj.instanceOf(Collection.Collection, object));
@@ -567,7 +574,7 @@ export const constructObjectActions = ({
           },
         ]
       : []),
-    ...(Obj.instanceOf(StoredSchema, object)
+    ...(Obj.instanceOf(Type.PersistentType, object)
       ? [
           {
             id: getId(SpaceAction.AddObject._tag),
@@ -689,7 +696,7 @@ export const constructObjectActions = ({
     ...(navigable ||
     (!Obj.instanceOf(Collection.Collection, object) &&
       !Obj.instanceOf(Collection.Managed, object) &&
-      !Obj.instanceOf(StoredSchema, object))
+      !Obj.instanceOf(Type.PersistentType, object))
       ? [
           {
             id: getId('copy-link'),
@@ -770,10 +777,10 @@ export const getNestedObjects = async (
  */
 // TODO(burdon): Remove.
 export const cloneObject = async (
-  object: Type.Expando,
+  object: Obj.Any,
   resolve: (typename: string) => Record<string, any>,
   newSpace: Space,
-): Promise<Type.Expando> => {
+): Promise<Obj.Any> => {
   const schema = Obj.getSchema(object);
   const typename = schema ? (Type.getTypename(schema) ?? EXPANDO_TYPENAME) : EXPANDO_TYPENAME;
   const metadata = resolve(typename);

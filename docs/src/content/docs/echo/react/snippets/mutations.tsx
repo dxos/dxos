@@ -5,16 +5,16 @@
 import React from 'react';
 import { createRoot } from 'react-dom/client';
 
-import { Filter, Type } from '@dxos/echo';
-import { live } from '@dxos/echo/internal';
+import { Filter, Obj, Type } from '@dxos/echo';
 import { ClientProvider } from '@dxos/react-client';
-import { Expando, useQuery, useSpaces } from '@dxos/react-client/echo';
+import { useQuery, useSpaces } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 
+// TODO(burdon): Replace with better example.
 export const App = () => {
   useIdentity();
   const [space] = useSpaces();
-  const tasks = useQuery(space, Filter.type(Type.Expando, { type: 'task' }));
+  const tasks = useQuery(space, Filter.type(Type.Expando));
   return (
     <>
       {tasks.map((task) => (
@@ -30,7 +30,10 @@ export const App = () => {
       <button
         name='add'
         onClick={() => {
-          const task = live(Expando, { type: 'task', name: 'buy milk' });
+          const task = Obj.make(Type.Expando, {
+            type: 'task',
+            name: 'buy milk',
+          });
           space?.db.add(task);
         }}
       >

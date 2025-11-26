@@ -4,7 +4,7 @@
 
 import type * as SchemaAST from 'effect/SchemaAST';
 
-import { FormatEnum, ReferenceAnnotationId } from '@dxos/echo/internal';
+import { Format, ReferenceAnnotationId } from '@dxos/echo/internal';
 import { findAnnotation } from '@dxos/effect';
 import { type SchemaProperty } from '@dxos/schema';
 
@@ -30,7 +30,7 @@ export const getRefProps = (property: SchemaProperty<any>): RefProps | undefined
   }
 
   // Direct reference.
-  if (format === FormatEnum.Ref) {
+  if (format === Format.TypeFormat.Ref) {
     return { ast, isArray: false };
   }
 

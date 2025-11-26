@@ -20,8 +20,10 @@ import {
   symbolIsProxy,
 } from '@dxos/live-object';
 
-import { getSchemaDXN } from '../ast';
-import { DeletedId, SchemaId, SchemaValidator, TypeId } from '../object';
+import { getSchemaDXN } from '../annotations';
+import { ObjectDeletedId } from '../entities';
+import { SchemaValidator } from '../object';
+import { SchemaId, TypeId } from '../types';
 
 const symbolSignal = Symbol('signal');
 const symbolPropertySignal = Symbol('property-signal');
@@ -68,7 +70,7 @@ export class TypedReactiveHandler implements ReactiveHandler<ProxyTarget> {
       defineHiddenProperty(target, symbolPropertySignal, compositeRuntime.createSignal());
     }
 
-    defineHiddenProperty(target, DeletedId, false);
+    defineHiddenProperty(target, ObjectDeletedId, false);
 
     for (const key of Object.getOwnPropertyNames(target)) {
       const descriptor = Object.getOwnPropertyDescriptor(target, key)!;
@@ -90,6 +92,7 @@ export class TypedReactiveHandler implements ReactiveHandler<ProxyTarget> {
 
   get(target: ProxyTarget, prop: string | symbol, receiver: any): any {
     switch (prop) {
+      // TODO(burdon): Remove?
       case objectData: {
         target[symbolSignal].notifyRead();
         return toJSON(target);
@@ -170,6 +173,7 @@ export class TypedReactiveHandler implements ReactiveHandler<ProxyTarget> {
       showHidden: false,
       customInspect: false,
     });
+
     return `Typed ${inspected}`;
   }
 }
@@ -177,6 +181,7 @@ export class TypedReactiveHandler implements ReactiveHandler<ProxyTarget> {
 /**
  * @deprecated Use `Obj.toJSON` instead.
  */
+// TODO(burdon): Remove?
 const toJSON = (target: ProxyTarget): any => {
   return { '@type': 'TypedReactiveObject', ...target };
 };

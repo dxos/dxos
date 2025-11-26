@@ -77,7 +77,7 @@ const StorybookKanban = () => {
     [space, schema, model],
   );
 
-  const handleRemoveCard = useCallback((card: { id: string }) => space.db.remove(card), [space]);
+  const handleRemoveCard = useCallback((card: { id: string }) => Obj.isObject(card) && space?.db.remove(card), [space]);
 
   const handleUpdateQuery = useCallback(
     (newQuery: QueryAST.Query) => {

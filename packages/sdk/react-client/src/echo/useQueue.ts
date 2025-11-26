@@ -6,7 +6,7 @@ import { useEffect, useMemo, useRef } from 'react';
 
 import { type Queue } from '@dxos/client/echo';
 import { raise } from '@dxos/debug';
-import { type Obj, type Relation } from '@dxos/echo';
+import { type Entity } from '@dxos/echo';
 import { type DXN } from '@dxos/keys';
 
 import { useClient } from '../client';
@@ -24,7 +24,7 @@ export type UseQueueOptions = {
 // TODO(dmaretskyi): Move into client package.
 // TODO(dmaretskyi): Consider passing the space into the hook to support queue DXNs without space id.
 // TODO(ZaymonFC): If queue is unchanged returned object should be refferentially stable on poll.
-export const useQueue = <T extends Obj.Any | Relation.Any>(
+export const useQueue = <T extends Entity.Unknown>(
   queueDxn?: DXN,
   options: UseQueueOptions = {},
 ): Queue<T> | undefined => {

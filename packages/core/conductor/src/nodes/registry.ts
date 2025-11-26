@@ -6,13 +6,12 @@ import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 import { JSONPath } from 'jsonpath-plus';
 
-import { Filter, Ref, Type } from '@dxos/echo';
-import { ObjectId, getTypename, isInstanceOf } from '@dxos/echo/internal';
-import { live } from '@dxos/echo/internal';
+import { Filter, Obj, Ref, Type } from '@dxos/echo';
+import { isInstanceOf } from '@dxos/echo/internal';
 import { DatabaseService, Queue } from '@dxos/echo-db';
 import { FunctionDefinition, FunctionInvocationService, QueueService } from '@dxos/functions';
 import { failedInvariant, invariant } from '@dxos/invariant';
-import { DXN } from '@dxos/keys';
+import { DXN, ObjectId } from '@dxos/keys';
 import { View, getTypenameFromQuery } from '@dxos/schema';
 import { Message } from '@dxos/types';
 import { safeParseJson } from '@dxos/util';
@@ -254,11 +253,11 @@ export const registry: Record<NodeType, Executable> = {
               for (const item of items) {
                 const { id: _id, '@type': _type, ...rest } = item as any;
                 // TODO(dmaretskyi): Forbid type on create.
-                db.add(live(schema, rest));
+                db.add(Obj.make(schema, rest));
               }
               yield* Effect.promise(() => db.flush());
             } else {
-              throw new Error(`Unsupported ECHO container type: ${getTypename(container)}`);
+              throw new Error(`Unsupported ECHO container type: ${Obj.getTypename(container)}`);
             }
 
             return {};

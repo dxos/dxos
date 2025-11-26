@@ -3,7 +3,7 @@
 //
 
 import { raise } from '@dxos/debug';
-import { type Testing } from '@dxos/schema/testing';
+import { type TestSchema } from '@dxos/schema/testing';
 import { type Message, type Person } from '@dxos/types';
 import { trim } from '@dxos/util';
 
@@ -15,8 +15,8 @@ type ProcessEmailResult = {
 type ProcessEmailParams = {
   email: Message.Message;
   context: {
-    labels: Testing.Label[];
-    documents?: Testing.DocumentType[];
+    labels: TestSchema.Label[];
+    documents?: TestSchema.DocumentType[];
     contacts?: Person.Person[];
   };
 };

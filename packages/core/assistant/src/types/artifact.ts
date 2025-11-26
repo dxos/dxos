@@ -6,9 +6,8 @@ import type * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
 import { type ObjectNotFoundError, type Type } from '@dxos/echo';
-import { type ObjectId } from '@dxos/echo/internal';
 import { DatabaseService } from '@dxos/echo-db';
-import { DXN, LOCAL_SPACE_TAG, type SpaceId } from '@dxos/keys';
+import { DXN, LOCAL_SPACE_TAG, type ObjectId, type SpaceId } from '@dxos/keys';
 import { trim } from '@dxos/util';
 
 /**
@@ -23,7 +22,7 @@ export const createArtifactElement = (id: ObjectId) => `<artifact id=${id} />`;
 // TODO(burdon): Rename RefFromLLM?
 export const ArtifactId: Schema.Schema<string> & {
   toDXN: (reference: ArtifactId, owningSpaceId?: SpaceId) => DXN;
-  resolve: <S extends Type.Obj.Any | Type.Relation.Any>(
+  resolve: <S extends Type.Entity.Any>(
     schema: S,
     ref: ArtifactId,
   ) => Effect.Effect<Schema.Schema.Type<S>, ObjectNotFoundError, DatabaseService>;
@@ -59,7 +58,7 @@ export const ArtifactId: Schema.Schema<string> & {
   /**
    * Resolves an artifact ID to an object.
    */
-  static resolve<S extends Type.Obj.Any | Type.Relation.Any>(
+  static resolve<S extends Type.Entity.Any>(
     schema: S,
     ref: ArtifactId,
   ): Effect.Effect<Schema.Schema.Type<S>, ObjectNotFoundError, DatabaseService> {

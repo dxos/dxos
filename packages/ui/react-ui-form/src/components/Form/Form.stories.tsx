@@ -6,13 +6,11 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Schema from 'effect/Schema';
 import React, { useCallback, useState } from 'react';
 
-import { ContactType } from '@dxos/client/testing';
-import { type Type } from '@dxos/echo';
-import { type BaseObject, Expando, Format, Ref, type TypeAnnotation, getObjectDXN } from '@dxos/echo/internal';
-import { live } from '@dxos/echo/internal';
+import { Format, Obj, Ref, Type } from '@dxos/echo';
+import { type AnyProperties, type TypeAnnotation } from '@dxos/echo/internal';
 import { Tooltip } from '@dxos/react-ui';
 import { withLayoutVariants, withTheme } from '@dxos/react-ui/testing';
-import { Testing } from '@dxos/schema/testing';
+import { TestSchema } from '@dxos/schema/testing';
 
 import { translations } from '../../translations';
 import { TestLayout, TestPanel } from '../testing';
@@ -20,12 +18,12 @@ import { TestLayout, TestPanel } from '../testing';
 import { SelectInput } from './Defaults';
 import { Form, type FormProps } from './Form';
 
-type StoryProps<T extends BaseObject> = {
+type StoryProps<T extends AnyProperties> = {
   debug?: boolean;
-  schema: Type.Obj.Any;
+  schema: Schema.Schema.AnyNoContext;
 } & FormProps<T>;
 
-const DefaultStory = <T extends BaseObject = any>({
+const DefaultStory = <T extends AnyProperties = any>({
   debug,
   schema,
   values: initialValues,
@@ -51,13 +49,13 @@ const DefaultStory = <T extends BaseObject = any>({
   return <Form<T> schema={schema} values={values} onSave={handleSave} {...props} />;
 };
 
-const RefStory = <T extends BaseObject = any>(props: StoryProps<T>) => {
+const RefStory = <T extends AnyProperties = any>(props: StoryProps<T>) => {
   const onQueryRefOptions = useCallback((typeInfo: TypeAnnotation) => {
     switch (typeInfo.typename) {
-      case Testing.Person.typename:
+      case TestSchema.Person.typename:
         return [
-          { dxn: getObjectDXN(contact1)!, label: 'John Coltraine' },
-          { dxn: getObjectDXN(contact2)!, label: 'Erykah Badu' },
+          { dxn: Obj.getDXN(contact1), label: 'Alice' },
+          { dxn: Obj.getDXN(contact2), label: 'Bob' },
         ];
       default:
         return [];
@@ -122,7 +120,7 @@ export const Default: Story = {
 export const Organization: Story = {
   args: {
     debug: true,
-    schema: Testing.OrganizationSchema,
+    schema: TestSchema.OrganizationSchema,
     values: {
       name: 'DXOS',
       website: 'https://dxos.org',
@@ -134,7 +132,7 @@ export const Organization: Story = {
 export const OrganizationAutoSave: Story = {
   args: {
     debug: true,
-    schema: Testing.OrganizationSchema,
+    schema: TestSchema.OrganizationSchema,
     values: {
       name: 'DXOS',
       website: 'https://dxos.org',
@@ -150,7 +148,7 @@ export const OrganizationAutoSave: Story = {
 export const Person: Story = {
   args: {
     debug: true,
-    schema: Testing.Person,
+    schema: TestSchema.Person,
     values: {
       name: 'Bot',
     },
@@ -278,16 +276,18 @@ export const Enum: StoryObj<StoryProps<ColorType>> = {
 //
 
 const RefSchema = Schema.Struct({
-  contact: Ref(ContactType).annotations({ title: 'Contact Reference' }),
-  optionalContact: Schema.optional(Ref(ContactType).annotations({ title: 'Optional Contact Reference' })),
-  refArray: Schema.optional(Schema.Array(Ref(ContactType))),
-  unknownExpando: Schema.optional(Ref(Expando).annotations({ title: 'Optional Ref to an Expando (DXN Input)' })),
+  contact: Type.Ref(TestSchema.Person).annotations({ title: 'Contact Reference' }),
+  optionalContact: Schema.optional(Type.Ref(TestSchema.Person).annotations({ title: 'Optional Contact Reference' })),
+  refArray: Schema.optional(Schema.Array(Type.Ref(TestSchema.Person))),
+  unknownExpando: Schema.optional(
+    Type.Ref(Type.Expando).annotations({ title: 'Optional Ref to an Expando (DXN Input)' }),
+  ),
 });
 
 type RefSchema = Schema.Schema.Type<typeof RefSchema>;
 
-const contact1 = live(ContactType, { identifiers: [] });
-const contact2 = live(ContactType, { identifiers: [] });
+const contact1 = Obj.make(TestSchema.Person, { name: 'Alice' });
+const contact2 = Obj.make(TestSchema.Person, { name: 'Bob' });
 
 export const Refs: StoryObj<StoryProps<RefSchema>> = {
   render: RefStory,

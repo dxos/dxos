@@ -7,10 +7,10 @@ import * as Schema from 'effect/Schema';
 
 import { Event } from '@dxos/async';
 import { Resource } from '@dxos/context';
-import { EntityKind, ObjectId } from '@dxos/echo/internal';
+import { EntityKind } from '@dxos/echo/internal';
 import { ObjectStructure, decodeReference } from '@dxos/echo-protocol';
 import { InternalError } from '@dxos/errors';
-import { PublicKey } from '@dxos/keys';
+import { ObjectId, PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { ObjectPointerEncoded } from '@dxos/protocols';
 import { IndexKind } from '@dxos/protocols/proto/dxos/echo/indexing';

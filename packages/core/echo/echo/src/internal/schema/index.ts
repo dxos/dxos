@@ -3,8 +3,7 @@
 //
 
 export * from './echo-schema';
-export * from './snapshot';
-export * from './stored-schema';
-export * from './runtime-schema-registry';
 export * from './manipulation';
-export * from './echo-schema';
+export * from './persistent-schema';
+export * from './runtime-schema-registry';
+export * from './snapshot';

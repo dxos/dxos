@@ -12,7 +12,7 @@ export default (context: PluginContext) => {
   const client = context.getCapability(ClientCapabilities.Client);
 
   // TODO(wittjosiah): Unregister schemas when they are disabled.
-  let previous: Type.Obj.Any[] = [];
+  let previous: Type.Entity.Any[] = [];
   const cancel = registry.subscribe(
     context.capabilities(ClientCapabilities.Schema),
     (_schemas) => {

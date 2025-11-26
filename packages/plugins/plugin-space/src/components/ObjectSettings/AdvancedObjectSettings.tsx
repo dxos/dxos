@@ -4,8 +4,7 @@
 
 import React, { useCallback, useState } from 'react';
 
-import { Obj } from '@dxos/echo';
-import { ForeignKey } from '@dxos/echo/internal';
+import { Key, Obj } from '@dxos/echo';
 import { IconButton, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 
@@ -30,7 +29,7 @@ export const AdvancedObjectSettings = ({ object }: AdvancedObjectSettingsProps) 
   const handleNew = useCallback(() => setAdding(true), []);
   const handleCancel = useCallback(() => setAdding(false), []);
   const handleSave = useCallback(
-    (key: ForeignKey) => {
+    (key: Key.ForeignKey) => {
       const index = keys.findIndex(({ source, id }) => source === key.source && id === key.id);
       if (index === -1) {
         keys.push(key);
@@ -40,7 +39,7 @@ export const AdvancedObjectSettings = ({ object }: AdvancedObjectSettingsProps) 
     [keys],
   );
   const handleDelete = useCallback(
-    (key: ForeignKey) => {
+    (key: Key.ForeignKey) => {
       const index = keys.findIndex(({ source, id }) => source === key.source && id === key.id);
       if (index !== -1) {
         keys.splice(index, 1);
@@ -70,7 +69,7 @@ export const AdvancedObjectSettings = ({ object }: AdvancedObjectSettingsProps) 
       {adding && (
         <Form
           outerSpacing={false}
-          schema={ForeignKey}
+          schema={Key.ForeignKey}
           values={initialValues}
           onSave={handleSave}
           onCancel={handleCancel}
