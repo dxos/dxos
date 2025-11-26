@@ -207,8 +207,7 @@ export class QueueImpl<T extends Entity.Any = Entity.Any> implements Queue<T> {
   // Odd way to define method's types from a typedef.
   declare query: Database.QueryFn;
   static {
-    // TODO(burdon): FIX!!!
-    this.prototype.query = this.prototype._query as any;
+    this.prototype.query = this.prototype._query;
   }
 
   private _query(queryOrFilter: Query.Any | Filter.Any, options?: Database.QueryOptions) {
