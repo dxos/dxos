@@ -2,13 +2,15 @@
 // Copyright 2025 DXOS.org
 //
 
-// TODO(burdon): Reconcile with model.ts
-export const VersionTypeId: unique symbol = Symbol('@dxos/echo/Version');
+/**
+ * Version type symbol.
+ */
+export const VersionTypeId: unique symbol = Symbol.for('@dxos/echo/VersionTypeId');
 
-export type VersionType = typeof VersionTypeId;
+export type VersionTypeId = typeof VersionTypeId;
 
 /**
- * Represents schema version.
+ * Represents the object version.
  * May be backed by Automerge.
  * Objects with no history are not versioned.
  */

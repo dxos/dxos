@@ -19,30 +19,16 @@
 - [x] Created Entity.Any (=> AnyEchoObject).
 - [x] TypeFormat => TypeFormat
 - [x] JsonSchemaType defs
-<<<<<<< HEAD
-||||||| 97c03bba7f
-- [ ] Fix commented out tests.
-=======
 - [x] Fix database.add() input/output types and search for "Obj.Any = db.add" (also QueryResult types).
 - [x] TODO(burdon): FIX!!!
 - [ ] Fix failing tests.
->>>>>>> de5cd48e4f32bf66c1cb439d416a893b531d3d59
 - [ ] Reconcile types/version with entities/model/version
-<<<<<<< HEAD
-- [ ] Fix database.add() input/output types and search for "Obj.Any = db.add" (also QueryResult types).
-- [ ] Resolve "TODO(burdon): FIX!!!"
-- [ ] Pass all tests
-||||||| 97c03bba7f
-- [ ] Fix database.add() input/output types and search for "Obj.Any = db.add" (also QueryResult types).
-- [ ] TODO(burdon): FIX!!!
-=======
 - [ ] Type.Expando => Type.Obj.Any
->>>>>>> de5cd48e4f32bf66c1cb439d416a893b531d3d59
+- [ ] Narrow QueryResult and match Schema and Object generics.
 
 2. Clean-up
 
-- [ ] Remove echo-db/AnyLiveObject<T> => Obj.Obj<T>
-- [ ] Narrow QueryResult and match Schema and Object generics.
+- [ ] Remove echo-db/AnyLiveObject<T> => Obj.Obj<T> \*\*\*
 - [ ] Directly import JSONPath, etc. from @dxos/effect.
 - [ ] DISCUSS: Standradize $ suffix to disambuguate imports (GPT recommended).
 - [ ] Reconcile Type.Ref with Ref.Ref

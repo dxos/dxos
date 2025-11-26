@@ -78,6 +78,8 @@ export type JsonSchemaOptions = {
  * Convert effect schema to JSON Schema.
  * @param schema
  */
+// TODO(burdon): Reconcile with @effect/Schema/JSONSchema
+//  We add additional propertyOrder (but the object properties ARE ordered); and type "string" for literals.
 export const toJsonSchema = (schema: Schema.Schema.All, options: JsonSchemaOptions = {}): JsonSchemaType => {
   assertArgument(Schema.isSchema(schema), 'schema');
   let jsonSchema = _toJsonSchemaAST(schema.ast);
