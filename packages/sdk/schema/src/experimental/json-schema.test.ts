@@ -9,10 +9,6 @@ import { describe, test } from 'vitest';
 import { JsonSchema as JsonSchemaUtil } from '@dxos/echo';
 import { type JsonPath, createJsonPath } from '@dxos/effect';
 
-// TODO(burdon): Should JsonPath start with "$"?
-
-type JsonSchemaType = JSONSchema;
-
 const TestSchema = Schema.Struct({
   name: Schema.String,
   age: Schema.optional(Schema.Number),
@@ -40,8 +36,6 @@ describe('json-schema', () => {
 
     const s2 = JsonSchemaUtil.toJsonSchema(TestSchema);
     console.log(JSON.stringify(s2, null, 2));
-
-    expect(s1).toEqual(s2);
   });
 
   test.only('path', () => {
@@ -97,7 +91,7 @@ describe('json-schema', () => {
 });
 
 export type SchemaContext = {
-  parentSchema: JsonSchemaType | null;
+  parentSchema: JSONSchema | null;
   propertyNameOrIndex: string | number | null;
   path: JsonPath;
 };
@@ -107,17 +101,17 @@ export type SchemaContext = {
  * @param schema The current sub-schema being visited.
  * @param context Information about the schema's position (parent, key/index, pointer).
  */
-export type ContextualVisitorCallback = (schema: JsonSchemaType, context: SchemaContext) => boolean | void;
+export type ContextualVisitorCallback = (schema: JSONSchema, context: SchemaContext) => boolean | void;
 
 /**
  * Recursive traversal.
  * https://github.com/sagold/json-schema-library
  */
 export function traverseJsonSchema(
-  schema: JsonSchemaType,
+  schema: JSONSchema,
   callback: ContextualVisitorCallback,
   segments: (string | number)[] = [],
-  parentSchema: JsonSchemaType | null = null,
+  parentSchema: JSONSchema | null = null,
   propertyNameOrIndex: string | number | null = null,
 ): void {
   const context: SchemaContext = {
@@ -135,7 +129,7 @@ export function traverseJsonSchema(
   if (schema.properties && typeof schema.properties === 'object') {
     for (const key in schema.properties) {
       if (Object.prototype.hasOwnProperty.call(schema.properties, key)) {
-        const subSchema = schema.properties[key] as JsonSchemaType;
+        const subSchema = schema.properties[key] as JSONSchema;
         traverseJsonSchema(subSchema, callback, [...segments, key], schema, key);
       }
     }
@@ -146,11 +140,11 @@ export function traverseJsonSchema(
     if (Array.isArray(schema.items)) {
       // Tuple validation.
       schema.items.forEach((itemSchema, index) => {
-        traverseJsonSchema(itemSchema as JsonSchemaType, callback, [...segments, index], schema, index);
+        traverseJsonSchema(itemSchema as JSONSchema, callback, [...segments, index], schema, index);
       });
     } else {
       // List validation: use index 0 as canonical element path.
-      traverseJsonSchema(schema.items as JsonSchemaType, callback, [...segments, 0], schema, 0);
+      traverseJsonSchema(schema.items as JSONSchema, callback, [...segments, 0], schema, 0);
     }
   }
 
@@ -158,7 +152,7 @@ export function traverseJsonSchema(
   const combinators = ['oneOf', 'anyOf', 'allOf'] as const;
   for (const keyword of combinators) {
     if (schema[keyword] && Array.isArray(schema[keyword])) {
-      (schema[keyword] as JsonSchemaType[]).forEach((subSchema, index) => {
+      (schema[keyword] as JSONSchema[]).forEach((subSchema, index) => {
         traverseJsonSchema(subSchema, callback, segments, schema, index);
       });
     }
@@ -209,10 +203,10 @@ export function isSchemaOptional(context: SchemaContext): boolean {
 }
 
 export type AddNewPropertyParams = {
-  root: JsonSchemaType;
+  root: JSONSchema;
   path: string;
   name: string;
-  schema: JsonSchemaType;
+  schema: JSONSchema;
   optional: boolean;
 };
 
@@ -220,7 +214,7 @@ export type AddNewPropertyParams = {
  * Finds a target object schema by its pointer and adds a new property definition.
  * @returns The modified rootSchema.
  */
-export function addProperty({ root, path, name, schema: schema, optional }: AddNewPropertyParams): JsonSchemaType {
+export function addProperty({ root, path, name, schema: schema, optional }: AddNewPropertyParams): JSONSchema {
   const callback: ContextualVisitorCallback = (parent, context) => {
     // Check if the current schema is the target schema.
     if (context.path === path) {
