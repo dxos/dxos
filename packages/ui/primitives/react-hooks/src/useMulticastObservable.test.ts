@@ -15,7 +15,7 @@ describe('useMulticastObservable', () => {
     const observable = MulticastObservable.from(event, 0);
     const { result } = renderHook(() => useMulticastObservable(observable));
     expect(result.current).toEqual(0);
-    void act(() => event.emit(1));
+    await act(async () => event.emit(1));
     await expect.poll(() => result.current).toEqual(1);
   });
 });
