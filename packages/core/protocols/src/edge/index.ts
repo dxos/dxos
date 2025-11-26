@@ -2,6 +2,6 @@
 // Copyright 2025 DXOS.org
 //
 
-export * from './edge';
-export * as EdgeFunctionEnv from './EdgeFunctionEnv';
-export * from './errors';
+export * from './edge.js';
+export * as EdgeFunctionEnv from './EdgeFunctionEnv.js';
+export * from './errors.js';

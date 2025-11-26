@@ -3,7 +3,7 @@
 //
 
 export * from './automerge.js';
-export * from './edge';
+export * from './edge/index.js';
 export * from './errors/index.js';
 export * from './indexing.js';
 export * from './profile-archive.js';
