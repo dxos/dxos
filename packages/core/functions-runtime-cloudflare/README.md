@@ -1,11 +1,11 @@
-# @dxos/functions-runtime
+# @dxos/functions-runtime-cloudflare
 
-Functions Runtime.
+Functions Runtime for Cloudflare wokrkers.
 
 ## Installation
 
 ```bash
-pnpm i @dxos/functions-runtime
+pnpm i @dxos/functions-runtime-cloudflare
 ```
 
 ## DXOS Resources
