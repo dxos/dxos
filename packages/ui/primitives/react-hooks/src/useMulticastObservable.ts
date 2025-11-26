@@ -16,6 +16,7 @@ export const useMulticastObservable = <T>(observable: MulticastObservable<T>): T
   const subscribeFn = useMemo(
     () => (listener: () => void) => {
       const subscription = observable.subscribe(listener);
+
       return () => subscription.unsubscribe();
     },
     [observable],
