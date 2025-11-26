@@ -47,6 +47,7 @@ export const wrapFunctionHandler = (func: FunctionDefinition): FunctionProtocol.
         });
       }
 
+      // eslint-disable-next-line no-useless-catch
       try {
         if (!SchemaAST.isAnyKeyword(func.inputSchema.ast)) {
           Schema.validateSync(func.inputSchema)(data);
@@ -80,7 +81,6 @@ export const wrapFunctionHandler = (func: FunctionDefinition): FunctionProtocol.
 
         return result;
       } catch (error) {
-        log.error('Function execution failed', { error });
         // TODO(dmaretskyi): We might do error wrapping here and add extra context.
         throw error;
       }
