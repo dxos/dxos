@@ -80,6 +80,7 @@ export const wrapFunctionHandler = (func: FunctionDefinition): FunctionProtocol.
 
         return result;
       } catch (error) {
+        log.error('Function execution failed', { error });
         // TODO(dmaretskyi): We might do error wrapping here and add extra context.
         throw error;
       }
