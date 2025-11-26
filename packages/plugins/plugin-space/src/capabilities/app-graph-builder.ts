@@ -174,7 +174,8 @@ export default (context: PluginContext) => {
     createExtension({
       id: SPACES,
       connector: (node) => {
-        let result: Database.QueryResult<Type.Expando> | undefined;
+        // TODO(wittjosiah): Find a simpler way to define this type.
+        let query: Database.QueryResult<Schema.Schema.Type<typeof Type.Expando>> | undefined;
         return Atom.make((get) =>
           Function.pipe(
             get(node),
@@ -198,10 +199,10 @@ export default (context: PluginContext) => {
 
               // TODO(wittjosiah): During client reset, accessing default space throws.
               try {
-                if (!result) {
-                  result = client.spaces.default.db.query(Filter.type(Type.Expando, { key: SHARED }));
+                if (!query) {
+                  query = client.spaces.default.db.query(Filter.type(Type.Expando, { key: SHARED }));
                 }
-                const [spacesOrder] = get(atomFromQuery(result));
+                const [spacesOrder] = get(atomFromQuery(query));
                 return get(
                   atomFromSignal(() => {
                     const order: string[] = spacesOrder?.order ?? [];
@@ -389,7 +390,8 @@ export default (context: PluginContext) => {
       id: `${meta.id}/system-collections`,
       connector: (node) => {
         const client = context.getCapability(ClientCapabilities.Client);
-        let query: Database.QueryResult<Type.Expando> | undefined;
+        // TODO(wittjosiah): Find a simpler way to define this type.
+        let query: Database.QueryResult<Schema.Schema.Type<typeof Type.Expando>> | undefined;
         return Atom.make((get) =>
           Function.pipe(
             get(node),

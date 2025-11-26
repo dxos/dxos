@@ -635,16 +635,16 @@ export default ({ context, observability, createInvitationUrl }: IntentResolverO
             Obj.instanceOf(Collection.Collection, deletionData.parentCollection)
           ) {
             // Restore the object to the space.
-            const restoredObjects = deletionData.objects.map((obj: Type.Expando) => space.db.add(obj));
+            const restoredObjects = deletionData.objects.map((obj: Obj.Any) => space.db.add(obj));
 
             // Restore nested objects to the space.
-            deletionData.nestedObjectsList.flat().forEach((obj: Type.Expando) => {
+            deletionData.nestedObjectsList.flat().forEach((obj: Obj.Any) => {
               space.db.add(obj);
             });
 
             deletionData.indices.forEach((index: number, i: number) => {
               if (index !== -1) {
-                deletionData.parentCollection.objects.splice(index, 0, Ref.make(restoredObjects[i] as Type.Expando));
+                deletionData.parentCollection.objects.splice(index, 0, Ref.make(restoredObjects[i] as Obj.Any));
               }
             });
 

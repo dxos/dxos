@@ -13,6 +13,7 @@ import {
   isValidProxyTarget,
 } from '@dxos/live-object';
 
+import type * as Entity from '../../Entity';
 import { getTypeAnnotation } from '../annotations';
 import { Expando } from '../entities';
 import { attachTypedJsonSerializer } from '../object';
@@ -24,7 +25,7 @@ import { TypedReactiveHandler, prepareTypedTarget } from './typed-handler';
  *
  */
 // TODO(burdon): Make internal
-export type MakeObjectProps<T extends AnyProperties> = Omit<T, 'id' | KindId>;
+export type MakeObjectProps<T extends AnyProperties> = Omit<T, 'id' | Entity.KindId>;
 
 /**
  * Creates a reactive object from a plain Javascript object.

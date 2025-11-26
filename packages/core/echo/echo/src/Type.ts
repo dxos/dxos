@@ -2,14 +2,14 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Schema$ from 'effect/Schema';
+import type * as Schema$ from 'effect/Schema';
 
 import { type EncodedReference } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
 import { type DXN } from '@dxos/keys';
 import { type ToMutable } from '@dxos/util';
 
-import * as Entity$ from './Entity';
+import type * as Entity$ from './Entity';
 import {
   type ATTR_RELATION_SOURCE,
   type ATTR_RELATION_TARGET,
@@ -78,24 +78,12 @@ export interface obj<Self extends Schema$.Schema.Any>
       Schema$.Schema.Context<Self>
     > {}
 
-const ObjAny: obj<Schema$.Schema.AnyNoContext> = Schema$.Any.pipe(
-  Schema$.filter((obj) => obj[Entity$.KindId] === Entity$.Kind.Object),
-  Schema$.annotations({ title: 'Object' }),
-) as any;
-
 /**
  * Object schema.
  */
 export const Obj: {
   (opts: TypeMeta): <Self extends Schema$.Schema.Any>(self: Self) => obj<Self>;
-
-  /**
-   * Schema representing any object type.
-   * Use this with Type.Ref() to create references to any object.
-   * @example Type.Ref(Type.Obj.Any)
-   */
-  Any: obj<Schema$.Schema.AnyNoContext>;
-} = Object.assign(EchoObjectSchema, { Any: ObjAny }) as any;
+} = EchoObjectSchema as any;
 
 /**
  * Object schema type definitions.

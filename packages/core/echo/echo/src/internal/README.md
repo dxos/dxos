@@ -21,13 +21,16 @@
 - [x] JsonSchemaType defs
 - [x] Fix database.add() input/output types and search for "Obj.Any = db.add" (also QueryResult types).
 - [x] TODO(burdon): FIX!!!
-- [ ] Fix failing tests.
-- [ ] Reconcile types/version with entities/model/version
-- [ ] Type.Expando => Type.Obj.Any
-- [ ] Add Relation.MakeProps
+- [x] Fix failing tests.
+- [x] Reconcile types/version with entities/model/version
+- [x] Type.Expando => Obj.Any
 
 2. Clean-up
 
+- [ ] TODO(wittjosiah): Find a simpler way to define this type.
+- [ ] TODO(wittjosiah): Should be Type.obj<...> or equivalent.
+- [ ] Ref.Array.targets doesn't satisfy Obj.Any because it uses AnyEchoObject.
+- [ ] Add Relation.MakeProps
 - [ ] Schema registry should return Type.Entity.Any instead of Schema.Schema.AnyNoContext.
 - [ ] Remove echo-db/AnyLiveObject<T> => Obj.Obj<T>
 - [ ] Narrow QueryResult and match Schema and Object generics.

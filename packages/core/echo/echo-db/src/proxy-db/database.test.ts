@@ -4,7 +4,7 @@
 
 import { inspect } from 'node:util';
 
-import { afterEach, beforeEach, describe, expect, test } from 'vitest';
+import { afterEach, assert, beforeEach, describe, expect, test } from 'vitest';
 
 import { Trigger, asyncTimeout, sleep } from '@dxos/async';
 import { Obj, Query, Ref, Type } from '@dxos/echo';
@@ -281,8 +281,12 @@ describe('Database', () => {
       const { objects } = await db.query(Filter.type(TestSchema.Container)).run();
       const [container] = objects;
       expect(container.objects).to.have.length(2);
-      expect(container.objects![0].target!.foo).to.equal(100);
-      expect(container.objects![1].target!.bar).to.equal(200);
+      const target1 = container.objects![0].target;
+      const target2 = container.objects![1].target;
+      assert(Obj.instanceOf(Type.Expando, target1));
+      assert(Obj.instanceOf(Type.Expando, target2));
+      expect(target1.foo).to.equal(100);
+      expect(target2.bar).to.equal(200);
     }
   });
 

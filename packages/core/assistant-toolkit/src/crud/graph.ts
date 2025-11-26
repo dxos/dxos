@@ -11,7 +11,7 @@ import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
 
-import { type Entity, Filter, Obj, Query, Type } from '@dxos/echo';
+import { Entity, Filter, Obj, Query, Type } from '@dxos/echo';
 import {
   ReferenceAnnotationId,
   RelationSourceDXNId,
@@ -60,7 +60,7 @@ export const findRelatedSchema = async (
   // TODO(dmaretskyi): Also do references.
   return allSchemas
     .filter((schema) => {
-      if (getTypeAnnotation(schema)?.kind !== Type.Kind.Relation) {
+      if (getTypeAnnotation(schema)?.kind !== Entity.Kind.Relation) {
         return false;
       }
 
@@ -269,7 +269,7 @@ export const sanitizeObjects = async (
         return recurse(value);
       });
 
-      if (Type.getKind(entry.schema) === 'relation') {
+      if (Entity.getKind(entry.schema) === 'relation') {
         const sourceDxn = resolveId(data.source);
         if (!sourceDxn) {
           log.warn('source not found', { source: data.source });
@@ -341,7 +341,7 @@ const SoftRef = Schema.Struct({
 });
 
 const preprocessSchema = (schema: Schema.Schema.AnyNoContext) => {
-  const isRelationSchema = Type.getKind(schema) === 'relation';
+  const isRelationSchema = Entity.getKind(schema) === 'relation';
 
   const go = (ast: SchemaAST.AST, visited = new Set<SchemaAST.AST>()): SchemaAST.AST => {
     if (visited.has(ast)) {

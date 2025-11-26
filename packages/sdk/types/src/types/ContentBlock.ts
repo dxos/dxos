@@ -243,7 +243,7 @@ export interface File extends Schema.Schema.Type<typeof File> {}
  * Non-text content embedded in the message (e.g., files, polls, etc.).
  */
 export const Reference = Schema.TaggedStruct('reference', {
-  reference: Type.Ref(Type.Obj.Any),
+  reference: Type.Ref(Obj.Any),
 
   ...Base.fields,
 }).pipe(Schema.mutable);

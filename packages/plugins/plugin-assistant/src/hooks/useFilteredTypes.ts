@@ -11,8 +11,8 @@ import { type Space } from '@dxos/react-client/echo';
 
 // TODO(burdon): Pass in filter.
 // TODO(wittjosiah): Factor out.
-export const useFilteredTypes = (space?: Space): Type.Obj.Any[] => {
-  const [types, setTypes] = useState<Type.Obj.Any[]>([]);
+export const useFilteredTypes = (space?: Space): Type.Entity.Any[] => {
+  const [types, setTypes] = useState<Type.Entity.Any[]>([]);
   useEffect(() => {
     if (!space) {
       return;

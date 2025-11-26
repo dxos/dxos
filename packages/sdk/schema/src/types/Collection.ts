@@ -13,7 +13,7 @@ import { invariant } from '@dxos/invariant';
 
 export const Collection = Schema.Struct({
   name: Schema.String.pipe(Schema.optional),
-  objects: Schema.Array(Type.Ref(Type.Obj.Any)).pipe(Schema.mutable, FormInputAnnotation.set(false)),
+  objects: Schema.Array(Type.Ref(Obj.Any)).pipe(Schema.mutable, FormInputAnnotation.set(false)),
 }).pipe(
   Type.Obj({
     typename: 'dxos.org/type/Collection',

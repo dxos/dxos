@@ -6,7 +6,7 @@ import { Atom, type Registry, RegistryContext, useAtomValue } from '@effect-atom
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Function from 'effect/Function';
 import * as Option from 'effect/Option';
-import * as Schema from 'effect/Schema';
+import type * as Schema from 'effect/Schema';
 import React, { type PropsWithChildren, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 
 import { Filter, type Live, Query, type Space, SpaceState, isSpace, live } from '@dxos/client/echo';
@@ -76,6 +76,7 @@ const createGraph = (client: Client, registry: Registry.Registry): ExpandableGra
   const objectBuilderExtension = createExtension({
     id: 'object',
     connector: (node) => {
+      // TODO(wittjosiah): Find a simpler way to define this type.
       let result: Database.QueryResult<Schema.Schema.Type<typeof Type.Expando>> | undefined;
       return Atom.make((get) =>
         Function.pipe(

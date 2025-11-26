@@ -7,7 +7,7 @@ import type * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { DXN, Format, Type } from '@dxos/echo';
+import { DXN, Entity, Format, Type } from '@dxos/echo';
 import { type Space } from '@dxos/react-client/echo';
 import { Toolbar } from '@dxos/react-ui';
 import { DynamicTable, type TableFeatures } from '@dxos/react-ui-table';
@@ -106,7 +106,7 @@ export const SchemaPanel = (props: { space?: Space }) => {
         id: Type.getDXN(item),
         typename: Type.getTypename(item) ?? '',
         version: Type.getVersion(item) ?? '',
-        kind: Type.getKind(item),
+        kind: Entity.getKind(item),
 
         _original: item, // Store the original item for selection
       }))

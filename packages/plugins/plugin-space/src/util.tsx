@@ -777,10 +777,10 @@ export const getNestedObjects = async (
  */
 // TODO(burdon): Remove.
 export const cloneObject = async (
-  object: Type.Expando,
+  object: Obj.Any,
   resolve: (typename: string) => Record<string, any>,
   newSpace: Space,
-): Promise<Type.Expando> => {
+): Promise<Obj.Any> => {
   const schema = Obj.getSchema(object);
   const typename = schema ? (Type.getTypename(schema) ?? EXPANDO_TYPENAME) : EXPANDO_TYPENAME;
   const metadata = resolve(typename);

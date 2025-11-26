@@ -6,9 +6,11 @@ import * as Schema from 'effect/Schema';
 
 import { EchoObjectSchema } from './object';
 
+export const EXPANDO_TYPENAME = 'dxos.org/type/Expando';
+
 const ExpandoSchema = Schema.Struct({}, { key: Schema.String, value: Schema.Any }).pipe(
   EchoObjectSchema({
-    typename: 'dxos.org/type/Expando',
+    typename: EXPANDO_TYPENAME,
     version: '0.1.0',
   }),
 );

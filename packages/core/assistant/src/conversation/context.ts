@@ -25,10 +25,9 @@ export const ContextBinding = Schema.Struct({
     removed: Schema.Array(Type.Ref(Blueprint.Blueprint)),
   }),
 
-  // TODO(burdon): Type.Expando => Type.Obj (or Obj.Any?)
   objects: Schema.Struct({
-    added: Schema.Array(Type.Ref(Type.Expando)),
-    removed: Schema.Array(Type.Ref(Type.Expando)),
+    added: Schema.Array(Type.Ref(Obj.Any)),
+    removed: Schema.Array(Type.Ref(Obj.Any)),
   }),
 }).pipe(
   Type.Obj({
@@ -41,13 +40,13 @@ export interface ContextBinding extends Schema.Schema.Type<typeof ContextBinding
 
 export type BindingProps = Partial<{
   blueprints: Ref.Ref<Blueprint.Blueprint>[];
-  objects: Ref.Ref<Type.Expando>[];
+  objects: Ref.Ref<Obj.Any>[];
 }>;
 
 export class Bindings {
   readonly blueprints = new ComplexSet<Ref.Ref<Blueprint.Blueprint>>((ref) => ref.dxn.toString());
   // TODO(burdon): Some DXNs have the Space prefix so only compare the object ID.
-  readonly objects = new ComplexSet<Ref.Ref<Type.Expando>>((ref) => ref.dxn.asEchoDXN()?.echoId);
+  readonly objects = new ComplexSet<Ref.Ref<Obj.Any>>((ref) => ref.dxn.asEchoDXN()?.echoId);
 
   toJSON() {
     return {
@@ -68,7 +67,7 @@ export class AiContextBinder extends Resource {
   // TODO(burdon): Cache value?
   private _bindings?: ReadonlySignal<Bindings>;
   private _blueprints?: ReadonlySignal<Ref.Ref<Blueprint.Blueprint>[]>;
-  private _objects?: ReadonlySignal<Ref.Ref<Type.Expando>[]>;
+  private _objects?: ReadonlySignal<Ref.Ref<Obj.Any>[]>;
 
   constructor(private readonly _queue: Queue) {
     super();
