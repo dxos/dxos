@@ -3208,27 +3208,15 @@ importers:
       '@dxos/keys':
         specifier: workspace:*
         version: link:../../common/keys
-      '@dxos/live-object':
-        specifier: workspace:*
-        version: link:../echo/live-object
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
-      '@dxos/node-std':
-        specifier: workspace:*
-        version: link:../../common/node-std
       '@dxos/protocols':
         specifier: workspace:*
         version: link:../protocols
-      '@dxos/schema':
-        specifier: workspace:*
-        version: link:../../sdk/schema
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
-      effect:
-        specifier: 3.18.3
-        version: 3.18.3
     devDependencies:
       '@cloudflare/workers-types':
         specifier: 4.20251106.1

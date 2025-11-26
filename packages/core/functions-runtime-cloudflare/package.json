@@ -32,13 +32,9 @@
     "@dxos/echo-protocol": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
-    "@dxos/live-object": "workspace:*",
     "@dxos/log": "workspace:*",
-    "@dxos/node-std": "workspace:*",
     "@dxos/protocols": "workspace:*",
-    "@dxos/schema": "workspace:*",
-    "@dxos/util": "workspace:*",
-    "effect": "3.18.3"
+    "@dxos/util": "workspace:*"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "4.20251106.1",
