@@ -8,8 +8,11 @@ import { subtleCrypto } from '@dxos/crypto';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { isNode, trim } from '@dxos/util';
+import * as Record from 'effect/Record';
+import * as Function from 'effect/Function';
 
 import { httpPlugin } from '../http-plugin-esbuild';
+import type { Loader } from 'esbuild';
 
 export type Import = {
   moduleUrl: string;
@@ -74,6 +77,7 @@ export const bundleFunction = async ({ source }: BundleOptions): Promise<BundleR
         // Keep output name stable as `index.js` to preserve API.
         index: 'dxos:entrypoint',
       },
+      outdir: '.',
       bundle: true,
       format: 'esm',
       external: ['cloudflare:workers'],
@@ -134,7 +138,8 @@ export const bundleFunction = async ({ source }: BundleOptions): Promise<BundleR
             });
           },
         },
-        PluginESMSh(),
+        // PluginESMSh(),
+        PluginR2VendoredPackages(),
       ],
     });
 
@@ -182,6 +187,96 @@ const PluginESMSh = (): Plugin => ({
           resolveDir: args.resolveDir,
         },
       );
+    });
+  },
+});
+
+/*
+
+node scripts/vendor-packages.mjs
+rclone copy dist/vendor r2:script-vendored-packages
+https://dash.cloudflare.com/950816f3f59b079880a1ae33fb0ec320/r2/default/buckets/script-vendored-packages/settings
+
+*/
+
+// script-vendored-packages bucket on R2
+const SCRIPT_PACKAGES_BUCKET = 'https://pub-5745ae82e450484aa28f75fc6a175935.r2.dev';
+
+const PluginR2VendoredPackages = (): Plugin => ({
+  name: 'r2-vendored-packages',
+  setup(build) {
+    build.onResolve({ filter: /^[^./]/ }, (args) => {
+      if (args.kind === 'entry-point') {
+        return;
+      }
+
+      return {
+        path: new URL(`/${args.path}.js`, SCRIPT_PACKAGES_BUCKET).href,
+        namespace: 'http-url',
+      };
+    });
+
+    // We also want to intercept all import paths inside downloaded files and resolve them against the original URL.
+    // All of these files will be in the "http-url" namespace.
+    // Make sure to keep the newly resolved URL in the "http-url" namespace so imports inside it will also be resolved as URLs recursively.
+    build.onResolve({ filter: /.*/, namespace: 'r2-vendored-packages' }, (args) => ({
+      path: new URL(args.path, args.importer).toString(),
+      namespace: 'r2-vendored-packages',
+    }));
+
+    build.onLoad({ filter: /.*/, namespace: 'r2-vendored-packages' }, async (args) => {
+      log.info('Fetching', { path: args.path });
+      try {
+        const response = await fetch(args.path);
+        const extension = new URL(args.path).pathname.split('.').pop() || '';
+        const text = await response.text();
+        const loader =
+          ((
+            {
+              js: 'js',
+              jsx: 'jsx',
+              ts: 'ts',
+              tsx: 'tsx',
+              // Add more mappings as needed
+            } as const
+          )[extension.toLowerCase()] as Loader) || 'jsx';
+        return {
+          contents: text,
+          loader,
+        } as const;
+      } catch (err) {
+        log.error('failed to fetch', { path: args.path });
+        throw err;
+      }
+    });
+  },
+});
+
+const PluginEmbeddedVendoredPackages = (): Plugin => ({
+  name: 'embedded-vendored-packages',
+  setup(build) {
+    // // https://vite.dev/guide/features#custom-queries
+    const moduleUrls = Function.pipe(
+      import.meta.glob('../../dist/vendor/**/*.js', {
+        query: '?url',
+        import: 'default',
+        eager: true,
+      }) as Record<string, string>,
+      Record.mapKeys((s) => s.replace('../../dist/vendor/', '').replace(/\.js$/, '')),
+      Record.filter((_, key) => !key.startsWith('internal/')),
+    );
+
+    // console.log(moduleUrls);
+
+    build.onResolve({ filter: /^[^./]/ }, (args) => {
+      if (args.kind === 'entry-point') {
+        return;
+      }
+
+      return build.resolve(new URL(moduleUrls[args.path], import.meta.url).href, {
+        kind: args.kind,
+        resolveDir: args.resolveDir,
+      });
     });
   },
 });
