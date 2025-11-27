@@ -17,13 +17,15 @@ import { NewForm, type NewFormRootProps } from './NewForm';
 
 // TODO(burdon): Use @dxos/types.
 
-const PersonSchema = Schema.Struct({
+const Person = Schema.Struct({
   name: Schema.optional(Schema.String.annotations({ title: 'Name' })),
   // active: Schema.optional(Schema.Boolean.annotations({ title: 'Active' })),
   // rank: Schema.optional(Schema.Number.annotations({ title: 'Rank' })),
   // website: Schema.optional(Format.URL.annotations({ title: 'Website' })),
   // address: Schema.optional(AddressSchema),
 }).pipe(Schema.mutable);
+
+export interface Person extends Schema.Schema.Type<typeof Person> {}
 
 type StoryProps<T extends AnyProperties> = {
   debug?: boolean;
@@ -45,7 +47,10 @@ const DefaultStory = <T extends AnyProperties = AnyProperties>({
     <Tooltip.Provider>
       <TestLayout json={{ values, schema: schema.ast }}>
         <TestPanel>
-          <NewForm.Root schema={schema} values={values} onSave={handleSave} />
+          <NewForm.Root debug={debug} schema={schema} values={values} onSave={handleSave} {...props}>
+            <NewForm.Content />
+            <NewForm.Actions />
+          </NewForm.Root>
         </TestPanel>
       </TestLayout>
     </Tooltip.Provider>
@@ -69,6 +74,6 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
   args: {
-    schema: PersonSchema,
+    schema: Person,
   },
 };
