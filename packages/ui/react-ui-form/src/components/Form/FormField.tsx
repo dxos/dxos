@@ -6,32 +6,38 @@ import * as Function from 'effect/Function';
 import * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
 import * as StringEffect from 'effect/String';
-import React, { forwardRef, useMemo } from 'react';
+import React, { useMemo } from 'react';
 
+import { Format } from '@dxos/echo';
 import { createJsonPath, findNode, getDiscriminatedType, isDiscriminatedUnion } from '@dxos/effect';
-import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
-import { type ProjectionModel, type SchemaProperty, getSchemaProperties } from '@dxos/schema';
-import { isTruthy } from '@dxos/util';
+import { type ProjectionModel, type SchemaProperty } from '@dxos/schema';
 
-import { type QueryRefOptions } from '../../hooks';
 import { getRefProps } from '../../util';
 
-import { getInputComponent } from './factory';
-import { ArrayField, RefField, type RefFieldProps, SelectField } from './fields';
-import { type FormFieldLookup } from './Form';
-import { FormErrorBoundary } from './FormErrorBoundary';
-import { type FormFieldComponent } from './FormFieldComponent';
-import { useFormFieldState, useFormValues } from './FormRoot';
+import {
+  ArrayField,
+  BooleanField,
+  GeoPointField,
+  MarkdownField,
+  NumberField,
+  RefField,
+  type RefFieldProps,
+  SelectField,
+  TextField,
+} from './fields';
+import { type FormFieldComponent, type FormFieldLookup, type FormFieldMap } from './FormFieldComponent';
+import { FormFieldSet } from './FormFieldSet';
+import { useFormFieldState } from './FormRoot';
 
 export type FormFieldProps = {
   property: SchemaProperty<any>;
   path?: (string | number)[];
-  /** Used to indicate if input should be presented inline (e.g. for array items). */
+  /** Indicates if input should be presented inline (e.g. for array items). */
   inline?: boolean;
   projection?: ProjectionModel;
   lookupComponent?: FormFieldLookup;
-  Custom?: Partial<Record<string, FormFieldComponent>>;
+  fieldMap?: FormFieldMap;
 } & Pick<
   RefFieldProps,
   | 'readonly'
@@ -44,12 +50,12 @@ export type FormFieldProps = {
 >;
 
 export const FormField = ({
-  Custom,
   property,
   path,
   readonly,
   inline,
   projection,
+  fieldMap,
   lookupComponent,
   createOptionLabel,
   createOptionIcon,
@@ -71,7 +77,7 @@ export const FormField = ({
   // Registry and Custom.
   //
 
-  const FoundComponent = lookupComponent?.({
+  const Component = lookupComponent?.({
     prop: name,
     schema: Schema.make(ast),
     inputProps: {
@@ -83,13 +89,12 @@ export const FormField = ({
       ...inputProps,
     },
   });
-
-  if (FoundComponent) {
-    return FoundComponent;
+  if (Component) {
+    return Component;
   }
 
   const jsonPath = createJsonPath(path ?? []);
-  const CustomComponent = Custom?.[jsonPath];
+  const CustomComponent = fieldMap?.[jsonPath];
   if (CustomComponent) {
     return (
       <CustomComponent
@@ -112,14 +117,14 @@ export const FormField = ({
   if (refProps) {
     return (
       <RefField
-        ast={refProps.ast}
-        array={refProps.isArray}
         type={type}
         format={format}
-        label={label}
-        placeholder={placeholder}
         readonly={readonly}
         inputOnly={inline}
+        label={label}
+        placeholder={placeholder}
+        ast={refProps.ast}
+        array={refProps.isArray}
         onQueryRefOptions={onQueryRefOptions}
         createOptionLabel={createOptionLabel}
         createOptionIcon={createOptionIcon}
@@ -143,7 +148,26 @@ export const FormField = ({
         readonly={readonly}
         inputOnly={inline}
         label={label}
+        placeholder={placeholder}
         options={options.map((option) => ({ value: option, label: String(option) }))}
+        {...inputProps}
+      />
+    );
+  }
+
+  //
+  // Standard Inputs.
+  //
+
+  const Field = getFormFieldComponent({ property });
+  if (Field) {
+    return (
+      <Field
+        type={type}
+        format={format}
+        readonly={readonly}
+        inputOnly={inline}
+        label={label}
         placeholder={placeholder}
         {...inputProps}
       />
@@ -155,25 +179,8 @@ export const FormField = ({
   //
 
   if (array) {
-    return <ArrayField property={property} path={path} inputProps={inputProps} readonly={readonly} Custom={Custom} />;
-  }
-
-  //
-  // Standard Inputs.
-  //
-
-  const InputComponent = getInputComponent(type, format);
-  if (InputComponent) {
     return (
-      <InputComponent
-        type={type}
-        format={format}
-        label={label}
-        inputOnly={inline}
-        placeholder={placeholder}
-        readonly={readonly}
-        {...inputProps}
-      />
+      <ArrayField property={property} path={path} inputProps={inputProps} readonly={readonly} fieldMap={fieldMap} />
     );
   }
 
@@ -191,17 +198,17 @@ export const FormField = ({
       return (
         <>
           {!inline && <h3 className={mx('text-lg mlb-inputSpacingBlock first:mbs-0')}>{label}</h3>}
-          <FormFields
+          <FormFieldSet
             schema={Schema.make(typeLiteral)}
             path={path}
             readonly={readonly}
             projection={projection}
-            onQueryRefOptions={onQueryRefOptions}
             createOptionLabel={createOptionLabel}
             createOptionIcon={createOptionIcon}
-            onCreate={onCreate}
-            Custom={Custom}
+            fieldMap={fieldMap}
             lookupComponent={lookupComponent}
+            onCreate={onCreate}
+            onQueryRefOptions={onQueryRefOptions}
           />
         </>
       );
@@ -213,114 +220,33 @@ export const FormField = ({
 
 FormField.displayName = 'Form.FormField';
 
-export type FormFieldsProps = ThemedClassName<
-  {
-    testId?: string;
-    schema: Schema.Schema.All;
-    /**
-     * Path to the current object from the root. Used with nested forms.
-     */
-    path?: (string | number)[];
-    exclude?: (props: SchemaProperty<any>[]) => SchemaProperty<any>[];
-    // TODO(burdon): Function.
-    sort?: string[];
-    /**
-     * Optional projection for projection-based field management.
-     */
-    projection?: ProjectionModel;
-    lookupComponent?: FormFieldLookup;
-    /**
-     * Map of custom renderers for specific properties.
-     * Prefer lookupComponent for plugin specific input surfaces.
-     */
-    Custom?: Partial<Record<string, FormFieldComponent>>;
-    onQueryRefOptions?: QueryRefOptions;
-  } & Pick<FormFieldProps, 'readonly'> &
-    Pick<
-      RefFieldProps,
-      | 'onQueryRefOptions'
-      | 'createOptionLabel'
-      | 'createOptionIcon'
-      | 'onCreate'
-      | 'createSchema'
-      | 'createInitialValuePath'
-    >
->;
+/**
+ * Get property input component.
+ */
+const getFormFieldComponent = ({ property }: Pick<FormFieldProps, 'property'>): FormFieldComponent | undefined => {
+  const { type, format } = property;
 
-export const FormFields = forwardRef<HTMLDivElement, FormFieldsProps>(
-  (
-    {
-      classNames,
-      schema,
-      path,
-      exclude,
-      sort,
-      projection,
-      readonly,
-      lookupComponent,
-      Custom,
-      onQueryRefOptions,
-      ...props
-    },
-    forwardRef,
-  ) => {
-    const values = useFormValues(FormFields.displayName!, path);
-    const properties = useMemo(() => {
-      const props = getSchemaProperties(schema.ast, values, { form: true });
+  //
+  // Standard types.
+  //
 
-      // Use projection-based field management when view and projection are available.
-      if (projection) {
-        const fieldProjections = projection.getFieldProjections();
-        const hiddenProperties = new Set(projection.getHiddenProperties());
+  switch (type) {
+    case 'string':
+      return TextField;
+    case 'number':
+      return NumberField;
+    case 'boolean':
+      return BooleanField;
+  }
 
-        // Filter properties to only include visible ones and order by projection.
-        const visibleProps = props.filter((prop) => !hiddenProperties.has(prop.name));
-        const orderedProps: SchemaProperty<any>[] = [];
+  //
+  // Standard formats.
+  //
 
-        // Add properties in projection field order.
-        for (const fieldProjection of fieldProjections) {
-          const fieldPath = String(fieldProjection.field.path);
-          const prop = visibleProps.find((p) => p.name === fieldPath);
-          if (prop) {
-            orderedProps.push(prop);
-          }
-        }
-
-        // Add any remaining properties not in projection.
-        const projectionPaths = new Set(fieldProjections.map((fp) => String(fp.field.path)));
-        const remainingProps = visibleProps.filter((prop) => !projectionPaths.has(prop.name));
-        orderedProps.push(...remainingProps);
-        return orderedProps;
-      }
-
-      // Fallback to legacy filter/sort behavior.
-      const filtered = exclude ? exclude(props) : props;
-      return sort ? filtered.sort((a, b) => sort.indexOf(a.name) - sort.indexOf(b.name)) : filtered;
-    }, [schema, values, exclude, sort, projection?.fields]);
-
-    return (
-      <div role='form' className={mx('is-full', classNames)} ref={forwardRef}>
-        {properties
-          .map((property) => {
-            return (
-              <FormErrorBoundary key={property.name} path={[...(path ?? []), property.name]}>
-                <FormField
-                  property={property}
-                  path={[...(path ?? []), property.name]}
-                  readonly={readonly}
-                  projection={projection}
-                  onQueryRefOptions={onQueryRefOptions}
-                  lookupComponent={lookupComponent}
-                  Custom={Custom}
-                  {...props}
-                />
-              </FormErrorBoundary>
-            );
-          })
-          .filter(isTruthy)}
-      </div>
-    );
-  },
-);
-
-FormFields.displayName = 'Form.Fields';
+  switch (format) {
+    case Format.TypeFormat.GeoPoint:
+      return GeoPointField;
+    case Format.TypeFormat.Markdown:
+      return MarkdownField;
+  }
+};

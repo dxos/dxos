@@ -19,7 +19,7 @@ import {
   ControlPage,
   ControlSection,
   Form,
-  type FormFieldComponent,
+  type FormFieldMap,
 } from '@dxos/react-ui-form';
 import { HuePicker, IconPicker } from '@dxos/react-ui-pickers';
 import { StackItem } from '@dxos/react-ui-stack';
@@ -102,7 +102,7 @@ export const SpaceSettingsContainer = ({ space }: SpaceSettingsContainerProps) =
     [space.properties.name, space.properties.icon, space.properties.hue, edgeReplication, archived],
   );
 
-  const customElements: Partial<Record<string, FormFieldComponent>> = useMemo(
+  const fieldMap = useMemo<FormFieldMap>(
     () => ({
       name: ({ type, label, getValue, onValueChange }) => {
         const handleChange = useCallback(
@@ -190,13 +190,13 @@ export const SpaceSettingsContainer = ({ space }: SpaceSettingsContainerProps) =
           })}
         >
           <Form
+            classNames='container-max-width grid grid-cols-1 md:grid-cols-[1fr_min-content]'
+            outerSpacing={false}
             schema={FormSchema}
             values={values}
+            fieldMap={fieldMap}
             autoSave
             onSave={handleSave}
-            Custom={customElements}
-            outerSpacing={false}
-            classNames='container-max-width grid grid-cols-1 md:grid-cols-[1fr_min-content]'
           />
         </ControlSection>
         <ControlSection

@@ -78,7 +78,7 @@ const DefaultStory = ({ id = 'test', init, sidebar, children, ...props }: Render
             <Form
               schema={RectangleShapeWithoutRef}
               values={selected}
-              Custom={{
+              fieldMap={{
                 // TODO(burdon): Replace by type.
                 ['center' as const]: (props) => <TupleField {...props} binding={['x', 'y']} />,
                 ['size' as const]: (props) => <TupleField {...props} binding={['width', 'height']} />,

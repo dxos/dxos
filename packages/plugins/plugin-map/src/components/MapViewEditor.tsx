@@ -84,7 +84,7 @@ export const MapViewEditor = ({ object }: MapViewEditorProps) => {
     [view],
   );
 
-  const custom: FormFieldMap = useMemo(
+  const fieldMap = useMemo<FormFieldMap>(
     () => ({
       coordinateSource: (props) => <SelectField {...props} options={schemaOptions} />,
       coordinateColumn: (props) => <SelectField {...props} options={locationFields} />,
@@ -98,13 +98,13 @@ export const MapViewEditor = ({ object }: MapViewEditorProps) => {
 
   return (
     <Form
+      classNames='pbs-inputSpacingBlock'
       schema={MapSettingsSchema}
       values={initialValues}
-      onSave={onSave}
-      autoSave
-      Custom={custom}
+      fieldMap={fieldMap}
       outerSpacing='blockStart-0'
-      classNames='pbs-inputSpacingBlock'
+      autoSave
+      onSave={onSave}
     />
   );
 };

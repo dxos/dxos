@@ -10,7 +10,7 @@ import { Function, Script, Trigger } from '@dxos/functions';
 import { Filter, Ref, type Space, useQuery } from '@dxos/react-client/echo';
 import { Input } from '@dxos/react-ui';
 import { QueryForm, type QueryFormProps } from '@dxos/react-ui-components';
-import { Form, type FormFieldMap, FormFieldLabel, SelectField, useRefQueryLookupHandler } from '@dxos/react-ui-form';
+import { Form, FormFieldLabel, type FormFieldMap, SelectField, useRefQueryLookupHandler } from '@dxos/react-ui-form';
 
 import { FunctionInputEditor, type FunctionInputEditorProps } from './FunctionInputEditor';
 import { SpecSelector } from './SpecSelector';
@@ -30,14 +30,14 @@ export const TriggerEditor = ({ space, trigger, readonlySpec, types, tags, onSav
   };
 
   const handleRefQueryLookup = useRefQueryLookupHandler({ space });
-  const Custom = useCustomInputs({ space, readonlySpec, types, tags, onQueryRefOptions: handleRefQueryLookup });
+  const fieldMap = useCustomInputs({ space, readonlySpec, types, tags, onQueryRefOptions: handleRefQueryLookup });
 
   return (
     <Form
       outerSpacing={false}
-      Custom={Custom}
       schema={Trigger.Trigger}
       values={trigger}
+      fieldMap={fieldMap}
       onSave={handleSave}
       onCancel={onCancel}
       onQueryRefOptions={handleRefQueryLookup}
@@ -51,7 +51,13 @@ type UseCustomInputsProps = {
   onQueryRefOptions: FunctionInputEditorProps['onQueryRefOptions'];
 } & Pick<QueryFormProps, 'types' | 'tags'>;
 
-const useCustomInputs = ({ space, readonlySpec, types, tags, onQueryRefOptions }: UseCustomInputsProps) => {
+const useCustomInputs = ({
+  space,
+  readonlySpec,
+  types,
+  tags,
+  onQueryRefOptions,
+}: UseCustomInputsProps): FormFieldMap => {
   const functions = useQuery(space, Filter.type(Function.Function));
   const workflows = useQuery(space, Filter.type(ComputeGraph));
   const scripts = useQuery(space, Filter.type(Script.Script));

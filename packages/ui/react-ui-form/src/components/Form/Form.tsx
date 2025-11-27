@@ -3,8 +3,7 @@
 //
 
 import { useFocusFinders } from '@fluentui/react-tabster';
-import type * as Schema from 'effect/Schema';
-import React, { type ReactElement, useCallback, useEffect, useRef } from 'react';
+import React, { useCallback, useEffect, useRef } from 'react';
 
 import { type AnyProperties, type PropertyKey } from '@dxos/echo/internal';
 import { type ThemedClassName } from '@dxos/react-ui';
@@ -14,19 +13,10 @@ import { type ProjectionModel, type SchemaProperty } from '@dxos/schema';
 import { type FormHandler, type FormOptions } from '../../hooks';
 
 import { FormActions, type FormOuterSpacing } from './FormActions';
-import { FormFields, type FormFieldsProps } from './FormField';
-import { type FormFieldComponent, type FormFieldComponentProps } from './FormFieldComponent';
+import { FormFieldSet, type FormFieldSetProps } from './FormFieldSet';
 import { FormProvider } from './FormRoot';
 
 export type PropertyFilter<T extends AnyProperties> = (props: SchemaProperty<T>[]) => SchemaProperty<T>[];
-
-export type FormFieldLookup = (args: {
-  prop: string;
-  schema: Schema.Schema<any>;
-  inputProps: FormFieldComponentProps;
-}) => ReactElement | undefined;
-
-export type FormFieldMap = Partial<Record<string, FormFieldComponent>>;
 
 export type FormProps<T extends AnyProperties> = ThemedClassName<{
   id?: string;
@@ -36,12 +26,13 @@ export type FormProps<T extends AnyProperties> = ThemedClassName<{
   projection?: ProjectionModel;
   autoFocus?: boolean;
   autoSave?: boolean;
+  // TODO(burdon): Remove?
   outerSpacing?: FormOuterSpacing;
   onCancel?: () => void;
 }> &
   Pick<FormOptions<T>, 'schema' | 'onValuesChanged' | 'onValidate' | 'onSave'> &
   // TODO(wittjosiah): This needs to support different ref field options per field.
-  FormFieldsProps;
+  FormFieldSetProps;
 
 export const Form = <T extends AnyProperties>({
   classNames,
@@ -94,7 +85,7 @@ export const Form = <T extends AnyProperties>({
       onSave={onSave}
     >
       <div role='none' className='contents' {...(id && { 'data-object-id': id })} data-testid={testId}>
-        <FormFields
+        <FormFieldSet
           {...props}
           ref={formRef}
           classNames={[

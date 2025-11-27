@@ -189,7 +189,7 @@ export const DiscriminatedShape: StoryObj<StoryProps<ShapeSchema>> = {
         radius: 5,
       },
     },
-    Custom: {
+    fieldMap: {
       ['shape.type' as const]: (props) => (
         <SelectField
           {...props}

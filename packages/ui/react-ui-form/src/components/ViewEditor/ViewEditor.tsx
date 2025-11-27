@@ -28,7 +28,14 @@ import {
 
 import { translationKey } from '../../translations';
 import { FieldEditor } from '../FieldEditor';
-import { Form, type FormFieldComponent, FormFieldLabel, type FormFieldComponentProps, type FormProps } from '../Form';
+import {
+  Form,
+  type FormFieldComponent,
+  type FormFieldComponentProps,
+  FormFieldLabel,
+  type FormFieldMap,
+  type FormProps,
+} from '../Form';
 
 const listGrid = 'grid grid-cols-[min-content_1fr_min-content_min-content_min-content]';
 const listItemGrid = 'grid grid-cols-subgrid col-span-5';
@@ -115,6 +122,11 @@ export const ViewEditor = forwardRef<ProjectionModel, ViewEditorProps>(
       [mode, view.query.ast, queueTarget],
     );
 
+    const fieldMap = useMemo<FormFieldMap | undefined>(
+      () => (mode === 'tag' ? customFields({ types, tags }) : undefined),
+      [mode, types, tags],
+    );
+
     const handleToggleField = useCallback(
       (field: FieldType) => {
         setExpandedField((prevExpandedFieldId) => (prevExpandedFieldId === field.id ? undefined : field.id));
@@ -182,8 +194,6 @@ export const ViewEditor = forwardRef<ProjectionModel, ViewEditorProps>(
       [projectionModel],
     );
 
-    const custom = useMemo(() => (mode === 'tag' ? customFields({ types, tags }) : undefined), [types, tags, mode]);
-
     return (
       <div role='none' className={mx(classNames)}>
         {/* If readonlyProp is set, then the callout is not needed. */}
@@ -196,12 +206,12 @@ export const ViewEditor = forwardRef<ProjectionModel, ViewEditorProps>(
         {/* TODO(burdon): Is the form read-only or just the schema? */}
         {/* TODO(burdon): Readonly fields should take up the same space as editable fields (just be ghosted). */}
         <Form<Schema.Schema.Type<typeof viewSchema>>
+          outerSpacing={outerSpacing}
           autoSave
           schema={viewSchema}
           values={viewValues}
+          fieldMap={fieldMap}
           onSave={handleUpdate}
-          outerSpacing={outerSpacing}
-          Custom={custom}
         />
 
         <div role='none' className={outerSpacing ? cardSpacing : 'mlb-cardSpacingBlock'}>

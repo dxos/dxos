@@ -20,7 +20,7 @@ import {
 } from '@dxos/schema';
 
 import { translationKey } from '../../translations';
-import { Form, type FormFieldComponent, type FormProps, SelectField, SelectOptionField } from '../Form';
+import { Form, type FormFieldMap, type FormProps, SelectField, SelectOptionField } from '../Form';
 
 export type FieldEditorProps = {
   projection: ProjectionModel;
@@ -135,7 +135,7 @@ export const FieldEditor = ({
     onSave();
   }, [onSave]);
 
-  const custom: Partial<Record<string, FormFieldComponent>> = useMemo(
+  const fieldMap = useMemo<FormFieldMap>(
     () => ({
       ['format' satisfies keyof PropertyType]: (props) => (
         <SelectField
@@ -184,18 +184,18 @@ export const FieldEditor = ({
   return (
     <Form<PropertyType>
       key={field.id}
+      outerSpacing={outerSpacing}
       autoFocus
       readonly={readonly}
-      values={props}
       schema={fieldSchema}
+      values={props}
+      fieldMap={fieldMap}
       exclude={propIsNotType}
       sort={['property', 'format']}
       onValuesChanged={handleValuesChanged}
       onValidate={handleValidate}
       onSave={handleSave}
       onCancel={handleCancel}
-      Custom={custom}
-      outerSpacing={outerSpacing}
     />
   );
 };

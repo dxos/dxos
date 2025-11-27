@@ -2,7 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { type FC, type FocusEvent } from 'react';
+import type * as Schema from 'effect/Schema';
+import React, { type FC, type FocusEvent, type ReactElement } from 'react';
 
 import { type Format } from '@dxos/echo/internal';
 import { type SimpleType } from '@dxos/effect';
@@ -28,19 +29,27 @@ export type FormFieldComponentProps = {
   format?: Format.TypeFormat;
   label: string;
   placeholder?: string;
-  inputOnly?: boolean;
   /**
    * Specifies the readonly variant: either disabled inputs, elements indicating they are usually editable but currently are not;
    * or `static`, a field’s representation as regular content without signifiers that it is ever editable.
    */
   // TODO(burdon): Rename 'mode'.
   readonly?: 'disabled-input' | 'static' | false;
+  inputOnly?: boolean;
 } & FormFieldStateProps;
 
 /**
  * Form field component.
  */
 export type FormFieldComponent = FC<FormFieldComponentProps>;
+
+export type FormFieldMap = Record<string, FormFieldComponent>;
+
+export type FormFieldLookup = (props: {
+  prop: string; // TODO(burdon): Path?
+  schema: Schema.Schema<any>;
+  inputProps: FormFieldComponentProps;
+}) => ReactElement | undefined;
 
 export type FormFieldLabelProps = {
   label: string;

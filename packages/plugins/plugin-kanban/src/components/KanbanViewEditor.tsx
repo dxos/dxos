@@ -42,20 +42,21 @@ export const KanbanViewEditor = ({ object }: KanbanViewEditorProps) => {
     () => ({ columnFieldId: view?.projection.pivotFieldId }),
     [view?.projection.pivotFieldId],
   );
-  const custom: FormFieldMap = useMemo(
+
+  const fieldMap: FormFieldMap = useMemo(
     () => ({ columnFieldId: (props) => <SelectField {...props} options={selectFields} /> }),
     [selectFields],
   );
 
   return (
     <Form
-      Custom={custom}
+      classNames='pbs-inputSpacingBlock'
+      outerSpacing={false}
+      autoSave
       schema={SettingsSchema}
       values={initialValues}
+      fieldMap={fieldMap}
       onSave={handleSave}
-      autoSave
-      outerSpacing={false}
-      classNames='pbs-inputSpacingBlock'
     />
   );
 };

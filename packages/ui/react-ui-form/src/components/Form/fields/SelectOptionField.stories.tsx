@@ -35,8 +35,8 @@ const DefaultStory = () => {
         <Form
           schema={schema}
           values={values}
+          fieldMap={{ options: SelectOptionField }}
           onSave={(vals) => setValues(vals)}
-          Custom={{ options: SelectOptionField }}
         />
       </TestPanel>
     </TestLayout>

@@ -15,7 +15,7 @@ import {
   ControlPage,
   ControlSection,
   Form,
-  type FormFieldComponent,
+  type FormFieldMap,
 } from '@dxos/react-ui-form';
 import { EmojiPickerBlock, HuePicker } from '@dxos/react-ui-pickers';
 import { hexToEmoji, hexToHue } from '@dxos/util';
@@ -73,7 +73,7 @@ export const ProfileContainer = () => {
   );
 
   // TODO(wittjosiah): Integrate descriptions with the form schema.
-  const customFields: Partial<Record<string, FormFieldComponent>> = useMemo(
+  const fieldMap = useMemo<FormFieldMap>(
     () => ({
       displayName: ({ type, label, getValue, onValueChange }) => {
         const handleChange = useCallback(
@@ -141,13 +141,13 @@ export const ProfileContainer = () => {
       <Clipboard.Provider>
         <ControlSection title={t('profile label')} description={t('profile description')}>
           <Form
-            schema={ProfileSchema}
-            values={values}
-            autoSave
-            onSave={handleSave}
             classNames='container-max-width grid grid-cols-1 md:grid-cols-[1fr_min-content]'
             outerSpacing={false}
-            Custom={customFields}
+            autoSave
+            schema={ProfileSchema}
+            values={values}
+            fieldMap={fieldMap}
+            onSave={handleSave}
           />
         </ControlSection>
       </Clipboard.Provider>

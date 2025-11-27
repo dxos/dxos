@@ -14,20 +14,24 @@ import { type SchemaProperty, getSchemaProperties } from '@dxos/schema';
 
 import { translationKey } from '../../../translations';
 import { findArrayElementType } from '../../../util';
-import { type FormFieldLookup } from '../Form';
 import { FormField, type FormFieldProps } from '../FormField';
-import { type FormFieldStateProps, type FormFieldComponent, FormFieldLabel } from '../FormFieldComponent';
+import {
+  FormFieldLabel,
+  type FormFieldLookup,
+  type FormFieldMap,
+  type FormFieldStateProps,
+} from '../FormFieldComponent';
 import { useFormValues } from '../FormRoot';
 
 type ArrayFieldProps = {
   property: SchemaProperty<any>;
   inputProps: FormFieldStateProps;
   path?: (string | number)[];
-  Custom?: Partial<Record<string, FormFieldComponent>>;
+  fieldMap?: FormFieldMap;
   lookupComponent?: FormFieldLookup;
 } & Pick<FormFieldProps, 'readonly'>;
 
-export const ArrayField = ({ property, readonly, path, inputProps, Custom, lookupComponent }: ArrayFieldProps) => {
+export const ArrayField = ({ property, readonly, path, inputProps, fieldMap, lookupComponent }: ArrayFieldProps) => {
   const { t } = useTranslation(translationKey);
   const { ast, name, type, title } = property;
   // TODO(wittjosiah): The fallback to an empty array stops the form from crashing but isn't immediately live.
@@ -87,14 +91,14 @@ export const ArrayField = ({ property, readonly, path, inputProps, Custom, looku
             <FormField
               property={{
                 ...property,
-                array: false, // NOTE(ZaymonFC): This breaks arrays of arrays but ¯\_(ツ)_/¯. Ping me if you need that.
+                array: false, // NOTE(ZaymonFC): This breaks arrays of arrays.
                 ast: elementType,
               }}
               path={[...(path ?? []), index]}
               readonly={readonly}
-              inline
-              Custom={Custom}
+              fieldMap={fieldMap}
               lookupComponent={lookupComponent}
+              inline
             />
           );
           return readonly ? (
