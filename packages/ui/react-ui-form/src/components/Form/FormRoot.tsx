@@ -55,20 +55,16 @@ export const useFormFieldState = (componentName: string, path: (string | number)
   );
 };
 
-export const FormProvider = ({
-  children,
-  formRef,
-  autoSave,
-  ...formOptions
-}: PropsWithChildren<
+export type FormProviderProps = PropsWithChildren<
   FormOptions<any> & {
     formRef?: RefObject<HTMLDivElement | null>;
     autoSave?: boolean;
   }
->) => {
+>;
+
+export const FormProvider = ({ children, formRef, autoSave, ...formOptions }: FormProviderProps) => {
   const form = useFormHandler(formOptions);
   useKeyHandler(formRef?.current ?? null, form, autoSave);
-
   return <FormContext.Provider value={form}>{children}</FormContext.Provider>;
 };
 

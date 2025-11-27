@@ -110,7 +110,7 @@ export const CreateObjectPanel = ({
         values={initialFormValues}
         schema={metadata.inputSchema}
         onSave={handleCreateObject}
-        lookupComponent={inputSurfaceLookup}
+        fieldProvider={inputSurfaceLookup}
         outerSpacing='blockStart-0'
       />
     </div>

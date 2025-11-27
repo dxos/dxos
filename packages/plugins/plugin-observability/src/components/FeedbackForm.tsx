@@ -15,8 +15,7 @@ const defaultValues: UserFeedback = { message: '' };
 
 const FeedbackContent = () => {
   const { t } = useTranslation(meta.id);
-  const { handleSave, canSave } = useFormContext<UserFeedback>(FeedbackContent.displayName);
-
+  const { onSave, canSave } = useFormContext<UserFeedback>(FeedbackContent.displayName);
   const messageProps = useFormFieldState(FeedbackContent.displayName, ['message']);
 
   return (
@@ -48,7 +47,7 @@ const FeedbackContent = () => {
           type='submit'
           classNames='is-full'
           disabled={!canSave}
-          onClick={handleSave}
+          onClick={onSave}
         />
       </div>
     </div>

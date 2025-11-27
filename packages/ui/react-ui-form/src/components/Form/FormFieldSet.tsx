@@ -30,7 +30,7 @@ export type FormFieldSetProps = ThemedClassName<
     | 'projection'
     | 'readonly'
     | 'fieldMap'
-    | 'lookupComponent'
+    | 'fieldProvider'
     | 'createSchema'
     | 'createOptionLabel'
     | 'createOptionIcon'
@@ -51,7 +51,7 @@ export const FormFieldSet = forwardRef<HTMLDivElement, FormFieldSetProps>(
       projection,
       readonly,
       fieldMap,
-      lookupComponent,
+      fieldProvider,
       onQueryRefOptions,
       ...props
     },
@@ -104,7 +104,7 @@ export const FormFieldSet = forwardRef<HTMLDivElement, FormFieldSetProps>(
                   readonly={readonly}
                   projection={projection}
                   fieldMap={fieldMap}
-                  lookupComponent={lookupComponent}
+                  fieldProvider={fieldProvider}
                   onQueryRefOptions={onQueryRefOptions}
                   {...props}
                 />

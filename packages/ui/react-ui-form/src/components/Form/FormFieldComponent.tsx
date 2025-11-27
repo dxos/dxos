@@ -35,6 +35,7 @@ export type FormFieldComponentProps = {
    */
   // TODO(burdon): Rename 'mode'.
   readonly?: 'disabled' | 'static' | false;
+  // TODO(burdon): Document.
   inputOnly?: boolean;
 } & FormFieldStateProps;
 
@@ -46,9 +47,9 @@ export type FormFieldComponent = FC<FormFieldComponentProps>;
 export type FormFieldMap = Record<string, FormFieldComponent>;
 
 export type FormFieldLookup = (props: {
-  prop: string; // TODO(burdon): Path?
   schema: Schema.Schema<any>;
-  inputProps: FormFieldComponentProps;
+  prop: string; // TODO(burdon): Path?
+  fieldProps: FormFieldComponentProps;
 }) => ReactElement | undefined;
 
 export type FormFieldLabelProps = {

@@ -26,7 +26,12 @@ import {
   SelectField,
   TextField,
 } from './fields';
-import { type FormFieldComponent, type FormFieldLookup, type FormFieldMap } from './FormFieldComponent';
+import {
+  type FormFieldComponent,
+  type FormFieldComponentProps,
+  type FormFieldLookup,
+  type FormFieldMap,
+} from './FormFieldComponent';
 import { FormFieldSet } from './FormFieldSet';
 import { useFormFieldState } from './FormRoot';
 
@@ -35,21 +40,28 @@ export type FormFieldProps = {
    * Property to render.
    */
   property: SchemaProperty<any>;
+
   /**
    * Path to the current object from the root. Used with nested forms.
    */
   path?: (string | number)[];
+
   /**
    * Optional projection for projection-based field management.
    */
   projection?: ProjectionModel;
+
   /**
    * Map of custom renderers for specific properties.
-   * Prefer lookupComponent for plugin specific input surfaces.
+   * Prefer fieldProvider for plugin specific input surfaces.
    */
   fieldMap?: FormFieldMap;
-  // TODO(burdon): Combine with fieldMap (i.e., Map | Funciton).
-  lookupComponent?: FormFieldLookup;
+
+  /**
+   * Function to lookup custom renderers for specific properties.
+   */
+  fieldProvider?: FormFieldLookup;
+
   /**
    * Indicates if input should be presented inline (e.g., for array items).
    */
@@ -68,20 +80,19 @@ export type FormFieldProps = {
 export const FormField = ({
   property,
   path,
-  readonly,
-  inline,
   projection,
   fieldMap,
-  lookupComponent,
+  fieldProvider,
+  inline,
+  readonly,
+  createSchema,
   createOptionLabel,
   createOptionIcon,
-  createSchema,
   createInitialValuePath,
   onCreate,
   onQueryRefOptions,
 }: FormFieldProps) => {
-  const { ast, name, type, format, title, description, options, examples, array } = property;
-  const inputProps = useFormFieldState(FormField.displayName, path);
+  const { ast, name, type, format, array, options, title, description, examples } = property;
 
   const label = useMemo(() => title ?? Function.pipe(name, StringEffect.capitalize), [title, name]);
   const placeholder = useMemo(
@@ -89,140 +100,112 @@ export const FormField = ({
     [examples, description],
   );
 
-  //
-  // Registry and Custom.
-  //
+  const fieldState = useFormFieldState(FormField.displayName, path);
+  const fieldProps: FormFieldComponentProps = {
+    type,
+    format,
+    label,
+    placeholder,
+    readonly,
+    inputOnly: inline,
+    ...fieldState,
+  };
 
-  const Component = lookupComponent?.({
-    prop: name,
-    schema: Schema.make(ast),
-    inputProps: {
-      type,
-      format,
-      label,
-      readonly,
-      placeholder,
-      ...inputProps,
-    },
-  });
-  if (Component) {
-    return Component;
-  }
+  //
+  // Custom field.
+  //
 
   const jsonPath = createJsonPath(path ?? []);
-  const CustomComponent = fieldMap?.[jsonPath];
-  if (CustomComponent) {
-    return (
-      <CustomComponent
-        type={type}
-        format={format}
-        label={label}
-        inputOnly={inline}
-        placeholder={placeholder}
-        readonly={readonly}
-        {...inputProps}
-      />
-    );
+  const CustomField = fieldMap?.[jsonPath];
+  if (CustomField) {
+    return <CustomField {...fieldProps} />;
+  }
+
+  const component = fieldProvider?.({ schema: Schema.make(ast), prop: name, fieldProps });
+  if (component) {
+    return component;
   }
 
   //
-  // Refs.
+  // Simple field.
+  //
+
+  const Field = getSimpleFormField({ property });
+  if (Field) {
+    return <Field {...fieldProps} />;
+  }
+
+  //
+  // Ref field.
   //
 
   const refProps = getRefProps(property);
   if (refProps) {
     return (
       <RefField
-        type={type}
-        format={format}
-        readonly={readonly}
-        inputOnly={inline}
-        label={label}
-        placeholder={placeholder}
+        {...fieldProps}
         ast={refProps.ast}
         array={refProps.isArray}
-        onQueryRefOptions={onQueryRefOptions}
+        createSchema={createSchema}
         createOptionLabel={createOptionLabel}
         createOptionIcon={createOptionIcon}
-        onCreate={onCreate}
-        createSchema={createSchema}
         createInitialValuePath={createInitialValuePath}
-        {...inputProps}
+        onCreate={onCreate}
+        onQueryRefOptions={onQueryRefOptions}
       />
     );
   }
 
   //
-  // Select.
+  // Select field.
   //
 
   if (options) {
     return (
       <SelectField
-        type={type}
-        format={format}
-        readonly={readonly}
-        inputOnly={inline}
-        label={label}
-        placeholder={placeholder}
-        options={options.map((option) => ({ value: option, label: String(option) }))}
-        {...inputProps}
+        {...fieldProps}
+        options={options.map((option) => ({
+          value: option,
+          label: String(option),
+        }))}
       />
     );
   }
 
   //
-  // Standard Inputs.
-  //
-
-  const Field = getFormFieldComponent({ property });
-  if (Field) {
-    return (
-      <Field
-        type={type}
-        format={format}
-        readonly={readonly}
-        inputOnly={inline}
-        label={label}
-        placeholder={placeholder}
-        {...inputProps}
-      />
-    );
-  }
-
-  //
-  // Array.
+  // Array field.
   //
 
   if (array) {
     return (
-      <ArrayField property={property} path={path} inputProps={inputProps} readonly={readonly} fieldMap={fieldMap} />
+      <ArrayField fieldProps={fieldState} property={property} path={path} readonly={readonly} fieldMap={fieldMap} />
     );
   }
 
   //
-  // Nested Objects.
+  // Nested Object field.
   //
 
   if (type === 'object') {
     const baseNode = findNode(ast, isDiscriminatedUnion);
     const typeLiteral = baseNode
-      ? getDiscriminatedType(baseNode, inputProps.getValue() as any)
+      ? getDiscriminatedType(baseNode, fieldState.getValue() as any)
       : findNode(ast, SchemaAST.isTypeLiteral);
 
     if (typeLiteral) {
+      const schema = Schema.make(typeLiteral);
       return (
         <>
           {!inline && <h3 className={mx('text-lg mlb-inputSpacingBlock first:mbs-0')}>{label}</h3>}
           <FormFieldSet
-            schema={Schema.make(typeLiteral)}
+            schema={schema}
             path={path}
             readonly={readonly}
             projection={projection}
+            fieldMap={fieldMap}
+            fieldProvider={fieldProvider}
             createOptionLabel={createOptionLabel}
             createOptionIcon={createOptionIcon}
-            fieldMap={fieldMap}
-            lookupComponent={lookupComponent}
             onCreate={onCreate}
             onQueryRefOptions={onQueryRefOptions}
           />
@@ -239,7 +222,7 @@ FormField.displayName = 'Form.FormField';
 /**
  * Get property input component.
  */
-const getFormFieldComponent = ({ property }: Pick<FormFieldProps, 'property'>): FormFieldComponent | undefined => {
+const getSimpleFormField = ({ property }: Pick<FormFieldProps, 'property'>): FormFieldComponent | undefined => {
   const { type, format } = property;
 
   //

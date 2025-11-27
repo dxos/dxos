@@ -31,21 +31,21 @@ import { type FormFieldComponentProps, FormFieldLabel } from '../FormFieldCompon
 
 import { TextField } from './TextField';
 
+// TODO(thure): Is this a standard that should be better canonized?
+const isRefSnapShot = (val: any): val is { '/': string } => {
+  return typeof val === 'object' && typeof (val as any)?.['/'] === 'string';
+};
+
 export type RefFieldProps = FormFieldComponentProps & {
+  schema?: EchoSchema;
   ast?: SchemaAST.AST;
   array?: boolean;
   createOptionLabel?: [string, { ns: string }];
   createOptionIcon?: string;
-  onCreate?: (values: any) => void;
   createSchema?: Schema.Schema.AnyNoContext;
   createInitialValuePath?: string;
+  onCreate?: (values: any) => void;
   onQueryRefOptions?: QueryRefOptions;
-  schema?: EchoSchema;
-};
-
-// TODO(thure): Is this a standard that should be better canonized?
-const isRefSnapShot = (val: any): val is { '/': string } => {
-  return typeof val === 'object' && typeof (val as any)?.['/'] === 'string';
 };
 
 export const RefField = ({

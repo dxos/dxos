@@ -122,22 +122,22 @@ const NewFormActions = ({ classNames }: NewFormActionsProps) => {
     <div role='none' className={mx('grid grid-flow-col auto-cols-fr gap-2 pbs-cardSpacingBlock', classNames)}>
       {form.onCancel && (
         <IconButton
-          data-testid='cancel-button'
           icon='ph--x--regular'
           iconEnd
           label={t('cancel button label')}
           onClick={form.onCancel}
+          data-testid='cancel-button'
         />
       )}
       {form.onSave && (
         <IconButton
           type='submit'
-          data-testid='save-button'
           disabled={!form.canSave}
           icon='ph--check--regular'
           iconEnd
           label={t('save button label')}
           onClick={form.onSave}
+          data-testid='save-button'
         />
       )}
     </div>

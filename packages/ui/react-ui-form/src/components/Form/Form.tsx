@@ -10,11 +10,11 @@ import { type ThemedClassName } from '@dxos/react-ui';
 import { cardDialogOverflow, cardSpacing } from '@dxos/react-ui-stack';
 import { type ProjectionModel, type SchemaProperty } from '@dxos/schema';
 
-import { type FormHandler, type FormOptions } from '../../hooks';
+import { type FormOptions } from '../../hooks';
 
 import { FormActions, type FormOuterSpacing } from './FormActions';
 import { FormFieldSet, type FormFieldSetProps } from './FormFieldSet';
-import { FormProvider } from './FormRoot';
+import { FormProvider, type FormProviderProps } from './FormRoot';
 
 export type PropertyFilter<T extends AnyProperties> = (props: SchemaProperty<T>[]) => SchemaProperty<T>[];
 
@@ -62,9 +62,9 @@ export const Form = <T extends AnyProperties>({
     }
   }, [autoFocus]);
 
-  // TODO(burdon): Name?
-  const handleValid = useCallback(
-    async (values: any, meta: { changed: FormHandler<T>['changed'] }) => {
+  // TODO(burdon): Why?
+  const handleValid = useCallback<NonNullable<FormProviderProps['onValid']>>(
+    async (values, meta) => {
       if (autoSave) {
         await onSave?.(values, meta);
       }

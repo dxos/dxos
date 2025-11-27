@@ -16,10 +16,10 @@ import { type FormFieldLookup } from '@dxos/react-ui-form';
 export const useInputSurfaceLookup = (baseData?: Record<string, any>): FormFieldLookup => {
   const pluginManager = usePluginManager();
   return useCallback<FormFieldLookup>(
-    ({ prop, schema, inputProps }) => {
+    ({ prop, schema, fieldProps }) => {
       const data = { prop, schema, ...baseData };
       if (isSurfaceAvailable(pluginManager.context, { role: 'form-input', data })) {
-        return <Surface role='form-input' data={data} {...inputProps} />;
+        return <Surface role='form-input' data={data} {...fieldProps} />;
       }
     },
     [pluginManager, baseData],

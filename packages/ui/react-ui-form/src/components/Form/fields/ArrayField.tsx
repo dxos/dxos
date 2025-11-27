@@ -18,11 +18,11 @@ import { FormField, type FormFieldProps } from '../FormField';
 import { FormFieldLabel, type FormFieldStateProps } from '../FormFieldComponent';
 import { useFormValues } from '../FormRoot';
 
-type ArrayFieldProps = {
-  inputProps: FormFieldStateProps;
-} & Pick<FormFieldProps, 'property' | 'path' | 'readonly' | 'fieldMap' | 'lookupComponent'>;
+export type ArrayFieldProps = {
+  fieldProps: FormFieldStateProps;
+} & Pick<FormFieldProps, 'property' | 'path' | 'readonly' | 'fieldMap' | 'fieldProvider'>;
 
-export const ArrayField = ({ property, readonly, path, inputProps, ...props }: ArrayFieldProps) => {
+export const ArrayField = ({ property, readonly, path, fieldProps: inputProps, ...props }: ArrayFieldProps) => {
   const { t } = useTranslation(translationKey);
   const { ast, name, type, title } = property;
   // TODO(wittjosiah): The fallback to an empty array stops the form from crashing but isn't immediately live.
