@@ -66,11 +66,11 @@ export const translations = [
         'format url': 'URL',
         'format uuid': 'UUID',
 
-        // GeoPointInput.
+        // GeoPointField.
         'latitude label': 'Latitude',
         'longitude label': 'Longitude',
 
-        // SelectOptionsInput.
+        // SelectOptionsField.
         'select option label': 'Label',
         'select option label placeholder': 'Option label',
         'select option color': 'Color',

@@ -14,9 +14,10 @@ import { Button, type ButtonProps } from './Button';
 type IconButtonProps = Omit<ButtonProps, 'children'> &
   Partial<Pick<IconProps, 'icon' | 'size'>> & {
     label: string;
-    iconOnly?: boolean;
     noTooltip?: boolean;
     caretDown?: boolean;
+    iconOnly?: boolean;
+    iconEnd?: boolean;
     iconClassNames?: ThemedClassName<any>['classNames'];
     tooltipSide?: TooltipSide;
   };
@@ -45,12 +46,13 @@ const IconOnlyButton = forwardRef<HTMLButtonElement, IconButtonProps>(
 
 // TODO(burdon): Inherit size from container/density.
 const LabelledIconButton = forwardRef<HTMLButtonElement, IconButtonProps>(
-  ({ icon, size = 5, iconOnly, label, classNames, iconClassNames, caretDown, ...props }, forwardedRef) => {
+  ({ size = 5, icon, iconOnly, iconEnd, iconClassNames, label, caretDown, classNames, ...props }, forwardedRef) => {
     const { tx } = useThemeContext();
     return (
       <Button {...props} classNames={tx('iconButton.root', 'iconButton', { iconOnly }, classNames)} ref={forwardedRef}>
-        {icon && <Icon icon={icon} size={size} classNames={iconClassNames} />}
+        {icon && !iconEnd && <Icon icon={icon} size={size} classNames={iconClassNames} />}
         <span className={iconOnly ? 'sr-only' : undefined}>{label}</span>
+        {icon && iconEnd && <Icon icon={icon} size={size} classNames={iconClassNames} />}
         {caretDown && <Icon size={3} icon='ph--caret-down--bold' />}
       </Button>
     );
