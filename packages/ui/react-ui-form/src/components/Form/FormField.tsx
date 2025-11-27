@@ -121,39 +121,19 @@ export const FormField = ({
     return <CustomField {...fieldProps} />;
   }
 
+  // TODO(burdon): Expensive to create schema each time; pass AST?
   const component = fieldProvider?.({ schema: Schema.make(ast), prop: name, fieldProps });
   if (component) {
     return component;
   }
 
   //
-  // Simple field.
+  // Regular field.
   //
 
-  const Field = getSimpleFormField({ property });
+  const Field = getFormField(property);
   if (Field) {
     return <Field {...fieldProps} />;
-  }
-
-  //
-  // Ref field.
-  //
-
-  const refProps = getRefProps(property);
-  if (refProps) {
-    return (
-      <RefField
-        {...fieldProps}
-        ast={refProps.ast}
-        array={refProps.isArray}
-        createSchema={createSchema}
-        createOptionLabel={createOptionLabel}
-        createOptionIcon={createOptionIcon}
-        createInitialValuePath={createInitialValuePath}
-        onCreate={onCreate}
-        onQueryRefOptions={onQueryRefOptions}
-      />
-    );
   }
 
   //
@@ -168,6 +148,26 @@ export const FormField = ({
           value: option,
           label: String(option),
         }))}
+      />
+    );
+  }
+
+  //
+  // Ref field.
+  //
+
+  const refProps = getRefProps(property);
+  if (refProps) {
+    return (
+      <RefField
+        {...fieldProps}
+        {...refProps}
+        createSchema={createSchema}
+        createOptionLabel={createOptionLabel}
+        createOptionIcon={createOptionIcon}
+        createInitialValuePath={createInitialValuePath}
+        onCreate={onCreate}
+        onQueryRefOptions={onQueryRefOptions}
       />
     );
   }
@@ -222,7 +222,7 @@ FormField.displayName = 'Form.FormField';
 /**
  * Get property input component.
  */
-const getSimpleFormField = ({ property }: Pick<FormFieldProps, 'property'>): FormFieldComponent | undefined => {
+const getFormField = (property: SchemaProperty<any>): FormFieldComponent | undefined => {
   const { type, format } = property;
 
   //
