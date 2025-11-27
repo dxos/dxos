@@ -16,11 +16,11 @@ import { type EdgeErrorData, type EdgeFailure, EdgeHttpErrorCodec, ErrorCodec } 
 export class EdgeCallFailedError extends Error {
   public static fromUnsuccessfulResponse(response: Response, body: EdgeFailure): EdgeCallFailedError {
     const error = new EdgeCallFailedError({
-      reason: body.reason,
-      errorData: body.errorData,
-      isRetryable: body.errorData == null && response.headers.has('Retry-After'),
+      message: body.message,
+      data: body.data,
+      isRetryable: body.data == null && response.headers.has('Retry-After'),
       retryAfterMs: getRetryAfterMillis(response),
-      cause: body.cause ? ErrorCodec.decode(body.cause) : undefined,
+      cause: body.error ? ErrorCodec.decode(body.error) : undefined,
     });
 
     return error;
@@ -28,7 +28,7 @@ export class EdgeCallFailedError extends Error {
 
   public static async fromHttpFailure(response: Response): Promise<EdgeCallFailedError> {
     return new EdgeCallFailedError({
-      reason: `HTTP code ${response.status}: ${response.statusText}.`,
+      message: `HTTP code ${response.status}: ${response.statusText}.`,
       isRetryable: isRetryableCode(response.status),
       retryAfterMs: getRetryAfterMillis(response),
       cause: await EdgeHttpErrorCodec.decode(response),
@@ -37,27 +37,26 @@ export class EdgeCallFailedError extends Error {
 
   public static fromProcessingFailureCause(cause: Error): EdgeCallFailedError {
     return new EdgeCallFailedError({
-      reason: 'Error processing request.',
+      message: 'Error processing request.',
       isRetryable: true,
       cause,
     });
   }
 
-  readonly reason: string;
-  readonly errorData?: EdgeErrorData;
+  readonly data?: EdgeErrorData;
   readonly isRetryable?: boolean;
   readonly retryAfterMs?: number;
 
   constructor(args: {
-    reason: string;
+    message: string;
     isRetryable?: boolean;
-    errorData?: EdgeErrorData;
+    data?: EdgeErrorData;
     retryAfterMs?: number;
     cause?: Error;
   }) {
-    super(args.reason, { cause: args.cause });
-    this.reason = args.reason;
-    this.errorData = args.errorData;
+    super(args.message, { cause: args.cause });
+    this.message = args.message;
+    this.data = args.data;
     this.retryAfterMs = args.retryAfterMs;
     this.isRetryable = Boolean(args.isRetryable);
   }
@@ -66,9 +65,9 @@ export class EdgeCallFailedError extends Error {
 export class EdgeAuthChallengeError extends EdgeCallFailedError {
   constructor(
     public readonly challenge: string,
-    errorData: EdgeErrorData,
+    data: EdgeErrorData,
   ) {
-    super({ reason: 'Auth challenge.', errorData, isRetryable: false });
+    super({ message: 'Auth challenge.', data, isRetryable: false });
   }
 }
 

@@ -38,6 +38,9 @@
     "dist",
     "src"
   ],
+  "scripts": {
+    "deploy-functions": "node ../../devtools/cli-next/dist/node-esm/bin.mjs edge function deploy src/functions/google/gmail/sync.ts"
+  },
   "dependencies": {
     "@dxos/ai": "workspace:*",
     "@dxos/app-framework": "workspace:*",

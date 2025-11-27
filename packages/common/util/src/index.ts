@@ -54,3 +54,4 @@ export * from './uint8array';
 export * from './unit';
 export * from './url';
 export * from './weak';
+export * from './error-format';
