@@ -175,10 +175,13 @@ const PluginESMSh = (): Plugin => ({
       }
 
       // Assuming all deps will be resolved the latest version.
-      return build.resolve(`https://esm.sh/${args.path}?bundle=false&conditions=workerd,worker,node&platform=node`, {
-        kind: args.kind,
-        resolveDir: args.resolveDir,
-      });
+      return build.resolve(
+        `https://esm.sh/${args.path}?bundle=false&conditions=workerd,worker,node&platform=node?deps=@automerge/automerge-repo@2.5.0`,
+        {
+          kind: args.kind,
+          resolveDir: args.resolveDir,
+        },
+      );
     });
   },
 });
