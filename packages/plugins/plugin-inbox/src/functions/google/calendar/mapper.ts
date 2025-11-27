@@ -37,7 +37,7 @@ export const mapEvent: (event: GoogleCalendar.Event) => Effect.Effect<Event.Even
         }
       : undefined;
 
-    const { objects: contacts } = yield* DatabaseService.runQuery(Query.select(Filter.type(Person.Person)));
+    const contacts = yield* DatabaseService.runQuery(Query.select(Filter.type(Person.Person)));
 
     // Parse attendees.
     const attendees = (event.attendees || [])

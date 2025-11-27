@@ -41,11 +41,11 @@ export const SHARED = 'shared-spaces';
 export const atomFromQuery = <T extends Entity.Unknown>(query: QueryResult.QueryResult<T>): Atom.Atom<T[]> => {
   return Atom.make((get) => {
     const unsubscribe = query.subscribe((result) => {
-      get.setSelf(result.objects);
+      get.setSelf(result.results);
     });
 
     get.addFinalizer(() => unsubscribe());
-    return query.objects;
+    return query.results;
   });
 };
 

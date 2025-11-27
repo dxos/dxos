@@ -261,7 +261,11 @@ export class Hypergraph {
           }
         } finally {
           if (TRACE_REF_RESOLUTION) {
-            log.info('resolveSchema', { dxn: dxn.toString(), status, time: performance.now() - beginTime });
+            log.info('resolveSchema', {
+              dxn: dxn.toString(),
+              status,
+              time: performance.now() - beginTime,
+            });
           }
         }
       },
@@ -375,7 +379,11 @@ export class Hypergraph {
       }
     } finally {
       if (TRACE_REF_RESOLUTION) {
-        log.info('resolve', { dxn: dxn.toString(), status, time: performance.now() - beginTime });
+        log.info('resolve', {
+          dxn: dxn.toString(),
+          status,
+          time: performance.now() - beginTime,
+        });
       }
     }
   }
@@ -385,9 +393,7 @@ export class Hypergraph {
     if (!db) {
       return undefined;
     }
-    const {
-      objects: [obj],
-    } = await db.query(Filter.ids(objectId)).run();
+    const [obj] = await db.query(Filter.ids(objectId)).run();
     return obj;
   }
 

@@ -115,13 +115,13 @@ const getLatestUpdateTimestamp: (
   teamId: string,
   dataType: Type.Obj.Any,
 ) => Effect.Effect<string, never, DatabaseService> = Effect.fnUntraced(function* (teamId, dataType) {
-  const { objects: existingTasks } = yield* DatabaseService.runQuery(
+  const existingTasks = yield* DatabaseService.runQuery(
     Query.type(dataType).select(Filter.foreignKeys(dataType, [{ source: LINEAR_TEAM_ID_KEY, id: teamId }])),
   );
   return Function.pipe(
     existingTasks,
-    Array.map((task) => Obj.getKeys(task, LINEAR_UPDATED_AT_KEY).at(0)?.id),
-    Array.filter((x) => x !== undefined),
+    Array.map((task: any) => Obj.getKeys(task, LINEAR_UPDATED_AT_KEY).at(0)?.id),
+    Array.filter((x): x is string => x !== undefined),
     Array.reduce('2025-01-01T00:00:00.000Z', (acc: string, x: string) => (x > acc ? x : acc)),
   );
 });

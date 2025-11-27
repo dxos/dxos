@@ -78,7 +78,7 @@ const LinkStory = (args: StoryProps) => {
 
       const name = text?.startsWith('@') ? text.slice(1).toLowerCase() : (text?.toLowerCase() ?? '');
       const result = await space?.db.query(Query.type(TestSchema.Person)).run();
-      const items = result.objects
+      const items = result
         .filter((object) => object.name.toLowerCase().includes(name))
         .map(
           (object): EditorMenuItem => ({

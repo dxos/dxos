@@ -46,7 +46,7 @@ export const useQuery: UseQueryFn = (
 
     let subscribed = false;
     return {
-      getObjects: () => (subscribed && queryResult ? queryResult.objects : EMPTY_ARRAY),
+      getObjects: () => (subscribed && queryResult ? queryResult.results : EMPTY_ARRAY),
       subscribe: (cb: () => void) => {
         subscribed = true;
         const unsubscribe = queryResult?.subscribe(cb) ?? noop;

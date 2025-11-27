@@ -39,8 +39,8 @@ const DefaultStory = (props: Partial<TriggerEditorProps>) => {
       return;
     }
 
-    const result = await space.db.query(Filter.type(Function.Function)).run();
-    const fn = result.objects.find((fn) => fn.name === 'example.com/function/forex');
+    const functions = await space.db.query(Filter.type(Function.Function)).run();
+    const fn = functions.find((fn) => fn.name === 'example.com/function/forex');
     invariant(fn);
     const trigger = space.db.add(
       Trigger.make({

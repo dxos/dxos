@@ -47,7 +47,7 @@ describe('Relations', () => {
     await testBuilder.lastPeer!.reload();
     {
       const db = await testBuilder.lastPeer!.openLastDatabase();
-      const { objects } = await db.query(Query.select(Filter.everything())).run();
+      const objects = await db.query(Query.select(Filter.everything())).run();
 
       const manager = objects.find((obj) => Obj.instanceOf(TestSchema.EmployedBy, obj));
       assert(manager, 'manager not found');

@@ -46,7 +46,10 @@ export class IndexQuerySourceProvider implements QuerySourceProvider {
 
   // TODO(burdon): Rename createQuerySource
   create(): QuerySource {
-    return new IndexQuerySource({ service: this._params.service, objectLoader: this._params.objectLoader });
+    return new IndexQuerySource({
+      service: this._params.service,
+      objectLoader: this._params.objectLoader,
+    });
   }
 }
 
@@ -62,7 +65,7 @@ export class IndexQuerySource implements QuerySource {
   changed = new Event<void>();
 
   private _query?: QueryAST.Query = undefined;
-  private _results?: QueryResult.Entry[] = [];
+  private _results?: QueryResult.EntityEntry[] = [];
   private _stream?: Stream<QueryResponse>;
 
   constructor(private readonly _params: IndexQuerySourceParams) {}
@@ -74,11 +77,11 @@ export class IndexQuerySource implements QuerySource {
     this._closeStream();
   }
 
-  getResults(): QueryResult.Entry[] {
+  getResults(): QueryResult.EntityEntry[] {
     return this._results ?? [];
   }
 
-  async run(query: QueryAST.Query): Promise<QueryResult.Entry[]> {
+  async run(query: QueryAST.Query): Promise<QueryResult.EntityEntry[]> {
     this._query = query;
     return new Promise((resolve, reject) => {
       this._queryIndex(query, QueryReactivity.ONE_SHOT, resolve, reject);
@@ -100,7 +103,7 @@ export class IndexQuerySource implements QuerySource {
   private _queryIndex(
     query: QueryAST.Query,
     queryType: QueryReactivity,
-    onResult: (results: QueryResult.Entry[]) => void,
+    onResult: (results: QueryResult.EntityEntry[]) => void,
     onError?: (error: Error) => void,
   ): void {
     const queryId = nextQueryId++;
@@ -110,7 +113,11 @@ export class IndexQuerySource implements QuerySource {
     let currentCtx: Context;
 
     const stream = this._params.service.execQuery(
-      { query: JSON.stringify(query), queryId: String(queryId), reactivity: queryType },
+      {
+        query: JSON.stringify(query),
+        queryId: String(queryId),
+        reactivity: queryType,
+      },
       { timeout: QUERY_SERVICE_TIMEOUT },
     );
 
@@ -162,7 +169,9 @@ export class IndexQuerySource implements QuerySource {
           if (currentCtx === ctx) {
             onResult(results);
           } else {
-            log.warn('results from the previous update are ignored', { queryId });
+            log.warn('results from the previous update are ignored', {
+              queryId,
+            });
           }
         } catch (err: any) {
           if (onError) {
@@ -188,7 +197,7 @@ export class IndexQuerySource implements QuerySource {
     ctx: Context,
     queryStartTimestamp: number,
     result: RemoteQueryResult,
-  ): Promise<QueryResult.Entry | null> {
+  ): Promise<QueryResult.EntityEntry | null> {
     if (!OBJECT_DIAGNOSTICS.has(result.id)) {
       OBJECT_DIAGNOSTICS.set(result.id, {
         objectId: result.id,
@@ -213,10 +222,10 @@ export class IndexQuerySource implements QuerySource {
     }
 
     const core = getObjectCore(object);
-    const queryResult: QueryResult.Entry = {
+    const queryResult: QueryResult.EntityEntry = {
       id: object.id,
       spaceId: core.database!.spaceId,
-      object,
+      result: object,
       match: { rank: result.rank },
       resolution: { source: 'index', time: Date.now() - queryStartTimestamp },
     };

@@ -35,7 +35,10 @@ type ObjectProps = {
 };
 
 const createTestObject = (props: ObjectProps = {}) => {
-  return Obj.make(Type.Expando, { title: faker.commerce.productName(), ...props });
+  return Obj.make(Type.Expando, {
+    title: faker.commerce.productName(),
+    ...props,
+  });
 };
 
 const createTestObjects = () => {
@@ -87,68 +90,64 @@ describe('Query', () => {
     });
 
     test('query nothing', async () => {
-      const { objects } = await db.query(Query.select(Filter.nothing())).run();
+      const objects = await db.query(Query.select(Filter.nothing())).run();
       expect(objects).to.have.length(0);
     });
 
     test('query everything', async () => {
-      const { objects } = await db.query(Query.select(Filter.everything())).run();
+      const objects = await db.query(Query.select(Filter.everything())).run();
       expect(objects).to.have.length(10);
     });
 
     test('order by natural', async () => {
-      const { objects } = await db.query(Query.select(Filter.everything())).run();
+      const objects = await db.query(Query.select(Filter.everything())).run();
       const sortedObjects = objects.sort((a, b) => a.id.localeCompare(b.id));
       expect(objects.map((obj) => obj.id)).to.deep.equal(sortedObjects.map((obj) => obj.id));
     });
 
     test('order by property', async () => {
-      const { objects } = await db
-        .query(Query.select(Filter.everything()).orderBy(Order.property('label', 'asc')))
-        .run();
+      const objects = await db.query(Query.select(Filter.everything()).orderBy(Order.property('label', 'asc'))).run();
       const sortedObjects = objects.sort((a, b) => a.label?.localeCompare(b.label));
       expect(objects.map((obj) => obj.label)).to.deep.equal(sortedObjects.map((obj) => obj.label));
     });
 
     test('order by property descending', async () => {
-      const { objects } = await db
-        .query(Query.select(Filter.everything()).orderBy(Order.property('label', 'desc')))
-        .run();
+      const objects = await db.query(Query.select(Filter.everything()).orderBy(Order.property('label', 'desc'))).run();
       const sortedObjects = objects.sort((a, b) => b.label?.localeCompare(a.label));
       expect(objects.map((obj) => obj.label)).to.deep.equal(sortedObjects.map((obj) => obj.label));
     });
 
     test('filter by type', async () => {
       {
-        const { objects } = await db.query(Query.select(Filter.type(Type.Expando, { value: undefined }))).run();
+        const objects = await db.query(Query.select(Filter.type(Type.Expando, { value: undefined }))).run();
         expect(objects).to.have.length(1);
       }
 
       {
-        const { objects } = await db.query(Query.select(Filter.type(Type.Expando, { value: 100 }))).run();
+        const objects = await db.query(Query.select(Filter.type(Type.Expando, { value: 100 }))).run();
         expect(objects).to.have.length(3);
       }
 
       {
-        const { objects } = await db.query(Query.select(Filter.type(Type.Expando, { value: 400 }))).run();
+        const objects = await db.query(Query.select(Filter.type(Type.Expando, { value: 400 }))).run();
         expect(objects).to.have.length(0);
       }
     });
 
     test('filter by tag', async () => {
       {
-        const { objects } = await db.query(Query.select(Filter.tag(tags[1]))).run();
+        const objects = await db.query(Query.select(Filter.tag(tags[1]))).run();
         expect(objects).to.have.length(3);
       }
 
       {
-        const { objects } = await db.query(Query.select(Filter.tag('bananas'))).run();
+        const objects = await db.query(Query.select(Filter.tag('bananas'))).run();
         expect(objects).to.have.length(0);
       }
     });
 
     test('filter expando', async () => {
-      const { objects } = await db.query(Query.select(Filter.type(Type.Expando, { value: 100 }))).run();
+      const objects = await db.query(Query.select(Filter.type(Type.Expando, { value: 100 }))).run();
       expect(objects).to.have.length(3);
     });
 
@@ -157,7 +156,7 @@ describe('Query', () => {
       const objB = db.add(Obj.make(Type.Expando, { value: 200, ref: Ref.make(objA) }));
       await db.flush({ indexes: true });
 
-      const { objects } = await db.query(Filter.type(Type.Expando, { ref: Ref.make(objA) })).run();
+      const objects = await db.query(Filter.type(Type.Expando, { ref: Ref.make(objA) })).run();
       expect(objects).toEqual([objB]);
     });
 
@@ -167,7 +166,7 @@ describe('Query', () => {
       db.add(obj);
 
       await db.flush({ indexes: true });
-      const { objects } = await db
+      const objects = await db
         .query(Filter.foreignKeys(Type.Expando, [{ id: 'test-id', source: 'test-source' }]))
         .run();
       expect(objects).toEqual([obj]);
@@ -178,20 +177,20 @@ describe('Query', () => {
       Obj.getMeta(obj).keys.push({ id: 'test-id', source: 'test-source' });
       db.add(obj);
 
-      const { objects } = await db
+      const objects = await db
         .query(Filter.foreignKeys(Type.Expando, [{ id: 'test-id', source: 'test-source' }]))
         .run();
       expect(objects).toEqual([obj]);
     });
 
     test('filter nothing', async () => {
-      const { objects } = await db.query(Filter.nothing()).run();
+      const objects = await db.query(Filter.nothing()).run();
       expect(objects).toHaveLength(0);
     });
 
     test('options', async () => {
       {
-        const { objects } = await db.query(Query.select(Filter.type(Type.Expando, { value: 100 }))).run();
+        const objects = await db.query(Query.select(Filter.type(Type.Expando, { value: 100 }))).run();
         expect(objects).to.have.length(3);
         for (const object of objects) {
           db.remove(object);
@@ -200,22 +199,22 @@ describe('Query', () => {
       }
 
       {
-        const { objects } = await db.query(Query.select(Filter.everything())).run();
+        const objects = await db.query(Query.select(Filter.everything())).run();
         expect(objects).to.have.length(7);
       }
 
       {
-        const { objects } = await db.query(Query.select(Filter.everything()), { deleted: 'exclude' }).run();
+        const objects = await db.query(Query.select(Filter.everything()), { deleted: 'exclude' }).run();
         expect(objects).to.have.length(7);
       }
 
       {
-        const { objects } = await db.query(Query.select(Filter.everything()), { deleted: 'include' }).run();
+        const objects = await db.query(Query.select(Filter.everything()), { deleted: 'include' }).run();
         expect(objects).to.have.length(10);
       }
 
       {
-        const { objects } = await db.query(Query.select(Filter.everything()), { deleted: 'only' }).run();
+        const objects = await db.query(Query.select(Filter.everything()), { deleted: 'only' }).run();
         expect(objects).to.have.length(3);
       }
     });
@@ -236,7 +235,7 @@ describe('Query', () => {
       const db = await peer.createDatabase(spaceKey);
       await createObjects(peer, db, { count: 3 });
 
-      expect((await db.query(Query.select(Filter.everything())).run()).objects.length).to.eq(3);
+      expect((await db.query(Query.select(Filter.everything())).run()).length).to.eq(3);
       root = db.coreDatabase._automergeDocLoader.getSpaceRootDocHandle().url;
       await peer.close();
     }
@@ -244,7 +243,7 @@ describe('Query', () => {
     {
       const peer = await builder.createPeer({ kv: createTestLevel(tmpPath) });
       const db = await peer.openDatabase(spaceKey, root);
-      expect((await db.query(Query.select(Filter.everything())).run()).objects.length).to.eq(3);
+      expect((await db.query(Query.select(Filter.everything())).run()).length).to.eq(3);
     }
   });
 
@@ -264,7 +263,7 @@ describe('Query', () => {
       const db = await peer.createDatabase(spaceKey);
       const [obj1, obj2] = await createObjects(peer, db, { count: 2 });
 
-      expect((await db.query(Query.select(Filter.everything())).run()).objects.length).to.eq(2);
+      expect((await db.query(Query.select(Filter.everything())).run()).length).to.eq(2);
       const rootDocHandle = db.coreDatabase._automergeDocLoader.getSpaceRootDocHandle();
       rootDocHandle.change((doc: DatabaseDirectory) => {
         doc.links![obj1.id] = 'automerge:4hjTgo9zLNsfRTJiLcpPY8P4smy';
@@ -278,7 +277,7 @@ describe('Query', () => {
     {
       const peer = await builder.createPeer({ kv: createTestLevel(tmpPath) });
       const db = await peer.openDatabase(spaceKey, root);
-      const queryResult = (await db.query(Query.select(Filter.everything())).run()).objects;
+      const queryResult = await db.query(Query.select(Filter.everything())).run();
       expect(queryResult.length).to.eq(1);
       expect(queryResult[0].id).to.eq(expectedObjectId);
     }
@@ -299,11 +298,12 @@ describe('Query', () => {
       const db = await peer.createDatabase(spaceKey);
       const [obj1, obj2] = await createObjects(peer, db, { count: 2 });
 
-      expect((await db.query(Query.select(Filter.everything())).run()).objects.length).to.eq(2);
+      expect((await db.query(Query.select(Filter.everything())).run()).length).to.eq(2);
       const rootDocHandle = db.coreDatabase._automergeDocLoader.getSpaceRootDocHandle();
       const anotherDocHandle = getObjectCore(obj2).docHandle!;
       anotherDocHandle.change((doc: DatabaseDirectory) => {
-        doc.objects![obj1.id] = getObjectCore(obj1).docHandle!.doc().objects![obj1.id];
+        // @ts-expect-error - Dynamic object access
+        doc.objects![obj1.id] = getObjectCore(obj1).docHandle!.doc()![obj1.id];
       });
       rootDocHandle.change((doc: DatabaseDirectory) => {
         doc.links![obj1.id] = anotherDocHandle.url;
@@ -319,7 +319,7 @@ describe('Query', () => {
 
     {
       const db = await peer.openDatabase(spaceKey, root);
-      const queryResult = (await db.query(Query.select(Filter.everything())).run()).objects;
+      const queryResult = await db.query(Query.select(Filter.everything())).run();
       expect(queryResult.length).to.eq(2);
 
       const object = queryResult.find((obj) => obj.id === assertion.objectId)!;
@@ -343,7 +343,7 @@ describe('Query', () => {
 
     db.remove(obj2);
 
-    const queryResult = (await db.query(Query.select(Filter.everything())).run()).objects;
+    const queryResult = await db.query(Query.select(Filter.everything())).run();
     expect(queryResult.length).to.eq(1);
     expect(queryResult[0].id).to.eq(obj1.id);
   });
@@ -376,7 +376,7 @@ describe('Query', () => {
     }
 
     const queryResult = await db.query(Filter.type(Type.Expando, { name: 'folder' })).run();
-    const result = queryResult.objects.flatMap(({ objects }) => objects.map((o: Ref.Any) => o.target));
+    const result = queryResult.flatMap(({ objects }) => objects.map((o: Ref.Any) => o.target));
 
     for (const i in objects) {
       expect(result[i]).to.eq(objects[i]);
@@ -394,7 +394,9 @@ describe('Query', () => {
         name: Schema.String,
       }).pipe(Type.Obj({ typename: 'example.com/type/Person', version: '0.2.0' }));
 
-      const { peer, db } = await builder.createDatabase({ types: [ContactV1, ContactV2] });
+      const { peer, db } = await builder.createDatabase({
+        types: [ContactV1, ContactV2],
+      });
 
       const contactV1 = db.add(Obj.make(ContactV1, { firstName: 'John', lastName: 'Doe' }));
       const contactV2 = db.add(Obj.make(ContactV2, { name: 'Brian Smith' }));
@@ -428,8 +430,8 @@ describe('Query', () => {
         Query.select(Filter.not(Filter.or(Filter.type(TestSchema.Person), Filter.type(TestSchema.Task)))),
       );
       const result = await query.run();
-      expect(result.objects).to.have.length(1);
-      expect(result.objects[0]).to.eq(expando);
+      expect(result).to.have.length(1);
+      expect(result[0]).to.eq(expando);
     });
 
     test('filter by refs', async () => {
@@ -439,7 +441,7 @@ describe('Query', () => {
       const b = db.add(Obj.make(Type.Expando, { name: 'b', owner: Ref.make(a) }));
       db.add(Obj.make(Type.Expando, { name: 'c' }));
 
-      const { objects } = await db.query(Query.select(Filter.type(Type.Expando, { owner: Ref.make(a) }))).run();
+      const objects = await db.query(Query.select(Filter.type(Type.Expando, { owner: Ref.make(a) }))).run();
       expect(objects).toEqual([b]);
     });
 
@@ -456,7 +458,7 @@ describe('Query', () => {
         }),
       );
 
-      const { objects } = await db.query(Filter.type(TestSchema.HasManager)).run();
+      const objects = await db.query(Filter.type(TestSchema.HasManager)).run();
       expect(objects).toEqual([hasManager]);
     });
 
@@ -464,10 +466,20 @@ describe('Query', () => {
       const { db } = await builder.createDatabase();
 
       db.add(Obj.make(Type.Expando, { name: 'a' }));
-      const b = db.add(Obj.make(Type.Expando, { name: 'b', [Obj.Meta]: { tags: ['important'] } }));
-      const c = db.add(Obj.make(Type.Expando, { name: 'c', [Obj.Meta]: { tags: ['important', 'investor'] } }));
+      const b = db.add(
+        Obj.make(Type.Expando, {
+          name: 'b',
+          [Obj.Meta]: { tags: ['important'] },
+        }),
+      );
+      const c = db.add(
+        Obj.make(Type.Expando, {
+          name: 'c',
+          [Obj.Meta]: { tags: ['important', 'investor'] },
+        }),
+      );
 
-      const { objects } = await db.query(Query.select(Filter.tag('important'))).run();
+      const objects = await db.query(Query.select(Filter.tag('important'))).run();
       expect(objects).toEqual([b, c]);
     });
   });
@@ -491,15 +503,30 @@ describe('Query', () => {
         }),
       );
 
-      db.add(Obj.make(TestSchema.Task, { title: 'Task 1', assignee: Ref.make(person1) }));
-      db.add(Obj.make(TestSchema.Task, { title: 'Task 2', assignee: Ref.make(person1) }));
-      db.add(Obj.make(TestSchema.Task, { title: 'Task 3', assignee: Ref.make(person2) }));
+      db.add(
+        Obj.make(TestSchema.Task, {
+          title: 'Task 1',
+          assignee: Ref.make(person1),
+        }),
+      );
+      db.add(
+        Obj.make(TestSchema.Task, {
+          title: 'Task 2',
+          assignee: Ref.make(person1),
+        }),
+      );
+      db.add(
+        Obj.make(TestSchema.Task, {
+          title: 'Task 3',
+          assignee: Ref.make(person2),
+        }),
+      );
 
       await db.flush({ indexes: true });
     });
 
     test('traverse relation source to target', async () => {
-      const { objects } = await db
+      const objects = await db
         .query(
           Query.select(Filter.type(TestSchema.Person, { name: 'Bob' }))
             .sourceOf(TestSchema.HasManager)
@@ -511,7 +538,7 @@ describe('Query', () => {
     });
 
     test('traverse relation target to source', async () => {
-      const { objects } = await db
+      const objects = await db
         .query(
           Query.select(Filter.type(TestSchema.Person, { name: 'Alice' }))
             .targetOf(TestSchema.HasManager)
@@ -523,7 +550,7 @@ describe('Query', () => {
     });
 
     test('traverse outbound references', async () => {
-      const { objects } = await db
+      const objects = await db
         .query(Query.select(Filter.type(TestSchema.Task, { title: 'Task 1' })).reference('assignee'))
         .run();
 
@@ -532,17 +559,22 @@ describe('Query', () => {
     });
 
     test('traverse outbound array references', async () => {
-      db.add(Obj.make(Type.Expando, { name: 'Contacts', objects: [Ref.make(person1)] }));
+      db.add(
+        Obj.make(Type.Expando, {
+          name: 'Contacts',
+          objects: [Ref.make(person1)],
+        }),
+      );
       await db.flush({ indexes: true });
 
-      const { objects } = await db
+      const objects = await db
         .query(Query.select(Filter.type(Type.Expando, { name: 'Contacts' })).reference('objects'))
         .run();
       expect(objects).toMatchObject([{ name: 'Alice' }]);
     });
 
     test('traverse inbound references', async () => {
-      const { objects } = await db
+      const objects = await db
         .query(
           Query.select(Filter.type(TestSchema.Person, { name: 'Alice' })).referencedBy(TestSchema.Task, 'assignee'),
         )
@@ -556,17 +588,22 @@ describe('Query', () => {
     });
 
     test('traverse inbound array references', async () => {
-      db.add(Obj.make(Type.Expando, { name: 'Contacts', objects: [Ref.make(person1)] }));
+      db.add(
+        Obj.make(Type.Expando, {
+          name: 'Contacts',
+          objects: [Ref.make(person1)],
+        }),
+      );
       await db.flush({ indexes: true });
 
-      const { objects } = await db
+      const objects = await db
         .query(Query.select(Filter.type(TestSchema.Person)).referencedBy(Type.Expando, 'objects'))
         .run();
       expect(objects).toMatchObject([{ name: 'Contacts' }]);
     });
 
     test('traverse query started from id', async () => {
-      const { objects } = await db
+      const objects = await db
         .query(Query.select(Filter.ids(person2.id)).sourceOf(TestSchema.HasManager).target())
         .run();
 
@@ -583,7 +620,7 @@ describe('Query', () => {
         'assignee',
       );
       const query = Query.all(query1, query2);
-      const { objects } = await db.query(query).run();
+      const objects = await db.query(query).run();
       expect(objects).toHaveLength(3);
     });
 
@@ -591,38 +628,43 @@ describe('Query', () => {
       const query1 = Query.select(Filter.type(TestSchema.Person));
       const query2 = Query.select(Filter.type(TestSchema.Person)).sourceOf(TestSchema.HasManager).source();
       const query = Query.without(query1, query2);
-      const { objects } = await db.query(query).run();
+      const objects = await db.query(query).run();
       expect(objects).toEqual([person1]);
     });
   });
 
   describe.skip('text search', () => {
     test('vector', async () => {
-      const { db } = await builder.createDatabase({ indexing: { vector: true }, types: [TestSchema.Task] });
+      const { db } = await builder.createDatabase({
+        indexing: { vector: true },
+        types: [TestSchema.Task],
+      });
 
       db.add(Obj.make(TestSchema.Task, { title: 'fix the tests' }));
       db.add(Obj.make(TestSchema.Task, { title: 'perf optimizations' }));
       await db.flush({ indexes: true });
 
       {
-        const { objects } = await db.query(Query.select(Filter.text('fix the tests', { type: 'vector' }))).run();
+        const objects = await db.query(Query.select(Filter.text('fix the tests', { type: 'vector' }))).run();
         expect(objects[0].title).toEqual('fix the tests');
       }
 
       {
-        const { objects } = await db.query(Query.select(Filter.text('perf optimizations', { type: 'vector' }))).run();
+        const objects = await db.query(Query.select(Filter.text('perf optimizations', { type: 'vector' }))).run();
         expect(objects[0].title).toEqual('perf optimizations');
       }
 
       {
-        const { objects } = await db.query(Query.select(Filter.text('vegetable', { type: 'vector' }))).run();
+        const objects = await db.query(Query.select(Filter.text('vegetable', { type: 'vector' }))).run();
         expect(objects).toHaveLength(1);
         expect(objects[0].title).toEqual('fix the tests');
       }
     });
 
     test('full-text', async () => {
-      const { db, graph } = await builder.createDatabase({ indexing: { fullText: true } });
+      const { db, graph } = await builder.createDatabase({
+        indexing: { fullText: true },
+      });
       graph.schemaRegistry.addSchema([TestSchema.Task]);
 
       db.add(Obj.make(TestSchema.Task, { title: 'fix the tests' }));
@@ -631,26 +673,24 @@ describe('Query', () => {
       await db.flush({ indexes: true });
 
       {
-        const { objects } = await db.query(Query.select(Filter.text('fix the tests', { type: 'full-text' }))).run();
+        const objects = await db.query(Query.select(Filter.text('fix the tests', { type: 'full-text' }))).run();
         expect(objects).toHaveLength(1);
         expect(objects[0].title).toEqual('fix the tests');
       }
 
       {
-        const { objects } = await db
-          .query(Query.select(Filter.text('perf optimizations', { type: 'full-text' })))
-          .run();
+        const objects = await db.query(Query.select(Filter.text('perf optimizations', { type: 'full-text' }))).run();
         expect(objects).toHaveLength(1);
         expect(objects[0].title).toEqual('perf optimizations');
       }
 
       {
-        const { objects } = await db.query(Query.select(Filter.text('vegetable', { type: 'full-text' }))).run();
+        const objects = await db.query(Query.select(Filter.text('vegetable', { type: 'full-text' }))).run();
         expect(objects).toHaveLength(0);
       }
 
       {
-        const { objects } = await db.query(Query.select(Filter.text('animal', { type: 'full-text' }))).run();
+        const objects = await db.query(Query.select(Filter.text('animal', { type: 'full-text' }))).run();
         expect(objects).toHaveLength(0);
       }
     });
@@ -679,7 +719,7 @@ describe('Query', () => {
       let lastResult;
       query.subscribe(() => {
         count++;
-        lastResult = query.objects;
+        lastResult = query.results;
       });
       expect(count).to.equal(0);
 
@@ -695,9 +735,9 @@ describe('Query', () => {
 
       let count = 0;
       query.subscribe(() => {
-        console.log('query.objects', query.objects);
+        console.log('query.results', query.results);
         count++;
-        expect(query.objects).to.have.length(2);
+        expect(query.results).to.have.length(2);
       });
       db.remove(objects[0]);
       await db.flush({ updates: true, indexes: true });
@@ -725,7 +765,7 @@ describe('Query', () => {
       let lastResult;
       const unsubscribe = query.subscribe(() => {
         count++;
-        lastResult = query.objects;
+        lastResult = query.results;
       });
       expect(count, 'Does not fire updates immediately.').to.equal(0);
 
@@ -748,7 +788,7 @@ describe('Query', () => {
 
       query.subscribe(() => {
         count++;
-        lastResult = query.objects;
+        lastResult = query.results;
       });
 
       {
@@ -782,7 +822,9 @@ describe('Query', () => {
 
     // TODO(dmaretskyi): Fix this test.
     test.skip('deleting an element', async (ctx) => {
-      const { db } = await builder.createDatabase({ types: [TestSchema.Person] });
+      const { db } = await builder.createDatabase({
+        types: [TestSchema.Person],
+      });
 
       // Create 3 test objects: Alice, Bob, Charlie.
       const person1 = db.add(Obj.make(TestSchema.Person, { name: 'Alice' }));
@@ -796,7 +838,7 @@ describe('Query', () => {
       const updates: string[][] = [];
       const unsub = db.query(Query.select(Filter.type(TestSchema.Person))).subscribe(
         (query) => {
-          const names = query.objects.map((obj) => obj.name!);
+          const names = query.results.map((obj) => obj.name!);
           log.info('upd', { names });
           updates.push(names);
         },
@@ -850,7 +892,7 @@ describe('Query', () => {
       const updates: number[][] = [];
       const unsub = db.query(Query.select(Filter.type(Type.Expando))).subscribe(
         (query) => {
-          const values = [...query.objects.map((obj) => obj.value)].sort((a, b) => a - b);
+          const values = [...query.results.map((obj) => obj.value)].sort((a, b) => a - b);
           updates.push(values);
         },
         { fire: true },
@@ -891,12 +933,13 @@ describe('Query', () => {
 
       const query = db.query(Filter.type(TestSchema.Person));
       const result = await query.run();
-      expect(result.objects).to.have.length(1);
-      expect(result.objects[0]).to.eq(contact);
+      expect(result).to.have.length(1);
+      expect(result[0]).to.eq(contact);
 
       const nameUpdate = new Trigger();
       const anotherContactAdded = new Trigger();
-      const unsub = query.subscribe(({ objects }) => {
+      const unsub = query.subscribe((query) => {
+        const objects = query.results;
         if (objects.some((obj) => obj.name === name)) {
           nameUpdate.wake();
         }
@@ -920,8 +963,8 @@ describe('Query', () => {
       // NOTE: Must use `Filter.type` with EchoSchema instance since matching is done by the object ID of the mutable schema.
       const query = db.query(Query.type(schema));
       const result = await query.run();
-      expect(result.objects).to.have.length(1);
-      expect(result.objects[0]).to.eq(contact);
+      expect(result).to.have.length(1);
+      expect(result[0]).to.eq(contact);
     });
 
     test('`instanceof` operator works', async () => {
@@ -933,7 +976,7 @@ describe('Query', () => {
 
       // query
       {
-        const contact = (await db.query(Filter.type(TestSchema.Person)).run()).objects[0];
+        const contact = (await db.query(Filter.type(TestSchema.Person)).run())[0];
         expect(contact.name).to.eq(name);
         expect(Obj.instanceOf(TestSchema.Person, contact)).to.be.true;
       }
@@ -948,7 +991,7 @@ const createObjects = async (peer: EchoTestPeer, db: EchoDatabase, options: { co
 };
 
 const assertQuery = async (db: EchoDatabase, filter: Filter.Any, expected: any[]) => {
-  const { objects } = await db.query(Query.select(filter)).run();
+  const objects = await db.query(Query.select(filter)).run();
   expect(sortById(objects)).toEqual(expect.arrayContaining(sortById(expected)));
 };
 

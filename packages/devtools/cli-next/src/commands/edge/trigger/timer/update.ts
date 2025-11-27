@@ -46,7 +46,7 @@ export const update = Command.make(
         trigger.input = input.value;
       }
       if (Option.isSome(functionId)) {
-        const { objects: functions } = yield* DatabaseService.runQuery(Filter.type(Function.Function));
+        const functions = yield* DatabaseService.runQuery(Filter.type(Function.Function));
         const fn = functions.find((fn) => getUserFunctionIdInMetadata(Obj.getMeta(fn)) === functionId.value);
         if (!fn) {
           throw new Error(`Function not found: ${functionId.value}`);

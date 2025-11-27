@@ -114,7 +114,7 @@ describe('schema registry', () => {
   test('get all raw stored schemas', async () => {
     const { db, registry } = await setupTest();
     const schemas = await registry.register([Organization, Contact]);
-    const retrieved = (await db.query(Filter.type(PersistentSchema)).run()).objects;
+    const retrieved = await db.query(Filter.type(PersistentSchema)).run();
     expect(retrieved.length).to.eq(schemas.length);
     for (const schema of retrieved) {
       expect(schemas.find((s) => s.id === schema.id)).not.to.undefined;

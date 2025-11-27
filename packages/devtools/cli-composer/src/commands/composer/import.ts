@@ -44,7 +44,7 @@ export default class Import extends BaseCommand<typeof Import> {
         const obj = this.parseObject(this.schemaMap, object);
 
         // Merge based on FKs (need to query by FK).
-        const { objects } = await space.db.query(Filter.typename(Obj.getTypename(obj)!)).run();
+        const objects = await space.db.query(Filter.typename(Obj.getTypename(obj)!)).run();
         const { added, updated } = diff(objects, [obj], compareForeignKeys);
         added.forEach((obj) => {
           if (this.flags.verbose && Obj.isObject(obj)) {

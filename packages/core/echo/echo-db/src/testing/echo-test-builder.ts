@@ -194,7 +194,7 @@ export const createDataAssertion = ({
 }: { referenceEquality?: boolean; onlyObject?: boolean; numObjects?: number } = {}) => {
   let seedObjects: AnyLiveObject<any>[];
   const findSeedObject = async (db: EchoDatabase) => {
-    const { objects } = await db.query(Query.select(Filter.everything())).run();
+    const objects = await db.query(Query.select(Filter.everything())).run();
     const received = seedObjects.map((seedObject) => objects.find((object) => object.id === seedObject.id));
     return { objects, received };
   };

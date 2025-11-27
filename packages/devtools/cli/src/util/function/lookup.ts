@@ -11,5 +11,5 @@ export const findFunctionByDeploymentId = async (space: Space, functionId?: stri
     return undefined;
   }
   const functions = await space.db.query(Filter.type(Function.Function)).run();
-  return functions.objects.find((fn) => getUserFunctionIdInMetadata(Obj.getMeta(fn)) === functionId);
+  return functions.find((fn) => getUserFunctionIdInMetadata(Obj.getMeta(fn)) === functionId);
 };

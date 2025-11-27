@@ -92,7 +92,7 @@ export class AiContextBinder extends Resource {
   protected override async _open(): Promise<void> {
     const query = this._queue.query(Query.select(Filter.everything()));
     this._ctx.onDispose(query.subscribe(() => {}));
-    this._bindings = computed(() => this._reduce(query.objects));
+    this._bindings = computed(() => this._reduce(query.results));
     this._blueprints = computed(() => [...this.bindings.value.blueprints]);
     this._objects = computed(() => [...this.bindings.value.objects]);
   }
@@ -107,7 +107,7 @@ export class AiContextBinder extends Resource {
    * Asynchronous query of all bindings.
    */
   async query(): Promise<Bindings> {
-    const { objects } = await this._queue.query(Query.select(Filter.everything())).run();
+    const objects = await this._queue.query(Query.select(Filter.everything())).run();
     return this._reduce(objects);
   }
 

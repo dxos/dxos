@@ -58,18 +58,20 @@ export default (context: PluginContext) =>
           return;
         }
 
-        const { objects: existingContacts } = await space.db.query(Filter.type(Person.Person)).run();
+        const existingContacts = await space.db.query(Filter.type(Person.Person)).run();
 
         // Check for existing contact
-        const existingContact = existingContacts.find((contact) =>
-          contact.emails?.some((contactEmail) => contactEmail.value === email),
+        const existingContact = existingContacts.find((contact: any) =>
+          contact.emails?.some((contactEmail: any) => contactEmail.value === email),
         );
         if (existingContact) {
           log.info('Contact already exists', { email, existingContact });
           return;
         }
 
-        const newContact = Obj.make(Person.Person, { emails: [{ value: email }] });
+        const newContact = Obj.make(Person.Person, {
+          emails: [{ value: email }],
+        });
         if (name) {
           newContact.fullName = name;
         }
@@ -78,13 +80,19 @@ export default (context: PluginContext) =>
         if (!emailDomain) {
           log.warn('Invalid email format, cannot extract domain', { email });
           return {
-            intents: [createIntent(SpaceAction.AddObject, { object: newContact, target: space, hidden: true })],
+            intents: [
+              createIntent(SpaceAction.AddObject, {
+                object: newContact,
+                target: space,
+                hidden: true,
+              }),
+            ],
           };
         }
 
         log.info('extracted email domain', { emailDomain });
-        const { objects: existingOrganisations } = await space.db.query(Filter.type(Organization.Organization)).run();
-        const matchingOrg = existingOrganisations.find((org) => {
+        const existingOrganisations = await space.db.query(Filter.type(Organization.Organization)).run();
+        const matchingOrg = existingOrganisations.find((org: any) => {
           if (org.website) {
             try {
               const websiteUrl =
@@ -99,7 +107,10 @@ export default (context: PluginContext) =>
                 emailDomain.endsWith(`.${websiteDomain}`)
               );
             } catch (err) {
-              log.warn('parsing website URL', { website: org.website, error: err });
+              log.warn('parsing website URL', {
+                website: org.website,
+                error: err,
+              });
               return false;
             }
           }
@@ -107,7 +118,9 @@ export default (context: PluginContext) =>
         });
 
         if (matchingOrg) {
-          log.info('found matching organization', { organization: matchingOrg });
+          log.info('found matching organization', {
+            organization: matchingOrg,
+          });
           newContact.organization = Ref.make(matchingOrg);
         }
 
@@ -122,7 +135,13 @@ export default (context: PluginContext) =>
           );
         }
 
-        intents.push(createIntent(SpaceAction.AddObject, { object: newContact, target: space, hidden: true }));
+        intents.push(
+          createIntent(SpaceAction.AddObject, {
+            object: newContact,
+            target: space,
+            hidden: true,
+          }),
+        );
         return { intents };
       },
     }),

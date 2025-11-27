@@ -65,7 +65,7 @@ test('migrate 1 object', async () => {
   await db.flush({ indexes: true });
   await db.runMigrations([migrationV2]);
 
-  const { objects } = await db.query(Filter.type(ContactV2)).run();
+  const objects = await db.query(Filter.type(ContactV2)).run();
   expect(objects).to.have.length(1);
 
   expect(getSchemaDXN(Obj.getSchema(objects[0])!)?.toString()).to.eq(
@@ -85,7 +85,7 @@ test('incrementally migrates new objects', async () => {
   await db.runMigrations([migrationV2]);
 
   {
-    const { objects } = await db.query(Filter.type(ContactV2)).run();
+    const objects = await db.query(Filter.type(ContactV2)).run();
     expect(objects).to.have.length(1);
     expect(objects[0].name).to.eq('John Doe');
   }
@@ -95,7 +95,7 @@ test('incrementally migrates new objects', async () => {
   await db.runMigrations([migrationV2]);
 
   {
-    const { objects } = await db.query(Filter.type(ContactV2)).run();
+    const objects = await db.query(Filter.type(ContactV2)).run();
     expect(objects).to.have.length(2);
     expect(objects[0].name).to.eq('John Doe');
     expect(objects[1].name).to.eq('Jane Smith');
@@ -104,7 +104,7 @@ test('incrementally migrates new objects', async () => {
   await db.runMigrations([migrationV2]);
 
   {
-    const { objects } = await db.query(Filter.type(ContactV2)).run();
+    const objects = await db.query(Filter.type(ContactV2)).run();
     expect(objects).to.have.length(2);
     expect(objects[0].name).to.eq('John Doe');
     expect(objects[1].name).to.eq('Jane Smith');
@@ -119,7 +119,7 @@ test('chained migrations', async () => {
   await db.flush({ indexes: true });
   await db.runMigrations([migrationV2, migrationV3]);
 
-  const { objects } = await db.query(Filter.type(ContactV3)).run();
+  const objects = await db.query(Filter.type(ContactV3)).run();
   expect(objects).to.have.length(1);
   expect(Obj.getTypename(objects[0])).to.eq('example.com/type/Person');
   expect(Type.getVersion(Obj.getSchema(objects[0])!)).to.eq('0.3.0');
@@ -148,7 +148,7 @@ test('chained migrations', async () => {
 //   await db.flush({ indexes: true });
 //   await db.runMigrations([ViewTypeV1ToV2]);
 
-//   const { objects } = await db.query(Filter.type(ViewTypeV2)).run();
+//   const objects = await db.query(Filter.type(ViewTypeV2)).run();
 //   expect(objects).to.have.length(1);
 // });
 

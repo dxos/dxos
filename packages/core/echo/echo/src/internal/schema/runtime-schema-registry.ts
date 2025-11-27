@@ -14,9 +14,8 @@ import { getSchemaTypename, getSchemaVersion } from '../annotations';
 import { PersistentSchema } from './persistent-schema';
 
 /**
- * Runtime registry of static schema objects (i.e., not Dynamic .
+ * Registry of `Type.RuntimeType` schemas.
  */
-// TODO(burdon): Reconcile with DatabaseSchemaRegistry.
 export class RuntimeSchemaRegistry {
   private readonly _registry = new Map<string, Schema.Schema.AnyNoContext[]>();
 

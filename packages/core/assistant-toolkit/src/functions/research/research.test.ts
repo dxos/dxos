@@ -136,11 +136,11 @@ describe('Research', () => {
           prompt: `Create a research summary about ${organization.name}.`,
         });
         {
-          const { objects: docs } = yield* DatabaseService.runQuery(
+          const docs = yield* DatabaseService.runQuery(
             Query.select(Filter.ids(organization.id)).targetOf(HasSubject.HasSubject).source(),
           );
           if (docs.length !== 1) {
-            throw new Error(`Expected 1 research document; got ${docs.length}: ${docs.map((_) => _.name)}`);
+            throw new Error(`Expected 1 research document; got ${docs.length}: ${docs.map((_: any) => _.name)}`);
           }
 
           const doc = docs[0];
@@ -156,11 +156,11 @@ describe('Research', () => {
           prompt: 'Add a section about their portfolio.',
         });
         {
-          const { objects: docs } = yield* DatabaseService.runQuery(
+          const docs = yield* DatabaseService.runQuery(
             Query.select(Filter.ids(organization.id)).targetOf(HasSubject.HasSubject).source(),
           );
           if (docs.length !== 1) {
-            throw new Error(`Expected 1 research document; got ${docs.length}: ${docs.map((_) => _.name)}`);
+            throw new Error(`Expected 1 research document; got ${docs.length}: ${docs.map((_: any) => _.name)}`);
           }
 
           const doc = docs[0];

@@ -309,8 +309,12 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
 
   async runMigrations(migrations: ObjectMigration[]): Promise<void> {
     for (const migration of migrations) {
-      const { objects } = await this._coreDatabase.graph.query(Query.select(Filter.typeDXN(migration.fromType))).run();
-      log.verbose('migrate', { from: migration.fromType, to: migration.toType, objects: objects.length });
+      const objects = await this._coreDatabase.graph.query(Query.select(Filter.typeDXN(migration.fromType))).run();
+      log.verbose('migrate', {
+        from: migration.fromType,
+        to: migration.toType,
+        objects: objects.length,
+      });
       for (const object of objects) {
         const output = await migration.transform(object, { db: this });
 

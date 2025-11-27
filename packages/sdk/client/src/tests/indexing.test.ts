@@ -88,27 +88,29 @@ describe('Index queries', () => {
     const receivedIndexedObject = new Trigger<AnyLiveObject<any>[]>();
     const unsubscribe = query.subscribe(
       (query) => {
-        const indexResults = query.results;
+        const indexResults = query.entries;
         log('Query results', {
           length: indexResults.length,
-          results: indexResults.map(({ object, resolution }) => ({
-            object: (object as any).toJSON(),
+          results: indexResults.map(({ result, resolution }) => ({
+            object: (result as any).toJSON(),
             resolution,
           })),
         });
 
         if (
-          query.objects.length === objects.length &&
-          objects.every((object) => indexResults.some((result) => objectContains(result.object!, object))) &&
-          indexResults.every((result) => objects.some((object) => objectContains(result.object!, object)))
+          query.results.length === objects.length &&
+          objects.every((object) => indexResults.some((entry) => objectContains(entry.result!, object))) &&
+          indexResults.every((entry) => objects.some((object) => objectContains(entry.result!, object)))
         ) {
-          receivedIndexedObject.wake(query.objects);
+          receivedIndexedObject.wake(query.results);
         }
       },
       { fire: true },
     );
 
-    const queriedObjects = await receivedIndexedObject.wait({ timeout: TIMEOUT });
+    const queriedObjects = await receivedIndexedObject.wait({
+      timeout: TIMEOUT,
+    });
     unsubscribe();
     return queriedObjects;
   };
@@ -252,7 +254,7 @@ describe('Index queries', () => {
       const query = space.db.query(Filter.type(TestSchema.DocumentType));
       await addObjects(space, documents);
       await matchObjects(query, documents);
-      expect((await query.run()).objects.length).to.equal(2);
+      expect((await query.run()).length).to.equal(2);
     }
 
     {
@@ -260,7 +262,7 @@ describe('Index queries', () => {
         Filter.or(Filter.type(TestSchema.ContactType), Filter.type(TestSchema.DocumentType)),
       );
       await matchObjects(query, [...contacts, ...documents]);
-      expect((await query.run()).objects.length).to.equal(5);
+      expect((await query.run()).length).to.equal(5);
     }
   });
 
@@ -288,7 +290,7 @@ describe('Index queries', () => {
           ),
         ),
       );
-      const ids = (await query.run()).objects.map(({ id }) => id);
+      const ids = (await query.run()).map(({ id }) => id);
       expect(ids.every((id) => !excludedIds.includes(id))).to.be.true;
     }
   });
@@ -320,7 +322,7 @@ describe('Index queries', () => {
     const queriedEverything = new Trigger();
     const receivedDeleteUpdate = new Trigger();
     const unsub = query.subscribe((query) => {
-      const objects = query.objects;
+      const objects = query.results;
       if (objects.length === contacts.length + documents.length) {
         queriedEverything.wake();
       }
@@ -342,7 +344,7 @@ describe('Index queries', () => {
     await space.db.flush();
     await receivedDeleteUpdate.wait({ timeout: TIMEOUT });
 
-    log.info('query', { objects: (await query.run()).objects.length });
+    log.info('query', { objects: (await query.run()).length });
   });
 
   const createTestBuilder = () => {

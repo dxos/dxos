@@ -54,9 +54,8 @@ export type EchoSchemaRegistryOptions = {
 };
 
 /**
- * Per-space set of mutable schemas.
+ * Registry of `Type.PersistentType` mutable schema objects within a space.
  */
-// TODO(burdon): Reconcile with RuntimeSchemaRegistry. Rename (no product name in types).
 export class DatabaseSchemaRegistry extends Resource implements SchemaRegistry {
   private readonly _schemaById: Map<string, EchoSchema> = new Map();
   private readonly _schemaByType: Map<string, EchoSchema> = new Map();
@@ -79,13 +78,14 @@ export class DatabaseSchemaRegistry extends Resource implements SchemaRegistry {
     // Preloading schema is required for ECHO to operate.
     // TODO(dmaretskyi): Does this change with strong object deps.
     if (this._preloadSchemaOnOpen) {
-      const { objects } = await this._db.query(Filter.type(PersistentSchema)).run();
+      const objects = await this._db.query(Filter.type(PersistentSchema)).run();
 
       objects.forEach((object) => this._registerSchema(object));
     }
 
     if (this._reactiveQuery) {
-      const unsubscribe = this._db.query(Filter.type(PersistentSchema)).subscribe(({ objects }) => {
+      const unsubscribe = this._db.query(Filter.type(PersistentSchema)).subscribe((query) => {
+        const objects = query.results;
         const currentObjectIds = new Set(objects.map((o) => o.id));
         const newObjects = objects.filter((object) => !this._schemaById.has(object.id));
         const removedObjects = [...this._schemaById.keys()].filter((oid) => !currentObjectIds.has(oid));
@@ -210,11 +210,7 @@ export class DatabaseSchemaRegistry extends Resource implements SchemaRegistry {
     return new SchemaRegistryPreparedQueryImpl({
       changes,
       getResultsSync() {
-        const objects = self._db
-          .query(Filter.type(PersistentSchema))
-          .runSync()
-          .map((result) => result.object)
-          .filter((object) => object != null);
+        const objects = self._db.query(Filter.type(PersistentSchema)).runSync();
 
         const results = filterOrderResults([
           ...self._db.graph.schemaRegistry.schemas.map((schema) => {
@@ -233,7 +229,7 @@ export class DatabaseSchemaRegistry extends Resource implements SchemaRegistry {
         return results;
       },
       async getResults() {
-        const { objects } = await self._db.query(Filter.type(PersistentSchema)).run();
+        const objects = await self._db.query(Filter.type(PersistentSchema)).run();
 
         return filterOrderResults([
           ...self._db.graph.schemaRegistry.schemas.map((schema) => {

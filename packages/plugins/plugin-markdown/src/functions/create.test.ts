@@ -106,7 +106,7 @@ describe('create', () => {
           prompt: `Create a document with a cookie recipe.`,
         });
         {
-          const { objects: docs } = yield* DatabaseService.runQuery(Query.type(Markdown.Document));
+          const docs = yield* DatabaseService.runQuery(Query.type(Markdown.Document));
           if (docs.length !== 1) {
             throw new Error(`Expected 1 document; got ${docs.length}: ${docs.map((_) => _.name)}`);
           }

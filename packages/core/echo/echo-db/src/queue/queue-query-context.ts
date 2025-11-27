@@ -32,7 +32,7 @@ export class QueueQueryContext<T extends Entity.Unknown = Entity.Unknown> implem
   /**
    * One-shot run.
    */
-  async run(query: QueryAST.Query): Promise<QueryResult.Entry<T>[]> {
+  async run(query: QueryAST.Query): Promise<QueryResult.EntityEntry<T>[]> {
     const trivial = isSimpleSelectionQuery(query);
     if (!trivial) {
       throw new Error('Query not supported.');
@@ -90,7 +90,7 @@ export class QueueQueryContext<T extends Entity.Unknown = Entity.Unknown> implem
   /**
    * Synchronously get the results.
    */
-  getResults(): QueryResult.Entry<T>[] {
+  getResults(): QueryResult.EntityEntry<T>[] {
     invariant(this.#filter);
 
     const spaceId = this.#queue.dxn.asQueueDXN()!.spaceId;
