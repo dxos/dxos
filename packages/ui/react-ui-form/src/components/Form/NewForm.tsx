@@ -159,6 +159,7 @@ const NewFormActions = ({ classNames }: NewFormActionsProps) => {
           icon='ph--check--regular'
           iconEnd
           label={t('save button label')}
+          // TODO(burdon): Changed.
           onClick={() => onSave(values, { changed: {} })}
         />
       )}
