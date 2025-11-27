@@ -529,7 +529,7 @@ export const seedTestData = async (space: Space) => {
   const schemas = [Person.Person, Organization.Organization, TestSchema.DocumentType];
   for (const schema of schemas) {
     if (!space.db.graph.schemaRegistry.hasSchema(schema)) {
-      space.db.graph.schemaRegistry.register([schema]);
+      await space.db.graph.schemaRegistry.register([schema]);
     }
   }
 

@@ -406,7 +406,7 @@ describe('Integration tests', () => {
         reactiveSchemaQuery: false,
         preloadSchemaOnOpen: false,
       });
-      db.graph.schemaRegistry.register([TestSchema.Person, TestSchema.HasManager]);
+      await db.graph.schemaRegistry.register([TestSchema.Person, TestSchema.HasManager]);
 
       let relationId!: ObjectId;
       {

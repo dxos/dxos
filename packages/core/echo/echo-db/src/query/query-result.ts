@@ -197,10 +197,10 @@ export class QueryResultImpl<T extends Entity.Unknown = Entity.Unknown> implemen
     return changed;
   }
 
-  private _uniqueObjects(results: QueryResult.EntityEntry<T>[]): T[] {
+  private _uniqueObjects(entries: QueryResult.EntityEntry<T>[]): T[] {
     const seen = new Set<unknown>();
-    return results
-      .map((result) => result.result)
+    return entries
+      .map(({ result }) => result)
       .filter(isNonNullable)
       .filter((object: any) => {
         // Assuming objects have `id` property we can use to dedup.
@@ -211,6 +211,7 @@ export class QueryResultImpl<T extends Entity.Unknown = Entity.Unknown> implemen
         if (seen.has(object.id)) {
           return false;
         }
+
         seen.add(object.id);
         return true;
       });

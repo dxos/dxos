@@ -123,7 +123,7 @@ describe('schema registry', () => {
 
   test('query both database and runtime schemas', async () => {
     const { registry, db } = await setupTest();
-    db.graph.schemaRegistry.register([Organization]);
+    await db.graph.schemaRegistry.register([Organization]);
 
     const [echoSchema] = await registry.register([Contact]);
     const retrieved = await registry.query({ location: ['database', 'runtime'] }).run();
@@ -132,7 +132,7 @@ describe('schema registry', () => {
 
   test('query only runtime schemas', async () => {
     const { registry, db } = await setupTest();
-    db.graph.schemaRegistry.register([Organization]);
+    await db.graph.schemaRegistry.register([Organization]);
 
     const [echoSchema] = await registry.register([Contact]);
     const retrieved = await registry.query({ location: ['runtime'] }).run();
@@ -141,7 +141,7 @@ describe('schema registry', () => {
 
   test('query only database schemas', async () => {
     const { registry, db } = await setupTest();
-    db.graph.schemaRegistry.register([Organization]);
+    await db.graph.schemaRegistry.register([Organization]);
 
     const [echoSchema] = await registry.register([Contact]);
     const retrieved = await registry.query({ location: ['database'] }).run();

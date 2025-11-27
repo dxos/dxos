@@ -557,7 +557,7 @@ export abstract class AbstractBaseCommand<T extends typeof Command = any> extend
       if (options.types) {
         for (const type of options.types) {
           if (!space.db.graph.schemaRegistry.hasSchema(type)) {
-            space.db.graph.schemaRegistry.register([type]);
+            await space.db.graph.schemaRegistry.register([type]);
           }
         }
       }

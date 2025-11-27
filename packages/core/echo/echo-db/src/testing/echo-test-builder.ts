@@ -94,7 +94,7 @@ export class EchoTestPeer extends Resource {
     this._clients.delete(this._echoClient);
     this._echoClient = new EchoClient();
     this._clients.add(this._echoClient);
-    this._echoClient.graph.schemaRegistry.register(this._types);
+    void this._echoClient.graph.schemaRegistry.register(this._types);
   }
 
   get client() {
@@ -138,7 +138,7 @@ export class EchoTestPeer extends Resource {
 
   async createClient(): Promise<EchoClient> {
     const client = new EchoClient();
-    client.graph.schemaRegistry.register(this._types);
+    await client.graph.schemaRegistry.register(this._types);
     this._clients.add(client);
     client.connectToService({
       dataService: this._echoHost.dataService,

@@ -302,8 +302,7 @@ describe('Query', () => {
       const rootDocHandle = db.coreDatabase._automergeDocLoader.getSpaceRootDocHandle();
       const anotherDocHandle = getObjectCore(obj2).docHandle!;
       anotherDocHandle.change((doc: DatabaseDirectory) => {
-        // @ts-expect-error - Dynamic object access
-        doc.objects![obj1.id] = getObjectCore(obj1).docHandle!.doc()![obj1.id];
+        doc.objects![obj1.id] = getObjectCore(obj1).docHandle!.doc()!.objects![obj1.id];
       });
       rootDocHandle.change((doc: DatabaseDirectory) => {
         doc.links![obj1.id] = anotherDocHandle.url;
@@ -420,7 +419,7 @@ describe('Query', () => {
 
     test('not(or) query', async () => {
       const { db, graph } = await builder.createDatabase();
-      graph.schemaRegistry.register([TestSchema.Person, TestSchema.Task]);
+      await graph.schemaRegistry.register([TestSchema.Person, TestSchema.Task]);
 
       db.add(Obj.make(TestSchema.Person, {}));
       db.add(Obj.make(TestSchema.Task, {}));
@@ -447,7 +446,7 @@ describe('Query', () => {
 
     test('query relation by type', async () => {
       const { db, graph } = await builder.createDatabase();
-      graph.schemaRegistry.register([TestSchema.Person, TestSchema.HasManager]);
+      await graph.schemaRegistry.register([TestSchema.Person, TestSchema.HasManager]);
 
       const person1 = db.add(Obj.make(TestSchema.Person, { name: 'Alice' }));
       const person2 = db.add(Obj.make(TestSchema.Person, { name: 'Bob' }));
@@ -665,7 +664,7 @@ describe('Query', () => {
       const { db, graph } = await builder.createDatabase({
         indexing: { fullText: true },
       });
-      graph.schemaRegistry.register([TestSchema.Task]);
+      await graph.schemaRegistry.register([TestSchema.Task]);
 
       db.add(Obj.make(TestSchema.Task, { title: 'fix the tests' }));
       db.add(Obj.make(TestSchema.Task, { title: 'perf optimizations' }));
@@ -927,7 +926,7 @@ describe('Query', () => {
     });
 
     test('query by typename receives updates', async () => {
-      graph.schemaRegistry.register([TestSchema.Person]);
+      await graph.schemaRegistry.register([TestSchema.Person]);
       const contact = db.add(Obj.make(TestSchema.Person, {}));
       const name = 'DXOS User';
 
@@ -968,7 +967,7 @@ describe('Query', () => {
     });
 
     test('`instanceof` operator works', async () => {
-      graph.schemaRegistry.register([TestSchema.Person]);
+      await graph.schemaRegistry.register([TestSchema.Person]);
       const name = 'DXOS User';
       const contact = Obj.make(TestSchema.Person, { name });
       db.add(contact);

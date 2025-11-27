@@ -171,7 +171,7 @@ describe.skip('loadObjectReferences', () => {
     const testPeer = await testBuilder.createPeer({ kv: createTestLevel(tmpPath) });
     const object = Obj.make(TestSchema, { nested: [Ref.make(Obj.make(Nested, { value: 42 }))] });
     const db = await testPeer.createDatabase(spaceKey);
-    db.graph.schemaRegistry.register([TestSchema, Nested]);
+    await db.graph.schemaRegistry.register([TestSchema, Nested]);
     db.add(object);
     await db.flush();
     await testPeer.close();

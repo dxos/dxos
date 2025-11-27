@@ -126,7 +126,7 @@ export class SpaceObjectGenerator<T extends string> extends TestObjectGenerator<
       if (existingSchema != null) {
         return existingSchema;
       }
-      this._space.db.graph.schemaRegistry.register([schema]);
+      await this._space.db.graph.schemaRegistry.register([schema]);
       return schema;
     }
   }

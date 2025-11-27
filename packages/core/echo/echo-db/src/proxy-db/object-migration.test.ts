@@ -59,7 +59,7 @@ const migrationV3 = defineObjectMigration({
 
 test('migrate 1 object', async () => {
   const { db, graph } = await builder.createDatabase();
-  graph.schemaRegistry.register([ContactV1, ContactV2]);
+  await graph.schemaRegistry.register([ContactV1, ContactV2]);
 
   db.add(Obj.make(ContactV1, { firstName: 'John', lastName: 'Doe' }));
   await db.flush({ indexes: true });
@@ -78,7 +78,7 @@ test('migrate 1 object', async () => {
 
 test('incrementally migrates new objects', async () => {
   const { db, graph } = await builder.createDatabase();
-  graph.schemaRegistry.register([ContactV1, ContactV2]);
+  await graph.schemaRegistry.register([ContactV1, ContactV2]);
 
   db.add(Obj.make(ContactV1, { firstName: 'John', lastName: 'Doe' }));
   await db.flush({ indexes: true });
@@ -113,7 +113,7 @@ test('incrementally migrates new objects', async () => {
 
 test('chained migrations', async () => {
   const { db, graph } = await builder.createDatabase();
-  graph.schemaRegistry.register([ContactV1, ContactV2, ContactV3]);
+  await graph.schemaRegistry.register([ContactV1, ContactV2, ContactV3]);
 
   db.add(Obj.make(ContactV1, { firstName: 'John', lastName: 'Doe' }));
   await db.flush({ indexes: true });
