@@ -12,6 +12,7 @@ import React, {
   useMemo,
 } from 'react';
 
+import { addEventListener } from '@dxos/async';
 import { raise } from '@dxos/debug';
 import { type AnyProperties, getValue } from '@dxos/echo/internal';
 import { type SimpleType, createJsonPath } from '@dxos/effect';
@@ -66,28 +67,39 @@ export const FormProvider = ({
   }
 >) => {
   const form = useFormHandler(formOptions);
+  useKeyHandler(formRef?.current ?? null, form, autoSave);
 
+  return <FormContext.Provider value={form}>{children}</FormContext.Provider>;
+};
+
+/**
+ * Key handler.
+ */
+const useKeyHandler = (formElement: HTMLDivElement | null, form: FormHandler<any>, autoSave?: boolean) => {
   const handleKeyDown = useCallback(
     (event: KeyboardEvent) => {
-      const keyIsEnter = event.key === 'Enter';
-      const modifierUsed = event.ctrlKey || event.altKey || event.metaKey || event.shiftKey;
-      const inputIsTextarea = (event.target as HTMLElement).tagName.toLowerCase() === 'textarea';
-      const inputOptOut =
-        (event.target as HTMLElement).hasAttribute('data-no-submit') ||
-        (event.target as HTMLElement).closest('[data-no-submit]') !== null;
+      switch (event.key) {
+        case 'Enter': {
+          const modifier = event.ctrlKey || event.altKey || event.metaKey || event.shiftKey;
+          const isTextarea = (event.target as HTMLElement).tagName.toLowerCase() === 'textarea';
 
-      // Regular inputs: Submit on Enter (no modifiers).
-      const shouldSubmitRegularInput = !inputIsTextarea && keyIsEnter && !modifierUsed;
+          // E.g., opt-out on combobox selection.
+          const optOut =
+            (event.target as HTMLElement).hasAttribute('data-no-submit') ||
+            (event.target as HTMLElement).closest('[data-no-submit]') !== null;
 
-      // Textareas: Submit only on Meta+Enter.
-      const shouldSubmitTextarea = inputIsTextarea && keyIsEnter && event.metaKey;
+          // TODO(burdon): Explain why disabled if modifier.
+          if ((isTextarea ? event.metaKey : !modifier) && !optOut) {
+            if (!autoSave && form.canSave) {
+              form.onSave();
+            }
 
-      if ((shouldSubmitRegularInput || shouldSubmitTextarea) && !inputOptOut) {
-        if (!autoSave && form.canSave) {
-          form.onSave();
-        }
-        if (autoSave && form.formIsValid) {
-          (event.target as HTMLElement).blur();
+            // TODO(burdon): WHY?
+            if (autoSave && form.formIsValid) {
+              (event.target as HTMLElement).blur();
+            }
+          }
+          break;
         }
       }
     },
@@ -95,15 +107,11 @@ export const FormProvider = ({
   );
 
   useEffect(() => {
-    if (!formRef?.current) {
+    if (!formElement) {
       return;
     }
 
-    const formElement = formRef.current;
-
-    formElement.addEventListener('keydown', handleKeyDown);
-    return () => formElement.removeEventListener('keydown', handleKeyDown);
-  }, [formRef, form.canSave, form.formIsValid, form.onSave, autoSave]);
-
-  return <FormContext.Provider value={form}>{children}</FormContext.Provider>;
+    // TODO(burdon): Move to @dxos/dom-util.
+    return addEventListener(formElement, 'keydown', handleKeyDown);
+  }, [formElement, handleKeyDown]);
 };
