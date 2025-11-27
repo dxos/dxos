@@ -12,6 +12,7 @@ import { Function } from '@dxos/functions';
 import { Trigger } from '@dxos/functions';
 import { FunctionsServiceClient } from '@dxos/functions-runtime/edge';
 import { bundleFunction } from '@dxos/functions-runtime/native';
+import { bundleFunction as sourceBundleFunction } from '@dxos/functions-runtime/bundler';
 import { failedInvariant } from '@dxos/invariant';
 import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { AccessToken, Message } from '@dxos/types';
@@ -20,6 +21,28 @@ import { log } from '../../../../../../common/log/src';
 import { Mailbox } from '../../../types';
 
 describe.runIf(process.env.DX_TEST_TAGS?.includes('functions-e2e'))('Functions deployment', () => {
+  test.only('bundle (cdn)', { timeout: 15_000 }, async () => {
+    const result = await sourceBundleFunction({
+      source: `//
+    // Copyright 2025 DXOS.org
+    //
+    
+    // @ts-ignore
+    import { Schema as S } from 'https://esm.sh/effect@3.17.0?bundle=false';
+    // @ts-ignore
+    import { defineFunction } from 'https://esm.sh/@dxos/functions@latest';
+    
+    export default defineFunction({
+      key: 'dxos.org/function/mirror',
+      name: 'mirror',
+      inputSchema: S.Any,
+      handler: ({ data }) => data,
+    });
+    `,
+    });
+    log.info('bundleFunction', { error: result.error });
+  });
+
   test('bundle function', async () => {
     const artifact = await bundleFunction({
       entryPoint: new URL('./sync.ts', import.meta.url).pathname,
