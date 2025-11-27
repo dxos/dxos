@@ -44,7 +44,6 @@ export const deployScript = async ({
 
   try {
     const buildResult = await bundleFunction({
-      platform: 'browser',
       source: script.source!.target!.content,
     });
     if ('error' in buildResult) {

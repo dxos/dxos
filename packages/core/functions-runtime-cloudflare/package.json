@@ -1,7 +1,7 @@
 {
-  "name": "@dxos/functions",
+  "name": "@dxos/functions-runtime-cloudflare",
   "version": "0.8.3",
-  "description": "Functions API.",
+  "description": "Functions runtime for Cloudflare.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
@@ -24,21 +24,22 @@
   ],
   "scripts": {},
   "dependencies": {
-    "@dxos/ai": "workspace:*",
+    "@dxos/codec-protobuf": "workspace:*",
     "@dxos/context": "workspace:*",
+    "@dxos/debug": "workspace:*",
     "@dxos/echo": "workspace:*",
     "@dxos/echo-db": "workspace:*",
-    "@dxos/effect": "workspace:*",
-    "@dxos/errors": "workspace:*",
+    "@dxos/echo-protocol": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/log": "workspace:*",
-    "@dxos/node-std": "workspace:*",
     "@dxos/protocols": "workspace:*",
-    "@dxos/schema": "workspace:*",
-    "@dxos/types": "workspace:*",
-    "@effect/platform": "0.92.1",
+    "@dxos/util": "workspace:*",
     "effect": "3.18.3"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "4.20251106.1",
+    "@dxos/types": "workspace:*"
   },
   "publishConfig": {
     "access": "public"

@@ -42,6 +42,7 @@ export const Unit: Record<string, UnitFormat> = {
   Gigabyte: createFormat({ symbol: 'GB', quotient: 1_000 * 1_000 * 1_000, precision: 2 }),
   Megabyte: createFormat({ symbol: 'MB', quotient: 1_000 * 1_000, precision: 2 }),
   Kilobyte: createFormat({ symbol: 'KB', quotient: 1_000, precision: 2 }),
+  Byte: createFormat({ symbol: 'B', quotient: 1 }),
 
   // Time.
   Hour: createFormat({ symbol: 'h', quotient: MS_HOURS }),

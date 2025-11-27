@@ -2,11 +2,12 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type BuildOptions, type BuildResult, type Plugin, type PluginBuild, build, initialize } from 'esbuild-wasm';
+import { type BuildResult, type Plugin, type PluginBuild, build, initialize } from 'esbuild-wasm';
 
 import { subtleCrypto } from '@dxos/crypto';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
+import { isNode } from '@dxos/util';
 
 import { httpPlugin } from '../http-plugin-esbuild';
 
@@ -21,8 +22,6 @@ export type BundleOptions = {
    * Source code to bundle.
    */
   source: string;
-
-  platform: BuildOptions['platform'];
 };
 
 export type BundleResult =
@@ -41,6 +40,10 @@ export type BundleResult =
     };
 
 let initialized: Promise<void>;
+/**
+ * Initializes the bundler.
+ * Must be called before using the bundler in browser.
+ */
 export const initializeBundler = async (options: { wasmUrl: string }) => {
   await (initialized ??= initialize({
     wasmURL: options.wasmUrl,
@@ -48,12 +51,16 @@ export const initializeBundler = async (options: { wasmUrl: string }) => {
 };
 
 /**
- * In-browser ESBuild bundler implemented as a function (parity with native bundler API style).
+ * ESBuild bundler implemented as a function (parity with native bundler API style).
+ * Bundles source code directly, does not really on filesystem or Node APIs.
+ *
+ * This is browser friendly version of the bundler, but it could also be used in Node environment.
+ * `initializeBundler` should be called before using it in browser, not required in Node.
  */
-export const bundleFunction = async ({ source, platform }: BundleOptions): Promise<BundleResult> => {
+export const bundleFunction = async ({ source }: BundleOptions): Promise<BundleResult> => {
   const sourceHash = Buffer.from(await subtleCrypto.digest('SHA-256', Buffer.from(source)));
 
-  if (platform === 'browser') {
+  if (!isNode()) {
     invariant(initialized, 'Compiler not initialized.');
     await initialized;
   }

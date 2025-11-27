@@ -19,6 +19,7 @@ import {
   type CreateSpaceResponseBody,
   EdgeAuthChallengeError,
   EdgeCallFailedError,
+  type EdgeFailure,
   type EdgeStatus,
   type ExecuteWorkflowResponseBody,
   type ExportBundleRequest,
@@ -74,12 +75,6 @@ type EdgeHttpRequestArgs = {
    * @default true
    */
   json?: boolean;
-
-  /**
-   * Do not expect a standard EDGE JSON response with a `success` field.
-   * @deprecated Use only for debugging.
-   */
-  rawResponse?: boolean;
 
   /**
    * Force authentication.
@@ -325,7 +320,6 @@ export class EdgeHttpClient {
       ...args,
       body: input,
       method: 'POST',
-      rawResponse: true,
     });
   }
 
@@ -352,6 +346,12 @@ export class EdgeHttpClient {
 
   public async getCronTriggers(spaceId: SpaceId) {
     return this._call(new URL(`/test/functions/${spaceId}/triggers/crons`, this.baseUrl), { method: 'GET' });
+  }
+
+  public async forceRunCronTrigger(spaceId: SpaceId, triggerId: ObjectId) {
+    return this._call(new URL(`/test/functions/${spaceId}/triggers/crons/${triggerId}/run`, this.baseUrl), {
+      method: 'POST',
+    });
   }
 
   //
@@ -418,9 +418,6 @@ export class EdgeHttpClient {
 
         if (response.ok) {
           const body = await response.clone().json();
-          if (args.rawResponse) {
-            return body as any;
-          }
           invariant(body, 'Expected body to be present');
           if (!('success' in body)) {
             return body;
@@ -434,13 +431,13 @@ export class EdgeHttpClient {
           continue;
         }
 
-        const body =
+        const body: EdgeFailure =
           response.headers.get('Content-Type') === 'application/json' ? await response.clone().json() : undefined;
 
         invariant(!body?.success, 'Expected body to not be a failure response or undefined.');
 
-        if (body?.errorData?.type === 'auth_challenge' && typeof body?.errorData?.challenge === 'string') {
-          processingError = new EdgeAuthChallengeError(body.errorData.challenge, body.errorData);
+        if (body?.data?.type === 'auth_challenge' && typeof body?.data?.challenge === 'string') {
+          processingError = new EdgeAuthChallengeError(body.data.challenge, body.data);
         } else if (body?.success === false) {
           processingError = EdgeCallFailedError.fromUnsuccessfulResponse(response, body);
         } else {

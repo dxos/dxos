@@ -6,7 +6,7 @@ import { type Client } from '@dxos/client';
 import { Obj } from '@dxos/echo';
 import { type EdgeHttpClient } from '@dxos/edge-client';
 import { FUNCTIONS_META_KEY, Function, FunctionError } from '@dxos/functions';
-import { type PublicKey, type SpaceId } from '@dxos/keys';
+import { type ObjectId, type PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { safeParseJson } from '@dxos/util';
 
@@ -152,5 +152,9 @@ export class FunctionsServiceClient {
     } catch (error) {
       throw FunctionError.wrap({ message: 'Failed to invoke function', ifTypeDiffers: true })(error);
     }
+  }
+
+  async forceRunCronTrigger(spaceId: SpaceId, triggerId: ObjectId) {
+    return await this.#edgeClient.forceRunCronTrigger(spaceId, triggerId);
   }
 }

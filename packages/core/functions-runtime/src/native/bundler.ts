@@ -5,7 +5,6 @@
 import { writeFile } from 'node:fs/promises';
 import * as fs from 'node:fs/promises';
 import { basename, join, relative } from 'node:path';
-import { dirname } from 'node:path';
 
 import * as Array from 'effect/Array';
 import * as Function from 'effect/Function';
@@ -52,11 +51,7 @@ export const bundleFunction = async (options: BundleOptions): Promise<BundleResu
     loader: {
       '.wasm': 'copy',
     },
-    alias: {
-      'dxos:functions': './runtime.js',
-    },
     external: [
-      './runtime.js',
       'node:async_hooks',
       'cloudflare:workers',
       'functions-service:user-script',
@@ -77,11 +72,20 @@ export const bundleFunction = async (options: BundleOptions): Promise<BundleResu
           }));
           build.onLoad({ filter: /^dxos:entrypoint$/, namespace: 'dxos:entrypoint' }, () => ({
             contents: trim`
-              import { wrapFunctionHandler } from '@dxos/functions';
-              import { default as handler } from '${options.entryPoint}';
-              export default wrapFunctionHandler(handler);
+              export default {
+                fetch: async (...args) => {
+                  const { wrapFunctionHandler } = await import('@dxos/functions');
+                  const { wrapHandlerForCloudflare } = await import('@dxos/functions-runtime-cloudflare');
+                  const { default: handler } = await import('${options.entryPoint}');
+
+                  //
+                  // Wrapper to make the function cloudflare-compatible.
+                  //
+                  return wrapHandlerForCloudflare(wrapFunctionHandler(handler))(...args);
+                },
+              };
             `,
-            resolveDir: dirname(options.entryPoint),
+            resolveDir: new URL('.', import.meta.url).pathname,
           }));
         },
       },
