@@ -50,7 +50,11 @@ export const wrapFunctionHandler = (func: FunctionDefinition): FunctionProtocol.
       // eslint-disable-next-line no-useless-catch
       try {
         if (!SchemaAST.isAnyKeyword(func.inputSchema.ast)) {
-          Schema.validateSync(func.inputSchema)(data);
+          try {
+            Schema.validateSync(func.inputSchema)(data);
+          } catch (error) {
+            throw new FunctionError({ message: 'Invalid input schema', cause: error });
+          }
         }
 
         await using funcContext = await new FunctionContext(context).open();
