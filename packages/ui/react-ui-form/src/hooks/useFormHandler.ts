@@ -6,7 +6,7 @@ import type * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { type AnyProperties, getValue, setValue } from '@dxos/echo/internal';
+import { type AnyProperties, getValue as getPathValue, setValue as setPathValue } from '@dxos/echo/internal';
 import { type JsonPath, type SimpleType, createJsonPath, fromEffectValidationPath } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
@@ -17,19 +17,23 @@ import { type MaybePromise } from '@dxos/util';
  * Form handler properties and methods.
  */
 export type FormHandler<T extends AnyProperties> = {
-  //
-  // Form state management.
-  //
-
+  /**
+   * Initial values (which may not pass validation).
+   */
   values: Partial<T>;
+
   errors: Record<JsonPath, string>;
   touched: Record<JsonPath, boolean>;
   changed: Record<JsonPath, boolean>;
+
+  /**
+   * Whether the form can be saved (i.e., data is valid).
+   */
   canSave: boolean;
   formIsValid: boolean;
 
-  // TODO(burdon): Return onSave.
-  handleSave: () => void;
+  onSave: () => void;
+  onCancel: () => void;
 
   //
   // Form input component helpers.
@@ -39,7 +43,7 @@ export type FormHandler<T extends AnyProperties> = {
   getValue: <V>(path: (string | number)[]) => V | undefined;
   onBlur: (path: (string | number)[]) => void;
   onValueChange: <V>(path: (string | number)[], type: SimpleType, value: V) => void;
-};
+} & Pick<FormOptions<T>, 'schema'>;
 
 /**
  * Hook options.
@@ -79,6 +83,11 @@ export interface FormOptions<T extends AnyProperties> {
    * Called when the form is submitted and passes validation.
    */
   onSave?: (values: T, meta: { changed: FormHandler<T>['changed'] }) => MaybePromise<void>;
+
+  /**
+   * Called when the form is canceled.
+   */
+  onCancel?: () => void;
 }
 
 /**
@@ -92,6 +101,7 @@ export const useFormHandler = <T extends AnyProperties>({
   onValidate,
   onValid,
   onSave,
+  onCancel,
 }: FormOptions<T>): FormHandler<T> => {
   invariant(SchemaAST.isTypeLiteral(schema.ast));
 
@@ -168,6 +178,10 @@ export const useFormHandler = <T extends AnyProperties>({
     }
   }, [values, validate, onSave, changed]);
 
+  const handleCancel = useCallback(() => {
+    onCancel?.();
+  }, [onCancel]);
+
   //
   // Fields.
   //
@@ -197,9 +211,9 @@ export const useFormHandler = <T extends AnyProperties>({
     [errors, touched],
   );
 
-  const getFormValue = useCallback<FormHandler<T>['getValue']>(
+  const getValue = useCallback<FormHandler<T>['getValue']>(
     <V>(path: (string | number)[]): V | undefined => {
-      return getValue(values, createJsonPath(path));
+      return getPathValue(values, createJsonPath(path));
     },
     [values],
   );
@@ -218,7 +232,7 @@ export const useFormHandler = <T extends AnyProperties>({
         parsedValue = undefined;
       }
 
-      const newValues = { ...setValue(values, jsonPath, parsedValue) };
+      const newValues = { ...setPathValue(values, jsonPath, parsedValue) };
       setValues(newValues);
       const newChanged = { ...changed, [jsonPath]: true };
       setChanged(newChanged);
@@ -241,37 +255,41 @@ export const useFormHandler = <T extends AnyProperties>({
     [validate, values],
   );
 
-  return useMemo(
+  return useMemo<FormHandler<T>>(
     () => ({
       // State.
+      schema,
       values,
       errors,
       touched,
       changed,
       canSave,
       formIsValid,
-
-      // Actions.
-      handleSave,
 
       // Field utils.
       getStatus,
-      getValue: getFormValue,
+      getValue: getValue,
       onBlur,
       onValueChange,
+
+      // Actions.
+      onSave: handleSave,
+      onCancel: handleCancel,
     }),
     [
+      schema,
       values,
       errors,
       touched,
       changed,
       canSave,
       formIsValid,
-      handleSave,
       getStatus,
-      getFormValue,
+      getValue,
       onBlur,
       onValueChange,
+      onSave,
+      onCancel,
     ],
   );
 };

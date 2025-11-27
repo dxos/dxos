@@ -22,7 +22,7 @@ export type FormActionsProps = ThemedClassName<{
 
 export const FormActions = ({ classNames, readonly, onCancel, outerSpacing = true }: FormActionsProps) => {
   const { t } = useTranslation(translationKey);
-  const { canSave, handleSave } = useFormContext(FormActions.displayName);
+  const { canSave, onSave: handleSave } = useFormContext(FormActions.displayName);
 
   return (
     <div

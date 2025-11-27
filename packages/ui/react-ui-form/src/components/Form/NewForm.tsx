@@ -3,8 +3,7 @@
 //
 
 import { createContext } from '@radix-ui/react-context';
-import type * as Schema from 'effect/Schema';
-import React, { type PropsWithChildren, useState } from 'react';
+import React, { type PropsWithChildren } from 'react';
 
 import { type AnyProperties } from '@dxos/echo/internal';
 import { IconButton, type ThemedClassName, useTranslation } from '@dxos/react-ui';
@@ -28,29 +27,9 @@ type NewFormContextValue<T extends AnyProperties = any> = {
   debug?: boolean;
 
   /**
-   * Effect schema (Type literal).
+   * Form handler.
    */
-  schema: Schema.Schema<T, any>;
-
-  /**
-   * Initial values (which may not pass validation).
-   */
-  values: Partial<T>;
-
-  /**
-   * Whether the form can be saved (i.e., data is valid).
-   */
-  canSave: boolean;
-
-  /**
-   * Called when the form is submitted and passes validation.
-   */
-  onSave?: (values: T, meta: { changed: FormHandler<T>['changed'] }) => void;
-
-  /**
-   * Called when the form is canceled to abandon/undo any pending changes.
-   */
-  onCancel?: () => void;
+  form: FormHandler<T>;
 } & Pick<FormFieldSetProps, 'readonly'>;
 
 const [NewFormContextProvider, useNewFormContext] = createContext<NewFormContextValue>('NewForm');
@@ -60,10 +39,18 @@ const [NewFormContextProvider, useNewFormContext] = createContext<NewFormContext
 //
 
 type NewFormRootProps<T extends AnyProperties = AnyProperties> = PropsWithChildren<
-  {} & MakeOptional<
-    Pick<NewFormContextValue<T>, 'debug' | 'schema' | 'values' | 'readonly' | 'onSave' | 'onCancel'>,
-    'values' | 'readonly'
-  >
+  {
+    /**
+     * Called when the form is submitted and passes validation.
+     */
+    onSave?: (values: T, meta: { changed: FormHandler<T>['changed'] }) => void;
+
+    /**
+     * Called when the form is canceled to abandon/undo any pending changes.
+     */
+    onCancel?: () => void;
+  } & (MakeOptional<FormHandler<T>, 'values'> &
+    MakeOptional<Pick<NewFormContextValue<T>, 'debug' | 'readonly'>, 'readonly'>)
 >;
 
 const NewFormRoot = <T extends AnyProperties = AnyProperties>({
@@ -75,23 +62,12 @@ const NewFormRoot = <T extends AnyProperties = AnyProperties>({
   onCancel,
   ...props
 }: NewFormRootProps<T>) => {
-  const [values, setValues] = useState(valuesProp ?? {});
-  const [canSave, setCanSave] = useState(false);
-
-  // TODO(burdon): Temporarily include old context.
-  const form = useFormHandler({ schema, initialValues: values, onSave, ...props });
+  const form = useFormHandler({ schema, initialValues: valuesProp, onSave, onCancel, ...props });
 
   return (
+    // TODO(burdon): Temporarily include old context.
     <FormContext.Provider value={form}>
-      <NewFormContextProvider
-        debug={debug}
-        schema={schema}
-        values={values}
-        canSave={canSave}
-        onSave={onSave}
-        onCancel={onCancel}
-        {...props}
-      >
+      <NewFormContextProvider form={form} debug={debug} {...props}>
         {children}
       </NewFormContextProvider>
     </FormContext.Provider>
@@ -119,9 +95,9 @@ NewFormContent.displayName = 'NewForm.Content';
 type NewFormFieldSetProps = ThemedClassName<{}>;
 
 const NewFormFieldSet = ({ classNames }: NewFormFieldSetProps) => {
-  const { schema, readonly } = useNewFormContext(NewFormFieldSet.displayName);
+  const { form, readonly } = useNewFormContext(NewFormFieldSet.displayName);
 
-  return <FormFieldSet classNames={classNames} schema={schema} readonly={readonly} />;
+  return <FormFieldSet classNames={classNames} schema={form.schema} readonly={readonly} />;
 };
 
 NewFormFieldSet.displayName = 'NewForm.FieldSet';
@@ -134,7 +110,7 @@ type NewFormActionsProps = ThemedClassName<{}>;
 
 const NewFormActions = ({ classNames }: NewFormActionsProps) => {
   const { t } = useTranslation(translationKey);
-  const { readonly, values, canSave, onSave, onCancel } = useNewFormContext(NewFormActions.displayName);
+  const { form, readonly } = useNewFormContext(NewFormActions.displayName);
 
   if (readonly) {
     return null;
@@ -142,25 +118,24 @@ const NewFormActions = ({ classNames }: NewFormActionsProps) => {
 
   return (
     <div role='none' className={mx('grid grid-flow-col auto-cols-fr gap-2 pbs-cardSpacingBlock', classNames)}>
-      {onCancel && (
+      {form.onCancel && (
         <IconButton
           data-testid='cancel-button'
           icon='ph--x--regular'
           iconEnd
           label={t('cancel button label')}
-          onClick={onCancel}
+          onClick={form.onCancel}
         />
       )}
-      {onSave && (
+      {form.onSave && (
         <IconButton
           type='submit'
           data-testid='save-button'
-          disabled={!canSave}
+          disabled={!form.canSave}
           icon='ph--check--regular'
           iconEnd
           label={t('save button label')}
-          // TODO(burdon): Changed.
-          onClick={() => onSave(values, { changed: {} })}
+          onClick={form.onSave}
         />
       )}
     </div>

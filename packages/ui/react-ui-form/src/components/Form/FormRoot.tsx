@@ -84,14 +84,14 @@ export const FormProvider = ({
 
       if ((shouldSubmitRegularInput || shouldSubmitTextarea) && !inputOptOut) {
         if (!autoSave && form.canSave) {
-          form.handleSave();
+          form.onSave();
         }
         if (autoSave && form.formIsValid) {
           (event.target as HTMLElement).blur();
         }
       }
     },
-    [form.canSave, form.formIsValid, form.handleSave, autoSave],
+    [form.canSave, form.formIsValid, form.onSave, autoSave],
   );
 
   useEffect(() => {
@@ -103,7 +103,7 @@ export const FormProvider = ({
 
     formElement.addEventListener('keydown', handleKeyDown);
     return () => formElement.removeEventListener('keydown', handleKeyDown);
-  }, [formRef, form.canSave, form.formIsValid, form.handleSave, autoSave]);
+  }, [formRef, form.canSave, form.formIsValid, form.onSave, autoSave]);
 
   return <FormContext.Provider value={form}>{children}</FormContext.Provider>;
 };
