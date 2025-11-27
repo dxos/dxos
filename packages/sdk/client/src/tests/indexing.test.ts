@@ -7,7 +7,7 @@ import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { Trigger, TriggerState, asyncTimeout } from '@dxos/async';
 import { type ClientServicesProvider, type Space, SpaceProperties } from '@dxos/client-protocol';
-import { type Database, type Entity, Obj, Type } from '@dxos/echo';
+import { type Entity, Obj, type QueryResult, Type } from '@dxos/echo';
 import { Expando, Ref } from '@dxos/echo/internal';
 import { type AnyLiveObject, Filter } from '@dxos/echo-db';
 import { type PublicKey } from '@dxos/keys';
@@ -82,7 +82,7 @@ describe('Index queries', () => {
 
   // TODO(burdon): Remove AnyLiveObject.
   const matchObjects = async <T extends Entity.Unknown = Entity.Unknown>(
-    query: Database.QueryResult<T>,
+    query: QueryResult.QueryResult<T>,
     objects: AnyLiveObject<any>[],
   ) => {
     const receivedIndexedObject = new Trigger<AnyLiveObject<any>[]>();
