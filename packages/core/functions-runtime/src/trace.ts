@@ -24,6 +24,9 @@ export enum InvocationTraceEventType {
   END = 'end',
 }
 
+/**
+ * @deprecated Relace with EncodedError.
+ */
 export const TraceEventException = Schema.Struct({
   timestamp: Schema.Number,
   message: Schema.String,
@@ -82,7 +85,9 @@ export const InvocationTraceEndEvent = Schema.Struct({
    */
   // TODO(burdon): Remove ms suffix.
   timestamp: Schema.Number,
+
   outcome: Schema.Enums(InvocationOutcome),
+
   exception: Schema.optional(TraceEventException),
 }).pipe(Type.Obj({ typename: 'dxos.org/type/InvocationTraceEnd', version: '0.1.0' }));
 

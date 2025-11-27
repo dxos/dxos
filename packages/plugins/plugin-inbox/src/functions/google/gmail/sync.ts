@@ -70,23 +70,14 @@ export default defineFunction({
   outputSchema: Schema.Struct({
     newMessages: Schema.Number,
   }),
+  types: [Mailbox.Mailbox],
   services: [DatabaseService, QueueService],
   handler: ({
     // TODO(wittjosiah): Schema-based defaults are not yet supported.
     data: { mailboxId, userId = 'me', label = 'inbox', after = format(subDays(new Date(), 30), 'yyyy-MM-dd') },
   }) =>
     Effect.gen(function* () {
-      log.info('syncing gmail', { mailboxId, userId, after });
-
-      const skip = true;
-      if (!skip) {
-        // Ensure required schema is registered in the runtime before resolving.
-        const { db } = yield* DatabaseService;
-        yield* Effect.sync(() => {
-          db.graph.schemaRegistry.addSchema([Mailbox.Mailbox]);
-        });
-      }
-
+      log('syncing gmail', { mailboxId, userId, after });
       const mailbox = yield* DatabaseService.resolve(DXN.parse(mailboxId), Mailbox.Mailbox);
 
       const labelCount = yield* syncLabels(mailbox, userId).pipe(

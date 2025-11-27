@@ -2,6 +2,7 @@
   "extends": "../../../tsconfig.base.json",
   "compilerOptions": {
     "types": [
+      "@cloudflare/workers-types/2023-07-01",
       "@dxos/typings"
     ]
   },
@@ -11,13 +12,13 @@
   ],
   "references": [
     {
+      "path": "../../common/codec-protobuf"
+    },
+    {
       "path": "../../common/context"
     },
     {
-      "path": "../../common/effect"
-    },
-    {
-      "path": "../../common/errors"
+      "path": "../../common/debug"
     },
     {
       "path": "../../common/invariant"
@@ -29,22 +30,19 @@
       "path": "../../common/log"
     },
     {
-      "path": "../../common/node-std"
-    },
-    {
-      "path": "../../sdk/schema"
+      "path": "../../common/util"
     },
     {
       "path": "../../sdk/types"
-    },
-    {
-      "path": "../ai"
     },
     {
       "path": "../echo/echo"
     },
     {
       "path": "../echo/echo-db"
+    },
+    {
+      "path": "../echo/echo-protocol"
     },
     {
       "path": "../protocols"
