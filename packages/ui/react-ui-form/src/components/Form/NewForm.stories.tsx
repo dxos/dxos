@@ -88,6 +88,8 @@ const meta = {
 export default meta;
 
 // TODO(burdon): Fix.
+//  error TS2322: Type 'obj<Struct<{ name: optional<SchemaClass<string, string, never>>;
+//  is not assignable to type 'Schema<Person, Person, never> & Schema<Person, any, never>'.
 type Story<T extends Type.Obj.Any> = StoryObj<StoryProps<T>>;
 
 export const Default: Story<Person> = {
