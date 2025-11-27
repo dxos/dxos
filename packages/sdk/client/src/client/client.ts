@@ -139,11 +139,6 @@ export class Client {
       const prefix = options.config?.get('runtime.client.log.prefix');
       log.config({ filter, prefix });
     }
-
-    await this._echoClient.graph.schemaRegistry.register([SpaceProperties]);
-    if (options.types) {
-      this.addTypes(options.types);
-    }
   }
 
   [inspect.custom](): string {
@@ -248,7 +243,7 @@ export class Client {
    * Add schema types to the client.
    */
   // TODO(burdon): Check if already registered (and remove downstream checks).
-  addTypes(types: Schema.Schema.AnyNoContext[]): this {
+  async addTypes(types: Schema.Schema.AnyNoContext[]) {
     log('addTypes', { schema: types.map((type) => Type.getTypename(type)) });
 
     // TODO(dmaretskyi): Uncomment after release.
@@ -260,8 +255,6 @@ export class Client {
     if (exists.length > 0) {
       await this._echoClient.graph.schemaRegistry.register(exists);
     }
-
-    return this;
   }
 
   /**
@@ -356,6 +349,11 @@ export class Client {
 
     log.trace('dxos.sdk.client.open', Trace.begin({ id: this._instanceId }));
     const { createClientServices, IFrameManager, ShellManager } = await import('../services');
+
+    await this._echoClient.graph.schemaRegistry.register([SpaceProperties]);
+    if (this._options.types) {
+      await this.addTypes(this._options.types);
+    }
 
     this._ctx = new Context();
     this._config = this._options.config ?? new Config();
