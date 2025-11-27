@@ -37,7 +37,7 @@ describe.skip('NER EntityExtraction', () => {
     builder = await new EchoTestBuilder().open();
     const { db: db1 } = await builder.createDatabase({ indexing: { vector: true } });
     db = db1;
-    db.graph.schemaRegistry.addSchema(TYPES);
+    db.graph.schemaRegistry.register(TYPES);
     const data = createTestData();
     testData = {
       transcriptJosiah: data.transcriptJosiah,

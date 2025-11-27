@@ -6,7 +6,7 @@ import { Event } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { StackTrace } from '@dxos/debug';
 import { type Database, type Entity, Filter, Query, type QueryAST, Ref } from '@dxos/echo';
-import { type AnyProperties, RuntimeSchemaRegistry, setRefResolver } from '@dxos/echo/internal';
+import { type AnyProperties, setRefResolver } from '@dxos/echo/internal';
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { failedInvariant } from '@dxos/invariant';
 import { DXN, type ObjectId, type QueueSubspaceTag, type SpaceId } from '@dxos/keys';
@@ -15,7 +15,7 @@ import { trace } from '@dxos/tracing';
 import { entry } from '@dxos/util';
 
 import { type ItemsUpdatedEvent } from './core-db';
-import { type EchoDatabaseImpl } from './proxy-db';
+import { type EchoDatabaseImpl, RuntimeSchemaRegistry } from './proxy-db';
 import {
   GraphQueryContext,
   type QueryContext,

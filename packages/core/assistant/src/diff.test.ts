@@ -15,7 +15,7 @@ describe('diff', () => {
   it('should apply diffs', async () => {
     const builder = new EchoTestBuilder();
     const { db, graph } = await builder.createDatabase();
-    graph.schemaRegistry.addSchema([Text.Text]);
+    graph.schemaRegistry.register([Text.Text]);
 
     const document = trim`
       # Hello World

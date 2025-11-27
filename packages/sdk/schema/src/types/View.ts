@@ -10,7 +10,7 @@ import * as SchemaAST from 'effect/SchemaAST';
 
 import { type Client } from '@dxos/client';
 import { type Space } from '@dxos/client/echo';
-import { Filter, Obj, Query, QueryAST, Type } from '@dxos/echo';
+import { Filter, Obj, Query, QueryAST, type SchemaRegistry, Type } from '@dxos/echo';
 import {
   FormInputAnnotation,
   Format,
@@ -18,12 +18,10 @@ import {
   LabelAnnotation,
   ReferenceAnnotationId,
   type ReferenceAnnotationValue,
-  type RuntimeSchemaRegistry,
   SystemTypeAnnotation,
   TypeEnum,
   toEffectSchema,
 } from '@dxos/echo/internal';
-import { type DatabaseSchemaRegistry } from '@dxos/echo-db';
 import { type JsonPath, type JsonProp, findAnnotation } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
@@ -156,9 +154,7 @@ export const make = ({
 };
 
 export type MakeWithReferencesProps = MakeProps & {
-  // TODO(wittjosiah): Unify these.
-  registry?: RuntimeSchemaRegistry;
-  echoRegistry?: DatabaseSchemaRegistry;
+  registry?: SchemaRegistry.SchemaRegistry;
 };
 
 /**
@@ -173,7 +169,6 @@ export const makeWithReferences = async ({
   fields,
   pivotFieldName,
   registry,
-  echoRegistry,
 }: MakeWithReferencesProps): Promise<Live<View>> => {
   const view = make({
     query,
@@ -206,7 +201,7 @@ export const makeWithReferences = async ({
         Option.map((ref) => DXN.fromTypenameAndVersion(ref.typename, ref.version)),
       );
 
-      const referenceSchema = yield* Effect.tryPromise(() => getSchema(referenceDxn, registry, echoRegistry));
+      const referenceSchema = yield* Effect.tryPromise(() => getSchema(referenceDxn, registry));
 
       const referencePath = yield* Function.pipe(
         Option.fromNullable(referenceSchema),
@@ -284,8 +279,7 @@ export const makeFromSpace = async ({
       ...props,
       query: Query.select(Filter.typename(typename)),
       jsonSchema,
-      registry: client?.graph.schemaRegistry,
-      echoRegistry: space.db.schemaRegistry,
+      registry: space.db.schemaRegistry,
     }),
   };
 };

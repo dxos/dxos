@@ -140,7 +140,7 @@ export class Client {
       log.config({ filter, prefix });
     }
 
-    this._echoClient.graph.schemaRegistry.addSchema([SpaceProperties]);
+    this._echoClient.graph.schemaRegistry.register([SpaceProperties]);
     if (options.types) {
       this.addTypes(options.types);
     }
@@ -258,7 +258,7 @@ export class Client {
 
     const exists = types.filter((type) => !this._echoClient.graph.schemaRegistry.hasSchema(type));
     if (exists.length > 0) {
-      this._echoClient.graph.schemaRegistry.addSchema(exists);
+      this._echoClient.graph.schemaRegistry.register(exists);
     }
 
     return this;

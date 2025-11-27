@@ -21,6 +21,7 @@ import {
 import { invariant } from '@dxos/invariant';
 import { DXN, type ObjectId } from '@dxos/keys';
 import { log } from '@dxos/log';
+import { coerceArray } from '@dxos/util';
 
 import { getObjectCore } from '../echo-handler';
 import { Filter } from '../query';
@@ -97,9 +98,9 @@ export class DatabaseSchemaRegistry extends Resource implements SchemaRegistry.S
     // Nothing to do.
   }
 
-  query<Query extends Types.NoExcessProperties<SchemaRegistry.Query, Query>>(
-    _query?: Query & SchemaRegistry.Query,
-  ): QueryResult.QueryResult<SchemaRegistry.ExtractQueryResult<Query>> {
+  query<Q extends Types.NoExcessProperties<SchemaRegistry.Query, Q>>(
+    _query?: Q & SchemaRegistry.Query,
+  ): QueryResult.QueryResult<SchemaRegistry.ExtractQueryResult<Q>> {
     const self = this;
     const query: SchemaRegistry.Query = _query ?? {};
     const allowedLocations = query.location ?? ['database'];
@@ -252,7 +253,7 @@ export class DatabaseSchemaRegistry extends Resource implements SchemaRegistry.S
         unsubscribe?.();
         unsubscribe = undefined;
       },
-    }) as QueryResult.QueryResult<SchemaRegistry.ExtractQueryResult<Query>>;
+    }) as QueryResult.QueryResult<SchemaRegistry.ExtractQueryResult<Q>>;
   }
 
   // TODO(burdon): Tighten type signature to TypedObject?
@@ -421,13 +422,6 @@ export class DatabaseSchemaRegistry extends Resource implements SchemaRegistry.S
     this._schemaSubscriptionCallbacks.forEach((s) => s(list));
   }
 }
-
-const coerceArray = <T>(arr: T | T[] | undefined): T[] => {
-  if (arr === undefined) {
-    return [];
-  }
-  return Array.isArray(arr) ? arr : [arr];
-};
 
 const validateStoredSchemaIntegrity = (schema: PersistentSchema) => {
   if (!schema.jsonSchema.$id && !schema.jsonSchema.$id?.startsWith('dxn:')) {

@@ -59,7 +59,7 @@ const migrationV3 = defineObjectMigration({
 
 test('migrate 1 object', async () => {
   const { db, graph } = await builder.createDatabase();
-  graph.schemaRegistry.addSchema([ContactV1, ContactV2]);
+  graph.schemaRegistry.register([ContactV1, ContactV2]);
 
   db.add(Obj.make(ContactV1, { firstName: 'John', lastName: 'Doe' }));
   await db.flush({ indexes: true });
@@ -78,7 +78,7 @@ test('migrate 1 object', async () => {
 
 test('incrementally migrates new objects', async () => {
   const { db, graph } = await builder.createDatabase();
-  graph.schemaRegistry.addSchema([ContactV1, ContactV2]);
+  graph.schemaRegistry.register([ContactV1, ContactV2]);
 
   db.add(Obj.make(ContactV1, { firstName: 'John', lastName: 'Doe' }));
   await db.flush({ indexes: true });
@@ -113,7 +113,7 @@ test('incrementally migrates new objects', async () => {
 
 test('chained migrations', async () => {
   const { db, graph } = await builder.createDatabase();
-  graph.schemaRegistry.addSchema([ContactV1, ContactV2, ContactV3]);
+  graph.schemaRegistry.register([ContactV1, ContactV2, ContactV3]);
 
   db.add(Obj.make(ContactV1, { firstName: 'John', lastName: 'Doe' }));
   await db.flush({ indexes: true });
@@ -130,7 +130,7 @@ test('chained migrations', async () => {
 // TODO(wittjosiah): Strip down to minimal example. Key thing this is testing is arrays.
 // test('view migration', async () => {
 //   const { db, graph } = await builder.createDatabase();
-//   graph.schemaRegistry.addSchema([ViewTypeV1, ViewTypeV2]);
+//   graph.schemaRegistry.register([ViewTypeV1, ViewTypeV2]);
 
 //   db.add(
 //     Obj.make(ViewTypeV1, {

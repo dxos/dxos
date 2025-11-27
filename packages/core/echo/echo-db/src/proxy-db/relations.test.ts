@@ -20,7 +20,7 @@ describe('Relations', () => {
   beforeEach(async () => {
     testBuilder = await new EchoTestBuilder().open();
     ({ db, graph } = await testBuilder.createDatabase());
-    graph.schemaRegistry.addSchema([TestSchema.Person, TestSchema.Organization, TestSchema.EmployedBy]);
+    graph.schemaRegistry.register([TestSchema.Person, TestSchema.Organization, TestSchema.EmployedBy]);
   });
 
   afterEach(async () => {

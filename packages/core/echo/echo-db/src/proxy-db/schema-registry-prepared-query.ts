@@ -12,6 +12,7 @@ const resultToEntry = <T extends Type.Entity.Any>(result: T): QueryResult.Entry<
 });
 
 export interface SchemaRegistryQueryResolver<T> {
+  // TODO(wittjosiah): This looks unused, remove?
   changes: Event<void>;
 
   /**

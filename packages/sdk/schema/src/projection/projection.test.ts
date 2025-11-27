@@ -13,13 +13,12 @@ import {
   type JsonPath,
   type JsonProp,
   Ref,
-  RuntimeSchemaRegistry,
   TypeAnnotationId,
   TypeEnum,
   getPropertyMetaAnnotation,
   toJsonSchema,
 } from '@dxos/echo/internal';
-import { DatabaseSchemaRegistry } from '@dxos/echo-db';
+import { DatabaseSchemaRegistry, RuntimeSchemaRegistry } from '@dxos/echo-db';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
 import { registerSignalsRuntime } from '@dxos/echo-signals';
 import { invariant } from '@dxos/invariant';
@@ -141,7 +140,7 @@ describe('ProjectionModel', () => {
 
   test('gets and updates references', async ({ expect }) => {
     const registry = new RuntimeSchemaRegistry();
-    registry.addSchema([TestSchema.Organization]);
+    await registry.register([TestSchema.Organization]);
 
     const typename = 'example.com/type/Person';
     const schema = Schema.Struct({
