@@ -18,7 +18,7 @@ import {
   formatToType,
 } from '@dxos/echo/internal';
 import { createEchoSchema } from '@dxos/echo/testing';
-import { type EchoSchemaRegistry } from '@dxos/echo-db';
+import { type DatabaseSchemaRegistry } from '@dxos/echo-db';
 import { type DXN, PublicKey } from '@dxos/keys';
 
 export type SelectOptionType = typeof SelectOptionSchema.Type;
@@ -63,7 +63,7 @@ export const createDefaultSchema = () =>
 export const getSchema = async (
   dxn: DXN,
   registry?: RuntimeSchemaRegistry,
-  echoRegistry?: EchoSchemaRegistry,
+  echoRegistry?: DatabaseSchemaRegistry,
 ): Promise<Schema.Schema.AnyNoContext | undefined> => {
   const staticSchema = registry?.getSchemaByDXN(dxn);
   if (staticSchema) {

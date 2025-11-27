@@ -57,7 +57,7 @@ export type EchoSchemaRegistryOptions = {
  * Per-space set of mutable schemas.
  */
 // TODO(burdon): Reconcile with RuntimeSchemaRegistry. Rename (no product name in types).
-export class EchoSchemaRegistry extends Resource implements SchemaRegistry {
+export class DatabaseSchemaRegistry extends Resource implements SchemaRegistry {
   private readonly _schemaById: Map<string, EchoSchema> = new Map();
   private readonly _schemaByType: Map<string, EchoSchema> = new Map();
   private readonly _unsubscribeById: Map<string, CleanupFn> = new Map();

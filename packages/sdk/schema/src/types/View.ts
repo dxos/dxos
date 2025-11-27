@@ -23,7 +23,7 @@ import {
   TypeEnum,
   toEffectSchema,
 } from '@dxos/echo/internal';
-import { type EchoSchemaRegistry } from '@dxos/echo-db';
+import { type DatabaseSchemaRegistry } from '@dxos/echo-db';
 import { type JsonPath, type JsonProp, findAnnotation } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
@@ -158,7 +158,7 @@ export const make = ({
 export type MakeWithReferencesProps = MakeProps & {
   // TODO(wittjosiah): Unify these.
   registry?: RuntimeSchemaRegistry;
-  echoRegistry?: EchoSchemaRegistry;
+  echoRegistry?: DatabaseSchemaRegistry;
 };
 
 /**

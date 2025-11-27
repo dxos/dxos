@@ -3,7 +3,7 @@
 //
 
 export * from './database';
+export * from './database-schema-registry';
 export * from './load-object';
-export * from './echo-schema-registry';
 export type * from './schema-registry-api';
 export * from './object-migration';
