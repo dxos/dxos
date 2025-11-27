@@ -7,7 +7,7 @@ import React from 'react';
 import { Input, useTranslation } from '@dxos/react-ui';
 
 import { translationKey } from '../../../translations';
-import { FormInputHeader, type FormInputProps } from '../FormInput';
+import { type FormFieldComponentProps, FormFieldLabel } from '../FormFieldComponent';
 
 export const BooleanField = ({
   type,
@@ -17,14 +17,14 @@ export const BooleanField = ({
   getValue,
   onValueChange,
   readonly,
-}: FormInputProps) => {
+}: FormFieldComponentProps) => {
   const { status, error } = getStatus();
   const checked = Boolean(getValue());
   const { t } = useTranslation(translationKey);
 
   return (
     <Input.Root validationValence={status}>
-      {!inputOnly && <FormInputHeader error={error} label={label} />}
+      {!inputOnly && <FormFieldLabel error={error} label={label} />}
       {readonly === 'static' ? (
         <p>{t(checked ? 'boolean input true value' : 'boolean input false value')}</p>
       ) : (

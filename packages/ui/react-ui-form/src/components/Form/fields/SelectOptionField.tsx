@@ -12,9 +12,16 @@ import { HuePicker } from '@dxos/react-ui-pickers';
 import { hues, subtleHover } from '@dxos/react-ui-theme';
 
 import { translationKey } from '../../../translations';
-import { FormInputHeader, type FormInputProps } from '../FormInput';
+import { type FormFieldComponentProps, FormFieldLabel } from '../FormFieldComponent';
 
-export const SelectOptionField = ({ type, label, readonly, getStatus, getValue, onValueChange }: FormInputProps) => {
+export const SelectOptionField = ({
+  type,
+  label,
+  readonly,
+  getStatus,
+  getValue,
+  onValueChange,
+}: FormFieldComponentProps) => {
   const { t } = useTranslation(translationKey);
   const { status, error } = getStatus();
   const [selected, setSelectedId] = useState<string | null>(null);
@@ -111,7 +118,7 @@ export const SelectOptionField = ({ type, label, readonly, getStatus, getValue, 
 
   return (
     <Input.Root validationValence={status}>
-      <FormInputHeader error={error} label={label} />
+      <FormFieldLabel error={error} label={label} />
       <div role='none'>
         {options && (
           <List.Root

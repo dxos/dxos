@@ -8,12 +8,12 @@ import { Ref, Type } from '@dxos/echo';
 import { type JsonPath } from '@dxos/echo/internal';
 import { type Function } from '@dxos/functions';
 import { useOnTransition } from '@dxos/react-ui';
-import { Form, type FormInputStateProps, type QueryRefOptions, useFormValues } from '@dxos/react-ui-form';
+import { Form, type FormFieldStateProps, type QueryRefOptions, useFormValues } from '@dxos/react-ui-form';
 
 export type FunctionInputEditorProps = {
   functions: Function.Function[];
   onQueryRefOptions: QueryRefOptions;
-} & FormInputStateProps;
+} & FormFieldStateProps;
 
 /**
  * Editor component for function input parameters.

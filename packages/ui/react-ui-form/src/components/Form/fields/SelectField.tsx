@@ -6,9 +6,9 @@ import React, { useCallback } from 'react';
 
 import { Input, Select } from '@dxos/react-ui';
 
-import { FormInputHeader, type FormInputProps } from '../FormInput';
+import { type FormFieldComponentProps, FormFieldLabel } from '../FormFieldComponent';
 
-export type SelectFieldOptions = FormInputProps & {
+export type SelectFieldOptions = FormFieldComponentProps & {
   options?: Array<{ value: string | number; label?: string }>;
 };
 
@@ -30,7 +30,7 @@ export const SelectField = ({
 
   return readonly && !value ? null : (
     <Input.Root validationValence={status}>
-      {!inputOnly && <FormInputHeader error={error} label={label} />}
+      {!inputOnly && <FormFieldLabel error={error} label={label} />}
       {readonly === 'static' ? (
         <p>{options?.find(({ value: optionValue }) => optionValue === value)?.label ?? String(value)}</p>
       ) : (

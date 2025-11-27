@@ -10,7 +10,7 @@ import { Function, Script, Trigger } from '@dxos/functions';
 import { Filter, Ref, type Space, useQuery } from '@dxos/react-client/echo';
 import { Input } from '@dxos/react-ui';
 import { QueryForm, type QueryFormProps } from '@dxos/react-ui-components';
-import { Form, type FormFieldMap, FormInputHeader, SelectField, useRefQueryLookupHandler } from '@dxos/react-ui-form';
+import { Form, type FormFieldMap, FormFieldLabel, SelectField, useRefQueryLookupHandler } from '@dxos/react-ui-form';
 
 import { FunctionInputEditor, type FunctionInputEditorProps } from './FunctionInputEditor';
 import { SpecSelector } from './SpecSelector';
@@ -102,7 +102,7 @@ const useCustomInputs = ({ space, readonlySpec, types, tags, onQueryRefOptions }
 
         return (
           <Input.Root>
-            <FormInputHeader label={props.label} />
+            <FormFieldLabel label={props.label} />
             <QueryForm initialQuery={(props.getValue() as any).ast} types={types} tags={tags} onChange={handleChange} />
           </Input.Root>
         );

@@ -14,8 +14,8 @@ import { type ProjectionModel, type SchemaProperty } from '@dxos/schema';
 import { type FormHandler, type FormOptions } from '../../hooks';
 
 import { FormActions, type FormOuterSpacing } from './FormActions';
-import { FormFields, type FormFieldsProps } from './FormContent';
-import { type FormInputComponent, type FormInputProps } from './FormInput';
+import { FormFields, type FormFieldsProps } from './FormField';
+import { type FormFieldComponent, type FormFieldComponentProps } from './FormFieldComponent';
 import { FormProvider } from './FormRoot';
 
 export type PropertyFilter<T extends AnyProperties> = (props: SchemaProperty<T>[]) => SchemaProperty<T>[];
@@ -23,10 +23,10 @@ export type PropertyFilter<T extends AnyProperties> = (props: SchemaProperty<T>[
 export type FormFieldLookup = (args: {
   prop: string;
   schema: Schema.Schema<any>;
-  inputProps: FormInputProps;
+  inputProps: FormFieldComponentProps;
 }) => ReactElement | undefined;
 
-export type FormFieldMap = Partial<Record<string, FormInputComponent>>;
+export type FormFieldMap = Partial<Record<string, FormFieldComponent>>;
 
 export type FormProps<T extends AnyProperties> = ThemedClassName<{
   id?: string;

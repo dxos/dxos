@@ -15,15 +15,15 @@ import { type SchemaProperty, getSchemaProperties } from '@dxos/schema';
 import { translationKey } from '../../../translations';
 import { findArrayElementType } from '../../../util';
 import { type FormFieldLookup } from '../Form';
-import { FormField, type FormFieldProps } from '../FormContent';
-import { type FormInputComponent, FormInputHeader } from '../FormInput';
-import { type FormInputStateProps, useFormValues } from '../FormRoot';
+import { FormField, type FormFieldProps } from '../FormField';
+import { type FormFieldStateProps, type FormFieldComponent, FormFieldLabel } from '../FormFieldComponent';
+import { useFormValues } from '../FormRoot';
 
 type ArrayFieldProps = {
   property: SchemaProperty<any>;
-  inputProps: FormInputStateProps;
+  inputProps: FormFieldStateProps;
   path?: (string | number)[];
-  Custom?: Partial<Record<string, FormInputComponent>>;
+  Custom?: Partial<Record<string, FormFieldComponent>>;
   lookupComponent?: FormFieldLookup;
 } & Pick<FormFieldProps, 'readonly'>;
 
@@ -71,7 +71,7 @@ export const ArrayField = ({ property, readonly, path, inputProps, Custom, looku
 
   return readonly && values.length < 1 ? null : (
     <>
-      <FormInputHeader readonly label={label} />
+      <FormFieldLabel readonly label={label} />
       <div
         role='none'
         className={

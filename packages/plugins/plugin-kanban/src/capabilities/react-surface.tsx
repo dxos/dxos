@@ -9,7 +9,7 @@ import { Capabilities, contributes, createSurface } from '@dxos/app-framework';
 import { Obj, Type } from '@dxos/echo';
 import { findAnnotation } from '@dxos/effect';
 import { type Space, getSpace, isSpace } from '@dxos/react-client/echo';
-import { type FormInputProps, SelectField, useFormValues } from '@dxos/react-ui-form';
+import { type FormFieldComponentProps, SelectField, useFormValues } from '@dxos/react-ui-form';
 import { Kanban } from '@dxos/react-ui-kanban/types';
 import { type Collection } from '@dxos/schema';
 
@@ -46,7 +46,7 @@ export default () =>
         return !!annotation;
       },
       component: ({ data: { target }, ...inputProps }) => {
-        const props = inputProps as any as FormInputProps;
+        const props = inputProps as any as FormFieldComponentProps;
         const space = isSpace(target) ? target : getSpace(target);
         if (!space) {
           return null;

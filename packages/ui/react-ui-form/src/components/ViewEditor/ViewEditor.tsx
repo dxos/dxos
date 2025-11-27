@@ -28,7 +28,7 @@ import {
 
 import { translationKey } from '../../translations';
 import { FieldEditor } from '../FieldEditor';
-import { Form, type FormInputComponent, FormInputHeader, type FormInputProps, type FormProps } from '../Form';
+import { Form, type FormFieldComponent, FormFieldLabel, type FormFieldComponentProps, type FormProps } from '../Form';
 
 const listGrid = 'grid grid-cols-[min-content_1fr_min-content_min-content_min-content]';
 const listItemGrid = 'grid grid-cols-subgrid col-span-5';
@@ -307,8 +307,8 @@ export const ViewEditor = forwardRef<ProjectionModel, ViewEditorProps>(
 const customFields = ({
   types,
   tags,
-}: Pick<ViewEditorProps, 'types' | 'tags'>): Record<string, FormInputComponent> => ({
-  query: (props: FormInputProps) => {
+}: Pick<ViewEditorProps, 'types' | 'tags'>): Record<string, FormFieldComponent> => ({
+  query: (props: FormFieldComponentProps) => {
     const handleChange = useCallback(
       (query: Query.Any) => props.onValueChange('object', query.ast),
       [props.onValueChange],
@@ -316,7 +316,7 @@ const customFields = ({
 
     return (
       <Input.Root>
-        <FormInputHeader label={props.label} />
+        <FormFieldLabel label={props.label} />
         <QueryForm initialQuery={props.getValue()} types={types} tags={tags} onChange={handleChange} />
       </Input.Root>
     );

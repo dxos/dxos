@@ -15,7 +15,7 @@ import {
   ControlPage,
   ControlSection,
   Form,
-  type FormInputComponent,
+  type FormFieldComponent,
 } from '@dxos/react-ui-form';
 import { EmojiPickerBlock, HuePicker } from '@dxos/react-ui-pickers';
 import { hexToEmoji, hexToHue } from '@dxos/util';
@@ -73,7 +73,7 @@ export const ProfileContainer = () => {
   );
 
   // TODO(wittjosiah): Integrate descriptions with the form schema.
-  const customFields: Partial<Record<string, FormInputComponent>> = useMemo(
+  const customFields: Partial<Record<string, FormFieldComponent>> = useMemo(
     () => ({
       displayName: ({ type, label, getValue, onValueChange }) => {
         const handleChange = useCallback(

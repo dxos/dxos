@@ -6,7 +6,7 @@ import React, { useCallback, useRef, useState } from 'react';
 
 import { getSnapshot } from '@dxos/echo/internal';
 import { IconButton, Input, useTranslation } from '@dxos/react-ui';
-import { FormProvider, useFormContext, useFormInputProps } from '@dxos/react-ui-form';
+import { FormProvider, useFormContext, useFormFieldState } from '@dxos/react-ui-form';
 
 import { meta } from '../meta';
 import { UserFeedback } from '../types';
@@ -17,7 +17,7 @@ const FeedbackContent = () => {
   const { t } = useTranslation(meta.id);
   const { handleSave, canSave } = useFormContext<UserFeedback>(FeedbackContent.displayName);
 
-  const messageProps = useFormInputProps(FeedbackContent.displayName, ['message']);
+  const messageProps = useFormFieldState(FeedbackContent.displayName, ['message']);
 
   return (
     <div role='form' className='p-3 flex flex-col gap-2'>

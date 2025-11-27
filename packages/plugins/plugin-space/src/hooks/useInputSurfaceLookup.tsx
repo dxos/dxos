@@ -6,7 +6,7 @@ import type * as Schema from 'effect/Schema';
 import React, { useCallback } from 'react';
 
 import { Surface, isSurfaceAvailable, usePluginManager } from '@dxos/app-framework/react';
-import { type FormInputProps } from '@dxos/react-ui-form';
+import { type FormFieldComponentProps } from '@dxos/react-ui-form';
 
 // TODO(ZaymonFC): Move this if you find yourself needing it elsewhere.
 /**
@@ -18,7 +18,15 @@ export const useInputSurfaceLookup = (baseData?: Record<string, any>) => {
   const pluginManager = usePluginManager();
 
   return useCallback(
-    ({ prop, schema, inputProps }: { prop: string; schema: Schema.Schema<any>; inputProps: FormInputProps }) => {
+    ({
+      prop,
+      schema,
+      inputProps,
+    }: {
+      prop: string;
+      schema: Schema.Schema<any>;
+      inputProps: FormFieldComponentProps;
+    }) => {
       const composedData = { prop, schema, ...baseData };
       if (
         !isSurfaceAvailable(pluginManager.context, {

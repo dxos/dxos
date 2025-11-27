@@ -13,7 +13,7 @@ import { findAnnotation } from '@dxos/effect';
 import { SettingsStore } from '@dxos/local-storage';
 import { type Space, SpaceState, getSpace, isLiveObject, isSpace, parseId, useSpace } from '@dxos/react-client/echo';
 import { Input } from '@dxos/react-ui';
-import { type FormInputProps, SelectField } from '@dxos/react-ui-form';
+import { type FormFieldComponentProps, SelectField } from '@dxos/react-ui-form';
 import { HuePicker, IconPicker } from '@dxos/react-ui-pickers';
 import { Collection, View, ViewAnnotation } from '@dxos/schema';
 import { type JoinPanelProps } from '@dxos/shell/react';
@@ -194,7 +194,7 @@ export default ({ createInvitationUrl }: ReactSurfaceOptions) =>
         return !!annotation;
       },
       component: ({ data: _, ...inputProps }) => {
-        const { label, readonly, type, getValue, onValueChange } = inputProps as any as FormInputProps;
+        const { label, readonly, type, getValue, onValueChange } = inputProps as any as FormFieldComponentProps;
         const handleChange = useCallback((nextHue: string) => onValueChange(type, nextHue), [onValueChange]);
         const handleReset = useCallback(() => onValueChange(type, undefined), [onValueChange]);
         return (
@@ -213,7 +213,7 @@ export default ({ createInvitationUrl }: ReactSurfaceOptions) =>
         return !!annotation;
       },
       component: ({ data: _, ...inputProps }) => {
-        const { label, readonly, type, getValue, onValueChange } = inputProps as any as FormInputProps;
+        const { label, readonly, type, getValue, onValueChange } = inputProps as any as FormFieldComponentProps;
         const handleChange = useCallback((nextIcon: string) => onValueChange(type, nextIcon), [onValueChange]);
         const handleReset = useCallback(() => onValueChange(type, undefined), [onValueChange]);
         return (
@@ -244,7 +244,7 @@ export default ({ createInvitationUrl }: ReactSurfaceOptions) =>
         return !!annotation;
       },
       component: ({ data: { schema, target }, ...inputProps }) => {
-        const props = inputProps as any as FormInputProps;
+        const props = inputProps as any as FormFieldComponentProps;
         const space = isSpace(target) ? target : getSpace(target);
         const annotation = findAnnotation<TypeInputOptions>(schema.ast, TypeInputOptionsAnnotationId)!;
         const options = useTypeOptions({ space, annotation });

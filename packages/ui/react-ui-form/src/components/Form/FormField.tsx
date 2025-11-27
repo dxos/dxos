@@ -6,7 +6,7 @@ import * as Function from 'effect/Function';
 import * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
 import * as StringEffect from 'effect/String';
-import React, { Component, type PropsWithChildren, type ReactNode, forwardRef, useMemo } from 'react';
+import React, { forwardRef, useMemo } from 'react';
 
 import { createJsonPath, findNode, getDiscriminatedType, isDiscriminatedUnion } from '@dxos/effect';
 import { type ThemedClassName } from '@dxos/react-ui';
@@ -20,8 +20,9 @@ import { getRefProps } from '../../util';
 import { getInputComponent } from './factory';
 import { ArrayField, RefField, type RefFieldProps, SelectField } from './fields';
 import { type FormFieldLookup } from './Form';
-import { type FormInputComponent } from './FormInput';
-import { useFormInputProps, useFormValues } from './FormRoot';
+import { FormErrorBoundary } from './FormErrorBoundary';
+import { type FormFieldComponent } from './FormFieldComponent';
+import { useFormFieldState, useFormValues } from './FormRoot';
 
 export type FormFieldProps = {
   property: SchemaProperty<any>;
@@ -30,7 +31,7 @@ export type FormFieldProps = {
   inline?: boolean;
   projection?: ProjectionModel;
   lookupComponent?: FormFieldLookup;
-  Custom?: Partial<Record<string, FormInputComponent>>;
+  Custom?: Partial<Record<string, FormFieldComponent>>;
 } & Pick<
   RefFieldProps,
   | 'readonly'
@@ -43,22 +44,22 @@ export type FormFieldProps = {
 >;
 
 export const FormField = ({
+  Custom,
   property,
   path,
   readonly,
   inline,
   projection,
-  onQueryRefOptions,
+  lookupComponent,
   createOptionLabel,
   createOptionIcon,
-  onCreate,
   createSchema,
   createInitialValuePath,
-  lookupComponent,
-  Custom,
+  onCreate,
+  onQueryRefOptions,
 }: FormFieldProps) => {
   const { ast, name, type, format, title, description, options, examples, array } = property;
-  const inputProps = useFormInputProps(FormField.displayName, path);
+  const inputProps = useFormFieldState(FormField.displayName, path);
 
   const label = useMemo(() => title ?? Function.pipe(name, StringEffect.capitalize), [title, name]);
   const placeholder = useMemo(
@@ -131,7 +132,26 @@ export const FormField = ({
   }
 
   //
-  // Arrays.
+  // Select.
+  //
+
+  if (options) {
+    return (
+      <SelectField
+        type={type}
+        format={format}
+        readonly={readonly}
+        inputOnly={inline}
+        label={label}
+        options={options.map((option) => ({ value: option, label: String(option) }))}
+        placeholder={placeholder}
+        {...inputProps}
+      />
+    );
+  }
+
+  //
+  // Array.
   //
 
   if (array) {
@@ -152,25 +172,6 @@ export const FormField = ({
         inputOnly={inline}
         placeholder={placeholder}
         readonly={readonly}
-        {...inputProps}
-      />
-    );
-  }
-
-  //
-  // Select.
-  //
-
-  if (options) {
-    return (
-      <SelectField
-        type={type}
-        format={format}
-        readonly={readonly}
-        inputOnly={inline}
-        label={label}
-        options={options.map((option) => ({ value: option, label: String(option) }))}
-        placeholder={placeholder}
         {...inputProps}
       />
     );
@@ -221,9 +222,10 @@ export type FormFieldsProps = ThemedClassName<
      */
     path?: (string | number)[];
     exclude?: (props: SchemaProperty<any>[]) => SchemaProperty<any>[];
+    // TODO(burdon): Function.
     sort?: string[];
     /**
-     * Optional projection for projection-based field management
+     * Optional projection for projection-based field management.
      */
     projection?: ProjectionModel;
     lookupComponent?: FormFieldLookup;
@@ -231,7 +233,7 @@ export type FormFieldsProps = ThemedClassName<
      * Map of custom renderers for specific properties.
      * Prefer lookupComponent for plugin specific input surfaces.
      */
-    Custom?: Partial<Record<string, FormInputComponent>>;
+    Custom?: Partial<Record<string, FormFieldComponent>>;
     onQueryRefOptions?: QueryRefOptions;
   } & Pick<FormFieldProps, 'readonly'> &
     Pick<
@@ -266,16 +268,16 @@ export const FormFields = forwardRef<HTMLDivElement, FormFieldsProps>(
     const properties = useMemo(() => {
       const props = getSchemaProperties(schema.ast, values, { form: true });
 
-      // Use projection-based field management when view and projection are available
+      // Use projection-based field management when view and projection are available.
       if (projection) {
         const fieldProjections = projection.getFieldProjections();
         const hiddenProperties = new Set(projection.getHiddenProperties());
 
-        // Filter properties to only include visible ones and order by projection
+        // Filter properties to only include visible ones and order by projection.
         const visibleProps = props.filter((prop) => !hiddenProperties.has(prop.name));
         const orderedProps: SchemaProperty<any>[] = [];
 
-        // Add properties in projection field order
+        // Add properties in projection field order.
         for (const fieldProjection of fieldProjections) {
           const fieldPath = String(fieldProjection.field.path);
           const prop = visibleProps.find((p) => p.name === fieldPath);
@@ -284,15 +286,14 @@ export const FormFields = forwardRef<HTMLDivElement, FormFieldsProps>(
           }
         }
 
-        // Add any remaining properties not in projection
+        // Add any remaining properties not in projection.
         const projectionPaths = new Set(fieldProjections.map((fp) => String(fp.field.path)));
         const remainingProps = visibleProps.filter((prop) => !projectionPaths.has(prop.name));
         orderedProps.push(...remainingProps);
-
         return orderedProps;
       }
 
-      // Fallback to legacy filter/sort behavior
+      // Fallback to legacy filter/sort behavior.
       const filtered = exclude ? exclude(props) : props;
       return sort ? filtered.sort((a, b) => sort.indexOf(a.name) - sort.indexOf(b.name)) : filtered;
     }, [schema, values, exclude, sort, projection?.fields]);
@@ -302,7 +303,7 @@ export const FormFields = forwardRef<HTMLDivElement, FormFieldsProps>(
         {properties
           .map((property) => {
             return (
-              <ErrorBoundary key={property.name} path={[...(path ?? []), property.name]}>
+              <FormErrorBoundary key={property.name} path={[...(path ?? []), property.name]}>
                 <FormField
                   property={property}
                   path={[...(path ?? []), property.name]}
@@ -313,7 +314,7 @@ export const FormFields = forwardRef<HTMLDivElement, FormFieldsProps>(
                   Custom={Custom}
                   {...props}
                 />
-              </ErrorBoundary>
+              </FormErrorBoundary>
             );
           })
           .filter(isTruthy)}
@@ -323,42 +324,3 @@ export const FormFields = forwardRef<HTMLDivElement, FormFieldsProps>(
 );
 
 FormFields.displayName = 'Form.Fields';
-
-type ErrorState = {
-  error: Error | undefined;
-};
-
-type ErrorBoundaryProps = PropsWithChildren<{
-  path?: (string | number)[];
-}>;
-
-class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorState> {
-  static getDerivedStateFromError(error: Error): { error: Error } {
-    return { error };
-  }
-
-  override state = { error: undefined };
-
-  override componentDidUpdate(prevProps: ErrorBoundaryProps): void {
-    if (prevProps.path !== this.props.path) {
-      this.resetError();
-    }
-  }
-
-  override render(): ReactNode {
-    if (this.state.error) {
-      return (
-        <div className='flex gap-2 border border-roseFill font-mono text-sm'>
-          <span className='bg-roseFill text-surfaceText pli-1 font-thin'>ERROR</span>
-          {String(this.props.path?.join('.'))}
-        </div>
-      );
-    }
-
-    return this.props.children;
-  }
-
-  private resetError(): void {
-    this.setState({ error: undefined });
-  }
-}

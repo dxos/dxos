@@ -6,7 +6,7 @@ import React from 'react';
 
 import { Input } from '@dxos/react-ui';
 
-import { FormInputHeader, type FormInputProps } from '../FormInput';
+import { type FormFieldComponentProps, FormFieldLabel } from '../FormFieldComponent';
 
 export const NumberField = ({
   type,
@@ -18,14 +18,14 @@ export const NumberField = ({
   getValue,
   onValueChange,
   onBlur,
-}: FormInputProps) => {
+}: FormFieldComponentProps) => {
   const { status, error } = getStatus();
 
   return readonly && !getValue() ? null : readonly === 'static' && inputOnly ? (
     <p>{getValue() ?? ''}</p>
   ) : (
     <Input.Root validationValence={status}>
-      {!inputOnly && <FormInputHeader error={error} label={label} />}
+      {!inputOnly && <FormFieldLabel error={error} label={label} />}
       {readonly === 'static' ? (
         <p>{getValue() ?? ''}</p>
       ) : (

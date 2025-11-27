@@ -6,7 +6,7 @@ import React, { useCallback, useEffect, useRef } from 'react';
 
 import { Input } from '@dxos/react-ui';
 
-import { FormInputHeader, type FormInputProps } from '../FormInput';
+import { type FormFieldComponentProps, FormFieldLabel } from '../FormFieldComponent';
 
 export const MarkdownField = ({
   type,
@@ -18,7 +18,7 @@ export const MarkdownField = ({
   getValue,
   onValueChange,
   onBlur,
-}: FormInputProps) => {
+}: FormFieldComponentProps) => {
   const { status, error } = getStatus();
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -45,7 +45,7 @@ export const MarkdownField = ({
 
   return (
     <Input.Root validationValence={status}>
-      {!inputOnly && <FormInputHeader error={error} label={label} />}
+      {!inputOnly && <FormFieldLabel error={error} label={label} />}
       {readonly === 'static' ? (
         <p>{getValue() ?? ''}</p>
       ) : (

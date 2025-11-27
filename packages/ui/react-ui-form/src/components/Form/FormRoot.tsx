@@ -3,7 +3,6 @@
 //
 
 import React, {
-  type FocusEvent,
   type PropsWithChildren,
   type RefObject,
   createContext,
@@ -17,41 +16,41 @@ import { raise } from '@dxos/debug';
 import { type AnyProperties, getValue } from '@dxos/echo/internal';
 import { type SimpleType, createJsonPath } from '@dxos/effect';
 
-import { type FormHandler, type FormOptions, useForm } from '../../hooks';
+import { type FormHandler, type FormOptions, useFormHandler } from '../../hooks';
+
+import { type FormFieldStateProps } from './FormFieldComponent';
 
 type FormContextValue<T extends AnyProperties> = FormHandler<T>;
 
 const FormContext = createContext<FormContextValue<any> | undefined>(undefined);
 
 export const useFormContext = <T extends AnyProperties>(componentName: string): FormContextValue<T> => {
-  return useContext(FormContext) ?? raise(new Error('Missing FormContext'));
+  return useContext(FormContext) ?? raise(new Error(`Missing FormContext from ${componentName}`));
 };
 
+/**
+ * Get the current form values.
+ */
 export const useFormValues = (componentName: string, path: (string | number)[] = []): any => {
   const { values: formValues } = useFormContext(componentName);
   const jsonPath = createJsonPath(path);
   return getValue(formValues, jsonPath) as AnyProperties;
 };
 
-export type FormInputStateProps = {
-  getStatus: () => { status?: 'error'; error?: string };
-  getValue: <V>() => V | undefined;
-  onValueChange: (type: SimpleType, value: any) => void;
-  onBlur: (event: FocusEvent<HTMLElement>) => void;
-};
-
-export const useFormInputProps = (componentName: string, path: (string | number)[] = []): FormInputStateProps => {
-  const { getStatus, getValue: getFormValue, onValueChange, onTouched } = useFormContext(componentName);
-
+/**
+ * Get the state props for the given field.
+ */
+export const useFormFieldState = (componentName: string, path: (string | number)[] = []): FormFieldStateProps => {
+  const { getStatus, getValue: getFormValue, onBlur, onValueChange } = useFormContext(componentName);
   const stablePath = useMemo(() => path, [Array.isArray(path) ? path.join('.') : path]);
   return useMemo(
     () => ({
       getStatus: () => getStatus(stablePath),
       getValue: () => getFormValue(stablePath),
+      onBlur: () => onBlur(stablePath),
       onValueChange: (type: SimpleType, value: any) => onValueChange(stablePath, type, value),
-      onBlur: () => onTouched(stablePath),
     }),
-    [getStatus, getFormValue, onValueChange, onTouched, stablePath],
+    [getStatus, getFormValue, onBlur, onValueChange, stablePath],
   );
 };
 
@@ -66,7 +65,7 @@ export const FormProvider = ({
     autoSave?: boolean;
   }
 >) => {
-  const form = useForm(formOptions);
+  const form = useFormHandler(formOptions);
 
   const handleKeyDown = useCallback(
     (event: KeyboardEvent) => {

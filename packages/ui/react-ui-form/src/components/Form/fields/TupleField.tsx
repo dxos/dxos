@@ -8,7 +8,7 @@ import { Input } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 import { safeParseFloat } from '@dxos/util';
 
-import { FormInputHeader, type FormInputProps } from '../FormInput';
+import { type FormFieldComponentProps, FormFieldLabel } from '../FormFieldComponent';
 
 const gridCols = ['grid-cols-1', 'grid-cols-2', 'grid-cols-3', 'grid-cols-4'];
 
@@ -21,7 +21,7 @@ export const TupleField = ({
   getValue,
   onValueChange,
   onBlur,
-}: FormInputProps & { binding: string[] }) => {
+}: FormFieldComponentProps & { binding: string[] }) => {
   const { status, error } = getStatus();
 
   // TODO(burdon): Generalize number/float/string, etc.
@@ -29,7 +29,7 @@ export const TupleField = ({
 
   return (
     <Input.Root validationValence={status}>
-      <FormInputHeader error={error} label={label} />
+      <FormFieldLabel error={error} label={label} />
       <div className={mx('grid gap-2', gridCols[binding.length - 1])}>
         {binding.map((prop) => (
           <Input.TextInput

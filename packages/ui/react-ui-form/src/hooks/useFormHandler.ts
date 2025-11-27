@@ -14,7 +14,7 @@ import { type ValidationError, validateSchema } from '@dxos/schema';
 import { type MaybePromise } from '@dxos/util';
 
 /**
- * Return type from `useForm` hook.
+ * Form handler properties and methods.
  */
 export type FormHandler<T extends AnyProperties> = {
   //
@@ -37,8 +37,8 @@ export type FormHandler<T extends AnyProperties> = {
 
   getStatus: (path: string | (string | number)[]) => { status?: 'error'; error?: string };
   getValue: <V>(path: (string | number)[]) => V | undefined;
+  onBlur: (path: (string | number)[]) => void;
   onValueChange: <V>(path: (string | number)[], type: SimpleType, value: V) => void;
-  onTouched: (path: (string | number)[]) => void;
 };
 
 /**
@@ -85,7 +85,7 @@ export interface FormOptions<T extends AnyProperties> {
  * Creates a hook for managing form state, including values, validation, and submission.
  * Deeply integrated with `@dxos/schema` for schema-based validation.
  */
-export const useForm = <T extends AnyProperties>({
+export const useFormHandler = <T extends AnyProperties>({
   schema,
   initialValues,
   onValuesChanged,
@@ -232,7 +232,7 @@ export const useForm = <T extends AnyProperties>({
     [values, onValuesChanged, validate, onValid, changed],
   );
 
-  const onTouched = useCallback(
+  const onBlur = useCallback(
     (path: (string | number)[]) => {
       const jsonPath = createJsonPath(path);
       setTouched((touched) => ({ ...touched, [jsonPath]: true }));
@@ -257,8 +257,8 @@ export const useForm = <T extends AnyProperties>({
       // Field utils.
       getStatus,
       getValue: getFormValue,
+      onBlur,
       onValueChange,
-      onTouched,
     }),
     [
       values,
@@ -270,8 +270,8 @@ export const useForm = <T extends AnyProperties>({
       handleSave,
       getStatus,
       getFormValue,
+      onBlur,
       onValueChange,
-      onTouched,
     ],
   );
 };

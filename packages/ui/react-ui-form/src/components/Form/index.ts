@@ -3,7 +3,10 @@
 //
 
 export * from './fields';
+
 export * from './Form';
-export * from './FormInput';
-export * from './FormContent';
+export * from './FormActions';
+export * from './FormErrorBoundary';
+export * from './FormField';
+export * from './FormFieldComponent';
 export * from './FormRoot';

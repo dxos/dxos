@@ -27,11 +27,11 @@ import { isNonNullable } from '@dxos/util';
 import { type QueryRefOptions, useQueryRefOptions } from '../../../hooks';
 import { translationKey } from '../../../translations';
 import { ObjectPicker } from '../../ObjectPicker';
-import { FormInputHeader, type FormInputProps } from '../FormInput';
+import { type FormFieldComponentProps, FormFieldLabel } from '../FormFieldComponent';
 
 import { TextField } from './TextField';
 
-export type RefFieldProps = FormInputProps & {
+export type RefFieldProps = FormFieldComponentProps & {
   ast?: SchemaAST.AST;
   array?: boolean;
   createOptionLabel?: [string, { ns: string }];
@@ -176,7 +176,7 @@ export const RefField = ({
   // NOTE(thure): I left both predicates in-place in case we decide to add variants which do render readonly but empty values.
   return readonly && items.length < 1 ? null : (
     <Input.Root validationValence={status}>
-      {!inputOnly && <FormInputHeader error={error} label={label} />}
+      {!inputOnly && <FormFieldLabel error={error} label={label} />}
       <div data-no-submit>
         {readonly ? (
           items.length < 1 ? (
@@ -244,7 +244,7 @@ const RefFieldFallback = ({
   getValue,
   onValueChange,
   ...restInputProps
-}: FormInputProps) => {
+}: FormFieldComponentProps) => {
   const handleOnValueChange = (_type: any, dxnString: string) => {
     const dxn = DXN.tryParse(dxnString);
     if (dxn) {

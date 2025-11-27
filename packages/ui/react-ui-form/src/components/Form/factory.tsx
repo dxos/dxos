@@ -6,7 +6,7 @@ import { Format } from '@dxos/echo/internal';
 import { type SimpleType } from '@dxos/effect';
 
 import { BooleanField, GeoPointField, MarkdownField, NumberField, TextField } from './fields';
-import { type FormInputComponent } from './FormInput';
+import { type FormFieldComponent } from './FormFieldComponent';
 
 /**
  * Get property input component.
@@ -14,7 +14,7 @@ import { type FormInputComponent } from './FormInput';
 export const getInputComponent = (
   type: SimpleType,
   format?: Format.TypeFormat | string,
-): FormInputComponent | undefined => {
+): FormFieldComponent | undefined => {
   switch (format) {
     case Format.TypeFormat.GeoPoint:
       return GeoPointField;

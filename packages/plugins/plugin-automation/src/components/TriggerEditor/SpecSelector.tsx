@@ -7,15 +7,15 @@ import React, { useCallback, useMemo } from 'react';
 import { Filter, Query } from '@dxos/echo';
 import { Trigger } from '@dxos/functions';
 import { useTranslation } from '@dxos/react-ui';
-import { type FormInputProps, SelectField, useFormInputProps } from '@dxos/react-ui-form';
+import { type FormFieldComponentProps, SelectField, useFormFieldState } from '@dxos/react-ui-form';
 
 import { meta } from '../../meta';
 
-export type SpecSelectorProps = FormInputProps;
+export type SpecSelectorProps = FormFieldComponentProps;
 
 export const SpecSelector = (props: SpecSelectorProps) => {
   const { t } = useTranslation(meta.id);
-  const specProps = useFormInputProps(SpecSelector.displayName, ['spec' satisfies keyof Trigger.Trigger]);
+  const specProps = useFormFieldState(SpecSelector.displayName, ['spec' satisfies keyof Trigger.Trigger]);
 
   const handleTypeChange = useCallback(
     (_type: any, value: string): Trigger.Spec | undefined => {
