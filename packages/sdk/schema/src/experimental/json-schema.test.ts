@@ -31,7 +31,7 @@ describe('json-schema', () => {
    * 2. Multiple semantically‐equivalent schemas → different ASTs.
    * 3. JSON Schema equivalence ≠ AST equivalence.
    */
-  test.only('AST equivalence', ({ expect }) => {
+  test('AST equivalence', ({ expect }) => {
     {
       const schema1 = Schema.mutable(
         Schema.partial(
