@@ -24,28 +24,28 @@ import { Button, Icon, Input, useTranslation } from '@dxos/react-ui';
 import { descriptionText, mx } from '@dxos/react-ui-theme';
 import { isNonNullable } from '@dxos/util';
 
-import { type QueryRefOptions, useQueryRefOptions } from '../../hooks';
-import { translationKey } from '../../translations';
-import { ObjectPicker } from '../ObjectPicker';
+import { type QueryRefOptions, useQueryRefOptions } from '../../../hooks';
+import { translationKey } from '../../../translations';
+import { ObjectPicker } from '../../ObjectPicker';
+import { type FormFieldComponentProps, FormFieldLabel } from '../FormFieldComponent';
 
-import { TextInput } from './Defaults';
-import { InputHeader, type InputProps } from './Input';
-
-export type RefFieldProps = InputProps & {
-  ast?: SchemaAST.AST;
-  array?: boolean;
-  createOptionLabel?: [string, { ns: string }];
-  createOptionIcon?: string;
-  onCreate?: (values: any) => void;
-  createSchema?: Schema.Schema.AnyNoContext;
-  createInitialValuePath?: string;
-  onQueryRefOptions?: QueryRefOptions;
-  schema?: EchoSchema;
-};
+import { TextField } from './TextField';
 
 // TODO(thure): Is this a standard that should be better canonized?
 const isRefSnapShot = (val: any): val is { '/': string } => {
   return typeof val === 'object' && typeof (val as any)?.['/'] === 'string';
+};
+
+export type RefFieldProps = FormFieldComponentProps & {
+  schema?: EchoSchema;
+  ast?: SchemaAST.AST;
+  array?: boolean;
+  createOptionLabel?: [string, { ns: string }];
+  createOptionIcon?: string;
+  createSchema?: Schema.Schema.AnyNoContext;
+  createInitialValuePath?: string;
+  onCreate?: (values: any) => void;
+  onQueryRefOptions?: QueryRefOptions;
 };
 
 export const RefField = ({
@@ -176,7 +176,7 @@ export const RefField = ({
   // NOTE(thure): I left both predicates in-place in case we decide to add variants which do render readonly but empty values.
   return readonly && items.length < 1 ? null : (
     <Input.Root validationValence={status}>
-      {!inputOnly && <InputHeader error={error} label={label} />}
+      {!inputOnly && <FormFieldLabel error={error} readonly={readonly} label={label} />}
       <div data-no-submit>
         {readonly ? (
           items.length < 1 ? (
@@ -244,7 +244,7 @@ const RefFieldFallback = ({
   getValue,
   onValueChange,
   ...restInputProps
-}: InputProps) => {
+}: FormFieldComponentProps) => {
   const handleOnValueChange = (_type: any, dxnString: string) => {
     const dxn = DXN.tryParse(dxnString);
     if (dxn) {
@@ -269,7 +269,7 @@ const RefFieldFallback = ({
   };
 
   return (
-    <TextInput
+    <TextField
       type={type}
       label={label}
       readonly={readonly}

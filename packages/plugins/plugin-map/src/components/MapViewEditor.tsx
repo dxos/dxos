@@ -9,7 +9,7 @@ import { Type } from '@dxos/echo';
 import { Format } from '@dxos/echo/internal';
 import { useClient } from '@dxos/react-client';
 import { getSpace, useSchema } from '@dxos/react-client/echo';
-import { type CustomInputMap, Form, SelectInput } from '@dxos/react-ui-form';
+import { Form, type FormFieldMap, SelectField } from '@dxos/react-ui-form';
 import { getTypenameFromQuery } from '@dxos/schema';
 
 import { type Map } from '../types';
@@ -84,10 +84,10 @@ export const MapViewEditor = ({ object }: MapViewEditorProps) => {
     [view],
   );
 
-  const custom: CustomInputMap = useMemo(
+  const fieldMap = useMemo<FormFieldMap>(
     () => ({
-      coordinateSource: (props) => <SelectInput {...props} options={schemaOptions} />,
-      coordinateColumn: (props) => <SelectInput {...props} options={locationFields} />,
+      coordinateSource: (props) => <SelectField {...props} options={schemaOptions} />,
+      coordinateColumn: (props) => <SelectField {...props} options={locationFields} />,
     }),
     [schemaOptions, locationFields],
   );
@@ -98,13 +98,13 @@ export const MapViewEditor = ({ object }: MapViewEditorProps) => {
 
   return (
     <Form
+      classNames='pbs-inputSpacingBlock'
       schema={MapSettingsSchema}
       values={initialValues}
-      onSave={onSave}
-      autoSave
-      Custom={custom}
+      fieldMap={fieldMap}
       outerSpacing='blockStart-0'
-      classNames='pbs-inputSpacingBlock'
+      autoSave
+      onSave={onSave}
     />
   );
 };

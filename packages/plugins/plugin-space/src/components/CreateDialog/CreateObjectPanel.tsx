@@ -105,12 +105,12 @@ export const CreateObjectPanel = ({
   ) : metadata.inputSchema ? (
     <div role='none' className={cardDialogOverflow}>
       <Form
+        testId='create-object-form'
         autoFocus
         values={initialFormValues}
         schema={metadata.inputSchema}
-        testId='create-object-form'
         onSave={handleCreateObject}
-        lookupComponent={inputSurfaceLookup}
+        fieldProvider={inputSurfaceLookup}
         outerSpacing='blockStart-0'
       />
     </div>

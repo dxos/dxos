@@ -30,7 +30,6 @@ export type HasTypename = {};
  */
 // TODO(burdon): Make internal.
 // TODO(burdon): Prefer Record<string, unknown>.
-// TODO(burdon): Exclude "id", etc. from keys.
 export type AnyProperties = Record<string, any>;
 
 /**

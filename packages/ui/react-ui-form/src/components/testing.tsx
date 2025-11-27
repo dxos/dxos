@@ -7,23 +7,27 @@ import React, { type PropsWithChildren } from 'react';
 import { type ThemedClassName } from '@dxos/react-ui';
 import { Card } from '@dxos/react-ui-stack';
 import { JsonFilter } from '@dxos/react-ui-syntax-highlighter';
-import { mx, textBlockWidth } from '@dxos/react-ui-theme';
+import { textBlockWidth } from '@dxos/react-ui-theme';
 
 type TestLayoutProps = ThemedClassName<PropsWithChildren<{ json?: any }>>;
 
 export const TestLayout = ({ classNames, children, json }: TestLayoutProps) => {
   return (
-    <div className='is-full bs-full grid grid-cols-[1fr_1fr] gap-2 overflow-hidden'>
-      <div className={mx('p-4 justify-center overflow-y-auto', classNames)}>{children}</div>
-      <JsonFilter data={json} classNames='is-full text-xs' testId='debug' />
+    <div className='is-full bs-full grid grid-cols-[1fr_1fr] p-4 gap-4 overflow-hidden'>
+      <TestPanel classNames={['justify-center overflow-y-auto', classNames]}>{children}</TestPanel>
+      <TestPanel classNames={'overflow-hidden'}>
+        <JsonFilter testId='debug' data={json} classNames='bs-full text-xs' />
+      </TestPanel>
     </div>
   );
 };
 
 type TestPanelProps = ThemedClassName<PropsWithChildren>;
 
-export const TestPanel = ({ classNames, children }: TestPanelProps) => {
-  return <Card.StaticRoot classNames={[textBlockWidth, classNames]}>{children}</Card.StaticRoot>;
+const TestPanel = ({ classNames, children }: TestPanelProps) => {
+  return (
+    <Card.StaticRoot classNames={['bs-full overflow-y-auto', textBlockWidth, classNames]}>{children}</Card.StaticRoot>
+  );
 };
 
 // Symbol for accessing debug objects in tests.
