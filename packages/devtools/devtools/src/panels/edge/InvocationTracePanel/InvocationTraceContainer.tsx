@@ -10,7 +10,7 @@ import React, { type FC, useCallback, useMemo, useState } from 'react';
 
 import { Filter, type Obj } from '@dxos/echo';
 import { Format } from '@dxos/echo/internal';
-import { type InvocationSpan } from '@dxos/functions-runtime';
+import { TraceEventException, type InvocationSpan } from '@dxos/functions-runtime';
 import { TraceEvent } from '@dxos/functions-runtime';
 import { DXN } from '@dxos/keys';
 import { type Space, useQuery } from '@dxos/react-client/echo';
