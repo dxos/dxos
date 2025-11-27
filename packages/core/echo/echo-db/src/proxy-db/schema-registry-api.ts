@@ -12,12 +12,6 @@ import { type ObjectId } from '@dxos/keys';
 
 export type SchemaSubscriptionCallback = (schema: EchoSchema[]) => void;
 
-/**
- * String identifier for the schema.
- * In practice it's an `echo` or `type` DXN.
- */
-export type SchemaId = string & { __SchemaId: never };
-
 // TODO(dmaretskyi): Change to Schema.Struct instance.
 export type AnyEchoObjectSchema = Schema.Schema.AnyNoContext;
 // export type AnyEchoObjectSchema = Schema.Struct<{ [key: string]: Schema.Schema.AnyNoContext }>;

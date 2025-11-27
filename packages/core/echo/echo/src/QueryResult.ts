@@ -6,12 +6,11 @@ import { type CleanupFn } from '@dxos/async';
 import { type SpaceId } from '@dxos/keys';
 
 import type * as Entity from './Entity';
-import type { Query } from './query';
 
 /**
  * Individual query result entry.
  */
-export type Entry<T extends Entity.Unknown = Entity.Unknown> = {
+export type Entry<T> = {
   id: string;
 
   spaceId: SpaceId;
@@ -19,7 +18,7 @@ export type Entry<T extends Entity.Unknown = Entity.Unknown> = {
   /**
    * May not be present for remote results.
    */
-  object?: T;
+  result?: T;
 
   match?: {
     // TODO(dmaretskyi): text positional info.
@@ -45,9 +44,13 @@ export type Entry<T extends Entity.Unknown = Entity.Unknown> = {
   };
 };
 
-export type OneShot<T extends Entity.Unknown = Entity.Unknown> = {
-  results: Entry<T>[];
-  objects: T[];
+/**
+ * Invidual query result entry for a database Entity.
+ */
+export type EntityEntry<T extends Entity.Unknown = Entity.Unknown> = Entry<T>;
+
+export type RunOptions = {
+  timeout?: number;
 };
 
 export type SubscriptionOptions = {
@@ -57,18 +60,48 @@ export type SubscriptionOptions = {
   fire?: boolean;
 };
 
-export interface QueryResult<T extends Entity.Unknown = Entity.Unknown> {
-  readonly query: Query<T>;
-  readonly results: Entry<T>[];
-  readonly objects: T[];
+export interface QueryResult<T> {
+  /**
+   * Currently available results along with their match metadata.
+   *
+   * @reactive
+   */
+  readonly entries: Entry<T>[];
 
-  run(opts?: RunOptions): Promise<OneShot<T>>;
-  runSync(): Entry<T>[];
+  /**
+   * Currently available results.
+   *
+   * @reactive
+   */
+  readonly results: T[];
+
+  /**
+   * Returns all known results.
+   */
+  run(opts?: RunOptions): Promise<T[]>;
+
+  /**
+   * Returns all known results along with their match metadata.
+   */
+  runEntries(opts?: RunOptions): Promise<Entry<T>[]>;
+
+  /**
+   * Returns currently available results synchronously.
+   */
+  runSync(): T[];
+
+  /**
+   * Returns currently available results synchronously along with their match metadata.
+   */
+  runSyncEntries(): Entry<T>[];
+
+  /**
+   * Returns first result.
+   */
   first(opts?: RunOptions): Promise<T>;
 
+  /**
+   * Subscribes to changes in query results.
+   */
   subscribe(callback?: (query: QueryResult<T>) => void, opts?: SubscriptionOptions): CleanupFn;
 }
-
-export type RunOptions = {
-  timeout?: number;
-};
