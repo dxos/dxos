@@ -10,7 +10,7 @@ import type * as Schema from 'effect/Schema';
 import React, { type PropsWithChildren, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 
 import { Filter, type Live, Query, type Space, SpaceState, isSpace, live } from '@dxos/client/echo';
-import { type Database, Obj, Type } from '@dxos/echo';
+import { Obj, type QueryResult, Type } from '@dxos/echo';
 import { faker } from '@dxos/random';
 import { type Client, useClient } from '@dxos/react-client';
 import { withClientProvider } from '@dxos/react-client/testing';
@@ -77,7 +77,7 @@ const createGraph = (client: Client, registry: Registry.Registry): ExpandableGra
     id: 'object',
     connector: (node) => {
       // TODO(wittjosiah): Find a simpler way to define this type.
-      let result: Database.QueryResult<Schema.Schema.Type<typeof Type.Expando>> | undefined;
+      let result: QueryResult.QueryResult<Schema.Schema.Type<typeof Type.Expando>> | undefined;
       return Atom.make((get) =>
         Function.pipe(
           get(node),

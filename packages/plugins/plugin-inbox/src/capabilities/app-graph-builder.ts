@@ -8,7 +8,7 @@ import * as Option from 'effect/Option';
 
 import { Capabilities, type PluginContext, contributes } from '@dxos/app-framework';
 import { getSpace } from '@dxos/client/echo';
-import { type Database, Filter, Obj } from '@dxos/echo';
+import { Filter, Obj, type QueryResult } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
 import { AutomationCapabilities, invokeFunctionWithTracing } from '@dxos/plugin-automation';
@@ -86,7 +86,7 @@ export default (context: PluginContext) =>
       id: `${meta.id}/mailbox-message`,
       connector: (node) => {
         let prevMessageId: string | undefined;
-        let query: Database.QueryResult<Message.Message> | undefined;
+        let query: QueryResult.QueryResult<Message.Message> | undefined;
         return Atom.make((get) =>
           Function.pipe(
             get(node),
@@ -109,7 +109,7 @@ export default (context: PluginContext) =>
                 prevMessageId = messageId;
                 query = queue.query(
                   messageId ? Filter.ids(messageId) : Filter.nothing(),
-                ) as Database.QueryResult<Message.Message>;
+                ) as QueryResult.QueryResult<Message.Message>;
               }
 
               const message = get(atomFromQuery(query))[0];
@@ -135,7 +135,7 @@ export default (context: PluginContext) =>
       id: `${meta.id}/calendar-event`,
       connector: (node) => {
         let prevEventId: string | undefined;
-        let query: Database.QueryResult<Event.Event> | undefined;
+        let query: QueryResult.QueryResult<Event.Event> | undefined;
         return Atom.make((get) =>
           Function.pipe(
             get(node),
@@ -158,7 +158,7 @@ export default (context: PluginContext) =>
                 prevEventId = eventId;
                 query = queue.query(
                   eventId ? Filter.ids(eventId) : Filter.nothing(),
-                ) as Database.QueryResult<Event.Event>;
+                ) as QueryResult.QueryResult<Event.Event>;
               }
 
               const event = get(atomFromQuery(query))[0];

@@ -28,6 +28,9 @@
 
 2. Clean-up
 
+- [x] QueryResult namespace
+- [ ] SchemaRegistry interface
+- [ ] Hypergraph interface
 - [ ] TODO(wittjosiah): Find a simpler way to define this type.
 - [ ] TODO(wittjosiah): Should be Type.obj<...> or equivalent.
 - [ ] Fix Obj.instanceOf(Type.Expando...

@@ -5,7 +5,7 @@
 import { Event } from '@dxos/async';
 import { type Space } from '@dxos/client-protocol';
 import { todo } from '@dxos/debug';
-import { type Database, type Obj } from '@dxos/echo';
+import { type Obj, type QueryResult } from '@dxos/echo';
 import { type QuerySource, type QuerySourceProvider } from '@dxos/echo-db';
 import { type QueryAST } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
@@ -96,7 +96,7 @@ export class AgentQuerySourceProvider implements QuerySourceProvider {
 }
 
 export class AgentQuerySource implements QuerySource {
-  private _results?: Database.QueryResultEntry[];
+  private _results?: QueryResult.Entry[];
   private _cancelPreviousRequest?: () => void = undefined;
 
   public readonly changed = new Event<void>();
@@ -115,11 +115,11 @@ export class AgentQuerySource implements QuerySource {
     // No-op.
   }
 
-  getResults(): Database.QueryResultEntry[] {
+  getResults(): QueryResult.Entry[] {
     return this._results ?? [];
   }
 
-  async run(): Promise<Database.QueryResultEntry[]> {
+  async run(): Promise<QueryResult.Entry[]> {
     return this._results ?? [];
   }
 
