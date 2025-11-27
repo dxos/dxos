@@ -4,7 +4,7 @@
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { type EchoSchema, FormatEnum, FormatEnums, formatToType } from '@dxos/echo/internal';
+import { type EchoSchema, Format, FormatEnums, formatToType } from '@dxos/echo/internal';
 import { type SchemaRegistry } from '@dxos/echo-db';
 import { log } from '@dxos/log';
 import { useAsyncEffect, useTranslation } from '@dxos/react-ui';
@@ -20,7 +20,7 @@ import {
 } from '@dxos/schema';
 
 import { translationKey } from '../../translations';
-import { Form, type FormProps, type InputComponent, SelectInput, SelectOptionInput } from '../Form';
+import { Form, type FormFieldMap, type FormProps, SelectField, SelectOptionField } from '../Form';
 
 export type FieldEditorProps = {
   projection: ProjectionModel;
@@ -135,19 +135,19 @@ export const FieldEditor = ({
     onSave();
   }, [onSave]);
 
-  const custom: Partial<Record<string, InputComponent>> = useMemo(
+  const fieldMap = useMemo<FormFieldMap>(
     () => ({
       ['format' satisfies keyof PropertyType]: (props) => (
-        <SelectInput
+        <SelectField
           {...props}
-          options={FormatEnums.filter((value) => value !== FormatEnum.None).map((value) => ({
+          options={FormatEnums.filter((value) => value !== Format.TypeFormat.None).map((value) => ({
             value,
             label: t(`format ${value}`),
           }))}
         />
       ),
       ['referenceSchema' satisfies keyof PropertyType]: (props) => (
-        <SelectInput
+        <SelectField
           {...props}
           options={schemas.map((schema) => ({
             value: schema.typename,
@@ -155,24 +155,24 @@ export const FieldEditor = ({
         />
       ),
       ['referencePath' satisfies keyof PropertyType]: (props) => (
-        <SelectInput
+        <SelectField
           {...props}
           options={
             referenceSchema
-              ? getSchemaProperties(referenceSchema.ast)
+              ? getSchemaProperties(referenceSchema.ast, {}, { form: true })
                   .sort(sortProperties)
                   .map((p) => ({ value: p.name }))
               : []
           }
         />
       ),
-      ['options' satisfies keyof PropertyType]: (props) => <SelectOptionInput {...props} />,
+      ['options' satisfies keyof PropertyType]: (props) => <SelectOptionField {...props} />,
     }),
     [t, schemas, referenceSchema],
   );
 
   const propIsNotType = useCallback(
-    (props: SchemaProperty<PropertyType>[]) => props.filter((p) => p.name !== 'type'),
+    (props: SchemaProperty<PropertyType>[]) => props.filter((prop) => prop.name !== 'type'),
     [],
   );
 
@@ -184,18 +184,18 @@ export const FieldEditor = ({
   return (
     <Form<PropertyType>
       key={field.id}
+      outerSpacing={outerSpacing}
       autoFocus
       readonly={readonly}
-      values={props}
       schema={fieldSchema}
-      filter={propIsNotType}
+      values={props}
+      fieldMap={fieldMap}
+      exclude={propIsNotType}
       sort={['property', 'format']}
       onValuesChanged={handleValuesChanged}
       onValidate={handleValidate}
       onSave={handleSave}
       onCancel={handleCancel}
-      Custom={custom}
-      outerSpacing={outerSpacing}
     />
   );
 };

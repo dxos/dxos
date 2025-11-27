@@ -12,8 +12,9 @@ import { faker } from '@dxos/random';
 import { useSpace } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { Button, Toolbar, useAsyncEffect, useInterval } from '@dxos/react-ui';
+import { type ScrollController } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
-import { type ScrollController, useExecutionGraph } from '@dxos/react-ui-components';
+import { useExecutionGraph } from '@dxos/react-ui-components';
 import { Message } from '@dxos/types';
 
 import { research } from './testing';

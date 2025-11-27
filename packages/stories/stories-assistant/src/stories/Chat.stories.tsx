@@ -37,13 +37,12 @@ import { TablePlugin } from '@dxos/plugin-table';
 import { ThreadPlugin } from '@dxos/plugin-thread';
 import { TokenManagerPlugin } from '@dxos/plugin-token-manager';
 import { TranscriptionPlugin } from '@dxos/plugin-transcription';
-import { Transcript } from '@dxos/plugin-transcription/types';
 import { useQuery, useSpace } from '@dxos/react-client/echo';
 import { useAsyncEffect, useSignalsMemo } from '@dxos/react-ui';
 import { withTheme } from '@dxos/react-ui/testing';
 import { Stack, StackItem } from '@dxos/react-ui-stack';
 import { Table } from '@dxos/react-ui-table/types';
-import { Collection, Text, View } from '@dxos/schema';
+import { Text, View } from '@dxos/schema';
 import { render } from '@dxos/storybook-utils';
 import {
   AccessToken,
@@ -56,6 +55,7 @@ import {
   Person,
   Project,
   Task,
+  Transcript,
 } from '@dxos/types';
 import { isNonNullable, trim } from '@dxos/util';
 
@@ -443,15 +443,16 @@ export const WithMap: Story = {
     types: [View.View, Map.Map, Table.Table],
     onInit: async ({ space }) => {
       const [schema] = await space.db.schemaRegistry.register([createLocationSchema()]);
-      const { view: tableView } = await Table.makeView({ name: 'Table', space, typename: schema.typename });
-      const { view: mapView } = await Map.makeView({
-        name: 'Map',
+      const { view: tableView, jsonSchema } = await View.makeFromSpace({ space, typename: schema.typename });
+      const table = Table.make({ name: 'Table', view: tableView, jsonSchema });
+      const { view: mapView } = await View.makeFromSpace({
         space,
         typename: schema.typename,
         pivotFieldName: 'location',
       });
-      space.db.add(tableView);
-      space.db.add(mapView);
+      const map = Map.make({ name: 'Map', view: mapView });
+      space.db.add(table);
+      space.db.add(map);
     },
     onChatCreated: async ({ space, binder }) => {
       const { objects } = await space.db.query(Filter.type(View.View)).run();
@@ -472,7 +473,8 @@ export const WithTrip: Story = {
     types: [Map.Map],
     onInit: async ({ space }) => {
       // TODO(burdon): Table.
-      space.db.add(Map.make({ name: 'Trip' }));
+      const map = Map.make({ name: 'Trip' });
+      space.db.add(map);
       space.db.add(
         Markdown.make({
           name: 'Itinerary',
@@ -861,38 +863,51 @@ export const WithProject: Story = {
       space.db.add(researchTrigger);
 
       const mailboxView = View.make({
-        name: 'Mailbox',
         query: Query.select(Filter.type(Message.Message))
           .select(Filter.tag(tagDxn))
           .options({
             queues: [mailbox.queue.dxn.toString()],
           }),
         jsonSchema: Type.toJsonSchema(Message.Message),
-        presentation: Obj.make(Collection.Collection, { objects: [] }),
       });
       const contactsView = View.make({
-        name: 'Contacts',
         query: contactsQuery,
         jsonSchema: Type.toJsonSchema(Person.Person),
-        presentation: Obj.make(Collection.Collection, { objects: [] }),
       });
       const organizationsView = View.make({
-        name: 'Organizations',
         query: organizationsQuery,
         jsonSchema: Type.toJsonSchema(Organization.Organization),
-        presentation: Obj.make(Collection.Collection, { objects: [] }),
       });
       const notesView = View.make({
-        name: 'Notes',
         query: notesQuery,
         jsonSchema: Type.toJsonSchema(Markdown.Document),
-        presentation: Obj.make(Collection.Collection, { objects: [] }),
       });
 
       space.db.add(
         Project.make({
           name: 'Investor Research',
-          collections: [mailboxView, contactsView, organizationsView, notesView].map((view) => Ref.make(view)),
+          columns: [
+            {
+              name: 'Mailbox',
+              view: Ref.make(mailboxView),
+              order: [],
+            },
+            {
+              name: 'Contacts',
+              view: Ref.make(contactsView),
+              order: [],
+            },
+            {
+              name: 'Organizations',
+              view: Ref.make(organizationsView),
+              order: [],
+            },
+            {
+              name: 'Notes',
+              view: Ref.make(notesView),
+              order: [],
+            },
+          ],
         }),
       );
     },

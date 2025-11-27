@@ -8,10 +8,9 @@ import * as Console from 'effect/Console';
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
+import { ClientService } from '@dxos/client';
 import { type Queue } from '@dxos/client/echo';
 import { DXN } from '@dxos/keys';
-
-import { ClientService } from '../../services';
 
 // TODO(dmaretskyi): Extract
 const DXNSchema = Schema.String.pipe(

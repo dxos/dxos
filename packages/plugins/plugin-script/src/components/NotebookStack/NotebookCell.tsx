@@ -5,9 +5,9 @@
 import React, { useCallback, useMemo } from 'react';
 
 import { Surface } from '@dxos/app-framework/react';
+import { createDocAccessor } from '@dxos/echo-db';
 import { invariant } from '@dxos/invariant';
 import { TemplateEditor } from '@dxos/plugin-assistant';
-import { createDocAccessor } from '@dxos/react-client/echo';
 import { type Space } from '@dxos/react-client/echo';
 import { useThemeContext, useTranslation } from '@dxos/react-ui';
 import { QueryEditor, type QueryEditorProps } from '@dxos/react-ui-components';
@@ -57,7 +57,7 @@ export const NotebookCell = ({ space, graph, dragging, cell, promptResults, env 
       : [];
   }, [cell.source?.target]);
 
-  const view = cell.view?.target;
+  const explorerGraph = cell.graph?.target;
 
   const handleQueryChange = useCallback<NonNullable<QueryEditorProps['onChange']>>(
     (value: string) => {
@@ -113,15 +113,17 @@ export const NotebookCell = ({ space, graph, dragging, cell, promptResults, env 
 
       // TODO(burdon): Remove app-framework deps (via render prop).
       return (
-        <div className={mx('bs-full overflow-hidden grid', view && !dragging && 'grid-rows-[min-content_1fr]')}>
+        <div
+          className={mx('bs-full overflow-hidden grid', explorerGraph && !dragging && 'grid-rows-[min-content_1fr]')}
+        >
           <QueryEditor
             id={cell.id}
-            classNames={[editorStyles, 'border-b border-subduedSeparator']}
+            classNames={[editorStyles, 'border-be border-subduedSeparator']}
             db={space?.db}
             value={cell.source.target.content}
             onChange={handleQueryChange}
           />
-          {view && !dragging && <Surface role='section' limit={1} data={{ subject: view }} />}
+          {explorerGraph && !dragging && <Surface role='section' limit={1} data={{ subject: explorerGraph }} />}
         </div>
       );
 

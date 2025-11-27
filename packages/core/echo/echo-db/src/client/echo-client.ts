@@ -6,12 +6,13 @@ import { type Context, ContextDisposedError, LifecycleState, Resource } from '@d
 import { invariant } from '@dxos/invariant';
 import { type PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
+import { type QueueService } from '@dxos/protocols';
 import { type QueryService } from '@dxos/protocols/proto/dxos/echo/query';
 import { type DataService } from '@dxos/protocols/proto/dxos/echo/service';
 
 import { Hypergraph } from '../hypergraph';
 import { EchoDatabaseImpl } from '../proxy-db';
-import { QueueFactory, type QueueService } from '../queue';
+import { QueueFactory } from '../queue';
 
 import { IndexQuerySourceProvider, type LoadObjectParams } from './index-query-source-provider';
 
@@ -54,7 +55,9 @@ export type ConstructDatabaseParams = {
  * Connects to the ECHO host via an ECHO service.
  */
 export class EchoClient extends Resource {
-  private readonly _graph: Hypergraph;
+  private readonly _graph = new Hypergraph();
+
+  // TODO(burdon): This already exists in Hypergraph.
   private readonly _databases = new Map<SpaceId, EchoDatabaseImpl>();
 
   private _dataService: DataService | undefined = undefined;
@@ -65,7 +68,6 @@ export class EchoClient extends Resource {
 
   constructor(_: EchoClientParams = {}) {
     super();
-    this._graph = new Hypergraph();
   }
 
   get graph(): Hypergraph {
@@ -80,11 +82,12 @@ export class EchoClient extends Resource {
    * Connects to the ECHO service.
    * Must be called before open.
    */
-  connectToService({ dataService, queryService, queueService }: ConnectToServiceParams): void {
+  connectToService({ dataService, queryService, queueService }: ConnectToServiceParams): this {
     invariant(this._lifecycleState === LifecycleState.CLOSED);
     this._dataService = dataService;
     this._queryService = queryService;
     this._queuesService = queueService;
+    return this;
   }
 
   disconnectFromService(): void {

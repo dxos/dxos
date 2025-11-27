@@ -7,9 +7,9 @@ import { Ref, Type } from '@dxos/echo';
 import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
 import { MarkdownEvents } from '@dxos/plugin-markdown';
 import { SpaceCapabilities, SpaceEvents } from '@dxos/plugin-space';
-import { defineObjectForm } from '@dxos/plugin-space/types';
+import { type CreateObjectIntent } from '@dxos/plugin-space/types';
 import { translations as threadTranslations } from '@dxos/react-ui-thread';
-import { AnchoredTo, Message } from '@dxos/types';
+import { AnchoredTo, Message, Thread } from '@dxos/types';
 
 import {
   AppGraphBuilder,
@@ -19,11 +19,12 @@ import {
   Markdown,
   ReactRoot,
   ReactSurface,
+  Repair,
   ThreadState,
 } from './capabilities';
 import { THREAD_ITEM, meta } from './meta';
 import { translations } from './translations';
-import { Channel, Thread, ThreadAction } from './types';
+import { Channel, ThreadAction } from './types';
 
 // TODO(Zan): Every instance of `cursor` should be replaced with `anchor`.
 //  NOTE(burdon): Review/discuss CursorConverter semantics.
@@ -64,6 +65,10 @@ export const ThreadPlugin = definePlugin(meta, () => [
         metadata: {
           icon: 'ph--hash--regular',
           iconHue: 'rose',
+          createObjectIntent: ((_, options) =>
+            createIntent(ThreadAction.CreateChannel, {
+              spaceId: options.space.id,
+            })) satisfies CreateObjectIntent,
         },
       }),
       contributes(Capabilities.Metadata, {
@@ -98,29 +103,15 @@ export const ThreadPlugin = definePlugin(meta, () => [
     ],
   }),
   defineModule({
-    id: `${meta.id}/module/object-form`,
-    activatesOn: ClientEvents.SetupSchema,
-    activate: () =>
-      contributes(
-        SpaceCapabilities.ObjectForm,
-        defineObjectForm({
-          objectSchema: Channel.Channel,
-          getIntent: (_, options) =>
-            createIntent(ThreadAction.CreateChannel, {
-              spaceId: options.space.id,
-            }),
-        }),
-      ),
-  }),
-  defineModule({
     id: `${meta.id}/module/schema`,
     activatesOn: ClientEvents.SetupSchema,
     activate: () =>
       contributes(ClientCapabilities.Schema, [
         AnchoredTo.AnchoredTo,
-        Thread.Thread,
+        Channel.Channel,
         Message.Message,
         Message.MessageV1,
+        Thread.Thread,
       ]),
   }),
   defineModule({
@@ -132,9 +123,12 @@ export const ThreadPlugin = definePlugin(meta, () => [
     id: `${meta.id}/module/on-space-created`,
     activatesOn: SpaceEvents.SpaceCreated,
     activate: () =>
-      contributes(SpaceCapabilities.onCreateSpace, ({ space, rootCollection }) =>
-        createIntent(ThreadAction.onCreateSpace, { space, rootCollection }),
-      ),
+      contributes(SpaceCapabilities.OnCreateSpace, (params) => createIntent(ThreadAction.OnCreateSpace, params)),
+  }),
+  defineModule({
+    id: `${meta.id}/module/repair`,
+    activatesOn: ClientEvents.SpacesReady,
+    activate: Repair,
   }),
   defineModule({
     id: `${meta.id}/module/markdown`,

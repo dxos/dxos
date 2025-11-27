@@ -4,7 +4,11 @@
 
 import * as Schema from 'effect/Schema';
 
-import { EntityKind, ObjectId, Ref, TypeAnnotationId } from '@dxos/echo/internal';
+import { Type } from '@dxos/echo';
+import { EntityKind, TypeAnnotationId } from '@dxos/echo/internal';
+import { ObjectId } from '@dxos/keys';
+
+// TODO(burdon): Replace with @dxos/echo/testing TestSchema.
 
 /** @deprecated */
 export const Contact = Schema.Struct({
@@ -44,8 +48,8 @@ export const Task = Schema.Struct({
   id: ObjectId,
   name: Schema.String.annotations({ description: 'The name of the task.' }),
   description: Schema.optional(Schema.String).annotations({ description: 'The description of the task.' }),
-  project: Ref(Project),
-  assignee: Ref(Contact),
+  project: Type.Ref(Project),
+  assignee: Type.Ref(Contact),
 })
   .pipe(Schema.mutable)
   .annotations({
@@ -62,8 +66,8 @@ export interface Task extends Schema.Schema.Type<typeof Task> {}
 export const Organization = Schema.Struct({
   id: ObjectId,
   name: Schema.String.annotations({ description: 'The name of the organization.' }),
-  projects: Schema.Array(Ref(Project)),
-  employees: Schema.Array(Ref(Contact)),
+  projects: Schema.Array(Type.Ref(Project)),
+  employees: Schema.Array(Type.Ref(Contact)),
 })
   .pipe(Schema.mutable)
   .annotations({

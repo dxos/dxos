@@ -4,8 +4,7 @@
 
 import { Capabilities, Events, contributes, createIntent, defineModule, definePlugin } from '@dxos/app-framework';
 import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
-import { SpaceCapabilities } from '@dxos/plugin-space';
-import { defineObjectForm } from '@dxos/plugin-space/types';
+import { type CreateObjectIntent } from '@dxos/plugin-space/types';
 import { RefArray } from '@dxos/react-client/echo';
 
 import { AppGraphSerializer, IntentResolver, ReactSurface, SketchSettings } from './capabilities';
@@ -38,25 +37,15 @@ export const SketchPlugin = definePlugin(meta, () => [
           loadReferences: async (diagram: Diagram.Diagram) => await RefArray.loadAll([diagram.canvas]),
           serializer,
           comments: 'unanchored',
+          createObjectIntent: (() => createIntent(SketchAction.Create)) satisfies CreateObjectIntent,
+          addToCollectionOnCreate: true,
         },
       }),
   }),
   defineModule({
-    id: `${meta.id}/module/object-form`,
-    activatesOn: ClientEvents.SetupSchema,
-    activate: () =>
-      contributes(
-        SpaceCapabilities.ObjectForm,
-        defineObjectForm({
-          objectSchema: Diagram.Diagram,
-          getIntent: () => createIntent(SketchAction.Create),
-        }),
-      ),
-  }),
-  defineModule({
     id: `${meta.id}/module/schema`,
     activatesOn: ClientEvents.SetupSchema,
-    activate: () => contributes(ClientCapabilities.Schema, [Diagram.Canvas]),
+    activate: () => contributes(ClientCapabilities.Schema, [Diagram.Canvas, Diagram.Diagram]),
   }),
   defineModule({
     id: `${meta.id}/module/react-surface`,

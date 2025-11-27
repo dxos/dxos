@@ -6,8 +6,6 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { type FC, useEffect, useMemo, useRef, useState } from 'react';
 
 import { Expando } from '@dxos/echo/internal';
-import { live } from '@dxos/echo/internal';
-import { createDocAccessor, createObject } from '@dxos/echo-db';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { faker } from '@dxos/random';
@@ -17,7 +15,6 @@ import {
   type Comment,
   type CommentsOptions,
   type Range,
-  automerge,
   comments,
   createBasicExtensions,
   createThemeExtensions,
@@ -28,6 +25,7 @@ import {
 } from '@dxos/react-ui-editor';
 import { hoverableControls, hoverableFocusedWithinControls } from '@dxos/react-ui-theme';
 
+import { Obj } from '../../../../core/echo/echo/src';
 import { MessageBody, MessageHeading, MessageRoot, MessageTextbox } from '../Message';
 import { type MessageEntity } from '../testing';
 import { translations } from '../translations';
@@ -71,7 +69,6 @@ const Editor: FC<{
       extensions: [
         createBasicExtensions(),
         createThemeExtensions({ themeMode }),
-        automerge(createDocAccessor(item, ['content'])),
         comments({
           id,
           onCreate: onCreateComment,
@@ -144,7 +141,7 @@ const StoryThread: FC<{
 
   const handleCreateMessage = () => {
     if (messageRef.current?.length) {
-      const message = live(Expando, {
+      const message = Obj.make(Expando, {
         timestamp: new Date().toISOString(),
         sender: { identityKey: authorId },
         text: messageRef.current,
@@ -239,7 +236,7 @@ type StoryProps = {
 };
 
 const DefaultStory = ({ text, autoCreate }: StoryProps) => {
-  const [item] = useState(createObject(live(Expando, { content: text ?? '' })));
+  const [item] = useState(() => Obj.make(Expando, { content: text ?? '' }));
   const [threads, setThreads] = useState<StoryCommentThread[]>([]);
   const [selected, setSelected] = useState<string>();
 

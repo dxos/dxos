@@ -115,7 +115,7 @@ export const ToolContainer = ({ items, onChangeOpen }: ToolContainerParams) => {
     if (open) {
       tabsRef.current?.focus();
     }
-  }, [onChangeOpen, open]);
+  }, [open, onChangeOpen]);
 
   const handleSelect = (index: number) => {
     setSelected(index);

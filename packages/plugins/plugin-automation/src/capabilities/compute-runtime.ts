@@ -23,7 +23,7 @@ import { TriggerStateStore } from '@dxos/functions-runtime';
 import { invariant } from '@dxos/invariant';
 import { type SpaceId } from '@dxos/keys';
 import { ClientCapabilities } from '@dxos/plugin-client';
-import { PropertiesType } from '@dxos/react-client/echo';
+import { SpaceProperties } from '@dxos/react-client/echo';
 
 import { AutomationCapabilities } from './capabilities';
 
@@ -114,12 +114,14 @@ const InvocationTracerLive = Layer.unwrapEffect(
   Effect.gen(function* () {
     const {
       objects: [properties],
-    } = yield* DatabaseService.runQuery(Query.type(PropertiesType));
+    } = yield* DatabaseService.runQuery(Query.type(SpaceProperties));
     invariant(properties);
-    if (!properties.invocationTraceQueue) {
+    // TODO(burdon): Check ref target has loaded?
+    if (!properties.invocationTraceQueue || !properties.invocationTraceQueue.target) {
       const queue = yield* QueueService.createQueue({ subspaceTag: 'trace' });
       properties.invocationTraceQueue = Ref.fromDXN(queue.dxn);
     }
+
     const queue = properties.invocationTraceQueue.target;
     invariant(queue);
     return InvocationTracer.layerLive({ invocationTraceQueue: queue });

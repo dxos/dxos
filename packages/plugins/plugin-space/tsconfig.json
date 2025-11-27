@@ -60,6 +60,12 @@
       "path": "../../core/echo/echo"
     },
     {
+      "path": "../../core/echo/echo-db"
+    },
+    {
+      "path": "../../core/echo/echo-protocol"
+    },
+    {
       "path": "../../core/echo/echo-signals"
     },
     {
@@ -76,6 +82,9 @@
     },
     {
       "path": "../../sdk/client"
+    },
+    {
+      "path": "../../sdk/client-protocol"
     },
     {
       "path": "../../sdk/migrations"

@@ -2,33 +2,27 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Effect from 'effect/Effect';
-import * as Function from 'effect/Function';
-import React, { useCallback } from 'react';
+import React from 'react';
 
-import { Capabilities, LayoutAction, chain, contributes, createIntent, createSurface } from '@dxos/app-framework';
-import { useIntentDispatcher } from '@dxos/app-framework/react';
+import { Capabilities, contributes, createSurface } from '@dxos/app-framework';
 import { Obj } from '@dxos/echo';
-import { AttentionAction } from '@dxos/plugin-attention/types';
-import { ATTENDABLE_PATH_SEPARATOR, DeckAction } from '@dxos/plugin-deck/types';
-import { Filter, getSpace, useQuery, useQueue, useSpace } from '@dxos/react-client/echo';
-import { Table } from '@dxos/react-ui-table/types';
-import { View, getTypenameFromQuery } from '@dxos/schema';
-import { Message, Organization, Person } from '@dxos/types';
+import { Event, Message, Organization, Person } from '@dxos/types';
 
 import {
   CalendarArticle,
+  EventArticle,
+  EventCard,
   MailboxArticle,
   MailboxSettings,
   MessageArticle,
   MessageCard,
   POPOVER_SAVE_FILTER,
   PopoverSaveFilter,
-  RelatedContacts,
-  RelatedMessages,
+  RelatedToContact,
+  RelatedToOrganization,
 } from '../components';
 import { meta } from '../meta';
-import { Calendar, InboxAction, Mailbox } from '../types';
+import { Calendar, Mailbox } from '../types';
 
 export default () =>
   contributes(Capabilities.ReactSurface, [
@@ -51,10 +45,19 @@ export default () =>
     createSurface({
       id: `${meta.id}/message`,
       role: ['article', 'section'],
-      filter: (data): data is { companionTo: Mailbox.Mailbox; subject: Message.Message } =>
-        Obj.instanceOf(Mailbox.Mailbox, data.companionTo) && Obj.instanceOf(Message.Message, data.subject),
-      component: ({ data: { companionTo, subject: message }, role }) => {
-        return <MessageArticle role={role as 'article' | 'section'} subject={message} mailbox={companionTo} />;
+      filter: (data): data is { subject: Message.Message; companionTo: Mailbox.Mailbox } =>
+        Obj.instanceOf(Message.Message, data.subject) && Obj.instanceOf(Mailbox.Mailbox, data.companionTo),
+      component: ({ data: { companionTo, subject }, role }) => {
+        return <MessageArticle role={role} subject={subject} mailbox={companionTo} />;
+      },
+    }),
+    createSurface({
+      id: `${meta.id}/event`,
+      role: ['article', 'section'],
+      filter: (data): data is { subject: Event.Event; companionTo: Calendar.Calendar } =>
+        Obj.instanceOf(Event.Event, data.subject) && Obj.instanceOf(Calendar.Calendar, data.companionTo),
+      component: ({ data: { companionTo, subject }, role }) => {
+        return <EventArticle role={role} subject={subject} calendar={companionTo} />;
       },
     }),
     createSurface({
@@ -67,7 +70,13 @@ export default () =>
       id: `${meta.id}/message-card`,
       role: ['card', 'card--intrinsic', 'card--extrinsic', 'card--popover', 'card--transclusion'],
       filter: (data): data is { subject: Message.Message } => Obj.instanceOf(Message.Message, data?.subject),
-      component: ({ data: { subject: message }, role }) => <MessageCard subject={message} role={role} />,
+      component: ({ data: { subject }, role }) => <MessageCard subject={subject} role={role} />,
+    }),
+    createSurface({
+      id: `${meta.id}/event-card`,
+      role: ['card', 'card--intrinsic', 'card--extrinsic', 'card--popover', 'card--transclusion'],
+      filter: (data): data is { subject: Event.Event } => Obj.instanceOf(Event.Event, data?.subject),
+      component: ({ data: { subject }, role }) => <EventCard subject={subject} role={role} />,
     }),
     createSurface({
       id: POPOVER_SAVE_FILTER,
@@ -94,121 +103,13 @@ export default () =>
       id: `${meta.id}/contact-related`,
       role: 'related',
       filter: (data): data is { subject: Person.Person } => Obj.instanceOf(Person.Person, data.subject),
-      component: ({ data: { subject: contact } }) => {
-        const { dispatchPromise: dispatch } = useIntentDispatcher();
-        const space = useSpace();
-        const [mailbox] = useQuery(space, Filter.type(Mailbox.Mailbox));
-        const queue = useQueue<Message.Message>(mailbox?.queue.dxn);
-        const messages = queue?.objects ?? [];
-        const related = messages
-          .filter(
-            (message) =>
-              contact.emails?.some((email) => email.value === message.sender.email) ||
-              message.sender.contact?.target === contact,
-          )
-          .filter((message) => message.properties?.subject)
-          .toSorted((a, b) => new Date(b.created).getTime() - new Date(a.created).getTime())
-          .slice(0, 5);
-
-        const handleMessageClick = useCallback(
-          (message: Message.Message) => {
-            void dispatch(
-              Function.pipe(
-                createIntent(LayoutAction.UpdatePopover, {
-                  part: 'popover',
-                  options: {
-                    state: false,
-                    anchorId: '',
-                  },
-                }),
-                chain(LayoutAction.Open, {
-                  part: 'main',
-                  subject: [Obj.getDXN(mailbox).toString()],
-                  options: { workspace: space?.id },
-                }),
-                chain(InboxAction.SelectMessage, { mailboxId: Obj.getDXN(mailbox).toString(), message }),
-              ),
-            );
-          },
-          [dispatch, space, mailbox],
-        );
-
-        return <RelatedMessages messages={related} onMessageClick={handleMessageClick} />;
-      },
+      component: ({ data: { subject } }) => <RelatedToContact subject={subject} />,
     }),
     createSurface({
       id: `${meta.id}/organization-related`,
       role: 'related',
       filter: (data): data is { subject: Organization.Organization } =>
         Obj.instanceOf(Organization.Organization, data.subject),
-      component: ({ data: { subject: organization } }) => {
-        const { dispatch } = useIntentDispatcher();
-        const space = getSpace(organization);
-        const defaultSpace = useSpace();
-        const currentSpaceContacts = useQuery(space, Filter.type(Person.Person));
-        const defaultSpaceContacts = useQuery(
-          defaultSpace === space ? undefined : defaultSpace,
-          Filter.type(Person.Person),
-        );
-        const contacts = [...(currentSpaceContacts ?? []), ...(defaultSpaceContacts ?? [])];
-        const related = contacts.filter((contact) =>
-          typeof contact.organization === 'string' ? false : contact.organization?.target === organization,
-        );
-
-        const currentSpaceViews = useQuery(space, Filter.type(View.View));
-        const defaultSpaceViews = useQuery(defaultSpace, Filter.type(View.View));
-        const currentSpaceContactTable = currentSpaceViews.find(
-          (view) =>
-            getTypenameFromQuery(view.query.ast) === Person.Person.typename &&
-            Obj.instanceOf(Table.Table, view.presentation.target),
-        );
-        const defaultSpaceContactTable = defaultSpaceViews.find(
-          (view) =>
-            getTypenameFromQuery(view.query.ast) === Person.Person.typename &&
-            Obj.instanceOf(Table.Table, view.presentation.target),
-        );
-
-        // TODO(wittjosiah): Generalized way of handling related objects navigation.
-        const handleContactClick = useCallback(
-          (contact: Person.Person) =>
-            Effect.gen(function* () {
-              const view = currentSpaceContacts.includes(contact) ? currentSpaceContactTable : defaultSpaceContactTable;
-              yield* dispatch(
-                createIntent(LayoutAction.UpdatePopover, {
-                  part: 'popover',
-                  options: {
-                    state: false,
-                    anchorId: '',
-                  },
-                }),
-              );
-              if (view) {
-                const id = Obj.getDXN(view).toString();
-                yield* dispatch(
-                  createIntent(LayoutAction.Open, {
-                    part: 'main',
-                    subject: [id],
-                    options: { workspace: space?.id },
-                  }),
-                );
-                yield* dispatch(
-                  createIntent(DeckAction.ChangeCompanion, {
-                    primary: id,
-                    companion: [id, 'selected-objects'].join(ATTENDABLE_PATH_SEPARATOR),
-                  }),
-                );
-                yield* dispatch(
-                  createIntent(AttentionAction.Select, {
-                    contextId: id,
-                    selection: { mode: 'multi', ids: [contact.id] },
-                  }),
-                );
-              }
-            }).pipe(Effect.runPromise),
-          [dispatch, currentSpaceContacts, currentSpaceContactTable, defaultSpaceContactTable, space, defaultSpace],
-        );
-
-        return <RelatedContacts contacts={related} onContactClick={handleContactClick} />;
-      },
+      component: ({ data: { subject } }) => <RelatedToOrganization subject={subject} />,
     }),
   ]);

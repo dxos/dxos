@@ -6,12 +6,12 @@ import React, { useCallback, useMemo, useState } from 'react';
 
 import { useIntentDispatcher } from '@dxos/app-framework/react';
 import { ComputeGraph } from '@dxos/conductor';
-import { Filter, type Obj } from '@dxos/echo';
+import { Filter, Obj } from '@dxos/echo';
 import { Markdown } from '@dxos/plugin-markdown/types';
 import { Sheet } from '@dxos/plugin-sheet/types';
 import { Diagram } from '@dxos/plugin-sketch/types';
 import { useClient } from '@dxos/react-client';
-import { type Space, getTypename } from '@dxos/react-client/echo';
+import { type Space } from '@dxos/react-client/echo';
 import { IconButton, Input, Toolbar, useAsyncEffect } from '@dxos/react-ui';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { Organization, Person, Task } from '@dxos/types';
@@ -55,7 +55,7 @@ export const SpaceGenerator = ({ space, onCreateObjects }: SpaceGeneratorProps) 
     const { objects } = await space.db.query(Filter.everything()).run();
     const objectMap = sortKeys(
       objects.reduce<Record<string, number>>((map, obj) => {
-        const type = getTypename(obj);
+        const type = Obj.getTypename(obj);
         if (type) {
           const count = map[type] ?? 0;
           map[type] = count + 1;

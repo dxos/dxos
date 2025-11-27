@@ -10,25 +10,28 @@ import { Obj, Relation, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { ATTENDABLE_PATH_SEPARATOR, DeckAction } from '@dxos/plugin-deck/types';
 import { ObservabilityAction } from '@dxos/plugin-observability/types';
-import { CollectionAction, SpaceAction } from '@dxos/plugin-space/types';
+import { SpaceAction } from '@dxos/plugin-space/types';
 import { Ref, getSpace } from '@dxos/react-client/echo';
-import { AnchoredTo, Message } from '@dxos/types';
+import { Collection } from '@dxos/schema';
+import { AnchoredTo, Message, Thread } from '@dxos/types';
 
 import { meta } from '../meta';
-import { Channel, Thread, ThreadAction } from '../types';
+import { Channel, ThreadAction } from '../types';
 
 import { ThreadCapabilities } from './capabilities';
 
 export default (context: PluginContext) =>
   contributes(Capabilities.IntentResolver, [
     createResolver({
-      intent: ThreadAction.onCreateSpace,
-      resolve: ({ space, rootCollection }) =>
+      intent: ThreadAction.OnCreateSpace,
+      resolve: ({ space, isDefault, rootCollection }) =>
         Effect.gen(function* () {
+          if (isDefault) {
+            return;
+          }
+
           const { dispatch } = context.getCapability(Capabilities.IntentDispatcher);
-          const { object: collection } = yield* dispatch(
-            createIntent(CollectionAction.CreateQueryCollection, { typename: Type.getTypename(Channel.Channel) }),
-          );
+          const collection = Collection.makeManaged({ key: Type.getTypename(Channel.Channel) });
           rootCollection.objects.push(Ref.make(collection));
 
           const { object: channel } = yield* dispatch(
@@ -61,9 +64,6 @@ export default (context: PluginContext) =>
     createResolver({
       intent: ThreadAction.Create,
       resolve: ({ name, anchor: _anchor, subject }) => {
-        const space = getSpace(subject);
-        invariant(space, 'Space not found');
-
         const { state } = context.getCapability(ThreadCapabilities.MutableState);
         const subjectId = Obj.getDXN(subject).toString();
         const thread = Thread.make({ name });

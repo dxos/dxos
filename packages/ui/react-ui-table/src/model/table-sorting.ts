@@ -5,7 +5,7 @@
 import { type ReadonlySignal, type Signal, computed, signal } from '@preact/signals-core';
 import orderBy from 'lodash.orderby';
 
-import { FormatEnum, TypeEnum, getValue } from '@dxos/echo/internal';
+import { Format, TypeEnum, getValue } from '@dxos/echo/internal';
 import { formatForDisplay } from '@dxos/react-ui-form';
 import {
   type FieldSortType,
@@ -52,19 +52,27 @@ type LocalSort = { type: 'cleared' } | { type: 'active'; sort: FieldSortType } |
 export class TableSorting<T extends TableRow> {
   private readonly _displayToDataIndex = new Map<number, number>();
   private readonly _rows: Signal<T[]>;
+  private readonly _getView: () => View.View;
+  private readonly _projection: ProjectionModel;
   private readonly _localSort = signal<LocalSort>(undefined);
   private readonly _isDirty: ReadonlySignal<boolean>;
   public readonly sortedRows: ReadonlySignal<T[]>;
 
-  constructor(
-    rows: Signal<T[]>,
-    private readonly _view: View.View,
-    private readonly _projection: ProjectionModel,
-  ) {
+  constructor({
+    rows,
+    projection,
+    getView,
+  }: {
+    rows: Signal<T[]>;
+    getView: () => View.View;
+    projection: ProjectionModel;
+  }) {
     this._rows = rows;
+    this._getView = getView;
+    this._projection = projection;
     this._isDirty = computed(() => {
       const local = this._localSort.value;
-      const viewSort = this._view.sort?.[0];
+      const viewSort = this._getView().sort?.[0];
       if (local?.type === 'cleared') {
         return viewSort !== undefined;
       }
@@ -92,7 +100,7 @@ export class TableSorting<T extends TableRow> {
       return local.sort;
     }
 
-    return this._view.sort?.[0];
+    return this._getView().sort?.[0];
   }
 
   /**
@@ -137,10 +145,11 @@ export class TableSorting<T extends TableRow> {
 
   public save(): void {
     if (this._localSort.value !== undefined) {
+      const view = this._getView();
       if (this._localSort.value.type === 'active') {
-        this._view.sort = [this._localSort.value.sort];
+        view.sort = [this._localSort.value.sort];
       } else {
-        this._view.sort = [];
+        view.sort = [];
       }
       this._localSort.value = undefined;
     }
@@ -202,7 +211,7 @@ export class TableSorting<T extends TableRow> {
      * For single select fields, the sort value is determined by the index of the option in the
      * options array. This ensures sort order matches the configured option order.
      */
-    if (format === FormatEnum.SingleSelect) {
+    if (format === Format.TypeFormat.SingleSelect) {
       const options = props.options;
       if (!options) {
         return undefined;
@@ -215,7 +224,7 @@ export class TableSorting<T extends TableRow> {
     // TODO(ZaymonFC): Should we format this returned value for display based on the referenced prop format?
     //   Right now we're going to be sorting based on the raw values.
     //   Maybe we need to recurse this function with the referenced prop format and field?
-    if (format === FormatEnum.Ref && field.referencePath) {
+    if (format === Format.TypeFormat.Ref && field.referencePath) {
       const refValue = getValue(value.target, field.referencePath);
       return refValue;
     }

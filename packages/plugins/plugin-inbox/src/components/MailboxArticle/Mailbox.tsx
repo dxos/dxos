@@ -7,7 +7,6 @@ import './mailbox.css';
 import React, { useCallback, useMemo, useState } from 'react';
 import { type OnResizeCallback, useResizeDetector } from 'react-resize-detector';
 
-import { Obj, type Tag } from '@dxos/echo';
 import { useStateWithRef } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
 import {
@@ -23,6 +22,7 @@ import { type Message } from '@dxos/types';
 import { trim } from '@dxos/util';
 
 import { GoogleMail } from '../../functions/apis';
+import { type Mailbox as MailboxType } from '../../types';
 import { getMessageProps } from '../../util';
 
 const ROW_SIZES = {
@@ -37,7 +37,7 @@ const messageColumnDefault = {
   grid: { size: 100 },
 };
 
-const renderMessageCell = (message: Message.Message, now: Date, current?: boolean, tags?: Tag.Map) => {
+const renderMessageCell = (message: Message.Message, now: Date, labels?: MailboxType.Labels) => {
   const { id, hue, from, date, subject } = getMessageProps(message, now);
 
   // NOTE: Currently all grid cells have borders, so we render a single cell for each row.
@@ -67,10 +67,10 @@ const renderMessageCell = (message: Message.Message, now: Date, current?: boolea
       <div class="message__abstract__body">
         <div class="message__snippet">${subject}</div>
         <div class="message__tags">
-          ${((tags && Obj.getMeta(message).tags) ?? [])
+          ${(labels && Array.isArray(message.properties?.labels) ? message.properties.labels : [])
             // TODO(burdon): Tags are no longer labels.
-            .filter((tagId: string) => !GoogleMail.isSystemLabel(tagId))
-            .map((tagId: string) => ({ hue: getHashStyles(tagId).hue, ...tags![tagId] }))
+            .filter((labelId: string) => !GoogleMail.isSystemLabel(labelId))
+            .map((labelId: string) => ({ hue: getHashStyles(labelId).hue, label: labels![labelId] }))
             .filter(Boolean)
             .map(
               ({ label, hue }) => trim`
@@ -95,13 +95,13 @@ export type MailboxActionHandler = (action: MailboxAction) => void;
 export type MailboxProps = {
   id: string;
   messages: Message.Message[];
-  tags?: Tag.Map;
+  labels?: MailboxType.Labels;
   currentMessageId?: string;
   ignoreAttention?: boolean;
   onAction?: MailboxActionHandler;
 };
 
-export const Mailbox = ({ id, messages, tags, currentMessageId, ignoreAttention, onAction }: MailboxProps) => {
+export const Mailbox = ({ id, messages, labels, currentMessageId, ignoreAttention, onAction }: MailboxProps) => {
   const { hasAttention } = useAttention(id);
   const [columnDefault, setColumnDefault] = useState(messageColumnDefault);
   const [_, setRow, rowRef] = useStateWithRef<number>(-1);
@@ -179,7 +179,7 @@ export const Mailbox = ({ id, messages, tags, currentMessageId, ignoreAttention,
               const current = currentMessageId === messages[row].id;
               cells[toPlaneCellIndex({ col: 0, row })] = {
                 readonly: true,
-                accessoryHtml: renderMessageCell(messages[row], now, current, tags),
+                accessoryHtml: renderMessageCell(messages[row], now, labels),
                 className: mx('message', current && 'message--current'),
               };
             }
@@ -209,7 +209,7 @@ export const Mailbox = ({ id, messages, tags, currentMessageId, ignoreAttention,
   }, [messages]);
 
   return (
-    <div role='none' className={mx('flex flex-col [&_.dx-grid]:grow')}>
+    <div role='none' className={mx('flex flex-col [&_.dx-grid]:grow overflow-hidden')}>
       <Grid.Root id={`${id}__grid`}>
         <Grid.Content
           className={mx(

@@ -47,7 +47,7 @@ export const BaseObjectSettings = ({ classNames, children, object }: BaseObjectS
   }, [object]);
 
   const meta = Obj.getMeta(object);
-  const tags = (meta.tags ?? []).map((tag) => space?.db.ref(DXN.parse(tag))).filter(isNonNullable);
+  const tags = (meta.tags ?? []).map((tag) => space?.db.makeRef(DXN.parse(tag))).filter(isNonNullable);
   const values = useMemo(
     () => ({
       tags,

@@ -9,9 +9,9 @@ import { invariant } from '@dxos/invariant';
 import { type DXN } from '@dxos/keys';
 import { defaultMap } from '@dxos/util';
 
-import { getSchemaTypename, getSchemaVersion } from '../ast';
+import { getSchemaTypename, getSchemaVersion } from '../annotations';
 
-import { StoredSchema } from './stored-schema';
+import { PersistentSchema } from './persistent-schema';
 
 /**
  * Runtime registry of static schema objects (i.e., not Dynamic .
@@ -21,7 +21,7 @@ export class RuntimeSchemaRegistry {
   private readonly _registry = new Map<string, Schema.Schema.AnyNoContext[]>();
 
   constructor() {
-    this._registry.set(StoredSchema.typename, [StoredSchema]);
+    this._registry.set(getSchemaTypename(PersistentSchema)!, [PersistentSchema]);
   }
 
   get schemas(): Schema.Schema.AnyNoContext[] {
@@ -63,7 +63,7 @@ export class RuntimeSchemaRegistry {
     return this._registry.get(typename)?.[0];
   }
 
-  addSchema(types: Schema.Schema.AnyNoContext[]): void {
+  addSchema(types: readonly Schema.Schema.AnyNoContext[]): void {
     types.forEach((schema) => {
       const typename = getSchemaTypename(schema) ?? raise(new TypeError('Schema has no typename'));
       const version = getSchemaVersion(schema) ?? raise(new TypeError('Schema has no version'));

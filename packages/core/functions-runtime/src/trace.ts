@@ -5,11 +5,11 @@
 import * as Layer from 'effect/Layer';
 import * as Schema from 'effect/Schema';
 
-import { type Obj, type Ref, Type } from '@dxos/echo';
-import { ObjectId } from '@dxos/echo/internal';
+import { Obj, type Ref, Type } from '@dxos/echo';
 import { Queue } from '@dxos/echo-db';
 import { TracingService } from '@dxos/functions';
 import { Trigger } from '@dxos/functions';
+import { ObjectId } from '@dxos/keys';
 import { log } from '@dxos/log';
 
 export enum InvocationOutcome {
@@ -24,6 +24,9 @@ export enum InvocationTraceEventType {
   END = 'end',
 }
 
+/**
+ * @deprecated Relace with EncodedError.
+ */
 export const TraceEventException = Schema.Struct({
   timestamp: Schema.Number,
   message: Schema.String,
@@ -58,7 +61,7 @@ export const InvocationTraceStartEvent = Schema.Struct({
   /**
    * DXN of the invoked function/workflow.
    */
-  invocationTarget: Schema.optional(Type.Ref(Type.Expando)),
+  invocationTarget: Schema.optional(Type.Ref(Obj.Any)),
   /**
    * Present for automatic invocations.
    */
@@ -82,7 +85,9 @@ export const InvocationTraceEndEvent = Schema.Struct({
    */
   // TODO(burdon): Remove ms suffix.
   timestamp: Schema.Number,
+
   outcome: Schema.Enums(InvocationOutcome),
+
   exception: Schema.optional(TraceEventException),
 }).pipe(Type.Obj({ typename: 'dxos.org/type/InvocationTraceEnd', version: '0.1.0' }));
 
@@ -121,7 +126,7 @@ export type InvocationSpan = {
   outcome: InvocationOutcome;
   input: object;
   invocationTraceQueue?: Ref.Ref<Queue>;
-  invocationTarget?: Ref.Ref<Type.Expando>;
+  invocationTarget?: Ref.Ref<Obj.Any>;
   trigger?: Ref.Ref<Trigger.Trigger>;
   exception?: TraceEventException;
 };

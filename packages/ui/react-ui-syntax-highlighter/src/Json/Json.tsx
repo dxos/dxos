@@ -52,7 +52,7 @@ export const JsonFilter = ({ classNames, data: initialData, replacer, testId }: 
   }, [initialData, text]); // TODO(burdon): Need structural diff.
 
   return (
-    <div className='flex flex-col grow overflow-hidden'>
+    <div className='flex flex-col bs-full overflow-hidden'>
       <Input.Root validationValence={error ? 'error' : 'success'}>
         <Input.TextInput
           classNames={['p-1 pli-2 font-mono', error && 'border-red-500']}

@@ -3,8 +3,9 @@
 //
 
 import { Capabilities, type PluginContext, contributes, createResolver } from '@dxos/app-framework';
+import { Transcript } from '@dxos/types';
 
-import { Transcript, TranscriptAction } from '../types';
+import { TranscriptAction } from '../types';
 
 export default (context: PluginContext) =>
   contributes(Capabilities.IntentResolver, [

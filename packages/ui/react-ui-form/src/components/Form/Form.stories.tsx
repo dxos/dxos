@@ -6,26 +6,26 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Schema from 'effect/Schema';
 import React, { useCallback, useState } from 'react';
 
-import { ContactType } from '@dxos/client/testing';
-import { type Type } from '@dxos/echo';
-import { type BaseObject, Expando, Format, Ref, type TypeAnnotation, getObjectDXN } from '@dxos/echo/internal';
-import { live } from '@dxos/echo/internal';
+import { Format, Obj, Ref, Type } from '@dxos/echo';
+import { type AnyProperties, type TypeAnnotation } from '@dxos/echo/internal';
 import { Tooltip } from '@dxos/react-ui';
 import { withLayoutVariants, withTheme } from '@dxos/react-ui/testing';
-import { Testing } from '@dxos/schema/testing';
+import { TestSchema } from '@dxos/schema/testing';
 
 import { translations } from '../../translations';
-import { TestLayout, TestPanel } from '../testing';
+import { TestLayout } from '../testing';
 
-import { SelectInput } from './Defaults';
+import { SelectField } from './fields';
 import { Form, type FormProps } from './Form';
 
-type StoryProps<T extends BaseObject> = {
+// TODO(burdon): Use @dxos/types.
+
+type StoryProps<T extends AnyProperties> = {
   debug?: boolean;
-  schema: Type.Obj.Any;
+  schema: Schema.Schema.AnyNoContext;
 } & FormProps<T>;
 
-const DefaultStory = <T extends BaseObject = any>({
+const DefaultStory = <T extends AnyProperties = any>({
   debug,
   schema,
   values: initialValues,
@@ -40,9 +40,7 @@ const DefaultStory = <T extends BaseObject = any>({
     return (
       <Tooltip.Provider>
         <TestLayout json={{ values, schema: schema.ast }}>
-          <TestPanel>
-            <Form<T> schema={schema} values={values} onSave={handleSave} {...props} />
-          </TestPanel>
+          <Form<T> schema={schema} values={values} onSave={handleSave} {...props} />
         </TestLayout>
       </Tooltip.Provider>
     );
@@ -51,13 +49,13 @@ const DefaultStory = <T extends BaseObject = any>({
   return <Form<T> schema={schema} values={values} onSave={handleSave} {...props} />;
 };
 
-const RefStory = <T extends BaseObject = any>(props: StoryProps<T>) => {
+const RefStory = <T extends AnyProperties = any>(props: StoryProps<T>) => {
   const onQueryRefOptions = useCallback((typeInfo: TypeAnnotation) => {
     switch (typeInfo.typename) {
-      case Testing.Person.typename:
+      case TestSchema.Person.typename:
         return [
-          { dxn: getObjectDXN(contact1)!, label: 'John Coltraine' },
-          { dxn: getObjectDXN(contact2)!, label: 'Erykah Badu' },
+          { dxn: Obj.getDXN(contact1), label: 'Alice' },
+          { dxn: Obj.getDXN(contact2), label: 'Bob' },
         ];
       default:
         return [];
@@ -74,7 +72,7 @@ const AddressSchema = Schema.Struct({
   location: Schema.optional(Format.GeoPoint.annotations({ title: 'Location' })),
 }).annotations({ title: 'Address' });
 
-const ContactSchema = Schema.Struct({
+const PersonSchema = Schema.Struct({
   name: Schema.optional(Schema.String.annotations({ title: 'Name' })),
   active: Schema.optional(Schema.Boolean.annotations({ title: 'Active' })),
   rank: Schema.optional(Schema.Number.annotations({ title: 'Rank' })),
@@ -82,7 +80,7 @@ const ContactSchema = Schema.Struct({
   address: Schema.optional(AddressSchema),
 }).pipe(Schema.mutable);
 
-type ContactSchema = Schema.Schema.Type<typeof ContactSchema>;
+type PersonSchema = Schema.Schema.Type<typeof PersonSchema>;
 
 const meta = {
   title: 'ui/react-ui-form/Form',
@@ -107,7 +105,7 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
   args: {
-    schema: ContactSchema,
+    schema: PersonSchema,
     values: {
       name: 'DXOS',
       active: true,
@@ -122,7 +120,7 @@ export const Default: Story = {
 export const Organization: Story = {
   args: {
     debug: true,
-    schema: Testing.OrganizationSchema,
+    schema: TestSchema.OrganizationSchema,
     values: {
       name: 'DXOS',
       website: 'https://dxos.org',
@@ -134,7 +132,7 @@ export const Organization: Story = {
 export const OrganizationAutoSave: Story = {
   args: {
     debug: true,
-    schema: Testing.OrganizationSchema,
+    schema: TestSchema.OrganizationSchema,
     values: {
       name: 'DXOS',
       website: 'https://dxos.org',
@@ -150,7 +148,7 @@ export const OrganizationAutoSave: Story = {
 export const Person: Story = {
   args: {
     debug: true,
-    schema: Testing.Person,
+    schema: TestSchema.Person,
     values: {
       name: 'Bot',
     },
@@ -189,9 +187,9 @@ export const DiscriminatedShape: StoryObj<StoryProps<ShapeSchema>> = {
         radius: 5,
       },
     },
-    Custom: {
+    fieldMap: {
       ['shape.type' as const]: (props) => (
-        <SelectInput
+        <SelectField
           {...props}
           options={['circle', 'square'].map((value) => ({
             value,
@@ -278,16 +276,18 @@ export const Enum: StoryObj<StoryProps<ColorType>> = {
 //
 
 const RefSchema = Schema.Struct({
-  contact: Ref(ContactType).annotations({ title: 'Contact Reference' }),
-  optionalContact: Schema.optional(Ref(ContactType).annotations({ title: 'Optional Contact Reference' })),
-  refArray: Schema.optional(Schema.Array(Ref(ContactType))),
-  unknownExpando: Schema.optional(Ref(Expando).annotations({ title: 'Optional Ref to an Expando (DXN Input)' })),
+  contact: Type.Ref(TestSchema.Person).annotations({ title: 'Contact Reference' }),
+  optionalContact: Schema.optional(Type.Ref(TestSchema.Person).annotations({ title: 'Optional Contact Reference' })),
+  refArray: Schema.optional(Schema.Array(Type.Ref(TestSchema.Person))),
+  unknownExpando: Schema.optional(
+    Type.Ref(Type.Expando).annotations({ title: 'Optional Ref to an Expando (DXN Input)' }),
+  ),
 });
 
 type RefSchema = Schema.Schema.Type<typeof RefSchema>;
 
-const contact1 = live(ContactType, { identifiers: [] });
-const contact2 = live(ContactType, { identifiers: [] });
+const contact1 = Obj.make(TestSchema.Person, { name: 'Alice' });
+const contact2 = Obj.make(TestSchema.Person, { name: 'Bob' });
 
 export const Refs: StoryObj<StoryProps<RefSchema>> = {
   render: RefStory,

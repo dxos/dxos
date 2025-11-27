@@ -6,12 +6,10 @@ import * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
-import { Filter, Obj, Query, Type } from '@dxos/echo';
+import { Filter, Query, Type } from '@dxos/echo';
 import {
-  EchoObject,
   EntityKind,
   Format,
-  FormatEnum,
   type JsonPath,
   type JsonProp,
   Ref,
@@ -26,7 +24,7 @@ import { EchoTestBuilder } from '@dxos/echo-db/testing';
 import { registerSignalsRuntime } from '@dxos/echo-signals';
 import { invariant } from '@dxos/invariant';
 
-import { Testing } from '../testing';
+import { TestSchema } from '../testing';
 import { View } from '../types';
 
 import { createFieldId } from './field';
@@ -68,11 +66,9 @@ describe('ProjectionModel', () => {
     });
     const [mutable] = await registry.register([schema]);
 
-    const presentation = Obj.make(Type.Expando, {});
     const view = View.make({
       query: Query.select(Filter.type(mutable)),
       jsonSchema: mutable.jsonSchema,
-      presentation,
     });
     const projectionModel = new ProjectionModel(mutable.jsonSchema, view.projection);
     expect(projectionModel.fields).to.have.length(3);
@@ -82,7 +78,7 @@ describe('ProjectionModel', () => {
       expect(props).to.deep.eq({
         property: 'name',
         type: TypeEnum.String,
-        format: FormatEnum.String,
+        format: Format.TypeFormat.String,
         title: 'Name',
       });
     }
@@ -92,7 +88,7 @@ describe('ProjectionModel', () => {
       expect(props).to.include({
         property: 'email',
         type: TypeEnum.String,
-        format: FormatEnum.Email,
+        format: Format.TypeFormat.Email,
       });
     }
 
@@ -111,7 +107,7 @@ describe('ProjectionModel', () => {
       expect(props).to.include({
         property: 'email',
         type: TypeEnum.String,
-        format: FormatEnum.Email,
+        format: Format.TypeFormat.Email,
       });
 
       projectionModel.setFieldProjection({ props });
@@ -122,7 +118,7 @@ describe('ProjectionModel', () => {
       expect(props).to.include({
         property: 'salary',
         type: TypeEnum.Number,
-        format: FormatEnum.Currency,
+        format: Format.TypeFormat.Currency,
         currency: 'USD',
         multipleOf: 2,
       });
@@ -136,7 +132,7 @@ describe('ProjectionModel', () => {
       expect(props).to.include({
         property: 'salary',
         type: TypeEnum.Number,
-        format: FormatEnum.Currency,
+        format: Format.TypeFormat.Currency,
         currency: 'GBP',
         multipleOf: 2,
       });
@@ -145,22 +141,20 @@ describe('ProjectionModel', () => {
 
   test('gets and updates references', async ({ expect }) => {
     const registry = new RuntimeSchemaRegistry();
-    registry.addSchema([Testing.Organization]);
+    registry.addSchema([TestSchema.Organization]);
 
     const typename = 'example.com/type/Person';
     const schema = Schema.Struct({
       name: Schema.String.annotations({ title: 'Name' }),
       email: Format.Email,
       salary: Format.Currency({ code: 'usd', decimals: 2 }),
-      organization: Ref(Testing.Organization),
+      organization: Ref(TestSchema.Organization),
     }).pipe(Type.Obj({ typename, version: '0.1.0' }));
     const jsonSchema = toJsonSchema(schema);
 
-    const presentation = Obj.make(Type.Expando, {});
     const view = await View.makeWithReferences({
       query: Query.select(Filter.type(schema)),
       jsonSchema,
-      presentation,
       registry,
     });
 
@@ -176,7 +170,7 @@ describe('ProjectionModel', () => {
     expect(props).to.deep.eq({
       property: 'organization',
       type: TypeEnum.Ref,
-      format: FormatEnum.Ref,
+      format: Format.TypeFormat.Ref,
       referenceSchema: 'example.com/type/Organization',
       referencePath: 'name',
     });
@@ -209,11 +203,9 @@ describe('ProjectionModel', () => {
     });
 
     const [mutable] = await registry.register([schema]);
-    const presentation = Obj.make(Type.Expando, {});
     const view = View.make({
       query: Query.select(Filter.type(mutable)),
       jsonSchema: mutable.jsonSchema,
-      presentation,
     });
     const projectionModel = new ProjectionModel(mutable.jsonSchema, view.projection);
 
@@ -226,7 +218,7 @@ describe('ProjectionModel', () => {
     expect(projectionModel.fields).to.have.length(1);
     expect(mutable.jsonSchema.properties?.['email' as const]).to.not.exist;
     expect(deleted.field.path).to.equal('email');
-    expect(deleted.props.format).to.equal(FormatEnum.Email);
+    expect(deleted.props.format).to.equal(Format.TypeFormat.Email);
   });
 
   test('field projection delete and restore', async ({ expect }) => {
@@ -246,11 +238,9 @@ describe('ProjectionModel', () => {
     });
 
     const [mutable] = await registry.register([schema]);
-    const presentation = Obj.make(Type.Expando, {});
     const view = View.make({
       query: Query.select(Filter.type(mutable)),
       jsonSchema: mutable.jsonSchema,
-      presentation,
     });
     const projectionModel = new ProjectionModel(mutable.jsonSchema, view.projection);
 
@@ -297,11 +287,9 @@ describe('ProjectionModel', () => {
     });
 
     const [mutable] = await registry.register([schema]);
-    const presentation = Obj.make(Type.Expando, {});
     const view = View.make({
       query: Query.select(Filter.type(mutable)),
       jsonSchema: mutable.jsonSchema,
-      presentation,
     });
     const projectionModel = new ProjectionModel(mutable.jsonSchema, view.projection);
 
@@ -350,11 +338,9 @@ describe('ProjectionModel', () => {
     });
 
     const [mutable] = await registry.register([schema]);
-    const presentation = Obj.make(Type.Expando, {});
     const view = View.make({
       query: Query.select(Filter.type(mutable)),
       jsonSchema: mutable.jsonSchema,
-      presentation,
     });
     const projection = new ProjectionModel(mutable.jsonSchema, view.projection);
 
@@ -408,11 +394,9 @@ describe('ProjectionModel', () => {
     });
 
     const [mutable] = await registry.register([schema]);
-    const presentation = Obj.make(Type.Expando, {});
     const view = View.make({
       query: Query.select(Filter.type(mutable)),
       jsonSchema: mutable.jsonSchema,
-      presentation,
     });
     const projection = new ProjectionModel(mutable.jsonSchema, view.projection);
     const fieldId = getFieldId(view.projection, 'status');
@@ -424,7 +408,7 @@ describe('ProjectionModel', () => {
       props: {
         property: 'status' as JsonProp,
         type: TypeEnum.String,
-        format: FormatEnum.SingleSelect,
+        format: Format.TypeFormat.SingleSelect,
         options: [
           { id: 'draft', title: 'Draft', color: 'gray' },
           { id: 'published', title: 'Published', color: 'green' },
@@ -452,7 +436,7 @@ describe('ProjectionModel', () => {
     // Verify projection.
     const { props } = projection.getFieldProjection(fieldId);
 
-    expect(props.format).to.equal(FormatEnum.SingleSelect);
+    expect(props.format).to.equal(Format.TypeFormat.SingleSelect);
     expect(props.options).to.deep.equal([
       { id: 'draft', title: 'Draft', color: 'gray' },
       { id: 'published', title: 'Published', color: 'green' },
@@ -520,11 +504,9 @@ describe('ProjectionModel', () => {
     });
 
     const [mutable] = await registry.register([schema]);
-    const presentation = Obj.make(Type.Expando, {});
     const view = View.make({
       query: Query.select(Filter.type(mutable)),
       jsonSchema: mutable.jsonSchema,
-      presentation,
     });
     const projection = new ProjectionModel(mutable.jsonSchema, view.projection);
     const fieldId = getFieldId(view.projection, 'tags');
@@ -535,7 +517,7 @@ describe('ProjectionModel', () => {
       props: {
         property: 'tags' as JsonProp,
         type: TypeEnum.Object,
-        format: FormatEnum.MultiSelect,
+        format: Format.TypeFormat.MultiSelect,
         options: [
           { id: 'feature', title: 'Feature', color: 'emerald' },
           { id: 'bug', title: 'Bug', color: 'red' },
@@ -562,7 +544,7 @@ describe('ProjectionModel', () => {
 
     const { props } = projection.getFieldProjection(fieldId);
 
-    expect(props.format).to.equal(FormatEnum.MultiSelect);
+    expect(props.format).to.equal(Format.TypeFormat.MultiSelect);
     expect(props.options).to.deep.equal([
       { id: 'feature', title: 'Feature', color: 'emerald' },
       { id: 'bug', title: 'Bug', color: 'red' },
@@ -659,11 +641,9 @@ describe('ProjectionModel', () => {
     const [mutable] = await registry.register([schema]);
 
     // Create view with only name and email fields.
-    const presentation = Obj.make(Type.Expando, {});
     const view = View.make({
       query: Query.select(Filter.type(mutable)),
       jsonSchema: mutable.jsonSchema,
-      presentation,
       fields: [
         'name',
         'email',
@@ -765,11 +745,9 @@ describe('ProjectionModel', () => {
     const [mutable] = await registry.register([schema]);
 
     // Create view with no explicit fields.
-    const presentation = Obj.make(Type.Expando, {});
     const view = View.make({
       query: Query.select(Filter.type(mutable)),
       jsonSchema: mutable.jsonSchema,
-      presentation,
       fields: [], // No fields specified.
     });
 
@@ -803,11 +781,9 @@ describe('ProjectionModel', () => {
     const [mutable] = await registry.register([initialSchema]);
 
     // Create empty view (no fields).
-    const presentation = Obj.make(Type.Expando, {});
     const view = View.make({
       query: Query.select(Filter.type(mutable)),
       jsonSchema: mutable.jsonSchema,
-      presentation,
       fields: [],
     });
 
@@ -846,11 +822,9 @@ describe('ProjectionModel', () => {
     });
 
     const [mutable] = await registry.register([schema]);
-    const presentation = Obj.make(Type.Expando, {});
     const view = View.make({
       query: Query.select(Filter.type(mutable)),
       jsonSchema: mutable.jsonSchema,
-      presentation,
     });
     let projectionModel = new ProjectionModel(mutable.jsonSchema, view.projection);
 
@@ -882,11 +856,10 @@ describe('ProjectionModel', () => {
 
   // TODO(burdon): Fix.
   test.skip('create view from static organization schema', async ({ expect }) => {
-    const schema = Testing.Organization;
+    const schema = TestSchema.Organization;
     const jsonSchema = toJsonSchema(schema);
 
-    const presentation = Obj.make(Type.Expando, {});
-    const view = View.make({ query: Query.select(Filter.type(schema)), jsonSchema, presentation });
+    const view = View.make({ query: Query.select(Filter.type(schema)), jsonSchema });
     const projection = new ProjectionModel(jsonSchema, view.projection);
     const fieldId = getFieldId(view.projection, 'status');
     invariant(fieldId);
@@ -939,15 +912,18 @@ describe('ProjectionModel', () => {
           }),
         ),
       ),
-    }).pipe(EchoObject({ typename: 'dxos.org/type/ContactWithArrayOfEmails', version: '0.1.0' }));
+    }).pipe(
+      Type.Obj({
+        typename: 'dxos.org/type/ContactWithArrayOfEmails',
+        version: '0.1.0',
+      }),
+    );
 
     const jsonSchema = toJsonSchema(ContactWithArrayOfEmails);
 
-    const presentation = Obj.make(Type.Expando, {});
     const view = View.make({
       query: Query.select(Filter.type(ContactWithArrayOfEmails)),
       jsonSchema,
-      presentation,
     });
     const projection = new ProjectionModel(jsonSchema, view.projection);
 
@@ -966,9 +942,9 @@ describe('ProjectionModel', () => {
 
   test('changing format to missing formats', async ({ expect }) => {
     const testCases = [
-      { format: FormatEnum.Integer, expectedType: TypeEnum.Number, fieldName: 'count' },
-      { format: FormatEnum.DXN, expectedType: TypeEnum.String, fieldName: 'identifier' },
-      { format: FormatEnum.Hostname, expectedType: TypeEnum.String, fieldName: 'host' },
+      { format: Format.TypeFormat.Integer, expectedType: TypeEnum.Number, fieldName: 'count' },
+      { format: Format.TypeFormat.DXN, expectedType: TypeEnum.String, fieldName: 'identifier' },
+      { format: Format.TypeFormat.Hostname, expectedType: TypeEnum.String, fieldName: 'host' },
     ];
 
     for (const { format, expectedType, fieldName } of testCases) {
@@ -988,11 +964,9 @@ describe('ProjectionModel', () => {
       });
 
       const [mutable] = await registry.register([schema]);
-      const presentation = Obj.make(Type.Expando, {});
       const view = View.make({
         query: Query.select(Filter.type(mutable)),
         jsonSchema: mutable.jsonSchema,
-        presentation,
       });
       const projection = new ProjectionModel(mutable.jsonSchema, view.projection);
       const fieldId = getFieldId(view.projection, fieldName);

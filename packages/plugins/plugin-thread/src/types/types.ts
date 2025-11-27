@@ -4,28 +4,28 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Type } from '@dxos/echo';
+import { Key } from '@dxos/echo';
 import { EchoObjectSchema, SpaceSchema } from '@dxos/react-client/echo';
 import { Collection } from '@dxos/schema';
-import { Actor, AnchoredTo, Message } from '@dxos/types';
+import { Actor, AnchoredTo, Message, Thread } from '@dxos/types';
 
 import { meta } from '../meta';
 
 import * as Channel from './Channel';
-import * as Thread from './Thread';
 
 export namespace ThreadAction {
-  export class onCreateSpace extends Schema.TaggedClass<onCreateSpace>()(`${meta.id}/action/on-space-created`, {
+  export class OnCreateSpace extends Schema.TaggedClass<OnCreateSpace>()(`${meta.id}/action/on-space-created`, {
     input: Schema.Struct({
       space: SpaceSchema,
       rootCollection: Collection.Collection,
+      isDefault: Schema.Boolean.pipe(Schema.optional),
     }),
     output: Schema.Void,
   }) {}
 
   export class CreateChannel extends Schema.TaggedClass<CreateChannel>()(`${meta.id}/action/create-channel`, {
     input: Schema.Struct({
-      spaceId: Type.SpaceId,
+      spaceId: Key.SpaceId,
       name: Schema.optional(Schema.String),
     }),
     output: Schema.Struct({

@@ -9,6 +9,7 @@ import { useCapability } from '@dxos/app-framework/react';
 import { Obj, type Ref } from '@dxos/echo';
 import { SettingsStore } from '@dxos/local-storage';
 import { getSpace } from '@dxos/react-client/echo';
+import { Thread } from '@dxos/types';
 
 import {
   CallDebugPanel,
@@ -19,7 +20,7 @@ import {
   ThreadSettings,
 } from '../components';
 import { meta } from '../meta';
-import { Channel, Thread, type ThreadSettingsProps } from '../types';
+import { Channel, type ThreadSettingsProps } from '../types';
 
 import { ThreadCapabilities } from './capabilities';
 
@@ -29,7 +30,7 @@ export default () =>
       id: `${meta.id}/channel`,
       role: 'article',
       filter: (data): data is { subject: Channel.Channel } => Obj.instanceOf(Channel.Channel, data.subject),
-      component: ({ data: { subject: channel }, role }) => <ChannelContainer channel={channel} role={role} />,
+      component: ({ data: { subject }, role }) => <ChannelContainer channel={subject} role={role} />,
     }),
     createSurface({
       id: `${meta.id}/chat-companion`,
@@ -50,13 +51,13 @@ export default () =>
       id: `${meta.id}/thread`,
       role: 'article',
       filter: (data): data is { subject: Thread.Thread } => Obj.instanceOf(Thread.Thread, data.subject),
-      component: ({ data: { subject: thread } }) => {
-        const space = getSpace(thread);
-        if (!space || !thread) {
+      component: ({ data: { subject } }) => {
+        const space = getSpace(subject);
+        if (!space || !subject) {
           return null;
         }
 
-        return <ChatContainer thread={thread} space={space} />;
+        return <ChatContainer thread={subject} space={space} />;
       },
     }),
     createSurface({

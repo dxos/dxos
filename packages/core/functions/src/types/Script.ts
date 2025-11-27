@@ -4,8 +4,8 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Obj, Ref, Type } from '@dxos/echo';
-import { FormAnnotation, LabelAnnotation } from '@dxos/echo/internal';
+import { Annotation, Obj, Ref, Type } from '@dxos/echo';
+import { FormInputAnnotation } from '@dxos/echo/internal';
 import { Text } from '@dxos/schema';
 
 /**
@@ -16,14 +16,14 @@ export const Script = Schema.Struct({
   description: Schema.String.pipe(Schema.optional),
   // TODO(burdon): Change to hash of deployed content.
   // Whether source has changed since last deploy.
-  changed: Schema.Boolean.pipe(FormAnnotation.set(false), Schema.optional),
-  source: Type.Ref(Text.Text).pipe(FormAnnotation.set(false)),
+  changed: Schema.Boolean.pipe(FormInputAnnotation.set(false), Schema.optional),
+  source: Type.Ref(Text.Text).pipe(FormInputAnnotation.set(false)),
 }).pipe(
   Type.Obj({
     typename: 'dxos.org/type/Script',
     version: '0.1.0',
   }),
-  LabelAnnotation.set(['name']),
+  Annotation.LabelAnnotation.set(['name']),
 );
 export interface Script extends Schema.Schema.Type<typeof Script> {}
 

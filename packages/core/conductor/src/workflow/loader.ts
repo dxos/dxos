@@ -4,7 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 
-import { toEffectSchema } from '@dxos/echo/internal';
+import { JsonSchema } from '@dxos/echo';
 import { FunctionDefinition, FunctionInvocationService } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { type DXN } from '@dxos/keys';
@@ -133,9 +133,9 @@ export class WorkflowLoader {
     }
 
     const funcionDef = FunctionDefinition.deserialize(await functionRef.load());
-    const output = node.outputSchema ? toEffectSchema(node.outputSchema) : AnyOutput;
+    const output = node.outputSchema ? JsonSchema.toEffectSchema(node.outputSchema) : AnyOutput;
     const result: Executable = {
-      meta: { input: node.inputSchema ? toEffectSchema(node.inputSchema) : AnyInput, output },
+      meta: { input: node.inputSchema ? JsonSchema.toEffectSchema(node.inputSchema) : AnyInput, output },
       exec: synchronizedComputeFunction(
         Effect.fnUntraced(function* (input) {
           return yield* FunctionInvocationService.invokeFunction(funcionDef, input);

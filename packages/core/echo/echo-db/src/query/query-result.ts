@@ -4,11 +4,9 @@
 
 import { type CleanupFn, Event } from '@dxos/async';
 import { StackTrace } from '@dxos/debug';
-import { type BaseObject } from '@dxos/echo/internal';
-import { type QueryAST } from '@dxos/echo-protocol';
+import { type Entity, type QueryResult } from '@dxos/echo';
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { invariant } from '@dxos/invariant';
-import { type PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { trace } from '@dxos/tracing';
 import { isNonNullable } from '@dxos/util';
@@ -16,107 +14,18 @@ import { isNonNullable } from '@dxos/util';
 import { prohibitSignalActions } from '../guarded-scope';
 
 import { type Query } from './api';
-
-// TODO(burdon): Multi-sort option.
-export type Sort<T extends BaseObject> = (a: T, b: T) => -1 | 0 | 1;
-
-export type QueryResultEntry<T extends BaseObject = BaseObject> = {
-  id: string;
-
-  spaceId: SpaceId;
-
-  /**
-   * May not be present for remote results.
-   */
-  object?: T;
-
-  match?: {
-    // TODO(dmaretskyi): text positional info.
-
-    /**
-     * Higher means better match.
-     */
-    rank: number;
-  };
-
-  /**
-   * Query resolution metadata.
-   */
-  // TODO(dmaretskyi): Rename to meta?
-  resolution?: {
-    // TODO(dmaretskyi): Make this more generic.
-    source: 'remote' | 'local' | 'index';
-
-    /**
-     * Query resolution time in milliseconds.
-     */
-    time: number;
-  };
-
-  /** @deprecated Use spaceId */
-  spaceKey?: PublicKey;
-};
-
-export type OneShotQueryResult<T extends BaseObject = BaseObject> = {
-  results: QueryResultEntry<T>[];
-  objects: T[];
-};
-
-export interface QueryContext<T extends BaseObject = BaseObject> {
-  getResults(): QueryResultEntry<T>[];
-
-  // TODO(dmaretskyi): Update info?
-  changed: Event<void>;
-
-  /**
-   * One-shot query.
-   */
-  run(query: QueryAST.Query, opts?: QueryRunOptions): Promise<QueryResultEntry<T>[]>;
-
-  /**
-   * Set the filter and trigger continuous updates.
-   */
-  update(query: QueryAST.Query): void;
-
-  /**
-   * Start creating query sources and firing events.
-   *
-   * `start` and `stop` are re-entrant.
-   */
-  // TODO(dmaretskyi): Make async.
-  start(): void;
-
-  /**
-   * Clear any resources associated with the query.
-   *
-   * `start` and `stop` are re-entrant.
-   */
-  // TODO(dmaretskyi): Make async.
-  stop(): void;
-}
-
-export type QuerySubscriptionOptions = {
-  /**
-   * Fire the callback immediately.
-   */
-  fire?: boolean;
-};
-
-export type QueryRunOptions = {
-  timeout?: number;
-};
+import { type QueryContext } from './query-context';
 
 /**
  * Predicate based query.
  */
-// TODO(dmaretskyi): Change to Obj.Any
-export class QueryResult<T extends BaseObject = BaseObject> {
+export class QueryResultImpl<T extends Entity.Unknown = Entity.Unknown> implements QueryResult.QueryResult<T> {
   private readonly _signal = compositeRuntime.createSignal();
-  private readonly _event = new Event<QueryResult<T>>();
+  private readonly _event = new Event<QueryResult.QueryResult<T>>();
   private readonly _diagnostic: QueryDiagnostic;
 
   private _isActive = false;
-  private _resultCache?: QueryResultEntry<T>[] = undefined;
+  private _resultCache?: QueryResult.Entry<T>[] = undefined;
   private _objectCache?: T[] = undefined;
   private _subscribers: number = 0;
 
@@ -150,7 +59,7 @@ export class QueryResult<T extends BaseObject = BaseObject> {
     return this._query;
   }
 
-  get results(): QueryResultEntry<T>[] {
+  get results(): QueryResult.Entry<T>[] {
     this._checkQueryIsRunning();
     this._signal.notifyRead();
     this._ensureCachePresent();
@@ -168,7 +77,7 @@ export class QueryResult<T extends BaseObject = BaseObject> {
    * Execute the query once and return the results.
    * Does not subscribe to updates.
    */
-  async run(opts: { timeout?: number } = { timeout: 30_000 }): Promise<OneShotQueryResult<T>> {
+  async run(opts: { timeout?: number } = { timeout: 30_000 }): Promise<QueryResult.OneShot<T>> {
     const filteredResults = await this._queryContext.run(this._query.ast, { timeout: opts.timeout });
     return {
       results: filteredResults,
@@ -190,7 +99,7 @@ export class QueryResult<T extends BaseObject = BaseObject> {
    * WARNING: This method will only return the data already cached and may return incomplete results.
    * Use `this.run()` for a complete list of results stored on-disk.
    */
-  runSync(): QueryResultEntry<T>[] {
+  runSync(): QueryResult.Entry<T>[] {
     this._ensureCachePresent();
     return this._resultCache!;
   }
@@ -201,7 +110,7 @@ export class QueryResult<T extends BaseObject = BaseObject> {
    * Does not update when the object properties change.
    */
   // TODO(burdon): Change to SubscriptionHandle (make uniform).
-  subscribe(callback?: (query: QueryResult<T>) => void, opts?: QuerySubscriptionOptions): CleanupFn {
+  subscribe(callback?: (query: QueryResult.QueryResult<T>) => void, opts?: QueryResult.SubscriptionOptions): CleanupFn {
     invariant(!(!callback && opts?.fire), 'Cannot fire without a callback.');
 
     log('subscribe', { filter: this._query.ast, active: this._isActive });
@@ -263,7 +172,7 @@ export class QueryResult<T extends BaseObject = BaseObject> {
     return changed;
   }
 
-  private _uniqueObjects(results: QueryResultEntry<T>[]): T[] {
+  private _uniqueObjects(results: QueryResult.Entry<T>[]): T[] {
     const seen = new Set<unknown>();
     return results
       .map((result) => result.object)

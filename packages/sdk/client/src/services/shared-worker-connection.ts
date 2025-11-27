@@ -80,7 +80,7 @@ export class SharedWorkerConnection {
       await this._systemRpc.rpc.WorkerService.start({ lockKey, ...params });
     } catch (err) {
       log.catch(err);
-      throw new RemoteServiceConnectionError('Failed to connect to worker');
+      throw new RemoteServiceConnectionError({ message: 'Failed to connect to worker' });
     }
   }
 

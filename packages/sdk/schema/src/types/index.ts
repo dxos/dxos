@@ -2,23 +2,20 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Type } from '@dxos/echo';
-import { StoredSchema as StoredSchema$ } from '@dxos/echo/internal';
+import { Type } from '@dxos/echo';
 
 import * as Collection from './Collection';
 import * as Text from './Text';
 import * as View from './View';
 
-export { StoredSchema } from '@dxos/echo/internal';
-
 export { Collection, Text, View };
 
-export const DataTypes: (Type.Obj.Any | Type.Relation.Any)[] = [
-  StoredSchema$,
+export const DataTypes: Type.Entity.Any[] = [
+  Type.PersistentType,
 
   // System
   Collection.Collection,
-  Collection.QueryCollection,
+  Collection.Managed,
   Text.Text,
   View.View,
 ];

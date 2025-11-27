@@ -57,7 +57,7 @@ export class DXN {
   static Schema = Schema.NonEmptyString.pipe(
     Schema.pattern(/^dxn:([^:]+):(?:[^:]+:?)+[^:]$/),
     // TODO(dmaretskyi): To set the format we need to move the annotation IDs out of the echo-schema package.
-    // FormatAnnotation.set(FormatEnum.DXN),
+    // FormatAnnotation.set(TypeFormat.DXN),
     Schema.annotations({
       title: 'DXN',
       description: 'DXN URI',

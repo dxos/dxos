@@ -19,6 +19,7 @@ import {
   type CreateSpaceResponseBody,
   EdgeAuthChallengeError,
   EdgeCallFailedError,
+  type EdgeFailure,
   type EdgeStatus,
   type ExecuteWorkflowResponseBody,
   type ExportBundleRequest,
@@ -76,14 +77,15 @@ type EdgeHttpRequestArgs = {
   json?: boolean;
 
   /**
-   * Do not expect a standard EDGE JSON response with a `success` field.
-   * @deprecated Use only for debugging.
+   * Force authentication.
+   * This should be used for requests with large bodies to avoid sending the body twice.
+   * The client will call /auth endpoint to generate the auth header.
    */
-  rawResponse?: boolean;
+  auth?: boolean;
 };
 
-export type EdgeHttpGetArgs = Pick<EdgeHttpRequestArgs, 'context' | 'retry'>;
-export type EdgeHttpPostArgs = Pick<EdgeHttpRequestArgs, 'context' | 'retry' | 'body'>;
+export type EdgeHttpGetArgs = Pick<EdgeHttpRequestArgs, 'context' | 'retry' | 'auth'>;
+export type EdgeHttpPostArgs = Pick<EdgeHttpRequestArgs, 'context' | 'retry' | 'body' | 'auth'>;
 
 export class EdgeHttpClient {
   private readonly _baseUrl: string;
@@ -318,7 +320,6 @@ export class EdgeHttpClient {
       ...args,
       body: input,
       method: 'POST',
-      rawResponse: true,
     });
   }
 
@@ -345,6 +346,12 @@ export class EdgeHttpClient {
 
   public async getCronTriggers(spaceId: SpaceId) {
     return this._call(new URL(`/test/functions/${spaceId}/triggers/crons`, this.baseUrl), { method: 'GET' });
+  }
+
+  public async forceRunCronTrigger(spaceId: SpaceId, triggerId: ObjectId) {
+    return this._call(new URL(`/test/functions/${spaceId}/triggers/crons/${triggerId}/run`, this.baseUrl), {
+      method: 'POST',
+    });
   }
 
   //
@@ -394,17 +401,23 @@ export class EdgeHttpClient {
     log('fetch', { url, request: args.body });
 
     let handledAuth = false;
+    const tryCount = 1;
     while (true) {
       let processingError: EdgeCallFailedError | undefined = undefined;
       try {
+        if (!this._authHeader && args.auth) {
+          const response = await fetch(new URL(`/auth`, this.baseUrl));
+          if (response.status === 401) {
+            this._authHeader = await this._handleUnauthorized(response);
+          }
+        }
+
         const request = createRequest(args, this._authHeader);
+        log('call edge', { url, tryCount, authHeader: !!this._authHeader });
         const response = await fetch(url, request);
 
         if (response.ok) {
           const body = await response.clone().json();
-          if (args.rawResponse) {
-            return body as any;
-          }
           invariant(body, 'Expected body to be present');
           if (!('success' in body)) {
             return body;
@@ -418,13 +431,13 @@ export class EdgeHttpClient {
           continue;
         }
 
-        const body =
+        const body: EdgeFailure =
           response.headers.get('Content-Type') === 'application/json' ? await response.clone().json() : undefined;
 
         invariant(!body?.success, 'Expected body to not be a failure response or undefined.');
 
-        if (body?.errorData?.type === 'auth_challenge' && typeof body?.errorData?.challenge === 'string') {
-          processingError = new EdgeAuthChallengeError(body.errorData.challenge, body.errorData);
+        if (body?.data?.type === 'auth_challenge' && typeof body?.data?.challenge === 'string') {
+          processingError = new EdgeAuthChallengeError(body.data.challenge, body.data);
         } else if (body?.success === false) {
           processingError = EdgeCallFailedError.fromUnsuccessfulResponse(response, body);
         } else {
@@ -436,7 +449,7 @@ export class EdgeHttpClient {
       }
 
       if (processingError?.isRetryable && (await shouldRetry(requestContext, processingError.retryAfterMs))) {
-        log('retrying edge request', { url, processingError });
+        log.verbose('retrying edge request', { url, processingError });
       } else {
         throw processingError!;
       }

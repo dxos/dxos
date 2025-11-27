@@ -8,12 +8,12 @@ import { Ref, Type } from '@dxos/echo';
 import { type JsonPath } from '@dxos/echo/internal';
 import { type Function } from '@dxos/functions';
 import { useOnTransition } from '@dxos/react-ui';
-import { Form, type FormInputStateProps, type QueryRefOptions, useFormValues } from '@dxos/react-ui-form';
+import { Form, type FormFieldStateProps, type QueryRefOptions, useFormValues } from '@dxos/react-ui-form';
 
 export type FunctionInputEditorProps = {
   functions: Function.Function[];
   onQueryRefOptions: QueryRefOptions;
-} & FormInputStateProps;
+} & FormFieldStateProps;
 
 /**
  * Editor component for function input parameters.
@@ -24,7 +24,7 @@ export const FunctionInputEditor = ({
   onValueChange,
   onQueryRefOptions,
 }: FunctionInputEditorProps) => {
-  const selectedFunctionValue = useFormValues(['function' as JsonPath]);
+  const selectedFunctionValue = useFormValues(FunctionInputEditor.displayName, ['function' as JsonPath]);
   const selectedFunctionId = useMemo(() => {
     if (Ref.isRef(selectedFunctionValue)) {
       return selectedFunctionValue.dxn.toString().split('dxn:echo:@:').at(1);
@@ -70,8 +70,7 @@ export const FunctionInputEditor = ({
   return (
     <>
       <h3 className='text-md'>Function parameters</h3>
-      {/* TODO(ZaymonFC): Try using <FormFields /> internal component for this nesting.
-                          This would allow errors to flow up to the root context. */}
+      {/* TODO(ZaymonFC): Try using <FormFieldSet /> internal component for nesting. This would allow errors to flow up to the root context. */}
       <Form
         schema={effectSchema}
         values={values}
@@ -82,3 +81,5 @@ export const FunctionInputEditor = ({
     </>
   );
 };
+
+FunctionInputEditor.displayName = 'AutomationTrigger.FunctionInputEditor';

@@ -19,6 +19,7 @@ export const translations = [
         'object name placeholder': 'New mailbox',
         'rename object label': 'Rename mailbox',
         'delete object label': 'Delete mailbox',
+        'object deleted label': 'Mailbox deleted',
       },
       [Calendar.Calendar.typename]: {
         'typename label': 'Calendar',
@@ -28,6 +29,7 @@ export const translations = [
         'object name placeholder': 'New calendar',
         'rename object label': 'Rename calendar',
         'delete object label': 'Delete calendar',
+        'object deleted label': 'Calendar deleted',
       },
       [meta.id]: {
         'plugin name': 'Inbox',
@@ -37,18 +39,28 @@ export const translations = [
         'action delete': 'Delete',
         'action mark read': 'Mark as read',
         'message label': 'Message',
+        'event label': 'Event',
         'no integrations label': 'No integrations configured',
         'manage integrations button label': 'Manage Integrations',
         'inbox label': 'Inbox',
+
+        'sync mailbox label': 'Sync mailbox',
+        'sync calendar label': 'Sync calendar',
+
+        'show contact label': 'Show contact',
+        'create contact label': 'Create contact',
 
         'mailbox sync label': 'Mailbox Sync',
         'mailbox object settings configure sync button label': 'Configure sync',
         'mailbox object settings configure subscription button label': 'Configure subscription',
 
-        'mailbox toolbar label': 'Message toolbar',
-        'mailbox toolbar show enriched message': 'Show enriched message',
-        'mailbox toolbar show plain message': 'Show plain message',
-        'mailbox toolbar enriched message not available': 'Enriched message not available',
+        'event untitled label': 'Untitled',
+        'event toolbar create note menu': 'Create note',
+
+        'message toolbar label': 'Message toolbar',
+        'message toolbar show enriched message': 'Show enriched message',
+        'message toolbar show plain message': 'Show plain message',
+        'message toolbar enriched message not available': 'Enriched message not available',
 
         'mailbox toolbar title': 'Mailbox toolbar',
         'mailbox toolbar sort': 'Sort messages',
@@ -65,6 +77,8 @@ export const translations = [
         'message header view mode plain only': 'Plain',
 
         'related contacts title': 'Related contacts',
+        'recent events title': 'Recent events',
+        'upcoming events title': 'Upcoming events',
         'related messages title': 'Recent messages',
       },
     },

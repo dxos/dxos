@@ -12,7 +12,7 @@ import { type Contact, Invitation } from '@dxos/protocols/proto/dxos/client/serv
 import { range } from '@dxos/util';
 
 import { Client } from '../client';
-import { TestBuilder, TextV0Type, performInvitation, waitForSpace } from '../testing';
+import { TestBuilder, TestSchema, performInvitation, waitForSpace } from '../testing';
 
 describe('ContactBook', () => {
   describe('joinBySpaceKey', () => {
@@ -45,9 +45,9 @@ describe('ContactBook', () => {
       await inviteMember(space1, client2);
       const [contact] = await waitForContactBookSize(client1, 1);
 
-      client1.addTypes([TextV0Type]);
+      client1.addTypes([TestSchema.TextV0Type]);
       const space2 = await client1.spaces.create();
-      const document = space2.db.add(Obj.make(TextV0Type, { content: 'text' }));
+      const document = space2.db.add(Obj.make(TestSchema.TextV0Type, { content: 'text' }));
       await space2.db.flush();
 
       await space2.admitContact(contact);
@@ -61,7 +61,7 @@ describe('ContactBook', () => {
     });
   });
 
-  const expectDocumentReplicated = async (space: Space, expected: TextV0Type) => {
+  const expectDocumentReplicated = async (space: Space, expected: TestSchema.TextV0Type) => {
     await waitForCondition({
       condition: () => {
         const actual = space.db.getObjectById(expected.id);

@@ -28,9 +28,10 @@ export type SurfaceRole =
  */
 // TODO(burdon): Standardize PluginSettings and ObjectProperties.
 // TODO(burdon): Include attendableId?
-export type SurfaceComponentProps<Subject extends Obj.Any = Obj.Any, Props = {}, Role extends string = string> = {
+// TODO(burdon): companionTo?
+export type SurfaceComponentProps<Subject extends Obj.Any = Obj.Any, Role extends string = string> = {
   role?: Role;
 
-  /** The object being displayed. */
+  /** The primary object being displayed. */
   subject: Subject;
-} & Props;
+};

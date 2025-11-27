@@ -5,11 +5,10 @@
 import { type Client } from '@dxos/client';
 import { Obj, Ref } from '@dxos/echo';
 import { Function, type Script, getUserFunctionIdInMetadata, setUserFunctionIdInMetadata } from '@dxos/functions';
-import { Bundler } from '@dxos/functions-runtime/bundler';
+import { bundleFunction } from '@dxos/functions-runtime/bundler';
 import { incrementSemverPatch, uploadWorkerFunction } from '@dxos/functions-runtime/edge';
 import { log } from '@dxos/log';
 import { type Space } from '@dxos/react-client/echo';
-import { isNode } from '@dxos/util';
 
 import { updateFunctionMetadata } from './functions';
 
@@ -44,8 +43,9 @@ export const deployScript = async ({
   }
 
   try {
-    const bundler = new Bundler({ platform: isNode() ? 'node' : 'browser', sandboxedModules: [], remoteModules: {} });
-    const buildResult = await bundler.bundle({ source: script.source!.target!.content });
+    const buildResult = await bundleFunction({
+      source: script.source!.target!.content,
+    });
     if ('error' in buildResult) {
       throw buildResult.error || new Error('Bundle creation failed');
     }

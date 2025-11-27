@@ -6,12 +6,12 @@ import * as Schema from 'effect/Schema';
 import { afterEach, assert, beforeEach, describe, test } from 'vitest';
 
 import { Filter, Obj, Query, Ref, Type } from '@dxos/echo';
-import { FormatEnum, RuntimeSchemaRegistry, StoredSchema, TypeEnum } from '@dxos/echo/internal';
+import { Format, PersistentSchema, RuntimeSchemaRegistry, TypeEnum } from '@dxos/echo/internal';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
 import { log } from '@dxos/log';
 import { ProjectionModel } from '@dxos/schema';
 
-import { Testing } from '../testing';
+import { TestSchema } from '../testing';
 
 import * as View from './View';
 
@@ -27,15 +27,14 @@ describe('Projection', () => {
   });
 
   test('create view from schema', async ({ expect }) => {
-    const schema = Testing.Person;
+    const schema = TestSchema.Person;
     const jsonSchema = Type.toJsonSchema(schema);
     const registry = new RuntimeSchemaRegistry();
-    registry.addSchema([Testing.Person, Testing.Organization]);
+    registry.addSchema([TestSchema.Person, TestSchema.Organization]);
 
     const view = await View.makeWithReferences({
       query: Query.select(Filter.type(schema)),
       jsonSchema,
-      presentation: Obj.make(Type.Expando, {}),
       registry,
     });
     assert(view.query.ast.type === 'select');
@@ -51,7 +50,7 @@ describe('Projection', () => {
       expect(props).to.deep.eq({
         property: 'name',
         type: TypeEnum.String,
-        format: FormatEnum.String,
+        format: Format.TypeFormat.String,
       });
     }
 
@@ -60,7 +59,7 @@ describe('Projection', () => {
       expect(props).to.deep.eq({
         property: 'organization',
         type: TypeEnum.Ref,
-        format: FormatEnum.Ref,
+        format: Format.TypeFormat.Ref,
         referencePath: 'name',
         referenceSchema: 'example.com/type/Organization',
       });
@@ -68,41 +67,39 @@ describe('Projection', () => {
   });
 
   test('static schema definitions with references', async ({ expect }) => {
-    const organization = Obj.make(Testing.Organization, {
+    const organization = Obj.make(TestSchema.Organization, {
       name: 'DXOS',
       website: 'https://dxos.org',
     });
-    const contact = Obj.make(Testing.Person, {
+    const contact = Obj.make(TestSchema.Person, {
       name: 'Alice',
       organization: Ref.make(organization),
     });
     log('schema', {
-      organization: Type.toJsonSchema(Testing.Organization),
-      contact: Type.toJsonSchema(Testing.Person),
+      organization: Type.toJsonSchema(TestSchema.Organization),
+      contact: Type.toJsonSchema(TestSchema.Person),
     });
     log('objects', { organization, contact });
-    expect(Obj.getTypename(organization)).to.eq(Testing.Organization.typename);
-    expect(Obj.getTypename(contact)).to.eq(Testing.Person.typename);
+    expect(Obj.getTypename(organization)).to.eq(TestSchema.Organization.typename);
+    expect(Obj.getTypename(contact)).to.eq(TestSchema.Person.typename);
   });
 
   test('maintains field order during initialization', async ({ expect }) => {
-    const schema = Obj.make(StoredSchema, {
+    const schema = Obj.make(PersistentSchema, {
       typename: 'example.com/type/Person',
       version: '0.1.0',
       jsonSchema: Type.toJsonSchema(
         Schema.Struct({
           name: Schema.optional(Schema.String).annotations({ title: 'Name' }),
-          email: Schema.optional(Type.Format.Email),
-          salary: Schema.optional(Type.Format.Currency({ code: 'usd', decimals: 2 })),
+          email: Schema.optional(Format.Email),
+          salary: Schema.optional(Format.Currency({ code: 'usd', decimals: 2 })),
         }),
       ),
     });
 
-    const presentation = Obj.make(Type.Expando, {});
     const view = View.make({
       query: Query.select(Filter.typename(schema.typename)),
       jsonSchema: schema.jsonSchema,
-      presentation,
       fields: ['name', 'email', 'salary'], // Explicitly define order.
     });
 

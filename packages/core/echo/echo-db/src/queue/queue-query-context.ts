@@ -7,17 +7,16 @@ import * as Function from 'effect/Function';
 
 import { Event } from '@dxos/async';
 import { Context } from '@dxos/context';
-import { Obj } from '@dxos/echo';
-import type { BaseObject } from '@dxos/echo/internal';
+import { type Entity, Obj, type QueryResult } from '@dxos/echo';
 import { filterMatchObjectJSON } from '@dxos/echo-pipeline/filter';
-import type { QueryAST } from '@dxos/echo-protocol';
+import { type QueryAST } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
 
-import { type QueryContext, type QueryResultEntry, isSimpleSelectionQuery } from '../query';
+import { type QueryContext, isSimpleSelectionQuery } from '../query';
 
 import { type QueueImpl } from './queue';
 
-export class QueueQueryContext implements QueryContext {
+export class QueueQueryContext<T extends Entity.Unknown = Entity.Unknown> implements QueryContext<T> {
   readonly #queue: QueueImpl;
   #runCtx: Context | null = null;
 
@@ -26,14 +25,14 @@ export class QueueQueryContext implements QueryContext {
 
   readonly changed = new Event();
 
-  constructor(queue: QueueImpl) {
+  constructor(queue: QueueImpl<T>) {
     this.#queue = queue;
   }
 
   /**
    * One-shot run.
    */
-  async run(query: QueryAST.Query): Promise<QueryResultEntry<BaseObject>[]> {
+  async run(query: QueryAST.Query): Promise<QueryResult.Entry<T>[]> {
     const trivial = isSimpleSelectionQuery(query);
     if (!trivial) {
       throw new Error('Query not supported.');
@@ -52,7 +51,7 @@ export class QueueQueryContext implements QueryContext {
     return objects.map((object) => ({
       id: object.id,
       spaceId,
-      object,
+      object: object as T,
     }));
   }
 
@@ -91,7 +90,7 @@ export class QueueQueryContext implements QueryContext {
   /**
    * Synchronously get the results.
    */
-  getResults(): QueryResultEntry<BaseObject>[] {
+  getResults(): QueryResult.Entry<T>[] {
     invariant(this.#filter);
 
     const spaceId = this.#queue.dxn.asQueueDXN()!.spaceId;
@@ -102,7 +101,7 @@ export class QueueQueryContext implements QueryContext {
       Array.map((object) => ({
         id: object.id,
         spaceId,
-        object,
+        object: object as T,
       })),
     );
   }

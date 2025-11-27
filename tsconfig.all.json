@@ -169,6 +169,9 @@
       "path": "packages/core/functions-runtime/tsconfig.json"
     },
     {
+      "path": "packages/core/functions-runtime-cloudflare/tsconfig.json"
+    },
+    {
       "path": "packages/core/halo/credentials/tsconfig.json"
     },
     {

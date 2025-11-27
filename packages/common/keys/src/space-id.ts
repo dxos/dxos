@@ -17,7 +17,7 @@ const MULTIBASE_PREFIX = 'B';
 
 const ENCODED_LENGTH = 33;
 
-const isValid = (value: string): value is SpaceId => {
+const isValid = (value: unknown): value is SpaceId => {
   return typeof value === 'string' && value.startsWith(MULTIBASE_PREFIX) && value.length === ENCODED_LENGTH;
 };
 
@@ -33,7 +33,7 @@ export const SpaceId: Schema.Schema<SpaceId, string> & {
   byteLength: number;
   encode: (value: Uint8Array) => SpaceId;
   decode: (value: SpaceId) => Uint8Array;
-  isValid: (value: string) => value is SpaceId;
+  isValid: (value: unknown) => value is SpaceId;
   make: (value: string) => SpaceId;
   random: () => SpaceId;
 } = class extends Schema.String.pipe(Schema.filter(isValid)) {

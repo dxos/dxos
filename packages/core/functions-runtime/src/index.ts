@@ -7,3 +7,4 @@ export * from './services';
 export * from './trace';
 export * from './triggers';
 export * from './url';
+export * from './errors';

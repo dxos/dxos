@@ -117,11 +117,11 @@ CalendarViewport.displayName = 'CalendarContent';
 // Header
 //
 
-type CalendarHeaderProps = ThemedClassName;
+type CalendarToolbarProps = ThemedClassName;
 
-const CalendarHeader = ({ classNames }: CalendarHeaderProps) => {
+const CalendarToolbar = ({ classNames }: CalendarToolbarProps) => {
   const { t } = useTranslation(translationKey);
-  const { weekStartsOn, event, index, selected } = useCalendarContext(CalendarHeader.displayName);
+  const { weekStartsOn, event, index, selected } = useCalendarContext(CalendarToolbar.displayName);
   const top = useMemo(() => getDate(start, index ?? 0, 6, weekStartsOn), [index, weekStartsOn]);
   const today = useMemo(() => new Date(), []);
 
@@ -130,11 +130,15 @@ const CalendarHeader = ({ classNames }: CalendarHeaderProps) => {
   }, [event, start, today]);
 
   return (
-    <div role='none' className={mx('shink-0 is-full grid grid-cols-3', classNames)} style={{ width: defaultWidth }}>
+    <div
+      role='none'
+      className={mx('shink-0 is-full grid grid-cols-3 items-center bg-barSurface', classNames)}
+      style={{ width: defaultWidth }}
+    >
       <div className='flex justify-start'>
         <IconButton
           variant='ghost'
-          size={6}
+          size={5}
           icon='ph--calendar--regular'
           iconOnly
           classNames='aspect-square'
@@ -142,13 +146,13 @@ const CalendarHeader = ({ classNames }: CalendarHeaderProps) => {
           onClick={handleToday}
         />
       </div>
-      <span className='flex justify-center p-2'>{format(selected ?? top, 'MMMM')}</span>
-      <span className='flex justify-end p-2'>{(selected ?? top).getFullYear()}</span>
+      <div className='flex justify-center p-2 text-description'>{format(selected ?? top, 'MMMM')}</div>
+      <div className='flex justify-end p-2 text-description'>{(selected ?? top).getFullYear()}</div>
     </div>
   );
 };
 
-CalendarHeader.displayName = 'CalendarHeader';
+CalendarToolbar.displayName = 'CalendarHeader';
 
 //
 // Grid
@@ -276,6 +280,7 @@ const CalendarGrid = ({ classNames, rows, onSelect }: CalendarGridProps) => {
           ))}
         </div>
       </div>
+
       {/* Grid */}
       <div role='none' className='flex flex-col bs-full is-full justify-center overflow-hidden' ref={containerRef}>
         <List
@@ -306,8 +311,8 @@ CalendarGrid.displayName = 'CalendarGrid';
 export const Calendar = {
   Root: CalendarRoot,
   Viewport: CalendarViewport,
-  Header: CalendarHeader,
+  Toolbar: CalendarToolbar,
   Grid: CalendarGrid,
 };
 
-export type { CalendarController, CalendarRootProps, CalendarViewportProps, CalendarHeaderProps, CalendarGridProps };
+export type { CalendarController, CalendarRootProps, CalendarViewportProps, CalendarToolbarProps, CalendarGridProps };

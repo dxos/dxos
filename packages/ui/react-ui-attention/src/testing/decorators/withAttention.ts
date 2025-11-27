@@ -5,8 +5,8 @@
 import { type Decorator } from '@storybook/react';
 import { createElement } from 'react';
 
-import { RootAttentionProvider } from '../../components';
+import { RootAttentionProvider, SelectionProvider } from '../../components';
 
 export const withAttention: Decorator = (Story) => {
-  return createElement(RootAttentionProvider, {}, createElement(Story));
+  return createElement(RootAttentionProvider, {}, createElement(SelectionProvider, {}, createElement(Story)));
 };

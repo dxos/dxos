@@ -5,8 +5,9 @@
 import { Event } from '@dxos/async';
 import { type Space } from '@dxos/client-protocol';
 import { todo } from '@dxos/debug';
-import { type AnyLiveObject, type QueryResultEntry, type QuerySource, type QuerySourceProvider } from '@dxos/echo-db';
-import type { QueryAST } from '@dxos/echo-protocol';
+import { type Obj, type QueryResult } from '@dxos/echo';
+import { type QuerySource, type QuerySourceProvider } from '@dxos/echo-db';
+import { type QueryAST } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
 import { PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -95,7 +96,7 @@ export class AgentQuerySourceProvider implements QuerySourceProvider {
 }
 
 export class AgentQuerySource implements QuerySource {
-  private _results?: QueryResultEntry[];
+  private _results?: QueryResult.Entry[];
   private _cancelPreviousRequest?: () => void = undefined;
 
   public readonly changed = new Event<void>();
@@ -114,11 +115,11 @@ export class AgentQuerySource implements QuerySource {
     // No-op.
   }
 
-  getResults(): QueryResultEntry[] {
+  getResults(): QueryResult.Entry[] {
     return this._results ?? [];
   }
 
-  async run(): Promise<QueryResultEntry[]> {
+  async run(): Promise<QueryResult.Entry[]> {
     return this._results ?? [];
   }
 
@@ -165,7 +166,7 @@ export class AgentQuerySource implements QuerySource {
   }
 }
 
-const getEchoObjectFromSnapshot = (objSnapshot: EchoObjectProto): AnyLiveObject<any> | undefined => {
+const getEchoObjectFromSnapshot = (objSnapshot: EchoObjectProto): Obj.Any | undefined => {
   invariant(objSnapshot.genesis, 'Genesis is undefined.');
   invariant(objSnapshot.snapshot, 'Genesis model type is undefined.');
 

@@ -74,6 +74,9 @@ export const callTool: <Tools extends Record<string, Tool.Any>>(
   },
 );
 
+/**
+ * Formats the error with the cause chain included, but omiting the stack trace.
+ */
 const formatError = (error: Error): string => {
   if (error.cause) {
     return `${String(error)}\ncaused by:\n${formatError(error.cause as Error)}`;

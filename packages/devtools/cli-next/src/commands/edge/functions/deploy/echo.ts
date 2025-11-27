@@ -10,7 +10,7 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 import type * as Schema from 'effect/Schema';
 
-import { Filter, type Space, getMeta } from '@dxos/client/echo';
+import { Filter, type Space } from '@dxos/client/echo';
 import { Obj, Ref } from '@dxos/echo';
 import { Function, Script, getUserFunctionIdInMetadata, setUserFunctionIdInMetadata } from '@dxos/functions';
 import { incrementSemverPatch } from '@dxos/functions-runtime/edge';
@@ -37,7 +37,7 @@ export const loadFunctionObject: (space: Space, functionId: string) => Effect.Ef
   Effect.fn(function* (space: Space, functionId: string) {
     // TODO(wittjosiah): Derive DatabaseService from ClientService.
     const functions = yield* Effect.tryPromise(() => space.db.query(Filter.type(Function.Function)).run());
-    const functionObject = functions.objects.find((fn) => getUserFunctionIdInMetadata(getMeta(fn)) === functionId);
+    const functionObject = functions.objects.find((fn) => getUserFunctionIdInMetadata(Obj.getMeta(fn)) === functionId);
     if (!functionObject) {
       return yield* Effect.fail(new Error(`Function ECHO object not found for ${functionId}`));
     }
@@ -45,6 +45,9 @@ export const loadFunctionObject: (space: Space, functionId: string) => Effect.Ef
     return functionObject;
   });
 
+/**
+ * @deprecated
+ */
 export const upsertFunctionObject: (opts: {
   space: Space;
   existingObject: Function.Function | undefined;

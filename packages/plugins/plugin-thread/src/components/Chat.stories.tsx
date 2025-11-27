@@ -16,10 +16,10 @@ import { useAsyncEffect } from '@dxos/react-ui';
 import { withTheme } from '@dxos/react-ui/testing';
 import { Thread as ThreadComponent } from '@dxos/react-ui-thread';
 import { render } from '@dxos/storybook-utils';
-import { Message } from '@dxos/types';
+import { Message, Thread } from '@dxos/types';
 
 import { translations } from '../translations';
-import { Channel, Thread } from '../types';
+import { Channel } from '../types';
 
 import { ChatContainer } from './ChatContainer';
 

@@ -6,7 +6,6 @@ import * as Schema from 'effect/Schema';
 
 import { Obj, Type } from '@dxos/echo';
 import { Format, GeneratorAnnotation, LabelAnnotation, PropertyMeta } from '@dxos/echo/internal';
-import { ItemAnnotation } from '@dxos/schema';
 
 import * as Geo from './Geo';
 import * as Organization from './Organization';
@@ -51,12 +50,10 @@ const PersonSchema = Schema.Struct({
       value: Format.Email.pipe(GeneratorAnnotation.set('internet.email')),
     }),
   ).pipe(Schema.mutable, Schema.optional),
-  // TODO(burdon): Identities? (socials, DIDs, etc.)
-  // TODO(burdon): Add annotations.
-  // TODO(burdon): Record or array (for CRDT)?
   identities: Schema.Array(
     Schema.Struct({
       label: Schema.optional(Schema.String),
+      // TODO(burdon): Identity types? (socials, DIDs, etc.)
       value: Schema.String,
     }),
   ).pipe(Schema.mutable, Schema.optional),
@@ -66,7 +63,9 @@ const PersonSchema = Schema.Struct({
       // TODO(wittjosiah): Format.Phone.
       value: Schema.String,
     }),
-  ).pipe(Schema.mutable, Schema.optional),
+  )
+    .pipe(Schema.mutable, Schema.optional)
+    .annotations({ title: 'Phone Numbers' }),
   addresses: Schema.Array(
     Schema.Struct({
       label: Schema.optional(Schema.String),
@@ -108,7 +107,6 @@ export const Person = PersonSchema.pipe(
   }),
   Schema.annotations({ title: 'Person' }),
   LabelAnnotation.set(['preferredName', 'fullName', 'nickname']),
-  ItemAnnotation.set(true),
 );
 
 export interface Person extends Schema.Schema.Type<typeof Person> {}
@@ -125,5 +123,4 @@ export const LegacyPerson = PersonSchema.pipe(
   }),
   Schema.annotations({ title: 'Person' }),
   LabelAnnotation.set(['preferredName', 'fullName', 'nickname']),
-  ItemAnnotation.set(true),
 );

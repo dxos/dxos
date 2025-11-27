@@ -194,7 +194,7 @@ export class DxAvatar extends LitElement {
                 font-size=${this.size === 'px' ? '200%' : this.size * fontScale}
                 mask=${`url(#${this.maskId})`}
               >
-                ${/\p{Emoji}/u.test(this.fallback) ? this.fallback : getInitials(this.fallback)}
+                ${/\p{Emoji_Presentation}/u.test(this.fallback) ? this.fallback : getInitials(this.fallback)}
               </text>`
         }
         ${

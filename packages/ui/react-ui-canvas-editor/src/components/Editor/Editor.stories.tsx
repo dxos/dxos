@@ -6,18 +6,17 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Schema from 'effect/Schema';
 import React, { type PropsWithChildren, useRef, useState } from 'react';
 
-import { Filter } from '@dxos/echo';
-import { getSchemaTypename, getTypename } from '@dxos/echo/internal';
+import { Filter, Obj, Type } from '@dxos/echo';
 import { type Live } from '@dxos/live-object';
 import { faker } from '@dxos/random';
 import { useClientProvider, withClientProvider } from '@dxos/react-client/testing';
 import { useAsyncEffect } from '@dxos/react-ui';
 import { withTheme } from '@dxos/react-ui/testing';
 import { withAttention } from '@dxos/react-ui-attention/testing';
-import { Form, TupleInput } from '@dxos/react-ui-form';
+import { Form, TupleField } from '@dxos/react-ui-form';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { createGraph } from '@dxos/schema';
-import { Testing, type TypeSpec, type ValueGenerator, createObjectFactory } from '@dxos/schema/testing';
+import { TestSchema, type TypeSpec, type ValueGenerator, createObjectFactory } from '@dxos/schema/testing';
 
 import { doLayout } from '../../layout';
 import { Container, DragTest, useSelection } from '../../testing';
@@ -27,7 +26,7 @@ import { Editor, type EditorController, type EditorRootProps } from './Editor';
 
 const generator: ValueGenerator = faker as any;
 
-const types = [Testing.Organization, Testing.Project, Testing.Person];
+const types = [TestSchema.Organization, TestSchema.Project, TestSchema.Person];
 
 // TODO(burdon): Ref expando breaks the form.
 const RectangleShapeWithoutRef = Schema.omit<any, any, ['object']>('object')(RectangleShape);
@@ -53,7 +52,9 @@ const DefaultStory = ({ id = 'test', init, sidebar, children, ...props }: Render
     // Load objects.
     const { objects } = await space.db.query(Filter.everything()).run();
     const model = await doLayout(
-      createGraph(objects.filter((object: Live<any>) => types.some((type) => type.typename === getTypename(object)))),
+      createGraph(
+        objects.filter((object: Live<any>) => types.some((type) => type.typename === Obj.getTypename(object))),
+      ),
     );
     setGraph(model);
   }, [space, init]);
@@ -77,10 +78,10 @@ const DefaultStory = ({ id = 'test', init, sidebar, children, ...props }: Render
             <Form
               schema={RectangleShapeWithoutRef}
               values={selected}
-              Custom={{
+              fieldMap={{
                 // TODO(burdon): Replace by type.
-                ['center' as const]: (props) => <TupleInput {...props} binding={['x', 'y']} />,
-                ['size' as const]: (props) => <TupleInput {...props} binding={['width', 'height']} />,
+                ['center' as const]: (props) => <TupleField {...props} binding={['x', 'y']} />,
+                ['size' as const]: (props) => <TupleField {...props} binding={['width', 'height']} />,
               }}
             />
           )}
@@ -115,7 +116,7 @@ const meta = {
 
             spec = spec.map((schema: any) => ({
               ...schema,
-              type: registeredSchema.find((s) => getSchemaTypename(s) === getSchemaTypename(schema.type)),
+              type: registeredSchema.find((s) => Type.getTypename(s) === Type.getTypename(schema.type)),
             }));
           } else {
             space.db.graph.schemaRegistry.addSchema(types);
@@ -141,7 +142,7 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {
   args: {
     init: true,
-    spec: [{ type: Testing.Organization, count: 1 }],
+    spec: [{ type: TestSchema.Organization, count: 1 }],
   },
 };
 
@@ -159,9 +160,9 @@ export const Query: Story = {
     sidebar: 'selected',
     init: true,
     spec: [
-      { type: Testing.Organization, count: 4 },
-      { type: Testing.Project, count: 0 },
-      { type: Testing.Person, count: 16 },
+      { type: TestSchema.Organization, count: 4 },
+      { type: TestSchema.Project, count: 0 },
+      { type: TestSchema.Person, count: 16 },
     ],
   },
 };

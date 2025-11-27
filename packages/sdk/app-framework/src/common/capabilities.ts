@@ -193,9 +193,7 @@ export namespace Capabilities {
   /**
    * @category Capability
    */
-  export const Functions = defineCapability<FunctionDefinition<any, any>[]>(
-    'dxos.org/app-framework/capability/functions',
-  );
+  export const Functions = defineCapability<FunctionDefinition.Any[]>('dxos.org/app-framework/capability/functions');
 
   export type FileUploader = (space: Space, file: File) => Promise<FileInfo | undefined>;
 

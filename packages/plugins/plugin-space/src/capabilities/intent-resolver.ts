@@ -6,13 +6,15 @@ import * as Effect from 'effect/Effect';
 
 import {
   Capabilities,
+  type Label,
   LayoutAction,
   type PluginContext,
   contributes,
   createIntent,
   createResolver,
 } from '@dxos/app-framework';
-import { Filter, Obj, Query, Ref, Relation, Type } from '@dxos/echo';
+import { Obj, Query, Ref, Relation, Type } from '@dxos/echo';
+import { Serializer } from '@dxos/echo-db';
 import { DatabaseService } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { Migrations } from '@dxos/migrations';
@@ -24,7 +26,7 @@ import { Invitation, InvitationEncoder } from '@dxos/react-client/invitations';
 import { ATTENDABLE_PATH_SEPARATOR } from '@dxos/react-ui-attention';
 import { iconValues } from '@dxos/react-ui-pickers';
 import { hues } from '@dxos/react-ui-theme';
-import { Collection, ProjectionModel, StoredSchema, getTypenameFromQuery } from '@dxos/schema';
+import { Collection, ProjectionModel, getTypenameFromQuery } from '@dxos/schema';
 
 import {
   CREATE_OBJECT_DIALOG,
@@ -43,7 +45,7 @@ import { COMPOSER_SPACE_LOCK, cloneObject, getNestedObjects } from '../util';
 import { SpaceCapabilities } from './capabilities';
 
 // TODO(wittjosiah): Remove.
-const SPACE_MAX_OBJECTS = 500;
+const SPACE_MAX_OBJECTS = 750;
 
 type IntentResolverOptions = {
   context: PluginContext;
@@ -92,20 +94,13 @@ export default ({ context, observability, createInvitationUrl }: IntentResolverO
         }
 
         // Create records smart collection.
-        collection.objects.push(
-          Ref.make(
-            Obj.make(Collection.QueryCollection, {
-              // NOTE: This is specifically Filter.typename due to current limitations in query collection parsing.
-              query: Query.select(Filter.typename(StoredSchema.typename)).ast,
-            }),
-          ),
-        );
+        collection.objects.push(Ref.make(Collection.makeManaged({ key: Type.getTypename(Type.PersistentType) })));
 
         // Allow other plugins to add default content.
         await context.activatePromise(SpaceEvents.SpaceCreated);
-        const onCreateSpaceCallbacks = context.getCapabilities(SpaceCapabilities.onCreateSpace);
+        const onCreateSpaceCallbacks = context.getCapabilities(SpaceCapabilities.OnCreateSpace);
         const spaceCreatedIntents = onCreateSpaceCallbacks.map((onCreateSpace) =>
-          onCreateSpace({ space, rootCollection: collection }),
+          onCreateSpace({ space, isDefault: false, rootCollection: collection }),
         );
 
         return {
@@ -331,6 +326,17 @@ export default ({ context, observability, createInvitationUrl }: IntentResolverO
       },
     }),
     createResolver({
+      intent: SpaceAction.Snapshot,
+      resolve: async ({ space, query }) => {
+        const backup = await new Serializer().export(space.db, query && Query.fromAst(query));
+        return {
+          data: {
+            snapshot: new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' }),
+          },
+        };
+      },
+    }),
+    createResolver({
       intent: SpaceAction.UseStaticSchema,
       resolve: async ({ space, typename, show }) => {
         const client = context.getCapability(ClientCapabilities.Client);
@@ -455,8 +461,8 @@ export default ({ context, observability, createInvitationUrl }: IntentResolverO
                   shouldNavigate: navigable
                     ? (object: Obj.Any) => {
                         const isCollection = Obj.instanceOf(Collection.Collection, object);
-                        const isQueryCollection = Obj.instanceOf(Collection.QueryCollection, object);
-                        return (!isCollection && !isQueryCollection) || state.navigableCollections;
+                        const isSystemCollection = Obj.instanceOf(Collection.Managed, object);
+                        return (!isCollection && !isSystemCollection) || state.navigableCollections;
                       }
                     : () => false,
                 } satisfies Partial<CreateObjectDialogProps>,
@@ -598,16 +604,17 @@ export default ({ context, observability, createInvitationUrl }: IntentResolverO
           });
           objects.forEach((obj) => space.db.remove(obj));
 
-          const undoMessageKey = objects.some((obj) => Obj.instanceOf(Collection.Collection, obj))
-            ? 'collection deleted label'
-            : objects.length > 1
-              ? 'objects deleted label'
-              : 'object deleted label';
+          // TODO(wittjosiah): Once we can compose translations outside of react, use count instead.
+          //   ['deleted label', { ns: meta.id, typename: ['typename label', { ns: typename, count: objects.length }] }]
+          const undoMessageLabel: Label =
+            objects.length === 1
+              ? ['object deleted label', { ns: Obj.getTypename(objects[0]) ?? meta.id, defaultValue: 'Object deleted' }]
+              : ['objects deleted label', { ns: meta.id }];
 
           return {
             undoable: {
               // TODO(ZaymonFC): Pluralize if more than one object.
-              message: [undoMessageKey, { ns: meta.id }],
+              message: undoMessageLabel,
               data: { deletionData },
             },
             intents:
@@ -628,16 +635,16 @@ export default ({ context, observability, createInvitationUrl }: IntentResolverO
             Obj.instanceOf(Collection.Collection, deletionData.parentCollection)
           ) {
             // Restore the object to the space.
-            const restoredObjects = deletionData.objects.map((obj: Type.Expando) => space.db.add(obj));
+            const restoredObjects = deletionData.objects.map((obj: Obj.Any) => space.db.add(obj));
 
             // Restore nested objects to the space.
-            deletionData.nestedObjectsList.flat().forEach((obj: Type.Expando) => {
+            deletionData.nestedObjectsList.flat().forEach((obj: Obj.Any) => {
               space.db.add(obj);
             });
 
             deletionData.indices.forEach((index: number, i: number) => {
               if (index !== -1) {
-                deletionData.parentCollection.objects.splice(index, 0, Ref.make(restoredObjects[i] as Type.Expando));
+                deletionData.parentCollection.objects.splice(index, 0, Ref.make(restoredObjects[i] as Obj.Any));
               }
             });
 
@@ -693,17 +700,6 @@ export default ({ context, observability, createInvitationUrl }: IntentResolverO
       intent: CollectionAction.Create,
       resolve: async ({ name }) => ({
         data: { object: Obj.make(Collection.Collection, { name, objects: [] }) },
-      }),
-    }),
-    createResolver({
-      intent: CollectionAction.CreateQueryCollection,
-      resolve: async ({ name, typename }) => ({
-        data: {
-          object: Obj.make(Collection.QueryCollection, {
-            name,
-            query: Query.select(Filter.typename(typename)).ast,
-          }),
-        },
       }),
     }),
   ]);

@@ -7,7 +7,7 @@ import React, { forwardRef, useCallback, useEffect, useState } from 'react';
 
 import { useAppGraph, useCapability } from '@dxos/app-framework/react';
 import { generateName } from '@dxos/display-name';
-import { Obj, type Type } from '@dxos/echo';
+import { Obj } from '@dxos/echo';
 import { PublicKey, useClient } from '@dxos/react-client';
 import { type SpaceMember, getSpace, useMembers } from '@dxos/react-client/echo';
 import { type Identity, useIdentity } from '@dxos/react-client/halo';
@@ -43,7 +43,7 @@ const noViewers = new ComplexMap<PublicKey, ObjectViewerProps>(PublicKey.hash);
 const getName = (identity: Identity) => identity.profile?.displayName ?? generateName(identity.identityKey.toHex());
 
 export type SpacePresenceProps = {
-  object: Type.Expando;
+  object: Obj.Any;
   spaceKey?: PublicKey;
 };
 

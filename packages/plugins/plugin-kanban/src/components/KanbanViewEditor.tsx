@@ -4,61 +4,59 @@
 
 import React, { useCallback, useMemo } from 'react';
 
-import { Type } from '@dxos/echo';
-import { EchoSchema, FormatEnum } from '@dxos/echo/internal';
+import { Format } from '@dxos/echo/internal';
+import { invariant } from '@dxos/invariant';
 import { useClient } from '@dxos/react-client';
 import { getSpace, useSchema } from '@dxos/react-client/echo';
-import { type CustomInputMap, Form, SelectInput } from '@dxos/react-ui-form';
-import { Kanban } from '@dxos/react-ui-kanban/types';
-import { ProjectionModel, type View, getTypenameFromQuery } from '@dxos/schema';
+import { Form, type FormFieldMap, SelectField } from '@dxos/react-ui-form';
+import { useProjectionModel } from '@dxos/react-ui-kanban';
+import { type Kanban } from '@dxos/react-ui-kanban/types';
+import { getTypenameFromQuery } from '@dxos/schema';
 
-type KanbanViewEditorProps = { view: View.View };
+import { SettingsSchema } from '../types';
 
-export const KanbanViewEditor = ({ view }: KanbanViewEditorProps) => {
+type KanbanViewEditorProps = { object: Kanban.Kanban };
+
+export const KanbanViewEditor = ({ object }: KanbanViewEditorProps) => {
   const client = useClient();
-  const space = getSpace(view);
-  const currentTypename = view.query ? getTypenameFromQuery(view.query.ast) : undefined;
+  const space = getSpace(object);
+  const view = object.view.target;
+  const currentTypename = view?.query ? getTypenameFromQuery(view.query.ast) : undefined;
   const schema = useSchema(client, space, currentTypename);
-
-  const projection = useMemo(() => {
-    if (schema) {
-      const jsonSchema = schema instanceof EchoSchema ? schema.jsonSchema : Type.toJsonSchema(schema);
-      const projection = new ProjectionModel(jsonSchema, view.projection);
-      projection.normalizeView();
-      return projection;
-    }
-  }, [view.projection, JSON.stringify(schema)]);
+  const projection = useProjectionModel(schema, object);
 
   const fieldProjections = projection?.getFieldProjections() || [];
   const selectFields = fieldProjections
-    .filter((field) => field.props.format === FormatEnum.SingleSelect)
+    .filter((field) => field.props.format === Format.TypeFormat.SingleSelect)
     .map(({ field }) => ({ value: field.id, label: field.path }));
 
   const handleSave = useCallback(
     (values: Partial<{ columnFieldId: string }>) => {
+      invariant(view);
       view.projection.pivotFieldId = values.columnFieldId;
     },
     [view],
   );
 
   const initialValues = useMemo(
-    () => ({ columnFieldId: view.projection.pivotFieldId }),
-    [view.projection.pivotFieldId],
+    () => ({ columnFieldId: view?.projection.pivotFieldId }),
+    [view?.projection.pivotFieldId],
   );
-  const custom: CustomInputMap = useMemo(
-    () => ({ columnFieldId: (props) => <SelectInput {...props} options={selectFields} /> }),
+
+  const fieldMap: FormFieldMap = useMemo(
+    () => ({ columnFieldId: (props) => <SelectField {...props} options={selectFields} /> }),
     [selectFields],
   );
 
   return (
     <Form
-      Custom={custom}
-      schema={Kanban.SettingsSchema}
-      values={initialValues}
-      onSave={handleSave}
-      autoSave
-      outerSpacing={false}
       classNames='pbs-inputSpacingBlock'
+      outerSpacing={false}
+      autoSave
+      schema={SettingsSchema}
+      values={initialValues}
+      fieldMap={fieldMap}
+      onSave={handleSave}
     />
   );
 };
