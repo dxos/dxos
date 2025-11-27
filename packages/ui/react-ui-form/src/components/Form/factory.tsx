@@ -5,9 +5,8 @@
 import { Format } from '@dxos/echo/internal';
 import { type SimpleType } from '@dxos/effect';
 
-import { GeoPointInput } from './custom';
-import { BooleanInput, MarkdownInput, NumberInput, TextInput } from './Defaults';
-import { type InputComponent } from './Input';
+import { BooleanField, GeoPointField, MarkdownField, NumberField, TextField } from './fields';
+import { type FormInputComponent } from './FormInput';
 
 /**
  * Get property input component.
@@ -15,20 +14,20 @@ import { type InputComponent } from './Input';
 export const getInputComponent = (
   type: SimpleType,
   format?: Format.TypeFormat | string,
-): InputComponent | undefined => {
+): FormInputComponent | undefined => {
   switch (format) {
     case Format.TypeFormat.GeoPoint:
-      return GeoPointInput;
+      return GeoPointField;
     case Format.TypeFormat.Markdown:
-      return MarkdownInput;
+      return MarkdownField;
   }
 
   switch (type) {
     case 'string':
-      return TextInput;
+      return TextField;
     case 'number':
-      return NumberInput;
+      return NumberField;
     case 'boolean':
-      return BooleanInput;
+      return BooleanField;
   }
 };

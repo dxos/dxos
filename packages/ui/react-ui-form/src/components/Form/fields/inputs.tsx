@@ -6,11 +6,10 @@ import React, { useCallback, useEffect, useRef } from 'react';
 
 import { Input, Select, useTranslation } from '@dxos/react-ui';
 
-import { translationKey } from '../../translations';
+import { translationKey } from '../../../translations';
+import { FormInputHeader, type FormInputProps } from '../FormInput';
 
-import { InputHeader, type InputProps } from './Input';
-
-export const TextInput = ({
+export const TextField = ({
   type,
   label,
   inputOnly,
@@ -20,14 +19,14 @@ export const TextInput = ({
   getValue,
   onValueChange,
   onBlur,
-}: InputProps) => {
+}: FormInputProps) => {
   const { status, error } = getStatus();
 
   return readonly && !getValue() ? null : readonly === 'static' && inputOnly ? (
     <p>{getValue() ?? ''}</p>
   ) : (
     <Input.Root validationValence={status}>
-      {!inputOnly && <InputHeader error={error} label={label} />}
+      {!inputOnly && <FormInputHeader error={error} label={label} />}
       {readonly === 'static' ? (
         <p>{getValue() ?? ''}</p>
       ) : (
@@ -44,7 +43,7 @@ export const TextInput = ({
   );
 };
 
-export const NumberInput = ({
+export const NumberField = ({
   type,
   label,
   inputOnly,
@@ -54,14 +53,14 @@ export const NumberInput = ({
   getValue,
   onValueChange,
   onBlur,
-}: InputProps) => {
+}: FormInputProps) => {
   const { status, error } = getStatus();
 
   return readonly && !getValue() ? null : readonly === 'static' && inputOnly ? (
     <p>{getValue() ?? ''}</p>
   ) : (
     <Input.Root validationValence={status}>
-      {!inputOnly && <InputHeader error={error} label={label} />}
+      {!inputOnly && <FormInputHeader error={error} label={label} />}
       {readonly === 'static' ? (
         <p>{getValue() ?? ''}</p>
       ) : (
@@ -79,14 +78,22 @@ export const NumberInput = ({
   );
 };
 
-export const BooleanInput = ({ type, label, inputOnly, getStatus, getValue, onValueChange, readonly }: InputProps) => {
+export const BooleanField = ({
+  type,
+  label,
+  inputOnly,
+  getStatus,
+  getValue,
+  onValueChange,
+  readonly,
+}: FormInputProps) => {
   const { status, error } = getStatus();
   const checked = Boolean(getValue());
   const { t } = useTranslation(translationKey);
 
   return (
     <Input.Root validationValence={status}>
-      {!inputOnly && <InputHeader error={error} label={label} />}
+      {!inputOnly && <FormInputHeader error={error} label={label} />}
       {readonly === 'static' ? (
         <p>{t(checked ? 'boolean input true value' : 'boolean input false value')}</p>
       ) : (
@@ -97,11 +104,11 @@ export const BooleanInput = ({ type, label, inputOnly, getStatus, getValue, onVa
   );
 };
 
-export type SelectInputOptions = InputProps & {
+export type SelectFieldOptions = FormInputProps & {
   options?: Array<{ value: string | number; label?: string }>;
 };
 
-export const SelectInput = ({
+export const SelectField = ({
   type,
   label,
   inputOnly,
@@ -111,7 +118,7 @@ export const SelectInput = ({
   getStatus,
   getValue,
   onValueChange,
-}: SelectInputOptions) => {
+}: SelectFieldOptions) => {
   const { status, error } = getStatus();
 
   const value = getValue() as string | undefined;
@@ -119,7 +126,7 @@ export const SelectInput = ({
 
   return readonly && !value ? null : (
     <Input.Root validationValence={status}>
-      {!inputOnly && <InputHeader error={error} label={label} />}
+      {!inputOnly && <FormInputHeader error={error} label={label} />}
       {readonly === 'static' ? (
         <p>{options?.find(({ value: optionValue }) => optionValue === value)?.label ?? String(value)}</p>
       ) : (
@@ -146,7 +153,7 @@ export const SelectInput = ({
   );
 };
 
-export const MarkdownInput = ({
+export const MarkdownField = ({
   type,
   label,
   inputOnly,
@@ -156,7 +163,7 @@ export const MarkdownInput = ({
   getValue,
   onValueChange,
   onBlur,
-}: InputProps) => {
+}: FormInputProps) => {
   const { status, error } = getStatus();
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -183,7 +190,7 @@ export const MarkdownInput = ({
 
   return (
     <Input.Root validationValence={status}>
-      {!inputOnly && <InputHeader error={error} label={label} />}
+      {!inputOnly && <FormInputHeader error={error} label={label} />}
       {readonly === 'static' ? (
         <p>{getValue() ?? ''}</p>
       ) : (

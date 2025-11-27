@@ -12,7 +12,7 @@ import { Format } from '@dxos/echo/internal';
 import { findAnnotation } from '@dxos/effect';
 import { useClient } from '@dxos/react-client';
 import { type Space, getSpace, isSpace } from '@dxos/react-client/echo';
-import { type InputProps, SelectInput, useFormValues } from '@dxos/react-ui-form';
+import { type FormInputProps, SelectField, useFormValues } from '@dxos/react-ui-form';
 import { type LatLngLiteral } from '@dxos/react-ui-geo';
 import { type Collection } from '@dxos/schema';
 
@@ -82,7 +82,7 @@ export default () =>
       },
       component: ({ data: { target }, ...inputProps }) => {
         const client = useClient();
-        const props = inputProps as any as InputProps;
+        const props = inputProps as any as FormInputProps;
         const space = isSpace(target) ? target : getSpace(target);
         const { typename } = useFormValues();
 
@@ -113,7 +113,7 @@ export default () =>
         }
 
         return (
-          <SelectInput
+          <SelectField
             {...props}
             options={coordinateProperties.map((property) => ({
               value: property,

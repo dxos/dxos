@@ -17,13 +17,11 @@ import { isTruthy } from '@dxos/util';
 import { type QueryRefOptions } from '../../hooks';
 import { getRefProps } from '../../util';
 
-import { ArrayField } from './ArrayField';
-import { SelectInput } from './Defaults';
 import { getInputComponent } from './factory';
+import { ArrayField, RefField, type RefFieldProps, SelectField } from './fields';
 import { type ComponentLookup } from './Form';
 import { useFormValues, useInputProps } from './FormContext';
-import { type InputComponent } from './Input';
-import { RefField, type RefFieldProps } from './RefField';
+import { type FormInputComponent } from './FormInput';
 
 export type FormFieldProps = {
   property: SchemaProperty<any>;
@@ -32,7 +30,7 @@ export type FormFieldProps = {
   inline?: boolean;
   projection?: ProjectionModel;
   lookupComponent?: ComponentLookup;
-  Custom?: Partial<Record<string, InputComponent>>;
+  Custom?: Partial<Record<string, FormInputComponent>>;
 } & Pick<
   RefFieldProps,
   | 'readonly'
@@ -165,7 +163,7 @@ export const FormField = ({
 
   if (options) {
     return (
-      <SelectInput
+      <SelectField
         type={type}
         format={format}
         readonly={readonly}
@@ -220,7 +218,7 @@ export type FormFieldsProps = ThemedClassName<
      * Path to the current object from the root. Used with nested forms.
      */
     path?: (string | number)[];
-    filter?: (props: SchemaProperty<any>[]) => SchemaProperty<any>[];
+    exclude?: (props: SchemaProperty<any>[]) => SchemaProperty<any>[];
     sort?: string[];
     /**
      * Optional projection for projection-based field management
@@ -231,7 +229,7 @@ export type FormFieldsProps = ThemedClassName<
      * Map of custom renderers for specific properties.
      * Prefer lookupComponent for plugin specific input surfaces.
      */
-    Custom?: Partial<Record<string, InputComponent>>;
+    Custom?: Partial<Record<string, FormInputComponent>>;
     onQueryRefOptions?: QueryRefOptions;
   } & Pick<FormFieldProps, 'readonly'> &
     Pick<
@@ -251,7 +249,7 @@ export const FormFields = forwardRef<HTMLDivElement, FormFieldsProps>(
       classNames,
       schema,
       path,
-      filter,
+      exclude,
       sort,
       projection,
       readonly,
@@ -293,9 +291,9 @@ export const FormFields = forwardRef<HTMLDivElement, FormFieldsProps>(
       }
 
       // Fallback to legacy filter/sort behavior
-      const filtered = filter ? filter(props) : props;
+      const filtered = exclude ? exclude(props) : props;
       return sort ? filtered.sort((a, b) => sort.indexOf(a.name) - sort.indexOf(b.name)) : filtered;
-    }, [schema, values, filter, sort, projection?.fields]);
+    }, [schema, values, exclude, sort, projection?.fields]);
 
     return (
       <div role='form' className={mx('is-full', classNames)} ref={forwardRef}>

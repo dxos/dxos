@@ -16,27 +16,25 @@ import { type FormHandler, type FormOptions } from '../../hooks';
 import { FormActions, type FormOuterSpacing } from './FormActions';
 import { FormFields, type FormFieldsProps } from './FormContent';
 import { FormProvider } from './FormContext';
-import { type InputComponent, type InputProps } from './Input';
+import { type FormInputComponent, type FormInputProps } from './FormInput';
 
-export type PropsFilter<T extends AnyProperties> = (props: SchemaProperty<T>[]) => SchemaProperty<T>[];
+export type PropertyFilter<T extends AnyProperties> = (props: SchemaProperty<T>[]) => SchemaProperty<T>[];
 
 export type ComponentLookup = (args: {
   prop: string;
   schema: Schema.Schema<any>;
-  inputProps: InputProps;
+  inputProps: FormInputProps;
 }) => ReactElement | undefined;
 
-export type CustomInputMap = Partial<Record<string, InputComponent>>;
+export type CustomInputMap = Partial<Record<string, FormInputComponent>>;
 
 export type FormProps<T extends AnyProperties> = ThemedClassName<{
   id?: string;
   values: Partial<T>;
-  // TODO(burdon): Autofocus first input.
-  autoFocus?: boolean;
-  // TODO(burdon): Change to JsonPath includes/excludes.
-  filter?: PropsFilter<T>;
   sort?: PropertyKey<T>[];
+  exclude?: PropertyFilter<T>;
   projection?: ProjectionModel;
+  autoFocus?: boolean;
   autoSave?: boolean;
   outerSpacing?: FormOuterSpacing;
   onCancel?: () => void;
@@ -50,8 +48,8 @@ export const Form = <T extends AnyProperties>({
   id,
   testId,
   values: initialValues,
-  autoFocus,
   readonly,
+  autoFocus,
   autoSave,
   outerSpacing = true,
   schema,

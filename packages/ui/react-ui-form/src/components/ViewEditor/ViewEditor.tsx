@@ -28,7 +28,7 @@ import {
 
 import { translationKey } from '../../translations';
 import { FieldEditor } from '../FieldEditor';
-import { Form, type FormProps, type InputComponent, InputHeader, type InputProps } from '../Form';
+import { Form, type FormInputComponent, FormInputHeader, type FormInputProps, type FormProps } from '../Form';
 
 const listGrid = 'grid grid-cols-[min-content_1fr_min-content_min-content_min-content]';
 const listItemGrid = 'grid grid-cols-subgrid col-span-5';
@@ -43,8 +43,7 @@ export type ViewEditorProps = ThemedClassName<
     showHeading?: boolean;
     onQueryChanged?: (query: QueryAST.Query, target?: string) => void;
     onDelete?: (fieldId: string) => void;
-  } & Pick<FormProps<any>, 'outerSpacing'> &
-    Pick<QueryFormProps, 'types' | 'tags'>
+  } & (Pick<FormProps<any>, 'outerSpacing'> & Pick<QueryFormProps, 'types' | 'tags'>)
 >;
 
 /**
@@ -305,8 +304,11 @@ export const ViewEditor = forwardRef<ProjectionModel, ViewEditorProps>(
   },
 );
 
-const customFields = ({ types, tags }: Pick<ViewEditorProps, 'types' | 'tags'>): Record<string, InputComponent> => ({
-  query: (props: InputProps) => {
+const customFields = ({
+  types,
+  tags,
+}: Pick<ViewEditorProps, 'types' | 'tags'>): Record<string, FormInputComponent> => ({
+  query: (props: FormInputProps) => {
     const handleChange = useCallback(
       (query: Query.Any) => props.onValueChange('object', query.ast),
       [props.onValueChange],
@@ -314,7 +316,7 @@ const customFields = ({ types, tags }: Pick<ViewEditorProps, 'types' | 'tags'>):
 
     return (
       <Input.Root>
-        <InputHeader label={props.label} />
+        <FormInputHeader label={props.label} />
         <QueryForm initialQuery={props.getValue()} types={types} tags={tags} onChange={handleChange} />
       </Input.Root>
     );

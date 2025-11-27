@@ -7,11 +7,11 @@ import React, { useCallback, useMemo } from 'react';
 import { Filter, Query } from '@dxos/echo';
 import { Trigger } from '@dxos/functions';
 import { useTranslation } from '@dxos/react-ui';
-import { type InputProps, SelectInput, useInputProps } from '@dxos/react-ui-form';
+import { type FormInputProps, SelectField, useInputProps } from '@dxos/react-ui-form';
 
 import { meta } from '../../meta';
 
-export type SpecSelectorProps = InputProps;
+export type SpecSelectorProps = FormInputProps;
 
 export const SpecSelector = (props: SpecSelectorProps) => {
   const { t } = useTranslation(meta.id);
@@ -61,5 +61,5 @@ export const SpecSelector = (props: SpecSelectorProps) => {
     [t],
   );
 
-  return <SelectInput {...props} options={options} onValueChange={handleTypeChange} />;
+  return <SelectField {...props} options={options} onValueChange={handleTypeChange} />;
 };

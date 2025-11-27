@@ -15,7 +15,7 @@ import { type FormInputStateProps } from './FormContext';
 /**
  * Props passed to input components.
  */
-export type InputProps = {
+export type FormInputProps = {
   type: SimpleType;
   format?: Format.TypeFormat;
   label: string;
@@ -30,15 +30,15 @@ export type InputProps = {
 /**
  * Form input component.
  */
-export type InputComponent = FC<InputProps>;
+export type FormInputComponent = FC<FormInputProps>;
 
-export type InputHeaderProps = {
+export type FormInputHeaderProps = {
   error?: string;
   label: string;
   readonly?: boolean;
 };
 
-export const InputHeader = ({ error, label, readonly }: InputHeaderProps) => {
+export const FormInputHeader = ({ error, label, readonly }: FormInputHeaderProps) => {
   const Label = readonly ? 'span' : Input.Label;
   const labelProps = readonly ? {} : { classNames: '!mlb-0' };
   return (

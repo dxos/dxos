@@ -12,19 +12,18 @@ import { invariant } from '@dxos/invariant';
 import { IconButton, useTranslation } from '@dxos/react-ui';
 import { type SchemaProperty, getSchemaProperties } from '@dxos/schema';
 
-import { translationKey } from '../../translations';
-import { findArrayElementType } from '../../util';
-
-import { type ComponentLookup } from './Form';
-import { FormField, type FormFieldProps } from './FormContent';
-import { type FormInputStateProps, useFormValues } from './FormContext';
-import { type InputComponent, InputHeader } from './Input';
+import { translationKey } from '../../../translations';
+import { findArrayElementType } from '../../../util';
+import { type ComponentLookup } from '../Form';
+import { FormField, type FormFieldProps } from '../FormContent';
+import { type FormInputStateProps, useFormValues } from '../FormContext';
+import { type FormInputComponent, FormInputHeader } from '../FormInput';
 
 type ArrayFieldProps = {
   property: SchemaProperty<any>;
   inputProps: FormInputStateProps;
   path?: (string | number)[];
-  Custom?: Partial<Record<string, InputComponent>>;
+  Custom?: Partial<Record<string, FormInputComponent>>;
   lookupComponent?: ComponentLookup;
 } & Pick<FormFieldProps, 'readonly'>;
 
@@ -72,7 +71,7 @@ export const ArrayField = ({ property, readonly, path, inputProps, Custom, looku
 
   return readonly && values.length < 1 ? null : (
     <>
-      <InputHeader readonly label={label} />
+      <FormInputHeader readonly label={label} />
       <div
         role='none'
         className={

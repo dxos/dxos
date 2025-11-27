@@ -24,14 +24,14 @@ import { Button, Icon, Input, useTranslation } from '@dxos/react-ui';
 import { descriptionText, mx } from '@dxos/react-ui-theme';
 import { isNonNullable } from '@dxos/util';
 
-import { type QueryRefOptions, useQueryRefOptions } from '../../hooks';
-import { translationKey } from '../../translations';
-import { ObjectPicker } from '../ObjectPicker';
+import { type QueryRefOptions, useQueryRefOptions } from '../../../hooks';
+import { translationKey } from '../../../translations';
+import { ObjectPicker } from '../../ObjectPicker';
+import { FormInputHeader, type FormInputProps } from '../FormInput';
 
-import { TextInput } from './Defaults';
-import { InputHeader, type InputProps } from './Input';
+import { TextField } from './inputs';
 
-export type RefFieldProps = InputProps & {
+export type RefFieldProps = FormInputProps & {
   ast?: SchemaAST.AST;
   array?: boolean;
   createOptionLabel?: [string, { ns: string }];
@@ -176,7 +176,7 @@ export const RefField = ({
   // NOTE(thure): I left both predicates in-place in case we decide to add variants which do render readonly but empty values.
   return readonly && items.length < 1 ? null : (
     <Input.Root validationValence={status}>
-      {!inputOnly && <InputHeader error={error} label={label} />}
+      {!inputOnly && <FormInputHeader error={error} label={label} />}
       <div data-no-submit>
         {readonly ? (
           items.length < 1 ? (
@@ -244,7 +244,7 @@ const RefFieldFallback = ({
   getValue,
   onValueChange,
   ...restInputProps
-}: InputProps) => {
+}: FormInputProps) => {
   const handleOnValueChange = (_type: any, dxnString: string) => {
     const dxn = DXN.tryParse(dxnString);
     if (dxn) {
@@ -269,7 +269,7 @@ const RefFieldFallback = ({
   };
 
   return (
-    <TextInput
+    <TextField
       type={type}
       label={label}
       readonly={readonly}

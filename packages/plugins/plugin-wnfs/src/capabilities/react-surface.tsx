@@ -8,7 +8,7 @@ import React, { useCallback } from 'react';
 import { Capabilities, contributes, createSurface } from '@dxos/app-framework';
 import { Obj } from '@dxos/echo';
 import { findAnnotation } from '@dxos/effect';
-import { type InputProps } from '@dxos/react-ui-form';
+import { type FormInputProps } from '@dxos/react-ui-form';
 
 import { FileContainer, FileInput } from '../components';
 import { meta } from '../meta';
@@ -33,7 +33,7 @@ export default () =>
         return !!annotation;
       },
       component: ({ data: { prop, schema }, ...props }) => {
-        const inputProps = props as unknown as InputProps;
+        const inputProps = props as unknown as FormInputProps;
         const handleChange = useCallback(
           (file: File) => inputProps.onValueChange?.('object', file),
           [prop, inputProps.onValueChange],

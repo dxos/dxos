@@ -13,7 +13,7 @@ import { translations } from '../../../translations';
 import { TestLayout, TestPanel } from '../../testing';
 import { Form } from '../Form';
 
-import { SelectOptionInput } from './SelectOptionsInput';
+import { SelectOptionField } from './SelectOptionField';
 
 const schema = Schema.Struct({
   options: Schema.Array(SelectOptionSchema).pipe(Schema.mutable),
@@ -36,7 +36,7 @@ const DefaultStory = () => {
           schema={schema}
           values={values}
           onSave={(vals) => setValues(vals)}
-          Custom={{ options: SelectOptionInput }}
+          Custom={{ options: SelectOptionField }}
         />
       </TestPanel>
     </TestLayout>
@@ -44,8 +44,8 @@ const DefaultStory = () => {
 };
 
 const meta = {
-  title: 'ui/react-ui-form/SelectOptionsInput',
-  component: SelectOptionInput as any,
+  title: 'ui/react-ui-form/SelectOptionField',
+  component: SelectOptionField as any,
   render: DefaultStory,
   decorators: [withTheme],
   parameters: {

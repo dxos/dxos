@@ -19,7 +19,7 @@ import {
   ControlPage,
   ControlSection,
   Form,
-  type InputComponent,
+  type FormInputComponent,
 } from '@dxos/react-ui-form';
 import { HuePicker, IconPicker } from '@dxos/react-ui-pickers';
 import { StackItem } from '@dxos/react-ui-stack';
@@ -102,7 +102,7 @@ export const SpaceSettingsContainer = ({ space }: SpaceSettingsContainerProps) =
     [space.properties.name, space.properties.icon, space.properties.hue, edgeReplication, archived],
   );
 
-  const customElements: Partial<Record<string, InputComponent>> = useMemo(
+  const customElements: Partial<Record<string, FormInputComponent>> = useMemo(
     () => ({
       name: ({ type, label, getValue, onValueChange }) => {
         const handleChange = useCallback(

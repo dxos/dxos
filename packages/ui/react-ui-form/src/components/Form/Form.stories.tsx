@@ -15,8 +15,10 @@ import { TestSchema } from '@dxos/schema/testing';
 import { translations } from '../../translations';
 import { TestLayout, TestPanel } from '../testing';
 
-import { SelectInput } from './Defaults';
+import { SelectField } from './fields';
 import { Form, type FormProps } from './Form';
+
+// TODO(burdon): Use @dxos/types.
 
 type StoryProps<T extends AnyProperties> = {
   debug?: boolean;
@@ -189,7 +191,7 @@ export const DiscriminatedShape: StoryObj<StoryProps<ShapeSchema>> = {
     },
     Custom: {
       ['shape.type' as const]: (props) => (
-        <SelectInput
+        <SelectField
           {...props}
           options={['circle', 'square'].map((value) => ({
             value,

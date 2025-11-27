@@ -20,7 +20,7 @@ import {
 } from '@dxos/schema';
 
 import { translationKey } from '../../translations';
-import { Form, type FormProps, type InputComponent, SelectInput, SelectOptionInput } from '../Form';
+import { Form, type FormInputComponent, type FormProps, SelectField, SelectOptionField } from '../Form';
 
 export type FieldEditorProps = {
   projection: ProjectionModel;
@@ -135,10 +135,10 @@ export const FieldEditor = ({
     onSave();
   }, [onSave]);
 
-  const custom: Partial<Record<string, InputComponent>> = useMemo(
+  const custom: Partial<Record<string, FormInputComponent>> = useMemo(
     () => ({
       ['format' satisfies keyof PropertyType]: (props) => (
-        <SelectInput
+        <SelectField
           {...props}
           options={FormatEnums.filter((value) => value !== Format.TypeFormat.None).map((value) => ({
             value,
@@ -147,7 +147,7 @@ export const FieldEditor = ({
         />
       ),
       ['referenceSchema' satisfies keyof PropertyType]: (props) => (
-        <SelectInput
+        <SelectField
           {...props}
           options={schemas.map((schema) => ({
             value: schema.typename,
@@ -155,7 +155,7 @@ export const FieldEditor = ({
         />
       ),
       ['referencePath' satisfies keyof PropertyType]: (props) => (
-        <SelectInput
+        <SelectField
           {...props}
           options={
             referenceSchema
@@ -166,13 +166,13 @@ export const FieldEditor = ({
           }
         />
       ),
-      ['options' satisfies keyof PropertyType]: (props) => <SelectOptionInput {...props} />,
+      ['options' satisfies keyof PropertyType]: (props) => <SelectOptionField {...props} />,
     }),
     [t, schemas, referenceSchema],
   );
 
   const propIsNotType = useCallback(
-    (props: SchemaProperty<PropertyType>[]) => props.filter((p) => p.name !== 'type'),
+    (props: SchemaProperty<PropertyType>[]) => props.filter((prop) => prop.name !== 'type'),
     [],
   );
 
@@ -188,7 +188,7 @@ export const FieldEditor = ({
       readonly={readonly}
       values={props}
       schema={fieldSchema}
-      filter={propIsNotType}
+      exclude={propIsNotType}
       sort={['property', 'format']}
       onValuesChanged={handleValuesChanged}
       onValidate={handleValidate}
