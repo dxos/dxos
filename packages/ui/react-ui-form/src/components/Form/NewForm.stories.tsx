@@ -18,6 +18,8 @@ import { NewForm, type NewFormRootProps } from './NewForm';
 
 const Person = Schema.Struct({
   name: Schema.optional(Schema.String.annotations({ title: 'Full name' })),
+  active: Schema.optional(Schema.Boolean.annotations({ title: 'Active' })),
+  age: Schema.optional(Schema.Number.annotations({ title: 'Age' })),
 }).pipe(
   Type.Obj({
     typename: 'dxos.org/type/Person', // TODO(burdon): /schema
@@ -83,6 +85,7 @@ export const Default: Story<any> = {
     values: {
       name: 'Alice',
     },
+    onCancel: () => {},
   },
 };
 

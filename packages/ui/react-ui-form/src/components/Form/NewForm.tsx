@@ -141,11 +141,12 @@ const NewFormActions = ({ classNames }: NewFormActionsProps) => {
   }
 
   return (
-    <div role='none' className={mx('grid grid-cols gap-1 pbs-cardSpacingBlock', classNames)}>
+    <div role='none' className={mx('grid grid-flow-col auto-cols-fr gap-2 pbs-cardSpacingBlock', classNames)}>
       {onCancel && (
         <IconButton
           data-testid='cancel-button'
           icon='ph--x--regular'
+          iconEnd
           label={t('cancel button label')}
           onClick={onCancel}
         />
@@ -156,6 +157,7 @@ const NewFormActions = ({ classNames }: NewFormActionsProps) => {
           data-testid='save-button'
           disabled={!canSave}
           icon='ph--check--regular'
+          iconEnd
           label={t('save button label')}
           onClick={() => onSave(values, { changed: {} })}
         />

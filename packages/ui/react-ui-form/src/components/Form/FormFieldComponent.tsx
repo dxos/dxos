@@ -60,10 +60,7 @@ export const FormFieldLabel = ({ label, error, readonly }: FormFieldLabelProps) 
   const labelProps = readonly ? { className: 'text-description text-xs' } : { classNames: '!mlb-0 text-sm' };
 
   return (
-    <div
-      role='none'
-      className={mx('flex justify-between items-center', readonly !== 'static' && 'pis-2', labelSpacing)}
-    >
+    <div role='none' className={mx('flex justify-between items-center', readonly !== 'static' && '', labelSpacing)}>
       <Label {...labelProps}>{label}</Label>
       {error && (
         <Tooltip.Trigger asChild content={error} side='bottom'>
