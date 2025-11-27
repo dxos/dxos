@@ -54,7 +54,7 @@ export const GeoPointField = ({
 
   return (
     <Input.Root validationValence={status}>
-      <FormFieldLabel error={error} label={label} />
+      <FormFieldLabel error={error} readonly={readonly} label={label} />
       <div role='none' className='grid grid-cols-2 gap-2'>
         <div role='none'>
           <Input.Label>{t('latitude label')}</Input.Label>

@@ -280,7 +280,7 @@ export const ViewEditor = forwardRef<ProjectionModel, ViewEditorProps>(
                         {expandedField === field.id && !readonly && (
                           <div role='none' className='col-span-5 mbs-1 mbe-1 border border-separator rounded-md'>
                             <FieldEditor
-                              readonly={readonly || schemaReadonly ? 'disabled-input' : false}
+                              readonly={readonly || schemaReadonly ? 'disabled' : false}
                               projection={projectionModel}
                               field={field}
                               registry={registry}
@@ -318,16 +318,16 @@ const customFields = ({
   types,
   tags,
 }: Pick<ViewEditorProps, 'types' | 'tags'>): Record<string, FormFieldComponent> => ({
-  query: (props: FormFieldComponentProps) => {
-    const handleChange = useCallback(
-      (query: Query.Any) => props.onValueChange('object', query.ast),
-      [props.onValueChange],
+  query: ({ readonly, label, getValue, onValueChange }: FormFieldComponentProps) => {
+    const handleChange = useCallback<NonNullable<QueryFormProps['onChange']>>(
+      (query) => onValueChange('object', query.ast),
+      [onValueChange],
     );
 
     return (
       <Input.Root>
-        <FormFieldLabel label={props.label} />
-        <QueryForm initialQuery={props.getValue()} types={types} tags={tags} onChange={handleChange} />
+        <FormFieldLabel readonly={readonly} label={label} />
+        <QueryForm initialQuery={getValue()} types={types} tags={tags} onChange={handleChange} />
       </Input.Root>
     );
   },

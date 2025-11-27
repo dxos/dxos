@@ -14,7 +14,7 @@ import { type MakeOptional } from '@dxos/util';
 import { type FormHandler, useFormHandler } from '../../hooks';
 import { translationKey } from '../../translations';
 
-import { FormFieldSet } from './FormFieldSet';
+import { FormFieldSet, type FormFieldSetProps } from './FormFieldSet';
 import { FormContext } from './FormRoot';
 
 //
@@ -51,7 +51,7 @@ type NewFormContextValue<T extends AnyProperties = any> = {
    * Called when the form is canceled to abandon/undo any pending changes.
    */
   onCancel?: () => void;
-};
+} & Pick<FormFieldSetProps, 'readonly'>;
 
 const [NewFormContextProvider, useNewFormContext] = createContext<NewFormContextValue>('NewForm');
 
@@ -60,7 +60,10 @@ const [NewFormContextProvider, useNewFormContext] = createContext<NewFormContext
 //
 
 type NewFormRootProps<T extends AnyProperties = AnyProperties> = PropsWithChildren<
-  {} & MakeOptional<Pick<NewFormContextValue<T>, 'debug' | 'schema' | 'values' | 'onSave' | 'onCancel'>, 'values'>
+  {} & MakeOptional<
+    Pick<NewFormContextValue<T>, 'debug' | 'schema' | 'values' | 'readonly' | 'onSave' | 'onCancel'>,
+    'values' | 'readonly'
+  >
 >;
 
 const NewFormRoot = <T extends AnyProperties = AnyProperties>({
@@ -70,12 +73,13 @@ const NewFormRoot = <T extends AnyProperties = AnyProperties>({
   values: valuesProp = {},
   onSave,
   onCancel,
+  ...props
 }: NewFormRootProps<T>) => {
   const [values, setValues] = useState(valuesProp ?? {});
   const [canSave, setCanSave] = useState(false);
 
   // TODO(burdon): Temporarily include old context.
-  const form = useFormHandler({ schema, initialValues: values, onSave });
+  const form = useFormHandler({ schema, initialValues: values, onSave, ...props });
 
   return (
     <FormContext.Provider value={form}>
@@ -86,6 +90,7 @@ const NewFormRoot = <T extends AnyProperties = AnyProperties>({
         canSave={canSave}
         onSave={onSave}
         onCancel={onCancel}
+        {...props}
       >
         {children}
       </NewFormContextProvider>
@@ -114,9 +119,9 @@ NewFormContent.displayName = 'NewForm.Content';
 type NewFormFieldSetProps = ThemedClassName<{}>;
 
 const NewFormFieldSet = ({ classNames }: NewFormFieldSetProps) => {
-  const { schema } = useNewFormContext(NewFormFieldSet.displayName);
+  const { schema, readonly } = useNewFormContext(NewFormFieldSet.displayName);
 
-  return <FormFieldSet classNames={classNames} schema={schema} />;
+  return <FormFieldSet classNames={classNames} schema={schema} readonly={readonly} />;
 };
 
 NewFormFieldSet.displayName = 'NewForm.FieldSet';
@@ -129,7 +134,11 @@ type NewFormActionsProps = ThemedClassName<{}>;
 
 const NewFormActions = ({ classNames }: NewFormActionsProps) => {
   const { t } = useTranslation(translationKey);
-  const { values, canSave, onSave, onCancel } = useNewFormContext(NewFormActions.displayName);
+  const { readonly, values, canSave, onSave, onCancel } = useNewFormContext(NewFormActions.displayName);
+
+  if (readonly) {
+    return null;
+  }
 
   return (
     <div role='none' className={mx('grid grid-cols gap-1 pbs-cardSpacingBlock', classNames)}>

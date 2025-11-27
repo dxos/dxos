@@ -96,7 +96,7 @@ const useCustomInputs = ({
       },
 
       // Spec selector.
-      ['spec.kind' as const]: (props) => <SpecSelector {...props} readonly={readonlySpec ? 'disabled-input' : false} />,
+      ['spec.kind' as const]: (props) => <SpecSelector {...props} readonly={readonlySpec ? 'disabled' : false} />,
 
       // TODO(wittjosiah): Copied from ViewEditor.
       // Query input editor.

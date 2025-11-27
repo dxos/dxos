@@ -34,7 +34,7 @@ export type FormFieldComponentProps = {
    * or `static`, a field’s representation as regular content without signifiers that it is ever editable.
    */
   // TODO(burdon): Rename 'mode'.
-  readonly?: 'disabled-input' | 'static' | false;
+  readonly?: 'disabled' | 'static' | false;
   inputOnly?: boolean;
 } & FormFieldStateProps;
 
@@ -52,16 +52,18 @@ export type FormFieldLookup = (props: {
 }) => ReactElement | undefined;
 
 export type FormFieldLabelProps = {
-  label: string;
   error?: string;
-  readonly?: boolean;
-};
+} & Pick<FormFieldComponentProps, 'label' | 'readonly'>;
 
 export const FormFieldLabel = ({ label, error, readonly }: FormFieldLabelProps) => {
   const Label = readonly ? 'span' : Input.Label;
-  const labelProps = readonly ? {} : { classNames: '!mlb-0' };
+  const labelProps = readonly ? { className: 'text-description text-xs' } : { classNames: '!mlb-0 text-sm' };
+
   return (
-    <div role='none' className={mx('flex justify-between items-center', labelSpacing)}>
+    <div
+      role='none'
+      className={mx('flex justify-between items-center', readonly !== 'static' && 'pis-2', labelSpacing)}
+    >
       <Label {...labelProps}>{label}</Label>
       {error && (
         <Tooltip.Trigger asChild content={error} side='bottom'>
@@ -71,3 +73,5 @@ export const FormFieldLabel = ({ label, error, readonly }: FormFieldLabelProps) 
     </div>
   );
 };
+
+FormFieldLabel.displayName = 'Form.FieldLabel';

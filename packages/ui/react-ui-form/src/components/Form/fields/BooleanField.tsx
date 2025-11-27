@@ -24,7 +24,7 @@ export const BooleanField = ({
 
   return (
     <Input.Root validationValence={status}>
-      {!inputOnly && <FormFieldLabel error={error} label={label} />}
+      {!inputOnly && <FormFieldLabel error={error} readonly={readonly} label={label} />}
       {readonly === 'static' ? (
         <p>{t(checked ? 'boolean input true value' : 'boolean input false value')}</p>
       ) : (

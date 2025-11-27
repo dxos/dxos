@@ -30,7 +30,7 @@ export const SelectField = ({
 
   return readonly && !value ? null : (
     <Input.Root validationValence={status}>
-      {!inputOnly && <FormFieldLabel error={error} label={label} />}
+      {!inputOnly && <FormFieldLabel error={error} readonly={readonly} label={label} />}
       {readonly === 'static' ? (
         <p>{options?.find(({ value: optionValue }) => optionValue === value)?.label ?? String(value)}</p>
       ) : (

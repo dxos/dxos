@@ -26,7 +26,6 @@ export type FormProps<T extends AnyProperties> = ThemedClassName<{
   projection?: ProjectionModel;
   autoFocus?: boolean;
   autoSave?: boolean;
-  // TODO(burdon): Remove?
   outerSpacing?: FormOuterSpacing;
   onCancel?: () => void;
 }> &

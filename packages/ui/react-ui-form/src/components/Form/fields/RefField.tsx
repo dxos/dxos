@@ -176,7 +176,7 @@ export const RefField = ({
   // NOTE(thure): I left both predicates in-place in case we decide to add variants which do render readonly but empty values.
   return readonly && items.length < 1 ? null : (
     <Input.Root validationValence={status}>
-      {!inputOnly && <FormFieldLabel error={error} label={label} />}
+      {!inputOnly && <FormFieldLabel error={error} readonly={readonly} label={label} />}
       <div data-no-submit>
         {readonly ? (
           items.length < 1 ? (

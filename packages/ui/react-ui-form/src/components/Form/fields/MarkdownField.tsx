@@ -45,7 +45,7 @@ export const MarkdownField = ({
 
   return (
     <Input.Root validationValence={status}>
-      {!inputOnly && <FormFieldLabel error={error} label={label} />}
+      {!inputOnly && <FormFieldLabel error={error} readonly={readonly} label={label} />}
       {readonly === 'static' ? (
         <p>{getValue() ?? ''}</p>
       ) : (

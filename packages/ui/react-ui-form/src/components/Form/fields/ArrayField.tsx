@@ -75,7 +75,7 @@ export const ArrayField = ({ property, readonly, path, inputProps, fieldMap, loo
 
   return readonly && values.length < 1 ? null : (
     <>
-      <FormFieldLabel readonly label={label} />
+      <FormFieldLabel readonly={readonly} label={label} />
       <div
         role='none'
         className={

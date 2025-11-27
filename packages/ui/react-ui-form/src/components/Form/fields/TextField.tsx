@@ -25,7 +25,7 @@ export const TextField = ({
     <p>{getValue() ?? ''}</p>
   ) : (
     <Input.Root validationValence={status}>
-      {!inputOnly && <FormFieldLabel error={error} label={label} />}
+      {!inputOnly && <FormFieldLabel error={error} readonly={readonly} label={label} />}
       {readonly === 'static' ? (
         <p>{getValue() ?? ''}</p>
       ) : (

@@ -85,3 +85,23 @@ export const Default: Story<any> = {
     },
   },
 };
+
+export const Readonly: Story<any> = {
+  args: {
+    schema: Person,
+    readonly: 'disabled',
+    values: {
+      name: 'Alice',
+    },
+  },
+};
+
+export const Static: Story<any> = {
+  args: {
+    schema: Person,
+    readonly: 'static',
+    values: {
+      name: 'Alice',
+    },
+  },
+};
