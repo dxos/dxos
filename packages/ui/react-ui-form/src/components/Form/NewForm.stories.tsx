@@ -24,7 +24,7 @@ const Person = Schema.Struct({
   identities: Schema.optional(Schema.Array(Schema.String).annotations({ title: 'Identities' })),
 }).pipe(
   Type.Obj({
-    typename: 'dxos.org/type/Person', // TODO(burdon): /schema
+    typename: 'dxos.org/type/Person', // TODO(burdon): Change all types to /schema
     version: '0.1.0',
   }),
 );
