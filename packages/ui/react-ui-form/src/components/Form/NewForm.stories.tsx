@@ -87,21 +87,25 @@ const meta = {
 
 export default meta;
 
+// TODO(burdon): Fix.
 type Story<T extends Type.Obj.Any> = StoryObj<StoryProps<T>>;
 
-// TODO(burdon): Fix.
-// export const Default: Story<Person> = {
-export const Default: Story<any> = {
+export const Default: Story<Person> = {
   args: {
     schema: Person,
     values: {
       name: 'Alice',
     },
-    onCancel: () => {},
+    onSave: (values, meta) => {
+      console.log('save', JSON.stringify({ values, meta }, null, 2));
+    },
+    onCancel: () => {
+      console.log('cancel');
+    },
   },
 };
 
-export const Readonly: Story<any> = {
+export const Readonly: Story<Person> = {
   args: {
     schema: Person,
     readonly: 'disabled',
@@ -111,7 +115,7 @@ export const Readonly: Story<any> = {
   },
 };
 
-export const Static: Story<any> = {
+export const Static: Story<Person> = {
   args: {
     schema: Person,
     readonly: 'static',
