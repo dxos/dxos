@@ -7,7 +7,7 @@ import { type BuildResult, type Plugin, type PluginBuild, build, initialize } fr
 import { subtleCrypto } from '@dxos/crypto';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { isNode } from '@dxos/util';
+import { isNode, trim } from '@dxos/util';
 
 import { httpPlugin } from '../http-plugin-esbuild';
 
@@ -76,7 +76,10 @@ export const bundleFunction = async ({ source }: BundleOptions): Promise<BundleR
       },
       bundle: true,
       format: 'esm',
-      external: ['./runtime.js', 'cloudflare:workers', 'functions-service:user-script'],
+      external: ['cloudflare:workers'],
+      alias: {
+        'node:path': 'path',
+      },
       plugins: [
         httpPlugin as any as Plugin,
         {
@@ -89,41 +92,49 @@ export const bundleFunction = async ({ source }: BundleOptions): Promise<BundleR
             }));
             build.onLoad({ filter: /^dxos:entrypoint$/, namespace: 'dxos:entrypoint' }, () => {
               return {
-                contents: [
-                  `import { wrapFunctionHandler } from 'dxos:functions';`,
-                  `import handler from 'memory:source.tsx';`,
-                  `export default wrapFunctionHandler(handler);`,
-                ].join('\n'),
-                loader: 'tsx',
-              };
+                contents: trim`
+                  export default {
+                    fetch: async (...args) => {
+                      const { wrapFunctionHandler } = await import('@dxos/functions');
+                      const { wrapHandlerForCloudflare } = await import('@dxos/functions-runtime-cloudflare');
+                      const { default: handler } = await import('memory:source.tsx');
+
+                      //
+                      // Wrapper to make the function cloudflare-compatible.
+                      //
+                      return wrapHandlerForCloudflare(wrapFunctionHandler(handler))(...args);
+                    },
+                  };
+                `,
+                loader: 'ts',
+              } as const;
             });
           },
         },
         {
           name: 'memory',
           setup: (build) => {
-            build.onResolve({ filter: /^\.\/runtime\.js$/ }, ({ path }) => {
-              return { path, external: true };
-            });
-
-            build.onResolve({ filter: /^dxos:functions$/ }, () => {
-              return { path: './runtime.js', external: true };
-            });
-
             build.onResolve({ filter: /^memory:/ }, ({ path }) => {
               return { path: path.split(':')[1], namespace: 'memory' };
             });
 
             build.onLoad({ filter: /.*/, namespace: 'memory' }, ({ path }) => {
-              if (path === 'source.tsx') {
-                return {
-                  contents: source,
-                  loader: 'tsx',
-                };
+              switch (path) {
+                case 'source.tsx':
+                  return {
+                    contents: source,
+                    loader: 'tsx',
+                  };
+                case 'empty':
+                  return {
+                    contents: '',
+                    loader: 'js',
+                  };
               }
             });
           },
         },
+        PluginESMSh(),
       ],
     });
 
@@ -143,6 +154,34 @@ export const bundleFunction = async ({ source }: BundleOptions): Promise<BundleR
     return { timestamp: Date.now(), sourceHash, error: err };
   }
 };
+
+/**
+ * Pulls NPM packages from `esm.sh`.
+ * Always uses latest versions for all packages.
+ */
+const PluginESMSh = (): Plugin => ({
+  name: 'esmsh',
+  setup(build) {
+    build.onResolve({ filter: /^[^./]/ }, (args) => {
+      if (args.kind === 'entry-point') {
+        return;
+      }
+
+      if (args.path.includes('@dxos/node-std')) {
+        return {
+          path: 'memory:empty',
+          namespace: 'memory',
+        };
+      }
+
+      // Assuming all deps will be resolved the latest version.
+      return build.resolve(`https://esm.sh/${args.path}?bundle=false&conditions=workerd,worker,node&platform=node`, {
+        kind: args.kind,
+        resolveDir: args.resolveDir,
+      });
+    });
+  },
+});
 
 // TODO(dmaretskyi): In the future we can replace the compiler with SWC with plugins running in WASM.
 const analyzeImports = (result: BuildResult): Import[] => {
