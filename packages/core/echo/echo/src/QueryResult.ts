@@ -3,7 +3,6 @@
 //
 
 import { type CleanupFn } from '@dxos/async';
-import { type SpaceId } from '@dxos/keys';
 
 import type * as Entity from './Entity';
 
@@ -12,8 +11,6 @@ import type * as Entity from './Entity';
  */
 export type Entry<T> = {
   id: string;
-
-  spaceId: SpaceId;
 
   /**
    * May not be present for remote results.
@@ -99,6 +96,11 @@ export interface QueryResult<T> {
    * Returns first result.
    */
   first(opts?: RunOptions): Promise<T>;
+
+  /**
+   * Returns first result if there is one.
+   */
+  firstOrUndefined(opts?: RunOptions): Promise<T | undefined>;
 
   /**
    * Subscribes to changes in query results.

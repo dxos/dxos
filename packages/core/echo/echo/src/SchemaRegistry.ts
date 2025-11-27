@@ -9,8 +9,8 @@ import type * as Key from './Key';
 import type * as QueryResult from './QueryResult';
 import type * as Type from './Type';
 
-/** @deprecated Replace w/ Query. */
-export type SchemaRegistryQuery = {
+/** @deprecated Replace w/ Query.Query. */
+export type Query = {
   /**
    * Filter by schema ID.
    * Schema id is a DXN with `echo` or `type` kind.
@@ -73,14 +73,10 @@ export type ExtractQueryResult<Query> = Query extends { location: ('database' | 
   : Type.RuntimeType;
 
 export interface SchemaRegistry {
-  query<Query extends Types.NoExcessProperties<SchemaRegistryQuery, Query>>(
-    query?: Query & SchemaRegistryQuery,
-  ): QueryResult.QueryResult<ExtractQueryResult<Query>>;
-
   /**
    * Registers the provided schema.
    *
-   * @returns Schema records after registration.
+   * @returns Mutable runtime instances of schemas that were registered.
    *
    * The behavior of this method depends on the state of the database.
    * The general principle is that the schema will be upserted into the space.
@@ -89,4 +85,8 @@ export interface SchemaRegistry {
    * If no schema with the same name and version exists, a new schema will be inserted based on semantic versioning rules.
    */
   register(input: RegisterSchemaInput[]): Promise<Type.RuntimeType[]>;
+
+  query<Q extends Types.NoExcessProperties<Query, Q>>(
+    query?: Q & Query,
+  ): QueryResult.QueryResult<ExtractQueryResult<Q>>;
 }

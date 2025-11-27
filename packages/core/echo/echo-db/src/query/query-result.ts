@@ -104,6 +104,11 @@ export class QueryResultImpl<T extends Entity.Unknown = Entity.Unknown> implemen
     return objects[0];
   }
 
+  async firstOrUndefined(opts?: { timeout?: number }): Promise<T | undefined> {
+    const objects = await this.run(opts);
+    return objects.at(0);
+  }
+
   /**
    * Runs the query synchronously and returns all results.
    * WARNING: This method will only return the data already cached and may return incomplete results.

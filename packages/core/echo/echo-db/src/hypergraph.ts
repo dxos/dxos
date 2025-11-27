@@ -6,13 +6,7 @@ import { Event } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { StackTrace } from '@dxos/debug';
 import { type Database, type Entity, Filter, Query, type QueryAST, Ref } from '@dxos/echo';
-import {
-  type AnyProperties,
-  type BaseSchema,
-  ImmutableSchema,
-  RuntimeSchemaRegistry,
-  setRefResolver,
-} from '@dxos/echo/internal';
+import { type AnyProperties, RuntimeSchemaRegistry, setRefResolver } from '@dxos/echo/internal';
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { failedInvariant } from '@dxos/invariant';
 import { DXN, type ObjectId, type QueueSubspaceTag, type SpaceId } from '@dxos/keys';
@@ -21,7 +15,7 @@ import { trace } from '@dxos/tracing';
 import { entry } from '@dxos/util';
 
 import { type ItemsUpdatedEvent } from './core-db';
-import { type EchoDatabase, type EchoDatabaseImpl } from './proxy-db';
+import { type EchoDatabaseImpl } from './proxy-db';
 import {
   GraphQueryContext,
   type QueryContext,
@@ -82,20 +76,6 @@ export class Hypergraph {
 
   get schemaRegistry(): RuntimeSchemaRegistry {
     return this._schemaRegistry;
-  }
-
-  /**
-   * @deprecated
-   */
-  // TODO(burdon): Use DXN.
-  // TODO(burdon): Ensure static and dynamic schema do not have overlapping type names.
-  async getSchemaByTypename(typename: string, db: EchoDatabase): Promise<BaseSchema | undefined> {
-    const schema = this.schemaRegistry.getSchema(typename);
-    if (schema) {
-      return new ImmutableSchema(schema);
-    }
-
-    return await db.schemaRegistry.query({ typename }).firstOrUndefined();
   }
 
   /**

@@ -224,7 +224,6 @@ export class IndexQuerySource implements QuerySource {
     const core = getObjectCore(object);
     const queryResult: QueryResult.EntityEntry = {
       id: object.id,
-      spaceId: core.database!.spaceId,
       result: object,
       match: { rank: result.rank },
       resolution: { source: 'index', time: Date.now() - queryStartTimestamp },

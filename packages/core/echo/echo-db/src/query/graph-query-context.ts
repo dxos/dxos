@@ -316,7 +316,6 @@ export class SpaceQuerySource implements QuerySource {
   private _mapCoreToResult(core: ObjectCore): QueryResult.EntityEntry<Obj.Any> {
     return {
       id: core.id,
-      spaceId: this.spaceId,
       result: this._database.getObjectById(core.id, { deleted: true }),
       resolution: {
         source: 'local',

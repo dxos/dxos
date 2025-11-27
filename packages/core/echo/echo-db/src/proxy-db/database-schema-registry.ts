@@ -8,9 +8,8 @@ import type * as Types from 'effect/Types';
 
 import { type CleanupFn, Event } from '@dxos/async';
 import { type Context, Resource } from '@dxos/context';
-import { JsonSchema, Type } from '@dxos/echo';
+import { JsonSchema, type QueryResult, type SchemaRegistry, Type } from '@dxos/echo';
 import {
-  EchoSchema,
   PersistentSchema,
   TypeAnnotationId,
   TypeIdentifierAnnotationId,
@@ -27,19 +26,14 @@ import { getObjectCore } from '../echo-handler';
 import { Filter } from '../query';
 
 import { type EchoDatabase } from './database';
-import type {
-  ExtractSchemaQueryResult,
-  RegisterSchemaInput,
-  SchemaRegistry,
-  SchemaRegistryPreparedQuery,
-  SchemaRegistryQuery,
-  SchemaSubscriptionCallback,
-} from './schema-registry-api';
 import { SchemaRegistryPreparedQueryImpl } from './schema-registry-prepared-query';
 
+// TODO(wittjosiah): Use Annotation.SystemTypeAnnotation.
 const SYSTEM_SCHEMA = ['dxos.org/type/Schema'];
 
-export type EchoSchemaRegistryOptions = {
+type SchemaSubscriptionCallback = (schema: Type.RuntimeType[]) => void;
+
+export type DatabaseSchemaRegistryOptions = {
   /**
    * Run a reactive query for dynamic schemas.
    * @default true
@@ -54,11 +48,11 @@ export type EchoSchemaRegistryOptions = {
 };
 
 /**
- * Registry of `Type.PersistentType` mutable schema objects within a space.
+ * Registry of `PersistentSchema` mutable schema objects within a space.
  */
-export class DatabaseSchemaRegistry extends Resource implements SchemaRegistry {
-  private readonly _schemaById: Map<string, EchoSchema> = new Map();
-  private readonly _schemaByType: Map<string, EchoSchema> = new Map();
+export class DatabaseSchemaRegistry extends Resource implements SchemaRegistry.SchemaRegistry {
+  private readonly _schemaById: Map<string, Type.RuntimeType> = new Map();
+  private readonly _schemaByType: Map<string, Type.RuntimeType> = new Map();
   private readonly _unsubscribeById: Map<string, CleanupFn> = new Map();
   private readonly _schemaSubscriptionCallbacks: SchemaSubscriptionCallback[] = [];
 
@@ -67,7 +61,7 @@ export class DatabaseSchemaRegistry extends Resource implements SchemaRegistry {
 
   constructor(
     private readonly _db: EchoDatabase,
-    { reactiveQuery = true, preloadSchemaOnOpen = true }: EchoSchemaRegistryOptions = {},
+    { reactiveQuery = true, preloadSchemaOnOpen = true }: DatabaseSchemaRegistryOptions = {},
   ) {
     super();
     this._reactiveQuery = reactiveQuery;
@@ -103,11 +97,11 @@ export class DatabaseSchemaRegistry extends Resource implements SchemaRegistry {
     // Nothing to do.
   }
 
-  query<Query extends Types.NoExcessProperties<SchemaRegistryQuery, Query>>(
-    _query?: Query & SchemaRegistryQuery,
-  ): SchemaRegistryPreparedQuery<ExtractSchemaQueryResult<Query>> {
+  query<Query extends Types.NoExcessProperties<SchemaRegistry.Query, Query>>(
+    _query?: Query & SchemaRegistry.Query,
+  ): QueryResult.QueryResult<SchemaRegistry.ExtractQueryResult<Query>> {
     const self = this;
-    const query: SchemaRegistryQuery = _query ?? {};
+    const query: SchemaRegistry.Query = _query ?? {};
     const allowedLocations = query.location ?? ['database'];
 
     type Entry =
@@ -117,7 +111,7 @@ export class DatabaseSchemaRegistry extends Resource implements SchemaRegistry {
         }
       | {
           source: 'database';
-          schema: EchoSchema;
+          schema: Type.RuntimeType;
         };
 
     const getSortKey = (entry: Entry) =>
@@ -258,12 +252,12 @@ export class DatabaseSchemaRegistry extends Resource implements SchemaRegistry {
         unsubscribe?.();
         unsubscribe = undefined;
       },
-    }) as SchemaRegistryPreparedQuery<ExtractSchemaQueryResult<Query>>;
+    }) as QueryResult.QueryResult<SchemaRegistry.ExtractQueryResult<Query>>;
   }
 
   // TODO(burdon): Tighten type signature to TypedObject?
-  async register(inputs: RegisterSchemaInput[]): Promise<EchoSchema[]> {
-    const results: EchoSchema[] = [];
+  async register(inputs: SchemaRegistry.RegisterSchemaInput[]): Promise<Type.RuntimeType[]> {
+    const results: Type.RuntimeType[] = [];
 
     // TODO(dmaretskyi): Check for conflicts with the schema in the DB.
     for (const input of inputs) {
@@ -288,22 +282,22 @@ export class DatabaseSchemaRegistry extends Resource implements SchemaRegistry {
     return results;
   }
 
-  public hasSchema(schema: Schema.Schema.AnyNoContext): boolean {
-    const schemaId = schema instanceof EchoSchema ? schema.id : getObjectIdFromSchema(schema);
+  public hasSchema(schema: Type.Entity.Any): boolean {
+    const schemaId = schema instanceof Type.RuntimeType ? schema.id : getObjectIdFromSchema(schema);
     return schemaId != null && this.getSchemaById(schemaId) != null;
   }
 
   /**
    * @deprecated Use `query` instead.
    */
-  public getSchema(typename: string): EchoSchema | undefined {
+  public getSchema(typename: string): Type.RuntimeType | undefined {
     return this.query({ typename }).runSync()[0];
   }
 
   /**
    * @deprecated Use `query` instead.
    */
-  public getSchemaById(id: string): EchoSchema | undefined {
+  public getSchemaById(id: string): Type.RuntimeType | undefined {
     const existing = this._schemaById.get(id);
     if (existing != null) {
       return existing;
@@ -325,9 +319,9 @@ export class DatabaseSchemaRegistry extends Resource implements SchemaRegistry {
   /**
    * @internal
    *
-   * Registers a PersistentSchema object if necessary and returns a EchoSchema object.
+   * Registers a PersistentSchema object if necessary and returns a Type.RuntimeType object.
    */
-  _registerSchema(schema: PersistentSchema): EchoSchema {
+  _registerSchema(schema: PersistentSchema): Type.RuntimeType {
     const existing = this._schemaById.get(schema.id);
     if (existing != null) {
       return existing;
@@ -338,14 +332,14 @@ export class DatabaseSchemaRegistry extends Resource implements SchemaRegistry {
     return registered;
   }
 
-  private _register(schema: PersistentSchema): EchoSchema {
+  private _register(schema: PersistentSchema): Type.RuntimeType {
     const existing = this._schemaById.get(schema.id);
     if (existing != null) {
       return existing;
     }
 
     let previousTypename: string | undefined;
-    const echoSchema = new EchoSchema(schema);
+    const echoSchema = new Type.RuntimeType(schema);
     const subscription = getObjectCore(schema).updates.on(() => {
       echoSchema._invalidate();
     });
@@ -366,8 +360,8 @@ export class DatabaseSchemaRegistry extends Resource implements SchemaRegistry {
   }
 
   // TODO(dmaretskyi): Figure out how to migrate the usages to the async `register` method.
-  private _addSchema(schema: Schema.Schema.AnyNoContext): EchoSchema {
-    if (schema instanceof EchoSchema) {
+  private _addSchema(schema: Type.Entity.Any): Type.RuntimeType {
+    if (schema instanceof Type.RuntimeType) {
       schema = schema.snapshot.annotations({
         [TypeIdentifierAnnotationId]: undefined,
       });
