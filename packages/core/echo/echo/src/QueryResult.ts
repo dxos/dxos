@@ -45,7 +45,7 @@ export type Entry<T extends Entity.Unknown = Entity.Unknown> = {
   };
 };
 
-export type OneShotResult<T extends Entity.Unknown = Entity.Unknown> = {
+export type OneShot<T extends Entity.Unknown = Entity.Unknown> = {
   results: Entry<T>[];
   objects: T[];
 };
@@ -57,13 +57,12 @@ export type SubscriptionOptions = {
   fire?: boolean;
 };
 
-// TODO(burdon): Narrow types.
 export interface QueryResult<T extends Entity.Unknown = Entity.Unknown> {
   readonly query: Query<T>;
   readonly results: Entry<T>[];
   readonly objects: T[];
 
-  run(opts?: RunOptions): Promise<OneShotResult<T>>;
+  run(opts?: RunOptions): Promise<OneShot<T>>;
   runSync(): Entry<T>[];
   first(opts?: RunOptions): Promise<T>;
 

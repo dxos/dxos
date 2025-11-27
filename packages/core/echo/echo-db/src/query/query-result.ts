@@ -77,7 +77,7 @@ export class QueryResultImpl<T extends Entity.Unknown = Entity.Unknown> implemen
    * Execute the query once and return the results.
    * Does not subscribe to updates.
    */
-  async run(opts: { timeout?: number } = { timeout: 30_000 }): Promise<QueryResult.OneShotResult<T>> {
+  async run(opts: { timeout?: number } = { timeout: 30_000 }): Promise<QueryResult.OneShot<T>> {
     const filteredResults = await this._queryContext.run(this._query.ast, { timeout: opts.timeout });
     return {
       results: filteredResults,

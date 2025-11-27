@@ -164,12 +164,8 @@ export class DatabaseService extends Context.Tag('@dxos/functions/DatabaseServic
    * Executes the query once and returns the results.
    */
   static runQuery: {
-    <Q extends Query.Any>(
-      query: Q,
-    ): Effect.Effect<QueryResult.OneShotResult<Live<Query.Type<Q>>>, never, DatabaseService>;
-    <F extends Filter.Any>(
-      filter: F,
-    ): Effect.Effect<QueryResult.OneShotResult<Live<Filter.Type<F>>>, never, DatabaseService>;
+    <Q extends Query.Any>(query: Q): Effect.Effect<QueryResult.OneShot<Live<Query.Type<Q>>>, never, DatabaseService>;
+    <F extends Filter.Any>(filter: F): Effect.Effect<QueryResult.OneShot<Live<Filter.Type<F>>>, never, DatabaseService>;
   } = (queryOrFilter: Query.Any | Filter.Any) =>
     DatabaseService.query(queryOrFilter as any).pipe(
       Effect.flatMap((queryResult) => promiseWithCauseCapture(() => queryResult.run())),
