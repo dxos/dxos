@@ -74,7 +74,7 @@ const AddressSchema = Schema.Struct({
   location: Schema.optional(Format.GeoPoint.annotations({ title: 'Location' })),
 }).annotations({ title: 'Address' });
 
-const ContactSchema = Schema.Struct({
+const PersonSchema = Schema.Struct({
   name: Schema.optional(Schema.String.annotations({ title: 'Name' })),
   active: Schema.optional(Schema.Boolean.annotations({ title: 'Active' })),
   rank: Schema.optional(Schema.Number.annotations({ title: 'Rank' })),
@@ -82,7 +82,7 @@ const ContactSchema = Schema.Struct({
   address: Schema.optional(AddressSchema),
 }).pipe(Schema.mutable);
 
-type ContactSchema = Schema.Schema.Type<typeof ContactSchema>;
+type PersonSchema = Schema.Schema.Type<typeof PersonSchema>;
 
 const meta = {
   title: 'ui/react-ui-form/Form',
@@ -107,7 +107,7 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
   args: {
-    schema: ContactSchema,
+    schema: PersonSchema,
     values: {
       name: 'DXOS',
       active: true,
