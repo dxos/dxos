@@ -7,7 +7,7 @@ import * as SchemaAST from 'effect/SchemaAST';
 
 import { invariant } from '@dxos/invariant';
 
-import { SchemaId } from './model';
+import { SchemaId } from '../types';
 
 // TODO(burdon): Reconcile with @dxos/effect visit().
 
@@ -46,7 +46,7 @@ export class SchemaValidator {
       }
 
       return type.ast.annotations[annotation] != null;
-    } catch (err) {
+    } catch {
       return false;
     }
   }
@@ -238,4 +238,5 @@ export const checkIdNotPresentOnSchema = (schema: Schema.Schema<any, any, any>) 
   }
 };
 
+// TODO(burdon): Reconcile with JsonPath.
 type KeyPath = readonly (string | number)[];

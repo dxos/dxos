@@ -4,7 +4,7 @@
 
 import React, { useMemo } from 'react';
 
-import { FormatEnum } from '@dxos/echo/internal';
+import { Format } from '@dxos/echo/internal';
 import { PublicKey } from '@dxos/keys';
 import { type KeyRecord } from '@dxos/protocols/proto/dxos/halo/keyring';
 import { useDevtools, useStream } from '@dxos/react-client/devtools';
@@ -17,7 +17,7 @@ export const KeyringPanel = () => {
   const { keys } = useStream(() => devtoolsHost.subscribeToKeyringKeys({}), {});
 
   const properties: TablePropertyDefinition[] = useMemo(
-    () => [{ name: 'publicKey', title: 'Public Key', format: FormatEnum.DID }],
+    () => [{ name: 'publicKey', title: 'Public Key', format: Format.TypeFormat.DID }],
     [],
   );
 

@@ -15,11 +15,23 @@
       "browser": "./dist/lib/browser/index.mjs",
       "node": "./dist/lib/node-esm/index.mjs"
     },
-    "./Type": {
-      "source": "./src/Type.ts",
-      "types": "./dist/types/src/Type.d.ts",
-      "browser": "./dist/lib/browser/Type.mjs",
-      "node": "./dist/lib/node-esm/Type.mjs"
+    "./internal": {
+      "source": "./src/internal/index.ts",
+      "types": "./dist/types/src/internal/index.d.ts",
+      "browser": "./dist/lib/browser/internal/index.mjs",
+      "node": "./dist/lib/node-esm/internal/index.mjs"
+    },
+    "./testing": {
+      "source": "./src/testing/index.ts",
+      "types": "./dist/types/src/testing/index.d.ts",
+      "browser": "./dist/lib/browser/testing/index.mjs",
+      "node": "./dist/lib/node-esm/testing/index.mjs"
+    },
+    "./Entity": {
+      "source": "./src/Entity.ts",
+      "types": "./dist/types/src/Entity.d.ts",
+      "browser": "./dist/lib/browser/Entity.mjs",
+      "node": "./dist/lib/node-esm/Entity.mjs"
     },
     "./Obj": {
       "source": "./src/Obj.ts",
@@ -39,30 +51,24 @@
       "browser": "./dist/lib/browser/Ref.mjs",
       "node": "./dist/lib/node-esm/Ref.mjs"
     },
-    "./internal": {
-      "source": "./src/internal/index.ts",
-      "types": "./dist/types/src/internal/index.d.ts",
-      "browser": "./dist/lib/browser/internal/index.mjs",
-      "node": "./dist/lib/node-esm/internal/index.mjs"
-    },
-    "./query": {
-      "source": "./src/query/index.ts",
-      "types": "./dist/types/src/query/index.d.ts",
-      "browser": "./dist/lib/browser/query/index.mjs",
-      "node": "./dist/lib/node-esm/query/index.mjs"
-    },
-    "./testing": {
-      "source": "./src/testing/index.ts",
-      "types": "./dist/types/src/testing/index.d.ts",
-      "browser": "./dist/lib/browser/testing/index.mjs",
-      "node": "./dist/lib/node-esm/testing/index.mjs"
+    "./Type": {
+      "source": "./src/Type.ts",
+      "types": "./dist/types/src/Type.d.ts",
+      "browser": "./dist/lib/browser/Type.mjs",
+      "node": "./dist/lib/node-esm/Type.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
   "typesVersions": {
     "*": {
-      "Type": [
-        "dist/types/src/Type.d.ts"
+      "internal": [
+        "dist/types/src/internal/index.d.ts"
+      ],
+      "testing": [
+        "dist/types/src/testing/index.d.ts"
+      ],
+      "Entity": [
+        "dist/types/src/Entity.d.ts"
       ],
       "Obj": [
         "dist/types/src/Obj.d.ts"
@@ -73,8 +79,8 @@
       "Ref": [
         "dist/types/src/Ref.d.ts"
       ],
-      "testing": [
-        "dist/types/src/testing/index.d.ts"
+      "Type": [
+        "dist/types/src/Type.d.ts"
       ]
     }
   },
@@ -83,6 +89,7 @@
     "src"
   ],
   "dependencies": {
+    "@dxos/context": "workspace:*",
     "@dxos/debug": "workspace:*",
     "@dxos/echo-protocol": "workspace:*",
     "@dxos/echo-signals": "workspace:*",
@@ -93,6 +100,7 @@
     "@dxos/live-object": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/node-std": "workspace:*",
+    "@dxos/protocols": "workspace:*",
     "@dxos/util": "workspace:*",
     "@preact/signals-core": "^1.12.1",
     "effect": "3.18.3"

@@ -35,7 +35,7 @@ export const useContextObjects = ({
 
       // Load the object by DXN/id from the current space.
       const id = dxn.asEchoDXN();
-      const object = id && (await space.db.getObjectById(id.echoId));
+      const object = id && space.db.getObjectById(id.echoId);
       if (!object) {
         log.warn('Object not found', { dxn, id });
         return;

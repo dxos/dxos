@@ -7,8 +7,8 @@ import React from 'react';
 
 import { IntentPlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { FormatEnum } from '@dxos/echo/internal';
-import { live } from '@dxos/echo/internal';
+import { Obj } from '@dxos/echo';
+import { Format } from '@dxos/echo/internal';
 import { faker } from '@dxos/random';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { withTheme } from '@dxos/react-ui/testing';
@@ -63,12 +63,12 @@ const meta = {
         const schema = getSchemaFromPropertyDefinitions(typename, [
           {
             name: 'single',
-            format: FormatEnum.SingleSelect,
+            format: Format.TypeFormat.SingleSelect,
             config: { options: selectOptions },
           },
           {
             name: 'multiple',
-            format: FormatEnum.MultiSelect,
+            format: Format.TypeFormat.MultiSelect,
             config: { options: selectOptions },
           },
         ]);
@@ -82,7 +82,7 @@ const meta = {
         // Populate.
         Array.from({ length: 10 }).map(() => {
           return space.db.add(
-            live(storedSchema, {
+            Obj.make(storedSchema, {
               single: faker.helpers.arrayElement([...selectOptionIds, undefined]),
               multiple: faker.helpers.randomSubset(selectOptionIds),
             }),

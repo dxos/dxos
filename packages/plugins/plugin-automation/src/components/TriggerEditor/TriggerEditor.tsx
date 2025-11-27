@@ -5,7 +5,7 @@
 import React, { useCallback, useMemo } from 'react';
 
 import { ComputeGraph } from '@dxos/conductor';
-import { type Query, Type } from '@dxos/echo';
+import { DXN, type Query } from '@dxos/echo';
 import { Function, Script, Trigger } from '@dxos/functions';
 import { Filter, Ref, type Space, useQuery } from '@dxos/react-client/echo';
 import { Input } from '@dxos/react-ui';
@@ -70,7 +70,7 @@ const useCustomInputs = ({ space, readonlySpec, types, tags, onQueryRefOptions }
 
         const handleOnValueChange = useCallback(
           (_type: any, dxnString: string) => {
-            const dxn = Type.DXN.parse(dxnString);
+            const dxn = DXN.parse(dxnString);
             if (dxn) {
               const ref = Ref.fromDXN(dxn);
               props.onValueChange('object', ref);

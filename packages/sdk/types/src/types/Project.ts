@@ -4,8 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Obj } from '@dxos/echo';
-import { Type } from '@dxos/echo';
+import { Obj, Type } from '@dxos/echo';
 import { FormInputAnnotation, Format, GeneratorAnnotation, LabelAnnotation } from '@dxos/echo/internal';
 import { IconAnnotation, View } from '@dxos/schema';
 

@@ -4,7 +4,7 @@
 
 import React, { useCallback, useMemo } from 'react';
 
-import { FormatEnum } from '@dxos/echo/internal';
+import { Format } from '@dxos/echo/internal';
 import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type SpaceArchive } from '@dxos/protocols/proto/dxos/client/services';
@@ -143,13 +143,13 @@ export const SpaceListPanel = ({ onSelect }: { onSelect?: (space: SpaceData | un
 
   const properties: TablePropertyDefinition[] = useMemo(
     () => [
-      { name: 'id', format: FormatEnum.DID },
-      { name: 'name', format: FormatEnum.String },
-      { name: 'objects', format: FormatEnum.Number, size: 120 },
-      { name: 'members', format: FormatEnum.Number, size: 120 },
-      { name: 'startup', format: FormatEnum.Number, size: 120 },
-      { name: 'isDefault', format: FormatEnum.Boolean, title: 'default?', size: 120 },
-      { name: 'isOpen', format: FormatEnum.Boolean, title: 'open?', size: 120 },
+      { name: 'id', format: Format.TypeFormat.DID },
+      { name: 'name', format: Format.TypeFormat.String },
+      { name: 'objects', format: Format.TypeFormat.Number, size: 120 },
+      { name: 'members', format: Format.TypeFormat.Number, size: 120 },
+      { name: 'startup', format: Format.TypeFormat.Number, size: 120 },
+      { name: 'isDefault', format: Format.TypeFormat.Boolean, title: 'default?', size: 120 },
+      { name: 'isOpen', format: Format.TypeFormat.Boolean, title: 'open?', size: 120 },
     ],
     [],
   );

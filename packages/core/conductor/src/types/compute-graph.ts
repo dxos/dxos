@@ -4,7 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Obj, Type } from '@dxos/echo';
+import { JsonSchema, Obj, Type } from '@dxos/echo';
 import { Function } from '@dxos/functions';
 import { BaseGraphEdge, BaseGraphNode, Graph } from '@dxos/graph';
 
@@ -24,8 +24,8 @@ export const ComputeNode = Schema.extend(
   Schema.Struct({
     /** For template nodes. */
     // TODO(dmaretskyi): Compute at runtime -- don't persist.
-    inputSchema: Schema.optional(Type.JsonSchema),
-    outputSchema: Schema.optional(Type.JsonSchema),
+    inputSchema: Schema.optional(JsonSchema.JsonSchema),
+    outputSchema: Schema.optional(JsonSchema.JsonSchema),
 
     /** For composition nodes. */
     subgraph: Schema.optional(Schema.suspend((): Type.Ref<ComputeGraph> => Type.Ref(ComputeGraph))),

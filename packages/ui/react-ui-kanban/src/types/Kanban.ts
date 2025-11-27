@@ -21,7 +21,7 @@ const KanbanSchema = Schema.Struct({
   arrangement: Schema.Array(
     Schema.Struct({
       columnValue: Schema.String,
-      ids: Schema.Array(Type.ObjectId),
+      ids: Schema.Array(Obj.ID),
       hidden: Schema.optional(Schema.Boolean),
     }).pipe(Schema.mutable),
   ).pipe(Schema.mutable, FormInputAnnotation.set(false)),
@@ -59,7 +59,7 @@ export const KanbanV1 = Schema.Struct({
   arrangement: Schema.Array(
     Schema.Struct({
       columnValue: Schema.String,
-      ids: Schema.Array(Type.ObjectId),
+      ids: Schema.Array(Obj.ID),
       hidden: Schema.optional(Schema.Boolean),
     }).pipe(Schema.mutable),
   ).pipe(Schema.mutable, Schema.optional),

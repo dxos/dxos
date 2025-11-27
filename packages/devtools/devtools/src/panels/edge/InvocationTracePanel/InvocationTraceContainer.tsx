@@ -9,8 +9,8 @@ import * as Schema from 'effect/Schema';
 import React, { type FC, useCallback, useMemo, useState } from 'react';
 
 import { Filter, type Obj } from '@dxos/echo';
-import { FormatEnum } from '@dxos/echo/internal';
-import { type InvocationSpan, type TraceEventException } from '@dxos/functions-runtime';
+import { Format } from '@dxos/echo/internal';
+import { type InvocationSpan } from '@dxos/functions-runtime';
 import { TraceEvent } from '@dxos/functions-runtime';
 import { DXN } from '@dxos/keys';
 import { type Space, useQuery } from '@dxos/react-client/echo';
@@ -58,21 +58,21 @@ export const InvocationTraceContainer = ({
   const properties: TablePropertyDefinition[] = useMemo(() => {
     function* generateProperties() {
       if (target === undefined) {
-        yield { name: 'target', title: 'Target', format: FormatEnum.String, size: 200 };
+        yield { name: 'target', title: 'Target', format: Format.TypeFormat.String, size: 200 };
       }
 
       yield* [
         {
           name: 'time',
           title: 'Started',
-          format: FormatEnum.DateTime,
+          format: Format.TypeFormat.DateTime,
           sort: 'desc' as const,
           size: 194,
         },
         {
           name: 'status',
           title: 'Status',
-          format: FormatEnum.SingleSelect,
+          format: Format.TypeFormat.SingleSelect,
           size: 110,
           config: {
             options: [
@@ -86,13 +86,13 @@ export const InvocationTraceContainer = ({
         {
           name: 'duration',
           title: 'Duration',
-          format: FormatEnum.Duration,
+          format: Format.TypeFormat.Duration,
           size: 110,
         },
         {
           name: 'queue',
           title: 'Queue',
-          format: FormatEnum.String,
+          format: Format.TypeFormat.String,
           // TODO(burdon): Add formatter.
           // formatter: (value: string) => value.split(':').pop(),
           size: 400,

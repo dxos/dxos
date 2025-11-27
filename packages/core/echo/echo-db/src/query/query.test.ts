@@ -7,15 +7,12 @@ import * as Schema from 'effect/Schema';
 import { afterEach, beforeEach, describe, expect, onTestFinished, test } from 'vitest';
 
 import { Trigger, asyncTimeout, sleep } from '@dxos/async';
-import { Obj, Order, Type } from '@dxos/echo';
-import { Expando, Ref, RelationSourceId, RelationTargetId, getMeta } from '@dxos/echo/internal';
-import { live } from '@dxos/echo/internal';
-import { TestingDeprecated } from '@dxos/echo/testing';
+import { type Entity, Obj, Order, Ref, Relation, Type } from '@dxos/echo';
+import { TestSchema } from '@dxos/echo/testing';
 import { type DatabaseDirectory } from '@dxos/echo-protocol';
 import { DXN, PublicKey } from '@dxos/keys';
 import { createTestLevel } from '@dxos/kv-store/testing';
 import { log } from '@dxos/log';
-import { QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
 import { faker } from '@dxos/random';
 import { range } from '@dxos/util';
 
@@ -28,19 +25,21 @@ import { Filter, Query } from './api';
 
 faker.seed(1);
 
-type ObjectProps = {
-  value?: number;
-  [Obj.Meta]?: { tags?: string[] };
-};
-
 const tags = ['red', 'green', 'blue'];
+
+Obj.make(Type.Expando, { foo: 100 });
+
+type ObjectProps = {
+  [Obj.Meta]?: { tags?: string[] };
+  value?: number;
+};
 
 const createTestObject = (props: ObjectProps = {}) => {
   return Obj.make(Type.Expando, { title: faker.commerce.productName(), ...props });
 };
 
 const createTestObjects = () => {
-  return new Array<Expando>()
+  return new Array<Entity.Any>()
     .concat(range(1).map(() => createTestObject()))
     .concat(
       range(3).map(() =>
@@ -121,17 +120,17 @@ describe('Query', () => {
 
     test('filter by type', async () => {
       {
-        const { objects } = await db.query(Query.select(Filter.type(Expando, { value: undefined }))).run();
+        const { objects } = await db.query(Query.select(Filter.type(Type.Expando, { value: undefined }))).run();
         expect(objects).to.have.length(1);
       }
 
       {
-        const { objects } = await db.query(Query.select(Filter.type(Expando, { value: 100 }))).run();
+        const { objects } = await db.query(Query.select(Filter.type(Type.Expando, { value: 100 }))).run();
         expect(objects).to.have.length(3);
       }
 
       {
-        const { objects } = await db.query(Query.select(Filter.type(Expando, { value: 400 }))).run();
+        const { objects } = await db.query(Query.select(Filter.type(Type.Expando, { value: 400 }))).run();
         expect(objects).to.have.length(0);
       }
     });
@@ -149,35 +148,39 @@ describe('Query', () => {
     });
 
     test('filter expando', async () => {
-      const { objects } = await db.query(Query.select(Filter.type(Expando, { value: 100 }))).run();
+      const { objects } = await db.query(Query.select(Filter.type(Type.Expando, { value: 100 }))).run();
       expect(objects).to.have.length(3);
     });
 
     test('filter by reference', async () => {
-      const objA = db.add(live(Expando, { value: 100 }));
-      const objB = db.add(live(Expando, { value: 200, ref: Ref.make(objA) }));
+      const objA = db.add(Obj.make(Type.Expando, { value: 100 }));
+      const objB = db.add(Obj.make(Type.Expando, { value: 200, ref: Ref.make(objA) }));
       await db.flush({ indexes: true });
 
-      const { objects } = await db.query(Filter.type(Expando, { ref: Ref.make(objA) })).run();
+      const { objects } = await db.query(Filter.type(Type.Expando, { ref: Ref.make(objA) })).run();
       expect(objects).toEqual([objB]);
     });
 
     test('filter by foreign keys', async () => {
-      const obj = live(Expando, { value: 100 });
-      getMeta(obj).keys.push({ id: 'test-id', source: 'test-source' });
+      const obj = Obj.make(Type.Expando, { value: 100 });
+      Obj.getMeta(obj).keys.push({ id: 'test-id', source: 'test-source' });
       db.add(obj);
 
       await db.flush({ indexes: true });
-      const { objects } = await db.query(Filter.foreignKeys(Expando, [{ id: 'test-id', source: 'test-source' }])).run();
+      const { objects } = await db
+        .query(Filter.foreignKeys(Type.Expando, [{ id: 'test-id', source: 'test-source' }]))
+        .run();
       expect(objects).toEqual([obj]);
     });
 
     test('filter by foreign keys without flushing index', async () => {
-      const obj = live(Expando, { value: 100 });
-      getMeta(obj).keys.push({ id: 'test-id', source: 'test-source' });
+      const obj = Obj.make(Type.Expando, { value: 100 });
+      Obj.getMeta(obj).keys.push({ id: 'test-id', source: 'test-source' });
       db.add(obj);
 
-      const { objects } = await db.query(Filter.foreignKeys(Expando, [{ id: 'test-id', source: 'test-source' }])).run();
+      const { objects } = await db
+        .query(Filter.foreignKeys(Type.Expando, [{ id: 'test-id', source: 'test-source' }]))
+        .run();
       expect(objects).toEqual([obj]);
     });
 
@@ -188,7 +191,7 @@ describe('Query', () => {
 
     test('options', async () => {
       {
-        const { objects } = await db.query(Query.select(Filter.type(Expando, { value: 100 }))).run();
+        const { objects } = await db.query(Query.select(Filter.type(Type.Expando, { value: 100 }))).run();
         expect(objects).to.have.length(3);
         for (const object of objects) {
           db.remove(object);
@@ -202,23 +205,17 @@ describe('Query', () => {
       }
 
       {
-        const { objects } = await db
-          .query(Query.select(Filter.everything()), { deleted: QueryOptions.ShowDeletedOption.HIDE_DELETED })
-          .run();
+        const { objects } = await db.query(Query.select(Filter.everything()), { deleted: 'exclude' }).run();
         expect(objects).to.have.length(7);
       }
 
       {
-        const { objects } = await db
-          .query(Query.select(Filter.everything()), { deleted: QueryOptions.ShowDeletedOption.SHOW_DELETED })
-          .run();
+        const { objects } = await db.query(Query.select(Filter.everything()), { deleted: 'include' }).run();
         expect(objects).to.have.length(10);
       }
 
       {
-        const { objects } = await db
-          .query(Query.select(Filter.everything()), { deleted: QueryOptions.ShowDeletedOption.SHOW_DELETED_ONLY })
-          .run();
+        const { objects } = await db.query(Query.select(Filter.everything()), { deleted: 'only' }).run();
         expect(objects).to.have.length(3);
       }
     });
@@ -324,6 +321,7 @@ describe('Query', () => {
       const db = await peer.openDatabase(spaceKey, root);
       const queryResult = (await db.query(Query.select(Filter.everything())).run()).objects;
       expect(queryResult.length).to.eq(2);
+
       const object = queryResult.find((obj) => obj.id === assertion.objectId)!;
       expect(getObjectCore(object).docHandle!.url).to.eq(assertion.documentUrl);
       expect(queryResult.find((obj) => obj.id !== assertion.objectId)).not.to.be.undefined;
@@ -371,14 +369,14 @@ describe('Query', () => {
   // TODO(burdon): Flakey.
   test.skip('map over refs in query result', async () => {
     const { db } = await builder.createDatabase();
-    const folder = db.add(live(Expando, { name: 'folder', objects: [] as any[] }));
+    const folder = db.add(Obj.make(Type.Expando, { name: 'folder', objects: [] as any[] }));
     const objects = range(3).map(() => createTestObject());
     for (const object of objects) {
       folder.objects.push(Ref.make(object as any));
     }
 
-    const queryResult = await db.query(Filter.type(Expando, { name: 'folder' })).run();
-    const result = queryResult.objects.flatMap(({ objects }) => objects.map((o: Ref<any>) => o.target));
+    const queryResult = await db.query(Filter.type(Type.Expando, { name: 'folder' })).run();
+    const result = queryResult.objects.flatMap(({ objects }) => objects.map((o: Ref.Any) => o.target));
 
     for (const i in objects) {
       expect(result[i]).to.eq(objects[i]);
@@ -420,14 +418,14 @@ describe('Query', () => {
 
     test('not(or) query', async () => {
       const { db, graph } = await builder.createDatabase();
-      graph.schemaRegistry.addSchema([TestingDeprecated.Person, TestingDeprecated.Task]);
+      graph.schemaRegistry.addSchema([TestSchema.Person, TestSchema.Task]);
 
-      const _contact = db.add(live(TestingDeprecated.Person, {}));
-      const _task = db.add(live(TestingDeprecated.Task, {}));
-      const expando = db.add(live(Expando, { name: 'expando' }));
+      db.add(Obj.make(TestSchema.Person, {}));
+      db.add(Obj.make(TestSchema.Task, {}));
+      const expando = db.add(Obj.make(Type.Expando, { name: 'expando' }));
 
       const query = db.query(
-        Query.select(Filter.not(Filter.or(Filter.type(TestingDeprecated.Person), Filter.type(TestingDeprecated.Task)))),
+        Query.select(Filter.not(Filter.or(Filter.type(TestSchema.Person), Filter.type(TestSchema.Task)))),
       );
       const result = await query.run();
       expect(result.objects).to.have.length(1);
@@ -437,44 +435,35 @@ describe('Query', () => {
     test('filter by refs', async () => {
       const { db } = await builder.createDatabase();
 
-      const a = db.add(live(Expando, { name: 'a' }));
-      const b = db.add(live(Expando, { name: 'b', owner: Ref.make(a) }));
-      const _c = db.add(live(Expando, { name: 'c' }));
+      const a = db.add(Obj.make(Type.Expando, { name: 'a' }));
+      const b = db.add(Obj.make(Type.Expando, { name: 'b', owner: Ref.make(a) }));
+      db.add(Obj.make(Type.Expando, { name: 'c' }));
 
-      const { objects } = await db.query(Query.select(Filter.type(Expando, { owner: Ref.make(a) }))).run();
+      const { objects } = await db.query(Query.select(Filter.type(Type.Expando, { owner: Ref.make(a) }))).run();
       expect(objects).toEqual([b]);
     });
 
     test('query relation by type', async () => {
       const { db, graph } = await builder.createDatabase();
-      graph.schemaRegistry.addSchema([TestingDeprecated.Person, TestingDeprecated.HasManager]);
+      graph.schemaRegistry.addSchema([TestSchema.Person, TestSchema.HasManager]);
 
-      const alice = db.add(
-        live(TestingDeprecated.Person, {
-          name: 'Alice',
-        }),
-      );
-      const bob = db.add(
-        live(TestingDeprecated.Person, {
-          name: 'Bob',
-        }),
-      );
+      const person1 = db.add(Obj.make(TestSchema.Person, { name: 'Alice' }));
+      const person2 = db.add(Obj.make(TestSchema.Person, { name: 'Bob' }));
       const hasManager = db.add(
-        live(TestingDeprecated.HasManager, {
-          [RelationSourceId]: bob,
-          [RelationTargetId]: alice,
-          since: '2022',
+        Relation.make(TestSchema.HasManager, {
+          [Relation.Source]: person1,
+          [Relation.Target]: person2,
         }),
       );
 
-      const { objects } = await db.query(Filter.type(TestingDeprecated.HasManager)).run();
+      const { objects } = await db.query(Filter.type(TestSchema.HasManager)).run();
       expect(objects).toEqual([hasManager]);
     });
 
     test('tags', async () => {
       const { db } = await builder.createDatabase();
 
-      const _a = db.add(Obj.make(Type.Expando, { name: 'a' }));
+      db.add(Obj.make(Type.Expando, { name: 'a' }));
       const b = db.add(Obj.make(Type.Expando, { name: 'b', [Obj.Meta]: { tags: ['important'] } }));
       const c = db.add(Obj.make(Type.Expando, { name: 'c', [Obj.Meta]: { tags: ['important', 'investor'] } }));
 
@@ -485,36 +474,26 @@ describe('Query', () => {
 
   describe('Traversal', () => {
     let db: EchoDatabase;
-
-    let alice: TestingDeprecated.Person, bob: TestingDeprecated.Person;
+    let person1: TestSchema.Person;
+    let person2: TestSchema.Person;
 
     beforeEach(async () => {
       ({ db } = await builder.createDatabase({
-        types: [TestingDeprecated.Person, TestingDeprecated.HasManager, TestingDeprecated.Task],
+        types: [TestSchema.Person, TestSchema.HasManager, TestSchema.Task],
       }));
 
-      // TODO(dmaretskyi): Better test data.
-      alice = db.add(
-        live(TestingDeprecated.Person, {
-          name: 'Alice',
-        }),
-      );
-      bob = db.add(
-        live(TestingDeprecated.Person, {
-          name: 'Bob',
-        }),
-      );
-      const _hasManager = db.add(
-        live(TestingDeprecated.HasManager, {
-          [RelationSourceId]: bob,
-          [RelationTargetId]: alice,
-          since: '2022',
+      person1 = db.add(Obj.make(TestSchema.Person, { name: 'Alice' }));
+      person2 = db.add(Obj.make(TestSchema.Person, { name: 'Bob' }));
+      db.add(
+        Relation.make(TestSchema.HasManager, {
+          [Relation.Source]: person2,
+          [Relation.Target]: person1,
         }),
       );
 
-      const _task1 = db.add(live(TestingDeprecated.Task, { title: 'Task 1', assignee: Ref.make(alice) }));
-      const _task2 = db.add(live(TestingDeprecated.Task, { title: 'Task 2', assignee: Ref.make(alice) }));
-      const _task3 = db.add(live(TestingDeprecated.Task, { title: 'Task 3', assignee: Ref.make(bob) }));
+      db.add(Obj.make(TestSchema.Task, { title: 'Task 1', assignee: Ref.make(person1) }));
+      db.add(Obj.make(TestSchema.Task, { title: 'Task 2', assignee: Ref.make(person1) }));
+      db.add(Obj.make(TestSchema.Task, { title: 'Task 3', assignee: Ref.make(person2) }));
 
       await db.flush({ indexes: true });
     });
@@ -522,8 +501,8 @@ describe('Query', () => {
     test('traverse relation source to target', async () => {
       const { objects } = await db
         .query(
-          Query.select(Filter.type(TestingDeprecated.Person, { name: 'Bob' }))
-            .sourceOf(TestingDeprecated.HasManager)
+          Query.select(Filter.type(TestSchema.Person, { name: 'Bob' }))
+            .sourceOf(TestSchema.HasManager)
             .target(),
         )
         .run();
@@ -534,8 +513,8 @@ describe('Query', () => {
     test('traverse relation target to source', async () => {
       const { objects } = await db
         .query(
-          Query.select(Filter.type(TestingDeprecated.Person, { name: 'Alice' }))
-            .targetOf(TestingDeprecated.HasManager)
+          Query.select(Filter.type(TestSchema.Person, { name: 'Alice' }))
+            .targetOf(TestSchema.HasManager)
             .source(),
         )
         .run();
@@ -545,7 +524,7 @@ describe('Query', () => {
 
     test('traverse outbound references', async () => {
       const { objects } = await db
-        .query(Query.select(Filter.type(TestingDeprecated.Task, { title: 'Task 1' })).reference('assignee'))
+        .query(Query.select(Filter.type(TestSchema.Task, { title: 'Task 1' })).reference('assignee'))
         .run();
 
       expect(objects).toMatchObject([{ name: 'Alice' }]);
@@ -553,11 +532,11 @@ describe('Query', () => {
     });
 
     test('traverse outbound array references', async () => {
-      db.add(live(Expando, { name: 'Contacts', objects: [Ref.make(alice)] }));
+      db.add(Obj.make(Type.Expando, { name: 'Contacts', objects: [Ref.make(person1)] }));
       await db.flush({ indexes: true });
 
       const { objects } = await db
-        .query(Query.select(Filter.type(Expando, { name: 'Contacts' })).reference('objects'))
+        .query(Query.select(Filter.type(Type.Expando, { name: 'Contacts' })).reference('objects'))
         .run();
       expect(objects).toMatchObject([{ name: 'Alice' }]);
     });
@@ -565,10 +544,7 @@ describe('Query', () => {
     test('traverse inbound references', async () => {
       const { objects } = await db
         .query(
-          Query.select(Filter.type(TestingDeprecated.Person, { name: 'Alice' })).referencedBy(
-            TestingDeprecated.Task,
-            'assignee',
-          ),
+          Query.select(Filter.type(TestSchema.Person, { name: 'Alice' })).referencedBy(TestSchema.Task, 'assignee'),
         )
         .run();
 
@@ -580,30 +556,30 @@ describe('Query', () => {
     });
 
     test('traverse inbound array references', async () => {
-      db.add(live(Expando, { name: 'Contacts', objects: [Ref.make(alice)] }));
+      db.add(Obj.make(Type.Expando, { name: 'Contacts', objects: [Ref.make(person1)] }));
       await db.flush({ indexes: true });
 
       const { objects } = await db
-        .query(Query.select(Filter.type(TestingDeprecated.Person)).referencedBy(Expando, 'objects'))
+        .query(Query.select(Filter.type(TestSchema.Person)).referencedBy(Type.Expando, 'objects'))
         .run();
       expect(objects).toMatchObject([{ name: 'Contacts' }]);
     });
 
     test('traverse query started from id', async () => {
       const { objects } = await db
-        .query(Query.select(Filter.ids(bob.id)).sourceOf(TestingDeprecated.HasManager).target())
+        .query(Query.select(Filter.ids(person2.id)).sourceOf(TestSchema.HasManager).target())
         .run();
 
       expect(objects).toMatchObject([{ name: 'Alice' }]);
     });
 
     test('query union', async () => {
-      const query1 = Query.select(Filter.type(TestingDeprecated.Person, { name: 'Alice' })).referencedBy(
-        TestingDeprecated.Task,
+      const query1 = Query.select(Filter.type(TestSchema.Person, { name: 'Alice' })).referencedBy(
+        TestSchema.Task,
         'assignee',
       );
-      const query2 = Query.select(Filter.type(TestingDeprecated.Person, { name: 'Bob' })).referencedBy(
-        TestingDeprecated.Task,
+      const query2 = Query.select(Filter.type(TestSchema.Person, { name: 'Bob' })).referencedBy(
+        TestSchema.Task,
         'assignee',
       );
       const query = Query.all(query1, query2);
@@ -612,61 +588,60 @@ describe('Query', () => {
     });
 
     test('query set difference', async () => {
-      const query1 = Query.select(Filter.type(TestingDeprecated.Person));
-      const query2 = Query.select(Filter.type(TestingDeprecated.Person))
-        .sourceOf(TestingDeprecated.HasManager)
-        .source();
+      const query1 = Query.select(Filter.type(TestSchema.Person));
+      const query2 = Query.select(Filter.type(TestSchema.Person)).sourceOf(TestSchema.HasManager).source();
       const query = Query.without(query1, query2);
       const { objects } = await db.query(query).run();
-      expect(objects).toEqual([alice]);
+      expect(objects).toEqual([person1]);
     });
   });
 
   describe.skip('text search', () => {
     test('vector', async () => {
-      const { db } = await builder.createDatabase({ indexing: { vector: true }, types: [TestingDeprecated.Task] });
+      const { db } = await builder.createDatabase({ indexing: { vector: true }, types: [TestSchema.Task] });
 
-      db.add(live(TestingDeprecated.Task, { title: 'apples' }));
-      db.add(live(TestingDeprecated.Task, { title: 'giraffes' }));
-
+      db.add(Obj.make(TestSchema.Task, { title: 'fix the tests' }));
+      db.add(Obj.make(TestSchema.Task, { title: 'perf optimizations' }));
       await db.flush({ indexes: true });
 
       {
-        const { objects } = await db.query(Query.select(Filter.text('apples', { type: 'vector' }))).run();
-        expect(objects[0].title).toEqual('apples');
+        const { objects } = await db.query(Query.select(Filter.text('fix the tests', { type: 'vector' }))).run();
+        expect(objects[0].title).toEqual('fix the tests');
       }
 
       {
-        const { objects } = await db.query(Query.select(Filter.text('giraffes', { type: 'vector' }))).run();
-        expect(objects[0].title).toEqual('giraffes');
+        const { objects } = await db.query(Query.select(Filter.text('perf optimizations', { type: 'vector' }))).run();
+        expect(objects[0].title).toEqual('perf optimizations');
       }
 
       {
         const { objects } = await db.query(Query.select(Filter.text('vegetable', { type: 'vector' }))).run();
         expect(objects).toHaveLength(1);
-        expect(objects[0].title).toEqual('apples');
+        expect(objects[0].title).toEqual('fix the tests');
       }
     });
 
     test('full-text', async () => {
       const { db, graph } = await builder.createDatabase({ indexing: { fullText: true } });
-      graph.schemaRegistry.addSchema([TestingDeprecated.Task]);
+      graph.schemaRegistry.addSchema([TestSchema.Task]);
 
-      db.add(live(TestingDeprecated.Task, { title: 'apples' }));
-      db.add(live(TestingDeprecated.Task, { title: 'giraffes' }));
+      db.add(Obj.make(TestSchema.Task, { title: 'fix the tests' }));
+      db.add(Obj.make(TestSchema.Task, { title: 'perf optimizations' }));
 
       await db.flush({ indexes: true });
 
       {
-        const { objects } = await db.query(Query.select(Filter.text('apples', { type: 'full-text' }))).run();
+        const { objects } = await db.query(Query.select(Filter.text('fix the tests', { type: 'full-text' }))).run();
         expect(objects).toHaveLength(1);
-        expect(objects[0].title).toEqual('apples');
+        expect(objects[0].title).toEqual('fix the tests');
       }
 
       {
-        const { objects } = await db.query(Query.select(Filter.text('giraffes', { type: 'full-text' }))).run();
+        const { objects } = await db
+          .query(Query.select(Filter.text('perf optimizations', { type: 'full-text' })))
+          .run();
         expect(objects).toHaveLength(1);
-        expect(objects[0].title).toEqual('giraffes');
+        expect(objects[0].title).toEqual('perf optimizations');
       }
 
       {
@@ -697,7 +672,7 @@ describe('Query', () => {
     });
 
     test('fires only once when new objects are added', async () => {
-      const query = db.query(Query.select(Filter.type(Expando, { value: 100 })));
+      const query = db.query(Query.select(Filter.type(Type.Expando, { value: 100 })));
       expect(query.runSync()).to.have.length(3);
 
       let count = 0;
@@ -715,7 +690,7 @@ describe('Query', () => {
     });
 
     test('fires only once when objects are removed', async () => {
-      const query = db.query(Query.select(Filter.type(Expando, { value: 100 })));
+      const query = db.query(Query.select(Filter.type(Type.Expando, { value: 100 })));
       expect(query.runSync()).to.have.length(3);
 
       let count = 0;
@@ -730,7 +705,7 @@ describe('Query', () => {
     });
 
     test('does not fire on object updates', async () => {
-      const query = db.query(Query.select(Filter.type(Expando, { value: 100 })));
+      const query = db.query(Query.select(Filter.type(Type.Expando, { value: 100 })));
       expect(query.runSync()).to.have.length(3);
 
       let updateCount = 0;
@@ -743,7 +718,7 @@ describe('Query', () => {
     });
 
     test('can unsubscribe and resubscribe', async () => {
-      const query = db.query(Query.select(Filter.type(Expando, { value: 100 })));
+      const query = db.query(Query.select(Filter.type(Type.Expando, { value: 100 })));
 
       let count = 0;
       let lastCount = 0;
@@ -786,8 +761,8 @@ describe('Query', () => {
     });
 
     test('multiple queries do not influence each other', async () => {
-      const query1 = db.query(Query.select(Filter.type(Expando, { value: 100 })));
-      const query2 = db.query(Query.select(Filter.type(Expando, { value: 100 })));
+      const query1 = db.query(Query.select(Filter.type(Type.Expando, { value: 100 })));
+      const query2 = db.query(Query.select(Filter.type(Type.Expando, { value: 100 })));
 
       let count1 = 0;
       let count2 = 0;
@@ -807,18 +782,19 @@ describe('Query', () => {
 
     // TODO(dmaretskyi): Fix this test.
     test.skip('deleting an element', async (ctx) => {
-      const { db } = await builder.createDatabase({ types: [TestingDeprecated.Person] });
+      const { db } = await builder.createDatabase({ types: [TestSchema.Person] });
 
       // Create 3 test objects: Alice, Bob, Charlie.
-      const _alice = db.add(live(TestingDeprecated.Person, { name: 'Alice' }));
-      const bob = db.add(live(TestingDeprecated.Person, { name: 'Bob' }));
-      const _charlie = db.add(live(TestingDeprecated.Person, { name: 'Charlie' }));
+      const person1 = db.add(Obj.make(TestSchema.Person, { name: 'Alice' }));
+      const person2 = db.add(Obj.make(TestSchema.Person, { name: 'Bob' }));
+      const person3 = db.add(Obj.make(TestSchema.Person, { name: 'Charlie' }));
+      expect([person1, person2, person3].filter(Boolean)).to.have.length(3);
       await db.flush({ indexes: true });
 
       // Track all updates to observe the bug.
       log.break();
       const updates: string[][] = [];
-      const unsub = db.query(Query.select(Filter.type(TestingDeprecated.Person))).subscribe(
+      const unsub = db.query(Query.select(Filter.type(TestSchema.Person))).subscribe(
         (query) => {
           const names = query.objects.map((obj) => obj.name!);
           log.info('upd', { names });
@@ -833,7 +809,7 @@ describe('Query', () => {
       log.break();
 
       // THE BUG REPRODUCTION: Delete Bob.
-      db.remove(bob);
+      db.remove(person2);
       log.info('removed bob');
       log.break();
 
@@ -867,12 +843,12 @@ describe('Query', () => {
       const { db } = await builder.createDatabase();
 
       // Create 10 test objects: 1, 2, 3, ..., 10.
-      const objects = Array.from({ length: 10 }, (_, i) => db.add(live(Expando, { value: i + 1 })));
+      const objects = Array.from({ length: 10 }, (_, i) => db.add(Obj.make(Type.Expando, { value: i + 1 })));
       await db.flush({ indexes: true, updates: true });
 
       // Track all updates to observe the bug.
       const updates: number[][] = [];
-      const unsub = db.query(Query.select(Filter.type(Expando))).subscribe(
+      const unsub = db.query(Query.select(Filter.type(Type.Expando))).subscribe(
         (query) => {
           const values = [...query.objects.map((obj) => obj.value)].sort((a, b) => a - b);
           updates.push(values);
@@ -909,11 +885,11 @@ describe('Query', () => {
     });
 
     test('query by typename receives updates', async () => {
-      graph.schemaRegistry.addSchema([TestingDeprecated.Person]);
-      const contact = db.add(live(TestingDeprecated.Person, {}));
+      graph.schemaRegistry.addSchema([TestSchema.Person]);
+      const contact = db.add(Obj.make(TestSchema.Person, {}));
       const name = 'DXOS User';
 
-      const query = db.query(Filter.type(TestingDeprecated.Person));
+      const query = db.query(Filter.type(TestSchema.Person));
       const result = await query.run();
       expect(result.objects).to.have.length(1);
       expect(result.objects[0]).to.eq(contact);
@@ -931,15 +907,15 @@ describe('Query', () => {
       onTestFinished(() => unsub());
 
       contact.name = name;
-      db.add(live(TestingDeprecated.Person, {}));
+      db.add(Obj.make(TestSchema.Person, {}));
 
       await asyncTimeout(nameUpdate.wait(), 1000);
       await asyncTimeout(anotherContactAdded.wait(), 1000);
     });
 
     test('query mutable schema objects', async () => {
-      const [schema] = await db.schemaRegistry.register([TestingDeprecated.Person]);
-      const contact = db.add(live(schema, {}));
+      const [schema] = await db.schemaRegistry.register([TestSchema.Person]);
+      const contact = db.add(Obj.make(schema, {}));
 
       // NOTE: Must use `Filter.type` with EchoSchema instance since matching is done by the object ID of the mutable schema.
       const query = db.query(Query.type(schema));
@@ -949,17 +925,17 @@ describe('Query', () => {
     });
 
     test('`instanceof` operator works', async () => {
-      graph.schemaRegistry.addSchema([TestingDeprecated.Person]);
+      graph.schemaRegistry.addSchema([TestSchema.Person]);
       const name = 'DXOS User';
-      const contact = live(TestingDeprecated.Person, { name });
+      const contact = Obj.make(TestSchema.Person, { name });
       db.add(contact);
-      expect(Obj.instanceOf(TestingDeprecated.Person, contact)).to.be.true;
+      expect(Obj.instanceOf(TestSchema.Person, contact)).to.be.true;
 
       // query
       {
-        const contact = (await db.query(Filter.type(TestingDeprecated.Person)).run()).objects[0];
+        const contact = (await db.query(Filter.type(TestSchema.Person)).run()).objects[0];
         expect(contact.name).to.eq(name);
-        expect(Obj.instanceOf(TestingDeprecated.Person, contact)).to.be.true;
+        expect(Obj.instanceOf(TestSchema.Person, contact)).to.be.true;
       }
     });
   });

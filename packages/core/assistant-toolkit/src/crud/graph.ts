@@ -11,20 +11,14 @@ import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
 
-import { Obj, type Relation } from '@dxos/echo';
-import { Filter, Query } from '@dxos/echo';
+import { Entity, Filter, Obj, Query, Type } from '@dxos/echo';
 import {
-  EntityKind,
-  ObjectId,
   ReferenceAnnotationId,
   RelationSourceDXNId,
   RelationSourceId,
   RelationTargetDXNId,
   RelationTargetId,
-  create,
-  getEntityKind,
-  getSchemaDXN,
-  getSchemaTypename,
+  createObject,
   getTypeAnnotation,
   getTypeIdentifierAnnotation,
 } from '@dxos/echo/internal';
@@ -32,7 +26,7 @@ import { type EchoDatabase, type Queue } from '@dxos/echo-db';
 import { isEncodedReference } from '@dxos/echo-protocol';
 import { mapAst } from '@dxos/effect';
 import { ContextQueueService, DatabaseService } from '@dxos/functions';
-import { DXN } from '@dxos/keys';
+import { DXN, ObjectId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { deepMapValues, isNonNullable, trim } from '@dxos/util';
 
@@ -66,7 +60,7 @@ export const findRelatedSchema = async (
   // TODO(dmaretskyi): Also do references.
   return allSchemas
     .filter((schema) => {
-      if (getTypeAnnotation(schema)?.kind !== EntityKind.Relation) {
+      if (getTypeAnnotation(schema)?.kind !== Entity.Kind.Relation) {
         return false;
       }
 
@@ -94,7 +88,7 @@ const isSchemaAddressableByDxn = (schema: Schema.Schema.AnyNoContext, dxn: DXN):
 
   const t = dxn.asTypeDXN();
   if (t) {
-    return t.type === getSchemaTypename(schema);
+    return t.type === Type.getTypename(schema);
   }
 
   return false;
@@ -199,7 +193,7 @@ export const createExtractionSchema = (types: Schema.Schema.AnyNoContext[]) => {
       types.map(preprocessSchema).map((schema, index) => [
         `objects_${getSanitizedSchemaName(types[index])}`,
         Schema.optional(Schema.Array(schema)).annotations({
-          description: `The objects of type: ${getSchemaDXN(types[index])?.asTypeDXN()!.type}. ${SchemaAST.getDescriptionAnnotation(types[index].ast).pipe(Option.getOrElse(() => ''))}`,
+          description: `The objects of type: ${Type.getDXN(types[index])?.asTypeDXN()!.type}. ${SchemaAST.getDescriptionAnnotation(types[index].ast).pipe(Option.getOrElse(() => ''))}`,
         }),
       ]),
     ),
@@ -207,7 +201,7 @@ export const createExtractionSchema = (types: Schema.Schema.AnyNoContext[]) => {
 };
 
 export const getSanitizedSchemaName = (schema: Schema.Schema.AnyNoContext) => {
-  return getSchemaDXN(schema)!
+  return Type.getDXN(schema)!
     .asTypeDXN()!
     .type.replaceAll(/[^a-zA-Z0-9]+/g, '_');
 };
@@ -230,7 +224,7 @@ export const sanitizeObjects = async (
 
   const idMap = new Map<string, string>();
   const existingIds = new Set<ObjectId>();
-  const enitties = new Map<ObjectId, Obj.Any | Relation.Any>();
+  const enitties = new Map<ObjectId, Entity.Unknown>();
 
   const resolveId = (id: string): DXN | undefined => {
     if (ObjectId.isValid(id)) {
@@ -275,7 +269,7 @@ export const sanitizeObjects = async (
         return recurse(value);
       });
 
-      if (getEntityKind(entry.schema) === 'relation') {
+      if (Entity.getKind(entry.schema) === 'relation') {
         const sourceDxn = resolveId(data.source);
         if (!sourceDxn) {
           log.warn('source not found', { source: data.source });
@@ -332,7 +326,7 @@ export const sanitizeObjects = async (
       }
     }
     if (!skip) {
-      const obj = create(schema, data);
+      const obj = createObject(schema, data);
       enitties.set(obj.id, obj);
       return [obj];
     }
@@ -347,7 +341,7 @@ const SoftRef = Schema.Struct({
 });
 
 const preprocessSchema = (schema: Schema.Schema.AnyNoContext) => {
-  const isRelationSchema = getEntityKind(schema) === 'relation';
+  const isRelationSchema = Entity.getKind(schema) === 'relation';
 
   const go = (ast: SchemaAST.AST, visited = new Set<SchemaAST.AST>()): SchemaAST.AST => {
     if (visited.has(ast)) {

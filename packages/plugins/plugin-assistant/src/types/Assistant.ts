@@ -35,7 +35,7 @@ export const makeChat = ({ name, queue }: { name?: string; queue: Queue }) =>
  * Relation between a Chat and companion objects (e.g., artifacts).
  */
 export const CompanionTo = Schema.Struct({
-  id: Type.ObjectId,
+  id: Obj.ID,
 }).pipe(
   Type.Relation({
     typename: 'dxos.org/relation/assistant/CompanionTo',

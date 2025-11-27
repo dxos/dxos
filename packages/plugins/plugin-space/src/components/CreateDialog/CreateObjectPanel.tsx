@@ -6,7 +6,7 @@ import * as Option from 'effect/Option';
 import type * as Schema from 'effect/Schema';
 import React, { useCallback } from 'react';
 
-import { type BaseObject, type TypeAnnotation, getTypeAnnotation } from '@dxos/echo/internal';
+import { type AnyProperties, type TypeAnnotation, getTypeAnnotation } from '@dxos/echo/internal';
 import { type Space, type SpaceId } from '@dxos/react-client/echo';
 import { Icon, toLocalizedString, useDefaultValue, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
@@ -33,7 +33,7 @@ export type CreateObjectPanelProps = {
   typename?: string;
   target?: Space | Collection.Collection;
   views?: boolean;
-  initialFormValues?: Partial<BaseObject>;
+  initialFormValues?: Partial<AnyProperties>;
   defaultSpaceId?: SpaceId;
   resolve?: (typename: string) => Metadata | undefined;
   onTargetChange?: (target: Space) => void;

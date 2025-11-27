@@ -6,7 +6,7 @@ import { Flags, ux } from '@oclif/core';
 import chalk from 'chalk';
 
 import { FLAG_SPACE_KEYS, type TableOptions, stringify, table } from '@dxos/cli-base';
-import { Filter, getMeta, getTypename } from '@dxos/client/echo';
+import { Filter, Obj } from '@dxos/echo';
 import { omit } from '@dxos/log';
 import { Message } from '@dxos/types';
 
@@ -70,11 +70,11 @@ const printObjects = (objects: any[], { printer = defaultPrinter, ...flags }: Pr
           truncate: true,
         },
         type: {
-          get: (row) => chalk.blue(getTypename(row)),
+          get: (row) => chalk.blue(Obj.getTypename(row)),
         },
         meta: {
           get: (row) => {
-            const keys = getMeta(row).keys;
+            const keys = Obj.getMeta(row).keys;
             if (keys?.length) {
               return '[' + keys.map(({ source, id }) => `${chalk.green(source)}:${chalk.gray(id)}`).join(', ') + ']';
             } else {

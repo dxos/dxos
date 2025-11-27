@@ -25,7 +25,7 @@ export default defineFunction({
     }),
   }),
   outputSchema: Schema.Struct({
-    // TODO(wittjosiah): Type.Obj.Any | Type.Relation.Any
+    // TODO(wittjosiah): Type.Entity.Any
     object: Schema.Any,
   }),
   handler: Effect.fn(function* ({ data: { id, typename } }) {

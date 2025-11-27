@@ -8,9 +8,8 @@ import * as SchemaAST from 'effect/SchemaAST';
 import { invariant } from '@dxos/invariant';
 import { type ObjectId } from '@dxos/keys';
 
-import { type SchemaMeta, SchemaMetaSymbol, type TypeAnnotation, getTypeAnnotation } from '../ast';
-import { toEffectSchema, toJsonSchema } from '../json';
-import { type JsonSchemaType } from '../json-schema';
+import { type SchemaMeta, SchemaMetaSymbol, type TypeAnnotation, getTypeAnnotation } from '../annotations';
+import { type JsonSchemaType, toEffectSchema, toJsonSchema } from '../json-schema';
 import { type TypedObject, type TypedObjectPrototype } from '../object';
 
 import {
@@ -20,14 +19,15 @@ import {
   updateFieldNameInSchema,
   updateFieldsInSchema,
 } from './manipulation';
+import { PersistentSchema } from './persistent-schema';
 import { getSnapshot } from './snapshot';
-import { StoredSchema } from './stored-schema';
 
 /**
  * Base schema type.
  */
 // TODO(burdon): Merge with ImmutableSchema.
 export interface BaseSchema<A = any, I = any> extends TypedObject<A, I> {
+  // TODO(burdon): Different from mutable?
   get readonly(): boolean;
   // TODO(burdon): Change to external function.
   get mutable(): EchoSchema<A, I>;
@@ -124,8 +124,10 @@ const EchoSchemaConstructor = (): TypedObjectPrototype => {
    */
   return class {
     private static get _schema() {
-      // The field is DynamicEchoSchema in runtime, but is serialized as StoredEchoSchema in automerge.
-      return Schema.Union(StoredSchema, Schema.instanceOf(EchoSchema)).annotations(StoredSchema.ast.annotations);
+      // The field is DynamicEchoSchema in runtime, but is serialized as PersisentSchema in automerge.
+      return Schema.Union(PersistentSchema, Schema.instanceOf(EchoSchema)).annotations(
+        PersistentSchema.ast.annotations,
+      );
     }
 
     static readonly [Schema.TypeId] = schemaVariance;
@@ -159,7 +161,7 @@ const schemaVariance = {
 };
 
 /**
- * Represents a schema that is stored in the ECHO database.
+ * Represents a schema that is persisted in the ECHO database.
  * Schema can me mutable or readonly (specified by the {@link EchoSchema.readonly} field).
  *
  * Schema that can be modified at runtime via the API.
@@ -177,13 +179,13 @@ const schemaVariance = {
  * }) {}
  * ```
  *
- * The ECHO API will translate any references to StoredSchema objects to be resolved as EchoSchema objects.
+ * The ECHO API will translate any references to PersistentSchema objects to be resolved as EchoSchema objects.
  */
 export class EchoSchema<A = any, I = any> extends EchoSchemaConstructor() implements BaseSchema<A, I> {
   private _schema: Schema.Schema.AnyNoContext | undefined;
   private _isDirty = true;
 
-  constructor(private readonly _storedSchema: StoredSchema) {
+  constructor(private readonly _persistentSchema: PersistentSchema) {
     super();
   }
 
@@ -196,11 +198,11 @@ export class EchoSchema<A = any, I = any> extends EchoSchemaConstructor() implem
   }
 
   public get Type() {
-    return this._storedSchema as A;
+    return this._persistentSchema as A;
   }
 
   public get Encoded() {
-    return this._storedSchema as I;
+    return this._persistentSchema as I;
   }
 
   public get Context() {
@@ -228,11 +230,11 @@ export class EchoSchema<A = any, I = any> extends EchoSchemaConstructor() implem
   //
 
   public get typename(): string {
-    return this._storedSchema.typename;
+    return this._persistentSchema.typename;
   }
 
   public get version(): string {
-    return this._storedSchema.version;
+    return this._persistentSchema.version;
   }
 
   public get readonly(): boolean {
@@ -250,7 +252,7 @@ export class EchoSchema<A = any, I = any> extends EchoSchemaConstructor() implem
    * @reactive
    */
   public get jsonSchema(): JsonSchemaType {
-    return this._storedSchema.jsonSchema;
+    return this._persistentSchema.jsonSchema;
   }
 
   /**
@@ -269,25 +271,25 @@ export class EchoSchema<A = any, I = any> extends EchoSchemaConstructor() implem
    * Id of the ECHO object containing the schema.
    */
   public get id(): ObjectId {
-    return this._storedSchema.id;
+    return this._persistentSchema.id;
   }
 
   /**
    * Short name of the schema.
    */
   public get name(): string | undefined {
-    return this._storedSchema.name;
+    return this._persistentSchema.name;
   }
 
   public get [SchemaMetaSymbol](): SchemaMeta {
-    return { id: this.id, typename: this.typename, version: this._storedSchema.version };
+    return { id: this.id, typename: this.typename, version: this._persistentSchema.version };
   }
 
   /**
-   * Reference to the underlying stored schema object.
+   * Reference to the underlying persistent schema object.
    */
-  public get storedSchema(): StoredSchema {
-    return this._storedSchema;
+  public get persistentSchema(): PersistentSchema {
+    return this._persistentSchema;
   }
 
   public getProperties(): SchemaAST.PropertySignature[] {
@@ -307,8 +309,8 @@ export class EchoSchema<A = any, I = any> extends EchoSchemaConstructor() implem
    */
   public updateTypename(typename: string): void {
     const updated = setTypenameInSchema(this._getSchema(), typename);
-    this._storedSchema.typename = typename;
-    this._storedSchema.jsonSchema = toJsonSchema(updated);
+    this._persistentSchema.typename = typename;
+    this._persistentSchema.jsonSchema = toJsonSchema(updated);
   }
 
   /**
@@ -316,7 +318,7 @@ export class EchoSchema<A = any, I = any> extends EchoSchemaConstructor() implem
    */
   public addFields(fields: Schema.Struct.Fields): void {
     const extended = addFieldsToSchema(this._getSchema(), fields);
-    this._storedSchema.jsonSchema = toJsonSchema(extended);
+    this._persistentSchema.jsonSchema = toJsonSchema(extended);
   }
 
   /**
@@ -324,7 +326,7 @@ export class EchoSchema<A = any, I = any> extends EchoSchemaConstructor() implem
    */
   public updateFields(fields: Schema.Struct.Fields): void {
     const updated = updateFieldsInSchema(this._getSchema(), fields);
-    this._storedSchema.jsonSchema = toJsonSchema(updated);
+    this._persistentSchema.jsonSchema = toJsonSchema(updated);
   }
 
   /**
@@ -332,7 +334,7 @@ export class EchoSchema<A = any, I = any> extends EchoSchemaConstructor() implem
    */
   public updateFieldPropertyName({ before, after }: { before: PropertyKey; after: PropertyKey }): void {
     const renamed = updateFieldNameInSchema(this._getSchema(), { before, after });
-    this._storedSchema.jsonSchema = toJsonSchema(renamed);
+    this._persistentSchema.jsonSchema = toJsonSchema(renamed);
   }
 
   /**
@@ -340,7 +342,7 @@ export class EchoSchema<A = any, I = any> extends EchoSchemaConstructor() implem
    */
   public removeFields(fieldNames: string[]): void {
     const removed = removeFieldsFromSchema(this._getSchema(), fieldNames);
-    this._storedSchema.jsonSchema = toJsonSchema(removed);
+    this._persistentSchema.jsonSchema = toJsonSchema(removed);
   }
 
   //
@@ -359,12 +361,12 @@ export class EchoSchema<A = any, I = any> extends EchoSchemaConstructor() implem
    */
   _rebuild(): void {
     if (this._isDirty || this._schema == null) {
-      this._schema = toEffectSchema(getSnapshot(this._storedSchema.jsonSchema));
+      this._schema = toEffectSchema(getSnapshot(this._persistentSchema.jsonSchema));
       this._isDirty = false;
     }
   }
 
-  private _getSchema(): Schema.Schema.AnyNoContext {
+  _getSchema(): Schema.Schema.AnyNoContext {
     this._rebuild();
     return this._schema!;
   }
