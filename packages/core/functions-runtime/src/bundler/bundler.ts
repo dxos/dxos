@@ -38,8 +38,7 @@ export type BundleResult =
       sourceHash: Buffer;
       imports: Import[];
       entryPoint: string;
-      asset: Uint8Array;
-      bundle: string;
+      assets: Record<string, Uint8Array>;
     };
 
 let initialized: Promise<void>;
@@ -144,7 +143,7 @@ export const bundleFunction = async ({ source }: BundleOptions): Promise<BundleR
     });
 
     log.info('Bundling complete', result.metafile);
-    log.info('Output files', result.outputFiles);
+    log.info('Output files', { files: result.outputFiles });
 
     const entryPoint = 'index.js';
     return {
@@ -152,8 +151,13 @@ export const bundleFunction = async ({ source }: BundleOptions): Promise<BundleR
       sourceHash,
       imports: analyzeImports(result),
       entryPoint,
-      asset: result.outputFiles![0].contents,
-      bundle: result.outputFiles![0].text,
+      assets: result.outputFiles.reduce(
+        (acc, file) => {
+          acc[file.path] = file.contents;
+          return acc;
+        },
+        {} as Record<string, Uint8Array>,
+      ),
     };
   } catch (err) {
     return { timestamp: Date.now(), sourceHash, error: err };
