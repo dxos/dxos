@@ -6,7 +6,7 @@ import * as Predicate from 'effect/Predicate';
 
 import { Event, asyncTimeout } from '@dxos/async';
 import { Context } from '@dxos/context';
-import { type Database, type Obj } from '@dxos/echo';
+import { type Obj, type QueryResult } from '@dxos/echo';
 import { filterMatchObject } from '@dxos/echo-pipeline/filter';
 import { type QueryAST } from '@dxos/echo-protocol';
 import { type ObjectId } from '@dxos/keys';
@@ -44,12 +44,12 @@ export interface QuerySource {
   /**
    * Synchronous query.
    */
-  getResults(): Database.QueryResultEntry[];
+  getResults(): QueryResult.Entry[];
 
   /**
    * One-shot query.
    */
-  run(query: QueryAST.Query): Promise<Database.QueryResultEntry[]>;
+  run(query: QueryAST.Query): Promise<QueryResult.Entry[]>;
 
   /**
    * Set the filter and trigger continuous updates.
@@ -98,21 +98,18 @@ export class GraphQueryContext implements QueryContext {
     this._params.onStop();
   }
 
-  getResults(): Database.QueryResultEntry[] {
+  getResults(): QueryResult.Entry[] {
     if (!this._query) {
       return [];
     }
     return Array.from(this._sources).flatMap((source) => source.getResults());
   }
 
-  async run(
-    query: QueryAST.Query,
-    { timeout = 30_000 }: Database.QueryRunOptions = {},
-  ): Promise<Database.QueryResultEntry[]> {
+  async run(query: QueryAST.Query, { timeout = 30_000 }: QueryResult.RunOptions = {}): Promise<QueryResult.Entry[]> {
     const runTasks = [...this._sources.values()].map(async (s) => {
       try {
         log('run query', { resolver: Object.getPrototypeOf(s).constructor.name });
-        const results = await asyncTimeout<Database.QueryResultEntry[]>(s.run(query), timeout);
+        const results = await asyncTimeout<QueryResult.Entry[]>(s.run(query), timeout);
         log('run query results', { resolver: Object.getPrototypeOf(s).constructor.name, count: results.length });
         return results;
       } catch (err) {
@@ -155,7 +152,7 @@ export class SpaceQuerySource implements QuerySource {
 
   private _ctx: Context = new Context();
   private _query: QueryAST.Query | undefined = undefined;
-  private _results?: Database.QueryResultEntry<AnyLiveObject<any>>[] = undefined;
+  private _results?: QueryResult.Entry<AnyLiveObject<any>>[] = undefined;
 
   constructor(private readonly _database: EchoDatabaseImpl) {}
 
@@ -205,7 +202,7 @@ export class SpaceQuerySource implements QuerySource {
     });
   };
 
-  async run(query: QueryAST.Query): Promise<Database.QueryResultEntry<Obj.Any>[]> {
+  async run(query: QueryAST.Query): Promise<QueryResult.Entry<Obj.Any>[]> {
     if (!this._isValidSourceForQuery(query)) {
       return [];
     }
@@ -216,7 +213,7 @@ export class SpaceQuerySource implements QuerySource {
     }
 
     const { filter, options } = simple;
-    const results: Database.QueryResultEntry<AnyLiveObject<any>>[] = [];
+    const results: QueryResult.Entry<AnyLiveObject<any>>[] = [];
     if (isObjectIdFilter(filter)) {
       results.push(
         ...(await this._database._coreDatabase.batchLoadObjectCores((filter as QueryAST.FilterObject).id as ObjectId[]))
@@ -231,7 +228,7 @@ export class SpaceQuerySource implements QuerySource {
     });
 
     // Dedup
-    const map = new Map<string, Database.QueryResultEntry<Obj.Any>>();
+    const map = new Map<string, QueryResult.Entry<Obj.Any>>();
     for (const result of results) {
       map.set(result.id, result);
     }
@@ -239,7 +236,7 @@ export class SpaceQuerySource implements QuerySource {
     return [...map.values()];
   }
 
-  getResults(): Database.QueryResultEntry<Obj.Any>[] {
+  getResults(): QueryResult.Entry<Obj.Any>[] {
     if (!this._query) {
       return [];
     }
@@ -282,7 +279,7 @@ export class SpaceQuerySource implements QuerySource {
   private _queryWorkingSet(
     filter: QueryAST.Filter,
     options: QueryAST.QueryOptions | undefined,
-  ): Database.QueryResultEntry<Obj.Any>[] {
+  ): QueryResult.Entry<Obj.Any>[] {
     const filteredCores = isObjectIdFilter(filter)
       ? (filter as QueryAST.FilterObject)
           .id!.map((id) => this._database.coreDatabase.getObjectCoreById(id, { load: true }))
@@ -303,7 +300,7 @@ export class SpaceQuerySource implements QuerySource {
     return true;
   }
 
-  private _mapCoreToResult(core: ObjectCore): Database.QueryResultEntry<Obj.Any> {
+  private _mapCoreToResult(core: ObjectCore): QueryResult.Entry<Obj.Any> {
     return {
       id: core.id,
       spaceId: this.spaceId,

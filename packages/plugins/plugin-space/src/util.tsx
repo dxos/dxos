@@ -8,7 +8,7 @@ import * as Function from 'effect/Function';
 import type * as Schema from 'effect/Schema';
 
 import { LayoutAction, type PromiseIntentDispatcher, chain, createIntent } from '@dxos/app-framework';
-import { type Database, type Entity, Filter, Obj, Query, Ref, Type } from '@dxos/echo';
+import { type Entity, Filter, Obj, Query, type QueryResult, Ref, Type } from '@dxos/echo';
 import { EXPANDO_TYPENAME } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
 import { Migrations } from '@dxos/migrations';
@@ -38,7 +38,7 @@ export const SHARED = 'shared-spaces';
 /**
  * Convert a query result to an Atom value of the objects.
  */
-export const atomFromQuery = <T extends Entity.Unknown>(query: Database.QueryResult<T>): Atom.Atom<T[]> => {
+export const atomFromQuery = <T extends Entity.Unknown>(query: QueryResult.QueryResult<T>): Atom.Atom<T[]> => {
   return Atom.make((get) => {
     const unsubscribe = query.subscribe((result) => {
       get.setSelf(result.objects);

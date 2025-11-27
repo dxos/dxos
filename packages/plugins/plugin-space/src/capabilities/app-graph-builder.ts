@@ -10,7 +10,7 @@ import * as Schema from 'effect/Schema';
 
 import { Capabilities, type PluginContext, contributes, createIntent } from '@dxos/app-framework';
 import { type Space, SpaceState, getSpace, isSpace } from '@dxos/client/echo';
-import { DXN, type Database, type Entity, Filter, Obj, Type } from '@dxos/echo';
+import { DXN, type Entity, Filter, Obj, type QueryResult, Type } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { ATTENDABLE_PATH_SEPARATOR, PLANK_COMPANION_TYPE } from '@dxos/plugin-deck/types';
@@ -175,7 +175,7 @@ export default (context: PluginContext) => {
       id: SPACES,
       connector: (node) => {
         // TODO(wittjosiah): Find a simpler way to define this type.
-        let query: Database.QueryResult<Schema.Schema.Type<typeof Type.Expando>> | undefined;
+        let query: QueryResult.QueryResult<Schema.Schema.Type<typeof Type.Expando>> | undefined;
         return Atom.make((get) =>
           Function.pipe(
             get(node),
@@ -358,7 +358,7 @@ export default (context: PluginContext) => {
           ),
         ),
       resolver: (id) => {
-        let query: Database.QueryResult<Entity.Unknown> | undefined;
+        let query: QueryResult.QueryResult<Entity.Unknown> | undefined;
         return Atom.make((get) => {
           const client = context.getCapability(ClientCapabilities.Client);
           const dxn = DXN.tryParse(id)?.asEchoDXN();
@@ -391,7 +391,7 @@ export default (context: PluginContext) => {
       connector: (node) => {
         const client = context.getCapability(ClientCapabilities.Client);
         // TODO(wittjosiah): Find a simpler way to define this type.
-        let query: Database.QueryResult<Schema.Schema.Type<typeof Type.Expando>> | undefined;
+        let query: QueryResult.QueryResult<Schema.Schema.Type<typeof Type.Expando>> | undefined;
         return Atom.make((get) =>
           Function.pipe(
             get(node),
@@ -461,7 +461,7 @@ export default (context: PluginContext) => {
     createExtension({
       id: `${meta.id}/static-schema-actions`,
       actions: (node) => {
-        let query: Database.QueryResult<Obj.Any> | undefined;
+        let query: QueryResult.QueryResult<Obj.Any> | undefined;
         return Atom.make((get) => {
           // TODO(wittjosiah): Use schemaRegistry query once it support atom reactivity.
           const schemas = get(context.capabilities(ClientCapabilities.Schema))
@@ -479,7 +479,7 @@ export default (context: PluginContext) => {
               if (!query) {
                 // TODO(wittjosiah): Ideally this query would traverse the view reference & filter by the query ast.
                 // TODO(wittjosiah): Remove cast.
-                query = space.db.query(filter) as unknown as Database.QueryResult<Obj.Any>;
+                query = space.db.query(filter) as unknown as QueryResult.QueryResult<Obj.Any>;
               }
 
               const objects = get(atomFromQuery(query));
@@ -517,7 +517,7 @@ export default (context: PluginContext) => {
     createExtension({
       id: `${meta.id}/schema-views`,
       connector: (node) => {
-        let query: Database.QueryResult<Obj.Any> | undefined;
+        let query: QueryResult.QueryResult<Obj.Any> | undefined;
         return Atom.make((get) => {
           // TODO(wittjosiah): Use schemaRegistry query once it support atom reactivity.
           const schemas = get(context.capabilities(ClientCapabilities.Schema))
@@ -537,7 +537,7 @@ export default (context: PluginContext) => {
               if (!query) {
                 // TODO(wittjosiah): Ideally this query would traverse the view reference & filter by the query ast.
                 // TODO(wittjosiah): Remove cast.
-                query = space.db.query(filter) as unknown as Database.QueryResult<Obj.Any>;
+                query = space.db.query(filter) as unknown as QueryResult.QueryResult<Obj.Any>;
               }
 
               // TODO(wittjosiah): Remove casts.
@@ -570,7 +570,7 @@ export default (context: PluginContext) => {
     createExtension({
       id: `${meta.id}/object-actions`,
       actions: (node) => {
-        let query: Database.QueryResult<Obj.Any> | undefined;
+        let query: QueryResult.QueryResult<Obj.Any> | undefined;
         return Atom.make((get) => {
           // TODO(wittjosiah): Use schemaRegistry query once it support atom reactivity.
           const schemas = get(context.capabilities(ClientCapabilities.Schema))
@@ -591,7 +591,7 @@ export default (context: PluginContext) => {
               if (!query && isSchema) {
                 // TODO(wittjosiah): Ideally this query would traverse the view reference & filter by the query ast.
                 // TODO(wittjosiah): Remove cast.
-                query = space.db.query(filter) as unknown as Database.QueryResult<Obj.Any>;
+                query = space.db.query(filter) as unknown as QueryResult.QueryResult<Obj.Any>;
               }
 
               let deletable =

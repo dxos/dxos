@@ -2,82 +2,14 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type CleanupFn } from '@dxos/async';
 import { type QueryAST } from '@dxos/echo-protocol';
 import { type DXN, type PublicKey, type SpaceId } from '@dxos/keys';
 import { type QueryOptions as QueryOptionsProto } from '@dxos/protocols/proto/dxos/echo/filter';
 
 import type * as Entity from './Entity';
 import type { Filter, Query } from './query';
+import type * as QueryResult from './QueryResult';
 import type * as Ref from './Ref';
-
-// TODO(burdon): Create QueryResult namespace.
-
-/**
- * Individual query result entry.
- */
-export type QueryResultEntry<T extends Entity.Unknown = Entity.Unknown> = {
-  id: string;
-
-  spaceId: SpaceId;
-
-  /**
-   * May not be present for remote results.
-   */
-  object?: T;
-
-  match?: {
-    // TODO(dmaretskyi): text positional info.
-
-    /**
-     * Higher means better match.
-     */
-    rank: number;
-  };
-
-  /**
-   * Query resolution metadata.
-   */
-  // TODO(dmaretskyi): Rename to meta?
-  resolution?: {
-    // TODO(dmaretskyi): Make this more generic.
-    source: 'remote' | 'local' | 'index';
-
-    /**
-     * Query resolution time in milliseconds.
-     */
-    time: number;
-  };
-};
-
-export type OneShotQueryResult<T extends Entity.Unknown = Entity.Unknown> = {
-  results: QueryResultEntry<T>[];
-  objects: T[];
-};
-
-export type QuerySubscriptionOptions = {
-  /**
-   * Fire the callback immediately.
-   */
-  fire?: boolean;
-};
-
-// TODO(burdon): Narrow types.
-export interface QueryResult<T extends Entity.Unknown = Entity.Unknown> {
-  readonly query: Query<T>;
-  readonly results: QueryResultEntry<T>[];
-  readonly objects: T[];
-
-  run(opts?: QueryRunOptions): Promise<OneShotQueryResult<T>>;
-  runSync(): QueryResultEntry<T>[];
-  first(opts?: QueryRunOptions): Promise<T>;
-
-  subscribe(callback?: (query: QueryResult<T>) => void, opts?: QuerySubscriptionOptions): CleanupFn;
-}
-
-export type QueryRunOptions = {
-  timeout?: number;
-};
 
 /**
  * @deprecated Use `QueryAST.QueryOptions` instead.
@@ -119,12 +51,12 @@ export interface QueryFn {
   <Q extends Query.Any>(
     query: Q,
     options?: (QueryAST.QueryOptions & QueryOptions) | undefined,
-  ): QueryResult<Query.Type<Q>>;
+  ): QueryResult.QueryResult<Query.Type<Q>>;
 
   <F extends Filter.Any>(
     filter: F,
     options?: (QueryAST.QueryOptions & QueryOptions) | undefined,
-  ): QueryResult<Filter.Type<F>>;
+  ): QueryResult.QueryResult<Filter.Type<F>>;
 }
 
 /**
