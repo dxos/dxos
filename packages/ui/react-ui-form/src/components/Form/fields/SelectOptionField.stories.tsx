@@ -6,7 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Schema from 'effect/Schema';
 import React, { useState } from 'react';
 
-import { type SelectOption, SelectOptionSchema } from '@dxos/echo/internal';
+import { SelectOption } from '@dxos/echo/internal';
 import { withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '../../../translations';
@@ -16,7 +16,7 @@ import { Form } from '../Form';
 import { SelectOptionField } from './SelectOptionField';
 
 const schema = Schema.Struct({
-  options: Schema.Array(SelectOptionSchema).pipe(Schema.mutable),
+  options: Schema.Array(SelectOption).pipe(Schema.mutable),
 }).pipe(Schema.mutable);
 
 const DefaultStory = () => {

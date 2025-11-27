@@ -15,8 +15,6 @@ import { TestLayout, TestPanel } from '../testing';
 
 import { NewForm, type NewFormRootProps } from './NewForm';
 
-// TODO(burdon): Use @dxos/types.
-
 const Person = Schema.Struct({
   name: Schema.optional(Schema.String.annotations({ title: 'Name' })),
 }).pipe(Schema.mutable);

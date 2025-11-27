@@ -17,7 +17,7 @@ const FeedbackContent = () => {
   const { t } = useTranslation(meta.id);
   const { handleSave, canSave } = useFormContext<UserFeedback>(FeedbackContent.displayName);
 
-  const messageProps = useFormInputProps(['message']);
+  const messageProps = useFormInputProps(FeedbackContent.displayName, ['message']);
 
   return (
     <div role='form' className='p-3 flex flex-col gap-2'>

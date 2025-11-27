@@ -15,11 +15,11 @@ import { translationKey } from '../../../translations';
 import { FormInputHeader, type FormInputProps } from '../FormInput';
 
 export const SelectOptionField = ({ type, label, readonly, getStatus, getValue, onValueChange }: FormInputProps) => {
+  const { t } = useTranslation(translationKey);
+  const { status, error } = getStatus();
   const [selected, setSelectedId] = useState<string | null>(null);
   const [isNewOption, setIsNewOption] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
-  const { t } = useTranslation(translationKey);
-  const { status, error } = getStatus();
   const options = getValue<SelectOption[] | undefined>();
 
   // Initialization.
