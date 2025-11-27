@@ -14,7 +14,7 @@ import { type SchemaProperty, getSchemaProperties } from '@dxos/schema';
 
 import { translationKey } from '../../../translations';
 import { findArrayElementType } from '../../../util';
-import { type ComponentLookup } from '../Form';
+import { type FormFieldLookup } from '../Form';
 import { FormField, type FormFieldProps } from '../FormContent';
 import { type FormInputStateProps, useFormValues } from '../FormContext';
 import { type FormInputComponent, FormInputHeader } from '../FormInput';
@@ -24,7 +24,7 @@ type ArrayFieldProps = {
   inputProps: FormInputStateProps;
   path?: (string | number)[];
   Custom?: Partial<Record<string, FormInputComponent>>;
-  lookupComponent?: ComponentLookup;
+  lookupComponent?: FormFieldLookup;
 } & Pick<FormFieldProps, 'readonly'>;
 
 export const ArrayField = ({ property, readonly, path, inputProps, Custom, lookupComponent }: ArrayFieldProps) => {

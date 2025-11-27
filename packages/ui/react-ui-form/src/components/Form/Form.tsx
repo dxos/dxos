@@ -20,13 +20,13 @@ import { type FormInputComponent, type FormInputProps } from './FormInput';
 
 export type PropertyFilter<T extends AnyProperties> = (props: SchemaProperty<T>[]) => SchemaProperty<T>[];
 
-export type ComponentLookup = (args: {
+export type FormFieldLookup = (args: {
   prop: string;
   schema: Schema.Schema<any>;
   inputProps: FormInputProps;
 }) => ReactElement | undefined;
 
-export type CustomInputMap = Partial<Record<string, FormInputComponent>>;
+export type FormFieldMap = Partial<Record<string, FormInputComponent>>;
 
 export type FormProps<T extends AnyProperties> = ThemedClassName<{
   id?: string;

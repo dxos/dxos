@@ -9,7 +9,7 @@ import { Type } from '@dxos/echo';
 import { Format } from '@dxos/echo/internal';
 import { useClient } from '@dxos/react-client';
 import { getSpace, useSchema } from '@dxos/react-client/echo';
-import { type CustomInputMap, Form, SelectInput } from '@dxos/react-ui-form';
+import { Form, type FormFieldMap, SelectField } from '@dxos/react-ui-form';
 import { getTypenameFromQuery } from '@dxos/schema';
 
 import { type Map } from '../types';
@@ -84,10 +84,10 @@ export const MapViewEditor = ({ object }: MapViewEditorProps) => {
     [view],
   );
 
-  const custom: CustomInputMap = useMemo(
+  const custom: FormFieldMap = useMemo(
     () => ({
-      coordinateSource: (props) => <SelectInput {...props} options={schemaOptions} />,
-      coordinateColumn: (props) => <SelectInput {...props} options={locationFields} />,
+      coordinateSource: (props) => <SelectField {...props} options={schemaOptions} />,
+      coordinateColumn: (props) => <SelectField {...props} options={locationFields} />,
     }),
     [schemaOptions, locationFields],
   );

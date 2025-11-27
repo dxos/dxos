@@ -19,7 +19,7 @@ import { getRefProps } from '../../util';
 
 import { getInputComponent } from './factory';
 import { ArrayField, RefField, type RefFieldProps, SelectField } from './fields';
-import { type ComponentLookup } from './Form';
+import { type FormFieldLookup } from './Form';
 import { useFormValues, useInputProps } from './FormContext';
 import { type FormInputComponent } from './FormInput';
 
@@ -29,7 +29,7 @@ export type FormFieldProps = {
   /** Used to indicate if input should be presented inline (e.g. for array items). */
   inline?: boolean;
   projection?: ProjectionModel;
-  lookupComponent?: ComponentLookup;
+  lookupComponent?: FormFieldLookup;
   Custom?: Partial<Record<string, FormInputComponent>>;
 } & Pick<
   RefFieldProps,
@@ -224,7 +224,7 @@ export type FormFieldsProps = ThemedClassName<
      * Optional projection for projection-based field management
      */
     projection?: ProjectionModel;
-    lookupComponent?: ComponentLookup;
+    lookupComponent?: FormFieldLookup;
     /**
      * Map of custom renderers for specific properties.
      * Prefer lookupComponent for plugin specific input surfaces.
