@@ -6,24 +6,30 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Schema from 'effect/Schema';
 import React, { useCallback, useState } from 'react';
 
+import { Type } from '@dxos/echo';
 import { type AnyProperties } from '@dxos/echo/internal';
 import { Tooltip } from '@dxos/react-ui';
-import { withLayoutVariants, withTheme } from '@dxos/react-ui/testing';
+import { withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '../../translations';
-import { TestLayout, TestPanel } from '../testing';
+import { TestLayout } from '../testing';
 
 import { NewForm, type NewFormRootProps } from './NewForm';
 
 const Person = Schema.Struct({
-  name: Schema.optional(Schema.String.annotations({ title: 'Name' })),
-}).pipe(Schema.mutable);
+  name: Schema.optional(Schema.String.annotations({ title: 'Full name' })),
+}).pipe(
+  Type.Obj({
+    typename: 'dxos.org/type/Person', // TODO(burdon): /schema
+    version: '0.1.0',
+  }),
+);
 
 export interface Person extends Schema.Schema.Type<typeof Person> {}
 
 type StoryProps<T extends AnyProperties> = {
   debug?: boolean;
-  schema: Schema.Schema.AnyNoContext;
+  schema: Schema.Schema<T>;
 } & NewFormRootProps<T>;
 
 const DefaultStory = <T extends AnyProperties = AnyProperties>({
@@ -40,12 +46,12 @@ const DefaultStory = <T extends AnyProperties = AnyProperties>({
   return (
     <Tooltip.Provider>
       <TestLayout json={{ values, schema: schema.ast }}>
-        <TestPanel>
-          <NewForm.Root debug={debug} schema={schema} values={values} onSave={handleSave} {...props}>
-            <NewForm.Content />
+        <NewForm.Root debug={debug} schema={schema} values={values} onSave={handleSave} {...props}>
+          <NewForm.Content>
+            <NewForm.FieldSet />
             <NewForm.Actions />
-          </NewForm.Root>
-        </TestPanel>
+          </NewForm.Content>
+        </NewForm.Root>
       </TestLayout>
     </Tooltip.Provider>
   );
@@ -55,7 +61,10 @@ const meta = {
   title: 'ui/react-ui-form/NewForm',
   component: NewForm.Root,
   render: DefaultStory,
-  decorators: [withTheme, withLayoutVariants()],
+  decorators: [
+    withTheme,
+    //, withLayoutVariants()
+  ],
   parameters: {
     layout: 'fullscreen',
     translations,
@@ -64,10 +73,15 @@ const meta = {
 
 export default meta;
 
-type Story = StoryObj<typeof meta>;
+type Story<T extends Type.Obj.Any> = StoryObj<StoryProps<T>>;
 
-export const Default: Story = {
+// TODO(burdon): Fix.
+// export const Default: Story<Person> = {
+export const Default: Story<any> = {
   args: {
     schema: Person,
+    values: {
+      name: 'Alice',
+    },
   },
 };

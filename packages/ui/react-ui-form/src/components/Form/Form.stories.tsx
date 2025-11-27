@@ -13,7 +13,7 @@ import { withLayoutVariants, withTheme } from '@dxos/react-ui/testing';
 import { TestSchema } from '@dxos/schema/testing';
 
 import { translations } from '../../translations';
-import { TestLayout, TestPanel } from '../testing';
+import { TestLayout } from '../testing';
 
 import { SelectField } from './fields';
 import { Form, type FormProps } from './Form';
@@ -40,9 +40,7 @@ const DefaultStory = <T extends AnyProperties = any>({
     return (
       <Tooltip.Provider>
         <TestLayout json={{ values, schema: schema.ast }}>
-          <TestPanel>
-            <Form<T> schema={schema} values={values} onSave={handleSave} {...props} />
-          </TestPanel>
+          <Form<T> schema={schema} values={values} onSave={handleSave} {...props} />
         </TestLayout>
       </Tooltip.Provider>
     );

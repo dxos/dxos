@@ -11,8 +11,11 @@ import { IconButton, type ThemedClassName, useTranslation } from '@dxos/react-ui
 import { mx } from '@dxos/react-ui-theme';
 import { type MakeOptional } from '@dxos/util';
 
-import { type FormHandler } from '../../hooks';
+import { type FormHandler, useFormHandler } from '../../hooks';
 import { translationKey } from '../../translations';
+
+import { FormFieldSet } from './FormFieldSet';
+import { FormContext } from './FormRoot';
 
 //
 // Context
@@ -64,24 +67,29 @@ const NewFormRoot = <T extends AnyProperties = AnyProperties>({
   children,
   debug,
   schema,
-  values: valuesProp,
+  values: valuesProp = {},
   onSave,
   onCancel,
 }: NewFormRootProps<T>) => {
   const [values, setValues] = useState(valuesProp ?? {});
   const [canSave, setCanSave] = useState(false);
 
+  // TODO(burdon): Temporarily include old context.
+  const form = useFormHandler({ schema, initialValues: values, onSave });
+
   return (
-    <NewFormContextProvider
-      debug={debug}
-      schema={schema}
-      values={values}
-      canSave={canSave}
-      onSave={onSave}
-      onCancel={onCancel}
-    >
-      {children}
-    </NewFormContextProvider>
+    <FormContext.Provider value={form}>
+      <NewFormContextProvider
+        debug={debug}
+        schema={schema}
+        values={values}
+        canSave={canSave}
+        onSave={onSave}
+        onCancel={onCancel}
+      >
+        {children}
+      </NewFormContextProvider>
+    </FormContext.Provider>
   );
 };
 
@@ -91,14 +99,27 @@ NewFormRoot.displayName = 'NewForm.Root';
 // Content
 //
 
-type NewFormContentProps = ThemedClassName<{}>;
+type NewFormContentProps = ThemedClassName<PropsWithChildren<{}>>;
 
-const NewFormContent = ({ classNames }: NewFormContentProps) => {
-  const context = useNewFormContext(NewFormContent.displayName);
-  return <div className={mx(classNames)}>{JSON.stringify(context)}</div>;
+const NewFormContent = ({ classNames, children }: NewFormContentProps) => {
+  return <div className={mx('flex flex-col is-full pli-cardSpacingInline', classNames)}>{children}</div>;
 };
 
 NewFormContent.displayName = 'NewForm.Content';
+
+//
+// FieldSet
+//
+
+type NewFormFieldSetProps = ThemedClassName<{}>;
+
+const NewFormFieldSet = ({ classNames }: NewFormFieldSetProps) => {
+  const { schema } = useNewFormContext(NewFormFieldSet.displayName);
+
+  return <FormFieldSet classNames={classNames} schema={schema} />;
+};
+
+NewFormFieldSet.displayName = 'NewForm.FieldSet';
 
 //
 // Actions
@@ -111,7 +132,7 @@ const NewFormActions = ({ classNames }: NewFormActionsProps) => {
   const { values, canSave, onSave, onCancel } = useNewFormContext(NewFormActions.displayName);
 
   return (
-    <div role='none' className={mx('grid grid-cols gap-1', classNames)}>
+    <div role='none' className={mx('grid grid-cols gap-1 pbs-cardSpacingBlock', classNames)}>
       {onCancel && (
         <IconButton
           data-testid='cancel-button'
@@ -144,9 +165,10 @@ NewFormActions.displayName = 'NewForm.Actions';
 export const NewForm = {
   Root: NewFormRoot,
   Content: NewFormContent,
+  FieldSet: NewFormFieldSet,
   Actions: NewFormActions,
 };
 
 export { useNewFormContext };
 
-export type { NewFormRootProps, NewFormContentProps, NewFormActionsProps };
+export type { NewFormRootProps, NewFormContentProps, NewFormFieldSetProps, NewFormActionsProps };

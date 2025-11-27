@@ -22,7 +22,7 @@ import { type FormFieldStateProps } from './FormFieldComponent';
 
 type FormContextValue<T extends AnyProperties> = FormHandler<T>;
 
-const FormContext = createContext<FormContextValue<any> | undefined>(undefined);
+export const FormContext = createContext<FormContextValue<any> | undefined>(undefined);
 
 export const useFormContext = <T extends AnyProperties>(componentName: string): FormContextValue<T> => {
   return useContext(FormContext) ?? raise(new Error(`Missing FormContext from ${componentName}`));

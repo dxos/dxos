@@ -27,7 +27,7 @@ export type FormFieldSetProps = ThemedClassName<
      */
     path?: (string | number)[];
     exclude?: (props: SchemaProperty<any>[]) => SchemaProperty<any>[];
-    // TODO(burdon): Function.
+    // TODO(burdon): Change to function (dynamic?)
     sort?: string[];
     /**
      * Optional projection for projection-based field management.
@@ -44,12 +44,12 @@ export type FormFieldSetProps = ThemedClassName<
   } & Pick<FormFieldProps, 'readonly'> &
     Pick<
       RefFieldProps,
-      | 'onQueryRefOptions'
+      | 'createSchema'
       | 'createOptionLabel'
       | 'createOptionIcon'
-      | 'onCreate'
-      | 'createSchema'
       | 'createInitialValuePath'
+      | 'onCreate'
+      | 'onQueryRefOptions'
     >
 >;
 
@@ -71,6 +71,7 @@ export const FormFieldSet = forwardRef<HTMLDivElement, FormFieldSetProps>(
     forwardRef,
   ) => {
     const values = useFormValues(FormFieldSet.displayName!, path);
+
     const properties = useMemo(() => {
       const props = getSchemaProperties(schema.ast, values, { form: true });
 
