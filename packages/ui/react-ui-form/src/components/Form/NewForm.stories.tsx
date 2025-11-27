@@ -6,7 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Schema from 'effect/Schema';
 import React, { useCallback, useState } from 'react';
 
-import { Type } from '@dxos/echo';
+import { Format, Type } from '@dxos/echo';
 import { type AnyProperties } from '@dxos/echo/internal';
 import { Tooltip } from '@dxos/react-ui';
 import { withTheme } from '@dxos/react-ui/testing';
@@ -20,6 +20,8 @@ const Person = Schema.Struct({
   name: Schema.optional(Schema.String.annotations({ title: 'Full name' })),
   active: Schema.optional(Schema.Boolean.annotations({ title: 'Active' })),
   age: Schema.optional(Schema.Number.annotations({ title: 'Age' })),
+  location: Format.GeoPoint.annotations({ title: 'Location' }),
+  identities: Schema.optional(Schema.Array(Schema.String).annotations({ title: 'Identities' })),
 }).pipe(
   Type.Obj({
     typename: 'dxos.org/type/Person', // TODO(burdon): /schema

@@ -20,19 +20,27 @@ export const TextField = ({
   onBlur,
 }: FormFieldComponentProps) => {
   const { status, error } = getStatus();
+  const value = getValue();
+  if (readonly && value == null) {
+    return null;
+  }
 
-  return readonly && !getValue() ? null : readonly === 'static' && inputOnly ? (
-    <p>{getValue() ?? ''}</p>
-  ) : (
+  // TODO(burdon): Factor out common layout.
+  const str = String(value ?? '');
+  if (readonly === 'static' && inputOnly) {
+    return <p>{str}</p>;
+  }
+
+  return (
     <Input.Root validationValence={status}>
       {!inputOnly && <FormFieldLabel error={error} readonly={readonly} label={label} />}
       {readonly === 'static' ? (
-        <p>{getValue() ?? ''}</p>
+        <p>{str}</p>
       ) : (
         <Input.TextInput
           disabled={!!readonly}
           placeholder={placeholder}
-          value={getValue() ?? ''}
+          value={str}
           onChange={(event) => onValueChange(type, event.target.value)}
           onBlur={onBlur}
         />

@@ -9,7 +9,7 @@ import React, { Fragment, useCallback } from 'react';
 
 import { SimpleType, findNode, getDiscriminatedType, isDiscriminatedUnion } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
-import { IconButton, useTranslation } from '@dxos/react-ui';
+import { IconButton, Input, useTranslation } from '@dxos/react-ui';
 import { getSchemaProperties } from '@dxos/schema';
 
 import { translationKey } from '../../../translations';
@@ -24,14 +24,15 @@ export type ArrayFieldProps = {
 
 export const ArrayField = ({ property, readonly, path, fieldProps: inputProps, ...props }: ArrayFieldProps) => {
   const { t } = useTranslation(translationKey);
-  const { ast, name, type, title } = property;
+  const { ast, type, name, title } = property;
+  const label = title ?? Function.pipe(name, String.capitalize);
+  const elementType = findArrayElementType(ast);
+  const { onValueChange } = inputProps;
+
   // TODO(wittjosiah): The fallback to an empty array stops the form from crashing but isn't immediately live.
   //  It doesn't become live until another field is touched, but that's better than the whole form crashing.
-  const values = (useFormValues(ArrayField.displayName, path ?? []) ?? []) as any[];
+  const values = useFormValues(ArrayField.displayName, path) ?? [];
   invariant(Array.isArray(values), `Expected array at: ${path?.join('.')}`);
-  const label = title ?? Function.pipe(name, String.capitalize);
-
-  const elementType = findArrayElementType(ast);
 
   const getDefaultObjectValue = (typeNode: SchemaAST.AST): any => {
     const baseNode = findNode(typeNode, isDiscriminatedUnion);
@@ -49,24 +50,28 @@ export const ArrayField = ({ property, readonly, path, fieldProps: inputProps, .
     type === 'object' && elementType ? getDefaultObjectValue(elementType) : SimpleType.getDefaultValue(type);
 
   const handleAdd = useCallback(() => {
-    inputProps.onValueChange(type, [...values, getDefaultValue()]);
-  }, [type, elementType, inputProps, values]);
+    onValueChange(type, [...values, getDefaultValue()]);
+  }, [onValueChange, type, values]);
 
-  const handleRemove = useCallback(
-    (index: number) => {
-      const newValues = values.filter((_, i) => i !== index);
-      inputProps.onValueChange(type, newValues);
+  const handleDelete = useCallback(
+    (idx: number) => {
+      onValueChange(
+        type,
+        values.filter((_, i) => i !== idx),
+      );
     },
-    [type, inputProps, values],
+    [onValueChange, type, values],
   );
 
-  if (!elementType) {
+  if (!elementType || (readonly && values.length < 1)) {
     return null;
   }
 
-  return readonly && values.length < 1 ? null : (
+  return (
     <>
-      <FormFieldLabel readonly={readonly} label={label} />
+      <Input.Root>
+        <FormFieldLabel readonly={readonly} label={label} />
+      </Input.Root>
       <div
         role='none'
         className={
@@ -77,39 +82,41 @@ export const ArrayField = ({ property, readonly, path, fieldProps: inputProps, .
               : 'hidden'
         }
       >
-        {values.map((_value, index) => {
-          const field = (
-            <FormField
-              inline
-              property={{
-                ...property,
-                array: false, // NOTE(ZaymonFC): This breaks arrays of arrays.
-                ast: elementType,
-              }}
-              path={[...(path ?? []), index]}
-              readonly={readonly}
-              {...props}
-            />
-          );
-          return readonly ? (
-            field
-          ) : (
+        {values.map((_, index) => {
+          return (
             <Fragment key={index}>
-              <div role='none'>{field}</div>
-              <IconButton
-                icon='ph--trash--regular'
-                iconOnly
-                label={t('button remove')}
-                onClick={() => handleRemove(index)}
-                classNames='self-center'
-              />
+              <div role='none'>
+                <FormField
+                  inline
+                  path={[...(path ?? []), index]}
+                  property={{
+                    ...property,
+                    array: false, // Cannot nest arrays.
+                    ast: elementType,
+                  }}
+                  readonly={readonly}
+                  {...props}
+                />
+              </div>
+
+              {!readonly && (
+                <IconButton
+                  icon='ph--x--regular'
+                  iconOnly
+                  label={t('button remove')}
+                  onClick={() => handleDelete(index)}
+                  classNames='self-center'
+                />
+              )}
             </Fragment>
           );
         })}
       </div>
+
+      {/* TODO(burdon): Get label from schema. */}
       {!readonly && (
         <IconButton
-          classNames='is-full mlb-cardSpacingBlock flex'
+          classNames='flex is-full mlb-cardSpacingBlock'
           icon='ph--plus--regular'
           label={t('add field')}
           onClick={handleAdd}

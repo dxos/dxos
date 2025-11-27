@@ -63,8 +63,9 @@ export type FormFieldProps = {
   fieldProvider?: FormFieldLookup;
 
   /**
-   * Indicates if input should be presented inline (e.g., for array items).
+   * Indicates input used in a list.
    */
+  // TODO(burdon): Rename listItem?
   inline?: boolean;
 } & Pick<
   RefFieldProps,
@@ -128,6 +129,16 @@ export const FormField = ({
   }
 
   //
+  // Array field.
+  //
+
+  if (array) {
+    return (
+      <ArrayField fieldProps={fieldState} property={property} path={path} readonly={readonly} fieldMap={fieldMap} />
+    );
+  }
+
+  //
   // Regular field.
   //
 
@@ -169,16 +180,6 @@ export const FormField = ({
         onCreate={onCreate}
         onQueryRefOptions={onQueryRefOptions}
       />
-    );
-  }
-
-  //
-  // Array field.
-  //
-
-  if (array) {
-    return (
-      <ArrayField fieldProps={fieldState} property={property} path={path} readonly={readonly} fieldMap={fieldMap} />
     );
   }
 
