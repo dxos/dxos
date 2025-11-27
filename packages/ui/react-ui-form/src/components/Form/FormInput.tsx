@@ -10,7 +10,7 @@ import { Icon, Input, Tooltip } from '@dxos/react-ui';
 import { labelSpacing } from '@dxos/react-ui-stack';
 import { errorText, mx } from '@dxos/react-ui-theme';
 
-import { type FormInputStateProps } from './FormContext';
+import { type FormInputStateProps } from './FormRoot';
 
 /**
  * Props passed to input components.

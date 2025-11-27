@@ -15,8 +15,8 @@ import { type FormHandler, type FormOptions } from '../../hooks';
 
 import { FormActions, type FormOuterSpacing } from './FormActions';
 import { FormFields, type FormFieldsProps } from './FormContent';
-import { FormProvider } from './FormContext';
 import { type FormInputComponent, type FormInputProps } from './FormInput';
+import { FormProvider } from './FormRoot';
 
 export type PropertyFilter<T extends AnyProperties> = (props: SchemaProperty<T>[]) => SchemaProperty<T>[];
 

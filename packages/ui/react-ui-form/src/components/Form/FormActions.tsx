@@ -10,7 +10,7 @@ import { mx } from '@dxos/react-ui-theme';
 
 import { translationKey } from '../../translations';
 
-import { useFormContext } from './FormContext';
+import { useFormContext } from './FormRoot';
 
 export type FormOuterSpacing = boolean | 'blockStart-0' | 'scroll-fields';
 
@@ -22,7 +22,7 @@ export type FormActionsProps = {
 
 export const FormActions = ({ readonly, onCancel, outerSpacing = true }: FormActionsProps) => {
   const { t } = useTranslation(translationKey);
-  const { canSave, handleSave } = useFormContext();
+  const { canSave, handleSave } = useFormContext(FormActions.displayName);
 
   return (
     <div
@@ -57,3 +57,5 @@ export const FormActions = ({ readonly, onCancel, outerSpacing = true }: FormAct
     </div>
   );
 };
+
+FormActions.displayName = 'Form.Actions';

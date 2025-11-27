@@ -52,7 +52,7 @@ export default () =>
           return null;
         }
 
-        const { typename } = useFormValues();
+        const { typename } = useFormValues('KanbanForm');
         const [selectedSchema] = useMemo(
           () => space?.db.schemaRegistry.query({ location: ['database', 'runtime'], typename }).runSync(),
           [space, typename],

@@ -6,18 +6,18 @@ import React, { useCallback, useRef, useState } from 'react';
 
 import { getSnapshot } from '@dxos/echo/internal';
 import { IconButton, Input, useTranslation } from '@dxos/react-ui';
-import { FormProvider, useFormContext, useInputProps } from '@dxos/react-ui-form';
+import { FormProvider, useFormContext, useFormInputProps } from '@dxos/react-ui-form';
 
 import { meta } from '../meta';
 import { UserFeedback } from '../types';
 
 const defaultValues: UserFeedback = { message: '' };
 
-const FormContent = () => {
+const FeedbackContent = () => {
   const { t } = useTranslation(meta.id);
-  const { handleSave, canSave } = useFormContext<UserFeedback>();
+  const { handleSave, canSave } = useFormContext<UserFeedback>(FeedbackContent.displayName);
 
-  const messageProps = useInputProps(['message']);
+  const messageProps = useFormInputProps(['message']);
 
   return (
     <div role='form' className='p-3 flex flex-col gap-2'>
@@ -55,6 +55,8 @@ const FormContent = () => {
   );
 };
 
+FeedbackContent.displayName = 'Form.FeedbackContent';
+
 // TODO(wittjosiah): Use `Form`?
 export const FeedbackForm = ({ onSave }: { onSave: (values: UserFeedback) => void }) => {
   const formRef = useRef<HTMLDivElement>(null);
@@ -75,7 +77,7 @@ export const FeedbackForm = ({ onSave }: { onSave: (values: UserFeedback) => voi
   return (
     <FormProvider formRef={formRef} schema={UserFeedback} initialValues={initialValues} onSave={handleSave}>
       <div ref={formRef}>
-        <FormContent />
+        <FeedbackContent />
       </div>
     </FormProvider>
   );

@@ -23,12 +23,12 @@ type FormContextValue<T extends AnyProperties> = FormHandler<T>;
 
 const FormContext = createContext<FormContextValue<any> | undefined>(undefined);
 
-export const useFormContext = <T extends AnyProperties>(): FormContextValue<T> => {
+export const useFormContext = <T extends AnyProperties>(componentName: string): FormContextValue<T> => {
   return useContext(FormContext) ?? raise(new Error('Missing FormContext'));
 };
 
-export const useFormValues = (path: (string | number)[] = []): any => {
-  const { values: formValues } = useFormContext();
+export const useFormValues = (componentName: string, path: (string | number)[] = []): any => {
+  const { values: formValues } = useFormContext(componentName);
   const jsonPath = createJsonPath(path);
   return getValue(formValues, jsonPath) as AnyProperties;
 };
@@ -40,8 +40,8 @@ export type FormInputStateProps = {
   onBlur: (event: FocusEvent<HTMLElement>) => void;
 };
 
-export const useInputProps = (path: (string | number)[] = []): FormInputStateProps => {
-  const { getStatus, getValue: getFormValue, onValueChange, onTouched } = useFormContext();
+export const useFormInputProps = (componentName: string, path: (string | number)[] = []): FormInputStateProps => {
+  const { getStatus, getValue: getFormValue, onValueChange, onTouched } = useFormContext(componentName);
 
   const stablePath = useMemo(() => path, [Array.isArray(path) ? path.join('.') : path]);
   return useMemo(

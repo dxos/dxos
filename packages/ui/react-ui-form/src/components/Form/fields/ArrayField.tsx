@@ -16,8 +16,8 @@ import { translationKey } from '../../../translations';
 import { findArrayElementType } from '../../../util';
 import { type FormFieldLookup } from '../Form';
 import { FormField, type FormFieldProps } from '../FormContent';
-import { type FormInputStateProps, useFormValues } from '../FormContext';
 import { type FormInputComponent, FormInputHeader } from '../FormInput';
+import { type FormInputStateProps, useFormValues } from '../FormRoot';
 
 type ArrayFieldProps = {
   property: SchemaProperty<any>;
@@ -32,7 +32,7 @@ export const ArrayField = ({ property, readonly, path, inputProps, Custom, looku
   const { ast, name, type, title } = property;
   // TODO(wittjosiah): The fallback to an empty array stops the form from crashing but isn't immediately live.
   //  It doesn't become live until another field is touched, but that's better than the whole form crashing.
-  const values = (useFormValues(path ?? []) ?? []) as any[];
+  const values = (useFormValues(ArrayField.displayName, path ?? []) ?? []) as any[];
   invariant(Array.isArray(values), `Values at path ${path?.join('.')} must be an array.`);
   const label = title ?? Function.pipe(name, String.capitalize);
 
@@ -124,3 +124,5 @@ export const ArrayField = ({ property, readonly, path, inputProps, Custom, looku
     </>
   );
 };
+
+ArrayField.displayName = 'Form.ArrayField';

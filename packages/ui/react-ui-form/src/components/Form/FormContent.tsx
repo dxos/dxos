@@ -20,8 +20,8 @@ import { getRefProps } from '../../util';
 import { getInputComponent } from './factory';
 import { ArrayField, RefField, type RefFieldProps, SelectField } from './fields';
 import { type FormFieldLookup } from './Form';
-import { useFormValues, useInputProps } from './FormContext';
 import { type FormInputComponent } from './FormInput';
+import { useFormInputProps, useFormValues } from './FormRoot';
 
 export type FormFieldProps = {
   property: SchemaProperty<any>;
@@ -34,12 +34,12 @@ export type FormFieldProps = {
 } & Pick<
   RefFieldProps,
   | 'readonly'
-  | 'onQueryRefOptions'
   | 'createOptionLabel'
   | 'createOptionIcon'
-  | 'onCreate'
   | 'createSchema'
   | 'createInitialValuePath'
+  | 'onCreate'
+  | 'onQueryRefOptions'
 >;
 
 export const FormField = ({
@@ -58,7 +58,7 @@ export const FormField = ({
   Custom,
 }: FormFieldProps) => {
   const { ast, name, type, format, title, description, options, examples, array } = property;
-  const inputProps = useInputProps(path);
+  const inputProps = useFormInputProps(FormField.displayName, path);
 
   const label = useMemo(() => title ?? Function.pipe(name, StringEffect.capitalize), [title, name]);
   const placeholder = useMemo(
@@ -210,6 +210,8 @@ export const FormField = ({
   return null;
 };
 
+FormField.displayName = 'Form.FormField';
+
 export type FormFieldsProps = ThemedClassName<
   {
     testId?: string;
@@ -260,7 +262,7 @@ export const FormFields = forwardRef<HTMLDivElement, FormFieldsProps>(
     },
     forwardRef,
   ) => {
-    const values = useFormValues(path);
+    const values = useFormValues(FormFields.displayName!, path);
     const properties = useMemo(() => {
       const props = getSchemaProperties(schema.ast, values, { form: true });
 
@@ -319,6 +321,8 @@ export const FormFields = forwardRef<HTMLDivElement, FormFieldsProps>(
     );
   },
 );
+
+FormFields.displayName = 'Form.Fields';
 
 type ErrorState = {
   error: Error | undefined;

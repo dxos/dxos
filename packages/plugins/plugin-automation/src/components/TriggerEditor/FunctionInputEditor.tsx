@@ -24,7 +24,7 @@ export const FunctionInputEditor = ({
   onValueChange,
   onQueryRefOptions,
 }: FunctionInputEditorProps) => {
-  const selectedFunctionValue = useFormValues(['function' as JsonPath]);
+  const selectedFunctionValue = useFormValues(FunctionInputEditor.displayName, ['function' as JsonPath]);
   const selectedFunctionId = useMemo(() => {
     if (Ref.isRef(selectedFunctionValue)) {
       return selectedFunctionValue.dxn.toString().split('dxn:echo:@:').at(1);
@@ -82,3 +82,5 @@ export const FunctionInputEditor = ({
     </>
   );
 };
+
+FunctionInputEditor.displayName = 'AutomationTrigger.FunctionInputEditor';

@@ -84,7 +84,7 @@ export default () =>
         const client = useClient();
         const props = inputProps as any as FormInputProps;
         const space = isSpace(target) ? target : getSpace(target);
-        const { typename } = useFormValues();
+        const { typename } = useFormValues('MapForm');
 
         const staticSchema = client.graph.schemaRegistry.schemas.find(
           (schema) => Type.getTypename(schema) === typename,

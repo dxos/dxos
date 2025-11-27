@@ -7,7 +7,7 @@ import React, { useCallback, useMemo } from 'react';
 import { Filter, Query } from '@dxos/echo';
 import { Trigger } from '@dxos/functions';
 import { useTranslation } from '@dxos/react-ui';
-import { type FormInputProps, SelectField, useInputProps } from '@dxos/react-ui-form';
+import { type FormInputProps, SelectField, useFormInputProps } from '@dxos/react-ui-form';
 
 import { meta } from '../../meta';
 
@@ -15,7 +15,7 @@ export type SpecSelectorProps = FormInputProps;
 
 export const SpecSelector = (props: SpecSelectorProps) => {
   const { t } = useTranslation(meta.id);
-  const specProps = useInputProps(['spec' satisfies keyof Trigger.Trigger]);
+  const specProps = useFormInputProps(SpecSelector.displayName, ['spec' satisfies keyof Trigger.Trigger]);
 
   const handleTypeChange = useCallback(
     (_type: any, value: string): Trigger.Spec | undefined => {
@@ -63,3 +63,5 @@ export const SpecSelector = (props: SpecSelectorProps) => {
 
   return <SelectField {...props} options={options} onValueChange={handleTypeChange} />;
 };
+
+SpecSelector.displayName = 'Form.SpecSelector';

@@ -29,7 +29,7 @@ import { translationKey } from '../../../translations';
 import { ObjectPicker } from '../../ObjectPicker';
 import { FormInputHeader, type FormInputProps } from '../FormInput';
 
-import { TextField } from './inputs';
+import { TextField } from './TextField';
 
 export type RefFieldProps = FormInputProps & {
   ast?: SchemaAST.AST;

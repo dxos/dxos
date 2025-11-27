@@ -8,6 +8,8 @@ import React, { type PropsWithChildren } from 'react';
 import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
+import { type FormHandler } from '../../hooks';
+
 //
 // Context
 //
@@ -50,5 +52,7 @@ export const Form = {
   Root: FormRoot,
   Content: FormContent,
 };
+
+export { useFormContext };
 
 export type { FormRootProps, FormContentProps };
