@@ -11,6 +11,7 @@ const resultToEntry = <T extends Type.Entity.Any>(result: T): QueryResult.Entry<
   result,
 });
 
+// TODO(wittjosiah): Simplify this interface.
 export interface SchemaRegistryQueryResolver<T> {
   // TODO(wittjosiah): This looks unused, remove?
   changes: Event<void>;

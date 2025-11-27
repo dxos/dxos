@@ -55,6 +55,7 @@ export class RuntimeSchemaRegistry implements SchemaRegistry.SchemaRegistry {
   }
 
   // TODO(wittjosiah): This is not currently reactive to newly registered schemas.
+  //   Implement once interface is simplified.
   query<Q extends Types.NoExcessProperties<SchemaRegistry.Query, Q>>(
     query?: Q & SchemaRegistry.Query,
   ): QueryResult.QueryResult<SchemaRegistry.ExtractQueryResult<Q>> {
