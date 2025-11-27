@@ -19,10 +19,6 @@ import { NewForm, type NewFormRootProps } from './NewForm';
 
 const Person = Schema.Struct({
   name: Schema.optional(Schema.String.annotations({ title: 'Name' })),
-  // active: Schema.optional(Schema.Boolean.annotations({ title: 'Active' })),
-  // rank: Schema.optional(Schema.Number.annotations({ title: 'Rank' })),
-  // website: Schema.optional(Format.URL.annotations({ title: 'Website' })),
-  // address: Schema.optional(AddressSchema),
 }).pipe(Schema.mutable);
 
 export interface Person extends Schema.Schema.Type<typeof Person> {}
