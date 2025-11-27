@@ -31,19 +31,35 @@ import { FormFieldSet } from './FormFieldSet';
 import { useFormFieldState } from './FormRoot';
 
 export type FormFieldProps = {
+  /**
+   * Property to render.
+   */
   property: SchemaProperty<any>;
+  /**
+   * Path to the current object from the root. Used with nested forms.
+   */
   path?: (string | number)[];
-  /** Indicates if input should be presented inline (e.g. for array items). */
-  inline?: boolean;
+  /**
+   * Optional projection for projection-based field management.
+   */
   projection?: ProjectionModel;
-  lookupComponent?: FormFieldLookup;
+  /**
+   * Map of custom renderers for specific properties.
+   * Prefer lookupComponent for plugin specific input surfaces.
+   */
   fieldMap?: FormFieldMap;
+  // TODO(burdon): Combine with fieldMap (i.e., Map | Funciton).
+  lookupComponent?: FormFieldLookup;
+  /**
+   * Indicates if input should be presented inline (e.g., for array items).
+   */
+  inline?: boolean;
 } & Pick<
   RefFieldProps,
   | 'readonly'
+  | 'createSchema'
   | 'createOptionLabel'
   | 'createOptionIcon'
-  | 'createSchema'
   | 'createInitialValuePath'
   | 'onCreate'
   | 'onQueryRefOptions'

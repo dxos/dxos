@@ -57,6 +57,7 @@ export interface FormOptions<T extends AnyProperties> {
   /**
    * Initial values (which may not pass validation).
    */
+  // TODO(burdon): Rename initial values?
   initialValues: Partial<T>;
 
   /**

@@ -44,11 +44,21 @@ const DefaultStory = <T extends AnyProperties = AnyProperties>({
   const handleSave = useCallback<NonNullable<NewFormRootProps<T>['onSave']>>((values) => {
     setValues(values);
   }, []);
+  const handleCancel = useCallback<NonNullable<NewFormRootProps<T>['onCancel']>>(() => {
+    setValues(valuesParam ?? {});
+  }, []);
 
   return (
     <Tooltip.Provider>
       <TestLayout json={{ values, schema: schema.ast }}>
-        <NewForm.Root debug={debug} schema={schema} values={values} onSave={handleSave} {...props}>
+        <NewForm.Root
+          debug={debug}
+          schema={schema}
+          values={values}
+          onSave={handleSave}
+          onCancel={handleCancel}
+          {...props}
+        >
           <NewForm.Content>
             <NewForm.FieldSet />
             <NewForm.Actions />

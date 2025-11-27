@@ -7,50 +7,37 @@ import React, { forwardRef, useMemo } from 'react';
 
 import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
-import { type ProjectionModel, type SchemaProperty, getSchemaProperties } from '@dxos/schema';
+import { type SchemaProperty, getSchemaProperties } from '@dxos/schema';
 import { isTruthy } from '@dxos/util';
 
 import { type QueryRefOptions } from '../../hooks';
 
-import { type RefFieldProps } from './fields';
 import { FormErrorBoundary } from './FormErrorBoundary';
 import { FormField, type FormFieldProps } from './FormField';
-import { type FormFieldLookup, type FormFieldMap } from './FormFieldComponent';
 import { useFormValues } from './FormRoot';
 
 export type FormFieldSetProps = ThemedClassName<
   {
     testId?: string;
     schema: Schema.Schema.All;
-    /**
-     * Path to the current object from the root. Used with nested forms.
-     */
-    path?: (string | number)[];
     exclude?: (props: SchemaProperty<any>[]) => SchemaProperty<any>[];
     // TODO(burdon): Change to function (dynamic?)
     sort?: string[];
-    /**
-     * Optional projection for projection-based field management.
-     */
-    projection?: ProjectionModel;
-    /**
-     * Map of custom renderers for specific properties.
-     * Prefer lookupComponent for plugin specific input surfaces.
-     */
-    fieldMap?: FormFieldMap;
-    // TODO(burdon): Document.
-    lookupComponent?: FormFieldLookup;
     onQueryRefOptions?: QueryRefOptions;
-  } & Pick<FormFieldProps, 'readonly'> &
-    Pick<
-      RefFieldProps,
-      | 'createSchema'
-      | 'createOptionLabel'
-      | 'createOptionIcon'
-      | 'createInitialValuePath'
-      | 'onCreate'
-      | 'onQueryRefOptions'
-    >
+  } & Pick<
+    FormFieldProps,
+    | 'path'
+    | 'projection'
+    | 'readonly'
+    | 'fieldMap'
+    | 'lookupComponent'
+    | 'createSchema'
+    | 'createOptionLabel'
+    | 'createOptionIcon'
+    | 'createInitialValuePath'
+    | 'onCreate'
+    | 'onQueryRefOptions'
+  >
 >;
 
 export const FormFieldSet = forwardRef<HTMLDivElement, FormFieldSetProps>(

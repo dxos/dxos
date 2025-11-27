@@ -49,8 +49,10 @@ type NewFormRootProps<T extends AnyProperties = AnyProperties> = PropsWithChildr
      * Called when the form is canceled to abandon/undo any pending changes.
      */
     onCancel?: () => void;
-  } & (MakeOptional<FormHandler<T>, 'values'> &
-    MakeOptional<Pick<NewFormContextValue<T>, 'debug' | 'readonly'>, 'readonly'>)
+  } &
+    //
+    MakeOptional<Pick<FormHandler<T>, 'schema' | 'values'>, 'values'> &
+    MakeOptional<Pick<NewFormContextValue<T>, 'debug' | 'readonly'>, 'readonly'>
 >;
 
 const NewFormRoot = <T extends AnyProperties = AnyProperties>({

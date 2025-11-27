@@ -10,34 +10,25 @@ import React, { Fragment, useCallback } from 'react';
 import { SimpleType, findNode, getDiscriminatedType, isDiscriminatedUnion } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { IconButton, useTranslation } from '@dxos/react-ui';
-import { type SchemaProperty, getSchemaProperties } from '@dxos/schema';
+import { getSchemaProperties } from '@dxos/schema';
 
 import { translationKey } from '../../../translations';
 import { findArrayElementType } from '../../../util';
 import { FormField, type FormFieldProps } from '../FormField';
-import {
-  FormFieldLabel,
-  type FormFieldLookup,
-  type FormFieldMap,
-  type FormFieldStateProps,
-} from '../FormFieldComponent';
+import { FormFieldLabel, type FormFieldStateProps } from '../FormFieldComponent';
 import { useFormValues } from '../FormRoot';
 
 type ArrayFieldProps = {
-  property: SchemaProperty<any>;
   inputProps: FormFieldStateProps;
-  path?: (string | number)[];
-  fieldMap?: FormFieldMap;
-  lookupComponent?: FormFieldLookup;
-} & Pick<FormFieldProps, 'readonly'>;
+} & Pick<FormFieldProps, 'property' | 'path' | 'readonly' | 'fieldMap' | 'lookupComponent'>;
 
-export const ArrayField = ({ property, readonly, path, inputProps, fieldMap, lookupComponent }: ArrayFieldProps) => {
+export const ArrayField = ({ property, readonly, path, inputProps, ...props }: ArrayFieldProps) => {
   const { t } = useTranslation(translationKey);
   const { ast, name, type, title } = property;
   // TODO(wittjosiah): The fallback to an empty array stops the form from crashing but isn't immediately live.
   //  It doesn't become live until another field is touched, but that's better than the whole form crashing.
   const values = (useFormValues(ArrayField.displayName, path ?? []) ?? []) as any[];
-  invariant(Array.isArray(values), `Values at path ${path?.join('.')} must be an array.`);
+  invariant(Array.isArray(values), `Expected array at: ${path?.join('.')}`);
   const label = title ?? Function.pipe(name, String.capitalize);
 
   const elementType = findArrayElementType(ast);
@@ -89,6 +80,7 @@ export const ArrayField = ({ property, readonly, path, inputProps, fieldMap, loo
         {values.map((_value, index) => {
           const field = (
             <FormField
+              inline
               property={{
                 ...property,
                 array: false, // NOTE(ZaymonFC): This breaks arrays of arrays.
@@ -96,9 +88,7 @@ export const ArrayField = ({ property, readonly, path, inputProps, fieldMap, loo
               }}
               path={[...(path ?? []), index]}
               readonly={readonly}
-              fieldMap={fieldMap}
-              lookupComponent={lookupComponent}
-              inline
+              {...props}
             />
           );
           return readonly ? (
