@@ -5,6 +5,7 @@
 import type * as Schema from 'effect/Schema';
 import React, { forwardRef, useMemo } from 'react';
 
+import { type AnyProperties } from '@dxos/echo/internal';
 import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 import { type SchemaProperty, getSchemaProperties } from '@dxos/schema';
@@ -16,16 +17,17 @@ import { FormErrorBoundary } from './FormErrorBoundary';
 import { FormField, type FormFieldProps } from './FormField';
 import { useFormValues } from './FormRoot';
 
-export type FormFieldSetProps = ThemedClassName<
+export type FormFieldSetProps<T extends AnyProperties> = ThemedClassName<
   {
     testId?: string;
-    schema: Schema.Schema.All;
-    exclude?: (props: SchemaProperty<any>[]) => SchemaProperty<any>[];
+    // TODO(burdon): Pick.
+    schema: Schema.Schema<T, any>;
+    exclude?: (props: SchemaProperty<T>[]) => SchemaProperty<T>[];
     // TODO(burdon): Change to function (dynamic?)
     sort?: string[];
     onQueryRefOptions?: QueryRefOptions;
   } & Pick<
-    FormFieldProps,
+    FormFieldProps<T>,
     | 'path'
     | 'projection'
     | 'readonly'
@@ -40,7 +42,8 @@ export type FormFieldSetProps = ThemedClassName<
   >
 >;
 
-export const FormFieldSet = forwardRef<HTMLDivElement, FormFieldSetProps>(
+// TODO(burdon): Fix generic.
+export const FormFieldSet = forwardRef<HTMLDivElement, FormFieldSetProps<any>>(
   (
     {
       classNames,

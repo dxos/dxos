@@ -7,6 +7,7 @@ import * as SchemaAST from 'effect/SchemaAST';
 import * as String from 'effect/String';
 import React, { Fragment, useCallback } from 'react';
 
+import { type AnyProperties } from '@dxos/echo/internal';
 import { SimpleType, findNode, getDiscriminatedType, isDiscriminatedUnion } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { IconButton, Input, useTranslation } from '@dxos/react-ui';
@@ -18,11 +19,17 @@ import { FormField, type FormFieldProps } from '../FormField';
 import { FormFieldLabel, type FormFieldStateProps } from '../FormFieldComponent';
 import { useFormValues } from '../FormRoot';
 
-export type ArrayFieldProps = {
+export type ArrayFieldProps<T extends AnyProperties> = {
   fieldProps: FormFieldStateProps;
-} & Pick<FormFieldProps, 'property' | 'path' | 'readonly' | 'fieldMap' | 'fieldProvider'>;
+} & Pick<FormFieldProps<T>, 'property' | 'path' | 'readonly' | 'fieldMap' | 'fieldProvider'>;
 
-export const ArrayField = ({ property, readonly, path, fieldProps: inputProps, ...props }: ArrayFieldProps) => {
+export const ArrayField = <T extends AnyProperties>({
+  property,
+  readonly,
+  path,
+  fieldProps: inputProps,
+  ...props
+}: ArrayFieldProps<T>) => {
   const { t } = useTranslation(translationKey);
   const { ast, type, name, title } = property;
   const label = title ?? Function.pipe(name, String.capitalize);

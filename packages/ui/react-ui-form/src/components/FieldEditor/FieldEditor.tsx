@@ -38,9 +38,9 @@ export const FieldEditor = ({
   projection,
   field,
   registry,
+  outerSpacing,
   onSave,
   onCancel,
-  outerSpacing,
 }: FieldEditorProps) => {
   const { t } = useTranslation(translationKey);
   const [props, setProps] = useState<PropertyType>(projection.getFieldProjection(field.id).props);

@@ -17,7 +17,7 @@ import { raise } from '@dxos/debug';
 import { type AnyProperties, getValue } from '@dxos/echo/internal';
 import { type SimpleType, createJsonPath } from '@dxos/effect';
 
-import { type FormHandler, type FormOptions, useFormHandler } from '../../hooks';
+import { type FormHandler, type FormHandlerProps, useFormHandler } from '../../hooks';
 
 import { type FormFieldStateProps } from './FormFieldComponent';
 
@@ -32,10 +32,10 @@ export const useFormContext = <T extends AnyProperties>(componentName: string): 
 /**
  * Get the current form values.
  */
-export const useFormValues = (componentName: string, path: (string | number)[] = []): any => {
+export const useFormValues = <T extends AnyProperties>(componentName: string, path: (string | number)[] = []): T => {
   const { values: formValues } = useFormContext(componentName);
   const jsonPath = createJsonPath(path);
-  return getValue(formValues, jsonPath) as AnyProperties;
+  return getValue(formValues, jsonPath) as T;
 };
 
 /**
@@ -55,15 +55,20 @@ export const useFormFieldState = (componentName: string, path: (string | number)
   );
 };
 
-export type FormProviderProps = PropsWithChildren<
-  FormOptions<any> & {
+export type FormProviderProps<T extends AnyProperties> = PropsWithChildren<
+  FormHandlerProps<T> & {
     formRef?: RefObject<HTMLDivElement | null>;
     autoSave?: boolean;
   }
 >;
 
-export const FormProvider = ({ children, formRef, autoSave, ...formOptions }: FormProviderProps) => {
-  const form = useFormHandler(formOptions);
+export const FormProvider = <T extends AnyProperties>({
+  children,
+  formRef,
+  autoSave,
+  ...FormProps
+}: FormProviderProps<T>) => {
+  const form = useFormHandler(FormProps);
   useKeyHandler(formRef?.current ?? null, form, autoSave);
   return <FormContext.Provider value={form}>{children}</FormContext.Provider>;
 };

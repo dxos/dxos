@@ -29,13 +29,17 @@ export type FormFieldComponentProps = {
   format?: Format.TypeFormat;
   label: string;
   placeholder?: string;
+
   /**
    * Specifies the readonly variant: either disabled inputs, elements indicating they are usually editable but currently are not;
    * or `static`, a field’s representation as regular content without signifiers that it is ever editable.
    */
   // TODO(burdon): Rename 'mode'.
   readonly?: 'disabled' | 'static' | false;
-  // TODO(burdon): Document.
+  /**
+   * Only show input controls.
+   */
+  // TODO(burdon): Rename or combine with readonly "mode".
   inputOnly?: boolean;
 } & FormFieldStateProps;
 

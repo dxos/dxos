@@ -87,12 +87,13 @@ const meta = {
 
 export default meta;
 
-// TODO(burdon): Fix.
+// TODO(burdon): Fix: Story<Person>
 //  error TS2322: Type 'obj<Struct<{ name: optional<SchemaClass<string, string, never>>;
 //  is not assignable to type 'Schema<Person, Person, never> & Schema<Person, any, never>'.
-type Story<T extends Type.Obj.Any> = StoryObj<StoryProps<T>>;
+// type Story<T extends Type.Obj.Any> = StoryObj<StoryProps<T>>;
+type Story<T extends AnyProperties> = StoryObj<StoryProps<T>>;
 
-export const Default: Story<Person> = {
+export const Default: Story<any> = {
   args: {
     schema: Person,
     values: {
@@ -107,7 +108,7 @@ export const Default: Story<Person> = {
   },
 };
 
-export const Readonly: Story<Person> = {
+export const Readonly: Story<any> = {
   args: {
     schema: Person,
     readonly: 'disabled',
@@ -117,7 +118,7 @@ export const Readonly: Story<Person> = {
   },
 };
 
-export const Static: Story<Person> = {
+export const Static: Story<any> = {
   args: {
     schema: Person,
     readonly: 'static',

@@ -10,7 +10,7 @@ import { type ThemedClassName } from '@dxos/react-ui';
 import { cardDialogOverflow, cardSpacing } from '@dxos/react-ui-stack';
 import { type ProjectionModel, type SchemaProperty } from '@dxos/schema';
 
-import { type FormOptions } from '../../hooks';
+import { type FormHandlerProps } from '../../hooks';
 
 import { FormActions, type FormOuterSpacing } from './FormActions';
 import { FormFieldSet, type FormFieldSetProps } from './FormFieldSet';
@@ -29,9 +29,9 @@ export type FormProps<T extends AnyProperties> = ThemedClassName<{
   outerSpacing?: FormOuterSpacing;
   onCancel?: () => void;
 }> &
-  Pick<FormOptions<T>, 'schema' | 'onValuesChanged' | 'onValidate' | 'onSave'> &
+  Pick<FormHandlerProps<T>, 'schema' | 'onValuesChanged' | 'onValidate' | 'onSave'> &
   // TODO(wittjosiah): This needs to support different ref field options per field.
-  FormFieldSetProps;
+  FormFieldSetProps<T>;
 
 export const Form = <T extends AnyProperties>({
   classNames,
@@ -63,7 +63,7 @@ export const Form = <T extends AnyProperties>({
   }, [autoFocus]);
 
   // TODO(burdon): Why?
-  const handleValid = useCallback<NonNullable<FormProviderProps['onValid']>>(
+  const handleValid = useCallback<NonNullable<FormProviderProps<T>['onValid']>>(
     async (values, meta) => {
       if (autoSave) {
         await onSave?.(values, meta);

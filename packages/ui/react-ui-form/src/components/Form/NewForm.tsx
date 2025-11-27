@@ -16,21 +16,26 @@ import { translationKey } from '../../translations';
 import { FormFieldSet, type FormFieldSetProps } from './FormFieldSet';
 import { FormContext } from './FormRoot';
 
+// TODO(burdon): Keyboard handler.
+// TODO(burdon): Refs, Selectors.
+// TODO(burdon): Additional root props: options, callbacks.
+// TODO(burdon): Context, hooks.
+
 //
 // Context
 //
 
 type NewFormContextValue<T extends AnyProperties = any> = {
   /**
-   * Show debug info.
-   */
-  debug?: boolean;
-
-  /**
    * Form handler.
    */
   form: FormHandler<T>;
-} & Pick<FormFieldSetProps, 'readonly'>;
+
+  /**
+   * Show debug info.
+   */
+  debug?: boolean;
+} & Pick<FormFieldSetProps<T>, 'readonly'>;
 
 const [NewFormContextProvider, useNewFormContext] = createContext<NewFormContextValue>('NewForm');
 
@@ -50,7 +55,7 @@ type NewFormRootProps<T extends AnyProperties = AnyProperties> = PropsWithChildr
      */
     onCancel?: () => void;
   } &
-    //
+    // TODO(burdon): Move debug, readonly into FormHandler.
     MakeOptional<Pick<FormHandler<T>, 'schema' | 'values'>, 'values'> &
     MakeOptional<Pick<NewFormContextValue<T>, 'debug' | 'readonly'>, 'readonly'>
 >;
@@ -80,6 +85,7 @@ NewFormRoot.displayName = 'NewForm.Root';
 
 //
 // Content
+// TODO(burdon): Viewport with scroller.
 //
 
 type NewFormContentProps = ThemedClassName<PropsWithChildren<{}>>;

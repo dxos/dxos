@@ -9,6 +9,7 @@ import * as StringEffect from 'effect/String';
 import React, { useMemo } from 'react';
 
 import { Format } from '@dxos/echo';
+import { type AnyProperties } from '@dxos/echo/internal';
 import { createJsonPath, findNode, getDiscriminatedType, isDiscriminatedUnion } from '@dxos/effect';
 import { mx } from '@dxos/react-ui-theme';
 import { type ProjectionModel, type SchemaProperty } from '@dxos/schema';
@@ -35,11 +36,11 @@ import {
 import { FormFieldSet } from './FormFieldSet';
 import { useFormFieldState } from './FormRoot';
 
-export type FormFieldProps = {
+export type FormFieldProps<T extends AnyProperties> = {
   /**
    * Property to render.
    */
-  property: SchemaProperty<any>;
+  property: SchemaProperty<T>;
 
   /**
    * Path to the current object from the root. Used with nested forms.
@@ -78,7 +79,7 @@ export type FormFieldProps = {
   | 'onQueryRefOptions'
 >;
 
-export const FormField = ({
+export const FormField = <T extends AnyProperties>({
   property,
   path,
   projection,
@@ -92,7 +93,7 @@ export const FormField = ({
   createInitialValuePath,
   onCreate,
   onQueryRefOptions,
-}: FormFieldProps) => {
+}: FormFieldProps<T>) => {
   const { ast, name, type, format, array, options, title, description, examples } = property;
 
   const label = useMemo(() => title ?? Function.pipe(name, StringEffect.capitalize), [title, name]);
@@ -134,7 +135,14 @@ export const FormField = ({
 
   if (array) {
     return (
-      <ArrayField fieldProps={fieldState} property={property} path={path} readonly={readonly} fieldMap={fieldMap} />
+      <ArrayField<T>
+        fieldProps={fieldState}
+        property={property}
+        path={path}
+        readonly={readonly}
+        fieldMap={fieldMap}
+        fieldProvider={fieldProvider}
+      />
     );
   }
 

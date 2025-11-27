@@ -14,41 +14,9 @@ import { type ValidationError, validateSchema } from '@dxos/schema';
 import { type MaybePromise } from '@dxos/util';
 
 /**
- * Form handler properties and methods.
+ * Form properties.
  */
-export type FormHandler<T extends AnyProperties> = {
-  /**
-   * Initial values (which may not pass validation).
-   */
-  values: Partial<T>;
-
-  errors: Record<JsonPath, string>;
-  touched: Record<JsonPath, boolean>;
-  changed: Record<JsonPath, boolean>;
-
-  /**
-   * Whether the form can be saved (i.e., data is valid).
-   */
-  canSave: boolean;
-  formIsValid: boolean;
-
-  onSave: () => void;
-  onCancel: () => void;
-
-  //
-  // Form input component helpers.
-  //
-
-  getStatus: (path: string | (string | number)[]) => { status?: 'error'; error?: string };
-  getValue: <V>(path: (string | number)[]) => V | undefined;
-  onBlur: (path: (string | number)[]) => void;
-  onValueChange: <V>(path: (string | number)[], type: SimpleType, value: V) => void;
-} & Pick<FormOptions<T>, 'schema'>;
-
-/**
- * Hook options.
- */
-export interface FormOptions<T extends AnyProperties> {
+export interface FormHandlerProps<T extends AnyProperties> {
   /**
    * Effect schema (Type literal).
    */
@@ -92,6 +60,38 @@ export interface FormOptions<T extends AnyProperties> {
 }
 
 /**
+ * Form handler properties and methods.
+ */
+export type FormHandler<T extends AnyProperties> = {
+  /**
+   * Initial values (which may not pass validation).
+   */
+  values: Partial<T>;
+
+  errors: Record<JsonPath, string>;
+  touched: Record<JsonPath, boolean>;
+  changed: Record<JsonPath, boolean>;
+
+  /**
+   * Whether the form can be saved (i.e., data is valid).
+   */
+  canSave: boolean;
+  formIsValid: boolean;
+
+  onSave: () => void;
+  onCancel: () => void;
+
+  //
+  // Form input component helpers.
+  //
+
+  getStatus: (path: string | (string | number)[]) => { status?: 'error'; error?: string };
+  getValue: <V>(path: (string | number)[]) => V | undefined;
+  onBlur: (path: (string | number)[]) => void;
+  onValueChange: <V>(path: (string | number)[], type: SimpleType, value: V) => void;
+} & Pick<FormHandlerProps<T>, 'schema'>;
+
+/**
  * Creates a hook for managing form state, including values, validation, and submission.
  * Deeply integrated with `@dxos/schema` for schema-based validation.
  */
@@ -103,9 +103,9 @@ export const useFormHandler = <T extends AnyProperties>({
   onValid,
   onSave,
   onCancel,
-}: FormOptions<T>): FormHandler<T> => {
+  ...props
+}: FormHandlerProps<T>): FormHandler<T> => {
   invariant(SchemaAST.isTypeLiteral(schema.ast));
-
   const [values, setValues] = useState<Partial<T>>(initialValues);
 
   useEffect(() => {
@@ -276,6 +276,8 @@ export const useFormHandler = <T extends AnyProperties>({
       // Actions.
       onSave: handleSave,
       onCancel: handleCancel,
+
+      ...props,
     }),
     [
       schema,
