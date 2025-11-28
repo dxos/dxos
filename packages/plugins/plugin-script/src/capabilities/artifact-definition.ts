@@ -54,7 +54,7 @@ export default () => {
         The description is used by AI to understand the script and its purpose.
         The description must provide cases on when the script should be used.
 
-      Schema: 
+      Schema:
         The schema is defined using a schema-DSL library called Effect Schema.
         The input schema describes the arguments that the script accepts.
         The output schema describes the result that the script produces.
@@ -75,18 +75,18 @@ export default () => {
         - Detailed output schema
 
       <apis>
-        export function defineFunction(params: { 
-          description: string, 
-          inputSchema: Schema.Schema, 
-          outputSchema: Schema.Schema, 
-          handler: (params: { event: { data: TInput } }) => Promise<TOutput> 
+        export function defineFunction(params: {
+          description: string,
+          inputSchema: Schema.Schema,
+          outputSchema: Schema.Schema,
+          handler: (params: { event: { data: TInput } }) => Promise<TOutput>
         }): FunctionDefinition
         /**
          * Effect Schema
          */
-        export const Schema; 
+        export const Schema;
 
-        // Examples: 
+        // Examples:
 
         Schema.String
         Schema.Number
@@ -112,7 +112,7 @@ export default () => {
 
         The function must return the result that matches the output schema.
       </handler_function>
-      
+
       <example>
         import { defineFunction, S } from 'dxos:functions';
 
@@ -181,7 +181,7 @@ export default () => {
         execute: async ({ id }, { extensions }) => {
           invariant(extensions?.space, 'No space');
 
-          const script = (await extensions.space.db.query(Filter.ids(id)).first()) as ScriptType;
+          const script = (await extensions.space.db.query(Filter.id(id)).first()) as ScriptType;
           const { content } = await script.source.load();
 
           return ToolResult.Success({
@@ -203,7 +203,7 @@ export default () => {
         execute: async ({ id, code }, { extensions }) => {
           invariant(extensions?.space, 'No space');
 
-          const script = (await extensions.space.db.query(Filter.ids(id)).first()) as ScriptType;
+          const script = (await extensions.space.db.query(Filter.id(id)).first()) as ScriptType;
           const source = await script.source.load();
           if (!source) {
             return ToolResult.Error('Script not found');

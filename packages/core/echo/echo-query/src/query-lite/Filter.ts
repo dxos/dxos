@@ -53,7 +53,7 @@ export const relation = () => {
   });
 };
 
-export const ids = (...ids: Key.ObjectId[]): Filter$.Any => {
+export const id = (...ids: Key.ObjectId[]): Filter$.Any => {
   // assertArgument(
   //   ids.every((id) => ObjectId.isValid(id)),
   //   'ids',

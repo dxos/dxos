@@ -73,10 +73,9 @@ export const nothing = (): FilterClass => {
 };
 
 /*
- * Filter by object IDs.
+ * Filter by ObjectId.
  */
-// TODO(dmaretskyi): Rename to `Filter.id`.
-export const ids = (...ids: ObjectId[]): Any => {
+export const id = (...ids: ObjectId[]): Any => {
   assertArgument(
     ids.every((id) => ObjectId.isValid(id)),
     'ids',

@@ -39,7 +39,7 @@ export class Serializer {
     } else {
       const ids = database.coreDatabase.getAllObjectIds();
       for (const chunk of chunkArray(ids, MAX_LOAD_OBJECT_CHUNK_SIZE)) {
-        const objects = await database.query(Filter.ids(...chunk)).run({ timeout: 60_000 });
+        const objects = await database.query(Filter.id(...chunk)).run({ timeout: 60_000 });
         loadedObjects.push(...objects);
       }
     }

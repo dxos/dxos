@@ -137,7 +137,7 @@ describe('Research', () => {
         });
         {
           const docs = yield* DatabaseService.runQuery(
-            Query.select(Filter.ids(organization.id)).targetOf(HasSubject.HasSubject).source(),
+            Query.select(Filter.id(organization.id)).targetOf(HasSubject.HasSubject).source(),
           );
           if (docs.length !== 1) {
             throw new Error(`Expected 1 research document; got ${docs.length}: ${docs.map((_) => _.name)}`);
@@ -157,7 +157,7 @@ describe('Research', () => {
         });
         {
           const docs = yield* DatabaseService.runQuery(
-            Query.select(Filter.ids(organization.id)).targetOf(HasSubject.HasSubject).source(),
+            Query.select(Filter.id(organization.id)).targetOf(HasSubject.HasSubject).source(),
           );
           if (docs.length !== 1) {
             throw new Error(`Expected 1 research document; got ${docs.length}: ${docs.map((_) => _.name)}`);

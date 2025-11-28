@@ -108,7 +108,7 @@ export default (context: PluginContext) =>
               if (!query || prevMessageId !== messageId) {
                 prevMessageId = messageId;
                 query = queue.query(
-                  messageId ? Filter.ids(messageId) : Filter.nothing(),
+                  messageId ? Filter.id(messageId) : Filter.nothing(),
                 ) as QueryResult.QueryResult<Message.Message>;
               }
 
@@ -157,7 +157,7 @@ export default (context: PluginContext) =>
               if (!query || prevEventId !== eventId) {
                 prevEventId = eventId;
                 query = queue.query(
-                  eventId ? Filter.ids(eventId) : Filter.nothing(),
+                  eventId ? Filter.id(eventId) : Filter.nothing(),
                 ) as QueryResult.QueryResult<Event.Event>;
               }
 

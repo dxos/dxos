@@ -28,7 +28,7 @@ export const remove = Command.make(
       }
       let query: Query.Any;
       if (Option.isSome(id)) {
-        query = Query.select(Filter.ids(id.value));
+        query = Query.select(Filter.id(id.value));
       } else if (Option.isSome(typename)) {
         query = Query.select(Filter.typename(typename.value));
       } else {
