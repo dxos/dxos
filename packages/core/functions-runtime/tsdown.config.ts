@@ -51,6 +51,12 @@ export default defineConfig({
     assetFileNames: 'internal/[name]-[hash].[extname]',
     minifyInternalExports: false,
   },
+  inputOptions: {
+    resolve: {
+      conditionNames: ['workerd', 'worker', 'browser'],
+    },
+  },
+  external: [/\.wasm$/],
   plugins: [
     {
       name: 'manifest',

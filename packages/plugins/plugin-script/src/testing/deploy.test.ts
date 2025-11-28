@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { readFile } from 'node:fs/promises';
+import { readFile, writeFile } from 'node:fs/promises';
 
 import { describe, expect, test } from 'vitest';
 
@@ -15,11 +15,12 @@ import { bundleFunction } from '@dxos/functions-runtime/bundler';
 import { FunctionsServiceClient, incrementSemverPatch } from '@dxos/functions-runtime/edge';
 import { Runtime } from '@dxos/protocols';
 import { configPreset } from '@dxos/config';
+import { resolve } from 'node:path';
 
 describe.runIf(process.env.DX_TEST_TAGS?.includes('functions-e2e'))('Functions deployment', () => {
   test('deploys FOREX (effect) function and invokes it via EDGE (main)', { timeout: 120_000 }, async () => {
     const config = configPreset({
-      edge: 'main',
+      edge: 'local',
     });
     await using client = await new Client({ config }).initialize();
     await client.halo.createIdentity();
@@ -34,6 +35,10 @@ describe.runIf(process.env.DX_TEST_TAGS?.includes('functions-e2e'))('Functions d
     const buildResult = await bundleFunction({ source });
     if ('error' in buildResult) {
       throw buildResult.error ?? new Error('Bundle creation failed');
+    }
+    for (const [key, value] of Object.entries(buildResult.assets)) {
+      await writeFile(key, value);
+      console.log(resolve(key));
     }
     const functionsServiceClient = FunctionsServiceClient.fromClient(client);
     const newFunction = await functionsServiceClient.deploy({

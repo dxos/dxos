@@ -66,6 +66,7 @@ export const bundleFunction = async ({ source }: BundleOptions): Promise<BundleR
     invariant(initialized, 'Compiler not initialized.');
     await initialized;
   }
+  const outdir = '/tmp/bundle';
   try {
     const result = await build({
       platform: 'browser',
@@ -76,8 +77,9 @@ export const bundleFunction = async ({ source }: BundleOptions): Promise<BundleR
         // Keep output name stable as `index.js` to preserve API.
         index: 'dxos:entrypoint',
       },
-      outdir: '.',
+      outdir,
       bundle: true,
+      splitting: true,
       format: 'esm',
       external: ['cloudflare:workers'],
       alias: {
@@ -153,7 +155,7 @@ export const bundleFunction = async ({ source }: BundleOptions): Promise<BundleR
       entryPoint,
       assets: result.outputFiles.reduce(
         (acc, file) => {
-          acc[file.path] = file.contents;
+          acc[file.path.replace(outdir + '/', '')] = file.contents;
           return acc;
         },
         {} as Record<string, Uint8Array>,

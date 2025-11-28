@@ -10,6 +10,7 @@ import { type ObjectId, type PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { safeParseJson } from '@dxos/util';
 import { Runtime } from '@dxos/protocols';
+import { invariant } from '@dxos/invariant';
 
 import { FunctionServiceError } from '../errors';
 
@@ -73,6 +74,10 @@ export class FunctionsServiceClient {
    */
   async deploy(request: FunctionDeployOptions): Promise<Function.Function> {
     try {
+      invariant(
+        Object.keys(request.assets).every((path) => !path.startsWith('/')),
+        'Asset paths must be relative',
+      );
       const response = await this.#edgeClient.uploadFunction(
         { functionId: request.functionId },
         {
