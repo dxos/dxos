@@ -5,7 +5,7 @@
 import { Event } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { StackTrace } from '@dxos/debug';
-import { type Database, type Entity, Filter, Query, type QueryAST, Ref } from '@dxos/echo';
+import { type Database, type Entity, Filter, type Hypergraph, Query, type QueryAST, Ref } from '@dxos/echo';
 import { type AnyProperties, setRefResolver } from '@dxos/echo/internal';
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { failedInvariant } from '@dxos/invariant';
@@ -29,40 +29,9 @@ import type { Queue, QueueFactory } from './queue';
 const TRACE_REF_RESOLUTION = false;
 
 /**
- * Resolution context.
- * Affects how non-absolute DXNs are resolved.
- */
-export interface RefResolutionContext {
-  /**
-   * Space that the resolution is happening from.
-   */
-  space?: SpaceId;
-
-  /**
-   * Queue that the resolution is happening from.
-   * This queue will be searched first, and then the space it belongs to.
-   */
-  queue?: DXN;
-}
-
-export interface RefResolverOptions {
-  /**
-   * Resolution context.
-   * Affects how non-absolute DXNs are resolved.
-   */
-  context?: RefResolutionContext;
-
-  /**
-   * Middleware to change the resolved object before returning it.
-   * @deprecated On track to be removed.
-   */
-  middleware?: (obj: AnyProperties) => AnyProperties;
-}
-
-/**
  * Manages cross-space database interactions.
  */
-export class Hypergraph {
+export class HypergraphImpl implements Hypergraph.Hypergraph {
   private readonly _databases = new Map<SpaceId, EchoDatabaseImpl>();
   private readonly _queueFactories = new Map<SpaceId, QueueFactory>();
 
@@ -161,7 +130,7 @@ export class Hypergraph {
    * `graph.ref(dxn)` is preferable in cases with access to the database.
    *
    */
-  ref<T extends AnyProperties = any>(dxn: DXN): Ref.Ref<T> {
+  makeRef<T extends AnyProperties = any>(dxn: DXN): Ref.Ref<T> {
     const ref = Ref.fromDXN(dxn);
     setRefResolver(ref, this.createRefResolver({}));
     return ref;
@@ -173,7 +142,7 @@ export class Hypergraph {
    * @returns Result of `onLoad`.
    */
   // TODO(dmaretskyi): Restructure API: Remove middleware, move `hostDb` into context option. Make accessible on Database objects.
-  createRefResolver({ context = {}, middleware = (obj) => obj }: RefResolverOptions): Ref.Resolver {
+  createRefResolver({ context = {}, middleware = (obj) => obj }: Hypergraph.RefResolverOptions): Ref.Resolver {
     // TODO(dmaretskyi): Rewrite resolution algorithm with tracks for absolute and relative DXNs.
 
     return {
@@ -259,7 +228,7 @@ export class Hypergraph {
    */
   private _resolveSync(
     dxn: DXN,
-    context: RefResolutionContext,
+    context: Hypergraph.RefResolutionContext,
     onResolve?: (obj: Entity.Any) => void,
   ): Entity.Any | undefined {
     if (!dxn.asEchoDXN()) {
@@ -301,7 +270,10 @@ export class Hypergraph {
     }
   }
 
-  private async _resolveAsync(dxn: DXN, context: RefResolutionContext): Promise<Entity.Unknown | Queue | undefined> {
+  private async _resolveAsync(
+    dxn: DXN,
+    context: Hypergraph.RefResolutionContext,
+  ): Promise<Entity.Unknown | Queue | undefined> {
     const beginTime = TRACE_REF_RESOLUTION ? performance.now() : 0;
     let status: string = '';
     try {

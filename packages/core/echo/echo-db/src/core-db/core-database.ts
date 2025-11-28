@@ -38,7 +38,7 @@ import { trace } from '@dxos/tracing';
 import { chunkArray, deepMapValues, defaultMap } from '@dxos/util';
 
 import { type ChangeEvent, type DocHandleProxy, RepoProxy, type SaveStateChangedEvent } from '../automerge';
-import { type Hypergraph } from '../hypergraph';
+import { type HypergraphImpl } from '../hypergraph';
 
 import {
   type AutomergeDocumentLoader,
@@ -52,7 +52,7 @@ import { getInlineAndLinkChanges } from './util';
 export type InitRootProxyFn = (core: ObjectCore) => void;
 
 export type CoreDatabaseParams = {
-  graph: Hypergraph;
+  graph: HypergraphImpl;
   dataService: DataService;
   queryService: QueryService;
   spaceId: SpaceId;
@@ -84,7 +84,7 @@ const TRACE_LOADING = false;
 // TODO(burdon): Document.
 @trace.resource()
 export class CoreDatabase {
-  private readonly _hypergraph: Hypergraph;
+  private readonly _hypergraph: HypergraphImpl;
   private readonly _dataService: DataService;
   private readonly _queryService: QueryService;
   private readonly _repoProxy: RepoProxy;
@@ -135,7 +135,7 @@ export class CoreDatabase {
     };
   }
 
-  get graph(): Hypergraph {
+  get graph(): HypergraphImpl {
     return this._hypergraph;
   }
 
