@@ -2,6 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
+import type * as Types from 'effect/Types';
+
 import type * as JsonSchema from './JsonSchema';
 import type * as Key from './Key';
 import type * as QueryResult from './QueryResult';
@@ -84,5 +86,7 @@ export interface SchemaRegistry {
    */
   register(input: RegisterSchemaInput[]): Promise<Type.RuntimeType[]>;
 
-  query(query?: Query): QueryResult.QueryResult<ExtractQueryResult<Query>>;
+  query<Q extends Types.NoExcessProperties<Query, Q>>(
+    query?: Q & Query,
+  ): QueryResult.QueryResult<ExtractQueryResult<Q>>;
 }
