@@ -51,6 +51,17 @@ export default defineConfig({
     assetFileNames: 'internal/[name]-[hash].[extname]',
     minifyInternalExports: false,
   },
+  plugins: [
+    {
+      name: 'manifest',
+      writeBundle(outputOptions, bundle) {
+        const manifest = {
+          files: Object.keys(bundle),
+        };
+        fs.writeFile(`${outputOptions.dir}/manifest.json`, JSON.stringify(manifest, null, 2));
+      },
+    },
+  ],
 });
 
 /**
