@@ -512,7 +512,7 @@ describe('Spaces', () => {
 
   test('export space archive', { timeout: 3_000 }, async () => {
     const [client] = await createInitializedClients(1, { storage: true });
-    registerTypes(client);
+    await registerTypes(client);
 
     const space = await client.spaces.create();
     space.db.add(createDocument());
@@ -566,8 +566,8 @@ describe('Spaces', () => {
     return space.db.getObjectById<TestSchema.DocumentType>(documentId)!.content.target!.content;
   };
 
-  const registerTypes = (client: Client) => {
-    client.addTypes([TestSchema.DocumentType, TestSchema.TextV0Type]);
+  const registerTypes = async (client: Client) => {
+    await client.addTypes([TestSchema.DocumentType, TestSchema.TextV0Type]);
   };
 
   const createDocument = (): Live<TestSchema.DocumentType> => {
