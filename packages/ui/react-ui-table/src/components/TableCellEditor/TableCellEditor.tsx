@@ -8,7 +8,6 @@ import type * as Schema from 'effect/Schema';
 import React, { useCallback, useMemo, useRef, useState } from 'react';
 
 import { debounce } from '@dxos/async';
-import type { Client } from '@dxos/client';
 import { Format, TypeEnum } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
 import { type DxGridAxis, type DxGridPosition } from '@dxos/lit-grid';
@@ -42,7 +41,6 @@ export type TableCellEditorProps = {
   onFocus?: (axis?: DxGridAxis, delta?: -1 | 0 | 1, cell?: DxGridPosition) => void;
   onCreate?: OnCreateHandler;
   onSave?: () => void;
-  client?: Client;
 };
 
 const adaptValidationMessage = (message: string | null) =>
@@ -55,7 +53,6 @@ export const TableValueEditor = ({
   onFocus,
   onSave,
   onCreate,
-  client,
   __gridScope,
 }: GridScopedProps<TableCellEditorProps>) => {
   const { editing } = useGridContext('TableValueEditor', __gridScope);
@@ -86,8 +83,6 @@ export const TableValueEditor = ({
         __gridScope={__gridScope}
         onSave={onSave}
         onCreate={onCreate}
-        client={client}
-        modals={modals}
       />
     );
   }

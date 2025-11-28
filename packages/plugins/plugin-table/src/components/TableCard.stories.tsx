@@ -48,7 +48,7 @@ const meta = {
       types: [View.View, Table.Table],
       createIdentity: true,
       createSpace: true,
-      onCreateSpace: async ({ client, space }) => {
+      onCreateSpace: async ({ space }) => {
         // Configure schema.
         const typename = 'example.com/SingleSelect';
         const selectOptions = [
@@ -75,7 +75,7 @@ const meta = {
         const [storedSchema] = await space.db.schemaRegistry.register([schema]);
 
         // Initialize table.
-        const { view, jsonSchema } = await View.makeFromSpace({ client, space, typename });
+        const { view, jsonSchema } = await View.makeFromSpace({ space, typename });
         const table = Table.make({ view, jsonSchema });
         space.db.add(table);
 

@@ -4,10 +4,9 @@
 
 import { afterEach, assert, beforeEach, describe, expect, test } from 'vitest';
 
-import { Filter, Obj, Query, Relation } from '@dxos/echo';
+import { Filter, type Hypergraph, Obj, Query, Relation } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
 
-import { type Hypergraph } from '../hypergraph';
 import { EchoTestBuilder } from '../testing';
 
 import { type EchoDatabase } from './database';
@@ -15,7 +14,7 @@ import { type EchoDatabase } from './database';
 describe('Relations', () => {
   let testBuilder: EchoTestBuilder;
   let db: EchoDatabase;
-  let graph: Hypergraph;
+  let graph: Hypergraph.Hypergraph;
 
   beforeEach(async () => {
     testBuilder = await new EchoTestBuilder().open();

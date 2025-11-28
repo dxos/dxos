@@ -17,7 +17,6 @@ import React, {
 } from 'react';
 
 // TODO(wittjosiah): Remove dependency on react-client.
-import { type Client } from '@dxos/react-client';
 import { useAttention } from '@dxos/react-ui-attention';
 import {
   type DxGridElement,
@@ -81,7 +80,6 @@ export type TableMainProps = {
   model?: TableModel;
   presentation?: TablePresentation;
   schema?: Schema.Schema.AnyNoContext;
-  client?: Client;
   // TODO(burdon): Rename since attention isn't a useful concept here? Standardize across other components. Pass property into useAttention.
   ignoreAttention?: boolean;
   onCreate?: OnCreateHandler;
@@ -90,7 +88,7 @@ export type TableMainProps = {
 };
 
 const TableMain = forwardRef<TableController, TableMainProps>(
-  ({ model, presentation, ignoreAttention, schema, client, onCreate, onRowClick, testId }, forwardedRef) => {
+  ({ model, presentation, ignoreAttention, schema, onCreate, onRowClick, testId }, forwardedRef) => {
     const [dxGrid, setDxGrid] = useState<DxGridElement | null>(null);
     const { hasAttention } = useAttention(model?.id ?? 'table');
     const modals = useMemo(() => new ModalController(), []);
@@ -408,7 +406,6 @@ const TableMain = forwardRef<TableController, TableMainProps>(
           onFocus={handleFocus}
           onSave={handleSave}
           onCreate={onCreate}
-          client={client}
         />
         <Grid.Content
           className={mx('[--dx-grid-base:var(--baseSurface)]', gridSeparatorInlineEnd, gridSeparatorBlockEnd)}

@@ -8,9 +8,8 @@ import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
 
-import { type Client } from '@dxos/client';
 import { type Space } from '@dxos/client/echo';
-import { Filter, Obj, Query, QueryAST, type SchemaRegistry, Type } from '@dxos/echo';
+import { Filter, JsonSchema, Obj, Query, QueryAST, type SchemaRegistry, Type } from '@dxos/echo';
 import {
   FormInputAnnotation,
   Format,
@@ -239,7 +238,6 @@ export const makeWithReferences = async ({
 };
 
 export type MakeFromSpaceProps = Omit<MakeWithReferencesProps, 'query' | 'queryRaw' | 'jsonSchema' | 'registry'> & {
-  client?: Client;
   space: Space;
   typename?: string;
   createInitial?: number;
@@ -249,7 +247,6 @@ export type MakeFromSpaceProps = Omit<MakeWithReferencesProps, 'query' | 'queryR
  * Create view from a schema in provided space or client.
  */
 export const makeFromSpace = async ({
-  client,
   space,
   typename,
   createInitial = 1,
@@ -262,12 +259,11 @@ export const makeFromSpace = async ({
     createInitial = 0;
   }
 
-  const staticSchema = client?.graph.schemaRegistry.schemas.find((schema) => Type.getTypename(schema) === typename);
-  const dynamicSchema = await space.db.schemaRegistry.query({ typename }).firstOrUndefined();
-  const jsonSchema = staticSchema ? Type.toJsonSchema(staticSchema) : dynamicSchema?.jsonSchema;
+  const schema = await space.db.schemaRegistry
+    .query({ typename, location: ['database', 'runtime'] })
+    .firstOrUndefined();
+  const jsonSchema = schema && JsonSchema.toJsonSchema(schema);
   invariant(jsonSchema, `Schema not found: ${typename}`);
-  const schema = staticSchema ?? dynamicSchema;
-  invariant(schema, `Schema not found: ${typename}`);
 
   Array.from({ length: createInitial }).forEach(() => {
     space.db.add(Obj.make(schema, {}));

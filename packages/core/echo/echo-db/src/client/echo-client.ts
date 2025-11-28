@@ -10,7 +10,7 @@ import { type QueueService } from '@dxos/protocols';
 import { type QueryService } from '@dxos/protocols/proto/dxos/echo/query';
 import { type DataService } from '@dxos/protocols/proto/dxos/echo/service';
 
-import { Hypergraph } from '../hypergraph';
+import { HypergraphImpl } from '../hypergraph';
 import { EchoDatabaseImpl } from '../proxy-db';
 import { QueueFactory } from '../queue';
 
@@ -55,7 +55,7 @@ export type ConstructDatabaseParams = {
  * Connects to the ECHO host via an ECHO service.
  */
 export class EchoClient extends Resource {
-  private readonly _graph = new Hypergraph();
+  private readonly _graph = new HypergraphImpl();
 
   // TODO(burdon): This already exists in Hypergraph.
   private readonly _databases = new Map<SpaceId, EchoDatabaseImpl>();
@@ -70,7 +70,7 @@ export class EchoClient extends Resource {
     super();
   }
 
-  get graph(): Hypergraph {
+  get graph(): HypergraphImpl {
     return this._graph;
   }
 

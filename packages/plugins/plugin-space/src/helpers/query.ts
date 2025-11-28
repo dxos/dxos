@@ -18,7 +18,6 @@ import {
   unwrapOptional,
 } from '@dxos/echo/internal';
 import { log } from '@dxos/log';
-import { type Client } from '@dxos/react-client';
 import { type Space } from '@dxos/react-client/echo';
 import { Person } from '@dxos/types';
 
@@ -35,19 +34,14 @@ export const evalQuery = (queryString: string): Query.Any => {
   }
 };
 
-export const resolveSchemaWithClientAndSpace = (client: Client, space: Space, query: QueryAST.Query) => {
+export const resolveSchemaWithClientAndSpace = (space: Space, query: QueryAST.Query) => {
   const resolve = Effect.fn(function* (dxn: string) {
     const typename = DXN.parse(dxn).asTypeDXN()?.type;
     if (!typename) {
       return Option.none();
     }
 
-    const staticSchema = client.graph.schemaRegistry.getSchema(typename);
-    if (staticSchema) {
-      return Option.some(staticSchema);
-    }
-
-    const query = space.db.schemaRegistry.query({ typename });
+    const query = space.db.schemaRegistry.query({ typename, location: ['database', 'runtime'] });
     const schemas = yield* Effect.promise(() => query.run());
     return Array.head(schemas);
   });

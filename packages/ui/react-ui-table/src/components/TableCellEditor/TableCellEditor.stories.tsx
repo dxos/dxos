@@ -49,8 +49,8 @@ const meta = {
       types: [View.View, Task.Task, Table.Table],
       createIdentity: true,
       createSpace: true,
-      onCreateSpace: async ({ client, space }) => {
-        const { view, jsonSchema } = await View.makeFromSpace({ client, space, typename: Task.Task.typename });
+      onCreateSpace: async ({ space }) => {
+        const { view, jsonSchema } = await View.makeFromSpace({ space, typename: Task.Task.typename });
         const table = Table.make({ view, jsonSchema });
         space.db.add(table);
         Array.from({ length: 10 }).forEach(() => {

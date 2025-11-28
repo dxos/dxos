@@ -22,7 +22,7 @@ export const ObjectDetailsPanel = ({ objectId, view }: RowDetailsPanelProps) => 
   const client = useClient();
   const space = getSpace(view);
   const typename = view.query ? getTypenameFromQuery(view.query.ast) : undefined;
-  const schema = useSchema(client, space, typename);
+  const schema = useSchema(space, typename);
 
   const queriedObjects = useQuery(space, schema ? Filter.type(schema) : Filter.nothing());
   const selectedRows = useSelected(objectId, 'multi');

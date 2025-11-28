@@ -218,7 +218,7 @@ MarkdownEditorBlocks.displayName = 'MarkdownEditor.Blocks';
 const PreviewBlock = ({ el, link }: PreviewBlock) => {
   const client = useClient();
   const dxn = DXN.parse(link.ref);
-  const subject = client.graph.ref(dxn).target;
+  const subject = client.graph.makeRef(dxn).target;
   const data = useMemo(() => ({ subject }), [subject]);
 
   return createPortal(<Surface role='card--transclusion' data={data} limit={1} />, el);

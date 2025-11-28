@@ -339,8 +339,8 @@ export default ({ context, observability, createInvitationUrl }: IntentResolverO
     createResolver({
       intent: SpaceAction.UseStaticSchema,
       resolve: async ({ space, typename, show }) => {
-        const client = context.getCapability(ClientCapabilities.Client);
-        const schema = client.graph.schemaRegistry.schemas.find((schema) => Type.getTypename(schema) === typename);
+        const schemas = context.getCapability(ClientCapabilities.Schema).flat();
+        const schema = schemas.find((schema) => Type.getTypename(schema) === typename);
         invariant(schema, `Schema not found: ${typename}`);
 
         if (!space.properties.staticRecords) {

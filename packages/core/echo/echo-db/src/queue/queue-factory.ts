@@ -3,12 +3,10 @@
 //
 
 import { Resource } from '@dxos/context';
-import { type Entity } from '@dxos/echo';
+import { type Entity, type Hypergraph } from '@dxos/echo';
 import { assertArgument, assertState } from '@dxos/invariant';
 import { DXN, ObjectId, type QueueSubspaceTag, QueueSubspaceTags, type SpaceId } from '@dxos/keys';
 import { type QueueService } from '@dxos/protocols';
-
-import { type Hypergraph } from '../hypergraph';
 
 import { QueueImpl } from './queue';
 import { type Queue } from './types';
@@ -24,7 +22,7 @@ export class QueueFactory extends Resource implements QueueAPI {
 
   constructor(
     private readonly _spaceId: SpaceId,
-    private readonly _graph: Hypergraph,
+    private readonly _graph: Hypergraph.Hypergraph,
   ) {
     super();
   }
