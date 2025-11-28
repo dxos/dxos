@@ -12,11 +12,11 @@ import { type FormFieldComponentProps, FormFieldLabel } from '../FormFieldCompon
 export const BooleanField = ({
   type,
   label,
-  inputOnly,
+  inline,
+  readonly,
   getStatus,
   getValue,
   onValueChange,
-  readonly,
 }: FormFieldComponentProps) => {
   const { status, error } = getStatus();
   const checked = Boolean(getValue());
@@ -24,13 +24,13 @@ export const BooleanField = ({
 
   return (
     <Input.Root validationValence={status}>
-      {!inputOnly && <FormFieldLabel error={error} readonly={readonly} label={label} />}
+      {!inline && <FormFieldLabel error={error} readonly={readonly} label={label} />}
       {readonly === 'static' ? (
         <p>{t(checked ? 'boolean input true value' : 'boolean input false value')}</p>
       ) : (
         <Input.Switch disabled={!!readonly} checked={checked} onCheckedChange={(value) => onValueChange(type, value)} />
       )}
-      {inputOnly && <Input.DescriptionAndValidation>{error}</Input.DescriptionAndValidation>}
+      {inline && <Input.DescriptionAndValidation>{error}</Input.DescriptionAndValidation>}
     </Input.Root>
   );
 };

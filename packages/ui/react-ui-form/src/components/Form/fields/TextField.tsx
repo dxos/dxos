@@ -11,7 +11,7 @@ import { type FormFieldComponentProps, FormFieldLabel } from '../FormFieldCompon
 export const TextField = ({
   type,
   label,
-  inputOnly,
+  inline,
   readonly,
   placeholder,
   getStatus,
@@ -27,13 +27,13 @@ export const TextField = ({
 
   // TODO(burdon): Factor out common layout.
   const str = String(value ?? '');
-  if (readonly === 'static' && inputOnly) {
+  if (readonly === 'static' && inline) {
     return <p>{str}</p>;
   }
 
   return (
     <Input.Root validationValence={status}>
-      {!inputOnly && <FormFieldLabel error={error} readonly={readonly} label={label} />}
+      {!inline && <FormFieldLabel error={error} readonly={readonly} label={label} />}
       {readonly === 'static' ? (
         <p>{str}</p>
       ) : (
@@ -45,7 +45,7 @@ export const TextField = ({
           onBlur={onBlur}
         />
       )}
-      {inputOnly && <Input.Validation>{error}</Input.Validation>}
+      {inline && <Input.Validation>{error}</Input.Validation>}
     </Input.Root>
   );
 };

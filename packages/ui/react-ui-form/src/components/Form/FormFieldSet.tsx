@@ -21,7 +21,7 @@ export type FormFieldSetProps<T extends AnyProperties> = ThemedClassName<
   {
     testId?: string;
     // TODO(burdon): Pick.
-    schema: Schema.Schema<T, any>;
+    schema?: Schema.Schema<T, any>;
     exclude?: (props: SchemaProperty<T>[]) => SchemaProperty<T>[];
     // TODO(burdon): Change to function (dynamic?)
     sort?: string[];
@@ -63,6 +63,10 @@ export const FormFieldSet = forwardRef<HTMLDivElement, FormFieldSetProps<any>>(
     const values = useFormValues(FormFieldSet.displayName!, path);
 
     const properties = useMemo(() => {
+      if (!schema) {
+        return [];
+      }
+
       const props = getSchemaProperties(schema.ast, values, { form: true });
 
       // Use projection-based field management when view and projection are available.

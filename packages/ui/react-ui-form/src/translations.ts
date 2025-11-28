@@ -32,6 +32,8 @@ export const translations = [
         'ref field placeholder_one': 'Select…',
         'ref field placeholder_other': 'Select items…',
 
+        'example placeholder': 'Example',
+
         // TODO(burdon): Factor out?
         'cancel button label': 'Cancel',
         'save button label': 'Save',

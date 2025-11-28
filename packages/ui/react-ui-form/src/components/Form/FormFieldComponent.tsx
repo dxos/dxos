@@ -36,11 +36,12 @@ export type FormFieldComponentProps = {
    */
   // TODO(burdon): Rename 'mode'.
   readonly?: 'disabled' | 'static' | false;
+
   /**
-   * Only show input controls.
+   * Indicates input used in a list.
    */
-  // TODO(burdon): Rename or combine with readonly "mode".
-  inputOnly?: boolean;
+  // TODO(burdon): Combine with readonly/mode.
+  inline?: boolean;
 } & FormFieldStateProps;
 
 /**

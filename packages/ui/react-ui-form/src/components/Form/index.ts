@@ -11,3 +11,5 @@ export * from './FormField';
 export * from './FormFieldComponent';
 export * from './FormFieldSet';
 export * from './FormRoot';
+
+export * from './NewForm';

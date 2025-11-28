@@ -11,7 +11,7 @@ import { type FormFieldComponentProps, FormFieldLabel } from '../FormFieldCompon
 export const MarkdownField = ({
   type,
   label,
-  inputOnly,
+  inline,
   readonly,
   placeholder,
   getStatus,
@@ -45,7 +45,7 @@ export const MarkdownField = ({
 
   return (
     <Input.Root validationValence={status}>
-      {!inputOnly && <FormFieldLabel error={error} readonly={readonly} label={label} />}
+      {!inline && <FormFieldLabel error={error} readonly={readonly} label={label} />}
       {readonly === 'static' ? (
         <p>{getValue() ?? ''}</p>
       ) : (
@@ -61,7 +61,7 @@ export const MarkdownField = ({
           spellCheck={false}
         />
       )}
-      {inputOnly && <Input.Validation>{error}</Input.Validation>}
+      {inline && <Input.Validation>{error}</Input.Validation>}
     </Input.Root>
   );
 };

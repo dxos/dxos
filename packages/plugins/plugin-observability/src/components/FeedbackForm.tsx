@@ -6,12 +6,52 @@ import React, { useCallback, useRef, useState } from 'react';
 
 import { getSnapshot } from '@dxos/echo/internal';
 import { IconButton, Input, useTranslation } from '@dxos/react-ui';
-import { FormProvider, useFormContext, useFormFieldState } from '@dxos/react-ui-form';
+import { FormProvider, NewForm, useFormContext, useFormFieldState } from '@dxos/react-ui-form';
 
 import { meta } from '../meta';
 import { UserFeedback } from '../types';
 
 const defaultValues: UserFeedback = { message: '' };
+
+export type FeedbackFormProps = {
+  onSave?: (values: UserFeedback) => void;
+};
+
+export const FeedbackForm = ({ onSave }: FeedbackFormProps) => {
+  const { t } = useTranslation(meta.id);
+  const formRef = useRef<HTMLDivElement>(null);
+
+  const [_, update] = useState({});
+  const forceRender = useCallback(() => update({}), [update]);
+
+  const initialValues = getSnapshot(defaultValues);
+
+  const handleSave = useCallback(
+    (values: UserFeedback) => {
+      onSave?.(values);
+      // TODO(wittjosiah): Force re-render to clear the form.
+      forceRender();
+    },
+    [forceRender, onSave],
+  );
+
+  return (
+    <NewForm.Root onSave={handleSave}>
+      <NewForm.Content>
+        <FeedbackContent />
+        <NewForm.Submit icon='ph--paper-plane-tilt--regular' label={t('send feedback label')} />
+      </NewForm.Content>
+    </NewForm.Root>
+  );
+
+  return (
+    <FormProvider formRef={formRef} schema={UserFeedback} initialValues={initialValues} onSave={handleSave}>
+      <div ref={formRef}>
+        <FeedbackContent />
+      </div>
+    </FormProvider>
+  );
+};
 
 const FeedbackContent = () => {
   const { t } = useTranslation(meta.id);
@@ -55,29 +95,3 @@ const FeedbackContent = () => {
 };
 
 FeedbackContent.displayName = 'Form.FeedbackContent';
-
-// TODO(wittjosiah): Use `Form`?
-export const FeedbackForm = ({ onSave }: { onSave: (values: UserFeedback) => void }) => {
-  const formRef = useRef<HTMLDivElement>(null);
-  const [_, update] = useState({});
-  const forceRender = useCallback(() => update({}), [update]);
-
-  const handleSave = useCallback(
-    (values: UserFeedback) => {
-      onSave(values);
-      // TODO(wittjosiah): Force re-render to clear the form.
-      forceRender();
-    },
-    [forceRender, onSave],
-  );
-
-  const initialValues = getSnapshot(defaultValues);
-
-  return (
-    <FormProvider formRef={formRef} schema={UserFeedback} initialValues={initialValues} onSave={handleSave}>
-      <div ref={formRef}>
-        <FeedbackContent />
-      </div>
-    </FormProvider>
-  );
-};

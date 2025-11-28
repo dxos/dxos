@@ -6,7 +6,7 @@ import { createContext } from '@radix-ui/react-context';
 import React, { type PropsWithChildren } from 'react';
 
 import { type AnyProperties } from '@dxos/echo/internal';
-import { IconButton, type ThemedClassName, useTranslation } from '@dxos/react-ui';
+import { IconButton, type IconButtonProps, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 import { type MakeOptional } from '@dxos/util';
 
@@ -16,10 +16,14 @@ import { translationKey } from '../../translations';
 import { FormFieldSet, type FormFieldSetProps } from './FormFieldSet';
 import { FormContext } from './FormRoot';
 
-// TODO(burdon): Keyboard handler.
+// TODO(burdon): Replace FeedbackForm.
+// TODO(burdon): Unify readonly/inline modes.
+// TODO(burdon): Inline tables for object arrays (type based extensions).
 // TODO(burdon): Refs, Selectors.
+// TODO(burdon): Keyboard handler.
 // TODO(burdon): Additional root props: options, callbacks.
-// TODO(burdon): Context, hooks.
+// TODO(burdon): Reaplce context, hooks.
+// TODO(burdon): Unify fieldMap/fieldProvider map callback (with adapter for map).
 
 //
 // Context
@@ -153,6 +157,33 @@ const NewFormActions = ({ classNames }: NewFormActionsProps) => {
 NewFormActions.displayName = 'NewForm.Actions';
 
 //
+// Submit
+//
+
+type NewFormSubmitProps = ThemedClassName<Partial<Pick<IconButtonProps, 'icon' | 'label'>>>;
+
+const NewFormSubmit = ({ classNames, label, icon }: NewFormSubmitProps) => {
+  const { t } = useTranslation(translationKey);
+  const { form } = useNewFormContext(NewFormSubmit.displayName);
+
+  return (
+    <div role='none' className={mx('flex is-full', classNames)}>
+      <IconButton
+        type='submit'
+        disabled={!form.canSave}
+        icon={icon ?? 'ph--check--regular'}
+        label={label ?? t('save button label')}
+        onClick={form.onSave}
+        classNames='is-full'
+        data-testid='save-button'
+      />
+    </div>
+  );
+};
+
+NewFormSubmit.displayName = 'NewForm.Submit';
+
+//
 // NewForm
 // https://www.radix-ui.com/primitives/docs/guides/composition
 //
@@ -162,6 +193,7 @@ export const NewForm = {
   Content: NewFormContent,
   FieldSet: NewFormFieldSet,
   Actions: NewFormActions,
+  Submit: NewFormSubmit,
 };
 
 export { useNewFormContext };

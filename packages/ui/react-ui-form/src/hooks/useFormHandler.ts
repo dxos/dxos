@@ -3,7 +3,6 @@
 //
 
 import type * as Schema from 'effect/Schema';
-import * as SchemaAST from 'effect/SchemaAST';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { type AnyProperties, getValue as getPathValue, setValue as setPathValue } from '@dxos/echo/internal';
@@ -20,13 +19,13 @@ export interface FormHandlerProps<T extends AnyProperties> {
   /**
    * Effect schema (Type literal).
    */
-  schema: Schema.Schema<T, any>;
+  schema?: Schema.Schema<T, any>;
 
   /**
    * Initial values (which may not pass validation).
    */
   // TODO(burdon): Rename initial values?
-  initialValues: Partial<T>;
+  initialValues?: Partial<T>;
 
   /**
    * Callback for value changes. Note: This is called even when values are invalid.
@@ -97,7 +96,7 @@ export type FormHandler<T extends AnyProperties> = {
  */
 export const useFormHandler = <T extends AnyProperties>({
   schema,
-  initialValues,
+  initialValues = {},
   onValuesChanged,
   onValidate,
   onValid,
@@ -105,7 +104,6 @@ export const useFormHandler = <T extends AnyProperties>({
   onCancel,
   ...props
 }: FormHandlerProps<T>): FormHandler<T> => {
-  invariant(SchemaAST.isTypeLiteral(schema.ast));
   const [values, setValues] = useState<Partial<T>>(initialValues);
 
   useEffect(() => {
@@ -123,6 +121,10 @@ export const useFormHandler = <T extends AnyProperties>({
 
   const validate = useCallback(
     (values: Partial<T>): values is T => {
+      if (!schema) {
+        return false;
+      }
+
       let errors: ValidationError[] = validateSchema(schema, values) ?? [];
       if (errors.length === 0 && onValidate) {
         const validatedValues = values as T;

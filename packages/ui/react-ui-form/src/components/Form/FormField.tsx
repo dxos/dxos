@@ -11,9 +11,11 @@ import React, { useMemo } from 'react';
 import { Format } from '@dxos/echo';
 import { type AnyProperties } from '@dxos/echo/internal';
 import { createJsonPath, findNode, getDiscriminatedType, isDiscriminatedUnion } from '@dxos/effect';
+import { useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 import { type ProjectionModel, type SchemaProperty } from '@dxos/schema';
 
+import { translationKey } from '../../translations';
 import { getRefProps } from '../../util';
 
 import {
@@ -30,8 +32,8 @@ import {
 import {
   type FormFieldComponent,
   type FormFieldComponentProps,
-  type FormFieldLookup,
   type FormFieldMap,
+  type FormFieldLookup as FormFieldProvider,
 } from './FormFieldComponent';
 import { FormFieldSet } from './FormFieldSet';
 import { useFormFieldState } from './FormRoot';
@@ -56,20 +58,16 @@ export type FormFieldProps<T extends AnyProperties> = {
    * Map of custom renderers for specific properties.
    * Prefer fieldProvider for plugin specific input surfaces.
    */
+  // TODO(burdon): Remove (convert to fieldProvider).
   fieldMap?: FormFieldMap;
 
   /**
    * Function to lookup custom renderers for specific properties.
    */
-  fieldProvider?: FormFieldLookup;
-
-  /**
-   * Indicates input used in a list.
-   */
-  // TODO(burdon): Rename listItem?
-  inline?: boolean;
+  fieldProvider?: FormFieldProvider;
 } & Pick<
   RefFieldProps,
+  | 'inline'
   | 'readonly'
   | 'createSchema'
   | 'createOptionLabel'
@@ -94,11 +92,12 @@ export const FormField = <T extends AnyProperties>({
   onCreate,
   onQueryRefOptions,
 }: FormFieldProps<T>) => {
+  const { t } = useTranslation(translationKey);
   const { ast, name, type, format, array, options, title, description, examples } = property;
 
   const label = useMemo(() => title ?? Function.pipe(name, StringEffect.capitalize), [title, name]);
   const placeholder = useMemo(
-    () => (examples?.length ? `Example: "${examples[0]}"` : description),
+    () => (examples?.length ? `${t('example placeholder')}: ${examples[0]}` : description),
     [examples, description],
   );
 
@@ -108,8 +107,8 @@ export const FormField = <T extends AnyProperties>({
     format,
     label,
     placeholder,
+    inline,
     readonly,
-    inputOnly: inline,
     ...fieldState,
   };
 

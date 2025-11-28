@@ -51,9 +51,9 @@ export type RefFieldProps = FormFieldComponentProps & {
 export const RefField = ({
   type,
   label,
+  inline,
   readonly,
   placeholder,
-  inputOnly,
   array,
   ast,
   getValue,
@@ -82,7 +82,7 @@ export const RefField = ({
     // If ref type is expando, fall back to taking a DXN in string format.
     return (
       <RefFieldFallback
-        {...{ type, label, placeholder, readonly, inputOnly, getValue, onBlur, onValueChange, ...restInputProps }}
+        {...{ type, label, placeholder, readonly, inline, getValue, onBlur, onValueChange, ...restInputProps }}
       />
     );
   }
@@ -176,7 +176,7 @@ export const RefField = ({
   // NOTE(thure): I left both predicates in-place in case we decide to add variants which do render readonly but empty values.
   return readonly && items.length < 1 ? null : (
     <Input.Root validationValence={status}>
-      {!inputOnly && <FormFieldLabel error={error} readonly={readonly} label={label} />}
+      {!inline && <FormFieldLabel error={error} readonly={readonly} label={label} />}
       <div data-no-submit>
         {readonly ? (
           items.length < 1 ? (
@@ -230,7 +230,7 @@ export const RefField = ({
           </ObjectPicker.Root>
         )}
       </div>
-      {inputOnly && <Input.DescriptionAndValidation>{error}</Input.DescriptionAndValidation>}
+      {inline && <Input.DescriptionAndValidation>{error}</Input.DescriptionAndValidation>}
     </Input.Root>
   );
 };
@@ -238,9 +238,9 @@ export const RefField = ({
 const RefFieldFallback = ({
   type,
   label,
+  inline,
   readonly,
   placeholder,
-  inputOnly,
   getValue,
   onValueChange,
   ...restInputProps
@@ -272,9 +272,9 @@ const RefFieldFallback = ({
     <TextField
       type={type}
       label={label}
+      inline={inline}
       readonly={readonly}
       placeholder={placeholder}
-      inputOnly={inputOnly}
       getValue={handleGetValue as <V>() => V | undefined}
       onValueChange={handleOnValueChange}
       {...restInputProps}
