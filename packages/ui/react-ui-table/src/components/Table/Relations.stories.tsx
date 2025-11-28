@@ -52,7 +52,6 @@ const useTestModel = <S extends Type.Obj.Any>(schema: S, count: number) => {
     const object = Table.make({ view, jsonSchema });
     setObject(object);
     space.db.add(object);
-    await space.db.schemaRegistry.register([schema]);
   }, [space, schema]);
 
   const projection = useProjectionModel(schema, object);
