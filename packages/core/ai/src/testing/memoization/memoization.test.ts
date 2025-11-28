@@ -14,10 +14,11 @@ import * as Layer from 'effect/Layer';
 import * as Schema from 'effect/Schema';
 import * as Stream from 'effect/Stream';
 
-import { TestHelpers } from '@dxos/effect';
+import { TestHelpers } from '@dxos/effect/testing';
 
-import * as AiService from '../AiService';
-import { AiServiceTestingPreset, TestingToolkit, testingLayer } from '../testing';
+import * as AiService from '../../AiService';
+import { AiServiceTestingPreset } from '../layer';
+import { TestingToolkit, testingLayer } from '../toolkit';
 
 import * as MemoizedAiService from './MemoizedAiService';
 
