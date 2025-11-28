@@ -9,9 +9,17 @@ import { Input, useTranslation } from '@dxos/react-ui';
 import { safeParseFloat } from '@dxos/util';
 
 import { translationKey } from '../../../translations';
-import { InputHeader, type InputProps } from '../Input';
+import { type FormFieldComponentProps, FormFieldLabel } from '../FormFieldComponent';
 
-export const GeoPointInput = ({ type, label, readonly, getStatus, getValue, onValueChange, onBlur }: InputProps) => {
+export const GeoPointField = ({
+  type,
+  label,
+  readonly,
+  getStatus,
+  getValue,
+  onValueChange,
+  onBlur,
+}: FormFieldComponentProps) => {
   const { t } = useTranslation(translationKey);
   const { status, error } = getStatus();
   const geoPoint = useMemo<GeoPoint>(() => getValue<GeoPoint>() ?? [0, 0], [getValue]);
@@ -46,7 +54,7 @@ export const GeoPointInput = ({ type, label, readonly, getStatus, getValue, onVa
 
   return (
     <Input.Root validationValence={status}>
-      <InputHeader error={error} label={label} />
+      <FormFieldLabel error={error} readonly={readonly} label={label} />
       <div role='none' className='grid grid-cols-2 gap-2'>
         <div role='none'>
           <Input.Label>{t('latitude label')}</Input.Label>

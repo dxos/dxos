@@ -163,7 +163,7 @@ const DefaultStory = ({
           <div className='flex flex-col bs-full overflow-hidden divide-y divider-separator'>
             {sidebar === 'selected' && selected && (
               <div>Form</div>
-              // <Form<ComputeNode> schema={FormSchema} values={getComputeNode(selected.id) ?? {}} Custom={{}} />
+              // <Form<ComputeNode> schema={FormSchema} values={getComputeNode(selected.id) ?? {}} fieldMap={{}} />
             )}
 
             <JsonFilter data={json} />

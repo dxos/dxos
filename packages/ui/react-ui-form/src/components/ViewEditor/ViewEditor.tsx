@@ -28,7 +28,14 @@ import {
 
 import { translationKey } from '../../translations';
 import { FieldEditor } from '../FieldEditor';
-import { Form, type FormProps, type InputComponent, InputHeader, type InputProps } from '../Form';
+import {
+  Form,
+  type FormFieldComponent,
+  type FormFieldComponentProps,
+  FormFieldLabel,
+  type FormFieldMap,
+  type FormProps,
+} from '../Form';
 
 const listGrid = 'grid grid-cols-[min-content_1fr_min-content_min-content_min-content]';
 const listItemGrid = 'grid grid-cols-subgrid col-span-5';
@@ -43,8 +50,7 @@ export type ViewEditorProps = ThemedClassName<
     showHeading?: boolean;
     onQueryChanged?: (query: QueryAST.Query, target?: string) => void;
     onDelete?: (fieldId: string) => void;
-  } & Pick<FormProps<any>, 'outerSpacing'> &
-    Pick<QueryFormProps, 'types' | 'tags'>
+  } & (Pick<FormProps<any>, 'outerSpacing'> & Pick<QueryFormProps, 'types' | 'tags'>)
 >;
 
 /**
@@ -116,6 +122,11 @@ export const ViewEditor = forwardRef<ProjectionModel, ViewEditorProps>(
       [mode, view.query.ast, queueTarget],
     );
 
+    const fieldMap = useMemo<FormFieldMap | undefined>(
+      () => (mode === 'tag' ? customFields({ types, tags }) : undefined),
+      [mode, types, tags],
+    );
+
     const handleToggleField = useCallback(
       (field: FieldType) => {
         setExpandedField((prevExpandedFieldId) => (prevExpandedFieldId === field.id ? undefined : field.id));
@@ -183,8 +194,6 @@ export const ViewEditor = forwardRef<ProjectionModel, ViewEditorProps>(
       [projectionModel],
     );
 
-    const custom = useMemo(() => (mode === 'tag' ? customFields({ types, tags }) : undefined), [types, tags, mode]);
-
     return (
       <div role='none' className={mx(classNames)}>
         {/* If readonlyProp is set, then the callout is not needed. */}
@@ -197,12 +206,12 @@ export const ViewEditor = forwardRef<ProjectionModel, ViewEditorProps>(
         {/* TODO(burdon): Is the form read-only or just the schema? */}
         {/* TODO(burdon): Readonly fields should take up the same space as editable fields (just be ghosted). */}
         <Form<Schema.Schema.Type<typeof viewSchema>>
+          outerSpacing={outerSpacing}
           autoSave
           schema={viewSchema}
           values={viewValues}
+          fieldMap={fieldMap}
           onSave={handleUpdate}
-          outerSpacing={outerSpacing}
-          Custom={custom}
         />
 
         <div role='none' className={outerSpacing ? cardSpacing : 'mlb-cardSpacingBlock'}>
@@ -271,7 +280,7 @@ export const ViewEditor = forwardRef<ProjectionModel, ViewEditorProps>(
                         {expandedField === field.id && !readonly && (
                           <div role='none' className='col-span-5 mbs-1 mbe-1 border border-separator rounded-md'>
                             <FieldEditor
-                              readonly={readonly || schemaReadonly ? 'disabled-input' : false}
+                              readonly={readonly || schemaReadonly ? 'disabled' : false}
                               projection={projectionModel}
                               field={field}
                               registry={registry}
@@ -305,17 +314,20 @@ export const ViewEditor = forwardRef<ProjectionModel, ViewEditorProps>(
   },
 );
 
-const customFields = ({ types, tags }: Pick<ViewEditorProps, 'types' | 'tags'>): Record<string, InputComponent> => ({
-  query: (props: InputProps) => {
-    const handleChange = useCallback(
-      (query: Query.Any) => props.onValueChange('object', query.ast),
-      [props.onValueChange],
+const customFields = ({
+  types,
+  tags,
+}: Pick<ViewEditorProps, 'types' | 'tags'>): Record<string, FormFieldComponent> => ({
+  query: ({ readonly, label, getValue, onValueChange }: FormFieldComponentProps) => {
+    const handleChange = useCallback<NonNullable<QueryFormProps['onChange']>>(
+      (query) => onValueChange('object', query.ast),
+      [onValueChange],
     );
 
     return (
       <Input.Root>
-        <InputHeader label={props.label} />
-        <QueryForm initialQuery={props.getValue()} types={types} tags={tags} onChange={handleChange} />
+        <FormFieldLabel readonly={readonly} label={label} />
+        <QueryForm initialQuery={getValue()} types={types} tags={tags} onChange={handleChange} />
       </Input.Root>
     );
   },

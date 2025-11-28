@@ -11,7 +11,7 @@ import {
   FormatAnnotation,
   type JsonSchemaType,
   PropertyMetaAnnotationId,
-  type SelectOptionSchema,
+  type SelectOption,
   TypeEnum,
   TypedObject,
   formatToType,
@@ -19,7 +19,7 @@ import {
 import { createEchoSchema } from '@dxos/echo/testing';
 import { type DXN, PublicKey } from '@dxos/keys';
 
-export type SelectOptionType = typeof SelectOptionSchema.Type;
+export type SelectOptionType = typeof SelectOption.Type;
 
 // TODO(ZaymonFC): Keep this in sync with the schema in `schema-tools.ts`.
 export type SchemaPropertyDefinition = {

@@ -6,17 +6,17 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Schema from 'effect/Schema';
 import React, { useState } from 'react';
 
-import { type SelectOption, SelectOptionSchema } from '@dxos/echo/internal';
+import { SelectOption } from '@dxos/echo/internal';
 import { withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '../../../translations';
-import { TestLayout, TestPanel } from '../../testing';
+import { TestLayout } from '../../testing';
 import { Form } from '../Form';
 
-import { SelectOptionInput } from './SelectOptionsInput';
+import { SelectOptionField } from './SelectOptionField';
 
 const schema = Schema.Struct({
-  options: Schema.Array(SelectOptionSchema).pipe(Schema.mutable),
+  options: Schema.Array(SelectOption).pipe(Schema.mutable),
 }).pipe(Schema.mutable);
 
 const DefaultStory = () => {
@@ -31,21 +31,19 @@ const DefaultStory = () => {
 
   return (
     <TestLayout>
-      <TestPanel>
-        <Form
-          schema={schema}
-          values={values}
-          onSave={(vals) => setValues(vals)}
-          Custom={{ options: SelectOptionInput }}
-        />
-      </TestPanel>
+      <Form
+        schema={schema}
+        values={values}
+        fieldMap={{ options: SelectOptionField }}
+        onSave={(vals) => setValues(vals)}
+      />
     </TestLayout>
   );
 };
 
 const meta = {
-  title: 'ui/react-ui-form/SelectOptionsInput',
-  component: SelectOptionInput as any,
+  title: 'ui/react-ui-form/SelectOptionField',
+  component: SelectOptionField as any,
   render: DefaultStory,
   decorators: [withTheme],
   parameters: {

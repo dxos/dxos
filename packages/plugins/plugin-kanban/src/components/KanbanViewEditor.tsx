@@ -8,7 +8,7 @@ import { Format } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
 import { useClient } from '@dxos/react-client';
 import { getSpace, useSchema } from '@dxos/react-client/echo';
-import { type CustomInputMap, Form, SelectInput } from '@dxos/react-ui-form';
+import { Form, type FormFieldMap, SelectField } from '@dxos/react-ui-form';
 import { useProjectionModel } from '@dxos/react-ui-kanban';
 import { type Kanban } from '@dxos/react-ui-kanban/types';
 import { getTypenameFromQuery } from '@dxos/schema';
@@ -42,20 +42,21 @@ export const KanbanViewEditor = ({ object }: KanbanViewEditorProps) => {
     () => ({ columnFieldId: view?.projection.pivotFieldId }),
     [view?.projection.pivotFieldId],
   );
-  const custom: CustomInputMap = useMemo(
-    () => ({ columnFieldId: (props) => <SelectInput {...props} options={selectFields} /> }),
+
+  const fieldMap: FormFieldMap = useMemo(
+    () => ({ columnFieldId: (props) => <SelectField {...props} options={selectFields} /> }),
     [selectFields],
   );
 
   return (
     <Form
-      Custom={custom}
+      classNames='pbs-inputSpacingBlock'
+      outerSpacing={false}
+      autoSave
       schema={SettingsSchema}
       values={initialValues}
+      fieldMap={fieldMap}
       onSave={handleSave}
-      autoSave
-      outerSpacing={false}
-      classNames='pbs-inputSpacingBlock'
     />
   );
 };
