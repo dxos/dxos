@@ -59,13 +59,13 @@ const migrationV3 = defineObjectMigration({
 
 test('migrate 1 object', async () => {
   const { db, graph } = await builder.createDatabase();
-  graph.schemaRegistry.addSchema([ContactV1, ContactV2]);
+  await graph.schemaRegistry.register([ContactV1, ContactV2]);
 
   db.add(Obj.make(ContactV1, { firstName: 'John', lastName: 'Doe' }));
   await db.flush({ indexes: true });
   await db.runMigrations([migrationV2]);
 
-  const { objects } = await db.query(Filter.type(ContactV2)).run();
+  const objects = await db.query(Filter.type(ContactV2)).run();
   expect(objects).to.have.length(1);
 
   expect(getSchemaDXN(Obj.getSchema(objects[0])!)?.toString()).to.eq(
@@ -78,14 +78,14 @@ test('migrate 1 object', async () => {
 
 test('incrementally migrates new objects', async () => {
   const { db, graph } = await builder.createDatabase();
-  graph.schemaRegistry.addSchema([ContactV1, ContactV2]);
+  await graph.schemaRegistry.register([ContactV1, ContactV2]);
 
   db.add(Obj.make(ContactV1, { firstName: 'John', lastName: 'Doe' }));
   await db.flush({ indexes: true });
   await db.runMigrations([migrationV2]);
 
   {
-    const { objects } = await db.query(Filter.type(ContactV2)).run();
+    const objects = await db.query(Filter.type(ContactV2)).run();
     expect(objects).to.have.length(1);
     expect(objects[0].name).to.eq('John Doe');
   }
@@ -95,7 +95,7 @@ test('incrementally migrates new objects', async () => {
   await db.runMigrations([migrationV2]);
 
   {
-    const { objects } = await db.query(Filter.type(ContactV2)).run();
+    const objects = await db.query(Filter.type(ContactV2)).run();
     expect(objects).to.have.length(2);
     expect(objects[0].name).to.eq('John Doe');
     expect(objects[1].name).to.eq('Jane Smith');
@@ -104,7 +104,7 @@ test('incrementally migrates new objects', async () => {
   await db.runMigrations([migrationV2]);
 
   {
-    const { objects } = await db.query(Filter.type(ContactV2)).run();
+    const objects = await db.query(Filter.type(ContactV2)).run();
     expect(objects).to.have.length(2);
     expect(objects[0].name).to.eq('John Doe');
     expect(objects[1].name).to.eq('Jane Smith');
@@ -113,13 +113,13 @@ test('incrementally migrates new objects', async () => {
 
 test('chained migrations', async () => {
   const { db, graph } = await builder.createDatabase();
-  graph.schemaRegistry.addSchema([ContactV1, ContactV2, ContactV3]);
+  await graph.schemaRegistry.register([ContactV1, ContactV2, ContactV3]);
 
   db.add(Obj.make(ContactV1, { firstName: 'John', lastName: 'Doe' }));
   await db.flush({ indexes: true });
   await db.runMigrations([migrationV2, migrationV3]);
 
-  const { objects } = await db.query(Filter.type(ContactV3)).run();
+  const objects = await db.query(Filter.type(ContactV3)).run();
   expect(objects).to.have.length(1);
   expect(Obj.getTypename(objects[0])).to.eq('example.com/type/Person');
   expect(Type.getVersion(Obj.getSchema(objects[0])!)).to.eq('0.3.0');
@@ -130,7 +130,7 @@ test('chained migrations', async () => {
 // TODO(wittjosiah): Strip down to minimal example. Key thing this is testing is arrays.
 // test('view migration', async () => {
 //   const { db, graph } = await builder.createDatabase();
-//   graph.schemaRegistry.addSchema([ViewTypeV1, ViewTypeV2]);
+//   graph.schemaRegistry.register([ViewTypeV1, ViewTypeV2]);
 
 //   db.add(
 //     Obj.make(ViewTypeV1, {
@@ -148,7 +148,7 @@ test('chained migrations', async () => {
 //   await db.flush({ indexes: true });
 //   await db.runMigrations([ViewTypeV1ToV2]);
 
-//   const { objects } = await db.query(Filter.type(ViewTypeV2)).run();
+//   const objects = await db.query(Filter.type(ViewTypeV2)).run();
 //   expect(objects).to.have.length(1);
 // });
 

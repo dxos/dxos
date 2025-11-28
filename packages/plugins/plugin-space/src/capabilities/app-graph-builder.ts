@@ -65,9 +65,7 @@ export default (context: PluginContext) => {
           nextOrder.map(({ id }) => id),
         );
 
-        const {
-          objects: [spacesOrder],
-        } = await client.spaces.default.db.query(Filter.type(Type.Expando, { key: SHARED })).run();
+        const [spacesOrder] = await client.spaces.default.db.query(Filter.type(Type.Expando, { key: SHARED })).run();
         if (spacesOrder) {
           spacesOrder.order = nextOrder.map(({ id }) => id);
         } else {
@@ -380,7 +378,12 @@ export default (context: PluginContext) => {
             return null;
           }
 
-          return createObjectNode({ object, space, resolve: resolve(get), disposition: 'hidden' });
+          return createObjectNode({
+            object,
+            space,
+            resolve: resolve(get),
+            disposition: 'hidden',
+          });
         });
       },
     }),

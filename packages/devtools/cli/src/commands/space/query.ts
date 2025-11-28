@@ -17,7 +17,10 @@ export default class Query extends BaseCommand<typeof Query> {
   static override flags = {
     ...BaseCommand.flags,
     ...TABLE_FLAGS,
-    typename: Flags.string({ default: undefined, description: 'Filter objects by typename.' }),
+    typename: Flags.string({
+      default: undefined,
+      description: 'Filter objects by typename.',
+    }),
   };
 
   static override args = ARG_SPACE_KEYS;
@@ -26,7 +29,7 @@ export default class Query extends BaseCommand<typeof Query> {
     return await this.execWithClient(async ({ client }) => {
       const space = await this.getSpace(client, this.args.key);
       const filter = this.flags.typename?.length ? Filter.typename(this.flags.typename) : undefined;
-      const { objects } = await space.db.query(filter ?? Filter.everything()).run();
+      const objects = await space.db.query(filter ?? Filter.everything()).run();
       this.log('Objects:', objects.length);
       this._printObjects(objects, { extended: this.flags.extended as boolean });
       return { objects };

@@ -35,10 +35,10 @@ export const remove = Command.make(
         throw new Error('Must specify typename or id');
       }
       const objects = yield* DatabaseService.runQuery(query);
-      for (const object of objects.objects) {
+      for (const object of objects) {
         yield* DatabaseService.remove(object);
       }
 
-      yield* Console.log(`Removed ${objects.objects.length} objects.`);
+      yield* Console.log(`Removed ${objects.length} objects.`);
     }).pipe(withDatabase(spaceId)),
 ).pipe(Command.withDescription('Remove an object from a space.'));

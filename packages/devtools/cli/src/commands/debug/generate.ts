@@ -59,7 +59,7 @@ export default class Generate extends BaseCommand<typeof Generate> {
         await pause();
       }
 
-      const { objects = [] } = (await space?.db.query(Filter.type(Type.Expando, { type }))?.run()) ?? {};
+      const objects = (await space?.db.query(Filter.type(Type.Expando, { type }))?.run()) ?? [];
       if (objects.length) {
         for (let i = 0; i < this.flags.mutations; i++) {
           const object = faker.helpers.arrayElement(objects);

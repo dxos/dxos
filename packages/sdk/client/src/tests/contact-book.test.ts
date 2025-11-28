@@ -45,7 +45,7 @@ describe('ContactBook', () => {
       await inviteMember(space1, client2);
       const [contact] = await waitForContactBookSize(client1, 1);
 
-      client1.addTypes([TestSchema.TextV0Type]);
+      await client1.addTypes([TestSchema.TextV0Type]);
       const space2 = await client1.spaces.create();
       const document = space2.db.add(Obj.make(TestSchema.TextV0Type, { content: 'text' }));
       await space2.db.flush();

@@ -32,14 +32,12 @@ export class QueueQueryContext<T extends Entity.Unknown = Entity.Unknown> implem
   /**
    * One-shot run.
    */
-  async run(query: QueryAST.Query): Promise<QueryResult.Entry<T>[]> {
+  async run(query: QueryAST.Query): Promise<QueryResult.EntityEntry<T>[]> {
     const trivial = isSimpleSelectionQuery(query);
     if (!trivial) {
       throw new Error('Query not supported.');
     }
     const { filter } = trivial;
-
-    const spaceId = this.#queue.dxn.asQueueDXN()!.spaceId;
 
     const objects = await Function.pipe(
       await this.#queue.fetchObjectsJSON(),
@@ -50,8 +48,7 @@ export class QueueQueryContext<T extends Entity.Unknown = Entity.Unknown> implem
 
     return objects.map((object) => ({
       id: object.id,
-      spaceId,
-      object: object as T,
+      result: object as T,
     }));
   }
 
@@ -90,18 +87,16 @@ export class QueueQueryContext<T extends Entity.Unknown = Entity.Unknown> implem
   /**
    * Synchronously get the results.
    */
-  getResults(): QueryResult.Entry<T>[] {
+  getResults(): QueryResult.EntityEntry<T>[] {
     invariant(this.#filter);
 
-    const spaceId = this.#queue.dxn.asQueueDXN()!.spaceId;
     return Function.pipe(
       this.#queue.getObjectsSync(),
       // TODO(dmaretskyi): We end-up marshaling objects from JSON and back.
       Array.filter((obj) => filterMatchObjectJSON(this.#filter!, Obj.toJSON(obj))),
       Array.map((object) => ({
         id: object.id,
-        spaceId,
-        object: object as T,
+        result: object as T,
       })),
     );
   }

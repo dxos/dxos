@@ -86,7 +86,7 @@ describe('queues', () => {
 
     await queue.append([
       // prettier-ignore
-      Obj.make(TestSchema.Person, { name: 'john' }),
+      Obj.make(TestSchema.Person, { name: "john" }),
       Obj.make(TestSchema.Person, { name: 'jane' }),
     ]);
 
@@ -105,7 +105,9 @@ describe('queues', () => {
   });
 
   test('relations in queues', async () => {
-    await using peer = await builder.createPeer({ types: [TestSchema.Person, TestSchema.EmployedBy] });
+    await using peer = await builder.createPeer({
+      types: [TestSchema.Person, TestSchema.EmployedBy],
+    });
     const spaceId = SpaceId.random();
     const queues = peer.client.constructQueueFactory(spaceId);
     const queue = queues.create();
@@ -132,7 +134,9 @@ describe('queues', () => {
   });
 
   test('relation between queue object and a database object', async () => {
-    await using peer = await builder.createPeer({ types: [TestSchema.Person, TestSchema.EmployedBy] });
+    await using peer = await builder.createPeer({
+      types: [TestSchema.Person, TestSchema.EmployedBy],
+    });
     const db = await peer.createDatabase();
     const queues = peer.client.constructQueueFactory(db.spaceId);
     const queue = queues.create();
@@ -159,7 +163,9 @@ describe('queues', () => {
 
   describe('Query', () => {
     test('one shot query everything', async ({ expect }) => {
-      await using peer = await builder.createPeer({ types: [TestSchema.Person, TestSchema.EmployedBy] });
+      await using peer = await builder.createPeer({
+        types: [TestSchema.Person, TestSchema.EmployedBy],
+      });
       const spaceId = SpaceId.random();
       const queues = peer.client.constructQueueFactory(spaceId);
       const queue = queues.create();
@@ -177,12 +183,14 @@ describe('queues', () => {
       ]);
 
       const result = await queue.query(Query.select(Filter.everything())).run();
-      expect(result.objects).toHaveLength(3);
-      expect(result.objects.map((obj) => (obj as TestSchema.Person).name).sort()).toEqual(['alice', 'jane', 'john']);
+      expect(result).toHaveLength(3);
+      expect(result.map((obj) => (obj as TestSchema.Person).name).sort()).toEqual(['alice', 'jane', 'john']);
     });
 
     test('one shot query contacts', async ({ expect }) => {
-      await using peer = await builder.createPeer({ types: [TestSchema.Person, TestSchema.Task] });
+      await using peer = await builder.createPeer({
+        types: [TestSchema.Person, TestSchema.Task],
+      });
       const spaceId = SpaceId.random();
       const queues = peer.client.constructQueueFactory(spaceId);
       const queue = queues.create();
@@ -200,12 +208,14 @@ describe('queues', () => {
       ]);
 
       const result = await queue.query(Query.select(Filter.type(TestSchema.Person))).run();
-      expect(result.objects).toHaveLength(2);
-      expect(result.objects.map((o) => (o as TestSchema.Person).name).sort()).toEqual(['jane', 'john']);
+      expect(result).toHaveLength(2);
+      expect(result.map((o) => (o as TestSchema.Person).name).sort()).toEqual(['jane', 'john']);
     });
 
     test('one shot query with name predicate', async ({ expect }) => {
-      await using peer = await builder.createPeer({ types: [TestSchema.Person] });
+      await using peer = await builder.createPeer({
+        types: [TestSchema.Person],
+      });
       const spaceId = SpaceId.random();
       const queues = peer.client.constructQueueFactory(spaceId);
       const queue = queues.create();
@@ -223,12 +233,14 @@ describe('queues', () => {
       ]);
 
       const result = await queue.query(Query.select(Filter.type(TestSchema.Person, { name: 'jane' }))).run();
-      expect(result.objects).toHaveLength(1);
-      expect(result.objects[0].name).toEqual('jane');
+      expect(result).toHaveLength(1);
+      expect(result[0].name).toEqual('jane');
     });
 
     test('subscription query gets initial result', async ({ expect }) => {
-      await using peer = await builder.createPeer({ types: [TestSchema.Person] });
+      await using peer = await builder.createPeer({
+        types: [TestSchema.Person],
+      });
       const spaceId = SpaceId.random();
       const queues = peer.client.constructQueueFactory(spaceId);
       const queue = queues.create();
@@ -249,13 +261,15 @@ describe('queues', () => {
 
       // Wait a bit to ensure subscription is processed.
       await calledOnce;
-      expect(query.objects).toHaveLength(2);
-      expect(query.objects.map((o) => o.name).sort()).toEqual(['jane', 'john']);
+      expect(query.results).toHaveLength(2);
+      expect(query.results.map((o) => o.name).sort()).toEqual(['jane', 'john']);
       sub();
     });
 
     test('subscription query updates on append', async ({ expect }) => {
-      await using peer = await builder.createPeer({ types: [TestSchema.Person] });
+      await using peer = await builder.createPeer({
+        types: [TestSchema.Person],
+      });
       const spaceId = SpaceId.random();
       const queues = peer.client.constructQueueFactory(spaceId);
       const queue = queues.create();
@@ -280,8 +294,8 @@ describe('queues', () => {
 
       // Wait for update.
       await calledOnce;
-      expect(query.objects).toHaveLength(2);
-      expect(query.objects.map((obj) => obj.name).sort()).toEqual(['jane', 'john']);
+      expect(query.results).toHaveLength(2);
+      expect(query.results.map((obj) => obj.name).sort()).toEqual(['jane', 'john']);
       sub();
     });
   });

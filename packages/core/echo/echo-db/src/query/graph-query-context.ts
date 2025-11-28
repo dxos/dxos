@@ -44,12 +44,12 @@ export interface QuerySource {
   /**
    * Synchronous query.
    */
-  getResults(): QueryResult.Entry[];
+  getResults(): QueryResult.EntityEntry[];
 
   /**
    * One-shot query.
    */
-  run(query: QueryAST.Query): Promise<QueryResult.Entry[]>;
+  run(query: QueryAST.Query): Promise<QueryResult.EntityEntry[]>;
 
   /**
    * Set the filter and trigger continuous updates.
@@ -98,22 +98,33 @@ export class GraphQueryContext implements QueryContext {
     this._params.onStop();
   }
 
-  getResults(): QueryResult.Entry[] {
+  getResults(): QueryResult.EntityEntry[] {
     if (!this._query) {
       return [];
     }
     return Array.from(this._sources).flatMap((source) => source.getResults());
   }
 
-  async run(query: QueryAST.Query, { timeout = 30_000 }: QueryResult.RunOptions = {}): Promise<QueryResult.Entry[]> {
+  async run(
+    query: QueryAST.Query,
+    { timeout = 30_000 }: QueryResult.RunOptions = {},
+  ): Promise<QueryResult.EntityEntry[]> {
     const runTasks = [...this._sources.values()].map(async (s) => {
       try {
-        log('run query', { resolver: Object.getPrototypeOf(s).constructor.name });
-        const results = await asyncTimeout<QueryResult.Entry[]>(s.run(query), timeout);
-        log('run query results', { resolver: Object.getPrototypeOf(s).constructor.name, count: results.length });
+        log('run query', {
+          resolver: Object.getPrototypeOf(s).constructor.name,
+        });
+        const results = await asyncTimeout<QueryResult.EntityEntry[]>(s.run(query), timeout);
+        log('run query results', {
+          resolver: Object.getPrototypeOf(s).constructor.name,
+          count: results.length,
+        });
         return results;
       } catch (err) {
-        log('run query error', { resolver: Object.getPrototypeOf(s).constructor.name, error: err });
+        log('run query error', {
+          resolver: Object.getPrototypeOf(s).constructor.name,
+          error: err,
+        });
         throw err;
       }
     });
@@ -152,7 +163,7 @@ export class SpaceQuerySource implements QuerySource {
 
   private _ctx: Context = new Context();
   private _query: QueryAST.Query | undefined = undefined;
-  private _results?: QueryResult.Entry<AnyLiveObject<any>>[] = undefined;
+  private _results?: QueryResult.EntityEntry<AnyLiveObject<any>>[] = undefined;
 
   constructor(private readonly _database: EchoDatabaseImpl) {}
 
@@ -179,7 +190,9 @@ export class SpaceQuerySource implements QuerySource {
     prohibitSignalActions(() => {
       // TODO(dmaretskyi): Could be optimized to recompute changed only to the relevant space.
       const changed = updateEvent.itemsUpdated.some(({ id: objectId }) => {
-        const core = this._database.coreDatabase.getObjectCoreById(objectId, { load: false });
+        const core = this._database.coreDatabase.getObjectCoreById(objectId, {
+          load: false,
+        });
 
         const trivial = isSimpleSelectionQuery(this._query!);
         if (!trivial) {
@@ -202,7 +215,7 @@ export class SpaceQuerySource implements QuerySource {
     });
   };
 
-  async run(query: QueryAST.Query): Promise<QueryResult.Entry<Obj.Any>[]> {
+  async run(query: QueryAST.Query): Promise<QueryResult.EntityEntry<Obj.Any>[]> {
     if (!this._isValidSourceForQuery(query)) {
       return [];
     }
@@ -213,7 +226,7 @@ export class SpaceQuerySource implements QuerySource {
     }
 
     const { filter, options } = simple;
-    const results: QueryResult.Entry<AnyLiveObject<any>>[] = [];
+    const results: QueryResult.EntityEntry<AnyLiveObject<any>>[] = [];
     if (isObjectIdFilter(filter)) {
       results.push(
         ...(await this._database._coreDatabase.batchLoadObjectCores((filter as QueryAST.FilterObject).id as ObjectId[]))
@@ -228,7 +241,7 @@ export class SpaceQuerySource implements QuerySource {
     });
 
     // Dedup
-    const map = new Map<string, QueryResult.Entry<Obj.Any>>();
+    const map = new Map<string, QueryResult.EntityEntry<Obj.Any>>();
     for (const result of results) {
       map.set(result.id, result);
     }
@@ -236,7 +249,7 @@ export class SpaceQuerySource implements QuerySource {
     return [...map.values()];
   }
 
-  getResults(): QueryResult.Entry<Obj.Any>[] {
+  getResults(): QueryResult.EntityEntry<Obj.Any>[] {
     if (!this._query) {
       return [];
     }
@@ -279,7 +292,7 @@ export class SpaceQuerySource implements QuerySource {
   private _queryWorkingSet(
     filter: QueryAST.Filter,
     options: QueryAST.QueryOptions | undefined,
-  ): QueryResult.Entry<Obj.Any>[] {
+  ): QueryResult.EntityEntry<Obj.Any>[] {
     const filteredCores = isObjectIdFilter(filter)
       ? (filter as QueryAST.FilterObject)
           .id!.map((id) => this._database.coreDatabase.getObjectCoreById(id, { load: true }))
@@ -300,11 +313,10 @@ export class SpaceQuerySource implements QuerySource {
     return true;
   }
 
-  private _mapCoreToResult(core: ObjectCore): QueryResult.Entry<Obj.Any> {
+  private _mapCoreToResult(core: ObjectCore): QueryResult.EntityEntry<Obj.Any> {
     return {
       id: core.id,
-      spaceId: this.spaceId,
-      object: this._database.getObjectById(core.id, { deleted: true }),
+      result: this._database.getObjectById(core.id, { deleted: true }),
       resolution: {
         source: 'local',
         time: 0,

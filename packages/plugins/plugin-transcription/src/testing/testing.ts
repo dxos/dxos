@@ -72,7 +72,12 @@ export class MessageBuilder extends AbstractMessageBuilder {
     let text = faker.lorem.paragraph();
     if (this._space) {
       const label = faker.commerce.productName();
-      const obj = this._space.db.add(Obj.make(TestItem, { title: label, description: faker.lorem.paragraph() }));
+      const obj = this._space.db.add(
+        Obj.make(TestItem, {
+          title: label,
+          description: faker.lorem.paragraph(),
+        }),
+      );
       const dxn = Ref.make(obj).dxn.toString();
       const words = text.split(' ');
       words.splice(Math.floor(Math.random() * words.length), 0, `[${label}](${dxn})`);
@@ -117,7 +122,7 @@ class EntityExtractionMessageBuilder extends AbstractMessageBuilder {
       throw new Error('Space not connected');
     }
 
-    const { objects } = await this.space.db
+    const objects = await this.space.db
       .query(
         Filter.or(
           Filter.type(Person.Person),

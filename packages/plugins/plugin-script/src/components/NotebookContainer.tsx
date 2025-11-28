@@ -78,8 +78,8 @@ export const NotebookContainer = ({ notebook, env }: NotebookContainerProps) => 
         if (cell.name && cell.graph?.target) {
           const graph = Obj.getSnapshot(cell.graph?.target);
           const query = Query.fromAst(graph.query.ast);
-          const result = await space?.db.query(query).run();
-          const objectIds = result?.objects?.map((obj) => obj.id);
+          const objects = await space?.db.query(query).run();
+          const objectIds = objects?.map((obj) => obj.id);
           setQueryValues((prev) => ({ ...prev, [cell.name!]: objectIds }));
         }
       }
@@ -150,8 +150,8 @@ export const NotebookContainer = ({ notebook, env }: NotebookContainerProps) => 
 
         case 'prompt': {
           if (space) {
-            const result = await space.db.query(Query.select(Filter.type(Blueprint.Blueprint))).run();
-            const blueprints = result.objects
+            const objects = await space.db.query(Query.select(Filter.type(Blueprint.Blueprint))).run();
+            const blueprints = objects
               .filter((blueprint) => INCLUDE_BLUEPRINTS.includes(blueprint.key))
               .map((blueprint) => Ref.make(blueprint));
             cell.prompt = Ref.make(Prompt.make({ instructions: '', blueprints }));

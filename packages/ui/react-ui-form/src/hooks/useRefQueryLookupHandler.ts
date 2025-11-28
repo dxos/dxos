@@ -21,7 +21,7 @@ export const useRefQueryLookupHandler = ({ space }: UseRefQueryLookupProps): Que
       }
 
       const query = space.db.query(Filter.typename(typeInfo.typename));
-      const { objects } = await query.run();
+      const objects = await query.run();
       return objects
         .map((object) => {
           const dxn = Obj.getDXN(object);

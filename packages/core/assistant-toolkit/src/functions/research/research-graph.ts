@@ -29,7 +29,7 @@ export interface ResearchGraph extends Schema.Schema.Type<typeof ResearchGraph> 
 export const queryResearchGraph: () => Effect.Effect<ResearchGraph | undefined, never, DatabaseService> = Effect.fn(
   'queryResearchGraph',
 )(function* () {
-  const { objects } = yield* DatabaseService.runQuery(Query.type(ResearchGraph));
+  const objects = yield* DatabaseService.runQuery(Query.type(ResearchGraph));
   return objects.at(0);
 });
 

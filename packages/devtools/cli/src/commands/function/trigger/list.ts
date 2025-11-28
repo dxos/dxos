@@ -25,7 +25,7 @@ export default class List extends BaseCommand<typeof List> {
   async run(): Promise<any> {
     return await this.execWithSpace(
       async ({ space }) => {
-        const { objects: triggers } = await space.db.query(Filter.type(Trigger.Trigger)).run();
+        const triggers = await space.db.query(Filter.type(Trigger.Trigger)).run();
         const filtered = this.flags.id ? triggers.filter((filter) => filter.id.startsWith(this.flags.id!)) : triggers;
         if (this.flags.enable !== undefined || this.flags.disable !== undefined) {
           for (const trigger of filtered) {

@@ -19,5 +19,6 @@ export * as Obj from './Obj';
 export * as QueryResult from './QueryResult';
 export * as Ref from './Ref';
 export * as Relation from './Relation';
+export * as SchemaRegistry from './SchemaRegistry';
 export * as Tag from './Tag';
 export * as Type from './Type';
