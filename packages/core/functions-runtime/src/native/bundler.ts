@@ -14,16 +14,17 @@ import { type Message, build } from 'esbuild';
 
 import { BaseError } from '@dxos/errors';
 import { PublicKey } from '@dxos/keys';
+import { log } from '@dxos/log';
 import { Unit, trim } from '@dxos/util';
 
 import { httpPlugin } from '../http-plugin-esbuild';
 
-type BundleOptions = {
+export type BundleOptions = {
   entryPoint: string;
   verbose?: boolean;
 };
 
-type BundleResult = {
+export type BundleResult = {
   entryPoint: string;
   assets: Record<string, Uint8Array>;
 };
@@ -127,10 +128,10 @@ export const bundleFunction = async (options: BundleOptions): Promise<BundleResu
   );
 
   if (options.verbose) {
-    console.log('Function compiled');
-    console.log('Metafile path:', `${outdir}/metafile.json`);
-    console.log('Assets:\n');
-    console.log(
+    log.info('Function compiled');
+    log.info('Metafile path:', `${outdir}/metafile.json`);
+    log.info('Assets:\n');
+    log.info(
       Object.entries(result.metafile!.outputs)
         .sort((a, b) => b[1].bytes - a[1].bytes)
         .map(
@@ -156,7 +157,7 @@ export const bundleFunction = async (options: BundleOptions): Promise<BundleResu
       Array.dedupe,
       Array.sort(Order.string),
     );
-    console.log(`Modules in output:\n${moduleInOutput.map((_) => ` - ${_}`).join('\n')}`);
+    log.info(`Modules in output:\n${moduleInOutput.map((_) => ` - ${_}`).join('\n')}`);
   }
 
   // Must match esbuild entry point.
