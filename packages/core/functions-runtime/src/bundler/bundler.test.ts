@@ -26,7 +26,7 @@ describe('Bundler', () => {
     `,
     });
     assert(!('error' in result), 'error should not exist');
-    expect(result.asset).toBeDefined();
+    expect(result.assets).toBeDefined();
   });
 
   test('Import', async () => {
@@ -40,7 +40,7 @@ describe('Bundler', () => {
     `,
     });
     assert(!('error' in result), 'error should not exist');
-    expect(result.asset).toBeDefined();
+    expect(result.assets).toBeDefined();
   });
 
   // TODO(dmaretskyi): Flaky on CI.
@@ -52,7 +52,7 @@ describe('Bundler', () => {
     `,
     });
     assert(!('error' in result), 'error should not exist');
-    expect(result.asset).toBeDefined();
+    expect(result.assets).toBeDefined();
   });
 
   test('Error', async () => {

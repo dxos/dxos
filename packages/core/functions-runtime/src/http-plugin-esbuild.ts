@@ -49,16 +49,22 @@ export const httpPlugin: Plugin = {
           );
         }
 
+        const extension = (new URL(args.path).pathname.split('.').pop() || '').toLowerCase();
+        // Special-case binary assets.
+        // if (extension === 'wasm') {
+        //   const buffer = yield* (response as any).arrayBuffer; // Effect<never, never, ArrayBuffer>
+        //   return { contents: new Uint8Array(buffer as ArrayBuffer), loader: 'file' satisfies Loader };
+        // }
+
         const text = yield* response.text;
-        const extension = new URL(args.path).pathname.split('.').pop() || '';
         const loader =
           ({
             js: 'js',
             jsx: 'jsx',
             ts: 'ts',
             tsx: 'tsx',
-            // Add more mappings as needed
-          }[extension.toLowerCase()] as Loader) || 'jsx';
+            wasm: 'copy',
+          }[extension] as Loader) || 'jsx';
         return { contents: text, loader };
       }).pipe(
         Effect.retry(
