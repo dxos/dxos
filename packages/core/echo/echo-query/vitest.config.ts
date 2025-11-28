@@ -12,7 +12,8 @@ export default createConfig({
   node: true,
 
   // TODO(dmaretskyi): Browser test fail on CI for mysterious reasons.
-  // browser: {
-  //   browsers: ['chromium'],
-  // },
+  // Note: WebGPU flags are now enabled by default in the base config for chromium.
+  browser: {
+    browsers: ['chromium'],
+  },
 });

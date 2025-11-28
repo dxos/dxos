@@ -45,7 +45,8 @@
   "devDependencies": {
     "@dxos/echo-generator": "workspace:*",
     "@dxos/random": "workspace:*",
-    "@lezer/generator": "^1.7.1"
+    "@lezer/generator": "^1.7.1",
+    "@mlc-ai/web-llm": "^0.2.79"
   },
   "publishConfig": {
     "access": "public"
