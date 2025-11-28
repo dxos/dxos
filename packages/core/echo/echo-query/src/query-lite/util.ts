@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Ref } from '@dxos/echo';
+import type { Ref } from '@dxos/echo';
 import { assertArgument } from '@dxos/invariant';
 
 export const RefTypeId: unique symbol = Symbol('@dxos/echo-query/Ref');
