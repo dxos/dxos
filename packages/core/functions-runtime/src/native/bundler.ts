@@ -10,13 +10,13 @@ import * as Array from 'effect/Array';
 import * as Function from 'effect/Function';
 import * as Order from 'effect/Order';
 import * as Record from 'effect/Record';
-import { type Message, build } from 'esbuild';
+import { build } from 'esbuild';
 
-import { BaseError } from '@dxos/errors';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { Unit, trim } from '@dxos/util';
 
+import { BundleCreationError } from '../errors';
 import { httpPlugin } from '../http-plugin-esbuild';
 
 export type BundleOptions = {
@@ -163,12 +163,6 @@ export const bundleFunction = async (options: BundleOptions): Promise<BundleResu
   // Must match esbuild entry point.
   return { entryPoint: 'index.js', assets };
 };
-
-class BundleCreationError extends BaseError.extend('BUNDLE_CREATION_ERROR', 'Bundle creation failed') {
-  constructor(errors: Message[]) {
-    super({ context: { errors } });
-  }
-}
 
 const formatBytes = (bytes: number) => {
   if (bytes < Unit.Kilobyte(1).unit.quotient) return Unit.Byte(bytes).toString();
