@@ -141,7 +141,6 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
    * @param middleware Called with the loaded object. The caller may change the object.
    * @returns Result of `onLoad`.
    */
-  // TODO(dmaretskyi): Restructure API: Remove middleware, move `hostDb` into context option. Make accessible on Database objects.
   createRefResolver({ context = {}, middleware = (obj) => obj }: Hypergraph.RefResolverOptions): Ref.Resolver {
     // TODO(dmaretskyi): Rewrite resolution algorithm with tracks for absolute and relative DXNs.
 
