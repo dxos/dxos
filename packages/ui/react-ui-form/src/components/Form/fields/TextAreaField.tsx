@@ -19,20 +19,20 @@ export const TextAreaField = ({
   getValue,
   onValueChange,
   onBlur,
-}: FormFieldComponentProps) => {
+}: FormFieldComponentProps<string>) => {
   return (
-    <FormFieldWrapper
+    <FormFieldWrapper<string>
       inline={inline}
       readonly={readonly}
       label={label}
       getStatus={getStatus}
       getValue={getValue}
-      Component={({ str }) => (
+      Component={({ value }) => (
         <Input.TextArea
           rows={3}
           disabled={!!readonly}
           placeholder={placeholder}
-          value={str}
+          value={value}
           onChange={(event) => onValueChange(type, event.target.value)}
           onBlur={onBlur}
         />

@@ -9,7 +9,7 @@ import { type AnyProperties, getValue as getPathValue, setValue as setPathValue 
 import { type JsonPath, type SimpleType, createJsonPath, fromEffectValidationPath } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { type ValidationError, validateSchema } from '@dxos/schema';
+import { type ValidationError, adaptValidationMessage, validateSchema } from '@dxos/schema';
 import { type MaybePromise } from '@dxos/util';
 
 /**
@@ -191,10 +191,11 @@ export const useFormHandler = <T extends AnyProperties>({
   const getStatus = useCallback<FormHandler<T>['getStatus']>(
     (path) => {
       const jsonPath = Array.isArray(path) ? createJsonPath(path) : path;
-      const matchingError = Object.entries(errors).find(
-        ([errorPath]) =>
-          errorPath === jsonPath || errorPath.startsWith(`${jsonPath}.`) || errorPath.startsWith(`${jsonPath}[`),
-      );
+      const [_, error] =
+        Object.entries(errors).find(
+          ([errorPath]) =>
+            errorPath === jsonPath || errorPath.startsWith(`${jsonPath}.`) || errorPath.startsWith(`${jsonPath}[`),
+        ) ?? [];
 
       // Only show errors for touched fields.
       const isTouched = touched[jsonPath as JsonPath];
@@ -206,8 +207,8 @@ export const useFormHandler = <T extends AnyProperties>({
       }
 
       return {
-        status: matchingError ? 'error' : undefined,
-        error: matchingError ? matchingError[1] : undefined,
+        status: error ? 'error' : undefined,
+        error: error ? (adaptValidationMessage(error) ?? undefined) : undefined,
       };
     },
     [errors, touched],

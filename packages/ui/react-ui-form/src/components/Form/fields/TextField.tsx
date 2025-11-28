@@ -9,7 +9,6 @@ import { Input } from '@dxos/react-ui';
 import { type FormFieldComponentProps } from '../FormFieldComponent';
 import { FormFieldWrapper } from '../FormFieldWrapper';
 
-// TODO(burdon): Lines annotation.
 export const TextField = ({
   type,
   label,
@@ -20,19 +19,19 @@ export const TextField = ({
   getValue,
   onValueChange,
   onBlur,
-}: FormFieldComponentProps) => {
+}: FormFieldComponentProps<string>) => {
   return (
-    <FormFieldWrapper
+    <FormFieldWrapper<string>
       inline={inline}
       readonly={readonly}
       label={label}
       getStatus={getStatus}
       getValue={getValue}
-      Component={({ str }) => (
+      Component={({ value }) => (
         <Input.TextInput
           disabled={!!readonly}
           placeholder={placeholder}
-          value={str}
+          value={value}
           onChange={(event) => onValueChange(type, event.target.value)}
           onBlur={onBlur}
         />

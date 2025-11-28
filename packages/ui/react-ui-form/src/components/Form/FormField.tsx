@@ -34,7 +34,7 @@ import {
   type FormFieldComponent,
   type FormFieldComponentProps,
   type FormFieldMap,
-  type FormFieldLookup as FormFieldProvider,
+  type FormFieldProvider,
 } from './FormFieldComponent';
 import { FormFieldSet } from './FormFieldSet';
 import { useFormFieldState } from './FormRoot';

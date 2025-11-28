@@ -12,20 +12,25 @@ import { Icon, Input, Tooltip } from '@dxos/react-ui';
 import { labelSpacing } from '@dxos/react-ui-stack';
 import { errorText, mx } from '@dxos/react-ui-theme';
 
+export type FormFieldStatus = {
+  status?: 'error';
+  error?: string;
+};
+
 /**
  * Dynamic props passed to input components.
  */
-export type FormFieldStateProps = {
-  getStatus: () => { status?: 'error'; error?: string };
-  getValue: <V>() => V | undefined;
+export type FormFieldStateProps<T = any> = {
+  getStatus: () => FormFieldStatus;
+  getValue: () => T | undefined;
   onBlur: (event: FocusEvent<HTMLElement>) => void;
-  onValueChange: (type: SimpleType, value: any) => void;
+  onValueChange: (type: SimpleType, value: T) => void;
 };
 
 /**
  * Props passed to input components.
  */
-export type FormFieldComponentProps = {
+export type FormFieldComponentProps<T = any> = {
   ast: SchemaAST.AST;
   type: SimpleType;
   format?: Format.TypeFormat;
@@ -44,7 +49,7 @@ export type FormFieldComponentProps = {
    */
   // TODO(burdon): Combine with readonly/mode.
   inline?: boolean;
-} & FormFieldStateProps;
+} & FormFieldStateProps<T>;
 
 /**
  * Form field component.
@@ -53,9 +58,9 @@ export type FormFieldComponent = FC<FormFieldComponentProps>;
 
 export type FormFieldMap = Record<string, FormFieldComponent>;
 
-export type FormFieldLookup = (props: {
-  schema: Schema.Schema<any>;
+export type FormFieldProvider = (props: {
   prop: string; // TODO(burdon): Path?
+  schema: Schema.Schema<any>;
   fieldProps: FormFieldComponentProps;
 }) => ReactElement | undefined;
 

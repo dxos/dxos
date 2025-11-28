@@ -21,13 +21,13 @@ export const SelectOptionField = ({
   getStatus,
   getValue,
   onValueChange,
-}: FormFieldComponentProps) => {
+}: FormFieldComponentProps<SelectOption[] | undefined>) => {
   const { t } = useTranslation(translationKey);
   const { status, error } = getStatus();
   const [selected, setSelectedId] = useState<string | null>(null);
   const [isNewOption, setIsNewOption] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
-  const options = getValue<SelectOption[] | undefined>();
+  const options = getValue();
 
   // Initialization.
   useEffect(() => {

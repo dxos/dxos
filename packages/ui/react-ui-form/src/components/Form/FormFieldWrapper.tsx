@@ -8,22 +8,21 @@ import { Input } from '@dxos/react-ui';
 
 import { type FormFieldComponentProps, FormFieldLabel } from './FormFieldComponent';
 
-export type FormFieldWrapperProps = Pick<
+export type FormFieldWrapperProps<T = any> = Pick<
   FormFieldComponentProps,
   'inline' | 'readonly' | 'label' | 'getStatus' | 'getValue'
 > & {
-  Component: FC<{ str: string }>;
+  Component: FC<{ value: T }>;
 };
 
-// TODO(burdon): Use consistently.
-export const FormFieldWrapper = ({
+export const FormFieldWrapper = <T = any,>({
   Component,
   inline,
   readonly,
   label,
   getStatus,
   getValue,
-}: FormFieldWrapperProps) => {
+}: FormFieldWrapperProps<T>) => {
   const { status, error } = getStatus();
   const value = getValue();
   if (readonly && value == null) {
@@ -38,7 +37,7 @@ export const FormFieldWrapper = ({
   return (
     <Input.Root validationValence={status}>
       {!inline && <FormFieldLabel error={error} readonly={readonly} label={label} />}
-      {readonly === 'static' ? <p>{str}</p> : <Component str={str} />}
+      {readonly === 'static' ? <p>{str}</p> : <Component value={value} />}
       {!inline && (
         <Input.DescriptionAndValidation>
           <Input.Validation>{error}</Input.Validation>

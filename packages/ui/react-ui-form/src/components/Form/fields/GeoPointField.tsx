@@ -19,10 +19,10 @@ export const GeoPointField = ({
   getValue,
   onValueChange,
   onBlur,
-}: FormFieldComponentProps) => {
+}: FormFieldComponentProps<GeoPoint>) => {
   const { t } = useTranslation(translationKey);
   const { status, error } = getStatus();
-  const geoPoint = useMemo<GeoPoint>(() => getValue<GeoPoint>() ?? [0, 0], [getValue]);
+  const geoPoint = useMemo<GeoPoint>(() => getValue() ?? [0, 0], [getValue]);
   const geoLocation = useMemo(() => GeoLocation.fromGeoPoint(geoPoint), [geoPoint]);
 
   const [longitudeText, setLongitudeText] = useState(geoLocation.longitude?.toString());
@@ -42,7 +42,7 @@ export const GeoPointField = ({
         if (inputText !== '' && inputText !== '-') {
           const coord = safeParseFloat(inputText);
           if (coord !== undefined && !isNaN(coord)) {
-            const currentLocation = GeoLocation.fromGeoPoint(getValue<GeoPoint>() ?? [0, 0]);
+            const currentLocation = GeoLocation.fromGeoPoint(getValue() ?? [0, 0]);
             const newLocation = { ...currentLocation, [coordinateType]: coord };
             const newValue = GeoLocation.toGeoPoint(newLocation);
             onValueChange(type, newValue);

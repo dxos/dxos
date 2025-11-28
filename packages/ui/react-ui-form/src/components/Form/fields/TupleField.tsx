@@ -21,11 +21,13 @@ export const TupleField = ({
   getValue,
   onValueChange,
   onBlur,
-}: FormFieldComponentProps & { binding: string[] }) => {
+}: FormFieldComponentProps<Record<string, number>> & {
+  binding: string[];
+}) => {
   const { status, error } = getStatus();
 
   // TODO(burdon): Generalize number/float/string, etc.
-  const values: Record<string, number> = getValue<Record<string, number>>() ?? {};
+  const values: Record<string, number> = getValue() ?? {};
 
   return (
     <Input.Root validationValence={status}>
@@ -37,7 +39,12 @@ export const TupleField = ({
             type='number'
             disabled={!!readonly}
             value={values[prop]}
-            onChange={(event) => onValueChange(type, { ...values, [prop]: safeParseFloat(event.target.value, 0) })}
+            onChange={(event) =>
+              onValueChange(type, {
+                ...values,
+                [prop]: safeParseFloat(event.target.value, 0),
+              })
+            }
             onBlur={onBlur}
           />
         ))}
