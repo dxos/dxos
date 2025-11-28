@@ -17,8 +17,7 @@ export const unwrapResult = <T>(context: QuickJSContext, result: SuccessOrFail<T
     if (
       typeof contextError === 'object' &&
       typeof contextError.name === 'string' &&
-      typeof contextError.message === 'string' &&
-      typeof contextError.stack === 'string'
+      typeof contextError.message === 'string'
     ) {
       const error = new Error(contextError.message);
       Object.defineProperty(error, 'name', { value: contextError.name });
