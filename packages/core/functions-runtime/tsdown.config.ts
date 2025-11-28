@@ -38,7 +38,12 @@ export default defineConfig({
   outDir: 'dist/vendor',
   noExternal: () => true,
   dts: {
-    resolve: true,
+    resolve: [
+      //
+      /@dxos/,
+      /effect/,
+      /^@effect/,
+    ],
   },
   treeshake: true,
   outputOptions: {
