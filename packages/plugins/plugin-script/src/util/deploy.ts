@@ -56,7 +56,7 @@ export const deployScript = async ({
       version: fn ? incrementSemverPatch(fn.version) : '0.0.1',
       functionId: existingFunctionId,
       entryPoint: buildResult.entryPoint,
-      assets: { [buildResult.entryPoint]: buildResult.asset },
+      assets: buildResult.assets,
     });
 
     if (functionId === undefined || version === undefined) {

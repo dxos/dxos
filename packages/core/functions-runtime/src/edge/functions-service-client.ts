@@ -8,6 +8,7 @@ import { type EdgeHttpClient } from '@dxos/edge-client';
 import { FUNCTIONS_META_KEY, Function, FunctionError } from '@dxos/functions';
 import { type ObjectId, type PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
+import { Runtime } from '@dxos/protocols';
 import { safeParseJson } from '@dxos/util';
 
 import { FunctionServiceError } from '../errors';
@@ -78,6 +79,7 @@ export class FunctionsServiceClient {
           ownerPublicKey: request.ownerPublicKey.toHex(),
           entryPoint: request.entryPoint,
           assets: request.assets,
+          runtime: Runtime.WORKER_LOADER,
         },
         { retry: { count: 3 }, auth: true },
       );

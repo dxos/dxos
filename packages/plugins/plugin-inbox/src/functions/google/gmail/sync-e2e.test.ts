@@ -10,38 +10,81 @@ import { configPreset } from '@dxos/config';
 import { Obj, Query, Ref } from '@dxos/echo';
 import { Function } from '@dxos/functions';
 import { Trigger } from '@dxos/functions';
+import { bundleFunction as sourceBundleFunction } from '@dxos/functions-runtime/bundler';
 import { FunctionsServiceClient } from '@dxos/functions-runtime/edge';
 import { bundleFunction } from '@dxos/functions-runtime/native';
-import { bundleFunction as sourceBundleFunction } from '@dxos/functions-runtime/bundler';
-import { failedInvariant } from '@dxos/invariant';
+import { log } from '@dxos/log';
 import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { AccessToken, Message } from '@dxos/types';
+import { trim } from '@dxos/util';
 
-import { log } from '../../../../../../common/log/src';
 import { Mailbox } from '../../../types';
 
 describe.runIf(process.env.DX_TEST_TAGS?.includes('functions-e2e'))('Functions deployment', () => {
-  test.only('bundle (cdn)', { timeout: 150_000 }, async () => {
+  test('bundle function (cdn)', { timeout: 150_000 }, async () => {
     const start = performance.now();
     const result = await sourceBundleFunction({
-      source: `//
-    // Copyright 2025 DXOS.org
-    //
-    
-    // @ts-ignore
-    import { Schema as S } from 'https://esm.sh/effect@3.17.0?bundle=false';
-    // @ts-ignore
-    import { defineFunction } from 'https://cdn.jsdelivr.net/npm/@dxos/functions@0.8.4-main.7ace549/+esm';
-    
-    export default defineFunction({
-      key: 'dxos.org/function/mirror',
-      name: 'mirror',
-      inputSchema: S.Any,
-      handler: ({ data }) => data,
+      source: trim`
+        //
+        // Copyright 2025 DXOS.org
+        //
+        
+        import { Schema as S } from 'https://cdn.jsdelivr.net/npm/effect@3.17.0/+esm';
+        import { defineFunction } from 'https://cdn.jsdelivr.net/npm/@dxos/functions@0.8.4-main.7ace549/+esm';
+        import { next as A } from 'https://cdn.jsdelivr.net/npm/@automerge/automerge@3.1.2/+esm';
+        
+        export default defineFunction({
+          key: 'dxos.org/function/mirror',
+          name: 'mirror',
+          inputSchema: S.Any,
+          handler: ({ data }) => {
+            const doc = A.init({});
+            return data;
+          },
+        });
+      `,
     });
-    `,
+    log.info('bundleFunction', { time: performance.now() - start, assets: result.assets });
+  });
+
+  test('bundle and invoke function (cdn)', { timeout: 150_000 }, async () => {
+    const { space, functionsServiceClient } = await setup();
+    await sync(space);
+    const artifact = await sourceBundleFunction({
+      source: trim`
+        //
+        // Copyright 2025 DXOS.org
+        //
+        
+        import { Schema as S } from 'https://cdn.jsdelivr.net/npm/effect@3.17.0/+esm';
+        import { defineFunction } from 'https://cdn.jsdelivr.net/npm/@dxos/functions@0.8.4-main.7ace549/+esm';
+        
+        export default defineFunction({
+          key: 'dxos.org/function/mirror',
+          name: 'mirror',
+          inputSchema: S.Any,
+          handler: ({ data }) => data,
+        });
+      `,
     });
-    log.info('bundleFunction', { time: performance.now() - start,  });
+    const func = await functionsServiceClient.deploy({
+      version: '0.0.1',
+      ownerPublicKey: space.key,
+      entryPoint: artifact.entryPoint,
+      assets: artifact.assets,
+    });
+    space.db.add(func);
+
+    const result = await functionsServiceClient.invoke(
+      func,
+      {
+        message: 'Hello, world!',
+      },
+      {
+        spaceId: space.id,
+      },
+    );
+    log.info('Invocation result', { result });
   });
 
   test('bundle function', async () => {
@@ -124,7 +167,7 @@ describe.runIf(process.env.DX_TEST_TAGS?.includes('functions-e2e'))('Functions d
 });
 
 const setup = async () => {
-  const config = configPreset({ edge: 'local' });
+  const config = configPreset({ edge: 'main' });
 
   const client = await new Client({
     config,
@@ -136,17 +179,17 @@ const setup = async () => {
   await space.waitUntilReady();
   await space.internal.setEdgeReplicationPreference(EdgeReplicationSetting.ENABLED);
 
-  const mailbox = space.db.add(Mailbox.make({ name: 'test', space }));
-  space.db.add(
-    Obj.make(AccessToken.AccessToken, {
-      note: 'Email read access.',
-      source: 'google.com',
-      token: process.env.GOOGLE_ACCESS_TOKEN ?? failedInvariant('GOOGLE_ACCESS_TOKEN is not set'),
-    }),
-  );
+  // const mailbox = space.db.add(Mailbox.make({ name: 'test', space }));
+  // space.db.add(
+  //   Obj.make(AccessToken.AccessToken, {
+  //     note: 'Email read access.',
+  //     source: 'google.com',
+  //     token: process.env.GOOGLE_ACCESS_TOKEN ?? failedInvariant('GOOGLE_ACCESS_TOKEN is not set'),
+  //   }),
+  // );
   const functionsServiceClient = FunctionsServiceClient.fromClient(client);
 
-  return { client, space, mailbox, functionsServiceClient };
+  return { client, space, functionsServiceClient };
 };
 
 const sync = async (space: Space) => {

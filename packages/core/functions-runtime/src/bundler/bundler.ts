@@ -5,8 +5,9 @@
 import { type Plugin, type PluginBuild, build, initialize } from 'esbuild-wasm';
 
 import { invariant } from '@dxos/invariant';
+import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { isNode } from '@dxos/util';
+import { isNode, trim } from '@dxos/util';
 
 import { BundleCreationError } from '../errors';
 import { httpPlugin } from '../http-plugin-esbuild';
@@ -26,8 +27,7 @@ export type BundleOptions = {
 
 export type BundleResult = {
   entryPoint: string;
-  asset: Uint8Array;
-  bundle: string;
+  assets: Record<string, Uint8Array>;
 };
 
 let initialized: Promise<void>;
@@ -53,6 +53,9 @@ export const bundleFunction = async ({ source }: BundleOptions): Promise<BundleR
     invariant(initialized, 'Compiler not initialized.');
     await initialized;
   }
+
+  const virtualOutDir = `/tmp/dxos-functions-bundle-${new Date().toISOString()}-${PublicKey.random().toHex()}`;
+
   const result = await build({
     platform: 'browser',
     conditions: ['workerd', 'worker', 'browser'],
@@ -62,8 +65,12 @@ export const bundleFunction = async ({ source }: BundleOptions): Promise<BundleR
       // Keep output name stable as `index.js` to preserve API.
       index: 'dxos:entrypoint',
     },
+    treeShaking: true,
     bundle: true,
+    // Note: Filesystem is not used, but esbuild requires `outdir` to be set.
+    outdir: virtualOutDir,
     format: 'esm',
+    splitting: true,
     external: ['./runtime.js', 'cloudflare:workers', 'functions-service:user-script'],
     plugins: [
       httpPlugin as any as Plugin,
@@ -77,11 +84,20 @@ export const bundleFunction = async ({ source }: BundleOptions): Promise<BundleR
           }));
           build.onLoad({ filter: /^dxos:entrypoint$/, namespace: 'dxos:entrypoint' }, () => {
             return {
-              contents: [
-                `import { wrapFunctionHandler } from 'dxos:functions';`,
-                `import handler from 'memory:source.tsx';`,
-                `export default wrapFunctionHandler(handler);`,
-              ].join('\n'),
+              contents: trim`
+                export default {
+                  fetch: async (...args) => {
+                    const { wrapFunctionHandler } = await import('https://cdn.jsdelivr.net/npm/@dxos/functions@0.8.4-main.7ace549/+esm');
+                    const { wrapHandlerForCloudflare } = await import('https://cdn.jsdelivr.net/npm/@dxos/functions-runtime-cloudflare@0.8.4-main.7ace549/+esm');
+                    const { default: handler } = await import('memory:source.tsx');
+  
+                    //
+                    // Wrapper to make the function cloudflare-compatible.
+                    //
+                    return wrapHandlerForCloudflare(wrapFunctionHandler(handler))(...args);
+                  },
+                };
+              `,
               loader: 'tsx',
             };
           });
@@ -121,11 +137,13 @@ export const bundleFunction = async ({ source }: BundleOptions): Promise<BundleR
 
   log.info('Bundling complete', result.metafile);
   log.info('Output files', result.outputFiles);
+  const normalizePath = (path: string) => path.replace(virtualOutDir + '/', '');
+  const assets = Object.fromEntries(result.outputFiles?.map((file) => [normalizePath(file.path), file.contents]));
 
   const entryPoint = 'index.js';
+
   return {
     entryPoint,
-    asset: result.outputFiles![0].contents,
-    bundle: result.outputFiles![0].text,
+    assets,
   };
 };
