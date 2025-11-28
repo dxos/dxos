@@ -21,7 +21,8 @@ import { log } from '../../../../../../common/log/src';
 import { Mailbox } from '../../../types';
 
 describe.runIf(process.env.DX_TEST_TAGS?.includes('functions-e2e'))('Functions deployment', () => {
-  test.only('bundle (cdn)', { timeout: 15_000 }, async () => {
+  test.only('bundle (cdn)', { timeout: 150_000 }, async () => {
+    const start = performance.now();
     const result = await sourceBundleFunction({
       source: `//
     // Copyright 2025 DXOS.org
@@ -30,7 +31,7 @@ describe.runIf(process.env.DX_TEST_TAGS?.includes('functions-e2e'))('Functions d
     // @ts-ignore
     import { Schema as S } from 'https://esm.sh/effect@3.17.0?bundle=false';
     // @ts-ignore
-    import { defineFunction } from 'https://esm.sh/@dxos/functions@latest';
+    import { defineFunction } from 'https://cdn.jsdelivr.net/npm/@dxos/functions@0.8.4-main.7ace549/+esm';
     
     export default defineFunction({
       key: 'dxos.org/function/mirror',
@@ -40,7 +41,7 @@ describe.runIf(process.env.DX_TEST_TAGS?.includes('functions-e2e'))('Functions d
     });
     `,
     });
-    log.info('bundleFunction', { error: result.error });
+    log.info('bundleFunction', { time: performance.now() - start,  });
   });
 
   test('bundle function', async () => {

@@ -26,11 +26,13 @@ export type BundleOptions = {
 
 export type BundleResult =
   | {
+      result: 'failure',
       timestamp: number;
       sourceHash: Buffer;
       error: unknown;
     }
   | {
+      result: 'success',
       timestamp: number;
       sourceHash: Buffer;
       imports: Import[];
