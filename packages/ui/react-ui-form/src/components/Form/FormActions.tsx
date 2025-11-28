@@ -4,25 +4,25 @@
 
 import React from 'react';
 
-import { IconButton, useTranslation } from '@dxos/react-ui';
+import { IconButton, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { cardSpacing } from '@dxos/react-ui-stack';
 import { mx } from '@dxos/react-ui-theme';
 
 import { translationKey } from '../../translations';
 
-import { useFormContext } from './FormContext';
+import { useFormContext } from './FormRoot';
 
 export type FormOuterSpacing = boolean | 'blockStart-0' | 'scroll-fields';
 
-export type FormActionsProps = {
+export type FormActionsProps = ThemedClassName<{
   readonly?: boolean;
   onCancel?: () => void;
   outerSpacing?: FormOuterSpacing;
-};
+}>;
 
-export const FormActions = ({ readonly, onCancel, outerSpacing = true }: FormActionsProps) => {
+export const FormActions = ({ classNames, readonly, onCancel, outerSpacing = true }: FormActionsProps) => {
   const { t } = useTranslation(translationKey);
-  const { canSave, handleSave } = useFormContext();
+  const { canSave, onSave: handleSave } = useFormContext(FormActions.displayName);
 
   return (
     <div
@@ -34,6 +34,7 @@ export const FormActions = ({ readonly, onCancel, outerSpacing = true }: FormAct
             ? cardSpacing
             : 'mbs-cardSpacingBlock',
         'flex [&_button]:grow gap-1 first:mbs-0',
+        classNames,
       )}
     >
       {onCancel && !readonly && (
@@ -57,3 +58,5 @@ export const FormActions = ({ readonly, onCancel, outerSpacing = true }: FormAct
     </div>
   );
 };
+
+FormActions.displayName = 'Form.Actions';

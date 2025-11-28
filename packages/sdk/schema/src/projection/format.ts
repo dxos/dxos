@@ -5,19 +5,12 @@
 import * as Schema from 'effect/Schema';
 
 import { Format } from '@dxos/echo';
-import {
-  DecimalPrecision,
-  JsonProp,
-  type JsonSchemaType,
-  type SelectOption,
-  SelectOptionSchema,
-  TypeEnum,
-} from '@dxos/echo/internal';
+import { DecimalPrecision, JsonProp, type JsonSchemaType, SelectOption, TypeEnum } from '@dxos/echo/internal';
 
 /**
  * Base schema.
  */
-export const BasePropertySchema = Schema.Struct({
+export const BaseProperty = Schema.Struct({
   property: JsonProp.annotations({
     title: 'Property',
     description: 'Field name.',
@@ -38,11 +31,11 @@ export const BasePropertySchema = Schema.Struct({
   ),
 });
 
-export type BaseProperty = Schema.Schema.Type<typeof BasePropertySchema>;
+export type BaseProperty = Schema.Schema.Type<typeof BaseProperty>;
 
 const extend = <Fields extends Schema.Struct.Fields>(format: Format.TypeFormat, type: TypeEnum, fields?: Fields) =>
   Schema.extend(
-    BasePropertySchema,
+    BaseProperty,
     Schema.Struct({
       type: Schema.Literal(type),
       format: Schema.Literal(format).annotations({
@@ -68,7 +61,7 @@ interface FormatSchemaCommon extends BaseProperty {
 // TODO(burdon): Translations?
 export const formatToSchema: Record<Format.TypeFormat, Schema.Schema<FormatSchemaCommon>> = {
   [Format.TypeFormat.None]: Schema.extend(
-    BasePropertySchema,
+    BaseProperty,
     Schema.Struct({
       type: Schema.Enums(TypeEnum),
       format: Schema.Literal(Format.TypeFormat.None) as Schema.Schema<Format.TypeFormat>,
@@ -115,14 +108,14 @@ export const formatToSchema: Record<Format.TypeFormat, Schema.Schema<FormatSchem
   //
 
   [Format.TypeFormat.SingleSelect]: extend(Format.TypeFormat.SingleSelect, TypeEnum.String, {
-    options: Schema.Array(SelectOptionSchema).annotations({
+    options: Schema.Array(SelectOption).annotations({
       title: 'Options',
       description: 'Available choices',
     }),
   }),
 
   [Format.TypeFormat.MultiSelect]: extend(Format.TypeFormat.MultiSelect, TypeEnum.Object, {
-    options: Schema.Array(SelectOptionSchema).annotations({
+    options: Schema.Array(SelectOption).annotations({
       title: 'Options',
       description: 'Available choices',
     }),

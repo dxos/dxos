@@ -13,10 +13,12 @@ import { withLayoutVariants, withTheme } from '@dxos/react-ui/testing';
 import { TestSchema } from '@dxos/schema/testing';
 
 import { translations } from '../../translations';
-import { TestLayout, TestPanel } from '../testing';
+import { TestLayout } from '../testing';
 
-import { SelectInput } from './Defaults';
+import { SelectField } from './fields';
 import { Form, type FormProps } from './Form';
+
+// TODO(burdon): Use @dxos/types.
 
 type StoryProps<T extends AnyProperties> = {
   debug?: boolean;
@@ -38,9 +40,7 @@ const DefaultStory = <T extends AnyProperties = any>({
     return (
       <Tooltip.Provider>
         <TestLayout json={{ values, schema: schema.ast }}>
-          <TestPanel>
-            <Form<T> schema={schema} values={values} onSave={handleSave} {...props} />
-          </TestPanel>
+          <Form<T> schema={schema} values={values} onSave={handleSave} {...props} />
         </TestLayout>
       </Tooltip.Provider>
     );
@@ -72,7 +72,7 @@ const AddressSchema = Schema.Struct({
   location: Schema.optional(Format.GeoPoint.annotations({ title: 'Location' })),
 }).annotations({ title: 'Address' });
 
-const ContactSchema = Schema.Struct({
+const PersonSchema = Schema.Struct({
   name: Schema.optional(Schema.String.annotations({ title: 'Name' })),
   active: Schema.optional(Schema.Boolean.annotations({ title: 'Active' })),
   rank: Schema.optional(Schema.Number.annotations({ title: 'Rank' })),
@@ -80,7 +80,7 @@ const ContactSchema = Schema.Struct({
   address: Schema.optional(AddressSchema),
 }).pipe(Schema.mutable);
 
-type ContactSchema = Schema.Schema.Type<typeof ContactSchema>;
+type PersonSchema = Schema.Schema.Type<typeof PersonSchema>;
 
 const meta = {
   title: 'ui/react-ui-form/Form',
@@ -105,7 +105,7 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
   args: {
-    schema: ContactSchema,
+    schema: PersonSchema,
     values: {
       name: 'DXOS',
       active: true,
@@ -187,9 +187,9 @@ export const DiscriminatedShape: StoryObj<StoryProps<ShapeSchema>> = {
         radius: 5,
       },
     },
-    Custom: {
+    fieldMap: {
       ['shape.type' as const]: (props) => (
-        <SelectInput
+        <SelectField
           {...props}
           options={['circle', 'square'].map((value) => ({
             value,

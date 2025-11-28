@@ -12,7 +12,7 @@ import { ProjectionModel } from '@dxos/schema';
 import { Example, testView } from '@dxos/schema/testing';
 
 import { translations } from '../../translations';
-import { FIELD_EDITOR_DEBUG_SYMBOL, TestLayout, TestPanel } from '../testing';
+import { FIELD_EDITOR_DEBUG_SYMBOL, TestLayout } from '../testing';
 
 import { FieldEditor, type FieldEditorProps } from './FieldEditor';
 
@@ -47,9 +47,7 @@ const DefaultStory = (props: FieldEditorProps) => {
 
   return (
     <TestLayout json={json}>
-      <TestPanel>
-        <FieldEditor {...props} onSave={handleComplete} />
-      </TestPanel>
+      <FieldEditor {...props} onSave={handleComplete} />
     </TestLayout>
   );
 };

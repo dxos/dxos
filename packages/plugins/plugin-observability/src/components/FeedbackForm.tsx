@@ -6,18 +6,17 @@ import React, { useCallback, useRef, useState } from 'react';
 
 import { getSnapshot } from '@dxos/echo/internal';
 import { IconButton, Input, useTranslation } from '@dxos/react-ui';
-import { FormProvider, useFormContext, useInputProps } from '@dxos/react-ui-form';
+import { FormProvider, useFormContext, useFormFieldState } from '@dxos/react-ui-form';
 
 import { meta } from '../meta';
 import { UserFeedback } from '../types';
 
 const defaultValues: UserFeedback = { message: '' };
 
-const FormContent = () => {
+const FeedbackContent = () => {
   const { t } = useTranslation(meta.id);
-  const { handleSave, canSave } = useFormContext<UserFeedback>();
-
-  const messageProps = useInputProps(['message']);
+  const { onSave, canSave } = useFormContext<UserFeedback>(FeedbackContent.displayName);
+  const messageProps = useFormFieldState(FeedbackContent.displayName, ['message']);
 
   return (
     <div role='form' className='p-3 flex flex-col gap-2'>
@@ -48,12 +47,14 @@ const FormContent = () => {
           type='submit'
           classNames='is-full'
           disabled={!canSave}
-          onClick={handleSave}
+          onClick={onSave}
         />
       </div>
     </div>
   );
 };
+
+FeedbackContent.displayName = 'Form.FeedbackContent';
 
 // TODO(wittjosiah): Use `Form`?
 export const FeedbackForm = ({ onSave }: { onSave: (values: UserFeedback) => void }) => {
@@ -75,7 +76,7 @@ export const FeedbackForm = ({ onSave }: { onSave: (values: UserFeedback) => voi
   return (
     <FormProvider formRef={formRef} schema={UserFeedback} initialValues={initialValues} onSave={handleSave}>
       <div ref={formRef}>
-        <FormContent />
+        <FeedbackContent />
       </div>
     </FormProvider>
   );
