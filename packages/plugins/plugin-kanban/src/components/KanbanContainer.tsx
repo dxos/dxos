@@ -43,7 +43,7 @@ export const KanbanContainer = ({ object }: { object: Kanban.Kanban; role: strin
       );
       return unsubscribe;
     }
-  }, [schemas, typename, space]);
+  }, [schemas, space, typename]);
 
   const objects = useQuery(space, cardSchema ? Filter.type(cardSchema) : Filter.nothing());
   const filteredObjects = useGlobalFilteredObjects(objects);

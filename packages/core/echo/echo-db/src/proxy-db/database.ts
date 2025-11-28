@@ -35,12 +35,12 @@ import { type ObjectMigration } from './object-migration';
 
 // TODO(burdon): Remove and progressively push methods to Database.Database.
 export interface EchoDatabase extends Database.Database {
-  get graph(): HypergraphImpl;
-  get schemaRegistry(): DatabaseSchemaRegistry;
-
   /** @deprecated */
   get spaceKey(): PublicKey;
   get spaceId(): SpaceId;
+
+  get graph(): HypergraphImpl;
+  get schemaRegistry(): DatabaseSchemaRegistry;
 
   toJSON(): object;
 

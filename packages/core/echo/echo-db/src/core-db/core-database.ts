@@ -84,12 +84,12 @@ const TRACE_LOADING = false;
 // TODO(burdon): Document.
 @trace.resource()
 export class CoreDatabase {
+  private readonly _spaceKey: PublicKey;
+  private readonly _spaceId: SpaceId;
   private readonly _hypergraph: HypergraphImpl;
   private readonly _dataService: DataService;
   private readonly _queryService: QueryService;
   private readonly _repoProxy: RepoProxy;
-  private readonly _spaceId: SpaceId;
-  private readonly _spaceKey: PublicKey;
   private readonly _objects = new Map<string, ObjectCore>();
 
   /**
