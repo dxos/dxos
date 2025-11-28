@@ -269,13 +269,13 @@ export const lte = <T>(value: T): Filter<T | undefined> => {
  * Predicate for property to be in the provided array.
  * @param values - Values to check against.
  */
-const in_ = <T>(...values: T[]): Filter<T | undefined> => {
+const in$ = <T>(...values: T[]): Filter<T | undefined> => {
   return new FilterClass({
     type: 'in',
     values,
   });
 };
-export { in_ as in };
+export { in$ as in };
 
 /**
  * Predicate for an array property to contain the provided value.

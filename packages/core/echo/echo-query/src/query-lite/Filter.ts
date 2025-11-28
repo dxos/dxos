@@ -191,13 +191,13 @@ export const lte = <T>(value: T): Filter$.Filter<T> => {
   });
 };
 
-const in_ = <T>(...values: T[]): Filter$.Filter<T> => {
+const in$ = <T>(...values: T[]): Filter$.Filter<T> => {
   return new FilterClass({
     type: 'in',
     values,
   });
 };
-export { in_ as in };
+export { in$ as in };
 
 export const contains = <T>(value: T): Filter$.Filter<readonly T[] | undefined> => {
   return new FilterClass({
