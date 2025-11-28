@@ -3,13 +3,13 @@
 //
 
 export { QueryAST } from '@dxos/echo-protocol';
+// TODO(wittjosiah): Refactor DXN to not use statics similar to Query.
 export { DXN } from '@dxos/keys';
-
-export * from './errors';
 
 export * as Annotation from './Annotation';
 export * as Database from './Database';
 export * as Entity from './Entity';
+export * as Err from './Err';
 export * as Filter from './Filter';
 export * as Format from './Format';
 export * as JsonSchema from './JsonSchema';

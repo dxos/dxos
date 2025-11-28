@@ -5,7 +5,7 @@
 import type * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
-import { type ObjectNotFoundError, type Type } from '@dxos/echo';
+import { type Err, type Type } from '@dxos/echo';
 import { DatabaseService } from '@dxos/echo-db';
 import { DXN, LOCAL_SPACE_TAG, type ObjectId, type SpaceId } from '@dxos/keys';
 import { trim } from '@dxos/util';
@@ -25,7 +25,7 @@ export const ArtifactId: Schema.Schema<string> & {
   resolve: <S extends Type.Entity.Any>(
     schema: S,
     ref: ArtifactId,
-  ) => Effect.Effect<Schema.Schema.Type<S>, ObjectNotFoundError, DatabaseService>;
+  ) => Effect.Effect<Schema.Schema.Type<S>, Err.ObjectNotFoundError, DatabaseService>;
 } = class extends Schema.String.annotations({
   // TODO(dmaretskyi): This section gets overriden.
   description: trim`
@@ -61,7 +61,7 @@ export const ArtifactId: Schema.Schema<string> & {
   static resolve<S extends Type.Entity.Any>(
     schema: S,
     ref: ArtifactId,
-  ): Effect.Effect<Schema.Schema.Type<S>, ObjectNotFoundError, DatabaseService> {
+  ): Effect.Effect<Schema.Schema.Type<S>, Err.ObjectNotFoundError, DatabaseService> {
     const dxn = ArtifactId.toDXN(ref);
     return DatabaseService.resolve(dxn, schema);
   }
