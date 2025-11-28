@@ -58,6 +58,9 @@ export const everything = (): FilterClass => {
   });
 };
 
+/**
+ * Filter that matches no objects.
+ */
 export const nothing = (): FilterClass => {
   return new FilterClass({
     type: 'not',
@@ -66,14 +69,6 @@ export const nothing = (): FilterClass => {
       typename: null,
       props: {},
     },
-  });
-};
-
-export const relation = () => {
-  return new FilterClass({
-    type: 'object',
-    typename: null,
-    props: {},
   });
 };
 
