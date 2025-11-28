@@ -24,8 +24,7 @@ export interface FormHandlerProps<T extends AnyProperties> {
   /**
    * Initial values (which may not pass validation).
    */
-  // TODO(burdon): Rename initial values?
-  initialValues?: Partial<T>;
+  values?: Partial<T>;
 
   /**
    * Callback for value changes. Note: This is called even when values are invalid.
@@ -96,7 +95,7 @@ export type FormHandler<T extends AnyProperties> = {
  */
 export const useFormHandler = <T extends AnyProperties>({
   schema,
-  initialValues = {},
+  initialValues,
   onValuesChanged,
   onValidate,
   onValid,
@@ -104,14 +103,14 @@ export const useFormHandler = <T extends AnyProperties>({
   onCancel,
   ...props
 }: FormHandlerProps<T>): FormHandler<T> => {
-  const [values, setValues] = useState<Partial<T>>(initialValues);
-
+  // TODO(burdon): Change to useControlledValue.
+  const [values, setValues] = useState<Partial<T>>(initialValues ?? {});
   useEffect(() => {
-    setValues(initialValues);
+    setValues(initialValues ?? {});
   }, [initialValues]);
 
-  const [touched, setTouched] = useState<Record<JsonPath, boolean>>(createKeySet(initialValues, false));
-  const [changed, setChanged] = useState<Record<JsonPath, boolean>>(createKeySet(initialValues, false));
+  const [touched, setTouched] = useState<Record<JsonPath, boolean>>(createKeySet(values, false));
+  const [changed, setChanged] = useState<Record<JsonPath, boolean>>(createKeySet(values, false));
   const [errors, setErrors] = useState<Record<JsonPath, string>>({});
   const [saving, setSaving] = useState(false);
 
@@ -271,7 +270,7 @@ export const useFormHandler = <T extends AnyProperties>({
 
       // Field utils.
       getStatus,
-      getValue: getValue,
+      getValue,
       onBlur,
       onValueChange,
 

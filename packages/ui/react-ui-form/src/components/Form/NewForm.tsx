@@ -8,7 +8,6 @@ import React, { type PropsWithChildren } from 'react';
 import { type AnyProperties } from '@dxos/echo/internal';
 import { IconButton, type IconButtonProps, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
-import { type MakeOptional } from '@dxos/util';
 
 import { type FormHandler, useFormHandler } from '../../hooks';
 import { translationKey } from '../../translations';
@@ -16,14 +15,16 @@ import { translationKey } from '../../translations';
 import { FormFieldSet, type FormFieldSetProps } from './FormFieldSet';
 import { FormContext } from './FormRoot';
 
-// TODO(burdon): Replace FeedbackForm.
-// TODO(burdon): Unify readonly/inline modes.
-// TODO(burdon): Inline tables for object arrays (type based extensions).
-// TODO(burdon): Refs, Selectors.
-// TODO(burdon): Keyboard handler.
-// TODO(burdon): Additional root props: options, callbacks.
-// TODO(burdon): Reaplce context, hooks.
-// TODO(burdon): Unify fieldMap/fieldProvider map callback (with adapter for map).
+// [ ] TextArea
+// [x] Replace FeedbackForm.
+// [ ] Unify readonly/inline modes.
+// [ ] Inline tables for object arrays
+// [ ] Refs, Selectors
+// [ ] Keyboard handler
+// [ ] Additional root props: options, callbacks
+// [ ] Reaplce context, hooks.
+// [ ] Unify fieldMap/fieldProvider map callback (with adapter for map).
+// [ ] Status message must include field (currently just "is missing")
 
 //
 // Context
@@ -60,20 +61,20 @@ type NewFormRootProps<T extends AnyProperties = AnyProperties> = PropsWithChildr
     onCancel?: () => void;
   } &
     // TODO(burdon): Move debug, readonly into FormHandler.
-    MakeOptional<Pick<FormHandler<T>, 'schema' | 'values'>, 'values'> &
-    MakeOptional<Pick<NewFormContextValue<T>, 'debug' | 'readonly'>, 'readonly'>
+    Pick<FormHandler<T>, 'schema' | 'values'> &
+    Pick<NewFormContextValue<T>, 'debug' | 'readonly'>
 >;
 
 const NewFormRoot = <T extends AnyProperties = AnyProperties>({
   children,
   debug,
   schema,
-  values: valuesProp = {},
+  values,
   onSave,
   onCancel,
   ...props
 }: NewFormRootProps<T>) => {
-  const form = useFormHandler({ schema, initialValues: valuesProp, onSave, onCancel, ...props });
+  const form = useFormHandler({ schema, initialValues: values, onSave, onCancel, ...props });
 
   return (
     // TODO(burdon): Temporarily include old context.
@@ -142,6 +143,7 @@ const NewFormActions = ({ classNames }: NewFormActionsProps) => {
       {form.onSave && (
         <IconButton
           type='submit'
+          variant='primary'
           disabled={!form.canSave}
           icon='ph--check--regular'
           iconEnd
@@ -167,14 +169,15 @@ const NewFormSubmit = ({ classNames, label, icon }: NewFormSubmitProps) => {
   const { form } = useNewFormContext(NewFormSubmit.displayName);
 
   return (
-    <div role='none' className={mx('flex is-full', classNames)}>
+    <div role='none' className={mx('flex is-full pbs-cardSpacingBlock', classNames)}>
       <IconButton
+        classNames='is-full'
         type='submit'
+        variant='primary'
         disabled={!form.canSave}
         icon={icon ?? 'ph--check--regular'}
         label={label ?? t('save button label')}
         onClick={form.onSave}
-        classNames='is-full'
         data-testid='save-button'
       />
     </div>

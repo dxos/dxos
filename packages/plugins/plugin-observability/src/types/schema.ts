@@ -7,15 +7,20 @@ import * as Schema from 'effect/Schema';
 import { Key } from '@dxos/echo';
 
 import { meta } from '../meta';
+import { translations } from '../translations';
 
-const nonEmpty = <S extends Schema.Schema.Any>(field: string) =>
-  Schema.nonEmptyString<S>({ message: () => `Missing field: ${field}` });
-
-const maxLength = <S extends Schema.Schema.Any>(field: string, length: number) =>
-  Schema.maxLength<S>(length, { message: () => `Exceeds max length (${length}): ${field}` });
+// TODO(burdon): Util?
+const t = translations[0]['en-US'][meta.id];
 
 export const UserFeedback = Schema.Struct({
-  message: Schema.String.pipe(nonEmpty('Feedback'), maxLength('Feedback', 32_768)),
+  message: Schema.String.pipe(
+    Schema.nonEmptyString(),
+    Schema.maxLength(8_000),
+    Schema.annotations({
+      title: t['feedback textarea label'],
+      description: t['feedback textarea placeholder'],
+    }),
+  ),
 });
 
 export type UserFeedback = Schema.Schema.Type<typeof UserFeedback>;

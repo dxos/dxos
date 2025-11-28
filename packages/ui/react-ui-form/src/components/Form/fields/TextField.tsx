@@ -6,8 +6,10 @@ import React from 'react';
 
 import { Input } from '@dxos/react-ui';
 
-import { type FormFieldComponentProps, FormFieldLabel } from '../FormFieldComponent';
+import { type FormFieldComponentProps } from '../FormFieldComponent';
+import { FormFieldWrapper } from '../FormFieldWrapper';
 
+// TODO(burdon): Lines annotation.
 export const TextField = ({
   type,
   label,
@@ -19,24 +21,14 @@ export const TextField = ({
   onValueChange,
   onBlur,
 }: FormFieldComponentProps) => {
-  const { status, error } = getStatus();
-  const value = getValue();
-  if (readonly && value == null) {
-    return null;
-  }
-
-  // TODO(burdon): Factor out common layout.
-  const str = String(value ?? '');
-  if (readonly === 'static' && inline) {
-    return <p>{str}</p>;
-  }
-
   return (
-    <Input.Root validationValence={status}>
-      {!inline && <FormFieldLabel error={error} readonly={readonly} label={label} />}
-      {readonly === 'static' ? (
-        <p>{str}</p>
-      ) : (
+    <FormFieldWrapper
+      inline={inline}
+      readonly={readonly}
+      label={label}
+      getStatus={getStatus}
+      getValue={getValue}
+      Component={({ str }) => (
         <Input.TextInput
           disabled={!!readonly}
           placeholder={placeholder}
@@ -45,7 +37,6 @@ export const TextField = ({
           onBlur={onBlur}
         />
       )}
-      {inline && <Input.Validation>{error}</Input.Validation>}
-    </Input.Root>
+    />
   );
 };
