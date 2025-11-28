@@ -84,6 +84,12 @@ export namespace TestSchema {
 
   export const Organization = Schema.Struct({
     name: Schema.String,
+    properties: Schema.optional(
+      Schema.Record({
+        key: Schema.String,
+        value: Schema.String,
+      }),
+    ),
   }).pipe(
     Type.Obj({
       typename: 'example.com/type/Organization',
@@ -101,6 +107,7 @@ export namespace TestSchema {
     name: Schema.String,
     username: Schema.String,
     email: Schema.String,
+    age: Schema.Number.pipe(Schema.optional),
     tasks: Schema.mutable(Schema.Array(Schema.suspend((): Type.Ref<Task> => Type.Ref(Task)))),
     employer: Schema.optional(Type.Ref(Organization)),
     address: Schema.Struct({
@@ -112,6 +119,10 @@ export namespace TestSchema {
         lng: Schema.optional(Schema.Number),
       }),
     }),
+    fields: Schema.Struct({
+      label: Schema.String,
+      value: Schema.String,
+    }).pipe(Schema.Array, Schema.optional),
   }).pipe(
     Schema.partial,
     Type.Obj({

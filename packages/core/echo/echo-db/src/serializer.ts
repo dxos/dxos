@@ -30,7 +30,7 @@ export type ImportOptions = {
 export class Serializer {
   static version = 1;
 
-  async export(database: EchoDatabase, query?: Query<any>): Promise<SerializedSpace> {
+  async export(database: EchoDatabase, query?: Query.Any): Promise<SerializedSpace> {
     const loadedObjects: Array<AnyLiveObject<any> | undefined> = [];
 
     if (query) {

@@ -7,7 +7,8 @@ import { type DXN, type PublicKey, type SpaceId } from '@dxos/keys';
 import { type QueryOptions as QueryOptionsProto } from '@dxos/protocols/proto/dxos/echo/filter';
 
 import type * as Entity from './Entity';
-import type { Filter, Query } from './query';
+import type * as Filter from './Filter';
+import type * as Query from './Query';
 import type * as QueryResult from './QueryResult';
 import type * as Ref from './Ref';
 

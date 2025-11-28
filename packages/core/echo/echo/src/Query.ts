@@ -7,14 +7,12 @@ import type * as Schema from 'effect/Schema';
 
 import { type QueryAST } from '@dxos/echo-protocol';
 
-import type * as Ref from '../Ref';
-import type * as Type from '../Type';
+import * as Filter from './Filter';
+import { getTypeDXNFromSpecifier } from './internal';
+import type * as Order from './Order';
+import type * as Ref from './Ref';
+import type * as Type$ from './Type';
 
-import { Filter, FilterClass } from './filter';
-import { type Order } from './order';
-import { getTypeDXNFromSpecifier } from './util';
-
-// TODO(burdon): Query namespace (and move Filter, Order into Query namespace).
 // TODO(dmaretskyi): Split up into interfaces for objects and relations so they can have separate verbs.
 // TODO(dmaretskyi): Undirected relation traversals.
 // TODO(wittjosiah): Make Filter & Query pipeable.
@@ -37,7 +35,7 @@ export interface Query<T> {
    * @param filter - Filter to select the objects.
    * @returns Query for the selected objects.
    */
-  select(filter: Filter<T>): Query<T>;
+  select(filter: Filter.Filter<T>): Query<T>;
   select(props: Filter.Props<T>): Query<T>;
 
   /**
@@ -94,13 +92,13 @@ export interface Query<T> {
    * For a query for relations, get the source objects.
    * @returns Query for the source objects.
    */
-  source(): Query<Type.Relation.Source<T>>;
+  source(): Query<Type$.Relation.Source<T>>;
 
   /**
    * For a query for relations, get the target objects.
    * @returns Query for the target objects.
    */
-  target(): Query<Type.Relation.Target<T>>;
+  target(): Query<Type$.Relation.Target<T>>;
 
   /**
    * Order the query results.
@@ -108,7 +106,7 @@ export interface Query<T> {
    * @param order - Order to sort the results.
    * @returns Query for the ordered results.
    */
-  orderBy(...order: EffectArray.NonEmptyArray<Order<T>>): Query<T>;
+  orderBy(...order: EffectArray.NonEmptyArray<Order.Order<T>>): Query<T>;
 
   /**
    * Add options to a query.
@@ -116,106 +114,18 @@ export interface Query<T> {
   options(options: QueryAST.QueryOptions): Query<T>;
 }
 
-interface QueryAPI {
-  is(value: unknown): value is Query.Any;
+export type Any = Query<any>;
 
-  /** Construct a query from an ast. */
-  fromAst(ast: QueryAST.Query): Query<any>;
+export type Type<Q extends Any> = Q extends Query<infer T> ? T : never;
 
-  /**
-   * Select objects based on a filter.
-   * @param filter - Filter to select the objects.
-   * @returns Query for the selected objects.
-   */
-  select<F extends Filter.Any>(filter: F): Query<Filter.Type<F>>;
-
-  /**
-   * Query for objects of a given schema.
-   * @param schema - Schema of the objects.
-   * @param predicates - Predicates to filter the objects.
-   * @returns Query for the objects.
-   *
-   * Shorthand for: `Query.select(Filter.type(schema, predicates))`.
-   */
-  type<S extends Schema.Schema.All>(
-    schema: S | string,
-    predicates?: Filter.Props<Schema.Schema.Type<S>>,
-  ): Query<Schema.Schema.Type<S>>;
-
-  /**
-   * Combine results of multiple queries.
-   * @param queries - Queries to combine.
-   * @returns Query for the combined results.
-   */
-  // TODO(dmaretskyi): Rename to `combine` or `union`.
-  all<T>(...queries: Query<T>[]): Query<T>;
-
-  /**
-   * Subtract one query from another.
-   * @param source - Query to subtract from.
-   * @param exclude - Query to subtract.
-   * @returns Query for the results of the source query minus the results of the exclude query.
-   */
-  without<T>(source: Query<T>, exclude: Query<T>): Query<T>;
-}
-
-export declare namespace Query {
-  export type Any = Query<any>;
-
-  export type Type<Q extends Any> = Q extends Query<infer T> ? T : never;
-}
-
-// TODO(dmaretskyi): Separate object instead of statics for better devex with type errors.
-class QueryClass implements Query<any> {
-  private static variance: Query<any>['~Query'] = {} as Query<any>['~Query'];
-
-  static is(value: unknown): value is Query<any> {
-    return typeof value === 'object' && value !== null && '~Query' in value;
-  }
-
-  static fromAst(ast: QueryAST.Query): Query<any> {
-    return new QueryClass(ast);
-  }
-
-  static select<F extends Filter.Any>(filter: F): Query<Filter.Type<F>> {
-    return new QueryClass({
-      type: 'select',
-      filter: filter.ast,
-    });
-  }
-
-  static type(schema: Schema.Schema.All | string, predicates?: Filter.Props<unknown>): Query<any> {
-    return new QueryClass({
-      type: 'select',
-      filter: FilterClass.type(schema, predicates).ast,
-    });
-  }
-
-  static all(...queries: Query<any>[]): Query<any> {
-    if (queries.length === 0) {
-      throw new TypeError(
-        'Query.all combines results of multiple queries, to query all objects use Query.select(Filter.everything())',
-      );
-    }
-    return new QueryClass({
-      type: 'union',
-      queries: queries.map((q) => q.ast),
-    });
-  }
-
-  static without<T>(source: Query<T>, exclude: Query<T>): Query<T> {
-    return new QueryClass({
-      type: 'set-difference',
-      source: source.ast,
-      exclude: exclude.ast,
-    });
-  }
+class QueryClass implements Any {
+  private static variance: Any['~Query'] = {} as Any['~Query'];
 
   constructor(public readonly ast: QueryAST.Query) {}
 
   '~Query' = QueryClass.variance;
 
-  select(filter: Filter.Any | Filter.Props<any>): Query.Any {
+  select(filter: Filter.Any | Filter.Props<any>): Any {
     if (Filter.is(filter)) {
       return new QueryClass({
         type: 'filter',
@@ -226,12 +136,12 @@ class QueryClass implements Query<any> {
       return new QueryClass({
         type: 'filter',
         selection: this.ast,
-        filter: FilterClass.props(filter).ast,
+        filter: Filter.props(filter).ast,
       });
     }
   }
 
-  reference(key: string): Query.Any {
+  reference(key: string): Any {
     return new QueryClass({
       type: 'reference-traversal',
       anchor: this.ast,
@@ -239,7 +149,7 @@ class QueryClass implements Query<any> {
     });
   }
 
-  referencedBy(target: Schema.Schema.All | string, key: string): Query.Any {
+  referencedBy(target: Schema.Schema.All | string, key: string): Any {
     const dxn = getTypeDXNFromSpecifier(target);
     return new QueryClass({
       type: 'incoming-references',
@@ -249,25 +159,25 @@ class QueryClass implements Query<any> {
     });
   }
 
-  sourceOf(relation: Schema.Schema.All | string, predicates?: Filter.Props<unknown> | undefined): Query.Any {
+  sourceOf(relation: Schema.Schema.All | string, predicates?: Filter.Props<unknown> | undefined): Any {
     return new QueryClass({
       type: 'relation',
       anchor: this.ast,
       direction: 'outgoing',
-      filter: FilterClass.type(relation, predicates).ast,
+      filter: Filter.type(relation, predicates).ast,
     });
   }
 
-  targetOf(relation: Schema.Schema.All | string, predicates?: Filter.Props<unknown> | undefined): Query.Any {
+  targetOf(relation: Schema.Schema.All | string, predicates?: Filter.Props<unknown> | undefined): Any {
     return new QueryClass({
       type: 'relation',
       anchor: this.ast,
       direction: 'incoming',
-      filter: FilterClass.type(relation, predicates).ast,
+      filter: Filter.type(relation, predicates).ast,
     });
   }
 
-  source(): Query.Any {
+  source(): Any {
     return new QueryClass({
       type: 'relation-traversal',
       anchor: this.ast,
@@ -275,7 +185,7 @@ class QueryClass implements Query<any> {
     });
   }
 
-  target(): Query.Any {
+  target(): Any {
     return new QueryClass({
       type: 'relation-traversal',
       anchor: this.ast,
@@ -283,7 +193,7 @@ class QueryClass implements Query<any> {
     });
   }
 
-  orderBy(...order: Order<any>[]): Query.Any {
+  orderBy(...order: Order.Order<any>[]): Any {
     return new QueryClass({
       type: 'order',
       query: this.ast,
@@ -291,7 +201,7 @@ class QueryClass implements Query<any> {
     });
   }
 
-  options(options: QueryAST.QueryOptions): Query.Any {
+  options(options: QueryAST.QueryOptions): Any {
     return new QueryClass({
       type: 'options',
       query: this.ast,
@@ -300,4 +210,70 @@ class QueryClass implements Query<any> {
   }
 }
 
-export const Query: QueryAPI = QueryClass;
+export const is = (value: unknown): value is Any => {
+  return typeof value === 'object' && value !== null && '~Query' in value;
+};
+
+/** Construct a query from an ast. */
+export const fromAst = (ast: QueryAST.Query): Any => {
+  return new QueryClass(ast);
+};
+
+/**
+ * Select objects based on a filter.
+ * @param filter - Filter to select the objects.
+ * @returns Query for the selected objects.
+ */
+export const select = <F extends Filter.Any>(filter: F): Query<Filter.Type<F>> => {
+  return new QueryClass({
+    type: 'select',
+    filter: filter.ast,
+  });
+};
+
+/**
+ * Query for objects of a given schema.
+ * @param schema - Schema of the objects.
+ * @param predicates - Predicates to filter the objects.
+ * @returns Query for the objects.
+ *
+ * Shorthand for: `Query.select(Filter.type(schema, predicates))`.
+ */
+export const type = (schema: Schema.Schema.All | string, predicates?: Filter.Props<unknown>): Any => {
+  return new QueryClass({
+    type: 'select',
+    filter: Filter.type(schema, predicates).ast,
+  });
+};
+
+/**
+ * Combine results of multiple queries.
+ * @param queries - Queries to combine.
+ * @returns Query for the combined results.
+ */
+// TODO(dmaretskyi): Rename to `combine` or `union`.
+export const all = (...queries: Any[]): Any => {
+  if (queries.length === 0) {
+    throw new TypeError(
+      'Query.all combines results of multiple queries, to query all objects use Query.select(Filter.everything())',
+    );
+  }
+  return new QueryClass({
+    type: 'union',
+    queries: queries.map((q) => q.ast),
+  });
+};
+
+/**
+ * Subtract one query from another.
+ * @param source - Query to subtract from.
+ * @param exclude - Query to subtract.
+ * @returns Query for the results of the source query minus the results of the exclude query.
+ */
+export const without = <T>(source: Query<T>, exclude: Query<T>): Query<T> => {
+  return new QueryClass({
+    type: 'set-difference',
+    source: source.ast,
+    exclude: exclude.ast,
+  });
+};
