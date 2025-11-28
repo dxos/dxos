@@ -9,8 +9,8 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Schema from 'effect/Schema';
 
-import { AiService, MemoizedAiService, ToolExecutionService, ToolResolverService } from '@dxos/ai';
-import { AiServiceTestingPreset } from '@dxos/ai/testing';
+import { AiService, ToolExecutionService, ToolResolverService } from '@dxos/ai';
+import { AiServiceTestingPreset, MemoizedAiService } from '@dxos/ai/testing';
 import { Obj, Type } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { TracingService } from '@dxos/functions';

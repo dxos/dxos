@@ -7,7 +7,7 @@ import * as Layer from 'effect/Layer';
 
 import { TestContextService } from '@dxos/effect/testing';
 
-import * as AiService from '../AiService';
+import * as AiService from '../../AiService';
 
 import * as MemoizedLanguageModel from './MemoizedLanguageModel';
 

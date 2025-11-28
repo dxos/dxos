@@ -6,8 +6,8 @@ import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
-import { AiService, MemoizedAiService } from '@dxos/ai';
-import { TestAiService } from '@dxos/ai/testing';
+import { AiService } from '@dxos/ai';
+import { MemoizedAiService, TestAiService } from '@dxos/ai/testing';
 import { makeToolExecutionServiceFromFunctions, makeToolResolverFromFunctions } from '@dxos/assistant';
 import { Blueprint } from '@dxos/blueprints';
 import { Obj } from '@dxos/echo';
