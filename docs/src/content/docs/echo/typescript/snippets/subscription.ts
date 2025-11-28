@@ -17,8 +17,8 @@ async () => {
 
   const query = space.db.query(Filter.type(Type.Expando, { type: 'task' }));
 
-  const unsubscribeFn = query.subscribe(({ objects }) => {
-    objects.forEach((object) => {
+  const unsubscribeFn = query.subscribe((query) => {
+    query.results.forEach((object) => {
       if (object.type === 'task') {
         // Do something with this task.
       }

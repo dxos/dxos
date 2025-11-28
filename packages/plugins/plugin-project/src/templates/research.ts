@@ -10,7 +10,7 @@ import { View } from '@dxos/schema';
 import { Message, Organization, Person, Project } from '@dxos/types';
 
 export const createResearchProject = async (space: Space, name?: string): Promise<Project.Project | null> => {
-  const { objects: mailboxes } = await space.db.query(Filter.type(Mailbox.Mailbox)).run();
+  const mailboxes = await space.db.query(Filter.type(Mailbox.Mailbox)).run();
   if (!mailboxes.length) {
     return null;
   }

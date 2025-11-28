@@ -37,7 +37,7 @@ export default defineFunction({
     const [schema] = yield* DatabaseService.runSchemaQuery({ typename });
     const filter = schema ? Filter.type(schema) : Filter.typename(typename);
 
-    const { objects } = yield* DatabaseService.runQuery(Query.select(filter));
+    const objects = yield* DatabaseService.runQuery(Query.select(filter));
     const results = objects.map((object) => ({
       dxn: Obj.getDXN(object).toString(),
       label: Obj.getLabel(object),

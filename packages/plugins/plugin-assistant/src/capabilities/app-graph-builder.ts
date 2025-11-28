@@ -193,10 +193,8 @@ const getOrCreateChat = async (
   space: Space,
 ): Promise<Assistant.Chat | undefined> => {
   // TODO(wittjosiah): This should be possible with a single query.
-  const { objects: allChats } = await space.db.query(Query.type(Assistant.Chat)).run();
-  const { objects: relatedChats } = await space.db
-    .query(Query.type(Assistant.Chat).sourceOf(Assistant.CompanionTo).source())
-    .run();
+  const allChats = await space.db.query(Query.type(Assistant.Chat)).run();
+  const relatedChats = await space.db.query(Query.type(Assistant.Chat).sourceOf(Assistant.CompanionTo).source()).run();
 
   const chats = allChats.filter((chat) => !relatedChats.includes(chat));
   if (chats.length > 0) {

@@ -22,7 +22,7 @@ const generator: ValueGenerator = {
 
 const queryObjects = async (db: EchoDatabase, specs: TypeSpec[]) => {
   for (const { type, count } of specs) {
-    const { objects } = await db.query(Query.type(type)).run();
+    const objects = await db.query(Query.type(type)).run();
     expect(objects).to.have.length(count);
     log('objects', {
       typename: type.typename,
@@ -50,13 +50,17 @@ describe('Generator', () => {
     }
 
     {
-      const objectGenerator = createGenerator(generator, Person.Person, { force: true });
+      const objectGenerator = createGenerator(generator, Person.Person, {
+        force: true,
+      });
       const object = objectGenerator.createObject();
       expect(object).to.exist;
     }
 
     {
-      const objectGenerator = createGenerator(generator, Project.Project, { force: true });
+      const objectGenerator = createGenerator(generator, Project.Project, {
+        force: true,
+      });
       const object = objectGenerator.createObject();
       expect(object).to.exist;
     }
@@ -67,7 +71,7 @@ describe('Generator', () => {
     const createObjects = createObjectFactory(db, generator);
 
     // Register static schema.
-    db.graph.schemaRegistry.addSchema([Organization.Organization, Project.Project, Person.Person]);
+    await db.graph.schemaRegistry.register([Organization.Organization, Project.Project, Person.Person]);
 
     const spec: TypeSpec[] = [
       { type: Organization.Organization, count: 5 },

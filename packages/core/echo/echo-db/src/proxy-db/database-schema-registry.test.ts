@@ -114,7 +114,7 @@ describe('schema registry', () => {
   test('get all raw stored schemas', async () => {
     const { db, registry } = await setupTest();
     const schemas = await registry.register([Organization, Contact]);
-    const retrieved = (await db.query(Filter.type(PersistentSchema)).run()).objects;
+    const retrieved = await db.query(Filter.type(PersistentSchema)).run();
     expect(retrieved.length).to.eq(schemas.length);
     for (const schema of retrieved) {
       expect(schemas.find((s) => s.id === schema.id)).not.to.undefined;
@@ -123,7 +123,7 @@ describe('schema registry', () => {
 
   test('query both database and runtime schemas', async () => {
     const { registry, db } = await setupTest();
-    db.graph.schemaRegistry.addSchema([Organization]);
+    await db.graph.schemaRegistry.register([Organization]);
 
     const [echoSchema] = await registry.register([Contact]);
     const retrieved = await registry.query({ location: ['database', 'runtime'] }).run();
@@ -132,7 +132,7 @@ describe('schema registry', () => {
 
   test('query only runtime schemas', async () => {
     const { registry, db } = await setupTest();
-    db.graph.schemaRegistry.addSchema([Organization]);
+    await db.graph.schemaRegistry.register([Organization]);
 
     const [echoSchema] = await registry.register([Contact]);
     const retrieved = await registry.query({ location: ['runtime'] }).run();
@@ -141,7 +141,7 @@ describe('schema registry', () => {
 
   test('query only database schemas', async () => {
     const { registry, db } = await setupTest();
-    db.graph.schemaRegistry.addSchema([Organization]);
+    await db.graph.schemaRegistry.register([Organization]);
 
     const [echoSchema] = await registry.register([Contact]);
     const retrieved = await registry.query({ location: ['database'] }).run();

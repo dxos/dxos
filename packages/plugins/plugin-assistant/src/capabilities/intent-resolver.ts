@@ -55,7 +55,7 @@ export default (context: PluginContext) => [
 
         // TODO(wittjosiah): This should be a space-level setting.
         // TODO(burdon): Clone when activated. Copy-on-write for template.
-        const { objects: blueprints } = await space.db.query(Filter.type(Blueprint.Blueprint)).run();
+        const blueprints = await space.db.query(Filter.type(Blueprint.Blueprint)).run();
         let defaultBlueprint = blueprints.find((blueprint) => blueprint.key === ASSISTANT_BLUEPRINT_KEY);
         if (!defaultBlueprint) {
           defaultBlueprint = space.db.add(createBlueprint());
