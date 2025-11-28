@@ -5,8 +5,8 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useCallback, useMemo, useState } from 'react';
 
+import { createDocAccessor } from '@dxos/echo-db';
 import { QuerySandbox } from '@dxos/echo-query';
-import { createDocAccessor } from '@dxos/react-client/echo';
 import { createObject } from '@dxos/react-client/echo';
 import { Toolbar, useAsyncEffect } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
