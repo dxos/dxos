@@ -139,6 +139,14 @@ export class Client {
       const prefix = options.config?.get('runtime.client.log.prefix');
       log.config({ filter, prefix });
     }
+
+    // TODO(wittjosiah): This is ill-advised.
+    //   However, it seems to work okay for now since the runtime registry operates synchronously despite the interface.
+    //   Moving this to `initialize` causes issues with re-initialization.
+    void this._echoClient.graph.schemaRegistry.register([SpaceProperties]);
+    if (this._options.types) {
+      void this.addTypes(this._options.types);
+    }
   }
 
   [inspect.custom](): string {
@@ -349,11 +357,6 @@ export class Client {
 
     log.trace('dxos.sdk.client.open', Trace.begin({ id: this._instanceId }));
     const { createClientServices, IFrameManager, ShellManager } = await import('../services');
-
-    await this._echoClient.graph.schemaRegistry.register([SpaceProperties]);
-    if (this._options.types) {
-      await this.addTypes(this._options.types);
-    }
 
     this._ctx = new Context();
     this._config = this._options.config ?? new Config();
