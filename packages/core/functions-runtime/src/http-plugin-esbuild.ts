@@ -57,6 +57,7 @@ export const httpPlugin: Plugin = {
             jsx: 'jsx',
             ts: 'ts',
             tsx: 'tsx',
+            wasm: 'copy',
             // Add more mappings as needed
           }[extension.toLowerCase()] as Loader) || 'jsx';
         return { contents: text, loader };

@@ -149,6 +149,7 @@
     "storybook": "^10.1.0",
     "syncpack": "^8.2.4",
     "ts-morph": "^16.0.0",
+    "tsdown": "^0.16.7",
     "types-package-json": "^2.0.39",
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.39.0",

@@ -91,7 +91,8 @@
     "iso-did": "^1.6.0"
   },
   "devDependencies": {
-    "@dxos/types": "workspace:*"
+    "@dxos/types": "workspace:*",
+    "wrangler": "^3.80.3"
   },
   "publishConfig": {
     "access": "public"

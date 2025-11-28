@@ -7,9 +7,12 @@ import { type BuildResult, type Plugin, type PluginBuild, build, initialize } fr
 import { subtleCrypto } from '@dxos/crypto';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { isNode } from '@dxos/util';
+import { isNode, trim } from '@dxos/util';
+import * as Record from 'effect/Record';
+import * as Function from 'effect/Function';
 
 import { httpPlugin } from '../http-plugin-esbuild';
+import type { Loader } from 'esbuild';
 
 export type Import = {
   moduleUrl: string;
@@ -35,8 +38,7 @@ export type BundleResult =
       sourceHash: Buffer;
       imports: Import[];
       entryPoint: string;
-      asset: Uint8Array;
-      bundle: string;
+      assets: Record<string, Uint8Array>;
     };
 
 let initialized: Promise<void>;
@@ -64,6 +66,7 @@ export const bundleFunction = async ({ source }: BundleOptions): Promise<BundleR
     invariant(initialized, 'Compiler not initialized.');
     await initialized;
   }
+  const outdir = '/tmp/bundle';
   try {
     const result = await build({
       platform: 'browser',
@@ -74,9 +77,14 @@ export const bundleFunction = async ({ source }: BundleOptions): Promise<BundleR
         // Keep output name stable as `index.js` to preserve API.
         index: 'dxos:entrypoint',
       },
+      outdir,
       bundle: true,
+      splitting: true,
       format: 'esm',
-      external: ['./runtime.js', 'cloudflare:workers', 'functions-service:user-script'],
+      external: ['cloudflare:workers'],
+      alias: {
+        'node:path': 'path',
+      },
       plugins: [
         httpPlugin as any as Plugin,
         {
@@ -89,46 +97,55 @@ export const bundleFunction = async ({ source }: BundleOptions): Promise<BundleR
             }));
             build.onLoad({ filter: /^dxos:entrypoint$/, namespace: 'dxos:entrypoint' }, () => {
               return {
-                contents: [
-                  `import { wrapFunctionHandler } from 'dxos:functions';`,
-                  `import handler from 'memory:source.tsx';`,
-                  `export default wrapFunctionHandler(handler);`,
-                ].join('\n'),
-                loader: 'tsx',
-              };
+                contents: trim`
+                  export default {
+                    fetch: async (...args) => {
+                      const { wrapFunctionHandler } = await import('@dxos/functions');
+                      const { wrapHandlerForCloudflare } = await import('@dxos/functions-runtime-cloudflare');
+                      const { default: handler } = await import('memory:source.tsx');
+
+                      //
+                      // Wrapper to make the function cloudflare-compatible.
+                      //
+                      return wrapHandlerForCloudflare(wrapFunctionHandler(handler))(...args);
+                    },
+                  };
+                `,
+                loader: 'ts',
+              } as const;
             });
           },
         },
         {
           name: 'memory',
           setup: (build) => {
-            build.onResolve({ filter: /^\.\/runtime\.js$/ }, ({ path }) => {
-              return { path, external: true };
-            });
-
-            build.onResolve({ filter: /^dxos:functions$/ }, () => {
-              return { path: './runtime.js', external: true };
-            });
-
             build.onResolve({ filter: /^memory:/ }, ({ path }) => {
               return { path: path.split(':')[1], namespace: 'memory' };
             });
 
             build.onLoad({ filter: /.*/, namespace: 'memory' }, ({ path }) => {
-              if (path === 'source.tsx') {
-                return {
-                  contents: source,
-                  loader: 'tsx',
-                };
+              switch (path) {
+                case 'source.tsx':
+                  return {
+                    contents: source,
+                    loader: 'tsx',
+                  };
+                case 'empty':
+                  return {
+                    contents: '',
+                    loader: 'js',
+                  };
               }
             });
           },
         },
+        // PluginESMSh(),
+        PluginR2VendoredPackages(),
       ],
     });
 
     log.info('Bundling complete', result.metafile);
-    log.info('Output files', result.outputFiles);
+    log.info('Output files', { files: result.outputFiles });
 
     const entryPoint = 'index.js';
     return {
@@ -136,13 +153,139 @@ export const bundleFunction = async ({ source }: BundleOptions): Promise<BundleR
       sourceHash,
       imports: analyzeImports(result),
       entryPoint,
-      asset: result.outputFiles![0].contents,
-      bundle: result.outputFiles![0].text,
+      assets: result.outputFiles.reduce(
+        (acc, file) => {
+          acc[file.path.replace(outdir + '/', '')] = file.contents;
+          return acc;
+        },
+        {} as Record<string, Uint8Array>,
+      ),
     };
   } catch (err) {
     return { timestamp: Date.now(), sourceHash, error: err };
   }
 };
+
+/**
+ * Pulls NPM packages from `esm.sh`.
+ * Always uses latest versions for all packages.
+ */
+const PluginESMSh = (): Plugin => ({
+  name: 'esmsh',
+  setup(build) {
+    build.onResolve({ filter: /^[^./]/ }, (args) => {
+      if (args.kind === 'entry-point') {
+        return;
+      }
+
+      if (args.path.includes('@dxos/node-std')) {
+        return {
+          path: 'memory:empty',
+          namespace: 'memory',
+        };
+      }
+
+      // Assuming all deps will be resolved the latest version.
+      return build.resolve(
+        `https://esm.sh/${args.path}?conditions=workerd,worker,node&platform=node&keep-names&deps=@automerge/automerge-repo@2.5.0,msgpackr@1.11.4`,
+        {
+          kind: args.kind,
+          resolveDir: args.resolveDir,
+        },
+      );
+    });
+  },
+});
+
+/*
+
+node scripts/vendor-packages.mjs
+rclone copy dist/vendor r2:script-vendored-packages
+https://dash.cloudflare.com/950816f3f59b079880a1ae33fb0ec320/r2/default/buckets/script-vendored-packages/settings
+
+*/
+
+// script-vendored-packages bucket on R2
+const SCRIPT_PACKAGES_BUCKET = 'https://pub-5745ae82e450484aa28f75fc6a175935.r2.dev';
+
+const PluginR2VendoredPackages = (): Plugin => ({
+  name: 'r2-vendored-packages',
+  setup(build) {
+    build.onResolve({ filter: /^[^./]/ }, (args) => {
+      if (args.kind === 'entry-point') {
+        return;
+      }
+
+      return {
+        path: new URL(`/${args.path}.js`, SCRIPT_PACKAGES_BUCKET).href,
+        namespace: 'http-url',
+      };
+    });
+
+    // We also want to intercept all import paths inside downloaded files and resolve them against the original URL.
+    // All of these files will be in the "http-url" namespace.
+    // Make sure to keep the newly resolved URL in the "http-url" namespace so imports inside it will also be resolved as URLs recursively.
+    build.onResolve({ filter: /.*/, namespace: 'r2-vendored-packages' }, (args) => ({
+      path: new URL(args.path, args.importer).toString(),
+      namespace: 'r2-vendored-packages',
+    }));
+
+    build.onLoad({ filter: /.*/, namespace: 'r2-vendored-packages' }, async (args) => {
+      log.info('Fetching', { path: args.path });
+      try {
+        const response = await fetch(args.path);
+        const extension = new URL(args.path).pathname.split('.').pop() || '';
+        const text = await response.text();
+        const loader =
+          ((
+            {
+              js: 'js',
+              jsx: 'jsx',
+              ts: 'ts',
+              tsx: 'tsx',
+              // Add more mappings as needed
+            } as const
+          )[extension.toLowerCase()] as Loader) || 'jsx';
+        return {
+          contents: text,
+          loader,
+        } as const;
+      } catch (err) {
+        log.error('failed to fetch', { path: args.path });
+        throw err;
+      }
+    });
+  },
+});
+
+const PluginEmbeddedVendoredPackages = (): Plugin => ({
+  name: 'embedded-vendored-packages',
+  setup(build) {
+    // // https://vite.dev/guide/features#custom-queries
+    const moduleUrls = Function.pipe(
+      import.meta.glob('../../dist/vendor/**/*.js', {
+        query: '?url',
+        import: 'default',
+        eager: true,
+      }) as Record<string, string>,
+      Record.mapKeys((s) => s.replace('../../dist/vendor/', '').replace(/\.js$/, '')),
+      Record.filter((_, key) => !key.startsWith('internal/')),
+    );
+
+    // console.log(moduleUrls);
+
+    build.onResolve({ filter: /^[^./]/ }, (args) => {
+      if (args.kind === 'entry-point') {
+        return;
+      }
+
+      return build.resolve(new URL(moduleUrls[args.path], import.meta.url).href, {
+        kind: args.kind,
+        resolveDir: args.resolveDir,
+      });
+    });
+  },
+});
 
 // TODO(dmaretskyi): In the future we can replace the compiler with SWC with plugins running in WASM.
 const analyzeImports = (result: BuildResult): Import[] => {
