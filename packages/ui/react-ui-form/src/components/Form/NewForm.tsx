@@ -9,7 +9,7 @@ import { type AnyProperties } from '@dxos/echo/internal';
 import { IconButton, type IconButtonProps, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
-import { type FormHandler, useFormHandler } from '../../hooks';
+import { type FormHandler, type FormHandlerProps, useFormHandler } from '../../hooks';
 import { translationKey } from '../../translations';
 
 import { FormFieldSet, type FormFieldSetProps } from './FormFieldSet';
@@ -59,10 +59,7 @@ type NewFormRootProps<T extends AnyProperties = AnyProperties> = PropsWithChildr
      * Called when the form is canceled to abandon/undo any pending changes.
      */
     onCancel?: () => void;
-  } &
-    // TODO(burdon): Move debug, readonly into FormHandler.
-    Pick<FormHandler<T>, 'schema' | 'values'> &
-    Pick<NewFormContextValue<T>, 'debug' | 'readonly'>
+  } & (Pick<FormHandlerProps<T>, 'schema' | 'values'> & Pick<NewFormContextValue<T>, 'debug' | 'readonly'>)
 >;
 
 const NewFormRoot = <T extends AnyProperties = AnyProperties>({
@@ -74,7 +71,7 @@ const NewFormRoot = <T extends AnyProperties = AnyProperties>({
   onCancel,
   ...props
 }: NewFormRootProps<T>) => {
-  const form = useFormHandler({ schema, initialValues: values, onSave, onCancel, ...props });
+  const form = useFormHandler({ schema, values, onSave, onCancel, ...props });
 
   return (
     // TODO(burdon): Temporarily include old context.

@@ -33,9 +33,9 @@ export const useFormContext = <T extends AnyProperties>(componentName: string): 
  * Get the current form values.
  */
 export const useFormValues = <T extends AnyProperties>(componentName: string, path: (string | number)[] = []): T => {
-  const { values: formValues } = useFormContext(componentName);
+  const { values } = useFormContext(componentName);
   const jsonPath = createJsonPath(path);
-  return getValue(formValues, jsonPath) as T;
+  return getValue(values, jsonPath) as T;
 };
 
 /**

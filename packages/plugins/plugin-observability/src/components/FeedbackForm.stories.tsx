@@ -26,7 +26,7 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
   args: {
-    onSave: (values: UserFeedback) => {
+    onSave: (values) => {
       console.log(values);
     },
   },

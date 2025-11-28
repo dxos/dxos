@@ -95,7 +95,7 @@ export type FormHandler<T extends AnyProperties> = {
  */
 export const useFormHandler = <T extends AnyProperties>({
   schema,
-  initialValues,
+  values: valuesProp,
   onValuesChanged,
   onValidate,
   onValid,
@@ -104,10 +104,10 @@ export const useFormHandler = <T extends AnyProperties>({
   ...props
 }: FormHandlerProps<T>): FormHandler<T> => {
   // TODO(burdon): Change to useControlledValue.
-  const [values, setValues] = useState<Partial<T>>(initialValues ?? {});
+  const [values, setValues] = useState<Partial<T>>(valuesProp ?? {});
   useEffect(() => {
-    setValues(initialValues ?? {});
-  }, [initialValues]);
+    setValues(valuesProp ?? {});
+  }, [valuesProp]);
 
   const [touched, setTouched] = useState<Record<JsonPath, boolean>>(createKeySet(values, false));
   const [changed, setChanged] = useState<Record<JsonPath, boolean>>(createKeySet(values, false));

@@ -20,7 +20,7 @@ export type PropertyFilter<T extends AnyProperties> = (props: SchemaProperty<T>[
 
 export type FormProps<T extends AnyProperties> = ThemedClassName<{
   id?: string;
-  values: Partial<T>;
+  values?: Partial<T>;
   sort?: PropertyKey<T>[];
   exclude?: PropertyFilter<T>;
   projection?: ProjectionModel;
@@ -37,7 +37,7 @@ export const Form = <T extends AnyProperties>({
   classNames,
   id,
   testId,
-  values: initialValues,
+  values: valuesProp,
   readonly,
   autoFocus,
   autoSave,
@@ -77,7 +77,7 @@ export const Form = <T extends AnyProperties>({
       formRef={formRef}
       schema={schema}
       autoSave={autoSave}
-      initialValues={initialValues}
+      values={valuesProp}
       onValuesChanged={onValuesChanged}
       onValidate={onValidate}
       onValid={handleValid}
