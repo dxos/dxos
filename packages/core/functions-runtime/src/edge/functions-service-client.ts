@@ -9,6 +9,7 @@ import { FUNCTIONS_META_KEY, Function, FunctionError } from '@dxos/functions';
 import { type ObjectId, type PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { safeParseJson } from '@dxos/util';
+import { Runtime } from '@dxos/protocols';
 
 import { FunctionServiceError } from '../errors';
 
@@ -22,6 +23,8 @@ export type FunctionDeployOptions = {
    */
   functionId?: string;
   ownerPublicKey: PublicKey;
+
+  runtime?: Runtime;
 
   /**
    * Path of the entry point file in the assets table.
@@ -78,6 +81,7 @@ export class FunctionsServiceClient {
           ownerPublicKey: request.ownerPublicKey.toHex(),
           entryPoint: request.entryPoint,
           assets: request.assets,
+          runtime: request.runtime,
         },
         { retry: { count: 3 }, auth: true },
       );
