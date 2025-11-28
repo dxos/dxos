@@ -9,7 +9,7 @@ import type * as Key from './Key';
 import type * as QueryResult from './QueryResult';
 import type * as Type from './Type';
 
-/** @deprecated Replace w/ Query.Query. */
+// TODO(wittjosiah): Replace w/ Query.Query.
 export type Query = {
   /**
    * Filter by schema ID.
