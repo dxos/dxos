@@ -45,10 +45,13 @@ export default defineConfig({
       /^@effect/,
     ],
   },
+  loader: {
+    '.wasm': 'asset',
+  },
   treeshake: true,
   outputOptions: {
     chunkFileNames: 'internal/[name]-[hash].js',
-    assetFileNames: 'internal/[name]-[hash].[extname]',
+    assetFileNames: 'internal/[name]-[hash][extname]',
     minifyInternalExports: false,
   },
   inputOptions: {
@@ -56,7 +59,6 @@ export default defineConfig({
       conditionNames: ['workerd', 'worker', 'browser'],
     },
   },
-  external: [/\.wasm$/],
   plugins: [
     {
       name: 'manifest',
