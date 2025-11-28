@@ -63,9 +63,8 @@ export const FunctionsRegistry = ({ space }: FunctionsRegistryProps) => {
 
   const hanleImportOrUpdate = useCallback(
     async (func: Function.Function) => {
-      const {
-        objects: [existingFunc],
-      } = await space.db.query(Query.type(Function.Function, { key: func.key })).run();
+      const functions = await space.db.query(Query.type(Function.Function, { key: func.key })).run();
+      const [existingFunc] = functions;
       if (!existingFunc) {
         space.db.add(func);
         return;

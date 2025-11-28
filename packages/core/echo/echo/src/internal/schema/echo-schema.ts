@@ -350,7 +350,7 @@ export class EchoSchema<A = any, I = any> extends EchoSchemaConstructor() implem
   //
 
   /**
-   * Called by EchoSchemaRegistry on update.
+   * Called by DatabaseSchemaRegistry on update.
    */
   _invalidate(): void {
     this._isDirty = true;

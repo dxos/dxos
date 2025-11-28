@@ -136,7 +136,7 @@ describe('Research', () => {
           prompt: `Create a research summary about ${organization.name}.`,
         });
         {
-          const { objects: docs } = yield* DatabaseService.runQuery(
+          const docs = yield* DatabaseService.runQuery(
             Query.select(Filter.ids(organization.id)).targetOf(HasSubject.HasSubject).source(),
           );
           if (docs.length !== 1) {
@@ -156,7 +156,7 @@ describe('Research', () => {
           prompt: 'Add a section about their portfolio.',
         });
         {
-          const { objects: docs } = yield* DatabaseService.runQuery(
+          const docs = yield* DatabaseService.runQuery(
             Query.select(Filter.ids(organization.id)).targetOf(HasSubject.HasSubject).source(),
           );
           if (docs.length !== 1) {

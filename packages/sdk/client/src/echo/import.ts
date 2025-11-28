@@ -7,9 +7,7 @@ import { Type } from '@dxos/echo';
 import { type EchoDatabase, Filter, type SerializedSpace, Serializer, decodeReferenceJSON } from '@dxos/echo-db';
 
 export const importSpace = async (database: EchoDatabase, data: SerializedSpace) => {
-  const {
-    objects: [properties],
-  } = await database.query(Filter.type(SpaceProperties)).run();
+  const [properties] = await database.query(Filter.type(SpaceProperties)).run();
 
   await new Serializer().import(database, data, {
     onObject: async (object) => {

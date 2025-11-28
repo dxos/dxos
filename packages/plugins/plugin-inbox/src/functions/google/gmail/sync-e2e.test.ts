@@ -70,7 +70,9 @@ describe.runIf(process.env.DX_TEST_TAGS?.includes('functions-e2e'))('Functions d
     );
     await sync(space);
     await space.db.flush({ indexes: true });
-    await space.internal.syncToEdge({ onProgress: (state) => console.log('sync', state ?? 'no connection to edge') });
+    await space.internal.syncToEdge({
+      onProgress: (state) => console.log('sync', state ?? 'no connection to edge'),
+    });
     const result = await functionsServiceClient.forceRunCronTrigger(space.id, trigger.id);
     console.log(result);
     await checkEmails(mailbox);
@@ -90,7 +92,9 @@ describe.runIf(process.env.DX_TEST_TAGS?.includes('functions-e2e'))('Functions d
     );
     await sync(space);
     await space.db.flush({ indexes: true });
-    await space.internal.syncToEdge({ onProgress: (state) => console.log('sync', state ?? 'no connection to edge') });
+    await space.internal.syncToEdge({
+      onProgress: (state) => console.log('sync', state ?? 'no connection to edge'),
+    });
     log.info('waiting for trigger to fire');
     await expect.poll(async () => {
       log.info('poll');
@@ -127,7 +131,9 @@ const setup = async () => {
 
 const sync = async (space: Space) => {
   await space.db.flush({ indexes: true });
-  await space.internal.syncToEdge({ onProgress: (state) => console.log('sync', state ?? 'no connection to edge') });
+  await space.internal.syncToEdge({
+    onProgress: (state) => console.log('sync', state ?? 'no connection to edge'),
+  });
 };
 
 const deployFunction = async (space: Space, functionsServiceClient: FunctionsServiceClient, entryPoint: string) => {
@@ -147,7 +153,7 @@ const deployFunction = async (space: Space, functionsServiceClient: FunctionsSer
 };
 
 const checkEmails = async (mailbox: Mailbox.Mailbox) => {
-  const { objects: messages } = await mailbox.queue.target!.query(Query.type(Message.Message)).run();
+  const messages = await mailbox.queue.target!.query(Query.type(Message.Message)).run();
   console.log(`Found ${messages.length} messages in mailbox`);
   return messages;
 };

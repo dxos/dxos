@@ -36,9 +36,7 @@ export class EdgeFunctionPlugin extends AsyncFunctionPlugin {
           return new CellError(ErrorType.REF, 'Missing space');
         }
 
-        const {
-          objects: [fn],
-        } = await space.db.query(Filter.type(Function.Function, { binding })).run();
+        const [fn] = await space.db.query(Filter.type(Function.Function, { binding })).run();
         if (!fn) {
           log.info('Function not found', { binding });
           return new CellError(ErrorType.REF, 'Function not found');
@@ -51,7 +49,9 @@ export class EdgeFunctionPlugin extends AsyncFunctionPlugin {
 
             // TODO(wittjosiah): `ttl` should be 0 to force a recalculation when a new version is deployed.
             //  This needs a ttl to prevent a binding change from causing the function not to be found.
-            this.runAsyncFunction(ast, state, handler(false), { ttl: FUNCTION_TTL });
+            this.runAsyncFunction(ast, state, handler(false), {
+              ttl: FUNCTION_TTL,
+            });
           });
 
           this.context.createSubscription(ast.procedureName, unsubscribe);
@@ -79,7 +79,9 @@ export class EdgeFunctionPlugin extends AsyncFunctionPlugin {
         return result as any;
       };
 
-    return this.runAsyncFunction(ast, state, handler(true), { ttl: FUNCTION_TTL });
+    return this.runAsyncFunction(ast, state, handler(true), {
+      ttl: FUNCTION_TTL,
+    });
   }
 }
 

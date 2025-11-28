@@ -130,3 +130,10 @@ export const intersectBy = <T, K>(arrays: T[][], selector: (item: T) => K): T[] 
     return lookups.every((lookup) => lookup.has(key));
   });
 };
+
+export const coerceArray = <T>(arr: T | T[] | undefined): T[] => {
+  if (arr === undefined) {
+    return [];
+  }
+  return Array.isArray(arr) ? arr : [arr];
+};

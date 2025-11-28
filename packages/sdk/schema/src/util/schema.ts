@@ -4,21 +4,19 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Type } from '@dxos/echo';
+import { type SchemaRegistry, Type } from '@dxos/echo';
 import {
   type EchoSchema,
   Format,
   FormatAnnotation,
   type JsonSchemaType,
   PropertyMetaAnnotationId,
-  type RuntimeSchemaRegistry,
   type SelectOption,
   TypeEnum,
   TypedObject,
   formatToType,
 } from '@dxos/echo/internal';
 import { createEchoSchema } from '@dxos/echo/testing';
-import { type EchoSchemaRegistry } from '@dxos/echo-db';
 import { type DXN, PublicKey } from '@dxos/keys';
 
 export type SelectOptionType = typeof SelectOption.Type;
@@ -62,22 +60,18 @@ export const createDefaultSchema = () =>
 
 export const getSchema = async (
   dxn: DXN,
-  registry?: RuntimeSchemaRegistry,
-  echoRegistry?: EchoSchemaRegistry,
+  registry?: SchemaRegistry.SchemaRegistry,
 ): Promise<Schema.Schema.AnyNoContext | undefined> => {
-  const staticSchema = registry?.getSchemaByDXN(dxn);
-  if (staticSchema) {
-    return staticSchema;
-  }
-
   const typeDxn = dxn.asTypeDXN();
   if (!typeDxn) {
     return;
   }
 
   const { type, version } = typeDxn;
-  const echoSchema = await echoRegistry?.query({ typename: type, version }).firstOrUndefined();
-  return echoSchema?.snapshot;
+  const schema = await registry
+    ?.query({ typename: type, version, location: ['database', 'runtime'] })
+    .firstOrUndefined();
+  return schema;
 };
 
 // TODO(burdon): Factor out.

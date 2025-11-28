@@ -4,8 +4,7 @@
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
-// TODO(burdon): Remove dependency on echo-db.
-import { type SchemaRegistry } from '@dxos/echo-db';
+import { type SchemaRegistry } from '@dxos/echo';
 import { Popover } from '@dxos/react-ui';
 import { FieldEditor } from '@dxos/react-ui-form';
 import { type FieldType } from '@dxos/schema';
@@ -13,7 +12,7 @@ import { type FieldType } from '@dxos/schema';
 import { type ModalController, type TableModel } from '../../model';
 
 type ColumnSettingsProps = {
-  registry?: SchemaRegistry;
+  registry?: SchemaRegistry.SchemaRegistry;
   model?: TableModel;
   modals: ModalController;
   onNewColumn: () => void;

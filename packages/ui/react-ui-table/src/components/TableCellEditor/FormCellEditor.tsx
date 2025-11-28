@@ -72,7 +72,7 @@ export const FormCellEditor = ({
     async (typeAnnotation: TypeAnnotation) => {
       const { schema, space } = getSchema(typeAnnotation);
       if (model && schema && space) {
-        const { objects } = await space.db.query(Filter.type(schema)).run();
+        const objects = await space.db.query(Filter.type(schema)).run();
         return objects
           .map((obj) => {
             return {

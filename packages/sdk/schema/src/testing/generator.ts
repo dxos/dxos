@@ -143,7 +143,7 @@ export const createReferences = <T extends AnyProperties>(schema: Schema.Schema<
             const { typename } = getSchemaReference(jsonSchema) ?? {};
             invariant(typename);
             // TODO(burdon): Filter.typename doesn't currently work for mutable objects.
-            const { objects: allObjects } = await db.query(Query.select(Filter.everything())).run();
+            const allObjects = await db.query(Query.select(Filter.everything())).run();
             const objects = allObjects.filter((obj) => Obj.getTypename(obj) === typename);
             if (objects.length) {
               const object = randomElement(objects);

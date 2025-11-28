@@ -25,7 +25,7 @@ describe('TestDatabaseLayer', { timeout: 600_000 }, () => {
       }).pipe(Effect.provide(DbLayer));
 
       yield* Effect.gen(function* () {
-        const { objects } = yield* DatabaseService.runQuery(Query.select(Filter.everything()));
+        const objects = yield* DatabaseService.runQuery(Query.select(Filter.everything()));
         expect(objects[0]?.label).toEqual('test');
       }).pipe(Effect.provide(DbLayer));
     }),
@@ -48,7 +48,7 @@ describe('TestDatabaseLayer', { timeout: 600_000 }, () => {
       }).pipe(Effect.provide(DbLayer));
 
       yield* Effect.gen(function* () {
-        const { objects } = yield* DatabaseService.runQuery(Query.select(Filter.type(Person.Person)));
+        const objects = yield* DatabaseService.runQuery(Query.select(Filter.type(Person.Person)));
         expect(objects.length).toEqual(NUM_OBJECTS);
       }).pipe(Effect.provide(DbLayer));
     }),
@@ -61,7 +61,7 @@ describe('TestDatabaseLayer', { timeout: 600_000 }, () => {
         const NUM_OBJECTS = 500;
 
         {
-          const { objects } = yield* DatabaseService.runQuery(Query.select(Filter.type(Person.Person)));
+          const objects = yield* DatabaseService.runQuery(Query.select(Filter.type(Person.Person)));
           console.log({ count: objects.length });
         }
 
@@ -71,7 +71,7 @@ describe('TestDatabaseLayer', { timeout: 600_000 }, () => {
         yield* DatabaseService.flush({ indexes: true });
 
         {
-          const { objects } = yield* DatabaseService.runQuery(Query.select(Filter.type(Person.Person)));
+          const objects = yield* DatabaseService.runQuery(Query.select(Filter.type(Person.Person)));
           console.log({ count: objects.length });
         }
       },

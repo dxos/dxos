@@ -53,8 +53,8 @@ export const useLinkQuery = (space: Space | undefined) => {
       };
 
       const items =
-        results?.objects
-          .filter((object) => toLocalizedString(getLabel(object), t).toLowerCase().includes(name))
+        results
+          ?.filter((object) => toLocalizedString(getLabel(object), t).toLowerCase().includes(name))
           // TODO(wittjosiah): Remove `any` type.
           .map((object: any): EditorMenuItem => {
             const metadata = resolve(Obj.getTypename(object)!);

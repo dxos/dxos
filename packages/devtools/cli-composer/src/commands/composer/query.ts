@@ -41,7 +41,7 @@ export default class Query extends BaseCommand<typeof Query> {
             break;
         }
 
-        const { objects } = await space.db.query(filter ?? Filter.everything()).run();
+        const objects = await space.db.query(filter ?? Filter.everything()).run();
         if (!this.flags.json) {
           printObjects(objects, { printer, extended: this.flags.extended });
         }

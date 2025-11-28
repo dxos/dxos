@@ -79,7 +79,7 @@ export type FunctionDefinition<T = any, O = any, S extends FunctionServices = Fu
    * List of types the function uses.
    * This is used to ensure that the types are available when the function is executed.
    */
-  types: readonly Type.Obj.Any[];
+  types: readonly Type.Entity.Any[];
 
   /**
    * Keys of the required services.
