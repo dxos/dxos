@@ -4,16 +4,15 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Key } from '@dxos/echo';
+import { Format, Key } from '@dxos/echo';
 
 import { meta } from '../meta';
 import { translations } from '../translations';
 
-// TODO(burdon): Util?
 const t = translations[0]['en-US'][meta.id];
 
 export const UserFeedback = Schema.Struct({
-  message: Schema.String.pipe(
+  message: Format.Text.pipe(
     Schema.nonEmptyString(),
     Schema.maxLength(8_000),
     Schema.annotations({

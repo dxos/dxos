@@ -102,9 +102,10 @@ export const getSchemaProperties = <T extends AnyProperties>(
       const processed = processProperty(
         key as PropertyKey<T>,
         {
+          name: key,
+          type: indexSignature.type,
           isOptional: true,
           isReadonly: indexSignature.isReadonly,
-          type: indexSignature.type,
         },
         form,
       );
@@ -117,9 +118,11 @@ export const getSchemaProperties = <T extends AnyProperties>(
   return knownProperties;
 };
 
+type PropertySignature = Pick<SchemaAST.PropertySignature, 'name' | 'type' | 'isOptional' | 'isReadonly'>;
+
 const processProperty = <T extends AnyProperties>(
   name: PropertyKey<T>,
-  prop: { type: SchemaAST.AST; isReadonly: boolean; isOptional: boolean },
+  prop: PropertySignature,
   form: boolean,
 ): SchemaProperty<T> | undefined => {
   // Annotations.

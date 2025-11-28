@@ -3,6 +3,7 @@
 //
 
 import type * as Schema from 'effect/Schema';
+import type * as SchemaAST from 'effect/SchemaAST';
 import React, { type FC, type FocusEvent, type ReactElement } from 'react';
 
 import { type Format } from '@dxos/echo/internal';
@@ -25,6 +26,7 @@ export type FormFieldStateProps = {
  * Props passed to input components.
  */
 export type FormFieldComponentProps = {
+  ast: SchemaAST.AST;
   type: SimpleType;
   format?: Format.TypeFormat;
   label: string;

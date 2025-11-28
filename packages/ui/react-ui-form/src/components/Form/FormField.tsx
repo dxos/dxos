@@ -27,6 +27,7 @@ import {
   RefField,
   type RefFieldProps,
   SelectField,
+  TextAreaField,
   TextField,
 } from './fields';
 import {
@@ -103,6 +104,7 @@ export const FormField = <T extends AnyProperties>({
 
   const fieldState = useFormFieldState(FormField.displayName, path);
   const fieldProps: FormFieldComponentProps = {
+    ast,
     type,
     format,
     label,
@@ -234,6 +236,19 @@ const getFormField = (property: SchemaProperty<any>): FormFieldComponent | undef
   const { type, format } = property;
 
   //
+  // Standard formats.
+  //
+
+  switch (format) {
+    case Format.TypeFormat.GeoPoint:
+      return GeoPointField;
+    case Format.TypeFormat.Markdown:
+      return MarkdownField;
+    case Format.TypeFormat.Text:
+      return TextAreaField;
+  }
+
+  //
   // Standard types.
   //
 
@@ -244,16 +259,5 @@ const getFormField = (property: SchemaProperty<any>): FormFieldComponent | undef
       return NumberField;
     case 'boolean':
       return BooleanField;
-  }
-
-  //
-  // Standard formats.
-  //
-
-  switch (format) {
-    case Format.TypeFormat.GeoPoint:
-      return GeoPointField;
-    case Format.TypeFormat.Markdown:
-      return MarkdownField;
   }
 };

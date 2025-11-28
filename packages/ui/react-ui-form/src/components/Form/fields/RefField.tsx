@@ -82,7 +82,7 @@ export const RefField = ({
     // If ref type is expando, fall back to taking a DXN in string format.
     return (
       <RefFieldFallback
-        {...{ type, label, placeholder, readonly, inline, getValue, onBlur, onValueChange, ...restInputProps }}
+        {...{ ast, type, label, placeholder, readonly, inline, getValue, onBlur, onValueChange, ...restInputProps }}
       />
     );
   }

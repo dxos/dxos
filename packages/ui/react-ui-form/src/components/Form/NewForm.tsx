@@ -17,14 +17,17 @@ import { FormContext } from './FormRoot';
 
 // [ ] TextArea
 // [x] Replace FeedbackForm.
-// [ ] Unify readonly/inline modes.
+
 // [ ] Inline tables for object arrays
+// [ ] Unify readonly/inline modes.
+// [ ] Unify fieldMap/fieldProvider map callback (with adapter for map).
+// [ ] Use FormFieldWrapper uniformly.
+
 // [ ] Refs, Selectors
 // [ ] Keyboard handler
 // [ ] Additional root props: options, callbacks
 // [ ] Reaplce context, hooks.
-// [ ] Unify fieldMap/fieldProvider map callback (with adapter for map).
-// [ ] Status message must include field (currently just "is missing")
+// [ ] Status (validation) message must include field (currently just "is missing")
 
 //
 // Context

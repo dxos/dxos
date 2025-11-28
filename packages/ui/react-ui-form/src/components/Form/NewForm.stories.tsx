@@ -21,6 +21,7 @@ const Person = Schema.Struct({
   active: Schema.optional(Schema.Boolean.annotations({ title: 'Active' })),
   age: Schema.optional(Schema.Number.annotations({ title: 'Age' })),
   location: Format.GeoPoint.annotations({ title: 'Location' }),
+  // TODO(burdon): Change to inline object.
   identities: Schema.optional(Schema.Array(Schema.String).annotations({ title: 'Identities' })),
 }).pipe(
   Type.Obj({
