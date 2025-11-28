@@ -60,6 +60,7 @@
     "@dxos/client": "workspace:*",
     "@dxos/client-protocol": "workspace:*",
     "@dxos/compute": "workspace:*",
+    "@dxos/config": "workspace:*",
     "@dxos/debug": "workspace:*",
     "@dxos/devtools": "workspace:*",
     "@dxos/echo": "workspace:*",

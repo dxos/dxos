@@ -8929,6 +8929,9 @@ importers:
       '@dxos/compute':
         specifier: workspace:*
         version: link:../../core/compute
+      '@dxos/config':
+        specifier: workspace:*
+        version: link:../../sdk/config
       '@dxos/debug':
         specifier: workspace:*
         version: link:../../common/debug
