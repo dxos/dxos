@@ -162,7 +162,7 @@ describe('queues', () => {
   });
 
   describe('Query', () => {
-    test.only('one shot query everything', async ({ expect }) => {
+    test('one shot query everything', async ({ expect }) => {
       await using peer = await builder.createPeer({
         types: [TestSchema.Person, TestSchema.EmployedBy],
       });
