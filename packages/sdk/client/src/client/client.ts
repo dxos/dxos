@@ -13,15 +13,15 @@ import {
   DEFAULT_CLIENT_CHANNEL,
   type Echo,
   type Halo,
-  PropertiesType,
   STATUS_TIMEOUT,
+  SpaceProperties,
   clientServiceBundle,
 } from '@dxos/client-protocol';
 import { type Stream } from '@dxos/codec-protobuf/stream';
 import { Config, SaveConfig } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { raise } from '@dxos/debug';
-import { getTypename } from '@dxos/echo/internal';
+import { Type } from '@dxos/echo';
 import { EchoClient, type Hypergraph, QueueServiceImpl } from '@dxos/echo-db';
 import { MockQueueService } from '@dxos/echo-db';
 import { EdgeHttpClient } from '@dxos/edge-client';
@@ -29,7 +29,14 @@ import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type QueueService } from '@dxos/protocols';
-import { ApiError, trace as Trace } from '@dxos/protocols';
+import {
+  ApiError,
+  AuthorizationError,
+  InvalidConfigError,
+  RemoteServiceConnectionError,
+  RemoteServiceConnectionTimeout,
+  trace as Trace,
+} from '@dxos/protocols';
 import { type QueryStatusResponse, SystemStatus } from '@dxos/protocols/proto/dxos/client/services';
 import { type ProtoRpcPeer, createProtoRpcPeer } from '@dxos/rpc';
 import { createIFramePort } from '@dxos/rpc-tunnel';
@@ -133,9 +140,12 @@ export class Client {
       log.config({ filter, prefix });
     }
 
-    this._echoClient.graph.schemaRegistry.addSchema([PropertiesType]);
-    if (options.types) {
-      this.addTypes(options.types);
+    // TODO(wittjosiah): This is ill-advised.
+    //   However, it seems to work okay for now since the runtime registry operates synchronously despite the interface.
+    //   Moving this to `initialize` causes issues with re-initialization.
+    void this._echoClient.graph.schemaRegistry.register([SpaceProperties]);
+    if (this._options.types) {
+      void this.addTypes(this._options.types);
     }
   }
 
@@ -241,8 +251,8 @@ export class Client {
    * Add schema types to the client.
    */
   // TODO(burdon): Check if already registered (and remove downstream checks).
-  addTypes(types: Schema.Schema.AnyNoContext[]): this {
-    log('addTypes', { schema: types.map((type) => getTypename(type)) });
+  async addTypes(types: Schema.Schema.AnyNoContext[]) {
+    log('addTypes', { schema: types.map((type) => Type.getTypename(type)) });
 
     // TODO(dmaretskyi): Uncomment after release.
     // if (!this._initialized) {
@@ -251,10 +261,8 @@ export class Client {
 
     const exists = types.filter((type) => !this._echoClient.graph.schemaRegistry.hasSchema(type));
     if (exists.length > 0) {
-      this._echoClient.graph.schemaRegistry.addSchema(exists);
+      await this._echoClient.graph.schemaRegistry.register(exists);
     }
-
-    return this;
   }
 
   /**
@@ -383,7 +391,13 @@ export class Client {
     const trigger = new Trigger<Error | undefined>();
     this._services.closed?.on(async (error) => {
       log('terminated', { resetting: this._resetting });
-      if (error instanceof ApiError) {
+      if (
+        error instanceof ApiError ||
+        error instanceof InvalidConfigError ||
+        error instanceof AuthorizationError ||
+        error instanceof RemoteServiceConnectionError ||
+        error instanceof RemoteServiceConnectionTimeout
+      ) {
         log.error('fatal', { error });
         trigger.wake(error);
       }
@@ -532,7 +546,7 @@ export class Client {
   @synchronized
   async reset(): Promise<void> {
     if (!this._initialized) {
-      throw new ApiError('Client not open.');
+      throw new ApiError({ message: 'Client not open.' });
     }
 
     log('resetting...');

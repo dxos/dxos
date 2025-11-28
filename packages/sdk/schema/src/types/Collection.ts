@@ -5,15 +5,15 @@
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
-import { PropertiesType } from '@dxos/client-protocol/types';
-import { Obj, Query, QueryAST, Ref, Type } from '@dxos/echo';
-import { type Expando, FormAnnotation } from '@dxos/echo/internal';
+import { SpaceProperties } from '@dxos/client-protocol/types';
+import { Obj, Query, Ref, Type } from '@dxos/echo';
+import { type Expando, FormInputAnnotation, SystemTypeAnnotation } from '@dxos/echo/internal';
 import { DatabaseService } from '@dxos/echo-db';
 import { invariant } from '@dxos/invariant';
 
 export const Collection = Schema.Struct({
   name: Schema.String.pipe(Schema.optional),
-  objects: Type.Ref(Type.Expando).pipe(Schema.Array, Schema.mutable, FormAnnotation.set(false)),
+  objects: Schema.Array(Type.Ref(Obj.Any)).pipe(Schema.mutable, FormInputAnnotation.set(false)),
 }).pipe(
   Type.Obj({
     typename: 'dxos.org/type/Collection',
@@ -26,22 +26,23 @@ export type Collection = Schema.Schema.Type<typeof Collection>;
 export const make = (props: Partial<Obj.MakeProps<typeof Collection>> = {}) =>
   Obj.make(Collection, { objects: [], ...props });
 
-// TODO(wittjosiah): Remove. Use View instead.
-const QueryCollection_ = Schema.Struct({
-  name: Schema.String.pipe(Schema.optional),
-  query: QueryAST.Query.pipe(FormAnnotation.set(false)),
+/**
+ * System collections are used runtime collections of nodes in the app graph.
+ * The purpose of this object is to allow them to be ordered within the root collection.
+ */
+export const Managed = Schema.Struct({
+  key: Schema.String,
 }).pipe(
   Type.Obj({
-    typename: 'dxos.org/type/QueryCollection',
+    typename: 'dxos.org/type/ManagedCollection',
     version: '0.1.0',
   }),
+  SystemTypeAnnotation.set(true),
 );
 
-/** @deprecated */
-export type QueryCollection = Schema.Schema.Type<typeof QueryCollection_>;
-export type QueryCollectionEncoded = Schema.Schema.Encoded<typeof QueryCollection_>;
-/** @deprecated */
-export const QueryCollection: Schema.Schema<QueryCollection, QueryCollectionEncoded> = QueryCollection_;
+export type Managed = Schema.Schema.Type<typeof Managed>;
+
+export const makeManaged = (props: Obj.MakeProps<typeof Managed>) => Obj.make(Managed, props);
 
 type AddParams = {
   object: Obj.Any;
@@ -55,7 +56,7 @@ export const add = Effect.fn(function* ({ object, target, hidden }: AddParams) {
   } else if (hidden) {
     yield* DatabaseService.add(object);
   } else {
-    const { objects } = yield* DatabaseService.runQuery(Query.type(PropertiesType));
+    const objects = yield* DatabaseService.runQuery(Query.type(SpaceProperties));
     invariant(objects.length === 1, 'Space properties not found');
     const properties: Expando = objects[0];
 

@@ -5,22 +5,24 @@
 import * as Schema from 'effect/Schema';
 
 import { Obj, Type } from '@dxos/echo';
-import { GeneratorAnnotation, ObjectId, TypedObject } from '@dxos/echo/internal';
+import { GeneratorAnnotation, SystemTypeAnnotation } from '@dxos/echo/internal';
 import { defineObjectMigration } from '@dxos/echo-db';
+import { type MakeOptional } from '@dxos/util';
 
 import * as Actor from './Actor';
 import * as ContentBlock from './ContentBlock';
 
 /**
- * Message.
+ * Message object.
  */
 // TODO(wittjosiah): Add read status:
 //  - Read receipts need to be per space member.
 //  - Read receipts don't need to be added to schema until they being implemented.
 export const Message = Schema.Struct({
-  id: ObjectId,
+  id: Obj.ID, // TODO(burdon): Remove (from all types in this package).
   // TODO(dmaretskyi): Consider adding a channelId too.
-  parentMessage: Schema.optional(ObjectId),
+  parentMessage: Schema.optional(Obj.ID),
+  // TODO(burdon): Rename sent (don't clash with metadata for created).
   created: Schema.String.pipe(
     Schema.annotations({ description: 'ISO date string when the message was sent.' }),
     GeneratorAnnotation.set('date.iso8601'),
@@ -47,11 +49,19 @@ export const Message = Schema.Struct({
 
 export interface Message extends Schema.Schema.Type<typeof Message> {}
 
-export const make = (sender: Actor.Actor | Actor.Role, blocks: ContentBlock.Any[] = []) => {
+export const make = ({
+  created,
+  sender,
+  blocks = [],
+  properties,
+}: MakeOptional<Omit<Obj.MakeProps<typeof Message>, 'sender'>, 'created' | 'blocks'> & {
+  sender: Actor.Actor | Actor.Role;
+}) => {
   return Obj.make(Message, {
-    created: new Date().toISOString(),
+    created: created ?? new Date().toISOString(),
     sender: typeof sender === 'string' ? { role: sender } : sender,
     blocks,
+    properties,
   });
 };
 
@@ -64,15 +74,21 @@ export enum MessageV1State {
 }
 
 /** @deprecated */
-export class MessageV1 extends TypedObject({ typename: 'dxos.org/type/Message', version: '0.1.0' })({
+export const MessageV1 = Schema.Struct({
   timestamp: Schema.String,
   state: Schema.optional(Schema.Enums(MessageV1State)),
   sender: Actor.Actor,
   text: Schema.String,
-  parts: Schema.optional(Schema.mutable(Schema.Array(Type.Ref(Type.Expando)))),
+  parts: Schema.optional(Schema.mutable(Schema.Array(Type.Ref(Obj.Any)))),
   properties: Schema.optional(Schema.mutable(Schema.Record({ key: Schema.String, value: Schema.Any }))),
-  context: Schema.optional(Type.Ref(Type.Expando)),
-}) {}
+  context: Schema.optional(Type.Ref(Obj.Any)),
+}).pipe(
+  Type.Obj({
+    typename: 'dxos.org/type/Message',
+    version: '0.1.0',
+  }),
+  SystemTypeAnnotation.set(true),
+);
 
 /** @deprecated */
 export const MessageV1ToV2 = defineObjectMigration({

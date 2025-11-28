@@ -503,7 +503,7 @@ export class InvitationsHandler {
 const checkInvitation = (protocol: InvitationProtocol, invitation: Partial<Invitation>) => {
   const expiresOn = getExpirationTime(invitation);
   if (expiresOn && expiresOn.getTime() < Date.now()) {
-    return new InvalidInvitationError('Invitation already expired.');
+    return new InvalidInvitationError({ message: 'Invitation already expired.' });
   }
   return protocol.checkInvitation(invitation);
 };

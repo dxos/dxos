@@ -5,6 +5,6 @@
 export * from './ast';
 export * from './context';
 export * from './errors';
-export * from './jsonPath';
+export * from './json-path';
 export * from './resource';
 export * from './url';

@@ -11,6 +11,7 @@ export const IntentResolver = lazy(() => import('./intent-resolver'));
 export const Markdown = lazy(() => import('./markdown'));
 export const ReactRoot = lazy(() => import('./react-root'));
 export const ReactSurface = lazy(() => import('./react-surface'));
+export const Repair = lazy(() => import('./repair'));
 export const ThreadSettings = lazy(() => import('./settings'));
 export const ThreadState = lazy(() => import('./state'));
 

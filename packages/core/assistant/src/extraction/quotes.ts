@@ -5,8 +5,8 @@
 import * as Schema from 'effect/Schema';
 
 import { Filter, Query } from '@dxos/echo';
-import { ObjectId } from '@dxos/echo/internal';
 import { type EchoDatabase } from '@dxos/echo-db';
+import { ObjectId } from '@dxos/keys';
 import { DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
 
@@ -31,7 +31,7 @@ export type ReferencedQuotes = Schema.Schema.Type<typeof ReferencedQuotes>;
 export const findQuotes = async (quotes: string[], db: EchoDatabase): Promise<ReferencedQuotes> => {
   const references = await Promise.all(
     quotes.map(async (quote) => {
-      const { objects } = await db.query(Query.select(Filter.text(quote, { type: 'vector' }))).run();
+      const objects = await db.query(Query.select(Filter.text(quote, { type: 'vector' }))).run();
       log.info('found quotes in vector index', { objects, quote });
       return objects.length > 0 ? [{ id: objects[0].id.toString(), quote }] : [];
     }),

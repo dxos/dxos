@@ -30,7 +30,7 @@ export class SpacesDumper {
 
     for (const space of client.spaces.get()) {
       await space.waitUntilReady();
-      const { objects } = await space.db.query(Filter.everything()).run();
+      const objects = await space.db.query(Filter.everything()).run();
 
       dump[space.id] = {};
       for (const object of objects) {
@@ -56,7 +56,12 @@ export class SpacesDumper {
         }
 
         if (!equals(received[spaceId][objectId], object)) {
-          log.warn('data mismatch', { spaceId, objectId, expected: object, received: received[spaceId][objectId] });
+          log.warn('data mismatch', {
+            spaceId,
+            objectId,
+            expected: object,
+            received: received[spaceId][objectId],
+          });
           return false;
         }
       }

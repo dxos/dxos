@@ -15,17 +15,18 @@ import {
   ATTR_RELATION_SOURCE,
   ATTR_RELATION_TARGET,
   ATTR_TYPE,
-  type BaseObject,
-  DeletedId,
+  type AnyProperties,
   EchoSchema,
   EntityKind,
-  EntityKindId,
   type HasId,
+  KindId,
   MetaId,
+  ObjectDeletedId,
   type ObjectJSON,
   type ObjectMeta,
   ObjectMetaSchema,
   ObjectVersionId,
+  PersistentSchema,
   Ref,
   RefImpl,
   RelationSourceDXNId,
@@ -36,14 +37,10 @@ import {
   SchemaMetaSymbol,
   SchemaValidator,
   SelfDXNId,
-  StoredSchema,
   TypeId,
-  assertObjectModelShape,
-  defineHiddenProperty,
+  assertObjectModel,
   getEntityKind,
-  getMeta,
   getRefSavedTarget,
-  getSchema,
   getTypeAnnotation,
   isInstanceOf,
   requireTypeReference,
@@ -52,6 +49,7 @@ import {
 import { DATA_NAMESPACE, type ObjectStructure, PROPERTY_ID, Reference, encodeReference } from '@dxos/echo-protocol';
 import { assertArgument, invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
+import { defineHiddenProperty } from '@dxos/live-object';
 import {
   type Live,
   type ReactiveHandler,
@@ -121,6 +119,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     if (isRootDataObject(target)) {
       keys.push(PROPERTY_ID);
     }
+
     return keys;
   }
 
@@ -129,6 +128,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     if (isRootDataObject(target) && p === PROPERTY_ID) {
       return { enumerable: true, configurable: true, writable: false };
     }
+
     return typeof value === 'object' ? Reflect.getOwnPropertyDescriptor(value, p) : undefined;
   }
 
@@ -169,7 +169,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
             return DXN.fromLocalObjectId(target[symbolInternals].core.id);
           }
         }
-        case EntityKindId: {
+        case KindId: {
           return target[symbolInternals].core.getKind();
         }
         case RelationSourceDXNId: {
@@ -188,21 +188,21 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
           return this.getTypeReference(target)?.toDXN();
         case MetaId:
           return this.getMeta(target);
-        case DeletedId:
+        case ObjectDeletedId:
           return this.isDeleted(target);
         case ObjectVersionId:
           return this._getVersion(target);
       }
     } else {
       switch (prop) {
-        case EntityKindId:
+        case KindId:
         case RelationSourceDXNId:
         case RelationTargetDXNId:
         case RelationSourceId:
         case RelationTargetId:
         case TypeId:
         case MetaId:
-        case DeletedId:
+        case ObjectDeletedId:
           return undefined;
       }
     }
@@ -263,7 +263,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
    */
   private _getTypename(target: ProxyTarget): string | undefined {
     const schema = this.getSchema(target);
-    // Special handling for EchoSchema. objectId is StoredSchema objectId, not a typename.
+    // Special handling for EchoSchema. objectId is persistentSchema objectId, not a typename.
     if (schema && typeof schema === 'object' && SchemaMetaSymbol in schema) {
       return (schema as any)[SchemaMetaSymbol].typename;
     }
@@ -358,8 +358,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
   private _handleStoredSchema(target: ProxyTarget, object: any): any {
     // Object instanceof StoredEchoSchema requires database to lookup schema.
     const database = target[symbolInternals].database;
-    // TODO(dmaretskyi): isInstanceOf(StoredSchema, object)
-    if (database && isInstanceOf(StoredSchema, object)) {
+    if (database && isInstanceOf(PersistentSchema, object)) {
       return database.schemaRegistry._registerSchema(object);
     }
 
@@ -428,7 +427,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     }
 
     // DynamicEchoSchema is a utility-wrapper around the object we actually store in automerge, unwrap it
-    const unwrappedValue = value instanceof EchoSchema ? value.storedSchema : value;
+    const unwrappedValue = value instanceof EchoSchema ? value.persistentSchema : value;
     const propertySchema = SchemaValidator.getPropertySchema(rootObjectSchema, path, (path) => {
       return target[symbolInternals].core.getDecoded([getNamespace(target), ...path]);
     });
@@ -564,7 +563,6 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
 
   arrayUnshift(target: Live<ProxyTarget>, path: KeyPath, ...items: any[]): number {
     const validatedItems = this._validateForArray(target, path, items, 0);
-
     const fullPath = this._getPropertyMountPath(target, path);
     const encodedItems = this._encodeForArray(target, validatedItems);
 
@@ -574,8 +572,8 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
       invariant(Array.isArray(array));
       newLength = array.unshift(...encodedItems);
     });
-    invariant(newLength !== -1);
 
+    invariant(newLength !== -1);
     return newLength;
   }
 
@@ -648,7 +646,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
    * @param proxy - the proxy that was passed to the method
    */
   createRef(target: ProxyTarget, proxy: any): Reference {
-    let otherEchoObj = proxy instanceof EchoSchema ? proxy.storedSchema : proxy;
+    let otherEchoObj = proxy instanceof EchoSchema ? proxy.persistentSchema : proxy;
     otherEchoObj = !isEchoObject(otherEchoObj) ? createObject(otherEchoObj) : otherEchoObj;
     const otherObjId = otherEchoObj.id;
     invariant(typeof otherObjId === 'string' && otherObjId.length > 0);
@@ -840,7 +838,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     const typename = schema ? getTypeAnnotation(schema)?.typename : undefined;
 
     return {
-      header: (config?: any) => getHeader(typename ?? 'EchoObject', target[symbolInternals].core.id, config),
+      header: (config?: any) => getHeader(typename ?? 'EchoObjectSchema', target[symbolInternals].core.id, config),
       hasBody: () => true,
       body: () => {
         let data = deepMapValues(this._getReified(target), (value, recurse) => {
@@ -887,9 +885,9 @@ export const throwIfCustomClass = (prop: KeyPath[number], value: any) => {
 };
 
 // TODO(burdon): Move ProxyTarget def to echo-schema and make AnyLiveObject inherit?
-export const getObjectCore = <T extends BaseObject>(obj: Live<T>): ObjectCore => {
+export const getObjectCore = <T extends AnyProperties>(obj: Live<T>): ObjectCore => {
   if (!(obj as any as ProxyTarget)[symbolInternals]) {
-    throw new Error('object is not an EchoObject');
+    throw new Error('object is not an EchoObjectSchema');
   }
 
   const { core } = (obj as any as ProxyTarget)[symbolInternals];
@@ -915,7 +913,7 @@ export const isRootDataObject = (target: ProxyTarget) => {
 };
 
 /**
- * @returns True if `value` is part of another EchoObject but not the root data object.
+ * @returns True if `value` is part of another EchoObjectSchema but not the root data object.
  */
 const isEchoObjectField = (value: any) => {
   return (
@@ -933,15 +931,15 @@ interface DecodedValueAtPath {
   dataPath: KeyPath;
 }
 
-/** @deprecated Use {@link @dxos/echo#AnyLiveObject} instead. */
-// TODO(burdon): Any shouldn't be generic (use namespace).
-export type AnyLiveObject<T extends BaseObject = any> = Live<T> & BaseObject & HasId;
+/** @deprecated */
+// TODO(burdon): Remove.
+export type AnyLiveObject<T extends AnyProperties = any> = Live<T> & HasId & AnyProperties;
 
 /**
  * @returns True if `value` is a reactive object with an EchoHandler backend.
  */
 // TODO(dmaretskyi): Reconcile with `isTypedObjectProxy`.
-export const isEchoObject = (value: any): value is AnyLiveObject<any> => {
+export const isEchoObject = (value: any): value is Obj.Any => {
   if (!isLiveObject(value)) {
     return false;
   }
@@ -965,7 +963,7 @@ export const isTypedObjectProxy = (value: any): value is Live<any> => {
     return true;
   }
 
-  const schema = getSchema(value);
+  const schema = Obj.getSchema(value);
   if (schema != null) {
     return !!getTypeAnnotation(schema);
   }
@@ -978,9 +976,9 @@ export const isTypedObjectProxy = (value: any): value is Live<any> => {
  * @internal
  */
 // TODO(burdon): Document lifecycle.
-export const createObject = <T extends BaseObject>(obj: T): AnyLiveObject<T> => {
+export const createObject = <T extends AnyProperties>(obj: T): AnyLiveObject<T> => {
   assertArgument(!isEchoObject(obj), 'obj', 'Object is already an ECHO object');
-  const schema = getSchema(obj);
+  const schema = Obj.getSchema(obj);
   if (schema != null) {
     validateSchema(schema);
   }
@@ -989,7 +987,7 @@ export const createObject = <T extends BaseObject>(obj: T): AnyLiveObject<T> => 
   const core = new ObjectCore();
   if (isLiveObject(obj)) {
     // Already an echo-schema reactive object.
-    const meta = getProxyTarget<ObjectMeta>(getMeta(obj));
+    const meta = getProxyTarget<ObjectMeta>(Obj.getMeta(obj));
 
     // TODO(burdon): Requires comment.
     const slot = getProxySlot(obj);
@@ -1043,7 +1041,7 @@ const metaNotEmpty = (meta: ObjectMeta) => meta.keys.length > 0 || (meta.tags &&
  * @internal
  */
 // TODO(burdon): Call and remove subscriptions.
-export const destroyObject = <T extends BaseObject>(proxy: AnyLiveObject<T>) => {
+export const destroyObject = <T extends AnyProperties>(proxy: AnyLiveObject<T>) => {
   invariant(isEchoObject(proxy));
   const target: ProxyTarget = getProxyTarget(proxy);
   const internals: ObjectInternals = target[symbolInternals];
@@ -1076,7 +1074,7 @@ export const initEchoReactiveObjectRootProxy = (core: ObjectCore, database?: Ech
   core.updates.on(() => target[symbolInternals].signal.notifyWrite());
 
   const obj = createProxy<ProxyTarget>(target, EchoReactiveHandler.instance) as any;
-  assertObjectModelShape(obj);
+  assertObjectModel(obj);
   return obj;
 };
 

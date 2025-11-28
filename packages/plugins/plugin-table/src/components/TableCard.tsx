@@ -4,33 +4,33 @@
 
 import React, { useMemo, useRef } from 'react';
 
-import { Filter, Obj, Type } from '@dxos/echo';
-import { EchoSchema } from '@dxos/echo/internal';
+import { Filter, Obj } from '@dxos/echo';
 import { useGlobalFilteredObjects } from '@dxos/plugin-search';
 import { useClient } from '@dxos/react-client';
 import { getSpace, useQuery, useSchema } from '@dxos/react-client/echo';
 import { Card } from '@dxos/react-ui-stack';
 import {
-  Table,
+  Table as TableComponent,
   type TableController,
   type TableFeatures,
   TablePresentation,
+  useProjectionModel,
   useTableModel,
 } from '@dxos/react-ui-table';
+import { type Table } from '@dxos/react-ui-table/types';
 import { getTypenameFromQuery } from '@dxos/schema';
-import { type View } from '@dxos/schema';
 
 export type TableCardProps = {
   role: string;
-  view: View.View;
+  object: Table.Table;
 };
 
-export const TableCard = ({ role, view }: TableCardProps) => {
+export const TableCard = ({ role, object }: TableCardProps) => {
   const tableRef = useRef<TableController>(null);
 
   const client = useClient();
-  const space = getSpace(view);
-  const typename = view.query ? getTypenameFromQuery(view.query.ast) : undefined;
+  const space = getSpace(object);
+  const typename = object.view.target?.query ? getTypenameFromQuery(object.view.target?.query.ast) : undefined;
   const schema = useSchema(client, space, typename);
   const queriedObjects = useQuery(space, schema ? Filter.type(schema) : Filter.nothing());
   const filteredObjects = useGlobalFilteredObjects(queriedObjects);
@@ -44,16 +44,10 @@ export const TableCard = ({ role, view }: TableCardProps) => {
     [],
   );
 
-  const jsonSchema = useMemo(() => {
-    if (schema instanceof EchoSchema) {
-      return schema.jsonSchema;
-    }
-    return schema ? Type.toJsonSchema(schema) : undefined;
-  }, [schema]);
-
+  const projection = useProjectionModel(schema, object);
   const model = useTableModel({
-    view,
-    schema: jsonSchema,
+    object,
+    projection,
     features,
     rows: filteredObjects,
     onCellUpdate: (cell) => tableRef.current?.update?.(cell),
@@ -63,16 +57,16 @@ export const TableCard = ({ role, view }: TableCardProps) => {
 
   return (
     <Card.SurfaceRoot role={role}>
-      <Table.Root role={role}>
-        <Table.Main
-          key={Obj.getDXN(view).toString()}
+      <TableComponent.Root role={role}>
+        <TableComponent.Main
+          key={Obj.getDXN(object).toString()}
           ref={tableRef}
           client={client}
           model={model}
           presentation={presentation}
           schema={schema}
         />
-      </Table.Root>
+      </TableComponent.Root>
     </Card.SurfaceRoot>
   );
 };

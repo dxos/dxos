@@ -12,10 +12,9 @@ import {
   definePlugin,
 } from '@dxos/app-framework';
 import { AutomationEvents } from '@dxos/plugin-automation';
-import { ClientEvents } from '@dxos/plugin-client';
+import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
 import { MarkdownEvents } from '@dxos/plugin-markdown';
-import { SpaceCapabilities } from '@dxos/plugin-space';
-import { defineObjectForm } from '@dxos/plugin-space/types';
+import { type CreateObjectIntent } from '@dxos/plugin-space/types';
 
 import { AnchorSort, ComputeGraphRegistry, IntentResolver, Markdown, ReactSurface } from './capabilities';
 import { meta } from './meta';
@@ -46,20 +45,15 @@ export const SheetPlugin = definePlugin(meta, () => [
           iconHue: 'indigo',
           serializer,
           comments: 'anchored',
+          createObjectIntent: ((props) => createIntent(SheetAction.Create, { ...props })) satisfies CreateObjectIntent,
+          addToCollectionOnCreate: true,
         },
       }),
   }),
   defineModule({
-    id: `${meta.id}/module/object-form`,
+    id: `${meta.id}/module/schema`,
     activatesOn: ClientEvents.SetupSchema,
-    activate: () =>
-      contributes(
-        SpaceCapabilities.ObjectForm,
-        defineObjectForm({
-          objectSchema: Sheet.Sheet,
-          getIntent: (props) => createIntent(SheetAction.Create, { ...props }),
-        }),
-      ),
+    activate: () => contributes(ClientCapabilities.Schema, [Sheet.Sheet]),
   }),
   defineModule({
     id: `${meta.id}/module/markdown`,

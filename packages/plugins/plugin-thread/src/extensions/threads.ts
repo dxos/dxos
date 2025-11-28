@@ -8,8 +8,9 @@ import { computed, effect } from '@preact/signals-core';
 
 import { type PromiseIntentDispatcher, createIntent } from '@dxos/app-framework';
 import { Filter, Obj, Query, Relation } from '@dxos/echo';
+import { createDocAccessor, getTextInRange } from '@dxos/echo-db';
 import { type Markdown } from '@dxos/plugin-markdown/types';
-import { createDocAccessor, getSource, getSpace, getTextInRange } from '@dxos/react-client/echo';
+import { getSpace } from '@dxos/react-client/echo';
 import { comments, createExternalCommentSync } from '@dxos/react-ui-editor';
 import { AnchoredTo, Thread } from '@dxos/types';
 
@@ -38,7 +39,7 @@ export const threads = (state: ThreadState, doc?: Markdown.Document, dispatch?: 
   const unsubscribe = query.subscribe();
 
   const anchors = computed(() =>
-    query.objects
+    query.results
       .filter((anchor) => {
         const thread = Relation.getSource(anchor);
         return Obj.instanceOf(Thread.Thread, thread) && thread.status !== 'resolved';
@@ -102,7 +103,7 @@ export const threads = (state: ThreadState, doc?: Markdown.Document, dispatch?: 
           }
         }
 
-        const thread = query.objects.find((object) => getSource(object).id === id);
+        const thread = query.results.find((object) => Relation.getSource(object).id === id);
         if (thread) {
           thread.anchor = undefined;
         }
@@ -115,9 +116,9 @@ export const threads = (state: ThreadState, doc?: Markdown.Document, dispatch?: 
           draft.anchor = cursor;
         }
 
-        const relation = query.objects.find((object) => getSource(object).id === id);
+        const relation = query.results.find((object) => Relation.getSource(object).id === id);
         if (relation) {
-          const thread = getSource(relation);
+          const thread = Relation.getSource(relation);
           if (Obj.instanceOf(Thread.Thread, thread)) {
             thread.name = getName(doc, cursor);
             relation.anchor = cursor;

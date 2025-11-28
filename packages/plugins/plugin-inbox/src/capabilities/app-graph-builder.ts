@@ -7,8 +7,8 @@ import * as Function from 'effect/Function';
 import * as Option from 'effect/Option';
 
 import { Capabilities, type PluginContext, contributes } from '@dxos/app-framework';
-import { type QueryResult, getSpace } from '@dxos/client/echo';
-import { Filter, Obj } from '@dxos/echo';
+import { getSpace } from '@dxos/client/echo';
+import { Filter, Obj, type QueryResult } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
 import { AutomationCapabilities, invokeFunctionWithTracing } from '@dxos/plugin-automation';
@@ -18,7 +18,7 @@ import { atomFromQuery } from '@dxos/plugin-space';
 import { type Event, type Message } from '@dxos/types';
 import { kebabize } from '@dxos/util';
 
-import { gmail } from '../functions';
+import { calendar, gmail } from '../functions';
 import { meta } from '../meta';
 import { Calendar, Mailbox } from '../types';
 
@@ -86,7 +86,7 @@ export default (context: PluginContext) =>
       id: `${meta.id}/mailbox-message`,
       connector: (node) => {
         let prevMessageId: string | undefined;
-        let query: QueryResult<Message.Message> | undefined;
+        let query: QueryResult.QueryResult<Message.Message> | undefined;
         return Atom.make((get) =>
           Function.pipe(
             get(node),
@@ -109,7 +109,7 @@ export default (context: PluginContext) =>
                 prevMessageId = messageId;
                 query = queue.query(
                   messageId ? Filter.ids(messageId) : Filter.nothing(),
-                ) as QueryResult<Message.Message>;
+                ) as QueryResult.QueryResult<Message.Message>;
               }
 
               const message = get(atomFromQuery(query))[0];
@@ -135,7 +135,7 @@ export default (context: PluginContext) =>
       id: `${meta.id}/calendar-event`,
       connector: (node) => {
         let prevEventId: string | undefined;
-        let query: QueryResult<Event.Event> | undefined;
+        let query: QueryResult.QueryResult<Event.Event> | undefined;
         return Atom.make((get) =>
           Function.pipe(
             get(node),
@@ -156,7 +156,9 @@ export default (context: PluginContext) =>
               const eventId = get(atomFromSignal(() => selection?.getSelected(nodeId, 'single')));
               if (!query || prevEventId !== eventId) {
                 prevEventId = eventId;
-                query = queue.query(eventId ? Filter.ids(eventId) : Filter.nothing()) as QueryResult<Event.Event>;
+                query = queue.query(
+                  eventId ? Filter.ids(eventId) : Filter.nothing(),
+                ) as QueryResult.QueryResult<Event.Event>;
               }
 
               const event = get(atomFromQuery(query))[0];
@@ -179,7 +181,7 @@ export default (context: PluginContext) =>
       },
     }),
     createExtension({
-      id: `${meta.id}/sync`,
+      id: `${meta.id}/sync-mailbox`,
       actions: (node) =>
         Atom.make((get) =>
           Function.pipe(
@@ -204,6 +206,43 @@ export default (context: PluginContext) =>
                     },
                     properties: {
                       label: ['sync mailbox label', { ns: meta.id }],
+                      icon: 'ph--arrows-clockwise--regular',
+                      disposition: 'list-item',
+                    },
+                  },
+                ]),
+              ),
+            ),
+            Option.getOrElse(() => []),
+          ),
+        ),
+    }),
+    createExtension({
+      id: `${meta.id}/sync-calendar`,
+      actions: (node) =>
+        Atom.make((get) =>
+          Function.pipe(
+            get(node),
+            Option.flatMap((node) =>
+              Obj.instanceOf(Calendar.Calendar, node.data) ? Option.some(node.data) : Option.none(),
+            ),
+            Option.map((object) =>
+              get(
+                atomFromSignal(() => [
+                  {
+                    id: `${Obj.getDXN(object).toString()}-sync`,
+                    type: ACTION_TYPE,
+                    data: async () => {
+                      const space = getSpace(object);
+                      invariant(space);
+                      const computeRuntime = context.getCapability(AutomationCapabilities.ComputeRuntime);
+                      const runtime = computeRuntime.getRuntime(space.id);
+                      await runtime.runPromise(
+                        invokeFunctionWithTracing(calendar.sync, { calendarId: Obj.getDXN(object).toString() }),
+                      );
+                    },
+                    properties: {
+                      label: ['sync calendar label', { ns: meta.id }],
                       icon: 'ph--arrows-clockwise--regular',
                       disposition: 'list-item',
                     },

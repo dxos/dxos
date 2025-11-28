@@ -5,6 +5,7 @@
 import * as Schema from 'effect/Schema';
 
 import { Obj, Type } from '@dxos/echo';
+import { SystemTypeAnnotation } from '@dxos/echo/internal';
 
 import * as Message from './Message';
 
@@ -18,7 +19,14 @@ const _Thread = Schema.Struct({
   name: Schema.String.pipe(Schema.optional),
   status: ThreadStatus.pipe(Schema.optional),
   messages: Schema.mutable(Schema.Array(Type.Ref(Message.Message))),
-}).pipe(Type.Obj({ typename: 'dxos.org/type/Thread', version: '0.1.0' }));
+}).pipe(
+  Type.Obj({
+    typename: 'dxos.org/type/Thread',
+    version: '0.1.0',
+  }),
+  // TODO(wittjosiah): Remove.
+  SystemTypeAnnotation.set(true),
+);
 export interface Thread extends Schema.Schema.Type<typeof _Thread> {}
 export interface ThreadEncoded extends Schema.Schema.Encoded<typeof _Thread> {}
 export const Thread: Schema.Schema<Thread, ThreadEncoded> = _Thread;

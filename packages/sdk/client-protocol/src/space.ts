@@ -4,10 +4,12 @@
 
 import * as Schema from 'effect/Schema';
 
-import { type CleanupFn, type MulticastObservable } from '@dxos/async';
+import { type MulticastObservable } from '@dxos/async';
 import { type SpecificCredential } from '@dxos/credentials';
-import { type AnyLiveObject, type EchoDatabase, type QueueFactory, type SpaceSyncState } from '@dxos/echo-db';
+import { type Obj } from '@dxos/echo';
+import { type EchoDatabase, type QueueFactory, type SpaceSyncState } from '@dxos/echo-db';
 import { type PublicKey, type SpaceId } from '@dxos/keys';
+import { type Messenger } from '@dxos/protocols';
 import {
   type Contact,
   type CreateEpochRequest,
@@ -21,9 +23,9 @@ import {
 import { type EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { type SpaceSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 import { type Credential, type Epoch } from '@dxos/protocols/proto/dxos/halo/credentials';
-import { type GossipMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/gossip';
 
 import { type CancellableInvitation } from './invitations';
+import { type SpaceProperties } from './types';
 
 export type CreateEpochOptions = {
   migration?: CreateEpochRequest.Migration;
@@ -64,7 +66,7 @@ export interface SpaceInternal {
 
 export const SPACE_TAG = Symbol('dxos.client.protocol.Space');
 
-export interface Space {
+export interface Space extends Messenger {
   readonly [SPACE_TAG]: true;
 
   /**
@@ -100,7 +102,7 @@ export interface Space {
   /**
    * Properties object.
    */
-  get properties(): AnyLiveObject<any>;
+  get properties(): Obj.Obj<SpaceProperties>;
 
   /**
    * Current state of space pipeline.
@@ -143,10 +145,6 @@ export interface Space {
   share(options?: Partial<Invitation>): CancellableInvitation;
   admitContact(contact: Contact): Promise<void>;
   updateMemberRole(request: Omit<UpdateMemberRoleRequest, 'spaceKey'>): Promise<void>;
-
-  // TODO(wittjosiah): Gather into messaging abstraction?
-  postMessage: (channel: string, message: any) => Promise<void>;
-  listen: (channel: string, callback: (message: GossipMessage) => void) => CleanupFn;
 }
 
 export const isSpace = (object: unknown): object is Space =>

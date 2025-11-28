@@ -4,7 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Filter, Obj, Query, Ref, Type } from '@dxos/echo';
+import { Filter, Obj, Query, Ref } from '@dxos/echo';
 import { DatabaseService } from '@dxos/functions';
 import { Message, Person } from '@dxos/types';
 
@@ -20,7 +20,7 @@ export const mapMessage = Effect.fn(function* (message: GoogleMail.Message) {
   const data = message.payload.body?.data ?? getPart(message, 'text/html') ?? getPart(message, 'text/plain');
   const fromHeader = message.payload.headers.find(({ name }) => name === 'From');
   const from = fromHeader && parseFromHeader(fromHeader.value);
-  const { objects: contacts } = yield* DatabaseService.runQuery(Query.select(Filter.type(Person.Person)));
+  const contacts = yield* DatabaseService.runQuery(Query.select(Filter.type(Person.Person)));
   const contact =
     from &&
     contacts.find(({ emails }) => {
@@ -44,7 +44,7 @@ export const mapMessage = Effect.fn(function* (message: GoogleMail.Message) {
   return Obj.make(
     Message.Message,
     {
-      id: Type.ObjectId.random(),
+      id: Obj.ID.random(),
       created,
       sender,
       blocks: [

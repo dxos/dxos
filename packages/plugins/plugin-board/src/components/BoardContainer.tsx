@@ -99,7 +99,7 @@ export const BoardContainer = ({ board }: BoardContainerProps) => {
 
       // Find the selected object by id from the space.
       const selectedObject = objects.find((obj) => obj.id === id);
-      if (!selectedObject) {
+      if (!Obj.isObject(selectedObject)) {
         return;
       }
 

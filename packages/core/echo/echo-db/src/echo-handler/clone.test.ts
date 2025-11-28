@@ -100,8 +100,7 @@ describe('clone', () => {
     expect(task2.assignee.target?.id).to.equal(task1.assignee.target?.id);
     expect(task2.assignee.target?.name).to.equal(task1.assignee.target?.name);
     expect(
-      (await db2.query(Query.select(Filter.type(Type.Expando, { type: 'Person' }))).run()).objects[0] ===
-        task2.assignee.target,
+      (await db2.query(Query.select(Filter.type(Type.Expando, { type: 'Person' }))).run())[0] === task2.assignee.target,
     ).to.be.true;
   });
 

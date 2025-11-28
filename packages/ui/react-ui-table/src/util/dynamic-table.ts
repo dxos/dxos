@@ -4,9 +4,7 @@
 
 import type * as Schema from 'effect/Schema';
 
-import { Filter, Obj, Query } from '@dxos/echo';
-import { getTypename, toJsonSchema } from '@dxos/echo/internal';
-import type { JsonSchemaType } from '@dxos/echo/internal';
+import { Filter, type JsonSchema, Obj, Query, Ref, Type } from '@dxos/echo';
 import {
   ProjectionModel,
   type SchemaPropertyDefinition,
@@ -38,14 +36,14 @@ export const getBaseSchema = ({
 }: {
   typename?: string;
   properties?: TablePropertyDefinition[];
-  jsonSchema?: JsonSchemaType;
+  jsonSchema?: JsonSchema.JsonSchema;
   schema?: Schema.Schema.AnyNoContext;
-}): { typename: string; jsonSchema: JsonSchemaType } => {
+}): { typename: string; jsonSchema: JsonSchema.JsonSchema } => {
   if (typename && properties) {
     const schema = getSchemaFromPropertyDefinitions(typename, properties);
     return { typename: schema.typename, jsonSchema: schema.jsonSchema };
   } else if (schema) {
-    return { typename: getTypename(schema)!, jsonSchema: toJsonSchema(schema) };
+    return { typename: Type.getTypename(schema)!, jsonSchema: Type.toJsonSchema(schema) };
   } else if (typename && jsonSchema) {
     return { typename, jsonSchema };
   } else {
@@ -57,24 +55,23 @@ export const makeDynamicTable = ({
   jsonSchema,
   properties,
 }: {
-  jsonSchema: JsonSchemaType;
+  jsonSchema: JsonSchema.JsonSchema;
   properties?: TablePropertyDefinition[];
-}): { projection: ProjectionModel; view: View.View } => {
-  const table = Obj.make(Table.Table, { sizes: {} });
+}): { projection: ProjectionModel; object: Table.Table } => {
   const view = View.make({
     query: Query.select(Filter.everything()),
     jsonSchema,
-    presentation: table,
     ...(properties && { fields: properties.map((property) => property.name) }),
   });
+  const object = Obj.make(Table.Table, { view: Ref.make(view), sizes: {} });
 
   const projection = new ProjectionModel(jsonSchema, view.projection);
   projection.normalizeView();
   if (properties && projection.fields) {
-    setProperties(view, projection, table, properties);
+    setProperties(view, projection, object, properties);
   }
 
-  return { projection, view };
+  return { projection, object };
 };
 
 const setProperties = (

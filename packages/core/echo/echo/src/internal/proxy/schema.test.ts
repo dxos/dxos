@@ -6,8 +6,9 @@ import * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
 import { describe, expect, test } from 'vitest';
 
-import { PropertyMeta, TypedObject, getPropertyMetaAnnotation, getTypeAnnotation } from '..';
-import { createEchoSchema } from '../../testing/echo-schema';
+import { createEchoSchema } from '../../testing';
+import { PropertyMeta, getPropertyMetaAnnotation, getTypeAnnotation } from '../annotations';
+import { TypedObject } from '../object';
 
 // TODO(dmaretskyi): Comment.
 class EmptySchemaType extends TypedObject({
@@ -95,7 +96,7 @@ describe('dynamic schema', () => {
   test('updates typename', async ({ expect }) => {
     // Create schema with some fields and annotations.
     const registered = createEchoSchema(EmptySchemaType);
-    const originalVersion = registered.storedSchema.version;
+    const originalVersion = registered.persistentSchema.version;
     registered.addFields({
       name: Schema.String.pipe(PropertyMeta('test', { maxLength: 10 })),
       age: Schema.Number,
@@ -111,7 +112,7 @@ describe('dynamic schema', () => {
     expect(registered.jsonSchema.typename).toBe(newTypename1);
 
     // Version preservation check.
-    expect(registered.storedSchema.version).toBe(originalVersion);
+    expect(registered.persistentSchema.version).toBe(originalVersion);
 
     // Field preservation check.
     const properties = registered.getProperties();

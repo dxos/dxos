@@ -6,13 +6,12 @@ import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 import { JSONPath } from 'jsonpath-plus';
 
-import { Filter, Ref, Type } from '@dxos/echo';
-import { ObjectId, getTypename, isInstanceOf } from '@dxos/echo/internal';
-import { live } from '@dxos/echo/internal';
+import { Filter, Obj, Ref, Type } from '@dxos/echo';
+import { isInstanceOf } from '@dxos/echo/internal';
 import { DatabaseService, Queue } from '@dxos/echo-db';
 import { FunctionDefinition, FunctionInvocationService, QueueService } from '@dxos/functions';
 import { failedInvariant, invariant } from '@dxos/invariant';
-import { DXN } from '@dxos/keys';
+import { DXN, ObjectId } from '@dxos/keys';
 import { View, getTypenameFromQuery } from '@dxos/schema';
 import { Message } from '@dxos/types';
 import { safeParseJson } from '@dxos/util';
@@ -226,7 +225,10 @@ export const registry: Record<NodeType, Executable> = {
         const dxn = DXN.parse(id);
         switch (dxn.kind) {
           case DXN.kind.QUEUE: {
-            const mappedItems = items.map((item: any) => ({ ...item, id: item.id ?? ObjectId.random() }));
+            const mappedItems = items.map((item: any) => ({
+              ...item,
+              id: item.id ?? ObjectId.random(),
+            }));
             const { queues } = yield* QueueService;
             yield* Effect.promise(() => queues.get(DXN.parse(id)).append(mappedItems));
             return {};
@@ -239,9 +241,7 @@ export const registry: Record<NodeType, Executable> = {
               invariant(db.spaceId === spaceId, 'Space mismatch');
             }
 
-            const {
-              objects: [container],
-            } = yield* Effect.promise(() => db.query(Filter.ids(echoId)).run());
+            const [container] = yield* Effect.promise(() => db.query(Filter.ids(echoId)).run());
             if (isInstanceOf(View.View, container)) {
               const schema = yield* Effect.promise(async () =>
                 db.schemaRegistry
@@ -254,11 +254,11 @@ export const registry: Record<NodeType, Executable> = {
               for (const item of items) {
                 const { id: _id, '@type': _type, ...rest } = item as any;
                 // TODO(dmaretskyi): Forbid type on create.
-                db.add(live(schema, rest));
+                db.add(Obj.make(schema, rest));
               }
               yield* Effect.promise(() => db.flush());
             } else {
-              throw new Error(`Unsupported ECHO container type: ${getTypename(container)}`);
+              throw new Error(`Unsupported ECHO container type: ${Obj.getTypename(container)}`);
             }
 
             return {};
@@ -302,7 +302,10 @@ export const registry: Record<NodeType, Executable> = {
 
   ['if' as const]: defineComputeNode({
     input: Schema.Struct({ condition: Schema.Boolean, value: Schema.Any }),
-    output: Schema.Struct({ true: Schema.optional(Schema.Any), false: Schema.optional(Schema.Any) }),
+    output: Schema.Struct({
+      true: Schema.optional(Schema.Any),
+      false: Schema.optional(Schema.Any),
+    }),
     exec: (input) =>
       Effect.gen(function* () {
         const { value, condition } = yield* ValueBag.unwrap(input);
@@ -323,10 +326,16 @@ export const registry: Record<NodeType, Executable> = {
 
   // Ternary operator.
   ['if-else' as const]: defineComputeNode({
-    input: Schema.Struct({ condition: Schema.Boolean, true: Schema.Any, false: Schema.Any }),
+    input: Schema.Struct({
+      condition: Schema.Boolean,
+      true: Schema.Any,
+      false: Schema.Any,
+    }),
     output: Schema.Struct({ [DEFAULT_OUTPUT]: Schema.Any }),
     exec: synchronizedComputeFunction(({ condition, true: trueValue, false: falseValue }) =>
-      Effect.succeed({ [DEFAULT_OUTPUT]: isTruthy(condition) ? trueValue : falseValue }),
+      Effect.succeed({
+        [DEFAULT_OUTPUT]: isTruthy(condition) ? trueValue : falseValue,
+      }),
     ),
   }),
 

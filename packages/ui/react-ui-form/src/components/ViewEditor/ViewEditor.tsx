@@ -8,9 +8,9 @@ import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 import React, { forwardRef, useCallback, useImperativeHandle, useMemo, useState } from 'react';
 
-import { QueryAST } from '@dxos/echo';
+import { QueryAST, type SchemaRegistry } from '@dxos/echo';
 import { EchoSchema, Format, type JsonProp, isMutable, toJsonSchema } from '@dxos/echo/internal';
-import { Filter, Query, type SchemaRegistry } from '@dxos/echo-db';
+import { Filter, Query } from '@dxos/echo-db';
 import { invariant } from '@dxos/invariant';
 import { Callout, IconButton, Input, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { QueryForm, type QueryFormProps } from '@dxos/react-ui-components';
@@ -28,7 +28,14 @@ import {
 
 import { translationKey } from '../../translations';
 import { FieldEditor } from '../FieldEditor';
-import { Form, type FormProps, type InputComponent, InputHeader, type InputProps } from '../Form';
+import {
+  Form,
+  type FormFieldComponent,
+  type FormFieldComponentProps,
+  FormFieldLabel,
+  type FormFieldMap,
+  type FormProps,
+} from '../Form';
 
 const listGrid = 'grid grid-cols-[min-content_1fr_min-content_min-content_min-content]';
 const listItemGrid = 'grid grid-cols-subgrid col-span-5';
@@ -37,14 +44,13 @@ export type ViewEditorProps = ThemedClassName<
   {
     schema: Schema.Schema.AnyNoContext;
     view: View.View;
-    mode?: 'schema' | 'query' | 'named-query';
-    registry?: SchemaRegistry;
+    mode?: 'schema' | 'tag';
+    registry?: SchemaRegistry.SchemaRegistry;
     readonly?: boolean;
     showHeading?: boolean;
     onQueryChanged?: (query: QueryAST.Query, target?: string) => void;
     onDelete?: (fieldId: string) => void;
-  } & Pick<FormProps<any>, 'outerSpacing'> &
-    Pick<QueryFormProps, 'types' | 'tags'>
+  } & (Pick<FormProps<any>, 'outerSpacing'> & Pick<QueryFormProps, 'types' | 'tags'>)
 >;
 
 /**
@@ -96,13 +102,9 @@ export const ViewEditor = forwardRef<ProjectionModel, ViewEditorProps>(
             : QueryAST.Query.annotations({ title: 'Query' }),
       });
 
-      if (mode === 'query' || mode === 'named-query') {
-        const name = Schema.Struct({
-          name: Schema.optional(Schema.String.annotations({ title: 'Name' })),
-        });
-
+      if (mode === 'tag') {
         return Schema.Struct({
-          ...(mode === 'named-query' ? { ...name.fields, ...base.fields } : base.fields),
+          ...base.fields,
           target: Schema.optional(Schema.String.annotations({ title: 'Target Queue' })),
         }).pipe(Schema.mutable);
       }
@@ -114,11 +116,15 @@ export const ViewEditor = forwardRef<ProjectionModel, ViewEditorProps>(
     // TODO(burdon): Settings should have domain name owned by user.
     const viewValues = useMemo(
       () => ({
-        name: view.name,
         query: mode === 'schema' ? getTypenameFromQuery(view.query.ast) : view.query.ast,
         target: queueTarget,
       }),
-      [view.name, mode, view.query.ast, queueTarget],
+      [mode, view.query.ast, queueTarget],
+    );
+
+    const fieldMap = useMemo<FormFieldMap | undefined>(
+      () => (mode === 'tag' ? customFields({ types, tags }) : undefined),
+      [mode, types, tags],
     );
 
     const handleToggleField = useCallback(
@@ -138,18 +144,12 @@ export const ViewEditor = forwardRef<ProjectionModel, ViewEditorProps>(
 
     const handleUpdate = useCallback(
       (values: any) => {
-        invariant(!readonly);
         requestAnimationFrame(() => {
-          if ('name' in values && view.name !== values.name) {
-            view.name = values.name;
-            return;
-          }
-
           const query = mode === 'schema' ? Query.select(Filter.typename(values.query)).ast : values.query;
           onQueryChanged?.(query, values.target);
         });
       },
-      [onQueryChanged, readonly, view, queueTarget, mode],
+      [onQueryChanged, view, queueTarget, mode],
     );
 
     const handleDelete = useCallback(
@@ -194,11 +194,10 @@ export const ViewEditor = forwardRef<ProjectionModel, ViewEditorProps>(
       [projectionModel],
     );
 
-    const custom = useMemo(() => (mode === 'query' ? customFields({ types, tags }) : undefined), [types, tags, mode]);
-
     return (
       <div role='none' className={mx(classNames)}>
-        {schemaReadonly && mode === 'schema' && (
+        {/* If readonlyProp is set, then the callout is not needed. */}
+        {schemaReadonly && !readonly && (
           <Callout.Root valence='info' classNames={['mlb-cardSpacingBlock', outerSpacing && 'mli-cardSpacingInline']}>
             <Callout.Title>{t('system schema description')}</Callout.Title>
           </Callout.Root>
@@ -207,13 +206,12 @@ export const ViewEditor = forwardRef<ProjectionModel, ViewEditorProps>(
         {/* TODO(burdon): Is the form read-only or just the schema? */}
         {/* TODO(burdon): Readonly fields should take up the same space as editable fields (just be ghosted). */}
         <Form<Schema.Schema.Type<typeof viewSchema>>
+          outerSpacing={outerSpacing}
           autoSave
           schema={viewSchema}
           values={viewValues}
-          readonly={readonly ? 'disabled-input' : false}
+          fieldMap={fieldMap}
           onSave={handleUpdate}
-          outerSpacing={outerSpacing}
-          Custom={custom}
         />
 
         <div role='none' className={outerSpacing ? cardSpacing : 'mlb-cardSpacingBlock'}>
@@ -243,7 +241,7 @@ export const ViewEditor = forwardRef<ProjectionModel, ViewEditorProps>(
                           role='none'
                           className={mx(subtleHover, listItemGrid, 'rounded-sm cursor-pointer min-bs-10')}
                         >
-                          <List.ItemDragHandle disabled={readonly} />
+                          <List.ItemDragHandle disabled={readonly || schemaReadonly} />
                           <List.ItemTitle
                             classNames={hidden && 'text-subdued'}
                             onClick={() => handleToggleField(field)}
@@ -258,7 +256,7 @@ export const ViewEditor = forwardRef<ProjectionModel, ViewEditorProps>(
                             disabled={readonly || (!hidden && projectionModel.fields.length <= 1)}
                             onClick={() => (hidden ? handleShow(field.path) : handleHide(field.id))}
                           />
-                          {mode === 'schema' && (
+                          {!readonly && (
                             <>
                               <List.ItemDeleteButton
                                 label={t('delete field label')}
@@ -279,10 +277,10 @@ export const ViewEditor = forwardRef<ProjectionModel, ViewEditorProps>(
                             </>
                           )}
                         </div>
-                        {expandedField === field.id && mode === 'schema' && (
+                        {expandedField === field.id && !readonly && (
                           <div role='none' className='col-span-5 mbs-1 mbe-1 border border-separator rounded-md'>
                             <FieldEditor
-                              readonly={readonly || schemaReadonly ? 'disabled-input' : false}
+                              readonly={readonly || schemaReadonly ? 'disabled' : false}
                               projection={projectionModel}
                               field={field}
                               registry={registry}
@@ -299,11 +297,11 @@ export const ViewEditor = forwardRef<ProjectionModel, ViewEditorProps>(
           </List.Root>
         </div>
 
-        {!readonly && !expandedField && mode === 'schema' && (
+        {!readonly && !expandedField && (
           <div role='none' className={outerSpacing ? cardSpacing : 'mlb-cardSpacingBlock'}>
             <IconButton
               icon='ph--plus--regular'
-              label={t('add property button')}
+              label={t('add property button label')}
               onClick={readonly ? undefined : handleAdd}
               // TODO(burdon): Show field limit in ux (not tooltip).
               disabled={view.projection.fields.length >= VIEW_FIELD_LIMIT}
@@ -316,17 +314,20 @@ export const ViewEditor = forwardRef<ProjectionModel, ViewEditorProps>(
   },
 );
 
-const customFields = ({ types, tags }: Pick<ViewEditorProps, 'types' | 'tags'>): Record<string, InputComponent> => ({
-  query: (props: InputProps) => {
-    const handleChange = useCallback(
-      (query: Query.Any) => props.onValueChange('object', query.ast),
-      [props.onValueChange],
+const customFields = ({
+  types,
+  tags,
+}: Pick<ViewEditorProps, 'types' | 'tags'>): Record<string, FormFieldComponent> => ({
+  query: ({ readonly, label, getValue, onValueChange }: FormFieldComponentProps) => {
+    const handleChange = useCallback<NonNullable<QueryFormProps['onChange']>>(
+      (query) => onValueChange('object', query.ast),
+      [onValueChange],
     );
 
     return (
       <Input.Root>
-        <InputHeader label={props.label} />
-        <QueryForm initialQuery={props.getValue()} types={types} tags={tags} onChange={handleChange} />
+        <FormFieldLabel readonly={readonly} label={label} />
+        <QueryForm initialQuery={getValue()} types={types} tags={tags} onChange={handleChange} />
       </Input.Root>
     );
   },

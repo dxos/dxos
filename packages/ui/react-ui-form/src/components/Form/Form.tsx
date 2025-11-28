@@ -3,55 +3,43 @@
 //
 
 import { useFocusFinders } from '@fluentui/react-tabster';
-import type * as Schema from 'effect/Schema';
-import React, { type ReactElement, useCallback, useEffect, useRef } from 'react';
+import React, { useCallback, useEffect, useRef } from 'react';
 
-import { type BaseObject, type PropertyKey } from '@dxos/echo/internal';
+import { type AnyProperties, type PropertyKey } from '@dxos/echo/internal';
 import { type ThemedClassName } from '@dxos/react-ui';
 import { cardDialogOverflow, cardSpacing } from '@dxos/react-ui-stack';
 import { type ProjectionModel, type SchemaProperty } from '@dxos/schema';
 
-import { type FormHandler, type FormOptions } from '../../hooks';
+import { type FormOptions } from '../../hooks';
 
 import { FormActions, type FormOuterSpacing } from './FormActions';
-import { FormFields, type FormFieldsProps } from './FormContent';
-import { FormProvider } from './FormContext';
-import { type InputComponent, type InputProps } from './Input';
+import { FormFieldSet, type FormFieldSetProps } from './FormFieldSet';
+import { FormProvider, type FormProviderProps } from './FormRoot';
 
-export type PropsFilter<T extends BaseObject> = (props: SchemaProperty<T>[]) => SchemaProperty<T>[];
+export type PropertyFilter<T extends AnyProperties> = (props: SchemaProperty<T>[]) => SchemaProperty<T>[];
 
-export type ComponentLookup = (args: {
-  prop: string;
-  schema: Schema.Schema<any>;
-  inputProps: InputProps;
-}) => ReactElement | undefined;
-
-export type CustomInputMap = Partial<Record<string, InputComponent>>;
-
-export type FormProps<T extends BaseObject> = ThemedClassName<{
+export type FormProps<T extends AnyProperties> = ThemedClassName<{
   id?: string;
   values: Partial<T>;
-  // TODO(burdon): Autofocus first input.
-  autoFocus?: boolean;
-  // TODO(burdon): Change to JsonPath includes/excludes.
-  filter?: PropsFilter<T>;
   sort?: PropertyKey<T>[];
+  exclude?: PropertyFilter<T>;
   projection?: ProjectionModel;
+  autoFocus?: boolean;
   autoSave?: boolean;
   outerSpacing?: FormOuterSpacing;
   onCancel?: () => void;
 }> &
   Pick<FormOptions<T>, 'schema' | 'onValuesChanged' | 'onValidate' | 'onSave'> &
   // TODO(wittjosiah): This needs to support different ref field options per field.
-  FormFieldsProps;
+  FormFieldSetProps;
 
-export const Form = <T extends BaseObject>({
+export const Form = <T extends AnyProperties>({
   classNames,
   id,
   testId,
   values: initialValues,
-  autoFocus,
   readonly,
+  autoFocus,
   autoSave,
   outerSpacing = true,
   schema,
@@ -74,9 +62,9 @@ export const Form = <T extends BaseObject>({
     }
   }, [autoFocus]);
 
-  // TODO(burdon): Name?
-  const handleValid = useCallback(
-    async (values: any, meta: { changed: FormHandler<T>['changed'] }) => {
+  // TODO(burdon): Why?
+  const handleValid = useCallback<NonNullable<FormProviderProps['onValid']>>(
+    async (values, meta) => {
       if (autoSave) {
         await onSave?.(values, meta);
       }
@@ -96,7 +84,7 @@ export const Form = <T extends BaseObject>({
       onSave={onSave}
     >
       <div role='none' className='contents' {...(id && { 'data-object-id': id })} data-testid={testId}>
-        <FormFields
+        <FormFieldSet
           {...props}
           ref={formRef}
           classNames={[

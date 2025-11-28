@@ -19,6 +19,7 @@ export const translations = [
         'object name placeholder': 'New mailbox',
         'rename object label': 'Rename mailbox',
         'delete object label': 'Delete mailbox',
+        'object deleted label': 'Mailbox deleted',
       },
       [Calendar.Calendar.typename]: {
         'typename label': 'Calendar',
@@ -28,6 +29,7 @@ export const translations = [
         'object name placeholder': 'New calendar',
         'rename object label': 'Rename calendar',
         'delete object label': 'Delete calendar',
+        'object deleted label': 'Calendar deleted',
       },
       [meta.id]: {
         'plugin name': 'Inbox',
@@ -43,6 +45,7 @@ export const translations = [
         'inbox label': 'Inbox',
 
         'sync mailbox label': 'Sync mailbox',
+        'sync calendar label': 'Sync calendar',
 
         'show contact label': 'Show contact',
         'create contact label': 'Create contact',
@@ -74,6 +77,8 @@ export const translations = [
         'message header view mode plain only': 'Plain',
 
         'related contacts title': 'Related contacts',
+        'recent events title': 'Recent events',
+        'upcoming events title': 'Upcoming events',
         'related messages title': 'Recent messages',
       },
     },

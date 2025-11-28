@@ -25,11 +25,11 @@ export const useReferencesProvider = (space?: Space): ReferencesProvider | undef
       getReferences: async ({ query }) => {
         // TODO(burdon): Previously we filtered by types declared by the artifact definitions.
         // const schemas = blueprints.map((blueprint) => blueprint.schema).flat();
-        // const { objects } = await space.db
+        // const objects = await space.db
         //   .query(Filter.or(...schemas.map((schema) => Filter.type(schema as Type.Schema))))
         //   .run();
 
-        const { objects } = await space.db.query(Filter.everything()).run();
+        const objects = await space.db.query(Filter.everything()).run();
 
         return (
           objects

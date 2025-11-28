@@ -1,10 +1,11 @@
 //
 // Copyright 2024 DXOS.org
 //
+
 import { describe } from 'vitest';
 
 import { Obj } from '@dxos/echo';
-import { type TestingDeprecated } from '@dxos/echo/testing';
+import { type TestSchema } from '@dxos/echo/testing';
 
 import { type EchoDatabase } from '../proxy-db';
 import { EchoTestBuilder } from '../testing';
@@ -40,12 +41,12 @@ describe('Echo reactive proxy', () => {
         await builder.close();
       },
       createObjectFn: async (props = {}) => {
-        const object = Obj.make(schema as any, props) as TestingDeprecated.TestSchema;
+        const object = Obj.make(schema as any, props) as TestSchema.Example;
         if (schema && !db.graph.schemaRegistry.hasSchema(schema)) {
-          db.graph.schemaRegistry.addSchema([schema]);
+          await db.graph.schemaRegistry.register([schema]);
         }
 
-        return db.add(object as any) as TestingDeprecated.TestSchema;
+        return db.add(object as any) as TestSchema.Example;
       },
     };
   });

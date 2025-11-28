@@ -8,11 +8,9 @@ import * as Prompt from '@effect/cli/Prompt';
 import * as Effect from 'effect/Effect';
 import * as Match from 'effect/Match';
 
-import { type Client } from '@dxos/client';
+import { type Client, ClientService } from '@dxos/client';
 import { type AuthenticatingInvitationObservable, Invitation, InvitationEncoder } from '@dxos/client/invitations';
 import { invariant } from '@dxos/invariant';
-
-import { ClientService } from '../../../services';
 
 export const join = Command.make(
   'join',

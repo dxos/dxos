@@ -266,7 +266,7 @@ export class HaloProxy implements Halo {
    */
   share(options?: Partial<Invitation>) {
     if (!this.opened) {
-      throw new ApiError('Client not open.');
+      throw new ApiError({ message: 'Client not open.' });
     }
 
     log('create invitation', { options });
@@ -281,7 +281,7 @@ export class HaloProxy implements Halo {
    */
   join(invitation: Invitation | string, deviceProfile?: DeviceProfileDocument) {
     if (!this.opened) {
-      throw new ApiError('Client not open.');
+      throw new ApiError({ message: 'Client not open.' });
     }
 
     const deviceProfileWithDefaults = {
@@ -297,10 +297,10 @@ export class HaloProxy implements Halo {
   async writeCredentials(credentials: Credential[]): Promise<void> {
     const identity = this._identity.get();
     if (!identity) {
-      throw new ApiError('Identity is not available.');
+      throw new ApiError({ message: 'Identity is not available.' });
     }
     if (!this._serviceProvider.services.SpacesService) {
-      throw new ApiError('SpacesService is not available.');
+      throw new ApiError({ message: 'SpacesService is not available.' });
     }
 
     return this._serviceProvider.services.SpacesService.writeCredentials(
@@ -318,7 +318,7 @@ export class HaloProxy implements Halo {
   // TODO(burdon): Rename createPresentation?
   async presentCredentials({ ids, nonce }: { ids: PublicKey[]; nonce?: Uint8Array }): Promise<Presentation> {
     if (!this._serviceProvider.services.IdentityService) {
-      throw new ApiError('IdentityService is not available.');
+      throw new ApiError({ message: 'IdentityService is not available.' });
     }
     const trigger = new Trigger<Credential[]>();
 
@@ -332,7 +332,7 @@ export class HaloProxy implements Halo {
     const credentials = await asyncTimeout(
       trigger.wait(),
       AUTH_TIMEOUT,
-      new ApiError('Timeout while waiting for credentials.'),
+      new ApiError({ message: 'Timeout while waiting for credentials.' }),
     );
     return this._serviceProvider.services.IdentityService.signPresentation(
       {

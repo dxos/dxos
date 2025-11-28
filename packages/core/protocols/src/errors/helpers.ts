@@ -2,11 +2,10 @@
 // Copyright 2023 DXOS.org
 //
 
+import { BaseError } from '@dxos/errors';
 import { invariant } from '@dxos/invariant';
 
 import { type Error as SerializedErrorProto } from '../proto/gen/dxos/error.js';
-
-import { SystemError } from './base-errors.js';
 
 export const reconstructError = (error: SerializedErrorProto) => {
   const { name, message, context } = error;
@@ -20,21 +19,21 @@ export const registerError = (code: string, make: (message?: string, context?: a
   errorRegistry.set(code, make);
 };
 
-export const registerErrorNoArgs = (code: string, Constructor: { new (): Error }) => {
+export const registerErrorNoArgs = (code: string, Constructor: { new (options?: any): Error }) => {
   registerError(code, () => new Constructor());
 };
 
 export const registerErrorMessageContext = (
   code: string,
-  Constructor: { new (message?: string, context?: any): Error },
+  Constructor: { new (options?: { message?: string; context?: any }): Error },
 ) => {
-  registerError(code, (message?: string, context?: string) => new Constructor(message, context));
+  registerError(code, (message?: string, context?: any) => new Constructor({ message, context }));
 };
 
 export const errorFromCode = (code?: string, message?: string, context?: any) => {
   if (code && errorRegistry.has(code)) {
     return errorRegistry.get(code)!(message, context);
   } else {
-    return new SystemError(code ?? 'Error', message, context);
+    return new BaseError(code ?? 'Error', { message, context });
   }
 };

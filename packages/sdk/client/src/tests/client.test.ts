@@ -15,7 +15,7 @@ import { type Runtime } from '@dxos/protocols/proto/dxos/config';
 import { isNode } from '@dxos/util';
 
 import { Client } from '../client';
-import { MessageType, TestBuilder, TextV0Type, ThreadType, performInvitation } from '../testing';
+import { TestBuilder, TestSchema, performInvitation } from '../testing';
 
 describe('Client', () => {
   const dataRoot = '/tmp/dxos/client/storage';
@@ -27,7 +27,9 @@ describe('Client', () => {
   test('creates client with embedded services', async () => {
     const testBuilder = new TestBuilder();
 
-    const client = new Client({ services: testBuilder.createLocalClientServices() });
+    const client = new Client({
+      services: testBuilder.createLocalClientServices(),
+    });
     await client.initialize();
     onTestFinished(() => client.destroy());
     expect(client.initialized).to.be.true;
@@ -37,7 +39,9 @@ describe('Client', () => {
     const testBuilder = new TestBuilder();
     onTestFinished(() => testBuilder.destroy());
 
-    const client = new Client({ services: testBuilder.createLocalClientServices() });
+    const client = new Client({
+      services: testBuilder.createLocalClientServices(),
+    });
     onTestFinished(() => client.destroy());
     await asyncTimeout(client.initialize(), 2_000);
     await asyncTimeout(client.halo.createIdentity(), 2_000);
@@ -48,7 +52,9 @@ describe('Client', () => {
   test('initialize and destroy multiple times', async () => {
     const testBuilder = new TestBuilder();
 
-    const client = new Client({ services: testBuilder.createLocalClientServices() });
+    const client = new Client({
+      services: testBuilder.createLocalClientServices(),
+    });
     await client.initialize();
     await client.initialize();
     expect(client.initialized).to.be.true;
@@ -61,7 +67,9 @@ describe('Client', () => {
   test('closes and reopens', async () => {
     const testBuilder = new TestBuilder();
 
-    const client = new Client({ services: testBuilder.createLocalClientServices() });
+    const client = new Client({
+      services: testBuilder.createLocalClientServices(),
+    });
     await client.initialize();
     expect(client.initialized).to.be.true;
 
@@ -78,7 +86,9 @@ describe('Client', () => {
   test('create space before identity', { timeout: 1_000 }, async () => {
     const testBuilder = new TestBuilder();
 
-    const client = new Client({ services: testBuilder.createLocalClientServices() });
+    const client = new Client({
+      services: testBuilder.createLocalClientServices(),
+    });
     await client.initialize();
     onTestFinished(() => client.destroy());
     await expect(client.spaces.create()).rejects.toThrowError('This device has no HALO identity available.');
@@ -94,7 +104,9 @@ describe('Client', () => {
       },
     });
     const testBuilder = new TestBuilder(config);
-    const client = new Client({ services: testBuilder.createLocalClientServices() });
+    const client = new Client({
+      services: testBuilder.createLocalClientServices(),
+    });
     const displayName = 'test-user';
     {
       // Create identity.
@@ -131,8 +143,14 @@ describe('Client', () => {
   });
 
   test('leveldb is cleared after client.reset', async () => {
-    const storageConfig = { persistent: true, dataRoot } satisfies Runtime.Client.Storage;
-    const config = new Config({ version: 1, runtime: { client: { storage: storageConfig } } });
+    const storageConfig = {
+      persistent: true,
+      dataRoot,
+    } satisfies Runtime.Client.Storage;
+    const config = new Config({
+      version: 1,
+      runtime: { client: { storage: storageConfig } },
+    });
     const testBuilder = new TestBuilder(config);
 
     const services = testBuilder.createLocalClientServices();
@@ -174,11 +192,11 @@ describe('Client', () => {
 
     const client1 = new Client({
       services: testBuilder.createLocalClientServices(),
-      types: [MessageType, ThreadType, TextV0Type],
+      types: [TestSchema.MessageType, TestSchema.ThreadType, TestSchema.TextV0Type],
     });
     const client2 = new Client({
       services: testBuilder.createLocalClientServices(),
-      types: [MessageType, ThreadType, TextV0Type],
+      types: [TestSchema.MessageType, TestSchema.ThreadType, TestSchema.TextV0Type],
     });
 
     await client1.initialize();
@@ -189,16 +207,17 @@ describe('Client', () => {
     await client2.halo.createIdentity();
     onTestFinished(() => client2.destroy());
 
-    const threadQueried = new Trigger<ThreadType>();
+    const threadQueried = new Trigger<TestSchema.ThreadType>();
 
     // Create space and invite second client.
     const space1 = await client1.spaces.create();
     await space1.waitUntilReady();
     const spaceKey = space1.key;
 
-    const query = space1.db.query(Filter.type(ThreadType));
+    const query = space1.db.query(Filter.type(TestSchema.ThreadType));
     query.subscribe(
-      ({ objects }) => {
+      (query) => {
+        const objects = query.results;
         if (objects.length === 1) {
           threadQueried.wake(objects[0]);
         }
@@ -210,15 +229,20 @@ describe('Client', () => {
     // Create Thread on second client.
     const space2 = client2.spaces.get(spaceKey)!;
     await space2.waitUntilReady();
-    const thread2 = space2.db.add(Obj.make(ThreadType, { messages: [] }));
+    const thread2 = space2.db.add(Obj.make(TestSchema.ThreadType, { messages: [] }));
     await space2.db.flush();
 
     const thread1 = await threadQueried.wait({ timeout: 2_000 });
 
     const text = 'Hello world';
     const message = space2.db.add(
-      Obj.make(MessageType, {
-        blocks: [{ timestamp: new Date().toISOString(), content: Ref.make(Obj.make(TextV0Type, { content: text })) }],
+      Obj.make(TestSchema.MessageType, {
+        blocks: [
+          {
+            timestamp: new Date().toISOString(),
+            content: Ref.make(Obj.make(TestSchema.TextV0Type, { content: text })),
+          },
+        ],
       }),
     );
     thread2.messages.push(Ref.make(message));
@@ -234,7 +258,9 @@ describe('Client', () => {
   test.skip('reset & create space', async () => {
     const testBuilder = new TestBuilder();
 
-    const client = new Client({ services: testBuilder.createLocalClientServices() });
+    const client = new Client({
+      services: testBuilder.createLocalClientServices(),
+    });
     await client.initialize();
     onTestFinished(() => client.destroy());
 

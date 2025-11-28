@@ -10,7 +10,7 @@ import * as SchemaAST from 'effect/SchemaAST';
 import { invariant } from '@dxos/invariant';
 import { isNonNullable } from '@dxos/util';
 
-import { type JsonPath, type JsonProp } from './jsonPath';
+import { type JsonPath, type JsonProp } from './json-path';
 
 //
 // Refs

@@ -9,11 +9,11 @@ import { describe } from 'vitest';
 
 import { TestAiService } from '@dxos/ai/testing';
 import { Obj, Ref } from '@dxos/echo';
-import { ObjectId } from '@dxos/echo/internal';
-import { TestHelpers } from '@dxos/effect/testing';
+import { TestHelpers } from '@dxos/effect';
 import { ComputeEventLogger, CredentialsService, TracingService } from '@dxos/functions';
 import { FunctionInvocationServiceLayerTest, TestDatabaseLayer } from '@dxos/functions-runtime/testing';
 import { invariant } from '@dxos/invariant';
+import { ObjectId } from '@dxos/keys';
 import { DXN } from '@dxos/keys';
 
 import { NODE_INPUT, NODE_OUTPUT } from '../nodes';

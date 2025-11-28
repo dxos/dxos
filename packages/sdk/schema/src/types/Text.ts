@@ -4,9 +4,8 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Obj } from '@dxos/echo';
+import { Annotation, Obj } from '@dxos/echo';
 import { Type } from '@dxos/echo';
-import { type ObjectId } from '@dxos/echo/internal';
 
 export const Text = Schema.Struct({
   content: Schema.String,
@@ -15,8 +14,10 @@ export const Text = Schema.Struct({
     typename: 'dxos.org/type/Text',
     version: '0.1.0',
   }),
+  Annotation.SystemTypeAnnotation.set(true),
 );
 
 export interface Text extends Schema.Schema.Type<typeof Text> {}
 
-export const make = (content = '', id?: ObjectId) => Obj.make(Text, { id, content });
+// TODO(burdon): Remove id property.
+export const make = (content = '', id?: Obj.ID) => Obj.make(Text, { id, content });

@@ -7,7 +7,7 @@ import { Obj, Ref, Relation, type Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { Employer, HasConnection, Message, Organization, Person } from '@dxos/types';
 
-export const testTypes: Type.Obj.Any[] = [
+export const testTypes: Type.Entity.Any[] = [
   Organization.Organization,
   Person.Person,
   Employer.Employer,

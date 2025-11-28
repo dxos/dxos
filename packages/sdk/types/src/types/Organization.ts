@@ -8,12 +8,11 @@ import { Obj, Type } from '@dxos/echo';
 import {
   Format,
   FormatAnnotation,
-  FormatEnum,
   GeneratorAnnotation,
   LabelAnnotation,
   PropertyMetaAnnotationId,
 } from '@dxos/echo/internal';
-import { IconAnnotation, ItemAnnotation } from '@dxos/schema';
+import { IconAnnotation } from '@dxos/schema';
 
 // TODO(burdon): Remove (specific to kanban demo).
 export const StatusOptions = [
@@ -28,7 +27,6 @@ export const StatusOptions = [
  * https://schema.org/Organization
  */
 const OrganizationSchema = Schema.Struct({
-  id: Type.ObjectId,
   name: Schema.String.pipe(
     Schema.annotations({ title: 'Name' }),
     GeneratorAnnotation.set({
@@ -47,7 +45,7 @@ const OrganizationSchema = Schema.Struct({
   ),
   // TODO(wittjosiah): Remove (change to relation).
   status: Schema.Literal('prospect', 'qualified', 'active', 'commit', 'reject').pipe(
-    FormatAnnotation.set(FormatEnum.SingleSelect),
+    FormatAnnotation.set(Format.TypeFormat.SingleSelect),
     GeneratorAnnotation.set({
       generator: 'helpers.arrayElement',
       args: [['prospect', 'qualified', 'active', 'commit', 'reject']],
@@ -74,7 +72,7 @@ const OrganizationSchema = Schema.Struct({
     GeneratorAnnotation.set('internet.url'),
     Schema.optional,
   ),
-}).pipe();
+});
 
 export const Organization = OrganizationSchema.pipe(
   Schema.extend(
@@ -84,7 +82,6 @@ export const Organization = OrganizationSchema.pipe(
   ),
   Schema.annotations({ title: 'Organization', description: 'An organization.' }),
   LabelAnnotation.set(['name']),
-  ItemAnnotation.set(true),
   IconAnnotation.set('ph--building--regular'),
   Type.Obj({
     typename: 'dxos.org/type/Organization',
@@ -101,7 +98,6 @@ export const make = (props: Partial<Obj.MakeProps<typeof Organization>> = {}) =>
 export const LegacyOrganization = OrganizationSchema.pipe(
   Schema.annotations({ title: 'Organization', description: 'An organization.' }),
   LabelAnnotation.set(['name']),
-  ItemAnnotation.set(true),
   IconAnnotation.set('ph--building--regular'),
   Type.Obj({
     typename: 'dxos.org/type/Organization',

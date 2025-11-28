@@ -2,7 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import { ATTR_META, EXPANDO_TYPENAME, type ObjectJSON } from '@dxos/echo/internal';
+import { EXPANDO_TYPENAME } from '@dxos/echo/internal';
+import { ATTR_META, type ObjectJSON } from '@dxos/echo/internal';
 import { ObjectStructure, type QueryAST, decodeReference, isEncodedReference } from '@dxos/echo-protocol';
 import { DXN, type ObjectId, type SpaceId } from '@dxos/keys';
 
@@ -151,8 +152,8 @@ export const filterMatchObjectJSON = (filter: QueryAST.Filter, obj: ObjectJSON):
       return tags.some((tag) => tag === filter.tag);
     }
 
+    // TODO: Implement text search.
     case 'text-search': {
-      // TODO: Implement text search
       return false;
     }
 

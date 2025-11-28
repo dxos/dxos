@@ -4,14 +4,14 @@
 
 import React, { useCallback } from 'react';
 
-import { type ForeignKey } from '@dxos/echo/internal';
+import { type Key } from '@dxos/echo';
 import { IconButton, List, ListItem, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '../../meta';
 
 export type ForeignKeysProps = {
-  keys: ForeignKey[];
-  onDelete?: (key: ForeignKey) => void;
+  keys: Key.ForeignKey[];
+  onDelete?: (key: Key.ForeignKey) => void;
 };
 
 // TODO(wittjosiah): This is a clone of `TokenManager`. Consider a form variant for arrays of read-only objects.
@@ -26,8 +26,8 @@ export const ForeignKeys = ({ keys, onDelete }: ForeignKeysProps) => {
 };
 
 type KeyItemProps = {
-  forignKey: ForeignKey;
-  onDelete?: (key: ForeignKey) => void;
+  forignKey: Key.ForeignKey;
+  onDelete?: (key: Key.ForeignKey) => void;
 };
 
 const KeyItem = ({ forignKey, onDelete }: KeyItemProps) => {

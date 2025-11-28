@@ -19,7 +19,6 @@ describe('Bundler', () => {
 
   test('Basic', async () => {
     const result = await bundleFunction({
-      platform: 'node',
       source: `
       export default function handler () {
         return 100;
@@ -32,7 +31,6 @@ describe('Bundler', () => {
 
   test('Import', async () => {
     const result = await bundleFunction({
-      platform: 'node',
       source: `
       import { Filter } from './runtime.js';
 
@@ -48,7 +46,6 @@ describe('Bundler', () => {
   // TODO(dmaretskyi): Flaky on CI.
   test.skip('HTTPS Import', async () => {
     const result = await bundleFunction({
-      platform: 'node',
       source: `
       import { invariant } from 'https://esm.sh/@dxos/invariant';
       invariant(true);
@@ -60,7 +57,6 @@ describe('Bundler', () => {
 
   test('Error', async () => {
     const result = await bundleFunction({
-      platform: 'node',
       source: "import missing from './module'; export default () => missing();",
     });
     assert('error' in result, 'error should exist');

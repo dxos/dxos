@@ -5,7 +5,7 @@
 import { useCallback } from 'react';
 
 import { Obj } from '@dxos/echo';
-import { type TypeAnnotation, getObjectDXN } from '@dxos/echo/internal';
+import { type TypeAnnotation } from '@dxos/echo/internal';
 import { Filter, type Space } from '@dxos/react-client/echo';
 import { isNonNullable } from '@dxos/util';
 
@@ -19,12 +19,12 @@ export const useRefQueryLookupHandler = ({ space }: UseRefQueryLookupProps): Que
       if (!space) {
         return [];
       }
-      const query = space.db.query(Filter.typename(typeInfo.typename));
-      const { objects } = await query.run();
 
+      const query = space.db.query(Filter.typename(typeInfo.typename));
+      const objects = await query.run();
       return objects
         .map((object) => {
-          const dxn = getObjectDXN(object);
+          const dxn = Obj.getDXN(object);
           if (!dxn) {
             return undefined;
           }

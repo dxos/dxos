@@ -6,7 +6,7 @@ import * as Command from '@effect/cli/Command';
 import * as Console from 'effect/Console';
 import * as Effect from 'effect/Effect';
 
-import { ClientService } from '../../../services';
+import { ClientService } from '@dxos/client';
 
 import { formatSpace } from './util';
 

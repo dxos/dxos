@@ -355,7 +355,7 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
                 continue;
               }
 
-              const { objects } = yield* DatabaseService.runQuery(Query.fromAst(spec.query.ast));
+              const objects = yield* DatabaseService.runQuery(Query.fromAst(spec.query.ast));
 
               const state: TriggerState = yield* TriggerStateStore.getState(trigger.id).pipe(
                 Effect.catchTag('TRIGGER_STATE_NOT_FOUND', () =>
@@ -393,7 +393,7 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
                       // TODO(dmaretskyi): Change type not supported.
                       type: 'unknown',
 
-                      subject: db.ref(Obj.getDXN(object)),
+                      subject: db.makeRef(Obj.getDXN(object)),
 
                       changedObjectId: object.id,
                     } satisfies TriggerEvent.SubscriptionEvent,
@@ -492,7 +492,7 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
 
   private _fetchTriggers = () =>
     Effect.gen(this, function* () {
-      const { objects } = yield* DatabaseService.runQuery(Filter.type(Trigger.Trigger));
+      const objects = yield* DatabaseService.runQuery(Filter.type(Trigger.Trigger));
       return objects;
     }).pipe(Effect.withSpan('TriggerDispatcher.fetchTriggers'));
 

@@ -4,9 +4,9 @@
 
 import { useEffect, useState } from 'react';
 
+import { createDocAccessor } from '@dxos/echo-db';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { createDocAccessor } from '@dxos/react-client/echo';
 
 import { Diagram } from '../types';
 
