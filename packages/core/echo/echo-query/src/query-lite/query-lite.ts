@@ -4,8 +4,7 @@
 
 import type * as Schema from 'effect/Schema';
 
-import type { Filter, Order, Query, Ref } from '@dxos/echo';
-import type * as Echo from '@dxos/echo';
+import type { Filter as Filter$, Order as Order$, Query as Query$, Ref } from '@dxos/echo';
 import type { ForeignKey, QueryAST } from '@dxos/echo-protocol';
 import { assertArgument } from '@dxos/invariant';
 import type { DXN, ObjectId } from '@dxos/keys';
@@ -14,10 +13,12 @@ import type { DXN, ObjectId } from '@dxos/keys';
 // Light-weight implementation of query execution.
 //
 
-class OrderClass implements Echo.Order<any> {
-  private static variance: Echo.Order<any>['~Order'] = {} as Echo.Order<any>['~Order'];
+// TODO(wittjosiah): The `export * as ...` syntax causes tsdown to genereate multiple files which breaks the sandbox.
 
-  static is(value: unknown): value is Echo.Order<any> {
+class OrderClass implements Order$.Any {
+  private static variance: Order$.Any['~Order'] = {} as Order$.Any['~Order'];
+
+  static is(value: unknown): value is Order$.Any {
     return typeof value === 'object' && value !== null && '~Order' in value;
   }
 
@@ -27,8 +28,8 @@ class OrderClass implements Echo.Order<any> {
 }
 
 namespace Order1 {
-  export const natural: Echo.Order<any> = new OrderClass({ kind: 'natural' });
-  export const property = <T>(property: keyof T & string, direction: QueryAST.OrderDirection): Echo.Order<T> =>
+  export const natural: Order$.Any = new OrderClass({ kind: 'natural' });
+  export const property = <T>(property: keyof T & string, direction: QueryAST.OrderDirection): Order$.Order<T> =>
     new OrderClass({
       kind: 'property',
       property,
@@ -36,17 +37,17 @@ namespace Order1 {
     });
 }
 
-const Order2: typeof Echo.Order = Order1;
+const Order2: typeof Order$ = Order1;
 export { Order2 as Order };
 
-class FilterClass implements Echo.Filter<any> {
-  private static variance: Echo.Filter<any>['~Filter'] = {} as Echo.Filter<any>['~Filter'];
+class FilterClass implements Filter$.Any {
+  private static variance: Filter$.Any['~Filter'] = {} as Filter$.Any['~Filter'];
 
-  static is(value: unknown): value is Echo.Filter<any> {
+  static is(value: unknown): value is Filter$.Any {
     return typeof value === 'object' && value !== null && '~Filter' in value;
   }
 
-  static fromAst(ast: QueryAST.Filter): Filter<any> {
+  static fromAst(ast: QueryAST.Filter): Filter$.Any {
     return new FilterClass(ast);
   }
 
@@ -77,7 +78,7 @@ class FilterClass implements Echo.Filter<any> {
     });
   }
 
-  static ids(...ids: ObjectId[]): Echo.Filter<any> {
+  static id(...ids: ObjectId[]): Filter$.Any {
     // assertArgument(
     //   ids.every((id) => ObjectId.isValid(id)),
     //   'ids',
@@ -98,8 +99,8 @@ class FilterClass implements Echo.Filter<any> {
 
   static type<S extends Schema.Schema.All>(
     schema: S | string,
-    props?: Echo.Filter.Props<Schema.Schema.Type<S>>,
-  ): Echo.Filter<Schema.Schema.Type<S>> {
+    props?: Filter$.Props<Schema.Schema.Type<S>>,
+  ): Filter$.Filter<Schema.Schema.Type<S>> {
     if (typeof schema !== 'string') {
       throw new TypeError('expected typename as the first paramter');
     }
@@ -110,7 +111,7 @@ class FilterClass implements Echo.Filter<any> {
     });
   }
 
-  static typename(typename: string): Echo.Filter<any> {
+  static typename(typename: string): Filter$.Any {
     return new FilterClass({
       type: 'object',
       typename: makeTypeDxn(typename),
@@ -118,7 +119,7 @@ class FilterClass implements Echo.Filter<any> {
     });
   }
 
-  static typeDXN(dxn: DXN): Echo.Filter<any> {
+  static typeDXN(dxn: DXN): Filter$.Any {
     return new FilterClass({
       type: 'object',
       typename: dxn.toString(),
@@ -126,14 +127,14 @@ class FilterClass implements Echo.Filter<any> {
     });
   }
 
-  static tag(tag: string): Echo.Filter<any> {
+  static tag(tag: string): Filter$.Any {
     return new FilterClass({
       type: 'tag',
       tag,
     });
   }
 
-  static props<T>(props: Echo.Filter.Props<T>): Echo.Filter<T> {
+  static props<T>(props: Filter$.Props<T>): Filter$.Filter<T> {
     return new FilterClass({
       type: 'object',
       typename: null,
@@ -141,7 +142,7 @@ class FilterClass implements Echo.Filter<any> {
     });
   }
 
-  static text(text: string, options?: Echo.Filter.TextSearchOptions): Echo.Filter<any> {
+  static text(text: string, options?: Filter$.TextSearchOptions): Filter$.Any {
     return new FilterClass({
       type: 'text-search',
       text,
@@ -152,7 +153,7 @@ class FilterClass implements Echo.Filter<any> {
   static foreignKeys<S extends Schema.Schema.All>(
     schema: S | string,
     keys: ForeignKey[],
-  ): Echo.Filter<Schema.Schema.Type<S>> {
+  ): Filter$.Filter<Schema.Schema.Type<S>> {
     assertArgument(typeof schema === 'string', 'schema');
     assertArgument(!schema.startsWith('dxn:'), 'schema');
     return new FilterClass({
@@ -163,7 +164,7 @@ class FilterClass implements Echo.Filter<any> {
     });
   }
 
-  static eq<T>(value: T): Echo.Filter<T> {
+  static eq<T>(value: T): Filter$.Filter<T | undefined> {
     if (!isRef(value) && typeof value === 'object' && value !== null) {
       throw new TypeError('Cannot use object as a value for eq filter');
     }
@@ -175,7 +176,7 @@ class FilterClass implements Echo.Filter<any> {
     });
   }
 
-  static neq<T>(value: T): Echo.Filter<T> {
+  static neq<T>(value: T): Filter$.Filter<T | undefined> {
     return new FilterClass({
       type: 'compare',
       operator: 'neq',
@@ -183,7 +184,7 @@ class FilterClass implements Echo.Filter<any> {
     });
   }
 
-  static gt<T>(value: T): Echo.Filter<T> {
+  static gt<T>(value: T): Filter$.Filter<T | undefined> {
     return new FilterClass({
       type: 'compare',
       operator: 'gt',
@@ -191,7 +192,7 @@ class FilterClass implements Echo.Filter<any> {
     });
   }
 
-  static gte<T>(value: T): Echo.Filter<T> {
+  static gte<T>(value: T): Filter$.Filter<T | undefined> {
     return new FilterClass({
       type: 'compare',
       operator: 'gte',
@@ -199,7 +200,7 @@ class FilterClass implements Echo.Filter<any> {
     });
   }
 
-  static lt<T>(value: T): Echo.Filter<T> {
+  static lt<T>(value: T): Filter$.Filter<T | undefined> {
     return new FilterClass({
       type: 'compare',
       operator: 'lt',
@@ -207,7 +208,7 @@ class FilterClass implements Echo.Filter<any> {
     });
   }
 
-  static lte<T>(value: T): Echo.Filter<T> {
+  static lte<T>(value: T): Filter$.Filter<T | undefined> {
     return new FilterClass({
       type: 'compare',
       operator: 'lte',
@@ -215,21 +216,21 @@ class FilterClass implements Echo.Filter<any> {
     });
   }
 
-  static in<T>(...values: T[]): Echo.Filter<T> {
+  static in<T>(...values: T[]): Filter$.Filter<T | undefined> {
     return new FilterClass({
       type: 'in',
       values,
     });
   }
 
-  static contains<T>(value: T): Echo.Filter<readonly T[] | undefined> {
+  static contains<T>(value: T): Filter$.Filter<readonly T[] | undefined> {
     return new FilterClass({
       type: 'contains',
       value,
     });
   }
 
-  static between<T>(from: T, to: T): Echo.Filter<unknown> {
+  static between<T>(from: T, to: T): Filter$.Filter<unknown> {
     return new FilterClass({
       type: 'range',
       from,
@@ -237,21 +238,25 @@ class FilterClass implements Echo.Filter<any> {
     });
   }
 
-  static not<F extends Echo.Filter.Any>(filter: F): Echo.Filter<Echo.Filter.Type<F>> {
+  static not<F extends Filter$.Any>(filter: F): Filter$.Filter<Filter$.Type<F>> {
     return new FilterClass({
       type: 'not',
       filter: filter.ast,
     });
   }
 
-  static and<T>(...filters: Echo.Filter<T>[]): Echo.Filter<T> {
+  static and<Filters extends readonly Filter$.Any[]>(
+    ...filters: Filters
+  ): Filter$.Filter<Filter$.Type<Filters[number]>> {
     return new FilterClass({
       type: 'and',
       filters: filters.map((f) => f.ast),
     });
   }
 
-  static or<T>(...filters: Echo.Filter<T>[]): Echo.Filter<T> {
+  static or<Filters extends readonly Filter$.Any[]>(
+    ...filters: Filters
+  ): Filter$.Filter<Filter$.Type<Filters[number]>> {
     return new FilterClass({
       type: 'or',
       filters: filters.map((f) => f.ast),
@@ -263,7 +268,7 @@ class FilterClass implements Echo.Filter<any> {
   '~Filter' = FilterClass.variance;
 }
 
-export const Filter1: typeof Echo.Filter = FilterClass;
+export const Filter1: typeof Filter$ = FilterClass;
 export { Filter1 as Filter };
 
 /**
@@ -272,7 +277,7 @@ export { Filter1 as Filter };
 // TODO(dmaretskyi): Filter only properties that are references (or optional references, or unions that include references).
 type RefPropKey<T> = keyof T & string;
 
-const propsFilterToAst = (predicates: Echo.Filter.Props<any>): Pick<QueryAST.FilterObject, 'id' | 'props'> => {
+const propsFilterToAst = (predicates: Filter$.Props<any>): Pick<QueryAST.FilterObject, 'id' | 'props'> => {
   let idFilter: readonly ObjectId[] | undefined;
   if ('id' in predicates) {
     assertArgument(
@@ -317,32 +322,32 @@ const processPredicate = (predicate: any): QueryAST.Filter => {
   return FilterClass.eq(predicate).ast;
 };
 
-class QueryClass implements Echo.Query<any> {
-  private static variance: Echo.Query<any>['~Query'] = {} as Echo.Query<any>['~Query'];
+class QueryClass implements Query$.Any {
+  private static variance: Query$.Any['~Query'] = {} as Query$.Any['~Query'];
 
-  static is(value: unknown): value is Echo.Query<any> {
+  static is(value: unknown): value is Query$.Any {
     return typeof value === 'object' && value !== null && '~Query' in value;
   }
 
-  static fromAst(ast: QueryAST.Query): Echo.Query<any> {
+  static fromAst(ast: QueryAST.Query): Query$.Any {
     return new QueryClass(ast);
   }
 
-  static select<F extends Echo.Filter.Any>(filter: F): Echo.Query<Echo.Filter.Type<F>> {
+  static select<F extends Filter$.Any>(filter: F): Query$.Query<Filter$.Type<F>> {
     return new QueryClass({
       type: 'select',
       filter: filter.ast,
     });
   }
 
-  static type(schema: Schema.Schema.All | string, predicates?: Echo.Filter.Props<unknown>): Query<any> {
+  static type(schema: Schema.Schema.All | string, predicates?: Filter$.Props<unknown>): Query$.Any {
     return new QueryClass({
       type: 'select',
       filter: FilterClass.type(schema, predicates).ast,
     });
   }
 
-  static all(...queries: Query<any>[]): Query<any> {
+  static all(...queries: Query$.Any[]): Query$.Any {
     if (queries.length === 0) {
       throw new TypeError(
         'Query.all combines results of multiple queries, to query all objects use Query.select(Filter.everything())',
@@ -354,7 +359,7 @@ class QueryClass implements Echo.Query<any> {
     });
   }
 
-  static without<T>(source: Query<T>, exclude: Query<T>): Query<T> {
+  static without<T>(source: Query$.Query<T>, exclude: Query$.Query<T>): Query$.Query<T> {
     return new QueryClass({
       type: 'set-difference',
       source: source.ast,
@@ -366,7 +371,7 @@ class QueryClass implements Echo.Query<any> {
 
   '~Query' = QueryClass.variance;
 
-  select(filter: Filter<any> | Filter.Props<any>): Query<any> {
+  select(filter: Filter$.Any | Filter$.Props<any>): Query$.Any {
     if (FilterClass.is(filter)) {
       return new QueryClass({
         type: 'filter',
@@ -382,7 +387,7 @@ class QueryClass implements Echo.Query<any> {
     }
   }
 
-  reference(key: string): Query<any> {
+  reference(key: string): Query$.Any {
     return new QueryClass({
       type: 'reference-traversal',
       anchor: this.ast,
@@ -390,7 +395,7 @@ class QueryClass implements Echo.Query<any> {
     });
   }
 
-  referencedBy(target: Schema.Schema.All | string, key: string): Query<any> {
+  referencedBy(target: Schema.Schema.All | string, key: string): Query$.Any {
     assertArgument(typeof target === 'string', 'target');
     assertArgument(!target.startsWith('dxn:'), 'target');
     return new QueryClass({
@@ -401,7 +406,7 @@ class QueryClass implements Echo.Query<any> {
     });
   }
 
-  sourceOf(relation: Schema.Schema.All | string, predicates?: Filter.Props<unknown> | undefined): Query<any> {
+  sourceOf(relation: Schema.Schema.All | string, predicates?: Filter$.Props<unknown> | undefined): Query$.Any {
     return new QueryClass({
       type: 'relation',
       anchor: this.ast,
@@ -410,7 +415,7 @@ class QueryClass implements Echo.Query<any> {
     });
   }
 
-  targetOf(relation: Schema.Schema.All | string, predicates?: Filter.Props<unknown> | undefined): Query<any> {
+  targetOf(relation: Schema.Schema.All | string, predicates?: Filter$.Props<unknown> | undefined): Query$.Any {
     return new QueryClass({
       type: 'relation',
       anchor: this.ast,
@@ -419,7 +424,7 @@ class QueryClass implements Echo.Query<any> {
     });
   }
 
-  source(): Query<any> {
+  source(): Query$.Any {
     return new QueryClass({
       type: 'relation-traversal',
       anchor: this.ast,
@@ -427,7 +432,7 @@ class QueryClass implements Echo.Query<any> {
     });
   }
 
-  target(): Query<any> {
+  target(): Query$.Any {
     return new QueryClass({
       type: 'relation-traversal',
       anchor: this.ast,
@@ -435,7 +440,7 @@ class QueryClass implements Echo.Query<any> {
     });
   }
 
-  orderBy(...order: Order<any>[]): Query<any> {
+  orderBy(...order: Order$.Any[]): Query$.Any {
     return new QueryClass({
       type: 'order',
       query: this.ast,
@@ -443,7 +448,7 @@ class QueryClass implements Echo.Query<any> {
     });
   }
 
-  options(options: QueryAST.QueryOptions): Query<any> {
+  options(options: QueryAST.QueryOptions): Query$.Any {
     return new QueryClass({
       type: 'options',
       query: this.ast,
@@ -452,7 +457,7 @@ class QueryClass implements Echo.Query<any> {
   }
 }
 
-export const Query1: typeof Echo.Query = QueryClass;
+export const Query1: typeof Query$ = QueryClass;
 export { Query1 as Query };
 
 const RefTypeId: unique symbol = Symbol('@dxos/echo-query/Ref');

@@ -75,7 +75,7 @@ export const useSelectThreadOnCellFocus = () => {
   const { dispatchPromise: dispatch } = useIntentDispatcher();
 
   const space = getSpace(model.sheet);
-  const anchors = useQuery(space, Query.select(Filter.ids(model.sheet.id)).targetOf(AnchoredTo.AnchoredTo));
+  const anchors = useQuery(space, Query.select(Filter.id(model.sheet.id)).targetOf(AnchoredTo.AnchoredTo));
 
   const selectClosestThread = useCallback(
     (cellAddress: CellAddress) => {

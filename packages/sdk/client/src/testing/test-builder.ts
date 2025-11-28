@@ -184,7 +184,7 @@ export const testSpaceAutomerge = async (
 ) => {
   const object = Obj.make(Type.Expando, {});
   createDb.add(object);
-  await expect.poll(() => checkDb.query(Filter.ids(object.id)).first({ timeout: 1000 }));
+  await expect.poll(() => checkDb.query(Filter.id(object.id)).first({ timeout: 1000 }));
 
   return { objectId: object.id };
 };

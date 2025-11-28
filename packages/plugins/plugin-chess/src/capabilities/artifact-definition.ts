@@ -86,7 +86,7 @@ export default () => {
         execute: async ({ id }, { extensions }) => {
           invariant(extensions?.space, 'No space');
           const game = await extensions.space.db
-            .query(Filter.ids(ArtifactId.toDXN(id, extensions.space.id).toString()))
+            .query(Filter.id(ArtifactId.toDXN(id, extensions.space.id).toString()))
             .first();
           invariant(Obj.instanceOf(Chess.Game, game));
 
@@ -107,7 +107,7 @@ export default () => {
         execute: async ({ id, move }, { extensions }) => {
           invariant(extensions?.space, 'No space');
           const game = await extensions.space.db
-            .query(Filter.ids(ArtifactId.toDXN(id, extensions.space.id).toString()))
+            .query(Filter.id(ArtifactId.toDXN(id, extensions.space.id).toString()))
             .first();
           invariant(Obj.instanceOf(Chess.Game, game));
 

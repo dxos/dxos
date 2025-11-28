@@ -9,18 +9,17 @@ import { QueryAST } from '@dxos/echo-protocol';
 import { DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
 
-import * as Obj from '../Obj';
-import * as Ref from '../Ref';
-
-import { Filter } from './filter';
-import { Order } from './order';
-import { Query } from './query';
-import * as Test from './testing';
+import * as Filter from './Filter';
+import * as Obj from './Obj';
+import * as Order from './Order';
+import * as Query from './Query';
+import * as Ref from './Ref';
+import { TestSchema } from './testing';
 
 describe('query api', () => {
   describe('Query', () => {
     test('get all people', () => {
-      const getAllPeople = Query.type(Test.Person);
+      const getAllPeople = Query.type(TestSchema.Person);
 
       log('query', { ast: getAllPeople.ast });
       Schema.validateSync(QueryAST.Query)(getAllPeople.ast);
@@ -28,7 +27,7 @@ describe('query api', () => {
     });
 
     test('get all people ordered by name', () => {
-      const getAllPeopleOrderedByName = Query.type(Test.Person).orderBy(Order.property('name', 'asc'));
+      const getAllPeopleOrderedByName = Query.type(TestSchema.Person).orderBy(Order.property('name', 'asc'));
 
       log('query', { ast: getAllPeopleOrderedByName.ast });
       Schema.validateSync(QueryAST.Query)(getAllPeopleOrderedByName.ast);
@@ -36,7 +35,7 @@ describe('query api', () => {
     });
 
     test('get all people named Fred', () => {
-      const PeopleNamedFred = Query.select(Filter.type(Test.Person, { name: 'Fred' }));
+      const PeopleNamedFred = Query.select(Filter.type(TestSchema.Person, { name: 'Fred' }));
 
       log('query', { ast: PeopleNamedFred.ast });
       Schema.validateSync(QueryAST.Query)(PeopleNamedFred.ast);
@@ -45,7 +44,7 @@ describe('query api', () => {
 
     test('get all people with field of "label" set to "Research"', () => {
       const PeopleWithFieldLabelSetToResearch = Query.select(
-        Filter.type(Test.Person, { fields: Filter.contains({ label: 'label', value: 'Research' }) }),
+        Filter.type(TestSchema.Person, { fields: Filter.contains({ label: 'label', value: 'Research' }) }),
       );
 
       log('query', { ast: PeopleWithFieldLabelSetToResearch.ast });
@@ -55,7 +54,7 @@ describe('query api', () => {
 
     test('get all orgs with property "label" set to "Research"', () => {
       const OrgsWithPropertyLabelSetToResearch = Query.select(
-        Filter.type(Test.Organization, { properties: { label: 'Research' } }),
+        Filter.type(TestSchema.Organization, { properties: { label: 'Research' } }),
       );
 
       log('query', { ast: OrgsWithPropertyLabelSetToResearch.ast });
@@ -64,9 +63,9 @@ describe('query api', () => {
     });
 
     test('get all orgs Fred worked for since 2020', () => {
-      const fred = Obj.make(Test.Person, { name: 'Fred' });
-      const OrganizationsFredWorkedForSince2020 = Query.select(Filter.type(Test.Person, { id: fred.id }))
-        .sourceOf(Test.WorksFor, { since: Filter.gt('2020') })
+      const fred = Obj.make(TestSchema.Person, { name: 'Fred' });
+      const OrganizationsFredWorkedForSince2020 = Query.select(Filter.type(TestSchema.Person, { id: fred.id }))
+        .sourceOf(TestSchema.EmployedBy, { since: Filter.gt('2020') })
         .target();
 
       log('query', { ast: OrganizationsFredWorkedForSince2020.ast });
@@ -75,8 +74,11 @@ describe('query api', () => {
     });
 
     test('get all tasks for Fred', () => {
-      const fred = Obj.make(Test.Person, { name: 'Fred' });
-      const TasksForFred = Query.select(Filter.type(Test.Person, { id: fred.id })).referencedBy(Test.Task, 'assignee');
+      const fred = Obj.make(TestSchema.Person, { name: 'Fred' });
+      const TasksForFred = Query.select(Filter.type(TestSchema.Person, { id: fred.id })).referencedBy(
+        TestSchema.Task,
+        'assignee',
+      );
 
       log('query', { ast: TasksForFred.ast });
       Schema.validateSync(QueryAST.Query)(TasksForFred.ast);
@@ -84,10 +86,10 @@ describe('query api', () => {
     });
 
     test('get all tasks for employees of Cyberdyne', () => {
-      const TasksForEmployeesOfCyberdyne = Query.select(Filter.type(Test.Organization, { name: 'Cyberdyne' }))
-        .targetOf(Test.WorksFor)
+      const TasksForEmployeesOfCyberdyne = Query.select(Filter.type(TestSchema.Organization, { name: 'Cyberdyne' }))
+        .targetOf(TestSchema.EmployedBy)
         .source()
-        .referencedBy(Test.Task, 'assignee');
+        .referencedBy(TestSchema.Task, 'assignee');
 
       log('query', { ast: TasksForEmployeesOfCyberdyne.ast });
       Schema.validateSync(QueryAST.Query)(TasksForEmployeesOfCyberdyne.ast);
@@ -96,8 +98,8 @@ describe('query api', () => {
 
     test('get all people or orgs', () => {
       const PeopleOrOrganizations = Query.all(
-        Query.select(Filter.type(Test.Person)),
-        Query.select(Filter.type(Test.Organization)),
+        Query.select(Filter.type(TestSchema.Person)),
+        Query.select(Filter.type(TestSchema.Organization)),
       );
 
       log('query', { ast: PeopleOrOrganizations.ast });
@@ -107,8 +109,8 @@ describe('query api', () => {
 
     test('get all people not in orgs', () => {
       const PeopleNotInOrganizations = Query.without(
-        Query.select(Filter.type(Test.Person)),
-        Query.select(Filter.type(Test.Person)).sourceOf(Test.WorksFor).source(),
+        Query.select(Filter.type(TestSchema.Person)),
+        Query.select(Filter.type(TestSchema.Person)).sourceOf(TestSchema.EmployedBy).source(),
       );
 
       log('query', { ast: PeopleNotInOrganizations.ast });
@@ -118,7 +120,7 @@ describe('query api', () => {
 
     test('get assignees of all tasks created after 2020', () => {
       const AssigneesOfAllTasksCreatedAfter2020 = Query.select(
-        Filter.type(Test.Task, { createdAt: Filter.gt('2020') }),
+        Filter.type(TestSchema.Task, { deadline: Filter.gt('2020') }),
       ).reference('assignee');
 
       log('query', { ast: AssigneesOfAllTasksCreatedAfter2020.ast });
@@ -144,7 +146,7 @@ describe('query api', () => {
     });
 
     test('typed full-text search', () => {
-      const contactFullTextSearch = Query.select(Filter.type(Test.Person)).select(Filter.text('Bill'));
+      const contactFullTextSearch = Query.select(Filter.type(TestSchema.Person)).select(Filter.text('Bill'));
 
       log('query', { ast: contactFullTextSearch.ast });
       Schema.validateSync(QueryAST.Query)(contactFullTextSearch.ast);
@@ -160,7 +162,7 @@ describe('query api', () => {
             "id": undefined,
             "props": {},
             "type": "object",
-            "typename": "dxn:type:dxos.org/type/Person:0.1.0",
+            "typename": "dxn:type:example.com/type/Person:0.1.0",
           },
           "type": "select",
         },
@@ -170,8 +172,8 @@ describe('query api', () => {
     });
 
     test('filter by ref', () => {
-      const fred = Obj.make(Test.Person, { name: 'Fred' });
-      const tasksByFred = Filter.type(Test.Task, { assignee: Ref.make(fred) });
+      const fred = Obj.make(TestSchema.Person, { name: 'Fred' });
+      const tasksByFred = Filter.type(TestSchema.Task, { assignee: Ref.make(fred) });
       expect(tasksByFred.ast).toEqual({
         props: {
           assignee: {
@@ -183,13 +185,15 @@ describe('query api', () => {
           },
         },
         type: 'object',
-        typename: 'dxn:type:dxos.org/type/Task:0.1.0',
+        typename: 'dxn:type:example.com/type/Task:0.1.0',
       });
       log('tasksByFred', { ast: tasksByFred.ast });
     });
 
     test('select orgs and people', () => {
-      const orgsAndPeople = Query.select(Filter.or(Filter.type(Test.Organization), Filter.type(Test.Person)));
+      const orgsAndPeople = Query.select(
+        Filter.or(Filter.type(TestSchema.Organization), Filter.type(TestSchema.Person)),
+      );
 
       Schema.validateSync(QueryAST.Query)(orgsAndPeople.ast);
       expect(orgsAndPeople.ast).toMatchInlineSnapshot(`
@@ -200,13 +204,13 @@ describe('query api', () => {
               "id": undefined,
               "props": {},
               "type": "object",
-              "typename": "dxn:type:dxos.org/type/Organization:0.1.0",
+              "typename": "dxn:type:example.com/type/Organization:0.1.0",
             },
             {
               "id": undefined,
               "props": {},
               "type": "object",
-              "typename": "dxn:type:dxos.org/type/Person:0.1.0",
+              "typename": "dxn:type:example.com/type/Person:0.1.0",
             },
           ],
           "type": "or",
@@ -218,7 +222,7 @@ describe('query api', () => {
 
     test('select everything but orgs and people', () => {
       const everythingButOrgsAndPeople = Query.select(
-        Filter.not(Filter.or(Filter.type(Test.Organization), Filter.type(Test.Person))),
+        Filter.not(Filter.or(Filter.type(TestSchema.Organization), Filter.type(TestSchema.Person))),
       );
 
       Schema.validateSync(QueryAST.Query)(everythingButOrgsAndPeople.ast);
@@ -231,13 +235,13 @@ describe('query api', () => {
                 "id": undefined,
                 "props": {},
                 "type": "object",
-                "typename": "dxn:type:dxos.org/type/Organization:0.1.0",
+                "typename": "dxn:type:example.com/type/Organization:0.1.0",
               },
               {
                 "id": undefined,
                 "props": {},
                 "type": "object",
-                "typename": "dxn:type:dxos.org/type/Person:0.1.0",
+                "typename": "dxn:type:example.com/type/Person:0.1.0",
               },
             ],
             "type": "or",
@@ -250,7 +254,7 @@ describe('query api', () => {
     });
 
     test('select deleted tasks', () => {
-      const deletedTasks = Query.select(Filter.type(Test.Task)).options({
+      const deletedTasks = Query.select(Filter.type(TestSchema.Task)).options({
         deleted: 'only',
       });
 
@@ -265,7 +269,7 @@ describe('query api', () => {
             "id": undefined,
             "props": {},
             "type": "object",
-            "typename": "dxn:type:dxos.org/type/Task:0.1.0",
+            "typename": "dxn:type:example.com/type/Task:0.1.0",
           },
           "type": "select",
         },
@@ -275,7 +279,7 @@ describe('query api', () => {
     });
 
     test('filter by tags', () => {
-      const query = Query.select(Filter.type(Test.Task)).select(Filter.tag('important'));
+      const query = Query.select(Filter.type(TestSchema.Task)).select(Filter.tag('important'));
       Schema.validateSync(QueryAST.Query)(query.ast);
       expect(query.ast).toMatchInlineSnapshot(`
         {
@@ -288,7 +292,7 @@ describe('query api', () => {
               "id": undefined,
               "props": {},
               "type": "object",
-              "typename": "dxn:type:dxos.org/type/Task:0.1.0",
+              "typename": "dxn:type:example.com/type/Task:0.1.0",
             },
             "type": "select",
           },
@@ -302,23 +306,31 @@ describe('query api', () => {
       // const f1: Filter<Person> = Filter.props({ name: 'Fred' });
 
       // const x = Query.select(Filter.props({ id: '123' }));
-      const y = Query.select(Filter.type(Test.Person));
+      const y = Query.select(Filter.type(TestSchema.Person));
 
-      const or = Filter.or(Filter.type(Test.Person, { id: Filter.in('1', '2', '3') }), Filter.type(Test.Organization));
+      const or = Filter.or(
+        Filter.type(TestSchema.Person, { id: Filter.in('1', '2', '3') }),
+        Filter.type(TestSchema.Organization),
+      );
 
       const and = Filter.and(
-        Filter.type(Test.Person, { id: Filter.in('1', '2', '3') }),
-        Filter.type(Test.Person, { name: 'Fred' }),
+        Filter.type(TestSchema.Person, { id: Filter.in('1', '2', '3') }),
+        Filter.type(TestSchema.Person, { name: 'Fred' }),
       );
 
       const q = Query
         //
         // NOTE: Can't support functions since they can't be serialized (to server).
         // .filter((object) => Math.random() > 0.5)
-        .select(Filter.type(Test.Person))
-        .select(Filter.type(Test.Person, { name: 'Fred' }))
+        .select(Filter.type(TestSchema.Person))
+        .select(Filter.type(TestSchema.Person, { name: 'Fred' }))
         .select({ age: Filter.between(20, 40) })
-        .select(Filter.and(Filter.type(Test.Person), Filter.type(Test.Person, { name: Filter.in('bob', 'bill') })));
+        .select(
+          Filter.and(
+            Filter.type(TestSchema.Person),
+            Filter.type(TestSchema.Person, { name: Filter.in('bob', 'bill') }),
+          ),
+        );
 
       log('stuff', { fOr: or, fAnd: and, q, y });
     });
@@ -326,7 +338,7 @@ describe('query api', () => {
 
   describe('Filter', () => {
     test('Filter.or(Filter.typename(...))', () => {
-      const filter = Filter.or(Filter.typename('dxos.org/type/Person'));
+      const filter = Filter.or(Filter.typename('example.com/type/Person'));
       // TODO(dmaretskyi): Give vitest type-tests a try.
       const _isAssignable: Obj.Any = null as any as Filter.Type<typeof filter>;
     });

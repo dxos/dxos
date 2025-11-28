@@ -7,6 +7,7 @@ import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
 
+import { raise } from '@dxos/debug';
 import { Reference } from '@dxos/echo-protocol';
 import { type JsonPath, getField } from '@dxos/effect';
 import { assertArgument, invariant } from '@dxos/invariant';
@@ -460,4 +461,18 @@ export const requireTypeReference = (schema: Schema.Schema.AnyNoContext): Refere
   }
 
   return typeReference;
+};
+
+/**
+ * @param input schema or a typename string
+ * @return type DXN
+ */
+export const getTypeDXNFromSpecifier = (input: Schema.Schema.All | string): DXN => {
+  if (Schema.isSchema(input)) {
+    return getTypeReference(input)?.toDXN() ?? raise(new TypeError('Schema has no DXN'));
+  } else {
+    assertArgument(typeof input === 'string', 'input');
+    assertArgument(!input.startsWith('dxn:'), 'input');
+    return DXN.fromTypename(input);
+  }
 };

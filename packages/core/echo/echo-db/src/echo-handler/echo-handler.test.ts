@@ -237,7 +237,7 @@ describe('Reactive Object with ECHO database', () => {
       await peer.client.graph.schemaRegistry.register([TestSchema.Example]);
       const db = await peer.openDatabase(spaceKey, root.url);
 
-      const obj = (await db.query(Query.select(Filter.ids(id))).first()) as AnyLiveObject<TestSchema.Example>;
+      const obj = (await db.query(Query.select(Filter.id(id))).first()) as AnyLiveObject<TestSchema.Example>;
       expect(isEchoObject(obj)).to.be.true;
       expect(obj.id).to.eq(id);
       expect(obj.string).to.eq('foo');
@@ -271,7 +271,7 @@ describe('Reactive Object with ECHO database', () => {
       const peer = await builder.createPeer({ kv: createTestLevel(tmpPath) });
       const db = await peer.openDatabase(spaceKey, root.url);
 
-      const obj = (await db.query(Filter.ids(id)).first()) as AnyLiveObject<TestSchema.Example>;
+      const obj = (await db.query(Filter.id(id)).first()) as AnyLiveObject<TestSchema.Example>;
       expect(isEchoObject(obj)).to.be.true;
       expect(obj.id).to.eq(id);
       expect(obj.string).to.eq('foo');
@@ -670,7 +670,7 @@ describe('Reactive Object with ECHO database', () => {
       {
         const peer = await builder.createPeer({ kv: createTestLevel(tmpPath) });
         const db = await peer.openDatabase(spaceKey, root.url);
-        const obj = (await db.query(Filter.ids(id)).first()) as AnyLiveObject<TestSchema.Example>;
+        const obj = (await db.query(Filter.id(id)).first()) as AnyLiveObject<TestSchema.Example>;
         expect(Obj.getMeta(obj).keys).to.deep.eq([metaKey]);
       }
     });

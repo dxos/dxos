@@ -163,7 +163,7 @@ describe('Integration tests', () => {
     await peer.reload();
     {
       await using db = await peer.openLastDatabase();
-      const outer = (await db.query(Filter.ids(outerId)).first()) as any;
+      const outer = (await db.query(Filter.id(outerId)).first()) as any;
       const loaded = new Trigger();
       using updates = updateCounter(() => {
         if (outer.inner.target) {
@@ -196,7 +196,7 @@ describe('Integration tests', () => {
     await peer.reload();
     {
       await using db = await peer.openDatabase(spaceKey, rootUrl);
-      const outer = (await db.query(Filter.ids(outerId)).first()) as any;
+      const outer = (await db.query(Filter.id(outerId)).first()) as any;
       expect(outer.inner.target).to.eq(undefined);
 
       const target = await outer.inner.load();
@@ -436,7 +436,7 @@ describe('Integration tests', () => {
           reactiveSchemaQuery: false,
           preloadSchemaOnOpen: false,
         });
-        const [obj] = await db.query(Filter.ids(relationId)).run();
+        const [obj] = await db.query(Filter.id(relationId)).run();
         assert(Relation.isRelation(obj), 'Query did not return a relation');
         const source = Relation.getSource(obj);
         const target = Relation.getTarget(obj);

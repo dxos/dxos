@@ -110,7 +110,7 @@ describe('Spaces', () => {
       expect(SpaceId.isValid(space.id)).to.be.true;
       await space.waitUntilReady();
 
-      const obj = await space.db.query(Filter.ids(objectId)).first();
+      const obj = await space.db.query(Filter.id(objectId)).first();
       expect(obj).to.exist;
     }
 
@@ -535,7 +535,7 @@ describe('Spaces', () => {
 
     const importedSpace = await client2.spaces.import(archive);
     expect(importedSpace.id).not.toEqual(space.id);
-    expect((await importedSpace.db.query(Filter.ids(doc1.id)).first()).title).toEqual(doc1.title);
+    expect((await importedSpace.db.query(Filter.id(doc1.id)).first()).title).toEqual(doc1.title);
   });
 
   const createInitializedClients = async (

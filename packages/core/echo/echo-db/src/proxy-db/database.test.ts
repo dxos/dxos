@@ -173,12 +173,12 @@ describe('Database', () => {
     await db.flush({ indexes: true });
 
     {
-      const objects = await db.query(Filter.ids(obj1.id)).run();
+      const objects = await db.query(Filter.id(obj1.id)).run();
       expect(objects).toEqual([obj1]);
     }
 
     {
-      const objects = await db.query(Filter.ids(obj2.id)).run();
+      const objects = await db.query(Filter.id(obj2.id)).run();
       expect(objects).toEqual([obj2]);
     }
   });
@@ -202,7 +202,7 @@ describe('Database', () => {
     {
       const db = await peer.openDatabase(spaceKey, rootUrl);
 
-      const query = db.query(Filter.ids(id));
+      const query = db.query(Filter.id(id));
       const loaded = new Trigger();
       query.subscribe();
       using updates = updateCounter(() => {

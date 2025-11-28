@@ -204,9 +204,11 @@ describe('effect-to-json', () => {
       'name',
       'username',
       'email',
+      'age',
       'tasks',
       'employer',
       'address',
+      'fields',
     ]);
   });
 

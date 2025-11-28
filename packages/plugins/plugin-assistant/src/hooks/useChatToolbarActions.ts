@@ -26,7 +26,7 @@ export const useChatToolbarActions = ({ chat, companionTo }: ChatToolbarActionsP
   const { dispatch } = useIntentDispatcher();
   const { space } = useChatContext('useChatToolbarActions');
   const query = companionTo
-    ? Query.select(Filter.ids(companionTo.id)).targetOf(Assistant.CompanionTo).source()
+    ? Query.select(Filter.id(companionTo.id)).targetOf(Assistant.CompanionTo).source()
     : Query.select(Filter.nothing());
 
   // TODO(wittjosiah): Query in react vs query in atom?
