@@ -61,8 +61,8 @@ export default (context: PluginContext) =>
         const existingContacts = await space.db.query(Filter.type(Person.Person)).run();
 
         // Check for existing contact
-        const existingContact = existingContacts.find((contact: any) =>
-          contact.emails?.some((contactEmail: any) => contactEmail.value === email),
+        const existingContact = existingContacts.find((contact) =>
+          contact.emails?.some((contactEmail) => contactEmail.value === email),
         );
         if (existingContact) {
           log.info('Contact already exists', { email, existingContact });
@@ -92,7 +92,7 @@ export default (context: PluginContext) =>
 
         log.info('extracted email domain', { emailDomain });
         const existingOrganisations = await space.db.query(Filter.type(Organization.Organization)).run();
-        const matchingOrg = existingOrganisations.find((org: any) => {
+        const matchingOrg = existingOrganisations.find((org) => {
           if (org.website) {
             try {
               const websiteUrl =

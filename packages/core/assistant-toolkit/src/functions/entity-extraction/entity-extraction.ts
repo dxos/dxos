@@ -111,8 +111,8 @@ const extractContact = Effect.fn('extractContact')(function* (actor: Actor.Actor
 
   // Check for existing contact
   // TODO(dmaretskyi): Query filter DSL - https://linear.app/dxos/issue/DX-541/filtercontains-should-work-with-partial-objects
-  const existingContact = existingContacts.find((contact: any) =>
-    contact.emails?.some((contactEmail: any) => contactEmail.value === email),
+  const existingContact = existingContacts.find((contact) =>
+    contact.emails?.some((contactEmail) => contactEmail.value === email),
   );
 
   if (existingContact) {
@@ -139,7 +139,7 @@ const extractContact = Effect.fn('extractContact')(function* (actor: Actor.Actor
   log.info('extracted email domain', { emailDomain });
 
   const existingOrganisations = yield* DatabaseService.runQuery(Filter.type(Organization.Organization));
-  const matchingOrg = existingOrganisations.find((org: any) => {
+  const matchingOrg = existingOrganisations.find((org) => {
     if (org.website) {
       try {
         const websiteUrl =

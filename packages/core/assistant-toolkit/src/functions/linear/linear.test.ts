@@ -61,17 +61,17 @@ describe('Linear', { timeout: 600_000 }, () => {
         const persons = yield* DatabaseService.runQuery(Query.type(Person.Person));
         console.log('people', {
           count: persons.length,
-          people: persons.map((_: any) => `(${_.id}) ${Obj.getLabel(_)} [${Obj.getKeys(_, LINEAR_ID_KEY)[0]?.id}]`),
+          people: persons.map((_) => `(${_.id}) ${Obj.getLabel(_)} [${Obj.getKeys(_, LINEAR_ID_KEY)[0]?.id}]`),
         });
         const projects = yield* DatabaseService.runQuery(Query.type(Project.Project));
         console.log('projects', {
           count: projects.length,
-          projects: projects.map((_: any) => `(${_.id}) ${Obj.getLabel(_)} [${Obj.getKeys(_, LINEAR_ID_KEY)[0]?.id}]`),
+          projects: projects.map((_) => `(${_.id}) ${Obj.getLabel(_)} [${Obj.getKeys(_, LINEAR_ID_KEY)[0]?.id}]`),
         });
         const tasks = yield* DatabaseService.runQuery(Query.type(Task.Task));
         console.log('tasks', {
           count: tasks.length,
-          tasks: tasks.map((_: any) => `(${_.id}) ${Obj.getLabel(_)} [${Obj.getKeys(_, LINEAR_ID_KEY)[0]?.id}]`),
+          tasks: tasks.map((_) => `(${_.id}) ${Obj.getLabel(_)} [${Obj.getKeys(_, LINEAR_ID_KEY)[0]?.id}]`),
         });
 
         yield* DatabaseService.flush({ indexes: true });
