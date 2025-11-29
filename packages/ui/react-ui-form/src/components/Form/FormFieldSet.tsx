@@ -2,7 +2,6 @@
 // Copyright 2025 DXOS.org
 //
 
-import type * as Schema from 'effect/Schema';
 import React, { forwardRef, useMemo } from 'react';
 
 import { type AnyProperties } from '@dxos/echo/internal';
@@ -11,7 +10,7 @@ import { mx } from '@dxos/react-ui-theme';
 import { type SchemaProperty, getSchemaProperties } from '@dxos/schema';
 import { isTruthy } from '@dxos/util';
 
-import { type QueryRefOptions } from '../../hooks';
+import { type FormHandlerProps } from '../../hooks';
 
 import { FormErrorBoundary } from './FormErrorBoundary';
 import { FormField, type FormFieldProps } from './FormField';
@@ -20,46 +19,28 @@ import { useFormValues } from './FormRoot';
 export type FormFieldSetProps<T extends AnyProperties> = ThemedClassName<
   {
     testId?: string;
-    // TODO(burdon): Pick.
-    schema?: Schema.Schema<T, any>;
     exclude?: (props: SchemaProperty<T>[]) => SchemaProperty<T>[];
     // TODO(burdon): Change to function (dynamic?)
     sort?: string[];
-    onQueryRefOptions?: QueryRefOptions;
-  } & Pick<
-    FormFieldProps<T>,
-    | 'path'
-    | 'projection'
-    | 'readonly'
-    | 'fieldMap'
-    | 'fieldProvider'
-    | 'createSchema'
-    | 'createOptionLabel'
-    | 'createOptionIcon'
-    | 'createInitialValuePath'
-    | 'onCreate'
-    | 'onQueryRefOptions'
-  >
+  } & Pick<FormHandlerProps<T>, 'schema'> &
+    Pick<
+      FormFieldProps<T>,
+      | 'path'
+      | 'projection'
+      | 'readonly'
+      | 'fieldMap'
+      | 'fieldProvider'
+      | 'createSchema'
+      | 'createOptionLabel'
+      | 'createOptionIcon'
+      | 'createInitialValuePath'
+      | 'onCreate'
+      | 'onQueryRefOptions'
+    >
 >;
 
-// TODO(burdon): Fix generic.
 export const FormFieldSet = forwardRef<HTMLDivElement, FormFieldSetProps<any>>(
-  (
-    {
-      classNames,
-      schema,
-      path,
-      exclude,
-      sort,
-      projection,
-      readonly,
-      fieldMap,
-      fieldProvider,
-      onQueryRefOptions,
-      ...props
-    },
-    forwardRef,
-  ) => {
+  ({ classNames, schema, path, exclude, sort, projection, ...props }, forwardRef) => {
     const values = useFormValues(FormFieldSet.displayName!, path);
 
     const properties = useMemo(() => {
@@ -108,11 +89,7 @@ export const FormFieldSet = forwardRef<HTMLDivElement, FormFieldSetProps<any>>(
                 <FormField
                   property={property}
                   path={[...(path ?? []), property.name]}
-                  readonly={readonly}
                   projection={projection}
-                  fieldMap={fieldMap}
-                  fieldProvider={fieldProvider}
-                  onQueryRefOptions={onQueryRefOptions}
                   {...props}
                 />
               </FormErrorBoundary>

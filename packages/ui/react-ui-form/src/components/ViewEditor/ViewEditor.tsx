@@ -16,7 +16,7 @@ import { Callout, IconButton, Input, type ThemedClassName, useTranslation } from
 import { QueryForm, type QueryFormProps } from '@dxos/react-ui-components';
 import { List } from '@dxos/react-ui-list';
 import { cardSpacing } from '@dxos/react-ui-stack';
-import { inputTextLabel, mx, subtleHover } from '@dxos/react-ui-theme';
+import { mx, subtleHover } from '@dxos/react-ui-theme';
 import {
   FieldSchema,
   type FieldType,
@@ -29,12 +29,12 @@ import {
 import { translationKey } from '../../translations';
 import { FieldEditor } from '../FieldEditor';
 import {
-  Form,
   type FormFieldComponent,
   type FormFieldComponentProps,
   FormFieldLabel,
   type FormFieldMap,
   type FormProps,
+  NewForm,
 } from '../Form';
 
 const listGrid = 'grid grid-cols-[min-content_1fr_min-content_min-content_min-content]';
@@ -134,8 +134,7 @@ export const ViewEditor = forwardRef<ProjectionModel, ViewEditorProps>(
       [readonly],
     );
 
-    // TODO(burdon): Check if mutable; variant of useCallback that return undefined if readonly?
-
+    // TODO(burdon): Check if mutable.
     const handleAdd = useCallback(() => {
       invariant(!readonly);
       const field = projectionModel.createFieldProjection();
@@ -203,19 +202,15 @@ export const ViewEditor = forwardRef<ProjectionModel, ViewEditorProps>(
           </Callout.Root>
         )}
 
-        {/* TODO(burdon): Is the form read-only or just the schema? */}
-        {/* TODO(burdon): Readonly fields should take up the same space as editable fields (just be ghosted). */}
-        <Form<Schema.Schema.Type<typeof viewSchema>>
-          outerSpacing={outerSpacing}
-          autoSave
-          schema={viewSchema}
-          values={viewValues}
-          fieldMap={fieldMap}
-          onSave={handleUpdate}
-        />
-
         <div role='none' className={outerSpacing ? cardSpacing : 'mlb-cardSpacingBlock'}>
-          <h2 className={mx(inputTextLabel)}>{t('fields label')}</h2>
+          {/* TODO(burdon): Is the form read-only or just the schema? */}
+          <NewForm.Root autoSave schema={viewSchema} values={viewValues} fieldMap={fieldMap} onSave={handleUpdate}>
+            <NewForm.FieldSet />
+          </NewForm.Root>
+
+          <Input.Root>
+            <FormFieldLabel label={t('fields label')} />
+          </Input.Root>
 
           <List.Root<FieldType>
             items={view.projection.fields}

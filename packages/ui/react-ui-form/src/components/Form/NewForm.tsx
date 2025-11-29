@@ -3,31 +3,33 @@
 //
 
 import { createContext } from '@radix-ui/react-context';
-import React, { type PropsWithChildren } from 'react';
+import React, { type PropsWithChildren, useRef } from 'react';
 
 import { type AnyProperties } from '@dxos/echo/internal';
 import { IconButton, type IconButtonProps, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
-import { type FormHandler, type FormHandlerProps, useFormHandler } from '../../hooks';
+import { type FormHandler, type FormHandlerProps, useFormHandler, useKeyHandler } from '../../hooks';
 import { translationKey } from '../../translations';
 
 import { FormFieldSet, type FormFieldSetProps } from './FormFieldSet';
 import { FormContext } from './FormRoot';
 
-// [ ] TextArea
-// [x] Replace FeedbackForm.
+// [x] TextArea
+// [x] Use NewForm with FeedbackForm.
+// [ ] Use NewForm with ViewEditor.
+// [ ] Use NewForm with TriggerEditor.FunctionInputEditor.
 
 // [ ] Inline tables for object arrays
-// [ ] Unify readonly/inline modes.
-// [ ] Unify fieldMap/fieldProvider map callback (with adapter for map).
 // [ ] Use FormFieldWrapper uniformly.
+// [ ] Unify readonly/inline modes.
 
 // [ ] Refs, Selectors
-// [ ] Keyboard handler
+// [ ] Keyboard handler (autosave).
 // [ ] Additional root props: options, callbacks
 // [ ] Reaplce context, hooks.
 // [ ] Status (validation) message must include field (currently just "is missing")
+// [ ] Unify fieldMap/fieldProvider map callback (with adapter for map).
 
 //
 // Context
@@ -40,10 +42,15 @@ type NewFormContextValue<T extends AnyProperties = any> = {
   form: FormHandler<T>;
 
   /**
+   * Auto-save the form when the values change.
+   */
+  autoSave?: boolean;
+
+  /**
    * Show debug info.
    */
   debug?: boolean;
-} & Pick<FormFieldSetProps<T>, 'readonly'>;
+} & Pick<FormFieldSetProps<T>, 'readonly' | 'fieldMap' | 'fieldProvider'>;
 
 const [NewFormContextProvider, useNewFormContext] = createContext<NewFormContextValue>('NewForm');
 
@@ -62,12 +69,11 @@ type NewFormRootProps<T extends AnyProperties = AnyProperties> = PropsWithChildr
      * Called when the form is canceled to abandon/undo any pending changes.
      */
     onCancel?: () => void;
-  } & (Pick<FormHandlerProps<T>, 'schema' | 'values'> & Pick<NewFormContextValue<T>, 'debug' | 'readonly'>)
+  } & (Pick<FormHandlerProps<T>, 'schema' | 'values'> & Omit<NewFormContextValue<T>, 'form'>)
 >;
 
 const NewFormRoot = <T extends AnyProperties = AnyProperties>({
   children,
-  debug,
   schema,
   values,
   onSave,
@@ -79,7 +85,7 @@ const NewFormRoot = <T extends AnyProperties = AnyProperties>({
   return (
     // TODO(burdon): Temporarily include old context.
     <FormContext.Provider value={form}>
-      <NewFormContextProvider form={form} debug={debug} {...props}>
+      <NewFormContextProvider form={form} {...props}>
         {children}
       </NewFormContextProvider>
     </FormContext.Provider>
@@ -96,7 +102,15 @@ NewFormRoot.displayName = 'NewForm.Root';
 type NewFormContentProps = ThemedClassName<PropsWithChildren<{}>>;
 
 const NewFormContent = ({ classNames, children }: NewFormContentProps) => {
-  return <div className={mx('flex flex-col is-full pli-cardSpacingInline', classNames)}>{children}</div>;
+  const { form, autoSave } = useNewFormContext(NewFormContent.displayName);
+  const ref = useRef<HTMLDivElement>(null);
+  useKeyHandler(ref.current, form, autoSave);
+
+  return (
+    <div ref={ref} className={mx('flex flex-col is-full pli-cardSpacingInline', classNames)}>
+      {children}
+    </div>
+  );
 };
 
 NewFormContent.displayName = 'NewForm.Content';
@@ -108,9 +122,9 @@ NewFormContent.displayName = 'NewForm.Content';
 type NewFormFieldSetProps = ThemedClassName<{}>;
 
 const NewFormFieldSet = ({ classNames }: NewFormFieldSetProps) => {
-  const { form, readonly } = useNewFormContext(NewFormFieldSet.displayName);
+  const { form, ...props } = useNewFormContext(NewFormFieldSet.displayName);
 
-  return <FormFieldSet classNames={classNames} schema={form.schema} readonly={readonly} />;
+  return <FormFieldSet classNames={classNames} schema={form.schema} {...props} />;
 };
 
 NewFormFieldSet.displayName = 'NewForm.FieldSet';
