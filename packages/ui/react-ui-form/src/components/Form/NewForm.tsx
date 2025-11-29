@@ -9,7 +9,13 @@ import { type AnyProperties } from '@dxos/echo/internal';
 import { IconButton, type IconButtonProps, ScrollArea, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
-import { type FormHandler, type FormHandlerProps, useFormHandler, useKeyHandler } from '../../hooks';
+import {
+  type FormHandler,
+  type FormHandlerProps,
+  type FormUpdateMeta,
+  useFormHandler,
+  useKeyHandler,
+} from '../../hooks';
 import { translationKey } from '../../translations';
 
 import { FormFieldSet, type FormFieldSetProps } from './FormFieldSet';
@@ -63,18 +69,17 @@ type NewFormRootProps<T extends AnyProperties = AnyProperties> = PropsWithChildr
     /**
      * Called when the form is submitted and passes validation.
      */
-    onSave?: (values: T, meta: { changed: FormHandler<T>['changed'] }) => void;
+    onSave?: (values: T, meta: FormUpdateMeta<T>) => void;
 
     /**
      * Called when the form is canceled to abandon/undo any pending changes.
      */
     onCancel?: () => void;
   } &
-    //
+    // prettier-ignore
     Omit<NewFormContextValue<T>, 'form'> &
     Pick<FormHandlerProps<T>, 'schema' | 'autoSave' | 'values' | 'onAutoSave' | 'onValuesChanged'> &
-    // TODO(burdon): Pick/Refine?
-    FormFieldSetProps<T>
+    Omit<FormFieldSetProps<T>, 'schema' | 'path'>
 >;
 
 const NewFormRoot = <T extends AnyProperties = AnyProperties>({

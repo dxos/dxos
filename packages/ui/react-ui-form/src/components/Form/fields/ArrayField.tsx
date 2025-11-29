@@ -94,6 +94,7 @@ export const ArrayField = <T extends AnyProperties>({
               <div role='none'>
                 <FormField
                   inline
+                  autoFocus={index === values.length - 1}
                   path={[...(path ?? []), index]}
                   property={{
                     ...property,

@@ -27,6 +27,7 @@ export type FormFieldSetProps<T extends AnyProperties> = ThemedClassName<
       FormFieldProps<T>,
       | 'path'
       | 'projection'
+      | 'autoFocus'
       | 'readonly'
       | 'fieldMap'
       | 'fieldProvider'

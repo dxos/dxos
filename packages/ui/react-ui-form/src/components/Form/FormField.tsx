@@ -68,6 +68,7 @@ export type FormFieldProps<T extends AnyProperties> = {
   fieldProvider?: FormFieldProvider;
 } & Pick<
   RefFieldProps,
+  | 'autoFocus'
   | 'inline'
   | 'readonly'
   | 'createSchema'

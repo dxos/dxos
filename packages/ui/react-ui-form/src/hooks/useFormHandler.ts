@@ -2,13 +2,13 @@
 // Copyright 2025 DXOS.org
 //
 
+import { useControllableState } from '@radix-ui/react-use-controllable-state';
 import type * as Schema from 'effect/Schema';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { type AnyProperties, getValue as getValue$, setValue as setValue$ } from '@dxos/echo/internal';
 import { type JsonPath, type SimpleType, createJsonPath, fromEffectValidationPath } from '@dxos/effect';
 import { log } from '@dxos/log';
-import { useControlledState } from '@dxos/react-ui';
 import { type ValidationError, validateSchema } from '@dxos/schema';
 import { type MaybePromise } from '@dxos/util';
 
@@ -41,12 +41,12 @@ export interface FormHandlerProps<T extends AnyProperties> {
    * Sometimes the parent component may want to know about changes even if the form is
    * in an invalid state.
    */
-  onValuesChanged?: (values: Partial<T>, meta: { changed: FormHandler<T>['changed']; isValid: boolean }) => void;
+  onValuesChanged?: (values: Partial<T>, meta: FormUpdateMeta<T>) => void;
 
   /**
    * Called when a field is blurred and is valid.
    */
-  onAutoSave?: (values: T, meta: { changed: FormHandler<T>['changed'] }) => void;
+  onAutoSave?: (values: T, meta: FormUpdateMeta<T>) => void;
 
   /**
    * Custom validation function that runs only after schema validation passes.
@@ -58,13 +58,18 @@ export interface FormHandlerProps<T extends AnyProperties> {
   /**
    * Called when the form is submitted and passes validation.
    */
-  onSave?: (values: T, meta: { changed: FormHandler<T>['changed'] }) => MaybePromise<void>;
+  onSave?: (values: T, meta: FormUpdateMeta<T>) => MaybePromise<void>;
 
   /**
    * Called when the form is canceled.
    */
   onCancel?: () => void;
 }
+
+export type FormUpdateMeta<T extends AnyProperties> = {
+  changed: FormHandler<T>['changed'];
+  isValid: boolean;
+};
 
 /**
  * Form handler properties and methods.
@@ -73,10 +78,10 @@ export type FormHandler<T extends AnyProperties> = Pick<FormHandlerProps<T>, 'sc
   /** Initial values (which may not pass validation). */
   values: Partial<T>;
 
-  /** Map of touched fields. */
-  touched: Record<JsonPath, boolean>;
-  // TODO(burdon): How is this different from above?
+  /** Map of changed fields. */
   changed: Record<JsonPath, boolean>;
+  // TODO(burdon): How is this different from above?
+  touched: Record<JsonPath, boolean>;
 
   /** Map of error strings. */
   errors: Record<JsonPath, string>;
@@ -114,16 +119,20 @@ export const useFormHandler = <T extends AnyProperties>({
   onCancel,
   ...props
 }: FormHandlerProps<T>): FormHandler<T> => {
-  const [touched, setTouched] = useState<Record<JsonPath, boolean>>({});
   const [changed, setChanged] = useState<Record<JsonPath, boolean>>({});
+  const [touched, setTouched] = useState<Record<JsonPath, boolean>>({});
   const [errors, setErrors] = useState<Record<JsonPath, string>>({});
   const [saving, setSaving] = useState(false);
-  const [values, setValues] = useControlledState<Partial<T>>(valuesProp ?? {}, () => {
-    setValues(valuesProp ?? {});
-    setTouched({});
-    setChanged({});
-    setErrors({});
-    setSaving(false);
+  const [values, setValues] = useControllableState<Partial<T>>({
+    prop: valuesProp,
+    defaultProp: {},
+    onChange: () => {
+      setValues(valuesProp ?? {});
+      setChanged({});
+      setTouched({});
+      setErrors({});
+      setSaving(false);
+    },
   });
 
   // Validate.
@@ -183,12 +192,12 @@ export const useFormHandler = <T extends AnyProperties>({
     if (validate(values)) {
       setSaving(true);
       try {
-        await onSave?.(values, { changed });
+        await onSave?.(values, { changed, isValid });
       } finally {
         setSaving(false);
       }
     }
-  }, [values, validate, onSave, changed]);
+  }, [values, validate, onSave, changed, isValid]);
 
   const handleCancel = useCallback(() => {
     onCancel?.();
@@ -273,7 +282,7 @@ export const useFormHandler = <T extends AnyProperties>({
 
       // Auto-save when a field is blurred and is valid
       if (Object.keys(changed).length > 0 && isValid && autoSave && onAutoSave) {
-        onAutoSave(values as T, { changed });
+        onAutoSave(values as T, { changed, isValid });
       }
     },
     [validate, values, changed, autoSave, onAutoSave],

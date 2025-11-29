@@ -33,6 +33,7 @@ export type FormFieldComponentProps<T = any> = {
   format?: Format.TypeFormat;
   label: string;
   placeholder?: string;
+  autoFocus?: boolean;
 
   /**
    * Specifies the readonly variant: either disabled inputs, elements indicating they are usually editable but currently are not;

@@ -12636,9 +12636,6 @@ importers:
       '@radix-ui/react-id':
         specifier: ^1.1.1
         version: 1.1.1(@types/react@19.2.2)(react@19.2.0)
-      '@radix-ui/react-use-controllable-state':
-        specifier: ^1.2.2
-        version: 1.2.2(@types/react@19.2.2)(react@19.2.0)
       alea:
         specifier: ^1.0.1
         version: 1.0.1
@@ -14192,6 +14189,9 @@ importers:
       '@radix-ui/react-context':
         specifier: 1.1.1
         version: 1.1.1(@types/react@19.2.2)(react@19.2.0)
+      '@radix-ui/react-use-controllable-state':
+        specifier: ^1.2.2
+        version: 1.2.2(@types/react@19.2.2)(react@19.2.0)
       date-fns:
         specifier: ^3.3.1
         version: 3.6.0
