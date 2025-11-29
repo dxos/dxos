@@ -18,15 +18,16 @@ import { FormContext } from './FormRoot';
 // [x] TextArea
 // [x] Use NewForm with FeedbackForm.
 // [x] Use NewForm with ViewEditor.
-// [ ] Test 22 usages.
-
 // [ ] NewForm.stories.tsx
 //  [x] Fix onSave callback (loses focus on change)
+//  [x] Fix autosave
+//  [x] Keyboard handler (autosave)
+//  [ ] Don't calls save/autoSave if value isn't different from original values.
 //  [ ] Fix onCancel (restore values)
-//  [ ] Fix autosave
-//  [x] Keyboard handler (autosave).
 // [ ] Update hooks used by external packages (i.e., useFormValues).
 // [ ] Padding and nesting.
+// [ ] Test 22 usages.
+// [ ] Merge stage 1.
 
 // New features/polish
 // [ ] Unify readonly/inline modes.
