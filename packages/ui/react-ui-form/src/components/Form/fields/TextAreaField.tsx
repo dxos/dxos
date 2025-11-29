@@ -27,7 +27,8 @@ export const TextAreaField = ({
       label={label}
       getStatus={getStatus}
       getValue={getValue}
-      Component={({ value }) => (
+    >
+      {({ value }) => (
         <Input.TextArea
           rows={3}
           disabled={!!readonly}
@@ -37,6 +38,6 @@ export const TextAreaField = ({
           onBlur={onBlur}
         />
       )}
-    />
+    </FormFieldWrapper>
   );
 };

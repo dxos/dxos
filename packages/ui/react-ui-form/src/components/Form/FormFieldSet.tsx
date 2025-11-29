@@ -43,13 +43,14 @@ export const FormFieldSet = forwardRef<HTMLDivElement, FormFieldSetProps<any>>(
   ({ classNames, schema, path, exclude, sort, projection, ...props }, forwardRef) => {
     const values = useFormValues(FormFieldSet.displayName!, path);
 
+    // TODO(burdon): Updates on every value change.
+    //  Remove values dep if can remove from getSchemaProperties.
     const properties = useMemo(() => {
       if (!schema) {
         return [];
       }
 
       const props = getSchemaProperties(schema.ast, values, { form: true });
-      console.log('updated', props);
 
       // Use projection-based field management when view and projection are available.
       if (projection) {
@@ -70,7 +71,7 @@ export const FormFieldSet = forwardRef<HTMLDivElement, FormFieldSetProps<any>>(
         }
 
         // Add any remaining properties not in projection.
-        const projectionPaths = new Set(fieldProjections.map((fp) => String(fp.field.path)));
+        const projectionPaths = new Set(fieldProjections.map((projection) => String(projection.field.path)));
         const remainingProps = visibleProps.filter((prop) => !projectionPaths.has(prop.name));
         orderedProps.push(...remainingProps);
         return orderedProps;
@@ -78,9 +79,8 @@ export const FormFieldSet = forwardRef<HTMLDivElement, FormFieldSetProps<any>>(
 
       // Fallback to legacy filter/sort behavior.
       const filtered = exclude ? exclude(props) : props;
-      return sort ? filtered.sort((a, b) => sort.indexOf(a.name) - sort.indexOf(b.name)) : filtered;
-    }, [schema, /*values,*/ exclude, sort, projection?.fields]);
-    // TODO(burdon): Update when values change?
+      return sort ? filtered.sort(({ name: a }, { name: b }) => sort.indexOf(a) - sort.indexOf(b)) : filtered;
+    }, [schema, values, exclude, sort, projection?.fields]);
 
     return (
       <div role='form' className={mx('is-full', classNames)} ref={forwardRef}>

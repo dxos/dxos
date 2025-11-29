@@ -25,9 +25,10 @@ export const BooleanField = ({
       label={label}
       getStatus={getStatus}
       getValue={getValue}
-      Component={({ value }) => (
+    >
+      {({ value }) => (
         <Input.Switch disabled={!!readonly} checked={value} onCheckedChange={(value) => onValueChange(type, value)} />
       )}
-    />
+    </FormFieldWrapper>
   );
 };

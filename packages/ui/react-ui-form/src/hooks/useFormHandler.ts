@@ -223,10 +223,9 @@ export const useFormHandler = <T extends AnyProperties>({
     [values],
   );
 
-  // TODO(wittjosiah): This is causing the entire form to re-render on every change.
   const onValueChange = useCallback<FormHandler<T>['onValueChange']>(
     (path: (string | number)[], type: SimpleType, value: any) => {
-      log.info('onValueChange', { path, type, value });
+      log('onValueChange', { path, type, value });
 
       const jsonPath = createJsonPath(path);
       let parsedValue = value;
@@ -263,7 +262,6 @@ export const useFormHandler = <T extends AnyProperties>({
     [validate, values],
   );
 
-  console.log(values);
   return useMemo<FormHandler<T>>(
     () => ({
       // State.

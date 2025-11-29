@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { type FC } from 'react';
+import React, { type ReactNode } from 'react';
 
 import { Input } from '@dxos/react-ui';
 
@@ -12,11 +12,11 @@ export type FormFieldWrapperProps<T = any> = Pick<
   FormFieldComponentProps,
   'inline' | 'readonly' | 'label' | 'getStatus' | 'getValue'
 > & {
-  Component: FC<{ value: T }>;
+  children?: ({ value }: { value: T }) => ReactNode;
 };
 
 export const FormFieldWrapper = <T = any,>({
-  Component,
+  children,
   inline,
   readonly,
   label,
@@ -37,7 +37,7 @@ export const FormFieldWrapper = <T = any,>({
   return (
     <Input.Root validationValence={status}>
       {!inline && <FormFieldLabel error={error} readonly={readonly} label={label} />}
-      {readonly === 'static' ? <p>{str}</p> : <Component value={value} />}
+      {readonly === 'static' ? <p>{str}</p> : children ? children({ value }) : null}
       {!inline && (
         <Input.DescriptionAndValidation>
           <Input.Validation>{error}</Input.Validation>

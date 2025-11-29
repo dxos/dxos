@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { useEffect } from 'react';
+import React from 'react';
 
 import { Input } from '@dxos/react-ui';
 
@@ -20,13 +20,6 @@ export const TextField = ({
   onValueChange,
   onBlur,
 }: FormFieldComponentProps<string>) => {
-  useEffect(() => {
-    console.log('mounted', type);
-    return () => {
-      console.log('unmounted', type);
-    };
-  }, []);
-
   return (
     <FormFieldWrapper<string>
       inline={inline}
@@ -34,7 +27,8 @@ export const TextField = ({
       label={label}
       getStatus={getStatus}
       getValue={getValue}
-      Component={({ value }) => (
+    >
+      {({ value }) => (
         <Input.TextInput
           {...{ 'data-1p-ignore': true }}
           disabled={!!readonly}
@@ -44,6 +38,6 @@ export const TextField = ({
           onBlur={onBlur}
         />
       )}
-    />
+    </FormFieldWrapper>
   );
 };
