@@ -14,6 +14,7 @@ import { type FormFieldComponentProps, FormFieldLabel } from '../FormFieldCompon
 export const GeoPointField = ({
   type,
   label,
+  inline,
   readonly,
   getStatus,
   getValue,
@@ -27,14 +28,13 @@ export const GeoPointField = ({
 
   const [longitudeText, setLongitudeText] = useState(geoLocation.longitude?.toString());
   const [latitudeText, setLatitudeText] = useState(geoLocation.latitude?.toString());
-
   useEffect(() => {
     const location = GeoLocation.fromGeoPoint(geoPoint);
-    setLongitudeText(location.longitude.toString());
-    setLatitudeText(location.latitude.toString());
+    setLongitudeText(location.longitude?.toString());
+    setLatitudeText(location.latitude?.toString());
   }, [geoPoint]);
 
-  const handleCoordinateChange = useCallback(
+  const handleChange = useCallback(
     (coordinateType: keyof Pick<GeoLocation, 'longitude' | 'latitude'>, setText: (text: string) => void) =>
       (event: ChangeEvent<HTMLInputElement>) => {
         const inputText = event.target.value;
@@ -54,34 +54,36 @@ export const GeoPointField = ({
 
   return (
     <Input.Root validationValence={status}>
-      <FormFieldLabel error={error} readonly={readonly} label={label} asChild />
+      {!inline && <FormFieldLabel error={error} readonly={readonly} label={label} asChild />}
       <div role='none' className='grid grid-cols-2 gap-2'>
         <div>
           <Input.Root>
-            <Input.Label>{t('latitude label')}</Input.Label>
+            {!inline && <Input.Label>{t('latitude label')}</Input.Label>}
             <Input.TextInput
               type='number'
               step='0.00001'
               min='-90'
               max='90'
               disabled={!!readonly}
-              value={latitudeText}
-              onChange={handleCoordinateChange('latitude', setLatitudeText)}
+              placeholder={inline ? t('latitude placeholder') : undefined}
+              value={latitudeText ?? ''}
+              onChange={handleChange('latitude', setLatitudeText)}
               onBlur={onBlur}
             />
           </Input.Root>
         </div>
         <div>
           <Input.Root>
-            <Input.Label>{t('longitude label')}</Input.Label>
+            {!inline && <Input.Label>{t('longitude label')}</Input.Label>}
             <Input.TextInput
               type='number'
               step='0.00001'
               min='-180'
               max='180'
               disabled={!!readonly}
-              value={longitudeText}
-              onChange={handleCoordinateChange('longitude', setLongitudeText)}
+              placeholder={inline ? t('longitude placeholder') : undefined}
+              value={longitudeText ?? ''}
+              onChange={handleChange('longitude', setLongitudeText)}
               onBlur={onBlur}
             />
           </Input.Root>

@@ -10,6 +10,7 @@
     --rail-size: calc(var(--rail-content) + 1px);
     --rail-action: calc(var(--rail-content) - 0.5rem + 1px);
     --rail-item: calc(var(--rail-content) - 1rem);
+    --line-height: 32px;
     --topbar-size: var(--rail-size);
     --toolbar-size: var(--rail-content);
     --statusbar-size: theme(spacing.8);

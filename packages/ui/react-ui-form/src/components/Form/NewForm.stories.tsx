@@ -24,6 +24,7 @@ const Person = Schema.Struct({
   age: Schema.optional(Schema.Number.annotations({ title: 'Age' })),
   location: Schema.optional(Format.GeoPoint.annotations({ title: 'Location' })),
   tasks: Schema.optional(Schema.Array(Schema.String).annotations({ title: 'Tasks' })),
+  locations: Schema.optional(Schema.Array(Format.GeoPoint).annotations({ title: 'Locations' })),
   identities: Schema.optional(
     Schema.Array(
       Schema.Struct({

@@ -33,8 +33,9 @@ export const translations = [
         'ref field placeholder_other': 'Select items…',
 
         'example placeholder': 'Example',
+        'latitude placeholder': 'Latitude (e.g., 40.7128)',
+        'longitude placeholder': 'Longitude (e.g., -74.0060)',
 
-        // TODO(burdon): Factor out?
         'cancel button label': 'Cancel',
         'save button label': 'Save',
 

@@ -107,13 +107,18 @@ export const ArrayField = <T extends AnyProperties>({
               </div>
 
               {!readonly && (
-                <IconButton
-                  icon='ph--x--regular'
-                  iconOnly
-                  label={t('button remove')}
-                  onClick={() => handleDelete(index)}
-                  classNames='self-center'
-                />
+                <div role='none' className='flex flex-col bs-full justify-end'>
+                  {/* TODO(burdon): Create variable for line-height. */}
+                  <div role='none' className='flex items-center bs-[var(--line-height)]'>
+                    <IconButton
+                      icon='ph--x--regular'
+                      iconOnly
+                      label={t('button remove')}
+                      onClick={() => handleDelete(index)}
+                      classNames='self-center'
+                    />
+                  </div>
+                </div>
               )}
             </Fragment>
           );
