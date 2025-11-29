@@ -5,13 +5,13 @@
 import React from 'react';
 
 import { log } from '@dxos/log';
+import { ToggleContainer } from '@dxos/react-ui-components';
 import {
   PromptWidget,
   ReferenceWidget,
   SelectWidget,
   SuggestionWidget,
   SummaryWidget,
-  ToggleContainer,
 } from '@dxos/react-ui-components';
 import { type XmlWidgetProps, type XmlWidgetRegistry, getXmlTextChild } from '@dxos/react-ui-editor';
 import { Json } from '@dxos/react-ui-syntax-highlighter';

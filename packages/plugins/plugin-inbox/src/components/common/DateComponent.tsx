@@ -32,7 +32,7 @@ export const DateComponent = ({ start, end, icon }: { start: Date; end?: Date; i
         />
       )}
       <div className='truncate text-description'>{format(start, 'PPp')}</div>
-      {(hours || minutes) && <div className='text-description text-xs'>({duration})</div>}
+      {hours || minutes ? <div className='text-description text-xs'>({duration})</div> : null}
     </div>
   );
 };

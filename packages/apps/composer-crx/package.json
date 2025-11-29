@@ -27,6 +27,7 @@
     "@dxos/react-client": "workspace:*",
     "@dxos/react-hooks": "workspace:*",
     "@dxos/react-ui": "workspace:*",
+    "@dxos/react-ui-markdown": "workspace:*",
     "@dxos/rpc": "workspace:*",
     "@dxos/shell": "workspace:*",
     "agents": "^0.2.23",
