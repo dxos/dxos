@@ -22,22 +22,22 @@ import { FormFieldSet, type FormFieldSetProps } from './FormFieldSet';
 import { FormContext } from './FormRoot';
 
 // [x] TextArea
-// [x] Use NewForm with FeedbackForm.
-// [x] Use NewForm with ViewEditor.
+// [x] Use NewForm with FeedbackForm
+// [x] Use NewForm with ViewEditor
 // [ ] NewForm.stories.tsx
 //  [x] Fix onSave callback (loses focus on change)
 //  [x] Fix autosave
 //  [x] Keyboard handler (autosave)
-//  [ ] Don't calls save/autoSave if value isn't different from original values.
+//  [ ] Don't call save/autoSave if value hasn't changed
 //  [ ] Fix onCancel (restore values)
-// [ ] Padding and nesting.
-// [ ] Update hooks used by external packages (i.e., useFormValues).
-// [ ] Test 22 usages.
-// [ ] Merge stage 1.
+// [ ] Padding and nesting
+// [ ] Update hooks used by external packages (i.e., useFormValues)
+// [ ] Test 22 usages
+// [ ] Merge stage 1
 
 // New features/polish
-// [ ] Unify readonly/inline modes.
-// [ ] Use FormFieldWrapper uniformly.
+// [ ] Unify readonly/inline modes
+// [ ] Use FormFieldWrapper uniformly
 // [ ] Inline tables for object arrays
 // [ ] Refs, Selectors
 // [ ] Remove @dxos/echo-db deps
