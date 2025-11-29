@@ -8,6 +8,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { type AnyProperties, getValue as getValue$, setValue as setValue$ } from '@dxos/echo/internal';
 import { type JsonPath, type SimpleType, createJsonPath, fromEffectValidationPath } from '@dxos/effect';
 import { log } from '@dxos/log';
+import { useControlledState } from '@dxos/react-ui';
 import { type ValidationError, validateSchema } from '@dxos/schema';
 import { type MaybePromise } from '@dxos/util';
 
@@ -117,21 +118,15 @@ export const useFormHandler = <T extends AnyProperties>({
   const [changed, setChanged] = useState<Record<JsonPath, boolean>>({});
   const [errors, setErrors] = useState<Record<JsonPath, string>>({});
   const [saving, setSaving] = useState(false);
-
-  // TODO(burdon): Change to useControlledValue.
-  const [values, setValues] = useState<Partial<T>>(valuesProp ?? {});
-  useEffect(() => {
+  const [values, setValues] = useControlledState<Partial<T>>(valuesProp ?? {}, () => {
     setValues(valuesProp ?? {});
     setTouched({});
     setChanged({});
     setErrors({});
     setSaving(false);
-  }, [valuesProp]);
+  });
 
-  //
-  // Validation.
-  //
-
+  // Validate.
   const validate = useCallback(
     (values: Partial<T>): values is T => {
       if (!schema) {
