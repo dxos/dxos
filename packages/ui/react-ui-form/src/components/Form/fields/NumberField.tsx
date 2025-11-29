@@ -5,8 +5,10 @@
 import React from 'react';
 
 import { Input } from '@dxos/react-ui';
+import { safeParseFloat } from '@dxos/util';
 
-import { type FormFieldComponentProps, FormFieldLabel } from '../FormFieldComponent';
+import { type FormFieldComponentProps } from '../FormFieldComponent';
+import { FormFieldWrapper } from '../FormFieldWrapper';
 
 export const NumberField = ({
   type,
@@ -18,27 +20,25 @@ export const NumberField = ({
   getValue,
   onValueChange,
   onBlur,
-}: FormFieldComponentProps) => {
-  const { status, error } = getStatus();
-
-  return readonly && !getValue() ? null : readonly === 'static' && inline ? (
-    <p>{getValue() ?? ''}</p>
-  ) : (
-    <Input.Root validationValence={status}>
-      {!inline && <FormFieldLabel error={error} readonly={readonly} label={label} />}
-      {readonly === 'static' ? (
-        <p>{getValue() ?? ''}</p>
-      ) : (
+}: FormFieldComponentProps<number>) => {
+  return (
+    <FormFieldWrapper<number>
+      inline={inline}
+      readonly={readonly}
+      label={label}
+      getStatus={getStatus}
+      getValue={getValue}
+    >
+      {({ value }) => (
         <Input.TextInput
           type='number'
           disabled={!!readonly}
           placeholder={placeholder}
-          value={getValue()}
-          onChange={(event) => onValueChange(type, event.target.value)}
+          value={value ?? ''}
+          onChange={(event) => onValueChange(type, safeParseFloat(event.target.value) || 0)}
           onBlur={onBlur}
         />
       )}
-      {inline && <Input.DescriptionAndValidation>{error}</Input.DescriptionAndValidation>}
-    </Input.Root>
+    </FormFieldWrapper>
   );
 };

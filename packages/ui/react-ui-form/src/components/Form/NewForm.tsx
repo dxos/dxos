@@ -21,7 +21,7 @@ import { FormContext } from './FormRoot';
 // [ ] Test 22 usages.
 
 // [ ] NewForm.stories.tsx
-//  [ ] Fix onSave callback (loses focus on change)
+//  [x] Fix onSave callback (loses focus on change)
 //  [ ] Fix onCancel (restore values)
 //  [ ] Fix autosave
 //  [x] Keyboard handler (autosave).
