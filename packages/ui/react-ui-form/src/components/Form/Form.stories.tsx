@@ -7,7 +7,7 @@ import * as Schema from 'effect/Schema';
 import React, { useCallback, useState } from 'react';
 
 import { Format, Obj, Ref, Type } from '@dxos/echo';
-import { type AnyProperties, type TypeAnnotation } from '@dxos/echo/internal';
+import { type AnyProperties } from '@dxos/echo/internal';
 import { Tooltip } from '@dxos/react-ui';
 import { withLayoutVariants, withTheme } from '@dxos/react-ui/testing';
 import { TestSchema } from '@dxos/schema/testing';
@@ -17,8 +17,6 @@ import { TestLayout } from '../testing';
 
 import { SelectField } from './fields';
 import { Form, type FormProps } from './Form';
-
-// TODO(burdon): Use @dxos/types.
 
 type StoryProps<T extends AnyProperties> = {
   debug?: boolean;
@@ -50,8 +48,8 @@ const DefaultStory = <T extends AnyProperties = any>({
 };
 
 const RefStory = <T extends AnyProperties = any>(props: StoryProps<T>) => {
-  const onQueryRefOptions = useCallback((typeInfo: TypeAnnotation) => {
-    switch (typeInfo.typename) {
+  const onQueryRefOptions = useCallback<NonNullable<FormProps<T>['onQueryRefOptions']>>(({ typename }) => {
+    switch (typename) {
       case TestSchema.Person.typename:
         return [
           { dxn: Obj.getDXN(contact1), label: 'Alice' },
