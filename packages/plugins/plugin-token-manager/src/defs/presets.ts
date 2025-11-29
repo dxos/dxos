@@ -10,6 +10,7 @@ export type OAuthPreset = {
   source: string;
   provider: OAuthProvider;
   scopes: string[];
+  hintRequired?: boolean;
 };
 
 export const OAUTH_PRESETS: OAuthPreset[] = [
@@ -19,5 +20,13 @@ export const OAUTH_PRESETS: OAuthPreset[] = [
     source: 'google.com',
     provider: OAuthProvider.GOOGLE,
     scopes: ['https://www.googleapis.com/auth/gmail.readonly', 'https://www.googleapis.com/auth/calendar.readonly'],
+  },
+  {
+    label: 'Bluesky',
+    note: 'Bluesky account access.',
+    source: 'bsky.app',
+    provider: OAuthProvider.BLUESKY,
+    scopes: ['transition:email', 'transition:generic'],
+    hintRequired: true,
   },
 ];
