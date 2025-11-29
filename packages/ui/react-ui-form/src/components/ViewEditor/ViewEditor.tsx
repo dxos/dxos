@@ -8,9 +8,9 @@ import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 import React, { forwardRef, useCallback, useImperativeHandle, useMemo, useState } from 'react';
 
-import { QueryAST } from '@dxos/echo';
+import { Filter, Query, QueryAST } from '@dxos/echo';
 import { EchoSchema, Format, type JsonProp, isMutable, toJsonSchema } from '@dxos/echo/internal';
-import { Filter, Query, type SchemaRegistry } from '@dxos/echo-db';
+import { type SchemaRegistry } from '@dxos/echo-db';
 import { invariant } from '@dxos/invariant';
 import { Callout, IconButton, Input, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { QueryForm, type QueryFormProps } from '@dxos/react-ui-components';

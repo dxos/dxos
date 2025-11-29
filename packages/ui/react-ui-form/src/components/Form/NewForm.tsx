@@ -34,6 +34,7 @@ import { FormContext } from './FormRoot';
 // [ ] Use FormFieldWrapper uniformly.
 // [ ] Inline tables for object arrays
 // [ ] Refs, Selectors
+// [ ] Remove @dxos/echo-db deps
 
 //
 // Context
