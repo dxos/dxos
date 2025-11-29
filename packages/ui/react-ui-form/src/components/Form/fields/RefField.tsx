@@ -56,6 +56,7 @@ export const RefField = ({
   placeholder,
   array,
   ast,
+  getStatus,
   getValue,
   createOptionLabel,
   createOptionIcon,
@@ -65,7 +66,7 @@ export const RefField = ({
   createInitialValuePath,
   onQueryRefOptions,
   onValueChange,
-  ...restInputProps
+  ...props
 }: RefFieldProps) => {
   const { t } = useTranslation(translationKey);
   const refTypeInfo = useMemo(
@@ -82,7 +83,7 @@ export const RefField = ({
     // If ref type is expando, fall back to taking a DXN in string format.
     return (
       <RefFieldFallback
-        {...{ ast, type, label, placeholder, readonly, inline, getValue, onBlur, onValueChange, ...restInputProps }}
+        {...{ ast, type, label, placeholder, readonly, inline, getValue, getStatus, onBlur, onValueChange, ...props }}
       />
     );
   }
@@ -149,11 +150,7 @@ export const RefField = ({
     [onCreate, updateOptions],
   );
 
-  if (!refTypeInfo) {
-    return null;
-  }
-
-  const { status, error } = restInputProps.getStatus();
+  const { status, error } = getStatus();
 
   const items = handleGetValue();
   const selectedIds = useMemo(() => items.map((i: any) => i.id), [items]);
@@ -172,6 +169,10 @@ export const RefField = ({
     },
     [array, selectedIds, handleUpdate],
   );
+
+  if (!refTypeInfo) {
+    return null;
+  }
 
   // NOTE(thure): I left both predicates in-place in case we decide to add variants which do render readonly but empty values.
   return readonly && items.length < 1 ? null : (
