@@ -15,7 +15,7 @@ export type SelectFieldOptions = FormFieldComponentProps & {
 export const SelectField = ({
   type,
   label,
-  inputOnly,
+  inline,
   readonly,
   placeholder,
   options,
@@ -30,7 +30,7 @@ export const SelectField = ({
 
   return readonly && !value ? null : (
     <Input.Root validationValence={status}>
-      {!inputOnly && <FormFieldLabel error={error} readonly={readonly} label={label} />}
+      {!inline && <FormFieldLabel error={error} readonly={readonly} label={label} />}
       {readonly === 'static' ? (
         <p>{options?.find(({ value: optionValue }) => optionValue === value)?.label ?? String(value)}</p>
       ) : (
@@ -52,7 +52,7 @@ export const SelectField = ({
           </Select.Portal>
         </Select.Root>
       )}
-      {inputOnly && <Input.DescriptionAndValidation>{error}</Input.DescriptionAndValidation>}
+      {inline && <Input.DescriptionAndValidation>{error}</Input.DescriptionAndValidation>}
     </Input.Root>
   );
 };

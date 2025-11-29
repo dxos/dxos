@@ -9,7 +9,7 @@ import { Input } from '@dxos/react-ui';
 import { type FormFieldComponentProps } from '../FormFieldComponent';
 import { FormFieldWrapper } from '../FormFieldWrapper';
 
-export const TextField = ({
+export const TextAreaField = ({
   type,
   label,
   inline,
@@ -28,7 +28,8 @@ export const TextField = ({
       getStatus={getStatus}
       getValue={getValue}
       Component={({ value }) => (
-        <Input.TextInput
+        <Input.TextArea
+          rows={3}
           disabled={!!readonly}
           placeholder={placeholder}
           value={value}

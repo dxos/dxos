@@ -30,6 +30,7 @@ export const TriggerEditor = ({ space, trigger, readonlySpec, types, tags, onSav
   };
 
   const handleRefQueryLookup = useRefQueryLookupHandler({ space });
+
   const fieldMap = useCustomInputs({ space, readonlySpec, types, tags, onQueryRefOptions: handleRefQueryLookup });
 
   return (

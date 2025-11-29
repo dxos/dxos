@@ -9,10 +9,13 @@ import * as StringEffect from 'effect/String';
 import React, { useMemo } from 'react';
 
 import { Format } from '@dxos/echo';
+import { type AnyProperties } from '@dxos/echo/internal';
 import { createJsonPath, findNode, getDiscriminatedType, isDiscriminatedUnion } from '@dxos/effect';
+import { useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 import { type ProjectionModel, type SchemaProperty } from '@dxos/schema';
 
+import { translationKey } from '../../translations';
 import { getRefProps } from '../../util';
 
 import {
@@ -24,22 +27,23 @@ import {
   RefField,
   type RefFieldProps,
   SelectField,
+  TextAreaField,
   TextField,
 } from './fields';
 import {
   type FormFieldComponent,
   type FormFieldComponentProps,
-  type FormFieldLookup,
   type FormFieldMap,
+  type FormFieldProvider,
 } from './FormFieldComponent';
 import { FormFieldSet } from './FormFieldSet';
 import { useFormFieldState } from './FormRoot';
 
-export type FormFieldProps = {
+export type FormFieldProps<T extends AnyProperties> = {
   /**
    * Property to render.
    */
-  property: SchemaProperty<any>;
+  property: SchemaProperty<T>;
 
   /**
    * Path to the current object from the root. Used with nested forms.
@@ -55,20 +59,16 @@ export type FormFieldProps = {
    * Map of custom renderers for specific properties.
    * Prefer fieldProvider for plugin specific input surfaces.
    */
+  // TODO(burdon): Remove (convert to fieldProvider).
   fieldMap?: FormFieldMap;
 
   /**
    * Function to lookup custom renderers for specific properties.
    */
-  fieldProvider?: FormFieldLookup;
-
-  /**
-   * Indicates input used in a list.
-   */
-  // TODO(burdon): Rename listItem?
-  inline?: boolean;
+  fieldProvider?: FormFieldProvider;
 } & Pick<
   RefFieldProps,
+  | 'inline'
   | 'readonly'
   | 'createSchema'
   | 'createOptionLabel'
@@ -78,7 +78,7 @@ export type FormFieldProps = {
   | 'onQueryRefOptions'
 >;
 
-export const FormField = ({
+export const FormField = <T extends AnyProperties>({
   property,
   path,
   projection,
@@ -92,23 +92,25 @@ export const FormField = ({
   createInitialValuePath,
   onCreate,
   onQueryRefOptions,
-}: FormFieldProps) => {
+}: FormFieldProps<T>) => {
+  const { t } = useTranslation(translationKey);
   const { ast, name, type, format, array, options, title, description, examples } = property;
 
   const label = useMemo(() => title ?? Function.pipe(name, StringEffect.capitalize), [title, name]);
   const placeholder = useMemo(
-    () => (examples?.length ? `Example: "${examples[0]}"` : description),
+    () => (examples?.length ? `${t('example placeholder')}: ${examples[0]}` : description),
     [examples, description],
   );
 
   const fieldState = useFormFieldState(FormField.displayName, path);
   const fieldProps: FormFieldComponentProps = {
+    ast,
     type,
     format,
     label,
     placeholder,
+    inline,
     readonly,
-    inputOnly: inline,
     ...fieldState,
   };
 
@@ -134,7 +136,14 @@ export const FormField = ({
 
   if (array) {
     return (
-      <ArrayField fieldProps={fieldState} property={property} path={path} readonly={readonly} fieldMap={fieldMap} />
+      <ArrayField<T>
+        fieldProps={fieldState}
+        property={property}
+        path={path}
+        readonly={readonly}
+        fieldMap={fieldMap}
+        fieldProvider={fieldProvider}
+      />
     );
   }
 
@@ -227,6 +236,19 @@ const getFormField = (property: SchemaProperty<any>): FormFieldComponent | undef
   const { type, format } = property;
 
   //
+  // Standard formats.
+  //
+
+  switch (format) {
+    case Format.TypeFormat.GeoPoint:
+      return GeoPointField;
+    case Format.TypeFormat.Markdown:
+      return MarkdownField;
+    case Format.TypeFormat.Text:
+      return TextAreaField;
+  }
+
+  //
   // Standard types.
   //
 
@@ -237,16 +259,5 @@ const getFormField = (property: SchemaProperty<any>): FormFieldComponent | undef
       return NumberField;
     case 'boolean':
       return BooleanField;
-  }
-
-  //
-  // Standard formats.
-  //
-
-  switch (format) {
-    case Format.TypeFormat.GeoPoint:
-      return GeoPointField;
-    case Format.TypeFormat.Markdown:
-      return MarkdownField;
   }
 };

@@ -21,10 +21,11 @@ const Person = Schema.Struct({
   active: Schema.optional(Schema.Boolean.annotations({ title: 'Active' })),
   age: Schema.optional(Schema.Number.annotations({ title: 'Age' })),
   location: Format.GeoPoint.annotations({ title: 'Location' }),
+  // TODO(burdon): Change to inline object.
   identities: Schema.optional(Schema.Array(Schema.String).annotations({ title: 'Identities' })),
 }).pipe(
   Type.Obj({
-    typename: 'dxos.org/type/Person', // TODO(burdon): /schema
+    typename: 'dxos.org/type/Person', // TODO(burdon): Change all types to /schema
     version: '0.1.0',
   }),
 );
@@ -87,17 +88,24 @@ const meta = {
 
 export default meta;
 
-type Story<T extends Type.Obj.Any> = StoryObj<StoryProps<T>>;
+// TODO(burdon): Fix: Story<Person>
+//  error TS2322: Type 'obj<Struct<{ name: optional<SchemaClass<string, string, never>>;
+//  is not assignable to type 'Schema<Person, Person, never> & Schema<Person, any, never>'.
+// type Story<T extends Type.Obj.Any> = StoryObj<StoryProps<T>>;
+type Story<T extends AnyProperties> = StoryObj<StoryProps<T>>;
 
-// TODO(burdon): Fix.
-// export const Default: Story<Person> = {
 export const Default: Story<any> = {
   args: {
     schema: Person,
     values: {
       name: 'Alice',
     },
-    onCancel: () => {},
+    onSave: (values, meta) => {
+      console.log('save', JSON.stringify({ values, meta }, null, 2));
+    },
+    onCancel: () => {
+      console.log('cancel');
+    },
   },
 };
 

@@ -3,18 +3,33 @@
 //
 
 import { createContext } from '@radix-ui/react-context';
-import React, { type PropsWithChildren } from 'react';
+import React, { type PropsWithChildren, useRef } from 'react';
 
 import { type AnyProperties } from '@dxos/echo/internal';
-import { IconButton, type ThemedClassName, useTranslation } from '@dxos/react-ui';
+import { IconButton, type IconButtonProps, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
-import { type MakeOptional } from '@dxos/util';
 
-import { type FormHandler, useFormHandler } from '../../hooks';
+import { type FormHandler, type FormHandlerProps, useFormHandler, useKeyHandler } from '../../hooks';
 import { translationKey } from '../../translations';
 
 import { FormFieldSet, type FormFieldSetProps } from './FormFieldSet';
 import { FormContext } from './FormRoot';
+
+// [x] TextArea
+// [x] Use NewForm with FeedbackForm.
+// [ ] Use NewForm with ViewEditor.
+// [ ] Use NewForm with TriggerEditor.FunctionInputEditor.
+
+// [ ] Inline tables for object arrays
+// [ ] Use FormFieldWrapper uniformly.
+// [ ] Unify readonly/inline modes.
+
+// [ ] Refs, Selectors
+// [ ] Keyboard handler (autosave).
+// [ ] Additional root props: options, callbacks
+// [ ] Reaplce context, hooks.
+// [ ] Status (validation) message must include field (currently just "is missing")
+// [ ] Unify fieldMap/fieldProvider map callback (with adapter for map).
 
 //
 // Context
@@ -22,15 +37,20 @@ import { FormContext } from './FormRoot';
 
 type NewFormContextValue<T extends AnyProperties = any> = {
   /**
-   * Show debug info.
-   */
-  debug?: boolean;
-
-  /**
    * Form handler.
    */
   form: FormHandler<T>;
-} & Pick<FormFieldSetProps, 'readonly'>;
+
+  /**
+   * Auto-save the form when the values change.
+   */
+  autoSave?: boolean;
+
+  /**
+   * Show debug info.
+   */
+  debug?: boolean;
+} & Pick<FormFieldSetProps<T>, 'readonly' | 'fieldMap' | 'fieldProvider'>;
 
 const [NewFormContextProvider, useNewFormContext] = createContext<NewFormContextValue>('NewForm');
 
@@ -49,27 +69,23 @@ type NewFormRootProps<T extends AnyProperties = AnyProperties> = PropsWithChildr
      * Called when the form is canceled to abandon/undo any pending changes.
      */
     onCancel?: () => void;
-  } &
-    //
-    MakeOptional<Pick<FormHandler<T>, 'schema' | 'values'>, 'values'> &
-    MakeOptional<Pick<NewFormContextValue<T>, 'debug' | 'readonly'>, 'readonly'>
+  } & (Pick<FormHandlerProps<T>, 'schema' | 'values'> & Omit<NewFormContextValue<T>, 'form'>)
 >;
 
 const NewFormRoot = <T extends AnyProperties = AnyProperties>({
   children,
-  debug,
   schema,
-  values: valuesProp = {},
+  values,
   onSave,
   onCancel,
   ...props
 }: NewFormRootProps<T>) => {
-  const form = useFormHandler({ schema, initialValues: valuesProp, onSave, onCancel, ...props });
+  const form = useFormHandler({ schema, values, onSave, onCancel, ...props });
 
   return (
     // TODO(burdon): Temporarily include old context.
     <FormContext.Provider value={form}>
-      <NewFormContextProvider form={form} debug={debug} {...props}>
+      <NewFormContextProvider form={form} {...props}>
         {children}
       </NewFormContextProvider>
     </FormContext.Provider>
@@ -80,12 +96,21 @@ NewFormRoot.displayName = 'NewForm.Root';
 
 //
 // Content
+// TODO(burdon): Viewport with scroller.
 //
 
 type NewFormContentProps = ThemedClassName<PropsWithChildren<{}>>;
 
 const NewFormContent = ({ classNames, children }: NewFormContentProps) => {
-  return <div className={mx('flex flex-col is-full pli-cardSpacingInline', classNames)}>{children}</div>;
+  const { form, autoSave } = useNewFormContext(NewFormContent.displayName);
+  const ref = useRef<HTMLDivElement>(null);
+  useKeyHandler(ref.current, form, autoSave);
+
+  return (
+    <div ref={ref} className={mx('flex flex-col is-full pli-cardSpacingInline', classNames)}>
+      {children}
+    </div>
+  );
 };
 
 NewFormContent.displayName = 'NewForm.Content';
@@ -97,9 +122,9 @@ NewFormContent.displayName = 'NewForm.Content';
 type NewFormFieldSetProps = ThemedClassName<{}>;
 
 const NewFormFieldSet = ({ classNames }: NewFormFieldSetProps) => {
-  const { form, readonly } = useNewFormContext(NewFormFieldSet.displayName);
+  const { form, ...props } = useNewFormContext(NewFormFieldSet.displayName);
 
-  return <FormFieldSet classNames={classNames} schema={form.schema} readonly={readonly} />;
+  return <FormFieldSet classNames={classNames} schema={form.schema} {...props} />;
 };
 
 NewFormFieldSet.displayName = 'NewForm.FieldSet';
@@ -132,6 +157,7 @@ const NewFormActions = ({ classNames }: NewFormActionsProps) => {
       {form.onSave && (
         <IconButton
           type='submit'
+          variant='primary'
           disabled={!form.canSave}
           icon='ph--check--regular'
           iconEnd
@@ -147,6 +173,34 @@ const NewFormActions = ({ classNames }: NewFormActionsProps) => {
 NewFormActions.displayName = 'NewForm.Actions';
 
 //
+// Submit
+//
+
+type NewFormSubmitProps = ThemedClassName<Partial<Pick<IconButtonProps, 'icon' | 'label'>>>;
+
+const NewFormSubmit = ({ classNames, label, icon }: NewFormSubmitProps) => {
+  const { t } = useTranslation(translationKey);
+  const { form } = useNewFormContext(NewFormSubmit.displayName);
+
+  return (
+    <div role='none' className={mx('flex is-full pbs-cardSpacingBlock', classNames)}>
+      <IconButton
+        classNames='is-full'
+        type='submit'
+        variant='primary'
+        disabled={!form.canSave}
+        icon={icon ?? 'ph--check--regular'}
+        label={label ?? t('save button label')}
+        onClick={form.onSave}
+        data-testid='save-button'
+      />
+    </div>
+  );
+};
+
+NewFormSubmit.displayName = 'NewForm.Submit';
+
+//
 // NewForm
 // https://www.radix-ui.com/primitives/docs/guides/composition
 //
@@ -156,6 +210,7 @@ export const NewForm = {
   Content: NewFormContent,
   FieldSet: NewFormFieldSet,
   Actions: NewFormActions,
+  Submit: NewFormSubmit,
 };
 
 export { useNewFormContext };

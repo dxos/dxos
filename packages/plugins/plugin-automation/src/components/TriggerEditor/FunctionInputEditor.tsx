@@ -70,7 +70,6 @@ export const FunctionInputEditor = ({
   return (
     <>
       <h3 className='text-md'>Function parameters</h3>
-      {/* TODO(ZaymonFC): Try using <FormFieldSet /> internal component for nesting. This would allow errors to flow up to the root context. */}
       <Form
         schema={effectSchema}
         values={values}

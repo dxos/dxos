@@ -27,6 +27,8 @@ export const validateSchema = <T>(schema: Schema.Schema<T>, values: any): Valida
         .join('.'),
     }));
   }
-
-  return undefined;
 };
+
+export const adaptValidationMessage = <T extends string | undefined | null = string | undefined | null>(
+  message?: T,
+): T => (message?.endsWith('is missing') ? 'Required field' : message) as T;

@@ -3,62 +3,28 @@
 //
 
 import type * as Schema from 'effect/Schema';
-import * as SchemaAST from 'effect/SchemaAST';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { type AnyProperties, getValue as getPathValue, setValue as setPathValue } from '@dxos/echo/internal';
 import { type JsonPath, type SimpleType, createJsonPath, fromEffectValidationPath } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { type ValidationError, validateSchema } from '@dxos/schema';
+import { type ValidationError, adaptValidationMessage, validateSchema } from '@dxos/schema';
 import { type MaybePromise } from '@dxos/util';
 
 /**
- * Form handler properties and methods.
+ * Form properties.
  */
-export type FormHandler<T extends AnyProperties> = {
-  /**
-   * Initial values (which may not pass validation).
-   */
-  values: Partial<T>;
-
-  errors: Record<JsonPath, string>;
-  touched: Record<JsonPath, boolean>;
-  changed: Record<JsonPath, boolean>;
-
-  /**
-   * Whether the form can be saved (i.e., data is valid).
-   */
-  canSave: boolean;
-  formIsValid: boolean;
-
-  onSave: () => void;
-  onCancel: () => void;
-
-  //
-  // Form input component helpers.
-  //
-
-  getStatus: (path: string | (string | number)[]) => { status?: 'error'; error?: string };
-  getValue: <V>(path: (string | number)[]) => V | undefined;
-  onBlur: (path: (string | number)[]) => void;
-  onValueChange: <V>(path: (string | number)[], type: SimpleType, value: V) => void;
-} & Pick<FormOptions<T>, 'schema'>;
-
-/**
- * Hook options.
- */
-export interface FormOptions<T extends AnyProperties> {
+export interface FormHandlerProps<T extends AnyProperties> {
   /**
    * Effect schema (Type literal).
    */
-  schema: Schema.Schema<T, any>;
+  schema?: Schema.Schema<T, any>;
 
   /**
    * Initial values (which may not pass validation).
    */
-  // TODO(burdon): Rename initial values?
-  initialValues: Partial<T>;
+  values?: Partial<T>;
 
   /**
    * Callback for value changes. Note: This is called even when values are invalid.
@@ -92,28 +58,59 @@ export interface FormOptions<T extends AnyProperties> {
 }
 
 /**
+ * Form handler properties and methods.
+ */
+export type FormHandler<T extends AnyProperties> = {
+  /**
+   * Initial values (which may not pass validation).
+   */
+  values: Partial<T>;
+
+  errors: Record<JsonPath, string>;
+  touched: Record<JsonPath, boolean>;
+  changed: Record<JsonPath, boolean>;
+
+  /**
+   * Whether the form can be saved (i.e., data is valid).
+   */
+  canSave: boolean;
+  formIsValid: boolean;
+
+  onSave: () => void;
+  onCancel: () => void;
+
+  //
+  // Form input component helpers.
+  //
+
+  getStatus: (path: string | (string | number)[]) => { status?: 'error'; error?: string };
+  getValue: <V>(path: (string | number)[]) => V | undefined;
+  onBlur: (path: (string | number)[]) => void;
+  onValueChange: <V>(path: (string | number)[], type: SimpleType, value: V) => void;
+} & Pick<FormHandlerProps<T>, 'schema'>;
+
+/**
  * Creates a hook for managing form state, including values, validation, and submission.
  * Deeply integrated with `@dxos/schema` for schema-based validation.
  */
 export const useFormHandler = <T extends AnyProperties>({
   schema,
-  initialValues,
+  values: valuesProp,
   onValuesChanged,
   onValidate,
   onValid,
   onSave,
   onCancel,
-}: FormOptions<T>): FormHandler<T> => {
-  invariant(SchemaAST.isTypeLiteral(schema.ast));
-
-  const [values, setValues] = useState<Partial<T>>(initialValues);
-
+  ...props
+}: FormHandlerProps<T>): FormHandler<T> => {
+  // TODO(burdon): Change to useControlledValue.
+  const [values, setValues] = useState<Partial<T>>(valuesProp ?? {});
   useEffect(() => {
-    setValues(initialValues);
-  }, [initialValues]);
+    setValues(valuesProp ?? {});
+  }, [valuesProp]);
 
-  const [touched, setTouched] = useState<Record<JsonPath, boolean>>(createKeySet(initialValues, false));
-  const [changed, setChanged] = useState<Record<JsonPath, boolean>>(createKeySet(initialValues, false));
+  const [touched, setTouched] = useState<Record<JsonPath, boolean>>(createKeySet(values, false));
+  const [changed, setChanged] = useState<Record<JsonPath, boolean>>(createKeySet(values, false));
   const [errors, setErrors] = useState<Record<JsonPath, string>>({});
   const [saving, setSaving] = useState(false);
 
@@ -123,6 +120,10 @@ export const useFormHandler = <T extends AnyProperties>({
 
   const validate = useCallback(
     (values: Partial<T>): values is T => {
+      if (!schema) {
+        return false;
+      }
+
       let errors: ValidationError[] = validateSchema(schema, values) ?? [];
       if (errors.length === 0 && onValidate) {
         const validatedValues = values as T;
@@ -190,10 +191,11 @@ export const useFormHandler = <T extends AnyProperties>({
   const getStatus = useCallback<FormHandler<T>['getStatus']>(
     (path) => {
       const jsonPath = Array.isArray(path) ? createJsonPath(path) : path;
-      const matchingError = Object.entries(errors).find(
-        ([errorPath]) =>
-          errorPath === jsonPath || errorPath.startsWith(`${jsonPath}.`) || errorPath.startsWith(`${jsonPath}[`),
-      );
+      const [_, error] =
+        Object.entries(errors).find(
+          ([errorPath]) =>
+            errorPath === jsonPath || errorPath.startsWith(`${jsonPath}.`) || errorPath.startsWith(`${jsonPath}[`),
+        ) ?? [];
 
       // Only show errors for touched fields.
       const isTouched = touched[jsonPath as JsonPath];
@@ -205,8 +207,8 @@ export const useFormHandler = <T extends AnyProperties>({
       }
 
       return {
-        status: matchingError ? 'error' : undefined,
-        error: matchingError ? matchingError[1] : undefined,
+        status: error ? 'error' : undefined,
+        error: error ? (adaptValidationMessage(error) ?? undefined) : undefined,
       };
     },
     [errors, touched],
@@ -269,13 +271,15 @@ export const useFormHandler = <T extends AnyProperties>({
 
       // Field utils.
       getStatus,
-      getValue: getValue,
+      getValue,
       onBlur,
       onValueChange,
 
       // Actions.
       onSave: handleSave,
       onCancel: handleCancel,
+
+      ...props,
     }),
     [
       schema,

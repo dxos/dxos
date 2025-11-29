@@ -87,14 +87,14 @@ describe('properties', () => {
       });
 
       type TestType = Schema.Schema.Type<typeof TestSchema>;
-
       const obj: TestType = {
         name: 'DXOS',
       };
 
-      const props = getSchemaProperties(TestSchema.ast, obj);
-      expect(props.length).to.eq(2);
-
+      {
+        const props = getSchemaProperties(TestSchema.ast, obj);
+        expect(props.length).to.eq(2);
+      }
       {
         const props = getSchemaProperties(TestSpecSchema.ast, {});
         expect(props.length).to.eq(1);

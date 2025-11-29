@@ -8,7 +8,7 @@ import type * as Schema from 'effect/Schema';
 import React, { useCallback, useMemo, useRef, useState } from 'react';
 
 import { debounce } from '@dxos/async';
-import type { Client } from '@dxos/client';
+import { type Client } from '@dxos/client';
 import { Format, TypeEnum } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
 import { type DxGridAxis, type DxGridPosition } from '@dxos/lit-grid';
@@ -23,7 +23,7 @@ import {
   parseCellIndex,
   useGridContext,
 } from '@dxos/react-ui-grid';
-import { type FieldProjection } from '@dxos/schema';
+import { type FieldProjection, adaptValidationMessage } from '@dxos/schema';
 
 import { type ModalController, type TableModel } from '../../model';
 
@@ -44,9 +44,6 @@ export type TableCellEditorProps = {
   onSave?: () => void;
   client?: Client;
 };
-
-const adaptValidationMessage = (message: string | null) =>
-  message ? (message.endsWith('is missing') ? 'Can’t be blank' : message) : null;
 
 export const TableValueEditor = ({
   model,

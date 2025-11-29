@@ -2,64 +2,52 @@
 // Copyright 2025 DXOS.org
 //
 
-import type * as Schema from 'effect/Schema';
 import React, { forwardRef, useMemo } from 'react';
 
+import { type AnyProperties } from '@dxos/echo/internal';
 import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 import { type SchemaProperty, getSchemaProperties } from '@dxos/schema';
 import { isTruthy } from '@dxos/util';
 
-import { type QueryRefOptions } from '../../hooks';
+import { type FormHandlerProps } from '../../hooks';
 
 import { FormErrorBoundary } from './FormErrorBoundary';
 import { FormField, type FormFieldProps } from './FormField';
 import { useFormValues } from './FormRoot';
 
-export type FormFieldSetProps = ThemedClassName<
+export type FormFieldSetProps<T extends AnyProperties> = ThemedClassName<
   {
     testId?: string;
-    schema: Schema.Schema.All;
-    exclude?: (props: SchemaProperty<any>[]) => SchemaProperty<any>[];
+    exclude?: (props: SchemaProperty<T>[]) => SchemaProperty<T>[];
     // TODO(burdon): Change to function (dynamic?)
     sort?: string[];
-    onQueryRefOptions?: QueryRefOptions;
-  } & Pick<
-    FormFieldProps,
-    | 'path'
-    | 'projection'
-    | 'readonly'
-    | 'fieldMap'
-    | 'fieldProvider'
-    | 'createSchema'
-    | 'createOptionLabel'
-    | 'createOptionIcon'
-    | 'createInitialValuePath'
-    | 'onCreate'
-    | 'onQueryRefOptions'
-  >
+  } & Pick<FormHandlerProps<T>, 'schema'> &
+    Pick<
+      FormFieldProps<T>,
+      | 'path'
+      | 'projection'
+      | 'readonly'
+      | 'fieldMap'
+      | 'fieldProvider'
+      | 'createSchema'
+      | 'createOptionLabel'
+      | 'createOptionIcon'
+      | 'createInitialValuePath'
+      | 'onCreate'
+      | 'onQueryRefOptions'
+    >
 >;
 
-export const FormFieldSet = forwardRef<HTMLDivElement, FormFieldSetProps>(
-  (
-    {
-      classNames,
-      schema,
-      path,
-      exclude,
-      sort,
-      projection,
-      readonly,
-      fieldMap,
-      fieldProvider,
-      onQueryRefOptions,
-      ...props
-    },
-    forwardRef,
-  ) => {
+export const FormFieldSet = forwardRef<HTMLDivElement, FormFieldSetProps<any>>(
+  ({ classNames, schema, path, exclude, sort, projection, ...props }, forwardRef) => {
     const values = useFormValues(FormFieldSet.displayName!, path);
 
     const properties = useMemo(() => {
+      if (!schema) {
+        return [];
+      }
+
       const props = getSchemaProperties(schema.ast, values, { form: true });
 
       // Use projection-based field management when view and projection are available.
@@ -101,11 +89,7 @@ export const FormFieldSet = forwardRef<HTMLDivElement, FormFieldSetProps>(
                 <FormField
                   property={property}
                   path={[...(path ?? []), property.name]}
-                  readonly={readonly}
                   projection={projection}
-                  fieldMap={fieldMap}
-                  fieldProvider={fieldProvider}
-                  onQueryRefOptions={onQueryRefOptions}
                   {...props}
                 />
               </FormErrorBoundary>

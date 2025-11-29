@@ -2,22 +2,13 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, {
-  type PropsWithChildren,
-  type RefObject,
-  createContext,
-  useCallback,
-  useContext,
-  useEffect,
-  useMemo,
-} from 'react';
+import React, { type PropsWithChildren, type RefObject, createContext, useContext, useMemo } from 'react';
 
-import { addEventListener } from '@dxos/async';
 import { raise } from '@dxos/debug';
 import { type AnyProperties, getValue } from '@dxos/echo/internal';
 import { type SimpleType, createJsonPath } from '@dxos/effect';
 
-import { type FormHandler, type FormOptions, useFormHandler } from '../../hooks';
+import { type FormHandler, type FormHandlerProps, useFormHandler, useKeyHandler } from '../../hooks';
 
 import { type FormFieldStateProps } from './FormFieldComponent';
 
@@ -32,10 +23,10 @@ export const useFormContext = <T extends AnyProperties>(componentName: string): 
 /**
  * Get the current form values.
  */
-export const useFormValues = (componentName: string, path: (string | number)[] = []): any => {
-  const { values: formValues } = useFormContext(componentName);
+export const useFormValues = <T extends AnyProperties>(componentName: string, path: (string | number)[] = []): T => {
+  const { values } = useFormContext(componentName);
   const jsonPath = createJsonPath(path);
-  return getValue(formValues, jsonPath) as AnyProperties;
+  return getValue(values, jsonPath) as T;
 };
 
 /**
@@ -55,59 +46,20 @@ export const useFormFieldState = (componentName: string, path: (string | number)
   );
 };
 
-export type FormProviderProps = PropsWithChildren<
-  FormOptions<any> & {
+export type FormProviderProps<T extends AnyProperties> = PropsWithChildren<
+  FormHandlerProps<T> & {
     formRef?: RefObject<HTMLDivElement | null>;
     autoSave?: boolean;
   }
 >;
 
-export const FormProvider = ({ children, formRef, autoSave, ...formOptions }: FormProviderProps) => {
-  const form = useFormHandler(formOptions);
+export const FormProvider = <T extends AnyProperties>({
+  children,
+  formRef,
+  autoSave,
+  ...FormProps
+}: FormProviderProps<T>) => {
+  const form = useFormHandler(FormProps);
   useKeyHandler(formRef?.current ?? null, form, autoSave);
   return <FormContext.Provider value={form}>{children}</FormContext.Provider>;
-};
-
-/**
- * Key handler.
- */
-const useKeyHandler = (formElement: HTMLDivElement | null, form: FormHandler<any>, autoSave?: boolean) => {
-  const handleKeyDown = useCallback(
-    (event: KeyboardEvent) => {
-      switch (event.key) {
-        case 'Enter': {
-          const modifier = event.ctrlKey || event.altKey || event.metaKey || event.shiftKey;
-          const isTextarea = (event.target as HTMLElement).tagName.toLowerCase() === 'textarea';
-
-          // E.g., opt-out on combobox selection.
-          const optOut =
-            (event.target as HTMLElement).hasAttribute('data-no-submit') ||
-            (event.target as HTMLElement).closest('[data-no-submit]') !== null;
-
-          // TODO(burdon): Explain why disabled if modifier.
-          if ((isTextarea ? event.metaKey : !modifier) && !optOut) {
-            if (!autoSave && form.canSave) {
-              form.onSave();
-            }
-
-            // TODO(burdon): WHY?
-            if (autoSave && form.formIsValid) {
-              (event.target as HTMLElement).blur();
-            }
-          }
-          break;
-        }
-      }
-    },
-    [form.canSave, form.formIsValid, form.onSave, autoSave],
-  );
-
-  useEffect(() => {
-    if (!formElement) {
-      return;
-    }
-
-    // TODO(burdon): Move to @dxos/dom-util.
-    return addEventListener(formElement, 'keydown', handleKeyDown);
-  }, [formElement, handleKeyDown]);
 };
