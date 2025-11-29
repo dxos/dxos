@@ -120,7 +120,7 @@
     "@effect/platform": "0.92.1",
     "@effect/platform-node": "0.98.3",
     "@sentry/vite-plugin": "^4.0.2",
-    "@tauri-apps/cli": "^2.8.4",
+    "@tauri-apps/cli": "^2.9.1",
     "@types/jsdom": "^21.1.7",
     "@types/react": "~19.2.2",
     "@types/react-dom": "~19.2.2",
