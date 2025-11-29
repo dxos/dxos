@@ -95,8 +95,8 @@ export const SelectOptionField = ({
     [options, type, onValueChange],
   );
 
-  const handleKeyDown = useCallback((e: KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter') {
+  const handleKeyDown = useCallback((ev: KeyboardEvent<HTMLInputElement>) => {
+    if (ev.key === 'Enter') {
       setSelectedId(null);
     }
   }, []);
@@ -123,7 +123,7 @@ export const SelectOptionField = ({
         {options && (
           <List.Root
             items={options}
-            isItem={(item) => true}
+            isItem={(_item) => true}
             onMove={readonly ? undefined : handleMove}
             readonly={!!readonly}
           >

@@ -49,6 +49,7 @@ export const FormFieldSet = forwardRef<HTMLDivElement, FormFieldSetProps<any>>(
       }
 
       const props = getSchemaProperties(schema.ast, values, { form: true });
+      console.log('updated', props);
 
       // Use projection-based field management when view and projection are available.
       if (projection) {
@@ -78,7 +79,8 @@ export const FormFieldSet = forwardRef<HTMLDivElement, FormFieldSetProps<any>>(
       // Fallback to legacy filter/sort behavior.
       const filtered = exclude ? exclude(props) : props;
       return sort ? filtered.sort((a, b) => sort.indexOf(a.name) - sort.indexOf(b.name)) : filtered;
-    }, [schema, values, exclude, sort, projection?.fields]);
+    }, [schema, /*values,*/ exclude, sort, projection?.fields]);
+    // TODO(burdon): Update when values change?
 
     return (
       <div role='form' className={mx('is-full', classNames)} ref={forwardRef}>

@@ -10,7 +10,7 @@ import React, { Fragment, useCallback } from 'react';
 import { type AnyProperties } from '@dxos/echo/internal';
 import { SimpleType, findNode, getDiscriminatedType, isDiscriminatedUnion } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
-import { IconButton, Input, useTranslation } from '@dxos/react-ui';
+import { IconButton, useTranslation } from '@dxos/react-ui';
 import { getSchemaProperties } from '@dxos/schema';
 
 import { translationKey } from '../../../translations';
@@ -76,9 +76,7 @@ export const ArrayField = <T extends AnyProperties>({
 
   return (
     <>
-      <Input.Root>
-        <FormFieldLabel readonly={readonly} label={label} asChild />
-      </Input.Root>
+      <FormFieldLabel readonly={readonly} label={label} asChild />
 
       <div
         role='none'

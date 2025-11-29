@@ -5,7 +5,7 @@
 import React, { type PropsWithChildren, type RefObject, createContext, useContext, useMemo } from 'react';
 
 import { raise } from '@dxos/debug';
-import { type AnyProperties, getValue } from '@dxos/echo/internal';
+import { type AnyProperties, getValue as getValue$ } from '@dxos/echo/internal';
 import { type SimpleType, createJsonPath } from '@dxos/effect';
 
 import { type FormHandler, type FormHandlerProps, useFormHandler, useKeyHandler } from '../../hooks';
@@ -26,23 +26,23 @@ export const useFormContext = <T extends AnyProperties>(componentName: string): 
 export const useFormValues = <T extends AnyProperties>(componentName: string, path: (string | number)[] = []): T => {
   const { values } = useFormContext(componentName);
   const jsonPath = createJsonPath(path);
-  return getValue(values, jsonPath) as T;
+  return getValue$(values, jsonPath) as T;
 };
 
 /**
  * Get the state props for the given field.
  */
 export const useFormFieldState = (componentName: string, path: (string | number)[] = []): FormFieldStateProps => {
-  const { getStatus, getValue: getFormValue, onBlur, onValueChange } = useFormContext(componentName);
+  const { getStatus, getValue, onBlur, onValueChange } = useFormContext(componentName);
   const stablePath = useMemo(() => path, [Array.isArray(path) ? path.join('.') : path]);
   return useMemo(
     () => ({
       getStatus: () => getStatus(stablePath),
-      getValue: () => getFormValue(stablePath),
+      getValue: () => getValue(stablePath),
       onBlur: () => onBlur(stablePath),
       onValueChange: (type: SimpleType, value: any) => onValueChange(stablePath, type, value),
     }),
-    [getStatus, getFormValue, onBlur, onValueChange, stablePath],
+    [getStatus, getValue, onBlur, onValueChange, stablePath],
   );
 };
 

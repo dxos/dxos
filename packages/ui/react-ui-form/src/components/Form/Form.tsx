@@ -62,14 +62,16 @@ export const Form = <T extends AnyProperties>({
     }
   }, [autoFocus]);
 
-  // TODO(burdon): Why?
-  const handleValid = useCallback<NonNullable<FormProviderProps<T>['onValid']>>(
+  // Auto-save.
+  const handleValueChanged = useCallback<NonNullable<FormProviderProps<T>['onValuesChanged']>>(
     async (values, meta) => {
-      if (autoSave) {
-        await onSave?.(values, meta);
+      if (autoSave && meta.isValid) {
+        await onSave?.(values as T, meta);
       }
+
+      onValuesChanged?.(values, meta);
     },
-    [autoSave, onSave],
+    [autoSave, onSave, onValuesChanged],
   );
 
   return (
@@ -78,9 +80,8 @@ export const Form = <T extends AnyProperties>({
       schema={schema}
       autoSave={autoSave}
       values={valuesProp}
-      onValuesChanged={onValuesChanged}
+      onValuesChanged={handleValueChanged}
       onValidate={onValidate}
-      onValid={handleValid}
       onSave={onSave}
     >
       <div role='none' className='contents' {...(id && { 'data-object-id': id })} data-testid={testId}>

@@ -31,15 +31,15 @@ export const useKeyHandler = (formElement: HTMLDivElement | null, form: FormHand
             }
 
             // TODO(burdon): WHY?
-            if (autoSave && form.formIsValid) {
-              (event.target as HTMLElement).blur();
-            }
+            // if (autoSave && form.isValid) {
+            // (event.target as HTMLElement).blur();
+            // }
           }
           break;
         }
       }
     },
-    [form.canSave, form.formIsValid, form.onSave, autoSave],
+    [form.isValid, form.canSave, form.onSave, autoSave],
   );
 
   useEffect(() => {

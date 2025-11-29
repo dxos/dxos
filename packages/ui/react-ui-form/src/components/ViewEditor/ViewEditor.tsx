@@ -208,9 +208,7 @@ export const ViewEditor = forwardRef<ProjectionModel, ViewEditorProps>(
             <NewForm.FieldSet />
           </NewForm.Root>
 
-          <Input.Root>
-            <FormFieldLabel label={t('fields label')} />
-          </Input.Root>
+          <FormFieldLabel label={t('fields label')} asChild />
 
           <List.Root<FieldType>
             items={view.projection.fields}

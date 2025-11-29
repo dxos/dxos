@@ -108,7 +108,7 @@ const useCustomInputs = ({
 
         return (
           <Input.Root>
-            <FormFieldLabel label={props.label} />
+            <FormFieldLabel label={props.label} asChild />
             <QueryForm initialQuery={(props.getValue() as any).ast} types={types} tags={tags} onChange={handleChange} />
           </Input.Root>
         );

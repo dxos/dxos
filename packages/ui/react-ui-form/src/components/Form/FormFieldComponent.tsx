@@ -12,10 +12,7 @@ import { Icon, Input, Tooltip } from '@dxos/react-ui';
 import { labelSpacing } from '@dxos/react-ui-stack';
 import { errorText, mx } from '@dxos/react-ui-theme';
 
-export type FormFieldStatus = {
-  status?: 'error';
-  error?: string;
-};
+import { type FormFieldStatus } from '../../hooks';
 
 /**
  * Dynamic props passed to input components.

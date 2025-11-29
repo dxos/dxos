@@ -6,7 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Schema from 'effect/Schema';
 import React, { useCallback, useState } from 'react';
 
-import { Format, Type } from '@dxos/echo';
+import { Type } from '@dxos/echo';
 import { type AnyProperties } from '@dxos/echo/internal';
 import { Tooltip } from '@dxos/react-ui';
 import { withTheme } from '@dxos/react-ui/testing';
@@ -18,12 +18,12 @@ import { NewForm, type NewFormRootProps } from './NewForm';
 
 const Person = Schema.Struct({
   name: Schema.String.annotations({ title: 'Full name' }),
-  notes: Schema.optional(Format.Text.annotations({ title: 'Notes' })),
-  active: Schema.optional(Schema.Boolean.annotations({ title: 'Active' })),
-  age: Schema.optional(Schema.Number.annotations({ title: 'Age' })),
-  location: Format.GeoPoint.annotations({ title: 'Location' }),
+  // notes: Schema.optional(Format.Text.annotations({ title: 'Notes' })),
+  // active: Schema.optional(Schema.Boolean.annotations({ title: 'Active' })),
+  // age: Schema.optional(Schema.Number.annotations({ title: 'Age' })),
+  // location: Format.GeoPoint.annotations({ title: 'Location' }),
   // TODO(burdon): Change to inline object.
-  identities: Schema.optional(Schema.Array(Schema.String).annotations({ title: 'Identities' })),
+  // identities: Schema.optional(Schema.Array(Schema.String).annotations({ title: 'Identities' })),
 }).pipe(
   Type.Obj({
     typename: 'dxos.org/type/Person', // TODO(burdon): Change all types to /schema
@@ -56,18 +56,18 @@ const DefaultStory = <T extends AnyProperties = AnyProperties>({
     <Tooltip.Provider>
       <TestLayout json={{ values, schema: schema.ast }}>
         <NewForm.Root
-          debug={debug}
+          // debug={debug}
           schema={schema}
           values={values}
-          autoSave
-          onSave={handleSave}
-          onCancel={handleCancel}
+          // autoSave
+          // onSave={handleSave}
+          // onCancel={handleCancel}
           {...props}
         >
           <NewForm.Viewport>
             <NewForm.Content>
               <NewForm.FieldSet />
-              <NewForm.Actions />
+              {/* <NewForm.Actions /> */}
             </NewForm.Content>
           </NewForm.Viewport>
         </NewForm.Root>
@@ -98,12 +98,14 @@ export default meta;
 // type Story<T extends Type.Obj.Any> = StoryObj<StoryProps<T>>;
 type Story<T extends AnyProperties> = StoryObj<StoryProps<T>>;
 
+const values: Partial<Person> = {
+  name: 'Alice',
+};
+
 export const Default: Story<any> = {
   args: {
     schema: Person,
-    values: {
-      name: 'Alice',
-    },
+    values,
     onSave: (values, meta) => {
       console.log('save', JSON.stringify({ values, meta }, null, 2));
     },
@@ -116,19 +118,28 @@ export const Default: Story<any> = {
 export const Readonly: Story<any> = {
   args: {
     schema: Person,
+    values,
     readonly: 'disabled',
-    values: {
-      name: 'Alice',
-    },
   },
 };
 
 export const Static: Story<any> = {
   args: {
     schema: Person,
+    values,
     readonly: 'static',
-    values: {
-      name: 'Alice',
-    },
   },
+};
+
+export const Empty: Story<any> = {
+  render: () => (
+    <NewForm.Root>
+      <NewForm.Viewport>
+        <NewForm.Content>
+          <NewForm.FieldSet />
+          <NewForm.Actions />
+        </NewForm.Content>
+      </NewForm.Viewport>
+    </NewForm.Root>
+  ),
 };

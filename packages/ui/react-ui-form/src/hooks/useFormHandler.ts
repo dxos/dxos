@@ -5,12 +5,17 @@
 import type * as Schema from 'effect/Schema';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { type AnyProperties, getValue as getPathValue, setValue as setPathValue } from '@dxos/echo/internal';
+import { type AnyProperties, getValue as getValue$, setValue as setValue$ } from '@dxos/echo/internal';
 import { type JsonPath, type SimpleType, createJsonPath, fromEffectValidationPath } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { type ValidationError, adaptValidationMessage, validateSchema } from '@dxos/schema';
 import { type MaybePromise } from '@dxos/util';
+
+export type FormFieldStatus = {
+  status?: 'error';
+  error?: string;
+};
 
 /**
  * Form properties.
@@ -31,7 +36,7 @@ export interface FormHandlerProps<T extends AnyProperties> {
    * Sometimes the parent component may want to know about changes even if the form is
    * in an invalid state.
    */
-  onValuesChanged?: (values: Partial<T>) => void;
+  onValuesChanged?: (values: Partial<T>, meta: { isValid: boolean; changed: FormHandler<T>['changed'] }) => void;
 
   /**
    * Custom validation function that runs only after schema validation passes.
@@ -40,11 +45,6 @@ export interface FormHandlerProps<T extends AnyProperties> {
    */
   // TODO(burdon): Change to key x value?
   onValidate?: (values: T) => ValidationError[] | undefined;
-
-  /**
-   * Called when the form is valid.
-   */
-  onValid?: (values: T, meta: { changed: FormHandler<T>['changed'] }) => void;
 
   /**
    * Called when the form is submitted and passes validation.
@@ -60,34 +60,37 @@ export interface FormHandlerProps<T extends AnyProperties> {
 /**
  * Form handler properties and methods.
  */
-export type FormHandler<T extends AnyProperties> = {
-  /**
-   * Initial values (which may not pass validation).
-   */
+export type FormHandler<T extends AnyProperties> = Pick<FormHandlerProps<T>, 'schema'> & {
+  /** Initial values (which may not pass validation). */
   values: Partial<T>;
 
+  /** Map of error strings. */
   errors: Record<JsonPath, string>;
+
+  /** Map of touched fields. */
   touched: Record<JsonPath, boolean>;
+
+  // TODO(burdon): How is this different from above?
   changed: Record<JsonPath, boolean>;
 
-  /**
-   * Whether the form can be saved (i.e., data is valid).
-   */
+  // TODO(burdon): How is this different from below?
+  isValid: boolean;
+
+  /** Whether the form can be saved (i.e., data is valid). */
   canSave: boolean;
-  formIsValid: boolean;
 
   onSave: () => void;
   onCancel: () => void;
 
   //
-  // Form input component helpers.
+  // Form field state management
   //
 
-  getStatus: (path: string | (string | number)[]) => { status?: 'error'; error?: string };
+  getStatus: (path: string | (string | number)[]) => FormFieldStatus;
   getValue: <V>(path: (string | number)[]) => V | undefined;
   onBlur: (path: (string | number)[]) => void;
   onValueChange: <V>(path: (string | number)[], type: SimpleType, value: V) => void;
-} & Pick<FormHandlerProps<T>, 'schema'>;
+};
 
 /**
  * Creates a hook for managing form state, including values, validation, and submission.
@@ -98,7 +101,6 @@ export const useFormHandler = <T extends AnyProperties>({
   values: valuesProp,
   onValuesChanged,
   onValidate,
-  onValid,
   onSave,
   onCancel,
   ...props
@@ -109,8 +111,8 @@ export const useFormHandler = <T extends AnyProperties>({
     setValues(valuesProp ?? {});
   }, [valuesProp]);
 
-  const [touched, setTouched] = useState<Record<JsonPath, boolean>>(createKeySet(values, false));
-  const [changed, setChanged] = useState<Record<JsonPath, boolean>>(createKeySet(values, false));
+  const [touched, setTouched] = useState<Record<JsonPath, boolean>>(createKeySet(valuesProp ?? {}, false));
+  const [changed, setChanged] = useState<Record<JsonPath, boolean>>(createKeySet(valuesProp ?? {}, false));
   const [errors, setErrors] = useState<Record<JsonPath, string>>({});
   const [saving, setSaving] = useState(false);
 
@@ -138,16 +140,16 @@ export const useFormHandler = <T extends AnyProperties>({
   );
 
   // Validate on schema change.
-  const [schemaDirty, setSchemaDirty] = useState(false);
-  useEffect(() => setSchemaDirty(true), [schema]);
+  const [schemaChanged, setSchemaChanged] = useState(false);
+  useEffect(() => setSchemaChanged(true), [schema]);
   useEffect(() => {
-    if (schemaDirty) {
+    if (schemaChanged) {
       validate(values);
-      setSchemaDirty(false);
+      setSchemaChanged(false);
     }
-  }, [values, schemaDirty]);
+  }, [values, schemaChanged]);
 
-  const formIsValid = useMemo(() => {
+  const isValid = useMemo(() => {
     return Object.keys(errors).length === 0;
   }, [errors]);
 
@@ -216,7 +218,7 @@ export const useFormHandler = <T extends AnyProperties>({
 
   const getValue = useCallback<FormHandler<T>['getValue']>(
     <V>(path: (string | number)[]): V | undefined => {
-      return getPathValue(values, createJsonPath(path));
+      return getValue$(values, createJsonPath(path));
     },
     [values],
   );
@@ -224,7 +226,8 @@ export const useFormHandler = <T extends AnyProperties>({
   // TODO(wittjosiah): This is causing the entire form to re-render on every change.
   const onValueChange = useCallback<FormHandler<T>['onValueChange']>(
     (path: (string | number)[], type: SimpleType, value: any) => {
-      console.log('onValueChange', path, type, value);
+      log.info('onValueChange', { path, type, value });
+
       const jsonPath = createJsonPath(path);
       let parsedValue = value;
       try {
@@ -236,20 +239,19 @@ export const useFormHandler = <T extends AnyProperties>({
         parsedValue = undefined;
       }
 
-      const newValues = { ...setPathValue(values, jsonPath, parsedValue) };
+      // Update.
+      const newValues = { ...setValue$(values, jsonPath, parsedValue) };
       setValues(newValues);
       const newChanged = { ...changed, [jsonPath]: true };
-      setChanged(newChanged);
+      setChanged({ ...changed, [jsonPath]: true });
+
+      // Validate.
+      const isValid = validate(newValues);
 
       // Callback.
-      onValuesChanged?.(newValues);
-
-      const isValid = validate(newValues);
-      if (isValid && onValid) {
-        onValid(newValues, { changed: newChanged });
-      }
+      onValuesChanged?.(newValues, { isValid, changed: newChanged });
     },
-    [values, onValuesChanged, validate, onValid, changed],
+    [values, changed, validate, onValuesChanged],
   );
 
   const onBlur = useCallback(
@@ -261,6 +263,7 @@ export const useFormHandler = <T extends AnyProperties>({
     [validate, values],
   );
 
+  console.log(values);
   return useMemo<FormHandler<T>>(
     () => ({
       // State.
@@ -269,18 +272,18 @@ export const useFormHandler = <T extends AnyProperties>({
       errors,
       touched,
       changed,
+      isValid,
       canSave,
-      formIsValid,
+
+      // Actions.
+      onSave: handleSave,
+      onCancel: handleCancel,
 
       // Field utils.
       getStatus,
       getValue,
       onBlur,
       onValueChange,
-
-      // Actions.
-      onSave: handleSave,
-      onCancel: handleCancel,
 
       ...props,
     }),
@@ -291,7 +294,7 @@ export const useFormHandler = <T extends AnyProperties>({
       touched,
       changed,
       canSave,
-      formIsValid,
+      isValid,
       getStatus,
       getValue,
       onBlur,

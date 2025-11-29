@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import React from 'react';
+import React, { useEffect } from 'react';
 
 import { Input } from '@dxos/react-ui';
 
@@ -20,6 +20,13 @@ export const TextField = ({
   onValueChange,
   onBlur,
 }: FormFieldComponentProps<string>) => {
+  useEffect(() => {
+    console.log('mounted', type);
+    return () => {
+      console.log('unmounted', type);
+    };
+  }, []);
+
   return (
     <FormFieldWrapper<string>
       inline={inline}
