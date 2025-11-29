@@ -33,14 +33,17 @@ import { FormContext } from './FormRoot';
 // [ ] Padding and nesting
 // [ ] Update hooks used by external packages (i.e., useFormValues)
 // [ ] Omit id from sub properties.
-// [ ] Test 22 usages
+// [ ] Refs
+//   [x] Single-select (fix popover)
+//   [ ] Multi-select (array)
+//   [ ] Defer query until popover
+// [ ] Test 22 usages (opencode migration)
 // [ ] Merge stage 1
 
 // New features/polish
 // [ ] Unify readonly/inline modes
 // [ ] Use FormFieldWrapper uniformly
 // [ ] Inline tables for object arrays
-// [ ] Refs, Selectors
 // [ ] Remove @dxos/echo-db deps
 
 //
