@@ -123,9 +123,9 @@ NewFormViewport.displayName = 'NewForm.Viewport';
 type NewFormContentProps = ThemedClassName<PropsWithChildren<{}>>;
 
 const NewFormContent = ({ classNames, children }: NewFormContentProps) => {
-  const { form, autoSave } = useNewFormContext(NewFormContent.displayName);
+  const { form } = useNewFormContext(NewFormContent.displayName);
   const ref = useRef<HTMLDivElement>(null);
-  false && useKeyHandler(ref.current, form, autoSave);
+  false && useKeyHandler(ref.current, form);
 
   return (
     <div ref={ref} className={mx('flex flex-col is-full pli-cardSpacingInline', classNames)}>

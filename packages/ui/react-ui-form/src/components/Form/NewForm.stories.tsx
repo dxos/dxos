@@ -8,6 +8,7 @@ import React, { useCallback, useState } from 'react';
 
 import { Format, Type } from '@dxos/echo';
 import { type AnyProperties } from '@dxos/echo/internal';
+import { log } from '@dxos/log';
 import { Tooltip } from '@dxos/react-ui';
 import { withTheme } from '@dxos/react-ui/testing';
 
@@ -45,9 +46,11 @@ const DefaultStory = <T extends AnyProperties = AnyProperties>({
 }: StoryProps<T>) => {
   const [values, setValues] = useState<Partial<T>>(valuesParam ?? {});
   const handleSave = useCallback<NonNullable<NewFormRootProps<T>['onSave']>>((values) => {
+    log.info('save', { values, meta });
     setValues(values);
   }, []);
   const handleCancel = useCallback<NonNullable<NewFormRootProps<T>['onCancel']>>(() => {
+    log.info('cancel');
     setValues(valuesParam ?? {});
   }, []);
 
@@ -58,6 +61,7 @@ const DefaultStory = <T extends AnyProperties = AnyProperties>({
           debug={debug}
           schema={schema}
           values={values}
+          onAutoSave={handleSave}
           onSave={handleSave}
           onCancel={handleCancel}
           {...props}
@@ -107,15 +111,6 @@ export const Default: Story<any> = {
     schema,
     values,
     autoSave: true,
-    onAutoSave: (values, meta) => {
-      console.log('auto-save', JSON.stringify({ values, meta }, null, 2));
-    },
-    onSave: (values, meta) => {
-      console.log('save', JSON.stringify({ values, meta }, null, 2));
-    },
-    onCancel: () => {
-      console.log('cancel');
-    },
   },
 };
 

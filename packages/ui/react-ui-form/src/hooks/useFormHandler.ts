@@ -68,7 +68,7 @@ export interface FormHandlerProps<T extends AnyProperties> {
 /**
  * Form handler properties and methods.
  */
-export type FormHandler<T extends AnyProperties> = Pick<FormHandlerProps<T>, 'schema'> & {
+export type FormHandler<T extends AnyProperties> = Pick<FormHandlerProps<T>, 'schema' | 'autoSave'> & {
   /** Initial values (which may not pass validation). */
   values: Partial<T>;
 
@@ -113,16 +113,20 @@ export const useFormHandler = <T extends AnyProperties>({
   onCancel,
   ...props
 }: FormHandlerProps<T>): FormHandler<T> => {
-  // TODO(burdon): Change to useControlledValue.
-  const [values, setValues] = useState<Partial<T>>(valuesProp ?? {});
-  useEffect(() => {
-    setValues(valuesProp ?? {});
-  }, [valuesProp]);
-
   const [touched, setTouched] = useState<Record<JsonPath, boolean>>({});
   const [changed, setChanged] = useState<Record<JsonPath, boolean>>({});
   const [errors, setErrors] = useState<Record<JsonPath, string>>({});
   const [saving, setSaving] = useState(false);
+
+  // TODO(burdon): Change to useControlledValue.
+  const [values, setValues] = useState<Partial<T>>(valuesProp ?? {});
+  useEffect(() => {
+    setValues(valuesProp ?? {});
+    setTouched({});
+    setChanged({});
+    setErrors({});
+    setSaving(false);
+  }, [valuesProp]);
 
   //
   // Validation.
@@ -250,6 +254,8 @@ export const useFormHandler = <T extends AnyProperties>({
       // Update.
       const newValues = { ...setValue$(values, jsonPath, parsedValue) };
       setValues(newValues);
+
+      // TODO(burdon): Check value has changed from original.
       const newChanged = { ...changed, [jsonPath]: true };
       setChanged({ ...changed, [jsonPath]: true });
 
@@ -265,6 +271,8 @@ export const useFormHandler = <T extends AnyProperties>({
   const onBlur = useCallback(
     (path: (string | number)[]) => {
       const jsonPath = createJsonPath(path);
+
+      // TODO(burdon): Check value has changed from original.
       setTouched((touched) => ({ ...touched, [jsonPath]: true }));
       const isValid = validate(values);
 
@@ -286,6 +294,7 @@ export const useFormHandler = <T extends AnyProperties>({
       changed,
       isValid,
       canSave,
+      autoSave,
 
       // Actions.
       onSave: handleSave,
