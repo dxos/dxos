@@ -4,11 +4,11 @@
 
 import { type Completion } from '@codemirror/autocomplete';
 import { EditorView } from '@codemirror/view';
-import type * as Schema from 'effect/Schema';
 import React, { useCallback, useMemo, useRef, useState } from 'react';
 
 import { debounce } from '@dxos/async';
 import { type Client } from '@dxos/client';
+import { type Type } from '@dxos/echo';
 import { Format, TypeEnum } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
 import { type DxGridAxis, type DxGridPosition } from '@dxos/lit-grid';
@@ -35,26 +35,26 @@ import { FormCellEditor, type OnCreateHandler } from './FormCellEditor';
  */
 export type QueryResult = Pick<Completion, 'label'> & { data: any };
 
-export type TableCellEditorProps = {
+export type TableCellEditorProps<T extends Type.Obj.Any = Type.Obj.Any> = {
+  client?: Client; // TODO(burdon): MUST REMOVE THIS.
+  schema?: T;
   model?: TableModel;
   modals?: ModalController;
-  schema?: Schema.Schema.AnyNoContext;
   onFocus?: (axis?: DxGridAxis, delta?: -1 | 0 | 1, cell?: DxGridPosition) => void;
   onCreate?: OnCreateHandler;
   onSave?: () => void;
-  client?: Client;
 };
 
-export const TableValueEditor = ({
+export const TableValueEditor = <T extends Type.Obj.Any = Type.Obj.Any>({
+  client,
+  schema,
   model,
   modals,
-  schema,
   onFocus,
   onSave,
   onCreate,
-  client,
   __gridScope,
-}: GridScopedProps<TableCellEditorProps>) => {
+}: GridScopedProps<TableCellEditorProps<T>>) => {
   const { editing } = useGridContext('TableValueEditor', __gridScope);
 
   const fieldProjection = useMemo<FieldProjection | undefined>(() => {
@@ -76,14 +76,14 @@ export const TableValueEditor = ({
     // TODO(thure): Support `Format.TypeFormat.MultiSelect`
   ) {
     return (
-      <FormCellEditor
+      <FormCellEditor<T>
+        __gridScope={__gridScope}
+        client={client}
         fieldProjection={fieldProjection}
         model={model}
         schema={schema}
-        __gridScope={__gridScope}
         onSave={onSave}
         onCreate={onCreate}
-        client={client}
         modals={modals}
       />
     );

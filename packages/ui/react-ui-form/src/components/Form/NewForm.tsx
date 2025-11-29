@@ -46,6 +46,10 @@ import { FormContext } from './FormRoot';
 // [ ] Inline tables for object arrays
 // [ ] Remove @dxos/echo-db deps
 
+// Misc
+// [ ] Remove client dependency from react-ui-table
+// [ ] Fix useSchema Type.Obj.Any cast
+
 //
 // Context
 //

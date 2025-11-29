@@ -29,15 +29,15 @@ export type TablePropertyDefinition = SchemaPropertyDefinition & Partial<Propert
  */
 // TODO(burdon): Remove variance.
 export const getBaseSchema = ({
+  schema,
   typename,
   properties,
   jsonSchema,
-  schema,
 }: {
+  schema?: Schema.Schema.AnyNoContext;
   typename?: string;
   properties?: TablePropertyDefinition[];
   jsonSchema?: JsonSchema.JsonSchema;
-  schema?: Schema.Schema.AnyNoContext;
 }): { typename: string; jsonSchema: JsonSchema.JsonSchema } => {
   if (typename && properties) {
     const schema = getSchemaFromPropertyDefinitions(typename, properties);
