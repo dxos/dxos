@@ -16,6 +16,7 @@ import {
   ResearchBlueprint,
   SystemToolkit,
   WebSearchBlueprint,
+  CodeExecutionBlueprint,
 } from '@dxos/assistant-toolkit';
 import { Blueprint } from '@dxos/blueprints';
 import { type FunctionDefinition } from '@dxos/functions';
@@ -63,4 +64,6 @@ export default (): Capability<any>[] => [
   // TODO(burdon): Factor out.
   contributes(Capabilities.Functions, [Linear.sync]),
   contributes(Capabilities.BlueprintDefinition, LinearBlueprint),
+
+  contributes(Capabilities.BlueprintDefinition, CodeExecutionBlueprint),
 ];
