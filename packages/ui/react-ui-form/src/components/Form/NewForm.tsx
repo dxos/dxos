@@ -170,7 +170,7 @@ const NewFormActions = ({ classNames }: NewFormActionsProps) => {
   }
 
   return (
-    <div role='none' className={mx('grid grid-flow-col auto-cols-fr gap-2 pbs-cardSpacingBlock', classNames)}>
+    <div role='none' className={mx('grid grid-flow-col auto-cols-fr gap-2 plb-cardSpacingBlock', classNames)}>
       {form.onCancel && (
         <IconButton
           icon='ph--x--regular'
@@ -209,7 +209,7 @@ const NewFormSubmit = ({ classNames, label, icon }: NewFormSubmitProps) => {
   const { form } = useNewFormContext(NewFormSubmit.displayName);
 
   return (
-    <div role='none' className={mx('flex is-full pbs-cardSpacingBlock', classNames)}>
+    <div role='none' className={mx('flex is-full plb-cardSpacingBlock', classNames)}>
       <IconButton
         classNames='is-full'
         type='submit'
