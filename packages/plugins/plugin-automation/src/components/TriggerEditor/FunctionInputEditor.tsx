@@ -7,18 +7,27 @@ import React, { useCallback, useMemo } from 'react';
 import { Ref, Type } from '@dxos/echo';
 import { type JsonPath } from '@dxos/echo/internal';
 import { type Function } from '@dxos/functions';
-import { useOnTransition } from '@dxos/react-ui';
-import { Form, type FormFieldStateProps, type QueryRefOptions, useFormValues } from '@dxos/react-ui-form';
+import { Input, type ThemedClassName, useOnTransition } from '@dxos/react-ui';
+import {
+  type FormFieldStateProps,
+  NewForm,
+  type NewFormRootProps,
+  type QueryRefOptions,
+  useFormValues,
+} from '@dxos/react-ui-form';
 
-export type FunctionInputEditorProps = {
-  functions: Function.Function[];
-  onQueryRefOptions: QueryRefOptions;
-} & FormFieldStateProps;
+export type FunctionInputEditorProps = ThemedClassName<
+  {
+    functions: Function.Function[];
+    onQueryRefOptions: QueryRefOptions;
+  } & FormFieldStateProps
+>;
 
 /**
  * Editor component for function input parameters.
  */
 export const FunctionInputEditor = ({
+  classNames,
   functions,
   getValue,
   onValueChange,
@@ -56,8 +65,8 @@ export const FunctionInputEditor = ({
 
   const values = useMemo(() => getValue() ?? {}, [getValue]);
 
-  const handleValuesChanged = useCallback(
-    (values: any) => {
+  const handleValuesChanged = useCallback<NonNullable<NewFormRootProps['onValuesChanged']>>(
+    (values) => {
       onValueChange('object', values);
     },
     [onValueChange],
@@ -69,14 +78,17 @@ export const FunctionInputEditor = ({
 
   return (
     <>
-      <h3 className='text-md'>Function parameters</h3>
-      <Form
+      <Input.Root>
+        <Input.Label>Function parameters</Input.Label>
+      </Input.Root>
+      <NewForm.Root
         schema={effectSchema}
         values={values}
         onValuesChanged={handleValuesChanged}
         onQueryRefOptions={onQueryRefOptions}
-        outerSpacing={false}
-      />
+      >
+        <NewForm.FieldSet />
+      </NewForm.Root>
     </>
   );
 };

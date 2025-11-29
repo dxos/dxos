@@ -9,18 +9,21 @@ import { DXN, Obj, type Ref, Tag, Type } from '@dxos/echo';
 import { type JsonPath, setValue } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
 import { getSpace } from '@dxos/react-client/echo';
-import { Form, useRefQueryLookupHandler } from '@dxos/react-ui-form';
+import { Form, useRefQueryOptions } from '@dxos/react-ui-form';
 import { isNonNullable } from '@dxos/util';
 
 import { meta as pluginMeta } from '../../meta';
 
 const TagSchema = Tag.Tag.pipe(Schema.omit('id'));
 
-type ObjectFormProps = { object: Obj.Any; schema: Schema.Schema.AnyNoContext };
+export type ObjectFormProps = {
+  object: Obj.Any;
+  schema: Schema.Schema.AnyNoContext;
+};
 
 export const ObjectForm = ({ object, schema }: ObjectFormProps) => {
   const space = getSpace(object);
-  const handleRefQueryLookup = useRefQueryLookupHandler({ space });
+  const handleRefQueryLookup = useRefQueryOptions({ space });
 
   const formSchema = useMemo(
     () => Schema.Struct({ tags: Schema.Array(Type.Ref(Tag.Tag)).pipe(Schema.optional) }).pipe(Schema.extend(schema)),

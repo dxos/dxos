@@ -11,9 +11,9 @@ import { isNonNullable } from '@dxos/util';
 
 import { type QueryRefOptions } from './useQueryRefOptions';
 
-type UseRefQueryLookupProps = { space?: Space };
+type UseRefQueryOptionsProps = { space?: Space };
 
-export const useRefQueryLookupHandler = ({ space }: UseRefQueryLookupProps): QueryRefOptions => {
+export const useRefQueryOptions = ({ space }: UseRefQueryOptionsProps): QueryRefOptions => {
   return useCallback(
     async (typeInfo: TypeAnnotation) => {
       if (!space) {

@@ -28,7 +28,7 @@ import { SpaceCapabilities } from '../../capabilities';
 import { meta } from '../../meta';
 import { SpaceAction, SpaceForm } from '../../types';
 
-const FormSchema = SpaceForm.pipe(
+const SpaceFormSchema = SpaceForm.pipe(
   Schema.extend(
     Schema.Struct({
       archived: Schema.Boolean.annotations({ title: 'Archive Space' }),
@@ -63,8 +63,8 @@ export const SpaceSettingsContainer = ({ space }: SpaceSettingsContainerProps) =
   );
 
   const handleSave = useCallback(
-    (properties: Schema.Schema.Type<typeof FormSchema>) => {
-      void toggleEdgeReplication(properties.edgeReplication);
+    (properties: Schema.Schema.Type<typeof SpaceFormSchema>) => {
+      void toggleEdgeReplication(properties.edgeReplication ?? false);
       if (properties.name !== space.properties.name) {
         space.properties.name = properties.name;
       }
@@ -192,7 +192,7 @@ export const SpaceSettingsContainer = ({ space }: SpaceSettingsContainerProps) =
           <Form
             classNames='container-max-width grid grid-cols-1 md:grid-cols-[1fr_min-content]'
             outerSpacing={false}
-            schema={FormSchema}
+            schema={SpaceFormSchema}
             values={values}
             fieldMap={fieldMap}
             autoSave

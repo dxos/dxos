@@ -100,12 +100,13 @@ export type CreateObjectIntent = (props: any, options: { space: Space }) => AnyI
 export const IconAnnotationId = Symbol.for('@dxos/plugin-space/annotation/Icon');
 export const HueAnnotationId = Symbol.for('@dxos/plugin-space/annotation/Hue');
 
+// TOOD(burdon): Use SpacePropertiesSchema.
 export const SpaceForm = Schema.Struct({
+  edgeReplication: Schema.optional(Schema.Boolean.annotations({ title: 'Enable EDGE Replication' })),
+
   name: Schema.optional(Schema.String.annotations({ title: 'Name' })),
   icon: Schema.optional(Schema.String.annotations({ title: 'Icon', [IconAnnotationId]: true })),
   hue: Schema.optional(Schema.String.annotations({ title: 'Color', [HueAnnotationId]: true })),
-  // TODO(wittjosiah): Make optional with default value.
-  edgeReplication: Schema.Boolean.annotations({ title: 'Enable EDGE Replication' }),
 });
 
 export const SPACE_ACTION = `${meta.id}/action`;

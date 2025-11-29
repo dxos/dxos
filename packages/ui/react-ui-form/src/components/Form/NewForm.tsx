@@ -17,19 +17,18 @@ import { FormContext } from './FormRoot';
 
 // [x] TextArea
 // [x] Use NewForm with FeedbackForm.
-// [ ] Use NewForm with ViewEditor.
-// [ ] Use NewForm with TriggerEditor.FunctionInputEditor.
+// [x] Use NewForm with ViewEditor.
+// [x] Keyboard handler (autosave).
+// [ ] Test 22 usages.
 
-// [ ] Inline tables for object arrays
-// [ ] Use FormFieldWrapper uniformly.
+// [ ] Update hooks used by external packages.
+// [ ] Padding and recursion.
+
+// New features/polish
 // [ ] Unify readonly/inline modes.
-
+// [ ] Use FormFieldWrapper uniformly.
+// [ ] Inline tables for object arrays
 // [ ] Refs, Selectors
-// [ ] Keyboard handler (autosave).
-// [ ] Additional root props: options, callbacks
-// [ ] Reaplce context, hooks.
-// [ ] Status (validation) message must include field (currently just "is missing")
-// [ ] Unify fieldMap/fieldProvider map callback (with adapter for map).
 
 //
 // Context
@@ -69,7 +68,12 @@ type NewFormRootProps<T extends AnyProperties = AnyProperties> = PropsWithChildr
      * Called when the form is canceled to abandon/undo any pending changes.
      */
     onCancel?: () => void;
-  } & (Pick<FormHandlerProps<T>, 'schema' | 'values'> & Omit<NewFormContextValue<T>, 'form'>)
+  } &
+    //
+    Omit<NewFormContextValue<T>, 'form'> &
+    Pick<FormHandlerProps<T>, 'schema' | 'values' | 'onValuesChanged'> &
+    // TODO(burdon): Pick/Refine?
+    FormFieldSetProps<T>
 >;
 
 const NewFormRoot = <T extends AnyProperties = AnyProperties>({
