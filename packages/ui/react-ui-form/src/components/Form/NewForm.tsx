@@ -6,7 +6,7 @@ import { createContext } from '@radix-ui/react-context';
 import React, { type PropsWithChildren, useRef } from 'react';
 
 import { type AnyProperties } from '@dxos/echo/internal';
-import { IconButton, type IconButtonProps, type ThemedClassName, useTranslation } from '@dxos/react-ui';
+import { IconButton, type IconButtonProps, ScrollArea, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
 import { type FormHandler, type FormHandlerProps, useFormHandler, useKeyHandler } from '../../hooks';
@@ -18,11 +18,15 @@ import { FormContext } from './FormRoot';
 // [x] TextArea
 // [x] Use NewForm with FeedbackForm.
 // [x] Use NewForm with ViewEditor.
-// [x] Keyboard handler (autosave).
 // [ ] Test 22 usages.
 
-// [ ] Update hooks used by external packages.
-// [ ] Padding and recursion.
+// [ ] NewForm.stories.tsx
+//  [ ] Fix onSave callback (loses focus on change)
+//  [ ] Fix onCancel (restore values)
+//  [ ] Fix autosave
+//  [x] Keyboard handler (autosave).
+// [ ] Update hooks used by external packages (i.e., useFormValues).
+// [ ] Padding and nesting.
 
 // New features/polish
 // [ ] Unify readonly/inline modes.
@@ -99,8 +103,26 @@ const NewFormRoot = <T extends AnyProperties = AnyProperties>({
 NewFormRoot.displayName = 'NewForm.Root';
 
 //
+// Viewport
+//
+
+type NewFormViewportProps = ThemedClassName<PropsWithChildren<{}>>;
+
+const NewFormViewport = ({ classNames, children }: NewFormViewportProps) => {
+  return (
+    <ScrollArea.Root>
+      <ScrollArea.Viewport classNames={classNames}>{children}</ScrollArea.Viewport>
+      <ScrollArea.Scrollbar orientation='vertical'>
+        <ScrollArea.Thumb />
+      </ScrollArea.Scrollbar>
+    </ScrollArea.Root>
+  );
+};
+
+NewFormViewport.displayName = 'NewForm.Viewport';
+
+//
 // Content
-// TODO(burdon): Viewport with scroller.
 //
 
 type NewFormContentProps = ThemedClassName<PropsWithChildren<{}>>;
@@ -108,7 +130,7 @@ type NewFormContentProps = ThemedClassName<PropsWithChildren<{}>>;
 const NewFormContent = ({ classNames, children }: NewFormContentProps) => {
   const { form, autoSave } = useNewFormContext(NewFormContent.displayName);
   const ref = useRef<HTMLDivElement>(null);
-  useKeyHandler(ref.current, form, autoSave);
+  false && useKeyHandler(ref.current, form, autoSave);
 
   return (
     <div ref={ref} className={mx('flex flex-col is-full pli-cardSpacingInline', classNames)}>
@@ -211,6 +233,7 @@ NewFormSubmit.displayName = 'NewForm.Submit';
 
 export const NewForm = {
   Root: NewFormRoot,
+  Viewport: NewFormViewport,
   Content: NewFormContent,
   FieldSet: NewFormFieldSet,
   Actions: NewFormActions,
@@ -219,4 +242,4 @@ export const NewForm = {
 
 export { useNewFormContext };
 
-export type { NewFormRootProps, NewFormContentProps, NewFormFieldSetProps, NewFormActionsProps };
+export type { NewFormRootProps, NewFormViewportProps, NewFormContentProps, NewFormFieldSetProps, NewFormActionsProps };

@@ -65,12 +65,13 @@ export type FormFieldProvider = (props: {
 }) => ReactElement | undefined;
 
 export type FormFieldLabelProps = {
+  asChild?: boolean;
   error?: string;
 } & Pick<FormFieldComponentProps, 'label' | 'readonly'>;
 
-export const FormFieldLabel = ({ label, error, readonly }: FormFieldLabelProps) => {
-  const Label = readonly ? 'span' : Input.Label;
-  const labelProps = readonly ? { className: 'text-description text-xs' } : { classNames: '!mlb-0 text-sm' };
+export const FormFieldLabel = ({ label, error, readonly, asChild }: FormFieldLabelProps) => {
+  const Label = readonly || asChild ? 'span' : Input.Label;
+  const labelProps = readonly || asChild ? { className: 'text-description text-sm' } : { classNames: '!mlb-0 text-sm' };
 
   return (
     <div role='none' className={mx('flex justify-between items-center', readonly !== 'static' && '', labelSpacing)}>

@@ -17,7 +17,8 @@ import { TestLayout } from '../testing';
 import { NewForm, type NewFormRootProps } from './NewForm';
 
 const Person = Schema.Struct({
-  name: Schema.optional(Schema.String.annotations({ title: 'Full name' })),
+  name: Schema.String.annotations({ title: 'Full name' }),
+  notes: Schema.optional(Format.Text.annotations({ title: 'Notes' })),
   active: Schema.optional(Schema.Boolean.annotations({ title: 'Active' })),
   age: Schema.optional(Schema.Number.annotations({ title: 'Age' })),
   location: Format.GeoPoint.annotations({ title: 'Location' }),
@@ -58,14 +59,17 @@ const DefaultStory = <T extends AnyProperties = AnyProperties>({
           debug={debug}
           schema={schema}
           values={values}
+          autoSave
           onSave={handleSave}
           onCancel={handleCancel}
           {...props}
         >
-          <NewForm.Content>
-            <NewForm.FieldSet />
-            <NewForm.Actions />
-          </NewForm.Content>
+          <NewForm.Viewport>
+            <NewForm.Content>
+              <NewForm.FieldSet />
+              <NewForm.Actions />
+            </NewForm.Content>
+          </NewForm.Viewport>
         </NewForm.Root>
       </TestLayout>
     </Tooltip.Provider>

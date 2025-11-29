@@ -49,38 +49,42 @@ export const GeoPointField = ({
           }
         }
       },
-    [getValue, onValueChange, type],
+    [type, getValue, onValueChange],
   );
 
   return (
     <Input.Root validationValence={status}>
-      <FormFieldLabel error={error} readonly={readonly} label={label} />
+      <FormFieldLabel error={error} readonly={readonly} label={label} asChild />
       <div role='none' className='grid grid-cols-2 gap-2'>
-        <div role='none'>
-          <Input.Label>{t('latitude label')}</Input.Label>
-          <Input.TextInput
-            type='number'
-            step='0.00001'
-            min='-90'
-            max='90'
-            disabled={!!readonly}
-            value={latitudeText}
-            onChange={handleCoordinateChange('latitude', setLatitudeText)}
-            onBlur={onBlur}
-          />
+        <div>
+          <Input.Root>
+            <Input.Label>{t('latitude label')}</Input.Label>
+            <Input.TextInput
+              type='number'
+              step='0.00001'
+              min='-90'
+              max='90'
+              disabled={!!readonly}
+              value={latitudeText}
+              onChange={handleCoordinateChange('latitude', setLatitudeText)}
+              onBlur={onBlur}
+            />
+          </Input.Root>
         </div>
-        <div role='none'>
-          <Input.Label>{t('longitude label')}</Input.Label>
-          <Input.TextInput
-            type='number'
-            step='0.00001'
-            min='-180'
-            max='180'
-            disabled={!!readonly}
-            value={longitudeText}
-            onChange={handleCoordinateChange('longitude', setLongitudeText)}
-            onBlur={onBlur}
-          />
+        <div>
+          <Input.Root>
+            <Input.Label>{t('longitude label')}</Input.Label>
+            <Input.TextInput
+              type='number'
+              step='0.00001'
+              min='-180'
+              max='180'
+              disabled={!!readonly}
+              value={longitudeText}
+              onChange={handleCoordinateChange('longitude', setLongitudeText)}
+              onBlur={onBlur}
+            />
+          </Input.Root>
         </div>
       </div>
     </Input.Root>

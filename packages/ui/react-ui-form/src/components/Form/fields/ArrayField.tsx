@@ -77,8 +77,9 @@ export const ArrayField = <T extends AnyProperties>({
   return (
     <>
       <Input.Root>
-        <FormFieldLabel readonly={readonly} label={label} />
+        <FormFieldLabel readonly={readonly} label={label} asChild />
       </Input.Root>
+
       <div
         role='none'
         className={

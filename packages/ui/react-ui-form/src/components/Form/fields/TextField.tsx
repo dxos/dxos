@@ -29,6 +29,7 @@ export const TextField = ({
       getValue={getValue}
       Component={({ value }) => (
         <Input.TextInput
+          {...{ 'data-1p-ignore': true }}
           disabled={!!readonly}
           placeholder={placeholder}
           value={value}
