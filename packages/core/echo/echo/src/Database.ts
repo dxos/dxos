@@ -111,6 +111,7 @@ export interface Database extends Queryable {
   /**
    * Adds object to the database.
    */
+  // TODO(burdon): Add batch.
   add<T extends Entity.Unknown = Entity.Unknown>(obj: T, opts?: AddOptions): T;
 
   /**

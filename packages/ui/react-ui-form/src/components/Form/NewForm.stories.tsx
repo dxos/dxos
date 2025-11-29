@@ -6,9 +6,11 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Schema from 'effect/Schema';
 import React, { useCallback, useState } from 'react';
 
-import { Format, Type } from '@dxos/echo';
+import { Filter, Format, Obj, Type } from '@dxos/echo';
 import { type AnyProperties } from '@dxos/echo/internal';
 import { log } from '@dxos/log';
+import { useClient } from '@dxos/react-client';
+import { withClientProvider } from '@dxos/react-client/testing';
 import { Tooltip } from '@dxos/react-ui';
 import { withTheme } from '@dxos/react-ui/testing';
 
@@ -17,11 +19,35 @@ import { TestLayout } from '../testing';
 
 import { NewForm, type NewFormRootProps } from './NewForm';
 
+const Organization = Schema.Struct({
+  name: Schema.String.pipe(Schema.minLength(1)).annotations({ title: 'Full name' }),
+}).pipe(
+  Type.Obj({
+    typename: 'dxos.org/type/Organization', // TODO(burdon): Change all types to /schema
+    version: '0.1.0',
+  }),
+);
+
+export interface Organization extends Schema.Schema.Type<typeof Organization> {}
+
 const Person = Schema.Struct({
   name: Schema.String.pipe(Schema.minLength(1)).annotations({ title: 'Full name' }),
-  notes: Schema.optional(Format.Text.annotations({ title: 'Notes' })),
   active: Schema.optional(Schema.Boolean.annotations({ title: 'Active' })),
-  age: Schema.optional(Schema.Number.annotations({ title: 'Age' })),
+  // TODO(burdon): Custom field.
+  address: Schema.optional(
+    Schema.Struct({
+      street: Schema.String,
+      city: Schema.String,
+      // TODO(burdon): Constrain input.
+      state: Schema.String.pipe(Schema.minLength(2), Schema.maxLength(2)).annotations({ title: 'State' }),
+      // TODO(burdon): Select input.
+      zip: Schema.Number,
+    }).annotations({ title: 'Address' }),
+  ),
+  // TODO(burdon): Array of refs.
+  employer: Schema.optional(Type.Ref(Organization).annotations({ title: 'Employer' })),
+  status: Schema.optional(Schema.Literal('active', 'inactive').annotations({ title: 'Status' })),
+  notes: Schema.optional(Format.Text.annotations({ title: 'Notes' })),
   location: Schema.optional(Format.GeoPoint.annotations({ title: 'Location' })),
   tasks: Schema.optional(Schema.Array(Schema.String).annotations({ title: 'Tasks' })),
   locations: Schema.optional(Schema.Array(Format.GeoPoint).annotations({ title: 'Locations' })),
@@ -56,14 +82,27 @@ const DefaultStory = <T extends AnyProperties = AnyProperties>({
   ...props
 }: StoryProps<T>) => {
   const [values, setValues] = useState<Partial<T>>(valuesParam ?? {});
+  const client = useClient();
+  const space = client.spaces.default;
+
   const handleSave = useCallback<NonNullable<NewFormRootProps<T>['onSave']>>((values) => {
     log.info('save', { values, meta });
     setValues(values);
   }, []);
+
   const handleCancel = useCallback<NonNullable<NewFormRootProps<T>['onCancel']>>(() => {
     log.info('cancel');
     setValues(valuesParam ?? {});
   }, []);
+
+  const handleQueryRefOptions = useCallback<NonNullable<NewFormRootProps<T>['onQueryRefOptions']>>(
+    async ({ typename }) => {
+      log.info('query', { typename });
+      const { objects } = await space.db.query(Filter.typename(typename)).run();
+      return objects.map((result: any) => ({ dxn: Obj.getDXN(result), label: Obj.getLabel(result) }));
+    },
+    [space],
+  );
 
   return (
     <Tooltip.Provider>
@@ -75,6 +114,7 @@ const DefaultStory = <T extends AnyProperties = AnyProperties>({
           onAutoSave={handleSave}
           onSave={handleSave}
           onCancel={handleCancel}
+          onQueryRefOptions={handleQueryRefOptions}
           {...props}
         >
           <NewForm.Viewport>
@@ -93,9 +133,23 @@ const meta = {
   title: 'ui/react-ui-form/NewForm',
   component: NewForm.Root,
   render: DefaultStory,
+
   decorators: [
     withTheme,
-    //, withLayoutVariants()
+    withClientProvider({
+      createIdentity: true,
+      createSpace: true,
+      types: [Organization, Person],
+      onCreateIdentity: ({ client }) => {
+        const space = client.spaces.default;
+        [
+          Obj.make(Organization, { name: 'DXOS' }),
+          Obj.make(Organization, { name: 'BlueYard' }),
+          Obj.make(Organization, { name: 'Backed' }),
+          Obj.make(Organization, { name: 'BCV' }),
+        ].map((obj) => space.db.add(obj));
+      },
+    }),
   ],
   parameters: {
     layout: 'fullscreen',

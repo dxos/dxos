@@ -84,7 +84,7 @@ export const ArrayField = <T extends AnyProperties>({
           readonly
             ? 'flex flex-wrap gap-1 mlb-1'
             : values.length > 0
-              ? 'grid gap-1 grid-cols-[1fr_min-content] mlb-1'
+              ? 'grid grid-cols-[1fr_min-content] gap-2 mlb-2'
               : 'hidden'
         }
       >

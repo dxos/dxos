@@ -12,7 +12,6 @@ import { Format } from '@dxos/echo';
 import { type AnyProperties } from '@dxos/echo/internal';
 import { createJsonPath, findNode, getDiscriminatedType, isDiscriminatedUnion } from '@dxos/effect';
 import { useTranslation } from '@dxos/react-ui';
-import { mx } from '@dxos/react-ui-theme';
 import { type ProjectionModel, type SchemaProperty } from '@dxos/schema';
 
 import { translationKey } from '../../translations';
@@ -33,6 +32,7 @@ import {
 import {
   type FormFieldComponent,
   type FormFieldComponentProps,
+  FormFieldLabel,
   type FormFieldMap,
   type FormFieldProvider,
 } from './FormFieldComponent';
@@ -207,7 +207,7 @@ export const FormField = <T extends AnyProperties>({
       const schema = Schema.make(typeLiteral);
       return (
         <>
-          {!inline && <h3 className={mx('text-lg mlb-inputSpacingBlock first:mbs-0')}>{label}</h3>}
+          {!inline && <FormFieldLabel label={label} asChild />}
           <FormFieldSet
             schema={schema}
             path={path}

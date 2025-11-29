@@ -5,21 +5,13 @@
 import '@dxos/lit-ui/dx-tag-picker.pcss';
 
 import type * as Schema from 'effect/Schema';
-import type * as SchemaAST from 'effect/SchemaAST';
 import React, { useCallback, useMemo } from 'react';
 
-import {
-  type EchoSchema,
-  Expando,
-  Ref,
-  ReferenceAnnotationId,
-  type ReferenceAnnotationValue,
-  getTypeAnnotation,
-} from '@dxos/echo/internal';
+import { Annotation, Ref, Type } from '@dxos/echo';
+import { ReferenceAnnotationId, type ReferenceAnnotationValue } from '@dxos/echo/internal';
 import { findAnnotation } from '@dxos/effect';
 import { DXN } from '@dxos/keys';
-import { type DxTagPickerItemClick } from '@dxos/lit-ui';
-import { DxAnchor, DxTagPickerItem } from '@dxos/lit-ui/react';
+import { DxAnchor } from '@dxos/lit-ui/react';
 import { Button, Icon, Input, useTranslation } from '@dxos/react-ui';
 import { descriptionText, mx } from '@dxos/react-ui-theme';
 import { isNonNullable } from '@dxos/util';
@@ -37,8 +29,6 @@ const isRefSnapShot = (val: any): val is { '/': string } => {
 };
 
 export type RefFieldProps = FormFieldComponentProps & {
-  schema?: EchoSchema;
-  ast?: SchemaAST.AST;
   array?: boolean;
   createOptionLabel?: [string, { ns: string }];
   createOptionIcon?: string;
@@ -48,54 +38,49 @@ export type RefFieldProps = FormFieldComponentProps & {
   onQueryRefOptions?: QueryRefOptions;
 };
 
-export const RefField = ({
-  type,
-  label,
-  inline,
-  readonly,
-  placeholder,
-  array,
-  ast,
-  getStatus,
-  getValue,
-  createOptionLabel,
-  createOptionIcon,
-  onBlur,
-  onCreate,
-  createSchema,
-  createInitialValuePath,
-  onQueryRefOptions,
-  onValueChange,
-  ...props
-}: RefFieldProps) => {
+export const RefField = (props: RefFieldProps) => {
+  const {
+    ast,
+    label,
+    inline,
+    readonly,
+    placeholder,
+    getStatus,
+    getValue,
+    array,
+    createOptionLabel,
+    createOptionIcon,
+    createSchema,
+    createInitialValuePath,
+    onCreate,
+    onQueryRefOptions,
+    onValueChange,
+  } = props;
   const { t } = useTranslation(translationKey);
-  const refTypeInfo = useMemo(
-    () => (ast ? findAnnotation<ReferenceAnnotationValue>(ast, ReferenceAnnotationId) : undefined),
+  const { status, error } = getStatus();
+
+  const typename = useMemo(
+    () => (ast ? findAnnotation<ReferenceAnnotationValue>(ast, ReferenceAnnotationId)?.typename : undefined),
     [ast],
   );
-  const {
-    options: availableOptions,
-    update: updateOptions,
-    loading: _loading,
-  } = useQueryRefOptions({ refTypeInfo, onQueryRefOptions });
 
-  if ((refTypeInfo && refTypeInfo?.typename === getTypeAnnotation(Expando)?.typename) || !onQueryRefOptions) {
-    // If ref type is expando, fall back to taking a DXN in string format.
-    return (
-      <RefFieldFallback
-        {...{ ast, type, label, placeholder, readonly, inline, getValue, getStatus, onBlur, onValueChange, ...props }}
-      />
-    );
+  // TODO(burdon): Query items on demand.
+  const { options, update: updateOptions } = useQueryRefOptions({ typename, onQueryRefOptions });
+
+  // If ref type is expando, fall back to taking a DXN in string format.
+  // TODO(burdon): Why?
+  if (typename === Annotation.getTypeAnnotation(Type.Expando)?.typename || !onQueryRefOptions) {
+    return <RefFieldFallback {...props} />;
   }
 
   const handleGetValue = useCallback(() => {
     const formValue = getValue();
 
-    const unknownToRefOption = (val: unknown) => {
-      const isRef = Ref.isRef(val);
-      if (isRef || isRefSnapShot(val)) {
-        const dxnString = isRef ? val.dxn.toString() : val['/'];
-        const matchingOption = availableOptions.find((option) => option.id === dxnString);
+    const unknownToRefOption = (value: unknown) => {
+      const isRef = Ref.isRef(value);
+      if (isRef || isRefSnapShot(value)) {
+        const dxnString = isRef ? value.dxn.toString() : value['/'];
+        const matchingOption = options.find((option) => option.id === dxnString);
         if (matchingOption) {
           return matchingOption;
         }
@@ -113,7 +98,7 @@ export const RefField = ({
     }
 
     return [];
-  }, [getValue, availableOptions, array]);
+  }, [options, array, getValue]);
 
   const handleUpdate = useCallback(
     (ids: string[]) => {
@@ -124,7 +109,7 @@ export const RefField = ({
 
       const refs = ids
         .map((id) => {
-          const item = availableOptions.find((option) => option.id === id);
+          const item = options.find((option) => option.id === id);
           if (item) {
             const dxn = DXN.parse(item.id);
             return Ref.fromDXN(dxn);
@@ -139,7 +124,7 @@ export const RefField = ({
         onValueChange('object', refs[0]);
       }
     },
-    [availableOptions, array, onValueChange],
+    [options, array, onValueChange],
   );
 
   const handleCreate = useCallback(
@@ -149,8 +134,6 @@ export const RefField = ({
     },
     [onCreate, updateOptions],
   );
-
-  const { status, error } = getStatus();
 
   const items = handleGetValue();
   const selectedIds = useMemo(() => items.map((i: any) => i.id), [items]);
@@ -170,7 +153,7 @@ export const RefField = ({
     [array, selectedIds, handleUpdate],
   );
 
-  if (!refTypeInfo || (readonly && items.length < 1)) {
+  if (!typename || (readonly && items.length < 1)) {
     return null;
   }
 
@@ -190,42 +173,36 @@ export const RefField = ({
           )
         ) : (
           <ObjectPicker.Root>
-            <ObjectPicker.Trigger asChild>
-              <Button variant='ghost' classNames='is-full text-start gap-2'>
-                <div role='none' className='grow'>
-                  {items?.length ? (
-                    items?.map((item) => (
-                      <DxTagPickerItem
-                        key={item.id}
-                        itemId={item.id}
-                        label={item.label}
-                        {...(item.hue ? { hue: item.hue } : {})}
-                        removeLabel={t('remove item label')}
-                        onItemClick={(event: DxTagPickerItemClick) => {
-                          if (event.action === 'remove') {
-                            toggleSelect(item.id);
-                          }
-                        }}
-                      />
-                    ))
-                  ) : (
+            <ObjectPicker.Trigger asChild classNames='p-0'>
+              {items?.length === 1 ? (
+                <div className='flex gap-2is-full'>
+                  {items?.map((item) => (
+                    <Input.Root key={item.id}>
+                      <Input.TextInput value={item.label} readOnly classNames='is-full' />
+                    </Input.Root>
+                  ))}
+                </div>
+              ) : (
+                <Button classNames='is-full text-start gap-2'>
+                  <div role='none' className='grow'>
                     <span className='text-description'>
                       {placeholder ?? t('ref field placeholder', { count: array ? 99 : 1 })}
                     </span>
-                  )}
-                </div>
-                <Icon size={3} icon='ph--caret-down--bold' />
-              </Button>
+                  </div>
+                  <Icon size={3} icon='ph--caret-down--bold' />
+                </Button>
+              )}
             </ObjectPicker.Trigger>
             <ObjectPicker.Content
-              options={availableOptions}
+              classNames='popover-card-width'
+              options={options}
               selectedIds={selectedIds}
-              onSelect={toggleSelect}
               createSchema={createSchema}
               createOptionLabel={createOptionLabel}
               createOptionIcon={createOptionIcon}
               createInitialValuePath={createInitialValuePath}
               onCreate={handleCreate}
+              onSelect={toggleSelect}
             />
           </ObjectPicker.Root>
         )}
