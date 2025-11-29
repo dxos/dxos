@@ -1,0 +1,20 @@
+//
+// Copyright 2025 DXOS.org
+//
+
+import type { Meta, StoryObj } from '@storybook/react';
+
+import { Form2 } from './Form2';
+
+const meta: Meta<typeof Form2> = {
+  title: 'components/Form2',
+  component: Form2,
+};
+
+export default meta;
+
+type Story = StoryObj<typeof meta>;
+
+export const Default: Story = {
+  args: {},
+};

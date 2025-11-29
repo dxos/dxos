@@ -25,6 +25,7 @@ const StorybookProjectItem = ({ item, projectionModel }: ItemProps) => {
     const contact = item as Obj.Obj<Person.Person>;
     return <Form values={contact} schema={Person.Person} projection={projectionModel} autoSave />;
   }
+
   return <span>{item.id}</span>;
 };
 

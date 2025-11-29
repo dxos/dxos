@@ -54,8 +54,8 @@ const Person = Schema.Struct({
   identities: Schema.optional(
     Schema.Array(
       Schema.Struct({
-        type: Schema.String,
-        value: Schema.String,
+        type: Schema.String.annotations({ title: 'Type' }),
+        value: Schema.String.annotations({ title: 'Value' }),
       }).annotations({ title: 'Identities' }),
     ).annotations({
       title: 'Identities',

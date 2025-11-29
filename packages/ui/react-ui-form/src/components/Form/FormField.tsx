@@ -99,9 +99,10 @@ export const FormField = <T extends AnyProperties>({
 
   const label = useMemo(() => title ?? Function.pipe(name, StringEffect.capitalize), [title, name]);
   const placeholder = useMemo(
-    () => (examples?.length ? `${t('example placeholder')}: ${examples[0]}` : description),
-    [examples, description],
+    () => (examples?.length ? `${t('example placeholder')}: ${examples[0]}` : (description ?? label)),
+    [examples, description, label],
   );
+  console.log(label, description, examples, placeholder);
 
   const fieldState = useFormFieldState(FormField.displayName, path);
   const fieldProps: FormFieldComponentProps = {
@@ -211,6 +212,7 @@ export const FormField = <T extends AnyProperties>({
           <FormFieldSet
             schema={schema}
             path={path}
+            inline={inline}
             readonly={readonly}
             projection={projection}
             fieldMap={fieldMap}

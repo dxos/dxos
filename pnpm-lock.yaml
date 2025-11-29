@@ -15964,6 +15964,8 @@ importers:
         specifier: '*'
         version: 5.1.2
 
+  tools/vscode-file-templates: {}
+
   tools/x:
     dependencies:
       '@dxos/log':

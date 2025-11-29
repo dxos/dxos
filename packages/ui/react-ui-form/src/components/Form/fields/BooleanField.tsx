@@ -6,8 +6,7 @@ import React from 'react';
 
 import { Input } from '@dxos/react-ui';
 
-import { type FormFieldComponentProps } from '../FormFieldComponent';
-import { FormFieldWrapper } from '../FormFieldWrapper';
+import { type FormFieldComponentProps, FormFieldWrapper } from '../FormFieldComponent';
 
 export const BooleanField = ({
   type,

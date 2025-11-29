@@ -12,8 +12,8 @@ import { isTruthy } from '@dxos/util';
 
 import { type FormHandlerProps } from '../../hooks';
 
-import { FormErrorBoundary } from './FormErrorBoundary';
 import { FormField, type FormFieldProps } from './FormField';
+import { FormFieldErrorBoundary } from './FormFieldComponent';
 import { useFormValues } from './FormRoot';
 
 export type FormFieldSetProps<T extends AnyProperties> = ThemedClassName<
@@ -26,6 +26,7 @@ export type FormFieldSetProps<T extends AnyProperties> = ThemedClassName<
     Pick<
       FormFieldProps<T>,
       | 'path'
+      | 'inline'
       | 'projection'
       | 'autoFocus'
       | 'readonly'
@@ -41,7 +42,7 @@ export type FormFieldSetProps<T extends AnyProperties> = ThemedClassName<
 >;
 
 export const FormFieldSet = forwardRef<HTMLDivElement, FormFieldSetProps<any>>(
-  ({ classNames, schema, path, exclude, sort, projection, ...props }, forwardRef) => {
+  ({ classNames, schema, path, exclude, sort, projection, inline, ...props }, forwardRef) => {
     const values = useFormValues(FormFieldSet.displayName!, path);
 
     // TODO(burdon): Updates on every value change.
@@ -84,18 +85,19 @@ export const FormFieldSet = forwardRef<HTMLDivElement, FormFieldSetProps<any>>(
     }, [schema, values, exclude, sort, projection?.fields]);
 
     return (
-      <div role='form' className={mx('is-full', classNames)} ref={forwardRef}>
+      <div role='form' className={mx('is-full', inline && 'flex flex-col gap-2', classNames)} ref={forwardRef}>
         {properties
           .map((property) => {
             return (
-              <FormErrorBoundary key={property.name} path={[...(path ?? []), property.name]}>
+              <FormFieldErrorBoundary key={property.name} path={[...(path ?? []), property.name]}>
                 <FormField
                   property={property}
                   path={[...(path ?? []), property.name]}
                   projection={projection}
+                  inline={inline}
                   {...props}
                 />
-              </FormErrorBoundary>
+              </FormFieldErrorBoundary>
             );
           })
           .filter(isTruthy)}

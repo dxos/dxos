@@ -91,20 +91,18 @@ export const ArrayField = <T extends AnyProperties>({
         {values.map((_, index) => {
           return (
             <Fragment key={index}>
-              <div role='none'>
-                <FormField
-                  inline
-                  autoFocus={index === values.length - 1}
-                  path={[...(path ?? []), index]}
-                  property={{
-                    ...property,
-                    array: false, // Cannot nest arrays.
-                    ast: elementType,
-                  }}
-                  readonly={readonly}
-                  {...props}
-                />
-              </div>
+              <FormField
+                autoFocus={index === values.length - 1}
+                path={[...(path ?? []), index]}
+                property={{
+                  ...property,
+                  array: false, // Cannot nest arrays.
+                  ast: elementType,
+                }}
+                readonly={readonly}
+                inline
+                {...props}
+              />
 
               {!readonly && (
                 <div role='none' className='flex flex-col bs-full justify-end'>
