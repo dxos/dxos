@@ -23,7 +23,18 @@ const Person = Schema.Struct({
   active: Schema.optional(Schema.Boolean.annotations({ title: 'Active' })),
   age: Schema.optional(Schema.Number.annotations({ title: 'Age' })),
   location: Schema.optional(Format.GeoPoint.annotations({ title: 'Location' })),
-  identities: Schema.optional(Schema.Array(Schema.String).annotations({ title: 'Identities' })),
+  // TOOD(burdon): Error.
+  // identities: Schema.optional(Schema.Array(Schema.String).annotations({ title: 'Identities' })),
+  // identities: Schema.optional(
+  //   Schema.Array(
+  //     Schema.Struct({
+  //       type: Schema.String,
+  //       value: Schema.String,
+  //     }).annotations({ title: 'Identities' }),
+  //   ).annotations({
+  //     title: 'Identities',
+  //   }),
+  // ),
 }).pipe(
   Type.Obj({
     typename: 'dxos.org/type/Person', // TODO(burdon): Change all types to /schema
