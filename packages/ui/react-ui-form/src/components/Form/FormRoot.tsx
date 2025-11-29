@@ -53,13 +53,8 @@ export type FormProviderProps<T extends AnyProperties> = PropsWithChildren<
   }
 >;
 
-export const FormProvider = <T extends AnyProperties>({
-  children,
-  formRef,
-  autoSave,
-  ...FormProps
-}: FormProviderProps<T>) => {
-  const form = useFormHandler(FormProps);
-  useKeyHandler(formRef?.current ?? null, form, autoSave);
+export const FormProvider = <T extends AnyProperties>({ children, formRef, ...props }: FormProviderProps<T>) => {
+  const form = useFormHandler(props);
+  useKeyHandler(formRef?.current ?? null, form);
   return <FormContext.Provider value={form}>{children}</FormContext.Provider>;
 };

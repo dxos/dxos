@@ -16,17 +16,8 @@ export const useKeyHandler = (formElement: HTMLDivElement | null, form: FormHand
     (event: KeyboardEvent) => {
       switch (event.key) {
         case 'Enter': {
-          // E.g., opt-out on combobox selection.
-          const optOut =
-            (event.target as HTMLElement).hasAttribute('data-no-submit') ||
-            (event.target as HTMLElement).closest('[data-no-submit]') !== null;
-
-          // TODO(burdon): Explain why disabled if modifier.
-          const isTextarea = (event.target as HTMLElement).tagName.toLowerCase() === 'textarea';
-          if ((isTextarea ? event.metaKey : true) && !optOut) {
-            if (!form.autoSave && form.canSave) {
-              form.onSave();
-            }
+          if (event.metaKey && form.canSave) {
+            form.onSave();
           }
           break;
         }

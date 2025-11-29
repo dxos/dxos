@@ -24,8 +24,8 @@ import { FormContext } from './FormRoot';
 //  [x] Keyboard handler (autosave)
 //  [ ] Don't calls save/autoSave if value isn't different from original values.
 //  [ ] Fix onCancel (restore values)
-// [ ] Update hooks used by external packages (i.e., useFormValues).
 // [ ] Padding and nesting.
+// [ ] Update hooks used by external packages (i.e., useFormValues).
 // [ ] Test 22 usages.
 // [ ] Merge stage 1.
 
@@ -127,10 +127,10 @@ type NewFormContentProps = ThemedClassName<PropsWithChildren<{}>>;
 const NewFormContent = ({ classNames, children }: NewFormContentProps) => {
   const { form } = useNewFormContext(NewFormContent.displayName);
   const ref = useRef<HTMLDivElement>(null);
-  false && useKeyHandler(ref.current, form);
+  useKeyHandler(ref.current, form);
 
   return (
-    <div ref={ref} className={mx('flex flex-col is-full pli-cardSpacingInline', classNames)}>
+    <div role='none' className={mx('flex flex-col is-full pli-cardSpacingInline', classNames)} ref={ref}>
       {children}
     </div>
   );

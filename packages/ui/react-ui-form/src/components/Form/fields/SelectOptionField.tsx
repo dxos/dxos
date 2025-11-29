@@ -164,7 +164,6 @@ export const SelectOptionField = ({
                               onChange={handleTitleChange(item.id)}
                               onKeyDown={handleKeyDown}
                               classNames='flex-1'
-                              data-no-submit
                             />
                             <HuePicker disabled={!!readonly} value={item.color} onChange={handleColorChange(item.id)} />
                             <IconButton

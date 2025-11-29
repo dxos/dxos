@@ -170,15 +170,14 @@ export const RefField = ({
     [array, selectedIds, handleUpdate],
   );
 
-  if (!refTypeInfo) {
+  if (!refTypeInfo || (readonly && items.length < 1)) {
     return null;
   }
 
-  // NOTE(thure): I left both predicates in-place in case we decide to add variants which do render readonly but empty values.
-  return readonly && items.length < 1 ? null : (
+  return (
     <Input.Root validationValence={status}>
       {!inline && <FormFieldLabel error={error} readonly={readonly} label={label} />}
-      <div data-no-submit>
+      <div>
         {readonly ? (
           items.length < 1 ? (
             <p className={mx(descriptionText, 'mbe-2')}>{t('empty readonly ref field label')}</p>

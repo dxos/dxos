@@ -40,7 +40,7 @@ export interface FormHandlerProps<T extends AnyProperties> {
    * Sometimes the parent component may want to know about changes even if the form is
    * in an invalid state.
    */
-  onValuesChanged?: (values: Partial<T>, meta: { isValid: boolean; changed: FormHandler<T>['changed'] }) => void;
+  onValuesChanged?: (values: Partial<T>, meta: { changed: FormHandler<T>['changed']; isValid: boolean }) => void;
 
   /**
    * Called when a field is blurred and is valid.
