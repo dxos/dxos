@@ -175,7 +175,7 @@ export const RefField = (props: RefFieldProps) => {
           <ObjectPicker.Root>
             <ObjectPicker.Trigger asChild classNames='p-0'>
               {items?.length === 1 ? (
-                <div className='flex gap-2is-full'>
+                <div className='flex gap-2 is-full'>
                   {items?.map((item) => (
                     <Input.Root key={item.id}>
                       <Input.TextInput value={item.label} readOnly classNames='is-full' />
@@ -184,8 +184,8 @@ export const RefField = (props: RefFieldProps) => {
                 </div>
               ) : (
                 <Button classNames='is-full text-start gap-2'>
-                  <div role='none' className='grow'>
-                    <span className='text-description'>
+                  <div role='none' className='grow overflow-hidden'>
+                    <span className='flex truncate text-description'>
                       {placeholder ?? t('ref field placeholder', { count: array ? 99 : 1 })}
                     </span>
                   </div>
