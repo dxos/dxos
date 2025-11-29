@@ -28,7 +28,7 @@ export const TextAreaField = ({
       getStatus={getStatus}
       getValue={getValue}
     >
-      {({ value }) => (
+      {({ value = '' }) => (
         <Input.TextArea
           rows={3}
           disabled={!!readonly}

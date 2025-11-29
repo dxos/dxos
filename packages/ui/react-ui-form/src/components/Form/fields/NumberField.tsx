@@ -29,12 +29,12 @@ export const NumberField = ({
       getStatus={getStatus}
       getValue={getValue}
     >
-      {({ value }) => (
+      {({ value = '' }) => (
         <Input.TextInput
           type='number'
           disabled={!!readonly}
           placeholder={placeholder}
-          value={value ?? ''}
+          value={value}
           onChange={(event) => onValueChange(type, safeParseFloat(event.target.value) || 0)}
           onBlur={onBlur}
         />

@@ -28,7 +28,7 @@ export const TextField = ({
       getStatus={getStatus}
       getValue={getValue}
     >
-      {({ value }) => (
+      {({ value = '' }) => (
         <Input.TextInput
           {...{ 'data-1p-ignore': true }}
           disabled={!!readonly}

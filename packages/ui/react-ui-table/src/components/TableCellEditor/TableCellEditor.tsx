@@ -23,7 +23,7 @@ import {
   parseCellIndex,
   useGridContext,
 } from '@dxos/react-ui-grid';
-import { type FieldProjection, adaptValidationMessage } from '@dxos/schema';
+import { type FieldProjection } from '@dxos/schema';
 
 import { type ModalController, type TableModel } from '../../model';
 
@@ -119,6 +119,7 @@ export const TableCellEditor = ({
     return fieldProjection;
   }, [model, editing]);
 
+  // TOOD(burdon): Attach to event handler.
   const handleEnter = useCallback(
     async (value: any) => {
       if (!model || !editing) {
@@ -135,7 +136,7 @@ export const TableCellEditor = ({
         setEditing(null);
         onSave?.();
       } else {
-        setValidationError(adaptValidationMessage(validationResult.error));
+        setValidationError(validationResult.error);
         setValidationVariant('error');
       }
     },

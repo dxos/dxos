@@ -45,11 +45,6 @@ type NewFormContextValue<T extends AnyProperties = any> = {
   form: FormHandler<T>;
 
   /**
-   * Auto-save the form when the values change.
-   */
-  autoSave?: boolean;
-
-  /**
    * Show debug info.
    */
   debug?: boolean;
@@ -75,7 +70,7 @@ type NewFormRootProps<T extends AnyProperties = AnyProperties> = PropsWithChildr
   } &
     //
     Omit<NewFormContextValue<T>, 'form'> &
-    Pick<FormHandlerProps<T>, 'schema' | 'values' | 'onValuesChanged'> &
+    Pick<FormHandlerProps<T>, 'schema' | 'autoSave' | 'values' | 'onAutoSave' | 'onValuesChanged'> &
     // TODO(burdon): Pick/Refine?
     FormFieldSetProps<T>
 >;
@@ -163,7 +158,10 @@ type NewFormActionsProps = ThemedClassName<{}>;
 
 const NewFormActions = ({ classNames }: NewFormActionsProps) => {
   const { t } = useTranslation(translationKey);
-  const { form, readonly } = useNewFormContext(NewFormActions.displayName);
+  const {
+    form: { isValid, onSave, onCancel },
+    readonly,
+  } = useNewFormContext(NewFormActions.displayName);
 
   if (readonly) {
     return null;
@@ -171,24 +169,24 @@ const NewFormActions = ({ classNames }: NewFormActionsProps) => {
 
   return (
     <div role='none' className={mx('grid grid-flow-col auto-cols-fr gap-2 plb-cardSpacingBlock', classNames)}>
-      {form.onCancel && (
+      {onCancel && (
         <IconButton
           icon='ph--x--regular'
           iconEnd
           label={t('cancel button label')}
-          onClick={form.onCancel}
+          onClick={onCancel}
           data-testid='cancel-button'
         />
       )}
-      {form.onSave && (
+      {onSave && (
         <IconButton
           type='submit'
           variant='primary'
-          disabled={!form.canSave}
+          disabled={!isValid}
           icon='ph--check--regular'
           iconEnd
           label={t('save button label')}
-          onClick={form.onSave}
+          onClick={onSave}
           data-testid='save-button'
         />
       )}
@@ -206,7 +204,9 @@ type NewFormSubmitProps = ThemedClassName<Partial<Pick<IconButtonProps, 'icon' |
 
 const NewFormSubmit = ({ classNames, label, icon }: NewFormSubmitProps) => {
   const { t } = useTranslation(translationKey);
-  const { form } = useNewFormContext(NewFormSubmit.displayName);
+  const {
+    form: { isValid, onSave },
+  } = useNewFormContext(NewFormSubmit.displayName);
 
   return (
     <div role='none' className={mx('flex is-full plb-cardSpacingBlock', classNames)}>
@@ -214,10 +214,10 @@ const NewFormSubmit = ({ classNames, label, icon }: NewFormSubmitProps) => {
         classNames='is-full'
         type='submit'
         variant='primary'
-        disabled={!form.canSave}
+        disabled={!isValid}
         icon={icon ?? 'ph--check--regular'}
         label={label ?? t('save button label')}
-        onClick={form.onSave}
+        onClick={onSave}
         data-testid='save-button'
       />
     </div>

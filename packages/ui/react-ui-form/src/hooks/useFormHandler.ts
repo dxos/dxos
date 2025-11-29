@@ -7,9 +7,8 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { type AnyProperties, getValue as getValue$, setValue as setValue$ } from '@dxos/echo/internal';
 import { type JsonPath, type SimpleType, createJsonPath, fromEffectValidationPath } from '@dxos/effect';
-import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { type ValidationError, adaptValidationMessage, validateSchema } from '@dxos/schema';
+import { type ValidationError, validateSchema } from '@dxos/schema';
 import { type MaybePromise } from '@dxos/util';
 
 export type FormFieldStatus = {
@@ -32,6 +31,11 @@ export interface FormHandlerProps<T extends AnyProperties> {
   values?: Partial<T>;
 
   /**
+   * Auto-save the form when the values change.
+   */
+  autoSave?: boolean;
+
+  /**
    * Callback for value changes. Note: This is called even when values are invalid.
    * Sometimes the parent component may want to know about changes even if the form is
    * in an invalid state.
@@ -39,11 +43,15 @@ export interface FormHandlerProps<T extends AnyProperties> {
   onValuesChanged?: (values: Partial<T>, meta: { isValid: boolean; changed: FormHandler<T>['changed'] }) => void;
 
   /**
+   * Called when a field is blurred and is valid.
+   */
+  onAutoSave?: (values: T, meta: { changed: FormHandler<T>['changed'] }) => void;
+
+  /**
    * Custom validation function that runs only after schema validation passes.
    * Use this for complex validation logic that can't be expressed in the schema.
    * @returns Array of validation errors, or undefined if validation passes
    */
-  // TODO(burdon): Change to key x value?
   onValidate?: (values: T) => ValidationError[] | undefined;
 
   /**
@@ -64,19 +72,17 @@ export type FormHandler<T extends AnyProperties> = Pick<FormHandlerProps<T>, 'sc
   /** Initial values (which may not pass validation). */
   values: Partial<T>;
 
-  /** Map of error strings. */
-  errors: Record<JsonPath, string>;
-
   /** Map of touched fields. */
   touched: Record<JsonPath, boolean>;
-
   // TODO(burdon): How is this different from above?
   changed: Record<JsonPath, boolean>;
 
-  // TODO(burdon): How is this different from below?
-  isValid: boolean;
+  /** Map of error strings. */
+  errors: Record<JsonPath, string>;
 
   /** Whether the form can be saved (i.e., data is valid). */
+  isValid: boolean;
+  // TODO(burdon): Why is this needed separately from isValid?
   canSave: boolean;
 
   onSave: () => void;
@@ -98,8 +104,10 @@ export type FormHandler<T extends AnyProperties> = Pick<FormHandlerProps<T>, 'sc
  */
 export const useFormHandler = <T extends AnyProperties>({
   schema,
+  autoSave,
   values: valuesProp,
   onValuesChanged,
+  onAutoSave,
   onValidate,
   onSave,
   onCancel,
@@ -111,8 +119,8 @@ export const useFormHandler = <T extends AnyProperties>({
     setValues(valuesProp ?? {});
   }, [valuesProp]);
 
-  const [touched, setTouched] = useState<Record<JsonPath, boolean>>(createKeySet(valuesProp ?? {}, false));
-  const [changed, setChanged] = useState<Record<JsonPath, boolean>>(createKeySet(valuesProp ?? {}, false));
+  const [touched, setTouched] = useState<Record<JsonPath, boolean>>({});
+  const [changed, setChanged] = useState<Record<JsonPath, boolean>>({});
   const [errors, setErrors] = useState<Record<JsonPath, string>>({});
   const [saving, setSaving] = useState(false);
 
@@ -127,6 +135,7 @@ export const useFormHandler = <T extends AnyProperties>({
       }
 
       let errors: ValidationError[] = validateSchema(schema, values) ?? [];
+      log('validate', { values, errors });
       if (errors.length === 0 && onValidate) {
         const validatedValues = values as T;
         errors = onValidate(validatedValues) ?? [];
@@ -147,7 +156,7 @@ export const useFormHandler = <T extends AnyProperties>({
       validate(values);
       setSchemaChanged(false);
     }
-  }, [values, schemaChanged]);
+  }, [validate, values, schemaChanged]);
 
   const isValid = useMemo(() => {
     return Object.keys(errors).length === 0;
@@ -155,7 +164,7 @@ export const useFormHandler = <T extends AnyProperties>({
 
   /**
    * NOTE: We can submit if there is no touched field that has an error.
-   * Basically, if there's a validation message visible in the form, submit should be disabled.
+   * If there's a validation message visible in the form, submit should be disabled.
    */
   const canSave = useMemo(
     () =>
@@ -210,7 +219,7 @@ export const useFormHandler = <T extends AnyProperties>({
 
       return {
         status: error ? 'error' : undefined,
-        error: error ? (adaptValidationMessage(error) ?? undefined) : undefined,
+        error: error ? (error ?? undefined) : undefined,
       };
     },
     [errors, touched],
@@ -257,9 +266,14 @@ export const useFormHandler = <T extends AnyProperties>({
     (path: (string | number)[]) => {
       const jsonPath = createJsonPath(path);
       setTouched((touched) => ({ ...touched, [jsonPath]: true }));
-      validate(values);
+      const isValid = validate(values);
+
+      // Auto-save when a field is blurred and is valid
+      if (Object.keys(changed).length > 0 && isValid && autoSave && onAutoSave) {
+        onAutoSave(values as T, { changed });
+      }
     },
-    [validate, values],
+    [validate, values, changed, autoSave, onAutoSave],
   );
 
   return useMemo<FormHandler<T>>(
@@ -301,11 +315,6 @@ export const useFormHandler = <T extends AnyProperties>({
       onCancel,
     ],
   );
-};
-
-const createKeySet = <T extends AnyProperties, V>(obj: T, value: V): Record<JsonPath, V> => {
-  invariant(obj);
-  return Object.keys(obj).reduce((acc, key) => ({ ...acc, [key]: value }), {} as Record<JsonPath, V>);
 };
 
 const flatMap = (errors: ValidationError[]) => {

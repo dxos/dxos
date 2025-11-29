@@ -17,11 +17,11 @@ import { TestLayout } from '../testing';
 import { NewForm, type NewFormRootProps } from './NewForm';
 
 const Person = Schema.Struct({
-  name: Schema.String.annotations({ title: 'Full name' }),
+  name: Schema.String.pipe(Schema.minLength(1)).annotations({ title: 'Full name' }),
   notes: Schema.optional(Format.Text.annotations({ title: 'Notes' })),
   active: Schema.optional(Schema.Boolean.annotations({ title: 'Active' })),
   age: Schema.optional(Schema.Number.annotations({ title: 'Age' })),
-  location: Format.GeoPoint.annotations({ title: 'Location' }),
+  location: Schema.optional(Format.GeoPoint.annotations({ title: 'Location' })),
   identities: Schema.optional(Schema.Array(Schema.String).annotations({ title: 'Identities' })),
 }).pipe(
   Type.Obj({
@@ -58,7 +58,6 @@ const DefaultStory = <T extends AnyProperties = AnyProperties>({
           debug={debug}
           schema={schema}
           values={values}
-          autoSave
           onSave={handleSave}
           onCancel={handleCancel}
           {...props}
@@ -97,14 +96,20 @@ export default meta;
 // type Story<T extends Type.Obj.Any> = StoryObj<StoryProps<T>>;
 type Story<T extends AnyProperties> = StoryObj<StoryProps<T>>;
 
+const schema = Person.pipe(Schema.omit('id'));
+
 const values: Partial<Person> = {
   name: 'Alice',
 };
 
 export const Default: Story<any> = {
   args: {
-    schema: Person,
+    schema,
     values,
+    autoSave: true,
+    onAutoSave: (values, meta) => {
+      console.log('auto-save', JSON.stringify({ values, meta }, null, 2));
+    },
     onSave: (values, meta) => {
       console.log('save', JSON.stringify({ values, meta }, null, 2));
     },
@@ -116,7 +121,7 @@ export const Default: Story<any> = {
 
 export const Readonly: Story<any> = {
   args: {
-    schema: Person,
+    schema,
     values,
     readonly: 'disabled',
   },
@@ -124,7 +129,7 @@ export const Readonly: Story<any> = {
 
 export const Static: Story<any> = {
   args: {
-    schema: Person,
+    schema,
     values,
     readonly: 'static',
   },
