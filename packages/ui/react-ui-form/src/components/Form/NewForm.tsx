@@ -242,7 +242,7 @@ const NewFormSubmit = ({ classNames, label, icon }: NewFormSubmitProps) => {
   }
 
   return (
-    <div role='none' className={mx('flex is-full plb-cardSpacingBlock', classNames)}>
+    <div role='none' className={mx('flex is-full pbs-cardSpacingBlock', classNames)}>
       <IconButton
         classNames='is-full'
         type='submit'
