@@ -17,7 +17,7 @@ import { withTheme } from '@dxos/react-ui/testing';
 import { translations } from '../../translations';
 import { TestLayout } from '../testing';
 
-import { NewForm, type NewFormRootProps } from './NewForm';
+import { NewForm, type NewFormRootProps, omitId } from './NewForm';
 
 const Organization = Schema.Struct({
   name: Schema.String.pipe(Schema.minLength(1)).annotations({ title: 'Full name' }),
@@ -165,8 +165,6 @@ export default meta;
 // type Story<T extends Type.Obj.Any> = StoryObj<StoryProps<T>>;
 type Story<T extends AnyProperties> = StoryObj<StoryProps<T>>;
 
-const schema = Person.pipe(Schema.omit('id'));
-
 const values: Partial<Person> = {
   name: 'Alice',
   location: [40.7128, -74.006],
@@ -175,7 +173,7 @@ const values: Partial<Person> = {
 
 export const Default: Story<any> = {
   args: {
-    schema,
+    schema: omitId(Person),
     values,
     autoSave: true,
   },
@@ -183,7 +181,7 @@ export const Default: Story<any> = {
 
 export const Readonly: Story<any> = {
   args: {
-    schema,
+    schema: omitId(Person),
     values,
     readonly: true,
   },
@@ -191,7 +189,7 @@ export const Readonly: Story<any> = {
 
 export const Static: Story<any> = {
   args: {
-    schema,
+    schema: omitId(Person),
     values,
     layout: 'static',
   },

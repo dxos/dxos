@@ -13,7 +13,7 @@ import { useClientProvider, withClientProvider } from '@dxos/react-client/testin
 import { useAsyncEffect } from '@dxos/react-ui';
 import { withTheme } from '@dxos/react-ui/testing';
 import { withAttention } from '@dxos/react-ui-attention/testing';
-import { Form, TupleField } from '@dxos/react-ui-form';
+import { NewForm, TupleField } from '@dxos/react-ui-form';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { createGraph } from '@dxos/schema';
 import { TestSchema, type TypeSpec, type ValueGenerator, createObjectFactory } from '@dxos/schema/testing';
@@ -75,15 +75,22 @@ const DefaultStory = ({ id = 'test', init, sidebar, children, ...props }: Render
       {sidebar && (
         <Container id='sidebar' classNames='flex grow overflow-hidden'>
           {sidebar === 'selected' && selected && (
-            <Form
+            <NewForm.Root
+              schema={RectangleShapeWithoutRef}
+              values={selected}
               fieldMap={{
                 // TODO(burdon): Replace by type.
                 ['center' as const]: (props) => <TupleField {...props} binding={['x', 'y']} />,
                 ['size' as const]: (props) => <TupleField {...props} binding={['width', 'height']} />,
               }}
-              schema={RectangleShapeWithoutRef}
-              values={selected}
-            />
+            >
+              <NewForm.Viewport>
+                <NewForm.Content>
+                  <NewForm.FieldSet />
+                  <NewForm.Actions />
+                </NewForm.Content>
+              </NewForm.Viewport>
+            </NewForm.Root>
           )}
 
           {sidebar === 'json' && (

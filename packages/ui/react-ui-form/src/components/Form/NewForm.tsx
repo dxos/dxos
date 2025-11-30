@@ -3,6 +3,7 @@
 //
 
 import { createContext } from '@radix-ui/react-context';
+import * as Schema from 'effect/Schema';
 import React, { type PropsWithChildren, useRef } from 'react';
 
 import { type AnyProperties } from '@dxos/echo/internal';
@@ -56,6 +57,9 @@ import { FormContext } from './FormRoot';
 // Misc
 // [ ] Remove client dependency from react-ui-table
 // [ ] Fix useSchema Type.Obj.Any cast
+
+// TODO(burdon): Option to omit automatically?
+export const omitId = <S extends Schema.Schema.AnyNoContext>(schema: S) => schema.pipe(Schema.omit('id'));
 
 //
 // Context
