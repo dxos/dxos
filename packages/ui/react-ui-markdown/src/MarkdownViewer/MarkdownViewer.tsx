@@ -10,9 +10,6 @@ import { type ThemedClassName } from '@dxos/react-ui';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { mx } from '@dxos/react-ui-theme';
 
-// TODO(burdon): Benchmark vs. codemirror (which would be more consistent).
-// TODO(burdon): Checkbox (input).
-
 export type MarkdownViewerProps = ThemedClassName<
   PropsWithChildren<{
     content?: string;
@@ -24,6 +21,7 @@ export type MarkdownViewerProps = ThemedClassName<
  * Transforms markdown text into react elements.
  * https://github.com/remarkjs/react-markdown
  * markdown -> remark -> [mdast -> remark plugins] -> [hast -> rehype plugins] -> components -> react elements.
+ * Consider using @dxos/react-ui-editor.
  */
 export const MarkdownViewer = ({ classNames, children, components, content = '' }: MarkdownViewerProps) => {
   return (

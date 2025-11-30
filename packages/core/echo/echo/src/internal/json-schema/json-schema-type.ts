@@ -54,7 +54,7 @@ export const JsonSchemaEchoAnnotations = Schema.Struct({
   /**
    * @deprecated
    */
-  // TODO(dmaretskyi): We risk old schema not passing validation due to the extra fields. Remove when we are sure this is safe
+  // TODO(dmaretskyi): We risk old schema not passing validation due to the extra fields. Remove when we are sure this is safe.
   type: Schema.optional(
     Schema.Struct({
       typename: Schema.String,
