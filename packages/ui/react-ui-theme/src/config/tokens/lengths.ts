@@ -19,6 +19,7 @@ export const lengthsFacet = {
           slope: 1,
         },
       },
+      // "gap"
       lacuna: {
         root: {
           unit: 'rem',
@@ -36,7 +37,6 @@ export const lengthsFacet = {
       noLine: { root: ['line', 0] },
       hairLine: { root: ['line', 1] },
       thickLine: { root: ['line', 2] },
-      // TODO(burdon): Can/should these be hyphenated?
       trimXs: { root: ['lacuna', 3] },
       trimSm: { root: ['lacuna', 6] },
       trimMd: { root: ['lacuna', 9] },

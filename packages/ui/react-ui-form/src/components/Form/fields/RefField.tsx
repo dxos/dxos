@@ -23,7 +23,7 @@ import { type FormFieldComponentProps, FormFieldLabel } from '../FormFieldCompon
 
 import { TextField } from './TextField';
 
-// TODO(thure): Is this a standard that should be better canonized?
+// TODO(burdon): Factor out.
 const isRefSnapShot = (val: any): val is { '/': string } => {
   return typeof val === 'object' && typeof (val as any)?.['/'] === 'string';
 };

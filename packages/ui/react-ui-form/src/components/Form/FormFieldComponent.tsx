@@ -52,8 +52,7 @@ export type FormFieldComponentProps<T = any> = {
   /**
    * Indicates input used in a list.
    */
-  // TODO(burdon): Combine with readonly/mode.
-  inline?: boolean;
+  inline?: boolean; // TODO(burdon): 'plain' | 'status' | 'inline'
 } & FormFieldStateProps<T>;
 
 /**
@@ -153,13 +152,13 @@ export class FormFieldErrorBoundary extends Component<FormFieldErrorBoundaryProp
 
   override state = { error: undefined };
 
-  override componentDidUpdate(prevProps: FormFieldErrorBoundaryProps): void {
+  override componentDidUpdate(prevProps: FormFieldErrorBoundaryProps) {
     if (prevProps.path !== this.props.path) {
       this.resetError();
     }
   }
 
-  override render(): ReactNode {
+  override render() {
     if (this.state.error) {
       return (
         <div className='flex gap-2 border border-roseFill font-mono text-sm'>
@@ -172,7 +171,7 @@ export class FormFieldErrorBoundary extends Component<FormFieldErrorBoundaryProp
     return this.props.children;
   }
 
-  private resetError(): void {
+  private resetError() {
     this.setState({ error: undefined });
   }
 }

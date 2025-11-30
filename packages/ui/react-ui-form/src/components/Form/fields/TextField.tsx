@@ -29,7 +29,7 @@ export const TextField = ({
     >
       {({ value = '' }) => (
         <Input.TextInput
-          {...{ 'data-1p-ignore': true }}
+          noAutoFill
           disabled={!!readonly}
           placeholder={placeholder}
           value={value}

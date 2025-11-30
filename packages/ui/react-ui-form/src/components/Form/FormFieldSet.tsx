@@ -20,7 +20,6 @@ export type FormFieldSetProps<T extends AnyProperties> = ThemedClassName<
   {
     testId?: string;
     exclude?: (props: SchemaProperty<T>[]) => SchemaProperty<T>[];
-    // TODO(burdon): Change to function (dynamic?)
     sort?: string[];
   } & Pick<FormHandlerProps<T>, 'schema'> &
     Pick<

@@ -22,9 +22,9 @@ const Component = ({
     <FormFieldWrapper<string> {...props}>
       {({ value = '' }) => (
         <Input.TextInput
-          {...{ 'data-1p-ignore': true }}
           disabled={!!readonly}
           placeholder={placeholder}
+          noAutoFill
           value={value}
           onChange={(event) => onValueChange(type, event.target.value)}
           onBlur={onBlur}
