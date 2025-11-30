@@ -79,19 +79,10 @@ export const ArrayField = <T extends AnyProperties>({
     <>
       {(layout !== 'static' || values.length > 0) && <FormFieldLabel readonly={readonly} label={label} asChild />}
 
-      <div
-        role='none'
-        className={
-          readonly || layout === 'static'
-            ? 'flex flex-wrap gap-1 mlb-1'
-            : values.length > 0
-              ? 'grid grid-cols-[1fr_min-content] gap-2 mlb-2'
-              : 'hidden'
-        }
-      >
+      <div role='none' className='flex flex-col gap-2'>
         {values.map((_, index) => {
           return (
-            <Fragment key={index}>
+            <div role='none' key={index} className='grid grid-cols-[1fr_min-content] gap-2 last:mb-3'>
               <FormField
                 autoFocus={index === values.length - 1}
                 path={[...(path ?? []), index]}
@@ -101,8 +92,7 @@ export const ArrayField = <T extends AnyProperties>({
                   ast: elementType,
                 }}
                 readonly={readonly || layout === 'static'}
-                // TODO(burdon): Need inline-static.
-                layout={layout === 'static' ? 'inline' : layout}
+                layout='inline'
                 {...props}
               />
 
@@ -120,7 +110,7 @@ export const ArrayField = <T extends AnyProperties>({
                   </div>
                 </div>
               )}
-            </Fragment>
+            </div>
           );
         })}
       </div>
@@ -128,7 +118,7 @@ export const ArrayField = <T extends AnyProperties>({
       {/* TODO(burdon): Get label from schema. */}
       {!readonly && layout !== 'static' && (
         <IconButton
-          classNames='flex is-full mlb-cardSpacingBlock'
+          classNames='flex is-full _mlb-cardSpacingBlock'
           icon='ph--plus--regular'
           label={t('add field')}
           onClick={handleAdd}
