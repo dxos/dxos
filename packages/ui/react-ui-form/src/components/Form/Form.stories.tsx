@@ -16,12 +16,12 @@ import { translations } from '../../translations';
 import { TestLayout } from '../testing';
 
 import { SelectField } from './fields';
-import { Form, type FormProps } from './Form';
+import { NewForm, type NewFormRootProps } from './NewForm';
 
 type StoryProps<T extends AnyProperties> = {
   debug?: boolean;
   schema: Schema.Schema.AnyNoContext;
-} & FormProps<T>;
+} & NewFormRootProps<T>;
 
 const DefaultStory = <T extends AnyProperties = any>({
   debug,
@@ -30,7 +30,7 @@ const DefaultStory = <T extends AnyProperties = any>({
   ...props
 }: StoryProps<T>) => {
   const [values, setValues] = useState(valuesProp);
-  const handleSave = useCallback<NonNullable<FormProps<T>['onSave']>>((values) => {
+  const handleSave = useCallback<NonNullable<NewFormRootProps<T>['onSave']>>((values) => {
     setValues(values);
   }, []);
 
@@ -38,17 +38,29 @@ const DefaultStory = <T extends AnyProperties = any>({
     return (
       <Tooltip.Provider>
         <TestLayout json={{ values, schema: schema.ast }}>
-          <Form<T> schema={schema} values={values} onSave={handleSave} {...props} />
+          <NewForm.Root<T> schema={schema} values={values} onSave={handleSave} {...props}>
+            <NewForm.Content>
+              <NewForm.FieldSet />
+              <NewForm.Actions />
+            </NewForm.Content>
+          </NewForm.Root>
         </TestLayout>
       </Tooltip.Provider>
     );
   }
 
-  return <Form<T> schema={schema} values={values} onSave={handleSave} {...props} />;
+  return (
+    <NewForm.Root<T> schema={schema} values={values} onSave={handleSave} {...props}>
+      <NewForm.Content>
+        <NewForm.FieldSet />
+        <NewForm.Actions />
+      </NewForm.Content>
+    </NewForm.Root>
+  );
 };
 
 const RefStory = <T extends AnyProperties = any>(props: StoryProps<T>) => {
-  const onQueryRefOptions = useCallback<NonNullable<FormProps<T>['onQueryRefOptions']>>(({ typename }) => {
+  const onQueryRefOptions = useCallback<NonNullable<NewFormRootProps<T>['onQueryRefOptions']>>(({ typename }) => {
     switch (typename) {
       case TestSchema.Person.typename:
         return [
@@ -82,7 +94,7 @@ type PersonSchema = Schema.Schema.Type<typeof PersonSchema>;
 
 const meta = {
   title: 'ui/react-ui-form/Form',
-  component: Form as any,
+  component: NewForm.Root as any,
   render: DefaultStory,
   decorators: [withTheme, withLayoutVariants()],
   parameters: {

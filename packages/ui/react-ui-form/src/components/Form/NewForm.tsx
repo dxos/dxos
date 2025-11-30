@@ -195,7 +195,7 @@ const NewFormActions = ({ classNames }: NewFormActionsProps) => {
   }
 
   return (
-    <div role='none' className={mx('grid grid-flow-col auto-cols-fr gap-2 plb-cardSpacingBlock', classNames)}>
+    <div role='none' className={mx('grid grid-flow-col auto-cols-fr gap-2 pbs-cardSpacingBlock', classNames)}>
       {onCancel && (
         <IconButton
           icon='ph--x--regular'
