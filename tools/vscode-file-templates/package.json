@@ -10,7 +10,7 @@
   "publisher": "dxos",
   "main": "./extension.js",
   "scripts": {
-    "build": "npx @vscode/vsce package && mkdir -p dist && mv *.vsix dist/",
+    "build": "vsce package && mkdir -p dist && mv *.vsix dist/",
     "bundle": "npm version patch && git push && git push --tags && npm run build",
     "version:patch": "npm version patch"
   },
@@ -33,6 +33,9 @@
   "activationEvents": [
     "onCommand:fileTemplates.newFromTemplate"
   ],
+  "devDependencies": {
+    "@vscode/vsce": "^3.7.1"
+  },
   "engines": {
     "vscode": "^1.80.0"
   }
