@@ -153,7 +153,7 @@ export const RefField = (props: RefFieldProps) => {
     [array, selectedIds, handleUpdate],
   );
 
-  if (!typename || (readonly && items.length < 1)) {
+  if (!typename || ((readonly || layout === 'static') && items.length < 1)) {
     return null;
   }
 

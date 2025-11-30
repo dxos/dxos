@@ -111,6 +111,7 @@ export const FormFieldWrapper = <T,>(props: FormFieldWrapperProps<T>) => {
   const { status, error } = getStatus();
   const value = getValue();
 
+  console.log(':::::::::', label, layout, readonly, value);
   if ((readonly || layout === 'static') && value == null) {
     return null;
   }

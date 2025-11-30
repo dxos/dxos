@@ -84,7 +84,7 @@ export const FormFieldSet = forwardRef<HTMLDivElement, FormFieldSetProps<any>>(
       return sort ? filtered.sort(({ name: a }, { name: b }) => sort.indexOf(a) - sort.indexOf(b)) : filtered;
     }, [schema, values, exclude, sort, projection?.fields]);
 
-    if (readonly || (layout === 'static' && values == null)) {
+    if ((readonly || layout === 'static') && values == null) {
       return null;
     }
 
@@ -102,6 +102,7 @@ export const FormFieldSet = forwardRef<HTMLDivElement, FormFieldSetProps<any>>(
                 <FormField
                   property={property}
                   path={[...(path ?? []), property.name]}
+                  readonly={readonly}
                   layout={layout}
                   projection={projection}
                   {...props}

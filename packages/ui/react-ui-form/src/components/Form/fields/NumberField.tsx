@@ -18,7 +18,7 @@ export const NumberField = ({
   ...props
 }: FormFieldComponentProps<number>) => {
   return (
-    <FormFieldWrapper<number> {...props}>
+    <FormFieldWrapper<number> readonly={readonly} {...props}>
       {({ value = '' }) => (
         <Input.TextInput
           type='number'

@@ -43,17 +43,23 @@ export const MarkdownField = ({
     adjustHeight();
   }, [getValue(), adjustHeight]);
 
+  const value = getValue();
+  if ((readonly || layout === 'static') && !value) {
+    return null;
+  }
+
+  // TODO(burdon): Use Markdown Editor.
   return (
     <Input.Root validationValence={status}>
       {layout !== 'inline' && <FormFieldLabel error={error} readonly={readonly} label={label} />}
       {layout === 'static' ? (
-        <p>{getValue() ?? ''}</p>
+        <p>{value}</p>
       ) : (
         <Input.TextArea
           ref={textareaRef}
           disabled={!!readonly}
           placeholder={placeholder}
-          value={getValue() ?? ''}
+          value={value ?? ''}
           classNames={'min-bs-auto max-bs-40 overflow-auto'}
           onChange={(event) => onValueChange(type, event.target.value)}
           onBlur={onBlur}

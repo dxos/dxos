@@ -169,6 +169,7 @@ const schema = Person.pipe(Schema.omit('id'));
 
 const values: Partial<Person> = {
   name: 'Alice',
+  location: [40.7128, -74.006],
 };
 
 export const Default: Story<any> = {

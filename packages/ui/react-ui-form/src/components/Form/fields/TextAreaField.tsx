@@ -17,7 +17,7 @@ export const TextAreaField = ({
   ...props
 }: FormFieldComponentProps<string>) => {
   return (
-    <FormFieldWrapper<string> {...props}>
+    <FormFieldWrapper<string> readonly={readonly} {...props}>
       {({ value = '' }) => (
         <Input.TextArea
           rows={3}

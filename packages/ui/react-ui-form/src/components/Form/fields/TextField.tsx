@@ -17,7 +17,7 @@ export const TextField = ({
   ...props
 }: FormFieldComponentProps<string>) => {
   return (
-    <FormFieldWrapper<string> {...props}>
+    <FormFieldWrapper<string> readonly={readonly} {...props}>
       {({ value = '' }) => (
         <Input.TextInput
           noAutoFill

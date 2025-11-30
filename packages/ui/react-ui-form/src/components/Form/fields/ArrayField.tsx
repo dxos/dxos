@@ -71,7 +71,7 @@ export const ArrayField = <T extends AnyProperties>({
     [onValueChange, type, values],
   );
 
-  if (!elementType || (readonly && values.length < 1)) {
+  if (!elementType || ((readonly || layout === 'static') && values.length < 1)) {
     return null;
   }
 

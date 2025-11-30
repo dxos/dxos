@@ -30,12 +30,12 @@ import { FormContext } from './FormRoot';
 //  [x] Keyboard handler (autosave)
 //  [ ] Don't call save/autoSave if value hasn't changed
 //  [ ] Fix onCancel (restore values)
-// [ ] Static mode
-//   [ ] Boolean
-//   [ ] Ref
+// [x] Static mode
+//   [x] Ref
+//   [x] Boolean
 //   [x] Array
 //   [x] Object
-//   [ ] Geo
+//   [x] Geo
 // [ ] Update hooks used by external packages (i.e., useFormValues)
 // [ ] Omit id from sub properties.
 // [ ] Refs
