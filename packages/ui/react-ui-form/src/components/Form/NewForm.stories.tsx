@@ -97,7 +97,7 @@ const DefaultStory = <T extends AnyProperties = AnyProperties>({
 
   const handleQueryRefOptions = useCallback<NonNullable<NewFormRootProps<T>['onQueryRefOptions']>>(
     async ({ typename }) => {
-      log.info('query', { typename });
+      log('query', { typename });
       const { objects } = await space.db.query(Filter.typename(typename)).run();
       return objects.map((result: any) => ({ dxn: Obj.getDXN(result), label: Obj.getLabel(result) }));
     },

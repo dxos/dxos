@@ -37,7 +37,7 @@ export type FormFieldStateProps<T = any> = {
  * - full: Show label, control, and status.
  * - compact: Show label and control.
  * - inline: Control only.
- * - static: Plain DOM; skip all undefined values.
+ * - static: Plain DOM; omit all undefined values.
  */
 export type Presentation = 'full' | 'compact' | 'inline' | 'static';
 
@@ -111,7 +111,7 @@ export const FormFieldWrapper = <T,>(props: FormFieldWrapperProps<T>) => {
   const { status, error } = getStatus();
   const value = getValue();
 
-  if ((readonly || layout === 'static') && value == null) {
+  if (layout === 'static' && value == null) {
     return null;
   }
 

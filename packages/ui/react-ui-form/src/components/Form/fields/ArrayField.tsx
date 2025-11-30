@@ -107,7 +107,7 @@ export const ArrayField = <T extends AnyProperties>({
 
               {!readonly && (
                 <div role='none' className='flex flex-col bs-full justify-end'>
-                  {/* TODO(burdon): Create variable for line-height. */}
+                  {/* NOTE: Aligns with center of last field if multi-field object. */}
                   <div role='none' className='flex items-center bs-[var(--line-height)]'>
                     <IconButton
                       icon='ph--x--regular'
