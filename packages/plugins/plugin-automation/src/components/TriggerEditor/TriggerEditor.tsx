@@ -40,7 +40,6 @@ export const TriggerEditor = ({ space, trigger, readonlySpec, types, tags, onSav
 
   return (
     <Form
-      outerSpacing={false}
       schema={Trigger.Trigger}
       values={trigger}
       fieldMap={fieldMap}

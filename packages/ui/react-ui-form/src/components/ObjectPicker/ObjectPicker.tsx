@@ -109,11 +109,11 @@ const ObjectPickerContent = forwardRef<HTMLDivElement, ObjectPickerContentProps>
         {showForm && createSchema ? (
           <Popover.Viewport>
             <Form
+              testId='create-referenced-object-form'
               schema={createSchema}
               values={createInitialValuePath ? { [createInitialValuePath]: searchString } : {}}
               onSave={handleFormSave}
               onCancel={handleFormCancel}
-              testId='create-referenced-object-form'
             />
           </Popover.Viewport>
         ) : (

@@ -150,7 +150,11 @@ const NewFormContent = ({ classNames, children }: NewFormContentProps) => {
   useKeyHandler(ref.current, form);
 
   return (
-    <div role='none' className={mx('flex flex-col is-full pli-cardSpacingInline', classNames)} ref={ref}>
+    <div
+      role='none'
+      className={mx('flex flex-col is-full plb-cardSpacingBlock pli-cardSpacingInline', classNames)}
+      ref={ref}
+    >
       {children}
     </div>
   );

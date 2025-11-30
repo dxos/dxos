@@ -51,11 +51,10 @@ export const KanbanViewEditor = ({ object }: KanbanViewEditorProps) => {
   return (
     <Form
       classNames='pbs-inputSpacingBlock'
-      outerSpacing={false}
-      autoSave
       schema={SettingsSchema}
       values={initialValues}
       fieldMap={fieldMap}
+      autoSave
       onSave={handleSave}
     />
   );

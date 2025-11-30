@@ -60,15 +60,15 @@ export const ObjectForm = ({ object, schema }: ObjectFormProps) => {
 
   return (
     <Form
-      autoSave
       schema={formSchema}
       values={values}
       createSchema={TagSchema}
       createOptionIcon='ph--plus--regular'
       createOptionLabel={['add tag label', { ns: pluginMeta.id }]}
       createInitialValuePath='label'
-      onCreate={handleCreateTag}
+      autoSave
       onSave={handleSave}
+      onCreate={handleCreateTag}
       onQueryRefOptions={handleRefQueryLookup}
     />
   );

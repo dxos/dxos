@@ -77,13 +77,7 @@ export const TokensContainer = ({ space }: { space: Space }) => {
         >
           {adding ? (
             <ControlItem title={t('new integration label')}>
-              <Form
-                outerSpacing={false}
-                schema={FormSchema}
-                values={initialValues}
-                onCancel={handleCancel}
-                onSave={handleAdd}
-              />
+              <Form schema={FormSchema} values={initialValues} onCancel={handleCancel} onSave={handleAdd} />
             </ControlItem>
           ) : (
             <div role='none' className={controlItemClasses}>

@@ -93,16 +93,15 @@ export const BaseObjectSettings = ({ classNames, children, object }: BaseObjectS
     <>
       <Form
         classNames={classNames}
-        outerSpacing={false}
-        autoSave
         schema={formSchema}
         values={values}
         createSchema={TagSchema}
         createOptionIcon='ph--plus--regular'
         createOptionLabel={['add tag label', { ns: pluginMeta.id }]}
         createInitialValuePath='label'
-        onCreate={handleCreateTag}
+        autoSave
         onSave={handleSave}
+        onCreate={handleCreateTag}
         onQueryRefOptions={handleRefQueryLookup}
       />
       {children}

@@ -142,11 +142,10 @@ export const ProfileContainer = () => {
         <ControlSection title={t('profile label')} description={t('profile description')}>
           <Form
             classNames='container-max-width grid grid-cols-1 md:grid-cols-[1fr_min-content]'
-            outerSpacing={false}
-            autoSave
             schema={ProfileSchema}
             values={values}
             fieldMap={fieldMap}
+            autoSave
             onSave={handleSave}
           />
         </ControlSection>

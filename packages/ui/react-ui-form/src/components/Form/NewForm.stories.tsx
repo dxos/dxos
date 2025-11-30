@@ -199,13 +199,15 @@ export const Static: Story<any> = {
 
 export const Empty: Story<any> = {
   render: () => (
-    <NewForm.Root>
-      <NewForm.Viewport>
-        <NewForm.Content>
-          <NewForm.FieldSet />
-          <NewForm.Actions />
-        </NewForm.Content>
-      </NewForm.Viewport>
-    </NewForm.Root>
+    <TestLayout>
+      <NewForm.Root>
+        <NewForm.Viewport>
+          <NewForm.Content>
+            <NewForm.FieldSet />
+            <NewForm.Actions />
+          </NewForm.Content>
+        </NewForm.Viewport>
+      </NewForm.Root>
+    </TestLayout>
   ),
 };

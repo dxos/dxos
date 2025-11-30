@@ -128,8 +128,8 @@ export default () =>
               projection={data.projection}
               values={data.subject}
               layout={role === 'card--popover' ? 'static' : undefined}
-              onSave={handleSave}
               autoSave
+              onSave={handleSave}
               {...(role === 'card--intrinsic' && {
                 outerSpacing: 'blockStart-0',
               })}
