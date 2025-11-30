@@ -47,7 +47,7 @@ export const useQueryRefOptions = ({ typename, onQueryRefOptions }: UseQueryRefO
       try {
         // TODO(wittjosiah): This should be a reactive query so that the options are always up to date.
         const options = await onQueryRefOptions({ typename });
-        log.info('options', { options: options.length });
+        log('options', { options: options.length });
         setOptions(
           options.map((option) => {
             const dxn = option.dxn.toString() as string;
