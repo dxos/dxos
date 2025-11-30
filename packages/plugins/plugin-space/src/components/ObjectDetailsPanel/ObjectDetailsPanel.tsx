@@ -43,6 +43,7 @@ export const ObjectDetailsPanel = ({ objectId, view }: RowDetailsPanelProps) => 
       {schema &&
         selectedObjects.map((object) => (
           <div key={object.id} className='border border-separator rounded'>
+            xxx
             <ObjectForm object={object} schema={schema} />
           </div>
         ))}

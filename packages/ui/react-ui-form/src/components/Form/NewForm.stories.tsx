@@ -38,8 +38,11 @@ const Person = Schema.Struct({
     Schema.Struct({
       street: Schema.String,
       city: Schema.String,
-      // TODO(burdon): Constrain input.
-      state: Schema.String.pipe(Schema.minLength(2), Schema.maxLength(2)).annotations({ title: 'State' }),
+      // TODO(burdon): Constrain input control.
+      state: Schema.String.pipe(Schema.minLength(2), Schema.maxLength(2)).annotations({
+        title: 'State',
+        description: 'State code',
+      }),
       // TODO(burdon): Select input.
       zip: Schema.Number,
     }).annotations({ title: 'Address' }),
