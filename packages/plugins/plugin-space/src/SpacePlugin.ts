@@ -17,7 +17,9 @@ import {
 import { Ref, Tag, Type } from '@dxos/echo';
 import { AttentionEvents } from '@dxos/plugin-attention';
 import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
-import { Collection, DataTypes, StoredSchema, getTypenameFromQuery } from '@dxos/schema';
+import { translations as componentsTranslations } from '@dxos/react-ui-components';
+import { translations as formTranslations } from '@dxos/react-ui-form';
+import { Collection, DataTypes, createDefaultSchema } from '@dxos/schema';
 import { translations as shellTranslations } from '@dxos/shell/react';
 import {
   AnchoredTo,
@@ -39,8 +41,7 @@ import {
   IntentResolver,
   ReactRoot,
   ReactSurface,
-  SchemaDefs,
-  SpaceCapabilities,
+  Repair,
   SpaceSettings,
   SpaceState,
   SpacesReady,
@@ -48,7 +49,7 @@ import {
 import { SpaceEvents } from './events';
 import { meta } from './meta';
 import { translations } from './translations';
-import { CollectionAction, SpaceAction, defineObjectForm } from './types';
+import { CollectionAction, type CreateObjectIntent, SpaceAction } from './types';
 
 export type SpacePluginOptions = {
   /**
@@ -94,7 +95,13 @@ export const SpacePlugin = definePlugin<SpacePluginOptions>(
       defineModule({
         id: `${meta.id}/module/translations`,
         activatesOn: Events.SetupTranslations,
-        activate: () => contributes(Capabilities.Translations, [...translations, ...shellTranslations]),
+        activate: () =>
+          contributes(Capabilities.Translations, [
+            ...translations,
+            ...componentsTranslations,
+            ...formTranslations,
+            ...shellTranslations,
+          ]),
       }),
       defineModule({
         id: `${meta.id}/module/metadata`,
@@ -107,27 +114,26 @@ export const SpacePlugin = definePlugin<SpacePluginOptions>(
               iconHue: 'neutral',
               // TODO(wittjosiah): Move out of metadata.
               loadReferences: async (collection: Collection.Collection) => await Ref.Array.loadAll(collection.objects),
+              inputSchema: Schema.Struct({ name: Schema.optional(Schema.String) }),
+              createObjectIntent: ((props) =>
+                createIntent(CollectionAction.Create, props)) satisfies CreateObjectIntent,
+              addToCollectionOnCreate: true,
             },
           }),
           contributes(Capabilities.Metadata, {
-            id: Type.getTypename(Collection.QueryCollection),
-            metadata: {
-              label: (object: Collection.QueryCollection) => [
-                'typename label',
-                {
-                  ns: getTypenameFromQuery(object.query),
-                  count: 2,
-                  defaultValue: 'New smart collection',
-                },
-              ],
-              icon: 'ph--funnel-simple--regular',
-            },
-          }),
-          contributes(Capabilities.Metadata, {
-            id: Type.getTypename(StoredSchema),
+            id: Type.getTypename(Type.PersistentType),
             metadata: {
               icon: 'ph--database--regular',
               iconHue: 'green',
+              inputSchema: SpaceAction.StoredSchemaForm,
+              createObjectIntent: ((props, options) =>
+                props.typename
+                  ? createIntent(SpaceAction.UseStaticSchema, { space: options.space, typename: props.typename })
+                  : createIntent(SpaceAction.AddSchema, {
+                      space: options.space,
+                      name: props.name,
+                      schema: createDefaultSchema(),
+                    })) satisfies CreateObjectIntent,
             },
           }),
           contributes(Capabilities.Metadata, {
@@ -157,82 +163,21 @@ export const SpacePlugin = definePlugin<SpacePluginOptions>(
         ],
       }),
       defineModule({
-        id: `${meta.id}/module/object-form`,
-        activatesOn: ClientEvents.SetupSchema,
-        activate: () => [
-          contributes(
-            SpaceCapabilities.ObjectForm,
-            defineObjectForm({
-              objectSchema: Collection.Collection,
-              formSchema: Schema.Struct({ name: Schema.optional(Schema.String) }),
-              getIntent: (props) => createIntent(CollectionAction.Create, props),
-            }),
-          ),
-          contributes(
-            SpaceCapabilities.ObjectForm,
-            defineObjectForm({
-              // TODO(wittjosiah): Remove cast.
-              objectSchema: Collection.QueryCollection as any,
-              formSchema: CollectionAction.QueryCollectionForm,
-              getIntent: (props) => createIntent(CollectionAction.CreateQueryCollection, props),
-            }),
-          ),
-          contributes(
-            SpaceCapabilities.ObjectForm,
-            defineObjectForm({
-              objectSchema: StoredSchema,
-              formSchema: SpaceAction.StoredSchemaForm,
-              getIntent: (props, options) =>
-                props.typename
-                  ? createIntent(SpaceAction.UseStaticSchema, { space: options.space, typename: props.typename })
-                  : createIntent(SpaceAction.AddSchema, {
-                      space: options.space,
-                      name: props.name,
-                      // TODO(burdon): Import createDefaultSchema when it's exported from @dxos/schema
-                      schema: Schema.Struct({
-                        title: Schema.optional(Schema.String),
-                        status: Schema.optional(Schema.Literal('todo', 'in-progress', 'done')),
-                        description: Schema.optional(Schema.String),
-                      }),
-                    }),
-            }),
-          ),
-        ],
-      }),
-      defineModule({
-        id: `${meta.id}/module/schema-defs`,
-        activatesOn: ClientEvents.ClientReady,
-        activatesBefore: [ClientEvents.SetupSchema],
-        activate: SchemaDefs,
-      }),
-      defineModule({
         id: `${meta.id}/module/schema`,
         activatesOn: ClientEvents.SetupSchema,
         activate: () =>
           contributes(ClientCapabilities.Schema, [
-            Tag.Tag,
-            Event.Event,
-            Organization.Organization,
-            Person.Person,
-            Project.Project,
-            Task.Task,
+            ...DataTypes,
             AnchoredTo.AnchoredTo,
             Employer.Employer,
+            Event.Event,
             HasConnection.HasConnection,
             HasRelationship.HasRelationship,
             HasSubject.HasSubject,
-            ...DataTypes,
-          ]),
-      }),
-      defineModule({
-        id: `${meta.id}/module/whitelist-schema`,
-        activatesOn: ClientEvents.SetupSchema,
-        activate: () =>
-          contributes(ClientCapabilities.SchemaWhiteList, [
-            Event.Event,
             Organization.Organization,
             Person.Person,
             Project.Project,
+            Tag.Tag,
             Task.Task,
           ]),
       }),
@@ -281,6 +226,11 @@ export const SpacePlugin = definePlugin<SpacePluginOptions>(
           ClientEvents.SpacesReady,
         ),
         activate: SpacesReady,
+      }),
+      defineModule({
+        id: `${meta.id}/module/repair`,
+        activatesOn: ClientEvents.SpacesReady,
+        activate: Repair,
       }),
     ];
   },

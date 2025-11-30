@@ -10,6 +10,7 @@ import * as DateUtil from './date';
 import * as NumberUtil from './number';
 import * as ObjectUtil from './object';
 import * as StringUtil from './string';
+import { TypeFormat as TypeFormatEnum } from './types';
 
 // TODO(burdon): Consider factoring out to separate `@dxos/json-schema`
 // TODO(burdon): Media encoding.
@@ -22,6 +23,8 @@ import * as StringUtil from './string';
  */
 // TODO(burdon): Add fields for `examples`, `message`, etc.
 export namespace Format {
+  export import TypeFormat = TypeFormatEnum;
+
   // Strings
   export const DXN = Keys.DXN.Schema;
   export const Email = StringUtil.Email;

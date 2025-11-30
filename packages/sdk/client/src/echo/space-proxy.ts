@@ -16,10 +16,10 @@ import {
 } from '@dxos/async';
 import {
   type ClientServicesProvider,
-  PropertiesType,
   SPACE_TAG,
   type Space,
   type SpaceInternal,
+  SpaceProperties,
 } from '@dxos/client-protocol';
 import { Stream } from '@dxos/codec-protobuf/stream';
 import { Context, cancelWithContext } from '@dxos/context';
@@ -32,8 +32,8 @@ import {
   todo,
   warnAfterTimeout,
 } from '@dxos/debug';
+import { type Obj } from '@dxos/echo';
 import {
-  type AnyLiveObject,
   type EchoClient,
   type EchoDatabase,
   type EchoDatabaseImpl,
@@ -128,7 +128,7 @@ export class SpaceProxy implements Space, CustomInspectable {
 
   private _databaseOpen = false;
   private _error: Error | undefined = undefined;
-  private _properties?: AnyLiveObject<any> = undefined;
+  private _properties?: Obj.Obj<SpaceProperties> = undefined;
 
   constructor(
     private _clientServices: ClientServicesProvider,
@@ -146,7 +146,11 @@ export class SpaceProxy implements Space, CustomInspectable {
       }),
     );
 
-    this._db = echoClient.constructDatabase({ spaceId: this.id, spaceKey: this.key, owningObject: this });
+    this._db = echoClient.constructDatabase({
+      spaceId: this.id,
+      spaceKey: this.key,
+      owningObject: this,
+    });
     this._queues = echoClient.constructQueueFactory(this.id);
 
     const self = this;
@@ -203,7 +207,7 @@ export class SpaceProxy implements Space, CustomInspectable {
   }
 
   @trace.info({ depth: 2 })
-  get properties(): AnyLiveObject<any> {
+  get properties(): Obj.Obj<SpaceProperties> {
     this._throwIfNotInitialized();
     invariant(this._properties, 'Properties not available');
     return this._properties;
@@ -377,11 +381,13 @@ export class SpaceProxy implements Space, CustomInspectable {
     // TODO(wittjosiah): Transfer subscriptions from cached properties to the new properties object.
     {
       const unsubscribe = this._db
-        .query(Filter.type(PropertiesType), { dataLocation: QueryOptions.DataLocation.LOCAL })
+        .query(Filter.type(SpaceProperties), {
+          dataLocation: QueryOptions.DataLocation.LOCAL,
+        })
         .subscribe(
           (query) => {
-            if (query.objects.length === 1) {
-              this._properties = query.objects[0];
+            if (query.results.length === 1) {
+              this._properties = query.results[0];
               propertiesAvailable.wake();
               this._stateUpdate.emit(this._currentState);
               scheduleMicroTask(this._ctx, () => {
@@ -454,7 +460,10 @@ export class SpaceProxy implements Space, CustomInspectable {
       {
         spaceKey: this.key,
         channel,
-        message: { ...message, '@type': message['@type'] || 'google.protobuf.Struct' },
+        message: {
+          ...message,
+          '@type': message['@type'] || 'google.protobuf.Struct',
+        },
       },
       { timeout: RPC_TIMEOUT },
     );
@@ -521,7 +530,10 @@ export class SpaceProxy implements Space, CustomInspectable {
   private async _createEpoch({
     migration,
     automergeRootUrl,
-  }: { migration?: CreateEpochRequest.Migration; automergeRootUrl?: string } = {}): Promise<void> {
+  }: {
+    migration?: CreateEpochRequest.Migration;
+    automergeRootUrl?: string;
+  } = {}): Promise<void> {
     log('create epoch', { migration, automergeRootUrl });
     const { controlTimeframe: targetTimeframe } = await this._clientServices.services.SpacesService!.createEpoch(
       {
@@ -543,7 +555,10 @@ export class SpaceProxy implements Space, CustomInspectable {
   }
 
   private async _getCredentials(): Promise<Credential[]> {
-    const stream = this._clientServices.services.SpacesService?.queryCredentials({ spaceKey: this.key, noTail: true });
+    const stream = this._clientServices.services.SpacesService?.queryCredentials({
+      spaceKey: this.key,
+      noTail: true,
+    });
     invariant(stream, 'SpacesService not available');
     return await Stream.consumeData(stream);
   }
@@ -645,7 +660,9 @@ export class SpaceProxy implements Space, CustomInspectable {
 
   private async _export(): Promise<SpaceArchive> {
     await this._db.flush();
-    const { archive } = await this._clientServices.services.SpacesService!.exportSpace({ spaceId: this.id });
+    const { archive } = await this._clientServices.services.SpacesService!.exportSpace({
+      spaceId: this.id,
+    });
     return archive;
   }
 }

@@ -2,12 +2,14 @@
 // Copyright 2023 DXOS.org
 //
 
+import { type Instruction } from '@atlaskit/pragmatic-drag-and-drop-hitbox/tree-item';
 import { Atom } from '@effect-atom/atom-react';
 import * as Function from 'effect/Function';
+import type * as Schema from 'effect/Schema';
 
 import { LayoutAction, type PromiseIntentDispatcher, chain, createIntent } from '@dxos/app-framework';
-import { Filter, Obj, Query, Ref, Type } from '@dxos/echo';
-import { type AnyEchoObject, EXPANDO_TYPENAME } from '@dxos/echo/internal';
+import { type Entity, Filter, Obj, Query, type QueryResult, Ref, Type } from '@dxos/echo';
+import { EXPANDO_TYPENAME } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
 import { Migrations } from '@dxos/migrations';
 import {
@@ -20,13 +22,13 @@ import {
   type ReadableGraph,
   isGraphNode,
 } from '@dxos/plugin-graph';
-import { type QueryResult, type Space, SpaceState, getSpace, isSpace } from '@dxos/react-client/echo';
+import { type Space, SpaceState, getSpace, isSpace } from '@dxos/react-client/echo';
 import { ATTENDABLE_PATH_SEPARATOR } from '@dxos/react-ui-attention';
 import { type TreeData } from '@dxos/react-ui-list';
-import { Collection, StoredSchema, View, getTypenameFromQuery } from '@dxos/schema';
+import { Collection } from '@dxos/schema';
 
 import { meta } from './meta';
-import { type ObjectForm, SPACE_TYPE, SpaceAction } from './types';
+import { SPACE_TYPE, SpaceAction } from './types';
 
 export const SPACES = `${meta.id}-spaces`;
 export const COMPOSER_SPACE_LOCK = `${meta.id}/lock`;
@@ -36,14 +38,14 @@ export const SHARED = 'shared-spaces';
 /**
  * Convert a query result to an Atom value of the objects.
  */
-export const atomFromQuery = <T extends AnyEchoObject>(query: QueryResult<T>): Atom.Atom<T[]> => {
+export const atomFromQuery = <T extends Entity.Unknown>(query: QueryResult.QueryResult<T>): Atom.Atom<T[]> => {
   return Atom.make((get) => {
     const unsubscribe = query.subscribe((result) => {
-      get.setSelf(result.objects);
+      get.setSelf(result.results);
     });
 
     get.addFinalizer(() => unsubscribe());
-    return query.objects;
+    return query.results;
   });
 };
 
@@ -53,7 +55,7 @@ export const getSpaceDisplayName = (
   { personal, namesCache = {} }: { personal?: boolean; namesCache?: Record<string, string> } = {},
 ): string | [string, { ns: string }] => {
   return space.state.get() === SpaceState.SPACE_READY && (space.properties.name?.length ?? 0) > 0
-    ? space.properties.name
+    ? space.properties.name!
     : namesCache[space.id]
       ? namesCache[space.id]
       : personal
@@ -136,59 +138,29 @@ const getCollectionGraphNodePartials = ({
   };
 };
 
-const getQueryCollectionNodePartials = ({
+const getSystemCollectionNodePartials = ({
   collection,
   space,
   resolve,
 }: {
-  collection: Collection.QueryCollection;
+  collection: Collection.Managed;
   space: Space;
   resolve: (typename: string) => Record<string, any>;
 }) => {
-  const typename = getTypenameFromQuery(collection.query);
-  const metadata = typename ? resolve(typename) : {};
+  const metadata = resolve(collection.key);
   return {
+    label: ['typename label', { ns: collection.key, count: 2 }],
     icon: metadata.icon,
     iconHue: metadata.iconHue,
     acceptPersistenceClass: new Set(['echo']),
     acceptPersistenceKey: new Set([space.id]),
     role: 'branch',
-    canDrop: (source: TreeData) => {
-      return (
-        isGraphNode(source.item) && Obj.isObject(source.item.data) && Obj.getTypename(source.item.data) === typename
-      );
-    },
-    onTransferStart: (child: Node<Obj.Any>, index?: number) => {
-      // No-op. Objects are moved into query collections by being removed from their original collection.
-    },
-    onTransferEnd: (child: Node<Obj.Any>, destination: Node) => {
-      // No-op. Objects are moved out of query collections by being added to another collection.
-    },
   };
 };
 
 const getSchemaGraphNodePartials = () => {
   return {
     role: 'branch',
-    canDrop: () => false,
-  };
-};
-
-const getViewGraphNodePartials = ({
-  view,
-  resolve,
-}: {
-  view: View.View;
-  resolve: (typename: string) => Record<string, any>;
-}) => {
-  const presentation = view.presentation.target;
-  const typename = presentation ? Obj.getTypename(presentation) : undefined;
-  const metadata = typename ? resolve(typename) : {};
-
-  return {
-    label: view.name || ['object name placeholder', { ns: typename, default: 'New view' }],
-    icon: metadata.icon,
-    iconHue: metadata.iconHue,
     canDrop: () => false,
   };
 };
@@ -359,13 +331,19 @@ export const constructSpaceActions = ({
   return actions;
 };
 
-export const createStaticSchemaNode = ({ schema, space }: { schema: Type.Obj.Any; space: Space }) => {
+export const createStaticSchemaNode = ({
+  schema,
+  space,
+}: {
+  schema: Schema.Schema.AnyNoContext;
+  space: Space;
+}): Node => {
   return {
     id: `${space.id}/${Type.getTypename(schema)}`,
     type: `${meta.id}/static-schema`,
     data: schema,
     properties: {
-      label: ['typename label', { ns: Type.getTypename(schema), default: Type.getTypename(schema) }],
+      label: ['typename label', { ns: Type.getTypename(schema), count: 2, default: Type.getTypename(schema) }],
       icon: 'ph--database--regular',
       iconHue: 'green',
       role: 'branch',
@@ -403,7 +381,7 @@ export const createStaticSchemaActions = ({
         );
       },
       properties: {
-        label: ['add view to schema label', { ns: Type.getTypename(StoredSchema) }],
+        label: ['add view to schema label', { ns: meta.id }],
         icon: 'ph--plus--regular',
         disposition: 'list-item-primary',
         testId: 'spacePlugin.addViewToSchema',
@@ -416,7 +394,7 @@ export const createStaticSchemaActions = ({
         throw new Error('Not implemented');
       },
       properties: {
-        label: ['rename object label', { ns: Type.getTypename(StoredSchema) }],
+        label: ['rename object label', { ns: Type.getTypename(Type.PersistentType) }],
         icon: 'ph--pencil-simple-line--regular',
         disabled: true,
         disposition: 'list-item',
@@ -435,7 +413,7 @@ export const createStaticSchemaActions = ({
         }
       },
       properties: {
-        label: ['delete object label', { ns: Type.getTypename(StoredSchema) }],
+        label: ['delete object label', { ns: Type.getTypename(Type.PersistentType) }],
         icon: 'ph--trash--regular',
         disposition: 'list-item',
         disabled: !deletable,
@@ -477,6 +455,7 @@ export const createObjectNode = ({
   disposition,
   droppable = true,
   navigable = false,
+  managedCollectionChild = false,
   resolve,
 }: {
   space: Space;
@@ -484,6 +463,7 @@ export const createObjectNode = ({
   disposition?: string;
   droppable?: boolean;
   navigable?: boolean;
+  managedCollectionChild?: boolean;
   resolve: (typename: string) => Record<string, any>;
 }) => {
   const type = Obj.getTypename(object);
@@ -494,13 +474,11 @@ export const createObjectNode = ({
   const metadata = resolve(type);
   const partials = Obj.instanceOf(Collection.Collection, object)
     ? getCollectionGraphNodePartials({ collection: object, space, resolve })
-    : Obj.instanceOf(Collection.QueryCollection, object)
-      ? getQueryCollectionNodePartials({ collection: object, space, resolve })
-      : Obj.instanceOf(StoredSchema, object)
+    : Obj.instanceOf(Collection.Managed, object)
+      ? getSystemCollectionNodePartials({ collection: object, space, resolve })
+      : Obj.instanceOf(Type.PersistentType, object)
         ? getSchemaGraphNodePartials()
-        : Obj.instanceOf(View.View, object)
-          ? getViewGraphNodePartials({ view: object, resolve })
-          : metadata.graphProps;
+        : metadata.graphProps;
 
   // TODO(wittjosiah): Obj.getLabel isn't triggering reactivity in some cases.
   //   e.g., create new collection with no name and rename it.
@@ -510,8 +488,8 @@ export const createObjectNode = ({
     metadata.label?.(object) || ['object name placeholder', { ns: type, default: 'New item' }];
 
   const selectable =
-    (!Obj.instanceOf(StoredSchema, object) &&
-      !Obj.instanceOf(Collection.QueryCollection, object) &&
+    (!Obj.instanceOf(Type.PersistentType, object) &&
+      !Obj.instanceOf(Collection.Managed, object) &&
       !Obj.instanceOf(Collection.Collection, object)) ||
     (navigable && Obj.instanceOf(Collection.Collection, object));
 
@@ -529,6 +507,20 @@ export const createObjectNode = ({
       persistenceClass: 'echo',
       persistenceKey: space?.id,
       selectable,
+      managedCollectionChild,
+      blockInstruction: (source: TreeData, instruction: Instruction) => {
+        if (source.item.properties.managedCollectionChild) {
+          // TODO(wittjosiah): Support reordering system collections.
+          // return !(managedCollectionChild && source.item.type === type && instruction.type.startsWith('reorder'));
+          return true;
+        }
+
+        if (Obj.instanceOf(Collection.Managed, object)) {
+          return !instruction.type.startsWith('reorder');
+        }
+
+        return managedCollectionChild;
+      },
       canDrop: (source: TreeData) => {
         return droppable && isGraphNode(source.item) && Obj.isObject(source.item.data);
       },
@@ -541,14 +533,14 @@ export const constructObjectActions = ({
   object,
   graph,
   dispatch,
-  objectForms,
+  resolve,
   deletable = true,
   navigable = false,
 }: {
   object: Obj.Any;
   graph: ReadableGraph;
   dispatch: PromiseIntentDispatcher;
-  objectForms: ObjectForm<any>[];
+  resolve: (typename: string) => Record<string, any>;
   deletable?: boolean;
   navigable?: boolean;
 }) => {
@@ -559,10 +551,10 @@ export const constructObjectActions = ({
 
   const getId = (id: string) => `${id}/${Obj.getDXN(object).toString()}`;
 
-  const queryCollection = Obj.instanceOf(Collection.QueryCollection, object) ? object : undefined;
-  const matchingObjectForm = queryCollection
-    ? objectForms.find((form) => Type.getTypename(form.objectSchema) === getTypenameFromQuery(queryCollection.query))
-    : undefined;
+  const managedCollection = Obj.instanceOf(Collection.Managed, object) ? object : undefined;
+  const metadata = managedCollection ? resolve(managedCollection.key) : {};
+  const createObjectIntent = metadata.createObjectIntent;
+  const inputSchema = metadata.inputSchema;
 
   const actions: NodeArg<ActionData>[] = [
     ...(Obj.instanceOf(Collection.Collection, object)
@@ -582,7 +574,7 @@ export const constructObjectActions = ({
           },
         ]
       : []),
-    ...(Obj.instanceOf(StoredSchema, object)
+    ...(Obj.instanceOf(Type.PersistentType, object)
       ? [
           {
             id: getId(SpaceAction.AddObject._tag),
@@ -597,7 +589,7 @@ export const constructObjectActions = ({
               );
             },
             properties: {
-              label: ['add view to schema label', { ns: Type.getTypename(StoredSchema) }],
+              label: ['add view to schema label', { ns: meta.id }],
               icon: 'ph--plus--regular',
               disposition: 'list-item-primary',
               testId: 'spacePlugin.addViewToSchema',
@@ -629,23 +621,23 @@ export const constructObjectActions = ({
           },
         ]
       : []),
-    ...(matchingObjectForm
+    ...(createObjectIntent
       ? [
           {
             id: getId(SpaceAction.OpenCreateObject._tag),
             type: ACTION_TYPE,
             data: async () => {
-              if (matchingObjectForm.formSchema) {
+              if (inputSchema) {
                 await dispatch(
                   createIntent(SpaceAction.OpenCreateObject, {
                     target: space,
-                    typename: queryCollection ? getTypenameFromQuery(queryCollection.query) : undefined,
+                    typename: managedCollection ? managedCollection.key : undefined,
                   }),
                 );
               } else {
                 await dispatch(
                   Function.pipe(
-                    matchingObjectForm.getIntent({}, { space }),
+                    createObjectIntent({}, { space }),
                     chain(SpaceAction.AddObject, { target: space, hidden: true }),
                     chain(LayoutAction.Open, { part: 'main' }),
                   ),
@@ -653,7 +645,7 @@ export const constructObjectActions = ({
               }
             },
             properties: {
-              label: ['create object in smart collection label', { ns: meta.id }],
+              label: ['create object in system collection label', { ns: meta.id }],
               icon: 'ph--plus--regular',
               disposition: 'list-item-primary',
               testId: 'spacePlugin.createObject',
@@ -661,46 +653,50 @@ export const constructObjectActions = ({
           },
         ]
       : []),
-    {
-      id: getId(SpaceAction.RenameObject._tag),
-      type: ACTION_TYPE,
-      data: async (params?: InvokeParams) => {
-        await dispatch(createIntent(SpaceAction.RenameObject, { object, caller: params?.caller }));
-      },
-      properties: {
-        label: ['rename object label', { ns: typename }],
-        icon: 'ph--pencil-simple-line--regular',
-        disposition: 'list-item',
-        // TODO(wittjosiah): Not working.
-        // keyBinding: {
-        //   macos: 'shift+F6',
-        // },
-        testId: 'spacePlugin.renameObject',
-      },
-    },
-    {
-      id: getId(SpaceAction.RemoveObjects._tag),
-      type: ACTION_TYPE,
-      data: async () => {
-        const collection = graph
-          .getConnections(Obj.getDXN(object).toString(), 'inbound')
-          .find(({ data }) => Obj.instanceOf(Collection.Collection, data))?.data;
-        await dispatch(createIntent(SpaceAction.RemoveObjects, { objects: [object], target: collection }));
-      },
-      properties: {
-        label: ['delete object label', { ns: typename }],
-        icon: 'ph--trash--regular',
-        disposition: 'list-item',
-        disabled: !deletable,
-        // TODO(wittjosiah): This is a browser shortcut.
-        // keyBinding: object instanceof CollectionType ? undefined : 'shift+meta+Backspace',
-        testId: 'spacePlugin.deleteObject',
-      },
-    },
+    ...(managedCollection
+      ? []
+      : [
+          {
+            id: getId(SpaceAction.RenameObject._tag),
+            type: ACTION_TYPE,
+            data: async (params?: InvokeParams) => {
+              await dispatch(createIntent(SpaceAction.RenameObject, { object, caller: params?.caller }));
+            },
+            properties: {
+              label: ['rename object label', { ns: typename }],
+              icon: 'ph--pencil-simple-line--regular',
+              disposition: 'list-item',
+              // TODO(wittjosiah): Not working.
+              // keyBinding: {
+              //   macos: 'shift+F6',
+              // },
+              testId: 'spacePlugin.renameObject',
+            },
+          },
+          {
+            id: getId(SpaceAction.RemoveObjects._tag),
+            type: ACTION_TYPE,
+            data: async () => {
+              const collection = graph
+                .getConnections(Obj.getDXN(object).toString(), 'inbound')
+                .find(({ data }) => Obj.instanceOf(Collection.Collection, data))?.data;
+              await dispatch(createIntent(SpaceAction.RemoveObjects, { objects: [object], target: collection }));
+            },
+            properties: {
+              label: ['delete object label', { ns: typename }],
+              icon: 'ph--trash--regular',
+              disposition: 'list-item',
+              disabled: !deletable,
+              // TODO(wittjosiah): This is a browser shortcut.
+              // keyBinding: object instanceof CollectionType ? undefined : 'shift+meta+Backspace',
+              testId: 'spacePlugin.deleteObject',
+            },
+          },
+        ]),
     ...(navigable ||
     (!Obj.instanceOf(Collection.Collection, object) &&
-      !Obj.instanceOf(Collection.QueryCollection, object) &&
-      !Obj.instanceOf(StoredSchema, object))
+      !Obj.instanceOf(Collection.Managed, object) &&
+      !Obj.instanceOf(Type.PersistentType, object))
       ? [
           {
             id: getId('copy-link'),
@@ -781,10 +777,10 @@ export const getNestedObjects = async (
  */
 // TODO(burdon): Remove.
 export const cloneObject = async (
-  object: Type.Expando,
+  object: Obj.Any,
   resolve: (typename: string) => Record<string, any>,
   newSpace: Space,
-): Promise<Type.Expando> => {
+): Promise<Obj.Any> => {
   const schema = Obj.getSchema(object);
   const typename = schema ? (Type.getTypename(schema) ?? EXPANDO_TYPENAME) : EXPANDO_TYPENAME;
   const metadata = resolve(typename);

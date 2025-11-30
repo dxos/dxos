@@ -392,10 +392,10 @@ export class NotarizationPlugin extends Resource implements CredentialProcessor 
 }
 
 const handleEdgeError = (error: any) => {
-  if (!(error instanceof EdgeCallFailedError) || error.errorData) {
+  if (!(error instanceof EdgeCallFailedError) || error.data) {
     log.catch(error);
   } else {
-    log.info('Edge notarization failure', { reason: error.reason });
+    log.info('Edge notarization failure', { message: error.message });
   }
 };
 

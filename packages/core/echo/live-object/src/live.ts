@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { isProxy } from './proxy/proxy';
+import { isProxy } from './proxy';
 
 /**
  * Marker interface.

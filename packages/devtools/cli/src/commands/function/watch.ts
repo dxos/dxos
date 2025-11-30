@@ -50,7 +50,6 @@ export default class Watch extends BaseCommand<typeof Watch> {
 
         const source = fs.readFileSync(this.args.file, 'utf-8');
         const bundleResult = await bundleFunction({
-          platform: 'browser',
           source,
         });
         if ('error' in bundleResult) {

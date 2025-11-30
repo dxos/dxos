@@ -8,8 +8,8 @@ import { describe, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
-import { AiService, ConsolePrinter, MemoizedAiService } from '@dxos/ai';
-import { TestAiService } from '@dxos/ai/testing';
+import { AiService, ConsolePrinter } from '@dxos/ai';
+import { MemoizedAiService, TestAiService } from '@dxos/ai/testing';
 import {
   AiConversation,
   type ContextBinding,
@@ -19,7 +19,8 @@ import {
 } from '@dxos/assistant';
 import { Blueprint } from '@dxos/blueprints';
 import { Filter, Obj, Query, Ref } from '@dxos/echo';
-import { TestHelpers, acquireReleaseResource } from '@dxos/effect';
+import { acquireReleaseResource } from '@dxos/effect';
+import { TestHelpers } from '@dxos/effect/testing';
 import {
   CredentialsService,
   DatabaseService,
@@ -136,7 +137,7 @@ describe('Research', () => {
           prompt: `Create a research summary about ${organization.name}.`,
         });
         {
-          const { objects: docs } = yield* DatabaseService.runQuery(
+          const docs = yield* DatabaseService.runQuery(
             Query.select(Filter.ids(organization.id)).targetOf(HasSubject.HasSubject).source(),
           );
           if (docs.length !== 1) {
@@ -156,7 +157,7 @@ describe('Research', () => {
           prompt: 'Add a section about their portfolio.',
         });
         {
-          const { objects: docs } = yield* DatabaseService.runQuery(
+          const docs = yield* DatabaseService.runQuery(
             Query.select(Filter.ids(organization.id)).targetOf(HasSubject.HasSubject).source(),
           );
           if (docs.length !== 1) {

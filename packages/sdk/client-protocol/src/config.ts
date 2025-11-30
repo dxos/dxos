@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { type ConfigProto } from '@dxos/config';
+// TODO(wittjosiah): Factor out to @dxos/config.
 
 export const DEFAULT_INTERNAL_CHANNEL = 'dxos:vault';
 export const DEFAULT_CLIENT_CHANNEL = 'dxos:app';
@@ -15,7 +15,7 @@ export const DEFAULT_WORKER_BROADCAST_CHANNEL = 'dxos:shared-worker';
 export const DEFAULT_VAULT_URL = 'https://halo.dxos.org/vault.html';
 
 export const EXPECTED_CONFIG_VERSION = 1;
-export const defaultConfig: ConfigProto = { version: 1 };
+export const defaultConfig = { version: 1 };
 
 // TODO(burdon): Allow override via env? Generalize since currently NodeJS only.
 const HOME = typeof process !== 'undefined' ? (process?.env?.HOME ?? '') : '';

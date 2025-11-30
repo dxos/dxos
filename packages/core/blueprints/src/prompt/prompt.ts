@@ -4,19 +4,16 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Obj, type Ref, Type } from '@dxos/echo';
-import { FormAnnotation, JsonSchemaType, toJsonSchema } from '@dxos/echo/internal';
+import { Annotation, JsonSchema, Obj, type Ref, Type } from '@dxos/echo';
 
 import { Blueprint } from '../blueprint';
 import * as Template from '../template';
 
 /**
- * Executable instructions.
- * Declare input and output schema.
- * May utilize blueprints.
+ * Executable instructions, which may use Blueprints.
  * May reference additional context.
  */
-const Prompt_ = Schema.Struct({
+const Prompt$ = Schema.Struct({
   /**
    * Name of the prompt.
    */
@@ -31,18 +28,18 @@ const Prompt_ = Schema.Struct({
   /**
    * Input schema of the prompt.
    */
-  input: JsonSchemaType.pipe(FormAnnotation.set(false)),
+  input: JsonSchema.JsonSchema.pipe(Annotation.FormInputAnnotation.set(false)),
 
   /**
    * Output schema of the prompt.
    */
-  output: JsonSchemaType.pipe(FormAnnotation.set(false)),
+  output: JsonSchema.JsonSchema.pipe(Annotation.FormInputAnnotation.set(false)),
 
   /**
    * Natural language instructions for the prompt.
    * These should provide concrete course of action for the AI to follow.
    */
-  instructions: Template.Template.pipe(FormAnnotation.set(false)),
+  instructions: Template.Template.pipe(Annotation.FormInputAnnotation.set(false)),
 
   /**
    * Blueprints that the prompt may utilize.
@@ -52,7 +49,7 @@ const Prompt_ = Schema.Struct({
   /**
    * Additional context that the prompt may utilize.
    */
-  context: Schema.Array(Schema.Any).pipe(FormAnnotation.set(false)),
+  context: Schema.Array(Schema.Any).pipe(Annotation.FormInputAnnotation.set(false)),
 }).pipe(
   Type.Obj({
     typename: 'dxos.org/type/Prompt',
@@ -60,9 +57,9 @@ const Prompt_ = Schema.Struct({
   }),
 );
 
-export interface Prompt extends Schema.Schema.Type<typeof Prompt_> {}
-export interface Prompt_Encoded extends Schema.Schema.Encoded<typeof Prompt_> {}
-export const Prompt: Schema.Schema<Prompt, Prompt_Encoded> = Prompt_;
+export interface Prompt extends Schema.Schema.Type<typeof Prompt$> {}
+export interface Prompt_Encoded extends Schema.Schema.Encoded<typeof Prompt$> {}
+export const Prompt: Schema.Schema<Prompt, Prompt_Encoded> = Prompt$;
 
 export const make = (params: {
   name?: string;
@@ -76,8 +73,8 @@ export const make = (params: {
   Obj.make(Prompt, {
     name: params.name,
     description: params.description,
-    input: toJsonSchema(params.input ?? Schema.Void),
-    output: toJsonSchema(params.output ?? Schema.Void),
+    input: JsonSchema.toJsonSchema(params.input ?? Schema.Void),
+    output: JsonSchema.toJsonSchema(params.output ?? Schema.Void),
     instructions: Template.make({ source: params.instructions }),
     blueprints: params.blueprints ?? [],
     context: params.context ?? [],

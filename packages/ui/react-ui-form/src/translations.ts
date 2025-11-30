@@ -15,7 +15,7 @@ export const translations = [
         'empty readonly ref field label': '(none)',
 
         // TODO(burdon): Standardize field/property.
-        'add property button': 'Add property',
+        'add property button label': 'Add property',
         'field property label': 'Property',
         'field property placeholder': 'Property name',
         'field format label': 'Type',
@@ -33,7 +33,8 @@ export const translations = [
         'ref field placeholder_other': 'Select items…',
 
         // TODO(burdon): Factor out?
-        'save button': 'Save',
+        'cancel button label': 'Cancel',
+        'save button label': 'Save',
 
         // FormatEnum
         'format boolean': 'Boolean',
@@ -65,11 +66,11 @@ export const translations = [
         'format url': 'URL',
         'format uuid': 'UUID',
 
-        // GeoPointInput.
+        // GeoPointField.
         'latitude label': 'Latitude',
         'longitude label': 'Longitude',
 
-        // SelectOptionsInput.
+        // SelectOptionsField.
         'select option label': 'Label',
         'select option label placeholder': 'Option label',
         'select option color': 'Color',
@@ -77,9 +78,9 @@ export const translations = [
         'select option add': 'Add option',
 
         // System schema message.
-        'system schema title': 'System record type',
+        'system schema title': 'System type',
         'system schema description':
-          'This is a system record type and cannot be modified, though the view can still be configured.',
+          'This is a system type and cannot be modified, though the view can still be configured.',
       },
     },
   },

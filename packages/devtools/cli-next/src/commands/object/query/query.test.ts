@@ -5,10 +5,10 @@
 import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 
+import { ClientService } from '@dxos/client';
 import { Obj } from '@dxos/echo';
 import { Task } from '@dxos/types';
 
-import { ClientService } from '../../../services';
 import { TestConsole, TestLayer } from '../../../testing';
 
 import { handler } from './query';

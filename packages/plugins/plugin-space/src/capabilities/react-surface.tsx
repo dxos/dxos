@@ -2,19 +2,20 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as Option from 'effect/Option';
 import type * as Schema from 'effect/Schema';
 import React, { useCallback } from 'react';
 
 import { Capabilities, contributes, createSurface } from '@dxos/app-framework';
 import { Surface, useCapability, useLayout } from '@dxos/app-framework/react';
-import { Obj } from '@dxos/echo';
+import { Obj, type Ref } from '@dxos/echo';
 import { findAnnotation } from '@dxos/effect';
 import { SettingsStore } from '@dxos/local-storage';
 import { type Space, SpaceState, getSpace, isLiveObject, isSpace, parseId, useSpace } from '@dxos/react-client/echo';
 import { Input } from '@dxos/react-ui';
-import { type InputProps, SelectInput } from '@dxos/react-ui-form';
+import { type FormFieldComponentProps, SelectField } from '@dxos/react-ui-form';
 import { HuePicker, IconPicker } from '@dxos/react-ui-pickers';
-import { Collection, type TypenameAnnotation, TypenameAnnotationId, View } from '@dxos/schema';
+import { Collection, View, ViewAnnotation } from '@dxos/schema';
 import { type JoinPanelProps } from '@dxos/shell/react';
 
 // TODO(burdon): Component name standard: NounVerbComponent.
@@ -48,7 +49,13 @@ import {
 } from '../components';
 import { useTypeOptions } from '../hooks';
 import { meta } from '../meta';
-import { HueAnnotationId, IconAnnotationId, type SpaceSettingsProps } from '../types';
+import {
+  HueAnnotationId,
+  IconAnnotationId,
+  type SpaceSettingsProps,
+  type TypeInputOptions,
+  TypeInputOptionsAnnotationId,
+} from '../types';
 
 import { SpaceCapabilities } from './capabilities';
 
@@ -187,7 +194,7 @@ export default ({ createInvitationUrl }: ReactSurfaceOptions) =>
         return !!annotation;
       },
       component: ({ data: _, ...inputProps }) => {
-        const { label, readonly, type, getValue, onValueChange } = inputProps as any as InputProps;
+        const { label, readonly, type, getValue, onValueChange } = inputProps as any as FormFieldComponentProps;
         const handleChange = useCallback((nextHue: string) => onValueChange(type, nextHue), [onValueChange]);
         const handleReset = useCallback(() => onValueChange(type, undefined), [onValueChange]);
         return (
@@ -206,7 +213,7 @@ export default ({ createInvitationUrl }: ReactSurfaceOptions) =>
         return !!annotation;
       },
       component: ({ data: _, ...inputProps }) => {
-        const { label, readonly, type, getValue, onValueChange } = inputProps as any as InputProps;
+        const { label, readonly, type, getValue, onValueChange } = inputProps as any as FormFieldComponentProps;
         const handleChange = useCallback((nextIcon: string) => onValueChange(type, nextIcon), [onValueChange]);
         const handleReset = useCallback(() => onValueChange(type, undefined), [onValueChange]);
         return (
@@ -224,30 +231,49 @@ export default ({ createInvitationUrl }: ReactSurfaceOptions) =>
         data,
       ): data is {
         prop: string;
-        schema: Schema.Schema<any>;
+        schema: Schema.Schema.Any;
         target: Space | Collection.Collection | undefined;
       } => {
         if (data.prop !== 'typename') {
           return false;
         }
 
-        const annotation = findAnnotation((data.schema as Schema.Schema.All).ast, TypenameAnnotationId);
+        // TODO(wittjosiah): This doesn't work here.
+        // const annotation = TypeInputOptionsAnnotation.get(data.schema as Schema.Schema.Any);
+        const annotation = findAnnotation((data.schema as Schema.Schema.All).ast, TypeInputOptionsAnnotationId);
         return !!annotation;
       },
       component: ({ data: { schema, target }, ...inputProps }) => {
-        const props = inputProps as any as InputProps;
+        const props = inputProps as any as FormFieldComponentProps;
         const space = isSpace(target) ? target : getSpace(target);
-        const annotation = findAnnotation<TypenameAnnotation[]>(schema.ast, TypenameAnnotationId)!;
+        const annotation = findAnnotation<TypeInputOptions>(schema.ast, TypeInputOptionsAnnotationId)!;
         const options = useTypeOptions({ space, annotation });
 
-        return <SelectInput {...props} options={options} />;
+        return <SelectField {...props} options={options} />;
       },
     }),
     createSurface({
       id: `${meta.id}/object-settings`,
       role: 'object-settings',
-      filter: (data): data is { subject: View.View } => Obj.instanceOf(View.View, data.subject),
-      component: ({ data }) => <ViewEditor view={data.subject} />,
+      filter: (data): data is { subject: { view: Ref.Ref<View.View> } } => {
+        if (!Obj.isObject(data.subject)) {
+          return false;
+        }
+
+        const schema = Obj.getSchema(data.subject);
+        return Option.fromNullable(schema).pipe(
+          Option.flatMap((schema) => ViewAnnotation.get(schema)),
+          Option.getOrElse(() => false),
+        );
+      },
+      component: ({ data }) => {
+        const view = data.subject.view.target;
+        if (!view) {
+          return null;
+        }
+
+        return <ViewEditor view={view} />;
+      },
     }),
     createSurface({
       id: SPACE_RENAME_POPOVER,

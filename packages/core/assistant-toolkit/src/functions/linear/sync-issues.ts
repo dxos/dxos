@@ -35,7 +35,7 @@ query Issues($teamId: String!, $after: DateTimeOrDuration!) {
             updatedAt
             description
             assignee { id, name }
-            state { 
+            state {
                 name
             }
             project {
@@ -115,7 +115,7 @@ const getLatestUpdateTimestamp: (
   teamId: string,
   dataType: Type.Obj.Any,
 ) => Effect.Effect<string, never, DatabaseService> = Effect.fnUntraced(function* (teamId, dataType) {
-  const { objects: existingTasks } = yield* DatabaseService.runQuery(
+  const existingTasks = yield* DatabaseService.runQuery(
     Query.type(dataType).select(Filter.foreignKeys(dataType, [{ source: LINEAR_TEAM_ID_KEY, id: teamId }])),
   );
   return Function.pipe(

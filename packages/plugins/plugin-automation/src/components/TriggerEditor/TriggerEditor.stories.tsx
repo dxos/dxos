@@ -11,7 +11,7 @@ import { Trigger } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { faker } from '@dxos/random';
 import { useQuery } from '@dxos/react-client/echo';
-import { ContactType, useClientProvider, withClientProvider } from '@dxos/react-client/testing';
+import { TestSchema, useClientProvider, withClientProvider } from '@dxos/react-client/testing';
 import { useAsyncEffect } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Employer, Organization, Person, Project } from '@dxos/types';
@@ -39,8 +39,8 @@ const DefaultStory = (props: Partial<TriggerEditorProps>) => {
       return;
     }
 
-    const result = await space.db.query(Filter.type(Function.Function)).run();
-    const fn = result.objects.find((fn) => fn.name === 'example.com/function/forex');
+    const functions = await space.db.query(Filter.type(Function.Function)).run();
+    const fn = functions.find((fn) => fn.name === 'example.com/function/forex');
     invariant(fn);
     const trigger = space.db.add(
       Trigger.make({
@@ -83,7 +83,7 @@ const meta = {
     withClientProvider({
       createIdentity: true,
       createSpace: true,
-      types: [Tag.Tag, Function.Function, Trigger.Trigger, ContactType],
+      types: [Tag.Tag, Function.Function, Trigger.Trigger, TestSchema.ContactType],
       onCreateSpace: ({ space }) => {
         space.db.add(Tag.make({ label: 'Important' }));
         space.db.add(Tag.make({ label: 'Investor' }));
@@ -94,7 +94,7 @@ const meta = {
         }
         Array.from({ length: 10 }).map(() => {
           return space.db.add(
-            Obj.make(ContactType, {
+            Obj.make(TestSchema.ContactType, {
               name: faker.person.fullName(),
               identifiers: [],
             }),

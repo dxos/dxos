@@ -2,6 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
+// TODO(burdon): Move this file to ../automerge.
+// TDOO(burdon): Standardize import * as A.
 import type { ChangeFn, ChangeOptions, Doc, Heads } from '@automerge/automerge';
 
 import { type Reference } from '@dxos/echo-protocol';

@@ -2,37 +2,35 @@
 // Copyright 2024 DXOS.org
 //
 
-import type * as Schema from 'effect/Schema';
 import { useEffect, useState } from 'react';
 
 import { type Live } from '@dxos/react-client/echo';
-import { type ProjectionModel, type View } from '@dxos/schema';
+import { type ProjectionModel } from '@dxos/schema';
 
 import { type BaseKanbanItem, KanbanModel } from '../model';
+import { type Kanban } from '../types';
 
 export type UseKanbanModelProps<T extends BaseKanbanItem = { id: string }> = {
-  view?: View.View;
-  schema?: Schema.Schema.AnyNoContext;
+  object?: Kanban.Kanban;
   projection?: ProjectionModel;
   items?: Live<T>[];
 };
 
 export const useKanbanModel = <T extends BaseKanbanItem = { id: string }>({
-  view,
-  schema,
+  object,
   projection,
   items,
   ...props
 }: UseKanbanModelProps<T>): KanbanModel<T> | undefined => {
   const [model, setModel] = useState<KanbanModel<T>>();
   useEffect(() => {
-    if (!view || !schema || !projection) {
+    if (!object || !projection) {
       return;
     }
 
     let model: KanbanModel<T> | undefined;
     const t = setTimeout(async () => {
-      model = new KanbanModel<T>({ view, schema, projection, ...props });
+      model = new KanbanModel<T>({ object, projection, ...props });
       await model.open();
       setModel(model);
     });
@@ -41,7 +39,8 @@ export const useKanbanModel = <T extends BaseKanbanItem = { id: string }>({
       clearTimeout(t);
       void model?.close();
     };
-  }, [view, schema, projection]);
+    // TODO(ZaymonFC): Is there a better way to get notified about deep changes in the json schema?
+  }, [object, projection]);
 
   // Update data.
   useEffect(() => {

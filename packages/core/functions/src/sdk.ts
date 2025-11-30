@@ -76,6 +76,12 @@ export type FunctionDefinition<T = any, O = any, S extends FunctionServices = Fu
   outputSchema?: Schema.Schema<O, any>;
 
   /**
+   * List of types the function uses.
+   * This is used to ensure that the types are available when the function is executed.
+   */
+  types: readonly Type.Entity.Any[];
+
+  /**
    * Keys of the required services.
    */
   services: readonly string[];
@@ -108,6 +114,12 @@ export type FunctionProps<T, O> = {
   description?: string;
   inputSchema: Schema.Schema<T, any>;
   outputSchema?: Schema.Schema<O, any>;
+
+  /**
+   * List of types the function uses.
+   * This is used to ensure that the types are available when the function is executed.
+   */
+  types?: readonly Type.Obj.Any[];
   // TODO(dmaretskyi): This currently doesn't cause a compile-time error if the handler requests a service that is not specified
   services?: readonly Context.Tag<any, any>[];
 
@@ -117,7 +129,7 @@ export type FunctionProps<T, O> = {
 // TODO(dmaretskyi): Output type doesn't get typechecked.
 export const defineFunction: {
   <I, O>(params: FunctionProps<I, O>): FunctionDefinition<I, O, FunctionServices>;
-} = ({ key, name, description, inputSchema, outputSchema = Schema.Any, handler, services }) => {
+} = ({ key, name, description, inputSchema, outputSchema = Schema.Any, handler, types, services }) => {
   if (!Schema.isSchema(inputSchema)) {
     throw new Error('Input schema must be a valid schema');
   }
@@ -162,6 +174,7 @@ export const defineFunction: {
     inputSchema,
     outputSchema,
     handler: handlerWithSpan,
+    types: types ?? [],
     services: !services ? [] : getServiceKeys(services),
   } satisfies FunctionDefinition.Any;
 };
@@ -219,6 +232,7 @@ export const deserializeFunction = (functionObj: Function.Function): FunctionDef
     // TODO(dmaretskyi): This should throw error.
     handler: () => {},
     services: functionObj.services ?? [],
+    types: [],
     meta: {
       deployedFunctionId: getUserFunctionIdInMetadata(Obj.getMeta(functionObj)),
     },

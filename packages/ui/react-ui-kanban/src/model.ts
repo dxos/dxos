@@ -3,7 +3,6 @@
 //
 
 import { batch, effect, signal, untracked } from '@preact/signals-core';
-import type * as Schema from 'effect/Schema';
 
 import { Resource } from '@dxos/context';
 import { Obj } from '@dxos/echo';
@@ -13,7 +12,7 @@ import type { StackItemRearrangeHandler } from '@dxos/react-ui-stack';
 import { type ProjectionModel, type View } from '@dxos/schema';
 import { arrayMove } from '@dxos/util';
 
-import { Kanban } from './types';
+import { type Kanban } from './types';
 import { computeArrangement } from './util';
 
 export const UNCATEGORIZED_VALUE = '__uncategorized__' as const;
@@ -31,34 +30,34 @@ export type ArrangedCards<T extends BaseKanbanItem = { id: string }> = {
 }[];
 
 export type KanbanModelProps = {
-  view: View.View;
-  schema: Schema.Schema.AnyNoContext;
+  object: Kanban.Kanban;
   projection: ProjectionModel;
 };
 
 export class KanbanModel<T extends BaseKanbanItem = { id: string }> extends Resource {
-  private readonly _view: View.View;
-  private readonly _schema: Schema.Schema.AnyNoContext;
+  private readonly _object: Kanban.Kanban;
   private readonly _projection: ProjectionModel;
-  private _kanban?: Kanban.Kanban;
 
   private readonly _items = signal<T[]>([]);
   private readonly _cards = signal<ArrangedCards<T>>([]);
 
-  constructor({ view, schema, projection }: KanbanModelProps) {
+  constructor({ object, projection }: KanbanModelProps) {
     super();
-    this._view = view;
-    this._schema = schema;
+    this._object = object;
     this._projection = projection;
   }
 
   get id() {
-    return Obj.getDXN(this._view).toString();
+    return Obj.getDXN(this._object).toString();
   }
 
-  get kanban(): Kanban.Kanban {
-    invariant(this._kanban, 'Kanban model not initialized');
-    return this._kanban;
+  get object(): Kanban.Kanban {
+    return this._object;
+  }
+
+  private get _view(): View.View {
+    invariant(this._object.view.target, 'Kanban model not initialized');
+    return this._object.view.target;
   }
 
   get projection(): ProjectionModel {
@@ -89,10 +88,6 @@ export class KanbanModel<T extends BaseKanbanItem = { id: string }> extends Reso
     });
   }
 
-  get schema() {
-    return this._schema;
-  }
-
   /**
    * @reactive Gets the current arrangement of kanban items.
    */
@@ -105,10 +100,7 @@ export class KanbanModel<T extends BaseKanbanItem = { id: string }> extends Reso
   //
 
   protected override async _open(): Promise<void> {
-    const presentation = this._view.presentation.target ?? (await this._view.presentation.load());
-    invariant(Obj.instanceOf(Kanban.Kanban, presentation));
-    this._kanban = presentation;
-
+    await this._object.view.load();
     this._computeArrangement();
     this.initializeEffects();
   }
@@ -171,7 +163,7 @@ export class KanbanModel<T extends BaseKanbanItem = { id: string }> extends Reso
 
       this._handleCardMove(sourceColumn, targetColumn, source, target, closestEdge as 'top' | 'bottom');
 
-      this.kanban.arrangement = nextArrangement.map(({ columnValue, cards }) => ({
+      this.object.arrangement = nextArrangement.map(({ columnValue, cards }) => ({
         columnValue,
         ids: cards.map(({ id }) => id),
       }));
@@ -199,7 +191,7 @@ export class KanbanModel<T extends BaseKanbanItem = { id: string }> extends Reso
 
     return untracked(() => {
       return computeArrangement<T>({
-        kanban: this.kanban,
+        object: this.object,
         items: this._items.value,
         pivotPath: this.columnFieldPath,
         selectOptions: options,

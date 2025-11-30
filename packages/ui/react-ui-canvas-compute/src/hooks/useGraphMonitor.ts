@@ -5,7 +5,7 @@
 import { useMemo } from 'react';
 
 import { type ComputeEdge, ComputeGraphModel, type ComputeNode, DEFAULT_INPUT, DEFAULT_OUTPUT } from '@dxos/conductor';
-import { ObjectId, Ref } from '@dxos/echo/internal';
+import { Obj, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { getSpace } from '@dxos/react-client/echo';
 import { type CanvasGraphModel, type Connection, type GraphMonitor } from '@dxos/react-ui-canvas-editor';
@@ -27,7 +27,7 @@ export const mapEdge = (
   invariant(targetNode?.node);
 
   return {
-    id: ObjectId.random(),
+    id: Obj.ID.random(),
     source: sourceNode.node,
     target: targetNode.node,
     output,

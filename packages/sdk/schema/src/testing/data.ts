@@ -4,16 +4,15 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Filter, type Live, Obj, Query, Type } from '@dxos/echo';
-import { TypedObject } from '@dxos/echo/internal';
+import { Filter, Format, Obj, Query, Type } from '@dxos/echo';
 
-import { StoredSchema, View } from '../types';
+import { View } from '../types';
 
-export class TestSchema extends TypedObject({
-  typename: 'example.com/type/Test',
-  version: '0.1.0',
-})({
-  id: Type.ObjectId,
+/**
+ * @deprecated Use (@dxos/echo/testing)
+ */
+// TODO(burdon): REMOVE
+export const Example = Schema.Struct({
   name: Schema.optional(
     Schema.String.pipe(
       Schema.annotations({
@@ -21,7 +20,7 @@ export class TestSchema extends TypedObject({
       }),
     ),
   ),
-  email: Type.Format.Email.pipe(Schema.optional),
+  email: Format.Email.pipe(Schema.optional),
   // TODO(burdon): Define transforms for objects?
   // address: Schema.optional(
   //   Schema.Struct({
@@ -38,28 +37,23 @@ export class TestSchema extends TypedObject({
   // ),
   admin: Schema.optional(Schema.Boolean),
   rating: Schema.optional(Schema.Number),
-}) {}
+}).pipe(
+  Type.Obj({
+    typename: 'example.com/type/Example',
+    version: '0.1.0',
+  }),
+);
 
-export type TestType = Schema.Schema.Type<typeof TestSchema>;
+export type Example = Schema.Schema.Type<typeof Example>;
 
-export const testSchema: Live<StoredSchema> = Obj.make(StoredSchema, {
+export const testSchema = Obj.make(Type.PersistentType, {
   typename: 'example.com/type/Test',
   version: '0.1.0',
-  jsonSchema: Type.toJsonSchema(TestSchema),
+  jsonSchema: Type.toJsonSchema(Example),
 });
 
-export const testView: Live<View.View> = View.make({
+export const testView: View.View = View.make({
   name: 'Test',
-  query: Query.select(Filter.type(TestSchema)),
-  jsonSchema: Type.toJsonSchema(TestSchema),
-  presentation: Obj.make(Type.Expando, {}),
+  query: Query.select(Filter.type(Example)),
+  jsonSchema: Type.toJsonSchema(Example),
 });
-
-export const testData: TestType = {
-  id: Type.ObjectId.random(),
-  name: 'Tester',
-  email: 'test@example.com',
-  // address: {
-  //   zip: '11205',
-  // },
-};

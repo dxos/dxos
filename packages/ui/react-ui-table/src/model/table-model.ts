@@ -5,16 +5,8 @@
 import { type ReadonlySignal, computed, effect, signal } from '@preact/signals-core';
 
 import { Resource } from '@dxos/context';
-import { Obj, Ref } from '@dxos/echo';
-import {
-  FormatEnum,
-  type JsonProp,
-  type JsonSchemaType,
-  getSchema,
-  getValue,
-  setValue,
-  toEffectSchema,
-} from '@dxos/echo/internal';
+import { Format, Obj, Ref } from '@dxos/echo';
+import { type JsonProp, type JsonSchemaType, getValue, setValue, toEffectSchema } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
 import { ObjectId } from '@dxos/keys';
 import { getSnapshot, isLiveObject } from '@dxos/live-object';
@@ -28,14 +20,14 @@ import {
 } from '@dxos/react-ui-grid';
 import {
   type FieldSortType,
-  ProjectionModel,
+  type ProjectionModel,
   type PropertyType,
   type ValidationError,
   type View,
   validateSchema,
 } from '@dxos/schema';
 
-import { Table } from '../types';
+import { type Table } from '../types';
 import { touch } from '../util';
 import { extractTagIds } from '../util/tag';
 
@@ -77,9 +69,8 @@ const defaultFeatures: TableFeatures = {
 export type InsertRowResult = 'draft' | 'final';
 
 export type TableModelProps<T extends TableRow = TableRow> = {
-  view: View.View;
-  schema: JsonSchemaType;
-  projection?: ProjectionModel;
+  object: Table.Table;
+  projection: ProjectionModel;
   features?: Partial<TableFeatures>;
   sorting?: FieldSortType[];
   initialSelection?: string[];
@@ -95,9 +86,8 @@ export type TableModelProps<T extends TableRow = TableRow> = {
 };
 
 export class TableModel<T extends TableRow = TableRow> extends Resource {
-  private readonly _view: View.View;
+  private readonly _object: Table.Table;
   private readonly _projection: ProjectionModel;
-  private _table?: Table.Table;
 
   private readonly _visibleRange = signal<DxGridPlaneRange>({
     start: { row: 0, col: 0 },
@@ -122,8 +112,7 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
   private _columnMeta?: ReadonlySignal<DxGridAxisMeta>;
 
   constructor({
-    view,
-    schema,
+    object,
     projection,
     features = {},
     sorting = [],
@@ -138,8 +127,8 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
     onRowAction,
   }: TableModelProps<T>) {
     super();
-    this._view = view;
-    this._projection = projection ?? new ProjectionModel(schema, view.projection);
+    this._object = object;
+    this._projection = projection;
     this._projection.normalizeView();
 
     // TODO(ZaymonFC): Use our more robust config merging module?
@@ -150,7 +139,11 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
       'Single selection is not compatible with editable tables.',
     );
 
-    this._sorting = new TableSorting(this._rows, this._view, this._projection);
+    this._sorting = new TableSorting({
+      rows: this._rows,
+      getView: () => this.view,
+      projection: this._projection,
+    });
 
     if (sorting.length > 0) {
       const [sort] = sorting;
@@ -175,16 +168,17 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
   }
 
   public get id(): string {
-    return Obj.getDXN(this._view).toString();
+    return Obj.getDXN(this._object).toString();
   }
 
   public get view(): View.View {
-    return this._view;
+    const view = this._object.view.target;
+    invariant(view, 'Table model not initialized');
+    return view;
   }
 
   public get table(): Table.Table {
-    invariant(this._table, 'Model not initialized');
-    return this._table;
+    return this._object;
   }
 
   public get projection(): ProjectionModel {
@@ -244,10 +238,7 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
   //
 
   protected override async _open(): Promise<void> {
-    const presentation = this._view.presentation.target ?? (await this._view.presentation.load());
-    invariant(Obj.instanceOf(Table.Table, presentation));
-    this._table = presentation;
-
+    await this._object.view.load();
     this.initializeColumnMeta();
     this.initializeEffects();
     await this._selection.open(this._ctx);
@@ -470,7 +461,7 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
 
     const { props } = this._projection.getFieldProjection(field.id);
     switch (props.format) {
-      case FormatEnum.Ref: {
+      case Format.TypeFormat.Ref: {
         if (!field.referencePath) {
           return ''; // TODO(burdon): Show error.
         }
@@ -527,7 +518,7 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
       const snapshot = getSnapshot(currentRow);
       setValue(snapshot, field.path, transformedValue);
 
-      const schema = getSchema(currentRow);
+      const schema = Obj.getSchema(currentRow);
       invariant(schema);
 
       const validationResult = validateSchema(schema, snapshot);
@@ -553,7 +544,7 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
     const transformedValue = editorTextToCellValue(props, value);
 
     // Special handling for Ref format to preserve existing behavior
-    if (props.format === FormatEnum.Ref && !isLiveObject(value)) {
+    if (props.format === Format.TypeFormat.Ref && !isLiveObject(value)) {
       return;
     }
 
@@ -668,7 +659,7 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
 
 const editorTextToCellValue = (props: PropertyType, value: any): any => {
   switch (props.format) {
-    case FormatEnum.Ref: {
+    case Format.TypeFormat.Ref: {
       if (isLiveObject(value)) {
         return Ref.make(value);
       } else {
@@ -676,7 +667,7 @@ const editorTextToCellValue = (props: PropertyType, value: any): any => {
       }
     }
 
-    case FormatEnum.SingleSelect: {
+    case Format.TypeFormat.SingleSelect: {
       const ids = extractTagIds(value);
       if (ids && ids.length > 0) {
         return ids[0];
@@ -685,7 +676,7 @@ const editorTextToCellValue = (props: PropertyType, value: any): any => {
       }
     }
 
-    case FormatEnum.MultiSelect: {
+    case Format.TypeFormat.MultiSelect: {
       const ids = extractTagIds(value);
       return ids || value;
     }

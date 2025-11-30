@@ -94,7 +94,7 @@ export class EchoTestPeer extends Resource {
     this._clients.delete(this._echoClient);
     this._echoClient = new EchoClient();
     this._clients.add(this._echoClient);
-    this._echoClient.graph.schemaRegistry.addSchema(this._types);
+    void this._echoClient.graph.schemaRegistry.register(this._types);
   }
 
   get client() {
@@ -138,7 +138,7 @@ export class EchoTestPeer extends Resource {
 
   async createClient(): Promise<EchoClient> {
     const client = new EchoClient();
-    client.graph.schemaRegistry.addSchema(this._types);
+    await client.graph.schemaRegistry.register(this._types);
     this._clients.add(client);
     client.connectToService({
       dataService: this._echoHost.dataService,
@@ -194,7 +194,7 @@ export const createDataAssertion = ({
 }: { referenceEquality?: boolean; onlyObject?: boolean; numObjects?: number } = {}) => {
   let seedObjects: AnyLiveObject<any>[];
   const findSeedObject = async (db: EchoDatabase) => {
-    const { objects } = await db.query(Query.select(Filter.everything())).run();
+    const objects = await db.query(Query.select(Filter.everything())).run();
     const received = seedObjects.map((seedObject) => objects.find((object) => object.id === seedObject.id));
     return { objects, received };
   };

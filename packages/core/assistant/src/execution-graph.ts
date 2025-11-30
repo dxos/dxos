@@ -3,7 +3,7 @@
 //
 
 import { AgentStatus } from '@dxos/ai';
-import { Obj, type Ref } from '@dxos/echo';
+import { type Entity, Obj, type Ref } from '@dxos/echo';
 import { MESSAGE_PROPERTY_TOOL_CALL_ID } from '@dxos/functions';
 import { type ObjectId } from '@dxos/keys';
 import { LogLevel } from '@dxos/log';
@@ -65,7 +65,7 @@ export class ExecutionGraph {
   /**
    * Adds events to the graph.
    */
-  addEvents(events: Obj.Any[]) {
+  addEvents(events: Entity.Unknown[]) {
     const sortedEvents = this.sortObjectsByCreated(events);
     for (const event of sortedEvents) {
       if (Obj.instanceOf(Message.Message, event)) {

@@ -18,7 +18,7 @@ import { DXN } from '@dxos/keys';
 import { LogLevel, log } from '@dxos/log';
 import { useConfig } from '@dxos/react-client';
 import { type Space } from '@dxos/react-client/echo';
-import { Avatar, Input, type ThemedClassName, Toolbar } from '@dxos/react-ui';
+import { Avatar, Input, type ThemedClassName, Toolbar, useAsyncEffect } from '@dxos/react-ui';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { errorText, mx } from '@dxos/react-ui-theme';
 
@@ -52,9 +52,9 @@ export const WorkflowDebugPanel = (props: WorkflowDebugPanelProps) => {
     return new EdgeHttpClient(edgeUrl);
   }, [config]);
 
-  useEffect(() => {
+  useAsyncEffect(async () => {
     setInputTemplate('');
-    props.loader
+    await props.loader
       .load(DXN.fromLocalObjectId(props.graph.id))
       .then((workflow) => {
         const workflowMeta = workflow.resolveMeta();

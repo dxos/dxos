@@ -5,7 +5,7 @@
 import * as Schema from 'effect/Schema';
 
 import { Obj, Type } from '@dxos/echo';
-import { DescriptionAnnotation, FormAnnotation, LabelAnnotation } from '@dxos/echo/internal';
+import { DescriptionAnnotation, FormInputAnnotation, LabelAnnotation } from '@dxos/echo/internal';
 import { Text } from '@dxos/schema';
 import { type MakeOptional } from '@dxos/util';
 
@@ -18,6 +18,7 @@ import * as Transcript from './Transcript';
  */
 // TODO(burdon): Location (string | Ref<Place>)
 export const Event = Schema.Struct({
+  id: Obj.ID,
   title: Schema.optional(Schema.String),
   description: Schema.optional(Schema.String),
   owner: Actor.Actor,
@@ -28,22 +29,22 @@ export const Event = Schema.Struct({
   /**
    * Transcript of the meeting.
    */
-  transcript: Type.Ref(Transcript.Transcript).pipe(FormAnnotation.set(false), Schema.optional),
+  transcript: Type.Ref(Transcript.Transcript).pipe(FormInputAnnotation.set(false), Schema.optional),
 
   /**
    * Markdown notes for the meeting.
    */
-  notes: Type.Ref(Text.Text).pipe(FormAnnotation.set(false), Schema.optional),
+  notes: Type.Ref(Text.Text).pipe(FormInputAnnotation.set(false), Schema.optional),
 
   /**
    * Generated summary of the meeting.
    */
-  summary: Type.Ref(Text.Text).pipe(FormAnnotation.set(false), Schema.optional),
+  summary: Type.Ref(Text.Text).pipe(FormInputAnnotation.set(false), Schema.optional),
 
   /**
    * Message thread for the meeting.
    */
-  thread: Type.Ref(Thread.Thread).pipe(FormAnnotation.set(false), Schema.optional),
+  thread: Type.Ref(Thread.Thread).pipe(FormInputAnnotation.set(false), Schema.optional),
 }).pipe(
   Type.Obj({
     typename: 'dxos.org/type/Event',

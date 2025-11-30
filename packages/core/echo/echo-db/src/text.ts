@@ -4,7 +4,7 @@
 
 import { next as A } from '@automerge/automerge';
 
-import { type BaseObject } from '@dxos/echo/internal';
+import { type AnyProperties } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
 import { isLiveObject } from '@dxos/live-object';
 import { get } from '@dxos/util';
@@ -86,7 +86,7 @@ export const getRangeFromCursor = (accessor: DocAccessor, cursor: string) => {
  * @param newText - The new text value.
  * @returns The updated object.
  */
-export const updateText = <T extends BaseObject>(
+export const updateText = <T extends AnyProperties>(
   obj: AnyLiveObject<T>,
   path: KeyPath,
   newText: string,

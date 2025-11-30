@@ -29,6 +29,6 @@ export const extractSpaceArchive = async (archive: SpaceArchive): Promise<Extrac
     documents[documentId] = entry.content ?? failedInvariant();
   }
 
-  log.info('extracted space archive', { metadata, documents });
+  log('extracted space archive', { metadata, documents });
   return { metadata, documents };
 };

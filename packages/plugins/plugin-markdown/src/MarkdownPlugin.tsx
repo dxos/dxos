@@ -6,8 +6,7 @@ import { Capabilities, Events, contributes, createIntent, defineModule, definePl
 import { type Obj, Ref } from '@dxos/echo';
 import { createDocAccessor, getTextInRange } from '@dxos/echo-db';
 import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
-import { SpaceCapabilities } from '@dxos/plugin-space';
-import { defineObjectForm } from '@dxos/plugin-space/types';
+import { type CreateObjectIntent } from '@dxos/plugin-space/types';
 import { translations as editorTranslations } from '@dxos/react-ui-editor';
 import { Text } from '@dxos/schema';
 
@@ -72,30 +71,15 @@ export const MarkdownPlugin = definePlugin(meta, () => [
               return getTextInRange(createDocAccessor(doc.content.target!, ['content']), start, end);
             }
           },
+          createObjectIntent: (() => createIntent(MarkdownAction.Create)) satisfies CreateObjectIntent,
+          addToCollectionOnCreate: true,
         },
       }),
   }),
   defineModule({
-    id: `${meta.id}/module/object-form`,
-    activatesOn: ClientEvents.SetupSchema,
-    activate: () =>
-      contributes(
-        SpaceCapabilities.ObjectForm,
-        defineObjectForm({
-          objectSchema: Markdown.Document,
-          getIntent: () => createIntent(MarkdownAction.Create, {}),
-        }),
-      ),
-  }),
-  defineModule({
     id: `${meta.id}/module/schema`,
     activatesOn: ClientEvents.SetupSchema,
-    activate: () => contributes(ClientCapabilities.Schema, [Text.Text]),
-  }),
-  defineModule({
-    id: `${meta.id}/module/whitelist-schema`,
-    activatesOn: ClientEvents.SetupSchema,
-    activate: () => contributes(ClientCapabilities.SchemaWhiteList, [Markdown.Document]),
+    activate: () => contributes(ClientCapabilities.Schema, [Markdown.Document, Text.Text]),
   }),
   defineModule({
     id: `${meta.id}/module/react-surface`,

@@ -44,7 +44,12 @@ export default async (context: PluginContext) => {
   await defaultSpace.waitUntilReady();
 
   if (deck?.activeDeck === 'default') {
-    await dispatch(createIntent(LayoutAction.SwitchWorkspace, { part: 'workspace', subject: defaultSpace.id }));
+    await dispatch(
+      createIntent(LayoutAction.SwitchWorkspace, {
+        part: 'workspace',
+        subject: defaultSpace.id,
+      }),
+    );
   }
 
   // Initialize space sharing lock in default space.
@@ -52,9 +57,7 @@ export default async (context: PluginContext) => {
     defaultSpace.properties[COMPOSER_SPACE_LOCK] = true;
   }
 
-  const {
-    objects: [spacesOrder],
-  } = await defaultSpace.db.query(Filter.type(Type.Expando, { key: SHARED })).run();
+  const [spacesOrder] = await defaultSpace.db.query(Filter.type(Type.Expando, { key: SHARED })).run();
   if (!spacesOrder) {
     // TODO(wittjosiah): Cannot be a Folder because Spaces are not TypedObjects so can't be saved in the database.
     //  Instead, we store order as an array of space ids.
@@ -101,7 +104,13 @@ export default async (context: PluginContext) => {
           subscriptions.add(
             scheduledEffect(
               () => ({ name: space.properties.name }),
-              ({ name }) => (state.spaceNames[space.id] = name),
+              ({ name }) => {
+                if (!name) {
+                  delete state.spaceNames[space.id];
+                } else {
+                  state.spaceNames[space.id] = name;
+                }
+              },
             ),
           );
         });
@@ -111,7 +120,11 @@ export default async (context: PluginContext) => {
   // Broadcast active node to other peers in the space.
   subscriptions.add(
     scheduledEffect(
-      () => ({ current: attention.current, active: layout.active, inactive: layout.inactive }),
+      () => ({
+        current: attention.current,
+        active: layout.active,
+        inactive: layout.inactive,
+      }),
       ({ current, active, inactive }) => {
         const send = () => {
           const spaces = client.spaces.get();
@@ -159,7 +172,9 @@ export default async (context: PluginContext) => {
                 })
                 // TODO(burdon): This seems defensive; why would this fail? Backoff interval.
                 .catch((err) => {
-                  log.warn('Failed to broadcast active node for presence.', { err: err.message });
+                  log.warn('Failed to broadcast active node for presence.', {
+                    err: err.message,
+                  });
                 });
             }
           }

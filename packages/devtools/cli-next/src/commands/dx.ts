@@ -7,9 +7,9 @@ import * as Options from '@effect/cli/Options';
 import * as Config from 'effect/Config';
 import * as Layer from 'effect/Layer';
 
+import { ClientService, ConfigService } from '@dxos/client';
 import { ENV_DX_PROFILE_DEFAULT } from '@dxos/client-protocol';
 
-import { ClientService, ConfigService } from '../services';
 import { CommandConfig } from '../services';
 import { DXOS_VERSION } from '../version';
 

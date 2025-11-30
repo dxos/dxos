@@ -41,10 +41,12 @@
     "@dxos/async": "workspace:*",
     "@dxos/blueprints": "workspace:*",
     "@dxos/client": "workspace:*",
+    "@dxos/client-protocol": "workspace:*",
     "@dxos/context": "workspace:*",
     "@dxos/display-name": "workspace:*",
     "@dxos/echo": "workspace:*",
     "@dxos/echo-db": "workspace:*",
+    "@dxos/echo-protocol": "workspace:*",
     "@dxos/echo-signals": "workspace:*",
     "@dxos/effect": "workspace:*",
     "@dxos/functions": "workspace:*",
@@ -88,6 +90,7 @@
     "react-qr-rounded": "^1.0.0"
   },
   "devDependencies": {
+    "@atlaskit/pragmatic-drag-and-drop-hitbox": "^1.0.3",
     "@babel/core": "^7.18.13",
     "@dxos/lit-ui": "workspace:*",
     "@dxos/random": "workspace:*",

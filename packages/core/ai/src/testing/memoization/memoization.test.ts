@@ -1,0 +1,145 @@
+//
+// Copyright 2025 DXOS.org
+//
+
+import * as Chat from '@effect/ai/Chat';
+import * as LanguageModel from '@effect/ai/LanguageModel';
+import * as Prompt from '@effect/ai/Prompt';
+import * as Tool from '@effect/ai/Tool';
+import * as Toolkit from '@effect/ai/Toolkit';
+import * as AnthropicTool from '@effect/ai-anthropic/AnthropicTool';
+import { describe, expect, it } from '@effect/vitest';
+import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
+import * as Schema from 'effect/Schema';
+import * as Stream from 'effect/Stream';
+
+import { TestHelpers } from '@dxos/effect/testing';
+
+import * as AiService from '../../AiService';
+import { AiServiceTestingPreset } from '../layer';
+import { TestingToolkit, testingLayer } from '../toolkit';
+
+import * as MemoizedAiService from './MemoizedAiService';
+
+const DateToolkit = Toolkit.make(
+  Tool.make('get-date', {
+    description: 'Get the current date',
+    success: Schema.DateFromString,
+  }),
+);
+
+const layerTest = DateToolkit.toLayer({
+  'get-date': Effect.fnUntraced(function* () {
+    return new Date('2025-10-01');
+  }),
+});
+
+const TestLayer = Layer.mergeAll(testingLayer, layerTest, AiService.model('@anthropic/claude-sonnet-4-0')).pipe(
+  Layer.provideMerge(MemoizedAiService.layerTest()),
+  Layer.provide(AiServiceTestingPreset('direct')),
+);
+
+describe('memoization', () => {
+  it.effect(
+    'context paths',
+    Effect.fnUntraced(function* (ctx) {
+      const filepath = ctx.task.file.filepath;
+      expect(filepath.endsWith('memoization.test.ts')).toBe(true);
+    }),
+  );
+
+  it.effect(
+    'generate a poem',
+    Effect.fnUntraced(
+      function* (_) {
+        yield* LanguageModel.generateText({
+          prompt: 'Write me a poem!',
+        });
+      },
+      Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
+  );
+
+  it.effect(
+    'tools',
+    Effect.fnUntraced(
+      function* (_) {
+        const chat = yield* Chat.fromPrompt('Add 47 + 23');
+
+        while (true) {
+          const stream = chat.streamText({
+            prompt: Prompt.empty,
+            toolkit: TestingToolkit,
+          });
+          yield* stream.pipe(
+            Stream.runForEach((_part) => {
+              // console.log(part);
+              return Effect.void;
+            }),
+          );
+
+          const lastMessage = (yield* chat.history).content.at(-1);
+          if (lastMessage?.role === 'tool') {
+            continue;
+          } else {
+            break;
+          }
+        }
+      },
+      Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
+  );
+
+  it.effect(
+    'tools with encoding',
+    Effect.fnUntraced(
+      function* (_) {
+        const chat = yield* Chat.fromPrompt('What is the current date?');
+
+        while (true) {
+          const response = yield* chat.generateText({
+            prompt: Prompt.empty,
+            toolkit: yield* DateToolkit,
+          });
+          if (response.finishReason === 'tool-calls') {
+            continue;
+          } else {
+            expect(response.finishReason).toBe('stop');
+            console.log(response.text);
+            break;
+          }
+        }
+      },
+      Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
+  );
+
+  it.effect(
+    'provider-defined tool',
+    Effect.fnUntraced(
+      function* (_) {
+        const chat = yield* Chat.fromPrompt('Who is the current pope?');
+
+        while (true) {
+          const response = yield* chat.generateText({
+            prompt: Prompt.empty,
+            toolkit: yield* Toolkit.make(AnthropicTool.WebSearch_20250305({})),
+          });
+          if (response.finishReason === 'tool-calls') {
+            continue;
+          } else {
+            expect(response.finishReason).toBe('stop');
+            console.log(response.text);
+            break;
+          }
+        }
+      },
+      Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
+  );
+});

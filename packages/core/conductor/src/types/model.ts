@@ -3,9 +3,8 @@
 //
 
 import { Obj, Ref } from '@dxos/echo';
-import { ObjectId } from '@dxos/echo/internal';
 import { AbstractGraphBuilder, AbstractGraphModel, type Graph, createEdgeId } from '@dxos/graph';
-import { DXN } from '@dxos/keys';
+import { DXN, ObjectId } from '@dxos/keys';
 import { type MakeOptional } from '@dxos/util';
 
 import { type ComputeEdge, ComputeGraph, type ComputeNode, isComputeGraph } from './compute-graph';

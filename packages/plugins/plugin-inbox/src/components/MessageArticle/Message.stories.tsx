@@ -42,7 +42,10 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
   args: {
-    message: MessageType.make({}),
+    message: MessageType.make({
+      sender: { name: 'John Doe', email: 'john@doe.com' },
+      blocks: [{ _tag: 'text', text: 'Hello world!' }],
+    }),
     sender: signal(undefined),
   },
 };

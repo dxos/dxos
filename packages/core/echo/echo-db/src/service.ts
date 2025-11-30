@@ -10,27 +10,23 @@ import type * as Schema from 'effect/Schema';
 import type * as Types from 'effect/Types';
 
 import {
+  type Entity,
   type Filter,
-  type Live,
   Obj,
   ObjectNotFoundError,
   type Query,
+  type QueryResult,
   type Ref,
-  type Relation,
+  type SchemaRegistry,
   type Type,
 } from '@dxos/echo';
 import { promiseWithCauseCapture } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
-import type { DXN } from '@dxos/keys';
+import { type DXN } from '@dxos/keys';
+import { type Live } from '@dxos/live-object';
 
 import type { FlushOptions } from './core-db';
-import type {
-  EchoDatabase,
-  ExtractSchemaQueryResult,
-  SchemaRegistryPreparedQuery,
-  SchemaRegistryQuery,
-} from './proxy-db';
-import type { OneShotQueryResult, QueryResult } from './query';
+import type { EchoDatabase } from './proxy-db';
 
 export class DatabaseService extends Context.Tag('@dxos/functions/DatabaseService')<
   DatabaseService,
@@ -61,13 +57,13 @@ export class DatabaseService extends Context.Tag('@dxos/functions/DatabaseServic
    */
   static resolve: {
     // No type check.
-    (dxn: DXN): Effect.Effect<Obj.Any | Relation.Any, never, DatabaseService>;
+    (dxn: DXN): Effect.Effect<Entity.Unknown, never, DatabaseService>;
     // Check matches schema.
-    <S extends Type.Obj.Any | Type.Relation.Any>(
+    <S extends Type.Entity.Any>(
       dxn: DXN,
       schema: S,
     ): Effect.Effect<Schema.Schema.Type<S>, ObjectNotFoundError, DatabaseService>;
-  } = (<S extends Type.Obj.Any | Type.Relation.Any>(
+  } = (<S extends Type.Entity.Any>(
     dxn: DXN,
     schema?: S,
   ): Effect.Effect<Schema.Schema.Type<S>, ObjectNotFoundError, DatabaseService> =>
@@ -118,13 +114,13 @@ export class DatabaseService extends Context.Tag('@dxos/functions/DatabaseServic
   /**
    * @link EchoDatabase.add
    */
-  static add = <T extends Obj.Any | Relation.Any>(obj: T): Effect.Effect<T, never, DatabaseService> =>
+  static add = <T extends Entity.Unknown>(obj: T): Effect.Effect<T, never, DatabaseService> =>
     DatabaseService.pipe(Effect.map(({ db }) => db.add(obj)));
 
   /**
    * @link EchoDatabase.remove
    */
-  static remove = <T extends Obj.Any | Relation.Any>(obj: T): Effect.Effect<void, never, DatabaseService> =>
+  static remove = <T extends Entity.Unknown>(obj: T): Effect.Effect<void, never, DatabaseService> =>
     DatabaseService.pipe(Effect.map(({ db }) => db.remove(obj)));
 
   /**
@@ -136,10 +132,10 @@ export class DatabaseService extends Context.Tag('@dxos/functions/DatabaseServic
   /**
    * @link EchoDatabase.getObjectById
    */
-  static getObjectById = <T extends Obj.Any | Relation.Any>(
+  static getObjectById = <T extends Entity.Unknown>(
     id: string,
-  ): Effect.Effect<Live<T> | undefined, never, DatabaseService> => {
-    return DatabaseService.pipe(Effect.map(({ db }) => db.getObjectById(id)));
+  ): Effect.Effect<T | undefined, never, DatabaseService> => {
+    return DatabaseService.pipe(Effect.map(({ db }) => db.getObjectById(id) as T | undefined));
   };
 
   // TODO(dmaretskyi): Change API to `yield* DatabaseService.query(...).first` and `yield* DatabaseService.query(...).objects`.
@@ -148,11 +144,15 @@ export class DatabaseService extends Context.Tag('@dxos/functions/DatabaseServic
    * Creates a `QueryResult` object that can be subscribed to.
    */
   static query: {
-    <Q extends Query.Any>(query: Q): Effect.Effect<QueryResult<Live<Query.Type<Q>>>, never, DatabaseService>;
-    <F extends Filter.Any>(filter: F): Effect.Effect<QueryResult<Live<Filter.Type<F>>>, never, DatabaseService>;
+    <Q extends Query.Any>(
+      query: Q,
+    ): Effect.Effect<QueryResult.QueryResult<Live<Query.Type<Q>>>, never, DatabaseService>;
+    <F extends Filter.Any>(
+      filter: F,
+    ): Effect.Effect<QueryResult.QueryResult<Live<Filter.Type<F>>>, never, DatabaseService>;
   } = (queryOrFilter: Query.Any | Filter.Any) =>
     DatabaseService.pipe(
-      Effect.map(({ db }) => db.query(queryOrFilter as any)),
+      Effect.map(({ db }) => db.query(queryOrFilter as any) as QueryResult.QueryResult<Live<any>>),
       Effect.withSpan('DatabaseService.query'),
     );
 
@@ -160,8 +160,8 @@ export class DatabaseService extends Context.Tag('@dxos/functions/DatabaseServic
    * Executes the query once and returns the results.
    */
   static runQuery: {
-    <Q extends Query.Any>(query: Q): Effect.Effect<OneShotQueryResult<Live<Query.Type<Q>>>, never, DatabaseService>;
-    <F extends Filter.Any>(filter: F): Effect.Effect<OneShotQueryResult<Live<Filter.Type<F>>>, never, DatabaseService>;
+    <Q extends Query.Any>(query: Q): Effect.Effect<Live<Query.Type<Q>>[], never, DatabaseService>;
+    <F extends Filter.Any>(filter: F): Effect.Effect<Live<Filter.Type<F>>[], never, DatabaseService>;
   } = (queryOrFilter: Query.Any | Filter.Any) =>
     DatabaseService.query(queryOrFilter as any).pipe(
       Effect.flatMap((queryResult) => promiseWithCauseCapture(() => queryResult.run())),
@@ -169,17 +169,17 @@ export class DatabaseService extends Context.Tag('@dxos/functions/DatabaseServic
 
   // TODO(dmaretskyi): Change API to `yield* DatabaseService.querySchema(...).first` and `yield* DatabaseService.querySchema(...).schema`.
 
-  static schemaQuery = <Query extends Types.NoExcessProperties<SchemaRegistryQuery, Query>>(
-    query?: Query & SchemaRegistryQuery,
-  ): Effect.Effect<SchemaRegistryPreparedQuery<ExtractSchemaQueryResult<Query>>, never, DatabaseService> =>
+  static schemaQuery = <Q extends Types.NoExcessProperties<SchemaRegistry.Query, Q>>(
+    query?: Q & SchemaRegistry.Query,
+  ): Effect.Effect<QueryResult.QueryResult<SchemaRegistry.ExtractQueryResult<Q>>, never, DatabaseService> =>
     DatabaseService.pipe(
       Effect.map(({ db }) => db.schemaRegistry.query(query)),
       Effect.withSpan('DatabaseService.schemaQuery'),
     );
 
-  static runSchemaQuery = <Query extends Types.NoExcessProperties<SchemaRegistryQuery, Query>>(
-    query?: Query & SchemaRegistryQuery,
-  ): Effect.Effect<ExtractSchemaQueryResult<Query>[], never, DatabaseService> =>
+  static runSchemaQuery = <Q extends Types.NoExcessProperties<SchemaRegistry.Query, Q>>(
+    query?: Q & SchemaRegistry.Query,
+  ): Effect.Effect<SchemaRegistry.ExtractQueryResult<Q>[], never, DatabaseService> =>
     DatabaseService.schemaQuery(query).pipe(
       Effect.flatMap((queryResult) => promiseWithCauseCapture(() => queryResult.run())),
     );
