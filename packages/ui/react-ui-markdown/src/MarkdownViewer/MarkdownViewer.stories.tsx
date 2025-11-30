@@ -13,7 +13,7 @@ import { MarkdownViewer } from './MarkdownViewer';
 faker.seed(0);
 
 const meta = {
-  title: 'ui/react-ui-components/MarkdownViewer',
+  title: 'ui/react-ui-markdown/MarkdownViewer',
   component: MarkdownViewer,
   decorators: [withTheme, withLayout({ container: 'column' })],
 } satisfies Meta<typeof MarkdownViewer>;
