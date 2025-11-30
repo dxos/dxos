@@ -273,7 +273,8 @@ export const ViewEditor = forwardRef<ProjectionModel, ViewEditorProps>(
                           {expandedField === field.id && !readonly && (
                             <div role='none' className='col-span-5 mbs-1 mbe-1 border border-separator rounded-md'>
                               <FieldEditor
-                                readonly={readonly || schemaReadonly ? 'disabled' : false}
+                                // TODO(burdon): Is this right?
+                                readonly={readonly || schemaReadonly}
                                 projection={projectionModel}
                                 field={field}
                                 registry={registry}

@@ -30,12 +30,19 @@ import { FormContext } from './FormRoot';
 //  [x] Keyboard handler (autosave)
 //  [ ] Don't call save/autoSave if value hasn't changed
 //  [ ] Fix onCancel (restore values)
+// [ ] Static mode
+//   [ ] Boolean
+//   [ ] Ref
+//   [x] Array
+//   [x] Object
+//   [ ] Geo
 // [ ] Update hooks used by external packages (i.e., useFormValues)
 // [ ] Omit id from sub properties.
 // [ ] Refs
 //   [x] Single-select (fix popover)
 //   [ ] Multi-select (array)
 //   [ ] Defer query until popover
+
 // [ ] Test 22 usages (opencode migration)
 // [ ] Merge stage 1
 
@@ -63,7 +70,7 @@ type NewFormContextValue<T extends AnyProperties = any> = {
    * Show debug info.
    */
   debug?: boolean;
-} & Pick<FormFieldSetProps<T>, 'readonly' | 'fieldMap' | 'fieldProvider'>;
+} & Pick<FormFieldSetProps<T>, 'readonly' | 'layout' | 'fieldMap' | 'fieldProvider'>;
 
 const [NewFormContextProvider, useNewFormContext] = createContext<NewFormContextValue>('NewForm');
 
@@ -175,9 +182,10 @@ const NewFormActions = ({ classNames }: NewFormActionsProps) => {
   const {
     form: { isValid, onSave, onCancel },
     readonly,
+    layout,
   } = useNewFormContext(NewFormActions.displayName);
 
-  if (readonly) {
+  if (readonly || layout === 'static') {
     return null;
   }
 
@@ -220,7 +228,13 @@ const NewFormSubmit = ({ classNames, label, icon }: NewFormSubmitProps) => {
   const { t } = useTranslation(translationKey);
   const {
     form: { isValid, onSave },
+    readonly,
+    layout,
   } = useNewFormContext(NewFormSubmit.displayName);
+
+  if (readonly || layout === 'static') {
+    return null;
+  }
 
   return (
     <div role='none' className={mx('flex is-full plb-cardSpacingBlock', classNames)}>

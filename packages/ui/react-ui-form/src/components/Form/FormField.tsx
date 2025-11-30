@@ -32,7 +32,6 @@ import {
 import {
   type FormFieldComponent,
   type FormFieldComponentProps,
-  FormFieldLabel,
   type FormFieldMap,
   type FormFieldProvider,
 } from './FormFieldComponent';
@@ -59,7 +58,6 @@ export type FormFieldProps<T extends AnyProperties> = {
    * Map of custom renderers for specific properties.
    * Prefer fieldProvider for plugin specific input surfaces.
    */
-  // TODO(burdon): Remove (convert to fieldProvider).
   fieldMap?: FormFieldMap;
 
   /**
@@ -69,8 +67,8 @@ export type FormFieldProps<T extends AnyProperties> = {
 } & Pick<
   RefFieldProps,
   | 'autoFocus'
-  | 'inline'
   | 'readonly'
+  | 'layout'
   | 'createSchema'
   | 'createOptionLabel'
   | 'createOptionIcon'
@@ -85,8 +83,8 @@ export const FormField = <T extends AnyProperties>({
   projection,
   fieldMap,
   fieldProvider,
-  inline,
   readonly,
+  layout,
   createSchema,
   createOptionLabel,
   createOptionIcon,
@@ -102,7 +100,6 @@ export const FormField = <T extends AnyProperties>({
     () => (examples?.length ? `${t('example placeholder')}: ${examples[0]}` : (description ?? label)),
     [examples, description, label],
   );
-  console.log(label, description, examples, placeholder);
 
   const fieldState = useFormFieldState(FormField.displayName, path);
   const fieldProps: FormFieldComponentProps = {
@@ -111,7 +108,7 @@ export const FormField = <T extends AnyProperties>({
     format,
     label,
     placeholder,
-    inline,
+    layout,
     readonly,
     ...fieldState,
   };
@@ -143,6 +140,7 @@ export const FormField = <T extends AnyProperties>({
         property={property}
         path={path}
         readonly={readonly}
+        layout={layout}
         fieldMap={fieldMap}
         fieldProvider={fieldProvider}
       />
@@ -207,22 +205,20 @@ export const FormField = <T extends AnyProperties>({
     if (typeLiteral) {
       const schema = Schema.make(typeLiteral);
       return (
-        <>
-          {!inline && <FormFieldLabel label={label} asChild />}
-          <FormFieldSet
-            schema={schema}
-            path={path}
-            inline={inline}
-            readonly={readonly}
-            projection={projection}
-            fieldMap={fieldMap}
-            fieldProvider={fieldProvider}
-            createOptionLabel={createOptionLabel}
-            createOptionIcon={createOptionIcon}
-            onCreate={onCreate}
-            onQueryRefOptions={onQueryRefOptions}
-          />
-        </>
+        <FormFieldSet
+          schema={schema}
+          path={path}
+          readonly={readonly}
+          layout={layout}
+          label={label}
+          projection={projection}
+          fieldMap={fieldMap}
+          fieldProvider={fieldProvider}
+          createOptionLabel={createOptionLabel}
+          createOptionIcon={createOptionIcon}
+          onCreate={onCreate}
+          onQueryRefOptions={onQueryRefOptions}
+        />
       );
     }
   }

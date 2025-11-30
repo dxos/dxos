@@ -11,23 +11,14 @@ import { type FormFieldComponentProps, FormFieldWrapper } from '../FormFieldComp
 
 export const NumberField = ({
   type,
-  label,
-  inline,
   readonly,
   placeholder,
-  getStatus,
-  getValue,
   onValueChange,
   onBlur,
+  ...props
 }: FormFieldComponentProps<number>) => {
   return (
-    <FormFieldWrapper<number>
-      inline={inline}
-      readonly={readonly}
-      label={label}
-      getStatus={getStatus}
-      getValue={getValue}
-    >
+    <FormFieldWrapper<number> {...props}>
       {({ value = '' }) => (
         <Input.TextInput
           type='number'

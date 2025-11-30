@@ -183,7 +183,7 @@ export const Readonly: Story<any> = {
   args: {
     schema,
     values,
-    readonly: 'disabled',
+    readonly: true,
   },
 };
 
@@ -191,7 +191,7 @@ export const Static: Story<any> = {
   args: {
     schema,
     values,
-    readonly: 'static',
+    layout: 'static',
   },
 };
 

@@ -14,9 +14,9 @@ export type SelectFieldOptions = FormFieldComponentProps & {
 
 export const SelectField = ({
   type,
-  label,
-  inline,
   readonly,
+  label,
+  layout,
   placeholder,
   options,
   getStatus,
@@ -24,14 +24,18 @@ export const SelectField = ({
   onValueChange,
 }: SelectFieldOptions) => {
   const { status, error } = getStatus();
-
   const value = getValue() as string | undefined;
+
   const handleValueChange = useCallback((value: string | number) => onValueChange(type, value), [type, onValueChange]);
 
-  return readonly && !value ? null : (
+  if ((readonly || layout === 'static') && value == null) {
+    return null;
+  }
+
+  return (
     <Input.Root validationValence={status}>
-      {!inline && <FormFieldLabel error={error} readonly={readonly} label={label} />}
-      {readonly === 'static' ? (
+      {layout !== 'inline' && <FormFieldLabel error={error} readonly={readonly} label={label} />}
+      {layout === 'static' ? (
         <p>{options?.find(({ value: optionValue }) => optionValue === value)?.label ?? String(value)}</p>
       ) : (
         <Select.Root value={value} onValueChange={handleValueChange}>
@@ -52,7 +56,7 @@ export const SelectField = ({
           </Select.Portal>
         </Select.Root>
       )}
-      {inline && <Input.DescriptionAndValidation>{error}</Input.DescriptionAndValidation>}
+      {layout === 'full' && <Input.DescriptionAndValidation>{error}</Input.DescriptionAndValidation>}
     </Input.Root>
   );
 };

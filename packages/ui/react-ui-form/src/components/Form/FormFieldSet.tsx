@@ -13,22 +13,23 @@ import { isTruthy } from '@dxos/util';
 import { type FormHandlerProps } from '../../hooks';
 
 import { FormField, type FormFieldProps } from './FormField';
-import { FormFieldErrorBoundary } from './FormFieldComponent';
+import { FormFieldErrorBoundary, FormFieldLabel } from './FormFieldComponent';
 import { useFormValues } from './FormRoot';
 
 export type FormFieldSetProps<T extends AnyProperties> = ThemedClassName<
   {
     testId?: string;
+    label?: string;
     exclude?: (props: SchemaProperty<T>[]) => SchemaProperty<T>[];
     sort?: string[];
   } & Pick<FormHandlerProps<T>, 'schema'> &
     Pick<
       FormFieldProps<T>,
       | 'path'
-      | 'inline'
-      | 'projection'
       | 'autoFocus'
       | 'readonly'
+      | 'layout'
+      | 'projection'
       | 'fieldMap'
       | 'fieldProvider'
       | 'createSchema'
@@ -41,7 +42,7 @@ export type FormFieldSetProps<T extends AnyProperties> = ThemedClassName<
 >;
 
 export const FormFieldSet = forwardRef<HTMLDivElement, FormFieldSetProps<any>>(
-  ({ classNames, schema, path, exclude, sort, projection, inline, ...props }, forwardRef) => {
+  ({ classNames, label, schema, readonly, path, exclude, sort, projection, layout, ...props }, forwardRef) => {
     const values = useFormValues(FormFieldSet.displayName!, path);
 
     // TODO(burdon): Updates on every value change.
@@ -83,8 +84,17 @@ export const FormFieldSet = forwardRef<HTMLDivElement, FormFieldSetProps<any>>(
       return sort ? filtered.sort(({ name: a }, { name: b }) => sort.indexOf(a) - sort.indexOf(b)) : filtered;
     }, [schema, values, exclude, sort, projection?.fields]);
 
+    if (readonly || (layout === 'static' && values == null)) {
+      return null;
+    }
+
     return (
-      <div role='form' className={mx('is-full', inline && 'flex flex-col gap-2', classNames)} ref={forwardRef}>
+      <div
+        role='form'
+        className={mx('is-full', layout === 'inline' && 'flex flex-col gap-2', classNames)}
+        ref={forwardRef}
+      >
+        {layout !== 'inline' && label && <FormFieldLabel label={label} asChild />}
         {properties
           .map((property) => {
             return (
@@ -92,8 +102,8 @@ export const FormFieldSet = forwardRef<HTMLDivElement, FormFieldSetProps<any>>(
                 <FormField
                   property={property}
                   path={[...(path ?? []), property.name]}
+                  layout={layout}
                   projection={projection}
-                  inline={inline}
                   {...props}
                 />
               </FormFieldErrorBoundary>

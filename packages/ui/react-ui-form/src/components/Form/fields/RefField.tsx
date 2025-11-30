@@ -41,10 +41,10 @@ export type RefFieldProps = FormFieldComponentProps & {
 export const RefField = (props: RefFieldProps) => {
   const {
     ast,
-    label,
-    inline,
     readonly,
+    label,
     placeholder,
+    layout,
     getStatus,
     getValue,
     array,
@@ -159,7 +159,7 @@ export const RefField = (props: RefFieldProps) => {
 
   return (
     <Input.Root validationValence={status}>
-      {!inline && <FormFieldLabel error={error} readonly={readonly} label={label} />}
+      {layout !== 'inline' && <FormFieldLabel error={error} readonly={readonly} label={label} />}
       <div>
         {readonly ? (
           items.length < 1 ? (
@@ -207,7 +207,7 @@ export const RefField = (props: RefFieldProps) => {
           </ObjectPicker.Root>
         )}
       </div>
-      {inline && <Input.DescriptionAndValidation>{error}</Input.DescriptionAndValidation>}
+      {layout === 'full' && <Input.DescriptionAndValidation>{error}</Input.DescriptionAndValidation>}
     </Input.Root>
   );
 };
@@ -215,8 +215,8 @@ export const RefField = (props: RefFieldProps) => {
 const RefFieldFallback = ({
   type,
   label,
-  inline,
   readonly,
+  layout,
   placeholder,
   getValue,
   onValueChange,
@@ -248,10 +248,10 @@ const RefFieldFallback = ({
   return (
     <TextField
       type={type}
-      label={label}
-      inline={inline}
       readonly={readonly}
+      label={label}
       placeholder={placeholder}
+      layout={layout}
       getValue={handleGetValue as <V>() => V | undefined}
       onValueChange={handleOnValueChange}
       {...restInputProps}

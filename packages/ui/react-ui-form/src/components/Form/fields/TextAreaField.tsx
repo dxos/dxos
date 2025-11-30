@@ -10,23 +10,14 @@ import { type FormFieldComponentProps, FormFieldWrapper } from '../FormFieldComp
 
 export const TextAreaField = ({
   type,
-  label,
-  inline,
   readonly,
   placeholder,
-  getStatus,
-  getValue,
   onValueChange,
   onBlur,
+  ...props
 }: FormFieldComponentProps<string>) => {
   return (
-    <FormFieldWrapper<string>
-      inline={inline}
-      readonly={readonly}
-      label={label}
-      getStatus={getStatus}
-      getValue={getValue}
-    >
+    <FormFieldWrapper<string> {...props}>
       {({ value = '' }) => (
         <Input.TextArea
           rows={3}

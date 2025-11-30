@@ -10,10 +10,10 @@ import { type FormFieldComponentProps, FormFieldLabel } from '../FormFieldCompon
 
 export const MarkdownField = ({
   type,
-  label,
-  inline,
   readonly,
+  label,
   placeholder,
+  layout,
   getStatus,
   getValue,
   onValueChange,
@@ -45,8 +45,8 @@ export const MarkdownField = ({
 
   return (
     <Input.Root validationValence={status}>
-      {!inline && <FormFieldLabel error={error} readonly={readonly} label={label} />}
-      {readonly === 'static' ? (
+      {layout !== 'inline' && <FormFieldLabel error={error} readonly={readonly} label={label} />}
+      {layout === 'static' ? (
         <p>{getValue() ?? ''}</p>
       ) : (
         <Input.TextArea
@@ -61,7 +61,7 @@ export const MarkdownField = ({
           spellCheck={false}
         />
       )}
-      {inline && <Input.Validation>{error}</Input.Validation>}
+      {layout === 'full' && <Input.Validation>{error}</Input.Validation>}
     </Input.Root>
   );
 };

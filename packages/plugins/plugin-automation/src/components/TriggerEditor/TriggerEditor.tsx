@@ -30,7 +30,13 @@ export const TriggerEditor = ({ space, trigger, readonlySpec, types, tags, onSav
   };
 
   const handleRefQueryOptions = useRefQueryOptions({ space });
-  const fieldMap = useCustomInputs({ space, readonlySpec, types, tags, onQueryRefOptions: handleRefQueryOptions });
+  const fieldMap = useCustomInputs({
+    space,
+    readonlySpec,
+    types,
+    tags,
+    onQueryRefOptions: handleRefQueryOptions,
+  });
 
   return (
     <Form
@@ -96,7 +102,7 @@ const useCustomInputs = ({
       },
 
       // Spec selector.
-      ['spec.kind' as const]: (props) => <SpecSelector {...props} readonly={readonlySpec ? 'disabled' : false} />,
+      ['spec.kind' as const]: (props) => <SpecSelector {...props} readonly={readonlySpec} />,
 
       // TODO(wittjosiah): Copied from ViewEditor.
       // Query input editor.

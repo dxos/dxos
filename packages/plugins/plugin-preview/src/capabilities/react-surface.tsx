@@ -127,7 +127,7 @@ export default () =>
               schema={schema}
               projection={data.projection}
               values={data.subject}
-              readonly={role === 'card--popover' ? 'static' : false}
+              layout={role === 'card--popover' ? 'static' : undefined}
               onSave={handleSave}
               autoSave
               {...(role === 'card--intrinsic' && {

@@ -21,12 +21,13 @@ import { useFormValues } from '../FormRoot';
 
 export type ArrayFieldProps<T extends AnyProperties> = {
   fieldProps: FormFieldStateProps;
-} & Pick<FormFieldProps<T>, 'property' | 'path' | 'readonly' | 'fieldMap' | 'fieldProvider'>;
+} & Pick<FormFieldProps<T>, 'property' | 'path' | 'readonly' | 'layout' | 'fieldMap' | 'fieldProvider'>;
 
 export const ArrayField = <T extends AnyProperties>({
   property,
-  readonly,
   path,
+  readonly,
+  layout,
   fieldProps: inputProps,
   ...props
 }: ArrayFieldProps<T>) => {
@@ -76,7 +77,7 @@ export const ArrayField = <T extends AnyProperties>({
 
   return (
     <>
-      <FormFieldLabel readonly={readonly} label={label} asChild />
+      {(layout !== 'static' || values.length > 0) && <FormFieldLabel readonly={readonly} label={label} asChild />}
 
       <div
         role='none'
@@ -100,7 +101,7 @@ export const ArrayField = <T extends AnyProperties>({
                   ast: elementType,
                 }}
                 readonly={readonly}
-                inline
+                layout='inline'
                 {...props}
               />
 
@@ -124,7 +125,7 @@ export const ArrayField = <T extends AnyProperties>({
       </div>
 
       {/* TODO(burdon): Get label from schema. */}
-      {!readonly && (
+      {!readonly && layout !== 'static' && (
         <IconButton
           classNames='flex is-full mlb-cardSpacingBlock'
           icon='ph--plus--regular'

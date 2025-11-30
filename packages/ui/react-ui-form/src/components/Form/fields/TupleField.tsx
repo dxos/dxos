@@ -15,8 +15,8 @@ const gridCols = ['grid-cols-1', 'grid-cols-2', 'grid-cols-3', 'grid-cols-4'];
 export const TupleField = ({
   binding,
   type,
-  label,
   readonly,
+  label,
   getStatus,
   getValue,
   onValueChange,

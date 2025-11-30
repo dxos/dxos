@@ -14,8 +14,8 @@ import { type FormFieldComponentProps, FormFieldLabel } from '../FormFieldCompon
 export const GeoPointField = ({
   type,
   label,
-  inline,
   readonly,
+  layout,
   getStatus,
   getValue,
   onValueChange,
@@ -54,18 +54,18 @@ export const GeoPointField = ({
 
   return (
     <Input.Root validationValence={status}>
-      {!inline && <FormFieldLabel error={error} readonly={readonly} label={label} asChild />}
+      {layout !== 'inline' && <FormFieldLabel error={error} readonly={readonly} label={label} asChild />}
       <div role='none' className='grid grid-cols-2 gap-2'>
         <div>
           <Input.Root>
-            {!inline && <Input.Label>{t('latitude label')}</Input.Label>}
+            {layout !== 'inline' && <Input.Label>{t('latitude label')}</Input.Label>}
             <Input.TextInput
               type='number'
               step='0.00001'
               min='-90'
               max='90'
               disabled={!!readonly}
-              placeholder={inline ? t('latitude placeholder') : undefined}
+              placeholder={t('latitude placeholder')}
               value={latitudeText ?? ''}
               onChange={handleChange('latitude', setLatitudeText)}
               onBlur={onBlur}
@@ -74,14 +74,14 @@ export const GeoPointField = ({
         </div>
         <div>
           <Input.Root>
-            {!inline && <Input.Label>{t('longitude label')}</Input.Label>}
+            {layout !== 'inline' && <Input.Label>{t('longitude label')}</Input.Label>}
             <Input.TextInput
               type='number'
               step='0.00001'
               min='-180'
               max='180'
               disabled={!!readonly}
-              placeholder={inline ? t('longitude placeholder') : undefined}
+              placeholder={t('longitude placeholder')}
               value={longitudeText ?? ''}
               onChange={handleChange('longitude', setLongitudeText)}
               onBlur={onBlur}

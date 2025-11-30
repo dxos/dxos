@@ -16,8 +16,8 @@ import { type FormFieldComponentProps, FormFieldLabel } from '../FormFieldCompon
 
 export const SelectOptionField = ({
   type,
-  label,
   readonly,
+  label,
   getStatus,
   getValue,
   onValueChange,

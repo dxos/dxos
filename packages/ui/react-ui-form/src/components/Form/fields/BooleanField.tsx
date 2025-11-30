@@ -8,23 +8,9 @@ import { Input } from '@dxos/react-ui';
 
 import { type FormFieldComponentProps, FormFieldWrapper } from '../FormFieldComponent';
 
-export const BooleanField = ({
-  type,
-  label,
-  inline,
-  readonly,
-  getStatus,
-  getValue,
-  onValueChange,
-}: FormFieldComponentProps<boolean>) => {
+export const BooleanField = ({ type, readonly, onValueChange, ...props }: FormFieldComponentProps<boolean>) => {
   return (
-    <FormFieldWrapper<boolean>
-      inline={inline}
-      readonly={readonly}
-      label={label}
-      getStatus={getStatus}
-      getValue={getValue}
-    >
+    <FormFieldWrapper<boolean> readonly={readonly} {...props}>
       {({ value }) => (
         <Input.Switch disabled={!!readonly} checked={value} onCheckedChange={(value) => onValueChange(type, value)} />
       )}
