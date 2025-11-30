@@ -82,7 +82,7 @@ export const ArrayField = <T extends AnyProperties>({
       <div
         role='none'
         className={
-          readonly
+          readonly || layout === 'static'
             ? 'flex flex-wrap gap-1 mlb-1'
             : values.length > 0
               ? 'grid grid-cols-[1fr_min-content] gap-2 mlb-2'
@@ -100,12 +100,13 @@ export const ArrayField = <T extends AnyProperties>({
                   array: false, // Cannot nest arrays.
                   ast: elementType,
                 }}
-                readonly={readonly}
-                layout='inline'
+                readonly={readonly || layout === 'static'}
+                // TODO(burdon): Need inline-static.
+                layout={layout === 'static' ? 'inline' : layout}
                 {...props}
               />
 
-              {!readonly && (
+              {!readonly && layout !== 'static' && (
                 <div role='none' className='flex flex-col bs-full justify-end'>
                   {/* NOTE: Aligns with center of last field if multi-field object. */}
                   <div role='none' className='flex items-center bs-[var(--line-height)]'>

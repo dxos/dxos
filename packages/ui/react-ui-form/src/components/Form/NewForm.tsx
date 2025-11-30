@@ -36,8 +36,9 @@ import { FormContext } from './FormRoot';
 //   [x] Array
 //   [x] Object
 //   [x] Geo
-// [ ] Update hooks used by external packages (i.e., useFormValues)
+// [ ] Split inline from layout.
 // [ ] Omit id from sub properties.
+// [ ] Update hooks used by external packages (i.e., useFormValues)
 // [ ] Refs
 //   [x] Single-select (fix popover)
 //   [ ] Multi-select (array)

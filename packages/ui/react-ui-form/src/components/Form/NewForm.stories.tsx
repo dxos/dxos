@@ -98,7 +98,7 @@ const DefaultStory = <T extends AnyProperties = AnyProperties>({
   const handleQueryRefOptions = useCallback<NonNullable<NewFormRootProps<T>['onQueryRefOptions']>>(
     async ({ typename }) => {
       log('query', { typename });
-      const { objects } = await space.db.query(Filter.typename(typename)).run();
+      const objects = await space.db.query(Filter.typename(typename)).run();
       return objects.map((result: any) => ({ dxn: Obj.getDXN(result), label: Obj.getLabel(result) }));
     },
     [space],
@@ -170,6 +170,7 @@ const schema = Person.pipe(Schema.omit('id'));
 const values: Partial<Person> = {
   name: 'Alice',
   location: [40.7128, -74.006],
+  tasks: ['task 1', 'task 2'],
 };
 
 export const Default: Story<any> = {

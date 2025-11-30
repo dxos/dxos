@@ -106,10 +106,10 @@ export const FormField = <T extends AnyProperties>({
     ast,
     type,
     format,
+    readonly,
     label,
     placeholder,
     layout,
-    readonly,
     ...fieldState,
   };
 

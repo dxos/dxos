@@ -39,6 +39,7 @@ export type FormFieldStateProps<T = any> = {
  * - inline: Control only.
  * - static: Plain DOM; omit all undefined values.
  */
+// TODO(burdon): 'inline' should be orthogonal to the layout (e.g., array of inline static).
 export type Presentation = 'full' | 'compact' | 'inline' | 'static';
 
 /**
