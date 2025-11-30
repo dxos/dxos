@@ -6,8 +6,8 @@ import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
-import { AiService, ConsolePrinter, MemoizedAiService } from '@dxos/ai';
-import { TestAiService } from '@dxos/ai/testing';
+import { AiService, ConsolePrinter } from '@dxos/ai';
+import { MemoizedAiService, TestAiService } from '@dxos/ai/testing';
 import {
   AiConversation,
   type ContextBinding,
@@ -18,7 +18,8 @@ import {
 import { Blueprint } from '@dxos/blueprints';
 import { SpaceProperties } from '@dxos/client-protocol';
 import { DXN, Obj, Query, Ref } from '@dxos/echo';
-import { TestHelpers, acquireReleaseResource } from '@dxos/effect';
+import { acquireReleaseResource } from '@dxos/effect';
+import { TestHelpers } from '@dxos/effect/testing';
 import {
   CredentialsService,
   DatabaseService,
@@ -106,7 +107,7 @@ describe('create', () => {
           prompt: `Create a document with a cookie recipe.`,
         });
         {
-          const { objects: docs } = yield* DatabaseService.runQuery(Query.type(Markdown.Document));
+          const docs = yield* DatabaseService.runQuery(Query.type(Markdown.Document));
           if (docs.length !== 1) {
             throw new Error(`Expected 1 document; got ${docs.length}: ${docs.map((_) => _.name)}`);
           }

@@ -25,7 +25,7 @@ export class QueryResultImpl<T extends Entity.Unknown = Entity.Unknown> implemen
   private readonly _diagnostic: QueryDiagnostic;
 
   private _isActive = false;
-  private _resultCache?: QueryResult.Entry<T>[] = undefined;
+  private _resultCache?: QueryResult.EntityEntry<T>[] = undefined;
   private _objectCache?: T[] = undefined;
   private _subscribers: number = 0;
 
@@ -59,14 +59,14 @@ export class QueryResultImpl<T extends Entity.Unknown = Entity.Unknown> implemen
     return this._query;
   }
 
-  get results(): QueryResult.Entry<T>[] {
+  get entries(): QueryResult.EntityEntry<T>[] {
     this._checkQueryIsRunning();
     this._signal.notifyRead();
     this._ensureCachePresent();
     return this._resultCache!;
   }
 
-  get objects(): T[] {
+  get results(): T[] {
     this._checkQueryIsRunning();
     this._signal.notifyRead();
     this._ensureCachePresent();
@@ -77,16 +77,26 @@ export class QueryResultImpl<T extends Entity.Unknown = Entity.Unknown> implemen
    * Execute the query once and return the results.
    * Does not subscribe to updates.
    */
-  async run(opts: { timeout?: number } = { timeout: 30_000 }): Promise<QueryResult.OneShot<T>> {
-    const filteredResults = await this._queryContext.run(this._query.ast, { timeout: opts.timeout });
-    return {
-      results: filteredResults,
-      objects: this._uniqueObjects(filteredResults),
-    };
+  async run(opts?: { timeout?: number }): Promise<T[]> {
+    const filteredResults = await this._queryContext.run(this._query.ast, {
+      timeout: opts?.timeout ?? 30_000,
+    });
+    return this._uniqueObjects(filteredResults);
+  }
+
+  /**
+   * Execute the query once and return the entries with match metadata.
+   * Does not subscribe to updates.
+   */
+  async runEntries(opts?: { timeout?: number }): Promise<QueryResult.EntityEntry<T>[]> {
+    const filteredResults = await this._queryContext.run(this._query.ast, {
+      timeout: opts?.timeout ?? 30_000,
+    });
+    return filteredResults;
   }
 
   async first(opts?: { timeout?: number }): Promise<T> {
-    const { objects } = await this.run(opts);
+    const objects = await this.run(opts);
     if (objects.length === 0) {
       throw new Error('No objects found');
     }
@@ -94,12 +104,27 @@ export class QueryResultImpl<T extends Entity.Unknown = Entity.Unknown> implemen
     return objects[0];
   }
 
+  async firstOrUndefined(opts?: { timeout?: number }): Promise<T | undefined> {
+    const objects = await this.run(opts);
+    return objects.at(0);
+  }
+
   /**
    * Runs the query synchronously and returns all results.
    * WARNING: This method will only return the data already cached and may return incomplete results.
    * Use `this.run()` for a complete list of results stored on-disk.
    */
-  runSync(): QueryResult.Entry<T>[] {
+  runSync(): T[] {
+    this._ensureCachePresent();
+    return this._objectCache!;
+  }
+
+  /**
+   * Runs the query synchronously and returns all entries with match metadata.
+   * WARNING: This method will only return the data already cached and may return incomplete results.
+   * Use `this.runEntries()` for a complete list of entries stored on-disk.
+   */
+  runSyncEntries(): QueryResult.EntityEntry<T>[] {
     this._ensureCachePresent();
     return this._resultCache!;
   }
@@ -172,10 +197,10 @@ export class QueryResultImpl<T extends Entity.Unknown = Entity.Unknown> implemen
     return changed;
   }
 
-  private _uniqueObjects(results: QueryResult.Entry<T>[]): T[] {
+  private _uniqueObjects(entries: QueryResult.EntityEntry<T>[]): T[] {
     const seen = new Set<unknown>();
-    return results
-      .map((result) => result.object)
+    return entries
+      .map(({ result }) => result)
       .filter(isNonNullable)
       .filter((object: any) => {
         // Assuming objects have `id` property we can use to dedup.
@@ -186,6 +211,7 @@ export class QueryResultImpl<T extends Entity.Unknown = Entity.Unknown> implemen
         if (seen.has(object.id)) {
           return false;
         }
+
         seen.add(object.id);
         return true;
       });
@@ -216,7 +242,7 @@ export class QueryResultImpl<T extends Entity.Unknown = Entity.Unknown> implemen
   private _checkQueryIsRunning(): void {
     if (!this._isActive) {
       throw new Error(
-        'Query must have at least 1 subscriber for `.objects` and `.results` to be used. Use query.run() for single-use result retrieval.',
+        'Query must have at least 1 subscriber for `.results` and `.entries` to be used. Use query.run() for single-use result retrieval.',
       );
     }
   }

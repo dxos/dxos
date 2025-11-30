@@ -35,7 +35,7 @@ export const createGenerator = <T extends Obj.Any>(
     const typename = schema.typename;
 
     // Find or create table and view.
-    const { objects: views } = await space.db.query(Filter.type(View.View)).run();
+    const views = await space.db.query(Filter.type(View.View)).run();
     const view = await findViewByTypename(views, typename);
     const staticSchema = client?.graph.schemaRegistry.schemas.find((schema) => Type.getTypename(schema) === typename);
     if (!view && !staticSchema) {

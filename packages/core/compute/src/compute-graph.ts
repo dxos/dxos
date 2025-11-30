@@ -250,7 +250,7 @@ export class ComputeGraph extends Resource {
       const query = this._space.db.query(Filter.type(Function.Function));
       const unsubscribe = query.subscribe();
       const dispose = effect(() => {
-        this._remoteFunctions = query.objects.filter(({ binding }) => binding);
+        this._remoteFunctions = query.results.filter((fn) => fn.binding);
         this.update.emit({ type: 'functionsUpdated' });
       });
 

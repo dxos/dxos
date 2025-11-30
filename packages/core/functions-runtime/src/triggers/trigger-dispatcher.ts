@@ -355,7 +355,7 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
                 continue;
               }
 
-              const { objects } = yield* DatabaseService.runQuery(Query.fromAst(spec.query.ast));
+              const objects = yield* DatabaseService.runQuery(Query.fromAst(spec.query.ast));
 
               const state: TriggerState = yield* TriggerStateStore.getState(trigger.id).pipe(
                 Effect.catchTag('TRIGGER_STATE_NOT_FOUND', () =>
@@ -492,7 +492,7 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
 
   private _fetchTriggers = () =>
     Effect.gen(this, function* () {
-      const { objects } = yield* DatabaseService.runQuery(Filter.type(Trigger.Trigger));
+      const objects = yield* DatabaseService.runQuery(Filter.type(Trigger.Trigger));
       return objects;
     }).pipe(Effect.withSpan('TriggerDispatcher.fetchTriggers'));
 

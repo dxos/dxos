@@ -20,7 +20,7 @@ export const useRefQueryOptions = ({ space }: UseRefQueryOptionsProps): QueryRef
       }
 
       const query = space.db.query(Filter.typename(typename));
-      const { objects } = await query.run();
+      const objects = await query.run();
       return objects
         .map((object) => {
           const dxn = Obj.getDXN(object);

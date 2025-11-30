@@ -96,7 +96,7 @@ export class AgentQuerySourceProvider implements QuerySourceProvider {
 }
 
 export class AgentQuerySource implements QuerySource {
-  private _results?: QueryResult.Entry[];
+  private _results?: QueryResult.EntityEntry[];
   private _cancelPreviousRequest?: () => void = undefined;
 
   public readonly changed = new Event<void>();
@@ -115,11 +115,11 @@ export class AgentQuerySource implements QuerySource {
     // No-op.
   }
 
-  getResults(): QueryResult.Entry[] {
+  getResults(): QueryResult.EntityEntry[] {
     return this._results ?? [];
   }
 
-  async run(): Promise<QueryResult.Entry[]> {
+  async run(): Promise<QueryResult.EntityEntry[]> {
     return this._results ?? [];
   }
 

@@ -11,8 +11,8 @@ import * as Redacted from 'effect/Redacted';
 
 import { type AiService } from '../AiService';
 import * as AiServiceRouter from '../AiServiceRouter';
-import { MemoizedAiService } from '../memoization';
 
+import { MemoizedAiService } from './memoization';
 import { tapHttpErrors } from './tap';
 
 export type AiServiceLayer = Layer.Layer<AiService, ConfigError.ConfigError, never>;

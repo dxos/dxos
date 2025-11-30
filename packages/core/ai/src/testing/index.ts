@@ -4,6 +4,7 @@
 
 export * from './defs';
 export * from './layer';
+export * from './memoization';
 export * from './tap';
 export * from './test-data';
 export * from './test-schema';

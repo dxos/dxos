@@ -13,13 +13,12 @@ import {
   type JsonPath,
   type JsonProp,
   Ref,
-  RuntimeSchemaRegistry,
   TypeAnnotationId,
   TypeEnum,
   getPropertyMetaAnnotation,
   toJsonSchema,
 } from '@dxos/echo/internal';
-import { EchoSchemaRegistry } from '@dxos/echo-db';
+import { DatabaseSchemaRegistry, RuntimeSchemaRegistry } from '@dxos/echo-db';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
 import { registerSignalsRuntime } from '@dxos/echo-signals';
 import { invariant } from '@dxos/invariant';
@@ -51,7 +50,7 @@ describe('ProjectionModel', () => {
 
   test('gets and updates projection', async ({ expect }) => {
     const { db } = await builder.createDatabase();
-    const registry = new EchoSchemaRegistry(db);
+    const registry = new DatabaseSchemaRegistry(db);
 
     const schema = Schema.Struct({
       name: Schema.String.annotations({ title: 'Name' }),
@@ -141,7 +140,7 @@ describe('ProjectionModel', () => {
 
   test('gets and updates references', async ({ expect }) => {
     const registry = new RuntimeSchemaRegistry();
-    registry.addSchema([TestSchema.Organization]);
+    await registry.register([TestSchema.Organization]);
 
     const typename = 'example.com/type/Person';
     const schema = Schema.Struct({
@@ -190,7 +189,7 @@ describe('ProjectionModel', () => {
 
   test('deletes field projections', async ({ expect }) => {
     const { db } = await builder.createDatabase();
-    const registry = new EchoSchemaRegistry(db);
+    const registry = new DatabaseSchemaRegistry(db);
 
     const schema = Schema.Struct({
       name: Schema.String.annotations({ title: 'Name' }),
@@ -223,7 +222,7 @@ describe('ProjectionModel', () => {
 
   test('field projection delete and restore', async ({ expect }) => {
     const { db } = await builder.createDatabase();
-    const registry = new EchoSchemaRegistry(db);
+    const registry = new DatabaseSchemaRegistry(db);
 
     const schema = Schema.Struct({
       name: Schema.optional(Schema.Number),
@@ -273,7 +272,7 @@ describe('ProjectionModel', () => {
 
   test('property rename', async ({ expect }) => {
     const { db } = await builder.createDatabase();
-    const registry = new EchoSchemaRegistry(db);
+    const registry = new DatabaseSchemaRegistry(db);
 
     const schema = Schema.Struct({
       name: Schema.String,
@@ -323,7 +322,7 @@ describe('ProjectionModel', () => {
 
   test('property rename updates schema propertyOrder and required arrays', async ({ expect }) => {
     const { db } = await builder.createDatabase();
-    const registry = new EchoSchemaRegistry(db);
+    const registry = new DatabaseSchemaRegistry(db);
 
     const schema = Schema.Struct({
       name: Schema.String,
@@ -381,7 +380,7 @@ describe('ProjectionModel', () => {
 
   test('single select format', async ({ expect }) => {
     const { db } = await builder.createDatabase();
-    const registry = new EchoSchemaRegistry(db);
+    const registry = new DatabaseSchemaRegistry(db);
 
     const schema = Schema.Struct({
       status: Schema.String,
@@ -491,7 +490,7 @@ describe('ProjectionModel', () => {
 
   test('multi select format', async ({ expect }) => {
     const { db } = await builder.createDatabase();
-    const registry = new EchoSchemaRegistry(db);
+    const registry = new DatabaseSchemaRegistry(db);
 
     const schema = Schema.Struct({
       tags: Schema.String,
@@ -624,7 +623,7 @@ describe('ProjectionModel', () => {
 
   test('hidden fields are tracked in hiddenFields', async ({ expect }) => {
     const { db } = await builder.createDatabase();
-    const registry = new EchoSchemaRegistry(db);
+    const registry = new DatabaseSchemaRegistry(db);
 
     const schema = Schema.Struct({
       name: Schema.String,
@@ -727,7 +726,7 @@ describe('ProjectionModel', () => {
 
   test('schema fields are automatically added to hiddenFields', async ({ expect }) => {
     const { db } = await builder.createDatabase();
-    const registry = new EchoSchemaRegistry(db);
+    const registry = new DatabaseSchemaRegistry(db);
 
     // Create schema with three properties.
     const schema = Schema.Struct({
@@ -765,7 +764,7 @@ describe('ProjectionModel', () => {
 
   test('normalizeView syncs fields with schema changes', async ({ expect }) => {
     const { db } = await builder.createDatabase();
-    const registry = new EchoSchemaRegistry(db);
+    const registry = new DatabaseSchemaRegistry(db);
 
     // Create initial schema with a single field.
     const initialSchema = Schema.Struct({
@@ -807,7 +806,7 @@ describe('ProjectionModel', () => {
 
   test('deleted fields should not appear in hidden properties after reinitialization', async ({ expect }) => {
     const { db } = await builder.createDatabase();
-    const registry = new EchoSchemaRegistry(db);
+    const registry = new DatabaseSchemaRegistry(db);
 
     const schema = Schema.Struct({
       name: Schema.String,
@@ -950,7 +949,7 @@ describe('ProjectionModel', () => {
     for (const { format, expectedType, fieldName } of testCases) {
       // Arrange.
       const { db } = await builder.createDatabase();
-      const registry = new EchoSchemaRegistry(db);
+      const registry = new DatabaseSchemaRegistry(db);
 
       const schemaType = expectedType === TypeEnum.Number ? Schema.Number : Schema.String;
       const schema = Schema.Struct({
@@ -997,7 +996,7 @@ describe('ProjectionModel', () => {
 
   test('Email validation persists after schema registration round-trip', async ({ expect }) => {
     const { db } = await builder.createDatabase();
-    const registry = new EchoSchemaRegistry(db);
+    const registry = new DatabaseSchemaRegistry(db);
 
     // Verify Format.Email has validation
     expect(() => Schema.validateSync(Format.Email)('valid@example.com')).not.toThrow();

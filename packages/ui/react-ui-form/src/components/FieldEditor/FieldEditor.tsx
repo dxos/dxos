@@ -4,8 +4,8 @@
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
+import { type SchemaRegistry } from '@dxos/echo';
 import { type EchoSchema, Format, FormatEnums, formatToType } from '@dxos/echo/internal';
-import { type SchemaRegistry } from '@dxos/echo-db';
 import { log } from '@dxos/log';
 import { useAsyncEffect, useTranslation } from '@dxos/react-ui';
 import {
@@ -25,7 +25,7 @@ import { Form, type FormFieldMap, type FormProps, SelectField, SelectOptionField
 export type FieldEditorProps = {
   projection: ProjectionModel;
   field: FieldType;
-  registry?: SchemaRegistry;
+  registry?: SchemaRegistry.SchemaRegistry;
   onSave: () => void;
   onCancel?: () => void;
 } & Pick<FormProps<any>, 'outerSpacing' | 'readonly'>;

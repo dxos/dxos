@@ -14,7 +14,7 @@ import { AiService, ToolExecutionService, ToolResolverService } from '@dxos/ai';
 import * as AiServiceRouter from '@dxos/ai/AiServiceRouter';
 import { tapHttpErrors } from '@dxos/ai/testing';
 import { AiSession } from '@dxos/assistant';
-import { TestHelpers } from '@dxos/effect';
+import { TestHelpers } from '@dxos/effect/testing';
 import { DatabaseService, TracingService } from '@dxos/functions';
 import { log } from '@dxos/log';
 import { Project } from '@dxos/types';

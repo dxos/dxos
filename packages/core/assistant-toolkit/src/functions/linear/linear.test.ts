@@ -13,7 +13,7 @@ import { AiService } from '@dxos/ai';
 import { AiServiceTestingPreset } from '@dxos/ai/testing';
 import { makeToolExecutionServiceFromFunctions, makeToolResolverFromFunctions } from '@dxos/assistant';
 import { Obj, Query } from '@dxos/echo';
-import { TestHelpers } from '@dxos/effect';
+import { TestHelpers } from '@dxos/effect/testing';
 import { CredentialsService, DatabaseService, FunctionInvocationService } from '@dxos/functions';
 import { TracingServiceExt } from '@dxos/functions-runtime';
 import {
@@ -39,9 +39,9 @@ const TestLayer = Layer.mergeAll(
         storagePath: testStoragePath({ name: 'feed-test-13' }),
       }),
       CredentialsService.layerConfig([{ service: 'linear.app', apiKey: Config.redacted('LINEAR_API_KEY') }]),
-      FunctionInvocationServiceLayerTestMocked({ functions: [fetchLinearIssues] }).pipe(
-        Layer.provideMerge(TracingServiceExt.layerLogInfo()),
-      ),
+      FunctionInvocationServiceLayerTestMocked({
+        functions: [fetchLinearIssues],
+      }).pipe(Layer.provideMerge(TracingServiceExt.layerLogInfo())),
       FetchHttpClient.layer,
     ),
   ),
@@ -58,17 +58,17 @@ describe('Linear', { timeout: 600_000 }, () => {
           team: '1127c63a-6f77-4725-9229-50f6cd47321c',
         });
 
-        const { objects: persons } = yield* DatabaseService.runQuery(Query.type(Person.Person));
+        const persons = yield* DatabaseService.runQuery(Query.type(Person.Person));
         console.log('people', {
           count: persons.length,
           people: persons.map((_) => `(${_.id}) ${Obj.getLabel(_)} [${Obj.getKeys(_, LINEAR_ID_KEY)[0]?.id}]`),
         });
-        const { objects: projects } = yield* DatabaseService.runQuery(Query.type(Project.Project));
+        const projects = yield* DatabaseService.runQuery(Query.type(Project.Project));
         console.log('projects', {
           count: projects.length,
           projects: projects.map((_) => `(${_.id}) ${Obj.getLabel(_)} [${Obj.getKeys(_, LINEAR_ID_KEY)[0]?.id}]`),
         });
-        const { objects: tasks } = yield* DatabaseService.runQuery(Query.type(Task.Task));
+        const tasks = yield* DatabaseService.runQuery(Query.type(Task.Task));
         console.log('tasks', {
           count: tasks.length,
           tasks: tasks.map((_) => `(${_.id}) ${Obj.getLabel(_)} [${Obj.getKeys(_, LINEAR_ID_KEY)[0]?.id}]`),

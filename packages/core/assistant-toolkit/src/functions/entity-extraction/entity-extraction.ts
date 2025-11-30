@@ -26,10 +26,14 @@ export default defineFunction({
   name: 'Entity Extraction',
   description: 'Extracts entities from emails and transcripts.',
   inputSchema: Schema.Struct({
-    source: Message.Message.annotations({ description: 'Email or transcript to extract entities from.' }),
+    source: Message.Message.annotations({
+      description: 'Email or transcript to extract entities from.',
+    }),
 
     // TODO(dmaretskyi): Consider making this an array of blueprints instead.
-    instructions: Schema.optional(Schema.String).annotations({ description: 'Instructions extraction process.' }),
+    instructions: Schema.optional(Schema.String).annotations({
+      description: 'Instructions extraction process.',
+    }),
   }),
   outputSchema: Schema.Struct({
     entities: Schema.optional(
@@ -46,7 +50,9 @@ export default defineFunction({
 
       if (contact && !contact.organization) {
         const created: DXN[] = [];
-        const GraphWriterToolkit = makeGraphWriterToolkit({ schema: [LegacyOrganization] }).pipe();
+        const GraphWriterToolkit = makeGraphWriterToolkit({
+          schema: [LegacyOrganization],
+        }).pipe();
         const GraphWriterHandler = makeGraphWriterHandler(GraphWriterToolkit, {
           onAppend: (dxns) => created.push(...dxns),
         });
@@ -101,12 +107,12 @@ const extractContact = Effect.fn('extractContact')(function* (actor: Actor.Actor
     return undefined;
   }
 
-  const { objects: existingContacts } = yield* DatabaseService.runQuery(Filter.type(Person.Person));
+  const existingContacts = yield* DatabaseService.runQuery(Filter.type(Person.Person));
 
   // Check for existing contact
   // TODO(dmaretskyi): Query filter DSL - https://linear.app/dxos/issue/DX-541/filtercontains-should-work-with-partial-objects
   const existingContact = existingContacts.find((contact) =>
-    contact.emails?.some((contactEmail: any) => contactEmail.value === email),
+    contact.emails?.some((contactEmail) => contactEmail.value === email),
   );
 
   if (existingContact) {
@@ -132,7 +138,7 @@ const extractContact = Effect.fn('extractContact')(function* (actor: Actor.Actor
 
   log.info('extracted email domain', { emailDomain });
 
-  const { objects: existingOrganisations } = yield* DatabaseService.runQuery(Filter.type(Organization.Organization));
+  const existingOrganisations = yield* DatabaseService.runQuery(Filter.type(Organization.Organization));
   const matchingOrg = existingOrganisations.find((org) => {
     if (org.website) {
       try {
@@ -148,7 +154,10 @@ const extractContact = Effect.fn('extractContact')(function* (actor: Actor.Actor
           emailDomain.endsWith(`.${websiteDomain}`)
         );
       } catch (e) {
-        log.warn('Error parsing website URL', { website: org.website, error: e });
+        log.warn('Error parsing website URL', {
+          website: org.website,
+          error: e,
+        });
         return false;
       }
     }

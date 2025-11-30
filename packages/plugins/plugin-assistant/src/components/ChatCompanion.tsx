@@ -115,7 +115,7 @@ export const ChatCompanion = ({ role, data }: ChatCompanionProps) => {
     }
 
     // NOTE: This must be run instead of using the useQuery result to avoid duplicates.
-    const { objects: existingBlueprints } = await space.db.query(Filter.type(Blueprint.Blueprint)).run();
+    const existingBlueprints = await space.db.query(Filter.type(Blueprint.Blueprint)).run();
     for (const key of blueprintKeys) {
       const existingBlueprint = existingBlueprints.find((blueprint) => blueprint.key === key);
       if (existingBlueprint) {

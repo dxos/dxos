@@ -50,7 +50,7 @@ const DefaultStory = ({ id = 'test', init, sidebar, children, ...props }: Render
     }
 
     // Load objects.
-    const { objects } = await space.db.query(Filter.everything()).run();
+    const objects = await space.db.query(Filter.everything()).run();
     const model = await doLayout(
       createGraph(
         objects.filter((object: Live<any>) => types.some((type) => type.typename === Obj.getTypename(object))),
@@ -119,7 +119,7 @@ const meta = {
               type: registeredSchema.find((s) => Type.getTypename(s) === Type.getTypename(schema.type)),
             }));
           } else {
-            space.db.graph.schemaRegistry.addSchema(types);
+            await space.db.graph.schemaRegistry.register(types);
           }
 
           const createObjects = createObjectFactory(space.db, generator);

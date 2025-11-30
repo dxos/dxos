@@ -166,7 +166,7 @@ export const FormCellEditor = <T extends Type.Obj.Any = Type.Obj.Any>({
     async ({ typename }) => {
       const { schema, space } = getSchema({ typename });
       if (model && schema && space) {
-        const { objects } = await space.db.query(Filter.type(schema)).run();
+        const objects = await space.db.query(Filter.type(schema)).run();
         return objects
           .map((obj) => {
             return {

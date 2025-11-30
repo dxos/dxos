@@ -127,7 +127,9 @@ describe('Spaces', () => {
     const [, { invitation: guestInvitation }] = await Promise.all(
       performInvitation({ host: space1, guest: client2.spaces }),
     );
-    const space2 = await waitForSpace(client2, guestInvitation!.spaceKey!, { ready: true });
+    const space2 = await waitForSpace(client2, guestInvitation!.spaceKey!, {
+      ready: true,
+    });
 
     const hello = new Trigger();
     {
@@ -184,7 +186,9 @@ describe('Spaces', () => {
       // Wait to process all mutations.
       await space1.db.flush();
       // Create epoch.
-      await client1.services.services.SpacesService?.createEpoch({ spaceKey: space1.key });
+      await client1.services.services.SpacesService?.createEpoch({
+        spaceKey: space1.key,
+      });
     }
 
     // log.break();
@@ -350,7 +354,9 @@ describe('Spaces', () => {
 
     // Grant the access.
     await Promise.all(performInvitation({ host: hostSpace2, guest: guest.spaces }));
-    const guestSpace = await waitForSpace(guest, hostSpace2.key, { ready: true });
+    const guestSpace = await waitForSpace(guest, hostSpace2.key, {
+      ready: true,
+    });
 
     await waitForObject(guestSpace, hostDocument);
   });
@@ -397,7 +403,9 @@ describe('Spaces', () => {
       await hostSpace.db.flush();
       await waitForObject(guestSpace, hostDocument);
 
-      const text = Obj.make(TestSchema.TextV0Type, { content: 'Hello, world!' });
+      const text = Obj.make(TestSchema.TextV0Type, {
+        content: 'Hello, world!',
+      });
       hostDocument.content = Ref.make(text);
 
       await expect.poll(() => getDocumentText(guestSpace, hostDocument.id)).toEqual('Hello, world!');
@@ -410,7 +418,9 @@ describe('Spaces', () => {
       await hostSpace.db.flush();
       await waitForObject(guestSpace, hostDocument);
 
-      const text = Obj.make(TestSchema.TextV0Type, { content: 'Hello, world!' });
+      const text = Obj.make(TestSchema.TextV0Type, {
+        content: 'Hello, world!',
+      });
       hostDocument.content = Ref.make(text);
 
       await expect.poll(() => getDocumentText(guestSpace, hostDocument.id)).toEqual('Hello, world!');
@@ -432,7 +442,8 @@ describe('Spaces', () => {
     const [wait, inc] = latch({ count: 2, timeout: 1000 });
 
     spaceA.db.query(Filter.everything()).subscribe(
-      ({ objects }) => {
+      (query) => {
+        const objects = query.results;
         expect(objects).to.have.length(2);
         expect(objects.some((obj) => getObjectCore(obj).getType()?.objectId === Type.getTypename(SpaceProperties))).to
           .be.true;
@@ -443,7 +454,8 @@ describe('Spaces', () => {
     );
 
     spaceB.db.query(Filter.everything()).subscribe(
-      ({ objects }) => {
+      (query) => {
+        const objects = query.results;
         expect(objects).to.have.length(2);
         expect(objects.some((obj) => getObjectCore(obj).getType()?.objectId === Type.getTypename(SpaceProperties))).to
           .be.true;
@@ -464,7 +476,9 @@ describe('Spaces', () => {
     const hostRoot = hostSpace.db.add(createObject({ entries: [Ref.make(createObject({ name: 'first' }))] }));
 
     await Promise.all(performInvitation({ host: hostSpace, guest: guest.spaces }));
-    const guestSpace = await waitForSpace(guest, hostSpace.key, { ready: true });
+    const guestSpace = await waitForSpace(guest, hostSpace.key, {
+      ready: true,
+    });
 
     {
       const done = new Trigger();
@@ -489,14 +503,16 @@ describe('Spaces', () => {
     const [client] = await createInitializedClients(1, { storage: true });
 
     const space = await client.spaces.create();
-    await space.internal.createEpoch({ migration: CreateEpochRequest.Migration.PRUNE_AUTOMERGE_ROOT_HISTORY });
+    await space.internal.createEpoch({
+      migration: CreateEpochRequest.Migration.PRUNE_AUTOMERGE_ROOT_HISTORY,
+    });
     const epochs = await space.internal.getEpochs();
     expect(epochs.length).to.eq(2);
   });
 
   test('export space archive', { timeout: 3_000 }, async () => {
     const [client] = await createInitializedClients(1, { storage: true });
-    registerTypes(client);
+    await registerTypes(client);
 
     const space = await client.spaces.create();
     space.db.add(createDocument());
@@ -506,7 +522,9 @@ describe('Spaces', () => {
   });
 
   test('import space archive', { timeout: 3_000, retry: 1 }, async () => {
-    const [client1, client2] = await createInitializedClients(2, { storage: true });
+    const [client1, client2] = await createInitializedClients(2, {
+      storage: true,
+    });
     [client1, client2].forEach(registerTypes);
 
     const space = await client1.spaces.create();
@@ -538,7 +556,9 @@ describe('Spaces', () => {
 
   const inviteMember = async (hostSpace: Space, guest: Client) => {
     await Promise.all(performInvitation({ host: hostSpace, guest: guest.spaces }));
-    const guestSpace = await waitForSpace(guest, hostSpace.key, { ready: true });
+    const guestSpace = await waitForSpace(guest, hostSpace.key, {
+      ready: true,
+    });
     return [hostSpace, guestSpace];
   };
 
@@ -546,8 +566,8 @@ describe('Spaces', () => {
     return space.db.getObjectById<TestSchema.DocumentType>(documentId)!.content.target!.content;
   };
 
-  const registerTypes = (client: Client) => {
-    client.addTypes([TestSchema.DocumentType, TestSchema.TextV0Type]);
+  const registerTypes = async (client: Client) => {
+    await client.addTypes([TestSchema.DocumentType, TestSchema.TextV0Type]);
   };
 
   const createDocument = (): Live<TestSchema.DocumentType> => {

@@ -12,6 +12,8 @@ import ts from 'typescript';
 
 import { invariant } from '@dxos/invariant';
 
+const GLOBALS = 'globals.d.ts';
+
 const defaultOptions: ts.CompilerOptions = {
   lib: ['DOM', 'es2022'],
   target: ts.ScriptTarget.ES2022,
@@ -23,16 +25,21 @@ export class Compiler {
 
   constructor(private readonly _options: ts.CompilerOptions = defaultOptions) {}
 
-  async initialize(): Promise<void> {
+  async initialize(globals?: string): Promise<void> {
     if (this._env) {
       return;
     }
 
     // TODO(wittjosiah): Figure out how to get workers working in plugin packages.
     //   https://github.com/val-town/codemirror-ts?tab=readme-ov-file#setup-worker
-    this._fsMap = await createDefaultMapFromCDN(this._options, '5.5.4', true, ts);
+    this._fsMap = await createDefaultMapFromCDN(this._options, '5.7.2', true, ts);
+    if (globals) {
+      this._fsMap.set(GLOBALS, globals);
+    }
+
+    const rootFiles = globals ? [GLOBALS] : [];
     const system = createSystem(this._fsMap);
-    this._env = createVirtualTypeScriptEnvironment(system, [], ts, this._options);
+    this._env = createVirtualTypeScriptEnvironment(system, rootFiles, ts, this._options);
   }
 
   get environment() {

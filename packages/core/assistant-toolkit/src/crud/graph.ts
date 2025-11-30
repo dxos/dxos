@@ -114,7 +114,7 @@ export const LocalSearchToolkit = Toolkit.make(
 
 export const LocalSearchHandler = LocalSearchToolkit.toLayer({
   search_local_search: Effect.fn(function* ({ query }) {
-    const { objects } = yield* DatabaseService.runQuery(Query.select(Filter.text(query, { type: 'vector' })));
+    const objects = yield* DatabaseService.runQuery(Query.select(Filter.text(query, { type: 'vector' })));
     const results = [...objects];
 
     const option = yield* Effect.serviceOption(ContextQueueService);
@@ -292,7 +292,7 @@ export const sanitizeObjects = async (
     .filter((object) => !existingIds.has(object.data.id)); // TODO(dmaretskyi): This dissallows updating existing objects.
 
   // TODO(dmaretskyi): Use ref resolver.
-  const { objects: dbObjects } = await db.query(Query.select(Filter.ids(...existingIds))).run();
+  const dbObjects = await db.query(Query.select(Filter.ids(...existingIds))).run();
   const queueObjects = (await queue?.getObjectsById([...existingIds])) ?? [];
   const objects = [...dbObjects, ...queueObjects].filter(isNonNullable);
 

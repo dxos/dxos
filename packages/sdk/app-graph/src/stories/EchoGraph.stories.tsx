@@ -130,7 +130,7 @@ const getSpaceWithObjects = async (client: Client): Promise<Space | undefined> =
   const spaceQueries = await Promise.all(
     readySpaces.map((space) => space.db.query(Filter.type(Type.Expando, { type: 'test' })).run()),
   );
-  const spaces = readySpaces.filter((space, index) => spaceQueries[index].objects.length > 0);
+  const spaces = readySpaces.filter((space, index) => spaceQueries[index].length > 0);
   return spaces[Math.floor(Math.random() * spaces.length)];
 };
 
@@ -164,7 +164,7 @@ const runAction = async (client: Client, action: Action) => {
     case Action.REMOVE_OBJECT: {
       const space = await getSpaceWithObjects(client);
       if (space) {
-        const { objects } = await space.db.query(Filter.type(Type.Expando, { type: 'test' })).run();
+        const objects = await space.db.query(Filter.type(Type.Expando, { type: 'test' })).run();
         space.db.remove(objects[Math.floor(Math.random() * objects.length)]);
       }
       break;
@@ -173,7 +173,7 @@ const runAction = async (client: Client, action: Action) => {
     case Action.RENAME_OBJECT: {
       const space = await getSpaceWithObjects(client);
       if (space) {
-        const { objects } = await space.db.query(Filter.type(Type.Expando, { type: 'test' })).run();
+        const objects = await space.db.query(Filter.type(Type.Expando, { type: 'test' })).run();
         objects[Math.floor(Math.random() * objects.length)].name = faker.commerce.productName();
       }
       break;

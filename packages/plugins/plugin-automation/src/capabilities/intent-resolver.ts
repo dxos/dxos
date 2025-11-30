@@ -28,13 +28,11 @@ export default (context: PluginContext) =>
 
         // TODO(wittjosiah): Factor out function lookup by script name?
         if (scriptName) {
-          const {
-            objects: [script],
-          } = await space.db.query(Filter.type(Script.Script, { name: scriptName })).run();
+          const scripts = await space.db.query(Filter.type(Script.Script, { name: scriptName })).run();
+          const [script] = scripts;
           if (script) {
-            const {
-              objects: [fn],
-            } = await space.db.query(Filter.type(Function.Function, { source: Ref.make(script) })).run();
+            const functions = await space.db.query(Filter.type(Function.Function, { source: Ref.make(script) })).run();
+            const [fn] = functions;
             if (fn) {
               trigger.function = Ref.make(fn);
             }
@@ -47,7 +45,10 @@ export default (context: PluginContext) =>
             break;
           }
           case 'queue': {
-            trigger.spec = { kind: 'queue', queue: (template.queueDXN as DXN).toString() };
+            trigger.spec = {
+              kind: 'queue',
+              queue: (template.queueDXN as DXN).toString(),
+            };
             break;
           }
           default: {
@@ -57,7 +58,11 @@ export default (context: PluginContext) =>
 
         return {
           intents: [
-            createIntent(SpaceAction.AddObject, { object: trigger, target: space, hidden: true }),
+            createIntent(SpaceAction.AddObject, {
+              object: trigger,
+              target: space,
+              hidden: true,
+            }),
             createIntent(LayoutAction.Open, {
               part: 'main',
               subject: [`automation-settings${ATTENDABLE_PATH_SEPARATOR}${space.id}`],
