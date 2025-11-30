@@ -73,9 +73,9 @@ export const CreateSpaceDialog = () => {
         <Form
           testId='create-space-form'
           autoFocus
-          values={initialValues}
-          schema={SpaceForm}
           fieldProvider={inputSurfaceLookup}
+          schema={SpaceForm}
+          values={initialValues}
           onSave={handleCreateSpace}
           outerSpacing='scroll-fields'
         />

@@ -191,9 +191,9 @@ export const SpaceSettingsContainer = ({ space }: SpaceSettingsContainerProps) =
         >
           <Form
             classNames='container-max-width grid grid-cols-1 md:grid-cols-[1fr_min-content]'
+            fieldMap={fieldMap}
             schema={SpaceFormSchema}
             values={values}
-            fieldMap={fieldMap}
             autoSave
             onSave={handleSave}
           />

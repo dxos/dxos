@@ -99,10 +99,10 @@ export const MapViewEditor = ({ object }: MapViewEditorProps) => {
   return (
     <Form
       classNames='pbs-inputSpacingBlock'
+      outerSpacing='blockStart-0'
+      fieldMap={fieldMap}
       schema={MapSettingsSchema}
       values={initialValues}
-      fieldMap={fieldMap}
-      outerSpacing='blockStart-0'
       autoSave
       onSave={onSave}
     />

@@ -107,10 +107,10 @@ export const CreateObjectPanel = ({
       <Form
         testId='create-object-form'
         autoFocus
-        values={initialFormValues}
-        schema={metadata.inputSchema}
-        onSave={handleCreateObject}
         fieldProvider={inputSurfaceLookup}
+        schema={metadata.inputSchema}
+        values={initialFormValues}
+        onSave={handleCreateObject}
         outerSpacing='blockStart-0'
       />
     </div>

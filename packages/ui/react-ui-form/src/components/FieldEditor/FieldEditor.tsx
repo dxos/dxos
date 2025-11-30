@@ -185,11 +185,11 @@ export const FieldEditor = ({
     <Form<PropertyType>
       key={field.id}
       outerSpacing={outerSpacing}
+      fieldMap={fieldMap}
       autoFocus
       readonly={readonly}
       schema={fieldSchema}
       values={props}
-      fieldMap={fieldMap}
       exclude={propIsNotType}
       sort={['property', 'format']}
       onValuesChanged={handleValuesChanged}

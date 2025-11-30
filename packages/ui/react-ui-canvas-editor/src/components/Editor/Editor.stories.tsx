@@ -76,13 +76,13 @@ const DefaultStory = ({ id = 'test', init, sidebar, children, ...props }: Render
         <Container id='sidebar' classNames='flex grow overflow-hidden'>
           {sidebar === 'selected' && selected && (
             <Form
-              schema={RectangleShapeWithoutRef}
-              values={selected}
               fieldMap={{
                 // TODO(burdon): Replace by type.
                 ['center' as const]: (props) => <TupleField {...props} binding={['x', 'y']} />,
                 ['size' as const]: (props) => <TupleField {...props} binding={['width', 'height']} />,
               }}
+              schema={RectangleShapeWithoutRef}
+              values={selected}
             />
           )}
 

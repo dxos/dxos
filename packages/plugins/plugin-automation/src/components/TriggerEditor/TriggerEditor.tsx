@@ -40,9 +40,9 @@ export const TriggerEditor = ({ space, trigger, readonlySpec, types, tags, onSav
 
   return (
     <Form
+      fieldMap={fieldMap}
       schema={Trigger.Trigger}
       values={trigger}
-      fieldMap={fieldMap}
       onSave={handleSave}
       onCancel={onCancel}
       onQueryRefOptions={handleRefQueryOptions}

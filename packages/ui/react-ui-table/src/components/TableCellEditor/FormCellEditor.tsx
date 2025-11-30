@@ -194,18 +194,18 @@ export const FormCellEditor = <T extends Type.Obj.Any = Type.Obj.Any>({
           <Popover.Arrow />
           <Popover.Viewport>
             <Form
-              autoFocus
-              values={formValues}
-              schema={narrowedSchema}
-              onSave={handleSave}
               {...formProps}
+              autoFocus
+              schema={narrowedSchema}
+              values={formValues}
+              onSave={handleSave}
               onQueryRefOptions={handleQueryRefOptions}
               {...(createSchema && {
-                onCreate: handleCreate,
                 createSchema,
                 createInitialValuePath: fieldProjection.field.referencePath,
                 createOptionIcon: 'ph--plus--regular',
                 createOptionLabel,
+                onCreate: handleCreate,
               })}
             />
           </Popover.Viewport>

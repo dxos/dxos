@@ -14,8 +14,8 @@ import {
   ControlItemInput,
   ControlPage,
   ControlSection,
-  Form,
   type FormFieldMap,
+  NewForm,
 } from '@dxos/react-ui-form';
 import { EmojiPickerBlock, HuePicker } from '@dxos/react-ui-pickers';
 import { hexToEmoji, hexToHue } from '@dxos/util';
@@ -117,7 +117,9 @@ export const ProfileContainer = () => {
         );
         return (
           <ControlItem title={label} description={t('hue description')}>
-            <HuePicker value={getValue()} onChange={handleChange} onReset={handleHueReset} />
+            <div className='flex justify-self-end'>
+              <HuePicker value={getValue()} onChange={handleChange} onReset={handleHueReset} />
+            </div>
           </ControlItem>
         );
       },
@@ -140,20 +142,18 @@ export const ProfileContainer = () => {
     <ControlPage>
       <Clipboard.Provider>
         <ControlSection title={t('profile label')} description={t('profile description')}>
-          <Form
-            classNames='container-max-width grid grid-cols-1 md:grid-cols-[1fr_min-content]'
-            schema={ProfileSchema}
-            values={values}
-            fieldMap={fieldMap}
-            autoSave
-            onSave={handleSave}
-          />
+          <NewForm.Root schema={ProfileSchema} values={values} fieldMap={fieldMap} autoSave onSave={handleSave}>
+            <NewForm.Content>
+              <NewForm.FieldSet classNames='container-max-width grid grid-cols-1 md:grid-cols-[1fr_min-content]' />
+            </NewForm.Content>
+          </NewForm.Root>
         </ControlSection>
       </Clipboard.Provider>
     </ControlPage>
   );
 };
 
+// TODO(burdon): Use SpacePropertiesSchema
 // TODO(wittjosiah): Integrate annotations with translations.
 const ProfileSchema = Schema.Struct({
   displayName: Schema.String.annotations({ title: 'Display name' }),
@@ -161,4 +161,5 @@ const ProfileSchema = Schema.Struct({
   hue: Schema.String.annotations({ title: 'Color' }),
   did: Schema.String.annotations({ title: 'DID' }),
 });
+
 type Profile = Schema.Schema.Type<typeof ProfileSchema>;
