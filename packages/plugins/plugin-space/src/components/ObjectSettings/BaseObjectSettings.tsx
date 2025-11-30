@@ -13,7 +13,7 @@ import { type JsonPath, setValue } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
 import { getSpace } from '@dxos/react-client/echo';
 import { type ThemedClassName } from '@dxos/react-ui';
-import { Form, useRefQueryOptions } from '@dxos/react-ui-form';
+import { NewForm, useRefQueryOptions } from '@dxos/react-ui-form';
 import { isNonNullable } from '@dxos/util';
 
 import { meta as pluginMeta } from '../../meta';
@@ -90,21 +90,22 @@ export const BaseObjectSettings = ({ classNames, children, object }: BaseObjectS
   }
 
   return (
-    <>
-      <Form
-        classNames={classNames}
-        schema={formSchema}
-        values={values}
-        createSchema={TagSchema}
-        createOptionIcon='ph--plus--regular'
-        createOptionLabel={['add tag label', { ns: pluginMeta.id }]}
-        createInitialValuePath='label'
-        autoSave
-        onSave={handleSave}
-        onCreate={handleCreateTag}
-        onQueryRefOptions={handleRefQueryLookup}
-      />
-      {children}
-    </>
+    <NewForm.Root
+      schema={formSchema}
+      values={values}
+      createSchema={TagSchema}
+      createOptionIcon='ph--plus--regular'
+      createOptionLabel={['add tag label', { ns: pluginMeta.id }]}
+      createInitialValuePath='label'
+      autoSave
+      onSave={handleSave}
+      onCreate={handleCreateTag}
+      onQueryRefOptions={handleRefQueryLookup}
+    >
+      <NewForm.Content classNames={classNames}>
+        <NewForm.FieldSet />
+        {children}
+      </NewForm.Content>
+    </NewForm.Root>
   );
 };

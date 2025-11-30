@@ -16,20 +16,20 @@ export type ObjectSettingsContainerProps = {
   role: string;
 };
 
-export const ObjectSettingsContainer = ({ object, role }: ObjectSettingsContainerProps) => {
+export const ObjectSettingsContainer = ({ object }: ObjectSettingsContainerProps) => {
   const data = useMemo(() => ({ subject: object }), [object]);
 
   return (
     <Clipboard.Provider>
       <StackItem.Content toolbar>
         <Toolbar.Root></Toolbar.Root>
-        <div role='none' className='overflow-y-auto pli-cardSpacingInline plb-cardSpacingBlock'>
+        <div role='none' className='overflow-y-auto'>
           <BaseObjectSettings object={object}>
             <Surface role='base-object-settings' data={data} />
+            <Surface role='object-settings' data={data} />
+            {/* TODO(wittjosiah): Remove? */}
+            {/* <AdvancedObjectSettings object={object} /> */}
           </BaseObjectSettings>
-          <Surface role='object-settings' data={data} />
-          {/* TODO(wittjosiah): Remove? */}
-          {/* <AdvancedObjectSettings object={object} /> */}
         </div>
       </StackItem.Content>
     </Clipboard.Provider>
