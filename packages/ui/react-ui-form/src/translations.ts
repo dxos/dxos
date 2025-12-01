@@ -82,8 +82,7 @@ export const translations = [
 
         // System schema message.
         'system schema title': 'System type',
-        'system schema description':
-          'This is a system type and cannot be modified, though the view can still be configured.',
+        'system schema description': 'System type: cannot add or remove fields.',
       },
     },
   },

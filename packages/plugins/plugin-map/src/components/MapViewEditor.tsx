@@ -9,7 +9,7 @@ import { Type } from '@dxos/echo';
 import { Format } from '@dxos/echo/internal';
 import { useClient } from '@dxos/react-client';
 import { getSpace, useSchema } from '@dxos/react-client/echo';
-import { Form, type FormFieldMap, SelectField } from '@dxos/react-ui-form';
+import { type FormFieldMap, NewForm, SelectField } from '@dxos/react-ui-form';
 import { getTypenameFromQuery } from '@dxos/schema';
 
 import { type Map } from '../types';
@@ -97,14 +97,8 @@ export const MapViewEditor = ({ object }: MapViewEditorProps) => {
   }
 
   return (
-    <Form
-      classNames='pbs-inputSpacingBlock'
-      outerSpacing='blockStart-0'
-      fieldMap={fieldMap}
-      schema={MapSettingsSchema}
-      values={initialValues}
-      autoSave
-      onSave={onSave}
-    />
+    <NewForm.Root fieldMap={fieldMap} schema={MapSettingsSchema} values={initialValues} autoSave onSave={onSave}>
+      <NewForm.FieldSet />
+    </NewForm.Root>
   );
 };

@@ -39,7 +39,7 @@ const ObjectPickerContent = forwardRef<HTMLDivElement, ObjectPickerContentProps>
     ref,
   ) => {
     const { t } = useTranslation(translationKey);
-    const [showForm, setShowForm] = useState(true);
+    const [showForm, setShowForm] = useState(false);
     const [searchString, setSearchString] = useState('');
 
     const handleFormSave = useCallback(
@@ -115,6 +115,7 @@ const ObjectPickerContent = forwardRef<HTMLDivElement, ObjectPickerContentProps>
             >
               <NewForm.Content>
                 <NewForm.FieldSet />
+                <NewForm.Actions />
               </NewForm.Content>
             </NewForm.Root>
           </Popover.Viewport>
