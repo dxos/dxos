@@ -35,8 +35,8 @@
     "src"
   ],
   "dependencies": {
-    "@automerge/automerge": "3.1.2",
-    "@automerge/automerge-repo": "2.4.0",
+    "@automerge/automerge": "3.2.0",
+    "@automerge/automerge-repo": "2.5.0",
     "@dxos/async": "workspace:*",
     "@dxos/codec-protobuf": "workspace:*",
     "@dxos/context": "workspace:*",
