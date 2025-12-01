@@ -2,21 +2,15 @@
 // Copyright 2025 DXOS.org
 //
 
-import type * as Schema from 'effect/Schema';
 import { useMemo, useSyncExternalStore } from 'react';
 
-import { type Client } from '@dxos/client';
 import { type Space } from '@dxos/client/echo';
-import { type BaseSchema } from '@dxos/echo/internal';
+import { type Type } from '@dxos/echo';
 
 /**
  * Subscribe to and retrieve schema changes from a space's schema registry.
  */
-export const useSchema = (
-  client: Client,
-  space: Space | undefined,
-  typename: string | undefined,
-): Schema.Schema.AnyNoContext | undefined => {
+export const useSchema = (space?: Space, typename?: string): Type.Entity.Any | undefined => {
   const { subscribe, getSchema } = useMemo(() => {
     if (!typename || !space) {
       return {
@@ -25,16 +19,8 @@ export const useSchema = (
       };
     }
 
-    const staticSchema = client.graph.schemaRegistry.getSchema(typename);
-    if (staticSchema) {
-      return {
-        subscribe: () => () => {},
-        getSchema: () => staticSchema,
-      };
-    }
-
-    const query = space.db.schemaRegistry.query({ typename });
-    const initialResult: BaseSchema = query.runSync()[0];
+    const query = space.db.schemaRegistry.query({ typename, location: ['database', 'runtime'] });
+    const initialResult = query.runSync()[0];
     let currentSchema = initialResult;
 
     return {

@@ -12,6 +12,7 @@ export * as Entity from './Entity';
 export * as Err from './Err';
 export * as Filter from './Filter';
 export * as Format from './Format';
+export * as Hypergraph from './Hypergraph';
 export * as JsonSchema from './JsonSchema';
 export * as Key from './Key';
 export * as Obj from './Obj';

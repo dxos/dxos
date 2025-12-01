@@ -8,7 +8,6 @@ import { type RefObject, useCallback, useMemo, useRef } from 'react';
 import { isMutable } from '@dxos/echo/internal';
 import { useGlobalFilteredObjects } from '@dxos/plugin-search';
 import { faker } from '@dxos/random';
-import { type Client, useClient } from '@dxos/react-client';
 import { Filter, type Space, useQuery, useSchema } from '@dxos/react-client/echo';
 import { useClientProvider } from '@dxos/react-client/testing';
 import { type ProjectionModel, getTypenameFromQuery } from '@dxos/schema';
@@ -28,7 +27,6 @@ export type TestTableModel = {
   model: TableModel | undefined;
   presentation: TablePresentation | undefined;
   space: Space | undefined;
-  client: Client | undefined;
   handleInsertRow: () => void;
   handleSaveView: () => void;
   handleDeleteRows: (rowIndex: number, objects: any[]) => void;
@@ -40,13 +38,12 @@ export type TestTableModel = {
  * Provides table data, schema, and handlers for table operations.
  */
 export const useTestTableModel = (): TestTableModel => {
-  const client = useClient();
   const { space } = useClientProvider();
 
   const tables = useQuery(space, Filter.type(Table.Table));
   const table = tables.at(0);
   const typename = table?.view.target?.query ? getTypenameFromQuery(table.view.target.query.ast) : undefined;
-  const schema = useSchema(client, space, typename);
+  const schema = useSchema(space, typename);
   const projection = useProjectionModel(schema, table);
 
   const features = useMemo(
@@ -125,7 +122,6 @@ export const useTestTableModel = (): TestTableModel => {
     model,
     presentation,
     space,
-    client,
     handleInsertRow,
     handleSaveView,
     handleDeleteRows,

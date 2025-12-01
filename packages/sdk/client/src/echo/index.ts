@@ -20,7 +20,6 @@ export {
   getVersion,
   type EchoDatabase,
   Filter,
-  type Hypergraph,
   type ObjectMigration,
   ObjectVersion,
   Query,
