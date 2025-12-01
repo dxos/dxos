@@ -105,7 +105,6 @@ export const FieldEditor = ({ readonly, projection, field, registry, onSave, onC
 
   const handleValuesChanged = useCallback<NonNullable<FormProps<PropertyType>['onValuesChanged']>>(
     (_props) => {
-      // TODO(burdon): Callback (EDIT: now does) should pass `changed` to indicate which fields have changed.
       // TODO(Zaymon): Workout why old and new format values are the same sometimes even when selecting novel format values.
       setFieldSchema((prev) => {
         const fieldSchema = getFormatSchema(_props.format);

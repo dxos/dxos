@@ -184,7 +184,7 @@ export const SpaceSettingsContainer = ({ space }: SpaceSettingsContainerProps) =
     <StackItem.Content scrollable>
       <ControlPage>
         <ControlSection
-          title={t('space properties settings verbose label', { ns: meta.id })}
+          title={t('space properties settings verbose label')}
           description={t('space properties settings description', {
             ns: meta.id,
           })}
@@ -199,22 +199,12 @@ export const SpaceSettingsContainer = ({ space }: SpaceSettingsContainerProps) =
             onSave={handleSave}
           />
         </ControlSection>
-        <ControlSection
-          // TODO(burdon): Why is `ns` needed here (since it's used in the declaration of t above.)?
-          title={t('space controls title', { ns: meta.id })}
-          description={t('space controls description', { ns: meta.id })}
-        >
+        <ControlSection title={t('space controls title')} description={t('space controls description')}>
           <div role='none' className='container-max-width grid grid-cols-1 md:grid-cols-[1fr_min-content]'>
-            <ControlItemInput
-              title={t('backup space title', { ns: meta.id })}
-              description={t('backup space description', { ns: meta.id })}
-            >
+            <ControlItemInput title={t('backup space title')} description={t('backup space description')}>
               <Button onClick={handleBackup}>{t('download backup label')}</Button>
             </ControlItemInput>
-            <ControlItemInput
-              title={t('repair space title', { ns: meta.id })}
-              description={t('repair space description', { ns: meta.id })}
-            >
+            <ControlItemInput title={t('repair space title')} description={t('repair space description')}>
               <Button onClick={handleRepair}>{t('repair space label')}</Button>
             </ControlItemInput>
           </div>

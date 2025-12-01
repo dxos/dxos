@@ -10,7 +10,7 @@ import { Format, Ref, getValue } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
 import { getSnapshot } from '@dxos/live-object';
 import { getSpace } from '@dxos/react-client/echo';
-import { Popover } from '@dxos/react-ui';
+import { type Label, Popover } from '@dxos/react-ui';
 import { Form, type FormProps } from '@dxos/react-ui-form';
 import { parseCellIndex, useGridContext } from '@dxos/react-ui-grid';
 import { type FieldProjection } from '@dxos/schema';
@@ -20,7 +20,7 @@ import { type ModalController, type TableModel, type TableRow } from '../../mode
 import { translationKey } from '../../translations';
 import { narrowSchema } from '../../util';
 
-const createOptionLabel = ['create new object label', { ns: translationKey }] as [string, { ns: string }];
+const createOptionLabel: Label = ['create new object label', { ns: translationKey }];
 
 export type OnCreateHandler = (schema: Schema.Schema.AnyNoContext, values: any) => Parameters<typeof Ref.make>[0];
 

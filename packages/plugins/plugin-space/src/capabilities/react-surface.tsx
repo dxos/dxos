@@ -15,7 +15,7 @@ import { type Space, SpaceState, getSpace, isLiveObject, isSpace, parseId, useSp
 import { Input } from '@dxos/react-ui';
 import { type FormFieldComponentProps, SelectField } from '@dxos/react-ui-form';
 import { HuePicker, IconPicker } from '@dxos/react-ui-pickers';
-import { Collection, View, ViewAnnotation } from '@dxos/schema';
+import { Collection, type View, ViewAnnotation } from '@dxos/schema';
 import { type JoinPanelProps } from '@dxos/shell/react';
 
 // TODO(burdon): Component name standard: NounVerbComponent.
@@ -158,13 +158,22 @@ export default ({ createInvitationUrl }: ReactSurfaceOptions) =>
     createSurface({
       id: `${meta.id}/selected-objects`,
       role: 'article',
-      filter: (data): data is { companionTo: View.View; subject: 'selected-objects' } =>
-        Obj.instanceOf(View.View, data.companionTo) && data.subject === 'selected-objects',
+      filter: (data): data is { companionTo: Obj.Obj<{ view: Ref.Ref<View.View> }>; subject: 'selected-objects' } => {
+        if (data.subject !== 'selected-objects' || !Obj.isObject(data.companionTo)) {
+          return false;
+        }
+
+        const schema = Obj.getSchema(data.companionTo);
+        return Option.fromNullable(schema).pipe(
+          Option.flatMap((schema) => ViewAnnotation.get(schema)),
+          Option.getOrElse(() => false),
+        );
+      },
       component: ({ data }) => (
         <ObjectDetailsPanel
           key={Obj.getDXN(data.companionTo).toString()}
           objectId={Obj.getDXN(data.companionTo).toString()}
-          view={data.companionTo}
+          view={data.companionTo.view.target}
         />
       ),
     }),
