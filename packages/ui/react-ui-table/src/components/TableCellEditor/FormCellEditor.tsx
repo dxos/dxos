@@ -11,7 +11,7 @@ import { invariant } from '@dxos/invariant';
 import { getSnapshot } from '@dxos/live-object';
 import { getSpace } from '@dxos/react-client/echo';
 import { type Label, Popover } from '@dxos/react-ui';
-import { Form, type FormProps } from '@dxos/react-ui-form';
+import { type FormProps, NewForm } from '@dxos/react-ui-form';
 import { parseCellIndex, useGridContext } from '@dxos/react-ui-grid';
 import { type FieldProjection } from '@dxos/schema';
 import { getDeep, isTruthy, setDeep } from '@dxos/util';
@@ -182,7 +182,7 @@ export const FormCellEditor = <T extends Type.Entity.Any = Type.Entity.Any>({
         <Popover.Content tabIndex={-1} classNames='popover-card-width density-fine'>
           <Popover.Arrow />
           <Popover.Viewport>
-            <Form
+            <NewForm.Root
               {...formProps}
               autoFocus
               schema={narrowedSchema}
@@ -196,7 +196,14 @@ export const FormCellEditor = <T extends Type.Entity.Any = Type.Entity.Any>({
                 createOptionLabel,
                 onCreate: handleCreate,
               })}
-            />
+            >
+              <NewForm.Viewport>
+                <NewForm.Content>
+                  <NewForm.FieldSet />
+                  <NewForm.Actions />
+                </NewForm.Content>
+              </NewForm.Viewport>
+            </NewForm.Root>
           </Popover.Viewport>
         </Popover.Content>
       </Popover.Portal>
