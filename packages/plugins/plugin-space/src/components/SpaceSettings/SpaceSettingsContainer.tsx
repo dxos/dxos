@@ -190,6 +190,7 @@ export const SpaceSettingsContainer = ({ space }: SpaceSettingsContainerProps) =
           })}
         >
           <Form
+            // TODOO(burdon): Move classNames to NewForm.Content (standardize for all settings).
             classNames='container-max-width grid grid-cols-1 md:grid-cols-[1fr_min-content]'
             fieldMap={fieldMap}
             schema={SpaceFormSchema}
