@@ -21,8 +21,8 @@ import { type Stream } from '@dxos/codec-protobuf/stream';
 import { Config, SaveConfig } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { raise } from '@dxos/debug';
-import { Type } from '@dxos/echo';
-import { EchoClient, type Hypergraph, QueueServiceImpl } from '@dxos/echo-db';
+import { type Hypergraph, Type } from '@dxos/echo';
+import { EchoClient, QueueServiceImpl } from '@dxos/echo-db';
 import { MockQueueService } from '@dxos/echo-db';
 import { EdgeHttpClient } from '@dxos/edge-client';
 import { invariant } from '@dxos/invariant';
@@ -234,7 +234,7 @@ export class Client {
   /**
    * ECHO graph.
    */
-  get graph(): Hypergraph {
+  get graph(): Hypergraph.Hypergraph {
     return this._echoClient.graph;
   }
 
