@@ -18,8 +18,8 @@ import {
   ControlItemInput,
   ControlPage,
   ControlSection,
-  Form,
   type FormFieldMap,
+  NewForm,
 } from '@dxos/react-ui-form';
 import { HuePicker, IconPicker } from '@dxos/react-ui-pickers';
 import { StackItem } from '@dxos/react-ui-stack';
@@ -189,15 +189,11 @@ export const SpaceSettingsContainer = ({ space }: SpaceSettingsContainerProps) =
             ns: meta.id,
           })}
         >
-          <Form
-            // TODOO(burdon): Move classNames to NewForm.Content (standardize for all settings).
-            classNames='container-max-width grid grid-cols-1 md:grid-cols-[1fr_min-content]'
-            fieldMap={fieldMap}
-            schema={SpaceFormSchema}
-            values={values}
-            autoSave
-            onSave={handleSave}
-          />
+          <NewForm.Root fieldMap={fieldMap} schema={SpaceFormSchema} values={values} autoSave onSave={handleSave}>
+            <NewForm.Content classNames='container-max-width grid grid-cols-1 md:grid-cols-[1fr_min-content]'>
+              <NewForm.FieldSet />
+            </NewForm.Content>
+          </NewForm.Root>
         </ControlSection>
         <ControlSection title={t('space controls title')} description={t('space controls description')}>
           <div role='none' className='container-max-width grid grid-cols-1 md:grid-cols-[1fr_min-content]'>
