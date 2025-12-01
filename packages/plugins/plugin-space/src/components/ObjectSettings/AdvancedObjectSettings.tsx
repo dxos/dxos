@@ -51,6 +51,7 @@ export const AdvancedObjectSettings = ({ object }: AdvancedObjectSettingsProps) 
   // TODO(wittjosiah): This should be wrapped in an "Advanced" accordion.
   return (
     <>
+      {/* TDOO(burdon): Use form components: NewForm.Label, etc. */}
       <div className='p-2 flex flex-col gap-4'>
         <h2>{t('advanced settings label')}</h2>
         <div className='flex items-center'>

@@ -113,8 +113,8 @@ export default () =>
         }
 
         const handleSave = useCallback((values: any, { changed }: { changed: Record<string, boolean> }) => {
-          const changedPaths = Object.keys(changed).filter((path) => changed[path]);
-          for (const path of changedPaths) {
+          const paths = Object.keys(changed).filter((path) => changed[path]);
+          for (const path of paths) {
             const value = values[path];
             setValue(data.subject, path as JsonPath, value);
           }
