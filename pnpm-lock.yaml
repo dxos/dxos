@@ -1287,6 +1287,9 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../util
+      '@hazae41/symbol-dispose-polyfill':
+        specifier: ^1.0.2
+        version: 1.0.2
 
   packages/common/crypto:
     dependencies:
@@ -2044,6 +2047,9 @@ importers:
       '@dxos/node-std':
         specifier: workspace:*
         version: link:../node-std
+      '@hazae41/symbol-dispose-polyfill':
+        specifier: ^1.0.2
+        version: 1.0.2
       lodash.get:
         specifier: ^4.4.2
         version: 4.4.2
@@ -18677,6 +18683,9 @@ packages:
 
   '@hapi/topo@5.1.0':
     resolution: {integrity: sha512-foQZKJig7Ob0BMAYBfcJk8d77QtOe7Wo4ox7ff1lQYoNNAb6jwcY1ncdoy2e9wQZzvNy7ODZCYJkK8kzmcAnAg==}
+
+  '@hazae41/symbol-dispose-polyfill@1.0.2':
+    resolution: {integrity: sha512-Jjlfw/K3A4Abl2QijyaAq4Xx+FN8Xu6132vqGUnNj3pFzPg+bGq6pytalvTEzU0o/VEOn7/hDnJ5v1NlCjUXkQ==}
 
   '@huggingface/jinja@0.2.2':
     resolution: {integrity: sha512-/KPde26khDUIPkTGU82jdtTW9UAuvUTumCAbFs/7giR0SxsvZC4hru51PBvpijH6BVkHcROcvZM/lpy5h1jRRA==}
@@ -38865,6 +38874,8 @@ snapshots:
   '@hapi/topo@5.1.0':
     dependencies:
       '@hapi/hoek': 9.3.0
+
+  '@hazae41/symbol-dispose-polyfill@1.0.2': {}
 
   '@huggingface/jinja@0.2.2': {}
 

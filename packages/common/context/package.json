@@ -30,7 +30,8 @@
     "@dxos/debug": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/node-std": "workspace:*",
-    "@dxos/util": "workspace:*"
+    "@dxos/util": "workspace:*",
+    "@hazae41/symbol-dispose-polyfill": "^1.0.2"
   },
   "publishConfig": {
     "access": "public"
