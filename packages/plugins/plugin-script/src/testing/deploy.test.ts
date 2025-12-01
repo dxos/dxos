@@ -20,7 +20,7 @@ import { resolve } from 'node:path';
 describe.runIf(process.env.DX_TEST_TAGS?.includes('functions-e2e'))('Functions deployment', () => {
   test('deploys FOREX (effect) function and invokes it via EDGE (main)', { timeout: 120_000 }, async () => {
     const config = configPreset({
-      edge: 'local',
+      edge: 'dev',
     });
     await using client = await new Client({ config }).initialize();
     await client.halo.createIdentity();

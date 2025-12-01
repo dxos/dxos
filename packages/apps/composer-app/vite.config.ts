@@ -64,6 +64,9 @@ export default defineConfig((env) => ({
   },
   esbuild: {
     keepNames: true,
+    supported: {
+      'using': false,
+    }
   },
   build: {
     outDir: 'out/composer',
