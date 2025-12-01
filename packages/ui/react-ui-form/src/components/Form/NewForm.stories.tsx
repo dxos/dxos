@@ -33,7 +33,6 @@ export interface Organization extends Schema.Schema.Type<typeof Organization> {}
 const Person = Schema.Struct({
   name: Schema.String.pipe(Schema.minLength(1)).annotations({ title: 'Full name' }),
   active: Schema.optional(Schema.Boolean.annotations({ title: 'Active' })),
-  // TODO(burdon): Custom field.
   address: Schema.optional(
     Schema.Struct({
       street: Schema.String,
@@ -43,7 +42,6 @@ const Person = Schema.Struct({
         title: 'State',
         description: 'State code',
       }),
-      // TODO(burdon): Select input.
       zip: Schema.Number,
     }).annotations({ title: 'Address' }),
   ),
