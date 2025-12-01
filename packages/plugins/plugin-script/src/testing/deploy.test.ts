@@ -36,10 +36,10 @@ describe.runIf(process.env.DX_TEST_TAGS?.includes('functions-e2e'))('Functions d
     if ('error' in buildResult) {
       throw buildResult.error ?? new Error('Bundle creation failed');
     }
-    for (const [key, value] of Object.entries(buildResult.assets)) {
-      await writeFile(key, value);
-      console.log(resolve(key));
-    }
+    // for (const [key, value] of Object.entries(buildResult.assets)) {
+    //   await writeFile(key, value);
+    //   console.log(resolve(key));
+    // }
     const functionsServiceClient = FunctionsServiceClient.fromClient(client);
     const newFunction = await functionsServiceClient.deploy({
       // TODO(dmaretskyi): Space key or identity key.

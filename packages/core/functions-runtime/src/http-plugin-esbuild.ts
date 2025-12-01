@@ -18,6 +18,14 @@ const INITIAL_DELAY = 1_000;
 
 export class HttpPluginError extends BaseError.extend('HTTP_PLUGIN_ERROR') {}
 
+const LOADERS: Record<string, Loader> = {
+  js: 'js',
+  jsx: 'jsx',
+  ts: 'ts',
+  tsx: 'tsx',
+  wasm: 'copy',
+} as const;
+
 export const httpPlugin: Plugin = {
   name: 'http',
   setup: (build) => {
@@ -40,6 +48,8 @@ export const httpPlugin: Plugin = {
     // This has just enough logic to be able to handle the example import from unpkg.com but in reality this would probably need to be more complex.
     build.onLoad({ filter: /.*/, namespace: 'http-url' }, async (args) => {
       return Effect.gen(function* () {
+        console.log('download', args.path);
+
         const response = yield* HttpClient.get(args.path);
         if (response.status !== 200) {
           yield* Effect.fail(
@@ -49,18 +59,10 @@ export const httpPlugin: Plugin = {
           );
         }
 
-        const text = yield* response.text;
+        const contents = new Uint8Array(yield* response.arrayBuffer);
         const extension = new URL(args.path).pathname.split('.').pop() || '';
-        const loader =
-          ({
-            js: 'js',
-            jsx: 'jsx',
-            ts: 'ts',
-            tsx: 'tsx',
-            wasm: 'copy',
-            // Add more mappings as needed
-          }[extension.toLowerCase()] as Loader) || 'jsx';
-        return { contents: text, loader };
+        const loader = LOADERS[extension.toLowerCase()] ?? 'jsx';
+        return { contents, loader };
       }).pipe(
         Effect.retry(
           Function.pipe(

@@ -79,8 +79,25 @@ export const bundleFunction = async ({ source }: BundleOptions): Promise<BundleR
       },
       outdir,
       bundle: true,
-      splitting: true,
+
+      // NOTE: Splitting causes an error in Cloudflare-Workers:
+      //   Disallowed operation called within global scope.
+      //   Asynchronous I/O (ex: fetch() or connect()), setting a timeout, and generating random values are not allowed within global scope.
+      //   To fix this error, perform this operation within a handler. https://developers.cloudflare.com/workers/runtime-apis/handlers/
+      //
+      // Likely, workerd is treating asynchronously-loaded modules as if they were executing in global scope.
+      // splitting: true,
       format: 'esm',
+      target: 'esnext',
+      supported: {
+        'class-private-accessor': true,
+        'class-private-brand-check': true,
+        'class-private-field': true,
+        'class-private-method': true,
+        'class-private-static-accessor': true,
+        'class-private-static-field': true,
+        'class-private-static-method': true,
+      },
       external: ['cloudflare:workers'],
       alias: {
         'node:path': 'path',
@@ -95,6 +112,7 @@ export const bundleFunction = async ({ source }: BundleOptions): Promise<BundleR
               path: 'dxos:entrypoint',
               namespace: 'dxos:entrypoint',
             }));
+            // TODO(dmaretskyi): Move into memory plugin
             build.onLoad({ filter: /^dxos:entrypoint$/, namespace: 'dxos:entrypoint' }, () => {
               return {
                 contents: trim`
@@ -197,6 +215,14 @@ const PluginESMSh = (): Plugin => ({
   },
 });
 
+const LOADERS: Record<string, Loader> = {
+  js: 'js',
+  jsx: 'jsx',
+  ts: 'ts',
+  tsx: 'tsx',
+  wasm: 'copy',
+} as const;
+
 /*
 
 node scripts/vendor-packages.mjs
@@ -231,21 +257,11 @@ const PluginR2VendoredPackages = (): Plugin => ({
     }));
 
     build.onLoad({ filter: /.*/, namespace: 'r2-vendored-packages' }, async (args) => {
-      log.info('Fetching', { path: args.path });
       try {
         const response = await fetch(args.path);
         const extension = new URL(args.path).pathname.split('.').pop() || '';
-        const text = await response.text();
-        const loader =
-          ((
-            {
-              js: 'js',
-              jsx: 'jsx',
-              ts: 'ts',
-              tsx: 'tsx',
-              // Add more mappings as needed
-            } as const
-          )[extension.toLowerCase()] as Loader) || 'jsx';
+        const text = extension === 'wasm' ? await response.arrayBuffer() : await response.text();
+        const loader = LOADERS[extension.toLowerCase()] || 'jsx';
         return {
           contents: text,
           loader,
