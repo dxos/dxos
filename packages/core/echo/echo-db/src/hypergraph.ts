@@ -373,7 +373,7 @@ export class Hypergraph {
     if (!db) {
       return undefined;
     }
-    const [obj] = await db.query(Filter.ids(objectId)).run();
+    const [obj] = await db.query(Filter.id(objectId)).run();
     return obj;
   }
 

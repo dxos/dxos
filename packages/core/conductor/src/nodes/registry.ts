@@ -241,7 +241,7 @@ export const registry: Record<NodeType, Executable> = {
               invariant(db.spaceId === spaceId, 'Space mismatch');
             }
 
-            const [container] = yield* Effect.promise(() => db.query(Filter.ids(echoId)).run());
+            const [container] = yield* Effect.promise(() => db.query(Filter.id(echoId)).run());
             if (isInstanceOf(View.View, container)) {
               const schema = yield* Effect.promise(async () =>
                 db.schemaRegistry
