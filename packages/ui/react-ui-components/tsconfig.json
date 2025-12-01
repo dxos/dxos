@@ -67,6 +67,9 @@
       "path": "../react-ui-editor"
     },
     {
+      "path": "../react-ui-markdown"
+    },
+    {
       "path": "../react-ui-stack"
     },
     {

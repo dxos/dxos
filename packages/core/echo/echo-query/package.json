@@ -17,7 +17,8 @@
       "types": "./dist/types/src/index.d.ts",
       "browser": "./dist/lib/browser/index.mjs",
       "node": "./dist/lib/node-esm/index.mjs"
-    }
+    },
+    "./api.d.ts": "./dist/query-lite/index.d.ts"
   },
   "types": "dist/types/src/index.d.ts",
   "typesVersions": {
@@ -39,13 +40,14 @@
     "@dxos/vendor-quickjs": "workspace:*",
     "@lezer/common": "^1.2.2",
     "@lezer/lezer": "^1.1.2",
-    "@lezer/lr": "^1.4.2",
-    "@orama/orama": "^3.1.7"
+    "@lezer/lr": "^1.4.2"
   },
   "devDependencies": {
     "@dxos/echo-generator": "workspace:*",
     "@dxos/random": "workspace:*",
-    "@lezer/generator": "^1.7.1"
+    "@lezer/generator": "^1.7.1",
+    "tsdown": "^0.16.6",
+    "typescript": "^5.9.3"
   },
   "publishConfig": {
     "access": "public"

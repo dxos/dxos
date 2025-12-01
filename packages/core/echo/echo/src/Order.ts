@@ -11,6 +11,8 @@ export interface Order<T> {
   ast: QueryAST.Order;
 }
 
+export type Any = Order<any>;
+
 class OrderClass implements Order<any> {
   private static variance: Order<any>['~Order'] = {} as Order<any>['~Order'];
 
@@ -23,12 +25,10 @@ class OrderClass implements Order<any> {
   '~Order' = OrderClass.variance;
 }
 
-export namespace Order {
-  export const natural: Order<any> = new OrderClass({ kind: 'natural' });
-  export const property = <T>(property: keyof T & string, direction: QueryAST.OrderDirection): Order<T> =>
-    new OrderClass({
-      kind: 'property',
-      property,
-      direction,
-    });
-}
+export const natural: Order<any> = new OrderClass({ kind: 'natural' });
+export const property = <T>(property: keyof T & string, direction: QueryAST.OrderDirection): Order<T> =>
+  new OrderClass({
+    kind: 'property',
+    property,
+    direction,
+  });

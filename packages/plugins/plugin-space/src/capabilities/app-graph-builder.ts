@@ -370,7 +370,7 @@ export default (context: PluginContext) => {
           }
 
           if (!query) {
-            query = space.db.query(Filter.ids(dxn.echoId));
+            query = space.db.query(Filter.id(dxn.echoId));
           }
 
           const object = get(atomFromQuery(query)).at(0);

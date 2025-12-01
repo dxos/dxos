@@ -602,7 +602,7 @@ describe('Query', () => {
 
     test('traverse query started from id', async () => {
       const objects = await db
-        .query(Query.select(Filter.ids(person2.id)).sourceOf(TestSchema.HasManager).target())
+        .query(Query.select(Filter.id(person2.id)).sourceOf(TestSchema.HasManager).target())
         .run();
 
       expect(objects).toMatchObject([{ name: 'Alice' }]);

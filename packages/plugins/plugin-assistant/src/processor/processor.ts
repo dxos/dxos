@@ -233,7 +233,7 @@ export class AiChatProcessor {
       //   artifacts.map(async (artifact) => {
       //     const {
       //       objects: [object],
-      //     } = await space.db.query(Filter.ids(artifact.id)).run();
+      //     } = await space.db.query(Filter.id(artifact.id)).run();
       //     if (!object) {
       //       return;
       //     }
