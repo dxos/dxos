@@ -47,9 +47,10 @@ import { FormContext } from './FormRoot';
 
 // [ ] Test 22 usages (opencode migration)
 // [ ] Merge stage 1
+// [ ] Remove 'outerSpacing' prop
 
 // New features/polish
-// [ ] Unify readonly/inline modes
+// [x] Unify readonly/inline modes
 // [ ] Use FormFieldWrapper uniformly
 // [ ] Inline tables for object arrays
 // [ ] Remove @dxos/echo-db deps
@@ -97,7 +98,7 @@ type NewFormRootProps<T extends AnyProperties = AnyProperties> = PropsWithChildr
   } &
     // prettier-ignore
     Omit<NewFormContextValue<T>, 'form'> &
-    Pick<FormHandlerProps<T>, 'schema' | 'autoSave' | 'values' | 'onAutoSave' | 'onValuesChanged'> &
+    Pick<FormHandlerProps<T>, 'schema' | 'autoSave' | 'values' | 'onAutoSave' | 'onValidate' | 'onValuesChanged'> &
     Omit<FormFieldSetProps<T>, 'schema' | 'path'>
 >;
 

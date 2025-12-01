@@ -19,18 +19,20 @@ const Component = ({
   ...props
 }: FormFieldComponentProps<string>) => {
   return (
-    <FormFieldWrapper<string> {...props}>
-      {({ value = '' }) => (
-        <Input.TextInput
-          disabled={!!readonly}
-          placeholder={placeholder}
-          noAutoFill
-          value={value}
-          onChange={(event) => onValueChange(type, event.target.value)}
-          onBlur={onBlur}
-        />
-      )}
-    </FormFieldWrapper>
+    <div className='plb-cardSpacingBlock pli-cardSpacingInline'>
+      <FormFieldWrapper<string> {...props}>
+        {({ value = '' }) => (
+          <Input.TextInput
+            disabled={!!readonly}
+            placeholder={placeholder}
+            noAutoFill
+            value={value}
+            onChange={(event) => onValueChange(type, event.target.value)}
+            onBlur={onBlur}
+          />
+        )}
+      </FormFieldWrapper>
+    </div>
   );
 };
 

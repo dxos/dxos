@@ -44,16 +44,16 @@ export interface FormHandlerProps<T extends AnyProperties> {
   onValuesChanged?: (values: Partial<T>, meta: FormUpdateMeta<T>) => void;
 
   /**
-   * Called when a field is blurred and is valid.
-   */
-  onAutoSave?: (values: T, meta: FormUpdateMeta<T>) => void;
-
-  /**
    * Custom validation function that runs only after schema validation passes.
    * Use this for complex validation logic that can't be expressed in the schema.
    * @returns Array of validation errors, or undefined if validation passes
    */
   onValidate?: (values: T) => ValidationError[] | undefined;
+
+  /**
+   * Called when a field is blurred and is valid.
+   */
+  onAutoSave?: (values: T, meta: FormUpdateMeta<T>) => void;
 
   /**
    * Called when the form is submitted and passes validation.

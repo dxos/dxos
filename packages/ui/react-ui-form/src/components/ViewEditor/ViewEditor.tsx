@@ -318,9 +318,9 @@ const FieldList = ({ schema, view, registry, readonly, showHeading = false, onDe
                       <FieldEditor
                         // TODO(burdon): Is this right?
                         readonly={readonly || schemaReadonly}
+                        registry={registry}
                         projection={projectionModel}
                         field={field}
-                        registry={registry}
                         onSave={handleClose}
                       />
                     </div>

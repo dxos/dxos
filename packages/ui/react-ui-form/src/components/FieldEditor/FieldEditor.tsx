@@ -20,7 +20,7 @@ import {
 } from '@dxos/schema';
 
 import { translationKey } from '../../translations';
-import { Form, type FormFieldMap, type FormProps, SelectField, SelectOptionField } from '../Form';
+import { type FormFieldMap, type FormProps, NewForm, SelectField, SelectOptionField } from '../Form';
 
 export type FieldEditorProps = {
   projection: ProjectionModel;
@@ -33,15 +33,7 @@ export type FieldEditorProps = {
 /**
  * Displays a Form representing the metadata for a given `Field` and `View`.
  */
-export const FieldEditor = ({
-  readonly,
-  projection,
-  field,
-  registry,
-  outerSpacing,
-  onSave,
-  onCancel,
-}: FieldEditorProps) => {
+export const FieldEditor = ({ readonly, projection, field, registry, onSave, onCancel }: FieldEditorProps) => {
   const { t } = useTranslation(translationKey);
   const [props, setProps] = useState<PropertyType>(projection.getFieldProjection(field.id).props);
   useEffect(() => setProps(projection.getFieldProjection(field.id).props), [field, projection]);
@@ -70,11 +62,51 @@ export const FieldEditor = ({
   //  Class constructor SchemaClass cannot be invoked without 'new'.
   const [{ fieldSchema }, setFieldSchema] = useState({ fieldSchema: getFormatSchema(props?.format) });
 
+  const fieldMap = useMemo<FormFieldMap>(
+    () => ({
+      ['format' satisfies keyof PropertyType]: (props) => (
+        <SelectField
+          {...props}
+          options={FormatEnums.filter((value) => value !== Format.TypeFormat.None).map((value) => ({
+            value,
+            label: t(`format ${value}`),
+          }))}
+        />
+      ),
+      ['referenceSchema' satisfies keyof PropertyType]: (props) => (
+        <SelectField
+          {...props}
+          options={schemas.map((schema) => ({
+            value: schema.typename,
+          }))}
+        />
+      ),
+      ['referencePath' satisfies keyof PropertyType]: (props) => (
+        <SelectField
+          {...props}
+          options={
+            referenceSchema
+              ? getSchemaProperties(referenceSchema.ast, {}, { form: true })
+                  .sort(sortProperties)
+                  .map((p) => ({ value: p.name }))
+              : []
+          }
+        />
+      ),
+      ['options' satisfies keyof PropertyType]: (props) => <SelectOptionField {...props} />,
+    }),
+    [t, schemas, referenceSchema],
+  );
+
+  const propIsNotType = useCallback(
+    (props: SchemaProperty<PropertyType>[]) => props.filter((prop) => prop.name !== 'type'),
+    [],
+  );
+
   const handleValuesChanged = useCallback<NonNullable<FormProps<PropertyType>['onValuesChanged']>>(
     (_props) => {
-      // TODO(burdon): Callback should pass `changed` to indicate which fields have changed.
-      // TODO(Zaymon): Workout why old and new format values are the same sometimes even when
-      //   selecting novel format values.
+      // TODO(burdon): Callback (EDIT: now does) should pass `changed` to indicate which fields have changed.
+      // TODO(Zaymon): Workout why old and new format values are the same sometimes even when selecting novel format values.
       setFieldSchema((prev) => {
         const fieldSchema = getFormatSchema(_props.format);
         if (prev.fieldSchema === fieldSchema) {
@@ -135,56 +167,14 @@ export const FieldEditor = ({
     onSave();
   }, [onSave]);
 
-  const fieldMap = useMemo<FormFieldMap>(
-    () => ({
-      ['format' satisfies keyof PropertyType]: (props) => (
-        <SelectField
-          {...props}
-          options={FormatEnums.filter((value) => value !== Format.TypeFormat.None).map((value) => ({
-            value,
-            label: t(`format ${value}`),
-          }))}
-        />
-      ),
-      ['referenceSchema' satisfies keyof PropertyType]: (props) => (
-        <SelectField
-          {...props}
-          options={schemas.map((schema) => ({
-            value: schema.typename,
-          }))}
-        />
-      ),
-      ['referencePath' satisfies keyof PropertyType]: (props) => (
-        <SelectField
-          {...props}
-          options={
-            referenceSchema
-              ? getSchemaProperties(referenceSchema.ast, {}, { form: true })
-                  .sort(sortProperties)
-                  .map((p) => ({ value: p.name }))
-              : []
-          }
-        />
-      ),
-      ['options' satisfies keyof PropertyType]: (props) => <SelectOptionField {...props} />,
-    }),
-    [t, schemas, referenceSchema],
-  );
-
-  const propIsNotType = useCallback(
-    (props: SchemaProperty<PropertyType>[]) => props.filter((prop) => prop.name !== 'type'),
-    [],
-  );
-
   if (!fieldSchema) {
     log.warn('invalid format', { props });
     return null;
   }
 
   return (
-    <Form<PropertyType>
+    <NewForm.Root<PropertyType>
       key={field.id}
-      outerSpacing={outerSpacing}
       fieldMap={fieldMap}
       autoFocus
       readonly={readonly}
@@ -196,6 +186,11 @@ export const FieldEditor = ({
       onValidate={handleValidate}
       onSave={handleSave}
       onCancel={handleCancel}
-    />
+    >
+      <NewForm.Content>
+        <NewForm.FieldSet />
+        <NewForm.Actions />
+      </NewForm.Content>
+    </NewForm.Root>
   );
 };
