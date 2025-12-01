@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import React from 'react';
+import React, { type PropsWithChildren } from 'react';
 
 import { Filter, getSpace, useQuery, useSchema } from '@dxos/react-client/echo';
 import { Callout, ScrollArea, Toolbar, useTranslation } from '@dxos/react-ui';
@@ -30,6 +30,10 @@ export const ObjectDetailsPanel = ({ objectId, view }: ObjectDetailsPanelProps) 
   const queriedObjects = useQuery(space, schema ? Filter.type(schema) : Filter.nothing());
   const selectedRows = useSelected(objectId, 'multi');
   const selectedObjects = selectedRows.map((id) => queriedObjects.find((obj) => obj.id === id)).filter(isNonNullable);
+
+  if (!schema) {
+    return null;
+  }
 
   // TODO(burdon): Should be part of container.
   if (selectedObjects.length === 0) {
