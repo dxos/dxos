@@ -10,7 +10,7 @@ import { Combobox } from '@dxos/react-ui-searchlist';
 
 import { type QueryTag } from '../../hooks';
 import { translationKey } from '../../translations';
-import { Form } from '../Form';
+import { NewForm } from '../Form';
 
 export type ObjectPickerContentProps = ThemedClassName<{
   options: QueryTag[];
@@ -39,9 +39,8 @@ const ObjectPickerContent = forwardRef<HTMLDivElement, ObjectPickerContentProps>
     ref,
   ) => {
     const { t } = useTranslation(translationKey);
-
+    const [showForm, setShowForm] = useState(true);
     const [searchString, setSearchString] = useState('');
-    const [showForm, setShowForm] = useState(false);
 
     const handleFormSave = useCallback(
       (values: any) => {
@@ -57,9 +56,8 @@ const ObjectPickerContent = forwardRef<HTMLDivElement, ObjectPickerContentProps>
       setSearchString('');
     }, []);
 
-    // TODO(thure): The following click and keydown handlers are necessary because `onSelect` is called after the
-    //  Popover is already closed. Augment/refactor CmdK, if possible, to facilitate stopping event default
-    //  and propagation.
+    // TODO(thure): The following click and keydown handlers are necessary because `onSelect` is called after the Popover is already closed.
+    //  Augment/refactor CmdK, if possible, to facilitate stopping event defaultand propagation.
 
     const handleClick = useCallback(
       (event: MouseEvent) => {
@@ -108,13 +106,17 @@ const ObjectPickerContent = forwardRef<HTMLDivElement, ObjectPickerContentProps>
       >
         {showForm && createSchema ? (
           <Popover.Viewport>
-            <Form
+            <NewForm.Root
               testId='create-referenced-object-form'
               schema={createSchema}
               values={createInitialValuePath ? { [createInitialValuePath]: searchString } : {}}
               onSave={handleFormSave}
               onCancel={handleFormCancel}
-            />
+            >
+              <NewForm.Content>
+                <NewForm.FieldSet />
+              </NewForm.Content>
+            </NewForm.Root>
           </Popover.Viewport>
         ) : (
           <>
