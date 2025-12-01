@@ -10,7 +10,7 @@ import { Function, Script, Trigger } from '@dxos/functions';
 import { Filter, Ref, type Space, useQuery } from '@dxos/react-client/echo';
 import { Input } from '@dxos/react-ui';
 import { QueryForm, type QueryFormProps } from '@dxos/react-ui-components';
-import { Form, FormFieldLabel, type FormFieldMap, SelectField, useRefQueryOptions } from '@dxos/react-ui-form';
+import { FormFieldLabel, type FormFieldMap, NewForm, SelectField, useRefQueryOptions } from '@dxos/react-ui-form';
 
 import { FunctionInputEditor, type FunctionInputEditorProps } from './FunctionInputEditor';
 import { SpecSelector } from './SpecSelector';
@@ -20,33 +20,44 @@ export type TriggerEditorProps = {
   trigger: Trigger.Trigger;
   // TODO(wittjosiah): This needs to apply to whole spec but currently only applies to spec.kind & spec.query.
   readonlySpec?: boolean;
+  // TODO(burdon): Why do we need to remove 'id'? Can we standardize this?
   onSave?: (trigger: Omit<Trigger.Trigger, 'id'>) => void;
   onCancel?: () => void;
 } & Pick<QueryFormProps, 'types' | 'tags'>;
 
-export const TriggerEditor = ({ space, trigger, readonlySpec, types, tags, onSave, onCancel }: TriggerEditorProps) => {
-  const handleSave = ({ id: _, ...values }: Trigger.Trigger) => {
-    onSave?.(values);
-  };
+export const TriggerEditor = ({ space, types, tags, readonlySpec, trigger, onSave, onCancel }: TriggerEditorProps) => {
+  const handleSave = useCallback(
+    ({ id: _, ...values }: Trigger.Trigger) => {
+      onSave?.(values);
+    },
+    [onSave],
+  );
 
   const handleRefQueryOptions = useRefQueryOptions({ space });
   const fieldMap = useCustomInputs({
     space,
-    readonlySpec,
     types,
     tags,
+    readonlySpec,
     onQueryRefOptions: handleRefQueryOptions,
   });
 
   return (
-    <Form
+    <NewForm.Root<Trigger.Trigger>
       fieldMap={fieldMap}
       schema={Trigger.Trigger}
       values={trigger}
       onSave={handleSave}
       onCancel={onCancel}
       onQueryRefOptions={handleRefQueryOptions}
-    />
+    >
+      <NewForm.Viewport>
+        <NewForm.Content>
+          <NewForm.FieldSet />
+          <NewForm.Actions />
+        </NewForm.Content>
+      </NewForm.Viewport>
+    </NewForm.Root>
   );
 };
 

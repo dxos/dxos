@@ -7,7 +7,7 @@ import React, { useCallback, useMemo } from 'react';
 import { Ref, Type } from '@dxos/echo';
 import { type JsonPath } from '@dxos/echo/internal';
 import { type Function } from '@dxos/functions';
-import { Input, type ThemedClassName, useOnTransition } from '@dxos/react-ui';
+import { useOnTransition, useTranslation } from '@dxos/react-ui';
 import {
   type FormFieldStateProps,
   NewForm,
@@ -16,23 +16,20 @@ import {
   useFormValues,
 } from '@dxos/react-ui-form';
 
-export type FunctionInputEditorProps = ThemedClassName<
-  {
-    functions: Function.Function[];
-    onQueryRefOptions: QueryRefOptions;
-  } & FormFieldStateProps
->;
+import { meta } from '../../meta';
 
-/**
- * Editor component for function input parameters.
- */
+export type FunctionInputEditorProps = {
+  functions: Function.Function[];
+  onQueryRefOptions: QueryRefOptions;
+} & FormFieldStateProps;
+
 export const FunctionInputEditor = ({
-  classNames,
   functions,
   getValue,
   onValueChange,
   onQueryRefOptions,
 }: FunctionInputEditorProps) => {
+  const { t } = useTranslation(meta.id);
   const selectedFunctionValue = useFormValues(FunctionInputEditor.displayName, ['function' as JsonPath]);
   const selectedFunctionId = useMemo(() => {
     if (Ref.isRef(selectedFunctionValue)) {
@@ -62,7 +59,6 @@ export const FunctionInputEditor = ({
   const inputSchema = useMemo(() => selectedFunction?.inputSchema, [selectedFunction]);
   const effectSchema = useMemo(() => (inputSchema ? Type.toEffectSchema(inputSchema) : undefined), [inputSchema]);
   const propertyCount = inputSchema?.properties ? Object.keys(inputSchema.properties).length : 0;
-
   const values = useMemo(() => getValue() ?? {}, [getValue]);
 
   const handleValuesChanged = useCallback<NonNullable<NewFormRootProps['onValuesChanged']>>(
@@ -78,9 +74,7 @@ export const FunctionInputEditor = ({
 
   return (
     <>
-      <Input.Root>
-        <Input.Label>Function parameters</Input.Label>
-      </Input.Root>
+      <NewForm.Label label={t('function parameters label')} asChild />
       <NewForm.Root
         schema={effectSchema}
         values={values}

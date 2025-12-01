@@ -19,6 +19,7 @@ import {
 } from '../../hooks';
 import { translationKey } from '../../translations';
 
+import { FormFieldLabel, type FormFieldLabelProps } from './FormFieldComponent';
 import { FormFieldSet, type FormFieldSetProps } from './FormFieldSet';
 import { FormContext } from './FormRoot';
 
@@ -197,6 +198,9 @@ const NewFormActions = ({ classNames }: NewFormActionsProps) => {
     return null;
   }
 
+  // TODO(burdon): Currently onCancel is a no-op; implement "revert values".
+  //   Deprecate NewFormSubmit ans use NewFormActions without Cancel button if no callback is supplied.
+
   return (
     <div role='none' className={mx('grid grid-flow-col auto-cols-fr gap-2 pbs-cardSpacingBlock', classNames)}>
       {onCancel && (
@@ -274,8 +278,16 @@ export const NewForm = {
   FieldSet: NewFormFieldSet,
   Actions: NewFormActions,
   Submit: NewFormSubmit,
+  Label: FormFieldLabel,
 };
 
 export { useNewFormContext };
 
-export type { NewFormRootProps, NewFormViewportProps, NewFormContentProps, NewFormFieldSetProps, NewFormActionsProps };
+export type {
+  NewFormRootProps,
+  NewFormViewportProps,
+  NewFormContentProps,
+  NewFormFieldSetProps,
+  NewFormActionsProps,
+  FormFieldLabelProps as LabelProps,
+};
