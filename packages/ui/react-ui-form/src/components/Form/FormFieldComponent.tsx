@@ -110,8 +110,8 @@ export type FormFieldWrapperProps<T = any> = Pick<
 export const FormFieldWrapper = <T,>(props: FormFieldWrapperProps<T>) => {
   const { children, readonly, layout, label, getStatus, getValue } = props;
   const { status, error } = getStatus();
-  const value = getValue();
 
+  const value = getValue();
   if (layout === 'static' && value == null) {
     return null;
   }

@@ -29,7 +29,7 @@ export const ObjectDetailsPanel = ({ objectId, view }: ObjectDetailsPanelProps) 
   const selectedRows = useSelected(objectId, 'multi');
   const selectedObjects = selectedRows.map((id) => queriedObjects.find((obj) => obj.id === id)).filter(isNonNullable);
 
-  return <div>ObjectDetails: {objectId}</div>;
+  // return <div>ObjectDetails: {objectId}</div>;
 
   if (selectedObjects.length === 0) {
     return (
