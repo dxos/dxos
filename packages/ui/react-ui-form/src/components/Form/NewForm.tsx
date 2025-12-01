@@ -54,6 +54,7 @@ import { FormContext } from './FormRoot';
 // [ ] Fix useSchema Type.Obj.Any cast
 // [ ] TableCellEditor (handleEnter/ModalController).
 // [ ] Remove @dxos/echo-db deps
+// [ ] SpacePropertiesSchema
 
 // New features/polish
 // [x] Unify readonly/inline modes
