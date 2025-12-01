@@ -135,7 +135,7 @@ export const FormField = <T extends AnyProperties>({
 
   if (array) {
     return (
-      <ArrayField<T>
+      <ArrayField
         fieldProps={fieldState}
         property={property}
         path={path}

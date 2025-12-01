@@ -19,6 +19,7 @@ import { TestLayout } from '../testing';
 
 import { NewForm, type NewFormRootProps, omitId } from './NewForm';
 
+// TODO(wittjosiah): Use @dxos/types.
 const Organization = Schema.Struct({
   name: Schema.String.pipe(Schema.minLength(1)).annotations({ title: 'Full name' }),
 }).pipe(

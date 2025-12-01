@@ -2,8 +2,6 @@
 // Copyright 2025 DXOS.org
 //
 
-import type * as Schema from 'effect/Schema';
-
 import { Filter, type JsonSchema, Obj, Query, Ref, Type } from '@dxos/echo';
 import {
   ProjectionModel,
@@ -34,7 +32,7 @@ export const getBaseSchema = ({
   properties,
   jsonSchema,
 }: {
-  schema?: Schema.Schema.AnyNoContext;
+  schema?: Type.Entity.Any;
   typename?: string;
   properties?: TablePropertyDefinition[];
   jsonSchema?: JsonSchema.JsonSchema;

@@ -184,6 +184,7 @@ const TextInput = forwardRef<HTMLInputElement, InputScopedProps<TextInputProps>>
     return (
       <TextInputPrimitive
         {...props}
+        // TODO(wittjosiah): Factor out autofill properies.
         {...{ 'data-1p-ignore': noAutoFill }}
         className={tx(
           'input.input',

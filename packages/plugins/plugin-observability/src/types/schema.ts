@@ -14,7 +14,7 @@ const t = translations[0]['en-US'][meta.id];
 export const UserFeedback = Schema.Struct({
   message: Format.Text.pipe(
     Schema.nonEmptyString(),
-    Schema.maxLength(8_000),
+    Schema.maxLength(4_096),
     Schema.annotations({
       title: t['feedback textarea label'],
       description: t['feedback textarea placeholder'],

@@ -433,9 +433,7 @@ const TableMainInner = <T extends Type.Entity.Any = Type.Entity.Any>(
   );
 };
 
-const TableMain = forwardRef<TableController, TableMainProps>(TableMainInner) as <
-  T extends Type.Entity.Any = Type.Entity.Any,
->(
+const TableMain = forwardRef(TableMainInner) as <T extends Type.Entity.Any = Type.Entity.Any>(
   props: TableMainProps<T> & { ref?: Ref<TableController> },
 ) => JSX.Element;
 

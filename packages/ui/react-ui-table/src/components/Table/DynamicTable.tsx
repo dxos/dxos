@@ -101,7 +101,7 @@ export const DynamicTable = <T extends Type.Entity.Any = Type.Entity.Any>({
     <div role='none' className={mx('is-full bs-full grow grid', classNames)}>
       <div role='none' className='grid min-bs-0 overflow-hidden'>
         <Table.Root>
-          <Table.Main<T>
+          <Table.Main
             ref={tableRef}
             model={model}
             presentation={presentation}
