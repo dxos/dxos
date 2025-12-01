@@ -200,6 +200,7 @@ export const SpaceSettingsContainer = ({ space }: SpaceSettingsContainerProps) =
           />
         </ControlSection>
         <ControlSection
+          // TODO(burdon): Why is `ns` needed here (since it's used in the declaration of t above.)?
           title={t('space controls title', { ns: meta.id })}
           description={t('space controls description', { ns: meta.id })}
         >
