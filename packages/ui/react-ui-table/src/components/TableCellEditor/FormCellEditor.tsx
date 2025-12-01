@@ -9,7 +9,6 @@ import { Filter, Obj, type Type } from '@dxos/echo';
 import { Format, Ref, getValue } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
 import { getSnapshot } from '@dxos/live-object';
-import { type Client } from '@dxos/react-client';
 import { getSpace } from '@dxos/react-client/echo';
 import { Popover } from '@dxos/react-ui';
 import { Form, type FormProps } from '@dxos/react-ui-form';
@@ -25,9 +24,8 @@ const createOptionLabel = ['create new object label', { ns: translationKey }] as
 
 export type OnCreateHandler = (schema: Schema.Schema.AnyNoContext, values: any) => Parameters<typeof Ref.make>[0];
 
-export type FormCellEditorProps<T extends Type.Obj.Any = Type.Obj.Any> = {
+export type FormCellEditorProps<T extends Type.Entity.Any = Type.Entity.Any> = {
   __gridScope: any;
-  client?: Client; // TODO(burdon): MUST REMOVE THIS.
   schema?: T;
   model?: TableModel;
   fieldProjection: FieldProjection;
@@ -36,9 +34,8 @@ export type FormCellEditorProps<T extends Type.Obj.Any = Type.Obj.Any> = {
   onCreate?: OnCreateHandler;
 } & Omit<FormProps<any>, 'values' | 'schema' | 'onCreate'>;
 
-export const FormCellEditor = <T extends Type.Obj.Any = Type.Obj.Any>({
+export const FormCellEditor = <T extends Type.Entity.Any = Type.Entity.Any>({
   __gridScope,
-  client,
   schema,
   model,
   fieldProjection,
@@ -70,22 +67,14 @@ export const FormCellEditor = <T extends Type.Obj.Any = Type.Obj.Any>({
     return narrowSchema(schema, [fieldProjection.field.path]);
   }, [JSON.stringify(schema), fieldProjection.field.path]); // TODO(burdon): Avoid stringify.
 
-  // TODO(burdon): FACTOR OUT client dependency.
   const getSchema = useCallback(
     ({ typename }: { typename: string }) => {
       const space = getSpace(model!.view);
       invariant(space);
-      let schema;
-      if (client) {
-        schema = client.graph.schemaRegistry.getSchema(typename);
-      }
-      if (!schema) {
-        schema = space.db.schemaRegistry.getSchema(typename);
-      }
-
+      const schema = space.db.schemaRegistry.query({ typename, location: ['database', 'runtime'] }).runSync()[0];
       return { space, schema };
     },
-    [client, model],
+    [model],
   );
 
   const refSchema = useMemo(() => {
@@ -179,7 +168,7 @@ export const FormCellEditor = <T extends Type.Obj.Any = Type.Obj.Any>({
 
       return [];
     },
-    [client, model],
+    [model],
   );
 
   if (!editing) {

@@ -370,7 +370,7 @@ export default (context: PluginContext) => {
           }
 
           if (!query) {
-            query = space.db.query(Filter.ids(dxn.echoId));
+            query = space.db.query(Filter.id(dxn.echoId));
           }
 
           const object = get(atomFromQuery(query)).at(0);
@@ -392,20 +392,18 @@ export default (context: PluginContext) => {
     createExtension({
       id: `${meta.id}/system-collections`,
       connector: (node) => {
-        const client = context.getCapability(ClientCapabilities.Client);
         // TODO(wittjosiah): Find a simpler way to define this type.
         let query: QueryResult.QueryResult<Schema.Schema.Type<typeof Type.Expando>> | undefined;
-        return Atom.make((get) =>
-          Function.pipe(
+        return Atom.make((get) => {
+          const schemas = get(context.capabilities(ClientCapabilities.Schema)).flat();
+          return Function.pipe(
             get(node),
             Option.flatMap((node) =>
               Obj.instanceOf(Collection.Managed, node.data) ? Option.some(node.data) : Option.none(),
             ),
             Option.flatMap((collection) => {
               const space = getSpace(collection);
-              const schema = client.graph.schemaRegistry.schemas.find(
-                (schema) => Type.getTypename(schema) === collection.key,
-              );
+              const schema = schemas.find((schema) => Type.getTypename(schema) === collection.key);
               return space && schema ? Option.some({ space, schema }) : Option.none();
             }),
             Option.map(({ space, schema }) => {
@@ -424,18 +422,18 @@ export default (context: PluginContext) => {
                 .filter(isNonNullable);
             }),
             Option.getOrElse(() => []),
-          ),
-        );
+          );
+        });
       },
     }),
 
     // Create branch nodes for static schema record types.
     createExtension({
       id: `${meta.id}/static-schemas`,
-      connector: (node) => {
-        const client = context.getCapability(ClientCapabilities.Client);
-        return Atom.make((get) =>
-          Function.pipe(
+      connector: (node) =>
+        Atom.make((get) => {
+          const schemas = get(context.capabilities(ClientCapabilities.Schema)).flat();
+          return Function.pipe(
             get(node),
             Option.flatMap((node) =>
               Obj.instanceOf(Collection.Managed, node.data) && node.data.key === Type.getTypename(Type.PersistentType)
@@ -448,16 +446,13 @@ export default (context: PluginContext) => {
             }),
             Option.map((space) => {
               return get(atomFromSignal(() => (space.properties.staticRecords ?? []) as string[]))
-                .map((typename) =>
-                  client.graph.schemaRegistry.schemas.find((schema) => Type.getTypename(schema) === typename),
-                )
+                .map((typename) => schemas.find((schema) => Type.getTypename(schema) === typename))
                 .filter(isNonNullable)
                 .map((schema) => createStaticSchemaNode({ schema, space }));
             }),
             Option.getOrElse(() => []),
-          ),
-        );
-      },
+          );
+        }),
     }),
 
     // Create actions for static schema record types.

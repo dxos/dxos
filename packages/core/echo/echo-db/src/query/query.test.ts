@@ -7,7 +7,7 @@ import * as Schema from 'effect/Schema';
 import { afterEach, beforeEach, describe, expect, onTestFinished, test } from 'vitest';
 
 import { Trigger, asyncTimeout, sleep } from '@dxos/async';
-import { type Entity, Obj, Order, Ref, Relation, Type } from '@dxos/echo';
+import { type Entity, type Hypergraph, Obj, Order, Ref, Relation, Type } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
 import { type DatabaseDirectory } from '@dxos/echo-protocol';
 import { DXN, PublicKey } from '@dxos/keys';
@@ -17,7 +17,6 @@ import { faker } from '@dxos/random';
 import { range } from '@dxos/util';
 
 import { getObjectCore } from '../echo-handler';
-import { type Hypergraph } from '../hypergraph';
 import { type EchoDatabase } from '../proxy-db';
 import { EchoTestBuilder, type EchoTestPeer, createTmpPath } from '../testing';
 
@@ -603,7 +602,7 @@ describe('Query', () => {
 
     test('traverse query started from id', async () => {
       const objects = await db
-        .query(Query.select(Filter.ids(person2.id)).sourceOf(TestSchema.HasManager).target())
+        .query(Query.select(Filter.id(person2.id)).sourceOf(TestSchema.HasManager).target())
         .run();
 
       expect(objects).toMatchObject([{ name: 'Alice' }]);
@@ -919,7 +918,7 @@ describe('Query', () => {
   });
 
   describe('Dynamic types', () => {
-    let db: EchoDatabase, graph: Hypergraph;
+    let db: EchoDatabase, graph: Hypergraph.Hypergraph;
 
     beforeEach(async () => {
       ({ db, graph } = await builder.createDatabase());

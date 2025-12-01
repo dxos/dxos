@@ -27,7 +27,7 @@ import {
   initEchoReactiveObjectRootProxy,
   isEchoObject,
 } from '../echo-handler';
-import { type Hypergraph } from '../hypergraph';
+import { type HypergraphImpl } from '../hypergraph';
 import { Filter, Query } from '../query';
 
 import { DatabaseSchemaRegistry } from './database-schema-registry';
@@ -35,12 +35,12 @@ import { type ObjectMigration } from './object-migration';
 
 // TODO(burdon): Remove and progressively push methods to Database.Database.
 export interface EchoDatabase extends Database.Database {
-  get graph(): Hypergraph;
-  get schemaRegistry(): DatabaseSchemaRegistry;
-
   /** @deprecated */
   get spaceKey(): PublicKey;
   get spaceId(): SpaceId;
+
+  get graph(): HypergraphImpl;
+  get schemaRegistry(): DatabaseSchemaRegistry;
 
   toJSON(): object;
 
@@ -104,7 +104,7 @@ export interface EchoDatabase extends Database.Database {
 }
 
 export type EchoDatabaseParams = {
-  graph: Hypergraph;
+  graph: HypergraphImpl;
   dataService: DataService;
   queryService: QueryService;
   spaceId: SpaceId;
@@ -185,7 +185,7 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
     return this._rootUrl;
   }
 
-  get graph(): Hypergraph {
+  get graph(): HypergraphImpl {
     return this._coreDatabase.graph;
   }
 

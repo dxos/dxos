@@ -98,18 +98,8 @@ const StoryViewEditor = ({
 //
 
 const DefaultStory = () => {
-  const {
-    space,
-    schema,
-    table,
-    tableRef,
-    model,
-    presentation,
-    client,
-    handleInsertRow,
-    handleSaveView,
-    handleDeleteColumn,
-  } = useTestTableModel();
+  const { space, schema, table, tableRef, model, presentation, handleInsertRow, handleSaveView, handleDeleteColumn } =
+    useTestTableModel();
 
   if (!schema || !table?.view.target) {
     return <div />;
@@ -125,7 +115,6 @@ const DefaultStory = () => {
             schema={schema}
             model={model}
             presentation={presentation}
-            client={client}
             ignoreAttention
           />
         </TableComponent.Root>
@@ -162,9 +151,9 @@ const meta = {
       types: [View.View, Table.Table],
       createIdentity: true,
       createSpace: true,
-      onCreateSpace: async ({ client, space }) => {
+      onCreateSpace: async ({ space }) => {
         const [schema] = await space.db.schemaRegistry.register([Example]);
-        const { view, jsonSchema } = await View.makeFromSpace({ client, space, typename: schema.typename });
+        const { view, jsonSchema } = await View.makeFromSpace({ space, typename: schema.typename });
         const table = Table.make({ view, jsonSchema });
         view.projection.fields = [
           view.projection.fields.find((field: any) => field.path === 'name')!,
@@ -207,8 +196,8 @@ export const StaticSchema: StoryObj = {
       types: [View.View, Table.Table],
       createIdentity: true,
       createSpace: true,
-      onCreateSpace: async ({ client, space }) => {
-        const { view, jsonSchema } = await View.makeFromSpace({ client, space, typename: TestSchema.Person.typename });
+      onCreateSpace: async ({ space }) => {
+        const { view, jsonSchema } = await View.makeFromSpace({ space, typename: TestSchema.Person.typename });
         const table = Table.make({ view, jsonSchema });
         space.db.add(table);
 
@@ -250,9 +239,8 @@ export const ArrayOfObjects: StoryObj = {
       types: [View.View, Table.Table, TestSchema.Person, TestSchema.Organization, ContactWithArrayOfEmails],
       createIdentity: true,
       createSpace: true,
-      onCreateSpace: async ({ client, space }) => {
+      onCreateSpace: async ({ space }) => {
         const { view, jsonSchema } = await View.makeFromSpace({
-          client,
           space,
           typename: ContactWithArrayOfEmails.typename,
         });
@@ -282,7 +270,7 @@ export const Tags: Meta<StoryProps> = {
       types: [View.View, Table.Table],
       createIdentity: true,
       createSpace: true,
-      onCreateSpace: async ({ client, space }) => {
+      onCreateSpace: async ({ space }) => {
         // Configure schema.
         const typename = 'example.com/SingleSelect';
         const selectOptions = [
@@ -310,7 +298,7 @@ export const Tags: Meta<StoryProps> = {
         const [storedSchema] = await space.db.schemaRegistry.register([schema]);
 
         // Initialize table.
-        const { view, jsonSchema } = await View.makeFromSpace({ client, space, typename });
+        const { view, jsonSchema } = await View.makeFromSpace({ space, typename });
         const table = Table.make({ view, jsonSchema });
         space.db.add(table);
 

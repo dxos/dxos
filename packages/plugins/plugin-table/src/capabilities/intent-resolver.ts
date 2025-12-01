@@ -14,7 +14,6 @@ import {
 } from '@dxos/app-framework';
 import { Obj, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
-import { ClientCapabilities } from '@dxos/plugin-client';
 import { SpaceAction } from '@dxos/plugin-space/types';
 import { getSpace } from '@dxos/react-client/echo';
 import { Table } from '@dxos/react-ui-table/types';
@@ -55,8 +54,7 @@ export default (context: PluginContext) =>
     createResolver({
       intent: TableAction.Create,
       resolve: async ({ space, name, typename }) => {
-        const client = context.getCapability(ClientCapabilities.Client);
-        const { view, jsonSchema } = await View.makeFromSpace({ client, space, typename });
+        const { view, jsonSchema } = await View.makeFromSpace({ space, typename });
         const table = Table.make({ name, view, jsonSchema });
         return { data: { object: table } };
       },

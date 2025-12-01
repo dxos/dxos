@@ -7,10 +7,9 @@ import React, { useCallback, useMemo, useState } from 'react';
 
 import { Capabilities, contributes, createSurface } from '@dxos/app-framework';
 import { useCapability } from '@dxos/app-framework/react';
-import { Obj, Type } from '@dxos/echo';
+import { JsonSchema, Obj } from '@dxos/echo';
 import { Format } from '@dxos/echo/internal';
 import { findAnnotation } from '@dxos/effect';
-import { useClient } from '@dxos/react-client';
 import { type Space, getSpace, isSpace } from '@dxos/react-client/echo';
 import { type FormFieldComponentProps, SelectField, useFormValues } from '@dxos/react-ui-form';
 import { type LatLngLiteral } from '@dxos/react-ui-geo';
@@ -81,15 +80,13 @@ export default () =>
         return !!annotation;
       },
       component: ({ data: { target }, ...inputProps }) => {
-        const client = useClient();
         const props = inputProps as any as FormFieldComponentProps;
         const space = isSpace(target) ? target : getSpace(target);
         const { typename } = useFormValues('MapForm');
-        const staticSchema = client.graph.schemaRegistry.schemas.find(
-          (schema) => Type.getTypename(schema) === typename,
-        );
-        const [dynamicSchema] = space?.db.schemaRegistry.query({ typename }).runSync() ?? [];
-        const jsonSchema = staticSchema ? Type.toJsonSchema(staticSchema) : dynamicSchema?.jsonSchema;
+
+        const [schema] =
+          space?.db.schemaRegistry.query({ typename, location: ['database', 'runtime'] }).runSync() ?? [];
+        const jsonSchema = schema && JsonSchema.toJsonSchema(schema);
 
         const coordinateProperties = useMemo(() => {
           if (!jsonSchema?.properties) {

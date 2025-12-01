@@ -48,7 +48,7 @@ export const useReferencesProvider = (space?: Space): ReferencesProvider | undef
         );
       },
       resolveReference: async ({ uri }) => {
-        const object = await space.db.query(Filter.ids(uri)).first();
+        const object = await space.db.query(Filter.id(uri)).first();
         return { uri, label: Obj.getLabel(object) ?? '' };
       },
     } satisfies ReferencesProvider;

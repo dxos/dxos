@@ -6,7 +6,6 @@ import React, { useCallback, useMemo } from 'react';
 
 import { Format } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
-import { useClient } from '@dxos/react-client';
 import { getSpace, useSchema } from '@dxos/react-client/echo';
 import { type FormFieldMap, NewForm, SelectField } from '@dxos/react-ui-form';
 import { useProjectionModel } from '@dxos/react-ui-kanban';
@@ -18,11 +17,10 @@ import { SettingsSchema } from '../types';
 type KanbanViewEditorProps = { object: Kanban.Kanban };
 
 export const KanbanViewEditor = ({ object }: KanbanViewEditorProps) => {
-  const client = useClient();
   const space = getSpace(object);
   const view = object.view.target;
   const currentTypename = view?.query ? getTypenameFromQuery(view.query.ast) : undefined;
-  const schema = useSchema(client, space, currentTypename);
+  const schema = useSchema(space, currentTypename);
   const projection = useProjectionModel(schema, object);
 
   const fieldProjections = projection?.getFieldProjections() || [];

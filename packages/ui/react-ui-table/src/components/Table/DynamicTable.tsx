@@ -16,7 +16,7 @@ import { type TablePropertyDefinition, getBaseSchema, makeDynamicTable } from '.
 
 import { Table, type TableController } from './Table';
 
-export type DynamicTableProps<T extends Type.Obj.Any = Type.Obj.Any> = ThemedClassName<{
+export type DynamicTableProps<T extends Type.Entity.Any = Type.Entity.Any> = ThemedClassName<{
   schema?: T;
   name?: string; // TODO(burdon): Remove?
   rows: any[];
@@ -33,7 +33,7 @@ export type DynamicTableProps<T extends Type.Obj.Any = Type.Obj.Any> = ThemedCla
  */
 // TODO(burdon): Instead of creating component variants, create helpers/hooks that normalize the props.
 // TODO(burdon): Warning: Cannot update a component (`DynamicTable`) while rendering a different component (`DynamicTable`).
-export const DynamicTable = <T extends Type.Obj.Any = Type.Obj.Any>({
+export const DynamicTable = <T extends Type.Entity.Any = Type.Entity.Any>({
   classNames,
   schema,
   name = 'example.com/dynamic-table', // Rmove default or make random; this will lead to type collisions.

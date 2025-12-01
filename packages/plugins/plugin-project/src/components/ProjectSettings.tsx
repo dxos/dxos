@@ -8,7 +8,6 @@ import React, { useCallback, useMemo, useRef, useState } from 'react';
 import { DXN, Filter, Obj, Query, type QueryAST, Ref, Tag, Type } from '@dxos/echo';
 import { useTypeOptions } from '@dxos/plugin-space';
 import { resolveSchemaWithClientAndSpace } from '@dxos/plugin-space';
-import { useClient } from '@dxos/react-client';
 import { getSpace, useQuery } from '@dxos/react-client/echo';
 import { IconButton, type ThemedClassName, useAsyncEffect, useTranslation } from '@dxos/react-ui';
 import { NewForm, ViewEditor } from '@dxos/react-ui-form';
@@ -36,7 +35,6 @@ export type ProjectObjectSettingsProps = ThemedClassName<{
  */
 export const ProjectObjectSettings = ({ classNames, project }: ProjectObjectSettingsProps) => {
   const { t } = useTranslation(meta.id);
-  const client = useClient();
   const space = getSpace(project);
   const [expandedId, setExpandedId] = useState<string>();
   const column = useMemo(
@@ -61,11 +59,11 @@ export const ProjectObjectSettings = ({ classNames, project }: ProjectObjectSett
       return;
     }
 
-    const foundSchema = await resolveSchemaWithClientAndSpace(client, space, view.query.ast);
+    const foundSchema = await resolveSchemaWithClientAndSpace(space, view.query.ast);
     if (foundSchema && foundSchema !== schema) {
       setSchema(() => foundSchema);
     }
-  }, [client, space, view, schema]);
+  }, [space, view, schema]);
 
   const handleMove = useCallback(
     (fromIndex: number, toIndex: number) => arrayMove(project.columns, fromIndex, toIndex),
@@ -81,7 +79,7 @@ export const ProjectObjectSettings = ({ classNames, project }: ProjectObjectSett
       const queue = target && DXN.tryParse(target) ? target : undefined;
       const query = queue ? Query.fromAst(newQuery).options({ queues: [queue] }) : Query.fromAst(newQuery);
       view.query.ast = query.ast;
-      const newSchema = await resolveSchemaWithClientAndSpace(client, space, query.ast);
+      const newSchema = await resolveSchemaWithClientAndSpace(space, query.ast);
       if (!newSchema) {
         return;
       }

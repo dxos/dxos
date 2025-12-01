@@ -18,7 +18,6 @@ import React, {
 } from 'react';
 
 import { type Type } from '@dxos/echo';
-import { type Client } from '@dxos/react-client';
 import { useAttention } from '@dxos/react-ui-attention';
 import {
   type DxGridElement,
@@ -78,8 +77,7 @@ export type TableController = {
   handleInsertRowResult?: (insertRowResult?: InsertRowResult) => void;
 };
 
-export type TableMainProps<T extends Type.Obj.Any = Type.Obj.Any> = {
-  client?: Client; // TODO(burdon): MUST REMOVE THIS.
+export type TableMainProps<T extends Type.Entity.Any = Type.Entity.Any> = {
   schema?: T;
   model?: TableModel;
   presentation?: TablePresentation;
@@ -90,8 +88,8 @@ export type TableMainProps<T extends Type.Obj.Any = Type.Obj.Any> = {
   testId?: string;
 };
 
-const TableMainInner = <T extends Type.Obj.Any = Type.Obj.Any>(
-  { client, schema, model, presentation, ignoreAttention, onCreate, onRowClick, testId }: TableMainProps<T>,
+const TableMainInner = <T extends Type.Entity.Any = Type.Entity.Any>(
+  { schema, model, presentation, ignoreAttention, onCreate, onRowClick, testId }: TableMainProps<T>,
   forwardedRef: Ref<TableController>,
 ) => {
   const [dxGrid, setDxGrid] = useState<DxGridElement | null>(null);
@@ -411,7 +409,6 @@ const TableMainInner = <T extends Type.Obj.Any = Type.Obj.Any>(
         onFocus={handleFocus}
         onSave={handleSave}
         onCreate={onCreate}
-        client={client}
       />
       <Grid.Content
         className={mx('[--dx-grid-base:var(--baseSurface)]', gridSeparatorInlineEnd, gridSeparatorBlockEnd)}
@@ -437,7 +434,7 @@ const TableMainInner = <T extends Type.Obj.Any = Type.Obj.Any>(
 };
 
 const TableMain = forwardRef<TableController, TableMainProps>(TableMainInner) as <
-  T extends Type.Obj.Any = Type.Obj.Any,
+  T extends Type.Entity.Any = Type.Entity.Any,
 >(
   props: TableMainProps<T> & { ref?: Ref<TableController> },
 ) => JSX.Element;

@@ -8,7 +8,6 @@ import { type Type } from '@dxos/echo';
 import { isMutable } from '@dxos/echo/internal';
 import { useGlobalFilteredObjects } from '@dxos/plugin-search';
 import { faker } from '@dxos/random';
-import { type Client, useClient } from '@dxos/react-client';
 import { Filter, type Space, useQuery, useSchema } from '@dxos/react-client/echo';
 import { useClientProvider } from '@dxos/react-client/testing';
 import { type ProjectionModel, getTypenameFromQuery } from '@dxos/schema';
@@ -20,7 +19,7 @@ import { Table } from '../types';
 
 faker.seed(0); // NOTE(ZaymonFC): Required for smoke tests.
 
-export type TestTableModel<T extends Type.Obj.Any = Type.Obj.Any> = {
+export type TestTableModel<T extends Type.Entity.Any = Type.Entity.Any> = {
   schema: T | undefined;
   table: Table.Table | undefined;
   projection: ProjectionModel | undefined;
@@ -28,7 +27,6 @@ export type TestTableModel<T extends Type.Obj.Any = Type.Obj.Any> = {
   model: TableModel | undefined;
   presentation: TablePresentation | undefined;
   space: Space | undefined;
-  client: Client | undefined;
   handleInsertRow: () => void;
   handleSaveView: () => void;
   handleDeleteRows: (rowIndex: number, objects: any[]) => void;
@@ -39,14 +37,13 @@ export type TestTableModel<T extends Type.Obj.Any = Type.Obj.Any> = {
  * Custom hook to create and manage a test table model for storybook demonstrations.
  * Provides table data, schema, and handlers for table operations.
  */
-export const useTestTableModel = <T extends Type.Obj.Any = Type.Obj.Any>(): TestTableModel<T> => {
-  const client = useClient();
+export const useTestTableModel = <T extends Type.Entity.Any = Type.Entity.Any>(): TestTableModel<T> => {
   const { space } = useClientProvider();
 
   const tables = useQuery(space, Filter.type(Table.Table));
   const table = tables.at(0);
   const typename = table?.view.target?.query ? getTypenameFromQuery(table.view.target.query.ast) : undefined;
-  const schema = useSchema<T>(client, space, typename);
+  const schema = useSchema<T>(space, typename);
   const projection = useProjectionModel(schema, table);
 
   const features = useMemo(
@@ -125,7 +122,6 @@ export const useTestTableModel = <T extends Type.Obj.Any = Type.Obj.Any>(): Test
     model,
     presentation,
     space,
-    client,
     handleInsertRow,
     handleSaveView,
     handleDeleteRows,

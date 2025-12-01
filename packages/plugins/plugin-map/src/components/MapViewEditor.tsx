@@ -7,7 +7,6 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { Type } from '@dxos/echo';
 import { Format } from '@dxos/echo/internal';
-import { useClient } from '@dxos/react-client';
 import { getSpace, useSchema } from '@dxos/react-client/echo';
 import { type FormFieldMap, NewForm, SelectField } from '@dxos/react-ui-form';
 import { getTypenameFromQuery } from '@dxos/schema';
@@ -23,11 +22,10 @@ export const MapSettingsSchema = Schema.Struct({
 type MapViewEditorProps = { object: Map.Map };
 
 export const MapViewEditor = ({ object }: MapViewEditorProps) => {
-  const client = useClient();
   const space = getSpace(object);
   const view = object?.view?.target;
   const typename = view?.query ? getTypenameFromQuery(view.query.ast) : undefined;
-  const currentSchema = useSchema(client, space, typename);
+  const currentSchema = useSchema(space, typename);
 
   const [allSchemata, setAllSchemata] = useState<Type.RuntimeType[]>([]);
 

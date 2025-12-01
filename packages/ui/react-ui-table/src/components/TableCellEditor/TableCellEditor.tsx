@@ -7,7 +7,6 @@ import { EditorView } from '@codemirror/view';
 import React, { useCallback, useMemo, useRef, useState } from 'react';
 
 import { debounce } from '@dxos/async';
-import { type Client } from '@dxos/client';
 import { type Type } from '@dxos/echo';
 import { Format, TypeEnum } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
@@ -43,8 +42,7 @@ export type QueryResult = Pick<Completion, 'label'> & {
   data: any;
 };
 
-export type TableCellEditorProps<T extends Type.Obj.Any = Type.Obj.Any> = {
-  client?: Client; // TODO(burdon): MUST REMOVE THIS.
+export type TableCellEditorProps<T extends Type.Entity.Any = Type.Entity.Any> = {
   schema?: T;
   model?: TableModel;
   modals?: ModalController;
@@ -53,9 +51,8 @@ export type TableCellEditorProps<T extends Type.Obj.Any = Type.Obj.Any> = {
   onSave?: () => void;
 };
 
-export const TableValueEditor = <T extends Type.Obj.Any = Type.Obj.Any>({
+export const TableValueEditor = <T extends Type.Entity.Any = Type.Entity.Any>({
   __gridScope,
-  client,
   schema,
   model,
   modals,
@@ -86,7 +83,6 @@ export const TableValueEditor = <T extends Type.Obj.Any = Type.Obj.Any>({
     return (
       <FormCellEditor<T>
         __gridScope={__gridScope}
-        client={client}
         schema={schema}
         model={model}
         fieldProjection={fieldProjection}
