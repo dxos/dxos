@@ -30,7 +30,7 @@ export type SpaceGraphEdge = GraphEdge.Optional;
 
 class SpaceGraphBuilder extends AbstractGraphBuilder<SpaceGraphNode, SpaceGraphEdge, SpaceGraphModel> {}
 
-const defaultFilter: Filter<any> = Filter.everything();
+const defaultFilter: Filter.Any = Filter.everything();
 
 const truncate = (id: string) => `${id.slice(0, 4)}…${id.slice(-4)}`;
 

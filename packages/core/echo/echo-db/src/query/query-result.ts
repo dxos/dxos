@@ -31,7 +31,7 @@ export class QueryResultImpl<T extends Entity.Unknown = Entity.Unknown> implemen
 
   constructor(
     private readonly _queryContext: QueryContext<T>,
-    private readonly _query: Query<T>,
+    private readonly _query: Query.Query<T>,
   ) {
     this._queryContext.changed.on(() => {
       if (this._recomputeResult()) {
@@ -55,7 +55,7 @@ export class QueryResultImpl<T extends Entity.Unknown = Entity.Unknown> implemen
     log('construct', { filter: this._query.ast });
   }
 
-  get query(): Query<T> {
+  get query(): Query.Query<T> {
     return this._query;
   }
 
