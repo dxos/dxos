@@ -9,6 +9,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { type AnyProperties, getValue as getValue$, setValue as setValue$ } from '@dxos/echo/internal';
 import { type JsonPath, type SimpleType, createJsonPath, fromEffectValidationPath } from '@dxos/effect';
 import { log } from '@dxos/log';
+import { useDefaultValue } from '@dxos/react-ui';
 import { type ValidationError, validateSchema } from '@dxos/schema';
 import { type MaybePromise } from '@dxos/util';
 
@@ -27,9 +28,14 @@ export interface FormHandlerProps<T extends AnyProperties> {
   schema?: Schema.Schema<T, any>;
 
   /**
-   * Initial values (which may not pass validation).
+   * Values for the form if controlled.
    */
   values?: Partial<T>;
+
+  /**
+   * Default values for the form which will be used if values is not provided.
+   */
+  defaultValues?: Partial<T>;
 
   /**
    * Auto-save the form when the values change.
@@ -112,6 +118,7 @@ export const useFormHandler = <T extends AnyProperties>({
   schema,
   autoSave,
   values: valuesProp,
+  defaultValues: defaultValuesProp,
   onValuesChanged,
   onAutoSave,
   onValidate,
@@ -123,11 +130,12 @@ export const useFormHandler = <T extends AnyProperties>({
   const [touched, setTouched] = useState<Record<JsonPath, boolean>>({});
   const [errors, setErrors] = useState<Record<JsonPath, string>>({});
   const [saving, setSaving] = useState(false);
+  const defaultValues = useDefaultValue<Partial<T>>(defaultValuesProp, () => ({}));
   const [values, setValues] = useControllableState<Partial<T>>({
     prop: valuesProp,
-    defaultProp: {},
+    defaultProp: defaultValues,
     onChange: () => {
-      setValues(valuesProp ?? {});
+      setValues(valuesProp ?? defaultValues);
       setChanged({});
       setTouched({});
       setErrors({});

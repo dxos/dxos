@@ -101,7 +101,10 @@ type NewFormRootProps<T extends AnyProperties = AnyProperties> = PropsWithChildr
   } &
     // prettier-ignore
     Omit<NewFormContextValue<T>, 'form'> &
-    Pick<FormHandlerProps<T>, 'schema' | 'autoSave' | 'values' | 'onAutoSave' | 'onValidate' | 'onValuesChanged'> &
+    Pick<
+      FormHandlerProps<T>,
+      'schema' | 'autoSave' | 'values' | 'defaultValues' | 'onAutoSave' | 'onValidate' | 'onValuesChanged'
+    > &
     Omit<FormFieldSetProps<T>, 'schema' | 'path'>
 >;
 
