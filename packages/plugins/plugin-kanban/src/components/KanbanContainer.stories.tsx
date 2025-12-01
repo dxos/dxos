@@ -16,7 +16,6 @@ import { SpacePlugin } from '@dxos/plugin-space';
 import { StorybookLayoutPlugin } from '@dxos/plugin-storybook-layout';
 import { ThemePlugin } from '@dxos/plugin-theme';
 import { faker } from '@dxos/random';
-import { useClient } from '@dxos/react-client';
 import { Filter, useQuery, useSchema, useSpaces } from '@dxos/react-client/echo';
 import { withTheme } from '@dxos/react-ui/testing';
 import { ViewEditor } from '@dxos/react-ui-form';
@@ -44,12 +43,11 @@ const rollOrg = () => ({
 });
 
 const StorybookKanban = () => {
-  const client = useClient();
   const spaces = useSpaces();
   const space = spaces[spaces.length - 1];
   const [object] = useQuery(space, Filter.type(Kanban.Kanban));
   const typename = object?.view.target?.query ? getTypenameFromQuery(object.view.target.query.ast) : undefined;
-  const schema = useSchema(client, space, typename);
+  const schema = useSchema(space, typename);
 
   const objects = useQuery(space, schema ? Filter.type(schema) : Filter.nothing());
   const filteredObjects = useGlobalFilteredObjects(objects);
@@ -139,7 +137,6 @@ const meta = {
             const space = await client.spaces.create();
             await space.waitUntilReady();
             const { view } = await View.makeFromSpace({
-              client,
               space,
               typename: Organization.Organization.typename,
               pivotFieldName: 'status',

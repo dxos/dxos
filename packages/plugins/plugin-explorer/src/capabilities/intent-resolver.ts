@@ -3,7 +3,6 @@
 //
 
 import { Capabilities, type PluginContext, contributes, createResolver } from '@dxos/app-framework';
-import { ClientCapabilities } from '@dxos/plugin-client';
 import { View } from '@dxos/schema';
 
 import { ExplorerAction, Graph } from '../types';
@@ -14,8 +13,7 @@ export default (context: PluginContext) =>
     createResolver({
       intent: ExplorerAction.CreateGraph,
       resolve: async ({ space, name, typename }) => {
-        const client = context.getCapability(ClientCapabilities.Client);
-        const { view } = await View.makeFromSpace({ client, space, typename });
+        const { view } = await View.makeFromSpace({ space, typename });
         const graph = Graph.make({ name, view });
         return { data: { object: graph } };
       },
