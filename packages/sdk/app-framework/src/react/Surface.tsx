@@ -47,12 +47,9 @@ export const Surface: NamedExoticComponent<SurfaceProps & RefAttributes<HTMLElem
         <Component ref={forwardedRef} key={id} id={id} role={role} data={data} limit={limit} {...rest} />
       ));
 
-      // TODO(burdon): Able to inject DOM properties into root (e.g., object.id).
-      const suspense = <Suspense fallback={placeholder}>{nodes}</Suspense>;
-
       return (
         <ErrorBoundary data={data} fallback={fallback}>
-          {suspense}
+          <Suspense fallback={placeholder}>{nodes}</Suspense>
         </ErrorBoundary>
       );
     },

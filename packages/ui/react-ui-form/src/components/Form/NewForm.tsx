@@ -62,8 +62,11 @@ import { FormContext } from './FormRoot';
 // [ ] Use FormFieldWrapper uniformly
 // [ ] Inline tables for object arrays
 
+export type ExcludeId<S extends Schema.Schema.AnyNoContext> = Omit<Schema.Schema.Type<S>, 'id'>;
+
 // TODO(burdon): Option to omit automatically?
-export const omitId = <S extends Schema.Schema.AnyNoContext>(schema: S) => schema.pipe(Schema.omit('id'));
+export const omitId = <S extends Schema.Schema.AnyNoContext>(schema: S): Schema.Schema<ExcludeId<S>, ExcludeId<S>> =>
+  schema.pipe(Schema.omit('id')) as any;
 
 //
 // Context

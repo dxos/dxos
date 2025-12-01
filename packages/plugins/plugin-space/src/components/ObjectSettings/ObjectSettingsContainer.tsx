@@ -19,18 +19,18 @@ export type ObjectSettingsContainerProps = {
 export const ObjectSettingsContainer = ({ object }: ObjectSettingsContainerProps) => {
   const data = useMemo(() => ({ subject: object }), [object]);
 
+  return <div>ObjectSettings: {object.id}</div>;
+
   return (
     <Clipboard.Provider>
       <StackItem.Content toolbar>
-        <Toolbar.Root></Toolbar.Root>
-        <div role='none' className='overflow-y-auto'>
-          <BaseObjectSettings object={object}>
-            <Surface role='base-object-settings' data={data} />
-            <Surface role='object-settings' data={data} />
-            {/* TODO(wittjosiah): Remove? */}
-            {/* <AdvancedObjectSettings object={object} /> */}
-          </BaseObjectSettings>
-        </div>
+        <Toolbar.Root />
+        <BaseObjectSettings object={object}>
+          <Surface role='base-object-settings' data={data} />
+          <Surface role='object-settings' data={data} />
+          {/* TODO(wittjosiah): Remove? */}
+          {/* <AdvancedObjectSettings object={object} /> */}
+        </BaseObjectSettings>
       </StackItem.Content>
     </Clipboard.Provider>
   );

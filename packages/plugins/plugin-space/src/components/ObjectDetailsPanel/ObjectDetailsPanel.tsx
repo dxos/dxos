@@ -4,7 +4,6 @@
 
 import React from 'react';
 
-import { useClient } from '@dxos/react-client';
 import { Filter, getSpace, useQuery, useSchema } from '@dxos/react-client/echo';
 import { Callout, useTranslation } from '@dxos/react-ui';
 import { useSelected } from '@dxos/react-ui-attention';
@@ -15,11 +14,13 @@ import { meta } from '../../meta';
 
 import { ObjectForm } from './ObjectForm';
 
-type RowDetailsPanelProps = { objectId: string; view: View.View };
+export type ObjectDetailsPanelProps = {
+  objectId: string;
+  view: View.View;
+};
 
-export const ObjectDetailsPanel = ({ objectId, view }: RowDetailsPanelProps) => {
+export const ObjectDetailsPanel = ({ objectId, view }: ObjectDetailsPanelProps) => {
   const { t } = useTranslation(meta.id);
-  const client = useClient();
   const space = getSpace(view);
   const typename = view.query ? getTypenameFromQuery(view.query.ast) : undefined;
   const schema = useSchema(space, typename);
@@ -27,6 +28,8 @@ export const ObjectDetailsPanel = ({ objectId, view }: RowDetailsPanelProps) => 
   const queriedObjects = useQuery(space, schema ? Filter.type(schema) : Filter.nothing());
   const selectedRows = useSelected(objectId, 'multi');
   const selectedObjects = selectedRows.map((id) => queriedObjects.find((obj) => obj.id === id)).filter(isNonNullable);
+
+  return <div>ObjectDetails: {objectId}</div>;
 
   if (selectedObjects.length === 0) {
     return (
@@ -42,8 +45,8 @@ export const ObjectDetailsPanel = ({ objectId, view }: RowDetailsPanelProps) => 
     <div role='none' className='bs-full is-full flex flex-col p-2 gap-1 overflow-y-auto'>
       {schema &&
         selectedObjects.map((object) => (
+          // TODO(burdon): Standardize.
           <div key={object.id} className='border border-separator rounded'>
-            xxx
             <ObjectForm object={object} schema={schema} />
           </div>
         ))}

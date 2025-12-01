@@ -58,6 +58,8 @@ export const ObjectForm = ({ object, schema }: ObjectFormProps) => {
     [object],
   );
 
+  return <div>Object: {object.id}</div>;
+
   return (
     <Form
       schema={formSchema}

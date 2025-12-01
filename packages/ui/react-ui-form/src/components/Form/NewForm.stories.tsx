@@ -17,7 +17,7 @@ import { withTheme } from '@dxos/react-ui/testing';
 import { translations } from '../../translations';
 import { TestLayout } from '../testing';
 
-import { NewForm, type NewFormRootProps, omitId } from './NewForm';
+import { type ExcludeId, NewForm, type NewFormRootProps, omitId } from './NewForm';
 
 const Organization = Schema.Struct({
   name: Schema.String.pipe(Schema.minLength(1)).annotations({ title: 'Full name' }),
@@ -160,7 +160,7 @@ const meta = {
 
 export default meta;
 
-type Story<T extends Type.Obj.Any> = StoryObj<StoryProps<T>>;
+type Story<T extends AnyProperties> = StoryObj<StoryProps<T>>;
 
 const values: Partial<Person> = {
   name: 'Alice',
@@ -168,7 +168,7 @@ const values: Partial<Person> = {
   tasks: ['task 1', 'task 2'],
 };
 
-export const Default: Story<any> = {
+export const Default: Story<ExcludeId<typeof Person>> = {
   args: {
     schema: omitId(Person),
     values,
@@ -176,7 +176,7 @@ export const Default: Story<any> = {
   },
 };
 
-export const Readonly: Story<any> = {
+export const Readonly: Story<ExcludeId<typeof Person>> = {
   args: {
     schema: omitId(Person),
     values,
@@ -184,7 +184,7 @@ export const Readonly: Story<any> = {
   },
 };
 
-export const Static: Story<any> = {
+export const Static: Story<ExcludeId<typeof Person>> = {
   args: {
     schema: omitId(Person),
     values,
@@ -192,7 +192,7 @@ export const Static: Story<any> = {
   },
 };
 
-export const Empty: Story<any> = {
+export const Empty: Story<ExcludeId<typeof Person>> = {
   render: () => (
     <TestLayout>
       <NewForm.Root>
