@@ -5,8 +5,9 @@
 import React from 'react';
 
 import { Filter, getSpace, useQuery, useSchema } from '@dxos/react-client/echo';
-import { Callout, useTranslation } from '@dxos/react-ui';
+import { Callout, ScrollArea, Toolbar, useTranslation } from '@dxos/react-ui';
 import { useSelected } from '@dxos/react-ui-attention';
+import { Card, StackItem } from '@dxos/react-ui-stack';
 import { type View, getTypenameFromQuery } from '@dxos/schema';
 import { isNonNullable } from '@dxos/util';
 
@@ -29,27 +30,47 @@ export const ObjectDetailsPanel = ({ objectId, view }: ObjectDetailsPanelProps) 
   const selectedRows = useSelected(objectId, 'multi');
   const selectedObjects = selectedRows.map((id) => queriedObjects.find((obj) => obj.id === id)).filter(isNonNullable);
 
-  // return <div>ObjectDetails: {objectId}</div>;
-
   if (selectedObjects.length === 0) {
     return (
-      <div role='none' className='plb-cardSpacingBlock pli-cardSpacingInline'>
-        <Callout.Root classNames='is-full'>
+      <CardStack>
+        <Callout.Root>
           <Callout.Title>{t('row details no selection label')}</Callout.Title>
         </Callout.Root>
-      </div>
+      </CardStack>
     );
   }
 
   return (
-    <div role='none' className='bs-full is-full flex flex-col p-2 gap-1 overflow-y-auto'>
-      {schema &&
-        selectedObjects.map((object) => (
-          // TODO(burdon): Standardize.
-          <div key={object.id} className='border border-separator rounded'>
-            <ObjectForm object={object} schema={schema} />
-          </div>
-        ))}
+    // TODO(burdon): What is the actual container? That has overflow-y-auto? (I.e., the equivalent of StackItem.Content for articles).
+    <StackItem.Content toolbar>
+      <Toolbar.Root />
+      <ScrollArea.Root>
+        <ScrollArea.Viewport>
+          <CardStack>
+            {selectedObjects.map((object) => (
+              <Card.StaticRoot key={object.id}>
+                <ObjectForm object={object} schema={schema} />
+              </Card.StaticRoot>
+            ))}
+          </CardStack>
+          <ScrollArea.Scrollbar orientation='vertical'>
+            <ScrollArea.Thumb />
+          </ScrollArea.Scrollbar>
+        </ScrollArea.Viewport>
+      </ScrollArea.Root>
+    </StackItem.Content>
+  );
+};
+
+// TODO(burdon): Factor out.
+const CardStack = ({ children }: PropsWithChildren) => {
+  return (
+    // TODO(burdon): Classnames for gap?
+    <div
+      role='none'
+      className='bs-full is-full flex flex-col gap-cardSpacingGap plb-cardSpacingBlock pli-cardSpacingInline'
+    >
+      {children}
     </div>
   );
 };

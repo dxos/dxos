@@ -21,13 +21,18 @@ export type AdvancedObjectSettingsProps = {
   object: Obj.Any;
 };
 
+/**
+ * @deprecated ???
+ */
 export const AdvancedObjectSettings = ({ object }: AdvancedObjectSettingsProps) => {
   const { t } = useTranslation(meta.id);
   const [adding, setAdding] = useState(false);
   const { keys } = Obj.getMeta(object);
 
   const handleNew = useCallback(() => setAdding(true), []);
+
   const handleCancel = useCallback(() => setAdding(false), []);
+
   const handleSave = useCallback(
     (key: Key.ForeignKey) => {
       const index = keys.findIndex(({ source, id }) => source === key.source && id === key.id);
@@ -38,6 +43,7 @@ export const AdvancedObjectSettings = ({ object }: AdvancedObjectSettingsProps) 
     },
     [keys],
   );
+
   const handleDelete = useCallback(
     (key: Key.ForeignKey) => {
       const index = keys.findIndex(({ source, id }) => source === key.source && id === key.id);

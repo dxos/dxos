@@ -32,6 +32,9 @@ const cardStackDefaultInlineSizeRem = cardDefaultInlineSize + 2.125;
 
 type SharedCardProps = ThemedClassName<ComponentPropsWithoutRef<'div'>> & { asChild?: boolean };
 
+/**
+ * Use this when ....
+ */
 const CardStaticRoot = forwardRef<HTMLDivElement, SharedCardProps & { id?: string }>(
   ({ children, classNames, id, asChild, role = 'group', ...props }, forwardedRef) => {
     const Root = asChild ? Slot : 'div';

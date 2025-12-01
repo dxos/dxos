@@ -19,8 +19,6 @@ export type ObjectSettingsContainerProps = {
 export const ObjectSettingsContainer = ({ object }: ObjectSettingsContainerProps) => {
   const data = useMemo(() => ({ subject: object }), [object]);
 
-  return <div>ObjectSettings: {object.id}</div>;
-
   return (
     <Clipboard.Provider>
       <StackItem.Content toolbar>
@@ -28,7 +26,7 @@ export const ObjectSettingsContainer = ({ object }: ObjectSettingsContainerProps
         <BaseObjectSettings object={object}>
           <Surface role='base-object-settings' data={data} />
           <Surface role='object-settings' data={data} />
-          {/* TODO(wittjosiah): Remove? */}
+          {/* TODO(wittjosiah): Remove (or add as surface)? */}
           {/* <AdvancedObjectSettings object={object} /> */}
         </BaseObjectSettings>
       </StackItem.Content>
