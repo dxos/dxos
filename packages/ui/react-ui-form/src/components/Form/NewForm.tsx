@@ -132,7 +132,7 @@ type NewFormViewportProps = ThemedClassName<PropsWithChildren<{}>>;
 const NewFormViewport = ({ classNames, children }: NewFormViewportProps) => {
   return (
     <ScrollArea.Root>
-      <ScrollArea.Viewport classNames={classNames}>{children}</ScrollArea.Viewport>
+      <ScrollArea.Viewport classNames={['plb-cardSpacingBlock', classNames]}>{children}</ScrollArea.Viewport>
       <ScrollArea.Scrollbar orientation='vertical'>
         <ScrollArea.Thumb />
       </ScrollArea.Scrollbar>
@@ -154,11 +154,7 @@ const NewFormContent = ({ classNames, children }: NewFormContentProps) => {
   useKeyHandler(ref.current, form);
 
   return (
-    <div
-      role='none'
-      className={mx('flex flex-col is-full plb-cardSpacingBlock pli-cardSpacingInline', classNames)}
-      ref={ref}
-    >
+    <div role='none' className={mx('flex flex-col is-full pli-cardSpacingInline', classNames)} ref={ref}>
       {children}
     </div>
   );

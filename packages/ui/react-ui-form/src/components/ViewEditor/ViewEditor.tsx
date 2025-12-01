@@ -127,13 +127,6 @@ export const ViewEditor = forwardRef<ProjectionModel, ViewEditorProps>(
       [mode, types, tags],
     );
 
-    const handleToggleField = useCallback(
-      (field: FieldType) => {
-        setExpandedField((prevExpandedFieldId) => (prevExpandedFieldId === field.id ? undefined : field.id));
-      },
-      [readonly],
-    );
-
     // TODO(burdon): Check if mutable.
     const handleAdd = useCallback(() => {
       invariant(!readonly);
@@ -163,36 +156,6 @@ export const ViewEditor = forwardRef<ProjectionModel, ViewEditorProps>(
       [expandedField, onDelete, readonly],
     );
 
-    const handleMove = useCallback(
-      (fromIndex: number, toIndex: number) => {
-        invariant(!readonly);
-        // NOTE(ZaymonFC): Using arrayMove here causes a race condition with the kanban model.
-        const fields = [...view.projection.fields];
-        const [moved] = fields.splice(fromIndex, 1);
-        fields.splice(toIndex, 0, moved);
-        view.projection.fields = fields;
-      },
-      [view.projection.fields, readonly],
-    );
-
-    const handleClose = useCallback(() => setExpandedField(undefined), []);
-
-    const handleHide = useCallback(
-      (fieldId: string) => {
-        setExpandedField(undefined);
-        projectionModel.hideFieldProjection(fieldId);
-      },
-      [projectionModel],
-    );
-
-    const handleShow = useCallback(
-      (property: string) => {
-        setExpandedField(undefined);
-        projectionModel.showFieldProjection(property as JsonProp);
-      },
-      [projectionModel],
-    );
-
     return (
       <div role='none' className={mx(classNames)}>
         {/* If readonly is set, then the callout is not needed. */}
@@ -202,95 +165,22 @@ export const ViewEditor = forwardRef<ProjectionModel, ViewEditorProps>(
           </Callout.Root>
         )}
 
-        <div role='none' className={outerSpacing ? cardSpacing : 'mlb-cardSpacingBlock'}>
-          {/* TODO(burdon): Is the form read-only or just the schema? */}
-          <NewForm.Root autoSave schema={viewSchema} values={viewValues} fieldMap={fieldMap} onSave={handleUpdate}>
+        {/* TODO(burdon): Is the form read-only or just the schema? */}
+        <NewForm.Root autoSave schema={viewSchema} values={viewValues} fieldMap={fieldMap} onSave={handleUpdate}>
+          <NewForm.Content>
             <NewForm.FieldSet />
-          </NewForm.Root>
 
-          <>
             <FormFieldLabel label={t('fields label')} asChild />
-            <List.Root<FieldType>
-              items={view.projection.fields}
-              isItem={Schema.is(FieldSchema)}
-              getId={(field) => field.id}
-              onMove={readonly ? undefined : handleMove}
+            <FieldList
+              schema={schema}
+              view={view}
+              registry={registry}
               readonly={readonly}
-            >
-              {({ items: fields }) => (
-                <>
-                  {showHeading && <h3 className='text-sm'>{t('field path label')}</h3>}
-                  <div role='list' className={listGrid}>
-                    {fields?.map((field) => {
-                      const hidden = field.visible === false;
-                      return (
-                        <List.Item<FieldType>
-                          key={field.id}
-                          item={field}
-                          classNames={listItemGrid}
-                          aria-expanded={expandedField === field.id}
-                        >
-                          <div
-                            role='none'
-                            className={mx(subtleHover, listItemGrid, 'rounded-sm cursor-pointer min-bs-10')}
-                          >
-                            <List.ItemDragHandle disabled={readonly || schemaReadonly} />
-                            <List.ItemTitle
-                              classNames={hidden && 'text-subdued'}
-                              onClick={() => handleToggleField(field)}
-                            >
-                              {field.path}
-                            </List.ItemTitle>
-                            <List.ItemButton
-                              label={t(hidden ? 'show field label' : 'hide field label')}
-                              data-testid={hidden ? 'show-field-button' : 'hide-field-button'}
-                              icon={hidden ? 'ph--eye-closed--regular' : 'ph--eye--regular'}
-                              autoHide={false}
-                              disabled={readonly || (!hidden && projectionModel.fields.length <= 1)}
-                              onClick={() => (hidden ? handleShow(field.path) : handleHide(field.id))}
-                            />
-                            {!readonly && (
-                              <>
-                                <List.ItemDeleteButton
-                                  label={t('delete field label')}
-                                  autoHide={false}
-                                  disabled={readonly || schemaReadonly || view.projection.fields.length <= 1}
-                                  onClick={() => handleDelete(field.id)}
-                                  data-testid='field.delete'
-                                />
-                                <IconButton
-                                  iconOnly
-                                  variant='ghost'
-                                  label={t('toggle expand label', { ns: 'os' })}
-                                  icon={
-                                    expandedField === field.id ? 'ph--caret-down--regular' : 'ph--caret-right--regular'
-                                  }
-                                  onClick={() => handleToggleField(field)}
-                                />
-                              </>
-                            )}
-                          </div>
-                          {expandedField === field.id && !readonly && (
-                            <div role='none' className='col-span-5 mbs-1 mbe-1 border border-separator rounded-md'>
-                              <FieldEditor
-                                // TODO(burdon): Is this right?
-                                readonly={readonly || schemaReadonly}
-                                projection={projectionModel}
-                                field={field}
-                                registry={registry}
-                                onSave={handleClose}
-                              />
-                            </div>
-                          )}
-                        </List.Item>
-                      );
-                    })}
-                  </div>
-                </>
-              )}
-            </List.Root>
-          </>
-        </div>
+              showHeading={showHeading}
+              onDelete={handleDelete}
+            />
+          </NewForm.Content>
+        </NewForm.Root>
 
         {!readonly && !expandedField && (
           <div role='none' className={outerSpacing ? cardSpacing : 'mlb-cardSpacingBlock'}>
@@ -308,6 +198,142 @@ export const ViewEditor = forwardRef<ProjectionModel, ViewEditorProps>(
     );
   },
 );
+
+type FieldListProps = Pick<ViewEditorProps, 'schema' | 'view' | 'registry' | 'readonly' | 'showHeading' | 'onDelete'>;
+
+const FieldList = ({ schema, view, registry, readonly, showHeading = false, onDelete }: FieldListProps) => {
+  const schemaReadonly = !isMutable(schema);
+  const { t } = useTranslation(translationKey);
+  const projectionModel = useMemo(() => {
+    // Use reactive and mutable version of json schema when schema is mutable.
+    const jsonSchema = schema instanceof EchoSchema ? schema.jsonSchema : toJsonSchema(schema);
+    return new ProjectionModel(jsonSchema, view.projection);
+  }, [schema, JSON.stringify(view.projection)]);
+  const [expandedField, setExpandedField] = useState<FieldType['id']>();
+
+  const handleToggleField = useCallback(
+    (field: FieldType) => {
+      setExpandedField((prevExpandedFieldId) => (prevExpandedFieldId === field.id ? undefined : field.id));
+    },
+    [readonly],
+  );
+
+  const handleDelete = useCallback(
+    (fieldId: string) => {
+      invariant(!readonly);
+      if (fieldId === expandedField) {
+        setExpandedField(undefined);
+      }
+
+      onDelete?.(fieldId);
+    },
+    [expandedField, onDelete, readonly],
+  );
+
+  const handleMove = useCallback(
+    (fromIndex: number, toIndex: number) => {
+      invariant(!readonly);
+      // NOTE(ZaymonFC): Using arrayMove here causes a race condition with the kanban model.
+      const fields = [...view.projection.fields];
+      const [moved] = fields.splice(fromIndex, 1);
+      fields.splice(toIndex, 0, moved);
+      view.projection.fields = fields;
+    },
+    [view.projection.fields, readonly],
+  );
+
+  const handleClose = useCallback(() => setExpandedField(undefined), []);
+
+  const handleHide = useCallback(
+    (fieldId: string) => {
+      setExpandedField(undefined);
+      projectionModel.hideFieldProjection(fieldId);
+    },
+    [projectionModel],
+  );
+
+  const handleShow = useCallback(
+    (property: string) => {
+      setExpandedField(undefined);
+      projectionModel.showFieldProjection(property as JsonProp);
+    },
+    [projectionModel],
+  );
+
+  return (
+    <List.Root<FieldType>
+      items={view.projection.fields}
+      isItem={Schema.is(FieldSchema)}
+      getId={(field) => field.id}
+      onMove={readonly ? undefined : handleMove}
+      readonly={readonly}
+    >
+      {({ items: fields }) => (
+        <>
+          {showHeading && <h3 className='text-sm'>{t('field path label')}</h3>}
+          <div role='list' className={listGrid}>
+            {fields?.map((field) => {
+              const hidden = field.visible === false;
+              return (
+                <List.Item<FieldType>
+                  key={field.id}
+                  item={field}
+                  classNames={listItemGrid}
+                  aria-expanded={expandedField === field.id}
+                >
+                  <div role='none' className={mx(subtleHover, listItemGrid, 'rounded-sm cursor-pointer min-bs-10')}>
+                    <List.ItemDragHandle disabled={readonly || schemaReadonly} />
+                    <List.ItemTitle classNames={hidden && 'text-subdued'} onClick={() => handleToggleField(field)}>
+                      {field.path}
+                    </List.ItemTitle>
+                    <List.ItemButton
+                      label={t(hidden ? 'show field label' : 'hide field label')}
+                      data-testid={hidden ? 'show-field-button' : 'hide-field-button'}
+                      icon={hidden ? 'ph--eye-closed--regular' : 'ph--eye--regular'}
+                      autoHide={false}
+                      disabled={readonly || (!hidden && projectionModel.fields.length <= 1)}
+                      onClick={() => (hidden ? handleShow(field.path) : handleHide(field.id))}
+                    />
+                    {!readonly && (
+                      <>
+                        <List.ItemDeleteButton
+                          label={t('delete field label')}
+                          autoHide={false}
+                          disabled={readonly || schemaReadonly || view.projection.fields.length <= 1}
+                          onClick={() => handleDelete(field.id)}
+                          data-testid='field.delete'
+                        />
+                        <IconButton
+                          iconOnly
+                          variant='ghost'
+                          label={t('toggle expand label', { ns: 'os' })}
+                          icon={expandedField === field.id ? 'ph--caret-down--regular' : 'ph--caret-right--regular'}
+                          onClick={() => handleToggleField(field)}
+                        />
+                      </>
+                    )}
+                  </div>
+                  {expandedField === field.id && !readonly && (
+                    <div role='none' className='col-span-5 mbs-1 mbe-1 border border-separator rounded-md'>
+                      <FieldEditor
+                        // TODO(burdon): Is this right?
+                        readonly={readonly || schemaReadonly}
+                        projection={projectionModel}
+                        field={field}
+                        registry={registry}
+                        onSave={handleClose}
+                      />
+                    </div>
+                  )}
+                </List.Item>
+              );
+            })}
+          </div>
+        </>
+      )}
+    </List.Root>
+  );
+};
 
 const customFields = ({
   types,
