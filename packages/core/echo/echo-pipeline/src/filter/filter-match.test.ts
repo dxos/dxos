@@ -74,7 +74,7 @@ describe('filterMatch', () => {
   });
 
   test('ids', () => {
-    const filter = Filter.ids(OBJECT_1.id);
+    const filter = Filter.id(OBJECT_1.id);
     expect(filterMatchObject(filter.ast, OBJECT_1)).to.be.true;
     expect(filterMatchObject(filter.ast, OBJECT_2)).to.be.false;
   });

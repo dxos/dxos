@@ -11,9 +11,9 @@ import type * as Types from 'effect/Types';
 
 import {
   type Entity,
+  Err,
   type Filter,
   Obj,
-  ObjectNotFoundError,
   type Query,
   type QueryResult,
   type Ref,
@@ -62,11 +62,11 @@ export class DatabaseService extends Context.Tag('@dxos/functions/DatabaseServic
     <S extends Type.Entity.Any>(
       dxn: DXN,
       schema: S,
-    ): Effect.Effect<Schema.Schema.Type<S>, ObjectNotFoundError, DatabaseService>;
+    ): Effect.Effect<Schema.Schema.Type<S>, Err.ObjectNotFoundError, DatabaseService>;
   } = (<S extends Type.Entity.Any>(
     dxn: DXN,
     schema?: S,
-  ): Effect.Effect<Schema.Schema.Type<S>, ObjectNotFoundError, DatabaseService> =>
+  ): Effect.Effect<Schema.Schema.Type<S>, Err.ObjectNotFoundError, DatabaseService> =>
     Effect.gen(function* () {
       const { db } = yield* DatabaseService;
       const object = yield* promiseWithCauseCapture(() =>
@@ -80,7 +80,7 @@ export class DatabaseService extends Context.Tag('@dxos/functions/DatabaseServic
       );
 
       if (!object) {
-        return yield* Effect.fail(new ObjectNotFoundError(dxn));
+        return yield* Effect.fail(new Err.ObjectNotFoundError(dxn));
       }
       invariant(!schema || Obj.instanceOf(schema, object), 'Object type mismatch.');
       return object as any;
@@ -89,10 +89,10 @@ export class DatabaseService extends Context.Tag('@dxos/functions/DatabaseServic
   /**
    * Loads an object reference.
    */
-  static load: <T>(ref: Ref.Ref<T>) => Effect.Effect<T, ObjectNotFoundError, never> = Effect.fn(function* (ref) {
+  static load: <T>(ref: Ref.Ref<T>) => Effect.Effect<T, Err.ObjectNotFoundError, never> = Effect.fn(function* (ref) {
     const object = yield* promiseWithCauseCapture(() => ref.tryLoad());
     if (!object) {
-      return yield* Effect.fail(new ObjectNotFoundError(ref.dxn));
+      return yield* Effect.fail(new Err.ObjectNotFoundError(ref.dxn));
     }
     return object;
   });

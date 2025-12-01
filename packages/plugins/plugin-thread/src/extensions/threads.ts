@@ -35,7 +35,7 @@ export const threads = (state: ThreadState, doc?: Markdown.Document, dispatch?: 
     return [comments()];
   }
 
-  const query = space.db.query(Query.select(Filter.ids(doc.id)).targetOf(AnchoredTo.AnchoredTo));
+  const query = space.db.query(Query.select(Filter.id(doc.id)).targetOf(AnchoredTo.AnchoredTo));
   const unsubscribe = query.subscribe();
 
   const anchors = computed(() =>
