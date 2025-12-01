@@ -20,6 +20,7 @@ export type ObjectDetailsPanelProps = {
   view: View.View;
 };
 
+// TODO(burdon): Rename ObjectDetailsAritcle; use SurfaceComponentProps?
 export const ObjectDetailsPanel = ({ objectId, view }: ObjectDetailsPanelProps) => {
   const { t } = useTranslation(meta.id);
   const space = getSpace(view);
@@ -30,6 +31,7 @@ export const ObjectDetailsPanel = ({ objectId, view }: ObjectDetailsPanelProps) 
   const selectedRows = useSelected(objectId, 'multi');
   const selectedObjects = selectedRows.map((id) => queriedObjects.find((obj) => obj.id === id)).filter(isNonNullable);
 
+  // TODO(burdon): Should be part of container.
   if (selectedObjects.length === 0) {
     return (
       <CardStack>
@@ -41,7 +43,7 @@ export const ObjectDetailsPanel = ({ objectId, view }: ObjectDetailsPanelProps) 
   }
 
   return (
-    // TODO(burdon): What is the actual container? That has overflow-y-auto? (I.e., the equivalent of StackItem.Content for articles).
+    // TODO(burdon): What is the actual container? That has overflow-y-auto? (i.e., the equivalent of StackItem.Content for articles).
     <StackItem.Content toolbar>
       <Toolbar.Root />
       <ScrollArea.Root>
@@ -66,10 +68,7 @@ export const ObjectDetailsPanel = ({ objectId, view }: ObjectDetailsPanelProps) 
 const CardStack = ({ children }: PropsWithChildren) => {
   return (
     // TODO(burdon): Classnames for gap?
-    <div
-      role='none'
-      className='bs-full is-full flex flex-col gap-cardSpacingGap plb-cardSpacingBlock pli-cardSpacingInline'
-    >
+    <div role='none' className='bs-full is-full flex flex-col p-2 gap-2'>
       {children}
     </div>
   );
