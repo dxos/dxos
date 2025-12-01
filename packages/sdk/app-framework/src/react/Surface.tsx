@@ -3,15 +3,20 @@
 //
 
 import React, {
+  type Context,
   Fragment,
   type NamedExoticComponent,
+  type PropsWithChildren,
   type RefAttributes,
   Suspense,
+  createContext,
   forwardRef,
   memo,
+  useContext,
   useMemo,
 } from 'react';
 
+import { raise } from '@dxos/debug';
 import { useDefaultValue } from '@dxos/react-hooks';
 import { byPosition } from '@dxos/util';
 
@@ -22,6 +27,34 @@ import { ErrorBoundary } from './ErrorBoundary';
 import { useCapabilities } from './useCapabilities';
 
 const DEFAULT_PLACEHOLDER = <Fragment />;
+
+export type SurfaceContext = Pick<SurfaceProps, 'id' | 'role' | 'data'>;
+
+const SurfaceContext: Context<SurfaceContext | undefined> = createContext<SurfaceContext | undefined>(undefined);
+
+/**
+ * Wrapper component that provides context for a surface.
+ */
+const SurfaceContextProvider = memo(
+  forwardRef<HTMLElement, SurfaceProps & { component: React.ComponentType<any> }>(
+    ({ id, role, data, limit, component: Component, ...rest }, forwardedRef) => {
+      const contextValue = useMemo(() => ({ id, role, data }), [id, role, data]);
+
+      return (
+        <SurfaceContext.Provider value={contextValue}>
+          <Component ref={forwardedRef} id={id} role={role} data={data} limit={limit} {...rest} />
+        </SurfaceContext.Provider>
+      );
+    },
+  ),
+);
+
+SurfaceContextProvider.displayName = 'SurfaceContextProvider';
+
+export const useSurface = (): SurfaceContext => {
+  const context = useContext(SurfaceContext) ?? raise(new Error('SurfaceContext not found'));
+  return context;
+};
 
 /**
  * A surface is a named region of the screen that can be populated by plugins.
@@ -44,7 +77,16 @@ export const Surface: NamedExoticComponent<SurfaceProps & RefAttributes<HTMLElem
       const definitions = findCandidates(surfaces, { role, data });
       const candidates = limit ? definitions.slice(0, limit) : definitions;
       const nodes = candidates.map(({ id, component: Component }) => (
-        <Component ref={forwardedRef} key={id} id={id} role={role} data={data} limit={limit} {...rest} />
+        <SurfaceContextProvider
+          key={id}
+          id={id}
+          role={role}
+          data={data}
+          limit={limit}
+          component={Component}
+          ref={forwardedRef}
+          {...rest}
+        />
       ));
 
       return (
@@ -55,6 +97,8 @@ export const Surface: NamedExoticComponent<SurfaceProps & RefAttributes<HTMLElem
     },
   ),
 );
+
+Surface.displayName = 'Surface';
 
 // TODO(burdon): Make user facing, with telemetry.
 // TODO(burdon): Change based on dev/prod mode; infer subject type, id.
@@ -103,4 +147,19 @@ const findCandidates = (surfaces: SurfaceDefinition[], { role, data }: Pick<Surf
     .toSorted(byPosition);
 };
 
-Surface.displayName = 'Surface';
+// TODO(burdon): Factor out to sdk/framework (extract react components).
+//  - Context metadata
+//  - Common padding, border, scroll area, etc.
+//  - Common debug.
+//  - Error boundary.
+export const SurfaceContainer = ({ className, children }: PropsWithChildren<{ className?: string }>) => {
+  const info = useSurface();
+  return (
+    <div role='none' className={`relative ${className}`}>
+      <div className='absolute left-1 top-1 border border-separator p-1 bg-deckSurface text-xs font-mono'>
+        {JSON.stringify({ info })}
+      </div>
+      {children}
+    </div>
+  );
+};

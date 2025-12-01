@@ -3,10 +3,10 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React, { type PropsWithChildren, useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 
 import { faker } from '@dxos/random';
-import { List, ListItem, type ThemedClassName, Toolbar } from '@dxos/react-ui';
+import { List, ListItem, Toolbar } from '@dxos/react-ui';
 import { withTheme } from '@dxos/react-ui/testing';
 import { getHashStyles, mx } from '@dxos/react-ui-theme';
 
@@ -14,23 +14,7 @@ import { Capabilities, createSurface } from '../common';
 import { withPluginManager } from '../testing';
 
 import { usePluginManager } from './PluginManagerProvider';
-import { Surface, useSurfaces } from './Surface';
-
-// TODO(burdon): Factor out to sdk/framework (extract react components).
-//  - Context metadata
-//  - Common padding, border, scroll area, etc.
-//  - Common debug.
-//  - Error boundary.
-const SurfaceContainer = ({ classNames, children }: ThemedClassName<PropsWithChildren>) => {
-  return (
-    <div role='none' className={mx('relative', classNames)}>
-      <div className='absolute left-1 top-1 border border-separator p-1 bg-deckSurface text-xs font-mono'>
-        {JSON.stringify({ info: {} })}
-      </div>
-      {children}
-    </div>
-  );
-};
+import { Surface, SurfaceContainer, useSurfaces } from './Surface';
 
 const DefaultStory = () => {
   const [selected, setSelected] = useState<string | undefined>();
@@ -50,7 +34,7 @@ const DefaultStory = () => {
         filter: (data): data is any => (data as any)?.id === id,
         component: () => (
           <SurfaceContainer
-            classNames={['flex justify-center items-center border rounded', styles.surface, styles.border]}
+            className={mx('flex justify-center items-center border rounded', styles.surface, styles.border)}
           >
             <span className={mx('dx-tag font-mono text-lg', styles.text)}>{id}</span>
           </SurfaceContainer>
