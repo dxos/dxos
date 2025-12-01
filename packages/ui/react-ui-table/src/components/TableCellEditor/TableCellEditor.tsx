@@ -30,10 +30,18 @@ import { type ModalController, type TableModel } from '../../model';
 import { CellValidationMessage } from './CellValidationMessage';
 import { FormCellEditor, type OnCreateHandler } from './FormCellEditor';
 
+const editorSlots = {
+  scroll: {
+    className: '!plb-[--dx-grid-cell-editor-padding-block]',
+  },
+};
+
 /**
  * Option to create new object/value.
  */
-export type QueryResult = Pick<Completion, 'label'> & { data: any };
+export type QueryResult = Pick<Completion, 'label'> & {
+  data: any;
+};
 
 export type TableCellEditorProps<T extends Type.Obj.Any = Type.Obj.Any> = {
   client?: Client; // TODO(burdon): MUST REMOVE THIS.
@@ -46,6 +54,7 @@ export type TableCellEditorProps<T extends Type.Obj.Any = Type.Obj.Any> = {
 };
 
 export const TableValueEditor = <T extends Type.Obj.Any = Type.Obj.Any>({
+  __gridScope,
   client,
   schema,
   model,
@@ -53,7 +62,6 @@ export const TableValueEditor = <T extends Type.Obj.Any = Type.Obj.Any>({
   onFocus,
   onSave,
   onCreate,
-  __gridScope,
 }: GridScopedProps<TableCellEditorProps<T>>) => {
   const { editing } = useGridContext('TableValueEditor', __gridScope);
 
@@ -79,28 +87,26 @@ export const TableValueEditor = <T extends Type.Obj.Any = Type.Obj.Any>({
       <FormCellEditor<T>
         __gridScope={__gridScope}
         client={client}
-        fieldProjection={fieldProjection}
-        model={model}
         schema={schema}
+        model={model}
+        fieldProjection={fieldProjection}
+        modals={modals}
         onSave={onSave}
         onCreate={onCreate}
-        modals={modals}
       />
     );
   }
 
-  // For all other types, use the existing cell editor
+  // For all other types, use the existing cell editor.
   return <TableCellEditor model={model} modals={modals} onFocus={onFocus} onSave={onSave} __gridScope={__gridScope} />;
 };
 
-const editorSlots = { scroll: { className: '!plb-[--dx-grid-cell-editor-padding-block]' } };
-
 export const TableCellEditor = ({
+  __gridScope,
   model,
   modals,
   onFocus,
   onSave,
-  __gridScope,
 }: GridScopedProps<TableCellEditorProps>) => {
   const { editing, setEditing } = useGridContext('TableCellEditor', __gridScope);
   const suppressNextBlur = useRef(false);
@@ -119,7 +125,7 @@ export const TableCellEditor = ({
     return fieldProjection;
   }, [model, editing]);
 
-  // TOOD(burdon): Attach to event handler.
+  // TOOD(burdon): Attach to event handler?
   const handleEnter = useCallback(
     async (value: any) => {
       if (!model || !editing) {

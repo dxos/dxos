@@ -31,9 +31,9 @@ export type FormCellEditorProps<T extends Type.Obj.Any = Type.Obj.Any> = {
   schema?: T;
   model?: TableModel;
   fieldProjection: FieldProjection;
+  modals?: ModalController; // TODO(burdon): Not used. Remove?
   onSave?: () => void;
   onCreate?: OnCreateHandler;
-  modals?: ModalController; // TODO(burdon): Not used.
 } & Omit<FormProps<any>, 'values' | 'schema' | 'onCreate'>;
 
 export const FormCellEditor = <T extends Type.Obj.Any = Type.Obj.Any>({

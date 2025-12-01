@@ -47,17 +47,18 @@ import { FormContext } from './FormRoot';
 
 // [ ] Test 22 usages (opencode migration)
 // [ ] Merge stage 1
+
+// Misc
 // [ ] Remove 'outerSpacing' prop
+// [ ] Remove client dependency from react-ui-table
+// [ ] Fix useSchema Type.Obj.Any cast
+// [ ] TableCellEditor (handleEnter/ModalController).
+// [ ] Remove @dxos/echo-db deps
 
 // New features/polish
 // [x] Unify readonly/inline modes
 // [ ] Use FormFieldWrapper uniformly
 // [ ] Inline tables for object arrays
-// [ ] Remove @dxos/echo-db deps
-
-// Misc
-// [ ] Remove client dependency from react-ui-table
-// [ ] Fix useSchema Type.Obj.Any cast
 
 // TODO(burdon): Option to omit automatically?
 export const omitId = <S extends Schema.Schema.AnyNoContext>(schema: S) => schema.pipe(Schema.omit('id'));
