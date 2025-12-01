@@ -60,7 +60,7 @@ export interface Hypergraph extends Database.Queryable {
    * @param middleware Called with the loaded object. The caller may change the object.
    * @returns Result of `onLoad`.
    */
-  // TODO(dmaretskyi): Restructure API: Remove middleware, move `hostDb` into context option. Make accessible on Database objects.
+  // TODO(dmaretskyi): Restructure API: Remove middleware.
   createRefResolver(options: RefResolverOptions): Ref.Resolver;
 
   /**
