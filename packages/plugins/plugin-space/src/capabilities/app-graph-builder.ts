@@ -15,7 +15,7 @@ import { log } from '@dxos/log';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { ATTENDABLE_PATH_SEPARATOR, PLANK_COMPANION_TYPE } from '@dxos/plugin-deck/types';
 import { ROOT_ID, atomFromObservable, atomFromSignal, createExtension } from '@dxos/plugin-graph';
-import { Collection, View, ViewAnnotation, getTypenameFromQuery } from '@dxos/schema';
+import { Collection, ViewAnnotation, getTypenameFromQuery } from '@dxos/schema';
 import { isNonNullable } from '@dxos/util';
 
 import { getActiveSpace } from '../hooks';
@@ -640,7 +640,22 @@ export default (context: PluginContext) => {
         Atom.make((get) =>
           Function.pipe(
             get(node),
-            Option.flatMap((node) => (Obj.instanceOf(View.View, node.data) ? Option.some(node) : Option.none())),
+            Option.flatMap((node) => {
+              if (!Obj.isObject(node.data)) {
+                return Option.none();
+              }
+
+              const schema = Obj.getSchema(node.data);
+              const isView = Option.fromNullable(schema).pipe(
+                Option.flatMap((schema) => ViewAnnotation.get(schema)),
+                Option.getOrElse(() => false),
+              );
+              if (!isView) {
+                return Option.none();
+              }
+
+              return Option.some(node);
+            }),
             Option.map((node) => [
               {
                 id: [node.id, 'selected-objects'].join(ATTENDABLE_PATH_SEPARATOR),
