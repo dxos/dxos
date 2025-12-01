@@ -11,7 +11,7 @@ import { Obj } from '@dxos/echo';
 import { SpaceAction } from '@dxos/plugin-space/types';
 import { Filter, type Space, useQuery } from '@dxos/react-client/echo';
 import { Separator, useTranslation } from '@dxos/react-ui';
-import { ControlItem, ControlPage, ControlSection, Form, controlItemClasses } from '@dxos/react-ui-form';
+import { ControlItem, ControlPage, ControlSection, NewForm, controlItemClasses } from '@dxos/react-ui-form';
 import { StackItem } from '@dxos/react-ui-stack';
 import { AccessToken } from '@dxos/types';
 
@@ -77,7 +77,10 @@ export const TokensContainer = ({ space }: { space: Space }) => {
         >
           {adding ? (
             <ControlItem title={t('new integration label')}>
-              <Form schema={FormSchema} values={initialValues} onCancel={handleCancel} onSave={handleAdd} />
+              <NewForm.Root schema={FormSchema} values={initialValues} onCancel={handleCancel} onSave={handleAdd}>
+                <NewForm.FieldSet />
+                <NewForm.Actions />
+              </NewForm.Root>
             </ControlItem>
           ) : (
             <div role='none' className={controlItemClasses}>
