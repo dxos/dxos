@@ -45,9 +45,11 @@ export const TableContainer = ({ role, object }: TableContainerProps) => {
   const space = getSpace(object);
   const view = object.view.target;
   const query = view ? Query.fromAst(Obj.getSnapshot(view).query.ast) : Query.select(Filter.nothing());
-  const typename = object.view.target?.query ? getTypenameFromQuery(object.view.target.query.ast) : undefined;
+  const typename = getTypenameFromQuery(query.ast);
   const schema = useSchema(space, typename);
-  const queriedObjects = useQuery(space, query);
+  // TODO(wittjosiah): This should use `query` above.
+  //   That currently doesn't work for dynamic schema objects because their indexed typename is the schema object DXN.
+  const queriedObjects = useQuery(space, schema ? Filter.type(schema) : Filter.nothing());
   const filteredObjects = useGlobalFilteredObjects(queriedObjects);
 
   const { graph } = useAppGraph();
