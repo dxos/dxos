@@ -72,9 +72,7 @@ export const staticGenerators = new Map<string, ObjectGenerator<any>>([
     Diagram.Diagram.typename,
     async (space, n, cb) => {
       const objects = range(n).map(() => {
-        // TODO(burdon): Generate diagram.
         const obj = space.db.add(Diagram.make({ name: faker.commerce.productName() }));
-
         return obj;
       });
 
