@@ -17,13 +17,12 @@ import { meta as pluginMeta } from '../../meta';
 const TagSchema = Tag.Tag.pipe(Schema.omit('id'));
 
 export type ObjectFormProps = {
-  object: Obj.Any;
   schema: Schema.Schema.AnyNoContext;
+  object: Obj.Any;
 };
 
 export const ObjectForm = ({ object, schema }: ObjectFormProps) => {
   const space = getSpace(object);
-  const handleRefQueryLookup = useRefQueryOptions({ space });
 
   const formSchema = useMemo(
     () => Schema.Struct({ tags: Schema.Array(Type.Ref(Tag.Tag)).pipe(Schema.optional) }).pipe(Schema.extend(schema)),
@@ -33,6 +32,8 @@ export const ObjectForm = ({ object, schema }: ObjectFormProps) => {
   const meta = Obj.getMeta(object);
   const tags = (meta.tags ?? []).map((tag) => space?.db.makeRef(DXN.parse(tag))).filter(isNonNullable);
   const values = useMemo(() => ({ tags, ...object }), [object, tags]);
+
+  const handleRefQueryLookup = useRefQueryOptions({ space });
 
   const handleCreateTag = useCallback((values: Schema.Schema.Type<typeof TagSchema>) => {
     invariant(space);

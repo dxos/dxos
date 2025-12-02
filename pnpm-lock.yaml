@@ -11155,6 +11155,9 @@ importers:
       react:
         specifier: ~19.2.0
         version: 19.2.0
+      react-dom:
+        specifier: ~19.2.0
+        version: 19.2.0(react@19.2.0)
       typedoc:
         specifier: 0.28.1
         version: 0.28.1(typescript@5.9.3)

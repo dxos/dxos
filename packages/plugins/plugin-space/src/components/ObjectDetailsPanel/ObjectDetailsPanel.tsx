@@ -5,9 +5,9 @@
 import React from 'react';
 
 import { Filter, getSpace, useQuery, useSchema } from '@dxos/react-client/echo';
-import { Callout, ScrollArea, Toolbar, useTranslation } from '@dxos/react-ui';
+import { Callout, Toolbar, useTranslation } from '@dxos/react-ui';
 import { useSelected } from '@dxos/react-ui-attention';
-import { Card, StackItem } from '@dxos/react-ui-stack';
+import { Card, CardStack, StackItem } from '@dxos/react-ui-stack';
 import { type View, getTypenameFromQuery } from '@dxos/schema';
 import { isNonNullable } from '@dxos/util';
 
@@ -31,45 +31,33 @@ export const ObjectDetailsPanel = ({ objectId, view }: ObjectDetailsPanelProps) 
   const selectedRows = useSelected(objectId, 'multi');
   const selectedObjects = selectedRows.map((id) => queriedObjects.find((obj) => obj.id === id)).filter(isNonNullable);
 
-  // TODO(burdon): Should be part of container.
-  if (selectedObjects.length === 0) {
-    return (
-      <CardStack>
-        <Callout.Root>
-          <Callout.Title>{t('row details no selection label')}</Callout.Title>
-        </Callout.Root>
-      </CardStack>
-    );
+  if (!schema) {
+    return null;
   }
 
   return (
-    // TODO(burdon): What is the actual container? That has overflow-y-auto? (i.e., the equivalent of StackItem.Content for articles).
     <StackItem.Content toolbar>
-      <Toolbar.Root />
-      <ScrollArea.Root>
-        <ScrollArea.Viewport>
-          <CardStack>
+      <Toolbar.Root></Toolbar.Root>
+      <CardStack.Root asChild>
+        <CardStack.Content>
+          <CardStack.Stack id={objectId} itemsCount={selectedObjects.length}>
+            {selectedObjects.length === 0 && (
+              <Callout.Root>
+                <Callout.Title>{t('row details no selection label')}</Callout.Title>
+              </Callout.Root>
+            )}
             {selectedObjects.map((object) => (
-              <Card.StaticRoot key={object.id}>
-                <ObjectForm object={object} schema={schema} />
-              </Card.StaticRoot>
+              <CardStack.Item key={object.id} asChild>
+                <StackItem.Root item={object}>
+                  <Card.StaticRoot>
+                    <ObjectForm object={object} schema={schema} />
+                  </Card.StaticRoot>
+                </StackItem.Root>
+              </CardStack.Item>
             ))}
-          </CardStack>
-          <ScrollArea.Scrollbar orientation='vertical'>
-            <ScrollArea.Thumb />
-          </ScrollArea.Scrollbar>
-        </ScrollArea.Viewport>
-      </ScrollArea.Root>
+          </CardStack.Stack>
+        </CardStack.Content>
+      </CardStack.Root>
     </StackItem.Content>
-  );
-};
-
-// TODO(burdon): Factor out.
-const CardStack = ({ children }: PropsWithChildren) => {
-  return (
-    // TODO(burdon): Classnames for gap?
-    <div role='none' className='bs-full is-full flex flex-col p-2 gap-2'>
-      {children}
-    </div>
   );
 };

@@ -13,8 +13,12 @@ import React, {
   forwardRef,
   memo,
   useContext,
+  useLayoutEffect,
   useMemo,
+  useRef,
+  useState,
 } from 'react';
+import { createPortal } from 'react-dom';
 
 import { raise } from '@dxos/debug';
 import { useDefaultValue } from '@dxos/react-hooks';
@@ -152,14 +156,67 @@ const findCandidates = (surfaces: SurfaceDefinition[], { role, data }: Pick<Surf
 //  - Common padding, border, scroll area, etc.
 //  - Common debug.
 //  - Error boundary.
-export const SurfaceContainer = ({ className, children }: PropsWithChildren<{ className?: string }>) => {
+export const SurfaceContainer = ({ className = 'contents', children }: PropsWithChildren<{ className?: string }>) => {
+  const ref = useRef<HTMLDivElement>(null);
+  const active = window.__DX_DEBUG__;
+  const [rect, setRect] = useState<DOMRect | null>(null);
+  const [expand, setExpand] = useState(false); // TOOD(burdon): Save state.
   const info = useSurface();
+
+  useLayoutEffect(() => {
+    if (!active || !ref.current) {
+      setRect(null);
+      return;
+    }
+
+    const measure = () => setRect(ref.current!.getBoundingClientRect());
+    measure();
+
+    const obs = new ResizeObserver(measure);
+    obs.observe(ref.current);
+
+    window.addEventListener('scroll', measure, true);
+    window.addEventListener('resize', measure);
+
+    return () => {
+      obs.disconnect();
+      window.removeEventListener('scroll', measure, true);
+      window.removeEventListener('resize', measure);
+    };
+  }, [active]);
+
+  const padding = 8;
+  const debug = active;
   return (
-    <div role='none' className={`relative ${className}`}>
-      <div className='absolute left-1 top-1 border border-separator p-1 bg-deckSurface text-xs font-mono'>
-        {JSON.stringify({ info })}
-      </div>
+    <div role='none' className={className} ref={ref}>
       {children}
+      {rect &&
+        // TODO(burdon): Scrolling won't work with pointer-events-none.
+        createPortal(
+          <div
+            className={['z-10 fixed overflow-auto', !debug && '_pointer-events-none'].filter(Boolean).join(' ')}
+            style={{
+              top: rect.top + padding,
+              left: rect.left + padding,
+              width: rect.width - padding * 2,
+              height: rect.height - padding * 2,
+            }}
+          >
+            {/* TODO(burdon): Replace with JsonFilter when extracted into separate react package. */}
+            <pre
+              onClick={() => setExpand((expand) => !expand)}
+              className={[
+                'p-1 bg-deckSurface text-xs font-mono font-thin border border-rose-500 cursor-pointer',
+                !expand && 'inline-block',
+              ]
+                .filter(Boolean)
+                .join(' ')}
+            >
+              {expand ? JSON.stringify({ info }, null, 2) : info.id}
+            </pre>
+          </div>,
+          document.body,
+        )}
     </div>
   );
 };

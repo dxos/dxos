@@ -7,7 +7,7 @@ import type * as Schema from 'effect/Schema';
 import React, { useCallback } from 'react';
 
 import { Capabilities, contributes, createSurface } from '@dxos/app-framework';
-import { Surface, useCapability, useLayout } from '@dxos/app-framework/react';
+import { Surface, SurfaceContainer, useCapability, useLayout } from '@dxos/app-framework/react';
 import { Obj, type Ref } from '@dxos/echo';
 import { findAnnotation } from '@dxos/effect';
 import { SettingsStore } from '@dxos/local-storage';
@@ -170,11 +170,13 @@ export default ({ createInvitationUrl }: ReactSurfaceOptions) =>
         );
       },
       component: ({ data }) => (
-        <ObjectDetailsPanel
-          key={Obj.getDXN(data.companionTo).toString()}
-          objectId={Obj.getDXN(data.companionTo).toString()}
-          view={data.companionTo.view.target}
-        />
+        <SurfaceContainer>
+          <ObjectDetailsPanel
+            key={Obj.getDXN(data.companionTo).toString()}
+            objectId={Obj.getDXN(data.companionTo).toString()}
+            view={data.companionTo.view.target}
+          />
+        </SurfaceContainer>
       ),
     }),
     createSurface({

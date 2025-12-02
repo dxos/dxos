@@ -54,7 +54,9 @@ export const Kanban = ({ model, onAddCard, onRemoveCard }: KanbanProps) => {
         const uncategorized = columnValue === UNCATEGORIZED_VALUE;
         const prevSiblingId = index > 0 ? array[index - 1].columnValue : undefined;
         const nextSiblingId = index < array.length - 1 ? array[index + 1].columnValue : undefined;
+
         return (
+          // TODO(burdon): Root should be headless and come after StackItem.Root.
           <CardStack.Root asChild key={columnValue}>
             <StackItem.Root
               item={{ id: columnValue }}
@@ -64,16 +66,17 @@ export const Kanban = ({ model, onAddCard, onRemoveCard }: KanbanProps) => {
               prevSiblingId={prevSiblingId}
               nextSiblingId={nextSiblingId}
             >
-              <CardStack.Content>
+              <CardStack.Content footer classNames='kanban-drop border border-separator rounded-md'>
                 <CardStack.Stack
                   id={columnValue}
-                  onRearrange={model.handleRearrange}
                   itemsCount={cards.length}
                   getDropElement={getColumnDropElement}
+                  onRearrange={model.handleRearrange}
                 >
                   {/* TODO(burdon): Factor out Card to separate file. */}
                   {cards.map((card, cardIndex, cardsArray) => (
-                    <CardStack.Item asChild key={card.id}>
+                    <CardStack.Item key={card.id} asChild>
+                      {/* TODO(burdon): Why is this required? */}
                       <StackItem.Root
                         item={card}
                         focusIndicatorVariant='group-always'
