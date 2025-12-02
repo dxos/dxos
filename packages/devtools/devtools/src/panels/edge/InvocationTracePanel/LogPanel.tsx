@@ -6,9 +6,10 @@ import React, { type FC, useMemo } from 'react';
 
 import { Format } from '@dxos/echo/internal';
 import { TraceEvent } from '@dxos/functions-runtime';
-import { log } from '@dxos/log';
+import { faker } from '@dxos/random';
 import { Filter, type Queue, useQuery } from '@dxos/react-client/echo';
-import { DynamicTable, type TablePropertyDefinition } from '@dxos/react-ui-table';
+import { DynamicTable } from '@dxos/react-ui-table';
+import { type SchemaPropertyDefinition } from '@dxos/schema';
 
 type LogPanelProps = {
   queue?: Queue;
@@ -16,12 +17,11 @@ type LogPanelProps = {
 
 export const LogPanel: FC<LogPanelProps> = ({ queue }) => {
   const objects = useQuery(queue, Filter.type(TraceEvent));
-  log.info('Objects', { objects });
 
   // Define properties for the DynamicTable
-  const properties: TablePropertyDefinition[] = useMemo(
+  const properties: SchemaPropertyDefinition[] = useMemo(
     () => [
-      { name: 'time', title: 'Started', format: Format.TypeFormat.DateTime, sort: 'desc' as const, size: 194 },
+      { name: 'time', title: 'Started', format: Format.TypeFormat.DateTime, sort: 'desc' as const },
       {
         name: 'level',
         title: 'Level',
@@ -74,16 +74,20 @@ export const LogPanel: FC<LogPanelProps> = ({ queue }) => {
       }
     };
 
-    return objects.flatMap((event) => {
-      return event.logs.map((log) => ({
-        id: `${event.id}-${log.timestamp}`,
-        timestamp: new Date(log.timestamp).toLocaleString(),
+    return objects.flatMap((event) =>
+      event.logs.map((log) => ({
+        id: faker.string.uuid(),
+        time: new Date(log.timestamp),
         level: log.level,
         message: log.message,
         context: safeStringify(log.context),
-      }));
-    });
+      })),
+    );
   }, [objects]);
 
-  return <DynamicTable properties={properties} rows={rows} />;
+  return (
+    <div className='bs-full min-bs-[20rem] is-full overflow-hidden'>
+      <DynamicTable properties={properties} rows={rows} />
+    </div>
+  );
 };
