@@ -13,6 +13,8 @@ tasks:
   compile-node:
     command: dx-compile
     args:
+      - '--entryPoint=src/index.ts'
+      - '--outputPath=dist'
       - '--platform=node'
     deps:
       - ^:compile
@@ -20,4 +22,4 @@ tasks:
     inputs:
       - '@group(production)'
     outputs:
-      - dist/testing
+      - dist

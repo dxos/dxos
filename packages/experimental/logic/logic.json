@@ -1,0 +1,2049 @@
+[
+  {
+    "name": "Appeal to probability",
+    "description": "taking something for granted because it would probably be the case (or might possibly be the case).",
+    "tags": [
+      "formal"
+    ],
+    "urls": [
+      "https://en.wikipedia.org/wiki/Appeal_to_probability"
+    ]
+  },
+  {
+    "name": "Argument from fallacy",
+    "description": "(also known as the fallacy fallacy) – the assumption that, if a particular argument for a \"conclusion\" is fallacious, then the conclusion by itself is false.",
+    "tags": [
+      "formal"
+    ],
+    "urls": [
+      "https://en.wikipedia.org/wiki/Argument_from_fallacy"
+    ]
+  },
+  {
+    "name": "Base rate fallacy",
+    "description": "making a probability judgment based on conditional probabilities, without taking into account the effect of prior probabilities.",
+    "tags": [
+      "formal"
+    ],
+    "urls": [
+      "https://en.wikipedia.org/wiki/Base_rate_fallacy"
+    ]
+  },
+  {
+    "name": "Conjunction fallacy",
+    "description": "the assumption that an outcome simultaneously satisfying multiple conditions is more probable than an outcome satisfying a single one of them.",
+    "tags": [
+      "formal"
+    ],
+    "urls": [
+      "https://en.wikipedia.org/wiki/Conjunction_fallacy"
+    ]
+  },
+  {
+    "name": "Non sequitur fallacy",
+    "description": "where the conclusion does not logically follow from the premise.",
+    "tags": [
+      "formal"
+    ],
+    "urls": [
+      "https://en.wikipedia.org/wiki/Non_sequitur_(fallacy)"
+    ]
+  },
+  {
+    "name": "Masked-man fallacy",
+    "description": "(illicit substitution of identicals) – the substitution of identical designators in a true statement can lead to a false one.",
+    "tags": [
+      "formal"
+    ],
+    "urls": [
+      "https://en.wikipedia.org/wiki/Masked-man_fallacy"
+    ]
+  },
+  {
+    "name": "Affirming a disjunct",
+    "description": "concluding that one disjunct of a logical disjunction must be false because the other disjunct is true; A or B; A, therefore not B.",
+    "tags": [
+      "formal",
+      "propositional"
+    ],
+    "urls": [
+      "https://en.wikipedia.org/wiki/Affirming_a_disjunct"
+    ]
+  },
+  {
+    "name": "Affirming the consequent",
+    "description": "the antecedent in an indicative conditional is claimed to be true because the consequent is true; if A, then B; B, therefore A.",
+    "tags": [
+      "formal",
+      "propositional"
+    ],
+    "urls": [
+      "https://en.wikipedia.org/wiki/Affirming_the_consequent"
+    ]
+  },
+  {
+    "name": "Denying the antecedent",
+    "description": "the consequent in an indicative conditional is claimed to be false because the antecedent is false; if A, then B; not A, therefore not B.",
+    "tags": [
+      "formal",
+      "propositional"
+    ],
+    "urls": [
+      "https://en.wikipedia.org/wiki/Denying_the_antecedent"
+    ]
+  },
+  {
+    "name": "Existential fallacy",
+    "description": "an argument that has a universal premise and a particular conclusion.",
+    "tags": [
+      "formal",
+      "quantification"
+    ],
+    "urls": [
+      "https://en.wikipedia.org/wiki/Existential_fallacy"
+    ]
+  },
+  {
+    "name": "Affirmative conclusion from a negative premise",
+    "description": "(illicit negative) – a categorical syllogism has a positive conclusion, but at least one negative premise.",
+    "tags": [
+      "formal",
+      "syllogistic"
+    ],
+    "urls": [
+      "https://en.wikipedia.org/wiki/Affirmative_conclusion_from_a_negative_premise"
+    ]
+  },
+  {
+    "name": "Fallacy of exclusive premises",
+    "description": "a categorical syllogism that is invalid because both of its premises are negative.",
+    "tags": [
+      "formal",
+      "syllogistic"
+    ],
+    "urls": [
+      "https://en.wikipedia.org/wiki/Fallacy_of_exclusive_premises"
+    ]
+  },
+  {
+    "name": "Fallacy of four terms",
+    "description": "(quaternio terminorum) – a categorical syllogism that has four terms.",
+    "tags": [
+      "formal",
+      "syllogistic"
+    ],
+    "urls": [
+      "https://en.wikipedia.org/wiki/Fallacy_of_four_terms"
+    ]
+  },
+  {
+    "name": "Illicit major",
+    "description": "a categorical syllogism that is invalid because its major term is not distributed in the major premise but distributed in the conclusion.",
+    "tags": [
+      "formal",
+      "syllogistic"
+    ],
+    "urls": [
+      "https://en.wikipedia.org/wiki/Illicit_major"
+    ]
+  },
+  {
+    "name": "Illicit minor",
+    "description": "a categorical syllogism that is invalid because its minor term is not distributed in the minor premise but distributed in the conclusion.",
+    "tags": [
+      "formal",
+      "syllogistic"
+    ],
+    "urls": [
+      "https://en.wikipedia.org/wiki/Illicit_minor"
+    ]
+  },
+  {
+    "name": "Negative conclusion from affirmative premises",
+    "description": "(illicit affirmative) – a categorical syllogism has a negative conclusion but affirmative premises.",
+    "tags": [
+      "formal",
+      "syllogistic"
+    ],
+    "urls": [
+      "https://en.wikipedia.org/wiki/Negative_conclusion_from_affirmative_premises"
+    ]
+  },
+  {
+    "name": "Fallacy of the undistributed middle",
+    "description": "the middle term in a categorical syllogism is not distributed.",
+    "tags": [
+      "formal",
+      "syllogistic"
+    ],
+    "urls": [
+      "https://en.wikipedia.org/wiki/Fallacy_of_the_undistributed_middle"
+    ]
+  },
+  {
+    "name": "Modal fallacy",
+    "description": "confusing necessity with sufficiency. A condition X is necessary for Y if X is required for even the possibility of Y. X does not bring about Y by itself, but if there is no X, there will be no Y. For example, oxygen is necessary for fire. But one cannot assume that everywhere there is oxygen, there is fire. A condition X is sufficient for Y if X, by itself, is enough to bring about Y. For example, riding the bus is a sufficient mode of transportation to get to work. But there are other modes of transportation – car, taxi, bicycle, walking – that can be used.",
+    "tags": [
+      "formal",
+      "syllogistic"
+    ],
+    "urls": [
+      "https://en.wikipedia.org/wiki/Modal_fallacy"
+    ]
+  },
+  {
+    "name": "Modal scope fallacy",
+    "description": "a degree of unwarranted necessity is placed in the conclusion.",
+    "tags": [
+      "formal",
+      "syllogistic"
+    ],
+    "urls": [
+      "https://en.wikipedia.org/wiki/Modal_scope_fallacy"
+    ]
+  },
+  {
+    "name": "Argument from incredulity",
+    "description": "when someone can't imagine something to be true, and therefore deems it false, or conversely, holds that it must be true because they can't see how it could be false.",
+    "tags": [
+      "informal"
+    ],
+    "urls": [
+      "https://en.wikipedia.org/wiki/Argument_from_incredulity"
+    ]
+  },
+  {
+    "name": "Argument to moderation",
+    "description": "(false compromise, middle ground, fallacy of the mean, argumentum ad temperantiam) – assuming that a compromise between two positions is always correct.",
+    "tags": [
+      "informal"
+    ],
+    "urls": [
+      "https://en.wikipedia.org/wiki/Argument_to_moderation"
+    ]
+  },
+  {
+    "name": "Continuum fallacy",
+    "description": "(fallacy of the beard, line-drawing fallacy, sorites fallacy, fallacy of the heap, bald man fallacy, decision-point fallacy) – improperly rejecting a claim for being imprecise.",
+    "tags": [
+      "informal"
+    ],
+    "urls": [
+      "https://en.wikipedia.org/wiki/Continuum_fallacy"
+    ]
+  },
+  {
+    "name": "Correlative-based fallacies",
+    "description": "Suppressed correlative – a correlative is redefined so that one alternative is made impossible (e.g., \"I am not fat because I am thinner than John.\").",
+    "tags": [
+      "informal"
+    ],
+    "urls": [
+      "https://en.wikipedia.org/wiki/Correlative-based_fallacies"
+    ]
+  },
+  {
+    "name": "Suppressed correlative",
+    "description": "a correlative is redefined so that one alternative is made impossible (e.g., \"I am not fat because I am thinner than John.\").",
+    "tags": [
+      "informal"
+    ],
+    "urls": [
+      "https://en.wikipedia.org/wiki/Suppressed_correlative"
+    ]
+  },
+  {
+    "name": "Divine fallacy",
+    "description": "(argument from incredulity) – arguing that, because something is so phenomenal or amazing, it must be the result of superior, divine, alien or paranormal agency.",
+    "tags": [
+      "informal"
+    ],
+    "urls": [
+      "https://en.wikipedia.org/wiki/Divine_fallacy"
+    ]
+  },
+  {
+    "name": "Double counting",
+    "description": "counting events or occurrences more than once in probabilistic reasoning, which leads to the sum of the probabilities of all cases exceeding unity.",
+    "tags": [
+      "informal"
+    ],
+    "urls": [
+      "https://en.wikipedia.org/wiki/Double_counting_(fallacy)"
+    ]
+  },
+  {
+    "name": "Ecological fallacy",
+    "description": "inferring about the nature of an entity based solely upon aggregate statistics collected for the group to which that entity belongs.",
+    "tags": [
+      "informal"
+    ],
+    "urls": [
+      "https://en.wikipedia.org/wiki/Ecological_fallacy"
+    ]
+  },
+  {
+    "name": "Equivocation",
+    "description": "using a term with more than one meaning in a statement without specifying which meaning is intended.\nAmbiguous middle term – using a middle term with multiple meanings.\nDefinitional retreat – changing the meaning of a word when an objection is raised. Often paired with moving the goalposts (see below), as when an argument is challenged using a common definition of a term in the argument, and the arguer presents a different definition of the term and thereby demands different evidence to debunk the argument.\nMotte-and-bailey fallacy – conflating two positions with similar properties, one modest and easy to defend (the \"motte\") and one more controversial (the \"bailey\"). The arguer first states the controversial position, but when challenged, states that they are advancing the modest position.\nFallacy of accent – changing the meaning of a statement by not specifying on which word emphasis falls.\nPersuasive definition – purporting to use the \"true\" or \"commonly accepted\" meaning of a term while, in reality, using an uncommon or altered definition.\n.mw-parser-output div.crossreference{padding-left:0}",
+    "tags": [
+      "informal"
+    ],
+    "urls": [
+      "https://en.wikipedia.org/wiki/Equivocation"
+    ]
+  },
+  {
+    "name": "Ambiguous middle term",
+    "description": "using a middle term with multiple meanings.",
+    "tags": [
+      "informal"
+    ],
+    "urls": [
+      "https://en.wikipedia.org/wiki/Ambiguous_middle_term"
+    ]
+  },
+  {
+    "name": "Motte-and-bailey fallacy",
+    "description": "conflating two positions with similar properties, one modest and easy to defend (the \"motte\") and one more controversial (the \"bailey\"). The arguer first states the controversial position, but when challenged, states that they are advancing the modest position.",
+    "tags": [
+      "informal"
+    ],
+    "urls": [
+      "https://en.wikipedia.org/wiki/Motte-and-bailey_fallacy"
+    ]
+  },
+  {
+    "name": "Fallacy of accent",
+    "description": "changing the meaning of a statement by not specifying on which word emphasis falls.",
+    "tags": [
+      "informal"
+    ],
+    "urls": [
+      "https://en.wikipedia.org/wiki/Accent_(fallacy)"
+    ]
+  },
+  {
+    "name": "Persuasive definition",
+    "description": "purporting to use the \"true\" or \"commonly accepted\" meaning of a term while, in reality, using an uncommon or altered definition.",
+    "tags": [
+      "informal"
+    ],
+    "urls": [
+      "https://en.wikipedia.org/wiki/Persuasive_definition"
+    ]
+  },
+  {
+    "name": "Etymological fallacy",
+    "description": "assuming that the original or historical meaning of a word or phrase is necessarily similar to its actual present-day usage.",
+    "tags": [
+      "informal"
+    ],
+    "urls": [
+      "https://en.wikipedia.org/wiki/Etymological_fallacy"
+    ]
+  },
+  {
+    "name": "Fallacy of composition",
+    "description": "assuming that something true of part of a whole must also be true of the whole.",
+    "tags": [
+      "informal"
+    ],
+    "urls": [
+      "https://en.wikipedia.org/wiki/Fallacy_of_composition"
+    ]
+  },
+  {
+    "name": "Fallacy of division",
+    "description": "assuming that something true of a composite thing must also be true of all or some of its parts.",
+    "tags": [
+      "informal"
+    ],
+    "urls": [
+      "https://en.wikipedia.org/wiki/Fallacy_of_division"
+    ]
+  },
+  {
+    "name": "False attribution",
+    "description": "appealing to an irrelevant, unqualified, unidentified, biased or fabricated source in support of an argument.\nFallacy of quoting out of context (contextotomy, contextomy; quotation mining) – selective excerpting of words from their original context to distort the intended meaning.",
+    "tags": [
+      "informal"
+    ],
+    "urls": [
+      "https://en.wikipedia.org/wiki/False_attribution"
+    ]
+  },
+  {
+    "name": "Fallacy of quoting out of context",
+    "description": "(contextotomy, contextomy; quotation mining) – selective excerpting of words from their original context to distort the intended meaning.",
+    "tags": [
+      "informal"
+    ],
+    "urls": [
+      "https://en.wikipedia.org/wiki/Fallacy_of_quoting_out_of_context"
+    ]
+  },
+  {
+    "name": "False authority",
+    "description": "(single authority) – using an expert of dubious credentials or using only one opinion to promote a product or idea. Related to the appeal to authority.",
+    "tags": [
+      "informal"
+    ],
+    "urls": [
+      "https://en.wikipedia.org/wiki/False_authority"
+    ]
+  },
+  {
+    "name": "False dilemma",
+    "description": "(false dichotomy, fallacy of bifurcation, black-or-white fallacy) – two alternative statements are given as the only possible options when, in reality, there are more.",
+    "tags": [
+      "informal"
+    ],
+    "urls": [
+      "https://en.wikipedia.org/wiki/False_dilemma"
+    ]
+  },
+  {
+    "name": "False equivalence",
+    "description": "describing two or more statements as virtually equal when they are not.",
+    "tags": [
+      "informal"
+    ],
+    "urls": [
+      "https://en.wikipedia.org/wiki/False_equivalence"
+    ]
+  },
+  {
+    "name": "Historian's fallacy",
+    "description": "assuming that decision-makers of the past had identical information as those subsequently analyzing the decision. This is not to be confused with presentism, in which present-day ideas and perspectives are anachronistically projected into the past.",
+    "tags": [
+      "informal"
+    ],
+    "urls": [
+      "https://en.wikipedia.org/wiki/Historian%27s_fallacy"
+    ]
+  },
+  {
+    "name": "Historical fallacy",
+    "description": "believing that certain results occurred only because a specific process was performed, though said process may actually be unrelated to the results.\nBaconian fallacy – supposing that historians can obtain the \"whole truth\" via induction from individual pieces of historical evidence. The \"whole truth\" is defined as learning \"something about everything\", \"everything about something\", or \"everything about everything\". In reality, a historian \"can only hope to know something about something\".",
+    "tags": [
+      "informal"
+    ],
+    "urls": [
+      "https://en.wikipedia.org/wiki/Historical_fallacy"
+    ]
+  },
+  {
+    "name": "Homunculus fallacy",
+    "description": "using a \"middle-man\" for explanation; this sometimes leads to regressive middle-men. It explains a concept in terms of the concept itself without explaining its real nature (e.g.: explaining thought as something produced by a little thinker – a homunculus – inside the head simply identifies an intermediary actor and does not explain the product or process of thinking).",
+    "tags": [
+      "informal"
+    ],
+    "urls": [
+      "https://en.wikipedia.org/wiki/Homunculus_fallacy"
+    ]
+  },
+  {
+    "name": "If-by-whiskey",
+    "description": "an argument that supports both sides of an issue by using terms that are emotionally sensitive and ambiguous.",
+    "tags": [
+      "informal"
+    ],
+    "urls": [
+      "https://en.wikipedia.org/wiki/If-by-whiskey"
+    ]
+  },
+  {
+    "name": "Incomplete comparison",
+    "description": "insufficient information is provided to make a complete comparison.",
+    "tags": [
+      "informal"
+    ],
+    "urls": [
+      "https://en.wikipedia.org/wiki/Incomplete_comparison"
+    ]
+  },
+  {
+    "name": "Intentionality fallacy",
+    "description": "the insistence that the ultimate meaning of an expression must be consistent with the intention of the person from whom the communication originated (e.g. a work of fiction that is widely received as a blatant allegory must necessarily not be regarded as such if the author intended it not to be so).",
+    "tags": [
+      "informal"
+    ],
+    "urls": [
+      "https://en.wikipedia.org/wiki/Intentional_Fallacy"
+    ]
+  },
+  {
+    "name": "Kettle logic",
+    "description": "using multiple, jointly inconsistent arguments to defend a position.",
+    "tags": [
+      "informal"
+    ],
+    "urls": [
+      "https://en.wikipedia.org/wiki/Kettle_logic"
+    ]
+  },
+  {
+    "name": "Ludic fallacy",
+    "description": "failing to take into account that non-regulated random occurrences unknown unknowns can affect the probability of an event taking place.",
+    "tags": [
+      "informal"
+    ],
+    "urls": [
+      "https://en.wikipedia.org/wiki/Ludic_fallacy"
+    ]
+  },
+  {
+    "name": "Lump of labour fallacy",
+    "description": "the misconception that there is a fixed amount of work to be done within an economy, which can be distributed to create more or fewer jobs.",
+    "tags": [
+      "informal"
+    ],
+    "urls": [
+      "https://en.wikipedia.org/wiki/Lump_of_labour_fallacy"
+    ]
+  },
+  {
+    "name": "McNamara fallacy",
+    "description": "(quantitative fallacy) – making an argument using only quantitative observations (measurements, statistical or numerical values) and discounting subjective information that focuses on quality (traits, features, or relationships).",
+    "tags": [
+      "informal"
+    ],
+    "urls": [
+      "https://en.wikipedia.org/wiki/McNamara_fallacy"
+    ]
+  },
+  {
+    "name": "Mind projection fallacy",
+    "description": "assuming that a statement about an object describes an inherent property of the object, rather than a personal perception.",
+    "tags": [
+      "informal"
+    ],
+    "urls": [
+      "https://en.wikipedia.org/wiki/Mind_projection_fallacy"
+    ]
+  },
+  {
+    "name": "Moralistic fallacy",
+    "description": "inferring factual conclusions from evaluative premises in violation of fact–value distinction (e.g.: inferring is from ought). Moralistic fallacy is the inverse of naturalistic fallacy.",
+    "tags": [
+      "informal"
+    ],
+    "urls": [
+      "https://en.wikipedia.org/wiki/Moralistic_fallacy"
+    ]
+  },
+  {
+    "name": "Moving the goalposts",
+    "description": "(raising the bar) – argument in which evidence presented in response to a specific claim is dismissed and some other (often greater) evidence is demanded.",
+    "tags": [
+      "informal"
+    ],
+    "urls": [
+      "https://en.wikipedia.org/wiki/Moving_the_goalposts"
+    ]
+  },
+  {
+    "name": "Nirvana fallacy",
+    "description": "(perfect-solution fallacy) – solutions to problems are rejected because they are not perfect.",
+    "tags": [
+      "informal"
+    ],
+    "urls": [
+      "https://en.wikipedia.org/wiki/Nirvana_fallacy"
+    ]
+  },
+  {
+    "name": "Package deal",
+    "description": "treating essentially dissimilar concepts as though they were essentially similar.",
+    "tags": [
+      "informal"
+    ],
+    "urls": [
+      "https://en.wikipedia.org/wiki/Package-deal_fallacy"
+    ]
+  },
+  {
+    "name": "Proof by assertion",
+    "description": "a proposition is repeatedly restated regardless of contradiction; sometimes confused with argument from repetition (argumentum ad infinitum, argumentum ad nauseam).",
+    "tags": [
+      "informal"
+    ],
+    "urls": [
+      "https://en.wikipedia.org/wiki/Proof_by_assertion"
+    ]
+  },
+  {
+    "name": "Prosecutor's fallacy",
+    "description": "a low probability of false matches does not mean a low probability of some false match being found.",
+    "tags": [
+      "informal"
+    ],
+    "urls": [
+      "https://en.wikipedia.org/wiki/Prosecutor%27s_fallacy"
+    ]
+  },
+  {
+    "name": "Proving too much",
+    "description": "an argument that results in an overly generalized conclusion",
+    "tags": [
+      "informal"
+    ],
+    "urls": [
+      "https://en.wikipedia.org/wiki/Proving_too_much"
+    ]
+  },
+  {
+    "name": "Psychologist's fallacy",
+    "description": "an observer presupposes the objectivity of their own perspective when analyzing a behavioral event.",
+    "tags": [
+      "informal"
+    ],
+    "urls": [
+      "https://en.wikipedia.org/wiki/Psychologist%27s_fallacy"
+    ]
+  },
+  {
+    "name": "Referential fallacy",
+    "description": "assuming that all words refer to existing things and that the meaning of words reside within the things they refer to, as opposed to words possibly referring to no real object (e.g.: Pegasus) or that the meaning comes from how they are used (e.g.: \"nobody\" was in the room).",
+    "tags": [
+      "informal"
+    ],
+    "urls": [
+      "https://en.wikipedia.org/wiki/Direct_reference_theory"
+    ]
+  },
+  {
+    "name": "Reification",
+    "description": "(concretism, hypostatization, or the fallacy of misplaced concreteness) – treating an abstract belief or hypothetical construct as if it were a concrete, real event or physical entity (e.g.: saying that evolution selects which traits are passed on to future generations; evolution is not a conscious entity with agency).",
+    "tags": [
+      "informal"
+    ],
+    "urls": [
+      "https://en.wikipedia.org/wiki/Reification_(fallacy)"
+    ]
+  },
+  {
+    "name": "Retrospective determinism",
+    "description": "believing that, because an event has occurred under some circumstance, the circumstance must have made the event inevitable (e.g.: because someone won the lottery while wearing their lucky socks, wearing those socks made winning the lottery inevitable).",
+    "tags": [
+      "informal"
+    ],
+    "urls": [
+      "https://en.wikipedia.org/wiki/Retrospective_determinism"
+    ]
+  },
+  {
+    "name": "Slippery slope",
+    "description": "(thin edge of the wedge, camel's nose) – asserting that a proposed, relatively small, first action will inevitably lead to a chain of related events resulting in a significant and negative event and, therefore, should not be permitted.",
+    "tags": [
+      "informal"
+    ],
+    "urls": [
+      "https://en.wikipedia.org/wiki/Slippery_slope"
+    ]
+  },
+  {
+    "name": "Special pleading",
+    "description": "the arguer attempts to cite something as an exemption to a generally accepted rule or principle without justifying the exemption (e.g.: an orphaned defendant who murdered their parents asking for leniency).",
+    "tags": [
+      "informal"
+    ],
+    "urls": [
+      "https://en.wikipedia.org/wiki/Special_pleading"
+    ]
+  },
+  {
+    "name": "Begging the question",
+    "description": "(petitio principii) – using the conclusion of the argument in support of itself in a premise (e.g.: saying that smoking cigarettes is deadly because cigarettes can kill you; something that kills is deadly).\nLoaded label – while not inherently fallacious, the use of evocative terms to support a conclusion is a type of begging the question fallacy. When fallaciously used, the term's connotations are relied on to sway the argument towards a particular conclusion. For example, in an organic foods advertisement that says \"Organic foods are safe and healthy foods grown without any pesticides, herbicides, or other unhealthy additives\", the terms \"safe\" and \"healthy\" are used to fallaciously imply that non-organic foods are neither safe nor healthy.\nCircular reasoning (circulus in demonstrando) – the reasoner begins with what they are trying to end up with (e.g.: The defendant is guilty because they failed a lie detector test. How do you know the test is accurate? Because convicts fail it.).",
+    "tags": [
+      "improper",
+      "informal",
+      "premise"
+    ],
+    "urls": [
+      "https://en.wikipedia.org/wiki/Begging_the_question"
+    ]
+  },
+  {
+    "name": "begging the question",
+    "description": "not inherently fallacious, the use of evocative terms to support a conclusion is a type of begging the question fallacy. When fallaciously used, the term's connotations are relied on to sway the argument towards a particular conclusion. For example, in an organic foods advertisement that says \"Organic foods are safe and healthy foods grown without any pesticides, herbicides, or other unhealthy additives\", the terms \"safe\" and \"healthy\" are used to fallaciously imply that non-organic foods are neither safe nor healthy.",
+    "tags": [
+      "improper",
+      "informal",
+      "premise"
+    ],
+    "urls": [
+      "https://en.wikipedia.org/wiki/Begging_the_question"
+    ]
+  },
+  {
+    "name": "Circular reasoning",
+    "description": "(circulus in demonstrando) – the reasoner begins with what they are trying to end up with (e.g.: The defendant is guilty because they failed a lie detector test. How do you know the test is accurate? Because convicts fail it.).",
+    "tags": [
+      "improper",
+      "informal",
+      "premise"
+    ],
+    "urls": [
+      "https://en.wikipedia.org/wiki/Circular_reasoning"
+    ]
+  },
+  {
+    "name": "Fallacy of many questions",
+    "description": "",
+    "tags": [
+      "improper",
+      "informal",
+      "premise"
+    ],
+    "urls": [
+      "https://en.wikipedia.org/wiki/Loaded_question"
+    ]
+  },
+  {
+    "name": "Accident",
+    "description": "an exception to a generalization is ignored.\nNo true Scotsman (aka appeal to purity) – makes a generalization true by changing the generalization to exclude a counterexample.",
+    "tags": [
+      "faulty",
+      "generalizations",
+      "informal"
+    ],
+    "urls": [
+      "https://en.wikipedia.org/wiki/Accident_(fallacy)"
+    ]
+  },
+  {
+    "name": "No true Scotsman",
+    "description": "(aka appeal to purity) – makes a generalization true by changing the generalization to exclude a counterexample.",
+    "tags": [
+      "faulty",
+      "generalizations",
+      "informal"
+    ],
+    "urls": [
+      "https://en.wikipedia.org/wiki/No_true_Scotsman"
+    ]
+  },
+  {
+    "name": "Cherry picking",
+    "description": "(suppressed evidence, incomplete evidence, argument by half-truth, fallacy of exclusion, card stacking, slanting) – using individual cases or data that confirm a particular position, while ignoring related cases or data that may contradict that position.\nNut-picking (suppressed evidence, incomplete evidence) – using individual cases or data that falsify a particular position, while ignoring related cases or data that may support that position.\nSurvivorship bias – a small number of successes of a given process are actively promoted while completely ignoring a large number of failures.",
+    "tags": [
+      "faulty",
+      "generalizations",
+      "informal"
+    ],
+    "urls": [
+      "https://en.wikipedia.org/wiki/Cherry_picking_(fallacy)"
+    ]
+  },
+  {
+    "name": "Nut-picking",
+    "description": "(suppressed evidence, incomplete evidence) – using individual cases or data that falsify a particular position, while ignoring related cases or data that may support that position.",
+    "tags": [
+      "faulty",
+      "generalizations",
+      "informal"
+    ],
+    "urls": [
+      "https://en.wikipedia.org/wiki/Nut-picking"
+    ]
+  },
+  {
+    "name": "Survivorship bias",
+    "description": "a small number of successes of a given process are actively promoted while completely ignoring a large number of failures.",
+    "tags": [
+      "faulty",
+      "generalizations",
+      "informal"
+    ],
+    "urls": [
+      "https://en.wikipedia.org/wiki/Survivorship_bias"
+    ]
+  },
+  {
+    "name": "False analogy",
+    "description": "an argument by analogy in which the analogy is poorly suited.",
+    "tags": [
+      "faulty",
+      "generalizations",
+      "informal"
+    ],
+    "urls": [
+      "https://en.wikipedia.org/wiki/False_analogy"
+    ]
+  },
+  {
+    "name": "Hasty generalization",
+    "description": "(fallacy of insufficient statistics, fallacy of insufficient sample, fallacy of the lonely fact, hasty induction, secundum quid, converse accident, jumping to conclusions) – basing a broad conclusion on a small or unrepresentative sample.",
+    "tags": [
+      "faulty",
+      "generalizations",
+      "informal"
+    ],
+    "urls": [
+      "https://en.wikipedia.org/wiki/Hasty_generalization"
+    ]
+  },
+  {
+    "name": "Argument from anecdote",
+    "description": "a fallacy where anecdotal evidence is presented as an argument; without any other contributory evidence or reasoning.",
+    "tags": [
+      "faulty",
+      "generalizations",
+      "informal"
+    ],
+    "urls": [
+      "https://en.wikipedia.org/wiki/Argument_from_anecdote"
+    ]
+  },
+  {
+    "name": "Inductive fallacy",
+    "description": "a more general name for a class of fallacies, including hasty generalization and its relatives. A fallacy of induction happens when a conclusion is drawn from premises that only lightly support it.",
+    "tags": [
+      "faulty",
+      "generalizations",
+      "informal"
+    ],
+    "urls": [
+      "https://en.wikipedia.org/wiki/Inductive_fallacy"
+    ]
+  },
+  {
+    "name": "Misleading vividness",
+    "description": "involves describing an occurrence in vivid detail, even if it is an exceptional occurrence, to convince someone that it is more important; this also relies on the appeal to emotion fallacy.",
+    "tags": [
+      "faulty",
+      "generalizations",
+      "informal"
+    ],
+    "urls": [
+      "https://en.wikipedia.org/wiki/Misleading_vividness"
+    ]
+  },
+  {
+    "name": "Overwhelming exception",
+    "description": "an accurate generalization that comes with qualifications that eliminate so many cases that what remains is much less impressive than the initial statement might have led one to assume.",
+    "tags": [
+      "faulty",
+      "generalizations",
+      "informal"
+    ],
+    "urls": [
+      "https://en.wikipedia.org/wiki/Overwhelming_exception"
+    ]
+  },
+  {
+    "name": "Thought-terminating cliché",
+    "description": "a commonly used phrase, sometimes passing as folk wisdom, used to quell cognitive dissonance, conceal lack of forethought, move on to other topics, etc. – but in any case, to end the debate with a cliché rather than a point.",
+    "tags": [
+      "faulty",
+      "generalizations",
+      "informal"
+    ],
+    "urls": [
+      "https://en.wikipedia.org/wiki/Thought-terminating_clich%C3%A9"
+    ]
+  },
+  {
+    "name": "Cum hoc ergo propter hoc",
+    "description": "(Latin for 'with this, therefore because of this'; correlation implies causation; faulty cause/effect, coincidental correlation, correlation without causation) – a faulty assumption that, because there is a correlation between two variables, one caused the other.\nPost hoc ergo propter hoc (Latin for 'after this, therefore because of this'; temporal sequence implies causation) – X happened, then Y happened; therefore X caused Y.\nWrong direction (reverse causation) – cause and effect are reversed. The cause is said to be the effect and vice versa. The consequence of the phenomenon is claimed to be its root cause.\nIgnoring a common cause",
+    "tags": [
+      "cause",
+      "informal",
+      "questionable"
+    ],
+    "urls": [
+      "https://en.wikipedia.org/wiki/Cum_hoc_ergo_propter_hoc"
+    ]
+  },
+  {
+    "name": "Post hoc ergo propter hoc",
+    "description": "(Latin for 'after this, therefore because of this'; temporal sequence implies causation) – X happened, then Y happened; therefore X caused Y.",
+    "tags": [
+      "cause",
+      "informal",
+      "questionable"
+    ],
+    "urls": [
+      "https://en.wikipedia.org/wiki/Post_hoc_ergo_propter_hoc"
+    ]
+  },
+  {
+    "name": "Wrong direction",
+    "description": "(reverse causation) – cause and effect are reversed. The cause is said to be the effect and vice versa. The consequence of the phenomenon is claimed to be its root cause.",
+    "tags": [
+      "cause",
+      "informal",
+      "questionable"
+    ],
+    "urls": [
+      "https://en.wikipedia.org/wiki/Wrong_direction"
+    ]
+  },
+  {
+    "name": "Fallacy of the single cause",
+    "description": "(causal oversimplification) – it is assumed that there is one, simple cause of an outcome when in reality it may have been caused by a number of only jointly sufficient causes.",
+    "tags": [
+      "cause",
+      "informal",
+      "questionable"
+    ],
+    "urls": [
+      "https://en.wikipedia.org/wiki/Fallacy_of_the_single_cause"
+    ]
+  },
+  {
+    "name": "Furtive fallacy",
+    "description": "outcomes are asserted to have been caused by the malfeasance of decision makers.",
+    "tags": [
+      "cause",
+      "informal",
+      "questionable"
+    ],
+    "urls": [
+      "https://en.wikipedia.org/wiki/Furtive_fallacy"
+    ]
+  },
+  {
+    "name": "Magical thinking",
+    "description": "fallacious attribution of causal relationships between actions and events. In anthropology, it refers primarily to cultural beliefs that ritual, prayer, sacrifice, and taboos will produce specific supernatural consequences. In psychology, it refers to an irrational belief that thoughts by themselves can affect the world or that thinking something corresponds with doing it.",
+    "tags": [
+      "cause",
+      "informal",
+      "questionable"
+    ],
+    "urls": [
+      "https://en.wikipedia.org/wiki/Magical_thinking"
+    ]
+  },
+  {
+    "name": "observational interpretation fallacy",
+    "description": "lacy occurs when associations identified in observational studies are misinterpreted as causal relationships.",
+    "tags": [
+      "cause",
+      "informal",
+      "questionable",
+      "statistical"
+    ],
+    "urls": [
+      "https://en.wikipedia.org/wiki/Observational_interpretation_fallacy"
+    ]
+  },
+  {
+    "name": "Regression fallacy",
+    "description": "ascribes cause where none exists. The flaw is failing to account for natural fluctuations. It is frequently a special kind of post hoc fallacy.",
+    "tags": [
+      "cause",
+      "informal",
+      "questionable",
+      "statistical"
+    ],
+    "urls": [
+      "https://en.wikipedia.org/wiki/Regression_fallacy"
+    ]
+  },
+  {
+    "name": "Gambler's fallacy",
+    "description": "the incorrect belief that separate, independent events can affect the likelihood of another random event. If a fair coin lands on heads 10 times in a row, the belief that it is \"due to the number of times it had previously landed on tails\" is incorrect.\nInverse gambler's fallacy – the inverse of the gambler's fallacy. It is the incorrect belief that on the basis of an unlikely outcome, the process must have happened many times before.",
+    "tags": [
+      "cause",
+      "informal",
+      "questionable",
+      "statistical"
+    ],
+    "urls": [
+      "https://en.wikipedia.org/wiki/Gambler%27s_fallacy"
+    ]
+  },
+  {
+    "name": "Inverse gambler's fallacy",
+    "description": "the inverse of the gambler's fallacy. It is the incorrect belief that on the basis of an unlikely outcome, the process must have happened many times before.",
+    "tags": [
+      "cause",
+      "informal",
+      "questionable",
+      "statistical"
+    ],
+    "urls": [
+      "https://en.wikipedia.org/wiki/Inverse_gambler%27s_fallacy"
+    ]
+  },
+  {
+    "name": "p-hacking",
+    "description": "belief in the significance of a result, not realizing that multiple comparisons or experiments have been run and only the most significant were published.",
+    "tags": [
+      "cause",
+      "informal",
+      "questionable",
+      "statistical"
+    ],
+    "urls": [
+      "https://en.wikipedia.org/wiki/P-hacking"
+    ]
+  },
+  {
+    "name": "Garden of forking paths fallacy",
+    "description": "incorrect belief that a single experiment can not be subject to the multiple comparisons effect.",
+    "tags": [
+      "cause",
+      "informal",
+      "questionable",
+      "statistical"
+    ],
+    "urls": [
+      "https://en.wikipedia.org/wiki/Garden_of_forking_paths_fallacy"
+    ]
+  },
+  {
+    "name": "Sunk costs fallacy",
+    "description": "refusal to leave a situation because you have already put large amounts of time or effort into it- for example trying to jump over a wall you physically cannot jump over because you have already spent an hour trying to jump.",
+    "tags": [
+      "cause",
+      "informal",
+      "questionable",
+      "statistical"
+    ],
+    "urls": [
+      "https://en.wikipedia.org/wiki/Sunk_costs_fallacy"
+    ]
+  },
+  {
+    "name": "Appeal to the stone",
+    "description": "(argumentum ad lapidem) – dismissing a claim as absurd without demonstrating proof for its absurdity.",
+    "tags": [
+      "informal",
+      "relevance"
+    ],
+    "urls": [
+      "https://en.wikipedia.org/wiki/Appeal_to_the_stone"
+    ]
+  },
+  {
+    "name": "Invincible ignorance",
+    "description": "(argument by pigheadedness) – where a person simply refuses to believe the argument, ignoring any evidence given.",
+    "tags": [
+      "informal",
+      "relevance"
+    ],
+    "urls": [
+      "https://en.wikipedia.org/wiki/Invincible_ignorance_fallacy"
+    ]
+  },
+  {
+    "name": "Argument from ignorance",
+    "description": "(appeal to ignorance, argumentum ad ignorantiam) – assuming that a claim is true because it has not been or cannot be proven false, or vice versa.",
+    "tags": [
+      "informal",
+      "relevance"
+    ],
+    "urls": [
+      "https://en.wikipedia.org/wiki/Argument_from_ignorance"
+    ]
+  },
+  {
+    "name": "Argument from incredulity",
+    "description": "(appeal to common sense) – \"I cannot imagine how this could be true; therefore, it must be false.\"",
+    "tags": [
+      "informal",
+      "relevance"
+    ],
+    "urls": [
+      "https://en.wikipedia.org/wiki/Argument_from_incredulity"
+    ]
+  },
+  {
+    "name": "Argument from repetition",
+    "description": "(argumentum ad nauseam or argumentum ad infinitum) – repeating an argument until nobody cares to discuss it any more and referencing that lack of objection as evidence of support for the truth of the conclusion; sometimes confused with proof by assertion.",
+    "tags": [
+      "informal",
+      "relevance"
+    ],
+    "urls": [
+      "https://en.wikipedia.org/wiki/Ad_nauseam"
+    ]
+  },
+  {
+    "name": "Argument from silence",
+    "description": "(argumentum ex silentio) – assuming that a claim is true based on the absence of textual or spoken evidence from an authoritative source, or vice versa.",
+    "tags": [
+      "informal",
+      "relevance"
+    ],
+    "urls": [
+      "https://en.wikipedia.org/wiki/Argument_from_silence"
+    ]
+  },
+  {
+    "name": "Ignoratio elenchi",
+    "description": "(irrelevant conclusion, missing the point) – an argument that may in itself be valid, but does not address the issue in question.",
+    "tags": [
+      "informal",
+      "relevance"
+    ],
+    "urls": [
+      "https://en.wikipedia.org/wiki/Ignoratio_elenchi"
+    ]
+  },
+  {
+    "name": "Ad hominem",
+    "description": "attacking the arguer instead of the argument. (Note that \"ad hominem\" can also refer to the dialectical strategy of arguing on the basis of the opponent's own commitments. This type of ad hominem is not a fallacy.)\nCircumstantial ad hominem – stating that the arguer's personal situation or perceived benefit from advancing a conclusion means that their conclusion is wrong.\nPoisoning the well – a subtype of ad hominem presenting adverse information about a target person with the intention of discrediting everything that the target person says.\nAppeal to motive – dismissing an idea by questioning the motives of its proposer.\nTone policing – focusing on emotion behind (or resulting from) a message rather than the message itself as a discrediting tactic.\nTraitorous critic fallacy (ergo decedo, 'therefore I leave') – a critic's perceived affiliation is portrayed as the underlying reason for the criticism and the critic is asked to stay away from the issue altogether. Easily confused with the association fallacy (guilt by association) below.\nBulverism (psychogenetic fallacy) – inferring why an argument is being used, associating it to some psychological reason, then assuming it is invalid as a result. The assumption that if the origin of an idea comes from a biased mind, then the idea itself must also be a falsehood.",
+    "tags": [
+      "herring",
+      "informal",
+      "red",
+      "relevance"
+    ],
+    "urls": [
+      "https://en.wikipedia.org/wiki/Ad_hominem"
+    ]
+  },
+  {
+    "name": "Circumstantial ad hominem",
+    "description": "stating that the arguer's personal situation or perceived benefit from advancing a conclusion means that their conclusion is wrong.",
+    "tags": [
+      "herring",
+      "informal",
+      "red",
+      "relevance"
+    ],
+    "urls": [
+      "https://en.wikipedia.org/wiki/Ad_hominem#Circumstantial"
+    ]
+  },
+  {
+    "name": "Poisoning the well",
+    "description": "a subtype of ad hominem presenting adverse information about a target person with the intention of discrediting everything that the target person says.",
+    "tags": [
+      "herring",
+      "informal",
+      "red",
+      "relevance"
+    ],
+    "urls": [
+      "https://en.wikipedia.org/wiki/Poisoning_the_well"
+    ]
+  },
+  {
+    "name": "Appeal to motive",
+    "description": "dismissing an idea by questioning the motives of its proposer.",
+    "tags": [
+      "herring",
+      "informal",
+      "red",
+      "relevance"
+    ],
+    "urls": [
+      "https://en.wikipedia.org/wiki/Appeal_to_motive"
+    ]
+  },
+  {
+    "name": "Tone policing",
+    "description": "focusing on emotion behind (or resulting from) a message rather than the message itself as a discrediting tactic.",
+    "tags": [
+      "herring",
+      "informal",
+      "red",
+      "relevance"
+    ],
+    "urls": [
+      "https://en.wikipedia.org/wiki/Tone_policing"
+    ]
+  },
+  {
+    "name": "Traitorous critic fallacy",
+    "description": "(ergo decedo, 'therefore I leave') – a critic's perceived affiliation is portrayed as the underlying reason for the criticism and the critic is asked to stay away from the issue altogether. Easily confused with the association fallacy (guilt by association) below.",
+    "tags": [
+      "herring",
+      "informal",
+      "red",
+      "relevance"
+    ],
+    "urls": [
+      "https://en.wikipedia.org/wiki/Ergo_decedo"
+    ]
+  },
+  {
+    "name": "Bulverism",
+    "description": "(psychogenetic fallacy) – inferring why an argument is being used, associating it to some psychological reason, then assuming it is invalid as a result. The assumption that if the origin of an idea comes from a biased mind, then the idea itself must also be a falsehood.",
+    "tags": [
+      "herring",
+      "informal",
+      "red",
+      "relevance"
+    ],
+    "urls": [
+      "https://en.wikipedia.org/wiki/Bulverism"
+    ]
+  },
+  {
+    "name": "Appeal to authority",
+    "description": "(argument from authority, argumentum ad verecundiam) – an assertion is deemed true because of the position or authority of the person asserting it.\nAppeal to accomplishment – an assertion is deemed true or false based on the accomplishments of the proposer. This may often also have elements of appeal to emotion see below.\nCourtier's reply – a criticism is dismissed by claiming that the critic lacks sufficient knowledge, credentials, or training to credibly comment on the subject matter.",
+    "tags": [
+      "herring",
+      "informal",
+      "red",
+      "relevance"
+    ],
+    "urls": [
+      "https://en.wikipedia.org/wiki/Appeal_to_authority"
+    ]
+  },
+  {
+    "name": "Appeal to accomplishment",
+    "description": "an assertion is deemed true or false based on the accomplishments of the proposer. This may often also have elements of appeal to emotion see below.",
+    "tags": [
+      "herring",
+      "informal",
+      "red",
+      "relevance"
+    ],
+    "urls": [
+      "https://en.wikipedia.org/wiki/Appeal_to_accomplishment"
+    ]
+  },
+  {
+    "name": "Courtier's reply",
+    "description": "a criticism is dismissed by claiming that the critic lacks sufficient knowledge, credentials, or training to credibly comment on the subject matter.",
+    "tags": [
+      "herring",
+      "informal",
+      "red",
+      "relevance"
+    ],
+    "urls": [
+      "https://en.wikipedia.org/wiki/Courtier%27s_reply"
+    ]
+  },
+  {
+    "name": "Appeal to consequences",
+    "description": "(argumentum ad consequentiam) – the conclusion is supported by a premise that asserts positive or negative consequences from some course of action in an attempt to distract from the initial discussion.",
+    "tags": [
+      "herring",
+      "informal",
+      "red",
+      "relevance"
+    ],
+    "urls": [
+      "https://en.wikipedia.org/wiki/Appeal_to_consequences"
+    ]
+  },
+  {
+    "name": "Appeal to emotion",
+    "description": "manipulating the emotions of the listener rather than using valid reasoning to obtain common agreement.\nAppeal to fear – generating distress, anxiety, cynicism, or prejudice towards the opponent in an argument.\nAppeal to flattery – using excessive or insincere praise to obtain common agreement.\nAppeal to pity (argumentum ad misericordiam) – generating feelings of sympathy or mercy in the listener to obtain common agreement.\nAppeal to ridicule – mocking or stating that the opponent's position is laughable to deflect from the merits of the opponent's argument.\nAppeal to spite – generating bitterness or hostility in the listener toward an opponent in an argument.\nJudgmental language – using insulting or pejorative language in an argument.\nPooh-pooh – stating that an opponent's argument is unworthy of consideration.\nStyle over substance – embellishing an argument with compelling language, exploiting a bias towards the esthetic qualities of an argument, e.g. the rhyme-as-reason effect\nWishful thinking – arguing for a course of action by the listener according to what might be pleasing to imagine rather than according to evidence or reason.",
+    "tags": [
+      "herring",
+      "informal",
+      "red",
+      "relevance"
+    ],
+    "urls": [
+      "https://en.wikipedia.org/wiki/Appeal_to_emotion"
+    ]
+  },
+  {
+    "name": "Appeal to fear",
+    "description": "generating distress, anxiety, cynicism, or prejudice towards the opponent in an argument.",
+    "tags": [
+      "herring",
+      "informal",
+      "red",
+      "relevance"
+    ],
+    "urls": [
+      "https://en.wikipedia.org/wiki/Appeal_to_fear"
+    ]
+  },
+  {
+    "name": "Appeal to flattery",
+    "description": "using excessive or insincere praise to obtain common agreement.",
+    "tags": [
+      "herring",
+      "informal",
+      "red",
+      "relevance"
+    ],
+    "urls": [
+      "https://en.wikipedia.org/wiki/Appeal_to_flattery"
+    ]
+  },
+  {
+    "name": "Appeal to pity",
+    "description": "(argumentum ad misericordiam) – generating feelings of sympathy or mercy in the listener to obtain common agreement.",
+    "tags": [
+      "herring",
+      "informal",
+      "red",
+      "relevance"
+    ],
+    "urls": [
+      "https://en.wikipedia.org/wiki/Appeal_to_pity"
+    ]
+  },
+  {
+    "name": "Appeal to ridicule",
+    "description": "mocking or stating that the opponent's position is laughable to deflect from the merits of the opponent's argument.",
+    "tags": [
+      "herring",
+      "informal",
+      "red",
+      "relevance"
+    ],
+    "urls": [
+      "https://en.wikipedia.org/wiki/Appeal_to_ridicule"
+    ]
+  },
+  {
+    "name": "Appeal to spite",
+    "description": "generating bitterness or hostility in the listener toward an opponent in an argument.",
+    "tags": [
+      "herring",
+      "informal",
+      "red",
+      "relevance"
+    ],
+    "urls": [
+      "https://en.wikipedia.org/wiki/Appeal_to_spite"
+    ]
+  },
+  {
+    "name": "Pooh-pooh",
+    "description": "stating that an opponent's argument is unworthy of consideration.",
+    "tags": [
+      "herring",
+      "informal",
+      "red",
+      "relevance"
+    ],
+    "urls": [
+      "https://en.wikipedia.org/wiki/Pooh-pooh"
+    ]
+  },
+  {
+    "name": "rhyme-as-reason effect",
+    "description": "embellishing an argument with compelling language, exploiting a bias towards the esthetic qualities of an argument, e.g. the rhyme-as-reason effect",
+    "tags": [
+      "herring",
+      "informal",
+      "red",
+      "relevance"
+    ],
+    "urls": [
+      "https://en.wikipedia.org/wiki/Rhyme-as-reason_effect"
+    ]
+  },
+  {
+    "name": "Wishful thinking",
+    "description": "arguing for a course of action by the listener according to what might be pleasing to imagine rather than according to evidence or reason.",
+    "tags": [
+      "herring",
+      "informal",
+      "red",
+      "relevance"
+    ],
+    "urls": [
+      "https://en.wikipedia.org/wiki/Wishful_thinking"
+    ]
+  },
+  {
+    "name": "Appeal to nature",
+    "description": "judgment is based solely on whether the subject of judgment is 'natural' or 'unnatural'.",
+    "tags": [
+      "herring",
+      "informal",
+      "red",
+      "relevance"
+    ],
+    "urls": [
+      "https://en.wikipedia.org/wiki/Appeal_to_nature"
+    ]
+  },
+  {
+    "name": "Appeal to tradition",
+    "description": "(argumentum ad antiquitatem) – a conclusion supported solely because it has long been held to be true.",
+    "tags": [
+      "herring",
+      "informal",
+      "red",
+      "relevance"
+    ],
+    "urls": [
+      "https://en.wikipedia.org/wiki/Appeal_to_tradition"
+    ]
+  },
+  {
+    "name": "Argumentum ad baculum",
+    "description": "(appeal to the stick, appeal to force, appeal to threat) – an argument made through coercion or threats of force to support position.",
+    "tags": [
+      "herring",
+      "informal",
+      "red",
+      "relevance"
+    ],
+    "urls": [
+      "https://en.wikipedia.org/wiki/Argumentum_ad_baculum"
+    ]
+  },
+  {
+    "name": "Argumentum ad populum",
+    "description": "(appeal to widespread belief, bandwagon argument, appeal to the majority, appeal to the people) – a proposition is claimed to be true or good solely because a majority or many people believe it to be so.",
+    "tags": [
+      "herring",
+      "informal",
+      "red",
+      "relevance"
+    ],
+    "urls": [
+      "https://en.wikipedia.org/wiki/Argumentum_ad_populum"
+    ]
+  },
+  {
+    "name": "Association fallacy",
+    "description": "(guilt by association and honor by association) – arguing that because two things share (or are implied to share) some property, they are the same.",
+    "tags": [
+      "herring",
+      "informal",
+      "red",
+      "relevance"
+    ],
+    "urls": [
+      "https://en.wikipedia.org/wiki/Association_fallacy"
+    ]
+  },
+  {
+    "name": "nit-picking",
+    "description": "ing fallacy (nit-picking, trivial objections) – Focusing on trivial details of an argument, rather than the main point of the argumentation.",
+    "tags": [
+      "herring",
+      "informal",
+      "red",
+      "relevance"
+    ],
+    "urls": [
+      "https://en.wikipedia.org/wiki/Nitpicking"
+    ]
+  },
+  {
+    "name": "Ipse dixit",
+    "description": "(bare assertion fallacy) – a claim that is presented as true without support, as self-evidently true, or as dogmatically true. This fallacy relies on the implied expertise of the speaker or on an unstated truism.",
+    "tags": [
+      "herring",
+      "informal",
+      "red",
+      "relevance"
+    ],
+    "urls": [
+      "https://en.wikipedia.org/wiki/Ipse_dixit"
+    ]
+  },
+  {
+    "name": "Chronological snobbery",
+    "description": "a thesis is deemed incorrect because it was commonly held when something else, known to be false, was also commonly held.",
+    "tags": [
+      "herring",
+      "informal",
+      "red",
+      "relevance"
+    ],
+    "urls": [
+      "https://en.wikipedia.org/wiki/Chronological_snobbery"
+    ]
+  },
+  {
+    "name": "First World problems",
+    "description": "privation (also known as \"appeal to worse problems\" or \"not as bad as\") – dismissing an argument or complaint due to what are perceived to be more important problems. First World problems are a subset of this fallacy.",
+    "tags": [
+      "herring",
+      "informal",
+      "red",
+      "relevance"
+    ],
+    "urls": [
+      "https://en.wikipedia.org/wiki/First_World_problem"
+    ]
+  },
+  {
+    "name": "Genetic fallacy",
+    "description": "a conclusion is suggested based solely on something or someone's origin rather than its current meaning or context.",
+    "tags": [
+      "herring",
+      "informal",
+      "red",
+      "relevance"
+    ],
+    "urls": [
+      "https://en.wikipedia.org/wiki/Genetic_fallacy"
+    ]
+  },
+  {
+    "name": "I'm entitled to my opinion",
+    "description": "a person discredits any opposition by claiming that they are entitled to their opinion.",
+    "tags": [
+      "herring",
+      "informal",
+      "red",
+      "relevance"
+    ],
+    "urls": [
+      "https://en.wikipedia.org/wiki/I%27m_entitled_to_my_opinion"
+    ]
+  },
+  {
+    "name": "Moralistic fallacy",
+    "description": "inferring factual conclusions from evaluative premises, in violation of fact–value distinction; e.g. making statements about what is, on the basis of claims about what ought to be. This is the inverse of the naturalistic fallacy.",
+    "tags": [
+      "herring",
+      "informal",
+      "red",
+      "relevance"
+    ],
+    "urls": [
+      "https://en.wikipedia.org/wiki/Moralistic_fallacy"
+    ]
+  },
+  {
+    "name": "Naturalistic fallacy",
+    "description": "inferring evaluative conclusions from purely factual premises in violation of fact–value distinction. Naturalistic fallacy (sometimes confused with appeal to nature) is the inverse of moralistic fallacy.\nIs–ought fallacy – deduce a conclusion about what ought to be, on the basis of what is.",
+    "tags": [
+      "herring",
+      "informal",
+      "red",
+      "relevance"
+    ],
+    "urls": [
+      "https://en.wikipedia.org/wiki/Naturalistic_fallacy"
+    ]
+  },
+  {
+    "name": "Is–ought fallacy",
+    "description": "deduce a conclusion about what ought to be, on the basis of what is.",
+    "tags": [
+      "herring",
+      "informal",
+      "red",
+      "relevance"
+    ],
+    "urls": [
+      "https://en.wikipedia.org/wiki/Is%E2%80%93ought_problem"
+    ]
+  },
+  {
+    "name": "Straw man",
+    "description": "fallacy – refuting an argument different from the one actually under discussion, while not recognizing or acknowledging the distinction.",
+    "tags": [
+      "herring",
+      "informal",
+      "red",
+      "relevance"
+    ],
+    "urls": [
+      "https://en.wikipedia.org/wiki/Straw_man"
+    ]
+  },
+  {
+    "name": "Texas sharpshooter fallacy",
+    "description": "improperly asserting a cause to explain a cluster of data.",
+    "tags": [
+      "herring",
+      "informal",
+      "red",
+      "relevance"
+    ],
+    "urls": [
+      "https://en.wikipedia.org/wiki/Texas_sharpshooter_fallacy"
+    ]
+  },
+  {
+    "name": "Tu quoque",
+    "description": "('you too' – appeal to hypocrisy, whataboutism) – stating that a position is false, wrong, or should be disregarded because its proponent fails to act consistently in accordance with it.",
+    "tags": [
+      "herring",
+      "informal",
+      "red",
+      "relevance"
+    ],
+    "urls": [
+      "https://en.wikipedia.org/wiki/Tu_quoque"
+    ]
+  },
+  {
+    "name": "Two wrongs make a right",
+    "description": "assuming that, if one wrong is committed, another wrong will rectify it.",
+    "tags": [
+      "herring",
+      "informal",
+      "red",
+      "relevance"
+    ],
+    "urls": [
+      "https://en.wikipedia.org/wiki/Two_wrongs_make_a_right"
+    ]
+  },
+  {
+    "name": "Vacuous truth",
+    "description": "a claim that is technically true but meaningless, in the form no A in B has C, when there is no A in B. For example, claiming that no mobile phones in the room are on when there are no mobile phones in the room.",
+    "tags": [
+      "herring",
+      "informal",
+      "red",
+      "relevance"
+    ],
+    "urls": [
+      "https://en.wikipedia.org/wiki/Vacuous_truth"
+    ]
+  },
+  {
+    "name": "Cognitive distortion",
+    "description": "Exaggerated or irrational thought pattern",
+    "tags": [
+      "herring",
+      "informal",
+      "red",
+      "relevance"
+    ],
+    "urls": [
+      "https://en.wikipedia.org/wiki/Cognitive_distortion"
+    ]
+  },
+  {
+    "name": "Outline of public relations",
+    "description": "Overview of and topical guide to public relations",
+    "tags": [
+      "herring",
+      "informal",
+      "red",
+      "relevance"
+    ],
+    "urls": [
+      "https://en.wikipedia.org/wiki/Outline_of_public_relations"
+    ]
+  },
+  {
+    "name": "Map–territory relation",
+    "description": "Relationship between an object and a representation of that object",
+    "tags": [
+      "herring",
+      "informal",
+      "red",
+      "relevance"
+    ],
+    "urls": [
+      "https://en.wikipedia.org/wiki/Map%E2%80%93territory_relation"
+    ]
+  },
+  {
+    "name": "Mathematical fallacy",
+    "description": "Certain type of mistaken proof",
+    "tags": [
+      "herring",
+      "informal",
+      "red",
+      "relevance"
+    ],
+    "urls": [
+      "https://en.wikipedia.org/wiki/Mathematical_fallacy"
+    ]
+  },
+  {
+    "name": "Sophistical Refutations",
+    "description": "Text by Aristotle on logical fallacies, in which Aristotle presented thirteen fallacies",
+    "tags": [
+      "herring",
+      "informal",
+      "red",
+      "relevance"
+    ],
+    "urls": [
+      "https://en.wikipedia.org/wiki/Sophistical_Refutations"
+    ]
+  },
+  {
+    "name": "Straight and Crooked Thinking",
+    "description": "Book by Robert H. Thouless",
+    "tags": [
+      "herring",
+      "informal",
+      "red",
+      "relevance"
+    ],
+    "urls": [
+      "https://en.wikipedia.org/wiki/Straight_and_Crooked_Thinking"
+    ]
+  },
+  {
+    "name": "ISBN",
+    "description": "in, Nicholas; Yu, Jiyuan, eds. (2004). The Blackwell Dictionary of Western Philosophy. Blackwell. ISBN 9781405106795.",
+    "tags": [
+      "herring",
+      "informal",
+      "red",
+      "relevance"
+    ],
+    "urls": [
+      "https://en.wikipedia.org/wiki/ISBN_(identifier)"
+    ]
+  },
+  {
+    "name": "ISBN",
+    "description": "on, W. Kent (1999). \"Formal fallacy\". In Audi, Robert (ed.). The Cambridge Dictionary of Philosophy (2nd ed.). Cambridge University Press. pp. 316–317. ISBN 9780511074172.",
+    "tags": [
+      "herring",
+      "informal",
+      "red",
+      "relevance"
+    ],
+    "urls": [
+      "https://en.wikipedia.org/wiki/ISBN_(identifier)"
+    ]
+  },
+  {
+    "name": "Walton, Douglas",
+    "description": "(2008). Informal Logic: A Pragmatic Approach (2nd ed.). Cambridge University Press. ISBN 9780511408786.",
+    "tags": [
+      "herring",
+      "informal",
+      "red",
+      "relevance"
+    ],
+    "urls": [
+      "https://en.wikipedia.org/wiki/Douglas_N._Walton"
+    ]
+  },
+  {
+    "name": "ISBN",
+    "description": "rlo, Christopher (2011). How to Become a Really Good Pain in the Ass: A Critical Thinker's Guide to Asking the Right Questions. Prometheus Books. ISBN 9781616143978.",
+    "tags": [
+      "herring",
+      "informal",
+      "red",
+      "relevance"
+    ],
+    "urls": [
+      "https://en.wikipedia.org/wiki/ISBN_(identifier)"
+    ]
+  },
+  {
+    "name": "Thouless, Robert H.",
+    "description": "(1953). Straight and Crooked Thinking (PDF). Pan Books. Retrieved 30 November 2010.",
+    "tags": [
+      "herring",
+      "informal",
+      "red",
+      "relevance"
+    ],
+    "urls": [
+      "https://en.wikipedia.org/wiki/Robert_H._Thouless"
+    ]
+  },
+  {
+    "name": "Argument from fallacy",
+    "description": "",
+    "tags": [
+      "herring",
+      "informal",
+      "red",
+      "relevance"
+    ],
+    "urls": [
+      "https://en.wikipedia.org/wiki/Argument_from_fallacy"
+    ]
+  },
+  {
+    "name": "Mathematical fallacy",
+    "description": "",
+    "tags": [
+      "herring",
+      "informal",
+      "red",
+      "relevance"
+    ],
+    "urls": [
+      "https://en.wikipedia.org/wiki/Mathematical_fallacy"
+    ]
+  },
+  {
+    "name": "Reification",
+    "description": "Map–territory relation",
+    "tags": [
+      "herring",
+      "informal",
+      "red",
+      "relevance"
+    ],
+    "urls": [
+      "https://en.wikipedia.org/wiki/Reification_(fallacy)"
+    ]
+  },
+  {
+    "name": "Circular reasoning",
+    "description": "/ Begging the question",
+    "tags": [
+      "herring",
+      "informal",
+      "red",
+      "relevance"
+    ],
+    "urls": [
+      "https://en.wikipedia.org/wiki/Circular_reasoning"
+    ]
+  },
+  {
+    "name": "Loaded language",
+    "description": "Leading question",
+    "tags": [
+      "herring",
+      "informal",
+      "red",
+      "relevance"
+    ],
+    "urls": [
+      "https://en.wikipedia.org/wiki/Loaded_language"
+    ]
+  },
+  {
+    "name": "Compound question",
+    "description": "/ Loaded question / Complex question",
+    "tags": [
+      "herring",
+      "informal",
+      "red",
+      "relevance"
+    ],
+    "urls": [
+      "https://en.wikipedia.org/wiki/Double-barreled_question"
+    ]
+  },
+  {
+    "name": "False dilemma",
+    "description": "Perfect solution",
+    "tags": [
+      "herring",
+      "informal",
+      "red",
+      "relevance"
+    ],
+    "urls": [
+      "https://en.wikipedia.org/wiki/False_dilemma"
+    ]
+  },
+  {
+    "name": "Sampling bias",
+    "description": "Cherry picking\nMcNamara",
+    "tags": [
+      "herring",
+      "informal",
+      "red",
+      "relevance"
+    ],
+    "urls": [
+      "https://en.wikipedia.org/wiki/Sampling_bias"
+    ]
+  },
+  {
+    "name": "Base rate",
+    "description": "/ Conjunction",
+    "tags": [
+      "herring",
+      "informal",
+      "red",
+      "relevance"
+    ],
+    "urls": [
+      "https://en.wikipedia.org/wiki/Base_rate_fallacy"
+    ]
+  },
+  {
+    "name": "Cum hoc",
+    "description": "tion implies causation\nCum hoc\nPost hoc",
+    "tags": [
+      "herring",
+      "informal",
+      "red",
+      "relevance"
+    ],
+    "urls": [
+      "https://en.wikipedia.org/wiki/Correlation_does_not_imply_causation"
+    ]
+  },
+  {
+    "name": "Stone",
+    "description": "/ Proof by assertion",
+    "tags": [
+      "herring",
+      "informal",
+      "red",
+      "relevance"
+    ],
+    "urls": [
+      "https://en.wikipedia.org/wiki/Appeal_to_the_stone"
+    ]
+  },
+  {
+    "name": "Invented here",
+    "description": "/ Not invented here",
+    "tags": [
+      "herring",
+      "informal",
+      "red",
+      "relevance"
+    ],
+    "urls": [
+      "https://en.wikipedia.org/wiki/Invented_here"
+    ]
+  },
+  {
+    "name": "Association",
+    "description": "Reductio ad Hitlerum\nReductio ad Stalinum",
+    "tags": [
+      "herring",
+      "informal",
+      "red",
+      "relevance"
+    ],
+    "urls": [
+      "https://en.wikipedia.org/wiki/Association_fallacy"
+    ]
+  },
+  {
+    "name": "Authority",
+    "description": "Accomplishment\nIpse dixit\nPoverty / Wealth",
+    "tags": [
+      "herring",
+      "informal",
+      "red",
+      "relevance"
+    ],
+    "urls": [
+      "https://en.wikipedia.org/wiki/Argument_from_authority"
+    ]
+  },
+  {
+    "name": "Tradition",
+    "description": "/ Novelty\nChronological snobbery",
+    "tags": [
+      "herring",
+      "informal",
+      "red",
+      "relevance"
+    ],
+    "urls": [
+      "https://en.wikipedia.org/wiki/Appeal_to_tradition"
+    ]
+  },
+  {
+    "name": "Moralistic",
+    "description": "/ Naturalistic",
+    "tags": [
+      "herring",
+      "informal",
+      "red",
+      "relevance"
+    ],
+    "urls": [
+      "https://en.wikipedia.org/wiki/Moralistic_fallacy"
+    ]
+  },
+  {
+    "name": "Motte-and-bailey fallacy",
+    "description": "",
+    "tags": [
+      "herring",
+      "informal",
+      "red",
+      "relevance"
+    ],
+    "urls": [
+      "https://en.wikipedia.org/wiki/Motte-and-bailey_fallacy"
+    ]
+  },
+  {
+    "name": "Psychologist's fallacy",
+    "description": "",
+    "tags": [
+      "herring",
+      "informal",
+      "red",
+      "relevance"
+    ],
+    "urls": [
+      "https://en.wikipedia.org/wiki/Psychologist%27s_fallacy"
+    ]
+  },
+  {
+    "name": "Red herring",
+    "description": "Two wrongs make a right",
+    "tags": [
+      "herring",
+      "informal",
+      "red",
+      "relevance"
+    ],
+    "urls": [
+      "https://en.wikipedia.org/wiki/Red_herring"
+    ]
+  },
+  {
+    "name": "Dialectic",
+    "description": "Antithesis, Socratic method, Unity of opposites",
+    "tags": [
+      "herring",
+      "informal",
+      "red",
+      "relevance"
+    ],
+    "urls": [
+      "https://en.wikipedia.org/wiki/Dialectic"
+    ]
+  },
+  {
+    "name": "Antithesis",
+    "description": ", Socratic method, Unity of opposites",
+    "tags": [
+      "herring",
+      "informal",
+      "red",
+      "relevance"
+    ],
+    "urls": [
+      "https://en.wikipedia.org/wiki/Antithesis"
+    ]
+  },
+  {
+    "name": "Fallacy",
+    "description": "List of fallacies",
+    "tags": [
+      "herring",
+      "informal",
+      "red",
+      "relevance"
+    ],
+    "urls": [
+      "https://en.wikipedia.org/wiki/Fallacy"
+    ]
+  },
+  {
+    "name": "Informal",
+    "description": "Critical thinking\nReason",
+    "tags": [
+      "herring",
+      "informal",
+      "red",
+      "relevance"
+    ],
+    "urls": [
+      "https://en.wikipedia.org/wiki/Informal_logic"
+    ]
+  },
+  {
+    "name": "Contradiction",
+    "description": "Paradox\nAntinomy",
+    "tags": [
+      "herring",
+      "informal",
+      "red",
+      "relevance"
+    ],
+    "urls": [
+      "https://en.wikipedia.org/wiki/Contradiction"
+    ]
+  }
+]
