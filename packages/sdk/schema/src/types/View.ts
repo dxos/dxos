@@ -7,6 +7,7 @@ import * as Function from 'effect/Function';
 import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
+import * as String from 'effect/String';
 
 import { type Space } from '@dxos/client/echo';
 import { Filter, Format, JsonSchema, Obj, Query, QueryAST, Ref, type SchemaRegistry, Type } from '@dxos/echo';
@@ -20,7 +21,7 @@ import {
   TypeEnum,
   toEffectSchema,
 } from '@dxos/echo/internal';
-import { type JsonPath, type JsonProp, findAnnotation, isNestedType } from '@dxos/effect';
+import { type JsonPath, type JsonProp, findAnnotation, getAnnotation, isArrayType, isNestedType } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
 import { type Live } from '@dxos/live-object';
@@ -126,7 +127,7 @@ export const make = ({
 
     const format = Format.FormatAnnotation.getFromAst(property.ast);
     // Omit objects from initial projection as they are difficult to handle automatically.
-    if (isNestedType(property.ast) && Option.isNone(format)) {
+    if ((isNestedType(property.ast) && Option.isNone(format)) || isArrayType(property.ast)) {
       continue;
     }
 
@@ -187,7 +188,7 @@ export const makeWithReferences = async ({
       continue;
     }
 
-    if (Ref.isRefType(property.ast)) {
+    if (!Ref.isRefType(property.ast)) {
       continue;
     }
 
@@ -210,6 +211,8 @@ export const makeWithReferences = async ({
 
       if (referenceSchema && referencePath) {
         const fieldId = yield* Option.fromNullable(view.projection.fields?.find((f) => f.path === property.name)?.id);
+        const title =
+          getAnnotation<string>(SchemaAST.TitleAnnotationId)(property.ast) ?? String.capitalize(property.name);
         projection.setFieldProjection({
           field: {
             id: fieldId,
@@ -221,7 +224,7 @@ export const makeWithReferences = async ({
             type: TypeEnum.Ref,
             format: Format.TypeFormat.Ref,
             referenceSchema: Type.getTypename(referenceSchema),
-            title: property.title,
+            title,
           },
         });
       }

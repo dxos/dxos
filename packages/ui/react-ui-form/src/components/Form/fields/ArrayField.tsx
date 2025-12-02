@@ -2,9 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Function from 'effect/Function';
+import * as Option from 'effect/Option';
 import * as SchemaAST from 'effect/SchemaAST';
-import * as String from 'effect/String';
 import React, { Fragment, useCallback } from 'react';
 
 import { type AnyProperties } from '@dxos/echo/internal';
@@ -19,20 +18,21 @@ import { FormField, type FormFieldProps } from '../FormField';
 import { FormFieldLabel, type FormFieldStateProps } from '../FormFieldComponent';
 
 export type ArrayFieldProps<T extends AnyProperties> = {
+  label: string;
   fieldProps: FormFieldStateProps;
 } & Pick<FormFieldProps<T>, 'property' | 'path' | 'readonly' | 'layout' | 'fieldMap' | 'fieldProvider'>;
 
 export const ArrayField = <T extends AnyProperties>({
   property,
   path,
+  label,
   readonly,
   layout,
   fieldProps: inputProps,
   ...props
 }: ArrayFieldProps<T>) => {
   const { t } = useTranslation(translationKey);
-  const { ast, name, title } = property;
-  const label = title ?? Function.pipe(name, String.capitalize);
+  const { ast } = property;
   const elementType = getArrayElementType(ast);
   const { onValueChange } = inputProps;
 
@@ -49,7 +49,12 @@ export const ArrayField = <T extends AnyProperties>({
     }
 
     return Object.fromEntries(
-      getSchemaProperties(typeLiteral, {}, { form: true }).map((prop) => [prop.name, prop.defaultValue]),
+      getSchemaProperties(typeLiteral, {}, { form: true }).map((prop) => {
+        const defaultValue = SchemaAST.getDefaultAnnotation(prop.ast).pipe((annotation) =>
+          Option.getOrUndefined(annotation),
+        );
+        return [prop.name, defaultValue];
+      }),
     );
   };
 

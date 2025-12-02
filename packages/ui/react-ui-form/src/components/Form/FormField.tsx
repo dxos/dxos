@@ -2,12 +2,11 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Function from 'effect/Function';
 import * as Match from 'effect/Match';
 import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
-import * as StringEffect from 'effect/String';
+import * as String from 'effect/String';
 import React, { useMemo } from 'react';
 
 import { Format } from '@dxos/echo';
@@ -15,6 +14,7 @@ import { type AnyProperties } from '@dxos/echo/internal';
 import {
   createJsonPath,
   findNode,
+  getAnnotation,
   getDiscriminatedType,
   isArrayType,
   isDiscriminatedUnion,
@@ -103,9 +103,12 @@ export const FormField = <T extends AnyProperties>({
   onQueryRefOptions,
 }: FormFieldProps<T>) => {
   const { t } = useTranslation(translationKey);
-  const { ast, name, title, description, examples } = property;
+  const { ast, name } = property;
+  const title = getAnnotation<string>(SchemaAST.TitleAnnotationId)(ast);
+  const description = getAnnotation<string>(SchemaAST.DescriptionAnnotationId)(ast);
+  const examples = getAnnotation<string[]>(SchemaAST.ExamplesAnnotationId)(ast);
 
-  const label = useMemo(() => title ?? Function.pipe(name, StringEffect.capitalize), [title, name]);
+  const label = useMemo(() => title ?? String.capitalize(name), [title, name]);
   const placeholder = useMemo(
     () => (examples?.length ? `${t('example placeholder')}: ${examples[0]}` : (description ?? label)),
     [examples, description, label],
@@ -148,6 +151,7 @@ export const FormField = <T extends AnyProperties>({
         fieldProps={fieldState}
         property={property}
         path={path}
+        label={label}
         readonly={readonly}
         layout={layout}
         fieldMap={fieldMap}
@@ -176,7 +180,7 @@ export const FormField = <T extends AnyProperties>({
         {...fieldProps}
         options={options.map((option) => ({
           value: option,
-          label: String(option),
+          label: option.toString(),
         }))}
       />
     );

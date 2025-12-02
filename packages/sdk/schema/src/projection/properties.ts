@@ -2,10 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
-import * as Function from 'effect/Function';
 import * as Option from 'effect/Option';
 import * as SchemaAST from 'effect/SchemaAST';
-import * as String from 'effect/String';
 
 import { type AnyProperties, FormInputAnnotationId, type PropertyKey } from '@dxos/echo/internal';
 import {
@@ -22,15 +20,11 @@ import { log } from '@dxos/log';
 /**
  * Flattened representation of AST node.
  */
-export type SchemaProperty<T extends AnyProperties, V = any> = {
+export type SchemaProperty<T extends AnyProperties> = {
   name: PropertyKey<T>;
   ast: SchemaAST.AST;
   optional: boolean;
   readonly: boolean;
-  title?: string;
-  description?: string;
-  examples?: string[];
-  defaultValue?: V;
 };
 
 /**
@@ -110,10 +104,6 @@ const processProperty = <T extends AnyProperties>(
   // TODO(wittjosiah): `findAnnotation` shouldn't be needed after extracting the base type.
   // Annotations.
   const formInput = findAnnotation<boolean>(prop.type, FormInputAnnotationId);
-  const title = findAnnotation<string>(prop.type, SchemaAST.TitleAnnotationId);
-  const description = findAnnotation<string>(prop.type, SchemaAST.DescriptionAnnotationId);
-  const examples = findAnnotation<string[]>(prop.type, SchemaAST.ExamplesAnnotationId);
-  const defaultValue = findAnnotation(prop.type, SchemaAST.DefaultAnnotationId);
 
   // TODO(wittjosiah): Factor out to form.
   if (form && formInput === false) {
@@ -126,10 +116,6 @@ const processProperty = <T extends AnyProperties>(
     ast: getBaseType(prop),
     optional: prop.isOptional,
     readonly: prop.isReadonly,
-    title: title ?? Function.pipe(name, String.capitalize),
-    description,
-    examples,
-    defaultValue,
   };
 
   // Parse SchemaAST.

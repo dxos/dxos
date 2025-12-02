@@ -3,6 +3,7 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as Option from 'effect/Option';
 import type * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
 
@@ -89,8 +90,9 @@ const createValue = <T extends AnyProperties>(
   property: SchemaProperty<T>,
   force = false,
 ): any | undefined => {
-  if (property.defaultValue !== undefined) {
-    return structuredClone(property.defaultValue);
+  const defaultValue = SchemaAST.getDefaultAnnotation(property.ast);
+  if (Option.isSome(defaultValue)) {
+    return structuredClone(defaultValue.value);
   }
 
   // Generator value from annotation.
