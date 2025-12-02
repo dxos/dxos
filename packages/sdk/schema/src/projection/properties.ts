@@ -7,16 +7,12 @@ import * as Option from 'effect/Option';
 import * as SchemaAST from 'effect/SchemaAST';
 import * as String from 'effect/String';
 
-import { Format } from '@dxos/echo';
 import {
   type AnyProperties,
   FormInputAnnotationId,
-  type JsonSchemaType,
   OptionsAnnotationId,
   type OptionsAnnotationType,
   type PropertyKey,
-  getFormatAnnotation,
-  getSchemaReference,
 } from '@dxos/echo/internal';
 import {
   findAnnotation,
@@ -38,7 +34,6 @@ export type SchemaProperty<T extends AnyProperties, V = any> = {
   ast: SchemaAST.AST;
   optional: boolean;
   readonly: boolean;
-  format?: Format.TypeFormat;
   title?: string;
   description?: string;
   examples?: string[];
@@ -150,21 +145,10 @@ const processProperty = <T extends AnyProperties>(
     options,
   };
 
-  let format: SchemaProperty<T>['format'] | undefined;
-
   // Parse SchemaAST.
   // NOTE: findNode traverses the AST until the condition is met.
   let baseType = findNode(prop.type, isSimpleType);
-
-  // First check if reference.
-  const jsonSchema = findAnnotation<JsonSchemaType>(prop.type, SchemaAST.JSONSchemaAnnotationId);
-  if (jsonSchema && '$id' in jsonSchema) {
-    const { typename } = getSchemaReference(jsonSchema) ?? {};
-    if (typename) {
-      // TODO(burdon): Special handling for refs? type = 'ref'?
-      format = Format.TypeFormat.Ref;
-    }
-  } else if (!baseType) {
+  if (!baseType) {
     // Transformations.
     // https://effect.website/docs/schema/transformations
     baseType = findNode(prop.type, SchemaAST.isTransformation);
@@ -181,15 +165,15 @@ const processProperty = <T extends AnyProperties>(
         if (tupleType) {
           invariant(baseType.elements.length === 0);
           baseType = findNode(tupleType.type, isSimpleType);
-          if (baseType) {
-            const jsonSchema = findAnnotation<JsonSchemaType>(baseType, SchemaAST.JSONSchemaAnnotationId);
-            if (jsonSchema && '$id' in jsonSchema) {
-              const { typename } = getSchemaReference(jsonSchema) ?? {};
-              if (typename) {
-                format = Format.TypeFormat.Ref;
-              }
-            }
-          }
+          // if (baseType) {
+          //   const jsonSchema = findAnnotation<JsonSchemaType>(baseType, SchemaAST.JSONSchemaAnnotationId);
+          //   if (jsonSchema && '$id' in jsonSchema) {
+          //     const { typename } = getSchemaReference(jsonSchema) ?? {};
+          //     if (typename) {
+          //       format = Format.TypeFormat.Ref;
+          //     }
+          //   }
+          // }
         }
       } else {
         // Union of literals.
@@ -211,7 +195,6 @@ const processProperty = <T extends AnyProperties>(
   }
 
   return {
-    format: format ?? (baseType ? getFormatAnnotation(baseType) : undefined),
     ...property,
     options,
   };

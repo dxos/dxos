@@ -6,14 +6,12 @@ import * as Effect from 'effect/Effect';
 import type * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
 
-import { Obj, Type } from '@dxos/echo';
+import { Obj, Ref, Type } from '@dxos/echo';
 import {
   type AnyProperties,
-  Format,
   GeneratorAnnotationId,
   type GeneratorAnnotationValue,
   type JsonSchemaType,
-  Ref,
   type TypedObject,
   getSchemaReference,
 } from '@dxos/echo/internal';
@@ -133,7 +131,7 @@ export const createReferences = <T extends AnyProperties>(schema: Schema.Schema<
   return async (obj: T): Promise<T> => {
     for (const property of getSchemaProperties<T>(schema.ast)) {
       if (!property.optional || randomBoolean()) {
-        if (property.format === Format.TypeFormat.Ref) {
+        if (Ref.isRefType(property.ast)) {
           const jsonSchema = findAnnotation<JsonSchemaType>(property.ast, SchemaAST.JSONSchemaAnnotationId);
           if (jsonSchema) {
             const { typename } = getSchemaReference(jsonSchema) ?? {};

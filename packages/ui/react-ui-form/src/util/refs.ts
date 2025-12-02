@@ -4,8 +4,8 @@
 
 import type * as SchemaAST from 'effect/SchemaAST';
 
-import { Format, ReferenceAnnotationId } from '@dxos/echo/internal';
-import { findAnnotation, getArrayElementType, isArrayType } from '@dxos/effect';
+import { Ref } from '@dxos/echo';
+import { getArrayElementType, isArrayType } from '@dxos/effect';
 import { type SchemaProperty } from '@dxos/schema';
 
 type RefProps = {
@@ -13,22 +13,19 @@ type RefProps = {
   isArray: boolean;
 };
 
-export const getRefProps = (property: SchemaProperty<any>): RefProps | undefined => {
-  const { ast, format } = property;
-
+export const getRefProps = ({ ast }: SchemaProperty<any>): RefProps | undefined => {
   // Array of references.
   if (isArrayType(ast)) {
     const elementType = getArrayElementType(ast);
     if (elementType) {
-      const annotation = findAnnotation(elementType, ReferenceAnnotationId);
-      if (annotation) {
+      if (Ref.isRefType(elementType)) {
         return { ast: elementType, isArray: true };
       }
     }
   }
 
   // Direct reference.
-  if (format === Format.TypeFormat.Ref) {
+  if (Ref.isRefType(ast)) {
     return { ast, isArray: false };
   }
 

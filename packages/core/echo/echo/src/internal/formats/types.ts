@@ -55,6 +55,7 @@ export const FormatAnnotationId = Symbol.for('@dxos/schema/annotation/Format');
 
 export const FormatAnnotation = createAnnotationHelper<TypeFormat>(FormatAnnotationId);
 
+/** @deprecated */
 export const getFormatAnnotation = (node: SchemaAST.AST): TypeFormat | undefined =>
   Function.pipe(SchemaAST.getAnnotation<TypeFormat>(FormatAnnotationId)(node), Option.getOrUndefined);
 

@@ -9,10 +9,9 @@ import * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
 
 import { type Space } from '@dxos/client/echo';
-import { Filter, JsonSchema, Obj, Query, QueryAST, type SchemaRegistry, Type } from '@dxos/echo';
+import { Filter, Format, JsonSchema, Obj, Query, QueryAST, Ref, type SchemaRegistry, Type } from '@dxos/echo';
 import {
   FormInputAnnotation,
-  Format,
   JsonSchemaType,
   LabelAnnotation,
   ReferenceAnnotationId,
@@ -125,8 +124,9 @@ export const make = ({
       continue;
     }
 
+    const format = Format.FormatAnnotation.getFromAst(property.ast);
     // Omit objects from initial projection as they are difficult to handle automatically.
-    if (isNestedType(property.ast) && !property.format) {
+    if (isNestedType(property.ast) && Option.isNone(format)) {
       continue;
     }
 
@@ -187,7 +187,7 @@ export const makeWithReferences = async ({
       continue;
     }
 
-    if (property.format !== Format.TypeFormat.Ref) {
+    if (Ref.isRefType(property.ast)) {
       continue;
     }
 

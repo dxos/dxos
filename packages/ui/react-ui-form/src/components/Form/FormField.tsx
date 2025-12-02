@@ -3,6 +3,8 @@
 //
 
 import * as Function from 'effect/Function';
+import * as Match from 'effect/Match';
+import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
 import * as StringEffect from 'effect/String';
@@ -100,7 +102,7 @@ export const FormField = <T extends AnyProperties>({
   onQueryRefOptions,
 }: FormFieldProps<T>) => {
   const { t } = useTranslation(translationKey);
-  const { ast, name, format, options, title, description, examples } = property;
+  const { ast, name, options, title, description, examples } = property;
 
   const label = useMemo(() => title ?? Function.pipe(name, StringEffect.capitalize), [title, name]);
   const placeholder = useMemo(
@@ -111,7 +113,7 @@ export const FormField = <T extends AnyProperties>({
   const fieldState = useFormFieldState(FormField.displayName, path);
   const fieldProps: FormFieldComponentProps = {
     ast,
-    format,
+    format: Format.FormatAnnotation.getFromAst(ast).pipe((annotation) => Option.getOrUndefined(annotation)),
     readonly,
     label,
     placeholder,
@@ -157,7 +159,7 @@ export const FormField = <T extends AnyProperties>({
   // Regular field.
   //
 
-  const Field = getFormField(property);
+  const Field = getFormField(fieldProps);
   if (Field) {
     return <Field {...fieldProps} />;
   }
@@ -237,20 +239,20 @@ FormField.displayName = 'Form.FormField';
 /**
  * Get property input component.
  */
-const getFormField = (property: SchemaProperty<any>): FormFieldComponent | undefined => {
-  const { ast, format } = property;
-
+const getFormField = ({ ast, format }: FormFieldComponentProps): FormFieldComponent | undefined => {
   //
   // Standard formats.
   //
 
-  switch (format) {
-    case Format.TypeFormat.GeoPoint:
-      return GeoPointField;
-    case Format.TypeFormat.Markdown:
-      return MarkdownField;
-    case Format.TypeFormat.Text:
-      return TextAreaField;
+  const formatField = Match.value(format).pipe(
+    Match.withReturnType<FormFieldComponent | undefined>(),
+    Match.when(Format.TypeFormat.GeoPoint, () => GeoPointField),
+    Match.when(Format.TypeFormat.Markdown, () => MarkdownField),
+    Match.when(Format.TypeFormat.Text, () => TextAreaField),
+    Match.orElse(() => undefined),
+  );
+  if (formatField) {
+    return formatField;
   }
 
   //
