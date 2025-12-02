@@ -7,7 +7,7 @@ import React, { useCallback, useMemo } from 'react';
 import { Format } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
 import { getSpace, useSchema } from '@dxos/react-client/echo';
-import { type FormFieldMap, NewForm, SelectField } from '@dxos/react-ui-form';
+import { Form, type FormFieldMap, SelectField } from '@dxos/react-ui-form';
 import { useProjectionModel } from '@dxos/react-ui-kanban';
 import { type Kanban } from '@dxos/react-ui-kanban/types';
 import { getTypenameFromQuery } from '@dxos/schema';
@@ -47,8 +47,8 @@ export const KanbanViewEditor = ({ object }: KanbanViewEditorProps) => {
   );
 
   return (
-    <NewForm.Root fieldMap={fieldMap} schema={SettingsSchema} values={initialValues} autoSave onSave={handleSave}>
-      <NewForm.FieldSet />
-    </NewForm.Root>
+    <Form.Root fieldMap={fieldMap} schema={SettingsSchema} values={initialValues} autoSave onSave={handleSave}>
+      <Form.FieldSet />
+    </Form.Root>
   );
 };

@@ -9,7 +9,7 @@ import { DXN, Obj, type Ref, Tag, Type } from '@dxos/echo';
 import { type JsonPath, setValue } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
 import { getSpace } from '@dxos/react-client/echo';
-import { NewForm, useRefQueryOptions } from '@dxos/react-ui-form';
+import { Form, useRefQueryOptions } from '@dxos/react-ui-form';
 import { isNonNullable } from '@dxos/util';
 
 import { meta as pluginMeta } from '../../meta';
@@ -60,7 +60,7 @@ export const ObjectForm = ({ object, schema }: ObjectFormProps) => {
   );
 
   return (
-    <NewForm.Root
+    <Form.Root
       schema={formSchema}
       values={values}
       createSchema={TagSchema}
@@ -72,11 +72,11 @@ export const ObjectForm = ({ object, schema }: ObjectFormProps) => {
       onCreate={handleCreateTag}
       onQueryRefOptions={handleRefQueryLookup}
     >
-      <NewForm.Viewport>
-        <NewForm.Content>
-          <NewForm.FieldSet />
-        </NewForm.Content>
-      </NewForm.Viewport>
-    </NewForm.Root>
+      <Form.Viewport>
+        <Form.Content>
+          <Form.FieldSet />
+        </Form.Content>
+      </Form.Viewport>
+    </Form.Root>
   );
 };

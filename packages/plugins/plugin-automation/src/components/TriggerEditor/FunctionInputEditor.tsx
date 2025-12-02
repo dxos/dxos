@@ -9,8 +9,8 @@ import { type JsonPath } from '@dxos/echo/internal';
 import { type Function } from '@dxos/functions';
 import { useOnTransition, useTranslation } from '@dxos/react-ui';
 import {
+  Form,
   type FormFieldStateProps,
-  NewForm,
   type NewFormRootProps,
   type QueryRefOptions,
   useFormValues,
@@ -74,15 +74,15 @@ export const FunctionInputEditor = ({
 
   return (
     <>
-      <NewForm.Label label={t('function parameters label')} asChild />
-      <NewForm.Root
+      <Form.Label label={t('function parameters label')} asChild />
+      <Form.Root
         schema={effectSchema}
         values={values}
         onValuesChanged={handleValuesChanged}
         onQueryRefOptions={onQueryRefOptions}
       >
-        <NewForm.FieldSet />
-      </NewForm.Root>
+        <Form.FieldSet />
+      </Form.Root>
     </>
   );
 };

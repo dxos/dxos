@@ -10,7 +10,7 @@ import { useTypeOptions } from '@dxos/plugin-space';
 import { resolveSchemaWithClientAndSpace } from '@dxos/plugin-space';
 import { getSpace, useQuery } from '@dxos/react-client/echo';
 import { IconButton, type ThemedClassName, useAsyncEffect, useTranslation } from '@dxos/react-ui';
-import { NewForm, ViewEditor } from '@dxos/react-ui-form';
+import { Form, ViewEditor } from '@dxos/react-ui-form';
 import { List } from '@dxos/react-ui-list';
 import { cardChrome, cardText } from '@dxos/react-ui-stack';
 import { inputTextLabel, mx, subtleHover } from '@dxos/react-ui-theme';
@@ -180,11 +180,11 @@ export const ProjectObjectSettings = ({ classNames, project }: ProjectObjectSett
                   </div>
                   {expandedId === column.view.dxn.toString() && view && (
                     <div role='none' className='col-span-5 mlb-2 border border-separator rounded-md'>
-                      <NewForm.Root schema={ColumnFormSchema} values={column} autoSave onSave={handleColumnSave}>
-                        <NewForm.Content>
-                          <NewForm.FieldSet />
-                        </NewForm.Content>
-                      </NewForm.Root>
+                      <Form.Root schema={ColumnFormSchema} values={column} autoSave onSave={handleColumnSave}>
+                        <Form.Content>
+                          <Form.FieldSet />
+                        </Form.Content>
+                      </Form.Root>
                       <ViewEditor
                         ref={projectionRef}
                         mode='tag'

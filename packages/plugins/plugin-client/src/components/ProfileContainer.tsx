@@ -14,8 +14,8 @@ import {
   ControlItemInput,
   ControlPage,
   ControlSection,
+  Form,
   type FormFieldMap,
-  NewForm,
 } from '@dxos/react-ui-form';
 import { EmojiPickerBlock, HuePicker } from '@dxos/react-ui-pickers';
 import { hexToEmoji, hexToHue } from '@dxos/util';
@@ -156,11 +156,11 @@ export const ProfileContainer = () => {
     <ControlPage>
       <Clipboard.Provider>
         <ControlSection title={t('profile label')} description={t('profile description')}>
-          <NewForm.Root schema={UserProfile} values={values} fieldMap={fieldMap} autoSave onSave={handleSave}>
-            <NewForm.Content>
-              <NewForm.FieldSet classNames='container-max-width grid grid-cols-1 md:grid-cols-[1fr_min-content]' />
-            </NewForm.Content>
-          </NewForm.Root>
+          <Form.Root schema={UserProfile} values={values} fieldMap={fieldMap} autoSave onSave={handleSave}>
+            <Form.Content>
+              <Form.FieldSet classNames='container-max-width grid grid-cols-1 md:grid-cols-[1fr_min-content]' />
+            </Form.Content>
+          </Form.Root>
         </ControlSection>
       </Clipboard.Provider>
     </ControlPage>

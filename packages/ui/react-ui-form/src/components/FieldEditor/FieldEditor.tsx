@@ -20,7 +20,7 @@ import {
 } from '@dxos/schema';
 
 import { translationKey } from '../../translations';
-import { type FormFieldMap, NewForm, type NewFormRootProps, SelectField, SelectOptionField } from '../Form';
+import { Form, type FormFieldMap, type NewFormRootProps, SelectField, SelectOptionField } from '../Form';
 
 export type FieldEditorProps = {
   projection: ProjectionModel;
@@ -172,7 +172,7 @@ export const FieldEditor = ({ readonly, projection, field, registry, onSave, onC
   }
 
   return (
-    <NewForm.Root<PropertyType>
+    <Form.Root<PropertyType>
       key={field.id}
       fieldMap={fieldMap}
       autoFocus
@@ -186,10 +186,10 @@ export const FieldEditor = ({ readonly, projection, field, registry, onSave, onC
       onSave={handleSave}
       onCancel={handleCancel}
     >
-      <NewForm.Content>
-        <NewForm.FieldSet />
-        <NewForm.Actions />
-      </NewForm.Content>
-    </NewForm.Root>
+      <Form.Content>
+        <Form.FieldSet />
+        <Form.Actions />
+      </Form.Content>
+    </Form.Root>
   );
 };

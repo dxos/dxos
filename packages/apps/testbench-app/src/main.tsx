@@ -99,7 +99,7 @@ const main = async () => {
       });
     }
 
-    client.addTypes([Item, Document]);
+    await client.addTypes([Item, Document]);
     await client.spaces.waitUntilReady();
   };
 

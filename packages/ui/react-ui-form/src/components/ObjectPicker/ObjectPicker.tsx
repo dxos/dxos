@@ -10,7 +10,7 @@ import { Combobox } from '@dxos/react-ui-searchlist';
 
 import { type QueryTag } from '../../hooks';
 import { translationKey } from '../../translations';
-import { NewForm } from '../Form';
+import { Form } from '../Form';
 
 export type ObjectPickerContentProps = ThemedClassName<{
   options: QueryTag[];
@@ -106,18 +106,18 @@ const ObjectPickerContent = forwardRef<HTMLDivElement, ObjectPickerContentProps>
       >
         {showForm && createSchema ? (
           <Popover.Viewport>
-            <NewForm.Root
+            <Form.Root
               testId='create-referenced-object-form'
               schema={createSchema}
               values={createInitialValuePath ? { [createInitialValuePath]: searchString } : {}}
               onSave={handleFormSave}
               onCancel={handleFormCancel}
             >
-              <NewForm.Content>
-                <NewForm.FieldSet />
-                <NewForm.Actions />
-              </NewForm.Content>
-            </NewForm.Root>
+              <Form.Content>
+                <Form.FieldSet />
+                <Form.Actions />
+              </Form.Content>
+            </Form.Root>
           </Popover.Viewport>
         ) : (
           <>

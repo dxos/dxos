@@ -5,7 +5,7 @@
 import React from 'react';
 
 import { useTranslation } from '@dxos/react-ui';
-import { NewForm, type NewFormRootProps } from '@dxos/react-ui-form';
+import { Form, type NewFormRootProps } from '@dxos/react-ui-form';
 
 import { meta } from '../meta';
 import { UserFeedback } from '../types';
@@ -16,11 +16,11 @@ export const FeedbackForm = ({ onSave }: FeedbackFormProps) => {
   const { t } = useTranslation(meta.id);
 
   return (
-    <NewForm.Root schema={UserFeedback} onSave={onSave}>
-      <NewForm.Content>
-        <NewForm.FieldSet />
-        <NewForm.Submit icon='ph--paper-plane-tilt--regular' label={t('send feedback label')} />
-      </NewForm.Content>
-    </NewForm.Root>
+    <Form.Root schema={UserFeedback} onSave={onSave}>
+      <Form.Content>
+        <Form.FieldSet />
+        <Form.Submit icon='ph--paper-plane-tilt--regular' label={t('send feedback label')} />
+      </Form.Content>
+    </Form.Root>
   );
 };

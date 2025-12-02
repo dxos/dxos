@@ -29,6 +29,7 @@ import {
   TextAreaField,
   TextField,
 } from './fields';
+import { useFormFieldState } from './Form';
 import {
   type FormFieldComponent,
   type FormFieldComponentProps,
@@ -36,7 +37,6 @@ import {
   type FormFieldProvider,
 } from './FormFieldComponent';
 import { FormFieldSet } from './FormFieldSet';
-import { useFormFieldState } from './NewForm';
 
 export type FormFieldProps<T extends AnyProperties> = {
   /**

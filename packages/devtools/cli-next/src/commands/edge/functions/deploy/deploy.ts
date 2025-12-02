@@ -54,7 +54,8 @@ export const deploy = Command.make(
   Effect.fn(function* (options) {
     const { json } = yield* CommandConfig;
     const client = yield* ClientService;
-    client.addTypes(DATA_TYPES);
+    yield* Effect.promise(() => client.addTypes(DATA_TYPES));
+
     const identity = client.halo.identity.get();
     invariant(identity, 'Identity not available');
 

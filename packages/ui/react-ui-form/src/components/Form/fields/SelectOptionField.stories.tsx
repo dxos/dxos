@@ -11,7 +11,7 @@ import { withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '../../../translations';
 import { TestLayout } from '../../testing';
-import { NewForm } from '../NewForm';
+import { Form } from '../Form';
 
 import { SelectOptionField } from './SelectOptionField';
 
@@ -31,17 +31,17 @@ const DefaultStory = () => {
 
   return (
     <TestLayout>
-      <NewForm.Root
+      <Form.Root
         schema={schema}
         values={values}
         fieldMap={{ options: SelectOptionField }}
         onSave={(values) => setValues(values)}
       >
-        <NewForm.Content>
-          <NewForm.FieldSet />
-          <NewForm.Actions />
-        </NewForm.Content>
-      </NewForm.Root>
+        <Form.Content>
+          <Form.FieldSet />
+          <Form.Actions />
+        </Form.Content>
+      </Form.Root>
     </TestLayout>
   );
 };

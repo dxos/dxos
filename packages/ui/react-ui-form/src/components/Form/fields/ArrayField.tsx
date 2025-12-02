@@ -15,9 +15,9 @@ import { getSchemaProperties } from '@dxos/schema';
 
 import { translationKey } from '../../../translations';
 import { findArrayElementType } from '../../../util';
+import { useFormValues } from '../Form';
 import { FormField, type FormFieldProps } from '../FormField';
 import { FormFieldLabel, type FormFieldStateProps } from '../FormFieldComponent';
-import { useFormValues } from '../NewForm';
 
 export type ArrayFieldProps<T extends AnyProperties> = {
   fieldProps: FormFieldStateProps;

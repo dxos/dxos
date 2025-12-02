@@ -8,7 +8,7 @@ import { useCallback } from 'react';
 import { Obj } from '@dxos/echo';
 import { type JsonPath, setValue } from '@dxos/echo/internal';
 import { useTranslation } from '@dxos/react-ui';
-import { NewForm } from '@dxos/react-ui-form';
+import { Form } from '@dxos/react-ui-form';
 import { Card } from '@dxos/react-ui-stack';
 import { descriptionMessage, mx } from '@dxos/react-ui-theme';
 import { type ProjectionModel } from '@dxos/schema';
@@ -38,7 +38,7 @@ export const FormCard = ({
 
   return (
     <Card.SurfaceRoot id={subject.id} role={role}>
-      <NewForm.Root
+      <Form.Root
         schema={schema}
         projection={projection}
         values={subject}
@@ -46,12 +46,12 @@ export const FormCard = ({
         autoSave
         onSave={handleSave}
       >
-        <NewForm.Viewport>
-          <NewForm.Content>
-            <NewForm.FieldSet />
-          </NewForm.Content>
-        </NewForm.Viewport>
-      </NewForm.Root>
+        <Form.Viewport>
+          <Form.Content>
+            <Form.FieldSet />
+          </Form.Content>
+        </Form.Viewport>
+      </Form.Root>
     </Card.SurfaceRoot>
   );
 };

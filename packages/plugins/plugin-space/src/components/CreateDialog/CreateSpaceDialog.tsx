@@ -9,7 +9,7 @@ import React, { useCallback, useRef } from 'react';
 import { LayoutAction, createIntent } from '@dxos/app-framework';
 import { useIntentDispatcher } from '@dxos/app-framework/react';
 import { Dialog, IconButton, useTranslation } from '@dxos/react-ui';
-import { NewForm } from '@dxos/react-ui-form';
+import { Form } from '@dxos/react-ui-form';
 import { cardDialogContent, cardDialogHeader } from '@dxos/react-ui-stack';
 
 import { useInputSurfaceLookup } from '../../hooks';
@@ -69,7 +69,7 @@ export const CreateSpaceDialog = () => {
           />
         </Dialog.Close>
       </div>
-      <NewForm.Root
+      <Form.Root
         testId='create-space-form'
         autoFocus
         fieldProvider={inputSurfaceLookup}
@@ -77,11 +77,11 @@ export const CreateSpaceDialog = () => {
         values={initialValues}
         onSave={handleCreateSpace}
       >
-        <NewForm.Content>
-          <NewForm.FieldSet />
-          <NewForm.Submit />
-        </NewForm.Content>
-      </NewForm.Root>
+        <Form.Content>
+          <Form.FieldSet />
+          <Form.Submit />
+        </Form.Content>
+      </Form.Root>
     </Dialog.Content>
   );
 };

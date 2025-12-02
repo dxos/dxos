@@ -4,5 +4,5 @@
 
 export * from './fields';
 
-export * from './NewForm';
+export * from './Form';
 export * from './FormFieldComponent';

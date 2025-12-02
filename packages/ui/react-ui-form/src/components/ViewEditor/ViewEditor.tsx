@@ -28,11 +28,11 @@ import {
 import { translationKey } from '../../translations';
 import { FieldEditor } from '../FieldEditor';
 import {
+  Form,
   type FormFieldComponent,
   type FormFieldComponentProps,
   FormFieldLabel,
   type FormFieldMap,
-  NewForm,
 } from '../Form';
 
 const listGrid = 'grid grid-cols-[min-content_1fr_min-content_min-content_min-content]';
@@ -163,8 +163,8 @@ export const ViewEditor = forwardRef<ProjectionModel, ViewEditorProps>(
         )}
 
         {/* TODO(burdon): Is the form read-only or just the schema? */}
-        <NewForm.Root autoSave schema={viewSchema} values={viewValues} fieldMap={fieldMap} onSave={handleUpdate}>
-          <NewForm.FieldSet />
+        <Form.Root autoSave schema={viewSchema} values={viewValues} fieldMap={fieldMap} onSave={handleUpdate}>
+          <Form.FieldSet />
 
           <FormFieldLabel label={t('fields label')} asChild />
           <FieldList
@@ -175,7 +175,7 @@ export const ViewEditor = forwardRef<ProjectionModel, ViewEditorProps>(
             showHeading={showHeading}
             onDelete={handleDelete}
           />
-        </NewForm.Root>
+        </Form.Root>
 
         {!readonly && !expandedField && (
           <div role='none' className='mlb-cardSpacingBlock'>

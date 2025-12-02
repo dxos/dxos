@@ -9,7 +9,7 @@ import React, { useCallback } from 'react';
 import { type AnyProperties, type TypeAnnotation, getTypeAnnotation } from '@dxos/echo/internal';
 import { type Space, type SpaceId } from '@dxos/react-client/echo';
 import { Icon, toLocalizedString, useDefaultValue, useTranslation } from '@dxos/react-ui';
-import { NewForm } from '@dxos/react-ui-form';
+import { Form } from '@dxos/react-ui-form';
 import { SearchList } from '@dxos/react-ui-searchlist';
 import { cardDialogOverflow, cardDialogPaddedOverflow, cardDialogSearchListRoot } from '@dxos/react-ui-stack';
 import { type Collection, ViewAnnotation } from '@dxos/schema';
@@ -103,7 +103,7 @@ export const CreateObjectPanel = ({
   ) : !target ? (
     <SelectSpace spaces={spaces} defaultSpaceId={defaultSpaceId} onChange={onTargetChange} />
   ) : metadata.inputSchema ? (
-    <NewForm.Root
+    <Form.Root
       testId='create-object-form'
       autoFocus
       fieldProvider={inputSurfaceLookup}
@@ -111,11 +111,11 @@ export const CreateObjectPanel = ({
       values={initialFormValues}
       onSave={handleCreateObject}
     >
-      <NewForm.Content>
-        <NewForm.FieldSet />
-        <NewForm.Submit />
-      </NewForm.Content>
-    </NewForm.Root>
+      <Form.Content>
+        <Form.FieldSet />
+        <Form.Submit />
+      </Form.Content>
+    </Form.Root>
   ) : null;
 };
 

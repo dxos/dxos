@@ -13,7 +13,7 @@ import { type JsonPath, setValue } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
 import { getSpace } from '@dxos/react-client/echo';
 import { type ThemedClassName } from '@dxos/react-ui';
-import { NewForm, useRefQueryOptions } from '@dxos/react-ui-form';
+import { Form, useRefQueryOptions } from '@dxos/react-ui-form';
 import { isNonNullable } from '@dxos/util';
 
 import { meta as pluginMeta } from '../../meta';
@@ -90,7 +90,7 @@ export const BaseObjectSettings = ({ classNames, children, object }: BaseObjectS
   }
 
   return (
-    <NewForm.Root
+    <Form.Root
       schema={formSchema}
       values={values}
       createSchema={TagSchema}
@@ -102,10 +102,10 @@ export const BaseObjectSettings = ({ classNames, children, object }: BaseObjectS
       onCreate={handleCreateTag}
       onQueryRefOptions={handleRefQueryLookup}
     >
-      <NewForm.Content classNames={classNames}>
-        <NewForm.FieldSet />
+      <Form.Content classNames={classNames}>
+        <Form.FieldSet />
         {children}
-      </NewForm.Content>
-    </NewForm.Root>
+      </Form.Content>
+    </Form.Root>
   );
 };

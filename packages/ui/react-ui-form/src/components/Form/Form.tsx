@@ -60,7 +60,7 @@ type NewFormContextValue<T extends AnyProperties = any> = {
   debug?: boolean;
 } & Pick<FormFieldSetProps<T>, 'readonly' | 'layout' | 'fieldMap' | 'fieldProvider'>;
 
-const [NewFormContextProvider, useNewFormContext] = createContext<NewFormContextValue>('NewForm');
+const [NewFormContextProvider, useNewFormContext] = createContext<NewFormContextValue>('Form');
 
 /**
  * Get the current form values.
@@ -136,7 +136,7 @@ const NewFormRoot = <T extends AnyProperties = AnyProperties>({
   );
 };
 
-NewFormRoot.displayName = 'NewForm.Root';
+NewFormRoot.displayName = 'Form.Root';
 
 //
 // Viewport
@@ -155,7 +155,7 @@ const NewFormViewport = ({ classNames, children }: NewFormViewportProps) => {
   );
 };
 
-NewFormViewport.displayName = 'NewForm.Viewport';
+NewFormViewport.displayName = 'Form.Viewport';
 
 //
 // Content
@@ -175,7 +175,7 @@ const NewFormContent = ({ classNames, children }: NewFormContentProps) => {
   );
 };
 
-NewFormContent.displayName = 'NewForm.Content';
+NewFormContent.displayName = 'Form.Content';
 
 //
 // FieldSet
@@ -189,7 +189,7 @@ const NewFormFieldSet = ({ classNames }: NewFormFieldSetProps) => {
   return <FormFieldSet classNames={classNames} schema={form.schema} {...props} />;
 };
 
-NewFormFieldSet.displayName = 'NewForm.FieldSet';
+NewFormFieldSet.displayName = 'Form.FieldSet';
 
 //
 // Actions
@@ -239,7 +239,7 @@ const NewFormActions = ({ classNames }: NewFormActionsProps) => {
   );
 };
 
-NewFormActions.displayName = 'NewForm.Actions';
+NewFormActions.displayName = 'Form.Actions';
 
 //
 // Submit
@@ -275,14 +275,14 @@ const NewFormSubmit = ({ classNames, label, icon }: NewFormSubmitProps) => {
   );
 };
 
-NewFormSubmit.displayName = 'NewForm.Submit';
+NewFormSubmit.displayName = 'Form.Submit';
 
 //
-// NewForm
+// Form
 // https://www.radix-ui.com/primitives/docs/guides/composition
 //
 
-export const NewForm = {
+export const Form = {
   Root: NewFormRoot,
   Viewport: NewFormViewport,
   Content: NewFormContent,

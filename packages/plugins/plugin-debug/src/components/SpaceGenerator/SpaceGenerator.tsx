@@ -35,11 +35,15 @@ export const SpaceGenerator = ({ space, onCreateObjects }: SpaceGeneratorProps) 
   const [info, setInfo] = useState<any>({});
   const presets = useMemo(() => generator(), []);
 
+  // Register types.
+  useAsyncEffect(async () => {
+    await client.addTypes([...staticTypes, ...recordTypes, ...presets.schemas]);
+  }, [client]);
+
   // Create type generators.
   const typeMap = useMemo(() => {
-    client.addTypes([...staticTypes, ...recordTypes, ...presets.schemas]);
     const recordGenerators = new Map<string, ObjectGenerator<any>>(
-      recordTypes.map((type) => [type.typename, createGenerator(client, dispatch, type as any)]),
+      recordTypes.map((type) => [type.typename, createGenerator(client, dispatch, type)]),
     );
 
     return new Map([...staticGenerators, ...presets.items, ...recordGenerators]);

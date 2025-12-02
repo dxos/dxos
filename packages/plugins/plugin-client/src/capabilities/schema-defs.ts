@@ -15,13 +15,13 @@ export default (context: PluginContext) => {
   let previous: Type.Entity.Any[] = [];
   const cancel = registry.subscribe(
     context.capabilities(ClientCapabilities.Schema),
-    (_schemas) => {
+    async (_schemas) => {
       // TODO(wittjosiah): This doesn't seem to de-dupe schemas as expected.
       const schemas = Array.from(new Set(_schemas.flat()));
       // TODO(wittjosiah): Filter out schemas which the client has already registered.
       const newSchemas = schemas.filter((schema) => !previous.includes(schema));
       previous = schemas;
-      client.addTypes(newSchemas);
+      await client.addTypes(newSchemas);
     },
     { immediate: true },
   );

@@ -10,7 +10,7 @@ import { Function, Script, Trigger } from '@dxos/functions';
 import { Filter, Ref, type Space, useQuery } from '@dxos/react-client/echo';
 import { Input } from '@dxos/react-ui';
 import { QueryForm, type QueryFormProps } from '@dxos/react-ui-components';
-import { FormFieldLabel, type FormFieldMap, NewForm, SelectField, useRefQueryOptions } from '@dxos/react-ui-form';
+import { Form, FormFieldLabel, type FormFieldMap, SelectField, useRefQueryOptions } from '@dxos/react-ui-form';
 
 import { FunctionInputEditor, type FunctionInputEditorProps } from './FunctionInputEditor';
 import { SpecSelector } from './SpecSelector';
@@ -43,7 +43,7 @@ export const TriggerEditor = ({ space, types, tags, readonlySpec, trigger, onSav
   });
 
   return (
-    <NewForm.Root<Trigger.Trigger>
+    <Form.Root<Trigger.Trigger>
       fieldMap={fieldMap}
       schema={Trigger.Trigger}
       values={trigger}
@@ -51,13 +51,13 @@ export const TriggerEditor = ({ space, types, tags, readonlySpec, trigger, onSav
       onCancel={onCancel}
       onQueryRefOptions={handleRefQueryOptions}
     >
-      <NewForm.Viewport>
-        <NewForm.Content>
-          <NewForm.FieldSet />
-          <NewForm.Actions />
-        </NewForm.Content>
-      </NewForm.Viewport>
-    </NewForm.Root>
+      <Form.Viewport>
+        <Form.Content>
+          <Form.FieldSet />
+          <Form.Actions />
+        </Form.Content>
+      </Form.Viewport>
+    </Form.Root>
   );
 };
 

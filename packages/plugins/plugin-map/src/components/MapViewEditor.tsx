@@ -8,7 +8,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Type } from '@dxos/echo';
 import { Format } from '@dxos/echo/internal';
 import { getSpace, useSchema } from '@dxos/react-client/echo';
-import { type FormFieldMap, NewForm, SelectField } from '@dxos/react-ui-form';
+import { Form, type FormFieldMap, SelectField } from '@dxos/react-ui-form';
 import { getTypenameFromQuery } from '@dxos/schema';
 
 import { type Map } from '../types';
@@ -95,8 +95,8 @@ export const MapViewEditor = ({ object }: MapViewEditorProps) => {
   }
 
   return (
-    <NewForm.Root fieldMap={fieldMap} schema={MapSettingsSchema} values={initialValues} autoSave onSave={onSave}>
-      <NewForm.FieldSet />
-    </NewForm.Root>
+    <Form.Root fieldMap={fieldMap} schema={MapSettingsSchema} values={initialValues} autoSave onSave={onSave}>
+      <Form.FieldSet />
+    </Form.Root>
   );
 };
