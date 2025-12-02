@@ -4,7 +4,7 @@
 
 import { writeFile } from 'node:fs/promises';
 import * as fs from 'node:fs/promises';
-import { basename, join, relative } from 'node:path';
+import { basename, dirname, join, relative, resolve } from 'node:path';
 
 import * as Array from 'effect/Array';
 import * as Function from 'effect/Function';
@@ -17,6 +17,7 @@ import { PublicKey } from '@dxos/keys';
 import { Unit, trim } from '@dxos/util';
 
 import { httpPlugin } from '../http-plugin-esbuild';
+import { statSync } from 'node:fs';
 
 type BundleOptions = {
   entryPoint: string;
@@ -34,6 +35,9 @@ type BundleResult = {
  */
 export const bundleFunction = async (options: BundleOptions): Promise<BundleResult> => {
   const outdir = `/tmp/dxos-functions-bundle-${new Date().toISOString()}-${PublicKey.random().toHex()}`;
+  const gitDir = findGitDir(dirname(options.entryPoint));
+  console.log('gitDir:', gitDir);
+  console.log('outdir:', outdir);
 
   const result = await build({
     entryPoints: {
@@ -47,6 +51,7 @@ export const bundleFunction = async (options: BundleOptions): Promise<BundleResu
     outdir,
     metafile: true,
     treeShaking: true,
+    sourcemap: true,
     splitting: true,
     loader: {
       '.wasm': 'copy',
@@ -161,6 +166,15 @@ export const bundleFunction = async (options: BundleOptions): Promise<BundleResu
     console.log(`Modules in output:\n${moduleInOutput.map((_) => ` - ${_}`).join('\n')}`);
   }
 
+  for (const path of Object.keys(assets)) {
+    if (path.endsWith('.map')) {
+      const content = assets[path];
+      const map = JSON.parse(new TextDecoder().decode(content));
+      const processedMap = postprocessSourceMap(map, outdir, gitDir);
+      assets[path] = Buffer.from(JSON.stringify(processedMap));
+    }
+  }
+
   // Must match esbuild entry point.
   return { entryPoint: 'index.js', assets };
 };
@@ -176,4 +190,41 @@ const formatBytes = (bytes: number) => {
   if (bytes < Unit.Megabyte(1).unit.quotient) return Unit.Kilobyte(bytes).toString();
   if (bytes < Unit.Gigabyte(1).unit.quotient) return Unit.Megabyte(bytes).toString();
   return Unit.Gigabyte(bytes).toString();
+};
+
+const findGitDir = (startPath: string): string | null => {
+  let current = startPath;
+  while (current !== '/') {
+    const gitPath = join(current, '.git');
+    try {
+      if (statSync(gitPath).isDirectory()) {
+        return gitPath;
+      }
+    } catch {
+      // ignore
+    }
+    current = dirname(current);
+  }
+  return null;
+};
+
+/**
+ * Adjust source paths to be relative to the repo root.
+ */
+const postprocessSourceMap = (map: any, outDir: string, gitDir: string | null) => {
+  if (!gitDir) return map;
+
+  // Update source paths to be relative to the output directory
+  if (map.sources && Array.isArray(map.sources)) {
+    map.sources = map.sources.map((source: string) => {
+      const resolved = resolve(outDir, source);
+      if (resolved.startsWith(dirname(gitDir))) {
+        const rel = relative(dirname(gitDir), resolved);
+        return rel;
+      }
+      return source;
+    });
+  }
+
+  return map;
 };

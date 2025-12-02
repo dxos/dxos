@@ -18,6 +18,8 @@ import { AccessToken, Message } from '@dxos/types';
 
 import { log } from '../../../../../../common/log/src';
 import { Mailbox } from '../../../types';
+import { tmpdir } from 'node:os';
+import { writeFileSync } from 'node:fs';
 
 describe.runIf(process.env.DX_TEST_TAGS?.includes('functions-e2e'))('Functions deployment', () => {
   test('bundle function', async () => {
@@ -26,6 +28,11 @@ describe.runIf(process.env.DX_TEST_TAGS?.includes('functions-e2e'))('Functions d
       verbose: true,
     });
     console.log(artifact);
+    const tmpDir = tmpdir();
+    for (const [name, data] of Object.entries(artifact.assets)) {
+      writeFileSync(`${tmpDir}/${name}`, data);
+      console.log(`${tmpDir}/${name}`);
+    }
   });
 
   test('deploy function', { timeout: 120_000 }, async () => {
