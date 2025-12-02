@@ -112,7 +112,7 @@ export default ({ createInvitationUrl }: ReactSurfaceOptions) =>
       id: `${meta.id}/space-settings-properties`,
       role: 'article',
       filter: (data): data is { subject: string } => data.subject === `${meta.id}/properties`,
-      component: () => {
+      component: ({ ref }) => {
         const layout = useLayout();
         const { spaceId } = parseId(layout.workspace);
         const space = useSpace(spaceId);
@@ -120,7 +120,7 @@ export default ({ createInvitationUrl }: ReactSurfaceOptions) =>
           return null;
         }
 
-        return <SpaceSettingsContainer space={space} />;
+        return <SpaceSettingsContainer space={space} ref={ref} />;
       },
     }),
     createSurface({
