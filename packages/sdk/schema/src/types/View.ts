@@ -8,9 +8,8 @@ import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
 
-import { type Client } from '@dxos/client';
 import { type Space } from '@dxos/client/echo';
-import { Filter, Obj, Query, QueryAST, Type } from '@dxos/echo';
+import { Filter, JsonSchema, Obj, Query, QueryAST, type SchemaRegistry, Type } from '@dxos/echo';
 import {
   FormInputAnnotation,
   Format,
@@ -18,12 +17,10 @@ import {
   LabelAnnotation,
   ReferenceAnnotationId,
   type ReferenceAnnotationValue,
-  type RuntimeSchemaRegistry,
   SystemTypeAnnotation,
   TypeEnum,
   toEffectSchema,
 } from '@dxos/echo/internal';
-import { type EchoSchemaRegistry } from '@dxos/echo-db';
 import { type JsonPath, type JsonProp, findAnnotation } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
@@ -156,9 +153,7 @@ export const make = ({
 };
 
 export type MakeWithReferencesProps = MakeProps & {
-  // TODO(wittjosiah): Unify these.
-  registry?: RuntimeSchemaRegistry;
-  echoRegistry?: EchoSchemaRegistry;
+  registry?: SchemaRegistry.SchemaRegistry;
 };
 
 /**
@@ -173,7 +168,6 @@ export const makeWithReferences = async ({
   fields,
   pivotFieldName,
   registry,
-  echoRegistry,
 }: MakeWithReferencesProps): Promise<Live<View>> => {
   const view = make({
     query,
@@ -206,7 +200,7 @@ export const makeWithReferences = async ({
         Option.map((ref) => DXN.fromTypenameAndVersion(ref.typename, ref.version)),
       );
 
-      const referenceSchema = yield* Effect.tryPromise(() => getSchema(referenceDxn, registry, echoRegistry));
+      const referenceSchema = yield* Effect.tryPromise(() => getSchema(referenceDxn, registry));
 
       const referencePath = yield* Function.pipe(
         Option.fromNullable(referenceSchema),
@@ -244,7 +238,6 @@ export const makeWithReferences = async ({
 };
 
 export type MakeFromSpaceProps = Omit<MakeWithReferencesProps, 'query' | 'queryRaw' | 'jsonSchema' | 'registry'> & {
-  client?: Client;
   space: Space;
   typename?: string;
   createInitial?: number;
@@ -254,7 +247,6 @@ export type MakeFromSpaceProps = Omit<MakeWithReferencesProps, 'query' | 'queryR
  * Create view from a schema in provided space or client.
  */
 export const makeFromSpace = async ({
-  client,
   space,
   typename,
   createInitial = 1,
@@ -267,12 +259,11 @@ export const makeFromSpace = async ({
     createInitial = 0;
   }
 
-  const staticSchema = client?.graph.schemaRegistry.schemas.find((schema) => Type.getTypename(schema) === typename);
-  const dynamicSchema = await space.db.schemaRegistry.query({ typename }).firstOrUndefined();
-  const jsonSchema = staticSchema ? Type.toJsonSchema(staticSchema) : dynamicSchema?.jsonSchema;
+  const schema = await space.db.schemaRegistry
+    .query({ typename, location: ['database', 'runtime'] })
+    .firstOrUndefined();
+  const jsonSchema = schema && JsonSchema.toJsonSchema(schema);
   invariant(jsonSchema, `Schema not found: ${typename}`);
-  const schema = staticSchema ?? dynamicSchema;
-  invariant(schema, `Schema not found: ${typename}`);
 
   Array.from({ length: createInitial }).forEach(() => {
     space.db.add(Obj.make(schema, {}));
@@ -284,8 +275,7 @@ export const makeFromSpace = async ({
       ...props,
       query: Query.select(Filter.typename(typename)),
       jsonSchema,
-      registry: client?.graph.schemaRegistry,
-      echoRegistry: space.db.schemaRegistry,
+      registry: space.db.schemaRegistry,
     }),
   };
 };

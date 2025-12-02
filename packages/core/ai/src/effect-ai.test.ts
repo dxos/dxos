@@ -25,13 +25,12 @@ import * as Schema from 'effect/Schema';
 import * as Stream from 'effect/Stream';
 
 import { AiParser } from '@dxos/ai';
-import { TestHelpers } from '@dxos/effect';
+import { TestHelpers } from '@dxos/effect/testing';
 import { log } from '@dxos/log';
 import { trim } from '@dxos/util';
 
 import * as AiService from './AiService';
-import { MemoizedAiService } from './memoization';
-import { AiServiceTestingPreset, hasToolCall, testingLayer } from './testing';
+import { AiServiceTestingPreset, MemoizedAiService, hasToolCall, testingLayer } from './testing';
 
 // https://effect.website/docs/ai/tool-use/#5-bring-it-all-together
 // https://github.com/Effect-TS/effect/blob/main/packages/ai/ai/CHANGELOG.md

@@ -71,7 +71,7 @@ export const useBlueprintHandlers = ({
       }
 
       // Find existing cloned blueprint.
-      const { objects } = await space.db.query(Filter.type(Blueprint.Blueprint)).run();
+      const objects = await space.db.query(Filter.type(Blueprint.Blueprint)).run();
       let storedBlueprint = objects.find((blueprint) => blueprint.key === key);
       if (checked) {
         if (!storedBlueprint) {

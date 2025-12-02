@@ -225,7 +225,10 @@ export const registry: Record<NodeType, Executable> = {
         const dxn = DXN.parse(id);
         switch (dxn.kind) {
           case DXN.kind.QUEUE: {
-            const mappedItems = items.map((item: any) => ({ ...item, id: item.id ?? ObjectId.random() }));
+            const mappedItems = items.map((item: any) => ({
+              ...item,
+              id: item.id ?? ObjectId.random(),
+            }));
             const { queues } = yield* QueueService;
             yield* Effect.promise(() => queues.get(DXN.parse(id)).append(mappedItems));
             return {};
@@ -238,9 +241,7 @@ export const registry: Record<NodeType, Executable> = {
               invariant(db.spaceId === spaceId, 'Space mismatch');
             }
 
-            const {
-              objects: [container],
-            } = yield* Effect.promise(() => db.query(Filter.ids(echoId)).run());
+            const [container] = yield* Effect.promise(() => db.query(Filter.id(echoId)).run());
             if (isInstanceOf(View.View, container)) {
               const schema = yield* Effect.promise(async () =>
                 db.schemaRegistry
@@ -301,7 +302,10 @@ export const registry: Record<NodeType, Executable> = {
 
   ['if' as const]: defineComputeNode({
     input: Schema.Struct({ condition: Schema.Boolean, value: Schema.Any }),
-    output: Schema.Struct({ true: Schema.optional(Schema.Any), false: Schema.optional(Schema.Any) }),
+    output: Schema.Struct({
+      true: Schema.optional(Schema.Any),
+      false: Schema.optional(Schema.Any),
+    }),
     exec: (input) =>
       Effect.gen(function* () {
         const { value, condition } = yield* ValueBag.unwrap(input);
@@ -322,10 +326,16 @@ export const registry: Record<NodeType, Executable> = {
 
   // Ternary operator.
   ['if-else' as const]: defineComputeNode({
-    input: Schema.Struct({ condition: Schema.Boolean, true: Schema.Any, false: Schema.Any }),
+    input: Schema.Struct({
+      condition: Schema.Boolean,
+      true: Schema.Any,
+      false: Schema.Any,
+    }),
     output: Schema.Struct({ [DEFAULT_OUTPUT]: Schema.Any }),
     exec: synchronizedComputeFunction(({ condition, true: trueValue, false: falseValue }) =>
-      Effect.succeed({ [DEFAULT_OUTPUT]: isTruthy(condition) ? trueValue : falseValue }),
+      Effect.succeed({
+        [DEFAULT_OUTPUT]: isTruthy(condition) ? trueValue : falseValue,
+      }),
     ),
   }),
 

@@ -51,98 +51,101 @@ type RootProps = ThemedClassName<
   PropsWithChildren<{
     pin?: boolean;
     fade?: boolean;
+    behavior?: ScrollBehavior;
   }>
 >;
 
 /**
  * Scroll container that automatically scrolls to the bottom when new content is added.
  */
-const Root = forwardRef<ScrollController, RootProps>(({ children, classNames, pin, fade }, forwardedRef) => {
-  const scrollerRef = useRef<HTMLDivElement>(null);
-  const autoScrollRef = useRef(false);
-  const [overflow, setOverflow] = useState(false);
-  const [pinned, setPinned] = useState(pin);
+const Root = forwardRef<ScrollController, RootProps>(
+  ({ children, classNames, pin, fade, behavior: behaviorProp = 'smooth' }, forwardedRef) => {
+    const scrollerRef = useRef<HTMLDivElement>(null);
+    const autoScrollRef = useRef(false);
+    const [overflow, setOverflow] = useState(false);
+    const [pinned, setPinned] = useState(pin);
 
-  const timeoutRef = useRef<NodeJS.Timeout>(undefined);
-  const scrollToBottom = useCallback((behavior: ScrollBehavior = 'instant') => {
-    if (scrollerRef.current) {
-      // Temporarily hide scrollbar to prevent flicker.
-      autoScrollRef.current = true;
-      scrollerRef.current.classList.add('scrollbar-none');
-      scrollerRef.current.scrollTo({
-        top: scrollerRef.current.scrollHeight,
-        behavior,
-      });
+    const timeoutRef = useRef<NodeJS.Timeout>(undefined);
+    const scrollToBottom = useCallback((behavior: ScrollBehavior = behaviorProp) => {
+      if (scrollerRef.current) {
+        // Temporarily hide scrollbar to prevent flicker.
+        autoScrollRef.current = true;
+        scrollerRef.current.classList.add('scrollbar-none');
+        scrollerRef.current.scrollTo({
+          top: scrollerRef.current.scrollHeight,
+          behavior,
+        });
 
-      clearTimeout(timeoutRef.current);
-      if (behavior !== 'instant') {
-        timeoutRef.current = setTimeout(() => {
-          scrollerRef.current?.classList.remove('scrollbar-none');
-          autoScrollRef.current = false;
-        }, 500);
+        clearTimeout(timeoutRef.current);
+        if (behavior !== 'instant') {
+          timeoutRef.current = setTimeout(() => {
+            scrollerRef.current?.classList.remove('scrollbar-none');
+            autoScrollRef.current = false;
+          }, 500);
+        }
+        setPinned(true);
       }
-      setPinned(true);
-    }
-  }, []);
+    }, []);
 
-  const controller = useMemo(
-    () => ({
-      viewport: scrollerRef.current,
-      scrollToTop: () => {
-        invariant(scrollerRef.current);
-        scrollerRef.current.scrollTo({ top: 0, behavior: 'smooth' });
-        setPinned(false);
-      },
-      scrollToBottom: () => {
-        scrollToBottom('smooth');
-      },
-    }),
-    [scrollToBottom, scrollerRef.current],
-  );
-
-  // Scroll controller imperative ref.
-  useImperativeHandle(forwardedRef, () => controller, [controller]);
-
-  // Listen for scroll events.
-  useEffect(() => {
-    if (!scrollerRef.current) {
-      return;
-    }
-
-    return combine(
-      // Check if user scrolls.
-      addEventListener(scrollerRef.current, 'wheel', () => {
-        setPinned(isBottom(scrollerRef.current));
+    const controller = useMemo(
+      () => ({
+        viewport: scrollerRef.current,
+        scrollToTop: () => {
+          invariant(scrollerRef.current);
+          scrollerRef.current.scrollTo({ top: 0, behavior: 'smooth' });
+          setPinned(false);
+        },
+        scrollToBottom: () => {
+          scrollToBottom('smooth');
+        },
       }),
-      // Check if scrolls.
-      addEventListener(scrollerRef.current, 'scroll', () => {
-        setOverflow((scrollerRef.current?.scrollTop ?? 0) > 0);
-      }),
+      [scrollToBottom, scrollerRef.current],
     );
-  }, []);
 
-  return (
-    <ScrollContainerProvider pinned={pinned} controller={controller} scrollToBottom={scrollToBottom}>
-      <div className='relative grid flex-1 min-bs-0 overflow-hidden'>
-        {fade && (
-          <div
-            role='none'
-            data-visible={overflow}
-            className={mx(
-              // NOTE: Gradients may not be visible with dark reader extensions.
-              'z-10 absolute block-start-0 inset-inline-0 bs-24 is-full',
-              'opacity-0 duration-200 transition-opacity data-[visible="true"]:opacity-100',
-              'bg-gradient-to-b from-[--surface-bg] to-transparent pointer-events-none',
-            )}
-          />
-        )}
-        <div className={mx('flex flex-col min-bs-0 overflow-y-auto scrollbar-thin', classNames)} ref={scrollerRef}>
-          {children}
+    // Scroll controller imperative ref.
+    useImperativeHandle(forwardedRef, () => controller, [controller]);
+
+    // Listen for scroll events.
+    useEffect(() => {
+      if (!scrollerRef.current) {
+        return;
+      }
+
+      return combine(
+        // Check if user scrolls.
+        addEventListener(scrollerRef.current, 'wheel', () => {
+          setPinned(isBottom(scrollerRef.current));
+        }),
+        // Check if scrolls.
+        addEventListener(scrollerRef.current, 'scroll', () => {
+          setOverflow((scrollerRef.current?.scrollTop ?? 0) > 0);
+        }),
+      );
+    }, []);
+
+    return (
+      <ScrollContainerProvider pinned={pinned} controller={controller} scrollToBottom={scrollToBottom}>
+        <div className='relative grid flex-1 min-bs-0 overflow-hidden'>
+          {fade && (
+            <div
+              role='none'
+              data-visible={overflow}
+              className={mx(
+                // NOTE: Gradients may not be visible with dark reader extensions.
+                'z-10 absolute block-start-0 inset-inline-0 bs-24 is-full',
+                'opacity-0 duration-200 transition-opacity data-[visible="true"]:opacity-100',
+                'bg-gradient-to-b from-[--surface-bg] to-transparent pointer-events-none',
+              )}
+            />
+          )}
+          <div className={mx('flex flex-col min-bs-0 overflow-y-auto scrollbar-thin', classNames)} ref={scrollerRef}>
+            {children}
+          </div>
         </div>
-      </div>
-    </ScrollContainerProvider>
-  );
-});
+      </ScrollContainerProvider>
+    );
+  },
+);
 
 Root.displayName = 'ScrollContainer.Root';
 
@@ -161,14 +164,13 @@ const Viewport = forwardRef<HTMLDivElement, ViewportProps>(({ classNames, childr
       return;
     }
 
+    // Scroll instantly otherwise it might move while we're scrolling.
+    scrollToBottom();
+
     // Setup resize observer to detect content changes.
     const resizeObserver = new ResizeObserver(() => scrollToBottom());
-    scrollToBottom('instant');
-
     resizeObserver.observe(contentRef.current);
-    return () => {
-      resizeObserver.disconnect();
-    };
+    return () => resizeObserver.disconnect();
   }, [pinned, scrollToBottom]);
 
   return (

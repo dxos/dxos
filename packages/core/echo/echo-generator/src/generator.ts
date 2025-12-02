@@ -29,10 +29,10 @@ import {
 export class TestObjectGenerator<T extends string = TestSchemaType> {
   // prettier-ignore
   constructor(
-    protected readonly _schemas: TestSchemaMap<T>,
-    private readonly _generators: TestGeneratorMap<T>,
-    private readonly _provider?: TestObjectProvider<T>,
-  ) {}
+		protected readonly _schemas: TestSchemaMap<T>,
+		private readonly _generators: TestGeneratorMap<T>,
+		private readonly _provider?: TestObjectProvider<T>,
+	) {}
 
   get schemas(): (EchoSchema | Schema.Schema.AnyNoContext)[] {
     return Object.values(this._schemas);
@@ -86,7 +86,7 @@ export class SpaceObjectGenerator<T extends string> extends TestObjectGenerator<
   ) {
     super(schemaMap, generators, async (type: T) => {
       const schema = this.getSchema(type);
-      const { objects } = await this._space.db.query(schema ? Filter.type(schema) : Filter.nothing()).run();
+      const objects = await this._space.db.query(schema ? Filter.type(schema) : Filter.nothing()).run();
       return objects;
     });
   }
@@ -102,7 +102,11 @@ export class SpaceObjectGenerator<T extends string> extends TestObjectGenerator<
     return result;
   }
 
-  override async createObject({ types }: { types?: T[] } = {}): Promise<AnyLiveObject<any>> {
+  override async createObject({
+    types,
+  }: {
+    types?: T[];
+  } = {}): Promise<AnyLiveObject<any>> {
     return this._space.db.add(await super.createObject({ types }));
   }
 
@@ -122,7 +126,7 @@ export class SpaceObjectGenerator<T extends string> extends TestObjectGenerator<
       if (existingSchema != null) {
         return existingSchema;
       }
-      this._space.db.graph.schemaRegistry.addSchema([schema]);
+      await this._space.db.graph.schemaRegistry.register([schema]);
       return schema;
     }
   }

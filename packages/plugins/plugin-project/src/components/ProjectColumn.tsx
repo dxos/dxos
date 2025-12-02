@@ -7,7 +7,6 @@ import React, { useMemo, useState } from 'react';
 
 import { Obj, Query, Type } from '@dxos/echo';
 import { getQueryTarget, resolveSchemaWithClientAndSpace } from '@dxos/plugin-space';
-import { useClient } from '@dxos/react-client';
 import { Filter, getSpace, isSpace, useQuery } from '@dxos/react-client/echo';
 import { useAsyncEffect, useTranslation } from '@dxos/react-ui';
 import { Card, CardStack, StackItem, cardStackDefaultInlineSizeRem, cardStackHeading } from '@dxos/react-ui-stack';
@@ -27,7 +26,6 @@ export type ProjectColumnProps = {
 // TODO(wittjosiah): Support item DnD reordering (ordering needs to be stored on the view presentation collection).
 export const ProjectColumn = ({ column }: ProjectColumnProps) => {
   const { t } = useTranslation(meta.id);
-  const client = useClient();
   const view = column.view.target;
   const space = getSpace(view);
   const { Item } = useProject('ViewColumn');
@@ -47,9 +45,9 @@ export const ProjectColumn = ({ column }: ProjectColumnProps) => {
       return;
     }
 
-    const schema = await resolveSchemaWithClientAndSpace(client, space, query.ast);
+    const schema = await resolveSchemaWithClientAndSpace(space, query.ast);
     setSchema(() => schema);
-  }, [client, space, query]);
+  }, [space, query]);
 
   const queryTarget = getQueryTarget(query.ast, space);
   const items = useQuery(queryTarget, query);

@@ -5,7 +5,7 @@
 import { type PromiseIntentDispatcher, createIntent } from '@dxos/app-framework';
 import { addressToA1Notation } from '@dxos/compute';
 import { ComputeGraph, ComputeGraphModel, DEFAULT_OUTPUT, NODE_INPUT, NODE_OUTPUT } from '@dxos/conductor';
-import { DXN, Filter, Key, type Obj, Type } from '@dxos/echo';
+import { DXN, Filter, Key, type Obj } from '@dxos/echo';
 import { type TypedObject } from '@dxos/echo/internal';
 import { Markdown } from '@dxos/plugin-markdown/types';
 import { Sheet } from '@dxos/plugin-sheet/types';
@@ -35,9 +35,9 @@ export const createGenerator = <T extends Obj.Any>(
     const typename = schema.typename;
 
     // Find or create table and view.
-    const { objects: views } = await space.db.query(Filter.type(View.View)).run();
+    const views = await space.db.query(Filter.type(View.View)).run();
     const view = await findViewByTypename(views, typename);
-    const staticSchema = client?.graph.schemaRegistry.schemas.find((schema) => Type.getTypename(schema) === typename);
+    const staticSchema = client?.graph.schemaRegistry.query({ typename }).runSync()[0];
     if (!view && !staticSchema) {
       await dispatch(createIntent(SpaceAction.AddSchema, { space, schema, show: false }));
     } else if (!view && staticSchema) {

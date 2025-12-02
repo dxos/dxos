@@ -30,16 +30,16 @@ export type ImportOptions = {
 export class Serializer {
   static version = 1;
 
-  async export(database: EchoDatabase, query?: Query<any>): Promise<SerializedSpace> {
+  async export(database: EchoDatabase, query?: Query.Any): Promise<SerializedSpace> {
     const loadedObjects: Array<AnyLiveObject<any> | undefined> = [];
 
     if (query) {
-      const { objects } = await database.query(query).run();
+      const objects = await database.query(query).run();
       loadedObjects.push(...objects);
     } else {
       const ids = database.coreDatabase.getAllObjectIds();
       for (const chunk of chunkArray(ids, MAX_LOAD_OBJECT_CHUNK_SIZE)) {
-        const { objects } = await database.query(Filter.ids(...chunk)).run({ timeout: 60_000 });
+        const objects = await database.query(Filter.id(...chunk)).run({ timeout: 60_000 });
         loadedObjects.push(...objects);
       }
     }

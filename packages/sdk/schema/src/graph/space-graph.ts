@@ -30,7 +30,7 @@ export type SpaceGraphEdge = GraphEdge.Optional;
 
 class SpaceGraphBuilder extends AbstractGraphBuilder<SpaceGraphNode, SpaceGraphEdge, SpaceGraphModel> {}
 
-const defaultFilter: Filter<any> = Filter.everything();
+const defaultFilter: Filter.Any = Filter.everything();
 
 const truncate = (id: string) => `${id.slice(0, 4)}…${id.slice(-4)}`;
 
@@ -149,9 +149,9 @@ export class SpaceGraphModel extends ReactiveGraphModel<SpaceGraphNode, SpaceGra
 
     invariant(this._space);
     this._objectSubscription = this._space.db.query(Query.select(this._filter ?? defaultFilter)).subscribe(
-      ({ objects }) => {
-        log('update', { objects: objects.length });
-        this._objects = [...objects];
+      (query) => {
+        log('update', { objects: query.results.length });
+        this._objects = [...query.results];
         this.invalidate();
       },
       { fire: true },

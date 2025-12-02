@@ -39,7 +39,7 @@ describe('Database', () => {
       preloadSchemaOnOpen: false,
     });
 
-    const { objects } = await db.query(Query.select(Filter.nothing())).run();
+    const objects = await db.query(Query.select(Filter.nothing())).run();
     expect(objects).to.have.length(0);
     await db.close();
   });
@@ -62,12 +62,14 @@ describe('Database', () => {
     let spaceKey: PublicKey;
     let rootUrl: string;
     {
-      const testPeer = await testBuilder.createPeer({ kv: createTestLevel(tmpPath) });
+      const testPeer = await testBuilder.createPeer({
+        kv: createTestLevel(tmpPath),
+      });
       const db = await testPeer.createDatabase();
       spaceKey = db.spaceKey;
       rootUrl = db.rootUrl!;
       db.add(Obj.make(Type.Expando, { name: 'Test' }));
-      const { objects } = await db.query(Query.select(Filter.everything())).run();
+      const objects = await db.query(Query.select(Filter.everything())).run();
       expect(objects).to.have.length(1);
       expect(objects[0].name).to.eq('Test');
       await sleep(500); // Wait for the object to be saved.
@@ -76,9 +78,11 @@ describe('Database', () => {
 
     // Load database.
     {
-      const testPeer = await testBuilder.createPeer({ kv: createTestLevel(tmpPath) });
+      const testPeer = await testBuilder.createPeer({
+        kv: createTestLevel(tmpPath),
+      });
       const db = await asyncTimeout(testPeer.openDatabase(spaceKey, rootUrl), 1000);
-      const { objects } = await db.query(Query.select(Filter.everything())).run();
+      const objects = await db.query(Query.select(Filter.everything())).run();
       expect(objects).to.have.length(1);
       expect(objects[0].name).to.eq('Test');
       await testPeer.close();
@@ -96,7 +100,7 @@ describe('Database', () => {
     const obj2 = db.add(obj1);
     await db.flush();
     expect(obj1).to.eq(obj2);
-    const { objects } = await db.query(Query.select(Filter.everything())).run();
+    const objects = await db.query(Query.select(Filter.everything())).run();
     expect(objects).to.have.length(1);
   });
 
@@ -141,14 +145,14 @@ describe('Database', () => {
       }
       await db.flush();
 
-      const { objects } = await db.query(Query.select(Filter.everything())).run();
+      const objects = await db.query(Query.select(Filter.everything())).run();
       expect(objects.length).to.eq(add);
     }
 
     // Remove objects.
     const remove = 3;
     {
-      const { objects } = await db.query(Query.select(Filter.everything())).run();
+      const objects = await db.query(Query.select(Filter.everything())).run();
       for (const obj of objects.slice(0, remove)) {
         db.remove(obj);
       }
@@ -156,7 +160,7 @@ describe('Database', () => {
     }
 
     {
-      const { objects } = await db.query(Query.select(Filter.everything())).run();
+      const objects = await db.query(Query.select(Filter.everything())).run();
       expect(objects.length).to.eq(add - remove);
     }
   });
@@ -169,12 +173,12 @@ describe('Database', () => {
     await db.flush({ indexes: true });
 
     {
-      const { objects } = await db.query(Filter.ids(obj1.id)).run();
+      const objects = await db.query(Filter.id(obj1.id)).run();
       expect(objects).toEqual([obj1]);
     }
 
     {
-      const { objects } = await db.query(Filter.ids(obj2.id)).run();
+      const objects = await db.query(Filter.id(obj2.id)).run();
       expect(objects).toEqual([obj2]);
     }
   });
@@ -198,22 +202,22 @@ describe('Database', () => {
     {
       const db = await peer.openDatabase(spaceKey, rootUrl);
 
-      const query = db.query(Filter.ids(id));
+      const query = db.query(Filter.id(id));
       const loaded = new Trigger();
       query.subscribe();
       using updates = updateCounter(() => {
-        if (query.objects.length > 0) {
+        if (query.results.length > 0) {
           loaded.wake();
         }
       });
 
-      expect(query.objects).toHaveLength(0);
+      expect(query.results).toHaveLength(0);
       expect(updates.count).toEqual(0);
 
       await loaded.wait();
       expect(updates.count).toBeGreaterThan(0);
-      expect(query.objects).toHaveLength(1);
-      expect(query.objects[0].name).toEqual('Object 1');
+      expect(query.results).toHaveLength(1);
+      expect(query.results[0].name).toEqual('Object 1');
     }
   });
 
@@ -245,7 +249,7 @@ describe('Database', () => {
     await db.flush();
     expect(getObjectCore(task).database).to.exist;
 
-    const { objects: tasks } = await db.query(Filter.type(TestSchema.Task)).run();
+    const tasks = await db.query(Filter.type(TestSchema.Task)).run();
     expect(tasks).to.have.length(1);
     expect(tasks[0].id).to.eq(task.id);
   });
@@ -254,12 +258,14 @@ describe('Database', () => {
     const { db } = await createDbWithTypes();
 
     {
-      const container = Obj.make(TestSchema.Container, { records: [{ type: TestSchema.RecordType.WORK }] });
+      const container = Obj.make(TestSchema.Container, {
+        records: [{ type: TestSchema.RecordType.WORK }],
+      });
       db.add(container);
     }
 
     {
-      const { objects } = await db.query(Filter.type(TestSchema.Container)).run();
+      const objects = await db.query(Filter.type(TestSchema.Container)).run();
       const [container] = objects;
       expect(container.records).to.have.length(1);
       expect(container.records![0].type).to.eq(TestSchema.RecordType.WORK);
@@ -278,7 +284,7 @@ describe('Database', () => {
     }
 
     {
-      const { objects } = await db.query(Filter.type(TestSchema.Container)).run();
+      const objects = await db.query(Filter.type(TestSchema.Container)).run();
       const [container] = objects;
       expect(container.objects).to.have.length(2);
       const target1 = await container.objects![0].load();
@@ -303,7 +309,7 @@ describe('Database', () => {
     }
 
     {
-      const { objects } = await db.query(Filter.type(TestSchema.Container)).run();
+      const objects = await db.query(Filter.type(TestSchema.Container)).run();
       const [container] = objects;
       expect(container.objects).to.have.length(2);
       expect(Obj.getTypename(container.objects![0].target!)).to.equal(Type.getTypename(TestSchema.Task));
@@ -347,7 +353,12 @@ describe('Database', () => {
     test('add with a reference to echo reactive proxy', async () => {
       const { db } = await createDbWithTypes();
       const firstTask = db.add(Obj.make(TestSchema.Task, { title: 'foo' }));
-      const secondTask = db.add(Obj.make(TestSchema.Task, { title: 'bar', previous: Ref.make(firstTask) }));
+      const secondTask = db.add(
+        Obj.make(TestSchema.Task, {
+          title: 'bar',
+          previous: Ref.make(firstTask),
+        }),
+      );
       expect(secondTask.previous?.target).to.eq(firstTask);
     });
 
@@ -441,7 +452,7 @@ describe('Database', () => {
       const { db } = await addToDatabase(root);
 
       expect(root.records).to.have.length(1);
-      const queriedContainer = (await db.query(Filter.type(TestSchema.Container)).run()).objects[0]!;
+      const queriedContainer = (await db.query(Filter.type(TestSchema.Container)).run())[0]!;
       expect(queriedContainer.records!.length).to.equal(1);
       expect(queriedContainer.records![0]!.contacts![0]!.target!.name).to.equal('tester');
     });
@@ -466,7 +477,7 @@ describe('Database', () => {
 
   const createDbWithTypes = async () => {
     const { db, graph } = await builder.createDatabase();
-    graph.schemaRegistry.addSchema([TestSchema.Task, TestSchema.Person, TestSchema.Container]);
+    await graph.schemaRegistry.register([TestSchema.Task, TestSchema.Person, TestSchema.Container]);
     return { db, graph };
   };
 

@@ -10,8 +10,7 @@
     ".": {
       "types": "./src/types.d.ts",
       "node": "./src/node.js",
-      "browser": "./src/browser.js",
-      "default": "./src/node.js"
+      "browser": "./src/browser.js"
     }
   },
   "files": [

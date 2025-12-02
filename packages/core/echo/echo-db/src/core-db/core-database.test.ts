@@ -240,7 +240,7 @@ describe('CoreDatabase', () => {
 
       await db.coreDatabase.updateSpaceState({ rootUrl: newRootDocHandle.url });
 
-      await db.query(Filter.ids(obj.id)).first();
+      await db.query(Filter.id(obj.id)).first();
     });
 
     test('multiple object update', async () => {
@@ -272,7 +272,7 @@ describe('CoreDatabase', () => {
 
       objectsToAdd.forEach((o) => addObjectToDoc(newRootDocHandle, o));
       for (const obj of loadedLinks) {
-        await db.query(Filter.ids(obj.id)).first();
+        await db.query(Filter.id(obj.id)).first();
       }
       for (const obj of partiallyLoadedLinks) {
         db.getObjectById(obj.id);
@@ -316,7 +316,7 @@ describe('CoreDatabase', () => {
         const kv = createTestLevel(tmpPath);
         const testPeer = await testBuilder.createPeer({ kv });
         const db = await testPeer.openDatabase(spaceKey, rootUrl);
-        await db.query(Filter.ids(objectId)).first();
+        await db.query(Filter.id(objectId)).first();
         const object = db.getObjectById(objectId);
         expect(object).not.to.be.undefined;
         expect((object as any).title).to.eq('first object');
@@ -326,7 +326,7 @@ describe('CoreDatabase', () => {
     test('load object', async () => {
       const object = Obj.make(Type.Expando, { title: 'Hello' });
       const db = await createClientDbInSpaceWithObject(object);
-      await db.query(Filter.ids(object.id)).first();
+      await db.query(Filter.id(object.id)).first();
       const loadedObject = db.getObjectById(object.id);
       expect(loadedObject).to.deep.eq(object);
     });
@@ -362,7 +362,7 @@ describe('CoreDatabase', () => {
       const testBuilder = new EchoTestBuilder();
       await openAndClose(testBuilder);
       const { db, graph } = await testBuilder.createDatabase();
-      graph.schemaRegistry.addSchema([TestSchema.Person]);
+      await graph.schemaRegistry.register([TestSchema.Person]);
       const contact = db.add(Obj.make(TestSchema.Person, { name: 'Foo' }));
 
       await db._coreDatabase.atomicReplaceObject(contact.id, {

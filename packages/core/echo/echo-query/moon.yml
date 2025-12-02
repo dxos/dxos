@@ -23,11 +23,12 @@ tasks:
       - src/parser/gen/query.terms.ts
       - src/parser/gen/query.ts
   prebuild-query-lite:
-    command: esbuild src/query-lite/index.ts --bundle --outdir=dist/query-lite --format=esm --log-level=error
+    command: tsdown --logLevel error
     deps:
       - ^:compile
     inputs:
       - src/query-lite/*
+      - tsdown.config.ts
     outputs:
       - dist/query-lite/*
   test:

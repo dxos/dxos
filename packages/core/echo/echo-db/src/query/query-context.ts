@@ -11,7 +11,7 @@ import { type QueryAST } from '@dxos/echo-protocol';
 export type Sort<T extends AnyProperties> = (a: T, b: T) => -1 | 0 | 1;
 
 export interface QueryContext<T extends AnyProperties = AnyProperties, O extends Entity.Entity<T> = Entity.Entity<T>> {
-  getResults(): QueryResult.Entry<O>[];
+  getResults(): QueryResult.EntityEntry<O>[];
 
   // TODO(dmaretskyi): Update info?
   changed: Event<void>;
@@ -19,7 +19,7 @@ export interface QueryContext<T extends AnyProperties = AnyProperties, O extends
   /**
    * One-shot query.
    */
-  run(query: QueryAST.Query, opts?: QueryResult.RunOptions): Promise<QueryResult.Entry<O>[]>;
+  run(query: QueryAST.Query, opts?: QueryResult.RunOptions): Promise<QueryResult.EntityEntry<O>[]>;
 
   /**
    * Set the filter and trigger continuous updates.

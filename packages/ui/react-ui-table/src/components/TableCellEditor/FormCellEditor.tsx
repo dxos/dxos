@@ -9,7 +9,6 @@ import { Filter, Obj } from '@dxos/echo';
 import { Format, Ref, type TypeAnnotation, getValue } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
 import { getSnapshot } from '@dxos/live-object';
-import { type Client } from '@dxos/react-client';
 import { getSpace } from '@dxos/react-client/echo';
 import { Popover } from '@dxos/react-ui';
 import { Form, type FormProps } from '@dxos/react-ui-form';
@@ -17,7 +16,7 @@ import { parseCellIndex, useGridContext } from '@dxos/react-ui-grid';
 import { type FieldProjection } from '@dxos/schema';
 import { getDeep, isTruthy, setDeep } from '@dxos/util';
 
-import { type ModalController, type TableModel } from '../../model';
+import { type TableModel } from '../../model';
 import { translationKey } from '../../translations';
 import { narrowSchema } from '../../util';
 
@@ -29,8 +28,6 @@ export type FormCellEditorProps = {
   schema?: Schema.Schema.AnyNoContext;
   onSave?: () => void;
   onCreate?: OnCreateHandler;
-  client?: Client;
-  modals?: ModalController;
   __gridScope: any;
 } & Omit<FormProps<any>, 'values' | 'schema' | 'onCreate'>;
 
@@ -41,8 +38,6 @@ export const FormCellEditor = ({
   model,
   schema,
   onSave,
-  client,
-  modals,
   onCreate,
   __gridScope,
   ...formProps
@@ -55,24 +50,19 @@ export const FormCellEditor = ({
     (typeAnnotation: Pick<TypeAnnotation, 'typename'>) => {
       const space = getSpace(model!.view);
       invariant(space);
-
-      let schema;
-      if (client) {
-        schema = client.graph.schemaRegistry.getSchema(typeAnnotation.typename);
-      }
-      if (!schema) {
-        schema = space.db.schemaRegistry.getSchema(typeAnnotation.typename);
-      }
+      const schema = space.db.schemaRegistry
+        .query({ typename: typeAnnotation.typename, location: ['database', 'runtime'] })
+        .runSync()[0];
       return { space, schema };
     },
-    [client, model],
+    [model],
   );
 
   const handleQueryRefOptions = useCallback(
     async (typeAnnotation: TypeAnnotation) => {
       const { schema, space } = getSchema(typeAnnotation);
       if (model && schema && space) {
-        const { objects } = await space.db.query(Filter.type(schema)).run();
+        const objects = await space.db.query(Filter.type(schema)).run();
         return objects
           .map((obj) => {
             return {
@@ -85,7 +75,7 @@ export const FormCellEditor = ({
 
       return [];
     },
-    [client, model],
+    [model],
   );
 
   const originalRow = useMemo(() => {

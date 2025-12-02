@@ -36,7 +36,7 @@ const migrateViewType = Effect.fn(function* (
     targetSchema: Type.getDXN(targetSchema)?.toString(),
   });
 
-  const { objects } = yield* DatabaseService.runQuery(
+  const objects = yield* DatabaseService.runQuery(
     Query.select(Filter.type(currentSchema)).referencedBy(View.ViewV4, 'presentation'),
   );
 

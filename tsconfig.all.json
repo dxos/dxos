@@ -520,6 +520,9 @@
       "path": "packages/ui/react-ui-list/tsconfig.json"
     },
     {
+      "path": "packages/ui/react-ui-markdown/tsconfig.json"
+    },
+    {
       "path": "packages/ui/react-ui-masonry/tsconfig.json"
     },
     {

@@ -135,7 +135,7 @@ export default () => {
           const space = extensions.space;
           const view = (await space.db
             // TODO(wittjosiah): Filter.and should aggregate type
-            .query(Query.select(Filter.and(Filter.type(View.View), Filter.ids(id))))
+            .query(Query.select(Filter.and(Filter.type(View.View), Filter.id(id))))
             .first()) as View.View;
 
           const table = await view.presentation.load();
@@ -162,7 +162,7 @@ export default () => {
           const space = extensions.space;
           const view = (await space.db
             // TODO(wittjosiah): Filter.and should aggregate type
-            .query(Query.select(Filter.and(Filter.type(View.View), Filter.ids(id))))
+            .query(Query.select(Filter.and(Filter.type(View.View), Filter.id(id))))
             .first()) as View.View;
 
           const table = await view.presentation.load();
@@ -192,7 +192,7 @@ export default () => {
           const space = extensions.space;
           const view = (await space.db
             // TODO(wittjosiah): Filter.and should aggregate type
-            .query(Query.select(Filter.and(Filter.type(View.View), Filter.ids(id))))
+            .query(Query.select(Filter.and(Filter.type(View.View), Filter.id(id))))
             .first()) as View.View;
           // Get schema for validation.
           const typename = view.query.typename;

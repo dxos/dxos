@@ -13,7 +13,7 @@ import * as Layer from 'effect/Layer';
 import * as Stream from 'effect/Stream';
 
 import { Obj } from '@dxos/echo';
-import { TestHelpers } from '@dxos/effect';
+import { TestHelpers } from '@dxos/effect/testing';
 import { log } from '@dxos/log';
 import { Message } from '@dxos/types';
 

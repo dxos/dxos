@@ -6,7 +6,8 @@ import * as Schema from 'effect/Schema';
 import { afterEach, assert, beforeEach, describe, test } from 'vitest';
 
 import { Filter, Obj, Query, Ref, Type } from '@dxos/echo';
-import { Format, PersistentSchema, RuntimeSchemaRegistry, TypeEnum } from '@dxos/echo/internal';
+import { Format, PersistentSchema, TypeEnum } from '@dxos/echo/internal';
+import { RuntimeSchemaRegistry } from '@dxos/echo-db';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
 import { log } from '@dxos/log';
 import { ProjectionModel } from '@dxos/schema';
@@ -30,7 +31,7 @@ describe('Projection', () => {
     const schema = TestSchema.Person;
     const jsonSchema = Type.toJsonSchema(schema);
     const registry = new RuntimeSchemaRegistry();
-    registry.addSchema([TestSchema.Person, TestSchema.Organization]);
+    await registry.register([TestSchema.Person, TestSchema.Organization]);
 
     const view = await View.makeWithReferences({
       query: Query.select(Filter.type(schema)),

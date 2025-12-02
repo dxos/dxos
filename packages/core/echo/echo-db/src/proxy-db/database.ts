@@ -27,20 +27,20 @@ import {
   initEchoReactiveObjectRootProxy,
   isEchoObject,
 } from '../echo-handler';
-import { type Hypergraph } from '../hypergraph';
+import { type HypergraphImpl } from '../hypergraph';
 import { Filter, Query } from '../query';
 
-import { EchoSchemaRegistry } from './echo-schema-registry';
+import { DatabaseSchemaRegistry } from './database-schema-registry';
 import { type ObjectMigration } from './object-migration';
 
 // TODO(burdon): Remove and progressively push methods to Database.Database.
 export interface EchoDatabase extends Database.Database {
-  get graph(): Hypergraph;
-  get schemaRegistry(): EchoSchemaRegistry;
-
   /** @deprecated */
   get spaceKey(): PublicKey;
   get spaceId(): SpaceId;
+
+  get graph(): HypergraphImpl;
+  get schemaRegistry(): DatabaseSchemaRegistry;
 
   toJSON(): object;
 
@@ -104,7 +104,7 @@ export interface EchoDatabase extends Database.Database {
 }
 
 export type EchoDatabaseParams = {
-  graph: Hypergraph;
+  graph: HypergraphImpl;
   dataService: DataService;
   queryService: QueryService;
   spaceId: SpaceId;
@@ -131,7 +131,7 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
    */
   readonly _coreDatabase: CoreDatabase;
 
-  private readonly _schemaRegistry: EchoSchemaRegistry;
+  private readonly _schemaRegistry: DatabaseSchemaRegistry;
 
   private _rootUrl: string | undefined = undefined;
 
@@ -154,7 +154,7 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
       spaceKey: params.spaceKey,
     });
 
-    this._schemaRegistry = new EchoSchemaRegistry(this, {
+    this._schemaRegistry = new DatabaseSchemaRegistry(this, {
       reactiveQuery: params.reactiveSchemaQuery,
       preloadSchemaOnOpen: params.preloadSchemaOnOpen,
     });
@@ -185,12 +185,12 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
     return this._rootUrl;
   }
 
-  get graph(): Hypergraph {
+  get graph(): HypergraphImpl {
     return this._coreDatabase.graph;
   }
 
   // TODO(burdon): Move into hypergraph.
-  get schemaRegistry(): EchoSchemaRegistry {
+  get schemaRegistry(): DatabaseSchemaRegistry {
     return this._schemaRegistry;
   }
 
@@ -309,8 +309,12 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
 
   async runMigrations(migrations: ObjectMigration[]): Promise<void> {
     for (const migration of migrations) {
-      const { objects } = await this._coreDatabase.graph.query(Query.select(Filter.typeDXN(migration.fromType))).run();
-      log.verbose('migrate', { from: migration.fromType, to: migration.toType, objects: objects.length });
+      const objects = await this._coreDatabase.graph.query(Query.select(Filter.typeDXN(migration.fromType))).run();
+      log.verbose('migrate', {
+        from: migration.fromType,
+        to: migration.toType,
+        objects: objects.length,
+      });
       for (const object of objects) {
         const output = await migration.transform(object, { db: this });
 

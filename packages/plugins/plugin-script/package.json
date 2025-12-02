@@ -109,7 +109,7 @@
     "@preact/signals-core": "^1.12.1",
     "@typescript/vfs": "^1.6.0",
     "@valtown/codemirror-continue": "^2.3.1",
-    "@valtown/codemirror-ts": "^2.2.0",
+    "@valtown/codemirror-ts": "^2.3.1",
     "codemirror": "^6.0.1",
     "date-fns": "^3.3.1",
     "esbuild-wasm": "^0.16.14",

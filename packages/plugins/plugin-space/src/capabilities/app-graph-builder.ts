@@ -65,9 +65,7 @@ export default (context: PluginContext) => {
           nextOrder.map(({ id }) => id),
         );
 
-        const {
-          objects: [spacesOrder],
-        } = await client.spaces.default.db.query(Filter.type(Type.Expando, { key: SHARED })).run();
+        const [spacesOrder] = await client.spaces.default.db.query(Filter.type(Type.Expando, { key: SHARED })).run();
         if (spacesOrder) {
           spacesOrder.order = nextOrder.map(({ id }) => id);
         } else {
@@ -372,7 +370,7 @@ export default (context: PluginContext) => {
           }
 
           if (!query) {
-            query = space.db.query(Filter.ids(dxn.echoId));
+            query = space.db.query(Filter.id(dxn.echoId));
           }
 
           const object = get(atomFromQuery(query)).at(0);
@@ -380,7 +378,12 @@ export default (context: PluginContext) => {
             return null;
           }
 
-          return createObjectNode({ object, space, resolve: resolve(get), disposition: 'hidden' });
+          return createObjectNode({
+            object,
+            space,
+            resolve: resolve(get),
+            disposition: 'hidden',
+          });
         });
       },
     }),
@@ -389,20 +392,21 @@ export default (context: PluginContext) => {
     createExtension({
       id: `${meta.id}/system-collections`,
       connector: (node) => {
-        const client = context.getCapability(ClientCapabilities.Client);
         // TODO(wittjosiah): Find a simpler way to define this type.
         let query: QueryResult.QueryResult<Schema.Schema.Type<typeof Type.Expando>> | undefined;
-        return Atom.make((get) =>
-          Function.pipe(
+        return Atom.make((get) => {
+          const client = get(context.capabilities(ClientCapabilities.Client)).at(0);
+          return Function.pipe(
             get(node),
             Option.flatMap((node) =>
               Obj.instanceOf(Collection.Managed, node.data) ? Option.some(node.data) : Option.none(),
             ),
             Option.flatMap((collection) => {
               const space = getSpace(collection);
-              const schema = client.graph.schemaRegistry.schemas.find(
-                (schema) => Type.getTypename(schema) === collection.key,
-              );
+              // TODO(wittjosiah): Support reactive schema registry queries.
+              const schema = client?.graph.schemaRegistry
+                .query({ typename: collection.key, location: ['runtime'] })
+                .runSync()[0];
               return space && schema ? Option.some({ space, schema }) : Option.none();
             }),
             Option.map(({ space, schema }) => {
@@ -421,18 +425,18 @@ export default (context: PluginContext) => {
                 .filter(isNonNullable);
             }),
             Option.getOrElse(() => []),
-          ),
-        );
+          );
+        });
       },
     }),
 
     // Create branch nodes for static schema record types.
     createExtension({
       id: `${meta.id}/static-schemas`,
-      connector: (node) => {
-        const client = context.getCapability(ClientCapabilities.Client);
-        return Atom.make((get) =>
-          Function.pipe(
+      connector: (node) =>
+        Atom.make((get) => {
+          const client = get(context.capabilities(ClientCapabilities.Client)).at(0);
+          return Function.pipe(
             get(node),
             Option.flatMap((node) =>
               Obj.instanceOf(Collection.Managed, node.data) && node.data.key === Type.getTypename(Type.PersistentType)
@@ -444,17 +448,15 @@ export default (context: PluginContext) => {
               return space?.properties.staticRecords ? Option.some(space) : Option.none();
             }),
             Option.map((space) => {
+              // TODO(wittjosiah): Support reactive schema registry queries.
               return get(atomFromSignal(() => (space.properties.staticRecords ?? []) as string[]))
-                .map((typename) =>
-                  client.graph.schemaRegistry.schemas.find((schema) => Type.getTypename(schema) === typename),
-                )
+                .map((typename) => client?.graph.schemaRegistry.query({ typename, location: ['runtime'] }).runSync()[0])
                 .filter(isNonNullable)
                 .map((schema) => createStaticSchemaNode({ schema, space }));
             }),
             Option.getOrElse(() => []),
-          ),
-        );
-      },
+          );
+        }),
     }),
 
     // Create actions for static schema record types.
@@ -463,11 +465,17 @@ export default (context: PluginContext) => {
       actions: (node) => {
         let query: QueryResult.QueryResult<Obj.Any> | undefined;
         return Atom.make((get) => {
-          // TODO(wittjosiah): Use schemaRegistry query once it support atom reactivity.
-          const schemas = get(context.capabilities(ClientCapabilities.Schema))
-            .flat()
-            .filter((schema) => ViewAnnotation.get(schema).pipe(Option.getOrElse(() => false)));
-          const filter = Filter.or(...schemas.map((schema) => Filter.type(schema)));
+          // TODO(wittjosiah): Support reactive schema registry queries.
+          const schemas =
+            get(context.capabilities(ClientCapabilities.Client))
+              .at(0)
+              ?.graph.schemaRegistry.query({ location: ['runtime'] })
+              .runSync() ?? [];
+          const filter = Filter.or(
+            ...schemas
+              .filter((schema) => ViewAnnotation.get(schema).pipe(Option.getOrElse(() => false)))
+              .map((schema) => Filter.type(schema)),
+          );
 
           return Function.pipe(
             get(node),
@@ -519,11 +527,17 @@ export default (context: PluginContext) => {
       connector: (node) => {
         let query: QueryResult.QueryResult<Obj.Any> | undefined;
         return Atom.make((get) => {
-          // TODO(wittjosiah): Use schemaRegistry query once it support atom reactivity.
-          const schemas = get(context.capabilities(ClientCapabilities.Schema))
-            .flat()
-            .filter((schema) => ViewAnnotation.get(schema).pipe(Option.getOrElse(() => false)));
-          const filter = Filter.or(...schemas.map((schema) => Filter.type(schema)));
+          // TODO(wittjosiah): Support reactive schema registry queries.
+          const schemas =
+            get(context.capabilities(ClientCapabilities.Client))
+              .at(0)
+              ?.graph.schemaRegistry.query({ location: ['runtime'] })
+              .runSync() ?? [];
+          const filter = Filter.or(
+            ...schemas
+              .filter((schema) => ViewAnnotation.get(schema).pipe(Option.getOrElse(() => false)))
+              .map((schema) => Filter.type(schema)),
+          );
 
           return Function.pipe(
             get(node),
@@ -572,11 +586,17 @@ export default (context: PluginContext) => {
       actions: (node) => {
         let query: QueryResult.QueryResult<Obj.Any> | undefined;
         return Atom.make((get) => {
-          // TODO(wittjosiah): Use schemaRegistry query once it support atom reactivity.
-          const schemas = get(context.capabilities(ClientCapabilities.Schema))
-            .flat()
-            .filter((schema) => ViewAnnotation.get(schema).pipe(Option.getOrElse(() => false)));
-          const filter = Filter.or(...schemas.map((schema) => Filter.type(schema)));
+          // TODO(wittjosiah): Support reactive schema registry queries.
+          const schemas =
+            get(context.capabilities(ClientCapabilities.Client))
+              .at(0)
+              ?.graph.schemaRegistry.query({ location: ['runtime'] })
+              .runSync() ?? [];
+          const filter = Filter.or(
+            ...schemas
+              .filter((schema) => ViewAnnotation.get(schema).pipe(Option.getOrElse(() => false)))
+              .map((schema) => Filter.type(schema)),
+          );
 
           return Function.pipe(
             get(node),

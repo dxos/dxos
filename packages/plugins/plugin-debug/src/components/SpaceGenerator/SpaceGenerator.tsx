@@ -52,7 +52,7 @@ export const SpaceGenerator = ({ space, onCreateObjects }: SpaceGeneratorProps) 
     const staticSchema = space.db.graph.schemaRegistry.schemas;
 
     // Create object map.
-    const { objects } = await space.db.query(Filter.everything()).run();
+    const objects = await space.db.query(Filter.everything()).run();
     const objectMap = sortKeys(
       objects.reduce<Record<string, number>>((map, obj) => {
         const type = Obj.getTypename(obj);

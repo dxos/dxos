@@ -21,8 +21,8 @@ import { type Stream } from '@dxos/codec-protobuf/stream';
 import { Config, SaveConfig } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { raise } from '@dxos/debug';
-import { Type } from '@dxos/echo';
-import { EchoClient, type Hypergraph, QueueServiceImpl } from '@dxos/echo-db';
+import { type Hypergraph, Type } from '@dxos/echo';
+import { EchoClient, QueueServiceImpl } from '@dxos/echo-db';
 import { MockQueueService } from '@dxos/echo-db';
 import { EdgeHttpClient } from '@dxos/edge-client';
 import { invariant } from '@dxos/invariant';
@@ -140,9 +140,12 @@ export class Client {
       log.config({ filter, prefix });
     }
 
-    this._echoClient.graph.schemaRegistry.addSchema([SpaceProperties]);
-    if (options.types) {
-      this.addTypes(options.types);
+    // TODO(wittjosiah): This is ill-advised.
+    //   However, it seems to work okay for now since the runtime registry operates synchronously despite the interface.
+    //   Moving this to `initialize` causes issues with re-initialization.
+    void this._echoClient.graph.schemaRegistry.register([SpaceProperties]);
+    if (this._options.types) {
+      void this.addTypes(this._options.types);
     }
   }
 
@@ -231,7 +234,7 @@ export class Client {
   /**
    * ECHO graph.
    */
-  get graph(): Hypergraph {
+  get graph(): Hypergraph.Hypergraph {
     return this._echoClient.graph;
   }
 
@@ -248,7 +251,7 @@ export class Client {
    * Add schema types to the client.
    */
   // TODO(burdon): Check if already registered (and remove downstream checks).
-  addTypes(types: Schema.Schema.AnyNoContext[]): this {
+  async addTypes(types: Schema.Schema.AnyNoContext[]) {
     log('addTypes', { schema: types.map((type) => Type.getTypename(type)) });
 
     // TODO(dmaretskyi): Uncomment after release.
@@ -258,10 +261,8 @@ export class Client {
 
     const exists = types.filter((type) => !this._echoClient.graph.schemaRegistry.hasSchema(type));
     if (exists.length > 0) {
-      this._echoClient.graph.schemaRegistry.addSchema(exists);
+      await this._echoClient.graph.schemaRegistry.register(exists);
     }
-
-    return this;
   }
 
   /**

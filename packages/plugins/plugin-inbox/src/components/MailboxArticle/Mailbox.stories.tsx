@@ -41,7 +41,7 @@ const WithCompanionStory = () => {
   const [mailbox] = useQuery(space, Filter.type(Mailbox.Mailbox));
 
   const selected = useSelected(Obj.getDXN(mailbox).toString(), 'single');
-  const message = useQuery(mailbox?.queue.target, selected ? Filter.ids(selected) : Filter.nothing())[0];
+  const message = useQuery(mailbox?.queue.target, selected ? Filter.id(selected) : Filter.nothing())[0];
 
   const mailboxData = useMemo(() => ({ subject: mailbox }), [mailbox]);
   const companionData = useMemo(() => ({ subject: message ?? 'message', companionTo: mailbox }), [message, mailbox]);

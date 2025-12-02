@@ -113,8 +113,7 @@ const DefaultStory = ({
             Filter.type(TestSchema.DocumentType),
           ),
         )
-        .run()
-        .then((result) => result.objects);
+        .run();
     }
     if (entityExtraction !== 'none') {
       executor = new FunctionExecutor(
