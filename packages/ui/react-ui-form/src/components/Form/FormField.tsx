@@ -10,7 +10,6 @@ import * as String from 'effect/String';
 import React, { useMemo } from 'react';
 
 import { Format } from '@dxos/echo';
-import { type AnyProperties } from '@dxos/echo/internal';
 import {
   createJsonPath,
   findNode,
@@ -22,7 +21,7 @@ import {
   isNestedType,
 } from '@dxos/effect';
 import { useTranslation } from '@dxos/react-ui';
-import { type ProjectionModel, type SchemaProperty } from '@dxos/schema';
+import { type ProjectionModel } from '@dxos/schema';
 
 import { translationKey } from '../../translations';
 import { getRefProps } from '../../util';
@@ -48,11 +47,16 @@ import {
 } from './FormFieldComponent';
 import { FormFieldSet } from './FormFieldSet';
 
-export type FormFieldProps<T extends AnyProperties> = {
+export type FormFieldProps = {
   /**
-   * Property to render.
+   * AST of the property to render.
    */
-  property: SchemaProperty<T>;
+  ast: SchemaAST.AST;
+
+  /**
+   * Name of the property.
+   */
+  name: string;
 
   /**
    * Path to the current object from the root. Used with nested forms.
@@ -87,8 +91,9 @@ export type FormFieldProps<T extends AnyProperties> = {
   | 'onQueryRefOptions'
 >;
 
-export const FormField = <T extends AnyProperties>({
-  property,
+export const FormField = ({
+  ast,
+  name,
   path,
   projection,
   fieldMap,
@@ -101,9 +106,8 @@ export const FormField = <T extends AnyProperties>({
   createInitialValuePath,
   onCreate,
   onQueryRefOptions,
-}: FormFieldProps<T>) => {
+}: FormFieldProps) => {
   const { t } = useTranslation(translationKey);
-  const { ast, name } = property;
   const title = getAnnotation<string>(SchemaAST.TitleAnnotationId)(ast);
   const description = getAnnotation<string>(SchemaAST.DescriptionAnnotationId)(ast);
   const examples = getAnnotation<string[]>(SchemaAST.ExamplesAnnotationId)(ast);
@@ -149,7 +153,8 @@ export const FormField = <T extends AnyProperties>({
     return (
       <ArrayField
         fieldProps={fieldState}
-        property={property}
+        ast={ast}
+        name={name}
         path={path}
         label={label}
         readonly={readonly}
@@ -173,7 +178,7 @@ export const FormField = <T extends AnyProperties>({
   // Select field.
   //
 
-  const options = getOptions(property);
+  const options = getOptions(ast);
   if (options) {
     return (
       <SelectField
@@ -190,7 +195,7 @@ export const FormField = <T extends AnyProperties>({
   // Ref field.
   //
 
-  const refProps = getRefProps(property);
+  const refProps = getRefProps(ast);
   if (refProps) {
     return (
       <RefField
@@ -277,10 +282,10 @@ const getFormField = ({ ast, format }: FormFieldComponentProps): FormFieldCompon
   }
 };
 
-const getOptions = (property: SchemaProperty<any>): Format.Options[] | undefined => {
-  if (isLiteralUnion(property.ast)) {
-    return property.ast.types.map((type) => type.literal).filter((v): v is string | number => v !== null);
+const getOptions = (ast: SchemaAST.AST): Format.Options[] | undefined => {
+  if (isLiteralUnion(ast)) {
+    return ast.types.map((type) => type.literal).filter((v): v is string | number => v !== null);
   }
 
-  return Format.OptionsAnnotation.getFromAst(property.ast).pipe((annotation) => Option.getOrUndefined(annotation));
+  return Format.OptionsAnnotation.getFromAst(ast).pipe((annotation) => Option.getOrUndefined(annotation));
 };

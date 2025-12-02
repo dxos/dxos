@@ -5,12 +5,13 @@
 import React, { forwardRef, useMemo } from 'react';
 
 import { type AnyProperties } from '@dxos/echo/internal';
+import { type SchemaProperty } from '@dxos/effect';
 import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
-import { type SchemaProperty, getSchemaProperties } from '@dxos/schema';
 import { isTruthy } from '@dxos/util';
 
 import { type FormHandlerProps } from '../../hooks';
+import { getFormProperties } from '../../util';
 
 import { useFormValues } from './Form';
 import { FormField, type FormFieldProps } from './FormField';
@@ -19,11 +20,11 @@ import { FormFieldErrorBoundary, FormFieldLabel } from './FormFieldComponent';
 export type FormFieldSetProps<T extends AnyProperties> = ThemedClassName<
   {
     label?: string;
-    exclude?: (props: SchemaProperty<T>[]) => SchemaProperty<T>[];
+    exclude?: (props: SchemaProperty[]) => SchemaProperty[];
     sort?: string[];
   } & Pick<FormHandlerProps<T>, 'schema'> &
     Pick<
-      FormFieldProps<T>,
+      FormFieldProps,
       | 'path'
       | 'autoFocus'
       | 'readonly'
@@ -51,7 +52,8 @@ export const FormFieldSet = forwardRef<HTMLDivElement, FormFieldSetProps<any>>(
         return [];
       }
 
-      const props = getSchemaProperties(schema.ast, values, { form: true });
+      // TODO(wittjosiah): Reconcile FormInputAnnotation with projection hidden properties & exclude function.
+      const props = getFormProperties(schema.ast);
 
       // Use projection-based field management when view and projection are available.
       if (projection) {
@@ -59,8 +61,8 @@ export const FormFieldSet = forwardRef<HTMLDivElement, FormFieldSetProps<any>>(
         const hiddenProperties = new Set(projection.getHiddenProperties());
 
         // Filter properties to only include visible ones and order by projection.
-        const visibleProps = props.filter((prop) => !hiddenProperties.has(prop.name));
-        const orderedProps: SchemaProperty<any>[] = [];
+        const visibleProps = props.filter((prop) => !hiddenProperties.has(prop.name.toString()));
+        const orderedProps: SchemaProperty[] = [];
 
         // Add properties in projection field order.
         for (const fieldProjection of fieldProjections) {
@@ -73,14 +75,16 @@ export const FormFieldSet = forwardRef<HTMLDivElement, FormFieldSetProps<any>>(
 
         // Add any remaining properties not in projection.
         const projectionPaths = new Set(fieldProjections.map((projection) => String(projection.field.path)));
-        const remainingProps = visibleProps.filter((prop) => !projectionPaths.has(prop.name));
+        const remainingProps = visibleProps.filter((prop) => !projectionPaths.has(prop.name.toString()));
         orderedProps.push(...remainingProps);
         return orderedProps;
       }
 
       // Fallback to legacy filter/sort behavior.
       const filtered = exclude ? exclude(props) : props;
-      return sort ? filtered.sort(({ name: a }, { name: b }) => sort.indexOf(a) - sort.indexOf(b)) : filtered;
+      return sort
+        ? filtered.sort(({ name: a }, { name: b }) => sort.indexOf(a.toString()) - sort.indexOf(b.toString()))
+        : filtered;
     }, [schema, values, exclude, sort, projection?.fields]);
 
     if ((readonly || layout === 'static') && values == null) {
@@ -96,11 +100,13 @@ export const FormFieldSet = forwardRef<HTMLDivElement, FormFieldSetProps<any>>(
         {layout !== 'inline' && label && <FormFieldLabel label={label} asChild />}
         {properties
           .map((property) => {
+            const name = property.name.toString();
             return (
-              <FormFieldErrorBoundary key={property.name} path={[...(path ?? []), property.name]}>
+              <FormFieldErrorBoundary key={name} path={[...(path ?? []), name]}>
                 <FormField
-                  property={property}
-                  path={[...(path ?? []), property.name]}
+                  ast={property.type}
+                  name={name}
+                  path={[...(path ?? []), name]}
                   readonly={readonly}
                   layout={layout}
                   projection={projection}

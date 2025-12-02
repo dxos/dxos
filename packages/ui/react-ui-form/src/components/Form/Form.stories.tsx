@@ -6,7 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Schema from 'effect/Schema';
 import React, { useCallback, useState } from 'react';
 
-import { Filter, Format, Obj, Type } from '@dxos/echo';
+import { Annotation, Filter, Format, Obj, Type } from '@dxos/echo';
 import { type AnyProperties } from '@dxos/echo/internal';
 import { log } from '@dxos/log';
 import { useClient } from '@dxos/react-client';
@@ -33,6 +33,7 @@ export interface Organization extends Schema.Schema.Type<typeof Organization> {}
 
 const Person = Schema.Struct({
   name: Schema.String.pipe(Schema.minLength(1)).annotations({ title: 'Full name' }),
+  ignore: Schema.String.pipe(Annotation.FormInputAnnotation.set(false), Schema.optional),
   active: Schema.optional(Schema.Boolean.annotations({ title: 'Active' })),
   address: Schema.optional(
     Schema.Struct({

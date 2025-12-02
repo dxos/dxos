@@ -19,6 +19,11 @@ import { type JsonPath, type JsonProp } from './json-path';
 // https://effect-ts.github.io/effect/schema/SchemaAST.ts.html
 //
 
+/**
+ * Get the base type of a property.
+ *
+ * Removes refinements via encoded schema and unwraps optional unions.
+ */
 export const getBaseType = (prop: SchemaAST.PropertySignature): SchemaAST.AST => {
   const encoded = SchemaAST.encodedAST(prop.type);
   // Extract property ast from optional union.
@@ -27,6 +32,21 @@ export const getBaseType = (prop: SchemaAST.PropertySignature): SchemaAST.AST =>
   }
 
   return encoded;
+};
+
+export type SchemaProperty = Pick<SchemaAST.PropertySignature, 'name' | 'type' | 'isOptional' | 'isReadonly'>;
+
+/**
+ * Get the property types of an AST.
+ */
+export const getProperties = (ast: SchemaAST.AST): SchemaProperty[] => {
+  const properties = SchemaAST.getPropertySignatures(ast);
+  return properties.map((prop) => ({
+    name: prop.name,
+    type: getBaseType(prop),
+    isOptional: prop.isOptional,
+    isReadonly: prop.isReadonly,
+  }));
 };
 
 //

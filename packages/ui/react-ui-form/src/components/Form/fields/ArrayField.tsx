@@ -6,33 +6,31 @@ import * as Option from 'effect/Option';
 import * as SchemaAST from 'effect/SchemaAST';
 import React, { Fragment, useCallback } from 'react';
 
-import { type AnyProperties } from '@dxos/echo/internal';
 import { findNode, getArrayElementType, getDiscriminatedType, isDiscriminatedUnion, isNestedType } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { IconButton, useTranslation } from '@dxos/react-ui';
-import { getSchemaProperties } from '@dxos/schema';
 
 import { translationKey } from '../../../translations';
+import { getFormProperties } from '../../../util';
 import { useFormValues } from '../Form';
 import { FormField, type FormFieldProps } from '../FormField';
 import { FormFieldLabel, type FormFieldStateProps } from '../FormFieldComponent';
 
-export type ArrayFieldProps<T extends AnyProperties> = {
+export type ArrayFieldProps = {
   label: string;
   fieldProps: FormFieldStateProps;
-} & Pick<FormFieldProps<T>, 'property' | 'path' | 'readonly' | 'layout' | 'fieldMap' | 'fieldProvider'>;
+} & Pick<FormFieldProps, 'ast' | 'name' | 'path' | 'readonly' | 'layout' | 'fieldMap' | 'fieldProvider'>;
 
-export const ArrayField = <T extends AnyProperties>({
-  property,
+export const ArrayField = ({
+  ast,
   path,
   label,
   readonly,
   layout,
   fieldProps: inputProps,
   ...props
-}: ArrayFieldProps<T>) => {
+}: ArrayFieldProps) => {
   const { t } = useTranslation(translationKey);
-  const { ast } = property;
   const elementType = getArrayElementType(ast);
   const { onValueChange } = inputProps;
 
@@ -49,8 +47,8 @@ export const ArrayField = <T extends AnyProperties>({
     }
 
     return Object.fromEntries(
-      getSchemaProperties(typeLiteral, {}, { form: true }).map((prop) => {
-        const defaultValue = SchemaAST.getDefaultAnnotation(prop.ast).pipe((annotation) =>
+      getFormProperties(typeLiteral).map((prop) => {
+        const defaultValue = SchemaAST.getDefaultAnnotation(prop.type).pipe((annotation) =>
           Option.getOrUndefined(annotation),
         );
         return [prop.name, defaultValue];
@@ -88,11 +86,8 @@ export const ArrayField = <T extends AnyProperties>({
             <div role='none' key={index} className='grid grid-cols-[1fr_min-content] gap-2 last:mb-3'>
               <FormField
                 autoFocus={index === values.length - 1}
+                ast={elementType}
                 path={[...(path ?? []), index]}
-                property={{
-                  ...property,
-                  ast: elementType,
-                }}
                 readonly={readonly || layout === 'static'}
                 layout='inline'
                 {...props}

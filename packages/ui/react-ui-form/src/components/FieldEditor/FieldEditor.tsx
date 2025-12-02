@@ -6,20 +6,19 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { type SchemaRegistry } from '@dxos/echo';
 import { type EchoSchema, Format, FormatEnums, formatToType } from '@dxos/echo/internal';
+import { type SchemaProperty } from '@dxos/effect';
 import { log } from '@dxos/log';
 import { useAsyncEffect, useTranslation } from '@dxos/react-ui';
 import {
   type FieldType,
   type ProjectionModel,
   type PropertyType,
-  type SchemaProperty,
   formatToAdditionalPropertyAttributes,
   getFormatSchema,
-  getSchemaProperties,
-  sortProperties,
 } from '@dxos/schema';
 
 import { translationKey } from '../../translations';
+import { getFormProperties } from '../../util';
 import { Form, type FormFieldMap, type NewFormRootProps, SelectField, SelectOptionField } from '../Form';
 
 export type FieldEditorProps = {
@@ -86,9 +85,9 @@ export const FieldEditor = ({ readonly, projection, field, registry, onSave, onC
           {...props}
           options={
             referenceSchema
-              ? getSchemaProperties(referenceSchema.ast, {}, { form: true })
-                  .sort(sortProperties)
-                  .map((p) => ({ value: p.name }))
+              ? getFormProperties(referenceSchema.ast)
+                  .sort((a, b) => a.name.toString().localeCompare(b.name.toString()))
+                  .map((p) => ({ value: p.name.toString() }))
               : []
           }
         />
@@ -98,10 +97,7 @@ export const FieldEditor = ({ readonly, projection, field, registry, onSave, onC
     [t, schemas, referenceSchema],
   );
 
-  const propIsNotType = useCallback(
-    (props: SchemaProperty<PropertyType>[]) => props.filter((prop) => prop.name !== 'type'),
-    [],
-  );
+  const propIsNotType = useCallback((props: SchemaProperty[]) => props.filter((prop) => prop.name !== 'type'), []);
 
   const handleValuesChanged = useCallback<NonNullable<NewFormRootProps<PropertyType>['onValuesChanged']>>(
     (_props) => {

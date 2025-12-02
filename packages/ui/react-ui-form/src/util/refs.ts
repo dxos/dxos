@@ -6,14 +6,13 @@ import type * as SchemaAST from 'effect/SchemaAST';
 
 import { Ref } from '@dxos/echo';
 import { getArrayElementType, isArrayType } from '@dxos/effect';
-import { type SchemaProperty } from '@dxos/schema';
 
 type RefProps = {
   ast: SchemaAST.AST;
   isArray: boolean;
 };
 
-export const getRefProps = ({ ast }: SchemaProperty<any>): RefProps | undefined => {
+export const getRefProps = (ast: SchemaAST.AST): RefProps | undefined => {
   // Array of references.
   if (isArrayType(ast)) {
     const elementType = getArrayElementType(ast);
