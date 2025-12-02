@@ -4,10 +4,10 @@
 
 import { type Completion } from '@codemirror/autocomplete';
 import { EditorView } from '@codemirror/view';
-import type * as Schema from 'effect/Schema';
 import React, { useCallback, useMemo, useRef, useState } from 'react';
 
 import { debounce } from '@dxos/async';
+import { type Type } from '@dxos/echo';
 import { Format, TypeEnum } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
 import { type DxGridAxis, type DxGridPosition } from '@dxos/lit-grid';
@@ -29,32 +29,37 @@ import { type ModalController, type TableModel } from '../../model';
 import { CellValidationMessage } from './CellValidationMessage';
 import { FormCellEditor, type OnCreateHandler } from './FormCellEditor';
 
+const editorSlots = {
+  scroll: {
+    className: '!plb-[--dx-grid-cell-editor-padding-block]',
+  },
+};
+
 /**
  * Option to create new object/value.
  */
-export type QueryResult = Pick<Completion, 'label'> & { data: any };
+export type QueryResult = Pick<Completion, 'label'> & {
+  data: any;
+};
 
-export type TableCellEditorProps = {
+export type TableCellEditorProps<T extends Type.Entity.Any = Type.Entity.Any> = {
+  schema?: T;
   model?: TableModel;
   modals?: ModalController;
-  schema?: Schema.Schema.AnyNoContext;
   onFocus?: (axis?: DxGridAxis, delta?: -1 | 0 | 1, cell?: DxGridPosition) => void;
   onCreate?: OnCreateHandler;
   onSave?: () => void;
 };
 
-const adaptValidationMessage = (message: string | null) =>
-  message ? (message.endsWith('is missing') ? 'Can’t be blank' : message) : null;
-
-export const TableValueEditor = ({
+export const TableValueEditor = <T extends Type.Entity.Any = Type.Entity.Any>({
+  __gridScope,
+  schema,
   model,
   modals,
-  schema,
   onFocus,
   onSave,
   onCreate,
-  __gridScope,
-}: GridScopedProps<TableCellEditorProps>) => {
+}: GridScopedProps<TableCellEditorProps<T>>) => {
   const { editing } = useGridContext('TableValueEditor', __gridScope);
 
   const fieldProjection = useMemo<FieldProjection | undefined>(() => {
@@ -76,29 +81,28 @@ export const TableValueEditor = ({
     // TODO(thure): Support `Format.TypeFormat.MultiSelect`
   ) {
     return (
-      <FormCellEditor
-        fieldProjection={fieldProjection}
-        model={model}
-        schema={schema}
+      <FormCellEditor<T>
         __gridScope={__gridScope}
+        schema={schema}
+        model={model}
+        fieldProjection={fieldProjection}
+        modals={modals}
         onSave={onSave}
         onCreate={onCreate}
       />
     );
   }
 
-  // For all other types, use the existing cell editor
+  // For all other types, use the existing cell editor.
   return <TableCellEditor model={model} modals={modals} onFocus={onFocus} onSave={onSave} __gridScope={__gridScope} />;
 };
 
-const editorSlots = { scroll: { className: '!plb-[--dx-grid-cell-editor-padding-block]' } };
-
 export const TableCellEditor = ({
+  __gridScope,
   model,
   modals,
   onFocus,
   onSave,
-  __gridScope,
 }: GridScopedProps<TableCellEditorProps>) => {
   const { editing, setEditing } = useGridContext('TableCellEditor', __gridScope);
   const suppressNextBlur = useRef(false);
@@ -117,6 +121,7 @@ export const TableCellEditor = ({
     return fieldProjection;
   }, [model, editing]);
 
+  // TOOD(burdon): Attach to event handler?
   const handleEnter = useCallback(
     async (value: any) => {
       if (!model || !editing) {
@@ -133,7 +138,7 @@ export const TableCellEditor = ({
         setEditing(null);
         onSave?.();
       } else {
-        setValidationError(adaptValidationMessage(validationResult.error));
+        setValidationError(validationResult.error);
         setValidationVariant('error');
       }
     },

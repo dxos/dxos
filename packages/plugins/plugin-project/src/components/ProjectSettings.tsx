@@ -179,8 +179,12 @@ export const ProjectObjectSettings = ({ classNames, project }: ProjectObjectSett
                     />
                   </div>
                   {expandedId === column.view.dxn.toString() && view && (
-                    <div role='none' className='col-span-5 mbs-1 mbe-1 border border-separator rounded-md'>
-                      <Form autoSave schema={ColumnFormSchema} values={column} onSave={handleColumnSave} />
+                    <div role='none' className='col-span-5 mlb-2 border border-separator rounded-md'>
+                      <Form.Root schema={ColumnFormSchema} values={column} autoSave onSave={handleColumnSave}>
+                        <Form.Content>
+                          <Form.FieldSet />
+                        </Form.Content>
+                      </Form.Root>
                       <ViewEditor
                         ref={projectionRef}
                         mode='tag'

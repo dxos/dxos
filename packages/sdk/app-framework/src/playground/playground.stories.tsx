@@ -15,8 +15,17 @@ import { GeneratorPlugin, createNumberPlugin } from './generator';
 import { LayoutPlugin } from './layout';
 import { LoggerPlugin } from './logger';
 
-const pluginFactories = [IntentPlugin, LayoutPlugin, DebugPlugin(), LoggerPlugin(), GeneratorPlugin()];
+const pluginFactories = [
+  // prettier-ignore
+  IntentPlugin,
+  LayoutPlugin,
+  DebugPlugin(),
+  LoggerPlugin(),
+  GeneratorPlugin(),
+];
+
 const plugins = pluginFactories.map((factory) => (typeof factory === 'function' ? factory() : factory));
+const core = plugins.map((plugin) => plugin.meta.id);
 
 const Placeholder = () => {
   return <div>Loading...</div>;
@@ -26,7 +35,7 @@ const DefaultStory = () => {
   const App = useApp({
     pluginLoader: (id) => createNumberPlugin(id)(),
     plugins,
-    core: plugins.map((plugin) => plugin.meta.id),
+    core,
     placeholder: Placeholder,
   });
 

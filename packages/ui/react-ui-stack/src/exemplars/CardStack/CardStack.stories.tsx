@@ -94,7 +94,7 @@ const CardStackStory = () => {
 
   return (
     <CardStack.Root classNames='is-96'>
-      <CardStack.Content>
+      <CardStack.Content footer>
         <CardStack.Stack id='story column' onRearrange={handleRearrange} itemsCount={column.length}>
           {column.map((card, cardIndex, cardsArray) => {
             const cardItem = { id: card.id, type: 'card' as const };

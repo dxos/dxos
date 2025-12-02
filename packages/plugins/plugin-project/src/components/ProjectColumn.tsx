@@ -67,7 +67,7 @@ export const ProjectColumn = ({ column }: ProjectColumnProps) => {
   return (
     <CardStack.Root asChild>
       <StackItem.Root item={view} size={cardStackDefaultInlineSizeRem} focusIndicatorVariant='group'>
-        <CardStack.Content classNames='density-fine' footer={false}>
+        <CardStack.Content classNames='density-fine border border-separator rounded-md'>
           <StackItem.Heading classNames={[cardStackHeading, 'min-is-0 pli-cardSpacingChrome']} separateOnScroll>
             <h3 className='grow truncate'>{column.name ?? t('untitled view title')}</h3>
           </StackItem.Heading>
@@ -75,7 +75,7 @@ export const ProjectColumn = ({ column }: ProjectColumnProps) => {
             {sortedItems.map((liveMarker) => {
               const item = liveMarker as unknown as Obj.Any;
               return (
-                <CardStack.Item asChild key={item.id}>
+                <CardStack.Item key={item.id} asChild>
                   <StackItem.Root item={item} focusIndicatorVariant='group'>
                     <Card.StaticRoot>
                       <Item item={item} projectionModel={projectionModel} />

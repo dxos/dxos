@@ -13,7 +13,7 @@ import { type JsonPath, setValue } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
 import { getSpace } from '@dxos/react-client/echo';
 import { type ThemedClassName } from '@dxos/react-ui';
-import { Form, useRefQueryLookupHandler } from '@dxos/react-ui-form';
+import { Form, useRefQueryOptions } from '@dxos/react-ui-form';
 import { isNonNullable } from '@dxos/util';
 
 import { meta as pluginMeta } from '../../meta';
@@ -35,7 +35,7 @@ export type BaseObjectSettingsProps = ThemedClassName<
 // TODO(wittjosiah): Reconcile w/ ObjectDetailsPanel.
 export const BaseObjectSettings = ({ classNames, children, object }: BaseObjectSettingsProps) => {
   const space = getSpace(object);
-  const handleRefQueryLookup = useRefQueryLookupHandler({ space });
+  const handleRefQueryLookup = useRefQueryOptions({ space });
 
   const formSchema = useMemo(() => {
     return Function.pipe(
@@ -90,22 +90,22 @@ export const BaseObjectSettings = ({ classNames, children, object }: BaseObjectS
   }
 
   return (
-    <>
-      <Form
-        classNames={classNames}
-        outerSpacing={false}
-        autoSave
-        schema={formSchema}
-        values={values}
-        createSchema={TagSchema}
-        createOptionIcon='ph--plus--regular'
-        createOptionLabel={['add tag label', { ns: pluginMeta.id }]}
-        createInitialValuePath='label'
-        onCreate={handleCreateTag}
-        onSave={handleSave}
-        onQueryRefOptions={handleRefQueryLookup}
-      />
-      {children}
-    </>
+    <Form.Root
+      schema={formSchema}
+      values={values}
+      createSchema={TagSchema}
+      createOptionIcon='ph--plus--regular'
+      createOptionLabel={['add tag label', { ns: pluginMeta.id }]}
+      createInitialValuePath='label'
+      autoSave
+      onSave={handleSave}
+      onCreate={handleCreateTag}
+      onQueryRefOptions={handleRefQueryLookup}
+    >
+      <Form.Content classNames={classNames}>
+        <Form.FieldSet />
+        {children}
+      </Form.Content>
+    </Form.Root>
   );
 };

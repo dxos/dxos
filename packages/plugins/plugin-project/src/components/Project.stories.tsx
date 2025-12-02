@@ -23,8 +23,18 @@ import { type ItemProps, Project as ProjectComponent } from './Project';
 const StorybookProjectItem = ({ item, projectionModel }: ItemProps) => {
   if (Obj.instanceOf(Person.Person, item)) {
     const contact = item as Obj.Obj<Person.Person>;
-    return <Form values={contact} schema={Person.Person} projection={projectionModel} autoSave />;
+
+    return (
+      <Form.Root values={contact} schema={Person.Person} projection={projectionModel} autoSave>
+        <Form.Viewport>
+          <Form.Content>
+            <Form.FieldSet />
+          </Form.Content>
+        </Form.Viewport>
+      </Form.Root>
+    );
   }
+
   return <span>{item.id}</span>;
 };
 

@@ -31,7 +31,7 @@ describe('spaces query', () => {
   it('should query space for objects', () =>
     Effect.gen(function* () {
       const client = yield* ClientService;
-      client.addTypes([Task.Task]);
+      yield* Effect.tryPromise(() => client.addTypes([Task.Task]));
       yield* Effect.tryPromise(() => client.halo.createIdentity());
       yield* Effect.tryPromise(() => client.spaces.waitUntilReady());
       const space = client.spaces.default;

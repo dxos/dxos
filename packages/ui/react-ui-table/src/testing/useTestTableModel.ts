@@ -2,9 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
-import type * as Schema from 'effect/Schema';
 import { type RefObject, useCallback, useMemo, useRef } from 'react';
 
+import { type Type } from '@dxos/echo';
 import { isMutable } from '@dxos/echo/internal';
 import { useGlobalFilteredObjects } from '@dxos/plugin-search';
 import { faker } from '@dxos/random';
@@ -19,8 +19,8 @@ import { Table } from '../types';
 
 faker.seed(0); // NOTE(ZaymonFC): Required for smoke tests.
 
-export type TestTableModel = {
-  schema: Schema.Schema.AnyNoContext | undefined;
+export type TestTableModel<T extends Type.Entity.Any = Type.Entity.Any> = {
+  schema: T | undefined;
   table: Table.Table | undefined;
   projection: ProjectionModel | undefined;
   tableRef: RefObject<TableController | null>;
@@ -37,13 +37,13 @@ export type TestTableModel = {
  * Custom hook to create and manage a test table model for storybook demonstrations.
  * Provides table data, schema, and handlers for table operations.
  */
-export const useTestTableModel = (): TestTableModel => {
+export const useTestTableModel = <T extends Type.Entity.Any = Type.Entity.Any>(): TestTableModel<T> => {
   const { space } = useClientProvider();
 
   const tables = useQuery(space, Filter.type(Table.Table));
   const table = tables.at(0);
   const typename = table?.view.target?.query ? getTypenameFromQuery(table.view.target.query.ast) : undefined;
-  const schema = useSchema(space, typename);
+  const schema = useSchema<T>(space, typename);
   const projection = useProjectionModel(schema, table);
 
   const features = useMemo(

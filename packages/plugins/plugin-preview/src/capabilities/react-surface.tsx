@@ -8,16 +8,11 @@ import { Capabilities, LayoutAction, contributes, createIntent, createSurface } 
 import { Surface, SurfaceCardRole, useIntentDispatcher } from '@dxos/app-framework/react';
 import { getSpace } from '@dxos/client/echo';
 import { Obj } from '@dxos/echo';
-import { type JsonPath, setValue } from '@dxos/echo/internal';
 import { useActiveSpace } from '@dxos/plugin-space';
-import { useTranslation } from '@dxos/react-ui';
-import { Form } from '@dxos/react-ui-form';
-import { Card } from '@dxos/react-ui-stack';
-import { descriptionMessage, mx } from '@dxos/react-ui-theme';
 import { type ProjectionModel } from '@dxos/schema';
 import { Organization, Person, Project, Task } from '@dxos/types';
 
-import { OrganizationCard, PersonCard, ProjectCard, TaskCard } from '../cards';
+import { FormCard, OrganizationCard, PersonCard, ProjectCard, TaskCard } from '../cards';
 import { meta } from '../meta';
 import { type CardPreviewProps } from '../types';
 
@@ -105,37 +100,7 @@ export default () =>
       position: 'fallback',
       filter: (data): data is { subject: Obj.Any; projection?: ProjectionModel } => Obj.isObject(data.subject),
       component: ({ data, role }) => {
-        const schema = Obj.getSchema(data.subject);
-        const { t } = useTranslation(meta.id);
-        if (!schema) {
-          // TODO(burdon): Use Alert.
-          return <p className={mx(descriptionMessage)}>{t('unable to create preview message')}</p>;
-        }
-
-        const handleSave = useCallback((values: any, { changed }: { changed: Record<string, boolean> }) => {
-          const changedPaths = Object.keys(changed).filter((path) => changed[path]);
-          for (const path of changedPaths) {
-            const value = values[path];
-            setValue(data.subject, path as JsonPath, value);
-          }
-        }, []);
-
-        return (
-          <Card.SurfaceRoot role={role}>
-            <Form
-              id={data.subject.id}
-              schema={schema}
-              projection={data.projection}
-              values={data.subject}
-              readonly={role === 'card--popover' ? 'static' : false}
-              onSave={handleSave}
-              autoSave
-              {...(role === 'card--intrinsic' && {
-                outerSpacing: 'blockStart-0',
-              })}
-            />
-          </Card.SurfaceRoot>
-        );
+        return <FormCard subject={data.subject} projection={data.projection} role={role as SurfaceCardRole} />;
       },
     }),
 

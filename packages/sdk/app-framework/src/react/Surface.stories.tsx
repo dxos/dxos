@@ -14,7 +14,7 @@ import { Capabilities, createSurface } from '../common';
 import { withPluginManager } from '../testing';
 
 import { usePluginManager } from './PluginManagerProvider';
-import { Surface, useSurfaces } from './Surface';
+import { Surface, SurfaceContainer, useSurfaces } from './Surface';
 
 const DefaultStory = () => {
   const [selected, setSelected] = useState<string | undefined>();
@@ -33,9 +33,11 @@ const DefaultStory = () => {
         role: 'item',
         filter: (data): data is any => (data as any)?.id === id,
         component: () => (
-          <div className={mx('flex justify-center items-center border rounded', styles.surface, styles.border)}>
+          <SurfaceContainer
+            className={mx('flex justify-center items-center border rounded', styles.surface, styles.border)}
+          >
             <span className={mx('dx-tag font-mono text-lg', styles.text)}>{id}</span>
-          </div>
+          </SurfaceContainer>
         ),
       }),
     });

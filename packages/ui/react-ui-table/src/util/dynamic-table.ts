@@ -2,8 +2,6 @@
 // Copyright 2025 DXOS.org
 //
 
-import type * as Schema from 'effect/Schema';
-
 import { Filter, type JsonSchema, Obj, Query, Ref, Type } from '@dxos/echo';
 import {
   ProjectionModel,
@@ -29,15 +27,15 @@ export type TablePropertyDefinition = SchemaPropertyDefinition & Partial<Propert
  */
 // TODO(burdon): Remove variance.
 export const getBaseSchema = ({
+  schema,
   typename,
   properties,
   jsonSchema,
-  schema,
 }: {
+  schema?: Type.Entity.Any;
   typename?: string;
   properties?: TablePropertyDefinition[];
   jsonSchema?: JsonSchema.JsonSchema;
-  schema?: Schema.Schema.AnyNoContext;
 }): { typename: string; jsonSchema: JsonSchema.JsonSchema } => {
   if (typename && properties) {
     const schema = getSchemaFromPropertyDefinitions(typename, properties);
