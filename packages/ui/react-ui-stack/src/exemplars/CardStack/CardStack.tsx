@@ -81,7 +81,7 @@ const CardStackStack = forwardRef<
       rail={false}
       classNames={
         /* NOTE(thure): Do not let this element have zero intrinsic size, otherwise the drop indicator will not display. See #9035. */
-        ['plb-1', itemsCount > 0 && 'plb-2', classNames]
+        ['plb-2', classNames]
       }
       itemsCount={itemsCount}
       separatorOnScroll={9}
