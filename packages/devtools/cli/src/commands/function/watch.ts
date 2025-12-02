@@ -33,6 +33,8 @@ export default class Watch extends BaseCommand<typeof Watch> {
   };
 
   async run(): Promise<any> {
+    // TODO(dmaretskyi): This isn't working since local functions runtime was removed.
+    throw new Error('Not implemented');
     return this.execWithSpace(async ({ client, space }) => {
       client.addTypes([Text.Text, Function.Function, Script.Script]);
 
@@ -57,6 +59,7 @@ export default class Watch extends BaseCommand<typeof Watch> {
           return;
         }
 
+        // @ts-expect-error
         const updateResult = await this._uploadSource(bundleResult.bundle);
         if (updateResult.success) {
           if (scriptContent) {
