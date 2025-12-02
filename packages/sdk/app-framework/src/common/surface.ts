@@ -8,7 +8,7 @@ import { type MakeOptional, type Position } from '@dxos/util';
 
 import { type ErrorBoundary } from '../react';
 
-// TODO(burdon): Default generic params aren't consistent.
+// TODO(burdon): Is default generic type variance deliberate (any vs. unknown)?
 
 /**
  * SurfaceProps are the props that are passed to the Surface component.

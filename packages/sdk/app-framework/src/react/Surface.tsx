@@ -56,7 +56,7 @@ const SurfaceContextProvider = memo(
 SurfaceContextProvider.displayName = 'SurfaceContextProvider';
 
 export const useSurface = (): SurfaceContext => {
-  const context = useContext(SurfaceContext) ?? raise(new Error('SurfaceContext not found'));
+  const context = useContext(SurfaceContext) ?? raise(new Error('Missing SurfaceContext'));
   return context;
 };
 
@@ -80,19 +80,20 @@ export const Surface: NamedExoticComponent<SurfaceProps & RefAttributes<HTMLElem
       // NOTE: Memoizing the candidates makes the surface not re-render based on reactivity within data.
       const definitions = findCandidates(surfaces, { role, data });
       const candidates = limit ? definitions.slice(0, limit) : definitions;
-      const nodes = candidates.map(({ id, component: Component }) => (
+      const nodes = candidates.map(({ id, component }) => (
         <SurfaceContextProvider
           key={id}
           id={id}
           role={role}
           data={data}
           limit={limit}
-          component={Component}
+          component={component}
           ref={forwardedRef}
           {...rest}
         />
       ));
 
+      // TODO(burdon): Wrap each component with an error boundary.
       return (
         <ErrorBoundary data={data} fallback={fallback}>
           <Suspense fallback={placeholder}>{nodes}</Suspense>
