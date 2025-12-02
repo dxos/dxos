@@ -15,6 +15,7 @@ import { Card } from '../Card';
 // Root
 //
 
+// TODO(burdon): Remove padding.
 const cardStackRoot = 'flex flex-col pli-2 plb-2';
 
 // TODO(burdon): Root should be headless.
@@ -24,6 +25,7 @@ const CardStackRoot = forwardRef<HTMLDivElement, SharedCardStackProps>(
     const rootProps = asChild
       ? { classNames: [cardStackRoot, classNames] }
       : { className: mx(cardStackRoot, classNames), role };
+
     return (
       <Root {...props} {...rootProps} ref={forwardedRef}>
         {children}
@@ -33,7 +35,35 @@ const CardStackRoot = forwardRef<HTMLDivElement, SharedCardStackProps>(
 );
 
 //
+// Content
+// TODO(burdon): Rename Viewport (should be the component that scrolls).
+//
+
+const cardStackContent = 'shrink min-bs-0 grid dx-focus-ring-group-x-indicator bg-baseSurface';
+
+type CardStackContentProps = SharedCardStackProps & {
+  footer?: boolean;
+};
+
+const CardStackContent = forwardRef<HTMLDivElement, CardStackContentProps>(
+  ({ children, classNames, asChild, role = 'none', footer, ...props }, forwardedRef) => {
+    const Root = asChild ? Slot : 'div';
+    const baseClassNames = footer ? [cardStackContent, railGridHorizontalContainFitContent] : [cardStackContent];
+    const rootProps = asChild
+      ? { classNames: [...baseClassNames, classNames] }
+      : { className: mx(...baseClassNames, classNames), role };
+
+    return (
+      <Root {...props} {...rootProps} data-scroll-separator='false' ref={forwardedRef}>
+        {children}
+      </Root>
+    );
+  },
+);
+
+//
 // Stack
+// TODO(burdon): Rename Content.
 //
 
 type SharedCardStackProps = ThemedClassName<ComponentPropsWithoutRef<'div'>> & {
@@ -65,32 +95,6 @@ const CardStackStack = forwardRef<
 });
 
 //
-// Content
-//
-
-const cardStackContent = 'shrink min-bs-0 grid dx-focus-ring-group-x-indicator bg-baseSurface';
-
-type CardStackContentProps = SharedCardStackProps & {
-  footer?: boolean;
-};
-
-// TODO(burdon): Viewport should be the component that scrolls.
-const CardStackContent = forwardRef<HTMLDivElement, CardStackContentProps>(
-  ({ children, classNames, asChild, role = 'none', footer, ...props }, forwardedRef) => {
-    const Root = asChild ? Slot : 'div';
-    const baseClassNames = footer ? [cardStackContent, railGridHorizontalContainFitContent] : [cardStackContent];
-    const rootProps = asChild
-      ? { classNames: [...baseClassNames, classNames] }
-      : { className: mx(...baseClassNames, classNames), role };
-    return (
-      <Root {...props} {...rootProps} data-scroll-separator='false' ref={forwardedRef}>
-        {children}
-      </Root>
-    );
-  },
-);
-
-//
 // Item
 //
 
@@ -102,6 +106,7 @@ const CardStackItem = forwardRef<HTMLDivElement, SharedCardStackProps>(
     const rootProps = asChild
       ? { classNames: [cardStackItem, classNames] }
       : { className: mx(cardStackItem, classNames), role };
+
     return (
       <Root {...props} {...rootProps} ref={forwardedRef}>
         {children}
@@ -122,6 +127,7 @@ const CardStackHeading = forwardRef<HTMLDivElement, SharedCardStackProps>(
     const rootProps = asChild
       ? { classNames: [cardStackHeading, classNames] }
       : { className: mx(cardStackHeading, classNames), role };
+
     return (
       <Root {...props} {...rootProps} ref={forwardedRef}>
         {children}
@@ -143,6 +149,7 @@ const CardStackFooter = forwardRef<HTMLDivElement, SharedCardStackProps>(
     const rootProps = asChild
       ? { classNames: [cardStackFooter, classNames] }
       : { className: mx(cardStackFooter, classNames), role };
+
     return (
       <Root {...props} {...rootProps} ref={forwardedRef}>
         {children}
@@ -163,9 +170,7 @@ const CardStackDragHandle = Card.DragHandle;
 
 export const CardStack = {
   Root: CardStackRoot,
-  // TOOD(burdon): Rename Viewport?
   Content: CardStackContent,
-  // TODO(burdon): Rename Content?
   Stack: CardStackStack,
   Heading: CardStackHeading,
   Footer: CardStackFooter,

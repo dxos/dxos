@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { type PropsWithChildren } from 'react';
+import React from 'react';
 
 import { Filter, getSpace, useQuery, useSchema } from '@dxos/react-client/echo';
 import { Callout, Toolbar, useTranslation } from '@dxos/react-ui';
