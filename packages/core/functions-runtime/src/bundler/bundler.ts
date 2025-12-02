@@ -8,11 +8,9 @@ import { subtleCrypto } from '@dxos/crypto';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { isNode, trim } from '@dxos/util';
-import * as Record from 'effect/Record';
-import * as Function from 'effect/Function';
 
-import { httpPlugin } from '../http-plugin-esbuild';
-import type { Loader } from 'esbuild';
+import { httpPlugin } from './plugins/http-plugin-esbuild';
+import { PluginR2VendoredPackages } from './plugins/r2-vendored-packages';
 
 export type Import = {
   moduleUrl: string;
@@ -183,103 +181,6 @@ export const bundleFunction = async ({ source }: BundleOptions): Promise<BundleR
     return { timestamp: Date.now(), sourceHash, error: err };
   }
 };
-
-/**
- * Pulls NPM packages from `esm.sh`.
- * Always uses latest versions for all packages.
- */
-const PluginESMSh = (): Plugin => ({
-  name: 'esmsh',
-  setup(build) {
-    build.onResolve({ filter: /^[^./]/ }, (args) => {
-      if (args.kind === 'entry-point') {
-        return;
-      }
-
-      if (args.path.includes('@dxos/node-std')) {
-        return {
-          path: 'memory:empty',
-          namespace: 'memory',
-        };
-      }
-
-      // Assuming all deps will be resolved the latest version.
-      return build.resolve(
-        `https://esm.sh/${args.path}?conditions=workerd,worker,node&platform=node&keep-names&deps=@automerge/automerge-repo@2.5.0,msgpackr@1.11.4`,
-        {
-          kind: args.kind,
-          resolveDir: args.resolveDir,
-        },
-      );
-    });
-  },
-});
-
-const LOADERS: Record<string, Loader> = {
-  js: 'js',
-  jsx: 'jsx',
-  ts: 'ts',
-  tsx: 'tsx',
-  wasm: 'copy',
-} as const;
-
-/*
-
-node scripts/vendor-packages.mjs
-rclone copy dist/vendor r2:script-vendored-packages
-https://dash.cloudflare.com/950816f3f59b079880a1ae33fb0ec320/r2/default/buckets/script-vendored-packages/settings
-
-*/
-
-// script-vendored-packages bucket on R2
-const SCRIPT_PACKAGES_BUCKET = 'https://pub-5745ae82e450484aa28f75fc6a175935.r2.dev';
-
-const PluginR2VendoredPackages = (): Plugin => ({
-  name: 'r2-vendored-packages',
-  setup(build) {
-    build.onResolve({ filter: /^[^./]/ }, (args) => {
-      if (args.kind === 'entry-point') {
-        return;
-      }
-
-      return {
-        path: new URL(`/${args.path}.js`, SCRIPT_PACKAGES_BUCKET).href,
-        namespace: 'http-url', // Uses http plugin.
-      };
-    });
-  },
-});
-
-const PluginEmbeddedVendoredPackages = (): Plugin => ({
-  name: 'embedded-vendored-packages',
-  setup(build) {
-    // // https://vite.dev/guide/features#custom-queries
-    const moduleUrls = Function.pipe(
-      // NOTE: Vite-specific API.
-      // @ts-expect-error
-      import.meta.glob('../../dist/vendor/**/*.js', {
-        query: '?url',
-        import: 'default',
-        eager: true,
-      }) as Record<string, string>,
-      Record.mapKeys((s) => s.replace('../../dist/vendor/', '').replace(/\.js$/, '')),
-      Record.filter((_, key) => !key.startsWith('internal/')),
-    );
-
-    // console.log(moduleUrls);
-
-    build.onResolve({ filter: /^[^./]/ }, (args) => {
-      if (args.kind === 'entry-point') {
-        return;
-      }
-
-      return build.resolve(new URL(moduleUrls[args.path], import.meta.url).href, {
-        kind: args.kind,
-        resolveDir: args.resolveDir,
-      });
-    });
-  },
-});
 
 // TODO(dmaretskyi): In the future we can replace the compiler with SWC with plugins running in WASM.
 const analyzeImports = (result: BuildResult): Import[] => {
