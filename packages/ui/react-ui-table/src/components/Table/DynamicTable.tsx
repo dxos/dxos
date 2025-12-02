@@ -2,9 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
-import type * as Schema from 'effect/Schema';
 import React, { useCallback, useMemo, useRef } from 'react';
 
+import { type Type } from '@dxos/echo';
 import { type JsonSchemaType } from '@dxos/echo/internal';
 import { type ThemedClassName, useDefaultValue } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
@@ -16,12 +16,12 @@ import { type TablePropertyDefinition, getBaseSchema, makeDynamicTable } from '.
 
 import { Table, type TableController } from './Table';
 
-type DynamicTableProps = ThemedClassName<{
+export type DynamicTableProps<T extends Type.Entity.Any = Type.Entity.Any> = ThemedClassName<{
+  schema?: T;
   name?: string; // TODO(burdon): Remove?
   rows: any[];
   properties?: TablePropertyDefinition[];
   jsonSchema?: JsonSchemaType;
-  schema?: Schema.Schema.AnyNoContext;
   features?: Partial<TableFeatures>;
   rowActions?: TableRowAction[];
   onRowClick?: (row: any) => void;
@@ -33,18 +33,18 @@ type DynamicTableProps = ThemedClassName<{
  */
 // TODO(burdon): Instead of creating component variants, create helpers/hooks that normalize the props.
 // TODO(burdon): Warning: Cannot update a component (`DynamicTable`) while rendering a different component (`DynamicTable`).
-export const DynamicTable = ({
+export const DynamicTable = <T extends Type.Entity.Any = Type.Entity.Any>({
   classNames,
+  schema,
   name = 'example.com/dynamic-table', // Rmove default or make random; this will lead to type collisions.
   rows,
   properties,
   jsonSchema: _jsonSchema,
-  schema,
   rowActions,
   onRowClick,
   onRowAction,
   ...props
-}: DynamicTableProps) => {
+}: DynamicTableProps<T>) => {
   // TODO(burdon): Remove variance from the props (should be normalized externally; possibly via hooks).
   const { jsonSchema } = useMemo(
     () => getBaseSchema({ typename: name, properties, jsonSchema: _jsonSchema, schema }),

@@ -5,14 +5,17 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
-import { withTheme } from '@dxos/react-ui/testing';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { ${name} } from './${name}';
 
 const meta: Meta<typeof ${name}> = {
   title: 'components/${name}',
   component: ${name},
-  decorators: [withTheme],
+  decorators: [withTheme, withLayout({ container: 'column' })],
+  parameters: {
+    layout: 'fullscreen',
+  },
 };
 
 export default meta;

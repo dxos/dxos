@@ -22,7 +22,7 @@ import { Function } from '@dxos/functions';
 describe('test', () => {
   test('test', async () => {
     const client = new Client();
-    client.addTypes([Function.Function]);
+    await client.addTypes([Function.Function]);
     await client.initialize();
     await client.halo.createIdentity();
 

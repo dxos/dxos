@@ -4,14 +4,17 @@
 
 import { useCallback, useEffect, useState } from 'react';
 
-import { type TypeAnnotation } from '@dxos/echo/internal';
 import { type DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type Palette } from '@dxos/react-ui-types';
 import { type MaybePromise } from '@dxos/util';
 
-export type RefOption = { dxn: DXN; label?: string };
-export type QueryRefOptions = (type: TypeAnnotation) => MaybePromise<RefOption[]>;
+export type RefOption = {
+  dxn: DXN;
+  label?: string;
+};
+
+export type QueryRefOptions = ({ typename }: { typename: string }) => MaybePromise<RefOption[]>;
 
 export type QueryTag = {
   id: string;
@@ -19,32 +22,40 @@ export type QueryTag = {
   hue?: Palette;
 };
 
-type UseQueryRefOptionsProps = { refTypeInfo: TypeAnnotation | undefined; onQueryRefOptions?: QueryRefOptions };
+type UseQueryRefOptionsProps = {
+  typename?: string;
+  onQueryRefOptions?: QueryRefOptions;
+};
 
 /**
  * Hook to query reference options based on type information.
  * Used internally within forms to fetch and format reference options for reference fields.
  */
-// TODO(wittjosiah): This should be a reactive query so that the options are always up to date.
-export const useQueryRefOptions = ({ refTypeInfo, onQueryRefOptions }: UseQueryRefOptionsProps) => {
+export const useQueryRefOptions = ({ typename, onQueryRefOptions }: UseQueryRefOptionsProps) => {
   const [options, setOptions] = useState<QueryTag[]>([]);
   const [loading, setLoading] = useState(false);
   const [state, setState] = useState({});
   const update = useCallback(() => setState({}), []);
 
   useEffect(() => {
-    if (!refTypeInfo || !onQueryRefOptions) {
+    if (!typename || !onQueryRefOptions) {
       return;
     }
 
     const fetchOptions = async () => {
       setLoading(true);
       try {
-        const fetchedOptions = await onQueryRefOptions(refTypeInfo);
+        // TODO(wittjosiah): This should be a reactive query so that the options are always up to date.
+        const options = await onQueryRefOptions({ typename });
+        log('options', { options: options.length });
         setOptions(
-          fetchedOptions.map((option) => {
+          options.map((option) => {
             const dxn = option.dxn.toString() as string;
-            return { id: dxn, label: option.label ?? dxn, hue: 'neutral' as any };
+            return {
+              id: dxn,
+              label: option.label ?? dxn,
+              hue: 'neutral' as any,
+            };
           }),
         );
       } catch (error) {
@@ -56,7 +67,7 @@ export const useQueryRefOptions = ({ refTypeInfo, onQueryRefOptions }: UseQueryR
     };
 
     void fetchOptions();
-  }, [refTypeInfo, onQueryRefOptions, state]);
+  }, [typename, onQueryRefOptions, state]);
 
   return { options, update, loading };
 };

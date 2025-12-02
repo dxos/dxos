@@ -2,64 +2,55 @@
 // Copyright 2025 DXOS.org
 //
 
-import type * as Schema from 'effect/Schema';
 import React, { forwardRef, useMemo } from 'react';
 
+import { type AnyProperties } from '@dxos/echo/internal';
 import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 import { type SchemaProperty, getSchemaProperties } from '@dxos/schema';
 import { isTruthy } from '@dxos/util';
 
-import { type QueryRefOptions } from '../../hooks';
+import { type FormHandlerProps } from '../../hooks';
 
-import { FormErrorBoundary } from './FormErrorBoundary';
+import { useFormValues } from './Form';
 import { FormField, type FormFieldProps } from './FormField';
-import { useFormValues } from './FormRoot';
+import { FormFieldErrorBoundary, FormFieldLabel } from './FormFieldComponent';
 
-export type FormFieldSetProps = ThemedClassName<
+export type FormFieldSetProps<T extends AnyProperties> = ThemedClassName<
   {
-    testId?: string;
-    schema: Schema.Schema.All;
-    exclude?: (props: SchemaProperty<any>[]) => SchemaProperty<any>[];
-    // TODO(burdon): Change to function (dynamic?)
+    label?: string;
+    exclude?: (props: SchemaProperty<T>[]) => SchemaProperty<T>[];
     sort?: string[];
-    onQueryRefOptions?: QueryRefOptions;
-  } & Pick<
-    FormFieldProps,
-    | 'path'
-    | 'projection'
-    | 'readonly'
-    | 'fieldMap'
-    | 'fieldProvider'
-    | 'createSchema'
-    | 'createOptionLabel'
-    | 'createOptionIcon'
-    | 'createInitialValuePath'
-    | 'onCreate'
-    | 'onQueryRefOptions'
-  >
+  } & Pick<FormHandlerProps<T>, 'schema'> &
+    Pick<
+      FormFieldProps<T>,
+      | 'path'
+      | 'autoFocus'
+      | 'readonly'
+      | 'layout'
+      | 'projection'
+      | 'fieldMap'
+      | 'fieldProvider'
+      | 'createSchema'
+      | 'createOptionLabel'
+      | 'createOptionIcon'
+      | 'createInitialValuePath'
+      | 'onCreate'
+      | 'onQueryRefOptions'
+    >
 >;
 
-export const FormFieldSet = forwardRef<HTMLDivElement, FormFieldSetProps>(
-  (
-    {
-      classNames,
-      schema,
-      path,
-      exclude,
-      sort,
-      projection,
-      readonly,
-      fieldMap,
-      fieldProvider,
-      onQueryRefOptions,
-      ...props
-    },
-    forwardRef,
-  ) => {
+export const FormFieldSet = forwardRef<HTMLDivElement, FormFieldSetProps<any>>(
+  ({ classNames, label, schema, readonly, path, exclude, sort, projection, layout, ...props }, forwardRef) => {
     const values = useFormValues(FormFieldSet.displayName!, path);
 
+    // TODO(burdon): Updates on every value change.
+    //  Remove values dep if can remove from getSchemaProperties.
     const properties = useMemo(() => {
+      if (!schema) {
+        return [];
+      }
+
       const props = getSchemaProperties(schema.ast, values, { form: true });
 
       // Use projection-based field management when view and projection are available.
@@ -81,7 +72,7 @@ export const FormFieldSet = forwardRef<HTMLDivElement, FormFieldSetProps>(
         }
 
         // Add any remaining properties not in projection.
-        const projectionPaths = new Set(fieldProjections.map((fp) => String(fp.field.path)));
+        const projectionPaths = new Set(fieldProjections.map((projection) => String(projection.field.path)));
         const remainingProps = visibleProps.filter((prop) => !projectionPaths.has(prop.name));
         orderedProps.push(...remainingProps);
         return orderedProps;
@@ -89,26 +80,33 @@ export const FormFieldSet = forwardRef<HTMLDivElement, FormFieldSetProps>(
 
       // Fallback to legacy filter/sort behavior.
       const filtered = exclude ? exclude(props) : props;
-      return sort ? filtered.sort((a, b) => sort.indexOf(a.name) - sort.indexOf(b.name)) : filtered;
+      return sort ? filtered.sort(({ name: a }, { name: b }) => sort.indexOf(a) - sort.indexOf(b)) : filtered;
     }, [schema, values, exclude, sort, projection?.fields]);
 
+    if ((readonly || layout === 'static') && values == null) {
+      return null;
+    }
+
     return (
-      <div role='form' className={mx('is-full', classNames)} ref={forwardRef}>
+      <div
+        role='form'
+        className={mx('is-full', layout === 'inline' && 'flex flex-col gap-2', classNames)}
+        ref={forwardRef}
+      >
+        {layout !== 'inline' && label && <FormFieldLabel label={label} asChild />}
         {properties
           .map((property) => {
             return (
-              <FormErrorBoundary key={property.name} path={[...(path ?? []), property.name]}>
+              <FormFieldErrorBoundary key={property.name} path={[...(path ?? []), property.name]}>
                 <FormField
                   property={property}
                   path={[...(path ?? []), property.name]}
                   readonly={readonly}
+                  layout={layout}
                   projection={projection}
-                  fieldMap={fieldMap}
-                  fieldProvider={fieldProvider}
-                  onQueryRefOptions={onQueryRefOptions}
                   {...props}
                 />
-              </FormErrorBoundary>
+              </FormFieldErrorBoundary>
             );
           })
           .filter(isTruthy)}

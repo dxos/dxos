@@ -10,7 +10,10 @@ import { type Type } from '@dxos/echo';
 /**
  * Subscribe to and retrieve schema changes from a space's schema registry.
  */
-export const useSchema = (space?: Space, typename?: string): Type.Entity.Any | undefined => {
+export const useSchema = <T extends Type.Entity.Any = Type.Entity.Any>(
+  space?: Space,
+  typename?: string,
+): T | undefined => {
   const { subscribe, getSchema } = useMemo(() => {
     if (!typename || !space) {
       return {
@@ -36,5 +39,5 @@ export const useSchema = (space?: Space, typename?: string): Type.Entity.Any | u
     };
   }, [typename, space]);
 
-  return useSyncExternalStore(subscribe, getSchema);
+  return useSyncExternalStore(subscribe, getSchema) as T;
 };

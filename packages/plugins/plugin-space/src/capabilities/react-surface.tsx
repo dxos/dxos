@@ -7,7 +7,7 @@ import type * as Schema from 'effect/Schema';
 import React, { useCallback } from 'react';
 
 import { Capabilities, contributes, createSurface } from '@dxos/app-framework';
-import { Surface, useCapability, useLayout } from '@dxos/app-framework/react';
+import { Surface, SurfaceContainer, useCapability, useLayout } from '@dxos/app-framework/react';
 import { Obj, type Ref } from '@dxos/echo';
 import { findAnnotation } from '@dxos/effect';
 import { SettingsStore } from '@dxos/local-storage';
@@ -15,7 +15,7 @@ import { type Space, SpaceState, getSpace, isLiveObject, isSpace, parseId, useSp
 import { Input } from '@dxos/react-ui';
 import { type FormFieldComponentProps, SelectField } from '@dxos/react-ui-form';
 import { HuePicker, IconPicker } from '@dxos/react-ui-pickers';
-import { Collection, View, ViewAnnotation } from '@dxos/schema';
+import { Collection, type View, ViewAnnotation } from '@dxos/schema';
 import { type JoinPanelProps } from '@dxos/shell/react';
 
 // TODO(burdon): Component name standard: NounVerbComponent.
@@ -33,9 +33,9 @@ import {
   MembersContainer,
   MenuFooter,
   OBJECT_RENAME_POPOVER,
-  ObjectDetailsPanel,
+  ObjectCardStack,
+  ObjectDetails,
   ObjectRenamePopover,
-  ObjectSettingsContainer,
   RecordArticle,
   SPACE_RENAME_POPOVER,
   SchemaContainer,
@@ -103,11 +103,12 @@ export default ({ createInvitationUrl }: ReactSurfaceOptions) =>
         data.subject instanceof SettingsStore && data.subject.prefix === meta.id,
       component: ({ data: { subject } }) => <SpacePluginSettings settings={subject.value} />,
     }),
+    // TODO(burdon): Rename object-details.
     createSurface({
       id: `${meta.id}/companion/object-settings`,
       role: 'article',
       filter: (data): data is { companionTo: Obj.Any } => Obj.isObject(data.companionTo) && data.subject === 'settings',
-      component: ({ data, role }) => <ObjectSettingsContainer object={data.companionTo} role={role} />,
+      component: ({ data, role }) => <ObjectDetails object={data.companionTo} role={role} />,
     }),
     createSurface({
       id: `${meta.id}/space-settings-properties`,
@@ -158,14 +159,26 @@ export default ({ createInvitationUrl }: ReactSurfaceOptions) =>
     createSurface({
       id: `${meta.id}/selected-objects`,
       role: 'article',
-      filter: (data): data is { companionTo: View.View; subject: 'selected-objects' } =>
-        Obj.instanceOf(View.View, data.companionTo) && data.subject === 'selected-objects',
+      filter: (data): data is { companionTo: Obj.Obj<{ view: Ref.Ref<View.View> }>; subject: 'selected-objects' } => {
+        if (data.subject !== 'selected-objects' || !Obj.isObject(data.companionTo)) {
+          return false;
+        }
+
+        // TODO(burdon): Check companionTo.view.target is valid.
+        const schema = Obj.getSchema(data.companionTo);
+        return Option.fromNullable(schema).pipe(
+          Option.flatMap((schema) => ViewAnnotation.get(schema)),
+          Option.getOrElse(() => false),
+        );
+      },
       component: ({ data }) => (
-        <ObjectDetailsPanel
-          key={Obj.getDXN(data.companionTo).toString()}
-          objectId={Obj.getDXN(data.companionTo).toString()}
-          view={data.companionTo}
-        />
+        <SurfaceContainer>
+          <ObjectCardStack
+            key={Obj.getDXN(data.companionTo).toString()}
+            objectId={Obj.getDXN(data.companionTo).toString()}
+            view={data.companionTo.view.target!}
+          />
+        </SurfaceContainer>
       ),
     }),
     createSurface({
@@ -238,7 +251,7 @@ export default ({ createInvitationUrl }: ReactSurfaceOptions) =>
           return false;
         }
 
-        // TODO(wittjosiah): This doesn't work here.
+        // TODO(wittjosiah): Shouldn't directly use annotation id, but this doesn't work here.
         // const annotation = TypeInputOptionsAnnotation.get(data.schema as Schema.Schema.Any);
         const annotation = findAnnotation((data.schema as Schema.Schema.All).ast, TypeInputOptionsAnnotationId);
         return !!annotation;

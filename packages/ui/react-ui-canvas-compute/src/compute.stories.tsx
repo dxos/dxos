@@ -21,6 +21,7 @@ import {
   ShapeRegistry,
 } from '@dxos/react-ui-canvas-editor';
 import { Container, useSelection } from '@dxos/react-ui-canvas-editor/testing';
+import { Form } from '@dxos/react-ui-form';
 import { JsonFilter } from '@dxos/react-ui-syntax-highlighter';
 
 import { DiagnosticOverlay } from './components';
@@ -161,11 +162,17 @@ const DefaultStory = ({
           </Toolbar.Root>
 
           <div className='flex flex-col bs-full overflow-hidden divide-y divider-separator'>
+            {/* TODO(burdon): Provide schema. */}
             {sidebar === 'selected' && selected && (
-              <div>Form</div>
-              // <Form<ComputeNode> schema={FormSchema} values={getComputeNode(selected.id) ?? {}} fieldMap={{}} />
+              <Form.Root<ComputeNode> values={getComputeNode(selected.id) ?? {}}>
+                <Form.Viewport>
+                  <Form.Content>
+                    <Form.FieldSet />
+                    <Form.Actions />
+                  </Form.Content>
+                </Form.Viewport>
+              </Form.Root>
             )}
-
             <JsonFilter data={json} />
           </div>
         </Container>

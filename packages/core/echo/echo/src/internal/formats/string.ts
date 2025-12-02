@@ -53,6 +53,11 @@ export const Markdown = Schema.String.pipe(FormatAnnotation.set(TypeFormat.Markd
 export const Regex = Schema.String.pipe(FormatAnnotation.set(TypeFormat.Regex));
 
 /**
+ * Multi-line text.
+ */
+export const Text = Schema.String.pipe(FormatAnnotation.set(TypeFormat.Text));
+
+/**
  * https://datatracker.ietf.org/doc/html/rfc3986#section-1.1.3
  */
 export const URL = Schema.String.pipe(

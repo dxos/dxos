@@ -5,40 +5,30 @@
 import React from 'react';
 
 import { Input } from '@dxos/react-ui';
+import { safeParseFloat } from '@dxos/util';
 
-import { type FormFieldComponentProps, FormFieldLabel } from '../FormFieldComponent';
+import { type FormFieldComponentProps, FormFieldWrapper } from '../FormFieldComponent';
 
 export const NumberField = ({
   type,
-  label,
-  inputOnly,
   readonly,
   placeholder,
-  getStatus,
-  getValue,
   onValueChange,
   onBlur,
-}: FormFieldComponentProps) => {
-  const { status, error } = getStatus();
-
-  return readonly && !getValue() ? null : readonly === 'static' && inputOnly ? (
-    <p>{getValue() ?? ''}</p>
-  ) : (
-    <Input.Root validationValence={status}>
-      {!inputOnly && <FormFieldLabel error={error} readonly={readonly} label={label} />}
-      {readonly === 'static' ? (
-        <p>{getValue() ?? ''}</p>
-      ) : (
+  ...props
+}: FormFieldComponentProps<number>) => {
+  return (
+    <FormFieldWrapper<number> readonly={readonly} {...props}>
+      {({ value = '' }) => (
         <Input.TextInput
           type='number'
           disabled={!!readonly}
           placeholder={placeholder}
-          value={getValue()}
-          onChange={(event) => onValueChange(type, event.target.value)}
+          value={value}
+          onChange={(event) => onValueChange(type, safeParseFloat(event.target.value) || 0)}
           onBlur={onBlur}
         />
       )}
-      {inputOnly && <Input.DescriptionAndValidation>{error}</Input.DescriptionAndValidation>}
-    </Input.Root>
+    </FormFieldWrapper>
   );
 };
