@@ -2,13 +2,13 @@
 // Copyright 2023 DXOS.org
 //
 
-import type { PropsWithChildren, ReactNode, Ref } from 'react';
+import type { PropsWithChildren, ReactNode, RefCallback } from 'react';
 
 import { type MakeOptional, type Position } from '@dxos/util';
 
 import { type ErrorBoundary } from '../react';
 
-type AnyProperties = Record<string, any>;
+// TODO(burdon): Default generic params aren't consistent.
 
 /**
  * SurfaceProps are the props that are passed to the Surface component.
@@ -62,7 +62,7 @@ export type CoreSurfaceProps<T extends Record<string, any> = Record<string, unkn
 }>;
 
 export type SurfaceComponentProps<T extends Record<string, any> = Record<string, any>> = CoreSurfaceProps<T> & {
-  ref?: Ref<HTMLElement>;
+  ref?: RefCallback<HTMLElement>;
 } & Record<string, any>;
 
 /**

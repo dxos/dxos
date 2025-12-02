@@ -104,6 +104,15 @@ export const Surface: NamedExoticComponent<SurfaceProps & RefAttributes<HTMLElem
 
 Surface.displayName = 'Surface';
 
+const findCandidates = (surfaces: SurfaceDefinition[], { role, data }: Pick<SurfaceProps, 'role' | 'data'>) => {
+  return Object.values(surfaces)
+    .filter((definition) =>
+      Array.isArray(definition.role) ? definition.role.includes(role) : definition.role === role,
+    )
+    .filter(({ filter }) => (filter ? filter(data ?? {}) : true))
+    .toSorted(byPosition);
+};
+
 // TODO(burdon): Make user facing, with telemetry.
 // TODO(burdon): Change based on dev/prod mode; infer subject type, id.
 const DefaultFallback = ({ data, error, dev }: { data: any; error: Error; dev?: boolean }) => {
@@ -140,13 +149,4 @@ export const isSurfaceAvailable = (context: PluginContext, { role, data }: Pick<
   const surfaces = context.getCapabilities(Capabilities.ReactSurface);
   const candidates = findCandidates(surfaces.flat(), { role, data });
   return candidates.length > 0;
-};
-
-const findCandidates = (surfaces: SurfaceDefinition[], { role, data }: Pick<SurfaceProps, 'role' | 'data'>) => {
-  return Object.values(surfaces)
-    .filter((definition) =>
-      Array.isArray(definition.role) ? definition.role.includes(role) : definition.role === role,
-    )
-    .filter(({ filter }) => (filter ? filter(data ?? {}) : true))
-    .toSorted(byPosition);
 };

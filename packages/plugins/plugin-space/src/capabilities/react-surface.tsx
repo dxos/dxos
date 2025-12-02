@@ -18,7 +18,6 @@ import { HuePicker, IconPicker } from '@dxos/react-ui-pickers';
 import { Collection, type View, ViewAnnotation } from '@dxos/schema';
 import { type JoinPanelProps } from '@dxos/shell/react';
 
-// TODO(burdon): Component name standard: NounVerbComponent.
 import {
   CREATE_OBJECT_DIALOG,
   CREATE_SPACE_DIALOG,
@@ -103,12 +102,11 @@ export default ({ createInvitationUrl }: ReactSurfaceOptions) =>
         data.subject instanceof SettingsStore && data.subject.prefix === meta.id,
       component: ({ data: { subject } }) => <SpacePluginSettings settings={subject.value} />,
     }),
-    // TODO(burdon): Rename object-details.
     createSurface({
       id: `${meta.id}/companion/object-settings`,
       role: 'article',
       filter: (data): data is { companionTo: Obj.Any } => Obj.isObject(data.companionTo) && data.subject === 'settings',
-      component: ({ ref, data, role }) => <ObjectDetails ref={ref} object={data.companionTo} role={role} />,
+      component: ({ ref, data, role }) => <ObjectDetails object={data.companionTo} role={role} ref={ref} />,
     }),
     createSurface({
       id: `${meta.id}/space-settings-properties`,
@@ -171,11 +169,12 @@ export default ({ createInvitationUrl }: ReactSurfaceOptions) =>
           Option.getOrElse(() => false),
         );
       },
-      component: ({ data }) => (
+      component: ({ ref, data }) => (
         <ObjectCardStack
           key={Obj.getDXN(data.companionTo).toString()}
           objectId={Obj.getDXN(data.companionTo).toString()}
           view={data.companionTo.view.target!}
+          ref={ref}
         />
       ),
     }),

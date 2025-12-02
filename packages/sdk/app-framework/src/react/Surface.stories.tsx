@@ -3,7 +3,7 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 
 import { faker } from '@dxos/random';
 import { List, ListItem, Toolbar } from '@dxos/react-ui';
@@ -86,6 +86,11 @@ const DefaultStory = () => {
     setSelected('error');
   }, [manager]);
 
+  const ref = useRef<HTMLElement>(null);
+  useEffect(() => {
+    console.log(ref.current);
+  }, [ref]);
+
   return (
     <div className='flex flex-col bs-full overflow-hidden'>
       <Toolbar.Root>
@@ -94,7 +99,7 @@ const DefaultStory = () => {
         <Toolbar.Button onClick={handleError}>Error</Toolbar.Button>
       </Toolbar.Root>
       <div className='grid grid-cols-2 bs-full gap-4 overflow-hidden'>
-        <Surface role='item' data={selected ? { id: selected } : undefined} limit={1} />
+        <Surface role='item' data={selected ? { id: selected } : undefined} limit={1} ref={ref} />
         <div className='overflow-y-auto bs-full'>
           <List>
             {surfaces.map((surface) => (

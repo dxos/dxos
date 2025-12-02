@@ -26,7 +26,7 @@ export default () =>
       filter: (data): data is { subject: Markdown.Document; variant: undefined } =>
         Obj.instanceOf(Markdown.Document, data.subject) && !data.variant,
       component: ({ ref, data, role }) => {
-        return <Container ref={ref} id={Obj.getDXN(data.subject).toString()} subject={data.subject} role={role} />;
+        return <Container id={Obj.getDXN(data.subject).toString()} subject={data.subject} role={role} ref={ref} />;
       },
     }),
     createSurface({
