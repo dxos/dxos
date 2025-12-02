@@ -54,7 +54,7 @@ describe('ViewEditor', () => {
     const nameField = screen.getByText('name');
     fireEvent.click(nameField);
 
-    const fieldInput = screen.getByPlaceholderText('Field name');
+    const fieldInput = screen.getByPlaceholderText('Property name');
     fireEvent.change(fieldInput, { target: { value: 'new_property' } });
 
     fireEvent.click(screen.getByTestId('save-button'));
