@@ -3,22 +3,18 @@
 //
 
 import React, {
+  type ComponentType,
   type Context,
   Fragment,
   type NamedExoticComponent,
-  type PropsWithChildren,
   type RefAttributes,
   Suspense,
   createContext,
   forwardRef,
   memo,
   useContext,
-  useLayoutEffect,
   useMemo,
-  useRef,
-  useState,
 } from 'react';
-import { createPortal } from 'react-dom';
 
 import { raise } from '@dxos/debug';
 import { useDefaultValue } from '@dxos/react-hooks';
@@ -28,25 +24,29 @@ import { Capabilities, type SurfaceDefinition, type SurfaceProps } from '../comm
 import { type PluginContext } from '../core';
 
 import { ErrorBoundary } from './ErrorBoundary';
+import { SurfaceInfo } from './SurfaceInfo';
 import { useCapabilities } from './useCapabilities';
 
 const DEFAULT_PLACEHOLDER = <Fragment />;
 
 export type SurfaceContext = Pick<SurfaceProps, 'id' | 'role' | 'data'>;
 
+// TODO(burdon): Use @radix-ui/react-context
 const SurfaceContext: Context<SurfaceContext | undefined> = createContext<SurfaceContext | undefined>(undefined);
 
 /**
  * Wrapper component that provides context for a surface.
  */
 const SurfaceContextProvider = memo(
-  forwardRef<HTMLElement, SurfaceProps & { component: React.ComponentType<any> }>(
+  forwardRef<HTMLElement, SurfaceProps & { component: ComponentType<any> }>(
     ({ id, role, data, limit, component: Component, ...rest }, forwardedRef) => {
       const contextValue = useMemo(() => ({ id, role, data }), [id, role, data]);
 
       return (
         <SurfaceContext.Provider value={contextValue}>
-          <Component ref={forwardedRef} id={id} role={role} data={data} limit={limit} {...rest} />
+          <SurfaceInfo ref={forwardedRef}>
+            <Component id={id} role={role} data={data} limit={limit} {...rest} />
+          </SurfaceInfo>
         </SurfaceContext.Provider>
       );
     },
@@ -149,74 +149,4 @@ const findCandidates = (surfaces: SurfaceDefinition[], { role, data }: Pick<Surf
     )
     .filter(({ filter }) => (filter ? filter(data ?? {}) : true))
     .toSorted(byPosition);
-};
-
-// TODO(burdon): Factor out to sdk/framework (extract react components).
-//  - Context metadata
-//  - Common padding, border, scroll area, etc.
-//  - Common debug.
-//  - Error boundary.
-export const SurfaceContainer = ({ className = 'contents', children }: PropsWithChildren<{ className?: string }>) => {
-  const ref = useRef<HTMLDivElement>(null);
-  const active = '__DX_DEBUG__' in window;
-  const [rect, setRect] = useState<DOMRect | null>(null);
-  const [expand, setExpand] = useState(false); // TOOD(burdon): Save state.
-  const info = useSurface();
-
-  useLayoutEffect(() => {
-    if (!active || !ref.current) {
-      setRect(null);
-      return;
-    }
-
-    const measure = () => setRect(ref.current!.getBoundingClientRect());
-    measure();
-
-    const obs = new ResizeObserver(measure);
-    obs.observe(ref.current);
-
-    window.addEventListener('scroll', measure, true);
-    window.addEventListener('resize', measure);
-
-    return () => {
-      obs.disconnect();
-      window.removeEventListener('scroll', measure, true);
-      window.removeEventListener('resize', measure);
-    };
-  }, [active]);
-
-  const padding = 8;
-  const debug = active;
-  return (
-    <div role='none' className={className} ref={ref}>
-      {children}
-      {rect &&
-        // TODO(burdon): Scrolling won't work with pointer-events-none.
-        createPortal(
-          <div
-            className={['z-10 fixed overflow-auto', !debug && '_pointer-events-none'].filter(Boolean).join(' ')}
-            style={{
-              top: rect.top + padding,
-              left: rect.left + padding,
-              width: rect.width - padding * 2,
-              height: rect.height - padding * 2,
-            }}
-          >
-            {/* TODO(burdon): Replace with JsonFilter when extracted into separate react package. */}
-            <pre
-              onClick={() => setExpand((expand) => !expand)}
-              className={[
-                'p-1 bg-deckSurface text-xs font-mono font-thin border border-rose-500 cursor-pointer',
-                !expand && 'inline-block',
-              ]
-                .filter(Boolean)
-                .join(' ')}
-            >
-              {expand ? JSON.stringify({ info }, null, 2) : info.id}
-            </pre>
-          </div>,
-          document.body,
-        )}
-    </div>
-  );
 };

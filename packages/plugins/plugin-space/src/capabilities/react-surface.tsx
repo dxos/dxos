@@ -7,7 +7,7 @@ import type * as Schema from 'effect/Schema';
 import React, { useCallback } from 'react';
 
 import { Capabilities, contributes, createSurface } from '@dxos/app-framework';
-import { Surface, SurfaceContainer, useCapability, useLayout } from '@dxos/app-framework/react';
+import { Surface, useCapability, useLayout } from '@dxos/app-framework/react';
 import { Obj, type Ref } from '@dxos/echo';
 import { findAnnotation } from '@dxos/effect';
 import { SettingsStore } from '@dxos/local-storage';
@@ -108,7 +108,7 @@ export default ({ createInvitationUrl }: ReactSurfaceOptions) =>
       id: `${meta.id}/companion/object-settings`,
       role: 'article',
       filter: (data): data is { companionTo: Obj.Any } => Obj.isObject(data.companionTo) && data.subject === 'settings',
-      component: ({ data, role }) => <ObjectDetails object={data.companionTo} role={role} />,
+      component: ({ ref, data, role }) => <ObjectDetails ref={ref} object={data.companionTo} role={role} />,
     }),
     createSurface({
       id: `${meta.id}/space-settings-properties`,
@@ -172,13 +172,11 @@ export default ({ createInvitationUrl }: ReactSurfaceOptions) =>
         );
       },
       component: ({ data }) => (
-        <SurfaceContainer>
-          <ObjectCardStack
-            key={Obj.getDXN(data.companionTo).toString()}
-            objectId={Obj.getDXN(data.companionTo).toString()}
-            view={data.companionTo.view.target!}
-          />
-        </SurfaceContainer>
+        <ObjectCardStack
+          key={Obj.getDXN(data.companionTo).toString()}
+          objectId={Obj.getDXN(data.companionTo).toString()}
+          view={data.companionTo.view.target!}
+        />
       ),
     }),
     createSurface({

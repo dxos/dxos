@@ -2,11 +2,13 @@
 // Copyright 2023 DXOS.org
 //
 
-import type { ComponentType, PropsWithChildren, ReactNode } from 'react';
+import type { PropsWithChildren, ReactNode, Ref } from 'react';
 
 import { type MakeOptional, type Position } from '@dxos/util';
 
 import { type ErrorBoundary } from '../react';
+
+type AnyProperties = Record<string, any>;
 
 /**
  * SurfaceProps are the props that are passed to the Surface component.
@@ -59,15 +61,16 @@ export type CoreSurfaceProps<T extends Record<string, any> = Record<string, unkn
   limit?: number | undefined;
 }>;
 
-export type SurfaceComponentProps<T extends Record<string, any> = Record<string, any>> = CoreSurfaceProps<T> &
-  Record<string, any>;
+export type SurfaceComponentProps<T extends Record<string, any> = Record<string, any>> = CoreSurfaceProps<T> & {
+  ref?: Ref<HTMLElement>;
+} & Record<string, any>;
 
 /**
  * React component used to render a surface once is has matched.
  */
-export type SurfaceComponent<T extends Record<string, any> = Record<string, any>> = ComponentType<
-  SurfaceComponentProps<T>
->;
+export type SurfaceComponent<T extends Record<string, any> = Record<string, any>> = (
+  props: SurfaceComponentProps<T>,
+) => ReactNode;
 
 /**
  * Definition of when a SurfaceComponent should be rendered.
