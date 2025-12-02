@@ -250,6 +250,9 @@
       "path": "packages/experimental/env-tests/tsconfig.json"
     },
     {
+      "path": "packages/experimental/logic/tsconfig.json"
+    },
+    {
       "path": "packages/experimental/metagraph/tsconfig.json"
     },
     {

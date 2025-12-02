@@ -5252,6 +5252,30 @@ importers:
         specifier: ~19.2.0
         version: 19.2.0(react@19.2.0)
 
+  packages/experimental/logic:
+    dependencies:
+      '@dxos/async':
+        specifier: workspace:*
+        version: link:../../common/async
+      '@dxos/config':
+        specifier: workspace:*
+        version: link:../../sdk/config
+      '@dxos/debug':
+        specifier: workspace:*
+        version: link:../../common/debug
+      '@dxos/log':
+        specifier: workspace:*
+        version: link:../../common/log
+      '@dxos/node-std':
+        specifier: workspace:*
+        version: link:../../common/node-std
+      '@dxos/protocols':
+        specifier: workspace:*
+        version: link:../../core/protocols
+      cross-fetch:
+        specifier: ^3.1.5
+        version: 3.1.5(encoding@0.1.13)
+
   packages/experimental/metagraph:
     dependencies:
       '@dxos/async':
