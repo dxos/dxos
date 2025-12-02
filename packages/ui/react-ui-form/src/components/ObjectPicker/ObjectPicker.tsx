@@ -113,10 +113,12 @@ const ObjectPickerContent = forwardRef<HTMLDivElement, ObjectPickerContentProps>
               onSave={handleFormSave}
               onCancel={handleFormCancel}
             >
-              <Form.Content>
-                <Form.FieldSet />
-                <Form.Actions />
-              </Form.Content>
+              <Form.Viewport>
+                <Form.Content>
+                  <Form.FieldSet />
+                  <Form.Actions />
+                </Form.Content>
+              </Form.Viewport>
             </Form.Root>
           </Popover.Viewport>
         ) : (

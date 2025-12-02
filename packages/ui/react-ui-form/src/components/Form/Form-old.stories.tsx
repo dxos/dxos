@@ -95,7 +95,7 @@ const PersonSchema = Schema.Struct({
 type PersonSchema = Schema.Schema.Type<typeof PersonSchema>;
 
 const meta = {
-  title: 'ui/react-ui-form/Form',
+  title: 'ui/react-ui-form/Form-Old',
   component: Form.Root as any,
   render: DefaultStory,
   decorators: [withTheme, withLayoutVariants()],

@@ -18,7 +18,6 @@ import { FormFieldErrorBoundary, FormFieldLabel } from './FormFieldComponent';
 
 export type FormFieldSetProps<T extends AnyProperties> = ThemedClassName<
   {
-    testId?: string;
     label?: string;
     exclude?: (props: SchemaProperty<T>[]) => SchemaProperty<T>[];
     sort?: string[];

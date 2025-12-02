@@ -304,6 +304,7 @@ const FieldList = ({ schema, view, registry, readonly, showHeading = false, onDe
                           label={t('toggle expand label', { ns: 'os' })}
                           icon={expandedField === field.id ? 'ph--caret-down--regular' : 'ph--caret-right--regular'}
                           onClick={() => handleToggleField(field)}
+                          data-testid='field.toggle'
                         />
                       </>
                     )}

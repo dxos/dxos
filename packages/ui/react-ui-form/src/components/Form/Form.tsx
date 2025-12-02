@@ -58,6 +58,11 @@ type NewFormContextValue<T extends AnyProperties = any> = {
    * Show debug info.
    */
   debug?: boolean;
+
+  /**
+   * Testing.
+   */
+  testId?: string;
 } & Pick<FormFieldSetProps<T>, 'readonly' | 'layout' | 'fieldMap' | 'fieldProvider'>;
 
 const [NewFormContextProvider, useNewFormContext] = createContext<NewFormContextValue>('Form');
@@ -163,13 +168,19 @@ NewFormViewport.displayName = 'Form.Viewport';
 
 type NewFormContentProps = ThemedClassName<PropsWithChildren<{}>>;
 
+// TOOD(burdon): Figure out nesting (indent and testId).
 const NewFormContent = ({ classNames, children }: NewFormContentProps) => {
-  const { form } = useNewFormContext(NewFormContent.displayName);
+  const { form, testId } = useNewFormContext(NewFormContent.displayName);
   const ref = useRef<HTMLDivElement>(null);
   useKeyHandler(ref.current, form);
 
   return (
-    <div role='none' className={mx('flex flex-col is-full pli-cardSpacingInline', classNames)} ref={ref}>
+    <div
+      ref={ref}
+      role='form'
+      className={mx('flex flex-col is-full pli-cardSpacingInline', classNames)}
+      data-testid={testId}
+    >
       {children}
     </div>
   );

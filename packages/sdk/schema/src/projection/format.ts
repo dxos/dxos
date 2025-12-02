@@ -13,20 +13,20 @@ import { DecimalPrecision, JsonProp, type JsonSchemaType, SelectOption, TypeEnum
 export const BaseProperty = Schema.Struct({
   property: JsonProp.annotations({
     title: 'Property',
-    description: 'Field name.',
+    description: 'Property name',
   }),
 
   title: Schema.optional(
     Schema.String.annotations({
       title: 'Label',
-      description: 'Property label.',
+      description: 'Property label',
     }),
   ),
 
   description: Schema.optional(
     Schema.String.annotations({
       title: 'Description',
-      description: 'Property description.',
+      description: 'Property description',
     }),
   ),
 });
