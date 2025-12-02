@@ -251,6 +251,8 @@ export default ({ createInvitationUrl }: ReactSurfaceOptions) =>
           return false;
         }
 
+        // TODO(wittjosiah): Shouldn't directly use annotation id, but this doesn't work here.
+        // const annotation = TypeInputOptionsAnnotation.get(data.schema as Schema.Schema.Any);
         const annotation = findAnnotation((data.schema as Schema.Schema.All).ast, TypeInputOptionsAnnotationId);
         return !!annotation;
       },

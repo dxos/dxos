@@ -151,6 +151,7 @@ const findCandidates = (surfaces: SurfaceDefinition[], { role, data }: Pick<Surf
     .toSorted(byPosition);
 };
 
+// TODO(wittjosiah): Remove react-dom dependency when factoring out.
 // TODO(burdon): Factor out to sdk/framework (extract react components).
 //  - Context metadata
 //  - Common padding, border, scroll area, etc.

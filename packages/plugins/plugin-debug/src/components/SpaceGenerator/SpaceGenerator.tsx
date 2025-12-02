@@ -6,7 +6,7 @@ import React, { useCallback, useMemo, useState } from 'react';
 
 import { useIntentDispatcher } from '@dxos/app-framework/react';
 import { ComputeGraph } from '@dxos/conductor';
-import { Filter, Obj, type Type } from '@dxos/echo';
+import { Filter, Obj } from '@dxos/echo';
 import { Markdown } from '@dxos/plugin-markdown/types';
 import { Sheet } from '@dxos/plugin-sheet/types';
 import { Diagram } from '@dxos/plugin-sketch/types';
@@ -21,6 +21,9 @@ import { type ObjectGenerator, createGenerator, staticGenerators } from './Objec
 import { generator } from './presets';
 import { SchemaTable } from './SchemaTable';
 
+const staticTypes = [Markdown.Document, Diagram.Diagram, Sheet.Sheet, ComputeGraph]; // TODO(burdon): Make extensible.
+const recordTypes = [Organization.Organization, Person.Person, Task.Task];
+
 export type SpaceGeneratorProps = {
   space: Space;
   onCreateObjects?: (objects: Obj.Any[]) => void;
@@ -29,8 +32,6 @@ export type SpaceGeneratorProps = {
 export const SpaceGenerator = ({ space, onCreateObjects }: SpaceGeneratorProps) => {
   const { dispatchPromise: dispatch } = useIntentDispatcher();
   const client = useClient();
-  const staticTypes = [Markdown.Document, Diagram.Diagram, Sheet.Sheet, ComputeGraph]; // TODO(burdon): Make extensible.
-  const recordTypes: Type.Obj.Any[] = [Organization.Organization, Person.Person, Task.Task];
   const [count, setCount] = useState(1);
   const [info, setInfo] = useState<any>({});
   const presets = useMemo(() => generator(), []);
