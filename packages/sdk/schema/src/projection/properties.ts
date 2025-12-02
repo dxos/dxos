@@ -23,9 +23,9 @@ import {
   findAnnotation,
   findNode,
   getDiscriminatedType,
+  isDiscriminatedUnion,
   isLiteralUnion,
   isTupleType,
-  isDiscriminatedUnion,
 } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
@@ -123,6 +123,7 @@ const processProperty = <T extends AnyProperties>(
   prop: PropertySignature,
   form: boolean,
 ): SchemaProperty<T> | undefined => {
+  // TODO(wittjosiah): `findAnnotation` shouldn't be needed after extracting the base type.
   // Annotations.
   const formInput = findAnnotation<boolean>(prop.type, FormInputAnnotationId);
   const title = findAnnotation<string>(prop.type, SchemaAST.TitleAnnotationId);
@@ -134,6 +135,7 @@ const processProperty = <T extends AnyProperties>(
     OptionsAnnotationId,
   );
 
+  // TODO(wittjosiah): Factor out to form.
   if (form && formInput === false) {
     return undefined;
   }
@@ -141,7 +143,7 @@ const processProperty = <T extends AnyProperties>(
   // Get type.
   const property: Omit<SchemaProperty<T>, 'type' | 'array' | 'format'> = {
     name,
-    ast: SchemaAST.encodedAST(prop.type),
+    ast: getBaseType(prop),
     optional: prop.isOptional,
     readonly: prop.isReadonly,
     title: title ?? Function.pipe(name, String.capitalize),
@@ -151,13 +153,6 @@ const processProperty = <T extends AnyProperties>(
     options,
   };
 
-  // Extract property ast from optional union.
-  if (prop.isOptional && SchemaAST.isUnion(prop.type)) {
-    property.ast = prop.type.types[0];
-  }
-
-  // TODO(wittjosiah): Remove.
-  let type: string | undefined;
   let array: SchemaProperty<T>['array'] | undefined;
   let format: SchemaProperty<T>['format'] | undefined;
 
@@ -171,67 +166,54 @@ const processProperty = <T extends AnyProperties>(
     const { typename } = getSchemaReference(jsonSchema) ?? {};
     if (typename) {
       // TODO(burdon): Special handling for refs? type = 'ref'?
-      type = 'object';
       format = Format.TypeFormat.Ref;
     }
-  } else {
-    const any = findNode(prop.type, SchemaAST.isAnyKeyword);
-    if (any) {
-      // NOTE: Schema.Any is currently used to represent template inputs.
-      type = 'string';
-    } else if (baseType) {
-      type = getSimpleType(baseType);
+  } else if (!baseType) {
+    // Transformations.
+    // https://effect.website/docs/schema/transformations
+    baseType = findNode(prop.type, SchemaAST.isTransformation);
+    if (baseType) {
+      invariant(SchemaAST.isTransformation(baseType));
     } else {
-      // Transformations.
-      // https://effect.website/docs/schema/transformations
-      baseType = findNode(prop.type, SchemaAST.isTransformation);
+      // TODO(wittjosiah): Can this ever happen?
+      // Tuples.
+      // https://effect.website/docs/schema/basic-usage/#rest-element
+      baseType = findNode(prop.type, SchemaAST.isTupleType);
       if (baseType) {
-        invariant(SchemaAST.isTransformation(baseType));
-        type = getSimpleType(baseType.from);
-      } else {
-        // TODO(wittjosiah): Can this ever happen?
-        // Tuples.
-        // https://effect.website/docs/schema/basic-usage/#rest-element
-        baseType = findNode(prop.type, SchemaAST.isTupleType);
-        if (baseType) {
-          invariant(SchemaAST.isTupleType(baseType));
-          const [tupleType] = baseType.rest ?? [];
-          if (tupleType) {
-            invariant(baseType.elements.length === 0);
-            baseType = findNode(tupleType.type, isSimpleType);
-            if (baseType) {
-              const jsonSchema = findAnnotation<JsonSchemaType>(baseType, SchemaAST.JSONSchemaAnnotationId);
-              if (jsonSchema && '$id' in jsonSchema) {
-                const { typename } = getSchemaReference(jsonSchema) ?? {};
-                if (typename) {
-                  type = 'object';
-                  format = Format.TypeFormat.Ref;
-                  array = true;
-                }
-              } else {
-                type = getSimpleType(baseType);
+        invariant(SchemaAST.isTupleType(baseType));
+        const [tupleType] = baseType.rest ?? [];
+        if (tupleType) {
+          invariant(baseType.elements.length === 0);
+          baseType = findNode(tupleType.type, isSimpleType);
+          if (baseType) {
+            const jsonSchema = findAnnotation<JsonSchemaType>(baseType, SchemaAST.JSONSchemaAnnotationId);
+            if (jsonSchema && '$id' in jsonSchema) {
+              const { typename } = getSchemaReference(jsonSchema) ?? {};
+              if (typename) {
+                format = Format.TypeFormat.Ref;
                 array = true;
               }
+            } else {
+              array = true;
             }
           }
-        } else {
-          // Union of literals.
-          // This will be returned from the head of the function when generating a discriminating type
-          baseType = findNode(prop.type, isLiteralUnion);
-          if (baseType) {
-            type = 'literal';
-            if (SchemaAST.isUnion(baseType)) {
-              options = baseType.types
-                .map((type) => (SchemaAST.isLiteral(type) ? type.literal : null))
-                .filter((v): v is string | number => v !== null);
-            }
+        }
+      } else {
+        // Union of literals.
+        // This will be returned from the head of the function when generating a discriminating type
+        baseType = findNode(prop.type, isLiteralUnion);
+        if (baseType) {
+          if (SchemaAST.isUnion(baseType)) {
+            options = baseType.types
+              .map((type) => (SchemaAST.isLiteral(type) ? type.literal : null))
+              .filter((v): v is string | number => v !== null);
           }
         }
       }
     }
   }
 
-  if (!type) {
+  if (!baseType) {
     return undefined;
   }
 
@@ -284,4 +266,17 @@ export const getSimpleType = (node: SchemaAST.AST): string | undefined => {
   }
 };
 
+/**
+ * @deprecated
+ */
 export const isSimpleType = (node: SchemaAST.AST): boolean => !!getSimpleType(node);
+
+export const getBaseType = (prop: PropertySignature): SchemaAST.AST => {
+  const encoded = SchemaAST.encodedAST(prop.type);
+  // Extract property ast from optional union.
+  if (prop.isOptional && encoded._tag === 'Union') {
+    return encoded.types[0];
+  }
+
+  return encoded;
+};
