@@ -203,9 +203,9 @@ const Selected: FC<{ span: InvocationSpan }> = ({ span }) => {
         <Tabs.Tablist classNames='border-be border-separator'>
           <Tabs.Tab value='input'>Input</Tabs.Tab>
           {isLogQueue && <Tabs.Tab value='logs'>Logs</Tabs.Tab>}
-          {isLogQueue && <Tabs.Tab value='exceptions'>Exceptions</Tabs.Tab>}
+          {isLogQueue && <Tabs.Tab value='errors'>Error logs</Tabs.Tab>}
           {isLogQueue && <Tabs.Tab value='raw'>Raw</Tabs.Tab>}
-          {span.exception && <Tabs.Tab value='exception'>Exception</Tabs.Tab>}
+          {span.exception && <Tabs.Tab value='failure'>Failure</Tabs.Tab>}
           {contents === 'execution-graph' && <Tabs.Tab value='execution-graph'>Execution Graph</Tabs.Tab>}
         </Tabs.Tablist>
         <Tabs.Tabpanel value='input'>
@@ -217,7 +217,7 @@ const Selected: FC<{ span: InvocationSpan }> = ({ span }) => {
           </Tabs.Tabpanel>
         )}
         {isLogQueue && (
-          <Tabs.Tabpanel value='exceptions'>
+          <Tabs.Tabpanel value='errors'>
             <ExceptionPanel objects={objects} />
           </Tabs.Tabpanel>
         )}
@@ -227,7 +227,7 @@ const Selected: FC<{ span: InvocationSpan }> = ({ span }) => {
           </Tabs.Tabpanel>
         )}
         {span.exception && (
-          <Tabs.Tabpanel value='exception'>
+          <Tabs.Tabpanel value='failure'>
             <SpanExceptionPanel exception={span.exception} />
           </Tabs.Tabpanel>
         )}
