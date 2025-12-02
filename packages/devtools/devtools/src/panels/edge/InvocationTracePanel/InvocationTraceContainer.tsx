@@ -180,7 +180,7 @@ const Selected: FC<{ span: InvocationSpan }> = ({ span }) => {
   const [activeTab, setActiveTab] = useState('input');
 
   const queue = span.invocationTraceQueue?.target;
-  const objects = useQuery(queue, Filter.everything());
+  const objects = useQuery(queue, Filter.type(TraceEvent));
 
   const contents = Array.head(objects).pipe(
     Option.getOrUndefined,
@@ -190,7 +190,7 @@ const Selected: FC<{ span: InvocationSpan }> = ({ span }) => {
     Match.orElse(() => 'execution-graph'),
   );
 
-  const isLogQueue = 'logs' === contents;
+  const isLogQueue = 'logs' === contents || objects.length === 0;
 
   return (
     <div className='grid grid-cols-1 grid-rows-[min-content_1fr] bs-full min-bs-0 border-separator'>
@@ -213,17 +213,17 @@ const Selected: FC<{ span: InvocationSpan }> = ({ span }) => {
         </Tabs.Tabpanel>
         {isLogQueue && (
           <Tabs.Tabpanel value='logs'>
-            <LogPanel queue={queue} />
+            <LogPanel objects={objects} />
           </Tabs.Tabpanel>
         )}
         {isLogQueue && (
           <Tabs.Tabpanel value='exceptions'>
-            <ExceptionPanel queue={queue} />
+            <ExceptionPanel objects={objects} />
           </Tabs.Tabpanel>
         )}
         {isLogQueue && (
           <Tabs.Tabpanel value='raw' classNames='min-bs-0 min-is-0 is-full overflow-auto'>
-            <RawDataPanel classNames='text-xs' span={span} queue={queue} />
+            <RawDataPanel classNames='text-xs' span={span} objects={objects} />
           </Tabs.Tabpanel>
         )}
         {span.exception && (
