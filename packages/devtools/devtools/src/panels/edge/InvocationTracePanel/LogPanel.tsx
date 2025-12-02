@@ -6,7 +6,6 @@ import React, { type FC, useMemo } from 'react';
 
 import { Format } from '@dxos/echo/internal';
 import { TraceEvent } from '@dxos/functions-runtime';
-import { faker } from '@dxos/random';
 import { Filter, type Queue, useQuery } from '@dxos/react-client/echo';
 import { DynamicTable } from '@dxos/react-ui-table';
 import { type SchemaPropertyDefinition } from '@dxos/schema';
@@ -75,8 +74,8 @@ export const LogPanel: FC<LogPanelProps> = ({ queue }) => {
     };
 
     return objects.flatMap((event) =>
-      event.logs.map((log) => ({
-        id: faker.string.uuid(),
+      event.logs.map((log, idx) => ({
+        id: `${event.id}-${idx}`,
         time: new Date(log.timestamp),
         level: log.level,
         message: log.message,
@@ -85,9 +84,5 @@ export const LogPanel: FC<LogPanelProps> = ({ queue }) => {
     );
   }, [objects]);
 
-  return (
-    <div className='bs-full min-bs-[20rem] is-full overflow-hidden'>
-      <DynamicTable properties={properties} rows={rows} />
-    </div>
-  );
+  return <DynamicTable classNames='min-bs-0 min-is-0 is-full overflow-auto' properties={properties} rows={rows} />;
 };
