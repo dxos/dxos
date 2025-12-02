@@ -3,7 +3,7 @@
 //
 
 import * as Schema from 'effect/Schema';
-import { describe, test } from 'vitest';
+import { assert, describe, test } from 'vitest';
 
 import { Format } from '@dxos/echo/internal';
 
@@ -25,15 +25,14 @@ const TestSchema = Schema.Struct({
 describe('properties', () => {
   test('get props', ({ expect }) => {
     const props = getSchemaProperties(TestSchema.ast);
-    expect(props.map((prop) => prop.type)).to.deep.eq([
-      //
-      'string',
-      'boolean',
-      'string',
-      'number',
-      'object',
-      'object',
-      'number',
+    expect(props.map((prop) => prop.ast._tag)).to.deep.eq([
+      'StringKeyword',
+      'BooleanKeyword',
+      'StringKeyword',
+      'NumberKeyword',
+      'TupleType',
+      'TypeLiteral',
+      'TupleType',
     ]);
   });
 
@@ -42,7 +41,8 @@ describe('properties', () => {
     const arrayProp = props.find((prop) => prop.array);
 
     expect(arrayProp).to.not.eq(undefined);
-    expect(arrayProp?.type).to.eq('number');
+    assert(arrayProp?.ast._tag === 'TupleType');
+    expect(arrayProp?.ast.rest[0].type._tag).to.eq('NumberKeyword');
     expect(arrayProp?.name).to.eq('scores');
   });
 
@@ -110,7 +110,6 @@ describe('properties', () => {
     const props = getSchemaProperties(ColorSchema.ast);
     expect(props[0]).to.deep.include({
       name: 'color',
-      type: 'literal',
       options: ['red', 'green', 'blue'],
     });
   });

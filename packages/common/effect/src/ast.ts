@@ -19,76 +19,6 @@ import { type JsonPath, type JsonProp } from './json-path';
 // https://effect-ts.github.io/effect/schema/SchemaAST.ts.html
 //
 
-// TODO(wittjosiah): What is a "simple type"?
-export type SimpleType = 'object' | 'string' | 'number' | 'boolean' | 'enum' | 'literal';
-
-const isTupleType = (node: SchemaAST.AST): boolean => {
-  // NOTE: Arrays are represented as tuples with no elements and a rest part.
-  return SchemaAST.isTupleType(node) && node.elements.length > 0;
-};
-
-/**
- * Get the base type; e.g., traverse through refinements.
- */
-export const getSimpleType = (node: SchemaAST.AST): SimpleType | undefined => {
-  if (
-    SchemaAST.isDeclaration(node) ||
-    SchemaAST.isObjectKeyword(node) ||
-    SchemaAST.isTypeLiteral(node) ||
-    // TODO(wittjosiah): Tuples are actually arrays.
-    isTupleType(node) ||
-    isDiscriminatedUnion(node)
-  ) {
-    return 'object';
-  }
-
-  if (SchemaAST.isStringKeyword(node)) {
-    return 'string';
-  }
-  if (SchemaAST.isNumberKeyword(node)) {
-    return 'number';
-  }
-  if (SchemaAST.isBooleanKeyword(node)) {
-    return 'boolean';
-  }
-
-  if (SchemaAST.isEnums(node)) {
-    return 'enum';
-  }
-
-  if (SchemaAST.isLiteral(node)) {
-    return 'literal';
-  }
-};
-
-export const isSimpleType = (node: SchemaAST.AST): boolean => !!getSimpleType(node);
-
-export namespace SimpleType {
-  /**
-   * Returns the default empty value for a given SimpleType.
-   * Used for initializing new array values etc.
-   */
-  export const getDefaultValue = (type: SimpleType): any => {
-    switch (type) {
-      case 'string': {
-        return '';
-      }
-      case 'number': {
-        return 0;
-      }
-      case 'boolean': {
-        return false;
-      }
-      case 'object': {
-        return {};
-      }
-      default: {
-        throw new Error(`Unsupported type for default value: ${type}`);
-      }
-    }
-  };
-}
-
 //
 // Branded types
 //
@@ -111,23 +41,14 @@ export type TestFn = (node: SchemaAST.AST, path: Path, depth: number) => VisitRe
 
 export type VisitorFn = (node: SchemaAST.AST, path: Path, depth: number) => void;
 
-const defaultTest: TestFn = isSimpleType;
-
 /**
  * Visit leaf nodes.
  * Refs:
  * - https://github.com/syntax-tree/unist-util-visit?tab=readme-ov-file#visitor
  * - https://github.com/syntax-tree/unist-util-is?tab=readme-ov-file#test
  */
-export const visit: {
-  (node: SchemaAST.AST, visitor: VisitorFn): void;
-  (node: SchemaAST.AST, test: TestFn, visitor: VisitorFn): void;
-} = (node: SchemaAST.AST, testOrVisitor: TestFn | VisitorFn, visitor?: VisitorFn): void => {
-  if (!visitor) {
-    visitNode(node, defaultTest, testOrVisitor);
-  } else {
-    visitNode(node, testOrVisitor as TestFn, visitor);
-  }
+export const visit = (node: SchemaAST.AST, testOrVisitor: TestFn | VisitorFn, visitor: VisitorFn): void => {
+  visitNode(node, testOrVisitor as TestFn, visitor);
 };
 
 const visitNode = (
@@ -349,6 +270,14 @@ export const isLiteralUnion = (node: SchemaAST.AST): boolean => {
 };
 
 /**
+ * Determines if the node is a tuple type.
+ */
+export const isTupleType = (node: SchemaAST.AST): boolean => {
+  // NOTE: Arrays are represented as tuples with no elements and a rest part.
+  return SchemaAST.isTupleType(node) && node.elements.length > 0;
+};
+
+/**
  * Determines if the node is a discriminated union.
  */
 export const isDiscriminatedUnion = (node: SchemaAST.AST): boolean => {
@@ -425,6 +354,20 @@ export const getDiscriminatedType = (
 
   const schema = Schema.Struct(fields);
   return schema.ast;
+};
+
+/**
+ * Determines if the node is a nested object type.
+ */
+export const isNestedType = (node: SchemaAST.AST): boolean => {
+  return (
+    SchemaAST.isDeclaration(node) ||
+    SchemaAST.isObjectKeyword(node) ||
+    SchemaAST.isTypeLiteral(node) ||
+    // TODO(wittjosiah): Tuples are actually arrays.
+    isTupleType(node) ||
+    isDiscriminatedUnion(node)
+  );
 };
 
 /**

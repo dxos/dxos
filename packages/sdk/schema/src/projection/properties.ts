@@ -20,13 +20,12 @@ import {
   getSchemaReference,
 } from '@dxos/echo/internal';
 import {
-  type SimpleType,
   findAnnotation,
   findNode,
   getDiscriminatedType,
-  getSimpleType,
   isLiteralUnion,
-  isSimpleType,
+  isTupleType,
+  isDiscriminatedUnion,
 } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
@@ -39,7 +38,6 @@ export type SchemaProperty<T extends AnyProperties, V = any> = {
   ast: SchemaAST.AST;
   optional: boolean;
   readonly: boolean;
-  type: SimpleType;
   array?: boolean;
   format?: Format.TypeFormat;
   title?: string;
@@ -143,7 +141,7 @@ const processProperty = <T extends AnyProperties>(
   // Get type.
   const property: Omit<SchemaProperty<T>, 'type' | 'array' | 'format'> = {
     name,
-    ast: prop.type,
+    ast: SchemaAST.encodedAST(prop.type),
     optional: prop.isOptional,
     readonly: prop.isReadonly,
     title: title ?? Function.pipe(name, String.capitalize),
@@ -153,7 +151,13 @@ const processProperty = <T extends AnyProperties>(
     options,
   };
 
-  let type: SchemaProperty<T>['type'] | undefined;
+  // Extract property ast from optional union.
+  if (prop.isOptional && SchemaAST.isUnion(prop.type)) {
+    property.ast = prop.type.types[0];
+  }
+
+  // TODO(wittjosiah): Remove.
+  let type: string | undefined;
   let array: SchemaProperty<T>['array'] | undefined;
   let format: SchemaProperty<T>['format'] | undefined;
 
@@ -232,7 +236,6 @@ const processProperty = <T extends AnyProperties>(
   }
 
   return {
-    type,
     array,
     format: format ?? (baseType ? getFormatAnnotation(baseType) : undefined),
     ...property,
@@ -244,3 +247,41 @@ export const sortProperties = <T extends AnyProperties>(
   { name: a }: SchemaProperty<T>,
   { name: b }: SchemaProperty<T>,
 ) => a.localeCompare(b);
+
+/**
+ * Get the base type; e.g., traverse through refinements.
+ *
+ * @deprecated
+ */
+export const getSimpleType = (node: SchemaAST.AST): string | undefined => {
+  if (
+    SchemaAST.isDeclaration(node) ||
+    SchemaAST.isObjectKeyword(node) ||
+    SchemaAST.isTypeLiteral(node) ||
+    // TODO(wittjosiah): Tuples are actually arrays.
+    isTupleType(node) ||
+    isDiscriminatedUnion(node)
+  ) {
+    return 'object';
+  }
+
+  if (SchemaAST.isStringKeyword(node)) {
+    return 'string';
+  }
+  if (SchemaAST.isNumberKeyword(node)) {
+    return 'number';
+  }
+  if (SchemaAST.isBooleanKeyword(node)) {
+    return 'boolean';
+  }
+
+  if (SchemaAST.isEnums(node)) {
+    return 'enum';
+  }
+
+  if (SchemaAST.isLiteral(node)) {
+    return 'literal';
+  }
+};
+
+export const isSimpleType = (node: SchemaAST.AST): boolean => !!getSimpleType(node);

@@ -18,7 +18,7 @@ import {
   getSchemaReference,
 } from '@dxos/echo/internal';
 import { type AnyLiveObject, type EchoDatabase, Filter, Query } from '@dxos/echo-db';
-import { findAnnotation } from '@dxos/effect';
+import { findAnnotation, isNestedType } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { type Live } from '@dxos/live-object';
 import { log } from '@dxos/log';
@@ -117,15 +117,11 @@ const createValue = <T extends AnyProperties>(
   if (!property.optional) {
     if (property.array) {
       return [];
+    } else if (isNestedType(property.ast)) {
+      return {};
     } else {
-      switch (property.type) {
-        case 'object':
-          return {};
-        default: {
-          const prop = [Type.getTypename(schema), property.name].filter(Boolean).join('.');
-          throw new Error(`Required property: ${prop}:${property.type}`);
-        }
-      }
+      const prop = [Type.getTypename(schema), property.name].filter(Boolean).join('.');
+      throw new Error(`Required property: ${prop}:${property.ast._tag}`);
     }
   }
 };

@@ -8,7 +8,7 @@ import * as String from 'effect/String';
 import React, { Fragment, useCallback } from 'react';
 
 import { type AnyProperties } from '@dxos/echo/internal';
-import { SimpleType, findNode, getDiscriminatedType, isDiscriminatedUnion } from '@dxos/effect';
+import { findNode, getDiscriminatedType, isDiscriminatedUnion, isNestedType } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { IconButton, useTranslation } from '@dxos/react-ui';
 import { getSchemaProperties } from '@dxos/schema';
@@ -32,7 +32,7 @@ export const ArrayField = <T extends AnyProperties>({
   ...props
 }: ArrayFieldProps<T>) => {
   const { t } = useTranslation(translationKey);
-  const { ast, type, name, title } = property;
+  const { ast, name, title } = property;
   const label = title ?? Function.pipe(name, String.capitalize);
   const elementType = findArrayElementType(ast);
   const { onValueChange } = inputProps;
@@ -54,12 +54,10 @@ export const ArrayField = <T extends AnyProperties>({
     );
   };
 
-  const getDefaultValue = () =>
-    type === 'object' && elementType ? getDefaultObjectValue(elementType) : SimpleType.getDefaultValue(type);
-
   const handleAdd = useCallback(() => {
-    onValueChange(ast, [...values, getDefaultValue()]);
-  }, [onValueChange, type, values]);
+    const defaultValue = isNestedType(ast) && elementType ? getDefaultObjectValue(elementType) : getDefaultValue(ast);
+    onValueChange(ast, [...values, defaultValue]);
+  }, [onValueChange, ast, values]);
 
   const handleDelete = useCallback(
     (idx: number) => {
@@ -68,7 +66,7 @@ export const ArrayField = <T extends AnyProperties>({
         values.filter((_, i) => i !== idx),
       );
     },
-    [onValueChange, type, values],
+    [onValueChange, ast, values],
   );
 
   if (!elementType || ((readonly || layout === 'static') && values.length < 1)) {
@@ -129,3 +127,27 @@ export const ArrayField = <T extends AnyProperties>({
 };
 
 ArrayField.displayName = 'Form.ArrayField';
+
+/**
+ * Returns the default empty value for a given AST.
+ * Used for initializing new array values etc.
+ */
+export const getDefaultValue = (ast: SchemaAST.AST): any => {
+  switch (ast._tag) {
+    case 'StringKeyword': {
+      return '';
+    }
+    case 'NumberKeyword': {
+      return 0;
+    }
+    case 'BooleanKeyword': {
+      return false;
+    }
+    case 'ObjectKeyword': {
+      return {};
+    }
+    default: {
+      throw new Error(`Unsupported type for default value: ${ast._tag}`);
+    }
+  }
+};

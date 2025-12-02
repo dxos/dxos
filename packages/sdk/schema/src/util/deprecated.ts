@@ -10,6 +10,8 @@ import { Format, TypeEnum } from '@dxos/echo/internal';
 import { visit } from '@dxos/effect';
 import { DXN } from '@dxos/keys';
 
+import { isSimpleType } from '../projection';
+
 /**
  * @deprecated
  */
@@ -24,10 +26,14 @@ export type SchemaFieldDescription = {
  */
 export const mapSchemaToFields = (schema: Schema.Schema<any, any>): SchemaFieldDescription[] => {
   const fields = [] as SchemaFieldDescription[];
-  visit(schema.ast, (node, path) => {
-    const { type, format } = toFieldValueType(node);
-    fields.push({ property: path.join('.'), type, format });
-  });
+  visit(
+    schema.ast,
+    (node, path) => {
+      const { type, format } = toFieldValueType(node);
+      fields.push({ property: path.join('.'), type, format });
+    },
+    isSimpleType,
+  );
 
   return fields;
 };

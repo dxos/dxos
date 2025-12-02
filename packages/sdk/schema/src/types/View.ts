@@ -21,7 +21,7 @@ import {
   TypeEnum,
   toEffectSchema,
 } from '@dxos/echo/internal';
-import { type JsonPath, type JsonProp, findAnnotation } from '@dxos/effect';
+import { type JsonPath, type JsonProp, findAnnotation, isNestedType } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
 import { type Live } from '@dxos/live-object';
@@ -126,7 +126,7 @@ export const make = ({
     }
 
     // Omit objects from initial projection as they are difficult to handle automatically.
-    if (property.type === 'object' && !property.format) {
+    if (isNestedType(property.ast) && !property.format) {
       continue;
     }
 
