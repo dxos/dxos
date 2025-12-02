@@ -2,11 +2,12 @@
 // Copyright 2024 DXOS.org
 //
 
+import type * as Schema from 'effect/Schema';
+
 import { type PromiseIntentDispatcher, createIntent } from '@dxos/app-framework';
 import { addressToA1Notation } from '@dxos/compute';
 import { ComputeGraph, ComputeGraphModel, DEFAULT_OUTPUT, NODE_INPUT, NODE_OUTPUT } from '@dxos/conductor';
-import { DXN, Filter, Key, type Obj } from '@dxos/echo';
-import { type TypedObject } from '@dxos/echo/internal';
+import { DXN, Filter, Key, type Type } from '@dxos/echo';
 import { Markdown } from '@dxos/plugin-markdown/types';
 import { Sheet } from '@dxos/plugin-sheet/types';
 import { Diagram } from '@dxos/plugin-sketch/types';
@@ -24,14 +25,14 @@ const findViewByTypename = async (views: View.View[], typename: string) => {
   return views.find((view) => getTypenameFromQuery(view.query.ast) === typename);
 };
 
-export type ObjectGenerator<T extends Obj.Any> = (space: Space, n: number, cb?: (objects: T[]) => void) => Promise<T[]>;
+export type ObjectGenerator<T> = (space: Space, n: number, cb?: (objects: T[]) => void) => Promise<T[]>;
 
-export const createGenerator = <T extends Obj.Any>(
+export const createGenerator = <S extends Type.Obj.Any>(
   client: Client,
   dispatch: PromiseIntentDispatcher,
-  schema: TypedObject<T>,
-): ObjectGenerator<T> => {
-  return async (space: Space, n: number): Promise<T[]> => {
+  schema: S,
+): ObjectGenerator<Schema.Schema.Type<S>> => {
+  return async (space: Space, n: number): Promise<Schema.Schema.Type<S>[]> => {
     const typename = schema.typename;
 
     // Find or create table and view.
