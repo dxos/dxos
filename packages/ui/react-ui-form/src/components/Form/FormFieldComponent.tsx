@@ -45,7 +45,7 @@ export type Presentation = 'full' | 'compact' | 'inline' | 'static';
  * Props passed to input components.
  */
 export type FormFieldComponentProps<T = any> = {
-  ast: SchemaAST.AST;
+  type: SchemaAST.AST;
   format?: Format.TypeFormat;
   readonly?: boolean;
   label: string;

@@ -9,7 +9,7 @@ import { Input } from '@dxos/react-ui';
 import { type FormFieldComponentProps, FormFieldLabel } from '../FormFieldComponent';
 
 export const MarkdownField = ({
-  ast,
+  type,
   readonly,
   label,
   placeholder,
@@ -44,8 +44,8 @@ export const MarkdownField = ({
   }, [getValue(), adjustHeight]);
 
   const handleChange = useCallback(
-    (event: ChangeEvent<HTMLTextAreaElement>) => onValueChange(ast, event.target.value),
-    [ast, onValueChange],
+    (event: ChangeEvent<HTMLTextAreaElement>) => onValueChange(type, event.target.value),
+    [type, onValueChange],
   );
 
   const value = getValue();

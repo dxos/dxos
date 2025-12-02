@@ -95,10 +95,10 @@ const useCustomInputs = ({
             const dxn = DXN.parse(dxnString);
             if (dxn) {
               const ref = Ref.fromDXN(dxn);
-              props.onValueChange(props.ast, ref);
+              props.onValueChange(props.type, ref);
             }
           },
-          [props.ast, props.onValueChange],
+          [props.type, props.onValueChange],
         );
 
         return (
@@ -118,8 +118,8 @@ const useCustomInputs = ({
       // Query input editor.
       ['spec.query' as const]: (props) => {
         const handleChange = useCallback(
-          (query: Query.Any) => props.onValueChange(props.ast, { ast: query.ast }),
-          [props.ast, props.onValueChange],
+          (query: Query.Any) => props.onValueChange(props.type, { ast: query.ast }),
+          [props.type, props.onValueChange],
         );
 
         return (

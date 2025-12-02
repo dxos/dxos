@@ -12,7 +12,7 @@ import { translationKey } from '../../../translations';
 import { type FormFieldComponentProps, FormFieldLabel } from '../FormFieldComponent';
 
 export const GeoPointField = ({
-  ast,
+  type,
   label,
   readonly,
   layout,
@@ -45,11 +45,11 @@ export const GeoPointField = ({
             const currentLocation = GeoLocation.fromGeoPoint(getValue() ?? [0, 0]);
             const newLocation = { ...currentLocation, [coordinateType]: coord };
             const newValue = GeoLocation.toGeoPoint(newLocation);
-            onValueChange(ast, newValue);
+            onValueChange(type, newValue);
           }
         }
       },
-    [ast, getValue, onValueChange],
+    [type, getValue, onValueChange],
   );
 
   if ((readonly || layout === 'static') && !value?.latitude && !value?.longitude) {

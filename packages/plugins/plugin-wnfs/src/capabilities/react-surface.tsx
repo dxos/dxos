@@ -35,8 +35,8 @@ export default () =>
       component: ({ data: { schema }, ...props }) => {
         const inputProps = props as unknown as FormFieldComponentProps;
         const handleChange = useCallback(
-          (file: File) => inputProps.onValueChange?.(inputProps.ast, file),
-          [inputProps.ast, inputProps.onValueChange],
+          (file: File) => inputProps.onValueChange?.(inputProps.type, file),
+          [inputProps.type, inputProps.onValueChange],
         );
 
         return <FileInput schema={schema} onChange={handleChange} />;

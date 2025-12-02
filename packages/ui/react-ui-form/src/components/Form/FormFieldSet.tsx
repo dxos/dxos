@@ -104,7 +104,7 @@ export const FormFieldSet = forwardRef<HTMLDivElement, FormFieldSetProps<any>>(
             return (
               <FormFieldErrorBoundary key={name} path={[...(path ?? []), name]}>
                 <FormField
-                  ast={property.type}
+                  type={property.type}
                   name={name}
                   path={[...(path ?? []), name]}
                   readonly={readonly}

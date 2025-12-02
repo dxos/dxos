@@ -9,7 +9,7 @@ import { Input } from '@dxos/react-ui';
 import { type FormFieldComponentProps, FormFieldWrapper } from '../FormFieldComponent';
 
 export const TextAreaField = ({
-  ast,
+  type,
   readonly,
   placeholder,
   onValueChange,
@@ -17,8 +17,8 @@ export const TextAreaField = ({
   ...props
 }: FormFieldComponentProps<string>) => {
   const handleChange = useCallback(
-    (event: ChangeEvent<HTMLTextAreaElement>) => onValueChange(ast, event.target.value),
-    [ast, onValueChange],
+    (event: ChangeEvent<HTMLTextAreaElement>) => onValueChange(type, event.target.value),
+    [type, onValueChange],
   );
 
   return (

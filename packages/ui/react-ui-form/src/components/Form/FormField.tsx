@@ -51,7 +51,7 @@ export type FormFieldProps = {
   /**
    * AST of the property to render.
    */
-  ast: SchemaAST.AST;
+  type: SchemaAST.AST;
 
   /**
    * Name of the property.
@@ -92,7 +92,7 @@ export type FormFieldProps = {
 >;
 
 export const FormField = ({
-  ast,
+  type,
   name,
   path,
   projection,
@@ -108,9 +108,9 @@ export const FormField = ({
   onQueryRefOptions,
 }: FormFieldProps) => {
   const { t } = useTranslation(translationKey);
-  const title = getAnnotation<string>(SchemaAST.TitleAnnotationId)(ast);
-  const description = getAnnotation<string>(SchemaAST.DescriptionAnnotationId)(ast);
-  const examples = getAnnotation<string[]>(SchemaAST.ExamplesAnnotationId)(ast);
+  const title = getAnnotation<string>(SchemaAST.TitleAnnotationId)(type);
+  const description = getAnnotation<string>(SchemaAST.DescriptionAnnotationId)(type);
+  const examples = getAnnotation<string[]>(SchemaAST.ExamplesAnnotationId)(type);
 
   const label = useMemo(() => title ?? String.capitalize(name), [title, name]);
   const placeholder = useMemo(
@@ -120,8 +120,8 @@ export const FormField = ({
 
   const fieldState = useFormFieldState(FormField.displayName, path);
   const fieldProps: FormFieldComponentProps = {
-    ast,
-    format: Format.FormatAnnotation.getFromAst(ast).pipe((annotation) => Option.getOrUndefined(annotation)),
+    type,
+    format: Format.FormatAnnotation.getFromAst(type).pipe((annotation) => Option.getOrUndefined(annotation)),
     readonly,
     label,
     placeholder,
@@ -140,7 +140,7 @@ export const FormField = ({
   }
 
   // TODO(burdon): Expensive to create schema each time; pass AST?
-  const component = fieldProvider?.({ schema: Schema.make(ast), prop: name, fieldProps });
+  const component = fieldProvider?.({ schema: Schema.make(type), prop: name, fieldProps });
   if (component) {
     return component;
   }
@@ -149,11 +149,11 @@ export const FormField = ({
   // Array field.
   //
 
-  if (isArrayType(ast)) {
+  if (isArrayType(type)) {
     return (
       <ArrayField
         fieldProps={fieldState}
-        ast={ast}
+        type={type}
         name={name}
         path={path}
         label={label}
@@ -178,7 +178,7 @@ export const FormField = ({
   // Select field.
   //
 
-  const options = getOptions(ast);
+  const options = getOptions(type);
   if (options) {
     return (
       <SelectField
@@ -195,7 +195,7 @@ export const FormField = ({
   // Ref field.
   //
 
-  const refProps = getRefProps(ast);
+  const refProps = getRefProps(type);
   if (refProps) {
     return (
       <RefField
@@ -215,11 +215,11 @@ export const FormField = ({
   // Nested Object field.
   //
 
-  if (isNestedType(ast)) {
-    const baseNode = findNode(ast, isDiscriminatedUnion);
+  if (isNestedType(type)) {
+    const baseNode = findNode(type, isDiscriminatedUnion);
     const typeLiteral = baseNode
       ? getDiscriminatedType(baseNode, fieldState.getValue() as any)
-      : findNode(ast, SchemaAST.isTypeLiteral);
+      : findNode(type, SchemaAST.isTypeLiteral);
 
     if (typeLiteral) {
       const schema = Schema.make(typeLiteral);
@@ -250,7 +250,7 @@ FormField.displayName = 'Form.FormField';
 /**
  * Get property input component.
  */
-const getFormField = ({ ast, format }: FormFieldComponentProps): FormFieldComponent | undefined => {
+const getFormField = ({ type, format }: FormFieldComponentProps): FormFieldComponent | undefined => {
   //
   // Standard formats.
   //
@@ -267,23 +267,10 @@ const getFormField = ({ ast, format }: FormFieldComponentProps): FormFieldCompon
   }
 
   //
-  // Standard formats.
-  //
-
-  switch (format) {
-    case Format.TypeFormat.GeoPoint:
-      return GeoPointField;
-    case Format.TypeFormat.Markdown:
-      return MarkdownField;
-    case Format.TypeFormat.Text:
-      return TextAreaField;
-  }
-
-  //
   // Standard types.
   //
 
-  switch (ast._tag) {
+  switch (type._tag) {
     // TODO(wittjosiah): Schema.Any is currently used to represent template inputs.
     case 'AnyKeyword':
     case 'StringKeyword':

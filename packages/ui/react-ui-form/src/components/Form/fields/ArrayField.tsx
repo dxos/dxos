@@ -19,10 +19,10 @@ import { FormFieldLabel, type FormFieldStateProps } from '../FormFieldComponent'
 export type ArrayFieldProps = {
   label: string;
   fieldProps: FormFieldStateProps;
-} & Pick<FormFieldProps, 'ast' | 'name' | 'path' | 'readonly' | 'layout' | 'fieldMap' | 'fieldProvider'>;
+} & Pick<FormFieldProps, 'type' | 'name' | 'path' | 'readonly' | 'layout' | 'fieldMap' | 'fieldProvider'>;
 
 export const ArrayField = ({
-  ast,
+  type,
   path,
   label,
   readonly,
@@ -31,7 +31,7 @@ export const ArrayField = ({
   ...props
 }: ArrayFieldProps) => {
   const { t } = useTranslation(translationKey);
-  const elementType = getArrayElementType(ast);
+  const elementType = getArrayElementType(type);
   const { onValueChange } = inputProps;
 
   // TODO(wittjosiah): The fallback to an empty array stops the form from crashing but isn't immediately live.
@@ -58,18 +58,18 @@ export const ArrayField = ({
 
   const handleAdd = useCallback(() => {
     const defaultValue =
-      isNestedType(ast) && elementType ? getDefaultObjectValue(elementType) : getDefaultValue(elementType);
-    onValueChange(ast, [...values, defaultValue]);
-  }, [onValueChange, ast, elementType, values]);
+      isNestedType(type) && elementType ? getDefaultObjectValue(elementType) : getDefaultValue(elementType);
+    onValueChange(type, [...values, defaultValue]);
+  }, [onValueChange, type, elementType, values]);
 
   const handleDelete = useCallback(
     (idx: number) => {
       onValueChange(
-        ast,
+        type,
         values.filter((_, i) => i !== idx),
       );
     },
-    [onValueChange, ast, values],
+    [onValueChange, type, values],
   );
 
   if (!elementType || ((readonly || layout === 'static') && values.length < 1)) {
@@ -86,7 +86,7 @@ export const ArrayField = ({
             <div role='none' key={index} className='grid grid-cols-[1fr_min-content] gap-2 last:mb-3'>
               <FormField
                 autoFocus={index === values.length - 1}
-                ast={elementType}
+                type={elementType}
                 path={[...(path ?? []), index]}
                 readonly={readonly || layout === 'static'}
                 layout='inline'

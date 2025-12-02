@@ -336,9 +336,9 @@ const customFields = ({
   types,
   tags,
 }: Pick<ViewEditorProps, 'types' | 'tags'>): Record<string, FormFieldComponent> => ({
-  query: ({ ast, readonly, label, getValue, onValueChange }: FormFieldComponentProps) => {
+  query: ({ type, readonly, label, getValue, onValueChange }: FormFieldComponentProps) => {
     const handleChange = useCallback<NonNullable<QueryFormProps['onChange']>>(
-      (query) => onValueChange(ast, query.ast),
+      (query) => onValueChange(type, query.ast),
       [onValueChange],
     );
 

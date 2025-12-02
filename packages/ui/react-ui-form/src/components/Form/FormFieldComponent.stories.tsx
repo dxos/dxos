@@ -11,7 +11,7 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { type FormFieldComponentProps, FormFieldWrapper } from './FormFieldComponent';
 
 const Component = ({
-  ast,
+  type,
   placeholder,
   readonly,
   onBlur,
@@ -19,8 +19,8 @@ const Component = ({
   ...props
 }: FormFieldComponentProps<string>) => {
   const handleChange = useCallback(
-    (event: ChangeEvent<HTMLInputElement>) => onValueChange(ast, event.target.value),
-    [ast, onValueChange],
+    (event: ChangeEvent<HTMLInputElement>) => onValueChange(type, event.target.value),
+    [type, onValueChange],
   );
 
   return (

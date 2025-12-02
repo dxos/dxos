@@ -40,7 +40,7 @@ export type RefFieldProps = FormFieldComponentProps & {
 
 export const RefField = (props: RefFieldProps) => {
   const {
-    ast,
+    type,
     readonly,
     label,
     placeholder,
@@ -60,8 +60,8 @@ export const RefField = (props: RefFieldProps) => {
   const { status, error } = getStatus();
 
   const typename = useMemo(
-    () => (ast ? findAnnotation<ReferenceAnnotationValue>(ast, ReferenceAnnotationId)?.typename : undefined),
-    [ast],
+    () => (type ? findAnnotation<ReferenceAnnotationValue>(type, ReferenceAnnotationId)?.typename : undefined),
+    [type],
   );
 
   // TODO(burdon): Query items on demand.
@@ -103,7 +103,7 @@ export const RefField = (props: RefFieldProps) => {
   const handleUpdate = useCallback(
     (ids: string[]) => {
       if (ids.length === 0) {
-        onValueChange(ast, undefined);
+        onValueChange(type, undefined);
         return;
       }
 
@@ -119,12 +119,12 @@ export const RefField = (props: RefFieldProps) => {
         .filter(isNonNullable);
 
       if (array) {
-        onValueChange(ast, refs);
+        onValueChange(type, refs);
       } else {
-        onValueChange(ast, refs[0]);
+        onValueChange(type, refs[0]);
       }
     },
-    [options, array, onValueChange],
+    [options, type, array, onValueChange],
   );
 
   const handleCreate = useCallback(
@@ -213,7 +213,7 @@ export const RefField = (props: RefFieldProps) => {
 };
 
 const RefFieldFallback = ({
-  ast,
+  type,
   label,
   readonly,
   layout,
@@ -225,11 +225,11 @@ const RefFieldFallback = ({
   const handleOnValueChange = (_type: any, dxnString: string) => {
     const dxn = DXN.tryParse(dxnString);
     if (dxn) {
-      onValueChange?.(ast, Ref.fromDXN(dxn));
+      onValueChange?.(type, Ref.fromDXN(dxn));
     } else if (dxnString === '') {
-      onValueChange?.(ast, undefined);
+      onValueChange?.(type, undefined);
     } else {
-      onValueChange?.(ast, dxnString);
+      onValueChange?.(type, dxnString);
     }
   };
 
@@ -247,7 +247,7 @@ const RefFieldFallback = ({
 
   return (
     <TextField
-      ast={ast}
+      type={type}
       readonly={readonly}
       label={label}
       placeholder={placeholder}

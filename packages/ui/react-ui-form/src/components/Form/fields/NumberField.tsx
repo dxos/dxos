@@ -10,7 +10,7 @@ import { safeParseFloat } from '@dxos/util';
 import { type FormFieldComponentProps, FormFieldWrapper } from '../FormFieldComponent';
 
 export const NumberField = ({
-  ast,
+  type,
   readonly,
   placeholder,
   onValueChange,
@@ -18,8 +18,8 @@ export const NumberField = ({
   ...props
 }: FormFieldComponentProps<number>) => {
   const handleChange = useCallback(
-    (event: ChangeEvent<HTMLInputElement>) => onValueChange(ast, safeParseFloat(event.target.value) || 0),
-    [ast, onValueChange],
+    (event: ChangeEvent<HTMLInputElement>) => onValueChange(type, safeParseFloat(event.target.value) || 0),
+    [type, onValueChange],
   );
 
   return (

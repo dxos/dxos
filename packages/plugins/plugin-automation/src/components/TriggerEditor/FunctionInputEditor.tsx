@@ -20,13 +20,13 @@ import {
 import { meta } from '../../meta';
 
 export type FunctionInputEditorProps = {
-  ast: SchemaAST.AST;
+  type: SchemaAST.AST;
   functions: Function.Function[];
   onQueryRefOptions: QueryRefOptions;
 } & FormFieldStateProps;
 
 export const FunctionInputEditor = ({
-  ast,
+  type,
   functions,
   getValue,
   onValueChange,
@@ -56,7 +56,7 @@ export const FunctionInputEditor = ({
       return prevValue.dxn.toString() !== selectedFunctionValue.dxn.toString();
     },
     (currValue) => currValue !== undefined,
-    () => onValueChange(ast, {}),
+    () => onValueChange(type, {}),
   );
 
   const inputSchema = useMemo(() => selectedFunction?.inputSchema, [selectedFunction]);
@@ -66,9 +66,9 @@ export const FunctionInputEditor = ({
 
   const handleValuesChanged = useCallback<NonNullable<NewFormRootProps['onValuesChanged']>>(
     (values) => {
-      onValueChange(ast, values);
+      onValueChange(type, values);
     },
-    [ast, onValueChange],
+    [type, onValueChange],
   );
 
   if (selectedFunction === undefined || effectSchema === undefined || propertyCount === 0) {
