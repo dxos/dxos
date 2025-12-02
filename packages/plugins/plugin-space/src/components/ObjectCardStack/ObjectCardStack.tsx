@@ -15,13 +15,12 @@ import { meta } from '../../meta';
 
 import { ObjectForm } from './ObjectForm';
 
-export type ObjectDetailsPanelProps = {
+export type ObjectCardStackProps = {
   objectId: string;
   view: View.View;
 };
 
-// TODO(burdon): Rename ObjectDetailsAritcle; use SurfaceComponentProps?
-export const ObjectDetailsPanel = ({ objectId, view }: ObjectDetailsPanelProps) => {
+export const ObjectCardStack = ({ objectId, view }: ObjectCardStackProps) => {
   const { t } = useTranslation(meta.id);
   const space = getSpace(view);
   const typename = view.query ? getTypenameFromQuery(view.query.ast) : undefined;

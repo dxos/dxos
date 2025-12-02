@@ -33,9 +33,9 @@ import {
   MembersContainer,
   MenuFooter,
   OBJECT_RENAME_POPOVER,
-  ObjectDetailsPanel,
+  ObjectCardStack,
+  ObjectDetails,
   ObjectRenamePopover,
-  ObjectSettingsContainer,
   RecordArticle,
   SPACE_RENAME_POPOVER,
   SchemaContainer,
@@ -103,11 +103,12 @@ export default ({ createInvitationUrl }: ReactSurfaceOptions) =>
         data.subject instanceof SettingsStore && data.subject.prefix === meta.id,
       component: ({ data: { subject } }) => <SpacePluginSettings settings={subject.value} />,
     }),
+    // TODO(burdon): Rename object-details.
     createSurface({
       id: `${meta.id}/companion/object-settings`,
       role: 'article',
       filter: (data): data is { companionTo: Obj.Any } => Obj.isObject(data.companionTo) && data.subject === 'settings',
-      component: ({ data, role }) => <ObjectSettingsContainer object={data.companionTo} role={role} />,
+      component: ({ data, role }) => <ObjectDetails object={data.companionTo} role={role} />,
     }),
     createSurface({
       id: `${meta.id}/space-settings-properties`,
@@ -163,6 +164,7 @@ export default ({ createInvitationUrl }: ReactSurfaceOptions) =>
           return false;
         }
 
+        // TODO(burdon): Check companionTo.view.target is valid.
         const schema = Obj.getSchema(data.companionTo);
         return Option.fromNullable(schema).pipe(
           Option.flatMap((schema) => ViewAnnotation.get(schema)),
@@ -171,10 +173,10 @@ export default ({ createInvitationUrl }: ReactSurfaceOptions) =>
       },
       component: ({ data }) => (
         <SurfaceContainer>
-          <ObjectDetailsPanel
+          <ObjectCardStack
             key={Obj.getDXN(data.companionTo).toString()}
             objectId={Obj.getDXN(data.companionTo).toString()}
-            view={data.companionTo.view.target}
+            view={data.companionTo.view.target!}
           />
         </SurfaceContainer>
       ),
