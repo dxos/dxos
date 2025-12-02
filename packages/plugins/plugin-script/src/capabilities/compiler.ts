@@ -3,22 +3,21 @@
 //
 
 // @ts-ignore
+import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
+import * as HttpClient from '@effect/platform/HttpClient';
+import * as Effect from 'effect/Effect';
+import * as Schedule from 'effect/Schedule';
+import * as Schema from 'effect/Schema';
 import wasmUrl from 'esbuild-wasm/esbuild.wasm?url';
+import * as ts from 'typescript';
 
 import { contributes } from '@dxos/app-framework';
 import { initializeBundler } from '@dxos/functions-runtime/bundler';
-import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
-import * as HttpClient from '@effect/platform/HttpClient';
-import * as Schema from 'effect/Schema';
+import { trim } from '@dxos/util';
 
 import { Compiler } from '../compiler';
 
 import { ScriptCapabilities } from './capabilities';
-import * as Effect from 'effect/Effect';
-import * as HttpClientResponse from '@effect/platform/HttpClientResponse';
-import * as Schedule from 'effect/Schedule';
-import { trim } from '@dxos/util';
-import * as ts from 'typescript';
 
 const SCRIPT_PACKAGES_BUCKET = 'https://pub-5745ae82e450484aa28f75fc6a175935.r2.dev';
 

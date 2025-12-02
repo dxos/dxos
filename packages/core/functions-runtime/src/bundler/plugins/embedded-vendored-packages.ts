@@ -1,11 +1,15 @@
-import type { Plugin } from 'esbuild';
-import * as Record from 'effect/Record';
+//
+// Copyright 2025 DXOS.org
+//
+
 import * as Function from 'effect/Function';
+import * as Record from 'effect/Record';
+import type { Plugin } from 'esbuild';
 
 // TODO(dmaretskyi): Haven't managed to get this working.
 export const PluginEmbeddedVendoredPackages = (): Plugin => ({
   name: 'embedded-vendored-packages',
-  setup(build) {
+  setup: (build) => {
     // // https://vite.dev/guide/features#custom-queries
     const moduleUrls = Function.pipe(
       // NOTE: Vite-specific API.

@@ -1,3 +1,7 @@
+//
+// Copyright 2025 DXOS.org
+//
+
 import type { Plugin } from 'esbuild';
 
 /*
@@ -15,7 +19,7 @@ const DEFAULT_SCRIPT_PACKAGES_BUCKET = 'https://pub-5745ae82e450484aa28f75fc6a17
 
 export const PluginR2VendoredPackages = ({ url = DEFAULT_SCRIPT_PACKAGES_BUCKET }: { url?: string } = {}): Plugin => ({
   name: 'r2-vendored-packages',
-  setup(build) {
+  setup: (build) => {
     build.onResolve({ filter: /^[^./]/ }, (args) => {
       if (args.kind === 'entry-point') {
         return;

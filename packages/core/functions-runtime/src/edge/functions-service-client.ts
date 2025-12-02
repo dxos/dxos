@@ -6,11 +6,11 @@ import { type Client } from '@dxos/client';
 import { Obj } from '@dxos/echo';
 import { type EdgeHttpClient } from '@dxos/edge-client';
 import { FUNCTIONS_META_KEY, Function, FunctionError } from '@dxos/functions';
+import { invariant } from '@dxos/invariant';
 import { type ObjectId, type PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
+import { type Runtime } from '@dxos/protocols';
 import { safeParseJson } from '@dxos/util';
-import { Runtime } from '@dxos/protocols';
-import { invariant } from '@dxos/invariant';
 
 import { FunctionServiceError } from '../errors';
 

@@ -2,20 +2,15 @@
 // Copyright 2025 DXOS.org
 //
 
-import { readFile, writeFile } from 'node:fs/promises';
+import { readFile } from 'node:fs/promises';
 
 import { describe, expect, test } from 'vitest';
 
-import { Client, Config } from '@dxos/client';
-import { createEdgeIdentity } from '@dxos/client/edge';
-import { invariant } from '@dxos/invariant';
-import { log } from '@dxos/log';
-
-import { bundleFunction } from '@dxos/functions-runtime/bundler';
-import { FunctionsServiceClient, incrementSemverPatch } from '@dxos/functions-runtime/edge';
-import { Runtime } from '@dxos/protocols';
+import { Client } from '@dxos/client';
 import { configPreset } from '@dxos/config';
-import { resolve } from 'node:path';
+import { bundleFunction } from '@dxos/functions-runtime/bundler';
+import { FunctionsServiceClient } from '@dxos/functions-runtime/edge';
+import { Runtime } from '@dxos/protocols';
 
 describe.runIf(process.env.DX_TEST_TAGS?.includes('functions-e2e'))('Functions deployment', () => {
   test('deploys FOREX (effect) function and invokes it via EDGE (main)', { timeout: 120_000 }, async () => {
