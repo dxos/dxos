@@ -33,14 +33,13 @@ const TestComponent = forwardRef<HTMLDivElement, TestComponentProps>(({ styles, 
 });
 
 const DefaultStory = () => {
-  const [selected, setSelected] = useState<string | undefined>();
   const manager = usePluginManager();
   const surfaces = useSurfaces();
+  const [selected, setSelected] = useState<string | undefined>();
 
   const handleAdd = useCallback(() => {
     const id = `test-${faker.number.int({ min: 0, max: 1_000 })}`;
     const styles = getHashStyles(id);
-
     manager.context.contributeCapability({
       module: 'test',
       interface: Capabilities.ReactSurface,
