@@ -18,6 +18,7 @@ import {
   getDiscriminatedType,
   isArrayType,
   isDiscriminatedUnion,
+  isLiteralUnion,
   isNestedType,
 } from '@dxos/effect';
 import { useTranslation } from '@dxos/react-ui';
@@ -102,7 +103,7 @@ export const FormField = <T extends AnyProperties>({
   onQueryRefOptions,
 }: FormFieldProps<T>) => {
   const { t } = useTranslation(translationKey);
-  const { ast, name, options, title, description, examples } = property;
+  const { ast, name, title, description, examples } = property;
 
   const label = useMemo(() => title ?? Function.pipe(name, StringEffect.capitalize), [title, name]);
   const placeholder = useMemo(
@@ -168,6 +169,7 @@ export const FormField = <T extends AnyProperties>({
   // Select field.
   //
 
+  const options = getOptions(property);
   if (options) {
     return (
       <SelectField
@@ -269,4 +271,12 @@ const getFormField = ({ ast, format }: FormFieldComponentProps): FormFieldCompon
     case 'BooleanKeyword':
       return BooleanField;
   }
+};
+
+const getOptions = (property: SchemaProperty<any>): Format.Options[] | undefined => {
+  if (isLiteralUnion(property.ast)) {
+    return property.ast.types.map((type) => type.literal).filter((v): v is string | number => v !== null);
+  }
+
+  return Format.OptionsAnnotation.getFromAst(property.ast).pipe((annotation) => Option.getOrUndefined(annotation));
 };

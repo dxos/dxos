@@ -7,20 +7,13 @@ import * as Option from 'effect/Option';
 import * as SchemaAST from 'effect/SchemaAST';
 import * as String from 'effect/String';
 
-import {
-  type AnyProperties,
-  FormInputAnnotationId,
-  OptionsAnnotationId,
-  type OptionsAnnotationType,
-  type PropertyKey,
-} from '@dxos/echo/internal';
+import { type AnyProperties, FormInputAnnotationId, type PropertyKey } from '@dxos/echo/internal';
 import {
   findAnnotation,
   findNode,
   getBaseType,
   getDiscriminatedType,
   isDiscriminatedUnion,
-  isLiteralUnion,
   isTupleType,
 } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
@@ -38,7 +31,6 @@ export type SchemaProperty<T extends AnyProperties, V = any> = {
   description?: string;
   examples?: string[];
   defaultValue?: V;
-  options?: OptionsAnnotationType[];
 };
 
 /**
@@ -122,10 +114,6 @@ const processProperty = <T extends AnyProperties>(
   const description = findAnnotation<string>(prop.type, SchemaAST.DescriptionAnnotationId);
   const examples = findAnnotation<string[]>(prop.type, SchemaAST.ExamplesAnnotationId);
   const defaultValue = findAnnotation(prop.type, SchemaAST.DefaultAnnotationId);
-  let options: (string | number)[] | undefined = findAnnotation<OptionsAnnotationType[]>(
-    prop.type,
-    OptionsAnnotationId,
-  );
 
   // TODO(wittjosiah): Factor out to form.
   if (form && formInput === false) {
@@ -142,7 +130,6 @@ const processProperty = <T extends AnyProperties>(
     description,
     examples,
     defaultValue,
-    options,
   };
 
   // Parse SchemaAST.
@@ -175,17 +162,6 @@ const processProperty = <T extends AnyProperties>(
           //   }
           // }
         }
-      } else {
-        // Union of literals.
-        // This will be returned from the head of the function when generating a discriminating type
-        baseType = findNode(prop.type, isLiteralUnion);
-        if (baseType) {
-          if (SchemaAST.isUnion(baseType)) {
-            options = baseType.types
-              .map((type) => (SchemaAST.isLiteral(type) ? type.literal : null))
-              .filter((v): v is string | number => v !== null);
-          }
-        }
       }
     }
   }
@@ -196,7 +172,6 @@ const processProperty = <T extends AnyProperties>(
 
   return {
     ...property,
-    options,
   };
 };
 

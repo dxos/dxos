@@ -275,7 +275,7 @@ export const isOption = (node: SchemaAST.AST): boolean => {
 /**
  * Determines if the node is a union of literal types.
  */
-export const isLiteralUnion = (node: SchemaAST.AST): boolean => {
+export const isLiteralUnion = (node: SchemaAST.AST): node is SchemaAST.Union<SchemaAST.Literal> => {
   return SchemaAST.isUnion(node) && node.types.every(SchemaAST.isLiteral);
 };
 
