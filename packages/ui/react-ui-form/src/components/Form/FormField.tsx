@@ -10,7 +10,14 @@ import React, { useMemo } from 'react';
 
 import { Format } from '@dxos/echo';
 import { type AnyProperties } from '@dxos/echo/internal';
-import { createJsonPath, findNode, getDiscriminatedType, isDiscriminatedUnion, isNestedType } from '@dxos/effect';
+import {
+  createJsonPath,
+  findNode,
+  getDiscriminatedType,
+  isArrayType,
+  isDiscriminatedUnion,
+  isNestedType,
+} from '@dxos/effect';
 import { useTranslation } from '@dxos/react-ui';
 import { type ProjectionModel, type SchemaProperty } from '@dxos/schema';
 
@@ -93,7 +100,7 @@ export const FormField = <T extends AnyProperties>({
   onQueryRefOptions,
 }: FormFieldProps<T>) => {
   const { t } = useTranslation(translationKey);
-  const { ast, name, format, array, options, title, description, examples } = property;
+  const { ast, name, format, options, title, description, examples } = property;
 
   const label = useMemo(() => title ?? Function.pipe(name, StringEffect.capitalize), [title, name]);
   const placeholder = useMemo(
@@ -132,7 +139,7 @@ export const FormField = <T extends AnyProperties>({
   // Array field.
   //
 
-  if (array) {
+  if (isArrayType(ast)) {
     return (
       <ArrayField
         fieldProps={fieldState}

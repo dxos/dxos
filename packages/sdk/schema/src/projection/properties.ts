@@ -4,7 +4,6 @@
 
 import * as Function from 'effect/Function';
 import * as Option from 'effect/Option';
-import * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
 import * as String from 'effect/String';
 
@@ -22,6 +21,7 @@ import {
 import {
   findAnnotation,
   findNode,
+  getBaseType,
   getDiscriminatedType,
   isDiscriminatedUnion,
   isLiteralUnion,
@@ -38,7 +38,6 @@ export type SchemaProperty<T extends AnyProperties, V = any> = {
   ast: SchemaAST.AST;
   optional: boolean;
   readonly: boolean;
-  array?: boolean;
   format?: Format.TypeFormat;
   title?: string;
   description?: string;
@@ -85,42 +84,40 @@ export const getSchemaProperties = <T extends AnyProperties>(
     return props;
   }, []);
 
-  if (ast.indexSignatures.length) {
-    invariant(ast.indexSignatures.length === 1, 'Multi-index signature is not supported.');
-    const indexSignature = ast.indexSignatures[0];
-    const validator = Schema.is(Schema.make(indexSignature.type));
-    for (const [key, val] of Object.entries(value)) {
-      if (knownProperties.some((prop) => prop.name === key)) {
-        continue;
-      }
-      if (!validator(val)) {
-        continue;
-      }
+  // if (ast.indexSignatures.length) {
+  //   invariant(ast.indexSignatures.length === 1, 'Multi-index signature is not supported.');
+  //   const indexSignature = ast.indexSignatures[0];
+  //   const validator = Schema.is(Schema.make(indexSignature.type));
+  //   for (const [key, val] of Object.entries(value)) {
+  //     if (knownProperties.some((prop) => prop.name === key)) {
+  //       continue;
+  //     }
+  //     if (!validator(val)) {
+  //       continue;
+  //     }
 
-      const processed = processProperty(
-        key as PropertyKey<T>,
-        {
-          name: key,
-          type: indexSignature.type,
-          isOptional: true,
-          isReadonly: indexSignature.isReadonly,
-        },
-        form,
-      );
-      if (processed) {
-        knownProperties.push(processed);
-      }
-    }
-  }
+  //     const processed = processProperty(
+  //       key as PropertyKey<T>,
+  //       {
+  //         name: key,
+  //         type: indexSignature.type,
+  //         isOptional: true,
+  //         isReadonly: indexSignature.isReadonly,
+  //       },
+  //       form,
+  //     );
+  //     if (processed) {
+  //       knownProperties.push(processed);
+  //     }
+  //   }
+  // }
 
   return knownProperties;
 };
 
-type PropertySignature = Pick<SchemaAST.PropertySignature, 'name' | 'type' | 'isOptional' | 'isReadonly'>;
-
 const processProperty = <T extends AnyProperties>(
   name: PropertyKey<T>,
-  prop: PropertySignature,
+  prop: SchemaAST.PropertySignature,
   form: boolean,
 ): SchemaProperty<T> | undefined => {
   // TODO(wittjosiah): `findAnnotation` shouldn't be needed after extracting the base type.
@@ -153,7 +150,6 @@ const processProperty = <T extends AnyProperties>(
     options,
   };
 
-  let array: SchemaProperty<T>['array'] | undefined;
   let format: SchemaProperty<T>['format'] | undefined;
 
   // Parse SchemaAST.
@@ -191,10 +187,7 @@ const processProperty = <T extends AnyProperties>(
               const { typename } = getSchemaReference(jsonSchema) ?? {};
               if (typename) {
                 format = Format.TypeFormat.Ref;
-                array = true;
               }
-            } else {
-              array = true;
             }
           }
         }
@@ -218,7 +211,6 @@ const processProperty = <T extends AnyProperties>(
   }
 
   return {
-    array,
     format: format ?? (baseType ? getFormatAnnotation(baseType) : undefined),
     ...property,
     options,
@@ -270,13 +262,3 @@ export const getSimpleType = (node: SchemaAST.AST): string | undefined => {
  * @deprecated
  */
 export const isSimpleType = (node: SchemaAST.AST): boolean => !!getSimpleType(node);
-
-export const getBaseType = (prop: PropertySignature): SchemaAST.AST => {
-  const encoded = SchemaAST.encodedAST(prop.type);
-  // Extract property ast from optional union.
-  if (prop.isOptional && encoded._tag === 'Union') {
-    return encoded.types[0];
-  }
-
-  return encoded;
-};

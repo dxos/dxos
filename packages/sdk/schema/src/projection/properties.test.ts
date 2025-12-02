@@ -6,6 +6,7 @@ import * as Schema from 'effect/Schema';
 import { assert, describe, test } from 'vitest';
 
 import { Format } from '@dxos/echo/internal';
+import { isArrayType } from '@dxos/effect';
 
 import { getSchemaProperties } from './properties';
 
@@ -38,7 +39,7 @@ describe('properties', () => {
 
   test('arrays', ({ expect }) => {
     const props = getSchemaProperties(TestSchema.ast);
-    const arrayProp = props.find((prop) => prop.array);
+    const arrayProp = props.find((prop) => isArrayType(prop.ast));
 
     expect(arrayProp).to.not.eq(undefined);
     assert(arrayProp?.ast._tag === 'TupleType');

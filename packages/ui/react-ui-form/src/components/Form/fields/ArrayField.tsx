@@ -8,13 +8,12 @@ import * as String from 'effect/String';
 import React, { Fragment, useCallback } from 'react';
 
 import { type AnyProperties } from '@dxos/echo/internal';
-import { findNode, getDiscriminatedType, isDiscriminatedUnion, isNestedType } from '@dxos/effect';
+import { findNode, getArrayElementType, getDiscriminatedType, isDiscriminatedUnion, isNestedType } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { IconButton, useTranslation } from '@dxos/react-ui';
 import { getSchemaProperties } from '@dxos/schema';
 
 import { translationKey } from '../../../translations';
-import { findArrayElementType } from '../../../util';
 import { useFormValues } from '../Form';
 import { FormField, type FormFieldProps } from '../FormField';
 import { FormFieldLabel, type FormFieldStateProps } from '../FormFieldComponent';
@@ -34,7 +33,7 @@ export const ArrayField = <T extends AnyProperties>({
   const { t } = useTranslation(translationKey);
   const { ast, name, title } = property;
   const label = title ?? Function.pipe(name, String.capitalize);
-  const elementType = findArrayElementType(ast);
+  const elementType = getArrayElementType(ast);
   const { onValueChange } = inputProps;
 
   // TODO(wittjosiah): The fallback to an empty array stops the form from crashing but isn't immediately live.
@@ -55,9 +54,10 @@ export const ArrayField = <T extends AnyProperties>({
   };
 
   const handleAdd = useCallback(() => {
-    const defaultValue = isNestedType(ast) && elementType ? getDefaultObjectValue(elementType) : getDefaultValue(ast);
+    const defaultValue =
+      isNestedType(ast) && elementType ? getDefaultObjectValue(elementType) : getDefaultValue(elementType);
     onValueChange(ast, [...values, defaultValue]);
-  }, [onValueChange, ast, values]);
+  }, [onValueChange, ast, elementType, values]);
 
   const handleDelete = useCallback(
     (idx: number) => {
@@ -86,7 +86,6 @@ export const ArrayField = <T extends AnyProperties>({
                 path={[...(path ?? []), index]}
                 property={{
                   ...property,
-                  array: false, // Cannot nest arrays.
                   ast: elementType,
                 }}
                 readonly={readonly || layout === 'static'}
@@ -132,8 +131,9 @@ ArrayField.displayName = 'Form.ArrayField';
  * Returns the default empty value for a given AST.
  * Used for initializing new array values etc.
  */
-export const getDefaultValue = (ast: SchemaAST.AST): any => {
-  switch (ast._tag) {
+// TODO(wittjosiah): Factor out?
+export const getDefaultValue = (ast?: SchemaAST.AST): any => {
+  switch (ast?._tag) {
     case 'StringKeyword': {
       return '';
     }
@@ -143,11 +143,12 @@ export const getDefaultValue = (ast: SchemaAST.AST): any => {
     case 'BooleanKeyword': {
       return false;
     }
-    case 'ObjectKeyword': {
-      return {};
-    }
     default: {
-      throw new Error(`Unsupported type for default value: ${ast._tag}`);
+      if (ast && isNestedType(ast)) {
+        return {};
+      } else {
+        throw new Error(`Unsupported type for default value: ${ast?._tag}`);
+      }
     }
   }
 };

@@ -18,7 +18,7 @@ import {
   getSchemaReference,
 } from '@dxos/echo/internal';
 import { type AnyLiveObject, type EchoDatabase, Filter, Query } from '@dxos/echo-db';
-import { findAnnotation, isNestedType } from '@dxos/effect';
+import { findAnnotation, isArrayType, isNestedType } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { type Live } from '@dxos/live-object';
 import { log } from '@dxos/log';
@@ -115,7 +115,7 @@ const createValue = <T extends AnyProperties>(
 
   // TODO(dmaretskyi): Support generating nested objects here; or generator via type.
   if (!property.optional) {
-    if (property.array) {
+    if (isArrayType(property.ast)) {
       return [];
     } else if (isNestedType(property.ast)) {
       return {};

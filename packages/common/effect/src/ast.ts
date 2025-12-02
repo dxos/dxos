@@ -19,6 +19,16 @@ import { type JsonPath, type JsonProp } from './json-path';
 // https://effect-ts.github.io/effect/schema/SchemaAST.ts.html
 //
 
+export const getBaseType = (prop: SchemaAST.PropertySignature): SchemaAST.AST => {
+  const encoded = SchemaAST.encodedAST(prop.type);
+  // Extract property ast from optional union.
+  if (prop.isOptional && encoded._tag === 'Union') {
+    return encoded.types[0];
+  }
+
+  return encoded;
+};
+
 //
 // Branded types
 //
@@ -270,10 +280,23 @@ export const isLiteralUnion = (node: SchemaAST.AST): boolean => {
 };
 
 /**
+ * Determines if the node is an array type.
+ */
+export const isArrayType = (node: SchemaAST.AST): node is SchemaAST.TupleType => {
+  return SchemaAST.isTupleType(node) && node.elements.length === 0 && node.rest.length === 1;
+};
+
+/**
+ * Get the type of the array elements.
+ */
+export const getArrayElementType = (node: SchemaAST.AST): SchemaAST.AST | undefined => {
+  return isArrayType(node) ? node.rest.at(0)?.type : undefined;
+};
+
+/**
  * Determines if the node is a tuple type.
  */
 export const isTupleType = (node: SchemaAST.AST): boolean => {
-  // NOTE: Arrays are represented as tuples with no elements and a rest part.
   return SchemaAST.isTupleType(node) && node.elements.length > 0;
 };
 
@@ -416,19 +439,6 @@ export const mapAst = (
       return ast;
     }
   }
-};
-
-/**
- * @returns true if AST is for Array(T) or optional(Array(T)).
- */
-export const isArrayType = (node: SchemaAST.AST): boolean => {
-  return (
-    SchemaAST.isTupleType(node) ||
-    (SchemaAST.isUnion(node) &&
-      node.types.some(isArrayType) &&
-      node.types.some(SchemaAST.isUndefinedKeyword) &&
-      node.types.length === 2)
-  );
 };
 
 const getIndexSignatures = (ast: SchemaAST.AST): Array<SchemaAST.IndexSignature> => {
