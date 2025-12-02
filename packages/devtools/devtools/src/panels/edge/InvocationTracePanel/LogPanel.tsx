@@ -84,5 +84,13 @@ export const LogPanel: FC<LogPanelProps> = ({ queue }) => {
     );
   }, [objects]);
 
-  return <DynamicTable classNames='min-bs-0 min-is-0 is-full overflow-auto' properties={properties} rows={rows} />;
+  return (
+    <div className='bs-full is-full min-bs-[20rem] overflow-hidden'>
+      <DynamicTable
+        classNames='min-bs-0 min-is-0 is-full bs-full' //
+        properties={properties}
+        rows={rows}
+      />
+    </div>
+  );
 };

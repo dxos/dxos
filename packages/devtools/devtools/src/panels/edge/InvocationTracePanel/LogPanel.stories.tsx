@@ -6,6 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useMemo } from 'react';
 
 import { Obj } from '@dxos/echo';
+import { MemoryQueue } from '@dxos/echo-db';
 import { TraceEvent as TraceEventSchema, type TraceEvent as TraceEventType } from '@dxos/functions-runtime';
 import { withTheme } from '@dxos/react-ui/testing';
 
@@ -56,34 +57,13 @@ const makeEvents = (): TraceEventType[] => {
 const DefaultStory = () => {
   const queue = useMemo(() => {
     const events = makeEvents();
-    const result: any = {
-      get results() {
-        return events;
-      },
-      entries: [],
-      run: async () => events,
-      runEntries: async () => [],
-      runSync: () => events,
-      runSyncEntries: () => [],
-      first: async () => events[0],
-      firstOrUndefined: async () => events[0],
-      subscribe: (cb?: (q: any) => void) => {
-        if (cb) {
-          cb(result);
-        }
-        return () => {};
-      },
-    };
-
-    const queueLike: any = {
-      query: () => result,
-    };
-    return queueLike;
+    const queue = MemoryQueue.make({ objects: events });
+    return queue;
   }, []);
 
   return (
     <div className='p-4'>
-      <LogPanel queue={queue as any} />
+      <LogPanel queue={queue} />
     </div>
   );
 };
