@@ -267,6 +267,19 @@ const getFormField = ({ ast, format }: FormFieldComponentProps): FormFieldCompon
   }
 
   //
+  // Standard formats.
+  //
+
+  switch (format) {
+    case Format.TypeFormat.GeoPoint:
+      return GeoPointField;
+    case Format.TypeFormat.Markdown:
+      return MarkdownField;
+    case Format.TypeFormat.Text:
+      return TextAreaField;
+  }
+
+  //
   // Standard types.
   //
 
