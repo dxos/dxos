@@ -35,8 +35,8 @@ const PersonSchema = Schema.Struct({
   organization: Type.Ref(Organization.Organization).pipe(
     PropertyMeta('referenceProperty', 'name'),
     Schema.annotations({
-      title: 'Organization',
-      description: 'The organization the person is currently employed by.',
+      title: 'Employer',
+      description: 'Current employer',
     }),
     Schema.optional,
   ),

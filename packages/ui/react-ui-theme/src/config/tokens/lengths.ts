@@ -19,6 +19,7 @@ export const lengthsFacet = {
           slope: 1,
         },
       },
+      // "gap"
       lacuna: {
         root: {
           unit: 'rem',
@@ -36,7 +37,6 @@ export const lengthsFacet = {
       noLine: { root: ['line', 0] },
       hairLine: { root: ['line', 1] },
       thickLine: { root: ['line', 2] },
-      // TODO(burdon): Can/should these be hyphenated?
       trimXs: { root: ['lacuna', 3] },
       trimSm: { root: ['lacuna', 6] },
       trimMd: { root: ['lacuna', 9] },
@@ -58,9 +58,9 @@ export const lengthsFacet = {
       noLine: { fine: ['focusOffset'] },
       hairLine: { fine: ['modalLine', 'landmarkLine', 'positionedLine', 'gridGap', 'gridFocusIndicatorWidth'] },
       thickLine: { fine: ['focusLine'], gridFocusStack: ['gridFocusIndicatorWidth'] },
-      trimXs: { fine: ['cardSpacingChrome', 'labelSpacingBlock'] },
-      trimSm: { fine: ['cardSpacingInline', 'cardSpacingBlock', 'inputSpacingBlock'] },
-      trimMd: { coarse: ['cardSpacingInline', 'cardSpacingBlock'] },
+      trimXs: { fine: ['cardSpacingChrome', 'labelSpacingBlock', 'inputSpacingBlock'] },
+      trimSm: { fine: ['cardSpacingInline', 'cardSpacingBlock', 'cardSpacingGap'] },
+      trimMd: { coarse: ['cardSpacingInline', 'cardSpacingBlock', 'cardSpacingGap'] },
       inputFine: { fine: ['iconButtonPadding'] },
       inputCoarse: { coarse: ['iconButtonPadding'] },
     },

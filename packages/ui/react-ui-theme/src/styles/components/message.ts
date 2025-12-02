@@ -13,15 +13,15 @@ export type MessageStyleProps = {
 };
 
 export const messageRoot: ComponentFunction<MessageStyleProps> = ({ valence }, etc) => {
-  return mx('p-trimMd rounded-md', messageValence(valence), etc);
+  return mx('p-trimSm rounded-md', messageValence(valence), etc);
 };
 
 export const messageTitle: ComponentFunction<MessageStyleProps> = (_, etc) => {
-  return mx('mbe-trimSm last:mbe-0 font-medium flex items-center gap-2 gap-trimXs', etc);
+  return mx('font-medium flex gap-trimSm', etc);
 };
 
 export const messageIcon: ComponentFunction<MessageStyleProps> = (_, etc) => {
-  return mx(etc);
+  return mx('flex bs-[1lh] items-center', etc);
 };
 
 export const messageContent: ComponentFunction<MessageStyleProps> = (_, etc) => {

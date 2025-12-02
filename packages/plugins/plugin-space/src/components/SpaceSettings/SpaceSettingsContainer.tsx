@@ -28,7 +28,7 @@ import { SpaceCapabilities } from '../../capabilities';
 import { meta } from '../../meta';
 import { SpaceAction, SpaceForm } from '../../types';
 
-const FormSchema = SpaceForm.pipe(
+const SpaceFormSchema = SpaceForm.pipe(
   Schema.extend(
     Schema.Struct({
       archived: Schema.Boolean.annotations({ title: 'Archive Space' }),
@@ -63,8 +63,8 @@ export const SpaceSettingsContainer = ({ space }: SpaceSettingsContainerProps) =
   );
 
   const handleSave = useCallback(
-    (properties: Schema.Schema.Type<typeof FormSchema>) => {
-      void toggleEdgeReplication(properties.edgeReplication);
+    (properties: Schema.Schema.Type<typeof SpaceFormSchema>) => {
+      void toggleEdgeReplication(properties.edgeReplication ?? false);
       if (properties.name !== space.properties.name) {
         space.properties.name = properties.name;
       }
@@ -184,36 +184,23 @@ export const SpaceSettingsContainer = ({ space }: SpaceSettingsContainerProps) =
     <StackItem.Content scrollable>
       <ControlPage>
         <ControlSection
-          title={t('space properties settings verbose label', { ns: meta.id })}
+          title={t('space properties settings verbose label')}
           description={t('space properties settings description', {
             ns: meta.id,
           })}
         >
-          <Form
-            classNames='container-max-width grid grid-cols-1 md:grid-cols-[1fr_min-content]'
-            outerSpacing={false}
-            schema={FormSchema}
-            values={values}
-            fieldMap={fieldMap}
-            autoSave
-            onSave={handleSave}
-          />
+          <Form.Root fieldMap={fieldMap} schema={SpaceFormSchema} values={values} autoSave onSave={handleSave}>
+            <Form.Content classNames='container-max-width grid grid-cols-1 md:grid-cols-[1fr_min-content]'>
+              <Form.FieldSet />
+            </Form.Content>
+          </Form.Root>
         </ControlSection>
-        <ControlSection
-          title={t('space controls title', { ns: meta.id })}
-          description={t('space controls description', { ns: meta.id })}
-        >
+        <ControlSection title={t('space controls title')} description={t('space controls description')}>
           <div role='none' className='container-max-width grid grid-cols-1 md:grid-cols-[1fr_min-content]'>
-            <ControlItemInput
-              title={t('backup space title', { ns: meta.id })}
-              description={t('backup space description', { ns: meta.id })}
-            >
+            <ControlItemInput title={t('backup space title')} description={t('backup space description')}>
               <Button onClick={handleBackup}>{t('download backup label')}</Button>
             </ControlItemInput>
-            <ControlItemInput
-              title={t('repair space title', { ns: meta.id })}
-              description={t('repair space description', { ns: meta.id })}
-            >
+            <ControlItemInput title={t('repair space title')} description={t('repair space description')}>
               <Button onClick={handleRepair}>{t('repair space label')}</Button>
             </ControlItemInput>
           </div>

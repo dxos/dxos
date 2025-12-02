@@ -5,6 +5,7 @@
 import { draggable } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
 import React, { type PropsWithChildren, useEffect, useRef, useState } from 'react';
 
+import { type Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { Card } from '@dxos/react-ui-stack';
@@ -14,11 +15,11 @@ import { translationKey } from '../../translations';
 
 import { useBoardContext } from './Board';
 import { getBoardRect } from './geometry';
-import { type CellLayout, type HasId, type Position } from './types';
+import { type CellLayout, type Position } from './types';
 
 type DragState = 'idle' | 'dragging';
 
-export type BoardCellProps<T extends HasId = any> = ThemedClassName<
+export type BoardCellProps<T extends Type.Obj.Any = any> = ThemedClassName<
   PropsWithChildren<{
     item: T;
     layout: CellLayout;
