@@ -41,7 +41,7 @@ export type SpaceSettingsContainerProps = {
 };
 
 // TODO(wittjosiah): Handle space migrations here?
-export const SpaceSettingsContainer = forwardRef<SpaceSettingsContainerProps, HTMLDivElement>(
+export const SpaceSettingsContainer = forwardRef<HTMLDivElement, SpaceSettingsContainerProps>(
   ({ space }, forwardedRef) => {
     const { t } = useTranslation(meta.id);
     const { dispatchPromise: dispatch } = useIntentDispatcher();
