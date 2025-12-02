@@ -167,19 +167,17 @@ export const ViewEditor = forwardRef<ProjectionModel, ViewEditorProps>(
 
         {/* TODO(burdon): Is the form read-only or just the schema? */}
         <NewForm.Root autoSave schema={viewSchema} values={viewValues} fieldMap={fieldMap} onSave={handleUpdate}>
-          <NewForm.Content>
-            <NewForm.FieldSet />
+          <NewForm.FieldSet />
 
-            <FormFieldLabel label={t('fields label')} asChild />
-            <FieldList
-              schema={schema}
-              view={view}
-              registry={registry}
-              readonly={readonly}
-              showHeading={showHeading}
-              onDelete={handleDelete}
-            />
-          </NewForm.Content>
+          <FormFieldLabel label={t('fields label')} asChild />
+          <FieldList
+            schema={schema}
+            view={view}
+            registry={registry}
+            readonly={readonly}
+            showHeading={showHeading}
+            onDelete={handleDelete}
+          />
         </NewForm.Root>
 
         {!readonly && !expandedField && (

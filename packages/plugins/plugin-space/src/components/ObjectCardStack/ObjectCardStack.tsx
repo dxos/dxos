@@ -45,9 +45,11 @@ export const ObjectCardStack = ({ objectId, view }: ObjectCardStackProps) => {
         <CardStack.Content>
           <CardStack.Stack id={objectId} itemsCount={selectedObjects.length}>
             {selectedObjects.length === 0 && (
-              <Callout.Root>
-                <Callout.Title>{t('row details no selection label')}</Callout.Title>
-              </Callout.Root>
+              <CardStack.Item>
+                <Callout.Root>
+                  <Callout.Title>{t('row details no selection label')}</Callout.Title>
+                </Callout.Root>
+              </CardStack.Item>
             )}
             {selectedObjects.map((object) => (
               <CardStack.Item key={object.id} asChild>
