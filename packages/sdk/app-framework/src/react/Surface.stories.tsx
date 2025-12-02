@@ -3,18 +3,34 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { forwardRef, useCallback, useEffect, useRef, useState } from 'react';
 
 import { faker } from '@dxos/random';
 import { List, ListItem, Toolbar } from '@dxos/react-ui';
 import { withTheme } from '@dxos/react-ui/testing';
-import { getHashStyles, mx } from '@dxos/react-ui-theme';
+import { type ColorStyles, getHashStyles, mx } from '@dxos/react-ui-theme';
 
 import { Capabilities, createSurface } from '../common';
 import { withPluginManager } from '../testing';
 
 import { usePluginManager } from './PluginManagerProvider';
 import { Surface, useSurfaces } from './Surface';
+
+type TestComponentProps = {
+  id: string;
+  styles: ColorStyles;
+};
+
+const TestComponent = forwardRef<HTMLDivElement, TestComponentProps>(({ styles, id }, forwardedRef) => {
+  return (
+    <div
+      className={mx('flex justify-center items-center border rounded', styles.surface, styles.border)}
+      ref={forwardedRef}
+    >
+      <span className={mx('dx-tag font-mono text-lg', styles.text)}>{id}</span>
+    </div>
+  );
+});
 
 const DefaultStory = () => {
   const [selected, setSelected] = useState<string | undefined>();
@@ -32,11 +48,7 @@ const DefaultStory = () => {
         id,
         role: 'item',
         filter: (data): data is any => (data as any)?.id === id,
-        component: () => (
-          <div className={mx('flex justify-center items-center border rounded', styles.surface, styles.border)}>
-            <span className={mx('dx-tag font-mono text-lg', styles.text)}>{id}</span>
-          </div>
-        ),
+        component: ({ ref }) => <TestComponent id={id} styles={styles} ref={ref} />,
       }),
     });
 

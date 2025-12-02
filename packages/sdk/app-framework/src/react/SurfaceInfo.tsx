@@ -5,6 +5,7 @@
 import React, { type ReactElement, cloneElement, forwardRef, useCallback, useLayoutEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 
+import { addEventListener, combine } from '@dxos/async';
 import { useMergeRefs } from '@dxos/react-hooks';
 
 import { useSurface } from './Surface';
@@ -36,15 +37,15 @@ export const SurfaceInfo = forwardRef<HTMLElement, SurfaceInfoProps>(({ children
 
     const observer = new ResizeObserver(measure);
     observer.observe(root);
-    window.addEventListener('scroll', measure, true);
-    window.addEventListener('resize', measure);
-
     measure();
-    return () => {
-      observer.disconnect();
-      window.removeEventListener('scroll', measure, true);
-      window.removeEventListener('resize', measure);
-    };
+
+    return combine(
+      addEventListener(window, 'scroll', measure, true),
+      addEventListener(window, 'resize', measure),
+      () => {
+        observer.disconnect();
+      },
+    );
   }, [root, active]);
 
   if (!active) {
