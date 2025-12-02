@@ -44,7 +44,7 @@ export const Kanban = ({ model, onAddCard, onRemoveCard }: KanbanProps) => {
       orientation='horizontal'
       size='contain'
       rail={false}
-      classNames='pli-1 density-fine'
+      classNames='p-2 gap-4 density-fine'
       onRearrange={model.handleRearrange}
       itemsCount={model.arrangedCards.length}
       {...autoScrollRootAttributes}
@@ -56,7 +56,7 @@ export const Kanban = ({ model, onAddCard, onRemoveCard }: KanbanProps) => {
         const nextSiblingId = index < array.length - 1 ? array[index + 1].columnValue : undefined;
 
         return (
-          // TODO(burdon): Root should be headless and come after StackItem.Root.
+          // TODO(burdon): Root should be headless and come after StackItem.Root?
           <CardStack.Root asChild key={columnValue}>
             <StackItem.Root
               item={{ id: columnValue }}

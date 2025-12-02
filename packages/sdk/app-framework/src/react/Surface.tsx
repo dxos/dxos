@@ -158,7 +158,7 @@ const findCandidates = (surfaces: SurfaceDefinition[], { role, data }: Pick<Surf
 //  - Error boundary.
 export const SurfaceContainer = ({ className = 'contents', children }: PropsWithChildren<{ className?: string }>) => {
   const ref = useRef<HTMLDivElement>(null);
-  const active = window.__DX_DEBUG__;
+  const active = '__DX_DEBUG__' in window;
   const [rect, setRect] = useState<DOMRect | null>(null);
   const [expand, setExpand] = useState(false); // TOOD(burdon): Save state.
   const info = useSurface();

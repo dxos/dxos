@@ -15,8 +15,7 @@ import { Card } from '../Card';
 // Root
 //
 
-// TODO(burdon): Remove padding.
-const cardStackRoot = 'flex flex-col pli-2 plb-2';
+const cardStackRoot = 'flex flex-col';
 
 // TODO(burdon): Root should be headless.
 const CardStackRoot = forwardRef<HTMLDivElement, SharedCardStackProps>(
@@ -74,6 +73,7 @@ const CardStackStack = forwardRef<
   HTMLDivElement,
   Omit<StackProps, 'orientation' | 'size' | 'rail' | 'separatorOnScroll'>
 >(({ children, classNames, itemsCount = 0, ...props }, forwardedRef) => {
+  // NOTE: Should not have horizontal padding since separatorOnScroll should be full width.
   return (
     <Stack
       orientation='vertical'
