@@ -6,6 +6,7 @@ import React, { type FC, useMemo } from 'react';
 
 import { Format } from '@dxos/echo/internal';
 import { TraceEvent } from '@dxos/functions-runtime';
+import { log } from '@dxos/log';
 import { Filter, type Queue, useQuery } from '@dxos/react-client/echo';
 import { DynamicTable, type TablePropertyDefinition } from '@dxos/react-ui-table';
 
@@ -15,6 +16,7 @@ type LogPanelProps = {
 
 export const LogPanel: FC<LogPanelProps> = ({ queue }) => {
   const objects = useQuery(queue, Filter.type(TraceEvent));
+  log.info('Objects', { objects });
 
   // Define properties for the DynamicTable
   const properties: TablePropertyDefinition[] = useMemo(
@@ -32,6 +34,8 @@ export const LogPanel: FC<LogPanelProps> = ({ queue }) => {
             { id: 'log', title: 'LOG', color: 'neutral' },
             { id: 'info', title: 'INFO', color: 'blue' },
             { id: 'debug', title: 'DEBUG', color: 'neutral' },
+            { id: 'trace', title: 'TRACE', color: 'neutral' },
+            { id: 'verbose', title: 'VERBOSE', color: 'neutral' },
           ],
         },
       },
@@ -46,14 +50,37 @@ export const LogPanel: FC<LogPanelProps> = ({ queue }) => {
       return [];
     }
 
+    const safeStringify = (value: any) => {
+      try {
+        if (value == null) {
+          return '';
+        }
+        const seen = new WeakSet();
+        return JSON.stringify(
+          value,
+          (key, val) => {
+            if (typeof val === 'object' && val !== null) {
+              if (seen.has(val)) {
+                return '[Circular]';
+              }
+              seen.add(val);
+            }
+            return val;
+          },
+          2,
+        );
+      } catch {
+        return '[Unserializable]';
+      }
+    };
+
     return objects.flatMap((event) => {
       return event.logs.map((log) => ({
         id: `${event.id}-${log.timestamp}`,
         timestamp: new Date(log.timestamp).toLocaleString(),
         level: log.level,
         message: log.message,
-        context: JSON.stringify(log.context) ?? {},
-        _original: { ...log, eventId: event.id },
+        context: safeStringify(log.context),
       }));
     });
   }, [objects]);
