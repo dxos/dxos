@@ -36,7 +36,7 @@ import {
   type FormFieldProvider,
 } from './FormFieldComponent';
 import { FormFieldSet } from './FormFieldSet';
-import { useFormFieldState } from './FormRoot';
+import { useFormFieldState } from './NewForm';
 
 export type FormFieldProps<T extends AnyProperties> = {
   /**

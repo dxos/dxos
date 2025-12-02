@@ -14,7 +14,7 @@ import { type FormHandlerProps } from '../../hooks';
 
 import { FormField, type FormFieldProps } from './FormField';
 import { FormFieldErrorBoundary, FormFieldLabel } from './FormFieldComponent';
-import { useFormValues } from './FormRoot';
+import { useFormValues } from './NewForm';
 
 export type FormFieldSetProps<T extends AnyProperties> = ThemedClassName<
   {

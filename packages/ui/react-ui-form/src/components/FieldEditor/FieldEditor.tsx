@@ -20,7 +20,7 @@ import {
 } from '@dxos/schema';
 
 import { translationKey } from '../../translations';
-import { type FormFieldMap, type FormProps, NewForm, SelectField, SelectOptionField } from '../Form';
+import { type FormFieldMap, NewForm, type NewFormRootProps, SelectField, SelectOptionField } from '../Form';
 
 export type FieldEditorProps = {
   projection: ProjectionModel;
@@ -28,7 +28,7 @@ export type FieldEditorProps = {
   registry?: SchemaRegistry.SchemaRegistry;
   onSave: () => void;
   onCancel?: () => void;
-} & Pick<FormProps<any>, 'outerSpacing' | 'readonly'>;
+} & Pick<NewFormRootProps<any>, 'readonly'>;
 
 /**
  * Displays a Form representing the metadata for a given `Field` and `View`.
@@ -103,7 +103,7 @@ export const FieldEditor = ({ readonly, projection, field, registry, onSave, onC
     [],
   );
 
-  const handleValuesChanged = useCallback<NonNullable<FormProps<PropertyType>['onValuesChanged']>>(
+  const handleValuesChanged = useCallback<NonNullable<NewFormRootProps<PropertyType>['onValuesChanged']>>(
     (_props) => {
       // TODO(Zaymon): Workout why old and new format values are the same sometimes even when selecting novel format values.
       setFieldSchema((prev) => {
@@ -138,7 +138,7 @@ export const FieldEditor = ({ readonly, projection, field, registry, onSave, onC
     [schemas, props.format, props.referenceSchema],
   );
 
-  const handleValidate = useCallback<NonNullable<FormProps<PropertyType>['onValidate']>>(
+  const handleValidate = useCallback<NonNullable<NewFormRootProps<PropertyType>['onValidate']>>(
     ({ property }) => {
       if (property && projection.fields.find((f) => f.path === property && f.path !== field.path)) {
         return [
@@ -152,7 +152,7 @@ export const FieldEditor = ({ readonly, projection, field, registry, onSave, onC
     [projection.fields, field],
   );
 
-  const handleSave = useCallback<NonNullable<FormProps<PropertyType>['onSave']>>(
+  const handleSave = useCallback<NonNullable<NewFormRootProps<PropertyType>['onSave']>>(
     (props) => {
       projection.setFieldProjection({ field, props });
       onSave();
@@ -160,7 +160,7 @@ export const FieldEditor = ({ readonly, projection, field, registry, onSave, onC
     [projection, field, onSave],
   );
 
-  const handleCancel = useCallback<NonNullable<FormProps<PropertyType>['onCancel']>>(() => {
+  const handleCancel = useCallback<NonNullable<NewFormRootProps<PropertyType>['onCancel']>>(() => {
     // Need to defer to allow form to close.
     requestAnimationFrame(() => onCancel?.());
     onSave();

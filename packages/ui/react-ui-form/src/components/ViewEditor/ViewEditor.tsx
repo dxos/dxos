@@ -15,7 +15,6 @@ import { invariant } from '@dxos/invariant';
 import { Callout, IconButton, Input, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { QueryForm, type QueryFormProps } from '@dxos/react-ui-components';
 import { List } from '@dxos/react-ui-list';
-import { cardSpacing } from '@dxos/react-ui-stack';
 import { mx, subtleHover } from '@dxos/react-ui-theme';
 import {
   FieldSchema,
@@ -33,7 +32,6 @@ import {
   type FormFieldComponentProps,
   FormFieldLabel,
   type FormFieldMap,
-  type FormProps,
   NewForm,
 } from '../Form';
 
@@ -50,7 +48,7 @@ export type ViewEditorProps = ThemedClassName<
     showHeading?: boolean;
     onQueryChanged?: (query: QueryAST.Query, target?: string) => void;
     onDelete?: (fieldId: string) => void;
-  } & (Pick<FormProps<any>, 'outerSpacing'> & Pick<QueryFormProps, 'types' | 'tags'>)
+  } & Pick<QueryFormProps, 'types' | 'tags'>
 >;
 
 /**
@@ -70,7 +68,6 @@ export const ViewEditor = forwardRef<ProjectionModel, ViewEditorProps>(
       tags,
       onQueryChanged,
       onDelete,
-      outerSpacing = true,
     },
     forwardedRef,
   ) => {
@@ -160,7 +157,7 @@ export const ViewEditor = forwardRef<ProjectionModel, ViewEditorProps>(
       <div role='none' className={mx(classNames)}>
         {/* If readonly is set, then the callout is not needed. */}
         {schemaReadonly && !readonly && (
-          <Callout.Root valence='info' classNames={['mlb-cardSpacingBlock', outerSpacing && 'mli-cardSpacingInline']}>
+          <Callout.Root valence='info' classNames='mlb-cardSpacingBlock'>
             <Callout.Title>{t('system schema description')}</Callout.Title>
           </Callout.Root>
         )}
@@ -181,7 +178,7 @@ export const ViewEditor = forwardRef<ProjectionModel, ViewEditorProps>(
         </NewForm.Root>
 
         {!readonly && !expandedField && (
-          <div role='none' className={outerSpacing ? cardSpacing : 'mlb-cardSpacingBlock'}>
+          <div role='none' className='mlb-cardSpacingBlock'>
             <IconButton
               icon='ph--plus--regular'
               label={t('add property button label')}
@@ -314,7 +311,6 @@ const FieldList = ({ schema, view, registry, readonly, showHeading = false, onDe
                   {expandedField === field.id && !readonly && (
                     <div role='none' className='col-span-5 mbs-1 mbe-1 border border-separator rounded-md'>
                       <FieldEditor
-                        // TODO(burdon): Is this right?
                         readonly={readonly || schemaReadonly}
                         registry={registry}
                         projection={projectionModel}

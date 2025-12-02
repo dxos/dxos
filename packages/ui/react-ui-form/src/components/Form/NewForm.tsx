@@ -4,9 +4,10 @@
 
 import { createContext } from '@radix-ui/react-context';
 import * as Schema from 'effect/Schema';
-import React, { type PropsWithChildren, useRef } from 'react';
+import React, { type PropsWithChildren, useMemo, useRef } from 'react';
 
 import { type AnyProperties } from '@dxos/echo/internal';
+import { type SimpleType, createJsonPath, getValue as getValue$ } from '@dxos/effect';
 import { IconButton, type IconButtonProps, ScrollArea, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
@@ -19,48 +20,23 @@ import {
 } from '../../hooks';
 import { translationKey } from '../../translations';
 
-import { FormFieldLabel, type FormFieldLabelProps } from './FormFieldComponent';
+import { FormFieldLabel, type FormFieldLabelProps, type FormFieldStateProps } from './FormFieldComponent';
 import { FormFieldSet, type FormFieldSetProps } from './FormFieldSet';
-import { FormContext } from './FormRoot';
-
-// [x] TextArea
-// [x] Use NewForm with FeedbackForm
-// [x] Use NewForm with ViewEditor
-// [ ] NewForm.stories.tsx
-//  [x] Fix onSave callback (loses focus on change)
-//  [x] Fix autosave
-//  [x] Keyboard handler (autosave)
-//  [ ] Don't call save/autoSave if value hasn't changed
-//  [ ] Fix onCancel (restore values)
-// [x] Static mode
-//   [x] Ref
-//   [x] Boolean
-//   [x] Array
-//   [x] Object
-//   [x] Geo
-// [ ] Split inline from layout.
-// [ ] Omit id from sub properties.
-// [ ] Update hooks used by external packages (i.e., useFormValues)
-// [ ] Refs
-//   [x] Single-select (fix popover)
-//   [ ] Multi-select (array)
-//   [ ] Defer query until popover
-
-// [ ] Test 22 usages (opencode migration)
-// [ ] Merge stage 1
-
-// Misc
-// [ ] Remove 'outerSpacing' prop
-// [ ] Remove client dependency from react-ui-table
-// [ ] Fix useSchema Type.Obj.Any cast
-// [ ] TableCellEditor (handleEnter/ModalController).
-// [ ] Remove @dxos/echo-db deps
-// [ ] SpacePropertiesSchema
 
 // New features/polish
 // [x] Unify readonly/inline modes
+// [ ] Don't call save/autoSave if value hasn't changed
+// [ ] Fix onCancel (restore values)
+// [ ] Fix useSchema Type.Obj.Any cast
+// [ ] Remove @dxos/echo-db deps
+// [ ] TableCellEditor (handleEnter/ModalController).
 // [ ] Use FormFieldWrapper uniformly
 // [ ] Inline tables for object arrays
+// [ ] Defer query until popover
+// [ ] Omit id from sub properties.
+// [ ] Refs
+//   [x] Single-select (fix popover)
+//   [ ] Multi-select (array)
 
 export type ExcludeId<S extends Schema.Schema.AnyNoContext> = Omit<Schema.Schema.Type<S>, 'id'>;
 
@@ -85,6 +61,38 @@ type NewFormContextValue<T extends AnyProperties = any> = {
 } & Pick<FormFieldSetProps<T>, 'readonly' | 'layout' | 'fieldMap' | 'fieldProvider'>;
 
 const [NewFormContextProvider, useNewFormContext] = createContext<NewFormContextValue>('NewForm');
+
+/**
+ * Get the current form values.
+ */
+const useFormValues = <T extends AnyProperties>(componentName: string, path: (string | number)[] = []): T => {
+  const jsonPath = createJsonPath(path);
+  const {
+    form: { values },
+  } = useNewFormContext(componentName);
+
+  return getValue$(values, jsonPath) as T;
+};
+
+/**
+ * Get the state props for the given field.
+ */
+const useFormFieldState = (componentName: string, path: (string | number)[] = []): FormFieldStateProps => {
+  const stablePath = useMemo(() => path, [Array.isArray(path) ? path.join('.') : path]);
+  const {
+    form: { getStatus, getValue, onBlur, onValueChange },
+  } = useNewFormContext(componentName);
+
+  return useMemo(
+    () => ({
+      getStatus: () => getStatus(stablePath),
+      getValue: () => getValue(stablePath),
+      onBlur: () => onBlur(stablePath),
+      onValueChange: (type: SimpleType, value: any) => onValueChange(stablePath, type, value),
+    }),
+    [getStatus, getValue, onBlur, onValueChange, stablePath],
+  );
+};
 
 //
 // Root
@@ -122,12 +130,9 @@ const NewFormRoot = <T extends AnyProperties = AnyProperties>({
   const form = useFormHandler({ schema, values, onSave, onCancel, ...props });
 
   return (
-    // TODO(burdon): Temporarily include old context.
-    <FormContext.Provider value={form}>
-      <NewFormContextProvider form={form} {...props}>
-        {children}
-      </NewFormContextProvider>
-    </FormContext.Provider>
+    <NewFormContextProvider form={form} {...props}>
+      {children}
+    </NewFormContextProvider>
   );
 };
 
@@ -287,7 +292,7 @@ export const NewForm = {
   Label: FormFieldLabel,
 };
 
-export { useNewFormContext };
+export { useNewFormContext, useFormValues, useFormFieldState };
 
 export type {
   NewFormRootProps,

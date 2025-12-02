@@ -17,7 +17,7 @@ import { translationKey } from '../../../translations';
 import { findArrayElementType } from '../../../util';
 import { FormField, type FormFieldProps } from '../FormField';
 import { FormFieldLabel, type FormFieldStateProps } from '../FormFieldComponent';
-import { useFormValues } from '../FormRoot';
+import { useFormValues } from '../NewForm';
 
 export type ArrayFieldProps<T extends AnyProperties> = {
   fieldProps: FormFieldStateProps;
