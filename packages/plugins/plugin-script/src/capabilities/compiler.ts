@@ -19,8 +19,8 @@ import { Compiler } from '../compiler';
 import { ScriptCapabilities } from './capabilities';
 
 const SCRIPT_PACKAGES_BUCKET = 'https://pub-5745ae82e450484aa28f75fc6a175935.r2.dev/dev/';
-
 const DECLARATION_EXTS = ['.d.ts', '.d.mts'];
+const NO_TYPES = true; // Types temopararly disabled due to compiler erorrs.
 
 export default async () => {
   await initializeBundler({ wasmUrl });
@@ -39,9 +39,12 @@ export default async () => {
 
   await compiler.initialize(trim`
     declare module 'https://*';
+    ${NO_TYPES ? '' : 'declare module "*";'}
   `);
-  for (const mod of runtimeModules) {
-    compiler.setFile(`/src/${mod.filename}`, mod.content);
+  if (!NO_TYPES) {
+    for (const mod of runtimeModules) {
+      compiler.setFile(`/src/${mod.filename}`, mod.content);
+    }
   }
 
   return contributes(ScriptCapabilities.Compiler, compiler);
