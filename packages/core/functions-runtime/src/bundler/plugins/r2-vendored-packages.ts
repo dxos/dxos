@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import type { Plugin } from 'esbuild';
+import type { Plugin } from 'esbuild-wasm';
 
 /*
 

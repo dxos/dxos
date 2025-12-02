@@ -4,7 +4,7 @@
 
 import * as Function from 'effect/Function';
 import * as Record from 'effect/Record';
-import type { Plugin } from 'esbuild';
+import type { Plugin } from 'esbuild-wasm';
 
 // TODO(dmaretskyi): Haven't managed to get this working.
 export const PluginEmbeddedVendoredPackages = (): Plugin => ({
