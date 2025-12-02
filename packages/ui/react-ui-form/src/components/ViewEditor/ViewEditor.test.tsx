@@ -85,7 +85,7 @@ describe('ViewEditor', () => {
     expect(newPropertyProjection!.props.property).toBe('new_property');
   });
 
-  test.only('add new property', async () => {
+  test('add new property', async () => {
     await Default.run();
     await waitForViewEditor();
 
