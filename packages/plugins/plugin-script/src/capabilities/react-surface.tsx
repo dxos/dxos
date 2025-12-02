@@ -28,6 +28,7 @@ import { meta } from '../meta';
 import { Notebook, type ScriptSettings } from '../types';
 
 import { ScriptCapabilities } from './capabilities';
+import { useCompiler } from '../hooks';
 
 export default () =>
   contributes(Capabilities.ReactSurface, [
@@ -43,10 +44,10 @@ export default () =>
       role: ['article', 'section'],
       filter: (data): data is { subject: Script.Script } => Obj.instanceOf(Script.Script, data.subject),
       component: ({ data, role }) => {
-        const compiler = useCapability(ScriptCapabilities.Compiler);
+        const compiler = useCompiler();
         // TODO(dmaretskyi): Since settings store is not reactive, this would break on the script plugin being enabled without a page reload.
         const settings = useCapability(Capabilities.SettingsStore).getStore<ScriptSettings>(meta.id)?.value;
-        return <ScriptContainer role={role} script={data.subject} settings={settings} env={compiler.environment} />;
+        return <ScriptContainer role={role} script={data.subject} settings={settings} env={compiler?.environment} />;
       },
     }),
     createSurface({
@@ -54,8 +55,8 @@ export default () =>
       role: 'article',
       filter: (data): data is { subject: Notebook.Notebook } => Obj.instanceOf(Notebook.Notebook, data.subject),
       component: ({ data, role }) => {
-        const compiler = useCapability(ScriptCapabilities.Compiler);
-        return <NotebookContainer role={role} notebook={data.subject} env={compiler.environment} />;
+        const compiler = useCompiler();
+        return <NotebookContainer role={role} notebook={data.subject} env={compiler?.environment} />;
       },
     }),
     // TODO(burdon): Standardize PluginSettings vs ObjectSettings.
