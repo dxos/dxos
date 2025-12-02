@@ -244,32 +244,8 @@ const PluginR2VendoredPackages = (): Plugin => ({
 
       return {
         path: new URL(`/${args.path}.js`, SCRIPT_PACKAGES_BUCKET).href,
-        namespace: 'http-url',
+        namespace: 'http-url', // Uses http plugin.
       };
-    });
-
-    // We also want to intercept all import paths inside downloaded files and resolve them against the original URL.
-    // All of these files will be in the "http-url" namespace.
-    // Make sure to keep the newly resolved URL in the "http-url" namespace so imports inside it will also be resolved as URLs recursively.
-    build.onResolve({ filter: /.*/, namespace: 'r2-vendored-packages' }, (args) => ({
-      path: new URL(args.path, args.importer).toString(),
-      namespace: 'r2-vendored-packages',
-    }));
-
-    build.onLoad({ filter: /.*/, namespace: 'r2-vendored-packages' }, async (args) => {
-      try {
-        const response = await fetch(args.path);
-        const extension = new URL(args.path).pathname.split('.').pop() || '';
-        const text = extension === 'wasm' ? await response.arrayBuffer() : await response.text();
-        const loader = LOADERS[extension.toLowerCase()] || 'jsx';
-        return {
-          contents: text,
-          loader,
-        } as const;
-      } catch (err) {
-        log.error('failed to fetch', { path: args.path });
-        throw err;
-      }
     });
   },
 });
@@ -279,6 +255,8 @@ const PluginEmbeddedVendoredPackages = (): Plugin => ({
   setup(build) {
     // // https://vite.dev/guide/features#custom-queries
     const moduleUrls = Function.pipe(
+      // NOTE: Vite-specific API.
+      // @ts-expect-error
       import.meta.glob('../../dist/vendor/**/*.js', {
         query: '?url',
         import: 'default',

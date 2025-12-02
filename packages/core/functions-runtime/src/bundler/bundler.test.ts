@@ -26,7 +26,7 @@ describe('Bundler', () => {
     `,
     });
     assert(!('error' in result), 'error should not exist');
-    expect(result.asset).toBeDefined();
+    expect(Object.keys(result.assets)).toBeGreaterThan(1);
   });
 
   test('Import', async () => {
@@ -40,7 +40,7 @@ describe('Bundler', () => {
     `,
     });
     assert(!('error' in result), 'error should not exist');
-    expect(result.asset).toBeDefined();
+    expect(Object.keys(result.assets)).toBeGreaterThan(1);
   });
 
   // TODO(dmaretskyi): Flaky on CI.
@@ -52,7 +52,7 @@ describe('Bundler', () => {
     `,
     });
     assert(!('error' in result), 'error should not exist');
-    expect(result.asset).toBeDefined();
+    expect(Object.keys(result.assets)).toBeGreaterThan(1);
   });
 
   test('Error', async () => {
@@ -62,7 +62,7 @@ describe('Bundler', () => {
     assert('error' in result, 'error should exist');
   });
 
-  test.only('forex-effect', { timeout: 60_000 }, async () => {
+  test('forex-effect', { timeout: 60_000 }, async () => {
     const result = await bundleFunction({
       source: trim`
         //
@@ -102,6 +102,6 @@ describe('Bundler', () => {
       `,
     });
     assert(!('error' in result), 'error should not exist');
-    expect(result.asset).toBeDefined();
+    expect(Object.keys(result.assets)).toBeGreaterThan(1);
   });
 });

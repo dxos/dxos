@@ -52,7 +52,8 @@
     }
   },
   "files": [
-    "dist",
+    "dist/lib",
+    "dist/types",
     "schema",
     "src"
   ],
