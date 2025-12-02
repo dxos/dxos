@@ -4,10 +4,11 @@
 
 import { useControllableState } from '@radix-ui/react-use-controllable-state';
 import type * as Schema from 'effect/Schema';
+import type * as SchemaAST from 'effect/SchemaAST';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { type AnyProperties, getValue as getValue$, setValue as setValue$ } from '@dxos/echo/internal';
-import { type JsonPath, type SimpleType, createJsonPath, fromEffectValidationPath } from '@dxos/effect';
+import { type JsonPath, createJsonPath, fromEffectValidationPath } from '@dxos/effect';
 import { log } from '@dxos/log';
 import { useDefaultValue } from '@dxos/react-ui';
 import { type ValidationError, validateSchema } from '@dxos/schema';
@@ -107,7 +108,7 @@ export type FormHandler<T extends AnyProperties> = Pick<FormHandlerProps<T>, 'sc
   getStatus: (path: string | (string | number)[]) => FormFieldStatus;
   getValue: <V>(path: (string | number)[]) => V | undefined;
   onBlur: (path: (string | number)[]) => void;
-  onValueChange: <V>(path: (string | number)[], type: SimpleType, value: V) => void;
+  onValueChange: <V>(path: (string | number)[], ast: SchemaAST.AST, value: V) => void;
 };
 
 /**
@@ -242,20 +243,20 @@ export const useFormHandler = <T extends AnyProperties>({
   );
 
   const getValue = useCallback<FormHandler<T>['getValue']>(
-    <V>(path: (string | number)[]): V | undefined => {
+    (path) => {
       return getValue$(values, createJsonPath(path));
     },
     [values],
   );
 
   const onValueChange = useCallback<FormHandler<T>['onValueChange']>(
-    (path: (string | number)[], type: SimpleType, value: any) => {
-      log('onValueChange', { path, type, value });
+    (path, ast, value) => {
+      log.info('onValueChange', { path, value });
 
       const jsonPath = createJsonPath(path);
-      let parsedValue = value;
+      let parsedValue = value as any;
       try {
-        if (type === 'number') {
+        if (ast._tag === 'NumberKeyword') {
           parsedValue = parseFloat(value as string) || 0;
         }
       } catch (err) {

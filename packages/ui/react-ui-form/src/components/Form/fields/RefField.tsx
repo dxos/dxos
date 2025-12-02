@@ -103,7 +103,7 @@ export const RefField = (props: RefFieldProps) => {
   const handleUpdate = useCallback(
     (ids: string[]) => {
       if (ids.length === 0) {
-        onValueChange('object', undefined);
+        onValueChange(ast, undefined);
         return;
       }
 
@@ -119,9 +119,9 @@ export const RefField = (props: RefFieldProps) => {
         .filter(isNonNullable);
 
       if (array) {
-        onValueChange('object', refs);
+        onValueChange(ast, refs);
       } else {
-        onValueChange('object', refs[0]);
+        onValueChange(ast, refs[0]);
       }
     },
     [options, array, onValueChange],
@@ -213,7 +213,7 @@ export const RefField = (props: RefFieldProps) => {
 };
 
 const RefFieldFallback = ({
-  type,
+  ast,
   label,
   readonly,
   layout,
@@ -225,11 +225,11 @@ const RefFieldFallback = ({
   const handleOnValueChange = (_type: any, dxnString: string) => {
     const dxn = DXN.tryParse(dxnString);
     if (dxn) {
-      onValueChange?.('object', Ref.fromDXN(dxn));
+      onValueChange?.(ast, Ref.fromDXN(dxn));
     } else if (dxnString === '') {
-      onValueChange?.('object', undefined);
+      onValueChange?.(ast, undefined);
     } else {
-      onValueChange?.('string', dxnString);
+      onValueChange?.(ast, dxnString);
     }
   };
 
@@ -247,7 +247,7 @@ const RefFieldFallback = ({
 
   return (
     <TextField
-      type={type}
+      ast={ast}
       readonly={readonly}
       label={label}
       placeholder={placeholder}

@@ -2,14 +2,14 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { useCallback, useEffect, useRef } from 'react';
+import React, { type ChangeEvent, useCallback, useEffect, useRef } from 'react';
 
 import { Input } from '@dxos/react-ui';
 
 import { type FormFieldComponentProps, FormFieldLabel } from '../FormFieldComponent';
 
 export const MarkdownField = ({
-  type,
+  ast,
   readonly,
   label,
   placeholder,
@@ -43,6 +43,11 @@ export const MarkdownField = ({
     adjustHeight();
   }, [getValue(), adjustHeight]);
 
+  const handleChange = useCallback(
+    (event: ChangeEvent<HTMLTextAreaElement>) => onValueChange(ast, event.target.value),
+    [ast, onValueChange],
+  );
+
   const value = getValue();
   if ((readonly || layout === 'static') && !value) {
     return null;
@@ -61,7 +66,7 @@ export const MarkdownField = ({
           placeholder={placeholder}
           value={value ?? ''}
           classNames={'min-bs-auto max-bs-40 overflow-auto'}
-          onChange={(event) => onValueChange(type, event.target.value)}
+          onChange={handleChange}
           onBlur={onBlur}
           style={{ resize: 'none' }}
           spellCheck={false}

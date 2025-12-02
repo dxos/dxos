@@ -3,7 +3,7 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React from 'react';
+import React, { type ChangeEvent, useCallback } from 'react';
 
 import { Input } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
@@ -11,13 +11,18 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { type FormFieldComponentProps, FormFieldWrapper } from './FormFieldComponent';
 
 const Component = ({
-  type,
+  ast,
   placeholder,
   readonly,
   onBlur,
   onValueChange,
   ...props
 }: FormFieldComponentProps<string>) => {
+  const handleChange = useCallback(
+    (event: ChangeEvent<HTMLInputElement>) => onValueChange(ast, event.target.value),
+    [ast, onValueChange],
+  );
+
   return (
     <div className='plb-cardSpacingBlock pli-cardSpacingInline'>
       <FormFieldWrapper<string> {...props}>
@@ -27,7 +32,7 @@ const Component = ({
             placeholder={placeholder}
             noAutoFill
             value={value}
-            onChange={(event) => onValueChange(type, event.target.value)}
+            onChange={handleChange}
             onBlur={onBlur}
           />
         )}

@@ -47,9 +47,9 @@ export const SpecSelector = (props: SpecSelectorProps) => {
       }
 
       // Update the entire spec object, not just the `spec.kind`.
-      specProps.onValueChange('object', defaultSpec);
+      specProps.onValueChange(props.ast, defaultSpec);
     },
-    [specProps],
+    [props.ast, specProps],
   );
 
   const options = useMemo(

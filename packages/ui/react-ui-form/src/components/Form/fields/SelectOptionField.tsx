@@ -15,7 +15,7 @@ import { translationKey } from '../../../translations';
 import { type FormFieldComponentProps, FormFieldLabel } from '../FormFieldComponent';
 
 export const SelectOptionField = ({
-  type,
+  ast,
   readonly,
   label,
   getStatus,
@@ -32,9 +32,9 @@ export const SelectOptionField = ({
   // Initialization.
   useEffect(() => {
     if (options === undefined) {
-      onValueChange(type, []);
+      onValueChange(ast, []);
     }
-  }, [options, onValueChange, type]);
+  }, [options, ast, onValueChange]);
 
   const randomHue = () => {
     const usedHues = new Set(options?.map((option) => option.color) ?? []);
@@ -55,18 +55,18 @@ export const SelectOptionField = ({
   const handleAdd = useCallback(() => {
     const newId = PublicKey.random().truncate();
     const newOption = { id: newId, title: '', color: randomHue() };
-    onValueChange(type, [...(options ?? []), newOption]);
+    onValueChange(ast, [...(options ?? []), newOption]);
     setSelectedId(newId);
     setIsNewOption(true);
-  }, [options, type, onValueChange]);
+  }, [options, ast, onValueChange]);
 
   const handleDelete = useCallback(
     (id: string) => {
       const newOptions = options?.filter((option) => option.id !== id) ?? [];
-      onValueChange(type, newOptions);
+      onValueChange(ast, newOptions);
       setSelectedId(null);
     },
-    [options, type, onValueChange],
+    [options, ast, onValueChange],
   );
 
   const handleMove = useCallback(
@@ -78,9 +78,9 @@ export const SelectOptionField = ({
       const newOptions = [...options];
       const [removed] = newOptions.splice(from, 1);
       newOptions.splice(to, 0, removed);
-      onValueChange(type, newOptions);
+      onValueChange(ast, newOptions);
     },
-    [options, type, onValueChange],
+    [options, ast, onValueChange],
   );
 
   const handleClick = useCallback((id: string) => {
@@ -90,9 +90,9 @@ export const SelectOptionField = ({
   const handleTitleChange = useCallback(
     (id: string) => (e: ChangeEvent<HTMLInputElement>) => {
       const newOptions = options?.map((o) => (o.id === id ? { ...o, title: e.target.value } : o));
-      onValueChange(type, newOptions ?? []);
+      onValueChange(ast, newOptions ?? []);
     },
-    [options, type, onValueChange],
+    [options, ast, onValueChange],
   );
 
   const handleKeyDown = useCallback((ev: KeyboardEvent<HTMLInputElement>) => {
@@ -104,9 +104,9 @@ export const SelectOptionField = ({
   const handleColorChange = useCallback(
     (id: string) => (hue: string) => {
       const newOptions = options?.map((o) => (o.id === id ? { ...o, color: hue } : o));
-      onValueChange(type, newOptions ?? []);
+      onValueChange(ast, newOptions ?? []);
     },
-    [options, type, onValueChange],
+    [options, ast, onValueChange],
   );
 
   useEffect(() => {

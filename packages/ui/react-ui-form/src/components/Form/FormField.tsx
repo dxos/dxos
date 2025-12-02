@@ -104,7 +104,6 @@ export const FormField = <T extends AnyProperties>({
   const fieldState = useFormFieldState(FormField.displayName, path);
   const fieldProps: FormFieldComponentProps = {
     ast,
-    type,
     format,
     readonly,
     label,

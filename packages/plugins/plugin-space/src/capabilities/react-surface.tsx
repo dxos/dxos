@@ -207,9 +207,9 @@ export default ({ createInvitationUrl }: ReactSurfaceOptions) =>
         return !!annotation;
       },
       component: ({ data: _, ...inputProps }) => {
-        const { label, readonly, type, getValue, onValueChange } = inputProps as any as FormFieldComponentProps;
-        const handleChange = useCallback((nextHue: string) => onValueChange(type, nextHue), [onValueChange]);
-        const handleReset = useCallback(() => onValueChange(type, undefined), [onValueChange]);
+        const { label, readonly, ast, getValue, onValueChange } = inputProps as any as FormFieldComponentProps;
+        const handleChange = useCallback((nextHue: string) => onValueChange(ast, nextHue), [onValueChange]);
+        const handleReset = useCallback(() => onValueChange(ast, undefined), [onValueChange]);
         return (
           <Input.Root>
             <Input.Label>{label}</Input.Label>
@@ -226,9 +226,9 @@ export default ({ createInvitationUrl }: ReactSurfaceOptions) =>
         return !!annotation;
       },
       component: ({ data: _, ...inputProps }) => {
-        const { label, readonly, type, getValue, onValueChange } = inputProps as any as FormFieldComponentProps;
-        const handleChange = useCallback((nextIcon: string) => onValueChange(type, nextIcon), [onValueChange]);
-        const handleReset = useCallback(() => onValueChange(type, undefined), [onValueChange]);
+        const { label, readonly, ast, getValue, onValueChange } = inputProps as any as FormFieldComponentProps;
+        const handleChange = useCallback((nextIcon: string) => onValueChange(ast, nextIcon), [onValueChange]);
+        const handleReset = useCallback(() => onValueChange(ast, undefined), [onValueChange]);
         return (
           <Input.Root>
             <Input.Label>{label}</Input.Label>

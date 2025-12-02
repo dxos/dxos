@@ -86,10 +86,10 @@ export const ProfileContainer = () => {
   // TODO(wittjosiah): Integrate descriptions with the form schema.
   const fieldMap = useMemo<FormFieldMap>(
     () => ({
-      displayName: ({ type, label, getValue, onValueChange }) => {
+      displayName: ({ ast, label, getValue, onValueChange }) => {
         const handleChange = useCallback(
-          ({ target: { value } }: ChangeEvent<HTMLInputElement>) => onValueChange(type, value),
-          [onValueChange, type],
+          ({ target: { value } }: ChangeEvent<HTMLInputElement>) => onValueChange(ast, value),
+          [onValueChange, ast],
         );
 
         return (
@@ -103,11 +103,11 @@ export const ProfileContainer = () => {
           </ControlItemInput>
         );
       },
-      emoji: ({ type, label, getValue, onValueChange }) => {
-        const handleChange = useCallback((nextEmoji: string) => onValueChange(type, nextEmoji), [onValueChange, type]);
+      emoji: ({ ast, label, getValue, onValueChange }) => {
+        const handleChange = useCallback((nextEmoji: string) => onValueChange(ast, nextEmoji), [onValueChange, ast]);
         const handleEmojiReset = useCallback(
-          () => onValueChange(type, getDefaultEmojiValue(identity)),
-          [onValueChange, type],
+          () => onValueChange(ast, getDefaultEmojiValue(identity)),
+          [onValueChange, ast],
         );
 
         return (
@@ -122,11 +122,11 @@ export const ProfileContainer = () => {
           </ControlItem>
         );
       },
-      hue: ({ type, label, getValue, onValueChange }) => {
-        const handleChange = useCallback((nextHue: string) => onValueChange(type, nextHue), [onValueChange, type]);
+      hue: ({ ast, label, getValue, onValueChange }) => {
+        const handleChange = useCallback((nextHue: string) => onValueChange(ast, nextHue), [onValueChange, ast]);
         const handleHueReset = useCallback(
-          () => onValueChange(type, getDefaultHueValue(identity)),
-          [onValueChange, type],
+          () => onValueChange(ast, getDefaultHueValue(identity)),
+          [onValueChange, ast],
         );
 
         return (

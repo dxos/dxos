@@ -2,6 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
+import type * as SchemaAST from 'effect/SchemaAST';
 import React, { useCallback, useMemo } from 'react';
 
 import { Ref, Type } from '@dxos/echo';
@@ -19,11 +20,13 @@ import {
 import { meta } from '../../meta';
 
 export type FunctionInputEditorProps = {
+  ast: SchemaAST.AST;
   functions: Function.Function[];
   onQueryRefOptions: QueryRefOptions;
 } & FormFieldStateProps;
 
 export const FunctionInputEditor = ({
+  ast,
   functions,
   getValue,
   onValueChange,
@@ -53,7 +56,7 @@ export const FunctionInputEditor = ({
       return prevValue.dxn.toString() !== selectedFunctionValue.dxn.toString();
     },
     (currValue) => currValue !== undefined,
-    () => onValueChange('object', {}),
+    () => onValueChange(ast, {}),
   );
 
   const inputSchema = useMemo(() => selectedFunction?.inputSchema, [selectedFunction]);
@@ -63,9 +66,9 @@ export const FunctionInputEditor = ({
 
   const handleValuesChanged = useCallback<NonNullable<NewFormRootProps['onValuesChanged']>>(
     (values) => {
-      onValueChange('object', values);
+      onValueChange(ast, values);
     },
-    [onValueChange],
+    [ast, onValueChange],
   );
 
   if (selectedFunction === undefined || effectSchema === undefined || propertyCount === 0) {

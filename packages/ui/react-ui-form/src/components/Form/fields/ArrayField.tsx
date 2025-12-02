@@ -58,13 +58,13 @@ export const ArrayField = <T extends AnyProperties>({
     type === 'object' && elementType ? getDefaultObjectValue(elementType) : SimpleType.getDefaultValue(type);
 
   const handleAdd = useCallback(() => {
-    onValueChange(type, [...values, getDefaultValue()]);
+    onValueChange(ast, [...values, getDefaultValue()]);
   }, [onValueChange, type, values]);
 
   const handleDelete = useCallback(
     (idx: number) => {
       onValueChange(
-        type,
+        ast,
         values.filter((_, i) => i !== idx),
       );
     },

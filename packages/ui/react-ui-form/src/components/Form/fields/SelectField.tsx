@@ -13,7 +13,7 @@ export type SelectFieldOptions = FormFieldComponentProps & {
 };
 
 export const SelectField = ({
-  type,
+  ast,
   readonly,
   label,
   layout,
@@ -26,7 +26,7 @@ export const SelectField = ({
   const { status, error } = getStatus();
   const value = getValue() as string | undefined;
 
-  const handleValueChange = useCallback((value: string | number) => onValueChange(type, value), [type, onValueChange]);
+  const handleValueChange = useCallback((value: string | number) => onValueChange(ast, value), [ast, onValueChange]);
 
   if ((readonly || layout === 'static') && value == null) {
     return null;

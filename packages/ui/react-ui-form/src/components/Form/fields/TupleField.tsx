@@ -14,7 +14,7 @@ const gridCols = ['grid-cols-1', 'grid-cols-2', 'grid-cols-3', 'grid-cols-4'];
 
 export const TupleField = ({
   binding,
-  type,
+  ast,
   readonly,
   label,
   getStatus,
@@ -40,7 +40,7 @@ export const TupleField = ({
             disabled={!!readonly}
             value={values[prop]}
             onChange={(event) =>
-              onValueChange(type, {
+              onValueChange(ast, {
                 ...values,
                 [prop]: safeParseFloat(event.target.value, 0),
               })

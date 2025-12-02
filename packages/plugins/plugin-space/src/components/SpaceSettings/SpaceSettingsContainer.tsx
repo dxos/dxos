@@ -104,10 +104,10 @@ export const SpaceSettingsContainer = ({ space }: SpaceSettingsContainerProps) =
 
   const fieldMap = useMemo<FormFieldMap>(
     () => ({
-      name: ({ type, label, getValue, onValueChange }) => {
+      name: ({ ast, label, getValue, onValueChange }) => {
         const handleChange = useCallback(
-          ({ target: { value } }: ChangeEvent<HTMLInputElement>) => onValueChange(type, value),
-          [onValueChange, type],
+          ({ target: { value } }: ChangeEvent<HTMLInputElement>) => onValueChange(ast, value),
+          [onValueChange, ast],
         );
         return (
           <ControlItemInput title={label} description={t('display name description')}>
@@ -120,9 +120,9 @@ export const SpaceSettingsContainer = ({ space }: SpaceSettingsContainerProps) =
           </ControlItemInput>
         );
       },
-      icon: ({ type, label, getValue, onValueChange }) => {
-        const handleChange = useCallback((icon: string) => onValueChange(type, icon), [onValueChange, type]);
-        const handleReset = useCallback(() => onValueChange(type, undefined), [onValueChange, type]);
+      icon: ({ ast, label, getValue, onValueChange }) => {
+        const handleChange = useCallback((icon: string) => onValueChange(ast, icon), [onValueChange, ast]);
+        const handleReset = useCallback(() => onValueChange(ast, undefined), [onValueChange, ast]);
         return (
           <ControlItem title={label} description={t('icon description')}>
             <IconPicker
@@ -134,25 +134,25 @@ export const SpaceSettingsContainer = ({ space }: SpaceSettingsContainerProps) =
           </ControlItem>
         );
       },
-      hue: ({ type, label, getValue, onValueChange }) => {
-        const handleChange = useCallback((nextHue: string) => onValueChange(type, nextHue), [onValueChange, type]);
-        const handleReset = useCallback(() => onValueChange(type, undefined), [onValueChange, type]);
+      hue: ({ ast, label, getValue, onValueChange }) => {
+        const handleChange = useCallback((nextHue: string) => onValueChange(ast, nextHue), [onValueChange, ast]);
+        const handleReset = useCallback(() => onValueChange(ast, undefined), [onValueChange, ast]);
         return (
           <ControlItem title={label} description={t('hue description')}>
             <HuePicker value={getValue()} onChange={handleChange} onReset={handleReset} classNames='justify-self-end' />
           </ControlItem>
         );
       },
-      edgeReplication: ({ type, label, getValue, onValueChange }) => {
-        const handleChange = useCallback((checked: boolean) => onValueChange(type, checked), [onValueChange, type]);
+      edgeReplication: ({ ast, label, getValue, onValueChange }) => {
+        const handleChange = useCallback((checked: boolean) => onValueChange(ast, checked), [onValueChange, ast]);
         return (
           <ControlItemInput title={label} description={t('edge replication description')}>
             <Input.Switch checked={getValue()} onCheckedChange={handleChange} classNames='justify-self-end' />
           </ControlItemInput>
         );
       },
-      archived: ({ type, label, getValue, onValueChange }) => {
-        const handleChange = useCallback(() => onValueChange(type, !getValue()), [onValueChange, type, getValue]);
+      archived: ({ ast, label, getValue, onValueChange }) => {
+        const handleChange = useCallback(() => onValueChange(ast, !getValue()), [onValueChange, ast, getValue]);
         return (
           <ControlItemInput title={label} description={t('archive space description')}>
             <Button

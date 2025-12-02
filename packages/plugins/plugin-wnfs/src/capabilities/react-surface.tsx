@@ -32,11 +32,11 @@ export default () =>
         );
         return !!annotation;
       },
-      component: ({ data: { prop, schema }, ...props }) => {
+      component: ({ data: { schema }, ...props }) => {
         const inputProps = props as unknown as FormFieldComponentProps;
         const handleChange = useCallback(
-          (file: File) => inputProps.onValueChange?.('object', file),
-          [prop, inputProps.onValueChange],
+          (file: File) => inputProps.onValueChange?.(inputProps.ast, file),
+          [inputProps.ast, inputProps.onValueChange],
         );
 
         return <FileInput schema={schema} onChange={handleChange} />;

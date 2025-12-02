@@ -14,7 +14,6 @@ import React, {
 } from 'react';
 
 import { type Format } from '@dxos/echo/internal';
-import { type SimpleType } from '@dxos/effect';
 import { Icon, Input, Tooltip } from '@dxos/react-ui';
 import { labelSpacing } from '@dxos/react-ui-stack';
 import { errorText, mx } from '@dxos/react-ui-theme';
@@ -28,7 +27,7 @@ export type FormFieldStateProps<T = any> = {
   getStatus: () => FormFieldStatus;
   getValue: () => T | undefined;
   onBlur: (event: FocusEvent<HTMLElement>) => void;
-  onValueChange: (type: SimpleType, value: T) => void;
+  onValueChange: (ast: SchemaAST.AST, value: T) => void;
 };
 
 /**
@@ -47,7 +46,6 @@ export type Presentation = 'full' | 'compact' | 'inline' | 'static';
  */
 export type FormFieldComponentProps<T = any> = {
   ast: SchemaAST.AST;
-  type: SimpleType;
   format?: Format.TypeFormat;
   readonly?: boolean;
   label: string;
