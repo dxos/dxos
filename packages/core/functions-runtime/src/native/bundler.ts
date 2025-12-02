@@ -75,8 +75,10 @@ export const bundleFunction = async (options: BundleOptions): Promise<BundleResu
               export default {
                 fetch: async (...args) => {
                   const { wrapFunctionHandler } = await import('@dxos/functions');
-                  const { wrapHandlerForCloudflare } = await import('@dxos/functions-runtime-cloudflare');
+                  const { wrapHandlerForCloudflare, setupFunctionsLogger } = await import('@dxos/functions-runtime-cloudflare');
                   const { default: handler } = await import('${options.entryPoint}');
+
+                  setupFunctionsLogger();
 
                   //
                   // Wrapper to make the function cloudflare-compatible.
