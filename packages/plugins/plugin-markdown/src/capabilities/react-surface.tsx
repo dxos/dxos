@@ -59,7 +59,7 @@ export default () =>
       role: SurfaceCardRole.literals as any,
       filter: (data): data is { subject: Markdown.Document | Text.Text } =>
         Obj.instanceOf(Markdown.Document, data.subject) || Obj.instanceOf(Text.Text, data.subject),
-      component: ({ data, role }) => <MarkdownCard {...data} role={role as SurfaceCardRole} />,
+      component: ({ ref, data, role }) => <MarkdownCard {...data} role={role as SurfaceCardRole} ref={ref} />,
     }),
   ]);
 
@@ -67,7 +67,7 @@ export default () =>
  * Common wrapper.
  */
 // TOOD(burdon): Use common type def.
-const Container = forwardRef<HTMLElement, { id: string; subject: MarkdownContainerProps['object']; role: string }>(
+const Container = forwardRef<HTMLDivElement, { id: string; subject: MarkdownContainerProps['object']; role: string }>(
   ({ id, subject, role }, forwardedRef) => {
     const selectionManager = useCapability(AttentionCapabilities.Selection);
     const settingsStore = useCapability(Capabilities.SettingsStore);
@@ -81,7 +81,6 @@ const Container = forwardRef<HTMLElement, { id: string; subject: MarkdownContain
 
     return (
       <MarkdownContainer
-        ref={forwardedRef}
         id={id}
         object={subject}
         role={role}
@@ -91,6 +90,7 @@ const Container = forwardRef<HTMLElement, { id: string; subject: MarkdownContain
         editorStateStore={editorState}
         viewMode={viewMode}
         onViewModeChange={handleViewModeChange}
+        ref={forwardedRef}
       />
     );
   },

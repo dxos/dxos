@@ -82,7 +82,7 @@ export const MarkdownContainer = forwardRef<HTMLDivElement, MarkdownContainerPro
     const handleLinkQuery = useLinkQuery(space);
 
     return (
-      <StackItem.Content ref={forwardedRef} toolbar={settings.toolbar}>
+      <StackItem.Content toolbar={settings.toolbar} ref={forwardedRef}>
         <MarkdownEditor.Root
           id={attendableId ?? id}
           object={object}

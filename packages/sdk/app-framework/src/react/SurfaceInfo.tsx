@@ -18,7 +18,6 @@ export const SurfaceInfo = forwardRef<HTMLElement, SurfaceInfoProps>(({ children
   const [rect, setRect] = useState<DOMRect | null>(null);
   const [expand, setExpand] = useState(false); // TOOD(burdon): Save state.
   const info = useSurface();
-  const padding = 8;
 
   const [root, setRoot] = useState<HTMLElement | null>(null);
   const measureRef = useCallback((node: HTMLElement | null) => setRoot(node), []);
@@ -52,7 +51,7 @@ export const SurfaceInfo = forwardRef<HTMLElement, SurfaceInfoProps>(({ children
     return null;
   }
 
-  // TODO(burdon): Scrolling won't work with pointer-events-none.
+  const padding = 0;
   return (
     <div className='contents'>
       {childWithRef}
@@ -60,7 +59,7 @@ export const SurfaceInfo = forwardRef<HTMLElement, SurfaceInfoProps>(({ children
         createPortal(
           <div
             role='none'
-            className={['z-10 fixed overflow-auto', 'pointer-events-none'].filter(Boolean).join(' ')}
+            className='z-20 fixed flex flex-col-reverse scrollbar-none overflow-auto pointer-events-none'
             style={{
               top: rect.top + padding,
               left: rect.left + padding,
@@ -68,18 +67,24 @@ export const SurfaceInfo = forwardRef<HTMLElement, SurfaceInfoProps>(({ children
               height: rect.height - padding * 2,
             }}
           >
-            {/* TODO(burdon): Replace with JsonFilter when extracted into separate react package. */}
-            <pre
-              onClick={() => setExpand((expand) => !expand)}
-              className={[
-                'p-1 bg-deckSurface text-xs font-mono font-thin border border-rose-500 cursor-pointer',
-                !expand && 'inline-block',
-              ]
-                .filter(Boolean)
-                .join(' ')}
-            >
-              {expand ? JSON.stringify({ info }, null, 2) : info.id}
-            </pre>
+            {expand ? (
+              <div
+                className='absolute inset-0 bg-deckSurface border border-rose-500 cursor-pointer pointer-events-auto overflow-auto'
+                onClick={() => setExpand(false)}
+              >
+                <pre className='p-2 text-xs text-description font-mono font-thin'>
+                  {JSON.stringify({ info }, null, 2)}
+                </pre>
+              </div>
+            ) : (
+              <span
+                className='absolute left-1 bottom-0 flex items-center p-1 text-rose-500 opacity-80 hover:opacity-100 text-xl cursor-pointer pointer-events-auto'
+                title={info.id}
+                onClick={() => setExpand(true)}
+              >
+                ⓘ
+              </span>
+            )}
           </div>,
           // TODO(burdon): Create well-known element for all debug portals.
           document.body,
