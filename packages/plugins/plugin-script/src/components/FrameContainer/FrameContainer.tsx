@@ -49,7 +49,9 @@ export const FrameContainer = ({ containerUrl, result, debug = true }: FrameCont
   invariant(result.sourceHash, 'Source hash is required.');
   const sourceHash = Buffer.from(result.sourceHash).toString('hex');
   const src =
-    'bundle' in result ? `${containerUrl}?ts=${sourceHash}#code=${encodeURIComponent(result.bundle)}` : undefined;
+    'bundle' in result
+      ? `${containerUrl}?ts=${sourceHash}#code=${encodeURIComponent(new TextDecoder().decode(Object.values(result.bundle as any)[0] as Uint8Array))}`
+      : undefined;
 
   return (
     <>
