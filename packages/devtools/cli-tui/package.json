@@ -25,10 +25,14 @@
   "dependencies": {
     "@dxos/cli-base": "workspace:*",
     "@dxos/client": "workspace:*",
-    "blessed": "^0.1.81"
+    "blessed": "^0.1.81",
+    "jsdom": "^27.0.0",
+    "node-fetch": "^2.6.0"
   },
   "devDependencies": {
     "@types/blessed": "^0.1.26",
+    "@types/jsdom": "^21.1.7",
+    "@types/node-fetch": "^2.5.10",
     "typescript": "^5.9.3"
   },
   "engines": {

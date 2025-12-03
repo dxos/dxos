@@ -2,16 +2,21 @@
 // Copyright 2025 DXOS.org
 //
 
+import blessed from 'blessed';
+
+import { checkOllamaServer, streamOllamaResponse } from '../util';
+
 /**
- * DXOS CLI TUI - Terminal User Interface
+ * DXOS CLI TUI - Terminal User Interface.
  * Built with blessed for zero-flicker performance.
  */
 
-// Suppress stderr to hide terminfo warnings - MUST be before importing blessed
+// Suppress stderr to hide terminfo warnings; MUST be before importing blessed.
 const originalStderrWrite = process.stderr.write.bind(process.stderr);
+
 process.stderr.write = (chunk: any, ...args: any[]): boolean => {
   const str = chunk.toString();
-  // Filter out blessed terminfo warnings (they're harmless but annoying)
+  // Filter out blessed terminfo warnings.
   if (
     str.includes('Error on xterm') ||
     str.includes('Setulc') ||
@@ -23,10 +28,6 @@ process.stderr.write = (chunk: any, ...args: any[]): boolean => {
   return originalStderrWrite(chunk, ...args);
 };
 
-import blessed from 'blessed';
-
-import { checkOllamaServer, streamOllamaResponse } from '../util/ollama.js';
-
 // Create screen with smart CSR (cursor save/restore) - prevents flickering!
 // @ts-ignore - blessed types are incomplete
 const screen = blessed.screen({
@@ -34,18 +35,18 @@ const screen = blessed.screen({
   fullUnicode: true,
   title: 'DXOS CLI',
   warnings: false,
-  // Try to prevent terminal shortcuts from affecting our screen
+  // Try to prevent terminal shortcuts from affecting our screen.
   forceUnicode: true,
   resizeTimeout: 300,
 });
 
-// Message storage
+// Message storage.
 const messages: string[] = [];
 
-// Track if we're currently streaming
+// Track if we're currently streaming.
 let isStreaming = false;
 
-// Fixed header at top
+// Fixed header at top.
 const header = blessed.box({
   top: 0,
   left: 0,
@@ -61,7 +62,7 @@ const header = blessed.box({
   },
 });
 
-// Scrollable message box in middle
+// Scrollable message box in middle.
 const messageBox = blessed.box({
   top: 3,
   left: 0,
@@ -69,7 +70,7 @@ const messageBox = blessed.box({
   bottom: 5,
   scrollable: true,
   alwaysScroll: true,
-  tags: true, // Enable tag rendering for colors
+  tags: true, // Enable tag rendering for colors.
   scrollbar: {
     ch: '█',
     style: {
@@ -87,7 +88,7 @@ const messageBox = blessed.box({
   },
 });
 
-// Show last N messages (scroll to bottom)
+// Show last N messages (scroll to bottom).
 const updateMessages = () => {
   const content = messages.join('\n');
   messageBox.setContent(content);
@@ -96,7 +97,7 @@ const updateMessages = () => {
   screen.render();
 };
 
-// Throttled update for streaming (max 20 updates/sec)
+// Throttled update for streaming (max 20 updates/sec).
 let updateTimeout: NodeJS.Timeout | null = null;
 const throttledUpdate = () => {
   if (updateTimeout) return;
@@ -106,14 +107,14 @@ const throttledUpdate = () => {
   }, 50);
 };
 
-// Fixed input box at bottom
+// Fixed input box at bottom.
 const inputBox = blessed.textarea({
   bottom: 0,
   left: 0,
   right: 0,
   height: 5,
   inputOnFocus: true,
-  keys: true, // Enable key handling
+  keys: true, // Enable key handling.
   mouse: true,
   border: 'line' as any,
   style: {
@@ -130,7 +131,7 @@ const inputBox = blessed.textarea({
   tags: true,
 });
 
-// Handle Enter key to submit (textarea normally uses Enter for newlines)
+// Handle Enter key to submit (textarea normally uses Enter for newlines).
 inputBox.key(['enter'], function (this: any) {
   const value = this.getValue();
   const prompt = value.trim();
@@ -138,32 +139,32 @@ inputBox.key(['enter'], function (this: any) {
     return false;
   }
 
-  // Trigger submit handler
+  // Trigger submit handler.
   this.emit('submit', value);
   return false;
 });
 
-// Allow Shift+Enter for multi-line input (insert newline)
+// Allow Shift+Enter for multi-line input (insert newline).
 inputBox.key(['S-enter'], function (this: any) {
   // Insert newline at cursor position
   this.insertText('\n');
   return false;
 });
 
-// Handle input submission
+// Handle input submission.
 inputBox.on('submit', async (value) => {
   const prompt = value.trim();
   if (!prompt || isStreaming) return;
 
-  // Add user message
+  // Add user message.
   messages.push(`{cyan-fg}User:{/} ${prompt}`);
   updateMessages();
 
-  // Clear input
+  // Clear input.
   inputBox.clearValue();
   inputBox.focus();
 
-  // Start streaming assistant response
+  // Start streaming assistant response.
   isStreaming = true;
   messages.push('{green-fg}Assistant:{/} ');
   const assistantMessageIndex = messages.length - 1;
@@ -172,7 +173,7 @@ inputBox.on('submit', async (value) => {
     await streamOllamaResponse(
       prompt,
       (chunk) => {
-        // Append chunk to last message
+        // Append chunk to last message.
         messages[assistantMessageIndex] += chunk;
         throttledUpdate();
       },
@@ -181,15 +182,15 @@ inputBox.on('submit', async (value) => {
       },
     );
 
-    // Final update after streaming completes
+    // Final update after streaming completes.
     updateMessages();
-    // Add blank line after assistant response
+    // Add blank line after assistant response.
     messages.push('');
     updateMessages();
   } catch (error) {
     messages[assistantMessageIndex] = `{red-fg}Error:{/} ${error instanceof Error ? error.message : String(error)}`;
     updateMessages();
-    // Add blank line after error
+    // Add blank line after error.
     messages.push('');
     updateMessages();
   } finally {
@@ -197,8 +198,8 @@ inputBox.on('submit', async (value) => {
   }
 });
 
-// Input box cursor navigation (Emacs-style)
-// Note: textarea has built-in Ctrl+A and Ctrl+E support, but we ensure they work
+// Input box cursor navigation (Emacs-style).
+// Note: textarea has built-in Ctrl+A and Ctrl+E support, but we ensure they work.
 inputBox.key(['home', 'C-a'], function (this: any) {
   // Move to start of line
   if (this._cline !== undefined) {
@@ -208,14 +209,14 @@ inputBox.key(['home', 'C-a'], function (this: any) {
 });
 
 inputBox.key(['end', 'C-e'], function (this: any) {
-  // Move to end of line
+  // Move to end of line.
   if (this._cline !== undefined && this._cline.line) {
     this._cline.ci = this._cline.line.length;
   }
   screen.render();
 });
 
-// Handle Page Up/Down for scrolling
+// Handle Page Up/Down for scrolling.
 messageBox.key(['pageup'], () => {
   messageBox.scroll(-5);
   screen.render();
@@ -226,7 +227,7 @@ messageBox.key(['pagedown'], () => {
   screen.render();
 });
 
-// Focus handling
+// Focus handling.
 screen.key(['tab'], () => {
   if (screen.focused === inputBox) {
     messageBox.focus();
@@ -237,27 +238,27 @@ screen.key(['tab'], () => {
 });
 
 // Prevent Ctrl+K from clearing the screen (Note: Command+K on macOS is a terminal-level
-// shortcut that cannot be intercepted, but the screen will restore on any interaction)
+// shortcut that cannot be intercepted, but the screen will restore on any interaction).
 screen.key(['C-k'], () => {
-  // Do nothing - prevent default clear screen behavior
+  // Do nothing - prevent default clear screen behavior.
   return false;
 });
 
 inputBox.key(['C-k'], () => {
-  // Do nothing - prevent default clear screen behavior
+  // Do nothing - prevent default clear screen behavior.
   return false;
 });
 
-// Add Ctrl+R to manually refresh/redraw the screen (helps recover from Cmd+K clears)
+// Add Ctrl+R to manually refresh/redraw the screen (helps recover from Cmd+K clears).
 const forceRefresh = () => {
-  // Force a complete redraw by clearing and re-rendering all elements
+  // Force a complete redraw by clearing and re-rendering all elements.
   try {
     screen.realloc();
   } catch (e) {
-    // realloc might not work on all systems
+    // realloc might not work on all systems.
   }
 
-  // Reset all element content
+  // Reset all element content.
   header.setContent(
     '{bold}{cyan-fg}DXOS CLI - Terminal UI{/}\n' +
       '{gray-fg}Tab to switch focus • Page Up/Down to scroll • Enter to send • Ctrl+R refresh • Esc to quit{/}',
@@ -268,7 +269,7 @@ const forceRefresh = () => {
   messageBox.setContent(content);
   messageBox.scrollTo(messages.length);
 
-  // Force screen render multiple times to ensure it takes
+  // Force screen render multiple times to ensure it takes.
   screen.render();
   setImmediate(() => screen.render());
 };
@@ -283,40 +284,40 @@ inputBox.key(['C-r'], () => {
   return false;
 });
 
-// Cleanup and exit handler
+// Cleanup and exit handler.
 const exitApp = () => {
   screen.destroy();
   process.exit(0);
 };
 
-// Quit on Escape or Ctrl+C
+// Quit on Escape or Ctrl+C.
 screen.key(['escape', 'C-c'], exitApp);
 
-// Also handle Ctrl+C from input box (in case it captures it first)
+// Also handle Ctrl+C from input box (in case it captures it first).
 inputBox.key(['C-c'], exitApp);
 
 // Handle process signals
 process.on('SIGINT', exitApp);
 process.on('SIGTERM', exitApp);
 
-// Handle screen resize and refresh - this helps restore content if terminal is cleared
+// Handle screen resize and refresh - this helps restore content if terminal is cleared.
 screen.on('resize', () => {
   updateMessages();
   screen.render();
 });
 
-// Add all elements to screen
+// Add all elements to screen.
 screen.append(header);
 screen.append(messageBox);
 screen.append(inputBox);
 
-// Focus input initially
+// Focus input initially.
 inputBox.focus();
 
-// Initial render
+// Initial render.
 screen.render();
 
-// Check Ollama server and show instructions
+// Check Ollama server and show instructions.
 setTimeout(async () => {
   const ollamaAvailable = await checkOllamaServer();
 

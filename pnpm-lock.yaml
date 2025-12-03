@@ -4532,6 +4532,9 @@ importers:
       '@types/wtfnode':
         specifier: ^0.10.0
         version: 0.10.0
+      ts-node:
+        specifier: 10.9.1
+        version: 10.9.1(patch_hash=8b505128d4c01d9dc6b047b35aac1252bda23c8fbc895b5a42388b2f97112636)(@swc/core@1.13.5(@swc/helpers@0.5.17))(@swc/wasm@1.13.3)(@types/node@22.10.2)(typescript@5.9.3)
       typescript:
         specifier: ^5.9.3
         version: 5.9.3
@@ -4551,10 +4554,22 @@ importers:
       blessed:
         specifier: ^0.1.81
         version: 0.1.81
+      jsdom:
+        specifier: ^27.0.0
+        version: 27.0.0(canvas@3.2.0)(postcss@8.5.6)
+      node-fetch:
+        specifier: ^2.6.0
+        version: 2.7.0(encoding@0.1.13)
     devDependencies:
       '@types/blessed':
         specifier: ^0.1.26
         version: 0.1.26
+      '@types/jsdom':
+        specifier: ^21.1.7
+        version: 21.1.7
+      '@types/node-fetch':
+        specifier: ^2.5.10
+        version: 2.6.9
       typescript:
         specifier: ^5.9.3
         version: 5.9.3
@@ -5297,46 +5312,6 @@ importers:
       react-dom:
         specifier: ~19.2.0
         version: 19.2.0(react@19.2.0)
-
-  packages/experimental/logic:
-    dependencies:
-      '@dxos/async':
-        specifier: workspace:*
-        version: link:../../common/async
-      '@dxos/config':
-        specifier: workspace:*
-        version: link:../../sdk/config
-      '@dxos/debug':
-        specifier: workspace:*
-        version: link:../../common/debug
-      '@dxos/log':
-        specifier: workspace:*
-        version: link:../../common/log
-      '@dxos/node-std':
-        specifier: workspace:*
-        version: link:../../common/node-std
-      '@dxos/protocols':
-        specifier: workspace:*
-        version: link:../../core/protocols
-      cross-fetch:
-        specifier: ^3.1.5
-        version: 3.1.5(encoding@0.1.13)
-      jsdom:
-        specifier: ^27.0.0
-        version: 27.0.0(canvas@3.2.0)(postcss@8.5.6)
-      yargs:
-        specifier: ^17.7.2
-        version: 17.7.2
-    devDependencies:
-      '@types/jsdom':
-        specifier: ^21.1.7
-        version: 21.1.7
-      '@types/yargs':
-        specifier: ^17.0.33
-        version: 17.0.35
-      tsx:
-        specifier: ^4.21.0
-        version: 4.21.0
 
   packages/experimental/script-toolbox: {}
 
@@ -24414,9 +24389,6 @@ packages:
 
   '@types/yargs@16.0.4':
     resolution: {integrity: sha512-T8Yc9wt/5LbJyCaLiHPReJa0kApcIgJ7Bn735GjItUfh08Z1pJvu8QZqb9s+mMvKV6WUQRV7K2R46YbjMXTTJw==}
-
-  '@types/yargs@17.0.35':
-    resolution: {integrity: sha512-qUHkeCyQFxMXg79wQfTtfndEC+N9ZZg76HJftDJp+qH2tV7Gj4OJi7l+PiWwJ+pWtW8GwSmqsDj/oymhrTWXjg==}
 
   '@types/yauzl@2.10.3':
     resolution: {integrity: sha512-oJoftv0LSuaDZE3Le4DbKX+KS9G36NzOeSap90UIK0yMA/NhKJhqlSGtNDORNRaIbQfzjXDrQa0ytJ6mNRGz/Q==}
@@ -45663,10 +45635,6 @@ snapshots:
   '@types/yargs-parser@21.0.0': {}
 
   '@types/yargs@16.0.4':
-    dependencies:
-      '@types/yargs-parser': 21.0.0
-
-  '@types/yargs@17.0.35':
     dependencies:
       '@types/yargs-parser': 21.0.0
 

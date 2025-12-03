@@ -450,11 +450,6 @@
         },
         {
           "type": "json",
-          "path": "packages/experimental/logic/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
           "path": "packages/experimental/script-toolbox/package.json",
           "jsonpath": "$.version"
         },

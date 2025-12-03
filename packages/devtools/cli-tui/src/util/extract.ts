@@ -2,11 +2,13 @@
 // Copyright 2025 DXOS.org
 //
 
-import { writeFileSync } from 'node:fs';
+import { mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 
-import fetch from 'cross-fetch';
 import { JSDOM } from 'jsdom';
+import fetch from 'node-fetch';
+
+// TODO(burdon): Test util to extract structured data from wikipedia.
 
 type Fallacy = {
   name: string;
@@ -16,6 +18,7 @@ type Fallacy = {
 };
 
 const WIKIPEDIA_URL = 'https://en.wikipedia.org/wiki/List_of_fallacies';
+const FILENAME = 'fallacies.json';
 
 const cleanText = (text: string): string => {
   return text.replace(/\[.*?\]/g, '').trim();
@@ -40,62 +43,6 @@ const processTags = (rawTags: string[]): string[] => {
   });
 
   return Array.from(tagSet).sort();
-};
-
-const extractExamples = async (url: string): Promise<string[]> => {
-  try {
-    const response = await fetch(url);
-    const html = await response.text();
-    const dom = new JSDOM(html);
-    const document = dom.window.document;
-
-    const examples: string[] = [];
-    const contentDiv = document.querySelector('#mw-content-text');
-    if (!contentDiv) return examples;
-
-    // Look for an Examples section - the ID is on a span, its parent is the section container.
-    const exampleSpan =
-      document.getElementById('Examples') || document.getElementById('Example') || document.getElementById('examples');
-
-    let headingElement: Element | null = null;
-    if (exampleSpan) {
-      // The span's parent is typically the heading container (H2/DIV).
-      headingElement = exampleSpan.parentElement;
-    }
-
-    // Fallback: search all headings for "Examples" text.
-    if (!headingElement) {
-      const headings = contentDiv.querySelectorAll('h2, h3, h4');
-      for (const heading of headings) {
-        const headingText = cleanText(heading.textContent || '').toLowerCase();
-        if (headingText === 'examples' || headingText === 'example') {
-          headingElement = heading;
-          break;
-        }
-      }
-    }
-
-    if (headingElement) {
-      // Extract paragraphs after the Examples heading until the next heading.
-      let currentElement = headingElement.nextElementSibling;
-      while (currentElement && !currentElement.tagName.match(/^H[2-6]$/)) {
-        if (currentElement.tagName === 'P') {
-          const text = cleanText(currentElement.textContent || '');
-          if (text.length > 50 && text.length < 1500) {
-            // Filter reasonable-sized examples.
-            examples.push(text);
-            if (examples.length >= 3) break;
-          }
-        }
-        currentElement = currentElement.nextElementSibling;
-      }
-    }
-
-    return examples;
-  } catch (error) {
-    console.error(`Error fetching examples from ${url}:`, error);
-    return [];
-  }
 };
 
 const extractFallacies = async (): Promise<Fallacy[]> => {
@@ -163,7 +110,6 @@ const extractFallacies = async (): Promise<Fallacy[]> => {
 
   // Find all list items in the content.
   const listItems = contentDiv.querySelectorAll('ul > li');
-
   listItems.forEach((li) => {
     // Find the first link in the list item.
     const link = li.querySelector('a');
@@ -221,7 +167,9 @@ const main = async () => {
     const fallacies = await extractFallacies();
     console.log(`Extracted ${fallacies.length} fallacies`);
 
-    const outputPath = join(process.cwd(), 'logic.json');
+    const outDir = join(process.cwd(), 'out');
+    mkdirSync(outDir, { recursive: true });
+    const outputPath = join(outDir, FILENAME);
     writeFileSync(outputPath, JSON.stringify(fallacies, null, 2));
 
     console.log(`Written to ${outputPath}`);
