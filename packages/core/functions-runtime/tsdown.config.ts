@@ -37,6 +37,7 @@ export default defineConfig({
   entry: processedEntryPoints,
   outDir: 'dist/vendor',
   noExternal: () => true,
+  platform: 'browser',
   dts: {
     resolve: [
       //
