@@ -7,7 +7,7 @@ import type * as Schema from 'effect/Schema';
 import React, { useCallback } from 'react';
 
 import { Capabilities, contributes, createSurface } from '@dxos/app-framework';
-import { Surface, SurfaceContainer, useCapability, useLayout } from '@dxos/app-framework/react';
+import { Surface, useCapability, useLayout } from '@dxos/app-framework/react';
 import { Obj, type Ref } from '@dxos/echo';
 import { findAnnotation } from '@dxos/effect';
 import { SettingsStore } from '@dxos/local-storage';
@@ -18,7 +18,6 @@ import { HuePicker, IconPicker } from '@dxos/react-ui-pickers';
 import { Collection, type View, ViewAnnotation } from '@dxos/schema';
 import { type JoinPanelProps } from '@dxos/shell/react';
 
-// TODO(burdon): Component name standard: NounVerbComponent.
 import {
   CREATE_OBJECT_DIALOG,
   CREATE_SPACE_DIALOG,
@@ -103,18 +102,17 @@ export default ({ createInvitationUrl }: ReactSurfaceOptions) =>
         data.subject instanceof SettingsStore && data.subject.prefix === meta.id,
       component: ({ data: { subject } }) => <SpacePluginSettings settings={subject.value} />,
     }),
-    // TODO(burdon): Rename object-details.
     createSurface({
       id: `${meta.id}/companion/object-settings`,
       role: 'article',
       filter: (data): data is { companionTo: Obj.Any } => Obj.isObject(data.companionTo) && data.subject === 'settings',
-      component: ({ data, role }) => <ObjectDetails object={data.companionTo} role={role} />,
+      component: ({ ref, data, role }) => <ObjectDetails object={data.companionTo} role={role} ref={ref} />,
     }),
     createSurface({
       id: `${meta.id}/space-settings-properties`,
       role: 'article',
       filter: (data): data is { subject: string } => data.subject === `${meta.id}/properties`,
-      component: () => {
+      component: ({ ref }) => {
         const layout = useLayout();
         const { spaceId } = parseId(layout.workspace);
         const space = useSpace(spaceId);
@@ -122,7 +120,7 @@ export default ({ createInvitationUrl }: ReactSurfaceOptions) =>
           return null;
         }
 
-        return <SpaceSettingsContainer space={space} />;
+        return <SpaceSettingsContainer space={space} ref={ref} />;
       },
     }),
     createSurface({
@@ -171,14 +169,13 @@ export default ({ createInvitationUrl }: ReactSurfaceOptions) =>
           Option.getOrElse(() => false),
         );
       },
-      component: ({ data }) => (
-        <SurfaceContainer>
-          <ObjectCardStack
-            key={Obj.getDXN(data.companionTo).toString()}
-            objectId={Obj.getDXN(data.companionTo).toString()}
-            view={data.companionTo.view.target!}
-          />
-        </SurfaceContainer>
+      component: ({ data, ref }) => (
+        <ObjectCardStack
+          key={Obj.getDXN(data.companionTo).toString()}
+          objectId={Obj.getDXN(data.companionTo).toString()}
+          view={data.companionTo.view.target!}
+          ref={ref}
+        />
       ),
     }),
     createSurface({
@@ -251,8 +248,6 @@ export default ({ createInvitationUrl }: ReactSurfaceOptions) =>
           return false;
         }
 
-        // TODO(wittjosiah): Shouldn't directly use annotation id, but this doesn't work here.
-        // const annotation = TypeInputOptionsAnnotation.get(data.schema as Schema.Schema.Any);
         const annotation = findAnnotation((data.schema as Schema.Schema.All).ast, TypeInputOptionsAnnotationId);
         return !!annotation;
       },

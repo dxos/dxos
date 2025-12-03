@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import React from 'react';
+import React, { forwardRef } from 'react';
 
 import { Filter, getSpace, useQuery, useSchema } from '@dxos/react-client/echo';
 import { Callout, Toolbar, useTranslation } from '@dxos/react-ui';
@@ -20,7 +20,7 @@ export type ObjectCardStackProps = {
   view: View.View;
 };
 
-export const ObjectCardStack = ({ objectId, view }: ObjectCardStackProps) => {
+export const ObjectCardStack = forwardRef<HTMLDivElement, ObjectCardStackProps>(({ objectId, view }, forwardedRef) => {
   const { t } = useTranslation(meta.id);
   const space = getSpace(view);
   const typename = view.query ? getTypenameFromQuery(view.query.ast) : undefined;
@@ -34,12 +34,8 @@ export const ObjectCardStack = ({ objectId, view }: ObjectCardStackProps) => {
     return null;
   }
 
-  if (!schema) {
-    return null;
-  }
-
   return (
-    <StackItem.Content toolbar>
+    <StackItem.Content toolbar ref={forwardedRef}>
       <Toolbar.Root></Toolbar.Root>
       <CardStack.Root asChild>
         <CardStack.Content>
@@ -65,4 +61,4 @@ export const ObjectCardStack = ({ objectId, view }: ObjectCardStackProps) => {
       </CardStack.Root>
     </StackItem.Content>
   );
-};
+});
