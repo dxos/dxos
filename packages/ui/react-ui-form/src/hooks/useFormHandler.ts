@@ -108,7 +108,7 @@ export type FormHandler<T extends AnyProperties> = Pick<FormHandlerProps<T>, 'sc
   getStatus: (path: string | (string | number)[]) => FormFieldStatus;
   getValue: <V>(path: (string | number)[]) => V | undefined;
   onBlur: (path: (string | number)[]) => void;
-  onValueChange: <V>(path: (string | number)[], ast: SchemaAST.AST, value: V) => void;
+  onValueChange: <V>(path: (string | number)[], type: SchemaAST.AST, value: V) => void;
 };
 
 /**
@@ -250,13 +250,13 @@ export const useFormHandler = <T extends AnyProperties>({
   );
 
   const onValueChange = useCallback<FormHandler<T>['onValueChange']>(
-    (path, ast, value) => {
-      log.info('onValueChange', { path, value });
+    (path, type, value) => {
+      log('onValueChange', { path, value });
 
       const jsonPath = createJsonPath(path);
       let parsedValue = value as any;
       try {
-        if (ast._tag === 'NumberKeyword') {
+        if (type._tag === 'NumberKeyword') {
           parsedValue = parseFloat(value as string) || 0;
         }
       } catch (err) {

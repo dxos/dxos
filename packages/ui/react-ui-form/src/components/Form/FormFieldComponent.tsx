@@ -27,7 +27,7 @@ export type FormFieldStateProps<T = any> = {
   getStatus: () => FormFieldStatus;
   getValue: () => T | undefined;
   onBlur: (event: FocusEvent<HTMLElement>) => void;
-  onValueChange: (ast: SchemaAST.AST, value: T) => void;
+  onValueChange: (type: SchemaAST.AST, value: T) => void;
 };
 
 /**
