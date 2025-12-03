@@ -14,6 +14,9 @@ export type SurfaceInfoProps = {
   children: ReactElement<{ ref?: React.Ref<HTMLElement> }>;
 };
 
+/**
+ * Debug wrapper for surfaces.
+ */
 export const SurfaceInfo = forwardRef<HTMLElement, SurfaceInfoProps>(({ children }, forwardedRef) => {
   const active = true; //'__DX_DEBUG__' in window;
   const [rect, setRect] = useState<DOMRect | null>(null);
@@ -60,7 +63,7 @@ export const SurfaceInfo = forwardRef<HTMLElement, SurfaceInfoProps>(({ children
         createPortal(
           <div
             role='none'
-            className='z-20 fixed flex flex-col-reverse scrollbar-none overflow-auto pointer-events-none'
+            className='z-50 fixed flex flex-col-reverse scrollbar-none overflow-auto pointer-events-none'
             style={{
               top: rect.top + padding,
               left: rect.left + padding,
@@ -71,7 +74,11 @@ export const SurfaceInfo = forwardRef<HTMLElement, SurfaceInfoProps>(({ children
             {expand ? (
               <div
                 className='absolute inset-0 bg-deckSurface border border-rose-500 cursor-pointer pointer-events-auto overflow-auto'
-                onClick={() => setExpand(false)}
+                onPointerDown={(ev) => ev.stopPropagation()}
+                onClick={(ev) => {
+                  ev.stopPropagation();
+                  setExpand(false);
+                }}
               >
                 <pre className='p-2 text-xs text-description font-mono font-thin'>
                   {JSON.stringify({ info }, null, 2)}
@@ -81,13 +88,17 @@ export const SurfaceInfo = forwardRef<HTMLElement, SurfaceInfoProps>(({ children
               <span
                 className='absolute left-1 bottom-0 flex items-center p-1 text-rose-500 opacity-80 hover:opacity-100 text-xl cursor-pointer pointer-events-auto'
                 title={info.id}
-                onClick={() => setExpand(true)}
+                onPointerDown={(ev) => ev.stopPropagation()}
+                onClick={(ev) => {
+                  ev.stopPropagation();
+                  setExpand(true);
+                }}
               >
                 ⓘ
               </span>
             )}
           </div>,
-          // TODO(burdon): Create well-known element for all debug portals.
+          // TODO(burdon): Create well-known element to gather all debug portals.
           document.body,
         )}
     </div>

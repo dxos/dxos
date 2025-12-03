@@ -16,7 +16,7 @@ export default () =>
       id: COMMANDS_DIALOG,
       role: 'dialog',
       filter: (data): data is { props: { selected?: string } } => data.component === COMMANDS_DIALOG,
-      component: ({ data }) => <CommandsDialogContent {...data.props} />,
+      component: ({ data, ref }) => <CommandsDialogContent {...data.props} ref={ref} />,
     }),
     createSurface({
       id: `${meta.id}/navigation`,
