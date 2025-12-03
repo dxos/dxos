@@ -8983,6 +8983,9 @@ importers:
       '@dxos/functions-runtime':
         specifier: workspace:*
         version: link:../../core/functions-runtime
+      '@dxos/functions-simulator-cloudflare':
+        specifier: workspace:*
+        version: link:../../core/functions-simulator-cloudflare
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant

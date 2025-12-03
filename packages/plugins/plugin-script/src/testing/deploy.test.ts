@@ -12,7 +12,7 @@ import { bundleFunction } from '@dxos/functions-runtime/bundler';
 import { FunctionsServiceClient } from '@dxos/functions-runtime/edge';
 import { Runtime } from '@dxos/protocols';
 
-describe.runIf(process.env.DX_TEST_TAGS?.includes('functions-e2e'))('Functions deployment', () => {
+describe.runIf(process.env.DX_TEST_TAGS?.includes('functions-e2e'))('Script deployment', () => {
   test('deploys FOREX (effect) function and invokes it via EDGE (main)', { timeout: 120_000 }, async () => {
     const config = configPreset({
       edge: 'dev',

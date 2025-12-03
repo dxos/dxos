@@ -38,14 +38,15 @@ export default defineConfig({
   outDir: 'dist/vendor',
   noExternal: () => true,
   platform: 'browser',
-  dts: {
-    resolve: [
-      //
-      /@dxos/,
-      /effect/,
-      /^@effect/,
-    ],
-  },
+  dts: false,
+  // dts: {
+  //   resolve: [
+  //     //
+  //     /@dxos/,
+  //     /effect/,
+  //     /^@effect/,
+  //   ],
+  // },
   loader: {
     '.wasm': 'asset',
   },
