@@ -40,6 +40,7 @@ await build({
   platform: 'browser',
   conditions: ['workerd', 'worker', 'browser'],
   metafile: true,
+  logLevel: 'error',
   loader: {
     '.wasm': 'copy',
   },
