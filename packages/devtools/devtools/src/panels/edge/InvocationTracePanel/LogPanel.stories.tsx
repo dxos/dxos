@@ -55,15 +55,11 @@ const makeEvents = (): TraceEventType[] => {
 };
 
 const DefaultStory = () => {
-  const queue = useMemo(() => {
-    const events = makeEvents();
-    const queue = MemoryQueue.make({ objects: events });
-    return queue;
-  }, []);
+  const objects = useMemo(() => makeEvents(), []);
 
   return (
     <div className='p-4'>
-      <LogPanel queue={queue} />
+      <LogPanel objects={objects} />
     </div>
   );
 };
