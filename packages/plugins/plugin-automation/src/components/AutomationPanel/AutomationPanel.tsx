@@ -23,7 +23,7 @@ import { isNonNullable } from '@dxos/util';
 import { meta } from '../../meta';
 import { TriggerEditor, type TriggerEditorProps } from '../TriggerEditor';
 
-const grid = 'grid grid-cols-[40px_1fr_32px] min-bs-[2.5rem]';
+const grid = 'grid grid-cols-[40px_1fr_32px_32px] min-bs-[2.5rem]';
 
 export type AutomationPanelProps = ThemedClassName<{
   space: Space;
@@ -87,6 +87,14 @@ export const AutomationPanel = ({ classNames, space, object, initialTrigger, onD
     onDone?.();
   };
 
+  const handleForceRunTrigger = async (trigger: Trigger.Trigger) => {
+    const edgeUrl = new URL(client.config.values.runtime!.services!.edge!.url!);
+    edgeUrl.pathname = `/test/functions/${space.id}/triggers/crons/${trigger.id}/run`;
+    await fetch(edgeUrl, {
+      method: 'POST',
+    });
+  };
+
   if (trigger) {
     return (
       <ControlItem title={t('trigger editor title')}>
@@ -144,6 +152,13 @@ export const AutomationPanel = ({ classNames, space, object, initialTrigger, onD
                         />
                       )}
                     </div>
+
+                    <IconButton
+                      disabled={!trigger.enabled || trigger.spec?.kind !== 'timer'}
+                      icon='ph--play--regular'
+                      label='Force run'
+                      onClick={() => handleForceRunTrigger(trigger)}
+                    />
 
                     <List.ItemDeleteButton onClick={() => handleDelete(trigger)} />
                   </List.Item>

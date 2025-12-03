@@ -15,3 +15,5 @@ export class TimeoutError extends BaseError.extend('TIMEOUT', 'Timeout') {}
 export class AbortedError extends BaseError.extend('ABORTED', 'Aborted') {}
 
 export class NotImplementedError extends BaseError.extend('NOT_IMPLEMENTED', 'Not implemented') {}
+
+export class RuntimeServiceError extends BaseError.extend('RUNTIME_SERVICE_ERROR', 'Runtime service error') {}
