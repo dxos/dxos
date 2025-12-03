@@ -48,8 +48,6 @@ export const httpPlugin: Plugin = {
     // This has just enough logic to be able to handle the example import from unpkg.com but in reality this would probably need to be more complex.
     build.onLoad({ filter: /.*/, namespace: 'http-url' }, async (args) => {
       return Effect.gen(function* () {
-        console.log('download', args.path);
-
         const response = yield* HttpClient.get(args.path);
         if (response.status !== 200) {
           yield* Effect.fail(

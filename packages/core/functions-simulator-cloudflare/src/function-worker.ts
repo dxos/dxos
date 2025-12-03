@@ -47,6 +47,12 @@ export class FunctionWorker extends Resource {
             path: filename,
             contents: mod.contents,
           };
+        case 'application/wasm':
+          return {
+            type: 'CompiledWasm' as const,
+            path: filename,
+            contents: mod.contents,
+          };
         default:
           throw new Error(`Unsupported content type: ${mod.contentType}`);
       }
@@ -70,7 +76,7 @@ export class FunctionWorker extends Resource {
         'Content-Type': 'application/json',
         'X-Edge-Env': 'test',
       },
-      body: JSON.stringify(input),
+      body: JSON.stringify({ data: input }),
     });
     const response = await this.#miniflare.dispatchFetch(request);
     try {

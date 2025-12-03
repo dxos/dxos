@@ -9,9 +9,11 @@ import { describe, expect, test } from 'vitest';
 
 import { bundleFunction } from '@dxos/functions-runtime/bundler';
 import { FunctionWorker } from '@dxos/functions-simulator-cloudflare';
+import { ErrorCodec } from '@dxos/protocols';
 
-describe('Run script in sumulator', () => {
-  test('deploys FOREX (effect) function and invokes it via EDGE (main)', { timeout: 120_000 }, async () => {
+// Requires downloading assets from R2
+describe.runIf(process.env.DX_TEST_TAGS?.includes('functions-e2e'))('Run script in sumulator', () => {
+  test('forex-effect', { timeout: 120_000 }, async () => {
     const source = await readFile(new URL('../templates/forex-effect.ts', import.meta.url), 'utf-8');
 
     // Bundle and upload.
@@ -22,15 +24,17 @@ describe('Run script in sumulator', () => {
 
     const worker = new FunctionWorker({
       mainModule: buildResult.entryPoint,
-      modules: Record.map(buildResult.assets, (contents) => ({
+      modules: Record.map(buildResult.assets, (contents, filename) => ({
         contents: contents as Uint8Array<ArrayBuffer>,
-        contentType: 'application/javascript',
+        contentType: filename.endsWith('.wasm') ? 'application/wasm' : 'application/javascript',
       })),
     });
 
     const result = await worker.invoke({ from: 'USD', to: 'EUR' });
     console.log(result);
-    expect(result).toBeGreaterThan(0);
-    expect(result).toBeLessThan(100);
+    if (result._kind === 'error') {
+      throw ErrorCodec.decode(result.error);
+    }
+    expect(Number(result.result)).toBeGreaterThan(0);
   });
 });

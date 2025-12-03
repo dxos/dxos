@@ -160,8 +160,8 @@ export const bundleFunction = async ({ source }: BundleOptions): Promise<BundleR
       ],
     });
 
-    log.info('Bundling complete', result.metafile);
-    log.info('Output files', { files: result.outputFiles });
+    // log.info('Bundling complete', result.metafile);
+    // log.info('Output files', { files: result.outputFiles });
 
     const entryPoint = 'index.js';
     return {

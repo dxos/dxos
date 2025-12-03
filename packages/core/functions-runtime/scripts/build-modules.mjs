@@ -1,6 +1,6 @@
+import { build } from 'esbuild';
 import path from 'path';
 import fs from 'node:fs/promises';
-import { defineConfig } from 'tsdown';
 
 const PACKAGES = [
   // packages to vendor
@@ -26,52 +26,26 @@ const entryPoints = Object.fromEntries(
     .map((pkg) => [pkg, pkg]),
 );
 
-const processedEntryPoints: Record<string, string> = {};
-for (const [key, value] of Object.entries(entryPoints)) {
-  await fs.mkdir(path.dirname(`dist/entrypoints/${key}`), { recursive: true });
-  await fs.writeFile(`dist/entrypoints/${key}.ts`, `export * from "${value}";`);
-  processedEntryPoints[key] = `dist/entrypoints/${key}.ts`;
-}
+console.log(entryPoints);
 
-export default defineConfig({
-  entry: processedEntryPoints,
-  outDir: 'dist/vendor',
-  noExternal: () => true,
+try {
+  await fs.rm('./dist/vendor', { recursive: true });
+} catch {}
+
+await build({
+  entryPoints,
+  bundle: true,
+  splitting: true,
+  format: 'esm',
   platform: 'browser',
-  dts: false,
-  // dts: {
-  //   resolve: [
-  //     //
-  //     /@dxos/,
-  //     /effect/,
-  //     /^@effect/,
-  //   ],
-  // },
+  conditions: ['workerd', 'worker', 'browser'],
+  metafile: true,
   loader: {
-    '.wasm': 'asset',
+    '.wasm': 'copy',
   },
-  treeshake: true,
-  outputOptions: {
-    chunkFileNames: 'internal/[name]-[hash].js',
-    assetFileNames: 'internal/[name]-[hash][extname]',
-    minifyInternalExports: false,
-  },
-  inputOptions: {
-    resolve: {
-      conditionNames: ['workerd', 'worker', 'browser'],
-    },
-  },
-  plugins: [
-    {
-      name: 'manifest',
-      writeBundle(outputOptions, bundle) {
-        const manifest = {
-          files: Object.keys(bundle),
-        };
-        fs.writeFile(`${outputOptions.dir}/manifest.json`, JSON.stringify(manifest, null, 2));
-      },
-    },
-  ],
+  outdir: './dist/vendor',
+  chunkNames: 'internal/[name]-[hash]',
+  assetNames: 'internal/[name]-[hash]',
 });
 
 /**
@@ -79,7 +53,7 @@ export default defineConfig({
  *
  * @example effect -> effect, effect/Array, effect/Effect, effect/Schema, effect/Schedule, etc..
  */
-async function resolveExports(pkg: string): Promise<string[]> {
+async function resolveExports(pkg) {
   let currentDir = process.cwd();
   const root = '/';
 

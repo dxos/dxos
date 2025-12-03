@@ -21,7 +21,7 @@ tasks:
       - build-runtime
 
   build-runtime:
-    command: tsdown --logLevel error
+    command: node ./scripts/build-modules.mjs
     deps:
       - ^:compile
 
