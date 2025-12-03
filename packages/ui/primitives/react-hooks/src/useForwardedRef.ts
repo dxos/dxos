@@ -57,5 +57,5 @@ export const mergeRefs = <T>(refs: (Ref<T> | undefined)[]): Ref<T> => {
  * The returned ref is memoized and only changes when the refs array changes.
  */
 export const useMergeRefs = <T>(refs: (Ref<T> | undefined)[]): Ref<T> => {
-  return useMemo(() => mergeRefs(refs), refs);
+  return useMemo(() => mergeRefs(refs), [...refs]);
 };

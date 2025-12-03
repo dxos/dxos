@@ -17,7 +17,7 @@ export default () =>
       id: `${meta.id}/table`,
       role: ['article', 'section', 'slide'],
       filter: (data): data is { subject: Table.Table } => Obj.instanceOf(Table.Table, data.subject),
-      component: ({ data, role }) => <TableContainer object={data.subject} role={role} />,
+      component: ({ data, role, ref }) => <TableContainer object={data.subject} role={role} ref={ref} />,
     }),
     createSurface({
       id: `${meta.id}/table-card`,

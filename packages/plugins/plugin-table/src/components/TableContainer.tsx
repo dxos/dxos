@@ -5,7 +5,7 @@
 import { Atom } from '@effect-atom/atom-react';
 import * as Match from 'effect/Match';
 import type * as Schema from 'effect/Schema';
-import React, { useCallback, useMemo, useRef } from 'react';
+import React, { forwardRef, useCallback, useMemo, useRef } from 'react';
 
 import { LayoutAction, createIntent } from '@dxos/app-framework';
 import { useAppGraph, useIntentDispatcher } from '@dxos/app-framework/react';
@@ -38,7 +38,7 @@ export type TableContainerProps = {
 };
 
 // TODO(wittjosiah): Need to handle more complex queries by restricting add row.
-export const TableContainer = ({ role, object }: TableContainerProps) => {
+export const TableContainer = forwardRef<HTMLDivElement, TableContainerProps>(({ role, object }, forwardedRef) => {
   const { dispatchPromise: dispatch } = useIntentDispatcher();
   const tableRef = useRef<TableController>(null);
 
@@ -158,7 +158,7 @@ export const TableContainer = ({ role, object }: TableContainerProps) => {
   );
 
   return (
-    <StackItem.Content toolbar>
+    <StackItem.Content toolbar ref={forwardedRef}>
       <TableToolbar
         attendableId={Obj.getDXN(object).toString()}
         customActions={customActions}
@@ -178,6 +178,8 @@ export const TableContainer = ({ role, object }: TableContainerProps) => {
       </TableComponent.Root>
     </StackItem.Content>
   );
-};
+});
+
+TableContainer.displayName = 'TableContainer';
 
 export default TableContainer;

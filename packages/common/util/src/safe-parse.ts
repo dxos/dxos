@@ -2,29 +2,27 @@
 // Copyright 2024 DXOS.org
 //
 
-export const safeParseInt: {
-  (str: string | undefined, defaultValue: number): number;
-  (str: string | undefined): number | undefined;
-} = ((str: string | undefined, defaultValue?: number): number | undefined => {
+export function safeParseInt(str: string | undefined, defaultValue: number): number;
+export function safeParseInt(str: string | undefined): number | undefined;
+export function safeParseInt(str: string | undefined, defaultValue?: number): number | undefined {
   try {
     const value = parseInt(str ?? '');
     return isNaN(value) ? defaultValue : value;
   } catch {
     return defaultValue;
   }
-}) as any;
+}
 
-export const safeParseFloat: {
-  (str: string | undefined, defaultValue: number): number;
-  (str: string | undefined): number | undefined;
-} = ((str: string | undefined, defaultValue?: number): number | undefined => {
+export function safeParseFloat(str: string | undefined, defaultValue: number): number;
+export function safeParseFloat(str: string | undefined): number | undefined;
+export function safeParseFloat(str: string | undefined, defaultValue?: number): number | undefined {
   try {
     const value = parseFloat(str ?? '');
     return isNaN(value) ? defaultValue : value;
   } catch {
     return defaultValue;
   }
-}) as any;
+}
 
 export const safeParseJson: {
   <T extends object>(str: string | undefined | null, defaultValue: T): T;

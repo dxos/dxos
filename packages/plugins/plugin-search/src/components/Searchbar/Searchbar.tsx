@@ -2,8 +2,9 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { useCallback, useEffect, useRef } from 'react';
+import React, { type KeyboardEvent, useCallback, useEffect, useRef } from 'react';
 
+import { addEventListener } from '@dxos/async';
 import { Input, type TextInputProps, type ThemedClassName, Toolbar, useControlledState } from '@dxos/react-ui';
 
 export type SearchbarProps = ThemedClassName<
@@ -19,22 +20,16 @@ export const Searchbar = ({ classNames, variant, placeholder, value, onChange, o
   const [text, setText] = useControlledState(value, onChange);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const handleWindowKeyDown = useCallback(
-    (event: KeyboardEvent) => {
+  useEffect(() => {
+    return addEventListener(window, 'keydown', (event) => {
       if (event.key === 'f' && event.metaKey && event.shiftKey) {
         inputRef.current?.focus();
       }
-    },
-    [inputRef],
-  );
-
-  useEffect(() => {
-    window.addEventListener('keydown', handleWindowKeyDown);
-    return () => window.removeEventListener('keydown', handleWindowKeyDown);
-  }, [handleWindowKeyDown]);
+    });
+  }, []);
 
   const handleKeyDown = useCallback(
-    (event: React.KeyboardEvent<HTMLInputElement>) => {
+    (event: KeyboardEvent<HTMLInputElement>) => {
       switch (event.key) {
         case 'Enter':
           onSubmit?.(text);
