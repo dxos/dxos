@@ -3,7 +3,7 @@
 //
 
 import * as Function from 'effect/Function';
-import React, { useCallback, useMemo } from 'react';
+import React, { forwardRef, useCallback, useMemo } from 'react';
 
 import { LayoutAction, chain, createIntent } from '@dxos/app-framework';
 import { useIntentDispatcher } from '@dxos/app-framework/react';
@@ -20,16 +20,16 @@ import { MarkdownEditor } from '../MarkdownEditor';
 
 export type MarkdownCardProps = CardPreviewProps<Markdown.Document | Text.Text>;
 
-export const MarkdownCard = ({ subject, role }: MarkdownCardProps) => {
-  const { dispatchPromise: dispatch } = useIntentDispatcher();
-  const { t } = useTranslation(meta.id);
-  const snippet = useMemo(() => getSnippet(subject, t('fallback abstract')), [subject]);
-  const info = getInfo(subject);
+export const MarkdownCard = forwardRef<HTMLDivElement, MarkdownCardProps>(
+  ({ subject, role }: MarkdownCardProps, forwardedRef) => {
+    const { dispatchPromise: dispatch } = useIntentDispatcher();
+    const { t } = useTranslation(meta.id);
+    const snippet = useMemo(() => getSnippet(subject, t('fallback abstract')), [subject]);
+    const info = getInfo(subject);
 
-  // TODO(wittjosiah): Factor out so this component isn't dependent on the app framework.
-  const handleNavigate = useCallback(
-    () =>
-      dispatch(
+    // TODO(wittjosiah): Factor out so this component isn't dependent on the app framework.
+    const handleNavigate = useCallback(() => {
+      void dispatch(
         Function.pipe(
           createIntent(LayoutAction.UpdatePopover, {
             part: 'popover',
@@ -41,35 +41,35 @@ export const MarkdownCard = ({ subject, role }: MarkdownCardProps) => {
             subject: [Obj.getDXN(subject).toString()],
           }),
         ),
-      ),
-    [dispatch, subject],
-  );
+      );
+    }, [dispatch, subject]);
 
-  return (
-    <Card.SurfaceRoot role={role}>
-      <Card.Heading classNames='flex items-center'>
-        {getTitle(subject, t('fallback title'))}
-        <span className='grow' />
-        <IconButton
-          iconOnly
-          icon='ph--arrow-right--regular'
-          label={t('navigate to document label')}
-          onClick={handleNavigate}
-        />
-      </Card.Heading>
-      {snippet && (
-        <Card.Text classNames='flex max-h-[300px] overflow-hidden'>
-          <MarkdownEditor.Root id={subject.id} viewMode='readonly'>
-            <MarkdownEditor.Content initialValue={snippet} slots={{}} classNames='!bg-transparent' />
-          </MarkdownEditor.Root>
+    return (
+      <Card.SurfaceRoot role={role} ref={forwardedRef}>
+        <Card.Heading classNames='flex items-center'>
+          {getTitle(subject, t('fallback title'))}
+          <span className='grow' />
+          <IconButton
+            iconOnly
+            icon='ph--arrow-right--regular'
+            label={t('navigate to document label')}
+            onClick={handleNavigate}
+          />
+        </Card.Heading>
+        {snippet && (
+          <Card.Text classNames='flex max-h-[300px] overflow-hidden'>
+            <MarkdownEditor.Root id={subject.id} viewMode='readonly'>
+              <MarkdownEditor.Content initialValue={snippet} slots={{}} classNames='!bg-transparent' />
+            </MarkdownEditor.Root>
+          </Card.Text>
+        )}
+        <Card.Text classNames='text-xs text-description'>
+          {info.words} {t('words label', { count: info.words })}
         </Card.Text>
-      )}
-      <Card.Text classNames='text-xs text-description'>
-        {info.words} {t('words label', { count: info.words })}
-      </Card.Text>
-    </Card.SurfaceRoot>
-  );
-};
+      </Card.SurfaceRoot>
+    );
+  },
+);
 
 const getInfo = (subject: Markdown.Document | Text.Text) => {
   const text = (Obj.instanceOf(Markdown.Document, subject) ? subject.content?.target?.content : subject.content) ?? '';

@@ -53,7 +53,11 @@ const MeetingItem = ({
   );
 };
 
-export const MeetingsList = ({ channel }: { channel: Channel.Channel }) => {
+export type MeetingsListProps = {
+  channel: Channel.Channel;
+};
+
+export const MeetingsList = ({ channel }: MeetingsListProps) => {
   const { t } = useTranslation(meta.id);
   const { dispatchPromise: dispatch } = useIntentDispatcher();
   const space = getSpace(channel);

@@ -62,7 +62,7 @@ export const capabilities: AnyCapability[] = [
       id: 'plugin-default',
       role: 'card--extrinsic',
       position: 'fallback',
-      component: ({ role, data }) => <JsonFilter data={data} />,
+      component: ({ data }) => <JsonFilter data={data} />,
     }),
   ),
 ];
