@@ -4,11 +4,11 @@
 
 import * as Match from 'effect/Match';
 import * as Schema from 'effect/Schema';
+import * as SchemaAST from 'effect/SchemaAST';
 
 import { Obj, Ref, Type } from '@dxos/echo';
 import { FormInputAnnotation, type JsonPath, type JsonSchemaType, LabelAnnotation } from '@dxos/echo/internal';
-import { type SimpleType } from '@dxos/effect';
-import { View, ViewAnnotation, getSchemaProperties } from '@dxos/schema';
+import { View, ViewAnnotation } from '@dxos/schema';
 
 const TableSchema = Schema.Struct({
   name: Schema.String.pipe(Schema.optional),
@@ -48,19 +48,20 @@ export const make = ({ name, sizes = {}, view, jsonSchema }: MakeProps): Table =
   // Preset sizes.
   if (jsonSchema) {
     const schema = Type.toEffectSchema(jsonSchema);
-    const properties = getSchemaProperties(schema.ast, {});
+    const properties = SchemaAST.getPropertySignatures(schema.ast);
     for (const property of properties) {
-      if (sizes?.[property.name]) {
-        table.sizes[property.name] = sizes[property.name];
+      const name = property.name.toString() as JsonPath;
+      if (sizes?.[name]) {
+        table.sizes[name] = sizes[name];
         continue;
       }
 
-      Match.type<SimpleType>().pipe(
-        Match.when('boolean', () => {
-          table.sizes[property.name as JsonPath] = 100;
+      Match.type<SchemaAST.AST>().pipe(
+        Match.when({ _tag: 'BooleanKeyword' }, () => {
+          table.sizes[name] = 100;
         }),
-        Match.when('number', () => {
-          table.sizes[property.name as JsonPath] = 100;
+        Match.when({ _tag: 'NumberKeyword' }, () => {
+          table.sizes[name] = 100;
         }),
         Match.orElse(() => {
           // Noop.

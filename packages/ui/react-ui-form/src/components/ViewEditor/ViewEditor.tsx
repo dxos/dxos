@@ -8,8 +8,8 @@ import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 import React, { forwardRef, useCallback, useImperativeHandle, useMemo, useState } from 'react';
 
-import { Filter, Query, QueryAST, type SchemaRegistry } from '@dxos/echo';
-import { EchoSchema, Format, type JsonProp, isMutable, toJsonSchema } from '@dxos/echo/internal';
+import { Filter, Format, Query, QueryAST, type SchemaRegistry } from '@dxos/echo';
+import { EchoSchema, type JsonProp, isMutable, toJsonSchema } from '@dxos/echo/internal';
 import {} from '@dxos/echo-db';
 import { invariant } from '@dxos/invariant';
 import { Callout, IconButton, Input, type ThemedClassName, useTranslation } from '@dxos/react-ui';
@@ -334,9 +334,9 @@ const customFields = ({
   types,
   tags,
 }: Pick<ViewEditorProps, 'types' | 'tags'>): Record<string, FormFieldComponent> => ({
-  query: ({ readonly, label, getValue, onValueChange }: FormFieldComponentProps) => {
+  query: ({ type, readonly, label, getValue, onValueChange }: FormFieldComponentProps) => {
     const handleChange = useCallback<NonNullable<QueryFormProps['onChange']>>(
-      (query) => onValueChange('object', query.ast),
+      (query) => onValueChange(type, query.ast),
       [onValueChange],
     );
 

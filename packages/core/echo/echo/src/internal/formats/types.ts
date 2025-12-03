@@ -55,6 +55,7 @@ export const FormatAnnotationId = Symbol.for('@dxos/schema/annotation/Format');
 
 export const FormatAnnotation = createAnnotationHelper<TypeFormat>(FormatAnnotationId);
 
+/** @deprecated */
 export const getFormatAnnotation = (node: SchemaAST.AST): TypeFormat | undefined =>
   Function.pipe(SchemaAST.getAnnotation<TypeFormat>(FormatAnnotationId)(node), Option.getOrUndefined);
 
@@ -176,7 +177,10 @@ export const formatToType: Record<TypeFormat, TypeEnum> = {
  */
 export const OptionsAnnotationId = Symbol.for('@dxos/schema/annotation/Options');
 
-export const getOptionsAnnotation = (node: SchemaAST.AST): OptionsAnnotationType[] | undefined =>
-  Function.pipe(SchemaAST.getAnnotation<OptionsAnnotationType[]>(OptionsAnnotationId)(node), Option.getOrUndefined);
+// TODO(wittjosiah): Reconcile with `SelectOption`.
+export type Options = string | number;
+export const OptionsAnnotation = createAnnotationHelper<Options[]>(OptionsAnnotationId);
 
-export type OptionsAnnotationType = string | number;
+/** @deprecated */
+export const getOptionsAnnotation = (node: SchemaAST.AST): Options[] | undefined =>
+  Function.pipe(SchemaAST.getAnnotation<Options[]>(OptionsAnnotationId)(node), Option.getOrUndefined);

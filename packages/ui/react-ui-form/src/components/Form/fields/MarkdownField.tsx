@@ -4,7 +4,7 @@
 
 import React, { useCallback, useEffect, useRef } from 'react';
 
-import { Input } from '@dxos/react-ui';
+import { Input, type TextAreaProps } from '@dxos/react-ui';
 
 import { type FormFieldComponentProps, FormFieldLabel } from '../FormFieldComponent';
 
@@ -43,6 +43,11 @@ export const MarkdownField = ({
     adjustHeight();
   }, [getValue(), adjustHeight]);
 
+  const handleChange = useCallback<NonNullable<TextAreaProps['onChange']>>(
+    (event) => onValueChange(type, event.target.value),
+    [type, onValueChange],
+  );
+
   const value = getValue();
   if ((readonly || layout === 'static') && !value) {
     return null;
@@ -61,7 +66,7 @@ export const MarkdownField = ({
           placeholder={placeholder}
           value={value ?? ''}
           classNames={'min-bs-auto max-bs-40 overflow-auto'}
-          onChange={(event) => onValueChange(type, event.target.value)}
+          onChange={handleChange}
           onBlur={onBlur}
           style={{ resize: 'none' }}
           spellCheck={false}

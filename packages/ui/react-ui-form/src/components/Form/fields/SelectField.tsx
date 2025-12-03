@@ -4,7 +4,7 @@
 
 import React, { useCallback } from 'react';
 
-import { Input, Select } from '@dxos/react-ui';
+import { Input, Select, type SelectRootProps } from '@dxos/react-ui';
 
 import { type FormFieldComponentProps, FormFieldLabel } from '../FormFieldComponent';
 
@@ -26,7 +26,10 @@ export const SelectField = ({
   const { status, error } = getStatus();
   const value = getValue() as string | undefined;
 
-  const handleValueChange = useCallback((value: string | number) => onValueChange(type, value), [type, onValueChange]);
+  const handleValueChange = useCallback<NonNullable<SelectRootProps['onValueChange']>>(
+    (value) => onValueChange(type, value),
+    [type, onValueChange],
+  );
 
   if ((readonly || layout === 'static') && value == null) {
     return null;
