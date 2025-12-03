@@ -91,22 +91,23 @@ export type FormFieldProps = {
   | 'onQueryRefOptions'
 >;
 
-export const FormField = ({
-  type,
-  name,
-  path,
-  projection,
-  fieldMap,
-  fieldProvider,
-  readonly,
-  layout,
-  createSchema,
-  createOptionLabel,
-  createOptionIcon,
-  createInitialValuePath,
-  onCreate,
-  onQueryRefOptions,
-}: FormFieldProps) => {
+export const FormField = (props: FormFieldProps) => {
+  const {
+    type,
+    name,
+    path,
+    projection,
+    fieldMap,
+    fieldProvider,
+    readonly,
+    layout,
+    createSchema,
+    createOptionLabel,
+    createOptionIcon,
+    createInitialValuePath,
+    onCreate,
+    onQueryRefOptions,
+  } = props;
   const { t } = useTranslation(translationKey);
   const title = getAnnotation<string>(SchemaAST.TitleAnnotationId)(type);
   const description = getAnnotation<string>(SchemaAST.DescriptionAnnotationId)(type);
@@ -150,19 +151,7 @@ export const FormField = ({
   //
 
   if (isArrayType(type)) {
-    return (
-      <ArrayField
-        fieldProps={fieldState}
-        type={type}
-        name={name}
-        path={path}
-        label={label}
-        readonly={readonly}
-        layout={layout}
-        fieldMap={fieldMap}
-        fieldProvider={fieldProvider}
-      />
-    );
+    return <ArrayField fieldProps={fieldState} label={label} {...props} />;
   }
 
   //

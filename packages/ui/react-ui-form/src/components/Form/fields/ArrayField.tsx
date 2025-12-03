@@ -19,7 +19,7 @@ import { FormFieldLabel, type FormFieldStateProps } from '../FormFieldComponent'
 export type ArrayFieldProps = {
   label: string;
   fieldProps: FormFieldStateProps;
-} & Pick<FormFieldProps, 'type' | 'name' | 'path' | 'readonly' | 'layout' | 'fieldMap' | 'fieldProvider'>;
+} & FormFieldProps;
 
 export const ArrayField = ({
   type,

@@ -6,7 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Schema from 'effect/Schema';
 import React, { useCallback, useState } from 'react';
 
-import { Annotation, Filter, Format, Obj, Type } from '@dxos/echo';
+import { Annotation, Filter, Format, Obj, Tag, Type } from '@dxos/echo';
 import { type AnyProperties } from '@dxos/echo/internal';
 import { log } from '@dxos/log';
 import { useClient } from '@dxos/react-client';
@@ -19,12 +19,11 @@ import { TestLayout } from '../testing';
 
 import { type ExcludeId, Form, type NewFormRootProps, omitId } from './Form';
 
-// TODO(wittjosiah): Use @dxos/types.
 const Organization = Schema.Struct({
   name: Schema.String.pipe(Schema.minLength(1)).annotations({ title: 'Full name' }),
 }).pipe(
   Type.Obj({
-    typename: 'dxos.org/type/Organization', // TODO(burdon): Change all types to /schema
+    typename: 'example.com/type/Organization', // TODO(burdon): Change all types to /schema
     version: '0.1.0',
   }),
 );
@@ -47,8 +46,8 @@ const Person = Schema.Struct({
       zip: Schema.Number,
     }).annotations({ title: 'Address' }),
   ),
-  // TODO(burdon): Array of refs.
   employer: Schema.optional(Type.Ref(Organization).annotations({ title: 'Employer' })),
+  tags: Schema.optional(Schema.Array(Type.Ref(Tag.Tag)).annotations({ title: 'Tags' })),
   status: Schema.optional(Schema.Literal('active', 'inactive').annotations({ title: 'Status' })),
   notes: Schema.optional(Format.Text.annotations({ title: 'Notes' })),
   location: Schema.optional(Format.GeoPoint.annotations({ title: 'Location' })),
@@ -100,7 +99,6 @@ const DefaultStory = <T extends AnyProperties = AnyProperties>({
 
   const handleQueryRefOptions = useCallback<NonNullable<NewFormRootProps<T>['onQueryRefOptions']>>(
     async ({ typename }) => {
-      log('query', { typename });
       const objects = await space.db.query(Filter.typename(typename)).run();
       return objects.map((result: any) => ({ dxn: Obj.getDXN(result), label: Obj.getLabel(result) }));
     },
@@ -142,7 +140,7 @@ const meta = {
     withClientProvider({
       createIdentity: true,
       createSpace: true,
-      types: [Organization, Person],
+      types: [Tag.Tag, Organization, Person],
       onCreateIdentity: ({ client }) => {
         const space = client.spaces.default;
         [
@@ -150,6 +148,9 @@ const meta = {
           Obj.make(Organization, { name: 'BlueYard' }),
           Obj.make(Organization, { name: 'Backed' }),
           Obj.make(Organization, { name: 'BCV' }),
+          Tag.make({ label: 'Tag 1' }),
+          Tag.make({ label: 'Tag 2' }),
+          Tag.make({ label: 'Tag 3' }),
         ].map((obj) => space.db.add(obj));
       },
     }),

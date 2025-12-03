@@ -6,6 +6,7 @@ import { useCallback, useEffect, useState } from 'react';
 
 import { type DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
+import { useAsyncEffect } from '@dxos/react-ui';
 import { type Palette } from '@dxos/react-ui-types';
 import { type MaybePromise } from '@dxos/util';
 
@@ -37,36 +38,32 @@ export const useQueryRefOptions = ({ typename, onQueryRefOptions }: UseQueryRefO
   const [state, setState] = useState({});
   const update = useCallback(() => setState({}), []);
 
-  useEffect(() => {
+  useAsyncEffect(async () => {
     if (!typename || !onQueryRefOptions) {
       return;
     }
 
-    const fetchOptions = async () => {
-      setLoading(true);
-      try {
-        // TODO(wittjosiah): This should be a reactive query so that the options are always up to date.
-        const options = await onQueryRefOptions({ typename });
-        log('options', { options: options.length });
-        setOptions(
-          options.map((option) => {
-            const dxn = option.dxn.toString() as string;
-            return {
-              id: dxn,
-              label: option.label ?? dxn,
-              hue: 'neutral' as any,
-            };
-          }),
-        );
-      } catch (error) {
-        log.error('Failed to fetch ref options:', error);
-        setOptions([]);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    void fetchOptions();
+    setLoading(true);
+    try {
+      // TODO(wittjosiah): This should be a reactive query so that the options are always up to date.
+      const options = await onQueryRefOptions({ typename });
+      log('options', { options: options.length });
+      setOptions(
+        options.map((option) => {
+          const dxn = option.dxn.toString() as string;
+          return {
+            id: dxn,
+            label: option.label ?? dxn,
+            hue: 'neutral' as any,
+          };
+        }),
+      );
+    } catch (error) {
+      log.error('Failed to fetch ref options:', error);
+      setOptions([]);
+    } finally {
+      setLoading(false);
+    }
   }, [typename, onQueryRefOptions, state]);
 
   return { options, update, loading };

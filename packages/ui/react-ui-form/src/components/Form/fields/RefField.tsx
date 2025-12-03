@@ -67,12 +67,6 @@ export const RefField = (props: RefFieldProps) => {
   // TODO(burdon): Query items on demand.
   const { options, update: updateOptions } = useQueryRefOptions({ typename, onQueryRefOptions });
 
-  // If ref type is expando, fall back to taking a DXN in string format.
-  // TODO(burdon): Why?
-  if (typename === Annotation.getTypeAnnotation(Type.Expando)?.typename || !onQueryRefOptions) {
-    return <RefFieldFallback {...props} />;
-  }
-
   const handleGetValue = useCallback(() => {
     const formValue = getValue();
 
@@ -209,52 +203,5 @@ export const RefField = (props: RefFieldProps) => {
       </div>
       {layout === 'full' && <Input.DescriptionAndValidation>{error}</Input.DescriptionAndValidation>}
     </Input.Root>
-  );
-};
-
-const RefFieldFallback = ({
-  type,
-  label,
-  readonly,
-  layout,
-  placeholder,
-  getValue,
-  onValueChange,
-  ...restInputProps
-}: FormFieldComponentProps) => {
-  const handleOnValueChange = (_type: any, dxnString: string) => {
-    const dxn = DXN.tryParse(dxnString);
-    if (dxn) {
-      onValueChange?.(type, Ref.fromDXN(dxn));
-    } else if (dxnString === '') {
-      onValueChange?.(type, undefined);
-    } else {
-      onValueChange?.(type, dxnString);
-    }
-  };
-
-  const handleGetValue = () => {
-    const formValue = getValue();
-    if (typeof formValue === 'string') {
-      return formValue;
-    }
-    if (Ref.isRef(formValue)) {
-      return formValue.dxn.toString();
-    }
-
-    return undefined;
-  };
-
-  return (
-    <TextField
-      type={type}
-      readonly={readonly}
-      label={label}
-      placeholder={placeholder}
-      layout={layout}
-      getValue={handleGetValue as <V>() => V | undefined}
-      onValueChange={handleOnValueChange}
-      {...restInputProps}
-    />
   );
 };
