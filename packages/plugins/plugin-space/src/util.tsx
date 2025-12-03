@@ -26,6 +26,7 @@ import { type Space, SpaceState, getSpace, isSpace } from '@dxos/react-client/ec
 import { ATTENDABLE_PATH_SEPARATOR } from '@dxos/react-ui-attention';
 import { type TreeData } from '@dxos/react-ui-list';
 import { Collection } from '@dxos/schema';
+import { createFilename } from '@dxos/util';
 
 import { meta } from './meta';
 import { SPACE_TYPE, SpaceAction } from './types';
@@ -433,8 +434,7 @@ export const createStaticSchemaActions = ({
         if (result.data?.snapshot) {
           await downloadBlob(
             result.data.snapshot,
-            // TODO(wittjosiah): Factor out file name construction.
-            `${new Date().toISOString()}-${space.id}-${Type.getTypename(schema)}.json`,
+            createFilename({ parts: [space.id, Type.getTypename(schema)], ext: 'json' }),
           );
         }
       },
@@ -608,8 +608,7 @@ export const constructObjectActions = ({
               if (result.data?.snapshot) {
                 await downloadBlob(
                   result.data.snapshot,
-                  // TODO(wittjosiah): Factor out file name construction.
-                  `${new Date().toISOString()}-${space.id}-${object.typename}.json`,
+                  createFilename({ parts: [space.id, object.typename], ext: 'json' }),
                 );
               }
             },
