@@ -6,10 +6,11 @@ import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
 import { ArtifactId } from '@dxos/assistant';
-import { DatabaseService, defineFunction } from '@dxos/functions';
+import { defineFunction } from '@dxos/functions';
 import { Markdown } from '@dxos/plugin-markdown/types';
 
 import { MarkdownTasks, type TaskOperation } from './task-list';
+import { Database } from '@dxos/echo';
 
 export default defineFunction({
   key: 'dxos.org/function/markdown/update-tasks',
@@ -34,10 +35,10 @@ export default defineFunction({
     }),
   }),
   handler: Effect.fn(function* ({ data: { id, operations = [] } }) {
-    const doc = yield* DatabaseService.resolve(ArtifactId.toDXN(id), Markdown.Document);
+    const doc = yield* Database.Service.resolve(ArtifactId.toDXN(id), Markdown.Document);
 
     // Create task manager and apply operations if provided.
-    const { content } = yield* DatabaseService.load(doc.content);
+    const { content } = yield* Database.Service.load(doc.content);
     const taskManager = new MarkdownTasks(content);
     if (operations.length > 0) {
       taskManager.applyOperations(operations as TaskOperation[]);

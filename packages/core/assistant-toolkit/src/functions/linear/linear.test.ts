@@ -14,7 +14,7 @@ import { AiServiceTestingPreset } from '@dxos/ai/testing';
 import { makeToolExecutionServiceFromFunctions, makeToolResolverFromFunctions } from '@dxos/assistant';
 import { Obj, Query } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
-import { CredentialsService, DatabaseService, FunctionInvocationService } from '@dxos/functions';
+import { CredentialsService, FunctionInvocationService } from '@dxos/functions';
 import { TracingServiceExt } from '@dxos/functions-runtime';
 import {
   FunctionInvocationServiceLayerTestMocked,
@@ -24,6 +24,7 @@ import {
 import { Person, Project, Task } from '@dxos/types';
 
 import { LINEAR_ID_KEY, default as fetchLinearIssues } from './sync-issues';
+import { Database } from '@dxos/echo';
 
 const TestLayer = Layer.mergeAll(
   AiService.model('@anthropic/claude-opus-4-0'),
@@ -52,29 +53,29 @@ describe('Linear', { timeout: 600_000 }, () => {
     'sync',
     Effect.fnUntraced(
       function* (_) {
-        yield* DatabaseService.flush({ indexes: true });
+        yield* Database.Service.flush({ indexes: true });
 
         yield* FunctionInvocationService.invokeFunction(fetchLinearIssues, {
           team: '1127c63a-6f77-4725-9229-50f6cd47321c',
         });
 
-        const persons = yield* DatabaseService.runQuery(Query.type(Person.Person));
+        const persons = yield* Database.Service.runQuery(Query.type(Person.Person));
         console.log('people', {
           count: persons.length,
           people: persons.map((_) => `(${_.id}) ${Obj.getLabel(_)} [${Obj.getKeys(_, LINEAR_ID_KEY)[0]?.id}]`),
         });
-        const projects = yield* DatabaseService.runQuery(Query.type(Project.Project));
+        const projects = yield* Database.Service.runQuery(Query.type(Project.Project));
         console.log('projects', {
           count: projects.length,
           projects: projects.map((_) => `(${_.id}) ${Obj.getLabel(_)} [${Obj.getKeys(_, LINEAR_ID_KEY)[0]?.id}]`),
         });
-        const tasks = yield* DatabaseService.runQuery(Query.type(Task.Task));
+        const tasks = yield* Database.Service.runQuery(Query.type(Task.Task));
         console.log('tasks', {
           count: tasks.length,
           tasks: tasks.map((_) => `(${_.id}) ${Obj.getLabel(_)} [${Obj.getKeys(_, LINEAR_ID_KEY)[0]?.id}]`),
         });
 
-        yield* DatabaseService.flush({ indexes: true });
+        yield* Database.Service.flush({ indexes: true });
       },
       Effect.provide(TestLayer),
       TestHelpers.taggedTest('sync'),

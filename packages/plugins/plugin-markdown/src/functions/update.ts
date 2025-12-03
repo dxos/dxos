@@ -7,10 +7,11 @@ import * as Schema from 'effect/Schema';
 
 import { ArtifactId, applyDiffs } from '@dxos/assistant';
 import { createDocAccessor } from '@dxos/echo-db';
-import { DatabaseService, defineFunction } from '@dxos/functions';
+import { defineFunction } from '@dxos/functions';
 import { trim } from '@dxos/util';
 
 import { Markdown } from '../types';
+import { Database } from '@dxos/echo';
 
 // TODO(wittjosiah): Reconcile with ThreadAction.AddProposal.
 export default defineFunction({
@@ -29,7 +30,7 @@ export default defineFunction({
   }),
   outputSchema: Schema.Void,
   handler: Effect.fn(function* ({ data: { id, diffs } }) {
-    const object = yield* DatabaseService.resolve(ArtifactId.toDXN(id), Markdown.Document);
+    const object = yield* Database.Service.resolve(ArtifactId.toDXN(id), Markdown.Document);
     const content = yield* Effect.promise(() => object.content.load());
     const accessor = createDocAccessor(content, ['content']);
     applyDiffs(accessor, diffs);

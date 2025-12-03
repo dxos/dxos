@@ -6,12 +6,12 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
 import { AiService } from '@dxos/ai';
-import { DatabaseService } from '@dxos/echo-db';
 import { CredentialsService, FunctionInvocationService, type InvocationServices, QueueService } from '@dxos/functions';
 import { type FunctionDefinition } from '@dxos/functions';
 
 import { FunctionImplementationResolver, LocalFunctionExecutionService } from './local-function-execution';
 import { RemoteFunctionExecutionService } from './remote-function-execution-service';
+import { Database } from '@dxos/echo';
 
 /**
  * Layer that provides FunctionInvocationService implementation routing between local and remote execution.
@@ -72,7 +72,7 @@ export const FunctionInvocationServiceLayerTest = ({
 } = {}): Layer.Layer<
   FunctionInvocationService,
   never,
-  AiService.AiService | CredentialsService | DatabaseService | QueueService
+  AiService.AiService | CredentialsService | Database.Service | QueueService
 > =>
   FunctionInvocationServiceLayerWithLocalLoopbackExecutor.pipe(
     Layer.provide(FunctionImplementationResolver.layerTest({ functions })),
@@ -93,6 +93,6 @@ export const FunctionInvocationServiceLayerTestMocked = ({
   FunctionInvocationServiceLayerTest({ functions }).pipe(
     Layer.provide(AiService.notAvailable),
     Layer.provide(CredentialsService.configuredLayer([])),
-    Layer.provide(DatabaseService.notAvailable),
+    Layer.provide(Database.Service.notAvailable),
     Layer.provide(QueueService.notAvailable),
   );

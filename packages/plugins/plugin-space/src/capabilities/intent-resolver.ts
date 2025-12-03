@@ -15,7 +15,6 @@ import {
 } from '@dxos/app-framework';
 import { Obj, Query, Ref, Relation, Type } from '@dxos/echo';
 import { Serializer } from '@dxos/echo-db';
-import { DatabaseService } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { Migrations } from '@dxos/migrations';
 import { ClientCapabilities } from '@dxos/plugin-client';
@@ -43,6 +42,7 @@ import { CollectionAction, SpaceAction } from '../types';
 import { COMPOSER_SPACE_LOCK, cloneObject, getNestedObjects } from '../util';
 
 import { SpaceCapabilities } from './capabilities';
+import { Database } from '@dxos/echo';
 
 // TODO(wittjosiah): Remove.
 const SPACE_MAX_OBJECTS = 750;
@@ -515,7 +515,7 @@ export default ({ context, observability, createInvitationUrl }: IntentResolverO
             target: isSpace(target) ? undefined : target,
             hidden,
           });
-        }).pipe(Effect.provide(DatabaseService.layer(space.db)), Effect.runPromise);
+        }).pipe(Effect.provide(Database.Service.layer(space.db)), Effect.runPromise);
 
         return {
           data: {

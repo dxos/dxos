@@ -10,10 +10,9 @@ import * as Function from 'effect/Function';
 import * as Record from 'effect/Record';
 
 import { Filter, Obj, Query } from '@dxos/echo';
-import { DatabaseService } from '@dxos/functions';
-
 import { withDatabase } from '../../util';
 import { Common } from '../options';
+import { Database } from '@dxos/echo';
 
 export const stats = Command.make(
   'stats',
@@ -22,7 +21,7 @@ export const stats = Command.make(
   },
   ({ spaceId }) =>
     Effect.gen(function* () {
-      const objects = yield* DatabaseService.runQuery(Query.select(Filter.everything()));
+      const objects = yield* Database.Service.runQuery(Query.select(Filter.everything()));
       const stats = Function.pipe(
         objects,
         Array.groupBy((obj) => Obj.getTypename(obj) ?? '<empty>'),

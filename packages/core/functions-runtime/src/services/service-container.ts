@@ -6,7 +6,6 @@ import type * as Context from 'effect/Context';
 import * as Layer from 'effect/Layer';
 
 import { AiService } from '@dxos/ai';
-import { DatabaseService } from '@dxos/echo-db';
 import {
   ComputeEventLogger,
   ConfiguredCredentialsService,
@@ -18,6 +17,7 @@ import {
 import { entries } from '@dxos/util';
 
 import { RemoteFunctionExecutionService } from './remote-function-execution-service';
+import { Database } from '@dxos/echo';
 
 // TODO(dmaretskyi): Refactor this module to only rely on tags and not the human-assigned names.
 
@@ -27,7 +27,7 @@ import { RemoteFunctionExecutionService } from './remote-function-execution-serv
 const SERVICES = {
   ai: AiService.AiService,
   credentials: CredentialsService,
-  database: DatabaseService,
+  database: Database.Service,
   eventLogger: ComputeEventLogger,
   functionInvocationService: FunctionInvocationService,
   functionCallService: RemoteFunctionExecutionService,
@@ -105,8 +105,8 @@ export class ServiceContainer {
     );
     const database =
       this._services.database != null
-        ? Layer.succeed(DatabaseService, this._services.database)
-        : DatabaseService.notAvailable;
+        ? Layer.succeed(Database.Service, this._services.database)
+        : Database.Service.notAvailable;
     const queues =
       this._services.queues != null ? Layer.succeed(QueueService, this._services.queues) : QueueService.notAvailable;
     const tracing = Layer.succeed(TracingService, this._services.tracing ?? TracingService.noop);

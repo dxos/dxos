@@ -7,11 +7,11 @@ import * as Console from 'effect/Console';
 import * as Effect from 'effect/Effect';
 
 import { Filter } from '@dxos/echo';
-import { DatabaseService } from '@dxos/echo-db';
 import { Trigger } from '@dxos/functions';
 
 import { withDatabase } from '../../../util';
 import { Common } from '../../options';
+import { Database } from '@dxos/echo';
 
 export const list = Command.make(
   'list',
@@ -20,7 +20,7 @@ export const list = Command.make(
   },
   ({ spaceId }) =>
     Effect.gen(function* () {
-      const triggers = yield* DatabaseService.runQuery(Filter.type(Trigger.Trigger));
+      const triggers = yield* Database.Service.runQuery(Filter.type(Trigger.Trigger));
       yield* Console.log(JSON.stringify(triggers, null, 2));
     }).pipe(withDatabase(spaceId)),
 ).pipe(Command.withDescription('List triggers configured on EDGE.'));

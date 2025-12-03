@@ -6,10 +6,10 @@ import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 
 import { Filter, Obj, Query, Type } from '@dxos/echo';
-import { DatabaseService } from '@dxos/echo-db';
 import { Person } from '@dxos/types';
 
 import { TestDatabaseLayer, testStoragePath } from './layer';
+import { Database } from '@dxos/echo';
 
 describe('TestDatabaseLayer', { timeout: 600_000 }, () => {
   it.effect(
@@ -20,12 +20,12 @@ describe('TestDatabaseLayer', { timeout: 600_000 }, () => {
       });
 
       yield* Effect.gen(function* () {
-        yield* DatabaseService.add(Obj.make(Type.Expando, { label: 'test' }));
-        yield* DatabaseService.flush({ indexes: true });
+        yield* Database.Service.add(Obj.make(Type.Expando, { label: 'test' }));
+        yield* Database.Service.flush({ indexes: true });
       }).pipe(Effect.provide(DbLayer));
 
       yield* Effect.gen(function* () {
-        const objects = yield* DatabaseService.runQuery(Query.select(Filter.everything()));
+        const objects = yield* Database.Service.runQuery(Query.select(Filter.everything()));
         expect(objects[0]?.label).toEqual('test');
       }).pipe(Effect.provide(DbLayer));
     }),
@@ -42,13 +42,13 @@ describe('TestDatabaseLayer', { timeout: 600_000 }, () => {
 
       yield* Effect.gen(function* () {
         for (let i = 0; i < NUM_OBJECTS; i++) {
-          yield* DatabaseService.add(Obj.make(Person.Person, { nickname: `Person ${i}` }));
+          yield* Database.Service.add(Obj.make(Person.Person, { nickname: `Person ${i}` }));
         }
-        yield* DatabaseService.flush({ indexes: true });
+        yield* Database.Service.flush({ indexes: true });
       }).pipe(Effect.provide(DbLayer));
 
       yield* Effect.gen(function* () {
-        const objects = yield* DatabaseService.runQuery(Query.select(Filter.type(Person.Person)));
+        const objects = yield* Database.Service.runQuery(Query.select(Filter.type(Person.Person)));
         expect(objects.length).toEqual(NUM_OBJECTS);
       }).pipe(Effect.provide(DbLayer));
     }),
@@ -61,17 +61,17 @@ describe('TestDatabaseLayer', { timeout: 600_000 }, () => {
         const NUM_OBJECTS = 500;
 
         {
-          const objects = yield* DatabaseService.runQuery(Query.select(Filter.type(Person.Person)));
+          const objects = yield* Database.Service.runQuery(Query.select(Filter.type(Person.Person)));
           console.log({ count: objects.length });
         }
 
         for (let i = 0; i < NUM_OBJECTS; i++) {
-          yield* DatabaseService.add(Obj.make(Person.Person, { nickname: `Person ${i}` }));
+          yield* Database.Service.add(Obj.make(Person.Person, { nickname: `Person ${i}` }));
         }
-        yield* DatabaseService.flush({ indexes: true });
+        yield* Database.Service.flush({ indexes: true });
 
         {
-          const objects = yield* DatabaseService.runQuery(Query.select(Filter.type(Person.Person)));
+          const objects = yield* Database.Service.runQuery(Query.select(Filter.type(Person.Person)));
           console.log({ count: objects.length });
         }
       },

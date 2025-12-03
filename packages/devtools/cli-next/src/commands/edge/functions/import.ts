@@ -8,12 +8,12 @@ import * as Effect from 'effect/Effect';
 
 import { ClientService } from '@dxos/client';
 import { Obj } from '@dxos/echo';
-import { DatabaseService } from '@dxos/echo-db';
 import { Function } from '@dxos/functions';
 import { getDeployedFunctions } from '@dxos/functions-runtime/edge';
 
 import { withDatabase } from '../../../util';
 import { Common } from '../../options';
+import { Database } from '@dxos/echo';
 
 export const importCommand = Command.make(
   'import',
@@ -38,7 +38,7 @@ export const importCommand = Command.make(
         throw new Error(`Function ${key} not found`);
       }
 
-      yield* DatabaseService.add(Obj.clone(fn));
+      yield* Database.Service.add(Obj.clone(fn));
       console.log(JSON.stringify(fn, null, 2));
     }).pipe(withDatabase(spaceId)),
 ).pipe(Command.withDescription('Import a function deployed to EDGE.'));

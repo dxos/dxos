@@ -5,11 +5,12 @@
 import * as Effect from 'effect/Effect';
 
 import { Obj } from '@dxos/echo';
-import { ContextQueueService, DatabaseService } from '@dxos/functions';
+import { ContextQueueService } from '@dxos/functions';
 import { faker } from '@dxos/random';
 import { renderObjectLink } from '@dxos/react-ui-components';
 import { type Actor, type ContentBlock, Message, Organization } from '@dxos/types';
 import { trim } from '@dxos/util';
+import { Database } from '@dxos/echo';
 
 export const createMessage = (role: Actor.Role, blocks: ContentBlock.Any[]): Message.Message => {
   return Obj.make(Message.Message, {
@@ -19,7 +20,7 @@ export const createMessage = (role: Actor.Role, blocks: ContentBlock.Any[]): Mes
   });
 };
 
-export type MessageGenerator = Effect.Effect<void, never, DatabaseService | ContextQueueService>;
+export type MessageGenerator = Effect.Effect<void, never, Database.Service | ContextQueueService>;
 
 export const createMessageGenerator = (): MessageGenerator[] => [
   Effect.gen(function* () {
@@ -145,7 +146,7 @@ export const createMessageGenerator = (): MessageGenerator[] => [
 
   Effect.gen(function* () {
     const { queue } = yield* ContextQueueService;
-    const { db } = yield* DatabaseService;
+    const { db } = yield* Database.Service;
     const obj1 = db.add(Obj.make(Organization.Organization, { name: 'DXOS' }));
     // const obj2 = db.add(Obj.make(Person.Person, { fullName: 'Alice' }));
     // const obj3 = db.add(Obj.make(Person.Person, { fullName: 'Bob' }));

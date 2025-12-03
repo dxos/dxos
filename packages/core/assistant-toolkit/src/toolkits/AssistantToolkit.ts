@@ -10,8 +10,8 @@ import * as Schema from 'effect/Schema';
 
 import { AiContextService, ArtifactId } from '@dxos/assistant';
 import { Ref } from '@dxos/echo';
-import { DatabaseService } from '@dxos/functions';
 import { trim } from '@dxos/util';
+import { Database } from '@dxos/echo';
 
 export const AssistantToolkit = Toolkit.make(
   Tool.make('add-to-context', {
@@ -25,7 +25,7 @@ export const AssistantToolkit = Toolkit.make(
     },
     success: Schema.Void,
     failure: Schema.Never,
-    dependencies: [AiContextService, DatabaseService],
+    dependencies: [AiContextService, Database.Service],
   }),
 );
 
@@ -35,7 +35,7 @@ export const layer = () =>
   AssistantToolkit.toLayer({
     'add-to-context': Effect.fnUntraced(function* ({ id }) {
       const { binder } = yield* AiContextService;
-      const { db } = yield* DatabaseService;
+      const { db } = yield* Database.Service;
       const ref = Ref.fromDXN(ArtifactId.toDXN(id, db.spaceId));
       yield* Effect.promise(() =>
         binder.bind({

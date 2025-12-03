@@ -6,8 +6,9 @@ import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
 import { ArtifactId } from '@dxos/assistant';
-import { DatabaseService, defineFunction } from '@dxos/functions';
+import { defineFunction } from '@dxos/functions';
 import { Markdown } from '@dxos/plugin-markdown/types';
+import { Database } from '@dxos/echo';
 
 export default defineFunction({
   key: 'dxos.org/function/markdown/update',
@@ -23,8 +24,8 @@ export default defineFunction({
   }),
   outputSchema: Schema.Void,
   handler: Effect.fn(function* ({ data: { id, content } }) {
-    const doc = yield* DatabaseService.resolve(ArtifactId.toDXN(id), Markdown.Document);
-    const text = yield* DatabaseService.load(doc.content);
+    const doc = yield* Database.Service.resolve(ArtifactId.toDXN(id), Markdown.Document);
+    const text = yield* Database.Service.load(doc.content);
     text.content = content;
   }),
 });

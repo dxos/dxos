@@ -9,13 +9,14 @@ import * as Effect from 'effect/Effect';
 import * as HashMap from 'effect/HashMap';
 
 import { Filter, Obj, Ref } from '@dxos/echo';
-import { DatabaseService, Function, Trigger, getUserFunctionIdInMetadata } from '@dxos/functions';
+import { Function, Trigger, getUserFunctionIdInMetadata } from '@dxos/functions';
 
 import { withDatabase, withTypes } from '../../../../util';
 import { Common } from '../../../options';
 import { Enabled, Input } from '../options';
 
 import { Cron } from './options';
+import { Database } from '@dxos/echo';
 
 export const create = Command.make(
   'create',
@@ -29,7 +30,7 @@ export const create = Command.make(
   },
   ({ spaceId, enabled, functionId, cron, input }) =>
     Effect.gen(function* () {
-      const functions = yield* DatabaseService.runQuery(Filter.type(Function.Function));
+      const functions = yield* Database.Service.runQuery(Filter.type(Function.Function));
       const fn = functions.find((fn) => getUserFunctionIdInMetadata(Obj.getMeta(fn)) === functionId);
       if (!fn) {
         throw new Error(`Function not found: ${functionId}`);
@@ -44,7 +45,7 @@ export const create = Command.make(
         },
         input: Object.fromEntries(HashMap.toEntries(input)),
       });
-      yield* DatabaseService.add(trigger);
+      yield* Database.Service.add(trigger);
       yield* Console.log('Created trigger', trigger.id);
     }).pipe(withDatabase(spaceId), withTypes([Function.Function, Trigger.Trigger])),
 ).pipe(Command.withDescription('Create a timer trigger.'));

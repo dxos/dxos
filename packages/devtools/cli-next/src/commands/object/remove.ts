@@ -9,10 +9,9 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
 import { Filter, Query } from '@dxos/echo';
-import { DatabaseService } from '@dxos/functions';
-
 import { withDatabase } from '../../util';
 import { Common } from '../options';
+import { Database } from '@dxos/echo';
 
 export const remove = Command.make(
   'remove',
@@ -34,9 +33,9 @@ export const remove = Command.make(
       } else {
         throw new Error('Must specify typename or id');
       }
-      const objects = yield* DatabaseService.runQuery(query);
+      const objects = yield* Database.Service.runQuery(query);
       for (const object of objects) {
-        yield* DatabaseService.remove(object);
+        yield* Database.Service.remove(object);
       }
 
       yield* Console.log(`Removed ${objects.length} objects.`);

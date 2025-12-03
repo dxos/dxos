@@ -15,7 +15,7 @@ import * as Stream from 'effect/Stream';
 import { ArtifactId } from '@dxos/assistant';
 import { DXN, Obj } from '@dxos/echo';
 import type { Queue } from '@dxos/echo-db';
-import { DatabaseService, QueueService, defineFunction } from '@dxos/functions';
+import { QueueService, defineFunction } from '@dxos/functions';
 import { log } from '@dxos/log';
 import { type Message } from '@dxos/types';
 
@@ -27,6 +27,7 @@ import * as Mailbox from '../../../types/Mailbox';
 import { GoogleMail } from '../../apis';
 
 import { mapMessage } from './mapper';
+import { Database } from '@dxos/echo';
 
 type DateChunk = {
   readonly start: Date;
@@ -71,14 +72,14 @@ export default defineFunction({
     newMessages: Schema.Number,
   }),
   types: [Mailbox.Mailbox],
-  services: [DatabaseService, QueueService],
+  services: [Database.Service, QueueService],
   handler: ({
     // TODO(wittjosiah): Schema-based defaults are not yet supported.
     data: { mailboxId, userId = 'me', label = 'inbox', after = format(subDays(new Date(), 30), 'yyyy-MM-dd') },
   }) =>
     Effect.gen(function* () {
       log('syncing gmail', { mailboxId, userId, after });
-      const mailbox = yield* DatabaseService.resolve(DXN.parse(mailboxId), Mailbox.Mailbox);
+      const mailbox = yield* Database.Service.resolve(DXN.parse(mailboxId), Mailbox.Mailbox);
 
       const labelCount = yield* syncLabels(mailbox, userId).pipe(
         Effect.catchAll((error) => {

@@ -17,7 +17,7 @@ import { type FunctionProtocol } from '@dxos/protocols';
 
 import { FunctionError } from '../errors';
 import { FunctionDefinition, type FunctionServices } from '../sdk';
-import { CredentialsService, DatabaseService, FunctionInvocationService, TracingService } from '../services';
+import { CredentialsService, Database.Service, FunctionInvocationService, TracingService } from '../services';
 import { QueueService } from '../services';
 
 /**
@@ -39,7 +39,7 @@ export const wrapFunctionHandler = (func: FunctionDefinition): FunctionProtocol.
     },
     handler: async ({ data, context }) => {
       if (
-        (func.services.includes(DatabaseService.key) || func.services.includes(QueueService.key)) &&
+        (func.services.includes(Database.Service.key) || func.services.includes(QueueService.key)) &&
         (!context.services.dataService || !context.services.queryService)
       ) {
         throw new FunctionError({
@@ -138,7 +138,7 @@ class FunctionContext extends Resource {
   createLayer(): Layer.Layer<FunctionServices> {
     assertState(this._lifecycleState === LifecycleState.OPEN, 'FunctionContext is not open');
 
-    const dbLayer = this.db ? DatabaseService.layer(this.db) : DatabaseService.notAvailable;
+    const dbLayer = this.db ? Database.Service.layer(this.db) : Database.Service.notAvailable;
     const queuesLayer = this.queues ? QueueService.layer(this.queues) : QueueService.notAvailable;
     const credentials = dbLayer
       ? CredentialsService.layerFromDatabase().pipe(Layer.provide(dbLayer))

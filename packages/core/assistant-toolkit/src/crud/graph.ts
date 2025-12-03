@@ -25,10 +25,11 @@ import {
 import { type EchoDatabase, type Queue } from '@dxos/echo-db';
 import { isEncodedReference } from '@dxos/echo-protocol';
 import { mapAst } from '@dxos/effect';
-import { ContextQueueService, DatabaseService } from '@dxos/functions';
+import { ContextQueueService } from '@dxos/functions';
 import { DXN, ObjectId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { deepMapValues, isNonNullable, trim } from '@dxos/util';
+import { Database } from '@dxos/echo';
 
 // TODO(burdon): Unify with the graph schema.
 export const Subgraph = Schema.Struct({
@@ -108,13 +109,13 @@ export const LocalSearchToolkit = Toolkit.make(
     },
     success: Schema.Unknown,
     failure: Schema.Never,
-    dependencies: [DatabaseService],
+    dependencies: [Database.Service],
   }),
 );
 
 export const LocalSearchHandler = LocalSearchToolkit.toLayer({
   search_local_search: Effect.fn(function* ({ query }) {
-    const objects = yield* DatabaseService.runQuery(Query.select(Filter.text(query, { type: 'vector' })));
+    const objects = yield* Database.Service.runQuery(Query.select(Filter.text(query, { type: 'vector' })));
     const results = [...objects];
 
     const option = yield* Effect.serviceOption(ContextQueueService);
@@ -152,7 +153,7 @@ export const makeGraphWriterToolkit = ({ schema }: { schema: Schema.Schema.AnyNo
       parameters: createExtractionSchema(schema).fields,
       success: Schema.Unknown,
       failure: Schema.Never,
-      dependencies: [DatabaseService, ContextQueueService],
+      dependencies: [Database.Service, ContextQueueService],
     }).annotateContext(Context.make(GraphWriterSchema, { schema })),
   );
 };
@@ -172,7 +173,7 @@ export const makeGraphWriterHandler = (
 
   return toolkit.toLayer({
     graph_writer: Effect.fn(function* (input) {
-      const { db } = yield* DatabaseService;
+      const { db } = yield* Database.Service;
       const { queue } = yield* ContextQueueService;
       const data = yield* Effect.promise(() => sanitizeObjects(schema, input as any, db, queue));
       yield* Effect.promise(() => queue.append(data as Obj.Any[]));

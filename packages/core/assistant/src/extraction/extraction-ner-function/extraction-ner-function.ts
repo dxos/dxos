@@ -20,7 +20,7 @@ export const extractionNerFunction = defineFunction({
     throw new Error('not implemented');
     // log.info('input', { message, options });
     // const startTime = performance.now();
-    // const { db } = context.getService(DatabaseService);
+    // const { db } = context.getService(Database.Service);
     // const { extractFullEntities } = await import('./named-entity-recognition');
 
     // const entitiesPromise = Promise.all(

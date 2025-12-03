@@ -5,9 +5,10 @@
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
-import { DatabaseService, defineFunction } from '@dxos/functions';
+import { defineFunction } from '@dxos/functions';
 
 import { Chess } from '../types';
+import { Database } from '@dxos/echo';
 
 export default defineFunction({
   key: 'dxos.org/function/chess/create',
@@ -27,6 +28,6 @@ export default defineFunction({
   }),
   outputSchema: Chess.Game,
   handler: Effect.fn(function* ({ data: { pgn, fen } }) {
-    return yield* DatabaseService.add(Chess.makeGame({ pgn, fen }));
+    return yield* Database.Service.add(Chess.makeGame({ pgn, fen }));
   }),
 });

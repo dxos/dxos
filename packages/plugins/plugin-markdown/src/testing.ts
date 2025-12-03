@@ -7,15 +7,15 @@ import * as Effect from 'effect/Effect';
 
 import { SpaceProperties } from '@dxos/client-protocol';
 import { Obj, Ref } from '@dxos/echo';
-import { DatabaseService } from '@dxos/functions';
 import { Collection } from '@dxos/schema';
+import { Database } from '@dxos/echo';
 
 // TODO(wittjosiah): Factor out.
-export const WithProperties = <A, E, R>(effect: Effect.Effect<A, E, R>): Effect.Effect<A, E, R | DatabaseService> =>
+export const WithProperties = <A, E, R>(effect: Effect.Effect<A, E, R>): Effect.Effect<A, E, R | Database.Service> =>
   Effect.zipRight(
     Effect.gen(function* () {
       // TODO(wittjosiah): Remove cast.
-      yield* DatabaseService.add(
+      yield* Database.Service.add(
         Obj.make(SpaceProperties, {
           [Collection.Collection.typename]: Ref.make(Collection.make()),
         }) as any,

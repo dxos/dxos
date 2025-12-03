@@ -8,7 +8,6 @@ import * as Layer from 'effect/Layer';
 import * as Schema from 'effect/Schema';
 
 import { AiService } from '@dxos/ai';
-import { DatabaseService } from '@dxos/echo-db';
 import {
   CredentialsService,
   type FunctionContext,
@@ -21,6 +20,7 @@ import {
 } from '@dxos/functions';
 import { type FunctionServices } from '@dxos/functions';
 import { log } from '@dxos/log';
+import { Database } from '@dxos/echo';
 
 export class LocalFunctionExecutionService extends Context.Tag('@dxos/functions/LocalFunctionExecutionService')<
   LocalFunctionExecutionService,
@@ -37,7 +37,7 @@ export class LocalFunctionExecutionService extends Context.Tag('@dxos/functions/
       const resolver = yield* FunctionImplementationResolver;
       const ai = yield* AiService.AiService;
       const credentials = yield* CredentialsService;
-      const database = yield* DatabaseService;
+      const database = yield* Database.Service;
       const queues = yield* QueueService;
       const functionInvocationService = yield* FunctionInvocationService;
       return {
@@ -53,7 +53,7 @@ export class LocalFunctionExecutionService extends Context.Tag('@dxos/functions/
           }).pipe(
             Effect.provideService(AiService.AiService, ai),
             Effect.provideService(CredentialsService, credentials),
-            Effect.provideService(DatabaseService, database),
+            Effect.provideService(Database.Service, database),
             Effect.provideService(QueueService, queues),
             Effect.provideService(FunctionInvocationService, functionInvocationService),
           ),

@@ -10,12 +10,13 @@ import * as Function from 'effect/Function';
 import * as Schema from 'effect/Schema';
 
 import { Filter, Obj, Query, Ref, type Type } from '@dxos/echo';
-import { DatabaseService, defineFunction, withAuthorization } from '@dxos/functions';
+import { defineFunction, withAuthorization } from '@dxos/functions';
 import { log } from '@dxos/log';
 import { Person, Project, Task } from '@dxos/types';
 
 import { syncObjects } from '../../sync';
 import { graphqlRequestBody } from '../../util';
+import { Database } from '@dxos/echo';
 
 const queryIssues = `
 query Issues($teamId: String!, $after: DateTimeOrDuration!) {
@@ -114,8 +115,8 @@ export default defineFunction({
 const getLatestUpdateTimestamp: (
   teamId: string,
   dataType: Type.Obj.Any,
-) => Effect.Effect<string, never, DatabaseService> = Effect.fnUntraced(function* (teamId, dataType) {
-  const existingTasks = yield* DatabaseService.runQuery(
+) => Effect.Effect<string, never, Database.Service> = Effect.fnUntraced(function* (teamId, dataType) {
+  const existingTasks = yield* Database.Service.runQuery(
     Query.type(dataType).select(Filter.foreignKeys(dataType, [{ source: LINEAR_TEAM_ID_KEY, id: teamId }])),
   );
   return Function.pipe(

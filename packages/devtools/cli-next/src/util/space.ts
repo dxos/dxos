@@ -10,9 +10,9 @@ import type * as Schema from 'effect/Schema';
 import { ClientService } from '@dxos/client';
 import { type Space, SpaceId } from '@dxos/client/echo';
 import { BaseError, type BaseErrorOptions } from '@dxos/errors';
-import { DatabaseService } from '@dxos/functions';
 import { log } from '@dxos/log';
 import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
+import { Database } from '@dxos/echo';
 
 export const getSpace = (rawSpaceId: string) =>
   Effect.gen(function* () {
@@ -23,7 +23,7 @@ export const getSpace = (rawSpaceId: string) =>
 
 export const withDatabase: (
   rawSpaceId: string,
-) => <A, E, R>(effect: Effect.Effect<A, E, R>) => Effect.Effect<A, E, ClientService | Exclude<R, DatabaseService>> = (
+) => <A, E, R>(effect: Effect.Effect<A, E, R>) => Effect.Effect<A, E, ClientService | Exclude<R, Database.Service>> = (
   rawSpaceId,
 ) =>
   Effect.fnUntraced(function* (effect) {
@@ -32,18 +32,18 @@ export const withDatabase: (
     // TODO(wittjosiah): Is waitUntilReady needed?
     // const db = spaceId.pipe(
     //   Option.flatMap((id) => Option.fromNullable(client.spaces.get(id))),
-    //   Option.map((space) => DatabaseService.layer(space.db)),
-    //   Option.getOrElse(() => DatabaseService.notAvailable),
+    //   Option.map((space) => Database.Service.layer(space.db)),
+    //   Option.getOrElse(() => Database.Service.notAvailable),
     // );
     const db = yield* spaceId.pipe(
       Option.flatMap((id) => Option.fromNullable(client.spaces.get(id))),
       Option.map((space) => Effect.promise(() => space.waitUntilReady())),
-      Option.map((space) => Effect.map(space, (space) => DatabaseService.layer(space.db))),
-      Option.getOrElse(() => Effect.succeed(DatabaseService.notAvailable)),
+      Option.map((space) => Effect.map(space, (space) => Database.Service.layer(space.db))),
+      Option.getOrElse(() => Effect.succeed(Database.Service.notAvailable)),
     );
 
     return yield* Effect.gen(function* () {
-      yield* Effect.addFinalizer(() => DatabaseService.flush({ indexes: true }));
+      yield* Effect.addFinalizer(() => Database.Service.flush({ indexes: true }));
       return yield* effect;
     }).pipe(Effect.scoped, Effect.provide(db));
   });

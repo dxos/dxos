@@ -7,9 +7,10 @@ import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
 import { ArtifactId } from '@dxos/assistant';
-import { DatabaseService, defineFunction } from '@dxos/functions';
+import { defineFunction } from '@dxos/functions';
 
 import { Chess } from '../types';
+import { Database } from '@dxos/echo';
 
 export default defineFunction({
   key: 'dxos.org/function/chess/move',
@@ -30,7 +31,7 @@ export default defineFunction({
     }),
   }),
   handler: Effect.fn(function* ({ data: { id, move } }) {
-    const object = yield* DatabaseService.resolve(ArtifactId.toDXN(id), Chess.Game);
+    const object = yield* Database.Service.resolve(ArtifactId.toDXN(id), Chess.Game);
     const chess = new ChessJS();
     if (object.pgn) {
       chess.loadPgn(object.pgn);

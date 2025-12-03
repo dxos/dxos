@@ -22,7 +22,7 @@ import {
 } from '@dxos/assistant';
 import { Template } from '@dxos/blueprints';
 import { type DXN, Obj } from '@dxos/echo';
-import { DatabaseService, TracingService, defineFunction } from '@dxos/functions';
+import { TracingService, defineFunction } from '@dxos/functions';
 import { FunctionInvocationServiceLayerTestMocked } from '@dxos/functions-runtime/testing';
 import { type Message, Person } from '@dxos/types';
 import { trim } from '@dxos/util';
@@ -33,6 +33,7 @@ import { exaFunction, exaMockFunction } from '../exa';
 import { contextQueueLayerFromResearchGraph } from './research-graph';
 import PROMPT from './research-instructions.tpl?raw';
 import { ResearchDataTypes } from './types';
+import { Database } from '@dxos/echo';
 
 /**
  * Exec external service and return the results as a Subgraph.
@@ -84,7 +85,7 @@ export default defineFunction({
   handler: Effect.fnUntraced(
     function* ({ data: { query, instructions, mockSearch = false, entityExtraction = false } }) {
       if (mockSearch) {
-        const mockPerson = yield* DatabaseService.add(
+        const mockPerson = yield* Database.Service.add(
           Obj.make(Person.Person, {
             preferredName: 'John Doe',
             emails: [{ value: 'john.doe@example.com' }],
@@ -101,7 +102,7 @@ export default defineFunction({
         };
       }
 
-      yield* DatabaseService.flush({ indexes: true });
+      yield* Database.Service.flush({ indexes: true });
       yield* TracingService.emitStatus({ message: 'Starting research...' });
 
       const NativeWebSearch = Toolkit.make(AnthropicTool.WebSearch_20250305({}));
@@ -137,7 +138,7 @@ export default defineFunction({
         observer: GenerationObserver.fromPrinter(new ConsolePrinter({ tag: 'research' })),
       });
 
-      const objects = yield* Effect.forEach(objectDXNs, (dxn) => DatabaseService.resolve(dxn)).pipe(
+      const objects = yield* Effect.forEach(objectDXNs, (dxn) => Database.Service.resolve(dxn)).pipe(
         Effect.map(Array.map((obj) => Obj.toJSON(obj))),
       );
 

@@ -5,7 +5,7 @@
 import type * as Context from 'effect/Context';
 
 import type { Space } from '@dxos/client/echo';
-import { DatabaseService, type EchoDatabase, type QueueFactory } from '@dxos/echo-db';
+import { type EchoDatabase, type QueueFactory } from '@dxos/echo-db';
 import {
   type ComputeEventLogger,
   ConfiguredCredentialsService,
@@ -19,6 +19,7 @@ import { assertArgument } from '@dxos/invariant';
 import { ServiceContainer } from '../services';
 
 import { consoleLogger, noopLogger } from './logger';
+import { Database } from '@dxos/echo';
 
 // TODO(burdon): Factor out.
 export type OneOf<T> = {
@@ -94,7 +95,7 @@ export const createTestServices = ({
   return new ServiceContainer().setServices({
     // ai: createAiService(ai),
     credentials: createCredentialsService(credentials),
-    database: space || db ? DatabaseService.make(space?.db || db!) : undefined,
+    database: space || db ? Database.Service.make(space?.db || db!) : undefined,
     eventLogger: (logging?.logger ?? logging?.enabled) ? consoleLogger : noopLogger,
     queues: space || queues ? QueueService.make(space?.queues || queues!, undefined) : undefined,
     tracing: tracing?.service,

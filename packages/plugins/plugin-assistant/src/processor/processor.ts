@@ -30,7 +30,6 @@ import { Obj } from '@dxos/echo';
 import { throwCause } from '@dxos/effect';
 import {
   type CredentialsService,
-  type DatabaseService,
   type FunctionInvocationService,
   type QueueService,
   type TracingService,
@@ -41,10 +40,11 @@ import { type ContentBlock, Message } from '@dxos/types';
 import { type Assistant } from '../types';
 
 import { updateName } from './update-name';
+import { Database } from '@dxos/echo';
 
 export type AiChatServices =
   | CredentialsService
-  | DatabaseService
+  | Database.Service
   | QueueService
   | FunctionInvocationService
   | AiService.AiService

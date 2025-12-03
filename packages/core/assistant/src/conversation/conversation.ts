@@ -10,7 +10,6 @@ import * as Option from 'effect/Option';
 import { Resource } from '@dxos/context';
 import { Obj } from '@dxos/echo';
 import { type Queue } from '@dxos/echo-db';
-import { DatabaseService } from '@dxos/echo-db';
 import { log } from '@dxos/log';
 import { Message } from '@dxos/types';
 
@@ -23,6 +22,7 @@ import {
 } from '../session';
 
 import { AiContextBinder, AiContextService, type ContextBinding } from './context';
+import { Database } from '@dxos/echo';
 
 export interface AiConversationRunParams {
   prompt: string;
@@ -90,11 +90,11 @@ export class AiConversation extends Resource {
 
       // Get context objects.
       const context = yield* Effect.promise(() => this.context.query());
-      const blueprints = yield* Effect.forEach(context.blueprints.values(), DatabaseService.loadOption).pipe(
+      const blueprints = yield* Effect.forEach(context.blueprints.values(), Database.Service.loadOption).pipe(
         Effect.map(Array.filter(Option.isSome)),
         Effect.map(Array.map((option) => option.value)),
       );
-      const objects = yield* Effect.forEach(context.objects.values(), DatabaseService.loadOption).pipe(
+      const objects = yield* Effect.forEach(context.objects.values(), Database.Service.loadOption).pipe(
         Effect.map(Array.filter(Option.isSome)),
         Effect.map(Array.map((option) => option.value)),
       );

@@ -9,11 +9,12 @@ import * as Schema from 'effect/Schema';
 
 import { ArtifactId } from '@dxos/assistant';
 import { Obj } from '@dxos/echo';
-import { DatabaseService, QueueService, defineFunction } from '@dxos/functions';
+import { QueueService, defineFunction } from '@dxos/functions';
 import { Message } from '@dxos/types';
 
 import { Mailbox } from '../types';
 import { renderMarkdown } from '../util';
+import { Database } from '@dxos/echo';
 
 export default defineFunction({
   key: 'dxos.org/function/inbox/email-open',
@@ -40,7 +41,7 @@ export default defineFunction({
     content: Schema.String,
   }),
   handler: Effect.fn(function* ({ data: { id, skip = 0, limit = 20 } }) {
-    const mailbox = yield* DatabaseService.resolve(ArtifactId.toDXN(id), Mailbox.Mailbox);
+    const mailbox = yield* Database.Service.resolve(ArtifactId.toDXN(id), Mailbox.Mailbox);
     const queue = yield* QueueService.getQueue(mailbox.queue.dxn);
     yield* Effect.promise(() => queue?.queryObjects());
     const content = Function.pipe(

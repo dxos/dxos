@@ -40,7 +40,7 @@ export type FunctionDeployOptions = {
 export type FunctionInvokeOptions = {
   /**
    * Space in which the function is invoked.
-   * Binds the DatabaseService injected into the function to this space.
+   * Binds the Database.Service injected into the function to this space.
    * Without this, the function will not have access to any database.
    */
   spaceId?: SpaceId;

@@ -5,9 +5,9 @@
 import * as Effect from 'effect/Effect';
 
 import { Filter, Obj, Query, Ref } from '@dxos/echo';
-import { DatabaseService } from '@dxos/functions';
 import { failedInvariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
+import { Database } from '@dxos/echo';
 
 /**
  * Syncs objects to the database.
@@ -20,7 +20,7 @@ import { log } from '@dxos/log';
 export const syncObjects: (
   objs: Obj.Any[],
   opts: { foreignKeyId: string },
-) => Effect.Effect<Obj.Any[], never, DatabaseService> = Effect.fn('syncObjects')(function* (objs, { foreignKeyId }) {
+) => Effect.Effect<Obj.Any[], never, Database.Service> = Effect.fn('syncObjects')(function* (objs, { foreignKeyId }) {
   return yield* Effect.forEach(
     objs,
     Effect.fnUntraced(function* (obj) {
@@ -39,7 +39,7 @@ export const syncObjects: (
 
       const schema = Obj.getSchema(obj) ?? failedInvariant('No schema.');
       const foreignId = Obj.getKeys(obj, foreignKeyId)[0]?.id ?? failedInvariant('No foreign key.');
-      const [existing] = yield* DatabaseService.runQuery(
+      const [existing] = yield* Database.Service.runQuery(
         Query.select(Filter.foreignKeys(schema, [{ source: foreignKeyId, id: foreignId }])),
       );
       log('sync object', {
@@ -48,7 +48,7 @@ export const syncObjects: (
         existing: existing ? Obj.getDXN(existing) : undefined,
       });
       if (!existing) {
-        yield* DatabaseService.add(obj);
+        yield* Database.Service.add(obj);
         return obj;
       } else {
         copyObjectData(existing, obj);

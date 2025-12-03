@@ -9,7 +9,6 @@ import * as Scope from 'effect/Scope';
 
 import { AiService } from '@dxos/ai';
 import { raise } from '@dxos/debug';
-import { DatabaseService } from '@dxos/echo-db';
 import {
   ComputeEventLogger,
   CredentialsService,
@@ -43,6 +42,7 @@ import {
   type TopologyNodeConnector,
   createTopology,
 } from './topology';
+import { Database } from '@dxos/echo';
 
 export type ValidateParams = {
   graph: ComputeGraphModel;
@@ -362,7 +362,7 @@ export class GraphExecutor {
         Layer.succeed(Scope.Scope, yield* Scope.Scope),
         Layer.succeed(ComputeEventLogger, yield* ComputeEventLogger),
         Layer.succeed(CredentialsService, yield* CredentialsService),
-        Layer.succeed(DatabaseService, yield* DatabaseService),
+        Layer.succeed(Database.Service, yield* Database.Service),
         Layer.succeed(QueueService, yield* QueueService),
         Layer.succeed(FunctionInvocationService, yield* FunctionInvocationService),
         Layer.succeed(TracingService, yield* TracingService),
