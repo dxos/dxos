@@ -81,9 +81,7 @@ export const SurfaceInfo = forwardRef<HTMLElement, SurfaceInfoProps>(({ children
                   setExpand(false);
                 }}
               >
-                <pre className='p-2 text-xs text-description font-mono font-thin'>
-                  {JSON.stringify({ info }, null, 2)}
-                </pre>
+                <pre className='p-2 text-xs text-description font-mono'>{JSON.stringify({ info }, null, 2)}</pre>
               </div>
             ) : (
               <span
