@@ -8,7 +8,8 @@ import * as Fiber from 'effect/Fiber';
 import * as Layer from 'effect/Layer';
 import React, { type CSSProperties, useEffect, useMemo, useState } from 'react';
 
-import { ContextQueueService, DatabaseService } from '@dxos/functions';
+import { Database } from '@dxos/echo';
+import { ContextQueueService } from '@dxos/functions';
 import { faker } from '@dxos/random';
 import { useQueue, useSpace } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
@@ -29,7 +30,7 @@ import TEXT from './testing/thread.md?raw';
 
 faker.seed(1);
 
-type MessageGenerator = Effect.Effect<void, never, DatabaseService | ContextQueueService>;
+type MessageGenerator = Effect.Effect<void, never, Database.Service | ContextQueueService>;
 
 type StoryProps = { generator?: MessageGenerator[]; delay?: number; wait?: boolean } & ChatThreadProps;
 
@@ -54,7 +55,7 @@ const DefaultStory = ({ generator = [], delay = 0, wait, ...props }: StoryProps)
           }
         }
         setDone(true);
-      }).pipe(Effect.provide(Layer.mergeAll(DatabaseService.layer(space.db), ContextQueueService.layer(queue)))),
+      }).pipe(Effect.provide(Layer.mergeAll(Database.Service.layer(space.db), ContextQueueService.layer(queue)))),
     );
 
     return () => {

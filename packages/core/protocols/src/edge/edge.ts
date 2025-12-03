@@ -249,12 +249,16 @@ export type UploadFunctionRequest = {
 /**
  * Note: Do not change the values of these enums, this values are stored in the FunctionVersions database.
  */
+// TODO(dmaretskyi): Rename to FunctionServiceRuntime
 export enum Runtime {
   // https://developers.cloudflare.com/cloudflare-for-platforms/workers-for-platforms/
   WORKERS_FOR_PLATFORMS = 'WORKERS_FOR_PLATFORMS',
   // https://developers.cloudflare.com/workers/runtime-apis/bindings/worker-loader/
   WORKER_LOADER = 'WORKER_LOADER',
   // Local worker dispatcher for testing.
+  /**
+   * @deprecated No longer supported.
+   */
   TEST = 'TEST',
 }
 

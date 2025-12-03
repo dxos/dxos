@@ -15,7 +15,8 @@ import * as Stream from 'effect/Stream';
 
 import { ArtifactId } from '@dxos/assistant';
 import { DXN } from '@dxos/echo';
-import { DatabaseService, QueueService, defineFunction } from '@dxos/functions';
+import { Database } from '@dxos/echo';
+import { QueueService, defineFunction } from '@dxos/functions';
 import { log } from '@dxos/log';
 import { type Event } from '@dxos/types';
 
@@ -53,7 +54,7 @@ export default defineFunction({
         pageSize,
       });
 
-      const calendar = yield* DatabaseService.resolve(DXN.parse(calendarId), Calendar.Calendar);
+      const calendar = yield* Database.Service.resolve(DXN.parse(calendarId), Calendar.Calendar);
       const queue = yield* QueueService.getQueue<Event.Event>(calendar.queue.dxn);
 
       // State management for sync process.

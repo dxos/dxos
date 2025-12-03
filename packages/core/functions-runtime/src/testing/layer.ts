@@ -7,7 +7,8 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import type * as Schema from 'effect/Schema';
 
-import { DatabaseService, type EchoDatabaseImpl, type QueueFactory } from '@dxos/echo-db';
+import { Database } from '@dxos/echo';
+import { type EchoDatabaseImpl, type QueueFactory } from '@dxos/echo-db';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
 import type { EchoHostIndexingConfig } from '@dxos/echo-pipeline';
 import { acquireReleaseResource } from '@dxos/effect';
@@ -34,7 +35,7 @@ export type TestDatabaseOptions = {
    */
   spaceKey?: PublicKey | 'fixed';
   storagePath?: string;
-  onInit?: () => Effect.Effect<void, never, DatabaseService | QueueService>;
+  onInit?: () => Effect.Effect<void, never, Database.Service | QueueService>;
 };
 
 export const TestDatabaseLayer = ({ indexing, types, spaceKey, storagePath, onInit }: TestDatabaseOptions = {}) =>
@@ -78,7 +79,7 @@ export const TestDatabaseLayer = ({ indexing, types, spaceKey, storagePath, onIn
 
           if (onInit) {
             yield* onInit().pipe(
-              Effect.provideService(DatabaseService, DatabaseService.make(db)),
+              Effect.provideService(Database.Service, Database.Service.make(db)),
               Effect.provideService(QueueService, QueueService.make(queues, undefined)),
             );
           }
@@ -93,7 +94,7 @@ export const TestDatabaseLayer = ({ indexing, types, spaceKey, storagePath, onIn
         queues = peer.client.constructQueueFactory(db.spaceId);
         if (onInit) {
           yield* onInit().pipe(
-            Effect.provideService(DatabaseService, DatabaseService.make(db)),
+            Effect.provideService(Database.Service, Database.Service.make(db)),
             Effect.provideService(QueueService, QueueService.make(queues, undefined)),
           );
         }
@@ -113,7 +114,7 @@ export const TestDatabaseLayer = ({ indexing, types, spaceKey, storagePath, onIn
       );
 
       return Context.mergeAll(
-        Context.make(DatabaseService, DatabaseService.make(db)),
+        Context.make(Database.Service, Database.Service.make(db)),
         Context.make(QueueService, QueueService.make(queues, undefined)),
       );
     }),
