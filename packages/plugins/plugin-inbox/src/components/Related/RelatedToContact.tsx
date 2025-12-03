@@ -10,7 +10,8 @@ import { LayoutAction, chain, createIntent } from '@dxos/app-framework';
 import { type SurfaceComponentProps, useIntentDispatcher } from '@dxos/app-framework/react';
 import { Filter, Obj } from '@dxos/echo';
 import { AttentionAction } from '@dxos/plugin-attention/types';
-import { useQuery, useQueue, useSpace } from '@dxos/react-client/echo';
+import { useActiveSpace } from '@dxos/plugin-space';
+import { useQuery, useQueue } from '@dxos/react-client/echo';
 import { Event, Message, type Person } from '@dxos/types';
 
 import { Calendar, Mailbox } from '../../types';
@@ -20,7 +21,7 @@ import { RelatedMessages } from './RelatedMessages';
 
 export const RelatedToContact = ({ subject: contact }: SurfaceComponentProps<Person.Person>) => {
   const { dispatchPromise: dispatch } = useIntentDispatcher();
-  const space = useSpace();
+  const space = useActiveSpace();
   const [mailbox] = useQuery(space, Filter.type(Mailbox.Mailbox));
   const [calendar] = useQuery(space, Filter.type(Calendar.Calendar));
   const messageQueue = useQueue(mailbox?.queue.dxn);
