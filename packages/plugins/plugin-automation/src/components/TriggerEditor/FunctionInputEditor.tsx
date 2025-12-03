@@ -7,23 +7,29 @@ import React, { useCallback, useMemo } from 'react';
 import { Ref, Type } from '@dxos/echo';
 import { type JsonPath } from '@dxos/echo/internal';
 import { type Function } from '@dxos/functions';
-import { useOnTransition } from '@dxos/react-ui';
-import { Form, type FormFieldStateProps, type QueryRefOptions, useFormValues } from '@dxos/react-ui-form';
+import { useOnTransition, useTranslation } from '@dxos/react-ui';
+import {
+  Form,
+  type FormFieldStateProps,
+  type NewFormRootProps,
+  type QueryRefOptions,
+  useFormValues,
+} from '@dxos/react-ui-form';
+
+import { meta } from '../../meta';
 
 export type FunctionInputEditorProps = {
   functions: Function.Function[];
   onQueryRefOptions: QueryRefOptions;
 } & FormFieldStateProps;
 
-/**
- * Editor component for function input parameters.
- */
 export const FunctionInputEditor = ({
   functions,
   getValue,
   onValueChange,
   onQueryRefOptions,
 }: FunctionInputEditorProps) => {
+  const { t } = useTranslation(meta.id);
   const selectedFunctionValue = useFormValues(FunctionInputEditor.displayName, ['function' as JsonPath]);
   const selectedFunctionId = useMemo(() => {
     if (Ref.isRef(selectedFunctionValue)) {
@@ -53,11 +59,10 @@ export const FunctionInputEditor = ({
   const inputSchema = useMemo(() => selectedFunction?.inputSchema, [selectedFunction]);
   const effectSchema = useMemo(() => (inputSchema ? Type.toEffectSchema(inputSchema) : undefined), [inputSchema]);
   const propertyCount = inputSchema?.properties ? Object.keys(inputSchema.properties).length : 0;
-
   const values = useMemo(() => getValue() ?? {}, [getValue]);
 
-  const handleValuesChanged = useCallback(
-    (values: any) => {
+  const handleValuesChanged = useCallback<NonNullable<NewFormRootProps['onValuesChanged']>>(
+    (values) => {
       onValueChange('object', values);
     },
     [onValueChange],
@@ -69,15 +74,15 @@ export const FunctionInputEditor = ({
 
   return (
     <>
-      <h3 className='text-md'>Function parameters</h3>
-      {/* TODO(ZaymonFC): Try using <FormFieldSet /> internal component for nesting. This would allow errors to flow up to the root context. */}
-      <Form
+      <Form.Label label={t('function parameters label')} asChild />
+      <Form.Root
         schema={effectSchema}
         values={values}
         onValuesChanged={handleValuesChanged}
         onQueryRefOptions={onQueryRefOptions}
-        outerSpacing={false}
-      />
+      >
+        <Form.FieldSet />
+      </Form.Root>
     </>
   );
 };

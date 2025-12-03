@@ -84,22 +84,23 @@ const command = Command.make(
   },
   Effect.fn(function* ({ file: [filename, contents] }: { file: readonly [string, Uint8Array] }) {
     const client = yield* ClientService;
-    yield* Effect.promise(() => client.halo.createIdentity());
-
-    client.addTypes([
-      Graph.Graph,
-      Graph.GraphV1,
-      Kanban.Kanban,
-      Kanban.KanbanV1,
-      Map.Map,
-      Map.MapV2,
-      Masonry.Masonry,
-      Masonry.MasonryV1,
-      Table.Table,
-      Table.TableV1,
-      View.View,
-      View.ViewV4,
-    ]);
+    yield* Effect.promise(async () => {
+      await client.halo.createIdentity();
+      await client.addTypes([
+        Graph.Graph,
+        Graph.GraphV1,
+        Kanban.Kanban,
+        Kanban.KanbanV1,
+        Map.Map,
+        Map.MapV2,
+        Masonry.Masonry,
+        Masonry.MasonryV1,
+        Table.Table,
+        Table.TableV1,
+        View.View,
+        View.ViewV4,
+      ]);
+    });
 
     log.info('importing', { filename, contents: contents.length });
     const space = yield* Effect.promise(() => client.spaces.import({ filename, contents }));

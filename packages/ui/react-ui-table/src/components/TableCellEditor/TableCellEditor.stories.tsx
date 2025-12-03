@@ -8,7 +8,7 @@ import React from 'react';
 import { Obj } from '@dxos/echo';
 import { faker } from '@dxos/random';
 import { withClientProvider } from '@dxos/react-client/testing';
-import { withTheme } from '@dxos/react-ui/testing';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Grid, type GridEditing, defaultRowSize } from '@dxos/react-ui-grid';
 import { View } from '@dxos/schema';
 import { Task } from '@dxos/types';
@@ -23,6 +23,7 @@ type StoryProps = {
   editing: GridEditing;
 };
 
+// TODO(burdon): Broken layout.
 const DefaultStory = ({ editing }: StoryProps) => {
   const { model, table } = useTestTableModel();
 
@@ -31,7 +32,7 @@ const DefaultStory = ({ editing }: StoryProps) => {
   }
 
   return (
-    <div className='flex is-[300px] border border-separator' style={{ height: defaultRowSize }}>
+    <div className='border border-separator' style={{ height: defaultRowSize }}>
       <Grid.Root id='test' editing={editing}>
         <TableCellEditor model={model} schema={Task.Task} />
       </Grid.Root>
@@ -45,6 +46,7 @@ const meta = {
   render: DefaultStory,
   decorators: [
     withTheme,
+    withLayout({ container: 'column' }),
     withClientProvider({
       types: [View.View, Task.Task, Table.Table],
       createIdentity: true,
@@ -66,8 +68,8 @@ const meta = {
     }),
   ],
   parameters: {
+    layout: 'fullscreen',
     translations,
-    layout: 'centered',
   },
 } satisfies Meta<typeof DefaultStory>;
 

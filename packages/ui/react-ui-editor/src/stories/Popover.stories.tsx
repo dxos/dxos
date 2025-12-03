@@ -143,7 +143,7 @@ export const Link: Story = {
     withClientProvider({
       createSpace: true,
       onInitialized: async (client) => {
-        client.addTypes([TestSchema.Person]);
+        await client.addTypes([TestSchema.Person]);
       },
       onCreateSpace: async ({ space }) => {
         const createObjects = createObjectFactory(space.db, generator);

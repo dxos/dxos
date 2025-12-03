@@ -51,6 +51,6 @@ const InputRoot = ({
 
 InputRoot.displayName = INPUT_NAME;
 
-export { InputRoot, InputRoot as Root, createInputScope, useInputContext, INPUT_NAME };
+export { InputRoot, createInputScope, useInputContext, INPUT_NAME };
 
 export type { Valence, InputRootProps, InputScopedProps };

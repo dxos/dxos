@@ -13,8 +13,8 @@ import { mx } from '@dxos/react-ui-theme';
 
 // TODO(burdon): Create generic container with wireframe mode.
 export type WireframeProps = ThemedClassName<{
-  label?: string;
   object: Obj.Any;
+  label?: string;
 }>;
 
 // TODO(burdon): Make focusable and attendable with input.

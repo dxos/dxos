@@ -25,7 +25,7 @@ export const PivotColumnAnnotationId = Symbol.for('@dxos/plugin-kanban/annotatio
 
 export const SettingsSchema = Schema.Struct({
   columnFieldId: Schema.String.annotations({
-    title: 'Column field identifier',
+    title: 'Column field',
   }),
 });
 

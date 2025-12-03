@@ -5,7 +5,7 @@
 import React, { useCallback } from 'react';
 
 import { Surface, isSurfaceAvailable, usePluginManager } from '@dxos/app-framework/react';
-import { type FormFieldLookup } from '@dxos/react-ui-form';
+import { type FormFieldProvider } from '@dxos/react-ui-form';
 
 /**
  * Creates a surface input component based on plugin context.
@@ -13,9 +13,9 @@ import { type FormFieldLookup } from '@dxos/react-ui-form';
  * This allows providing more context to the surface than what's available from the form itself.
  */
 // TODO(burdon): Factor out?
-export const useInputSurfaceLookup = (baseData?: Record<string, any>): FormFieldLookup => {
+export const useInputSurfaceLookup = (baseData?: Record<string, any>): FormFieldProvider => {
   const pluginManager = usePluginManager();
-  return useCallback<FormFieldLookup>(
+  return useCallback<FormFieldProvider>(
     ({ schema, prop, fieldProps }) => {
       const data = { prop, schema, ...baseData };
       if (isSurfaceAvailable(pluginManager.context, { role: 'form-input', data })) {

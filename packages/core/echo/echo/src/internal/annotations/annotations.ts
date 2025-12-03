@@ -30,6 +30,10 @@ export const FIELD_PATH_ANNOTATION = 'path';
 // TODO(burdon): Field, vs. path vs. property.
 export const FieldPath = (path: string) => PropertyMeta(FIELD_PATH_ANNOTATION, path);
 
+//
+// Type
+//
+
 /**
  * ECHO identifier (for a stored schema).
  * Must be a `dxn:echo:` URI.
@@ -43,15 +47,87 @@ export const getTypeIdentifierAnnotation = (schema: Schema.Schema.All) =>
   )(schema.ast);
 
 /**
+ * @returns DXN of the schema.
+ *
+ * For non-stored schema returns `dxn:type:`.
+ * For stored schema returns `dxn:echo:`.
+ */
+export const getSchemaDXN = (schema: Schema.Schema.All): DXN | undefined => {
+  assertArgument(Schema.isSchema(schema), 'schema', 'invalid schema');
+  const id = getTypeIdentifierAnnotation(schema);
+  if (id) {
+    return DXN.parse(id);
+  }
+
+  // TODO(dmaretskyi): Add support for dynamic schema.
+  const objectAnnotation = getTypeAnnotation(schema);
+  if (!objectAnnotation) {
+    return undefined;
+  }
+
+  return DXN.fromTypenameAndVersion(objectAnnotation.typename, objectAnnotation.version);
+};
+
+/**
+ * Returns a reference that will be used to point to a schema.
+ * @deprecated Use {@link getSchemaDXN} instead.
+ */
+export const getTypeReference = (schema: Schema.Schema.All | undefined): Reference | undefined => {
+  if (!schema) {
+    return undefined;
+  }
+
+  const schemaDXN = getSchemaDXN(schema);
+  if (!schemaDXN) {
+    return undefined;
+  }
+  return Reference.fromDXN(schemaDXN);
+};
+
+/**
+ * Returns a reference that will be used to point to a schema.
+ * @throws If it is not possible to reference this schema.
+ *
+ * @deprecated Use {@link getSchemaDXN} instead.
+ */
+export const requireTypeReference = (schema: Schema.Schema.AnyNoContext): Reference => {
+  const typeReference = getTypeReference(schema);
+  if (typeReference == null) {
+    // TODO(burdon): Catalog user-facing errors (this is too verbose).
+    throw new Error('Schema must be defined via TypedObject.');
+  }
+
+  return typeReference;
+};
+
+/**
+ * @param input schema or a typename string
+ * @return type DXN
+ */
+export const getTypeDXNFromSpecifier = (input: Schema.Schema.All | string): DXN => {
+  if (Schema.isSchema(input)) {
+    return getTypeReference(input)?.toDXN() ?? raise(new TypeError('Schema has no DXN'));
+  } else {
+    assertArgument(typeof input === 'string', 'input');
+    assertArgument(!input.startsWith('dxn:'), 'input');
+    return DXN.fromTypename(input);
+  }
+};
+
+//
+// TypeAnnotation
+//
+
+/**
  * Fully qualified globally unique typename.
- * Example: `dxos.org/type/Person`
+ * Example: `dxos.org/type/Message`
  */
 // TODO(burdon): Reconcile with short DXN format.
-// TODO(burdon): Change type => schema throughout.
+// TODO(burdon): Change "/type" => "/schema" throughout.
 export const TypenameSchema = Schema.String.pipe(Schema.pattern(/^[a-zA-Z]\w+\.[a-zA-Z]\w{1,}\/[\w/_-]+$/)).annotations(
   {
     description: 'Fully qualified globally unique typename',
-    example: 'dxos.org/type/Person',
+    example: 'dxos.org/type/Message',
   },
 );
 
@@ -83,9 +159,6 @@ export const TypeAnnotation = Schema.extend(
   TypeMeta,
   Schema.Struct({
     kind: Schema.Enums(EntityKind),
-    // kind: Schema.Enums(EntityKind),
-    // typename: Typename,
-    // version: VersionSchema,
 
     /**
      * If this is a relation, the schema of the source object.
@@ -102,8 +175,6 @@ export const TypeAnnotation = Schema.extend(
 );
 
 export interface TypeAnnotation extends Schema.Schema.Type<typeof TypeAnnotation> {}
-
-// export type TypeMeta = Pick<TypeAnnotation, 'typename' | 'version'>;
 
 /**
  * @returns {@link TypeAnnotation} from a schema.
@@ -229,6 +300,10 @@ export const isInstanceOf = <Schema extends Schema.Schema.AnyNoContext>(
   return typeDXN.type === typename;
 };
 
+//
+// PropertyMeta
+//
+
 /**
  * PropertyMeta (metadata for dynamic schema properties).
  * For user-defined annotations.
@@ -261,6 +336,10 @@ export const getPropertyMetaAnnotation = <T>(prop: SchemaAST.PropertySignature, 
     Option.map((meta) => meta[name] as T),
     Option.getOrElse(() => undefined),
   );
+
+//
+// Reference
+//
 
 /**
  * Schema reference.
@@ -407,72 +486,3 @@ export type GeneratorAnnotationValue =
     };
 
 export const GeneratorAnnotation = createAnnotationHelper<GeneratorAnnotationValue>(GeneratorAnnotationId);
-
-/**
- * @returns DXN of the schema.
- *
- * For non-stored schema returns `dxn:type:`.
- * For stored schema returns `dxn:echo:`.
- */
-export const getSchemaDXN = (schema: Schema.Schema.All): DXN | undefined => {
-  assertArgument(Schema.isSchema(schema), 'schema', 'invalid schema');
-
-  const id = getTypeIdentifierAnnotation(schema);
-  if (id) {
-    return DXN.parse(id);
-  }
-
-  // TODO(dmaretskyi): Add support for dynamic schema.
-  const objectAnnotation = getTypeAnnotation(schema);
-  if (!objectAnnotation) {
-    return undefined;
-  }
-
-  return DXN.fromTypenameAndVersion(objectAnnotation.typename, objectAnnotation.version);
-};
-
-/**
- * Returns a reference that will be used to point to a schema.
- * @deprecated Use {@link getSchemaDXN} instead.
- */
-export const getTypeReference = (schema: Schema.Schema.All | undefined): Reference | undefined => {
-  if (!schema) {
-    return undefined;
-  }
-
-  const schemaDXN = getSchemaDXN(schema);
-  if (!schemaDXN) {
-    return undefined;
-  }
-  return Reference.fromDXN(schemaDXN);
-};
-
-/**
- * Returns a reference that will be used to point to a schema.
- * @throws If it is not possible to reference this schema.
- *
- * @deprecated Use {@link getSchemaDXN} instead.
- */
-export const requireTypeReference = (schema: Schema.Schema.AnyNoContext): Reference => {
-  const typeReference = getTypeReference(schema);
-  if (typeReference == null) {
-    // TODO(burdon): Catalog user-facing errors (this is too verbose).
-    throw new Error('Schema must be defined via TypedObject.');
-  }
-
-  return typeReference;
-};
-
-/**
- * @param input schema or a typename string
- * @return type DXN
- */
-export const getTypeDXNFromSpecifier = (input: Schema.Schema.All | string): DXN => {
-  if (Schema.isSchema(input)) {
-    return getTypeReference(input)?.toDXN() ?? raise(new TypeError('Schema has no DXN'));
-  } else {
-    assertArgument(typeof input === 'string', 'input');
-    assertArgument(!input.startsWith('dxn:'), 'input');
-    return DXN.fromTypename(input);
-  }
-};

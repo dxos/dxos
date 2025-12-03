@@ -31,12 +31,17 @@ const DefaultStory = () => {
 
   return (
     <TestLayout>
-      <Form
+      <Form.Root
         schema={schema}
         values={values}
         fieldMap={{ options: SelectOptionField }}
-        onSave={(vals) => setValues(vals)}
-      />
+        onSave={(values) => setValues(values)}
+      >
+        <Form.Content>
+          <Form.FieldSet />
+          <Form.Actions />
+        </Form.Content>
+      </Form.Root>
     </TestLayout>
   );
 };

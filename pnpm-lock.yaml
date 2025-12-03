@@ -11173,6 +11173,9 @@ importers:
       react:
         specifier: ~19.2.0
         version: 19.2.0
+      react-dom:
+        specifier: ~19.2.0
+        version: 19.2.0(react@19.2.0)
       typedoc:
         specifier: 0.28.1
         version: 0.28.1(typescript@5.9.3)
@@ -12660,9 +12663,9 @@ importers:
       '@preact-signals/safe-react':
         specifier: ^0.9.0
         version: 0.9.0(@babel/core@7.28.0)(@swc/helpers@0.5.17)(react@19.2.0)
-      '@radix-ui/react-use-controllable-state':
-        specifier: ^1.2.2
-        version: 1.2.2(@types/react@19.2.2)(react@19.2.0)
+      '@radix-ui/react-id':
+        specifier: ^1.1.1
+        version: 1.1.1(@types/react@19.2.2)(react@19.2.0)
       alea:
         specifier: ^1.0.1
         version: 1.0.1
@@ -14210,6 +14213,9 @@ importers:
       '@radix-ui/react-context':
         specifier: 1.1.1
         version: 1.1.1(@types/react@19.2.2)(react@19.2.0)
+      '@radix-ui/react-use-controllable-state':
+        specifier: ^1.2.2
+        version: 1.2.2(@types/react@19.2.2)(react@19.2.0)
       date-fns:
         specifier: ^3.3.1
         version: 3.6.0
@@ -21165,6 +21171,15 @@ packages:
 
   '@radix-ui/react-id@1.1.0':
     resolution: {integrity: sha512-EJUrI8yYh7WOjNOqpoJaf1jlFIH2LvtgAl+YcFqNCa+4hj64ZXmPkAKOFs/ukjz3byN6bdb/AVUqHkI8/uWWMA==}
+    peerDependencies:
+      '@types/react': ~19.2.2
+      react: ~19.2.0
+    peerDependenciesMeta:
+      '@types/react':
+        optional: true
+
+  '@radix-ui/react-id@1.1.1':
+    resolution: {integrity: sha512-kGkGegYIdQsOb4XjsfM97rXsiHaBwco+hFI66oO4s9LU+PLAC5oJ7khdOVFxkhsmlbpUqDAvXw11CluXP+jkHg==}
     peerDependencies:
       '@types/react': ~19.2.2
       react: ~19.2.0
@@ -41928,6 +41943,13 @@ snapshots:
   '@radix-ui/react-id@1.1.0(@types/react@19.2.2)(react@19.2.0)':
     dependencies:
       '@radix-ui/react-use-layout-effect': 1.1.0(@types/react@19.2.2)(react@19.2.0)
+      react: 19.2.0
+    optionalDependencies:
+      '@types/react': 19.2.2
+
+  '@radix-ui/react-id@1.1.1(@types/react@19.2.2)(react@19.2.0)':
+    dependencies:
+      '@radix-ui/react-use-layout-effect': 1.1.1(@types/react@19.2.2)(react@19.2.0)
       react: 19.2.0
     optionalDependencies:
       '@types/react': 19.2.2

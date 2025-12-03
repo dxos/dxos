@@ -24,7 +24,7 @@ const types = [
   // TODO(burdon): Get label from annotation.
   { value: Organization.Organization.typename, label: 'Organization' },
   { value: Person.Person.typename, label: 'Person' },
-  { value: Type.getTypename(Project.Project), label: 'Project' },
+  { value: Project.Project.typename, label: 'Project' },
   { value: Employer.Employer.typename, label: 'Employer' },
 ];
 

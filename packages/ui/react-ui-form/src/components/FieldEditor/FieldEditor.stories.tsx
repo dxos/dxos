@@ -60,6 +60,9 @@ const meta = {
   parameters: {
     layout: 'fullscreen',
     translations,
+    controls: {
+      disabled: true,
+    },
   },
 } satisfies Meta<typeof DefaultStory>;
 
@@ -72,5 +75,4 @@ export const Default: Story = {
     projection: new ProjectionModel(createEchoSchema(Example).jsonSchema, testView.projection),
     field: testView.projection.fields[0],
   },
-  parameters: { controls: { disabled: true } },
 };

@@ -53,7 +53,7 @@ export const withTypes: (
 ) => <A, E, R>(effect: Effect.Effect<A, E, R>) => Effect.Effect<A, E, ClientService | R> = (types) =>
   Effect.fnUntraced(function* (effect) {
     const client = yield* ClientService;
-    client.addTypes(types);
+    yield* Effect.promise(() => client.addTypes(types));
     return yield* effect;
   });
 
