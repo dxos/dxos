@@ -6,7 +6,6 @@ import { type BuildResult, type Plugin, type PluginBuild, build, initialize } fr
 
 import { subtleCrypto } from '@dxos/crypto';
 import { invariant } from '@dxos/invariant';
-import { log } from '@dxos/log';
 import { isNode, trim } from '@dxos/util';
 
 import { httpPlugin } from './plugins/http-plugin-esbuild';

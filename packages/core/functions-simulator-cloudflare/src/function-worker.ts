@@ -1,6 +1,11 @@
-import { Headers, Miniflare, Request, type RequestInfo } from 'miniflare';
-import { Resource, type Context } from '@dxos/context';
-import { SerializedError, type EdgeEnvelope } from '@dxos/protocols';
+//
+// Copyright 2025 DXOS.org
+//
+
+import { Miniflare, Request } from 'miniflare';
+
+import { type Context, Resource } from '@dxos/context';
+import { type EdgeEnvelope, type SerializedError } from '@dxos/protocols';
 
 export type InvokeResult =
   | {

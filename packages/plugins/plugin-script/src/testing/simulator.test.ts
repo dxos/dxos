@@ -3,8 +3,8 @@
 //
 
 import { readFile } from 'node:fs/promises';
-import { Record } from 'effect';
 
+import * as Record from 'effect/Record';
 import { describe, expect, test } from 'vitest';
 
 import { bundleFunction } from '@dxos/functions-runtime/bundler';
