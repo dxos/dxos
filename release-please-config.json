@@ -455,16 +455,6 @@
         },
         {
           "type": "json",
-          "path": "packages/experimental/metagraph/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/experimental/react-metagraph/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
           "path": "packages/experimental/script-toolbox/package.json",
           "jsonpath": "$.version"
         },

@@ -259,12 +259,6 @@
       "path": "packages/experimental/logic/tsconfig.json"
     },
     {
-      "path": "packages/experimental/metagraph/tsconfig.json"
-    },
-    {
-      "path": "packages/experimental/react-metagraph/tsconfig.json"
-    },
-    {
       "path": "packages/experimental/script-toolbox/tsconfig.json"
     },
     {

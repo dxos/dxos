@@ -4548,16 +4548,13 @@ importers:
       '@dxos/client':
         specifier: workspace:*
         version: link:../../sdk/client
-      '@types/blessed':
-        specifier: ^0.1.26
-        version: 0.1.26
       blessed:
         specifier: ^0.1.81
         version: 0.1.81
-      chalk:
-        specifier: ^5.3.0
-        version: 5.6.2
     devDependencies:
+      '@types/blessed':
+        specifier: ^0.1.26
+        version: 0.1.26
       typescript:
         specifier: ^5.9.3
         version: 5.9.3
@@ -5340,91 +5337,6 @@ importers:
       tsx:
         specifier: ^4.21.0
         version: 4.21.0
-
-  packages/experimental/metagraph:
-    dependencies:
-      '@dxos/async':
-        specifier: workspace:*
-        version: link:../../common/async
-      '@dxos/config':
-        specifier: workspace:*
-        version: link:../../sdk/config
-      '@dxos/debug':
-        specifier: workspace:*
-        version: link:../../common/debug
-      '@dxos/log':
-        specifier: workspace:*
-        version: link:../../common/log
-      '@dxos/node-std':
-        specifier: workspace:*
-        version: link:../../common/node-std
-      '@dxos/protocols':
-        specifier: workspace:*
-        version: link:../../core/protocols
-      cross-fetch:
-        specifier: ^3.1.5
-        version: 3.1.5(encoding@0.1.13)
-
-  packages/experimental/react-metagraph:
-    dependencies:
-      '@dxos/async':
-        specifier: workspace:*
-        version: link:../../common/async
-      '@dxos/client':
-        specifier: workspace:*
-        version: link:../../sdk/client
-      '@dxos/config':
-        specifier: workspace:*
-        version: link:../../sdk/config
-      '@dxos/debug':
-        specifier: workspace:*
-        version: link:../../common/debug
-      '@dxos/keys':
-        specifier: workspace:*
-        version: link:../../common/keys
-      '@dxos/log':
-        specifier: workspace:*
-        version: link:../../common/log
-      '@dxos/metagraph':
-        specifier: workspace:*
-        version: link:../metagraph
-      '@dxos/node-std':
-        specifier: workspace:*
-        version: link:../../common/node-std
-      '@dxos/protocols':
-        specifier: workspace:*
-        version: link:../../core/protocols
-      '@dxos/react-client':
-        specifier: workspace:*
-        version: link:../../sdk/react-client
-      '@dxos/react-hooks':
-        specifier: workspace:*
-        version: link:../../ui/primitives/react-hooks
-      '@dxos/util':
-        specifier: workspace:*
-        version: link:../../common/util
-      assert:
-        specifier: ^2.0.0
-        version: 2.0.0
-      use-subscription:
-        specifier: ^1.8.0
-        version: 1.8.0(react@19.2.0)
-    devDependencies:
-      '@types/react':
-        specifier: ~19.2.2
-        version: 19.2.2
-      '@types/react-dom':
-        specifier: ~19.2.2
-        version: 19.2.2(@types/react@19.2.2)
-      '@types/use-subscription':
-        specifier: ^1.0.0
-        version: 1.0.0
-      react:
-        specifier: ~19.2.0
-        version: 19.2.0
-      react-dom:
-        specifier: ~19.2.0
-        version: 19.2.0(react@19.2.0)
 
   packages/experimental/script-toolbox: {}
 
@@ -24461,9 +24373,6 @@ packages:
   '@types/unist@3.0.3':
     resolution: {integrity: sha512-ko/gIFJRv177XgZsZcBwnqJN5x/Gien8qNOn0D5bQU/zAzVf9Zt3BlcUiLqhV9y4ARk0GbT3tnUiPNgnTXzc/Q==}
 
-  '@types/use-subscription@1.0.0':
-    resolution: {integrity: sha512-0WWZ5GUDKMXUY/1zy4Ur5/zsC0s/B+JjXfHdkvx6JgDNZzZV5eW+KKhDqsTGyqX56uh99gwGwbsKbVwkcVIKQA==}
-
   '@types/uuid@9.0.7':
     resolution: {integrity: sha512-WUtIVRUZ9i5dYXefDEAI7sh9/O7jGvHg7Df/5O/gtH3Yabe5odI3UWopVR1qbPXQtvOxWu3mM4XxlYeZtMWF4g==}
 
@@ -35042,11 +34951,6 @@ packages:
     peerDependenciesMeta:
       '@types/react':
         optional: true
-
-  use-subscription@1.8.0:
-    resolution: {integrity: sha512-LISuG0/TmmoDoCRmV5XAqYkd3UCBNM0ML3gGBndze65WITcsExCD3DTvXXTLyNcOC0heFQZzluW88bN/oC1DQQ==}
-    peerDependencies:
-      react: ~19.2.0
 
   use-sync-external-store@1.2.2:
     resolution: {integrity: sha512-PElTlVMwpblvbNqQ82d2n6RjStvdSoNe9FG28kNfz3WiXilJm4DdNkEzRhCZuIDwY8U08WVihhGR5iRqAwfDiw==}
@@ -45725,8 +45629,6 @@ snapshots:
   '@types/unist@2.0.6': {}
 
   '@types/unist@3.0.3': {}
-
-  '@types/use-subscription@1.0.0': {}
 
   '@types/uuid@9.0.7': {}
 
@@ -58823,11 +58725,6 @@ snapshots:
       tslib: 2.8.1
     optionalDependencies:
       '@types/react': 19.2.2
-
-  use-subscription@1.8.0(react@19.2.0):
-    dependencies:
-      react: 19.2.0
-      use-sync-external-store: 1.2.2(react@19.2.0)
 
   use-sync-external-store@1.2.2(react@19.2.0):
     dependencies:

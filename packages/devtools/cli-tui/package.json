@@ -25,11 +25,10 @@
   "dependencies": {
     "@dxos/cli-base": "workspace:*",
     "@dxos/client": "workspace:*",
-    "@types/blessed": "^0.1.26",
-    "blessed": "^0.1.81",
-    "chalk": "^5.3.0"
+    "blessed": "^0.1.81"
   },
   "devDependencies": {
+    "@types/blessed": "^0.1.26",
     "typescript": "^5.9.3"
   },
   "engines": {
