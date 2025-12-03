@@ -529,7 +529,7 @@ export class CoreDatabase {
     core.setDecoded([], newStruct);
   }
 
-  async flush({ disk = true, indexes = false, updates = false }: FlushOptions = {}): Promise<void> {
+  async flush({ disk = true, indexes = false, updates = false }: Database.FlushOptions = {}): Promise<void> {
     log('flush', { disk, indexes, updates });
     if (disk) {
       await this._repoProxy.flush();

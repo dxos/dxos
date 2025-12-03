@@ -9,7 +9,7 @@ import * as SchemaAST from 'effect/SchemaAST';
 
 import { AiService } from '@dxos/ai';
 import { LifecycleState, Resource } from '@dxos/context';
-import { Type } from '@dxos/echo';
+import { Database, Type } from '@dxos/echo';
 import { EchoClient, type EchoDatabaseImpl, type QueueFactory } from '@dxos/echo-db';
 import { assertState, failedInvariant, invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
@@ -17,7 +17,7 @@ import { type FunctionProtocol } from '@dxos/protocols';
 
 import { FunctionError } from '../errors';
 import { FunctionDefinition, type FunctionServices } from '../sdk';
-import { CredentialsService, Database.Service, FunctionInvocationService, TracingService } from '../services';
+import { CredentialsService, FunctionInvocationService, TracingService } from '../services';
 import { QueueService } from '../services';
 
 /**

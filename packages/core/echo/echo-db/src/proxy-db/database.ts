@@ -18,7 +18,7 @@ import { type DataService, type SpaceSyncState } from '@dxos/protocols/proto/dxo
 import { defaultMap } from '@dxos/util';
 
 import type { SaveStateChangedEvent } from '../automerge';
-import { CoreDatabase, type FlushOptions, type LoadObjectOptions, type ObjectCore } from '../core-db';
+import { CoreDatabase, type LoadObjectOptions, type ObjectCore } from '../core-db';
 import {
   EchoReactiveHandler,
   type ProxyTarget,
@@ -51,7 +51,6 @@ export interface EchoDatabase extends Database.Database {
     id: string,
     opts?: Database.GetObjectByIdOptions,
   ): T | undefined;
-
 
   /**
    * Run migrations.
@@ -299,7 +298,7 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
     return this._coreDatabase.removeCore(getObjectCore(obj));
   }
 
-  async flush(opts?: FlushOptions): Promise<void> {
+  async flush(opts?: Database.FlushOptions): Promise<void> {
     await this._coreDatabase.flush(opts);
   }
 
