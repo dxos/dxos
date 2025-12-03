@@ -32,15 +32,6 @@ export const isMarkdownProperties = (data: unknown): data is MarkdownProperties 
 
 const nonTitleChars = /[^\w ]/g;
 
-export const getContentSnippet = (content = '') => {
-  const abstract = content
-    .split('\n')
-    .filter((line) => !line.startsWith('#'))
-    .filter((line) => line.trim() !== '');
-
-  return abstract.length > 0 ? abstract[0].replaceAll(nonTitleChars, '').trim() + '...' : '';
-};
-
 // Lines matching these patterns are skipped.
 const skipPatterns = [
   /^!\[/, // Image.
@@ -110,6 +101,16 @@ export const getFallbackName = (content = ''): string => {
   }
 
   return '';
+};
+
+// TODO(burdon): Option to strip Markdown.
+export const getContentSnippet = (content = '') => {
+  const abstract = content
+    .split('\n')
+    .filter((line) => !line.startsWith('!'))
+    .filter((line) => line.trim() !== '');
+
+  return abstract.slice(0, 3).join('\n') ?? '';
 };
 
 export const setFallbackName = debounce((doc: Markdown.Document, content = '') => {
