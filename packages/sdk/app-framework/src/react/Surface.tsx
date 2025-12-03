@@ -42,6 +42,7 @@ const SurfaceContextProvider = memo(
     ({ id, role, data, limit, component: Component, ...rest }, forwardedRef) => {
       const contextValue = useMemo(() => ({ id, role, data }), [id, role, data]);
 
+      // TODO(burdon): In production mode, remove SurfaceInfo wrapper.
       return (
         <SurfaceContext.Provider value={contextValue}>
           <SurfaceInfo ref={forwardedRef}>

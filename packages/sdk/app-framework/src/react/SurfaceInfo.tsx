@@ -18,9 +18,10 @@ export type SurfaceInfoProps = {
  * Debug wrapper for surfaces.
  */
 export const SurfaceInfo = forwardRef<HTMLElement, SurfaceInfoProps>(({ children }, forwardedRef) => {
-  const active = true; //'__DX_DEBUG__' in window;
+  // TODO(burdon): Standardize/document.
+  const active = import.meta.env.VITE_DEBUG || '__DX_DEBUG__' in window;
   const [rect, setRect] = useState<DOMRect | null>(null);
-  const [expand, setExpand] = useState(false); // TOOD(burdon): Save state.
+  const [expand, setExpand] = useState(false);
   const info = useSurface();
 
   const [root, setRoot] = useState<HTMLElement | null>(null);
@@ -63,7 +64,7 @@ export const SurfaceInfo = forwardRef<HTMLElement, SurfaceInfoProps>(({ children
         createPortal(
           <div
             role='none'
-            className='z-50 fixed flex flex-col-reverse scrollbar-none overflow-auto pointer-events-none'
+            className='z-[100] fixed flex flex-col-reverse scrollbar-none overflow-auto pointer-events-none'
             style={{
               top: rect.top + padding,
               left: rect.left + padding,
