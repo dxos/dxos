@@ -52,10 +52,6 @@ export interface EchoDatabase extends Database.Database {
     opts?: Database.GetObjectByIdOptions,
   ): T | undefined;
 
-  /**
-   * Wait for all pending changes to be saved to disk.
-   */
-  flush(opts?: FlushOptions): Promise<void>;
 
   /**
    * Run migrations.

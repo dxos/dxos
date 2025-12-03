@@ -963,26 +963,6 @@ export type AtomicReplaceObjectParams = {
   type?: DXN;
 };
 
-export type FlushOptions = {
-  /**
-   * Write any pending changes to disk.
-   * @default true
-   */
-  disk?: boolean;
-
-  /**
-   * Wait for pending index updates.
-   * @default false
-   */
-  indexes?: boolean;
-
-  /**
-   * Flush pending updates to objects and queries.
-   * @default false
-   */
-  updates?: boolean;
-};
-
 const RPC_TIMEOUT = 20_000;
 
 const DISABLE_THROTTLING = true;
