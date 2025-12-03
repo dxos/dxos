@@ -11,7 +11,6 @@ import { DecimalPrecision, JsonProp, type JsonSchemaType, SelectOption, TypeEnum
  * Base schema.
  */
 export const BaseProperty = Schema.Struct({
-  // TODO(wittjosiah): Annotations on refinements don't make it to the form.
   property: JsonProp.annotations({
     title: 'Property',
     description: 'Property name',

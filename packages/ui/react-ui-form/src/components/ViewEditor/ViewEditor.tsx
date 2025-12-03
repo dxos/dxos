@@ -8,7 +8,7 @@ import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 import React, { forwardRef, useCallback, useImperativeHandle, useMemo, useState } from 'react';
 
-import { Filter, Query, QueryAST, type SchemaRegistry } from '@dxos/echo';
+import { Filter, Format, Query, QueryAST, type SchemaRegistry } from '@dxos/echo';
 import { EchoSchema, type JsonProp, isMutable, toJsonSchema } from '@dxos/echo/internal';
 import {} from '@dxos/echo-db';
 import { invariant } from '@dxos/invariant';
@@ -95,9 +95,7 @@ export const ViewEditor = forwardRef<ProjectionModel, ViewEditorProps>(
       const base = Schema.Struct({
         query:
           mode === 'schema'
-            ? // TODO(wittjosiah): Annotations on refinements don't make it to the form.
-              // Format.URL.annotations({ title: 'Record type' })
-              Schema.String.annotations({ title: 'Record type' })
+            ? Format.URL.annotations({ title: 'Record type' })
             : QueryAST.Query.annotations({ title: 'Query' }),
       });
 

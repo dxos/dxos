@@ -20,21 +20,39 @@ import { type JsonPath, type JsonProp } from './json-path';
 //
 
 /**
- * Get the base type of a property.
- *
- * Removes refinements via encoded schema and unwraps optional unions.
+ * Unwraps and collects refinement filters.
  */
-export const getBaseType = (prop: SchemaAST.PropertySignature): SchemaAST.AST => {
-  const encoded = SchemaAST.encodedAST(prop.type);
-  // Extract property ast from optional union.
-  if (prop.isOptional && encoded._tag === 'Union') {
-    return encoded.types[0];
+const reduceRefinements = (
+  type: SchemaAST.AST,
+  refinements: SchemaAST.Refinement['filter'][] = [],
+): { type: SchemaAST.AST; refinements: SchemaAST.Refinement['filter'][] } => {
+  if (SchemaAST.isRefinement(type)) {
+    const annotations = type.annotations;
+    const filter = type.filter;
+    const nextType = { ...type.from, annotations: { ...type.annotations, ...annotations } } as SchemaAST.AST;
+    return reduceRefinements(nextType, [...refinements, filter]);
   }
 
-  return encoded;
+  return { type, refinements };
 };
 
-export type SchemaProperty = Pick<SchemaAST.PropertySignature, 'name' | 'type' | 'isOptional' | 'isReadonly'>;
+/**
+ * Get the base type of a property.
+ *
+ * Unwraps refinements and optional unions.
+ */
+export const getBaseType = (
+  prop: SchemaAST.PropertySignature,
+): { type: SchemaAST.AST; refinements: SchemaAST.Refinement['filter'][] } => {
+  const encoded = SchemaAST.encodedBoundAST(prop.type);
+  // Extract property ast from optional union.
+  const unwrapped = prop.isOptional && encoded._tag === 'Union' ? encoded.types[0] : encoded;
+  return reduceRefinements(unwrapped);
+};
+
+export type SchemaProperty = Pick<SchemaAST.PropertySignature, 'name' | 'type' | 'isOptional' | 'isReadonly'> & {
+  refinements: SchemaAST.Refinement['filter'][];
+};
 
 /**
  * Get the property types of an AST.
@@ -42,8 +60,8 @@ export type SchemaProperty = Pick<SchemaAST.PropertySignature, 'name' | 'type' |
 export const getProperties = (ast: SchemaAST.AST): SchemaProperty[] => {
   const properties = SchemaAST.getPropertySignatures(ast);
   return properties.map((prop) => ({
+    ...getBaseType(prop),
     name: prop.name,
-    type: getBaseType(prop),
     isOptional: prop.isOptional,
     isReadonly: prop.isReadonly,
   }));
