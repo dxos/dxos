@@ -5,6 +5,7 @@
 import type { RequestOptions } from '@dxos/codec-protobuf';
 import { Stream } from '@dxos/codec-protobuf/stream';
 import { raise } from '@dxos/debug';
+import { NotImplementedError, RuntimeServiceError } from '@dxos/errors';
 import { invariant } from '@dxos/invariant';
 import { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -41,7 +42,14 @@ export class DataServiceImpl implements DataServiceProto {
   }
 
   async updateSubscription({ subscriptionId, addIds, removeIds }: UpdateSubscriptionRequest): Promise<void> {
-    const sub = this.dataSubscriptions.get(subscriptionId) ?? raise(new Error('Subscription not found'));
+    const sub =
+      this.dataSubscriptions.get(subscriptionId) ??
+      raise(
+        new RuntimeServiceError({
+          message: 'Subscription not found.',
+          context: { subscriptionId },
+        }),
+      );
 
     if (addIds) {
       log.info('request documents', { count: addIds.length });
@@ -59,12 +67,26 @@ export class DataServiceImpl implements DataServiceProto {
   }
 
   async update({ updates, subscriptionId }: UpdateRequest): Promise<void> {
-    const sub = this.dataSubscriptions.get(subscriptionId) ?? raise(new Error('Subscription not found'));
+    const sub =
+      this.dataSubscriptions.get(subscriptionId) ??
+      raise(
+        new RuntimeServiceError({
+          message: 'Subscription not found.',
+          context: { subscriptionId },
+        }),
+      );
     // TODO(dmaretskyi): Batch.
-    for (const update of updates ?? []) {
-      await this._dataService.changeDocument(this._executionContext, sub.spaceId, update.documentId, update.mutation);
+    try {
+      for (const update of updates ?? []) {
+        await this._dataService.changeDocument(this._executionContext, sub.spaceId, update.documentId, update.mutation);
+      }
+    } catch (error) {
+      throw RuntimeServiceError.wrap({
+        message: 'Failed to apply document updates.',
+        context: { subscriptionId },
+        ifTypeDiffers: true,
+      })(error);
     }
-    throw new Error('Method not implemented.');
   }
 
   async flush(): Promise<void> {
@@ -72,22 +94,32 @@ export class DataServiceImpl implements DataServiceProto {
   }
 
   subscribeSpaceSyncState(request: GetSpaceSyncStateRequest, options?: RequestOptions): Stream<SpaceSyncState> {
-    throw new Error('Method not implemented.');
+    throw new NotImplementedError({
+      message: 'subscribeSpaceSyncState is not implemented.',
+    });
   }
 
   async getDocumentHeads({ documentIds }: GetDocumentHeadsRequest): Promise<GetDocumentHeadsResponse> {
-    throw new Error('Method not implemented.');
+    throw new NotImplementedError({
+      message: 'getDocumentHeads is not implemented.',
+    });
   }
 
   async reIndexHeads({ documentIds }: ReIndexHeadsRequest): Promise<void> {
-    throw new Error('Method not implemented.');
+    throw new NotImplementedError({
+      message: 'reIndexHeads is not implemented.',
+    });
   }
 
   async updateIndexes(): Promise<void> {
-    throw new Error('Method not implemented.');
+    throw new NotImplementedError({
+      message: 'updateIndexes is not implemented.',
+    });
   }
 
   async waitUntilHeadsReplicated({ heads }: { heads: any }): Promise<void> {
-    throw new Error('Method not implemented.');
+    throw new NotImplementedError({
+      message: 'waitUntilHeadsReplicated is not implemented.',
+    });
   }
 }
