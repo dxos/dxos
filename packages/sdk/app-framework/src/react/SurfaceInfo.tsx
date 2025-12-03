@@ -2,7 +2,15 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { type ReactElement, cloneElement, forwardRef, useCallback, useLayoutEffect, useState } from 'react';
+import React, {
+  type ReactElement,
+  type Ref,
+  cloneElement,
+  forwardRef,
+  useCallback,
+  useLayoutEffect,
+  useState,
+} from 'react';
 import { createPortal } from 'react-dom';
 
 import { addEventListener, combine } from '@dxos/async';
@@ -11,7 +19,7 @@ import { useMergeRefs } from '@dxos/react-hooks';
 import { useSurface } from './Surface';
 
 export type SurfaceInfoProps = {
-  children: ReactElement<{ ref?: React.Ref<HTMLElement> }>;
+  children: ReactElement<{ ref?: Ref<HTMLElement> }>;
 };
 
 /**

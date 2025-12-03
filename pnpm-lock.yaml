@@ -9149,6 +9149,9 @@ importers:
       '@dxos/assistant':
         specifier: workspace:*
         version: link:../../core/assistant
+      '@dxos/async':
+        specifier: workspace:*
+        version: link:../../common/async
       '@dxos/blueprints':
         specifier: workspace:*
         version: link:../../core/blueprints
