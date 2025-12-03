@@ -22,6 +22,7 @@ import {
 } from '@dxos/assistant';
 import { Template } from '@dxos/blueprints';
 import { type DXN, Obj } from '@dxos/echo';
+import { Database } from '@dxos/echo';
 import { TracingService, defineFunction } from '@dxos/functions';
 import { FunctionInvocationServiceLayerTestMocked } from '@dxos/functions-runtime/testing';
 import { type Message, Person } from '@dxos/types';
@@ -33,7 +34,6 @@ import { exaFunction, exaMockFunction } from '../exa';
 import { contextQueueLayerFromResearchGraph } from './research-graph';
 import PROMPT from './research-instructions.tpl?raw';
 import { ResearchDataTypes } from './types';
-import { Database } from '@dxos/echo';
 
 /**
  * Exec external service and return the results as a Subgraph.

@@ -16,6 +16,7 @@ import * as Record from 'effect/Record';
 import * as Schedule from 'effect/Schedule';
 
 import { DXN, Filter, Obj, Query } from '@dxos/echo';
+import { Database } from '@dxos/echo';
 import { causeToError } from '@dxos/effect';
 import { FunctionInvocationService, QueueService, deserializeFunction } from '@dxos/functions';
 import { Function, Trigger, type TriggerEvent } from '@dxos/functions';
@@ -28,7 +29,6 @@ import { TracingServiceExt } from '../trace';
 import { createInvocationPayload } from './input-builder';
 import { InvocationTracer } from './invocation-tracer';
 import { type TriggerState, TriggerStateStore } from './trigger-state-store';
-import { Database } from '@dxos/echo';
 
 export type TimeControl = 'natural' | 'manual';
 

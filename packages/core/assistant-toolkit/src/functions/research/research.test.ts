@@ -19,6 +19,7 @@ import {
 } from '@dxos/assistant';
 import { Blueprint } from '@dxos/blueprints';
 import { Filter, Obj, Query, Ref } from '@dxos/echo';
+import { Database } from '@dxos/echo';
 import { acquireReleaseResource } from '@dxos/effect';
 import { TestHelpers } from '@dxos/effect/testing';
 import { CredentialsService, FunctionInvocationService, QueueService, TracingService } from '@dxos/functions';
@@ -36,7 +37,6 @@ import { default as createDocument } from './document-create';
 import { default as research } from './research';
 import { ResearchGraph, queryResearchGraph } from './research-graph';
 import { ResearchDataTypes } from './types';
-import { Database } from '@dxos/echo';
 
 ObjectId.dangerouslyDisableRandomness();
 

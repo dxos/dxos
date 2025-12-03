@@ -12,6 +12,7 @@ import * as Layer from 'effect/Layer';
 
 import { AiService } from '@dxos/ai';
 import { Filter, Obj, Query, Ref } from '@dxos/echo';
+import { Database } from '@dxos/echo';
 import { serializeFunction } from '@dxos/functions';
 import { CredentialsService, QueueService } from '@dxos/functions';
 import { Function, Trigger } from '@dxos/functions';
@@ -26,7 +27,6 @@ import { TracingServiceExt } from '../trace';
 import { InvocationTracer } from './invocation-tracer';
 import { TriggerDispatcher } from './trigger-dispatcher';
 import { TriggerStateStore } from './trigger-state-store';
-import { Database } from '@dxos/echo';
 
 const TestLayer = Fn.pipe(
   Layer.mergeAll(InvocationTracer.layerTest, TriggerStateStore.layerMemory),

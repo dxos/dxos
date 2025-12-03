@@ -9,12 +9,12 @@ import * as Schema from 'effect/Schema';
 
 import { ArtifactId } from '@dxos/assistant';
 import { Obj } from '@dxos/echo';
+import { Database } from '@dxos/echo';
 import { QueueService, defineFunction } from '@dxos/functions';
 import { Message } from '@dxos/types';
 
 import { Mailbox } from '../types';
 import { renderMarkdown } from '../util';
-import { Database } from '@dxos/echo';
 
 export default defineFunction({
   key: 'dxos.org/function/inbox/email-open',

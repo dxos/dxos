@@ -7,12 +7,12 @@ import * as Schema from 'effect/Schema';
 
 import { ArtifactId } from '@dxos/assistant';
 import { Obj, Relation } from '@dxos/echo';
+import { Database } from '@dxos/echo';
 import { TracingService, defineFunction } from '@dxos/functions';
 import { log } from '@dxos/log';
 import { Markdown } from '@dxos/plugin-markdown/types';
 import { HasSubject } from '@dxos/types';
 import { trim } from '@dxos/util';
-import { Database } from '@dxos/echo';
 
 export default defineFunction({
   key: 'dxos.org/function/research/document-create',

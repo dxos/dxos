@@ -8,6 +8,7 @@ import * as Fiber from 'effect/Fiber';
 import * as Layer from 'effect/Layer';
 import React, { type CSSProperties, useEffect, useMemo, useState } from 'react';
 
+import { Database } from '@dxos/echo';
 import { ContextQueueService } from '@dxos/functions';
 import { faker } from '@dxos/random';
 import { useQueue, useSpace } from '@dxos/react-client/echo';
@@ -26,7 +27,6 @@ import { translations } from '../../translations';
 import { ChatThread, type ChatThreadProps } from './ChatThread';
 import { componentRegistry } from './registry';
 import TEXT from './testing/thread.md?raw';
-import { Database } from '@dxos/echo';
 
 faker.seed(1);
 

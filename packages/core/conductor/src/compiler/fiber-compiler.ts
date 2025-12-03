@@ -9,6 +9,7 @@ import * as Scope from 'effect/Scope';
 
 import { AiService } from '@dxos/ai';
 import { raise } from '@dxos/debug';
+import { Database } from '@dxos/echo';
 import {
   ComputeEventLogger,
   CredentialsService,
@@ -42,7 +43,6 @@ import {
   type TopologyNodeConnector,
   createTopology,
 } from './topology';
-import { Database } from '@dxos/echo';
 
 export type ValidateParams = {
   graph: ComputeGraphModel;

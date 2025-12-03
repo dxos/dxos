@@ -20,13 +20,13 @@ import {
   makeGraphWriterToolkit,
 } from '@dxos/assistant-toolkit';
 import { Obj } from '@dxos/echo';
+import { Database } from '@dxos/echo';
 import { QueueService, TracingService, defineFunction } from '@dxos/functions';
 import { Message, Organization, Person, Project } from '@dxos/types';
 import { trim } from '@dxos/util';
 
 import { Mailbox } from '../types';
 import { renderMarkdown } from '../util';
-import { Database } from '@dxos/echo';
 
 /**
  * Summarize a mailbox.

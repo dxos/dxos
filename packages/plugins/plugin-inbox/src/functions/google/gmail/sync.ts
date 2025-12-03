@@ -14,6 +14,7 @@ import * as Stream from 'effect/Stream';
 
 import { ArtifactId } from '@dxos/assistant';
 import { DXN, Obj } from '@dxos/echo';
+import { Database } from '@dxos/echo';
 import type { Queue } from '@dxos/echo-db';
 import { QueueService, defineFunction } from '@dxos/functions';
 import { log } from '@dxos/log';
@@ -27,7 +28,6 @@ import * as Mailbox from '../../../types/Mailbox';
 import { GoogleMail } from '../../apis';
 
 import { mapMessage } from './mapper';
-import { Database } from '@dxos/echo';
 
 type DateChunk = {
   readonly start: Date;

@@ -9,6 +9,7 @@ import * as Option from 'effect/Option';
 
 import { Resource } from '@dxos/context';
 import { Obj } from '@dxos/echo';
+import { Database } from '@dxos/echo';
 import { type Queue } from '@dxos/echo-db';
 import { log } from '@dxos/log';
 import { Message } from '@dxos/types';
@@ -22,7 +23,6 @@ import {
 } from '../session';
 
 import { AiContextBinder, AiContextService, type ContextBinding } from './context';
-import { Database } from '@dxos/echo';
 
 export interface AiConversationRunParams {
   prompt: string;

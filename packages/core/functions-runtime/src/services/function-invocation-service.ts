@@ -6,12 +6,12 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
 import { AiService } from '@dxos/ai';
+import { Database } from '@dxos/echo';
 import { CredentialsService, FunctionInvocationService, type InvocationServices, QueueService } from '@dxos/functions';
 import { type FunctionDefinition } from '@dxos/functions';
 
 import { FunctionImplementationResolver, LocalFunctionExecutionService } from './local-function-execution';
 import { RemoteFunctionExecutionService } from './remote-function-execution-service';
-import { Database } from '@dxos/echo';
 
 /**
  * Layer that provides FunctionInvocationService implementation routing between local and remote execution.

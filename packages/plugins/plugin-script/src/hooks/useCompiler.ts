@@ -1,8 +1,13 @@
-import { useCapabilities, useCapability, usePluginManager } from '@dxos/app-framework/react';
-import { ScriptCapabilities } from '../capabilities';
-import { ScriptEvents } from '../events';
-import type { Compiler } from '../compiler';
+//
+// Copyright 2025 DXOS.org
+//
+
+import { useCapabilities, usePluginManager } from '@dxos/app-framework/react';
 import { useAsyncEffect } from '@dxos/react-ui';
+
+import { ScriptCapabilities } from '../capabilities';
+import type { Compiler } from '../compiler';
+import { ScriptEvents } from '../events';
 
 /**
  * Asynchronously sets up the compiler and returns it.

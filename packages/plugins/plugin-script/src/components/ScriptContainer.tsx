@@ -16,8 +16,6 @@ import { type ScriptSettings } from '../types';
 
 import { ScriptToolbar } from './ScriptToolbar';
 import { TypescriptEditor, type TypescriptEditorProps } from './TypescriptEditor';
-import { useCapabilities } from '@dxos/app-framework/react';
-import { ScriptCapabilities } from '../capabilities';
 
 export type ScriptEditorProps = {
   role: string;

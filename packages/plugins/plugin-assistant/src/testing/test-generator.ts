@@ -5,12 +5,12 @@
 import * as Effect from 'effect/Effect';
 
 import { Obj } from '@dxos/echo';
+import { Database } from '@dxos/echo';
 import { ContextQueueService } from '@dxos/functions';
 import { faker } from '@dxos/random';
 import { renderObjectLink } from '@dxos/react-ui-components';
 import { type Actor, type ContentBlock, Message, Organization } from '@dxos/types';
 import { trim } from '@dxos/util';
-import { Database } from '@dxos/echo';
 
 export const createMessage = (role: Actor.Role, blocks: ContentBlock.Any[]): Message.Message => {
   return Obj.make(Message.Message, {

@@ -11,6 +11,7 @@ import { MemoizedAiService, TestAiService } from '@dxos/ai/testing';
 import { makeToolExecutionServiceFromFunctions, makeToolResolverFromFunctions } from '@dxos/assistant';
 import { Blueprint } from '@dxos/blueprints';
 import { Obj } from '@dxos/echo';
+import { Database } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { CredentialsService, FunctionInvocationService, TracingService } from '@dxos/functions';
 import { FunctionInvocationServiceLayerTest, TestDatabaseLayer } from '@dxos/functions-runtime/testing';
@@ -21,7 +22,6 @@ import { testToolkit } from '../../blueprints/testing';
 import { ResearchGraph } from '../research';
 
 import { default as entityExtraction } from './entity-extraction';
-import { Database } from '@dxos/echo';
 
 ObjectId.dangerouslyDisableRandomness();
 

@@ -8,12 +8,12 @@ import * as Effect from 'effect/Effect';
 
 import { ClientService } from '@dxos/client';
 import { Obj } from '@dxos/echo';
+import { Database } from '@dxos/echo';
 import { Function } from '@dxos/functions';
 import { getDeployedFunctions } from '@dxos/functions-runtime/edge';
 
 import { withDatabase } from '../../../util';
 import { Common } from '../../options';
-import { Database } from '@dxos/echo';
 
 export const importCommand = Command.make(
   'import',

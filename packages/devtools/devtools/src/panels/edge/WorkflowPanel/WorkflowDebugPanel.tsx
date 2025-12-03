@@ -8,6 +8,7 @@ import * as SchemaAST from 'effect/SchemaAST';
 import React, { forwardRef, useEffect, useMemo, useRef, useState } from 'react';
 
 import { type ComputeGraph, ValueBag, type WorkflowLoader } from '@dxos/conductor';
+import { Database } from '@dxos/echo';
 import { EdgeHttpClient } from '@dxos/edge-client';
 import { createEventLogger } from '@dxos/functions';
 import { QueueService } from '@dxos/functions';
@@ -23,7 +24,6 @@ import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { errorText, mx } from '@dxos/react-ui-theme';
 
 import { useDevtoolsState } from '../../../hooks';
-import { Database } from '@dxos/echo';
 
 // TODO: reconcile with DebugPanel in ScriptPlugin
 

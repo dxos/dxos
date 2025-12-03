@@ -13,9 +13,9 @@ import * as Schema from 'effect/Schema';
 import { AiToolNotFoundError, ToolExecutionService, ToolResolverService } from '@dxos/ai';
 import { todo } from '@dxos/debug';
 import { Query } from '@dxos/echo';
+import { Database } from '@dxos/echo';
 import { Function, FunctionDefinition, FunctionInvocationService } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
-import { Database } from '@dxos/echo';
 
 /**
  * Constructs a `ToolResolverService` whose `resolve(id)` looks up tools in the following order:

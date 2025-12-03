@@ -10,9 +10,10 @@ import * as Function from 'effect/Function';
 import * as Record from 'effect/Record';
 
 import { Filter, Obj, Query } from '@dxos/echo';
+import { Database } from '@dxos/echo';
+
 import { withDatabase } from '../../util';
 import { Common } from '../options';
-import { Database } from '@dxos/echo';
 
 export const stats = Command.make(
   'stats',

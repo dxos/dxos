@@ -10,8 +10,8 @@ import * as Schema from 'effect/Schema';
 
 import { AiContextService, ArtifactId } from '@dxos/assistant';
 import { Ref } from '@dxos/echo';
-import { trim } from '@dxos/util';
 import { Database } from '@dxos/echo';
+import { trim } from '@dxos/util';
 
 export const AssistantToolkit = Toolkit.make(
   Tool.make('add-to-context', {

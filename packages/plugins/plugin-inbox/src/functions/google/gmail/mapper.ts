@@ -5,11 +5,11 @@
 import * as Effect from 'effect/Effect';
 
 import { Filter, Obj, Query, Ref } from '@dxos/echo';
+import { Database } from '@dxos/echo';
 import { Message, Person } from '@dxos/types';
 
 import { type GoogleMail } from '../../apis';
 import { getPart, normalizeText, parseFromHeader } from '../../util';
-import { Database } from '@dxos/echo';
 
 /**
  * Transforms Gmail message to ECHO message object.

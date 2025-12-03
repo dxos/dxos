@@ -7,10 +7,10 @@ import * as Layer from 'effect/Layer';
 import * as Schema from 'effect/Schema';
 
 import { Obj, Query, Ref, Type } from '@dxos/echo';
+import { Database } from '@dxos/echo';
 import { SystemTypeAnnotation } from '@dxos/echo/internal';
 import { Queue } from '@dxos/echo-db';
 import { ContextQueueService, QueueService } from '@dxos/functions';
-import { Database } from '@dxos/echo';
 
 /**
  * Container for a set of ephemeral research results.

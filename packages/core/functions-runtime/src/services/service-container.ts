@@ -6,6 +6,7 @@ import type * as Context from 'effect/Context';
 import * as Layer from 'effect/Layer';
 
 import { AiService } from '@dxos/ai';
+import { Database } from '@dxos/echo';
 import {
   ComputeEventLogger,
   ConfiguredCredentialsService,
@@ -17,7 +18,6 @@ import {
 import { entries } from '@dxos/util';
 
 import { RemoteFunctionExecutionService } from './remote-function-execution-service';
-import { Database } from '@dxos/echo';
 
 // TODO(dmaretskyi): Refactor this module to only rely on tags and not the human-assigned names.
 

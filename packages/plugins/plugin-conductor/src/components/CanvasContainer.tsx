@@ -7,6 +7,7 @@ import React, { useEffect, useMemo, useRef } from 'react';
 import { type Config } from '@dxos/client';
 import { ComputeGraphModel } from '@dxos/conductor';
 import { Obj } from '@dxos/echo';
+import { Database } from '@dxos/echo';
 import { QueueService } from '@dxos/functions';
 import { ServiceContainer } from '@dxos/functions-runtime';
 import { useConfig } from '@dxos/react-client';
@@ -29,7 +30,6 @@ import {
   ShapeRegistry,
 } from '@dxos/react-ui-canvas-editor';
 import { StackItem } from '@dxos/react-ui-stack';
-import { Database } from '@dxos/echo';
 
 const createServices = (config: Config, space?: Space): ServiceContainer => {
   return new ServiceContainer().setServices({

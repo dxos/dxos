@@ -17,6 +17,7 @@ import {
 } from '@dxos/assistant';
 import { Blueprint } from '@dxos/blueprints';
 import { Obj, Ref } from '@dxos/echo';
+import { Database } from '@dxos/echo';
 import { acquireReleaseResource } from '@dxos/effect';
 import { TestHelpers } from '@dxos/effect/testing';
 import { QueueService, TracingService } from '@dxos/functions';
@@ -31,7 +32,6 @@ import { Document } from '../../functions';
 import { testToolkit } from '../testing';
 
 import blueprint from './design-blueprint';
-import { Database } from '@dxos/echo';
 
 describe('Design Blueprint', { timeout: 120_000 }, () => {
   it.scoped(

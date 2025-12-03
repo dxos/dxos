@@ -12,6 +12,7 @@ import * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
 
 import { Entity, Filter, Obj, Query, Type } from '@dxos/echo';
+import { Database } from '@dxos/echo';
 import {
   ReferenceAnnotationId,
   RelationSourceDXNId,
@@ -29,7 +30,6 @@ import { ContextQueueService } from '@dxos/functions';
 import { DXN, ObjectId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { deepMapValues, isNonNullable, trim } from '@dxos/util';
-import { Database } from '@dxos/echo';
 
 // TODO(burdon): Unify with the graph schema.
 export const Subgraph = Schema.Struct({

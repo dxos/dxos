@@ -11,6 +11,7 @@ import * as Schema from 'effect/Schema';
 import { AiService } from '@dxos/ai';
 import { AiSession, makeToolExecutionServiceFromFunctions, makeToolResolverFromFunctions } from '@dxos/assistant';
 import { Filter, Obj, Ref } from '@dxos/echo';
+import { Database } from '@dxos/echo';
 import { defineFunction } from '@dxos/functions';
 import { FunctionInvocationServiceLayerTest } from '@dxos/functions-runtime/testing';
 import { type DXN } from '@dxos/keys';
@@ -20,7 +21,6 @@ import { trim } from '@dxos/util';
 
 import { makeGraphWriterHandler, makeGraphWriterToolkit } from '../../crud';
 import { contextQueueLayerFromResearchGraph } from '../research';
-import { Database } from '@dxos/echo';
 
 export default defineFunction({
   key: 'dxos.org/functions/entity-extraction',

@@ -5,6 +5,7 @@
 import type * as Context from 'effect/Context';
 
 import type { Space } from '@dxos/client/echo';
+import { Database } from '@dxos/echo';
 import { type EchoDatabase, type QueueFactory } from '@dxos/echo-db';
 import {
   type ComputeEventLogger,
@@ -19,7 +20,6 @@ import { assertArgument } from '@dxos/invariant';
 import { ServiceContainer } from '../services';
 
 import { consoleLogger, noopLogger } from './logger';
-import { Database } from '@dxos/echo';
 
 // TODO(burdon): Factor out.
 export type OneOf<T> = {

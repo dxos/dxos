@@ -27,6 +27,7 @@ import {
 } from '@dxos/assistant';
 import { type Blueprint } from '@dxos/blueprints';
 import { Obj } from '@dxos/echo';
+import { type Database } from '@dxos/echo';
 import { throwCause } from '@dxos/effect';
 import {
   type CredentialsService,
@@ -40,7 +41,6 @@ import { type ContentBlock, Message } from '@dxos/types';
 import { type Assistant } from '../types';
 
 import { updateName } from './update-name';
-import { Database } from '@dxos/echo';
 
 export type AiChatServices =
   | CredentialsService

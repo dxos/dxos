@@ -13,9 +13,9 @@ import { AiService, ConsolePrinter, ModelName } from '@dxos/ai';
 import { AiSession, GenerationObserver, createToolkit } from '@dxos/assistant';
 import { Prompt, Template } from '@dxos/blueprints';
 import { Obj, Ref, Type } from '@dxos/echo';
+import { Database } from '@dxos/echo';
 import { TracingService, defineFunction } from '@dxos/functions';
 import { log } from '@dxos/log';
-import { Database } from '@dxos/echo';
 
 const DEFAULT_MODEL: ModelName = '@anthropic/claude-opus-4-0';
 

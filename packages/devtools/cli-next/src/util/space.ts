@@ -9,10 +9,10 @@ import type * as Schema from 'effect/Schema';
 
 import { ClientService } from '@dxos/client';
 import { type Space, SpaceId } from '@dxos/client/echo';
+import { Database } from '@dxos/echo';
 import { BaseError, type BaseErrorOptions } from '@dxos/errors';
 import { log } from '@dxos/log';
 import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
-import { Database } from '@dxos/echo';
 
 export const getSpace = (rawSpaceId: string) =>
   Effect.gen(function* () {

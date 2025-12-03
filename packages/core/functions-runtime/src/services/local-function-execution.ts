@@ -8,6 +8,7 @@ import * as Layer from 'effect/Layer';
 import * as Schema from 'effect/Schema';
 
 import { AiService } from '@dxos/ai';
+import { Database } from '@dxos/echo';
 import {
   CredentialsService,
   type FunctionContext,
@@ -20,7 +21,6 @@ import {
 } from '@dxos/functions';
 import { type FunctionServices } from '@dxos/functions';
 import { log } from '@dxos/log';
-import { Database } from '@dxos/echo';
 
 export class LocalFunctionExecutionService extends Context.Tag('@dxos/functions/LocalFunctionExecutionService')<
   LocalFunctionExecutionService,

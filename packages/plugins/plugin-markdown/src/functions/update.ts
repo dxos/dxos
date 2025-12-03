@@ -6,12 +6,12 @@ import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
 import { ArtifactId, applyDiffs } from '@dxos/assistant';
+import { Database } from '@dxos/echo';
 import { createDocAccessor } from '@dxos/echo-db';
 import { defineFunction } from '@dxos/functions';
 import { trim } from '@dxos/util';
 
 import { Markdown } from '../types';
-import { Database } from '@dxos/echo';
 
 // TODO(wittjosiah): Reconcile with ThreadAction.AddProposal.
 export default defineFunction({

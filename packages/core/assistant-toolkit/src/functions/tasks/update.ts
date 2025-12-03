@@ -6,11 +6,11 @@ import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
 import { ArtifactId } from '@dxos/assistant';
+import { Database } from '@dxos/echo';
 import { defineFunction } from '@dxos/functions';
 import { Markdown } from '@dxos/plugin-markdown/types';
 
 import { MarkdownTasks, type TaskOperation } from './task-list';
-import { Database } from '@dxos/echo';
 
 export default defineFunction({
   key: 'dxos.org/function/markdown/update-tasks',

@@ -14,6 +14,7 @@ import {
   createResolver,
 } from '@dxos/app-framework';
 import { Obj, Query, Ref, Relation, Type } from '@dxos/echo';
+import { Database } from '@dxos/echo';
 import { Serializer } from '@dxos/echo-db';
 import { invariant } from '@dxos/invariant';
 import { Migrations } from '@dxos/migrations';
@@ -42,7 +43,6 @@ import { CollectionAction, SpaceAction } from '../types';
 import { COMPOSER_SPACE_LOCK, cloneObject, getNestedObjects } from '../util';
 
 import { SpaceCapabilities } from './capabilities';
-import { Database } from '@dxos/echo';
 
 // TODO(wittjosiah): Remove.
 const SPACE_MAX_OBJECTS = 750;

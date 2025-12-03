@@ -18,6 +18,7 @@ import {
 import { Blueprint, Template } from '@dxos/blueprints';
 import { Obj } from '@dxos/echo';
 import { Ref } from '@dxos/echo';
+import { Database } from '@dxos/echo';
 import { acquireReleaseResource } from '@dxos/effect';
 import { TestHelpers } from '@dxos/effect/testing';
 import { CredentialsService, QueueService, TracingService } from '@dxos/functions';
@@ -26,7 +27,6 @@ import { ObjectId } from '@dxos/keys';
 import { Message, Organization, Person } from '@dxos/types';
 
 import * as AssistantToolkit from './AssistantToolkit';
-import { Database } from '@dxos/echo';
 
 ObjectId.dangerouslyDisableRandomness();
 

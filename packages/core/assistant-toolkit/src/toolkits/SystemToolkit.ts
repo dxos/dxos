@@ -11,8 +11,8 @@ import * as Schema from 'effect/Schema';
 
 import { ArtifactId } from '@dxos/assistant';
 import { DXN, Obj, Relation, Tag, Type } from '@dxos/echo';
-import { trim } from '@dxos/util';
 import { Database } from '@dxos/echo';
+import { trim } from '@dxos/util';
 
 export const SystemToolkit = Toolkit.make(
   //

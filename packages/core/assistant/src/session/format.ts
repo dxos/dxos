@@ -9,6 +9,7 @@ import * as Option from 'effect/Option';
 
 import { Template } from '@dxos/blueprints';
 import { Obj } from '@dxos/echo';
+import { Database } from '@dxos/echo';
 import { ObjectVersion } from '@dxos/echo-db';
 import { type ObjectId } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -19,7 +20,6 @@ import { AiAssistantError } from '../errors';
 
 import { ArtifactDiffResolver } from './artifact-diff';
 import { type AiSessionRunError, type AiSessionRunParams } from './session';
-import { Database } from '@dxos/echo';
 
 /**
  * Formats the system prompt.

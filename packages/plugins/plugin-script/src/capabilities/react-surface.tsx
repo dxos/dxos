@@ -24,11 +24,9 @@ import {
   ScriptProperties,
   TestContainer,
 } from '../components';
+import { useCompiler } from '../hooks';
 import { meta } from '../meta';
 import { Notebook, type ScriptSettings } from '../types';
-
-import { ScriptCapabilities } from './capabilities';
-import { useCompiler } from '../hooks';
 
 export default () =>
   contributes(Capabilities.ReactSurface, [

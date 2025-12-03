@@ -9,6 +9,7 @@ import * as Effect from 'effect/Effect';
 import * as HashMap from 'effect/HashMap';
 
 import { Filter, Obj, Ref } from '@dxos/echo';
+import { Database } from '@dxos/echo';
 import { Function, Trigger, getUserFunctionIdInMetadata } from '@dxos/functions';
 
 import { withDatabase, withTypes } from '../../../../util';
@@ -16,7 +17,6 @@ import { Common } from '../../../options';
 import { Enabled, Input } from '../options';
 
 import { Cron } from './options';
-import { Database } from '@dxos/echo';
 
 export const create = Command.make(
   'create',

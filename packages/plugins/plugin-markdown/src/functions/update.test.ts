@@ -18,6 +18,7 @@ import {
 import { Blueprint } from '@dxos/blueprints';
 import { SpaceProperties } from '@dxos/client-protocol';
 import { Obj, Query, Ref } from '@dxos/echo';
+import { Database } from '@dxos/echo';
 import { acquireReleaseResource } from '@dxos/effect';
 import { TestHelpers } from '@dxos/effect/testing';
 import { CredentialsService, FunctionInvocationService, QueueService, TracingService } from '@dxos/functions';
@@ -30,7 +31,6 @@ import { HasSubject, type Message } from '@dxos/types';
 
 import { WithProperties, testToolkit } from '../testing';
 import { MarkdownBlueprint, MarkdownFunction } from '../toolkit';
-import { Database } from '@dxos/echo';
 
 ObjectId.dangerouslyDisableRandomness();
 

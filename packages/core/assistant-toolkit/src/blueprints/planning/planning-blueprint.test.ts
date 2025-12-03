@@ -16,6 +16,7 @@ import {
 } from '@dxos/assistant';
 import { Blueprint } from '@dxos/blueprints';
 import { Obj, Ref } from '@dxos/echo';
+import { Database } from '@dxos/echo';
 import { acquireReleaseResource } from '@dxos/effect';
 import { TestHelpers } from '@dxos/effect/testing';
 import { QueueService, TracingService } from '@dxos/functions';
@@ -31,7 +32,6 @@ import { Tasks } from '../../functions';
 import { type TestStep, runSteps, testToolkit } from '../testing';
 
 import blueprint from './planning-blueprint';
-import { Database } from '@dxos/echo';
 
 describe('Planning Blueprint', { timeout: 120_000 }, () => {
   it.scoped(

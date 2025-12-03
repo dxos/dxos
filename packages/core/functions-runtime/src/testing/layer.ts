@@ -7,6 +7,7 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import type * as Schema from 'effect/Schema';
 
+import { Database } from '@dxos/echo';
 import { type EchoDatabaseImpl, type QueueFactory } from '@dxos/echo-db';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
 import type { EchoHostIndexingConfig } from '@dxos/echo-pipeline';
@@ -16,7 +17,6 @@ import { PublicKey } from '@dxos/keys';
 import type { LevelDB } from '@dxos/kv-store';
 import { createTestLevel } from '@dxos/kv-store/testing';
 import { log } from '@dxos/log';
-import { Database } from '@dxos/echo';
 
 const testBuilder = acquireReleaseResource(() => new EchoTestBuilder());
 

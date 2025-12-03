@@ -2,9 +2,10 @@
 // Copyright 2025 DXOS.org
 //
 
-import { defineFunction } from '@dxos/functions';
 import * as Schema from 'effect/Schema';
 import { Chess } from 'https://esm.sh/chess.js@0.13.1?bundle=false';
+
+import { defineFunction } from '@dxos/functions';
 
 export default defineFunction({
   key: 'dxos.org/script/chess',

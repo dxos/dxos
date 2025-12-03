@@ -6,9 +6,9 @@ import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
 import { Filter, Obj, Query } from '@dxos/echo';
+import { Database } from '@dxos/echo';
 import { defineFunction } from '@dxos/functions';
 import { trim } from '@dxos/util';
-import { Database } from '@dxos/echo';
 
 // TODO(burdon): Move to toolkit (i.e., tool not function).
 export default defineFunction({

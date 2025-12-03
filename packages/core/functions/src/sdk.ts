@@ -8,6 +8,7 @@ import * as Schema from 'effect/Schema';
 
 import { type AiService } from '@dxos/ai';
 import { Obj, Type } from '@dxos/echo';
+import { type Database } from '@dxos/echo';
 import { assertArgument, failedInvariant } from '@dxos/invariant';
 
 import {
@@ -18,7 +19,6 @@ import {
 } from './services';
 import { Function } from './types';
 import { getUserFunctionIdInMetadata, setUserFunctionIdInMetadata } from './types';
-import { Database } from '@dxos/echo';
 
 // TODO(burdon): Model after http request. Ref Lambda/OpenFaaS.
 // https://docs.aws.amazon.com/lambda/latest/dg/typescript-handler.html

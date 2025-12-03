@@ -9,9 +9,10 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
 import { Filter, Query } from '@dxos/echo';
+import { Database } from '@dxos/echo';
+
 import { withDatabase } from '../../util';
 import { Common } from '../options';
-import { Database } from '@dxos/echo';
 
 export const remove = Command.make(
   'remove',

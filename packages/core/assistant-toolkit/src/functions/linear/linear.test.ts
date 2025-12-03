@@ -13,6 +13,7 @@ import { AiService } from '@dxos/ai';
 import { AiServiceTestingPreset } from '@dxos/ai/testing';
 import { makeToolExecutionServiceFromFunctions, makeToolResolverFromFunctions } from '@dxos/assistant';
 import { Obj, Query } from '@dxos/echo';
+import { Database } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { CredentialsService, FunctionInvocationService } from '@dxos/functions';
 import { TracingServiceExt } from '@dxos/functions-runtime';
@@ -24,7 +25,6 @@ import {
 import { Person, Project, Task } from '@dxos/types';
 
 import { LINEAR_ID_KEY, default as fetchLinearIssues } from './sync-issues';
-import { Database } from '@dxos/echo';
 
 const TestLayer = Layer.mergeAll(
   AiService.model('@anthropic/claude-opus-4-0'),

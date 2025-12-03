@@ -6,10 +6,10 @@ import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 
 import { Filter, Obj, Query, Type } from '@dxos/echo';
+import { Database } from '@dxos/echo';
 import { Person } from '@dxos/types';
 
 import { TestDatabaseLayer, testStoragePath } from './layer';
-import { Database } from '@dxos/echo';
 
 describe('TestDatabaseLayer', { timeout: 600_000 }, () => {
   it.effect(

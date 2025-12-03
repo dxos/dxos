@@ -9,6 +9,7 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
 import { DXN, Filter, Obj, Ref } from '@dxos/echo';
+import { Database } from '@dxos/echo';
 import { Function } from '@dxos/functions';
 import { Trigger } from '@dxos/functions';
 import { getUserFunctionIdInMetadata } from '@dxos/functions';
@@ -18,7 +19,6 @@ import { Common } from '../../../options';
 import { Enabled, Input, TriggerId } from '../options';
 
 import { Cron } from './options';
-import { Database } from '@dxos/echo';
 
 export const update = Command.make(
   'update',

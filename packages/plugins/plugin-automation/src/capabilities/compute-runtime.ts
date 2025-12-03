@@ -11,6 +11,7 @@ import { Capabilities, type PluginContext, contributes } from '@dxos/app-framewo
 import { GenericToolkit, makeToolExecutionServiceFromFunctions, makeToolResolverFromFunctions } from '@dxos/assistant';
 import { Resource } from '@dxos/context';
 import { Query, Ref } from '@dxos/echo';
+import { Database } from '@dxos/echo';
 import { CredentialsService, QueueService } from '@dxos/functions';
 import {
   FunctionImplementationResolver,
@@ -26,7 +27,6 @@ import { ClientCapabilities } from '@dxos/plugin-client';
 import { SpaceProperties } from '@dxos/react-client/echo';
 
 import { AutomationCapabilities } from './capabilities';
-import { Database } from '@dxos/echo';
 
 export default async (context: PluginContext) => {
   const provider = await new ComputeRuntimeProviderImpl(context).open();

@@ -15,6 +15,7 @@ import * as Stream from 'effect/Stream';
 
 import { ArtifactId } from '@dxos/assistant';
 import { DXN } from '@dxos/echo';
+import { Database } from '@dxos/echo';
 import { QueueService, defineFunction } from '@dxos/functions';
 import { log } from '@dxos/log';
 import { type Event } from '@dxos/types';
@@ -24,7 +25,6 @@ import * as Calendar from '../../../types/Calendar';
 import { GoogleCalendar } from '../../apis';
 
 import { mapEvent } from './mapper';
-import { Database } from '@dxos/echo';
 
 export default defineFunction({
   key: 'dxos.org/function/inbox/google-calendar-sync',

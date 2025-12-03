@@ -9,12 +9,12 @@ import * as Schema from 'effect/Schema';
 
 import { ArtifactId, computeDiffsWithCursors } from '@dxos/assistant';
 import { Obj, Ref, Relation } from '@dxos/echo';
+import { Database } from '@dxos/echo';
 import { createDocAccessor } from '@dxos/echo-db';
 import { defineFunction } from '@dxos/functions';
 import { DXN } from '@dxos/keys';
 import { Markdown } from '@dxos/plugin-markdown/types';
 import { AnchoredTo, Message, Thread } from '@dxos/types';
-import { Database } from '@dxos/echo';
 
 export default defineFunction({
   key: 'dxos.org/function/thread/create-proposals',

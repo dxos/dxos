@@ -7,11 +7,11 @@ import * as Schema from 'effect/Schema';
 
 import { ArtifactId } from '@dxos/assistant';
 import { Obj } from '@dxos/echo';
+import { Database } from '@dxos/echo';
 import { QueueService, defineFunction } from '@dxos/functions';
 import { Message, Transcript } from '@dxos/types';
 
 import { renderByline } from '../components';
-import { Database } from '@dxos/echo';
 
 export default defineFunction({
   key: 'dxos.org/function/transcription/open',

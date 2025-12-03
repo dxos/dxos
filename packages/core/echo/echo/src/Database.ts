@@ -2,11 +2,22 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as Context from 'effect/Context';
+import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
+import * as Option from 'effect/Option';
+import type * as Schema from 'effect/Schema';
+import type * as Types from 'effect/Types';
+
 import { type QueryAST } from '@dxos/echo-protocol';
+import { promiseWithCauseCapture } from '@dxos/effect';
+import { invariant } from '@dxos/invariant';
 import { type DXN, type PublicKey, type SpaceId } from '@dxos/keys';
+import { type Live } from '@dxos/live-object';
 import { type QueryOptions as QueryOptionsProto } from '@dxos/protocols/proto/dxos/echo/filter';
 
 import type * as Entity from './Entity';
+import * as Err from './Err';
 import type * as Filter from './Filter';
 import type * as Hypergraph from './Hypergraph';
 import type * as Query from './Query';
@@ -14,16 +25,8 @@ import type * as QueryResult from './QueryResult';
 import type * as Ref from './Ref';
 import type * as Type from './Type';
 import type * as SchemaRegistry from './SchemaRegistry';
-import * as Context from 'effect/Context';
-import * as Effect from 'effect/Effect';
-import * as Layer from 'effect/Layer';
-import * as Types from 'effect/Types';
-import * as Schema from 'effect/Schema';
-import { promiseWithCauseCapture } from '@dxos/effect';
-import { invariant } from '@dxos/invariant';
-import { type Live } from '@dxos/live-object';
-import * as Err from './Err';
-import * as Option from 'effect/Option';
+
+
 import { isInstanceOf } from './internal';
 
 /**

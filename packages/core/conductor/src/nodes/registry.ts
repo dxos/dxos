@@ -7,6 +7,7 @@ import * as Schema from 'effect/Schema';
 import { JSONPath } from 'jsonpath-plus';
 
 import { Filter, Obj, Ref, Type } from '@dxos/echo';
+import { Database } from '@dxos/echo';
 import { isInstanceOf } from '@dxos/echo/internal';
 import { Queue } from '@dxos/echo-db';
 import { FunctionDefinition, FunctionInvocationService, QueueService } from '@dxos/functions';
@@ -41,7 +42,6 @@ import {
 import { gptNode } from './gpt';
 import { NODE_INPUT, NODE_OUTPUT, inputNode, outputNode } from './system';
 import { templateNode } from './template';
-import { Database } from '@dxos/echo';
 
 export const isFalsy = (value: any) =>
   value === 'false' ||

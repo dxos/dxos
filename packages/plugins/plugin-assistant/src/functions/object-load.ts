@@ -9,8 +9,8 @@ import * as Schema from 'effect/Schema';
 
 import { ArtifactId } from '@dxos/assistant';
 import { Obj } from '@dxos/echo';
-import { defineFunction } from '@dxos/functions';
 import { Database } from '@dxos/echo';
+import { defineFunction } from '@dxos/functions';
 
 // TODO(burdon): Move to toolkit (i.e., tool not function).
 export default defineFunction({

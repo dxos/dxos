@@ -10,13 +10,13 @@ import * as Function from 'effect/Function';
 import * as Schema from 'effect/Schema';
 
 import { Filter, Obj, Query, Ref, type Type } from '@dxos/echo';
+import { Database } from '@dxos/echo';
 import { defineFunction, withAuthorization } from '@dxos/functions';
 import { log } from '@dxos/log';
 import { Person, Project, Task } from '@dxos/types';
 
 import { syncObjects } from '../../sync';
 import { graphqlRequestBody } from '../../util';
-import { Database } from '@dxos/echo';
 
 const queryIssues = `
 query Issues($teamId: String!, $after: DateTimeOrDuration!) {

@@ -5,11 +5,11 @@
 import * as Effect from 'effect/Effect';
 
 import { Filter, Query, Ref } from '@dxos/echo';
+import { Database } from '@dxos/echo';
 import { Event, Person } from '@dxos/types';
 
 import { type GoogleCalendar } from '../../apis';
 import { normalizeText } from '../../util';
-import { Database } from '@dxos/echo';
 
 /**
  * Transforms Google Calendar event to ECHO event object.
