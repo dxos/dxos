@@ -11,7 +11,7 @@ import * as Schema from 'effect/Schema';
 
 import { ArtifactId } from '@dxos/assistant';
 import { DXN, Obj, Relation, Tag, Type } from '@dxos/echo';
-import { DatabaseService } from '@dxos/functions';
+import { Database } from '@dxos/echo';
 import { trim } from '@dxos/util';
 
 export const SystemToolkit = Toolkit.make(
@@ -30,7 +30,7 @@ export const SystemToolkit = Toolkit.make(
     // TODO(dmaretskyi): Effect returns ({ result, encodedResult })
     success: Schema.Any,
     failure: Schema.Never,
-    dependencies: [DatabaseService],
+    dependencies: [Database.Service],
   }),
 
   Tool.make('schema-add', {
@@ -46,7 +46,7 @@ export const SystemToolkit = Toolkit.make(
     },
     success: Schema.Any,
     failure: Schema.Never,
-    dependencies: [DatabaseService],
+    dependencies: [Database.Service],
   }),
 
   //
@@ -64,7 +64,7 @@ export const SystemToolkit = Toolkit.make(
     },
     success: Schema.Any,
     failure: Schema.Never,
-    dependencies: [DatabaseService],
+    dependencies: [Database.Service],
   }),
 
   Tool.make('object-remove', {
@@ -78,7 +78,7 @@ export const SystemToolkit = Toolkit.make(
     },
     success: Schema.Any,
     failure: Schema.Never,
-    dependencies: [DatabaseService],
+    dependencies: [Database.Service],
   }),
 
   //
@@ -104,7 +104,7 @@ export const SystemToolkit = Toolkit.make(
     },
     success: Schema.Any,
     failure: Schema.Never,
-    dependencies: [DatabaseService],
+    dependencies: [Database.Service],
   }),
 
   //
@@ -126,7 +126,7 @@ export const SystemToolkit = Toolkit.make(
     },
     success: Schema.Any,
     failure: Schema.Never,
-    dependencies: [DatabaseService],
+    dependencies: [Database.Service],
   }),
 
   Tool.make('tag-remove', {
@@ -144,7 +144,7 @@ export const SystemToolkit = Toolkit.make(
     },
     success: Schema.Any,
     failure: Schema.Never,
-    dependencies: [DatabaseService],
+    dependencies: [Database.Service],
   }),
 );
 
@@ -153,7 +153,7 @@ export const tools = Record.keys(SystemToolkit.tools);
 export const layer = (): Layer.Layer<Tool.Handler<any>, never, never> =>
   SystemToolkit.toLayer({
     'schema-list': Effect.fnUntraced(function* () {
-      const { db } = yield* DatabaseService;
+      const { db } = yield* Database.Service;
       const schema = yield* Effect.promise(() => db.schemaRegistry.query({ location: ['database', 'runtime'] }).run());
 
       return schema.map((schema) => {
@@ -167,7 +167,7 @@ export const layer = (): Layer.Layer<Tool.Handler<any>, never, never> =>
     }),
 
     'schema-add': Effect.fnUntraced(function* ({ name, typename, jsonSchema }) {
-      const { db } = yield* DatabaseService;
+      const { db } = yield* Database.Service;
 
       yield* Effect.promise(() =>
         db.schemaRegistry.register([
@@ -182,7 +182,7 @@ export const layer = (): Layer.Layer<Tool.Handler<any>, never, never> =>
     }),
 
     'object-create': Effect.fnUntraced(function* ({ typename, data }) {
-      const { db } = yield* DatabaseService;
+      const { db } = yield* Database.Service;
       const schema = yield* Effect.promise(() =>
         db.schemaRegistry.query({ typename, location: ['database', 'runtime'] }).first(),
       );
@@ -193,20 +193,20 @@ export const layer = (): Layer.Layer<Tool.Handler<any>, never, never> =>
     }),
 
     'object-remove': Effect.fnUntraced(function* ({ id }) {
-      const { db } = yield* DatabaseService;
-      const object = yield* DatabaseService.resolve(DXN.parse(id));
+      const { db } = yield* Database.Service;
+      const object = yield* Database.Service.resolve(DXN.parse(id));
       db.remove(object);
       return object;
     }),
 
     'relation-create': Effect.fnUntraced(function* ({ typename, source, target, data }) {
-      const { db } = yield* DatabaseService;
+      const { db } = yield* Database.Service;
       const schema = yield* Effect.promise(() =>
         db.schemaRegistry.query({ typename, location: ['database', 'runtime'] }).first(),
       );
 
-      const sourceObj = yield* DatabaseService.resolve(DXN.parse(source));
-      const targetObj = yield* DatabaseService.resolve(DXN.parse(target));
+      const sourceObj = yield* Database.Service.resolve(DXN.parse(source));
+      const targetObj = yield* Database.Service.resolve(DXN.parse(target));
       const relation = db.add(
         Relation.make(schema, {
           [Relation.Source]: sourceObj,
@@ -218,13 +218,13 @@ export const layer = (): Layer.Layer<Tool.Handler<any>, never, never> =>
     }),
 
     'tag-add': Effect.fnUntraced(function* ({ tagId, objectId }) {
-      const object = yield* DatabaseService.resolve(DXN.parse(objectId));
+      const object = yield* Database.Service.resolve(DXN.parse(objectId));
       Obj.addTag(object, DXN.parse(tagId).toString());
       return object;
     }),
 
     'tag-remove': Effect.fnUntraced(function* ({ tagId, objectId }) {
-      const object = yield* DatabaseService.resolve(DXN.parse(objectId));
+      const object = yield* Database.Service.resolve(DXN.parse(objectId));
       Obj.removeTag(object, DXN.parse(tagId).toString());
       return object;
     }),

@@ -36,6 +36,9 @@
       "path": "../../core/echo/echo-db"
     },
     {
+      "path": "../../core/functions"
+    },
+    {
       "path": "../../core/mesh/edge-client"
     },
     {

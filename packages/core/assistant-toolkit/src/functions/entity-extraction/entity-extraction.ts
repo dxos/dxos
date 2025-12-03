@@ -11,7 +11,8 @@ import * as Schema from 'effect/Schema';
 import { AiService } from '@dxos/ai';
 import { AiSession, makeToolExecutionServiceFromFunctions, makeToolResolverFromFunctions } from '@dxos/assistant';
 import { Filter, Obj, Ref } from '@dxos/echo';
-import { DatabaseService, defineFunction } from '@dxos/functions';
+import { Database } from '@dxos/echo';
+import { defineFunction } from '@dxos/functions';
 import { FunctionInvocationServiceLayerTest } from '@dxos/functions-runtime/testing';
 import { type DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -73,7 +74,7 @@ export default defineFunction({
         if (created.length > 1) {
           throw new Error('Multiple organizations created');
         } else if (created.length === 1) {
-          organization = yield* DatabaseService.resolve(created[0], Organization.Organization);
+          organization = yield* Database.Service.resolve(created[0], Organization.Organization);
           Obj.getMeta(organization).tags ??= [];
           Obj.getMeta(organization).tags!.push(...(tags ?? []));
           contact.organization = Ref.make(organization);
@@ -107,7 +108,7 @@ const extractContact = Effect.fn('extractContact')(function* (actor: Actor.Actor
     return undefined;
   }
 
-  const existingContacts = yield* DatabaseService.runQuery(Filter.type(Person.Person));
+  const existingContacts = yield* Database.Service.runQuery(Filter.type(Person.Person));
 
   // Check for existing contact
   // TODO(dmaretskyi): Query filter DSL - https://linear.app/dxos/issue/DX-541/filtercontains-should-work-with-partial-objects
@@ -124,7 +125,7 @@ const extractContact = Effect.fn('extractContact')(function* (actor: Actor.Actor
     [Obj.Meta]: { tags },
     emails: [{ value: email }],
   });
-  yield* DatabaseService.add(newContact);
+  yield* Database.Service.add(newContact);
 
   if (name) {
     newContact.fullName = name;
@@ -138,7 +139,7 @@ const extractContact = Effect.fn('extractContact')(function* (actor: Actor.Actor
 
   log.info('extracted email domain', { emailDomain });
 
-  const existingOrganisations = yield* DatabaseService.runQuery(Filter.type(Organization.Organization));
+  const existingOrganisations = yield* Database.Service.runQuery(Filter.type(Organization.Organization));
   const matchingOrg = existingOrganisations.find((org) => {
     if (org.website) {
       try {

@@ -2,8 +2,6 @@
 // Copyright 2025 DXOS.org
 //
 
-export { DatabaseService } from '@dxos/echo-db';
-
 export * from './credentials';
 export { ConfiguredCredentialsService, type ServiceCredential } from './credentials';
 export * from './event-logger';

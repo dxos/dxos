@@ -20,7 +20,7 @@ import {
 // import { TestRuntime } from '@dxos/conductor/testing';
 import { Filter, Obj, Ref } from '@dxos/echo';
 // import { runAndForwardErrors } from '@dxos/effect';
-// import { AiService, DatabaseService, QueueService, ServiceContainer, ToolResolverService } from '@dxos/functions';
+// import { AiService, Database.Service, QueueService, ServiceContainer, ToolResolverService } from '@dxos/functions';
 // import { failedInvariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { SpaceAction } from '@dxos/plugin-space/types';
@@ -156,7 +156,7 @@ export default (context: PluginContext) =>
         // const aiClient = null as any; // context.getCapability(AssistantCapabilities.AiClient);
         // const serviceContainer = new ServiceContainer().setServices({
         //   ai: AiService.AiService.make(aiClient.value),
-        //   database: DatabaseService.make(space.db),
+        //   database: Database.Service.make(space.db),
         //   queues: QueueService.make(space.queues, undefined),
         //   // eventLogger: consoleLogger,
         //   toolResolver: ToolResolverService.make(
