@@ -2,6 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
+import { writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+
 import { describe, test } from 'vitest';
 
 import { Client } from '@dxos/client';
@@ -13,6 +16,7 @@ import { Trigger } from '@dxos/functions';
 import { FunctionsServiceClient } from '@dxos/functions-runtime/edge';
 import { bundleFunction } from '@dxos/functions-runtime/native';
 import { failedInvariant } from '@dxos/invariant';
+import { Runtime } from '@dxos/protocols';
 import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { AccessToken, Message } from '@dxos/types';
 
@@ -26,6 +30,11 @@ describe.runIf(process.env.DX_TEST_TAGS?.includes('functions-e2e'))('Functions d
       verbose: true,
     });
     console.log(artifact);
+    const tmpDir = tmpdir();
+    for (const [name, data] of Object.entries(artifact.assets)) {
+      writeFileSync(`${tmpDir}/${name}`, data);
+      console.log(`${tmpDir}/${name}`);
+    }
   });
 
   test('deploy function', { timeout: 120_000 }, async () => {
@@ -142,6 +151,7 @@ const deployFunction = async (space: Space, functionsServiceClient: FunctionsSer
     ownerPublicKey: space.key,
     entryPoint: artifact.entryPoint,
     assets: artifact.assets,
+    runtime: Runtime.WORKER_LOADER,
   });
   space.db.add(func);
 

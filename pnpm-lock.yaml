@@ -3244,6 +3244,9 @@ importers:
       '@dxos/echo-protocol':
         specifier: workspace:*
         version: link:../echo/echo-protocol
+      '@dxos/errors':
+        specifier: workspace:*
+        version: link:../../common/errors
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant

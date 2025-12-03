@@ -35,6 +35,7 @@ export type FunctionDeployOptions = {
     // TODO(dmaretskyi): Allow passing strings and setting mime-type.
     [path: string]: Uint8Array;
   };
+  runtime?: Runtime;
 };
 
 export type FunctionInvokeOptions = {
