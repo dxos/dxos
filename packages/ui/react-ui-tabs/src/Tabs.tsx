@@ -13,10 +13,16 @@ import React, {
   forwardRef,
   useCallback,
   useLayoutEffect,
-  useRef,
 } from 'react';
 
-import { Button, type ButtonProps, IconButton, type IconButtonProps, type ThemedClassName } from '@dxos/react-ui';
+import {
+  Button,
+  type ButtonProps,
+  IconButton,
+  type IconButtonProps,
+  type ThemedClassName,
+  useForwardedRef,
+} from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
 import { ghostSelectedContainerMd, mx } from '@dxos/react-ui-theme';
 
@@ -63,7 +69,8 @@ const TabsRoot = forwardRef<HTMLDivElement, TabsRootProps>(
     },
     forwardedRef,
   ) => {
-    const tabsRoot = useRef<HTMLDivElement | null>(null);
+    // const tabsRoot = useRef<HTMLDivElement | null>(null);
+    const tabsRoot = useForwardedRef(forwardedRef);
 
     // TODO(thure): Without these, we get Groupper/Mover `API used before initialization`, but why?
     const _1 = useArrowNavigationGroup();

@@ -39,12 +39,12 @@ export const TupleField = ({
             type='number'
             disabled={!!readonly}
             value={values[prop]}
-            onChange={(event) =>
+            onChange={(event) => {
               onValueChange(type, {
                 ...values,
                 [prop]: safeParseFloat(event.target.value, 0),
-              })
-            }
+              });
+            }}
             onBlur={onBlur}
           />
         ))}
