@@ -210,7 +210,7 @@ export const getSanitizedSchemaName = (schema: Schema.Schema.AnyNoContext) => {
 export const sanitizeObjects = async (
   types: Schema.Schema.AnyNoContext[],
   data: Record<string, readonly unknown[]>,
-  db: EchoDatabase,
+  db: Database.Database,
   queue?: Queue,
 ): Promise<Obj.Any[]> => {
   const entries = types
