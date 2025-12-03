@@ -7,8 +7,9 @@ import * as Schema from 'effect/Schema';
 import { JSONPath } from 'jsonpath-plus';
 
 import { Filter, Obj, Ref, Type } from '@dxos/echo';
+import { Database } from '@dxos/echo';
 import { isInstanceOf } from '@dxos/echo/internal';
-import { DatabaseService, Queue } from '@dxos/echo-db';
+import { Queue } from '@dxos/echo-db';
 import { FunctionDefinition, FunctionInvocationService, QueueService } from '@dxos/functions';
 import { failedInvariant, invariant } from '@dxos/invariant';
 import { DXN, ObjectId } from '@dxos/keys';
@@ -236,7 +237,7 @@ export const registry: Record<NodeType, Executable> = {
 
           case DXN.kind.ECHO: {
             const { echoId, spaceId } = dxn.asEchoDXN() ?? failedInvariant();
-            const { db } = yield* DatabaseService;
+            const { db } = yield* Database.Service;
             if (spaceId != null) {
               invariant(db.spaceId === spaceId, 'Space mismatch');
             }
@@ -353,7 +354,7 @@ export const registry: Record<NodeType, Executable> = {
           throw new Error(`Function not specified on ${node?.id}.`);
         }
 
-        const func = yield* DatabaseService.load(functionRef);
+        const func = yield* Database.Service.load(functionRef);
         const funcDefinition = FunctionDefinition.deserialize(func);
         return yield* FunctionInvocationService.invokeFunction(funcDefinition, input);
       }),

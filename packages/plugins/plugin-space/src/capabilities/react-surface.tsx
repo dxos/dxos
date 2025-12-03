@@ -15,10 +15,9 @@ import { type Space, SpaceState, getSpace, isLiveObject, isSpace, parseId, useSp
 import { Input } from '@dxos/react-ui';
 import { type FormFieldComponentProps, SelectField } from '@dxos/react-ui-form';
 import { HuePicker, IconPicker } from '@dxos/react-ui-pickers';
-import { Collection, View, ViewAnnotation } from '@dxos/schema';
+import { Collection, type View, ViewAnnotation } from '@dxos/schema';
 import { type JoinPanelProps } from '@dxos/shell/react';
 
-// TODO(burdon): Component name standard: NounVerbComponent.
 import {
   CREATE_OBJECT_DIALOG,
   CREATE_SPACE_DIALOG,
@@ -33,9 +32,9 @@ import {
   MembersContainer,
   MenuFooter,
   OBJECT_RENAME_POPOVER,
-  ObjectDetailsPanel,
+  ObjectCardStack,
+  ObjectDetails,
   ObjectRenamePopover,
-  ObjectSettingsContainer,
   RecordArticle,
   SPACE_RENAME_POPOVER,
   SchemaContainer,
@@ -107,13 +106,13 @@ export default ({ createInvitationUrl }: ReactSurfaceOptions) =>
       id: `${meta.id}/companion/object-settings`,
       role: 'article',
       filter: (data): data is { companionTo: Obj.Any } => Obj.isObject(data.companionTo) && data.subject === 'settings',
-      component: ({ data, role }) => <ObjectSettingsContainer object={data.companionTo} role={role} />,
+      component: ({ ref, data, role }) => <ObjectDetails object={data.companionTo} role={role} ref={ref} />,
     }),
     createSurface({
       id: `${meta.id}/space-settings-properties`,
       role: 'article',
       filter: (data): data is { subject: string } => data.subject === `${meta.id}/properties`,
-      component: () => {
+      component: ({ ref }) => {
         const layout = useLayout();
         const { spaceId } = parseId(layout.workspace);
         const space = useSpace(spaceId);
@@ -121,7 +120,7 @@ export default ({ createInvitationUrl }: ReactSurfaceOptions) =>
           return null;
         }
 
-        return <SpaceSettingsContainer space={space} />;
+        return <SpaceSettingsContainer space={space} ref={ref} />;
       },
     }),
     createSurface({
@@ -158,13 +157,24 @@ export default ({ createInvitationUrl }: ReactSurfaceOptions) =>
     createSurface({
       id: `${meta.id}/selected-objects`,
       role: 'article',
-      filter: (data): data is { companionTo: View.View; subject: 'selected-objects' } =>
-        Obj.instanceOf(View.View, data.companionTo) && data.subject === 'selected-objects',
-      component: ({ data }) => (
-        <ObjectDetailsPanel
+      filter: (data): data is { companionTo: Obj.Obj<{ view: Ref.Ref<View.View> }>; subject: 'selected-objects' } => {
+        if (data.subject !== 'selected-objects' || !Obj.isObject(data.companionTo)) {
+          return false;
+        }
+
+        // TODO(burdon): Check companionTo.view.target is valid.
+        const schema = Obj.getSchema(data.companionTo);
+        return Option.fromNullable(schema).pipe(
+          Option.flatMap((schema) => ViewAnnotation.get(schema)),
+          Option.getOrElse(() => false),
+        );
+      },
+      component: ({ data, ref }) => (
+        <ObjectCardStack
           key={Obj.getDXN(data.companionTo).toString()}
           objectId={Obj.getDXN(data.companionTo).toString()}
-          view={data.companionTo}
+          view={data.companionTo.view.target!}
+          ref={ref}
         />
       ),
     }),
@@ -238,8 +248,6 @@ export default ({ createInvitationUrl }: ReactSurfaceOptions) =>
           return false;
         }
 
-        // TODO(wittjosiah): This doesn't work here.
-        // const annotation = TypeInputOptionsAnnotation.get(data.schema as Schema.Schema.Any);
         const annotation = findAnnotation((data.schema as Schema.Schema.All).ast, TypeInputOptionsAnnotationId);
         return !!annotation;
       },

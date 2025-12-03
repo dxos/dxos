@@ -12,6 +12,25 @@ tasks:
       - '--entryPoint=src/index.ts'
       - '--entryPoint=src/native/index.ts'
       - '--entryPoint=src/testing/index.ts'
+    deps:
+      - prebuild
+
+  prebuild:
+    command: noop
+    deps:
+      - build-runtime
+
+  build-runtime:
+    command: node ./scripts/build-modules.mjs
+    deps:
+      - ^:compile
+
+  # Executed manually: moon functions-runtime:upload-runtime -- --env dev
+  upload-runtime:
+    command: node scripts/upload-modules.mjs
+    deps:
+      - build-runtime
+
   # TODO(wittjosiah): Fix.
   # e2e:
   #   env:

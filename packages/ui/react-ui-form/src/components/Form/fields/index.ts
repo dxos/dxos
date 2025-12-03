@@ -11,4 +11,5 @@ export * from './RefField';
 export * from './SelectField';
 export * from './SelectOptionField';
 export * from './TextField';
+export * from './TextAreaField';
 export * from './TupleField';

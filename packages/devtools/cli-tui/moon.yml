@@ -1,46 +1,12 @@
-type: 'library'
-
-language: 'typescript'
-
-project:
-  name: 'cli-tui'
-  description: 'Enhanced terminal UI for DXOS CLI'
-  owner: 'devtools'
-  maintainers: []
-
+type: application
+language: typescript
+tags:
+  - ts-test
+  - ts-compile
 tasks:
   build:
-    command: 'tsc --build'
-    inputs:
-      - 'src/**/*'
-      - 'package.json'
-      - 'tsconfig.json'
-    outputs:
-      - 'dist'
-
-  compile:
-    command: 'tsc --build'
-    inputs:
-      - 'src/**/*'
-      - 'package.json'
-      - 'tsconfig.json'
-    outputs:
-      - 'dist'
-
-  lint:
-    command: 'eslint . --max-warnings 0'
-    inputs:
-      - 'src/**/*'
-      - '.eslintrc.js'
-
-  test:
-    command: 'vitest run'
-    inputs:
-      - 'src/**/*'
-      - 'vitest.config.ts'
-
-dependsOn:
-  - id: 'cli-base'
-    scope: 'production'
-  - id: 'client'
-    scope: 'production'
+    command: 'true'
+    deps:
+      - ^:build
+      - ^:compile
+      - compile

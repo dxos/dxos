@@ -12,9 +12,9 @@ export type CellValidationMessageProps = {
 };
 
 export const CellValidationMessage = ({
+  __gridScope,
   validationError,
   variant = 'error',
-  __gridScope,
 }: GridScopedProps<CellValidationMessageProps>) => {
   const { editing, editBox: box } = useGridContext('GridSheetCellEditor', __gridScope);
 

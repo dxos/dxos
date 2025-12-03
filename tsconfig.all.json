@@ -172,6 +172,9 @@
       "path": "packages/core/functions-runtime-cloudflare/tsconfig.json"
     },
     {
+      "path": "packages/core/functions-simulator-cloudflare/tsconfig.json"
+    },
+    {
       "path": "packages/core/halo/credentials/tsconfig.json"
     },
     {
@@ -251,15 +254,6 @@
     },
     {
       "path": "packages/experimental/env-tests/tsconfig.json"
-    },
-    {
-      "path": "packages/experimental/logic/tsconfig.json"
-    },
-    {
-      "path": "packages/experimental/metagraph/tsconfig.json"
-    },
-    {
-      "path": "packages/experimental/react-metagraph/tsconfig.json"
     },
     {
       "path": "packages/experimental/script-toolbox/tsconfig.json"

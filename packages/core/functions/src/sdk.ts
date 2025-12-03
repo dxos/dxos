@@ -8,7 +8,7 @@ import * as Schema from 'effect/Schema';
 
 import { type AiService } from '@dxos/ai';
 import { Obj, Type } from '@dxos/echo';
-import { type DatabaseService } from '@dxos/echo-db';
+import { type Database } from '@dxos/echo';
 import { assertArgument, failedInvariant } from '@dxos/invariant';
 
 import {
@@ -37,7 +37,7 @@ export type FunctionServices =
   | InvocationServices
   | AiService.AiService
   | CredentialsService
-  | DatabaseService
+  | Database.Service
   | QueueService
   | FunctionInvocationService;
 

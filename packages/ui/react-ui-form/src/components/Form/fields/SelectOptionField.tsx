@@ -16,25 +16,25 @@ import { type FormFieldComponentProps, FormFieldLabel } from '../FormFieldCompon
 
 export const SelectOptionField = ({
   type,
-  label,
   readonly,
+  label,
   getStatus,
   getValue,
   onValueChange,
-}: FormFieldComponentProps) => {
+}: FormFieldComponentProps<SelectOption[] | undefined>) => {
   const { t } = useTranslation(translationKey);
   const { status, error } = getStatus();
   const [selected, setSelectedId] = useState<string | null>(null);
   const [isNewOption, setIsNewOption] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
-  const options = getValue<SelectOption[] | undefined>();
+  const options = getValue();
 
   // Initialization.
   useEffect(() => {
     if (options === undefined) {
       onValueChange(type, []);
     }
-  }, [options, onValueChange, type]);
+  }, [options, type, onValueChange]);
 
   const randomHue = () => {
     const usedHues = new Set(options?.map((option) => option.color) ?? []);
@@ -95,8 +95,8 @@ export const SelectOptionField = ({
     [options, type, onValueChange],
   );
 
-  const handleKeyDown = useCallback((e: KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter') {
+  const handleKeyDown = useCallback((ev: KeyboardEvent<HTMLInputElement>) => {
+    if (ev.key === 'Enter') {
       setSelectedId(null);
     }
   }, []);
@@ -123,7 +123,7 @@ export const SelectOptionField = ({
         {options && (
           <List.Root
             items={options}
-            isItem={(item) => true}
+            isItem={(_item) => true}
             onMove={readonly ? undefined : handleMove}
             readonly={!!readonly}
           >
@@ -164,7 +164,6 @@ export const SelectOptionField = ({
                               onChange={handleTitleChange(item.id)}
                               onKeyDown={handleKeyDown}
                               classNames='flex-1'
-                              data-no-submit
                             />
                             <HuePicker disabled={!!readonly} value={item.color} onChange={handleColorChange(item.id)} />
                             <IconButton

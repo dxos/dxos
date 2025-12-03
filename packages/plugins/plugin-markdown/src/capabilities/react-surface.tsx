@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { useCallback } from 'react';
+import React, { forwardRef, useCallback } from 'react';
 
 import { Capabilities, contributes, createSurface } from '@dxos/app-framework';
 import { SurfaceCardRole, useCapability } from '@dxos/app-framework/react';
@@ -25,8 +25,8 @@ export default () =>
       role: ['article', 'section', 'tabpanel'],
       filter: (data): data is { subject: Markdown.Document; variant: undefined } =>
         Obj.instanceOf(Markdown.Document, data.subject) && !data.variant,
-      component: ({ data, role }) => {
-        return <Container id={Obj.getDXN(data.subject).toString()} subject={data.subject} role={role} />;
+      component: ({ data, role, ref }) => {
+        return <Container id={Obj.getDXN(data.subject).toString()} subject={data.subject} role={role} ref={ref} />;
       },
     }),
     createSurface({
@@ -59,35 +59,39 @@ export default () =>
       role: SurfaceCardRole.literals as any,
       filter: (data): data is { subject: Markdown.Document | Text.Text } =>
         Obj.instanceOf(Markdown.Document, data.subject) || Obj.instanceOf(Text.Text, data.subject),
-      component: ({ data, role }) => <MarkdownCard {...data} role={role as SurfaceCardRole} />,
+      component: ({ data, role, ref }) => <MarkdownCard {...data} role={role as SurfaceCardRole} ref={ref} />,
     }),
   ]);
 
 /**
  * Common wrapper.
  */
-const Container = ({ id, subject, role }: { id: string; subject: MarkdownContainerProps['object']; role: string }) => {
-  const selectionManager = useCapability(AttentionCapabilities.Selection);
-  const settingsStore = useCapability(Capabilities.SettingsStore);
-  const settings = settingsStore.getStore<Markdown.Settings>(meta.id)!.value;
-  const { state, editorState, getViewMode, setViewMode } = useCapability(MarkdownCapabilities.State);
-  const viewMode = getViewMode(id);
-  const handleViewModeChange = useCallback<NonNullable<MarkdownContainerProps['onViewModeChange']>>(
-    (mode) => setViewMode(id, mode),
-    [id, setViewMode],
-  );
+// TOOD(burdon): Use common type def.
+const Container = forwardRef<HTMLDivElement, { id: string; subject: MarkdownContainerProps['object']; role: string }>(
+  ({ id, subject, role }, forwardedRef) => {
+    const selectionManager = useCapability(AttentionCapabilities.Selection);
+    const settingsStore = useCapability(Capabilities.SettingsStore);
+    const settings = settingsStore.getStore<Markdown.Settings>(meta.id)!.value;
+    const { state, editorState, getViewMode, setViewMode } = useCapability(MarkdownCapabilities.State);
+    const viewMode = getViewMode(id);
+    const handleViewModeChange = useCallback<NonNullable<MarkdownContainerProps['onViewModeChange']>>(
+      (mode) => setViewMode(id, mode),
+      [id, setViewMode],
+    );
 
-  return (
-    <MarkdownContainer
-      id={id}
-      object={subject}
-      role={role}
-      settings={settings}
-      selectionManager={selectionManager}
-      extensionProviders={state.extensionProviders}
-      editorStateStore={editorState}
-      viewMode={viewMode}
-      onViewModeChange={handleViewModeChange}
-    />
-  );
-};
+    return (
+      <MarkdownContainer
+        id={id}
+        object={subject}
+        role={role}
+        settings={settings}
+        selectionManager={selectionManager}
+        extensionProviders={state.extensionProviders}
+        editorStateStore={editorState}
+        viewMode={viewMode}
+        onViewModeChange={handleViewModeChange}
+        ref={forwardedRef}
+      />
+    );
+  },
+);

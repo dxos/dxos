@@ -9,6 +9,7 @@ import { withTheme } from '@dxos/react-ui/testing';
 
 import { useApp } from './useApp';
 
+// TODO(burdon): Start-up doesn't complete since no plugins are loaded.
 const DefaultStory = () => {
   const App = useApp({
     placeholder: () => <div className='fixed inset-0 flex items-center justify-center'>Loading...</div>,

@@ -32,6 +32,9 @@ const cardStackDefaultInlineSizeRem = cardDefaultInlineSize + 2.125;
 
 type SharedCardProps = ThemedClassName<ComponentPropsWithoutRef<'div'>> & { asChild?: boolean };
 
+/**
+ * Use this when ....
+ */
 const CardStaticRoot = forwardRef<HTMLDivElement, SharedCardProps & { id?: string }>(
   ({ children, classNames, id, asChild, role = 'group', ...props }, forwardedRef) => {
     const Root = asChild ? Slot : 'div';
@@ -48,43 +51,42 @@ const CardStaticRoot = forwardRef<HTMLDivElement, SharedCardProps & { id?: strin
  * This should be used by Surface fulfillments in cases where the content may or may not already be encapsulated (e.g., in a Popover) and knows this based on the `role` it receives.
  * This will render a `Card.StaticRoot` by default, otherwise it will render a `div` primitive with the appropriate styling for specific handled situations.
  */
-const CardSurfaceRoot = ({
-  id,
-  role = 'never',
-  children,
-  classNames,
-}: ThemedClassName<PropsWithChildren<{ id?: string; role?: string }>>) => {
-  if (['card--popover', 'card--intrinsic', 'card--extrinsic'].includes(role)) {
-    return (
-      <div
-        {...(id && { 'data-object-id': id })}
-        className={mx(
-          role === 'card--popover'
-            ? 'popover-card-width'
-            : ['card--intrinsic', 'card--extrinsic'].includes(role)
-              ? 'contents'
-              : '',
-          classNames,
-        )}
-      >
-        {children}
-      </div>
-    );
-  } else {
-    return (
-      <CardStaticRoot
-        id={id}
-        classNames={[
-          role === 'card--transclusion' && 'mlb-1',
-          role === 'card--transclusion' && hoverableControls,
-          classNames,
-        ]}
-      >
-        {children}
-      </CardStaticRoot>
-    );
-  }
-};
+const CardSurfaceRoot = forwardRef<HTMLDivElement, ThemedClassName<PropsWithChildren<{ id?: string; role?: string }>>>(
+  ({ id, role = 'never', children, classNames }, forwardedRef) => {
+    if (['card--popover', 'card--intrinsic', 'card--extrinsic'].includes(role)) {
+      return (
+        <div
+          {...(id && { 'data-object-id': id })}
+          className={mx(
+            role === 'card--popover'
+              ? 'popover-card-width'
+              : ['card--intrinsic', 'card--extrinsic'].includes(role)
+                ? 'contents'
+                : '',
+            classNames,
+          )}
+          ref={forwardedRef}
+        >
+          {children}
+        </div>
+      );
+    } else {
+      return (
+        <CardStaticRoot
+          id={id}
+          classNames={[
+            role === 'card--transclusion' && 'mlb-1',
+            role === 'card--transclusion' && hoverableControls,
+            classNames,
+          ]}
+          ref={forwardedRef}
+        >
+          {children}
+        </CardStaticRoot>
+      );
+    }
+  },
+);
 
 const CardHeading = forwardRef<HTMLDivElement, SharedCardProps>(
   ({ children, classNames, asChild, role = 'heading', ...props }, forwardedRef) => {

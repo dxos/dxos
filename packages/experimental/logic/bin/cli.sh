@@ -1,1 +1,0 @@
-npx tsx "$(dirname "$0")/../src/cli.ts" "$@"

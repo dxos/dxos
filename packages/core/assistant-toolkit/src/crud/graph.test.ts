@@ -14,8 +14,9 @@ import { AiService, ToolExecutionService, ToolResolverService } from '@dxos/ai';
 import * as AiServiceRouter from '@dxos/ai/AiServiceRouter';
 import { tapHttpErrors } from '@dxos/ai/testing';
 import { AiSession } from '@dxos/assistant';
+import { Database } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
-import { DatabaseService, TracingService } from '@dxos/functions';
+import { TracingService } from '@dxos/functions';
 import { log } from '@dxos/log';
 import { Project } from '@dxos/types';
 
@@ -25,7 +26,7 @@ import { makeGraphWriterHandler, makeGraphWriterToolkit } from './graph';
 
 const TestLayer = Function.pipe(
   AiService.model('@anthropic/claude-3-5-sonnet-20241022'),
-  Layer.provideMerge(DatabaseService.notAvailable),
+  Layer.provideMerge(Database.Service.notAvailable),
   Layer.provideMerge(ToolResolverService.layerEmpty),
   Layer.provideMerge(ToolExecutionService.layerEmpty),
   Layer.provide(AiServiceRouter.AiServiceRouter),

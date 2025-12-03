@@ -21,7 +21,7 @@ import { withTheme } from '@dxos/react-ui/testing';
 import { ViewEditor } from '@dxos/react-ui-form';
 import { Kanban as KanbanComponent, useKanbanModel, useProjectionModel } from '@dxos/react-ui-kanban';
 import { Kanban } from '@dxos/react-ui-kanban/types';
-import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
+import { JsonFilter } from '@dxos/react-ui-syntax-highlighter';
 import { defaultTx } from '@dxos/react-ui-theme';
 import { View, getTypenameFromQuery } from '@dxos/schema';
 import { Organization, Person } from '@dxos/types';
@@ -94,9 +94,9 @@ const StorybookKanban = () => {
   }
 
   return (
-    <div className='grow grid grid-cols-[1fr_350px]'>
+    <div className='grow grid grid-cols-[1fr_350px] overflow-hidden'>
       {model ? <KanbanComponent model={model} onAddCard={handleAddCard} onRemoveCard={handleRemoveCard} /> : <div />}
-      <div className='flex flex-col bs-full border-is border-separator overflow-y-auto'>
+      <div className='flex flex-col bs-full overflow-hidden'>
         <ViewEditor
           registry={space?.db.schemaRegistry}
           schema={schema}
@@ -106,16 +106,10 @@ const StorybookKanban = () => {
             console.log('[ViewEditor]', 'onDelete', fieldId);
           }}
         />
-        <SyntaxHighlighter language='json' className='text-xs'>
-          {JSON.stringify({ view: object.view.target, schema }, null, 2)}
-        </SyntaxHighlighter>
+        <JsonFilter data={{ view: object.view.target, schema }} classNames='text-xs' />
       </div>
     </div>
   );
-};
-
-type StoryProps = {
-  rows?: number;
 };
 
 //

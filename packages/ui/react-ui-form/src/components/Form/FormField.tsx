@@ -2,17 +2,28 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Function from 'effect/Function';
+import * as Match from 'effect/Match';
+import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
-import * as StringEffect from 'effect/String';
+import * as String from 'effect/String';
 import React, { useMemo } from 'react';
 
 import { Format } from '@dxos/echo';
-import { createJsonPath, findNode, getDiscriminatedType, isDiscriminatedUnion } from '@dxos/effect';
-import { mx } from '@dxos/react-ui-theme';
-import { type ProjectionModel, type SchemaProperty } from '@dxos/schema';
+import {
+  createJsonPath,
+  findNode,
+  getAnnotation,
+  getDiscriminatedType,
+  isArrayType,
+  isDiscriminatedUnion,
+  isLiteralUnion,
+  isNestedType,
+} from '@dxos/effect';
+import { useTranslation } from '@dxos/react-ui';
+import { type ProjectionModel } from '@dxos/schema';
 
+import { translationKey } from '../../translations';
 import { getRefProps } from '../../util';
 
 import {
@@ -24,22 +35,28 @@ import {
   RefField,
   type RefFieldProps,
   SelectField,
+  TextAreaField,
   TextField,
 } from './fields';
+import { useFormFieldState } from './Form';
 import {
   type FormFieldComponent,
   type FormFieldComponentProps,
-  type FormFieldLookup,
   type FormFieldMap,
+  type FormFieldProvider,
 } from './FormFieldComponent';
 import { FormFieldSet } from './FormFieldSet';
-import { useFormFieldState } from './FormRoot';
 
 export type FormFieldProps = {
   /**
-   * Property to render.
+   * AST of the property to render.
    */
-  property: SchemaProperty<any>;
+  type: SchemaAST.AST;
+
+  /**
+   * Name of the property.
+   */
+  name: string;
 
   /**
    * Path to the current object from the root. Used with nested forms.
@@ -60,16 +77,12 @@ export type FormFieldProps = {
   /**
    * Function to lookup custom renderers for specific properties.
    */
-  fieldProvider?: FormFieldLookup;
-
-  /**
-   * Indicates input used in a list.
-   */
-  // TODO(burdon): Rename listItem?
-  inline?: boolean;
+  fieldProvider?: FormFieldProvider;
 } & Pick<
   RefFieldProps,
+  | 'autoFocus'
   | 'readonly'
+  | 'layout'
   | 'createSchema'
   | 'createOptionLabel'
   | 'createOptionIcon'
@@ -78,37 +91,42 @@ export type FormFieldProps = {
   | 'onQueryRefOptions'
 >;
 
-export const FormField = ({
-  property,
-  path,
-  projection,
-  fieldMap,
-  fieldProvider,
-  inline,
-  readonly,
-  createSchema,
-  createOptionLabel,
-  createOptionIcon,
-  createInitialValuePath,
-  onCreate,
-  onQueryRefOptions,
-}: FormFieldProps) => {
-  const { ast, name, type, format, array, options, title, description, examples } = property;
+export const FormField = (props: FormFieldProps) => {
+  const {
+    type,
+    name,
+    path,
+    projection,
+    fieldMap,
+    fieldProvider,
+    readonly,
+    layout,
+    createSchema,
+    createOptionLabel,
+    createOptionIcon,
+    createInitialValuePath,
+    onCreate,
+    onQueryRefOptions,
+  } = props;
+  const { t } = useTranslation(translationKey);
+  const title = getAnnotation<string>(SchemaAST.TitleAnnotationId)(type);
+  const description = getAnnotation<string>(SchemaAST.DescriptionAnnotationId)(type);
+  const examples = getAnnotation<string[]>(SchemaAST.ExamplesAnnotationId)(type);
 
-  const label = useMemo(() => title ?? Function.pipe(name, StringEffect.capitalize), [title, name]);
+  const label = useMemo(() => title ?? String.capitalize(name), [title, name]);
   const placeholder = useMemo(
-    () => (examples?.length ? `Example: "${examples[0]}"` : description),
-    [examples, description],
+    () => (examples?.length ? `${t('example placeholder')}: ${examples[0]}` : (description ?? label)),
+    [examples, description, label],
   );
 
   const fieldState = useFormFieldState(FormField.displayName, path);
   const fieldProps: FormFieldComponentProps = {
     type,
-    format,
+    format: Format.FormatAnnotation.getFromAst(type).pipe((annotation) => Option.getOrUndefined(annotation)),
+    readonly,
     label,
     placeholder,
-    readonly,
-    inputOnly: inline,
+    layout,
     ...fieldState,
   };
 
@@ -123,7 +141,7 @@ export const FormField = ({
   }
 
   // TODO(burdon): Expensive to create schema each time; pass AST?
-  const component = fieldProvider?.({ schema: Schema.make(ast), prop: name, fieldProps });
+  const component = fieldProvider?.({ schema: Schema.make(type), prop: name, fieldProps });
   if (component) {
     return component;
   }
@@ -132,17 +150,15 @@ export const FormField = ({
   // Array field.
   //
 
-  if (array) {
-    return (
-      <ArrayField fieldProps={fieldState} property={property} path={path} readonly={readonly} fieldMap={fieldMap} />
-    );
+  if (isArrayType(type)) {
+    return <ArrayField fieldProps={fieldState} label={label} {...props} />;
   }
 
   //
   // Regular field.
   //
 
-  const Field = getFormField(property);
+  const Field = getFormField(fieldProps);
   if (Field) {
     return <Field {...fieldProps} />;
   }
@@ -151,13 +167,14 @@ export const FormField = ({
   // Select field.
   //
 
+  const options = getOptions(type);
   if (options) {
     return (
       <SelectField
         {...fieldProps}
         options={options.map((option) => ({
           value: option,
-          label: String(option),
+          label: option.toString(),
         }))}
       />
     );
@@ -167,7 +184,7 @@ export const FormField = ({
   // Ref field.
   //
 
-  const refProps = getRefProps(property);
+  const refProps = getRefProps(type);
   if (refProps) {
     return (
       <RefField
@@ -187,30 +204,29 @@ export const FormField = ({
   // Nested Object field.
   //
 
-  if (type === 'object') {
-    const baseNode = findNode(ast, isDiscriminatedUnion);
+  if (isNestedType(type)) {
+    const baseNode = findNode(type, isDiscriminatedUnion);
     const typeLiteral = baseNode
       ? getDiscriminatedType(baseNode, fieldState.getValue() as any)
-      : findNode(ast, SchemaAST.isTypeLiteral);
+      : findNode(type, SchemaAST.isTypeLiteral);
 
     if (typeLiteral) {
       const schema = Schema.make(typeLiteral);
       return (
-        <>
-          {!inline && <h3 className={mx('text-lg mlb-inputSpacingBlock first:mbs-0')}>{label}</h3>}
-          <FormFieldSet
-            schema={schema}
-            path={path}
-            readonly={readonly}
-            projection={projection}
-            fieldMap={fieldMap}
-            fieldProvider={fieldProvider}
-            createOptionLabel={createOptionLabel}
-            createOptionIcon={createOptionIcon}
-            onCreate={onCreate}
-            onQueryRefOptions={onQueryRefOptions}
-          />
-        </>
+        <FormFieldSet
+          schema={schema}
+          path={path}
+          readonly={readonly}
+          layout={layout}
+          label={label}
+          projection={projection}
+          fieldMap={fieldMap}
+          fieldProvider={fieldProvider}
+          createOptionLabel={createOptionLabel}
+          createOptionIcon={createOptionIcon}
+          onCreate={onCreate}
+          onQueryRefOptions={onQueryRefOptions}
+        />
       );
     }
   }
@@ -223,30 +239,42 @@ FormField.displayName = 'Form.FormField';
 /**
  * Get property input component.
  */
-const getFormField = (property: SchemaProperty<any>): FormFieldComponent | undefined => {
-  const { type, format } = property;
+const getFormField = ({ type, format }: FormFieldComponentProps): FormFieldComponent | undefined => {
+  //
+  // Standard formats.
+  //
+
+  const formatField = Match.value(format).pipe(
+    Match.withReturnType<FormFieldComponent | undefined>(),
+    Match.when(Format.TypeFormat.GeoPoint, () => GeoPointField),
+    Match.when(Format.TypeFormat.Markdown, () => MarkdownField),
+    Match.when(Format.TypeFormat.Text, () => TextAreaField),
+    Match.orElse(() => undefined),
+  );
+  if (formatField) {
+    return formatField;
+  }
 
   //
   // Standard types.
   //
 
-  switch (type) {
-    case 'string':
+  switch (type._tag) {
+    // TODO(wittjosiah): Schema.Any is currently used to represent template inputs.
+    case 'AnyKeyword':
+    case 'StringKeyword':
       return TextField;
-    case 'number':
+    case 'NumberKeyword':
       return NumberField;
-    case 'boolean':
+    case 'BooleanKeyword':
       return BooleanField;
   }
+};
 
-  //
-  // Standard formats.
-  //
-
-  switch (format) {
-    case Format.TypeFormat.GeoPoint:
-      return GeoPointField;
-    case Format.TypeFormat.Markdown:
-      return MarkdownField;
+const getOptions = (ast: SchemaAST.AST): Format.Options[] | undefined => {
+  if (isLiteralUnion(ast)) {
+    return ast.types.map((type) => type.literal).filter((v): v is string | number => v !== null);
   }
+
+  return Format.OptionsAnnotation.getFromAst(ast).pipe((annotation) => Option.getOrUndefined(annotation));
 };

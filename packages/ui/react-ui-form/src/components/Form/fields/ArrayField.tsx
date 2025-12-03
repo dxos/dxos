@@ -2,31 +2,36 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Function from 'effect/Function';
+import * as Option from 'effect/Option';
 import * as SchemaAST from 'effect/SchemaAST';
-import * as String from 'effect/String';
 import React, { Fragment, useCallback } from 'react';
 
-import { SimpleType, findNode, getDiscriminatedType, isDiscriminatedUnion } from '@dxos/effect';
+import { findNode, getArrayElementType, getDiscriminatedType, isDiscriminatedUnion, isNestedType } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
-import { IconButton, Input, useTranslation } from '@dxos/react-ui';
-import { getSchemaProperties } from '@dxos/schema';
+import { IconButton, useTranslation } from '@dxos/react-ui';
 
 import { translationKey } from '../../../translations';
-import { findArrayElementType } from '../../../util';
+import { getFormProperties } from '../../../util';
+import { useFormValues } from '../Form';
 import { FormField, type FormFieldProps } from '../FormField';
 import { FormFieldLabel, type FormFieldStateProps } from '../FormFieldComponent';
-import { useFormValues } from '../FormRoot';
 
 export type ArrayFieldProps = {
+  label: string;
   fieldProps: FormFieldStateProps;
-} & Pick<FormFieldProps, 'property' | 'path' | 'readonly' | 'fieldMap' | 'fieldProvider'>;
+} & FormFieldProps;
 
-export const ArrayField = ({ property, readonly, path, fieldProps: inputProps, ...props }: ArrayFieldProps) => {
+export const ArrayField = ({
+  type,
+  path,
+  label,
+  readonly,
+  layout,
+  fieldProps: inputProps,
+  ...props
+}: ArrayFieldProps) => {
   const { t } = useTranslation(translationKey);
-  const { ast, type, name, title } = property;
-  const label = title ?? Function.pipe(name, String.capitalize);
-  const elementType = findArrayElementType(ast);
+  const elementType = getArrayElementType(type);
   const { onValueChange } = inputProps;
 
   // TODO(wittjosiah): The fallback to an empty array stops the form from crashing but isn't immediately live.
@@ -42,16 +47,20 @@ export const ArrayField = ({ property, readonly, path, fieldProps: inputProps, .
     }
 
     return Object.fromEntries(
-      getSchemaProperties(typeLiteral, {}, { form: true }).map((prop) => [prop.name, prop.defaultValue]),
+      getFormProperties(typeLiteral).map((prop) => {
+        const defaultValue = SchemaAST.getDefaultAnnotation(prop.type).pipe((annotation) =>
+          Option.getOrUndefined(annotation),
+        );
+        return [prop.name, defaultValue];
+      }),
     );
   };
 
-  const getDefaultValue = () =>
-    type === 'object' && elementType ? getDefaultObjectValue(elementType) : SimpleType.getDefaultValue(type);
-
   const handleAdd = useCallback(() => {
-    onValueChange(type, [...values, getDefaultValue()]);
-  }, [onValueChange, type, values]);
+    const defaultValue =
+      isNestedType(type) && elementType ? getDefaultObjectValue(elementType) : getDefaultValue(elementType);
+    onValueChange(type, [...values, defaultValue]);
+  }, [onValueChange, type, elementType, values]);
 
   const handleDelete = useCallback(
     (idx: number) => {
@@ -63,60 +72,50 @@ export const ArrayField = ({ property, readonly, path, fieldProps: inputProps, .
     [onValueChange, type, values],
   );
 
-  if (!elementType || (readonly && values.length < 1)) {
+  if (!elementType || ((readonly || layout === 'static') && values.length < 1)) {
     return null;
   }
 
   return (
     <>
-      <Input.Root>
-        <FormFieldLabel readonly={readonly} label={label} />
-      </Input.Root>
-      <div
-        role='none'
-        className={
-          readonly
-            ? 'flex flex-wrap gap-1 mlb-1'
-            : values.length > 0
-              ? 'grid gap-1 grid-cols-[1fr_min-content] mlb-1'
-              : 'hidden'
-        }
-      >
+      {(layout !== 'static' || values.length > 0) && <FormFieldLabel readonly={readonly} label={label} asChild />}
+
+      <div role='none' className='flex flex-col gap-2'>
         {values.map((_, index) => {
           return (
-            <Fragment key={index}>
-              <div role='none'>
-                <FormField
-                  inline
-                  path={[...(path ?? []), index]}
-                  property={{
-                    ...property,
-                    array: false, // Cannot nest arrays.
-                    ast: elementType,
-                  }}
-                  readonly={readonly}
-                  {...props}
-                />
-              </div>
+            <div role='none' key={index} className='grid grid-cols-[1fr_min-content] gap-2 last:mb-3'>
+              <FormField
+                autoFocus={index === values.length - 1}
+                type={elementType}
+                path={[...(path ?? []), index]}
+                readonly={readonly || layout === 'static'}
+                layout='inline'
+                {...props}
+              />
 
-              {!readonly && (
-                <IconButton
-                  icon='ph--x--regular'
-                  iconOnly
-                  label={t('button remove')}
-                  onClick={() => handleDelete(index)}
-                  classNames='self-center'
-                />
+              {!readonly && layout !== 'static' && (
+                <div role='none' className='flex flex-col bs-full justify-end'>
+                  {/* NOTE: Aligns with center of last field if multi-field object. */}
+                  <div role='none' className='flex items-center bs-[var(--line-height)]'>
+                    <IconButton
+                      icon='ph--x--regular'
+                      iconOnly
+                      label={t('button remove')}
+                      onClick={() => handleDelete(index)}
+                      classNames='self-center'
+                    />
+                  </div>
+                </div>
               )}
-            </Fragment>
+            </div>
           );
         })}
       </div>
 
       {/* TODO(burdon): Get label from schema. */}
-      {!readonly && (
+      {!readonly && layout !== 'static' && (
         <IconButton
-          classNames='flex is-full mlb-cardSpacingBlock'
+          classNames='flex is-full _mlb-cardSpacingBlock'
           icon='ph--plus--regular'
           label={t('add field')}
           onClick={handleAdd}
@@ -127,3 +126,29 @@ export const ArrayField = ({ property, readonly, path, fieldProps: inputProps, .
 };
 
 ArrayField.displayName = 'Form.ArrayField';
+
+/**
+ * Returns the default empty value for a given AST.
+ * Used for initializing new array values etc.
+ */
+// TODO(wittjosiah): Factor out?
+export const getDefaultValue = (ast?: SchemaAST.AST): any => {
+  switch (ast?._tag) {
+    case 'StringKeyword': {
+      return '';
+    }
+    case 'NumberKeyword': {
+      return 0;
+    }
+    case 'BooleanKeyword': {
+      return false;
+    }
+    default: {
+      if (ast && isNestedType(ast)) {
+        return {};
+      } else {
+        throw new Error(`Unsupported type: ${ast?._tag}`);
+      }
+    }
+  }
+};

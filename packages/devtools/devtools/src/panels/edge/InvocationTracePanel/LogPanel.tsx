@@ -4,59 +4,81 @@
 
 import React, { type FC, useMemo } from 'react';
 
-import { Format } from '@dxos/echo/internal';
-import { TraceEvent } from '@dxos/functions-runtime';
-import { Filter, type Queue, useQuery } from '@dxos/react-client/echo';
-import { DynamicTable, type TablePropertyDefinition } from '@dxos/react-ui-table';
+import { type TraceEvent } from '@dxos/functions-runtime';
 
 type LogPanelProps = {
-  queue?: Queue;
+  objects?: TraceEvent[];
 };
 
-export const LogPanel: FC<LogPanelProps> = ({ queue }) => {
-  const objects = useQuery(queue, Filter.type(TraceEvent));
-
-  // Define properties for the DynamicTable
-  const properties: TablePropertyDefinition[] = useMemo(
-    () => [
-      { name: 'time', title: 'Started', format: Format.TypeFormat.DateTime, sort: 'desc' as const, size: 194 },
-      {
-        name: 'level',
-        title: 'Level',
-        format: Format.TypeFormat.SingleSelect,
-        size: 100,
-        config: {
-          options: [
-            { id: 'error', title: 'ERROR', color: 'red' },
-            { id: 'warn', title: 'WARN', color: 'amber' },
-            { id: 'log', title: 'LOG', color: 'neutral' },
-            { id: 'info', title: 'INFO', color: 'blue' },
-            { id: 'debug', title: 'DEBUG', color: 'neutral' },
-          ],
-        },
-      },
-      { name: 'message', title: 'Message', format: Format.TypeFormat.String },
-      { name: 'context', title: 'Context', format: Format.TypeFormat.JSON, size: 500 },
-    ],
-    [],
-  );
-
+export const LogPanel: FC<LogPanelProps> = ({ objects }) => {
   const rows = useMemo(() => {
     if (!objects?.length) {
       return [];
     }
 
-    return objects.flatMap((event) => {
-      return event.logs.map((log) => ({
-        id: `${event.id}-${log.timestamp}`,
-        timestamp: new Date(log.timestamp).toLocaleString(),
+    return objects.flatMap((event) =>
+      event.logs.map((log, idx) => ({
+        id: `${event.id}-${idx}`,
+        time: new Date(log.timestamp),
         level: log.level,
         message: log.message,
-        context: JSON.stringify(log.context) ?? {},
-        _original: { ...log, eventId: event.id },
-      }));
-    });
+        context: safeStringify(log.context),
+      })),
+    );
   }, [objects]);
 
-  return <DynamicTable properties={properties} rows={rows} />;
+  return (
+    <div className='flex grow min-bs-0 min-is-0 is-full bs-full overflow-auto'>
+      <table className='table-fixed min-w-full text-xs border-collapse'>
+        <thead className='sticky top-0 z-10'>
+          <tr>
+            <th className='text-left px-2 py-1 w-40 border border-separator'>Started</th>
+            <th className='text-left px-2 py-1 w-24 border border-separator'>Level</th>
+            <th className='text-left px-2 py-1 w-80 border border-separator'>Message</th>
+            <th className='text-left px-2 py-1 border border-separator'>Context</th>
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((row) => {
+            const level = String(row.level).toUpperCase();
+
+            return (
+              <tr key={row.id} className='align-top'>
+                <td className='px-2 py-1 whitespace-nowrap border border-separator'>{row.time.toLocaleString()}</td>
+                <td className='px-2 py-1 font-mono border border-separator'>{level}</td>
+                <td className='px-2 py-1 truncate max-w-[20rem] border border-separator'>{row.message}</td>
+                <td className='px-2 py-1 font-mono text-[10px] whitespace-pre-wrap break-words border border-separator'>
+                  {row.context}
+                </td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+    </div>
+  );
+};
+
+const safeStringify = (value: any) => {
+  try {
+    if (value == null) {
+      return '';
+    }
+    const seen = new WeakSet();
+    return JSON.stringify(
+      value,
+      (key, val) => {
+        if (typeof val === 'object' && val !== null) {
+          if (seen.has(val)) {
+            return '[Circular]';
+          }
+          seen.add(val);
+        }
+        return val;
+      },
+      2,
+    );
+  } catch {
+    return '[Unserializable]';
+  }
 };

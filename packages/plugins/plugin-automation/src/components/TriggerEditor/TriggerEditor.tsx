@@ -10,7 +10,7 @@ import { Function, Script, Trigger } from '@dxos/functions';
 import { Filter, Ref, type Space, useQuery } from '@dxos/react-client/echo';
 import { Input } from '@dxos/react-ui';
 import { QueryForm, type QueryFormProps } from '@dxos/react-ui-components';
-import { Form, FormFieldLabel, type FormFieldMap, SelectField, useRefQueryLookupHandler } from '@dxos/react-ui-form';
+import { Form, FormFieldLabel, type FormFieldMap, SelectField, useRefQueryOptions } from '@dxos/react-ui-form';
 
 import { FunctionInputEditor, type FunctionInputEditorProps } from './FunctionInputEditor';
 import { SpecSelector } from './SpecSelector';
@@ -20,28 +20,44 @@ export type TriggerEditorProps = {
   trigger: Trigger.Trigger;
   // TODO(wittjosiah): This needs to apply to whole spec but currently only applies to spec.kind & spec.query.
   readonlySpec?: boolean;
+  // TODO(burdon): Why do we need to remove 'id'? Can we standardize this?
   onSave?: (trigger: Omit<Trigger.Trigger, 'id'>) => void;
   onCancel?: () => void;
 } & Pick<QueryFormProps, 'types' | 'tags'>;
 
-export const TriggerEditor = ({ space, trigger, readonlySpec, types, tags, onSave, onCancel }: TriggerEditorProps) => {
-  const handleSave = ({ id: _, ...values }: Trigger.Trigger) => {
-    onSave?.(values);
-  };
+export const TriggerEditor = ({ space, types, tags, readonlySpec, trigger, onSave, onCancel }: TriggerEditorProps) => {
+  const handleSave = useCallback(
+    ({ id: _, ...values }: Trigger.Trigger) => {
+      onSave?.(values);
+    },
+    [onSave],
+  );
 
-  const handleRefQueryLookup = useRefQueryLookupHandler({ space });
-  const fieldMap = useCustomInputs({ space, readonlySpec, types, tags, onQueryRefOptions: handleRefQueryLookup });
+  const handleRefQueryOptions = useRefQueryOptions({ space });
+  const fieldMap = useCustomInputs({
+    space,
+    types,
+    tags,
+    readonlySpec,
+    onQueryRefOptions: handleRefQueryOptions,
+  });
 
   return (
-    <Form
-      outerSpacing={false}
+    <Form.Root<Trigger.Trigger>
+      fieldMap={fieldMap}
       schema={Trigger.Trigger}
       values={trigger}
-      fieldMap={fieldMap}
       onSave={handleSave}
       onCancel={onCancel}
-      onQueryRefOptions={handleRefQueryLookup}
-    />
+      onQueryRefOptions={handleRefQueryOptions}
+    >
+      <Form.Viewport>
+        <Form.Content>
+          <Form.FieldSet />
+          <Form.Actions />
+        </Form.Content>
+      </Form.Viewport>
+    </Form.Root>
   );
 };
 
@@ -79,10 +95,10 @@ const useCustomInputs = ({
             const dxn = DXN.parse(dxnString);
             if (dxn) {
               const ref = Ref.fromDXN(dxn);
-              props.onValueChange('object', ref);
+              props.onValueChange(props.type, ref);
             }
           },
-          [props.onValueChange],
+          [props.type, props.onValueChange],
         );
 
         return (
@@ -96,19 +112,19 @@ const useCustomInputs = ({
       },
 
       // Spec selector.
-      ['spec.kind' as const]: (props) => <SpecSelector {...props} readonly={readonlySpec ? 'disabled' : false} />,
+      ['spec.kind' as const]: (props) => <SpecSelector {...props} readonly={readonlySpec} />,
 
       // TODO(wittjosiah): Copied from ViewEditor.
       // Query input editor.
       ['spec.query' as const]: (props) => {
         const handleChange = useCallback(
-          (query: Query.Any) => props.onValueChange('object', { ast: query.ast }),
-          [props.onValueChange],
+          (query: Query.Any) => props.onValueChange(props.type, { ast: query.ast }),
+          [props.type, props.onValueChange],
         );
 
         return (
           <Input.Root>
-            <FormFieldLabel label={props.label} />
+            <FormFieldLabel label={props.label} asChild />
             <QueryForm initialQuery={(props.getValue() as any).ast} types={types} tags={tags} onChange={handleChange} />
           </Input.Root>
         );

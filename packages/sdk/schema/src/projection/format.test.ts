@@ -7,10 +7,10 @@ import { describe, test } from 'vitest';
 
 import { Format } from '@dxos/echo';
 import { type JsonProp, TypeEnum } from '@dxos/echo/internal';
+import { getProperties } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 
 import { PropertySchema, type PropertyType, formatToSchema, getFormatSchema } from './format';
-import { getSchemaProperties } from './properties';
 
 describe('format', () => {
   test('get format schema', ({ expect }) => {
@@ -98,7 +98,7 @@ describe('format', () => {
     const schema = getFormatSchema(prop.format);
     invariant(schema);
 
-    const props = getSchemaProperties(schema.ast);
+    const props = getProperties(schema.ast);
     expect(props).to.have.length(7);
   });
 });

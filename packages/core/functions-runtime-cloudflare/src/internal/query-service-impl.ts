@@ -6,6 +6,7 @@ import * as Schema from 'effect/Schema';
 
 import { Stream } from '@dxos/codec-protobuf/stream';
 import { QueryAST } from '@dxos/echo-protocol';
+import { NotImplementedError, RuntimeServiceError } from '@dxos/errors';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { SpaceId } from '@dxos/keys';
@@ -54,20 +55,28 @@ export class QueryServiceImpl implements QueryServiceProto {
               }),
             ),
           } satisfies QueryResponse;
-        } catch (err) {
-          log.error('query failed', { err });
-          throw err;
+        } catch (error) {
+          log.error('query failed', { err: error });
+          throw RuntimeServiceError.wrap({
+            message: 'Query execution failed.',
+            context: { spaceId, filter: request.filter },
+            ifTypeDiffers: true,
+          })(error);
         }
       })(),
     );
   }
 
   async reindex() {
-    throw new Error('Method not implemented.');
+    throw new NotImplementedError({
+      message: 'Reindex is not implemented.',
+    });
   }
 
   async setConfig() {
-    throw new Error('Method not implemented.');
+    throw new NotImplementedError({
+      message: 'SetConfig is not implemented.',
+    });
   }
 }
 

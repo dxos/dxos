@@ -4,16 +4,16 @@
 
 import React, { useCallback, useEffect, useRef } from 'react';
 
-import { Input } from '@dxos/react-ui';
+import { Input, type TextAreaProps } from '@dxos/react-ui';
 
 import { type FormFieldComponentProps, FormFieldLabel } from '../FormFieldComponent';
 
 export const MarkdownField = ({
   type,
-  label,
-  inputOnly,
   readonly,
+  label,
   placeholder,
+  layout,
   getStatus,
   getValue,
   onValueChange,
@@ -43,25 +43,36 @@ export const MarkdownField = ({
     adjustHeight();
   }, [getValue(), adjustHeight]);
 
+  const handleChange = useCallback<NonNullable<TextAreaProps['onChange']>>(
+    (event) => onValueChange(type, event.target.value),
+    [type, onValueChange],
+  );
+
+  const value = getValue();
+  if ((readonly || layout === 'static') && !value) {
+    return null;
+  }
+
+  // TODO(burdon): Use Markdown Editor.
   return (
     <Input.Root validationValence={status}>
-      {!inputOnly && <FormFieldLabel error={error} readonly={readonly} label={label} />}
-      {readonly === 'static' ? (
-        <p>{getValue() ?? ''}</p>
+      {layout !== 'inline' && <FormFieldLabel error={error} readonly={readonly} label={label} />}
+      {layout === 'static' ? (
+        <p>{value}</p>
       ) : (
         <Input.TextArea
           ref={textareaRef}
           disabled={!!readonly}
           placeholder={placeholder}
-          value={getValue() ?? ''}
+          value={value ?? ''}
           classNames={'min-bs-auto max-bs-40 overflow-auto'}
-          onChange={(event) => onValueChange(type, event.target.value)}
+          onChange={handleChange}
           onBlur={onBlur}
           style={{ resize: 'none' }}
           spellCheck={false}
         />
       )}
-      {inputOnly && <Input.Validation>{error}</Input.Validation>}
+      {layout === 'full' && <Input.Validation>{error}</Input.Validation>}
     </Input.Root>
   );
 };

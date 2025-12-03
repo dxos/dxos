@@ -46,7 +46,7 @@ describe.runIf(process.env.DX_TEST_TAGS?.includes('functions-e2e'))('Functions d
       ownerPublicKey: space.key,
       version: '0.0.1',
       entryPoint: buildResult.entryPoint,
-      assets: { [buildResult.entryPoint]: buildResult.asset },
+      assets: buildResult.assets,
       name: 'e2e-echo',
     });
 

@@ -305,6 +305,11 @@
         },
         {
           "type": "json",
+          "path": "packages/core/functions-simulator-cloudflare/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/core/halo/credentials/package.json",
           "jsonpath": "$.version"
         },
@@ -441,21 +446,6 @@
         {
           "type": "json",
           "path": "packages/experimental/env-tests/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/experimental/logic/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/experimental/metagraph/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/experimental/react-metagraph/package.json",
           "jsonpath": "$.version"
         },
         {
