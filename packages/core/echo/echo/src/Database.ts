@@ -20,14 +20,12 @@ import type * as Entity from './Entity';
 import * as Err from './Err';
 import type * as Filter from './Filter';
 import type * as Hypergraph from './Hypergraph';
+import { isInstanceOf } from './internal';
 import type * as Query from './Query';
 import type * as QueryResult from './QueryResult';
 import type * as Ref from './Ref';
-import type * as Type from './Type';
 import type * as SchemaRegistry from './SchemaRegistry';
-
-
-import { isInstanceOf } from './internal';
+import type * as Type from './Type';
 
 /**
  * @deprecated Use `QueryAST.QueryOptions` instead.
