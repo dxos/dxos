@@ -2,9 +2,9 @@
 // Copyright 2024 DXOS.org
 //
 
-import React from 'react';
+import React, { useCallback } from 'react';
 
-import { Input } from '@dxos/react-ui';
+import { Input, type TextInputProps } from '@dxos/react-ui';
 
 import { type FormFieldComponentProps, FormFieldWrapper } from '../FormFieldComponent';
 
@@ -16,6 +16,11 @@ export const TextField = ({
   onBlur,
   ...props
 }: FormFieldComponentProps<string>) => {
+  const handleChange = useCallback<NonNullable<TextInputProps['onChange']>>(
+    (event) => onValueChange(type, event.target.value),
+    [type, onValueChange],
+  );
+
   return (
     <FormFieldWrapper<string> readonly={readonly} {...props}>
       {({ value = '' }) => (
@@ -24,7 +29,7 @@ export const TextField = ({
           disabled={!!readonly}
           placeholder={placeholder}
           value={value}
-          onChange={(event) => onValueChange(type, event.target.value)}
+          onChange={handleChange}
           onBlur={onBlur}
         />
       )}

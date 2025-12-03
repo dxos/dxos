@@ -34,7 +34,7 @@ export const SelectOptionField = ({
     if (options === undefined) {
       onValueChange(type, []);
     }
-  }, [options, onValueChange, type]);
+  }, [options, type, onValueChange]);
 
   const randomHue = () => {
     const usedHues = new Set(options?.map((option) => option.color) ?? []);
