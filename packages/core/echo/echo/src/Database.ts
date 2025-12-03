@@ -2,17 +2,30 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as Context from 'effect/Context';
+import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
+import * as Option from 'effect/Option';
+import type * as Schema from 'effect/Schema';
+import type * as Types from 'effect/Types';
+
 import { type QueryAST } from '@dxos/echo-protocol';
+import { promiseWithCauseCapture } from '@dxos/effect';
+import { invariant } from '@dxos/invariant';
 import { type DXN, type PublicKey, type SpaceId } from '@dxos/keys';
+import { type Live } from '@dxos/live-object';
 import { type QueryOptions as QueryOptionsProto } from '@dxos/protocols/proto/dxos/echo/filter';
 
 import type * as Entity from './Entity';
+import * as Err from './Err';
 import type * as Filter from './Filter';
 import type * as Hypergraph from './Hypergraph';
+import { isInstanceOf } from './internal';
 import type * as Query from './Query';
 import type * as QueryResult from './QueryResult';
 import type * as Ref from './Ref';
 import type * as SchemaRegistry from './SchemaRegistry';
+import type * as Type from './Type';
 
 /**
  * @deprecated Use `QueryAST.QueryOptions` instead.
@@ -87,6 +100,26 @@ export type AddOptions = {
   placeIn?: ObjectPlacement;
 };
 
+export type FlushOptions = {
+  /**
+   * Write any pending changes to disk.
+   * @default true
+   */
+  disk?: boolean;
+
+  /**
+   * Wait for pending index updates.
+   * @default false
+   */
+  indexes?: boolean;
+
+  /**
+   * Flush pending updates to objects and queries.
+   * @default false
+   */
+  updates?: boolean;
+};
+
 /**
  * ECHO Database interface.
  */
@@ -115,6 +148,7 @@ export interface Database extends Queryable {
   /**
    * Adds object to the database.
    */
+  // TODO(burdon): Add batch.
   add<T extends Entity.Unknown = Entity.Unknown>(obj: T, opts?: AddOptions): T;
 
   /**
@@ -122,4 +156,148 @@ export interface Database extends Queryable {
    */
   // TODO(burdon): Return true if removed (currently throws if not present).
   remove(obj: Entity.Unknown): void;
+
+  /**
+   * Wait for all pending changes to be saved to disk.
+   * Optionaly waits for changes to be propagated to indexes and event handlers.
+   */
+  flush(opts?: FlushOptions): Promise<void>;
+}
+
+export class Service extends Context.Tag('@dxos/echo/Database/Service')<
+  Service,
+  {
+    readonly db: Database;
+  }
+>() {
+  static notAvailable = Layer.succeed(Service, {
+    get db(): Database {
+      throw new Error('Database not available');
+    },
+  });
+
+  static make = (db: Database): Context.Tag.Service<Service> => {
+    return {
+      get db() {
+        return db;
+      },
+    };
+  };
+
+  static layer = (db: Database): Layer.Layer<Service> => {
+    return Layer.succeed(Service, Service.make(db));
+  };
+
+  /**
+   * Resolves an object by its DXN.
+   */
+  static resolve: {
+    // No type check.
+    (dxn: DXN): Effect.Effect<Entity.Unknown, never, Service>;
+    // Check matches schema.
+    <S extends Type.Entity.Any>(
+      dxn: DXN,
+      schema: S,
+    ): Effect.Effect<Schema.Schema.Type<S>, Err.ObjectNotFoundError, Service>;
+  } = (<S extends Type.Entity.Any>(
+    dxn: DXN,
+    schema?: S,
+  ): Effect.Effect<Schema.Schema.Type<S>, Err.ObjectNotFoundError, Service> =>
+    Effect.gen(function* () {
+      const { db } = yield* Service;
+      const object = yield* promiseWithCauseCapture(() =>
+        db.graph
+          .createRefResolver({
+            context: {
+              space: db.spaceId,
+            },
+          })
+          .resolve(dxn),
+      );
+
+      if (!object) {
+        return yield* Effect.fail(new Err.ObjectNotFoundError(dxn));
+      }
+      invariant(!schema || isInstanceOf(schema, object), 'Object type mismatch.');
+      return object as any;
+    })) as any;
+
+  /**
+   * Loads an object reference.
+   */
+  static load: <T>(ref: Ref.Ref<T>) => Effect.Effect<T, Err.ObjectNotFoundError, never> = Effect.fn(function* (ref) {
+    const object = yield* promiseWithCauseCapture(() => ref.tryLoad());
+    if (!object) {
+      return yield* Effect.fail(new Err.ObjectNotFoundError(ref.dxn));
+    }
+    return object;
+  });
+
+  /**
+   * Loads an object reference option.
+   */
+  // TODO(burdon): Option?
+  static loadOption: <T>(ref: Ref.Ref<T>) => Effect.Effect<Option.Option<T>, never, never> = Effect.fn(function* (ref) {
+    const object = yield* Service.load(ref).pipe(Effect.catchTag('OBJECT_NOT_FOUND', () => Effect.succeed(undefined)));
+    return Option.fromNullable(object);
+  });
+
+  // TODO(burdon): Can we create a proxy for the following methods on Database? Use @inheritDoc?
+  // TODO(burdon): Figure out how to chain query().run();
+
+  /**
+   * @link EchoDatabase.add
+   */
+  static add = <T extends Entity.Unknown>(obj: T): Effect.Effect<T, never, Service> =>
+    Service.pipe(Effect.map(({ db }) => db.add(obj)));
+
+  /**
+   * @link EchoDatabase.remove
+   */
+  static remove = <T extends Entity.Unknown>(obj: T): Effect.Effect<void, never, Service> =>
+    Service.pipe(Effect.map(({ db }) => db.remove(obj)));
+
+  /**
+   * @link EchoDatabase.flush
+   */
+  static flush = (opts?: FlushOptions) =>
+    Service.pipe(Effect.flatMap(({ db }) => promiseWithCauseCapture(() => db.flush(opts))));
+
+  /**
+   * Creates a `QueryResult` object that can be subscribed to.
+   */
+  static query: {
+    <Q extends Query.Any>(query: Q): Effect.Effect<QueryResult.QueryResult<Live<Query.Type<Q>>>, never, Service>;
+    <F extends Filter.Any>(filter: F): Effect.Effect<QueryResult.QueryResult<Live<Filter.Type<F>>>, never, Service>;
+  } = (queryOrFilter: Query.Any | Filter.Any) =>
+    Service.pipe(
+      Effect.map(({ db }) => db.query(queryOrFilter as any) as QueryResult.QueryResult<Live<any>>),
+      Effect.withSpan('Service.query'),
+    );
+
+  /**
+   * Executes the query once and returns the results.
+   */
+  static runQuery: {
+    <Q extends Query.Any>(query: Q): Effect.Effect<Live<Query.Type<Q>>[], never, Service>;
+    <F extends Filter.Any>(filter: F): Effect.Effect<Live<Filter.Type<F>>[], never, Service>;
+  } = (queryOrFilter: Query.Any | Filter.Any) =>
+    Service.query(queryOrFilter as any).pipe(
+      Effect.flatMap((queryResult) => promiseWithCauseCapture(() => queryResult.run())),
+    );
+
+  // TODO(dmaretskyi): Change API to `yield* Service.querySchema(...).first` and `yield* Service.querySchema(...).schema`.
+
+  static schemaQuery = <Q extends Types.NoExcessProperties<SchemaRegistry.Query, Q>>(
+    query?: Q & SchemaRegistry.Query,
+  ): Effect.Effect<QueryResult.QueryResult<SchemaRegistry.ExtractQueryResult<Q>>, never, Service> =>
+    Service.pipe(
+      Effect.map(({ db }) => db.schemaRegistry.query(query)),
+      Effect.withSpan('Service.schemaQuery'),
+    );
+
+  static runSchemaQuery = <Q extends Types.NoExcessProperties<SchemaRegistry.Query, Q>>(
+    query?: Q & SchemaRegistry.Query,
+  ): Effect.Effect<SchemaRegistry.ExtractQueryResult<Q>[], never, Service> =>
+    Service.schemaQuery(query).pipe(Effect.flatMap((queryResult) => promiseWithCauseCapture(() => queryResult.run())));
 }

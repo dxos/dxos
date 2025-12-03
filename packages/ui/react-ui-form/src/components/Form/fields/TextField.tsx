@@ -2,50 +2,37 @@
 // Copyright 2024 DXOS.org
 //
 
-import React from 'react';
+import React, { useCallback } from 'react';
 
-import { Input } from '@dxos/react-ui';
+import { Input, type TextInputProps } from '@dxos/react-ui';
 
-import { type FormFieldComponentProps, FormFieldLabel } from '../FormFieldComponent';
+import { type FormFieldComponentProps, FormFieldWrapper } from '../FormFieldComponent';
 
 export const TextField = ({
   type,
-  label,
-  inputOnly,
   readonly,
   placeholder,
-  getStatus,
-  getValue,
   onValueChange,
   onBlur,
-}: FormFieldComponentProps) => {
-  const { status, error } = getStatus();
-  const value = getValue();
-  if (readonly && value == null) {
-    return null;
-  }
-
-  // TODO(burdon): Factor out common layout.
-  const str = String(value ?? '');
-  if (readonly === 'static' && inputOnly) {
-    return <p>{str}</p>;
-  }
+  ...props
+}: FormFieldComponentProps<string>) => {
+  const handleChange = useCallback<NonNullable<TextInputProps['onChange']>>(
+    (event) => onValueChange(type, event.target.value),
+    [type, onValueChange],
+  );
 
   return (
-    <Input.Root validationValence={status}>
-      {!inputOnly && <FormFieldLabel error={error} readonly={readonly} label={label} />}
-      {readonly === 'static' ? (
-        <p>{str}</p>
-      ) : (
+    <FormFieldWrapper<string> readonly={readonly} {...props}>
+      {({ value = '' }) => (
         <Input.TextInput
+          noAutoFill
           disabled={!!readonly}
           placeholder={placeholder}
-          value={str}
-          onChange={(event) => onValueChange(type, event.target.value)}
+          value={value}
+          onChange={handleChange}
           onBlur={onBlur}
         />
       )}
-      {inputOnly && <Input.Validation>{error}</Input.Validation>}
-    </Input.Root>
+    </FormFieldWrapper>
   );
 };

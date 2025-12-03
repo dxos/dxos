@@ -18,15 +18,10 @@ import {
 import { Blueprint } from '@dxos/blueprints';
 import { SpaceProperties } from '@dxos/client-protocol';
 import { DXN, Obj, Query, Ref } from '@dxos/echo';
+import { Database } from '@dxos/echo';
 import { acquireReleaseResource } from '@dxos/effect';
 import { TestHelpers } from '@dxos/effect/testing';
-import {
-  CredentialsService,
-  DatabaseService,
-  FunctionInvocationService,
-  QueueService,
-  TracingService,
-} from '@dxos/functions';
+import { CredentialsService, FunctionInvocationService, QueueService, TracingService } from '@dxos/functions';
 import { FunctionInvocationServiceLayerTest, TestDatabaseLayer } from '@dxos/functions-runtime/testing';
 import { invariant } from '@dxos/invariant';
 import { ObjectId } from '@dxos/keys';
@@ -75,9 +70,9 @@ describe('create', () => {
           content,
         });
 
-        const doc = yield* DatabaseService.resolve(DXN.parse(result.id), Markdown.Document);
+        const doc = yield* Database.Service.resolve(DXN.parse(result.id), Markdown.Document);
         expect(doc.name).toBe(name);
-        const text = yield* DatabaseService.load(doc.content);
+        const text = yield* Database.Service.load(doc.content);
         expect(text.content).toBe(content);
       },
       WithProperties,
@@ -93,8 +88,8 @@ describe('create', () => {
         const queue = yield* QueueService.createQueue<Message.Message | ContextBinding>();
         const conversation = yield* acquireReleaseResource(() => new AiConversation(queue));
 
-        yield* DatabaseService.flush({ indexes: true });
-        const markdownBlueprint = yield* DatabaseService.add(Obj.clone(MarkdownBlueprint));
+        yield* Database.Service.flush({ indexes: true });
+        const markdownBlueprint = yield* Database.Service.add(Obj.clone(MarkdownBlueprint));
         yield* Effect.promise(() =>
           conversation.context.bind({
             blueprints: [Ref.make(markdownBlueprint)],
@@ -107,7 +102,7 @@ describe('create', () => {
           prompt: `Create a document with a cookie recipe.`,
         });
         {
-          const docs = yield* DatabaseService.runQuery(Query.type(Markdown.Document));
+          const docs = yield* Database.Service.runQuery(Query.type(Markdown.Document));
           if (docs.length !== 1) {
             throw new Error(`Expected 1 document; got ${docs.length}: ${docs.map((_) => _.name)}`);
           }
@@ -116,7 +111,7 @@ describe('create', () => {
           invariant(Obj.instanceOf(Markdown.Document, doc));
           console.log({
             name: doc.name,
-            content: yield* DatabaseService.load(doc.content).pipe(Effect.map((_) => _.content)),
+            content: yield* Database.Service.load(doc.content).pipe(Effect.map((_) => _.content)),
           });
         }
       },

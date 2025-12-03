@@ -75,7 +75,7 @@ const DefaultStory = ({ id = 'test', init, sidebar, children, ...props }: Render
       {sidebar && (
         <Container id='sidebar' classNames='flex grow overflow-hidden'>
           {sidebar === 'selected' && selected && (
-            <Form
+            <Form.Root
               schema={RectangleShapeWithoutRef}
               values={selected}
               fieldMap={{
@@ -83,7 +83,14 @@ const DefaultStory = ({ id = 'test', init, sidebar, children, ...props }: Render
                 ['center' as const]: (props) => <TupleField {...props} binding={['x', 'y']} />,
                 ['size' as const]: (props) => <TupleField {...props} binding={['width', 'height']} />,
               }}
-            />
+            >
+              <Form.Viewport>
+                <Form.Content>
+                  <Form.FieldSet />
+                  <Form.Actions />
+                </Form.Content>
+              </Form.Viewport>
+            </Form.Root>
           )}
 
           {sidebar === 'json' && (

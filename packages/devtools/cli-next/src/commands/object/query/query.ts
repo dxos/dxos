@@ -16,7 +16,7 @@ export const handler = Effect.fn(function* ({ spaceId, typename }: { spaceId: st
   const space = yield* getSpace(spaceId);
   yield* Effect.tryPromise(() => space.waitUntilReady());
   const filter = typename?.length ? Filter.typename(typename) : Filter.nothing();
-  // TODO(wittjosiah): Use DatabaseService?
+  // TODO(wittjosiah): Use Database.Service?
   const objects = yield* Effect.tryPromise(() => space.db.query(filter).run());
   yield* Console.log(JSON.stringify(objects, null, 2));
 });

@@ -3,28 +3,25 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as Option from 'effect/Option';
 import type * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
 
-import { Obj, Type } from '@dxos/echo';
+import { Obj, Ref, Type } from '@dxos/echo';
 import {
   type AnyProperties,
-  Format,
   GeneratorAnnotationId,
   type GeneratorAnnotationValue,
   type JsonSchemaType,
-  Ref,
   type TypedObject,
   getSchemaReference,
 } from '@dxos/echo/internal';
 import { type AnyLiveObject, type EchoDatabase, Filter, Query } from '@dxos/echo-db';
-import { findAnnotation } from '@dxos/effect';
+import { type SchemaProperty, findAnnotation, getProperties, isArrayType, isNestedType } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { type Live } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { getDeep } from '@dxos/util';
-
-import { type SchemaProperty, getSchemaProperties } from '../projection';
 
 /**
  * Decouples from faker.
@@ -72,9 +69,10 @@ export const createProps = <S extends Schema.Schema.AnyNoContext>(
   return (
     data: Type.Properties<Schema.Schema.Type<S>> = {} as Type.Properties<Schema.Schema.Type<S>>,
   ): Type.Properties<Schema.Schema.Type<S>> => {
-    return getSchemaProperties<S>(schema.ast).reduce<Type.Properties<Schema.Schema.Type<S>>>((obj, property) => {
-      if ((obj as any)[property.name] === undefined) {
-        (obj as any)[property.name] = createValue(generator, schema, property, force);
+    return getProperties(schema.ast).reduce<Type.Properties<Schema.Schema.Type<S>>>((obj, property) => {
+      const name = property.name.toString();
+      if ((obj as any)[name] === undefined && name !== 'id') {
+        (obj as any)[name] = createValue(generator, schema, property, force);
       }
 
       return obj;
@@ -88,22 +86,23 @@ export const createProps = <S extends Schema.Schema.AnyNoContext>(
 const createValue = <T extends AnyProperties>(
   generator: ValueGenerator,
   schema: Schema.Schema<T>,
-  property: SchemaProperty<T>,
+  property: SchemaProperty,
   force = false,
 ): any | undefined => {
-  if (property.defaultValue !== undefined) {
-    return structuredClone(property.defaultValue);
+  const defaultValue = SchemaAST.getDefaultAnnotation(property.type);
+  if (Option.isSome(defaultValue)) {
+    return structuredClone(defaultValue.value);
   }
 
   // Generator value from annotation.
-  const annotation = findAnnotation<GeneratorAnnotationValue>(property.ast, GeneratorAnnotationId);
+  const annotation = findAnnotation<GeneratorAnnotationValue>(property.type, GeneratorAnnotationId);
   if (annotation) {
     const {
       generator: generatorName,
       probability = 0.5,
       args = [],
     } = typeof annotation === 'string' ? { generator: annotation } : annotation;
-    if (!property.optional || force || randomBoolean(probability)) {
+    if (!property.isOptional || force || randomBoolean(probability)) {
       const fn = getDeep<(...args: any[]) => any>(generator, generatorName.split('.'));
       if (!fn) {
         log.warn('unknown generator', { generatorName });
@@ -114,18 +113,14 @@ const createValue = <T extends AnyProperties>(
   }
 
   // TODO(dmaretskyi): Support generating nested objects here; or generator via type.
-  if (!property.optional) {
-    if (property.array) {
+  if (!property.isOptional) {
+    if (isArrayType(property.type)) {
       return [];
+    } else if (isNestedType(property.type)) {
+      return {};
     } else {
-      switch (property.type) {
-        case 'object':
-          return {};
-        default: {
-          const prop = [Type.getTypename(schema), property.name].filter(Boolean).join('.');
-          throw new Error(`Required property: ${prop}:${property.type}`);
-        }
-      }
+      const prop = [Type.getTypename(schema), property.name.toString()].filter(Boolean).join('.');
+      throw new Error(`Required property: ${prop}:${property.type._tag}`);
     }
   }
 };
@@ -135,10 +130,10 @@ const createValue = <T extends AnyProperties>(
  */
 export const createReferences = <T extends AnyProperties>(schema: Schema.Schema<T>, db: EchoDatabase) => {
   return async (obj: T): Promise<T> => {
-    for (const property of getSchemaProperties<T>(schema.ast)) {
-      if (!property.optional || randomBoolean()) {
-        if (property.format === Format.TypeFormat.Ref) {
-          const jsonSchema = findAnnotation<JsonSchemaType>(property.ast, SchemaAST.JSONSchemaAnnotationId);
+    for (const property of getProperties(schema.ast)) {
+      if (!property.isOptional || randomBoolean()) {
+        if (Ref.isRefType(property.type)) {
+          const jsonSchema = findAnnotation<JsonSchemaType>(property.type, SchemaAST.JSONSchemaAnnotationId);
           if (jsonSchema) {
             const { typename } = getSchemaReference(jsonSchema) ?? {};
             invariant(typename);

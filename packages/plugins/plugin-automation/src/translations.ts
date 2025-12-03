@@ -30,6 +30,8 @@ export const translations = [
         'go to function source button label': 'Show function source',
         'delete function button label': 'Delete function',
 
+        'function parameters label': 'Function parameters',
+
         'trigger editor title': 'Configure Trigger',
         'new trigger label': 'Add Trigger',
         'trigger type timer': 'Timer',

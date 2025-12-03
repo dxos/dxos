@@ -8,7 +8,7 @@ import { useDynamicRef } from './useDynamicRef';
 
 /**
  * A stateful hook with a controlled value.
- * @deprecated Use Radix `useControllableState` (NOTE: `useControlledState` is not compatible with `useControllableState`)
+ * NOTE: Consider using Radix's `useControllableState`.
  */
 export const useControlledState = <T>(
   valueParam: T,

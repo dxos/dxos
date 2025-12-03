@@ -103,17 +103,19 @@ export const CreateObjectPanel = ({
   ) : !target ? (
     <SelectSpace spaces={spaces} defaultSpaceId={defaultSpaceId} onChange={onTargetChange} />
   ) : metadata.inputSchema ? (
-    <div role='none' className={cardDialogOverflow}>
-      <Form
-        testId='create-object-form'
-        autoFocus
-        values={initialFormValues}
-        schema={metadata.inputSchema}
-        onSave={handleCreateObject}
-        fieldProvider={inputSurfaceLookup}
-        outerSpacing='blockStart-0'
-      />
-    </div>
+    <Form.Root
+      testId='create-object-form'
+      autoFocus
+      fieldProvider={inputSurfaceLookup}
+      schema={metadata.inputSchema}
+      values={initialFormValues}
+      onSave={handleCreateObject}
+    >
+      <Form.Content>
+        <Form.FieldSet />
+        <Form.Submit />
+      </Form.Content>
+    </Form.Root>
   ) : null;
 };
 

@@ -8,7 +8,7 @@ import * as Effect from 'effect/Effect';
 
 import { ClientService } from '@dxos/client';
 import { Obj } from '@dxos/echo';
-import { DatabaseService } from '@dxos/echo-db';
+import { Database } from '@dxos/echo';
 import { Function } from '@dxos/functions';
 import { getDeployedFunctions } from '@dxos/functions-runtime/edge';
 
@@ -26,7 +26,7 @@ export const importCommand = Command.make(
       const client = yield* ClientService;
 
       // TODO(dmaretskyi): Extract.
-      client.addTypes([Function.Function]);
+      yield* Effect.promise(() => client.addTypes([Function.Function]));
 
       // Produce normalized in-memory FunctionType objects for display.
       const fns = yield* Effect.promise(() => getDeployedFunctions(client));
@@ -38,7 +38,7 @@ export const importCommand = Command.make(
         throw new Error(`Function ${key} not found`);
       }
 
-      yield* DatabaseService.add(Obj.clone(fn));
+      yield* Database.Service.add(Obj.clone(fn));
       console.log(JSON.stringify(fn, null, 2));
     }).pipe(withDatabase(spaceId)),
 ).pipe(Command.withDescription('Import a function deployed to EDGE.'));

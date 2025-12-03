@@ -6,7 +6,7 @@ import { effect, untracked } from '@preact/signals-core';
 import type * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
 
-import { type Path, findNode, isLiteralUnion, isSimpleType } from '@dxos/effect';
+import { type Path, findNode, isLiteralUnion, isNestedType } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { type Live, isLiveObject, live } from '@dxos/live-object';
 import { log } from '@dxos/log';
@@ -156,10 +156,7 @@ export class SettingsStore<T extends SettingsValue> {
     this.close();
 
     for (const prop of SchemaAST.getPropertySignatures(this._schema.ast)) {
-      const node = findNode(
-        prop.type,
-        (node) => isSimpleType(node) || SchemaAST.isTupleType(node) || isLiteralUnion(node),
-      );
+      const node = findNode(prop.type, nodeTest);
       invariant(node, `invalid prop: ${prop.name.toString()}`);
 
       const path = [prop.name.toString()];
@@ -197,10 +194,7 @@ export class SettingsStore<T extends SettingsValue> {
 
   save(): false | undefined {
     for (const prop of SchemaAST.getPropertySignatures(this._schema.ast)) {
-      const node = findNode(
-        prop.type,
-        (node) => isSimpleType(node) || SchemaAST.isTupleType(node) || isLiteralUnion(node),
-      );
+      const node = findNode(prop.type, nodeTest);
       invariant(node, `invalid prop: ${prop.name.toString()}`);
 
       const path = [prop.name.toString()];
@@ -229,3 +223,16 @@ export class SettingsStore<T extends SettingsValue> {
     }
   }
 }
+
+const nodeTest = (node: SchemaAST.AST) => {
+  return (
+    SchemaAST.isStringKeyword(node) ||
+    SchemaAST.isNumberKeyword(node) ||
+    SchemaAST.isBooleanKeyword(node) ||
+    SchemaAST.isEnums(node) ||
+    SchemaAST.isLiteral(node) ||
+    SchemaAST.isTupleType(node) ||
+    isLiteralUnion(node) ||
+    isNestedType(node)
+  );
+};

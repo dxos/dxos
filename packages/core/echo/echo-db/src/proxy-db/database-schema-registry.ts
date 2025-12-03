@@ -94,7 +94,7 @@ export class DatabaseSchemaRegistry extends Resource implements SchemaRegistry.S
     }
   }
 
-  protected override async _close(ctx: Context): Promise<void> {
+  protected override async _close(_ctx: Context): Promise<void> {
     // Nothing to do.
   }
 

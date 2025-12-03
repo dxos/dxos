@@ -81,8 +81,6 @@ export const ScriptPlugin = definePlugin(meta, () => [
   defineModule({
     id: `${meta.id}/module/react-surface`,
     activatesOn: Events.SetupReactSurface,
-    // TODO(wittjosiah): Should occur before the script editor is loaded when surfaces activation is more granular.
-    activatesBefore: [ScriptEvents.SetupCompiler],
     activate: ReactSurface,
   }),
   defineModule({

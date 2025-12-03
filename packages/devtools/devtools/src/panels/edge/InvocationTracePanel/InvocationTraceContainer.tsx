@@ -190,7 +190,7 @@ const Selected: FC<{ span: InvocationSpan }> = ({ span }) => {
     Match.orElse(() => 'execution-graph'),
   );
 
-  const isLogQueue = 'logs' === contents;
+  const isLogQueue = 'logs' === contents || objects.length === 0;
 
   return (
     <div className='grid grid-cols-1 grid-rows-[min-content_1fr] bs-full min-bs-0 border-separator'>
@@ -203,9 +203,9 @@ const Selected: FC<{ span: InvocationSpan }> = ({ span }) => {
         <Tabs.Tablist classNames='border-be border-separator'>
           <Tabs.Tab value='input'>Input</Tabs.Tab>
           {isLogQueue && <Tabs.Tab value='logs'>Logs</Tabs.Tab>}
-          {isLogQueue && <Tabs.Tab value='exceptions'>Exceptions</Tabs.Tab>}
+          {isLogQueue && <Tabs.Tab value='errors'>Error logs</Tabs.Tab>}
           {isLogQueue && <Tabs.Tab value='raw'>Raw</Tabs.Tab>}
-          {span.exception && <Tabs.Tab value='exception'>Exception</Tabs.Tab>}
+          {span.exception && <Tabs.Tab value='failure'>Failure</Tabs.Tab>}
           {contents === 'execution-graph' && <Tabs.Tab value='execution-graph'>Execution Graph</Tabs.Tab>}
         </Tabs.Tablist>
         <Tabs.Tabpanel value='input'>
@@ -213,21 +213,21 @@ const Selected: FC<{ span: InvocationSpan }> = ({ span }) => {
         </Tabs.Tabpanel>
         {isLogQueue && (
           <Tabs.Tabpanel value='logs'>
-            <LogPanel queue={queue} />
+            <LogPanel objects={objects} />
           </Tabs.Tabpanel>
         )}
         {isLogQueue && (
-          <Tabs.Tabpanel value='exceptions'>
-            <ExceptionPanel queue={queue} />
+          <Tabs.Tabpanel value='errors'>
+            <ExceptionPanel objects={objects} />
           </Tabs.Tabpanel>
         )}
         {isLogQueue && (
           <Tabs.Tabpanel value='raw' classNames='min-bs-0 min-is-0 is-full overflow-auto'>
-            <RawDataPanel classNames='text-xs' span={span} queue={queue} />
+            <RawDataPanel classNames='text-xs' span={span} objects={objects} />
           </Tabs.Tabpanel>
         )}
         {span.exception && (
-          <Tabs.Tabpanel value='exception'>
+          <Tabs.Tabpanel value='failure'>
             <SpanExceptionPanel exception={span.exception} />
           </Tabs.Tabpanel>
         )}

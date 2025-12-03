@@ -35,7 +35,7 @@ export const getNextVersion = (fnObject: Option.Option<Function.Function>) => {
 
 export const loadFunctionObject: (space: Space, functionId: string) => Effect.Effect<Function.Function, Error, never> =
   Effect.fn(function* (space: Space, functionId: string) {
-    // TODO(wittjosiah): Derive DatabaseService from ClientService.
+    // TODO(wittjosiah): Derive Database.Service from ClientService.
     const functions = yield* Effect.tryPromise(() => space.db.query(Filter.type(Function.Function)).run());
     const functionObject = functions.find((fn) => getUserFunctionIdInMetadata(Obj.getMeta(fn)) === functionId);
     if (!functionObject) {

@@ -8,9 +8,10 @@ import * as SchemaAST from 'effect/SchemaAST';
 import React, { forwardRef, useEffect, useMemo, useRef, useState } from 'react';
 
 import { type ComputeGraph, ValueBag, type WorkflowLoader } from '@dxos/conductor';
+import { Database } from '@dxos/echo';
 import { EdgeHttpClient } from '@dxos/edge-client';
 import { createEventLogger } from '@dxos/functions';
-import { DatabaseService, QueueService } from '@dxos/functions';
+import { QueueService } from '@dxos/functions';
 import { type RuntimeServices, ServiceContainer } from '@dxos/functions-runtime';
 import { RemoteFunctionExecutionService } from '@dxos/functions-runtime';
 import { invariant } from '@dxos/invariant';
@@ -243,7 +244,7 @@ const createLocalExecutionContext = (space: Space): Layer.Layer<RuntimeServices>
   return new ServiceContainer()
     .setServices({
       eventLogger: createEventLogger(LogLevel.INFO),
-      database: DatabaseService.make(space.db),
+      database: Database.Service.make(space.db),
       queues: QueueService.make(space.queues, undefined),
       functionCallService: RemoteFunctionExecutionService.mock(),
     })

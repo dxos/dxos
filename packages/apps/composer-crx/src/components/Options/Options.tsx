@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { useEffect, useState } from 'react';
+import React, { type ChangeEvent, useEffect, useState } from 'react';
 import browser from 'webextension-polyfill';
 
 import { Composer, DXOSHorizontalType } from '@dxos/brand';
@@ -52,7 +52,7 @@ export const Options = ({ classNames }: OptionsProps) => {
     setSpaceMode(next);
   };
 
-  const handleSpaceIdChange = async (ev: React.ChangeEvent<HTMLInputElement>) => {
+  const handleSpaceIdChange = async (ev: ChangeEvent<HTMLInputElement>) => {
     const next = ev.target.value;
     await browser.storage.sync.set({ [SPACE_ID_PROP]: next });
     setSpaceId(next);

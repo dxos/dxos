@@ -4,18 +4,15 @@
 
 import React, { type FC, useMemo } from 'react';
 
-import { TraceEvent } from '@dxos/functions-runtime';
-import { Filter, type Queue, useQuery } from '@dxos/react-client/echo';
+import { type TraceEvent } from '@dxos/functions-runtime';
 import { Callout } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
 type ExceptionPanelProps = {
-  queue?: Queue;
+  objects?: TraceEvent[];
 };
 
-export const ExceptionPanel: FC<ExceptionPanelProps> = ({ queue }) => {
-  const objects = useQuery(queue, Filter.type(TraceEvent));
-
+export const ExceptionPanel: FC<ExceptionPanelProps> = ({ objects }) => {
   const errorLogs = useMemo(() => {
     if (!objects?.length) {
       return [];

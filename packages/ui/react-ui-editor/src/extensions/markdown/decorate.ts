@@ -169,8 +169,8 @@ const autoHideTags = new Set([
 type NumberingLevel = { type: string; from: number; to: number; level: number; number: number };
 
 const buildDecorations = (view: EditorView, options: DecorateOptions, focus: boolean) => {
-  const deco = new RangeSetBuilder<Decoration>();
-  const atomicDeco = new RangeSetBuilder<Decoration>();
+  const decoRanges: { from: number; to: number; deco: Decoration }[] = [];
+  const atomicDecoRanges: { from: number; to: number; deco: Decoration }[] = [];
   const { state } = view;
 
   // Header numbering.
@@ -237,7 +237,7 @@ const buildDecorations = (view: EditorView, options: DecorateOptions, focus: boo
           const text = state.sliceDoc(node.from, node.to);
           const len = text.match(/[#\s]+/)![0].length;
           if (!from || level < from || level > to) {
-            atomicDeco.add(mark.from, mark.from + len, hide);
+            atomicDecoRanges.push({ from: mark.from, to: mark.from + len, deco: hide });
           } else {
             // TODO(burdon): Number format/style.
             const num =
@@ -247,13 +247,13 @@ const buildDecorations = (view: EditorView, options: DecorateOptions, focus: boo
                 .join('.') + ' ';
 
             if (num.length) {
-              atomicDeco.add(
-                mark.from,
-                mark.from + len,
-                Decoration.replace({
+              atomicDecoRanges.push({
+                from: mark.from,
+                to: mark.from + len,
+                deco: Decoration.replace({
                   widget: new TextWidget(num, theme.heading(level)),
                 }),
-              );
+              });
             }
           }
         }
@@ -286,16 +286,16 @@ const buildDecorations = (view: EditorView, options: DecorateOptions, focus: boo
 
         // Add line decoration for the continuation indent.
         // TODO(burdon): Bug if indentation is more than one indentation unit (e.g., 4 spaces) from the previous line.
-        deco.add(
-          line.from,
-          line.from,
-          Decoration.line({
+        decoRanges.push({
+          from: line.from,
+          to: line.from,
+          deco: Decoration.line({
             class: 'cm-list-item',
             attributes: {
               style: `padding-left: ${offset}px; text-indent: -${width}px;`,
             },
           }),
-        );
+        });
 
         break;
       }
@@ -314,16 +314,16 @@ const buildDecorations = (view: EditorView, options: DecorateOptions, focus: boo
         const label = list.type === 'OrderedList' ? `${++list.number}.` : Unicode.bulletSmall;
         const line = state.doc.lineAt(node.from);
         const to = state.doc.sliceString(node.to, node.to + 1) === ' ' ? node.to + 1 : node.to;
-        atomicDeco.add(
-          line.from,
+        atomicDecoRanges.push({
+          from: line.from,
           to,
-          Decoration.replace({
+          deco: Decoration.replace({
             widget: new TextWidget(
               label,
               list.type === 'OrderedList' ? 'cm-list-mark cm-list-mark-ordered' : 'cm-list-mark cm-list-mark-bullet',
             ),
           }),
-        );
+        });
         break;
       }
 
@@ -332,7 +332,7 @@ const buildDecorations = (view: EditorView, options: DecorateOptions, focus: boo
         // Check if the next character is a space and if so, include it in the replacement.
         const line = state.doc.lineAt(node.from);
         const to = state.doc.sliceString(node.to, node.to + 1) === ' ' ? node.to + 1 : node.to;
-        atomicDeco.add(line.from, to, checked ? checkedTask : uncheckedTask);
+        atomicDecoRanges.push({ from: line.from, to, deco: checked ? checkedTask : uncheckedTask });
         break;
       }
 
@@ -345,7 +345,7 @@ const buildDecorations = (view: EditorView, options: DecorateOptions, focus: boo
         const quoteMark = node.node.getChild('QuoteMark');
         const paragraph = node.node.getChild('Paragraph');
         if (!editing && quoteMark && paragraph) {
-          atomicDeco.add(quoteMark.from, paragraph.from, hide);
+          atomicDecoRanges.push({ from: quoteMark.from, to: paragraph.from, deco: hide });
         }
 
         for (const block of view.viewportLineBlocks) {
@@ -356,7 +356,7 @@ const buildDecorations = (view: EditorView, options: DecorateOptions, focus: boo
             break;
           }
 
-          deco.add(block.from, block.from, blockQuote);
+          decoRanges.push({ from: block.from, to: block.from, deco: blockQuote });
         }
 
         break;
@@ -379,14 +379,14 @@ const buildDecorations = (view: EditorView, options: DecorateOptions, focus: boo
           const isFirst = block.from <= node.from;
           const isLast = block.to >= node.to && /^(\s>)*-->$/.test(state.doc.sliceString(block.from, block.to));
 
-          deco.add(
-            block.from,
-            block.from,
-            isFirst ? commentBlockLineFirst : isLast ? commentBlockLineLast : commentBlockLine,
-          );
+          decoRanges.push({
+            from: block.from,
+            to: block.from,
+            deco: isFirst ? commentBlockLineFirst : isLast ? commentBlockLineLast : commentBlockLine,
+          });
 
           if (!editing && (isFirst || isLast)) {
-            atomicDeco.add(block.from, block.to, hide);
+            atomicDecoRanges.push({ from: block.from, to: block.to, deco: hide });
           }
         }
         break;
@@ -407,11 +407,15 @@ const buildDecorations = (view: EditorView, options: DecorateOptions, focus: boo
 
           const first = block.from <= node.from;
           const last = block.to >= node.to && /```$/.test(state.doc.sliceString(block.from, block.to));
-          deco.add(block.from, block.from, first ? fencedCodeLineFirst : last ? fencedCodeLineLast : fencedCodeLine);
+          decoRanges.push({
+            from: block.from,
+            to: block.from,
+            deco: first ? fencedCodeLineFirst : last ? fencedCodeLineLast : fencedCodeLine,
+          });
 
           const editing = editingRange(state, node, focus);
           if (!editing && (first || last)) {
-            atomicDeco.add(block.from, block.to, hide);
+            atomicDecoRanges.push({ from: block.from, to: block.to, deco: hide });
           }
         }
         return false;
@@ -431,13 +435,13 @@ const buildDecorations = (view: EditorView, options: DecorateOptions, focus: boo
             break;
           }
           if (!editing) {
-            atomicDeco.add(node.from, marks[0].to, hide);
+            atomicDecoRanges.push({ from: node.from, to: marks[0].to, deco: hide });
           }
 
-          deco.add(
-            marks[0].to,
-            marks[1].from,
-            Decoration.mark({
+          decoRanges.push({
+            from: marks[0].to,
+            to: marks[1].from,
+            deco: Decoration.mark({
               tagName: 'a',
               attributes: {
                 class: 'cm-link',
@@ -446,16 +450,16 @@ const buildDecorations = (view: EditorView, options: DecorateOptions, focus: boo
                 target: '_blank',
               },
             }),
-          );
+          });
 
           if (!editing) {
-            atomicDeco.add(
-              marks[1].from,
-              node.to,
-              options.renderLinkButton
+            atomicDecoRanges.push({
+              from: marks[1].from,
+              to: node.to,
+              deco: options.renderLinkButton
                 ? Decoration.replace({ widget: new LinkButton(url, options.renderLinkButton) })
                 : hide,
-            );
+            });
           }
         }
         break;
@@ -467,7 +471,7 @@ const buildDecorations = (view: EditorView, options: DecorateOptions, focus: boo
 
       case 'HorizontalRule': {
         if (!editingRange(state, node, focus)) {
-          deco.add(node.from, node.to, horizontalRule);
+          decoRanges.push({ from: node.from, to: node.to, deco: horizontalRule });
         }
         break;
       }
@@ -475,7 +479,7 @@ const buildDecorations = (view: EditorView, options: DecorateOptions, focus: boo
       default: {
         if (autoHideTags.has(node.name)) {
           if (!editingRange(state, node.node.parent!, focus)) {
-            atomicDeco.add(node.from, node.to, hide);
+            atomicDecoRanges.push({ from: node.from, to: node.to, deco: hide });
           }
         }
       }
@@ -508,6 +512,23 @@ const buildDecorations = (view: EditorView, options: DecorateOptions, focus: boo
       enter: wrapWithCatch(enterNode, 'decorate.enter'),
       leave: wrapWithCatch(leaveNode, 'decorate.leave'),
     });
+  }
+
+  // Sort and build decoration sets.
+  const sortRanges = (a: { from: number; to: number }, b: { from: number; to: number }) =>
+    a.from - b.from || a.to - b.to;
+
+  decoRanges.sort(sortRanges);
+  atomicDecoRanges.sort(sortRanges);
+
+  const deco = new RangeSetBuilder<Decoration>();
+  for (const { from, to, deco: d } of decoRanges) {
+    deco.add(from, to, d);
+  }
+
+  const atomicDeco = new RangeSetBuilder<Decoration>();
+  for (const { from, to, deco: d } of atomicDecoRanges) {
+    atomicDeco.add(from, to, d);
   }
 
   return {

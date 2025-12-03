@@ -54,7 +54,7 @@ describe('ViewEditor', () => {
     const nameField = screen.getByText('name');
     fireEvent.click(nameField);
 
-    const fieldInput = screen.getByPlaceholderText('Field name.');
+    const fieldInput = screen.getByPlaceholderText('Property name');
     fireEvent.change(fieldInput, { target: { value: 'new_property' } });
 
     fireEvent.click(screen.getByTestId('save-button'));
@@ -93,8 +93,12 @@ describe('ViewEditor', () => {
     const addButton = screen.getByText('Add property');
     fireEvent.click(addButton);
 
+    // Open the last field.
+    const buttons = screen.getAllByTestId('field.toggle');
+    fireEvent.click(buttons.at(-1)!);
+
     // Fill out the property field.
-    const fieldInput = screen.getByPlaceholderText('Field name.');
+    const fieldInput = screen.getByPlaceholderText('Property name');
     fireEvent.change(fieldInput, { target: { value: 'added_property' } });
 
     // Click the format combo box and select the first option.

@@ -3,12 +3,12 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { forwardRef, useCallback, useEffect, useRef, useState } from 'react';
 
 import { faker } from '@dxos/random';
 import { List, ListItem, Toolbar } from '@dxos/react-ui';
 import { withTheme } from '@dxos/react-ui/testing';
-import { getHashStyles, mx } from '@dxos/react-ui-theme';
+import { type ColorStyles, getHashStyles, mx } from '@dxos/react-ui-theme';
 
 import { Capabilities, createSurface } from '../common';
 import { withPluginManager } from '../testing';
@@ -16,15 +16,30 @@ import { withPluginManager } from '../testing';
 import { usePluginManager } from './PluginManagerProvider';
 import { Surface, useSurfaces } from './Surface';
 
+type TestComponentProps = {
+  id: string;
+  styles: ColorStyles;
+};
+
+const TestComponent = forwardRef<HTMLDivElement, TestComponentProps>(({ styles, id }, forwardedRef) => {
+  return (
+    <div
+      className={mx('flex justify-center items-center border rounded', styles.surface, styles.border)}
+      ref={forwardedRef}
+    >
+      <span className={mx('dx-tag font-mono text-lg', styles.text)}>{id}</span>
+    </div>
+  );
+});
+
 const DefaultStory = () => {
-  const [selected, setSelected] = useState<string | undefined>();
   const manager = usePluginManager();
   const surfaces = useSurfaces();
+  const [selected, setSelected] = useState<string | undefined>();
 
   const handleAdd = useCallback(() => {
     const id = `test-${faker.number.int({ min: 0, max: 1_000 })}`;
     const styles = getHashStyles(id);
-
     manager.context.contributeCapability({
       module: 'test',
       interface: Capabilities.ReactSurface,
@@ -32,11 +47,7 @@ const DefaultStory = () => {
         id,
         role: 'item',
         filter: (data): data is any => (data as any)?.id === id,
-        component: () => (
-          <div className={mx('flex justify-center items-center border rounded', styles.surface, styles.border)}>
-            <span className={mx('dx-tag font-mono text-lg', styles.text)}>{id}</span>
-          </div>
-        ),
+        component: ({ ref }) => <TestComponent id={id} styles={styles} ref={ref} />,
       }),
     });
 
@@ -86,6 +97,11 @@ const DefaultStory = () => {
     setSelected('error');
   }, [manager]);
 
+  const ref = useRef<HTMLElement>(null);
+  useEffect(() => {
+    console.log(ref.current);
+  }, [ref]);
+
   return (
     <div className='flex flex-col bs-full overflow-hidden'>
       <Toolbar.Root>
@@ -94,7 +110,7 @@ const DefaultStory = () => {
         <Toolbar.Button onClick={handleError}>Error</Toolbar.Button>
       </Toolbar.Root>
       <div className='grid grid-cols-2 bs-full gap-4 overflow-hidden'>
-        <Surface role='item' data={selected ? { id: selected } : undefined} limit={1} />
+        <Surface role='item' data={selected ? { id: selected } : undefined} limit={1} ref={ref} />
         <div className='overflow-y-auto bs-full'>
           <List>
             {surfaces.map((surface) => (
