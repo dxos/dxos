@@ -1,1 +1,2 @@
-npx tsx "$(dirname "$0")/../src/examples/ollama-demo.tsx" "$@"
+#!/bin/bash
+npx tsx "$(dirname "$0")/../src/app/app.ts" "$@"

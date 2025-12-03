@@ -4527,28 +4527,16 @@ importers:
       '@dxos/client':
         specifier: workspace:*
         version: link:../../sdk/client
-      ansi-escapes:
-        specifier: ^7.0.0
-        version: 7.0.0
+      '@types/blessed':
+        specifier: ^0.1.26
+        version: 0.1.26
+      blessed:
+        specifier: ^0.1.81
+        version: 0.1.81
       chalk:
         specifier: ^5.3.0
         version: 5.6.2
-      ink:
-        specifier: ^6.3.1
-        version: 6.3.1(@types/react@19.2.2)(react@19.2.0)
-      react:
-        specifier: ~19.2.0
-        version: 19.2.0
-      strip-ansi:
-        specifier: ^7.1.2
-        version: 7.1.2
     devDependencies:
-      '@types/react':
-        specifier: ~19.2.2
-        version: 19.2.2
-      ink-testing-library:
-        specifier: ^4.0.0
-        version: 4.0.0(@types/react@19.2.2)
       typescript:
         specifier: ^5.9.3
         version: 5.9.3
@@ -23849,6 +23837,9 @@ packages:
   '@types/base16@1.0.2':
     resolution: {integrity: sha512-oYO/U4VD1DavwrKuCSQWdLG+5K22SLPem2OQaHmFcQuwHoVeGC+JGVRji2MUqZUAIQZHEonOeVfAX09hYiLsdg==}
 
+  '@types/blessed@0.1.26':
+    resolution: {integrity: sha512-TAFZ4PF1bU0uVy86NTVAyhtC8BBWhjQLUfIS2N5P7YTJil+PtxpdPZ0AmpmJWO8pZ7RYPrcbGYZW0sVYVCEVLA==}
+
   '@types/body-parser@1.19.2':
     resolution: {integrity: sha512-ALYone6pm6QmwZoAgeyNksccT9Q4AWZQ6PvfwR37GT6r6FWUPguq6sUmNGSMV2Wr761oQoBxwGGa6DR5o1DC9g==}
 
@@ -25524,6 +25515,11 @@ packages:
 
   blake3-wasm@2.1.5:
     resolution: {integrity: sha512-F1+K8EbfOZE49dtoPtmxUQrpXaBIl3ICvasLh+nJta0xkz+9kF/7uet9fLnwKqhDrmj6g+6K3Tw9yQPUg2ka5g==}
+
+  blessed@0.1.81:
+    resolution: {integrity: sha512-LoF5gae+hlmfORcG1M5+5XZi4LBmvlXTzwJWzUlPryN/SJdSflZvROM2TwkT0GMpq7oqT48NRd4GS7BiVBc5OQ==}
+    engines: {node: '>= 0.8.0'}
+    hasBin: true
 
   blob-to-it@2.0.5:
     resolution: {integrity: sha512-3VIFla8L4JuB+0WCdf+0POI7E1tTl8mhdGiwwwmnZEu6QjRJciS9fIvz8NgWY9URb0iagXYModGEYTcYeq9BMg==}
@@ -28982,15 +28978,6 @@ packages:
     peerDependencies:
       ink: '>=3.0.0'
       react: ~19.2.0
-
-  ink-testing-library@4.0.0:
-    resolution: {integrity: sha512-yF92kj3pmBvk7oKbSq5vEALO//o7Z9Ck/OaLNlkzXNeYdwfpxMQkSowGTFUCS5MSu9bWfSZMewGpp7bFc66D7Q==}
-    engines: {node: '>=18'}
-    peerDependencies:
-      '@types/react': ~19.2.2
-    peerDependenciesMeta:
-      '@types/react':
-        optional: true
 
   ink-text-input@6.0.0:
     resolution: {integrity: sha512-Fw64n7Yha5deb1rHY137zHTAbSTNelUKuB5Kkk2HACXEtwIHBCf9OH2tP/LQ9fRYTl1F0dZgbW0zPnZk6FA9Lw==}
@@ -44981,6 +44968,10 @@ snapshots:
 
   '@types/base16@1.0.2': {}
 
+  '@types/blessed@0.1.26':
+    dependencies:
+      '@types/node': 22.10.2
+
   '@types/body-parser@1.19.2':
     dependencies:
       '@types/connect': 3.4.38
@@ -46993,6 +46984,8 @@ snapshots:
       nanoassert: 2.0.0
 
   blake3-wasm@2.1.5: {}
+
+  blessed@0.1.81: {}
 
   blob-to-it@2.0.5:
     dependencies:
@@ -51287,10 +51280,6 @@ snapshots:
       ink: 6.3.1(@types/react@19.2.2)(react@19.2.0)
       object-hash: 2.2.0
       react: 19.2.0
-
-  ink-testing-library@4.0.0(@types/react@19.2.2):
-    optionalDependencies:
-      '@types/react': 19.2.2
 
   ink-text-input@6.0.0(ink@6.3.1(@types/react@19.2.2)(react@19.2.0))(react@19.2.0):
     dependencies:
