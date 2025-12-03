@@ -15,7 +15,7 @@ const functionLogProcessor: LogProcessor = (config, entry) => {
       console.debug(entry.message, entry.context);
       break;
     case LogLevel.TRACE:
-      console.trace(entry.message, entry.context);
+      console.debug(entry.message, entry.context);
       break;
     case LogLevel.VERBOSE:
       console.log(entry.message, entry.context);
