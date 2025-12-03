@@ -60,7 +60,7 @@ export const MarkdownCard = ({ subject, role }: MarkdownCardProps) => {
       {snippet && (
         <Card.Text classNames='flex max-h-[300px] overflow-hidden'>
           <MarkdownEditor.Root id={subject.id} viewMode='readonly'>
-            <MarkdownEditor.Content initialValue={snippet} slots={{}} />
+            <MarkdownEditor.Content initialValue={snippet} slots={{}} classNames='!bg-transparent' />
           </MarkdownEditor.Root>
         </Card.Text>
       )}

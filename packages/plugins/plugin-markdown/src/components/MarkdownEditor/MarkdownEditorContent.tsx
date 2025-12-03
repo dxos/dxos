@@ -26,6 +26,7 @@ import {
   stackItemContentEditorClassNames,
   useTextEditor,
 } from '@dxos/react-ui-editor';
+import { mx } from '@dxos/react-ui-theme';
 import { isTruthy } from '@dxos/util';
 
 import { useSelectCurrentThread } from '../../hooks';
@@ -133,7 +134,7 @@ export const MarkdownEditorContent = forwardRef<EditorView | null, MarkdownEdito
         role='none'
         ref={parentRef}
         data-testid='composer.markdownRoot'
-        className={(stackItemContentEditorClassNames(role), classNames)}
+        className={mx(stackItemContentEditorClassNames(role), classNames)}
         data-popover-collision-boundary={true}
         {...focusAttributes}
       />
