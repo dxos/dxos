@@ -2,6 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
+import { statSync } from 'node:fs';
 import { writeFile } from 'node:fs/promises';
 import * as fs from 'node:fs/promises';
 import { basename, dirname, join, relative, resolve } from 'node:path';
@@ -17,7 +18,6 @@ import { PublicKey } from '@dxos/keys';
 import { Unit, trim } from '@dxos/util';
 
 import { httpPlugin } from '../http-plugin-esbuild';
-import { statSync } from 'node:fs';
 
 type BundleOptions = {
   entryPoint: string;
@@ -36,8 +36,6 @@ type BundleResult = {
 export const bundleFunction = async (options: BundleOptions): Promise<BundleResult> => {
   const outdir = `/tmp/dxos-functions-bundle-${new Date().toISOString()}-${PublicKey.random().toHex()}`;
   const gitDir = findGitDir(dirname(options.entryPoint));
-  console.log('gitDir:', gitDir);
-  console.log('outdir:', outdir);
 
   const result = await build({
     entryPoints: {
