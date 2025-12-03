@@ -169,7 +169,7 @@ export default ({ createInvitationUrl }: ReactSurfaceOptions) =>
           Option.getOrElse(() => false),
         );
       },
-      component: ({ ref, data }) => (
+      component: ({ data, ref }) => (
         <ObjectCardStack
           key={Obj.getDXN(data.companionTo).toString()}
           objectId={Obj.getDXN(data.companionTo).toString()}

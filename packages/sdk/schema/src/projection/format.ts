@@ -100,7 +100,7 @@ export const formatToSchema: Record<Format.TypeFormat, Schema.Schema<FormatSchem
   [Format.TypeFormat.JSON]: extend(Format.TypeFormat.JSON, TypeEnum.String),
   [Format.TypeFormat.Markdown]: extend(Format.TypeFormat.Markdown, TypeEnum.String),
   [Format.TypeFormat.Regex]: extend(Format.TypeFormat.Regex, TypeEnum.String),
-  [Format.TypeFormat.Text]: extend(Format.TypeFormat.Text, TypeEnum.String),
+  // [Format.TypeFormat.Text]: extend(Format.TypeFormat.Text, TypeEnum.String),
   [Format.TypeFormat.URL]: extend(Format.TypeFormat.URL, TypeEnum.String),
   [Format.TypeFormat.UUID]: extend(Format.TypeFormat.UUID, TypeEnum.String),
 
@@ -241,7 +241,7 @@ export const formatToAdditionalPropertyAttributes: Record<Format.TypeFormat, Par
   [Format.TypeFormat.Integer]: {},
   [Format.TypeFormat.Percent]: {},
   [Format.TypeFormat.Timestamp]: {},
-  [Format.TypeFormat.Text]: {},
+  // [Format.TypeFormat.Text]: {},
   [Format.TypeFormat.DateTime]: {},
   [Format.TypeFormat.Date]: {},
   [Format.TypeFormat.Time]: {},

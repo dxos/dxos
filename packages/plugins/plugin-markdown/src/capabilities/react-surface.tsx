@@ -25,7 +25,7 @@ export default () =>
       role: ['article', 'section', 'tabpanel'],
       filter: (data): data is { subject: Markdown.Document; variant: undefined } =>
         Obj.instanceOf(Markdown.Document, data.subject) && !data.variant,
-      component: ({ ref, data, role }) => {
+      component: ({ data, role, ref }) => {
         return <Container id={Obj.getDXN(data.subject).toString()} subject={data.subject} role={role} ref={ref} />;
       },
     }),
@@ -59,7 +59,7 @@ export default () =>
       role: SurfaceCardRole.literals as any,
       filter: (data): data is { subject: Markdown.Document | Text.Text } =>
         Obj.instanceOf(Markdown.Document, data.subject) || Obj.instanceOf(Text.Text, data.subject),
-      component: ({ ref, data, role }) => <MarkdownCard {...data} role={role as SurfaceCardRole} ref={ref} />,
+      component: ({ data, role, ref }) => <MarkdownCard {...data} role={role as SurfaceCardRole} ref={ref} />,
     }),
   ]);
 

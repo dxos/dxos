@@ -10,6 +10,7 @@ import React, {
   Activity,
   type ComponentPropsWithoutRef,
   type MouseEvent,
+  forwardRef,
   useCallback,
   useLayoutEffect,
   useRef,
@@ -43,83 +44,89 @@ type TabsRootProps = ThemedClassName<TabsPrimitive.TabsProps> &
     defaultActivePart: TabsActivePart;
   }>;
 
-const TabsRoot = ({
-  children,
-  classNames,
-  activePart: propsActivePart,
-  onActivePartChange,
-  defaultActivePart,
-  value: propsValue,
-  onValueChange,
-  defaultValue,
-  orientation = 'vertical',
-  activationMode = 'manual',
-  verticalVariant = 'stateful',
-  attendableId,
-  ...props
-}: TabsRootProps) => {
-  // TODO(thure): Without these, we get Groupper/Mover `API used before initialization`, but why?
-  const _1 = useArrowNavigationGroup();
-  const _2 = useFocusableGroup();
-  const [activePart = 'list', setActivePart] = useControllableState({
-    prop: propsActivePart,
-    onChange: onActivePartChange,
-    defaultProp: defaultActivePart,
-  });
-
-  const [value, setValue] = useControllableState({
-    prop: propsValue,
-    onChange: onValueChange,
-    defaultProp: defaultValue,
-  });
-
-  const handleValueChange = useCallback(
-    (nextValue: string) => {
-      setActivePart('panel');
-      setValue(nextValue);
+const TabsRoot = forwardRef<HTMLDivElement, TabsRootProps>(
+  (
+    {
+      children,
+      classNames,
+      activePart: propsActivePart,
+      onActivePartChange,
+      defaultActivePart,
+      value: propsValue,
+      onValueChange,
+      defaultValue,
+      orientation = 'vertical',
+      activationMode = 'manual',
+      verticalVariant = 'stateful',
+      attendableId,
+      ...props
     },
-    [value],
-  );
+    forwardedRef,
+  ) => {
+    const tabsRoot = useRef<HTMLDivElement | null>(null);
 
-  const { findFirstFocusable } = useFocusFinders();
-  const tabsRoot = useRef<HTMLDivElement | null>(null);
+    // TODO(thure): Without these, we get Groupper/Mover `API used before initialization`, but why?
+    const _1 = useArrowNavigationGroup();
+    const _2 = useFocusableGroup();
+    const [activePart = 'list', setActivePart] = useControllableState({
+      prop: propsActivePart,
+      onChange: onActivePartChange,
+      defaultProp: defaultActivePart,
+    });
 
-  useLayoutEffect(() => {
-    if (tabsRoot.current) {
-      findFirstFocusable(tabsRoot.current)?.focus();
-    }
-  }, [activePart]);
+    const [value, setValue] = useControllableState({
+      prop: propsValue,
+      onChange: onValueChange,
+      defaultProp: defaultValue,
+    });
 
-  return (
-    <TabsContextProvider
-      orientation={orientation}
-      activePart={activePart}
-      setActivePart={setActivePart}
-      value={value}
-      attendableId={attendableId}
-      verticalVariant={verticalVariant}
-    >
-      <TabsPrimitive.Root
-        activationMode={activationMode}
-        data-active={activePart}
+    const handleValueChange = useCallback(
+      (nextValue: string) => {
+        setActivePart('panel');
+        setValue(nextValue);
+      },
+      [value],
+    );
+
+    const { findFirstFocusable } = useFocusFinders();
+
+    useLayoutEffect(() => {
+      if (tabsRoot.current) {
+        findFirstFocusable(tabsRoot.current)?.focus();
+      }
+    }, [activePart]);
+
+    return (
+      <TabsContextProvider
         orientation={orientation}
-        {...props}
+        activePart={activePart}
+        setActivePart={setActivePart}
         value={value}
-        onValueChange={handleValueChange}
-        className={mx(
-          'overflow-hidden',
-          orientation === 'vertical' &&
-            verticalVariant === 'stateful' &&
-            '[&[data-active=list]_[role=tabpanel]]:invisible @md:[&[data-active=list]_[role=tabpanel]]:visible',
-          classNames,
-        )}
-        ref={tabsRoot}
+        attendableId={attendableId}
+        verticalVariant={verticalVariant}
       >
-        {children}
-      </TabsPrimitive.Root>
-    </TabsContextProvider>
-  );
-};
+        <TabsPrimitive.Root
+          activationMode={activationMode}
+          data-active={activePart}
+          orientation={orientation}
+          {...props}
+          value={value}
+          onValueChange={handleValueChange}
+          className={mx(
+            'overflow-hidden',
+            orientation === 'vertical' &&
+              verticalVariant === 'stateful' &&
+              '[&[data-active=list]_[role=tabpanel]]:invisible @md:[&[data-active=list]_[role=tabpanel]]:visible',
+            classNames,
+          )}
+          ref={tabsRoot}
+        >
+          {children}
+        </TabsPrimitive.Root>
+      </TabsContextProvider>
+    );
+  },
+);
 
 type TabsViewportProps = ThemedClassName<ComponentPropsWithoutRef<'div'>>;
 

@@ -23,11 +23,12 @@ export default () =>
       role: 'navigation',
       filter: (data): data is { popoverAnchorId?: string; topbar: boolean; current: string } =>
         typeof data.current === 'string',
-      component: ({ data }) => (
+      component: ({ data, ref }) => (
         <NavTreeContainer
           tab={data.current}
           popoverAnchorId={data.popoverAnchorId as string | undefined}
           topbar={data.topbar as boolean}
+          ref={ref}
         />
       ),
     }),
