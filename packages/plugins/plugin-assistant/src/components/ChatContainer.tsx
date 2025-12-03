@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import React from 'react';
+import React, { forwardRef } from 'react';
 
 import { Capabilities } from '@dxos/app-framework';
 import { useCapability } from '@dxos/app-framework/react';
@@ -23,7 +23,8 @@ export type ChatContainerProps = {
   companionTo?: Obj.Any;
 } & Pick<ChatRootProps, 'onEvent'>;
 
-export const ChatContainer = ({ space: spaceProp, chat, companionTo, onEvent }: ChatContainerProps) => {
+export const ChatContainer = forwardRef<HTMLDivElement, ChatContainerProps>((props, forwardedRef) => {
+  const { space: spaceProp, chat, companionTo, onEvent } = props;
   const space = spaceProp ?? getSpace(chat);
   const settings = useCapability(Capabilities.SettingsStore).getStore<Assistant.Settings>(meta.id)?.value;
   const services = useChatServices({ space, chat });
@@ -44,7 +45,7 @@ export const ChatContainer = ({ space: spaceProp, chat, companionTo, onEvent }: 
   }
 
   return (
-    <StackItem.Content toolbar>
+    <StackItem.Content toolbar ref={forwardedRef}>
       <Chat.Root space={space} chat={chat} processor={processor} onEvent={onEvent}>
         <Chat.Toolbar companionTo={companionTo} />
         <Chat.Viewport classNames='container-max-width'>
@@ -56,6 +57,6 @@ export const ChatContainer = ({ space: spaceProp, chat, companionTo, onEvent }: 
       </Chat.Root>
     </StackItem.Content>
   );
-};
+});
 
 export default ChatContainer;
