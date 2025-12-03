@@ -9,6 +9,7 @@ import * as FileSystem from '@effect/platform/FileSystem';
 import * as NodeContext from '@effect/platform-node/NodeContext';
 import * as NodeRuntime from '@effect/platform-node/NodeRuntime';
 import * as Effect from 'effect/Effect';
+import * as path from 'node:path';
 
 import { ClientService, ConfigService } from '@dxos/client';
 import { ENV_DX_PROFILE_DEFAULT } from '@dxos/client-protocol';
@@ -120,10 +121,15 @@ const command = Command.make(
 
     log.info('exporting', { spaceId: space.id });
     const archive = yield* Effect.promise(() => space.internal.export());
-    log.info('exported', { spaceId: space.id, filename: archive.filename, contents: archive.contents.length });
 
     const fs = yield* FileSystem.FileSystem;
-    yield* fs.writeFile(archive.filename, archive.contents);
+    const out = path.join(path.dirname(filename), archive.filename);
+    yield* fs.writeFile(out, archive.contents);
+    log.info('exported', {
+      spaceId: space.id,
+      filename: out,
+      contents: archive.contents.length,
+    });
   }),
 ).pipe(Command.provide(ClientService.layer), Command.provide(ConfigService.layerMemory));
 
@@ -132,4 +138,9 @@ const cli = Command.run(command, {
   version: '20251117',
 });
 
+/**
+ * ```bash
+ * npx tsx ./scripts/20251117-migrate.ts <path-to-archive>
+ * ```
+ */
 cli(process.argv).pipe(Effect.provide(NodeContext.layer), NodeRuntime.runMain);
