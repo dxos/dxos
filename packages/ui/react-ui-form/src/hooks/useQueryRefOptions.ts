@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useState } from 'react';
 
 import { type DXN } from '@dxos/keys';
 import { log } from '@dxos/log';

@@ -7,7 +7,7 @@ import '@dxos/lit-ui/dx-tag-picker.pcss';
 import type * as Schema from 'effect/Schema';
 import React, { useCallback, useMemo } from 'react';
 
-import { Annotation, Ref, Type } from '@dxos/echo';
+import { Ref } from '@dxos/echo';
 import { ReferenceAnnotationId, type ReferenceAnnotationValue } from '@dxos/echo/internal';
 import { findAnnotation } from '@dxos/effect';
 import { DXN } from '@dxos/keys';
@@ -20,8 +20,6 @@ import { type QueryRefOptions, useQueryRefOptions } from '../../../hooks';
 import { translationKey } from '../../../translations';
 import { ObjectPicker } from '../../ObjectPicker';
 import { type FormFieldComponentProps, FormFieldLabel } from '../FormFieldComponent';
-
-import { TextField } from './TextField';
 
 // TODO(burdon): Factor out.
 const isRefSnapShot = (val: any): val is { '/': string } => {
