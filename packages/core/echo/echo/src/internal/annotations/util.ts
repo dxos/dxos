@@ -13,12 +13,14 @@ import { EntityKind } from '../types';
 
 export interface AnnotationHelper<T> {
   get: (schema: Schema.Schema.Any) => Option.Option<T>;
+  getFromAst: (ast: SchemaAST.AST) => Option.Option<T>;
   set: (value: T) => <S extends Schema.Schema.Any>(schema: S) => S;
 }
 
 export const createAnnotationHelper = <T>(id: symbol): AnnotationHelper<T> => {
   return {
     get: (schema) => SchemaAST.getAnnotation(schema.ast, id),
+    getFromAst: (ast) => SchemaAST.getAnnotation(ast, id),
     set:
       (value) =>
       <S extends Schema.Schema.Any>(schema: S) =>

@@ -7,7 +7,7 @@ import '@dxos/lit-ui/dx-tag-picker.pcss';
 import type * as Schema from 'effect/Schema';
 import React, { useCallback, useMemo } from 'react';
 
-import { Annotation, Ref, Type } from '@dxos/echo';
+import { Ref } from '@dxos/echo';
 import { ReferenceAnnotationId, type ReferenceAnnotationValue } from '@dxos/echo/internal';
 import { findAnnotation } from '@dxos/effect';
 import { DXN } from '@dxos/keys';
@@ -20,8 +20,6 @@ import { type QueryRefOptions, useQueryRefOptions } from '../../../hooks';
 import { translationKey } from '../../../translations';
 import { ObjectPicker } from '../../ObjectPicker';
 import { type FormFieldComponentProps, FormFieldLabel } from '../FormFieldComponent';
-
-import { TextField } from './TextField';
 
 // TODO(burdon): Factor out.
 const isRefSnapShot = (val: any): val is { '/': string } => {
@@ -40,7 +38,7 @@ export type RefFieldProps = FormFieldComponentProps & {
 
 export const RefField = (props: RefFieldProps) => {
   const {
-    ast,
+    type,
     readonly,
     label,
     placeholder,
@@ -60,18 +58,12 @@ export const RefField = (props: RefFieldProps) => {
   const { status, error } = getStatus();
 
   const typename = useMemo(
-    () => (ast ? findAnnotation<ReferenceAnnotationValue>(ast, ReferenceAnnotationId)?.typename : undefined),
-    [ast],
+    () => (type ? findAnnotation<ReferenceAnnotationValue>(type, ReferenceAnnotationId)?.typename : undefined),
+    [type],
   );
 
   // TODO(burdon): Query items on demand.
   const { options, update: updateOptions } = useQueryRefOptions({ typename, onQueryRefOptions });
-
-  // If ref type is expando, fall back to taking a DXN in string format.
-  // TODO(burdon): Why?
-  if (typename === Annotation.getTypeAnnotation(Type.Expando)?.typename || !onQueryRefOptions) {
-    return <RefFieldFallback {...props} />;
-  }
 
   const handleGetValue = useCallback(() => {
     const formValue = getValue();
@@ -103,7 +95,7 @@ export const RefField = (props: RefFieldProps) => {
   const handleUpdate = useCallback(
     (ids: string[]) => {
       if (ids.length === 0) {
-        onValueChange('object', undefined);
+        onValueChange(type, undefined);
         return;
       }
 
@@ -119,12 +111,12 @@ export const RefField = (props: RefFieldProps) => {
         .filter(isNonNullable);
 
       if (array) {
-        onValueChange('object', refs);
+        onValueChange(type, refs);
       } else {
-        onValueChange('object', refs[0]);
+        onValueChange(type, refs[0]);
       }
     },
-    [options, array, onValueChange],
+    [options, type, array, onValueChange],
   );
 
   const handleCreate = useCallback(
@@ -209,52 +201,5 @@ export const RefField = (props: RefFieldProps) => {
       </div>
       {layout === 'full' && <Input.DescriptionAndValidation>{error}</Input.DescriptionAndValidation>}
     </Input.Root>
-  );
-};
-
-const RefFieldFallback = ({
-  type,
-  label,
-  readonly,
-  layout,
-  placeholder,
-  getValue,
-  onValueChange,
-  ...restInputProps
-}: FormFieldComponentProps) => {
-  const handleOnValueChange = (_type: any, dxnString: string) => {
-    const dxn = DXN.tryParse(dxnString);
-    if (dxn) {
-      onValueChange?.('object', Ref.fromDXN(dxn));
-    } else if (dxnString === '') {
-      onValueChange?.('object', undefined);
-    } else {
-      onValueChange?.('string', dxnString);
-    }
-  };
-
-  const handleGetValue = () => {
-    const formValue = getValue();
-    if (typeof formValue === 'string') {
-      return formValue;
-    }
-    if (Ref.isRef(formValue)) {
-      return formValue.dxn.toString();
-    }
-
-    return undefined;
-  };
-
-  return (
-    <TextField
-      type={type}
-      readonly={readonly}
-      label={label}
-      placeholder={placeholder}
-      layout={layout}
-      getValue={handleGetValue as <V>() => V | undefined}
-      onValueChange={handleOnValueChange}
-      {...restInputProps}
-    />
   );
 };

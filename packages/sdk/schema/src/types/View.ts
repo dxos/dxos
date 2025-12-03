@@ -7,12 +7,12 @@ import * as Function from 'effect/Function';
 import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
+import * as String from 'effect/String';
 
 import { type Space } from '@dxos/client/echo';
-import { Filter, JsonSchema, Obj, Query, QueryAST, type SchemaRegistry, Type } from '@dxos/echo';
+import { Filter, Format, JsonSchema, Obj, Query, QueryAST, Ref, type SchemaRegistry, Type } from '@dxos/echo';
 import {
   FormInputAnnotation,
-  Format,
   JsonSchemaType,
   LabelAnnotation,
   ReferenceAnnotationId,
@@ -21,12 +21,20 @@ import {
   TypeEnum,
   toEffectSchema,
 } from '@dxos/echo/internal';
-import { type JsonPath, type JsonProp, findAnnotation } from '@dxos/effect';
+import {
+  type JsonPath,
+  type JsonProp,
+  findAnnotation,
+  getAnnotation,
+  getProperties,
+  isArrayType,
+  isNestedType,
+} from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
 import { type Live } from '@dxos/live-object';
 
-import { FieldSchema, FieldSortType, ProjectionModel, getSchemaProperties } from '../projection';
+import { FieldSchema, FieldSortType, ProjectionModel } from '../projection';
 import { createDefaultSchema, getSchema } from '../util';
 
 export const Projection = Schema.Struct({
@@ -104,7 +112,7 @@ export const make = ({
   queryRaw,
   jsonSchema,
   overrideSchema,
-  fields: include,
+  fields,
   pivotFieldName,
 }: MakeProps): Live<View> => {
   const view = Obj.make(View, {
@@ -118,26 +126,28 @@ export const make = ({
   const projection = new ProjectionModel(jsonSchema, view.projection);
   projection.normalizeView();
   const schema = toEffectSchema(jsonSchema);
-  const includeId = include?.find((field) => field === 'id') !== undefined;
-  const properties = getSchemaProperties(schema.ast, {}, { includeId });
+  const properties = getProperties(schema.ast);
   for (const property of properties) {
-    if (include && !include.includes(property.name)) {
+    const name = property.name.toString() as JsonProp;
+    const include = fields ? fields.includes(name) : name !== 'id';
+    if (!include) {
       continue;
     }
 
+    const format = Format.FormatAnnotation.getFromAst(property.type);
     // Omit objects from initial projection as they are difficult to handle automatically.
-    if (property.type === 'object' && !property.format) {
+    if ((isNestedType(property.type) && Option.isNone(format)) || isArrayType(property.type)) {
       continue;
     }
 
-    projection.showFieldProjection(property.name as JsonProp);
+    projection.showFieldProjection(name);
   }
 
   // Sort fields to match the order in the params.
-  if (include) {
+  if (fields) {
     view.projection.fields.sort((a, b) => {
-      const indexA = include.indexOf(a.path);
-      const indexB = include.indexOf(b.path);
+      const indexA = fields.indexOf(a.path);
+      const indexB = fields.indexOf(b.path);
       return indexA - indexB;
     });
   }
@@ -180,22 +190,23 @@ export const makeWithReferences = async ({
 
   const projection = new ProjectionModel(jsonSchema, view.projection);
   const schema = toEffectSchema(jsonSchema);
-  const includeId = fields?.find((field) => field === 'id') !== undefined;
-  const properties = getSchemaProperties(schema.ast, {}, { includeId });
+  const properties = getProperties(schema.ast);
   for (const property of properties) {
-    if (fields && !fields.includes(property.name)) {
+    const name = property.name.toString() as JsonProp;
+    const include = fields ? fields.includes(name) : name !== 'id';
+    if (!include) {
       continue;
     }
 
-    if (property.format !== Format.TypeFormat.Ref) {
+    if (!Ref.isRefType(property.type)) {
       continue;
     }
 
-    projection.showFieldProjection(property.name as JsonProp);
+    projection.showFieldProjection(name);
 
     await Effect.gen(function* () {
       const referenceDxn = yield* Function.pipe(
-        findAnnotation<ReferenceAnnotationValue>(property.ast, ReferenceAnnotationId),
+        findAnnotation<ReferenceAnnotationValue>(property.type, ReferenceAnnotationId),
         Option.fromNullable,
         Option.map((ref) => DXN.fromTypenameAndVersion(ref.typename, ref.version)),
       );
@@ -210,6 +221,7 @@ export const makeWithReferences = async ({
 
       if (referenceSchema && referencePath) {
         const fieldId = yield* Option.fromNullable(view.projection.fields?.find((f) => f.path === property.name)?.id);
+        const title = getAnnotation<string>(SchemaAST.TitleAnnotationId)(property.type) ?? String.capitalize(name);
         projection.setFieldProjection({
           field: {
             id: fieldId,
@@ -221,7 +233,7 @@ export const makeWithReferences = async ({
             type: TypeEnum.Ref,
             format: Format.TypeFormat.Ref,
             referenceSchema: Type.getTypename(referenceSchema),
-            title: property.title,
+            title,
           },
         });
       }

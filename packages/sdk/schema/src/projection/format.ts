@@ -16,6 +16,7 @@ export const BaseProperty = Schema.Struct({
     description: 'Property name',
   }),
 
+  // TODO(wittjosiah): Rename label?
   title: Schema.optional(
     Schema.String.annotations({
       title: 'Label',

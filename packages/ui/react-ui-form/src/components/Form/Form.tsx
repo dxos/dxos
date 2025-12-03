@@ -4,10 +4,11 @@
 
 import { createContext } from '@radix-ui/react-context';
 import * as Schema from 'effect/Schema';
+import type * as SchemaAST from 'effect/SchemaAST';
 import React, { type PropsWithChildren, useMemo, useRef } from 'react';
 
 import { type AnyProperties } from '@dxos/echo/internal';
-import { type SimpleType, createJsonPath, getValue as getValue$ } from '@dxos/effect';
+import { createJsonPath, getValue as getValue$ } from '@dxos/effect';
 import { IconButton, type IconButtonProps, ScrollArea, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
@@ -93,7 +94,7 @@ const useFormFieldState = (componentName: string, path: (string | number)[] = []
       getStatus: () => getStatus(stablePath),
       getValue: () => getValue(stablePath),
       onBlur: () => onBlur(stablePath),
-      onValueChange: (type: SimpleType, value: any) => onValueChange(stablePath, type, value),
+      onValueChange: (ast: SchemaAST.AST, value: any) => onValueChange(stablePath, ast, value),
     }),
     [getStatus, getValue, onBlur, onValueChange, stablePath],
   );
