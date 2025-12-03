@@ -26,8 +26,6 @@ const entryPoints = Object.fromEntries(
     .map((pkg) => [pkg, pkg]),
 );
 
-console.log(entryPoints);
-
 try {
   await fs.rm('./dist/vendor', { recursive: true });
 } catch {}
