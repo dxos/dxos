@@ -529,7 +529,7 @@ export class CoreDatabase {
     core.setDecoded([], newStruct);
   }
 
-  async flush({ disk = true, indexes = false, updates = false }: FlushOptions = {}): Promise<void> {
+  async flush({ disk = true, indexes = false, updates = false }: Database.FlushOptions = {}): Promise<void> {
     log('flush', { disk, indexes, updates });
     if (disk) {
       await this._repoProxy.flush();
@@ -961,26 +961,6 @@ export type AtomicReplaceObjectParams = {
    * Update object type.
    */
   type?: DXN;
-};
-
-export type FlushOptions = {
-  /**
-   * Write any pending changes to disk.
-   * @default true
-   */
-  disk?: boolean;
-
-  /**
-   * Wait for pending index updates.
-   * @default false
-   */
-  indexes?: boolean;
-
-  /**
-   * Flush pending updates to objects and queries.
-   * @default false
-   */
-  updates?: boolean;
 };
 
 const RPC_TIMEOUT = 20_000;

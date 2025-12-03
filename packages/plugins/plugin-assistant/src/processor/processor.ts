@@ -27,10 +27,10 @@ import {
 } from '@dxos/assistant';
 import { type Blueprint } from '@dxos/blueprints';
 import { Obj } from '@dxos/echo';
+import { type Database } from '@dxos/echo';
 import { throwCause } from '@dxos/effect';
 import {
   type CredentialsService,
-  type DatabaseService,
   type FunctionInvocationService,
   type QueueService,
   type TracingService,
@@ -44,7 +44,7 @@ import { updateName } from './update-name';
 
 export type AiChatServices =
   | CredentialsService
-  | DatabaseService
+  | Database.Service
   | QueueService
   | FunctionInvocationService
   | AiService.AiService

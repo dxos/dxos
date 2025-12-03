@@ -11,7 +11,8 @@ import { Capabilities, type PluginContext, contributes } from '@dxos/app-framewo
 import { GenericToolkit, makeToolExecutionServiceFromFunctions, makeToolResolverFromFunctions } from '@dxos/assistant';
 import { Resource } from '@dxos/context';
 import { Query, Ref } from '@dxos/echo';
-import { CredentialsService, DatabaseService, QueueService } from '@dxos/functions';
+import { Database } from '@dxos/echo';
+import { CredentialsService, QueueService } from '@dxos/functions';
 import {
   FunctionImplementationResolver,
   FunctionInvocationServiceLayerWithLocalLoopbackExecutor,
@@ -94,7 +95,7 @@ class ComputeRuntimeProviderImpl extends Resource implements AutomationCapabilit
                 ),
                 Layer.provideMerge(serviceLayer),
                 Layer.provideMerge(CredentialsService.layerFromDatabase()),
-                Layer.provideMerge(space ? DatabaseService.layer(space.db) : DatabaseService.notAvailable),
+                Layer.provideMerge(space ? Database.Service.layer(space.db) : Database.Service.notAvailable),
                 Layer.provideMerge(space ? QueueService.layer(space.queues) : QueueService.notAvailable),
               ),
             ),
@@ -112,7 +113,7 @@ class ComputeRuntimeProviderImpl extends Resource implements AutomationCapabilit
 
 const InvocationTracerLive = Layer.unwrapEffect(
   Effect.gen(function* () {
-    const objects = yield* DatabaseService.runQuery(Query.type(SpaceProperties));
+    const objects = yield* Database.Service.runQuery(Query.type(SpaceProperties));
     const [properties] = objects;
     invariant(properties);
     // TODO(burdon): Check ref target has loaded?

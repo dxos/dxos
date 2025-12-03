@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import { Filter, Query, Ref } from '@dxos/echo';
-import { DatabaseService } from '@dxos/functions';
+import { Database } from '@dxos/echo';
 import { Event, Person } from '@dxos/types';
 
 import { type GoogleCalendar } from '../../apis';
@@ -14,7 +14,7 @@ import { normalizeText } from '../../util';
 /**
  * Transforms Google Calendar event to ECHO event object.
  */
-export const mapEvent: (event: GoogleCalendar.Event) => Effect.Effect<Event.Event | null, never, DatabaseService> =
+export const mapEvent: (event: GoogleCalendar.Event) => Effect.Effect<Event.Event | null, never, Database.Service> =
   Effect.fn(function* (event: GoogleCalendar.Event) {
     // Skip cancelled events.
     if (event.status === 'cancelled') {
@@ -37,7 +37,7 @@ export const mapEvent: (event: GoogleCalendar.Event) => Effect.Effect<Event.Even
         }
       : undefined;
 
-    const contacts = yield* DatabaseService.runQuery(Query.select(Filter.type(Person.Person)));
+    const contacts = yield* Database.Service.runQuery(Query.select(Filter.type(Person.Person)));
 
     // Parse attendees.
     const attendees = (event.attendees || [])

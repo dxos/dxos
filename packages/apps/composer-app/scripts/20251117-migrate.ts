@@ -13,7 +13,7 @@ import * as Effect from 'effect/Effect';
 import { ClientService, ConfigService } from '@dxos/client';
 import { ENV_DX_PROFILE_DEFAULT } from '@dxos/client-protocol';
 import { Filter, Query, Ref, Type } from '@dxos/echo';
-import { DatabaseService, EchoDatabase } from '@dxos/echo-db';
+import { EchoDatabase } from '@dxos/echo-db';
 import { log } from '@dxos/log';
 import { Graph } from '@dxos/plugin-explorer/types';
 import { Kanban } from '@dxos/react-ui-kanban/types';
@@ -21,6 +21,7 @@ import { Map } from '@dxos/plugin-map/types';
 import { Masonry } from '@dxos/plugin-masonry/types';
 import { Table } from '@dxos/react-ui-table/types';
 import { View } from '@dxos/schema';
+import { Database } from '@dxos/echo';
 
 /**
  * Generic migration function for view types.
@@ -36,13 +37,13 @@ const migrateViewType = Effect.fn(function* (
     targetSchema: Type.getDXN(targetSchema)?.toString(),
   });
 
-  const objects = yield* DatabaseService.runQuery(
+  const objects = yield* Database.Service.runQuery(
     Query.select(Filter.type(currentSchema)).referencedBy(View.ViewV4, 'presentation'),
   );
 
   for (const object of objects) {
     const { name, presentation: ref, ...view } = object;
-    const presentation = yield* DatabaseService.load(ref);
+    const presentation = yield* Database.Service.load(ref);
     yield* Effect.promise(() =>
       (db as any)._coreDatabase.atomicReplaceObject(presentation.id, {
         data: {
@@ -113,8 +114,8 @@ const command = Command.make(
       migrateViewType(space.db, Masonry.MasonryV1, Masonry.Masonry),
       migrateViewType(space.db, Table.TableV1, Table.Table),
     ]).pipe(
-      Effect.andThen(() => DatabaseService.flush()),
-      Effect.provide(DatabaseService.layer(space.db)),
+      Effect.andThen(() => Database.Service.flush()),
+      Effect.provide(Database.Service.layer(space.db)),
     );
 
     log.info('exporting', { spaceId: space.id });

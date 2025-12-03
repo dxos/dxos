@@ -4,13 +4,12 @@
 
 import { type Client } from '@dxos/client';
 import { Obj, Ref } from '@dxos/echo';
-import { Function, type Script, getUserFunctionIdInMetadata, setUserFunctionIdInMetadata } from '@dxos/functions';
+import { Function, type Script, getUserFunctionIdInMetadata } from '@dxos/functions';
 import { bundleFunction } from '@dxos/functions-runtime/bundler';
-import { incrementSemverPatch, uploadWorkerFunction } from '@dxos/functions-runtime/edge';
+import { FunctionsServiceClient, incrementSemverPatch } from '@dxos/functions-runtime/edge';
 import { log } from '@dxos/log';
+import { Runtime } from '@dxos/protocols';
 import { type Space } from '@dxos/react-client/echo';
-
-import { updateFunctionMetadata } from './functions';
 
 export const isScriptDeployed = ({ script, fn }: { script: Script.Script; fn: any }): boolean => {
   const existingFunctionId = fn && getUserFunctionIdInMetadata(Obj.getMeta(fn));
@@ -50,26 +49,21 @@ export const deployScript = async ({
       throw buildResult.error || new Error('Bundle creation failed');
     }
 
-    const { functionId, version, meta } = await uploadWorkerFunction({
-      client,
+    const functionsServiceClient = FunctionsServiceClient.fromClient(client);
+    const newFunction = await functionsServiceClient.deploy({
+      // TODO(dmaretskyi): Space key or identity key.
       ownerPublicKey: space.key,
       version: fn ? incrementSemverPatch(fn.version) : '0.0.1',
       functionId: existingFunctionId,
       entryPoint: buildResult.entryPoint,
-      assets: { [buildResult.entryPoint]: buildResult.asset },
+      assets: buildResult.assets,
+      runtime: Runtime.WORKER_LOADER,
     });
 
-    if (functionId === undefined || version === undefined) {
-      throw new Error(`Upload didn't return expected data: ${JSON.stringify({ functionId, version })}`);
-    }
-
-    const storedFunction = createOrUpdateFunctionInSpace(space, fn, script, functionId, version);
+    const storedFunction = createOrUpdateFunctionInSpace(space, fn, script, newFunction);
     script.changed = false;
-    updateFunctionMetadata(script, storedFunction, meta, functionId);
 
-    setUserFunctionIdInMetadata(Obj.getMeta(storedFunction), functionId);
-
-    return { success: true, functionId };
+    return { success: true, functionId: getUserFunctionIdInMetadata(Obj.getMeta(storedFunction)) };
   } catch (err: any) {
     log.catch(err);
     return { success: false, error: err };
@@ -90,17 +84,13 @@ const createOrUpdateFunctionInSpace = (
   space: Space,
   fn: Function.Function | undefined,
   script: Script.Script,
-  functionId: string,
-  version: string,
+  newFunction: Function.Function,
 ): Function.Function => {
   if (fn) {
-    fn.name = script.name ?? 'New Function';
-    fn.version = version;
+    Function.setFrom(fn, newFunction);
     return fn;
   } else {
-    const fn = Function.make({ name: script.name ?? 'New Function', version, source: Ref.make(script) });
-    space.db.add(fn);
-    setUserFunctionIdInMetadata(Obj.getMeta(fn), functionId);
-    return fn;
+    newFunction.source = Ref.make(script);
+    return space.db.add(newFunction);
   }
 };

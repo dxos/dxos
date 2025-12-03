@@ -9,7 +9,8 @@ import * as Option from 'effect/Option';
 
 import { Template } from '@dxos/blueprints';
 import { Obj } from '@dxos/echo';
-import { DatabaseService, ObjectVersion } from '@dxos/echo-db';
+import { Database } from '@dxos/echo';
+import { ObjectVersion } from '@dxos/echo-db';
 import { type ObjectId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type ContentBlock, Message } from '@dxos/types';
@@ -33,7 +34,7 @@ export const formatSystemPrompt = ({
     const blueprintDefs = yield* Function.pipe(
       blueprints,
       Effect.forEach((blueprint) => Effect.succeed(blueprint.instructions)),
-      Effect.flatMap(Effect.forEach((template) => DatabaseService.loadOption(template.source))),
+      Effect.flatMap(Effect.forEach((template) => Database.Service.loadOption(template.source))),
       Effect.map(Array.filter(Option.isSome)),
       Effect.map(
         Array.map(
