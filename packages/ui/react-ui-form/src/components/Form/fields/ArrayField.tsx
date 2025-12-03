@@ -147,7 +147,7 @@ export const getDefaultValue = (ast?: SchemaAST.AST): any => {
       if (ast && isNestedType(ast)) {
         return {};
       } else {
-        throw new Error(`Unsupported type for default value: ${ast?._tag}`);
+        throw new Error(`Unsupported type: ${ast?._tag}`);
       }
     }
   }

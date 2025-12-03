@@ -2,9 +2,9 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { type ChangeEvent, useCallback } from 'react';
+import React, { useCallback } from 'react';
 
-import { Input } from '@dxos/react-ui';
+import { Input, type TextAreaProps } from '@dxos/react-ui';
 
 import { type FormFieldComponentProps, FormFieldWrapper } from '../FormFieldComponent';
 
@@ -16,8 +16,8 @@ export const TextAreaField = ({
   onBlur,
   ...props
 }: FormFieldComponentProps<string>) => {
-  const handleChange = useCallback(
-    (event: ChangeEvent<HTMLTextAreaElement>) => onValueChange(type, event.target.value),
+  const handleChange = useCallback<NonNullable<TextAreaProps['onChange']>>(
+    (event) => onValueChange(type, event.target.value),
     [type, onValueChange],
   );
 

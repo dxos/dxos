@@ -2,9 +2,9 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { type ChangeEvent, useCallback, useEffect, useRef } from 'react';
+import React, { useCallback, useEffect, useRef } from 'react';
 
-import { Input } from '@dxos/react-ui';
+import { Input, type TextAreaProps } from '@dxos/react-ui';
 
 import { type FormFieldComponentProps, FormFieldLabel } from '../FormFieldComponent';
 
@@ -43,8 +43,8 @@ export const MarkdownField = ({
     adjustHeight();
   }, [getValue(), adjustHeight]);
 
-  const handleChange = useCallback(
-    (event: ChangeEvent<HTMLTextAreaElement>) => onValueChange(type, event.target.value),
+  const handleChange = useCallback<NonNullable<TextAreaProps['onChange']>>(
+    (event) => onValueChange(type, event.target.value),
     [type, onValueChange],
   );
 

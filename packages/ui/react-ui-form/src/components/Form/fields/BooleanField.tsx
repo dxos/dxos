@@ -4,12 +4,15 @@
 
 import React, { useCallback } from 'react';
 
-import { Input } from '@dxos/react-ui';
+import { Input, type SwitchProps } from '@dxos/react-ui';
 
 import { type FormFieldComponentProps, FormFieldWrapper } from '../FormFieldComponent';
 
 export const BooleanField = ({ type, readonly, onValueChange, ...props }: FormFieldComponentProps<boolean>) => {
-  const handleChange = useCallback((value: boolean) => onValueChange(type, value), [type, onValueChange]);
+  const handleChange = useCallback<NonNullable<SwitchProps['onCheckedChange']>>(
+    (value) => onValueChange?.(type, value),
+    [type, onValueChange],
+  );
 
   return (
     <FormFieldWrapper<boolean> readonly={readonly} {...props}>
