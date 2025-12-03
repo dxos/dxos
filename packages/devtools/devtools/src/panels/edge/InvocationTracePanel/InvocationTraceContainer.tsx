@@ -180,7 +180,7 @@ const Selected: FC<{ span: InvocationSpan }> = ({ span }) => {
   const [activeTab, setActiveTab] = useState('input');
 
   const queue = span.invocationTraceQueue?.target;
-  const objects = useQuery(queue, Filter.type(TraceEvent));
+  const objects = useQuery(queue, Filter.everything());
 
   const contents = Array.head(objects).pipe(
     Option.getOrUndefined,

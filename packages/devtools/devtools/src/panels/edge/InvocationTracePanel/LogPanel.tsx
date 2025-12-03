@@ -16,30 +16,6 @@ export const LogPanel: FC<LogPanelProps> = ({ objects }) => {
       return [];
     }
 
-    const safeStringify = (value: any) => {
-      try {
-        if (value == null) {
-          return '';
-        }
-        const seen = new WeakSet();
-        return JSON.stringify(
-          value,
-          (key, val) => {
-            if (typeof val === 'object' && val !== null) {
-              if (seen.has(val)) {
-                return '[Circular]';
-              }
-              seen.add(val);
-            }
-            return val;
-          },
-          2,
-        );
-      } catch {
-        return '[Unserializable]';
-      }
-    };
-
     return objects.flatMap((event) =>
       event.logs.map((log, idx) => ({
         id: `${event.id}-${idx}`,
@@ -81,4 +57,28 @@ export const LogPanel: FC<LogPanelProps> = ({ objects }) => {
       </table>
     </div>
   );
+};
+
+const safeStringify = (value: any) => {
+  try {
+    if (value == null) {
+      return '';
+    }
+    const seen = new WeakSet();
+    return JSON.stringify(
+      value,
+      (key, val) => {
+        if (typeof val === 'object' && val !== null) {
+          if (seen.has(val)) {
+            return '[Circular]';
+          }
+          seen.add(val);
+        }
+        return val;
+      },
+      2,
+    );
+  } catch {
+    return '[Unserializable]';
+  }
 };
