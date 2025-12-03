@@ -12,6 +12,7 @@ import { useClient } from '@dxos/react-client';
 import { useSpaces } from '@dxos/react-client/echo';
 import { useFileDownload } from '@dxos/react-ui';
 import { DynamicTable, type TableFeatures, type TablePropertyDefinition } from '@dxos/react-ui-table';
+import { createFilename } from '@dxos/util';
 
 import { PanelContainer } from '../../../components';
 import { useDevtoolsDispatch } from '../../../hooks';
@@ -86,8 +87,7 @@ export const SpaceListPanel = ({ onSelect }: { onSelect?: (space: SpaceData | un
       const space = spaces.find((space) => space.id === spaceId)!;
       await space.waitUntilReady();
       const backupBlob = await exportData(space);
-      // TODO(wittjosiah): Factor out file name construction.
-      download(backupBlob, `${new Date().toISOString()}-${space.id}.json`);
+      download(backupBlob, createFilename({ parts: [space.id], ext: 'json' }));
     },
     [download, spaces],
   );
