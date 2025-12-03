@@ -6,13 +6,14 @@ import { type EditorView } from '@codemirror/view';
 import React, { forwardRef, useEffect, useImperativeHandle, useMemo } from 'react';
 
 import { type Live } from '@dxos/live-object';
-import { useDynamicRef, useThemeContext, useTranslation } from '@dxos/react-ui';
+import { type ThemedClassName, useDynamicRef, useThemeContext, useTranslation } from '@dxos/react-ui';
 import {
   type EditorMenuGroup,
   type EditorSelectionState,
   type EditorStateStore,
   type EditorToolbarState,
   type EditorViewMode,
+  type ThemeExtensionsOptions,
   type UseTextEditorProps,
   createBasicExtensions,
   createMarkdownExtensions,
@@ -25,6 +26,7 @@ import {
   stackItemContentEditorClassNames,
   useTextEditor,
 } from '@dxos/react-ui-editor';
+import { mx } from '@dxos/react-ui-theme';
 import { isTruthy } from '@dxos/util';
 
 import { useSelectCurrentThread } from '../../hooks';
@@ -32,7 +34,7 @@ import { meta } from '../../meta';
 
 import { type MarkdownEditorToolbarProps } from './MarkdownEditorToolbar';
 
-export type MarkdownEditorContentProps = {
+export type MarkdownEditorContentProps = ThemedClassName<{
   id: string;
   role?: string;
   viewMode?: EditorViewMode;
@@ -41,11 +43,27 @@ export type MarkdownEditorContentProps = {
   editorStateStore?: EditorStateStore;
   toolbarState?: Live<EditorToolbarState>;
   onLinkQuery?: (query?: string) => Promise<EditorMenuGroup[]>;
-} & (Pick<UseTextEditorProps, 'initialValue' | 'extensions'> & Pick<MarkdownEditorToolbarProps, 'onFileUpload'>);
+}> &
+  // prettier-ignore
+  Pick<UseTextEditorProps, 'initialValue' | 'extensions'> &
+  Pick<MarkdownEditorToolbarProps, 'onFileUpload'> &
+  Pick<ThemeExtensionsOptions, 'slots'>;
 
 export const MarkdownEditorContent = forwardRef<EditorView | null, MarkdownEditorContentProps>(
   (
-    { id, role, initialValue, editorStateStore, toolbarState, extensions, viewMode, scrollPastEnd, onFileUpload },
+    {
+      classNames,
+      id,
+      role,
+      viewMode,
+      initialValue,
+      editorStateStore,
+      toolbarState,
+      extensions,
+      scrollPastEnd,
+      slots = editorSlots,
+      onFileUpload,
+    },
     forwardedRef,
   ) => {
     const { t } = useTranslation(meta.id);
@@ -81,7 +99,7 @@ export const MarkdownEditorContent = forwardRef<EditorView | null, MarkdownEdito
           }),
           createThemeExtensions({
             themeMode,
-            slots: editorSlots,
+            slots,
             syntaxHighlighting: true,
           }),
           createMarkdownExtensions(),
@@ -116,7 +134,7 @@ export const MarkdownEditorContent = forwardRef<EditorView | null, MarkdownEdito
         role='none'
         ref={parentRef}
         data-testid='composer.markdownRoot'
-        className={stackItemContentEditorClassNames(role)}
+        className={mx(stackItemContentEditorClassNames(role), classNames)}
         data-popover-collision-boundary={true}
         {...focusAttributes}
       />
