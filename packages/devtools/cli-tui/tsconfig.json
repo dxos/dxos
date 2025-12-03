@@ -17,6 +17,9 @@
   ],
   "references": [
     {
+      "path": "../../common/util"
+    },
+    {
       "path": "../../sdk/client"
     },
     {

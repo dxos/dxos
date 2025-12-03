@@ -4551,6 +4551,9 @@ importers:
       '@dxos/client':
         specifier: workspace:*
         version: link:../../sdk/client
+      '@dxos/util':
+        specifier: workspace:*
+        version: link:../../common/util
       blessed:
         specifier: ^0.1.81
         version: 0.1.81

@@ -170,6 +170,7 @@ inputBox.on('submit', async (value) => {
   const assistantMessageIndex = messages.length - 1;
 
   try {
+    // TODO(burdon): Reuse our stack with conversation awareness (or use Effect).
     await streamOllamaResponse(
       prompt,
       (chunk) => {
@@ -320,7 +321,6 @@ screen.render();
 // Check Ollama server and show instructions.
 setTimeout(async () => {
   const ollamaAvailable = await checkOllamaServer();
-
   if (ollamaAvailable) {
     messages.push(
       '{green-fg}✓{/green-fg} Ollama server connected',

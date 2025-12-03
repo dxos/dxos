@@ -4,6 +4,8 @@
 
 import http from 'node:http';
 
+import { safeParseJson } from '@dxos/util';
+
 const OLLAMA_HOST = process.env.OLLAMA_HOST || 'localhost';
 const OLLAMA_PORT = parseInt(process.env.OLLAMA_PORT || '11434', 10);
 const DEFAULT_MODEL = process.env.OLLAMA_MODEL || 'llama3.2:latest';
@@ -54,7 +56,15 @@ export const streamOllamaResponse = async (
 
     const req = http.request(requestOptions, (res) => {
       if (res.statusCode !== 200) {
-        reject(new Error(`Ollama API error: ${res.statusCode} ${res.statusMessage}`));
+        // Read the error body for more details.
+        let errorBody = '';
+        res.on('data', (chunk: Buffer) => {
+          errorBody += chunk.toString();
+        });
+        const { error } = safeParseJson<any>(errorBody, {});
+        res.on('end', () => {
+          reject(new Error(`Ollama API error: [${res.statusCode} ${res.statusMessage}] ${error}`));
+        });
         return;
       }
 

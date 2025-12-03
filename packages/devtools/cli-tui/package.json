@@ -25,6 +25,7 @@
   "dependencies": {
     "@dxos/cli-base": "workspace:*",
     "@dxos/client": "workspace:*",
+    "@dxos/util": "workspace:*",
     "blessed": "^0.1.81",
     "jsdom": "^27.0.0",
     "node-fetch": "^2.6.0"
