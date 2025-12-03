@@ -10,7 +10,8 @@ import { isNode, trim } from '@dxos/util';
 
 import { bundleFunction, initializeBundler } from './bundler';
 
-describe('Bundler', () => {
+// SKipped because requies CDN
+describe.skip('Bundler', () => {
   beforeAll(async () => {
     if (!isNode()) {
       await initializeBundler({ wasmUrl });
