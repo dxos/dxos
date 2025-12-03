@@ -87,7 +87,7 @@ export const SurfaceInfo = forwardRef<HTMLElement, SurfaceInfoProps>(({ children
               </div>
             ) : (
               <span
-                className='absolute left-1 bottom-0 flex items-center p-1 text-green-500 opacity-80 hover:opacity-100 text-xl cursor-pointer pointer-events-auto'
+                className='absolute right-1 bottom-0 flex items-center p-1 text-green-500 opacity-80 hover:opacity-100 text-xl cursor-pointer pointer-events-auto'
                 title={info.id}
                 onPointerDown={(ev) => ev.stopPropagation()}
                 onClick={(ev) => {
