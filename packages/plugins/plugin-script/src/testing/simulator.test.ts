@@ -22,10 +22,14 @@ describe('Run script in sumulator', () => {
 
     const worker = new FunctionWorker({
       mainModule: buildResult.entryPoint,
-      modules: Record.map(buildResult.assets),
+      modules: Record.map(buildResult.assets, (contents) => ({
+        contents: contents as Uint8Array<ArrayBuffer>,
+        contentType: 'application/javascript',
+      })),
     });
 
     const result = await worker.invoke({ from: 'USD', to: 'EUR' });
+    console.log(result);
     expect(result).toBeGreaterThan(0);
     expect(result).toBeLessThan(100);
   });

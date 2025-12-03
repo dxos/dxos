@@ -26,7 +26,8 @@ export const PluginR2VendoredPackages = ({ url = DEFAULT_SCRIPT_PACKAGES_BUCKET 
       }
 
       return {
-        path: new URL(`${args.path}.mjs`, url).href,
+        // NOTE: Use .js extension for tsdown
+        path: new URL(`${args.path}.js`, url).href,
         namespace: 'http-url', // Uses http plugin.
       };
     });

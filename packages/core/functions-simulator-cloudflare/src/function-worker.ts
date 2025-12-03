@@ -73,16 +73,25 @@ export class FunctionWorker extends Resource {
       body: JSON.stringify(input),
     });
     const response = await this.#miniflare.dispatchFetch(request);
-    const envelope = (await response.json()) as EdgeEnvelope<unknown>;
-    if (envelope.success) {
-      return { _kind: 'success', result: envelope.data };
+    try {
+      const envelope = (await response.clone().json()) as EdgeEnvelope<unknown>;
+      if (envelope.success) {
+        return { _kind: 'success', result: envelope.data };
+      }
+      return {
+        _kind: 'error',
+        error: envelope.error ?? {
+          message: envelope.message,
+        },
+      };
+    } catch (err) {
+      return {
+        _kind: 'error',
+        error: {
+          message: (await response.text()).slice(0, 1024),
+        },
+      };
     }
-    return {
-      _kind: 'error',
-      error: envelope.error ?? {
-        message: envelope.message,
-      },
-    };
   }
 }
 
