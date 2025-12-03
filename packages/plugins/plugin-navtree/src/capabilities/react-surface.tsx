@@ -23,14 +23,16 @@ export default () =>
       role: 'navigation',
       filter: (data): data is { popoverAnchorId?: string; topbar: boolean; current: string } =>
         typeof data.current === 'string',
-      component: ({ data, ref }) => (
-        <NavTreeContainer
-          tab={data.current}
-          popoverAnchorId={data.popoverAnchorId as string | undefined}
-          topbar={data.topbar as boolean}
-          ref={ref}
-        />
-      ),
+      component: ({ data, ref }) => {
+        return (
+          <NavTreeContainer
+            tab={data.current}
+            popoverAnchorId={data.popoverAnchorId as string | undefined}
+            topbar={data.topbar as boolean}
+            ref={ref}
+          />
+        );
+      },
     }),
     createSurface({
       id: `${meta.id}/document-title`,

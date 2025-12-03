@@ -17,6 +17,7 @@ import React, {
 } from 'react';
 
 import { raise } from '@dxos/debug';
+import { log } from '@dxos/log';
 import { useDefaultValue } from '@dxos/react-hooks';
 import { byPosition } from '@dxos/util';
 
@@ -29,6 +30,8 @@ import { useCapabilities } from './useCapabilities';
 
 const DEFAULT_PLACEHOLDER = <Fragment />;
 
+const DEBUG = import.meta.env.VITE_DEBUG;
+
 export type SurfaceContext = Pick<SurfaceProps, 'id' | 'role' | 'data'>;
 
 // TODO(burdon): Use @radix-ui/react-context
@@ -39,16 +42,29 @@ const SurfaceContext: Context<SurfaceContext | undefined> = createContext<Surfac
  */
 const SurfaceContextProvider = memo(
   forwardRef<HTMLElement, SurfaceProps & { component: ComponentType<any> }>(
-    ({ id, role, data, limit, component: Component, ...rest }, forwardedRef) => {
+    ({ id, role, data, limit, fallback = DefaultFallback, component: Component, ...rest }, forwardedRef) => {
       const contextValue = useMemo(() => ({ id, role, data }), [id, role, data]);
 
-      // TODO(burdon): In production mode, remove SurfaceInfo wrapper.
+      // TODO(burdon): Remove from production build?
+      const active = DEBUG || '__DX_DEBUG__' in window;
+      if (active) {
+        return (
+          <ErrorBoundary data={data} fallback={fallback}>
+            <SurfaceContext.Provider value={contextValue}>
+              <SurfaceInfo ref={forwardedRef}>
+                <Component id={id} role={role} data={data} limit={limit} {...rest} />
+              </SurfaceInfo>
+            </SurfaceContext.Provider>
+          </ErrorBoundary>
+        );
+      }
+
       return (
-        <SurfaceContext.Provider value={contextValue}>
-          <SurfaceInfo ref={forwardedRef}>
-            <Component id={id} role={role} data={data} limit={limit} {...rest} />
-          </SurfaceInfo>
-        </SurfaceContext.Provider>
+        <ErrorBoundary data={data} fallback={fallback}>
+          <SurfaceContext.Provider value={contextValue}>
+            <Component id={id} role={role} data={data} limit={limit} {...rest} ref={forwardedRef} />
+          </SurfaceContext.Provider>
+        </ErrorBoundary>
       );
     },
   ),
@@ -65,44 +81,41 @@ export const useSurface = (): SurfaceContext => {
  * A surface is a named region of the screen that can be populated by plugins.
  */
 export const Surface: NamedExoticComponent<SurfaceProps & RefAttributes<HTMLElement>> = memo(
-  forwardRef(
-    (
-      { id: _id, role, data: dataParam, limit, fallback = DefaultFallback, placeholder = DEFAULT_PLACEHOLDER, ...rest },
-      forwardedRef,
-    ) => {
-      const data = useDefaultValue(dataParam, () => ({}));
+  forwardRef(({ id: _id, role, data: dataParam, limit, placeholder = DEFAULT_PLACEHOLDER, ...rest }, forwardedRef) => {
+    const data = useDefaultValue(dataParam, () => ({}));
 
-      // TODO(wittjosiah): This will make all surfaces depend on a single signal.
-      //   This isn't ideal because it means that any change to the data will cause all surfaces to re-render.
-      //   This effectively means that plugin modules which contribute surfaces need to all be activated at startup.
-      //   This should be fine for now because it's how it worked prior to capabilities api anyway.
-      //   In the future, it would be nice to be able to bucket the surface contributions by role.
-      const surfaces = useSurfaces();
+    // TODO(wittjosiah): This will make all surfaces depend on a single signal.
+    //   This isn't ideal because it means that any change to the data will cause all surfaces to re-render.
+    //   This effectively means that plugin modules which contribute surfaces need to all be activated at startup.
+    //   This should be fine for now because it's how it worked prior to capabilities api anyway.
+    //   In the future, it would be nice to be able to bucket the surface contributions by role.
+    const surfaces = useSurfaces();
 
-      // NOTE: Memoizing the candidates makes the surface not re-render based on reactivity within data.
-      const definitions = findCandidates(surfaces, { role, data });
-      const candidates = limit ? definitions.slice(0, limit) : definitions;
-      const nodes = candidates.map(({ id, component }) => (
-        <SurfaceContextProvider
-          key={id}
-          id={id}
-          role={role}
-          data={data}
-          limit={limit}
-          component={component}
-          ref={forwardedRef}
-          {...rest}
-        />
-      ));
+    // NOTE: Memoizing the candidates makes the surface not re-render based on reactivity within data.
+    const definitions = findCandidates(surfaces, { role, data });
+    const candidates = limit ? definitions.slice(0, limit) : definitions;
+    if (DEBUG && candidates.length === 0) {
+      log.warn('no candidates for surface', { role, data });
+      return null;
+    }
 
-      // TODO(burdon): Wrap each component with an error boundary.
-      return (
-        <ErrorBoundary data={data} fallback={fallback}>
-          <Suspense fallback={placeholder}>{nodes}</Suspense>
-        </ErrorBoundary>
-      );
-    },
-  ),
+    return (
+      <Suspense fallback={placeholder}>
+        {candidates.map(({ id, component }) => (
+          <SurfaceContextProvider
+            key={id}
+            id={id}
+            role={role}
+            data={data}
+            limit={limit}
+            component={component}
+            ref={forwardedRef}
+            {...rest}
+          />
+        ))}
+      </Suspense>
+    );
+  }),
 );
 
 Surface.displayName = 'Surface';

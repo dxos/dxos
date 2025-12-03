@@ -18,8 +18,6 @@ export type SurfaceInfoProps = {
  * Debug wrapper for surfaces.
  */
 export const SurfaceInfo = forwardRef<HTMLElement, SurfaceInfoProps>(({ children }, forwardedRef) => {
-  // TODO(burdon): Standardize/document.
-  const active = import.meta.env.VITE_DEBUG || '__DX_DEBUG__' in window;
   const [rect, setRect] = useState<DOMRect | null>(null);
   const [expand, setExpand] = useState(false);
   const info = useSurface();
@@ -30,7 +28,7 @@ export const SurfaceInfo = forwardRef<HTMLElement, SurfaceInfoProps>(({ children
   const childWithRef = cloneElement(children, { ref: mergedRef });
 
   useLayoutEffect(() => {
-    if (!active || !root) {
+    if (!root) {
       setRect(null);
       return;
     }
@@ -50,15 +48,11 @@ export const SurfaceInfo = forwardRef<HTMLElement, SurfaceInfoProps>(({ children
         observer.disconnect();
       },
     );
-  }, [root, active]);
-
-  if (!active) {
-    return null;
-  }
+  }, [root]);
 
   const padding = 0;
   return (
-    <div className='contents'>
+    <>
       {childWithRef}
       {rect &&
         createPortal(
@@ -100,6 +94,6 @@ export const SurfaceInfo = forwardRef<HTMLElement, SurfaceInfoProps>(({ children
           // TODO(burdon): Create well-known element to gather all debug portals.
           document.body,
         )}
-    </div>
+    </>
   );
 });
