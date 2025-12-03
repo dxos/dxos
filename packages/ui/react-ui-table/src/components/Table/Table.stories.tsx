@@ -112,9 +112,9 @@ const DefaultStory = () => {
         <TableComponent.Root>
           <TableComponent.Main
             ref={tableRef}
+            schema={schema}
             model={model}
             presentation={presentation}
-            schema={schema}
             ignoreAttention
           />
         </TableComponent.Root>

@@ -10,11 +10,10 @@ import * as DateUtil from './date';
 import * as NumberUtil from './number';
 import * as ObjectUtil from './object';
 import * as StringUtil from './string';
-import { TypeFormat as TypeFormatEnum } from './types';
+import { TypeFormat as TypeFormat$ } from './types';
 
-// TODO(burdon): Consider factoring out to separate `@dxos/json-schema`
 // TODO(burdon): Media encoding.
-//  - https://json-schema.org/understanding-json-schema/reference/non_json_data
+// - https://json-schema.org/understanding-json-schema/reference/non_json_data
 
 /**
  * Formats.
@@ -23,9 +22,9 @@ import { TypeFormat as TypeFormatEnum } from './types';
  */
 // TODO(burdon): Add fields for `examples`, `message`, etc.
 export namespace Format {
-  export import TypeFormat = TypeFormatEnum;
+  export import TypeFormat = TypeFormat$;
 
-  // Strings
+  // String
   export const DXN = Keys.DXN.Schema;
   export const Email = StringUtil.Email;
   export const Formula = StringUtil.Formula;
@@ -44,12 +43,12 @@ export namespace Format {
   export const Timestamp = NumberUtil.Timestamp;
 
   // Dates and times
-  export const DateTime = DateUtil.DateTime;
   export const Date = DateUtil.DateOnly;
-  export const Time = DateUtil.TimeOnly;
+  export const DateTime = DateUtil.DateTime;
   export const Duration = DateUtil.Duration;
+  export const Time = DateUtil.TimeOnly;
 
   // Objects
   export const GeoPoint = ObjectUtil.GeoPoint;
-  export type GeoPoint = ObjectUtil.GeoPoint;
+  export type GeoPoint = ObjectUtil.GeoPoint; // TODO(burdon): Export types.
 }

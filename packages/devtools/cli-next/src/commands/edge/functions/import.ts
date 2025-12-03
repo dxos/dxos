@@ -26,7 +26,7 @@ export const importCommand = Command.make(
       const client = yield* ClientService;
 
       // TODO(dmaretskyi): Extract.
-      client.addTypes([Function.Function]);
+      yield* Effect.promise(() => client.addTypes([Function.Function]));
 
       // Produce normalized in-memory FunctionType objects for display.
       const fns = yield* Effect.promise(() => getDeployedFunctions(client));

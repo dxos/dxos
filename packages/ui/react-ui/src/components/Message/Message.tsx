@@ -53,6 +53,7 @@ const MessageRoot = forwardRef<HTMLDivElement, MessageRootProps>(
     const descriptionId = useId('message__description', propsDescriptionId);
     const elevation = useElevationContext(propsElevation);
     const Root = asChild ? Slot : Primitive.div;
+
     return (
       <MessageProvider {...{ titleId, descriptionId, valence }}>
         <Root
@@ -84,6 +85,7 @@ const MessageTitle = forwardRef<HTMLHeadingElement, MessageTitleProps>(
     const { tx } = useThemeContext();
     const { titleId, valence } = useMessageContext(MESSAGE_TITLE_NAME);
     const Root = asChild ? Slot : Primitive.h2;
+
     return (
       <Root
         {...props}

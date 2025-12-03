@@ -15,26 +15,26 @@ export const GeoPointField = ({
   type,
   label,
   readonly,
+  layout,
   getStatus,
   getValue,
   onValueChange,
   onBlur,
-}: FormFieldComponentProps) => {
+}: FormFieldComponentProps<GeoPoint>) => {
   const { t } = useTranslation(translationKey);
   const { status, error } = getStatus();
-  const geoPoint = useMemo<GeoPoint>(() => getValue<GeoPoint>() ?? [0, 0], [getValue]);
-  const geoLocation = useMemo(() => GeoLocation.fromGeoPoint(geoPoint), [geoPoint]);
+  const geoPoint = useMemo<GeoPoint>(() => getValue() ?? [0, 0], [getValue]);
+  const value = useMemo(() => GeoLocation.fromGeoPoint(geoPoint), [geoPoint]);
 
-  const [longitudeText, setLongitudeText] = useState(geoLocation.longitude?.toString());
-  const [latitudeText, setLatitudeText] = useState(geoLocation.latitude?.toString());
-
+  const [longitudeText, setLongitudeText] = useState(value.longitude?.toString());
+  const [latitudeText, setLatitudeText] = useState(value.latitude?.toString());
   useEffect(() => {
     const location = GeoLocation.fromGeoPoint(geoPoint);
-    setLongitudeText(location.longitude.toString());
-    setLatitudeText(location.latitude.toString());
+    setLongitudeText(location.longitude?.toString());
+    setLatitudeText(location.latitude?.toString());
   }, [geoPoint]);
 
-  const handleCoordinateChange = useCallback(
+  const handleChange = useCallback(
     (coordinateType: keyof Pick<GeoLocation, 'longitude' | 'latitude'>, setText: (text: string) => void) =>
       (event: ChangeEvent<HTMLInputElement>) => {
         const inputText = event.target.value;
@@ -42,47 +42,79 @@ export const GeoPointField = ({
         if (inputText !== '' && inputText !== '-') {
           const coord = safeParseFloat(inputText);
           if (coord !== undefined && !isNaN(coord)) {
-            const currentLocation = GeoLocation.fromGeoPoint(getValue<GeoPoint>() ?? [0, 0]);
+            const currentLocation = GeoLocation.fromGeoPoint(getValue() ?? [0, 0]);
             const newLocation = { ...currentLocation, [coordinateType]: coord };
             const newValue = GeoLocation.toGeoPoint(newLocation);
             onValueChange(type, newValue);
           }
         }
       },
-    [getValue, onValueChange, type],
+    [type, getValue, onValueChange],
   );
+
+  if ((readonly || layout === 'static') && !value?.latitude && !value?.longitude) {
+    return null;
+  }
 
   return (
     <Input.Root validationValence={status}>
-      <FormFieldLabel error={error} readonly={readonly} label={label} />
-      <div role='none' className='grid grid-cols-2 gap-2'>
-        <div role='none'>
-          <Input.Label>{t('latitude label')}</Input.Label>
-          <Input.TextInput
-            type='number'
-            step='0.00001'
-            min='-90'
-            max='90'
-            disabled={!!readonly}
-            value={latitudeText}
-            onChange={handleCoordinateChange('latitude', setLatitudeText)}
-            onBlur={onBlur}
-          />
+      {layout !== 'inline' && <FormFieldLabel error={error} readonly={readonly} label={label} asChild />}
+      {layout === 'static' ? (
+        <LatLng {...value} />
+      ) : (
+        <div role='none' className='grid grid-cols-2 gap-2'>
+          <div>
+            <Input.Root>
+              {layout !== 'inline' && <Input.Label>{t('latitude label')}</Input.Label>}
+              <Input.TextInput
+                type='number'
+                step='0.00001'
+                min='-90'
+                max='90'
+                disabled={!!readonly}
+                placeholder={t('latitude placeholder')}
+                value={latitudeText ?? ''}
+                onChange={handleChange('latitude', setLatitudeText)}
+                onBlur={onBlur}
+              />
+            </Input.Root>
+          </div>
+          <div>
+            <Input.Root>
+              {layout !== 'inline' && <Input.Label>{t('longitude label')}</Input.Label>}
+              <Input.TextInput
+                type='number'
+                step='0.00001'
+                min='-180'
+                max='180'
+                disabled={!!readonly}
+                placeholder={t('longitude placeholder')}
+                value={longitudeText ?? ''}
+                onChange={handleChange('longitude', setLongitudeText)}
+                onBlur={onBlur}
+              />
+            </Input.Root>
+          </div>
         </div>
-        <div role='none'>
-          <Input.Label>{t('longitude label')}</Input.Label>
-          <Input.TextInput
-            type='number'
-            step='0.00001'
-            min='-180'
-            max='180'
-            disabled={!!readonly}
-            value={longitudeText}
-            onChange={handleCoordinateChange('longitude', setLongitudeText)}
-            onBlur={onBlur}
-          />
-        </div>
-      </div>
+      )}
     </Input.Root>
+  );
+};
+
+const LatLng = ({ latitude = 0, longitude = 0 }: GeoLocation) => {
+  const latHem = latitude >= 0 ? 'N' : 'S';
+  const lngHem = longitude >= 0 ? 'E' : 'W';
+
+  return (
+    <span className='inline-flex items-center gap-1'>
+      <span>
+        <span>{Math.abs(latitude).toFixed(5)}</span>
+        <span className='text-subdued'>°{latHem}</span>
+      </span>
+      <span>
+        <span>{Math.abs(longitude).toFixed(5)}</span>
+        <span className='text-subdued'>°{lngHem}</span>
+      </span>
+    </span>
   );
 };

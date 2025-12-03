@@ -21,6 +21,9 @@ import { type ObjectGenerator, createGenerator, staticGenerators } from './Objec
 import { generator } from './presets';
 import { SchemaTable } from './SchemaTable';
 
+const staticTypes = [Markdown.Document, Diagram.Diagram, Sheet.Sheet, ComputeGraph]; // TODO(burdon): Make extensible.
+const recordTypes = [Organization.Organization, Person.Person, Task.Task];
+
 export type SpaceGeneratorProps = {
   space: Space;
   onCreateObjects?: (objects: Obj.Any[]) => void;
@@ -29,17 +32,19 @@ export type SpaceGeneratorProps = {
 export const SpaceGenerator = ({ space, onCreateObjects }: SpaceGeneratorProps) => {
   const { dispatchPromise: dispatch } = useIntentDispatcher();
   const client = useClient();
-  const staticTypes = [Markdown.Document, Diagram.Diagram, Sheet.Sheet, ComputeGraph]; // TODO(burdon): Make extensible.
-  const recordTypes = [Organization.Organization, Person.Person, Task.Task];
   const [count, setCount] = useState(1);
   const [info, setInfo] = useState<any>({});
   const presets = useMemo(() => generator(), []);
 
+  // Register types.
+  useAsyncEffect(async () => {
+    await client.addTypes([...staticTypes, ...recordTypes, ...presets.schemas]);
+  }, [client]);
+
   // Create type generators.
   const typeMap = useMemo(() => {
-    client.addTypes([...staticTypes, ...recordTypes, ...presets.schemas]);
     const recordGenerators = new Map<string, ObjectGenerator<any>>(
-      recordTypes.map((type) => [type.typename, createGenerator(client, dispatch, type as any)]),
+      recordTypes.map((type) => [type.typename, createGenerator(client, dispatch, type)]),
     );
 
     return new Map([...staticGenerators, ...presets.items, ...recordGenerators]);

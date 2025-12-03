@@ -7,62 +7,48 @@ const path = require('path');
 
 async function activate(context) {
   const command = vscode.commands.registerCommand('fileTemplates.newFromTemplate', async (uri) => {
+    // Load templates.
     const templatesDir = path.join(context.extensionPath, 'templates');
-
-    // Load template files ending in .tpl
     const templates = fs.readdirSync(templatesDir).filter((f) => f.endsWith('.tpl'));
-
     if (templates.length === 0) {
       vscode.window.showErrorMessage('No templates found in templates/ directory.');
       return;
     }
 
-    // Prompt user to pick a template
+    // Select template.
     const chosen = await vscode.window.showQuickPick(templates, {
       placeHolder: 'Select a template',
     });
-    if (!chosen) return;
+    if (!chosen) {
+      return;
+    }
 
-    // Ask for name variable
+    // Enter name.
     const name = await vscode.window.showInputBox({
       prompt: 'Enter name',
     });
-    if (!name) return;
+    if (!name) {
+      return;
+    }
 
-    // Load template file content
+    // Load template file content and replace ${name}.
     const templatePath = path.join(templatesDir, chosen);
-    const content = fs.readFileSync(templatePath, 'utf8');
-
-    // Replace ${name}
-    const finalContent = content.replace(/\$\{name\}/g, name);
-
-    // Example:
-    // "Component.stories.tsx.tpl" → basename → "Component.stories.tsx.tpl"
-    const basename = path.basename(chosen);
+    const template = fs.readFileSync(templatePath, 'utf8');
+    const content = template.replace(/\$\{name\}/g, name);
 
     // Strip .tpl → "Component.stories.tsx"
+    const basename = path.basename(chosen);
     const templateBase = basename.replace(/\.tpl$/, '');
-
-    // Replace everything before the first "." → "MyButton.stories.tsx"
     const outputFilename = templateBase.replace(/^[^.]+/, name);
 
-    // ----------------------------
-    // Directory resolution
-    // Priority:
-    // 1) Explorer clicked folder (uri)
-    // 2) Active editor dir
-    // 3) Workspace root
-    // ----------------------------
-
     const workspaceFolder = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
-
     const active = vscode.window.activeTextEditor;
-    let baseDir;
 
+    let baseDir;
     if (uri && uri.fsPath) {
       const stat = fs.statSync(uri.fsPath);
-      // If user clicked a folder → use it
-      // If user clicked a file → use its parent
+      // If user clicked a folder → use it.
+      // If user clicked a file → use its parent.
       baseDir = stat.isDirectory() ? uri.fsPath : path.dirname(uri.fsPath);
     } else if (active) {
       baseDir = path.dirname(active.document.uri.fsPath);
@@ -75,16 +61,15 @@ async function activate(context) {
       return;
     }
 
-    // Full output path
+    // Full output path.
     const outFile = path.join(baseDir, outputFilename);
 
-    // Write file
-    fs.writeFileSync(outFile, finalContent, 'utf8');
+    // Write file.
+    fs.writeFileSync(outFile, content, 'utf8');
 
-    // Open generated file in editor
+    // Open generated file in editor.
     const doc = await vscode.workspace.openTextDocument(outFile);
     vscode.window.showTextDocument(doc);
-
     vscode.window.showInformationMessage(`Created: ${outFile}`);
   });
 

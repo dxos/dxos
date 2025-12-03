@@ -9,10 +9,12 @@ import * as StringEffect from 'effect/String';
 import React, { useMemo } from 'react';
 
 import { Format } from '@dxos/echo';
+import { type AnyProperties } from '@dxos/echo/internal';
 import { createJsonPath, findNode, getDiscriminatedType, isDiscriminatedUnion } from '@dxos/effect';
-import { mx } from '@dxos/react-ui-theme';
+import { useTranslation } from '@dxos/react-ui';
 import { type ProjectionModel, type SchemaProperty } from '@dxos/schema';
 
+import { translationKey } from '../../translations';
 import { getRefProps } from '../../util';
 
 import {
@@ -24,22 +26,23 @@ import {
   RefField,
   type RefFieldProps,
   SelectField,
+  TextAreaField,
   TextField,
 } from './fields';
+import { useFormFieldState } from './Form';
 import {
   type FormFieldComponent,
   type FormFieldComponentProps,
-  type FormFieldLookup,
   type FormFieldMap,
+  type FormFieldProvider,
 } from './FormFieldComponent';
 import { FormFieldSet } from './FormFieldSet';
-import { useFormFieldState } from './FormRoot';
 
-export type FormFieldProps = {
+export type FormFieldProps<T extends AnyProperties> = {
   /**
    * Property to render.
    */
-  property: SchemaProperty<any>;
+  property: SchemaProperty<T>;
 
   /**
    * Path to the current object from the root. Used with nested forms.
@@ -60,16 +63,12 @@ export type FormFieldProps = {
   /**
    * Function to lookup custom renderers for specific properties.
    */
-  fieldProvider?: FormFieldLookup;
-
-  /**
-   * Indicates input used in a list.
-   */
-  // TODO(burdon): Rename listItem?
-  inline?: boolean;
+  fieldProvider?: FormFieldProvider;
 } & Pick<
   RefFieldProps,
+  | 'autoFocus'
   | 'readonly'
+  | 'layout'
   | 'createSchema'
   | 'createOptionLabel'
   | 'createOptionIcon'
@@ -78,37 +77,39 @@ export type FormFieldProps = {
   | 'onQueryRefOptions'
 >;
 
-export const FormField = ({
+export const FormField = <T extends AnyProperties>({
   property,
   path,
   projection,
   fieldMap,
   fieldProvider,
-  inline,
   readonly,
+  layout,
   createSchema,
   createOptionLabel,
   createOptionIcon,
   createInitialValuePath,
   onCreate,
   onQueryRefOptions,
-}: FormFieldProps) => {
+}: FormFieldProps<T>) => {
+  const { t } = useTranslation(translationKey);
   const { ast, name, type, format, array, options, title, description, examples } = property;
 
   const label = useMemo(() => title ?? Function.pipe(name, StringEffect.capitalize), [title, name]);
   const placeholder = useMemo(
-    () => (examples?.length ? `Example: "${examples[0]}"` : description),
-    [examples, description],
+    () => (examples?.length ? `${t('example placeholder')}: ${examples[0]}` : (description ?? label)),
+    [examples, description, label],
   );
 
   const fieldState = useFormFieldState(FormField.displayName, path);
   const fieldProps: FormFieldComponentProps = {
+    ast,
     type,
     format,
+    readonly,
     label,
     placeholder,
-    readonly,
-    inputOnly: inline,
+    layout,
     ...fieldState,
   };
 
@@ -134,7 +135,15 @@ export const FormField = ({
 
   if (array) {
     return (
-      <ArrayField fieldProps={fieldState} property={property} path={path} readonly={readonly} fieldMap={fieldMap} />
+      <ArrayField
+        fieldProps={fieldState}
+        property={property}
+        path={path}
+        readonly={readonly}
+        layout={layout}
+        fieldMap={fieldMap}
+        fieldProvider={fieldProvider}
+      />
     );
   }
 
@@ -196,21 +205,20 @@ export const FormField = ({
     if (typeLiteral) {
       const schema = Schema.make(typeLiteral);
       return (
-        <>
-          {!inline && <h3 className={mx('text-lg mlb-inputSpacingBlock first:mbs-0')}>{label}</h3>}
-          <FormFieldSet
-            schema={schema}
-            path={path}
-            readonly={readonly}
-            projection={projection}
-            fieldMap={fieldMap}
-            fieldProvider={fieldProvider}
-            createOptionLabel={createOptionLabel}
-            createOptionIcon={createOptionIcon}
-            onCreate={onCreate}
-            onQueryRefOptions={onQueryRefOptions}
-          />
-        </>
+        <FormFieldSet
+          schema={schema}
+          path={path}
+          readonly={readonly}
+          layout={layout}
+          label={label}
+          projection={projection}
+          fieldMap={fieldMap}
+          fieldProvider={fieldProvider}
+          createOptionLabel={createOptionLabel}
+          createOptionIcon={createOptionIcon}
+          onCreate={onCreate}
+          onQueryRefOptions={onQueryRefOptions}
+        />
       );
     }
   }
@@ -227,6 +235,19 @@ const getFormField = (property: SchemaProperty<any>): FormFieldComponent | undef
   const { type, format } = property;
 
   //
+  // Standard formats.
+  //
+
+  switch (format) {
+    case Format.TypeFormat.GeoPoint:
+      return GeoPointField;
+    case Format.TypeFormat.Markdown:
+      return MarkdownField;
+    case Format.TypeFormat.Text:
+      return TextAreaField;
+  }
+
+  //
   // Standard types.
   //
 
@@ -237,16 +258,5 @@ const getFormField = (property: SchemaProperty<any>): FormFieldComponent | undef
       return NumberField;
     case 'boolean':
       return BooleanField;
-  }
-
-  //
-  // Standard formats.
-  //
-
-  switch (format) {
-    case Format.TypeFormat.GeoPoint:
-      return GeoPointField;
-    case Format.TypeFormat.Markdown:
-      return MarkdownField;
   }
 };
