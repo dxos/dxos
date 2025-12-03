@@ -23,7 +23,7 @@ export const mapMessage = Effect.fn(function* (message: GoogleMail.Message) {
   const contacts = yield* DatabaseService.runQuery(Query.select(Filter.type(Person.Person)));
   const contact =
     from &&
-    contacts?.find(({ emails }) => {
+    contacts.find(({ emails }) => {
       if (!emails) {
         return false;
       }
