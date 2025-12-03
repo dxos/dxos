@@ -170,7 +170,7 @@ inputBox.on('submit', async (value) => {
   const assistantMessageIndex = messages.length - 1;
 
   try {
-    // TODO(burdon): Reuse our stack with conversation awareness (or use Effect).
+    // TODO(burdon): Use @dxos/assistant AiConversation.
     await streamOllamaResponse(
       prompt,
       (chunk) => {
