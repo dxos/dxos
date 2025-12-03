@@ -93,7 +93,7 @@
   },
   "devDependencies": {
     "@dxos/types": "workspace:*",
-    "wrangler": "^3.80.3"
+    "wrangler": "^4.51.0"
   },
   "publishConfig": {
     "access": "public"
