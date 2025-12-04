@@ -405,6 +405,11 @@
         },
         {
           "type": "json",
+          "path": "packages/devtools/cli-tui/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/devtools/devtools/package.json",
           "jsonpath": "$.version"
         },
@@ -441,16 +446,6 @@
         {
           "type": "json",
           "path": "packages/experimental/env-tests/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/experimental/metagraph/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/experimental/react-metagraph/package.json",
           "jsonpath": "$.version"
         },
         {
