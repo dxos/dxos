@@ -5,8 +5,8 @@
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
-import { defineFunction } from '@dxos/functions';
 import { Database, Filter, Query } from '@dxos/echo';
+import { defineFunction } from '@dxos/functions';
 
 export default defineFunction({
   key: 'example.org/function/query',

@@ -2,6 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
+import fs from 'node:fs';
+
 import { sleep } from '@dxos/async';
 import { Client, type Config } from '@dxos/client';
 import { type Space } from '@dxos/client/echo';
@@ -11,11 +13,9 @@ import { Trigger } from '@dxos/functions';
 import { InvocationTraceEndEvent, InvocationTraceStartEvent } from '@dxos/functions-runtime';
 import { FunctionsServiceClient } from '@dxos/functions-runtime/edge';
 import { bundleFunction } from '@dxos/functions-runtime/native';
+import type { BundleResult } from '@dxos/functions-runtime/native';
 import { Runtime } from '@dxos/protocols';
 import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
-import type { BundleResult } from '@dxos/functions-runtime/native';
-import fs from 'node:fs';
-import path from 'node:path';
 
 export const writeBundle = (path: string, bundle: BundleResult) => {
   fs.mkdirSync(path, { recursive: true });
