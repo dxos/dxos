@@ -10,29 +10,45 @@ import { Function, Script, Trigger } from '@dxos/functions';
 import { Filter, Ref, type Space, useQuery } from '@dxos/react-client/echo';
 import { Input } from '@dxos/react-ui';
 import { QueryForm, type QueryFormProps } from '@dxos/react-ui-components';
-import { Form, FormFieldLabel, type FormFieldMap, SelectField, useRefQueryOptions } from '@dxos/react-ui-form';
+import {
+  type ExcludeId,
+  Form,
+  FormFieldLabel,
+  type FormFieldMap,
+  type FormRootProps,
+  SelectField,
+  omitId,
+  useRefQueryOptions,
+} from '@dxos/react-ui-form';
 
 import { FunctionInputEditor, type FunctionInputEditorProps } from './FunctionInputEditor';
 import { SpecSelector } from './SpecSelector';
+
+/**
+ * NOTE:
+ * The interface `Trigger.Trigger` is the data type, and the const `Trigger.Trigger` is typed as Schema.Schema<Trigger, TriggerEncoded> — which does extend Schema.Schema.AnyNoContext.
+ * So in theory, ExcludeId<Trigger.Trigger> in type position should resolve to the const's type (Schema.Schema<Trigger, TriggerEncoded>), which satisfies the constraint.
+ *
+ * The issue is that when you access `Trigger.Trigger` (namespace + member), TypeScript's resolution in type position prefers the interface over the const's type. 
+ * The interface `Trigger` is the data shape, not the schema.
+ *
+ * To get the schema type, you need `typeof Trigger.Trigger` to explicitly reference the const's type.
+ *
+ * This is a quirk of how TypeScript resolves merged declarations (interface + const with same name) in type vs value contexts. 
+ * The `typeof` forces value-context resolution.
+ */
 
 export type TriggerEditorProps = {
   space: Space;
   trigger: Trigger.Trigger;
   // TODO(wittjosiah): This needs to apply to whole spec but currently only applies to spec.kind & spec.query.
   readonlySpec?: boolean;
-  // TODO(burdon): Why do we need to remove 'id'? Can we standardize this?
-  onSave?: (trigger: Omit<Trigger.Trigger, 'id'>) => void;
-  onCancel?: () => void;
-} & Pick<QueryFormProps, 'types' | 'tags'>;
+} &
+  // prettier-ignore
+  Pick<QueryFormProps, 'types' | 'tags'> &
+  Pick<FormRootProps<ExcludeId<typeof Trigger.Trigger>>, 'onSave' | 'onCancel'>;
 
-export const TriggerEditor = ({ space, types, tags, readonlySpec, trigger, onSave, onCancel }: TriggerEditorProps) => {
-  const handleSave = useCallback(
-    ({ id: _, ...values }: Trigger.Trigger) => {
-      onSave?.(values);
-    },
-    [onSave],
-  );
-
+export const TriggerEditor = ({ space, types, tags, readonlySpec, trigger, ...formProps }: TriggerEditorProps) => {
   const handleRefQueryOptions = useRefQueryOptions({ space });
   const fieldMap = useCustomInputs({
     space,
@@ -43,12 +59,11 @@ export const TriggerEditor = ({ space, types, tags, readonlySpec, trigger, onSav
   });
 
   return (
-    <Form.Root<Trigger.Trigger>
-      fieldMap={fieldMap}
-      schema={Trigger.Trigger}
+    <Form.Root<ExcludeId<typeof Trigger.Trigger>>
+      {...formProps}
+      schema={omitId(Trigger.Trigger)}
       values={trigger}
-      onSave={handleSave}
-      onCancel={onCancel}
+      fieldMap={fieldMap}
       onQueryRefOptions={handleRefQueryOptions}
     >
       <Form.Viewport>
@@ -146,4 +161,6 @@ const getWorkflowOptions = (graphs: ComputeGraph[]) => {
 const getFunctionOptions = (scripts: Script.Script[], functions: Function.Function[]) => {
   const getLabel = (fn: Function.Function) => scripts.find((s) => fn.source?.target?.id === s.id)?.name ?? fn.name;
   return functions.map((fn) => ({ label: getLabel(fn), value: `dxn:echo:@:${fn.id}` }));
+};
+
 };
