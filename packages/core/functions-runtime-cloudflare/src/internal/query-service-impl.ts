@@ -22,6 +22,8 @@ import {
 import { queryToDataServiceRequest } from './adapter';
 
 export class QueryServiceImpl implements QueryServiceProto {
+  private _queryCount = 0;
+
   constructor(
     private readonly _executionContext: EdgeFunctionEnv.ExecutionContext,
     private readonly _dataService: EdgeFunctionEnv.DataService,
@@ -37,6 +39,7 @@ export class QueryServiceImpl implements QueryServiceProto {
     return Stream.fromPromise<QueryResponse>(
       (async () => {
         try {
+          this._queryCount++;
           log.info('begin query', { spaceId });
           const queryResponse = await this._dataService.queryDocuments(
             this._executionContext,
@@ -58,8 +61,8 @@ export class QueryServiceImpl implements QueryServiceProto {
         } catch (error) {
           log.error('query failed', { err: error });
           throw new RuntimeServiceError({
-            message: 'Query execution failed.',
-            context: { spaceId, filter: request.filter },
+            message: `Query execution failed (queryCount=${this._queryCount})`,
+            context: { spaceId, filter: request.filter, queryCount: this._queryCount },
             cause: error,
           });
         }
