@@ -3287,6 +3287,12 @@ importers:
 
   packages/core/functions-testing:
     dependencies:
+      '@dxos/async':
+        specifier: workspace:*
+        version: link:../../common/async
+      '@dxos/client':
+        specifier: workspace:*
+        version: link:../../sdk/client
       '@dxos/config':
         specifier: workspace:*
         version: link:../../sdk/config
@@ -3311,6 +3317,9 @@ importers:
       '@dxos/protocols':
         specifier: workspace:*
         version: link:../protocols
+      '@effect/platform':
+        specifier: 0.92.1
+        version: 0.92.1(effect@3.18.3)
 
   packages/core/halo/credentials:
     dependencies:
