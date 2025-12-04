@@ -47,7 +47,6 @@ describe.runIf(process.env.DX_TEST_TAGS?.includes('functions-e2e'))('Functions d
       version: '0.0.1',
       entryPoint: buildResult.entryPoint,
       assets: buildResult.assets,
-      name: 'e2e-echo',
     });
 
     // Invoke deployed function via EDGE directly.
