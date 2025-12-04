@@ -8,7 +8,7 @@ import { configPreset } from '@dxos/config';
 import { Obj, Ref } from '@dxos/echo';
 import { Trigger } from '@dxos/functions';
 
-import { deployFunction, observeInvocations, setup, sync } from './test-utils';
+import { deployFunction, observeInvocations, setup, sync } from './testing';
 
 const FIB_FUNCTION_PATH = new URL('./functions/fib.ts', import.meta.url).pathname;
 

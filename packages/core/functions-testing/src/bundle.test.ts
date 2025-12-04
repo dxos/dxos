@@ -8,7 +8,7 @@ import { describe, it } from 'vitest';
 
 import { bundleFunction } from '@dxos/functions-runtime/native';
 
-import { writeBundle } from './testing/util';
+import { writeBundle } from './testing';
 
 describe('bundle', () => {
   it('should bundle', async () => {
