@@ -198,12 +198,12 @@ export const observeInvocations = async (space: Space, maxCount: number | null) 
       end?: InvocationTraceEndEvent;
     }
   >();
+  let count = 0;
   while (true) {
     try {
       const invocations =
         (await space.properties.invocationTraceQueue?.target!.query(Query.select(Filter.everything())).run()) ?? [];
 
-      let count = 0;
       for (const invocation of invocations) {
         if (Obj.instanceOf(InvocationTraceStartEvent, invocation)) {
           if (invocationData.has(invocation.invocationId)) {
