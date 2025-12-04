@@ -112,7 +112,6 @@ const DefaultStory = <T extends AnyProperties = AnyProperties>({
           debug={debug}
           schema={schema}
           values={values}
-          onAutoSave={handleSave}
           onSave={handleSave}
           onCancel={handleCancel}
           onQueryRefOptions={handleQueryRefOptions}

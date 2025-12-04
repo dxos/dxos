@@ -9,7 +9,7 @@ import { DXN, Obj, type Ref, Tag, Type } from '@dxos/echo';
 import { type JsonPath, setValue } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
 import { getSpace } from '@dxos/react-client/echo';
-import { Form, useRefQueryOptions } from '@dxos/react-ui-form';
+import { Form, omitId, useRefQueryOptions } from '@dxos/react-ui-form';
 import { isNonNullable } from '@dxos/util';
 
 import { meta as pluginMeta } from '../../meta';
@@ -25,7 +25,10 @@ export const ObjectForm = ({ object, schema }: ObjectFormProps) => {
   const space = getSpace(object);
 
   const formSchema = useMemo(
-    () => Schema.Struct({ tags: Schema.Array(Type.Ref(Tag.Tag)).pipe(Schema.optional) }).pipe(Schema.extend(schema)),
+    () =>
+      Schema.Struct({
+        tags: Schema.Array(Type.Ref(Tag.Tag)).pipe(Schema.optional),
+      }).pipe(Schema.extend(omitId(schema))),
     [schema],
   );
 
@@ -42,11 +45,17 @@ export const ObjectForm = ({ object, schema }: ObjectFormProps) => {
     meta.tags = [...(meta.tags ?? []), Obj.getDXN(tag).toString()];
   }, []);
 
-  const handleSave = useCallback(
-    ({ tags, ...values }: any, { changed }: { changed: Record<JsonPath, boolean> }) => {
+  // TODO(wittjosiah): Use FormRootProps type.
+  const handleChange = useCallback(
+    ({ tags, ...values }: any, { isValid, changed }: { isValid: boolean; changed: Record<JsonPath, boolean> }) => {
+      if (!isValid) {
+        return;
+      }
+
       const changedPaths = Object.keys(changed).filter((path) => changed[path as JsonPath]) as JsonPath[];
       for (const path of changedPaths) {
-        if (path === 'tags') {
+        // TODO(wittjosiah): This doesn't handle array paths well.
+        if (path.startsWith('tags')) {
           const meta = Obj.getMeta(object);
           meta.tags = tags?.map((tag: Ref.Ref<Tag.Tag>) => tag.dxn.toString()) ?? [];
           continue;
@@ -61,14 +70,13 @@ export const ObjectForm = ({ object, schema }: ObjectFormProps) => {
 
   return (
     <Form.Root
-      schema={formSchema}
+      schema={omitId(formSchema)}
       values={values}
       createSchema={TagSchema}
       createOptionIcon='ph--plus--regular'
       createOptionLabel={['add tag label', { ns: pluginMeta.id }]}
       createInitialValuePath='label'
-      autoSave
-      onSave={handleSave}
+      onValuesChanged={handleChange}
       onCreate={handleCreateTag}
       onQueryRefOptions={handleRefQueryLookup}
     >

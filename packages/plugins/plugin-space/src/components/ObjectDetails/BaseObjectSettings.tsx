@@ -13,7 +13,7 @@ import { type JsonPath, setValue } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
 import { getSpace } from '@dxos/react-client/echo';
 import { type ThemedClassName } from '@dxos/react-ui';
-import { Form, useRefQueryOptions } from '@dxos/react-ui-form';
+import { Form, omitId, useRefQueryOptions } from '@dxos/react-ui-form';
 import { isNonNullable } from '@dxos/util';
 
 import { meta as pluginMeta } from '../../meta';
@@ -63,15 +63,21 @@ export const BaseObjectSettings = ({ classNames, children, object }: BaseObjectS
     meta.tags = [...(meta.tags ?? []), Obj.getDXN(tag).toString()];
   }, []);
 
-  const handleSave = useCallback(
+  // TODO(wittjosiah): Use FormRootProps type.
+  const handleChange = useCallback(
     (
       { tags, ...values }: Schema.Schema.Type<typeof formSchema>,
-      { changed }: { changed: Record<JsonPath, boolean> },
+      { isValid, changed }: { isValid: boolean; changed: Record<JsonPath, boolean> },
     ) => {
+      if (!isValid) {
+        return;
+      }
+
       const changedPaths = Object.keys(changed).filter((path) => changed[path as JsonPath]) as JsonPath[];
       batch(() => {
         for (const path of changedPaths) {
-          if (path === 'tags') {
+          // TODO(wittjosiah): This doesn't handle array paths well.
+          if (path.startsWith('tags')) {
             const meta = Obj.getMeta(object);
             meta.tags = tags?.map((tag: Ref.Ref<Tag.Tag>) => tag.dxn.toString()) ?? [];
             continue;
@@ -91,21 +97,22 @@ export const BaseObjectSettings = ({ classNames, children, object }: BaseObjectS
 
   return (
     <Form.Root
-      schema={formSchema}
+      schema={omitId(formSchema)}
       values={values}
       createSchema={TagSchema}
       createOptionIcon='ph--plus--regular'
       createOptionLabel={['add tag label', { ns: pluginMeta.id }]}
       createInitialValuePath='label'
-      autoSave
-      onSave={handleSave}
+      onValuesChanged={handleChange}
       onCreate={handleCreateTag}
       onQueryRefOptions={handleRefQueryLookup}
     >
-      <Form.Content classNames={classNames}>
-        <Form.FieldSet />
-        {children}
-      </Form.Content>
+      <Form.Viewport>
+        <Form.Content classNames={classNames}>
+          <Form.FieldSet />
+          {children}
+        </Form.Content>
+      </Form.Viewport>
     </Form.Root>
   );
 };
