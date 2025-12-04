@@ -19,6 +19,7 @@ import { FunctionError } from '../errors';
 import { FunctionDefinition, type FunctionServices } from '../sdk';
 import { CredentialsService, FunctionInvocationService, TracingService } from '../services';
 import { QueueService } from '../services';
+import { runAndForwardErrors } from '@dxos/effect';
 
 /**
  * Wraps a function handler made with `defineFunction` to a protocol that the functions-runtime expects.
@@ -71,7 +72,7 @@ export const wrapFunctionHandler = (func: FunctionDefinition): FunctionProtocol.
         });
 
         if (Effect.isEffect(result)) {
-          result = await Effect.runPromise(
+          result = await runAndForwardErrors(
             (result as Effect.Effect<unknown, unknown, FunctionServices>).pipe(
               Effect.orDie,
               Effect.provide(funcContext.createLayer()),
