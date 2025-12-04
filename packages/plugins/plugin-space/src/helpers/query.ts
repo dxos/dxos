@@ -144,9 +144,9 @@ export const getQueryTarget = (query: QueryAST.Query, space?: Space) => {
         Option.flatMap((queues) => Array.head(queues)),
         Option.flatMap((queueDxn) => Option.fromNullable(DXN.tryParse(queueDxn))),
         Option.flatMap((queueDxn) => Option.fromNullable(space?.queues.get(queueDxn))),
-        Option.getOrElse(() => space),
+        Option.getOrElse(() => space?.db),
       );
     }),
-    Match.orElse(() => space),
+    Match.orElse(() => space?.db),
   );
 };

@@ -35,7 +35,7 @@ describe('useQuery', () => {
     // Setup useQuery hook that captures every render.
     renderHook(
       () => {
-        const objects = useQuery(space, Filter.type(Type.Expando));
+        const objects = useQuery(space?.db, Filter.type(Type.Expando));
 
         // Capture the names in this render.
         const namesInThisRender = objects.map((obj) => obj.name);
@@ -94,7 +94,7 @@ describe('useQuery', () => {
     // Setup useQuery hook that captures every render.
     renderHook(
       () => {
-        const queryObjects = useQuery(space, Filter.type(Type.Expando));
+        const queryObjects = useQuery(space?.db, Filter.type(Type.Expando));
 
         // Capture the values in this render.
         const valuesInThisRender = queryObjects.map((obj) => obj.value);

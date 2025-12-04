@@ -32,7 +32,7 @@ const types = [
 const DefaultStory = (props: Partial<TriggerEditorProps>) => {
   const { space } = useClientProvider();
   const [trigger, setTrigger] = useState<Trigger.Trigger>();
-  const tags = useQuery(space, Filter.type(Tag.Tag));
+  const tags = useQuery(space?.db, Filter.type(Tag.Tag));
 
   useAsyncEffect(async () => {
     if (!space) {
@@ -61,7 +61,7 @@ const DefaultStory = (props: Partial<TriggerEditorProps>) => {
 
   return (
     <TriggerEditor
-      space={space}
+      db={space.db}
       trigger={trigger}
       types={types}
       tags={tags}

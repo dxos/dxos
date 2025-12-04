@@ -20,7 +20,7 @@ interface TriggerRuntimeControls {
 }
 
 export const useTriggerRuntimeControls = (space: Space | undefined): TriggerRuntimeControls => {
-  const triggers = useQuery(space, Filter.type(Trigger.Trigger));
+  const triggers = useQuery(space?.db, Filter.type(Trigger.Trigger));
 
   const [isRunningState, setIsRunningState] = useAsyncState(
     useComputeRuntimeCallback(space, () => TriggerDispatcher.pipe(Effect.map((t) => t.running))),

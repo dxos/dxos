@@ -37,8 +37,9 @@ export const BoardContainer = ({ board }: BoardContainerProps) => {
   const attendableId = Obj.getDXN(board).toString();
   const { hasAttention } = useAttention(attendableId);
 
+  const space = getSpace(board);
   // TODO(burdon): Use search.
-  const objects = useQuery(getSpace(board), Filter.everything());
+  const objects = useQuery(space?.db, Filter.everything());
   const options = useMemo<ObjectPickerContentProps['options']>(
     () =>
       objects

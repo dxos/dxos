@@ -15,7 +15,7 @@ import { useQuery } from '@dxos/react-client/echo';
 import { type ComponentProps } from './types';
 
 export const ScriptModule = ({ space }: ComponentProps) => {
-  const [script] = useQuery(space, Filter.type(Script.Script));
+  const [script] = useQuery(space.db, Filter.type(Script.Script));
   const compiler = useCapability(ScriptCapabilities.Compiler);
   const settings = useCapability(Capabilities.SettingsStore).getStore<ScriptSettings>(meta.id)?.value;
   if (!script) {

@@ -20,7 +20,7 @@ export const KanbanViewEditor = ({ object }: KanbanViewEditorProps) => {
   const space = getSpace(object);
   const view = object.view.target;
   const currentTypename = view?.query ? getTypenameFromQuery(view.query.ast) : undefined;
-  const schema = useSchema(space, currentTypename);
+  const schema = useSchema(space?.db, currentTypename);
   const projection = useProjectionModel(schema, object);
 
   const fieldProjections = projection?.getFieldProjections() || [];

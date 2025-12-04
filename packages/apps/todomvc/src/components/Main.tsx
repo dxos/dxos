@@ -6,14 +6,15 @@ import React, { useEffect } from 'react';
 import { Navigate, Outlet, generatePath, useParams } from 'react-router-dom';
 
 import { useClient } from '@dxos/react-client';
-import { useSpace, useSpaces } from '@dxos/react-client/echo';
+import { parseId, useSpace, useSpaces } from '@dxos/react-client/echo';
 
 import { SpaceList } from './SpaceList';
 
 export const Main = () => {
-  const { spaceId } = useParams();
+  const { spaceParam } = useParams();
   const client = useClient();
   const spaces = useSpaces();
+  const { spaceId } = parseId(spaceParam);
   const space = useSpace(spaceId);
 
   useEffect(() => {

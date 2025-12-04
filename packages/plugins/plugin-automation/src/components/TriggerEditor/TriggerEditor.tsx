@@ -5,9 +5,9 @@
 import React, { useCallback, useMemo } from 'react';
 
 import { ComputeGraph } from '@dxos/conductor';
-import { DXN, type Query } from '@dxos/echo';
+import { DXN, type Database, type Query } from '@dxos/echo';
 import { Function, Script, Trigger } from '@dxos/functions';
-import { Filter, Ref, type Space, useQuery } from '@dxos/react-client/echo';
+import { Filter, Ref, useQuery } from '@dxos/react-client/echo';
 import { Input } from '@dxos/react-ui';
 import { QueryForm, type QueryFormProps } from '@dxos/react-ui-components';
 import { Form, FormFieldLabel, type FormFieldMap, SelectField, useRefQueryOptions } from '@dxos/react-ui-form';
@@ -16,7 +16,7 @@ import { FunctionInputEditor, type FunctionInputEditorProps } from './FunctionIn
 import { SpecSelector } from './SpecSelector';
 
 export type TriggerEditorProps = {
-  space: Space;
+  db: Database.Database;
   trigger: Trigger.Trigger;
   // TODO(wittjosiah): This needs to apply to whole spec but currently only applies to spec.kind & spec.query.
   readonlySpec?: boolean;
@@ -25,7 +25,7 @@ export type TriggerEditorProps = {
   onCancel?: () => void;
 } & Pick<QueryFormProps, 'types' | 'tags'>;
 
-export const TriggerEditor = ({ space, types, tags, readonlySpec, trigger, onSave, onCancel }: TriggerEditorProps) => {
+export const TriggerEditor = ({ db, types, tags, readonlySpec, trigger, onSave, onCancel }: TriggerEditorProps) => {
   const handleSave = useCallback(
     ({ id: _, ...values }: Trigger.Trigger) => {
       onSave?.(values);
@@ -33,9 +33,9 @@ export const TriggerEditor = ({ space, types, tags, readonlySpec, trigger, onSav
     [onSave],
   );
 
-  const handleRefQueryOptions = useRefQueryOptions({ space });
+  const handleRefQueryOptions = useRefQueryOptions({ db });
   const fieldMap = useCustomInputs({
-    space,
+    db,
     types,
     tags,
     readonlySpec,
@@ -62,21 +62,15 @@ export const TriggerEditor = ({ space, types, tags, readonlySpec, trigger, onSav
 };
 
 type UseCustomInputsProps = {
-  space: Space;
+  db: Database.Database;
   readonlySpec?: boolean;
   onQueryRefOptions: FunctionInputEditorProps['onQueryRefOptions'];
 } & Pick<QueryFormProps, 'types' | 'tags'>;
 
-const useCustomInputs = ({
-  space,
-  readonlySpec,
-  types,
-  tags,
-  onQueryRefOptions,
-}: UseCustomInputsProps): FormFieldMap => {
-  const functions = useQuery(space, Filter.type(Function.Function));
-  const workflows = useQuery(space, Filter.type(ComputeGraph));
-  const scripts = useQuery(space, Filter.type(Script.Script));
+const useCustomInputs = ({ db, readonlySpec, types, tags, onQueryRefOptions }: UseCustomInputsProps): FormFieldMap => {
+  const functions = useQuery(db, Filter.type(Function.Function));
+  const workflows = useQuery(db, Filter.type(ComputeGraph));
+  const scripts = useQuery(db, Filter.type(Script.Script));
 
   return useMemo(
     (): FormFieldMap => ({
