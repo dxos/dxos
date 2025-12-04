@@ -51,7 +51,7 @@ export const EventArticle = ({
       <Event.Root event={subject}>
         <Event.Toolbar onNoteCreate={handleNoteCreate} />
         <Event.Viewport>
-          <Event.Header onContactCreate={handleContactCreate} />
+          <Event.Header space={space} onContactCreate={handleContactCreate} />
           <Event.Content />
           {/* TODO(burdon): Suppress markdown toolbar if section. */}
           {notes && <Surface role='section' data={{ id, subject: notes }} limit={1} />}

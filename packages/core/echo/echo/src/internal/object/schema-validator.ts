@@ -6,6 +6,7 @@ import * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
 
 import { invariant } from '@dxos/invariant';
+import { log } from '@dxos/log';
 
 import { SchemaId } from '../types';
 
@@ -67,7 +68,8 @@ export class SchemaValidator {
           getProperty([...propertyPath.slice(0, i), propertyName]),
         );
         if (propertyType == null) {
-          throw new TypeError(`unknown property: ${String(propertyName)} on object. Path: ${propertyPath}`);
+          log.warn('unknown property', { path: propertyPath, property: propertyName });
+          continue;
         }
 
         schema = Schema.make(propertyType).annotations(propertyType.annotations);

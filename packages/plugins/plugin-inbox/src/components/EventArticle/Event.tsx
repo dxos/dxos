@@ -5,7 +5,7 @@
 import { createContext } from '@radix-ui/react-context';
 import React, { type PropsWithChildren } from 'react';
 
-import { getSpace } from '@dxos/react-client/echo';
+import { type Space } from '@dxos/react-client/echo';
 import { Icon, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { MenuProvider, ToolbarMenu } from '@dxos/react-ui-menu';
 import { mx } from '@dxos/react-ui-theme';
@@ -76,13 +76,13 @@ EventViewport.displayName = 'Event.Viewport';
 //
 
 type EventHeaderProps = {
+  space?: Space;
   onContactCreate?: (actor: Actor.Actor) => void;
 };
 
-const EventHeader = ({ onContactCreate }: EventHeaderProps) => {
+const EventHeader = ({ space, onContactCreate }: EventHeaderProps) => {
   const { t } = useTranslation(meta.id);
   const { event } = useEventContext(EventHeader.displayName);
-  const space = getSpace(event);
 
   return (
     <div role='none' className='p-1 flex flex-col gap-2 border-be border-subduedSeparator'>
