@@ -10,7 +10,7 @@ import { type SyntaxNodeRef } from '@lezer/common';
 import { invariant } from '@dxos/invariant';
 import { mx } from '@dxos/react-ui-theme';
 
-import { type HeadingLevel, theme } from '../../styles';
+import { type HeadingLevel, markdownTheme } from '../../styles';
 import { type RenderCallback } from '../../types';
 import { wrapWithCatch } from '../../util';
 
@@ -251,7 +251,7 @@ const buildDecorations = (view: EditorView, options: DecorateOptions, focus: boo
                 from: mark.from,
                 to: mark.from + len,
                 deco: Decoration.replace({
-                  widget: new TextWidget(num, theme.heading(level)),
+                  widget: new TextWidget(num, markdownTheme.heading(level)),
                 }),
               });
             }

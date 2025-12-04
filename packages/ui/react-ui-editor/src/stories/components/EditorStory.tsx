@@ -17,7 +17,7 @@ import { mx } from '@dxos/react-ui-theme';
 import { isNonNullable } from '@dxos/util';
 
 import { type EditorController, createEditorController } from '../../components';
-import { editorGutter, editorSlots } from '../../defaults';
+import { editorSlots } from '../../defaults';
 import {
   type DebugNode,
   type ThemeExtensionsOptions,
@@ -44,6 +44,7 @@ export type StoryProps = Pick<UseTextEditorProps, 'id' | 'scrollTo' | 'selection
     readOnly?: boolean;
     placeholder?: string;
     lineNumbers?: boolean;
+    monospace?: boolean;
     onReady?: (view: EditorView) => void;
   };
 
@@ -99,6 +100,7 @@ export const EditorComponent = forwardRef<EditorController, StoryProps>(
       readOnly,
       placeholder = 'New document.',
       lineNumbers,
+      monospace,
       scrollTo,
       selection,
       extensions,
@@ -118,10 +120,9 @@ export const EditorComponent = forwardRef<EditorController, StoryProps>(
         initialValue: text,
         extensions: [
           createBasicExtensions({ readOnly, placeholder, lineNumbers, scrollPastEnd: true, search: true }),
+          createThemeExtensions({ monospace, themeMode, syntaxHighlighting: true, slots }),
           createMarkdownExtensions(),
-          createThemeExtensions({ themeMode, syntaxHighlighting: true, slots }),
           decorateMarkdown(),
-          editorGutter,
           extensions || [],
         ],
       }),

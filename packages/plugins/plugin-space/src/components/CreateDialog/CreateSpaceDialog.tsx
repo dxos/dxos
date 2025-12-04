@@ -72,9 +72,9 @@ export const CreateSpaceDialog = () => {
       <Form.Root
         testId='create-space-form'
         autoFocus
-        fieldProvider={inputSurfaceLookup}
         schema={SpaceForm}
         values={initialValues}
+        fieldProvider={inputSurfaceLookup}
         onSave={handleCreateSpace}
       >
         <Form.Content>
