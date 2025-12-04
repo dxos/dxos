@@ -202,6 +202,12 @@ export const WithTest: Story = {
     // Check that clicking the save button calls onCreate with expected values.
     await expect(mockHandleCreate).toHaveBeenCalledWith({
       fullName: unrelatedTerm,
+      addresses: [],
+      phoneNumbers: [],
+      emails: [],
+      identities: [],
+      urls: [],
+      fields: [],
     });
   },
 };
