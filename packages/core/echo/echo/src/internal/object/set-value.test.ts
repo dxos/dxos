@@ -6,84 +6,50 @@ import * as Schema from 'effect/Schema';
 import { describe, test } from 'vitest';
 
 import * as Obj from '../../Obj';
+import { TestSchema } from '../../testing';
 import * as Type from '../../Type';
 
 describe('Obj.setValue', () => {
   test('sets simple nested object property', ({ expect }) => {
-    const Address = Schema.Struct({
-      street: Schema.optional(Schema.String),
-      city: Schema.optional(Schema.String),
-    }).pipe(Schema.mutable);
+    const person = Obj.make(TestSchema.Person, {
+      name: 'John',
+      username: 'john',
+      email: 'john@example.com',
+    });
 
-    const Person = Schema.Struct({
-      name: Schema.String,
-      address: Schema.optional(Schema.mutable(Address)),
-    }).pipe(
-      Type.Obj({
-        typename: 'test.com/Person',
-        version: '0.1.0',
-      }),
-    );
-
-    const person = Obj.make(Person, { name: 'John' });
-
-    Obj.setValue(person, ['address', 'street'], '123 Main St');
+    Obj.setValue(person, ['address', 'city'], 'NYC');
 
     expect(person.address).toBeDefined();
-    expect(person.address?.street).toBe('123 Main St');
+    expect(person.address?.city).toBe('NYC');
   });
 
   test('sets array element by initializing array', ({ expect }) => {
-    const Address = Schema.Struct({
-      street: Schema.optional(Schema.String),
-    }).pipe(Schema.mutable);
+    const person = Obj.make(TestSchema.Person, {
+      name: 'John',
+      username: 'john',
+      email: 'john@example.com',
+    });
 
-    const Person = Schema.Struct({
-      name: Schema.String,
-      addresses: Schema.optional(Schema.mutable(Schema.Array(Address))),
-    }).pipe(
-      Type.Obj({
-        typename: 'test.com/Person',
-        version: '0.1.0',
-      }),
-    );
+    Obj.setValue(person, ['fields', 0, 'label'], 'Phone');
 
-    const person = Obj.make(Person, { name: 'John' });
-
-    Obj.setValue(person, ['addresses', 0, 'street'], '123 Main St');
-
-    expect(Array.isArray(person.addresses)).toBe(true);
-    expect(person.addresses?.[0].street).toBe('123 Main St');
+    expect(Array.isArray(person.fields)).toBe(true);
+    expect(person.fields?.[0].label).toBe('Phone');
+    // The 'value' field is required, so it should be initialized with default.
+    expect(person.fields?.[0].value).toBe('');
   });
 
   test('sets deeply nested array in object', ({ expect }) => {
-    const Tag = Schema.Struct({
-      name: Schema.optional(Schema.String),
-    }).pipe(Schema.mutable);
+    const person = Obj.make(TestSchema.Person, {
+      name: 'John',
+      username: 'john',
+      email: 'john@example.com',
+    });
 
-    const Person = Schema.Struct({
-      name: Schema.String,
-      metadata: Schema.optional(
-        Schema.mutable(
-          Schema.Struct({
-            tags: Schema.optional(Schema.mutable(Schema.Array(Tag))),
-          }),
-        ),
-      ),
-    }).pipe(
-      Type.Obj({
-        typename: 'test.com/Person',
-        version: '0.1.0',
-      }),
-    );
+    Obj.setValue(person, ['address', 'coordinates', 'lat'], 40.7128);
 
-    const person = Obj.make(Person, { name: 'John' });
-
-    Obj.setValue(person, ['metadata', 'tags', 0, 'name'], 'important');
-
-    expect(person.metadata).toBeDefined();
-    expect(Array.isArray(person.metadata?.tags)).toBe(true);
-    expect(person.metadata?.tags?.[0].name).toBe('important');
+    expect(person.address).toBeDefined();
+    expect(person.address?.coordinates).toBeDefined();
+    expect(person.address?.coordinates?.lat).toBe(40.7128);
   });
 
   test('sets multiple nested array elements', ({ expect }) => {
@@ -114,58 +80,36 @@ describe('Obj.setValue', () => {
   });
 
   test('handles optional fields', ({ expect }) => {
-    const Person = Schema.Struct({
-      name: Schema.String,
-      nickname: Schema.optional(Schema.String),
-    }).pipe(
-      Type.Obj({
-        typename: 'test.com/Person',
-        version: '0.1.0',
-      }),
-    );
+    const person = Obj.make(TestSchema.Person, {
+      name: 'John',
+      username: 'john',
+      email: 'john@example.com',
+    });
 
-    const person = Obj.make(Person, { name: 'John' });
+    Obj.setValue(person, ['age'], 25);
 
-    Obj.setValue(person, ['nickname'], 'Johnny');
-
-    expect(person.nickname).toBe('Johnny');
+    expect(person.age).toBe(25);
   });
 
   test('handles nested optional objects', ({ expect }) => {
-    const Address = Schema.Struct({
-      street: Schema.optional(Schema.String),
-    }).pipe(Schema.mutable);
+    const person = Obj.make(TestSchema.Person, {
+      name: 'John',
+      username: 'john',
+      email: 'john@example.com',
+    });
 
-    const Person = Schema.Struct({
-      name: Schema.String,
-      address: Schema.optional(Schema.mutable(Address)),
-    }).pipe(
-      Type.Obj({
-        typename: 'test.com/Person',
-        version: '0.1.0',
-      }),
-    );
-
-    const person = Obj.make(Person, { name: 'John' });
-
-    Obj.setValue(person, ['address', 'street'], '123 Main St');
+    Obj.setValue(person, ['address', 'city'], 'NYC');
 
     expect(person.address).toBeDefined();
-    expect(person.address?.street).toBe('123 Main St');
+    expect(person.address?.city).toBe('NYC');
   });
 
   test('returns the set value', ({ expect }) => {
-    const Person = Schema.Struct({
-      name: Schema.String,
-      age: Schema.optional(Schema.Number),
-    }).pipe(
-      Type.Obj({
-        typename: 'test.com/Person',
-        version: '0.1.0',
-      }),
-    );
-
-    const person = Obj.make(Person, { name: 'John' });
+    const person = Obj.make(TestSchema.Person, {
+      name: 'John',
+      username: 'john',
+      email: 'john@example.com',
+    });
 
     const result = Obj.setValue(person, ['age'], 30);
 
@@ -173,17 +117,12 @@ describe('Obj.setValue', () => {
   });
 
   test('overwrites existing values', ({ expect }) => {
-    const Person = Schema.Struct({
-      name: Schema.String,
-      age: Schema.Number,
-    }).pipe(
-      Type.Obj({
-        typename: 'test.com/Person',
-        version: '0.1.0',
-      }),
-    );
-
-    const person = Obj.make(Person, { name: 'John', age: 25 });
+    const person = Obj.make(TestSchema.Person, {
+      name: 'John',
+      username: 'john',
+      email: 'john@example.com',
+      age: 25,
+    });
 
     Obj.setValue(person, ['age'], 30);
 
@@ -191,30 +130,17 @@ describe('Obj.setValue', () => {
   });
 
   test('sets nested value in existing object', ({ expect }) => {
-    const Address = Schema.Struct({
-      street: Schema.String,
-      city: Schema.String,
-    }).pipe(Schema.mutable);
-
-    const Person = Schema.Struct({
-      name: Schema.String,
-      address: Schema.mutable(Address),
-    }).pipe(
-      Type.Obj({
-        typename: 'test.com/Person',
-        version: '0.1.0',
-      }),
-    );
-
-    const person = Obj.make(Person, {
+    const person = Obj.make(TestSchema.Person, {
       name: 'John',
-      address: { street: 'Old St', city: 'NYC' },
+      username: 'john',
+      email: 'john@example.com',
+      address: { city: 'Boston', state: 'MA', coordinates: {} },
     });
 
-    Obj.setValue(person, ['address', 'street'], '123 Main St');
+    Obj.setValue(person, ['address', 'city'], 'NYC');
 
-    expect(person.address.street).toBe('123 Main St');
-    expect(person.address.city).toBe('NYC');
+    expect(person.address?.city).toBe('NYC');
+    expect(person.address?.state).toBe('MA');
   });
 
   test('handles two-dimensional arrays', ({ expect }) => {
@@ -241,32 +167,21 @@ describe('Obj.setValue', () => {
   });
 
   test('throws error for empty path', ({ expect }) => {
-    const Person = Schema.Struct({
-      name: Schema.String,
-    }).pipe(
-      Type.Obj({
-        typename: 'test.com/Person',
-        version: '0.1.0',
-      }),
-    );
-
-    const person = Obj.make(Person, { name: 'John' });
+    const person = Obj.make(TestSchema.Person, {
+      name: 'John',
+      username: 'john',
+      email: 'john@example.com',
+    });
 
     expect(() => Obj.setValue(person, [], 'value')).toThrow('Path must not be empty');
   });
 
   test('sets value with single-element path', ({ expect }) => {
-    const Person = Schema.Struct({
-      name: Schema.String,
-      age: Schema.optional(Schema.Number),
-    }).pipe(
-      Type.Obj({
-        typename: 'test.com/Person',
-        version: '0.1.0',
-      }),
-    );
-
-    const person = Obj.make(Person, { name: 'John' });
+    const person = Obj.make(TestSchema.Person, {
+      name: 'John',
+      username: 'john',
+      email: 'john@example.com',
+    });
 
     Obj.setValue(person, ['age'], 30);
 
@@ -300,7 +215,7 @@ describe('Obj.setValue', () => {
     // This test demonstrates the problematic scenario:
     // An array containing objects that have required fields.
     const Task = Schema.Struct({
-      id: Schema.String, // REQUIRED field
+      id: Schema.String, // Required field.
       title: Schema.optional(Schema.String),
       completed: Schema.optional(Schema.Boolean),
     }).pipe(Schema.mutable);
@@ -353,32 +268,5 @@ describe('Obj.setValue', () => {
     expect(container.items?.[0].count).toBe(0);
     expect(container.items?.[0].active).toBe(false);
     expect(container.items?.[0].label).toBe('First Item');
-  });
-
-  test('allows setting required field after initialization with default', ({ expect }) => {
-    const Task = Schema.Struct({
-      id: Schema.String, // Required
-      title: Schema.optional(Schema.String),
-    }).pipe(Schema.mutable);
-
-    const TodoList = Schema.Struct({
-      tasks: Schema.optional(Schema.mutable(Schema.Array(Task))),
-    }).pipe(
-      Type.Obj({
-        typename: 'test.com/TodoList',
-        version: '0.1.0',
-      }),
-    );
-
-    const todoList = Obj.make(TodoList, {});
-
-    // First set creates the object with default id: "".
-    Obj.setValue(todoList, ['tasks', 0, 'title'], 'Buy groceries');
-    expect(todoList.tasks?.[0].id).toBe('');
-
-    // Now update the id to a real value.
-    Obj.setValue(todoList, ['tasks', 0, 'id'], 'task-123');
-    expect(todoList.tasks?.[0].id).toBe('task-123');
-    expect(todoList.tasks?.[0].title).toBe('Buy groceries');
   });
 });

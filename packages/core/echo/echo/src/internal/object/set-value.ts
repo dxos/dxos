@@ -6,7 +6,14 @@ import * as Match from 'effect/Match';
 import * as Option from 'effect/Option';
 import * as SchemaAST from 'effect/SchemaAST';
 
-import { type SchemaProperty, getArrayElementType, getProperties, isArrayType, isNestedType } from '@dxos/effect';
+import {
+  type SchemaProperty,
+  getArrayElementType,
+  getBaseType,
+  getProperties,
+  isArrayType,
+  isNestedType,
+} from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 
 import { getSchema } from '../types';
@@ -64,9 +71,8 @@ const getPropertyAST = (ast: SchemaAST.AST | undefined, propertyName: string): S
   if (isNestedType(ast)) {
     const properties = getProperties(ast);
     const property = properties.find((p) => p.name.toString() === propertyName);
-
     if (property) {
-      return property.type;
+      return getBaseType(property).type;
     }
   }
 
@@ -128,8 +134,7 @@ const getDefaultValueForType = (ast: SchemaAST.AST | undefined): any => {
 
 /**
  * Create an object with default values for all required properties.
- * Currently handles primitive types only (String, Number, Boolean).
- * Non-primitive required fields are left undefined.
+ * Handles primitive types (String, Number, Boolean) and recursively initializes required nested objects.
  *
  * @param ast - Schema AST describing the object structure.
  * @returns Object with required fields populated with defaults.
@@ -146,6 +151,8 @@ const createObjectWithDefaults = (ast: SchemaAST.AST | undefined): any => {
     const defaultValue = getDefaultValueForType(prop.type);
     if (defaultValue !== undefined) {
       obj[prop.name] = defaultValue;
+    } else if (isNestedType(prop.type)) {
+      obj[prop.name] = createObjectWithDefaults(prop.type);
     }
   }
 
