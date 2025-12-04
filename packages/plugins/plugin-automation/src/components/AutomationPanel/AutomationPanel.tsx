@@ -151,7 +151,8 @@ export const AutomationPanel = ({ classNames, space, object, initialTrigger, onD
                       )}
                     </div>
 
-                    <IconButton
+                    <List.ItemButton
+                      autoHide={false}
                       disabled={!trigger.enabled || trigger.spec?.kind !== 'timer'}
                       icon='ph--play--regular'
                       label='Force run'
