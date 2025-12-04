@@ -6,15 +6,8 @@
     "outDir": "./dist",
     "rootDir": "./src"
   },
-  "exclude": [
-    "**/*.test.ts",
-    "**/*.test.tsx",
-    "dist",
-    "node_modules"
-  ],
-  "include": [
-    "src/**/*"
-  ],
+  "exclude": ["dist", "node_modules"],
+  "include": ["src/**/*"],
   "references": [
     {
       "path": "../../common/util"
