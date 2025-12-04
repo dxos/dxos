@@ -9,16 +9,17 @@ import { Obj, Ref } from '@dxos/echo';
 import { Trigger } from '@dxos/functions';
 
 import { deployFunction, observeInvocations, setup, sync } from './testing';
+import { Runtime } from '@dxos/protocols';
 
 const FIB_FUNCTION_PATH = new URL('./functions/fib.ts', import.meta.url).pathname;
 
 // Test suite to explore who CPU time limits influence function execution
 describe.runIf(process.env.DX_TEST_TAGS?.includes('functions-e2e'))('CPU limit', () => {
-  const config = configPreset({ edge: 'main' });
+  const config = configPreset({ edge: 'dev' });
 
   test('invoke directly', { timeout: 120_000 }, async ({ expect }) => {
     const { client, space, functionsServiceClient } = await setup(config);
-    const func = await deployFunction(space, functionsServiceClient, FIB_FUNCTION_PATH);
+    const func = await deployFunction(space, functionsServiceClient, FIB_FUNCTION_PATH, Runtime.WORKERS_FOR_PLATFORMS);
     const result = await functionsServiceClient.invoke(
       func,
       {
@@ -33,12 +34,12 @@ describe.runIf(process.env.DX_TEST_TAGS?.includes('functions-e2e'))('CPU limit',
 
   test('force-trigger', { timeout: 120_000 }, async ({ expect }) => {
     const { client, space, functionsServiceClient } = await setup(config);
-    const func = await deployFunction(space, functionsServiceClient, FIB_FUNCTION_PATH);
+    const func = await deployFunction(space, functionsServiceClient, FIB_FUNCTION_PATH, Runtime.WORKERS_FOR_PLATFORMS);
     const trigger = space.db.add(
       Obj.make(Trigger.Trigger, {
         enabled: true,
         function: Ref.make(func),
-        spec: { kind: 'timer', cron: '*/5 * * * * *' },
+        spec: { kind: 'timer', cron: '* */30 * * * *' },
         input: { iterations: 100 },
       }),
     );
@@ -49,12 +50,12 @@ describe.runIf(process.env.DX_TEST_TAGS?.includes('functions-e2e'))('CPU limit',
 
   test('break CPU limit', { timeout: 120_000 }, async ({ expect }) => {
     const { client, space, functionsServiceClient } = await setup(config);
-    const func = await deployFunction(space, functionsServiceClient, FIB_FUNCTION_PATH);
+    const func = await deployFunction(space, functionsServiceClient, FIB_FUNCTION_PATH, Runtime.WORKERS_FOR_PLATFORMS);
     const trigger = space.db.add(
       Obj.make(Trigger.Trigger, {
         enabled: true,
         function: Ref.make(func),
-        spec: { kind: 'timer', cron: '*/5 * * * * *' },
+        spec: { kind: 'timer', cron: '* */30 * * * *' },
         input: { iterations: 1_000_000_000 },
       }),
     );
@@ -79,7 +80,7 @@ describe.runIf(process.env.DX_TEST_TAGS?.includes('functions-e2e'))('CPU limit',
 
   test('observe invocations', { timeout: 520_000 }, async ({ expect }) => {
     const { client, space, functionsServiceClient } = await setup(config);
-    const func = await deployFunction(space, functionsServiceClient, FIB_FUNCTION_PATH);
+    const func = await deployFunction(space, functionsServiceClient, FIB_FUNCTION_PATH, Runtime.WORKERS_FOR_PLATFORMS);
     const trigger = space.db.add(
       Obj.make(Trigger.Trigger, {
         enabled: true,
@@ -92,9 +93,9 @@ describe.runIf(process.env.DX_TEST_TAGS?.includes('functions-e2e'))('CPU limit',
     await observeInvocations(space, 100);
   });
 
-  test.only('break CPU limit through natural exection', { timeout: 520_000 }, async ({ expect }) => {
+  test('break CPU limit through natural exection', { timeout: 520_000 }, async ({ expect }) => {
     const { client, space, functionsServiceClient } = await setup(config);
-    const func = await deployFunction(space, functionsServiceClient, FIB_FUNCTION_PATH);
+    const func = await deployFunction(space, functionsServiceClient, FIB_FUNCTION_PATH, Runtime.WORKERS_FOR_PLATFORMS);
     const trigger = space.db.add(
       Obj.make(Trigger.Trigger, {
         enabled: true,

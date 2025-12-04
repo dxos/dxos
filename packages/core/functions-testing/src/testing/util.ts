@@ -52,6 +52,7 @@ export const deployFunction = async (
   space: Space,
   functionsServiceClient: FunctionsServiceClient,
   entryPoint: string,
+  runtime: Runtime,
 ) => {
   const artifact = await bundleFunction({
     entryPoint,
@@ -62,7 +63,7 @@ export const deployFunction = async (
     ownerPublicKey: space.key,
     entryPoint: artifact.entryPoint,
     assets: artifact.assets,
-    runtime: Runtime.WORKER_LOADER,
+    runtime,
   });
   space.db.add(func);
 
