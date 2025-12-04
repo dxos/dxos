@@ -95,7 +95,7 @@ export const MapViewEditor = ({ object }: MapViewEditorProps) => {
   }
 
   return (
-    <Form.Root fieldMap={fieldMap} schema={MapSettingsSchema} values={initialValues} autoSave onSave={onSave}>
+    <Form.Root schema={MapSettingsSchema} values={initialValues} fieldMap={fieldMap} autoSave onSave={onSave}>
       <Form.FieldSet />
     </Form.Root>
   );

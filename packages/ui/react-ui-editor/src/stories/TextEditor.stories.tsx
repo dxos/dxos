@@ -10,7 +10,6 @@ import React from 'react';
 import { log } from '@dxos/log';
 import { withTheme } from '@dxos/react-ui/testing';
 
-import { editorMonospace } from '../defaults';
 import {
   InputModeExtensions,
   decorateMarkdown,
@@ -178,11 +177,7 @@ export const ScrollTo: Story = {
 
 export const Typescript: Story = {
   render: () => (
-    <EditorStory
-      text={content.typescript}
-      lineNumbers
-      extensions={[editorMonospace, javascript({ typescript: true })]}
-    />
+    <EditorStory text={content.typescript} lineNumbers monospace extensions={javascript({ typescript: true })} />
   ),
 };
 

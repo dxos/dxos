@@ -163,7 +163,7 @@ export const ViewEditor = forwardRef<ProjectionModel, ViewEditorProps>(
         )}
 
         {/* TODO(burdon): Is the form read-only or just the schema? */}
-        <Form.Root autoSave schema={viewSchema} values={viewValues} fieldMap={fieldMap} onSave={handleUpdate}>
+        <Form.Root schema={viewSchema} values={viewValues} fieldMap={fieldMap} autoSave onSave={handleUpdate}>
           <Form.FieldSet />
 
           <FormFieldLabel label={t('fields label')} asChild />

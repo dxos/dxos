@@ -17,7 +17,7 @@ import { withTheme } from '@dxos/react-ui/testing';
 import { translations } from '../../translations';
 import { TestLayout } from '../testing';
 
-import { type ExcludeId, Form, type NewFormRootProps, omitId } from './Form';
+import { type ExcludeId, Form, type FormRootProps, omitId } from './Form';
 
 const Organization = Schema.Struct({
   name: Schema.String.pipe(Schema.minLength(1)).annotations({ title: 'Full name' }),
@@ -75,7 +75,7 @@ export interface Person extends Schema.Schema.Type<typeof Person> {}
 type StoryProps<T extends AnyProperties> = {
   debug?: boolean;
   schema: Schema.Schema<T>;
-} & NewFormRootProps<T>;
+} & FormRootProps<T>;
 
 const DefaultStory = <T extends AnyProperties = AnyProperties>({
   debug,
@@ -87,17 +87,17 @@ const DefaultStory = <T extends AnyProperties = AnyProperties>({
   const client = useClient();
   const space = client.spaces.default;
 
-  const handleSave = useCallback<NonNullable<NewFormRootProps<T>['onSave']>>((values) => {
+  const handleSave = useCallback<NonNullable<FormRootProps<T>['onSave']>>((values) => {
     log.info('save', { values, meta });
     setValues(values);
   }, []);
 
-  const handleCancel = useCallback<NonNullable<NewFormRootProps<T>['onCancel']>>(() => {
+  const handleCancel = useCallback<NonNullable<FormRootProps<T>['onCancel']>>(() => {
     log.info('cancel');
     setValues(valuesParam ?? {});
   }, []);
 
-  const handleQueryRefOptions = useCallback<NonNullable<NewFormRootProps<T>['onQueryRefOptions']>>(
+  const handleQueryRefOptions = useCallback<NonNullable<FormRootProps<T>['onQueryRefOptions']>>(
     async ({ typename }) => {
       const objects = await space.db.query(Filter.typename(typename)).run();
       return objects.map((result: any) => ({ dxn: Obj.getDXN(result), label: Obj.getLabel(result) }));

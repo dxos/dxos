@@ -6,26 +6,26 @@ import { readFile } from 'node:fs/promises';
 
 import { describe, expect, test } from 'vitest';
 
-import { Client, Config } from '@dxos/client';
+import { Client, type Config } from '@dxos/client';
 import { createEdgeIdentity } from '@dxos/client/edge';
+import { configPreset } from '@dxos/config';
+import { bundleFunction } from '@dxos/functions-runtime/bundler';
+import { FunctionsServiceClient } from '@dxos/functions-runtime/edge';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
-import { bundleFunction } from '../bundler';
-import { uploadWorkerFunction } from '../edge';
-
 describe.runIf(process.env.DX_TEST_TAGS?.includes('functions-e2e'))('Functions deployment', () => {
   test('deploys FOREX (effect) function and invokes it via EDGE (main)', { timeout: 120_000 }, async () => {
-    const LOCAL = false;
-    const config = new Config({
-      version: 1,
-      runtime: {
-        services: {
-          edge: { url: LOCAL ? 'http://localhost:8787' : 'https://edge-main.dxos.workers.dev' },
-        },
-      },
-    });
+    const config = configPreset({ edge: 'main' });
+    await testDeploy(config);
+  });
 
+  test('deploys FOREX (effect) function and invokes it via EDGE (production)', { timeout: 120_000 }, async () => {
+    const config = configPreset({ edge: 'production' });
+    await testDeploy(config);
+  });
+
+  const testDeploy = async (config: Config) => {
     await using client = await new Client({ config }).initialize();
     await client.halo.createIdentity();
 
@@ -33,24 +33,21 @@ describe.runIf(process.env.DX_TEST_TAGS?.includes('functions-e2e'))('Functions d
     await space.waitUntilReady();
 
     // Inline echo function source.
-    const source = await readFile(new URL('../example/forex-effect.ts', import.meta.url), 'utf-8');
+    const source = await readFile(new URL('../templates/forex-effect.ts', import.meta.url), 'utf-8');
 
     // Bundle and upload.
     const buildResult = await bundleFunction({ source });
     if ('error' in buildResult) {
       throw buildResult.error ?? new Error('Bundle creation failed');
     }
+    const functionsServiceClient = FunctionsServiceClient.fromClient(client);
 
-    const { functionId } = await uploadWorkerFunction({
-      client,
+    const func = await functionsServiceClient.deploy({
       ownerPublicKey: space.key,
       version: '0.0.1',
       entryPoint: buildResult.entryPoint,
       assets: buildResult.assets,
-      name: 'e2e-echo',
     });
-
-    expect(functionId).toBeDefined();
 
     // Invoke deployed function via EDGE directly.
     const edgeClient = client.edge;
@@ -58,10 +55,10 @@ describe.runIf(process.env.DX_TEST_TAGS?.includes('functions-e2e'))('Functions d
     edgeClient.setIdentity(createEdgeIdentity(client));
 
     const input = { from: 'USD', to: 'EUR' };
-    const result = await edgeClient.invokeFunction({ functionId }, input);
-    log.info('>>> result', { result, functionId });
+    const result = await functionsServiceClient.invoke(func, input);
+    log.info('>>> result', { result, func });
     const resultNumber = Number(result);
     expect(resultNumber).toBeGreaterThan(0);
     expect(resultNumber).toBeLessThan(100);
-  });
+  };
 });

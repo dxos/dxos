@@ -42,8 +42,17 @@ export interface RefResolverOptions {
   middleware?: (obj: AnyProperties) => AnyProperties;
 }
 
+/**
+ *
+ */
+// TODO(burdon): Comment required.
 export interface Hypergraph extends Database.Queryable {
   get schemaRegistry(): SchemaRegistry.SchemaRegistry;
+
+  /**
+   * Query objects.
+   */
+  query: Database.QueryFn;
 
   /**
    * Creates a reference to an existing object in the database.
@@ -62,9 +71,4 @@ export interface Hypergraph extends Database.Queryable {
    */
   // TODO(dmaretskyi): Restructure API: Remove middleware.
   createRefResolver(options: RefResolverOptions): Ref.Resolver;
-
-  /**
-   * Query objects.
-   */
-  query: Database.QueryFn;
 }

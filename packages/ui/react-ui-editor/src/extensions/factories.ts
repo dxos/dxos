@@ -21,7 +21,6 @@ import {
 } from '@codemirror/view';
 import { vscodeDarkStyle, vscodeLightStyle } from '@uiw/codemirror-theme-vscode';
 import defaultsDeep from 'lodash.defaultsdeep';
-import merge from 'lodash.merge';
 
 import { generateName } from '@dxos/display-name';
 import { type DocAccessor } from '@dxos/echo-db';
@@ -32,8 +31,7 @@ import { type ThemeMode } from '@dxos/react-ui';
 import { type HuePalette } from '@dxos/react-ui-theme';
 import { hexToHue, isTruthy } from '@dxos/util';
 
-import { editorGutter, editorMonospace } from '../defaults';
-import { type ThemeStyles, defaultTheme } from '../styles';
+import { createBaseTheme, editorGutter } from '../styles';
 
 import { automerge } from './automerge';
 import { SpaceAwarenessProvider, awareness } from './awareness';
@@ -174,10 +172,8 @@ export const createBasicExtensions = (_props?: BasicExtensionsOptions): Extensio
 //
 
 export type ThemeExtensionsOptions = {
-  themeMode?: ThemeMode;
   monospace?: boolean;
-  styles?: ThemeStyles;
-  syntaxHighlighting?: boolean;
+  themeMode?: ThemeMode;
   slots?: {
     editor?: {
       className?: string;
@@ -190,6 +186,7 @@ export type ThemeExtensionsOptions = {
       className?: string;
     };
   };
+  syntaxHighlighting?: boolean;
 };
 
 export const grow: ThemeExtensionsOptions['slots'] = {
@@ -215,17 +212,15 @@ export const defaultStyles = {
  * https://codemirror.net/examples/styling
  */
 export const createThemeExtensions = ({
-  themeMode,
   monospace,
-  styles,
-  syntaxHighlighting: syntaxHighlightingProp,
+  themeMode,
   slots: slotsParam,
+  syntaxHighlighting: syntaxHighlightingProp,
 }: ThemeExtensionsOptions = {}): Extension => {
   const slots = defaultsDeep({}, slotsParam, defaultThemeSlots);
   return [
     EditorView.darkTheme.of(themeMode === 'dark'),
-    EditorView.baseTheme(styles ? merge({}, defaultTheme, styles) : defaultTheme),
-    monospace && editorMonospace,
+    createBaseTheme({ monospace }),
     syntaxHighlightingProp &&
       syntaxHighlighting(HighlightStyle.define(themeMode === 'dark' ? defaultStyles.dark : defaultStyles.light)),
     slots.editor?.className && EditorView.editorAttributes.of({ class: slots.editor.className }),

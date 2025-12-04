@@ -119,6 +119,7 @@
     "typescript": "^5.9.3"
   },
   "devDependencies": {
+    "@dxos/config": "workspace:*",
     "@dxos/echo-db": "workspace:*",
     "@dxos/plugin-automation": "workspace:*",
     "@dxos/random": "workspace:*",

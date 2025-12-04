@@ -11,7 +11,6 @@ import {
   EditorView,
   createBasicExtensions,
   createThemeExtensions,
-  editorMonospace,
   folding,
   useTextEditor,
 } from '@dxos/react-ui-editor';
@@ -39,11 +38,12 @@ export const JsonEditor = (_: JsonEditorProps) => {
           scrollPastEnd: true,
         }),
         createThemeExtensions({
-          themeMode,
+          monospace: true,
           syntaxHighlighting: true,
+          themeMode,
         }),
         folding(),
-        [editorMonospace, json()],
+        json(),
         EditorView.updateListener.of(handleUpdate),
       ],
     }),

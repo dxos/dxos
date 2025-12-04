@@ -5,12 +5,12 @@
 import React from 'react';
 
 import { useTranslation } from '@dxos/react-ui';
-import { Form, type NewFormRootProps } from '@dxos/react-ui-form';
+import { Form, type FormRootProps } from '@dxos/react-ui-form';
 
 import { meta } from '../meta';
 import { UserFeedback } from '../types';
 
-export type FeedbackFormProps = Pick<NewFormRootProps<UserFeedback>, 'onSave'>;
+export type FeedbackFormProps = Pick<FormRootProps<UserFeedback>, 'onSave'>;
 
 export const FeedbackForm = ({ onSave }: FeedbackFormProps) => {
   const { t } = useTranslation(meta.id);
