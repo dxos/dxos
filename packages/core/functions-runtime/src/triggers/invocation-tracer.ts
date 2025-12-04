@@ -18,6 +18,7 @@ import {
   InvocationTraceEventType,
   InvocationTraceStartEvent,
 } from '../trace';
+import { ErrorCodec } from '@dxos/protocols';
 
 export type FunctionInvocationPayload = {
   data?: any;
@@ -77,14 +78,7 @@ export class InvocationTracer extends Context.Tag('@dxos/functions/InvocationTra
               invocationId: trace.invocationId,
               timestamp: now,
               outcome: exception ? InvocationOutcome.FAILURE : InvocationOutcome.SUCCESS,
-              exception: exception
-                ? {
-                    name: exception.constructor.name,
-                    timestamp: now,
-                    message: exception?.message ?? 'Unknown error',
-                    stack: exception?.stack,
-                  }
-                : undefined,
+              error: exception ? ErrorCodec.encode(exception) : undefined,
             });
             yield* QueueService.append(opts.invocationTraceQueue, [traceEvent]);
           }),

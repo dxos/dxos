@@ -11,6 +11,8 @@ import { TracingService } from '@dxos/functions';
 import { Trigger } from '@dxos/functions';
 import { ObjectId } from '@dxos/keys';
 import { log } from '@dxos/log';
+import { SerializedError } from '@dxos/protocols';
+import { FunctionRuntimeKind } from '@dxos/protocols';
 
 export enum InvocationOutcome {
   SUCCESS = 'success',
@@ -66,6 +68,10 @@ export const InvocationTraceStartEvent = Schema.Struct({
    * Present for automatic invocations.
    */
   trigger: Schema.optional(Type.Ref(Trigger.Trigger)),
+  /**
+   * Runtime executing the function.
+   */
+  runtime: Schema.optional(FunctionRuntimeKind),
 }).pipe(Type.Obj({ typename: 'dxos.org/type/InvocationTraceStart', version: '0.1.0' }));
 
 export type InvocationTraceStartEvent = Schema.Schema.Type<typeof InvocationTraceStartEvent>;
@@ -88,7 +94,7 @@ export const InvocationTraceEndEvent = Schema.Struct({
 
   outcome: Schema.Enums(InvocationOutcome),
 
-  exception: Schema.optional(TraceEventException),
+  error: Schema.optional(SerializedError),
 }).pipe(Type.Obj({ typename: 'dxos.org/type/InvocationTraceEnd', version: '0.1.0' }));
 
 export type InvocationTraceEndEvent = Schema.Schema.Type<typeof InvocationTraceEndEvent>;
