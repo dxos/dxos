@@ -50,13 +50,13 @@ export type TriggerEditorProps = {
   Pick<FormRootProps<TriggerFormSchema>, 'onSave' | 'onCancel'>;
 
 export const TriggerEditor = ({ space, types, tags, readonlySpec, trigger, ...formProps }: TriggerEditorProps) => {
-  const handleRefQueryOptions = useRefQueryOptions({ space });
+  const handleQueryRefOptions = useRefQueryOptions({ space });
   const fieldMap = useCustomInputs({
     space,
     types,
     tags,
     readonlySpec,
-    onQueryRefOptions: handleRefQueryOptions,
+    onQueryRefOptions: handleQueryRefOptions,
   });
 
   return (
@@ -65,7 +65,7 @@ export const TriggerEditor = ({ space, types, tags, readonlySpec, trigger, ...fo
       schema={omitId(Trigger.Trigger)}
       values={trigger}
       fieldMap={fieldMap}
-      onQueryRefOptions={handleRefQueryOptions}
+      onQueryRefOptions={handleQueryRefOptions}
     >
       <Form.Viewport>
         <Form.Content>

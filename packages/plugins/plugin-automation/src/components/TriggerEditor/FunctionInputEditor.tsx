@@ -14,6 +14,7 @@ import {
   type FormFieldStateProps,
   type FormRootProps,
   type QueryRefOptions,
+  omitId,
   useFormValues,
 } from '@dxos/react-ui-form';
 
@@ -79,7 +80,7 @@ export const FunctionInputEditor = ({
     <>
       <Form.Label label={t('function parameters label')} asChild />
       <Form.Root
-        schema={effectSchema}
+        schema={omitId(effectSchema)}
         values={values}
         onValuesChanged={handleValuesChanged}
         onQueryRefOptions={onQueryRefOptions}
