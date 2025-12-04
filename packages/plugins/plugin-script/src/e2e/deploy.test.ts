@@ -10,7 +10,7 @@ import { Client, type Config } from '@dxos/client';
 import { createEdgeIdentity } from '@dxos/client/edge';
 import { configPreset } from '@dxos/config';
 import { bundleFunction } from '@dxos/functions-runtime/bundler';
-import { uploadWorkerFunction } from '@dxos/functions-runtime/edge';
+import { FunctionsServiceClient } from '@dxos/functions-runtime/edge';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
@@ -40,9 +40,9 @@ describe.runIf(process.env.DX_TEST_TAGS?.includes('functions-e2e'))('Functions d
     if ('error' in buildResult) {
       throw buildResult.error ?? new Error('Bundle creation failed');
     }
+    const functionsServiceClient = FunctionsServiceClient.fromClient(client);
 
-    const { functionId } = await uploadWorkerFunction({
-      client,
+    const func = await functionsServiceClient.deploy({
       ownerPublicKey: space.key,
       version: '0.0.1',
       entryPoint: buildResult.entryPoint,
@@ -50,16 +50,14 @@ describe.runIf(process.env.DX_TEST_TAGS?.includes('functions-e2e'))('Functions d
       name: 'e2e-echo',
     });
 
-    expect(functionId).toBeDefined();
-
     // Invoke deployed function via EDGE directly.
     const edgeClient = client.edge;
     invariant(edgeClient, 'edgeClient is required');
     edgeClient.setIdentity(createEdgeIdentity(client));
 
     const input = { from: 'USD', to: 'EUR' };
-    const result = await edgeClient.invokeFunction({ functionId }, input);
-    log.info('>>> result', { result, functionId });
+    const result = await functionsServiceClient.invoke(func, input);
+    log.info('>>> result', { result, func });
     const resultNumber = Number(result);
     expect(resultNumber).toBeGreaterThan(0);
     expect(resultNumber).toBeLessThan(100);
