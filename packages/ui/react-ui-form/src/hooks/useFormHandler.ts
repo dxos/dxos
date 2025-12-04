@@ -41,7 +41,6 @@ export interface FormHandlerProps<T extends AnyProperties> {
   /**
    * Auto-save the form when the values change.
    */
-  // TODO(burdon): Not currently working?
   autoSave?: boolean;
 
   /**

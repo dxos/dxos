@@ -76,7 +76,6 @@ export const ObjectForm = ({ object, schema }: ObjectFormProps) => {
       createOptionIcon='ph--plus--regular'
       createOptionLabel={['add tag label', { ns: pluginMeta.id }]}
       createInitialValuePath='label'
-      autoSave
       onValuesChanged={handleChange}
       onCreate={handleCreateTag}
       onQueryRefOptions={handleRefQueryLookup}
