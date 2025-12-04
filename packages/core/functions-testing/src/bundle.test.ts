@@ -1,7 +1,14 @@
-import { bundleFunction } from '@dxos/functions-runtime/native';
-import { describe, it } from 'vitest';
-import { writeBundle } from './testing/util';
+//
+// Copyright 2025 DXOS.org
+//
+
 import { join } from 'node:path';
+
+import { describe, it } from 'vitest';
+
+import { bundleFunction } from '@dxos/functions-runtime/native';
+
+import { writeBundle } from './testing/util';
 
 describe('bundle', () => {
   it('should bundle', async () => {
