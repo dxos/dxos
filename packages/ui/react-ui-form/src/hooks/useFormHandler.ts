@@ -59,11 +59,6 @@ export interface FormHandlerProps<T extends AnyProperties> {
   onValidate?: (values: T) => ValidationError[] | undefined;
 
   /**
-   * Called when a field is blurred and is valid.
-   */
-  onAutoSave?: (values: T, meta: FormUpdateMeta<T>) => void;
-
-  /**
    * Called when the form is submitted and passes validation.
    */
   onSave?: (values: T, meta: FormUpdateMeta<T>) => MaybePromise<void>;
@@ -122,7 +117,6 @@ export const useFormHandler = <T extends AnyProperties>({
   values: valuesProp,
   defaultValues: defaultValuesProp,
   onValuesChanged,
-  onAutoSave,
   onValidate,
   onSave,
   onCancel,
@@ -283,19 +277,19 @@ export const useFormHandler = <T extends AnyProperties>({
   );
 
   const onBlur = useCallback(
-    (path: (string | number)[]) => {
+    async (path: (string | number)[]) => {
       const jsonPath = createJsonPath(path);
 
       // TODO(burdon): Check value has changed from original.
       setTouched((touched) => ({ ...touched, [jsonPath]: true }));
       const isValid = validate(values);
 
-      // Auto-save when a field is blurred and is valid
-      if (Object.keys(changed).length > 0 && isValid && autoSave && onAutoSave) {
-        onAutoSave(values as T, { changed, isValid });
+      // Auto-save when a field is blurred and is valid.
+      if (Object.keys(changed).length > 0 && isValid && autoSave) {
+        await onSave?.(values as T, { changed, isValid });
       }
     },
-    [validate, values, changed, autoSave, onAutoSave],
+    [validate, values, changed, autoSave, onSave],
   );
 
   return useMemo<FormHandler<T>>(

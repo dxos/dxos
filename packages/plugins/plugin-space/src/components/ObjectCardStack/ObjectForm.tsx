@@ -45,11 +45,17 @@ export const ObjectForm = ({ object, schema }: ObjectFormProps) => {
     meta.tags = [...(meta.tags ?? []), Obj.getDXN(tag).toString()];
   }, []);
 
-  const handleSave = useCallback(
-    ({ tags, ...values }: any, { changed }: { changed: Record<JsonPath, boolean> }) => {
+  // TODO(wittjosiah): Use FormRootProps type.
+  const handleChange = useCallback(
+    ({ tags, ...values }: any, { isValid, changed }: { isValid: boolean; changed: Record<JsonPath, boolean> }) => {
+      if (!isValid) {
+        return;
+      }
+
       const changedPaths = Object.keys(changed).filter((path) => changed[path as JsonPath]) as JsonPath[];
       for (const path of changedPaths) {
-        if (path === 'tags') {
+        // TODO(wittjosiah): This doesn't handle array paths well.
+        if (path.startsWith('tags')) {
           const meta = Obj.getMeta(object);
           meta.tags = tags?.map((tag: Ref.Ref<Tag.Tag>) => tag.dxn.toString()) ?? [];
           continue;
@@ -71,15 +77,13 @@ export const ObjectForm = ({ object, schema }: ObjectFormProps) => {
       createOptionLabel={['add tag label', { ns: pluginMeta.id }]}
       createInitialValuePath='label'
       autoSave
-      onSave={handleSave}
+      onValuesChanged={handleChange}
       onCreate={handleCreateTag}
       onQueryRefOptions={handleRefQueryLookup}
     >
       <Form.Viewport>
         <Form.Content>
           <Form.FieldSet />
-          {/* TODO(burdon): Remove actions (should autoSave). */}
-          <Form.Actions />
         </Form.Content>
       </Form.Viewport>
     </Form.Root>

@@ -12,13 +12,7 @@ import { createJsonPath, getValue as getValue$ } from '@dxos/effect';
 import { IconButton, type IconButtonProps, ScrollArea, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
-import {
-  type FormHandler,
-  type FormHandlerProps,
-  type FormUpdateMeta,
-  useFormHandler,
-  useKeyHandler,
-} from '../../hooks';
+import { type FormHandler, type FormHandlerProps, useFormHandler, useKeyHandler } from '../../hooks';
 import { translationKey } from '../../translations';
 
 import { FormFieldLabel, type FormFieldLabelProps, type FormFieldStateProps } from './FormFieldComponent';
@@ -35,9 +29,10 @@ import { FormFieldSet, type FormFieldSetProps } from './FormFieldSet';
 // [ ] Inline tables for object arrays
 // [ ] Defer query until popover
 // [ ] Omit id from sub properties.
-// [ ] Refs
+// [x] Refs
 //   [x] Single-select (fix popover)
-//   [ ] Multi-select (array)
+//   [x] Multi-select (array)
+// [ ] auto save doesn't work for combobox + select due to only firing on blur (workaround is to use onValuesChanged)
 
 // TODO(burdon): Move to @dxos/schema (re-export here).
 export type ExcludeId<S extends Schema.Schema.AnyNoContext> = Omit<Schema.Schema.Type<S>, 'id'>;
@@ -106,22 +101,10 @@ const useFormFieldState = (componentName: string, path: (string | number)[] = []
 //
 
 type NewFormRootProps<T extends AnyProperties = AnyProperties> = PropsWithChildren<
-  {
-    /**
-     * Called when the form is submitted and passes validation.
-     */
-    onSave?: (values: T, meta: FormUpdateMeta<T>) => void;
-
-    /**
-     * Called when the form is canceled to abandon/undo any pending changes.
-     */
-    onCancel?: () => void;
-  } &
-    // prettier-ignore
-    Omit<NewFormContextValue<T>, 'form'> &
+  Omit<NewFormContextValue<T>, 'form'> &
     Pick<
       FormHandlerProps<T>,
-      'schema' | 'autoSave' | 'values' | 'defaultValues' | 'onAutoSave' | 'onValidate' | 'onValuesChanged'
+      'schema' | 'autoSave' | 'values' | 'defaultValues' | 'onCancel' | 'onSave' | 'onValidate' | 'onValuesChanged'
     > &
     Omit<FormFieldSetProps<T>, 'schema' | 'path'>
 >;
