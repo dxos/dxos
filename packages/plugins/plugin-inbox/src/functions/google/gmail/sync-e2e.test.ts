@@ -118,13 +118,13 @@ describe.runIf(process.env.DX_TEST_TAGS?.includes('functions-e2e'))('Functions d
       Obj.make(Trigger.Trigger, {
         enabled: true,
         function: Ref.make(func),
-        spec: { kind: 'timer', cron: '*/30 * * * * *' },
+        spec: { kind: 'timer', cron: '*/3 * * * * *' },
         input: { mailboxId: Obj.getDXN(mailbox).toString() },
       }),
     );
     await sync(space);
 
-    await observeInvocations(space, 10);
+    await observeInvocations(space, 10000);
 
     await expect.poll(async () => {
       log.info('poll');
@@ -175,7 +175,7 @@ const deployFunction = async (space: Space, functionsServiceClient: FunctionsSer
     ownerPublicKey: space.key,
     entryPoint: artifact.entryPoint,
     assets: artifact.assets,
-    runtime: Runtime.WORKER_LOADER,
+    runtime: Runtime.WORKERS_FOR_PLATFORMS,
   });
   space.db.add(func);
 
@@ -188,11 +188,12 @@ const checkEmails = async (mailbox: Mailbox.Mailbox) => {
   return messages;
 };
 
-export const observeInvocations = async (space: Space, count: number | null) => {
+export const observeInvocations = async (space: Space, maxCount: number | null) => {
   let initialCount = null;
   const invocationData = new Map<
     string,
     {
+      count: number;
       begin: InvocationTraceStartEvent;
       end?: InvocationTraceEndEvent;
     }
@@ -202,15 +203,17 @@ export const observeInvocations = async (space: Space, count: number | null) => 
       const invocations =
         (await space.properties.invocationTraceQueue?.target!.query(Query.select(Filter.everything())).run()) ?? [];
 
+      let count = 0;
       for (const invocation of invocations) {
         if (Obj.instanceOf(InvocationTraceStartEvent, invocation)) {
           if (invocationData.has(invocation.invocationId)) {
             continue;
           }
           invocationData.set(invocation.invocationId, {
+            count: count++,
             begin: invocation,
           });
-          console.log(`BEGIN ${JSON.stringify(invocation.input)}`);
+          console.log(`${count.toString().padStart(3, ' ')}: BEGIN ${JSON.stringify(invocation.input)}`);
         } else if (Obj.instanceOf(InvocationTraceEndEvent, invocation)) {
           const data = invocationData.get(invocation.invocationId);
           if (!data || !!data.end) {
@@ -219,7 +222,9 @@ export const observeInvocations = async (space: Space, count: number | null) => 
           data.end = invocation;
 
           const outcome = data.end.outcome;
-          console.log(`END outcome=${outcome} duration=${data.end.timestamp - data.begin.timestamp}`);
+          console.log(
+            `${data.count.toString().padStart(3, ' ')}: END outcome=${outcome} duration=${data.end.timestamp - data.begin.timestamp}`,
+          );
           if (outcome === 'failure') {
             console.log(data.end.exception?.stack);
           }
@@ -229,7 +234,7 @@ export const observeInvocations = async (space: Space, count: number | null) => 
         initialCount = invocations.length;
       }
 
-      if (count !== null && invocationData.size >= count + initialCount) {
+      if (maxCount !== null && invocationData.size >= maxCount + initialCount) {
         break;
       }
     } catch (err) {
