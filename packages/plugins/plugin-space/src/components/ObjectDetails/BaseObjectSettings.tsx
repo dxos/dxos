@@ -13,7 +13,7 @@ import { type JsonPath, setValue } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
 import { getSpace } from '@dxos/react-client/echo';
 import { type ThemedClassName } from '@dxos/react-ui';
-import { Form, useRefQueryOptions } from '@dxos/react-ui-form';
+import { Form, omitId, useRefQueryOptions } from '@dxos/react-ui-form';
 import { isNonNullable } from '@dxos/util';
 
 import { meta as pluginMeta } from '../../meta';
@@ -91,7 +91,7 @@ export const BaseObjectSettings = ({ classNames, children, object }: BaseObjectS
 
   return (
     <Form.Root
-      schema={formSchema}
+      schema={omitId(formSchema)}
       values={values}
       createSchema={TagSchema}
       createOptionIcon='ph--plus--regular'
@@ -102,10 +102,14 @@ export const BaseObjectSettings = ({ classNames, children, object }: BaseObjectS
       onCreate={handleCreateTag}
       onQueryRefOptions={handleRefQueryLookup}
     >
-      <Form.Content classNames={classNames}>
-        <Form.FieldSet />
-        {children}
-      </Form.Content>
+      <Form.Viewport>
+        <Form.Content classNames={classNames}>
+          <Form.FieldSet />
+          {children}
+          {/* TODO(burdon): Remove actions (should autoSave). */}
+          <Form.Actions />
+        </Form.Content>
+      </Form.Viewport>
     </Form.Root>
   );
 };

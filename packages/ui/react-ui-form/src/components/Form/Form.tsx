@@ -39,9 +39,10 @@ import { FormFieldSet, type FormFieldSetProps } from './FormFieldSet';
 //   [x] Single-select (fix popover)
 //   [ ] Multi-select (array)
 
+// TODO(burdon): Move to @dxos/schema (re-export here).
 export type ExcludeId<S extends Schema.Schema.AnyNoContext> = Omit<Schema.Schema.Type<S>, 'id'>;
 
-// TODO(burdon): Option to omit automatically?
+// TODO(burdon): Move to @dxos/schema (re-export here).
 export const omitId = <S extends Schema.Schema.AnyNoContext>(schema: S): Schema.Schema<ExcludeId<S>, ExcludeId<S>> =>
   schema.pipe(Schema.omit('id')) as any;
 

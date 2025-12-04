@@ -9,7 +9,7 @@ import { DXN, Obj, type Ref, Tag, Type } from '@dxos/echo';
 import { type JsonPath, setValue } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
 import { getSpace } from '@dxos/react-client/echo';
-import { Form, useRefQueryOptions } from '@dxos/react-ui-form';
+import { Form, omitId, useRefQueryOptions } from '@dxos/react-ui-form';
 import { isNonNullable } from '@dxos/util';
 
 import { meta as pluginMeta } from '../../meta';
@@ -25,7 +25,10 @@ export const ObjectForm = ({ object, schema }: ObjectFormProps) => {
   const space = getSpace(object);
 
   const formSchema = useMemo(
-    () => Schema.Struct({ tags: Schema.Array(Type.Ref(Tag.Tag)).pipe(Schema.optional) }).pipe(Schema.extend(schema)),
+    () =>
+      Schema.Struct({
+        tags: Schema.Array(Type.Ref(Tag.Tag)).pipe(Schema.optional),
+      }).pipe(Schema.extend(omitId(schema))),
     [schema],
   );
 
@@ -61,7 +64,7 @@ export const ObjectForm = ({ object, schema }: ObjectFormProps) => {
 
   return (
     <Form.Root
-      schema={formSchema}
+      schema={omitId(formSchema)}
       values={values}
       createSchema={TagSchema}
       createOptionIcon='ph--plus--regular'
@@ -75,6 +78,8 @@ export const ObjectForm = ({ object, schema }: ObjectFormProps) => {
       <Form.Viewport>
         <Form.Content>
           <Form.FieldSet />
+          {/* TODO(burdon): Remove actions (should autoSave). */}
+          <Form.Actions />
         </Form.Content>
       </Form.Viewport>
     </Form.Root>
