@@ -37,6 +37,7 @@ import { SpecSelector } from './SpecSelector';
  * This is a quirk of how TypeScript resolves merged declarations (interface + const with same name) in type vs value contexts.
  * The `typeof` forces value-context resolution.
  */
+type TriggerFormSchema = ExcludeId<typeof Trigger.Trigger>;
 
 export type TriggerEditorProps = {
   space: Space;
@@ -46,7 +47,7 @@ export type TriggerEditorProps = {
 } &
   // prettier-ignore
   Pick<QueryFormProps, 'types' | 'tags'> &
-  Pick<FormRootProps<ExcludeId<typeof Trigger.Trigger>>, 'onSave' | 'onCancel'>;
+  Pick<FormRootProps<TriggerFormSchema>, 'onSave' | 'onCancel'>;
 
 export const TriggerEditor = ({ space, types, tags, readonlySpec, trigger, ...formProps }: TriggerEditorProps) => {
   const handleRefQueryOptions = useRefQueryOptions({ space });
@@ -59,7 +60,7 @@ export const TriggerEditor = ({ space, types, tags, readonlySpec, trigger, ...fo
   });
 
   return (
-    <Form.Root<ExcludeId<typeof Trigger.Trigger>>
+    <Form.Root<TriggerFormSchema>
       {...formProps}
       schema={omitId(Trigger.Trigger)}
       values={trigger}
