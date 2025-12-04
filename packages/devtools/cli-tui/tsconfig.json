@@ -1,0 +1,22 @@
+{
+  "extends": "../../../tsconfig.base.json",
+  "compilerOptions": {
+    "jsx": "react-jsx",
+    "jsxImportSource": "react",
+    "outDir": "./dist",
+    "rootDir": "./src"
+  },
+  "exclude": ["dist", "node_modules"],
+  "include": ["src/**/*"],
+  "references": [
+    {
+      "path": "../../common/util"
+    },
+    {
+      "path": "../../sdk/client"
+    },
+    {
+      "path": "../cli-base"
+    }
+  ]
+}

@@ -77,10 +77,12 @@ export const CreateSpaceDialog = () => {
         fieldProvider={inputSurfaceLookup}
         onSave={handleCreateSpace}
       >
-        <Form.Content>
-          <Form.FieldSet />
-          <Form.Submit />
-        </Form.Content>
+        <Form.Viewport>
+          <Form.Content>
+            <Form.FieldSet />
+            <Form.Submit />
+          </Form.Content>
+        </Form.Viewport>
       </Form.Root>
     </Dialog.Content>
   );
