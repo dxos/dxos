@@ -12,7 +12,13 @@ import { createJsonPath, getValue as getValue$ } from '@dxos/effect';
 import { IconButton, type IconButtonProps, ScrollArea, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
-import { type FormHandler, type FormHandlerProps, useFormHandler, useKeyHandler } from '../../hooks';
+import {
+  type FormHandler,
+  type FormHandlerProps,
+  type FormUpdateMeta,
+  useFormHandler,
+  useKeyHandler,
+} from '../../hooks';
 import { translationKey } from '../../translations';
 
 import { FormFieldLabel, type FormFieldLabelProps, type FormFieldStateProps } from './FormFieldComponent';
@@ -101,11 +107,18 @@ const useFormFieldState = (componentName: string, path: (string | number)[] = []
 //
 
 type NewFormRootProps<T extends AnyProperties = AnyProperties> = PropsWithChildren<
-  Omit<NewFormContextValue<T>, 'form'> &
-    Pick<
-      FormHandlerProps<T>,
-      'schema' | 'autoSave' | 'values' | 'defaultValues' | 'onCancel' | 'onSave' | 'onValidate' | 'onValuesChanged'
-    > &
+  {
+    /**
+     * Called when the form is submitted and passes validation.
+     */
+    onSave?: (values: T, meta: FormUpdateMeta<T>) => void;
+
+    /**
+     * Called when the form is canceled to abandon/undo any pending changes.
+     */
+    onCancel?: () => void;
+  } & Omit<NewFormContextValue<T>, 'form'> &
+    Pick<FormHandlerProps<T>, 'schema' | 'autoSave' | 'values' | 'defaultValues' | 'onValidate' | 'onValuesChanged'> &
     Omit<FormFieldSetProps<T>, 'schema' | 'path'>
 >;
 
