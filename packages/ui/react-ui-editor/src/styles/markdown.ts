@@ -16,7 +16,7 @@ const headings: Record<HeadingLevel, string> = {
   6: '', // TODO(burdon): Should be text-base, but that's a color in our system.
 };
 
-export const theme = {
+export const markdownTheme = {
   code: 'font-mono !no-underline text-neutral-700 dark:text-neutral-300',
   codeMark: 'font-mono text-primary-500',
   mark: 'opacity-50',

@@ -98,11 +98,6 @@ const TableMainInner = <T extends Type.Entity.Any = Type.Entity.Any>(
 
   const draftRowCount = model?.getDraftRowCount() ?? 0;
 
-  const handleSave = useCallback(() => {
-    dxGrid?.updateCells(true);
-    dxGrid?.requestUpdate();
-  }, [dxGrid]);
-
   const frozen = useMemo(() => {
     const noActionColumn =
       model?.features.dataEditable === false &&
@@ -122,12 +117,22 @@ const TableMainInner = <T extends Type.Entity.Any = Type.Entity.Any>(
     [presentation],
   );
 
+  // Set initial sort order.
+  // TODO(burdon): Save sort order to local storage.
   useEffect(() => {
-    if (!presentation || !dxGrid) {
+    const fieldId = model?.projection?.fields?.[0]?.id;
+    if (fieldId) {
+      model.sorting.setSort(fieldId, 'asc');
+    }
+  }, [model]);
+
+  useEffect(() => {
+    if (!dxGrid || !presentation) {
       return;
     }
+
     dxGrid.getCells = getCells;
-  }, [presentation, dxGrid, getCells]);
+  }, [dxGrid, presentation, getCells]);
 
   const handleInsertRowResult = useCallback(
     (insertResult?: InsertRowResult) => {
@@ -146,26 +151,10 @@ const TableMainInner = <T extends Type.Entity.Any = Type.Entity.Any>(
     [model, dxGrid],
   );
 
-  /**
-   * Provides an external controller that can be called to repaint the table.
-   */
-  useImperativeHandle<TableController, TableController>(forwardedRef, () => {
-    if (!presentation || !dxGrid) {
-      return {};
-    }
-
-    return {
-      update: (cell) => {
-        if (cell) {
-          dxGrid.updateIfWithinBounds(cell, true);
-        } else {
-          dxGrid.updateCells(true);
-          dxGrid.requestUpdate();
-        }
-      },
-      handleInsertRowResult,
-    };
-  }, [presentation, dxGrid, model]);
+  const handleSave = useCallback(() => {
+    dxGrid?.updateCells(true);
+    dxGrid?.requestUpdate();
+  }, [dxGrid]);
 
   const handleSaveDraftRow = useCallback(
     (rowIndex = 0) => {
@@ -395,6 +384,27 @@ const TableMainInner = <T extends Type.Entity.Any = Type.Entity.Any>(
       dxGrid.scrollToColumn(columns - 1);
     }
   }, [model, dxGrid]);
+
+  /**
+   * Provides an external controller that can be called to repaint the table.
+   */
+  useImperativeHandle<TableController, TableController>(forwardedRef, () => {
+    if (!dxGrid || !presentation) {
+      return {};
+    }
+
+    return {
+      update: (cell) => {
+        if (cell) {
+          dxGrid.updateIfWithinBounds(cell, true);
+        } else {
+          dxGrid.updateCells(true);
+          dxGrid.requestUpdate();
+        }
+      },
+      handleInsertRowResult,
+    };
+  }, [dxGrid, model, presentation]);
 
   if (!model || !modals) {
     return <span role='none' className='attention-surface' />;

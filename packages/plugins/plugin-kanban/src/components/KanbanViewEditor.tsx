@@ -47,7 +47,7 @@ export const KanbanViewEditor = ({ object }: KanbanViewEditorProps) => {
   );
 
   return (
-    <Form.Root fieldMap={fieldMap} schema={SettingsSchema} values={initialValues} autoSave onSave={handleSave}>
+    <Form.Root schema={SettingsSchema} values={initialValues} fieldMap={fieldMap} autoSave onSave={handleSave}>
       <Form.FieldSet />
     </Form.Root>
   );
