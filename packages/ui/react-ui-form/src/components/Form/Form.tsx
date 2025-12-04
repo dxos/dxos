@@ -22,7 +22,10 @@ import {
 import { translationKey } from '../../translations';
 
 import { FormFieldLabel, type FormFieldLabelProps, type FormFieldStateProps } from './FormFieldComponent';
-import { FormFieldSet, type FormFieldSetProps } from './FormFieldSet';
+import {
+  FormFieldSet as NaturalFormFieldSet,
+  type FormFieldSetProps as NaturalFormFieldSetProps,
+} from './FormFieldSet';
 
 // New features/polish
 // [x] Unify readonly/inline modes
@@ -35,13 +38,15 @@ import { FormFieldSet, type FormFieldSetProps } from './FormFieldSet';
 // [ ] Inline tables for object arrays
 // [ ] Defer query until popover
 // [ ] Omit id from sub properties.
-// [ ] Refs
+// [x] Refs
 //   [x] Single-select (fix popover)
-//   [ ] Multi-select (array)
+//   [x] Multi-select (array)
+// [ ] auto save doesn't work for combobox + select due to only firing on blur (workaround is to use onValuesChanged)
 
+// TODO(burdon): Move to @dxos/schema (re-export here).
 export type ExcludeId<S extends Schema.Schema.AnyNoContext> = Omit<Schema.Schema.Type<S>, 'id'>;
 
-// TODO(burdon): Option to omit automatically?
+// TODO(burdon): Move to @dxos/schema (re-export here).
 export const omitId = <S extends Schema.Schema.AnyNoContext>(schema: S): Schema.Schema<ExcludeId<S>, ExcludeId<S>> =>
   schema.pipe(Schema.omit('id')) as any;
 
@@ -49,7 +54,7 @@ export const omitId = <S extends Schema.Schema.AnyNoContext>(schema: S): Schema.
 // Context
 //
 
-type NewFormContextValue<T extends AnyProperties = any> = {
+type FormContextValue<T extends AnyProperties = any> = {
   /**
    * Form handler.
    */
@@ -64,9 +69,9 @@ type NewFormContextValue<T extends AnyProperties = any> = {
    * Testing.
    */
   testId?: string;
-} & Pick<FormFieldSetProps<T>, 'readonly' | 'layout' | 'fieldMap' | 'fieldProvider'>;
+} & Pick<NaturalFormFieldSetProps<T>, 'readonly' | 'layout' | 'fieldMap' | 'fieldProvider'>;
 
-const [NewFormContextProvider, useNewFormContext] = createContext<NewFormContextValue>('Form');
+const [FormContextProvider, useFormContext] = createContext<FormContextValue>('Form');
 
 /**
  * Get the current form values.
@@ -75,7 +80,7 @@ const useFormValues = <T extends AnyProperties>(componentName: string, path: (st
   const jsonPath = createJsonPath(path);
   const {
     form: { values },
-  } = useNewFormContext(componentName);
+  } = useFormContext(componentName);
 
   return getValue$(values, jsonPath) as T;
 };
@@ -87,7 +92,7 @@ const useFormFieldState = (componentName: string, path: (string | number)[] = []
   const stablePath = useMemo(() => path, [Array.isArray(path) ? path.join('.') : path]);
   const {
     form: { getStatus, getValue, onBlur, onValueChange },
-  } = useNewFormContext(componentName);
+  } = useFormContext(componentName);
 
   return useMemo(
     () => ({
@@ -104,7 +109,7 @@ const useFormFieldState = (componentName: string, path: (string | number)[] = []
 // Root
 //
 
-type NewFormRootProps<T extends AnyProperties = AnyProperties> = PropsWithChildren<
+type FormRootProps<T extends AnyProperties = AnyProperties> = PropsWithChildren<
   {
     /**
      * Called when the form is submitted and passes validation.
@@ -115,42 +120,37 @@ type NewFormRootProps<T extends AnyProperties = AnyProperties> = PropsWithChildr
      * Called when the form is canceled to abandon/undo any pending changes.
      */
     onCancel?: () => void;
-  } &
-    // prettier-ignore
-    Omit<NewFormContextValue<T>, 'form'> &
-    Pick<
-      FormHandlerProps<T>,
-      'schema' | 'autoSave' | 'values' | 'defaultValues' | 'onAutoSave' | 'onValidate' | 'onValuesChanged'
-    > &
-    Omit<FormFieldSetProps<T>, 'schema' | 'path'>
+  } & Omit<FormContextValue<T>, 'form'> &
+    Pick<FormHandlerProps<T>, 'schema' | 'autoSave' | 'values' | 'defaultValues' | 'onValidate' | 'onValuesChanged'> &
+    Omit<NaturalFormFieldSetProps<T>, 'schema' | 'path'>
 >;
 
-const NewFormRoot = <T extends AnyProperties = AnyProperties>({
+const FormRoot = <T extends AnyProperties = AnyProperties>({
   children,
   schema,
   values,
   onSave,
   onCancel,
   ...props
-}: NewFormRootProps<T>) => {
+}: FormRootProps<T>) => {
   const form = useFormHandler({ schema, values, onSave, onCancel, ...props });
 
   return (
-    <NewFormContextProvider form={form} {...props}>
+    <FormContextProvider form={form} {...props}>
       {children}
-    </NewFormContextProvider>
+    </FormContextProvider>
   );
 };
 
-NewFormRoot.displayName = 'Form.Root';
+FormRoot.displayName = 'Form.Root';
 
 //
 // Viewport
 //
 
-type NewFormViewportProps = ThemedClassName<PropsWithChildren<{}>>;
+type FormViewportProps = ThemedClassName<PropsWithChildren<{}>>;
 
-const NewFormViewport = ({ classNames, children }: NewFormViewportProps) => {
+const FormViewport = ({ classNames, children }: FormViewportProps) => {
   return (
     <ScrollArea.Root>
       <ScrollArea.Viewport classNames={['plb-cardSpacingBlock', classNames]}>{children}</ScrollArea.Viewport>
@@ -161,17 +161,17 @@ const NewFormViewport = ({ classNames, children }: NewFormViewportProps) => {
   );
 };
 
-NewFormViewport.displayName = 'Form.Viewport';
+FormViewport.displayName = 'Form.Viewport';
 
 //
 // Content
 //
 
-type NewFormContentProps = ThemedClassName<PropsWithChildren<{}>>;
+type FormContentProps = ThemedClassName<PropsWithChildren<{}>>;
 
 // TOOD(burdon): Figure out nesting (indent and testId).
-const NewFormContent = ({ classNames, children }: NewFormContentProps) => {
-  const { form, testId } = useNewFormContext(NewFormContent.displayName);
+const FormContent = ({ classNames, children }: FormContentProps) => {
+  const { form, testId } = useFormContext(FormContent.displayName);
   const ref = useRef<HTMLDivElement>(null);
   useKeyHandler(ref.current, form);
 
@@ -187,42 +187,42 @@ const NewFormContent = ({ classNames, children }: NewFormContentProps) => {
   );
 };
 
-NewFormContent.displayName = 'Form.Content';
+FormContent.displayName = 'Form.Content';
 
 //
 // FieldSet
 //
 
-type NewFormFieldSetProps = ThemedClassName<{}>;
+type FormFieldSetProps = ThemedClassName<{}>;
 
-const NewFormFieldSet = ({ classNames }: NewFormFieldSetProps) => {
-  const { form, ...props } = useNewFormContext(NewFormFieldSet.displayName);
+const FormFieldSet = ({ classNames }: FormFieldSetProps) => {
+  const { form, ...props } = useFormContext(FormFieldSet.displayName);
 
-  return <FormFieldSet classNames={classNames} schema={form.schema} {...props} />;
+  return <NaturalFormFieldSet classNames={classNames} schema={form.schema} {...props} />;
 };
 
-NewFormFieldSet.displayName = 'Form.FieldSet';
+FormFieldSet.displayName = 'Form.FieldSet';
 
 //
 // Actions
 //
 
-type NewFormActionsProps = ThemedClassName<{}>;
+type FormActionsProps = ThemedClassName<{}>;
 
-const NewFormActions = ({ classNames }: NewFormActionsProps) => {
+const FormActions = ({ classNames }: FormActionsProps) => {
   const { t } = useTranslation(translationKey);
   const {
     form: { isValid, onSave, onCancel },
     readonly,
     layout,
-  } = useNewFormContext(NewFormActions.displayName);
+  } = useFormContext(FormActions.displayName);
 
   if (readonly || layout === 'static') {
     return null;
   }
 
   // TODO(burdon): Currently onCancel is a no-op; implement "revert values".
-  //   Deprecate NewFormSubmit ans use NewFormActions without Cancel button if no callback is supplied.
+  //   Deprecate FormSubmit ans use FormActions without Cancel button if no callback is supplied.
 
   return (
     <div role='none' className={mx('grid grid-flow-col auto-cols-fr gap-2 pbs-cardSpacingBlock', classNames)}>
@@ -251,21 +251,21 @@ const NewFormActions = ({ classNames }: NewFormActionsProps) => {
   );
 };
 
-NewFormActions.displayName = 'Form.Actions';
+FormActions.displayName = 'Form.Actions';
 
 //
 // Submit
 //
 
-type NewFormSubmitProps = ThemedClassName<Partial<Pick<IconButtonProps, 'icon' | 'label'>>>;
+type FormSubmitProps = ThemedClassName<Partial<Pick<IconButtonProps, 'icon' | 'label'>>>;
 
-const NewFormSubmit = ({ classNames, label, icon }: NewFormSubmitProps) => {
+const FormSubmit = ({ classNames, label, icon }: FormSubmitProps) => {
   const { t } = useTranslation(translationKey);
   const {
     form: { isValid, onSave },
     readonly,
     layout,
-  } = useNewFormContext(NewFormSubmit.displayName);
+  } = useFormContext(FormSubmit.displayName);
 
   if (readonly || layout === 'static') {
     return null;
@@ -287,7 +287,7 @@ const NewFormSubmit = ({ classNames, label, icon }: NewFormSubmitProps) => {
   );
 };
 
-NewFormSubmit.displayName = 'Form.Submit';
+FormSubmit.displayName = 'Form.Submit';
 
 //
 // Form
@@ -295,22 +295,22 @@ NewFormSubmit.displayName = 'Form.Submit';
 //
 
 export const Form = {
-  Root: NewFormRoot,
-  Viewport: NewFormViewport,
-  Content: NewFormContent,
-  FieldSet: NewFormFieldSet,
-  Actions: NewFormActions,
-  Submit: NewFormSubmit,
+  Root: FormRoot,
+  Viewport: FormViewport,
+  Content: FormContent,
+  FieldSet: FormFieldSet,
+  Actions: FormActions,
+  Submit: FormSubmit,
   Label: FormFieldLabel,
 };
 
-export { useNewFormContext, useFormValues, useFormFieldState };
+export { useFormContext, useFormValues, useFormFieldState };
 
 export type {
-  NewFormRootProps,
-  NewFormViewportProps,
-  NewFormContentProps,
-  NewFormFieldSetProps,
-  NewFormActionsProps,
+  FormRootProps,
+  FormViewportProps,
+  FormContentProps,
+  FormFieldSetProps,
+  FormActionsProps,
   FormFieldLabelProps as LabelProps,
 };

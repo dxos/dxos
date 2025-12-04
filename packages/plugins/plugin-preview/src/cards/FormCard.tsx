@@ -8,7 +8,7 @@ import { useCallback } from 'react';
 import { Obj } from '@dxos/echo';
 import { type JsonPath, setValue } from '@dxos/echo/internal';
 import { useTranslation } from '@dxos/react-ui';
-import { Form } from '@dxos/react-ui-form';
+import { Form, omitId } from '@dxos/react-ui-form';
 import { Card } from '@dxos/react-ui-stack';
 import { descriptionMessage, mx } from '@dxos/react-ui-theme';
 import { type ProjectionModel } from '@dxos/schema';
@@ -39,7 +39,7 @@ export const FormCard = ({
   return (
     <Card.SurfaceRoot id={subject.id} role={role}>
       <Form.Root
-        schema={schema}
+        schema={omitId(schema)}
         projection={projection}
         values={subject}
         layout={role === 'card--popover' ? 'static' : undefined}
