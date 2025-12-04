@@ -71,11 +71,11 @@ export const useTableModel = <T extends TableRow = TableRow>({
   // Update data.
   useEffect(() => {
     if (rows) {
-      // TODO(ZaymonFC): Remove this workaround once unstable query ordering issue is resolved
       /*
        * Sort all objects by string id field as a temporary workaround for query ordering issues
        * Reference: https://github.com/dxos/dxos/pull/9409
        */
+      // TODO(ZaymonFC): Remove this workaround once unstable query ordering issue is resolved
       const sortedRows = orderBy(rows, [(row) => String(row.id)], ['asc']);
       model?.setRows(sortedRows);
     }

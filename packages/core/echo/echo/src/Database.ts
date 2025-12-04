@@ -126,9 +126,19 @@ export type FlushOptions = {
 export interface Database extends Queryable {
   get spaceId(): SpaceId;
 
+  // TODO(burdon): Can we move this into graph?
   get schemaRegistry(): SchemaRegistry.SchemaRegistry;
 
+  /**
+   *
+   */
+  // TODO(burdon): Comment required.
   get graph(): Hypergraph.Hypergraph;
+
+  /**
+   * Query objects.
+   */
+  query: QueryFn;
 
   /**
    * Creates a reference to an existing object in the database.
@@ -139,11 +149,6 @@ export interface Database extends Queryable {
    * `db.makeRef(dxn)` is preferable in cases with access to the database.
    */
   makeRef<T extends Entity.Unknown = Entity.Unknown>(dxn: DXN): Ref.Ref<T>;
-
-  /**
-   * Query objects.
-   */
-  query: QueryFn;
 
   /**
    * Adds object to the database.

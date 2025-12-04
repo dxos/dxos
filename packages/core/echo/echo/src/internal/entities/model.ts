@@ -69,7 +69,7 @@ export interface InternalObjectProps {
   // Echo supports untyped objects O_O.
   readonly [TypeId]?: DXN;
 
-  //
+  // TODO(burdon): ???
   readonly [SelfDXNId]?: DXN;
 
   /**
