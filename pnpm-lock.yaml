@@ -3287,6 +3287,12 @@ importers:
 
   packages/core/functions-testing:
     dependencies:
+      '@dxos/config':
+        specifier: workspace:*
+        version: link:../../sdk/config
+      '@dxos/echo':
+        specifier: workspace:*
+        version: link:../echo/echo
       '@dxos/functions':
         specifier: workspace:*
         version: link:../functions
@@ -3296,6 +3302,15 @@ importers:
       '@dxos/functions-runtime-cloudflare':
         specifier: workspace:*
         version: link:../functions-runtime-cloudflare
+      '@dxos/invariant':
+        specifier: workspace:*
+        version: link:../../common/invariant
+      '@dxos/log':
+        specifier: workspace:*
+        version: link:../../common/log
+      '@dxos/protocols':
+        specifier: workspace:*
+        version: link:../protocols
 
   packages/core/halo/credentials:
     dependencies:

@@ -7,6 +7,18 @@
   ],
   "references": [
     {
+      "path": "../../common/invariant"
+    },
+    {
+      "path": "../../common/log"
+    },
+    {
+      "path": "../../sdk/config"
+    },
+    {
+      "path": "../echo/echo"
+    },
+    {
       "path": "../functions"
     },
     {
@@ -14,6 +26,9 @@
     },
     {
       "path": "../functions-runtime-cloudflare"
+    },
+    {
+      "path": "../protocols"
     }
   ]
 }

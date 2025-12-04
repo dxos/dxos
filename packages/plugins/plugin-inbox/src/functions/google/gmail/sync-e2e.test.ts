@@ -20,7 +20,7 @@ import { Runtime } from '@dxos/protocols';
 import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { AccessToken, Message } from '@dxos/types';
 
-import { log } from '../../../../../../common/log/src';
+import { log } from '@dxos/log';
 import { Mailbox } from '../../../types';
 
 describe.runIf(process.env.DX_TEST_TAGS?.includes('functions-e2e'))('Functions deployment', () => {

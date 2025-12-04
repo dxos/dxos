@@ -33,9 +33,14 @@
     "src"
   ],
   "dependencies": {
+    "@dxos/config": "workspace:*",
+    "@dxos/echo": "workspace:*",
     "@dxos/functions": "workspace:*",
     "@dxos/functions-runtime": "workspace:*",
-    "@dxos/functions-runtime-cloudflare": "workspace:*"
+    "@dxos/functions-runtime-cloudflare": "workspace:*",
+    "@dxos/invariant": "workspace:*",
+    "@dxos/log": "workspace:*",
+    "@dxos/protocols": "workspace:*"
   },
   "devDependencies": {},
   "publishConfig": {
