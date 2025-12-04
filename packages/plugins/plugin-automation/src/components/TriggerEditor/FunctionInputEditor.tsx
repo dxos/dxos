@@ -12,7 +12,7 @@ import { useOnTransition, useTranslation } from '@dxos/react-ui';
 import {
   Form,
   type FormFieldStateProps,
-  type NewFormRootProps,
+  type FormRootProps,
   type QueryRefOptions,
   useFormValues,
 } from '@dxos/react-ui-form';
@@ -64,7 +64,7 @@ export const FunctionInputEditor = ({
   const propertyCount = inputSchema?.properties ? Object.keys(inputSchema.properties).length : 0;
   const values = useMemo(() => getValue() ?? {}, [getValue]);
 
-  const handleValuesChanged = useCallback<NonNullable<NewFormRootProps['onValuesChanged']>>(
+  const handleValuesChanged = useCallback<NonNullable<FormRootProps['onValuesChanged']>>(
     (values) => {
       onValueChange(type, values);
     },

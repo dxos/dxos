@@ -29,12 +29,12 @@ import { SpecSelector } from './SpecSelector';
  * The interface `Trigger.Trigger` is the data type, and the const `Trigger.Trigger` is typed as Schema.Schema<Trigger, TriggerEncoded> — which does extend Schema.Schema.AnyNoContext.
  * So in theory, ExcludeId<Trigger.Trigger> in type position should resolve to the const's type (Schema.Schema<Trigger, TriggerEncoded>), which satisfies the constraint.
  *
- * The issue is that when you access `Trigger.Trigger` (namespace + member), TypeScript's resolution in type position prefers the interface over the const's type. 
+ * The issue is that when you access `Trigger.Trigger` (namespace + member), TypeScript's resolution in type position prefers the interface over the const's type.
  * The interface `Trigger` is the data shape, not the schema.
  *
  * To get the schema type, you need `typeof Trigger.Trigger` to explicitly reference the const's type.
  *
- * This is a quirk of how TypeScript resolves merged declarations (interface + const with same name) in type vs value contexts. 
+ * This is a quirk of how TypeScript resolves merged declarations (interface + const with same name) in type vs value contexts.
  * The `typeof` forces value-context resolution.
  */
 
@@ -161,6 +161,4 @@ const getWorkflowOptions = (graphs: ComputeGraph[]) => {
 const getFunctionOptions = (scripts: Script.Script[], functions: Function.Function[]) => {
   const getLabel = (fn: Function.Function) => scripts.find((s) => fn.source?.target?.id === s.id)?.name ?? fn.name;
   return functions.map((fn) => ({ label: getLabel(fn), value: `dxn:echo:@:${fn.id}` }));
-};
-
 };

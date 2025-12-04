@@ -11,7 +11,7 @@ import { invariant } from '@dxos/invariant';
 import { getSnapshot } from '@dxos/live-object';
 import { getSpace } from '@dxos/react-client/echo';
 import { type Label, Popover } from '@dxos/react-ui';
-import { Form, type NewFormRootProps } from '@dxos/react-ui-form';
+import { Form, type FormRootProps } from '@dxos/react-ui-form';
 import { parseCellIndex, useGridContext } from '@dxos/react-ui-grid';
 import { type FieldProjection } from '@dxos/schema';
 import { getDeep, isTruthy, setDeep } from '@dxos/util';
@@ -32,7 +32,7 @@ export type FormCellEditorProps<T extends Type.Entity.Any = Type.Entity.Any> = {
   modals?: ModalController; // TODO(burdon): Not used. Remove?
   onSave?: () => void;
   onCreate?: OnCreateHandler;
-} & Omit<NewFormRootProps<any>, 'values' | 'schema' | 'onCreate'>;
+} & Omit<FormRootProps<any>, 'values' | 'schema' | 'onCreate'>;
 
 export const FormCellEditor = <T extends Type.Entity.Any = Type.Entity.Any>({
   __gridScope,
@@ -120,7 +120,7 @@ export const FormCellEditor = <T extends Type.Entity.Any = Type.Entity.Any>({
     setLocalEditing(nextOpen);
   }, []);
 
-  const handleSave = useCallback<NonNullable<NewFormRootProps<any>['onSave']>>(
+  const handleSave = useCallback<NonNullable<FormRootProps<any>['onSave']>>(
     (values) => {
       const path = fieldProjection.field.path;
       const value = getDeep(values, [path]);
@@ -133,7 +133,7 @@ export const FormCellEditor = <T extends Type.Entity.Any = Type.Entity.Any>({
     [fieldProjection.field.path, onSave, contextEditing, originalRow],
   );
 
-  const handleCreate = useCallback<NonNullable<NewFormRootProps<any>['onCreate']>>(
+  const handleCreate = useCallback<NonNullable<FormRootProps<any>['onCreate']>>(
     (values) => {
       if (refSchema && onCreate) {
         const objectWithId = onCreate(refSchema, values);
@@ -151,7 +151,7 @@ export const FormCellEditor = <T extends Type.Entity.Any = Type.Entity.Any>({
     [fieldProjection.field.path, onSave, contextEditing, originalRow, refSchema, onCreate],
   );
 
-  const handleQueryRefOptions = useCallback<NonNullable<NewFormRootProps<any>['onQueryRefOptions']>>(
+  const handleQueryRefOptions = useCallback<NonNullable<FormRootProps<any>['onQueryRefOptions']>>(
     async ({ typename }) => {
       const { schema, space } = getSchema({ typename });
       if (model && schema && space) {
