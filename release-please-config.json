@@ -310,6 +310,11 @@
         },
         {
           "type": "json",
+          "path": "packages/core/functions-testing/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/core/halo/credentials/package.json",
           "jsonpath": "$.version"
         },

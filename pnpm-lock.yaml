@@ -3285,6 +3285,18 @@ importers:
         specifier: ^4.20251128.0
         version: 4.20251128.0
 
+  packages/core/functions-testing:
+    dependencies:
+      '@dxos/functions':
+        specifier: workspace:*
+        version: link:../functions
+      '@dxos/functions-runtime':
+        specifier: workspace:*
+        version: link:../functions-runtime
+      '@dxos/functions-runtime-cloudflare':
+        specifier: workspace:*
+        version: link:../functions-runtime-cloudflare
+
   packages/core/halo/credentials:
     dependencies:
       '@dxos/async':

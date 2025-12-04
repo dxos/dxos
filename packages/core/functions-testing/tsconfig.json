@@ -1,0 +1,19 @@
+{
+  "extends": "../../../tsconfig.base.json",
+  "compilerOptions": {},
+  "include": [
+    "src",
+    "src/**/*.json"
+  ],
+  "references": [
+    {
+      "path": "../functions"
+    },
+    {
+      "path": "../functions-runtime"
+    },
+    {
+      "path": "../functions-runtime-cloudflare"
+    }
+  ]
+}
