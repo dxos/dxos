@@ -57,11 +57,11 @@ export class QueryServiceImpl implements QueryServiceProto {
           } satisfies QueryResponse;
         } catch (error) {
           log.error('query failed', { err: error });
-          throw RuntimeServiceError.wrap({
+          throw new RuntimeServiceError({
             message: 'Query execution failed.',
             context: { spaceId, filter: request.filter },
-            ifTypeDiffers: true,
-          })(error);
+            cause: error,
+          });
         }
       })(),
     );

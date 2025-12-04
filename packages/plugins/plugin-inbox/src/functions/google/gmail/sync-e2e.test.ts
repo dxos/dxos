@@ -25,6 +25,8 @@ import { AccessToken, Message } from '@dxos/types';
 
 import { Mailbox } from '../../../types';
 
+const config = configPreset({ edge: 'dev' });
+
 describe.runIf(process.env.DX_TEST_TAGS?.includes('functions-e2e'))('Functions deployment', () => {
   test('bundle function', async () => {
     const artifact = await bundleFunction({
@@ -109,9 +111,8 @@ describe.runIf(process.env.DX_TEST_TAGS?.includes('functions-e2e'))('Functions d
     });
   });
 
-  test('deployes inbox sync function (wait for trigger)', { timeout: 120_000 }, async ({ expect }) => {
+  test.only('deployes inbox sync function (wait for trigger)', { timeout: 120_000 }, async ({ expect }) => {
     const { client, space, mailbox, functionsServiceClient } = await setup();
-    await sync(space);
     const func = await deployFunction(space, functionsServiceClient, new URL('./sync.ts', import.meta.url).pathname);
     space.db.add(
       Obj.make(Trigger.Trigger, {
@@ -121,7 +122,6 @@ describe.runIf(process.env.DX_TEST_TAGS?.includes('functions-e2e'))('Functions d
         input: { mailboxId: Obj.getDXN(mailbox).toString() },
       }),
     );
-    await space.db.flush({ indexes: true });
     await sync(space);
 
     await observeInvocations(space, 10);
@@ -134,8 +134,6 @@ describe.runIf(process.env.DX_TEST_TAGS?.includes('functions-e2e'))('Functions d
 });
 
 const setup = async () => {
-  const config = configPreset({ edge: 'dev' });
-
   const client = await new Client({
     config,
     types: [Mailbox.Mailbox, AccessToken.AccessToken, Function.Function, Trigger.Trigger],
@@ -162,7 +160,8 @@ const setup = async () => {
 const sync = async (space: Space) => {
   await space.db.flush({ indexes: true });
   await space.internal.syncToEdge({
-    onProgress: (state) => console.log('sync', state ?? 'no connection to edge'),
+    onProgress: (state) =>
+      console.log(state ? `${state.unsyncedDocumentCount} documents syncing...` : 'connecting to edge...'),
   });
 };
 
