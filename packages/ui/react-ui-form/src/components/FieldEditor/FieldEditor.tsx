@@ -157,9 +157,9 @@ export const FieldEditor = ({ readonly, projection, field, registry, onSave, onC
   );
 
   const handleCancel = useCallback<NonNullable<FormRootProps<PropertyType>['onCancel']>>(() => {
+    onSave();
     // Need to defer to allow form to close.
     requestAnimationFrame(() => onCancel?.());
-    onSave();
   }, [onSave]);
 
   if (!fieldSchema) {

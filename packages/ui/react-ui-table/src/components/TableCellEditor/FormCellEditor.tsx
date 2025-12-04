@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Schema from 'effect/Schema';
+import type * as Schema from 'effect/Schema';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { Filter, Obj, type Type } from '@dxos/echo';
@@ -11,7 +11,7 @@ import { invariant } from '@dxos/invariant';
 import { getSnapshot } from '@dxos/live-object';
 import { getSpace } from '@dxos/react-client/echo';
 import { type Label, Popover } from '@dxos/react-ui';
-import { Form, type FormRootProps } from '@dxos/react-ui-form';
+import { Form, type FormRootProps, omitId } from '@dxos/react-ui-form';
 import { parseCellIndex, useGridContext } from '@dxos/react-ui-grid';
 import { type FieldProjection } from '@dxos/schema';
 import { getDeep, isTruthy, setDeep } from '@dxos/util';
@@ -86,10 +86,7 @@ export const FormCellEditor = <T extends Type.Entity.Any = Type.Entity.Any>({
     return null;
   }, [fieldProjection.props.format, fieldProjection.props.referenceSchema, getSchema]);
 
-  // TODO(burdon): Factor out.
-  const createSchema = useMemo(() => {
-    return refSchema ? Schema.omit<any, any, ['id']>('id')(refSchema) : null;
-  }, [refSchema]);
+  const createSchema = useMemo(() => (refSchema ? omitId(refSchema) : null), [refSchema]);
 
   const originalRow = useMemo<TableRow | undefined>(() => {
     if (model && contextEditing) {
