@@ -35,13 +35,15 @@ import { FormFieldSet, type FormFieldSetProps } from './FormFieldSet';
 // [ ] Inline tables for object arrays
 // [ ] Defer query until popover
 // [ ] Omit id from sub properties.
-// [ ] Refs
+// [x] Refs
 //   [x] Single-select (fix popover)
-//   [ ] Multi-select (array)
+//   [x] Multi-select (array)
+// [ ] auto save doesn't work for combobox + select due to only firing on blur (workaround is to use onValuesChanged)
 
+// TODO(burdon): Move to @dxos/schema (re-export here).
 export type ExcludeId<S extends Schema.Schema.AnyNoContext> = Omit<Schema.Schema.Type<S>, 'id'>;
 
-// TODO(burdon): Option to omit automatically?
+// TODO(burdon): Move to @dxos/schema (re-export here).
 export const omitId = <S extends Schema.Schema.AnyNoContext>(schema: S): Schema.Schema<ExcludeId<S>, ExcludeId<S>> =>
   schema.pipe(Schema.omit('id')) as any;
 
@@ -115,13 +117,8 @@ type NewFormRootProps<T extends AnyProperties = AnyProperties> = PropsWithChildr
      * Called when the form is canceled to abandon/undo any pending changes.
      */
     onCancel?: () => void;
-  } &
-    // prettier-ignore
-    Omit<NewFormContextValue<T>, 'form'> &
-    Pick<
-      FormHandlerProps<T>,
-      'schema' | 'autoSave' | 'values' | 'defaultValues' | 'onAutoSave' | 'onValidate' | 'onValuesChanged'
-    > &
+  } & Omit<NewFormContextValue<T>, 'form'> &
+    Pick<FormHandlerProps<T>, 'schema' | 'autoSave' | 'values' | 'defaultValues' | 'onValidate' | 'onValuesChanged'> &
     Omit<FormFieldSetProps<T>, 'schema' | 'path'>
 >;
 

@@ -27,6 +27,7 @@ const isRefSnapShot = (val: any): val is { '/': string } => {
 };
 
 export type RefFieldProps = FormFieldComponentProps & {
+  // TODO(wittjosiah): Remove this. Array is handled upstream.
   array?: boolean;
   createOptionLabel?: [string, { ns: string }];
   createOptionIcon?: string;
