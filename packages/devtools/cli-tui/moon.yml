@@ -1,12 +1,6 @@
 type: application
 language: typescript
 tags:
-  - ts-test
   - ts-compile
 tasks:
-  build:
-    command: 'true'
-    deps:
-      - ^:build
-      - ^:compile
-      - compile
+  test:
