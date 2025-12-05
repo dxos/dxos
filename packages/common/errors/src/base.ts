@@ -20,19 +20,19 @@ export type BaseErrorOptions = ErrorOptions & {
 /**
  * Base class for all DXOS errors.
  */
-export class BaseError<Code extends string = string> extends Error {
+export class BaseError<Name extends string = string> extends Error {
   /**
    * Primary way of defining new error classes.
    * Extended class may specialize constructor for required context params.
    * @param code - Error code.
    * @param message - Default error message.
    */
-  static extend<Code extends string = string>(code: Code, message?: string) {
-    return class ExtendedError extends BaseError<Code> {
-      static code = code;
+  static extend<Name extends string = string>(name: Name, message?: string) {
+    return class ExtendedError extends BaseError<Name> {
+      static override name = name;
 
       static is(error: unknown): error is BaseError {
-        return typeof error === 'object' && error !== null && 'code' in error && error.code === code;
+        return typeof error === 'object' && error !== null && 'name' in error && error.name === name;
       }
 
       static wrap(
@@ -50,25 +50,21 @@ export class BaseError<Code extends string = string> extends Error {
       }
 
       constructor(options?: BaseErrorOptions) {
-        super(code, { message: options?.message ?? message, ...options });
+        super(name, { message: options?.message ?? message, ...options });
       }
     };
   }
 
   // NOTE: Errors go through odd transformations and the private fields seem to break.
-  code: Code;
+  override name: Name;
   context: Record<string, unknown>;
 
-  constructor(code: Code, options?: BaseErrorOptions) {
+  constructor(name: Name, options?: BaseErrorOptions) {
     super(options?.message, { cause: options?.cause });
 
-    this.code = code;
+    this.name = name;
     this.context = options?.context ?? {};
     Object.setPrototypeOf(this, new.target.prototype);
-  }
-
-  override get name() {
-    return this.code;
   }
 
   /** Fallback message. */
@@ -77,7 +73,7 @@ export class BaseError<Code extends string = string> extends Error {
   }
 
   // For effect error matching.
-  get _tag(): Code {
-    return this.code;
+  get _tag(): Name {
+    return this.name;
   }
 }
