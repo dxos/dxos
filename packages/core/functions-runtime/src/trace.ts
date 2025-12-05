@@ -134,7 +134,7 @@ export type InvocationSpan = {
   invocationTraceQueue?: Ref.Ref<Queue>;
   invocationTarget?: Ref.Ref<Obj.Any>;
   trigger?: Ref.Ref<Trigger.Trigger>;
-  exception?: TraceEventException;
+  error?: SerializedError;
 };
 
 export const createInvocationSpans = (items?: InvocationTraceEvent[]): InvocationSpan[] => {
@@ -178,7 +178,7 @@ export const createInvocationSpans = (items?: InvocationTraceEvent[]): Invocatio
       timestamp: start.timestamp,
       duration: isInProgress ? now - start.timestamp : end!.timestamp - start.timestamp,
       outcome: end?.outcome ?? InvocationOutcome.PENDING,
-      exception: end?.exception,
+      error: end?.error,
       input: start.input,
       invocationTraceQueue: start.invocationTraceQueue,
       invocationTarget: start.invocationTarget,

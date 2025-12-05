@@ -256,11 +256,6 @@ export const FunctionRuntimeKind = Schema.Enums({
   WORKERS_FOR_PLATFORMS: 'WORKERS_FOR_PLATFORMS',
   // https://developers.cloudflare.com/workers/runtime-apis/bindings/worker-loader/
   WORKER_LOADER: 'WORKER_LOADER',
-  // Local worker dispatcher for testing.
-  /**
-   * @deprecated No longer supported.
-   */
-  TEST: 'TEST',
 });
 export type FunctionRuntimeKind = Schema.Schema.Type<typeof FunctionRuntimeKind>;
 
