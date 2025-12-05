@@ -13,9 +13,9 @@ import * as Yaml from 'yaml';
 
 import { DX_CONFIG, DX_DATA } from '@dxos/client-protocol';
 import { getProfilePath } from '@dxos/client-protocol';
+import { invariant } from '@dxos/invariant';
 
 import { Config } from './config';
-import { invariant } from '@dxos/invariant';
 
 export const memoryConfig = new Config({
   runtime: {

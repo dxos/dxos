@@ -19,10 +19,10 @@ import { edge } from './edge';
 import { halo } from './halo';
 import { hub } from './hub';
 import { object } from './object';
+import { profile } from './profile';
 import { queue } from './queue';
 import { repl } from './repl';
 import { spaces } from './spaces';
-import { profile } from './profile';
 
 export const command = Command.make('dx', {
   config: Options.file('config', { exists: 'yes' }).pipe(

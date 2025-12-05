@@ -4,8 +4,8 @@
 
 import * as Command from '@effect/cli/Command';
 
-import { list } from './list';
 import { create } from './create';
+import { list } from './list';
 
 export const profile = Command.make('profile').pipe(
   Command.withDescription('Profile commands.'),

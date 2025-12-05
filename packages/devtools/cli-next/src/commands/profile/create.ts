@@ -3,19 +3,14 @@
 //
 
 import * as Command from '@effect/cli/Command';
-import * as Effect from 'effect/Effect';
-
-import { Config, ConfigService } from '@dxos/client';
-import { CommandConfig } from '../../services';
-import { basename, extname, join } from 'node:path';
-import { DX_CONFIG, DX_DATA, getProfilePath } from '@dxos/client-protocol';
-import * as Yaml from 'yaml';
-import * as FileSystem from '@effect/platform/FileSystem';
-import * as Chalk from 'chalk';
 import * as Options from '@effect/cli/Options';
-import { trim } from '@dxos/util';
-import { Record } from 'effect';
+import * as FileSystem from '@effect/platform/FileSystem';
+import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
+import * as Record from 'effect/Record';
+
+import { DX_CONFIG, getProfilePath } from '@dxos/client-protocol';
+import { trim } from '@dxos/util';
 
 const TEMPLATES = {
   default: trim`

@@ -10,6 +10,7 @@ import * as Command from '@effect/cli/Command';
 import * as Options from '@effect/cli/Options';
 import * as Console from 'effect/Console';
 import * as Effect from 'effect/Effect';
+import * as Match from 'effect/Match';
 import * as Option from 'effect/Option';
 
 import { ClientService } from '@dxos/client';
@@ -18,6 +19,7 @@ import { FUNCTIONS_META_KEY, Function } from '@dxos/functions';
 import { FunctionsServiceClient } from '@dxos/functions-runtime/edge';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
+import { Runtime } from '@dxos/protocols';
 
 import { CommandConfig } from '../../../../services';
 import { waitForSync } from '../../../../util';
@@ -26,8 +28,6 @@ import { Common } from '../../../options';
 import { bundle } from './bundle';
 import { DATA_TYPES, upsertComposerScript } from './echo';
 import { parseOptions } from './options';
-import * as Match from 'effect/Match';
-import { Runtime } from '@dxos/protocols';
 
 export const deploy = Command.make(
   'deploy',

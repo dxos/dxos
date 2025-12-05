@@ -2,16 +2,18 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Command from '@effect/cli/Command';
-import * as Effect from 'effect/Effect';
+import { extname, join } from 'node:path';
 
-import { Config, ConfigService } from '@dxos/client';
-import { CommandConfig } from '../../services';
-import { basename, extname, join } from 'node:path';
-import { DX_CONFIG, DX_DATA, getProfilePath } from '@dxos/client-protocol';
-import * as Yaml from 'yaml';
+import * as Command from '@effect/cli/Command';
 import * as FileSystem from '@effect/platform/FileSystem';
 import * as Chalk from 'chalk';
+import * as Effect from 'effect/Effect';
+import * as Yaml from 'yaml';
+
+import { Config } from '@dxos/client';
+import { DX_CONFIG, DX_DATA, getProfilePath } from '@dxos/client-protocol';
+
+import { CommandConfig } from '../../services';
 
 export const list = Command.make(
   'list',
