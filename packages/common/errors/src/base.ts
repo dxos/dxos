@@ -29,7 +29,7 @@ export class BaseError<Name extends string = string> extends Error {
    */
   static extend<Name extends string = string>(name: Name, message?: string) {
     return class ExtendedError extends BaseError<Name> {
-      static override name = name;
+      static override name: Name = name;
 
       static is(error: unknown): error is BaseError {
         return typeof error === 'object' && error !== null && 'name' in error && error.name === name;
