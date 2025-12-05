@@ -1,0 +1,40 @@
+{
+  "extends": "../../../tsconfig.base.json",
+  "compilerOptions": {},
+  "include": [
+    "src",
+    "src/**/*.json"
+  ],
+  "references": [
+    {
+      "path": "../../common/async"
+    },
+    {
+      "path": "../../common/invariant"
+    },
+    {
+      "path": "../../common/log"
+    },
+    {
+      "path": "../../sdk/client"
+    },
+    {
+      "path": "../../sdk/config"
+    },
+    {
+      "path": "../echo/echo"
+    },
+    {
+      "path": "../functions"
+    },
+    {
+      "path": "../functions-runtime"
+    },
+    {
+      "path": "../functions-runtime-cloudflare"
+    },
+    {
+      "path": "../protocols"
+    }
+  ]
+}

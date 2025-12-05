@@ -10,9 +10,10 @@ import React, { type FC, useCallback, useMemo, useState } from 'react';
 
 import { Filter, type Obj } from '@dxos/echo';
 import { Format } from '@dxos/echo/internal';
-import { type InvocationSpan, type TraceEventException } from '@dxos/functions-runtime';
+import { type InvocationSpan } from '@dxos/functions-runtime';
 import { TraceEvent } from '@dxos/functions-runtime';
 import { DXN } from '@dxos/keys';
+import { type SerializedError } from '@dxos/protocols';
 import { type Space, useQuery } from '@dxos/react-client/echo';
 import { Toolbar } from '@dxos/react-ui';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
@@ -205,7 +206,7 @@ const Selected: FC<{ span: InvocationSpan }> = ({ span }) => {
           {isLogQueue && <Tabs.Tab value='logs'>Logs</Tabs.Tab>}
           {isLogQueue && <Tabs.Tab value='errors'>Error logs</Tabs.Tab>}
           {isLogQueue && <Tabs.Tab value='raw'>Raw</Tabs.Tab>}
-          {span.exception && <Tabs.Tab value='failure'>Failure</Tabs.Tab>}
+          {span.error && <Tabs.Tab value='failure'>Failure</Tabs.Tab>}
           {contents === 'execution-graph' && <Tabs.Tab value='execution-graph'>Execution Graph</Tabs.Tab>}
         </Tabs.Tablist>
         <Tabs.Tabpanel value='input'>
@@ -226,9 +227,9 @@ const Selected: FC<{ span: InvocationSpan }> = ({ span }) => {
             <RawDataPanel classNames='text-xs' span={span} objects={objects} />
           </Tabs.Tabpanel>
         )}
-        {span.exception && (
+        {span.error && (
           <Tabs.Tabpanel value='failure'>
-            <SpanExceptionPanel exception={span.exception} />
+            <SpanErrorPanel exception={span.error} />
           </Tabs.Tabpanel>
         )}
         {contents === 'execution-graph' && (
@@ -241,14 +242,20 @@ const Selected: FC<{ span: InvocationSpan }> = ({ span }) => {
   );
 };
 
-const SpanExceptionPanel = ({ exception }: { exception: TraceEventException }) => {
+const SpanErrorPanel = ({ exception }: { exception: SerializedError }) => {
   return (
     <div className='text-xs whitespace-pre-wrap m-4'>
-      <div>Timestamp: {exception.timestamp}</div>
+      <div>Code: {exception.code}</div>
       <div>Message: {exception.message}</div>
-      <div>Name: {exception.name}</div>
       <div />
       <div>Stack: {exception.stack}</div>
+      <div />
+      {exception.cause && (
+        <>
+          <div>Caused by:</div>
+          <SpanErrorPanel exception={exception.cause} />
+        </>
+      )}
     </div>
   );
 };
