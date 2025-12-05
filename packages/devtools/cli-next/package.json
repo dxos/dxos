@@ -42,7 +42,8 @@
     "effect": "3.18.3",
     "esbuild": "0.25.10",
     "wtfnode": "^0.10.0",
-    "yaml": "^2.5.0"
+    "yaml": "^2.5.0",
+    "chalk": "^4.1.2"
   },
   "devDependencies": {
     "@types/node": "^22.5.2",
