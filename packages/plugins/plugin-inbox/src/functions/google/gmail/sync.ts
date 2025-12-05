@@ -114,7 +114,6 @@ export default defineFunction({
 
       // Stream messages oldest-first into queue.
       const newMessagesCount = yield* streamGmailMessagesToQueue(startDate, queue, userId, label, existingGmailIds);
-
       log('sync complete', { newMessages: newMessagesCount });
 
       return {
@@ -249,7 +248,7 @@ const streamGmailMessagesToQueue = Effect.fn(function* (
       },
     ),
     // Convert to Message.Message objects.
-    Stream.mapEffect((gmailMessage) => mapMessage(gmailMessage)),
+    Stream.mapEffect((message) => mapMessage(message)),
     Stream.filter(Predicate.isNotNullable),
     // Batch messages for queue append.
     Stream.grouped(STREAMING_CONFIG.queueBatchSize),

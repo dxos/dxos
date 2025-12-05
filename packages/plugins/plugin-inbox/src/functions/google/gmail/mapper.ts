@@ -20,6 +20,8 @@ export const mapMessage = Effect.fn(function* (message: GoogleMail.Message) {
   const data = message.payload.body?.data ?? getPart(message, 'text/html') ?? getPart(message, 'text/plain');
   const fromHeader = message.payload.headers.find(({ name }) => name === 'From');
   const from = fromHeader && parseFromHeader(fromHeader.value);
+
+  // TODO(burdon): Factor out resolvers.
   const contacts = yield* Database.Service.runQuery(Query.select(Filter.type(Person.Person)));
   const contact =
     from &&
