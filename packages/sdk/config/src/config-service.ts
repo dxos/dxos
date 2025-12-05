@@ -63,7 +63,7 @@ export const defaultConfig = new Config({
   },
 });
 
-// TODO(wittjosiah): Factor out.
+// TODO(wittjosiah): Factor out -- this should go to the CLI.
 export class ConfigService extends Context.Tag('ConfigService')<ConfigService, Config>() {
   static layerMemory = Layer.effect(ConfigService, Effect.succeed(memoryConfig));
 
@@ -101,7 +101,14 @@ const profileBuiltinDefaults = (profile: string) => {
   return new Config({
     runtime: {
       client: {
+        edgeFeatures: {
+          echoReplicator: true,
+          feedReplicator: true,
+          signaling: true,
+          agents: true,
+        },
         storage: {
+          persistent: true,
           dataRoot: getProfilePath(DX_DATA, profile),
         },
       },
