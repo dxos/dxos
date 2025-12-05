@@ -174,7 +174,7 @@
   },
   "packageManager": "pnpm@10.13.1",
   "engines": {
-    "node": "24.4.1"
+    "node": "^24.0.0"
   },
   "pnpm": {
     "onlyBuiltDependencies": [
