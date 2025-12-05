@@ -22,6 +22,7 @@ import { object } from './object';
 import { queue } from './queue';
 import { repl } from './repl';
 import { spaces } from './spaces';
+import { profile } from './profile';
 
 export const command = Command.make('dx', {
   config: Options.file('config', { exists: 'yes' }).pipe(
@@ -50,6 +51,7 @@ export const command = Command.make('dx', {
 
 export const dx = command.pipe(
   Command.withSubcommands([
+    profile,
     config,
     repl,
 
@@ -66,10 +68,11 @@ export const dx = command.pipe(
   ]),
   // TODO(wittjosiah): Create separate command path for clients that don't need the client.
   Command.provideEffect(ConfigService, (args) => ConfigService.load(args)),
-  Command.provide(({ json, verbose }) =>
+  Command.provide(({ json, verbose, profile }) =>
     Layer.succeed(CommandConfig, {
       json,
       verbose,
+      profile,
     }),
   ),
 );

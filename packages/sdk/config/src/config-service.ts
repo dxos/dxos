@@ -15,6 +15,7 @@ import { DX_CONFIG, DX_DATA } from '@dxos/client-protocol';
 import { getProfilePath } from '@dxos/client-protocol';
 
 import { Config } from './config';
+import { invariant } from '@dxos/invariant';
 
 export const memoryConfig = new Config({
   runtime: {
@@ -73,23 +74,12 @@ export class ConfigService extends Context.Tag('ConfigService')<ConfigService, C
       const configPath = Option.getOrElse(args.config, () => defaultConfigPath);
       const configContent = yield* fs.readFileString(configPath);
       const configValues = Yaml.parse(configContent);
-      return ConfigService.of(new Config(configValues));
+      return ConfigService.of(new Config(configValues, profileBuiltinDefaults(args.profile).values));
     }).pipe(
       // If the config file doesn't exist, create it.
       Effect.catchTag('SystemError', () =>
         Effect.gen(function* () {
           const configValues = defaultConfig.values;
-          {
-            // Isolate DX_PROFILE storages.
-            configValues.runtime ??= {};
-            configValues.runtime.client ??= {};
-            configValues.runtime.client.storage ??= {};
-            configValues.runtime.client.storage.dataRoot = getProfilePath(
-              configValues.runtime.client.storage.dataRoot ?? DX_DATA,
-              args.profile,
-            );
-          }
-
           const fs = yield* FileSystem.FileSystem;
           yield* fs.makeDirectory(dirname(defaultConfigPath), { recursive: true });
           yield* fs.writeFileString(defaultConfigPath, Yaml.stringify(configValues));
@@ -100,3 +90,21 @@ export class ConfigService extends Context.Tag('ConfigService')<ConfigService, C
     );
   };
 }
+
+/**
+ * Default config for a profile.
+ * Always merged with the default config.
+ */
+const profileBuiltinDefaults = (profile: string) => {
+  invariant(!profile.endsWith('.yml'));
+
+  return new Config({
+    runtime: {
+      client: {
+        storage: {
+          dataRoot: getProfilePath(DX_DATA, profile),
+        },
+      },
+    },
+  });
+};
