@@ -27,16 +27,6 @@ export type ResolverMap<D extends ResolverDefinitionMap, K extends ResolverKind<
   [P in K]: Resolver<D[P]['source'], D[P]['target']>;
 };
 
-/**
- * Helper type to create a resolver factory for a specific definition kind.
- */
-export type ResolverFactory<
-  D extends ResolverDefinitionMap,
-  K extends ResolverKind<D>,
-  E = never,
-  R = never,
-> = Effect.Effect<Resolver<D[K]['source'], D[K]['target']>, E, R>;
-
 //
 // TODO(burdon): Factor out implementation.
 //
