@@ -4,6 +4,6 @@
 
 import { BaseError } from '@dxos/errors';
 
-export class QueryError extends BaseError.extend('QUERY_ERROR') {}
+export class QueryError extends BaseError.extend('QueryError') {}
 
-export class InvalidQueryError extends QueryError.extend('INVALID_QUERY') {}
+export class InvalidQueryError extends QueryError.extend('InvalidQueryError') {}

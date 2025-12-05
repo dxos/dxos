@@ -245,7 +245,7 @@ const Selected: FC<{ span: InvocationSpan }> = ({ span }) => {
 const SpanErrorPanel = ({ exception }: { exception: SerializedError }) => {
   return (
     <div className='text-xs whitespace-pre-wrap m-4'>
-      <div>Code: {exception.code}</div>
+      <div>Code: {exception.name}</div>
       <div>Message: {exception.message}</div>
       <div />
       <div>Stack: {exception.stack}</div>

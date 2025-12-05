@@ -24,7 +24,7 @@ export type EdgeSuccess<T> = {
 };
 
 const _SerializedError = Schema.Struct({
-  code: Schema.optional(Schema.String),
+  name: Schema.optional(Schema.String),
   message: Schema.optional(Schema.String),
   context: Schema.optional(Schema.Record({ key: Schema.String, value: Schema.Any })),
   stack: Schema.optional(Schema.String),
@@ -39,11 +39,6 @@ export type EdgeErrorData = { type: string } & Record<string, any>;
  * This is the shape of the error response from the Edge service,
  * when the error is gracefully handled, the Response will be an object with this shape and have status code 200.
  */
-// TODO(dmaretskyi): Refactor this type to just be { success: false, error: SerializedError }
-// reason -> error.message
-// cause -> error.cause
-// data.type -> error.code
-// ...data -> error.context
 export type EdgeFailure = {
   /**
    * Branded Type.
@@ -420,15 +415,15 @@ const MAX_ERROR_DEPTH = 3;
  */
 export const ErrorCodec = Object.freeze({
   encode: (err: Error, depth: number = 0): SerializedError => ({
-    code: 'code' in err ? (err as any).code : undefined,
+    name: 'name' in err ? err.name : (err as any).code || 'Error',
     message: err.message,
     stack: err.stack,
     cause: err.cause instanceof Error && depth < MAX_ERROR_DEPTH ? ErrorCodec.encode(err.cause, depth + 1) : undefined,
   }),
   decode: (serializedError: SerializedError, depth: number = 0): Error => {
     let err: Error;
-    if (typeof serializedError.code === 'string') {
-      err = new BaseError(serializedError.code, {
+    if (typeof serializedError.name === 'string') {
+      err = new BaseError(serializedError.name, {
         message: serializedError.message ?? 'Unknown error',
         cause:
           serializedError.cause && depth < MAX_ERROR_DEPTH

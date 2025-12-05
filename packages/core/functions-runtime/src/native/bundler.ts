@@ -180,7 +180,7 @@ export const bundleFunction = async (options: BundleOptions): Promise<BundleResu
   return { entryPoint: 'index.js', assets };
 };
 
-class BundleCreationError extends BaseError.extend('BUNDLE_CREATION_ERROR', 'Bundle creation failed') {
+class BundleCreationError extends BaseError.extend('BundleCreationError', 'Bundle creation failed') {
   constructor(errors: Message[]) {
     super({ context: { errors } });
   }
