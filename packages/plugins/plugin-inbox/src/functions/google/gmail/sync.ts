@@ -86,6 +86,7 @@ export default defineFunction({
       log('syncing gmail', { mailboxId, userId, after });
       const mailbox = yield* Database.Service.resolve(DXN.parse(mailboxId), Mailbox.Mailbox);
 
+      // Get labels.
       const labelCount = yield* syncLabels(mailbox, userId).pipe(
         Effect.catchAll((error) => {
           log.catch(error);

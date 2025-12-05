@@ -2,7 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
 
 import { Database, Filter, Query } from '@dxos/echo';
 import { Organization, Person } from '@dxos/types';
@@ -73,6 +75,13 @@ export const createInboxResolverMap = Effect.gen(function* () {
     person: yield* createPersonResolver,
   } satisfies ResolverMap<InboxResolverDefinitions>;
 });
+
+export class InboxResolverMap extends Context.Tag('InboxResolverMap')<
+  InboxResolverMap,
+  ResolverMap<InboxResolverDefinitions>
+>() {
+  static readonly Live = Layer.effect(InboxResolverMap, createInboxResolverMap);
+}
 
 //
 // TODO(burdon): Factor out implementation.

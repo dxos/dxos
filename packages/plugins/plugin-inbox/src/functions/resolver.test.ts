@@ -9,23 +9,27 @@ import { Database } from '@dxos/echo';
 import { TestDatabaseLayer } from '@dxos/functions-runtime/testing';
 import { Organization, Person } from '@dxos/types';
 
-import { createInboxResolverMap } from './resolver';
+import { InboxResolverMap } from './resolver';
 
 describe('resolver', () => {
   it.effect(
     'resolve contacts',
-    Effect.fnUntraced(function* ({ expect }) {
-      const resolvers = yield* createInboxResolverMap;
+    Effect.fnUntraced(
+      function* ({ expect }) {
+        const resolvers = yield* InboxResolverMap;
 
-      // Organization
-      expect(yield* resolvers.organization({ email: 'alice@dxos.org' })).toBeDefined();
-      expect(yield* resolvers.organization({ email: 'bob@dxos.org' })).toBeDefined();
-      expect(yield* resolvers.organization({ email: 'charlie@testing.com' })).not.toBeDefined();
+        // Organization
+        expect(yield* resolvers.organization({ email: 'alice@dxos.org' })).toBeDefined();
+        expect(yield* resolvers.organization({ email: 'bob@dxos.org' })).toBeDefined();
+        expect(yield* resolvers.organization({ email: 'charlie@testing.com' })).not.toBeDefined();
 
-      // Person
-      expect(yield* resolvers.person({ email: 'alice@dxos.org' })).toBeDefined();
-      expect(yield* resolvers.person({ email: 'alice@gmail.com' })).not.toBeDefined();
-    }, Effect.provide(TestContactsLayer)),
+        // Person
+        expect(yield* resolvers.person({ email: 'alice@dxos.org' })).toBeDefined();
+        expect(yield* resolvers.person({ email: 'alice@gmail.com' })).not.toBeDefined();
+      },
+      Effect.provide(InboxResolverMap.Live),
+      Effect.provide(TestContactsLayer),
+    ),
   );
 });
 
