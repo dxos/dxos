@@ -122,6 +122,7 @@ class FunctionContext extends Resource {
             spaceId: this.context.spaceId ?? failedInvariant(),
             spaceKey: PublicKey.fromHex(this.context.spaceKey ?? failedInvariant('spaceKey missing in context')),
             reactiveSchemaQuery: false,
+            preloadSchemaOnOpen: false,
           })
         : undefined;
 

@@ -10,7 +10,7 @@ import { Client } from '@dxos/client';
 import { configPreset } from '@dxos/config';
 import { bundleFunction } from '@dxos/functions-runtime/bundler';
 import { FunctionsServiceClient } from '@dxos/functions-runtime/edge';
-import { Runtime } from '@dxos/protocols';
+import { FunctionRuntimeKind } from '@dxos/protocols';
 
 describe.runIf(process.env.DX_TEST_TAGS?.includes('functions-e2e'))('Script deployment', () => {
   test('deploys FOREX (effect) function and invokes it via EDGE (main)', { timeout: 120_000 }, async () => {
@@ -42,7 +42,7 @@ describe.runIf(process.env.DX_TEST_TAGS?.includes('functions-e2e'))('Script depl
       version: '0.0.1',
       entryPoint: buildResult.entryPoint,
       assets: buildResult.assets,
-      runtime: Runtime.WORKER_LOADER,
+      runtime: FunctionRuntimeKind.enums.WORKER_LOADER,
     });
     console.log(newFunction);
 
