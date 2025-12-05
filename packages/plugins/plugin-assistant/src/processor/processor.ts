@@ -28,7 +28,7 @@ import {
 import { type Blueprint } from '@dxos/blueprints';
 import { Obj } from '@dxos/echo';
 import { type Database } from '@dxos/echo';
-import { throwCause } from '@dxos/effect';
+import { runAndForwardErrors, throwCause } from '@dxos/effect';
 import {
   type CredentialsService,
   type FunctionInvocationService,
