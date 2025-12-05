@@ -33,16 +33,6 @@ export type ResolverMap<D extends ResolverDefinitionMap, K extends ResolverKind<
 
 export type HasEmail = { email: string };
 
-export const createContactResolver = Effect.gen(function* () {
-  // Cache.
-  const contacts = yield* Database.Service.runQuery(Query.select(Filter.type(Person.Person)));
-  const resolver: Resolver<HasEmail, Person.Person> = ({ email }) => {
-    return Effect.succeed(contacts.find((contact) => contact.emails?.some(({ value }) => value === email)));
-  };
-
-  return resolver;
-});
-
 export const createOrganizationResolver = Effect.gen(function* () {
   // Cache.
   const organizations = yield* Database.Service.runQuery(Query.select(Filter.type(Organization.Organization)));
@@ -58,19 +48,29 @@ export const createOrganizationResolver = Effect.gen(function* () {
   return resolver;
 });
 
+export const createPersonResolver = Effect.gen(function* () {
+  // Cache.
+  const contacts = yield* Database.Service.runQuery(Query.select(Filter.type(Person.Person)));
+  const resolver: Resolver<HasEmail, Person.Person> = ({ email }) => {
+    return Effect.succeed(contacts.find((contact) => contact.emails?.some(({ value }) => value === email)));
+  };
+
+  return resolver;
+});
+
 //
 // TODO(burdon): Factor out implementation.
 //
 
 export type InboxResolverDefinitions = {
-  contact: { source: HasEmail; target: Person.Person };
+  person: { source: HasEmail; target: Person.Person };
   organization: { source: HasEmail; target: Organization.Organization };
 };
 
 export const createInboxResolverMap = Effect.gen(function* () {
   return {
-    contact: yield* createContactResolver,
     organization: yield* createOrganizationResolver,
+    person: yield* createPersonResolver,
   } satisfies ResolverMap<InboxResolverDefinitions>;
 });
 
