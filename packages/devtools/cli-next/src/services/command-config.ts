@@ -15,5 +15,5 @@ export class CommandConfig extends Context.Tag('CommandConfig')<
     Effect.map((config) => config.verbose),
   );
 
-  static layerTest = Layer.succeed(CommandConfig, { json: false, verbose: false });
+  static layerTest = Layer.succeed(CommandConfig, { json: false, verbose: false, profile: 'default' });
 }
