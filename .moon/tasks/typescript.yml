@@ -7,4 +7,3 @@ tasks:
       # Is this fine:
       - /tools/eslint-plugin-rules/**/*
       - '@group(sources)'
-      - $USE_TSGO

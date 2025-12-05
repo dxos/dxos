@@ -10,8 +10,8 @@ import { dirname, join, resolve } from 'node:path';
 
 import ts from 'typescript';
 
-const VERBOSE = false,
-  USE_TSGO = false;
+const VERBOSE = true,
+  USE_TSGO = true;
 
 const main = async () => {
   // Find and parse tsconfig.json.
