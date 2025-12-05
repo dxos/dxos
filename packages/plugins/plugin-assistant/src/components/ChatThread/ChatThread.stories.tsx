@@ -9,6 +9,7 @@ import * as Layer from 'effect/Layer';
 import React, { type CSSProperties, useEffect, useMemo, useState } from 'react';
 
 import { Database } from '@dxos/echo';
+import { runAndForwardErrors } from '@dxos/effect';
 import { ContextQueueService } from '@dxos/functions';
 import { faker } from '@dxos/random';
 import { useQueue, useSpace } from '@dxos/react-client/echo';
@@ -59,7 +60,7 @@ const DefaultStory = ({ generator = [], delay = 0, wait, ...props }: StoryProps)
     );
 
     return () => {
-      void Effect.runPromise(Fiber.interrupt(fiber));
+      void runAndForwardErrors(Fiber.interrupt(fiber));
     };
   }, [space, queue, generator]);
 

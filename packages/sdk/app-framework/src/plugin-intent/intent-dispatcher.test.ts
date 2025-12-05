@@ -8,6 +8,8 @@ import * as Function from 'effect/Function';
 import * as Schema from 'effect/Schema';
 import { describe, expect, test } from 'vitest';
 
+import { runAndForwardErrors } from '@dxos/effect';
+
 import { chain, createIntent } from './intent';
 import { type AnyIntentResolver, createDispatcher, createResolver } from './intent-dispatcher';
 
@@ -59,7 +61,7 @@ describe('Intent dispatcher', () => {
       return b.value - a.value;
     });
 
-    expect(await Effect.runPromise(program)).toBe(2);
+    expect(await runAndForwardErrors(program)).toBe(2);
   });
 
   test('concurrent intent effects', async () => {
@@ -71,7 +73,7 @@ describe('Intent dispatcher', () => {
       return b.value - a.value;
     });
 
-    expect(await Effect.runPromise(program)).toBe(-6);
+    expect(await runAndForwardErrors(program)).toBe(-6);
   });
 
   test('mix & match intent effects with promises', async () => {
@@ -82,7 +84,7 @@ describe('Intent dispatcher', () => {
       return b.string;
     });
 
-    expect(await Effect.runPromise(program)).toBe('4');
+    expect(await runAndForwardErrors(program)).toBe('4');
 
     const a = await dispatchPromise(createIntent(Compute, { value: 2 }));
     const b = await dispatchPromise(createIntent(ToString, { value: a.data!.value }));
@@ -102,7 +104,7 @@ describe('Intent dispatcher', () => {
       expect(b.value).toBe(2);
     });
 
-    await Effect.runPromise(program);
+    await runAndForwardErrors(program);
   });
 
   test('chain intents', async () => {
@@ -122,7 +124,7 @@ describe('Intent dispatcher', () => {
       return data.string;
     });
 
-    expect(await Effect.runPromise(program)).toBe('2!');
+    expect(await runAndForwardErrors(program)).toBe('2!');
   });
 
   test('undo chained intent', async () => {
@@ -138,7 +140,7 @@ describe('Intent dispatcher', () => {
       expect(b.value).toBe(1);
     });
 
-    await Effect.runPromise(program);
+    await runAndForwardErrors(program);
   });
 
   test('filter resolvers by predicate', async () => {
@@ -158,7 +160,7 @@ describe('Intent dispatcher', () => {
       expect(b.value).toBe(6);
     });
 
-    await Effect.runPromise(program);
+    await runAndForwardErrors(program);
   });
 
   test('hoist resolvers', async () => {
@@ -194,7 +196,7 @@ describe('Intent dispatcher', () => {
       expect(b.value).toBe(6);
     });
 
-    await Effect.runPromise(program);
+    await runAndForwardErrors(program);
   });
 
   test('non-struct inputs & outputs', async () => {
