@@ -9,7 +9,7 @@ import { FUNCTIONS_META_KEY, Function, FunctionError } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { type ObjectId, type PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { type Runtime } from '@dxos/protocols';
+import { type FunctionRuntimeKind } from '@dxos/protocols';
 import { safeParseJson } from '@dxos/util';
 
 import { FunctionServiceError } from '../errors';
@@ -25,7 +25,7 @@ export type FunctionDeployOptions = {
   functionId?: string;
   ownerPublicKey: PublicKey;
 
-  runtime?: Runtime;
+  runtime?: FunctionRuntimeKind;
 
   /**
    * Path of the entry point file in the assets table.

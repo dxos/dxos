@@ -17,6 +17,7 @@ import {
   getTypeAnnotation,
   unwrapOptional,
 } from '@dxos/echo/internal';
+import { runAndForwardErrors } from '@dxos/effect';
 import { log } from '@dxos/log';
 import { type Space } from '@dxos/react-client/echo';
 import { Person } from '@dxos/types';
@@ -48,7 +49,7 @@ export const resolveSchemaWithClientAndSpace = (space: Space, query: QueryAST.Qu
 
   return resolveSchema(query, resolve).pipe(
     Effect.map((schema) => Option.getOrUndefined(schema)),
-    Effect.runPromise,
+    runAndForwardErrors,
   );
 };
 

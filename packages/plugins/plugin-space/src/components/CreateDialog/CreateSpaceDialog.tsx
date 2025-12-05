@@ -8,6 +8,7 @@ import React, { useCallback, useRef } from 'react';
 
 import { LayoutAction, createIntent } from '@dxos/app-framework';
 import { useIntentDispatcher } from '@dxos/app-framework/react';
+import { runAndForwardErrors } from '@dxos/effect';
 import { Dialog, IconButton, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 import { cardDialogContent, cardDialogHeader } from '@dxos/react-ui-stack';
@@ -45,7 +46,7 @@ export const CreateSpaceDialog = () => {
           }),
         );
       });
-      await Effect.runPromise(program);
+      await runAndForwardErrors(program);
     },
     [dispatch],
   );

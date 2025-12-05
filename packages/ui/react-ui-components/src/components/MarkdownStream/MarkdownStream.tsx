@@ -20,6 +20,7 @@ import React, {
 import { createPortal } from 'react-dom';
 
 import { addEventListener } from '@dxos/async';
+import { runAndForwardErrors } from '@dxos/effect';
 import { type ThemedClassName, useDynamicRef, useStateWithRef } from '@dxos/react-ui';
 import { useThemeContext } from '@dxos/react-ui';
 import {
@@ -143,7 +144,7 @@ export const MarkdownStream = forwardRef<MarkdownStreamController | null, Markdo
       );
 
       return () => {
-        void Effect.runPromise(Fiber.interrupt(fork));
+        void runAndForwardErrors(Fiber.interrupt(fork));
       };
     }, [view, queue]);
 
@@ -189,7 +190,7 @@ export const MarkdownStream = forwardRef<MarkdownStreamController | null, Markdo
         // Append to queue (and stream).
         append: async (text: string) => {
           if (text.length) {
-            await Effect.runPromise(Queue.offer(queueRef.current, text));
+            await runAndForwardErrors(Queue.offer(queueRef.current, text));
           }
         },
         // Update widget.
