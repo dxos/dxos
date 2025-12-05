@@ -32,7 +32,7 @@ export const ErrorResponse = Schema.Struct({
 
 export interface ErrorResponse extends Schema.Schema.Type<typeof ErrorResponse> {}
 
-export class GoogleError extends BaseError.extend('GOOGLE_ERROR') {
+export class GoogleError extends BaseError.extend('GoogleError') {
   errors?: ErrorResponse['error']['errors'] = undefined;
 
   static fromErrorResponse(response: ErrorResponse) {

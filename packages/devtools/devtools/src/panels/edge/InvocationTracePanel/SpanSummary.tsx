@@ -74,7 +74,7 @@ export const SpanSummary: FC<SpanSummaryProps> = ({ space, span, onClose }) => {
 
       {span.error && (
         <div className='mlb-2 text-sm font-medium'>
-          {span.error.code}: {span.error.message}
+          {span.error.name}: {span.error.message}
         </div>
       )}
 

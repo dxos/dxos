@@ -7,10 +7,10 @@ import { BaseError } from '@dxos/errors';
 /**
  * Error was thrown inside the compute node.
  */
-export class ComputeNodeError extends BaseError.extend('COMPUTE_NODE_ERROR', 'Compute node error') {}
+export class ComputeNodeError extends BaseError.extend('ComputeNodeError', 'Compute node error') {}
 
 /**
  * Node inputs/outputs failed schema validation.
  */
 // TODO(burdon): Move to @dxos/errors (InvalidValueError)
-export class InvalidValueError extends BaseError.extend('VALUE_VALIDATION_ERROR', 'Value validation error') {}
+export class InvalidValueError extends BaseError.extend('InvalidValueError', 'Value validation error') {}
