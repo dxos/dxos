@@ -11,7 +11,7 @@ import { type GoogleMail } from '../../apis';
 import { getPart, normalizeText, parseFromHeader } from '../../util';
 
 /**
- * Transforms Gmail message to ECHO message object.
+ * Maps Gmail message to ECHO message object.
  */
 export const mapMessage = Effect.fn(function* (message: GoogleMail.Message, contacts: Person.Person[]) {
   const created = new Date(parseInt(message.internalDate)).toISOString();

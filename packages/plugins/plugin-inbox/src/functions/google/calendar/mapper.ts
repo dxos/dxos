@@ -12,7 +12,7 @@ import { type GoogleCalendar } from '../../apis';
 import { normalizeText } from '../../util';
 
 /**
- * Transforms Google Calendar event to ECHO event object.
+ * Maps Google Calendar event to ECHO event object.
  */
 export const mapEvent: (event: GoogleCalendar.Event) => Effect.Effect<Event.Event | null, never, Database.Service> =
   Effect.fn(function* (event: GoogleCalendar.Event) {

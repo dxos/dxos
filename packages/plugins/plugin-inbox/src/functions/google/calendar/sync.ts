@@ -111,6 +111,14 @@ export default defineFunction({
     }).pipe(Effect.provide(FetchHttpClient.layer)),
 });
 
+type BaseSyncProps<T = unknown> = {
+  googleCalendarId: string;
+  pageSize: number;
+  newEvents: Ref.Ref<Event.Event[]>;
+  nextPage: Ref.Ref<string | undefined>;
+  latestUpdate: Ref.Ref<string | undefined>;
+} & T;
+
 /**
  * Performs initial sync by fetching all future events in chronological order.
  * Uses singleEvents=true with startTime ordering to get expanded recurring event instances.
@@ -118,21 +126,16 @@ export default defineFunction({
  */
 const performInitialSync = Effect.fn(function* ({
   googleCalendarId,
-  syncBackDays,
-  syncForwardDays,
   pageSize,
   newEvents,
   nextPage,
   latestUpdate,
-}: {
-  googleCalendarId: string;
+  syncBackDays,
+  syncForwardDays,
+}: BaseSyncProps<{
   syncBackDays: number;
   syncForwardDays: number;
-  pageSize: number;
-  newEvents: Ref.Ref<Event.Event[]>;
-  nextPage: Ref.Ref<string | undefined>;
-  latestUpdate: Ref.Ref<string | undefined>;
-}) {
+}>) {
   log('performing initial sync', { syncBackDays, syncForwardDays });
   const now = new Date();
   const timeMin = addDays(now, -syncBackDays).toISOString();
@@ -162,19 +165,14 @@ const performInitialSync = Effect.fn(function* ({
  */
 const performIncrementalSync = Effect.fn(function* ({
   googleCalendarId,
-  updatedMin,
   pageSize,
   newEvents,
   nextPage,
   latestUpdate,
-}: {
-  googleCalendarId: string;
+  updatedMin,
+}: BaseSyncProps<{
   updatedMin: string;
-  pageSize: number;
-  newEvents: Ref.Ref<Event.Event[]>;
-  nextPage: Ref.Ref<string | undefined>;
-  latestUpdate: Ref.Ref<string | undefined>;
-}) {
+}>) {
   log('performing incremental sync', { updatedMin });
 
   do {
