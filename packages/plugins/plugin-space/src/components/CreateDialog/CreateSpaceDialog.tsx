@@ -45,7 +45,7 @@ export const CreateSpaceDialog = () => {
           }),
         );
       });
-      await Effect.runPromise(program);
+      await runAndForwardErrors(program);
     },
     [dispatch],
   );

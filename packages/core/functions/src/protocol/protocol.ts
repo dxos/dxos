@@ -71,7 +71,7 @@ export const wrapFunctionHandler = (func: FunctionDefinition): FunctionProtocol.
         });
 
         if (Effect.isEffect(result)) {
-          result = await Effect.runPromise(
+          result = await runAndForwardErrors(
             (result as Effect.Effect<unknown, unknown, FunctionServices>).pipe(
               Effect.orDie,
               Effect.provide(funcContext.createLayer()),

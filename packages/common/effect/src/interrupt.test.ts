@@ -18,7 +18,7 @@ it.effect.skip(
     function* (_) {
       const resultFiber = yield* doWork().pipe(Effect.fork);
       setTimeout(() => {
-        void Effect.runPromise(Fiber.interrupt(resultFiber));
+        void runAndForwardErrors(Fiber.interrupt(resultFiber));
       }, 2_000);
 
       const result = yield* resultFiber;

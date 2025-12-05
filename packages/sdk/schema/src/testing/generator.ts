@@ -46,7 +46,7 @@ export const createObjectFactory =
     for (const { type, count } of specs) {
       try {
         const pipeline = createObjectPipeline(generator, type, { db });
-        const objects = await Effect.runPromise(createArrayPipeline(count, pipeline));
+        const objects = await runAndForwardErrors(createArrayPipeline(count, pipeline));
         result.push(...objects);
         // NOTE: Flush so that available to other generators as refs.
         await db.flush();
@@ -246,7 +246,7 @@ export const createAsyncGenerator = <T extends AnyProperties>(
   const pipeline = createObjectPipeline(generator, type, options);
 
   return {
-    createObject: () => Effect.runPromise(pipeline({} as Type.Properties<T>)),
-    createObjects: (n: number) => Effect.runPromise(createArrayPipeline(n, pipeline)),
+    createObject: () => runAndForwardErrors(pipeline({} as Type.Properties<T>)),
+    createObjects: (n: number) => runAndForwardErrors(createArrayPipeline(n, pipeline)),
   };
 };

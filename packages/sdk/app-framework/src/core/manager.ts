@@ -190,7 +190,7 @@ export class PluginManager {
       });
 
       log('pending reset', { events: [...this.pendingReset] });
-      await Effect.runPromise(
+      await runAndForwardErrors(
         Effect.all(
           this.pendingReset.map((event) => this._activate(event)),
           { concurrency: 'unbounded' },
@@ -237,7 +237,7 @@ export class PluginManager {
       const enabledIndex = this._state.enabled.findIndex((enabled) => enabled === id);
       if (enabledIndex !== -1) {
         this._state.enabled.splice(enabledIndex, 1);
-        await Effect.runPromise(this._deactivate(id));
+        await runAndForwardErrors(this._deactivate(id));
 
         plugin.modules.forEach((module) => {
           this._removeModule(module.id);
@@ -254,7 +254,7 @@ export class PluginManager {
    * @returns Whether the activation was successful.
    */
   activate(event: ActivationEvent | string): Promise<boolean> {
-    return untracked(() => Effect.runPromise(this._activate(event)));
+    return untracked(() => runAndForwardErrors(this._activate(event)));
   }
 
   /**
@@ -263,7 +263,7 @@ export class PluginManager {
    * @returns Whether the deactivation was successful.
    */
   deactivate(id: string): Promise<boolean> {
-    return untracked(() => Effect.runPromise(this._deactivate(id)));
+    return untracked(() => runAndForwardErrors(this._deactivate(id)));
   }
 
   /**
@@ -272,7 +272,7 @@ export class PluginManager {
    * @returns Whether the reset was successful.
    */
   reset(event: ActivationEvent | string): Promise<boolean> {
-    return untracked(() => Effect.runPromise(this._reset(event)));
+    return untracked(() => runAndForwardErrors(this._reset(event)));
   }
 
   private _addPlugin(plugin: Plugin): void {

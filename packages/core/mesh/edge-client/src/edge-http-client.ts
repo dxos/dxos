@@ -390,7 +390,7 @@ export class EdgeHttpClient {
       Effect.provide(FetchHttpClient.layer),
       Effect.provide(HttpConfig.default),
       Effect.withSpan('EdgeHttpClient'),
-      Effect.runPromise,
+      runAndForwardErrors,
     ) as T;
   }
 

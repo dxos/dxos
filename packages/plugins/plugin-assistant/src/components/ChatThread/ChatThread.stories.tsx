@@ -59,7 +59,7 @@ const DefaultStory = ({ generator = [], delay = 0, wait, ...props }: StoryProps)
     );
 
     return () => {
-      void Effect.runPromise(Fiber.interrupt(fiber));
+      void runAndForwardErrors(Fiber.interrupt(fiber));
     };
   }, [space, queue, generator]);
 

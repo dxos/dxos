@@ -175,7 +175,7 @@ export class AiChatProcessor {
       );
 
       // Execute request.
-      const response = await this._fiber.pipe(Fiber.join, Effect.runPromiseExit);
+      const response = await this._fiber.pipe(Fiber.join, runAndForwardErrorsExit);
       if (!Exit.isSuccess(response) && !Cause.isInterruptedOnly(response.cause)) {
         throwCause(response.cause);
       }
@@ -196,7 +196,7 @@ export class AiChatProcessor {
    * Cancels the current request.
    */
   async cancel(): Promise<void> {
-    await Effect.runPromise(
+    await runAndForwardErrors(
       Effect.gen(this, function* () {
         if (this._fiber) {
           yield* this._fiber.pipe(Fiber.interrupt);

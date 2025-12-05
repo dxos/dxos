@@ -515,7 +515,7 @@ export default ({ context, observability, createInvitationUrl }: IntentResolverO
             target: isSpace(target) ? undefined : target,
             hidden,
           });
-        }).pipe(Effect.provide(Database.Service.layer(space.db)), Effect.runPromise);
+        }).pipe(Effect.provide(Database.Service.layer(space.db)), runAndForwardErrors);
 
         return {
           data: {

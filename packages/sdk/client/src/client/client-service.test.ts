@@ -19,7 +19,7 @@ describe('ClientService', () => {
       const client = yield* ClientService;
       return client;
     }).pipe(Effect.provide(TestLayer));
-    const client = await Effect.runPromise(program);
+    const client = await runAndForwardErrors(program);
     expect(client).toBeDefined();
   });
 
@@ -32,7 +32,7 @@ describe('ClientService', () => {
       });
       return identity;
     }).pipe(Effect.provide(TestLayer));
-    const identity = await Effect.runPromise(program);
+    const identity = await runAndForwardErrors(program);
     expect(identity).toBeDefined();
   });
 });

@@ -67,7 +67,7 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('GPT pipelines', () => {
           }),
         );
 
-        const logger = Effect.runPromise(output.values.text).then((token) => {
+        const logger = runAndForwardErrors(output.values.text).then((token) => {
           log.info('token', { token });
         });
 
@@ -116,7 +116,7 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('GPT pipelines', () => {
   //   const runtime = new TestRuntime();
   //   runtime.registerGraph('dxn:compute:gpt1', gpt1());
   //
-  //   await Effect.runPromise(
+  //   await runAndForwardErrors(
   //     Effect.gen(function* () {
   //       const scope = yield* Scope.make();
   //       const computeResult = yield* runtime
@@ -141,7 +141,7 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('GPT pipelines', () => {
   //   const runtime = new TestRuntime();
   //   runtime.registerGraph('dxn:compute:gpt2', gpt2());
   //
-  //   await Effect.runPromise(
+  //   await runAndForwardErrors(
   //     Effect.gen(function* () {
   //       const scope = yield* Scope.make();
   //       const outputs: ValueBag<GptOutput> = yield* runtime
@@ -155,7 +155,7 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('GPT pipelines', () => {
   //
   //       // log.info('text in test', { text: getDebugName(text) });
   //
-  //       const p = Effect.runPromise(outputs.values.text).then((x) => {
+  //       const p = runAndForwardErrors(outputs.values.text).then((x) => {
   //         console.log({ x });
   //       });
   //

@@ -233,7 +233,7 @@ export class ComputeGraphController extends Resource {
     }
 
     const serviceLayer = this._serviceContainer.createLayer();
-    await Effect.runPromise(
+    await runAndForwardErrors(
       Effect.gen(this, function* () {
         const scope = yield* Scope.make();
 
@@ -290,7 +290,7 @@ export class ComputeGraphController extends Resource {
         : this._graph.nodes.filter((node) => node.type != null && AUTO_TRIGGER_NODES.includes(node.type));
     const allAffectedNodes = [...new Set(triggerNodes.flatMap((node) => executor.getAllDependantNodes(node.id)))];
 
-    await Effect.runPromise(
+    await runAndForwardErrors(
       Effect.gen(this, function* () {
         const scope = yield* Scope.make();
 

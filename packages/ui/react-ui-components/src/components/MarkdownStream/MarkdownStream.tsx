@@ -143,7 +143,7 @@ export const MarkdownStream = forwardRef<MarkdownStreamController | null, Markdo
       );
 
       return () => {
-        void Effect.runPromise(Fiber.interrupt(fork));
+        void runAndForwardErrors(Fiber.interrupt(fork));
       };
     }, [view, queue]);
 
@@ -189,7 +189,7 @@ export const MarkdownStream = forwardRef<MarkdownStreamController | null, Markdo
         // Append to queue (and stream).
         append: async (text: string) => {
           if (text.length) {
-            await Effect.runPromise(Queue.offer(queueRef.current, text));
+            await runAndForwardErrors(Queue.offer(queueRef.current, text));
           }
         },
         // Update widget.

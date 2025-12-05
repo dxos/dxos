@@ -128,7 +128,7 @@ export const WorkflowDebugPanel = (props: WorkflowDebugPanelProps) => {
         response = await edgeClient.executeWorkflow(space.id, props.graph.id, requestBody);
       } else {
         const compiled = await props.loader.load(DXN.fromLocalObjectId(props.graph.id));
-        response = await Effect.runPromise(
+        response = await runAndForwardErrors(
           compiled
             .run(ValueBag.make(requestBody))
             .pipe(

@@ -273,7 +273,7 @@ export const createDispatcher = (
   };
 
   const dispatchPromise: PromiseIntentDispatcher = (intentChain) => {
-    return Effect.runPromise(dispatch(intentChain))
+    return runAndForwardErrors(dispatch(intentChain))
       .then((data) => ({ data }))
       .catch((error) => {
         log.catch(error);
@@ -300,7 +300,7 @@ export const createDispatcher = (
   };
 
   const undoPromise: PromiseIntentUndo = () => {
-    return Effect.runPromise(undo())
+    return runAndForwardErrors(undo())
       .then((data) => ({ data }))
       .catch((error) => ({ error }));
   };
@@ -309,7 +309,7 @@ export const createDispatcher = (
 };
 
 const defaultEffect = () => Effect.fail(new Error('Intent runtime not ready'));
-const defaultPromise = () => Effect.runPromise(defaultEffect());
+const defaultPromise = () => runAndForwardErrors(defaultEffect());
 
 export default (context: PluginContext) => {
   const state = live<IntentContext>({

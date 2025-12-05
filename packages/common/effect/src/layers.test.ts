@@ -76,7 +76,7 @@ class ClientPlugin {
   async run() {
     const layer = Layer.provide(Client.layer, this._serverPlugin.clientConfigLayer);
 
-    await Effect.runPromise(
+    await runAndForwardErrors(
       Effect.gen(function* () {
         const client = yield* Client;
         yield* client.call();
@@ -89,7 +89,7 @@ test.skip('plugins', async () => {
   const serverPlugin = new ServerPlugin();
   console.log('ServerPlugin created');
 
-  await Effect.runPromise(Effect.sleep(Duration.millis(500)));
+  await runAndForwardErrors(Effect.sleep(Duration.millis(500)));
   console.log('wake up');
 
   {

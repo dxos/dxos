@@ -33,4 +33,4 @@ const program = Effect.gen(function*() {
   yield* Effect.log("[Build] Build completed.")
 }).pipe(Effect.provide(NodeContext.layer))
 
-Effect.runPromise(program).catch(console.error)
+runAndForwardErrors(program).catch(console.error)

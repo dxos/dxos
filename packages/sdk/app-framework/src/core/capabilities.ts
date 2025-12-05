@@ -254,10 +254,10 @@ export class PluginContext {
   }
 
   async activatePromise(event: ActivationEvent): Promise<boolean> {
-    return this.activate(event).pipe(Effect.runPromise);
+    return this.activate(event).pipe(runAndForwardErrors);
   }
 
   async resetPromise(event: ActivationEvent): Promise<boolean> {
-    return this.reset(event).pipe(Effect.runPromise);
+    return this.reset(event).pipe(runAndForwardErrors);
   }
 }

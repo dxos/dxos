@@ -25,7 +25,7 @@ const NO_TYPES = true; // Types temopararly disabled due to compiler erorrs.
 export default async () => {
   await initializeBundler({ wasmUrl });
 
-  const runtimeModules = await Effect.runPromise(fetchRuntimeModules().pipe(Effect.provide(FetchHttpClient.layer)));
+  const runtimeModules = await runAndForwardErrors(fetchRuntimeModules().pipe(Effect.provide(FetchHttpClient.layer)));
 
   const compiler = new Compiler({
     skipLibCheck: true,

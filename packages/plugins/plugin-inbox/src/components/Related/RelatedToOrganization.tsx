@@ -75,7 +75,7 @@ export const RelatedToOrganization = ({ subject: organization }: SurfaceComponen
             }),
           );
         }
-      }).pipe(Effect.runPromise),
+      }).pipe(runAndForwardErrors),
     [dispatch, currentSpaceContacts, currentSpaceContactTable, defaultSpaceContactTable, space, defaultSpace],
   );
 

@@ -48,7 +48,7 @@ export const resolveSchemaWithClientAndSpace = (space: Space, query: QueryAST.Qu
 
   return resolveSchema(query, resolve).pipe(
     Effect.map((schema) => Option.getOrUndefined(schema)),
-    Effect.runPromise,
+    runAndForwardErrors,
   );
 };
 

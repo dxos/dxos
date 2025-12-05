@@ -19,7 +19,7 @@ describe('sanity tests', () => {
   });
 
   test('effect pipeline (mixing types)', async ({ expect }) => {
-    const result = await Effect.runPromise(
+    const result = await runAndForwardErrors(
       Function.pipe(
         Effect.promise(() => Promise.resolve(100)),
         Effect.tap((value) => {
@@ -39,7 +39,7 @@ describe('sanity tests', () => {
   });
 
   test('effect pipeline (mixing sync/async)', async ({ expect }) => {
-    const result = await Effect.runPromise(
+    const result = await runAndForwardErrors(
       Function.pipe(
         Effect.succeed(100),
         Effect.tap((value) => {
@@ -59,7 +59,7 @@ describe('sanity tests', () => {
   });
 
   test('error handling', async ({ expect }) => {
-    Effect.runPromise(
+    runAndForwardErrors(
       Function.pipe(
         Effect.succeed(10),
         Effect.map((value) => value * 2),

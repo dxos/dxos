@@ -103,7 +103,7 @@ export const CreateObjectDialog = ({
 
           onCreateObject?.(object);
         }
-      }).pipe(Effect.runPromise),
+      }).pipe(runAndForwardErrors),
     [dispatch, target, resolve, _shouldNavigate],
   );
 

@@ -22,6 +22,6 @@ export default (context: PluginContext) => {
       return fileInfo;
     });
 
-    return Effect.runPromise(program);
+    return runAndForwardErrors(program);
   });
 };

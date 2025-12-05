@@ -36,7 +36,7 @@ describe('HttpClient', () => {
         withRetry(HttpClient.get(server.url)),
         Effect.provide(FetchHttpClient.layer),
         Effect.withSpan('EdgeHttpClient'),
-        Effect.runPromise,
+        runAndForwardErrors,
       );
       expect(result).toMatchObject({ success: true, data: { value: 100 } });
     }
@@ -49,7 +49,7 @@ describe('HttpClient', () => {
         Effect.provide(FetchHttpClient.layer),
         Effect.provide(HttpConfig.default), // TODO(burdon): Swap out to mock.
         Effect.withSpan('EdgeHttpClient'), // TODO(burdon): OTEL.
-        Effect.runPromise,
+        runAndForwardErrors,
       );
       expect(result).toMatchObject({ success: true, data: { value: 100 } });
     }

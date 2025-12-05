@@ -242,7 +242,7 @@ export const makeWithReferences = async ({
         (error) => error._tag === 'NoSuchElementException',
         () => Effect.succeed('Recovering from NoSuchElementException'),
       ),
-      Effect.runPromise,
+      runAndForwardErrors,
     );
   }
 

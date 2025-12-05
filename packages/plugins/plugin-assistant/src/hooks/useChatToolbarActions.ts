@@ -53,7 +53,7 @@ export const useChatToolbarActions = ({ chat, companionTo }: ChatToolbarActionsP
                   companionTo,
                   chat: undefined,
                 }),
-              ).pipe(Effect.runPromise),
+              ).pipe(runAndForwardErrors),
           )
           .action(
             'rename',
@@ -67,7 +67,7 @@ export const useChatToolbarActions = ({ chat, companionTo }: ChatToolbarActionsP
               Effect.gen(function* () {
                 invariant(chat);
                 yield* dispatch(createIntent(AssistantAction.UpdateChatName, { chat }));
-              }).pipe(Effect.runPromise),
+              }).pipe(runAndForwardErrors),
           )
           .action(
             'branch',
@@ -108,7 +108,7 @@ export const useChatToolbarActions = ({ chat, companionTo }: ChatToolbarActionsP
                             chat,
                           }),
                         );
-                      }).pipe(Effect.runPromise),
+                      }).pipe(runAndForwardErrors),
                   );
                 });
             },
