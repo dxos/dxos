@@ -14,21 +14,21 @@ export type Resolver<Source, Target, E = never, R = never> = (
   source: Source,
 ) => Effect.Effect<Target | undefined, E, R>;
 
-/**
- * Defines the source and target types for each resolver kind.
- */
 export type ResolverDefinition = { source: unknown; target: unknown };
 
 export type ResolverDefinitionMap = Record<string, ResolverDefinition>;
 
 export type ResolverKind<D extends ResolverDefinitionMap> = keyof D & string;
 
+/**
+ * Map of resolver effects indexed by resolver kind.
+ */
 export type ResolverMap<D extends ResolverDefinitionMap, K extends ResolverKind<D> = ResolverKind<D>> = {
   [P in K]: Resolver<D[P]['source'], D[P]['target'] | undefined>;
 };
 
 //
-// TODO(burdon): Factor out.
+// TODO(burdon): Factor out implementation.
 //
 
 export type HasEmail = { email: string };
