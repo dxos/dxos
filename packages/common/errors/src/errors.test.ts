@@ -12,8 +12,8 @@ describe('errors', () => {
     const error = new SystemError({ message: 'Test message', cause: new Error('Test cause'), context: { a: 1, b: 2 } });
     expect(error).toBeInstanceOf(SystemError);
     expect(error).toBeInstanceOf(SystemError);
-    expect(error.name).toBe(SystemError._tag);
-    expect(error._tag).toBe(SystemError._tag);
+    expect(error.name).toBe(SystemError.name);
+    expect(error._tag).toBe(SystemError.name);
     expect(error.message).toBe('Test message');
     expect(error.cause).toBeInstanceOf(Error);
     expect((error.cause as Error).message).toBe('Test cause');
