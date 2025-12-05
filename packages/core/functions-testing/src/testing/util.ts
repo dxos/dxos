@@ -70,15 +70,17 @@ export const deployFunction = async (
   return func;
 };
 
-export const observeInvocations = async (space: Space, count: number | null) => {
+export const observeInvocations = async (space: Space, maxCount: number | null) => {
   let initialCount = null;
   const invocationData = new Map<
     string,
     {
+      count: number;
       begin: InvocationTraceStartEvent;
       end?: InvocationTraceEndEvent;
     }
   >();
+  let count = 0;
   while (true) {
     try {
       const invocations =
@@ -90,9 +92,10 @@ export const observeInvocations = async (space: Space, count: number | null) => 
             continue;
           }
           invocationData.set(invocation.invocationId, {
+            count: count++,
             begin: invocation,
           });
-          console.log(`BEGIN ${JSON.stringify(invocation.input)}`);
+          console.log(`${count.toString().padStart(3, ' ')}: BEGIN ${JSON.stringify(invocation.input)}`);
         } else if (Obj.instanceOf(InvocationTraceEndEvent, invocation)) {
           const data = invocationData.get(invocation.invocationId);
           if (!data || !!data.end) {
@@ -101,7 +104,9 @@ export const observeInvocations = async (space: Space, count: number | null) => 
           data.end = invocation;
 
           const outcome = data.end.outcome;
-          console.log(`END outcome=${outcome} duration=${data.end.timestamp - data.begin.timestamp}`);
+          console.log(
+            `${data.count.toString().padStart(3, ' ')}: END outcome=${outcome} duration=${data.end.timestamp - data.begin.timestamp}`,
+          );
           if (outcome === 'failure') {
             console.log(data.end.error?.stack);
           }
@@ -111,7 +116,7 @@ export const observeInvocations = async (space: Space, count: number | null) => 
         initialCount = invocations.length;
       }
 
-      if (count !== null && invocationData.size >= count + initialCount) {
+      if (maxCount !== null && invocationData.size >= maxCount + initialCount) {
         break;
       }
     } catch (err) {
