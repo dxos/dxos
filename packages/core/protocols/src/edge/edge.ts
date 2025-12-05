@@ -415,7 +415,7 @@ const MAX_ERROR_DEPTH = 3;
  */
 export const ErrorCodec = Object.freeze({
   encode: (err: Error, depth: number = 0): SerializedError => ({
-    name: err.name,
+    name: 'name' in err ? err.name : (err as any).code || 'Error',
     message: err.message,
     stack: err.stack,
     cause: err.cause instanceof Error && depth < MAX_ERROR_DEPTH ? ErrorCodec.encode(err.cause, depth + 1) : undefined,
