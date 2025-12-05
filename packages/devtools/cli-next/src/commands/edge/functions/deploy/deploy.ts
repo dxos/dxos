@@ -19,7 +19,7 @@ import { FUNCTIONS_META_KEY, Function } from '@dxos/functions';
 import { FunctionsServiceClient } from '@dxos/functions-runtime/edge';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
-import { Runtime } from '@dxos/protocols';
+import { FunctionRuntimeKind } from '@dxos/protocols';
 
 import { CommandConfig } from '../../../../services';
 import { waitForSync } from '../../../../util';
@@ -89,8 +89,8 @@ export const deploy = Command.make(
         entryPoint: artifact.entryPoint,
         assets: artifact.assets,
         runtime: Match.value(options.runtime.pipe(Option.getOrUndefined)).pipe(
-          Match.when('worker-loader', () => Runtime.WORKER_LOADER),
-          Match.when('workers-for-platforms', () => Runtime.WORKERS_FOR_PLATFORMS),
+          Match.when('worker-loader', () => FunctionRuntimeKind.enums.WORKER_LOADER),
+          Match.when('workers-for-platforms', () => FunctionRuntimeKind.enums.WORKERS_FOR_PLATFORMS),
           Match.when(undefined, () => undefined),
           Match.exhaustive,
         ),
