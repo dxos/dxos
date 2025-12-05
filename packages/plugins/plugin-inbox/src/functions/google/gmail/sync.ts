@@ -13,12 +13,12 @@ import * as Schema from 'effect/Schema';
 import * as Stream from 'effect/Stream';
 
 import { ArtifactId } from '@dxos/assistant';
-import { DXN, Obj } from '@dxos/echo';
+import { DXN, Filter, Obj, Query } from '@dxos/echo';
 import { Database } from '@dxos/echo';
 import type { Queue } from '@dxos/echo-db';
 import { QueueService, defineFunction } from '@dxos/functions';
 import { log } from '@dxos/log';
-import { type Message } from '@dxos/types';
+import { type Message, Person } from '@dxos/types';
 
 // NOTE: While the integration is in test mode, only the emails listed in the following dashboard are supported:
 //   https://console.cloud.google.com/auth/audience?authuser=1&project=composer-app-454920
@@ -92,7 +92,7 @@ export default defineFunction({
       const queue = yield* QueueService.getQueue<Message.Message>(mailbox.queue.dxn);
 
       // Get last message to resume from.
-      const objects = yield* Effect.tryPromise(() => queue.queryObjects());
+      const objects = yield* Effect.tryPromise(() => queue.query(Query.select(Filter.everything())).run());
       const lastMessage = objects.at(-1);
 
       // Build deduplication set from recent messages to prevent duplicates across sync runs.
@@ -223,6 +223,9 @@ const streamGmailMessagesToQueue = Effect.fn(function* (
     chunkDays: STREAMING_CONFIG.dateChunkDays,
   };
 
+  // TODO(burdon): Move to resolver.
+  const contacts = yield* Database.Service.runQuery(Query.select(Filter.type(Person.Person)));
+
   const count = yield* Function.pipe(
     generateDateRanges(config),
     // Sequential date range processing to maintain chronological order.
@@ -248,7 +251,7 @@ const streamGmailMessagesToQueue = Effect.fn(function* (
       },
     ),
     // Convert to Message.Message objects.
-    Stream.mapEffect((message) => mapMessage(message)),
+    Stream.mapEffect((message) => mapMessage(message, contacts)),
     Stream.filter(Predicate.isNotNullable),
     // Batch messages for queue append.
     Stream.grouped(STREAMING_CONFIG.queueBatchSize),
