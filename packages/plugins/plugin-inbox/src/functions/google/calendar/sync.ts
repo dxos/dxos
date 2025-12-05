@@ -155,7 +155,6 @@ const performInitialSync = Effect.fn(function* ({
       pageToken,
     );
     yield* Ref.update(nextPage, () => nextPageToken);
-
     yield* processEvents({ items, newEvents, latestUpdate, seenRecurringEventIds });
   } while (yield* Ref.get(nextPage));
 });

@@ -109,7 +109,6 @@ export default defineFunction({
       );
 
       const startDate = lastMessage ? new Date(lastMessage.created) : new Date(after);
-
       log('starting sync', {
         startDate: format(startDate, 'yyyy-MM-dd'),
         lastMessageId: lastMessage?.id,
