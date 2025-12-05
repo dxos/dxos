@@ -10,6 +10,7 @@ import React, { forwardRef, useEffect, useMemo, useRef, useState } from 'react';
 import { type ComputeGraph, ValueBag, type WorkflowLoader } from '@dxos/conductor';
 import { Database } from '@dxos/echo';
 import { EdgeHttpClient } from '@dxos/edge-client';
+import { runAndForwardErrors } from '@dxos/effect';
 import { createEventLogger } from '@dxos/functions';
 import { QueueService } from '@dxos/functions';
 import { type RuntimeServices, ServiceContainer } from '@dxos/functions-runtime';

@@ -17,7 +17,14 @@ import {
   getSchemaReference,
 } from '@dxos/echo/internal';
 import { type AnyLiveObject, type EchoDatabase, Filter, Query } from '@dxos/echo-db';
-import { type SchemaProperty, findAnnotation, getProperties, isArrayType, isNestedType } from '@dxos/effect';
+import {
+  type SchemaProperty,
+  findAnnotation,
+  getProperties,
+  isArrayType,
+  isNestedType,
+  runAndForwardErrors,
+} from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { type Live } from '@dxos/live-object';
 import { log } from '@dxos/log';

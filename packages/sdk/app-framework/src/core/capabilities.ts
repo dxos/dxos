@@ -3,9 +3,10 @@
 //
 
 import { Atom, type Registry } from '@effect-atom/atom-react';
-import * as Effect from 'effect/Effect';
+import type * as Effect from 'effect/Effect';
 
 import { Trigger } from '@dxos/async';
+import { runAndForwardErrors } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { type MaybePromise } from '@dxos/util';

@@ -8,6 +8,8 @@ import * as Function from 'effect/Function';
 import * as Schema from 'effect/Schema';
 import { describe, expect, test } from 'vitest';
 
+import { runAndForwardErrors } from '@dxos/effect';
+
 import { chain, createIntent } from './intent';
 import { type AnyIntentResolver, createDispatcher, createResolver } from './intent-dispatcher';
 

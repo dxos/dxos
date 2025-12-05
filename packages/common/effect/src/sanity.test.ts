@@ -8,6 +8,8 @@ import { describe, test } from 'vitest';
 
 import { log } from '@dxos/log';
 
+import { runAndForwardErrors } from './errors';
+
 describe('sanity tests', () => {
   test('function pipeline', async ({ expect }) => {
     const result = Function.pipe(
@@ -75,7 +77,7 @@ describe('sanity tests', () => {
       ),
     )
       .then(() => expect.fail())
-      .catch((error) => {
+      .catch((error: any) => {
         expect(error).to.be.instanceOf(Error);
       });
   });

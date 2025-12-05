@@ -6,6 +6,7 @@ import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 
 import { ClientService } from '@dxos/client';
+import { runAndForwardErrors } from '@dxos/effect';
 
 import { TestConsole, TestLayer } from '../../../testing';
 

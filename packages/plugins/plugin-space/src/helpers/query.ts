@@ -17,6 +17,7 @@ import {
   getTypeAnnotation,
   unwrapOptional,
 } from '@dxos/echo/internal';
+import { runAndForwardErrors } from '@dxos/effect';
 import { log } from '@dxos/log';
 import { type Space } from '@dxos/react-client/echo';
 import { Person } from '@dxos/types';

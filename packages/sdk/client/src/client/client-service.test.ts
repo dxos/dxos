@@ -8,6 +8,7 @@ import * as Function from 'effect/Function';
 import * as Layer from 'effect/Layer';
 
 import { ConfigService } from '@dxos/config';
+import { runAndForwardErrors } from '@dxos/effect';
 
 import { ClientService } from './client-service';
 

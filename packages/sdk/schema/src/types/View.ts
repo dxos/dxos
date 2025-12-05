@@ -29,6 +29,7 @@ import {
   getProperties,
   isArrayType,
   isNestedType,
+  runAndForwardErrors,
 } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';

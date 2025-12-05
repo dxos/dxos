@@ -14,6 +14,7 @@ import * as Match from 'effect/Match';
 import * as Ref from 'effect/Ref';
 
 import { Event } from '@dxos/async';
+import { runAndForwardErrors } from '@dxos/effect';
 import { type Live, live } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { type MaybePromise } from '@dxos/util';

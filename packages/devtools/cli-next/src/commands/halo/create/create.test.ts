@@ -7,6 +7,7 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
 import { ClientService } from '@dxos/client';
+import { runAndForwardErrors } from '@dxos/effect';
 
 import { TestConsole, TestLayer } from '../../../testing';
 

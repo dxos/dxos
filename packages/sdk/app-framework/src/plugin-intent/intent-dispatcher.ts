@@ -8,6 +8,7 @@ import * as Option from 'effect/Option';
 import * as Ref from 'effect/Ref';
 import type * as Types from 'effect/Types';
 
+import { runAndForwardErrors } from '@dxos/effect';
 import { live } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { type GuardedType, type MaybePromise, type Position, byPosition } from '@dxos/util';
@@ -274,8 +275,8 @@ export const createDispatcher = (
 
   const dispatchPromise: PromiseIntentDispatcher = (intentChain) => {
     return runAndForwardErrors(dispatch(intentChain))
-      .then((data) => ({ data }))
-      .catch((error) => {
+      .then((data: any) => ({ data }))
+      .catch((error: any) => {
         log.catch(error);
         return { error };
       });
@@ -301,8 +302,8 @@ export const createDispatcher = (
 
   const undoPromise: PromiseIntentUndo = () => {
     return runAndForwardErrors(undo())
-      .then((data) => ({ data }))
-      .catch((error) => ({ error }));
+      .then((data: any) => ({ data }))
+      .catch((error: any) => ({ error }));
   };
 
   return { dispatch, dispatchPromise, undo, undoPromise };

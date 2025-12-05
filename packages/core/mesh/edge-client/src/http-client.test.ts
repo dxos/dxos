@@ -8,6 +8,7 @@ import * as Effect from 'effect/Effect';
 import * as Function from 'effect/Function';
 import { afterEach, beforeEach, describe, it } from 'vitest';
 
+import { runAndForwardErrors } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 
 import { HttpConfig, withLogging, withRetry, withRetryConfig } from './http-client';

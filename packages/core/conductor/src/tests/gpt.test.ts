@@ -12,6 +12,7 @@ import * as Stream from 'effect/Stream';
 import { describe } from 'vitest';
 
 import { TestAiService } from '@dxos/ai/testing';
+import { runAndForwardErrors } from '@dxos/effect';
 import { TestHelpers } from '@dxos/effect/testing';
 import { CredentialsService, TracingService } from '@dxos/functions';
 import { FunctionInvocationServiceLayerTest, TestDatabaseLayer } from '@dxos/functions-runtime/testing';
@@ -67,7 +68,7 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('GPT pipelines', () => {
           }),
         );
 
-        const logger = runAndForwardErrors(output.values.text).then((token) => {
+        const logger = runAndForwardErrors(output.values.text).then((token: any) => {
           log.info('token', { token });
         });
 

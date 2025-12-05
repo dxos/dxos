@@ -9,6 +9,7 @@ import * as Function from 'effect/Function';
 
 import { sleep } from '@dxos/async';
 import { Context } from '@dxos/context';
+import { runAndForwardErrors } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';

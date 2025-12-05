@@ -49,7 +49,7 @@ export const updateName = async (
     Runtime.runFork(runtime), // Run in the background.
   );
 
-  const response = await fiber.pipe(Fiber.join, runAndForwardErrorsExit);
+  const response = await fiber.pipe(Fiber.join, Effect.runPromiseExit);
   if (!Exit.isSuccess(response)) {
     throwCause(response.cause);
   }

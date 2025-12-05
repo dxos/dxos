@@ -10,6 +10,8 @@ import * as Layer from 'effect/Layer';
 import * as ManagedRuntime from 'effect/ManagedRuntime';
 import { test } from 'vitest';
 
+import { runAndForwardErrors } from './errors';
+
 class ClientConfig extends Context.Tag('ClientConfig')<ClientConfig, { endpoint: string }>() {}
 
 class Client extends Context.Tag('Client')<Client, { call: () => Effect.Effect<void> }>() {

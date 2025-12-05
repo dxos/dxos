@@ -16,6 +16,7 @@ import {
 import { Obj, Query, Ref, Relation, Type } from '@dxos/echo';
 import { Database } from '@dxos/echo';
 import { Serializer } from '@dxos/echo-db';
+import { runAndForwardErrors } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { Migrations } from '@dxos/migrations';
 import { ClientCapabilities } from '@dxos/plugin-client';

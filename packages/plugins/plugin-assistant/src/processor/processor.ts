@@ -175,7 +175,7 @@ export class AiChatProcessor {
       );
 
       // Execute request.
-      const response = await this._fiber.pipe(Fiber.join, runAndForwardErrorsExit);
+      const response = await this._fiber.pipe(Fiber.join, Effect.runPromiseExit);
       if (!Exit.isSuccess(response) && !Cause.isInterruptedOnly(response.cause)) {
         throwCause(response.cause);
       }

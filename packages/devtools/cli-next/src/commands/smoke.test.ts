@@ -7,6 +7,8 @@ import { assert, describe, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
+import { runAndForwardErrors } from '@dxos/effect';
+
 import { TestConsole } from '../testing';
 
 import { run } from './dx';

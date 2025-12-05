@@ -10,6 +10,7 @@ import React, { useCallback } from 'react';
 import { LayoutAction, createIntent } from '@dxos/app-framework';
 import { type SurfaceComponentProps, useIntentDispatcher } from '@dxos/app-framework/react';
 import { Filter, Obj } from '@dxos/echo';
+import { runAndForwardErrors } from '@dxos/effect';
 import { AttentionAction } from '@dxos/plugin-attention/types';
 import { ATTENDABLE_PATH_SEPARATOR, DeckAction } from '@dxos/plugin-deck/types';
 import { getSpace, useQuery, useSpace } from '@dxos/react-client/echo';

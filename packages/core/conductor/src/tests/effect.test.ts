@@ -6,6 +6,7 @@ import * as Effect from 'effect/Effect';
 import * as Stream from 'effect/Stream';
 import { describe, test } from 'vitest';
 
+import { runAndForwardErrors } from '@dxos/effect';
 import { log } from '@dxos/log';
 
 describe('effect-basics', () => {

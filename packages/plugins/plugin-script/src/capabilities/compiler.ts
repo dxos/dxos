@@ -11,6 +11,7 @@ import wasmUrl from 'esbuild-wasm/esbuild.wasm?url';
 import * as ts from 'typescript';
 
 import { contributes } from '@dxos/app-framework';
+import { runAndForwardErrors } from '@dxos/effect';
 import { initializeBundler } from '@dxos/functions-runtime/bundler';
 import { trim } from '@dxos/util';
 
@@ -34,7 +35,7 @@ export default async () => {
     noEmit: true,
     strict: true,
     esModuleInterop: true,
-    paths: Object.fromEntries(runtimeModules.map((mod) => [mod.moduleName, [`./src/${mod.filename}`]])),
+    paths: Object.fromEntries(runtimeModules.map((mod: any) => [mod.moduleName, [`./src/${mod.filename}`]])),
   });
 
   await compiler.initialize(trim`

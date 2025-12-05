@@ -22,6 +22,7 @@ import {
   isNotExecuted,
 } from '@dxos/conductor';
 import { Resource } from '@dxos/context';
+import { runAndForwardErrors } from '@dxos/effect';
 import { type ComputeEventLogger, type ComputeEventPayload } from '@dxos/functions';
 import { type ServiceContainer } from '@dxos/functions-runtime';
 import { log } from '@dxos/log';
