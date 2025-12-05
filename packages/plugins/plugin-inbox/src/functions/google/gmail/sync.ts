@@ -18,7 +18,7 @@ import { Database } from '@dxos/echo';
 import type { Queue } from '@dxos/echo-db';
 import { QueueService, defineFunction } from '@dxos/functions';
 import { log } from '@dxos/log';
-import { Person, type Message } from '@dxos/types';
+import { type Message, Person } from '@dxos/types';
 
 // NOTE: While the integration is in test mode, only the emails listed in the following dashboard are supported:
 //   https://console.cloud.google.com/auth/audience?authuser=1&project=composer-app-454920

@@ -11,6 +11,7 @@ import { type Queue } from '@dxos/echo-db';
 import { QueueService } from '@dxos/functions';
 import type { Trigger } from '@dxos/functions';
 import { DXN, ObjectId } from '@dxos/keys';
+import { ErrorCodec } from '@dxos/protocols';
 
 import {
   InvocationOutcome,
@@ -18,7 +19,6 @@ import {
   InvocationTraceEventType,
   InvocationTraceStartEvent,
 } from '../trace';
-import { ErrorCodec } from '@dxos/protocols';
 
 export type FunctionInvocationPayload = {
   data?: any;
