@@ -28,7 +28,7 @@ import {
 import { type Blueprint } from '@dxos/blueprints';
 import { Obj } from '@dxos/echo';
 import { type Database } from '@dxos/echo';
-import { throwCause } from '@dxos/effect';
+import { runAndForwardErrors, throwCause } from '@dxos/effect';
 import {
   type CredentialsService,
   type FunctionInvocationService,
@@ -196,7 +196,7 @@ export class AiChatProcessor {
    * Cancels the current request.
    */
   async cancel(): Promise<void> {
-    await Effect.runPromise(
+    await runAndForwardErrors(
       Effect.gen(this, function* () {
         if (this._fiber) {
           yield* this._fiber.pipe(Fiber.interrupt);
