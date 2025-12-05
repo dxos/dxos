@@ -135,6 +135,7 @@ export type InvocationSpan = {
   invocationTarget?: Ref.Ref<Obj.Any>;
   trigger?: Ref.Ref<Trigger.Trigger>;
   error?: SerializedError;
+  runtime?: FunctionRuntimeKind;
 };
 
 export const createInvocationSpans = (items?: InvocationTraceEvent[]): InvocationSpan[] => {
@@ -170,7 +171,6 @@ export const createInvocationSpans = (items?: InvocationTraceEvent[]): Invocatio
       log.warn('found end event without matching start', { invocationId });
       continue;
     }
-
     const isInProgress = end === undefined;
 
     result.push({
@@ -183,6 +183,7 @@ export const createInvocationSpans = (items?: InvocationTraceEvent[]): Invocatio
       invocationTraceQueue: start.invocationTraceQueue,
       invocationTarget: start.invocationTarget,
       trigger: start.trigger,
+      runtime: start.runtime,
     });
   }
 
