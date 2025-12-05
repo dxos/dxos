@@ -1,7 +1,0 @@
-#!/usr/bin/env bash
-
-set -e
-
-node ../../devtools/cli-next/dist/node-esm/bin.mjs edge function deploy src/functions/reply.ts
-node ../../devtools/cli-next/dist/node-esm/bin.mjs edge function deploy src/functions/fib.ts
-node ../../devtools/cli-next/dist/node-esm/bin.mjs edge function deploy src/functions/query.ts
