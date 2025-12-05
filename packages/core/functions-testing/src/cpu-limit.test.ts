@@ -23,7 +23,7 @@ describe.runIf(process.env.DX_TEST_TAGS?.includes('functions-e2e'))('CPU limit',
       space,
       functionsServiceClient,
       FIB_FUNCTION_PATH,
-      FunctionRuntimeKind.WORKERS_FOR_PLATFORMS,
+      FunctionRuntimeKind.enums.WORKERS_FOR_PLATFORMS,
     );
     const result = await functionsServiceClient.invoke(
       func,
@@ -43,7 +43,7 @@ describe.runIf(process.env.DX_TEST_TAGS?.includes('functions-e2e'))('CPU limit',
       space,
       functionsServiceClient,
       FIB_FUNCTION_PATH,
-      FunctionRuntimeKind.WORKERS_FOR_PLATFORMS,
+      FunctionRuntimeKind.enums.WORKERS_FOR_PLATFORMS,
     );
     const trigger = space.db.add(
       Obj.make(Trigger.Trigger, {
@@ -64,7 +64,7 @@ describe.runIf(process.env.DX_TEST_TAGS?.includes('functions-e2e'))('CPU limit',
       space,
       functionsServiceClient,
       FIB_FUNCTION_PATH,
-      FunctionRuntimeKind.WORKERS_FOR_PLATFORMS,
+      FunctionRuntimeKind.enums.WORKERS_FOR_PLATFORMS,
     );
     const trigger = space.db.add(
       Obj.make(Trigger.Trigger, {
@@ -99,7 +99,7 @@ describe.runIf(process.env.DX_TEST_TAGS?.includes('functions-e2e'))('CPU limit',
       space,
       functionsServiceClient,
       FIB_FUNCTION_PATH,
-      FunctionRuntimeKind.WORKERS_FOR_PLATFORMS,
+      FunctionRuntimeKind.enums.WORKERS_FOR_PLATFORMS,
     );
     const trigger = space.db.add(
       Obj.make(Trigger.Trigger, {
@@ -119,7 +119,7 @@ describe.runIf(process.env.DX_TEST_TAGS?.includes('functions-e2e'))('CPU limit',
       space,
       functionsServiceClient,
       FIB_FUNCTION_PATH,
-      FunctionRuntimeKind.WORKERS_FOR_PLATFORMS,
+      FunctionRuntimeKind.enums.WORKERS_FOR_PLATFORMS,
     );
     const trigger = space.db.add(
       Obj.make(Trigger.Trigger, {

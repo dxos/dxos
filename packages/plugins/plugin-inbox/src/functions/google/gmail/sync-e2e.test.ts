@@ -19,7 +19,7 @@ import { FunctionsServiceClient } from '@dxos/functions-runtime/edge';
 import { bundleFunction } from '@dxos/functions-runtime/native';
 import { failedInvariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { Runtime } from '@dxos/protocols';
+import { FunctionRuntimeKind } from '@dxos/protocols';
 import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { AccessToken, Message } from '@dxos/types';
 
@@ -175,7 +175,7 @@ const deployFunction = async (space: Space, functionsServiceClient: FunctionsSer
     ownerPublicKey: space.key,
     entryPoint: artifact.entryPoint,
     assets: artifact.assets,
-    runtime: Runtime.WORKERS_FOR_PLATFORMS,
+    runtime: FunctionRuntimeKind.enums.WORKERS_FOR_PLATFORMS,
   });
   space.db.add(func);
 
@@ -226,7 +226,7 @@ export const observeInvocations = async (space: Space, maxCount: number | null) 
             `${data.count.toString().padStart(3, ' ')}: END outcome=${outcome} duration=${data.end.timestamp - data.begin.timestamp}`,
           );
           if (outcome === 'failure') {
-            console.log(data.end.exception?.stack);
+            console.log(data.end.error?.stack);
           }
         }
       }

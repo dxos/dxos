@@ -14,7 +14,7 @@ import { InvocationTraceEndEvent, InvocationTraceStartEvent } from '@dxos/functi
 import { FunctionsServiceClient } from '@dxos/functions-runtime/edge';
 import { bundleFunction } from '@dxos/functions-runtime/native';
 import type { BundleResult } from '@dxos/functions-runtime/native';
-import { Runtime } from '@dxos/protocols';
+import { type FunctionRuntimeKind } from '@dxos/protocols';
 import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
 
 export const writeBundle = (path: string, bundle: BundleResult) => {
@@ -52,7 +52,7 @@ export const deployFunction = async (
   space: Space,
   functionsServiceClient: FunctionsServiceClient,
   entryPoint: string,
-  runtime: Runtime,
+  runtime: FunctionRuntimeKind,
 ) => {
   const artifact = await bundleFunction({
     entryPoint,
@@ -103,7 +103,7 @@ export const observeInvocations = async (space: Space, count: number | null) => 
           const outcome = data.end.outcome;
           console.log(`END outcome=${outcome} duration=${data.end.timestamp - data.begin.timestamp}`);
           if (outcome === 'failure') {
-            console.log(data.end.exception?.stack);
+            console.log(data.end.error?.stack);
           }
         }
       }
