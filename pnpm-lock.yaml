@@ -4552,6 +4552,9 @@ importers:
       '@effect/workflow':
         specifier: 0.11.3
         version: 0.11.3(@effect/platform@0.92.1(effect@3.18.3))(@effect/rpc@0.71.0(@effect/platform@0.92.1(effect@3.18.3))(effect@3.18.3))(effect@3.18.3)
+      chalk:
+        specifier: ^4.1.2
+        version: 4.1.2
       effect:
         specifier: 3.18.3
         version: 3.18.3
@@ -25971,10 +25974,6 @@ packages:
     resolution: {integrity: sha512-Fo07WOYGqMfCWHOzSXOt2CxDbC6skS/jO9ynEcmpANMoPrD+W1r1K6Vx7iNm+AQmETU1Xr2t+n8nzkV9t6xh3w==}
     engines: {node: ^12.17.0 || ^14.13 || >=16.0.0}
 
-  chalk@5.3.0:
-    resolution: {integrity: sha512-dLitG79d+GV1Nb/VYcCDFivJeK1hiukt9QjRNVOsUtTy1rR1YJsmpGGTZ3qJos+uw7WmWF4wUwBd9jxjocFC2w==}
-    engines: {node: ^12.17.0 || ^14.13 || >=16.0.0}
-
   chalk@5.6.2:
     resolution: {integrity: sha512-7NzBL0rN6fMUW+f7A6Io4h40qQlG+xGmtMxfbnH/K7TAtt8JQWVQK+6g0UXKMeVJoyV5EkkNsErQ8pVD3bLHbA==}
     engines: {node: ^12.17.0 || ^14.13 || >=16.0.0}
@@ -46380,7 +46379,7 @@ snapshots:
 
   '@wdio/logger@8.28.0':
     dependencies:
-      chalk: 5.3.0
+      chalk: 5.6.2
       loglevel: 1.8.1
       loglevel-plugin-prefix: 0.8.4
       strip-ansi: 7.1.2
@@ -47338,7 +47337,7 @@ snapshots:
     dependencies:
       ansi-align: 3.0.1
       camelcase: 7.0.1
-      chalk: 5.3.0
+      chalk: 5.6.2
       cli-boxes: 3.0.0
       string-width: 5.1.2
       type-fest: 2.19.0
@@ -47349,7 +47348,7 @@ snapshots:
     dependencies:
       ansi-align: 3.0.1
       camelcase: 8.0.0
-      chalk: 5.3.0
+      chalk: 5.6.2
       cli-boxes: 3.0.0
       string-width: 7.2.0
       type-fest: 4.41.0
@@ -47632,8 +47631,6 @@ snapshots:
       supports-color: 7.2.0
 
   chalk@5.0.1: {}
-
-  chalk@5.3.0: {}
 
   chalk@5.6.2: {}
 
@@ -51549,7 +51546,7 @@ snapshots:
 
   ink-text-input@6.0.0(ink@6.3.1(@types/react@19.2.2)(react@19.2.0))(react@19.2.0):
     dependencies:
-      chalk: 5.3.0
+      chalk: 5.6.2
       ink: 6.3.1(@types/react@19.2.2)(react@19.2.0)
       react: 19.2.0
       type-fest: 4.41.0
@@ -51560,7 +51557,7 @@ snapshots:
       ansi-escapes: 7.0.0
       ansi-styles: 6.2.1
       auto-bind: 5.0.1
-      chalk: 5.3.0
+      chalk: 5.6.2
       cli-boxes: 3.0.0
       cli-cursor: 4.0.0
       cli-truncate: 4.0.0
