@@ -74,9 +74,13 @@ export const createInboxResolverMap = Effect.gen(function* () {
   } satisfies ResolverMap<InboxResolverDefinitions>;
 });
 
+//
+// TODO(burdon): Factor out implementation.
+//
+
 /**
  * Checks if sub matches base (base is a subdomain of or equal to sub).
- * Example: `www.eng.example.com` matches `www.eng.example.com` and `eng.example.com` and `example.com`
+ * Example: `www.eng.example.com` matches `www.eng.example.com` and `eng.example.com` and `example.com`.
  */
 export const matchesDomain = (base: string, sub: string): boolean => {
   try {
@@ -102,5 +106,5 @@ export const matchesDomain = (base: string, sub: string): boolean => {
 
 export const extractDomain = (email: string): string | undefined => {
   const match = email.match(/@(.+)/);
-  return match?.[1];
+  return match?.[1].toLowerCase();
 };
