@@ -26,6 +26,8 @@ import { Common } from '../../../options';
 import { bundle } from './bundle';
 import { DATA_TYPES, upsertComposerScript } from './echo';
 import { parseOptions } from './options';
+import * as Match from 'effect/Match';
+import { Runtime } from '@dxos/protocols';
 
 export const deploy = Command.make(
   'deploy',
@@ -49,6 +51,10 @@ export const deploy = Command.make(
     dryRun: Options.boolean('dry-run').pipe(
       Options.withDescription('Do not upload, just build the function.'),
       Options.withDefault(false),
+    ),
+    runtime: Options.choice('runtime', ['worker-loader', 'workers-for-platforms']).pipe(
+      Options.withDescription('The runtime to use.'),
+      Options.optional,
     ),
   },
   Effect.fn(function* (options) {
@@ -82,6 +88,12 @@ export const deploy = Command.make(
         version,
         entryPoint: artifact.entryPoint,
         assets: artifact.assets,
+        runtime: Match.value(options.runtime.pipe(Option.getOrUndefined)).pipe(
+          Match.when('worker-loader', () => Runtime.WORKER_LOADER),
+          Match.when('workers-for-platforms', () => Runtime.WORKERS_FOR_PLATFORMS),
+          Match.when(undefined, () => undefined),
+          Match.exhaustive,
+        ),
       }),
     );
 
