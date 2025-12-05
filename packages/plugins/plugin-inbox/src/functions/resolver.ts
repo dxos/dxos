@@ -32,25 +32,29 @@ export type ResolverMap<D extends ResolverDefinitionMap, K extends ResolverKind<
 //
 
 export type HasEmail = { email: string };
-export type HasDomain = { domain: string };
 
 export const createContactResolver = Effect.gen(function* () {
   // Cache.
   const contacts = yield* Database.Service.runQuery(Query.select(Filter.type(Person.Person)));
-  const resolver: Resolver<HasEmail, Person.Person> = ({ email }) =>
-    Effect.succeed(contacts.find((contact) => contact.emails?.some(({ value }) => value === email)));
+  const resolver: Resolver<HasEmail, Person.Person> = ({ email }) => {
+    return Effect.succeed(contacts.find((contact) => contact.emails?.some(({ value }) => value === email)));
+  };
+
   return resolver;
 });
 
 export const createOrganizationResolver = Effect.gen(function* () {
   // Cache.
   const organizations = yield* Database.Service.runQuery(Query.select(Filter.type(Organization.Organization)));
-  const resolver: Resolver<HasDomain, Organization.Organization> = ({ domain }) =>
-    Effect.succeed(
-      organizations.find((organization) => {
-        return organization.website && matchesDomain(organization.website, domain);
-      }),
+  const resolver: Resolver<HasEmail, Organization.Organization> = ({ email }) => {
+    const domain = extractDomain(email);
+    return Effect.succeed(
+      domain
+        ? organizations.find((organization) => organization.website && matchesDomain(organization.website, domain))
+        : undefined,
     );
+  };
+
   return resolver;
 });
 
@@ -60,7 +64,7 @@ export const createOrganizationResolver = Effect.gen(function* () {
 
 export type InboxResolverDefinitions = {
   contact: { source: HasEmail; target: Person.Person };
-  organization: { source: HasDomain; target: Organization.Organization };
+  organization: { source: HasEmail; target: Organization.Organization };
 };
 
 export const createInboxResolverMap = Effect.gen(function* () {
@@ -94,4 +98,9 @@ export const matchesDomain = (base: string, sub: string): boolean => {
   } catch {
     return false;
   }
+};
+
+export const extractDomain = (email: string): string | undefined => {
+  const match = email.match(/@(.+)/);
+  return match?.[1];
 };
