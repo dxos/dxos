@@ -17,6 +17,7 @@
     "check-cycles": "node scripts/check-cycles.mjs",
     "check-dependencies": "syncpack list-mismatches --filter '!ink'",
     "create-worktree": "./scripts/create-worktree",
+    "dxnext": "vite-node --root packages/devtools/cli-next packages/devtools/cli-next/src/bin.ts",
     "fix-dependencies": "syncpack fix-mismatches",
     "format-package": "syncpack format",
     "gh-action": "./scripts/gh-action.mjs",
@@ -32,8 +33,7 @@
     "pre-ci": "./scripts/pre-ci.mjs",
     "prepare": "[ \"$HUSKY\" != \"0\" ] && husky install || true",
     "test": "MOON_CONCURRENCY=4 moon run :test -- --no-file-parallelism",
-    "toolbox": "vite-node tools/toolbox/src/main.ts",
-    "dxnext": "vite-node --root packages/devtools/cli-next packages/devtools/cli-next/src/bin.ts"
+    "toolbox": "vite-node tools/toolbox/src/main.ts"
   },
   "dependencies": {
     "tslib": "^2.8.1"
