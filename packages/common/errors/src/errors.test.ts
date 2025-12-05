@@ -34,7 +34,7 @@ describe('errors', () => {
   });
 
   test('custom message', () => {
-    class CustomError extends BaseError.extend('CUSTOM', 'Custom message') {
+    class CustomError extends BaseError.extend('CustomError', 'Custom message') {
       constructor(value: number, options?: Omit<BaseErrorOptions, 'context'>) {
         super({ context: { value }, ...options });
       }

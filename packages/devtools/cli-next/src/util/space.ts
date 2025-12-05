@@ -74,7 +74,7 @@ export const waitForSync = Effect.fn(function* (space: Space) {
 });
 
 // TODO(burdon): Reconcile with @dxos/protocols
-export class SpaceNotFoundError extends BaseError.extend('SPACE_NOT_FOUND', 'Space not found') {
+export class SpaceNotFoundError extends BaseError.extend('SpaceNotFoundError', 'Space not found') {
   constructor(spaceId: string, options?: Omit<BaseErrorOptions, 'context'>) {
     super({ context: { spaceId }, ...options });
   }
