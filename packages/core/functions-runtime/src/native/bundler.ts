@@ -24,7 +24,7 @@ type BundleOptions = {
   verbose?: boolean;
 };
 
-type BundleResult = {
+export type BundleResult = {
   entryPoint: string;
   assets: Record<string, Uint8Array>;
 };
@@ -51,6 +51,9 @@ export const bundleFunction = async (options: BundleOptions): Promise<BundleResu
     treeShaking: true,
     sourcemap: true,
     splitting: true,
+    logOverride: {
+      'ignored-bare-import': 'silent',
+    },
     loader: {
       '.wasm': 'copy',
     },

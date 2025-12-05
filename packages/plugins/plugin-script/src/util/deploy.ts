@@ -8,7 +8,7 @@ import { Function, type Script, getUserFunctionIdInMetadata } from '@dxos/functi
 import { bundleFunction } from '@dxos/functions-runtime/bundler';
 import { FunctionsServiceClient, incrementSemverPatch } from '@dxos/functions-runtime/edge';
 import { log } from '@dxos/log';
-import { Runtime } from '@dxos/protocols';
+import { FunctionRuntimeKind } from '@dxos/protocols';
 import { type Space } from '@dxos/react-client/echo';
 
 export const isScriptDeployed = ({ script, fn }: { script: Script.Script; fn: any }): boolean => {
@@ -57,7 +57,7 @@ export const deployScript = async ({
       functionId: existingFunctionId,
       entryPoint: buildResult.entryPoint,
       assets: buildResult.assets,
-      runtime: Runtime.WORKER_LOADER,
+      runtime: FunctionRuntimeKind.enums.WORKER_LOADER,
     });
 
     const storedFunction = createOrUpdateFunctionInSpace(space, fn, script, newFunction);
