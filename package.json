@@ -17,7 +17,6 @@
     "check-cycles": "node scripts/check-cycles.mjs",
     "check-dependencies": "syncpack list-mismatches --filter '!ink'",
     "create-worktree": "./scripts/create-worktree",
-    "dxnext": "vite-node --root packages/devtools/cli-next packages/devtools/cli-next/src/bin.ts",
     "fix-dependencies": "syncpack fix-mismatches",
     "format-package": "syncpack format",
     "gh-action": "./scripts/gh-action.mjs",

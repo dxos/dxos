@@ -38,9 +38,6 @@
     "dist",
     "src"
   ],
-  "scripts": {
-    "deploy-functions": "pnpm -c . -ws dxnext --profile main edge function deploy --runtime workers-for-platforms src/functions/google/gmail/sync.ts"
-  },
   "dependencies": {
     "@dxos/ai": "workspace:*",
     "@dxos/app-framework": "workspace:*",
