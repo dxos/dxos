@@ -111,7 +111,7 @@ describe.runIf(process.env.DX_TEST_TAGS?.includes('functions-e2e'))('Functions d
     });
   });
 
-  test.only('deployes inbox sync function (wait for trigger)', { timeout: 0 }, async ({ expect }) => {
+  test('deployes inbox sync function (wait for trigger)', { timeout: 0 }, async ({ expect }) => {
     const { client, space, mailbox, functionsServiceClient } = await setup();
     const func = await deployFunction(space, functionsServiceClient, new URL('./sync.ts', import.meta.url).pathname);
     space.db.add(
