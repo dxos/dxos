@@ -24,7 +24,7 @@ export class BaseError<Name extends string = string> extends Error {
   /**
    * Primary way of defining new error classes.
    * Extended class may specialize constructor for required context params.
-   * @param code - Error code.
+   * @param name - Error name.
    * @param message - Default error message.
    */
   static extend<Name extends string = string>(name: Name, message?: string) {
