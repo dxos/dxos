@@ -175,6 +175,9 @@
       "path": "packages/core/functions-simulator-cloudflare/tsconfig.json"
     },
     {
+      "path": "packages/core/functions-testing/tsconfig.json"
+    },
+    {
       "path": "packages/core/halo/credentials/tsconfig.json"
     },
     {
