@@ -39,11 +39,11 @@
     "@effect/sql": "0.46.0",
     "@effect/typeclass": "0.37.0",
     "@effect/workflow": "0.11.3",
+    "chalk": "^4.1.2",
     "effect": "3.18.3",
     "esbuild": "0.25.10",
     "wtfnode": "^0.10.0",
-    "yaml": "^2.5.0",
-    "chalk": "^4.1.2"
+    "yaml": "^2.5.0"
   },
   "devDependencies": {
     "@types/node": "^22.5.2",
