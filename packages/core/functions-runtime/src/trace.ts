@@ -11,6 +11,8 @@ import { TracingService } from '@dxos/functions';
 import { Trigger } from '@dxos/functions';
 import { ObjectId } from '@dxos/keys';
 import { log } from '@dxos/log';
+import { SerializedError } from '@dxos/protocols';
+import { FunctionRuntimeKind } from '@dxos/protocols';
 
 export enum InvocationOutcome {
   SUCCESS = 'success',
@@ -66,6 +68,10 @@ export const InvocationTraceStartEvent = Schema.Struct({
    * Present for automatic invocations.
    */
   trigger: Schema.optional(Type.Ref(Trigger.Trigger)),
+  /**
+   * Runtime executing the function.
+   */
+  runtime: Schema.optional(FunctionRuntimeKind),
 }).pipe(Type.Obj({ typename: 'dxos.org/type/InvocationTraceStart', version: '0.1.0' }));
 
 export type InvocationTraceStartEvent = Schema.Schema.Type<typeof InvocationTraceStartEvent>;
@@ -88,7 +94,7 @@ export const InvocationTraceEndEvent = Schema.Struct({
 
   outcome: Schema.Enums(InvocationOutcome),
 
-  exception: Schema.optional(TraceEventException),
+  error: Schema.optional(SerializedError),
 }).pipe(Type.Obj({ typename: 'dxos.org/type/InvocationTraceEnd', version: '0.1.0' }));
 
 export type InvocationTraceEndEvent = Schema.Schema.Type<typeof InvocationTraceEndEvent>;
@@ -128,7 +134,8 @@ export type InvocationSpan = {
   invocationTraceQueue?: Ref.Ref<Queue>;
   invocationTarget?: Ref.Ref<Obj.Any>;
   trigger?: Ref.Ref<Trigger.Trigger>;
-  exception?: TraceEventException;
+  error?: SerializedError;
+  runtime?: FunctionRuntimeKind;
 };
 
 export const createInvocationSpans = (items?: InvocationTraceEvent[]): InvocationSpan[] => {
@@ -164,7 +171,6 @@ export const createInvocationSpans = (items?: InvocationTraceEvent[]): Invocatio
       log.warn('found end event without matching start', { invocationId });
       continue;
     }
-
     const isInProgress = end === undefined;
 
     result.push({
@@ -172,11 +178,12 @@ export const createInvocationSpans = (items?: InvocationTraceEvent[]): Invocatio
       timestamp: start.timestamp,
       duration: isInProgress ? now - start.timestamp : end!.timestamp - start.timestamp,
       outcome: end?.outcome ?? InvocationOutcome.PENDING,
-      exception: end?.exception,
+      error: end?.error,
       input: start.input,
       invocationTraceQueue: start.invocationTraceQueue,
       invocationTarget: start.invocationTarget,
       trigger: start.trigger,
+      runtime: start.runtime,
     });
   }
 

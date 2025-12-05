@@ -11,6 +11,7 @@ import wasmUrl from 'esbuild-wasm/esbuild.wasm?url';
 import * as ts from 'typescript';
 
 import { contributes } from '@dxos/app-framework';
+import { runAndForwardErrors } from '@dxos/effect';
 import { initializeBundler } from '@dxos/functions-runtime/bundler';
 import { trim } from '@dxos/util';
 
@@ -25,7 +26,7 @@ const NO_TYPES = true; // Types temopararly disabled due to compiler erorrs.
 export default async () => {
   await initializeBundler({ wasmUrl });
 
-  const runtimeModules = await Effect.runPromise(fetchRuntimeModules().pipe(Effect.provide(FetchHttpClient.layer)));
+  const runtimeModules = await runAndForwardErrors(fetchRuntimeModules().pipe(Effect.provide(FetchHttpClient.layer)));
 
   const compiler = new Compiler({
     skipLibCheck: true,
@@ -34,7 +35,7 @@ export default async () => {
     noEmit: true,
     strict: true,
     esModuleInterop: true,
-    paths: Object.fromEntries(runtimeModules.map((mod) => [mod.moduleName, [`./src/${mod.filename}`]])),
+    paths: Object.fromEntries(runtimeModules.map((mod: any) => [mod.moduleName, [`./src/${mod.filename}`]])),
   });
 
   await compiler.initialize(trim`

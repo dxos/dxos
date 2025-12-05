@@ -10,6 +10,7 @@ import React, { forwardRef, useEffect, useMemo, useRef, useState } from 'react';
 import { type ComputeGraph, ValueBag, type WorkflowLoader } from '@dxos/conductor';
 import { Database } from '@dxos/echo';
 import { EdgeHttpClient } from '@dxos/edge-client';
+import { runAndForwardErrors } from '@dxos/effect';
 import { createEventLogger } from '@dxos/functions';
 import { QueueService } from '@dxos/functions';
 import { type RuntimeServices, ServiceContainer } from '@dxos/functions-runtime';
@@ -128,7 +129,7 @@ export const WorkflowDebugPanel = (props: WorkflowDebugPanelProps) => {
         response = await edgeClient.executeWorkflow(space.id, props.graph.id, requestBody);
       } else {
         const compiled = await props.loader.load(DXN.fromLocalObjectId(props.graph.id));
-        response = await Effect.runPromise(
+        response = await runAndForwardErrors(
           compiled
             .run(ValueBag.make(requestBody))
             .pipe(

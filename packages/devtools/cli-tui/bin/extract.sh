@@ -1,0 +1,1 @@
+npx tsx "$(dirname "$0")/../src/util/extract.ts" "$@"

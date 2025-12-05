@@ -8,6 +8,7 @@ import * as Option from 'effect/Option';
 import * as Ref from 'effect/Ref';
 import type * as Types from 'effect/Types';
 
+import { runAndForwardErrors } from '@dxos/effect';
 import { live } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { type GuardedType, type MaybePromise, type Position, byPosition } from '@dxos/util';
@@ -273,9 +274,9 @@ export const createDispatcher = (
   };
 
   const dispatchPromise: PromiseIntentDispatcher = (intentChain) => {
-    return Effect.runPromise(dispatch(intentChain))
-      .then((data) => ({ data }))
-      .catch((error) => {
+    return runAndForwardErrors(dispatch(intentChain))
+      .then((data: any) => ({ data }))
+      .catch((error: any) => {
         log.catch(error);
         return { error };
       });
@@ -300,16 +301,16 @@ export const createDispatcher = (
   };
 
   const undoPromise: PromiseIntentUndo = () => {
-    return Effect.runPromise(undo())
-      .then((data) => ({ data }))
-      .catch((error) => ({ error }));
+    return runAndForwardErrors(undo())
+      .then((data: any) => ({ data }))
+      .catch((error: any) => ({ error }));
   };
 
   return { dispatch, dispatchPromise, undo, undoPromise };
 };
 
 const defaultEffect = () => Effect.fail(new Error('Intent runtime not ready'));
-const defaultPromise = () => Effect.runPromise(defaultEffect());
+const defaultPromise = () => runAndForwardErrors(defaultEffect());
 
 export default (context: PluginContext) => {
   const state = live<IntentContext>({

@@ -7,6 +7,7 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
 import { ClientService } from '@dxos/client';
+import { runAndForwardErrors } from '@dxos/effect';
 
 import { TestConsole, TestLayer } from '../../../testing';
 
@@ -22,7 +23,7 @@ describe('halo create', () => {
       expect(logs).toHaveLength(2);
       expect(logs[0].args).toEqual([`Identity key: ${client.halo.identity.get()?.identityKey.toHex()}`]);
       expect(logs[1].args).toEqual([`Display name: ${client.halo.identity.get()?.profile?.displayName}`]);
-    }).pipe(Effect.provide(TestLayer), Effect.scoped, Effect.runPromise));
+    }).pipe(Effect.provide(TestLayer), Effect.scoped, runAndForwardErrors));
 
   it('should create an identity with a display name', () =>
     Effect.gen(function* () {
@@ -33,5 +34,5 @@ describe('halo create', () => {
       expect(logs).toHaveLength(2);
       expect(logs[0].args).toEqual([`Identity key: ${client.halo.identity.get()?.identityKey.toHex()}`]);
       expect(logs[1].args).toEqual([`Display name: ${client.halo.identity.get()?.profile?.displayName}`]);
-    }).pipe(Effect.provide(TestLayer), Effect.scoped, Effect.runPromise));
+    }).pipe(Effect.provide(TestLayer), Effect.scoped, runAndForwardErrors));
 });

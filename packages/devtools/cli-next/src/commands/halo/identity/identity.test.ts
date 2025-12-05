@@ -6,6 +6,7 @@ import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 
 import { ClientService } from '@dxos/client';
+import { runAndForwardErrors } from '@dxos/effect';
 
 import { TestConsole, TestLayer } from '../../../testing';
 
@@ -19,7 +20,7 @@ describe('halo identity', () => {
       const logs = logger.logs;
       expect(logs).toHaveLength(1);
       expect(logs[0].args).toEqual(['Identity not initialized.']);
-    }).pipe(Effect.provide(TestLayer), Effect.scoped, Effect.runPromise));
+    }).pipe(Effect.provide(TestLayer), Effect.scoped, runAndForwardErrors));
 
   it('should print identity if initialized', () =>
     Effect.gen(function* () {
@@ -31,5 +32,5 @@ describe('halo identity', () => {
       expect(logs).toHaveLength(2);
       expect(logs[0].args).toEqual([`Identity key: ${client.halo.identity.get()?.identityKey.toHex()}`]);
       expect(logs[1].args).toEqual([`Display name: ${client.halo.identity.get()?.profile?.displayName}`]);
-    }).pipe(Effect.provide(TestLayer), Effect.scoped, Effect.runPromise));
+    }).pipe(Effect.provide(TestLayer), Effect.scoped, runAndForwardErrors));
 });

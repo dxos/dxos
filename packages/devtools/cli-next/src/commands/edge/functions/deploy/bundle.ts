@@ -39,7 +39,7 @@ export const bundle: (
   );
 });
 
-class BundleCreationError extends BaseError.extend('BUNDLE_CREATION_ERROR', 'Bundle creation failed') {
+class BundleCreationError extends BaseError.extend('BundleCreationError', 'Bundle creation failed') {
   constructor(errors: Message[]) {
     super({ context: { errors } });
   }

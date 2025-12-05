@@ -7,6 +7,8 @@ import { assert, describe, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
+import { runAndForwardErrors } from '@dxos/effect';
+
 import { TestConsole } from '../testing';
 
 import { run } from './dx';
@@ -27,5 +29,5 @@ describe('smoke tests', () => {
         yield* run(args('dx --json hub status'));
         assert.containSubset(logger.logs.at(1), { level: 'log', args: [{ status: 'ok' }] });
       }
-    }).pipe(Effect.provide(Layer.mergeAll(TestConsole.layer, NodeContext.layer)), Effect.scoped, Effect.runPromise));
+    }).pipe(Effect.provide(Layer.mergeAll(TestConsole.layer, NodeContext.layer)), Effect.scoped, runAndForwardErrors));
 });

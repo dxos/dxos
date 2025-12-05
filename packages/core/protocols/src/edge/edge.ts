@@ -23,13 +23,15 @@ export type EdgeSuccess<T> = {
   data: T;
 };
 
-export type SerializedError = {
-  code?: string;
-  message?: string;
-  context?: Record<string, unknown>;
-  stack?: string;
-  cause?: SerializedError;
-};
+const _SerializedError = Schema.Struct({
+  name: Schema.optional(Schema.String),
+  message: Schema.optional(Schema.String),
+  context: Schema.optional(Schema.Record({ key: Schema.String, value: Schema.Any })),
+  stack: Schema.optional(Schema.String),
+  cause: Schema.optional(Schema.suspend(() => SerializedError)),
+});
+export interface SerializedError extends Schema.Schema.Type<typeof _SerializedError> {}
+export const SerializedError: Schema.Schema<SerializedError, SerializedError, never> = _SerializedError;
 
 export type EdgeErrorData = { type: string } & Record<string, any>;
 
@@ -37,11 +39,6 @@ export type EdgeErrorData = { type: string } & Record<string, any>;
  * This is the shape of the error response from the Edge service,
  * when the error is gracefully handled, the Response will be an object with this shape and have status code 200.
  */
-// TODO(dmaretskyi): Refactor this type to just be { success: false, error: SerializedError }
-// reason -> error.message
-// cause -> error.cause
-// data.type -> error.code
-// ...data -> error.context
 export type EdgeFailure = {
   /**
    * Branded Type.
@@ -243,24 +240,19 @@ export type UploadFunctionRequest = {
    * Runtime cannot be changed once the function was deployed.
    * @default Runtime.WORKERS_FOR_PLATFORMS
    */
-  runtime?: Runtime;
+  runtime?: FunctionRuntimeKind;
 };
 
 /**
  * Note: Do not change the values of these enums, this values are stored in the FunctionVersions database.
  */
-// TODO(dmaretskyi): Rename to FunctionServiceRuntime
-export enum Runtime {
+export const FunctionRuntimeKind = Schema.Enums({
   // https://developers.cloudflare.com/cloudflare-for-platforms/workers-for-platforms/
-  WORKERS_FOR_PLATFORMS = 'WORKERS_FOR_PLATFORMS',
+  WORKERS_FOR_PLATFORMS: 'WORKERS_FOR_PLATFORMS',
   // https://developers.cloudflare.com/workers/runtime-apis/bindings/worker-loader/
-  WORKER_LOADER = 'WORKER_LOADER',
-  // Local worker dispatcher for testing.
-  /**
-   * @deprecated No longer supported.
-   */
-  TEST = 'TEST',
-}
+  WORKER_LOADER: 'WORKER_LOADER',
+});
+export type FunctionRuntimeKind = Schema.Schema.Type<typeof FunctionRuntimeKind>;
 
 export type UploadFunctionResponseBody = {
   functionId: string;
@@ -423,15 +415,15 @@ const MAX_ERROR_DEPTH = 3;
  */
 export const ErrorCodec = Object.freeze({
   encode: (err: Error, depth: number = 0): SerializedError => ({
-    code: 'code' in err ? (err as any).code : undefined,
+    name: 'name' in err ? err.name : (err as any).code || 'Error',
     message: err.message,
     stack: err.stack,
     cause: err.cause instanceof Error && depth < MAX_ERROR_DEPTH ? ErrorCodec.encode(err.cause, depth + 1) : undefined,
   }),
   decode: (serializedError: SerializedError, depth: number = 0): Error => {
     let err: Error;
-    if (typeof serializedError.code === 'string') {
-      err = new BaseError(serializedError.code, {
+    if (typeof serializedError.name === 'string') {
+      err = new BaseError(serializedError.name, {
         message: serializedError.message ?? 'Unknown error',
         cause:
           serializedError.cause && depth < MAX_ERROR_DEPTH

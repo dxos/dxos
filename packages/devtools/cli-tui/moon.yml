@@ -1,0 +1,6 @@
+type: application
+language: typescript
+tags:
+  - ts-compile
+tasks:
+  test:

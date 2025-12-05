@@ -35,7 +35,7 @@ export class ToolResolverService extends Context.Tag('@dxos/ai/ToolResolverServi
     Effect.gen(function* () {
       const tools = yield* Effect.forEach(ids, (id) =>
         ToolResolverService.resolve(id).pipe(
-          Effect.tapErrorTag('AI_TOOL_NOT_FOUND', (error) =>
+          Effect.tapErrorTag('AiToolNotFoundError', (error) =>
             Effect.sync(() => {
               log.warn('Failed to resolve AI tool', { id, error });
               return Effect.void;

@@ -9,6 +9,7 @@ import { useMemo } from 'react';
 import { createIntent } from '@dxos/app-framework';
 import { useIntentDispatcher } from '@dxos/app-framework/react';
 import { Filter, Obj, Query } from '@dxos/echo';
+import { runAndForwardErrors } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { useQuery } from '@dxos/react-client/echo';
 import { MenuBuilder, useMenuActions } from '@dxos/react-ui-menu';
@@ -53,7 +54,7 @@ export const useChatToolbarActions = ({ chat, companionTo }: ChatToolbarActionsP
                   companionTo,
                   chat: undefined,
                 }),
-              ).pipe(Effect.runPromise),
+              ).pipe(runAndForwardErrors),
           )
           .action(
             'rename',
@@ -67,7 +68,7 @@ export const useChatToolbarActions = ({ chat, companionTo }: ChatToolbarActionsP
               Effect.gen(function* () {
                 invariant(chat);
                 yield* dispatch(createIntent(AssistantAction.UpdateChatName, { chat }));
-              }).pipe(Effect.runPromise),
+              }).pipe(runAndForwardErrors),
           )
           .action(
             'branch',
@@ -108,7 +109,7 @@ export const useChatToolbarActions = ({ chat, companionTo }: ChatToolbarActionsP
                             chat,
                           }),
                         );
-                      }).pipe(Effect.runPromise),
+                      }).pipe(runAndForwardErrors),
                   );
                 });
             },
