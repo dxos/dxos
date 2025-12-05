@@ -235,6 +235,9 @@
       "path": "packages/devtools/cli-next/tsconfig.json"
     },
     {
+      "path": "packages/devtools/cli-tui/tsconfig.json"
+    },
+    {
       "path": "packages/devtools/devtools/tsconfig.json"
     },
     {
@@ -254,12 +257,6 @@
     },
     {
       "path": "packages/experimental/env-tests/tsconfig.json"
-    },
-    {
-      "path": "packages/experimental/metagraph/tsconfig.json"
-    },
-    {
-      "path": "packages/experimental/react-metagraph/tsconfig.json"
     },
     {
       "path": "packages/experimental/script-toolbox/tsconfig.json"

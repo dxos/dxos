@@ -42,13 +42,13 @@ describe.runIf(process.env.DX_TEST_TAGS?.includes('functions-e2e'))('Functions d
   });
 
   test('deploy function', { timeout: 120_000 }, async () => {
-    const { client, space, mailbox, functionsServiceClient } = await setup();
+    const { space, mailbox, functionsServiceClient } = await setup();
     const func = await deployFunction(space, functionsServiceClient, new URL('./sync.ts', import.meta.url).pathname);
     console.log(func);
   });
 
   test('inbox sync function (invoke)', { timeout: 120_000 }, async ({ expect }) => {
-    const { client, space, mailbox, functionsServiceClient } = await setup();
+    const { space, mailbox, functionsServiceClient } = await setup();
     await sync(space);
     const func = await deployFunction(space, functionsServiceClient, new URL('./sync.ts', import.meta.url).pathname);
     const result = await functionsServiceClient.invoke(
@@ -65,7 +65,7 @@ describe.runIf(process.env.DX_TEST_TAGS?.includes('functions-e2e'))('Functions d
   });
 
   test('deployes inbox sync function (force-trigger)', { timeout: 120_000 }, async ({ expect }) => {
-    const { client, space, mailbox, functionsServiceClient } = await setup();
+    const { space, mailbox, functionsServiceClient } = await setup();
     await sync(space);
 
     const func = await deployFunction(space, functionsServiceClient, new URL('./sync.ts', import.meta.url).pathname);
@@ -88,7 +88,7 @@ describe.runIf(process.env.DX_TEST_TAGS?.includes('functions-e2e'))('Functions d
   });
 
   test('deployes inbox sync function (wait for trigger)', { timeout: 120_000 }, async ({ expect }) => {
-    const { client, space, mailbox, functionsServiceClient } = await setup();
+    const { space, mailbox, functionsServiceClient } = await setup();
     await sync(space);
     const func = await deployFunction(space, functionsServiceClient, new URL('./sync.ts', import.meta.url).pathname);
     const trigger = space.db.add(
@@ -152,8 +152,8 @@ const setup = async () => {
       token: process.env.GOOGLE_ACCESS_TOKEN ?? failedInvariant('GOOGLE_ACCESS_TOKEN is not set'),
     }),
   );
-  const functionsServiceClient = FunctionsServiceClient.fromClient(client);
 
+  const functionsServiceClient = FunctionsServiceClient.fromClient(client);
   return { client, space, mailbox, functionsServiceClient };
 };
 
@@ -177,14 +177,14 @@ const deployFunction = async (space: Space, functionsServiceClient: FunctionsSer
     assets: artifact.assets,
     runtime: FunctionRuntimeKind.enums.WORKERS_FOR_PLATFORMS,
   });
-  space.db.add(func);
 
+  space.db.add(func);
   return func;
 };
 
 const checkEmails = async (mailbox: Mailbox.Mailbox) => {
   const messages = await mailbox.queue.target!.query(Query.type(Message.Message)).run();
-  console.log(`Found ${messages.length} messages in mailbox`);
+  console.log(`Messages in mailbox: ${messages.length}`);
   return messages;
 };
 

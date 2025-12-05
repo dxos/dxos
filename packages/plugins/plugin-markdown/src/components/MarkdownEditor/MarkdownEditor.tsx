@@ -154,11 +154,11 @@ type MarkdownEditorContentProps = Omit<NaturalMarkdownEditorContentProps, 'id' |
 const MarkdownEditorContent = (props: MarkdownEditorContentProps) => {
   const {
     id,
-    extensions,
     editorView,
     setEditorView,
-    toolbarState,
     viewMode,
+    toolbarState,
+    extensions,
     popoverMenu: { groupsRef, ...menuProps },
   } = useMarkdownEditorContext(MarkdownEditorContent.displayName);
 
@@ -167,9 +167,9 @@ const MarkdownEditorContent = (props: MarkdownEditorContentProps) => {
       <NaturalMarkdownEditorContent
         {...props}
         id={id}
-        extensions={extensions}
-        toolbarState={toolbarState}
         viewMode={viewMode}
+        toolbarState={toolbarState}
+        extensions={extensions}
         ref={setEditorView}
       />
     </EditorMenuProvider>

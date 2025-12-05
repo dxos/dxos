@@ -18,6 +18,7 @@ export * from './deep';
 export * from './defer-function';
 export * from './defer';
 export * from './entry';
+export * from './filename';
 export * from './for-each-async';
 export * from './human-hash';
 export * from './instance-id';

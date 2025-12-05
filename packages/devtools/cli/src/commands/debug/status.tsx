@@ -3,7 +3,7 @@
 //
 
 import { Flags } from '@oclif/core';
-import React from 'react';
+import { createElement } from 'react';
 
 import { BaseCommand } from '../../base';
 
@@ -25,7 +25,7 @@ export default class Status extends BaseCommand<typeof Status> {
     const { render } = await import('ink');
     const { App } = await import('../../components/App');
     return await this.execWithClient(async ({ client }) => {
-      const element = React.createElement(App, { client, interval: this.flags.interval });
+      const element = createElement(App, { client, interval: this.flags.interval });
       const { waitUntilExit } = render(element);
       await waitUntilExit();
     });

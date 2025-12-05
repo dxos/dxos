@@ -10,46 +10,49 @@ import { Function, Script, Trigger } from '@dxos/functions';
 import { Filter, Ref, type Space, useQuery } from '@dxos/react-client/echo';
 import { Input } from '@dxos/react-ui';
 import { QueryForm, type QueryFormProps } from '@dxos/react-ui-components';
-import { Form, FormFieldLabel, type FormFieldMap, SelectField, useRefQueryOptions } from '@dxos/react-ui-form';
+import {
+  type ExcludeId,
+  Form,
+  FormFieldLabel,
+  type FormFieldMap,
+  type FormRootProps,
+  SelectField,
+  omitId,
+  useRefQueryOptions,
+} from '@dxos/react-ui-form';
 
 import { FunctionInputEditor, type FunctionInputEditorProps } from './FunctionInputEditor';
 import { SpecSelector } from './SpecSelector';
+
+type TriggerFormSchema = ExcludeId<typeof Trigger.Trigger>;
 
 export type TriggerEditorProps = {
   space: Space;
   trigger: Trigger.Trigger;
   // TODO(wittjosiah): This needs to apply to whole spec but currently only applies to spec.kind & spec.query.
   readonlySpec?: boolean;
-  // TODO(burdon): Why do we need to remove 'id'? Can we standardize this?
-  onSave?: (trigger: Omit<Trigger.Trigger, 'id'>) => void;
-  onCancel?: () => void;
-} & Pick<QueryFormProps, 'types' | 'tags'>;
+} &
+  // prettier-ignore
+  Pick<QueryFormProps, 'types' | 'tags'> &
+  Pick<FormRootProps<TriggerFormSchema>, 'onSave' | 'onCancel'>;
 
-export const TriggerEditor = ({ space, types, tags, readonlySpec, trigger, onSave, onCancel }: TriggerEditorProps) => {
-  const handleSave = useCallback(
-    ({ id: _, ...values }: Trigger.Trigger) => {
-      onSave?.(values);
-    },
-    [onSave],
-  );
-
-  const handleRefQueryOptions = useRefQueryOptions({ space });
+export const TriggerEditor = ({ space, types, tags, readonlySpec, trigger, ...formProps }: TriggerEditorProps) => {
+  const handleQueryRefOptions = useRefQueryOptions({ space });
   const fieldMap = useCustomInputs({
     space,
     types,
     tags,
     readonlySpec,
-    onQueryRefOptions: handleRefQueryOptions,
+    onQueryRefOptions: handleQueryRefOptions,
   });
 
   return (
-    <Form.Root<Trigger.Trigger>
-      fieldMap={fieldMap}
-      schema={Trigger.Trigger}
+    <Form.Root<TriggerFormSchema>
+      {...formProps}
+      schema={omitId(Trigger.Trigger)}
       values={trigger}
-      onSave={handleSave}
-      onCancel={onCancel}
-      onQueryRefOptions={handleRefQueryOptions}
+      fieldMap={fieldMap}
+      onQueryRefOptions={handleQueryRefOptions}
     >
       <Form.Viewport>
         <Form.Content>

@@ -146,8 +146,8 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
     });
 
     if (sorting.length > 0) {
-      const [sort] = sorting;
-      this._sorting.setSort(sort.fieldId, sort.direction);
+      const { fieldId, direction } = sorting[0];
+      this._sorting.setSort(fieldId, direction);
     }
 
     this._selection = new SelectionModel(
