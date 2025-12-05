@@ -37,8 +37,17 @@ export type InboxResolverDefinitions = {
   contact: { source: HasEmail; target: Person.Person };
 };
 
-export const createContactResolver: Resolver<HasEmail, Person.Person, never, Database.Service> = ({ email }) =>
-  Effect.gen(function* () {
-    const contacts = yield* Database.Service.runQuery(Query.select(Filter.type(Person.Person)));
-    return contacts.find((contact) => contact.emails?.some((e) => e.value === email));
-  });
+export const createContactResolver = Effect.gen(function* () {
+  // Cached contacts.
+  const contacts = yield* Database.Service.runQuery(Query.select(Filter.type(Person.Person)));
+  const resolver: Resolver<HasEmail, Person.Person> = ({ email }) =>
+    Effect.succeed(contacts.find((contact) => contact.emails?.some(({ value }) => value === email)));
+
+  return resolver;
+});
+
+export const createInboxResolverMap = Effect.gen(function* () {
+  return {
+    contact: yield* createContactResolver,
+  } satisfies ResolverMap<InboxResolverDefinitions>;
+});
