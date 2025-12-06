@@ -11,7 +11,7 @@ import { Core } from './core';
 
 const main = Effect.gen(function* () {
   const services = yield* Effect.runtime<Core.AiChatServices>();
-  const core = new Core.Core(services);
+  const core = new Core.Core(services, Core.DEFAULT_MODEL);
   const app = new App(core);
   yield* Effect.promise(() => app.initialize());
 }).pipe(Effect.provide(Core.TestLayer));

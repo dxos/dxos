@@ -39,6 +39,7 @@ export class App {
   private _messageBox!: Widgets.BoxElement;
   private _inputBox!: Widgets.TextareaElement;
   private _indicator!: Widgets.BoxElement;
+  private _status!: Widgets.BoxElement;
 
   private _messages: string[] = [];
   private _isStreaming = false;
@@ -59,11 +60,6 @@ export class App {
     this._createScreen();
     this._setupKeyBindings();
     this._setupSignalHandlers();
-
-    // Add all elements to screen.
-    this._screen.append(this._messageBox);
-    this._screen.append(this._inputBox);
-    this._screen.append(this._indicator);
 
     // Focus input initially.
     this._inputBox.focus();
@@ -101,7 +97,7 @@ export class App {
   /**
    * Create the blessed screen.
    */
-  private _createScreen(options: { header: number; prompt: number } = { header: 3, prompt: 5 }): void {
+  private _createScreen(options: { prompt: number } = { prompt: 5 }): void {
     // Store identity DID.
     this._identityDid = this._core.client?.halo.identity.get()?.did || '';
 
@@ -120,12 +116,12 @@ export class App {
       top: 0,
       left: 0,
       right: 0,
-      bottom: options.prompt,
+      bottom: options.prompt + 2,
       scrollable: true,
       alwaysScroll: true,
       tags: true,
       scrollbar: {
-        ch: '█',
+        ch: '│',
         style: {
           fg: 'yellow',
         },
@@ -136,33 +132,46 @@ export class App {
       padding: { left: 1, right: 1 },
     });
 
+    // Border.
+    this._screen.append(
+      blessed.box({
+        bottom: 1,
+        height: options.prompt,
+        left: 0,
+        width: 2,
+        border: {
+          type: 'line',
+          left: false,
+          right: true,
+          top: false,
+          bottom: false,
+        } as any,
+        style: {
+          border: {
+            fg: 'bright-green',
+            left: '│',
+          },
+        },
+      }),
+    );
+
     // Prompt.
     this._inputBox = blessed.textarea({
       bottom: 1,
-      left: 0,
-      right: 0,
       height: options.prompt,
+      left: 2,
+      right: 2,
       inputOnFocus: true,
       keys: true,
       mouse: true,
-      border: {
-        type: 'line',
-        left: true,
-        right: false,
-        top: false,
-        bottom: false,
-      } as any,
-      padding: { left: 1 },
+      padding: {
+        left: 1,
+        right: 1,
+      },
       style: {
         bg: 'black',
-        border: {
-          fg: 'green',
-        },
         focus: {
           bg: 'black',
-          border: {
-            fg: 'bright-green',
-          },
         },
       },
       tags: true,
@@ -170,18 +179,33 @@ export class App {
 
     const logo = 'Ⓓ Ⓧ Ⓞ Ⓢ ';
 
-    // Streaming indicator (always visible, shows identity on right).
+    // Streaming indicator.
     this._indicator = blessed.box({
       bottom: 0,
-      left: 0,
-      right: 0,
+      left: 2,
       height: 1,
+      width: 12,
       tags: true,
-      content: `{|}  {grey-fg}${this._identityDid}{/} {grey-fg}${logo}{/}`,
+    });
+
+    // Status.
+    this._status = blessed.box({
+      bottom: 0,
+      left: 14,
+      height: 1,
+      right: 2,
+      tags: true,
+      content: `{|}{grey-fg}${this._identityDid}{/} {green-fg}${logo}{/}`,
       style: {
-        fg: 'blue',
+        fg: 'grey-fg',
       },
     });
+
+    // Add all elements to screen.
+    this._screen.append(this._messageBox);
+    this._screen.append(this._inputBox);
+    this._screen.append(this._indicator);
+    this._screen.append(this._status);
   }
 
   /**
@@ -383,24 +407,10 @@ export class App {
   private _startIndicator(): void {
     this._indicatorPhase = 0;
 
-    const frames = [
-      '⠋ Thinking',
-      '⠙ Thinking',
-      '⠹ Thinking',
-      '⠸ Thinking',
-      '⠼ Thinking',
-      '⠴ Thinking',
-      '⠦ Thinking',
-      '⠧ Thinking',
-      '⠇ Thinking',
-      '⠏ Thinking',
-    ];
-
+    const frames = ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏'].map((c) => c + ' Processing');
     this._indicatorInterval = setInterval(() => {
       this._indicatorPhase = (this._indicatorPhase + 1) % frames.length;
-      this._indicator.setContent(
-        `  {cyan-fg}${frames[this._indicatorPhase]}{/}{|}  {grey-fg}Identity: ${this._identityDid}{/}`,
-      );
+      this._indicator.setContent(`{cyan-fg}${frames[this._indicatorPhase]}{/}`);
       this._screen.render();
     }, 80);
   }
@@ -413,8 +423,7 @@ export class App {
       clearInterval(this._indicatorInterval);
       this._indicatorInterval = null;
     }
-    // Show identity info even when not streaming.
-    this._indicator.setContent(`{|}  {grey-fg}Identity: ${this._identityDid}{/}`);
+    this._indicator.setContent('');
     this._screen.render();
   }
 
