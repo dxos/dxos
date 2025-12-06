@@ -60,8 +60,11 @@ const TestServicesLayer = Layer.mergeAll(
   }).pipe(Layer.provideMerge(TracingService.layerNoop)),
 );
 
+// TODO(burdon): Configure for ollama.
+const DEFAULT_MODEL = DEFAULT_EDGE_MODEL;
+
 export const TestLayer: Layer.Layer<AiChatServices, never, never> = Layer.mergeAll(
-  AiService.model('@anthropic/claude-opus-4-0'),
+  AiService.model(DEFAULT_MODEL),
   makeToolResolverFromFunctions([], toolkit),
   makeToolExecutionServiceFromFunctions(toolkit, toolkit.toLayer({}) as any),
   CredentialsService.layerFromDatabase(),
@@ -82,6 +85,10 @@ export class Core extends Context {
 
   get client(): Client | undefined {
     return this._client;
+  }
+
+  get conversation(): AiConversation | undefined {
+    return this._conversation;
   }
 
   async open(): Promise<void> {
@@ -111,7 +118,7 @@ export class Core extends Context {
     invariant(this._conversation);
     const request = this._conversation.createRequest(params);
     const fiber = request.pipe(
-      Effect.provide(AiService.model(DEFAULT_EDGE_MODEL)),
+      Effect.provide(AiService.model(DEFAULT_MODEL)),
       Effect.asVoid,
       Runtime.runFork(this._services),
     );
@@ -120,7 +127,5 @@ export class Core extends Context {
     if (!Exit.isSuccess(response) && !Cause.isInterruptedOnly(response.cause)) {
       throwCause(response.cause);
     }
-
-    console.log(response);
   }
 }

@@ -22,7 +22,10 @@ import { Assistant, AssistantAction } from '../types';
 
 export type ChatCompanionProps = {
   role?: string;
-  data: { subject: Assistant.Chat | 'assistant-chat'; companionTo: Obj.Any };
+  data: {
+    subject: Assistant.Chat | 'assistant-chat';
+    companionTo: Obj.Any;
+  };
 };
 
 export const ChatCompanion = forwardRef<HTMLDivElement, ChatCompanionProps>(

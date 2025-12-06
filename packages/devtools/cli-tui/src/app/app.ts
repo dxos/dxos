@@ -3,9 +3,11 @@
 //
 
 import blessed, { type Widgets } from 'blessed';
+import * as Effect from 'effect/Effect';
 
-import { type Core } from '../Core';
-import { checkOllamaServer, streamOllamaResponse } from '../util';
+import { GenerationObserver } from '@dxos/assistant';
+
+import { type Core, checkOllamaServer, streamOllamaResponse } from '../core';
 
 const ollama = false;
 
@@ -330,8 +332,6 @@ export class App {
     const assistantMessageIndex = this._messages.length - 1;
 
     try {
-      await this._core.request({ prompt });
-
       if (ollama) {
         await streamOllamaResponse(
           prompt,
@@ -343,6 +343,19 @@ export class App {
             model: process.env.OLLAMA_MODEL || 'llama3.2:latest',
           },
         );
+      } else {
+        await this._core.request({
+          prompt,
+          observer: GenerationObserver.make({
+            onPart: (part) =>
+              Effect.sync(() => {
+                if (part.type === 'text-delta') {
+                  this._messages[assistantMessageIndex] += part.delta;
+                  this._throttledUpdate();
+                }
+              }),
+          }),
+        });
       }
 
       this._updateMessages();
