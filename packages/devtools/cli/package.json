@@ -1,149 +1,149 @@
 {
-  "name": "@dxos/cli",
-  "version": "0.8.3",
-  "description": "DXOS CLI",
-  "keywords": [
-    "dxos",
-    "cli",
-    "oclif"
-  ],
-  "homepage": "https://dxos.org",
-  "bugs": "https://github.com/dxos/dxos/issues",
-  "license": "Elastic-2.0",
-  "author": "info@dxos.org",
-  "sideEffects": false,
-  "type": "module",
-  "main": "dist/src/index.js",
-  "types": "dist/src/index.d.ts",
-  "bin": {
-    "dx": "./bin/dx.js"
-  },
-  "files": [
-    "/bin",
-    "/config",
-    "/dist",
-    "/oclif.manifest.json"
-  ],
-  "scripts": {
-    "bin": "./bin/dx.js",
-    "manifest": "NODE_OPTIONS='--import=extensionless/register' oclif manifest",
-    "prepack": "npm run manifest && npm run readme",
-    "postpack": "shx rm -f oclif.manifest.json",
-    "prepublishOnly": "scripts/patch_dx_environment.sh",
-    "readme": "oclif readme --multi"
-  },
-  "dependencies": {
-    "@dxos/async": "workspace:*",
-    "@dxos/cli-base": "workspace:*",
-    "@dxos/cli-composer": "workspace:*",
-    "@dxos/client": "workspace:*",
-    "@dxos/client-protocol": "workspace:*",
-    "@dxos/client-services": "workspace:*",
-    "@dxos/compute": "workspace:*",
-    "@dxos/config": "workspace:*",
-    "@dxos/context": "workspace:*",
-    "@dxos/debug": "workspace:*",
-    "@dxos/echo": "workspace:*",
-    "@dxos/functions": "workspace:*",
-    "@dxos/functions-runtime": "workspace:*",
-    "@dxos/invariant": "workspace:*",
-    "@dxos/log": "workspace:*",
-    "@dxos/network-manager": "workspace:*",
-    "@dxos/node-std": "workspace:*",
-    "@dxos/observability": "workspace:*",
-    "@dxos/process": "workspace:*",
-    "@dxos/protocols": "workspace:*",
-    "@dxos/random": "workspace:*",
-    "@dxos/rpc": "workspace:*",
-    "@dxos/schema": "workspace:*",
-    "@dxos/util": "workspace:*",
-    "@oclif/core": "^4.0.30",
-    "@oclif/plugin-autocomplete": "^3.2.6",
-    "@oclif/plugin-help": "^6.2.16",
-    "@oclif/plugin-plugins": "^5.4.15",
-    "@oclif/plugin-update": "^4.7.8",
-    "@octokit/core": "^4.0.4",
-    "chalk": "^4.1.0",
-    "cli-progress": "^3.11.2",
-    "date-fns": "^3.3.1",
-    "do-wrapper": "^4.5.1",
-    "extensionless": "^1.9.9",
-    "fs-extra": "^8.1.0",
-    "get-folder-size": "^2.0.1",
-    "git-rev-sync": "^3.0.2",
-    "ink": "^6.3.1",
-    "ink-table": "^3.1.0",
-    "inquirer": "^12.0.0",
-    "isomorphic-ws": "^5.0.0",
-    "js-yaml": "^4.1.0",
-    "kubo-rpc-client": "^4.1.1",
-    "lodash.defaultsdeep": "^4.6.1",
-    "node-clipboardy": "^1.0.3",
-    "node-fetch": "^2.6.0",
-    "pkg-up": "^3.1.0",
-    "platform": "^1.3.6",
-    "react": "~19.2.0",
-    "ws": "^8.14.2",
-    "wtfnode": "^0.10.0"
-  },
-  "devDependencies": {
-    "@oclif/test": "^4.1.0",
-    "@types/cli-progress": "^3.11.0",
-    "@types/fs-extra": "^9.0.4",
-    "@types/js-yaml": "^4.0.5",
-    "@types/lodash.defaultsdeep": "^4.6.6",
-    "@types/node-fetch": "^2.5.10",
-    "@types/platform": "^1.3.4",
-    "@types/react-dom": "~19.2.2",
-    "oclif": "^4.15.12",
-    "shx": "^0.3.3",
-    "ts-node": "10.9.1",
-    "undici": "*"
-  },
-  "peerDependencies": {
-    "undici": "*"
-  },
-  "engines": {
-    "node": ">=18.0.0"
-  },
-  "publishConfig": {
-    "access": "public"
-  },
-  "oclif": {
-    "bin": "dx",
-    "commands": "./dist/src/commands",
-    "dirname": "dx",
-    "helpClass": "./dist/src/help",
-    "hooks": {
-      "command_not_found": "./dist/src/hooks/command-not-found"
-    },
-    "plugins": [
-      "@dxos/cli-composer",
-      "@oclif/plugin-autocomplete",
-      "@oclif/plugin-help",
-      "@oclif/plugin-plugins",
-      "@oclif/plugin-update"
-    ],
-    "topicSeparator": " ",
-    "topics": {
-      "agent": {
-        "description": "Manage agents."
-      },
-      "debug": {
-        "description": "Debugging tools and diagnostics."
-      },
-      "device": {
-        "description": "Manage HALO devices."
-      },
-      "function": {
-        "description": "Manage distributed functions and triggers."
-      },
-      "halo": {
-        "description": "Manage HALO identity and devices."
-      },
-      "space": {
-        "description": "Manage ECHO Spaces."
-      }
-    }
-  }
+	"name": "@dxos/cli",
+	"version": "0.8.3",
+	"description": "DXOS CLI",
+	"keywords": [
+		"dxos",
+		"cli",
+		"oclif"
+	],
+	"homepage": "https://dxos.org",
+	"bugs": "https://github.com/dxos/dxos/issues",
+	"license": "Apache-2.0",
+	"author": "info@dxos.org",
+	"sideEffects": false,
+	"type": "module",
+	"main": "dist/src/index.js",
+	"types": "dist/src/index.d.ts",
+	"bin": {
+		"dx": "./bin/dx.js"
+	},
+	"files": [
+		"/bin",
+		"/config",
+		"/dist",
+		"/oclif.manifest.json"
+	],
+	"scripts": {
+		"bin": "./bin/dx.js",
+		"manifest": "NODE_OPTIONS='--import=extensionless/register' oclif manifest",
+		"prepack": "npm run manifest && npm run readme",
+		"postpack": "shx rm -f oclif.manifest.json",
+		"prepublishOnly": "scripts/patch_dx_environment.sh",
+		"readme": "oclif readme --multi"
+	},
+	"oclif": {
+		"bin": "dx",
+		"commands": "./dist/src/commands",
+		"dirname": "dx",
+		"helpClass": "./dist/src/help",
+		"hooks": {
+			"command_not_found": "./dist/src/hooks/command-not-found"
+		},
+		"plugins": [
+			"@dxos/cli-composer",
+			"@oclif/plugin-autocomplete",
+			"@oclif/plugin-help",
+			"@oclif/plugin-plugins",
+			"@oclif/plugin-update"
+		],
+		"topicSeparator": " ",
+		"topics": {
+			"agent": {
+				"description": "Manage agents."
+			},
+			"debug": {
+				"description": "Debugging tools and diagnostics."
+			},
+			"device": {
+				"description": "Manage HALO devices."
+			},
+			"function": {
+				"description": "Manage distributed functions and triggers."
+			},
+			"halo": {
+				"description": "Manage HALO identity and devices."
+			},
+			"space": {
+				"description": "Manage ECHO Spaces."
+			}
+		}
+	},
+	"dependencies": {
+		"@dxos/async": "workspace:*",
+		"@dxos/cli-base": "workspace:*",
+		"@dxos/cli-composer": "workspace:*",
+		"@dxos/client": "workspace:*",
+		"@dxos/client-protocol": "workspace:*",
+		"@dxos/client-services": "workspace:*",
+		"@dxos/compute": "workspace:*",
+		"@dxos/config": "workspace:*",
+		"@dxos/context": "workspace:*",
+		"@dxos/debug": "workspace:*",
+		"@dxos/echo": "workspace:*",
+		"@dxos/functions": "workspace:*",
+		"@dxos/functions-runtime": "workspace:*",
+		"@dxos/invariant": "workspace:*",
+		"@dxos/log": "workspace:*",
+		"@dxos/network-manager": "workspace:*",
+		"@dxos/node-std": "workspace:*",
+		"@dxos/observability": "workspace:*",
+		"@dxos/process": "workspace:*",
+		"@dxos/protocols": "workspace:*",
+		"@dxos/random": "workspace:*",
+		"@dxos/rpc": "workspace:*",
+		"@dxos/schema": "workspace:*",
+		"@dxos/util": "workspace:*",
+		"@oclif/core": "^4.0.30",
+		"@oclif/plugin-autocomplete": "^3.2.6",
+		"@oclif/plugin-help": "^6.2.16",
+		"@oclif/plugin-plugins": "^5.4.15",
+		"@oclif/plugin-update": "^4.7.8",
+		"@octokit/core": "^4.0.4",
+		"chalk": "^4.1.0",
+		"cli-progress": "^3.11.2",
+		"date-fns": "^3.3.1",
+		"do-wrapper": "^4.5.1",
+		"extensionless": "^1.9.9",
+		"fs-extra": "^8.1.0",
+		"get-folder-size": "^2.0.1",
+		"git-rev-sync": "^3.0.2",
+		"ink": "^6.3.1",
+		"ink-table": "^3.1.0",
+		"inquirer": "^12.0.0",
+		"isomorphic-ws": "^5.0.0",
+		"js-yaml": "^4.1.0",
+		"kubo-rpc-client": "^4.1.1",
+		"lodash.defaultsdeep": "^4.6.1",
+		"node-clipboardy": "^1.0.3",
+		"node-fetch": "^2.6.0",
+		"pkg-up": "^3.1.0",
+		"platform": "^1.3.6",
+		"react": "~19.2.0",
+		"ws": "^8.14.2",
+		"wtfnode": "^0.10.0"
+	},
+	"devDependencies": {
+		"@oclif/test": "^4.1.0",
+		"@types/cli-progress": "^3.11.0",
+		"@types/fs-extra": "^9.0.4",
+		"@types/js-yaml": "^4.0.5",
+		"@types/lodash.defaultsdeep": "^4.6.6",
+		"@types/node-fetch": "^2.5.10",
+		"@types/platform": "^1.3.4",
+		"@types/react-dom": "~19.2.2",
+		"oclif": "^4.15.12",
+		"shx": "^0.3.3",
+		"ts-node": "10.9.1",
+		"undici": "*"
+	},
+	"peerDependencies": {
+		"undici": "*"
+	},
+	"engines": {
+		"node": ">=18.0.0"
+	},
+	"publishConfig": {
+		"access": "public"
+	}
 }
