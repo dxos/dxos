@@ -16,4 +16,4 @@ const main = Effect.gen(function* () {
   yield* Effect.promise(() => app.initialize());
 }).pipe(Effect.provide(Core.TestLayer));
 
-runAndForwardErrors(main);
+void runAndForwardErrors(main);

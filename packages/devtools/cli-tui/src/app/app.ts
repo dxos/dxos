@@ -7,9 +7,7 @@ import * as Effect from 'effect/Effect';
 
 import { GenerationObserver } from '@dxos/assistant';
 
-import { type Core, checkOllamaServer, streamOllamaResponse } from '../core';
-
-const ollama = false;
+import { type Core } from '../core';
 
 // Suppress stderr to hide terminfo warnings; MUST be before importing blessed.
 const originalStderrWrite = process.stderr.write.bind(process.stderr);
@@ -53,8 +51,8 @@ export class App {
    */
   async initialize(): Promise<void> {
     await this._core.open();
-    await this._initializeServices();
 
+    // Setup UI.
     this._createScreen();
     this._createHeader();
     this._createMessageBox();
@@ -287,29 +285,6 @@ export class App {
   }
 
   /**
-   * Initialize services (Ollama, DXOS client).
-   */
-  private async _initializeServices(): Promise<void> {
-    if (ollama) {
-      const ollamaAvailable = await checkOllamaServer();
-      if (ollamaAvailable) {
-        this._messages.push(
-          '{green-fg}✓{/green-fg} Ollama server connected',
-          '{gray-fg}Type a message and press Enter to chat{/gray-fg}',
-          '',
-        );
-      } else {
-        this._messages.push(
-          '{red-fg}✗{/red-fg} Ollama server not available',
-          '{gray-fg}Start Ollama with: ollama serve{/gray-fg}',
-          '{gray-fg}Pull a model with: ollama pull llama3.2{/gray-fg}',
-          '',
-        );
-      }
-    }
-  }
-
-  /**
    * Handle input submission.
    */
   private async _handleSubmit(value: string): Promise<void> {
@@ -326,37 +301,24 @@ export class App {
     this._inputBox.clearValue();
     this._inputBox.focus();
 
-    // Start streaming assistant response.
-    this._isStreaming = true;
     this._messages.push('{green-fg}Assistant:{/} ');
     const assistantMessageIndex = this._messages.length - 1;
 
     try {
-      if (ollama) {
-        await streamOllamaResponse(
-          prompt,
-          (chunk) => {
-            this._messages[assistantMessageIndex] += chunk;
-            this._throttledUpdate();
-          },
-          {
-            model: process.env.OLLAMA_MODEL || 'llama3.2:latest',
-          },
-        );
-      } else {
-        await this._core.request({
-          prompt,
-          observer: GenerationObserver.make({
-            onPart: (part) =>
-              Effect.sync(() => {
-                if (part.type === 'text-delta') {
-                  this._messages[assistantMessageIndex] += part.delta;
-                  this._throttledUpdate();
-                }
-              }),
-          }),
-        });
-      }
+      // Start streaming assistant response.
+      this._isStreaming = true;
+      await this._core.request({
+        prompt,
+        observer: GenerationObserver.make({
+          onPart: (part) =>
+            Effect.sync(() => {
+              if (part.type === 'text-delta') {
+                this._messages[assistantMessageIndex] += part.delta;
+                this._throttledUpdate();
+              }
+            }),
+        }),
+      });
 
       this._updateMessages();
       this._messages.push('');
