@@ -4605,15 +4605,24 @@ importers:
       '@dxos/client':
         specifier: workspace:*
         version: link:../../sdk/client
+      '@dxos/context':
+        specifier: workspace:*
+        version: link:../../common/context
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
+      '@dxos/effect':
+        specifier: workspace:*
+        version: link:../../common/effect
       '@dxos/functions':
         specifier: workspace:*
         version: link:../../core/functions
       '@dxos/functions-runtime':
         specifier: workspace:*
         version: link:../../core/functions-runtime
+      '@dxos/invariant':
+        specifier: workspace:*
+        version: link:../../common/invariant
       '@dxos/schema':
         specifier: workspace:*
         version: link:../../sdk/schema

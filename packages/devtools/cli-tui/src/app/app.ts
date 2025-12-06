@@ -2,61 +2,10 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Tool from '@effect/ai/Tool';
-import * as Toolkit from '@effect/ai/Toolkit';
 import blessed, { type Widgets } from 'blessed';
-import * as Effect from 'effect/Effect';
-import * as Fiber from 'effect/Fiber';
-import * as Layer from 'effect/Layer';
-import * as Runtime from 'effect/Runtime';
-import * as Schema from 'effect/Schema';
 
-import { AiService, DEFAULT_EDGE_MODEL, type ToolExecutionService, type ToolResolverService } from '@dxos/ai';
-import { AiServiceTestingPreset } from '@dxos/ai/testing';
-import { AiConversation, makeToolExecutionServiceFromFunctions, makeToolResolverFromFunctions } from '@dxos/assistant';
-import { Client, Config } from '@dxos/client';
-import { type Database } from '@dxos/echo';
-import { CredentialsService, type FunctionInvocationService, type QueueService, TracingService } from '@dxos/functions';
-import { FunctionInvocationServiceLayerTestMocked, TestDatabaseLayer } from '@dxos/functions-runtime/testing';
-import { type Message } from '@dxos/types';
-
+import { type Core } from '../Core';
 import { checkOllamaServer, streamOllamaResponse } from '../util';
-
-// TODO(burdon): Factor out (see plugin-assistant/processor.ts)
-export type AiChatServices =
-  | CredentialsService
-  | Database.Service
-  | QueueService
-  | FunctionInvocationService
-  | AiService.AiService
-  | ToolExecutionService
-  | ToolResolverService
-  | TracingService;
-
-const TestToolkit = Toolkit.make(
-  Tool.make('random', {
-    description: 'Random number generator',
-    parameters: {},
-    success: Schema.Number,
-  }),
-);
-
-// TODO(burdon): Create minimal toolkit.
-const toolkit = Toolkit.merge(TestToolkit) as Toolkit.Toolkit<any>;
-
-const TestServicesLayer = Layer.mergeAll(
-  TracingService.layerNoop,
-  AiServiceTestingPreset('direct'),
-  TestDatabaseLayer({}),
-  FunctionInvocationServiceLayerTestMocked({ functions: [] }).pipe(Layer.provideMerge(TracingService.layerNoop)),
-);
-
-const TestLayer: Layer.Layer<AiChatServices, never, never> = Layer.mergeAll(
-  AiService.model('@anthropic/claude-opus-4-0'),
-  makeToolResolverFromFunctions([], toolkit),
-  makeToolExecutionServiceFromFunctions(toolkit, toolkit.toLayer({}) as any),
-  CredentialsService.layerFromDatabase(),
-).pipe(Layer.provideMerge(TestServicesLayer), Layer.orDie);
 
 // Suppress stderr to hide terminfo warnings; MUST be before importing blessed.
 const originalStderrWrite = process.stderr.write.bind(process.stderr);
@@ -90,18 +39,16 @@ export class App {
   private _isStreaming = false;
   private _updateTimeout: NodeJS.Timeout | null = null;
 
-  private _client?: Client;
-  private _conversation?: AiConversation;
-  private _services?: Runtime.Runtime<AiChatServices>;
-
   private readonly _exitHandler = () => this._exit();
   private readonly _resizeHandler = () => this._handleResize();
+
+  constructor(private _core: Core.Core) {}
 
   /**
    * Initialize the TUI application.
    */
   async initialize(): Promise<void> {
-    // Check Ollama server and initialize client.
+    await this._core.open();
     await this._initializeServices();
 
     this._createScreen();
@@ -127,6 +74,8 @@ export class App {
    * Destroy the TUI application and cleanup resources.
    */
   async destroy(): Promise<void> {
+    await this._core.close();
+
     // Clear any pending timeouts.
     if (this._updateTimeout) {
       clearTimeout(this._updateTimeout);
@@ -136,12 +85,6 @@ export class App {
     // Remove signal handlers.
     process.off('SIGINT', this._exitHandler);
     process.off('SIGTERM', this._exitHandler);
-
-    // Destroy client.
-    if (this._client) {
-      await this._client.destroy();
-      this._client = undefined;
-    }
 
     // Destroy screen.
     if (this._screen) {
@@ -168,13 +111,14 @@ export class App {
    * Create the header element.
    */
   private _createHeader(): void {
-    const identity = this._client?.halo.identity.get();
+    const did = this._core.client?.halo.identity.get()?.did;
     this._header = blessed.box({
       top: 0,
       left: 0,
       width: '100%',
       height: 3,
-      content: `{bold}{cyan-fg}DXOS CLI - (Identity: ${identity?.did}){/}`,
+      padding: { left: 1, right: 1 },
+      content: `{bold}{cyan-fg}DXOS CLI - (Identity: ${did}){/}`,
       tags: true,
       border: 'line' as any,
       style: {
@@ -207,6 +151,7 @@ export class App {
       vi: true,
       mouse: true,
       border: 'line' as any,
+      padding: { left: 1, right: 1 },
       style: {
         border: {
           fg: 'gray',
@@ -223,11 +168,12 @@ export class App {
       bottom: 0,
       left: 0,
       right: 0,
-      height: 5,
+      height: 8,
       inputOnFocus: true,
       keys: true,
       mouse: true,
       border: 'line' as any,
+      padding: { left: 1, right: 1 },
       style: {
         border: {
           fg: 'green',
@@ -340,22 +286,6 @@ export class App {
    * Initialize services (Ollama, DXOS client).
    */
   private async _initializeServices(): Promise<void> {
-    const config = new Config();
-    this._client = new Client({ config });
-    await this._client.initialize();
-    const identity = this._client.halo.identity.get();
-    if (!identity?.identityKey) {
-      await this._client.halo.createIdentity();
-    }
-
-    await this._client.spaces.waitUntilReady();
-    const space = this._client.spaces.default;
-    const queue = space.queues.create<Message.Message>();
-    this._conversation = new AiConversation(queue);
-
-    // TODO(burdon): Effect.
-    // this._services = yield * Effect.runtime<AiChatServices>();
-
     const ollamaAvailable = await checkOllamaServer();
     if (ollamaAvailable) {
       this._messages.push(
@@ -396,18 +326,6 @@ export class App {
     const assistantMessageIndex = this._messages.length - 1;
 
     try {
-      // TODO(burdon): See processor.test.ts
-      if (this._conversation && this._services) {
-        const request = this._conversation.createRequest({ prompt });
-        const fiber = request.pipe(
-          Effect.provide(AiService.model(DEFAULT_EDGE_MODEL)),
-          Effect.asVoid,
-          Runtime.runFork(this._services),
-        );
-        const response = await fiber.pipe(Fiber.join, Effect.runPromiseExit);
-        console.log(response);
-      }
-
       await streamOllamaResponse(
         prompt,
         (chunk) => {
