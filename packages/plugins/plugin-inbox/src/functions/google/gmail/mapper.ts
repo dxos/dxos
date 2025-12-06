@@ -11,7 +11,7 @@ import { type GoogleMail } from '../../apis';
 import { getPart, normalizeText, parseFromHeader } from '../../util';
 
 /**
- * Transforms Gmail message to ECHO message object.
+ * Maps Gmail message to ECHO message object.
  */
 export const mapMessage = Effect.fn(function* (message: GoogleMail.Message, contacts: Person.Person[]) {
   const created = new Date(parseInt(message.internalDate)).toISOString();
@@ -19,6 +19,8 @@ export const mapMessage = Effect.fn(function* (message: GoogleMail.Message, cont
   const data = message.payload.body?.data ?? getPart(message, 'text/html') ?? getPart(message, 'text/plain');
   const fromHeader = message.payload.headers.find(({ name }) => name === 'From');
   const from = fromHeader && parseFromHeader(fromHeader.value);
+
+  // TODO(burdon): Factor out resolvers.
   const contact =
     from &&
     contacts.find(({ emails }) => {
@@ -28,10 +30,10 @@ export const mapMessage = Effect.fn(function* (message: GoogleMail.Message, cont
 
       return emails.findIndex(({ value }) => value === from.email) !== -1;
     });
-  const sender = { ...from, contact: contact && Ref.make(contact) };
 
   // Skip the message if content or sender is missing.
   // TODO(wittjosiah): This comparison should be done via foreignId probably.
+  const sender = { ...from, contact: contact && Ref.make(contact) };
   if (!sender || !data) {
     return null;
   }
