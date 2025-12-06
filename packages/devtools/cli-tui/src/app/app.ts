@@ -39,10 +39,13 @@ export class App {
   private _header!: Widgets.BoxElement;
   private _messageBox!: Widgets.BoxElement;
   private _inputBox!: Widgets.TextareaElement;
+  private _indicator!: Widgets.BoxElement;
 
   private _messages: string[] = [];
   private _isStreaming = false;
   private _updateTimeout: NodeJS.Timeout | null = null;
+  private _indicatorInterval: NodeJS.Timeout | null = null;
+  private _indicatorPhase = 0;
 
   constructor(private _core: Core.Core) {}
 
@@ -61,6 +64,7 @@ export class App {
     this._screen.append(this._header);
     this._screen.append(this._messageBox);
     this._screen.append(this._inputBox);
+    this._screen.append(this._indicator);
 
     // Focus input initially.
     this._inputBox.focus();
@@ -80,6 +84,10 @@ export class App {
       clearTimeout(this._updateTimeout);
       this._updateTimeout = null;
     }
+    if (this._indicatorInterval) {
+      clearInterval(this._indicatorInterval);
+      this._indicatorInterval = null;
+    }
 
     // Remove signal handlers.
     process.off('SIGINT', this._exitHandler);
@@ -94,7 +102,7 @@ export class App {
   /**
    * Create the blessed screen.
    */
-  private _createScreen(): void {
+  private _createScreen(options: { header: number; prompt: number } = { header: 3, prompt: 5 }): void {
     // Screen.
     this._screen = blessed.screen({
       smartCSR: true,
@@ -111,7 +119,7 @@ export class App {
       top: 0,
       left: 0,
       width: '100%',
-      height: 3,
+      height: options.header,
       padding: { left: 1, right: 1 },
       content: `{bold}{cyan-fg}DXOS CLI - (Identity: ${did}){/}`,
       tags: true,
@@ -128,7 +136,7 @@ export class App {
       top: 3,
       left: 0,
       right: 0,
-      bottom: 5,
+      bottom: options.prompt + 1,
       scrollable: true,
       alwaysScroll: true,
       tags: true,
@@ -152,10 +160,10 @@ export class App {
 
     // Prompt.
     this._inputBox = blessed.textarea({
-      bottom: 0,
+      bottom: 1,
       left: 0,
       right: 0,
-      height: 8,
+      height: options.prompt,
       inputOnFocus: true,
       keys: true,
       mouse: true,
@@ -173,6 +181,20 @@ export class App {
       },
       label: ' {green-fg}❯ Type here{/} ',
       tags: true,
+    });
+
+    // Streaming indicator (hidden by default).
+    this._indicator = blessed.box({
+      bottom: 0,
+      left: 0,
+      right: 0,
+      height: 1,
+      tags: true,
+      content: '',
+      style: {
+        fg: 'cyan',
+      },
+      hidden: true,
     });
   }
 
@@ -292,6 +314,7 @@ export class App {
     try {
       // Start streaming assistant response.
       this._isStreaming = true;
+      this._startIndicator();
       await this._core.request({
         prompt,
         observer: GenerationObserver.make({
@@ -315,6 +338,7 @@ export class App {
       this._messages.push('');
       this._updateMessages();
     } finally {
+      this._stopIndicator();
       this._isStreaming = false;
     }
   }
@@ -364,6 +388,45 @@ export class App {
    */
   private _handleResize(): void {
     this._updateMessages();
+    this._screen.render();
+  }
+
+  /**
+   * Start the streaming indicator animation.
+   */
+  private _startIndicator(): void {
+    this._indicator.show();
+    this._indicatorPhase = 0;
+
+    const frames = [
+      '⠋ Thinking',
+      '⠙ Thinking',
+      '⠹ Thinking',
+      '⠸ Thinking',
+      '⠼ Thinking',
+      '⠴ Thinking',
+      '⠦ Thinking',
+      '⠧ Thinking',
+      '⠇ Thinking',
+      '⠏ Thinking',
+    ];
+
+    this._indicatorInterval = setInterval(() => {
+      this._indicatorPhase = (this._indicatorPhase + 1) % frames.length;
+      this._indicator.setContent(`  {cyan-fg}${frames[this._indicatorPhase]}{/}`);
+      this._screen.render();
+    }, 80);
+  }
+
+  /**
+   * Stop the streaming indicator animation.
+   */
+  private _stopIndicator(): void {
+    if (this._indicatorInterval) {
+      clearInterval(this._indicatorInterval);
+      this._indicatorInterval = null;
+    }
+    this._indicator.hide();
     this._screen.render();
   }
 
