@@ -36,7 +36,6 @@ export class App {
   private readonly _resizeHandler = () => this._handleResize();
 
   private _screen!: Widgets.Screen;
-  private _header!: Widgets.BoxElement;
   private _messageBox!: Widgets.BoxElement;
   private _inputBox!: Widgets.TextareaElement;
   private _indicator!: Widgets.BoxElement;
@@ -46,6 +45,7 @@ export class App {
   private _updateTimeout: NodeJS.Timeout | null = null;
   private _indicatorInterval: NodeJS.Timeout | null = null;
   private _indicatorPhase = 0;
+  private _identityDid = '';
 
   constructor(private _core: Core.Core) {}
 
@@ -61,7 +61,6 @@ export class App {
     this._setupSignalHandlers();
 
     // Add all elements to screen.
-    this._screen.append(this._header);
     this._screen.append(this._messageBox);
     this._screen.append(this._inputBox);
     this._screen.append(this._indicator);
@@ -103,6 +102,9 @@ export class App {
    * Create the blessed screen.
    */
   private _createScreen(options: { header: number; prompt: number } = { header: 3, prompt: 5 }): void {
+    // Store identity DID.
+    this._identityDid = this._core.client?.halo.identity.get()?.did || '';
+
     // Screen.
     this._screen = blessed.screen({
       smartCSR: true,
@@ -113,30 +115,12 @@ export class App {
       resizeTimeout: 300,
     });
 
-    // Header.
-    const did = this._core.client?.halo.identity.get()?.did;
-    this._header = blessed.box({
-      top: 0,
-      left: 0,
-      width: '100%',
-      height: options.header,
-      padding: { left: 1, right: 1 },
-      content: `{bold}{cyan-fg}DXOS CLI - (Identity: ${did}){/}`,
-      tags: true,
-      border: 'line' as any,
-      style: {
-        border: {
-          fg: 'blue',
-        },
-      },
-    });
-
     // Message viewport.
     this._messageBox = blessed.box({
-      top: 3,
+      top: 0,
       left: 0,
       right: 0,
-      bottom: options.prompt + 1,
+      bottom: options.prompt,
       scrollable: true,
       alwaysScroll: true,
       tags: true,
@@ -149,13 +133,7 @@ export class App {
       keys: true,
       vi: true,
       mouse: true,
-      border: 'line' as any,
       padding: { left: 1, right: 1 },
-      style: {
-        border: {
-          fg: 'gray',
-        },
-      },
     });
 
     // Prompt.
@@ -167,34 +145,42 @@ export class App {
       inputOnFocus: true,
       keys: true,
       mouse: true,
-      border: 'line' as any,
-      padding: { left: 1, right: 1 },
+      border: {
+        type: 'line',
+        left: true,
+        right: false,
+        top: false,
+        bottom: false,
+      } as any,
+      padding: { left: 1 },
       style: {
+        bg: 'black',
         border: {
           fg: 'green',
         },
         focus: {
+          bg: 'black',
           border: {
             fg: 'bright-green',
           },
         },
       },
-      label: ' {green-fg}❯{/} ',
       tags: true,
     });
 
-    // Streaming indicator (hidden by default).
+    const logo = 'Ⓓ Ⓧ Ⓞ Ⓢ ';
+
+    // Streaming indicator (always visible, shows identity on right).
     this._indicator = blessed.box({
       bottom: 0,
       left: 0,
       right: 0,
       height: 1,
       tags: true,
-      content: '',
+      content: `{|}  {grey-fg}${this._identityDid}{/} {grey-fg}${logo}{/}`,
       style: {
-        fg: 'cyan',
+        fg: 'blue',
       },
-      hidden: true,
     });
   }
 
@@ -395,7 +381,6 @@ export class App {
    * Start the streaming indicator animation.
    */
   private _startIndicator(): void {
-    this._indicator.show();
     this._indicatorPhase = 0;
 
     const frames = [
@@ -413,7 +398,9 @@ export class App {
 
     this._indicatorInterval = setInterval(() => {
       this._indicatorPhase = (this._indicatorPhase + 1) % frames.length;
-      this._indicator.setContent(`  {cyan-fg}${frames[this._indicatorPhase]}{/}`);
+      this._indicator.setContent(
+        `  {cyan-fg}${frames[this._indicatorPhase]}{/}{|}  {grey-fg}Identity: ${this._identityDid}{/}`,
+      );
       this._screen.render();
     }, 80);
   }
@@ -426,7 +413,8 @@ export class App {
       clearInterval(this._indicatorInterval);
       this._indicatorInterval = null;
     }
-    this._indicator.hide();
+    // Show identity info even when not streaming.
+    this._indicator.setContent(`{|}  {grey-fg}Identity: ${this._identityDid}{/}`);
     this._screen.render();
   }
 
