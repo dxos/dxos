@@ -4,7 +4,9 @@
 
 import * as Tool from '@effect/ai/Tool';
 import * as Toolkit from '@effect/ai/Toolkit';
+import * as Cause from 'effect/Cause';
 import * as Effect from 'effect/Effect';
+import * as Exit from 'effect/Exit';
 import * as Fiber from 'effect/Fiber';
 import * as Layer from 'effect/Layer';
 import * as Runtime from 'effect/Runtime';
@@ -12,10 +14,16 @@ import * as Schema from 'effect/Schema';
 
 import { AiService, DEFAULT_EDGE_MODEL, type ToolExecutionService, type ToolResolverService } from '@dxos/ai';
 import { AiServiceTestingPreset } from '@dxos/ai/testing';
-import { AiConversation, makeToolExecutionServiceFromFunctions, makeToolResolverFromFunctions } from '@dxos/assistant';
+import {
+  AiConversation,
+  type AiConversationRunParams,
+  makeToolExecutionServiceFromFunctions,
+  makeToolResolverFromFunctions,
+} from '@dxos/assistant';
 import { Client, Config } from '@dxos/client';
 import { Context } from '@dxos/context';
 import { type Database } from '@dxos/echo';
+import { throwCause } from '@dxos/effect';
 import { CredentialsService, type FunctionInvocationService, type QueueService, TracingService } from '@dxos/functions';
 import { FunctionInvocationServiceLayerTestMocked, TestDatabaseLayer } from '@dxos/functions-runtime/testing';
 import { invariant } from '@dxos/invariant';
@@ -99,9 +107,9 @@ export class Core extends Context {
     this._client = undefined;
   }
 
-  async submit(prompt: string) {
+  async request(params: AiConversationRunParams) {
     invariant(this._conversation);
-    const request = this._conversation.createRequest({ prompt });
+    const request = this._conversation.createRequest(params);
     const fiber = request.pipe(
       Effect.provide(AiService.model(DEFAULT_EDGE_MODEL)),
       Effect.asVoid,
@@ -109,8 +117,10 @@ export class Core extends Context {
     );
 
     const response = await fiber.pipe(Fiber.join, Effect.runPromiseExit);
+    if (!Exit.isSuccess(response) && !Cause.isInterruptedOnly(response.cause)) {
+      throwCause(response.cause);
+    }
+
     console.log(response);
-    // TODO(burdon): Effect.
-    // this._services = yield * Effect.runtime<AiChatServices>();
   }
 }

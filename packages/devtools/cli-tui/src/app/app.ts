@@ -7,6 +7,8 @@ import blessed, { type Widgets } from 'blessed';
 import { type Core } from '../Core';
 import { checkOllamaServer, streamOllamaResponse } from '../util';
 
+const ollama = false;
+
 // Suppress stderr to hide terminfo warnings; MUST be before importing blessed.
 const originalStderrWrite = process.stderr.write.bind(process.stderr);
 
@@ -286,20 +288,22 @@ export class App {
    * Initialize services (Ollama, DXOS client).
    */
   private async _initializeServices(): Promise<void> {
-    const ollamaAvailable = await checkOllamaServer();
-    if (ollamaAvailable) {
-      this._messages.push(
-        '{green-fg}✓{/green-fg} Ollama server connected',
-        '{gray-fg}Type a message and press Enter to chat{/gray-fg}',
-        '',
-      );
-    } else {
-      this._messages.push(
-        '{red-fg}✗{/red-fg} Ollama server not available',
-        '{gray-fg}Start Ollama with: ollama serve{/gray-fg}',
-        '{gray-fg}Pull a model with: ollama pull llama3.2{/gray-fg}',
-        '',
-      );
+    if (ollama) {
+      const ollamaAvailable = await checkOllamaServer();
+      if (ollamaAvailable) {
+        this._messages.push(
+          '{green-fg}✓{/green-fg} Ollama server connected',
+          '{gray-fg}Type a message and press Enter to chat{/gray-fg}',
+          '',
+        );
+      } else {
+        this._messages.push(
+          '{red-fg}✗{/red-fg} Ollama server not available',
+          '{gray-fg}Start Ollama with: ollama serve{/gray-fg}',
+          '{gray-fg}Pull a model with: ollama pull llama3.2{/gray-fg}',
+          '',
+        );
+      }
     }
   }
 
@@ -326,16 +330,20 @@ export class App {
     const assistantMessageIndex = this._messages.length - 1;
 
     try {
-      await streamOllamaResponse(
-        prompt,
-        (chunk) => {
-          this._messages[assistantMessageIndex] += chunk;
-          this._throttledUpdate();
-        },
-        {
-          model: process.env.OLLAMA_MODEL || 'llama3.2:latest',
-        },
-      );
+      await this._core.request({ prompt });
+
+      if (ollama) {
+        await streamOllamaResponse(
+          prompt,
+          (chunk) => {
+            this._messages[assistantMessageIndex] += chunk;
+            this._throttledUpdate();
+          },
+          {
+            model: process.env.OLLAMA_MODEL || 'llama3.2:latest',
+          },
+        );
+      }
 
       this._updateMessages();
       this._messages.push('');
