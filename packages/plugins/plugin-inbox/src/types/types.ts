@@ -4,6 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
+// TODO(burdon): Remove dependency.
 import { SpaceSchema } from '@dxos/client/echo';
 import { Actor } from '@dxos/types';
 

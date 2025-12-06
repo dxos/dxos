@@ -24,7 +24,7 @@ export const MarkdownCard = forwardRef<HTMLDivElement, MarkdownCardProps>(
   ({ subject, role }: MarkdownCardProps, forwardedRef) => {
     const { dispatchPromise: dispatch } = useIntentDispatcher();
     const { t } = useTranslation(meta.id);
-    const snippet = useMemo(() => getSnippet(subject, t('fallback abstract')), [subject]);
+    const snippet = useMemo(() => getSnippet(subject), [subject]);
     const info = getInfo(subject);
 
     // TODO(wittjosiah): Factor out so this component isn't dependent on the app framework.
@@ -87,7 +87,7 @@ const getTitle = (subject: Markdown.Document | Text.Text, fallback: string) => {
 };
 
 // TODO(burdon): Factor out.
-const getSnippet = (subject: Markdown.Document | Text.Text, fallback: string) => {
+const getSnippet = (subject: Markdown.Document | Text.Text, fallback?: string) => {
   if (Obj.instanceOf(Markdown.Document, subject)) {
     return Obj.getDescription(subject) || getContentSnippet(subject.content?.target?.content ?? fallback);
   } else if (Obj.instanceOf(Text.Text, subject)) {

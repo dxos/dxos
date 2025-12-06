@@ -36,7 +36,7 @@ const TestLayer = Layer.mergeAll(
  * Click Authorize, then Exchange authorization code for tokens.
  *
  * export ACCESS_TOKEN="xxx"
- * pnpm vitest api.test.ts
+ * pnpm vitest sync.test.ts
  */
 describe.runIf(process.env.GOOGLE_ACCESS_TOKEN)('Gmail API', { timeout: 30_000 }, () => {
   it.effect(

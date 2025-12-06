@@ -114,6 +114,7 @@ export type ThreadState = {
   /** Object toolbar state. */
   toolbar: Record<string, boolean>;
   /** In-memory draft threads. */
+  // TODO(burdon): Drafts are getting lost.
   drafts: Record<string, AnchoredTo.AnchoredTo[]>;
   current?: string | undefined;
 };

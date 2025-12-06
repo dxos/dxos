@@ -65,7 +65,7 @@ export default defineFunction({
       // Determine sync strategy and execute.
       const isInitialSync = !calendar.lastSyncedUpdate;
       if (isInitialSync) {
-        yield* performInitialSync(
+        yield* performInitialSync({
           googleCalendarId,
           syncBackDays,
           syncForwardDays,
@@ -73,16 +73,16 @@ export default defineFunction({
           newEvents,
           nextPage,
           latestUpdate,
-        );
+        });
       } else {
-        yield* performIncrementalSync(
+        yield* performIncrementalSync({
           googleCalendarId,
-          calendar.lastSyncedUpdate!,
+          updatedMin: calendar.lastSyncedUpdate!,
           pageSize,
           newEvents,
           nextPage,
           latestUpdate,
-        );
+        });
       }
 
       // Update the calendar's last synced update timestamp.
@@ -111,20 +111,31 @@ export default defineFunction({
     }).pipe(Effect.provide(FetchHttpClient.layer)),
 });
 
+type BaseSyncProps<T = unknown> = {
+  googleCalendarId: string;
+  pageSize: number;
+  newEvents: Ref.Ref<Event.Event[]>;
+  nextPage: Ref.Ref<string | undefined>;
+  latestUpdate: Ref.Ref<string | undefined>;
+} & T;
+
 /**
  * Performs initial sync by fetching all future events in chronological order.
  * Uses singleEvents=true with startTime ordering to get expanded recurring event instances.
  * Recurring events are deduplicated by recurringEventId to keep only one instance per recurring series.
  */
-const performInitialSync = Effect.fn(function* (
-  googleCalendarId: string,
-  syncBackDays: number,
-  syncForwardDays: number,
-  pageSize: number,
-  newEvents: Ref.Ref<Event.Event[]>,
-  nextPage: Ref.Ref<string | undefined>,
-  latestUpdate: Ref.Ref<string | undefined>,
-) {
+const performInitialSync = Effect.fn(function* ({
+  googleCalendarId,
+  pageSize,
+  newEvents,
+  nextPage,
+  latestUpdate,
+  syncBackDays,
+  syncForwardDays,
+}: BaseSyncProps<{
+  syncBackDays: number;
+  syncForwardDays: number;
+}>) {
   log('performing initial sync', { syncBackDays, syncForwardDays });
   const now = new Date();
   const timeMin = addDays(now, -syncBackDays).toISOString();
@@ -136,7 +147,7 @@ const performInitialSync = Effect.fn(function* (
   do {
     const pageToken = yield* Ref.get(nextPage);
     log('requesting events by start time', { timeMin, timeMax, pageToken });
-    const { items, nextPageToken } = yield* GoogleCalendar.listEventsByStartTime(
+    const { items = [], nextPageToken } = yield* GoogleCalendar.listEventsByStartTime(
       googleCalendarId,
       timeMin,
       timeMax,
@@ -144,28 +155,29 @@ const performInitialSync = Effect.fn(function* (
       pageToken,
     );
     yield* Ref.update(nextPage, () => nextPageToken);
-
-    yield* processEvents(items, newEvents, latestUpdate, seenRecurringEventIds);
+    yield* processEvents({ items, newEvents, latestUpdate, seenRecurringEventIds });
   } while (yield* Ref.get(nextPage));
 });
 
 /**
  * Performs incremental sync by fetching events updated since last sync.
  */
-const performIncrementalSync = Effect.fn(function* (
-  googleCalendarId: string,
-  updatedMin: string,
-  pageSize: number,
-  newEvents: Ref.Ref<Event.Event[]>,
-  nextPage: Ref.Ref<string | undefined>,
-  latestUpdate: Ref.Ref<string | undefined>,
-) {
+const performIncrementalSync = Effect.fn(function* ({
+  googleCalendarId,
+  pageSize,
+  newEvents,
+  nextPage,
+  latestUpdate,
+  updatedMin,
+}: BaseSyncProps<{
+  updatedMin: string;
+}>) {
   log('performing incremental sync', { updatedMin });
 
   do {
     const pageToken = yield* Ref.get(nextPage);
     log('requesting events by updated time', { updatedMin, pageToken });
-    const { items, nextPageToken } = yield* GoogleCalendar.listEventsByUpdated(
+    const { items = [], nextPageToken } = yield* GoogleCalendar.listEventsByUpdated(
       googleCalendarId,
       updatedMin,
       pageSize,
@@ -173,7 +185,7 @@ const performIncrementalSync = Effect.fn(function* (
     );
     yield* Ref.update(nextPage, () => nextPageToken);
 
-    yield* processEvents(items, newEvents, latestUpdate);
+    yield* processEvents({ items, newEvents, latestUpdate });
   } while (yield* Ref.get(nextPage));
 });
 
@@ -183,12 +195,17 @@ const performIncrementalSync = Effect.fn(function* (
  *  - deduplicates recurring events
  *  - transforms to DXOS objects
  */
-const processEvents = Effect.fn(function* (
-  items: readonly GoogleCalendar.Event[],
-  newEvents: Ref.Ref<Event.Event[]>,
-  latestUpdate: Ref.Ref<string | undefined>,
-  seenRecurringEventIds?: Ref.Ref<Set<string>>,
-) {
+const processEvents = Effect.fn(function* ({
+  items,
+  newEvents,
+  latestUpdate,
+  seenRecurringEventIds,
+}: {
+  items: readonly GoogleCalendar.Event[];
+  newEvents: Ref.Ref<Event.Event[]>;
+  latestUpdate: Ref.Ref<string | undefined>;
+  seenRecurringEventIds?: Ref.Ref<Set<string>>;
+}) {
   // Track the latest update timestamp we've seen.
   if (items.length > 0) {
     const maxUpdated = items.reduce((max, event) => {
