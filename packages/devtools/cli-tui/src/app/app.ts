@@ -32,6 +32,9 @@ process.stderr.write = (chunk: any, ...args: any[]): boolean => {
  * Built with blessed for zero-flicker performance.
  */
 export class App {
+  private readonly _exitHandler = () => this._exit();
+  private readonly _resizeHandler = () => this._handleResize();
+
   private _screen!: Widgets.Screen;
   private _header!: Widgets.BoxElement;
   private _messageBox!: Widgets.BoxElement;
@@ -40,9 +43,6 @@ export class App {
   private _messages: string[] = [];
   private _isStreaming = false;
   private _updateTimeout: NodeJS.Timeout | null = null;
-
-  private readonly _exitHandler = () => this._exit();
-  private readonly _resizeHandler = () => this._handleResize();
 
   constructor(private _core: Core.Core) {}
 
@@ -54,9 +54,6 @@ export class App {
 
     // Setup UI.
     this._createScreen();
-    this._createHeader();
-    this._createMessageBox();
-    this._createInputBox();
     this._setupKeyBindings();
     this._setupSignalHandlers();
 
@@ -98,7 +95,7 @@ export class App {
    * Create the blessed screen.
    */
   private _createScreen(): void {
-    // @ts-ignore - blessed types are incomplete.
+    // Screen.
     this._screen = blessed.screen({
       smartCSR: true,
       fullUnicode: true,
@@ -107,12 +104,8 @@ export class App {
       forceUnicode: true,
       resizeTimeout: 300,
     });
-  }
 
-  /**
-   * Create the header element.
-   */
-  private _createHeader(): void {
+    // Header.
     const did = this._core.client?.halo.identity.get()?.did;
     this._header = blessed.box({
       top: 0,
@@ -129,12 +122,8 @@ export class App {
         },
       },
     });
-  }
 
-  /**
-   * Create the scrollable message box.
-   */
-  private _createMessageBox(): void {
+    // Message viewport.
     this._messageBox = blessed.box({
       top: 3,
       left: 0,
@@ -160,12 +149,8 @@ export class App {
         },
       },
     });
-  }
 
-  /**
-   * Create the input box.
-   */
-  private _createInputBox(): void {
+    // Prompt.
     this._inputBox = blessed.textarea({
       bottom: 0,
       left: 0,
