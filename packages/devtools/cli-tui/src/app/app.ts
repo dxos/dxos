@@ -179,7 +179,7 @@ export class App {
           },
         },
       },
-      label: ' {green-fg}❯ Type here{/} ',
+      label: ' {green-fg}❯{/} ',
       tags: true,
     });
 
