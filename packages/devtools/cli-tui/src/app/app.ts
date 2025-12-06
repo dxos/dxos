@@ -2,13 +2,61 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as Tool from '@effect/ai/Tool';
+import * as Toolkit from '@effect/ai/Toolkit';
 import blessed, { type Widgets } from 'blessed';
+import * as Effect from 'effect/Effect';
+import * as Fiber from 'effect/Fiber';
+import * as Layer from 'effect/Layer';
+import * as Runtime from 'effect/Runtime';
+import * as Schema from 'effect/Schema';
 
-import { AiConversation } from '@dxos/assistant';
+import { AiService, DEFAULT_EDGE_MODEL, type ToolExecutionService, type ToolResolverService } from '@dxos/ai';
+import { AiServiceTestingPreset } from '@dxos/ai/testing';
+import { AiConversation, makeToolExecutionServiceFromFunctions, makeToolResolverFromFunctions } from '@dxos/assistant';
 import { Client, Config } from '@dxos/client';
+import { type Database } from '@dxos/echo';
+import { CredentialsService, type FunctionInvocationService, type QueueService, TracingService } from '@dxos/functions';
+import { FunctionInvocationServiceLayerTestMocked, TestDatabaseLayer } from '@dxos/functions-runtime/testing';
 import { type Message } from '@dxos/types';
 
 import { checkOllamaServer, streamOllamaResponse } from '../util';
+
+// TODO(burdon): Factor out (see plugin-assistant/processor.ts)
+export type AiChatServices =
+  | CredentialsService
+  | Database.Service
+  | QueueService
+  | FunctionInvocationService
+  | AiService.AiService
+  | ToolExecutionService
+  | ToolResolverService
+  | TracingService;
+
+const TestToolkit = Toolkit.make(
+  Tool.make('random', {
+    description: 'Random number generator',
+    parameters: {},
+    success: Schema.Number,
+  }),
+);
+
+// TODO(burdon): Create minimal toolkit.
+const toolkit = Toolkit.merge(TestToolkit) as Toolkit.Toolkit<any>;
+
+const TestServicesLayer = Layer.mergeAll(
+  TracingService.layerNoop,
+  AiServiceTestingPreset('direct'),
+  TestDatabaseLayer({}),
+  FunctionInvocationServiceLayerTestMocked({ functions: [] }).pipe(Layer.provideMerge(TracingService.layerNoop)),
+);
+
+const TestLayer: Layer.Layer<AiChatServices, never, never> = Layer.mergeAll(
+  AiService.model('@anthropic/claude-opus-4-0'),
+  makeToolResolverFromFunctions([], toolkit),
+  makeToolExecutionServiceFromFunctions(toolkit, toolkit.toLayer({}) as any),
+  CredentialsService.layerFromDatabase(),
+).pipe(Layer.provideMerge(TestServicesLayer), Layer.orDie);
 
 // Suppress stderr to hide terminfo warnings; MUST be before importing blessed.
 const originalStderrWrite = process.stderr.write.bind(process.stderr);
@@ -44,6 +92,7 @@ export class App {
 
   private _client?: Client;
   private _conversation?: AiConversation;
+  private _services?: Runtime.Runtime<AiChatServices>;
 
   private readonly _exitHandler = () => this._exit();
   private readonly _resizeHandler = () => this._handleResize();
@@ -304,6 +353,9 @@ export class App {
     const queue = space.queues.create<Message.Message>();
     this._conversation = new AiConversation(queue);
 
+    // TODO(burdon): Effect.
+    // this._services = yield * Effect.runtime<AiChatServices>();
+
     const ollamaAvailable = await checkOllamaServer();
     if (ollamaAvailable) {
       this._messages.push(
@@ -344,6 +396,18 @@ export class App {
     const assistantMessageIndex = this._messages.length - 1;
 
     try {
+      // TODO(burdon): See processor.test.ts
+      if (this._conversation && this._services) {
+        const request = this._conversation.createRequest({ prompt });
+        const fiber = request.pipe(
+          Effect.provide(AiService.model(DEFAULT_EDGE_MODEL)),
+          Effect.asVoid,
+          Runtime.runFork(this._services),
+        );
+        const response = await fiber.pipe(Fiber.join, Effect.runPromiseExit);
+        console.log(response);
+      }
+
       await streamOllamaResponse(
         prompt,
         (chunk) => {

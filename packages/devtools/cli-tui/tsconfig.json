@@ -18,6 +18,9 @@
       "path": "../../common/util"
     },
     {
+      "path": "../../core/ai"
+    },
+    {
       "path": "../../core/assistant"
     },
     {
@@ -27,7 +30,13 @@
       "path": "../../core/blueprints"
     },
     {
+      "path": "../../core/echo/echo"
+    },
+    {
       "path": "../../core/functions"
+    },
+    {
+      "path": "../../core/functions-runtime"
     },
     {
       "path": "../../sdk/client"
