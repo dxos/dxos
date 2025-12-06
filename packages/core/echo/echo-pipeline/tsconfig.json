@@ -67,6 +67,9 @@
       "path": "../../../common/util"
     },
     {
+      "path": "../../../sdk/echo"
+    },
+    {
       "path": "../../halo/credentials"
     },
     {
@@ -98,9 +101,6 @@
     },
     {
       "path": "../../protocols"
-    },
-    {
-      "path": "../echo"
     },
     {
       "path": "../echo-protocol"

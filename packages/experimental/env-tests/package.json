@@ -5,7 +5,7 @@
   "description": "Testing that our code compiles in different environments.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
-  "license": "MIT",
+  "license": "Elastic-2.0",
   "author": "DXOS.org",
   "type": "module",
   "exports": {

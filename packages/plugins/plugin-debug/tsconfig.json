@@ -57,9 +57,6 @@
       "path": "../../core/conductor"
     },
     {
-      "path": "../../core/echo/echo"
-    },
-    {
       "path": "../../core/echo/echo-generator"
     },
     {
@@ -85,6 +82,9 @@
     },
     {
       "path": "../../sdk/config"
+    },
+    {
+      "path": "../../sdk/echo"
     },
     {
       "path": "../../sdk/react-client"

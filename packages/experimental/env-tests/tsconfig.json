@@ -30,9 +30,6 @@
       "path": "../../core/conductor"
     },
     {
-      "path": "../../core/echo/echo"
-    },
-    {
       "path": "../../core/echo/echo-db"
     },
     {
@@ -43,6 +40,9 @@
     },
     {
       "path": "../../sdk/app-framework"
+    },
+    {
+      "path": "../../sdk/echo"
     }
   ]
 }

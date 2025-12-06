@@ -466,7 +466,7 @@ importers:
         version: link:../packages/sdk/config
       '@dxos/echo':
         specifier: workspace:*
-        version: link:../packages/core/echo/echo
+        version: link:../packages/sdk/echo
       '@dxos/echo-signals':
         specifier: workspace:*
         version: link:../packages/core/echo/echo-signals
@@ -502,7 +502,7 @@ importers:
         version: link:../../devtools/devtools
       '@dxos/echo':
         specifier: workspace:*
-        version: link:../../core/echo/echo
+        version: link:../../sdk/echo
       '@dxos/echo-signals':
         specifier: workspace:*
         version: link:../../core/echo/echo-signals
@@ -972,7 +972,7 @@ importers:
         version: link:../../sdk/config
       '@dxos/echo':
         specifier: workspace:*
-        version: link:../../core/echo/echo
+        version: link:../../sdk/echo
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../sdk/react-client
@@ -1030,7 +1030,7 @@ importers:
         version: link:../../devtools/devtools
       '@dxos/echo':
         specifier: workspace:*
-        version: link:../../core/echo/echo
+        version: link:../../sdk/echo
       '@dxos/echo-db':
         specifier: workspace:*
         version: link:../../core/echo/echo-db
@@ -1151,7 +1151,7 @@ importers:
         version: link:../../sdk/config
       '@dxos/echo':
         specifier: workspace:*
-        version: link:../../core/echo/echo
+        version: link:../../sdk/echo
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
@@ -1492,7 +1492,7 @@ importers:
     devDependencies:
       '@dxos/echo':
         specifier: workspace:*
-        version: link:../../core/echo/echo
+        version: link:../../sdk/echo
       '@dxos/echo-db':
         specifier: workspace:*
         version: link:../../core/echo/echo-db
@@ -1639,7 +1639,7 @@ importers:
     dependencies:
       '@dxos/echo':
         specifier: workspace:*
-        version: link:../../core/echo/echo
+        version: link:../../sdk/echo
       '@dxos/echo-signals':
         specifier: workspace:*
         version: link:../../core/echo/echo-signals
@@ -2089,7 +2089,7 @@ importers:
         version: link:../../common/debug
       '@dxos/echo':
         specifier: workspace:*
-        version: link:../echo/echo
+        version: link:../../sdk/echo
       '@dxos/echo-db':
         specifier: workspace:*
         version: link:../echo/echo-db
@@ -2192,7 +2192,7 @@ importers:
         version: link:../../common/debug
       '@dxos/echo':
         specifier: workspace:*
-        version: link:../echo/echo
+        version: link:../../sdk/echo
       '@dxos/echo-db':
         specifier: workspace:*
         version: link:../echo/echo-db
@@ -2286,7 +2286,7 @@ importers:
         version: link:../../common/context
       '@dxos/echo':
         specifier: workspace:*
-        version: link:../echo/echo
+        version: link:../../sdk/echo
       '@dxos/echo-db':
         specifier: workspace:*
         version: link:../echo/echo-db
@@ -2368,7 +2368,7 @@ importers:
         version: link:../ai
       '@dxos/echo':
         specifier: workspace:*
-        version: link:../echo/echo
+        version: link:../../sdk/echo
       '@dxos/functions':
         specifier: workspace:*
         version: link:../functions
@@ -2413,7 +2413,7 @@ importers:
         version: link:../../common/debug
       '@dxos/echo':
         specifier: workspace:*
-        version: link:../echo/echo
+        version: link:../../sdk/echo
       '@dxos/functions':
         specifier: workspace:*
         version: link:../functions
@@ -2489,7 +2489,7 @@ importers:
         version: link:../../common/debug
       '@dxos/echo':
         specifier: workspace:*
-        version: link:../echo/echo
+        version: link:../../sdk/echo
       '@dxos/echo-db':
         specifier: workspace:*
         version: link:../echo/echo-db
@@ -2557,54 +2557,6 @@ importers:
         specifier: 10.2.0
         version: 10.2.0
 
-  packages/core/echo/echo:
-    dependencies:
-      '@dxos/context':
-        specifier: workspace:*
-        version: link:../../../common/context
-      '@dxos/debug':
-        specifier: workspace:*
-        version: link:../../../common/debug
-      '@dxos/echo-protocol':
-        specifier: workspace:*
-        version: link:../echo-protocol
-      '@dxos/echo-signals':
-        specifier: workspace:*
-        version: link:../echo-signals
-      '@dxos/effect':
-        specifier: workspace:*
-        version: link:../../../common/effect
-      '@dxos/errors':
-        specifier: workspace:*
-        version: link:../../../common/errors
-      '@dxos/invariant':
-        specifier: workspace:*
-        version: link:../../../common/invariant
-      '@dxos/keys':
-        specifier: workspace:*
-        version: link:../../../common/keys
-      '@dxos/live-object':
-        specifier: workspace:*
-        version: link:../live-object
-      '@dxos/log':
-        specifier: workspace:*
-        version: link:../../../common/log
-      '@dxos/node-std':
-        specifier: workspace:*
-        version: link:../../../common/node-std
-      '@dxos/protocols':
-        specifier: workspace:*
-        version: link:../../protocols
-      '@dxos/util':
-        specifier: workspace:*
-        version: link:../../../common/util
-      '@preact/signals-core':
-        specifier: ^1.12.1
-        version: 1.12.1
-      effect:
-        specifier: 3.18.3
-        version: 3.18.3
-
   packages/core/echo/echo-db:
     dependencies:
       '@automerge/automerge':
@@ -2630,7 +2582,7 @@ importers:
         version: link:../../../common/debug
       '@dxos/echo':
         specifier: workspace:*
-        version: link:../echo
+        version: link:../../../sdk/echo
       '@dxos/echo-pipeline':
         specifier: workspace:*
         version: link:../echo-pipeline
@@ -2712,7 +2664,7 @@ importers:
         version: link:../../../sdk/client
       '@dxos/echo':
         specifier: workspace:*
-        version: link:../echo
+        version: link:../../../sdk/echo
       '@dxos/echo-db':
         specifier: workspace:*
         version: link:../echo-db
@@ -2767,7 +2719,7 @@ importers:
         version: link:../../../common/debug
       '@dxos/echo':
         specifier: workspace:*
-        version: link:../echo
+        version: link:../../../sdk/echo
       '@dxos/echo-protocol':
         specifier: workspace:*
         version: link:../echo-protocol
@@ -2900,7 +2852,7 @@ importers:
         version: link:../../../common/debug
       '@dxos/echo':
         specifier: workspace:*
-        version: link:../echo
+        version: link:../../../sdk/echo
       '@dxos/echo-protocol':
         specifier: workspace:*
         version: link:../echo-protocol
@@ -2983,7 +2935,7 @@ importers:
         version: link:../../../common/debug
       '@dxos/echo':
         specifier: workspace:*
-        version: link:../echo
+        version: link:../../../sdk/echo
       '@dxos/echo-protocol':
         specifier: workspace:*
         version: link:../echo-protocol
@@ -3086,7 +3038,7 @@ importers:
         version: link:../../common/context
       '@dxos/echo':
         specifier: workspace:*
-        version: link:../echo/echo
+        version: link:../../sdk/echo
       '@dxos/echo-db':
         specifier: workspace:*
         version: link:../echo/echo-db
@@ -3149,7 +3101,7 @@ importers:
         version: link:../../common/debug
       '@dxos/echo':
         specifier: workspace:*
-        version: link:../echo/echo
+        version: link:../../sdk/echo
       '@dxos/echo-db':
         specifier: workspace:*
         version: link:../echo/echo-db
@@ -3240,7 +3192,7 @@ importers:
         version: link:../../common/debug
       '@dxos/echo':
         specifier: workspace:*
-        version: link:../echo/echo
+        version: link:../../sdk/echo
       '@dxos/echo-db':
         specifier: workspace:*
         version: link:../echo/echo-db
@@ -3301,7 +3253,7 @@ importers:
         version: link:../../sdk/config
       '@dxos/echo':
         specifier: workspace:*
-        version: link:../echo/echo
+        version: link:../../sdk/echo
       '@dxos/functions':
         specifier: workspace:*
         version: link:../functions
@@ -3933,7 +3885,7 @@ importers:
         version: link:../../common/debug
       '@dxos/echo':
         specifier: workspace:*
-        version: link:../../core/echo/echo
+        version: link:../../sdk/echo
       '@dxos/functions':
         specifier: workspace:*
         version: link:../../core/functions
@@ -4117,7 +4069,7 @@ importers:
         version: link:../../common/debug
       '@dxos/echo':
         specifier: workspace:*
-        version: link:../../core/echo/echo
+        version: link:../../sdk/echo
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
@@ -4289,7 +4241,7 @@ importers:
         version: link:../../common/debug
       '@dxos/echo':
         specifier: workspace:*
-        version: link:../../core/echo/echo
+        version: link:../../sdk/echo
       '@dxos/functions':
         specifier: workspace:*
         version: link:../../core/functions
@@ -4482,7 +4434,7 @@ importers:
         version: link:../../common/debug
       '@dxos/echo':
         specifier: workspace:*
-        version: link:../../core/echo/echo
+        version: link:../../sdk/echo
       '@dxos/echo-db':
         specifier: workspace:*
         version: link:../../core/echo/echo-db
@@ -4653,7 +4605,7 @@ importers:
         version: link:../../common/display-name
       '@dxos/echo':
         specifier: workspace:*
-        version: link:../../core/echo/echo
+        version: link:../../sdk/echo
       '@dxos/echo-db':
         specifier: workspace:*
         version: link:../../core/echo/echo-db
@@ -5048,7 +5000,7 @@ importers:
         version: link:../../common/debug
       '@dxos/echo':
         specifier: workspace:*
-        version: link:../../core/echo/echo
+        version: link:../../sdk/echo
       '@dxos/echo-db':
         specifier: workspace:*
         version: link:../../core/echo/echo-db
@@ -5214,7 +5166,7 @@ importers:
         version: link:../../common/debug
       '@dxos/echo':
         specifier: workspace:*
-        version: link:../../core/echo/echo
+        version: link:../../sdk/echo
       '@dxos/echo-db':
         specifier: workspace:*
         version: link:../../core/echo/echo-db
@@ -5331,7 +5283,7 @@ importers:
         version: link:../../core/conductor
       '@dxos/echo':
         specifier: workspace:*
-        version: link:../../core/echo/echo
+        version: link:../../sdk/echo
       '@dxos/echo-db':
         specifier: workspace:*
         version: link:../../core/echo/echo-db
@@ -5424,7 +5376,7 @@ importers:
         version: link:../../devtools/devtools
       '@dxos/echo':
         specifier: workspace:*
-        version: link:../../core/echo/echo
+        version: link:../../sdk/echo
       '@dxos/echo-db':
         specifier: workspace:*
         version: link:../../core/echo/echo-db
@@ -5662,7 +5614,7 @@ importers:
         version: link:../../sdk/app-framework
       '@dxos/echo':
         specifier: workspace:*
-        version: link:../../core/echo/echo
+        version: link:../../sdk/echo
       '@dxos/echo-signals':
         specifier: workspace:*
         version: link:../../core/echo/echo-signals
@@ -5717,7 +5669,7 @@ importers:
         version: link:../../common/context
       '@dxos/echo':
         specifier: workspace:*
-        version: link:../../core/echo/echo
+        version: link:../../sdk/echo
       '@dxos/functions':
         specifier: workspace:*
         version: link:../../core/functions
@@ -5847,7 +5799,7 @@ importers:
         version: link:../../sdk/client
       '@dxos/echo':
         specifier: workspace:*
-        version: link:../../core/echo/echo
+        version: link:../../sdk/echo
       '@dxos/effect':
         specifier: workspace:*
         version: link:../../common/effect
@@ -5968,7 +5920,7 @@ importers:
         version: link:../../common/display-name
       '@dxos/echo':
         specifier: workspace:*
-        version: link:../../core/echo/echo
+        version: link:../../sdk/echo
       '@dxos/functions':
         specifier: workspace:*
         version: link:../../core/functions
@@ -6062,7 +6014,7 @@ importers:
         version: link:../../sdk/config
       '@dxos/echo':
         specifier: workspace:*
-        version: link:../../core/echo/echo
+        version: link:../../sdk/echo
       '@dxos/echo-signals':
         specifier: workspace:*
         version: link:../../core/echo/echo-signals
@@ -6165,7 +6117,7 @@ importers:
         version: link:../../common/debug
       '@dxos/echo':
         specifier: workspace:*
-        version: link:../../core/echo/echo
+        version: link:../../sdk/echo
       '@dxos/edge-client':
         specifier: workspace:*
         version: link:../../core/mesh/edge-client
@@ -6277,7 +6229,7 @@ importers:
         version: link:../../devtools/devtools
       '@dxos/echo':
         specifier: workspace:*
-        version: link:../../core/echo/echo
+        version: link:../../sdk/echo
       '@dxos/echo-generator':
         specifier: workspace:*
         version: link:../../core/echo/echo-generator
@@ -6464,7 +6416,7 @@ importers:
         version: link:../../common/debug
       '@dxos/echo':
         specifier: workspace:*
-        version: link:../../core/echo/echo
+        version: link:../../sdk/echo
       '@dxos/echo-signals':
         specifier: workspace:*
         version: link:../../core/echo/echo-signals
@@ -6585,7 +6537,7 @@ importers:
         version: link:../../common/async
       '@dxos/echo':
         specifier: workspace:*
-        version: link:../../core/echo/echo
+        version: link:../../sdk/echo
       '@dxos/echo-db':
         specifier: workspace:*
         version: link:../../core/echo/echo-db
@@ -6697,7 +6649,7 @@ importers:
         version: link:../../sdk/client
       '@dxos/echo':
         specifier: workspace:*
-        version: link:../../core/echo/echo
+        version: link:../../sdk/echo
       '@dxos/echo-query':
         specifier: workspace:*
         version: link:../../core/echo/echo-query
@@ -6836,7 +6788,7 @@ importers:
         version: link:../../common/async
       '@dxos/echo':
         specifier: workspace:*
-        version: link:../../core/echo/echo
+        version: link:../../sdk/echo
       '@dxos/echo-signals':
         specifier: workspace:*
         version: link:../../core/echo/echo-signals
@@ -6985,7 +6937,7 @@ importers:
         version: link:../../common/debug
       '@dxos/echo':
         specifier: workspace:*
-        version: link:../../core/echo/echo
+        version: link:../../sdk/echo
       '@dxos/keyboard':
         specifier: workspace:*
         version: link:../../common/keyboard
@@ -7100,7 +7052,7 @@ importers:
         version: link:../../common/display-name
       '@dxos/echo':
         specifier: workspace:*
-        version: link:../../core/echo/echo
+        version: link:../../sdk/echo
       '@dxos/echo-db':
         specifier: workspace:*
         version: link:../../core/echo/echo-db
@@ -7305,7 +7257,7 @@ importers:
         version: link:../../core/blueprints
       '@dxos/echo':
         specifier: workspace:*
-        version: link:../../core/echo/echo
+        version: link:../../sdk/echo
       '@dxos/effect':
         specifier: workspace:*
         version: link:../../common/effect
@@ -7420,7 +7372,7 @@ importers:
         version: link:../../core/blueprints
       '@dxos/echo':
         specifier: workspace:*
-        version: link:../../core/echo/echo
+        version: link:../../sdk/echo
       '@dxos/effect':
         specifier: workspace:*
         version: link:../../common/effect
@@ -7550,7 +7502,7 @@ importers:
         version: link:../../sdk/client-protocol
       '@dxos/echo':
         specifier: workspace:*
-        version: link:../../core/echo/echo
+        version: link:../../sdk/echo
       '@dxos/echo-db':
         specifier: workspace:*
         version: link:../../core/echo/echo-db
@@ -7701,7 +7653,7 @@ importers:
         version: link:../../sdk/app-framework
       '@dxos/echo':
         specifier: workspace:*
-        version: link:../../core/echo/echo
+        version: link:../../sdk/echo
       '@dxos/effect':
         specifier: workspace:*
         version: link:../../common/effect
@@ -7813,7 +7765,7 @@ importers:
         version: link:../../common/display-name
       '@dxos/echo':
         specifier: workspace:*
-        version: link:../../core/echo/echo
+        version: link:../../sdk/echo
       '@dxos/echo-db':
         specifier: workspace:*
         version: link:../../core/echo/echo-db
@@ -8001,7 +7953,7 @@ importers:
     devDependencies:
       '@dxos/echo':
         specifier: workspace:*
-        version: link:../../core/echo/echo
+        version: link:../../sdk/echo
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../../ui/react-ui
@@ -8104,7 +8056,7 @@ importers:
         version: link:../../common/debug
       '@dxos/echo':
         specifier: workspace:*
-        version: link:../../core/echo/echo
+        version: link:../../sdk/echo
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
@@ -8243,7 +8195,7 @@ importers:
         version: link:../../common/context
       '@dxos/echo':
         specifier: workspace:*
-        version: link:../../core/echo/echo
+        version: link:../../sdk/echo
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
@@ -8331,7 +8283,7 @@ importers:
         version: link:../../common/async
       '@dxos/echo':
         specifier: workspace:*
-        version: link:../../core/echo/echo
+        version: link:../../sdk/echo
       '@dxos/echo-db':
         specifier: workspace:*
         version: link:../../core/echo/echo-db
@@ -8446,7 +8398,7 @@ importers:
         version: link:../../common/async
       '@dxos/echo':
         specifier: workspace:*
-        version: link:../../core/echo/echo
+        version: link:../../sdk/echo
       '@dxos/live-object':
         specifier: workspace:*
         version: link:../../core/echo/live-object
@@ -8582,7 +8534,7 @@ importers:
         version: link:../../sdk/client
       '@dxos/echo':
         specifier: workspace:*
-        version: link:../../core/echo/echo
+        version: link:../../sdk/echo
       '@dxos/keys':
         specifier: workspace:*
         version: link:../../common/keys
@@ -8679,7 +8631,7 @@ importers:
         version: link:../../devtools/devtools
       '@dxos/echo':
         specifier: workspace:*
-        version: link:../../core/echo/echo
+        version: link:../../sdk/echo
       '@dxos/echo-query':
         specifier: workspace:*
         version: link:../../core/echo/echo-query
@@ -8846,7 +8798,7 @@ importers:
         version: link:../../sdk/app-framework
       '@dxos/echo':
         specifier: workspace:*
-        version: link:../../core/echo/echo
+        version: link:../../sdk/echo
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
@@ -8970,7 +8922,7 @@ importers:
         version: link:../../devtools/devtools
       '@dxos/echo':
         specifier: workspace:*
-        version: link:../../core/echo/echo
+        version: link:../../sdk/echo
       '@dxos/echo-db':
         specifier: workspace:*
         version: link:../../core/echo/echo-db
@@ -9193,7 +9145,7 @@ importers:
         version: link:../../common/debug
       '@dxos/echo':
         specifier: workspace:*
-        version: link:../../core/echo/echo
+        version: link:../../sdk/echo
       '@dxos/echo-protocol':
         specifier: workspace:*
         version: link:../../core/echo/echo-protocol
@@ -9335,7 +9287,7 @@ importers:
         version: link:../../common/debug
       '@dxos/echo':
         specifier: workspace:*
-        version: link:../../core/echo/echo
+        version: link:../../sdk/echo
       '@dxos/echo-db':
         specifier: workspace:*
         version: link:../../core/echo/echo-db
@@ -9540,7 +9492,7 @@ importers:
         version: link:../../common/context
       '@dxos/echo':
         specifier: workspace:*
-        version: link:../../core/echo/echo
+        version: link:../../sdk/echo
       '@dxos/echo-db':
         specifier: workspace:*
         version: link:../../core/echo/echo-db
@@ -9691,7 +9643,7 @@ importers:
         version: link:../../common/display-name
       '@dxos/echo':
         specifier: workspace:*
-        version: link:../../core/echo/echo
+        version: link:../../sdk/echo
       '@dxos/echo-db':
         specifier: workspace:*
         version: link:../../core/echo/echo-db
@@ -9875,7 +9827,7 @@ importers:
         version: link:../../sdk/client
       '@dxos/echo':
         specifier: workspace:*
-        version: link:../../core/echo/echo
+        version: link:../../sdk/echo
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
@@ -9978,7 +9930,7 @@ importers:
         version: link:../../common/async
       '@dxos/echo':
         specifier: workspace:*
-        version: link:../../core/echo/echo
+        version: link:../../sdk/echo
       '@dxos/plugin-observability':
         specifier: workspace:*
         version: link:../plugin-observability
@@ -10097,7 +10049,7 @@ importers:
         version: link:../../core/blueprints
       '@dxos/echo':
         specifier: workspace:*
-        version: link:../../core/echo/echo
+        version: link:../../sdk/echo
       '@dxos/effect':
         specifier: workspace:*
         version: link:../../common/effect
@@ -10203,7 +10155,7 @@ importers:
         version: link:../../common/async
       '@dxos/echo':
         specifier: workspace:*
-        version: link:../../core/echo/echo
+        version: link:../../sdk/echo
       '@dxos/plugin-client':
         specifier: workspace:*
         version: link:../plugin-client
@@ -10267,7 +10219,7 @@ importers:
         version: link:../../sdk/app-framework
       '@dxos/echo':
         specifier: workspace:*
-        version: link:../../core/echo/echo
+        version: link:../../sdk/echo
       '@dxos/live-object':
         specifier: workspace:*
         version: link:../../core/echo/live-object
@@ -10419,7 +10371,7 @@ importers:
         version: link:../../common/display-name
       '@dxos/echo':
         specifier: workspace:*
-        version: link:../../core/echo/echo
+        version: link:../../sdk/echo
       '@dxos/echo-db':
         specifier: workspace:*
         version: link:../../core/echo/echo-db
@@ -10588,7 +10540,7 @@ importers:
         version: link:../../sdk/app-framework
       '@dxos/echo':
         specifier: workspace:*
-        version: link:../../core/echo/echo
+        version: link:../../sdk/echo
       '@dxos/live-object':
         specifier: workspace:*
         version: link:../../core/echo/live-object
@@ -10712,7 +10664,7 @@ importers:
         version: link:../../common/display-name
       '@dxos/echo':
         specifier: workspace:*
-        version: link:../../core/echo/echo
+        version: link:../../sdk/echo
       '@dxos/echo-db':
         specifier: workspace:*
         version: link:../../core/echo/echo-db
@@ -10893,7 +10845,7 @@ importers:
         version: link:../../common/display-name
       '@dxos/echo':
         specifier: workspace:*
-        version: link:../../core/echo/echo
+        version: link:../../sdk/echo
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
@@ -10990,7 +10942,7 @@ importers:
         version: link:../../common/crypto
       '@dxos/echo':
         specifier: workspace:*
-        version: link:../../core/echo/echo
+        version: link:../../sdk/echo
       '@dxos/effect':
         specifier: workspace:*
         version: link:../../common/effect
@@ -11120,7 +11072,7 @@ importers:
         version: link:../../common/debug
       '@dxos/echo':
         specifier: workspace:*
-        version: link:../../core/echo/echo
+        version: link:../echo
       '@dxos/effect':
         specifier: workspace:*
         version: link:../../common/effect
@@ -11217,7 +11169,7 @@ importers:
         version: link:../../common/debug
       '@dxos/echo':
         specifier: workspace:*
-        version: link:../../core/echo/echo
+        version: link:../echo
       '@dxos/echo-signals':
         specifier: workspace:*
         version: link:../../core/echo/echo-signals
@@ -11326,7 +11278,7 @@ importers:
         version: link:../../common/debug
       '@dxos/echo':
         specifier: workspace:*
-        version: link:../../core/echo/echo
+        version: link:../echo
       '@dxos/echo-db':
         specifier: workspace:*
         version: link:../../core/echo/echo-db
@@ -11444,7 +11396,7 @@ importers:
         version: link:../../core/halo/credentials
       '@dxos/echo':
         specifier: workspace:*
-        version: link:../../core/echo/echo
+        version: link:../echo
       '@dxos/echo-db':
         specifier: workspace:*
         version: link:../../core/echo/echo-db
@@ -11504,7 +11456,7 @@ importers:
         version: link:../../common/debug
       '@dxos/echo':
         specifier: workspace:*
-        version: link:../../core/echo/echo
+        version: link:../echo
       '@dxos/echo-db':
         specifier: workspace:*
         version: link:../../core/echo/echo-db
@@ -11664,11 +11616,59 @@ importers:
         specifier: ^5.88.2
         version: 5.88.2(@swc/core@1.13.5(@swc/helpers@0.5.17))(esbuild@0.25.10)
 
+  packages/sdk/echo:
+    dependencies:
+      '@dxos/context':
+        specifier: workspace:*
+        version: link:../../common/context
+      '@dxos/debug':
+        specifier: workspace:*
+        version: link:../../common/debug
+      '@dxos/echo-protocol':
+        specifier: workspace:*
+        version: link:../../core/echo/echo-protocol
+      '@dxos/echo-signals':
+        specifier: workspace:*
+        version: link:../../core/echo/echo-signals
+      '@dxos/effect':
+        specifier: workspace:*
+        version: link:../../common/effect
+      '@dxos/errors':
+        specifier: workspace:*
+        version: link:../../common/errors
+      '@dxos/invariant':
+        specifier: workspace:*
+        version: link:../../common/invariant
+      '@dxos/keys':
+        specifier: workspace:*
+        version: link:../../common/keys
+      '@dxos/live-object':
+        specifier: workspace:*
+        version: link:../../core/echo/live-object
+      '@dxos/log':
+        specifier: workspace:*
+        version: link:../../common/log
+      '@dxos/node-std':
+        specifier: workspace:*
+        version: link:../../common/node-std
+      '@dxos/protocols':
+        specifier: workspace:*
+        version: link:../../core/protocols
+      '@dxos/util':
+        specifier: workspace:*
+        version: link:../../common/util
+      '@preact/signals-core':
+        specifier: ^1.12.1
+        version: 1.12.1
+      effect:
+        specifier: 3.18.3
+        version: 3.18.3
+
   packages/sdk/examples:
     dependencies:
       '@dxos/echo':
         specifier: workspace:*
-        version: link:../../core/echo/echo
+        version: link:../echo
       '@dxos/echo-signals':
         specifier: workspace:*
         version: link:../../core/echo/echo-signals
@@ -11746,7 +11746,7 @@ importers:
         version: link:../client
       '@dxos/echo':
         specifier: workspace:*
-        version: link:../../core/echo/echo
+        version: link:../echo
       '@dxos/echo-db':
         specifier: workspace:*
         version: link:../../core/echo/echo-db
@@ -11912,7 +11912,7 @@ importers:
         version: link:../../common/debug
       '@dxos/echo':
         specifier: workspace:*
-        version: link:../../core/echo/echo
+        version: link:../echo
       '@dxos/echo-signals':
         specifier: workspace:*
         version: link:../../core/echo/echo-signals
@@ -12026,7 +12026,7 @@ importers:
         version: link:../../common/debug
       '@dxos/echo':
         specifier: workspace:*
-        version: link:../../core/echo/echo
+        version: link:../echo
       '@dxos/echo-db':
         specifier: workspace:*
         version: link:../../core/echo/echo-db
@@ -12242,7 +12242,7 @@ importers:
         version: link:../../common/debug
       '@dxos/echo':
         specifier: workspace:*
-        version: link:../../core/echo/echo
+        version: link:../echo
       '@dxos/echo-db':
         specifier: workspace:*
         version: link:../../core/echo/echo-db
@@ -12360,7 +12360,7 @@ importers:
         version: link:../../devtools/devtools
       '@dxos/echo':
         specifier: workspace:*
-        version: link:../../core/echo/echo
+        version: link:../../sdk/echo
       '@dxos/echo-db':
         specifier: workspace:*
         version: link:../../core/echo/echo-db
@@ -12999,7 +12999,7 @@ importers:
     dependencies:
       '@dxos/echo':
         specifier: workspace:*
-        version: link:../../core/echo/echo
+        version: link:../../sdk/echo
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
@@ -13087,7 +13087,7 @@ importers:
         version: link:../../common/debug
       '@dxos/echo':
         specifier: workspace:*
-        version: link:../../core/echo/echo
+        version: link:../../sdk/echo
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
@@ -13354,7 +13354,7 @@ importers:
         version: link:../../common/debug
       '@dxos/echo':
         specifier: workspace:*
-        version: link:../../core/echo/echo
+        version: link:../../sdk/echo
       '@dxos/edge-client':
         specifier: workspace:*
         version: link:../../core/mesh/edge-client
@@ -13514,7 +13514,7 @@ importers:
         version: link:../../common/debug
       '@dxos/echo':
         specifier: workspace:*
-        version: link:../../core/echo/echo
+        version: link:../../sdk/echo
       '@dxos/graph':
         specifier: workspace:*
         version: link:../../common/graph
@@ -13638,7 +13638,7 @@ importers:
         version: link:../../common/debug
       '@dxos/echo':
         specifier: workspace:*
-        version: link:../../core/echo/echo
+        version: link:../../sdk/echo
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
@@ -13750,7 +13750,7 @@ importers:
         version: link:../../sdk/client-protocol
       '@dxos/echo':
         specifier: workspace:*
-        version: link:../../core/echo/echo
+        version: link:../../sdk/echo
       '@dxos/echo-query':
         specifier: workspace:*
         version: link:../../core/echo/echo-query
@@ -13965,7 +13965,7 @@ importers:
         version: link:../../common/display-name
       '@dxos/echo':
         specifier: workspace:*
-        version: link:../../core/echo/echo
+        version: link:../../sdk/echo
       '@dxos/echo-db':
         specifier: workspace:*
         version: link:../../core/echo/echo-db
@@ -14179,7 +14179,7 @@ importers:
         version: link:../../common/debug
       '@dxos/echo':
         specifier: workspace:*
-        version: link:../../core/echo/echo
+        version: link:../../sdk/echo
       '@dxos/echo-db':
         specifier: workspace:*
         version: link:../../core/echo/echo-db
@@ -14674,7 +14674,7 @@ importers:
         version: link:../../common/context
       '@dxos/echo':
         specifier: workspace:*
-        version: link:../../core/echo/echo
+        version: link:../../sdk/echo
       '@dxos/effect':
         specifier: workspace:*
         version: link:../../common/effect
@@ -14765,7 +14765,7 @@ importers:
         version: link:../../common/debug
       '@dxos/echo':
         specifier: workspace:*
-        version: link:../../core/echo/echo
+        version: link:../../sdk/echo
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
@@ -14847,7 +14847,7 @@ importers:
         version: link:../../common/async
       '@dxos/echo':
         specifier: workspace:*
-        version: link:../../core/echo/echo
+        version: link:../../sdk/echo
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
@@ -14963,7 +14963,7 @@ importers:
         version: link:../../sdk/client
       '@dxos/echo':
         specifier: workspace:*
-        version: link:../../core/echo/echo
+        version: link:../../sdk/echo
       '@dxos/random':
         specifier: workspace:*
         version: link:../../common/random
@@ -15288,7 +15288,7 @@ importers:
         version: 1.0.3
       '@dxos/echo':
         specifier: workspace:*
-        version: link:../../core/echo/echo
+        version: link:../../sdk/echo
       '@dxos/keyboard':
         specifier: workspace:*
         version: link:../../common/keyboard
@@ -15443,7 +15443,7 @@ importers:
         version: link:../../common/debug
       '@dxos/echo':
         specifier: workspace:*
-        version: link:../../core/echo/echo
+        version: link:../../sdk/echo
       '@dxos/echo-db':
         specifier: workspace:*
         version: link:../../core/echo/echo-db
@@ -15787,7 +15787,7 @@ importers:
     devDependencies:
       '@dxos/echo':
         specifier: workspace:*
-        version: link:../../core/echo/echo
+        version: link:../../sdk/echo
       '@dxos/echo-db':
         specifier: workspace:*
         version: link:../../core/echo/echo-db

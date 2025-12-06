@@ -5,7 +5,7 @@
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "repository": "https://github.com/dxos/dxos",
-  "license": "MIT",
+  "license": "Elastic-2.0",
   "author": "info@dxos.org",
   "publisher": "dxos",
   "main": "./extension.js",

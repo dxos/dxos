@@ -39,13 +39,13 @@
       "path": "../../common/util"
     },
     {
-      "path": "../../core/echo/echo"
-    },
-    {
       "path": "../../core/echo/live-object"
     },
     {
       "path": "../../sdk/app-framework"
+    },
+    {
+      "path": "../../sdk/echo"
     },
     {
       "path": "../../sdk/react-client"

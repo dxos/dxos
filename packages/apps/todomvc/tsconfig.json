@@ -34,10 +34,10 @@
       "path": "../../common/util"
     },
     {
-      "path": "../../core/echo/echo"
+      "path": "../../sdk/config"
     },
     {
-      "path": "../../sdk/config"
+      "path": "../../sdk/echo"
     },
     {
       "path": "../../sdk/observability"

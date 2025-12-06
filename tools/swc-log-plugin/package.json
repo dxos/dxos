@@ -6,7 +6,7 @@
   ],
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
-  "license": "ISC",
+  "license": "Elastic-2.0",
   "author": "info@dxos.org",
   "sideEffects": true,
   "main": "./target/wasm32-wasip1/release/swc_log_plugin.wasm",

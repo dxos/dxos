@@ -40,9 +40,6 @@
       "path": "../../common/util"
     },
     {
-      "path": "../../core/echo/echo"
-    },
-    {
       "path": "../../core/echo/live-object"
     },
     {
@@ -74,6 +71,9 @@
     },
     {
       "path": "../../sdk/config"
+    },
+    {
+      "path": "../../sdk/echo"
     },
     {
       "path": "../../sdk/observability"

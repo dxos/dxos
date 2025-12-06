@@ -28,9 +28,6 @@
       "path": "../../common/util"
     },
     {
-      "path": "../../core/echo/echo"
-    },
-    {
       "path": "../../core/echo/echo-signals"
     },
     {
@@ -47,6 +44,9 @@
     },
     {
       "path": "../../ui/react-ui-theme"
+    },
+    {
+      "path": "../echo"
     },
     {
       "path": "../react-client"

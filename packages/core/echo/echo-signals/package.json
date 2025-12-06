@@ -4,7 +4,7 @@
   "description": "Plugable integration between ECHO and Signals libraries.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
-  "license": "MIT",
+  "license": "Elastic-2.0",
   "author": "info@dxos.org",
   "sideEffects": true,
   "type": "module",

@@ -39,9 +39,6 @@
       "path": "../../common/util"
     },
     {
-      "path": "../../core/echo/echo"
-    },
-    {
       "path": "../../core/echo/echo-db"
     },
     {
@@ -64,6 +61,9 @@
     },
     {
       "path": "../../sdk/config"
+    },
+    {
+      "path": "../../sdk/echo"
     },
     {
       "path": "../../sdk/schema"

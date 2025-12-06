@@ -6,13 +6,13 @@
   ],
   "references": [
     {
-      "path": "../../core/echo/echo"
-    },
-    {
       "path": "../../core/echo/echo-signals"
     },
     {
       "path": "../../core/echo/live-object"
+    },
+    {
+      "path": "../../sdk/echo"
     },
     {
       "path": "../async"

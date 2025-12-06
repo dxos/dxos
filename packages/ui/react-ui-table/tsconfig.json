@@ -45,9 +45,6 @@
       "path": "../../common/util"
     },
     {
-      "path": "../../core/echo/echo"
-    },
-    {
       "path": "../../core/echo/echo-db"
     },
     {
@@ -58,6 +55,9 @@
     },
     {
       "path": "../../plugins/plugin-search"
+    },
+    {
+      "path": "../../sdk/echo"
     },
     {
       "path": "../../sdk/react-client"

@@ -4,7 +4,7 @@
   "description": "A themed ⌘K-style combobox component, triggered by a button (or keyboard shortcut), where values are queried only within the invoked modal.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
-  "license": "MIT",
+  "license": "Elastic-2.0",
   "author": "DXOS.org",
   "sideEffects": true,
   "type": "module",
