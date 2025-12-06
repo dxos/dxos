@@ -12,13 +12,14 @@ import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
+import * as AiModelResolver from './AiModelResolver';
 import * as AiService from './AiService';
-import { AiModelResolver, DEFAULT_LMSTUDIO_ENDPOINT } from './AiServiceRouter';
 import { AiModelNotAvailableError } from './errors';
+import * as LMStudioResolver from './resolvers/lmstudio/LMStudioResolver';
 
-const TestRouter = AiModelResolver.buildAiService.pipe(
+const TestRouter = AiModelResolver.AiModelResolver.buildAiService.pipe(
   Layer.provide(
-    AiModelResolver.resolver(
+    AiModelResolver.AiModelResolver.resolver(
       Effect.gen(function* () {
         const claudeSonnet = yield* AnthropicLanguageModel.model('claude-3-5-sonnet-20241022');
         return (name) => {
@@ -33,12 +34,12 @@ const TestRouter = AiModelResolver.buildAiService.pipe(
     ),
   ),
   Layer.provide(
-    AiModelResolver.resolver(
+    AiModelResolver.AiModelResolver.resolver(
       Effect.gen(function* () {
         const gemma = yield* OpenAiLanguageModel.model('google/gemma-3-27b').pipe(
           Effect.provide(
             OpenAiClient.layer({
-              apiUrl: DEFAULT_LMSTUDIO_ENDPOINT,
+              apiUrl: LMStudioResolver.DEFAULT_LMSTUDIO_ENDPOINT,
             }),
           ),
         );
@@ -58,7 +59,7 @@ const TestRouter = AiModelResolver.buildAiService.pipe(
   Layer.provide(FetchHttpClient.layer),
 );
 
-describe('AiServiceRouter', () => {
+describe('AiModelResolver', () => {
   it.effect(
     'claude',
     Effect.fn(

@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
-import * as AiServiceRouter from '@dxos/ai/AiServiceRouter';
+import { AiModelResolver } from '@dxos/ai';
 import { Capabilities, type PluginContext, contributes } from '@dxos/app-framework';
 
 export default (context: PluginContext) => {
@@ -14,14 +14,14 @@ export default (context: PluginContext) => {
   // TODO(dmaretskyi): Extract function to reduce them.
   const combinedLayer = resolvers.reduce(
     (acc, resolver) => resolver.pipe(Layer.provide(acc)),
-    AiServiceRouter.AiModelResolver.fromModelMap(Effect.succeed({})), // Empty resolver as fallback.
+    AiModelResolver.AiModelResolver.fromModelMap(Effect.succeed({})), // Empty resolver as fallback.
   );
 
   return [
     // TODO(dmaretskyi): Read config from settings.
     contributes(
       Capabilities.AiServiceLayer,
-      AiServiceRouter.AiModelResolver.buildAiService.pipe(Layer.provide(combinedLayer)),
+      AiModelResolver.AiModelResolver.buildAiService.pipe(Layer.provide(combinedLayer)),
     ),
   ];
 };

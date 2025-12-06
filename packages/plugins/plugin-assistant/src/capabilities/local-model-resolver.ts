@@ -6,7 +6,7 @@ import * as OpenAiClient from '@effect/ai-openai/OpenAiClient';
 import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
 import * as Layer from 'effect/Layer';
 
-import * as AiServiceRouter from '@dxos/ai/AiServiceRouter';
+import { LMStudioResolver } from '@dxos/ai/resolvers';
 import { Capabilities, type Capability, contributes } from '@dxos/app-framework';
 
 /**
@@ -18,10 +18,10 @@ import { Capabilities, type Capability, contributes } from '@dxos/app-framework'
 export default (): Capability<any>[] => [
   contributes(
     Capabilities.AiModelResolver,
-    AiServiceRouter.LMStudioResolver.pipe(
+    LMStudioResolver.LMStudioResolver.pipe(
       Layer.provide(
         OpenAiClient.layer({
-          apiUrl: AiServiceRouter.DEFAULT_LMSTUDIO_ENDPOINT,
+          apiUrl: LMStudioResolver.DEFAULT_LMSTUDIO_ENDPOINT,
         }),
       ),
       Layer.provide(FetchHttpClient.layer),

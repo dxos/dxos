@@ -9,21 +9,28 @@ import type * as ConfigError from 'effect/ConfigError';
 import * as Layer from 'effect/Layer';
 import * as Redacted from 'effect/Redacted';
 
-import { type AiService } from '../AiService';
-import * as AiServiceRouter from '../AiServiceRouter';
+import * as AiModelResolver from '../AiModelResolver';
+import type * as AiService from '../AiService';
+import { AnthropicResolver, LMStudioResolver } from '../resolvers';
 
 import { MemoizedAiService } from './memoization';
 import { tapHttpErrors } from './tap';
 
-export type AiServiceLayer = Layer.Layer<AiService, ConfigError.ConfigError, never>;
+export type AiServiceLayer = Layer.Layer<AiService.AiService, ConfigError.ConfigError, never>;
 
 // TODO(burdon): Adapt Config to @dxos/config.
+
+export const TestRouter = AiModelResolver.AiModelResolver.buildAiService.pipe(
+  Layer.provide(AnthropicResolver.AnthropicResolver),
+  Layer.provide(LMStudioResolver.LMStudioResolver),
+  // Layer.provide(OpenAiResolver.OpenAiResolver),
+);
 
 /**
  * AiService that directly accesses remote cloud providers.
  * API keys are taken from environment variables.
  */
-export const DirectAiServiceLayer: AiServiceLayer = AiServiceRouter.AiServiceRouter.pipe(
+export const DirectAiServiceLayer: AiServiceLayer = TestRouter.pipe(
   Layer.provide(
     AnthropicClient.layerConfig({
       apiKey: Config.redacted('ANTHROPIC_API_KEY').pipe(Config.withDefault(Redacted.make('not-a-real-key'))),
@@ -36,7 +43,7 @@ export const DirectAiServiceLayer: AiServiceLayer = AiServiceRouter.AiServiceRou
 /**
  * Uses local EDGE AI-service instance (running on `localhost:8788`).
  */
-export const LocalEdgeAiServiceLayer: AiServiceLayer = AiServiceRouter.AiServiceRouter.pipe(
+export const LocalEdgeAiServiceLayer: AiServiceLayer = TestRouter.pipe(
   Layer.provide(
     AnthropicClient.layerConfig({
       apiUrl: Config.succeed('http://localhost:8788/provider/anthropic'),
@@ -48,7 +55,7 @@ export const LocalEdgeAiServiceLayer: AiServiceLayer = AiServiceRouter.AiService
 /**
  * Uses hosted EDGE AI-service instance.
  */
-export const RemoteEdgeAiServiceLayer: AiServiceLayer = AiServiceRouter.AiServiceRouter.pipe(
+export const RemoteEdgeAiServiceLayer: AiServiceLayer = TestRouter.pipe(
   Layer.provide(
     AnthropicClient.layerConfig({
       apiUrl: Config.succeed('https://ai-service.dxos.workers.dev/provider/anthropic'),

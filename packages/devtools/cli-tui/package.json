@@ -41,6 +41,7 @@
     "@effect/ai": "0.29.1",
     "@effect/ai-anthropic": "0.21.1",
     "@effect/ai-openai": "^0.32.1",
+    "@effect/platform": "^0.92.1",
     "blessed": "^0.1.81",
     "jsdom": "^27.0.0",
     "node-fetch": "^2.6.0"

@@ -10,8 +10,8 @@ import * as Effect from 'effect/Effect';
 import * as Function from 'effect/Function';
 import * as Layer from 'effect/Layer';
 
-import { AiService, ToolExecutionService, ToolResolverService } from '@dxos/ai';
-import * as AiServiceRouter from '@dxos/ai/AiServiceRouter';
+import { AiModelResolver, AiService, ToolExecutionService, ToolResolverService } from '@dxos/ai';
+import { AnthropicResolver, LMStudioResolver } from '@dxos/ai/resolvers';
 import { tapHttpErrors } from '@dxos/ai/testing';
 import { AiSession } from '@dxos/assistant';
 import { Database } from '@dxos/echo';
@@ -24,12 +24,18 @@ import { makeGraphWriterHandler, makeGraphWriterToolkit } from './graph';
 
 // import { type EchoTestBuilder } from '@dxos/echo-db/testing';
 
+const TestRouter = AiModelResolver.AiModelResolver.buildAiService.pipe(
+  Layer.provide(AnthropicResolver.AnthropicResolver),
+  Layer.provide(LMStudioResolver.LMStudioResolver),
+  // Layer.provide(OpenAiResolver.OpenAiResolver),
+);
+
 const TestLayer = Function.pipe(
   AiService.model('@anthropic/claude-3-5-sonnet-20241022'),
   Layer.provideMerge(Database.Service.notAvailable),
   Layer.provideMerge(ToolResolverService.layerEmpty),
   Layer.provideMerge(ToolExecutionService.layerEmpty),
-  Layer.provide(AiServiceRouter.AiServiceRouter),
+  Layer.provide(TestRouter),
   Layer.provide(
     AnthropicClient.layerConfig({
       apiKey: Config.redacted('ANTHROPIC_API_KEY'),

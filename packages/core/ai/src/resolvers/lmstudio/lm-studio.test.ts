@@ -18,9 +18,10 @@ import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { Message } from '@dxos/types';
 
-import { parseResponse } from './AiParser';
-import { preprocessPrompt } from './AiPreprocessor';
-import { DEFAULT_LMSTUDIO_ENDPOINT } from './AiServiceRouter';
+import { parseResponse } from '../../AiParser';
+import { preprocessPrompt } from '../../AiPreprocessor';
+
+import { DEFAULT_LMSTUDIO_ENDPOINT } from './LMStudioResolver';
 
 /**
  * To start the LM Studio server:

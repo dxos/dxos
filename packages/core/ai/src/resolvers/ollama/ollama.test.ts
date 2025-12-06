@@ -17,12 +17,12 @@ import { TestHelpers } from '@dxos/effect/testing';
 import { log } from '@dxos/log';
 import { Message } from '@dxos/types';
 
-import { parseResponse } from './AiParser';
-import { preprocessPrompt } from './AiPreprocessor';
-import { tapHttpErrors } from './testing';
-import { processMessages } from './testing';
+import { parseResponse } from '../../AiParser';
+import { preprocessPrompt } from '../../AiPreprocessor';
+import { tapHttpErrors } from '../../testing';
+import { processMessages } from '../../testing';
 
-const OLLAMA_ENDPOINT = 'http://localhost:11434/v1';
+import { DEFAULT_OLLAMA_ENDPOINT } from './OllamaResolver';
 
 describe('ollama', () => {
   it.effect(
@@ -57,7 +57,7 @@ describe('ollama', () => {
         Layer.provide(
           OpenAiLanguageModel.model('deepseek-r1' as any),
           OpenAiClient.layer({
-            apiUrl: OLLAMA_ENDPOINT,
+            apiUrl: DEFAULT_OLLAMA_ENDPOINT,
           }).pipe(Layer.provide(FetchHttpClient.layer)),
         ),
       ),
@@ -83,7 +83,7 @@ describe('ollama', () => {
         Layer.provide(
           OpenAiLanguageModel.model('qwen2.5:14b' as any),
           OpenAiClient.layer({
-            apiUrl: OLLAMA_ENDPOINT,
+            apiUrl: DEFAULT_OLLAMA_ENDPOINT,
             transformClient: tapHttpErrors,
           }).pipe(Layer.provide(FetchHttpClient.layer)),
         ),

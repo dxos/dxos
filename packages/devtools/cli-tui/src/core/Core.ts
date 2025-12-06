@@ -4,6 +4,7 @@
 
 import * as Tool from '@effect/ai/Tool';
 import * as Toolkit from '@effect/ai/Toolkit';
+import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
 import * as Cause from 'effect/Cause';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
@@ -12,7 +13,15 @@ import * as Layer from 'effect/Layer';
 import * as Runtime from 'effect/Runtime';
 import * as Schema from 'effect/Schema';
 
-import { AiService, DEFAULT_EDGE_MODEL, type ToolExecutionService, type ToolResolverService } from '@dxos/ai';
+import {
+  AiModelResolver,
+  AiService,
+  DEFAULT_EDGE_MODEL,
+  DEFAULT_OLLAMA_MODEL,
+  type ToolExecutionService,
+  type ToolResolverService,
+} from '@dxos/ai';
+import { OllamaResolver } from '@dxos/ai/resolvers';
 import { AiServiceTestingPreset } from '@dxos/ai/testing';
 import {
   AiConversation,
@@ -51,6 +60,8 @@ const TestToolkit = Toolkit.make(
 // TODO(burdon): Create minimal toolkit.
 const toolkit = Toolkit.merge(TestToolkit) as Toolkit.Toolkit<any>;
 
+const DEFAULT_MODEL = DEFAULT_EDGE_MODEL;
+
 const TestServicesLayer = Layer.mergeAll(
   TracingService.layerNoop,
   AiServiceTestingPreset('direct'),
@@ -60,15 +71,36 @@ const TestServicesLayer = Layer.mergeAll(
   }).pipe(Layer.provideMerge(TracingService.layerNoop)),
 );
 
-// TODO(burdon): Configure for ollama.
-const DEFAULT_MODEL = DEFAULT_EDGE_MODEL;
-
 export const TestLayer: Layer.Layer<AiChatServices, never, never> = Layer.mergeAll(
   AiService.model(DEFAULT_MODEL),
   makeToolResolverFromFunctions([], toolkit),
   makeToolExecutionServiceFromFunctions(toolkit, toolkit.toLayer({}) as any),
   CredentialsService.layerFromDatabase(),
 ).pipe(Layer.provideMerge(TestServicesLayer), Layer.orDie);
+
+const OllamaAiServiceLayer = AiModelResolver.AiModelResolver.buildAiService.pipe(
+  Layer.provide(OllamaResolver.OllamaResolver()),
+  Layer.provide(FetchHttpClient.layer),
+);
+
+export const OllamaServicesLayer = Layer.mergeAll(
+  TracingService.layerNoop,
+  OllamaAiServiceLayer,
+  TestDatabaseLayer({}),
+  FunctionInvocationServiceLayerTestMocked({
+    functions: [],
+  }).pipe(Layer.provideMerge(TracingService.layerNoop)),
+);
+
+/**
+ * Layer that configures the Ollama AiServiceProvider.
+ */
+export const OllamaLayer: Layer.Layer<AiChatServices, never, never> = Layer.mergeAll(
+  AiService.model(DEFAULT_OLLAMA_MODEL),
+  makeToolResolverFromFunctions([], toolkit),
+  makeToolExecutionServiceFromFunctions(toolkit, toolkit.toLayer({}) as any),
+  CredentialsService.layerFromDatabase(),
+).pipe(Layer.provideMerge(OllamaServicesLayer), Layer.orDie);
 
 /**
  * CLI internal state.
