@@ -45,7 +45,6 @@ export class App {
   private _isStreaming = false;
   private _updateTimeout: NodeJS.Timeout | null = null;
   private _indicatorInterval: NodeJS.Timeout | null = null;
-  private _indicatorPhase = 0;
   private _identityDid = '';
 
   constructor(private _core: Core.Core) {}
@@ -405,12 +404,11 @@ export class App {
    * Start the streaming indicator animation.
    */
   private _startIndicator(): void {
-    this._indicatorPhase = 0;
-
+    let phase = 0;
     const frames = ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏'].map((c) => c + ' Processing');
     this._indicatorInterval = setInterval(() => {
-      this._indicatorPhase = (this._indicatorPhase + 1) % frames.length;
-      this._indicator.setContent(`{cyan-fg}${frames[this._indicatorPhase]}{/}`);
+      phase = (phase + 1) % frames.length;
+      this._indicator.setContent(`{cyan-fg}${frames[phase]}{/}`);
       this._screen.render();
     }, 80);
   }
