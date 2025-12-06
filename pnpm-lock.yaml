@@ -4587,12 +4587,30 @@ importers:
 
   packages/devtools/cli-tui:
     dependencies:
+      '@dxos/assistant':
+        specifier: workspace:*
+        version: link:../../core/assistant
+      '@dxos/assistant-toolkit':
+        specifier: workspace:*
+        version: link:../../core/assistant-toolkit
+      '@dxos/blueprints':
+        specifier: workspace:*
+        version: link:../../core/blueprints
       '@dxos/cli-base':
         specifier: workspace:*
         version: link:../cli-base
       '@dxos/client':
         specifier: workspace:*
         version: link:../../sdk/client
+      '@dxos/functions':
+        specifier: workspace:*
+        version: link:../../core/functions
+      '@dxos/schema':
+        specifier: workspace:*
+        version: link:../../sdk/schema
+      '@dxos/types':
+        specifier: workspace:*
+        version: link:../../sdk/types
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util

@@ -18,7 +18,25 @@
       "path": "../../common/util"
     },
     {
+      "path": "../../core/assistant"
+    },
+    {
+      "path": "../../core/assistant-toolkit"
+    },
+    {
+      "path": "../../core/blueprints"
+    },
+    {
+      "path": "../../core/functions"
+    },
+    {
       "path": "../../sdk/client"
+    },
+    {
+      "path": "../../sdk/schema"
+    },
+    {
+      "path": "../../sdk/types"
     },
     {
       "path": "../cli-base"
