@@ -3,6 +3,7 @@
 //
 
 import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
+import * as HttpClient from '@effect/platform/HttpClient';
 import { Command } from '@tauri-apps/plugin-shell';
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
@@ -76,8 +77,7 @@ const OllamaSidecarModelResolver: Layer.Layer<AiModelResolver.AiModelResolver, n
       const { endpoint } = yield* OllamaSidecar;
       return OllamaResolver.make({
         endpoint,
-        // TODO(burdon): New adapter.
-        // transformClient: HttpClient.withTracerPropagation(false),
+        transformClient: HttpClient.withTracerPropagation(false),
       });
     }),
   ).pipe(Layer.provide(FetchHttpClient.layer));

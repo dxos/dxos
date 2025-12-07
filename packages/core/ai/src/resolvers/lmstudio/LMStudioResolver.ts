@@ -4,11 +4,12 @@
 
 import type * as LanguageModel from '@effect/ai/LanguageModel';
 import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
+import type * as HttpClient from '@effect/platform/HttpClient';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
 import * as AiModelResolver from '../../AiModelResolver';
-import * as ChatCompletions from '../../ChatCompletionsLanguageModel';
+import * as ChatCompletionsLanguageModel from '../../ChatCompletionsLanguageModel';
 import { type ModelName } from '../../defs';
 import { type AiModelNotAvailableError } from '../../errors';
 
@@ -23,17 +24,21 @@ export const DEFAULT_LMSTUDIO_ENDPOINT = 'http://localhost:1234';
 
 export const make = ({
   endpoint = DEFAULT_LMSTUDIO_ENDPOINT,
+  transformClient,
 }: {
   readonly endpoint?: string;
+  readonly transformClient?: (client: HttpClient.HttpClient) => HttpClient.HttpClient;
 } = {}) => {
   // Create the base layers that provide ChatCompletionsClient.
-  const clientLayer = ChatCompletions.clientLayer({
+  const clientLayer = ChatCompletionsLanguageModel.clientLayer({
     baseUrl: endpoint,
     apiFormat: 'openai',
+    transformClient,
   }).pipe(Layer.provide(FetchHttpClient.layer));
 
   // Create model layers with client dependency provided.
-  const createModelLayer = (model: string) => ChatCompletions.layer(model).pipe(Layer.provide(clientLayer));
+  const createModelLayer = (model: string) =>
+    ChatCompletionsLanguageModel.layer(model).pipe(Layer.provide(clientLayer));
 
   return AiModelResolver.AiModelResolver.fromModelMap(
     'LM Studio',

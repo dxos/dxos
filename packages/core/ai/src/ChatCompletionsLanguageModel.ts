@@ -36,6 +36,7 @@ export type ApiFormat = 'ollama' | 'openai';
 export type ChatCompletionsClientConfig = {
   readonly baseUrl: string;
   readonly apiFormat: ApiFormat;
+  readonly transformClient?: (client: HttpClient.HttpClient) => HttpClient.HttpClient;
 };
 
 /**
@@ -431,7 +432,8 @@ export const clientLayer = (
   Layer.effect(
     ChatCompletionsClient,
     Effect.gen(function* () {
-      const httpClient = yield* HttpClient.HttpClient;
+      const baseClient = yield* HttpClient.HttpClient;
+      const httpClient = config.transformClient ? config.transformClient(baseClient) : baseClient;
       return { config, httpClient };
     }),
   );

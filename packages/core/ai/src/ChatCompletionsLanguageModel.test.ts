@@ -13,12 +13,12 @@ import * as Stream from 'effect/Stream';
 import { TestHelpers } from '@dxos/effect/testing';
 import { log } from '@dxos/log';
 
-import * as ChatCompletions from './ChatCompletionsLanguageModel';
+import * as ChatCompletionsLanguageModel from './ChatCompletionsLanguageModel';
 
 type ProviderConfig = {
   name: string;
   endpoint: string;
-  apiFormat: ChatCompletions.ApiFormat;
+  apiFormat: ChatCompletionsLanguageModel.ApiFormat;
   model: string;
 };
 
@@ -41,11 +41,11 @@ const providers: ProviderConfig[] = [
  * Create a test layer for a provider.
  */
 const createLayer = (config: ProviderConfig) => {
-  const clientLayer = ChatCompletions.clientLayer({
+  const clientLayer = ChatCompletionsLanguageModel.clientLayer({
     baseUrl: config.endpoint,
     apiFormat: config.apiFormat,
   }).pipe(Layer.provide(FetchHttpClient.layer));
-  return ChatCompletions.layer(config.model).pipe(Layer.provide(clientLayer));
+  return ChatCompletionsLanguageModel.layer(config.model).pipe(Layer.provide(clientLayer));
 };
 
 describe('ChatCompletionsLanguageModel', () => {
