@@ -14,7 +14,7 @@ export default (context: PluginContext) => {
   // TODO(dmaretskyi): Extract function to reduce them.
   const combinedLayer = resolvers.reduce(
     (acc, resolver) => resolver.pipe(Layer.provide(acc)),
-    AiModelResolver.AiModelResolver.fromModelMap(Effect.succeed({})), // Empty resolver as fallback.
+    AiModelResolver.AiModelResolver.fromModelMap('Fallback', Effect.succeed({})), // Empty resolver as fallback.
   );
 
   return [

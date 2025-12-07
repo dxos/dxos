@@ -31,6 +31,7 @@ export class Core extends Context {
 
   constructor(
     private _services: Runtime.Runtime<AiChatServices>,
+    private _resolverName: string,
     private _model: ModelName,
   ) {
     super();
@@ -42,6 +43,10 @@ export class Core extends Context {
 
   get model(): ModelName {
     return this._model;
+  }
+
+  get resolverName(): string {
+    return this._resolverName;
   }
 
   get conversation(): AiConversation | undefined {

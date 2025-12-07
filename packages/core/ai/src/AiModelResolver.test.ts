@@ -14,15 +14,17 @@ import * as Layer from 'effect/Layer';
 
 import * as AiModelResolver from './AiModelResolver';
 import * as AiService from './AiService';
+import { type ModelName } from './defs';
 import { AiModelNotAvailableError } from './errors';
 import * as LMStudioResolver from './resolvers/lmstudio/LMStudioResolver';
 
 const TestRouter = AiModelResolver.AiModelResolver.buildAiService.pipe(
   Layer.provide(
     AiModelResolver.AiModelResolver.resolver(
+      'Anthropic',
       Effect.gen(function* () {
         const claudeSonnet = yield* AnthropicLanguageModel.model('claude-3-5-sonnet-20241022');
-        return (name) => {
+        return (name: ModelName) => {
           switch (name) {
             case '@anthropic/claude-3-5-sonnet-20241022':
               return claudeSonnet;
@@ -35,6 +37,7 @@ const TestRouter = AiModelResolver.AiModelResolver.buildAiService.pipe(
   ),
   Layer.provide(
     AiModelResolver.AiModelResolver.resolver(
+      'LM Studio',
       Effect.gen(function* () {
         const gemma = yield* OpenAiLanguageModel.model('google/gemma-3-27b').pipe(
           Effect.provide(
@@ -44,7 +47,7 @@ const TestRouter = AiModelResolver.AiModelResolver.buildAiService.pipe(
           ),
         );
 
-        return (name) => {
+        return (name: ModelName) => {
           switch (name) {
             case '@google/gemma-3-27b':
               return gemma;

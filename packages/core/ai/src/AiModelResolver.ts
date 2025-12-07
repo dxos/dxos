@@ -22,6 +22,7 @@ import { AiModelNotAvailableError } from './errors';
 export class AiModelResolver extends Context.Tag('@dxos/ai/AiModelResolver')<
   AiModelResolver,
   {
+    readonly name: string;
     readonly model: (model: ModelName) => Layer.Layer<LanguageModel.LanguageModel, AiModelNotAvailableError, never>;
   }
 >() {
@@ -36,6 +37,7 @@ export class AiModelResolver extends Context.Tag('@dxos/ai/AiModelResolver')<
   );
 
   static resolver = <R>(
+    name: string,
     impl: Effect.Effect<
       (model: ModelName) => Layer.Layer<LanguageModel.LanguageModel, AiModelNotAvailableError, never>,
       never,
@@ -48,13 +50,14 @@ export class AiModelResolver extends Context.Tag('@dxos/ai/AiModelResolver')<
         const getModel = yield* impl;
         const upstream = yield* Effect.serviceOption(AiModelResolver);
         return {
-          model: (name) =>
-            getModel(name).pipe(
+          name,
+          model: (modelName) =>
+            getModel(modelName).pipe(
               Layer.catchAll(() => {
                 if (Option.isSome(upstream)) {
-                  return upstream.value.model(name);
+                  return upstream.value.model(modelName);
                 } else {
-                  return Layer.fail(new AiModelNotAvailableError(name));
+                  return Layer.fail(new AiModelNotAvailableError(modelName));
                 }
               }),
             ),
@@ -63,6 +66,7 @@ export class AiModelResolver extends Context.Tag('@dxos/ai/AiModelResolver')<
     );
 
   static fromModelMap = <R>(
+    name: string,
     models: Effect.Effect<
       Partial<Record<ModelName, Layer.Layer<LanguageModel.LanguageModel, AiModelNotAvailableError, never>>>,
       never,
@@ -70,8 +74,12 @@ export class AiModelResolver extends Context.Tag('@dxos/ai/AiModelResolver')<
     >,
   ): Layer.Layer<AiModelResolver, never, R> =>
     AiModelResolver.resolver(
+      name,
       models.pipe(
-        Effect.map((models) => (name: ModelName) => models[name] ?? Layer.fail(new AiModelNotAvailableError(name))),
+        Effect.map(
+          (models) => (modelName: ModelName) =>
+            models[modelName] ?? Layer.fail(new AiModelNotAvailableError(modelName)),
+        ),
       ),
     );
 }
