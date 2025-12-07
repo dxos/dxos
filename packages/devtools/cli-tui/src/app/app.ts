@@ -197,17 +197,17 @@ export class App {
       },
     });
 
-    const banner = BANNER2.split('\n');
+    const banner = BANNER1.split('\n');
     this._logo = blessed.box({
       top: `50%-${Math.floor((banner.length + options.prompt + 2) / 2)}`,
       left: 'center',
       width: banner[0].length,
-      height: banner.length,
+      height: banner.length + 1,
       tags: true,
       style: {
         fg: 'green-fg',
       },
-      content: `{green-fg}${banner.join('\n')}{/}`,
+      content: `{green-fg}${banner.join('\n')}{/}\n{|}{white-fg}${VERSION}{/}`,
     });
 
     // Add all elements to screen.
@@ -486,18 +486,7 @@ const VERSION = '0.0.1';
 
 // https://textfancy.com/text-art/
 
-const BANNER = trim`
-
-██████╗ ██╗  ██╗ ██████╗ ███████╗
-██╔══██╗╚██╗██╔╝██╔═══██╗██╔════╝
-██║  ██║ ╚███╔╝ ██║   ██║███████╗
-██║  ██║ ██╔██╗ ██║   ██║╚════██║
-██████╔╝██╔╝ ██╗╚██████╔╝███████║
-╚═════╝ ╚═╝  ╚═╝ ╚═════╝ ╚══════╝
-
-`;
-
-const BANNER2 = trim`
+const BANNER1 = trim`
 
 ┏━━━┓━┓┏━┓━━━┓━━━┓
 ┗┓┏┓┃┓┗┛┏┛┏━┓┃┏━┓┃
@@ -505,5 +494,16 @@ const BANNER2 = trim`
 ╋┃┃┃┃┏┛┗┓╋┃╋┃┃━━┓┃
 ┏┛┗┛┃┛┏┓┗┓┗━┛┃┗━┛┃
 ┗━━━┛━┛┗━┛━━━┛━━━┛
+
+`;
+
+const BANNER2 = trim`
+
+██████╗ ██╗  ██╗ ██████╗ ███████╗ 
+██╔══██╗╚██╗██╔╝██╔═══██╗██╔════╝ 
+██║  ██║ ╚███╔╝ ██║   ██║███████╗ 
+██║  ██║ ██╔██╗ ██║   ██║╚════██║ 
+██████╔╝██╔╝ ██╗╚██████╔╝███████║ 
+╚═════╝ ╚═╝  ╚═╝ ╚═════╝ ╚══════╝ 
 
 `;
