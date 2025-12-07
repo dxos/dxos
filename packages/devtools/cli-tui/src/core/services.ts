@@ -47,6 +47,7 @@ const TestToolkit = Toolkit.make(
 // TODO(burdon): Create minimal toolkit.
 const toolkit = Toolkit.merge(TestToolkit) as Toolkit.Toolkit<any>;
 
+// TODO(burdon): Consolidate with @dxos/ai.
 export const BaseLayer = Layer.mergeAll(
   makeToolResolverFromFunctions([], toolkit),
   makeToolExecutionServiceFromFunctions(toolkit, toolkit.toLayer({}) as any),

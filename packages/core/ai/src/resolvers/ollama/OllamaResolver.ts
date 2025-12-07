@@ -16,10 +16,10 @@ import { type AiModelNotAvailableError } from '../../errors';
 export const DEFAULT_OLLAMA_ENDPOINT = 'http://localhost:11434';
 
 export const make = ({
-  server = DEFAULT_OLLAMA_ENDPOINT,
+  endpoint = DEFAULT_OLLAMA_ENDPOINT,
   transformClient,
 }: {
-  readonly server?: string;
+  readonly endpoint?: string;
   readonly transformClient?: (client: HttpClient.HttpClient) => HttpClient.HttpClient;
 } = {}) =>
   AiModelResolver.AiModelResolver.fromModelMap(
@@ -32,7 +32,7 @@ export const make = ({
     }).pipe(
       Effect.provide(
         OpenAiClient.layer({
-          apiUrl: server + '/v1',
+          apiUrl: new URL('/v1', endpoint).toString(),
           transformClient,
         }),
       ),

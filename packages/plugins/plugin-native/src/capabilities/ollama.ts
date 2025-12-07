@@ -76,7 +76,7 @@ const OllamaSidecarModelResolver: Layer.Layer<AiModelResolver.AiModelResolver, n
     Effect.gen(function* () {
       const { endpoint } = yield* OllamaSidecar;
       return OllamaResolver.make({
-        server: endpoint,
+        endpoint,
         transformClient: HttpClient.withTracerPropagation(false),
       });
     }),

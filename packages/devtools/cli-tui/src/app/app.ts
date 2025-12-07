@@ -6,7 +6,7 @@ import blessed, { type Widgets } from 'blessed';
 import * as Effect from 'effect/Effect';
 
 import { GenerationObserver } from '@dxos/assistant';
-import { safeParseJson } from '@dxos/util';
+import { safeParseJson, trim } from '@dxos/util';
 
 import { type Core } from '../core';
 
@@ -41,6 +41,7 @@ export class App {
   private _inputBox!: Widgets.TextareaElement;
   private _indicator!: Widgets.BoxElement;
   private _status!: Widgets.BoxElement;
+  private _logo!: Widgets.BoxElement;
 
   private _messages: string[] = [];
   private _isStreaming = false;
@@ -181,6 +182,7 @@ export class App {
       height: 1,
       width: 12,
       tags: true,
+      content: '{grey-fg}Ctrl-c{/}',
     });
 
     // Status.
@@ -195,11 +197,25 @@ export class App {
       },
     });
 
+    const banner = BANNER2.split('\n');
+    this._logo = blessed.box({
+      top: `50%-${Math.floor((banner.length + options.prompt + 2) / 2)}`,
+      left: 'center',
+      width: banner[0].length,
+      height: banner.length,
+      tags: true,
+      style: {
+        fg: 'green-fg',
+      },
+      content: `{green-fg}${banner.join('\n')}{/}`,
+    });
+
     // Add all elements to screen.
     this._screen.append(this._messageBox);
     this._screen.append(this._inputBox);
     this._screen.append(this._indicator);
     this._screen.append(this._status);
+    this._screen.append(this._logo);
   }
 
   /**
@@ -311,6 +327,11 @@ export class App {
     const prompt = value.trim();
     if (!prompt || this._isStreaming) {
       return;
+    }
+
+    // Hide logo on first request.
+    if (this._logo.visible) {
+      this._logo.hide();
     }
 
     // Add user message.
@@ -454,10 +475,35 @@ export class App {
 }
 
 // TODO(burdon): Factor out (see error log in LM Studio Developer tab).
-//  curl http://localhost:1234/v1/models
 const parseError = (err: any): string | undefined => {
   const str = String(err);
   if (str.toLowerCase().includes('error loading model')) {
     return 'Model not found';
   }
 };
+
+const VERSION = '0.0.1';
+
+// https://textfancy.com/text-art/
+
+const BANNER = trim`
+
+██████╗ ██╗  ██╗ ██████╗ ███████╗
+██╔══██╗╚██╗██╔╝██╔═══██╗██╔════╝
+██║  ██║ ╚███╔╝ ██║   ██║███████╗
+██║  ██║ ██╔██╗ ██║   ██║╚════██║
+██████╔╝██╔╝ ██╗╚██████╔╝███████║
+╚═════╝ ╚═╝  ╚═╝ ╚═════╝ ╚══════╝
+
+`;
+
+const BANNER2 = trim`
+
+┏━━━┓━┓┏━┓━━━┓━━━┓
+┗┓┏┓┃┓┗┛┏┛┏━┓┃┏━┓┃
+╋┃┃┃┃┗┓┏┛╋┃╋┃┃┗━━┓
+╋┃┃┃┃┏┛┗┓╋┃╋┃┃━━┓┃
+┏┛┗┛┃┛┏┓┗┓┗━┛┃┗━┛┃
+┗━━━┛━┛┗━┛━━━┛━━━┛
+
+`;
