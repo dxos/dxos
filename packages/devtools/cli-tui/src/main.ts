@@ -36,18 +36,18 @@ const getLayerAndModel = (
   model?: string,
 ): { layer: Layer.Layer<Core.AiChatServices, never, never>; model: ModelName } => {
   switch (provider) {
+    case 'lmstudio': {
+      const modelName = (model ?? Core.DEFAULT_LMSTUDIO_MODEL) as ModelName;
+      return { layer: Core.createLMStudioLayer(modelName), model: modelName };
+    }
     case 'ollama': {
       const modelName = (model ?? Core.DEFAULT_OLLAMA_MODEL) as ModelName;
       return { layer: Core.createOllamaLayer(modelName), model: modelName };
     }
-    case 'edge': {
+    case 'edge':
+    default: {
       const modelName = (model ?? Core.DEFAULT_EDGE_MODEL) as ModelName;
       return { layer: Core.createTestLayer(modelName), model: modelName };
-    }
-    case 'lmstudio':
-    default: {
-      const modelName = (model ?? Core.DEFAULT_LMSTUDIO_MODEL) as ModelName;
-      return { layer: Core.createLMStudioLayer(modelName), model: modelName };
     }
   }
 };
