@@ -15,7 +15,7 @@ import { OllamaResolver } from '@dxos/ai/resolvers';
 import { Capabilities, type Capability, type PluginContext, contributes } from '@dxos/app-framework';
 import { log } from '@dxos/log';
 
-// Running ollama on non-standard port.
+// NOTE: Running ollama on non-standard port (config Tauri).
 const OLLAMA_HOST = 'http://localhost:21434';
 
 export default (_context: PluginContext): Capability<any> => {
