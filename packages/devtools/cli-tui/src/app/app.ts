@@ -8,6 +8,7 @@ import * as Effect from 'effect/Effect';
 import { GenerationObserver } from '@dxos/assistant';
 import { safeParseJson, trim } from '@dxos/util';
 
+import { version } from '../../package.json';
 import { type Core } from '../core';
 
 // Suppress stderr to hide terminfo warnings; MUST be before importing blessed.
@@ -197,7 +198,7 @@ export class App {
       },
     });
 
-    const banner = BANNER1.split('\n');
+    const banner = BANNER.split('\n');
     this._logo = blessed.box({
       top: `50%-${Math.floor((banner.length + options.prompt + 2) / 2)}`,
       left: 'center',
@@ -207,7 +208,7 @@ export class App {
       style: {
         fg: 'green-fg',
       },
-      content: `{green-fg}${banner.join('\n')}{/}\n{|}{white-fg}${VERSION}{/}`,
+      content: `{green-fg}${banner.join('\n')}{/}\n{|}{white-fg}${version}{/}`,
     });
 
     // Add all elements to screen.
@@ -390,10 +391,35 @@ export class App {
    * Update the message display.
    */
   private _updateMessages(): void {
-    const content = this._messages.join('\n');
+    const content = this._formatContent(this._messages.join('\n'));
     this._messageBox.setContent(content);
     this._messageBox.scrollTo(this._messages.length);
     this._screen.render();
+  }
+
+  /**
+   * Format content with syntax highlighting for fenced code blocks.
+   */
+  private _formatContent(content: string): string {
+    const lines = content.split('\n');
+    const result: string[] = [];
+    let inCodeBlock = false;
+    const width = (this._messageBox.width as number) - 3; // Account for padding.
+
+    for (const line of lines) {
+      if (line.startsWith('```')) {
+        inCodeBlock = !inCodeBlock;
+        const paddedLine = line.padEnd(width);
+        result.push(`{black-bg}{grey-fg}${paddedLine}{/}`);
+      } else if (inCodeBlock) {
+        const paddedLine = line.padEnd(width);
+        result.push(`{black-bg}${paddedLine}{/}`);
+      } else {
+        result.push(line);
+      }
+    }
+
+    return result.join('\n');
   }
 
   /**
@@ -485,11 +511,9 @@ const parseError = (err: any): string | undefined => {
   }
 };
 
-const VERSION = '0.0.1';
-
 // https://textfancy.com/text-art/
 
-const BANNER1 = trim`
+const BANNER = trim`
 
 ┏━━━┓━┓┏━┓━━━┓━━━┓
 ┗┓┏┓┃┓┗┛┏┛┏━┓┃┏━┓┃
@@ -500,13 +524,24 @@ const BANNER1 = trim`
 
 `;
 
-const BANNER2 = trim`
+const _BANNER2 = trim`
 
-██████╗ ██╗  ██╗ ██████╗ ███████╗ 
-██╔══██╗╚██╗██╔╝██╔═══██╗██╔════╝ 
-██║  ██║ ╚███╔╝ ██║   ██║███████╗ 
-██║  ██║ ██╔██╗ ██║   ██║╚════██║ 
-██████╔╝██╔╝ ██╗╚██████╔╝███████║ 
-╚═════╝ ╚═╝  ╚═╝ ╚═════╝ ╚══════╝ 
+┏━━━┓━┓┏━┓━━━┓━━━┓
+┗┓┏┓┃┓┗┛┏┃┏━┓┃┏━┓┃
+ ┃┃┃┃┗┓┏┛┃┃ ┃┃┗━━┓
+ ┃┃┃┃┏┛┗┓┃┃ ┃┃━━┓┃
+┏┛┗┛┃┛┏┓┗┃┗━┛┃┗━┛┃
+┗━━━┛━┛┗━┛━━━┛━━━┛
+
+`;
+
+const _BANNER3 = trim`
+
+██████╗ ██╗  ██╗   ██████╗ ███████╗ 
+██╔══██╗╚██╗██╔╝  ██╔═══██╗██╔════╝ 
+██║  ██║ ╚███╔╝   ██║   ██║███████╗ 
+██║  ██║ ██╔██╗   ██║   ██║╚════██║ 
+██████╔╝██╔╝ ██╗  ╚██████╔╝███████║ 
+╚═════╝ ╚═╝  ╚═╝   ╚═════╝ ╚══════╝ 
 
 `;
