@@ -99,7 +99,7 @@ export class App {
   /**
    * Create the blessed screen.
    */
-  private _createScreen(options: { prompt: number } = { prompt: 5 }): void {
+  private _createScreen(options: { prompt: number } = { prompt: 4 }): void {
     // Screen.
     this._screen = blessed.screen({
       smartCSR: true,
@@ -544,4 +544,40 @@ const _BANNER3 = trim`
 ██████╔╝██╔╝ ██╗  ╚██████╔╝███████║ 
 ╚═════╝ ╚═╝  ╚═╝   ╚═════╝ ╚══════╝ 
 
+`;
+
+// https://www.asciiart.eu/image-to-ascii
+
+const _BANNER4 = trim`
+                                                         
+ AAAA                                               AAAA 
+  EAAAAA                                         AAAAAE  
+    AEAAAAA                                   AAAAEAE    
+     AAE EAAAA                             AAAAE AAA     
+      EAAA  AAAAA                       AAAEA  AAAE      
+        AAA    AEAAA                 AAAAA    AEA        
+         AAA      AAAAA           AAAAE      AAA         
+          EAAE       EAAAE     AAAEA       EAEA          
+            AAA         AAAAAAAEA         AAA            
+             AAA          EAAEA          AAA             
+              EAAA       AAAAAAA       AAEE              
+                AAA     AAEAEAEAA     AAA                
+                 AAA  AAEA AAA AAAA  AAA                 
+                  EAAAAA   AEA   AAAAEE                  
+                    AEA    AAA    AEA                    
+                  EAAAAA   EAA   AAAAAE                  
+                 AAA  AAAA AAA AEAE  AAA                 
+                AAA     AAEAEAEAA     AAA                
+              AAEA       AAAAAAA       AEAE              
+             AAA          EAAAE          AAA             
+            AAE         AAAAAEAAA         AAA            
+          EAAE       AAAAA     AAAAA       EAAA          
+         AAA      AAAAA           AAAAA      AAA         
+        AAE    AAAAE                 AAAAA    EAA        
+      AAEA  AAAEA                       EAAAA  AAAA      
+     AAA EAAEA                             AAAAE AAA     
+    AEAEAAA                                   AAAEAEA    
+  EAAAAA                                         AAAAAE  
+ EAAA                                               AAAE 
+                                                         
 `;

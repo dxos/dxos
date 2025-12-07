@@ -24,8 +24,11 @@ import { LMStudioResolver, OllamaResolver } from '@dxos/ai/resolvers';
 import { AiServiceTestingPreset } from '@dxos/ai/testing';
 import { makeToolExecutionServiceFromFunctions, makeToolResolverFromFunctions } from '@dxos/assistant';
 import { type Database } from '@dxos/echo';
+import { defineFunction } from '@dxos/functions';
 import { CredentialsService, type FunctionInvocationService, type QueueService, TracingService } from '@dxos/functions';
 import { FunctionInvocationServiceLayerTestMocked, TestDatabaseLayer } from '@dxos/functions-runtime/testing';
+
+export { DEFAULT_EDGE_MODEL, DEFAULT_LMSTUDIO_MODEL, DEFAULT_OLLAMA_MODEL };
 
 // TODO(burdon): Factor out (see plugin-assistant/processor.ts)
 export type AiChatServices =
@@ -41,7 +44,7 @@ export type AiChatServices =
 
 const TestToolkit = Toolkit.make(
   Tool.make('random', {
-    description: 'Random number generator',
+    description: 'Generates a random number.',
     parameters: {},
     success: Schema.Number,
   }),
@@ -50,25 +53,42 @@ const TestToolkit = Toolkit.make(
 // TODO(burdon): Create minimal toolkit.
 const toolkit = Toolkit.merge(TestToolkit) as Toolkit.Toolkit<any>;
 
-// TODO(burdon): Consolidate with @dxos/ai.
+// TODO(burdon): Not hooked up.
+const fn = defineFunction({
+  key: 'example.com/function/random',
+  name: 'Random',
+  description: 'Generates a random number.',
+  inputSchema: Schema.Struct({}),
+  outputSchema: Schema.Struct({
+    value: Schema.Number,
+  }),
+  handler: Effect.fn(function* () {
+    return {
+      value: 100,
+    };
+  }),
+});
+
 export const BaseLayer = Layer.mergeAll(
-  makeToolResolverFromFunctions([], toolkit),
+  makeToolResolverFromFunctions([fn], toolkit),
   makeToolExecutionServiceFromFunctions(toolkit, toolkit.toLayer({}) as any),
   CredentialsService.layerFromDatabase(),
   TracingService.layerNoop,
 ).pipe(
-  Layer.provideMerge(TestDatabaseLayer({})),
+  Layer.provideMerge(
+    TestDatabaseLayer({
+      types: [],
+    }),
+  ),
   Layer.provideMerge(
     FunctionInvocationServiceLayerTestMocked({
-      functions: [],
+      functions: [fn],
     }).pipe(Layer.provideMerge(TracingService.layerNoop)),
   ),
 );
 
-export { DEFAULT_EDGE_MODEL, DEFAULT_LMSTUDIO_MODEL, DEFAULT_OLLAMA_MODEL };
-
 /**
- * EDGE (uses Anthropic resolver).
+ * EDGE
  */
 export const createTestLayer = (model: ModelName = DEFAULT_EDGE_MODEL): Layer.Layer<AiChatServices, never, never> => {
   // AiServiceTestingPreset provides AiService but not AiModelResolver, so we need to create a resolver layer.
