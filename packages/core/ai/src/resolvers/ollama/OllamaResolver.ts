@@ -9,20 +9,20 @@ import type * as HttpClient from '@effect/platform/HttpClient';
 import * as Effect from 'effect/Effect';
 import type * as Layer from 'effect/Layer';
 
-import { AiModelResolver } from '../../AiModelResolver';
+import * as AiModelResolver from '../../AiModelResolver';
 import { type ModelName } from '../../defs';
 import { type AiModelNotAvailableError } from '../../errors';
 
 export const DEFAULT_OLLAMA_ENDPOINT = 'http://localhost:11434';
 
-export const OllamaResolver = ({
-  host = DEFAULT_OLLAMA_ENDPOINT,
+export const make = ({
+  server = DEFAULT_OLLAMA_ENDPOINT,
   transformClient,
 }: {
-  readonly host?: string;
+  readonly server?: string;
   readonly transformClient?: (client: HttpClient.HttpClient) => HttpClient.HttpClient;
 } = {}) =>
-  AiModelResolver.fromModelMap(
+  AiModelResolver.AiModelResolver.fromModelMap(
     Effect.gen(function* () {
       return {
         '@google/gemma-3-27b': yield* OpenAiLanguageModel.model('gemma-3-27b'),
@@ -32,7 +32,7 @@ export const OllamaResolver = ({
     }).pipe(
       Effect.provide(
         OpenAiClient.layer({
-          apiUrl: host + '/v1',
+          apiUrl: server + '/v1',
           transformClient,
         }),
       ),

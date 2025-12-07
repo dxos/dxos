@@ -21,8 +21,8 @@ export type AiServiceLayer = Layer.Layer<AiService.AiService, ConfigError.Config
 // TODO(burdon): Adapt Config to @dxos/config.
 
 export const TestRouter = AiModelResolver.AiModelResolver.buildAiService.pipe(
-  Layer.provide(AnthropicResolver.AnthropicResolver),
-  Layer.provide(LMStudioResolver.LMStudioResolver),
+  Layer.provide(AnthropicResolver.make()),
+  Layer.provide(LMStudioResolver.make()),
   // Layer.provide(OpenAiResolver.OpenAiResolver),
 );
 

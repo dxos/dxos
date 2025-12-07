@@ -40,6 +40,10 @@ export class Core extends Context {
     return this._client;
   }
 
+  get model(): ModelName {
+    return this._model;
+  }
+
   get conversation(): AiConversation | undefined {
     return this._conversation;
   }

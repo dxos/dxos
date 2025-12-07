@@ -70,7 +70,7 @@ export type ModelName = Schema.Schema.Type<typeof ModelName>;
 export const DEFAULT_EDGE_MODEL: ModelName = '@anthropic/claude-sonnet-4-5';
 export const DEFAULT_OPENAI_MODEL: ModelName = '@openai/gpt-4o';
 export const DEFAULT_OLLAMA_MODEL: ModelName = 'llama3.2:1b';
-export const DEFAULT_LMSTUDIO_MODEL: ModelName = '@google/gemma-3-27b';
+export const DEFAULT_LMSTUDIO_MODEL: ModelName = '@meta/llama-3.2-3b-instruct';
 
 export type ModelCapabilities = {
   cot?: boolean;

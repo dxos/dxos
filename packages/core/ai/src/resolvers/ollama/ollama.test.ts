@@ -79,6 +79,7 @@ describe('ollama', () => {
           ],
         });
       },
+      // TODO(burdon): Use OllamaResolver.
       Effect.provide(
         Layer.provide(
           OpenAiLanguageModel.model('qwen2.5:14b' as any),

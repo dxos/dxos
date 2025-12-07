@@ -25,8 +25,8 @@ import { makeGraphWriterHandler, makeGraphWriterToolkit } from './graph';
 // import { type EchoTestBuilder } from '@dxos/echo-db/testing';
 
 const TestRouter = AiModelResolver.AiModelResolver.buildAiService.pipe(
-  Layer.provide(AnthropicResolver.AnthropicResolver),
-  Layer.provide(LMStudioResolver.LMStudioResolver),
+  Layer.provide(AnthropicResolver.make()),
+  Layer.provide(LMStudioResolver.make()),
   // Layer.provide(OpenAiResolver.OpenAiResolver),
 );
 

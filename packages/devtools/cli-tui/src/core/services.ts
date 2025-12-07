@@ -12,11 +12,13 @@ import {
   AiModelResolver,
   AiService,
   DEFAULT_EDGE_MODEL,
+  DEFAULT_LMSTUDIO_MODEL,
   DEFAULT_OLLAMA_MODEL,
+  type ModelName,
   type ToolExecutionService,
   type ToolResolverService,
 } from '@dxos/ai';
-import { OllamaResolver } from '@dxos/ai/resolvers';
+import { LMStudioResolver, OllamaResolver } from '@dxos/ai/resolvers';
 import { AiServiceTestingPreset } from '@dxos/ai/testing';
 import { makeToolExecutionServiceFromFunctions, makeToolResolverFromFunctions } from '@dxos/assistant';
 import { type Database } from '@dxos/echo';
@@ -45,42 +47,57 @@ const TestToolkit = Toolkit.make(
 // TODO(burdon): Create minimal toolkit.
 const toolkit = Toolkit.merge(TestToolkit) as Toolkit.Toolkit<any>;
 
-export const DEFAULT_MODEL = DEFAULT_EDGE_MODEL;
-
-const TestServicesLayer = Layer.mergeAll(
-  TracingService.layerNoop,
-  AiServiceTestingPreset('direct'),
-  TestDatabaseLayer({}),
-  FunctionInvocationServiceLayerTestMocked({
-    functions: [],
-  }).pipe(Layer.provideMerge(TracingService.layerNoop)),
-);
-
-export const TestLayer: Layer.Layer<AiChatServices, never, never> = Layer.mergeAll(
-  AiService.model(DEFAULT_MODEL),
+export const BaseLayer = Layer.mergeAll(
   makeToolResolverFromFunctions([], toolkit),
   makeToolExecutionServiceFromFunctions(toolkit, toolkit.toLayer({}) as any),
   CredentialsService.layerFromDatabase(),
-).pipe(Layer.provideMerge(TestServicesLayer), Layer.orDie);
-
-export const OllamaServicesLayer = Layer.mergeAll(
   TracingService.layerNoop,
-  AiModelResolver.AiModelResolver.buildAiService.pipe(
-    Layer.provide(OllamaResolver.OllamaResolver()),
-    Layer.provide(FetchHttpClient.layer),
+).pipe(
+  Layer.provideMerge(TestDatabaseLayer({})),
+  Layer.provideMerge(
+    FunctionInvocationServiceLayerTestMocked({
+      functions: [],
+    }).pipe(Layer.provideMerge(TracingService.layerNoop)),
   ),
-  TestDatabaseLayer({}),
-  FunctionInvocationServiceLayerTestMocked({
-    functions: [],
-  }).pipe(Layer.provideMerge(TracingService.layerNoop)),
 );
+
+export { DEFAULT_EDGE_MODEL, DEFAULT_LMSTUDIO_MODEL, DEFAULT_OLLAMA_MODEL };
 
 /**
- * Layer that configures the Ollama AiServiceProvider.
+ * EDGE
  */
-export const OllamaLayer: Layer.Layer<AiChatServices, never, never> = Layer.mergeAll(
-  AiService.model(DEFAULT_OLLAMA_MODEL),
-  makeToolResolverFromFunctions([], toolkit),
-  makeToolExecutionServiceFromFunctions(toolkit, toolkit.toLayer({}) as any),
-  CredentialsService.layerFromDatabase(),
-).pipe(Layer.provideMerge(OllamaServicesLayer), Layer.orDie);
+export const createTestLayer = (model: ModelName = DEFAULT_EDGE_MODEL): Layer.Layer<AiChatServices, never, never> =>
+  Layer.mergeAll(BaseLayer, AiService.model(model)).pipe(
+    Layer.provideMerge(AiServiceTestingPreset('direct')),
+    Layer.orDie,
+  );
+
+/**
+ * Ollama
+ */
+export const createOllamaLayer = (model: ModelName = DEFAULT_OLLAMA_MODEL): Layer.Layer<AiChatServices, never, never> =>
+  Layer.mergeAll(BaseLayer, AiService.model(model)).pipe(
+    Layer.provideMerge(
+      AiModelResolver.AiModelResolver.buildAiService.pipe(
+        Layer.provide(OllamaResolver.make()),
+        Layer.provide(FetchHttpClient.layer),
+      ),
+    ),
+    Layer.orDie,
+  );
+
+/**
+ * LMStudio
+ */
+export const createLMStudioLayer = (
+  model: ModelName = DEFAULT_LMSTUDIO_MODEL,
+): Layer.Layer<AiChatServices, never, never> =>
+  Layer.mergeAll(BaseLayer, AiService.model(model)).pipe(
+    Layer.provideMerge(
+      AiModelResolver.AiModelResolver.buildAiService.pipe(
+        Layer.provide(LMStudioResolver.make()),
+        Layer.provide(FetchHttpClient.layer),
+      ),
+    ),
+    Layer.orDie,
+  );

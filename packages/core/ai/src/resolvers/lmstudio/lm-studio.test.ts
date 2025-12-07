@@ -72,6 +72,7 @@ describe.skip('lm-studio', () => {
         expect(block.text).toContain('Google');
         log.info('message', { message });
       },
+      // TODO(burdon): Use LMStudioResolver.
       Effect.provide(
         Layer.provide(
           // NOTE: Actual model name is ignored by server.

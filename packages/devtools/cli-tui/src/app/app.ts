@@ -6,6 +6,7 @@ import blessed, { type Widgets } from 'blessed';
 import * as Effect from 'effect/Effect';
 
 import { GenerationObserver } from '@dxos/assistant';
+import { safeParseJson } from '@dxos/util';
 
 import { type Core } from '../core';
 
@@ -45,7 +46,6 @@ export class App {
   private _isStreaming = false;
   private _updateTimeout: NodeJS.Timeout | null = null;
   private _indicatorInterval: NodeJS.Timeout | null = null;
-  private _identityDid = '';
 
   constructor(private _core: Core.Core) {}
 
@@ -59,6 +59,7 @@ export class App {
     this._createScreen();
     this._setupKeyBindings();
     this._setupSignalHandlers();
+    this._updateStatus();
 
     // Focus input initially.
     this._inputBox.focus();
@@ -97,9 +98,6 @@ export class App {
    * Create the blessed screen.
    */
   private _createScreen(options: { prompt: number } = { prompt: 5 }): void {
-    // Store identity DID.
-    this._identityDid = this._core.client?.halo.identity.get()?.did || '';
-
     // Screen.
     this._screen = blessed.screen({
       smartCSR: true,
@@ -176,8 +174,6 @@ export class App {
       tags: true,
     });
 
-    const logo = 'Ⓓ Ⓧ Ⓞ Ⓢ ';
-
     // Streaming indicator.
     this._indicator = blessed.box({
       bottom: 0,
@@ -194,7 +190,6 @@ export class App {
       height: 1,
       right: 2,
       tags: true,
-      content: `{|}{grey-fg}${this._identityDid}{/} {green-fg}${logo}{/}`,
       style: {
         fg: 'grey-fg',
       },
@@ -205,6 +200,15 @@ export class App {
     this._screen.append(this._inputBox);
     this._screen.append(this._indicator);
     this._screen.append(this._status);
+  }
+
+  /**
+   * Update status bar.
+   */
+  private _updateStatus(): void {
+    const logo = 'Ⓓ Ⓧ Ⓞ Ⓢ ';
+    const identityDid = this._core.client?.halo.identity.get()?.did || '';
+    this._status.setContent(`{|}{grey-fg}${this._core.model}{/} {grey-fg}${identityDid}{/} {green-fg}${logo}{/}`);
   }
 
   /**
@@ -340,9 +344,15 @@ export class App {
       this._updateMessages();
       this._messages.push('');
       this._updateMessages();
-    } catch (error) {
-      this._messages[assistantMessageIndex] =
-        `{red-fg}Error:{/} ${error instanceof Error ? error.message : String(error)}`;
+    } catch (err) {
+      // TODO(burdon): For LMStudio, HttpRequest was thrown.
+      // TODO(burdon): Flag to exit on error.
+      const message = parseError(err);
+      // if (!message) {
+      this._exit(err as Error);
+      // }
+
+      this._messages[assistantMessageIndex] = `{red-fg}Error:{/} ${message}`;
       this._updateMessages();
       this._messages.push('');
       this._updateMessages();
@@ -428,8 +438,26 @@ export class App {
   /**
    * Exit the application.
    */
-  private _exit(): void {
+  private _exit(err?: Error): void {
     this._screen.destroy();
-    process.exit(0);
+    if (err) {
+      console.error(String(err));
+      console.log(JSON.stringify(err, null, 2));
+      const body = (err as any).body;
+      if (body) {
+        console.log(JSON.stringify(safeParseJson(JSON.parse(body)), null, 2));
+      }
+    }
+
+    process.exit(err ? 1 : 0);
   }
 }
+
+// TODO(burdon): Factor out (see error log in LM Studio Developer tab).
+//  curl http://localhost:1234/v1/models
+const parseError = (err: any): string | undefined => {
+  const str = String(err);
+  if (str.toLowerCase().includes('error loading model')) {
+    return 'Model not found';
+  }
+};
