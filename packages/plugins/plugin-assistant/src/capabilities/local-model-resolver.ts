@@ -18,7 +18,7 @@ import { Capabilities, type Capability, contributes } from '@dxos/app-framework'
 export default (): Capability<any>[] => [
   contributes(
     Capabilities.AiModelResolver,
-    LMStudioResolver.LMStudioResolver.pipe(
+    LMStudioResolver.make().pipe(
       Layer.provide(
         OpenAiClient.layer({
           apiUrl: LMStudioResolver.DEFAULT_LMSTUDIO_ENDPOINT,

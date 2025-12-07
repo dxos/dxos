@@ -12,7 +12,7 @@ import { Capabilities, type Capability, contributes } from '@dxos/app-framework'
 export default (): Capability<any>[] => [
   contributes(
     Capabilities.AiModelResolver,
-    AnthropicResolver.AnthropicResolver.pipe(
+    AnthropicResolver.make().pipe(
       Layer.provide(
         AnthropicClient.layer({
           // TODO(dmaretskyi): Read endpoint from config/settings.
