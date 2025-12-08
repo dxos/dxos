@@ -52,8 +52,6 @@ export type RefFieldProps = FormFieldComponentProps &
   Pick<ObjectPickerContentProps, 'createOptionLabel' | 'createOptionIcon' | 'createInitialValuePath'> &
   Pick<UseQueryRefOptionsProps, 'db' | 'getOptions'> & {
     onCreate?: (schema: Type.Entity.Any, values: any) => void;
-    // TODO(wittjosiah): Remove this. Array is handled upstream.
-    array?: boolean;
   };
 
 export const RefField = (props: RefFieldProps) => {
@@ -65,7 +63,6 @@ export const RefField = (props: RefFieldProps) => {
     layout,
     getStatus,
     getValue,
-    array,
     createOptionLabel,
     createOptionIcon,
     createInitialValuePath,
@@ -99,48 +96,21 @@ export const RefField = (props: RefFieldProps) => {
       return undefined;
     };
 
-    if (array && Array.isArray(formValue)) {
-      return formValue.map(unknownToRefOption).filter(isNonNullable) ?? [];
-    }
-
-    const option = unknownToRefOption(formValue);
-    if (option) {
-      return [option];
-    }
-
-    return [];
-  }, [options, array, getValue]);
+    return unknownToRefOption(formValue);
+  }, [options, getValue]);
 
   const handleUpdate = useCallback(
-    (ids: string[]) => {
-      if (ids.length === 0) {
-        onValueChange(type, undefined);
-        return;
-      }
-
-      const refs = ids
-        .map((id) => {
-          const item = options.find((option) => option.id === id);
-          if (item) {
-            const dxn = DXN.parse(item.id);
-            return Ref.fromDXN(dxn);
-          }
-          return null;
-        })
-        .filter(isNonNullable);
-
-      if (array) {
-        onValueChange(type, refs);
-      } else {
-        onValueChange(type, refs[0]);
-      }
+    (id: string | undefined) => {
+      const item = options.find((option) => option.id === id);
+      const ref = item ? Ref.fromDXN(DXN.parse(item.id)) : undefined;
+      onValueChange(type, ref);
     },
-    [options, type, array, onValueChange],
+    [options, type, onValueChange],
   );
 
-  const items = handleGetValue();
+  const item = handleGetValue();
+  const selectedIds = useMemo(() => (item ? [item.id] : []), [item]);
   const createSchema = useSchema(db, typename);
-  const selectedIds = useMemo(() => items.map((i: any) => i.id), [items]);
 
   const handleCreate = useCallback(
     (values: any) => {
@@ -153,21 +123,16 @@ export const RefField = (props: RefFieldProps) => {
 
   const handleSelect = useCallback(
     (id: string) => {
-      if (array) {
-        const nextIds = selectedIds.includes(id) ? selectedIds.filter((x) => x !== id) : [...selectedIds, id];
-        handleUpdate(nextIds);
+      if (item?.id === id) {
+        handleUpdate(undefined);
       } else {
-        if (selectedIds[0] === id) {
-          handleUpdate([]);
-        } else {
-          handleUpdate([id]);
-        }
+        handleUpdate(id);
       }
     },
-    [array, selectedIds, handleUpdate],
+    [item, handleUpdate],
   );
 
-  if (!typename || ((readonly || layout === 'static') && items.length < 1)) {
+  if (!typename || ((readonly || layout === 'static') && !item)) {
     return null;
   }
 
@@ -176,32 +141,26 @@ export const RefField = (props: RefFieldProps) => {
       {layout !== 'inline' && <FormFieldLabel error={error} readonly={readonly} label={label} />}
       <div>
         {readonly ? (
-          items.length < 1 ? (
+          !item ? (
             <p className={mx(descriptionText, 'mbe-2')}>{t('empty readonly ref field label')}</p>
           ) : (
-            items.map((item) => (
-              <DxAnchor key={item.id} refid={item.id} rootclassname='mie-1'>
-                {item.label}
-              </DxAnchor>
-            ))
+            <DxAnchor key={item.id} refid={item.id} rootclassname='mie-1'>
+              {item.label}
+            </DxAnchor>
           )
         ) : (
           <ObjectPicker.Root>
             <ObjectPicker.Trigger asChild classNames='p-0'>
-              {items?.length === 1 ? (
+              {item ? (
                 <div className='flex gap-2 is-full'>
-                  {items?.map((item) => (
-                    <Input.Root key={item.id}>
-                      <Input.TextInput value={item.label} readOnly classNames='is-full' />
-                    </Input.Root>
-                  ))}
+                  <Input.Root key={item.id}>
+                    <Input.TextInput value={item.label} readOnly classNames='is-full' />
+                  </Input.Root>
                 </div>
               ) : (
                 <Button classNames='is-full text-start gap-2'>
                   <div role='none' className='grow overflow-hidden'>
-                    <span className='flex truncate text-description'>
-                      {placeholder ?? t('ref field placeholder', { count: array ? 99 : 1 })}
-                    </span>
+                    <span className='flex truncate text-description'>{placeholder ?? t('ref field placeholder')}</span>
                   </div>
                   <Icon size={3} icon='ph--caret-down--bold' />
                 </Button>
