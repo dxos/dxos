@@ -22,10 +22,21 @@ import { hexToEmoji, hexToHue } from '@dxos/util';
 
 import { meta } from '../meta';
 
+// TOOD(burdon): Factor out?
+// TODO(wittjosiah): Integrate annotations with translations.
+const UserProfile = Schema.Struct({
+  did: Schema.String.annotations({ title: 'DID' }),
+  displayName: Schema.String.annotations({ title: 'Display name' }),
+  emoji: Schema.String.annotations({ title: 'Avatar' }),
+  hue: Schema.String.annotations({ title: 'Color' }),
+});
+
+type UserProfile = Schema.Schema.Type<typeof UserProfile>;
+
 // TODO(thure): Factor out?
 const getDefaultHueValue = (identity: Identity | null) => hexToHue(identity?.identityKey.toHex() ?? '0');
-const getDefaultEmojiValue = (identity: Identity | null) => hexToEmoji(identity?.identityKey.toHex() ?? '0');
 const getHueValue = (identity: Identity | null) => identity?.profile?.data?.hue || getDefaultHueValue(identity);
+const getDefaultEmojiValue = (identity: Identity | null) => hexToEmoji(identity?.identityKey.toHex() ?? '0');
 const getEmojiValue = (identity: Identity | null) => identity?.profile?.data?.emoji || getDefaultEmojiValue(identity);
 
 export const ProfileContainer = () => {
@@ -39,7 +50,7 @@ export const ProfileContainer = () => {
   const updateProfile = useMemo(
     () =>
       debounce(
-        (profile: Partial<Profile>) =>
+        (profile: Partial<UserProfile>) =>
           client.halo.updateProfile({
             displayName: profile.displayName,
             data: {
@@ -53,7 +64,7 @@ export const ProfileContainer = () => {
   );
 
   const handleSave = useCallback(
-    (profile: Profile) => {
+    (profile: UserProfile) => {
       setDisplayNameDirectly(profile.displayName);
       setEmojiDirectly(profile.emoji);
       setHueDirectly(profile.hue);
@@ -64,10 +75,10 @@ export const ProfileContainer = () => {
 
   const values = useMemo(
     () => ({
+      did: identity?.did,
       displayName,
       emoji,
       hue,
-      did: identity?.did,
     }),
     [identity, displayName, emoji, hue],
   );
@@ -80,6 +91,7 @@ export const ProfileContainer = () => {
           ({ target: { value } }: ChangeEvent<HTMLInputElement>) => onValueChange(type, value),
           [onValueChange, type],
         );
+
         return (
           <ControlItemInput title={label} description={t('display name description')}>
             <Input.TextInput
@@ -97,6 +109,7 @@ export const ProfileContainer = () => {
           () => onValueChange(type, getDefaultEmojiValue(identity)),
           [onValueChange, type],
         );
+
         return (
           <ControlItem title={label} description={t('icon description')}>
             <EmojiPickerBlock
@@ -115,9 +128,12 @@ export const ProfileContainer = () => {
           () => onValueChange(type, getDefaultHueValue(identity)),
           [onValueChange, type],
         );
+
         return (
           <ControlItem title={label} description={t('hue description')}>
-            <HuePicker value={getValue()} onChange={handleChange} onReset={handleHueReset} />
+            <div role='none' className='flex justify-self-end'>
+              <HuePicker value={getValue()} onChange={handleChange} onReset={handleHueReset} />
+            </div>
           </ControlItem>
         );
       },
@@ -140,26 +156,13 @@ export const ProfileContainer = () => {
     <ControlPage>
       <Clipboard.Provider>
         <ControlSection title={t('profile label')} description={t('profile description')}>
-          <Form
-            classNames='container-max-width grid grid-cols-1 md:grid-cols-[1fr_min-content]'
-            outerSpacing={false}
-            autoSave
-            schema={ProfileSchema}
-            values={values}
-            fieldMap={fieldMap}
-            onSave={handleSave}
-          />
+          <Form.Root schema={UserProfile} values={values} fieldMap={fieldMap} autoSave onSave={handleSave}>
+            <Form.Content>
+              <Form.FieldSet classNames='container-max-width grid grid-cols-1 md:grid-cols-[1fr_min-content]' />
+            </Form.Content>
+          </Form.Root>
         </ControlSection>
       </Clipboard.Provider>
     </ControlPage>
   );
 };
-
-// TODO(wittjosiah): Integrate annotations with translations.
-const ProfileSchema = Schema.Struct({
-  displayName: Schema.String.annotations({ title: 'Display name' }),
-  emoji: Schema.String.annotations({ title: 'Avatar' }),
-  hue: Schema.String.annotations({ title: 'Color' }),
-  did: Schema.String.annotations({ title: 'DID' }),
-});
-type Profile = Schema.Schema.Type<typeof ProfileSchema>;

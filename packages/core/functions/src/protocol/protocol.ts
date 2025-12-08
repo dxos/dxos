@@ -9,15 +9,16 @@ import * as SchemaAST from 'effect/SchemaAST';
 
 import { AiService } from '@dxos/ai';
 import { LifecycleState, Resource } from '@dxos/context';
-import { Type } from '@dxos/echo';
+import { Database, Type } from '@dxos/echo';
 import { EchoClient, type EchoDatabaseImpl, type QueueFactory } from '@dxos/echo-db';
+import { runAndForwardErrors } from '@dxos/effect';
 import { assertState, failedInvariant, invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { type FunctionProtocol } from '@dxos/protocols';
 
 import { FunctionError } from '../errors';
 import { FunctionDefinition, type FunctionServices } from '../sdk';
-import { CredentialsService, DatabaseService, FunctionInvocationService, TracingService } from '../services';
+import { CredentialsService, FunctionInvocationService, TracingService } from '../services';
 import { QueueService } from '../services';
 
 /**
@@ -39,7 +40,7 @@ export const wrapFunctionHandler = (func: FunctionDefinition): FunctionProtocol.
     },
     handler: async ({ data, context }) => {
       if (
-        (func.services.includes(DatabaseService.key) || func.services.includes(QueueService.key)) &&
+        (func.services.includes(Database.Service.key) || func.services.includes(QueueService.key)) &&
         (!context.services.dataService || !context.services.queryService)
       ) {
         throw new FunctionError({
@@ -71,7 +72,7 @@ export const wrapFunctionHandler = (func: FunctionDefinition): FunctionProtocol.
         });
 
         if (Effect.isEffect(result)) {
-          result = await Effect.runPromise(
+          result = await runAndForwardErrors(
             (result as Effect.Effect<unknown, unknown, FunctionServices>).pipe(
               Effect.orDie,
               Effect.provide(funcContext.createLayer()),
@@ -121,6 +122,7 @@ class FunctionContext extends Resource {
             spaceId: this.context.spaceId ?? failedInvariant(),
             spaceKey: PublicKey.fromHex(this.context.spaceKey ?? failedInvariant('spaceKey missing in context')),
             reactiveSchemaQuery: false,
+            preloadSchemaOnOpen: false,
           })
         : undefined;
 
@@ -138,7 +140,7 @@ class FunctionContext extends Resource {
   createLayer(): Layer.Layer<FunctionServices> {
     assertState(this._lifecycleState === LifecycleState.OPEN, 'FunctionContext is not open');
 
-    const dbLayer = this.db ? DatabaseService.layer(this.db) : DatabaseService.notAvailable;
+    const dbLayer = this.db ? Database.Service.layer(this.db) : Database.Service.notAvailable;
     const queuesLayer = this.queues ? QueueService.layer(this.queues) : QueueService.notAvailable;
     const credentials = dbLayer
       ? CredentialsService.layerFromDatabase().pipe(Layer.provide(dbLayer))

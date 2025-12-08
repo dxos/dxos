@@ -13,11 +13,12 @@ import * as Schema from 'effect/Schema';
 import * as Stream from 'effect/Stream';
 
 import { ArtifactId } from '@dxos/assistant';
-import { DXN, Obj } from '@dxos/echo';
+import { DXN, Filter, Obj, Query } from '@dxos/echo';
+import { Database } from '@dxos/echo';
 import type { Queue } from '@dxos/echo-db';
-import { DatabaseService, QueueService, defineFunction } from '@dxos/functions';
+import { QueueService, defineFunction } from '@dxos/functions';
 import { log } from '@dxos/log';
-import { type Message } from '@dxos/types';
+import { type Message, Person } from '@dxos/types';
 
 // NOTE: While the integration is in test mode, only the emails listed in the following dashboard are supported:
 //   https://console.cloud.google.com/auth/audience?authuser=1&project=composer-app-454920
@@ -40,11 +41,16 @@ type DateRangeConfig = {
 };
 
 const STREAMING_CONFIG = {
-  dateChunkDays: 7, // Days per date chunk.
-  messageFetchConcurrency: 5, // Parallel message fetches.
-  bufferSize: 10, // In-flight message buffer.
-  queueBatchSize: 10, // Messages per queue append.
-  maxResults: 500, // Gmail API page size.
+  /** Days per date chunk. */
+  dateChunkDays: 7,
+  /** Parallel message fetches. */
+  messageFetchConcurrency: 5,
+  /** In-flight message buffer. */
+  bufferSize: 10,
+  /** Messages per queue append. */
+  queueBatchSize: 10,
+  /** Gmail API page size. */
+  maxResults: 500,
 } as const;
 
 export default defineFunction({
@@ -71,15 +77,16 @@ export default defineFunction({
     newMessages: Schema.Number,
   }),
   types: [Mailbox.Mailbox],
-  services: [DatabaseService, QueueService],
+  services: [Database.Service, QueueService],
   handler: ({
     // TODO(wittjosiah): Schema-based defaults are not yet supported.
     data: { mailboxId, userId = 'me', label = 'inbox', after = format(subDays(new Date(), 30), 'yyyy-MM-dd') },
   }) =>
     Effect.gen(function* () {
       log('syncing gmail', { mailboxId, userId, after });
-      const mailbox = yield* DatabaseService.resolve(DXN.parse(mailboxId), Mailbox.Mailbox);
+      const mailbox = yield* Database.Service.resolve(DXN.parse(mailboxId), Mailbox.Mailbox);
 
+      // Get labels.
       const labelCount = yield* syncLabels(mailbox, userId).pipe(
         Effect.catchAll((error) => {
           log.catch(error);
@@ -88,10 +95,9 @@ export default defineFunction({
       );
       log('synced labels', { count: labelCount });
 
-      const queue = yield* QueueService.getQueue<Message.Message>(mailbox.queue.dxn);
-
       // Get last message to resume from.
-      const objects = yield* Effect.tryPromise(() => queue.queryObjects());
+      const queue = yield* QueueService.getQueue<Message.Message>(mailbox.queue.dxn);
+      const objects = yield* Effect.tryPromise(() => queue.query(Query.select(Filter.everything())).run());
       const lastMessage = objects.at(-1);
 
       // Build deduplication set from recent messages to prevent duplicates across sync runs.
@@ -104,7 +110,6 @@ export default defineFunction({
       );
 
       const startDate = lastMessage ? new Date(lastMessage.created) : new Date(after);
-
       log('starting sync', {
         startDate: format(startDate, 'yyyy-MM-dd'),
         lastMessageId: lastMessage?.id,
@@ -113,7 +118,6 @@ export default defineFunction({
 
       // Stream messages oldest-first into queue.
       const newMessagesCount = yield* streamGmailMessagesToQueue(startDate, queue, userId, label, existingGmailIds);
-
       log('sync complete', { newMessages: newMessagesCount });
 
       return {
@@ -180,7 +184,6 @@ const fetchMessagesForDateRange = (userId: string, label: string, dateChunk: Dat
 
       // Build query for date range.
       const query = `in:anywhere label:${label} after:${format(dateChunk.start, 'yyyy/MM/dd')} before:${format(dateChunk.end, 'yyyy/MM/dd')}`;
-
       log('fetching message IDs', {
         query,
         pageToken: Option.getOrUndefined(state.pageToken),
@@ -195,7 +198,6 @@ const fetchMessagesForDateRange = (userId: string, label: string, dateChunk: Dat
 
       // Messages come newest-first from Gmail, reverse to get oldest-first.
       const messageIds = (messages ?? []).map((m) => m.id).reverse();
-
       const nextState = {
         pageToken: Option.fromNullable(nextPageToken),
         done: !nextPageToken,
@@ -223,6 +225,9 @@ const streamGmailMessagesToQueue = Effect.fn(function* (
     chunkDays: STREAMING_CONFIG.dateChunkDays,
   };
 
+  // TODO(burdon): Move to resolver.
+  const contacts = yield* Database.Service.runQuery(Query.select(Filter.type(Person.Person)));
+
   const count = yield* Function.pipe(
     generateDateRanges(config),
     // Sequential date range processing to maintain chronological order.
@@ -248,7 +253,7 @@ const streamGmailMessagesToQueue = Effect.fn(function* (
       },
     ),
     // Convert to Message.Message objects.
-    Stream.mapEffect((gmailMessage) => mapMessage(gmailMessage)),
+    Stream.mapEffect((message) => mapMessage(message, contacts)),
     Stream.filter(Predicate.isNotNullable),
     // Batch messages for queue append.
     Stream.grouped(STREAMING_CONFIG.queueBatchSize),

@@ -52,7 +52,8 @@
     }
   },
   "files": [
-    "dist",
+    "dist/lib",
+    "dist/types",
     "schema",
     "src"
   ],
@@ -91,7 +92,8 @@
     "iso-did": "^1.6.0"
   },
   "devDependencies": {
-    "@dxos/types": "workspace:*"
+    "@dxos/types": "workspace:*",
+    "wrangler": "^4.51.0"
   },
   "publishConfig": {
     "access": "public"

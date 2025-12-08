@@ -8,9 +8,11 @@ import * as SchemaAST from 'effect/SchemaAST';
 import React, { forwardRef, useEffect, useMemo, useRef, useState } from 'react';
 
 import { type ComputeGraph, ValueBag, type WorkflowLoader } from '@dxos/conductor';
+import { Database } from '@dxos/echo';
 import { EdgeHttpClient } from '@dxos/edge-client';
+import { runAndForwardErrors } from '@dxos/effect';
 import { createEventLogger } from '@dxos/functions';
-import { DatabaseService, QueueService } from '@dxos/functions';
+import { QueueService } from '@dxos/functions';
 import { type RuntimeServices, ServiceContainer } from '@dxos/functions-runtime';
 import { RemoteFunctionExecutionService } from '@dxos/functions-runtime';
 import { invariant } from '@dxos/invariant';
@@ -127,7 +129,7 @@ export const WorkflowDebugPanel = (props: WorkflowDebugPanelProps) => {
         response = await edgeClient.executeWorkflow(space.id, props.graph.id, requestBody);
       } else {
         const compiled = await props.loader.load(DXN.fromLocalObjectId(props.graph.id));
-        response = await Effect.runPromise(
+        response = await runAndForwardErrors(
           compiled
             .run(ValueBag.make(requestBody))
             .pipe(
@@ -243,7 +245,7 @@ const createLocalExecutionContext = (space: Space): Layer.Layer<RuntimeServices>
   return new ServiceContainer()
     .setServices({
       eventLogger: createEventLogger(LogLevel.INFO),
-      database: DatabaseService.make(space.db),
+      database: Database.Service.make(space.db),
       queues: QueueService.make(space.queues, undefined),
       functionCallService: RemoteFunctionExecutionService.mock(),
     })

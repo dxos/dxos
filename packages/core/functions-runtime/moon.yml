@@ -12,14 +12,21 @@ tasks:
       - '--entryPoint=src/index.ts'
       - '--entryPoint=src/native/index.ts'
       - '--entryPoint=src/testing/index.ts'
-  # TODO(wittjosiah): Fix.
-  # e2e:
-  #   env:
-  #     DX_TEST_TAGS: functions-e2e
-  #   command: vitest run -c vitest.config.ts --reporter=verbose src/e2e/*.test.ts
-  #   deps:
-  #     - ^:build
-  #     - ^:compile
-  #   inputs:
-  #     - src/e2e/**
-  #     - vitest.config.ts
+    deps:
+      - prebuild
+
+  prebuild:
+    command: noop
+    deps:
+      - build-runtime
+
+  build-runtime:
+    command: node ./scripts/build-modules.mjs
+    deps:
+      - ^:compile
+
+  # Executed manually: moon functions-runtime:upload-runtime -- --env dev
+  upload-runtime:
+    command: node scripts/upload-modules.mjs
+    deps:
+      - build-runtime

@@ -11,6 +11,7 @@ import { Capabilities, LayoutAction, chain, createIntent } from '@dxos/app-frame
 import { useIntentDispatcher, usePluginManager } from '@dxos/app-framework/react';
 import { Obj, Type } from '@dxos/echo';
 import { EntityKind, SystemTypeAnnotation, getTypeAnnotation } from '@dxos/echo/internal';
+import { runAndForwardErrors } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { useClient } from '@dxos/react-client';
 import { type Space, getSpace, isLiveObject, isSpace, useSpaces } from '@dxos/react-client/echo';
@@ -103,7 +104,7 @@ export const CreateObjectDialog = ({
 
           onCreateObject?.(object);
         }
-      }).pipe(Effect.runPromise),
+      }).pipe(runAndForwardErrors),
     [dispatch, target, resolve, _shouldNavigate],
   );
 

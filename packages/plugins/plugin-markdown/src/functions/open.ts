@@ -6,7 +6,8 @@ import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
 import { ArtifactId } from '@dxos/assistant';
-import { DatabaseService, defineFunction } from '@dxos/functions';
+import { Database } from '@dxos/echo';
+import { defineFunction } from '@dxos/functions';
 
 import { Markdown } from '../types';
 
@@ -23,7 +24,7 @@ export default defineFunction({
     content: Schema.String,
   }),
   handler: Effect.fn(function* ({ data: { id } }) {
-    const object = yield* DatabaseService.resolve(ArtifactId.toDXN(id), Markdown.Document);
+    const object = yield* Database.Service.resolve(ArtifactId.toDXN(id), Markdown.Document);
     const { content } = yield* Effect.promise(() => object.content.load());
     return {
       content,

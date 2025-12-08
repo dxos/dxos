@@ -16,7 +16,7 @@ import * as Record from 'effect/Record';
 import * as Schedule from 'effect/Schedule';
 
 import { DXN, Filter, Obj, Query } from '@dxos/echo';
-import { DatabaseService } from '@dxos/echo-db';
+import { Database } from '@dxos/echo';
 import { causeToError } from '@dxos/effect';
 import { FunctionInvocationService, QueueService, deserializeFunction } from '@dxos/functions';
 import { Function, Trigger, type TriggerEvent } from '@dxos/functions';
@@ -78,7 +78,7 @@ type TriggerDispatcherServices =
   | TriggerStateStore
   | InvocationTracer
   | QueueService
-  | DatabaseService;
+  | Database.Service;
 
 export class TriggerDispatcher extends Context.Tag('@dxos/functions/TriggerDispatcher')<
   TriggerDispatcher,
@@ -101,7 +101,7 @@ export class TriggerDispatcher extends Context.Tag('@dxos/functions/TriggerDispa
     /**
      * Refresh triggers.
      */
-    refreshTriggers(): Effect.Effect<void, never, DatabaseService>;
+    refreshTriggers(): Effect.Effect<void, never, Database.Service>;
 
     /**
      * Manually invoke a specific trigger.
@@ -234,7 +234,7 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
         }
 
         // Resolve the function
-        const serialiedFunction = yield* DatabaseService.load(trigger.function!).pipe(Effect.orDie);
+        const serialiedFunction = yield* Database.Service.load(trigger.function!).pipe(Effect.orDie);
         invariant(Obj.instanceOf(Function.Function, serialiedFunction));
         const functionDef = deserializeFunction(serialiedFunction);
 
@@ -339,7 +339,7 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
                 // Update trigger cursor.
                 Obj.deleteKeys(trigger, KEY_QUEUE_CURSOR);
                 Obj.getMeta(trigger).keys.push({ source: KEY_QUEUE_CURSOR, id: objectPos });
-                yield* DatabaseService.flush();
+                yield* Database.Service.flush();
 
                 // We only invoke one trigger for each queue at a time.
                 break;
@@ -355,10 +355,10 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
                 continue;
               }
 
-              const objects = yield* DatabaseService.runQuery(Query.fromAst(spec.query.ast));
+              const objects = yield* Database.Service.runQuery(Query.fromAst(spec.query.ast));
 
               const state: TriggerState = yield* TriggerStateStore.getState(trigger.id).pipe(
-                Effect.catchTag('TRIGGER_STATE_NOT_FOUND', () =>
+                Effect.catchTag('TriggerStateNotFound', () =>
                   Effect.succeed({
                     version: '1',
                     triggerId: trigger.id,
@@ -385,7 +385,7 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
                   continue;
                 }
 
-                const { db } = yield* DatabaseService;
+                const { db } = yield* Database.Service;
                 invocations.push(
                   yield* this.invokeTrigger({
                     trigger,
@@ -440,7 +440,7 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
     }
   };
 
-  refreshTriggers = (): Effect.Effect<void, never, DatabaseService> =>
+  refreshTriggers = (): Effect.Effect<void, never, Database.Service> =>
     Effect.gen(this, function* () {
       const triggers = yield* this._fetchTriggers();
       const currentTriggerIds = new Set(triggers.map((t) => t.id));
@@ -492,7 +492,7 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
 
   private _fetchTriggers = () =>
     Effect.gen(this, function* () {
-      const objects = yield* DatabaseService.runQuery(Filter.type(Trigger.Trigger));
+      const objects = yield* Database.Service.runQuery(Filter.type(Trigger.Trigger));
       return objects;
     }).pipe(Effect.withSpan('TriggerDispatcher.fetchTriggers'));
 

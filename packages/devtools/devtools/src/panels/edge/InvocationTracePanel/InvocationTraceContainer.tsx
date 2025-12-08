@@ -10,9 +10,10 @@ import React, { type FC, useCallback, useMemo, useState } from 'react';
 
 import { Filter, type Obj } from '@dxos/echo';
 import { Format } from '@dxos/echo/internal';
-import { type InvocationSpan, type TraceEventException } from '@dxos/functions-runtime';
+import { type InvocationSpan } from '@dxos/functions-runtime';
 import { TraceEvent } from '@dxos/functions-runtime';
 import { DXN } from '@dxos/keys';
+import { type SerializedError } from '@dxos/protocols';
 import { type Space, useQuery } from '@dxos/react-client/echo';
 import { Toolbar } from '@dxos/react-ui';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
@@ -190,7 +191,7 @@ const Selected: FC<{ span: InvocationSpan }> = ({ span }) => {
     Match.orElse(() => 'execution-graph'),
   );
 
-  const isLogQueue = 'logs' === contents;
+  const isLogQueue = 'logs' === contents || objects.length === 0;
 
   return (
     <div className='grid grid-cols-1 grid-rows-[min-content_1fr] bs-full min-bs-0 border-separator'>
@@ -203,9 +204,9 @@ const Selected: FC<{ span: InvocationSpan }> = ({ span }) => {
         <Tabs.Tablist classNames='border-be border-separator'>
           <Tabs.Tab value='input'>Input</Tabs.Tab>
           {isLogQueue && <Tabs.Tab value='logs'>Logs</Tabs.Tab>}
-          {isLogQueue && <Tabs.Tab value='exceptions'>Exceptions</Tabs.Tab>}
+          {isLogQueue && <Tabs.Tab value='errors'>Error logs</Tabs.Tab>}
           {isLogQueue && <Tabs.Tab value='raw'>Raw</Tabs.Tab>}
-          {span.exception && <Tabs.Tab value='exception'>Exception</Tabs.Tab>}
+          {span.error && <Tabs.Tab value='failure'>Failure</Tabs.Tab>}
           {contents === 'execution-graph' && <Tabs.Tab value='execution-graph'>Execution Graph</Tabs.Tab>}
         </Tabs.Tablist>
         <Tabs.Tabpanel value='input'>
@@ -213,22 +214,22 @@ const Selected: FC<{ span: InvocationSpan }> = ({ span }) => {
         </Tabs.Tabpanel>
         {isLogQueue && (
           <Tabs.Tabpanel value='logs'>
-            <LogPanel queue={queue} />
+            <LogPanel objects={objects} />
           </Tabs.Tabpanel>
         )}
         {isLogQueue && (
-          <Tabs.Tabpanel value='exceptions'>
-            <ExceptionPanel queue={queue} />
+          <Tabs.Tabpanel value='errors'>
+            <ExceptionPanel objects={objects} />
           </Tabs.Tabpanel>
         )}
         {isLogQueue && (
           <Tabs.Tabpanel value='raw' classNames='min-bs-0 min-is-0 is-full overflow-auto'>
-            <RawDataPanel classNames='text-xs' span={span} queue={queue} />
+            <RawDataPanel classNames='text-xs' span={span} objects={objects} />
           </Tabs.Tabpanel>
         )}
-        {span.exception && (
-          <Tabs.Tabpanel value='exception'>
-            <SpanExceptionPanel exception={span.exception} />
+        {span.error && (
+          <Tabs.Tabpanel value='failure'>
+            <SpanErrorPanel exception={span.error} />
           </Tabs.Tabpanel>
         )}
         {contents === 'execution-graph' && (
@@ -241,14 +242,20 @@ const Selected: FC<{ span: InvocationSpan }> = ({ span }) => {
   );
 };
 
-const SpanExceptionPanel = ({ exception }: { exception: TraceEventException }) => {
+const SpanErrorPanel = ({ exception }: { exception: SerializedError }) => {
   return (
     <div className='text-xs whitespace-pre-wrap m-4'>
-      <div>Timestamp: {exception.timestamp}</div>
+      <div>Code: {exception.name}</div>
       <div>Message: {exception.message}</div>
-      <div>Name: {exception.name}</div>
       <div />
       <div>Stack: {exception.stack}</div>
+      <div />
+      {exception.cause && (
+        <>
+          <div>Caused by:</div>
+          <SpanErrorPanel exception={exception.cause} />
+        </>
+      )}
     </div>
   );
 };

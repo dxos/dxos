@@ -6,8 +6,10 @@ import { type Client } from '@dxos/client';
 import { Obj } from '@dxos/echo';
 import { type EdgeHttpClient } from '@dxos/edge-client';
 import { FUNCTIONS_META_KEY, Function, FunctionError } from '@dxos/functions';
+import { invariant } from '@dxos/invariant';
 import { type ObjectId, type PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
+import { type FunctionRuntimeKind } from '@dxos/protocols';
 import { safeParseJson } from '@dxos/util';
 
 import { FunctionServiceError } from '../errors';
@@ -23,6 +25,8 @@ export type FunctionDeployOptions = {
   functionId?: string;
   ownerPublicKey: PublicKey;
 
+  runtime?: FunctionRuntimeKind;
+
   /**
    * Path of the entry point file in the assets table.
    */
@@ -36,7 +40,7 @@ export type FunctionDeployOptions = {
 export type FunctionInvokeOptions = {
   /**
    * Space in which the function is invoked.
-   * Binds the DatabaseService injected into the function to this space.
+   * Binds the Database.Service injected into the function to this space.
    * Without this, the function will not have access to any database.
    */
   spaceId?: SpaceId;
@@ -70,6 +74,10 @@ export class FunctionsServiceClient {
    */
   async deploy(request: FunctionDeployOptions): Promise<Function.Function> {
     try {
+      invariant(
+        Object.keys(request.assets).every((path) => !path.startsWith('/')),
+        'Asset paths must be relative',
+      );
       const response = await this.#edgeClient.uploadFunction(
         { functionId: request.functionId },
         {
@@ -78,6 +86,7 @@ export class FunctionsServiceClient {
           ownerPublicKey: request.ownerPublicKey.toHex(),
           entryPoint: request.entryPoint,
           assets: request.assets,
+          runtime: request.runtime,
         },
         { retry: { count: 3 }, auth: true },
       );

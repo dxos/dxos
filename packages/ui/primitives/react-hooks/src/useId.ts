@@ -19,8 +19,9 @@ export const randomString = (n = 4) =>
     .toString(16)
     .slice(2, n + 2);
 
-export const useId = (namespace: string, propsId?: string, opts?: Partial<{ n: number }>) =>
-  useMemo(() => makeId(namespace, propsId, opts), [propsId]);
+export const useId = (namespace: string, propsId?: string, opts?: Partial<{ n: number }>) => {
+  return useMemo(() => makeId(namespace, propsId, opts), [propsId]);
+};
 
 export const makeId = (namespace: string, propsId?: string, opts?: Partial<{ n: number }>) =>
   propsId ?? `${namespace}-${randomString(opts?.n ?? 4)}`;

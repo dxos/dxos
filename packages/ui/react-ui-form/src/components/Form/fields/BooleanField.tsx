@@ -2,35 +2,21 @@
 // Copyright 2024 DXOS.org
 //
 
-import React from 'react';
+import React, { useCallback } from 'react';
 
-import { Input, useTranslation } from '@dxos/react-ui';
+import { Input, type SwitchProps } from '@dxos/react-ui';
 
-import { translationKey } from '../../../translations';
-import { type FormFieldComponentProps, FormFieldLabel } from '../FormFieldComponent';
+import { type FormFieldComponentProps, FormFieldWrapper } from '../FormFieldComponent';
 
-export const BooleanField = ({
-  type,
-  label,
-  inputOnly,
-  getStatus,
-  getValue,
-  onValueChange,
-  readonly,
-}: FormFieldComponentProps) => {
-  const { status, error } = getStatus();
-  const checked = Boolean(getValue());
-  const { t } = useTranslation(translationKey);
+export const BooleanField = ({ type, readonly, onValueChange, ...props }: FormFieldComponentProps<boolean>) => {
+  const handleChange = useCallback<NonNullable<SwitchProps['onCheckedChange']>>(
+    (value) => onValueChange?.(type, value),
+    [type, onValueChange],
+  );
 
   return (
-    <Input.Root validationValence={status}>
-      {!inputOnly && <FormFieldLabel error={error} readonly={readonly} label={label} />}
-      {readonly === 'static' ? (
-        <p>{t(checked ? 'boolean input true value' : 'boolean input false value')}</p>
-      ) : (
-        <Input.Switch disabled={!!readonly} checked={checked} onCheckedChange={(value) => onValueChange(type, value)} />
-      )}
-      {inputOnly && <Input.DescriptionAndValidation>{error}</Input.DescriptionAndValidation>}
-    </Input.Root>
+    <FormFieldWrapper<boolean> readonly={readonly} {...props}>
+      {({ value }) => <Input.Switch disabled={!!readonly} checked={value} onCheckedChange={handleChange} />}
+    </FormFieldWrapper>
   );
 };

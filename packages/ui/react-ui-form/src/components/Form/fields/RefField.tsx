@@ -5,21 +5,13 @@
 import '@dxos/lit-ui/dx-tag-picker.pcss';
 
 import type * as Schema from 'effect/Schema';
-import type * as SchemaAST from 'effect/SchemaAST';
 import React, { useCallback, useMemo } from 'react';
 
-import {
-  type EchoSchema,
-  Expando,
-  Ref,
-  ReferenceAnnotationId,
-  type ReferenceAnnotationValue,
-  getTypeAnnotation,
-} from '@dxos/echo/internal';
+import { Ref } from '@dxos/echo';
+import { ReferenceAnnotationId, type ReferenceAnnotationValue } from '@dxos/echo/internal';
 import { findAnnotation } from '@dxos/effect';
 import { DXN } from '@dxos/keys';
-import { type DxTagPickerItemClick } from '@dxos/lit-ui';
-import { DxAnchor, DxTagPickerItem } from '@dxos/lit-ui/react';
+import { DxAnchor } from '@dxos/lit-ui/react';
 import { Button, Icon, Input, useTranslation } from '@dxos/react-ui';
 import { descriptionText, mx } from '@dxos/react-ui-theme';
 import { isNonNullable } from '@dxos/util';
@@ -29,16 +21,13 @@ import { translationKey } from '../../../translations';
 import { ObjectPicker } from '../../ObjectPicker';
 import { type FormFieldComponentProps, FormFieldLabel } from '../FormFieldComponent';
 
-import { TextField } from './TextField';
-
-// TODO(thure): Is this a standard that should be better canonized?
+// TODO(burdon): Factor out.
 const isRefSnapShot = (val: any): val is { '/': string } => {
   return typeof val === 'object' && typeof (val as any)?.['/'] === 'string';
 };
 
 export type RefFieldProps = FormFieldComponentProps & {
-  schema?: EchoSchema;
-  ast?: SchemaAST.AST;
+  // TODO(wittjosiah): Remove this. Array is handled upstream.
   array?: boolean;
   createOptionLabel?: [string, { ns: string }];
   createOptionIcon?: string;
@@ -48,53 +37,43 @@ export type RefFieldProps = FormFieldComponentProps & {
   onQueryRefOptions?: QueryRefOptions;
 };
 
-export const RefField = ({
-  type,
-  label,
-  readonly,
-  placeholder,
-  inputOnly,
-  array,
-  ast,
-  getValue,
-  createOptionLabel,
-  createOptionIcon,
-  onBlur,
-  onCreate,
-  createSchema,
-  createInitialValuePath,
-  onQueryRefOptions,
-  onValueChange,
-  ...restInputProps
-}: RefFieldProps) => {
-  const { t } = useTranslation(translationKey);
-  const refTypeInfo = useMemo(
-    () => (ast ? findAnnotation<ReferenceAnnotationValue>(ast, ReferenceAnnotationId) : undefined),
-    [ast],
-  );
+export const RefField = (props: RefFieldProps) => {
   const {
-    options: availableOptions,
-    update: updateOptions,
-    loading: _loading,
-  } = useQueryRefOptions({ refTypeInfo, onQueryRefOptions });
+    type,
+    readonly,
+    label,
+    placeholder,
+    layout,
+    getStatus,
+    getValue,
+    array,
+    createOptionLabel,
+    createOptionIcon,
+    createSchema,
+    createInitialValuePath,
+    onCreate,
+    onQueryRefOptions,
+    onValueChange,
+  } = props;
+  const { t } = useTranslation(translationKey);
+  const { status, error } = getStatus();
 
-  if ((refTypeInfo && refTypeInfo?.typename === getTypeAnnotation(Expando)?.typename) || !onQueryRefOptions) {
-    // If ref type is expando, fall back to taking a DXN in string format.
-    return (
-      <RefFieldFallback
-        {...{ type, label, placeholder, readonly, inputOnly, getValue, onBlur, onValueChange, ...restInputProps }}
-      />
-    );
-  }
+  const typename = useMemo(
+    () => (type ? findAnnotation<ReferenceAnnotationValue>(type, ReferenceAnnotationId)?.typename : undefined),
+    [type],
+  );
+
+  // TODO(burdon): Query items on demand.
+  const { options, update: updateOptions } = useQueryRefOptions({ typename, onQueryRefOptions });
 
   const handleGetValue = useCallback(() => {
     const formValue = getValue();
 
-    const unknownToRefOption = (val: unknown) => {
-      const isRef = Ref.isRef(val);
-      if (isRef || isRefSnapShot(val)) {
-        const dxnString = isRef ? val.dxn.toString() : val['/'];
-        const matchingOption = availableOptions.find((option) => option.id === dxnString);
+    const unknownToRefOption = (value: unknown) => {
+      const isRef = Ref.isRef(value);
+      if (isRef || isRefSnapShot(value)) {
+        const dxnString = isRef ? value.dxn.toString() : value['/'];
+        const matchingOption = options.find((option) => option.id === dxnString);
         if (matchingOption) {
           return matchingOption;
         }
@@ -112,18 +91,18 @@ export const RefField = ({
     }
 
     return [];
-  }, [getValue, availableOptions, array]);
+  }, [options, array, getValue]);
 
   const handleUpdate = useCallback(
     (ids: string[]) => {
       if (ids.length === 0) {
-        onValueChange('object', undefined);
+        onValueChange(type, undefined);
         return;
       }
 
       const refs = ids
         .map((id) => {
-          const item = availableOptions.find((option) => option.id === id);
+          const item = options.find((option) => option.id === id);
           if (item) {
             const dxn = DXN.parse(item.id);
             return Ref.fromDXN(dxn);
@@ -133,12 +112,12 @@ export const RefField = ({
         .filter(isNonNullable);
 
       if (array) {
-        onValueChange('object', refs);
+        onValueChange(type, refs);
       } else {
-        onValueChange('object', refs[0]);
+        onValueChange(type, refs[0]);
       }
     },
-    [availableOptions, array, onValueChange],
+    [options, type, array, onValueChange],
   );
 
   const handleCreate = useCallback(
@@ -148,12 +127,6 @@ export const RefField = ({
     },
     [onCreate, updateOptions],
   );
-
-  if (!refTypeInfo) {
-    return null;
-  }
-
-  const { status, error } = restInputProps.getStatus();
 
   const items = handleGetValue();
   const selectedIds = useMemo(() => items.map((i: any) => i.id), [items]);
@@ -173,11 +146,14 @@ export const RefField = ({
     [array, selectedIds, handleUpdate],
   );
 
-  // NOTE(thure): I left both predicates in-place in case we decide to add variants which do render readonly but empty values.
-  return readonly && items.length < 1 ? null : (
+  if (!typename || ((readonly || layout === 'static') && items.length < 1)) {
+    return null;
+  }
+
+  return (
     <Input.Root validationValence={status}>
-      {!inputOnly && <FormFieldLabel error={error} readonly={readonly} label={label} />}
-      <div data-no-submit>
+      {layout !== 'inline' && <FormFieldLabel error={error} readonly={readonly} label={label} />}
+      <div>
         {readonly ? (
           items.length < 1 ? (
             <p className={mx(descriptionText, 'mbe-2')}>{t('empty readonly ref field label')}</p>
@@ -190,94 +166,41 @@ export const RefField = ({
           )
         ) : (
           <ObjectPicker.Root>
-            <ObjectPicker.Trigger asChild>
-              <Button variant='ghost' classNames='is-full text-start gap-2'>
-                <div role='none' className='grow'>
-                  {items?.length ? (
-                    items?.map((item) => (
-                      <DxTagPickerItem
-                        key={item.id}
-                        itemId={item.id}
-                        label={item.label}
-                        {...(item.hue ? { hue: item.hue } : {})}
-                        removeLabel={t('remove item label')}
-                        onItemClick={(event: DxTagPickerItemClick) => {
-                          if (event.action === 'remove') {
-                            toggleSelect(item.id);
-                          }
-                        }}
-                      />
-                    ))
-                  ) : (
-                    <span className='text-description'>
+            <ObjectPicker.Trigger asChild classNames='p-0'>
+              {items?.length === 1 ? (
+                <div className='flex gap-2 is-full'>
+                  {items?.map((item) => (
+                    <Input.Root key={item.id}>
+                      <Input.TextInput value={item.label} readOnly classNames='is-full' />
+                    </Input.Root>
+                  ))}
+                </div>
+              ) : (
+                <Button classNames='is-full text-start gap-2'>
+                  <div role='none' className='grow overflow-hidden'>
+                    <span className='flex truncate text-description'>
                       {placeholder ?? t('ref field placeholder', { count: array ? 99 : 1 })}
                     </span>
-                  )}
-                </div>
-                <Icon size={3} icon='ph--caret-down--bold' />
-              </Button>
+                  </div>
+                  <Icon size={3} icon='ph--caret-down--bold' />
+                </Button>
+              )}
             </ObjectPicker.Trigger>
             <ObjectPicker.Content
-              options={availableOptions}
+              classNames='popover-card-width'
+              options={options}
               selectedIds={selectedIds}
-              onSelect={toggleSelect}
               createSchema={createSchema}
               createOptionLabel={createOptionLabel}
               createOptionIcon={createOptionIcon}
               createInitialValuePath={createInitialValuePath}
               onCreate={handleCreate}
+              onSelect={toggleSelect}
             />
           </ObjectPicker.Root>
         )}
       </div>
-      {inputOnly && <Input.DescriptionAndValidation>{error}</Input.DescriptionAndValidation>}
+      {layout === 'full' && <Input.DescriptionAndValidation>{error}</Input.DescriptionAndValidation>}
     </Input.Root>
-  );
-};
-
-const RefFieldFallback = ({
-  type,
-  label,
-  readonly,
-  placeholder,
-  inputOnly,
-  getValue,
-  onValueChange,
-  ...restInputProps
-}: FormFieldComponentProps) => {
-  const handleOnValueChange = (_type: any, dxnString: string) => {
-    const dxn = DXN.tryParse(dxnString);
-    if (dxn) {
-      onValueChange?.('object', Ref.fromDXN(dxn));
-    } else if (dxnString === '') {
-      onValueChange?.('object', undefined);
-    } else {
-      onValueChange?.('string', dxnString);
-    }
-  };
-
-  const handleGetValue = () => {
-    const formValue = getValue();
-    if (typeof formValue === 'string') {
-      return formValue;
-    }
-    if (Ref.isRef(formValue)) {
-      return formValue.dxn.toString();
-    }
-
-    return undefined;
-  };
-
-  return (
-    <TextField
-      type={type}
-      label={label}
-      readonly={readonly}
-      placeholder={placeholder}
-      inputOnly={inputOnly}
-      getValue={handleGetValue as <V>() => V | undefined}
-      onValueChange={handleOnValueChange}
-      {...restInputProps}
-    />
   );
 };

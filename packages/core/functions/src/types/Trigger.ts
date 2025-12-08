@@ -133,6 +133,7 @@ const Trigger_ = Schema.Struct({
   }),
   SystemTypeAnnotation.set(true),
 );
+
 export interface Trigger extends Schema.Schema.Type<typeof Trigger_> {}
 export interface TriggerEncoded extends Schema.Schema.Encoded<typeof Trigger_> {}
 export const Trigger: Schema.Schema<Trigger, TriggerEncoded> = Trigger_;

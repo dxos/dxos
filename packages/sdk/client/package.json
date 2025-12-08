@@ -118,6 +118,7 @@
     "@dxos/echo-pipeline": "workspace:*",
     "@dxos/echo-protocol": "workspace:*",
     "@dxos/edge-client": "workspace:*",
+    "@dxos/effect": "workspace:*",
     "@dxos/indexing": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",

@@ -7,9 +7,10 @@ import * as Layer from 'effect/Layer';
 import * as Schema from 'effect/Schema';
 
 import { Obj, Query, Ref, Type } from '@dxos/echo';
+import { Database } from '@dxos/echo';
 import { SystemTypeAnnotation } from '@dxos/echo/internal';
 import { Queue } from '@dxos/echo-db';
-import { ContextQueueService, DatabaseService, QueueService } from '@dxos/functions';
+import { ContextQueueService, QueueService } from '@dxos/functions';
 
 /**
  * Container for a set of ephemeral research results.
@@ -26,24 +27,23 @@ export const ResearchGraph = Schema.Struct({
 
 export interface ResearchGraph extends Schema.Schema.Type<typeof ResearchGraph> {}
 
-export const queryResearchGraph: () => Effect.Effect<ResearchGraph | undefined, never, DatabaseService> = Effect.fn(
+export const queryResearchGraph: () => Effect.Effect<ResearchGraph | undefined, never, Database.Service> = Effect.fn(
   'queryResearchGraph',
 )(function* () {
-  const objects = yield* DatabaseService.runQuery(Query.type(ResearchGraph));
+  const objects = yield* Database.Service.runQuery(Query.type(ResearchGraph));
   return objects.at(0);
 });
 
-export const createResearchGraph: () => Effect.Effect<ResearchGraph, never, DatabaseService | QueueService> = Effect.fn(
-  'createResearchGraph',
-)(function* () {
-  const queue = yield* QueueService.createQueue();
-  return yield* DatabaseService.add(Obj.make(ResearchGraph, { queue: Ref.fromDXN(queue.dxn) }));
-});
+export const createResearchGraph: () => Effect.Effect<ResearchGraph, never, Database.Service | QueueService> =
+  Effect.fn('createResearchGraph')(function* () {
+    const queue = yield* QueueService.createQueue();
+    return yield* Database.Service.add(Obj.make(ResearchGraph, { queue: Ref.fromDXN(queue.dxn) }));
+  });
 
 export const contextQueueLayerFromResearchGraph = Layer.unwrapEffect(
   Effect.gen(function* () {
     const researchGraph = (yield* queryResearchGraph()) ?? (yield* createResearchGraph());
-    const researchQueue = yield* DatabaseService.load(researchGraph.queue);
+    const researchQueue = yield* Database.Service.load(researchGraph.queue);
     return ContextQueueService.layer(researchQueue);
   }),
 );

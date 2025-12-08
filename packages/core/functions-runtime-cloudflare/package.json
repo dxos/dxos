@@ -30,6 +30,7 @@
     "@dxos/echo": "workspace:*",
     "@dxos/echo-db": "workspace:*",
     "@dxos/echo-protocol": "workspace:*",
+    "@dxos/errors": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/log": "workspace:*",
@@ -38,7 +39,7 @@
     "effect": "3.18.3"
   },
   "devDependencies": {
-    "@cloudflare/workers-types": "4.20251106.1",
+    "@cloudflare/workers-types": "4.20251202.0",
     "@dxos/types": "workspace:*"
   },
   "publishConfig": {

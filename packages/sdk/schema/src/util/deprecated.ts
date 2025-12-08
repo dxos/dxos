@@ -7,8 +7,49 @@ import * as SchemaAST from 'effect/SchemaAST';
 
 import { QueryAST } from '@dxos/echo';
 import { Format, TypeEnum } from '@dxos/echo/internal';
-import { visit } from '@dxos/effect';
+import { isDiscriminatedUnion, isTupleType, visit } from '@dxos/effect';
 import { DXN } from '@dxos/keys';
+
+/**
+ * Get the base type; e.g., traverse through refinements.
+ *
+ * @deprecated
+ */
+const getSimpleType = (node: SchemaAST.AST): string | undefined => {
+  if (
+    SchemaAST.isDeclaration(node) ||
+    SchemaAST.isObjectKeyword(node) ||
+    SchemaAST.isTypeLiteral(node) ||
+    // TODO(wittjosiah): Tuples are actually arrays.
+    isTupleType(node) ||
+    isDiscriminatedUnion(node)
+  ) {
+    return 'object';
+  }
+
+  if (SchemaAST.isStringKeyword(node)) {
+    return 'string';
+  }
+  if (SchemaAST.isNumberKeyword(node)) {
+    return 'number';
+  }
+  if (SchemaAST.isBooleanKeyword(node)) {
+    return 'boolean';
+  }
+
+  if (SchemaAST.isEnums(node)) {
+    return 'enum';
+  }
+
+  if (SchemaAST.isLiteral(node)) {
+    return 'literal';
+  }
+};
+
+/**
+ * @deprecated
+ */
+const isSimpleType = (node: SchemaAST.AST): boolean => !!getSimpleType(node);
 
 /**
  * @deprecated
@@ -24,10 +65,14 @@ export type SchemaFieldDescription = {
  */
 export const mapSchemaToFields = (schema: Schema.Schema<any, any>): SchemaFieldDescription[] => {
   const fields = [] as SchemaFieldDescription[];
-  visit(schema.ast, (node, path) => {
-    const { type, format } = toFieldValueType(node);
-    fields.push({ property: path.join('.'), type, format });
-  });
+  visit(
+    schema.ast,
+    (node, path) => {
+      const { type, format } = toFieldValueType(node);
+      fields.push({ property: path.join('.'), type, format });
+    },
+    isSimpleType,
+  );
 
   return fields;
 };

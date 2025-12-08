@@ -10,6 +10,7 @@ import React, { useMemo, useState } from 'react';
 
 import { Filter, Obj, Tag } from '@dxos/echo';
 import { Function, Script, Trigger } from '@dxos/functions';
+import { FunctionsServiceClient } from '@dxos/functions-runtime/edge';
 import { useTypeOptions } from '@dxos/plugin-space';
 import { type Client, useClient } from '@dxos/react-client';
 import { type Space, getSpace, useQuery } from '@dxos/react-client/echo';
@@ -23,7 +24,7 @@ import { isNonNullable } from '@dxos/util';
 import { meta } from '../../meta';
 import { TriggerEditor, type TriggerEditorProps } from '../TriggerEditor';
 
-const grid = 'grid grid-cols-[40px_1fr_32px] min-bs-[2.5rem]';
+const grid = 'grid grid-cols-[40px_1fr_32px_32px] min-bs-[2.5rem]';
 
 export type AutomationPanelProps = ThemedClassName<{
   space: Space;
@@ -36,6 +37,7 @@ export type AutomationPanelProps = ThemedClassName<{
 export const AutomationPanel = ({ classNames, space, object, initialTrigger, onDone }: AutomationPanelProps) => {
   const { t } = useTranslation(meta.id);
   const client = useClient();
+  const functionsServiceClient = useMemo(() => FunctionsServiceClient.fromClient(client), [client]);
   const functions = useQuery(space, Filter.type(Function.Function));
   const triggers = useQuery(space, Filter.type(Trigger.Trigger));
   const filteredTriggers = useMemo(() => {
@@ -85,6 +87,10 @@ export const AutomationPanel = ({ classNames, space, object, initialTrigger, onD
   const handleCancel: TriggerEditorProps['onCancel'] = () => {
     setTrigger(undefined);
     onDone?.();
+  };
+
+  const handleForceRunTrigger = async (trigger: Trigger.Trigger) => {
+    await functionsServiceClient.forceRunCronTrigger(space.id, trigger.id);
   };
 
   if (trigger) {
@@ -144,6 +150,14 @@ export const AutomationPanel = ({ classNames, space, object, initialTrigger, onD
                         />
                       )}
                     </div>
+
+                    <List.ItemButton
+                      autoHide={false}
+                      disabled={!trigger.enabled || trigger.spec?.kind !== 'timer'}
+                      icon='ph--play--regular'
+                      label='Force run'
+                      onClick={() => handleForceRunTrigger(trigger)}
+                    />
 
                     <List.ItemDeleteButton onClick={() => handleDelete(trigger)} />
                   </List.Item>

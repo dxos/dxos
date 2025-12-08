@@ -162,10 +162,17 @@ const PinInput = forwardRef<HTMLInputElement, PinInputProps>(
 
 // TODO(burdon): Implement inline icon within button: e.g., https://www.radix-ui.com/themes/playground#text-field
 
-type TextInputProps = InputSharedProps & ThemedClassName<TextInputPrimitiveProps>;
+type AutoFillProps = {
+  noAutoFill?: boolean;
+};
+
+type TextInputProps = InputSharedProps & ThemedClassName<TextInputPrimitiveProps> & AutoFillProps;
 
 const TextInput = forwardRef<HTMLInputElement, InputScopedProps<TextInputProps>>(
-  ({ __inputScope, classNames, density: propsDensity, elevation: propsElevation, variant, ...props }, forwardedRef) => {
+  (
+    { __inputScope, classNames, density: propsDensity, elevation: propsElevation, variant, noAutoFill, ...props },
+    forwardedRef,
+  ) => {
     const { hasIosKeyboard } = useThemeContext();
     const themeContextValue = useThemeContext();
     const density = useDensityContext(propsDensity);
@@ -177,6 +184,8 @@ const TextInput = forwardRef<HTMLInputElement, InputScopedProps<TextInputProps>>
     return (
       <TextInputPrimitive
         {...props}
+        // TODO(wittjosiah): Factor out autofill properies.
+        {...{ 'data-1p-ignore': noAutoFill }}
         className={tx(
           'input.input',
           'input',

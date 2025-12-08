@@ -2,28 +2,38 @@
 // Copyright 2025 DXOS.org
 //
 
+import type * as SchemaAST from 'effect/SchemaAST';
 import React, { useCallback, useMemo } from 'react';
 
 import { Ref, Type } from '@dxos/echo';
 import { type JsonPath } from '@dxos/echo/internal';
 import { type Function } from '@dxos/functions';
-import { useOnTransition } from '@dxos/react-ui';
-import { Form, type FormFieldStateProps, type QueryRefOptions, useFormValues } from '@dxos/react-ui-form';
+import { useOnTransition, useTranslation } from '@dxos/react-ui';
+import {
+  Form,
+  type FormFieldStateProps,
+  type FormRootProps,
+  type QueryRefOptions,
+  omitId,
+  useFormValues,
+} from '@dxos/react-ui-form';
+
+import { meta } from '../../meta';
 
 export type FunctionInputEditorProps = {
+  type: SchemaAST.AST;
   functions: Function.Function[];
   onQueryRefOptions: QueryRefOptions;
 } & FormFieldStateProps;
 
-/**
- * Editor component for function input parameters.
- */
 export const FunctionInputEditor = ({
+  type,
   functions,
   getValue,
   onValueChange,
   onQueryRefOptions,
 }: FunctionInputEditorProps) => {
+  const { t } = useTranslation(meta.id);
   const selectedFunctionValue = useFormValues(FunctionInputEditor.displayName, ['function' as JsonPath]);
   const selectedFunctionId = useMemo(() => {
     if (Ref.isRef(selectedFunctionValue)) {
@@ -47,20 +57,19 @@ export const FunctionInputEditor = ({
       return prevValue.dxn.toString() !== selectedFunctionValue.dxn.toString();
     },
     (currValue) => currValue !== undefined,
-    () => onValueChange('object', {}),
+    () => onValueChange(type, {}),
   );
 
   const inputSchema = useMemo(() => selectedFunction?.inputSchema, [selectedFunction]);
   const effectSchema = useMemo(() => (inputSchema ? Type.toEffectSchema(inputSchema) : undefined), [inputSchema]);
   const propertyCount = inputSchema?.properties ? Object.keys(inputSchema.properties).length : 0;
-
   const values = useMemo(() => getValue() ?? {}, [getValue]);
 
-  const handleValuesChanged = useCallback(
-    (values: any) => {
-      onValueChange('object', values);
+  const handleValuesChanged = useCallback<NonNullable<FormRootProps['onValuesChanged']>>(
+    (values) => {
+      onValueChange(type, values);
     },
-    [onValueChange],
+    [type, onValueChange],
   );
 
   if (selectedFunction === undefined || effectSchema === undefined || propertyCount === 0) {
@@ -69,15 +78,15 @@ export const FunctionInputEditor = ({
 
   return (
     <>
-      <h3 className='text-md'>Function parameters</h3>
-      {/* TODO(ZaymonFC): Try using <FormFieldSet /> internal component for nesting. This would allow errors to flow up to the root context. */}
-      <Form
-        schema={effectSchema}
+      <Form.Label label={t('function parameters label')} asChild />
+      <Form.Root
+        schema={omitId(effectSchema)}
         values={values}
         onValuesChanged={handleValuesChanged}
         onQueryRefOptions={onQueryRefOptions}
-        outerSpacing={false}
-      />
+      >
+        <Form.FieldSet />
+      </Form.Root>
     </>
   );
 };

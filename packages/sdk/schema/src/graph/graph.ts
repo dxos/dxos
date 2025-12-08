@@ -2,11 +2,10 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type Entity, Format, Obj } from '@dxos/echo';
+import { type Entity, Obj, Ref } from '@dxos/echo';
+import { getProperties } from '@dxos/effect';
 import { GraphModel, type GraphNode, createEdgeId } from '@dxos/graph';
 import { log } from '@dxos/log';
-
-import { getSchemaProperties } from '../projection';
 
 /**
  * Creates a new reactive graph from a set of ECHO objects.
@@ -29,8 +28,8 @@ export const createGraph = <T extends Entity.Unknown>(objects: T[]): GraphModel<
     }
 
     // Parse schema to follow referenced objects.
-    for (const prop of getSchemaProperties(schema.ast, object)) {
-      if (prop.format === Format.TypeFormat.Ref) {
+    for (const prop of getProperties(schema.ast)) {
+      if (Ref.isRefType(prop.type)) {
         const source = object;
         const target = (object as any)[prop.name]?.target;
         if (target) {

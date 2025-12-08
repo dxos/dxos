@@ -18,7 +18,7 @@ import { log } from '@dxos/log';
  * Makes an authenticated HTTP request to a Google API endpoint.
  * Includes authorization, retry logic, and error handling.
  */
-export const makeGoogleApiRequest = Effect.fnUntraced(function* (url: string) {
+export const makeGoogleApiRequest = Effect.fn('makeGoogleApiRequest')(function* (url: string) {
   const httpClient = yield* HttpClient.HttpClient.pipe(
     Effect.map(withAuthorization({ service: 'google.com' }, 'Bearer')),
   );
@@ -35,6 +35,7 @@ export const makeGoogleApiRequest = Effect.fnUntraced(function* (url: string) {
     Effect.timeout('1 second'),
     Effect.retry(Schedule.exponential(1_000).pipe(Schedule.compose(Schedule.recurs(3)))),
     Effect.scoped,
+    Effect.withSpan('GoogleApiRequest'),
   );
 
   // TODO(burdon): Handle errors (esp. 401).

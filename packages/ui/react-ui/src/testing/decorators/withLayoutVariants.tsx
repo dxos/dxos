@@ -14,7 +14,7 @@ type Config = {
 };
 
 const Container = ({ children, elevation, surface }: PropsWithChildren<{ elevation: Elevation; surface?: string }>) => (
-  <div className={mx('rounded-md border border-separator p-2', surface, surfaceShadow({ elevation }))}>{children}</div>
+  <div className={mx('rounded-md border border-separator', surface, surfaceShadow({ elevation }))}>{children}</div>
 );
 
 const Panel = ({

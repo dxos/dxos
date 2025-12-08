@@ -6,6 +6,7 @@ import * as Schema from 'effect/Schema';
 
 import { Stream } from '@dxos/codec-protobuf/stream';
 import { QueryAST } from '@dxos/echo-protocol';
+import { NotImplementedError, RuntimeServiceError } from '@dxos/errors';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { SpaceId } from '@dxos/keys';
@@ -21,6 +22,8 @@ import {
 import { queryToDataServiceRequest } from './adapter';
 
 export class QueryServiceImpl implements QueryServiceProto {
+  private _queryCount = 0;
+
   constructor(
     private readonly _executionContext: EdgeFunctionEnv.ExecutionContext,
     private readonly _dataService: EdgeFunctionEnv.DataService,
@@ -36,6 +39,7 @@ export class QueryServiceImpl implements QueryServiceProto {
     return Stream.fromPromise<QueryResponse>(
       (async () => {
         try {
+          this._queryCount++;
           log.info('begin query', { spaceId });
           const queryResponse = await this._dataService.queryDocuments(
             this._executionContext,
@@ -54,20 +58,28 @@ export class QueryServiceImpl implements QueryServiceProto {
               }),
             ),
           } satisfies QueryResponse;
-        } catch (err) {
-          log.error('query failed', { err });
-          throw err;
+        } catch (error) {
+          log.error('query failed', { err: error });
+          throw new RuntimeServiceError({
+            message: `Query execution failed (queryCount=${this._queryCount})`,
+            context: { spaceId, filter: request.filter, queryCount: this._queryCount },
+            cause: error,
+          });
         }
       })(),
     );
   }
 
   async reindex() {
-    throw new Error('Method not implemented.');
+    throw new NotImplementedError({
+      message: 'Reindex is not implemented.',
+    });
   }
 
   async setConfig() {
-    throw new Error('Method not implemented.');
+    throw new NotImplementedError({
+      message: 'SetConfig is not implemented.',
+    });
   }
 }
 

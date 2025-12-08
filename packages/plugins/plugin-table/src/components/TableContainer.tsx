@@ -5,7 +5,7 @@
 import { Atom } from '@effect-atom/atom-react';
 import * as Match from 'effect/Match';
 import type * as Schema from 'effect/Schema';
-import React, { useCallback, useMemo, useRef } from 'react';
+import React, { forwardRef, useCallback, useMemo, useRef } from 'react';
 
 import { LayoutAction, createIntent } from '@dxos/app-framework';
 import { useAppGraph, useIntentDispatcher } from '@dxos/app-framework/react';
@@ -38,16 +38,18 @@ export type TableContainerProps = {
 };
 
 // TODO(wittjosiah): Need to handle more complex queries by restricting add row.
-export const TableContainer = ({ role, object }: TableContainerProps) => {
+export const TableContainer = forwardRef<HTMLDivElement, TableContainerProps>(({ role, object }, forwardedRef) => {
   const { dispatchPromise: dispatch } = useIntentDispatcher();
   const tableRef = useRef<TableController>(null);
 
   const space = getSpace(object);
   const view = object.view.target;
   const query = view ? Query.fromAst(Obj.getSnapshot(view).query.ast) : Query.select(Filter.nothing());
-  const typename = object.view.target?.query ? getTypenameFromQuery(object.view.target.query.ast) : undefined;
+  const typename = getTypenameFromQuery(query.ast);
   const schema = useSchema(space, typename);
-  const queriedObjects = useQuery(space, query);
+  // TODO(wittjosiah): This should use `query` above.
+  //   That currently doesn't work for dynamic schema objects because their indexed typename is the schema object DXN.
+  const queriedObjects = useQuery(space, schema ? Filter.type(schema) : Filter.nothing());
   const filteredObjects = useGlobalFilteredObjects(queriedObjects);
 
   const { graph } = useAppGraph();
@@ -156,7 +158,7 @@ export const TableContainer = ({ role, object }: TableContainerProps) => {
   );
 
   return (
-    <StackItem.Content toolbar>
+    <StackItem.Content toolbar ref={forwardedRef}>
       <TableToolbar
         attendableId={Obj.getDXN(object).toString()}
         customActions={customActions}
@@ -176,6 +178,8 @@ export const TableContainer = ({ role, object }: TableContainerProps) => {
       </TableComponent.Root>
     </StackItem.Content>
   );
-};
+});
+
+TableContainer.displayName = 'TableContainer';
 
 export default TableContainer;

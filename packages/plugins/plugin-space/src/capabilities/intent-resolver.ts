@@ -14,8 +14,9 @@ import {
   createResolver,
 } from '@dxos/app-framework';
 import { Obj, Query, Ref, Relation, Type } from '@dxos/echo';
+import { Database } from '@dxos/echo';
 import { Serializer } from '@dxos/echo-db';
-import { DatabaseService } from '@dxos/functions';
+import { runAndForwardErrors } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { Migrations } from '@dxos/migrations';
 import { ClientCapabilities } from '@dxos/plugin-client';
@@ -339,9 +340,8 @@ export default ({ context, observability, createInvitationUrl }: IntentResolverO
     createResolver({
       intent: SpaceAction.UseStaticSchema,
       resolve: async ({ space, typename, show }) => {
-        const schemas = context.getCapability(ClientCapabilities.Schema).flat();
-        const schema = schemas.find((schema) => Type.getTypename(schema) === typename);
-        invariant(schema, `Schema not found: ${typename}`);
+        const client = context.getCapability(ClientCapabilities.Client);
+        const schema = await client.graph.schemaRegistry.query({ typename, location: ['runtime'] }).first();
 
         if (!space.properties.staticRecords) {
           space.properties.staticRecords = [];
@@ -516,7 +516,7 @@ export default ({ context, observability, createInvitationUrl }: IntentResolverO
             target: isSpace(target) ? undefined : target,
             hidden,
           });
-        }).pipe(Effect.provide(DatabaseService.layer(space.db)), Effect.runPromise);
+        }).pipe(Effect.provide(Database.Service.layer(space.db)), runAndForwardErrors);
 
         return {
           data: {

@@ -7,6 +7,7 @@ import React, {
   type CSSProperties,
   Children,
   type ComponentPropsWithRef,
+  type FocusEvent,
   type KeyboardEvent,
   forwardRef,
   useCallback,
@@ -122,7 +123,7 @@ export const Stack = forwardRef<HTMLDivElement, StackProps>(
      * Handles blur events to track the last focused item within this stack.
      */
     const handleBlur = useCallback(
-      (event: React.FocusEvent<HTMLDivElement>) => {
+      (event: FocusEvent<HTMLDivElement>) => {
         if (event.target) {
           const target = event.target as HTMLElement;
           const closestStackItem = target.closest(`[data-dx-item-id]`) as HTMLElement | null;

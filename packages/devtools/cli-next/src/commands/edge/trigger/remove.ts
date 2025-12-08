@@ -7,7 +7,7 @@ import * as Console from 'effect/Console';
 import * as Effect from 'effect/Effect';
 
 import { DXN } from '@dxos/echo';
-import { DatabaseService } from '@dxos/echo-db';
+import { Database } from '@dxos/echo';
 import { Trigger } from '@dxos/functions';
 
 import { withDatabase } from '../../../util';
@@ -24,8 +24,8 @@ export const remove = Command.make(
   ({ spaceId, id }) =>
     Effect.gen(function* () {
       const dxn = DXN.fromLocalObjectId(id);
-      const trigger = yield* DatabaseService.resolve(dxn, Trigger.Trigger);
-      yield* DatabaseService.remove(trigger);
+      const trigger = yield* Database.Service.resolve(dxn, Trigger.Trigger);
+      yield* Database.Service.remove(trigger);
       yield* Console.log('Removed trigger', trigger.id);
     }).pipe(withDatabase(spaceId)),
 ).pipe(Command.withDescription('Remove a trigger.'));

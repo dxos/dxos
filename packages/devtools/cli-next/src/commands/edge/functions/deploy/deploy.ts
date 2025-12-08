@@ -10,6 +10,7 @@ import * as Command from '@effect/cli/Command';
 import * as Options from '@effect/cli/Options';
 import * as Console from 'effect/Console';
 import * as Effect from 'effect/Effect';
+import * as Match from 'effect/Match';
 import * as Option from 'effect/Option';
 
 import { ClientService } from '@dxos/client';
@@ -18,6 +19,7 @@ import { FUNCTIONS_META_KEY, Function } from '@dxos/functions';
 import { FunctionsServiceClient } from '@dxos/functions-runtime/edge';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
+import { FunctionRuntimeKind } from '@dxos/protocols';
 
 import { CommandConfig } from '../../../../services';
 import { waitForSync } from '../../../../util';
@@ -50,11 +52,16 @@ export const deploy = Command.make(
       Options.withDescription('Do not upload, just build the function.'),
       Options.withDefault(false),
     ),
+    runtime: Options.choice('runtime', ['worker-loader', 'workers-for-platforms']).pipe(
+      Options.withDescription('The runtime to use.'),
+      Options.optional,
+    ),
   },
   Effect.fn(function* (options) {
     const { json } = yield* CommandConfig;
     const client = yield* ClientService;
-    client.addTypes(DATA_TYPES);
+    yield* Effect.promise(() => client.addTypes(DATA_TYPES));
+
     const identity = client.halo.identity.get();
     invariant(identity, 'Identity not available');
 
@@ -81,6 +88,12 @@ export const deploy = Command.make(
         version,
         entryPoint: artifact.entryPoint,
         assets: artifact.assets,
+        runtime: Match.value(options.runtime.pipe(Option.getOrUndefined)).pipe(
+          Match.when('worker-loader', () => FunctionRuntimeKind.enums.WORKER_LOADER),
+          Match.when('workers-for-platforms', () => FunctionRuntimeKind.enums.WORKERS_FOR_PLATFORMS),
+          Match.when(undefined, () => undefined),
+          Match.exhaustive,
+        ),
       }),
     );
 

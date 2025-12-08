@@ -7,6 +7,7 @@ import * as Effect from 'effect/Effect';
 
 import { ClientService } from '@dxos/client';
 import { Obj } from '@dxos/echo';
+import { runAndForwardErrors } from '@dxos/effect';
 import { Task } from '@dxos/types';
 
 import { TestConsole, TestLayer } from '../../../testing';
@@ -26,12 +27,12 @@ describe('spaces query', () => {
       const logs = logger.logs;
       expect(logs).toHaveLength(1);
       expect(logs[0].args).toEqual(['[]']);
-    }).pipe(Effect.provide(TestLayer), Effect.scoped, Effect.runPromise));
+    }).pipe(Effect.provide(TestLayer), Effect.scoped, runAndForwardErrors));
 
   it('should query space for objects', () =>
     Effect.gen(function* () {
       const client = yield* ClientService;
-      client.addTypes([Task.Task]);
+      yield* Effect.tryPromise(() => client.addTypes([Task.Task]));
       yield* Effect.tryPromise(() => client.halo.createIdentity());
       yield* Effect.tryPromise(() => client.spaces.waitUntilReady());
       const space = client.spaces.default;
@@ -44,5 +45,5 @@ describe('spaces query', () => {
       expect(logs).toHaveLength(1);
       const formattedObjects = JSON.parse(logs[0].args as string);
       expect(formattedObjects).toHaveLength(2);
-    }).pipe(Effect.provide(TestLayer), Effect.scoped, Effect.runPromise));
+    }).pipe(Effect.provide(TestLayer), Effect.scoped, runAndForwardErrors));
 });

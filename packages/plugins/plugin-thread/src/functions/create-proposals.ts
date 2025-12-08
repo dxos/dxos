@@ -9,8 +9,9 @@ import * as Schema from 'effect/Schema';
 
 import { ArtifactId, computeDiffsWithCursors } from '@dxos/assistant';
 import { Obj, Ref, Relation } from '@dxos/echo';
+import { Database } from '@dxos/echo';
 import { createDocAccessor } from '@dxos/echo-db';
-import { DatabaseService, defineFunction } from '@dxos/functions';
+import { defineFunction } from '@dxos/functions';
 import { DXN } from '@dxos/keys';
 import { Markdown } from '@dxos/plugin-markdown/types';
 import { AnchoredTo, Message, Thread } from '@dxos/types';
@@ -27,7 +28,7 @@ export default defineFunction({
   }),
   outputSchema: Schema.Void,
   handler: Effect.fn(function* ({ data: { id, diffs: _diffs } }) {
-    const object = yield* DatabaseService.resolve(DXN.parse(id), Markdown.Document);
+    const object = yield* Database.Service.resolve(DXN.parse(id), Markdown.Document);
     const content = yield* Effect.promise(() => object.content.load());
     const accessor = createDocAccessor(content, ['content']);
 
@@ -46,8 +47,8 @@ export default defineFunction({
             [Relation.Target]: object,
             anchor: cursor,
           });
-          yield* DatabaseService.add(thread);
-          yield* DatabaseService.add(relation);
+          yield* Database.Service.add(thread);
+          yield* Database.Service.add(relation);
         }),
       ),
       Effect.allWith({ concurrency: 'unbounded' }),

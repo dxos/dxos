@@ -9,7 +9,7 @@ import React, { useCallback } from 'react';
 import { type AnyProperties, type TypeAnnotation, getTypeAnnotation } from '@dxos/echo/internal';
 import { type Space, type SpaceId } from '@dxos/react-client/echo';
 import { Icon, toLocalizedString, useDefaultValue, useTranslation } from '@dxos/react-ui';
-import { Form } from '@dxos/react-ui-form';
+import { Form, omitId } from '@dxos/react-ui-form';
 import { SearchList } from '@dxos/react-ui-searchlist';
 import { cardDialogOverflow, cardDialogPaddedOverflow, cardDialogSearchListRoot } from '@dxos/react-ui-stack';
 import { type Collection, ViewAnnotation } from '@dxos/schema';
@@ -103,17 +103,21 @@ export const CreateObjectPanel = ({
   ) : !target ? (
     <SelectSpace spaces={spaces} defaultSpaceId={defaultSpaceId} onChange={onTargetChange} />
   ) : metadata.inputSchema ? (
-    <div role='none' className={cardDialogOverflow}>
-      <Form
-        testId='create-object-form'
-        autoFocus
-        values={initialFormValues}
-        schema={metadata.inputSchema}
-        onSave={handleCreateObject}
-        fieldProvider={inputSurfaceLookup}
-        outerSpacing='blockStart-0'
-      />
-    </div>
+    <Form.Root
+      testId='create-object-form'
+      autoFocus
+      schema={omitId(metadata.inputSchema)}
+      values={initialFormValues}
+      fieldProvider={inputSurfaceLookup}
+      onSave={handleCreateObject}
+    >
+      <Form.Viewport>
+        <Form.Content>
+          <Form.FieldSet />
+          <Form.Submit />
+        </Form.Content>
+      </Form.Viewport>
+    </Form.Root>
   ) : null;
 };
 
