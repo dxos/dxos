@@ -132,7 +132,19 @@ export class AutomergeHost extends Resource {
   public readonly documentsSaved = new Event();
 
   private readonly _headsUpdates = new Map<DocumentId, Heads>();
-  private _onHeadsChangedTask?: DeferredTask | undefined;
+  private _onHeadsChangedTask?: DeferredTask;
+
+  /**
+   * Documents created in this session.
+   */
+  private _createdDocuemnts = new Set<DocumentId>();
+
+  /**
+   * Documents that need to be synced based on the result of collection-sync.
+   */
+  private _documentsToSync = new Set<DocumentId>();
+
+  private _sharePolicyChangedTask?: DeferredTask;
 
   constructor({
     db,
@@ -226,6 +238,10 @@ export class AutomergeHost extends Resource {
       );
     });
 
+    this._sharePolicyChangedTask = new DeferredTask(this._ctx, async () => {
+      this._repo.shareConfigChanged();
+    });
+
     await this._echoNetworkAdapter.open();
     await this._collectionSynchronizer.open();
     await this._echoNetworkAdapter.open();
@@ -238,6 +254,7 @@ export class AutomergeHost extends Resource {
     await this._echoNetworkAdapter.close();
     this._syncTask = undefined;
     this._onHeadsChangedTask = undefined;
+    this._sharePolicyChangedTask = undefined;
   }
 
   /**
@@ -314,13 +331,19 @@ export class AutomergeHost extends Resource {
       }
 
       // TODO(dmaretskyi): There's a more efficient way.
-      return this._repo.import(save(initialValue as Doc<T>));
+      const handle = this._repo.import(save(initialValue as Doc<T>));
+      this._createdDocuemnts.add(handle.documentId);
+      this._sharePolicyChangedTask!.schedule();
+      return handle as DocHandle<T>;
     } else {
       if (initialValue instanceof Uint8Array) {
         throw new Error('Cannot create document from Uint8Array without preserving history');
       }
 
-      return this._repo.create(initialValue);
+      const handle = this._repo.create(initialValue);
+      this._createdDocuemnts.add(handle.documentId);
+      this._sharePolicyChangedTask!.schedule();
+      return handle as DocHandle<T>;
     }
   }
 
@@ -379,6 +402,11 @@ export class AutomergeHost extends Resource {
   // https://github.com/automerge/automerge-repo/pull/292
   private async _sharePolicy(peerId: PeerId, documentId?: DocumentId): Promise<boolean> {
     if (!documentId) {
+      return false;
+    }
+
+    if (!this._createdDocuemnts.has(documentId) && !this._documentsToSync.has(documentId)) {
+      // Skip advertising documents that don't need to be synced.
       return false;
     }
 
@@ -684,8 +712,11 @@ export class AutomergeHost extends Resource {
 
     // Load the documents so they will start syncing.
     for (const documentId of toReplicateWithoutBatching) {
+      // Unless we track the document in "to sync" list, it will not be advertised.
+      this._documentsToSync!.add(documentId);
       this._repo.findWithProgress(documentId);
     }
+    this._sharePolicyChangedTask!.schedule();
   }
 
   // TODO(mykola): Add retries of batches https://gist.github.com/mykola-vrmchk/fde270259e9209fcbf1331e5abbf12cf
