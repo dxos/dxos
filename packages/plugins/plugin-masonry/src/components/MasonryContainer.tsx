@@ -46,7 +46,7 @@ export const MasonryContainer = ({ object, role }: { object: Masonry.Masonry; ro
     }
   }, [schemas, typename, space]);
 
-  const objects = useQuery(space, cardSchema ? Filter.type(cardSchema) : Filter.nothing());
+  const objects = useQuery(space?.db, cardSchema ? Filter.type(cardSchema) : Filter.nothing());
   const filteredObjects = useGlobalFilteredObjects(objects);
 
   return (

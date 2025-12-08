@@ -14,7 +14,7 @@ import { PreviewPlugin } from '@dxos/plugin-preview';
 import { SpacePlugin } from '@dxos/plugin-space';
 import { StorybookLayoutPlugin } from '@dxos/plugin-storybook-layout';
 import { ThemePlugin } from '@dxos/plugin-theme';
-import { useQuery, useSpace } from '@dxos/react-client/echo';
+import { useDatabase, useQuery } from '@dxos/react-client/echo';
 import { List, ListItem } from '@dxos/react-ui';
 import { withTheme } from '@dxos/react-ui/testing';
 import { defaultTx } from '@dxos/react-ui-theme';
@@ -131,8 +131,8 @@ type Story = StoryObj<typeof meta>;
 
 export const Contacts: Story = {
   render: () => {
-    const space = useSpace();
-    const contacts = useQuery(space, Filter.type(Person.Person));
+    const db = useDatabase();
+    const contacts = useQuery(db, Filter.type(Person.Person));
 
     return (
       <List>
@@ -146,8 +146,8 @@ export const Contacts: Story = {
 
 export const Organizations: Story = {
   render: () => {
-    const space = useSpace();
-    const organizations = useQuery(space, Filter.type(Organization.Organization));
+    const db = useDatabase();
+    const organizations = useQuery(db, Filter.type(Organization.Organization));
 
     return (
       <List>

@@ -33,8 +33,8 @@ export const MapContainer = ({ role, type: typeParam = 'map', object, ...props }
 
   const view = object?.view?.target;
   const typename = view?.query ? getTypenameFromQuery(view.query.ast) : undefined;
-  const schema = useSchema(space, typename);
-  const objects = useQuery(space, schema ? Filter.type(schema) : Filter.nothing());
+  const schema = useSchema(space?.db, typename);
+  const objects = useQuery(space?.db, schema ? Filter.type(schema) : Filter.nothing());
 
   const markers = objects
     .map((row) => {

@@ -8,7 +8,7 @@ import React from 'react';
 import { contributes } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { ClientCapabilities } from '@dxos/plugin-client';
-import { Query, useQuery, useSpace } from '@dxos/react-client/echo';
+import { Query, useDatabase, useQuery } from '@dxos/react-client/echo';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { render } from '@dxos/storybook-utils';
 import { Message, Thread } from '@dxos/types';
@@ -21,8 +21,8 @@ import { ChannelContainer, type ChannelContainerProps } from './ChannelContainer
 
 // TODO(wittjosiah): Channel doesn't render full height.
 const DefaultStory = ({ roomId }: ChannelContainerProps) => {
-  const space = useSpace();
-  const [channel] = useQuery(space, Query.type(Channel.Channel));
+  const db = useDatabase();
+  const [channel] = useQuery(db, Query.type(Channel.Channel));
   if (!channel) {
     return null;
   }
