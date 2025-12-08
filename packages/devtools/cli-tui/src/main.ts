@@ -80,7 +80,6 @@ const main = Effect.gen(function* () {
   yield* Effect.gen(function* () {
     const services = yield* Effect.runtime<Core.AiChatServices>();
     const service = yield* AiService.AiService;
-    console.log(service);
     if (!service.metadata) {
       throw new Error('AI service not available');
     }
