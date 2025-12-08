@@ -25,7 +25,7 @@ export const ViewEditor = ({ view }: ViewEditorProps) => {
   const client = useClient();
   const space = getSpace(view);
   const [schema, setSchema] = useState<Schema.Schema.AnyNoContext>(() => Schema.Struct({}));
-  const tags = useQuery(space, Filter.type(Tag.Tag));
+  const tags = useQuery(space?.db, Filter.type(Tag.Tag));
   const types = useTypeOptions({
     space,
     annotation: {

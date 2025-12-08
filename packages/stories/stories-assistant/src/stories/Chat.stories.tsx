@@ -132,7 +132,7 @@ const DefaultStory = ({ modules, showContext, blueprints = [] }: StoryProps) => 
     log.info('event', { event });
   }, []);
 
-  const chats = useQuery(space, Filter.type(Assistant.Chat));
+  const chats = useQuery(space?.db, Filter.type(Assistant.Chat));
   const binder = useContextBinder(chats.at(-1)?.queue.target);
   const objects = useSignalsMemo(
     () => binder?.objects.value.map((ref) => ref.target).filter(isNonNullable) ?? [],

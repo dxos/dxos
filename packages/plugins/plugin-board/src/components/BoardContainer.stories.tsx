@@ -50,7 +50,7 @@ const createOrg = () =>
 const DefaultStory = () => {
   const spaces = useSpaces();
   const space = spaces[spaces.length - 1];
-  const boards = useQuery(space, Filter.type(Board.Board));
+  const boards = useQuery(space?.db, Filter.type(Board.Board));
   const [board, setBoard] = useState<Board.Board>();
 
   useEffect(() => {

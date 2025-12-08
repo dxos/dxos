@@ -8,22 +8,23 @@ import { createRoot } from 'react-dom/client';
 import { ClientProvider } from '@dxos/react-client';
 import {
   Filter,
-  type Space,
+  parseId,
+  useDatabase,
   useQuery,
-  useSpace,
   useSpaces,
 } from '@dxos/react-client/echo';
 
 export const App = () => {
-  // Usually space IDs are in the URL like in params.spaceKey.
-  const _space1 = useSpace('<space_key_goes_here>');
+  // Usually space IDs are in the URL like in params.spaceId.
+  const { spaceId } = parseId('<space_id_param_goes_here>');
+  const _space1 = useDatabase(spaceId);
 
   // Get all spaces.
   const spaces = useSpaces();
-  const space2: Space | undefined = spaces[0]; // Spaces may be an empty list.
+  const space2 = spaces.at(0);
 
   // Get objects from the space as an array of JS objects.
-  const objects = useQuery(space2, Filter.everything());
+  const objects = useQuery(space2?.db, Filter.everything());
 
   return <>{objects.length}</>;
 };

@@ -45,7 +45,7 @@ export const KanbanContainer = ({ object }: { object: Kanban.Kanban; role: strin
     }
   }, [schemas, space, typename]);
 
-  const objects = useQuery(space, cardSchema ? Filter.type(cardSchema) : Filter.nothing());
+  const objects = useQuery(space?.db, cardSchema ? Filter.type(cardSchema) : Filter.nothing());
   const filteredObjects = useGlobalFilteredObjects(objects);
 
   const projection = useProjectionModel(cardSchema, object);

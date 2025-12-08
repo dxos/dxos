@@ -35,7 +35,7 @@ export type BaseObjectSettingsProps = ThemedClassName<
 // TODO(wittjosiah): Reconcile w/ ObjectDetailsPanel.
 export const BaseObjectSettings = ({ classNames, children, object }: BaseObjectSettingsProps) => {
   const space = getSpace(object);
-  const handleRefQueryLookup = useRefQueryOptions({ space });
+  const handleRefQueryLookup = useRefQueryOptions({ db: space?.db });
 
   const formSchema = useMemo(() => {
     return Function.pipe(

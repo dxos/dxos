@@ -60,7 +60,7 @@ const useRelatedObjects = (
   record?: Obj.Any,
   options: { references?: boolean; relations?: boolean } = {},
 ) => {
-  const objects = useQuery(space, Filter.everything());
+  const objects = useQuery(space?.db, Filter.everything());
   return useMemo(() => {
     if (!record) {
       return [];

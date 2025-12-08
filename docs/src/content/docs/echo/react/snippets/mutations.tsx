@@ -7,14 +7,11 @@ import { createRoot } from 'react-dom/client';
 
 import { Filter, Obj, Type } from '@dxos/echo';
 import { ClientProvider } from '@dxos/react-client';
-import { useQuery, useSpaces } from '@dxos/react-client/echo';
-import { useIdentity } from '@dxos/react-client/halo';
+import { useDatabase, useQuery } from '@dxos/react-client/echo';
 
-// TODO(burdon): Replace with better example.
 export const App = () => {
-  useIdentity();
-  const [space] = useSpaces();
-  const tasks = useQuery(space, Filter.type(Type.Expando));
+  const db = useDatabase();
+  const tasks = useQuery(db, Filter.type(Type.Expando));
   return (
     <>
       {tasks.map((task) => (
@@ -34,7 +31,7 @@ export const App = () => {
             type: 'task',
             name: 'buy milk',
           });
-          space?.db.add(task);
+          db?.add(task);
         }}
       >
         Add a task
