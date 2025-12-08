@@ -415,7 +415,7 @@ export class AutomergeHost extends Resource {
       return false;
     }
 
-    const peerMetadata = this.repo.peerMetadataByPeerId[peerId];
+    const peerMetadata = this._repo.peerMetadataByPeerId[peerId];
     if (isEchoPeerMetadata(peerMetadata)) {
       return this._echoNetworkAdapter.shouldAdvertise(peerId, { documentId });
     }
