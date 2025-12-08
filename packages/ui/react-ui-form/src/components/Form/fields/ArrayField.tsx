@@ -7,7 +7,6 @@ import * as SchemaAST from 'effect/SchemaAST';
 import React, { Fragment, useCallback } from 'react';
 
 import { findNode, getArrayElementType, getDiscriminatedType, isDiscriminatedUnion, isNestedType } from '@dxos/effect';
-import { invariant } from '@dxos/invariant';
 import { IconButton, useTranslation } from '@dxos/react-ui';
 
 import { translationKey } from '../../../translations';
@@ -33,11 +32,7 @@ export const ArrayField = ({
   const { t } = useTranslation(translationKey);
   const elementType = getArrayElementType(type);
   const { onValueChange } = inputProps;
-
-  // TODO(wittjosiah): The fallback to an empty array stops the form from crashing but isn't immediately live.
-  //  It doesn't become live until another field is touched, but that's better than the whole form crashing.
-  const values = useFormValues(ArrayField.displayName, path) ?? [];
-  invariant(Array.isArray(values), `Expected array at: ${path?.join('.')}`);
+  const values = useFormValues(ArrayField.displayName, path, () => []);
 
   const getDefaultObjectValue = (typeNode: SchemaAST.AST): any => {
     const baseNode = findNode(typeNode, isDiscriminatedUnion);
@@ -59,29 +54,31 @@ export const ArrayField = ({
   const handleAdd = useCallback(() => {
     const defaultValue =
       isNestedType(type) && elementType ? getDefaultObjectValue(elementType) : getDefaultValue(elementType);
-    onValueChange(type, [...values, defaultValue]);
+    values && onValueChange(type, [...values, defaultValue]);
   }, [onValueChange, type, elementType, values]);
 
   const handleDelete = useCallback(
     (idx: number) => {
       onValueChange(
         type,
-        values.filter((_, i) => i !== idx),
+        values?.filter((_, i) => i !== idx),
       );
     },
     [onValueChange, type, values],
   );
 
-  if (!elementType || ((readonly || layout === 'static') && values.length < 1)) {
+  if (!elementType || ((readonly || layout === 'static') && values && values.length < 1)) {
     return null;
   }
 
   return (
     <>
-      {(layout !== 'static' || values.length > 0) && <FormFieldLabel readonly={readonly} label={label} asChild />}
+      {(layout !== 'static' || (values && values.length > 0)) && (
+        <FormFieldLabel readonly={readonly} label={label} asChild />
+      )}
 
       <div role='none' className='flex flex-col gap-2'>
-        {values.map((_, index) => {
+        {values?.map((_, index) => {
           return (
             <div role='none' key={index} className='grid grid-cols-[1fr_min-content] gap-2 last:mb-3'>
               <FormField

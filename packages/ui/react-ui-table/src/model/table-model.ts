@@ -6,7 +6,8 @@ import { type ReadonlySignal, computed, effect, signal } from '@preact/signals-c
 
 import { Resource } from '@dxos/context';
 import { Format, Obj, Ref } from '@dxos/echo';
-import { type JsonProp, type JsonSchemaType, getValue, setValue, toEffectSchema } from '@dxos/echo/internal';
+import { type JsonProp, type JsonSchemaType, toEffectSchema } from '@dxos/echo/internal';
+import { getValue, setValue } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { ObjectId } from '@dxos/keys';
 import { getSnapshot, isLiveObject } from '@dxos/live-object';

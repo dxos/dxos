@@ -8,4 +8,5 @@ export * from './deleted';
 export * from './ids';
 export * from './json-serializer';
 export * from './schema-validator';
+export * from './set-value';
 export * from './typed-object';
