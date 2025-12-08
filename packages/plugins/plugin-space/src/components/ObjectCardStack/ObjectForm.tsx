@@ -6,7 +6,7 @@ import * as Schema from 'effect/Schema';
 import React, { useCallback, useMemo } from 'react';
 
 import { DXN, Obj, type Ref, Tag, Type } from '@dxos/echo';
-import { type JsonPath, setValue } from '@dxos/echo/internal';
+import { type JsonPath, splitJsonPath } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
 import { getSpace } from '@dxos/react-client/echo';
 import { Form, omitId, useRefQueryOptions } from '@dxos/react-ui-form';
@@ -54,15 +54,17 @@ export const ObjectForm = ({ object, schema }: ObjectFormProps) => {
 
       const changedPaths = Object.keys(changed).filter((path) => changed[path as JsonPath]) as JsonPath[];
       for (const path of changedPaths) {
+        const parts = splitJsonPath(path);
         // TODO(wittjosiah): This doesn't handle array paths well.
-        if (path.startsWith('tags')) {
+        if (parts[0] === 'tags') {
           const meta = Obj.getMeta(object);
           meta.tags = tags?.map((tag: Ref.Ref<Tag.Tag>) => tag.dxn.toString()) ?? [];
           continue;
         }
 
-        const value = values[path];
-        setValue(object, path, value);
+        const value = Obj.getValue(values, parts);
+        console.log('set value', isValid, parts, value);
+        Obj.setValue(object, parts, value);
       }
     },
     [object],
