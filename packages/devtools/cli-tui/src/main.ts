@@ -78,7 +78,7 @@ const main = Effect.gen(function* () {
       },
       services: {
         edge: {
-          url: 'https://edge.dxos.workers.dev/',
+          url: 'https://edge.dxos.workers.dev',
         },
         iceProviders: [
           {
@@ -88,6 +88,7 @@ const main = Effect.gen(function* () {
       },
     },
   });
+
   const client = new Client({ config });
   yield* Effect.promise(async () => {
     console.log('initializing...');
@@ -96,7 +97,9 @@ const main = Effect.gen(function* () {
     if (!identity?.identityKey) {
       await client.halo.createIdentity();
     }
-    await client.spaces.waitUntilReady(); // TODO(burdon): Clean-up init.
+
+    // TODO(burdon): Clean-up init.
+    await client.spaces.waitUntilReady();
     await client.spaces.default.waitUntilReady(); // TODO(burdon): BUG: Hangs if identity not created.
   });
 
@@ -107,7 +110,6 @@ const main = Effect.gen(function* () {
     argv.provider as Provider,
     argv.model as ModelName,
   );
-  console.log('Layer', layer, model);
 
   return runAndForwardErrors(
     Effect.gen(function* () {
