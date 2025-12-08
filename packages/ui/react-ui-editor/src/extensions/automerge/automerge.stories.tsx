@@ -11,7 +11,8 @@ import React, { useEffect, useState } from 'react';
 
 import { Obj, Ref, Type } from '@dxos/echo';
 import { DocAccessor, createDocAccessor } from '@dxos/echo-db';
-import { Query, type Space, useQuery, useSpace } from '@dxos/react-client/echo';
+import { type Messenger } from '@dxos/protocols';
+import { Query, useQuery, useSpace } from '@dxos/react-client/echo';
 import { type Identity, useIdentity } from '@dxos/react-client/halo';
 import { type ClientRepeatedComponentProps, ClientRepeater } from '@dxos/react-client/testing';
 import { useThemeContext } from '@dxos/react-ui';
@@ -32,11 +33,11 @@ type TestObject = {
 type EditorProps = {
   source: DocAccessor;
   autoFocus?: boolean;
-  space?: Space;
+  messenger?: Messenger;
   identity?: Identity;
 };
 
-const Editor = ({ source, autoFocus, space, identity }: EditorProps) => {
+const Editor = ({ source, autoFocus, messenger, identity }: EditorProps) => {
   const { themeMode } = useThemeContext();
   const { parentRef } = useTextEditor(
     () => ({
@@ -44,7 +45,7 @@ const Editor = ({ source, autoFocus, space, identity }: EditorProps) => {
       extensions: [
         createBasicExtensions({ placeholder: 'Type here...', search: true }),
         createThemeExtensions({ themeMode, slots: editorSlots }),
-        createDataExtensions({ id: 'test', text: source, messenger: space, identity }),
+        createDataExtensions({ id: 'test', text: source, messenger, identity }),
       ],
       autoFocus,
     }),
@@ -89,11 +90,11 @@ const DefaultStory = () => {
   );
 };
 
-const EchoStory = ({ spaceKey }: ClientRepeatedComponentProps) => {
+const EchoStory = ({ spaceId }: ClientRepeatedComponentProps) => {
   const identity = useIdentity();
-  const space = useSpace(spaceKey);
+  const space = useSpace(spaceId);
   const [source, setSource] = useState<DocAccessor>();
-  const objects = useQuery(space, Query.type(Type.Expando, { type: 'test' }));
+  const objects = useQuery(space?.db, Query.type(Type.Expando, { type: 'test' }));
 
   useEffect(() => {
     const content = objects[0]?.content.target;
@@ -107,7 +108,7 @@ const EchoStory = ({ spaceKey }: ClientRepeatedComponentProps) => {
     return null;
   }
 
-  return <Editor source={source} space={space} identity={identity ?? undefined} />;
+  return <Editor source={source} messenger={space} identity={identity ?? undefined} />;
 };
 
 const meta = {

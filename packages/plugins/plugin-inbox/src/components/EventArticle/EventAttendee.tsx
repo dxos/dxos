@@ -4,7 +4,7 @@
 
 import React, { useCallback } from 'react';
 
-import { type Space } from '@dxos/react-client/echo';
+import { type Database } from '@dxos/react-client/echo';
 import { type Actor } from '@dxos/types';
 
 import { useActorContact } from '../../hooks';
@@ -12,12 +12,12 @@ import { UserIconButton } from '../common';
 
 export type EventAttendeeProps = {
   attendee: Actor.Actor;
-  space?: Space;
+  db?: Database.Database;
   onContactCreate?: (actor: Actor.Actor) => void;
 };
 
-export const EventAttendee = ({ attendee, space, onContactCreate }: EventAttendeeProps) => {
-  const contactDxn = useActorContact(space, attendee);
+export const EventAttendee = ({ attendee, db, onContactCreate }: EventAttendeeProps) => {
+  const contactDxn = useActorContact(db, attendee);
   const handleContactCreate = useCallback(() => onContactCreate?.(attendee), [attendee]);
 
   return (

@@ -22,8 +22,8 @@ import { RelatedMessages } from './RelatedMessages';
 export const RelatedToContact = ({ subject: contact }: SurfaceComponentProps<Person.Person>) => {
   const { dispatchPromise: dispatch } = useIntentDispatcher();
   const space = useActiveSpace();
-  const [mailbox] = useQuery(space, Filter.type(Mailbox.Mailbox));
-  const [calendar] = useQuery(space, Filter.type(Calendar.Calendar));
+  const [mailbox] = useQuery(space?.db, Filter.type(Mailbox.Mailbox));
+  const [calendar] = useQuery(space?.db, Filter.type(Calendar.Calendar));
   const messageQueue = useQueue(mailbox?.queue.dxn);
   const eventQueue = useQueue(calendar?.queue.dxn);
   const messages = useQuery(messageQueue, Filter.type(Message.Message));

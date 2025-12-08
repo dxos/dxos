@@ -106,7 +106,7 @@ export const ChatCompanion = forwardRef<HTMLDivElement, ChatCompanionProps>(
         ),
       [metadata, companionTo],
     );
-    const existingBlueprints = useQuery(space, Filter.type(Blueprint.Blueprint));
+    const existingBlueprints = useQuery(space?.db, Filter.type(Blueprint.Blueprint));
     const pluginBlueprints = useMemo(
       () => existingBlueprints.filter((blueprint) => blueprintKeys.includes(blueprint.key)),
       [existingBlueprints, blueprintKeys],

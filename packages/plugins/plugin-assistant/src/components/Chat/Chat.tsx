@@ -359,7 +359,7 @@ const ChatPrompt = ({
       {space && settings && (
         <div role='none' className='flex items-center overflow-hidden'>
           <ChatOptions
-            space={space}
+            db={space.db}
             blueprintRegistry={processor.blueprintRegistry}
             context={processor.context}
             preset={preset}
@@ -368,7 +368,7 @@ const ChatPrompt = ({
           />
 
           <div role='none' className='flex grow overflow-x-auto scrollbar-none'>
-            <ChatReferences space={space} context={processor.context} />
+            <ChatReferences db={space.db} context={processor.context} />
           </div>
 
           <ChatActions

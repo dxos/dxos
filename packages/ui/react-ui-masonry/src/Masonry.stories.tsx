@@ -31,7 +31,7 @@ const StoryItem = ({ data: { image, name, description } }: { data: Organization.
 
 const DefaultStory = () => {
   const { space } = useClientProvider();
-  const organizations = useQuery(space, Filter.type(Organization.Organization));
+  const organizations = useQuery(space?.db, Filter.type(Organization.Organization));
 
   return (
     <Masonry.Root<Organization.Organization>
