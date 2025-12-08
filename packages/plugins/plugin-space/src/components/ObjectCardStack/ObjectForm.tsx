@@ -36,7 +36,7 @@ export const ObjectForm = ({ object, schema }: ObjectFormProps) => {
   const tags = (meta.tags ?? []).map((tag) => space?.db.makeRef(DXN.parse(tag))).filter(isNonNullable);
   const values = useMemo(() => ({ tags, ...object }), [object, tags]);
 
-  const handleRefQueryLookup = useRefQueryOptions({ space });
+  const handleRefQueryLookup = useRefQueryOptions({ db: space?.db });
 
   const handleCreateTag = useCallback((values: Schema.Schema.Type<typeof TagSchema>) => {
     invariant(space);

@@ -23,7 +23,7 @@ export const SearchMain = ({ space }: { space?: Space }) => {
   const [query, setQuery] = useState<string>();
   // TODO(burdon): Option to search across spaces.
   const allSpaces = false;
-  const objects = useQuery(allSpaces ? client.spaces : space, Filter.everything());
+  const objects = useQuery(allSpaces ? client.spaces : space?.db, Filter.everything());
   const results = useGlobalSearchResults(objects);
 
   const { runSearch, results: webResults } = useWebSearch({ query });

@@ -6,8 +6,8 @@ import React, { type JSX, useMemo, useState } from 'react';
 
 import { type AiContextBinder } from '@dxos/assistant';
 import { type Blueprint } from '@dxos/blueprints';
-import { Filter, Obj, Type } from '@dxos/echo';
-import { type Space, useQuery } from '@dxos/react-client/echo';
+import { type Database, Filter, Obj, Type } from '@dxos/echo';
+import { useQuery } from '@dxos/react-client/echo';
 import { Icon, IconButton, Popover, Select, useTranslation } from '@dxos/react-ui';
 import { Listbox, SearchList } from '@dxos/react-ui-searchlist';
 import { Tabs } from '@dxos/react-ui-tabs';
@@ -24,7 +24,7 @@ import { meta } from '../../meta';
 const panelClassNames = 'is-[calc(100dvw-.5rem)] sm:is-max md:is-72 max-is-[--text-content]';
 
 export type ChatOptionsProps = {
-  space: Space;
+  db: Database.Database;
   context: AiContextBinder;
   blueprintRegistry?: Blueprint.Registry;
   presets?: { id: string; label: string }[];
@@ -35,14 +35,7 @@ export type ChatOptionsProps = {
 /**
  * Manages the runtime context for the chat.
  */
-export const ChatOptions = ({
-  space,
-  context,
-  blueprintRegistry,
-  presets,
-  preset,
-  onPresetChange,
-}: ChatOptionsProps) => {
+export const ChatOptions = ({ db, context, blueprintRegistry, presets, preset, onPresetChange }: ChatOptionsProps) => {
   const { t } = useTranslation(meta.id);
 
   return (
@@ -54,7 +47,7 @@ export const ChatOptions = ({
         <Popover.Portal>
           <Popover.Content side='top' classNames={panelClassNames}>
             <Popover.Viewport>
-              <ObjectsPanel space={space} context={context} />
+              <ObjectsPanel db={db} context={context} />
             </Popover.Viewport>
             <Popover.Arrow />
           </Popover.Content>
@@ -76,7 +69,7 @@ export const ChatOptions = ({
               <Tabs.Root orientation='horizontal' defaultValue='blueprints' defaultActivePart='list' tabIndex={-1}>
                 <Tabs.Viewport classNames='max-bs-[--radix-popover-content-available-height] grid grid-rows-[1fr_min-content] [&_[cmdk-root]]:contents [&_[role="tabpanel"]]:grid [&_[role="tabpanel"]]:grid-rows-[1fr_min-content] [&_[role="listbox"]]:min-bs-0 [&_[role="listbox"]]:overflow-y-auto [&_[role="tabpanel"]]:min-bs-0 [&_[role="tabpanel"]]:pli-cardSpacingChrome [&_[role="tabpanel"][data-state="active"]]:order-first [&_[role="tabpanel"][data-state="inactive"]]:hidden'>
                   <Tabs.Tabpanel value='blueprints' tabIndex={-1} classNames='dx-focus-ring-inset'>
-                    <BlueprintsPanel blueprintRegistry={blueprintRegistry} space={space} context={context} />
+                    <BlueprintsPanel blueprintRegistry={blueprintRegistry} db={db} context={context} />
                   </Tabs.Tabpanel>
                   <Tabs.Tabpanel value='model' tabIndex={-1} classNames='dx-focus-ring-inset !pli-0'>
                     <ModelsPanel presets={presets} preset={preset} onPresetChange={onPresetChange} />
@@ -102,14 +95,14 @@ export const ChatOptions = ({
 
 const BlueprintsPanel = ({
   blueprintRegistry,
-  space,
+  db,
   context,
-}: Pick<ChatOptionsProps, 'blueprintRegistry' | 'space' | 'context'>) => {
+}: Pick<ChatOptionsProps, 'blueprintRegistry' | 'db' | 'context'>) => {
   const { t } = useTranslation(meta.id);
 
-  const blueprints = useBlueprints({ blueprintRegistry, space });
+  const blueprints = useBlueprints({ blueprintRegistry, db });
   const activeBlueprints = useActiveBlueprints({ context });
-  const { onUpdateBlueprint } = useBlueprintHandlers({ space, context, blueprintRegistry });
+  const { onUpdateBlueprint } = useBlueprintHandlers({ db, context, blueprintRegistry });
 
   return (
     <SearchList.Root>
@@ -155,11 +148,11 @@ const ModelsPanel = ({
 
 const ANY = '__any__';
 
-const ObjectsPanel = ({ space, context }: Pick<ChatOptionsProps, 'space' | 'context'>): JSX.Element => {
+const ObjectsPanel = ({ db, context }: Pick<ChatOptionsProps, 'db' | 'context'>): JSX.Element => {
   const { t } = useTranslation(meta.id);
 
   // Item types sorted by label.
-  const types = useFilteredTypes(space);
+  const types = useFilteredTypes(db);
   const typenames = useMemo(() => {
     const typenames = types.map((type) => {
       const typename = Type.getTypename(type);
@@ -181,8 +174,8 @@ const ObjectsPanel = ({ space, context }: Pick<ChatOptionsProps, 'space' | 'cont
   );
 
   // Context objects.
-  const objects = useQuery(space, typename === ANY ? anyFilter : Filter.typename(typename));
-  const { objects: contextObjects, onUpdateObject } = useContextObjects({ space, context });
+  const objects = useQuery(db, typename === ANY ? anyFilter : Filter.typename(typename));
+  const { objects: contextObjects, onUpdateObject } = useContextObjects({ db, context });
 
   return (
     <SearchList.Root>

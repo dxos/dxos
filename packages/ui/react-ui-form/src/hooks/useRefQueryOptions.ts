@@ -4,22 +4,22 @@
 
 import { useCallback } from 'react';
 
-import { Obj } from '@dxos/echo';
-import { Filter, type Space } from '@dxos/react-client/echo';
+import { type Database, Obj } from '@dxos/echo';
+import { Filter } from '@dxos/react-client/echo';
 import { isNonNullable } from '@dxos/util';
 
 import { type QueryRefOptions } from './useQueryRefOptions';
 
-type UseRefQueryOptionsProps = { space?: Space };
+type UseRefQueryOptionsProps = { db?: Database.Database };
 
-export const useRefQueryOptions = ({ space }: UseRefQueryOptionsProps): QueryRefOptions => {
+export const useRefQueryOptions = ({ db }: UseRefQueryOptionsProps): QueryRefOptions => {
   return useCallback<QueryRefOptions>(
     async ({ typename }) => {
-      if (!space) {
+      if (!db) {
         return [];
       }
 
-      const query = space.db.query(Filter.typename(typename));
+      const query = db.query(Filter.typename(typename));
       const objects = await query.run();
       return objects
         .map((object) => {
@@ -32,6 +32,6 @@ export const useRefQueryOptions = ({ space }: UseRefQueryOptionsProps): QueryRef
         })
         .filter(isNonNullable);
     },
-    [space],
+    [db],
   );
 };

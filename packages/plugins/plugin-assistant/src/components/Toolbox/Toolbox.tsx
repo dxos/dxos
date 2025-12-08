@@ -5,10 +5,10 @@
 import React, { type FC, Fragment, useEffect, useState } from 'react';
 
 import { type Blueprint } from '@dxos/blueprints';
-import { type Ref } from '@dxos/echo';
+import { type Database, type Ref } from '@dxos/echo';
 import { Function } from '@dxos/functions';
 import { log } from '@dxos/log';
-import { Filter, type Space, useQuery } from '@dxos/react-client/echo';
+import { Filter, useQuery } from '@dxos/react-client/echo';
 import { type ThemedClassName } from '@dxos/react-ui';
 import { useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
@@ -105,13 +105,13 @@ const Section: FC<{
 };
 
 export type ToolboxContainerProps = ThemedClassName<{
-  space?: Space;
+  db?: Database.Database;
   processor?: AiChatProcessor;
 }>;
 
-export const ToolboxContainer = ({ classNames, space, processor }: ToolboxContainerProps) => {
+export const ToolboxContainer = ({ classNames, db, processor }: ToolboxContainerProps) => {
   // Registered services.
-  const services = useQuery(space, Filter.type(ServiceType));
+  const services = useQuery(db, Filter.type(ServiceType));
   const [serviceTools, setServiceTools] = useState<{ service: ServiceType }[]>([]);
   useEffect(() => {
     log('creating service tools...', { services: services.length });
@@ -125,7 +125,7 @@ export const ToolboxContainer = ({ classNames, space, processor }: ToolboxContai
   }, [services]);
 
   // Deployed functions.
-  const functions = useQuery(space, Filter.type(Function.Function));
+  const functions = useQuery(db, Filter.type(Function.Function));
 
   return (
     <Toolbox

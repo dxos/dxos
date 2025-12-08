@@ -14,17 +14,18 @@ import {
 
 import { Obj } from '@dxos/echo';
 import { ClientProvider, useShell } from '@dxos/react-client';
-import { Filter, Query, useQuery, useSpace } from '@dxos/react-client/echo';
+import { Filter, Query, parseId, useQuery, useSpace } from '@dxos/react-client/echo';
 
 import { getConfig } from './config';
 import { TaskList } from './TaskList';
 import { Task } from './types';
 
 export const TaskListContainer = () => {
-  const { spaceKey } = useParams<{ spaceKey: string }>();
+  const { spaceParam } = useParams<{ spaceParam: string }>();
 
-  const space = useSpace(spaceKey);
-  const tasks = useQuery(space, Query.select(Filter.type(Task)));
+  const { spaceId } = parseId(spaceParam);
+  const space = useSpace(spaceId);
+  const tasks = useQuery(space?.db, Query.select(Filter.type(Task)));
   const shell = useShell();
 
   return (
@@ -79,18 +80,18 @@ export const Home = () => {
       void (async () => {
         const { space } = await shell.joinSpace({ invitationCode });
         if (space) {
-          navigate(`/space/${space.key}`);
+          navigate(`/space/${space.id}`);
         }
       })();
     }
   }, [invitationCode, deviceInvitationCode]);
 
-  return space ? <Navigate to={`/space/${space.key}`} /> : null;
+  return space ? <Navigate to={`/space/${space.id}`} /> : null;
 };
 
 const router = createBrowserRouter([
   {
-    path: '/space/:spaceKey',
+    path: '/space/:spaceParam',
     element: <TaskListContainer />,
   },
   {

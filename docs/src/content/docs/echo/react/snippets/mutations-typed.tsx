@@ -7,15 +7,13 @@ import { createRoot } from 'react-dom/client';
 
 import { Filter, Obj } from '@dxos/echo';
 import { ClientProvider } from '@dxos/react-client';
-import { useQuery, useSpaces } from '@dxos/react-client/echo';
-import { useIdentity } from '@dxos/react-client/halo';
+import { useDatabase, useQuery } from '@dxos/react-client/echo';
 
 import { Task } from './schema';
 
 export const App = () => {
-  useIdentity();
-  const [space] = useSpaces();
-  const tasks = useQuery(space, Filter.type(Task));
+  const db = useDatabase();
+  const tasks = useQuery(db, Filter.type(Task));
   return (
     <>
       {tasks.map((task) => (
@@ -32,7 +30,7 @@ export const App = () => {
         name='add'
         onClick={() => {
           const task = Obj.make(Task, { name: 'buy milk' });
-          space?.db.add(task);
+          db?.add(task);
         }}
       >
         Add a task
