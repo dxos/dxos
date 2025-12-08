@@ -9,14 +9,12 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
 import * as AiModelResolver from '../../AiModelResolver';
-import * as ChatCompletionsLanguageModel from '../../ChatCompletionsLanguageModel';
 import { type ModelName } from '../../defs';
 import { type AiModelNotAvailableError } from '../../errors';
+import * as ChatCompletionsAdapter from '../ChatCompletionsAdapter';
 
 /**
  * LM Studio resolver using OpenAI-compatible Chat Completions API.
- *
- * Uses the `/v1/chat/completions` endpoint.
  *
  * curl http://localhost:1234/v1/models | jq
  */
@@ -30,15 +28,14 @@ export const make = ({
   readonly transformClient?: (client: HttpClient.HttpClient) => HttpClient.HttpClient;
 } = {}) => {
   // Create the base layers that provide ChatCompletionsClient.
-  const clientLayer = ChatCompletionsLanguageModel.clientLayer({
+  const clientLayer = ChatCompletionsAdapter.clientLayer({
     baseUrl: endpoint,
     apiFormat: 'openai',
     transformClient,
   }).pipe(Layer.provide(FetchHttpClient.layer));
 
   // Create model layers with client dependency provided.
-  const createModelLayer = (model: string) =>
-    ChatCompletionsLanguageModel.layer(model).pipe(Layer.provide(clientLayer));
+  const createModelLayer = (model: string) => ChatCompletionsAdapter.layer(model).pipe(Layer.provide(clientLayer));
 
   return AiModelResolver.AiModelResolver.fromModelMap(
     'LM Studio',

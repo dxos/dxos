@@ -386,9 +386,9 @@ export class App {
       // TODO(burdon): For LMStudio, HttpRequest was thrown.
       // TODO(burdon): Flag to exit on error.
       const message = parseError(err);
-      // if (!message) {
-      this._exit(err as Error);
-      // }
+      if (!message) {
+        this._exit(err as Error);
+      }
 
       this._messages[assistantMessageIndex] = `{red-fg}Error:{/} ${message}`;
       this._updateMessages();

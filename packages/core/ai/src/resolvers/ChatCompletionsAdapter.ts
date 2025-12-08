@@ -13,30 +13,12 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Stream from 'effect/Stream';
 
-//
-// Types
-//
-
 /**
  * Chat message format (OpenAI-compatible).
  */
 type ChatMessage = {
   role: 'system' | 'user' | 'assistant';
   content: string;
-};
-
-/**
- * API format for the chat completions endpoint.
- */
-export type ApiFormat = 'ollama' | 'openai';
-
-/**
- * Chat completions client configuration.
- */
-export type ChatCompletionsClientConfig = {
-  readonly baseUrl: string;
-  readonly apiFormat: ApiFormat;
-  readonly transformClient?: (client: HttpClient.HttpClient) => HttpClient.HttpClient;
 };
 
 /**
@@ -141,7 +123,44 @@ type OllamaStreamChunk = {
 //
 
 /**
+ * API format for the chat completions endpoint.
+ */
+export type ApiFormat = 'ollama' | 'openai';
+
+/**
+ * Chat completions client configuration.
+ */
+export type ChatCompletionsClientConfig = {
+  readonly baseUrl: string;
+  readonly apiFormat: ApiFormat;
+  readonly transformClient?: (client: HttpClient.HttpClient) => HttpClient.HttpClient;
+};
+
+/**
  * Chat completions client service tag.
+ *
+ * This custom implementation exists because `@effect/ai-openai` has several limitations
+ * that prevent it from working with local LLM servers like Ollama and LM Studio:
+ *
+ * 1. **Hardcoded API key requirement**: The `@effect/ai-openai` package requires an API key
+ *    to be configured, even when connecting to local servers that don't need authentication.
+ *    It validates the key presence and fails if not provided.
+ *
+ * 2. **Strict OpenAI API compliance**: Local LLM servers (Ollama, LM Studio, llama.cpp) implement
+ *    OpenAI-compatible APIs but with subtle differences in response formats, error handling,
+ *    and optional fields. The Effect library expects exact OpenAI response structures.
+ *
+ * 3. **Different endpoint paths**: Ollama uses `/api/chat` while OpenAI uses `/v1/chat/completions`.
+ *    The `@effect/ai-openai` package hardcodes the OpenAI path structure.
+ *
+ * 4. **Response format variations**: Ollama returns `format: 'json'` while OpenAI uses
+ *    `response_format: { type: 'json_object' }`. Token usage fields also differ between providers.
+ *
+ * 5. **Streaming format differences**: Ollama streams raw JSON lines while OpenAI uses SSE
+ *    (Server-Sent Events) with `data:` prefixes. This implementation handles both formats.
+ *
+ * This implementation provides a unified interface that abstracts over these differences,
+ * allowing seamless switching between local and cloud providers via the `apiFormat` config.
  */
 export class ChatCompletionsClient extends Context.Tag('@dxos/ai/ChatCompletionsClient')<
   ChatCompletionsClient,

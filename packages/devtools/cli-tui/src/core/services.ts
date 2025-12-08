@@ -69,6 +69,7 @@ const fn = defineFunction({
   }),
 });
 
+// TODO(burdon): See compute-runtime.ts
 export const BaseLayer = Layer.mergeAll(
   makeToolResolverFromFunctions([fn], toolkit),
   makeToolExecutionServiceFromFunctions(toolkit, toolkit.toLayer({}) as any),
@@ -76,6 +77,7 @@ export const BaseLayer = Layer.mergeAll(
   TracingService.layerNoop,
 ).pipe(
   Layer.provideMerge(
+    //
     TestDatabaseLayer({
       types: [],
     }),
