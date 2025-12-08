@@ -6,7 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Schema from 'effect/Schema';
 import React, { useCallback, useState } from 'react';
 
-import { Annotation, Filter, Format, Obj, Tag, Type } from '@dxos/echo';
+import { Annotation, Format, Obj, Tag, Type } from '@dxos/echo';
 import { type AnyProperties } from '@dxos/echo/internal';
 import { log } from '@dxos/log';
 import { useClient } from '@dxos/react-client';
