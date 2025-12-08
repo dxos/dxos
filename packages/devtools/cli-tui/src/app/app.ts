@@ -366,8 +366,9 @@ export class App {
       // Start streaming assistant response.
       this._isStreaming = true;
       this._startIndicator();
-      await this._core.request({
+      await this._core.streamRequest({
         prompt,
+        system: 'You are a helpful assistant that is able to make function calls.',
         observer: GenerationObserver.make({
           onPart: (part) =>
             Effect.sync(() => {

@@ -61,7 +61,7 @@ class ComputeRuntimeProviderImpl extends Resource implements AutomationCapabilit
     const layer = Layer.unwrapEffect(
       Effect.gen(this, function* () {
         const client = this.#context.getCapability(ClientCapabilities.Client);
-        const serviceLayer =
+        const aiServiceLayer =
           this.#context.getCapability(Capabilities.AiServiceLayer) ?? Layer.die('AiService not found');
 
         // TODO(dmaretskyi): Make these reactive.
@@ -75,7 +75,11 @@ class ComputeRuntimeProviderImpl extends Resource implements AutomationCapabilit
         invariant(space);
         yield* Effect.promise(() => space.waitUntilReady());
 
-        return Layer.mergeAll(TriggerDispatcher.layer({ timeControl: 'natural' })).pipe(
+        return Layer.mergeAll(
+          TriggerDispatcher.layer({
+            timeControl: 'natural',
+          }),
+        ).pipe(
           Layer.provideMerge(
             Layer.mergeAll(
               InvocationTracerLive,
@@ -95,7 +99,7 @@ class ComputeRuntimeProviderImpl extends Resource implements AutomationCapabilit
                     client.config.get('runtime.client.edgeFeatures.agents') ? spaceId : undefined,
                   ),
                 ),
-                Layer.provideMerge(serviceLayer),
+                Layer.provideMerge(aiServiceLayer),
                 Layer.provideMerge(CredentialsService.layerFromDatabase()),
                 Layer.provideMerge(space ? Database.Service.layer(space.db) : Database.Service.notAvailable),
                 Layer.provideMerge(space ? QueueService.layer(space.queues) : QueueService.notAvailable),

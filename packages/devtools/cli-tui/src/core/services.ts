@@ -2,12 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Tool from '@effect/ai/Tool';
-import * as Toolkit from '@effect/ai/Toolkit';
 import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
-import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
-import * as Schema from 'effect/Schema';
 
 import {
   AiModelResolver,
@@ -27,16 +23,18 @@ import { type Space } from '@dxos/client/echo';
 import { Database } from '@dxos/echo';
 import {
   CredentialsService,
+  type FunctionDefinition,
   type FunctionInvocationService,
   QueueService,
   TracingService,
-  defineFunction,
 } from '@dxos/functions';
 import {
   FunctionImplementationResolver,
   FunctionInvocationServiceLayerWithLocalLoopbackExecutor,
   RemoteFunctionExecutionService,
 } from '@dxos/functions-runtime';
+
+import * as TestToolkit from './TestToolkit';
 
 export { DEFAULT_EDGE_MODEL, DEFAULT_LMSTUDIO_MODEL, DEFAULT_OLLAMA_MODEL };
 
@@ -51,33 +49,6 @@ export type AiChatServices =
   | ToolResolverService
   | TracingService;
 
-const TestToolkit = Toolkit.make(
-  Tool.make('random', {
-    description: 'Generates a random number.',
-    parameters: {},
-    success: Schema.Number,
-  }),
-);
-
-// TODO(burdon): Create minimal toolkit.
-const toolkit = Toolkit.merge(TestToolkit) as Toolkit.Toolkit<any>;
-
-// TODO(burdon): Not hooked up.
-const fn = defineFunction({
-  key: 'example.com/function/random',
-  name: 'Random',
-  description: 'Generates a random number.',
-  inputSchema: Schema.Struct({}),
-  outputSchema: Schema.Struct({
-    value: Schema.Number,
-  }),
-  handler: Effect.fn(function* () {
-    return {
-      value: Math.floor(Math.random() * 100),
-    };
-  }),
-});
-
 export type LayerOptions = {
   client: Client;
   space: Space;
@@ -90,19 +61,21 @@ export type LayerFactoryResult = {
 
 export type LayerFactory = (options: LayerOptions) => LayerFactoryResult;
 
+const functions: FunctionDefinition.Any[] = [];
+
 export const createBaseLayer = (
   aiServiceLayer: Layer.Layer<AiService.AiService, any, any>,
   { client, space }: LayerOptions,
 ) => {
   return Layer.mergeAll(
-    makeToolResolverFromFunctions([fn], toolkit),
-    makeToolExecutionServiceFromFunctions(toolkit, toolkit.toLayer({}) as any),
     TracingService.layerNoop,
+    makeToolResolverFromFunctions(functions, TestToolkit.toolkit),
+    makeToolExecutionServiceFromFunctions(TestToolkit.toolkit, TestToolkit.layer),
   ).pipe(
     // TODO(burdon): Factor out from compute-runtime.ts
     Layer.provideMerge(
       FunctionInvocationServiceLayerWithLocalLoopbackExecutor.pipe(
-        Layer.provideMerge(FunctionImplementationResolver.layerTest({ functions: [fn] })),
+        Layer.provideMerge(FunctionImplementationResolver.layerTest({ functions: [] })),
         Layer.provideMerge(
           RemoteFunctionExecutionService.fromClient(
             client,

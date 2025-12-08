@@ -64,7 +64,7 @@ export class Core extends Context {
     this._conversation = undefined;
   }
 
-  async request(params: AiConversationRunParams) {
+  async streamRequest(params: AiConversationRunParams) {
     invariant(this._conversation);
     const request = this._conversation.createRequest(params);
     const fiber = request.pipe(
