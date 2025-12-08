@@ -70,7 +70,7 @@ export type Requirements<T extends Any> = T extends GenericToolkit<infer _TR, in
 export const make = <Tools extends Record<string, Tool.Any>, E, R>(
   toolkit: Toolkit.Toolkit<Tools>,
   layer: Layer.Layer<Tool.HandlersFor<Tools>, E, R>,
-): GenericToolkit<E, R> => {
+): GenericToolkit<Tool.Requirements<Tools>, E, R> => {
   return {
     [TypeId]: TypeId,
     toolkit: toolkit as any,

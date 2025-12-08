@@ -8,3 +8,4 @@ export * from './plugins';
 export * from './sync';
 export * from './crud';
 export * from './toolkits';
+export * from './experimental/code-execution/code-execution';
