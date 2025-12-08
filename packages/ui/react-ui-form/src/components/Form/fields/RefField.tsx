@@ -11,8 +11,7 @@ import { ReferenceAnnotationId, type ReferenceAnnotationValue } from '@dxos/echo
 import { findAnnotation } from '@dxos/effect';
 import { DXN } from '@dxos/keys';
 import { DxAnchor } from '@dxos/lit-ui/react';
-// TODO(wittjosiah): Factor out to `@dxos/react-echo`.
-import { useQuery, useSchema } from '@dxos/react-client/echo';
+import { useQuery, useSchema } from '@dxos/echo-react';
 import { Button, Icon, Input, useTranslation } from '@dxos/react-ui';
 import { descriptionText, mx } from '@dxos/react-ui-theme';
 import { isNonNullable } from '@dxos/util';

@@ -10,7 +10,6 @@ import React, { forwardRef, useCallback, useImperativeHandle, useMemo, useState 
 
 import { Filter, Format, Query, QueryAST, type SchemaRegistry } from '@dxos/echo';
 import { EchoSchema, type JsonProp, isMutable, toJsonSchema } from '@dxos/echo/internal';
-import {} from '@dxos/echo-db';
 import { invariant } from '@dxos/invariant';
 import { Callout, IconButton, Input, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { QueryForm, type QueryFormProps } from '@dxos/react-ui-components';
