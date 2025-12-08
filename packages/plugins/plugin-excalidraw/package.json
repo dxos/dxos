@@ -24,7 +24,7 @@
     "src"
   ],
   "dependencies": {
-    "@automerge/automerge": "3.2.0",
+    "@automerge/automerge": "3.2.1",
     "@dxos/app-framework": "workspace:*",
     "@dxos/async": "workspace:*",
     "@dxos/echo": "workspace:*",

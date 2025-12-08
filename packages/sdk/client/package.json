@@ -102,8 +102,8 @@
     "typedoc": "typedoc --out typedoc"
   },
   "dependencies": {
-    "@automerge/automerge": "3.2.0",
-    "@automerge/automerge-repo": "2.5.0",
+    "@automerge/automerge": "3.2.1",
+    "@automerge/automerge-repo": "2.5.1",
     "@dxos/async": "workspace:*",
     "@dxos/client-protocol": "workspace:*",
     "@dxos/client-services": "workspace:*",
@@ -144,7 +144,7 @@
     "ua-parser-js": "^1.0.39"
   },
   "devDependencies": {
-    "@automerge/automerge": "3.2.0",
+    "@automerge/automerge": "3.2.1",
     "@dxos/test-utils": "workspace:*",
     "@types/lodash.isequal": "^4.5.0",
     "@types/lodash.isequalwith": "^4.4.0",

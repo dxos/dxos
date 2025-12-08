@@ -44,7 +44,7 @@
     "src"
   ],
   "dependencies": {
-    "@automerge/automerge": "3.2.0",
+    "@automerge/automerge": "3.2.1",
     "@codemirror/search": "^6.5.11",
     "@codemirror/state": "^6.5.2",
     "@codemirror/view": "^6.38.4",

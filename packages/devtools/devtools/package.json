@@ -24,7 +24,7 @@
     "proxy": "vite-node scripts/proxy.ts"
   },
   "dependencies": {
-    "@automerge/automerge": "3.2.0",
+    "@automerge/automerge": "3.2.1",
     "@dxos/ai": "workspace:*",
     "@dxos/assistant": "workspace:*",
     "@dxos/async": "workspace:*",

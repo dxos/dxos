@@ -34,7 +34,7 @@
     "vitest-ui": "vitest --ui"
   },
   "dependencies": {
-    "@automerge/automerge": "3.2.0",
+    "@automerge/automerge": "3.2.1",
     "@codemirror/autocomplete": "^6.19.0",
     "@codemirror/commands": "^6.8.1",
     "@codemirror/lang-html": "^6.4.11",
@@ -89,9 +89,9 @@
     "style-mod": "^4.1.0"
   },
   "devDependencies": {
-    "@automerge/automerge": "3.2.0",
-    "@automerge/automerge-repo": "2.5.0",
-    "@automerge/automerge-repo-network-broadcastchannel": "2.5.0",
+    "@automerge/automerge": "3.2.1",
+    "@automerge/automerge-repo": "2.5.1",
+    "@automerge/automerge-repo-network-broadcastchannel": "2.5.1",
     "@dxos/config": "workspace:*",
     "@dxos/echo": "workspace:*",
     "@dxos/echo-signals": "workspace:*",

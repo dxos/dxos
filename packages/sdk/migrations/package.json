@@ -25,8 +25,8 @@
     "src"
   ],
   "dependencies": {
-    "@automerge/automerge": "3.2.0",
-    "@automerge/automerge-repo": "2.5.0",
+    "@automerge/automerge": "3.2.1",
+    "@automerge/automerge-repo": "2.5.1",
     "@dxos/client": "workspace:*",
     "@dxos/echo": "workspace:*",
     "@dxos/echo-db": "workspace:*",
