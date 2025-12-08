@@ -9,6 +9,8 @@
   "sideEffects": false,
   "type": "module",
   "dependencies": {
+    "@dxos/ai": "workspace:*",
+    "@dxos/assistant": "workspace:*",
     "@dxos/async": "workspace:*",
     "@dxos/client": "workspace:*",
     "@dxos/client-protocol": "workspace:*",
@@ -29,6 +31,9 @@
     "@dxos/schema": "workspace:*",
     "@dxos/types": "workspace:*",
     "@dxos/util": "workspace:*",
+    "@effect/ai": "0.29.1",
+    "@effect/ai-anthropic": "0.21.1",
+    "@effect/ai-openai": "^0.32.1",
     "@effect/cli": "0.71.0",
     "@effect/cluster": "0.50.3",
     "@effect/platform": "0.92.1",
@@ -39,6 +44,7 @@
     "@effect/sql": "0.46.0",
     "@effect/typeclass": "0.37.0",
     "@effect/workflow": "0.11.3",
+    "blessed": "^0.1.81",
     "chalk": "^4.1.2",
     "effect": "3.18.3",
     "esbuild": "0.25.10",
@@ -46,6 +52,7 @@
     "yaml": "^2.5.0"
   },
   "devDependencies": {
+    "@types/blessed": "^0.1.26",
     "@types/node": "^22.5.2",
     "@types/wtfnode": "^0.10.0",
     "ts-node": "10.9.1",

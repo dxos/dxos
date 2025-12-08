@@ -4,42 +4,42 @@
 
 import * as Console from 'effect/Console';
 import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
 import type * as Schema from 'effect/Schema';
 
 import { ClientService } from '@dxos/client';
-import { type Space, SpaceId } from '@dxos/client/echo';
-import { Database } from '@dxos/echo';
+import { type Space } from '@dxos/client/echo';
+import { Database, Key } from '@dxos/echo';
 import { BaseError, type BaseErrorOptions } from '@dxos/errors';
+import { QueueService } from '@dxos/functions';
 import { log } from '@dxos/log';
 import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
 
 export const getSpace = (rawSpaceId: string) =>
   Effect.gen(function* () {
     const client = yield* ClientService;
-    const spaceId = yield* SpaceId.isValid(rawSpaceId) ? Option.some(rawSpaceId) : Option.none();
+    const spaceId = yield* Key.SpaceId.tryParse(rawSpaceId);
     return yield* Option.fromNullable(client.spaces.get(spaceId));
   }).pipe(Effect.catchTag('NoSuchElementException', () => Effect.fail(new SpaceNotFoundError(rawSpaceId))));
 
+// TODO(wittjosiah): Refactor to be able to use with `Command.provideEffect`?
 export const withDatabase: (
-  rawSpaceId: string,
-) => <A, E, R>(effect: Effect.Effect<A, E, R>) => Effect.Effect<A, E, ClientService | Exclude<R, Database.Service>> = (
-  rawSpaceId,
-) =>
+  rawSpaceId?: string,
+) => <A, E, R>(
+  effect: Effect.Effect<A, E, R>,
+) => Effect.Effect<A, E, ClientService | Exclude<R, Database.Service | QueueService>> = (rawSpaceId) =>
   Effect.fnUntraced(function* (effect) {
     const client = yield* ClientService;
-    const spaceId = SpaceId.isValid(rawSpaceId) ? Option.some(rawSpaceId) : Option.none();
-    // TODO(wittjosiah): Is waitUntilReady needed?
-    // const db = spaceId.pipe(
-    //   Option.flatMap((id) => Option.fromNullable(client.spaces.get(id))),
-    //   Option.map((space) => Database.Service.layer(space.db)),
-    //   Option.getOrElse(() => Database.Service.notAvailable),
-    // );
+    yield* Effect.promise(() => client.spaces.waitUntilReady());
+    const spaceId = Key.SpaceId.tryParse(rawSpaceId ?? client.spaces.default.id);
     const db = yield* spaceId.pipe(
       Option.flatMap((id) => Option.fromNullable(client.spaces.get(id))),
       Option.map((space) => Effect.promise(() => space.waitUntilReady())),
-      Option.map((space) => Effect.map(space, (space) => Database.Service.layer(space.db))),
-      Option.getOrElse(() => Effect.succeed(Database.Service.notAvailable)),
+      Option.map((space) =>
+        Effect.map(space, (space) => Layer.merge(Database.Service.layer(space.db), QueueService.layer(space.queues))),
+      ),
+      Option.getOrElse(() => Effect.succeed(Layer.merge(Database.Service.notAvailable, QueueService.notAvailable))),
     );
 
     return yield* Effect.gen(function* () {
@@ -57,7 +57,7 @@ export const withTypes: (
     return yield* effect;
   });
 
-// TODO(dmaretsky): there a race condition with edge connection not showing up
+// TODO(dmaretskyi): There a race condition with edge connection not showing up.
 export const waitForSync = Effect.fn(function* (space: Space) {
   // TODO(wittjosiah): This should probably be prompted for.
   if (space.internal.data.edgeReplication !== EdgeReplicationSetting.ENABLED) {
