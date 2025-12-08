@@ -394,7 +394,9 @@ export class App {
   private _updateMessages(): void {
     const content = this._formatContent(this._messages.join('\n'));
     this._messageBox.setContent(content);
-    this._messageBox.scrollTo(this._messages.length);
+    // Scroll to bottom based on actual content height.
+    const scrollHeight = this._messageBox.getScrollHeight();
+    this._messageBox.scrollTo(scrollHeight);
     this._screen.render();
   }
 
@@ -446,9 +448,10 @@ export class App {
       // realloc might not work on all systems.
     }
 
-    const content = this._messages.join('\n');
+    const content = this._formatContent(this._messages.join('\n'));
     this._messageBox.setContent(content);
-    this._messageBox.scrollTo(this._messages.length);
+    const scrollHeight = this._messageBox.getScrollHeight();
+    this._messageBox.scrollTo(scrollHeight);
     this._screen.render();
     setImmediate(() => this._screen.render());
   }
