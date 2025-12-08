@@ -32,6 +32,7 @@ process.stderr.write = (chunk: any, ...args: any[]): boolean => {
 /**
  * DXOS CLI TUI - Terminal User Interface.
  * Built with blessed for zero-flicker performance.
+ * https://github.com/chjj/blessed
  */
 export class App {
   private readonly _exitHandler = () => this._exit();
