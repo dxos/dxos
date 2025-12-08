@@ -150,6 +150,7 @@
     "syncpack": "^8.2.4",
     "ts-morph": "^16.0.0",
     "tsdown": "^0.16.7",
+    "tsx": "^4.21.0",
     "types-package-json": "^2.0.39",
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.39.0",
@@ -173,7 +174,7 @@
   },
   "packageManager": "pnpm@10.13.1",
   "engines": {
-    "node": "24.4.1"
+    "node": "^24.0.0"
   },
   "pnpm": {
     "onlyBuiltDependencies": [

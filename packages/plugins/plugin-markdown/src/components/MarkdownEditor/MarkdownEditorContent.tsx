@@ -19,7 +19,6 @@ import {
   createMarkdownExtensions,
   createThemeExtensions,
   dropFile,
-  editorGutter,
   editorSlots,
   formattingListener,
   processEditorPayload,
@@ -104,7 +103,6 @@ export const MarkdownEditorContent = forwardRef<EditorView | null, MarkdownEdito
           }),
           createMarkdownExtensions(),
           formattingListener(() => toolbarStateRef.current),
-          editorGutter,
           role !== 'section' &&
             onFileUpload &&
             dropFile({

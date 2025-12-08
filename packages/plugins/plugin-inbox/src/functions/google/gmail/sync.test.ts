@@ -13,6 +13,7 @@ import * as Layer from 'effect/Layer';
 import { CredentialsService } from '@dxos/functions';
 import { TestDatabaseLayer } from '@dxos/functions-runtime/testing';
 import { invariant } from '@dxos/invariant';
+import { type Person } from '@dxos/types';
 
 import { GoogleMail } from '../../apis';
 
@@ -35,7 +36,7 @@ const TestLayer = Layer.mergeAll(
  * Click Authorize, then Exchange authorization code for tokens.
  *
  * export ACCESS_TOKEN="xxx"
- * pnpm vitest api.test.ts
+ * pnpm vitest sync.test.ts
  */
 describe.runIf(process.env.GOOGLE_ACCESS_TOKEN)('Gmail API', { timeout: 30_000 }, () => {
   it.effect(
@@ -59,7 +60,7 @@ describe.runIf(process.env.GOOGLE_ACCESS_TOKEN)('Gmail API', { timeout: 30_000 }
         Array.map((message) =>
           Function.pipe(
             GoogleMail.getMessage(userId, message.id),
-            Effect.flatMap((message) => mapMessage(message)),
+            Effect.flatMap((message) => mapMessage(message, [] as Person.Person[])),
           ),
         ),
         Effect.all,

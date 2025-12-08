@@ -11,7 +11,7 @@ import { faker } from '@dxos/random';
 import { useQuery } from '@dxos/react-client/echo';
 import { useClientProvider, withClientProvider } from '@dxos/react-client/testing';
 import { withTheme } from '@dxos/react-ui/testing';
-import { Form } from '@dxos/react-ui-form';
+import { Form, omitId } from '@dxos/react-ui-form';
 import { Collection, View } from '@dxos/schema';
 import { createObjectFactory } from '@dxos/schema/testing';
 import { Person, Project } from '@dxos/types';
@@ -25,7 +25,7 @@ const StorybookProjectItem = ({ item, projectionModel }: ItemProps) => {
     const contact = item as Obj.Obj<Person.Person>;
 
     return (
-      <Form.Root values={contact} schema={Person.Person} projection={projectionModel} autoSave>
+      <Form.Root schema={omitId(Person.Person)} projection={projectionModel} values={contact} autoSave>
         <Form.Viewport>
           <Form.Content>
             <Form.FieldSet />

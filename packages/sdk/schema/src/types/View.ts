@@ -29,6 +29,7 @@ import {
   getProperties,
   isArrayType,
   isNestedType,
+  runAndForwardErrors,
 } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
@@ -242,7 +243,7 @@ export const makeWithReferences = async ({
         (error) => error._tag === 'NoSuchElementException',
         () => Effect.succeed('Recovering from NoSuchElementException'),
       ),
-      Effect.runPromise,
+      runAndForwardErrors,
     );
   }
 

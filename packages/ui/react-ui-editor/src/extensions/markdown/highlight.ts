@@ -7,7 +7,7 @@ import { HighlightStyle } from '@codemirror/language';
 import { Tag, styleTags, tags } from '@lezer/highlight';
 import { type MarkdownConfig, Table } from '@lezer/markdown';
 
-import { fontBody, theme } from '../../styles';
+import { fontBody, markdownTheme } from '../../styles';
 
 /**
  * Custom tags defined and processed by the GFM lezer extension.
@@ -114,7 +114,7 @@ export const markdownHighlightStyle = (_options: HighlightOptions = {}) => {
           markdownTags.LinkReference,
           markdownTags.ListMark,
         ],
-        class: theme.mark,
+        class: markdownTheme.mark,
       },
 
       // Markdown marks.
@@ -126,7 +126,7 @@ export const markdownHighlightStyle = (_options: HighlightOptions = {}) => {
           markdownTags.QuoteMark,
           markdownTags.EmphasisMark,
         ],
-        class: theme.mark,
+        class: markdownTheme.mark,
       },
 
       // E.g., code block language (after ```).
@@ -136,7 +136,7 @@ export const markdownHighlightStyle = (_options: HighlightOptions = {}) => {
           tags.function(tags.variableName),
           tags.labelName,
         ],
-        class: theme.codeMark,
+        class: markdownTheme.codeMark,
       },
 
       // Fonts.
@@ -146,12 +146,12 @@ export const markdownHighlightStyle = (_options: HighlightOptions = {}) => {
       },
 
       // Headings.
-      { tag: tags.heading1, class: theme.heading(1) },
-      { tag: tags.heading2, class: theme.heading(2) },
-      { tag: tags.heading3, class: theme.heading(3) },
-      { tag: tags.heading4, class: theme.heading(4) },
-      { tag: tags.heading5, class: theme.heading(5) },
-      { tag: tags.heading6, class: theme.heading(6) },
+      { tag: tags.heading1, class: markdownTheme.heading(1) },
+      { tag: tags.heading2, class: markdownTheme.heading(2) },
+      { tag: tags.heading3, class: markdownTheme.heading(3) },
+      { tag: tags.heading4, class: markdownTheme.heading(4) },
+      { tag: tags.heading5, class: markdownTheme.heading(5) },
+      { tag: tags.heading6, class: markdownTheme.heading(6) },
 
       // Emphasis.
       { tag: tags.emphasis, class: 'italic' },
@@ -165,7 +165,7 @@ export const markdownHighlightStyle = (_options: HighlightOptions = {}) => {
       // IMPORTANT: Therefore, the fenced code block will use the base editor font unless changed by an extension.
       {
         tag: [markdownTags.CodeText, markdownTags.InlineCode],
-        class: theme.code,
+        class: markdownTheme.code,
       },
 
       {

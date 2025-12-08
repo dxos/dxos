@@ -21,6 +21,7 @@ export namespace ThreadCapabilities {
     onCallStateUpdated: (callState: CallState) => Promise<void>;
     onMediaStateUpdated: ([mediaState, isSpeaking]: [MediaState, boolean]) => Promise<void>;
   };
+
   export const CallExtension = defineCapability<CallProperties>(`${meta.id}/capability/call-extension`);
 
   type GetViewState = (subjectId: string) => ViewState;

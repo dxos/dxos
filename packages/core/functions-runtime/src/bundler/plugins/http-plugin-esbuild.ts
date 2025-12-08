@@ -16,7 +16,7 @@ import { BaseError } from '@dxos/errors';
 const MAX_RETRIES = 5;
 const INITIAL_DELAY = 1_000;
 
-export class HttpPluginError extends BaseError.extend('HTTP_PLUGIN_ERROR') {}
+export class HttpPluginError extends BaseError.extend('HttpPluginError') {}
 
 const LOADERS: Record<string, Loader> = {
   js: 'js',

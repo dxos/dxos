@@ -16,14 +16,14 @@ import { translations } from '../../translations';
 import { TestLayout } from '../testing';
 
 import { SelectField } from './fields';
-import { Form, type NewFormRootProps } from './Form';
+import { Form, type FormRootProps } from './Form';
 
 // TODO(burdon): Extract into Form.stories.tsx
 
 type StoryProps<T extends AnyProperties> = {
   debug?: boolean;
   schema: Schema.Schema.AnyNoContext;
-} & NewFormRootProps<T>;
+} & FormRootProps<T>;
 
 const DefaultStory = <T extends AnyProperties = any>({
   debug,
@@ -32,7 +32,7 @@ const DefaultStory = <T extends AnyProperties = any>({
   ...props
 }: StoryProps<T>) => {
   const [values, setValues] = useState(valuesProp);
-  const handleSave = useCallback<NonNullable<NewFormRootProps<T>['onSave']>>((values) => {
+  const handleSave = useCallback<NonNullable<FormRootProps<T>['onSave']>>((values) => {
     setValues(values);
   }, []);
 
@@ -62,7 +62,7 @@ const DefaultStory = <T extends AnyProperties = any>({
 };
 
 const RefStory = <T extends AnyProperties = any>(props: StoryProps<T>) => {
-  const onQueryRefOptions = useCallback<NonNullable<NewFormRootProps<T>['onQueryRefOptions']>>(({ typename }) => {
+  const onQueryRefOptions = useCallback<NonNullable<FormRootProps<T>['onQueryRefOptions']>>(({ typename }) => {
     switch (typename) {
       case TestSchema.Person.typename:
         return [

@@ -10,6 +10,7 @@ import React, { useMemo, useState } from 'react';
 
 import { Filter, Obj, Tag } from '@dxos/echo';
 import { Function, Script, Trigger } from '@dxos/functions';
+import { FunctionsServiceClient } from '@dxos/functions-runtime/edge';
 import { useTypeOptions } from '@dxos/plugin-space';
 import { type Client, useClient } from '@dxos/react-client';
 import { type Space, getSpace, useQuery } from '@dxos/react-client/echo';
@@ -36,6 +37,7 @@ export type AutomationPanelProps = ThemedClassName<{
 export const AutomationPanel = ({ classNames, space, object, initialTrigger, onDone }: AutomationPanelProps) => {
   const { t } = useTranslation(meta.id);
   const client = useClient();
+  const functionsServiceClient = useMemo(() => FunctionsServiceClient.fromClient(client), [client]);
   const functions = useQuery(space.db, Filter.type(Function.Function));
   const triggers = useQuery(space.db, Filter.type(Trigger.Trigger));
   const filteredTriggers = useMemo(() => {
@@ -88,11 +90,7 @@ export const AutomationPanel = ({ classNames, space, object, initialTrigger, onD
   };
 
   const handleForceRunTrigger = async (trigger: Trigger.Trigger) => {
-    const edgeUrl = new URL(client.config.values.runtime!.services!.edge!.url!);
-    edgeUrl.pathname = `/test/functions/${space.id}/triggers/crons/${trigger.id}/run`;
-    await fetch(edgeUrl, {
-      method: 'POST',
-    });
+    await functionsServiceClient.forceRunCronTrigger(space.id, trigger.id);
   };
 
   if (trigger) {
@@ -153,7 +151,8 @@ export const AutomationPanel = ({ classNames, space, object, initialTrigger, onD
                       )}
                     </div>
 
-                    <IconButton
+                    <List.ItemButton
+                      autoHide={false}
                       disabled={!trigger.enabled || trigger.spec?.kind !== 'timer'}
                       icon='ph--play--regular'
                       label='Force run'

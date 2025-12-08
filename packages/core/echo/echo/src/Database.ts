@@ -126,9 +126,19 @@ export type FlushOptions = {
 export interface Database extends Queryable {
   get spaceId(): SpaceId;
 
+  // TODO(burdon): Can we move this into graph?
   get schemaRegistry(): SchemaRegistry.SchemaRegistry;
 
+  /**
+   *
+   */
+  // TODO(burdon): Comment required.
   get graph(): Hypergraph.Hypergraph;
+
+  /**
+   * Query objects.
+   */
+  query: QueryFn;
 
   /**
    * Creates a reference to an existing object in the database.
@@ -139,11 +149,6 @@ export interface Database extends Queryable {
    * `db.makeRef(dxn)` is preferable in cases with access to the database.
    */
   makeRef<T extends Entity.Unknown = Entity.Unknown>(dxn: DXN): Ref.Ref<T>;
-
-  /**
-   * Query objects.
-   */
-  query: QueryFn;
 
   /**
    * Adds object to the database.
@@ -238,7 +243,9 @@ export class Service extends Context.Tag('@dxos/echo/Database/Service')<
    */
   // TODO(burdon): Option?
   static loadOption: <T>(ref: Ref.Ref<T>) => Effect.Effect<Option.Option<T>, never, never> = Effect.fn(function* (ref) {
-    const object = yield* Service.load(ref).pipe(Effect.catchTag('OBJECT_NOT_FOUND', () => Effect.succeed(undefined)));
+    const object = yield* Service.load(ref).pipe(
+      Effect.catchTag('ObjectNotFoundError', () => Effect.succeed(undefined)),
+    );
     return Option.fromNullable(object);
   });
 
