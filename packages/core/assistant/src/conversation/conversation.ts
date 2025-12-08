@@ -65,6 +65,10 @@ export class AiConversation extends Resource {
     await this._context.close();
   }
 
+  public get queue() {
+    return this._queue;
+  }
+
   public get context() {
     return this._context;
   }

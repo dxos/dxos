@@ -61,10 +61,10 @@ export const FunctionInvocationServiceLayerWithLocalLoopbackExecutor = Layer.eff
   }),
 );
 
-// TODO(dmaretskyi): Don't provide `FunctionImplementationResolver`.
 /**
  * Layer for testing with optional function implementations.
  */
+// TODO(dmaretskyi): Don't provide `FunctionImplementationResolver`.
 export const FunctionInvocationServiceLayerTest = ({
   functions = [],
 }: {
@@ -79,12 +79,12 @@ export const FunctionInvocationServiceLayerTest = ({
     Layer.provide(RemoteFunctionExecutionService.layerMock),
   );
 
-// TODO(dmaretskyi): This shouldn't default to all services being not available.
-// TODO(dmaretskyi): Don't provide `FunctionImplementationResolver`.
 /**
  * @deprecated Use {@link FunctionInvocationServiceLayerTest} instead.
  * Layer for testing with all services mocked/unavailable.
  */
+// TODO(dmaretskyi): This shouldn't default to all services being not available.
+// TODO(dmaretskyi): Don't provide `FunctionImplementationResolver`.
 export const FunctionInvocationServiceLayerTestMocked = ({
   functions,
 }: {
