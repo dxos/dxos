@@ -77,7 +77,6 @@ const main = Effect.gen(function* () {
   const space = client.spaces.default;
   const { layer, model } = getLayer(client, space, argv.provider as Provider);
 
-  console.log('Creating layer...');
   yield* Effect.gen(function* () {
     const services = yield* Effect.runtime<Core.AiChatServices>();
     const service = yield* AiService.AiService;
