@@ -256,7 +256,7 @@ const createDocumentsIterator = (automergeHost: AutomergeHost) =>
     }
 
     // TODO(mykola): Use list of roots instead of iterating over all handles.
-    for (const handle of Object.values(automergeHost.repo.handles)) {
+    for (const handle of Object.values(automergeHost.handles)) {
       if (visited.has(handle.documentId)) {
         continue;
       }

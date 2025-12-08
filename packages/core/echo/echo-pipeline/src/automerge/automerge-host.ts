@@ -267,6 +267,10 @@ export class AutomergeHost extends Resource {
     return Object.keys(this._repo.handles).length;
   }
 
+  get handles(): Readonly<Record<DocumentId, DocHandle<any>>> {
+    return this._repo.handles;
+  }
+
   async addReplicator(replicator: EchoReplicator): Promise<void> {
     invariant(this.isOpen, 'AutomergeHost is not open');
     await this._echoNetworkAdapter.addReplicator(replicator);
