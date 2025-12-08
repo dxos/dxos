@@ -38,7 +38,9 @@ export const make = ({
   const createModelLayer = (model: string) => ChatCompletionsAdapter.layer(model).pipe(Layer.provide(clientLayer));
 
   return AiModelResolver.AiModelResolver.fromModelMap(
-    'LM Studio',
+    {
+      name: 'LM Studio',
+    },
     Effect.succeed({
       '@google/gemma-3-27b': createModelLayer('google/gemma-3-27b'),
       '@meta/llama-3.1-8b-instruct': createModelLayer('meta-llama-3.1-8b-instruct'),

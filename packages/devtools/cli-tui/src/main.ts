@@ -6,6 +6,7 @@ import * as Effect from 'effect/Effect';
 import yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
 
+import { AiService } from '@dxos/ai';
 import { Client, Config } from '@dxos/client';
 import { type Space } from '@dxos/client/echo';
 
@@ -79,8 +80,13 @@ const main = Effect.gen(function* () {
   console.log('Creating layer...');
   yield* Effect.gen(function* () {
     const services = yield* Effect.runtime<Core.AiChatServices>();
-    const provider = '???';
-    const core = new Core.Core(client, services, provider, model);
+    const service = yield* AiService.AiService;
+    console.log(service);
+    if (!service.metadata) {
+      throw new Error('AI service not available');
+    }
+
+    const core = new Core.Core(client, services, service.metadata.name, model);
     const app = new App(core);
     yield* Effect.promise(() => app.initialize());
   }).pipe(Effect.provide(layer));

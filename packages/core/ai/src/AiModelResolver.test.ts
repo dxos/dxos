@@ -21,7 +21,9 @@ import * as LMStudioResolver from './resolvers/lmstudio/LMStudioResolver';
 const TestRouter = AiModelResolver.AiModelResolver.buildAiService.pipe(
   Layer.provide(
     AiModelResolver.AiModelResolver.resolver(
-      'Anthropic',
+      {
+        name: 'Anthropic',
+      },
       Effect.gen(function* () {
         const claudeSonnet = yield* AnthropicLanguageModel.model('claude-3-5-sonnet-20241022');
         return (name: ModelName) => {
@@ -37,7 +39,9 @@ const TestRouter = AiModelResolver.AiModelResolver.buildAiService.pipe(
   ),
   Layer.provide(
     AiModelResolver.AiModelResolver.resolver(
-      'LM Studio',
+      {
+        name: 'LM Studio',
+      },
       Effect.gen(function* () {
         const gemma = yield* OpenAiLanguageModel.model('google/gemma-3-27b').pipe(
           Effect.provide(

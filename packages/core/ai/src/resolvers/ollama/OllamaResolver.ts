@@ -38,7 +38,9 @@ export const make = ({
   const createModelLayer = (model: string) => ChatCompletionsAdapter.layer(model).pipe(Layer.provide(clientLayer));
 
   return AiModelResolver.AiModelResolver.fromModelMap(
-    'Ollama',
+    {
+      name: 'Ollama',
+    },
     Effect.succeed({
       '@google/gemma-3-27b': createModelLayer('gemma3:27b'),
       'deepseek-r1:latest': createModelLayer('deepseek-r1:latest'),
