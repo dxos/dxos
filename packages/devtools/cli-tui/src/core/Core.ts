@@ -10,7 +10,7 @@ import * as Runtime from 'effect/Runtime';
 
 import { AiService, type ModelName } from '@dxos/ai';
 import { AiConversation, type AiConversationRunParams } from '@dxos/assistant';
-import { Client, Config } from '@dxos/client';
+import { type Client } from '@dxos/client';
 import { Context } from '@dxos/context';
 import { throwCause } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
@@ -24,12 +24,10 @@ export * from './services';
  * CLI internal state.
  */
 export class Core extends Context {
-  private readonly _ctx = new Context();
-
-  private _client?: Client;
   private _conversation?: AiConversation;
 
   constructor(
+    private _client: Client,
     private _services: Runtime.Runtime<AiChatServices>,
     private _resolverName: string,
     private _model: ModelName,
@@ -54,14 +52,6 @@ export class Core extends Context {
   }
 
   async open(): Promise<void> {
-    const config = new Config();
-    this._client = new Client({ config });
-    await this._client.initialize();
-    const identity = this._client.halo.identity.get();
-    if (!identity?.identityKey) {
-      await this._client.halo.createIdentity();
-    }
-
     await this._client.spaces.waitUntilReady();
     const space = this._client.spaces.default;
     const queue = space.queues.create<Message.Message>();
@@ -71,9 +61,7 @@ export class Core extends Context {
   async close(): Promise<void> {
     await this._conversation?.close();
     await this._client?.destroy();
-    await this._ctx.dispose();
     this._conversation = undefined;
-    this._client = undefined;
   }
 
   async request(params: AiConversationRunParams) {

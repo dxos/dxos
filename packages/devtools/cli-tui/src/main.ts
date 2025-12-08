@@ -7,7 +7,9 @@ import type * as Layer from 'effect/Layer';
 import yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
 
-import { AiModelResolver, type ModelName } from '@dxos/ai';
+import { type ModelName } from '@dxos/ai';
+import { Client, Config } from '@dxos/client';
+import { type Space } from '@dxos/client/echo';
 import { runAndForwardErrors } from '@dxos/effect';
 
 import { App } from './app';
@@ -32,43 +34,89 @@ const argv = yargs(hideBin(process.argv))
   .parse();
 
 const getLayerAndModel = (
+  client: Client,
+  space: Space,
   provider: Provider,
-  model?: string,
-): { layer: Layer.Layer<Core.AiChatServices, never, never>; model: ModelName } => {
+  model?: ModelName,
+): { layer: Layer.Layer<Core.AiChatServices, never, never>; model: ModelName; resolverName: string } => {
   switch (provider) {
     case 'lmstudio': {
-      const modelName = (model ?? Core.DEFAULT_LMSTUDIO_MODEL) as ModelName;
+      const modelName = model ?? Core.DEFAULT_LMSTUDIO_MODEL;
       return {
-        layer: Core.createLMStudioLayer(modelName),
+        layer: Core.createLMStudioLayer({ client, space, model: modelName }),
         model: modelName,
+        resolverName: 'LM Studio',
       };
     }
     case 'ollama': {
-      const modelName = (model ?? Core.DEFAULT_OLLAMA_MODEL) as ModelName;
+      const modelName = model ?? Core.DEFAULT_OLLAMA_MODEL;
       return {
-        layer: Core.createOllamaLayer(modelName),
+        layer: Core.createOllamaLayer({ client, space, model: modelName }),
         model: modelName,
+        resolverName: 'Ollama',
       };
     }
     case 'edge':
     default: {
-      const modelName = (model ?? Core.DEFAULT_EDGE_MODEL) as ModelName;
+      const modelName = model ?? Core.DEFAULT_EDGE_MODEL;
       return {
-        layer: Core.createTestLayer(modelName),
+        layer: Core.createTestLayer({ client, space, model: modelName }),
         model: modelName,
+        resolverName: 'EDGE',
       };
     }
   }
 };
 
-const { layer, model } = getLayerAndModel(argv.provider as Provider, argv.model);
-
 const main = Effect.gen(function* () {
-  const resolver = yield* AiModelResolver.AiModelResolver;
-  const services = yield* Effect.runtime<Core.AiChatServices>();
-  const core = new Core.Core(services, resolver.name, model);
-  const app = new App(core);
-  yield* Effect.promise(() => app.initialize());
-}).pipe(Effect.provide(layer));
+  const config = new Config({
+    runtime: {
+      client: {
+        edgeFeatures: {
+          signaling: true,
+        },
+      },
+      services: {
+        edge: {
+          url: 'https://edge.dxos.workers.dev/',
+        },
+        iceProviders: [
+          {
+            urls: 'https://edge.dxos.workers.dev/ice',
+          },
+        ],
+      },
+    },
+  });
+  const client = new Client({ config });
+  yield* Effect.promise(async () => {
+    console.log('initializing...');
+    await client.initialize();
+    const identity = client.halo.identity.get();
+    if (!identity?.identityKey) {
+      await client.halo.createIdentity();
+    }
+    await client.spaces.waitUntilReady(); // TODO(burdon): Clean-up init.
+    await client.spaces.default.waitUntilReady(); // TODO(burdon): BUG: Hangs if identity not created.
+  });
+
+  const space = client.spaces.default;
+  const { layer, model, resolverName } = getLayerAndModel(
+    client,
+    space,
+    argv.provider as Provider,
+    argv.model as ModelName,
+  );
+  console.log('Layer', layer, model);
+
+  return runAndForwardErrors(
+    Effect.gen(function* () {
+      const services = yield* Effect.runtime<Core.AiChatServices>();
+      const core = new Core.Core(client, services, resolverName, model);
+      const app = new App(core);
+      yield* Effect.promise(() => app.initialize());
+    }).pipe(Effect.provide(layer)),
+  );
+});
 
 void runAndForwardErrors(main);
