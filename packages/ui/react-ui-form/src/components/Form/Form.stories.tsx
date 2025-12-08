@@ -97,14 +97,6 @@ const DefaultStory = <T extends AnyProperties = AnyProperties>({
     setValues(valuesParam ?? {});
   }, []);
 
-  const handleQueryRefOptions = useCallback<NonNullable<FormRootProps<T>['onQueryRefOptions']>>(
-    async ({ typename }) => {
-      const objects = await space.db.query(Filter.typename(typename)).run();
-      return objects.map((result: any) => ({ dxn: Obj.getDXN(result), label: Obj.getLabel(result) }));
-    },
-    [space],
-  );
-
   return (
     <Tooltip.Provider>
       <TestLayout json={{ values, schema: schema.ast }}>
@@ -112,9 +104,9 @@ const DefaultStory = <T extends AnyProperties = AnyProperties>({
           debug={debug}
           schema={schema}
           values={values}
+          db={space.db}
           onSave={handleSave}
           onCancel={handleCancel}
-          onQueryRefOptions={handleQueryRefOptions}
           {...props}
         >
           <Form.Viewport>

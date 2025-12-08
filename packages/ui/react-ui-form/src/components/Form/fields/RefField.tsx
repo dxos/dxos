@@ -4,38 +4,58 @@
 
 import '@dxos/lit-ui/dx-tag-picker.pcss';
 
-import type * as Schema from 'effect/Schema';
 import React, { useCallback, useMemo } from 'react';
 
-import { Ref } from '@dxos/echo';
+import { type Database, type Entity, Filter, Obj, Ref, type Type } from '@dxos/echo';
 import { ReferenceAnnotationId, type ReferenceAnnotationValue } from '@dxos/echo/internal';
 import { findAnnotation } from '@dxos/effect';
 import { DXN } from '@dxos/keys';
 import { DxAnchor } from '@dxos/lit-ui/react';
+// TODO(wittjosiah): Factor out to `@dxos/react-echo`.
+import { useQuery, useSchema } from '@dxos/react-client/echo';
 import { Button, Icon, Input, useTranslation } from '@dxos/react-ui';
 import { descriptionText, mx } from '@dxos/react-ui-theme';
 import { isNonNullable } from '@dxos/util';
 
-import { type QueryRefOptions, useQueryRefOptions } from '../../../hooks';
 import { translationKey } from '../../../translations';
-import { ObjectPicker } from '../../ObjectPicker';
+import { ObjectPicker, type ObjectPickerContentProps, type RefOption } from '../../ObjectPicker';
+import { omitId } from '../Form';
 import { type FormFieldComponentProps, FormFieldLabel } from '../FormFieldComponent';
 
 // TODO(burdon): Factor out.
-const isRefSnapShot = (val: any): val is { '/': string } => {
+const isRefSnapshot = (val: any): val is { '/': string } => {
   return typeof val === 'object' && typeof (val as any)?.['/'] === 'string';
 };
 
-export type RefFieldProps = FormFieldComponentProps & {
-  // TODO(wittjosiah): Remove this. Array is handled upstream.
-  array?: boolean;
-  createOptionLabel?: [string, { ns: string }];
-  createOptionIcon?: string;
-  createSchema?: Schema.Schema.AnyNoContext;
-  createInitialValuePath?: string;
-  onCreate?: (values: any) => void;
-  onQueryRefOptions?: QueryRefOptions;
+type UseQueryRefOptionsProps = {
+  typename?: string;
+  db?: Database.Database;
+  getOptions?: (objects: Entity.Any[]) => RefOption[];
 };
+
+const defaultGetOptions: NonNullable<RefFieldProps['getOptions']> = (results) =>
+  results.map((result) => {
+    const id = Obj.getDXN(result).toString();
+    const label = Obj.getLabel(result);
+    return { id, label: label ?? id };
+  });
+
+/**
+ * Hook to query reference options based on type information.
+ * Used internally within forms to fetch and format reference options for reference fields.
+ */
+const useQueryRefOptions = ({ typename, db, getOptions = defaultGetOptions }: UseQueryRefOptionsProps) => {
+  const objects = useQuery(db, typename ? Filter.typename(typename) : Filter.nothing());
+  return useMemo(() => getOptions(objects), [objects, getOptions]);
+};
+
+export type RefFieldProps = FormFieldComponentProps &
+  Pick<ObjectPickerContentProps, 'createOptionLabel' | 'createOptionIcon' | 'createInitialValuePath'> &
+  Pick<UseQueryRefOptionsProps, 'db' | 'getOptions'> & {
+    onCreate?: (schema: Type.Entity.Any, values: any) => void;
+    // TODO(wittjosiah): Remove this. Array is handled upstream.
+    array?: boolean;
+  };
 
 export const RefField = (props: RefFieldProps) => {
   const {
@@ -49,10 +69,10 @@ export const RefField = (props: RefFieldProps) => {
     array,
     createOptionLabel,
     createOptionIcon,
-    createSchema,
     createInitialValuePath,
+    db,
+    getOptions,
     onCreate,
-    onQueryRefOptions,
     onValueChange,
   } = props;
   const { t } = useTranslation(translationKey);
@@ -63,15 +83,14 @@ export const RefField = (props: RefFieldProps) => {
     [type],
   );
 
-  // TODO(burdon): Query items on demand.
-  const { options, update: updateOptions } = useQueryRefOptions({ typename, onQueryRefOptions });
+  const options = useQueryRefOptions({ typename, db, getOptions });
 
   const handleGetValue = useCallback(() => {
     const formValue = getValue();
 
     const unknownToRefOption = (value: unknown) => {
       const isRef = Ref.isRef(value);
-      if (isRef || isRefSnapShot(value)) {
+      if (isRef || isRefSnapshot(value)) {
         const dxnString = isRef ? value.dxn.toString() : value['/'];
         const matchingOption = options.find((option) => option.id === dxnString);
         if (matchingOption) {
@@ -120,17 +139,20 @@ export const RefField = (props: RefFieldProps) => {
     [options, type, array, onValueChange],
   );
 
+  const items = handleGetValue();
+  const createSchema = useSchema(db, typename);
+  const selectedIds = useMemo(() => items.map((i: any) => i.id), [items]);
+
   const handleCreate = useCallback(
     (values: any) => {
-      onCreate?.(values);
-      updateOptions();
+      if (createSchema && onCreate) {
+        onCreate(createSchema, values);
+      }
     },
-    [onCreate, updateOptions],
+    [createSchema, onCreate],
   );
 
-  const items = handleGetValue();
-  const selectedIds = useMemo(() => items.map((i: any) => i.id), [items]);
-  const toggleSelect = useCallback(
+  const handleSelect = useCallback(
     (id: string) => {
       if (array) {
         const nextIds = selectedIds.includes(id) ? selectedIds.filter((x) => x !== id) : [...selectedIds, id];
@@ -190,12 +212,12 @@ export const RefField = (props: RefFieldProps) => {
               classNames='popover-card-width'
               options={options}
               selectedIds={selectedIds}
-              createSchema={createSchema}
+              createSchema={createSchema && omitId(createSchema)}
               createOptionLabel={createOptionLabel}
               createOptionIcon={createOptionIcon}
               createInitialValuePath={createInitialValuePath}
               onCreate={handleCreate}
-              onSelect={toggleSelect}
+              onSelect={handleSelect}
             />
           </ObjectPicker.Root>
         )}

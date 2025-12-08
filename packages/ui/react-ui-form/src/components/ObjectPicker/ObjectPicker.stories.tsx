@@ -11,7 +11,7 @@ import { Obj } from '@dxos/echo';
 import { faker } from '@dxos/random';
 import { Filter, useQuery } from '@dxos/react-client/echo';
 import { useClientProvider, withClientProvider } from '@dxos/react-client/testing';
-import { Button } from '@dxos/react-ui';
+import { Button, Label } from '@dxos/react-ui';
 import { withTheme } from '@dxos/react-ui/testing';
 import { Person } from '@dxos/types';
 

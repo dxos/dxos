@@ -32,12 +32,12 @@ export type FormFieldSetProps<T extends AnyProperties> = ThemedClassName<
       | 'projection'
       | 'fieldMap'
       | 'fieldProvider'
-      | 'createSchema'
       | 'createOptionLabel'
       | 'createOptionIcon'
       | 'createInitialValuePath'
+      | 'db'
+      | 'getOptions'
       | 'onCreate'
-      | 'onQueryRefOptions'
     >
 >;
 
