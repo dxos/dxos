@@ -13,7 +13,9 @@ import { type AiModelNotAvailableError } from '../../errors';
 
 export const make = () =>
   AiModelResolver.AiModelResolver.fromModelMap(
-    'OpenAI',
+    {
+      name: 'OpenAI',
+    },
     Effect.gen(function* () {
       return {
         '@openai/gpt-4o': yield* OpenAiLanguageModel.model('gpt-4o'),

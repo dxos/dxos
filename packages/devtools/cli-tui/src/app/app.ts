@@ -237,7 +237,7 @@ export class App {
   private _updateStatus(): void {
     const logo = 'Ⓓ Ⓧ Ⓞ Ⓢ ';
     const identityDid = this._core.client?.halo.identity.get()?.did || '';
-    const resolver = this._core.resolverName;
+    const resolver = this._core.provider;
     this._status.setContent(
       `{|}{yellow-fg}(${resolver}){/} {white-fg}${this._core.model}{/} {grey-fg}${identityDid}{/} {green-fg}${logo}{/}`,
     );

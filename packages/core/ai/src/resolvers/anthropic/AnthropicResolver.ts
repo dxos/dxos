@@ -13,7 +13,9 @@ import { type AiModelNotAvailableError } from '../../errors';
 
 export const make = () =>
   AiModelResolver.AiModelResolver.fromModelMap(
-    'Anthropic',
+    {
+      name: 'Anthropic',
+    },
     Effect.gen(function* () {
       return {
         '@anthropic/claude-3-5-haiku-latest': yield* AnthropicLanguageModel.model('claude-3-5-haiku-latest'),

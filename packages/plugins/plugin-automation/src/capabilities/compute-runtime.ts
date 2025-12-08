@@ -10,8 +10,7 @@ import * as ManagedRuntime from 'effect/ManagedRuntime';
 import { Capabilities, type PluginContext, contributes } from '@dxos/app-framework';
 import { GenericToolkit, makeToolExecutionServiceFromFunctions, makeToolResolverFromFunctions } from '@dxos/assistant';
 import { Resource } from '@dxos/context';
-import { Query, Ref } from '@dxos/echo';
-import { Database } from '@dxos/echo';
+import { Database, Query, Ref } from '@dxos/echo';
 import { CredentialsService, QueueService } from '@dxos/functions';
 import {
   FunctionImplementationResolver,
