@@ -81,7 +81,13 @@ export type FormFieldProps = {
 } & Pick<FormFieldComponentProps, 'autoFocus' | 'readonly' | 'layout'> &
   Pick<
     RefFieldProps,
-    'createOptionLabel' | 'createOptionIcon' | 'createInitialValuePath' | 'db' | 'getOptions' | 'onCreate'
+    | 'createOptionLabel'
+    | 'createOptionIcon'
+    | 'createInitialValuePath'
+    | 'db'
+    | 'schemaHook'
+    | 'getOptions'
+    | 'onCreate'
   >;
 
 export const FormField = (props: FormFieldProps) => {
@@ -100,6 +106,7 @@ export const FormField = (props: FormFieldProps) => {
     createOptionIcon,
     createInitialValuePath,
     db,
+    schemaHook,
     getOptions: getRefOptions,
     onCreate,
   } = props;
@@ -189,6 +196,7 @@ export const FormField = (props: FormFieldProps) => {
         createOptionIcon={createOptionIcon}
         createInitialValuePath={createInitialValuePath}
         db={db}
+        schemaHook={schemaHook}
         getOptions={getRefOptions}
         onCreate={onCreate}
       />
@@ -221,6 +229,7 @@ export const FormField = (props: FormFieldProps) => {
           createOptionIcon={createOptionIcon}
           createInitialValuePath={createInitialValuePath}
           db={db}
+          schemaHook={schemaHook}
           getOptions={getRefOptions}
           onCreate={onCreate}
         />

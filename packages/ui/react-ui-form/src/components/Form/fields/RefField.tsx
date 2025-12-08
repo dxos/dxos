@@ -8,13 +8,12 @@ import React, { useCallback, useMemo } from 'react';
 
 import { type Database, type Entity, Filter, Obj, Ref, type Type } from '@dxos/echo';
 import { ReferenceAnnotationId, type ReferenceAnnotationValue } from '@dxos/echo/internal';
+import { useQuery, useSchema as useSchema$ } from '@dxos/echo-react';
 import { findAnnotation } from '@dxos/effect';
 import { DXN } from '@dxos/keys';
 import { DxAnchor } from '@dxos/lit-ui/react';
-import { useQuery, useSchema } from '@dxos/echo-react';
 import { Button, Icon, Input, useTranslation } from '@dxos/react-ui';
 import { descriptionText, mx } from '@dxos/react-ui-theme';
-import { isNonNullable } from '@dxos/util';
 
 import { translationKey } from '../../../translations';
 import { ObjectPicker, type ObjectPickerContentProps, type RefOption } from '../../ObjectPicker';
@@ -26,12 +25,6 @@ const isRefSnapshot = (val: any): val is { '/': string } => {
   return typeof val === 'object' && typeof (val as any)?.['/'] === 'string';
 };
 
-type UseQueryRefOptionsProps = {
-  typename?: string;
-  db?: Database.Database;
-  getOptions?: (objects: Entity.Any[]) => RefOption[];
-};
-
 const defaultGetOptions: NonNullable<RefFieldProps['getOptions']> = (results) =>
   results.map((result) => {
     const id = Obj.getDXN(result).toString();
@@ -39,18 +32,15 @@ const defaultGetOptions: NonNullable<RefFieldProps['getOptions']> = (results) =>
     return { id, label: label ?? id };
   });
 
-/**
- * Hook to query reference options based on type information.
- * Used internally within forms to fetch and format reference options for reference fields.
- */
-const useQueryRefOptions = ({ typename, db, getOptions = defaultGetOptions }: UseQueryRefOptionsProps) => {
-  const objects = useQuery(db, typename ? Filter.typename(typename) : Filter.nothing());
-  return useMemo(() => getOptions(objects), [objects, getOptions]);
-};
+const defaultResultsHook: NonNullable<RefFieldProps['resultsHook']> = (db, typename) =>
+  useQuery(db, typename ? Filter.typename(typename) : Filter.nothing());
 
 export type RefFieldProps = FormFieldComponentProps &
-  Pick<ObjectPickerContentProps, 'createOptionLabel' | 'createOptionIcon' | 'createInitialValuePath'> &
-  Pick<UseQueryRefOptionsProps, 'db' | 'getOptions'> & {
+  Pick<ObjectPickerContentProps, 'createOptionLabel' | 'createOptionIcon' | 'createInitialValuePath'> & {
+    db?: Database.Database;
+    resultsHook?: (db?: Database.Database, typename?: string) => Entity.Any[];
+    schemaHook?: (db?: Database.Database, typename?: string) => Type.Entity.Any;
+    getOptions?: (objects: Entity.Any[]) => RefOption[];
     onCreate?: (schema: Type.Entity.Any, values: any) => void;
   };
 
@@ -67,7 +57,9 @@ export const RefField = (props: RefFieldProps) => {
     createOptionIcon,
     createInitialValuePath,
     db,
-    getOptions,
+    resultsHook: useResults = defaultResultsHook,
+    schemaHook: useSchema = useSchema$,
+    getOptions = defaultGetOptions,
     onCreate,
     onValueChange,
   } = props;
@@ -79,7 +71,8 @@ export const RefField = (props: RefFieldProps) => {
     [type],
   );
 
-  const options = useQueryRefOptions({ typename, db, getOptions });
+  const results = useResults(db, typename);
+  const options = useMemo(() => getOptions(results), [results, getOptions]);
 
   const handleGetValue = useCallback(() => {
     const formValue = getValue();

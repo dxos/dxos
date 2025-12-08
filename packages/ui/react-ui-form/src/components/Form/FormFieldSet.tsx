@@ -36,6 +36,7 @@ export type FormFieldSetProps<T extends AnyProperties> = ThemedClassName<
       | 'createOptionIcon'
       | 'createInitialValuePath'
       | 'db'
+      | 'schemaHook'
       | 'getOptions'
       | 'onCreate'
     >
