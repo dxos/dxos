@@ -127,8 +127,19 @@ export class App {
       },
       keys: true,
       vi: true,
-      mouse: true,
+      mouse: false,
       padding: { left: 1, right: 1 },
+    });
+
+    // TODO(burdon): Break auto-scroll if not pinned to bottom.
+    // Custom mouse scroll with reduced sensitivity.
+    this._messageBox.on('wheeldown', () => {
+      this._messageBox.scroll(1);
+      this._screen.render();
+    });
+    this._messageBox.on('wheelup', () => {
+      this._messageBox.scroll(-1);
+      this._screen.render();
     });
 
     // Border.
