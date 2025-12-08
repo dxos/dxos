@@ -48,7 +48,6 @@ describe('FunctionInvocationService', () => {
       });
 
       const layer = TestLayer.pipe(Layer.provideMerge(FunctionImplementationResolver.layerTest({ functions: [add] })));
-
       const result = yield* Effect.gen(function* () {
         return yield* FunctionInvocationService.invokeFunction(add, { a: 2, b: 3 });
       }).pipe(Effect.provide(layer));

@@ -154,6 +154,61 @@ const ChatViewport = ({ classNames, children }: ChatViewportProps) => {
 };
 
 //
+// Thread
+//
+
+type ChatThreadProps = Omit<NaturalChatThreadProps, 'identity' | 'messages' | 'tools'>;
+
+const ChatThread = (props: ChatThreadProps) => {
+  const { debug, event, messages, processor } = useChatContext(ChatThread.displayName);
+  const identity = useIdentity();
+  const error = useAtomValue(processor.error).pipe(Option.getOrUndefined);
+
+  const controllerRef = useRef<MarkdownStreamController | null>(null);
+  useEffect(() => {
+    return event.on((event) => {
+      switch (event.type) {
+        case 'submit':
+        case 'scroll-to-bottom':
+          controllerRef.current?.scrollToBottom();
+          break;
+        case 'nav-previous':
+          controllerRef.current?.navigatePrevious();
+          break;
+        case 'nav-next':
+          controllerRef.current?.navigateNext();
+          break;
+      }
+    });
+  }, [event]);
+
+  const handleEvent = useCallback<NonNullable<NaturalChatThreadProps['onEvent']>>(
+    (ev) => {
+      event.emit(ev);
+    },
+    [event],
+  );
+
+  if (!identity) {
+    return null;
+  }
+
+  return (
+    <NaturalChatThread
+      {...props}
+      identity={identity}
+      messages={messages}
+      error={error}
+      debug={debug}
+      onEvent={handleEvent}
+      ref={controllerRef}
+    />
+  );
+};
+
+ChatThread.displayName = 'Chat.Thread';
+
+//
 // Prompt
 //
 
@@ -340,61 +395,6 @@ const ChatPrompt = ({
 ChatPrompt.displayName = 'Chat.Prompt';
 
 //
-// Thread
-//
-
-type ChatThreadProps = Omit<NaturalChatThreadProps, 'identity' | 'messages' | 'tools'>;
-
-const ChatThread = (props: ChatThreadProps) => {
-  const { debug, event, messages, processor } = useChatContext(ChatThread.displayName);
-  const identity = useIdentity();
-  const error = useAtomValue(processor.error).pipe(Option.getOrUndefined);
-
-  const controllerRef = useRef<MarkdownStreamController | null>(null);
-  useEffect(() => {
-    return event.on((event) => {
-      switch (event.type) {
-        case 'submit':
-        case 'scroll-to-bottom':
-          controllerRef.current?.scrollToBottom();
-          break;
-        case 'nav-previous':
-          controllerRef.current?.navigatePrevious();
-          break;
-        case 'nav-next':
-          controllerRef.current?.navigateNext();
-          break;
-      }
-    });
-  }, [event]);
-
-  const handleEvent = useCallback<NonNullable<NaturalChatThreadProps['onEvent']>>(
-    (ev) => {
-      event.emit(ev);
-    },
-    [event],
-  );
-
-  if (!identity) {
-    return null;
-  }
-
-  return (
-    <NaturalChatThread
-      {...props}
-      identity={identity}
-      messages={messages}
-      error={error}
-      debug={debug}
-      onEvent={handleEvent}
-      ref={controllerRef}
-    />
-  );
-};
-
-ChatThread.displayName = 'Chat.Thread';
-
-//
 // Toolbar
 //
 
@@ -423,8 +423,8 @@ ChatToolbar.displayName = 'Chat.Toolbar';
 export const Chat = {
   Root: ChatRoot,
   Viewport: ChatViewport,
-  Prompt: ChatPrompt,
   Thread: ChatThread,
+  Prompt: ChatPrompt,
   Toolbar: ChatToolbar,
 };
 
