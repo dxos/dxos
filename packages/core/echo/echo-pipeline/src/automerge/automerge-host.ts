@@ -72,6 +72,8 @@ export type CreateDocOptions = {
    * Import the document together with its history.
    */
   preserveHistory?: boolean;
+
+  documentId?: DocumentId;
 };
 
 export const FIND_PARAMS = {
@@ -331,7 +333,7 @@ export class AutomergeHost extends Resource {
       }
 
       // TODO(dmaretskyi): There's a more efficient way.
-      const handle = this._repo.import(save(initialValue as Doc<T>));
+      const handle = this._repo.import(save(initialValue as Doc<T>), { docId: opts?.documentId });
       this._createdDocuemnts.add(handle.documentId);
       this._sharePolicyChangedTask!.schedule();
       return handle as DocHandle<T>;
@@ -340,6 +342,9 @@ export class AutomergeHost extends Resource {
         throw new Error('Cannot create document from Uint8Array without preserving history');
       }
 
+      if (opts?.documentId) {
+        throw new Error('Cannot prefil document id when not importing an existing doc');
+      }
       const handle = this._repo.create(initialValue);
       this._createdDocuemnts.add(handle.documentId);
       this._sharePolicyChangedTask!.schedule();

@@ -6,16 +6,18 @@ import { next as A, type Heads } from '@automerge/automerge';
 import { type DocHandle, type DocumentId, type Repo } from '@automerge/automerge-repo';
 
 import { UpdateScheduler, sleep } from '@dxos/async';
-import { LifecycleState, Resource, cancelWithContext } from '@dxos/context';
+import { Context, LifecycleState, Resource, cancelWithContext } from '@dxos/context';
 import { type DatabaseDirectory } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { type BatchedDocumentUpdates, type DocumentUpdate } from '@dxos/protocols/proto/dxos/echo/service';
+import type { AutomergeHost } from '../automerge';
+import { retry } from '@dxos/util';
 
 const MAX_UPDATE_FREQ = 10; // [updates/sec]
 
 export type DocumentsSynchronizerParams = {
-  repo: Repo;
+  automergeHost: AutomergeHost;
   sendUpdates: (updates: BatchedDocumentUpdates) => void;
 };
 
@@ -48,31 +50,26 @@ export class DocumentsSynchronizer extends Resource {
     super();
   }
 
-  addDocuments(
-    documentIds: DocumentId[],
-    retryCounter = 0,
-    wrapAroundRetryDelay = WRAP_AROUND_RETRY_INITIAL_DELAY,
-  ): void {
-    if (retryCounter > WRAP_AROUND_RETRY_LIMIT) {
-      log.warn('Failed to load document, retry limit reached', { documentIds });
-      return;
-    }
-
+  addDocuments(documentIds: DocumentId[]): void {
     for (const documentId of documentIds) {
-      this._params.repo
-        .find<DatabaseDirectory>(documentId as DocumentId)
-        .then(async (doc) => {
-          await doc.whenReady();
-          this._startSync(doc);
-          this._pendingUpdates.add(doc.documentId);
-          this._sendUpdatesJob!.trigger();
-        })
-        .catch((error) => {
-          log.warn('Failed to load document, wraparound', { documentId, error });
-          void cancelWithContext(this._ctx, sleep(wrapAroundRetryDelay)).then(() =>
-            this.addDocuments([documentId], retryCounter + 1, wrapAroundRetryDelay * 2),
+      queueMicrotask(async () => {
+        try {
+          await retry(
+            { count: WRAP_AROUND_RETRY_LIMIT, delayMs: WRAP_AROUND_RETRY_INITIAL_DELAY, exponent: 2 },
+            async () => {
+              const doc = await this._params.automergeHost.loadDoc<DatabaseDirectory>(
+                Context.default(),
+                documentId as DocumentId,
+              );
+              this._startSync(doc);
+              this._pendingUpdates.add(doc.documentId);
+              this._sendUpdatesJob!.trigger();
+            },
           );
-        });
+        } catch (err) {
+          log.catch(err);
+        }
+      });
     }
   }
 
@@ -100,7 +97,7 @@ export class DocumentsSynchronizer extends Resource {
       this._writeMutation(documentId as DocumentId, mutation, isNew);
     }
     // TODO(mykola): This should not be required.
-    await this._params.repo.flush(updates.map(({ documentId }) => documentId as DocumentId));
+    await this._params.automergeHost.flush({ documentIds: updates.map(({ documentId }) => documentId as DocumentId) });
   }
 
   private _startSync(doc: DocHandle<DatabaseDirectory>) {
@@ -166,7 +163,7 @@ export class DocumentsSynchronizer extends Resource {
       return;
     }
     if (isNew) {
-      const newHandle = this._params.repo.import<DatabaseDirectory>(mutation, { docId: documentId });
+      const newHandle = this._params.automergeHost.createDoc<DatabaseDirectory>(mutation, { documentId });
       const syncState = this._startSync(newHandle);
       syncState!.lastSentHead = A.getHeads(newHandle.doc());
     } else {
@@ -174,7 +171,7 @@ export class DocumentsSynchronizer extends Resource {
       invariant(syncState, 'Sync state for document not found');
       const headsBefore = A.getHeads(syncState.handle.doc());
       // This will update corresponding handle in the repo.
-      this._params.repo.import(mutation, { docId: documentId });
+      this._params.automergeHost.createDoc(mutation, { documentId });
 
       if (A.equals(headsBefore, syncState!.lastSentHead)) {
         // No new mutations were discovered on network, so we do not need to send updates from worker to client.
