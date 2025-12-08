@@ -64,7 +64,7 @@ const fn = defineFunction({
   }),
   handler: Effect.fn(function* () {
     return {
-      value: 100,
+      value: Math.floor(Math.random() * 100),
     };
   }),
 });

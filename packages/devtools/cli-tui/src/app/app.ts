@@ -242,6 +242,7 @@ export class App {
       if (!prompt || this._isStreaming) {
         return false;
       }
+
       (this._inputBox as any).emit('submit', value);
       return false;
     });
@@ -339,7 +340,7 @@ export class App {
     }
 
     // Add user message.
-    this._messages.push(`{cyan-fg}User:{/} ${prompt}`);
+    this._messages.push(`{cyan-fg}⟫{/} ${prompt}\n`);
     this._updateMessages();
 
     // Clear input.
