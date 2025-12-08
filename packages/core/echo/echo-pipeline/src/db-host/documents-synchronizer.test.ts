@@ -10,13 +10,21 @@ import { sleep } from '@dxos/async';
 import { openAndClose } from '@dxos/test-utils';
 
 import { DocumentsSynchronizer } from './documents-synchronizer';
+import { AutomergeHost } from '../automerge';
+import { createTestLevel } from '@dxos/kv-store/testing';
+import { IndexMetadataStore } from '@dxos/indexing';
 
 describe('DocumentsSynchronizer', () => {
   test('do not get init changes for client created docs', async () => {
     let counter = 0;
-    const serverRepo = new Repo({ network: [] });
+    const kv = createTestLevel();
+    const host = new AutomergeHost({
+      db: kv,
+      indexMetadataStore: new IndexMetadataStore({ db: kv.sublevel('index-metadata') }),
+    });
+    await openAndClose(host);
     const synchronizer = new DocumentsSynchronizer({
-      repo: serverRepo,
+      automergeHost: host,
       sendUpdates: () => {
         counter++;
       },

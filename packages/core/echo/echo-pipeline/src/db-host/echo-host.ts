@@ -10,7 +10,7 @@ import {
   type Repo,
 } from '@automerge/automerge-repo';
 
-import { type Context, LifecycleState, Resource } from '@dxos/context';
+import { Context, LifecycleState, Resource } from '@dxos/context';
 import { todo } from '@dxos/debug';
 import { type DatabaseDirectory, SpaceDocVersion, createIdFromSpaceKey } from '@dxos/echo-protocol';
 import { IndexMetadataStore, IndexStore, Indexer } from '@dxos/indexing';
@@ -177,13 +177,6 @@ export class EchoHost extends Resource {
     return this._dataService;
   }
 
-  /**
-   * @deprecated To be abstracted away.
-   */
-  get automergeRepo(): Repo {
-    return this._automergeHost.repo;
-  }
-
   get roots(): ReadonlyMap<DocumentId, DatabaseRoot> {
     return this._spaceStateManager.roots;
   }
@@ -271,7 +264,7 @@ export class EchoHost extends Resource {
   // TODO(dmaretskyi): Change to document id.
   async openSpaceRoot(spaceId: SpaceId, automergeUrl: AutomergeUrl): Promise<DatabaseRoot> {
     invariant(this._lifecycleState === LifecycleState.OPEN);
-    const handle = await this._automergeHost.repo.find<DatabaseDirectory>(automergeUrl, FIND_PARAMS);
+    const handle = await this._automergeHost.loadDoc<DatabaseDirectory>(Context.default(), automergeUrl);
     await handle.whenReady();
 
     return this._spaceStateManager.assignRootToSpace(spaceId, handle);

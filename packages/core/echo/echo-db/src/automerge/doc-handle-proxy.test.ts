@@ -6,10 +6,13 @@ import { Repo, generateAutomergeUrl, parseAutomergeUrl } from '@automerge/autome
 import { describe, expect, test } from 'vitest';
 
 import { Trigger } from '@dxos/async';
-import { DocumentsSynchronizer } from '@dxos/echo-pipeline';
+import { AutomergeHost, DocumentsSynchronizer } from '@dxos/echo-pipeline';
 import { openAndClose } from '@dxos/test-utils';
 
 import { DocHandleProxy } from './doc-handle-proxy';
+import { createTestLevel } from '@dxos/kv-store/testing';
+import { IndexMetadataStore } from '@dxos/indexing';
+import { Context } from '@dxos/context';
 
 describe('DocHandleProxy', () => {
   test('get update from handle', async () => {
@@ -20,26 +23,26 @@ describe('DocHandleProxy', () => {
       doc.text = text;
     });
 
-    const workerRepo = new Repo({ network: [] });
-    const docsSynchronizer = new DocumentsSynchronizer({ repo: workerRepo, sendUpdates: () => {} });
+    const { host } = await setup();
+    const docsSynchronizer = new DocumentsSynchronizer({ automergeHost: host, sendUpdates: () => {} });
     await openAndClose(docsSynchronizer);
 
     const mutation = clientHandle._getPendingChanges()!;
     await docsSynchronizer.update([{ documentId, mutation, isNew: true }]);
-    const workerHandle = await workerRepo.find<{ text: string }>(documentId);
+    const workerHandle = await host.loadDoc<{ text: string }>(Context.default(), documentId);
     expect(workerHandle.doc()?.text).to.equal(text);
   });
 
   test('update handle with foreign mutation', async () => {
     const text = 'Hello World!';
 
-    const workerRepo = new Repo({ network: [] });
-    const workerHandle = workerRepo.create<{ text: string }>();
+    const { host } = await setup();
+    const workerHandle = host.createDoc<{ text: string }>();
 
     const clientHandle = new DocHandleProxy<{ text: string }>(workerHandle.documentId);
 
     const docsSynchronizer = new DocumentsSynchronizer({
-      repo: workerRepo,
+      automergeHost: host,
       sendUpdates: ({ updates }) => {
         updates?.forEach((update) => clientHandle._integrateHostUpdate(update.mutation));
       },
@@ -58,10 +61,10 @@ describe('DocHandleProxy', () => {
     const foreignPeerText = 'Hello World from foreign peer!';
     type DocType = { clientText: string; foreignPeerText: string };
 
-    const workerRepo = new Repo({ network: [] });
-    const workerHandle = workerRepo.create<DocType>();
+    const { host } = await setup();
+    const workerHandle = host.createDoc<DocType>();
     const synchronizer = new DocumentsSynchronizer({
-      repo: workerRepo,
+      automergeHost: host,
       sendUpdates: ({ updates }) => updates?.forEach((update) => clientHandle._integrateHostUpdate(update.mutation)),
     });
     await openAndClose(synchronizer);
@@ -90,3 +93,13 @@ describe('DocHandleProxy', () => {
     }
   });
 });
+
+const setup = async (kv = createTestLevel()) => {
+  await openAndClose(kv);
+  const host = new AutomergeHost({
+    db: kv,
+    indexMetadataStore: new IndexMetadataStore({ db: kv.sublevel('index-metadata') }),
+  });
+  await openAndClose(host);
+  return { kv, host };
+};

@@ -3,7 +3,7 @@
 //
 
 import { save } from '@automerge/automerge';
-import { type DocHandle } from '@automerge/automerge-repo';
+import { type AutomergeUrl, type DocHandle } from '@automerge/automerge-repo';
 
 import { Event, Mutex, scheduleTask, sleep, synchronized, trackLeaks } from '@dxos/async';
 import { AUTH_TIMEOUT } from '@dxos/client-protocol';
@@ -471,7 +471,7 @@ export class DataSpace {
         await warnAfterTimeout(5_000, 'Automerge root doc load timeout (DataSpace)', async () => {
           handle = await cancelWithContext(
             this._ctx,
-            this._echoHost.automergeRepo.find<DatabaseDirectory>(rootUrl as any, FIND_PARAMS),
+            this._echoHost.loadDoc<DatabaseDirectory>(Context.default(), rootUrl as AutomergeUrl),
           );
           await cancelWithContext(this._ctx, handle.whenReady());
         });

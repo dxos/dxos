@@ -5,6 +5,7 @@
 import { next as A } from '@automerge/automerge';
 import { type AutomergeUrl } from '@automerge/automerge-repo';
 import { describe, expect, test } from 'vitest';
+import { Context } from '@dxos/context';
 
 import { Trigger, asyncTimeout, latch, sleep } from '@dxos/async';
 import { AutomergeHost, DataServiceImpl, FIND_PARAMS, SpaceStateManager } from '@dxos/echo-pipeline';
@@ -18,6 +19,7 @@ import { createTmpPath } from '../testing';
 
 import { type DocHandleProxy } from './doc-handle-proxy';
 import { RepoProxy } from './repo-proxy';
+import { log } from '@dxos/log';
 
 describe('RepoProxy', () => {
   test('create document from client', async () => {
@@ -25,10 +27,15 @@ describe('RepoProxy', () => {
     const [clientRepo] = createProxyRepos(dataService);
     await openAndClose(clientRepo);
 
+    log.break();
     const clientHandle = clientRepo.create<{ text: string }>();
-    const hostHandle = await host.repo!.find<{ text: string }>(clientHandle.url, FIND_PARAMS);
+    log.break();
+
+    const hostHandle = await host.loadDoc<{ text: string }>(Context.default(), clientHandle.url);
+    log.break();
     await hostHandle.whenReady();
 
+    log.break();
     const receivedChange = new Trigger();
     hostHandle.once('change', () => receivedChange.wake());
     const text = 'Hello World!';
@@ -38,6 +45,8 @@ describe('RepoProxy', () => {
     await receivedChange.wait();
 
     expect(hostHandle.doc()?.text).to.equal(text);
+
+    log.break();
 
     {
       // Change from another peer.

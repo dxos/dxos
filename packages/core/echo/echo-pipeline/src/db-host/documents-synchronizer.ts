@@ -57,13 +57,19 @@ export class DocumentsSynchronizer extends Resource {
           await retry(
             { count: WRAP_AROUND_RETRY_LIMIT, delayMs: WRAP_AROUND_RETRY_INITIAL_DELAY, exponent: 2 },
             async () => {
-              const doc = await this._params.automergeHost.loadDoc<DatabaseDirectory>(
-                Context.default(),
-                documentId as DocumentId,
-              );
-              this._startSync(doc);
-              this._pendingUpdates.add(doc.documentId);
-              this._sendUpdatesJob!.trigger();
+              try {
+                log('loading document', { documentId });
+                const doc = await this._params.automergeHost.loadDoc<DatabaseDirectory>(
+                  Context.default(),
+                  documentId as DocumentId,
+                );
+                this._startSync(doc);
+                this._pendingUpdates.add(doc.documentId);
+                this._sendUpdatesJob!.trigger();
+              } catch (err) {
+                log.warn('failed to load document', { err });
+                throw err;
+              }
             },
           );
         } catch (err) {
@@ -162,8 +168,13 @@ export class DocumentsSynchronizer extends Resource {
     if (this._lifecycleState === LifecycleState.CLOSED) {
       return;
     }
+    log('write mutation', { documentId, isNew });
+
     if (isNew) {
-      const newHandle = this._params.automergeHost.createDoc<DatabaseDirectory>(mutation, { documentId });
+      const newHandle = this._params.automergeHost.createDoc<DatabaseDirectory>(mutation, {
+        documentId,
+        preserveHistory: true,
+      });
       const syncState = this._startSync(newHandle);
       syncState!.lastSentHead = A.getHeads(newHandle.doc());
     } else {
@@ -171,7 +182,7 @@ export class DocumentsSynchronizer extends Resource {
       invariant(syncState, 'Sync state for document not found');
       const headsBefore = A.getHeads(syncState.handle.doc());
       // This will update corresponding handle in the repo.
-      this._params.automergeHost.createDoc(mutation, { documentId });
+      this._params.automergeHost.createDoc(mutation, { documentId, preserveHistory: true });
 
       if (A.equals(headsBefore, syncState!.lastSentHead)) {
         // No new mutations were discovered on network, so we do not need to send updates from worker to client.

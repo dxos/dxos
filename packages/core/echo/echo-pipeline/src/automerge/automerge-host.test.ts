@@ -3,7 +3,7 @@
 //
 
 import { getHeads } from '@automerge/automerge';
-import type { DocumentId, Heads } from '@automerge/automerge-repo';
+import { generateAutomergeUrl, parseAutomergeUrl, type DocumentId, type Heads } from '@automerge/automerge-repo';
 import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { IndexMetadataStore } from '@dxos/indexing';
@@ -16,6 +16,8 @@ import { range } from '@dxos/util';
 import { TestReplicationNetwork } from '../testing';
 
 import { AutomergeHost } from './automerge-host';
+import { Context } from '@dxos/context';
+import * as Automerge from '@automerge/automerge';
 
 describe('AutomergeHost', () => {
   test('can create documents', async () => {
@@ -46,6 +48,26 @@ describe('AutomergeHost', () => {
     await handle2.whenReady();
     expect(handle2.doc()!.text).toEqual('Hello world');
     await host2.repo.flush();
+  });
+
+  test('load resolves when document is created from binary', async () => {
+    const level = await createLevel();
+    const host = await setupAutomergeHost({ level });
+
+    // Create a document to get its binary representation
+    const document = Automerge.from({ text: 'Hello world' });
+    const binary = Automerge.save(document);
+    const { documentId } = parseAutomergeUrl(generateAutomergeUrl());
+
+    // Start loading a non-existent document (should hang until created)
+    const loadPromise = host.loadDoc(Context.default(), documentId);
+
+    // Create the document from binary - this should resolve the load
+    const createdHandle = host.createDoc(binary, { preserveHistory: true, documentId });
+
+    // The load should now resolve
+    const loadedHandle = await loadPromise;
+    expect(loadedHandle.doc()).toEqual(createdHandle.doc());
   });
 
   test('query single document heads', async () => {

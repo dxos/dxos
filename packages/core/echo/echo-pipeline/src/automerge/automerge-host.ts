@@ -325,7 +325,7 @@ export class AutomergeHost extends Resource {
     invariant(this.isOpen, 'AutomergeHost is not open');
     if (opts?.preserveHistory) {
       if (initialValue instanceof Uint8Array) {
-        return this._repo.import(initialValue);
+        return this._repo.import(initialValue, { docId: opts?.documentId });
       }
 
       if (!isAutomerge(initialValue)) {
@@ -410,10 +410,10 @@ export class AutomergeHost extends Resource {
       return false;
     }
 
-    if (!this._createdDocuemnts.has(documentId) && !this._documentsToSync.has(documentId)) {
-      // Skip advertising documents that don't need to be synced.
-      return false;
-    }
+    // if (!this._createdDocuemnts.has(documentId) && !this._documentsToSync.has(documentId)) {
+    //   // Skip advertising documents that don't need to be synced.
+    //   return false;
+    // }
 
     const peerMetadata = this._repo.peerMetadataByPeerId[peerId];
     if (isEchoPeerMetadata(peerMetadata)) {
