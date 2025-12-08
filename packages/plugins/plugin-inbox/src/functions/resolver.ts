@@ -12,6 +12,7 @@ import { Organization, Person } from '@dxos/types';
 /**
  * Attempts to match the given source to a target object using the provided resolution logic.
  */
+// TODO(burdon): Factor out to @dxos/schema.
 export type Resolver<Source, Target, E = never, R = never> = (
   source: Source,
 ) => Effect.Effect<Target | undefined, E, R>;

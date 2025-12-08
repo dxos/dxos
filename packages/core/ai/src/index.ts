@@ -2,6 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
+export * as AiModelResolver from './AiModelResolver';
 export * as AiParser from './AiParser';
 export * as AiPreprocessor from './AiPreprocessor';
 export * as AiService from './AiService';
