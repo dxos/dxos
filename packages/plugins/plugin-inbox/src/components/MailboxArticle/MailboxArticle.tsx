@@ -64,7 +64,7 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterParam, attendab
 
   // Parse filter.
   const space = getSpace(mailbox);
-  const tags = useQuery(space, Filter.type(Tag.Tag));
+  const tags = useQuery(space?.db, Filter.type(Tag.Tag));
   const tagMap = useMemo(() => {
     return tags.reduce((acc, tag) => {
       acc[tag.id] = tag;

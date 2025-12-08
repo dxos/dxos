@@ -1,48 +1,48 @@
 {
-	"name": "@dxos/vscode-extension",
-	"displayName": "DXOS VSCode Extension",
-	"version": "0.0.1",
-	"description": "VSCode extension for DXOS development",
-	"categories": [
-		"Other"
-	],
-	"homepage": "https://dxos.org",
-	"bugs": "https://github.com/dxos/dxos/issues",
-	"license": "Apache-2.0",
-	"author": "info@dxos.org",
-	"contributes": {
-		"commands": [
-			{
-				"command": "dxos.helloWorld",
-				"title": "DXOS: Hello World"
-			},
-			{
-				"command": "dxos.showFileInfo",
-				"title": "DXOS: Show File Info"
-			}
-		],
-		"menus": {
-			"explorer/context": [
-				{
-					"command": "dxos.showFileInfo",
-					"when": "resourceScheme == file",
-					"group": "dxos@1"
-				}
-			],
-			"editor/title/context": [
-				{
-					"command": "dxos.showFileInfo",
-					"when": "resourceScheme == file",
-					"group": "dxos@1"
-				}
-			]
-		}
-	},
-	"activationEvents": [],
-	"devDependencies": {
-		"@types/vscode": "^1.74.0"
-	},
-	"engines": {
-		"vscode": "^1.74.0"
-	}
+  "name": "@dxos/vscode-extension",
+  "displayName": "DXOS VSCode Extension",
+  "version": "0.0.1",
+  "description": "VSCode extension for DXOS development",
+  "categories": [
+    "Other"
+  ],
+  "homepage": "https://dxos.org",
+  "bugs": "https://github.com/dxos/dxos/issues",
+  "license": "Apache-2.0",
+  "author": "info@dxos.org",
+  "contributes": {
+    "commands": [
+      {
+        "command": "dxos.helloWorld",
+        "title": "DXOS: Hello World"
+      },
+      {
+        "command": "dxos.showFileInfo",
+        "title": "DXOS: Show File Info"
+      }
+    ],
+    "menus": {
+      "explorer/context": [
+        {
+          "command": "dxos.showFileInfo",
+          "when": "resourceScheme == file",
+          "group": "dxos@1"
+        }
+      ],
+      "editor/title/context": [
+        {
+          "command": "dxos.showFileInfo",
+          "when": "resourceScheme == file",
+          "group": "dxos@1"
+        }
+      ]
+    }
+  },
+  "activationEvents": [],
+  "devDependencies": {
+    "@types/vscode": "^1.74.0"
+  },
+  "engines": {
+    "vscode": "^1.74.0"
+  }
 }

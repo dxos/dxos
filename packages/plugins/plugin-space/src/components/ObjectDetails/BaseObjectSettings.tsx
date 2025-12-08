@@ -9,7 +9,7 @@ import * as Schema from 'effect/Schema';
 import React, { type PropsWithChildren, useCallback, useMemo } from 'react';
 
 import { DXN, Obj, type Ref, Tag, Type } from '@dxos/echo';
-import { type JsonPath, setValue } from '@dxos/echo/internal';
+import { type JsonPath, splitJsonPath } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
 import { getSpace } from '@dxos/react-client/echo';
 import { type ThemedClassName } from '@dxos/react-ui';
@@ -35,7 +35,7 @@ export type BaseObjectSettingsProps = ThemedClassName<
 // TODO(wittjosiah): Reconcile w/ ObjectDetailsPanel.
 export const BaseObjectSettings = ({ classNames, children, object }: BaseObjectSettingsProps) => {
   const space = getSpace(object);
-  const handleRefQueryLookup = useRefQueryOptions({ space });
+  const handleRefQueryLookup = useRefQueryOptions({ db: space?.db });
 
   const formSchema = useMemo(() => {
     return Function.pipe(
@@ -76,15 +76,16 @@ export const BaseObjectSettings = ({ classNames, children, object }: BaseObjectS
       const changedPaths = Object.keys(changed).filter((path) => changed[path as JsonPath]) as JsonPath[];
       batch(() => {
         for (const path of changedPaths) {
+          const parts = splitJsonPath(path);
           // TODO(wittjosiah): This doesn't handle array paths well.
-          if (path.startsWith('tags')) {
+          if (parts[0] === 'tags') {
             const meta = Obj.getMeta(object);
             meta.tags = tags?.map((tag: Ref.Ref<Tag.Tag>) => tag.dxn.toString()) ?? [];
             continue;
           }
 
-          const value = values[path];
-          setValue(object, path, value);
+          const value = Obj.getValue(values, parts);
+          Obj.setValue(object, parts, value);
         }
       });
     },

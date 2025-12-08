@@ -82,17 +82,17 @@ export class AiChatProcessor {
   /** External observer. */
   private readonly _observer: GenerationObserver;
 
-  /** Currently active request fiber. */
-  private _fiber: Fiber.Fiber<void, any> | undefined;
-
-  /** Last request (for retries). */
-  private _lastRequest: AiRequest | undefined;
-
   /** Pending messages (incl. the current user request). */
   private readonly _pending = Atom.make<Message.Message[]>([]);
 
   /** Currently streaming message (from the AI service). */
   private readonly _streaming = Atom.make<Option.Option<Message.Message>>(Option.none());
+
+  /** Currently active request fiber. */
+  private _fiber: Fiber.Fiber<void, any> | undefined;
+
+  /** Last request (for retries). */
+  private _lastRequest: AiRequest | undefined;
 
   /** Streaming state. */
   public readonly streaming = Atom.make<boolean>((get) => Option.isSome(get(this._streaming)));
@@ -154,6 +154,8 @@ export class AiChatProcessor {
       this._registry.set(this.error, Option.none());
       this._registry.set(this.active, true);
 
+      const services = await this._services();
+
       // Create request.
       const request = this._conversation.createRequest({
         system: this._options.system,
@@ -161,17 +163,13 @@ export class AiChatProcessor {
         observer: this._observer,
       });
 
-      const runtime = await this._services();
-
       // Create fiber.
       this._fiber = request.pipe(
         Effect.provide(AiService.model(this._options.model ?? DEFAULT_EDGE_MODEL)),
-
         // TODO(dmaretskyi): Move ArtifactDiffResolver upstream.
         Effect.provideService(ArtifactDiffResolver, this._artifactDiffResolver),
-
         Effect.asVoid,
-        Runtime.runFork(runtime), // Runs in the background.
+        Runtime.runFork(services), // Runs in the background.
       );
 
       // Execute request.
@@ -183,12 +181,12 @@ export class AiChatProcessor {
       this._registry.set(this.error, Option.none());
       this._lastRequest = undefined;
       this._fiber = undefined;
-    } catch (error) {
-      log.error('request failed', { error });
-      this._registry.set(this.error, Option.some(new Error('AI service error', { cause: error })));
+    } catch (err) {
+      log.error('request failed', { error: err });
+      this._registry.set(this.error, Option.some(new Error('AI service error', { cause: err })));
     } finally {
-      this._fiber = undefined;
       this._registry.set(this.active, false);
+      this._fiber = undefined;
     }
   }
 

@@ -24,15 +24,18 @@ export const RelatedToOrganization = ({ subject: organization }: SurfaceComponen
   const { dispatch } = useIntentDispatcher();
   const space = getSpace(organization);
   const defaultSpace = useSpace();
-  const currentSpaceContacts = useQuery(space, Filter.type(Person.Person));
-  const defaultSpaceContacts = useQuery(defaultSpace === space ? undefined : defaultSpace, Filter.type(Person.Person));
+  const currentSpaceContacts = useQuery(space?.db, Filter.type(Person.Person));
+  const defaultSpaceContacts = useQuery(
+    defaultSpace === space ? undefined : defaultSpace?.db,
+    Filter.type(Person.Person),
+  );
   const contacts = [...(currentSpaceContacts ?? []), ...(defaultSpaceContacts ?? [])];
   const related = contacts.filter((contact) =>
     typeof contact.organization === 'string' ? false : contact.organization?.target === organization,
   );
 
-  const currentSpaceViews = useQuery(space, Filter.type(Table.Table));
-  const defaultSpaceViews = useQuery(defaultSpace, Filter.type(Table.Table));
+  const currentSpaceViews = useQuery(space?.db, Filter.type(Table.Table));
+  const defaultSpaceViews = useQuery(defaultSpace?.db, Filter.type(Table.Table));
   const currentSpaceContactTable = currentSpaceViews.find(
     (table) => getTypenameFromQuery(table.view.target?.query.ast) === Person.Person.typename,
   );

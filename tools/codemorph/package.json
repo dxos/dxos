@@ -5,7 +5,7 @@
   "description": "Large scale code refactoring.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
-  "license": "Elastic-2.0",
+  "license": "FSL-1.1-Apache-2.0",
   "author": "info@dxos.org",
   "scripts": {
     "codemorph": "vite-node ./src/main.ts"

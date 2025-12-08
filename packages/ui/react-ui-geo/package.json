@@ -4,7 +4,7 @@
   "description": "Geo components.",
   "homepage": "https://github.com/dxos",
   "bugs": "https://github.com/dxos/issues",
-  "license": "Elastic-2.0",
+  "license": "FSL-1.1-Apache-2.0",
   "author": "DXOS.org",
   "sideEffects": true,
   "type": "module",

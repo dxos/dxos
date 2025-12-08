@@ -8535,6 +8535,9 @@ importers:
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../sdk/echo
+      '@dxos/effect':
+        specifier: workspace:*
+        version: link:../../common/effect
       '@dxos/keys':
         specifier: workspace:*
         version: link:../../common/keys

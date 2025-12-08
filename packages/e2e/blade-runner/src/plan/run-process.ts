@@ -12,6 +12,7 @@ import type { BrowserContext, BrowserType } from 'playwright';
 import { Context } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { CONSOLE_PROCESSOR, LogLevel, type LogProcessor, createFileProcessor, log } from '@dxos/log';
+import { trim } from '@dxos/util';
 
 import { type GlobalOptions, type Platform, type ReplicantParams, type ReplicantRuntimeParams } from './spec';
 
@@ -118,24 +119,24 @@ export const runBrowser = async ({ replicantParams, options }: RunParams): Promi
   const server = await servePage({
     '/index.html': {
       contentType: 'text/html',
-      data: `
+      data: trim`
         <!DOCTYPE html>
-  <html lang="en">
-  <head>
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Browser-Mocha</title>
-  </head>
-  <body>
-    <h1>TESTING TESTING.</h1>
-    <script>
-      window.DX_RUN_PARAMS = ${JSON.stringify(JSON.stringify({ replicantParams, options }))}
-    </script>
-    <script type="module" src="index.js"></script>
-  </body>
-  </html>
-  `,
+        <html lang="en">
+        <head>
+          <meta charset="UTF-8">
+          <meta http-equiv="X-UA-Compatible" content="IE=edge">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <title>Browser-Mocha</title>
+        </head>
+        <body>
+          <h1>TESTING TESTING.</h1>
+          <script>
+            window.DX_RUN_PARAMS = ${JSON.stringify(JSON.stringify({ replicantParams, options }))}
+          </script>
+          <script type="module" src="index.js"></script>
+        </body>
+        </html>
+      `,
     },
     '/index.js': {
       contentType: 'text/javascript',

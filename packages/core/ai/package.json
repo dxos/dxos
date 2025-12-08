@@ -4,7 +4,7 @@
   "description": "AI utils.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
-  "license": "Elastic-2.0",
+  "license": "FSL-1.1-Apache-2.0",
   "author": "info@dxos.org",
   "sideEffects": false,
   "type": "module",
@@ -29,11 +29,11 @@
       "browser": "./dist/lib/browser/index.mjs",
       "node": "./dist/lib/node-esm/index.mjs"
     },
-    "./AiServiceRouter": {
-      "source": "./src/AiServiceRouter.ts",
-      "types": "./dist/types/src/AiServiceRouter.d.ts",
-      "browser": "./dist/lib/browser/AiServiceRouter.mjs",
-      "node": "./dist/lib/node-esm/AiServiceRouter.mjs"
+    "./resolvers": {
+      "source": "./src/resolvers/index.ts",
+      "types": "./dist/types/src/resolvers/index.d.ts",
+      "browser": "./dist/lib/browser/resolvers/index.mjs",
+      "node": "./dist/lib/node-esm/resolvers/index.mjs"
     },
     "./testing": {
       "source": "./src/testing/index.ts",

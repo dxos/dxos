@@ -130,8 +130,8 @@ export const WithJsonSchema: StoryObj = {
 export const WithEchoSchema: StoryObj = {
   render: () => {
     const { space } = useClientProvider();
-    const schema = useSchema(space, TestSchema.Person.typename);
-    const objects = useQuery(space, schema ? Filter.type(schema) : Filter.nothing());
+    const schema = useSchema(space?.db, TestSchema.Person.typename);
+    const objects = useQuery(space?.db, schema ? Filter.type(schema) : Filter.nothing());
     if (!schema) {
       return <div>Loading schema...</div>;
     }

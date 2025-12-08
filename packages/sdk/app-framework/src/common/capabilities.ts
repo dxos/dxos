@@ -7,8 +7,7 @@ import type * as Layer from 'effect/Layer';
 import type * as Schema from 'effect/Schema';
 import { type FC, type PropsWithChildren } from 'react';
 
-import { type AiService } from '@dxos/ai';
-import type * as AiServiceRouter from '@dxos/ai/AiServiceRouter';
+import { type AiModelResolver, type AiService } from '@dxos/ai';
 import { type BuilderExtensions, type GraphBuilder } from '@dxos/app-graph';
 import { type GenericToolkit } from '@dxos/assistant';
 import { type Blueprint } from '@dxos/blueprints';
@@ -186,7 +185,7 @@ export namespace Capabilities {
   /**
    * Plugins can contribute them to provide model resolvers.
    */
-  export const AiModelResolver = defineCapability<Layer.Layer<AiServiceRouter.AiModelResolver>>(
+  export const AiModelResolver = defineCapability<Layer.Layer<AiModelResolver.AiModelResolver>>(
     'dxos.org/app-framework/capability/ai-model-resolver',
   );
 

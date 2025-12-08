@@ -1,95 +1,60 @@
-Elastic License 2.0
+Functional Source License, Version 1.1, Apache 2.0 Future License
 
-Copyright (c) 2022 DXOS
+Abbreviation: FSL-1.1-Apache-2.0
 
-URL: https://www.elastic.co/licensing/elastic-license
+Parameters
 
-## Acceptance
+Licensor: DXOS
+Licensed Work: The Licensed Work is (c) 2022-2025 DXOS
+Change Date: 2027-12-08
+Change License: Apache License, Version 2.0
 
-By using the software, you agree to all of the terms and conditions below.
+Notice
 
-## Copyright License
+The Functional Source License (FSL) is not an Open Source license. However, the Licensed Work will eventually be made available under the Change License, as stated in this License.
 
-The licensor grants you a non-exclusive, royalty-free, worldwide,
-non-sublicensable, non-transferable license to use, copy, distribute, make
-available, and prepare derivative works of the software, in each case subject to
-the limitations and conditions below.
+License Text
 
-## Limitations
+Parameters
 
-You may not provide the software to third parties as a hosted or managed
-service, where the service provides users with access to any substantial set of
-the features or functionality of the software.
+Licensor: The Licensor is the entity that originally granted this license.
 
-You may not move, change, disable, or circumvent the license key functionality
-in the software, and you may not remove or obscure any functionality in the
-software that is protected by the license key.
+Licensed Work: The Licensed Work is the software that the Licensor makes available under this License.
 
-You may not alter, remove, or obscure any licensing, copyright, or other notices
-of the licensor in the software. Any use of the licensor's trademarks is subject
-to applicable law.
+Change Date: The Change Date is the date when this License converts to the Change License.
 
-## Patents
+Change License: The Change License is the license that this License converts to on the Change Date.
 
-The licensor grants you a license, under any patent claims the licensor can
-license, or becomes able to license, to make, have made, use, sell, offer for
-sale, import and have imported the software, in each case subject to the
-limitations and conditions in this license. This license does not cover any
-patent claims that you cause to be infringed by modifications or additions to
-the software. If you or your company make any written claim that the software
-infringes or contributes to infringement of any patent, your patent license for
-the software granted under these terms ends immediately. If your company makes
-such a claim, your patent license ends immediately for work on behalf of your
-company.
+Terms
 
-## Notices
+Subject to the terms and conditions of this License, the Licensor grants you a worldwide, royalty-free, non-exclusive, non-transferable license to:
 
-You must ensure that anyone who gets a copy of any part of the software from you
-also gets a copy of these terms.
+1. Use the Licensed Work for any purpose other than making the functionality of the Licensed Work or a modified version available to third parties as a service.
 
-If you modify the software, you must include in any modified copies of the
-software prominent notices stating that you have modified the software.
+2. Prepare derivative works based on the Licensed Work.
 
-## No Other Rights
+3. Distribute the Licensed Work to third parties, including in source code or object code form.
 
-These terms do not imply any licenses other than those expressly granted in
-these terms.
+4. Grant sublicenses to others to do any of the foregoing.
 
-## Termination
+Limitations
 
-If you use the software in violation of these terms, such use is not licensed,
-and your licenses will automatically terminate. If the licensor provides you
-with a notice of your violation, and you cease all violation of this license no
-later than 30 days after you receive that notice, your licenses will be
-reinstated retroactively. However, if you violate these terms after such
-reinstatement, any additional violation of these terms will cause your licenses
-to terminate automatically and permanently.
+You may not make the functionality of the Licensed Work or a modified version available to third parties as a service without purchasing a commercial license from the Licensor.
 
-## No Liability
+You may not alter, remove, or obscure any licensing, copyright, or other notices of the Licensor in the Licensed Work. Any use of the Licensor's trademarks is subject to applicable law.
 
-*As far as the law allows, the software comes as is, without any warranty or
-condition, and the licensor will not be liable to you for any damages arising
-out of these terms or the use or nature of the software, under any kind of
-legal claim.*
+Termination
 
-## Definitions
+If you violate any of the terms or conditions of this License, your rights under this License will automatically terminate.
 
-The **licensor** is the entity offering these terms, and the **software** is the
-software the licensor makes available under these terms, including any portion
-of it.
+No Other Rights
 
-**you** refers to the individual or entity agreeing to these terms.
+This License does not grant you any rights other than those expressly granted herein.
 
-**your company** is any legal entity, sole proprietorship, or other kind of
-organization that you work for, plus all organizations that have control over,
-are under the control of, or are under common control with that
-organization. **control** means ownership of substantially all the assets of an
-entity, or the power to direct its management and policies by vote, contract, or
-otherwise. Control can be direct or indirect.
+Disclaimer
 
-**your licenses** are all the licenses granted to you for the software under
-these terms.
+THE LICENSED WORK IS PROVIDED "AS IS". THE LICENSOR HEREBY DISCLAIMS ALL WARRANTIES AND CONDITIONS, EXPRESS OR IMPLIED, INCLUDING (WITHOUT LIMITATION) WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, NON-INFRINGEMENT, AND TITLE.
 
-**use** means anything you do with the software requiring one of your licenses.
+Conversion to Change License
 
-**trademark** means trademarks, service marks, and similar rights.
+On the Change Date, or when the Licensor publicly announces an earlier date, this License will automatically convert to the Change License, and the terms of the Change License will apply to the Licensed Work going forward. No additional action by you or the Licensor is required for this conversion.

@@ -38,12 +38,12 @@ export const AutomationPanel = ({ classNames, space, object, initialTrigger, onD
   const { t } = useTranslation(meta.id);
   const client = useClient();
   const functionsServiceClient = useMemo(() => FunctionsServiceClient.fromClient(client), [client]);
-  const functions = useQuery(space, Filter.type(Function.Function));
-  const triggers = useQuery(space, Filter.type(Trigger.Trigger));
+  const functions = useQuery(space.db, Filter.type(Function.Function));
+  const triggers = useQuery(space.db, Filter.type(Trigger.Trigger));
   const filteredTriggers = useMemo(() => {
     return object ? triggers.filter(triggerMatch(object)) : triggers;
   }, [object, triggers]);
-  const tags = useQuery(space, Filter.type(Tag.Tag));
+  const tags = useQuery(space.db, Filter.type(Tag.Tag));
   const types = useTypeOptions({
     space,
     annotation: {
@@ -97,7 +97,7 @@ export const AutomationPanel = ({ classNames, space, object, initialTrigger, onD
     return (
       <ControlItem title={t('trigger editor title')}>
         <TriggerEditor
-          space={space}
+          db={space.db}
           trigger={trigger}
           readonlySpec={Boolean(object)}
           tags={tags}
