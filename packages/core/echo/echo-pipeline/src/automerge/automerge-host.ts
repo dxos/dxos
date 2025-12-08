@@ -139,12 +139,17 @@ export class AutomergeHost extends Resource {
   /**
    * Documents created in this session.
    */
-  private _createdDocuemnts = new Set<DocumentId>();
+  private _createdDocuments = new Set<DocumentId>();
 
   /**
    * Documents that need to be synced based on the result of collection-sync.
    */
   private _documentsToSync = new Set<DocumentId>();
+
+  /**
+   * Documents that are not avaiale locally that should be requested.
+   */
+  private _documentsToRequest = new Set<DocumentId>();
 
   private _sharePolicyChangedTask?: DeferredTask;
 
@@ -192,7 +197,7 @@ export class AutomergeHost extends Resource {
     // Construct the automerge repo.
     this._repo = new Repo({
       peerId: this._peerId as PeerId,
-      sharePolicy: this._sharePolicy.bind(this),
+      shareConfig: this._shareConfig,
       storage: this._storage,
       network: [
         // Upstream swarm.
@@ -331,7 +336,7 @@ export class AutomergeHost extends Resource {
 
       // TODO(dmaretskyi): There's a more efficient way.
       const handle = this._repo.import(save(initialValue as Doc<T>), { docId: opts?.documentId });
-      this._createdDocuemnts.add(handle.documentId);
+      this._createdDocuments.add(handle.documentId);
       this._sharePolicyChangedTask!.schedule();
       return handle as DocHandle<T>;
     } else {
@@ -343,7 +348,7 @@ export class AutomergeHost extends Resource {
         throw new Error('Cannot prefil document id when not importing an existing doc');
       }
       const handle = this._repo.create(initialValue);
-      this._createdDocuemnts.add(handle.documentId);
+      this._createdDocuments.add(handle.documentId);
       this._sharePolicyChangedTask!.schedule();
       return handle as DocHandle<T>;
     }
@@ -398,27 +403,50 @@ export class AutomergeHost extends Resource {
     log('done re-indexing heads');
   }
 
-  // TODO(dmaretskyi): Share based on HALO permissions and space affinity.
-  // Hosts, running in the worker, don't share documents unless requested by other peers.
-  // NOTE: If both peers return sharePolicy=false the replication will not happen
-  // https://github.com/automerge/automerge-repo/pull/292
-  private async _sharePolicy(peerId: PeerId, documentId?: DocumentId): Promise<boolean> {
-    if (!documentId) {
+  private readonly _shareConfig = {
+    // Called on `repo.find`.
+    access: async (peerId: PeerId, documentId: DocumentId): Promise<boolean> => {
+      if (
+        !this._createdDocuments.has(documentId) &&
+        !this._documentsToSync.has(documentId) &&
+        !this._documentsToRequest.has(documentId)
+      ) {
+        // Skip advertising documents that don't need to be synced.
+        return false;
+      }
+
+      const peerMetadata = this._repo.peerMetadataByPeerId[peerId];
+      if (isEchoPeerMetadata(peerMetadata)) {
+        // TODO(dmaretskyi): We need to document the `shouldAdvertise` method better so that it's clear that it's also called for access.
+        return this._echoNetworkAdapter.shouldAdvertise(peerId, { documentId });
+      }
+
       return false;
-    }
+    },
 
-    // if (!this._createdDocuemnts.has(documentId) && !this._documentsToSync.has(documentId)) {
-    //   // Skip advertising documents that don't need to be synced.
-    //   return false;
-    // }
+    // TODO(dmaretskyi): Share based on HALO permissions and space affinity.
+    // Hosts, running in the worker, don't share documents unless requested by other peers.
+    // NOTE: If both peers return sharePolicy=false the replication will not happen
+    // https://github.com/automerge/automerge-repo/pull/292
+    // Called for all loaded documents so they could be advertised to the sync server.
+    announce: async (peerId: PeerId, documentId?: DocumentId): Promise<boolean> => {
+      if (!documentId) {
+        return false;
+      }
 
-    const peerMetadata = this._repo.peerMetadataByPeerId[peerId];
-    if (isEchoPeerMetadata(peerMetadata)) {
-      return this._echoNetworkAdapter.shouldAdvertise(peerId, { documentId });
-    }
+      if (!this._createdDocuments.has(documentId) && !this._documentsToSync.has(documentId)) {
+        // Skip advertising documents that don't need to be synced.
+        return false;
+      }
 
-    return false;
-  }
+      const peerMetadata = this._repo.peerMetadataByPeerId[peerId];
+      if (isEchoPeerMetadata(peerMetadata)) {
+        return this._echoNetworkAdapter.shouldAdvertise(peerId, { documentId });
+      }
+
+      return false;
+    },
+  };
 
   private async _beforeSave({ path, batch }: BeforeSaveParams): Promise<void> {
     const handle = this._repo.handles[path[0] as DocumentId];
