@@ -259,13 +259,6 @@ export class AutomergeHost extends Resource {
     this._sharePolicyChangedTask = undefined;
   }
 
-  /**
-   * @deprecated To be abstracted away.
-   */
-  get repo(): Repo {
-    return this._repo;
-  }
-
   get peerId(): PeerId {
     return this._peerId;
   }
