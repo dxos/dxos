@@ -23,31 +23,31 @@ describe('AutomergeHost', () => {
   test('can create documents', async () => {
     const level = await createLevel();
     const host = await setupAutomergeHost({ level });
-    const handle = host.repo.create<any>();
+    const handle = host.createDoc<any>();
     handle.change((doc: any) => {
       doc.text = 'Hello world';
     });
-    await host.repo.flush();
+    await host.flush();
     expect(handle.doc()!.text).toEqual('Hello world');
   });
 
   test('changes are preserved in storage', async () => {
     const level = await createLevel();
     const host = await setupAutomergeHost({ level });
-    const handle = host.repo.create();
+    const handle = host.createDoc<any>();
     handle.change((doc: any) => {
       doc.text = 'Hello world';
     });
     const url = handle.url;
 
-    await host.repo.flush();
+    await host.flush();
     await host.close();
 
     const host2 = await setupAutomergeHost({ level });
-    const handle2 = await host2.repo.find<any>(url);
+    const handle2 = await host2.loadDoc<any>(Context.default(), url);
     await handle2.whenReady();
     expect(handle2.doc()!.text).toEqual('Hello world');
-    await host2.repo.flush();
+    await host2.flush();
   });
 
   test('load resolves when document is created from binary', async () => {
