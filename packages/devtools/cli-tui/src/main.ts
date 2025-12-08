@@ -79,7 +79,8 @@ const main = Effect.gen(function* () {
   console.log('Creating layer...');
   yield* Effect.gen(function* () {
     const services = yield* Effect.runtime<Core.AiChatServices>();
-    const core = new Core.Core(client, services, argv.provider as Provider, model);
+    const provider = '???';
+    const core = new Core.Core(client, services, provider, model);
     const app = new App(core);
     yield* Effect.promise(() => app.initialize());
   }).pipe(Effect.provide(layer));

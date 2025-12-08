@@ -29,7 +29,7 @@ export class Core extends Context {
   constructor(
     private _client: Client,
     private _services: Runtime.Runtime<AiChatServices>,
-    private _resolverName: string,
+    private _provider: string,
     private _model: ModelName,
   ) {
     super();
@@ -43,8 +43,8 @@ export class Core extends Context {
     return this._model;
   }
 
-  get resolverName(): string {
-    return this._resolverName;
+  get provider(): string {
+    return this._provider;
   }
 
   get conversation(): AiConversation | undefined {
