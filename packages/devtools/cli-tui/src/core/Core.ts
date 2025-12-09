@@ -10,13 +10,13 @@ import * as Fiber from 'effect/Fiber';
 import * as Runtime from 'effect/Runtime';
 
 import { AiService, type ModelName } from '@dxos/ai';
-import { AiConversation, type AiConversationRunParams } from '@dxos/assistant';
+import { AiConversation, type AiConversationRunParams, type GenericToolkit } from '@dxos/assistant';
 import { type Client } from '@dxos/client';
 import { Context } from '@dxos/context';
 import { throwCause } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { type Message } from '@dxos/types';
-
+import { Layer } from 'effect';
 import { type AiChatServices } from './services';
 
 export * from './services';
@@ -32,7 +32,7 @@ export class Core extends Context {
     private _services: Runtime.Runtime<AiChatServices>,
     private _provider: string,
     private _model: ModelName,
-    private _toolkit?: Toolkit.Any,
+    private _toolkit?: GenericToolkit.GenericToolkit,
   ) {
     super();
   }
@@ -57,7 +57,7 @@ export class Core extends Context {
     await this._client.spaces.waitUntilReady();
     const space = this._client.spaces.default;
     const queue = space.queues.create<Message.Message>();
-    this._conversation = new AiConversation(queue, this._toolkit);
+    this._conversation = new AiConversation(queue, this._toolkit?.toolkit);
   }
 
   async close(): Promise<void> {
@@ -71,6 +71,7 @@ export class Core extends Context {
     const request = this._conversation.createRequest(params);
     const fiber = request.pipe(
       Effect.provide(AiService.model(this._model)),
+      Effect.provide(this._toolkit?.layer ?? Layer.empty),
       Effect.asVoid,
       Runtime.runFork(this._services),
     );

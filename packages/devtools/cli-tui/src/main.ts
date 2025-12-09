@@ -11,6 +11,7 @@ import { Client, Config } from '@dxos/client';
 
 import { App } from './app';
 import { Core, TestToolkit } from './core';
+import { GenericToolkit } from '@dxos/assistant';
 
 const argv = yargs(hideBin(process.argv))
   .option('provider', {
@@ -67,7 +68,13 @@ const main = Effect.gen(function* () {
       throw new Error('AI service not available');
     }
 
-    const core = new Core.Core(client, services, service.metadata.name, model, TestToolkit.toolkit);
+    const core = new Core.Core(
+      client,
+      services,
+      service.metadata.name,
+      model,
+      GenericToolkit.make(TestToolkit.toolkit, TestToolkit.layer),
+    );
     const app = new App(core);
     yield* Effect.promise(() => app.initialize());
   }).pipe(Effect.provide(layer));

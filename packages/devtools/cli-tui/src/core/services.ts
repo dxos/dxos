@@ -17,7 +17,7 @@ import {
 } from '@dxos/ai';
 import { LMStudioResolver, OllamaResolver } from '@dxos/ai/resolvers';
 import { AiServiceTestingPreset } from '@dxos/ai/testing';
-import { makeToolExecutionServiceFromFunctions, makeToolResolverFromFunctions } from '@dxos/assistant';
+import { GenericToolkit, makeToolExecutionServiceFromFunctions, makeToolResolverFromFunctions } from '@dxos/assistant';
 import { type Client } from '@dxos/client';
 import { type Space } from '@dxos/client/echo';
 import { Database } from '@dxos/echo';
@@ -60,15 +60,25 @@ export const createBaseLayer = (
   aiServiceLayer: Layer.Layer<AiService.AiService, any, any>,
   { client, space }: LayerOptions,
 ) => {
+  const testToolkit = GenericToolkit.make(TestToolkit.toolkit, TestToolkit.layer);
+  const mergedToolkit = GenericToolkit.merge(
+    ...[
+      //
+      testToolkit,
+    ],
+  );
+  const toolkit = mergedToolkit.toolkit;
+  const toolkitLayer = mergedToolkit.layer;
+
   return Layer.mergeAll(
     TracingService.layerNoop,
-    makeToolResolverFromFunctions(TestToolkit.functions, TestToolkit.toolkit),
-    makeToolExecutionServiceFromFunctions(TestToolkit.toolkit, TestToolkit.layer),
+    makeToolResolverFromFunctions(TestToolkit.functions, toolkit),
+    makeToolExecutionServiceFromFunctions(toolkit, toolkitLayer),
   ).pipe(
     // TODO(burdon): Factor out from compute-runtime.ts
     Layer.provideMerge(
       FunctionInvocationServiceLayerWithLocalLoopbackExecutor.pipe(
-        Layer.provideMerge(FunctionImplementationResolver.layerTest({ functions: [] })),
+        Layer.provideMerge(FunctionImplementationResolver.layerTest({ functions: TestToolkit.functions })),
         Layer.provideMerge(
           RemoteFunctionExecutionService.fromClient(
             client,
