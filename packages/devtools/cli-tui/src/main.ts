@@ -7,36 +7,27 @@ import yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
 
 import { AiService } from '@dxos/ai';
+import { GenericToolkit } from '@dxos/assistant';
 import { Client, Config } from '@dxos/client';
-import { type Space } from '@dxos/client/echo';
 
 import { App } from './app';
-import { Core } from './core';
-
-type Provider = 'edge' | 'lmstudio' | 'ollama';
+import { Core, TestToolkit } from './core';
 
 const argv = yargs(hideBin(process.argv))
+  .option('verbose', {
+    alias: 'v',
+    type: 'boolean',
+    description: 'Verbose logging',
+  })
   .option('provider', {
     alias: 'p',
     type: 'string',
-    choices: ['lmstudio', 'ollama', 'edge'] as const,
-    default: 'edge' as Provider,
+    choices: ['edge', 'lmstudio', 'ollama'] as const,
+    default: 'edge' as Core.Provider,
     description: 'AI provider to use',
   })
   .help()
   .parse();
-
-const getLayer = (client: Client, space: Space, provider: Provider): Core.LayerFactoryResult => {
-  switch (provider) {
-    case 'lmstudio':
-      return Core.createLMStudioLayer({ client, space });
-    case 'ollama':
-      return Core.createOllamaLayer({ client, space });
-    case 'edge':
-    default:
-      return Core.createEdgeLayer({ client, space });
-  }
-};
 
 const main = Effect.gen(function* () {
   const config = new Config({
@@ -61,7 +52,6 @@ const main = Effect.gen(function* () {
 
   const client = new Client({ config });
   yield* Effect.promise(async () => {
-    console.log('initializing...');
     await client.initialize();
     const identity = client.halo.identity.get();
     if (!identity?.identityKey) {
@@ -71,11 +61,10 @@ const main = Effect.gen(function* () {
     // TODO(burdon): Clean-up init.
     await client.spaces.waitUntilReady();
     await client.spaces.default.waitUntilReady(); // TODO(burdon): BUG: Hangs if identity not created.
-    console.log('initialized');
   });
 
   const space = client.spaces.default;
-  const { layer, model } = getLayer(client, space, argv.provider as Provider);
+  const { layer, model } = Core.getLayer(argv.provider as Core.Provider, { client, space });
 
   yield* Effect.gen(function* () {
     const services = yield* Effect.runtime<Core.AiChatServices>();
@@ -84,8 +73,14 @@ const main = Effect.gen(function* () {
       throw new Error('AI service not available');
     }
 
-    const core = new Core.Core(client, services, service.metadata.name, model);
-    const app = new App(core);
+    const core = new Core.Core(
+      client,
+      services,
+      service.metadata.name,
+      model,
+      GenericToolkit.make(TestToolkit.toolkit, TestToolkit.layer),
+    );
+    const app = new App(core, argv.verbose);
     yield* Effect.promise(() => app.initialize());
   }).pipe(Effect.provide(layer));
 });

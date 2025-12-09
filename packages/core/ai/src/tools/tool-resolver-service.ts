@@ -44,6 +44,7 @@ export class ToolResolverService extends Context.Tag('@dxos/ai/ToolResolverServi
           Effect.either,
         ),
       ).pipe(Effect.map(Array.filterMap(Either.getRight)));
+
       return Toolkit.make(...tools);
     });
 }

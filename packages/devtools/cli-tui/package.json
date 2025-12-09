@@ -35,6 +35,7 @@
     "@dxos/functions": "workspace:*",
     "@dxos/functions-runtime": "workspace:*",
     "@dxos/invariant": "workspace:*",
+    "@dxos/node-std": "workspace:*",
     "@dxos/schema": "workspace:*",
     "@dxos/types": "workspace:*",
     "@dxos/util": "workspace:*",
@@ -42,7 +43,9 @@
     "@effect/ai-anthropic": "0.21.1",
     "@effect/ai-openai": "^0.32.1",
     "@effect/platform": "^0.92.1",
+    "@opentui/core": "^0.1.58",
     "blessed": "^0.1.81",
+    "effect": "3.18.3",
     "jsdom": "^27.0.0",
     "node-fetch": "^2.6.0",
     "yargs": "~16.2.0"

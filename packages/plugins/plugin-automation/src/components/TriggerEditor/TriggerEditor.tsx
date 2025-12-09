@@ -18,10 +18,9 @@ import {
   type FormRootProps,
   SelectField,
   omitId,
-  useRefQueryOptions,
 } from '@dxos/react-ui-form';
 
-import { FunctionInputEditor, type FunctionInputEditorProps } from './FunctionInputEditor';
+import { FunctionInputEditor } from './FunctionInputEditor';
 import { SpecSelector } from './SpecSelector';
 
 type TriggerFormSchema = ExcludeId<typeof Trigger.Trigger>;
@@ -37,13 +36,11 @@ export type TriggerEditorProps = {
   Pick<FormRootProps<TriggerFormSchema>, 'onSave' | 'onCancel'>;
 
 export const TriggerEditor = ({ db, types, tags, readonlySpec, trigger, ...formProps }: TriggerEditorProps) => {
-  const handleQueryRefOptions = useRefQueryOptions({ db });
   const fieldMap = useCustomInputs({
     db,
     types,
     tags,
     readonlySpec,
-    onQueryRefOptions: handleQueryRefOptions,
   });
 
   return (
@@ -51,8 +48,8 @@ export const TriggerEditor = ({ db, types, tags, readonlySpec, trigger, ...formP
       {...formProps}
       schema={omitId(Trigger.Trigger)}
       values={trigger}
+      db={db}
       fieldMap={fieldMap}
-      onQueryRefOptions={handleQueryRefOptions}
     >
       <Form.Viewport>
         <Form.Content>
@@ -67,10 +64,9 @@ export const TriggerEditor = ({ db, types, tags, readonlySpec, trigger, ...formP
 type UseCustomInputsProps = {
   db: Database.Database;
   readonlySpec?: boolean;
-  onQueryRefOptions: FunctionInputEditorProps['onQueryRefOptions'];
 } & Pick<QueryFormProps, 'types' | 'tags'>;
 
-const useCustomInputs = ({ db, readonlySpec, types, tags, onQueryRefOptions }: UseCustomInputsProps): FormFieldMap => {
+const useCustomInputs = ({ db, readonlySpec, types, tags }: UseCustomInputsProps): FormFieldMap => {
   const functions = useQuery(db, Filter.type(Function.Function));
   const workflows = useQuery(db, Filter.type(ComputeGraph));
   const scripts = useQuery(db, Filter.type(Script.Script));
@@ -128,9 +124,7 @@ const useCustomInputs = ({ db, readonlySpec, types, tags, onQueryRefOptions }: U
       },
 
       // Function input editor.
-      ['input' as const]: (props) => (
-        <FunctionInputEditor {...props} functions={functions} onQueryRefOptions={onQueryRefOptions} />
-      ),
+      ['input' as const]: (props) => <FunctionInputEditor {...props} functions={functions} db={db} />,
     }),
     [workflows, scripts, functions, readonlySpec],
   );

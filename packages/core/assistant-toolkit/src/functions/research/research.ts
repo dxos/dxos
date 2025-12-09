@@ -123,9 +123,7 @@ export default defineFunction({
         ) as any;
       }
 
-      const finishedToolkit = yield* createToolkit({
-        toolkit: toolkit as any,
-      }).pipe(Effect.provide(handlers));
+      const finishedToolkit = yield* createToolkit({ toolkit }).pipe(Effect.provide(handlers));
 
       const session = new AiSession();
       const result = yield* session.run({

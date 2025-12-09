@@ -2945,6 +2945,25 @@ importers:
         specifier: ^5.9.3
         version: 5.9.3
 
+  packages/core/echo/echo-react:
+    dependencies:
+      '@dxos/echo':
+        specifier: workspace:*
+        version: link:../echo
+    devDependencies:
+      '@types/react':
+        specifier: ~19.2.2
+        version: 19.2.2
+      '@types/react-dom':
+        specifier: ~19.2.2
+        version: 19.2.2(@types/react@19.2.2)
+      react:
+        specifier: ~19.2.0
+        version: 19.2.0
+      react-dom:
+        specifier: ~19.2.0
+        version: 19.2.0(react@19.2.0)
+
   packages/core/echo/echo-signals:
     dependencies:
       '@preact/signals':
@@ -4650,6 +4669,9 @@ importers:
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
+      '@dxos/node-std':
+        specifier: workspace:*
+        version: link:../../common/node-std
       '@dxos/schema':
         specifier: workspace:*
         version: link:../../sdk/schema
@@ -4671,9 +4693,15 @@ importers:
       '@effect/platform':
         specifier: ^0.92.1
         version: 0.92.1(effect@3.18.3)
+      '@opentui/core':
+        specifier: ^0.1.58
+        version: 0.1.59(typescript@5.9.3)
       blessed:
         specifier: ^0.1.81
         version: 0.1.81
+      effect:
+        specifier: 3.18.3
+        version: 3.18.3
       jsdom:
         specifier: ^27.0.0
         version: 27.0.0(canvas@3.2.0)(postcss@8.5.6)
@@ -11997,6 +12025,9 @@ importers:
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
+      '@dxos/echo-react':
+        specifier: workspace:*
+        version: link:../../core/echo/echo-react
       '@dxos/echo-signals':
         specifier: workspace:*
         version: link:../../core/echo/echo-signals
@@ -14264,12 +14295,12 @@ importers:
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
-      '@dxos/echo-db':
-        specifier: workspace:*
-        version: link:../../core/echo/echo-db
       '@dxos/echo-query':
         specifier: workspace:*
         version: link:../../core/echo/echo-query
+      '@dxos/echo-react':
+        specifier: workspace:*
+        version: link:../../core/echo/echo-react
       '@dxos/effect':
         specifier: workspace:*
         version: link:../../common/effect
@@ -15528,9 +15559,6 @@ importers:
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
-      '@dxos/echo-db':
-        specifier: workspace:*
-        version: link:../../core/echo/echo-db
       '@dxos/effect':
         specifier: workspace:*
         version: link:../../common/effect
