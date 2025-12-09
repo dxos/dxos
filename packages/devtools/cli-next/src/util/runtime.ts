@@ -35,9 +35,11 @@ export type AiChatServices =
   | ToolResolverService
   | TracingService;
 
+// TODO(wittjosiah): Factor out.
 export const Provider = Schema.Literal('lmstudio', 'ollama', 'edge');
 export type Provider = Schema.Schema.Type<typeof Provider>;
 
+// TODO(wittjosiah): Factor out.
 export const chatLayer = ({
   provider,
   spaceId,
