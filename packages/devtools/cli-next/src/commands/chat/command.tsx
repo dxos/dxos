@@ -94,14 +94,22 @@ export const chat = Command.make(
         ),
       );
 
-      // Cleanup the terminal when exiting the process so that it doesn't lock up and output garbage.
       // TODO(wittjosiah): Shouldn't opentui have a way to cleanup the renderer?
-      process.on('SIGINT', () => {
-        process.stdout.write('\x1b[?1000l\x1b[?1002l\x1b[?1003l\x1b[?1006l');
-        process.stdout.write('\x1b[?1049l\x1b[?25h\x1b[0m');
-        if (process.stdin.isTTY) process.stdin.setRawMode(false);
-        process.exit(0);
-      });
+      // This attempts to cleanup the terminal when exiting the process so that it doesn't lock up and output garbage.
+      yield* Effect.addFinalizer(() =>
+        Effect.sync(() => {
+          // Disable mouse tracking
+          process.stdout.write('\x1b[?1000l\x1b[?1002l\x1b[?1003l\x1b[?1006l');
+          // Exit alternate screen buffer
+          process.stdout.write('\x1b[?1049l');
+          // Show cursor
+          process.stdout.write('\x1b[?25h');
+          // Reset attributes
+          process.stdout.write('\x1b[0m');
+          // Restore cooked mode
+          if (process.stdin.isTTY) process.stdin.setRawMode(false);
+        }),
+      );
 
       yield* Effect.promise(() => render(() => <Chat conversation={conversation} runtime={runtime} model={model} />));
 
