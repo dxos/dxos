@@ -6,6 +6,7 @@ import * as Tool from '@effect/ai/Tool';
 import * as Toolkit from '@effect/ai/Toolkit';
 import * as Command from '@effect/cli/Command';
 import * as Options from '@effect/cli/Options';
+import { render } from '@opentui/solid';
 import * as Cause from 'effect/Cause';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
@@ -52,7 +53,7 @@ import { type Message } from '@dxos/types';
 
 import { withDatabase } from '../../util';
 
-import { App } from './app';
+import { InputTest } from './Chat';
 
 // TODO(burdon): Factor out (see plugin-assistant/processor.ts)
 export type AiChatServices =
@@ -140,11 +141,15 @@ export const chat = Command.make(
         }
       };
 
-      const app = new App(request);
-      yield* Effect.promise(() => app.initialize());
+      // const app = new App(request);
+      // yield* Effect.promise(() => app.initialize());
 
-      // TODO(wittjosiah): The ui should hold the process open until exit is triggered.
-      yield* Effect.sleep(300_000);
+      yield* Effect.promise(() => render(InputTest));
+
+      // Hold process open and sleep to allow interactivity in ui.
+      do {
+        yield* Effect.sleep(999_999_999);
+      } while (true);
     }).pipe(
       Effect.provide(
         Layer.mergeAll(
