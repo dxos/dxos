@@ -1,9 +1,6 @@
 {
   "extends": "../../../tsconfig.base.json",
   "compilerOptions": {
-    "jsx": "react-jsx",
-    "jsxImportSource": "react",
-    "outDir": "./dist",
     "rootDir": "./src"
   },
   "exclude": [
@@ -11,6 +8,7 @@
     "node_modules"
   ],
   "include": [
+    "package.json",
     "src/**/*"
   ],
   "references": [
@@ -22,6 +20,9 @@
     },
     {
       "path": "../../common/invariant"
+    },
+    {
+      "path": "../../common/node-std"
     },
     {
       "path": "../../common/util"

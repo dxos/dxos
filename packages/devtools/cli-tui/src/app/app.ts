@@ -29,6 +29,8 @@ process.stderr.write = (chunk: any, ...args: any[]): boolean => {
   return originalStderrWrite(chunk, ...args);
 };
 
+const DEBUG = !!process.env.DX_DEBUG_CHAT;
+
 /**
  * DXOS CLI TUI - Terminal User Interface.
  * Built with blessed for zero-flicker performance.
@@ -50,7 +52,10 @@ export class App {
   private _updateTimeout: NodeJS.Timeout | null = null;
   private _indicatorInterval: NodeJS.Timeout | null = null;
 
-  constructor(private _core: Core.Core) {}
+  constructor(
+    private _core: Core.Core,
+    private _verbose = false,
+  ) {}
 
   /**
    * Initialize the TUI application.
@@ -276,7 +281,6 @@ export class App {
       }
       this._screen.render();
     });
-
     this._inputBox.key(['end', 'C-e'], () => {
       const inputBox = this._inputBox as any;
       if (inputBox._cline !== undefined && inputBox._cline.line) {
@@ -290,7 +294,6 @@ export class App {
       this._messageBox.scroll(-5);
       this._screen.render();
     });
-
     this._messageBox.key(['pagedown'], () => {
       this._messageBox.scroll(5);
       this._screen.render();
@@ -315,7 +318,6 @@ export class App {
       this._forceRefresh();
       return false;
     });
-
     this._inputBox.key(['C-r'], () => {
       this._forceRefresh();
       return false;
@@ -360,20 +362,48 @@ export class App {
     this._inputBox.focus();
 
     this._messages.push('{green-fg}Assistant:{/} ');
-    const assistantMessageIndex = this._messages.length - 1;
+    let assistantMessageIndex = this._messages.length - 1;
 
     try {
       // Start streaming assistant response.
       this._isStreaming = true;
       this._startIndicator();
-      await this._core.request({
+      await this._core.streamRequest({
         prompt,
+        system: 'You are a helpful assistant that is able to make function calls.',
         observer: GenerationObserver.make({
           onPart: (part) =>
             Effect.sync(() => {
-              if (part.type === 'text-delta') {
-                this._messages[assistantMessageIndex] += part.delta;
-                this._throttledUpdate();
+              switch (part.type) {
+                case 'text-delta':
+                  this._messages[assistantMessageIndex] += part.delta;
+                  this._throttledUpdate();
+                  break;
+                case 'error':
+                case 'tool-call':
+                case 'tool-result':
+                case 'finish':
+                  if (DEBUG) {
+                    this._messages[assistantMessageIndex] += `\n${JSON.stringify(part, null, 2)}\n`;
+                    this._throttledUpdate();
+                  }
+                  break;
+              }
+            }),
+          onMessage: (message) =>
+            Effect.sync(() => {
+              switch (message.sender.role) {
+                case 'tool': {
+                  if (this._verbose) {
+                    for (const part of message.blocks) {
+                      this._messages.splice(assistantMessageIndex, 0, `${JSON.stringify(part, null, 2)}\n`);
+                      assistantMessageIndex++;
+                    }
+
+                    this._throttledUpdate();
+                  }
+                  break;
+                }
               }
             }),
         }),
@@ -401,11 +431,26 @@ export class App {
   }
 
   /**
+   * Throttled update for streaming (max 20 updates/sec).
+   */
+  private _throttledUpdate(): void {
+    if (this._updateTimeout) {
+      return;
+    }
+
+    this._updateTimeout = setTimeout(() => {
+      this._updateMessages();
+      this._updateTimeout = null;
+    }, 50);
+  }
+
+  /**
    * Update the message display.
    */
   private _updateMessages(): void {
-    const content = this._formatContent(this._messages.join('\n'));
+    const content = this._formatContent(this._messages);
     this._messageBox.setContent(content);
+    // TODO(burdon): Don't scroll if not pinned.
     // Scroll to bottom based on actual content height.
     const scrollHeight = this._messageBox.getScrollHeight();
     this._messageBox.scrollTo(scrollHeight);
@@ -413,14 +458,31 @@ export class App {
   }
 
   /**
+   * Force a complete screen refresh.
+   */
+  private _forceRefresh(): void {
+    try {
+      this._screen.realloc();
+    } catch {
+      // realloc might not work on all systems.
+    }
+
+    const content = this._formatContent(this._messages);
+    this._messageBox.setContent(content);
+    const scrollHeight = this._messageBox.getScrollHeight();
+    this._messageBox.scrollTo(scrollHeight);
+    this._screen.render();
+    setImmediate(() => this._screen.render());
+  }
+
+  /**
    * Format content with syntax highlighting for fenced code blocks.
    */
-  private _formatContent(content: string): string {
-    const lines = content.split('\n');
-    const result: string[] = [];
-    let inCodeBlock = false;
+  private _formatContent(lines: string[]): string {
     const width = (this._messageBox.width as number) - 3; // Account for padding.
 
+    let inCodeBlock = false;
+    const result: string[] = [];
     for (const line of lines) {
       if (line.startsWith('```')) {
         inCodeBlock = !inCodeBlock;
@@ -435,37 +497,6 @@ export class App {
     }
 
     return result.join('\n');
-  }
-
-  /**
-   * Throttled update for streaming (max 20 updates/sec).
-   */
-  private _throttledUpdate(): void {
-    if (this._updateTimeout) {
-      return;
-    }
-    this._updateTimeout = setTimeout(() => {
-      this._updateMessages();
-      this._updateTimeout = null;
-    }, 50);
-  }
-
-  /**
-   * Force a complete screen refresh.
-   */
-  private _forceRefresh(): void {
-    try {
-      this._screen.realloc();
-    } catch {
-      // realloc might not work on all systems.
-    }
-
-    const content = this._formatContent(this._messages.join('\n'));
-    this._messageBox.setContent(content);
-    const scrollHeight = this._messageBox.getScrollHeight();
-    this._messageBox.scrollTo(scrollHeight);
-    this._screen.render();
-    setImmediate(() => this._screen.render());
   }
 
   /**
