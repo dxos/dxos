@@ -18,7 +18,6 @@ void (async () => {
       .option('bundlePackage', { type: 'array', default: [], describe: 'Packages to include in the bundle' })
       .option('ignorePackage', { type: 'array', default: [], describe: 'Packages to ignore when bundling' })
       .option('entryPoint', { type: 'array', demandOption: true, describe: 'Entrypoints for esbuild to build from' })
-      .option('injectGlobals', { type: 'boolean', default: false, describe: 'Inject import for node stdlib globals' })
       .option('importGlobals', { type: 'boolean', default: false, describe: 'Import globals into module scope' })
       .option('metafile', { type: 'boolean', default: true, describe: 'Output a build meta file' })
       .option('outputPath', { type: 'string', demandOption: true, describe: 'Directory to output build files' })
@@ -43,7 +42,6 @@ void (async () => {
       bundlePackages: argv.bundlePackage as string[],
       ignorePackages: argv.ignorePackage as string[],
       entryPoints: argv.entryPoint as string[],
-      injectGlobals: argv.injectGlobals as boolean,
       importGlobals: argv.importGlobals as boolean,
       metafile: argv.metafile as boolean,
       outputPath: argv.outputPath as string,
