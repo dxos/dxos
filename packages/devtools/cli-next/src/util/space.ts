@@ -5,6 +5,7 @@
 import * as Console from 'effect/Console';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
+import * as Match from 'effect/Match';
 import * as Option from 'effect/Option';
 import type * as Schema from 'effect/Schema';
 
@@ -22,29 +23,81 @@ export const getSpace = (spaceId: Key.SpaceId) =>
     return yield* Option.fromNullable(client.spaces.get(spaceId));
   }).pipe(Effect.catchTag('NoSuchElementException', () => Effect.fail(new SpaceNotFoundError(spaceId))));
 
-// TODO(wittjosiah): Refactor to be able to use with `Command.provideEffect`?
-export const withDatabase: (
-  spaceId?: Key.SpaceId,
-) => <A, E, R>(
-  effect: Effect.Effect<A, E, R>,
-) => Effect.Effect<A, E, ClientService | Exclude<R, Database.Service | QueueService>> = (spaceId$) =>
-  Effect.fnUntraced(function* (effect) {
+// TODO(wittjosiah): Factor out.
+export const spaceLayer = (
+  spaceId$: Option.Option<Key.SpaceId>,
+  fallbackToDefaultSpace = false,
+): Layer.Layer<Database.Service | QueueService, never, ClientService> => {
+  const getSpace = Effect.fn(function* () {
     const client = yield* ClientService;
     yield* Effect.promise(() => client.spaces.waitUntilReady());
-    const spaceId = spaceId$ ?? client.spaces.default.id;
-    const db = yield* Option.fromNullable(client.spaces.get(spaceId)).pipe(
-      Option.map((space) => Effect.promise(() => space.waitUntilReady())),
-      Option.map((space) =>
-        Effect.map(space, (space) => Layer.merge(Database.Service.layer(space.db), QueueService.layer(space.queues))),
+
+    const spaceId = Match.value(fallbackToDefaultSpace).pipe(
+      Match.when(true, () =>
+        spaceId$.pipe(
+          Option.getOrElse(() => client.spaces.default.id),
+          Option.some,
+        ),
       ),
-      Option.getOrElse(() => Effect.succeed(Layer.merge(Database.Service.notAvailable, QueueService.notAvailable))),
+      Match.when(false, () => spaceId$),
+      Match.exhaustive,
     );
 
-    return yield* Effect.gen(function* () {
-      yield* Effect.addFinalizer(() => Database.Service.flush({ indexes: true }));
-      return yield* effect;
-    }).pipe(Effect.scoped, Effect.provide(db));
+    const space = spaceId.pipe(
+      Option.flatMap((id) => Option.fromNullable(client.spaces.get(id))),
+      Option.getOrUndefined,
+    );
+
+    if (space) {
+      yield* Effect.promise(() => space.waitUntilReady());
+    }
+    return space;
   });
+
+  const db = Layer.scoped(
+    Database.Service,
+    Effect.acquireRelease(
+      Effect.gen(function* () {
+        const space = yield* getSpace();
+        if (!space) {
+          return {
+            get db(): Database.Database {
+              throw new Error('Space not found');
+            },
+          };
+        }
+        return { db: space.db };
+      }),
+      ({ db }) => Effect.promise(() => db.flush({ indexes: true })),
+    ),
+  );
+
+  const queue = Layer.effect(
+    QueueService,
+    Effect.gen(function* () {
+      const space = yield* getSpace();
+      if (!space) {
+        return {
+          queues: {
+            get: (_dxn) => {
+              throw new Error('Queues not available');
+            },
+            create: () => {
+              throw new Error('Queues not available');
+            },
+          },
+          queue: undefined,
+        };
+      }
+      return {
+        queues: space.queues,
+        queue: undefined,
+      };
+    }),
+  );
+
+  return Layer.merge(db, queue);
+};
 
 export const withTypes: (
   types: Schema.Schema.AnyNoContext[],

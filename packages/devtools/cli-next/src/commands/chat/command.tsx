@@ -19,9 +19,7 @@ import {
   makeToolResolverFromFunctions,
 } from '@dxos/assistant';
 import { ClientService } from '@dxos/client';
-import { Database } from '@dxos/echo';
-import { type QueueAPI } from '@dxos/echo-db';
-import { CredentialsService, QueueService, TracingService } from '@dxos/functions';
+import { CredentialsService, TracingService } from '@dxos/functions';
 import {
   FunctionImplementationResolver,
   FunctionInvocationServiceLayerWithLocalLoopbackExecutor,
@@ -29,6 +27,7 @@ import {
 } from '@dxos/functions-runtime';
 import { type Message } from '@dxos/types';
 
+import { spaceLayer } from '../../util';
 import { Common } from '../options';
 
 import { Chat } from './Chat';
@@ -116,49 +115,11 @@ export const chat = Command.make(
           Layer.provideMerge(FunctionImplementationResolver.layerTest({ functions: TestToolkit.functions })),
           Layer.provideMerge(RemoteFunctionExecutionService.withClient(spaceId, true)),
           Layer.provideMerge(CredentialsService.layerFromDatabase()),
+          Layer.provideMerge(spaceLayer(spaceId, true)),
         ),
       ),
     );
   }),
-  // TODO(wittjosiah): Factor out.
-  Command.provideEffect(
-    Database.Service,
-    Effect.fnUntraced(function* ({ spaceId: spaceId$ }) {
-      const client = yield* ClientService;
-      yield* Effect.promise(() => client.spaces.waitUntilReady());
-      const spaceId = Option.getOrElse(spaceId$, () => client.spaces.default.id);
-      const space = client.spaces.get(spaceId);
-      if (!space) {
-        return {
-          get db(): Database.Database {
-            throw new Error('Space not found');
-          },
-        };
-      }
-      yield* Effect.promise(() => space.waitUntilReady());
-      return { db: space.db };
-    }),
-  ),
-  // TODO(wittjosiah): Factor out.
-  Command.provideEffect(
-    QueueService,
-    Effect.fnUntraced(function* ({ spaceId: spaceId$ }) {
-      const client = yield* ClientService;
-      yield* Effect.promise(() => client.spaces.waitUntilReady());
-      const spaceId = Option.getOrElse(spaceId$, () => client.spaces.default.id);
-      const space = client.spaces.get(spaceId);
-      if (!space) {
-        return {
-          get queues(): QueueAPI {
-            throw new Error('Space not found');
-          },
-          queue: undefined,
-        };
-      }
-      yield* Effect.promise(() => space.waitUntilReady());
-      return { queues: space.queues, queue: undefined };
-    }),
-  ),
   Command.provide(({ provider }) => {
     const resolver = Match.value(provider).pipe(
       Match.when('lmstudio', () => LMStudioResolver.make()),

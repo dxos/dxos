@@ -11,17 +11,17 @@ import * as Option from 'effect/Option';
 import { Filter, Query } from '@dxos/echo';
 import { Database } from '@dxos/echo';
 
-import { withDatabase } from '../../util';
+import { spaceLayer } from '../../util';
 import { Common } from '../options';
 
 export const remove = Command.make(
   'remove',
   {
-    spaceId: Common.spaceId,
+    spaceId: Common.spaceId.pipe(Options.optional),
     typename: Options.text('typename').pipe(Options.withDescription('The typename to query.'), Options.optional),
     id: Options.text('id').pipe(Options.withDescription('The object ID.'), Options.optional),
   },
-  ({ spaceId, typename, id }) =>
+  ({ typename, id }) =>
     Effect.gen(function* () {
       if (Option.isSome(id) && Option.isSome(typename)) {
         throw new Error('Cannot specify both typename and id');
@@ -40,5 +40,8 @@ export const remove = Command.make(
       }
 
       yield* Console.log(`Removed ${objects.length} objects.`);
-    }).pipe(withDatabase(spaceId)),
-).pipe(Command.withDescription('Remove an object from a space.'));
+    }),
+).pipe(
+  Command.withDescription('Remove an object from a space.'),
+  Command.provide(({ spaceId }) => spaceLayer(spaceId, true)),
+);
