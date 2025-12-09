@@ -245,7 +245,7 @@ export class CollectionSynchronizer extends Resource {
         attributes: { peerId },
       });
     }
-    log.info("diff", {
+    log("diff", {
       localState: localState.documents,
       remoteState: remoteState.documents,
       missingOnLocal: diff.missingOnLocal,
