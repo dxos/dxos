@@ -1,8 +1,6 @@
 type: application
 language: typescript
 tags:
-  - ts-compile
-tasks:
-  compile:
-  build:
-  test:
+  - ts-build
+  - ts-test
+  - pack
