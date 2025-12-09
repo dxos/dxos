@@ -114,10 +114,13 @@ export class AiContextBinder extends Resource {
   // TODO(burdon): Pass in Blueprint obj (from registry?) and create reference.
   async bind(props: BindingProps): Promise<void> {
     const blueprints =
-      props.blueprints?.filter((ref) => !this.blueprints.peek().find((b) => b.dxn.toString() === ref.dxn.toString())) ??
-      [];
+      props.blueprints?.filter(
+        (ref) => !this.blueprints.peek().find((blueprint) => blueprint.dxn.toString() === ref.dxn.toString()),
+      ) ?? [];
     const objects =
-      props.objects?.filter((ref) => !this.objects.peek().find((o) => o.dxn.toString() === ref.dxn.toString())) ?? [];
+      props.objects?.filter(
+        (ref) => !this.objects.peek().find((object) => object.dxn.toString() === ref.dxn.toString()),
+      ) ?? [];
 
     if (!blueprints.length && !objects.length) {
       return;
