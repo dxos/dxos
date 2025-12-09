@@ -19,7 +19,6 @@
     "./events": "./dist/lib/browser/events.mjs",
     "./fs": "./dist/lib/browser/fs.mjs",
     "./fs/promises": "./dist/lib/browser/fs/promises.mjs",
-    "./globals": "./dist/lib/browser/globals.mjs",
     "./inject-globals": "./dist/lib/browser/inject-globals.mjs",
     "./path": "./dist/lib/browser/path.mjs",
     "./stream": "./dist/lib/browser/stream.mjs",
