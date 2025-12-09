@@ -14,12 +14,14 @@ import { AiService, type ModelName } from '@dxos/ai';
 import { type AiConversation, type AiConversationRunParams, GenerationObserver } from '@dxos/assistant';
 import { throwCause } from '@dxos/effect';
 
+import { type AiChatServices } from '../../util';
+
 import { ChatBanner } from './ChatBanner';
 import { ChatInput } from './ChatInput';
 import { ChatMessages } from './ChatMessages';
 import { ChatStatusBar } from './ChatStatusBar';
 import { useChatKeyboard, useChatMessages, useSpinner } from './hooks';
-import { type AiChatServices, createAssistantMessage, createUserMessage } from './types';
+import { createAssistantMessage, createUserMessage } from './types';
 
 const DEBUG = false;
 

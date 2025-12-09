@@ -7,7 +7,6 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Match from 'effect/Match';
 import * as Option from 'effect/Option';
-import type * as Schema from 'effect/Schema';
 
 import { ClientService } from '@dxos/client';
 import { type Space } from '@dxos/client/echo';
@@ -98,15 +97,6 @@ export const spaceLayer = (
 
   return Layer.merge(db, queue);
 };
-
-export const withTypes: (
-  types: Schema.Schema.AnyNoContext[],
-) => <A, E, R>(effect: Effect.Effect<A, E, R>) => Effect.Effect<A, E, ClientService | R> = (types) =>
-  Effect.fnUntraced(function* (effect) {
-    const client = yield* ClientService;
-    yield* Effect.promise(() => client.addTypes(types));
-    return yield* effect;
-  });
 
 // TODO(dmaretskyi): There a race condition with edge connection not showing up.
 export const waitForSync = Effect.fn(function* (space: Space) {
