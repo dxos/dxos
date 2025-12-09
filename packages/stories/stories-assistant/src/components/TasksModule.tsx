@@ -22,7 +22,7 @@ import { type ComponentProps } from './types';
 
 export const TasksModule = ({ space }: ComponentProps) => {
   const { themeMode } = useThemeContext();
-  const [document] = useQuery(space, Filter.type(Markdown.Document));
+  const [document] = useQuery(space.db, Filter.type(Markdown.Document));
   if (!document?.content.target) {
     return null;
   }

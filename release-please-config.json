@@ -275,6 +275,11 @@
         },
         {
           "type": "json",
+          "path": "packages/core/echo/echo-react/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/core/echo/echo-signals/package.json",
           "jsonpath": "$.version"
         },

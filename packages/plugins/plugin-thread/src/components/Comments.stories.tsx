@@ -10,7 +10,7 @@ import { withPluginManager } from '@dxos/app-framework/testing';
 import { Obj, Query, Relation, Type } from '@dxos/echo';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { faker } from '@dxos/random';
-import { useQuery, useSpace } from '@dxos/react-client/echo';
+import { useDatabase, useQuery } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { useAsyncEffect } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
@@ -26,22 +26,22 @@ faker.seed(1);
 
 const DefaultStory = () => {
   const identity = useIdentity();
-  const space = useSpace();
-  const anchors = useQuery(space, Query.type(AnchoredTo.AnchoredTo));
+  const db = useDatabase();
+  const anchors = useQuery(db, Query.type(AnchoredTo.AnchoredTo));
 
   useAsyncEffect(async () => {
-    if (identity && space) {
-      const object = space.db.add(Obj.make(Type.Expando, {}));
-      const thread1 = space.db.add(createCommentThread(identity));
-      const thread2 = space.db.add(createProposalThread(identity));
-      space.db.add(
+    if (identity && db) {
+      const object = db.add(Obj.make(Type.Expando, {}));
+      const thread1 = db.add(createCommentThread(identity));
+      const thread2 = db.add(createProposalThread(identity));
+      db.add(
         Relation.make(AnchoredTo.AnchoredTo, {
           [Relation.Source]: thread1,
           [Relation.Target]: object,
           anchor: 'test',
         }),
       );
-      space.db.add(
+      db.add(
         Relation.make(AnchoredTo.AnchoredTo, {
           [Relation.Source]: thread2,
           [Relation.Target]: object,
@@ -49,9 +49,9 @@ const DefaultStory = () => {
         }),
       );
     }
-  }, [identity, space]);
+  }, [identity, db]);
 
-  if (!identity || !space || !anchors) {
+  if (!identity || !db || !anchors) {
     return null;
   }
 

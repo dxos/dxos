@@ -32,9 +32,9 @@ const ClientStory = () => {
   return <JsonPanel value={client.toJSON()} />;
 };
 
-const ClientSpace = ({ spaceKey }: ClientRepeatedComponentProps) => {
+const ClientSpace = ({ spaceId }: ClientRepeatedComponentProps) => {
   const client = useClient();
-  const space = useSpace(spaceKey);
+  const space = useSpace(spaceId);
   if (!space?.isOpen) {
     return null;
   }

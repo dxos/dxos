@@ -31,7 +31,7 @@ export const useChatToolbarActions = ({ chat, companionTo }: ChatToolbarActionsP
     : Query.select(Filter.nothing());
 
   // TODO(wittjosiah): Query in react vs query in atom?
-  const chats = useQuery(space, query);
+  const chats = useQuery(space?.db, query);
 
   // Create stable reference for dependency array to avoid circular reference issues.
   return useMenuActions(

@@ -6,7 +6,8 @@ import * as Schema from 'effect/Schema';
 import { useEffect } from 'react';
 
 import { Format } from '@dxos/echo';
-import { TypeEnum, TypedObject, setValue } from '@dxos/echo/internal';
+import { TypeEnum, TypedObject } from '@dxos/echo/internal';
+import { setValue } from '@dxos/effect';
 import { live } from '@dxos/live-object';
 import { faker } from '@dxos/random';
 import { type ProjectionModel } from '@dxos/schema';

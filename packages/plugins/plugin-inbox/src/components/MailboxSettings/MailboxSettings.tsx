@@ -21,7 +21,7 @@ export const MailboxSettings = ({ subject }: SurfaceComponentProps<Mailbox.Mailb
   const { t } = useTranslation(meta.id);
   const { dispatchPromise: dispatch } = useIntentDispatcher();
   const space = useMemo(() => getSpace(subject), [subject]);
-  const triggers = useQuery(space, Filter.type(Trigger.Trigger));
+  const triggers = useQuery(space?.db, Filter.type(Trigger.Trigger));
 
   const handleConfigureSync = useCallback(() => {
     invariant(space);

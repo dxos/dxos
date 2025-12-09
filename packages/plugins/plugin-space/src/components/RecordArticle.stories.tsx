@@ -28,7 +28,7 @@ const generator: ValueGenerator = faker as any;
 
 const DefaultStory = () => {
   const { space } = useClientProvider();
-  const [object] = useQuery(space, Filter.type(Organization.Organization));
+  const [object] = useQuery(space?.db, Filter.type(Organization.Organization));
   if (!object) {
     return null;
   }

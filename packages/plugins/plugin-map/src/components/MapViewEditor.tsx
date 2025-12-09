@@ -25,7 +25,7 @@ export const MapViewEditor = ({ object }: MapViewEditorProps) => {
   const space = getSpace(object);
   const view = object?.view?.target;
   const typename = view?.query ? getTypenameFromQuery(view.query.ast) : undefined;
-  const currentSchema = useSchema(space, typename);
+  const currentSchema = useSchema(space?.db, typename);
 
   const [allSchemata, setAllSchemata] = useState<Type.RuntimeType[]>([]);
 

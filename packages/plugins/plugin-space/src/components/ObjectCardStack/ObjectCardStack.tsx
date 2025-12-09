@@ -24,9 +24,9 @@ export const ObjectCardStack = forwardRef<HTMLDivElement, ObjectCardStackProps>(
   const { t } = useTranslation(meta.id);
   const space = getSpace(view);
   const typename = view.query ? getTypenameFromQuery(view.query.ast) : undefined;
-  const schema = useSchema(space, typename);
+  const schema = useSchema(space?.db, typename);
 
-  const queriedObjects = useQuery(space, schema ? Filter.type(schema) : Filter.nothing());
+  const queriedObjects = useQuery(space?.db, schema ? Filter.type(schema) : Filter.nothing());
   const selectedRows = useSelected(objectId, 'multi');
   const selectedObjects = selectedRows.map((id) => queriedObjects.find((obj) => obj.id === id)).filter(isNonNullable);
 

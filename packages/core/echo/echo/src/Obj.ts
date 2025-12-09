@@ -6,6 +6,7 @@ import * as Function from 'effect/Function';
 import * as Schema from 'effect/Schema';
 
 import { type ForeignKey } from '@dxos/echo-protocol';
+import { createJsonPath, getValue as getValue$ } from '@dxos/effect';
 import { assertArgument, invariant } from '@dxos/invariant';
 import { type DXN, ObjectId } from '@dxos/keys';
 import { getSnapshot as getSnapshot$ } from '@dxos/live-object';
@@ -36,6 +37,7 @@ import {
   objectToJSON,
   setDescription as setDescription$,
   setLabel as setLabel$,
+  setValue as setValue$,
 } from './internal';
 import * as Ref from './Ref';
 import * as Type from './Type';
@@ -175,6 +177,53 @@ export const clone = <T extends Any>(obj: T, opts?: CloneOptions): T => {
 
   return make(schema as Type.Obj.Any, props);
 };
+
+/**
+ * Get a deeply nested property from an object.
+ *
+ * Similar to lodash.get and getDeep from @dxos/util.
+ * This is the complementary function to setValue.
+ *
+ * @param obj - The ECHO object to get the property from.
+ * @param path - Path to the property (array of keys).
+ * @returns The value at the path, or undefined if not found.
+ *
+ * @example
+ * ```ts
+ * const person = Obj.make(Person, {
+ *   name: 'John',
+ *   addresses: [{ street: '123 Main St' }]
+ * });
+ *
+ * Obj.getValue(person, ['addresses', 0, 'street']); // '123 Main St'
+ * Obj.getValue(person, ['addresses', 1, 'street']); // undefined
+ * ```
+ */
+export const getValue = (obj: any, path: readonly (string | number)[]): any => {
+  return getValue$(obj, createJsonPath(path));
+};
+
+/**
+ * Set a deeply nested property on an object, using the object's schema to determine
+ * whether to initialize nested data as an empty object or array.
+ *
+ * Similar to lodash.set and setDeep from @dxos/util, but schema-aware.
+ *
+ * @param obj - The ECHO object to set the property on.
+ * @param path - Path to the property (array of keys).
+ * @param value - Value to set.
+ * @returns The value that was set.
+ *
+ * @example
+ * ```ts
+ * const person = Obj.make(Person, { name: 'John' });
+ * // Person schema has: addresses: Schema.mutable(Schema.Array(Address))
+ * Obj.setValue(person, ['addresses', 0, 'street'], '123 Main St');
+ * // Creates: person.addresses = [{ street: '123 Main St' }]
+ * ```
+ */
+// TODO(wittjosiah): Compute possible path values + type value based on generic object type.
+export const setValue: (obj: Any, path: readonly (string | number)[], value: any) => void = setValue$ as any;
 
 //
 // Type

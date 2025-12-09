@@ -13,7 +13,7 @@ import {
   ShellLayout,
   type ShellRuntime,
 } from '@dxos/react-client';
-import { useSpace } from '@dxos/react-client/echo';
+import { type SpaceId, useSpace } from '@dxos/react-client/echo';
 import { useAsyncEffect } from '@dxos/react-ui';
 
 import { IdentityDialog } from '../IdentityDialog';
@@ -39,7 +39,7 @@ export const Shell = ({ runtime }: { runtime: ShellRuntime }) => {
     });
 
   const client = useClient();
-  const space = useSpace(spaceId ?? spaceKey);
+  const space = useSpace((spaceId as SpaceId | undefined) ?? spaceKey);
 
   const createDeviceInvitationUrl = (invitationCode: string) => {
     const baseUrl = new URL(invitationUrl);

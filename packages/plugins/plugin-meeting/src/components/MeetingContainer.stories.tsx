@@ -14,7 +14,7 @@ import { MarkdownPlugin } from '@dxos/plugin-markdown';
 import { SpacePlugin } from '@dxos/plugin-space';
 import { ThemePlugin } from '@dxos/plugin-theme';
 import { Channel } from '@dxos/plugin-thread/types';
-import { Query, useQuery, useSpace } from '@dxos/react-client/echo';
+import { Query, useDatabase, useQuery } from '@dxos/react-client/echo';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { defaultTx } from '@dxos/react-ui-theme';
 import { Text } from '@dxos/schema';
@@ -26,8 +26,8 @@ import { Meeting } from '../types';
 import { MeetingContainer, type MeetingContainerProps } from './MeetingContainer';
 
 const Story = () => {
-  const space = useSpace();
-  const [meeting] = useQuery(space, Query.type(Meeting.Meeting));
+  const db = useDatabase();
+  const [meeting] = useQuery(db, Query.type(Meeting.Meeting));
   if (!meeting) {
     return null;
   }

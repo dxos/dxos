@@ -154,6 +154,9 @@
       "path": "packages/core/echo/echo-query/tsconfig.json"
     },
     {
+      "path": "packages/core/echo/echo-react/tsconfig.json"
+    },
+    {
       "path": "packages/core/echo/echo-signals/tsconfig.json"
     },
     {

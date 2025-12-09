@@ -7,8 +7,14 @@ import type * as Schema from 'effect/Schema';
 import type * as SchemaAST from 'effect/SchemaAST';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { type AnyProperties, getValue as getValue$, setValue as setValue$ } from '@dxos/echo/internal';
-import { type JsonPath, createJsonPath, fromEffectValidationPath } from '@dxos/effect';
+import { type AnyProperties } from '@dxos/echo/internal';
+import {
+  type JsonPath,
+  createJsonPath,
+  fromEffectValidationPath,
+  getValue as getValue$,
+  setValue as setValue$,
+} from '@dxos/effect';
 import { log } from '@dxos/log';
 import { useDefaultValue } from '@dxos/react-ui';
 import { type ValidationError, validateSchema } from '@dxos/schema';
@@ -263,8 +269,8 @@ export const useFormHandler = <T extends AnyProperties>({
       setValues(newValues);
 
       // TODO(burdon): Check value has changed from original.
-      const newChanged = { ...changed, [jsonPath]: true };
-      setChanged({ ...changed, [jsonPath]: true });
+      const newChanged = { [jsonPath]: true };
+      setChanged({ ...changed, ...newChanged });
 
       // Validate.
       const isValid = validate(newValues);

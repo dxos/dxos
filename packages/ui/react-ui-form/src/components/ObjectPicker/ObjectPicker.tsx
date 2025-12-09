@@ -5,22 +5,27 @@
 import type * as Schema from 'effect/Schema';
 import React, { type KeyboardEvent, type MouseEvent, forwardRef, useCallback, useMemo, useState } from 'react';
 
-import { Icon, Popover, type ThemedClassName, useTranslation } from '@dxos/react-ui';
+import { Icon, type Palette, Popover, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { Combobox } from '@dxos/react-ui-searchlist';
 
-import { type QueryTag } from '../../hooks';
 import { translationKey } from '../../translations';
 import { Form } from '../Form';
 
+export type RefOption = {
+  id: string;
+  label: string;
+  hue?: Palette;
+};
+
 export type ObjectPickerContentProps = ThemedClassName<{
-  options: QueryTag[];
+  options: RefOption[];
   selectedIds?: string[];
-  createSchema?: Schema.Schema.AnyNoContext;
   createOptionLabel?: [string, { ns: string }];
   createOptionIcon?: string;
+  createSchema?: Schema.Schema.AnyNoContext;
   createInitialValuePath?: string;
-  onSelect: (id: string) => void;
   onCreate?: (values: any) => void;
+  onSelect: (id: string) => void;
 }>;
 
 const ObjectPickerContent = forwardRef<HTMLDivElement, ObjectPickerContentProps>(

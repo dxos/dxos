@@ -17,6 +17,22 @@ export interface Queue<T extends Entity.Unknown = Entity.Unknown> extends Databa
   readonly dxn: DXN;
 
   /**
+   * @deprecated Use query() API instead.
+   */
+  readonly isLoading: boolean;
+
+  /**
+   * @deprecated Use query() API instead.
+   */
+  readonly error: Error | null;
+
+  /**
+   * @deprecated Use query() API instead.
+   */
+  // TODO(dmaretskyi): Replace with unified query(query) => QueryResult<T> API.
+  readonly objects: T[];
+
+  /**
    * Appends objects to the queue.
    */
   append(objects: T[]): Promise<void>;
@@ -39,22 +55,6 @@ export interface Queue<T extends Entity.Unknown = Entity.Unknown> extends Databa
    */
   // TODO(dmaretskyi): Replace with unified query(query) => QueryResult<T> API.
   getObjectsById(ids: ObjectId[]): Promise<(T | undefined)[]>;
-
-  /**
-   * @deprecated Use query() API instead.
-   */
-  readonly isLoading: boolean;
-
-  /**
-   * @deprecated Use query() API instead.
-   */
-  readonly error: Error | null;
-
-  /**
-   * @deprecated Use query() API instead.
-   */
-  // TODO(dmaretskyi): Replace with unified query(query) => QueryResult<T> API.
-  readonly objects: T[];
 
   /**
    * Refreshes the queue from the server.

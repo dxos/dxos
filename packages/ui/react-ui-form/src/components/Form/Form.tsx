@@ -5,10 +5,10 @@
 import { createContext } from '@radix-ui/react-context';
 import * as Schema from 'effect/Schema';
 import type * as SchemaAST from 'effect/SchemaAST';
-import React, { type PropsWithChildren, useMemo, useRef } from 'react';
+import React, { type PropsWithChildren, useEffect, useMemo, useRef } from 'react';
 
 import { type AnyProperties } from '@dxos/echo/internal';
-import { createJsonPath, getValue as getValue$ } from '@dxos/effect';
+import { createJsonPath, getValue as getValue$, setValue as setValue$ } from '@dxos/effect';
 import { IconButton, type IconButtonProps, ScrollArea, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
@@ -76,13 +76,28 @@ const [FormContextProvider, useFormContext] = createContext<FormContextValue>('F
 /**
  * Get the current form values.
  */
-const useFormValues = <T extends AnyProperties>(componentName: string, path: (string | number)[] = []): T => {
+const useFormValues: {
+  <T extends AnyProperties>(componentName: string, path?: (string | number)[]): T;
+  <T extends AnyProperties>(
+    componentName: string,
+    path: (string | number)[] | undefined,
+    defaultValue: () => T,
+  ): T | undefined;
+} = (componentName: string, path: (string | number)[] = [], defaultValue?: () => any) => {
   const jsonPath = createJsonPath(path);
   const {
     form: { values },
   } = useFormContext(componentName);
 
-  return getValue$(values, jsonPath) as T;
+  const value = getValue$(values, jsonPath);
+
+  useEffect(() => {
+    if (!value && defaultValue) {
+      setValue$(values, jsonPath, defaultValue());
+    }
+  }, [value, defaultValue]);
+
+  return value;
 };
 
 /**

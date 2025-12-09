@@ -47,7 +47,7 @@ describe('useSpace', () => {
   test('gets space by key', async () => {
     const { client, space } = await createClient({ createIdentity: true, createSpace: true });
     const wrapper = await createClientContextProvider(client);
-    const { result } = renderHook(() => useSpace(space!.key), { wrapper });
+    const { result } = renderHook(() => useSpace(space!.id), { wrapper });
     expect(result.current).to.not.be.undefined;
   });
 });

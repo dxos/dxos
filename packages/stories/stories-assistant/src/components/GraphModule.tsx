@@ -24,7 +24,7 @@ export const GraphModule = ({ space }: ComponentProps) => {
   const [filter, setFilter] = useState<Filter.Any>();
   const [open, setOpen] = useState(false);
 
-  const [researchGraph] = useQuery(space, Query.type(ResearchGraph));
+  const [researchGraph] = useQuery(space.db, Query.type(ResearchGraph));
   const queue = researchGraph?.queue.target;
 
   // TODO(burdon): Clean-up API.

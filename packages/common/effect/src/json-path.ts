@@ -55,7 +55,7 @@ export const isJsonPath = (value: unknown): value is JsonPath => {
  * @param path Array of string or number segments
  * @returns Valid JsonPath or undefined if invalid
  */
-export const createJsonPath = (path: (string | number)[]): JsonPath => {
+export const createJsonPath = (path: readonly (string | number)[]): JsonPath => {
   const candidatePath = path
     .map((p, i) => {
       if (typeof p === 'number') {
@@ -85,7 +85,7 @@ export const fromEffectValidationPath = (effectPath: string): JsonPath => {
  * Splits a JsonPath into its constituent parts.
  * Handles property access and array indexing.
  */
-export const splitJsonPath = (path: JsonPath): string[] => {
+export const splitJsonPath = (path: JsonPath): (string | number)[] => {
   if (!isJsonPath(path)) {
     return [];
   }
@@ -93,7 +93,11 @@ export const splitJsonPath = (path: JsonPath): string[] => {
   return (
     path
       .match(/[a-zA-Z_$][\w$]*|\[\d+\]/g)
-      ?.map((part) => (part.startsWith('[') ? part.replace(/[[\]]/g, '') : part)) ?? []
+      ?.map((part) => part.replace(/[[\]]/g, ''))
+      .map((part) => {
+        const parsed = Number.parseInt(part, 10);
+        return Number.isNaN(parsed) ? part : parsed;
+      }) ?? []
   );
 };
 
@@ -110,19 +114,12 @@ export const getField = (object: any, path: JsonPath): any => {
  * Get value from object using JsonPath.
  */
 export const getValue = <T extends object>(obj: T, path: JsonPath): any => {
-  return getDeep(
-    obj,
-    splitJsonPath(path).map((p) => p.replace(/[[\]]/g, '')),
-  );
+  return getDeep(obj, splitJsonPath(path));
 };
 
 /**
  * Set value on object using JsonPath.
  */
 export const setValue = <T extends object>(obj: T, path: JsonPath, value: any): T => {
-  return setDeep(
-    obj,
-    splitJsonPath(path).map((p) => p.replace(/[[\]]/g, '')),
-    value,
-  );
+  return setDeep(obj, splitJsonPath(path), value);
 };

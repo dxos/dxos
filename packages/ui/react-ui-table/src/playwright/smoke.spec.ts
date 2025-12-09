@@ -72,7 +72,7 @@ test.describe('Table', () => {
 
     await table.grid.ready();
     await table.deleteRow(0);
-    await expect(page.getByRole('gridcell', { name: 'Sapiente.' })).toHaveCount(0);
+    await expect(page.getByRole('gridcell', { name: 'Aut.' })).toHaveCount(0);
     await page.close();
   });
 
@@ -88,7 +88,7 @@ test.describe('Table', () => {
     // Delete action affects all selected rows.
     await table.deleteRow(0);
 
-    await expect(page.getByRole('gridcell', { name: 'Sapiente.' })).toHaveCount(0);
+    await expect(page.getByRole('gridcell', { name: 'Aut.' })).toHaveCount(0);
     await expect(page.getByRole('gridcell', { name: 'Beatae.' })).toHaveCount(0);
     await expect(table.grid.cellsWithinPlane('grid')).toHaveCount(0);
     await page.close();
@@ -153,7 +153,7 @@ test.describe('Table', () => {
     // Assert the first two switch checkboxes are checked.
     await expect(page.getByTestId('table-switch').first()).toBeChecked();
     await expect(page.getByTestId('table-switch').nth(1)).toBeChecked();
-    await expect(table.grid.cell(0, 0, 'grid')).toHaveText('Sapiente.');
+    await expect(table.grid.cell(0, 0, 'grid')).toHaveText('Aut.');
     await expect(table.grid.cell(0, 1, 'grid')).toHaveText('Beatae.');
 
     await page.close();

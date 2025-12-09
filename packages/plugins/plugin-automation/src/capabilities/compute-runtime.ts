@@ -10,8 +10,7 @@ import * as ManagedRuntime from 'effect/ManagedRuntime';
 import { Capabilities, type PluginContext, contributes } from '@dxos/app-framework';
 import { GenericToolkit, makeToolExecutionServiceFromFunctions, makeToolResolverFromFunctions } from '@dxos/assistant';
 import { Resource } from '@dxos/context';
-import { Query, Ref } from '@dxos/echo';
-import { Database } from '@dxos/echo';
+import { Database, Query, Ref } from '@dxos/echo';
 import { CredentialsService, QueueService } from '@dxos/functions';
 import {
   FunctionImplementationResolver,
@@ -35,6 +34,9 @@ export default async (context: PluginContext) => {
   });
 };
 
+/**
+ * Adapts plugin capabilities to runtime layers.
+ */
 class ComputeRuntimeProviderImpl extends Resource implements AutomationCapabilities.ComputeRuntimeProvider {
   readonly #runtimes = new Map<SpaceId, AutomationCapabilities.ComputeRuntime>();
   readonly #context: PluginContext;
@@ -106,7 +108,6 @@ class ComputeRuntimeProviderImpl extends Resource implements AutomationCapabilit
 
     const runtime = ManagedRuntime.make(layer);
     this.#runtimes.set(spaceId, runtime);
-
     return runtime;
   }
 }

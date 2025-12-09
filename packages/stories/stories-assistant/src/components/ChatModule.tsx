@@ -25,7 +25,7 @@ export const ChatModule = ({ space }: ComponentProps) => {
   const [online, setOnline] = useOnline();
   const { preset, ...chatProps } = usePresets(online);
 
-  const chats = useQuery(space, Filter.type(Assistant.Chat));
+  const chats = useQuery(space.db, Filter.type(Assistant.Chat));
   const chat = chats.at(-1);
 
   const blueprintRegistry = useBlueprintRegistry();

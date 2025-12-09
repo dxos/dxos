@@ -45,7 +45,7 @@ export const ThreadCompanion = ({ subject }: { subject: any }) => {
   );
 
   const space = getSpace(subject);
-  const objectsAnchoredTo = useQuery(space, Query.select(Filter.id(subject.id)).targetOf(AnchoredTo.AnchoredTo));
+  const objectsAnchoredTo = useQuery(space?.db, Query.select(Filter.id(subject.id)).targetOf(AnchoredTo.AnchoredTo));
   const anchors = objectsAnchoredTo
     .toSorted((a, b) => sort?.(a, b) ?? 0)
     .filter((anchor) => Obj.instanceOf(Thread.Thread, Relation.getSource(anchor)))

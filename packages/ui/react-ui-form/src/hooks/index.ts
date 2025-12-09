@@ -4,5 +4,3 @@
 
 export * from './useFormHandler';
 export * from './useKeyHandler';
-export * from './useQueryRefOptions';
-export * from './useRefQueryOptions';

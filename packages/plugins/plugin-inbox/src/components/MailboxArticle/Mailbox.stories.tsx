@@ -16,7 +16,7 @@ import { PreviewPlugin } from '@dxos/plugin-preview';
 import { SpacePlugin } from '@dxos/plugin-space';
 import { StorybookLayoutPlugin } from '@dxos/plugin-storybook-layout';
 import { ThemePlugin } from '@dxos/plugin-theme';
-import { Filter, useQuery, useSpace } from '@dxos/react-client/echo';
+import { Filter, useDatabase, useQuery } from '@dxos/react-client/echo';
 import { withTheme } from '@dxos/react-ui/testing';
 import { useAttentionAttributes, useSelected } from '@dxos/react-ui-attention';
 import { withAttention } from '@dxos/react-ui-attention/testing';
@@ -37,8 +37,8 @@ const DefaultStory = () => {
 };
 
 const WithCompanionStory = () => {
-  const space = useSpace();
-  const [mailbox] = useQuery(space, Filter.type(Mailbox.Mailbox));
+  const db = useDatabase();
+  const [mailbox] = useQuery(db, Filter.type(Mailbox.Mailbox));
 
   const selected = useSelected(Obj.getDXN(mailbox).toString(), 'single');
   const message = useQuery(mailbox?.queue.target, selected ? Filter.id(selected) : Filter.nothing())[0];
@@ -49,7 +49,7 @@ const WithCompanionStory = () => {
   // NOTE: Attention required for scrolling.
   const attentionAttrs = useAttentionAttributes(mailbox ? Obj.getDXN(mailbox).toString() : undefined);
 
-  if (!space || !mailbox) {
+  if (!db || !mailbox) {
     return null;
   }
 

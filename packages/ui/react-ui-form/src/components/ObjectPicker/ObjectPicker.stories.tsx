@@ -48,7 +48,7 @@ const DefaultStory = () => {
   }, [space]);
 
   // Get all objects in the space (similar to BoardContainer)
-  const allObjects = useQuery(space, Filter.everything());
+  const allObjects = useQuery(space?.db, Filter.everything());
 
   // Map objects to options format expected by ObjectPicker
   const options = useMemo(
@@ -202,6 +202,12 @@ export const WithTest: Story = {
     // Check that clicking the save button calls onCreate with expected values.
     await expect(mockHandleCreate).toHaveBeenCalledWith({
       fullName: unrelatedTerm,
+      addresses: [],
+      phoneNumbers: [],
+      emails: [],
+      identities: [],
+      urls: [],
+      fields: [],
     });
   },
 };

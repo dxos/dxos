@@ -17,7 +17,7 @@ import { SpacePlugin } from '@dxos/plugin-space';
 import { StorybookLayoutPlugin } from '@dxos/plugin-storybook-layout';
 import { ThemePlugin } from '@dxos/plugin-theme';
 import { faker } from '@dxos/random';
-import { useQuery, useSpace } from '@dxos/react-client/echo';
+import { useDatabase, useQuery } from '@dxos/react-client/echo';
 import { withTheme } from '@dxos/react-ui/testing';
 import { translations as stackTranslations } from '@dxos/react-ui-stack';
 import { Stack } from '@dxos/react-ui-stack';
@@ -34,8 +34,8 @@ import { ProjectObjectSettings } from './ProjectSettings';
 faker.seed(0);
 
 const DefaultStory = () => {
-  const space = useSpace();
-  const projects = useQuery(space, Filter.type(Project.Project));
+  const db = useDatabase();
+  const projects = useQuery(db, Filter.type(Project.Project));
   const project = projects[0];
 
   if (!project) {

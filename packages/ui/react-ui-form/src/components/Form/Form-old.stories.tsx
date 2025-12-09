@@ -6,7 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Schema from 'effect/Schema';
 import React, { useCallback, useState } from 'react';
 
-import { Format, Obj, Ref, Type } from '@dxos/echo';
+import { Format } from '@dxos/echo';
 import { type AnyProperties } from '@dxos/echo/internal';
 import { Tooltip } from '@dxos/react-ui';
 import { withLayoutVariants, withTheme } from '@dxos/react-ui/testing';
@@ -61,21 +61,21 @@ const DefaultStory = <T extends AnyProperties = any>({
   );
 };
 
-const RefStory = <T extends AnyProperties = any>(props: StoryProps<T>) => {
-  const onQueryRefOptions = useCallback<NonNullable<FormRootProps<T>['onQueryRefOptions']>>(({ typename }) => {
-    switch (typename) {
-      case TestSchema.Person.typename:
-        return [
-          { dxn: Obj.getDXN(contact1), label: 'Alice' },
-          { dxn: Obj.getDXN(contact2), label: 'Bob' },
-        ];
-      default:
-        return [];
-    }
-  }, []);
+// const RefStory = <T extends AnyProperties = any>(props: StoryProps<T>) => {
+//   const onQueryRefOptions = useCallback<NonNullable<FormRootProps<T>['onQueryRefOptions']>>(({ typename }) => {
+//     switch (typename) {
+//       case TestSchema.Person.typename:
+//         return [
+//           { dxn: Obj.getDXN(contact1), label: 'Alice' },
+//           { dxn: Obj.getDXN(contact2), label: 'Bob' },
+//         ];
+//       default:
+//         return [];
+//     }
+//   }, []);
 
-  return <DefaultStory<T> onQueryRefOptions={onQueryRefOptions} {...props} />;
-};
+//   return <DefaultStory<T> onQueryRefOptions={onQueryRefOptions} {...props} />;
+// };
 
 const AddressSchema = Schema.Struct({
   street: Schema.optional(Schema.String.annotations({ title: 'Street' })),
@@ -287,28 +287,28 @@ export const Enum: StoryObj<StoryProps<ColorType>> = {
 // Refs
 //
 
-const RefSchema = Schema.Struct({
-  contact: Type.Ref(TestSchema.Person).annotations({ title: 'Contact Reference' }),
-  optionalContact: Schema.optional(Type.Ref(TestSchema.Person).annotations({ title: 'Optional Contact Reference' })),
-  refArray: Schema.optional(Schema.Array(Type.Ref(TestSchema.Person))),
-  unknownExpando: Schema.optional(
-    Type.Ref(Type.Expando).annotations({ title: 'Optional Ref to an Expando (DXN Input)' }),
-  ),
-});
+// const RefSchema = Schema.Struct({
+//   contact: Type.Ref(TestSchema.Person).annotations({ title: 'Contact Reference' }),
+//   optionalContact: Schema.optional(Type.Ref(TestSchema.Person).annotations({ title: 'Optional Contact Reference' })),
+//   refArray: Schema.optional(Schema.Array(Type.Ref(TestSchema.Person))),
+//   unknownExpando: Schema.optional(
+//     Type.Ref(Type.Expando).annotations({ title: 'Optional Ref to an Expando (DXN Input)' }),
+//   ),
+// });
 
-type RefSchema = Schema.Schema.Type<typeof RefSchema>;
+// type RefSchema = Schema.Schema.Type<typeof RefSchema>;
 
-const contact1 = Obj.make(TestSchema.Person, { name: 'Alice' });
-const contact2 = Obj.make(TestSchema.Person, { name: 'Bob' });
+// const contact1 = Obj.make(TestSchema.Person, { name: 'Alice' });
+// const contact2 = Obj.make(TestSchema.Person, { name: 'Bob' });
 
-export const Refs: StoryObj<StoryProps<RefSchema>> = {
-  render: RefStory,
-  args: {
-    debug: true,
-    schema: RefSchema,
-    readonly: false,
-    values: {
-      refArray: [Ref.make(contact1), Ref.make(contact2)],
-    },
-  },
-};
+// export const Refs: StoryObj<StoryProps<RefSchema>> = {
+//   render: RefStory,
+//   args: {
+//     debug: true,
+//     schema: RefSchema,
+//     readonly: false,
+//     values: {
+//       refArray: [Ref.make(contact1), Ref.make(contact2)],
+//     },
+//   },
+// };

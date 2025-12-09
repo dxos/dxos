@@ -119,7 +119,7 @@ export const useDeployState = ({ state, script }: { state: Partial<DeployState>;
 export const useDeployDeps = ({ script }: { script: Script.Script }) => {
   const client = useClient();
   const space = getSpace(script);
-  const [fn] = useQuery(space, Query.type(Function.Function, { source: Ref.make(script) }));
+  const [fn] = useQuery(space?.db, Query.type(Function.Function, { source: Ref.make(script) }));
   const existingFunctionId = useMemo(() => fn && getUserFunctionIdInMetadata(Obj.getMeta(fn)), [fn]);
   return { client, space, fn, existingFunctionId };
 };

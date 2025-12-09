@@ -19,13 +19,13 @@ export namespace AutomationCapabilities {
    */
   export type ComputeServices =
     | TriggerDispatcher
+    | TriggerStateStore
     | AiService.AiService
     | Database.Service
     | QueueService
     | CredentialsService
     | FunctionInvocationService
     | InvocationTracer
-    | TriggerStateStore
     // TODO(dmaretskyi): Those should be provided at AI-chat call site.
     | ToolResolverService
     | ToolExecutionService;

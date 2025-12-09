@@ -34,7 +34,7 @@ export const Panel = ({
   onToggle,
 }: PropsWithChildren<PanelProps>) => {
   return (
-    <div className='flex flex-col'>
+    <div className='flex flex-col overflow-hidden'>
       <div
         className='flex items-center justify-between pli-2 text-sm text-fine cursor-pointer'
         onClick={() => onToggle?.(id, !open)}

@@ -6,7 +6,7 @@ import React from 'react';
 import { useCallback } from 'react';
 
 import { Obj } from '@dxos/echo';
-import { type JsonPath, setValue } from '@dxos/echo/internal';
+import { type JsonPath, splitJsonPath } from '@dxos/effect';
 import { useTranslation } from '@dxos/react-ui';
 import { Form, omitId } from '@dxos/react-ui-form';
 import { Card } from '@dxos/react-ui-stack';
@@ -32,7 +32,8 @@ export const FormCard = ({
     const paths = Object.keys(changed).filter((path) => changed[path]);
     for (const path of paths) {
       const value = values[path];
-      setValue(subject, path as JsonPath, value);
+      const parts = splitJsonPath(path as JsonPath);
+      Obj.setValue(subject, parts, value);
     }
   }, []);
 

@@ -10,11 +10,12 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as ManagedRuntime from 'effect/ManagedRuntime';
 
-import * as AiServiceRouter from '@dxos/ai/AiServiceRouter';
+import { type AiModelResolver } from '@dxos/ai';
+import { OllamaResolver } from '@dxos/ai/resolvers';
 import { Capabilities, type Capability, type PluginContext, contributes } from '@dxos/app-framework';
 import { log } from '@dxos/log';
 
-// Running ollama on non-standard port.
+// NOTE: Running ollama on non-standard port (config Tauri).
 const OLLAMA_HOST = 'http://localhost:21434';
 
 export default (_context: PluginContext): Capability<any> => {
@@ -70,12 +71,12 @@ class OllamaSidecar extends Context.Tag('@dxos/plugin-native/OllamaSidecar')<
   );
 }
 
-const OllamaSidecarModelResolver: Layer.Layer<AiServiceRouter.AiModelResolver, never, OllamaSidecar> =
+const OllamaSidecarModelResolver: Layer.Layer<AiModelResolver.AiModelResolver, never, OllamaSidecar> =
   Layer.unwrapEffect(
     Effect.gen(function* () {
       const { endpoint } = yield* OllamaSidecar;
-      return AiServiceRouter.OllamaResolver({
-        host: endpoint,
+      return OllamaResolver.make({
+        endpoint,
         transformClient: HttpClient.withTracerPropagation(false),
       });
     }),

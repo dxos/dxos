@@ -151,6 +151,7 @@ export class LocalClientServices implements ClientServicesProvider {
         },
       },
     });
+
     await this._host.open(this._ctx);
     this._isOpen = true;
     setIdentityTags({

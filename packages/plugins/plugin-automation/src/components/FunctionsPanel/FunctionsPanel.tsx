@@ -26,8 +26,8 @@ export type FunctionsPanelProps = {
 
 export const FunctionsPanel = ({ space }: FunctionsPanelProps) => {
   const { t } = useTranslation(meta.id);
-  const functions = useQuery(space, Filter.type(Function.Function));
-  const scripts = useQuery(space, Filter.type(Script.Script));
+  const functions = useQuery(space.db, Filter.type(Function.Function));
+  const scripts = useQuery(space.db, Filter.type(Script.Script));
   const { dispatchPromise: dispatch } = useIntentDispatcher();
 
   const functionToScriptMap = useMemo(

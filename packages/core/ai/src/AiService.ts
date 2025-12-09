@@ -10,7 +10,19 @@ import * as Layer from 'effect/Layer';
 import { type ModelName } from './defs';
 import { AiModelNotAvailableError } from './errors';
 
+export type SericeMetadata = {
+  name: string;
+};
+
 export interface Service {
+  /**
+   * Service metadata.
+   */
+  readonly metadata?: SericeMetadata;
+
+  /**
+   * Maps model name ont a LanguageModel layer.
+   */
   readonly model: (model: ModelName) => Layer.Layer<LanguageModel.LanguageModel, AiModelNotAvailableError, never>;
 }
 

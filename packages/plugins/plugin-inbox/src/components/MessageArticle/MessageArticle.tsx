@@ -30,7 +30,7 @@ export const MessageArticle = ({
   }, [message]);
 
   const space = getSpace(mailbox);
-  const sender = useActorContact(space, message.sender);
+  const sender = useActorContact(space?.db, message.sender);
 
   const { dispatchPromise: dispatch } = useIntentDispatcher();
   const handleContactCreate = useCallback<NonNullable<MessageHeaderProps['onContactCreate']>>(

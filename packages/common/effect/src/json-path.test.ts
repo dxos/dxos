@@ -32,9 +32,9 @@ describe('createJsonPath', () => {
 
   test('path splitting', () => {
     const cases = [
-      ['foo.bar[0].baz', ['foo', 'bar', '0', 'baz']],
-      ['users[1].name', ['users', '1', 'name']],
-      ['data[0][1]', ['data', '0', '1']],
+      ['foo.bar[0].baz', ['foo', 'bar', 0, 'baz']],
+      ['users[1].name', ['users', 1, 'name']],
+      ['data[0][1]', ['data', 0, 1]],
       ['simple.path', ['simple', 'path']],
       ['root', ['root']],
     ] as const;
@@ -47,15 +47,15 @@ describe('createJsonPath', () => {
   test('path splitting - extended cases', () => {
     const cases = [
       // Multiple consecutive array indices.
-      ['matrix[0][1][2]', ['matrix', '0', '1', '2']],
+      ['matrix[0][1][2]', ['matrix', 0, 1, 2]],
       // Properties with underscores and $.
       ['$_foo.bar_baz', ['$_foo', 'bar_baz']],
       // Deep nesting.
-      ['very.deep.nested[0].property.path[5]', ['very', 'deep', 'nested', '0', 'property', 'path', '5']],
+      ['very.deep.nested[0].property.path[5]', ['very', 'deep', 'nested', 0, 'property', 'path', 5]],
       // Single character properties.
-      ['a[0].b.c', ['a', '0', 'b', 'c']],
+      ['a[0].b.c', ['a', 0, 'b', 'c']],
       // Properties containing numbers.
-      ['prop123.item456[7]', ['prop123', 'item456', '7']],
+      ['prop123.item456[7]', ['prop123', 'item456', 7]],
     ] as const;
 
     cases.forEach(([input, expected]) => {

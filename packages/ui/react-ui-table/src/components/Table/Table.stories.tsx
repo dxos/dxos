@@ -6,12 +6,11 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Schema from 'effect/Schema';
 import React, { useCallback } from 'react';
 
-import { Annotation, Format, Obj, type QueryAST, Type } from '@dxos/echo';
+import { Annotation, type Database, Format, Obj, type QueryAST, Type } from '@dxos/echo';
 import { PropertyMetaAnnotationId } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
 import { faker } from '@dxos/random';
 import { PublicKey } from '@dxos/react-client';
-import { type Space } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { withTheme } from '@dxos/react-ui/testing';
 import { ViewEditor, translations as formTranslations } from '@dxos/react-ui-form';
@@ -59,12 +58,12 @@ interface Example extends Schema.Schema.Type<typeof Example> {}
 const StoryViewEditor = ({
   view,
   schema,
-  space,
+  db,
   handleDeleteColumn,
 }: {
   view?: View.View;
   schema?: Schema.Schema.AnyNoContext;
-  space?: Space;
+  db?: Database.Database;
   handleDeleteColumn: (fieldId: string) => void;
 }) => {
   const handleQueryChanged = useCallback(
@@ -84,7 +83,7 @@ const StoryViewEditor = ({
 
   return (
     <ViewEditor
-      registry={space?.db.schemaRegistry}
+      registry={db?.schemaRegistry}
       schema={schema}
       view={view}
       onQueryChanged={handleQueryChanged}
@@ -98,7 +97,7 @@ const StoryViewEditor = ({
 //
 
 const DefaultStory = () => {
-  const { space, schema, table, tableRef, model, presentation, handleInsertRow, handleSaveView, handleDeleteColumn } =
+  const { db, schema, table, tableRef, model, presentation, handleInsertRow, handleSaveView, handleDeleteColumn } =
     useTestTableModel();
 
   if (!schema || !table?.view.target) {
@@ -120,12 +119,7 @@ const DefaultStory = () => {
         </TableComponent.Root>
       </div>
       <div className='flex flex-col bs-full border-l border-separator overflow-y-auto'>
-        <StoryViewEditor
-          view={table.view.target}
-          schema={schema}
-          space={space}
-          handleDeleteColumn={handleDeleteColumn}
-        />
+        <StoryViewEditor view={table.view.target} schema={schema} db={db} handleDeleteColumn={handleDeleteColumn} />
         <SyntaxHighlighter language='json' className='text-xs'>
           {JSON.stringify({ view: table.view.target, schema }, null, 2)}
         </SyntaxHighlighter>

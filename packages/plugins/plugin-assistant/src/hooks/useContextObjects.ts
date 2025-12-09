@@ -5,9 +5,7 @@
 import { useCallback } from 'react';
 
 import { type AiContextBinder } from '@dxos/assistant';
-import { type DXN, type Obj, Ref } from '@dxos/echo';
-import { log } from '@dxos/log';
-import { type Space } from '@dxos/react-client/echo';
+import { type DXN, type Database, type Obj, Ref } from '@dxos/echo';
 import { isNonNullable } from '@dxos/util';
 
 export type UseContextObjects = {
@@ -19,36 +17,31 @@ export type UseContextObjects = {
  * Create reactive map of active object references (by DXN string).
  */
 export const useContextObjects = ({
-  space,
+  db,
   context,
 }: {
-  space?: Space;
+  db?: Database.Database;
   context?: AiContextBinder;
 }): UseContextObjects => {
   const objects = context?.objects.value.map((ref) => ref.target).filter(isNonNullable) ?? [];
 
   const handleUpdateObject = useCallback<UseContextObjects['onUpdateObject']>(
     async (dxn: DXN, checked: boolean) => {
-      if (!space || !context) {
-        return;
-      }
-
-      // Load the object by DXN/id from the current space.
-      const id = dxn.asEchoDXN();
-      const object = id && space.db.getObjectById(id.echoId);
-      if (!object) {
-        log.warn('Object not found', { dxn, id });
+      if (!db || !context) {
         return;
       }
 
       const ref = Ref.fromDXN(dxn);
+      // Load the object by DXN from the current space.
+      await ref.load();
+
       if (checked) {
         await context.bind({ objects: [ref] });
       } else {
         await context.unbind({ objects: [ref] });
       }
     },
-    [space, context],
+    [db, context],
   );
 
   return {

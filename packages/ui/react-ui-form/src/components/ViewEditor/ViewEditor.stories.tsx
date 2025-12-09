@@ -43,7 +43,7 @@ const DefaultStory = (props: StoryProps) => {
   const [view, setView] = useState<View.View>();
   const projectionRef = useRef<ProjectionModel>(null);
 
-  const tags = useQuery(space, Filter.type(Tag.Tag));
+  const tags = useQuery(space?.db, Filter.type(Tag.Tag));
 
   useAsyncEffect(async () => {
     if (space) {

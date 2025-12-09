@@ -12,7 +12,7 @@ import { useQuery, useQueue } from '@dxos/react-client/echo';
 import { type ComponentProps } from './types';
 
 export const ResearchOutputModule = ({ space }: ComponentProps) => {
-  const [researchGraph] = useQuery(space, Filter.type(ResearchGraph));
+  const [researchGraph] = useQuery(space.db, Filter.type(ResearchGraph));
   const queue = useQueue(researchGraph?.queue.dxn);
 
   return (

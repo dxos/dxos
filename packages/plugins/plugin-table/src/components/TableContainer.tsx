@@ -46,10 +46,10 @@ export const TableContainer = forwardRef<HTMLDivElement, TableContainerProps>(({
   const view = object.view.target;
   const query = view ? Query.fromAst(Obj.getSnapshot(view).query.ast) : Query.select(Filter.nothing());
   const typename = getTypenameFromQuery(query.ast);
-  const schema = useSchema(space, typename);
+  const schema = useSchema(space?.db, typename);
   // TODO(wittjosiah): This should use `query` above.
   //   That currently doesn't work for dynamic schema objects because their indexed typename is the schema object DXN.
-  const queriedObjects = useQuery(space, schema ? Filter.type(schema) : Filter.nothing());
+  const queriedObjects = useQuery(space?.db, schema ? Filter.type(schema) : Filter.nothing());
   const filteredObjects = useGlobalFilteredObjects(queriedObjects);
 
   const { graph } = useAppGraph();
@@ -64,7 +64,7 @@ export const TableContainer = forwardRef<HTMLDivElement, TableContainerProps>(({
     });
   }, [graph]);
 
-  const addRow = useAddRow({ space, schema });
+  const addRow = useAddRow({ db: space?.db, schema });
 
   const handleDeleteRows = useCallback(
     (_row: number, objects: any[]) => {
