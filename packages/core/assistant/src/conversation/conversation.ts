@@ -98,13 +98,18 @@ export class AiConversation extends Resource {
         Effect.map(Array.filter(Option.isSome)),
         Effect.map(Array.map((option) => option.value)),
       );
+
+      // Create toolkit.
+      const toolkit = yield* createToolkit({
+        toolkit: this._toolkit,
+        blueprints,
+      });
+
+      // Context objects.
       const objects = yield* Effect.forEach(context.objects.values(), Database.Service.loadOption).pipe(
         Effect.map(Array.filter(Option.isSome)),
         Effect.map(Array.map((option) => option.value)),
       );
-
-      // Create toolkit.
-      const toolkit = yield* createToolkit({ toolkit: this._toolkit as any, blueprints });
 
       const start = Date.now();
       log('run', {
@@ -115,7 +120,7 @@ export class AiConversation extends Resource {
       });
 
       // Process request.
-      const messages = yield* session.run({ history, blueprints, objects, toolkit, ...params }).pipe(
+      const messages = yield* session.run({ history, blueprints, toolkit, objects, ...params }).pipe(
         Effect.provideService(AiContextService, {
           binder: this.context,
         }),
