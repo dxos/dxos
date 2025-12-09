@@ -217,6 +217,11 @@ const fetchMessagesForDateRange = (userId: string, label: string, dateChunk: Dat
         Option.getOrUndefined(state.pageToken),
       );
 
+      log('fetched message IDs', {
+        count: messages?.length ?? 0,
+        done: !nextPageToken,
+      });
+
       // Messages come newest-first from Gmail, reverse to get oldest-first.
       const messageIds = (messages ?? []).map((m) => m.id).reverse();
       const nextState = {
@@ -243,9 +248,10 @@ const streamGmailMessagesToQueue = Effect.fn(function* (
 ) {
   const config: DateRangeConfig = {
     startDate,
-    // In restricted mode, limit to single day range.
-    endDate: restricted ? addDays(startDate, 1) : addDays(new Date(), 1),
-    chunkDays: restricted ? 1 : STREAMING_CONFIG.dateChunkDays,
+    // NOTE: Restricted mode can get stuck if there are no messages in the date range.
+    // In restricted mode, limit to single range.
+    endDate: restricted ? addDays(startDate, STREAMING_CONFIG.dateChunkDays + 1) : addDays(new Date(), 1),
+    chunkDays: STREAMING_CONFIG.dateChunkDays,
   };
 
   // TODO(burdon): Move to resolver.
