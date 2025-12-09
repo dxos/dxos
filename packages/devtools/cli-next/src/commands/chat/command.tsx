@@ -7,43 +7,17 @@ import * as Toolkit from '@effect/ai/Toolkit';
 import * as Command from '@effect/cli/Command';
 import * as Options from '@effect/cli/Options';
 import { render } from '@opentui/solid';
-import * as Cause from 'effect/Cause';
 import * as Effect from 'effect/Effect';
-import * as Exit from 'effect/Exit';
-import * as Fiber from 'effect/Fiber';
 import * as Layer from 'effect/Layer';
 import * as Match from 'effect/Match';
 import * as Option from 'effect/Option';
-import * as Runtime from 'effect/Runtime';
 import * as Schema from 'effect/Schema';
 
-import {
-  AiModelResolver,
-  AiService,
-  DEFAULT_EDGE_MODEL,
-  DEFAULT_LMSTUDIO_MODEL,
-  DEFAULT_OLLAMA_MODEL,
-  ModelName,
-  type ToolExecutionService,
-  type ToolResolverService,
-} from '@dxos/ai';
+import { AiModelResolver, DEFAULT_EDGE_MODEL, DEFAULT_LMSTUDIO_MODEL, DEFAULT_OLLAMA_MODEL, ModelName } from '@dxos/ai';
 import { LMStudioResolver, OllamaResolver } from '@dxos/ai/resolvers';
-import {
-  AiConversation,
-  type AiConversationRunParams,
-  makeToolExecutionServiceFromFunctions,
-  makeToolResolverFromFunctions,
-} from '@dxos/assistant';
+import { AiConversation, makeToolExecutionServiceFromFunctions, makeToolResolverFromFunctions } from '@dxos/assistant';
 import { ClientService } from '@dxos/client';
-import { type Database } from '@dxos/echo';
-import { throwCause } from '@dxos/effect';
-import {
-  CredentialsService,
-  type FunctionInvocationService,
-  type QueueService,
-  TracingService,
-  defineFunction,
-} from '@dxos/functions';
+import { CredentialsService, TracingService, defineFunction } from '@dxos/functions';
 import {
   FunctionImplementationResolver,
   FunctionInvocationServiceLayerWithLocalLoopbackExecutor,
@@ -53,19 +27,8 @@ import { type Message } from '@dxos/types';
 
 import { withDatabase } from '../../util';
 
-import { InputTest } from './Chat';
-
-// TODO(burdon): Factor out (see plugin-assistant/processor.ts)
-export type AiChatServices =
-  | AiModelResolver.AiModelResolver
-  | AiService.AiService
-  | CredentialsService
-  | Database.Service
-  | FunctionInvocationService
-  | QueueService
-  | ToolExecutionService
-  | ToolResolverService
-  | TracingService;
+import { Chat } from './Chat';
+import { type AiChatServices } from './types';
 
 const TestToolkit = Toolkit.make(
   Tool.make('random', {
@@ -112,8 +75,15 @@ export const chat = Command.make(
   },
   ({ provider, model: model$ }) =>
     Effect.gen(function* () {
-      const services = yield* Effect.runtime<AiChatServices>();
+      const runtime = yield* Effect.runtime<AiChatServices>();
       const client = yield* ClientService;
+
+      const conversation = yield* Effect.promise(async () => {
+        await client.spaces.waitUntilReady();
+        const space = client.spaces.default;
+        const queue = space.queues.create<Message.Message>();
+        return new AiConversation(queue);
+      });
 
       const model = Option.getOrElse(model$, () =>
         Match.value(provider).pipe(
@@ -124,32 +94,10 @@ export const chat = Command.make(
         ),
       );
 
-      const conversation = yield* Effect.promise(async () => {
-        await client.spaces.waitUntilReady();
-        const space = client.spaces.default;
-        const queue = space.queues.create<Message.Message>();
-        return new AiConversation(queue);
-      });
-
-      const request = async (params: AiConversationRunParams) => {
-        const request = conversation.createRequest(params);
-        const fiber = request.pipe(Effect.provide(AiService.model(model)), Effect.asVoid, Runtime.runFork(services));
-
-        const response = await fiber.pipe(Fiber.join, Effect.runPromiseExit);
-        if (!Exit.isSuccess(response) && !Cause.isInterruptedOnly(response.cause)) {
-          throwCause(response.cause);
-        }
-      };
-
-      // const app = new App(request);
-      // yield* Effect.promise(() => app.initialize());
-
-      yield* Effect.promise(() => render(InputTest));
+      yield* Effect.promise(() => render(() => <Chat conversation={conversation} runtime={runtime} model={model} />));
 
       // Hold process open and sleep to allow interactivity in ui.
-      do {
-        yield* Effect.sleep(999_999_999);
-      } while (true);
+      return yield* Effect.never;
     }).pipe(
       Effect.provide(
         Layer.mergeAll(

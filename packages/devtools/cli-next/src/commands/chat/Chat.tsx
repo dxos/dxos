@@ -3,11 +3,29 @@
 //
 
 import { useKeyboard, useRenderer } from '@opentui/solid';
+import * as Cause from 'effect/Cause';
+import * as Effect from 'effect/Effect';
+import * as Exit from 'effect/Exit';
+import * as Fiber from 'effect/Fiber';
+import * as Runtime from 'effect/Runtime';
 import { Match, Show, Switch, createSignal } from 'solid-js';
+
+import { AiService, type ModelName } from '@dxos/ai';
+import { type AiConversation, type AiConversationRunParams } from '@dxos/assistant';
+import { throwCause } from '@dxos/effect';
+
+import { type AiChatServices } from './types';
 
 // https://github.com/sst/opentui/blob/main/packages/solid/examples/repro-onSubmit.tsx
 
-export const InputTest = () => {
+type ChatProps = {
+  conversation: AiConversation;
+  runtime: Runtime.Runtime<AiChatServices>;
+  model: ModelName;
+};
+
+export const Chat = ({ conversation, runtime, model }: ChatProps) => {
+  console.log('props', { conversation, runtime, model });
   const renderer = useRenderer();
 
   renderer.useConsole = true;
@@ -23,6 +41,16 @@ export const InputTest = () => {
 
   const onSubmit = () => {
     console.log('input');
+  };
+
+  const request = async (params: AiConversationRunParams) => {
+    const request = conversation.createRequest(params);
+    const fiber = request.pipe(Effect.provide(AiService.model(model)), Effect.asVoid, Runtime.runFork(runtime));
+
+    const response = await fiber.pipe(Fiber.join, Effect.runPromiseExit);
+    if (!Exit.isSuccess(response) && !Cause.isInterruptedOnly(response.cause)) {
+      throwCause(response.cause);
+    }
   };
 
   return (
