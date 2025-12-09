@@ -1,8 +1,11 @@
 type: application
 language: typescript
 tags:
-  - ts-compile
+  - ts-build
+  - ts-test
+  - pack
+
 tasks:
   compile:
-  build:
-  test:
+    args:
+      - '--entryPoint=src/index.ts'

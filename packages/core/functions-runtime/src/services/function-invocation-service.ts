@@ -57,6 +57,7 @@ export const FunctionInvocationServiceLayerWithLocalLoopbackExecutor = Layer.eff
           ),
         ),
       );
+
     return functionInvocationService;
   }),
 );
