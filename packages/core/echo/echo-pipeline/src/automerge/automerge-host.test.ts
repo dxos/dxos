@@ -117,7 +117,7 @@ describe('AutomergeHost', () => {
     }
   });
 
-  test.only('collection synchronization', async () => {
+  test('collection synchronization', async () => {
     const NUM_DOCUMENTS = 10;
 
     const level1 = await createLevel();
@@ -137,13 +137,13 @@ describe('AutomergeHost', () => {
 
     const host2 = await setupAutomergeHost({ level: level2 });
 
-    const collectionId = 'test-collection';
-    await host1.updateLocalCollectionState(collectionId, documentIds);
-    await host2.updateLocalCollectionState(collectionId, documentIds);
-
     const network = await new TestReplicationNetwork().open();
     await host1.addReplicator(await network.createReplicator());
     await host2.addReplicator(await network.createReplicator());
+
+    const collectionId = 'test-collection';
+    await host1.updateLocalCollectionState(collectionId, documentIds);
+    await host2.updateLocalCollectionState(collectionId, documentIds);
 
     for (const documentId of documentIds) {
       await expect.poll(() => host1.getHeads([documentId])).toEqual(await host2.getHeads([documentId]));
