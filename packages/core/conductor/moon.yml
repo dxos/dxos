@@ -11,4 +11,3 @@ tasks:
       - '--entryPoint=src/testing/index.ts'
       - '--platform=browser'
       - '--platform=node'
-      - '--importGlobals'
