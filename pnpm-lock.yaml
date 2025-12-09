@@ -4650,6 +4650,9 @@ importers:
       blessed:
         specifier: ^0.1.81
         version: 0.1.81
+      effect:
+        specifier: 3.18.3
+        version: 3.18.3
       jsdom:
         specifier: ^27.0.0
         version: 27.0.0(canvas@3.2.0)(postcss@8.5.6)

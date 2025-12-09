@@ -44,6 +44,7 @@
     "@effect/platform": "^0.92.1",
     "@opentui/core": "^0.1.58",
     "blessed": "^0.1.81",
+    "effect": "3.18.3",
     "jsdom": "^27.0.0",
     "node-fetch": "^2.6.0",
     "yargs": "~16.2.0"
