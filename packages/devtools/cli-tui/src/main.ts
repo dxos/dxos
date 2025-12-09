@@ -14,6 +14,11 @@ import { App } from './app';
 import { Core, TestToolkit } from './core';
 
 const argv = yargs(hideBin(process.argv))
+  .option('verbose', {
+    alias: 'v',
+    type: 'boolean',
+    description: 'Verbose logging',
+  })
   .option('provider', {
     alias: 'p',
     type: 'string',
@@ -75,7 +80,7 @@ const main = Effect.gen(function* () {
       model,
       GenericToolkit.make(TestToolkit.toolkit, TestToolkit.layer),
     );
-    const app = new App(core);
+    const app = new App(core, argv.verbose);
     yield* Effect.promise(() => app.initialize());
   }).pipe(Effect.provide(layer));
 });
