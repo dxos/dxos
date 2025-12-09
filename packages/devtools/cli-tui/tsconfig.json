@@ -3,8 +3,14 @@
   "compilerOptions": {
     "rootDir": "./src"
   },
-  "exclude": ["dist", "node_modules"],
-  "include": ["src/**/*", "package.json"],
+  "exclude": [
+    "dist",
+    "node_modules"
+  ],
+  "include": [
+    "package.json",
+    "src/**/*"
+  ],
   "references": [
     {
       "path": "../../common/context"
