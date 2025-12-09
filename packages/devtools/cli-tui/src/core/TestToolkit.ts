@@ -26,19 +26,20 @@ export const layer = toolkit.toLayer({
   time: Effect.fn(function* () {
     return new Date().toISOString();
   }),
-}) satisfies Layer.Layer<Tool.HandlersFor<{ time: any }>>;
+}) satisfies Layer.Layer<Tool.Handler<'time'>>;
 
 const random = defineFunction({
   key: 'example.com/function/random',
   name: 'random',
   description: 'Gets a random number.',
-  inputSchema: Schema.Void, // TODO(burdon): Void.
+  // TODO(burdon): Change type to parameters, success, failure.
+  inputSchema: Schema.Void,
   outputSchema: Schema.Struct({
     value: Schema.String,
   }),
   handler: Effect.fn(function* () {
     return {
-      value: Math.floor(Math.random() * 100).toString(),
+      value: Math.floor(Math.random() * 10).toString(),
     };
   }),
 });

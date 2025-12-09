@@ -21,13 +21,7 @@ import { makeToolExecutionServiceFromFunctions, makeToolResolverFromFunctions } 
 import { type Client } from '@dxos/client';
 import { type Space } from '@dxos/client/echo';
 import { Database } from '@dxos/echo';
-import {
-  CredentialsService,
-  type FunctionDefinition,
-  type FunctionInvocationService,
-  QueueService,
-  TracingService,
-} from '@dxos/functions';
+import { CredentialsService, type FunctionInvocationService, QueueService, TracingService } from '@dxos/functions';
 import {
   FunctionImplementationResolver,
   FunctionInvocationServiceLayerWithLocalLoopbackExecutor,
@@ -61,15 +55,13 @@ export type LayerFactoryResult = {
 
 export type LayerFactory = (options: LayerOptions) => LayerFactoryResult;
 
-const functions: FunctionDefinition.Any[] = [];
-
 export const createBaseLayer = (
   aiServiceLayer: Layer.Layer<AiService.AiService, any, any>,
   { client, space }: LayerOptions,
 ) => {
   return Layer.mergeAll(
     TracingService.layerNoop,
-    makeToolResolverFromFunctions(functions, TestToolkit.toolkit),
+    makeToolResolverFromFunctions(TestToolkit.functions, TestToolkit.toolkit),
     makeToolExecutionServiceFromFunctions(TestToolkit.toolkit, TestToolkit.layer),
   ).pipe(
     // TODO(burdon): Factor out from compute-runtime.ts
