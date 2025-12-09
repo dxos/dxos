@@ -404,9 +404,6 @@ export class App {
                   }
                   break;
                 }
-                default: {
-                  break;
-                }
               }
             }),
         }),
