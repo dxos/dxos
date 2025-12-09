@@ -19,3 +19,4 @@ tasks:
 
   deploy-functions:
     command: $workspaceRoot/scripts/dxnext --profile main edge function deploy --runtime worker-loader src/functions/google/gmail/sync.ts
+    local: true
