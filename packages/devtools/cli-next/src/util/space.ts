@@ -10,31 +10,29 @@ import type * as Schema from 'effect/Schema';
 
 import { ClientService } from '@dxos/client';
 import { type Space } from '@dxos/client/echo';
-import { Database, Key } from '@dxos/echo';
+import { Database, type Key } from '@dxos/echo';
 import { BaseError, type BaseErrorOptions } from '@dxos/errors';
 import { QueueService } from '@dxos/functions';
 import { log } from '@dxos/log';
 import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
 
-export const getSpace = (rawSpaceId: string) =>
+export const getSpace = (spaceId: Key.SpaceId) =>
   Effect.gen(function* () {
     const client = yield* ClientService;
-    const spaceId = yield* Key.SpaceId.tryParse(rawSpaceId);
     return yield* Option.fromNullable(client.spaces.get(spaceId));
-  }).pipe(Effect.catchTag('NoSuchElementException', () => Effect.fail(new SpaceNotFoundError(rawSpaceId))));
+  }).pipe(Effect.catchTag('NoSuchElementException', () => Effect.fail(new SpaceNotFoundError(spaceId))));
 
 // TODO(wittjosiah): Refactor to be able to use with `Command.provideEffect`?
 export const withDatabase: (
-  rawSpaceId?: string,
+  spaceId?: Key.SpaceId,
 ) => <A, E, R>(
   effect: Effect.Effect<A, E, R>,
-) => Effect.Effect<A, E, ClientService | Exclude<R, Database.Service | QueueService>> = (rawSpaceId) =>
+) => Effect.Effect<A, E, ClientService | Exclude<R, Database.Service | QueueService>> = (spaceId$) =>
   Effect.fnUntraced(function* (effect) {
     const client = yield* ClientService;
     yield* Effect.promise(() => client.spaces.waitUntilReady());
-    const spaceId = Key.SpaceId.tryParse(rawSpaceId ?? client.spaces.default.id);
-    const db = yield* spaceId.pipe(
-      Option.flatMap((id) => Option.fromNullable(client.spaces.get(id))),
+    const spaceId = spaceId$ ?? client.spaces.default.id;
+    const db = yield* Option.fromNullable(client.spaces.get(spaceId)).pipe(
       Option.map((space) => Effect.promise(() => space.waitUntilReady())),
       Option.map((space) =>
         Effect.map(space, (space) => Layer.merge(Database.Service.layer(space.db), QueueService.layer(space.queues))),

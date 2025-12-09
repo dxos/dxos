@@ -2,8 +2,6 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Tool from '@effect/ai/Tool';
-import * as Toolkit from '@effect/ai/Toolkit';
 import * as Command from '@effect/cli/Command';
 import * as Options from '@effect/cli/Options';
 import { render } from '@opentui/solid';
@@ -11,13 +9,19 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Match from 'effect/Match';
 import * as Option from 'effect/Option';
-import * as Schema from 'effect/Schema';
 
 import { AiModelResolver, DEFAULT_EDGE_MODEL, DEFAULT_LMSTUDIO_MODEL, DEFAULT_OLLAMA_MODEL, ModelName } from '@dxos/ai';
 import { LMStudioResolver, OllamaResolver } from '@dxos/ai/resolvers';
-import { AiConversation, makeToolExecutionServiceFromFunctions, makeToolResolverFromFunctions } from '@dxos/assistant';
+import {
+  AiConversation,
+  GenericToolkit,
+  makeToolExecutionServiceFromFunctions,
+  makeToolResolverFromFunctions,
+} from '@dxos/assistant';
 import { ClientService } from '@dxos/client';
-import { CredentialsService, TracingService, defineFunction } from '@dxos/functions';
+import { Database } from '@dxos/echo';
+import { type QueueAPI } from '@dxos/echo-db';
+import { CredentialsService, QueueService, TracingService } from '@dxos/functions';
 import {
   FunctionImplementationResolver,
   FunctionInvocationServiceLayerWithLocalLoopbackExecutor,
@@ -25,39 +29,11 @@ import {
 } from '@dxos/functions-runtime';
 import { type Message } from '@dxos/types';
 
-import { withDatabase } from '../../util';
+import { Common } from '../options';
 
 import { Chat } from './Chat';
+import * as TestToolkit from './TestToolkit';
 import { type AiChatServices } from './types';
-
-const TestToolkit = Toolkit.make(
-  Tool.make('random', {
-    description: 'Generates a random number.',
-    parameters: {},
-    success: Schema.Number,
-  }),
-);
-
-// TODO(burdon): Create minimal toolkit.
-const toolkit = Toolkit.merge(TestToolkit) as Toolkit.Toolkit<any>;
-
-// TODO(burdon): Not hooked up.
-const fn = defineFunction({
-  key: 'example.com/function/random',
-  name: 'Random',
-  description: 'Generates a random number.',
-  inputSchema: Schema.Struct({}),
-  outputSchema: Schema.Struct({
-    value: Schema.Number,
-  }),
-  handler: Effect.fn(function* () {
-    return {
-      value: Math.floor(Math.random() * 100),
-    };
-  }),
-});
-
-const functions = [fn];
 
 export const chat = Command.make(
   'chat',
@@ -72,6 +48,7 @@ export const chat = Command.make(
       Options.withDescription('Model to use.'),
       Options.withAlias('m'),
     ),
+    spaceId: Common.spaceId.pipe(Options.optional),
   },
   ({ provider, model: model$ }) =>
     Effect.gen(function* () {
@@ -115,26 +92,73 @@ export const chat = Command.make(
 
       // Hold process open and sleep to allow interactivity in ui.
       return yield* Effect.never;
-    }).pipe(
-      Effect.provide(
-        Layer.mergeAll(
-          makeToolResolverFromFunctions(functions, toolkit),
-          makeToolExecutionServiceFromFunctions(toolkit, toolkit.toLayer({}) as any),
-          TracingService.layerNoop,
-        ).pipe(
-          Layer.provideMerge(
-            FunctionInvocationServiceLayerWithLocalLoopbackExecutor.pipe(
-              Layer.provideMerge(FunctionImplementationResolver.layerTest({ functions })),
-              Layer.provideMerge(RemoteFunctionExecutionService.layerMock),
-              Layer.provideMerge(CredentialsService.layerFromDatabase()),
-            ),
-          ),
-        ),
-      ),
-      withDatabase(),
-    ),
+    }),
 ).pipe(
   Command.withDescription('Open chat interface.'),
+  Command.provide(({ spaceId }) => {
+    const testToolkit = GenericToolkit.make(TestToolkit.toolkit, TestToolkit.layer);
+    const mergedToolkit = GenericToolkit.merge(
+      ...[
+        //
+        testToolkit,
+      ],
+    );
+    const toolkit = mergedToolkit.toolkit;
+    const toolkitLayer = mergedToolkit.layer;
+
+    return Layer.mergeAll(
+      TracingService.layerNoop,
+      makeToolResolverFromFunctions(TestToolkit.functions, toolkit),
+      makeToolExecutionServiceFromFunctions(toolkit, toolkitLayer),
+    ).pipe(
+      Layer.provideMerge(
+        FunctionInvocationServiceLayerWithLocalLoopbackExecutor.pipe(
+          Layer.provideMerge(FunctionImplementationResolver.layerTest({ functions: TestToolkit.functions })),
+          Layer.provideMerge(RemoteFunctionExecutionService.withClient(spaceId, true)),
+          Layer.provideMerge(CredentialsService.layerFromDatabase()),
+        ),
+      ),
+    );
+  }),
+  // TODO(wittjosiah): Factor out.
+  Command.provideEffect(
+    Database.Service,
+    Effect.fnUntraced(function* ({ spaceId: spaceId$ }) {
+      const client = yield* ClientService;
+      yield* Effect.promise(() => client.spaces.waitUntilReady());
+      const spaceId = Option.getOrElse(spaceId$, () => client.spaces.default.id);
+      const space = client.spaces.get(spaceId);
+      if (!space) {
+        return {
+          get db(): Database.Database {
+            throw new Error('Space not found');
+          },
+        };
+      }
+      yield* Effect.promise(() => space.waitUntilReady());
+      return { db: space.db };
+    }),
+  ),
+  // TODO(wittjosiah): Factor out.
+  Command.provideEffect(
+    QueueService,
+    Effect.fnUntraced(function* ({ spaceId: spaceId$ }) {
+      const client = yield* ClientService;
+      yield* Effect.promise(() => client.spaces.waitUntilReady());
+      const spaceId = Option.getOrElse(spaceId$, () => client.spaces.default.id);
+      const space = client.spaces.get(spaceId);
+      if (!space) {
+        return {
+          get queues(): QueueAPI {
+            throw new Error('Space not found');
+          },
+          queue: undefined,
+        };
+      }
+      yield* Effect.promise(() => space.waitUntilReady());
+      return { queues: space.queues, queue: undefined };
+    }),
+  ),
   Command.provide(({ provider }) => {
     const resolver = Match.value(provider).pipe(
       Match.when('lmstudio', () => LMStudioResolver.make()),
