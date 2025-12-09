@@ -8,8 +8,7 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
 import { Resource } from '@dxos/context';
-import { Obj } from '@dxos/echo';
-import { Database } from '@dxos/echo';
+import { Database, Obj } from '@dxos/echo';
 import { type Queue } from '@dxos/echo-db';
 import { log } from '@dxos/log';
 import { Message } from '@dxos/types';
@@ -107,15 +106,15 @@ export class AiConversation extends Resource {
       // Create toolkit.
       const toolkit = yield* createToolkit({ toolkit: this._toolkit as any, blueprints });
 
+      const start = Date.now();
       log('run', {
         history: history.length,
         blueprints: blueprints.length,
         objects: objects.length,
-        tools: toolkit?.tools.length ?? 0,
+        tools: Object.keys(toolkit.tools).length,
       });
 
       // Process request.
-      const start = Date.now();
       const messages = yield* session.run({ history, blueprints, objects, toolkit, ...params }).pipe(
         Effect.provideService(AiContextService, {
           binder: this.context,

@@ -13,7 +13,7 @@ import { isTruthy } from '@dxos/util';
 
 export type CreateToolkitParams<Tools extends Record<string, Tool.Any>> = {
   toolkit?: Toolkit.Toolkit<Tools>;
-  toolIds?: ToolId[];
+  toolIds?: ToolId[]; // TODO(burdon): Remove?
   blueprints?: Blueprint.Blueprint[];
 };
 
@@ -25,7 +25,7 @@ export const createToolkit = <Tools extends Record<string, Tool.Any> = {}>({
   toolIds = [],
   blueprints = [],
 }: CreateToolkitParams<Tools>): Effect.Effect<
-  Toolkit.WithHandler<any>,
+  Toolkit.WithHandler<Tools>,
   AiToolNotFoundError,
   ToolResolverService | ToolExecutionService | Tool.HandlersFor<Tools>
 > =>
@@ -41,7 +41,7 @@ export const createToolkit = <Tools extends Record<string, Tool.Any> = {}>({
 
     const toolkit = Toolkit.merge(...[toolkitParam, blueprintToolkit].filter(isTruthy));
     return yield* toolkit.pipe(Effect.provide(blueprintToolkitHandler)) as any as Effect.Effect<
-      Toolkit.WithHandler<any>,
+      Toolkit.WithHandler<Tools>,
       never,
       Tool.HandlersFor<Tools>
     >;
