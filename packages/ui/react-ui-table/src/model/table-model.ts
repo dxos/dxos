@@ -5,7 +5,7 @@
 import { type ReadonlySignal, computed, effect, signal } from '@preact/signals-core';
 
 import { Resource } from '@dxos/context';
-import { Format, Obj, Ref } from '@dxos/echo';
+import { type Database, Format, Obj, Ref } from '@dxos/echo';
 import { type JsonProp, type JsonSchemaType, toEffectSchema } from '@dxos/echo/internal';
 import { getValue, setValue } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
@@ -72,6 +72,7 @@ export type InsertRowResult = 'draft' | 'final';
 export type TableModelProps<T extends TableRow = TableRow> = {
   object: Table.Table;
   projection: ProjectionModel;
+  db?: Database.Database;
   features?: Partial<TableFeatures>;
   sorting?: FieldSortType[];
   initialSelection?: string[];
@@ -89,6 +90,7 @@ export type TableModelProps<T extends TableRow = TableRow> = {
 export class TableModel<T extends TableRow = TableRow> extends Resource {
   private readonly _object: Table.Table;
   private readonly _projection: ProjectionModel;
+  private readonly _db?: Database.Database;
 
   private readonly _visibleRange = signal<DxGridPlaneRange>({
     start: { row: 0, col: 0 },
@@ -115,6 +117,7 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
   constructor({
     object,
     projection,
+    db,
     features = {},
     sorting = [],
     initialSelection = [],
@@ -131,6 +134,7 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
     this._object = object;
     this._projection = projection;
     this._projection.normalizeView();
+    this._db = db;
 
     // TODO(ZaymonFC): Use our more robust config merging module?
     this._features = { ...defaultFeatures, ...features };
@@ -184,6 +188,10 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
 
   public get projection(): ProjectionModel {
     return this._projection;
+  }
+
+  public get db(): Database.Database | undefined {
+    return this._db;
   }
 
   public get rows(): ReadonlySignal<T[]> {

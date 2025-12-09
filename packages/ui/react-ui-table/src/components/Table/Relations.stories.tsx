@@ -55,7 +55,7 @@ const useTestModel = <S extends Type.Obj.Any>(schema: S, count: number) => {
   }, [space, schema]);
 
   const projection = useProjectionModel(schema, object);
-  const model = useTableModel<TableRow>({ object, projection, features });
+  const model = useTableModel<TableRow>({ object, projection, db: space?.db, features });
 
   useEffect(() => {
     if (!model || !space) {
