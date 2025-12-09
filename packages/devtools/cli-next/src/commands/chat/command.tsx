@@ -14,7 +14,7 @@ import { AiConversation } from '@dxos/assistant';
 import { ClientService } from '@dxos/client';
 import { type Message } from '@dxos/types';
 
-import { type AiChatServices, chatLayer } from '../../util';
+import { type AiChatServices, Provider, chatLayer } from '../../util';
 import { Common } from '../options';
 
 import { Chat } from './Chat';
@@ -22,7 +22,7 @@ import { Chat } from './Chat';
 export const chat = Command.make(
   'chat',
   {
-    provider: Options.choice('provider', ['ollama', 'lmstudio', 'edge']).pipe(
+    provider: Options.choice('provider', Provider.literals).pipe(
       Options.withDescription('AI provider to use.'),
       Options.withAlias('p'),
     ),
