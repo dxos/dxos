@@ -246,6 +246,7 @@ export class AutomergeHost extends Resource {
     });
 
     this._sharePolicyChangedTask = new DeferredTask(this._ctx, async () => {
+      log('share policy changed');
       this._repo.shareConfigChanged();
     });
 
@@ -412,6 +413,7 @@ export class AutomergeHost extends Resource {
         !this._documentsToRequest.has(documentId)
       ) {
         // Skip advertising documents that don't need to be synced.
+        log('skip access', { peerId, documentId });
         return false;
       }
 
@@ -750,7 +752,6 @@ export class AutomergeHost extends Resource {
   }
 
   // TODO(mykola): Add retries of batches https://gist.github.com/mykola-vrmchk/fde270259e9209fcbf1331e5abbf12cf
-  // TODO(mykola): Use effect to retry batches.
   private async _pushInBundles(
     peerId: PeerId,
     documentIds: DocumentId[],
