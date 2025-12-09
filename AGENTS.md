@@ -22,6 +22,14 @@
 - JSDoc comments for public functions, all comments end with period
 - React: arrow function components, TailwindCSS for styles, proper event handler types
 
+## PR Checklist
+
+**IMPORTANT**: Run this after every review & change cycle before submitting a PR:
+
+```bash
+pnpm -w pre-ci
+```
+
 ## Workflow
 
 - Check `moon.yml` for available package tasks

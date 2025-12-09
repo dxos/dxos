@@ -11,3 +11,111 @@ packages:
 
 # Do not disable.
 strictPeerDependencies: true
+
+# Package extensions migrated from .pnpmfile.cjs
+# https://pnpm.io/settings#packageextensions
+# Static package modifications that don't require dynamic logic
+packageExtensions:
+  # Align on single version of buffer polyfill
+  '@sammacbeth/random-access-idb-mutable-file':
+    dependencies:
+      buffer: ^6.0.3
+  abstract-leveldown:
+    dependencies:
+      buffer: ^6.0.3
+  bl:
+    dependencies:
+      buffer: ^6.0.3
+  crc:
+    dependencies:
+      buffer: ^6.0.3
+  level-codec:
+    dependencies:
+      buffer: ^6.0.3
+  level-js:
+    dependencies:
+      buffer: ^6.0.3
+  random-access-idb-mutable-file:
+    dependencies:
+      buffer: ^6.0.3
+  unbzip2-stream:
+    dependencies:
+      buffer: ^6.0.3
+
+  # Effect-rx peer dependency
+  # TODO(wittjosiah): Remove when bumping @effect-rx/rx-react
+  '@effect-rx/rx':
+    peerDependencies:
+      '@effect/platform': '*'
+
+  # Package has an unnecessarily strict peer dep of 17.0.1
+  '@hot-loader/react-dom':
+    peerDependencies:
+      react: ^18.0.0
+
+  # ESLint plugin compatibility
+  eslint-plugin-unused-imports:
+    peerDependencies:
+      '@typescript-eslint/eslint-plugin': ^6.5.0
+  eslint-plugin-storybook:
+    dependencies:
+      '@typescript-eslint/types': 8.39.0
+      '@typescript-eslint/utils': 8.39.0
+  eslint-plugin-prefer-arrow-functions:
+    dependencies:
+      '@typescript-eslint/types': 8.39.0
+      '@typescript-eslint/utils': 8.39.0
+
+  # Remove unused @babel/core peer from @storybook/html
+  '@storybook/html':
+    peerDependencies:
+      '@babel/core': '-'
+
+  # Conflict between web-ext and addons-scanner-utils
+  # web-ext > addons-linter > addons-scanner-utils
+  addons-scanner-utils:
+    peerDependencies:
+      node-fetch: '-'
+
+  # TypeScript ESTree dependency
+  detective-typescript:
+    dependencies:
+      '@typescript-eslint/typescript-estree': 8.39.0
+
+  # Rollup plugin utils
+  '@rollup/pluginutils':
+    peerDependencies:
+      rollup: ^2.0.0||^3.0.0
+
+  # Vite plugin glslify
+  vite-plugin-glslify:
+    peerDependencies:
+      vite: ^7.0.0
+
+  # Hypercore protocol - noise-protocol version alignment
+  # https://github.com/dxos/dxos/issues/3330
+  simple-hypercore-protocol:
+    dependencies:
+      noise-protocol: 3.0.1
+  simple-handshake:
+    dependencies:
+      noise-protocol: 3.0.1
+
+  # Storybook addon react router v6 compatibility
+  storybook-addon-react-router-v6:
+    peerDependencies:
+      '@storybook/addons': ^7.0.0-beta
+      '@storybook/api': ^7.0.0-beta
+      '@storybook/components': ^7.0.0-beta
+      '@storybook/core-events': ^7.0.0-beta
+      '@storybook/theming': ^7.0.0-beta
+
+  # @dxos/apidoc doesn't work with the latest version of typedoc (yet)
+  typedoc:
+    peerDependencies:
+      typescript: ^5.0.0
+
+  # Ensure zen-push is using the same version of zen-observable
+  zen-push:
+    dependencies:
+      zen-observable: ^0.10.0
