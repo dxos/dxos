@@ -11,7 +11,7 @@ import {
   type PeerMetadata,
 } from '@automerge/automerge-repo';
 
-import { Trigger, synchronized } from '@dxos/async';
+import { Event, Trigger, synchronized } from '@dxos/async';
 import { LifecycleState } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
@@ -56,6 +56,7 @@ type ConnectionEntry = {
   connection: ReplicatorConnection;
   reader: ReadableStreamDefaultReader<AutomergeProtocolMessage>;
   writer: WritableStreamDefaultWriter<AutomergeProtocolMessage>;
+  requestedDocuments: Set<DocumentId>;
 };
 
 /**
@@ -70,6 +71,8 @@ export class EchoNetworkAdapter extends NetworkAdapter {
   private _lifecycleState: LifecycleState = LifecycleState.CLOSED;
   private readonly _connected = new Trigger();
   private readonly _ready = new Trigger();
+  
+  public readonly documentRequested = new Event<{ documentId: DocumentId; peerId: PeerId }>();
 
   constructor(private readonly _params: EchoNetworkAdapterParams) {
     super();
@@ -265,6 +268,7 @@ export class EchoNetworkAdapter extends NetworkAdapter {
       connection,
       reader: connection.readable.getReader(),
       writer: connection.writable.getWriter(),
+      requestedDocuments: new Set(),
     };
 
     this._connections.set(connection.peerId as PeerId, connectionEntry);
@@ -279,7 +283,7 @@ export class EchoNetworkAdapter extends NetworkAdapter {
             break;
           }
 
-          this._onMessage(value as Message);
+          this._onMessage(connectionEntry, value as Message);
         }
       } catch (err) {
         if (connectionEntry.isOpen) {
@@ -293,7 +297,12 @@ export class EchoNetworkAdapter extends NetworkAdapter {
     this._params.monitor?.recordPeerConnected(connection.peerId);
   }
 
-  private _onMessage(message: Message): void {
+  private _onMessage(connectionEntry: ConnectionEntry, message: Message): void {
+    const amMessage = message as AutomergeProtocolMessage;
+    if(amMessage.type === 'request') {
+      this.documentRequested.emit({ documentId: amMessage.documentId as DocumentId, peerId: connectionEntry.connection.peerId as PeerId });
+    }
+
     if (isCollectionQueryMessage(message)) {
       this._params.onCollectionStateQueried(message.collectionId, message.senderId);
     } else if (isCollectionStateMessage(message)) {

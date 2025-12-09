@@ -7,6 +7,7 @@ import type { Message } from '@automerge/automerge-repo';
 import {
   type CollectionQueryMessage,
   type CollectionStateMessage,
+  type RequestProtocolMessage,
   MESSAGE_TYPE_COLLECTION_QUERY,
   MESSAGE_TYPE_COLLECTION_STATE,
 } from '@dxos/protocols';
@@ -18,3 +19,4 @@ export const isCollectionQueryMessage = (message: Message): message is Collectio
 
 export const isCollectionStateMessage = (message: Message): message is CollectionStateMessage =>
   message.type === MESSAGE_TYPE_COLLECTION_STATE;
+

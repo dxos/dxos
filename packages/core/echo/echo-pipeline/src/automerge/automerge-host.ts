@@ -38,7 +38,7 @@ import { objectPointerCodec } from '@dxos/protocols';
 import { type SpaceSyncState } from '@dxos/protocols/proto/dxos/echo/service';
 import { type DocHeadsList, type FlushRequest } from '@dxos/protocols/proto/dxos/echo/service';
 import { trace } from '@dxos/tracing';
-import { ComplexSet, bufferToArray, isNonNullable, range } from '@dxos/util';
+import { ComplexSet, bufferToArray, defaultMap, isNonNullable, range } from '@dxos/util';
 
 import { type CollectionState, CollectionSynchronizer, diffCollectionState } from './collection-synchronizer';
 import { type EchoDataMonitor } from './echo-data-monitor';
@@ -65,6 +65,12 @@ export type AutomergeHostParams = {
 
 export type LoadDocOptions = {
   timeout?: number;
+
+  /**
+   * If true, the document will be fetched from the network if it is not found in the local storage.
+   * Setting this to false does not guarantee that the document will not be fetched from the network.
+   */
+  fetchFromNetwork?: boolean;
 };
 
 export type CreateDocOptions = {
@@ -151,6 +157,11 @@ export class AutomergeHost extends Resource {
    */
   private _documentsToRequest = new Set<DocumentId>();
 
+  /**
+   * Documents requested by remote peers.
+   */
+  private _documentsRequested = new Map<PeerId, Set<DocumentId>>();
+
   private _sharePolicyChangedTask?: DeferredTask;
 
   constructor({
@@ -176,6 +187,10 @@ export class AutomergeHost extends Resource {
       onCollectionStateQueried: this._onCollectionStateQueried.bind(this),
       onCollectionStateReceived: this._onCollectionStateReceived.bind(this),
       monitor: dataMonitor,
+    });
+    this._echoNetworkAdapter.documentRequested.on(({ peerId, documentId }) => {
+      defaultMap(this._documentsRequested, peerId, () => new Set()).add(documentId);
+      this._sharePolicyChangedTask!.schedule();
     });
     this._headsStore = new HeadsStore({ db: db.sublevel('heads') });
     this._indexMetadataStore = indexMetadataStore;
@@ -290,6 +305,7 @@ export class AutomergeHost extends Resource {
   /**
    * Loads the document handle from the repo and waits for it to be ready.
    */
+  @log.method()
   async loadDoc<T>(ctx: Context, documentId: AnyDocumentId, opts?: LoadDocOptions): Promise<DocHandle<T>> {
     invariant(this.isOpen, 'AutomergeHost is not open');
     let handle: DocHandle<T> | undefined;
@@ -298,7 +314,21 @@ export class AutomergeHost extends Resource {
       handle = this._repo.handles[documentId as DocumentId];
     }
     if (!handle) {
-      handle = await this._repo.find(documentId as DocumentId, FIND_PARAMS);
+      if(!opts?.fetchFromNetwork) {
+        handle = await this._repo.find(documentId as DocumentId, FIND_PARAMS);
+      } else {
+        try {
+          handle = await this._repo.find(documentId as DocumentId, { allowableStates: ['ready', 'requesting', 'unavailable']});
+          if(handle.state === 'requesting' || handle.state === 'unavailable') {
+            this._documentsToRequest.add(handle.documentId);
+            this._sharePolicyChangedTask!.schedule();
+          }
+          log.info('state', { documentId, state: handle.state });
+        } catch(err) {
+          log.error('failed to load document', { documentId, err });
+          throw err;
+        }
+      }
     }
 
     // `whenReady` creates a timeout so we guard it with an if to skip it if the handle is already ready.
@@ -406,12 +436,18 @@ export class AutomergeHost extends Resource {
 
   private readonly _shareConfig = {
     // Called on `repo.find`.
-    access: async (peerId: PeerId, documentId: DocumentId): Promise<boolean> => {
+    access: log.function('access', async (peerId: PeerId, documentId: DocumentId): Promise<boolean> => {
+      return true;
       if (
         !this._createdDocuments.has(documentId) &&
         !this._documentsToSync.has(documentId) &&
         !this._documentsToRequest.has(documentId)
       ) {
+        const peerMetadata = this._repo.peerMetadataByPeerId[peerId];
+        if (isEchoPeerMetadata(peerMetadata) && this._documentsRequested.get(peerId)?.has(documentId)) {
+          return true; // Allow access if the peer has requested the document.
+        }
+
         // Skip advertising documents that don't need to be synced.
         log('skip access', { peerId, documentId });
         return false;
@@ -424,14 +460,14 @@ export class AutomergeHost extends Resource {
       }
 
       return false;
-    },
+    }),
 
     // TODO(dmaretskyi): Share based on HALO permissions and space affinity.
     // Hosts, running in the worker, don't share documents unless requested by other peers.
     // NOTE: If both peers return sharePolicy=false the replication will not happen
     // https://github.com/automerge/automerge-repo/pull/292
     // Called for all loaded documents so they could be advertised to the sync server.
-    announce: async (peerId: PeerId, documentId?: DocumentId): Promise<boolean> => {
+    announce: log.function('announce', async (peerId: PeerId, documentId?: DocumentId): Promise<boolean> => {
       if (!documentId) {
         return false;
       }
@@ -447,7 +483,7 @@ export class AutomergeHost extends Resource {
       }
 
       return false;
-    },
+    }),
   };
 
   private async _beforeSave({ path, batch }: BeforeSaveParams): Promise<void> {

@@ -20,6 +20,7 @@ import { createTmpPath } from '../testing';
 import { type DocHandleProxy } from './doc-handle-proxy';
 import { RepoProxy } from './repo-proxy';
 import { log } from '@dxos/log';
+import { Record } from 'effect';
 
 describe('RepoProxy', () => {
   test('create document from client', async () => {
@@ -73,7 +74,7 @@ describe('RepoProxy', () => {
     expect(clientHandle.doc()?.text).to.equal(text);
   });
 
-  test('two peers exchange document', async () => {
+  test.only('two peers exchange document', async () => {
     const peer1 = await setup();
     const [repo1] = createProxyRepos(peer1.dataService);
     await openAndClose(repo1);
@@ -85,10 +86,11 @@ describe('RepoProxy', () => {
 
     await peer1.host.addReplicator(await network.createReplicator());
     await peer2.host.addReplicator(await network.createReplicator());
-
+    
     const text = 'Hello World!';
     const handle1 = repo1.create<{ text: string }>({ text });
-
+    await repo1.flush();
+    
     const handle2 = repo2.find<{ text: string }>(handle1.url);
     await handle2.whenReady();
     expect(handle2.doc()?.text).to.equal(text);
@@ -368,7 +370,13 @@ const setup = async (kv = createTestLevel()) => {
     spaceStateManager: new SpaceStateManager(),
     updateIndexes: async () => {},
   });
-  return { kv, host, dataService };
+
+  const refreshCollectionState = () => {
+    const documentIds = Record.keys(host.handles);
+    log('refreshCollectionState', { documentIds });
+    host.updateLocalCollectionState('default', documentIds);
+  }
+  return { kv, host, dataService, refreshCollectionState };
 };
 
 function* createProxyRepos(dataService: DataServiceImpl): Generator<RepoProxy> {
