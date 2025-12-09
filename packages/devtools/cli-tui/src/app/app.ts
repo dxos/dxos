@@ -29,6 +29,8 @@ process.stderr.write = (chunk: any, ...args: any[]): boolean => {
   return originalStderrWrite(chunk, ...args);
 };
 
+const DEBUG = !!process.env.DX_DEBUG_CHAT;
+
 /**
  * DXOS CLI TUI - Terminal User Interface.
  * Built with blessed for zero-flicker performance.
@@ -372,9 +374,31 @@ export class App {
         observer: GenerationObserver.make({
           onPart: (part) =>
             Effect.sync(() => {
-              if (part.type === 'text-delta') {
-                this._messages[assistantMessageIndex] += part.delta;
-                this._throttledUpdate();
+              switch (part.type) {
+                case 'text-delta':
+                  this._messages[assistantMessageIndex] += part.delta;
+                  this._throttledUpdate();
+                  break;
+                case 'error':
+                case 'tool-call':
+                case 'tool-result':
+                case 'finish':
+                  if (DEBUG) {
+                    this._messages[assistantMessageIndex] += `\n${JSON.stringify(part, null, 2)}\n`;
+                    this._throttledUpdate();
+                  }
+                  break;
+              }
+            }),
+          onMessage: (message) =>
+            Effect.sync(() => {
+              if (message.sender.role === 'tool') {
+                if (DEBUG) {
+                  for (const part of message.blocks) {
+                    this._messages.push(JSON.stringify(part, null, 2));
+                  }
+                  this._throttledUpdate();
+                }
               }
             }),
         }),
