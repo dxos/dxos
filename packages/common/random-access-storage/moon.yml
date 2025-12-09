@@ -8,5 +8,5 @@ tasks:
   compile:
     args:
       - '--entryPoint=src/index.ts'
-      - '--injectGlobals'
+      - '--importGlobals'
       - '--bundlePackage=random-access-idb'

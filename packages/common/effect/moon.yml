@@ -9,4 +9,4 @@ tasks:
     args:
       - '--entryPoint=src/index.ts'
       - '--entryPoint=src/testing.ts'
-      - '--injectGlobals'
+      - '--importGlobals'

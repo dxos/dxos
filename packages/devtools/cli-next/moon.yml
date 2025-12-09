@@ -16,7 +16,7 @@ tasks:
     args:
       - '--entryPoint=src/bin.ts'
       - '--platform=node'
-      - '--injectGlobals'
+      - '--importGlobals'
       - '--outputPath=dist'
     options:
       mergeArgs: replace

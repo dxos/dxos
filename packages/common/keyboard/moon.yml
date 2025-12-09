@@ -9,7 +9,7 @@ tasks:
   compile:
     args:
       - '--entryPoint=src/index.ts'
-      - '--injectGlobals'
+      - '--importGlobals'
   test:
     inputs:
       - .storybook/*
