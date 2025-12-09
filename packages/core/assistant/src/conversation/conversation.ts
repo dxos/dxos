@@ -48,12 +48,13 @@ export class AiConversation extends Resource {
   /**
    * Toolkit from the current session request.
    */
-  private _toolkit: Toolkit.WithHandler<any> | undefined;
+  private readonly _toolkit?: Toolkit.Any;
 
-  public constructor(queue: Queue<Message.Message | ContextBinding>) {
+  public constructor(queue: Queue<Message.Message | ContextBinding>, toolkit?: Toolkit.Any) {
     super();
     this._queue = queue;
     this._context = new AiContextBinder(this._queue);
+    this._toolkit = toolkit;
   }
 
   protected override async _open(): Promise<void> {
@@ -104,18 +105,17 @@ export class AiConversation extends Resource {
       );
 
       // Create toolkit.
-      const toolkit = yield* createToolkit({ blueprints });
-      this._toolkit = toolkit;
+      const toolkit = yield* createToolkit({ toolkit: this._toolkit as any, blueprints });
 
-      const start = Date.now();
       log('run', {
         history: history.length,
         blueprints: blueprints.length,
         objects: objects.length,
-        tools: this._toolkit?.tools.length ?? 0,
+        tools: toolkit?.tools.length ?? 0,
       });
 
       // Process request.
+      const start = Date.now();
       const messages = yield* session.run({ history, blueprints, objects, toolkit, ...params }).pipe(
         Effect.provideService(AiContextService, {
           binder: this.context,

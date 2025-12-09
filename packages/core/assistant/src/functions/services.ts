@@ -80,6 +80,7 @@ export const makeToolExecutionServiceFromFunctions = (
                 if (Tool.isProviderDefined(tool)) {
                   throw new Error('Attempted to call a provider-defined tool');
                 }
+
                 // TODO(wittjosiah): Everything is `never` here.
                 const { result } = yield* (toolkitHandler.handle as any)(tool.name, input);
                 return result;

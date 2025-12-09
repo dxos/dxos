@@ -72,14 +72,10 @@ class ComputeRuntimeProviderImpl extends Resource implements AutomationCapabilit
         const toolkitLayer = mergedToolkit.layer;
 
         const space = client.spaces.get(spaceId);
-        invariant(space);
+        invariant(space, `Invalid space: ${spaceId}`);
         yield* Effect.promise(() => space.waitUntilReady());
 
-        return Layer.mergeAll(
-          TriggerDispatcher.layer({
-            timeControl: 'natural',
-          }),
-        ).pipe(
+        return Layer.mergeAll(TriggerDispatcher.layer({ timeControl: 'natural' })).pipe(
           Layer.provideMerge(
             Layer.mergeAll(
               InvocationTracerLive,
@@ -89,21 +85,19 @@ class ComputeRuntimeProviderImpl extends Resource implements AutomationCapabilit
             ),
           ),
           Layer.provideMerge(
-            Layer.mergeAll(
-              FunctionInvocationServiceLayerWithLocalLoopbackExecutor.pipe(
-                Layer.provideMerge(FunctionImplementationResolver.layerTest({ functions })),
-                Layer.provideMerge(
-                  RemoteFunctionExecutionService.fromClient(
-                    client,
-                    // If agent is not enabled do not provide spaceId because space context will be unavailable on EDGE.
-                    client.config.get('runtime.client.edgeFeatures.agents') ? spaceId : undefined,
-                  ),
+            FunctionInvocationServiceLayerWithLocalLoopbackExecutor.pipe(
+              Layer.provideMerge(FunctionImplementationResolver.layerTest({ functions })),
+              Layer.provideMerge(
+                RemoteFunctionExecutionService.fromClient(
+                  client,
+                  // If agent is not enabled do not provide spaceId because space context will be unavailable on EDGE.
+                  client.config.get('runtime.client.edgeFeatures.agents') ? spaceId : undefined,
                 ),
-                Layer.provideMerge(aiServiceLayer),
-                Layer.provideMerge(CredentialsService.layerFromDatabase()),
-                Layer.provideMerge(space ? Database.Service.layer(space.db) : Database.Service.notAvailable),
-                Layer.provideMerge(space ? QueueService.layer(space.queues) : QueueService.notAvailable),
               ),
+              Layer.provideMerge(aiServiceLayer),
+              Layer.provideMerge(CredentialsService.layerFromDatabase()),
+              Layer.provideMerge(space ? Database.Service.layer(space.db) : Database.Service.notAvailable),
+              Layer.provideMerge(space ? QueueService.layer(space.queues) : QueueService.notAvailable),
             ),
           ),
         );

@@ -2,6 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
+import type * as Toolkit from '@effect/ai/Toolkit';
 import * as Cause from 'effect/Cause';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
@@ -31,6 +32,7 @@ export class Core extends Context {
     private _services: Runtime.Runtime<AiChatServices>,
     private _provider: string,
     private _model: ModelName,
+    private _toolkit?: Toolkit.Any,
   ) {
     super();
   }
@@ -55,7 +57,7 @@ export class Core extends Context {
     await this._client.spaces.waitUntilReady();
     const space = this._client.spaces.default;
     const queue = space.queues.create<Message.Message>();
-    this._conversation = new AiConversation(queue);
+    this._conversation = new AiConversation(queue, this._toolkit);
   }
 
   async close(): Promise<void> {

@@ -33,12 +33,13 @@ import * as TestToolkit from './TestToolkit';
 export { DEFAULT_EDGE_MODEL, DEFAULT_LMSTUDIO_MODEL, DEFAULT_OLLAMA_MODEL };
 
 // TODO(burdon): Factor out (see plugin-assistant/processor.ts)
+
 export type AiChatServices =
+  | AiService.AiService
   | CredentialsService
   | Database.Service
-  | QueueService
   | FunctionInvocationService
-  | AiService.AiService
+  | QueueService
   | ToolExecutionService
   | ToolResolverService
   | TracingService;
@@ -84,10 +85,24 @@ export const createBaseLayer = (
   );
 };
 
+export type Provider = 'edge' | 'lmstudio' | 'ollama';
+
+export const getLayer = (provider: Provider, options: LayerOptions): LayerFactoryResult => {
+  switch (provider) {
+    case 'lmstudio':
+      return createLMStudioLayer(options);
+    case 'ollama':
+      return createOllamaLayer(options);
+    case 'edge':
+    default:
+      return createEdgeLayer(options);
+  }
+};
+
 /**
  * EDGE
  */
-export const createEdgeLayer: LayerFactory = (options: LayerOptions) => {
+const createEdgeLayer: LayerFactory = (options: LayerOptions) => {
   return {
     model: DEFAULT_EDGE_MODEL,
     layer: createBaseLayer(AiServiceTestingPreset('direct'), options),
@@ -97,7 +112,7 @@ export const createEdgeLayer: LayerFactory = (options: LayerOptions) => {
 /**
  * Ollama
  */
-export const createOllamaLayer: LayerFactory = (options) => {
+const createOllamaLayer: LayerFactory = (options) => {
   return {
     model: DEFAULT_OLLAMA_MODEL,
     layer: createBaseLayer(
@@ -112,7 +127,7 @@ export const createOllamaLayer: LayerFactory = (options) => {
 /**
  * LMStudio
  */
-export const createLMStudioLayer: LayerFactory = (options) => {
+const createLMStudioLayer: LayerFactory = (options) => {
   return {
     model: DEFAULT_LMSTUDIO_MODEL,
     layer: createBaseLayer(

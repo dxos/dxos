@@ -11,7 +11,7 @@ import { type AiToolNotFoundError, ToolExecutionService, type ToolId, ToolResolv
 import { type Blueprint } from '@dxos/blueprints';
 import { isTruthy } from '@dxos/util';
 
-export type ToolkitParams<Tools extends Record<string, Tool.Any>> = {
+export type CreateToolkitParams<Tools extends Record<string, Tool.Any>> = {
   toolkit?: Toolkit.Toolkit<Tools>;
   toolIds?: ToolId[];
   blueprints?: Blueprint.Blueprint[];
@@ -24,7 +24,7 @@ export const createToolkit = <Tools extends Record<string, Tool.Any> = {}>({
   toolkit: toolkitParam,
   toolIds = [],
   blueprints = [],
-}: ToolkitParams<Tools>): Effect.Effect<
+}: CreateToolkitParams<Tools>): Effect.Effect<
   Toolkit.WithHandler<any>,
   AiToolNotFoundError,
   ToolResolverService | ToolExecutionService | Tool.HandlersFor<Tools>
