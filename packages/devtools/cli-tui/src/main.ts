@@ -7,11 +7,11 @@ import yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
 
 import { AiService } from '@dxos/ai';
+import { GenericToolkit } from '@dxos/assistant';
 import { Client, Config } from '@dxos/client';
 
 import { App } from './app';
 import { Core, TestToolkit } from './core';
-import { GenericToolkit } from '@dxos/assistant';
 
 const argv = yargs(hideBin(process.argv))
   .option('provider', {

@@ -2,11 +2,11 @@
 // Copyright 2025 DXOS.org
 //
 
-import type * as Toolkit from '@effect/ai/Toolkit';
 import * as Cause from 'effect/Cause';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
 import * as Fiber from 'effect/Fiber';
+import * as Layer from 'effect/Layer';
 import * as Runtime from 'effect/Runtime';
 
 import { AiService, type ModelName } from '@dxos/ai';
@@ -16,7 +16,7 @@ import { Context } from '@dxos/context';
 import { throwCause } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { type Message } from '@dxos/types';
-import { Layer } from 'effect';
+
 import { type AiChatServices } from './services';
 
 export * from './services';
