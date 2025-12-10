@@ -10,11 +10,11 @@ import * as Match from 'effect/Match';
 import * as Option from 'effect/Option';
 
 import { AiService, DEFAULT_EDGE_MODEL, DEFAULT_LMSTUDIO_MODEL, DEFAULT_OLLAMA_MODEL, ModelName } from '@dxos/ai';
-import { AiConversation } from '@dxos/assistant';
+import { AiConversation, GenericToolkit } from '@dxos/assistant';
 import { ClientService } from '@dxos/client';
 import { type Message } from '@dxos/types';
 
-import { type AiChatServices, Provider, chatLayer } from '../../util';
+import { type AiChatServices, Provider, TestToolkit, chatLayer } from '../../util';
 import { Common } from '../options';
 
 import { Chat } from './components';
@@ -27,6 +27,7 @@ export const chat = Command.make(
     provider: Options.choice('provider', Provider.literals).pipe(
       Options.withDescription('AI provider to use.'),
       Options.withAlias('p'),
+      Options.withDefault('edge'),
     ),
     model: Options.text('model').pipe(
       Options.withDescription('Model to use.'),
@@ -40,13 +41,6 @@ export const chat = Command.make(
       const runtime = yield* Effect.runtime<AiChatServices>();
       const client = yield* ClientService;
 
-      const conversation = yield* Effect.promise(async () => {
-        await client.spaces.waitUntilReady();
-        const space = client.spaces.default;
-        const queue = space.queues.create<Message.Message>();
-        return new AiConversation(queue);
-      });
-
       const model = Option.getOrElse(modelParam, () =>
         Match.value(provider).pipe(
           Match.when('lmstudio', () => DEFAULT_LMSTUDIO_MODEL),
@@ -55,6 +49,15 @@ export const chat = Command.make(
           Match.orElse(() => DEFAULT_EDGE_MODEL),
         ),
       );
+
+      // TODO(burdon): Create processor abstraction (move out of Chat UX).
+      const toolkit = GenericToolkit.make(TestToolkit.toolkit, TestToolkit.layer);
+      const conversation = yield* Effect.promise(async () => {
+        await client.spaces.waitUntilReady();
+        const space = client.spaces.default;
+        const queue = space.queues.create<Message.Message>();
+        return new AiConversation(queue, toolkit.toolkit);
+      });
 
       // Ensure clean exit on errors or signals.
       const cleanup = () => {
@@ -69,7 +72,15 @@ export const chat = Command.make(
       const service = yield* AiService.AiService;
       yield* Effect.async<void>(() => {
         void render(
-          () => <Chat conversation={conversation} runtime={runtime} model={model} metadata={service.metadata} />,
+          () => (
+            <Chat
+              conversation={conversation}
+              runtime={runtime}
+              model={model}
+              metadata={service.metadata}
+              toolkit={toolkit}
+            />
+          ),
           {
             exitOnCtrlC: false, // Handle Ctrl-C ourselves.
           },

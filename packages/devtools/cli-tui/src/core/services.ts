@@ -61,12 +61,7 @@ export const createBaseLayer = (
   { client, space }: LayerOptions,
 ) => {
   const testToolkit = GenericToolkit.make(TestToolkit.toolkit, TestToolkit.layer);
-  const mergedToolkit = GenericToolkit.merge(
-    ...[
-      //
-      testToolkit,
-    ],
-  );
+  const mergedToolkit = GenericToolkit.merge(...[testToolkit]);
   const toolkit = mergedToolkit.toolkit;
   const toolkitLayer = mergedToolkit.layer;
 

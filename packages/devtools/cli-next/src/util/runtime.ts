@@ -37,35 +37,32 @@ export type AiChatServices =
   | TracingService;
 
 // TODO(wittjosiah): Factor out.
-export const Provider = Schema.Literal('lmstudio', 'ollama', 'edge');
+export const Provider = Schema.Literal('edge', 'lmstudio', 'ollama');
 export type Provider = Schema.Schema.Type<typeof Provider>;
+
+export type LayerOptions = {
+  provider: Provider;
+  spaceId: Option.Option<Key.SpaceId>;
+};
 
 // TODO(wittjosiah): Factor out.
 export const chatLayer = ({
   provider,
   spaceId,
-}: {
-  provider: Provider;
-  spaceId: Option.Option<Key.SpaceId>;
-}): Layer.Layer<AiChatServices, ConfigError.ConfigError, ClientService> => {
+}: LayerOptions): Layer.Layer<AiChatServices, ConfigError.ConfigError, ClientService> => {
   const testToolkit = GenericToolkit.make(TestToolkit.toolkit, TestToolkit.layer);
-  const mergedToolkit = GenericToolkit.merge(
-    ...[
-      //
-      testToolkit,
-    ],
-  );
+  const mergedToolkit = GenericToolkit.merge(...[testToolkit]);
   const toolkit = mergedToolkit.toolkit;
   const toolkitLayer = mergedToolkit.layer;
 
   const aiServiceLayer = Match.value(provider).pipe(
+    Match.when('edge', () => AiServiceTestingPreset('direct')),
     Match.when('lmstudio', () =>
       AiModelResolver.AiModelResolver.buildAiService.pipe(Layer.provideMerge(LMStudioResolver.make())),
     ),
     Match.when('ollama', () =>
       AiModelResolver.AiModelResolver.buildAiService.pipe(Layer.provideMerge(OllamaResolver.make())),
     ),
-    Match.when('edge', () => AiServiceTestingPreset('direct')),
     Match.exhaustive,
   );
 

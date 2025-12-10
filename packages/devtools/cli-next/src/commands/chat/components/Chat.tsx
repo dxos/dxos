@@ -7,11 +7,12 @@ import * as Cause from 'effect/Cause';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
 import * as Fiber from 'effect/Fiber';
+import * as Layer from 'effect/Layer';
 import * as Runtime from 'effect/Runtime';
 import { createSignal, onMount } from 'solid-js';
 
 import { AiService, type ModelName } from '@dxos/ai';
-import { type AiConversation, type AiConversationRunParams, GenerationObserver } from '@dxos/assistant';
+import { type AiConversation, GenerationObserver, type GenericToolkit } from '@dxos/assistant';
 import { throwCause } from '@dxos/effect';
 
 import { type AiChatServices } from '../../../util';
@@ -28,23 +29,25 @@ import { ChatStatusBar } from './ChatStatusBar';
 // TODO(burdon): CLI option.
 const DEBUG = false;
 
-type ChatProps = {
+export type ChatProps = {
   conversation: AiConversation;
   runtime: Runtime.Runtime<AiChatServices>;
   model: ModelName;
   metadata: AiService.Metadata;
+
+  // TOOD(burdon): From blueprints.
+  toolkit?: GenericToolkit.GenericToolkit;
 };
 
-export const Chat = ({ conversation, runtime, model, metadata }: ChatProps) => {
+export const Chat = ({ conversation, runtime, model, toolkit, metadata }: ChatProps) => {
   const chatMessages = useChatMessages();
-  const [isStreaming, setIsStreaming] = createSignal(false);
-  const [inputValue, setInputValue] = createSignal('');
   const [showBanner, setShowBanner] = createSignal(true);
+  const [inputValue, setInputValue] = createSignal('');
+  const [isStreaming, setIsStreaming] = createSignal(false);
   const [focusedElement, setFocusedElement] = createSignal<'input' | 'messages'>('input');
 
   useChatKeyboard(setFocusedElement);
   const renderer = useRenderer();
-
   if (DEBUG) {
     renderer.useConsole = true;
     renderer.console.show();
@@ -73,6 +76,8 @@ export const Chat = ({ conversation, runtime, model, metadata }: ChatProps) => {
 
     try {
       setIsStreaming(true);
+
+      // TODO(burdon): Factor out processor.
       const observer = GenerationObserver.make({
         onPart: (part) =>
           Effect.sync(() => {
@@ -82,10 +87,19 @@ export const Chat = ({ conversation, runtime, model, metadata }: ChatProps) => {
           }),
       });
 
-      await executeAiRequest(conversation, runtime, model, {
-        prompt,
-        observer,
-      });
+      // Create and execute request.
+      const request = conversation.createRequest({ prompt, observer });
+      const fiber = request.pipe(
+        Effect.provide(AiService.model(model)),
+        Effect.provide(toolkit?.layer ?? Layer.empty),
+        Effect.asVoid,
+        Runtime.runFork(runtime),
+      );
+
+      const response = await fiber.pipe(Fiber.join, Effect.runPromiseExit);
+      if (!Exit.isSuccess(response) && !Cause.isInterruptedOnly(response.cause)) {
+        throwCause(response.cause);
+      }
     } catch (err) {
       chatMessages.updateMessage(assistantIndex, (msg) => {
         msg.role = 'error';
@@ -113,19 +127,4 @@ export const Chat = ({ conversation, runtime, model, metadata }: ChatProps) => {
       <ChatStatusBar isStreaming={isStreaming} model={model} metadata={metadata} />
     </box>
   );
-};
-
-const executeAiRequest = async (
-  conversation: AiConversation,
-  runtime: Runtime.Runtime<AiChatServices>,
-  model: ModelName,
-  params: AiConversationRunParams,
-): Promise<void> => {
-  const request = conversation.createRequest(params);
-  const fiber = request.pipe(Effect.provide(AiService.model(model)), Effect.asVoid, Runtime.runFork(runtime));
-
-  const response = await fiber.pipe(Fiber.join, Effect.runPromiseExit);
-  if (!Exit.isSuccess(response) && !Cause.isInterruptedOnly(response.cause)) {
-    throwCause(response.cause);
-  }
 };
