@@ -45,7 +45,7 @@ export const ChatInput = (props: ChatInputProps) => {
           ref={textarea}
           width='100%'
           height='100%'
-          focused={context.focus?.() === 'input'}
+          focused={context?.focus?.() === 'input'}
           placeholder='Search or ask anything...'
           initialValue={props.value()}
           onContentChange={() => props.onInput(textarea?.plainText ?? '')}
