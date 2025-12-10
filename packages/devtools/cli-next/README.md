@@ -11,7 +11,7 @@ moon run cli-next:compile
 Once it's compiled it can be run from the cli-next package:
 
 ```bash
-./dist/node-esm/bin.mjs
+./dist/<platform>/dx
 ```
 
 ## Development
@@ -24,7 +24,7 @@ Running with vite-node (reads all workspace packages directly from source, so re
 
 ```bash
 cd packages/devtools/cli-next
-./cli-next
+./dxnext
 ```
 
 ## CLI Design Guide
@@ -42,3 +42,4 @@ cd packages/devtools/cli-next
 - [Effect CLI](https://github.com/Effect-TS/effect/blob/main/packages/cli/README.md)
 - [Effect CLI Docs](https://effect-ts.github.io/effect/docs/cli)
 - [Example](https://github.com/Effect-TS/examples/tree/main/templates/cli)
+- [OpenTUI](https://github.com/sst/opentui/tree/main/packages/solid)

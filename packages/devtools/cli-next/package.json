@@ -44,8 +44,8 @@
     "@effect/sql": "0.46.0",
     "@effect/typeclass": "0.37.0",
     "@effect/workflow": "0.11.3",
-    "@opentui/core": "^0.1.57",
-    "@opentui/solid": "^0.1.57",
+    "@opentui/core": "0.1.59",
+    "@opentui/solid": "0.1.59",
     "chalk": "^4.1.2",
     "effect": "3.18.3",
     "esbuild": "0.25.10",
@@ -54,7 +54,11 @@
     "yaml": "^2.5.0"
   },
   "devDependencies": {
-    "@types/blessed": "^0.1.26",
+    "@opentui/core-darwin-arm64": "0.1.59",
+    "@opentui/core-darwin-x64": "0.1.59",
+    "@opentui/core-linux-arm64": "0.1.59",
+    "@opentui/core-linux-x64": "0.1.59",
+    "@opentui/core-win32-x64": "0.1.59",
     "@types/node": "^22.5.2",
     "@types/wtfnode": "^0.10.0",
     "ts-node": "10.9.1",
@@ -62,7 +66,6 @@
     "vitest": "^3.2.4"
   },
   "publishConfig": {
-    "access": "public",
-    "directory": "dist"
+    "access": "public"
   }
 }

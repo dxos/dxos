@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as NodeContext from '@effect/platform-node/NodeContext';
+import * as BunContext from '@effect/platform-bun/BunContext';
 import { assert, describe, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
@@ -29,5 +29,5 @@ describe('smoke tests', () => {
         yield* run(args('dx --json hub status'));
         assert.containSubset(logger.logs.at(1), { level: 'log', args: [{ status: 'ok' }] });
       }
-    }).pipe(Effect.provide(Layer.mergeAll(TestConsole.layer, NodeContext.layer)), Effect.scoped, runAndForwardErrors));
+    }).pipe(Effect.provide(Layer.mergeAll(TestConsole.layer, BunContext.layer)), Effect.scoped, runAndForwardErrors));
 });
