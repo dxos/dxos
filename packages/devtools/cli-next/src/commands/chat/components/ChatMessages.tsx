@@ -38,11 +38,11 @@ const MessageItem = (props: { message: Message }) => {
   const rolePrefix = () => {
     switch (props.message.role) {
       case 'user':
-        return '⟫';
+        return '⟫ ';
       case 'assistant':
-        return 'Assistant:';
+        return 'Assistant: ';
       case 'error':
-        return 'Error:';
+        return 'Error: ';
       default:
         return '';
     }
@@ -52,7 +52,8 @@ const MessageItem = (props: { message: Message }) => {
   return (
     <box paddingBottom={1}>
       <text>
-        <span style={{ fg: theme.role(props.message.role) }}>{rolePrefix()}</span> {props.message.content}
+        {props.message.content && <span style={{ fg: theme.role(props.message.role) }}>{rolePrefix()}</span>}
+        {props.message.content}
       </text>
     </box>
   );
