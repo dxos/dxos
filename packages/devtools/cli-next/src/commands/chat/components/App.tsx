@@ -70,6 +70,7 @@ export const App = (props: AppProps) => {
         setFocus(focusElements[0]);
       }
     }
+
     randomHint();
   });
 
