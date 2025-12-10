@@ -26,7 +26,7 @@ import { type AiChatServices } from '../../util';
 export class ChatProcessor {
   constructor(
     private readonly _runtime: Runtime.Runtime<AiChatServices>,
-    private readonly _metadata?: AiService.Metadata,
+    private readonly _metadata?: AiService.ServiceMetadata,
     private readonly _toolkit?: GenericToolkit.GenericToolkit,
   ) {}
 
@@ -47,8 +47,7 @@ export class ChatProcessor {
     model: ModelName,
   ) {
     const fiber = request.pipe(
-      Effect.provide(AiService.model(model)),
-      Effect.provide(this.toolkit?.layer ?? Layer.empty),
+      Effect.provide(Layer.merge(AiService.model(model), this.toolkit?.layer ?? Layer.empty)),
       Effect.asVoid,
       Runtime.runFork(this.runtime),
     );

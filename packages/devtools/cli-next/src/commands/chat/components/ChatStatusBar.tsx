@@ -11,7 +11,7 @@ import { theme } from '../theme';
 
 export type ChatStatusBarProps = {
   model: ModelName;
-  metadata: AiService.Metadata;
+  metadata?: AiService.ServiceMetadata;
   processing: Accessor<boolean>;
 };
 
@@ -31,7 +31,7 @@ export const ChatStatusBar = ({ model, metadata, processing }: ChatStatusBarProp
         {processing() ? `${spinner.frame()} Processing` : 'esc | ctrl-c'}
       </text>
       <box flexGrow={1} />
-      {metadata.name && <text style={{ fg: theme.text.secondary, marginRight: 1 }}>({metadata.name})</text>}
+      {metadata?.name && <text style={{ fg: theme.text.secondary, marginRight: 1 }}>({metadata.name})</text>}
       <text style={{ fg: theme.text.subdued, marginRight: 1 }}>{model}</text>
       <text style={{ fg: theme.accent }}>Ⓓ Ⓧ Ⓞ Ⓢ</text>
     </box>
