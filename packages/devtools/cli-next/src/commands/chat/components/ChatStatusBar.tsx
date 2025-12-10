@@ -10,15 +10,15 @@ import { useSpinner } from '../hooks';
 import { theme } from '../theme';
 
 export type ChatStatusBarProps = {
-  isStreaming: Accessor<boolean>;
   model: ModelName;
   metadata: AiService.Metadata;
+  processing: Accessor<boolean>;
 };
 
-export const ChatStatusBar = ({ isStreaming, model, metadata }: ChatStatusBarProps) => {
+export const ChatStatusBar = ({ model, metadata, processing }: ChatStatusBarProps) => {
   const spinner = useSpinner();
   createEffect(() => {
-    if (isStreaming()) {
+    if (processing()) {
       spinner.start();
     } else {
       spinner.stop();
@@ -27,8 +27,8 @@ export const ChatStatusBar = ({ isStreaming, model, metadata }: ChatStatusBarPro
 
   return (
     <box height={1} flexDirection='row' paddingLeft={2} paddingRight={2}>
-      <text style={{ fg: isStreaming() ? theme.text.secondary : theme.text.subdued }}>
-        {isStreaming() ? `${spinner.frame()} Processing` : 'esc | ctrl-c'}
+      <text style={{ fg: processing() ? theme.text.secondary : theme.text.subdued }}>
+        {processing() ? `${spinner.frame()} Processing` : 'esc | ctrl-c'}
       </text>
       <box flexGrow={1} />
       {metadata.name && <text style={{ fg: theme.text.secondary, marginRight: 1 }}>({metadata.name})</text>}

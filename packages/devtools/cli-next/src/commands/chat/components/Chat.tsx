@@ -34,7 +34,7 @@ export const Chat = ({ processor, conversation, model }: ChatProps) => {
   const chatMessages = useChatMessages();
   const [showBanner, setShowBanner] = createSignal(true);
   const [inputValue, setInputValue] = createSignal('');
-  const [isStreaming, setIsStreaming] = createSignal(false);
+  const [streaming, setStreaming] = createSignal(false);
   const [focusedElement, setFocusedElement] = createSignal<'input' | 'messages'>('input');
   useChatKeyboard(setFocusedElement);
 
@@ -50,7 +50,7 @@ export const Chat = ({ processor, conversation, model }: ChatProps) => {
 
   const handleSubmit = async (value: string) => {
     const prompt = value.trim();
-    if (!prompt || isStreaming()) {
+    if (!prompt || streaming()) {
       return;
     }
 
@@ -66,7 +66,7 @@ export const Chat = ({ processor, conversation, model }: ChatProps) => {
     const assistantIndex = chatMessages.addMessage(assistantMessage);
 
     try {
-      setIsStreaming(true);
+      setStreaming(true);
       const observer = GenerationObserver.make({
         onPart: (part) =>
           Effect.sync(() => {
@@ -98,7 +98,7 @@ export const Chat = ({ processor, conversation, model }: ChatProps) => {
         message.content = `Error: ${String(err)}`;
       });
     } finally {
-      setIsStreaming(false);
+      setStreaming(false);
     }
   };
 
@@ -116,7 +116,7 @@ export const Chat = ({ processor, conversation, model }: ChatProps) => {
         focused={focusedElement() === 'input'}
       />
 
-      <ChatStatusBar isStreaming={isStreaming} model={model} metadata={processor.metadata} />
+      <ChatStatusBar processing={streaming} model={model} metadata={processor.metadata} />
     </box>
   );
 };
