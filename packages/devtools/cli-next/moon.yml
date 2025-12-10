@@ -16,6 +16,7 @@ tasks:
       mergeArgs: replace
       mergeInputs: append
       mergeOutputs: replace
+      timeout: 60
     inputs:
       - scripts/build.ts
       - bunfig.toml
