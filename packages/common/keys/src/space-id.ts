@@ -4,7 +4,6 @@
 
 import base32Decode from 'base32-decode';
 import base32Encode from 'base32-encode';
-import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 
 import { invariant } from '@dxos/invariant';
@@ -35,8 +34,6 @@ export const SpaceId: Schema.Schema<SpaceId, string> & {
   encode: (value: Uint8Array) => SpaceId;
   decode: (value: SpaceId) => Uint8Array;
   isValid: (value: unknown) => value is SpaceId;
-  parse: (value: string) => SpaceId;
-  tryParse: (value: string) => Option.Option<SpaceId>;
   make: (value: string) => SpaceId;
   random: () => SpaceId;
 } = class extends Schema.String.pipe(Schema.filter(isValid)) {
@@ -54,15 +51,6 @@ export const SpaceId: Schema.Schema<SpaceId, string> & {
   };
 
   static isValid = isValid;
-
-  static parse = (value: string): SpaceId => {
-    invariant(isValid(value), 'Invalid space ID');
-    return value as SpaceId;
-  };
-
-  static tryParse = (value: string): Option.Option<SpaceId> => {
-    return isValid(value) ? Option.some(value as SpaceId) : Option.none();
-  };
 
   static random = (): SpaceId => {
     return SpaceId.encode(randomBytes(SpaceId.byteLength));
