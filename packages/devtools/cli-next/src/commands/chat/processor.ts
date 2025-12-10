@@ -24,7 +24,7 @@ import { type Message } from '@dxos/types';
 
 import { type AiChatServices, TestToolkit } from '../../util';
 
-// TODO(burdon): Factor out common guts from assistant plugin and from Chat component.
+// TODO(burdon): Factor out common guts from AiChatProcessor.
 export class ChatProcessor {
   constructor(
     private readonly _runtime: Runtime.Runtime<AiChatServices>,
