@@ -3,19 +3,12 @@
 //
 
 import { useRenderer } from '@opentui/solid';
-import * as Cause from 'effect/Cause';
 import * as Effect from 'effect/Effect';
-import * as Exit from 'effect/Exit';
-import * as Fiber from 'effect/Fiber';
-import * as Layer from 'effect/Layer';
-import * as Runtime from 'effect/Runtime';
 import { createSignal, onMount } from 'solid-js';
 
-import { AiService, type ModelName } from '@dxos/ai';
+import { type ModelName } from '@dxos/ai';
 import { type AiConversation, GenerationObserver } from '@dxos/assistant';
-import { throwCause } from '@dxos/effect';
 
-import { type AiChatServices } from '../../../util';
 import { DXOS_VERSION } from '../../../version';
 import { useChatKeyboard, useChatMessages } from '../hooks';
 import { type ChatProcessor } from '../processor';
@@ -33,12 +26,10 @@ const DEBUG = false;
 export type ChatProps = {
   processor: ChatProcessor;
   conversation: AiConversation;
-  runtime: Runtime.Runtime<AiChatServices>;
   model: ModelName;
-  metadata: AiService.Metadata;
 };
 
-export const Chat = ({ processor, conversation, runtime, model, metadata }: ChatProps) => {
+export const Chat = ({ processor, conversation, model }: ChatProps) => {
   const chatMessages = useChatMessages();
   const [showBanner, setShowBanner] = createSignal(true);
   const [inputValue, setInputValue] = createSignal('');
@@ -75,8 +66,6 @@ export const Chat = ({ processor, conversation, runtime, model, metadata }: Chat
 
     try {
       setIsStreaming(true);
-
-      // TODO(burdon): Factor out processor.
       const observer = GenerationObserver.make({
         onPart: (part) =>
           Effect.sync(() => {
@@ -88,21 +77,11 @@ export const Chat = ({ processor, conversation, runtime, model, metadata }: Chat
 
       // Create and execute request.
       const request = conversation.createRequest({ prompt, observer });
-      const fiber = request.pipe(
-        Effect.provide(AiService.model(model)),
-        Effect.provide(processor.toolkit?.layer ?? Layer.empty),
-        Effect.asVoid,
-        Runtime.runFork(runtime),
-      );
-
-      const response = await fiber.pipe(Fiber.join, Effect.runPromiseExit);
-      if (!Exit.isSuccess(response) && !Cause.isInterruptedOnly(response.cause)) {
-        throwCause(response.cause);
-      }
+      await processor.execute(request, model);
     } catch (err) {
-      chatMessages.updateMessage(assistantIndex, (msg) => {
-        msg.role = 'error';
-        msg.content = `Error: ${String(err)}`;
+      chatMessages.updateMessage(assistantIndex, (message) => {
+        message.role = 'error';
+        message.content = `Error: ${String(err)}`;
       });
     } finally {
       setIsStreaming(false);
@@ -123,7 +102,7 @@ export const Chat = ({ processor, conversation, runtime, model, metadata }: Chat
         focused={focusedElement() === 'input'}
       />
 
-      <ChatStatusBar isStreaming={isStreaming} model={model} metadata={metadata} />
+      <ChatStatusBar isStreaming={isStreaming} model={model} metadata={processor.metadata} />
     </box>
   );
 };

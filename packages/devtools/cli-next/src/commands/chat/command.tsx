@@ -12,6 +12,7 @@ import * as Option from 'effect/Option';
 import { AiService, DEFAULT_EDGE_MODEL, DEFAULT_LMSTUDIO_MODEL, DEFAULT_OLLAMA_MODEL, ModelName } from '@dxos/ai';
 import { GenericToolkit } from '@dxos/assistant';
 import { ClientService } from '@dxos/client';
+import { invariant } from '@dxos/invariant';
 
 import { type AiChatServices, Provider, TestToolkit, chatLayer } from '../../util';
 import { Common } from '../options';
@@ -40,6 +41,7 @@ export const chat = Command.make(
     Effect.gen(function* () {
       const runtime = yield* Effect.runtime<AiChatServices>();
       const client = yield* ClientService;
+      const service = yield* AiService.AiService;
 
       const model = Option.getOrElse(modelParam, () =>
         Match.value(provider).pipe(
@@ -50,40 +52,33 @@ export const chat = Command.make(
         ),
       );
 
+      // TODO(burdon): From blueprints.
       const toolkit = GenericToolkit.make(TestToolkit.toolkit, TestToolkit.layer);
-      const processor = new ChatProcessor(runtime, toolkit);
+      const processor = new ChatProcessor(runtime, toolkit, service.metadata);
       const conversation = yield* Effect.promise(async () => {
+        invariant(client.halo.identity);
+        // TODO(burdon): Hangs if identity is not ready.
         await client.spaces.waitUntilReady();
         const space = client.spaces.default;
         return processor.createConversation(space);
       });
 
       // Ensure clean exit on errors or signals.
-      const cleanup = () => {
-        restoreTerminal();
-        process.exit(1);
-      };
-      process.on('uncaughtException', cleanup);
-      process.on('unhandledRejection', cleanup);
-      process.on('SIGINT', cleanup);
-      process.on('SIGTERM', cleanup);
+      {
+        const cleanup = () => {
+          restoreTerminal();
+          process.exit(1);
+        };
+        process.on('uncaughtException', cleanup);
+        process.on('unhandledRejection', cleanup);
+        process.on('SIGINT', cleanup);
+        process.on('SIGTERM', cleanup);
+      }
 
-      const service = yield* AiService.AiService;
       yield* Effect.async<void>(() => {
-        void render(
-          () => (
-            <Chat
-              processor={processor}
-              conversation={conversation}
-              runtime={runtime}
-              model={model}
-              metadata={service.metadata}
-            />
-          ),
-          {
-            exitOnCtrlC: false, // Handle Ctrl-C ourselves.
-          },
-        );
+        void render(() => <Chat processor={processor} conversation={conversation} model={model} />, {
+          exitOnCtrlC: false, // Handle Ctrl-C ourselves.
+        });
       });
     }),
 ).pipe(
