@@ -36,8 +36,8 @@ export const Chat = ({ processor, conversation, model }: ChatProps) => {
   const [inputValue, setInputValue] = createSignal('');
   const [isStreaming, setIsStreaming] = createSignal(false);
   const [focusedElement, setFocusedElement] = createSignal<'input' | 'messages'>('input');
-
   useChatKeyboard(setFocusedElement);
+
   const renderer = useRenderer();
   if (DEBUG) {
     renderer.useConsole = true;
