@@ -14,7 +14,7 @@ tasks:
     args:
       - '--entryPoint=src/hypercore.js'
       - '--entryPoint=src/hypercore-crypto.js'
-      - '--injectGlobals'
+      - '--importGlobals'
       - >-
         --alias='{"events":"node:events","hypercore-default-storage":"./src/empty.js","os":"node:os","timers":"node:timers","tty":"node:tty","util":"node:util"}'
       - '--bundlePackage=abstract-extension'

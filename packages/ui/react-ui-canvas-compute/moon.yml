@@ -9,7 +9,6 @@ tasks:
   compile:
     args:
       - '--entryPoint=src/index.ts'
-      - '--injectGlobals'
       - '--preactSignalTracking'
   test:
     inputs:

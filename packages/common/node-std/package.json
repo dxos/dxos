@@ -9,21 +9,17 @@
   "sideEffects": true,
   "type": "module",
   "exports": {
-    "./_/config": {
-      "import": "./dist/lib/browser/_/config.mjs",
-      "require": "./dist/lib/node-esm/_/config.mjs"
-    },
-    "./assert": "./dist/lib/browser/assert.mjs",
-    "./buffer": "./dist/lib/browser/buffer.mjs",
-    "./crypto": "./dist/lib/browser/crypto.mjs",
-    "./events": "./dist/lib/browser/events.mjs",
-    "./fs": "./dist/lib/browser/fs.mjs",
-    "./fs/promises": "./dist/lib/browser/fs/promises.mjs",
-    "./globals": "./dist/lib/browser/globals.mjs",
-    "./inject-globals": "./dist/lib/browser/inject-globals.mjs",
-    "./path": "./dist/lib/browser/path.mjs",
-    "./stream": "./dist/lib/browser/stream.mjs",
-    "./util": "./dist/lib/browser/util.mjs"
+    "./_/config": "./dist/lib/browser/_/config.js",
+    "./assert": "./dist/lib/browser/assert.js",
+    "./buffer": "./dist/lib/browser/buffer.js",
+    "./crypto": "./dist/lib/browser/crypto.js",
+    "./events": "./dist/lib/browser/events.js",
+    "./fs": "./dist/lib/browser/fs.js",
+    "./fs/promises": "./dist/lib/browser/fs/promises.js",
+    "./inject-globals": "./dist/lib/browser/inject-globals.js",
+    "./path": "./dist/lib/browser/path.js",
+    "./stream": "./dist/lib/browser/stream.js",
+    "./util": "./dist/lib/browser/util.js"
   },
   "typesVersions": {
     "*": {

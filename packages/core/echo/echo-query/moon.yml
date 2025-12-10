@@ -10,7 +10,7 @@ tasks:
       - prebuild
     args:
       - '--entryPoint=src/index.ts'
-      - '--injectGlobals'
+      - '--importGlobals'
   prebuild:
     deps:
       - echo-query:prebuild-lezer

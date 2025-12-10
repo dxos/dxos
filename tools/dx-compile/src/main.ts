@@ -28,7 +28,6 @@ export interface EsbuildExecutorOptions {
   ignorePackages: string[];
   alias: Record<string, string>;
   entryPoints: string[];
-  injectGlobals: boolean;
   importGlobals: boolean;
   metafile: boolean;
   outputPath: string;
@@ -169,7 +168,6 @@ export default async (options: EsbuildExecutorOptions): Promise<{ success: boole
             allowedDirectory: process.cwd(),
           }),
           NodeExternalPlugin({
-            injectGlobals: options.injectGlobals,
             importGlobals: options.importGlobals,
             nodeStd: Boolean(packageJson.dependencies?.['@dxos/node-std']),
           }),

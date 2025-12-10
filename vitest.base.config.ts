@@ -72,10 +72,10 @@ const createStorybookProject = (dirname: string) =>
 type BrowserOptions = {
   browserName: string;
   nodeExternal?: boolean;
-  injectGlobals?: boolean;
+  importGlobals?: boolean;
 };
 
-const createBrowserProject = ({ browserName, nodeExternal = false, injectGlobals = true }: BrowserOptions) =>
+const createBrowserProject = ({ browserName, nodeExternal = false, importGlobals = true }: BrowserOptions) =>
   defineProject({
     plugins: [
       nodeStdPlugin(),
@@ -89,7 +89,7 @@ const createBrowserProject = ({ browserName, nodeExternal = false, injectGlobals
           // TODO(burdon): esbuild version mismatch.
           FixGracefulFsPlugin(),
           // TODO(wittjosiah): Compute nodeStd from package.json
-          ...(nodeExternal ? [NodeExternalPlugin({ injectGlobals, nodeStd: true })] : []),
+          ...(nodeExternal ? [NodeExternalPlugin({ importGlobals, nodeStd: true })] : []),
         ],
       },
     },

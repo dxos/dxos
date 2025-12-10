@@ -10,4 +10,4 @@ tasks:
       - '--entryPoint=src/index.ts'
       - '--platform=browser'
       - '--platform=node'
-      - '--injectGlobals'
+      - '--importGlobals'
