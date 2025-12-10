@@ -33,5 +33,6 @@ export const reset = Command.make(
       }
     }
     yield* fs.remove(path, { recursive: true });
+    console.log(`Profile (${profile}) has been reset successfully.`);
   }),
 );
