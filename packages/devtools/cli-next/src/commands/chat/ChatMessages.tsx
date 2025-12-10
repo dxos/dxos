@@ -4,13 +4,14 @@
 
 import { For } from 'solid-js';
 
+import { theme } from './theme';
 import { type Message } from './types';
 
-type ChatMessagesProps = {
+export type ChatMessagesProps = {
   messages: Message[];
 };
 
-export const ChatMessages = (props: ChatMessagesProps) => {
+export const ChatMessages = ({ messages }: ChatMessagesProps) => {
   return (
     <scrollbox
       stickyScroll={true}
@@ -28,25 +29,12 @@ export const ChatMessages = (props: ChatMessagesProps) => {
       }}
       flexGrow={1}
     >
-      <For each={props.messages}>{(message) => <MessageItem message={message} />}</For>
+      <For each={messages}>{(message) => <MessageItem message={message} />}</For>
     </scrollbox>
   );
 };
 
 const MessageItem = (props: { message: Message }) => {
-  const roleColor = () => {
-    switch (props.message.role) {
-      case 'user':
-        return '#00ffff';
-      case 'assistant':
-        return '#00ff00';
-      case 'error':
-        return '#ff0000';
-      default:
-        return '#ffffff';
-    }
-  };
-
   const rolePrefix = () => {
     switch (props.message.role) {
       case 'user':
@@ -63,7 +51,7 @@ const MessageItem = (props: { message: Message }) => {
   return (
     <box paddingBottom={1}>
       <text>
-        <span style={{ fg: roleColor() }}>{rolePrefix()}</span> {props.message.content}
+        <span style={{ fg: theme.role(props.message.role) }}>{rolePrefix()}</span> {props.message.content}
       </text>
     </box>
   );

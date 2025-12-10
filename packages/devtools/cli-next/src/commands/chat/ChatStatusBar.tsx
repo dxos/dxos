@@ -2,24 +2,38 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Accessor } from 'solid-js';
+import { type Accessor, createEffect } from 'solid-js';
 
-import { type ModelName } from '@dxos/ai';
+import { type AiService, type ModelName } from '@dxos/ai';
 
-type ChatStatusBarProps = {
+import { useSpinner } from './hooks';
+import { theme } from './theme';
+
+export type ChatStatusBarProps = {
   isStreaming: Accessor<boolean>;
-  spinnerFrame: Accessor<string>;
   model: ModelName;
+  metadata: AiService.Metadata;
 };
 
-export const ChatStatusBar = (props: ChatStatusBarProps) => {
+export const ChatStatusBar = ({ isStreaming, model, metadata }: ChatStatusBarProps) => {
+  const spinner = useSpinner();
+  createEffect(() => {
+    if (isStreaming()) {
+      spinner.start();
+    } else {
+      spinner.stop();
+    }
+  });
+
   return (
     <box height={1} flexDirection='row' paddingLeft={2} paddingRight={2}>
-      <text style={{ fg: props.isStreaming() ? '#00ffff' : '#666666' }}>
-        {props.isStreaming() ? `${props.spinnerFrame()} Processing` : 'Ctrl-c'}
+      <text style={{ fg: isStreaming() ? theme.text.secondary : theme.text.subdued }}>
+        {isStreaming() ? `${spinner.frame()} Processing` : 'esc | ctrl-c'}
       </text>
       <box flexGrow={1} />
-      <text style={{ fg: '#666666' }}>{props.model} | Ⓓ Ⓧ Ⓞ Ⓢ</text>
+      {metadata.name && <text style={{ fg: theme.text.secondary, marginRight: 1 }}>({metadata.name})</text>}
+      <text style={{ fg: theme.text.subdued, marginRight: 1 }}>{model}</text>
+      <text style={{ fg: theme.accent }}>Ⓓ Ⓧ Ⓞ Ⓢ</text>
     </box>
   );
 };

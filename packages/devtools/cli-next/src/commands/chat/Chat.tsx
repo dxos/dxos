@@ -15,40 +15,43 @@ import { type AiConversation, type AiConversationRunParams, GenerationObserver }
 import { throwCause } from '@dxos/effect';
 
 import { type AiChatServices } from '../../util';
+import { DXOS_VERSION } from '../../version';
 
 import { ChatBanner } from './ChatBanner';
 import { ChatInput } from './ChatInput';
 import { ChatMessages } from './ChatMessages';
 import { ChatStatusBar } from './ChatStatusBar';
-import { useChatKeyboard, useChatMessages, useSpinner } from './hooks';
+import { useChatKeyboard, useChatMessages } from './hooks';
+import { theme } from './theme';
 import { createAssistantMessage, createUserMessage } from './types';
 
+// TODO(burdon): CLI option.
 const DEBUG = false;
 
 type ChatProps = {
   conversation: AiConversation;
   runtime: Runtime.Runtime<AiChatServices>;
   model: ModelName;
+  metadata: AiService.Metadata;
 };
 
-export const Chat = ({ conversation, runtime, model }: ChatProps) => {
+export const Chat = ({ conversation, runtime, model, metadata }: ChatProps) => {
   const chatMessages = useChatMessages();
   const [isStreaming, setIsStreaming] = createSignal(false);
   const [inputValue, setInputValue] = createSignal('');
   const [showBanner, setShowBanner] = createSignal(true);
   const [focusedElement, setFocusedElement] = createSignal<'input' | 'messages'>('input');
 
-  const spinner = useSpinner();
   useChatKeyboard(setFocusedElement);
-
   const renderer = useRenderer();
+
   if (DEBUG) {
     renderer.useConsole = true;
     renderer.console.show();
   }
 
   onMount(() => {
-    renderer.setBackgroundColor('#000000');
+    renderer.setBackgroundColor(theme.bg);
   });
 
   const handleSubmit = async (value: string) => {
@@ -70,8 +73,6 @@ export const Chat = ({ conversation, runtime, model }: ChatProps) => {
 
     try {
       setIsStreaming(true);
-      spinner.start();
-
       const observer = GenerationObserver.make({
         onPart: (part) =>
           Effect.sync(() => {
@@ -91,7 +92,6 @@ export const Chat = ({ conversation, runtime, model }: ChatProps) => {
         msg.content = `Error: ${String(err)}`;
       });
     } finally {
-      spinner.stop();
       setIsStreaming(false);
     }
   };
@@ -99,7 +99,7 @@ export const Chat = ({ conversation, runtime, model }: ChatProps) => {
   return (
     <box flexDirection='column' height='100%' width='100%'>
       <box flexGrow={1} position='relative'>
-        <ChatBanner visible={showBanner} />
+        {showBanner() && <ChatBanner version={DXOS_VERSION} />}
         <ChatMessages messages={chatMessages.messages.data} />
       </box>
 
@@ -110,7 +110,7 @@ export const Chat = ({ conversation, runtime, model }: ChatProps) => {
         focused={focusedElement() === 'input'}
       />
 
-      <ChatStatusBar isStreaming={isStreaming} spinnerFrame={spinner.frame} model={model} />
+      <ChatStatusBar isStreaming={isStreaming} model={model} metadata={metadata} />
     </box>
   );
 };
