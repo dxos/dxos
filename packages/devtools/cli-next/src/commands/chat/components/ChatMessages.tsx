@@ -14,13 +14,6 @@ export type ChatMessagesProps = {
 export const ChatMessages = ({ messages }: ChatMessagesProps) => {
   return (
     <scrollbox
-      stickyScroll={true}
-      stickyStart='bottom'
-      scrollX={false}
-      scrollY={true}
-      verticalScrollbarOptions={{
-        visible: false,
-      }}
       contentOptions={{
         paddingLeft: 1,
         paddingRight: 1,
@@ -28,6 +21,13 @@ export const ChatMessages = ({ messages }: ChatMessagesProps) => {
         paddingBottom: 1,
       }}
       flexGrow={1}
+      scrollX={false}
+      scrollY={true}
+      stickyScroll={true}
+      stickyStart='bottom'
+      verticalScrollbarOptions={{
+        visible: false,
+      }}
     >
       <For each={messages}>{(message) => <MessageItem message={message} />}</For>
     </scrollbox>
