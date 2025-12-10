@@ -32,7 +32,7 @@ export const StatusBar = (props: StatusBarProps) => {
   return (
     <box flexDirection='row' height={1} paddingLeft={2} paddingRight={2}>
       <text style={{ fg: props.processing() ? theme.text.secondary : theme.text.subdued }}>
-        {props.processing() ? `${spinner.frame()} Processing` : context.hints?.join(' | ')}
+        {props.processing() ? `${spinner.frame()} Processing` : context?.hint}
       </text>
       <box flexGrow={1} />
       {props.metadata?.name && (

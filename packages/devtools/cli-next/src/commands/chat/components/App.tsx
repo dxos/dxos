@@ -3,12 +3,16 @@
 //
 
 import { useKeyboard, useRenderer } from '@opentui/solid';
-import { type Accessor, type ParentProps, createContext, createSignal, onMount } from 'solid-js';
+import { type Accessor, type ParentProps, createContext, createEffect, createSignal, onMount } from 'solid-js';
+
+import { isTruthy } from '@dxos/util';
+
+import { theme } from '../theme';
 
 export const AppContext = createContext<{
-  focus?: Accessor<string | undefined>;
-  hints?: string[];
-}>({});
+  focus: Accessor<string | undefined>;
+  hint: Accessor<string | undefined>;
+}>();
 
 export type AppProps = ParentProps<{
   focusElements?: string[];
@@ -20,48 +24,85 @@ export type AppProps = ParentProps<{
  */
 // TODO(burdon): Factor out (common to all commands).
 export const App = (props: AppProps) => {
-  const [focus, setFocus] = createSignal<string | undefined>(props.focusElements?.[0]);
-
+  // Focus.
   const focusElements = [...(props.focusElements ?? [])];
-  const hints = ['ctrl-c | esc'];
+  const [focus, setFocus] = createSignal<string | undefined>(props.focusElements?.[0]);
+  const [showConsole, setShowConsole] = createSignal<boolean>(props.showConsole ?? false);
+
+  // Hints.
+  const hints = ['[ctrl-c | esc]: Quit', '[tab]: Cycle focus', props.showConsole && '[f1]: Toggle console'].filter(
+    isTruthy,
+  );
+  const [hint, setHint] = createSignal<string | undefined>();
+  const randomHint = () => {
+    const idx = Math.floor(Math.random() * hints.length);
+    setHint(hints[idx]);
+  };
 
   const renderer = useRenderer();
   onMount(() => {
-    console.log('ready');
-    // renderer.setBackgroundColor(theme.bg);
+    console.log('OK');
+    renderer.setBackgroundColor(theme.bg);
+    randomHint();
   });
 
-  if (props.showConsole) {
-    // Use ctrl-p to cycle position, +/- to resize at runtime (when focused).
-    renderer.useConsole = true;
-    renderer.console.show();
-    renderer.console.focus();
-    focusElements.splice(0, 0, 'console');
-    hints.push('tab');
-    setFocus('console');
-  }
+  // Use ctrl-p to cycle position, +/- to resize at runtime (when focused).
+  renderer.useConsole = props.showConsole ?? false;
+  createEffect(() => {
+    if (!props.showConsole) {
+      return;
+    }
+
+    if (showConsole()) {
+      renderer.console.show();
+      renderer.console.focus();
+      if (!focusElements.includes('console')) {
+        focusElements.splice(0, 0, 'console');
+      }
+      setFocus('console');
+    } else {
+      renderer.console.hide();
+      const idx = focusElements.indexOf('console');
+      if (idx !== -1) {
+        focusElements.splice(idx, 1);
+      }
+      if (focus() === 'console') {
+        setFocus(focusElements[0]);
+      }
+    }
+    randomHint();
+  });
 
   // Toggle focus between console and app content with tab.
   useKeyboard((key) => {
+    // Quit.
     if (key.name === 'escape' || (key.ctrl && key.name === 'c')) {
       renderer.destroy();
       process.exit(0);
     }
 
-    if (key.name === 'tab' && props.showConsole) {
+    // Focus.
+    if (key.name === 'tab') {
       const idx = focusElements.findIndex((f) => f === focus());
       setFocus(idx === focusElements.length - 1 ? focusElements[0] : focusElements[(idx + 1) % focusElements.length]);
+      randomHint();
       if (focus() === 'console') {
-        // renderer.console.show();
         renderer.console.focus();
       } else {
-        // renderer.console.hide();
         renderer.console.blur();
       }
 
       return true;
     }
+
+    // Console.
+    if (key.name === 'f1' && props.showConsole) {
+      setShowConsole(!showConsole());
+      return true;
+    }
+
+    return false;
   });
 
-  return <AppContext.Provider value={{ focus, hints }}>{props.children}</AppContext.Provider>;
+  return <AppContext.Provider value={{ focus, hint }}>{props.children}</AppContext.Provider>;
 };
