@@ -54,6 +54,7 @@ NodeRuntime.runMain(program, {
           log.error('Re-run with DX_TRACK_LEAKS=1 to dump information about leaks.');
         }
       }, EXIT_GRACE_PERIOD);
+
       // Don't block process exit.
       unrefTimeout(timeout);
     }

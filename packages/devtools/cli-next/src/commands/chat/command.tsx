@@ -22,19 +22,19 @@ import { Chat } from './Chat';
 export const chat = Command.make(
   'chat',
   {
+    spaceId: Common.spaceId.pipe(Options.optional),
     provider: Options.choice('provider', Provider.literals).pipe(
       Options.withDescription('AI provider to use.'),
       Options.withAlias('p'),
     ),
     model: Options.text('model').pipe(
-      Options.withSchema(ModelName),
-      Options.optional,
       Options.withDescription('Model to use.'),
       Options.withAlias('m'),
+      Options.withSchema(ModelName),
+      Options.optional,
     ),
-    spaceId: Common.spaceId.pipe(Options.optional),
   },
-  ({ provider, model: model$ }) =>
+  ({ provider, model: modelParam }) =>
     Effect.gen(function* () {
       const runtime = yield* Effect.runtime<AiChatServices>();
       const client = yield* ClientService;
@@ -46,7 +46,7 @@ export const chat = Command.make(
         return new AiConversation(queue);
       });
 
-      const model = Option.getOrElse(model$, () =>
+      const model = Option.getOrElse(modelParam, () =>
         Match.value(provider).pipe(
           Match.when('lmstudio', () => DEFAULT_LMSTUDIO_MODEL),
           Match.when('ollama', () => DEFAULT_OLLAMA_MODEL),
@@ -55,27 +55,11 @@ export const chat = Command.make(
         ),
       );
 
-      // TODO(wittjosiah): Shouldn't opentui have a way to cleanup the renderer?
-      // This attempts to cleanup the terminal when exiting the process so that it doesn't lock up and output garbage.
-      yield* Effect.addFinalizer(() =>
-        Effect.sync(() => {
-          // Disable mouse tracking
-          process.stdout.write('\x1b[?1000l\x1b[?1002l\x1b[?1003l\x1b[?1006l');
-          // Exit alternate screen buffer
-          process.stdout.write('\x1b[?1049l');
-          // Show cursor
-          process.stdout.write('\x1b[?25h');
-          // Reset attributes
-          process.stdout.write('\x1b[0m');
-          // Restore cooked mode
-          if (process.stdin.isTTY) process.stdin.setRawMode(false);
-        }),
-      );
-
-      yield* Effect.promise(() => render(() => <Chat conversation={conversation} runtime={runtime} model={model} />));
-
-      // Hold process open and sleep to allow interactivity in ui.
-      return yield* Effect.never;
+      yield* Effect.async<void>(() => {
+        void render(() => <Chat conversation={conversation} runtime={runtime} model={model} />, {
+          exitOnCtrlC: false, // Handle Ctrl-C ourselves.
+        });
+      });
     }),
 ).pipe(
   Command.withDescription('Open chat interface.'),

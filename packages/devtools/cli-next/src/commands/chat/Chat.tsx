@@ -23,6 +23,7 @@ import { ChatStatusBar } from './ChatStatusBar';
 import { useChatKeyboard, useChatMessages, useSpinner } from './hooks';
 import { createAssistantMessage, createUserMessage } from './types';
 
+// TODO(burdon): CLI option.
 const DEBUG = false;
 
 type ChatProps = {
@@ -37,11 +38,11 @@ export const Chat = ({ conversation, runtime, model }: ChatProps) => {
   const [inputValue, setInputValue] = createSignal('');
   const [showBanner, setShowBanner] = createSignal(true);
   const [focusedElement, setFocusedElement] = createSignal<'input' | 'messages'>('input');
-
-  const spinner = useSpinner();
   useChatKeyboard(setFocusedElement);
 
+  const spinner = useSpinner();
   const renderer = useRenderer();
+
   if (DEBUG) {
     renderer.useConsole = true;
     renderer.console.show();

@@ -4,19 +4,12 @@
 
 import { type Accessor, Show } from 'solid-js';
 
+import { theme } from './theme';
+
 type ChatBannerProps = {
   visible: Accessor<boolean>;
   version?: string;
 };
-
-const BANNER = `
-┏━━━┓━┓┏━┓━━━┓━━━┓
-┗┓┏┓┃┓┗┛┏┛┏━┓┃┏━┓┃
-╋┃┃┃┃┗┓┏┛╋┃╋┃┃┗━━┓
-╋┃┃┃┃┏┛┗┓╋┃╋┃┃━━┓┃
-┏┛┗┛┃┛┏┓┗┓┗━┛┃┗━┛┃
-┗━━━┛━┛┗━┛━━━┛━━━┛
-`;
 
 export const ChatBanner = (props: ChatBannerProps) => {
   const bannerLines = BANNER.split('\n').filter((line) => line.trim().length > 0);
@@ -34,10 +27,19 @@ export const ChatBanner = (props: ChatBannerProps) => {
         justifyContent='center'
       >
         <box flexDirection='column' alignItems='center'>
-          <text style={{ fg: '#00ff00' }}>{bannerLines.join('\n')}</text>
-          <text style={{ fg: '#ffffff' }}>{props.version ?? 'v0.8.3'}</text>
+          <text style={{ fg: theme.border }}>{bannerLines.join('\n')}</text>
+          <text style={{ fg: theme.text.subdued }}>{props.version ?? 'v0.8.3'}</text>
         </box>
       </box>
     </Show>
   );
 };
+
+const BANNER = `
+┏━━━┓━┓┏━┓━━━┓━━━┓
+┗┓┏┓┃┓┗┛┏┛┏━┓┃┏━┓┃
+╋┃┃┃┃┗┓┏┛╋┃╋┃┃┗━━┓
+╋┃┃┃┃┏┛┗┓╋┃╋┃┃━━┓┃
+┏┛┗┛┃┛┏┓┗┓┗━┛┃┗━┛┃
+┗━━━┛━┛┗━┛━━━┛━━━┛
+`;
