@@ -241,9 +241,6 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
   }
 
   private _query(query: Query.Any | Filter.Any, options?: Database.QueryOptions & QueryAST.QueryOptions) {
-    if (this._lifecycleState !== LifecycleState.OPEN) {
-      throw new Error('Database is not open');
-    }
     query = Filter.is(query) ? Query.select(query) : query;
     return this._coreDatabase.graph.query(query, {
       ...options,
