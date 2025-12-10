@@ -17,11 +17,6 @@ const TEMPLATES = {
     version: 1
     runtime:
       client:
-        edgeFeatures:
-          echoReplicator: true
-          feedReplicator: true
-          signaling: true
-          agents: true
         storage:
           persistent: true
       services:
@@ -32,11 +27,6 @@ const TEMPLATES = {
     version: 1
     runtime:
       client:
-        edgeFeatures:
-          echoReplicator: true
-          feedReplicator: true
-          signaling: true
-          agents: true
         storage:
           persistent: true
       services:
@@ -47,11 +37,6 @@ const TEMPLATES = {
     version: 1
     runtime:
       client:
-        edgeFeatures:
-          echoReplicator: true
-          feedReplicator: true
-          signaling: true
-          agents: true
         storage:
           persistent: true
       services:
@@ -62,11 +47,6 @@ const TEMPLATES = {
     version: 1
     runtime:
       client:
-        edgeFeatures:
-          echoReplicator: true
-          feedReplicator: true
-          signaling: true
-          agents: true
         storage:
           persistent: true
       services:
