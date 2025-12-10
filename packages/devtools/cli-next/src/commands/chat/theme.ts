@@ -12,7 +12,8 @@ export const theme = {
   },
   text: {
     subdued: '#cdcdcd',
-    primary: '#00ffff',
+    primary: '#00ffaa',
+    secondary: '#00aaff',
   },
   role: (role: string) => {
     switch (role) {

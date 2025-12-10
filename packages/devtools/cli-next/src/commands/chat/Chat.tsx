@@ -32,16 +32,17 @@ type ChatProps = {
   conversation: AiConversation;
   runtime: Runtime.Runtime<AiChatServices>;
   model: ModelName;
+  metadata: AiService.Metadata;
 };
 
-export const Chat = ({ conversation, runtime, model }: ChatProps) => {
+export const Chat = ({ conversation, runtime, model, metadata }: ChatProps) => {
   const chatMessages = useChatMessages();
   const [isStreaming, setIsStreaming] = createSignal(false);
   const [inputValue, setInputValue] = createSignal('');
   const [showBanner, setShowBanner] = createSignal(true);
   const [focusedElement, setFocusedElement] = createSignal<'input' | 'messages'>('input');
-  useChatKeyboard(setFocusedElement);
 
+  useChatKeyboard(setFocusedElement);
   const renderer = useRenderer();
 
   if (DEBUG) {
@@ -109,7 +110,7 @@ export const Chat = ({ conversation, runtime, model }: ChatProps) => {
         focused={focusedElement() === 'input'}
       />
 
-      <ChatStatusBar isStreaming={isStreaming} model={model} />
+      <ChatStatusBar isStreaming={isStreaming} model={model} metadata={metadata} />
     </box>
   );
 };

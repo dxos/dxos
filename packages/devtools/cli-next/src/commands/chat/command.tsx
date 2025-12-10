@@ -9,7 +9,7 @@ import * as Effect from 'effect/Effect';
 import * as Match from 'effect/Match';
 import * as Option from 'effect/Option';
 
-import { DEFAULT_EDGE_MODEL, DEFAULT_LMSTUDIO_MODEL, DEFAULT_OLLAMA_MODEL, ModelName } from '@dxos/ai';
+import { AiService, DEFAULT_EDGE_MODEL, DEFAULT_LMSTUDIO_MODEL, DEFAULT_OLLAMA_MODEL, ModelName } from '@dxos/ai';
 import { AiConversation } from '@dxos/assistant';
 import { ClientService } from '@dxos/client';
 import { type Message } from '@dxos/types';
@@ -66,10 +66,14 @@ export const chat = Command.make(
       process.on('SIGINT', cleanup);
       process.on('SIGTERM', cleanup);
 
+      const service = yield* AiService.AiService;
       yield* Effect.async<void>(() => {
-        void render(() => <Chat conversation={conversation} runtime={runtime} model={model} />, {
-          exitOnCtrlC: false, // Handle Ctrl-C ourselves.
-        });
+        void render(
+          () => <Chat conversation={conversation} runtime={runtime} model={model} metadata={service.metadata} />,
+          {
+            exitOnCtrlC: false, // Handle Ctrl-C ourselves.
+          },
+        );
       });
     }),
 ).pipe(
