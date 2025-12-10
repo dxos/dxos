@@ -75,8 +75,8 @@ export const chat = Command.make(
         return processor.createConversation(space, blueprintKeys);
       });
 
-      yield* Effect.async<void>(() => {
-        void render(
+      yield* Effect.promise(() =>
+        render(
           () => (
             <App showConsole={showConsole} focusElements={['input', 'messages']}>
               <Chat processor={processor} conversation={conversation} model={model} verbose={verbose} />
@@ -89,8 +89,11 @@ export const chat = Command.make(
               position: ConsolePosition.TOP,
             },
           },
-        );
-      });
+        ),
+      );
+
+      // Wait for user to exit.
+      return yield* Effect.never;
     }),
 ).pipe(
   Command.withDescription('Open chat interface.'),
