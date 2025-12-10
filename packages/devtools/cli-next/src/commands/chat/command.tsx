@@ -14,6 +14,7 @@ import { GenericToolkit } from '@dxos/assistant';
 import { ClientService } from '@dxos/client';
 import { invariant } from '@dxos/invariant';
 
+import { CommandConfig } from '../../services';
 import { type AiChatServices, Provider, TestToolkit, chatLayer } from '../../util';
 import { Common } from '../options';
 
@@ -39,6 +40,7 @@ export const chat = Command.make(
   },
   ({ provider, model: modelParam }) =>
     Effect.gen(function* () {
+      const { verbose } = yield* CommandConfig;
       const client = yield* ClientService;
       const runtime = yield* Effect.runtime<AiChatServices>();
       const service = yield* AiService.AiService;
@@ -76,7 +78,7 @@ export const chat = Command.make(
       }
 
       yield* Effect.async<void>(() => {
-        void render(() => <Chat processor={processor} conversation={conversation} model={model} />, {
+        void render(() => <Chat processor={processor} conversation={conversation} model={model} verbose={verbose} />, {
           exitOnCtrlC: false, // Handle Ctrl-C ourselves.
         });
       });

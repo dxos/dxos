@@ -20,17 +20,17 @@ import { ChatInput } from './ChatInput';
 import { ChatMessages } from './ChatMessages';
 import { ChatStatusBar } from './ChatStatusBar';
 
-// TODO(burdon): CLI options.
-const verbose = true;
+// TODO(wittjosiah): Factor out to CommandConfig.
 const DEBUG = false;
 
 export type ChatProps = {
   processor: ChatProcessor;
   conversation: AiConversation;
   model: ModelName;
+  verbose?: boolean;
 };
 
-export const Chat = ({ processor, conversation, model }: ChatProps) => {
+export const Chat = ({ processor, conversation, model, verbose }: ChatProps) => {
   const chatMessages = useChatMessages();
   const [showBanner, setShowBanner] = createSignal(true);
   const [inputValue, setInputValue] = createSignal('');
