@@ -9,7 +9,7 @@ import { type ModelName } from '@dxos/ai';
 import { type AiConversation, GenerationObserver } from '@dxos/assistant';
 
 import { DXOS_VERSION } from '../../../version';
-import { useChatKeyboard, useChatMessages } from '../hooks';
+import { useChatMessages } from '../hooks';
 import { type ChatProcessor } from '../processor';
 import { createAssistantMessage, createUserMessage } from '../types';
 
@@ -25,13 +25,11 @@ export type ChatProps = {
   verbose?: boolean;
 };
 
-export const Chat = ({ processor, conversation, model, verbose, showConsole }: ChatProps) => {
+export const Chat = (props: ChatProps) => {
   const chatMessages = useChatMessages();
   const [showBanner, setShowBanner] = createSignal(true);
   const [inputValue, setInputValue] = createSignal('');
   const [streaming, setStreaming] = createSignal(false);
-  const [focusedElement, setFocusedElement] = createSignal<'input' | 'messages'>('input');
-  useChatKeyboard(setFocusedElement);
 
   const handleSubmit = async (value: string) => {
     const prompt = value.trim();
@@ -63,7 +61,7 @@ export const Chat = ({ processor, conversation, model, verbose, showConsole }: C
           Effect.sync(() => {
             switch (message.sender.role) {
               case 'tool': {
-                if (verbose) {
+                if (props.verbose) {
                   // for (const part of message.blocks) {
                   // TODO(burdon): Add tool call.
                   // }
@@ -75,8 +73,8 @@ export const Chat = ({ processor, conversation, model, verbose, showConsole }: C
       });
 
       // Create and execute request.
-      const request = conversation.createRequest({ prompt, observer });
-      await processor.execute(request, model);
+      const request = props.conversation.createRequest({ prompt, observer });
+      await props.processor.execute(request, props.model);
     } catch (err) {
       chatMessages.updateMessage(assistantIndex, (message) => {
         message.role = 'error';
@@ -88,20 +86,15 @@ export const Chat = ({ processor, conversation, model, verbose, showConsole }: C
   };
 
   return (
-    <box flexDirection='column' height='100%' width='100%'>
+    <box flexDirection='column'>
       <box flexGrow={1} position='relative'>
         {showBanner() && <Banner version={DXOS_VERSION} />}
         <ChatMessages messages={chatMessages.messages.data} />
       </box>
 
-      <ChatInput
-        value={inputValue}
-        onInput={setInputValue}
-        onSubmit={() => handleSubmit(inputValue())}
-        focused={focusedElement() === 'input'}
-      />
+      <ChatInput value={inputValue} onInput={setInputValue} onSubmit={() => handleSubmit(inputValue())} />
 
-      <StatusBar model={model} metadata={processor.metadata} processing={streaming} />
+      <StatusBar model={props.model} metadata={props.processor.metadata} processing={streaming} />
     </box>
   );
 };

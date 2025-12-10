@@ -4,6 +4,7 @@
 
 import * as Command from '@effect/cli/Command';
 import * as Options from '@effect/cli/Options';
+import { ConsolePosition } from '@opentui/core';
 import { render } from '@opentui/solid';
 import * as Effect from 'effect/Effect';
 import * as Match from 'effect/Match';
@@ -36,6 +37,7 @@ export const chat = Command.make(
       Options.withSchema(ModelName),
       Options.optional,
     ),
+    // TODO(burdon): --debug?
     showConsole: Options.boolean('console', { ifPresent: true }).pipe(
       Options.withDescription('Show console to see logs.'),
     ),
@@ -70,14 +72,15 @@ export const chat = Command.make(
       yield* Effect.async<void>(() => {
         void render(
           () => (
-            <App showConsole={showConsole}>
+            <App showConsole={showConsole} focusElements={['input', 'messages']}>
               <Chat processor={processor} conversation={conversation} model={model} verbose={verbose} />
             </App>
           ),
           {
-            exitOnCtrlC: false, // Handle Ctrl-C ourselves.
+            exitSignals: ['SIGINT', 'SIGTERM'],
+            backgroundColor: 'red',
             consoleOptions: {
-              position: 'top',
+              position: ConsolePosition.TOP,
             },
           },
         );

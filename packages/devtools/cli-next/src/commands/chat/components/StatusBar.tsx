@@ -2,12 +2,14 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Accessor, createEffect } from 'solid-js';
+import { type Accessor, createEffect, useContext } from 'solid-js';
 
 import { type AiService, type ModelName } from '@dxos/ai';
 
 import { useSpinner } from '../hooks';
 import { theme } from '../theme';
+
+import { AppContext } from './App';
 
 export type StatusBarProps = {
   model: ModelName;
@@ -15,10 +17,12 @@ export type StatusBarProps = {
   processing: Accessor<boolean>;
 };
 
-export const StatusBar = ({ model, metadata, processing }: StatusBarProps) => {
+export const StatusBar = (props: StatusBarProps) => {
+  const context = useContext(AppContext);
+
   const spinner = useSpinner();
   createEffect(() => {
-    if (processing()) {
+    if (props.processing()) {
       spinner.start();
     } else {
       spinner.stop();
@@ -26,13 +30,15 @@ export const StatusBar = ({ model, metadata, processing }: StatusBarProps) => {
   });
 
   return (
-    <box height={1} flexDirection='row' paddingLeft={2} paddingRight={2}>
-      <text style={{ fg: processing() ? theme.text.secondary : theme.text.subdued }}>
-        {processing() ? `${spinner.frame()} Processing` : 'esc | ctrl-c'}
+    <box flexDirection='row' height={1} paddingLeft={2} paddingRight={2}>
+      <text style={{ fg: props.processing() ? theme.text.secondary : theme.text.subdued }}>
+        {props.processing() ? `${spinner.frame()} Processing` : context.hints?.join(' | ')}
       </text>
       <box flexGrow={1} />
-      {metadata?.name && <text style={{ fg: theme.text.secondary, marginRight: 1 }}>({metadata.name})</text>}
-      <text style={{ fg: theme.text.subdued, marginRight: 1 }}>{model}</text>
+      {props.metadata?.name && (
+        <text style={{ fg: theme.text.secondary, marginRight: 1 }}>({props.metadata.name})</text>
+      )}
+      <text style={{ fg: theme.text.subdued, marginRight: 1 }}>{props.model}</text>
       <text style={{ fg: theme.accent }}>Ⓓ Ⓧ Ⓞ Ⓢ</text>
     </box>
   );
