@@ -54,7 +54,7 @@ export const chat = Command.make(
 
       // TODO(burdon): From blueprints.
       const toolkit = GenericToolkit.make(TestToolkit.toolkit, TestToolkit.layer);
-      const processor = new ChatProcessor(runtime, service.metadata, toolkit);
+      const processor = new ChatProcessor(runtime, toolkit, service.metadata);
       const conversation = yield* Effect.promise(async () => {
         invariant(client.halo.identity);
         // TODO(burdon): Hangs if identity is not ready.

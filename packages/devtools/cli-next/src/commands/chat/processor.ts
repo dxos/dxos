@@ -15,19 +15,21 @@ import {
   type AiSessionRunError,
   type AiSessionRunRequirements,
   type GenericToolkit,
+  makeToolExecutionServiceFromFunctions,
+  makeToolResolverFromFunctions,
 } from '@dxos/assistant';
 import { type Space } from '@dxos/client/echo';
 import { throwCause } from '@dxos/effect';
 import { type Message } from '@dxos/types';
 
-import { type AiChatServices } from '../../util';
+import { type AiChatServices, TestToolkit } from '../../util';
 
 // TODO(burdon): Factor out common guts from assistant plugin and from Chat component.
 export class ChatProcessor {
   constructor(
     private readonly _runtime: Runtime.Runtime<AiChatServices>,
+    private readonly _toolkit: GenericToolkit.GenericToolkit,
     private readonly _metadata?: AiService.ServiceMetadata,
-    private readonly _toolkit?: GenericToolkit.GenericToolkit,
   ) {}
 
   get runtime() {
@@ -47,7 +49,13 @@ export class ChatProcessor {
     model: ModelName,
   ) {
     const fiber = request.pipe(
-      Effect.provide(Layer.merge(AiService.model(model), this.toolkit?.layer ?? Layer.empty)),
+      Effect.provide(
+        Layer.mergeAll(
+          AiService.model(model),
+          makeToolResolverFromFunctions(TestToolkit.functions, this._toolkit.toolkit),
+          makeToolExecutionServiceFromFunctions(this._toolkit.toolkit, this._toolkit.layer),
+        ),
+      ),
       Effect.asVoid,
       Runtime.runFork(this.runtime),
     );
@@ -60,6 +68,8 @@ export class ChatProcessor {
 
   async createConversation(space: Space) {
     const queue = space.queues.create<Message.Message>();
+    // TODO(wittjosiah): This is currently the only way the conversation gets access to tools.
+    //   The toolkit layers above are required but the conversation doesn't use them.
     return new AiConversation(queue, this._toolkit?.toolkit);
   }
 }
