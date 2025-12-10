@@ -9,18 +9,7 @@
   "sideEffects": false,
   "type": "module",
   "imports": {
-    "#parjs": {
-      "browser": "./vendor/parjs-browser.mjs",
-      "default": "./vendor/parjs-default.mjs"
-    },
-    "#parjs/combinators": {
-      "browser": "./vendor/parjs-combinators-browser.mjs",
-      "default": "./vendor/parjs-combinators-default.mjs"
-    },
-    "#parsimmon": {
-      "browser": "./vendor/parsimmon-browser.mjs",
-      "default": "./vendor/parsimmon-default.mjs"
-    }
+    "#parsimmon": "./vendor/parsimmon.mjs"
   },
   "exports": {
     ".": {

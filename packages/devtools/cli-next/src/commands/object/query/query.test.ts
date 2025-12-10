@@ -4,6 +4,7 @@
 
 import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
+import * as Option from 'effect/Option';
 
 import { ClientService } from '@dxos/client';
 import { Obj } from '@dxos/echo';
@@ -11,6 +12,7 @@ import { runAndForwardErrors } from '@dxos/effect';
 import { Task } from '@dxos/types';
 
 import { TestConsole, TestLayer } from '../../../testing';
+import { spaceLayer } from '../../../util';
 
 import { handler } from './query';
 
@@ -22,7 +24,8 @@ describe('spaces query', () => {
       yield* Effect.tryPromise(() => client.halo.createIdentity());
       yield* Effect.tryPromise(() => client.spaces.waitUntilReady());
       yield* Effect.tryPromise(() => client.spaces.default.waitUntilReady());
-      yield* handler({ spaceId: client.spaces.default.id, typename: Task.Task.typename });
+      const space = client.spaces.default;
+      yield* handler({ typename: Task.Task.typename }).pipe(Effect.provide(spaceLayer(Option.some(space.id))));
       const logger = yield* TestConsole.TestConsole;
       const logs = logger.logs;
       expect(logs).toHaveLength(1);
@@ -39,7 +42,7 @@ describe('spaces query', () => {
       yield* Effect.tryPromise(() => space.waitUntilReady());
       space.db.add(Obj.make(Task.Task, { title: 'Task 1' }));
       space.db.add(Obj.make(Task.Task, { title: 'Task 2' }));
-      yield* handler({ spaceId: space.id, typename: Task.Task.typename });
+      yield* handler({ typename: Task.Task.typename }).pipe(Effect.provide(spaceLayer(Option.some(space.id))));
       const logger = yield* TestConsole.TestConsole;
       const logs = logger.logs;
       expect(logs).toHaveLength(1);

@@ -1,7 +1,7 @@
 $schema: https://moonrepo.dev/schemas/tasks.json
 tasks:
   bundle:
-    command: vite build
+    command: pnpm exec vite build
     deps:
       - ^:build
       - ^:compile
@@ -27,12 +27,12 @@ tasks:
     outputs:
       - out
   serve:
-    command: vite dev
+    command: pnpm exec vite dev
     deps:
       - ^:compile
     preset: server
   preview:
-    command: vite preview
+    command: pnpm exec vite preview
     deps:
       - bundle
     preset: server
