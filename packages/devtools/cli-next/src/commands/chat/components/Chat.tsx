@@ -2,9 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import { useRenderer } from '@opentui/solid';
 import * as Effect from 'effect/Effect';
-import { createSignal, onMount } from 'solid-js';
+import { createSignal } from 'solid-js';
 
 import { type ModelName } from '@dxos/ai';
 import { type AiConversation, GenerationObserver } from '@dxos/assistant';
@@ -12,7 +11,6 @@ import { type AiConversation, GenerationObserver } from '@dxos/assistant';
 import { DXOS_VERSION } from '../../../version';
 import { useChatKeyboard, useChatMessages } from '../hooks';
 import { type ChatProcessor } from '../processor';
-import { theme } from '../theme';
 import { createAssistantMessage, createUserMessage } from '../types';
 
 import { Banner } from './Banner';
@@ -25,7 +23,6 @@ export type ChatProps = {
   conversation: AiConversation;
   model: ModelName;
   verbose?: boolean;
-  showConsole?: boolean;
 };
 
 export const Chat = ({ processor, conversation, model, verbose, showConsole }: ChatProps) => {
@@ -35,16 +32,6 @@ export const Chat = ({ processor, conversation, model, verbose, showConsole }: C
   const [streaming, setStreaming] = createSignal(false);
   const [focusedElement, setFocusedElement] = createSignal<'input' | 'messages'>('input');
   useChatKeyboard(setFocusedElement);
-
-  const renderer = useRenderer();
-  if (showConsole) {
-    renderer.useConsole = true;
-    renderer.console.show();
-  }
-
-  onMount(() => {
-    renderer.setBackgroundColor(theme.bg);
-  });
 
   const handleSubmit = async (value: string) => {
     const prompt = value.trim();

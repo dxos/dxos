@@ -18,8 +18,7 @@ import { CommandConfig } from '../../services';
 import { type AiChatServices, Provider, TestToolkit, chatLayer } from '../../util';
 import { Common } from '../options';
 
-import { Chat } from './components';
-import { restoreTerminal } from './hooks';
+import { App, Chat } from './components';
 import { ChatProcessor } from './processor';
 
 export const chat = Command.make(
@@ -68,31 +67,18 @@ export const chat = Command.make(
         return processor.createConversation(space);
       });
 
-      // Ensure clean exit on errors or signals.
-      {
-        const cleanup = () => {
-          restoreTerminal();
-          process.exit(1);
-        };
-        process.on('uncaughtException', cleanup);
-        process.on('unhandledRejection', cleanup);
-        process.on('SIGINT', cleanup);
-        process.on('SIGTERM', cleanup);
-      }
-
       yield* Effect.async<void>(() => {
         void render(
           () => (
-            <Chat
-              processor={processor}
-              conversation={conversation}
-              model={model}
-              verbose={verbose}
-              showConsole={showConsole}
-            />
+            <App showConsole={showConsole}>
+              <Chat processor={processor} conversation={conversation} model={model} verbose={verbose} />
+            </App>
           ),
           {
             exitOnCtrlC: false, // Handle Ctrl-C ourselves.
+            consoleOptions: {
+              position: 'top',
+            },
           },
         );
       });
