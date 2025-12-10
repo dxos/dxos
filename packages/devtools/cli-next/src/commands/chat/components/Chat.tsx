@@ -18,7 +18,7 @@ import { createAssistantMessage, createUserMessage } from '../types';
 import { Banner } from './Banner';
 import { ChatInput } from './ChatInput';
 import { ChatMessages } from './ChatMessages';
-import { ChatStatusBar } from './ChatStatusBar';
+import { StatusBar } from './StatusBar';
 
 export type ChatProps = {
   processor: ChatProcessor;
@@ -114,7 +114,7 @@ export const Chat = ({ processor, conversation, model, verbose, showConsole }: C
         focused={focusedElement() === 'input'}
       />
 
-      <ChatStatusBar processing={streaming} model={model} metadata={processor.metadata} />
+      <StatusBar model={model} metadata={processor.metadata} processing={streaming} />
     </box>
   );
 };

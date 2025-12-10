@@ -6,4 +6,4 @@ export * from './Banner';
 export * from './Chat';
 export * from './ChatInput';
 export * from './ChatMessages';
-export * from './ChatStatusBar';
+export * from './StatusBar';

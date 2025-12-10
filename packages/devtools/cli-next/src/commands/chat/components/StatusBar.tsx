@@ -9,13 +9,13 @@ import { type AiService, type ModelName } from '@dxos/ai';
 import { useSpinner } from '../hooks';
 import { theme } from '../theme';
 
-export type ChatStatusBarProps = {
+export type StatusBarProps = {
   model: ModelName;
   metadata?: AiService.ServiceMetadata;
   processing: Accessor<boolean>;
 };
 
-export const ChatStatusBar = ({ model, metadata, processing }: ChatStatusBarProps) => {
+export const StatusBar = ({ model, metadata, processing }: StatusBarProps) => {
   const spinner = useSpinner();
   createEffect(() => {
     if (processing()) {
