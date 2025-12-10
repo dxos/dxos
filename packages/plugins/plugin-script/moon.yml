@@ -16,7 +16,7 @@ tasks:
     inputs:
       - .storybook/*
 
-  e2e-node:
+  e2e:
     env:
       DX_TEST_TAGS: functions-e2e
     command: vitest run -c vitest.config.ts --reporter=verbose src/e2e/*.test.ts
