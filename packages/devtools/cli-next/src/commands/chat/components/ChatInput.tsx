@@ -5,7 +5,7 @@
 import { type KeyEvent } from '@opentui/core';
 import { type Accessor, createEffect } from 'solid-js';
 
-import { theme } from './theme';
+import { theme } from '../theme';
 
 type ChatInputProps = {
   focused: boolean;

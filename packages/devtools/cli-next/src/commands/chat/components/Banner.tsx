@@ -2,13 +2,13 @@
 // Copyright 2025 DXOS.org
 //
 
-import { theme } from './theme';
+import { theme } from '../theme';
 
-export type ChatBannerProps = {
+export type BannerProps = {
   version?: string;
 };
 
-export const ChatBanner = ({ version }: ChatBannerProps) => {
+export const Banner = ({ version }: BannerProps) => {
   const bannerLines = BANNER.split('\n').filter((line) => line.trim().length > 0);
 
   return (
@@ -22,7 +22,7 @@ export const ChatBanner = ({ version }: ChatBannerProps) => {
       alignItems='center'
       justifyContent='center'
     >
-      <box flexDirection='column' alignItems='right'>
+      <box flexDirection='column' alignItems='flex-end'>
         <text style={{ fg: theme.accent }}>{bannerLines.join('\n')}</text>
         <text style={{ fg: theme.text.subdued }}>v{version}</text>
       </box>

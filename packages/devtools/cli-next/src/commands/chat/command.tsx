@@ -17,7 +17,7 @@ import { type Message } from '@dxos/types';
 import { type AiChatServices, Provider, chatLayer } from '../../util';
 import { Common } from '../options';
 
-import { Chat } from './Chat';
+import { Chat } from './components';
 import { restoreTerminal } from './hooks';
 
 export const chat = Command.make(

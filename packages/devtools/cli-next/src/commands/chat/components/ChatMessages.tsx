@@ -4,8 +4,8 @@
 
 import { For } from 'solid-js';
 
-import { theme } from './theme';
-import { type Message } from './types';
+import { theme } from '../theme';
+import { type Message } from '../types';
 
 export type ChatMessagesProps = {
   messages: Message[];

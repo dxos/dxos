@@ -6,8 +6,8 @@ import { type Accessor, createEffect } from 'solid-js';
 
 import { type AiService, type ModelName } from '@dxos/ai';
 
-import { useSpinner } from './hooks';
-import { theme } from './theme';
+import { useSpinner } from '../hooks';
+import { theme } from '../theme';
 
 export type ChatStatusBarProps = {
   isStreaming: Accessor<boolean>;

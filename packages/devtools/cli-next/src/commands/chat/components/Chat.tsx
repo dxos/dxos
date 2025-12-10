@@ -14,16 +14,16 @@ import { AiService, type ModelName } from '@dxos/ai';
 import { type AiConversation, type AiConversationRunParams, GenerationObserver } from '@dxos/assistant';
 import { throwCause } from '@dxos/effect';
 
-import { type AiChatServices } from '../../util';
-import { DXOS_VERSION } from '../../version';
+import { type AiChatServices } from '../../../util';
+import { DXOS_VERSION } from '../../../version';
+import { useChatKeyboard, useChatMessages } from '../hooks';
+import { theme } from '../theme';
+import { createAssistantMessage, createUserMessage } from '../types';
 
-import { ChatBanner } from './ChatBanner';
+import { Banner } from './Banner';
 import { ChatInput } from './ChatInput';
 import { ChatMessages } from './ChatMessages';
 import { ChatStatusBar } from './ChatStatusBar';
-import { useChatKeyboard, useChatMessages } from './hooks';
-import { theme } from './theme';
-import { createAssistantMessage, createUserMessage } from './types';
 
 // TODO(burdon): CLI option.
 const DEBUG = false;
@@ -99,7 +99,7 @@ export const Chat = ({ conversation, runtime, model, metadata }: ChatProps) => {
   return (
     <box flexDirection='column' height='100%' width='100%'>
       <box flexGrow={1} position='relative'>
-        {showBanner() && <ChatBanner version={DXOS_VERSION} />}
+        {showBanner() && <Banner version={DXOS_VERSION} />}
         <ChatMessages messages={chatMessages.messages.data} />
       </box>
 
