@@ -1,8 +1,9 @@
 // TODO(wittjosiah): Get the linter to stop ignoring this file.
 
-import { FileSystem, Path } from '@effect/platform';
-import { NodeContext } from '@effect/platform-node';
-import { Effect } from 'effect';
+import * as FileSystem from '@effect/platform/FileSystem';
+import * as Path from '@effect/platform/Path';
+import * as BunContext from '@effect/platform-bun/BunContext';
+import * as Effect from 'effect/Effect';
 
 import { runAndForwardErrors } from '@dxos/effect';
 
@@ -33,6 +34,6 @@ const program = Effect.gen(function* () {
   };
   yield* fs.writeFileString(path.join('dist', 'package.json'), JSON.stringify(pkg, null, 2));
   yield* Effect.log('[Build] Build completed.');
-}).pipe(Effect.provide(NodeContext.layer));
+}).pipe(Effect.provide(BunContext.layer));
 
 runAndForwardErrors(program).catch(console.error);
