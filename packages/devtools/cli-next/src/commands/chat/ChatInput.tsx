@@ -37,7 +37,7 @@ export const ChatInput = ({ focused, value, onInput, onSubmit }: ChatInputProps)
   return (
     <box width='100%' height={4} flexDirection='row'>
       <box width={1} height='100%' border={['right']} borderColor={theme.border} />
-      <box width='100%' height='100%' paddingLeft={1} marginRight={1} backgroundColor={theme.input.bg}>
+      <box width='100%' height='100%' paddingLeft={1} paddingRight={1} marginRight={1} backgroundColor={theme.input.bg}>
         <textarea
           ref={textareaRef}
           width='100%'
