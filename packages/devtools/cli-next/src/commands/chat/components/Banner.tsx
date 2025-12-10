@@ -8,7 +8,7 @@ export type BannerProps = {
   version?: string;
 };
 
-export const Banner = ({ version }: BannerProps) => {
+export const Banner = (props: BannerProps) => {
   const bannerLines = BANNER.split('\n').filter((line) => line.trim().length > 0);
 
   return (
@@ -24,7 +24,7 @@ export const Banner = ({ version }: BannerProps) => {
     >
       <box flexDirection='column' alignItems='flex-end'>
         <text style={{ fg: theme.accent }}>{bannerLines.join('\n')}</text>
-        <text style={{ fg: theme.text.subdued }}>v{version}</text>
+        <text style={{ fg: theme.text.subdued }}>v{props.version}</text>
       </box>
     </box>
   );
