@@ -2,6 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
+import type * as ConfigError from 'effect/ConfigError';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Match from 'effect/Match';
@@ -10,6 +11,7 @@ import * as Schema from 'effect/Schema';
 
 import { AiModelResolver, type AiService, type ToolExecutionService, type ToolResolverService } from '@dxos/ai';
 import { LMStudioResolver, OllamaResolver } from '@dxos/ai/resolvers';
+import { AiServiceTestingPreset } from '@dxos/ai/testing';
 import { GenericToolkit, makeToolExecutionServiceFromFunctions, makeToolResolverFromFunctions } from '@dxos/assistant';
 import { ClientService } from '@dxos/client';
 import { type Database, type Key } from '@dxos/echo';
@@ -25,7 +27,6 @@ import * as TestToolkit from './test-toolkit';
 
 // TODO(burdon): Factor out (see plugin-assistant/processor.ts)
 export type AiChatServices =
-  | AiModelResolver.AiModelResolver
   | AiService.AiService
   | CredentialsService
   | Database.Service
@@ -46,7 +47,7 @@ export const chatLayer = ({
 }: {
   provider: Provider;
   spaceId: Option.Option<Key.SpaceId>;
-}): Layer.Layer<AiChatServices, never, ClientService> => {
+}): Layer.Layer<AiChatServices, ConfigError.ConfigError, ClientService> => {
   const testToolkit = GenericToolkit.make(TestToolkit.toolkit, TestToolkit.layer);
   const mergedToolkit = GenericToolkit.merge(
     ...[
@@ -57,10 +58,15 @@ export const chatLayer = ({
   const toolkit = mergedToolkit.toolkit;
   const toolkitLayer = mergedToolkit.layer;
 
-  const resolver = Match.value(provider).pipe(
-    Match.when('lmstudio', () => LMStudioResolver.make()),
-    Match.when('ollama', () => OllamaResolver.make()),
-    Match.orElseAbsurd,
+  const aiServiceLayer = Match.value(provider).pipe(
+    Match.when('lmstudio', () =>
+      AiModelResolver.AiModelResolver.buildAiService.pipe(Layer.provideMerge(LMStudioResolver.make())),
+    ),
+    Match.when('ollama', () =>
+      AiModelResolver.AiModelResolver.buildAiService.pipe(Layer.provideMerge(OllamaResolver.make())),
+    ),
+    Match.when('edge', () => AiServiceTestingPreset('direct')),
+    Match.exhaustive,
   );
 
   return Layer.mergeAll(
@@ -72,7 +78,7 @@ export const chatLayer = ({
       FunctionInvocationServiceLayerWithLocalLoopbackExecutor.pipe(
         Layer.provideMerge(FunctionImplementationResolver.layerTest({ functions: TestToolkit.functions })),
         Layer.provideMerge(RemoteFunctionExecutionService.withClient(spaceId, true)),
-        Layer.provideMerge(AiModelResolver.AiModelResolver.buildAiService.pipe(Layer.provideMerge(resolver))),
+        Layer.provideMerge(aiServiceLayer),
         Layer.provideMerge(CredentialsService.layerFromDatabase()),
         Layer.provideMerge(spaceLayer(spaceId, true)),
       ),
