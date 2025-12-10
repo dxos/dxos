@@ -18,6 +18,7 @@ runs:
       run: |
         node --version
         pnpm --version
+        bun --version
       shell: bash
 
     - name: PNPM Store Path
