@@ -68,11 +68,10 @@ export const chatLayer = ({
   );
 };
 
-export const withTypes: (
-  types: Schema.Schema.AnyNoContext[],
-) => <A, E, R>(effect: Effect.Effect<A, E, R>) => Effect.Effect<A, E, ClientService | R> = (types) =>
-  Effect.fnUntraced(function* (effect) {
+export const withTypes: (...types: Schema.Schema.AnyNoContext[]) => Effect.Effect<void, never, ClientService> = (
+  ...types
+) =>
+  Effect.gen(function* () {
     const client = yield* ClientService;
     yield* Effect.promise(() => client.addTypes(types));
-    return yield* effect;
   });

@@ -18,11 +18,15 @@ import {
   makeToolExecutionServiceFromFunctions,
   makeToolResolverFromFunctions,
 } from '@dxos/assistant';
+import { Blueprint } from '@dxos/blueprints';
 import { type Space } from '@dxos/client/echo';
+import { Filter, Obj, Ref } from '@dxos/echo';
 import { throwCause } from '@dxos/effect';
 import { type Message } from '@dxos/types';
 
 import { type AiChatServices, TestToolkit } from '../../util';
+
+import { blueprintRegistry } from './blueprints';
 
 // TODO(burdon): Factor out common guts from AiChatProcessor.
 export class ChatProcessor {
@@ -66,10 +70,40 @@ export class ChatProcessor {
     }
   }
 
-  async createConversation(space: Space) {
+  async createConversation(space: Space, blueprintKeys: string[]) {
+    // TODO(wittjosiah): This is copied from ChatCompanion.tsx.
+    const existingBlueprints = await space.db.query(Filter.type(Blueprint.Blueprint)).run();
+
+    // TODO(wittjosiah): Stop doing this.
+    //   Currently doing this to ensure blueprints are always up to date from the registry.
+    for (const blueprint of existingBlueprints) {
+      space.db.remove(blueprint);
+    }
+
+    for (const key of blueprintKeys) {
+      const existingBlueprint = existingBlueprints.find((blueprint) => blueprint.key === key);
+      if (existingBlueprint) {
+        continue;
+      }
+
+      const blueprint = blueprintRegistry.getByKey(key);
+      if (!blueprint) {
+        continue;
+      }
+
+      space.db.add(Obj.clone(blueprint));
+    }
+
     const queue = space.queues.create<Message.Message>();
-    // TODO(wittjosiah): This is currently the only way the conversation gets access to tools.
-    //   The toolkit layers above are required but the conversation doesn't use them.
-    return new AiConversation(queue, this._toolkit?.toolkit);
+    // TODO(wittjosiah): Remove this hardcoded toolkit now that blueprints are available?
+    const conversation = new AiConversation(queue, this._toolkit?.toolkit);
+    await conversation.open();
+
+    const blueprints = await space.db.query(Filter.type(Blueprint.Blueprint)).run();
+    await conversation.context.bind({
+      blueprints: blueprints.map((blueprint) => Ref.make(blueprint)),
+    });
+
+    return conversation;
   }
 }
