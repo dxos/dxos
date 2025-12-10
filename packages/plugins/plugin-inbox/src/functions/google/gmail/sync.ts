@@ -51,6 +51,8 @@ const STREAMING_CONFIG = {
   queueBatchSize: 10,
   /** Gmail API page size. */
   maxResults: 500,
+  /** Restricted mode max messages. */
+  restrictedMax: 20,
 } as const;
 
 export default defineFunction({
@@ -72,6 +74,12 @@ export default defineFunction({
       }),
       Schema.optional,
     ),
+    restrictedMode: Schema.Boolean.pipe(
+      Schema.annotations({
+        description: 'Use restricted mode to limit to single date range and max 20 messages. Reduces subrequests.',
+      }),
+      Schema.optional,
+    ),
   }),
   outputSchema: Schema.Struct({
     newMessages: Schema.Number,
@@ -80,10 +88,16 @@ export default defineFunction({
   services: [Database.Service, QueueService],
   handler: ({
     // TODO(wittjosiah): Schema-based defaults are not yet supported.
-    data: { mailboxId, userId = 'me', label = 'inbox', after = format(subDays(new Date(), 30), 'yyyy-MM-dd') },
+    data: {
+      mailboxId,
+      userId = 'me',
+      label = 'inbox',
+      after = format(subDays(new Date(), 30), 'yyyy-MM-dd'),
+      restrictedMode = false,
+    },
   }) =>
     Effect.gen(function* () {
-      log('syncing gmail', { mailboxId, userId, after });
+      log('syncing gmail', { mailboxId, userId, after, restrictedMode });
       const mailbox = yield* Database.Service.resolve(DXN.parse(mailboxId), Mailbox.Mailbox);
 
       // Get labels.
@@ -117,7 +131,14 @@ export default defineFunction({
       });
 
       // Stream messages oldest-first into queue.
-      const newMessagesCount = yield* streamGmailMessagesToQueue(startDate, queue, userId, label, existingGmailIds);
+      const newMessagesCount = yield* streamGmailMessagesToQueue(
+        startDate,
+        queue,
+        userId,
+        label,
+        existingGmailIds,
+        restrictedMode,
+      );
       log('sync complete', { newMessages: newMessagesCount });
 
       return {
@@ -196,6 +217,11 @@ const fetchMessagesForDateRange = (userId: string, label: string, dateChunk: Dat
         Option.getOrUndefined(state.pageToken),
       );
 
+      log('fetched message IDs', {
+        count: messages?.length ?? 0,
+        done: !nextPageToken,
+      });
+
       // Messages come newest-first from Gmail, reverse to get oldest-first.
       const messageIds = (messages ?? []).map((m) => m.id).reverse();
       const nextState = {
@@ -210,6 +236,7 @@ const fetchMessagesForDateRange = (userId: string, label: string, dateChunk: Dat
 
 /**
  * Streams Gmail messages from oldest to newest into a DXOS queue.
+ * In restricted mode, limits to a single date chunk and max N messages to reduce subrequests.
  */
 const streamGmailMessagesToQueue = Effect.fn(function* (
   startDate: Date,
@@ -217,11 +244,13 @@ const streamGmailMessagesToQueue = Effect.fn(function* (
   userId: string,
   label: string,
   existingGmailIds: Set<string>,
+  restricted: boolean,
 ) {
   const config: DateRangeConfig = {
     startDate,
-    // Add 1 day to endDate to ensure messages from today are included.
-    endDate: addDays(new Date(), 1),
+    // NOTE: Restricted mode can get stuck if there are no messages in the date range.
+    // In restricted mode, limit to single range.
+    endDate: restricted ? addDays(startDate, STREAMING_CONFIG.dateChunkDays + 1) : addDays(new Date(), 1),
     chunkDays: STREAMING_CONFIG.dateChunkDays,
   };
 
@@ -240,6 +269,8 @@ const streamGmailMessagesToQueue = Effect.fn(function* (
       }
       return !isDuplicate;
     }),
+    // In restricted mode, limit to N oldest messages.
+    restricted ? Stream.take(STREAMING_CONFIG.restrictedMax) : Function.identity,
     // Parallel message fetching with bounded buffer.
     Stream.flatMap(
       (messageId) =>
