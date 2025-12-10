@@ -4,6 +4,7 @@
 
 import * as Command from '@effect/cli/Command';
 import * as Options from '@effect/cli/Options';
+import { ConsolePosition } from '@opentui/core';
 import { render } from '@opentui/solid';
 import * as Effect from 'effect/Effect';
 import * as Match from 'effect/Match';
@@ -19,8 +20,7 @@ import { CommandConfig } from '../../services';
 import { type AiChatServices, Provider, TestToolkit, chatLayer, withTypes } from '../../util';
 import { Common } from '../options';
 
-import { Chat } from './components';
-import { restoreTerminal } from './hooks';
+import { App, Chat } from './components';
 import { ChatProcessor } from './processor';
 
 export const chat = Command.make(
@@ -43,6 +43,7 @@ export const chat = Command.make(
       Options.withAlias('b'),
       Options.repeated,
     ),
+    // TODO(burdon): --debug?
     showConsole: Options.boolean('console', { ifPresent: true }).pipe(
       Options.withDescription('Show console to see logs.'),
     ),
@@ -74,31 +75,19 @@ export const chat = Command.make(
         return processor.createConversation(space, blueprintKeys);
       });
 
-      // Ensure clean exit on errors or signals.
-      {
-        const cleanup = () => {
-          restoreTerminal();
-          process.exit(1);
-        };
-        process.on('uncaughtException', cleanup);
-        process.on('unhandledRejection', cleanup);
-        process.on('SIGINT', cleanup);
-        process.on('SIGTERM', cleanup);
-      }
-
       yield* Effect.async<void>(() => {
         void render(
           () => (
-            <Chat
-              processor={processor}
-              conversation={conversation}
-              model={model}
-              verbose={verbose}
-              showConsole={showConsole}
-            />
+            <App showConsole={showConsole} focusElements={['input', 'messages']}>
+              <Chat processor={processor} conversation={conversation} model={model} verbose={verbose} />
+            </App>
           ),
           {
-            exitOnCtrlC: false, // Handle Ctrl-C ourselves.
+            exitSignals: ['SIGINT', 'SIGTERM'],
+            backgroundColor: 'red',
+            consoleOptions: {
+              position: ConsolePosition.TOP,
+            },
           },
         );
       });

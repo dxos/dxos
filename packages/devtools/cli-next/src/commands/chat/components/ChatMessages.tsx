@@ -11,7 +11,7 @@ export type ChatMessagesProps = {
   messages: Message[];
 };
 
-export const ChatMessages = ({ messages }: ChatMessagesProps) => {
+export const ChatMessages = (props: ChatMessagesProps) => {
   return (
     <scrollbox
       contentOptions={{
@@ -29,7 +29,7 @@ export const ChatMessages = ({ messages }: ChatMessagesProps) => {
         visible: false,
       }}
     >
-      <For each={messages}>{(message) => <MessageItem message={message} />}</For>
+      <For each={props.messages}>{(message) => <MessageItem message={message} />}</For>
     </scrollbox>
   );
 };
