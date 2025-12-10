@@ -26,8 +26,8 @@ import { type AiChatServices } from '../../util';
 export class ChatProcessor {
   constructor(
     private readonly _runtime: Runtime.Runtime<AiChatServices>,
-    private readonly _toolkit?: GenericToolkit.GenericToolkit,
     private readonly _metadata?: AiService.Metadata,
+    private readonly _toolkit?: GenericToolkit.GenericToolkit,
   ) {}
 
   get runtime() {
@@ -40,11 +40,6 @@ export class ChatProcessor {
 
   get metadata() {
     return this._metadata;
-  }
-
-  async createConversation(space: Space) {
-    const queue = space.queues.create<Message.Message>();
-    return new AiConversation(queue, this._toolkit?.toolkit);
   }
 
   async execute(
@@ -62,5 +57,10 @@ export class ChatProcessor {
     if (!Exit.isSuccess(response) && !Cause.isInterruptedOnly(response.cause)) {
       throwCause(response.cause);
     }
+  }
+
+  async createConversation(space: Space) {
+    const queue = space.queues.create<Message.Message>();
+    return new AiConversation(queue, this._toolkit?.toolkit);
   }
 }
