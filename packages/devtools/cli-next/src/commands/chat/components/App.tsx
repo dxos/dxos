@@ -10,7 +10,7 @@ import { isTruthy } from '@dxos/util';
 
 import { theme } from '../theme';
 
-type KeyHandler = {
+export type KeyHandler = {
   hint: string;
   handler: (key: KeyEvent) => void;
 };
