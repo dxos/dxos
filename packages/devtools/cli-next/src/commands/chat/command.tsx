@@ -84,7 +84,6 @@ export const chat = Command.make(
           ),
           {
             exitSignals: ['SIGINT', 'SIGTERM'],
-            backgroundColor: 'red',
             consoleOptions: {
               position: ConsolePosition.TOP,
             },
