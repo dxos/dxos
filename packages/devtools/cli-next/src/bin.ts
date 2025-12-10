@@ -4,8 +4,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as NodeContext from '@effect/platform-node/NodeContext';
-import * as NodeRuntime from '@effect/platform-node/NodeRuntime';
+import * as BunContext from '@effect/platform-bun/BunContext';
+import * as BunRuntime from '@effect/platform-bun/BunRuntime';
 import * as Cause from 'effect/Cause';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
@@ -35,11 +35,11 @@ const FORCE_EXIT = true;
 
 // Work around Effect type system limitation where Requirements type becomes overly restrictive.
 const program = run(process.argv).pipe(
-  Effect.provide(Layer.mergeAll(NodeContext.layer, Logger.pretty)),
+  Effect.provide(Layer.mergeAll(BunContext.layer, Logger.pretty)),
   Effect.scoped,
 ) as Effect.Effect<void, unknown>;
 
-NodeRuntime.runMain(program, {
+BunRuntime.runMain(program, {
   teardown: (exit, onExit) => {
     const exitCode = Exit.isFailure(exit) && !Cause.isInterruptedOnly(exit.cause) ? 1 : 0;
     onExit(exitCode);

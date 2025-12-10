@@ -11,25 +11,24 @@ tasks:
       mergeOutputs: replace
     outputs: []
   compile:
-    # TODO(wittjosiah): Maybe add bundleAll option to match what tsup would do?
-    # Bundling the deps would allow the published package.json to not have dependencies.
+    command: bun
     args:
-      - '--entryPoint=src/bin.ts'
-      - '--platform=node'
-      - '--injectGlobals'
-      - '--outputPath=dist'
+      - ./scripts/build.ts
     options:
       mergeArgs: replace
       mergeOutputs: replace
+    inputs:
+      - scripts/build.ts
+      - bunfig.toml
     outputs:
-      - dist/node-esm/
+      - dist/
   dev:
-    command: ./cli-next
+    command: ./dxnext
     deps:
       - ^:compile
     local: true
   prebuild:
-    command: vite-node ./scripts/copy-package-json.ts
+    command: bun ./scripts/copy-package-json.ts
     deps:
       - compile
     inputs:
