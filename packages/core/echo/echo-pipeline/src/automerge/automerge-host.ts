@@ -46,6 +46,7 @@ import { EchoNetworkAdapter, isEchoPeerMetadata } from './echo-network-adapter';
 import { type EchoReplicator, type RemoteDocumentExistenceCheckParams } from './echo-replicator';
 import { HeadsStore } from './heads-store';
 import { type BeforeSaveParams, LevelDBStorageAdapter } from './leveldb-storage-adapter';
+import { Record } from 'effect';
 
 export type PeerIdProvider = () => string | undefined;
 
@@ -435,7 +436,7 @@ export class AutomergeHost extends Resource {
 
   private readonly _shareConfig = {
     // Called on `repo.find`.
-    access: log.function('access', async (peerId: PeerId, documentId: DocumentId): Promise<boolean> => {
+    access: async (peerId: PeerId, documentId: DocumentId): Promise<boolean> => {
       return true;
       if (
         !this._createdDocuments.has(documentId) &&
@@ -459,14 +460,14 @@ export class AutomergeHost extends Resource {
       }
 
       return false;
-    }),
+    },
 
     // TODO(dmaretskyi): Share based on HALO permissions and space affinity.
     // Hosts, running in the worker, don't share documents unless requested by other peers.
     // NOTE: If both peers return sharePolicy=false the replication will not happen
     // https://github.com/automerge/automerge-repo/pull/292
     // Called for all loaded documents so they could be advertised to the sync server.
-    announce: log.function('announce', async (peerId: PeerId, documentId?: DocumentId): Promise<boolean> => {
+    announce: async (peerId: PeerId, documentId?: DocumentId): Promise<boolean> => {
       if (!documentId) {
         return false;
       }
@@ -482,7 +483,7 @@ export class AutomergeHost extends Resource {
       }
 
       return false;
-    }),
+    },
   };
 
   private async _beforeSave({ path, batch }: BeforeSaveParams): Promise<void> {
