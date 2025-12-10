@@ -24,10 +24,13 @@ export const reset = Command.make(
     const { profile } = yield* CommandConfig;
     const path = config.values.runtime?.client?.storage?.dataRoot ?? getProfilePath(DX_DATA, profile);
     if (!force) {
-      yield* Prompt.confirm({
+      const confirmed = yield* Prompt.confirm({
         message: `Are you sure you want to reset the profile (${profile})?`,
         initial: false,
       });
+      if (!confirmed) {
+        return;
+      }
     }
     yield* fs.remove(path, { recursive: true });
   }),
