@@ -2,12 +2,18 @@
 // Copyright 2025 DXOS.org
 //
 
+import { type KeyEvent } from '@opentui/core';
 import { useKeyboard, useRenderer } from '@opentui/solid';
 import { type Accessor, type ParentProps, createContext, createEffect, createSignal, onMount } from 'solid-js';
 
 import { isTruthy } from '@dxos/util';
 
 import { theme } from '../theme';
+
+type KeyHandler = {
+  hint: string;
+  handler: (key: KeyEvent) => void;
+};
 
 export const AppContext = createContext<{
   focus: Accessor<string | undefined>;
@@ -30,14 +36,59 @@ export const App = (props: AppProps) => {
   const [showConsole, setShowConsole] = createSignal<boolean>(props.showConsole ?? false);
 
   // Hints.
-  const hints = ['[ctrl-c | esc]: Quit', '[tab]: Cycle focus', props.showConsole && '[f1]: Toggle console'].filter(
-    isTruthy,
-  );
   const [hint, setHint] = createSignal<string | undefined>();
   const randomHint = () => {
-    const idx = Math.floor(Math.random() * hints.length);
-    setHint(hints[idx]);
+    if (handlers.length) {
+      const idx = Math.floor(Math.random() * handlers.length);
+      setHint(handlers[idx].hint);
+    }
   };
+
+  const handlers: KeyHandler[] = [
+    //
+    // Quit
+    //
+    {
+      hint: '[ctrl-c | esc]: Quit',
+      handler: (key: KeyEvent) => {
+        if (key.name === 'escape' || (key.ctrl && key.name === 'c')) {
+          renderer.destroy();
+          process.exit(0);
+        }
+      },
+    },
+    //
+    // Focus
+    //
+    {
+      hint: '[tab]: Cycle focus',
+      handler: (key: KeyEvent) => {
+        if (key.name === 'tab') {
+          const idx = focusElements.findIndex((f) => f === focus());
+          setFocus(
+            idx === focusElements.length - 1 ? focusElements[0] : focusElements[(idx + 1) % focusElements.length],
+          );
+          randomHint();
+          if (focus() === 'console') {
+            renderer.console.focus();
+          } else {
+            renderer.console.blur();
+          }
+        }
+      },
+    },
+    //
+    // Console
+    //
+    props.showConsole && {
+      hint: '[f1]: Toggle console',
+      handler: (key: KeyEvent) => {
+        if (key.name === 'f1' && props.showConsole) {
+          setShowConsole(!showConsole());
+        }
+      },
+    },
+  ].filter(isTruthy);
 
   const renderer = useRenderer();
   onMount(() => {
@@ -46,13 +97,13 @@ export const App = (props: AppProps) => {
     randomHint();
   });
 
-  // Use ctrl-p to cycle position, +/- to resize at runtime (when focused).
   renderer.useConsole = props.showConsole ?? false;
   createEffect(() => {
     if (!props.showConsole) {
       return;
     }
 
+    // Use ctrl-p to cycle position; +/- to resize at runtime (when focused).
     if (showConsole()) {
       renderer.console.show();
       renderer.console.focus();
@@ -76,33 +127,9 @@ export const App = (props: AppProps) => {
 
   // Toggle focus between console and app content with tab.
   useKeyboard((key) => {
-    // Quit.
-    if (key.name === 'escape' || (key.ctrl && key.name === 'c')) {
-      renderer.destroy();
-      process.exit(0);
-    }
-
-    // Focus.
-    if (key.name === 'tab') {
-      const idx = focusElements.findIndex((f) => f === focus());
-      setFocus(idx === focusElements.length - 1 ? focusElements[0] : focusElements[(idx + 1) % focusElements.length]);
-      randomHint();
-      if (focus() === 'console') {
-        renderer.console.focus();
-      } else {
-        renderer.console.blur();
-      }
-
-      return true;
-    }
-
-    // Console.
-    if (key.name === 'f1' && props.showConsole) {
-      setShowConsole(!showConsole());
-      return true;
-    }
-
-    return false;
+    handlers.forEach((handler) => {
+      handler.handler(key);
+    });
   });
 
   return <AppContext.Provider value={{ focus, hint }}>{props.children}</AppContext.Provider>;
