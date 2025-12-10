@@ -9,12 +9,26 @@ import { FUNCTIONS_META_KEY, Function, FunctionError } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { type ObjectId, type PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { type FunctionRuntimeKind } from '@dxos/protocols';
+import { type FunctionRuntimeKind, type SerializedError } from '@dxos/protocols';
 import { safeParseJson } from '@dxos/util';
 
 import { FunctionServiceError } from '../errors';
 
 import { createEdgeClient } from './functions';
+
+// TODO(wittjosiah): Copied from @dxos/functions-simulator-cloudflare.
+export type InvokeResult =
+  | {
+      _kind: 'success';
+      /**
+       * The output of the function.
+       */
+      result: unknown;
+    }
+  | {
+      _kind: 'error';
+      error: SerializedError;
+    };
 
 export type FunctionDeployOptions = {
   name?: string;
@@ -163,7 +177,7 @@ export class FunctionsServiceClient {
     }
   }
 
-  async forceRunCronTrigger(spaceId: SpaceId, triggerId: ObjectId) {
-    return await this.#edgeClient.forceRunCronTrigger(spaceId, triggerId);
+  async forceRunCronTrigger(spaceId: SpaceId, triggerId: ObjectId): Promise<InvokeResult> {
+    return (await this.#edgeClient.forceRunCronTrigger(spaceId, triggerId)) as InvokeResult;
   }
 }
