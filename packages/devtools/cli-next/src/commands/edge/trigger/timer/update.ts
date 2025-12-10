@@ -14,7 +14,7 @@ import { Function } from '@dxos/functions';
 import { Trigger } from '@dxos/functions';
 import { getUserFunctionIdInMetadata } from '@dxos/functions';
 
-import { withDatabase } from '../../../../util';
+import { spaceLayer } from '../../../../util';
 import { Common } from '../../../options';
 import { Enabled, Input, TriggerId } from '../options';
 
@@ -23,14 +23,14 @@ import { Cron } from './options';
 export const update = Command.make(
   'update',
   {
-    spaceId: Common.spaceId,
+    spaceId: Common.spaceId.pipe(Options.optional),
     id: TriggerId,
     enabled: Enabled,
     functionId: Common.functionId.pipe(Options.optional),
     cron: Cron.pipe(Options.optional),
     input: Input.pipe(Options.optional),
   },
-  ({ spaceId, id, enabled, functionId, cron, input }) =>
+  ({ id, enabled, functionId, cron, input }) =>
     Effect.gen(function* () {
       const dxn = DXN.fromLocalObjectId(id);
       const trigger = yield* Database.Service.resolve(dxn, Trigger.Trigger);
@@ -55,5 +55,8 @@ export const update = Command.make(
       }
 
       yield* Console.log('Updated trigger', trigger.id);
-    }).pipe(withDatabase(spaceId)),
-).pipe(Command.withDescription('Update a timer trigger.'));
+    }),
+).pipe(
+  Command.withDescription('Update a timer trigger.'),
+  Command.provide(({ spaceId }) => spaceLayer(spaceId)),
+);
