@@ -10,15 +10,15 @@ import * as Match from 'effect/Match';
 import * as Option from 'effect/Option';
 
 import { AiService, DEFAULT_EDGE_MODEL, DEFAULT_LMSTUDIO_MODEL, DEFAULT_OLLAMA_MODEL, ModelName } from '@dxos/ai';
-import { AiConversation, GenericToolkit } from '@dxos/assistant';
+import { GenericToolkit } from '@dxos/assistant';
 import { ClientService } from '@dxos/client';
-import { type Message } from '@dxos/types';
 
 import { type AiChatServices, Provider, TestToolkit, chatLayer } from '../../util';
 import { Common } from '../options';
 
 import { Chat } from './components';
 import { restoreTerminal } from './hooks';
+import { ChatProcessor } from './processor';
 
 export const chat = Command.make(
   'chat',
@@ -50,13 +50,12 @@ export const chat = Command.make(
         ),
       );
 
-      // TODO(burdon): Create processor abstraction (move out of Chat UX).
       const toolkit = GenericToolkit.make(TestToolkit.toolkit, TestToolkit.layer);
+      const processor = new ChatProcessor(runtime, toolkit);
       const conversation = yield* Effect.promise(async () => {
         await client.spaces.waitUntilReady();
         const space = client.spaces.default;
-        const queue = space.queues.create<Message.Message>();
-        return new AiConversation(queue, toolkit.toolkit);
+        return processor.createConversation(space);
       });
 
       // Ensure clean exit on errors or signals.
@@ -74,11 +73,11 @@ export const chat = Command.make(
         void render(
           () => (
             <Chat
+              processor={processor}
               conversation={conversation}
               runtime={runtime}
               model={model}
               metadata={service.metadata}
-              toolkit={toolkit}
             />
           ),
           {

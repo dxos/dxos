@@ -12,12 +12,13 @@ import * as Runtime from 'effect/Runtime';
 import { createSignal, onMount } from 'solid-js';
 
 import { AiService, type ModelName } from '@dxos/ai';
-import { type AiConversation, GenerationObserver, type GenericToolkit } from '@dxos/assistant';
+import { type AiConversation, GenerationObserver } from '@dxos/assistant';
 import { throwCause } from '@dxos/effect';
 
 import { type AiChatServices } from '../../../util';
 import { DXOS_VERSION } from '../../../version';
 import { useChatKeyboard, useChatMessages } from '../hooks';
+import { type ChatProcessor } from '../processor';
 import { theme } from '../theme';
 import { createAssistantMessage, createUserMessage } from '../types';
 
@@ -30,16 +31,14 @@ import { ChatStatusBar } from './ChatStatusBar';
 const DEBUG = false;
 
 export type ChatProps = {
+  processor: ChatProcessor;
   conversation: AiConversation;
   runtime: Runtime.Runtime<AiChatServices>;
   model: ModelName;
   metadata: AiService.Metadata;
-
-  // TOOD(burdon): From blueprints.
-  toolkit?: GenericToolkit.GenericToolkit;
 };
 
-export const Chat = ({ conversation, runtime, model, toolkit, metadata }: ChatProps) => {
+export const Chat = ({ processor, conversation, runtime, model, metadata }: ChatProps) => {
   const chatMessages = useChatMessages();
   const [showBanner, setShowBanner] = createSignal(true);
   const [inputValue, setInputValue] = createSignal('');
@@ -91,7 +90,7 @@ export const Chat = ({ conversation, runtime, model, toolkit, metadata }: ChatPr
       const request = conversation.createRequest({ prompt, observer });
       const fiber = request.pipe(
         Effect.provide(AiService.model(model)),
-        Effect.provide(toolkit?.layer ?? Layer.empty),
+        Effect.provide(processor.toolkit?.layer ?? Layer.empty),
         Effect.asVoid,
         Runtime.runFork(runtime),
       );
