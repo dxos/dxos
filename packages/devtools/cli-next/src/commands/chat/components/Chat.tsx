@@ -93,7 +93,6 @@ export const Chat = (props: ChatProps) => {
       </box>
 
       <ChatInput value={inputValue} onInput={setInputValue} onSubmit={() => handleSubmit(inputValue())} />
-
       <StatusBar model={props.model} metadata={props.processor.metadata} processing={streaming} />
     </box>
   );
