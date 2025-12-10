@@ -18,6 +18,7 @@ import { type AiChatServices, Provider, chatLayer } from '../../util';
 import { Common } from '../options';
 
 import { Chat } from './Chat';
+import { restoreTerminal } from './hooks';
 
 export const chat = Command.make(
   'chat',
@@ -54,6 +55,16 @@ export const chat = Command.make(
           Match.orElse(() => DEFAULT_EDGE_MODEL),
         ),
       );
+
+      // Ensure clean exit on errors or signals.
+      const cleanup = () => {
+        restoreTerminal();
+        process.exit(1);
+      };
+      process.on('uncaughtException', cleanup);
+      process.on('unhandledRejection', cleanup);
+      process.on('SIGINT', cleanup);
+      process.on('SIGTERM', cleanup);
 
       yield* Effect.async<void>(() => {
         void render(() => <Chat conversation={conversation} runtime={runtime} model={model} />, {

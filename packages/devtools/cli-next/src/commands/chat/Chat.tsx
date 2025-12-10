@@ -20,7 +20,7 @@ import { ChatBanner } from './ChatBanner';
 import { ChatInput } from './ChatInput';
 import { ChatMessages } from './ChatMessages';
 import { ChatStatusBar } from './ChatStatusBar';
-import { useChatKeyboard, useChatMessages, useSpinner } from './hooks';
+import { useChatKeyboard, useChatMessages } from './hooks';
 import { createAssistantMessage, createUserMessage } from './types';
 
 // TODO(burdon): CLI option.
@@ -40,7 +40,6 @@ export const Chat = ({ conversation, runtime, model }: ChatProps) => {
   const [focusedElement, setFocusedElement] = createSignal<'input' | 'messages'>('input');
   useChatKeyboard(setFocusedElement);
 
-  const spinner = useSpinner();
   const renderer = useRenderer();
 
   if (DEBUG) {
@@ -71,8 +70,6 @@ export const Chat = ({ conversation, runtime, model }: ChatProps) => {
 
     try {
       setIsStreaming(true);
-      spinner.start();
-
       const observer = GenerationObserver.make({
         onPart: (part) =>
           Effect.sync(() => {
@@ -92,7 +89,6 @@ export const Chat = ({ conversation, runtime, model }: ChatProps) => {
         msg.content = `Error: ${String(err)}`;
       });
     } finally {
-      spinner.stop();
       setIsStreaming(false);
     }
   };
@@ -111,7 +107,7 @@ export const Chat = ({ conversation, runtime, model }: ChatProps) => {
         focused={focusedElement() === 'input'}
       />
 
-      <ChatStatusBar isStreaming={isStreaming} spinnerFrame={spinner.frame} model={model} />
+      <ChatStatusBar isStreaming={isStreaming} model={model} />
     </box>
   );
 };

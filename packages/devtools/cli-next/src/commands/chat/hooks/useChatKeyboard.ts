@@ -31,7 +31,7 @@ export const useChatKeyboard = (setFocusedElement: Setter<FocusElement>) => {
 /**
  * Restore terminal to normal state before exiting.
  */
-const restoreTerminal = () => {
+export const restoreTerminal = () => {
   try {
     // Show cursor.
     process.stdout.write('\x1b[?25h');

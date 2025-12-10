@@ -6,11 +6,11 @@ import { For } from 'solid-js';
 
 import { type Message } from './types';
 
-type ChatMessagesProps = {
+export type ChatMessagesProps = {
   messages: Message[];
 };
 
-export const ChatMessages = (props: ChatMessagesProps) => {
+export const ChatMessages = ({ messages }: ChatMessagesProps) => {
   return (
     <scrollbox
       stickyScroll={true}
@@ -28,7 +28,7 @@ export const ChatMessages = (props: ChatMessagesProps) => {
       }}
       flexGrow={1}
     >
-      <For each={props.messages}>{(message) => <MessageItem message={message} />}</For>
+      <For each={messages}>{(message) => <MessageItem message={message} />}</For>
     </scrollbox>
   );
 };

@@ -2,24 +2,36 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Accessor } from 'solid-js';
+import { type Accessor, createEffect } from 'solid-js';
 
 import { type ModelName } from '@dxos/ai';
 
-type ChatStatusBarProps = {
+import { useSpinner } from './hooks';
+import { theme } from './theme';
+
+export type ChatStatusBarProps = {
   isStreaming: Accessor<boolean>;
-  spinnerFrame: Accessor<string>;
   model: ModelName;
 };
 
-export const ChatStatusBar = (props: ChatStatusBarProps) => {
+export const ChatStatusBar = ({ isStreaming, model }: ChatStatusBarProps) => {
+  const spinner = useSpinner();
+  createEffect(() => {
+    if (isStreaming()) {
+      spinner.start();
+    } else {
+      spinner.stop();
+    }
+  });
+
   return (
     <box height={1} flexDirection='row' paddingLeft={2} paddingRight={2}>
-      <text style={{ fg: props.isStreaming() ? '#00ffff' : '#666666' }}>
-        {props.isStreaming() ? `${props.spinnerFrame()} Processing` : 'Ctrl-c'}
+      <text style={{ fg: isStreaming() ? '#00ffff' : '#666666' }}>
+        {isStreaming() ? `${spinner.frame()} Processing` : 'Ctrl-c'}
       </text>
       <box flexGrow={1} />
-      <text style={{ fg: '#666666' }}>{props.model} | Ⓓ Ⓧ Ⓞ Ⓢ</text>
+      <text style={{ fg: theme.text.subdued, marginRight: 1 }}>{model}</text>
+      <text style={{ fg: theme.border }}>Ⓓ Ⓧ Ⓞ Ⓢ</text>
     </box>
   );
 };
