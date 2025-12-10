@@ -20,17 +20,15 @@ import { ChatInput } from './ChatInput';
 import { ChatMessages } from './ChatMessages';
 import { ChatStatusBar } from './ChatStatusBar';
 
-// TODO(wittjosiah): Factor out to CommandConfig.
-const DEBUG = false;
-
 export type ChatProps = {
   processor: ChatProcessor;
   conversation: AiConversation;
   model: ModelName;
   verbose?: boolean;
+  showConsole?: boolean;
 };
 
-export const Chat = ({ processor, conversation, model, verbose }: ChatProps) => {
+export const Chat = ({ processor, conversation, model, verbose, showConsole }: ChatProps) => {
   const chatMessages = useChatMessages();
   const [showBanner, setShowBanner] = createSignal(true);
   const [inputValue, setInputValue] = createSignal('');
@@ -39,7 +37,7 @@ export const Chat = ({ processor, conversation, model, verbose }: ChatProps) => 
   useChatKeyboard(setFocusedElement);
 
   const renderer = useRenderer();
-  if (DEBUG) {
+  if (showConsole) {
     renderer.useConsole = true;
     renderer.console.show();
   }

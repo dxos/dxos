@@ -37,8 +37,11 @@ export const chat = Command.make(
       Options.withSchema(ModelName),
       Options.optional,
     ),
+    showConsole: Options.boolean('console', { ifPresent: true }).pipe(
+      Options.withDescription('Show console to see logs.'),
+    ),
   },
-  ({ provider, model: modelParam }) =>
+  ({ provider, model: modelParam, showConsole }) =>
     Effect.gen(function* () {
       const { verbose } = yield* CommandConfig;
       const client = yield* ClientService;
@@ -78,9 +81,20 @@ export const chat = Command.make(
       }
 
       yield* Effect.async<void>(() => {
-        void render(() => <Chat processor={processor} conversation={conversation} model={model} verbose={verbose} />, {
-          exitOnCtrlC: false, // Handle Ctrl-C ourselves.
-        });
+        void render(
+          () => (
+            <Chat
+              processor={processor}
+              conversation={conversation}
+              model={model}
+              verbose={verbose}
+              showConsole={showConsole}
+            />
+          ),
+          {
+            exitOnCtrlC: false, // Handle Ctrl-C ourselves.
+          },
+        );
       });
     }),
 ).pipe(
