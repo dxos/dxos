@@ -305,7 +305,6 @@ export class AutomergeHost extends Resource {
   /**
    * Loads the document handle from the repo and waits for it to be ready.
    */
-  @log.method()
   async loadDoc<T>(ctx: Context, documentId: AnyDocumentId, opts?: LoadDocOptions): Promise<DocHandle<T>> {
     invariant(this.isOpen, 'AutomergeHost is not open');
     let handle: DocHandle<T> | undefined;
