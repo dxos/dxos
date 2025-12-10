@@ -26,12 +26,12 @@ export const ChatStatusBar = ({ isStreaming, model }: ChatStatusBarProps) => {
 
   return (
     <box height={1} flexDirection='row' paddingLeft={2} paddingRight={2}>
-      <text style={{ fg: isStreaming() ? '#00ffff' : '#666666' }}>
+      <text style={{ fg: isStreaming() ? theme.text.primary : theme.text.subdued }}>
         {isStreaming() ? `${spinner.frame()} Processing` : 'Ctrl-c'}
       </text>
       <box flexGrow={1} />
       <text style={{ fg: theme.text.subdued, marginRight: 1 }}>{model}</text>
-      <text style={{ fg: theme.border }}>Ⓓ Ⓧ Ⓞ Ⓢ</text>
+      <text style={{ fg: theme.accent }}>Ⓓ Ⓧ Ⓞ Ⓢ</text>
     </box>
   );
 };

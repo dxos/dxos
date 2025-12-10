@@ -15,12 +15,14 @@ import { type AiConversation, type AiConversationRunParams, GenerationObserver }
 import { throwCause } from '@dxos/effect';
 
 import { type AiChatServices } from '../../util';
+import { DXOS_VERSION } from '../../version';
 
 import { ChatBanner } from './ChatBanner';
 import { ChatInput } from './ChatInput';
 import { ChatMessages } from './ChatMessages';
 import { ChatStatusBar } from './ChatStatusBar';
 import { useChatKeyboard, useChatMessages } from './hooks';
+import { theme } from './theme';
 import { createAssistantMessage, createUserMessage } from './types';
 
 // TODO(burdon): CLI option.
@@ -48,7 +50,7 @@ export const Chat = ({ conversation, runtime, model }: ChatProps) => {
   }
 
   onMount(() => {
-    renderer.setBackgroundColor('#000000');
+    renderer.setBackgroundColor(theme.bg);
   });
 
   const handleSubmit = async (value: string) => {
@@ -96,7 +98,7 @@ export const Chat = ({ conversation, runtime, model }: ChatProps) => {
   return (
     <box flexDirection='column' height='100%' width='100%'>
       <box flexGrow={1} position='relative'>
-        <ChatBanner visible={showBanner} />
+        {showBanner() && <ChatBanner version={DXOS_VERSION} />}
         <ChatMessages messages={chatMessages.messages.data} />
       </box>
 
