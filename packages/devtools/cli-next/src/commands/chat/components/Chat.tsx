@@ -20,7 +20,8 @@ import { ChatInput } from './ChatInput';
 import { ChatMessages } from './ChatMessages';
 import { ChatStatusBar } from './ChatStatusBar';
 
-// TODO(burdon): CLI option.
+// TODO(burdon): CLI options.
+const verbose = true;
 const DEBUG = false;
 
 export type ChatProps = {
@@ -71,6 +72,19 @@ export const Chat = ({ processor, conversation, model }: ChatProps) => {
           Effect.sync(() => {
             if (part.type === 'text-delta') {
               chatMessages.appendToMessage(assistantIndex, part.delta);
+            }
+          }),
+        onMessage: (message) =>
+          Effect.sync(() => {
+            switch (message.sender.role) {
+              case 'tool': {
+                if (verbose) {
+                  // for (const part of message.blocks) {
+                  // TODO(burdon): Add tool call.
+                  // }
+                }
+                break;
+              }
             }
           }),
       });

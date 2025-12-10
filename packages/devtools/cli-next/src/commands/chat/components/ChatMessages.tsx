@@ -48,6 +48,7 @@ const MessageItem = (props: { message: Message }) => {
     }
   };
 
+  // TODO(burdon): Format fenced code blocks.
   return (
     <box paddingBottom={1}>
       <text>
