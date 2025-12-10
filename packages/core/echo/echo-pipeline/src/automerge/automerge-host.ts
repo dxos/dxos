@@ -472,7 +472,7 @@ export class AutomergeHost extends Resource {
         return false;
       }
 
-      if (!this._createdDocuments.has(documentId) && !this._documentsToSync.has(documentId)) {
+      if (!this._createdDocuments.has(documentId) && !this._documentsToSync.has(documentId) && !this._documentsToRequest.has(documentId)) {
         // Skip advertising documents that don't need to be synced.
         return false;
       }

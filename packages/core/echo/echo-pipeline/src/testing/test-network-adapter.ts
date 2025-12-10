@@ -11,12 +11,22 @@ import { log } from '@dxos/log';
 export type TestConnectionStateProvider = () => 'on' | 'off';
 
 export class TestAdapter extends NetworkAdapter {
-  static createPair(connectionStateProvider: TestConnectionStateProvider = () => 'on'): TestAdapter[] {
+  static createPair(connectionStateProvider: TestConnectionStateProvider = () => 'on', onMessage?: (message: Message) => void): TestAdapter[] {
     const adapter1: TestAdapter = new TestAdapter({
-      send: (message: Message) => connectionStateProvider() === 'on' && sleep(10).then(() => adapter2.receive(message)),
+      send: (message: Message) => {
+        onMessage?.(message);
+        if (connectionStateProvider() === 'on') {
+          sleep(10).then(() => adapter2.receive(message));
+        }
+      },
     });
     const adapter2: TestAdapter = new TestAdapter({
-      send: (message: Message) => connectionStateProvider() === 'on' && sleep(10).then(() => adapter1.receive(message)),
+      send: (message: Message) => {
+        onMessage?.(message);
+        if (connectionStateProvider() === 'on') {
+          sleep(10).then(() => adapter1.receive(message));
+        }
+      },
     });
 
     return [adapter1, adapter2];
