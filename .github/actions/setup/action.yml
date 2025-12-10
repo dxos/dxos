@@ -14,13 +14,11 @@ runs:
     # TODO(wittjosiah): Install moon in docker image?
     - uses: moonrepo/setup-toolchain@v0
 
-    # TODO(wittjosiah): Install bun in docker image?
-    - uses: oven-sh/setup-bun@v2
-
     - name: Log out debug info
       run: |
         node --version
         pnpm --version
+        bun --version
       shell: bash
 
     - name: PNPM Store Path
