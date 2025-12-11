@@ -6,13 +6,12 @@ import * as Command from '@effect/cli/Command';
 import * as Options from '@effect/cli/Options';
 import { ConsolePosition } from '@opentui/core';
 import { render } from '@opentui/solid';
+import * as Cause from 'effect/Cause';
 import * as Deferred from 'effect/Deferred';
 import * as Effect from 'effect/Effect';
+import * as Exit from 'effect/Exit';
 import * as Match from 'effect/Match';
 import * as Option from 'effect/Option';
-import * as Cause from 'effect/Cause';
-import * as Fiber from 'effect/Fiber';
-import * as fs from 'node:fs';
 
 import { AiService, DEFAULT_EDGE_MODEL, DEFAULT_LMSTUDIO_MODEL, DEFAULT_OLLAMA_MODEL, ModelName } from '@dxos/ai';
 import { GenericToolkit } from '@dxos/assistant';
@@ -25,7 +24,7 @@ import { CommandConfig } from '../../services';
 import { type AiChatServices, Provider, TestToolkit, chatLayer, createLogBuffer, withTypes } from '../../util';
 import { Common } from '../options';
 
-import { App, Chat, restoreTerminal } from './components';
+import { App, Chat } from './components';
 import { ChatProcessor } from './processor';
 import { theme } from './theme';
 
@@ -57,17 +56,15 @@ export const chat = Command.make(
     logLevel: Options.choice('logLevel', ['debug', 'verbose', 'info', 'warn', 'error']).pipe(
       Options.withDescription('Log level to use.'),
       Options.withAlias('l'),
-      Options.withDefault('info'),
+      Options.withDefault(process.env.DX_DEBUG ?? 'info'),
     ),
   },
   (options) =>
     Effect.gen(function* () {
+      // Configure logging.
       const logBuffer = createLogBuffer();
-      log.config({
-        filter: options.logLevel,
-      });
-      // TODO(burdon): Temporarily disabled.
-      // log.runtimeConfig.processors = [logBuffer.processor];
+      log.config({ filter: options.logLevel });
+      log.runtimeConfig.processors = [logBuffer.processor];
 
       const client = yield* ClientService;
       const runtime = yield* Effect.runtime<AiChatServices>();
@@ -93,59 +90,45 @@ export const chat = Command.make(
         return processor.createConversation(space, options.blueprints);
       });
 
-      // Render.
       const exitSignal = yield* Deferred.make<void, never>();
-      
-      // Remove existing listeners that might be exiting the process prematurely.
-      // The log showed an 'onSigint' listener attached to SIGTERM.
-      console.log('listening');
-      process.removeAllListeners('SIGTERM');
-      process.on('SIGTERM', () => {
-        // logBuffer.close();
-        console.log('!!!!!!!!!!!');
-        process.stderr.write('exit\n');
-        // Effect.runSync(Deferred.succeed(exitSignal, undefined));
-      });
 
-      if (false) {
-        yield* Effect.promise(() =>
-          render(
-            () => (
-              <App
-                showConsole={options.debug}
-                focusElements={['input', 'messages']}
-                logBuffer={logBuffer}
-              >
-                <Chat processor={processor} conversation={conversation} model={model} verbose={verbose} />
-              </App>
-            ),
-            {
-              exitSignals: ['SIGINT', 'SIGTERM'], 
-              exitOnCtrlC: true,
-              onDestroy: () => {
-                logBuffer.close();
-                Effect.runSync(Deferred.succeed(exitSignal, undefined));
-              },
-              openConsoleOnError: true,
-              consoleOptions: {
-                position: ConsolePosition.TOP,
-                maxDisplayLines: 16, // Ignored (default is 16).
-                colorDefault: theme.log.default,
-                colorDebug: theme.log.debug,
-                colorInfo: theme.log.info,
-                colorWarn: theme.log.warn,
-                colorError: theme.log.error,
-              },
-            },
+      // Render.
+      yield* Effect.promise(() =>
+        render(
+          () => (
+            <App showConsole={options.debug} focusElements={['input', 'messages']} logBuffer={logBuffer}>
+              <Chat processor={processor} conversation={conversation} model={model} verbose={verbose} />
+            </App>
           ),
-        );
-      }
+          {
+            exitOnCtrlC: true,
+            exitSignals: ['SIGINT', 'SIGTERM'],
+            // NOTE: Called on on SIGINT (ctrl-c) and SIGTERM (via pkill not killall).
+            onDestroy: () => {
+              logBuffer.close();
+              Effect.runSync(Deferred.succeed(exitSignal, undefined));
+            },
+            openConsoleOnError: true,
+            consoleOptions: {
+              position: ConsolePosition.TOP,
+              colorDefault: theme.log.default,
+              colorDebug: theme.log.debug,
+              colorInfo: theme.log.info,
+              colorWarn: theme.log.warn,
+              colorError: theme.log.error,
+            },
+          },
+        ),
+      );
 
-      // Wait for user to exit; destroy renderer on interrupt.
+      // Wait for exit.
       yield* Deferred.await(exitSignal).pipe(
         Effect.onExit((exit) =>
           Effect.sync(() => {
-            process.stderr.write('exit\n');
+            const cause = Exit.isFailure(exit) ? Cause.pretty(exit.cause) : undefined;
+            if (cause || options.debug) {
+              process.stderr.write(['exit:', cause ?? 'OK', '\n'].join(' '));
+            }
           }),
         ),
       );

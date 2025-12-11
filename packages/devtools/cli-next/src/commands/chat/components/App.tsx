@@ -23,6 +23,7 @@ export const AppContext = createContext<{
 }>();
 
 export type AppProps = ParentProps<{
+  showConsole?: boolean;
   focusElements?: string[];
   logBuffer?: LogBuffer;
 }>;
@@ -39,7 +40,7 @@ export const App = (props: AppProps) => {
   // Focus.
   const focusElements = [...(props.focusElements ?? [])];
   const [focus, setFocus] = createSignal<string | undefined>(props.focusElements?.[0]);
-  const [showConsole, setShowConsole] = createSignal<boolean>(props.showConsole ?? false);
+  const [showConsole, setShowConsole] = createSignal<boolean>(false);
 
   // Hints.
   const [hint, setHint] = createSignal<string | undefined>();
@@ -56,7 +57,7 @@ export const App = (props: AppProps) => {
     // Console
     //
     props.showConsole && {
-      hints: '[f1]: Toggle console',
+      hint: '[f1]: Toggle console',
       handler: (key: KeyEvent) => {
         if (key.name === 'f1' && props.showConsole) {
           setShowConsole(!showConsole());
@@ -113,10 +114,6 @@ export const App = (props: AppProps) => {
   });
 
   onMount(() => {
-    process.on('SIGTERM', () => {
-      renderer.destroy();
-    });
-    process.stderr.write('App mounted\n');
     setFocus(props.focusElements?.[0]);
     randomHint();
 
@@ -132,27 +129,9 @@ export const App = (props: AppProps) => {
     });
   });
 
-  return <AppContext.Provider value={{ focus, hint }}>{props.children}</AppContext.Provider>;
+  return (
+    <AppContext.Provider value={{ focus, hint }}>
+      <box marginTop={showConsole() ? 13 : 0}>{props.children}</box>
+    </AppContext.Provider>
+  );
 };
-
-export const restoreTerminal = () => {
-  try {
-    // Show cursor.
-    process.stdout.write('\x1b[?25h');
-    // Reset attributes.
-    process.stdout.write('\x1b[0m');
-    // Disable mouse tracking.
-    process.stdout.write('\x1b[?1000l');
-    process.stdout.write('\x1b[?1002l');
-    process.stdout.write('\x1b[?1003l');
-    process.stdout.write('\x1b[?1006l');
-    // Exit alternate screen if used.
-    process.stdout.write('\x1b[?1049l');
-    if (process.stdin.isTTY && process.stdin.isRaw) {
-      process.stdin.setRawMode(false);
-    }
-  } catch {
-    // Ignore errors during cleanup.
-  } 
-}
-      // process.on('SIGTERM', sigtermHandler);

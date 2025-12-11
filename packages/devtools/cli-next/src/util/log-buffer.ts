@@ -69,12 +69,8 @@ const getMethod = (level: LogLevel): keyof LogPrinter => {
 /**
  * Creates a log processor that buffers logs until replayed.
  */
-const formatter = (_config: LogConfig, entry: LogEntry) => {
-  const { message, context, error } = entry;
-  const parts: string[] = [message ?? JSON.stringify(context)];
-  if (error) {
-    parts.push(String(error));
-  }
-
-  return parts.join(' ');
+const formatter = (_config: LogConfig, { message, context, error }: LogEntry) => {
+  return [message, Object.keys(context).length > 0 && JSON.stringify(context), error && String(error)]
+    .filter(Boolean)
+    .join(' ');
 };
