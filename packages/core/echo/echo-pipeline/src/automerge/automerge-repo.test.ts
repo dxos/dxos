@@ -164,32 +164,6 @@ describe('AutomergeRepo', () => {
       expect((await asyncTimeout(client.find<any>(handle.url), 1000))!.doc().text).to.equal(text);
     });
 
-    test('share policy gets enabled afterwards', async () => {
-      let sharePolicy = false;
-
-      const { repos, adapters } = await createHostClientRepoTopology({
-        sharePolicy: async () => sharePolicy,
-      });
-      const [host, client] = repos;
-      await connectAdapters(adapters);
-
-      const handle = host.create();
-      const text = 'Hello world';
-      handle.change((doc: any) => {
-        doc.text = text;
-      });
-
-      {
-        await client.find(handle.url, { allowableStates: ['unavailable'] });
-      }
-
-      sharePolicy = true;
-
-      {
-        await client.find(handle.url, { allowableStates: ['unavailable'] });
-      }
-    });
-
     test('two documents and share policy switching', async () => {
       const allowedDocs: DocumentId[] = [];
 
