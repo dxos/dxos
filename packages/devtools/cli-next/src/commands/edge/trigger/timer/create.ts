@@ -47,8 +47,9 @@ export const create = Command.make(
       });
       yield* Database.Service.add(trigger);
       yield* Console.log('Created trigger', trigger.id);
-    }).pipe(withTypes([Function.Function, Trigger.Trigger])),
+    }),
 ).pipe(
   Command.withDescription('Create a timer trigger.'),
   Command.provide(({ spaceId }) => spaceLayer(spaceId)),
+  Command.provideEffectDiscard(() => withTypes(Function.Function, Trigger.Trigger)),
 );

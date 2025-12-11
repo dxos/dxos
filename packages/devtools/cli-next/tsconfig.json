@@ -47,6 +47,9 @@
       "path": "../../core/assistant"
     },
     {
+      "path": "../../core/blueprints"
+    },
+    {
       "path": "../../core/echo/echo"
     },
     {
@@ -63,6 +66,9 @@
     },
     {
       "path": "../../core/protocols"
+    },
+    {
+      "path": "../../plugins/plugin-assistant"
     },
     {
       "path": "../../sdk/client"
