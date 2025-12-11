@@ -5,19 +5,16 @@
 import * as Layer from 'effect/Layer';
 
 import { GenericToolkit } from '@dxos/assistant';
-import { Research, ResearchBlueprint, WebSearchBlueprint, WebSearchToolkit } from '@dxos/assistant-toolkit';
+import { AssistantToolkit, SystemToolkit, WebSearchToolkit } from '@dxos/assistant-toolkit';
 import { Blueprint } from '@dxos/blueprints';
 import type { FunctionDefinition } from '@dxos/functions';
-import { createBlueprint } from '@dxos/plugin-assistant/blueprints';
+import { blueprints as AssistantBlueprints, functions as AssistantFunctions } from '@dxos/plugin-assistant/blueprints';
 
 import { TestToolkit } from '../../util';
 
-const AssistantBlueprint = createBlueprint();
 export const blueprintRegistry = new Blueprint.Registry([
   // Blueprints available to the chat.
-  AssistantBlueprint,
-  ResearchBlueprint,
-  WebSearchBlueprint,
+  ...AssistantBlueprints,
 ]);
 
 // TODO(dmaretskyi): In Composer, those are handled by the plugins and capabilities mechanism.
@@ -27,12 +24,13 @@ export const blueprintRegistry = new Blueprint.Registry([
 
 export const functions: FunctionDefinition.Any[] = [
   // NOTE: Functions referenced by blueprints above need to be added here.
-  Research.create,
-  Research.research,
+  ...AssistantFunctions,
 ];
 
 export const toolkits: GenericToolkit.GenericToolkit[] = [
   // NOTE: Toolkits referenced by blueprints above need to be added here.
+  GenericToolkit.make(AssistantToolkit.AssistantToolkit, AssistantToolkit.layer()),
+  GenericToolkit.make(SystemToolkit.SystemToolkit, SystemToolkit.layer()),
   GenericToolkit.make(TestToolkit.toolkit, TestToolkit.layer),
   GenericToolkit.make(WebSearchToolkit, Layer.empty),
 ];

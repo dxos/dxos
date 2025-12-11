@@ -17,6 +17,7 @@ import { type SignalManager } from '@dxos/messaging';
 import { type SwarmNetworkManagerOptions, type TransportFactory, createIceProvider } from '@dxos/network-manager';
 import { type ServiceBundle } from '@dxos/rpc';
 import { trace } from '@dxos/tracing';
+import { isBun } from '@dxos/util';
 
 /**
  * Creates stand-alone services without rpc.
@@ -63,10 +64,14 @@ const setupNetworking = async (
       signalManager = edgeFeatures?.signaling || !signals
         ? undefined // EdgeSignalManager needs EdgeConnection and will be created in service-host
         : new WebsocketSignalManager(signals, signalMetadata),
-      transportFactory = createRtcTransportFactory(
-        { iceServers: config.get('runtime.services.ice') },
-        config.get('runtime.services.iceProviders') && createIceProvider(config.get('runtime.services.iceProviders')!),
-      ),
+      // TODO(wittjosiah): P2P networking causes seg fault in bun currently.
+      transportFactory = isBun()
+        ? MemoryTransportFactory
+        : createRtcTransportFactory(
+            { iceServers: config.get('runtime.services.ice') },
+            config.get('runtime.services.iceProviders') &&
+              createIceProvider(config.get('runtime.services.iceProviders')!),
+          ),
     } = options;
 
     return {
