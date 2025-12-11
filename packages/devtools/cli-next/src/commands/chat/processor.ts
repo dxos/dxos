@@ -22,10 +22,11 @@ import { Blueprint } from '@dxos/blueprints';
 import { type Space } from '@dxos/client/echo';
 import { Filter, Obj, Ref } from '@dxos/echo';
 import { throwCause } from '@dxos/effect';
+import type { FunctionDefinition } from '@dxos/functions';
 import { log } from '@dxos/log';
 import { type Message } from '@dxos/types';
 
-import { type AiChatServices, TestToolkit } from '../../util';
+import { type AiChatServices } from '../../util';
 
 import { blueprintRegistry } from './blueprints';
 
@@ -34,6 +35,7 @@ export class ChatProcessor {
   constructor(
     private readonly _runtime: Runtime.Runtime<AiChatServices>,
     private readonly _toolkit: GenericToolkit.GenericToolkit,
+    private readonly _functions: FunctionDefinition.Any[],
     private readonly _metadata?: AiService.ServiceMetadata,
   ) {}
 
@@ -57,7 +59,8 @@ export class ChatProcessor {
       Effect.provide(
         Layer.mergeAll(
           AiService.model(model),
-          makeToolResolverFromFunctions(TestToolkit.functions, this._toolkit.toolkit),
+          // TODO(dmaretskyi): Introduce new FunctionRegistry service (injected above) that will provide functions here.
+          makeToolResolverFromFunctions(this._functions, this._toolkit.toolkit),
           makeToolExecutionServiceFromFunctions(this._toolkit.toolkit, this._toolkit.layer),
         ),
       ),
@@ -98,8 +101,7 @@ export class ChatProcessor {
     }
 
     const queue = space.queues.create<Message.Message>();
-    // TODO(wittjosiah): Remove this hardcoded toolkit now that blueprints are available?
-    const conversation = new AiConversation(queue, this._toolkit?.toolkit);
+    const conversation = new AiConversation(queue);
     await conversation.open();
 
     const blueprints = await space.db.query(Filter.type(Blueprint.Blueprint)).run();
