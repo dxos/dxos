@@ -513,7 +513,7 @@ describe('AutomergeRepo', () => {
       expect(handleB.doc()!.text).to.equal(text);
     });
 
-    test.only('retry share config', async () => {
+    test('retry share config', async () => {
       let announce = false;
 
       const { repos, adapters } = await createRepoTopology({

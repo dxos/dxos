@@ -108,7 +108,7 @@ export class EchoEdgeReplicator implements EchoReplicator {
   }
 
   async connectToSpace(spaceId: SpaceId): Promise<void> {
-    log.info('connectToSpace', { spaceId });
+    log('connectToSpace', { spaceId });
     using _guard = await this._mutex.acquire();
 
     if (this._connectedSpaces.has(spaceId)) {
