@@ -22,7 +22,7 @@ export const recover = Command.make(
 
     const identity = yield* Effect.tryPromise(() => client.halo.recoverIdentity({ recoveryCode }));
     yield* Console.log('Identity recovered successfully');
-    yield* Console.log('Identity key:', identity?.identityKey?.toHex());
-    yield* Console.log('Display name:', identity?.profile?.displayName);
+    yield* Console.log('Identity key:', identity.identityKey.toHex());
+    yield* Console.log('Display name:', identity.profile?.displayName);
   }),
 ).pipe(Command.withDescription('Recover an existing identity using a recovery code.'));
