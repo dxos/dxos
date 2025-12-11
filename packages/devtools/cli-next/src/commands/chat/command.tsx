@@ -21,9 +21,10 @@ import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
 import { CommandConfig } from '../../services';
-import { type AiChatServices, Provider, TestToolkit, chatLayer, createLogBuffer, withTypes } from '../../util';
+import { type AiChatServices, Provider, chatLayer, createLogBuffer, withTypes } from '../../util';
 import { Common } from '../options';
 
+import { functions, toolkits } from './blueprints';
 import { App, Chat } from './components';
 import { ChatProcessor } from './processor';
 import { theme } from './theme';
@@ -80,8 +81,8 @@ export const chat = Command.make(
         ),
       );
 
-      const toolkit = GenericToolkit.make(TestToolkit.toolkit, TestToolkit.layer);
-      const processor = new ChatProcessor(runtime, toolkit, service.metadata);
+      const toolkit = GenericToolkit.merge(...toolkits);
+      const processor = new ChatProcessor(runtime, toolkit, functions, service.metadata);
       const conversation = yield* Effect.promise(async () => {
         invariant(client.halo.identity);
         // TODO(burdon): Hangs if identity is not ready.
@@ -135,6 +136,6 @@ export const chat = Command.make(
     }),
 ).pipe(
   Command.withDescription('Open chat interface.'),
-  Command.provide(({ provider, spaceId }) => chatLayer({ provider, spaceId })),
+  Command.provide(({ provider, spaceId }) => chatLayer({ provider, spaceId, functions })),
   Command.provideEffectDiscard(() => withTypes(Blueprint.Blueprint)),
 );
