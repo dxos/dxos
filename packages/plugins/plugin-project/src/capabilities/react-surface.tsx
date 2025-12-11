@@ -7,7 +7,6 @@ import React from 'react';
 import { Capabilities, contributes, createSurface } from '@dxos/app-framework';
 import { InvocationTraceContainer } from '@dxos/devtools';
 import { Obj } from '@dxos/echo';
-import { getSpace } from '@dxos/react-client/echo';
 import { StackItem } from '@dxos/react-ui-stack';
 import { Project } from '@dxos/types';
 
@@ -28,11 +27,11 @@ export default () =>
       filter: (data): data is { companionTo: Project.Project } =>
         Obj.instanceOf(Project.Project, data.companionTo) && data.subject === 'invocations',
       component: ({ data }) => {
-        const space = getSpace(data.companionTo);
+        const db = Obj.getDatabase(data.companionTo);
         // TODO(wittjosiah): Filter the invocations to those relevant to the project.
         return (
           <StackItem.Content>
-            <InvocationTraceContainer space={space} detailAxis='block' />
+            <InvocationTraceContainer db={db} detailAxis='block' />
           </StackItem.Content>
         );
       },

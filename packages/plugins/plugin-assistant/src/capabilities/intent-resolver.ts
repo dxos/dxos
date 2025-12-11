@@ -13,7 +13,6 @@ import { Sequence } from '@dxos/conductor';
 import { Filter, Key, Obj, Ref, Type } from '@dxos/echo';
 import { TracingService, serializeFunction } from '@dxos/functions';
 import { AutomationCapabilities } from '@dxos/plugin-automation';
-import { getSpace } from '@dxos/react-client/echo';
 import { Collection } from '@dxos/schema';
 import { type Message } from '@dxos/types';
 
@@ -72,15 +71,15 @@ export default (context: PluginContext) => [
     createResolver({
       intent: AssistantAction.UpdateChatName,
       resolve: async ({ chat }) => {
-        const space = getSpace(chat);
+        const db = Obj.getDatabase(chat);
         const queue = chat.queue.target as Queue<Message.Message>;
-        if (!space || !queue) {
+        if (!db || !queue) {
           return;
         }
 
         const runtimeResolver = context.getCapability(AutomationCapabilities.ComputeRuntime);
         const runtime = await runtimeResolver
-          .getRuntime(space.id)
+          .getRuntime(db.spaceId)
           .runPromise(Effect.runtime<AiChatServices>().pipe(Effect.provide(TracingService.layerNoop)));
 
         await new AiConversation(queue).use(async (conversation) => updateName(runtime, conversation, chat));

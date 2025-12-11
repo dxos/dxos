@@ -25,13 +25,13 @@ export type ChatToolbarActionsProps = {
 
 export const useChatToolbarActions = ({ chat, companionTo }: ChatToolbarActionsProps) => {
   const { dispatch } = useIntentDispatcher();
-  const { space } = useChatContext('useChatToolbarActions');
+  const { db } = useChatContext('useChatToolbarActions');
   const query = companionTo
     ? Query.select(Filter.id(companionTo.id)).targetOf(Assistant.CompanionTo).source()
     : Query.select(Filter.nothing());
 
   // TODO(wittjosiah): Query in react vs query in atom?
-  const chats = useQuery(space?.db, query);
+  const chats = useQuery(db, query);
 
   // Create stable reference for dependency array to avoid circular reference issues.
   return useMenuActions(

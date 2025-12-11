@@ -23,7 +23,7 @@ import { ATTENDABLE_PATH_SEPARATOR, PLANK_COMPANION_TYPE } from '@dxos/plugin-de
 import { ROOT_ID, atomFromSignal, createExtension } from '@dxos/plugin-graph';
 import { getActiveSpace } from '@dxos/plugin-space';
 import { SpaceAction } from '@dxos/plugin-space/types';
-import { Query, type Space, getSpace } from '@dxos/react-client/echo';
+import { Query, type Space } from '@dxos/react-client/echo';
 
 import { ASSISTANT_DIALOG, meta } from '../meta';
 import { Assistant, AssistantAction } from '../types';
@@ -131,9 +131,9 @@ export default (context: PluginContext) =>
                 return Option.some({ object, currentChat: undefined });
               }
 
-              const space = getSpace(object);
+              const db = Obj.getDatabase(object);
               const currentChatDxn = DXN.tryParse(currentChatState);
-              const currentChatRef = currentChatDxn ? space?.db.makeRef(currentChatDxn) : undefined;
+              const currentChatRef = currentChatDxn ? db?.makeRef(currentChatDxn) : undefined;
               const currentChat = get(atomFromSignal(() => currentChatRef?.target));
               return Obj.isObject(currentChat) ? Option.some({ object, currentChat }) : Option.none();
             }),
