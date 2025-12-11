@@ -91,11 +91,6 @@ export const App = (props: AppProps) => {
   ].filter(isTruthy);
 
   const renderer = useRenderer();
-  onMount(() => {
-    console.log('OK');
-    renderer.setBackgroundColor(theme.bg);
-    randomHint();
-  });
 
   renderer.useConsole = props.showConsole ?? false;
   createEffect(() => {
@@ -106,11 +101,9 @@ export const App = (props: AppProps) => {
     // Use ctrl-p to cycle position; +/- to resize at runtime (when focused).
     if (showConsole()) {
       renderer.console.show();
-      renderer.console.focus();
       if (!focusElements.includes('console')) {
         focusElements.splice(0, 0, 'console');
       }
-      setFocus('console');
     } else {
       renderer.console.hide();
       const idx = focusElements.indexOf('console');
@@ -122,6 +115,12 @@ export const App = (props: AppProps) => {
       }
     }
 
+    randomHint();
+  });
+
+  onMount(() => {
+    renderer.setBackgroundColor(theme.bg);
+    setFocus(props.focusElements?.[0]);
     randomHint();
   });
 
