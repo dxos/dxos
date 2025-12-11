@@ -14,7 +14,13 @@ import { LMStudioResolver, OllamaResolver } from '@dxos/ai/resolvers';
 import { AiServiceTestingPreset } from '@dxos/ai/testing';
 import { ClientService } from '@dxos/client';
 import { type Database, type Key } from '@dxos/echo';
-import { CredentialsService, type FunctionInvocationService, type QueueService, TracingService } from '@dxos/functions';
+import {
+  CredentialsService,
+  type FunctionDefinition,
+  type FunctionInvocationService,
+  type QueueService,
+  TracingService,
+} from '@dxos/functions';
 import {
   FunctionImplementationResolver,
   FunctionInvocationServiceLayerWithLocalLoopbackExecutor,
@@ -22,7 +28,6 @@ import {
 } from '@dxos/functions-runtime';
 
 import { spaceLayer } from './space';
-import * as TestToolkit from './test-toolkit';
 
 // TODO(burdon): Factor out (see plugin-assistant/processor.ts)
 export type AiChatServices =
@@ -40,12 +45,14 @@ export type Provider = Schema.Schema.Type<typeof Provider>;
 export type LayerOptions = {
   provider: Provider;
   spaceId: Option.Option<Key.SpaceId>;
+  functions: FunctionDefinition.Any[];
 };
 
 // TODO(wittjosiah): Factor out.
 export const chatLayer = ({
   provider,
   spaceId,
+  functions,
 }: LayerOptions): Layer.Layer<AiChatServices, ConfigError.ConfigError, ClientService> => {
   const aiServiceLayer = Match.value(provider).pipe(
     Match.when('edge', () => AiServiceTestingPreset('direct')),
@@ -59,7 +66,7 @@ export const chatLayer = ({
   );
 
   return FunctionInvocationServiceLayerWithLocalLoopbackExecutor.pipe(
-    Layer.provideMerge(FunctionImplementationResolver.layerTest({ functions: TestToolkit.functions })),
+    Layer.provideMerge(FunctionImplementationResolver.layerTest({ functions })),
     Layer.provideMerge(RemoteFunctionExecutionService.withClient(spaceId, true)),
     Layer.provideMerge(aiServiceLayer),
     Layer.provideMerge(CredentialsService.layerFromDatabase()),
