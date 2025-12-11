@@ -4490,6 +4490,9 @@ importers:
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
+      '@dxos/blueprints':
+        specifier: workspace:*
+        version: link:../../core/blueprints
       '@dxos/client':
         specifier: workspace:*
         version: link:../../sdk/client
@@ -4535,6 +4538,9 @@ importers:
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
+      '@dxos/plugin-assistant':
+        specifier: workspace:*
+        version: link:../../plugins/plugin-assistant
       '@dxos/protocols':
         specifier: workspace:*
         version: link:../../core/protocols
@@ -4632,9 +4638,6 @@ importers:
       '@types/wtfnode':
         specifier: ^0.10.0
         version: 0.10.0
-      ts-node:
-        specifier: 10.9.1
-        version: 10.9.1(patch_hash=8b505128d4c01d9dc6b047b35aac1252bda23c8fbc895b5a42388b2f97112636)(@swc/core@1.13.5(@swc/helpers@0.5.17))(@swc/wasm@1.13.3)(@types/node@22.10.2)(typescript@5.9.3)
       typescript:
         specifier: ^5.9.3
         version: 5.9.3
