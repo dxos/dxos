@@ -1,6 +1,6 @@
 #/bin/bash
 
 #
-# killall "dxos-cli"
+# killall dxnext
 #
-exec -a "dxos-cli" bun src/bin.ts "$@"
+bun src/bin.ts "$@"

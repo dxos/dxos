@@ -6,9 +6,13 @@ import * as Command from '@effect/cli/Command';
 import * as Options from '@effect/cli/Options';
 import { ConsolePosition } from '@opentui/core';
 import { render } from '@opentui/solid';
+import * as Deferred from 'effect/Deferred';
 import * as Effect from 'effect/Effect';
 import * as Match from 'effect/Match';
 import * as Option from 'effect/Option';
+import * as Cause from 'effect/Cause';
+import * as Fiber from 'effect/Fiber';
+import * as fs from 'node:fs';
 
 import { AiService, DEFAULT_EDGE_MODEL, DEFAULT_LMSTUDIO_MODEL, DEFAULT_OLLAMA_MODEL, ModelName } from '@dxos/ai';
 import { GenericToolkit } from '@dxos/assistant';
@@ -21,7 +25,7 @@ import { CommandConfig } from '../../services';
 import { type AiChatServices, Provider, TestToolkit, chatLayer, createLogBuffer, withTypes } from '../../util';
 import { Common } from '../options';
 
-import { App, Chat } from './components';
+import { App, Chat, restoreTerminal } from './components';
 import { ChatProcessor } from './processor';
 import { theme } from './theme';
 
@@ -62,7 +66,8 @@ export const chat = Command.make(
       log.config({
         filter: options.logLevel,
       });
-      log.runtimeConfig.processors = [logBuffer.processor];
+      // TODO(burdon): Temporarily disabled.
+      // log.runtimeConfig.processors = [logBuffer.processor];
 
       const client = yield* ClientService;
       const runtime = yield* Effect.runtime<AiChatServices>();
@@ -88,18 +93,43 @@ export const chat = Command.make(
         return processor.createConversation(space, options.blueprints);
       });
 
-      yield* Effect.acquireRelease(
-        Effect.promise(() =>
+      // Render.
+      const exitSignal = yield* Deferred.make<void, never>();
+      
+      // Remove existing listeners that might be exiting the process prematurely.
+      // The log showed an 'onSigint' listener attached to SIGTERM.
+      console.log('listening');
+      process.removeAllListeners('SIGTERM');
+      process.on('SIGTERM', () => {
+        // logBuffer.close();
+        console.log('!!!!!!!!!!!');
+        process.stderr.write('exit\n');
+        // Effect.runSync(Deferred.succeed(exitSignal, undefined));
+      });
+
+      if (false) {
+        yield* Effect.promise(() =>
           render(
             () => (
-              <App showConsole={options.debug} focusElements={['input', 'messages']} logBuffer={logBuffer}>
+              <App
+                showConsole={options.debug}
+                focusElements={['input', 'messages']}
+                logBuffer={logBuffer}
+              >
                 <Chat processor={processor} conversation={conversation} model={model} verbose={verbose} />
               </App>
             ),
             {
-              exitSignals: ['SIGINT', 'SIGTERM'],
+              exitSignals: ['SIGINT', 'SIGTERM'], 
+              exitOnCtrlC: true,
+              onDestroy: () => {
+                logBuffer.close();
+                Effect.runSync(Deferred.succeed(exitSignal, undefined));
+              },
+              openConsoleOnError: true,
               consoleOptions: {
                 position: ConsolePosition.TOP,
+                maxDisplayLines: 16, // Ignored (default is 16).
                 colorDefault: theme.log.default,
                 colorDebug: theme.log.debug,
                 colorInfo: theme.log.info,
@@ -108,12 +138,17 @@ export const chat = Command.make(
               },
             },
           ),
-        ),
-        () => Effect.sync(() => {}),
-      );
+        );
+      }
 
-      // Wait for user to exit.
-      return yield* Effect.never;
+      // Wait for user to exit; destroy renderer on interrupt.
+      yield* Deferred.await(exitSignal).pipe(
+        Effect.onExit((exit) =>
+          Effect.sync(() => {
+            process.stderr.write('exit\n');
+          }),
+        ),
+      );
     }),
 ).pipe(
   Command.withDescription('Open chat interface.'),

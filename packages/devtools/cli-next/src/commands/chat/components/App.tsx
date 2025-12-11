@@ -24,7 +24,6 @@ export const AppContext = createContext<{
 
 export type AppProps = ParentProps<{
   focusElements?: string[];
-  showConsole?: boolean;
   logBuffer?: LogBuffer;
 }>;
 
@@ -33,6 +32,10 @@ export type AppProps = ParentProps<{
  */
 // TODO(burdon): Factor out (common to all commands).
 export const App = (props: AppProps) => {
+  const renderer = useRenderer();
+  renderer.setBackgroundColor(theme.bg);
+  renderer.useConsole = props.showConsole ?? false;
+
   // Focus.
   const focusElements = [...(props.focusElements ?? [])];
   const [focus, setFocus] = createSignal<string | undefined>(props.focusElements?.[0]);
@@ -50,17 +53,17 @@ export const App = (props: AppProps) => {
 
   const handlers: KeyHandler[] = [
     //
-    // Quit
+    // Console
     //
-    {
-      hint: '[ctrl-c | esc]: Quit',
+    props.showConsole && {
+      hints: '[f1]: Toggle console',
       handler: (key: KeyEvent) => {
-        if (key.name === 'escape' || (key.ctrl && key.name === 'c')) {
-          renderer.destroy();
-          process.exit(0);
+        if (key.name === 'f1' && props.showConsole) {
+          setShowConsole(!showConsole());
         }
       },
     },
+
     //
     // Focus
     //
@@ -81,21 +84,8 @@ export const App = (props: AppProps) => {
         }
       },
     },
-    //
-    // Console
-    //
-    props.showConsole && {
-      hints: '[f1]: Toggle console',
-      handler: (key: KeyEvent) => {
-        if (key.name === 'f1' && props.showConsole) {
-          setShowConsole(!showConsole());
-        }
-      },
-    },
   ].filter(isTruthy);
 
-  const renderer = useRenderer();
-  renderer.useConsole = props.showConsole ?? false;
   createEffect(() => {
     if (!props.showConsole) {
       return;
@@ -123,7 +113,10 @@ export const App = (props: AppProps) => {
   });
 
   onMount(() => {
-    renderer.setBackgroundColor(theme.bg);
+    process.on('SIGTERM', () => {
+      renderer.destroy();
+    });
+    process.stderr.write('App mounted\n');
     setFocus(props.focusElements?.[0]);
     randomHint();
 
@@ -141,3 +134,25 @@ export const App = (props: AppProps) => {
 
   return <AppContext.Provider value={{ focus, hint }}>{props.children}</AppContext.Provider>;
 };
+
+export const restoreTerminal = () => {
+  try {
+    // Show cursor.
+    process.stdout.write('\x1b[?25h');
+    // Reset attributes.
+    process.stdout.write('\x1b[0m');
+    // Disable mouse tracking.
+    process.stdout.write('\x1b[?1000l');
+    process.stdout.write('\x1b[?1002l');
+    process.stdout.write('\x1b[?1003l');
+    process.stdout.write('\x1b[?1006l');
+    // Exit alternate screen if used.
+    process.stdout.write('\x1b[?1049l');
+    if (process.stdin.isTTY && process.stdin.isRaw) {
+      process.stdin.setRawMode(false);
+    }
+  } catch {
+    // Ignore errors during cleanup.
+  } 
+}
+      // process.on('SIGTERM', sigtermHandler);
