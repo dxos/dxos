@@ -66,6 +66,7 @@ export const chat = Command.make(
       const logBuffer = createLogBuffer();
       log.config({ filter: options.logLevel });
       log.runtimeConfig.processors = [logBuffer.processor];
+      log.info('starting...');
 
       const client = yield* ClientService;
       const runtime = yield* Effect.runtime<AiChatServices>();
