@@ -207,11 +207,11 @@ jobs:
 
       - name: Test Affected
         if: ${{ steps.extract_branch.outputs.branch != 'main' }}
-        run: moon run :e2e --affected --remote --concurrency=2 -- --browser=all
+        run: PLAYWRIGHT_BROWSER=all moon run :e2e --affected --remote --concurrency=2
 
       - name: Test All
         if: ${{ steps.extract_branch.outputs.branch == 'main' }}
-        run: moon run :e2e --concurrency=2 -- --browser=all
+        run: PLAYWRIGHT_BROWSER=all moon run :e2e --concurrency=2
 
       - uses: 'moonrepo/run-report-action@v1'
         if: (success() || failure()) && github.event_name == 'pull_request'

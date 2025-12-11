@@ -12,7 +12,7 @@ import { Filter, Obj, Ref } from '@dxos/echo';
 import { Database } from '@dxos/echo';
 import { Function, Trigger, getUserFunctionIdInMetadata } from '@dxos/functions';
 
-import { withDatabase, withTypes } from '../../../../util';
+import { spaceLayer, withTypes } from '../../../../util';
 import { Common } from '../../../options';
 import { Enabled, Input } from '../options';
 
@@ -21,14 +21,14 @@ import { Cron } from './options';
 export const create = Command.make(
   'create',
   {
-    spaceId: Common.spaceId,
+    spaceId: Common.spaceId.pipe(Options.optional),
     enabled: Enabled,
     // TODO(dmaretskyi): Should be the ECHO id of the function
     functionId: Common.functionId,
     cron: Cron,
     input: Input.pipe(Options.withDefault(HashMap.empty())),
   },
-  ({ spaceId, enabled, functionId, cron, input }) =>
+  ({ enabled, functionId, cron, input }) =>
     Effect.gen(function* () {
       const functions = yield* Database.Service.runQuery(Filter.type(Function.Function));
       const fn = functions.find((fn) => getUserFunctionIdInMetadata(Obj.getMeta(fn)) === functionId);
@@ -47,5 +47,9 @@ export const create = Command.make(
       });
       yield* Database.Service.add(trigger);
       yield* Console.log('Created trigger', trigger.id);
-    }).pipe(withDatabase(spaceId), withTypes([Function.Function, Trigger.Trigger])),
-).pipe(Command.withDescription('Create a timer trigger.'));
+    }),
+).pipe(
+  Command.withDescription('Create a timer trigger.'),
+  Command.provide(({ spaceId }) => spaceLayer(spaceId)),
+  Command.provideEffectDiscard(() => withTypes(Function.Function, Trigger.Trigger)),
+);

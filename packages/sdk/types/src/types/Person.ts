@@ -47,7 +47,10 @@ const PersonSchema = Schema.Struct({
   emails: Schema.Array(
     Schema.Struct({
       label: Schema.optional(Schema.String),
-      value: Format.Email.pipe(GeneratorAnnotation.set('internet.email')),
+      value: Format.Email.pipe(
+        Schema.annotations({ default: 'hello@email.com' }),
+        GeneratorAnnotation.set('internet.email'),
+      ),
     }),
   ).pipe(Schema.mutable, Schema.optional),
   identities: Schema.Array(
@@ -75,7 +78,10 @@ const PersonSchema = Schema.Struct({
   urls: Schema.Array(
     Schema.Struct({
       label: Schema.optional(Schema.String),
-      value: Format.URL.pipe(GeneratorAnnotation.set('internet.url')),
+      value: Format.URL.pipe(
+        Schema.annotations({ default: 'https://example.com' }),
+        GeneratorAnnotation.set('internet.url'),
+      ),
     }),
   ).pipe(Schema.mutable, Schema.optional),
   // TODO(burdon): Support date or create String type for ISO Date.

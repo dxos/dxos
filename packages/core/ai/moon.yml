@@ -8,5 +8,5 @@ tasks:
   compile:
     args:
       - '--entryPoint=src/index.ts'
+      - '--entryPoint=src/resolvers/index.ts'
       - '--entryPoint=src/testing/index.ts'
-      - '--entryPoint=src/AiServiceRouter.ts'

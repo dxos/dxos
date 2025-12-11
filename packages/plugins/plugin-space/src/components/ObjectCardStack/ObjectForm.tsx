@@ -6,10 +6,10 @@ import * as Schema from 'effect/Schema';
 import React, { useCallback, useMemo } from 'react';
 
 import { DXN, Obj, type Ref, Tag, Type } from '@dxos/echo';
-import { type JsonPath, setValue } from '@dxos/echo/internal';
+import { type JsonPath, splitJsonPath } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
 import { getSpace } from '@dxos/react-client/echo';
-import { Form, omitId, useRefQueryOptions } from '@dxos/react-ui-form';
+import { Form, omitId } from '@dxos/react-ui-form';
 import { isNonNullable } from '@dxos/util';
 
 import { meta as pluginMeta } from '../../meta';
@@ -36,13 +36,13 @@ export const ObjectForm = ({ object, schema }: ObjectFormProps) => {
   const tags = (meta.tags ?? []).map((tag) => space?.db.makeRef(DXN.parse(tag))).filter(isNonNullable);
   const values = useMemo(() => ({ tags, ...object }), [object, tags]);
 
-  const handleRefQueryLookup = useRefQueryOptions({ space });
-
-  const handleCreateTag = useCallback((values: Schema.Schema.Type<typeof TagSchema>) => {
+  const handleCreate = useCallback((schema: Type.Entity.Any, values: any) => {
     invariant(space);
-    const tag = space.db.add(Tag.make(values));
-    const meta = Obj.getMeta(object);
-    meta.tags = [...(meta.tags ?? []), Obj.getDXN(tag).toString()];
+    const newObject = space.db.add(Obj.make(schema, values));
+    if (Obj.instanceOf(newObject, Tag.Tag)) {
+      const meta = Obj.getMeta(object);
+      meta.tags = [...(meta.tags ?? []), Obj.getDXN(newObject).toString()];
+    }
   }, []);
 
   // TODO(wittjosiah): Use FormRootProps type.
@@ -54,15 +54,17 @@ export const ObjectForm = ({ object, schema }: ObjectFormProps) => {
 
       const changedPaths = Object.keys(changed).filter((path) => changed[path as JsonPath]) as JsonPath[];
       for (const path of changedPaths) {
+        const parts = splitJsonPath(path);
         // TODO(wittjosiah): This doesn't handle array paths well.
-        if (path.startsWith('tags')) {
+        if (parts[0] === 'tags') {
           const meta = Obj.getMeta(object);
           meta.tags = tags?.map((tag: Ref.Ref<Tag.Tag>) => tag.dxn.toString()) ?? [];
           continue;
         }
 
-        const value = values[path];
-        setValue(object, path, value);
+        const value = Obj.getValue(values, parts);
+        console.log('set value', isValid, parts, value);
+        Obj.setValue(object, parts, value);
       }
     },
     [object],
@@ -72,13 +74,12 @@ export const ObjectForm = ({ object, schema }: ObjectFormProps) => {
     <Form.Root
       schema={omitId(formSchema)}
       values={values}
-      createSchema={TagSchema}
       createOptionIcon='ph--plus--regular'
       createOptionLabel={['add tag label', { ns: pluginMeta.id }]}
       createInitialValuePath='label'
+      db={space?.db}
       onValuesChanged={handleChange}
-      onCreate={handleCreateTag}
-      onQueryRefOptions={handleRefQueryLookup}
+      onCreate={handleCreate}
     >
       <Form.Viewport>
         <Form.Content>

@@ -33,7 +33,7 @@ export const FunctionsRegistry = ({ space }: FunctionsRegistryProps) => {
   const [functions, setFunctions] = useState<Function.Function[]>([]);
   const { t } = useTranslation(meta.id);
 
-  const dbFunctions = useQuery(space, Filter.type(Function.Function));
+  const dbFunctions = useQuery(space.db, Filter.type(Function.Function));
 
   const state = (func: Function.Function) => {
     const dbFunction = dbFunctions.find((f) => f.key === func.key);

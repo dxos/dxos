@@ -45,11 +45,11 @@ const rollOrg = () => ({
 const StorybookKanban = () => {
   const spaces = useSpaces();
   const space = spaces[spaces.length - 1];
-  const [object] = useQuery(space, Filter.type(Kanban.Kanban));
+  const [object] = useQuery(space?.db, Filter.type(Kanban.Kanban));
   const typename = object?.view.target?.query ? getTypenameFromQuery(object.view.target.query.ast) : undefined;
-  const schema = useSchema(space, typename);
+  const schema = useSchema(space?.db, typename);
 
-  const objects = useQuery(space, schema ? Filter.type(schema) : Filter.nothing());
+  const objects = useQuery(space?.db, schema ? Filter.type(schema) : Filter.nothing());
   const filteredObjects = useGlobalFilteredObjects(objects);
 
   const projection = useProjectionModel(schema, object);

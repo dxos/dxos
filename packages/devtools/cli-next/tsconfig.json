@@ -1,6 +1,8 @@
 {
   "extends": "../../../tsconfig.base.json",
   "compilerOptions": {
+    "jsx": "preserve",
+    "jsxImportSource": "@opentui/solid",
     "noEmit": true,
     "rootDir": "src",
     "types": [
@@ -39,6 +41,15 @@
       "path": "../../common/util"
     },
     {
+      "path": "../../core/ai"
+    },
+    {
+      "path": "../../core/assistant"
+    },
+    {
+      "path": "../../core/blueprints"
+    },
+    {
       "path": "../../core/echo/echo"
     },
     {
@@ -55,6 +66,9 @@
     },
     {
       "path": "../../core/protocols"
+    },
+    {
+      "path": "../../plugins/plugin-assistant"
     },
     {
       "path": "../../sdk/client"

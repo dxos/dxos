@@ -14,7 +14,7 @@ const dirname = typeof __dirname !== 'undefined' ? __dirname : path.dirname(file
 export default createConfig({
   dirname,
   node: {
-    environment: 'jsdom',
+    environment: 'happy-dom',
     setupFiles: ['./src/vitest-setup.ts'],
     plugins: [
       ThemePlugin({

@@ -19,7 +19,7 @@ import { FunctionsServiceClient } from '@dxos/functions-runtime/edge';
 import { bundleFunction } from '@dxos/functions-runtime/native';
 import { failedInvariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { FunctionRuntimeKind } from '@dxos/protocols';
+import { ErrorCodec, FunctionRuntimeKind } from '@dxos/protocols';
 import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { AccessToken, Message } from '@dxos/types';
 
@@ -55,6 +55,7 @@ describe.runIf(process.env.DX_TEST_TAGS?.includes('functions-e2e'))('Functions d
       func,
       {
         mailboxId: Obj.getDXN(mailbox),
+        restrictedMode: true,
       },
       {
         spaceId: space.id,
@@ -74,7 +75,7 @@ describe.runIf(process.env.DX_TEST_TAGS?.includes('functions-e2e'))('Functions d
         enabled: true,
         function: Ref.make(func),
         spec: { kind: 'timer', cron: '*/30 * * * * *' },
-        input: { mailboxId: Obj.getDXN(mailbox).toString() },
+        input: { mailboxId: Obj.getDXN(mailbox).toString(), restrictedMode: true },
       }),
     );
     await sync(space);
@@ -84,6 +85,9 @@ describe.runIf(process.env.DX_TEST_TAGS?.includes('functions-e2e'))('Functions d
     });
     const result = await functionsServiceClient.forceRunCronTrigger(space.id, trigger.id);
     console.log(result);
+    if (result._kind === 'error') {
+      throw ErrorCodec.decode(result.error);
+    }
     await checkEmails(mailbox);
   });
 
@@ -96,7 +100,7 @@ describe.runIf(process.env.DX_TEST_TAGS?.includes('functions-e2e'))('Functions d
         enabled: true,
         function: Ref.make(func),
         spec: { kind: 'timer', cron: '*/30 * * * * *' },
-        input: { mailboxId: Obj.getDXN(mailbox).toString() },
+        input: { mailboxId: Obj.getDXN(mailbox).toString(), restrictedMode: true },
       }),
     );
     await sync(space);
@@ -119,7 +123,7 @@ describe.runIf(process.env.DX_TEST_TAGS?.includes('functions-e2e'))('Functions d
         enabled: true,
         function: Ref.make(func),
         spec: { kind: 'timer', cron: '*/3 * * * * *' },
-        input: { mailboxId: Obj.getDXN(mailbox).toString() },
+        input: { mailboxId: Obj.getDXN(mailbox).toString(), restrictedMode: true },
       }),
     );
     await sync(space);
@@ -175,7 +179,7 @@ const deployFunction = async (space: Space, functionsServiceClient: FunctionsSer
     ownerPublicKey: space.key,
     entryPoint: artifact.entryPoint,
     assets: artifact.assets,
-    runtime: FunctionRuntimeKind.enums.WORKERS_FOR_PLATFORMS,
+    runtime: FunctionRuntimeKind.enums.WORKER_LOADER,
   });
 
   space.db.add(func);

@@ -14,7 +14,7 @@ import { descriptionMessage, mx } from '@dxos/react-ui-theme';
 import { type ComponentProps } from './types';
 
 export const BlueprintModule = ({ space }: ComponentProps) => {
-  const [blueprint] = useQuery(space, Filter.type(Blueprint.Blueprint));
+  const [blueprint] = useQuery(space.db, Filter.type(Blueprint.Blueprint));
   const { t } = useTranslation(meta.id);
 
   return !blueprint?.instructions ? (

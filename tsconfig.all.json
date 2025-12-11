@@ -154,6 +154,9 @@
       "path": "packages/core/echo/echo-query/tsconfig.json"
     },
     {
+      "path": "packages/core/echo/echo-react/tsconfig.json"
+    },
+    {
       "path": "packages/core/echo/echo-signals/tsconfig.json"
     },
     {
@@ -233,9 +236,6 @@
     },
     {
       "path": "packages/devtools/cli-next/tsconfig.json"
-    },
-    {
-      "path": "packages/devtools/cli-tui/tsconfig.json"
     },
     {
       "path": "packages/devtools/devtools/tsconfig.json"

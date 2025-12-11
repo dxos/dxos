@@ -5,8 +5,7 @@
 import React from 'react';
 
 import { type AiContextBinder } from '@dxos/assistant';
-import { Obj } from '@dxos/echo';
-import { type Space } from '@dxos/react-client/echo';
+import { type Database, Obj } from '@dxos/echo';
 import { IconButton, type Label, type ThemedClassName, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
@@ -15,12 +14,12 @@ import { meta } from '../../meta';
 
 export type ChatReferencesProps = ThemedClassName<{
   context: AiContextBinder;
-  space: Space;
+  db: Database.Database;
 }>;
 
-export const ChatReferences = ({ classNames, context, space }: ChatReferencesProps) => {
+export const ChatReferences = ({ classNames, context, db }: ChatReferencesProps) => {
   const { t } = useTranslation(meta.id);
-  const { objects, onUpdateObject } = useContextObjects({ space, context });
+  const { objects, onUpdateObject } = useContextObjects({ db, context });
 
   return (
     <ul className={mx('flex', classNames)}>

@@ -37,7 +37,7 @@ const generator: ValueGenerator = faker as any;
 const DefaultStory = () => {
   const { dispatchPromise: dispatch } = useIntentDispatcher();
   const space = useSpace();
-  const [doc] = useQuery(space, Query.type(Markdown.Document));
+  const [doc] = useQuery(space?.db, Query.type(Markdown.Document));
   const data = useMemo(() => ({ subject: doc }), [doc]);
   const id = doc && Obj.getDXN(doc).toString();
   const attentionAttrs = useAttentionAttributes(id);

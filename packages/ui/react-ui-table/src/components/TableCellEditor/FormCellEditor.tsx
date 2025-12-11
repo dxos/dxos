@@ -5,13 +5,12 @@
 import type * as Schema from 'effect/Schema';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { Filter, Obj, type Type } from '@dxos/echo';
-import { Format, Ref, getValue } from '@dxos/echo/internal';
+import { Obj, type Type } from '@dxos/echo';
+import { Ref, getValue } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
 import { getSnapshot } from '@dxos/live-object';
-import { getSpace } from '@dxos/react-client/echo';
 import { type Label, Popover } from '@dxos/react-ui';
-import { Form, type FormRootProps, omitId } from '@dxos/react-ui-form';
+import { Form, type FormRootProps, type RefFieldProps } from '@dxos/react-ui-form';
 import { parseCellIndex, useGridContext } from '@dxos/react-ui-grid';
 import { type FieldProjection } from '@dxos/schema';
 import { getDeep, isTruthy, setDeep } from '@dxos/util';
@@ -67,27 +66,6 @@ export const FormCellEditor = <T extends Type.Entity.Any = Type.Entity.Any>({
     return narrowSchema(schema, [fieldProjection.field.path]);
   }, [JSON.stringify(schema), fieldProjection.field.path]); // TODO(burdon): Avoid stringify.
 
-  const getSchema = useCallback(
-    ({ typename }: { typename: string }) => {
-      const space = getSpace(model!.view);
-      invariant(space);
-      const schema = space.db.schemaRegistry.query({ typename, location: ['database', 'runtime'] }).runSync()[0];
-      return { space, schema };
-    },
-    [model],
-  );
-
-  const refSchema = useMemo(() => {
-    if (fieldProjection.props.format === Format.TypeFormat.Ref && fieldProjection.props.referenceSchema) {
-      const { schema } = getSchema({ typename: fieldProjection.props.referenceSchema });
-      return schema;
-    }
-
-    return null;
-  }, [fieldProjection.props.format, fieldProjection.props.referenceSchema, getSchema]);
-
-  const createSchema = useMemo(() => (refSchema ? omitId(refSchema) : null), [refSchema]);
-
   const originalRow = useMemo<TableRow | undefined>(() => {
     if (model && contextEditing) {
       // Check if this is a draft cell and get the appropriate row data
@@ -131,41 +109,32 @@ export const FormCellEditor = <T extends Type.Entity.Any = Type.Entity.Any>({
   );
 
   const handleCreate = useCallback<NonNullable<FormRootProps<any>['onCreate']>>(
-    (values) => {
-      if (refSchema && onCreate) {
-        const objectWithId = onCreate(refSchema, values);
-        if (objectWithId) {
-          const ref = Ref.make(objectWithId);
-          const path = fieldProjection.field.path;
-          setDeep(originalRow, [path], ref);
-        }
+    (schema, values) => {
+      const objectWithId = onCreate?.(schema, values);
+      if (objectWithId) {
+        const ref = Ref.make(objectWithId);
+        const path = fieldProjection.field.path;
+        setDeep(originalRow, [path], ref);
       }
       contextEditing?.cellElement?.focus();
       setEditing(null);
       setLocalEditing(false);
       onSave?.();
     },
-    [fieldProjection.field.path, onSave, contextEditing, originalRow, refSchema, onCreate],
+    [fieldProjection.field.path, onSave, contextEditing, originalRow, onCreate],
   );
 
-  const handleQueryRefOptions = useCallback<NonNullable<FormRootProps<any>['onQueryRefOptions']>>(
-    async ({ typename }) => {
-      const { schema, space } = getSchema({ typename });
-      if (model && schema && space) {
-        const objects = await space.db.query(Filter.type(schema)).run();
-        return objects
-          .map((obj) => {
-            return {
-              dxn: Obj.getDXN(obj),
-              label: getValue(obj, fieldProjection.field.referencePath!) || obj.id.toString(),
-            };
-          })
-          .filter(isTruthy);
-      }
-
-      return [];
-    },
-    [model],
+  const getOptions = useCallback<NonNullable<RefFieldProps['getOptions']>>(
+    (results) =>
+      results
+        .map((obj) => {
+          return {
+            id: Obj.getDXN(obj).toString(),
+            label: getValue(obj, fieldProjection.field.referencePath!) || obj.id.toString(),
+          };
+        })
+        .filter(isTruthy),
+    [fieldProjection],
   );
 
   if (!editing) {
@@ -184,15 +153,13 @@ export const FormCellEditor = <T extends Type.Entity.Any = Type.Entity.Any>({
               autoFocus
               schema={narrowedSchema}
               values={formValues}
+              createInitialValuePath={fieldProjection.field.referencePath}
+              createOptionIcon='ph--plus--regular'
+              createOptionLabel={createOptionLabel}
+              db={model?.db}
+              getOptions={getOptions}
+              onCreate={handleCreate}
               onSave={handleSave}
-              onQueryRefOptions={handleQueryRefOptions}
-              {...(createSchema && {
-                createSchema,
-                createInitialValuePath: fieldProjection.field.referencePath,
-                createOptionIcon: 'ph--plus--regular',
-                createOptionLabel,
-                onCreate: handleCreate,
-              })}
             >
               <Form.Viewport>
                 <Form.Content>

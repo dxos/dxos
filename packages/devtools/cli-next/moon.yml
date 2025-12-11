@@ -5,36 +5,42 @@ tags:
   - ts-test
 tasks:
   build:
-    deps:
-      - prebuild
     options:
       mergeOutputs: replace
     outputs: []
   compile:
-    # TODO(wittjosiah): Maybe add bundleAll option to match what tsup would do?
-    # Bundling the deps would allow the published package.json to not have dependencies.
+    command: bun
     args:
-      - '--entryPoint=src/bin.ts'
-      - '--platform=node'
-      - '--injectGlobals'
-      - '--outputPath=dist'
+      - ./scripts/build.ts
     options:
       mergeArgs: replace
+      mergeInputs: append
       mergeOutputs: replace
+      timeout: 60
+    inputs:
+      - scripts/build.ts
+      - bunfig.toml
+      - package.json
+      - LICENSE
     outputs:
-      - dist/node-esm/
+      - dist/cli-next/
+      - dist/cli-next-darwin-arm64/
+      - dist/cli-next-darwin-x64/
+      - dist/cli-next-linux-arm64/
+      - dist/cli-next-linux-x64/
+      - dist/cli-next-win32-x64/
   dev:
-    command: ./cli-next
+    command: ./dxnext
     deps:
       - ^:compile
     local: true
-  prebuild:
-    command: vite-node ./scripts/copy-package-json.ts
+  publish:
+    command: bun
+    args:
+      - ./scripts/publish.ts
     deps:
       - compile
     inputs:
-      - scripts/copy-package-json.ts
-      - package.json
-      - moon.yml
-    outputs:
-      - dist/package.json
+      - scripts/publish.ts
+      - dist/**/*
+    local: true

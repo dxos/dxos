@@ -271,6 +271,18 @@ export default tseslint.config(
   },
 
   //
+  // SolidJS - Exclude React rules
+  //
+  {
+    files: ['packages/devtools/cli-next/**/*.{js,ts,jsx,tsx,mts,cts,mjs,cjs}'],
+    rules: {
+      ...Object.fromEntries(
+        Object.keys(reactPlugin.rules).map((rule) => [`react/${rule}`, 'off']),
+      ),
+    },
+  },
+
+  //
   // Tests
   //
   {
