@@ -2,13 +2,15 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Blueprint } from '@dxos/blueprints';
-import { createBlueprint } from '@dxos/plugin-assistant/blueprints';
-import { Research, ResearchBlueprint, WebSearchBlueprint, WebSearchToolkit } from '@dxos/assistant-toolkit';
-import type { FunctionDefinition } from '@dxos/functions';
+import * as Layer from 'effect/Layer';
+
 import { GenericToolkit } from '@dxos/assistant';
+import { Research, ResearchBlueprint, WebSearchBlueprint, WebSearchToolkit } from '@dxos/assistant-toolkit';
+import { Blueprint } from '@dxos/blueprints';
+import type { FunctionDefinition } from '@dxos/functions';
+import { createBlueprint } from '@dxos/plugin-assistant/blueprints';
+
 import { TestToolkit } from '../../util';
-import { Layer } from 'effect';
 
 const AssistantBlueprint = createBlueprint();
 export const blueprintRegistry = new Blueprint.Registry([

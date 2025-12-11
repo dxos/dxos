@@ -14,7 +14,13 @@ import { LMStudioResolver, OllamaResolver } from '@dxos/ai/resolvers';
 import { AiServiceTestingPreset } from '@dxos/ai/testing';
 import { ClientService } from '@dxos/client';
 import { type Database, type Key } from '@dxos/echo';
-import { CredentialsService, type FunctionDefinition, type FunctionInvocationService, type QueueService, TracingService } from '@dxos/functions';
+import {
+  CredentialsService,
+  type FunctionDefinition,
+  type FunctionInvocationService,
+  type QueueService,
+  TracingService,
+} from '@dxos/functions';
 import {
   FunctionImplementationResolver,
   FunctionInvocationServiceLayerWithLocalLoopbackExecutor,
@@ -22,7 +28,6 @@ import {
 } from '@dxos/functions-runtime';
 
 import { spaceLayer } from './space';
-import * as TestToolkit from './test-toolkit';
 
 // TODO(burdon): Factor out (see plugin-assistant/processor.ts)
 export type AiChatServices =

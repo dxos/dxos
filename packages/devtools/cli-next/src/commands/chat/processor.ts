@@ -22,13 +22,13 @@ import { Blueprint } from '@dxos/blueprints';
 import { type Space } from '@dxos/client/echo';
 import { Filter, Obj, Ref } from '@dxos/echo';
 import { throwCause } from '@dxos/effect';
+import type { FunctionDefinition } from '@dxos/functions';
 import { log } from '@dxos/log';
 import { type Message } from '@dxos/types';
 
-import { type AiChatServices, TestToolkit } from '../../util';
+import { type AiChatServices } from '../../util';
 
 import { blueprintRegistry } from './blueprints';
-import type { FunctionDefinition } from '@dxos/functions';
 
 // TODO(burdon): Factor out common guts from AiChatProcessor.
 export class ChatProcessor {
