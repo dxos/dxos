@@ -14,12 +14,6 @@ export type ChatMessagesProps = {
 export const ChatMessages = (props: ChatMessagesProps) => {
   return (
     <scrollbox
-      contentOptions={{
-        paddingLeft: 1,
-        paddingRight: 1,
-        paddingTop: 1,
-        paddingBottom: 1,
-      }}
       flexGrow={1}
       scrollX={false}
       scrollY={true}
