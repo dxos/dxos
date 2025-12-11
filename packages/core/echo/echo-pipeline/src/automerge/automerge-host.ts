@@ -330,7 +330,6 @@ export class AutomergeHost extends Resource {
             this._documentsToRequest.add(handle.documentId);
             this._sharePolicyChangedTask!.schedule();
           }
-          log('loaded handle', { documentId, state: handle.state });
         } catch (err) {
           log.error('failed to load document', { documentId, err });
           throw err;
