@@ -1025,6 +1025,9 @@ importers:
       '@dxos/config':
         specifier: workspace:*
         version: link:../../sdk/config
+      '@dxos/context':
+        specifier: workspace:*
+        version: link:../../common/context
       '@dxos/devtools':
         specifier: workspace:*
         version: link:../../devtools/devtools
@@ -1064,6 +1067,9 @@ importers:
       '@dxos/react-ui-editor':
         specifier: workspace:*
         version: link:../../ui/react-ui-editor
+      '@dxos/react-ui-syntax-highlighter':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-syntax-highlighter
       '@dxos/react-ui-table':
         specifier: workspace:*
         version: link:../../ui/react-ui-table
@@ -4487,6 +4493,9 @@ importers:
       '@dxos/assistant':
         specifier: workspace:*
         version: link:../../core/assistant
+      '@dxos/assistant-toolkit':
+        specifier: workspace:*
+        version: link:../../core/assistant-toolkit
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async

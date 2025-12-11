@@ -12,6 +12,7 @@
   "dependencies": {
     "@dxos/ai": "workspace:*",
     "@dxos/assistant": "workspace:*",
+    "@dxos/assistant-toolkit": "workspace:*",
     "@dxos/async": "workspace:*",
     "@dxos/blueprints": "workspace:*",
     "@dxos/client": "workspace:*",
