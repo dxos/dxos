@@ -16,6 +16,7 @@ import { Query } from '@dxos/echo';
 import { Database } from '@dxos/echo';
 import { Function, FunctionDefinition, FunctionInvocationService } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
+import { log } from '@dxos/log';
 
 /**
  * Constructs a `ToolResolverService` whose `resolve(id)` looks up tools in the following order:
@@ -49,6 +50,12 @@ export const makeToolResolverFromFunctions = (
             const functionDef = dbFunction
               ? FunctionDefinition.deserialize(dbFunction)
               : functions.find((fn) => fn.key === id);
+
+            log.info('resolved fn', {
+              id,
+              functionDef: functionDef?.name,
+              functions: functions.map((fn) => fn.key),
+            });
 
             if (!functionDef) {
               return yield* Effect.fail(new AiToolNotFoundError(id));
