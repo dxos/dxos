@@ -91,6 +91,9 @@ export const RevealPlayer = ({ classNames, content, slide, fullscreen = true, on
       slideNumber: false,
       embedded: true,
 
+      // Disable autoplay to prevent errors in headless environments (e.g., CI).
+      autoPlayMedia: false,
+
       // TODO(burdon): Speaker view requires server to serve popout window.
       // https://revealjs.com/speaker-view
       showNotes: false,
