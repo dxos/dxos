@@ -371,10 +371,10 @@ const setup = async (kv = createTestLevel()) => {
     updateIndexes: async () => {},
   });
 
-  const refreshCollectionState = () => {
+  const refreshCollectionState = async () => {
     const documentIds = Record.keys(host.handles);
     log('refreshCollectionState', { documentIds });
-    host.updateLocalCollectionState('default', documentIds);
+    await host.updateLocalCollectionState('default', documentIds);
   };
   return { kv, host, dataService, refreshCollectionState };
 };
