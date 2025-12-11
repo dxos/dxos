@@ -77,17 +77,13 @@ export class ChatProcessor {
   async createConversation(space: Space, blueprintKeys: string[]) {
     // TODO(wittjosiah): This is copied from ChatCompanion.tsx.
     const existingBlueprints = await space.db.query(Filter.type(Blueprint.Blueprint)).run();
-
-    // TODO(wittjosiah): Stop doing this.
-    //   Currently doing this to ensure blueprints are always up to date from the registry.
-    for (const blueprint of existingBlueprints) {
-      space.db.remove(blueprint);
-    }
-
     for (const key of blueprintKeys) {
       const existingBlueprint = existingBlueprints.find((blueprint) => blueprint.key === key);
       if (existingBlueprint) {
-        continue;
+        // continue;
+        // TODO(wittjosiah): Stop doing this.
+        //   Currently doing this to ensure blueprints are always up to date from the registry.
+        space.db.remove(existingBlueprint);
       }
 
       const blueprint = blueprintRegistry.getByKey(key);
