@@ -110,7 +110,7 @@ export default defineConfig((env) => ({
     {
       name: 'raw-md-loader',
       load(id) {
-        if (id.endsWith('.md?raw') ) {
+        if (id.endsWith('.md?raw')) {
           const filePath = id.replace(/\?raw$/, '');
           const content = readFileSync(filePath, 'utf-8');
           return `export default ${JSON.stringify(content)}`;
