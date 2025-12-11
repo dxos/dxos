@@ -69,24 +69,17 @@ export const ObjectDatabaseId = Symbol.for('@dxos/echo/Database');
  * Internal runtime representation of an object.
  * The fields are accessed through getter functions.
  */
+// NOTE: Each symbol has a jsdoc describing its purpose.
 export interface InternalObjectProps {
-  id: ObjectId;
-
-  // Echo supports untyped objects O_O.
-  readonly [TypeId]?: DXN;
-
-  // TODO(burdon): ???
-  readonly [SelfDXNId]?: DXN;
-
-  /**
-   * Returns the schema for the object.
-   */
-  readonly [SchemaId]?: Schema.Schema.AnyNoContext;
+  readonly id: ObjectId;
+  readonly [SelfDXNId]: DXN;
   readonly [KindId]: EntityKind;
+  readonly [SchemaId]: Schema.Schema.AnyNoContext;
+  readonly [TypeId]: DXN;
   readonly [MetaId]?: ObjectMeta;
+  readonly [ObjectDatabaseId]?: Database.Database;
   readonly [ObjectDeletedId]?: boolean;
   readonly [ObjectVersionId]?: Version;
-  readonly [ObjectDatabaseId]?: Database.Database;
   readonly [RelationSourceDXNId]?: DXN;
   readonly [RelationTargetDXNId]?: DXN;
   readonly [RelationSourceId]?: InternalObjectProps;
