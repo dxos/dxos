@@ -245,7 +245,13 @@ const createDocumentsIterator = (automergeHost: AutomergeHost) =>
           if (visited.has(urlString)) {
             continue;
           }
-          const linkHandle = await automergeHost.loadDoc<DatabaseDirectory>(Context.default(), urlString as DocumentId);
+          const linkHandle = await automergeHost.loadDoc<DatabaseDirectory>(
+            Context.default(),
+            urlString as DocumentId,
+            {
+              fetchFromNetwork: true,
+            },
+          );
           for await (const result of getObjectsFromHandle(linkHandle)) {
             yield result;
           }

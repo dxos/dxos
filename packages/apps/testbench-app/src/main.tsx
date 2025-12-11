@@ -19,6 +19,8 @@ import { AppContainer, Error, Main } from './components';
 import { getConfig } from './config';
 import { Document, Item } from './data';
 import { translations } from './translations';
+import { SyncBench } from './components/SyncBench';
+import { log } from '@dxos/log';
 
 TRACE_PROCESSOR.setInstanceTag('app');
 
@@ -36,6 +38,10 @@ const router = createBrowserRouter([
         <Main />
       </AppContainer>
     ),
+  },
+  {
+    path: '/sync-bench',
+    element: <SyncBench />,
   },
 ]);
 
@@ -75,6 +81,8 @@ const main = async () => {
           type: 'module',
           name: 'dxos-client-worker',
         });
+
+  log.config({ filter: config.get('runtime.client.log.filter'), prefix: config.get('runtime.client.log.prefix') });
 
   const handleInitialized = async (client: Client) => {
     const searchParams = new URLSearchParams(location.search);

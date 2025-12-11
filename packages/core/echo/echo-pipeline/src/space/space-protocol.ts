@@ -294,7 +294,9 @@ export class SpaceProtocolSession implements WireProtocol {
       }),
     );
 
+    console.log('disableP2pReplication', this._disableP2pReplication);
     if (!this._disableP2pReplication) {
+      console.log('ADD REPLICATOR EXTENSION');
       this._teleport.addExtension('dxos.mesh.teleport.replicator', this.replicator);
     }
     this._teleport.addExtension('dxos.mesh.teleport.blobsync', this._blobSync.createExtension());

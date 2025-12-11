@@ -388,7 +388,9 @@ export class DataSpaceManager extends Resource {
   private async _getSpaceRootDocument(space: DataSpace): Promise<DocHandle<DatabaseDirectory>> {
     const automergeIndex = space.automergeSpaceState.rootUrl;
     invariant(automergeIndex);
-    const document = await this._echoHost.loadDoc<DatabaseDirectory>(Context.default(), automergeIndex as any);
+    const document = await this._echoHost.loadDoc<DatabaseDirectory>(Context.default(), automergeIndex as any, {
+      fetchFromNetwork: true,
+    });
     await document.whenReady();
     return document;
   }

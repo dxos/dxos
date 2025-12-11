@@ -392,5 +392,8 @@
   "typescript.preferences.importModuleSpecifier": "non-relative",
   "vitest.disableWorkspaceWarning": true,
   "vitest.rootConfig": "vitest.all.config.ts",
-  "typescript.tsdk": "node_modules/typescript/lib"
+  "typescript.tsdk": "node_modules/typescript/lib",
+  "[typescript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  }
 }

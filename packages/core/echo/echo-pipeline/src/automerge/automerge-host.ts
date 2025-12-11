@@ -314,17 +314,19 @@ export class AutomergeHost extends Resource {
       handle = this._repo.handles[documentId as DocumentId];
     }
     if (!handle) {
-      if(!opts?.fetchFromNetwork) {
+      if (!opts?.fetchFromNetwork) {
         handle = await this._repo.find(documentId as DocumentId, FIND_PARAMS);
       } else {
         try {
-          handle = await this._repo.find(documentId as DocumentId, { allowableStates: ['ready', 'requesting', 'unavailable']});
-          if(handle.state === 'requesting' || handle.state === 'unavailable') {
+          handle = await this._repo.find(documentId as DocumentId, {
+            allowableStates: ['ready', 'requesting', 'unavailable'],
+          });
+          if (handle.state === 'requesting' || handle.state === 'unavailable') {
             this._documentsToRequest.add(handle.documentId);
             this._sharePolicyChangedTask!.schedule();
           }
           log.info('state', { documentId, state: handle.state });
-        } catch(err) {
+        } catch (err) {
           log.error('failed to load document', { documentId, err });
           throw err;
         }
@@ -472,7 +474,11 @@ export class AutomergeHost extends Resource {
         return false;
       }
 
-      if (!this._createdDocuments.has(documentId) && !this._documentsToSync.has(documentId) && !this._documentsToRequest.has(documentId)) {
+      if (
+        !this._createdDocuments.has(documentId) &&
+        !this._documentsToSync.has(documentId) &&
+        !this._documentsToRequest.has(documentId)
+      ) {
         // Skip advertising documents that don't need to be synced.
         return false;
       }
