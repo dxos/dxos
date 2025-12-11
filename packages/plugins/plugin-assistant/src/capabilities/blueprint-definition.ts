@@ -30,6 +30,16 @@ import { analysis, list, load } from '../functions';
 const deckTools = ['open-item'];
 
 export const functions$: FunctionDefinition[] = [analysis, list, load];
+export const functions = [
+  ...functions$,
+  // Factor out.
+  Research.create,
+  Research.research,
+  Agent.prompt,
+  EntityExtraction.extract,
+  Discord.fetch,
+  Linear.sync,
+];
 export const tools = [...AssistantToolkit.tools, ...SystemToolkit.tools, ...deckTools];
 
 export const ASSISTANT_BLUEPRINT_KEY = 'dxos.org/blueprint/assistant';
@@ -51,17 +61,6 @@ export const blueprints = [
   WebSearchBlueprint,
   DiscordBlueprint,
   LinearBlueprint,
-];
-
-export const functions = [
-  ...functions$,
-  // Factor out.
-  Research.create,
-  Research.research,
-  Agent.prompt,
-  EntityExtraction.extract,
-  Discord.fetch,
-  Linear.sync,
 ];
 
 export default (): Capability<any>[] => [
