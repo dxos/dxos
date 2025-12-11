@@ -101,6 +101,11 @@ const BUNDLE_SYNC_CONCURRENCY = 2;
 const BUNDLE_SYNC_THRESHOLD = 50;
 
 /**
+ * Only announce documents that are known to require sync.
+ */
+const OPTIMIZED_SHARE_POLICY = true;
+
+/**
  * Abstracts over the AutomergeRepo.
  */
 @trace.resource()
@@ -325,7 +330,7 @@ export class AutomergeHost extends Resource {
             this._documentsToRequest.add(handle.documentId);
             this._sharePolicyChangedTask!.schedule();
           }
-          log.info('state', { documentId, state: handle.state });
+          log('loaded handle', { documentId, state: handle.state });
         } catch (err) {
           log.error('failed to load document', { documentId, err });
           throw err;
@@ -474,13 +479,15 @@ export class AutomergeHost extends Resource {
         return false;
       }
 
-      if (
-        !this._createdDocuments.has(documentId) &&
-        !this._documentsToSync.has(documentId) &&
-        !this._documentsToRequest.has(documentId)
-      ) {
-        // Skip advertising documents that don't need to be synced.
-        return false;
+      if (OPTIMIZED_SHARE_POLICY) {
+        if (
+          !this._createdDocuments.has(documentId) &&
+          !this._documentsToSync.has(documentId) &&
+          !this._documentsToRequest.has(documentId)
+        ) {
+          // Skip advertising documents that don't need to be synced.
+          return false;
+        }
       }
 
       const peerMetadata = this._repo.peerMetadataByPeerId[peerId];
