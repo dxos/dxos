@@ -35,7 +35,6 @@ const generator: ValueGenerator = faker as any;
 // TODO(burdon): Reconcile schemas types and utils (see API PR).
 // TODO(burdon): Base type for T (with id); see ECHO API PR?
 const useTestModel = <S extends Type.Obj.Any>(schema: S, count: number) => {
-  const client = useClient();
   const { space } = useClientProvider();
   const [object, setObject] = useState<Table.Table>();
 
@@ -49,15 +48,14 @@ const useTestModel = <S extends Type.Obj.Any>(schema: S, count: number) => {
       return;
     }
 
-    const { view, jsonSchema } = await View.makeFromSpace({ client, space, typename: Type.getTypename(schema) });
+    const { view, jsonSchema } = await View.makeFromSpace({ space, typename: Type.getTypename(schema) });
     const object = Table.make({ view, jsonSchema });
     setObject(object);
     space.db.add(object);
-    await space.db.schemaRegistry.register([schema]);
-  }, [client, space, schema]);
+  }, [space, schema]);
 
   const projection = useProjectionModel(schema, object);
-  const model = useTableModel<TableRow>({ object, projection, features });
+  const model = useTableModel<TableRow>({ object, projection, db: space?.db, features });
 
   useEffect(() => {
     if (!model || !space) {
@@ -102,7 +100,6 @@ const DefaultStory = () => {
           schema={Organization.Organization}
           presentation={orgPresentation}
           onCreate={handleCreate}
-          client={client}
           ignoreAttention
           testId='relations-0'
         />
@@ -113,7 +110,6 @@ const DefaultStory = () => {
           schema={Person.Person}
           presentation={contactPresentation}
           onCreate={handleCreate}
-          client={client}
           ignoreAttention
           testId='relations-1'
         />

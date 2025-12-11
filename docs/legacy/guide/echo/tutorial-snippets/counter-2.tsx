@@ -4,17 +4,18 @@
 
 import React, { useEffect } from 'react';
 
-import { Expando, live, useQuery, useSpaces } from '@dxos/react-client/echo';
+import { Filter, Type, Obj } from '@dxos/echo';
+import { useQuery, useSpaces } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 
 export const Counter = () => {
   useIdentity();
   const [space] = useSpaces();
-  const [counter] = useQuery(space, { type: 'counter' });
+  const [counter] = useQuery(space, Filter.type(Type.Expando));
 
   useEffect(() => {
     if (space && !counter) {
-      const counter = live(Expando, { type: 'counter', values: [] });
+      const counter = Obj.make(Type.Expando, { type: 'counter', values: [] });
       space.db.add(counter);
     }
   }, [space, counter]);

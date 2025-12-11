@@ -10,7 +10,6 @@ import { Filter, type Space } from '@dxos/client/echo';
 import { FQ_ID_LENGTH } from '@dxos/client/echo';
 import { Resource } from '@dxos/context';
 import { Obj } from '@dxos/echo';
-import { getTypename } from '@dxos/echo/internal';
 import { Function, type FunctionInvocationService } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
@@ -171,7 +170,7 @@ export class ComputeGraph extends Resource {
 
             for (const obj of objects) {
               if (obj.name === name) {
-                const type = getTypename(obj)!;
+                const type = Obj.getTypename(obj)!;
                 // NOTE: Names must be single quoted.
                 return `'${createSheetName({ type, id: obj.id })}'!`;
               }
@@ -251,7 +250,7 @@ export class ComputeGraph extends Resource {
       const query = this._space.db.query(Filter.type(Function.Function));
       const unsubscribe = query.subscribe();
       const dispose = effect(() => {
-        this._remoteFunctions = query.objects.filter(({ binding }) => binding);
+        this._remoteFunctions = query.results.filter((fn) => fn.binding);
         this.update.emit({ type: 'functionsUpdated' });
       });
 

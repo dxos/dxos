@@ -20,7 +20,7 @@ export const sync = Command.make(
       Options.withDefault(5000),
     ),
   },
-  ({ spaceId, spaceTimeout }: { spaceId: string; spaceTimeout: number }) =>
+  ({ spaceId, spaceTimeout }) =>
     Effect.gen(function* () {
       // If space is not available locally, wait for it to sync.
       const space = yield* getSpace(spaceId).pipe(

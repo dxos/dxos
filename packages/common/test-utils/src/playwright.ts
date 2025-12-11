@@ -7,7 +7,7 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 
-import { type Browser, type BrowserContext, type Page, type PlaywrightTestConfig } from '@playwright/test';
+import { type Browser, type BrowserContext, type Page, type PlaywrightTestConfig, devices } from '@playwright/test';
 import pkgUp from 'pkg-up';
 
 import { Lock } from './lock';
@@ -51,6 +51,24 @@ export const e2ePreset = (testDir: string): PlaywrightTestConfig => {
   const testResultOuputDir = join(workspaceRoot, 'test-results/playwright/output', packageDirName);
   const reporterOutputFile = join(workspaceRoot, 'test-results/playwright/report', `${packageDirName}.json`);
 
+  const browser = process.env.PLAYWRIGHT_BROWSER || (process.env.CI ? 'all' : 'chromium');
+  const projects = [
+    {
+      name: 'chromium',
+      use: { ...devices['Desktop Chrome'] },
+    },
+    {
+      name: 'firefox',
+      use: { ...devices['Desktop Firefox'] },
+    },
+    {
+      name: 'webkit',
+      use: { ...devices['Desktop Safari'] },
+    },
+  ].filter((project) => {
+    return browser === 'all' || project.name === browser;
+  });
+
   return {
     testDir,
     outputDir: testResultOuputDir,
@@ -77,6 +95,7 @@ export const e2ePreset = (testDir: string): PlaywrightTestConfig => {
     use: {
       trace: 'retain-on-failure',
     },
+    projects,
   };
 };
 

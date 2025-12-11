@@ -6,8 +6,8 @@ import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
-import { AiService, ConsolePrinter, MemoizedAiService } from '@dxos/ai';
-import { TestAiService } from '@dxos/ai/testing';
+import { AiService, ConsolePrinter } from '@dxos/ai';
+import { MemoizedAiService, TestAiService } from '@dxos/ai/testing';
 import {
   AiConversation,
   type ContextBinding,
@@ -16,16 +16,12 @@ import {
   makeToolResolverFromFunctions,
 } from '@dxos/assistant';
 import { Blueprint } from '@dxos/blueprints';
-import { PropertiesType } from '@dxos/client-protocol';
+import { SpaceProperties } from '@dxos/client-protocol';
 import { Obj, Query, Ref } from '@dxos/echo';
-import { TestHelpers, acquireReleaseResource } from '@dxos/effect';
-import {
-  CredentialsService,
-  DatabaseService,
-  FunctionInvocationService,
-  QueueService,
-  TracingService,
-} from '@dxos/functions';
+import { Database } from '@dxos/echo';
+import { acquireReleaseResource } from '@dxos/effect';
+import { TestHelpers } from '@dxos/effect/testing';
+import { CredentialsService, FunctionInvocationService, QueueService, TracingService } from '@dxos/functions';
 import { FunctionInvocationServiceLayerTest, TestDatabaseLayer } from '@dxos/functions-runtime/testing';
 import { invariant } from '@dxos/invariant';
 import { ObjectId } from '@dxos/keys';
@@ -54,7 +50,7 @@ const TestLayer = Layer.mergeAll(
       TestDatabaseLayer({
         spaceKey: 'fixed',
         indexing: { vector: true },
-        types: [PropertiesType, Collection.Collection, Blueprint.Blueprint, Markdown.Document, HasSubject.HasSubject],
+        types: [SpaceProperties, Collection.Collection, Blueprint.Blueprint, Markdown.Document, HasSubject.HasSubject],
       }),
       CredentialsService.configuredLayer([]),
       TracingService.layerNoop,
@@ -71,16 +67,16 @@ describe('update', () => {
           name: 'BlueYard',
           content: 'Founders and portfolio of BlueYard.',
         });
-        yield* DatabaseService.add(doc);
+        yield* Database.Service.add(doc);
 
         yield* FunctionInvocationService.invokeFunction(MarkdownFunction.update, {
           id: doc.id,
           diffs: ['- Founders', '+ # Founders'],
         });
 
-        const updatedDoc = yield* DatabaseService.resolve(Obj.getDXN(doc), Markdown.Document);
+        const updatedDoc = yield* Database.Service.resolve(Obj.getDXN(doc), Markdown.Document);
         expect(updatedDoc.name).toBe(doc.name);
-        const text = yield* DatabaseService.load(updatedDoc.content);
+        const text = yield* Database.Service.load(updatedDoc.content);
         expect(text.content).toBe('# Founders and portfolio of BlueYard.');
       },
       WithProperties,
@@ -96,8 +92,8 @@ describe('update', () => {
         const queue = yield* QueueService.createQueue<Message.Message | ContextBinding>();
         const conversation = yield* acquireReleaseResource(() => new AiConversation(queue));
 
-        yield* DatabaseService.flush({ indexes: true });
-        const markdownBlueprint = yield* DatabaseService.add(Obj.clone(MarkdownBlueprint));
+        yield* Database.Service.flush({ indexes: true });
+        const markdownBlueprint = yield* Database.Service.add(Obj.clone(MarkdownBlueprint));
         yield* Effect.promise(() =>
           conversation.context.bind({
             blueprints: [Ref.make(markdownBlueprint)],
@@ -111,7 +107,7 @@ describe('update', () => {
           prompt: `Create a document with a cookie recipe.`,
         });
         {
-          const { objects: docs } = yield* DatabaseService.runQuery(Query.type(Markdown.Document));
+          const docs = yield* Database.Service.runQuery(Query.type(Markdown.Document));
           if (docs.length !== 1) {
             throw new Error(`Expected 1 document; got ${docs.length}: ${docs.map((_) => _.name)}`);
           }
@@ -120,7 +116,7 @@ describe('update', () => {
           invariant(Obj.instanceOf(Markdown.Document, doc));
           console.log({
             name: doc.name,
-            content: yield* DatabaseService.load(doc.content).pipe(Effect.map((_) => _.content)),
+            content: yield* Database.Service.load(doc.content).pipe(Effect.map((_) => _.content)),
           });
         }
 
@@ -129,7 +125,7 @@ describe('update', () => {
           prompt: 'Add a section with a holiday-themed variation.',
         });
         {
-          const { objects: docs } = yield* DatabaseService.runQuery(Query.type(Markdown.Document));
+          const docs = yield* Database.Service.runQuery(Query.type(Markdown.Document));
           if (docs.length !== 1) {
             throw new Error(`Expected 1 document; got ${docs.length}: ${docs.map((_) => _.name)}`);
           }
@@ -138,7 +134,7 @@ describe('update', () => {
           invariant(Obj.instanceOf(Markdown.Document, doc));
           console.log({
             name: doc.name,
-            content: yield* DatabaseService.load(doc.content).pipe(Effect.map((_) => _.content)),
+            content: yield* Database.Service.load(doc.content).pipe(Effect.map((_) => _.content)),
           });
         }
       },

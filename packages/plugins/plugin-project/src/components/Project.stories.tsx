@@ -11,7 +11,7 @@ import { faker } from '@dxos/random';
 import { useQuery } from '@dxos/react-client/echo';
 import { useClientProvider, withClientProvider } from '@dxos/react-client/testing';
 import { withTheme } from '@dxos/react-ui/testing';
-import { Form } from '@dxos/react-ui-form';
+import { Form, omitId } from '@dxos/react-ui-form';
 import { Collection, View } from '@dxos/schema';
 import { createObjectFactory } from '@dxos/schema/testing';
 import { Person, Project } from '@dxos/types';
@@ -23,14 +23,24 @@ import { type ItemProps, Project as ProjectComponent } from './Project';
 const StorybookProjectItem = ({ item, projectionModel }: ItemProps) => {
   if (Obj.instanceOf(Person.Person, item)) {
     const contact = item as Obj.Obj<Person.Person>;
-    return <Form values={contact} schema={Person.Person} projection={projectionModel} autoSave />;
+
+    return (
+      <Form.Root schema={omitId(Person.Person)} projection={projectionModel} values={contact} autoSave>
+        <Form.Viewport>
+          <Form.Content>
+            <Form.FieldSet />
+          </Form.Content>
+        </Form.Viewport>
+      </Form.Root>
+    );
   }
+
   return <span>{item.id}</span>;
 };
 
 const DefaultStory = () => {
   const { space } = useClientProvider();
-  const projects = useQuery(space, Filter.type(Project.Project));
+  const projects = useQuery(space?.db, Filter.type(Project.Project));
   const project = projects[0];
 
   const handleAddColumn = useCallback(() => {
@@ -67,8 +77,8 @@ const DefaultStory = () => {
 
 const MutationsStory = () => {
   const { space } = useClientProvider();
-  const projects = useQuery(space, Filter.type(Project.Project));
-  const contacts = useQuery(space, Filter.type(Person.Person));
+  const projects = useQuery(space?.db, Filter.type(Project.Project));
+  const contacts = useQuery(space?.db, Filter.type(Person.Person));
   const project = projects[0];
 
   const handleAddColumn = useCallback(() => {

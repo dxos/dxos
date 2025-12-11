@@ -38,7 +38,7 @@ export default ({ createInvitationUrl, onReset }: ReactSurfaceOptions) =>
       id: Account.Devices,
       role: 'article',
       filter: (data): data is any => data.subject === Account.Devices,
-      component: ({ data }) => <DevicesContainer createInvitationUrl={createInvitationUrl} />,
+      component: () => <DevicesContainer createInvitationUrl={createInvitationUrl} />,
     }),
     createSurface({
       id: Account.Security,

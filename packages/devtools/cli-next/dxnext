@@ -1,0 +1,6 @@
+#/bin/bash
+
+#
+# killall "dxos-cli"
+#
+exec -a "dxos-cli" bun src/bin.ts "$@"

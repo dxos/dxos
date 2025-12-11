@@ -6,12 +6,12 @@ import React, { useCallback, useMemo, useState } from 'react';
 
 import { useIntentDispatcher } from '@dxos/app-framework/react';
 import { ComputeGraph } from '@dxos/conductor';
-import { Filter, type Obj } from '@dxos/echo';
+import { Filter, Obj, type Type } from '@dxos/echo';
 import { Markdown } from '@dxos/plugin-markdown/types';
 import { Sheet } from '@dxos/plugin-sheet/types';
 import { Diagram } from '@dxos/plugin-sketch/types';
 import { useClient } from '@dxos/react-client';
-import { type Space, getTypename } from '@dxos/react-client/echo';
+import { type Space } from '@dxos/react-client/echo';
 import { IconButton, Input, Toolbar, useAsyncEffect } from '@dxos/react-ui';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { Organization, Person, Task } from '@dxos/types';
@@ -30,16 +30,20 @@ export const SpaceGenerator = ({ space, onCreateObjects }: SpaceGeneratorProps) 
   const { dispatchPromise: dispatch } = useIntentDispatcher();
   const client = useClient();
   const staticTypes = [Markdown.Document, Diagram.Diagram, Sheet.Sheet, ComputeGraph]; // TODO(burdon): Make extensible.
-  const recordTypes = [Organization.Organization, Person.Person, Task.Task];
+  const recordTypes: Type.Obj.Any[] = [Organization.Organization, Person.Person, Task.Task];
   const [count, setCount] = useState(1);
   const [info, setInfo] = useState<any>({});
   const presets = useMemo(() => generator(), []);
 
+  // Register types.
+  useAsyncEffect(async () => {
+    await client.addTypes([...staticTypes, ...recordTypes, ...presets.schemas]);
+  }, [client]);
+
   // Create type generators.
   const typeMap = useMemo(() => {
-    client.addTypes([...staticTypes, ...recordTypes, ...presets.schemas]);
     const recordGenerators = new Map<string, ObjectGenerator<any>>(
-      recordTypes.map((type) => [type.typename, createGenerator(client, dispatch, type as any)]),
+      recordTypes.map((type) => [type.typename, createGenerator(client, dispatch, type)]),
     );
 
     return new Map([...staticGenerators, ...presets.items, ...recordGenerators]);
@@ -52,10 +56,10 @@ export const SpaceGenerator = ({ space, onCreateObjects }: SpaceGeneratorProps) 
     const staticSchema = space.db.graph.schemaRegistry.schemas;
 
     // Create object map.
-    const { objects } = await space.db.query(Filter.everything()).run();
+    const objects = await space.db.query(Filter.everything()).run();
     const objectMap = sortKeys(
       objects.reduce<Record<string, number>>((map, obj) => {
-        const type = getTypename(obj);
+        const type = Obj.getTypename(obj);
         if (type) {
           const count = map[type] ?? 0;
           map[type] = count + 1;

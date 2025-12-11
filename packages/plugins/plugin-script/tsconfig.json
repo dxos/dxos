@@ -27,6 +27,9 @@
       "path": "../../common/debug"
     },
     {
+      "path": "../../common/effect"
+    },
+    {
       "path": "../../common/invariant"
     },
     {
@@ -84,6 +87,9 @@
       "path": "../../core/functions-runtime"
     },
     {
+      "path": "../../core/functions-simulator-cloudflare"
+    },
+    {
       "path": "../../core/mesh/rpc"
     },
     {
@@ -103,6 +109,9 @@
     },
     {
       "path": "../../sdk/client-protocol"
+    },
+    {
+      "path": "../../sdk/config"
     },
     {
       "path": "../../sdk/react-client"

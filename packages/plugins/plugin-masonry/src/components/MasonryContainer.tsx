@@ -4,11 +4,11 @@
 
 import React, { useEffect, useState } from 'react';
 
-import { Surface } from '@dxos/app-framework/react';
+import { Surface, useCapabilities } from '@dxos/app-framework/react';
 import { Filter, Type } from '@dxos/echo';
 import { type TypedObject } from '@dxos/echo/internal';
+import { ClientCapabilities } from '@dxos/plugin-client';
 import { useGlobalFilteredObjects } from '@dxos/plugin-search';
-import { useClient } from '@dxos/react-client';
 import { getSpace, useQuery } from '@dxos/react-client/echo';
 import { Masonry as MasonryComponent } from '@dxos/react-ui-masonry';
 import { getTypenameFromQuery } from '@dxos/schema';
@@ -20,14 +20,14 @@ const Item = ({ data }: { data: any }) => {
 };
 
 export const MasonryContainer = ({ object, role }: { object: Masonry.Masonry; role?: string }) => {
-  const client = useClient();
+  const schemas = useCapabilities(ClientCapabilities.Schema);
   const space = getSpace(object);
   const typename = object.view.target?.query ? getTypenameFromQuery(object.view.target.query.ast) : undefined;
 
   const [cardSchema, setCardSchema] = useState<TypedObject<any, any>>();
 
   useEffect(() => {
-    const staticSchema = client.graph.schemaRegistry.schemas.find((schema) => Type.getTypename(schema) === typename);
+    const staticSchema = schemas.flat().find((schema) => Type.getTypename(schema) === typename);
     if (staticSchema) {
       setCardSchema(() => staticSchema as TypedObject<any, any>);
     }
@@ -44,9 +44,9 @@ export const MasonryContainer = ({ object, role }: { object: Masonry.Masonry; ro
       );
       return unsubscribe;
     }
-  }, [typename, space]);
+  }, [schemas, typename, space]);
 
-  const objects = useQuery(space, cardSchema ? Filter.type(cardSchema) : Filter.nothing());
+  const objects = useQuery(space?.db, cardSchema ? Filter.type(cardSchema) : Filter.nothing());
   const filteredObjects = useGlobalFilteredObjects(objects);
 
   return (

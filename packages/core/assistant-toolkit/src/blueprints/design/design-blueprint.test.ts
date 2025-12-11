@@ -17,8 +17,10 @@ import {
 } from '@dxos/assistant';
 import { Blueprint } from '@dxos/blueprints';
 import { Obj, Ref } from '@dxos/echo';
-import { TestHelpers, acquireReleaseResource } from '@dxos/effect';
-import { DatabaseService, QueueService, TracingService } from '@dxos/functions';
+import { Database } from '@dxos/echo';
+import { acquireReleaseResource } from '@dxos/effect';
+import { TestHelpers } from '@dxos/effect/testing';
+import { QueueService, TracingService } from '@dxos/functions';
 import { FunctionInvocationServiceLayerTestMocked, TestDatabaseLayer } from '@dxos/functions-runtime/testing';
 import { log } from '@dxos/log';
 import { Markdown } from '@dxos/plugin-markdown/types';
@@ -40,19 +42,19 @@ describe('Design Blueprint', { timeout: 120_000 }, () => {
         const queue = yield* QueueService.createQueue<Message.Message | ContextBinding>();
         const conversation = yield* acquireReleaseResource(() => new AiConversation(queue));
 
-        yield* DatabaseService.add(blueprint);
+        yield* Database.Service.add(blueprint);
         yield* Effect.promise(() =>
           conversation.context.bind({
             blueprints: [Ref.make(blueprint)],
           }),
         );
 
-        const artifact = yield* DatabaseService.add(Markdown.make({ content: 'Hello, world!' }));
+        const artifact = yield* Database.Service.add(Markdown.make({ content: 'Hello, world!' }));
         let prevContent = artifact.content;
 
         {
           const prompt = trim`
-            I want to design a new feature for our product. 
+            I want to design a new feature for our product.
 
             We need to add a user profile system with the following requirements:
             1. Users should be able to create and edit their profiles
@@ -72,7 +74,7 @@ describe('Design Blueprint', { timeout: 120_000 }, () => {
 
         {
           const prompt = trim`
-            I want this to be built on top of Durable Objects and SQLite database. 
+            I want this to be built on top of Durable Objects and SQLite database.
             Adjust the spec to reflect this.
           `;
 

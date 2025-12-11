@@ -29,7 +29,7 @@ faker.seed(0);
 const StorybookMasonry = () => {
   const spaces = useSpaces();
   const space = spaces[spaces.length - 1];
-  const masonries = useQuery(space, Filter.type(Masonry.Masonry));
+  const masonries = useQuery(space?.db, Filter.type(Masonry.Masonry));
   const masonry = masonries.at(0);
 
   return masonry ? <MasonryContainer object={masonry} role='story' /> : null;
@@ -50,7 +50,7 @@ const meta = {
             const space = await client.spaces.create();
             await space.waitUntilReady();
 
-            const { view } = await View.makeFromSpace({ client, space, typename: Organization.Organization.typename });
+            const { view } = await View.makeFromSpace({ space, typename: Organization.Organization.typename });
             const masonry = Masonry.make({ view });
             space.db.add(masonry);
 

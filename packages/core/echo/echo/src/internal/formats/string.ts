@@ -5,7 +5,7 @@
 import * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
 
-import { FormatAnnotation, FormatEnum } from './types';
+import { FormatAnnotation, TypeFormat } from './types';
 
 /**
  * Email address (RFC 5321)
@@ -13,7 +13,7 @@ import { FormatAnnotation, FormatEnum } from './types';
  */
 export const Email = Schema.String.pipe(
   Schema.pattern(/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/),
-  FormatAnnotation.set(FormatEnum.Email),
+  FormatAnnotation.set(TypeFormat.Email),
   Schema.annotations({
     title: 'Email',
     description: 'Email address',
@@ -24,25 +24,25 @@ export const Email = Schema.String.pipe(
  *
  */
 // TODO(burdon): Implement.
-export const Formula = Schema.String.pipe(FormatAnnotation.set(FormatEnum.Formula));
+export const Formula = Schema.String.pipe(FormatAnnotation.set(TypeFormat.Formula));
 
 /**
  *
  */
 // TODO(burdon): Implement.
-export const Hostname = Schema.String.pipe(FormatAnnotation.set(FormatEnum.Hostname));
+export const Hostname = Schema.String.pipe(FormatAnnotation.set(TypeFormat.Hostname));
 
 /**
  *
  */
 // TODO(burdon): Implement.
-export const JSON = Schema.String.pipe(FormatAnnotation.set(FormatEnum.JSON));
+export const JSON = Schema.String.pipe(FormatAnnotation.set(TypeFormat.JSON));
 
 /**
  *
  */
 // TODO(burdon): Implement.
-export const Markdown = Schema.String.pipe(FormatAnnotation.set(FormatEnum.Markdown));
+export const Markdown = Schema.String.pipe(FormatAnnotation.set(TypeFormat.Markdown));
 
 /**
  * Regex
@@ -50,14 +50,19 @@ export const Markdown = Schema.String.pipe(FormatAnnotation.set(FormatEnum.Markd
  * https://ecma-international.org/publications-and-standards/standards/ecma-262
  */
 // TODO(burdon): Implement.
-export const Regex = Schema.String.pipe(FormatAnnotation.set(FormatEnum.Regex));
+export const Regex = Schema.String.pipe(FormatAnnotation.set(TypeFormat.Regex));
+
+/**
+ * Multi-line text.
+ */
+export const Text = Schema.String.pipe(FormatAnnotation.set(TypeFormat.Text));
 
 /**
  * https://datatracker.ietf.org/doc/html/rfc3986#section-1.1.3
  */
 export const URL = Schema.String.pipe(
   Schema.pattern(/^(\w+?:\/\/)?([\da-z.-]+)\.([a-z.]{2,6})([/\w .-]*)*\/?$/i),
-  FormatAnnotation.set(FormatEnum.URL),
+  FormatAnnotation.set(TypeFormat.URL),
   Schema.annotations({
     title: 'URL',
     description: 'URL',
@@ -69,7 +74,7 @@ export const URL = Schema.String.pipe(
  * https://datatracker.ietf.org/doc/html/rfc4122
  */
 export const UUID = Schema.UUID.pipe(
-  FormatAnnotation.set(FormatEnum.UUID),
+  FormatAnnotation.set(TypeFormat.UUID),
   Schema.annotations({
     [SchemaAST.ExamplesAnnotationId]: ['3e4666bf-d5e5-4aa7-b8ce-cefe41c7568a'],
   }),

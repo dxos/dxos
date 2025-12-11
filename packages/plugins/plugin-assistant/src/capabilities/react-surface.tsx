@@ -38,7 +38,7 @@ export default () =>
       role: 'article',
       filter: (data): data is { subject: Assistant.Chat; variant: undefined } =>
         Obj.instanceOf(Assistant.Chat, data.subject) && data.variant !== 'assistant-chat',
-      component: ({ data, role }) => <ChatContainer role={role} chat={data.subject} />,
+      component: ({ data, role, ref }) => <ChatContainer role={role} chat={data.subject} ref={ref} />,
     }),
     // TODO(wittjosiah): This is flashing when chat changes.
     createSurface({
@@ -47,7 +47,7 @@ export default () =>
       filter: (data): data is { companionTo: Obj.Any; subject: Assistant.Chat | 'assistant-chat' } =>
         Obj.isObject(data.companionTo) &&
         (Obj.instanceOf(Assistant.Chat, data.subject) || data.subject === 'assistant-chat'),
-      component: ({ data, role }) => <ChatCompanion role={role} data={data} />,
+      component: ({ data, role, ref }) => <ChatCompanion role={role} data={data} ref={ref} />,
     }),
     createSurface({
       id: `${meta.id}/companion-invocations`,

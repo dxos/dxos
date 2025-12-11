@@ -13,7 +13,7 @@ import * as Schema from 'effect/Schema';
 import { AiToolNotFoundError, ToolExecutionService, ToolResolverService } from '@dxos/ai';
 import { todo } from '@dxos/debug';
 import { Query } from '@dxos/echo';
-import { DatabaseService } from '@dxos/echo-db';
+import { Database } from '@dxos/echo';
 import { Function, FunctionDefinition, FunctionInvocationService } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 
@@ -26,16 +26,16 @@ import { invariant } from '@dxos/invariant';
  *
  * If none of the above yield a match, the effect fails with `AiToolNotFoundError`.
  *
- * Requires `DatabaseService` in the environment.
+ * Requires `Database.Service` in the environment.
  */
 export const makeToolResolverFromFunctions = (
   functions: FunctionDefinition.Any[],
   toolkit: Toolkit.Toolkit<any>,
-): Layer.Layer<ToolResolverService, never, DatabaseService> => {
+): Layer.Layer<ToolResolverService, never, Database.Service> => {
   return Layer.effect(
     ToolResolverService,
     Effect.gen(function* () {
-      const dbService = yield* DatabaseService;
+      const dbService = yield* Database.Service;
       return {
         resolve: (id): Effect.Effect<Tool.Any, AiToolNotFoundError> =>
           Effect.gen(function* () {
@@ -44,9 +44,7 @@ export const makeToolResolverFromFunctions = (
               return tool;
             }
 
-            const {
-              objects: [dbFunction],
-            } = yield* DatabaseService.runQuery(Query.type(Function.Function, { key: id }));
+            const [dbFunction] = yield* Database.Service.runQuery(Query.type(Function.Function, { key: id }));
 
             const functionDef = dbFunction
               ? FunctionDefinition.deserialize(dbFunction)
@@ -57,7 +55,7 @@ export const makeToolResolverFromFunctions = (
             }
 
             return projectFunctionToTool(functionDef);
-          }).pipe(Effect.provideService(DatabaseService, dbService)),
+          }).pipe(Effect.provideService(Database.Service, dbService)),
       } satisfies Context.Tag.Service<ToolResolverService>;
     }),
   );
@@ -82,6 +80,7 @@ export const makeToolExecutionServiceFromFunctions = (
                 if (Tool.isProviderDefined(tool)) {
                   throw new Error('Attempted to call a provider-defined tool');
                 }
+
                 // TODO(wittjosiah): Everything is `never` here.
                 const { result } = yield* (toolkitHandler.handle as any)(tool.name, input);
                 return result;

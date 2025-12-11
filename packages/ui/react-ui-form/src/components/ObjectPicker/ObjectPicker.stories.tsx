@@ -48,7 +48,7 @@ const DefaultStory = () => {
   }, [space]);
 
   // Get all objects in the space (similar to BoardContainer)
-  const allObjects = useQuery(space, Filter.everything());
+  const allObjects = useQuery(space?.db, Filter.everything());
 
   // Map objects to options format expected by ObjectPicker
   const options = useMemo(
@@ -73,22 +73,22 @@ const DefaultStory = () => {
   );
 
   return (
-    <div className='p-4'>
+    <div role='none' className='flex is-96'>
       <ObjectPicker.Root open={isOpen} onOpenChange={setIsOpen}>
         <ObjectPicker.Trigger asChild>
-          <Button variant='primary' data-testid='trigger'>
+          <Button variant='primary' data-testid='trigger' classNames='is-full'>
             Select Person
           </Button>
         </ObjectPicker.Trigger>
         <ObjectPicker.Content
+          classNames='popover-card-width'
           options={options}
-          onSelect={mockHandleSelect}
           createSchema={personSchema}
           createOptionLabel={['create new person label', { ns: 'os' }]}
           createOptionIcon='ph--user-plus--regular'
           createInitialValuePath='fullName'
           onCreate={handleCreateCallback}
-          classNames='popover-card-width'
+          onSelect={mockHandleSelect}
         />
       </ObjectPicker.Root>
     </div>
@@ -202,6 +202,12 @@ export const WithTest: Story = {
     // Check that clicking the save button calls onCreate with expected values.
     await expect(mockHandleCreate).toHaveBeenCalledWith({
       fullName: unrelatedTerm,
+      addresses: [],
+      phoneNumbers: [],
+      emails: [],
+      identities: [],
+      urls: [],
+      fields: [],
     });
   },
 };

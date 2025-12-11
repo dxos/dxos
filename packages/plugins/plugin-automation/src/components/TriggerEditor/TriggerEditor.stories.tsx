@@ -6,14 +6,14 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 
 import { Filter, Obj, Ref, Tag, Type } from '@dxos/echo';
-import { Function } from '@dxos/functions';
-import { Trigger } from '@dxos/functions';
+import { Function, Trigger } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { faker } from '@dxos/random';
 import { useQuery } from '@dxos/react-client/echo';
-import { ContactType, useClientProvider, withClientProvider } from '@dxos/react-client/testing';
+import { TestSchema, useClientProvider, withClientProvider } from '@dxos/react-client/testing';
 import { useAsyncEffect } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import { translations as formTranslations } from '@dxos/react-ui-form';
 import { Employer, Organization, Person, Project } from '@dxos/types';
 
 import { functions } from '../../testing';
@@ -32,15 +32,15 @@ const types = [
 const DefaultStory = (props: Partial<TriggerEditorProps>) => {
   const { space } = useClientProvider();
   const [trigger, setTrigger] = useState<Trigger.Trigger>();
-  const tags = useQuery(space, Filter.type(Tag.Tag));
+  const tags = useQuery(space?.db, Filter.type(Tag.Tag));
 
   useAsyncEffect(async () => {
     if (!space) {
       return;
     }
 
-    const result = await space.db.query(Filter.type(Function.Function)).run();
-    const fn = result.objects.find((fn) => fn.name === 'example.com/function/forex');
+    const functions = await space.db.query(Filter.type(Function.Function)).run();
+    const fn = functions.find((fn) => fn.name === 'example.com/function/forex');
     invariant(fn);
     const trigger = space.db.add(
       Trigger.make({
@@ -60,16 +60,14 @@ const DefaultStory = (props: Partial<TriggerEditorProps>) => {
   }
 
   return (
-    <div role='none' className='is-[32rem] bs-fit border border-separator rounded-sm'>
-      <TriggerEditor
-        space={space}
-        trigger={trigger}
-        types={types}
-        tags={tags}
-        onSave={(values) => console.log('on save', values)}
-        {...props}
-      />
-    </div>
+    <TriggerEditor
+      db={space.db}
+      trigger={trigger}
+      types={types}
+      tags={tags}
+      onSave={(values) => console.log('on save', values)}
+      {...props}
+    />
   );
 };
 
@@ -83,18 +81,22 @@ const meta = {
     withClientProvider({
       createIdentity: true,
       createSpace: true,
-      types: [Tag.Tag, Function.Function, Trigger.Trigger, ContactType],
+      types: [Tag.Tag, Function.Function, Trigger.Trigger, TestSchema.ContactType],
       onCreateSpace: ({ space }) => {
-        space.db.add(Tag.make({ label: 'Important' }));
-        space.db.add(Tag.make({ label: 'Investor' }));
-        space.db.add(Tag.make({ label: 'New' }));
+        // Tags.
+        ['Important', 'Investor', 'New'].forEach((label) => {
+          space.db.add(Tag.make({ label }));
+        });
 
-        for (const fn of functions) {
+        // Functions.
+        functions.forEach((fn) => {
           space.db.add(Function.make(fn));
-        }
+        });
+
+        // Objects.
         Array.from({ length: 10 }).map(() => {
           return space.db.add(
-            Obj.make(ContactType, {
+            Obj.make(TestSchema.ContactType, {
               name: faker.person.fullName(),
               identifiers: [],
             }),
@@ -104,7 +106,8 @@ const meta = {
     }),
   ],
   parameters: {
-    translations,
+    layout: 'fullscreen',
+    translations: [...formTranslations, ...translations],
   },
 } satisfies Meta<typeof DefaultStory>;
 

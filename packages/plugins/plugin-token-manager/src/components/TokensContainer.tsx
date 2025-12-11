@@ -34,7 +34,7 @@ export const TokensContainer = ({ space }: { space: Space }) => {
   const { t } = useTranslation(meta.id);
   const { dispatchPromise: dispatch } = useIntentDispatcher();
   const [adding, setAdding] = useState(false);
-  const tokens = useQuery(space, Filter.type(AccessToken.AccessToken));
+  const tokens = useQuery(space.db, Filter.type(AccessToken.AccessToken));
 
   const handleNew = useCallback(() => setAdding(true), []);
   const handleCancel = useCallback(() => setAdding(false), []);
@@ -77,13 +77,10 @@ export const TokensContainer = ({ space }: { space: Space }) => {
         >
           {adding ? (
             <ControlItem title={t('new integration label')}>
-              <Form
-                outerSpacing={false}
-                schema={FormSchema}
-                values={initialValues}
-                onCancel={handleCancel}
-                onSave={handleAdd}
-              />
+              <Form.Root schema={FormSchema} values={initialValues} onCancel={handleCancel} onSave={handleAdd}>
+                <Form.FieldSet />
+                <Form.Actions />
+              </Form.Root>
             </ControlItem>
           ) : (
             <div role='none' className={controlItemClasses}>

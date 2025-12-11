@@ -10,7 +10,7 @@ import * as SchemaAST from 'effect/SchemaAST';
 import { invariant } from '@dxos/invariant';
 import { isNonNullable } from '@dxos/util';
 
-import { type JsonPath, type JsonProp } from './jsonPath';
+import { type JsonPath, type JsonProp } from './json-path';
 
 //
 // Refs
@@ -19,75 +19,54 @@ import { type JsonPath, type JsonProp } from './jsonPath';
 // https://effect-ts.github.io/effect/schema/SchemaAST.ts.html
 //
 
-// TODO(wittjosiah): What is a "simple type"?
-export type SimpleType = 'object' | 'string' | 'number' | 'boolean' | 'enum' | 'literal';
+/**
+ * Unwraps and collects refinement filters.
+ */
+const reduceRefinements = (
+  type: SchemaAST.AST,
+  refinements: SchemaAST.Refinement['filter'][] = [],
+): { type: SchemaAST.AST; refinements: SchemaAST.Refinement['filter'][] } => {
+  if (SchemaAST.isRefinement(type)) {
+    const annotations = type.annotations;
+    const filter = type.filter;
+    const nextType = { ...type.from, annotations: { ...type.annotations, ...annotations } } as SchemaAST.AST;
+    return reduceRefinements(nextType, [...refinements, filter]);
+  }
 
-const isTupleType = (node: SchemaAST.AST): boolean => {
-  // NOTE: Arrays are represented as tuples with no elements and a rest part.
-  return SchemaAST.isTupleType(node) && node.elements.length > 0;
+  return { type, refinements };
 };
 
 /**
- * Get the base type; e.g., traverse through refinements.
+ * Get the base type of a property.
+ *
+ * Unwraps refinements and optional unions.
  */
-export const getSimpleType = (node: SchemaAST.AST): SimpleType | undefined => {
-  if (
-    SchemaAST.isDeclaration(node) ||
-    SchemaAST.isObjectKeyword(node) ||
-    SchemaAST.isTypeLiteral(node) ||
-    // TODO(wittjosiah): Tuples are actually arrays.
-    isTupleType(node) ||
-    isDiscriminatedUnion(node)
-  ) {
-    return 'object';
-  }
-
-  if (SchemaAST.isStringKeyword(node)) {
-    return 'string';
-  }
-  if (SchemaAST.isNumberKeyword(node)) {
-    return 'number';
-  }
-  if (SchemaAST.isBooleanKeyword(node)) {
-    return 'boolean';
-  }
-
-  if (SchemaAST.isEnums(node)) {
-    return 'enum';
-  }
-
-  if (SchemaAST.isLiteral(node)) {
-    return 'literal';
-  }
+export const getBaseType = (
+  prop: SchemaAST.PropertySignature | SchemaProperty,
+): { type: SchemaAST.AST; refinements: SchemaAST.Refinement['filter'][] } => {
+  const encoded = SchemaAST.encodedBoundAST(prop.type);
+  // Extract property ast from optional union.
+  const unwrapped = prop.isOptional && encoded._tag === 'Union' ? encoded.types[0] : encoded;
+  return reduceRefinements(unwrapped);
 };
 
-export const isSimpleType = (node: SchemaAST.AST): boolean => !!getSimpleType(node);
+export type SchemaProperty = Pick<SchemaAST.PropertySignature, 'name' | 'type' | 'isOptional' | 'isReadonly'> & {
+  /** Can be used to validate the property to the spec of the initial AST. */
+  refinements: SchemaAST.Refinement['filter'][];
+};
 
-export namespace SimpleType {
-  /**
-   * Returns the default empty value for a given SimpleType.
-   * Used for initializing new array values etc.
-   */
-  export const getDefaultValue = (type: SimpleType): any => {
-    switch (type) {
-      case 'string': {
-        return '';
-      }
-      case 'number': {
-        return 0;
-      }
-      case 'boolean': {
-        return false;
-      }
-      case 'object': {
-        return {};
-      }
-      default: {
-        throw new Error(`Unsupported type for default value: ${type}`);
-      }
-    }
-  };
-}
+/**
+ * Get the property types of an AST.
+ */
+export const getProperties = (ast: SchemaAST.AST): SchemaProperty[] => {
+  const properties = SchemaAST.getPropertySignatures(ast);
+  return properties.map((prop) => ({
+    ...getBaseType(prop),
+    name: prop.name,
+    isOptional: prop.isOptional,
+    isReadonly: prop.isReadonly,
+  }));
+};
 
 //
 // Branded types
@@ -111,23 +90,14 @@ export type TestFn = (node: SchemaAST.AST, path: Path, depth: number) => VisitRe
 
 export type VisitorFn = (node: SchemaAST.AST, path: Path, depth: number) => void;
 
-const defaultTest: TestFn = isSimpleType;
-
 /**
  * Visit leaf nodes.
  * Refs:
  * - https://github.com/syntax-tree/unist-util-visit?tab=readme-ov-file#visitor
  * - https://github.com/syntax-tree/unist-util-is?tab=readme-ov-file#test
  */
-export const visit: {
-  (node: SchemaAST.AST, visitor: VisitorFn): void;
-  (node: SchemaAST.AST, test: TestFn, visitor: VisitorFn): void;
-} = (node: SchemaAST.AST, testOrVisitor: TestFn | VisitorFn, visitor?: VisitorFn): void => {
-  if (!visitor) {
-    visitNode(node, defaultTest, testOrVisitor);
-  } else {
-    visitNode(node, testOrVisitor as TestFn, visitor);
-  }
+export const visit = (node: SchemaAST.AST, testOrVisitor: TestFn | VisitorFn, visitor: VisitorFn): void => {
+  visitNode(node, testOrVisitor as TestFn, visitor);
 };
 
 const visitNode = (
@@ -344,8 +314,29 @@ export const isOption = (node: SchemaAST.AST): boolean => {
 /**
  * Determines if the node is a union of literal types.
  */
-export const isLiteralUnion = (node: SchemaAST.AST): boolean => {
+export const isLiteralUnion = (node: SchemaAST.AST): node is SchemaAST.Union<SchemaAST.Literal> => {
   return SchemaAST.isUnion(node) && node.types.every(SchemaAST.isLiteral);
+};
+
+/**
+ * Determines if the node is an array type.
+ */
+export const isArrayType = (node: SchemaAST.AST): node is SchemaAST.TupleType => {
+  return SchemaAST.isTupleType(node) && node.elements.length === 0 && node.rest.length === 1;
+};
+
+/**
+ * Get the type of the array elements.
+ */
+export const getArrayElementType = (node: SchemaAST.AST): SchemaAST.AST | undefined => {
+  return isArrayType(node) ? node.rest.at(0)?.type : undefined;
+};
+
+/**
+ * Determines if the node is a tuple type.
+ */
+export const isTupleType = (node: SchemaAST.AST): boolean => {
+  return SchemaAST.isTupleType(node) && node.elements.length > 0;
 };
 
 /**
@@ -428,6 +419,20 @@ export const getDiscriminatedType = (
 };
 
 /**
+ * Determines if the node is a nested object type.
+ */
+export const isNestedType = (node: SchemaAST.AST): boolean => {
+  return (
+    SchemaAST.isDeclaration(node) ||
+    SchemaAST.isObjectKeyword(node) ||
+    SchemaAST.isTypeLiteral(node) ||
+    // TODO(wittjosiah): Tuples are actually arrays.
+    isTupleType(node) ||
+    isDiscriminatedUnion(node)
+  );
+};
+
+/**
  * Maps AST nodes.
  * The user is responsible for recursively calling {@link mapAst} on the SchemaAST.
  * NOTE: Will evaluate suspended ASTs.
@@ -473,19 +478,6 @@ export const mapAst = (
       return ast;
     }
   }
-};
-
-/**
- * @returns true if AST is for Array(T) or optional(Array(T)).
- */
-export const isArrayType = (node: SchemaAST.AST): boolean => {
-  return (
-    SchemaAST.isTupleType(node) ||
-    (SchemaAST.isUnion(node) &&
-      node.types.some(isArrayType) &&
-      node.types.some(SchemaAST.isUndefinedKeyword) &&
-      node.types.length === 2)
-  );
 };
 
 const getIndexSignatures = (ast: SchemaAST.AST): Array<SchemaAST.IndexSignature> => {

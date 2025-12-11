@@ -4,10 +4,11 @@
 
 import { useEffect, useMemo } from 'react';
 
+import { Obj, Query, Ref } from '@dxos/echo';
 import { Function, type Script, getUserFunctionIdInMetadata } from '@dxos/functions';
 import { log } from '@dxos/log';
 import { type Client, useClient } from '@dxos/react-client';
-import { Query, Ref, type Space, getMeta, getSpace, useQuery } from '@dxos/react-client/echo';
+import { type Space, getSpace, useQuery } from '@dxos/react-client/echo';
 import { type TFunction } from '@dxos/react-ui';
 import { createMenuAction } from '@dxos/react-ui-menu';
 import { errorMessageColors } from '@dxos/react-ui-theme';
@@ -118,7 +119,7 @@ export const useDeployState = ({ state, script }: { state: Partial<DeployState>;
 export const useDeployDeps = ({ script }: { script: Script.Script }) => {
   const client = useClient();
   const space = getSpace(script);
-  const [fn] = useQuery(space, Query.type(Function.Function, { source: Ref.make(script) }));
-  const existingFunctionId = useMemo(() => fn && getUserFunctionIdInMetadata(getMeta(fn)), [fn]);
+  const [fn] = useQuery(space?.db, Query.type(Function.Function, { source: Ref.make(script) }));
+  const existingFunctionId = useMemo(() => fn && getUserFunctionIdInMetadata(Obj.getMeta(fn)), [fn]);
   return { client, space, fn, existingFunctionId };
 };

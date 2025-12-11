@@ -6,7 +6,6 @@ import * as Schema from 'effect/Schema';
 
 import { type AnyIntentChain } from '@dxos/app-framework';
 import { type Obj, QueryAST, Type } from '@dxos/echo';
-import { EchoSchema, StoredSchema } from '@dxos/echo/internal';
 import { type PublicKey } from '@dxos/react-client';
 // TODO(wittjosiah): This pulls in full client.
 import { EchoObjectSchema, ReactiveObjectSchema, type Space, SpaceSchema } from '@dxos/react-client/echo';
@@ -84,7 +83,7 @@ export type SpaceSettingsProps = Schema.Schema.Type<typeof SpaceSettingsSchema>;
 
 export type SerializerMap = Record<string, TypedObjectSerializer>;
 
-export interface TypedObjectSerializer<T extends Obj.Any = Type.Expando> {
+export interface TypedObjectSerializer<T extends Obj.Any = Obj.Any> {
   serialize(params: { object: T }): Promise<string>;
 
   /**
@@ -101,12 +100,12 @@ export type CreateObjectIntent = (props: any, options: { space: Space }) => AnyI
 export const IconAnnotationId = Symbol.for('@dxos/plugin-space/annotation/Icon');
 export const HueAnnotationId = Symbol.for('@dxos/plugin-space/annotation/Hue');
 
+// TOOD(burdon): Use SpacePropertiesSchema.
 export const SpaceForm = Schema.Struct({
   name: Schema.optional(Schema.String.annotations({ title: 'Name' })),
   icon: Schema.optional(Schema.String.annotations({ title: 'Icon', [IconAnnotationId]: true })),
   hue: Schema.optional(Schema.String.annotations({ title: 'Color', [HueAnnotationId]: true })),
-  // TODO(wittjosiah): Make optional with default value.
-  edgeReplication: Schema.Boolean.annotations({ title: 'Enable EDGE Replication' }),
+  edgeReplication: Schema.optional(Schema.Boolean.annotations({ title: 'Enable EDGE Replication' })),
 });
 
 export const SPACE_ACTION = `${meta.id}/action`;
@@ -260,8 +259,8 @@ export namespace SpaceAction {
     output: Schema.Struct({
       // TODO(wittjosiah): ObjectId.
       id: Schema.String,
-      object: StoredSchema,
-      schema: Schema.instanceOf(EchoSchema),
+      object: Type.PersistentType,
+      schema: Schema.instanceOf(Type.RuntimeType),
     }),
   }) {}
 

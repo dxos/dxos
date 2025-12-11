@@ -2,12 +2,9 @@
 // Copyright 2024 DXOS.org
 //
 
-import { EditorView } from '@codemirror/view';
-
 import { mx } from '@dxos/react-ui-theme';
 
 import { type ThemeExtensionsOptions } from './extensions';
-import { fontMono } from './styles';
 
 /**
  * CodeMirror content width.
@@ -25,21 +22,6 @@ export const editorSlots: ThemeExtensionsOptions['slots'] = {
     className: editorWidth,
   },
 };
-
-export const editorGutter = EditorView.theme({
-  '.cm-gutters': {
-    // NOTE: Color required to cover content if scrolling horizontally.
-    // TODO(burdon): Non-transparent background clips the focus ring.
-    background: 'var(--dx-baseSurface) !important',
-    paddingRight: '1rem',
-  },
-});
-
-export const editorMonospace = EditorView.theme({
-  '.cm-content': {
-    fontFamily: fontMono,
-  },
-});
 
 export const editorWithToolbarLayout =
   'grid grid-cols-1 grid-rows-[min-content_1fr] data-[toolbar=disabled]:grid-rows-[1fr] justify-center content-start overflow-hidden';

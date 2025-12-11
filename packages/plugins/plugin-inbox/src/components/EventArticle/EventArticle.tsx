@@ -25,7 +25,7 @@ export const EventArticle = ({
   const { dispatchPromise: dispatch } = useIntentDispatcher();
   const id = Obj.getDXN(subject).toString();
   const space = getSpace(calendar);
-  const [shadowedEvent, createShadowEvent] = useShadowObject(space, subject, EventType.Event);
+  const [shadowedEvent, createShadowEvent] = useShadowObject(space?.db, subject, EventType.Event);
   const notes = shadowedEvent?.notes?.target;
 
   const handleNoteCreate = useCallback(async () => {
@@ -51,7 +51,7 @@ export const EventArticle = ({
       <Event.Root event={subject}>
         <Event.Toolbar onNoteCreate={handleNoteCreate} />
         <Event.Viewport>
-          <Event.Header onContactCreate={handleContactCreate} />
+          <Event.Header db={space?.db} onContactCreate={handleContactCreate} />
           <Event.Content />
           {/* TODO(burdon): Suppress markdown toolbar if section. */}
           {notes && <Surface role='section' data={{ id, subject: notes }} limit={1} />}

@@ -52,7 +52,8 @@
     }
   },
   "files": [
-    "dist",
+    "dist/lib",
+    "dist/types",
     "schema",
     "src"
   ],
@@ -73,6 +74,7 @@
     "@dxos/effect": "workspace:*",
     "@dxos/errors": "workspace:*",
     "@dxos/functions": "workspace:*",
+    "@dxos/functions-runtime-cloudflare": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/kv-store": "workspace:*",
@@ -90,7 +92,8 @@
     "iso-did": "^1.6.0"
   },
   "devDependencies": {
-    "@dxos/types": "workspace:*"
+    "@dxos/types": "workspace:*",
+    "wrangler": "^4.51.0"
   },
   "publishConfig": {
     "access": "public"

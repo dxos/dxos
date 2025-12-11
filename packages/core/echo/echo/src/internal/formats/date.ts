@@ -5,7 +5,7 @@
 import * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
 
-import { FormatAnnotation, FormatEnum } from './types';
+import { FormatAnnotation, TypeFormat } from './types';
 
 /**
  * Datetime values should be stored as ISO strings or unix numbers (ms) in UTC.
@@ -102,7 +102,7 @@ export const DateOnly = /* Schema.transformOrFail(Schema.String, SimpleDate, {
     );
   },
 }) */ Schema.String.pipe(
-  FormatAnnotation.set(FormatEnum.Date),
+  FormatAnnotation.set(TypeFormat.Date),
   Schema.annotations({
     title: 'Date',
     description: 'Valid date in ISO format',
@@ -132,7 +132,7 @@ export const TimeOnly = /* Schema.transformOrFail(Schema.String, SimpleTime, {
     );
   },
 }) */ Schema.String.pipe(
-  FormatAnnotation.set(FormatEnum.Time),
+  FormatAnnotation.set(TypeFormat.Time),
   Schema.annotations({
     title: 'Time',
     description: 'Valid time in ISO format',
@@ -177,7 +177,7 @@ export const DateTime = /* Schema.transformOrFail(Schema.String, SimpleDateTime,
     );
   },
 }) */ Schema.String.pipe(
-  FormatAnnotation.set(FormatEnum.DateTime),
+  FormatAnnotation.set(TypeFormat.DateTime),
   Schema.annotations({
     title: 'DateTime',
     description: 'Valid date and time in ISO format',
@@ -189,7 +189,7 @@ export const DateTime = /* Schema.transformOrFail(Schema.String, SimpleDateTime,
  */
 // TODO(burdon): Define duration type.
 export const Duration = Schema.String.pipe(
-  FormatAnnotation.set(FormatEnum.Duration),
+  FormatAnnotation.set(TypeFormat.Duration),
   Schema.annotations({
     title: 'Duration',
     description: 'Duration in ISO 8601 format',

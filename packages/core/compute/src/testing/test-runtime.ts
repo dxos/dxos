@@ -7,7 +7,8 @@ import * as ManagedRuntime from 'effect/ManagedRuntime';
 
 import { AiService } from '@dxos/ai';
 import { type SpaceId } from '@dxos/client/echo';
-import { CredentialsService, DatabaseService, type FunctionDefinition, QueueService } from '@dxos/functions';
+import { Database } from '@dxos/echo';
+import { CredentialsService, type FunctionDefinition, QueueService } from '@dxos/functions';
 import { FunctionInvocationServiceLayerTest } from '@dxos/functions-runtime/testing';
 
 import { type FunctionsRuntimeProvider } from '../compute-graph-registry';
@@ -25,7 +26,7 @@ export const createMockedComputeRuntimeProvider = ({
         FunctionInvocationServiceLayerTest({ functions }).pipe(
           Layer.provide(AiService.notAvailable),
           Layer.provide(CredentialsService.configuredLayer([])),
-          Layer.provide(DatabaseService.notAvailable),
+          Layer.provide(Database.Service.notAvailable),
           Layer.provide(QueueService.notAvailable),
         ),
       ),

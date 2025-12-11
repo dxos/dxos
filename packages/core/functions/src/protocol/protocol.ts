@@ -8,16 +8,17 @@ import * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
 
 import { AiService } from '@dxos/ai';
-import { Type } from '@dxos/echo';
-import { EchoClient } from '@dxos/echo-db';
-import { acquireReleaseResource } from '@dxos/effect';
-import { failedInvariant, invariant } from '@dxos/invariant';
+import { LifecycleState, Resource } from '@dxos/context';
+import { Database, Type } from '@dxos/echo';
+import { EchoClient, type EchoDatabaseImpl, type QueueFactory } from '@dxos/echo-db';
+import { runAndForwardErrors } from '@dxos/effect';
+import { assertState, failedInvariant, invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { type FunctionProtocol } from '@dxos/protocols';
 
 import { FunctionError } from '../errors';
 import { FunctionDefinition, type FunctionServices } from '../sdk';
-import { CredentialsService, DatabaseService, FunctionInvocationService, TracingService } from '../services';
+import { CredentialsService, FunctionInvocationService, TracingService } from '../services';
 import { QueueService } from '../services';
 
 /**
@@ -39,7 +40,7 @@ export const wrapFunctionHandler = (func: FunctionDefinition): FunctionProtocol.
     },
     handler: async ({ data, context }) => {
       if (
-        (func.services.includes(DatabaseService.key) || func.services.includes(QueueService.key)) &&
+        (func.services.includes(Database.Service.key) || func.services.includes(QueueService.key)) &&
         (!context.services.dataService || !context.services.queryService)
       ) {
         throw new FunctionError({
@@ -47,9 +48,21 @@ export const wrapFunctionHandler = (func: FunctionDefinition): FunctionProtocol.
         });
       }
 
+      // eslint-disable-next-line no-useless-catch
       try {
         if (!SchemaAST.isAnyKeyword(func.inputSchema.ast)) {
-          Schema.validateSync(func.inputSchema)(data);
+          try {
+            Schema.validateSync(func.inputSchema)(data);
+          } catch (error) {
+            throw new FunctionError({ message: 'Invalid input schema', cause: error });
+          }
+        }
+
+        await using funcContext = await new FunctionContext(context).open();
+
+        if (func.types.length > 0) {
+          invariant(funcContext.db, 'Database is required for functions with types');
+          await funcContext.db.graph.schemaRegistry.register(func.types as Type.Entity.Any[]);
         }
 
         let result = await func.handler({
@@ -59,10 +72,10 @@ export const wrapFunctionHandler = (func: FunctionDefinition): FunctionProtocol.
         });
 
         if (Effect.isEffect(result)) {
-          result = await Effect.runPromise(
+          result = await runAndForwardErrors(
             (result as Effect.Effect<unknown, unknown, FunctionServices>).pipe(
               Effect.orDie,
-              Effect.provide(createServiceLayer(context)),
+              Effect.provide(funcContext.createLayer()),
             ),
           );
         }
@@ -73,72 +86,72 @@ export const wrapFunctionHandler = (func: FunctionDefinition): FunctionProtocol.
 
         return result;
       } catch (error) {
-        if (FunctionError.is(error)) {
-          throw error;
-        } else {
-          throw new FunctionError({
-            cause: error,
-            context: { func: func.key },
-          });
-        }
+        // TODO(dmaretskyi): We might do error wrapping here and add extra context.
+        throw error;
       }
     },
   };
 };
 
 /**
- * Creates a layer of services for the function.
+ * Container for services and context for a function.
  */
-const createServiceLayer = (context: FunctionProtocol.Context): Layer.Layer<FunctionServices> => {
-  return Layer.unwrapScoped(
-    Effect.gen(function* () {
-      let client: EchoClient | undefined;
+class FunctionContext extends Resource {
+  readonly context: FunctionProtocol.Context;
+  readonly client: EchoClient | undefined;
+  db: EchoDatabaseImpl | undefined;
+  queues: QueueFactory | undefined;
 
-      if (context.services.dataService && context.services.queryService) {
-        client = yield* acquireReleaseResource(() => {
-          invariant(context.services.dataService && context.services.queryService);
-          // TODO(dmaretskyi): Queues service.
-          return new EchoClient().connectToService({
-            dataService: context.services.dataService,
-            queryService: context.services.queryService,
-            queueService: context.services.queueService,
-          });
-        });
-      }
+  constructor(context: FunctionProtocol.Context) {
+    super();
+    this.context = context;
+    if (context.services.dataService && context.services.queryService) {
+      this.client = new EchoClient().connectToService({
+        dataService: context.services.dataService,
+        queryService: context.services.queryService,
+        queueService: context.services.queueService,
+      });
+    }
+  }
 
-      const db =
-        client && context.spaceId
-          ? yield* acquireReleaseResource(() =>
-              client.constructDatabase({
-                spaceId: context.spaceId ?? failedInvariant(),
-                spaceKey: PublicKey.fromHex(context.spaceKey ?? failedInvariant('spaceKey missing in context')),
-                reactiveSchemaQuery: false,
-              }),
-            )
-          : undefined;
+  override async _open() {
+    await this.client?.open();
+    this.db =
+      this.client && this.context.spaceId
+        ? this.client.constructDatabase({
+            spaceId: this.context.spaceId ?? failedInvariant(),
+            spaceKey: PublicKey.fromHex(this.context.spaceKey ?? failedInvariant('spaceKey missing in context')),
+            reactiveSchemaQuery: false,
+            preloadSchemaOnOpen: false,
+          })
+        : undefined;
 
-      if (db) {
-        console.log('Setting space root', context.spaceRootUrl);
-        yield* Effect.promise(() =>
-          db!.setSpaceRoot(context.spaceRootUrl ?? failedInvariant('spaceRootUrl missing in context')),
-        );
-      }
+    await this.db?.setSpaceRoot(this.context.spaceRootUrl ?? failedInvariant('spaceRootUrl missing in context'));
+    await this.db?.open();
+    this.queues =
+      this.client && this.context.spaceId ? this.client.constructQueueFactory(this.context.spaceId) : undefined;
+  }
 
-      const queues = client && context.spaceId ? client.constructQueueFactory(context.spaceId) : undefined;
+  override async _close() {
+    await this.db?.close();
+    await this.client?.close();
+  }
 
-      const dbLayer = db ? DatabaseService.layer(db) : DatabaseService.notAvailable;
-      const queuesLayer = queues ? QueueService.layer(queues) : QueueService.notAvailable;
-      const credentials = dbLayer
-        ? CredentialsService.layerFromDatabase().pipe(Layer.provide(dbLayer))
-        : CredentialsService.configuredLayer([]);
-      const functionInvocationService = MockedFunctionInvocationService;
-      const aiService = AiService.notAvailable;
-      const tracing = TracingService.layerNoop;
+  createLayer(): Layer.Layer<FunctionServices> {
+    assertState(this._lifecycleState === LifecycleState.OPEN, 'FunctionContext is not open');
 
-      return Layer.mergeAll(dbLayer, queuesLayer, credentials, functionInvocationService, aiService, tracing);
-    }),
-  );
-};
+    const dbLayer = this.db ? Database.Service.layer(this.db) : Database.Service.notAvailable;
+    const queuesLayer = this.queues ? QueueService.layer(this.queues) : QueueService.notAvailable;
+    const credentials = dbLayer
+      ? CredentialsService.layerFromDatabase().pipe(Layer.provide(dbLayer))
+      : CredentialsService.configuredLayer([]);
+    const functionInvocationService = MockedFunctionInvocationService;
+    const aiService = AiService.notAvailable;
+    const tracing = TracingService.layerNoop;
+
+    return Layer.mergeAll(dbLayer, queuesLayer, credentials, functionInvocationService, aiService, tracing);
+  }
+}
 
 const MockedFunctionInvocationService = Layer.succeed(FunctionInvocationService, {
   invokeFunction: () => Effect.die('Calling functions from functions is not implemented yet.'),

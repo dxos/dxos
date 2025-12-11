@@ -3,6 +3,7 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import type * as Schema from 'effect/Schema';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { Events, IntentPlugin, SettingsPlugin } from '@dxos/app-framework';
@@ -14,7 +15,7 @@ import {
   getNer,
   processTranscriptMessage,
 } from '@dxos/assistant/extraction';
-import { Filter, Obj, type Type } from '@dxos/echo';
+import { Filter, type Obj } from '@dxos/echo';
 import { createQueueDXN } from '@dxos/echo/internal';
 import { MemoryQueue } from '@dxos/echo-db';
 import { FunctionExecutor, ServiceContainer } from '@dxos/functions-runtime';
@@ -28,7 +29,7 @@ import { ThemePlugin } from '@dxos/plugin-theme';
 import { IndexKind, useSpace } from '@dxos/react-client/echo';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { defaultTx } from '@dxos/react-ui-theme';
-import { Testing } from '@dxos/schema/testing';
+import { TestSchema } from '@dxos/schema/testing';
 import { Message, Organization, Person } from '@dxos/types';
 import { seedTestData } from '@dxos/types/testing';
 
@@ -76,7 +77,8 @@ const DefaultStory = ({
   // Queue.
   // TODO(dmaretskyi): Use space.queues.create() instead.
   const queueDxn = useMemo(() => createQueueDXN(), []);
-  const queue = useMemo(() => new MemoryQueue<Message.Message>(queueDxn), [queueDxn]);
+  // TODO(wittjosiah): Find a simpler way to define this type.
+  const queue = useMemo(() => new MemoryQueue<Schema.Schema.Type<typeof Message.Message>>(queueDxn), [queueDxn]);
   const model = useQueueModelAdapter(renderByline([]), queue);
   const space = useSpace();
 
@@ -95,7 +97,7 @@ const DefaultStory = ({
 
     let executor: FunctionExecutor | undefined;
     let extractionFunction: ExtractionFunction | undefined;
-    let objects: Promise<Type.Expando[]> | undefined;
+    let objects: Promise<Obj.Any[]> | undefined;
 
     if (entityExtraction === 'ner') {
       // Init model loading. Takes time.
@@ -108,11 +110,10 @@ const DefaultStory = ({
           Filter.or(
             Filter.type(Person.Person),
             Filter.type(Organization.Organization),
-            Filter.type(Testing.DocumentType),
+            Filter.type(TestSchema.DocumentType),
           ),
         )
-        .run()
-        .then((result) => result.objects);
+        .run();
     }
     if (entityExtraction !== 'none') {
       executor = new FunctionExecutor(
@@ -133,7 +134,7 @@ const DefaultStory = ({
   // Transcriber.
   const handleSegments = useCallback<TranscriberParams['onSegments']>(
     async (blocks) => {
-      const message = Obj.make(Message.Message, {
+      const message = Message.make({
         sender: { name: 'You' },
         created: new Date().toISOString(),
         blocks,
@@ -201,7 +202,7 @@ const meta = {
     withPluginManager({
       plugins: [
         ClientPlugin({
-          types: [TestItem, Person.Person, Organization.Organization, Testing.DocumentType],
+          types: [TestItem, Person.Person, Organization.Organization, TestSchema.DocumentType],
           onClientInitialized: async ({ client }) => {
             await client.halo.createIdentity();
             await client.spaces.waitUntilReady();

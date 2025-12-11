@@ -16,6 +16,9 @@
       "path": "../../common/async"
     },
     {
+      "path": "../../common/effect"
+    },
+    {
       "path": "../../common/invariant"
     },
     {
@@ -65,6 +68,9 @@
     },
     {
       "path": "../react-ui-editor"
+    },
+    {
+      "path": "../react-ui-markdown"
     },
     {
       "path": "../react-ui-stack"

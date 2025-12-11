@@ -154,6 +154,9 @@
       "path": "packages/core/echo/echo-query/tsconfig.json"
     },
     {
+      "path": "packages/core/echo/echo-react/tsconfig.json"
+    },
+    {
       "path": "packages/core/echo/echo-signals/tsconfig.json"
     },
     {
@@ -167,6 +170,15 @@
     },
     {
       "path": "packages/core/functions-runtime/tsconfig.json"
+    },
+    {
+      "path": "packages/core/functions-runtime-cloudflare/tsconfig.json"
+    },
+    {
+      "path": "packages/core/functions-simulator-cloudflare/tsconfig.json"
+    },
+    {
+      "path": "packages/core/functions-testing/tsconfig.json"
     },
     {
       "path": "packages/core/halo/credentials/tsconfig.json"
@@ -245,12 +257,6 @@
     },
     {
       "path": "packages/experimental/env-tests/tsconfig.json"
-    },
-    {
-      "path": "packages/experimental/metagraph/tsconfig.json"
-    },
-    {
-      "path": "packages/experimental/react-metagraph/tsconfig.json"
     },
     {
       "path": "packages/experimental/script-toolbox/tsconfig.json"
@@ -515,6 +521,9 @@
     },
     {
       "path": "packages/ui/react-ui-list/tsconfig.json"
+    },
+    {
+      "path": "packages/ui/react-ui-markdown/tsconfig.json"
     },
     {
       "path": "packages/ui/react-ui-masonry/tsconfig.json"

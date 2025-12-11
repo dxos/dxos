@@ -2,33 +2,36 @@
 // Copyright 2024 DXOS.org
 //
 
-export const safeParseInt = (value: string | undefined, defaultValue?: number) => {
+export function safeParseInt(str: string | undefined, defaultValue: number): number;
+export function safeParseInt(str: string | undefined): number | undefined;
+export function safeParseInt(str: string | undefined, defaultValue?: number): number | undefined {
   try {
-    const n = parseInt(value ?? '');
-    return isNaN(n) ? defaultValue : n;
+    const value = parseInt(str ?? '');
+    return isNaN(value) ? defaultValue : value;
   } catch {
     return defaultValue;
   }
-};
+}
 
-export const safeParseFloat = (str: string, defaultValue?: number): number | undefined => {
+export function safeParseFloat(str: string | undefined, defaultValue: number): number;
+export function safeParseFloat(str: string | undefined): number | undefined;
+export function safeParseFloat(str: string | undefined, defaultValue?: number): number | undefined {
   try {
-    return parseFloat(str);
+    const value = parseFloat(str ?? '');
+    return isNaN(value) ? defaultValue : value;
   } catch {
-    return defaultValue ?? 0;
+    return defaultValue;
   }
-};
+}
 
 export const safeParseJson: {
-  <T extends object>(data: string | undefined | null, defaultValue: T): T;
-  <T extends object>(data: string | undefined | null): T | undefined;
-} = <T extends object = any>(data: string | undefined | null, defaultValue?: T): T | undefined => {
-  if (data && data.length > 0) {
+  <T extends object>(str: string | undefined | null, defaultValue: T): T;
+  <T extends object>(str: string | undefined | null): T | undefined;
+} = <T extends object = any>(str: string | undefined | null, defaultValue?: T): T | undefined => {
+  if (str && str.length > 0) {
     try {
-      return JSON.parse(data);
-    } catch {
-      // no-op.
-    }
+      return JSON.parse(str);
+    } catch {}
   }
 
   return defaultValue;

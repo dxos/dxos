@@ -10,6 +10,7 @@ import React, { useCallback } from 'react';
 import { LayoutAction, createIntent } from '@dxos/app-framework';
 import { type SurfaceComponentProps, useIntentDispatcher } from '@dxos/app-framework/react';
 import { Filter, Obj } from '@dxos/echo';
+import { runAndForwardErrors } from '@dxos/effect';
 import { AttentionAction } from '@dxos/plugin-attention/types';
 import { ATTENDABLE_PATH_SEPARATOR, DeckAction } from '@dxos/plugin-deck/types';
 import { getSpace, useQuery, useSpace } from '@dxos/react-client/echo';
@@ -23,15 +24,18 @@ export const RelatedToOrganization = ({ subject: organization }: SurfaceComponen
   const { dispatch } = useIntentDispatcher();
   const space = getSpace(organization);
   const defaultSpace = useSpace();
-  const currentSpaceContacts = useQuery(space, Filter.type(Person.Person));
-  const defaultSpaceContacts = useQuery(defaultSpace === space ? undefined : defaultSpace, Filter.type(Person.Person));
+  const currentSpaceContacts = useQuery(space?.db, Filter.type(Person.Person));
+  const defaultSpaceContacts = useQuery(
+    defaultSpace === space ? undefined : defaultSpace?.db,
+    Filter.type(Person.Person),
+  );
   const contacts = [...(currentSpaceContacts ?? []), ...(defaultSpaceContacts ?? [])];
   const related = contacts.filter((contact) =>
     typeof contact.organization === 'string' ? false : contact.organization?.target === organization,
   );
 
-  const currentSpaceViews = useQuery(space, Filter.type(Table.Table));
-  const defaultSpaceViews = useQuery(defaultSpace, Filter.type(Table.Table));
+  const currentSpaceViews = useQuery(space?.db, Filter.type(Table.Table));
+  const defaultSpaceViews = useQuery(defaultSpace?.db, Filter.type(Table.Table));
   const currentSpaceContactTable = currentSpaceViews.find(
     (table) => getTypenameFromQuery(table.view.target?.query.ast) === Person.Person.typename,
   );
@@ -75,7 +79,7 @@ export const RelatedToOrganization = ({ subject: organization }: SurfaceComponen
             }),
           );
         }
-      }).pipe(Effect.runPromise),
+      }).pipe(runAndForwardErrors),
     [dispatch, currentSpaceContacts, currentSpaceContactTable, defaultSpaceContactTable, space, defaultSpace],
   );
 

@@ -154,11 +154,11 @@ type MarkdownEditorContentProps = Omit<NaturalMarkdownEditorContentProps, 'id' |
 const MarkdownEditorContent = (props: MarkdownEditorContentProps) => {
   const {
     id,
-    extensions,
     editorView,
     setEditorView,
-    toolbarState,
     viewMode,
+    toolbarState,
+    extensions,
     popoverMenu: { groupsRef, ...menuProps },
   } = useMarkdownEditorContext(MarkdownEditorContent.displayName);
 
@@ -167,9 +167,9 @@ const MarkdownEditorContent = (props: MarkdownEditorContentProps) => {
       <NaturalMarkdownEditorContent
         {...props}
         id={id}
-        extensions={extensions}
-        toolbarState={toolbarState}
         viewMode={viewMode}
+        toolbarState={toolbarState}
+        extensions={extensions}
         ref={setEditorView}
       />
     </EditorMenuProvider>
@@ -218,7 +218,7 @@ MarkdownEditorBlocks.displayName = 'MarkdownEditor.Blocks';
 const PreviewBlock = ({ el, link }: PreviewBlock) => {
   const client = useClient();
   const dxn = DXN.parse(link.ref);
-  const subject = client.graph.ref(dxn).target;
+  const subject = client.graph.makeRef(dxn).target;
   const data = useMemo(() => ({ subject }), [subject]);
 
   return createPortal(<Surface role='card--transclusion' data={data} limit={1} />, el);

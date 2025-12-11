@@ -9,7 +9,6 @@ import * as Schema from 'effect/Schema';
 import { useState } from 'react';
 import React, { useCallback } from 'react';
 
-import { Obj } from '@dxos/echo';
 import { Function } from '@dxos/functions';
 import { getDeployedFunctions } from '@dxos/functions-runtime/edge';
 import { useClient } from '@dxos/react-client';
@@ -34,7 +33,7 @@ export const FunctionsRegistry = ({ space }: FunctionsRegistryProps) => {
   const [functions, setFunctions] = useState<Function.Function[]>([]);
   const { t } = useTranslation(meta.id);
 
-  const dbFunctions = useQuery(space, Filter.type(Function.Function));
+  const dbFunctions = useQuery(space.db, Filter.type(Function.Function));
 
   const state = (func: Function.Function) => {
     const dbFunction = dbFunctions.find((f) => f.key === func.key);
@@ -64,21 +63,13 @@ export const FunctionsRegistry = ({ space }: FunctionsRegistryProps) => {
 
   const hanleImportOrUpdate = useCallback(
     async (func: Function.Function) => {
-      const {
-        objects: [existingFunc],
-      } = await space.db.query(Query.type(Function.Function, { key: func.key })).run();
+      const functions = await space.db.query(Query.type(Function.Function, { key: func.key })).run();
+      const [existingFunc] = functions;
       if (!existingFunc) {
         space.db.add(func);
         return;
       }
-      existingFunc.version = func.version;
-      existingFunc.updated = func.updated;
-      existingFunc.name = func.name;
-      existingFunc.description = func.description;
-      // TODO(dmaretskyi): A workaround for an ECHO bug.
-      existingFunc.inputSchema = JSON.parse(JSON.stringify(func.inputSchema));
-      existingFunc.outputSchema = JSON.parse(JSON.stringify(func.outputSchema));
-      Obj.getMeta(existingFunc).keys = JSON.parse(JSON.stringify(Obj.getMeta(func).keys));
+      Function.setFrom(existingFunc, func);
     },
     [space],
   );

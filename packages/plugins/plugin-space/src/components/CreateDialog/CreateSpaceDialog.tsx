@@ -8,6 +8,7 @@ import React, { useCallback, useRef } from 'react';
 
 import { LayoutAction, createIntent } from '@dxos/app-framework';
 import { useIntentDispatcher } from '@dxos/app-framework/react';
+import { runAndForwardErrors } from '@dxos/effect';
 import { Dialog, IconButton, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 import { cardDialogContent, cardDialogHeader } from '@dxos/react-ui-stack';
@@ -45,7 +46,7 @@ export const CreateSpaceDialog = () => {
           }),
         );
       });
-      await Effect.runPromise(program);
+      await runAndForwardErrors(program);
     },
     [dispatch],
   );
@@ -69,17 +70,21 @@ export const CreateSpaceDialog = () => {
           />
         </Dialog.Close>
       </div>
-      <div role='none' className='contents'>
-        <Form
-          testId='create-space-form'
-          autoFocus
-          values={initialValues}
-          schema={SpaceForm}
-          lookupComponent={inputSurfaceLookup}
-          onSave={handleCreateSpace}
-          outerSpacing='scroll-fields'
-        />
-      </div>
+      <Form.Root
+        testId='create-space-form'
+        autoFocus
+        schema={SpaceForm}
+        values={initialValues}
+        fieldProvider={inputSurfaceLookup}
+        onSave={handleCreateSpace}
+      >
+        <Form.Viewport>
+          <Form.Content>
+            <Form.FieldSet />
+            <Form.Submit />
+          </Form.Content>
+        </Form.Viewport>
+      </Form.Root>
     </Dialog.Content>
   );
 };

@@ -4,7 +4,7 @@
 
 import React, { useCallback, useMemo } from 'react';
 
-import { FormatEnum } from '@dxos/echo/internal';
+import { Format } from '@dxos/echo/internal';
 import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type SpaceArchive } from '@dxos/protocols/proto/dxos/client/services';
@@ -12,6 +12,7 @@ import { useClient } from '@dxos/react-client';
 import { useSpaces } from '@dxos/react-client/echo';
 import { useFileDownload } from '@dxos/react-ui';
 import { DynamicTable, type TableFeatures, type TablePropertyDefinition } from '@dxos/react-ui-table';
+import { createFilename } from '@dxos/util';
 
 import { PanelContainer } from '../../../components';
 import { useDevtoolsDispatch } from '../../../hooks';
@@ -86,8 +87,7 @@ export const SpaceListPanel = ({ onSelect }: { onSelect?: (space: SpaceData | un
       const space = spaces.find((space) => space.id === spaceId)!;
       await space.waitUntilReady();
       const backupBlob = await exportData(space);
-      // TODO(wittjosiah): Factor out file name construction.
-      download(backupBlob, `${new Date().toISOString()}-${space.id}.json`);
+      download(backupBlob, createFilename({ parts: [space.id], ext: 'json' }));
     },
     [download, spaces],
   );
@@ -143,13 +143,13 @@ export const SpaceListPanel = ({ onSelect }: { onSelect?: (space: SpaceData | un
 
   const properties: TablePropertyDefinition[] = useMemo(
     () => [
-      { name: 'id', format: FormatEnum.DID },
-      { name: 'name', format: FormatEnum.String },
-      { name: 'objects', format: FormatEnum.Number, size: 120 },
-      { name: 'members', format: FormatEnum.Number, size: 120 },
-      { name: 'startup', format: FormatEnum.Number, size: 120 },
-      { name: 'isDefault', format: FormatEnum.Boolean, title: 'default?', size: 120 },
-      { name: 'isOpen', format: FormatEnum.Boolean, title: 'open?', size: 120 },
+      { name: 'id', format: Format.TypeFormat.DID },
+      { name: 'name', format: Format.TypeFormat.String },
+      { name: 'objects', format: Format.TypeFormat.Number, size: 120 },
+      { name: 'members', format: Format.TypeFormat.Number, size: 120 },
+      { name: 'startup', format: Format.TypeFormat.Number, size: 120 },
+      { name: 'isDefault', format: Format.TypeFormat.Boolean, title: 'default?', size: 120 },
+      { name: 'isOpen', format: Format.TypeFormat.Boolean, title: 'open?', size: 120 },
     ],
     [],
   );

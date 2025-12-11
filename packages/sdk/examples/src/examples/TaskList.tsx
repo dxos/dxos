@@ -4,16 +4,15 @@
 
 import React, { type ChangeEventHandler, type KeyboardEventHandler, useState } from 'react';
 
-import type { PublicKey } from '@dxos/client';
 import { Filter, Obj } from '@dxos/echo';
-import { useQuery, useSpace } from '@dxos/react-client/echo';
+import { type SpaceId, useDatabase, useQuery } from '@dxos/react-client/echo';
 import { IconButton, Input } from '@dxos/react-ui';
 
 import { TaskType } from '../types';
 
-const TaskList = ({ id, spaceKey }: { id: number; spaceKey?: PublicKey }) => {
-  const space = useSpace(spaceKey);
-  const tasks = useQuery(space, Filter.type(TaskType));
+const TaskList = ({ id, spaceId }: { id: number; spaceId?: SpaceId }) => {
+  const db = useDatabase(spaceId);
+  const tasks = useQuery(db, Filter.type(TaskType));
   const [value, setValue] = useState('');
 
   const handleChange: ChangeEventHandler<HTMLInputElement> = (event) => {
@@ -21,10 +20,10 @@ const TaskList = ({ id, spaceKey }: { id: number; spaceKey?: PublicKey }) => {
   };
 
   const handleKeyDown: KeyboardEventHandler<HTMLInputElement> = (event) => {
-    if (event.key === 'Enter' && space && value) {
+    if (event.key === 'Enter' && db && value) {
       const task = Obj.make(TaskType, { title: value, completed: false });
       setValue('');
-      space.db.add(task);
+      db.add(task);
     }
   };
 
@@ -56,7 +55,7 @@ const TaskList = ({ id, spaceKey }: { id: number; spaceKey?: PublicKey }) => {
               iconOnly
               noTooltip
               variant='ghost'
-              onClick={() => space?.db.remove(task)}
+              onClick={() => db?.remove(task)}
             />
           </li>
         ))}

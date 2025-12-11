@@ -10,7 +10,7 @@ import * as Schema from 'effect/Schema';
 
 import { Blueprint } from '@dxos/blueprints';
 import { Resource } from '@dxos/context';
-import { DXN, Filter, Obj, Query, type Ref, type Relation, Type } from '@dxos/echo';
+import { DXN, type Entity, Filter, Obj, Query, type Ref, Type } from '@dxos/echo';
 import { type Queue } from '@dxos/echo-db';
 import { invariant } from '@dxos/invariant';
 import { ComplexSet } from '@dxos/util';
@@ -25,10 +25,9 @@ export const ContextBinding = Schema.Struct({
     removed: Schema.Array(Type.Ref(Blueprint.Blueprint)),
   }),
 
-  // TODO(burdon): Type.Expando => Type.Obj (or Obj.Any?)
   objects: Schema.Struct({
-    added: Schema.Array(Type.Ref(Type.Expando)),
-    removed: Schema.Array(Type.Ref(Type.Expando)),
+    added: Schema.Array(Type.Ref(Obj.Any)),
+    removed: Schema.Array(Type.Ref(Obj.Any)),
   }),
 }).pipe(
   Type.Obj({
@@ -41,13 +40,13 @@ export interface ContextBinding extends Schema.Schema.Type<typeof ContextBinding
 
 export type BindingProps = Partial<{
   blueprints: Ref.Ref<Blueprint.Blueprint>[];
-  objects: Ref.Ref<Type.Expando>[];
+  objects: Ref.Ref<Obj.Any>[];
 }>;
 
 export class Bindings {
   readonly blueprints = new ComplexSet<Ref.Ref<Blueprint.Blueprint>>((ref) => ref.dxn.toString());
   // TODO(burdon): Some DXNs have the Space prefix so only compare the object ID.
-  readonly objects = new ComplexSet<Ref.Ref<Type.Expando>>((ref) => ref.dxn.asEchoDXN()?.echoId);
+  readonly objects = new ComplexSet<Ref.Ref<Obj.Any>>((ref) => ref.dxn.asEchoDXN()?.echoId);
 
   toJSON() {
     return {
@@ -68,7 +67,7 @@ export class AiContextBinder extends Resource {
   // TODO(burdon): Cache value?
   private _bindings?: ReadonlySignal<Bindings>;
   private _blueprints?: ReadonlySignal<Ref.Ref<Blueprint.Blueprint>[]>;
-  private _objects?: ReadonlySignal<Ref.Ref<Type.Expando>[]>;
+  private _objects?: ReadonlySignal<Ref.Ref<Obj.Any>[]>;
 
   constructor(private readonly _queue: Queue) {
     super();
@@ -93,7 +92,7 @@ export class AiContextBinder extends Resource {
   protected override async _open(): Promise<void> {
     const query = this._queue.query(Query.select(Filter.everything()));
     this._ctx.onDispose(query.subscribe(() => {}));
-    this._bindings = computed(() => this._reduce(query.objects));
+    this._bindings = computed(() => this._reduce(query.results));
     this._blueprints = computed(() => [...this.bindings.value.blueprints]);
     this._objects = computed(() => [...this.bindings.value.objects]);
   }
@@ -108,17 +107,20 @@ export class AiContextBinder extends Resource {
    * Asynchronous query of all bindings.
    */
   async query(): Promise<Bindings> {
-    const { objects } = await this._queue.query(Query.select(Filter.everything())).run();
+    const objects = await this._queue.query(Query.select(Filter.everything())).run();
     return this._reduce(objects);
   }
 
   // TODO(burdon): Pass in Blueprint obj (from registry?) and create reference.
   async bind(props: BindingProps): Promise<void> {
     const blueprints =
-      props.blueprints?.filter((ref) => !this.blueprints.peek().find((b) => b.dxn.toString() === ref.dxn.toString())) ??
-      [];
+      props.blueprints?.filter(
+        (ref) => !this.blueprints.peek().find((blueprint) => blueprint.dxn.toString() === ref.dxn.toString()),
+      ) ?? [];
     const objects =
-      props.objects?.filter((ref) => !this.objects.peek().find((o) => o.dxn.toString() === ref.dxn.toString())) ?? [];
+      props.objects?.filter(
+        (ref) => !this.objects.peek().find((object) => object.dxn.toString() === ref.dxn.toString()),
+      ) ?? [];
 
     if (!blueprints.length && !objects.length) {
       return;
@@ -157,7 +159,7 @@ export class AiContextBinder extends Resource {
     ]);
   }
 
-  private _reduce(items: (Obj.Any | Relation.Any)[]): Bindings {
+  private _reduce(items: Entity.Unknown[]): Bindings {
     return Function.pipe(
       items,
       Array.filter(Obj.instanceOf(ContextBinding)),

@@ -5,7 +5,6 @@
 import * as Predicate from 'effect/Predicate';
 import React from 'react';
 
-import { useClient } from '@dxos/react-client';
 import { Filter, getSpace, useQuery, useSchema } from '@dxos/react-client/echo';
 import { useControlledState } from '@dxos/react-ui';
 import { useSelected } from '@dxos/react-ui-attention';
@@ -30,13 +29,12 @@ export type MapContainerProps = {
 
 export const MapContainer = ({ role, type: typeParam = 'map', object, ...props }: MapContainerProps) => {
   const [type, setType] = useControlledState(typeParam);
-  const client = useClient();
   const space = getSpace(object);
 
   const view = object?.view?.target;
   const typename = view?.query ? getTypenameFromQuery(view.query.ast) : undefined;
-  const schema = useSchema(client, space, typename);
-  const objects = useQuery(space, schema ? Filter.type(schema) : Filter.nothing());
+  const schema = useSchema(space?.db, typename);
+  const objects = useQuery(space?.db, schema ? Filter.type(schema) : Filter.nothing());
 
   const markers = objects
     .map((row) => {

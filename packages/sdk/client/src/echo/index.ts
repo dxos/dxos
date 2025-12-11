@@ -3,42 +3,26 @@
 //
 
 export { SpaceId } from '@dxos/keys';
-export {
-  isSpace,
-  type Echo,
-  type Space,
-  SpaceSchema,
-  PropertiesType,
-  type PropertiesTypeProps,
-} from '@dxos/client-protocol';
+export { isSpace, type Echo, type Space, SpaceSchema, SpaceProperties } from '@dxos/client-protocol';
 export {
   compareForeignKeys,
   createQueueDXN,
-  getMeta,
-  getSchema,
-  getType,
-  getTypename,
-  Expando,
   type ObjectMeta,
   Ref,
   RefArray,
   type TypedObject,
 } from '@dxos/echo/internal';
+export { Entity, Relation, Type, Database } from '@dxos/echo';
 export { type Live, live, isLiveObject } from '@dxos/live-object';
 export {
   createObject,
   createSubscription,
-  getSource,
-  getTarget,
   getVersion,
   type EchoDatabase,
   Filter,
-  type Hypergraph,
   type ObjectMigration,
   ObjectVersion,
   Query,
-  type Queryable,
-  type QueryResult,
   Queue,
   type Selection,
   type SubscriptionHandle,

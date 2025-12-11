@@ -56,12 +56,12 @@ export const useSheetContext = (): SheetContextValue => {
 };
 
 const SheetProviderImpl = ({
+  __gridScope,
+  children,
+  ignoreAttention,
   model,
   onInfo,
-  ignoreAttention,
-  children,
-  __gridScope,
-}: GridScopedProps<PropsWithChildren<Pick<SheetContextValue, 'onInfo' | 'model' | 'ignoreAttention'>>>) => {
+}: GridScopedProps<PropsWithChildren<Pick<SheetContextValue, 'ignoreAttention' | 'model' | 'onInfo'>>>) => {
   const { id, editing, setEditing } = useGridContext('SheetProvider', __gridScope);
 
   const [cursor, setCursorInternal] = useState<CellAddress>();

@@ -8,25 +8,22 @@ import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import { Filter, Query, Type } from '@dxos/echo';
 import {
-  EchoObject,
   EntityKind,
   Format,
-  FormatEnum,
   type JsonPath,
   type JsonProp,
   Ref,
-  RuntimeSchemaRegistry,
   TypeAnnotationId,
   TypeEnum,
   getPropertyMetaAnnotation,
   toJsonSchema,
 } from '@dxos/echo/internal';
-import { EchoSchemaRegistry } from '@dxos/echo-db';
+import { DatabaseSchemaRegistry, RuntimeSchemaRegistry } from '@dxos/echo-db';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
 import { registerSignalsRuntime } from '@dxos/echo-signals';
 import { invariant } from '@dxos/invariant';
 
-import { Testing } from '../testing';
+import { TestSchema } from '../testing';
 import { View } from '../types';
 
 import { createFieldId } from './field';
@@ -53,7 +50,7 @@ describe('ProjectionModel', () => {
 
   test('gets and updates projection', async ({ expect }) => {
     const { db } = await builder.createDatabase();
-    const registry = new EchoSchemaRegistry(db);
+    const registry = new DatabaseSchemaRegistry(db);
 
     const schema = Schema.Struct({
       name: Schema.String.annotations({ title: 'Name' }),
@@ -80,7 +77,7 @@ describe('ProjectionModel', () => {
       expect(props).to.deep.eq({
         property: 'name',
         type: TypeEnum.String,
-        format: FormatEnum.String,
+        format: Format.TypeFormat.String,
         title: 'Name',
       });
     }
@@ -90,7 +87,7 @@ describe('ProjectionModel', () => {
       expect(props).to.include({
         property: 'email',
         type: TypeEnum.String,
-        format: FormatEnum.Email,
+        format: Format.TypeFormat.Email,
       });
     }
 
@@ -109,7 +106,7 @@ describe('ProjectionModel', () => {
       expect(props).to.include({
         property: 'email',
         type: TypeEnum.String,
-        format: FormatEnum.Email,
+        format: Format.TypeFormat.Email,
       });
 
       projectionModel.setFieldProjection({ props });
@@ -120,7 +117,7 @@ describe('ProjectionModel', () => {
       expect(props).to.include({
         property: 'salary',
         type: TypeEnum.Number,
-        format: FormatEnum.Currency,
+        format: Format.TypeFormat.Currency,
         currency: 'USD',
         multipleOf: 2,
       });
@@ -134,7 +131,7 @@ describe('ProjectionModel', () => {
       expect(props).to.include({
         property: 'salary',
         type: TypeEnum.Number,
-        format: FormatEnum.Currency,
+        format: Format.TypeFormat.Currency,
         currency: 'GBP',
         multipleOf: 2,
       });
@@ -143,14 +140,14 @@ describe('ProjectionModel', () => {
 
   test('gets and updates references', async ({ expect }) => {
     const registry = new RuntimeSchemaRegistry();
-    registry.addSchema([Testing.Organization]);
+    await registry.register([TestSchema.Organization]);
 
     const typename = 'example.com/type/Person';
     const schema = Schema.Struct({
       name: Schema.String.annotations({ title: 'Name' }),
       email: Format.Email,
       salary: Format.Currency({ code: 'usd', decimals: 2 }),
-      organization: Ref(Testing.Organization),
+      organization: Ref(TestSchema.Organization),
     }).pipe(Type.Obj({ typename, version: '0.1.0' }));
     const jsonSchema = toJsonSchema(schema);
 
@@ -172,7 +169,7 @@ describe('ProjectionModel', () => {
     expect(props).to.deep.eq({
       property: 'organization',
       type: TypeEnum.Ref,
-      format: FormatEnum.Ref,
+      format: Format.TypeFormat.Ref,
       referenceSchema: 'example.com/type/Organization',
       referencePath: 'name',
     });
@@ -192,7 +189,7 @@ describe('ProjectionModel', () => {
 
   test('deletes field projections', async ({ expect }) => {
     const { db } = await builder.createDatabase();
-    const registry = new EchoSchemaRegistry(db);
+    const registry = new DatabaseSchemaRegistry(db);
 
     const schema = Schema.Struct({
       name: Schema.String.annotations({ title: 'Name' }),
@@ -220,12 +217,12 @@ describe('ProjectionModel', () => {
     expect(projectionModel.fields).to.have.length(1);
     expect(mutable.jsonSchema.properties?.['email' as const]).to.not.exist;
     expect(deleted.field.path).to.equal('email');
-    expect(deleted.props.format).to.equal(FormatEnum.Email);
+    expect(deleted.props.format).to.equal(Format.TypeFormat.Email);
   });
 
   test('field projection delete and restore', async ({ expect }) => {
     const { db } = await builder.createDatabase();
-    const registry = new EchoSchemaRegistry(db);
+    const registry = new DatabaseSchemaRegistry(db);
 
     const schema = Schema.Struct({
       name: Schema.optional(Schema.Number),
@@ -275,7 +272,7 @@ describe('ProjectionModel', () => {
 
   test('property rename', async ({ expect }) => {
     const { db } = await builder.createDatabase();
-    const registry = new EchoSchemaRegistry(db);
+    const registry = new DatabaseSchemaRegistry(db);
 
     const schema = Schema.Struct({
       name: Schema.String,
@@ -325,7 +322,7 @@ describe('ProjectionModel', () => {
 
   test('property rename updates schema propertyOrder and required arrays', async ({ expect }) => {
     const { db } = await builder.createDatabase();
-    const registry = new EchoSchemaRegistry(db);
+    const registry = new DatabaseSchemaRegistry(db);
 
     const schema = Schema.Struct({
       name: Schema.String,
@@ -383,7 +380,7 @@ describe('ProjectionModel', () => {
 
   test('single select format', async ({ expect }) => {
     const { db } = await builder.createDatabase();
-    const registry = new EchoSchemaRegistry(db);
+    const registry = new DatabaseSchemaRegistry(db);
 
     const schema = Schema.Struct({
       status: Schema.String,
@@ -410,7 +407,7 @@ describe('ProjectionModel', () => {
       props: {
         property: 'status' as JsonProp,
         type: TypeEnum.String,
-        format: FormatEnum.SingleSelect,
+        format: Format.TypeFormat.SingleSelect,
         options: [
           { id: 'draft', title: 'Draft', color: 'gray' },
           { id: 'published', title: 'Published', color: 'green' },
@@ -438,7 +435,7 @@ describe('ProjectionModel', () => {
     // Verify projection.
     const { props } = projection.getFieldProjection(fieldId);
 
-    expect(props.format).to.equal(FormatEnum.SingleSelect);
+    expect(props.format).to.equal(Format.TypeFormat.SingleSelect);
     expect(props.options).to.deep.equal([
       { id: 'draft', title: 'Draft', color: 'gray' },
       { id: 'published', title: 'Published', color: 'green' },
@@ -493,7 +490,7 @@ describe('ProjectionModel', () => {
 
   test('multi select format', async ({ expect }) => {
     const { db } = await builder.createDatabase();
-    const registry = new EchoSchemaRegistry(db);
+    const registry = new DatabaseSchemaRegistry(db);
 
     const schema = Schema.Struct({
       tags: Schema.String,
@@ -519,7 +516,7 @@ describe('ProjectionModel', () => {
       props: {
         property: 'tags' as JsonProp,
         type: TypeEnum.Object,
-        format: FormatEnum.MultiSelect,
+        format: Format.TypeFormat.MultiSelect,
         options: [
           { id: 'feature', title: 'Feature', color: 'emerald' },
           { id: 'bug', title: 'Bug', color: 'red' },
@@ -546,7 +543,7 @@ describe('ProjectionModel', () => {
 
     const { props } = projection.getFieldProjection(fieldId);
 
-    expect(props.format).to.equal(FormatEnum.MultiSelect);
+    expect(props.format).to.equal(Format.TypeFormat.MultiSelect);
     expect(props.options).to.deep.equal([
       { id: 'feature', title: 'Feature', color: 'emerald' },
       { id: 'bug', title: 'Bug', color: 'red' },
@@ -626,7 +623,7 @@ describe('ProjectionModel', () => {
 
   test('hidden fields are tracked in hiddenFields', async ({ expect }) => {
     const { db } = await builder.createDatabase();
-    const registry = new EchoSchemaRegistry(db);
+    const registry = new DatabaseSchemaRegistry(db);
 
     const schema = Schema.Struct({
       name: Schema.String,
@@ -729,7 +726,7 @@ describe('ProjectionModel', () => {
 
   test('schema fields are automatically added to hiddenFields', async ({ expect }) => {
     const { db } = await builder.createDatabase();
-    const registry = new EchoSchemaRegistry(db);
+    const registry = new DatabaseSchemaRegistry(db);
 
     // Create schema with three properties.
     const schema = Schema.Struct({
@@ -767,7 +764,7 @@ describe('ProjectionModel', () => {
 
   test('normalizeView syncs fields with schema changes', async ({ expect }) => {
     const { db } = await builder.createDatabase();
-    const registry = new EchoSchemaRegistry(db);
+    const registry = new DatabaseSchemaRegistry(db);
 
     // Create initial schema with a single field.
     const initialSchema = Schema.Struct({
@@ -809,7 +806,7 @@ describe('ProjectionModel', () => {
 
   test('deleted fields should not appear in hidden properties after reinitialization', async ({ expect }) => {
     const { db } = await builder.createDatabase();
-    const registry = new EchoSchemaRegistry(db);
+    const registry = new DatabaseSchemaRegistry(db);
 
     const schema = Schema.Struct({
       name: Schema.String,
@@ -858,7 +855,7 @@ describe('ProjectionModel', () => {
 
   // TODO(burdon): Fix.
   test.skip('create view from static organization schema', async ({ expect }) => {
-    const schema = Testing.Organization;
+    const schema = TestSchema.Organization;
     const jsonSchema = toJsonSchema(schema);
 
     const view = View.make({ query: Query.select(Filter.type(schema)), jsonSchema });
@@ -914,7 +911,12 @@ describe('ProjectionModel', () => {
           }),
         ),
       ),
-    }).pipe(EchoObject({ typename: 'dxos.org/type/ContactWithArrayOfEmails', version: '0.1.0' }));
+    }).pipe(
+      Type.Obj({
+        typename: 'dxos.org/type/ContactWithArrayOfEmails',
+        version: '0.1.0',
+      }),
+    );
 
     const jsonSchema = toJsonSchema(ContactWithArrayOfEmails);
 
@@ -939,15 +941,15 @@ describe('ProjectionModel', () => {
 
   test('changing format to missing formats', async ({ expect }) => {
     const testCases = [
-      { format: FormatEnum.Integer, expectedType: TypeEnum.Number, fieldName: 'count' },
-      { format: FormatEnum.DXN, expectedType: TypeEnum.String, fieldName: 'identifier' },
-      { format: FormatEnum.Hostname, expectedType: TypeEnum.String, fieldName: 'host' },
+      { format: Format.TypeFormat.Integer, expectedType: TypeEnum.Number, fieldName: 'count' },
+      { format: Format.TypeFormat.DXN, expectedType: TypeEnum.String, fieldName: 'identifier' },
+      { format: Format.TypeFormat.Hostname, expectedType: TypeEnum.String, fieldName: 'host' },
     ];
 
     for (const { format, expectedType, fieldName } of testCases) {
       // Arrange.
       const { db } = await builder.createDatabase();
-      const registry = new EchoSchemaRegistry(db);
+      const registry = new DatabaseSchemaRegistry(db);
 
       const schemaType = expectedType === TypeEnum.Number ? Schema.Number : Schema.String;
       const schema = Schema.Struct({
@@ -994,7 +996,7 @@ describe('ProjectionModel', () => {
 
   test('Email validation persists after schema registration round-trip', async ({ expect }) => {
     const { db } = await builder.createDatabase();
-    const registry = new EchoSchemaRegistry(db);
+    const registry = new DatabaseSchemaRegistry(db);
 
     // Verify Format.Email has validation
     expect(() => Schema.validateSync(Format.Email)('valid@example.com')).not.toThrow();

@@ -6,8 +6,8 @@ import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
-import { AiService, ConsolePrinter, MemoizedAiService } from '@dxos/ai';
-import { TestAiService } from '@dxos/ai/testing';
+import { AiService, ConsolePrinter } from '@dxos/ai';
+import { MemoizedAiService, TestAiService } from '@dxos/ai/testing';
 import {
   AiConversation,
   type ContextBinding,
@@ -18,8 +18,10 @@ import {
 import { Blueprint, Template } from '@dxos/blueprints';
 import { Obj } from '@dxos/echo';
 import { Ref } from '@dxos/echo';
-import { TestHelpers, acquireReleaseResource } from '@dxos/effect';
-import { CredentialsService, DatabaseService, QueueService, TracingService } from '@dxos/functions';
+import { Database } from '@dxos/echo';
+import { acquireReleaseResource } from '@dxos/effect';
+import { TestHelpers } from '@dxos/effect/testing';
+import { CredentialsService, QueueService, TracingService } from '@dxos/functions';
 import { FunctionInvocationServiceLayerTest, TestDatabaseLayer } from '@dxos/functions-runtime/testing';
 import { ObjectId } from '@dxos/keys';
 import { Message, Organization, Person } from '@dxos/types';
@@ -60,13 +62,13 @@ describe('AssistantToolkit', () => {
     'can add to context',
     Effect.fnUntraced(
       function* (_) {
-        const { db } = yield* DatabaseService;
+        const { db } = yield* Database.Service;
         const queue = yield* QueueService.createQueue<Message.Message | ContextBinding>();
         const conversation = yield* acquireReleaseResource(() => new AiConversation(queue));
         const observer = GenerationObserver.fromPrinter(new ConsolePrinter());
         yield* Effect.promise(() => conversation.context.bind({ blueprints: [Ref.make(db.add(blueprint))] }));
 
-        const organization = yield* DatabaseService.add(
+        const organization = yield* Database.Service.add(
           Obj.make(Organization.Organization, {
             name: 'Cyberdyne Systems',
             website: 'https://cyberdyne.com',

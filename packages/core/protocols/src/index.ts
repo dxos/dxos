@@ -5,8 +5,7 @@
 // TODO(burdon): Why export .js?
 
 export * from './automerge.js';
-export * from './edge-error.js';
-export * from './edge.js';
+export * from './edge/index.js';
 export * from './errors/index.js';
 export * from './indexing.js';
 export * from './messenger.js';

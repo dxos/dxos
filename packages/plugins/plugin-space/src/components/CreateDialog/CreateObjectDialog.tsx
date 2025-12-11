@@ -11,12 +11,13 @@ import { Capabilities, LayoutAction, chain, createIntent } from '@dxos/app-frame
 import { useIntentDispatcher, usePluginManager } from '@dxos/app-framework/react';
 import { Obj, Type } from '@dxos/echo';
 import { EntityKind, SystemTypeAnnotation, getTypeAnnotation } from '@dxos/echo/internal';
+import { runAndForwardErrors } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { useClient } from '@dxos/react-client';
 import { type Space, getSpace, isLiveObject, isSpace, useSpaces } from '@dxos/react-client/echo';
 import { Dialog, IconButton, useTranslation } from '@dxos/react-ui';
 import { cardDialogContent, cardDialogHeader } from '@dxos/react-ui-stack';
-import { type Collection, StoredSchema } from '@dxos/schema';
+import { type Collection } from '@dxos/schema';
 
 import { meta } from '../../meta';
 import { SpaceAction } from '../../types';
@@ -86,7 +87,7 @@ export const CreateObjectDialog = ({
         const space = isSpace(target) ? target : getSpace(target);
         invariant(space, 'Missing space');
         const { object } = yield* dispatch(metadata.createObjectIntent(data, { space }));
-        if (isLiveObject(object) && !Obj.instanceOf(StoredSchema, object)) {
+        if (isLiveObject(object) && !Obj.instanceOf(Type.PersistentType, object)) {
           // TODO(wittjosiah): Selection in navtree isn't working as expected when hidden typenames evals to true.
           const hidden = !metadata.addToCollectionOnCreate;
           const addObjectIntent = createIntent(SpaceAction.AddObject, {
@@ -103,7 +104,7 @@ export const CreateObjectDialog = ({
 
           onCreateObject?.(object);
         }
-      }).pipe(Effect.runPromise),
+      }).pipe(runAndForwardErrors),
     [dispatch, target, resolve, _shouldNavigate],
   );
 

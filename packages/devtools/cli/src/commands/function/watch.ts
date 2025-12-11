@@ -33,8 +33,10 @@ export default class Watch extends BaseCommand<typeof Watch> {
   };
 
   async run(): Promise<any> {
+    // TODO(dmaretskyi): This isn't working since local functions runtime was removed.
+    throw new Error('Not implemented');
     return this.execWithSpace(async ({ client, space }) => {
-      client.addTypes([Text.Text, Function.Function, Script.Script]);
+      await client.addTypes([Text.Text, Function.Function, Script.Script]);
 
       const { scriptContent } = await this._loadFunctionObject(space);
 
@@ -49,15 +51,13 @@ export default class Watch extends BaseCommand<typeof Watch> {
         }
 
         const source = fs.readFileSync(this.args.file, 'utf-8');
-        const bundleResult = await bundleFunction({
-          platform: 'browser',
-          source,
-        });
+        const bundleResult = await bundleFunction({ source });
         if ('error' in bundleResult) {
           this._logWithTime('Source bundling failed, waiting for new changes...');
           return;
         }
 
+        // @ts-expect-error
         const updateResult = await this._uploadSource(bundleResult.bundle);
         if (updateResult.success) {
           if (scriptContent) {

@@ -4,7 +4,7 @@
 
 import type * as Schema from 'effect/Schema';
 
-import type { Type } from '@dxos/echo';
+import type { Entity, Type } from '@dxos/echo';
 import { getSchemaDXN } from '@dxos/echo/internal';
 import { type DXN } from '@dxos/keys';
 
@@ -22,7 +22,7 @@ type DefineObjectMigrationOptions<From extends Schema.Schema.AnyNoContext, To ex
   transform: (
     from: Schema.Schema.Type<From>,
     context: ObjectMigrationContext,
-  ) => Promise<Omit<Schema.Schema.Type<To>, 'id' | Type.KindId>>;
+  ) => Promise<Omit<Schema.Schema.Type<To>, 'id' | Entity.KindId>>;
 
   /**
    * Callback that is called after the object is migrated. Called for every object that is migrated.

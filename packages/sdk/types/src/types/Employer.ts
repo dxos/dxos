@@ -4,13 +4,16 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Obj, Type } from '@dxos/echo';
+import { Obj, Relation, Type } from '@dxos/echo';
 
 import { Organization } from './Organization';
 import { Person } from './Person';
 
+/**
+ * Employer relation.
+ */
 export const Employer = Schema.Struct({
-  id: Type.ObjectId,
+  id: Obj.ID, // TODO(burdon): Remove.
   role: Schema.optional(Schema.String),
   active: Schema.optional(Schema.Boolean),
   startDate: Schema.optional(Schema.String),
@@ -30,4 +33,10 @@ export const Employer = Schema.Struct({
 
 export interface Employer extends Schema.Schema.Type<typeof Employer> {}
 
-export const make = (props: Obj.MakeProps<typeof Employer>) => Obj.make(Employer, props);
+// TODO(wittjosiah): Add `Relation.MakeProps`.
+export const make = (
+  props: {
+    [Relation.Source]: Schema.Schema.Type<typeof Person>;
+    [Relation.Target]: Schema.Schema.Type<typeof Organization>;
+  } & Type.Properties<Schema.Schema.Type<typeof Employer>>,
+) => Relation.make(Employer, props);

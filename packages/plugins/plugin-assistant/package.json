@@ -15,6 +15,12 @@
       "browser": "./dist/lib/browser/index.mjs",
       "node": "./dist/lib/node-esm/index.mjs"
     },
+    "./blueprints": {
+      "source": "./src/capabilities/blueprint-definition.ts",
+      "types": "./dist/types/src/capabilities/blueprint-definition.d.ts",
+      "browser": "./dist/lib/browser/capabilities/blueprint-definition.mjs",
+      "node": "./dist/lib/node-esm/capabilities/blueprint-definition.mjs"
+    },
     "./types": {
       "source": "./src/types/index.ts",
       "types": "./dist/types/src/types/index.d.ts",
@@ -89,6 +95,7 @@
     "@dxos/react-ui-form": "workspace:*",
     "@dxos/react-ui-graph": "workspace:*",
     "@dxos/react-ui-list": "workspace:*",
+    "@dxos/react-ui-markdown": "workspace:*",
     "@dxos/react-ui-menu": "workspace:*",
     "@dxos/react-ui-searchlist": "workspace:*",
     "@dxos/react-ui-sfx": "workspace:*",

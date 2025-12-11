@@ -8,7 +8,6 @@ import React, { useCallback, useMemo, useRef, useState } from 'react';
 import { DXN, Filter, Obj, Query, type QueryAST, Ref, Tag, Type } from '@dxos/echo';
 import { useTypeOptions } from '@dxos/plugin-space';
 import { resolveSchemaWithClientAndSpace } from '@dxos/plugin-space';
-import { useClient } from '@dxos/react-client';
 import { getSpace, useQuery } from '@dxos/react-client/echo';
 import { IconButton, type ThemedClassName, useAsyncEffect, useTranslation } from '@dxos/react-ui';
 import { Form, ViewEditor } from '@dxos/react-ui-form';
@@ -36,7 +35,6 @@ export type ProjectObjectSettingsProps = ThemedClassName<{
  */
 export const ProjectObjectSettings = ({ classNames, project }: ProjectObjectSettingsProps) => {
   const { t } = useTranslation(meta.id);
-  const client = useClient();
   const space = getSpace(project);
   const [expandedId, setExpandedId] = useState<string>();
   const column = useMemo(
@@ -46,7 +44,7 @@ export const ProjectObjectSettings = ({ classNames, project }: ProjectObjectSett
   const view = column?.view.target;
   const [schema, setSchema] = useState<Schema.Schema.AnyNoContext>(() => Schema.Struct({}));
   const projectionRef = useRef<ProjectionModel>(null);
-  const tags = useQuery(space, Filter.type(Tag.Tag));
+  const tags = useQuery(space?.db, Filter.type(Tag.Tag));
   const types = useTypeOptions({
     space,
     annotation: {
@@ -61,11 +59,11 @@ export const ProjectObjectSettings = ({ classNames, project }: ProjectObjectSett
       return;
     }
 
-    const foundSchema = await resolveSchemaWithClientAndSpace(client, space, view.query.ast);
+    const foundSchema = await resolveSchemaWithClientAndSpace(space, view.query.ast);
     if (foundSchema && foundSchema !== schema) {
       setSchema(() => foundSchema);
     }
-  }, [client, space, view, schema]);
+  }, [space, view, schema]);
 
   const handleMove = useCallback(
     (fromIndex: number, toIndex: number) => arrayMove(project.columns, fromIndex, toIndex),
@@ -81,7 +79,7 @@ export const ProjectObjectSettings = ({ classNames, project }: ProjectObjectSett
       const queue = target && DXN.tryParse(target) ? target : undefined;
       const query = queue ? Query.fromAst(newQuery).options({ queues: [queue] }) : Query.fromAst(newQuery);
       view.query.ast = query.ast;
-      const newSchema = await resolveSchemaWithClientAndSpace(client, space, query.ast);
+      const newSchema = await resolveSchemaWithClientAndSpace(space, query.ast);
       if (!newSchema) {
         return;
       }
@@ -181,8 +179,12 @@ export const ProjectObjectSettings = ({ classNames, project }: ProjectObjectSett
                     />
                   </div>
                   {expandedId === column.view.dxn.toString() && view && (
-                    <div role='none' className='col-span-5 mbs-1 mbe-1 border border-separator rounded-md'>
-                      <Form autoSave schema={ColumnFormSchema} values={column} onSave={handleColumnSave} />
+                    <div role='none' className='col-span-5 mlb-2 border border-separator rounded-md'>
+                      <Form.Root schema={ColumnFormSchema} values={column} autoSave onSave={handleColumnSave}>
+                        <Form.Content>
+                          <Form.FieldSet />
+                        </Form.Content>
+                      </Form.Root>
                       <ViewEditor
                         ref={projectionRef}
                         mode='tag'

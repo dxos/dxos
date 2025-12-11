@@ -53,11 +53,15 @@ const MeetingItem = ({
   );
 };
 
-export const MeetingsList = ({ channel }: { channel: Channel.Channel }) => {
+export type MeetingsListProps = {
+  channel: Channel.Channel;
+};
+
+export const MeetingsList = ({ channel }: MeetingsListProps) => {
   const { t } = useTranslation(meta.id);
   const { dispatchPromise: dispatch } = useIntentDispatcher();
   const space = getSpace(channel);
-  const meetings = useQuery(space, Query.type(Meeting.Meeting));
+  const meetings = useQuery(space?.db, Query.type(Meeting.Meeting));
   // TODO(wittjosiah): This should be done in the query.
   const sortedMeetings = useMemo(() => {
     return meetings.toSorted((a, b) => new Date(b.created).getTime() - new Date(a.created).getTime());

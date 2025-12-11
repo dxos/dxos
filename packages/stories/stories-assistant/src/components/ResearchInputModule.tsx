@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { Filter, Obj, type Relation } from '@dxos/echo';
+import { type Entity, Filter, Obj } from '@dxos/echo';
 import { useQuery, useQueue } from '@dxos/react-client/echo';
 import { getHashHue } from '@dxos/react-ui-theme';
 
@@ -13,7 +13,7 @@ import { ResearchInputQueue } from '../testing';
 import { type ComponentProps } from './types';
 
 export const ResearchInputModule = ({ space }: ComponentProps) => {
-  const [researchInput] = useQuery(space, Filter.type(ResearchInputQueue));
+  const [researchInput] = useQuery(space.db, Filter.type(ResearchInputQueue));
   const queue = useQueue(researchInput?.queue.dxn);
 
   return (
@@ -28,7 +28,7 @@ export const ResearchInputModule = ({ space }: ComponentProps) => {
 };
 
 type DebugCardProps = {
-  object: Obj.Any | Relation.Any;
+  object: Entity.Unknown;
 };
 
 const DebugCard = ({ object }: DebugCardProps) => {

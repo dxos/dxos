@@ -13,12 +13,14 @@ import { ENV_DX_PROFILE_DEFAULT } from '@dxos/client-protocol';
 import { CommandConfig } from '../services';
 import { DXOS_VERSION } from '../version';
 
+import { chat } from './chat';
 import { config } from './config';
 import { debug } from './debug';
 import { edge } from './edge';
 import { halo } from './halo';
 import { hub } from './hub';
 import { object } from './object';
+import { profile } from './profile';
 import { queue } from './queue';
 import { repl } from './repl';
 import { spaces } from './spaces';
@@ -51,25 +53,28 @@ export const command = Command.make('dx', {
 export const dx = command.pipe(
   Command.withSubcommands([
     config,
+    profile,
     repl,
 
     // Only providing client to commands that require it.
+    chat.pipe(Command.provide(ClientService.layer)),
+    edge.pipe(Command.provide(ClientService.layer)),
     halo.pipe(Command.provide(ClientService.layer)),
-    spaces.pipe(Command.provide(ClientService.layer)),
     object.pipe(Command.provide(ClientService.layer)),
     queue.pipe(Command.provide(ClientService.layer)),
-    edge.pipe(Command.provide(ClientService.layer)),
+    spaces.pipe(Command.provide(ClientService.layer)),
 
     // TODO(burdon): Admin-only (separate dynamic module?)
-    hub.pipe(Command.provide(ClientService.layer)),
     debug.pipe(Command.provide(ClientService.layer)),
+    hub.pipe(Command.provide(ClientService.layer)),
   ]),
   // TODO(wittjosiah): Create separate command path for clients that don't need the client.
   Command.provideEffect(ConfigService, (args) => ConfigService.load(args)),
-  Command.provide(({ json, verbose }) =>
+  Command.provide(({ json, verbose, profile }) =>
     Layer.succeed(CommandConfig, {
       json,
       verbose,
+      profile,
     }),
   ),
 );

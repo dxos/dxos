@@ -25,7 +25,7 @@ export const ViewEditor = ({ view }: ViewEditorProps) => {
   const client = useClient();
   const space = getSpace(view);
   const [schema, setSchema] = useState<Schema.Schema.AnyNoContext>(() => Schema.Struct({}));
-  const tags = useQuery(space, Filter.type(Tag.Tag));
+  const tags = useQuery(space?.db, Filter.type(Tag.Tag));
   const types = useTypeOptions({
     space,
     annotation: {
@@ -40,7 +40,7 @@ export const ViewEditor = ({ view }: ViewEditorProps) => {
       return;
     }
 
-    const foundSchema = await resolveSchemaWithClientAndSpace(client, space, view.query.ast);
+    const foundSchema = await resolveSchemaWithClientAndSpace(space, view.query.ast);
     if (foundSchema && foundSchema !== schema) {
       setSchema(() => foundSchema);
     }
@@ -55,7 +55,7 @@ export const ViewEditor = ({ view }: ViewEditorProps) => {
       const queue = target && DXN.tryParse(target) ? target : undefined;
       const query = queue ? Query.fromAst(newQuery).options({ queues: [queue] }) : Query.fromAst(newQuery);
       view.query.ast = query.ast;
-      const newSchema = await resolveSchemaWithClientAndSpace(client, space, query.ast);
+      const newSchema = await resolveSchemaWithClientAndSpace(space, query.ast);
       if (!newSchema) {
         return;
       }
@@ -88,7 +88,6 @@ export const ViewEditor = ({ view }: ViewEditorProps) => {
       schema={schema}
       view={view}
       mode='tag'
-      outerSpacing={false}
       tags={tags}
       types={types}
       onQueryChanged={handleQueryChanged}

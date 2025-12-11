@@ -10,8 +10,8 @@ import * as ManagedRuntime from 'effect/ManagedRuntime';
 import { Capabilities, type PluginContext, contributes } from '@dxos/app-framework';
 import { GenericToolkit, makeToolExecutionServiceFromFunctions, makeToolResolverFromFunctions } from '@dxos/assistant';
 import { Resource } from '@dxos/context';
-import { Query, Ref } from '@dxos/echo';
-import { CredentialsService, DatabaseService, QueueService } from '@dxos/functions';
+import { Database, Query, Ref } from '@dxos/echo';
+import { CredentialsService, QueueService } from '@dxos/functions';
 import {
   FunctionImplementationResolver,
   FunctionInvocationServiceLayerWithLocalLoopbackExecutor,
@@ -23,7 +23,7 @@ import { TriggerStateStore } from '@dxos/functions-runtime';
 import { invariant } from '@dxos/invariant';
 import { type SpaceId } from '@dxos/keys';
 import { ClientCapabilities } from '@dxos/plugin-client';
-import { PropertiesType } from '@dxos/react-client/echo';
+import { SpaceProperties } from '@dxos/react-client/echo';
 
 import { AutomationCapabilities } from './capabilities';
 
@@ -34,6 +34,9 @@ export default async (context: PluginContext) => {
   });
 };
 
+/**
+ * Adapts plugin capabilities to runtime layers.
+ */
 class ComputeRuntimeProviderImpl extends Resource implements AutomationCapabilities.ComputeRuntimeProvider {
   readonly #runtimes = new Map<SpaceId, AutomationCapabilities.ComputeRuntime>();
   readonly #context: PluginContext;
@@ -58,7 +61,7 @@ class ComputeRuntimeProviderImpl extends Resource implements AutomationCapabilit
     const layer = Layer.unwrapEffect(
       Effect.gen(this, function* () {
         const client = this.#context.getCapability(ClientCapabilities.Client);
-        const serviceLayer =
+        const aiServiceLayer =
           this.#context.getCapability(Capabilities.AiServiceLayer) ?? Layer.die('AiService not found');
 
         // TODO(dmaretskyi): Make these reactive.
@@ -69,7 +72,7 @@ class ComputeRuntimeProviderImpl extends Resource implements AutomationCapabilit
         const toolkitLayer = mergedToolkit.layer;
 
         const space = client.spaces.get(spaceId);
-        invariant(space);
+        invariant(space, `Invalid space: ${spaceId}`);
         yield* Effect.promise(() => space.waitUntilReady());
 
         return Layer.mergeAll(TriggerDispatcher.layer({ timeControl: 'natural' })).pipe(
@@ -82,21 +85,19 @@ class ComputeRuntimeProviderImpl extends Resource implements AutomationCapabilit
             ),
           ),
           Layer.provideMerge(
-            Layer.mergeAll(
-              FunctionInvocationServiceLayerWithLocalLoopbackExecutor.pipe(
-                Layer.provideMerge(FunctionImplementationResolver.layerTest({ functions })),
-                Layer.provideMerge(
-                  RemoteFunctionExecutionService.fromClient(
-                    client,
-                    // If agent is not enabled do not provide spaceId because space context will be unavailable on EDGE.
-                    client.config.get('runtime.client.edgeFeatures.agents') ? spaceId : undefined,
-                  ),
+            FunctionInvocationServiceLayerWithLocalLoopbackExecutor.pipe(
+              Layer.provideMerge(FunctionImplementationResolver.layerTest({ functions })),
+              Layer.provideMerge(
+                RemoteFunctionExecutionService.fromClient(
+                  client,
+                  // If agent is not enabled do not provide spaceId because space context will be unavailable on EDGE.
+                  client.config.get('runtime.client.edgeFeatures.agents') ? spaceId : undefined,
                 ),
-                Layer.provideMerge(serviceLayer),
-                Layer.provideMerge(CredentialsService.layerFromDatabase()),
-                Layer.provideMerge(space ? DatabaseService.layer(space.db) : DatabaseService.notAvailable),
-                Layer.provideMerge(space ? QueueService.layer(space.queues) : QueueService.notAvailable),
               ),
+              Layer.provideMerge(aiServiceLayer),
+              Layer.provideMerge(CredentialsService.layerFromDatabase()),
+              Layer.provideMerge(space ? Database.Service.layer(space.db) : Database.Service.notAvailable),
+              Layer.provideMerge(space ? QueueService.layer(space.queues) : QueueService.notAvailable),
             ),
           ),
         );
@@ -105,16 +106,14 @@ class ComputeRuntimeProviderImpl extends Resource implements AutomationCapabilit
 
     const runtime = ManagedRuntime.make(layer);
     this.#runtimes.set(spaceId, runtime);
-
     return runtime;
   }
 }
 
 const InvocationTracerLive = Layer.unwrapEffect(
   Effect.gen(function* () {
-    const {
-      objects: [properties],
-    } = yield* DatabaseService.runQuery(Query.type(PropertiesType));
+    const objects = yield* Database.Service.runQuery(Query.type(SpaceProperties));
+    const [properties] = objects;
     invariant(properties);
     // TODO(burdon): Check ref target has loaded?
     if (!properties.invocationTraceQueue || !properties.invocationTraceQueue.target) {

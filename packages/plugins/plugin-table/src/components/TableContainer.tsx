@@ -5,7 +5,7 @@
 import { Atom } from '@effect-atom/atom-react';
 import * as Match from 'effect/Match';
 import type * as Schema from 'effect/Schema';
-import React, { useCallback, useMemo, useRef } from 'react';
+import React, { forwardRef, useCallback, useMemo, useRef } from 'react';
 
 import { LayoutAction, createIntent } from '@dxos/app-framework';
 import { useAppGraph, useIntentDispatcher } from '@dxos/app-framework/react';
@@ -13,7 +13,6 @@ import { Filter, Obj, Query, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { useGlobalFilteredObjects } from '@dxos/plugin-search';
 import { SpaceAction } from '@dxos/plugin-space/types';
-import { useClient } from '@dxos/react-client';
 import { getSpace, useQuery, useSchema } from '@dxos/react-client/echo';
 import { StackItem } from '@dxos/react-ui-stack';
 import {
@@ -39,17 +38,18 @@ export type TableContainerProps = {
 };
 
 // TODO(wittjosiah): Need to handle more complex queries by restricting add row.
-export const TableContainer = ({ role, object }: TableContainerProps) => {
+export const TableContainer = forwardRef<HTMLDivElement, TableContainerProps>(({ role, object }, forwardedRef) => {
   const { dispatchPromise: dispatch } = useIntentDispatcher();
   const tableRef = useRef<TableController>(null);
 
-  const client = useClient();
   const space = getSpace(object);
   const view = object.view.target;
   const query = view ? Query.fromAst(Obj.getSnapshot(view).query.ast) : Query.select(Filter.nothing());
-  const typename = object.view.target?.query ? getTypenameFromQuery(object.view.target.query.ast) : undefined;
-  const schema = useSchema(client, space, typename);
-  const queriedObjects = useQuery(space, query);
+  const typename = getTypenameFromQuery(query.ast);
+  const schema = useSchema(space?.db, typename);
+  // TODO(wittjosiah): This should use `query` above.
+  //   That currently doesn't work for dynamic schema objects because their indexed typename is the schema object DXN.
+  const queriedObjects = useQuery(space?.db, schema ? Filter.type(schema) : Filter.nothing());
   const filteredObjects = useGlobalFilteredObjects(queriedObjects);
 
   const { graph } = useAppGraph();
@@ -64,7 +64,7 @@ export const TableContainer = ({ role, object }: TableContainerProps) => {
     });
   }, [graph]);
 
-  const addRow = useAddRow({ space, schema });
+  const addRow = useAddRow({ db: space?.db, schema });
 
   const handleDeleteRows = useCallback(
     (_row: number, objects: any[]) => {
@@ -158,7 +158,7 @@ export const TableContainer = ({ role, object }: TableContainerProps) => {
   );
 
   return (
-    <StackItem.Content toolbar>
+    <StackItem.Content toolbar ref={forwardedRef}>
       <TableToolbar
         attendableId={Obj.getDXN(object).toString()}
         customActions={customActions}
@@ -169,7 +169,6 @@ export const TableContainer = ({ role, object }: TableContainerProps) => {
         <TableComponent.Main
           key={Obj.getDXN(object).toString()}
           ref={tableRef}
-          client={client}
           model={model}
           presentation={presentation}
           schema={schema}
@@ -179,6 +178,8 @@ export const TableContainer = ({ role, object }: TableContainerProps) => {
       </TableComponent.Root>
     </StackItem.Content>
   );
-};
+});
+
+TableContainer.displayName = 'TableContainer';
 
 export default TableContainer;

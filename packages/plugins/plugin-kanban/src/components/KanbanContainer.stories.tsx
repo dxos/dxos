@@ -16,13 +16,12 @@ import { SpacePlugin } from '@dxos/plugin-space';
 import { StorybookLayoutPlugin } from '@dxos/plugin-storybook-layout';
 import { ThemePlugin } from '@dxos/plugin-theme';
 import { faker } from '@dxos/random';
-import { useClient } from '@dxos/react-client';
 import { Filter, useQuery, useSchema, useSpaces } from '@dxos/react-client/echo';
 import { withTheme } from '@dxos/react-ui/testing';
 import { ViewEditor } from '@dxos/react-ui-form';
 import { Kanban as KanbanComponent, useKanbanModel, useProjectionModel } from '@dxos/react-ui-kanban';
 import { Kanban } from '@dxos/react-ui-kanban/types';
-import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
+import { JsonFilter } from '@dxos/react-ui-syntax-highlighter';
 import { defaultTx } from '@dxos/react-ui-theme';
 import { View, getTypenameFromQuery } from '@dxos/schema';
 import { Organization, Person } from '@dxos/types';
@@ -44,14 +43,13 @@ const rollOrg = () => ({
 });
 
 const StorybookKanban = () => {
-  const client = useClient();
   const spaces = useSpaces();
   const space = spaces[spaces.length - 1];
-  const [object] = useQuery(space, Filter.type(Kanban.Kanban));
+  const [object] = useQuery(space?.db, Filter.type(Kanban.Kanban));
   const typename = object?.view.target?.query ? getTypenameFromQuery(object.view.target.query.ast) : undefined;
-  const schema = useSchema(client, space, typename);
+  const schema = useSchema(space?.db, typename);
 
-  const objects = useQuery(space, schema ? Filter.type(schema) : Filter.nothing());
+  const objects = useQuery(space?.db, schema ? Filter.type(schema) : Filter.nothing());
   const filteredObjects = useGlobalFilteredObjects(objects);
 
   const projection = useProjectionModel(schema, object);
@@ -77,7 +75,7 @@ const StorybookKanban = () => {
     [space, schema, model],
   );
 
-  const handleRemoveCard = useCallback((card: { id: string }) => space.db.remove(card), [space]);
+  const handleRemoveCard = useCallback((card: { id: string }) => Obj.isObject(card) && space?.db.remove(card), [space]);
 
   const handleUpdateQuery = useCallback(
     (newQuery: QueryAST.Query) => {
@@ -96,9 +94,9 @@ const StorybookKanban = () => {
   }
 
   return (
-    <div className='grow grid grid-cols-[1fr_350px]'>
+    <div className='grow grid grid-cols-[1fr_350px] overflow-hidden'>
       {model ? <KanbanComponent model={model} onAddCard={handleAddCard} onRemoveCard={handleRemoveCard} /> : <div />}
-      <div className='flex flex-col bs-full border-is border-separator overflow-y-auto'>
+      <div className='flex flex-col bs-full overflow-hidden'>
         <ViewEditor
           registry={space?.db.schemaRegistry}
           schema={schema}
@@ -108,16 +106,10 @@ const StorybookKanban = () => {
             console.log('[ViewEditor]', 'onDelete', fieldId);
           }}
         />
-        <SyntaxHighlighter language='json' className='text-xs'>
-          {JSON.stringify({ view: object.view.target, schema }, null, 2)}
-        </SyntaxHighlighter>
+        <JsonFilter data={{ view: object.view.target, schema }} classNames='text-xs' />
       </div>
     </div>
   );
-};
-
-type StoryProps = {
-  rows?: number;
 };
 
 //
@@ -139,7 +131,6 @@ const meta = {
             const space = await client.spaces.create();
             await space.waitUntilReady();
             const { view } = await View.makeFromSpace({
-              client,
               space,
               typename: Organization.Organization.typename,
               pivotFieldName: 'status',

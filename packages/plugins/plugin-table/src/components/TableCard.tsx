@@ -6,7 +6,6 @@ import React, { useMemo, useRef } from 'react';
 
 import { Filter, Obj } from '@dxos/echo';
 import { useGlobalFilteredObjects } from '@dxos/plugin-search';
-import { useClient } from '@dxos/react-client';
 import { getSpace, useQuery, useSchema } from '@dxos/react-client/echo';
 import { Card } from '@dxos/react-ui-stack';
 import {
@@ -28,11 +27,10 @@ export type TableCardProps = {
 export const TableCard = ({ role, object }: TableCardProps) => {
   const tableRef = useRef<TableController>(null);
 
-  const client = useClient();
   const space = getSpace(object);
   const typename = object.view.target?.query ? getTypenameFromQuery(object.view.target?.query.ast) : undefined;
-  const schema = useSchema(client, space, typename);
-  const queriedObjects = useQuery(space, schema ? Filter.type(schema) : Filter.nothing());
+  const schema = useSchema(space?.db, typename);
+  const queriedObjects = useQuery(space?.db, schema ? Filter.type(schema) : Filter.nothing());
   const filteredObjects = useGlobalFilteredObjects(queriedObjects);
 
   const features: Partial<TableFeatures> = useMemo(
@@ -61,7 +59,6 @@ export const TableCard = ({ role, object }: TableCardProps) => {
         <TableComponent.Main
           key={Obj.getDXN(object).toString()}
           ref={tableRef}
-          client={client}
           model={model}
           presentation={presentation}
           schema={schema}

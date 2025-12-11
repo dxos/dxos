@@ -16,7 +16,7 @@ import { type ProjectionModel, View, getTypenameFromQuery } from '@dxos/schema';
 import { Employer, Organization, Person, Project } from '@dxos/types';
 
 import { translations } from '../../translations';
-import { TestLayout, TestPanel, VIEW_EDITOR_DEBUG_SYMBOL } from '../testing';
+import { TestLayout, VIEW_EDITOR_DEBUG_SYMBOL } from '../testing';
 
 import { ViewEditor, type ViewEditorProps } from './ViewEditor';
 
@@ -24,7 +24,7 @@ const types = [
   // TODO(burdon): Get label from annotation.
   { value: Organization.Organization.typename, label: 'Organization' },
   { value: Person.Person.typename, label: 'Person' },
-  { value: Type.getTypename(Project.Project), label: 'Project' },
+  { value: Project.Project.typename, label: 'Project' },
   { value: Employer.Employer.typename, label: 'Employer' },
 ];
 
@@ -43,7 +43,7 @@ const DefaultStory = (props: StoryProps) => {
   const [view, setView] = useState<View.View>();
   const projectionRef = useRef<ProjectionModel>(null);
 
-  const tags = useQuery(space, Filter.type(Tag.Tag));
+  const tags = useQuery(space?.db, Filter.type(Tag.Tag));
 
   useAsyncEffect(async () => {
     if (space) {
@@ -140,20 +140,18 @@ const DefaultStory = (props: StoryProps) => {
 
   return (
     <TestLayout json={json}>
-      <TestPanel>
-        <ViewEditor
-          ref={projectionRef}
-          schema={schema}
-          view={view}
-          registry={space?.db.schemaRegistry}
-          mode={props.mode}
-          readonly={props.readonly}
-          types={types}
-          tags={tags}
-          onQueryChanged={updateViewQuery}
-          onDelete={handleDelete}
-        />
-      </TestPanel>
+      <ViewEditor
+        ref={projectionRef}
+        schema={schema}
+        view={view}
+        registry={space?.db.schemaRegistry}
+        mode={props.mode}
+        readonly={props.readonly}
+        types={types}
+        tags={tags}
+        onQueryChanged={updateViewQuery}
+        onDelete={handleDelete}
+      />
     </TestLayout>
   );
 };

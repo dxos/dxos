@@ -5,7 +5,7 @@
 import * as Array from 'effect/Array';
 import * as Function from 'effect/Function';
 import * as Option from 'effect/Option';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { forwardRef, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { Capabilities, createIntent } from '@dxos/app-framework';
 import { useCapabilities, useIntentDispatcher } from '@dxos/app-framework/react';
@@ -22,134 +22,148 @@ import { Assistant, AssistantAction } from '../types';
 
 export type ChatCompanionProps = {
   role?: string;
-  data: { subject: Assistant.Chat | 'assistant-chat'; companionTo: Obj.Any };
+  data: {
+    subject: Assistant.Chat | 'assistant-chat';
+    companionTo: Obj.Any;
+  };
 };
 
-export const ChatCompanion = ({ role, data }: ChatCompanionProps) => {
-  const { dispatchPromise: dispatch } = useIntentDispatcher();
-  const blueprintRegistry = useBlueprintRegistry();
-  const companionTo = data.companionTo;
+export const ChatCompanion = forwardRef<HTMLDivElement, ChatCompanionProps>(
+  ({ role, data }: ChatCompanionProps, forwardedRef) => {
+    const { dispatchPromise: dispatch } = useIntentDispatcher();
+    const blueprintRegistry = useBlueprintRegistry();
+    const companionTo = data.companionTo;
 
-  const space = getSpace(companionTo);
-  const [chat, setChat] = useState(data.subject === 'assistant-chat' ? undefined : data.subject);
-  useEffect(() => {
-    setChat(data.subject === 'assistant-chat' ? undefined : data.subject);
-  }, [data.subject]);
+    const space = getSpace(companionTo);
+    const [chat, setChat] = useState(data.subject === 'assistant-chat' ? undefined : data.subject);
+    useEffect(() => {
+      setChat(data.subject === 'assistant-chat' ? undefined : data.subject);
+    }, [data.subject]);
 
-  const chatQueue = space && chat ? space.queues.get(chat.queue.dxn) : undefined;
-  const binder = useContextBinder(chatQueue);
+    const chatQueue = space && chat ? space.queues.get(chat.queue.dxn) : undefined;
+    const binder = useContextBinder(chatQueue);
 
-  // Initialize companion chat if it doesn't exist, but don't add it to the space immediately.
-  useAsyncEffect(async () => {
-    if (!space || chat) {
-      return;
-    }
-
-    const { data } = await dispatch(createIntent(AssistantAction.CreateChat, { space }));
-    setChat(data?.object);
-  }, [chat, space]);
-
-  // Add chat to space when user submits the first message.
-  const handleEvent = useCallback(
-    async (event: ChatEvent) => {
-      const chatInSpace = !!getSpace(chat);
-      if (chatInSpace || !chat || !space) {
+    // Initialize companion chat if it doesn't exist, but don't add it to the space immediately.
+    useAsyncEffect(async () => {
+      if (!space || chat) {
         return;
       }
 
-      if (event.type === 'submit') {
-        await dispatch(
-          createIntent(SpaceAction.AddObject, {
-            object: chat,
-            target: space,
-            hidden: true,
-          }),
-        );
-        await dispatch(
-          createIntent(SpaceAction.AddRelation, {
-            space,
-            schema: Assistant.CompanionTo,
-            source: chat,
-            target: companionTo,
-          }),
-        );
-        await dispatch(
-          createIntent(AssistantAction.SetCurrentChat, {
-            companionTo,
-            chat,
-          }),
-        );
-      }
-    },
-    [chat, space, companionTo, dispatch],
-  );
+      const { data } = await dispatch(createIntent(AssistantAction.CreateChat, { space }));
+      setChat(data?.object);
+    }, [chat, space]);
 
-  const metadata = useCapabilities(Capabilities.Metadata);
-  const blueprintKeys = useMemo(
-    () =>
-      Function.pipe(
-        metadata,
-        Array.findFirst(
-          (
-            capability,
-          ): capability is {
-            id: string;
-            metadata: { blueprints?: string[] };
-          } => capability.id === Obj.getTypename(companionTo),
+    // Add chat to space when user submits the first message.
+    const handleEvent = useCallback(
+      async (event: ChatEvent) => {
+        const chatInSpace = !!getSpace(chat);
+        if (chatInSpace || !chat || !space) {
+          return;
+        }
+
+        if (event.type === 'submit') {
+          await dispatch(
+            createIntent(SpaceAction.AddObject, {
+              object: chat,
+              target: space,
+              hidden: true,
+            }),
+          );
+          await dispatch(
+            createIntent(SpaceAction.AddRelation, {
+              space,
+              schema: Assistant.CompanionTo,
+              source: chat,
+              target: companionTo,
+            }),
+          );
+          await dispatch(
+            createIntent(AssistantAction.SetCurrentChat, {
+              companionTo,
+              chat,
+            }),
+          );
+        }
+      },
+      [chat, space, companionTo, dispatch],
+    );
+
+    const metadata = useCapabilities(Capabilities.Metadata);
+    const blueprintKeys = useMemo(
+      () =>
+        Function.pipe(
+          metadata,
+          Array.findFirst(
+            (
+              capability,
+            ): capability is {
+              id: string;
+              metadata: { blueprints?: string[] };
+            } => capability.id === Obj.getTypename(companionTo),
+          ),
+          Option.flatMap((c) => Option.fromNullable(c.metadata.blueprints)),
+          Option.getOrElse(() => [] as string[]),
         ),
-        Option.flatMap((c) => Option.fromNullable(c.metadata.blueprints)),
-        Option.getOrElse(() => [] as string[]),
-      ),
-    [metadata, companionTo],
-  );
-  const existingBlueprints = useQuery(space, Filter.type(Blueprint.Blueprint));
-  const pluginBlueprints = useMemo(
-    () => existingBlueprints.filter((blueprint) => blueprintKeys.includes(blueprint.key)),
-    [existingBlueprints, blueprintKeys],
-  );
+      [metadata, companionTo],
+    );
+    const existingBlueprints = useQuery(space?.db, Filter.type(Blueprint.Blueprint));
+    const pluginBlueprints = useMemo(
+      () => existingBlueprints.filter((blueprint) => blueprintKeys.includes(blueprint.key)),
+      [existingBlueprints, blueprintKeys],
+    );
 
-  // Initialize related blueprints that are not already in the space.
-  useAsyncEffect(async () => {
-    if (!space) {
-      return;
-    }
-
-    // NOTE: This must be run instead of using the useQuery result to avoid duplicates.
-    const { objects: existingBlueprints } = await space.db.query(Filter.type(Blueprint.Blueprint)).run();
-    for (const key of blueprintKeys) {
-      const existingBlueprint = existingBlueprints.find((blueprint) => blueprint.key === key);
-      if (existingBlueprint) {
-        continue;
+    // Initialize related blueprints that are not already in the space.
+    useAsyncEffect(async () => {
+      if (!space) {
+        return;
       }
 
-      const blueprint = blueprintRegistry.getByKey(key);
-      if (!blueprint) {
-        continue;
+      // NOTE: This must be run instead of using the useQuery result to avoid duplicates.
+      const existingBlueprints = await space.db.query(Filter.type(Blueprint.Blueprint)).run();
+      for (const key of blueprintKeys) {
+        const existingBlueprint = existingBlueprints.find((blueprint) => blueprint.key === key);
+        if (existingBlueprint) {
+          continue;
+        }
+
+        const blueprint = blueprintRegistry.getByKey(key);
+        if (!blueprint) {
+          continue;
+        }
+
+        space.db.add(Obj.clone(blueprint));
+      }
+    }, [space, blueprintRegistry, blueprintKeys]);
+
+    useAsyncEffect(async () => {
+      if (!binder?.isOpen) {
+        return;
       }
 
-      space.db.add(Obj.clone(blueprint));
-    }
-  }, [space, blueprintRegistry, blueprintKeys]);
+      if (pluginBlueprints.length > 0) {
+        await binder.bind({
+          blueprints: pluginBlueprints.map((blueprint) => Ref.make(blueprint)),
+        });
+      }
 
-  useAsyncEffect(async () => {
-    if (!binder?.isOpen) {
-      return;
-    }
+      if (Obj.instanceOf(Blueprint.Blueprint, companionTo)) {
+        await binder.bind({ blueprints: [Ref.make(companionTo)] });
+      } else {
+        await binder.bind({ objects: [Ref.make(companionTo)] });
+      }
+    }, [binder, companionTo, blueprintKeys]);
 
-    if (pluginBlueprints.length > 0) {
-      await binder.bind({
-        blueprints: pluginBlueprints.map((blueprint) => Ref.make(blueprint)),
-      });
-    }
-
-    if (Obj.instanceOf(Blueprint.Blueprint, companionTo)) {
-      await binder.bind({ blueprints: [Ref.make(companionTo)] });
-    } else {
-      await binder.bind({ objects: [Ref.make(companionTo)] });
-    }
-  }, [binder, companionTo, blueprintKeys]);
-
-  return <ChatContainer role={role} space={space} chat={chat} companionTo={companionTo} onEvent={handleEvent} />;
-};
+    return (
+      <ChatContainer
+        role={role}
+        space={space}
+        chat={chat}
+        companionTo={companionTo}
+        onEvent={handleEvent}
+        ref={forwardedRef}
+      />
+    );
+  },
+);
 
 export default ChatCompanion;

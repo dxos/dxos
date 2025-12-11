@@ -1,7 +1,7 @@
 $schema: https://moonrepo.dev/schemas/tasks.json
 tasks:
   build:
-    command: dx-build
+    command: pnpm exec dx-build
     deps:
       - dx-build:compile
       - ^:build
@@ -16,7 +16,7 @@ tasks:
     options:
       timeout: 60
   compile:
-    command: dx-compile
+    command: pnpm exec dx-compile
     args:
       - --outputPath=dist/lib
     deps:

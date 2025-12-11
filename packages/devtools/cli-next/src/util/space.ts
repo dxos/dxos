@@ -4,60 +4,101 @@
 
 import * as Console from 'effect/Console';
 import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
+import * as Match from 'effect/Match';
 import * as Option from 'effect/Option';
-import type * as Schema from 'effect/Schema';
 
 import { ClientService } from '@dxos/client';
-import { type Space, SpaceId } from '@dxos/client/echo';
+import { type Space } from '@dxos/client/echo';
+import { Database, type Key } from '@dxos/echo';
 import { BaseError, type BaseErrorOptions } from '@dxos/errors';
-import { DatabaseService } from '@dxos/functions';
+import { QueueService } from '@dxos/functions';
 import { log } from '@dxos/log';
 import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
 
-export const getSpace = (rawSpaceId: string) =>
+export const getSpace = (spaceId: Key.SpaceId) =>
   Effect.gen(function* () {
     const client = yield* ClientService;
-    const spaceId = yield* SpaceId.isValid(rawSpaceId) ? Option.some(rawSpaceId) : Option.none();
     return yield* Option.fromNullable(client.spaces.get(spaceId));
-  }).pipe(Effect.catchTag('NoSuchElementException', () => Effect.fail(new SpaceNotFoundError(rawSpaceId))));
+  }).pipe(Effect.catchTag('NoSuchElementException', () => Effect.fail(new SpaceNotFoundError(spaceId))));
 
-export const withDatabase: (
-  rawSpaceId: string,
-) => <A, E, R>(effect: Effect.Effect<A, E, R>) => Effect.Effect<A, E, ClientService | Exclude<R, DatabaseService>> = (
-  rawSpaceId,
-) =>
-  Effect.fnUntraced(function* (effect) {
+// TODO(wittjosiah): Factor out.
+export const spaceLayer = (
+  spaceId$: Option.Option<Key.SpaceId>,
+  fallbackToDefaultSpace = false,
+): Layer.Layer<Database.Service | QueueService, never, ClientService> => {
+  const getSpace = Effect.fn(function* () {
     const client = yield* ClientService;
-    const spaceId = SpaceId.isValid(rawSpaceId) ? Option.some(rawSpaceId) : Option.none();
-    // TODO(wittjosiah): Is waitUntilReady needed?
-    // const db = spaceId.pipe(
-    //   Option.flatMap((id) => Option.fromNullable(client.spaces.get(id))),
-    //   Option.map((space) => DatabaseService.layer(space.db)),
-    //   Option.getOrElse(() => DatabaseService.notAvailable),
-    // );
-    const db = yield* spaceId.pipe(
-      Option.flatMap((id) => Option.fromNullable(client.spaces.get(id))),
-      Option.map((space) => Effect.promise(() => space.waitUntilReady())),
-      Option.map((space) => Effect.map(space, (space) => DatabaseService.layer(space.db))),
-      Option.getOrElse(() => Effect.succeed(DatabaseService.notAvailable)),
+    yield* Effect.promise(() => client.spaces.waitUntilReady());
+
+    const spaceId = Match.value(fallbackToDefaultSpace).pipe(
+      Match.when(true, () =>
+        spaceId$.pipe(
+          Option.getOrElse(() => client.spaces.default.id),
+          Option.some,
+        ),
+      ),
+      Match.when(false, () => spaceId$),
+      Match.exhaustive,
     );
 
-    return yield* Effect.gen(function* () {
-      yield* Effect.addFinalizer(() => DatabaseService.flush({ indexes: true }));
-      return yield* effect;
-    }).pipe(Effect.scoped, Effect.provide(db));
+    const space = spaceId.pipe(
+      Option.flatMap((id) => Option.fromNullable(client.spaces.get(id))),
+      Option.getOrUndefined,
+    );
+
+    if (space) {
+      yield* Effect.promise(() => space.waitUntilReady());
+    }
+    return space;
   });
 
-export const withTypes: (
-  types: Schema.Schema.AnyNoContext[],
-) => <A, E, R>(effect: Effect.Effect<A, E, R>) => Effect.Effect<A, E, ClientService | R> = (types) =>
-  Effect.fnUntraced(function* (effect) {
-    const client = yield* ClientService;
-    client.addTypes(types);
-    return yield* effect;
-  });
+  const db = Layer.scoped(
+    Database.Service,
+    Effect.acquireRelease(
+      Effect.gen(function* () {
+        const space = yield* getSpace();
+        if (!space) {
+          return {
+            get db(): Database.Database {
+              throw new Error('Space not found');
+            },
+          };
+        }
+        return { db: space.db };
+      }),
+      ({ db }) => Effect.promise(() => db.flush({ indexes: true })),
+    ),
+  );
 
-// TODO(dmaretsky): there a race condition with edge connection not showing up
+  const queue = Layer.effect(
+    QueueService,
+    Effect.gen(function* () {
+      const space = yield* getSpace();
+      if (!space) {
+        return {
+          queues: {
+            get: (_dxn) => {
+              throw new Error('Queues not available');
+            },
+            create: () => {
+              throw new Error('Queues not available');
+            },
+          },
+          queue: undefined,
+        };
+      }
+      return {
+        queues: space.queues,
+        queue: undefined,
+      };
+    }),
+  );
+
+  return Layer.merge(db, queue);
+};
+
+// TODO(dmaretskyi): There a race condition with edge connection not showing up.
 export const waitForSync = Effect.fn(function* (space: Space) {
   // TODO(wittjosiah): This should probably be prompted for.
   if (space.internal.data.edgeReplication !== EdgeReplicationSetting.ENABLED) {
@@ -74,7 +115,7 @@ export const waitForSync = Effect.fn(function* (space: Space) {
 });
 
 // TODO(burdon): Reconcile with @dxos/protocols
-export class SpaceNotFoundError extends BaseError.extend('SPACE_NOT_FOUND', 'Space not found') {
+export class SpaceNotFoundError extends BaseError.extend('SpaceNotFoundError', 'Space not found') {
   constructor(spaceId: string, options?: Omit<BaseErrorOptions, 'context'>) {
     super({ context: { spaceId }, ...options });
   }

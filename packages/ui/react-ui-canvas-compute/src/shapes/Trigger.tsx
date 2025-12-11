@@ -6,8 +6,7 @@ import * as Schema from 'effect/Schema';
 import React, { useEffect } from 'react';
 
 import { VoidInput } from '@dxos/conductor';
-import { Filter, Query } from '@dxos/echo';
-import { ObjectId, Ref } from '@dxos/echo/internal';
+import { Filter, Obj, Query, Ref, Type } from '@dxos/echo';
 import { Trigger, TriggerEvent } from '@dxos/functions';
 import { DXN, SpaceId } from '@dxos/keys';
 import { useSpace } from '@dxos/react-client/echo';
@@ -21,7 +20,7 @@ export const TriggerShape = Schema.extend(
   ComputeShape,
   Schema.Struct({
     type: Schema.Literal('trigger'),
-    functionTrigger: Schema.optional(Ref(Trigger.Trigger)),
+    functionTrigger: Schema.optional(Type.Ref(Trigger.Trigger)),
   }),
 );
 export type TriggerShape = Schema.Schema.Type<typeof TriggerShape>;
@@ -122,7 +121,7 @@ const createTriggerSpec = (props: { triggerKind?: Trigger.Kind; spaceId?: SpaceI
     case 'email':
       return { kind: 'email' } satisfies Trigger.EmailSpec;
     case 'queue': {
-      const dxn = new DXN(DXN.kind.QUEUE, ['data', props.spaceId ?? SpaceId.random(), ObjectId.random()]).toString();
+      const dxn = new DXN(DXN.kind.QUEUE, ['data', props.spaceId ?? SpaceId.random(), Obj.ID.random()]).toString();
       return { kind: 'queue', queue: dxn } satisfies Trigger.QueueSpec;
     }
   }

@@ -4,7 +4,7 @@
 
 import React, { useMemo } from 'react';
 
-import { FormatEnum } from '@dxos/echo/internal';
+import { Format } from '@dxos/echo/internal';
 import { Device, DeviceKind, DeviceType, useDevices } from '@dxos/react-client/halo';
 import { type TablePropertyDefinition } from '@dxos/react-ui-table';
 
@@ -15,10 +15,10 @@ export const DeviceListPanel = () => {
 
   const properties: TablePropertyDefinition[] = useMemo(
     () => [
-      { name: 'key', format: FormatEnum.DID },
+      { name: 'key', format: Format.TypeFormat.DID },
       {
         name: 'state',
-        format: FormatEnum.SingleSelect,
+        format: Format.TypeFormat.SingleSelect,
         size: 150,
         config: {
           options: [
@@ -30,7 +30,7 @@ export const DeviceListPanel = () => {
       },
       {
         name: 'type',
-        format: FormatEnum.SingleSelect,
+        format: Format.TypeFormat.SingleSelect,
         size: 180,
         config: {
           options: Object.entries(DeviceType)
@@ -38,7 +38,7 @@ export const DeviceListPanel = () => {
             .map(([key]) => ({ id: key, title: key, color: 'neutral' })),
         },
       },
-      { name: 'label', format: FormatEnum.String, size: 180 },
+      { name: 'label', format: Format.TypeFormat.String, size: 180 },
     ],
     [],
   );

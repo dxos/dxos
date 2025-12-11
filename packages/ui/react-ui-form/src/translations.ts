@@ -32,7 +32,10 @@ export const translations = [
         'ref field placeholder_one': 'Select…',
         'ref field placeholder_other': 'Select items…',
 
-        // TODO(burdon): Factor out?
+        'example placeholder': 'Example',
+        'latitude placeholder': 'Latitude (e.g., 40.7128)',
+        'longitude placeholder': 'Longitude (e.g., -74.0060)',
+
         'cancel button label': 'Cancel',
         'save button label': 'Save',
 
@@ -66,11 +69,11 @@ export const translations = [
         'format url': 'URL',
         'format uuid': 'UUID',
 
-        // GeoPointInput.
+        // GeoPointField.
         'latitude label': 'Latitude',
         'longitude label': 'Longitude',
 
-        // SelectOptionsInput.
+        // SelectOptionsField.
         'select option label': 'Label',
         'select option label placeholder': 'Option label',
         'select option color': 'Color',
@@ -79,8 +82,7 @@ export const translations = [
 
         // System schema message.
         'system schema title': 'System type',
-        'system schema description':
-          'This is a system type and cannot be modified, though the view can still be configured.',
+        'system schema description': 'System type: cannot add or remove fields.',
       },
     },
   },

@@ -2,7 +2,16 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { forwardRef, useCallback, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react';
+import React, {
+  type Ref,
+  forwardRef,
+  useCallback,
+  useEffect,
+  useImperativeHandle,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 
 import { type ClassNameValue, type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
@@ -175,7 +184,7 @@ export const TextRibbon = forwardRef<TextRibbonController, TextRibbonProps>(
       cyclic,
       transition = 500,
     }: TextRibbonProps,
-    forwardedRef: React.Ref<TextRibbonController>,
+    forwardedRef: Ref<TextRibbonController>,
   ) => {
     const { className, lineHeight } = sizeClassNames[size];
     const containerRef = useRef<HTMLDivElement>(null);

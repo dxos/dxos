@@ -79,8 +79,8 @@ describe('signals integration', () => {
       let outerId: string;
       {
         await using db = await peer.createDatabase();
-        const inner = db.add({ name: 'inner' });
-        const outer = db.add({ inner: Ref.make(inner) });
+        const inner = db.add(Obj.make(Type.Expando, { name: 'inner' }));
+        const outer = db.add(Obj.make(Type.Expando, { inner: Ref.make(inner) }));
         outerId = outer.id;
         await db.flush();
       }
@@ -88,7 +88,7 @@ describe('signals integration', () => {
       await peer.reload();
       {
         await using db = await peer.openLastDatabase();
-        const outer = (await db.query(Filter.ids(outerId)).first()) as any;
+        const outer = (await db.query(Filter.id(outerId)).first()) as any;
         const innerAtom = atomFromSignal(() => outer.inner.target);
         const loaded = new Trigger();
 
@@ -118,8 +118,8 @@ describe('signals integration', () => {
       let outerId, innerId: string;
       {
         await using db = await peer.createDatabase();
-        const inner = db.add({ name: 'inner' });
-        const outer = db.add({ inner: Ref.make(inner) });
+        const inner = db.add(Obj.make(Type.Expando, { name: 'inner' }));
+        const outer = db.add(Obj.make(Type.Expando, { inner: Ref.make(inner) }));
         innerId = inner.id;
         outerId = outer.id;
         await db.flush();
@@ -129,7 +129,7 @@ describe('signals integration', () => {
 
       {
         await using db = await peer.openLastDatabase();
-        const outer = (await db.query(Filter.ids(outerId)).first()) as any;
+        const outer = (await db.query(Filter.id(outerId)).first()) as any;
         const innerAtom = atomFromSignal(() => outer.inner.target);
         const inner = registry.get(innerAtom);
         expect(inner).to.eq(undefined);
@@ -187,7 +187,11 @@ describe('signals integration', () => {
 
             return Atom.make((get) => {
               const objects = get(atomFromQuery(query));
-              return objects.map((object) => ({ id: object.id, type: EXAMPLE_TYPE, data: object.name }));
+              return objects.map((object) => ({
+                id: object.id,
+                type: EXAMPLE_TYPE,
+                data: object.name,
+              }));
             });
           },
         }),

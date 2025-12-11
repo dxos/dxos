@@ -6,7 +6,7 @@ import * as SchemaAST from 'effect/SchemaAST';
 import React, { useMemo, useState } from 'react';
 
 import { ComputeGraph, ComputeGraphModel, WorkflowLoader } from '@dxos/conductor';
-import { FormatEnum } from '@dxos/echo/internal';
+import { Format } from '@dxos/echo/internal';
 import { Filter } from '@dxos/echo-db';
 import { DXN } from '@dxos/keys';
 import { type Space, useQuery } from '@dxos/react-client/echo';
@@ -25,7 +25,7 @@ export const WorkflowPanel = (props: { space?: Space }) => {
   const space = props.space ?? state.space;
   const [displayMode, setDisplayMode] = useState(DisplayMode.COMPILED);
   const [executionMode, setExecutionMode] = useState(WorkflowDebugPanelMode.LOCAL);
-  const graphs = useQuery(space, Filter.type(ComputeGraph));
+  const graphs = useQuery(space?.db, Filter.type(ComputeGraph));
   const [selectedId, setSelectedId] = useState<string>();
   const selected = useMemo(() => graphs.find((graph) => graph.id === selectedId), [graphs, selectedId]);
 
@@ -33,9 +33,9 @@ export const WorkflowPanel = (props: { space?: Space }) => {
 
   const properties: TablePropertyDefinition[] = useMemo(
     () => [
-      { name: 'id', format: FormatEnum.String },
-      { name: 'nodes', format: FormatEnum.Number, size: 100 },
-      { name: 'edges', format: FormatEnum.Number, size: 100 },
+      { name: 'id', format: Format.TypeFormat.String },
+      { name: 'nodes', format: Format.TypeFormat.Number, size: 100 },
+      { name: 'edges', format: Format.TypeFormat.Number, size: 100 },
     ],
     [],
   );

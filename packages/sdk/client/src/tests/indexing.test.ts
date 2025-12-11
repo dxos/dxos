@@ -6,47 +6,47 @@ import isEqual from 'lodash.isequal';
 import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { Trigger, TriggerState, asyncTimeout } from '@dxos/async';
-import { type ClientServicesProvider, PropertiesType, type Space } from '@dxos/client-protocol';
-import { Obj } from '@dxos/echo';
+import { type ClientServicesProvider, type Space, SpaceProperties } from '@dxos/client-protocol';
+import { type Entity, Obj, type QueryResult, Type } from '@dxos/echo';
 import { Expando, Ref } from '@dxos/echo/internal';
-import { type AnyLiveObject, Filter, type QueryResult } from '@dxos/echo-db';
+import { type AnyLiveObject, Filter } from '@dxos/echo-db';
 import { type PublicKey } from '@dxos/keys';
 import { createTestLevel } from '@dxos/kv-store/testing';
 import { log } from '@dxos/log';
 import { StorageType, createStorage } from '@dxos/random-access-storage';
 
 import { Client } from '../client';
-import { ContactType, DocumentType, TestBuilder, TextV0Type } from '../testing';
+import { TestBuilder, TestSchema } from '../testing';
 
 describe('Index queries', () => {
   const createObjects = () => ({
     contacts: [
-      Obj.make(ContactType, {
+      Obj.make(TestSchema.ContactType, {
         name: 'Alice',
         identifiers: [],
       }),
-      Obj.make(ContactType, {
+      Obj.make(TestSchema.ContactType, {
         name: 'Bob',
         identifiers: [],
       }),
-      Obj.make(ContactType, {
+      Obj.make(TestSchema.ContactType, {
         name: 'Catherine',
         identifiers: [],
       }),
     ],
     documents: [
-      Obj.make(DocumentType, {
+      Obj.make(TestSchema.DocumentType, {
         title: 'DXOS Design Doc',
         content: Ref.make(
-          Obj.make(TextV0Type, {
+          Obj.make(TestSchema.TextV0Type, {
             content: 'Very important design document',
           }),
         ),
       }),
-      Obj.make(DocumentType, {
+      Obj.make(TestSchema.DocumentType, {
         title: 'ECHO Architecture',
         content: Ref.make(
-          Obj.make(TextV0Type, {
+          Obj.make(TestSchema.TextV0Type, {
             content: 'Very important architecture document',
           }),
         ),
@@ -62,12 +62,15 @@ describe('Index queries', () => {
   const TIMEOUT = 1_000;
 
   const initClient = async (services: ClientServicesProvider) => {
-    const client = new Client({ services, types: [ContactType, DocumentType, TextV0Type] });
+    const client = new Client({
+      services,
+      types: [TestSchema.ContactType, TestSchema.DocumentType, TestSchema.TextV0Type],
+    });
     await client.initialize();
     return client;
   };
 
-  const addObjects = async <T extends {}>(space: Space, objects: AnyLiveObject<T>[]) => {
+  const addObjects = async <T extends {}>(space: Space, objects: Obj.Obj<T>[]) => {
     await space.waitUntilReady();
     const objectsInDataBase = objects.map((object) => {
       return space.db.add(object);
@@ -77,31 +80,37 @@ describe('Index queries', () => {
     return objectsInDataBase;
   };
 
-  const matchObjects = async (query: QueryResult<any>, objects: AnyLiveObject<any>[]) => {
+  // TODO(burdon): Remove AnyLiveObject.
+  const matchObjects = async <T extends Entity.Unknown = Entity.Unknown>(
+    query: QueryResult.QueryResult<T>,
+    objects: AnyLiveObject<any>[],
+  ) => {
     const receivedIndexedObject = new Trigger<AnyLiveObject<any>[]>();
     const unsubscribe = query.subscribe(
       (query) => {
-        const indexResults = query.results;
+        const indexResults = query.entries;
         log('Query results', {
           length: indexResults.length,
-          results: indexResults.map(({ object, resolution }) => ({
-            object: (object as any).toJSON(),
+          results: indexResults.map(({ result, resolution }) => ({
+            object: (result as any).toJSON(),
             resolution,
           })),
         });
 
         if (
-          query.objects.length === objects.length &&
-          objects.every((object) => indexResults.some((result) => objectContains(result.object!, object))) &&
-          indexResults.every((result) => objects.some((object) => objectContains(result.object!, object)))
+          query.results.length === objects.length &&
+          objects.every((object) => indexResults.some((entry) => objectContains(entry.result!, object))) &&
+          indexResults.every((entry) => objects.some((object) => objectContains(entry.result!, object)))
         ) {
-          receivedIndexedObject.wake(query.objects);
+          receivedIndexedObject.wake(query.results);
         }
       },
       { fire: true },
     );
 
-    const queriedObjects = await receivedIndexedObject.wait({ timeout: TIMEOUT });
+    const queriedObjects = await receivedIndexedObject.wait({
+      timeout: TIMEOUT,
+    });
     unsubscribe();
     return queriedObjects;
   };
@@ -119,7 +128,8 @@ describe('Index queries', () => {
 
     const { contacts } = createObjects();
     await addObjects(space, contacts);
-    await matchObjects(space.db.query(Filter.type(ContactType)), contacts);
+
+    await matchObjects(space.db.query(Filter.type(TestSchema.ContactType)), contacts);
   });
 
   test('indexes persists between client restarts', async () => {
@@ -139,7 +149,7 @@ describe('Index queries', () => {
       spaceKey = space.key;
 
       await addObjects(space, contacts);
-      await matchObjects(space.db.query(Filter.type(ContactType)), contacts);
+      await matchObjects(space.db.query(Filter.type(TestSchema.ContactType)), contacts);
 
       await client.destroy();
     }
@@ -151,7 +161,7 @@ describe('Index queries', () => {
       const space = client.spaces.get(spaceKey)!;
       await space.waitUntilReady();
 
-      await matchObjects(space.db.query(Filter.type(ContactType)), contacts);
+      await matchObjects(space.db.query(Filter.type(TestSchema.ContactType)), contacts);
     }
   });
 
@@ -170,7 +180,7 @@ describe('Index queries', () => {
       spaceKey = space.key;
 
       await addObjects(space, contacts);
-      await matchObjects(space.db.query(Filter.type(ContactType)), contacts);
+      await matchObjects(space.db.query(Filter.type(TestSchema.ContactType)), contacts);
 
       await client.destroy();
     }
@@ -185,7 +195,7 @@ describe('Index queries', () => {
       const space = client.spaces.get(spaceKey)!;
       await asyncTimeout(space.waitUntilReady(), TIMEOUT);
 
-      await matchObjects(space.db.query(Filter.type(ContactType)), contacts);
+      await matchObjects(space.db.query(Filter.type(TestSchema.ContactType)), contacts);
     }
   });
 
@@ -205,7 +215,7 @@ describe('Index queries', () => {
       spaceKey = space.key;
 
       await addObjects(space, contacts);
-      await matchObjects(space.db.query(Filter.type(ContactType)), contacts);
+      await matchObjects(space.db.query(Filter.type(TestSchema.ContactType)), contacts);
 
       await client.destroy();
     }
@@ -222,7 +232,7 @@ describe('Index queries', () => {
       await asyncTimeout(space.waitUntilReady(), TIMEOUT);
 
       await client.services.services.QueryService?.reindex();
-      await matchObjects(space.db.query(Filter.type(ContactType)), contacts);
+      await matchObjects(space.db.query(Filter.type(TestSchema.ContactType)), contacts);
     }
   });
 
@@ -236,21 +246,23 @@ describe('Index queries', () => {
 
     {
       await addObjects(space, contacts);
-      await matchObjects(space.db.query(Filter.type(ContactType)), contacts);
+      await matchObjects(space.db.query(Filter.type(TestSchema.ContactType)), contacts);
     }
 
     // TODO(burdon): Do we support text matching?
     {
-      const query = space.db.query(Filter.type(DocumentType));
+      const query = space.db.query(Filter.type(TestSchema.DocumentType));
       await addObjects(space, documents);
       await matchObjects(query, documents);
-      expect((await query.run()).objects.length).to.equal(2);
+      expect((await query.run()).length).to.equal(2);
     }
 
     {
-      const query = space.db.query(Filter.or(Filter.type(ContactType), Filter.type(DocumentType)));
+      const query = space.db.query(
+        Filter.or(Filter.type(TestSchema.ContactType), Filter.type(TestSchema.DocumentType)),
+      );
       await matchObjects(query, [...contacts, ...documents]);
-      expect((await query.run()).objects.length).to.equal(5);
+      expect((await query.run()).length).to.equal(5);
     }
   });
 
@@ -270,9 +282,15 @@ describe('Index queries', () => {
 
     {
       const query = space.db.query(
-        Filter.not(Filter.or(Filter.type(ContactType), Filter.type(DocumentType), Filter.type(PropertiesType))),
+        Filter.not(
+          Filter.or(
+            Filter.type(TestSchema.ContactType),
+            Filter.type(TestSchema.DocumentType),
+            Filter.type(SpaceProperties),
+          ),
+        ),
       );
-      const ids = (await query.run()).objects.map(({ id }) => id);
+      const ids = (await query.run()).map(({ id }) => id);
       expect(ids.every((id) => !excludedIds.includes(id))).to.be.true;
     }
   });
@@ -286,7 +304,7 @@ describe('Index queries', () => {
     const { expandos } = createObjects();
 
     await addObjects(space, expandos);
-    const query = space.db.query(Filter.type(Expando));
+    const query = space.db.query(Filter.type(Type.Expando));
     await matchObjects(query, expandos);
   });
 
@@ -300,11 +318,11 @@ describe('Index queries', () => {
     const echoContacts = await addObjects(space, contacts);
     await addObjects(space, documents);
 
-    const query = space.db.query(Filter.or(Filter.type(ContactType), Filter.type(DocumentType)));
+    const query = space.db.query(Filter.or(Filter.type(TestSchema.ContactType), Filter.type(TestSchema.DocumentType)));
     const queriedEverything = new Trigger();
     const receivedDeleteUpdate = new Trigger();
     const unsub = query.subscribe((query) => {
-      const objects = query.objects;
+      const objects = query.results;
       if (objects.length === contacts.length + documents.length) {
         queriedEverything.wake();
       }
@@ -326,7 +344,7 @@ describe('Index queries', () => {
     await space.db.flush();
     await receivedDeleteUpdate.wait({ timeout: TIMEOUT });
 
-    log.info('query', { objects: (await query.run()).objects.length });
+    log.info('query', { objects: (await query.run()).length });
   });
 
   const createTestBuilder = () => {

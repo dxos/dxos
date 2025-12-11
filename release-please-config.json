@@ -275,6 +275,11 @@
         },
         {
           "type": "json",
+          "path": "packages/core/echo/echo-react/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/core/echo/echo-signals/package.json",
           "jsonpath": "$.version"
         },
@@ -296,6 +301,21 @@
         {
           "type": "json",
           "path": "packages/core/functions-runtime/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/core/functions-runtime-cloudflare/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/core/functions-simulator-cloudflare/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/core/functions-testing/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -431,16 +451,6 @@
         {
           "type": "json",
           "path": "packages/experimental/env-tests/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/experimental/metagraph/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/experimental/react-metagraph/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -881,6 +891,11 @@
         {
           "type": "json",
           "path": "packages/ui/react-ui-list/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/ui/react-ui-markdown/package.json",
           "jsonpath": "$.version"
         },
         {

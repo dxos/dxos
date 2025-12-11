@@ -1,7 +1,8 @@
 # https://moonrepo.dev/docs/proto/config
 
-node = "24.4.1"
+node = "24.11.1"
 pnpm = "10.13.1"
+bun = "1.3.4"
 
 # Upgrading moon: https://moonrepo.dev/docs/install#upgrading
 # NOTE: Moon is also included in the npm packages at the repo root.

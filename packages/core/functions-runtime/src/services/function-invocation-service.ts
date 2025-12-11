@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
 import { AiService } from '@dxos/ai';
-import { DatabaseService } from '@dxos/echo-db';
+import { Database } from '@dxos/echo';
 import { CredentialsService, FunctionInvocationService, type InvocationServices, QueueService } from '@dxos/functions';
 import { type FunctionDefinition } from '@dxos/functions';
 
@@ -57,14 +57,15 @@ export const FunctionInvocationServiceLayerWithLocalLoopbackExecutor = Layer.eff
           ),
         ),
       );
+
     return functionInvocationService;
   }),
 );
 
-// TODO(dmaretskyi): Don't provide `FunctionImplementationResolver`.
 /**
  * Layer for testing with optional function implementations.
  */
+// TODO(dmaretskyi): Don't provide `FunctionImplementationResolver`.
 export const FunctionInvocationServiceLayerTest = ({
   functions = [],
 }: {
@@ -72,19 +73,19 @@ export const FunctionInvocationServiceLayerTest = ({
 } = {}): Layer.Layer<
   FunctionInvocationService,
   never,
-  AiService.AiService | CredentialsService | DatabaseService | QueueService
+  AiService.AiService | CredentialsService | Database.Service | QueueService
 > =>
   FunctionInvocationServiceLayerWithLocalLoopbackExecutor.pipe(
     Layer.provide(FunctionImplementationResolver.layerTest({ functions })),
     Layer.provide(RemoteFunctionExecutionService.layerMock),
   );
 
-// TODO(dmaretskyi): This shouldn't default to all services being not available.
-// TODO(dmaretskyi): Don't provide `FunctionImplementationResolver`.
 /**
  * @deprecated Use {@link FunctionInvocationServiceLayerTest} instead.
  * Layer for testing with all services mocked/unavailable.
  */
+// TODO(dmaretskyi): This shouldn't default to all services being not available.
+// TODO(dmaretskyi): Don't provide `FunctionImplementationResolver`.
 export const FunctionInvocationServiceLayerTestMocked = ({
   functions,
 }: {
@@ -93,6 +94,6 @@ export const FunctionInvocationServiceLayerTestMocked = ({
   FunctionInvocationServiceLayerTest({ functions }).pipe(
     Layer.provide(AiService.notAvailable),
     Layer.provide(CredentialsService.configuredLayer([])),
-    Layer.provide(DatabaseService.notAvailable),
+    Layer.provide(Database.Service.notAvailable),
     Layer.provide(QueueService.notAvailable),
   );

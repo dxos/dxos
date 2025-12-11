@@ -3,11 +3,10 @@
 //
 
 import { type EditorView } from '@codemirror/view';
+import type * as Schema from 'effect/Schema';
 import React, { type ReactNode, forwardRef, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react';
 
-import { Expando } from '@dxos/echo/internal';
-import { live } from '@dxos/echo/internal';
-import { createDocAccessor, createObject } from '@dxos/echo-db';
+import { Obj, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -18,12 +17,11 @@ import { mx } from '@dxos/react-ui-theme';
 import { isNonNullable } from '@dxos/util';
 
 import { type EditorController, createEditorController } from '../../components';
-import { editorGutter, editorSlots } from '../../defaults';
+import { editorSlots } from '../../defaults';
 import {
   type DebugNode,
   type ThemeExtensionsOptions,
   createBasicExtensions,
-  createDataExtensions,
   createMarkdownExtensions,
   createThemeExtensions,
   debugTree,
@@ -41,10 +39,12 @@ export type StoryProps = Pick<UseTextEditorProps, 'id' | 'scrollTo' | 'selection
     debug?: DebugMode;
     debugCustom?: (view: EditorView) => ReactNode;
     text?: string;
-    object?: Expando;
+    // TODO(wittjosiah): Find a simpler way to define this type.
+    object?: Obj.Obj<Schema.Schema.Type<typeof Type.Expando>>;
     readOnly?: boolean;
     placeholder?: string;
     lineNumbers?: boolean;
+    monospace?: boolean;
     onReady?: (view: EditorView) => void;
   };
 
@@ -55,7 +55,7 @@ export const EditorStory = forwardRef<EditorController, StoryProps>(
 
     const attentionAttrs = useAttentionAttributes('test-panel');
     const [tree, setTree] = useState<DebugNode>();
-    const [object] = useState(createObject(live(Expando, { content: text ?? '' })));
+    const [object] = useState(Obj.make(Type.Expando, { content: text ?? '' }));
 
     const extensions = useMemo(
       () => (debug ? [extensionsParam, debugTree(setTree)].filter(isNonNullable) : extensionsParam),
@@ -100,6 +100,7 @@ export const EditorComponent = forwardRef<EditorController, StoryProps>(
       readOnly,
       placeholder = 'New document.',
       lineNumbers,
+      monospace,
       scrollTo,
       selection,
       extensions,
@@ -118,12 +119,10 @@ export const EditorComponent = forwardRef<EditorController, StoryProps>(
         selection,
         initialValue: text,
         extensions: [
-          createDataExtensions({ id, text: createDocAccessor(object, ['content']) }),
           createBasicExtensions({ readOnly, placeholder, lineNumbers, scrollPastEnd: true, search: true }),
+          createThemeExtensions({ monospace, themeMode, syntaxHighlighting: true, slots }),
           createMarkdownExtensions(),
-          createThemeExtensions({ themeMode, syntaxHighlighting: true, slots }),
           decorateMarkdown(),
-          editorGutter,
           extensions || [],
         ],
       }),

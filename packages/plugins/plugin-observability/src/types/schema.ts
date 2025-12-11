@@ -4,18 +4,22 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Type } from '@dxos/echo';
+import { Format, Key } from '@dxos/echo';
 
 import { meta } from '../meta';
+import { translations } from '../translations';
 
-const nonEmpty = <S extends Schema.Schema.Any>(field: string) =>
-  Schema.nonEmptyString<S>({ message: () => `Missing field: ${field}` });
-
-const maxLength = <S extends Schema.Schema.Any>(field: string, length: number) =>
-  Schema.maxLength<S>(length, { message: () => `Exceeds max length (${length}): ${field}` });
+const t = translations[0]['en-US'][meta.id];
 
 export const UserFeedback = Schema.Struct({
-  message: Schema.String.pipe(nonEmpty('Feedback'), maxLength('Feedback', 32_768)),
+  message: Format.Text.pipe(
+    Schema.nonEmptyString(),
+    Schema.maxLength(4_096),
+    Schema.annotations({
+      title: t['feedback textarea label'],
+      description: t['feedback textarea placeholder'],
+    }),
+  ),
 });
 
 export type UserFeedback = Schema.Schema.Type<typeof UserFeedback>;
@@ -84,31 +88,31 @@ export namespace ObservabilityAction {
       Schema.Struct({
         name: Schema.Literal('space.create'),
         properties: Schema.Struct({
-          spaceId: Type.SpaceId,
+          spaceId: Key.SpaceId,
         }),
       }),
       Schema.Struct({
         name: Schema.Literal('space.join'),
         properties: Schema.Struct({
-          spaceId: Type.SpaceId,
+          spaceId: Key.SpaceId,
         }),
       }),
       Schema.Struct({
         name: Schema.Literal('space.limit'),
         properties: Schema.Struct({
-          spaceId: Type.SpaceId,
+          spaceId: Key.SpaceId,
         }),
       }),
       Schema.Struct({
         name: Schema.Literal('space.lock'),
         properties: Schema.Struct({
-          spaceId: Type.SpaceId,
+          spaceId: Key.SpaceId,
         }),
       }),
       Schema.Struct({
         name: Schema.Literal('space.migrate'),
         properties: Schema.Struct({
-          spaceId: Type.SpaceId,
+          spaceId: Key.SpaceId,
           targetVersion: Schema.optional(Schema.String),
           version: Schema.optional(Schema.String),
         }),
@@ -116,14 +120,14 @@ export namespace ObservabilityAction {
       Schema.Struct({
         name: Schema.Literal('space.schema.use'),
         properties: Schema.Struct({
-          spaceId: Type.SpaceId,
+          spaceId: Key.SpaceId,
           typename: Schema.String,
         }),
       }),
       Schema.Struct({
         name: Schema.Literal('space.schema.add'),
         properties: Schema.Struct({
-          spaceId: Type.SpaceId,
+          spaceId: Key.SpaceId,
           objectId: Schema.String,
           typename: Schema.String,
         }),
@@ -131,7 +135,7 @@ export namespace ObservabilityAction {
       Schema.Struct({
         name: Schema.Literal('space.object.add'),
         properties: Schema.Struct({
-          spaceId: Type.SpaceId,
+          spaceId: Key.SpaceId,
           objectId: Schema.String,
           typename: Schema.optional(Schema.String),
         }),
@@ -139,33 +143,33 @@ export namespace ObservabilityAction {
       Schema.Struct({
         name: Schema.Literal('space.share'),
         properties: Schema.Struct({
-          spaceId: Type.SpaceId,
+          spaceId: Key.SpaceId,
         }),
       }),
       Schema.Struct({
         name: Schema.Literal('space.unlock'),
         properties: Schema.Struct({
-          spaceId: Type.SpaceId,
+          spaceId: Key.SpaceId,
         }),
       }),
       Schema.Struct({
         name: Schema.Literal('threads.create'),
         properties: Schema.Struct({
-          spaceId: Type.SpaceId,
+          spaceId: Key.SpaceId,
           threadId: Schema.String,
         }),
       }),
       Schema.Struct({
         name: Schema.Literal('threads.delete'),
         properties: Schema.Struct({
-          spaceId: Type.SpaceId,
+          spaceId: Key.SpaceId,
           threadId: Schema.String,
         }),
       }),
       Schema.Struct({
         name: Schema.Literal('threads.message.add'),
         properties: Schema.Struct({
-          spaceId: Type.SpaceId,
+          spaceId: Key.SpaceId,
           threadId: Schema.String,
           threadLength: Schema.Number,
           messageId: Schema.String,
@@ -175,7 +179,7 @@ export namespace ObservabilityAction {
       Schema.Struct({
         name: Schema.Literal('threads.message.delete'),
         properties: Schema.Struct({
-          spaceId: Type.SpaceId,
+          spaceId: Key.SpaceId,
           threadId: Schema.String,
           messageId: Schema.String,
         }),
@@ -183,7 +187,7 @@ export namespace ObservabilityAction {
       Schema.Struct({
         name: Schema.Literal('threads.message.undo-delete'),
         properties: Schema.Struct({
-          spaceId: Type.SpaceId,
+          spaceId: Key.SpaceId,
           threadId: Schema.String,
           messageId: Schema.String,
         }),
@@ -191,7 +195,7 @@ export namespace ObservabilityAction {
       Schema.Struct({
         name: Schema.Literal('threads.message.update'),
         properties: Schema.Struct({
-          spaceId: Type.SpaceId,
+          spaceId: Key.SpaceId,
           messageId: Schema.String,
           messageLength: Schema.Number,
         }),
@@ -199,14 +203,14 @@ export namespace ObservabilityAction {
       Schema.Struct({
         name: Schema.Literal('threads.toggle-resolved'),
         properties: Schema.Struct({
-          spaceId: Type.SpaceId,
+          spaceId: Key.SpaceId,
           threadId: Schema.String,
         }),
       }),
       Schema.Struct({
         name: Schema.Literal('threads.undo-delete'),
         properties: Schema.Struct({
-          spaceId: Type.SpaceId,
+          spaceId: Key.SpaceId,
           threadId: Schema.String,
         }),
       }),

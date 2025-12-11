@@ -5,11 +5,11 @@
 import React, { useCallback, useEffect, useState } from 'react';
 
 import { createIntent } from '@dxos/app-framework';
-import { useIntentDispatcher } from '@dxos/app-framework/react';
+import { useCapabilities, useIntentDispatcher } from '@dxos/app-framework/react';
 import { Filter, Obj, Type } from '@dxos/echo';
 import { type TypedObject } from '@dxos/echo/internal';
+import { ClientCapabilities } from '@dxos/plugin-client';
 import { useGlobalFilteredObjects } from '@dxos/plugin-search';
-import { useClient } from '@dxos/react-client';
 import { getSpace, useQuery } from '@dxos/react-client/echo';
 import { Kanban as KanbanComponent, useKanbanModel, useProjectionModel } from '@dxos/react-ui-kanban';
 import { type Kanban } from '@dxos/react-ui-kanban/types';
@@ -19,14 +19,14 @@ import { getTypenameFromQuery } from '@dxos/schema';
 import { KanbanAction } from '../types';
 
 export const KanbanContainer = ({ object }: { object: Kanban.Kanban; role: string }) => {
-  const client = useClient();
+  const schemas = useCapabilities(ClientCapabilities.Schema);
   const [cardSchema, setCardSchema] = useState<TypedObject<any, any>>();
   const space = getSpace(object);
   const { dispatchPromise: dispatch } = useIntentDispatcher();
   const typename = object.view.target?.query ? getTypenameFromQuery(object.view.target.query.ast) : undefined;
 
   useEffect(() => {
-    const staticSchema = client.graph.schemaRegistry.schemas.find((schema) => Type.getTypename(schema) === typename);
+    const staticSchema = schemas.flat().find((schema) => Type.getTypename(schema) === typename);
     if (staticSchema) {
       setCardSchema(() => staticSchema as TypedObject<any, any>);
     }
@@ -43,9 +43,9 @@ export const KanbanContainer = ({ object }: { object: Kanban.Kanban; role: strin
       );
       return unsubscribe;
     }
-  }, [typename, space]);
+  }, [schemas, space, typename]);
 
-  const objects = useQuery(space, cardSchema ? Filter.type(cardSchema) : Filter.nothing());
+  const objects = useQuery(space?.db, cardSchema ? Filter.type(cardSchema) : Filter.nothing());
   const filteredObjects = useGlobalFilteredObjects(objects);
 
   const projection = useProjectionModel(cardSchema, object);

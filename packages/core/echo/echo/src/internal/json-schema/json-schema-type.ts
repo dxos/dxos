@@ -6,8 +6,8 @@ import * as Schema from 'effect/Schema';
 
 import { JsonPath, type JsonProp } from '@dxos/effect';
 
-import { EntityKindSchema } from '../ast';
-import { FormatAnnotation, FormatEnum } from '../formats';
+import { FormatAnnotation, TypeFormat } from '../formats';
+import { EntityKindSchema } from '../types';
 
 //
 // JSON Schema
@@ -54,7 +54,7 @@ export const JsonSchemaEchoAnnotations = Schema.Struct({
   /**
    * @deprecated
    */
-  // TODO(dmaretskyi): We risk old schema not passing validation due to the extra fields. Remove when we are sure this is safe
+  // TODO(dmaretskyi): We risk old schema not passing validation due to the extra fields. Remove when we are sure this is safe.
   type: Schema.optional(
     Schema.Struct({
       typename: Schema.String,
@@ -206,7 +206,7 @@ const _JsonSchemaType = Schema.Struct({
   /**
    * Regex pattern for strings.
    */
-  pattern: Schema.optional(Schema.String.pipe(FormatAnnotation.set(FormatEnum.Regex))),
+  pattern: Schema.optional(Schema.String.pipe(FormatAnnotation.set(TypeFormat.Regex))),
 
   /**
    * Serialized from {@link FormatAnnotationId}.
@@ -337,6 +337,7 @@ export const JsonSchemaFields = Object.keys(_JsonSchemaType.fields);
 /**
  * https://json-schema.org/draft-07/schema
  */
+// TODO(burdon): Reconcile with @effect/Schema/JSONSchema
 export interface JsonSchemaType extends Schema.Schema.Type<Schema.mutable<typeof _JsonSchemaType>> {}
 
 export const JsonSchemaType: Schema.Schema<JsonSchemaType> = _JsonSchemaType.pipe(Schema.mutable);

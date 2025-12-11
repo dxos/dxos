@@ -7,6 +7,7 @@ import * as Option from 'effect/Option';
 
 import { ClientService } from '@dxos/client';
 import { type Space } from '@dxos/client/echo';
+import { type Key } from '@dxos/echo';
 import { type Function } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 
@@ -18,7 +19,7 @@ export const parseOptions = Effect.fn(function* (options: {
   name: Option.Option<string>;
   version: Option.Option<string>;
   functionId: Option.Option<string>;
-  spaceId: Option.Option<string>;
+  spaceId: Option.Option<Key.SpaceId>;
 }) {
   const client = yield* ClientService;
   const identity = client.halo.identity.get();

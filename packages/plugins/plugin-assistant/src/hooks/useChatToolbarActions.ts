@@ -9,6 +9,7 @@ import { useMemo } from 'react';
 import { createIntent } from '@dxos/app-framework';
 import { useIntentDispatcher } from '@dxos/app-framework/react';
 import { Filter, Obj, Query } from '@dxos/echo';
+import { runAndForwardErrors } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { useQuery } from '@dxos/react-client/echo';
 import { MenuBuilder, useMenuActions } from '@dxos/react-ui-menu';
@@ -26,11 +27,11 @@ export const useChatToolbarActions = ({ chat, companionTo }: ChatToolbarActionsP
   const { dispatch } = useIntentDispatcher();
   const { space } = useChatContext('useChatToolbarActions');
   const query = companionTo
-    ? Query.select(Filter.ids(companionTo.id)).targetOf(Assistant.CompanionTo).source()
+    ? Query.select(Filter.id(companionTo.id)).targetOf(Assistant.CompanionTo).source()
     : Query.select(Filter.nothing());
 
   // TODO(wittjosiah): Query in react vs query in atom?
-  const chats = useQuery(space, query);
+  const chats = useQuery(space?.db, query);
 
   // Create stable reference for dependency array to avoid circular reference issues.
   return useMenuActions(
@@ -53,7 +54,7 @@ export const useChatToolbarActions = ({ chat, companionTo }: ChatToolbarActionsP
                   companionTo,
                   chat: undefined,
                 }),
-              ).pipe(Effect.runPromise),
+              ).pipe(runAndForwardErrors),
           )
           .action(
             'rename',
@@ -67,7 +68,7 @@ export const useChatToolbarActions = ({ chat, companionTo }: ChatToolbarActionsP
               Effect.gen(function* () {
                 invariant(chat);
                 yield* dispatch(createIntent(AssistantAction.UpdateChatName, { chat }));
-              }).pipe(Effect.runPromise),
+              }).pipe(runAndForwardErrors),
           )
           .action(
             'branch',
@@ -108,7 +109,7 @@ export const useChatToolbarActions = ({ chat, companionTo }: ChatToolbarActionsP
                             chat,
                           }),
                         );
-                      }).pipe(Effect.runPromise),
+                      }).pipe(runAndForwardErrors),
                   );
                 });
             },

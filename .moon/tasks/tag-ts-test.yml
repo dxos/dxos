@@ -1,7 +1,7 @@
 $schema: https://moonrepo.dev/schemas/tasks.json
 tasks:
   test:
-    command: dx-killorphans vitest run --passWithNoTests
+    command: pnpm exec dx-killorphans vitest run --passWithNoTests
     deps:
       - esbuild-plugins:compile
       - node-std:compile
@@ -22,7 +22,7 @@ tasks:
     options:
       timeout: 600
   test-watch:
-    command: dx-killorphans vitest
+    command: pnpm exec dx-killorphans vitest
     deps:
       - esbuild-plugins:compile
       - node-std:compile

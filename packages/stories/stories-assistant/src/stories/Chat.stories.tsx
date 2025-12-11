@@ -107,7 +107,7 @@ const DefaultStory = ({ modules, showContext, blueprints = [] }: StoryProps) => 
       return;
     }
 
-    const { objects: chats = [] } = await space.db.query(Filter.type(Assistant.Chat)).run();
+    const chats = await space.db.query(Filter.type(Assistant.Chat)).run();
     const chat = chats[0];
     if (!chat) {
       return;
@@ -132,7 +132,7 @@ const DefaultStory = ({ modules, showContext, blueprints = [] }: StoryProps) => 
     log.info('event', { event });
   }, []);
 
-  const chats = useQuery(space, Filter.type(Assistant.Chat));
+  const chats = useQuery(space?.db, Filter.type(Assistant.Chat));
   const binder = useContextBinder(chats.at(-1)?.queue.target);
   const objects = useSignalsMemo(
     () => binder?.objects.value.map((ref) => ref.target).filter(isNonNullable) ?? [],
@@ -300,7 +300,7 @@ export const WithDocument: Story = {
       );
     },
     onChatCreated: async ({ space, binder }) => {
-      const { objects } = await space.db.query(Filter.type(Markdown.Document)).run();
+      const objects = await space.db.query(Filter.type(Markdown.Document)).run();
       await binder.bind({ objects: objects.map((object) => Ref.make(object)) });
     },
   }),
@@ -319,7 +319,7 @@ export const WithBlueprints: Story = {
       space.db.add(Markdown.make({ name: 'Tasks' }));
     },
     onChatCreated: async ({ space, binder }) => {
-      const { objects } = await space.db.query(Filter.type(Markdown.Document)).run();
+      const objects = await space.db.query(Filter.type(Markdown.Document)).run();
       await binder.bind({ objects: objects.map((object) => Ref.make(object)) });
     },
   }),
@@ -358,7 +358,7 @@ export const WithChess: Story = {
       );
     },
     onChatCreated: async ({ space, binder }) => {
-      const { objects } = await space.db.query(Filter.type(Chess.Game)).run();
+      const objects = await space.db.query(Filter.type(Chess.Game)).run();
       await binder.bind({ objects: objects.map((object) => Ref.make(object)) });
     },
   }),
@@ -382,7 +382,7 @@ export const WithMail: Story = {
       await queue.append(messages);
     },
     onChatCreated: async ({ space, binder }) => {
-      const { objects } = await space.db.query(Filter.type(Mailbox.Mailbox)).run();
+      const objects = await space.db.query(Filter.type(Mailbox.Mailbox)).run();
       await binder.bind({ objects: objects.map((object) => Ref.make(object)) });
     },
   }),
@@ -403,7 +403,7 @@ export const WithGmail: Story = {
       space.db.add(Mailbox.make({ name: 'Mailbox', space }));
     },
     onChatCreated: async ({ space, binder }) => {
-      const { objects } = await space.db.query(Filter.type(Mailbox.Mailbox)).run();
+      const objects = await space.db.query(Filter.type(Mailbox.Mailbox)).run();
       await binder.bind({ objects: objects.map((object) => Ref.make(object)) });
     },
   }),
@@ -424,7 +424,7 @@ export const WithCalendar: Story = {
       space.db.add(Calendar.make({ name: 'Calendar', space }));
     },
     onChatCreated: async ({ space, binder }) => {
-      const { objects } = await space.db.query(Filter.type(Calendar.Calendar)).run();
+      const objects = await space.db.query(Filter.type(Calendar.Calendar)).run();
       await binder.bind({ objects: objects.map((object) => Ref.make(object)) });
     },
   }),
@@ -455,7 +455,7 @@ export const WithMap: Story = {
       space.db.add(map);
     },
     onChatCreated: async ({ space, binder }) => {
-      const { objects } = await space.db.query(Filter.type(View.View)).run();
+      const objects = await space.db.query(Filter.type(View.View)).run();
       await binder.bind({ objects: objects.map((object) => Ref.make(object)) });
     },
   }),
@@ -507,7 +507,7 @@ export const WithTrip: Story = {
       );
     },
     onChatCreated: async ({ space, binder }) => {
-      const { objects } = await space.db.query(Filter.or(Filter.type(Map.Map), Filter.type(Markdown.Document))).run();
+      const objects = await space.db.query(Filter.or(Filter.type(Map.Map), Filter.type(Markdown.Document))).run();
       await binder.bind({ objects: objects.map((object) => Ref.make(object)) });
     },
   }),
@@ -526,7 +526,7 @@ export const WithBoard: Story = {
       space.db.add(Board.makeBoard());
     },
     onChatCreated: async ({ space, binder }) => {
-      const { objects } = await space.db.query(Filter.type(Board.Board)).run();
+      const objects = await space.db.query(Filter.type(Board.Board)).run();
       await binder.bind({ objects: objects.map((object) => Ref.make(object)) });
     },
   }),
@@ -550,8 +550,8 @@ export const WithResearch: Story = {
       space.db.add(Markdown.make({ name: 'DXOS', content: DXOS_DOCUMENT }));
     },
     onChatCreated: async ({ space, binder }) => {
-      const { objects: organizations } = await space.db.query(Filter.type(Organization.Organization)).run();
-      const { objects: documents } = await space.db.query(Filter.type(Markdown.Document)).run();
+      const organizations = await space.db.query(Filter.type(Organization.Organization)).run();
+      const documents = await space.db.query(Filter.type(Markdown.Document)).run();
       await binder.bind({ objects: [...organizations, ...documents].map((object) => Ref.make(object)) });
     },
   }),
@@ -590,7 +590,7 @@ export const WithTranscription: Story = {
       space.db.add(Transcript.makeTranscript(queue.dxn));
     },
     onChatCreated: async ({ space, binder }) => {
-      const { objects } = await space.db.query(Filter.type(Transcript.Transcript)).run();
+      const objects = await space.db.query(Filter.type(Transcript.Transcript)).run();
       await binder.bind({ objects: objects.map((object) => Ref.make(object)) });
     },
   }),
@@ -767,8 +767,8 @@ export const WithProject: Story = {
     ],
     onInit: async ({ space }) => {
       await addTestData(space);
-      const { objects: people } = await space.db.query(Filter.type(Person.Person)).run();
-      const { objects: organizations } = await space.db.query(Filter.type(Organization.Organization)).run();
+      const people = await space.db.query(Filter.type(Person.Person)).run();
+      const organizations = await space.db.query(Filter.type(Organization.Organization)).run();
       const tag = space.db.add(Tag.make({ label: 'Project' }));
       const tagDxn = Obj.getDXN(tag).toString();
 
@@ -957,7 +957,7 @@ export const WithScript: Story = {
       await space.db.flush();
     },
     onChatCreated: async ({ space, binder }) => {
-      const { objects: blueprints } = await space.db.query(Query.select(Filter.type(Blueprint.Blueprint))).run();
+      const blueprints = await space.db.query(Query.select(Filter.type(Blueprint.Blueprint))).run();
       await binder.bind({ blueprints: blueprints.map((blueprint) => Ref.make(blueprint)) });
     },
   }),

@@ -48,17 +48,18 @@ export const callTool: <Tools extends Record<string, Tool.Any>>(
           }) satisfies ContentBlock.ToolResult,
       ),
       Effect.catchAllCause((cause) =>
-        Effect.sync(
-          () =>
-            ({
-              // TODO(dmaretskyi): Effect-ai does not support isError flag.
-              _tag: 'toolResult',
-              toolCallId: toolCall.toolCallId,
-              name: toolCall.name,
-              error: formatError(Cause.prettyErrors(cause)[0]),
-              providerExecuted: false,
-            }) satisfies ContentBlock.ToolResult,
-        ),
+        Effect.sync(() => {
+          const errors = Cause.prettyErrors(cause);
+          log.warn('tool failed', { err: errors[0] });
+          return {
+            // TODO(dmaretskyi): Effect-ai does not support isError flag.
+            _tag: 'toolResult',
+            toolCallId: toolCall.toolCallId,
+            name: toolCall.name,
+            error: formatError(errors[0]),
+            providerExecuted: false,
+          } satisfies ContentBlock.ToolResult;
+        }),
       ),
     );
 
@@ -74,6 +75,9 @@ export const callTool: <Tools extends Record<string, Tool.Any>>(
   },
 );
 
+/**
+ * Formats the error with the cause chain included, but omiting the stack trace.
+ */
 const formatError = (error: Error): string => {
   if (error.cause) {
     return `${String(error)}\ncaused by:\n${formatError(error.cause as Error)}`;

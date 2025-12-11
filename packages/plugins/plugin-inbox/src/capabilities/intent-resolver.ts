@@ -20,7 +20,7 @@ import {
 // import { TestRuntime } from '@dxos/conductor/testing';
 import { Filter, Obj, Ref } from '@dxos/echo';
 // import { runAndForwardErrors } from '@dxos/effect';
-// import { AiService, DatabaseService, QueueService, ServiceContainer, ToolResolverService } from '@dxos/functions';
+// import { AiService, Database.Service, QueueService, ServiceContainer, ToolResolverService } from '@dxos/functions';
 // import { failedInvariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { SpaceAction } from '@dxos/plugin-space/types';
@@ -58,7 +58,7 @@ export default (context: PluginContext) =>
           return;
         }
 
-        const { objects: existingContacts } = await space.db.query(Filter.type(Person.Person)).run();
+        const existingContacts = await space.db.query(Filter.type(Person.Person)).run();
 
         // Check for existing contact
         const existingContact = existingContacts.find((contact) =>
@@ -69,7 +69,9 @@ export default (context: PluginContext) =>
           return;
         }
 
-        const newContact = Obj.make(Person.Person, { emails: [{ value: email }] });
+        const newContact = Obj.make(Person.Person, {
+          emails: [{ value: email }],
+        });
         if (name) {
           newContact.fullName = name;
         }
@@ -78,12 +80,18 @@ export default (context: PluginContext) =>
         if (!emailDomain) {
           log.warn('Invalid email format, cannot extract domain', { email });
           return {
-            intents: [createIntent(SpaceAction.AddObject, { object: newContact, target: space, hidden: true })],
+            intents: [
+              createIntent(SpaceAction.AddObject, {
+                object: newContact,
+                target: space,
+                hidden: true,
+              }),
+            ],
           };
         }
 
         log.info('extracted email domain', { emailDomain });
-        const { objects: existingOrganisations } = await space.db.query(Filter.type(Organization.Organization)).run();
+        const existingOrganisations = await space.db.query(Filter.type(Organization.Organization)).run();
         const matchingOrg = existingOrganisations.find((org) => {
           if (org.website) {
             try {
@@ -99,7 +107,10 @@ export default (context: PluginContext) =>
                 emailDomain.endsWith(`.${websiteDomain}`)
               );
             } catch (err) {
-              log.warn('parsing website URL', { website: org.website, error: err });
+              log.warn('parsing website URL', {
+                website: org.website,
+                error: err,
+              });
               return false;
             }
           }
@@ -107,7 +118,9 @@ export default (context: PluginContext) =>
         });
 
         if (matchingOrg) {
-          log.info('found matching organization', { organization: matchingOrg });
+          log.info('found matching organization', {
+            organization: matchingOrg,
+          });
           newContact.organization = Ref.make(matchingOrg);
         }
 
@@ -122,7 +135,13 @@ export default (context: PluginContext) =>
           );
         }
 
-        intents.push(createIntent(SpaceAction.AddObject, { object: newContact, target: space, hidden: true }));
+        intents.push(
+          createIntent(SpaceAction.AddObject, {
+            object: newContact,
+            target: space,
+            hidden: true,
+          }),
+        );
         return { intents };
       },
     }),
@@ -137,7 +156,7 @@ export default (context: PluginContext) =>
         // const aiClient = null as any; // context.getCapability(AssistantCapabilities.AiClient);
         // const serviceContainer = new ServiceContainer().setServices({
         //   ai: AiService.AiService.make(aiClient.value),
-        //   database: DatabaseService.make(space.db),
+        //   database: Database.Service.make(space.db),
         //   queues: QueueService.make(space.queues, undefined),
         //   // eventLogger: consoleLogger,
         //   toolResolver: ToolResolverService.make(
