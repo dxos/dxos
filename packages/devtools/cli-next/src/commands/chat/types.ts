@@ -2,6 +2,38 @@
 // Copyright 2025 DXOS.org
 //
 
+import { Blueprint } from '@dxos/blueprints';
+import { Tag, type Type } from '@dxos/echo';
+import { DataTypes } from '@dxos/schema';
+import {
+  AnchoredTo,
+  Employer,
+  Event,
+  HasConnection,
+  HasRelationship,
+  HasSubject,
+  Organization,
+  Person,
+  Project,
+  Task,
+} from '@dxos/types';
+
+export const typeRegistry: Type.Entity.Any[] = [
+  ...DataTypes,
+  AnchoredTo.AnchoredTo,
+  Blueprint.Blueprint,
+  Employer.Employer,
+  Event.Event,
+  HasConnection.HasConnection,
+  HasRelationship.HasRelationship,
+  HasSubject.HasSubject,
+  Organization.Organization,
+  Person.Person,
+  Project.Project,
+  Tag.Tag,
+  Task.Task,
+];
+
 export type Message = {
   id: string;
   role: 'user' | 'assistant' | 'error';

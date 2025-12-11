@@ -15,7 +15,6 @@ import * as Option from 'effect/Option';
 
 import { AiService, DEFAULT_EDGE_MODEL, DEFAULT_LMSTUDIO_MODEL, DEFAULT_OLLAMA_MODEL, ModelName } from '@dxos/ai';
 import { GenericToolkit } from '@dxos/assistant';
-import { Blueprint } from '@dxos/blueprints';
 import { ClientService } from '@dxos/client';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
@@ -28,6 +27,7 @@ import { functions, toolkits } from './blueprints';
 import { App, Chat } from './components';
 import { ChatProcessor } from './processor';
 import { theme } from './theme';
+import { typeRegistry } from './types';
 
 export const chat = Command.make(
   'chat',
@@ -138,5 +138,5 @@ export const chat = Command.make(
 ).pipe(
   Command.withDescription('Open chat interface.'),
   Command.provide(({ provider, spaceId }) => chatLayer({ provider, spaceId, functions })),
-  Command.provideEffectDiscard(() => withTypes(Blueprint.Blueprint)),
+  Command.provideEffectDiscard(() => withTypes(...typeRegistry)),
 );

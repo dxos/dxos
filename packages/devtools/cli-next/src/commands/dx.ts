@@ -23,7 +23,7 @@ import { object } from './object';
 import { profile } from './profile';
 import { queue } from './queue';
 import { repl } from './repl';
-import { spaces } from './spaces';
+import { space } from './space';
 
 export const command = Command.make('dx', {
   config: Options.file('config', { exists: 'yes' }).pipe(
@@ -62,7 +62,7 @@ export const dx = command.pipe(
     halo.pipe(Command.provide(ClientService.layer)),
     object.pipe(Command.provide(ClientService.layer)),
     queue.pipe(Command.provide(ClientService.layer)),
-    spaces.pipe(Command.provide(ClientService.layer)),
+    space.pipe(Command.provide(ClientService.layer)),
 
     // TODO(burdon): Admin-only (separate dynamic module?)
     debug.pipe(Command.provide(ClientService.layer)),
