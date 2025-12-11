@@ -12,12 +12,14 @@ import { type DXN, ObjectId } from '@dxos/keys';
 import { getSnapshot as getSnapshot$ } from '@dxos/live-object';
 import { assumeType, deepMapValues } from '@dxos/util';
 
+import type * as Database from './Database';
 import * as Entity from './Entity';
 import {
   type AnyEchoObject,
   type AnyProperties,
   type InternalObjectProps,
   MetaId,
+  ObjectDatabaseId,
   type ObjectJSON,
   type ObjectMeta,
   ObjectVersionId,
@@ -287,6 +289,17 @@ export const getTypename = (entity: Entity.Unknown): string | undefined => {
   }
 
   return getSchemaTypename(schema);
+};
+
+//
+// Database
+//
+
+/**
+ * Get the database the object belongs to.
+ */
+export const getDatabase = (entity: Entity.Unknown): Database.Database | undefined => {
+  return (entity as any)[ObjectDatabaseId];
 };
 
 //

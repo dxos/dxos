@@ -9,6 +9,7 @@ import { invariant } from '@dxos/invariant';
 import { DXN, ObjectId } from '@dxos/keys';
 import { assumeType } from '@dxos/util';
 
+import type * as Database from '../../Database';
 import {
   type ATTR_META,
   type ATTR_TYPE,
@@ -60,6 +61,11 @@ export const ObjectDeletedId = Symbol.for('@dxos/echo/Deleted');
 export const ObjectVersionId: unique symbol = Symbol.for('@dxos/echo/Version');
 
 /**
+ * Object database accessor symbol.
+ */
+export const ObjectDatabaseId = Symbol.for('@dxos/echo/Database');
+
+/**
  * Internal runtime representation of an object.
  * The fields are accessed through getter functions.
  */
@@ -80,6 +86,7 @@ export interface InternalObjectProps {
   readonly [MetaId]?: ObjectMeta;
   readonly [ObjectDeletedId]?: boolean;
   readonly [ObjectVersionId]?: Version;
+  readonly [ObjectDatabaseId]?: Database.Database;
   readonly [RelationSourceDXNId]?: DXN;
   readonly [RelationTargetDXNId]?: DXN;
   readonly [RelationSourceId]?: InternalObjectProps;
