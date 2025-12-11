@@ -7,7 +7,7 @@ import * as Command from '@effect/cli/Command';
 import { list } from './list';
 import { sync } from './sync';
 
-export const spaces = Command.make('spaces').pipe(
+export const space = Command.make('space').pipe(
   Command.withDescription('Manage ECHO spaces.'),
   Command.withSubcommands([list, sync]),
 );
