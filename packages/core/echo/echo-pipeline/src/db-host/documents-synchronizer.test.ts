@@ -3,16 +3,17 @@
 //
 
 import { next as A } from '@automerge/automerge';
-import { Repo, generateAutomergeUrl, parseAutomergeUrl } from '@automerge/automerge-repo';
+import { generateAutomergeUrl, parseAutomergeUrl } from '@automerge/automerge-repo';
 import { describe, expect, test } from 'vitest';
 
 import { sleep } from '@dxos/async';
+import { IndexMetadataStore } from '@dxos/indexing';
+import { createTestLevel } from '@dxos/kv-store/testing';
 import { openAndClose } from '@dxos/test-utils';
 
-import { DocumentsSynchronizer } from './documents-synchronizer';
 import { AutomergeHost } from '../automerge';
-import { createTestLevel } from '@dxos/kv-store/testing';
-import { IndexMetadataStore } from '@dxos/indexing';
+
+import { DocumentsSynchronizer } from './documents-synchronizer';
 
 describe('DocumentsSynchronizer', () => {
   test('do not get init changes for client created docs', async () => {

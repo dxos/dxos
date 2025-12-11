@@ -3,9 +3,11 @@
 //
 
 import { getHeads } from '@automerge/automerge';
-import { generateAutomergeUrl, parseAutomergeUrl, type DocumentId, type Heads } from '@automerge/automerge-repo';
+import * as Automerge from '@automerge/automerge';
+import { type DocumentId, type Heads, generateAutomergeUrl, parseAutomergeUrl } from '@automerge/automerge-repo';
 import { describe, expect, onTestFinished, test } from 'vitest';
 
+import { Context } from '@dxos/context';
 import { IndexMetadataStore } from '@dxos/indexing';
 import { PublicKey } from '@dxos/keys';
 import type { LevelDB } from '@dxos/kv-store';
@@ -16,8 +18,6 @@ import { range } from '@dxos/util';
 import { TestReplicationNetwork } from '../testing';
 
 import { AutomergeHost } from './automerge-host';
-import { Context } from '@dxos/context';
-import * as Automerge from '@automerge/automerge';
 
 describe('AutomergeHost', () => {
   test('can create documents', async () => {

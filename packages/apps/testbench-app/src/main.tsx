@@ -9,6 +9,7 @@ import React, { StrictMode, useEffect, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { RouterProvider, createBrowserRouter } from 'react-router-dom';
 
+import { log } from '@dxos/log';
 import { initializeAppObservability } from '@dxos/observability';
 import { type Client, ClientProvider, Config, Defaults } from '@dxos/react-client';
 import { type ThemeMode, ThemeProvider } from '@dxos/react-ui';
@@ -16,11 +17,10 @@ import { defaultTx } from '@dxos/react-ui-theme';
 import { TRACE_PROCESSOR } from '@dxos/tracing';
 
 import { AppContainer, Error, Main } from './components';
+import { SyncBench } from './components/SyncBench';
 import { getConfig } from './config';
 import { Document, Item } from './data';
 import { translations } from './translations';
-import { SyncBench } from './components/SyncBench';
-import { log } from '@dxos/log';
 
 TRACE_PROCESSOR.setInstanceTag('app');
 

@@ -1,3 +1,7 @@
+//
+// Copyright 2025 DXOS.org
+//
+
 export interface RetryOptions<T> {
   /**
    * @default 3

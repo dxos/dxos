@@ -39,7 +39,6 @@ import {
 } from '../automerge';
 
 import { InflightRequestLimiter } from './inflight-request-limiter';
-import { error } from 'effect/Brand';
 
 /**
  * Delay before restarting the connection after receiving a forbidden error.

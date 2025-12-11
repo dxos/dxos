@@ -33,6 +33,7 @@ import { asyncTimeout, sleep } from '@dxos/async';
 import { randomBytes } from '@dxos/crypto';
 import { PublicKey } from '@dxos/keys';
 import { createTestLevel } from '@dxos/kv-store/testing';
+import { log } from '@dxos/log';
 import { TestBuilder as TeleportBuilder, TestPeer as TeleportPeer } from '@dxos/teleport/testing';
 import { openAndClose } from '@dxos/test-utils';
 import { isNonNullable, range } from '@dxos/util';
@@ -43,8 +44,6 @@ import { FIND_PARAMS } from './automerge-host';
 import { EchoNetworkAdapter } from './echo-network-adapter';
 import { LevelDBStorageAdapter } from './leveldb-storage-adapter';
 import { MeshEchoReplicator } from './mesh-echo-replicator';
-import type { AutomergeProtocolMessage } from '@dxos/protocols';
-import { log } from '@dxos/log';
 
 const HOST_AND_CLIENT: [string, string] = ['host', 'client'];
 
@@ -514,40 +513,36 @@ describe('AutomergeRepo', () => {
       expect(handleB.doc()!.text).to.equal(text);
     });
 
-
     test.only('retry share config', async () => {
       let announce = false;
-      
+
       const { repos, adapters } = await createRepoTopology({
         peers: ['A', 'B'],
-        connections: [
-          ['A', 'B'],
-        ],
+        connections: [['A', 'B']],
         options: {
           shareConfig: {
             access: async () => true,
             announce: async () => announce,
-          }
+          },
         },
         onMessage: (message) => {
           console.log(`${message.senderId} -> ${message.targetId}: ${message.type} ${message.documentId ?? ''}`);
-        }
+        },
       });
       const [repoA, repoB] = repos;
       await connectAdapters(adapters);
-      console.log({ peersA: repoA.peers, peersB: repoB.peers })
+      console.log({ peersA: repoA.peers, peersB: repoB.peers });
 
       const docA = repoA.create({ text: 'Hello world' });
 
       const docB = await repoB.find(docA.url, { allowableStates: ['ready', 'unavailable'] });
       expect(docB.state).to.equal('unavailable');
-      log.info('unavailable')
+      log.info('unavailable');
 
       announce = true;
-      repoB.shareConfigChanged()
-      await docB.whenReady()
+      repoB.shareConfigChanged();
+      await docB.whenReady();
     });
-
   });
 
   describe('teleport', () => {
@@ -823,7 +818,7 @@ const createRepoTopology = async <Peers extends string[], Peer extends string = 
       peerId: peerId as PeerId,
       storage: args.options?.storages?.[peerIndex],
       network,
-      sharePolicy: args.options?.sharePolicy ?? args.options?.shareConfig ? undefined : (async () => true),
+      sharePolicy: (args.options?.sharePolicy ?? args.options?.shareConfig) ? undefined : async () => true,
       shareConfig: args.options?.shareConfig,
     });
   });

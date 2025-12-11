@@ -25,6 +25,7 @@ import {
   type StorageKey,
   interpretAsDocumentId,
 } from '@automerge/automerge-repo';
+import type * as Record from 'effect/Record';
 
 import { DeferredTask, Event, asyncTimeout } from '@dxos/async';
 import { Context, type Lifecycle, Resource, cancelWithContext } from '@dxos/context';
@@ -46,7 +47,6 @@ import { EchoNetworkAdapter, isEchoPeerMetadata } from './echo-network-adapter';
 import { type EchoReplicator, type RemoteDocumentExistenceCheckParams } from './echo-replicator';
 import { HeadsStore } from './heads-store';
 import { type BeforeSaveParams, LevelDBStorageAdapter } from './leveldb-storage-adapter';
-import { Record } from 'effect';
 
 export type PeerIdProvider = () => string | undefined;
 

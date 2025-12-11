@@ -4,23 +4,23 @@
 
 import { next as A } from '@automerge/automerge';
 import { type AutomergeUrl } from '@automerge/automerge-repo';
+import * as Record from 'effect/Record';
 import { describe, expect, test } from 'vitest';
-import { Context } from '@dxos/context';
 
 import { Trigger, asyncTimeout, latch, sleep } from '@dxos/async';
-import { AutomergeHost, DataServiceImpl, FIND_PARAMS, SpaceStateManager } from '@dxos/echo-pipeline';
+import { Context } from '@dxos/context';
+import { AutomergeHost, DataServiceImpl, SpaceStateManager } from '@dxos/echo-pipeline';
 import { TestReplicationNetwork } from '@dxos/echo-pipeline/testing';
 import { IndexMetadataStore } from '@dxos/indexing';
 import { SpaceId } from '@dxos/keys';
 import { createTestLevel } from '@dxos/kv-store/testing';
+import { log } from '@dxos/log';
 import { openAndClose } from '@dxos/test-utils';
 
 import { createTmpPath } from '../testing';
 
 import { type DocHandleProxy } from './doc-handle-proxy';
 import { RepoProxy } from './repo-proxy';
-import { log } from '@dxos/log';
-import { Record } from 'effect';
 
 describe('RepoProxy', () => {
   test('create document from client', async () => {
@@ -86,11 +86,11 @@ describe('RepoProxy', () => {
 
     await peer1.host.addReplicator(await network.createReplicator());
     await peer2.host.addReplicator(await network.createReplicator());
-    
+
     const text = 'Hello World!';
     const handle1 = repo1.create<{ text: string }>({ text });
     await repo1.flush();
-    
+
     const handle2 = repo2.find<{ text: string }>(handle1.url);
     await handle2.whenReady();
     expect(handle2.doc()?.text).to.equal(text);
@@ -375,7 +375,7 @@ const setup = async (kv = createTestLevel()) => {
     const documentIds = Record.keys(host.handles);
     log('refreshCollectionState', { documentIds });
     host.updateLocalCollectionState('default', documentIds);
-  }
+  };
   return { kv, host, dataService, refreshCollectionState };
 };
 

@@ -2,13 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import {
-  type AnyDocumentId,
-  type AutomergeUrl,
-  type DocHandle,
-  type DocumentId,
-  type Repo,
-} from '@automerge/automerge-repo';
+import { type AnyDocumentId, type AutomergeUrl, type DocHandle, type DocumentId } from '@automerge/automerge-repo';
 
 import { Context, LifecycleState, Resource } from '@dxos/context';
 import { todo } from '@dxos/debug';
@@ -26,7 +20,6 @@ import {
   EchoDataMonitor,
   type EchoDataStats,
   type EchoReplicator,
-  FIND_PARAMS,
   type LoadDocOptions,
   type PeerIdProvider,
   type RootDocumentSpaceKeyProvider,
@@ -264,7 +257,9 @@ export class EchoHost extends Resource {
   // TODO(dmaretskyi): Change to document id.
   async openSpaceRoot(spaceId: SpaceId, automergeUrl: AutomergeUrl): Promise<DatabaseRoot> {
     invariant(this._lifecycleState === LifecycleState.OPEN);
-    const handle = await this._automergeHost.loadDoc<DatabaseDirectory>(Context.default(), automergeUrl, { fetchFromNetwork: true });
+    const handle = await this._automergeHost.loadDoc<DatabaseDirectory>(Context.default(), automergeUrl, {
+      fetchFromNetwork: true,
+    });
     await handle.whenReady();
 
     return this._spaceStateManager.assignRootToSpace(spaceId, handle);

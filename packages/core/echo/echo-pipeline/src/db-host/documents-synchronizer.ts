@@ -3,16 +3,17 @@
 //
 
 import { next as A, type Heads } from '@automerge/automerge';
-import { type DocHandle, type DocumentId, type Repo } from '@automerge/automerge-repo';
+import { type DocHandle, type DocumentId } from '@automerge/automerge-repo';
 
-import { UpdateScheduler, sleep } from '@dxos/async';
-import { Context, LifecycleState, Resource, cancelWithContext } from '@dxos/context';
+import { UpdateScheduler } from '@dxos/async';
+import { Context, LifecycleState, Resource } from '@dxos/context';
 import { type DatabaseDirectory } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { type BatchedDocumentUpdates, type DocumentUpdate } from '@dxos/protocols/proto/dxos/echo/service';
-import type { AutomergeHost } from '../automerge';
 import { retry } from '@dxos/util';
+
+import type { AutomergeHost } from '../automerge';
 
 const MAX_UPDATE_FREQ = 10; // [updates/sec]
 
@@ -62,7 +63,7 @@ export class DocumentsSynchronizer extends Resource {
                 const doc = await this._params.automergeHost.loadDoc<DatabaseDirectory>(
                   Context.default(),
                   documentId as DocumentId,
-                  { fetchFromNetwork: true }
+                  { fetchFromNetwork: true },
                 );
                 this._startSync(doc);
                 this._pendingUpdates.add(doc.documentId);

@@ -3,15 +3,14 @@
 //
 
 import { type Heads } from '@automerge/automerge';
+import * as Automerge from '@automerge/automerge';
 import type { DocumentId, PeerId } from '@automerge/automerge-repo';
 import { describe, expect, onTestFinished, test } from 'vitest';
-import * as Automerge from '@automerge/automerge';
 
 import { sleep } from '@dxos/async';
-
-import { type CollectionState, CollectionSynchronizer, diffCollectionState } from './collection-synchronizer';
 import { range } from '@dxos/util';
 
+import { type CollectionState, CollectionSynchronizer, diffCollectionState } from './collection-synchronizer';
 
 describe('CollectionSynchronizer', () => {
   test('sync two peers', async () => {

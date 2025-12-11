@@ -1,18 +1,21 @@
-import { useClient, useConfig } from '@dxos/react-client';
-import { useIdentity } from '@dxos/react-client/halo';
-import React, { useEffect, useState } from 'react';
-import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
-import { Record } from 'effect';
-import { SpaceId, useSpaceSyncState, useSyncState, type SpaceSyncState } from '@dxos/react-client/echo';
+//
+// Copyright 2025 DXOS.org
+//
+
+import * as BrowserKeyValueStore from '@effect/platform-browser/BrowserKeyValueStore';
 import { Atom, useAtomSet, useAtomValue } from '@effect-atom/atom-react';
-import { BrowserKeyValueStore } from '@effect/platform-browser';
-import { Schema } from 'effect';
-import { Button, ButtonGroup, Toggle } from '@dxos/react-ui';
+import * as Schema from 'effect/Schema';
+import React, { useEffect, useState } from 'react';
+
+import { scheduleTaskInterval } from '@dxos/async';
+import { Invitation, InvitationEncoder } from '@dxos/client/invitations';
 import { Context } from '@dxos/context';
 import { Filter, Obj, Type } from '@dxos/echo';
-import { Invitation, InvitationEncoder } from '@dxos/client/invitations';
-import { scheduleTaskInterval } from '@dxos/async';
-import { log } from '@dxos/log';
+import { useClient, useConfig } from '@dxos/react-client';
+import { type SpaceId, type SpaceSyncState } from '@dxos/react-client/echo';
+import { useIdentity } from '@dxos/react-client/halo';
+import { Button, ButtonGroup } from '@dxos/react-ui';
+import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 
 const runtime = Atom.runtime(BrowserKeyValueStore.layerLocalStorage);
 
@@ -71,7 +74,7 @@ export const SyncBench = () => {
     });
     const code = InvitationEncoder.encode(invitation.get());
     const url = new URL(`?spaceInvitation=${code}`, location.href);
-    navigator.clipboard.writeText(url.href);
+    await navigator.clipboard.writeText(url.href);
   };
 
   useEffect(() => {

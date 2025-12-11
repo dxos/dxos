@@ -71,7 +71,7 @@ export class EchoNetworkAdapter extends NetworkAdapter {
   private _lifecycleState: LifecycleState = LifecycleState.CLOSED;
   private readonly _connected = new Trigger();
   private readonly _ready = new Trigger();
-  
+
   public readonly documentRequested = new Event<{ documentId: DocumentId; peerId: PeerId }>();
 
   constructor(private readonly _params: EchoNetworkAdapterParams) {
@@ -299,8 +299,11 @@ export class EchoNetworkAdapter extends NetworkAdapter {
 
   private _onMessage(connectionEntry: ConnectionEntry, message: Message): void {
     const amMessage = message as AutomergeProtocolMessage;
-    if(amMessage.type === 'request') {
-      this.documentRequested.emit({ documentId: amMessage.documentId as DocumentId, peerId: connectionEntry.connection.peerId as PeerId });
+    if (amMessage.type === 'request') {
+      this.documentRequested.emit({
+        documentId: amMessage.documentId as DocumentId,
+        peerId: connectionEntry.connection.peerId as PeerId,
+      });
     }
 
     if (isCollectionQueryMessage(message)) {

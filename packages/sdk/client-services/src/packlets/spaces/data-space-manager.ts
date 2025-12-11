@@ -23,7 +23,6 @@ import {
   DatabaseRoot,
   type EchoEdgeReplicator,
   type EchoHost,
-  FIND_PARAMS,
   type MeshEchoReplicator,
   type MetadataStore,
   type Space,

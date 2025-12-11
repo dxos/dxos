@@ -2,17 +2,17 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Repo, generateAutomergeUrl, parseAutomergeUrl } from '@automerge/automerge-repo';
+import { generateAutomergeUrl, parseAutomergeUrl } from '@automerge/automerge-repo';
 import { describe, expect, test } from 'vitest';
 
 import { Trigger } from '@dxos/async';
+import { Context } from '@dxos/context';
 import { AutomergeHost, DocumentsSynchronizer } from '@dxos/echo-pipeline';
+import { IndexMetadataStore } from '@dxos/indexing';
+import { createTestLevel } from '@dxos/kv-store/testing';
 import { openAndClose } from '@dxos/test-utils';
 
 import { DocHandleProxy } from './doc-handle-proxy';
-import { createTestLevel } from '@dxos/kv-store/testing';
-import { IndexMetadataStore } from '@dxos/indexing';
-import { Context } from '@dxos/context';
 
 describe('DocHandleProxy', () => {
   test('get update from handle', async () => {

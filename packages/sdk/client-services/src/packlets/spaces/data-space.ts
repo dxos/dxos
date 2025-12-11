@@ -13,7 +13,6 @@ import { timed, warnAfterTimeout } from '@dxos/debug';
 import {
   type DatabaseRoot,
   type EchoHost,
-  FIND_PARAMS,
   type MetadataStore,
   type Space,
   createMappedFeedWriter,
