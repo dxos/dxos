@@ -9,6 +9,7 @@ import arrowFunctions from 'eslint-plugin-prefer-arrow-functions';
 import prettierRecommended from 'eslint-plugin-prettier/recommended';
 import storybook from 'eslint-plugin-storybook';
 import unusedImports from 'eslint-plugin-unused-imports';
+import nodePlugin from 'eslint-plugin-n';
 import tseslint from 'typescript-eslint';
 
 import dxos from '@dxos/eslint-plugin-rules';
@@ -98,7 +99,9 @@ export default tseslint.config(
       'prefer-arrow-functions': arrowFunctions,
       'sort-imports': sortImports,
       'sort-exports': sortExports,
+      'sort-exports': sortExports,
       'unused-imports': unusedImports,
+      n: nodePlugin,
     },
   },
 
@@ -216,6 +219,11 @@ export default tseslint.config(
       ],
       'react/jsx-wrap-multilines': 'off',
       'react/prop-types': 'off',
+
+      // Node
+      'n/prefer-global/buffer': ['error', 'never'],
+      'n/prefer-global/process': ['error', 'never'],
+      'n/prefer-node-protocol': 'error',
 
       // Imports
       'import-x/newline-after-import': [
