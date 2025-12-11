@@ -28,8 +28,8 @@ export type ChatProps = {
 export const Chat = (props: ChatProps) => {
   const chatMessages = useChatMessages();
   const [showBanner, setShowBanner] = createSignal(true);
-  const [inputValue, setInputValue] = createSignal('');
   const [streaming, setStreaming] = createSignal(false);
+  const [inputValue, setInputValue] = createSignal('');
 
   const handleSubmit = async (value: string) => {
     const prompt = value.trim();

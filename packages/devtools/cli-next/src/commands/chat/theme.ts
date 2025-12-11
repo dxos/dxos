@@ -15,6 +15,13 @@ export const theme = {
     primary: '#00ffaa',
     secondary: '#00aaff',
   },
+  log: {
+    default: '#757679',
+    debug: '#757679',
+    info: '#59C2C6',
+    warn: '#C7C43F',
+    error: '#D07E78',
+  },
   role: (role: string) => {
     switch (role) {
       case 'user':
