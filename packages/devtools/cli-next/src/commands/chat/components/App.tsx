@@ -6,8 +6,10 @@ import { type KeyEvent } from '@opentui/core';
 import { useKeyboard, useRenderer } from '@opentui/solid';
 import { type Accessor, type ParentProps, createContext, createEffect, createSignal, onMount } from 'solid-js';
 
+import { log } from '@dxos/log';
 import { isTruthy } from '@dxos/util';
 
+import { type LogBuffer } from '../../../util';
 import { theme } from '../theme';
 
 export type KeyHandler = {
@@ -23,6 +25,7 @@ export const AppContext = createContext<{
 export type AppProps = ParentProps<{
   focusElements?: string[];
   showConsole?: boolean;
+  logBuffer?: LogBuffer;
 }>;
 
 /**
@@ -39,8 +42,9 @@ export const App = (props: AppProps) => {
   const [hint, setHint] = createSignal<string | undefined>();
   const randomHint = () => {
     if (handlers.length) {
-      const idx = Math.floor(Math.random() * handlers.length);
-      setHint(handlers[idx].hint);
+      const hints = handlers.map((handler) => handler.hint);
+      const idx = Math.floor(Math.random() * hints.length);
+      setHint(hints[idx]);
     }
   };
 
@@ -81,7 +85,7 @@ export const App = (props: AppProps) => {
     // Console
     //
     props.showConsole && {
-      hint: '[f1]: Toggle console',
+      hints: '[f1]: Toggle console',
       handler: (key: KeyEvent) => {
         if (key.name === 'f1' && props.showConsole) {
           setShowConsole(!showConsole());
@@ -91,7 +95,6 @@ export const App = (props: AppProps) => {
   ].filter(isTruthy);
 
   const renderer = useRenderer();
-
   renderer.useConsole = props.showConsole ?? false;
   createEffect(() => {
     if (!props.showConsole) {
@@ -110,6 +113,7 @@ export const App = (props: AppProps) => {
       if (idx !== -1) {
         focusElements.splice(idx, 1);
       }
+
       if (focus() === 'console') {
         setFocus(focusElements[0]);
       }
@@ -122,6 +126,10 @@ export const App = (props: AppProps) => {
     renderer.setBackgroundColor(theme.bg);
     setFocus(props.focusElements?.[0]);
     randomHint();
+
+    // Replay logs once.
+    props.logBuffer?.replay();
+    log.info('focus console then ctrl-s to save logs to file');
   });
 
   // Toggle focus between console and app content with tab.

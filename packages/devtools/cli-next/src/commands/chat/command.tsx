@@ -15,48 +15,62 @@ import { GenericToolkit } from '@dxos/assistant';
 import { Blueprint } from '@dxos/blueprints';
 import { ClientService } from '@dxos/client';
 import { invariant } from '@dxos/invariant';
+import { log } from '@dxos/log';
 
 import { CommandConfig } from '../../services';
-import { type AiChatServices, Provider, TestToolkit, chatLayer, withTypes } from '../../util';
+import { type AiChatServices, Provider, TestToolkit, chatLayer, createLogBuffer, withTypes } from '../../util';
 import { Common } from '../options';
 
 import { App, Chat } from './components';
 import { ChatProcessor } from './processor';
+import { theme } from './theme';
 
 export const chat = Command.make(
   'chat',
   {
     spaceId: Common.spaceId.pipe(Options.optional),
+    debug: Options.boolean('debug', { ifPresent: true }).pipe(
+      Options.withDescription('Show console to see logs.'),
+      Options.withAlias('d'),
+    ),
     provider: Options.choice('provider', Provider.literals).pipe(
       Options.withDescription('AI provider to use.'),
       Options.withAlias('p'),
       Options.withDefault('edge'),
     ),
-    modelOption: Options.text('model').pipe(
+    model: Options.text('model').pipe(
       Options.withDescription('Model to use.'),
       Options.withAlias('m'),
       Options.withSchema(ModelName),
       Options.optional,
     ),
-    blueprintKeys: Options.text('blueprint').pipe(
+    blueprints: Options.text('blueprint').pipe(
       Options.withDescription('Blueprints to include in the chat context.'),
       Options.withAlias('b'),
       Options.repeated,
     ),
-    // TODO(burdon): --debug?
-    showConsole: Options.boolean('console', { ifPresent: true }).pipe(
-      Options.withDescription('Show console to see logs.'),
+    // TODO(burdon): Push down (like verbose?)
+    logLevel: Options.choice('logLevel', ['debug', 'verbose', 'info', 'warn', 'error']).pipe(
+      Options.withDescription('Log level to use.'),
+      Options.withAlias('l'),
+      Options.withDefault('info'),
     ),
   },
-  ({ provider, modelOption, blueprintKeys, showConsole }) =>
+  (options) =>
     Effect.gen(function* () {
-      const { verbose } = yield* CommandConfig;
+      const logBuffer = createLogBuffer();
+      log.config({
+        filter: options.logLevel,
+      });
+      log.runtimeConfig.processors = [logBuffer.processor];
+
       const client = yield* ClientService;
       const runtime = yield* Effect.runtime<AiChatServices>();
       const service = yield* AiService.AiService;
+      const { verbose } = yield* CommandConfig;
 
-      const model = Option.getOrElse(modelOption, () =>
-        Match.value(provider).pipe(
+      const model = Option.getOrElse(options.model, () =>
+        Match.value(options.provider).pipe(
           Match.when('lmstudio', () => DEFAULT_LMSTUDIO_MODEL),
           Match.when('ollama', () => DEFAULT_OLLAMA_MODEL),
           Match.when('edge', () => DEFAULT_EDGE_MODEL),
@@ -64,7 +78,6 @@ export const chat = Command.make(
         ),
       );
 
-      // TODO(burdon): From blueprints.
       const toolkit = GenericToolkit.make(TestToolkit.toolkit, TestToolkit.layer);
       const processor = new ChatProcessor(runtime, toolkit, service.metadata);
       const conversation = yield* Effect.promise(async () => {
@@ -72,23 +85,31 @@ export const chat = Command.make(
         // TODO(burdon): Hangs if identity is not ready.
         await client.spaces.waitUntilReady();
         const space = client.spaces.default;
-        return processor.createConversation(space, blueprintKeys);
+        return processor.createConversation(space, options.blueprints);
       });
 
-      yield* Effect.promise(() =>
-        render(
-          () => (
-            <App showConsole={showConsole} focusElements={['input', 'messages']}>
-              <Chat processor={processor} conversation={conversation} model={model} verbose={verbose} />
-            </App>
-          ),
-          {
-            exitSignals: ['SIGINT', 'SIGTERM'],
-            consoleOptions: {
-              position: ConsolePosition.TOP,              
+      yield* Effect.acquireRelease(
+        Effect.promise(() =>
+          render(
+            () => (
+              <App showConsole={options.debug} focusElements={['input', 'messages']} logBuffer={logBuffer}>
+                <Chat processor={processor} conversation={conversation} model={model} verbose={verbose} />
+              </App>
+            ),
+            {
+              exitSignals: ['SIGINT', 'SIGTERM'],
+              consoleOptions: {
+                position: ConsolePosition.TOP,
+                colorDefault: theme.log.default,
+                colorDebug: theme.log.debug,
+                colorInfo: theme.log.info,
+                colorWarn: theme.log.warn,
+                colorError: theme.log.error,
+              },
             },
-          },
+          ),
         ),
+        () => Effect.sync(() => {}),
       );
 
       // Wait for user to exit.

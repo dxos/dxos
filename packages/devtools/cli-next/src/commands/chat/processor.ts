@@ -22,6 +22,7 @@ import { Blueprint } from '@dxos/blueprints';
 import { type Space } from '@dxos/client/echo';
 import { Filter, Obj, Ref } from '@dxos/echo';
 import { throwCause } from '@dxos/effect';
+import { log } from '@dxos/log';
 import { type Message } from '@dxos/types';
 
 import { type AiChatServices, TestToolkit } from '../../util';
@@ -88,10 +89,12 @@ export class ChatProcessor {
 
       const blueprint = blueprintRegistry.getByKey(key);
       if (!blueprint) {
+        log.warn(`Blueprint not found: ${key}`);
         continue;
       }
 
       space.db.add(Obj.clone(blueprint));
+      log.info(`Added blueprint: ${key}`);
     }
 
     const queue = space.queues.create<Message.Message>();
