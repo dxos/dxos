@@ -1,6 +1,8 @@
-#/bin/bash
+#!/bin/bash
 
 #
-# killall "dxos-cli"
+# Use exec -a to set process name for easy signal targeting.
+# NOTE: killall uses the actual executable name, not argv[0], so use pkill instead:
+# pkill -TERM dxnext
 #
-exec -a "dxos-cli" bun src/bin.ts "$@"
+exec -a dxnext bun run src/bin.ts "$@"
