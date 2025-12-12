@@ -14,8 +14,6 @@ import { DXOS_VERSION } from '../../../version';
 import { theme } from '../theme';
 import { Banner } from './Banner';
 
-const CONSOLE_HEIGHT = 16;
-
 export type KeyHandler = {
   hint: string;
   handler: (key: KeyEvent) => void;
@@ -49,7 +47,7 @@ export const App = (props: AppProps) => {
   // Focus.
   const focusElements = [...(props.focusElements ?? [])];
   const [focus, setFocus] = createSignal<string | undefined>(props.focusElements?.[0]);
-  const [showConsole, setShowConsole] = createSignal(true); // TODO(burdon): Option.
+  const [showConsole, setShowConsole] = createSignal(false); // TODO(burdon): Option.
   const [showBanner, setShowBanner] = createSignal(true);
   const [processing, setProcessing] = createSignal(false);
 
@@ -150,7 +148,7 @@ export const App = (props: AppProps) => {
   return (
     <AppContext.Provider value={{ focus, hint, processing, setProcessing }}>
       {showBanner() && <Banner version={DXOS_VERSION} />}
-      <box marginTop={showConsole() ? CONSOLE_HEIGHT + 1 : 0}>{props.children}</box>
+      {props.children}
     </AppContext.Provider>
   );
 };

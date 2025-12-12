@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type LogConfig, type LogEntry, LogLevel, type LogProcessor, shouldLog } from '@dxos/log';
+import { CallMetadata, type LogConfig, type LogEntry, LogLevel, type LogProcessor, shouldLog } from '@dxos/log';
 
 export type LogPrinter = Pick<Console, 'debug' | 'log' | 'info' | 'warn' | 'error'>;
 
@@ -69,8 +69,19 @@ const getMethod = (level: LogLevel): keyof LogPrinter => {
 /**
  * Creates a log processor that buffers logs until replayed.
  */
-const formatter = (_config: LogConfig, { message, context, error }: LogEntry) => {
-  return [message, Object.keys(context).length > 0 && JSON.stringify(context), error && String(error)]
+const formatter = (_config: LogConfig, { message, context, error, meta }: LogEntry) => {
+  return [
+    meta && line(meta),
+    message,
+    Object.keys(context).length > 0 && JSON.stringify(context),
+    error && String(error),
+  ]
     .filter(Boolean)
     .join(' ');
+};
+
+const line = (meta: CallMetadata) => {
+  const file = meta.F.split('/').pop()?.split('.').shift();
+  const line = meta.L;
+  return `[${file}:${line}]`;
 };

@@ -7,7 +7,6 @@ import { createSignal, useContext } from 'solid-js';
 
 import { type ModelName } from '@dxos/ai';
 import { type AiConversation, GenerationObserver } from '@dxos/assistant';
-import { log } from '@dxos/log';
 
 import { useChatMessages } from '../hooks';
 import { type ChatProcessor } from '../processor';
@@ -29,6 +28,19 @@ export const Chat = (props: ChatProps) => {
   const context = useContext(AppContext);
   const chatMessages = useChatMessages();
   const [inputValue, setInputValue] = createSignal('');
+
+  // TODO(burdon): Testing.
+  // chatMessages.addMessage(
+  //   createAssistantMessage(
+  //     [
+  //       'this is `inline`',
+  //       '```typescript',
+  //       '// hello.ts',
+  //       'console.log("hello");',
+  //       '```',
+  //     ].join('\n'),
+  //   ),
+  // );
 
   const handleSubmit = async (value: string) => {
     const prompt = value.trim();
@@ -52,25 +64,25 @@ export const Chat = (props: ChatProps) => {
               chatMessages.appendToMessage(assistantIndex, part.delta);
             }
           }),
-        // onMessage: (message) =>
-        //   Effect.sync(() => {
-        //     switch (message.sender.role) {
-        //       case 'tool': {
-        //         if (props.verbose) {
-        //           for (const part of message.blocks) {
-        //           }
-        //         }
-        //         break;
-        //       }
-        //     }
-        //   }),
+        onMessage: (message) =>
+          Effect.sync(() => {
+            switch (message.sender.role) {
+              case 'tool': {
+                if (props.verbose) {
+                  for (const block of message.blocks) {
+                    chatMessages.appendToMessage(assistantIndex, ['```json', JSON.stringify(block), '```'].join('\n'));
+                  }
+                }
+                break;
+              }
+            }
+          }),
       });
 
       // Create and execute request.
       const request = props.conversation.createRequest({ prompt, observer });
       await props.processor.execute(request, props.model);
-    } catch (err) {
-      log.catch(err);
+    } catch (err: any) {
       chatMessages.updateMessage(assistantIndex, (message) => {
         message.role = 'error';
         message.content = String(err);

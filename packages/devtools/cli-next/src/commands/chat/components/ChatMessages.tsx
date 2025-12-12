@@ -39,7 +39,9 @@ const MessageItem = (props: { message: Message }) => {
         </text>
       </Match>
       <Match when={props.message.role === 'assistant'}>
-        <Markdown content={props.message.content} />
+        <box marginTop={1} marginBottom={1}>
+          <Markdown content={props.message.content} />
+        </box>
       </Match>
       <Match when={props.message.role === 'error'}>
         <box

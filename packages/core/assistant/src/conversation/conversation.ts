@@ -88,7 +88,6 @@ export class AiConversation extends Resource {
   createRequest(
     params: AiConversationRunParams,
   ): Effect.Effect<Message.Message[], AiSessionRunError, AiSessionRunRequirements> {
-    console.log('DEBUG: Inside createRequest');
     const self = this;
     return Effect.gen(function* () {
       const session = new AiSession();

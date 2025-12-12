@@ -125,6 +125,7 @@ export const chat = Command.make(
             openConsoleOnError: true,
             consoleOptions: {
               position: ConsolePosition.TOP,
+              sizePercent: 25, // TODO(burdon): Option.
               colorDefault: theme.log.default,
               colorDebug: theme.log.debug,
               colorInfo: theme.log.info,

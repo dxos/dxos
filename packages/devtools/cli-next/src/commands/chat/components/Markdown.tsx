@@ -4,7 +4,7 @@
 
 import { type SyntaxNode } from '@lezer/common';
 import { parser } from '@lezer/markdown';
-import { createMemo, For, Show } from 'solid-js';
+import { createMemo, ErrorBoundary, For, Show } from 'solid-js';
 
 import { log } from '@dxos/log';
 
@@ -15,17 +15,31 @@ export type MarkdownProps = {
 };
 
 export const Markdown = (props: MarkdownProps) => {
+  log.info('markdown', { content: props.content });
+
   const tree = createMemo(() => {
-    log('markdown', { content: props.content });
     return props.content ? parser.parse(props.content) : null;
   });
 
   return (
-    <box flexDirection='column'>
-      <Show when={tree()} fallback={<text>{props.content}</text>}>
-        {(t) => <For each={[t()]}>{(currTree) => <RenderNode node={currTree.topNode} content={props.content!} />}</For>}
-      </Show>
-    </box>
+    <ErrorBoundary
+      fallback={(err) => {
+        log.catch(err);
+        return (
+          <box paddingLeft={1} paddingRight={1} borderStyle='single' style={{ borderColor: theme.log.error }}>
+            <text>{props.content}</text>
+          </box>
+        );
+      }}
+    >
+      <box flexDirection='column'>
+        <Show when={tree()} fallback={<text>{props.content}</text>}>
+          {(t) => (
+            <For each={[t()]}>{(currTree) => <RenderNode node={currTree.topNode} content={props.content!} />}</For>
+          )}
+        </Show>
+      </box>
+    </ErrorBoundary>
   );
 };
 
@@ -96,7 +110,7 @@ const RenderNode = (props: { node: SyntaxNode; content: string }) => {
     case 'Paragraph':
       return (
         <box marginBottom={props.node.parent?.name === 'ListItem' ? 0 : 1}>
-          <text style={{ fg: theme.log.default }}>
+          <text style={{ fg: theme.text.default }}>
             <RenderInline node={props.node} content={props.content} />
           </text>
         </box>
@@ -118,15 +132,25 @@ const RenderNode = (props: { node: SyntaxNode; content: string }) => {
 
     case 'FencedCode':
       return (
-        <box padding={1} flexDirection='column' style={{ backgroundColor: theme.input.bg }}>
+        <box marginBottom={1} padding={1} flexDirection='column' style={{ backgroundColor: theme.input.bg }}>
           <For each={children}>{(child) => <RenderNode node={child} content={props.content} />}</For>
         </box>
+      );
+
+    case 'CodeText':
+      return <text style={{ fg: theme.log.info }}>{props.content.slice(props.node.from, props.node.to)}</text>;
+
+    case 'InlineCode':
+      return (
+        <span style={{ fg: theme.log.info }}>
+          <RenderInline node={props.node} content={props.content} />
+        </span>
       );
 
     case 'BulletList':
     case 'OrderedList':
       return (
-        <box flexDirection='column' paddingLeft={1}>
+        <box flexDirection='column' marginBottom={1}>
           <For each={children}>{(child) => <RenderNode node={child} content={props.content} />}</For>
         </box>
       );
@@ -138,20 +162,15 @@ const RenderNode = (props: { node: SyntaxNode; content: string }) => {
         </box>
       );
 
+    case 'ListMark': // - or 1.
+      return <text style={{ fg: theme.text.primary }}>{props.content.slice(props.node.from, props.node.to)} </text>;
+
     case 'Blockquote':
       return (
-        <box
-          flexDirection='column'
-          paddingLeft={1}
-          borderStyle='single'
-          style={{ borderLeft: true, borderColor: theme.text.subdued } as any}
-        >
+        <box flexDirection='column' paddingLeft={1} borderStyle='single' style={{ borderColor: theme.text.subdued }}>
           <For each={children}>{(child) => <RenderNode node={child} content={props.content} />}</For>
         </box>
       );
-
-    case 'CodeText':
-      return <text style={{ fg: theme.log.info }}>{props.content.slice(props.node.from, props.node.to)}</text>;
 
     case 'CodeMark': // ```
     case 'CodeInfo': // language
@@ -159,9 +178,6 @@ const RenderNode = (props: { node: SyntaxNode; content: string }) => {
     case 'QuoteMark': // >
     case 'EmphasisMark': // *
       return null;
-
-    case 'ListMark': // - or 1.
-      return <text style={{ fg: theme.accent }}>{props.content.slice(props.node.from, props.node.to)} </text>;
 
     case 'Emphasis':
     case 'StrongEmphasis':
@@ -171,15 +187,8 @@ const RenderNode = (props: { node: SyntaxNode; content: string }) => {
         </span>
       );
 
-    case 'InlineCode':
-      return (
-        <span style={{ fg: theme.log.info }}>
-          <RenderInline node={props.node} content={props.content} />
-        </span>
-      );
-
+    // Use RenderInline for unknown nodes to ensure text gaps are rendered.
     default:
-      // Use RenderInline for unknown nodes to ensure text gaps are rendered.
       return <RenderInline node={props.node} content={props.content} />;
   }
 };

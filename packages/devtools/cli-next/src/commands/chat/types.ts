@@ -54,10 +54,10 @@ export const createUserMessage = (content: string): Message => ({
 /**
  * Create an empty assistant message placeholder.
  */
-export const createAssistantMessage = (): Message => ({
+export const createAssistantMessage = (content = ''): Message => ({
   id: `assistant-${Date.now()}`,
   role: 'assistant',
-  content: '',
+  content,
   timestamp: new Date(),
 });
 
