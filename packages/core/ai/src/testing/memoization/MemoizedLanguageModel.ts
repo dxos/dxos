@@ -297,7 +297,7 @@ const MemoziedConversation = Schema.Struct({
   // This is supposed to be Response.AllParts for arbitrary tools.
   // Tool call schema is generated based on the available tools so we can't use a static schema.
   response: Schema.Array(Schema.Unknown),
-});
+}).annotations({ identifier: 'MemoziedConversation' });
 type MemoziedConversation = Schema.Schema.Type<typeof MemoziedConversation>;
 
 const ConversationStore = Schema.Struct({
