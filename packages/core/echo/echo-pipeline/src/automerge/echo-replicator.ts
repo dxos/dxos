@@ -32,6 +32,10 @@ export interface EchoReplicatorContext {
    */
   getContainingSpaceForDocument(documentId: string): Promise<PublicKey | null>;
   getContainingSpaceIdForDocument(documentId: string): Promise<SpaceId | null>;
+
+  /**
+   * Returns false if collection sync hasn't happened yet.
+   */
   isDocumentInRemoteCollection(params: RemoteDocumentExistenceCheckParams): Promise<boolean>;
 
   onConnectionOpen(connection: ReplicatorConnection): void;

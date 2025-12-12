@@ -123,14 +123,6 @@ export class ClientServicesHost {
     this._callbacks = callbacks;
     this._runtimeParams = runtimeParams ?? {};
 
-    if (this._runtimeParams.disableP2pReplication === undefined) {
-      this._runtimeParams.disableP2pReplication = config?.get('runtime.client.disableP2pReplication', false);
-    }
-
-    if (this._runtimeParams.enableVectorIndexing === undefined) {
-      this._runtimeParams.enableVectorIndexing = config?.get('runtime.client.enableVectorIndexing', false);
-    }
-
     if (config) {
       this.initialize({ config, transportFactory, signalManager });
     }
@@ -210,6 +202,19 @@ export class ClientServicesHost {
     log('initializing...');
 
     if (config) {
+      console.log('SET P2P REPLICATION', {
+        current: this._runtimeParams.disableP2pReplication,
+        configured: config.get('runtime.client.disableP2pReplication', false),
+        config,
+      });
+      if (this._runtimeParams.disableP2pReplication === undefined) {
+        this._runtimeParams.disableP2pReplication = config?.get('runtime.client.disableP2pReplication', false);
+      }
+
+      if (this._runtimeParams.enableVectorIndexing === undefined) {
+        this._runtimeParams.enableVectorIndexing = config?.get('runtime.client.enableVectorIndexing', false);
+      }
+
       invariant(!this._config, 'config already set');
       this._config = config;
       if (!this._storage) {
@@ -284,6 +289,7 @@ export class ClientServicesHost {
 
     await this._loggingService.open();
 
+    console.log('OPEN', { replication: this._runtimeParams.disableP2pReplication });
     this._serviceContext = new ServiceContext(
       this._storage,
       this._level,

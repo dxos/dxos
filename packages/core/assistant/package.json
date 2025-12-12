@@ -41,7 +41,7 @@
     "run:chat": "vite-node ./bin/chat.ts"
   },
   "dependencies": {
-    "@automerge/automerge": "3.1.2",
+    "@automerge/automerge": "3.2.1",
     "@dxos/ai": "workspace:*",
     "@dxos/async": "workspace:*",
     "@dxos/blueprints": "workspace:*",
