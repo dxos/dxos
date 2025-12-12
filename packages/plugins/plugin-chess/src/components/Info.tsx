@@ -5,7 +5,8 @@
 import React, { type JSX, type PropsWithChildren, useEffect, useMemo, useRef } from 'react';
 
 import { generateName } from '@dxos/display-name';
-import { type SpaceMember, getSpace, useMembers } from '@dxos/react-client/echo';
+import { Obj } from '@dxos/echo';
+import { type SpaceMember, useMembers } from '@dxos/react-client/echo';
 import { Icon, IconButton, Select, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { type Player, useGameboardContext } from '@dxos/react-ui-gameboard';
 import { mx } from '@dxos/react-ui-theme';
@@ -25,7 +26,8 @@ export type InfoProps = ThemedClassName<
 export const Info = ({ classNames, orientation = 'white', onOrientationChange, onClose, ...props }: InfoProps) => {
   const { t } = useTranslation(meta.id);
   const { model } = useGameboardContext<ExtendedChessModel>(Info.displayName);
-  const members = useMembers(getSpace(model.object)?.key);
+  const db = Obj.getDatabase(model.object);
+  const members = useMembers(db?.spaceId);
 
   return (
     <div

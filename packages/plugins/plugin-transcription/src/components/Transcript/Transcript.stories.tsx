@@ -45,10 +45,10 @@ const TranscriptContainer: FC<
     onRunningChange: (running: boolean) => void;
     onReset?: () => void;
   }
-> = ({ space, model, running, onRunningChange, onReset }) => {
+> = ({ model, running, onRunningChange, onReset }) => {
   return (
     <div className='grid grid-rows-[1fr_40px] grow divide-y divide-separator'>
-      <TranscriptView space={space} model={model} />
+      <TranscriptView model={model} />
       <div className='grid grid-cols-[1fr_16rem] overflow-hidden'>
         <div className='flex items-center'>
           <SyntaxHighlighter language='json' className='text-sm'>
@@ -137,19 +137,12 @@ const QueueStory = ({
 }: StoryProps & { queueId: Key.ObjectId; onReset: () => void }) => {
   const [running, setRunning] = useState(true);
   const space = useSpace();
-  const members = useMembers(space?.key).map((member) => member.identity);
+  const members = useMembers(space?.id).map((member) => member.identity);
   const queue = useTestTranscriptionQueue(space, queueId, running, 2_000);
   const model = useQueueModelAdapter(renderByline(members), queue, initialMessages);
 
   return (
-    <TranscriptContainer
-      space={space}
-      model={model}
-      running={running}
-      onRunningChange={setRunning}
-      onReset={onReset}
-      {...props}
-    />
+    <TranscriptContainer model={model} running={running} onRunningChange={setRunning} onReset={onReset} {...props} />
   );
 };
 
@@ -161,7 +154,7 @@ const EntityExtractionQueueStory = () => {
   const queue = useTestTranscriptionQueueWithEntityExtraction(space, undefined, running, 2_000);
   const model = useQueueModelAdapter(renderByline(members), queue, []);
 
-  return <TranscriptContainer space={space} model={model} running={running} onRunningChange={setRunning} />;
+  return <TranscriptContainer model={model} running={running} onRunningChange={setRunning} />;
 };
 
 /**

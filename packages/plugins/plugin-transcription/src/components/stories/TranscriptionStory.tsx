@@ -6,7 +6,6 @@ import '@dxos-theme';
 
 import React, { type Dispatch, type FC, type RefObject, type SetStateAction } from 'react';
 
-import { useSpace } from '@dxos/react-client/echo';
 import { IconButton, ScrollContainer, Toolbar } from '@dxos/react-ui';
 import { type Message } from '@dxos/types';
 
@@ -20,8 +19,6 @@ export const TranscriptionStory: FC<{
   onRunningChange: Dispatch<SetStateAction<boolean>>;
   audioRef?: RefObject<HTMLAudioElement | null>;
 }> = ({ model, running, onRunningChange, audioRef, disabled }) => {
-  const space = useSpace();
-
   return (
     <div className='flex flex-col is-[30rem]'>
       {audioRef && <audio ref={audioRef} autoPlay />}
@@ -36,7 +33,7 @@ export const TranscriptionStory: FC<{
       </Toolbar.Root>
       <ScrollContainer.Root pin>
         <ScrollContainer.Viewport>
-          <TranscriptView space={space} model={model} />
+          <TranscriptView model={model} />
         </ScrollContainer.Viewport>
       </ScrollContainer.Root>
     </div>

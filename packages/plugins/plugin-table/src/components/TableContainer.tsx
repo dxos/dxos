@@ -13,7 +13,7 @@ import { Filter, Obj, Query, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { useGlobalFilteredObjects } from '@dxos/plugin-search';
 import { SpaceAction } from '@dxos/plugin-space/types';
-import { getSpace, useQuery, useSchema } from '@dxos/react-client/echo';
+import { useQuery, useSchema } from '@dxos/react-client/echo';
 import { StackItem } from '@dxos/react-ui-stack';
 import {
   Table as TableComponent,
@@ -42,14 +42,14 @@ export const TableContainer = forwardRef<HTMLDivElement, TableContainerProps>(({
   const { dispatchPromise: dispatch } = useIntentDispatcher();
   const tableRef = useRef<TableController>(null);
 
-  const space = getSpace(object);
+  const db = Obj.getDatabase(object);
   const view = object.view.target;
   const query = view ? Query.fromAst(Obj.getSnapshot(view).query.ast) : Query.select(Filter.nothing());
   const typename = getTypenameFromQuery(query.ast);
-  const schema = useSchema(space?.db, typename);
+  const schema = useSchema(db, typename);
   // TODO(wittjosiah): This should use `query` above.
   //   That currently doesn't work for dynamic schema objects because their indexed typename is the schema object DXN.
-  const queriedObjects = useQuery(space?.db, schema ? Filter.type(schema) : Filter.nothing());
+  const queriedObjects = useQuery(db, schema ? Filter.type(schema) : Filter.nothing());
   const filteredObjects = useGlobalFilteredObjects(queriedObjects);
 
   const { graph } = useAppGraph();
@@ -64,7 +64,7 @@ export const TableContainer = forwardRef<HTMLDivElement, TableContainerProps>(({
     });
   }, [graph]);
 
-  const addRow = useAddRow({ db: space?.db, schema });
+  const addRow = useAddRow({ db, schema });
 
   const handleDeleteRows = useCallback(
     (_row: number, objects: any[]) => {
@@ -116,10 +116,10 @@ export const TableContainer = forwardRef<HTMLDivElement, TableContainerProps>(({
 
   const handleCreate = useCallback(
     (schema: Schema.Schema.AnyNoContext, values: any) => {
-      invariant(space);
-      return space.db.add(Obj.make(schema, values));
+      invariant(db);
+      return db.add(Obj.make(schema, values));
     },
-    [space],
+    [db],
   );
 
   const projection = useProjectionModel(schema, object);

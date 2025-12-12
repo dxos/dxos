@@ -9,8 +9,18 @@ import * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
 import * as String from 'effect/String';
 
-import { type Space } from '@dxos/client/echo';
-import { Filter, Format, JsonSchema, Obj, Query, QueryAST, Ref, type SchemaRegistry, Type } from '@dxos/echo';
+import {
+  type Database,
+  Filter,
+  Format,
+  JsonSchema,
+  Obj,
+  Query,
+  QueryAST,
+  Ref,
+  type SchemaRegistry,
+  Type,
+} from '@dxos/echo';
 import {
   FormInputAnnotation,
   JsonSchemaType,
@@ -250,8 +260,8 @@ export const makeWithReferences = async ({
   return view;
 };
 
-export type MakeFromSpaceProps = Omit<MakeWithReferencesProps, 'query' | 'queryRaw' | 'jsonSchema' | 'registry'> & {
-  space: Space;
+export type MakeFromDatabaseProps = Omit<MakeWithReferencesProps, 'query' | 'queryRaw' | 'jsonSchema' | 'registry'> & {
+  db: Database.Database;
   typename?: string;
   createInitial?: number;
 };
@@ -259,27 +269,25 @@ export type MakeFromSpaceProps = Omit<MakeWithReferencesProps, 'query' | 'queryR
 /**
  * Create view from a schema in provided space or client.
  */
-export const makeFromSpace = async ({
-  space,
+export const makeFromDatabase = async ({
+  db,
   typename,
   createInitial = 1,
   ...props
-}: MakeFromSpaceProps): Promise<{ jsonSchema: JsonSchemaType; view: View }> => {
+}: MakeFromDatabaseProps): Promise<{ jsonSchema: JsonSchemaType; view: View }> => {
   if (!typename) {
-    const [schema] = await space.db.schemaRegistry.register([createDefaultSchema()]);
+    const [schema] = await db.schemaRegistry.register([createDefaultSchema()]);
     typename = schema.typename;
   } else {
     createInitial = 0;
   }
 
-  const schema = await space.db.schemaRegistry
-    .query({ typename, location: ['database', 'runtime'] })
-    .firstOrUndefined();
+  const schema = await db.schemaRegistry.query({ typename, location: ['database', 'runtime'] }).firstOrUndefined();
   const jsonSchema = schema && JsonSchema.toJsonSchema(schema);
   invariant(jsonSchema, `Schema not found: ${typename}`);
 
   Array.from({ length: createInitial }).forEach(() => {
-    space.db.add(Obj.make(schema, {}));
+    db.add(Obj.make(schema, {}));
   });
 
   return {
@@ -288,7 +296,7 @@ export const makeFromSpace = async ({
       ...props,
       query: Query.select(Filter.typename(typename)),
       jsonSchema,
-      registry: space.db.schemaRegistry,
+      registry: db.schemaRegistry,
     }),
   };
 };

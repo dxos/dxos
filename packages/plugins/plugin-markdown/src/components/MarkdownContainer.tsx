@@ -9,7 +9,6 @@ import React, { forwardRef, useMemo } from 'react';
 import { Capabilities } from '@dxos/app-framework';
 import { useAppGraph, useCapabilities } from '@dxos/app-framework/react';
 import { Obj } from '@dxos/echo';
-import { getSpace } from '@dxos/react-client/echo';
 import { type SelectionManager } from '@dxos/react-ui-attention';
 import { StackItem } from '@dxos/react-ui-stack';
 import { Text } from '@dxos/schema';
@@ -31,7 +30,7 @@ export type MarkdownContainerProps = {
 
 export const MarkdownContainer = forwardRef<HTMLDivElement, MarkdownContainerProps>(
   ({ id, role, object, settings, extensionProviders, ...props }, forwardedRef) => {
-    const space = getSpace(object);
+    const db = Obj.isObject(object) ? Obj.getDatabase(object) : undefined;
     const isDocument = Obj.instanceOf(Markdown.Document, object);
     const isText = Obj.instanceOf(Text.Text, object);
     const attendableId = isDocument ? Obj.getDXN(object).toString() : undefined;
@@ -71,15 +70,15 @@ export const MarkdownContainer = forwardRef<HTMLDivElement, MarkdownContainerPro
     // File upload.
     const [upload] = useCapabilities(Capabilities.FileUploader);
     const handleFileUpload = useMemo(() => {
-      if (!space || !upload) {
+      if (!db || !upload) {
         return undefined;
       }
 
-      return async (file: File) => upload(space, file);
-    }, [space, upload]);
+      return async (file: File) => upload(db, file);
+    }, [db, upload]);
 
     // Query for @ refs.
-    const handleLinkQuery = useLinkQuery(space);
+    const handleLinkQuery = useLinkQuery(db);
 
     return (
       <StackItem.Content toolbar={settings.toolbar} ref={forwardedRef}>

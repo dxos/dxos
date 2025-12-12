@@ -8,7 +8,6 @@ import React, { useCallback, useMemo } from 'react';
 import { DXN, Obj, type Ref, Tag, Type } from '@dxos/echo';
 import { type JsonPath, splitJsonPath } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
-import { getSpace } from '@dxos/react-client/echo';
 import { Form, omitId } from '@dxos/react-ui-form';
 import { isNonNullable } from '@dxos/util';
 
@@ -20,7 +19,7 @@ export type ObjectFormProps = {
 };
 
 export const ObjectForm = ({ object, schema }: ObjectFormProps) => {
-  const space = getSpace(object);
+  const db = Obj.getDatabase(object);
 
   const formSchema = useMemo(
     () =>
@@ -31,12 +30,12 @@ export const ObjectForm = ({ object, schema }: ObjectFormProps) => {
   );
 
   const meta = Obj.getMeta(object);
-  const tags = (meta.tags ?? []).map((tag) => space?.db.makeRef(DXN.parse(tag))).filter(isNonNullable);
+  const tags = (meta.tags ?? []).map((tag) => db?.makeRef(DXN.parse(tag))).filter(isNonNullable);
   const values = useMemo(() => ({ tags, ...object }), [object, tags]);
 
   const handleCreate = useCallback((schema: Type.Entity.Any, values: any) => {
-    invariant(space);
-    const newObject = space.db.add(Obj.make(schema, values));
+    invariant(db);
+    const newObject = db.add(Obj.make(schema, values));
     if (Obj.instanceOf(newObject, Tag.Tag)) {
       const meta = Obj.getMeta(object);
       meta.tags = [...(meta.tags ?? []), Obj.getDXN(newObject).toString()];
@@ -74,7 +73,7 @@ export const ObjectForm = ({ object, schema }: ObjectFormProps) => {
       createOptionIcon='ph--plus--regular'
       createOptionLabel={['add tag label', { ns: pluginMeta.id }]}
       createInitialValuePath='label'
-      db={space?.db}
+      db={db}
       onValuesChanged={handleChange}
       onCreate={handleCreate}
     >

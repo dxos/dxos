@@ -4,8 +4,8 @@
 
 import * as Schema from 'effect/Schema';
 
+import { Database } from '@dxos/echo';
 import { TypeInputOptionsAnnotation } from '@dxos/plugin-space/types';
-import { SpaceSchema } from '@dxos/react-client/echo';
 import { Kanban } from '@dxos/react-ui-kanban/types';
 import { FieldSchema, View } from '@dxos/schema';
 
@@ -53,7 +53,7 @@ export namespace KanbanAction {
   const KANBAN_ACTION = `${meta.id}/action`;
 
   export class Create extends Schema.TaggedClass<Create>()(`${KANBAN_ACTION}/create`, {
-    input: Schema.extend(Schema.Struct({ space: SpaceSchema }), CreateKanbanSchema),
+    input: Schema.extend(Schema.Struct({ db: Database.Database }), CreateKanbanSchema),
     output: Schema.Struct({
       object: Kanban.Kanban,
     }),

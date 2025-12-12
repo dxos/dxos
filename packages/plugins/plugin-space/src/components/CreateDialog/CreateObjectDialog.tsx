@@ -9,12 +9,12 @@ import React, { useCallback, useMemo, useRef, useState } from 'react';
 
 import { Capabilities, LayoutAction, chain, createIntent } from '@dxos/app-framework';
 import { useIntentDispatcher, usePluginManager } from '@dxos/app-framework/react';
-import { Obj, Type } from '@dxos/echo';
+import { Database, Obj, Type } from '@dxos/echo';
 import { EntityKind, SystemTypeAnnotation, getTypeAnnotation } from '@dxos/echo/internal';
 import { runAndForwardErrors } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { useClient } from '@dxos/react-client';
-import { type Space, getSpace, isLiveObject, isSpace, useSpaces } from '@dxos/react-client/echo';
+import { isLiveObject, useSpaces } from '@dxos/react-client/echo';
 import { Dialog, IconButton, useTranslation } from '@dxos/react-ui';
 import { cardDialogContent, cardDialogHeader } from '@dxos/react-ui-stack';
 import { type Collection } from '@dxos/schema';
@@ -45,7 +45,7 @@ export const CreateObjectDialog = ({
   const manager = usePluginManager();
   const { t } = useTranslation(meta.id);
   const { dispatch } = useIntentDispatcher();
-  const [target, setTarget] = useState<Space | Collection.Collection | undefined>(initialTarget);
+  const [target, setTarget] = useState<Database.Database | Collection.Collection | undefined>(initialTarget);
   const [typename, setTypename] = useState<string | undefined>(initialTypename);
   const client = useClient();
   const spaces = useSpaces();
@@ -61,9 +61,9 @@ export const CreateObjectDialog = ({
     [manager],
   );
 
-  const space = isSpace(target) ? target : getSpace(target);
+  const db = Database.isDatabase(target) ? target : target && Obj.getDatabase(target);
   // TODO(wittjosiah): Support database schemas.
-  const schemas = space?.db.schemaRegistry.query({ location: ['runtime'] }).runSync();
+  const schemas = db?.schemaRegistry.query({ location: ['runtime'] }).runSync();
   const userSchemas = useMemo(
     () =>
       schemas
@@ -84,9 +84,9 @@ export const CreateObjectDialog = ({
         // NOTE: Must close before navigating or attention won't follow object.
         closeRef.current?.click();
 
-        const space = isSpace(target) ? target : getSpace(target);
-        invariant(space, 'Missing space');
-        const { object } = yield* dispatch(metadata.createObjectIntent(data, { space }));
+        const db = Database.isDatabase(target) ? target : target && Obj.getDatabase(target);
+        invariant(db, 'Missing database');
+        const { object } = yield* dispatch(metadata.createObjectIntent(data, { db }));
         if (isLiveObject(object) && !Obj.instanceOf(Type.PersistentType, object)) {
           // TODO(wittjosiah): Selection in navtree isn't working as expected when hidden typenames evals to true.
           const hidden = !metadata.addToCollectionOnCreate;

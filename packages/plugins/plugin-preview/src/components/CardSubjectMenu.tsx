@@ -28,13 +28,13 @@ import { type CardPreviewProps } from '../types';
 // TODO(burdon): Reconcile title and menu with main Card header.
 export const CardSubjectMenu = ({
   subject,
-  activeSpace,
+  db,
   ...props
 }: CardPreviewProps & Omit<IconButtonProps, 'icon' | 'label'>) => {
   const { t } = useTranslation(meta.id);
-  const menuProps = useSubjectMenuGroupItems({ subject, activeSpace });
+  const menuProps = useSubjectMenuGroupItems({ subject, db });
 
-  if (!activeSpace) {
+  if (!db) {
     return null;
   }
 
@@ -55,7 +55,7 @@ export const CardSubjectMenu = ({
   );
 };
 
-const useSubjectMenuGroupItems = ({ subject, activeSpace }: CardPreviewProps): MenuActions => {
+const useSubjectMenuGroupItems = ({ subject, db }: CardPreviewProps): MenuActions => {
   const { dispatchPromise: dispatch } = useIntentDispatcher();
   const result: ActionGraphProps = { edges: [], nodes: [] };
 
@@ -75,7 +75,7 @@ const useSubjectMenuGroupItems = ({ subject, activeSpace }: CardPreviewProps): M
     },
   });
 
-  if (activeSpace && Obj.getDXN(subject).asQueueDXN()) {
+  if (db && Obj.getDXN(subject).asQueueDXN()) {
     result.nodes.push({
       type: ACTION_TYPE,
       id: `${subject.id}/add-to-space`,
@@ -84,7 +84,7 @@ const useSubjectMenuGroupItems = ({ subject, activeSpace }: CardPreviewProps): M
         dispatch(
           createIntent(SpaceAction.AddObject, {
             object: subject,
-            target: activeSpace,
+            target: db,
             hidden: true,
           }),
         ),

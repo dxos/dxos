@@ -15,7 +15,6 @@ import {
 import { Obj, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { SpaceAction } from '@dxos/plugin-space/types';
-import { getSpace } from '@dxos/react-client/echo';
 import { Table } from '@dxos/react-ui-table/types';
 import { View, getTypenameFromQuery } from '@dxos/schema';
 import { Task } from '@dxos/types';
@@ -29,20 +28,22 @@ export default (context: PluginContext) =>
       resolve: ({ space }) =>
         Effect.gen(function* () {
           const { dispatch } = context.getCapability(Capabilities.IntentDispatcher);
-          const { object } = yield* dispatch(createIntent(TableAction.Create, { space, typename: Task.Task.typename }));
+          const { object } = yield* dispatch(
+            createIntent(TableAction.Create, { db: space.db, typename: Task.Task.typename }),
+          );
           space.db.add(object);
           space.properties.staticRecords = [Task.Task.typename];
         }),
     }),
     createResolver({
       intent: TableAction.OnSchemaAdded,
-      resolve: ({ space, schema, show = true }) =>
+      resolve: ({ db, schema, show = true }) =>
         Effect.gen(function* () {
           const { dispatch } = context.getCapability(Capabilities.IntentDispatcher);
           const { object } = yield* dispatch(
-            createIntent(TableAction.Create, { space, typename: Type.getTypename(schema) }),
+            createIntent(TableAction.Create, { db, typename: Type.getTypename(schema) }),
           );
-          yield* dispatch(createIntent(SpaceAction.AddObject, { target: space, object, hidden: true }));
+          yield* dispatch(createIntent(SpaceAction.AddObject, { target: db, object, hidden: true }));
 
           if (show) {
             return {
@@ -53,8 +54,8 @@ export default (context: PluginContext) =>
     }),
     createResolver({
       intent: TableAction.Create,
-      resolve: async ({ space, name, typename }) => {
-        const { view, jsonSchema } = await View.makeFromSpace({ space, typename });
+      resolve: async ({ db, name, typename }) => {
+        const { view, jsonSchema } = await View.makeFromDatabase({ db, typename });
         const table = Table.make({ name, view, jsonSchema });
         return { data: { object: table } };
       },
@@ -62,14 +63,14 @@ export default (context: PluginContext) =>
     createResolver({
       intent: TableAction.AddRow,
       resolve: async ({ view, data }) => {
-        const space = getSpace(view);
-        invariant(space);
+        const db = Obj.getDatabase(view);
+        invariant(db);
         const typename = view.query ? getTypenameFromQuery(view.query.ast) : undefined;
         invariant(typename);
-        const schema = await space.db.schemaRegistry.query({ typename }).firstOrUndefined();
+        const schema = await db.schemaRegistry.query({ typename }).firstOrUndefined();
         invariant(schema);
         const object = Obj.make(schema, data);
-        return { intents: [createIntent(SpaceAction.AddObject, { target: space, object, hidden: true })] };
+        return { intents: [createIntent(SpaceAction.AddObject, { target: db, object, hidden: true })] };
       },
     }),
   ]);

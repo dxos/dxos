@@ -4,9 +4,10 @@
 
 import React, { useCallback, useMemo } from 'react';
 
+import { Obj } from '@dxos/echo';
 import { Format } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
-import { getSpace, useSchema } from '@dxos/react-client/echo';
+import { useSchema } from '@dxos/react-client/echo';
 import { Form, type FormFieldMap, SelectField } from '@dxos/react-ui-form';
 import { useProjectionModel } from '@dxos/react-ui-kanban';
 import { type Kanban } from '@dxos/react-ui-kanban/types';
@@ -17,10 +18,10 @@ import { SettingsSchema } from '../types';
 type KanbanViewEditorProps = { object: Kanban.Kanban };
 
 export const KanbanViewEditor = ({ object }: KanbanViewEditorProps) => {
-  const space = getSpace(object);
+  const db = Obj.getDatabase(object);
   const view = object.view.target;
   const currentTypename = view?.query ? getTypenameFromQuery(view.query.ast) : undefined;
-  const schema = useSchema(space?.db, currentTypename);
+  const schema = useSchema(db, currentTypename);
   const projection = useProjectionModel(schema, object);
 
   const fieldProjections = projection?.getFieldProjections() || [];

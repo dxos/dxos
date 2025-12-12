@@ -21,6 +21,7 @@ import {
   type HasId,
   KindId,
   MetaId,
+  ObjectDatabaseId,
   ObjectDeletedId,
   type ObjectJSON,
   type ObjectMeta,
@@ -192,6 +193,8 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
           return this.isDeleted(target);
         case ObjectVersionId:
           return this._getVersion(target);
+        case ObjectDatabaseId:
+          return target[symbolInternals].database;
       }
     } else {
       switch (prop) {
@@ -203,6 +206,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
         case TypeId:
         case MetaId:
         case ObjectDeletedId:
+        case ObjectDatabaseId:
           return undefined;
       }
     }
