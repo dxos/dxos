@@ -8,13 +8,14 @@ import * as Console from 'effect/Console';
 import * as Effect from 'effect/Effect';
 import * as HashMap from 'effect/HashMap';
 
-import { Filter, Obj, Ref } from '@dxos/echo';
-import { Database } from '@dxos/echo';
+import { Database, Filter, Obj, Ref } from '@dxos/echo';
 import { Function, Trigger, getUserFunctionIdInMetadata } from '@dxos/functions';
 
+import { CommandConfig } from '../../../../services';
 import { spaceLayer, withTypes } from '../../../../util';
 import { Common } from '../../../options';
 import { Enabled, Input } from '../options';
+import { prettyPrintTrigger } from '../util';
 
 import { Cron } from './options';
 
@@ -30,6 +31,7 @@ export const create = Command.make(
   },
   ({ enabled, functionId, cron, input }) =>
     Effect.gen(function* () {
+      const { json } = yield* CommandConfig;
       const functions = yield* Database.Service.runQuery(Filter.type(Function.Function));
       const fn = functions.find((fn) => getUserFunctionIdInMetadata(Obj.getMeta(fn)) === functionId);
       if (!fn) {
@@ -46,10 +48,15 @@ export const create = Command.make(
         input: Object.fromEntries(HashMap.toEntries(input)),
       });
       yield* Database.Service.add(trigger);
-      yield* Console.log('Created trigger', trigger.id);
+
+      if (json) {
+        yield* Console.log(JSON.stringify(trigger, null, 2));
+      } else {
+        yield* Console.log(yield* prettyPrintTrigger(trigger));
+      }
     }),
 ).pipe(
   Command.withDescription('Create a timer trigger.'),
-  Command.provide(({ spaceId }) => spaceLayer(spaceId)),
+  Command.provide(({ spaceId }) => spaceLayer(spaceId, true)),
   Command.provideEffectDiscard(() => withTypes(Function.Function, Trigger.Trigger)),
 );

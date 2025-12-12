@@ -5,10 +5,19 @@
 import * as Doc from '@effect/printer/Doc';
 import * as Ansi from '@effect/printer-ansi/Ansi';
 import * as AnsiDoc from '@effect/printer-ansi/AnsiDoc';
+import * as Match from 'effect/Match';
 
 import { type Function } from '@dxos/functions';
 
 export type FunctionStatus = 'not imported' | 'up-to-date' | 'update available';
+
+const getStatusColor = Match.type<FunctionStatus>().pipe(
+  Match.withReturnType<Ansi.Ansi>(),
+  Match.when('not imported', () => Ansi.blackBright),
+  Match.when('up-to-date', () => Ansi.green),
+  Match.when('update available', () => Ansi.yellow),
+  Match.exhaustive,
+);
 
 /**
  * Determines the status of a deployed function relative to the space database.
@@ -42,8 +51,7 @@ export const prettyPrintFunction = (fn: Function.Function, status?: FunctionStat
   const parts = [name, key, version, uploaded];
 
   if (status) {
-    const statusColor =
-      status === 'up-to-date' ? Ansi.green : status === 'update available' ? Ansi.yellow : Ansi.blackBright;
+    const statusColor = getStatusColor(status);
     const statusDoc = Doc.cat(Doc.text('  Status: '), Doc.annotate(Doc.text(status), statusColor));
     parts.push(statusDoc);
   }
