@@ -59,6 +59,7 @@ On Error returns `EdgeEnvelope` with error:
 export interface Env {
   QUEUE_SERVICE: QueueService;
   DATA_SERVICE: DataService;
+  AI_SERVICE: AiService;
 }
 
 /**
@@ -86,6 +87,16 @@ export interface DataService {
 export interface QueueService {
   query(ctx: ExecutionContext, queueDXN: string, query: Omit<QueueQuery, 'queueId'>): Promise<QueryResult>;
   append(ctx: ExecutionContext, queueDXN: string, objects: unknown[]): Promise<void>;
+}
+
+/**
+ * AiService API for other CF services like functions.
+ */
+export interface AiService {
+  /**
+   * Enables proxying HTTP requests to the AI service from other workers.
+   */
+  proxyFetch(ctx: ExecutionContext, request: Request): Promise<Response>;
 }
 
 export type ObjectDocumentJson = {
