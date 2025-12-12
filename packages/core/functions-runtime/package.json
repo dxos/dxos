@@ -84,7 +84,7 @@
     "@dxos/protocols": "workspace:*",
     "@dxos/schema": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@effect/platform": "0.92.1",
+    "@effect/platform": "0.93.6",
     "effect": "catalog:",
     "esbuild": "catalog:",
     "esbuild-wasm": "catalog:",

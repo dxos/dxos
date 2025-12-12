@@ -64,7 +64,7 @@
     "@dxos/timeframe": "workspace:*",
     "@dxos/tracing": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@effect/platform": "0.92.1",
+    "@effect/platform": "0.93.6",
     "@preact-signals/safe-react": "catalog:",
     "@radix-ui/react-tabs": "catalog:",
     "@robloche/chartjs-plugin-streaming": "catalog:",

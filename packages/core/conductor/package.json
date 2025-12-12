@@ -58,7 +58,7 @@
     "@dxos/util": "workspace:*",
     "@effect/ai": "catalog:",
     "@effect/experimental": "catalog:",
-    "@effect/platform": "0.92.1",
+    "@effect/platform": "0.93.6",
     "@preact/signals-core": "catalog:",
     "chalk": "^4.1.2",
     "effect": "catalog:",

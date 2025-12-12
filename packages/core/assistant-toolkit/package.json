@@ -59,7 +59,7 @@
     "@effect/ai": "catalog:",
     "@effect/ai-anthropic": "catalog:",
     "@effect/experimental": "catalog:",
-    "@effect/platform": "^0.92.1",
+    "@effect/platform": "^0.93.6",
     "dfx": "catalog:",
     "exa-js": "catalog:"
   },

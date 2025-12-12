@@ -98,7 +98,7 @@
     "@dxos/storybook-utils": "workspace:*",
     "@dxos/test-utils": "workspace:*",
     "@effect-atom/atom-react": "catalog:",
-    "@effect/platform": "0.92.1",
+    "@effect/platform": "0.93.6",
     "@types/dom-speech-recognition": "catalog:",
     "@types/react": "~19.2.2",
     "effect": "catalog:",

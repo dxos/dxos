@@ -58,23 +58,23 @@ catalog:
   '@dxos/cli-next-linux-arm64': 0.8.3
   '@dxos/cli-next-linux-x64': 0.8.3
   '@dxos/cli-next-win32-x64': 0.8.3
-  '@effect-atom/atom-react': ^0.3.4
-  '@effect/ai': 0.29.1
-  '@effect/ai-anthropic': 0.21.1
-  '@effect/cli': 0.71.0
-  '@effect/cluster': 0.50.3
-  '@effect/experimental': 0.56.0
-  '@effect/language-service': ^0.42.0
-  '@effect/opentelemetry': ^0.58.0
-  '@effect/platform-browser': 0.72.0
+  '@effect-atom/atom-react': ^0.4.4
+  '@effect/ai': 0.32.1
+  '@effect/ai-anthropic': 0.22.0
+  '@effect/cli': 0.72.1
+  '@effect/cluster': 0.55.0
+  '@effect/experimental': 0.57.11
+  '@effect/language-service': ^0.62.1
+  '@effect/opentelemetry': ^0.59.2
+  '@effect/platform-browser': 0.73.0
   '@effect/platform-bun': 0.86.0
-  '@effect/printer': 0.46.0
-  '@effect/printer-ansi': 0.46.0
-  '@effect/rpc': 0.71.0
+  '@effect/printer': 0.47.0
+  '@effect/printer-ansi': 0.47.0
+  '@effect/rpc': 0.72.2
   '@effect/schema': ^0.75.5
-  '@effect/sql': 0.46.0
-  '@effect/typeclass': 0.37.0
-  '@effect/vitest': ~0.26.0
+  '@effect/sql': 0.48.6
+  '@effect/typeclass': 0.38.0
+  '@effect/vitest': ~0.27.0
   '@emoji-mart/data': ^1.1.2
   '@emoji-mart/react': ^1.1.1
   '@eslint/js': ^9.37.0
@@ -363,12 +363,12 @@ catalog:
   deep-equal: ^2.2.3
   del: ^5.1.0
   depcheck: ^1.4.7
-  dfx: ^0.126.0
+  dfx: ^0.127.0
   diff: ^8.0.2
   discord.js: ^14.14.1
   do-wrapper: ^4.5.1
   domain-browser: ^4.22.0
-  effect: 3.18.3
+  effect: 3.19.11
   emoji-mart: ^5.5.2
   enquirer: ^2.3.6
   esbuild: 0.25.10
@@ -653,9 +653,6 @@ catalog:
   zx: ^8.4.1
 
 packageExtensions:
-  '@effect-rx/rx':
-    peerDependencies:
-      '@effect/platform': '*'
   '@hot-loader/react-dom':
     peerDependencies:
       react: ^18.0.0

@@ -57,7 +57,7 @@
     "@dxos/schema": "workspace:*",
     "@dxos/types": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@effect/platform": "0.92.1",
+    "@effect/platform": "0.93.6",
     "@preact-signals/safe-react": "catalog:",
     "chess.js": "^1.0.0"
   },

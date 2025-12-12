@@ -37,7 +37,7 @@
     "@dxos/protocols": "workspace:*",
     "@dxos/schema": "workspace:*",
     "@dxos/types": "workspace:*",
-    "@effect/platform": "0.92.1",
+    "@effect/platform": "0.93.6",
     "effect": "catalog:"
   },
   "publishConfig": {

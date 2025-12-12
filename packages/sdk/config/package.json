@@ -73,7 +73,7 @@
     "@dxos/protocols": "workspace:*",
     "@dxos/tracing": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@effect/platform": "0.92.1",
+    "@effect/platform": "0.93.6",
     "boolean": "catalog:",
     "effect": "catalog:",
     "localforage": "catalog:",

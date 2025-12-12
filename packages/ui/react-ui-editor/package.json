@@ -106,7 +106,7 @@
     "@dxos/schema": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
     "@effect-atom/atom-react": "catalog:",
-    "@effect/platform": "0.92.1",
+    "@effect/platform": "0.93.6",
     "@types/chai": "catalog:",
     "@types/chai-dom": "catalog:",
     "@types/lodash.defaultsdeep": "catalog:",
