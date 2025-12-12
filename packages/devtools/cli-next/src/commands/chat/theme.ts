@@ -8,7 +8,7 @@ export const theme = {
   accent: colors[Math.floor(Math.random() * colors.length)],
   bg: '#000000',
   input: {
-    bg: '#1f1f1f',
+    bg: '#101010',
   },
   text: {
     bold: '#ffffff',

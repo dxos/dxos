@@ -91,15 +91,6 @@ export const App = (props: AppProps) => {
         }
       },
     },
-
-    //
-    // Blueprints
-    // TODO(burdon): Factor out.
-    //
-    {
-      hint: '[ctrl-b]: Blueprints',
-      handler: (key: KeyEvent) => {},
-    },
   ].filter(isTruthy);
 
   createEffect(() => {

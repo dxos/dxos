@@ -123,6 +123,7 @@ export const Chat = (props: ChatProps) => {
         onSubmit={() => handleSubmit(inputValue())}
         focused={() => popup() === 'logo' || popup() === undefined}
       />
+      {/* TODO(burdon): Show blueprints in status bar. */}
       <StatusBar model={props.model} metadata={props.processor.metadata} processing={context?.processing} />
     </box>
   );
