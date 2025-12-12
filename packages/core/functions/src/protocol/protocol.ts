@@ -151,7 +151,7 @@ class FunctionContext extends Resource {
     const functionInvocationService = MockedFunctionInvocationService;
     const tracing = TracingService.layerNoop;
 
-    const aiLayer = this.context.services.aiService
+    const aiLayer = this.context.services.functionsService
       ? AiModelResolver.AiModelResolver.buildAiService.pipe(
           Layer.provide(
             AnthropicResolver.make().pipe(
@@ -159,7 +159,7 @@ class FunctionContext extends Resource {
                 AnthropicClient.layer({
                   // TODO(dmaretskyi): Read endpoint from config/settings.
                   apiUrl: 'https://ai-service.dxos.workers.dev/provider/anthropic',
-                }).pipe(Layer.provide(FunctionsAiHttpClient.layer(this.context.services.aiService))),
+                }).pipe(Layer.provide(FunctionsAiHttpClient.layer(this.context.services.functionsService))),
               ),
             ),
           ),

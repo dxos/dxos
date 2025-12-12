@@ -59,7 +59,7 @@ On Error returns `EdgeEnvelope` with error:
 export interface Env {
   QUEUE_SERVICE: QueueService;
   DATA_SERVICE: DataService;
-  AI_SERVICE: AiService;
+  FUNCTIONS_SERVICE: FunctionService;
 }
 
 /**
@@ -90,13 +90,13 @@ export interface QueueService {
 }
 
 /**
- * AiService API for other CF services like functions.
+ * FunctionService API for other CF services like functions.
  */
-export interface AiService {
+export interface FunctionService {
   /**
    * Enables proxying HTTP requests to the AI service from other workers.
    */
-  proxyFetch(ctx: ExecutionContext, request: Request): Promise<Response>;
+  aiFetch(request: Request): Promise<Response>;
 }
 
 export type ObjectDocumentJson = {

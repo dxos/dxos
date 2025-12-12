@@ -37,6 +37,7 @@
     "@dxos/protocols": "workspace:*",
     "@dxos/schema": "workspace:*",
     "@dxos/types": "workspace:*",
+    "@effect/ai-anthropic": "0.21.1",
     "@effect/platform": "0.92.1",
     "effect": "3.18.3"
   },
