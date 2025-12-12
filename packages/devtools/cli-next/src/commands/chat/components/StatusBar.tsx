@@ -14,7 +14,7 @@ import { AppContext } from './App';
 export type StatusBarProps = {
   model: ModelName;
   metadata?: AiService.ServiceMetadata;
-  processing: Accessor<boolean>;
+  processing?: Accessor<boolean>;
 };
 
 export const StatusBar = (props: StatusBarProps) => {
@@ -22,7 +22,7 @@ export const StatusBar = (props: StatusBarProps) => {
 
   const spinner = useSpinner();
   createEffect(() => {
-    if (props.processing()) {
+    if (props.processing?.()) {
       spinner.start();
     } else {
       spinner.stop();
@@ -31,8 +31,8 @@ export const StatusBar = (props: StatusBarProps) => {
 
   return (
     <box flexDirection='row' height={1} paddingLeft={2} paddingRight={2}>
-      <text style={{ fg: props.processing() ? theme.text.secondary : theme.text.subdued }}>
-        {props.processing() ? `${spinner.frame()} Processing` : context?.hint}
+      <text style={{ fg: props.processing?.() ? theme.text.secondary : theme.text.subdued }}>
+        {props.processing?.() ? `${spinner.frame()} Processing` : context?.hint}
       </text>
       <box flexGrow={1} />
       {props.metadata?.name && (
