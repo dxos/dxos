@@ -2,10 +2,12 @@
 // Copyright 2025 DXOS.org
 //
 
-import { For } from 'solid-js';
+import { For, Match, Switch } from 'solid-js';
 
 import { theme } from '../theme';
+
 import { type Message } from '../types';
+import { Markdown } from './Markdown';
 
 export type ChatMessagesProps = {
   messages: Message[];
@@ -29,28 +31,28 @@ export const ChatMessages = (props: ChatMessagesProps) => {
 };
 
 const MessageItem = (props: { message: Message }) => {
-  const rolePrefix = (role: string) => {
-    switch (role) {
-      case 'user':
-        return '⟫';
-      case 'assistant':
-        return 'Assistant:';
-      case 'error':
-        return 'Error:';
-      default:
-        return '';
-    }
-  };
-
-  // TODO(burdon): Format fenced code blocks.
   return (
-    <box paddingBottom={1}>
-      <text>
-        {props.message.content && (
-          <span style={{ fg: theme.role(props.message.role) }}>{rolePrefix(props.message.role)} </span>
-        )}
-        {props.message.content}
-      </text>
-    </box>
+    <Switch>
+      <Match when={props.message.role === 'user'}>
+        <text>
+          <span style={{ fg: theme.role('user') }}>⟫</span> {props.message.content}
+        </text>
+      </Match>
+      <Match when={props.message.role === 'assistant'}>
+        <Markdown content={props.message.content} />
+      </Match>
+      <Match when={props.message.role === 'error'}>
+        <box
+          marginTop={1}
+          marginBottom={1}
+          paddingLeft={1}
+          paddingRight={1}
+          borderStyle='single'
+          borderColor={theme.log.error}
+        >
+          <text style={{ fg: theme.log.error }}>{props.message.content}</text>
+        </box>
+      </Match>
+    </Switch>
   );
 };

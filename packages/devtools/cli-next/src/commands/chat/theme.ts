@@ -8,10 +8,12 @@ export const theme = {
   accent: colors[Math.floor(Math.random() * colors.length)],
   bg: '#000000',
   input: {
-    bg: '#1a1a1a',
+    bg: '#1f1f1f',
   },
   text: {
-    subdued: '#cdcdcd',
+    bold: '#ffffff',
+    default: '#cdcdcd',
+    subdued: '#a0a0a0',
     primary: '#00ffaa',
     secondary: '#00aaff',
   },

@@ -7,6 +7,7 @@ import { createSignal, useContext } from 'solid-js';
 
 import { type ModelName } from '@dxos/ai';
 import { type AiConversation, GenerationObserver } from '@dxos/assistant';
+import { log } from '@dxos/log';
 
 import { useChatMessages } from '../hooks';
 import { type ChatProcessor } from '../processor';
@@ -51,28 +52,28 @@ export const Chat = (props: ChatProps) => {
               chatMessages.appendToMessage(assistantIndex, part.delta);
             }
           }),
-        onMessage: (message) =>
-          Effect.sync(() => {
-            switch (message.sender.role) {
-              case 'tool': {
-                if (props.verbose) {
-                  // for (const part of message.blocks) {
-                  // TODO(burdon): Add tool call.
-                  // }
-                }
-                break;
-              }
-            }
-          }),
+        // onMessage: (message) =>
+        //   Effect.sync(() => {
+        //     switch (message.sender.role) {
+        //       case 'tool': {
+        //         if (props.verbose) {
+        //           for (const part of message.blocks) {
+        //           }
+        //         }
+        //         break;
+        //       }
+        //     }
+        //   }),
       });
 
       // Create and execute request.
       const request = props.conversation.createRequest({ prompt, observer });
       await props.processor.execute(request, props.model);
     } catch (err) {
+      log.catch(err);
       chatMessages.updateMessage(assistantIndex, (message) => {
         message.role = 'error';
-        message.content = `Error: ${String(err)}`;
+        message.content = String(err);
       });
     } finally {
       context?.setProcessing(false);

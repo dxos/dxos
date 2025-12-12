@@ -21,7 +21,6 @@ import {
 import { Blueprint } from '@dxos/blueprints';
 import { type Space } from '@dxos/client/echo';
 import { Filter, Obj, Ref } from '@dxos/echo';
-import { throwCause } from '@dxos/effect';
 import type { FunctionDefinition } from '@dxos/functions';
 import { log } from '@dxos/log';
 import { type Message } from '@dxos/types';
@@ -70,7 +69,9 @@ export class ChatProcessor {
 
     const response = await fiber.pipe(Fiber.join, Effect.runPromiseExit);
     if (!Exit.isSuccess(response) && !Cause.isInterruptedOnly(response.cause)) {
-      throwCause(response.cause);
+      const cause = Cause.pretty(response.cause);
+      log.error('failed to execute', { cause });
+      throw new Error(cause);
     }
   }
 

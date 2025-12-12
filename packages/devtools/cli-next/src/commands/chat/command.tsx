@@ -101,6 +101,7 @@ export const chat = Command.make(
           () => (
             <ErrorBoundary
               fallback={(err: any) => {
+                log.catch(err);
                 return (
                   <box flexDirection='column' overflow='hidden'>
                     <text style={{ fg: theme.log.error }}>{err.stack}</text>

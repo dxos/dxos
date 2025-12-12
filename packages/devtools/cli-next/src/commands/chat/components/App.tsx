@@ -49,7 +49,7 @@ export const App = (props: AppProps) => {
   // Focus.
   const focusElements = [...(props.focusElements ?? [])];
   const [focus, setFocus] = createSignal<string | undefined>(props.focusElements?.[0]);
-  const [showConsole, setShowConsole] = createSignal(false);
+  const [showConsole, setShowConsole] = createSignal(true); // TODO(burdon): Option.
   const [showBanner, setShowBanner] = createSignal(true);
   const [processing, setProcessing] = createSignal(false);
 
