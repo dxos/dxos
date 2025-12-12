@@ -130,8 +130,8 @@ const meta = {
             await client.halo.createIdentity();
             const space = await client.spaces.create();
             await space.waitUntilReady();
-            const { view } = await View.makeFromSpace({
-              space,
+            const { view } = await View.makeFromDatabase({
+              db: space.db,
               typename: Organization.Organization.typename,
               pivotFieldName: 'status',
             });

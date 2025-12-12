@@ -6,7 +6,7 @@ import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
-import type * as Schema from 'effect/Schema';
+import * as Schema from 'effect/Schema';
 import type * as Types from 'effect/Types';
 
 import { type QueryAST } from '@dxos/echo-protocol';
@@ -120,10 +120,14 @@ export type FlushOptions = {
   updates?: boolean;
 };
 
+export const __DatabaseId = Symbol.for('@dxos/echo/Database');
+
 /**
  * ECHO Database interface.
  */
 export interface Database extends Queryable {
+  readonly [__DatabaseId]: true;
+
   get spaceId(): SpaceId;
 
   // TODO(burdon): Can we move this into graph?
@@ -168,6 +172,12 @@ export interface Database extends Queryable {
    */
   flush(opts?: FlushOptions): Promise<void>;
 }
+
+export const isDatabase = (obj: unknown): obj is Database => {
+  return obj ? typeof obj === 'object' && __DatabaseId in obj && obj[__DatabaseId] === true : false;
+};
+
+export const Database: Schema.Schema<Database> = Schema.Any.pipe(Schema.filter((space) => isDatabase(space)));
 
 export class Service extends Context.Tag('@dxos/echo/Database/Service')<
   Service,

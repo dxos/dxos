@@ -6,8 +6,8 @@ import React, { useMemo } from 'react';
 
 import { Surface } from '@dxos/app-framework/react';
 import { type SurfaceComponentProps } from '@dxos/app-framework/react';
-import { type Entity, Filter, type Obj, Ref, Relation } from '@dxos/echo';
-import { type Space, getSpace, useQuery } from '@dxos/react-client/echo';
+import { type Database, type Entity, Filter, Obj, Ref, Relation } from '@dxos/echo';
+import { useQuery } from '@dxos/react-client/echo';
 import { useTranslation } from '@dxos/react-ui';
 import { Masonry } from '@dxos/react-ui-masonry';
 import { StackItem } from '@dxos/react-ui-stack';
@@ -18,9 +18,9 @@ import { meta } from '../meta';
 
 export const RecordArticle = ({ subject }: SurfaceComponentProps) => {
   const { t } = useTranslation(meta.id);
-  const space = getSpace(subject);
+  const db = Obj.getDatabase(subject);
   const data = useMemo(() => ({ subject }), [subject]);
-  const related = useRelatedObjects(space, subject, {
+  const related = useRelatedObjects(db, subject, {
     references: true,
     relations: true,
   });
@@ -56,11 +56,11 @@ const Card = ({ data: subject }: { data: Entity.Unknown }) => {
 
 // TODO(wittjosiah): This is a hack. ECHO needs to have a back reference index to easily query for related objects.
 const useRelatedObjects = (
-  space?: Space,
+  db?: Database.Database,
   record?: Obj.Any,
   options: { references?: boolean; relations?: boolean } = {},
 ) => {
-  const objects = useQuery(space?.db, Filter.everything());
+  const objects = useQuery(db, Filter.everything());
   return useMemo(() => {
     if (!record) {
       return [];

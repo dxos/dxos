@@ -118,6 +118,6 @@ export const useChatToolbarActions = ({ chat, companionTo }: ChatToolbarActionsP
 
         return builder.build();
       });
-    }, [chats.length, space?.id, companionTo?.id, chat?.id, dispatch]),
+    }, [chats.length, db?.spaceId, companionTo?.id, chat?.id, dispatch]),
   );
 };

@@ -5,11 +5,11 @@
 import React, { useEffect, useState } from 'react';
 
 import { Surface, useCapabilities } from '@dxos/app-framework/react';
-import { Filter, Type } from '@dxos/echo';
+import { Filter, Obj, Type } from '@dxos/echo';
 import { type TypedObject } from '@dxos/echo/internal';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { useGlobalFilteredObjects } from '@dxos/plugin-search';
-import { getSpace, useQuery } from '@dxos/react-client/echo';
+import { useQuery } from '@dxos/react-client/echo';
 import { Masonry as MasonryComponent } from '@dxos/react-ui-masonry';
 import { getTypenameFromQuery } from '@dxos/schema';
 
@@ -21,7 +21,7 @@ const Item = ({ data }: { data: any }) => {
 
 export const MasonryContainer = ({ object, role }: { object: Masonry.Masonry; role?: string }) => {
   const schemas = useCapabilities(ClientCapabilities.Schema);
-  const space = getSpace(object);
+  const db = Obj.getDatabase(object);
   const typename = object.view.target?.query ? getTypenameFromQuery(object.view.target.query.ast) : undefined;
 
   const [cardSchema, setCardSchema] = useState<TypedObject<any, any>>();
@@ -31,8 +31,8 @@ export const MasonryContainer = ({ object, role }: { object: Masonry.Masonry; ro
     if (staticSchema) {
       setCardSchema(() => staticSchema as TypedObject<any, any>);
     }
-    if (!staticSchema && typename && space) {
-      const query = space.db.schemaRegistry.query({ typename });
+    if (!staticSchema && typename && db) {
+      const query = db.schemaRegistry.query({ typename });
       const unsubscribe = query.subscribe(
         () => {
           const [schema] = query.results;
@@ -44,9 +44,9 @@ export const MasonryContainer = ({ object, role }: { object: Masonry.Masonry; ro
       );
       return unsubscribe;
     }
-  }, [schemas, typename, space]);
+  }, [schemas, typename, db]);
 
-  const objects = useQuery(space?.db, cardSchema ? Filter.type(cardSchema) : Filter.nothing());
+  const objects = useQuery(db, cardSchema ? Filter.type(cardSchema) : Filter.nothing());
   const filteredObjects = useGlobalFilteredObjects(objects);
 
   return (

@@ -50,7 +50,7 @@ export const ScriptPlugin = definePlugin(meta, () => [
           loadReferences: async (script: Script.Script) => await Ref.Array.loadAll([script.source]),
           inputSchema: ScriptAction.ScriptProps,
           createObjectIntent: ((props, options) =>
-            createIntent(ScriptAction.CreateScript, { ...props, space: options.space })) satisfies CreateObjectIntent,
+            createIntent(ScriptAction.CreateScript, { ...props, db: options.db })) satisfies CreateObjectIntent,
           addToCollectionOnCreate: true,
         },
       }),
@@ -61,7 +61,7 @@ export const ScriptPlugin = definePlugin(meta, () => [
           iconHue: 'sky',
           inputSchema: ScriptAction.NotebookProps,
           createObjectIntent: ((props, options) =>
-            createIntent(ScriptAction.CreateNotebook, { ...props, space: options.space })) satisfies CreateObjectIntent,
+            createIntent(ScriptAction.CreateNotebook, { ...props, db: options.db })) satisfies CreateObjectIntent,
           addToCollectionOnCreate: true,
         },
       }),

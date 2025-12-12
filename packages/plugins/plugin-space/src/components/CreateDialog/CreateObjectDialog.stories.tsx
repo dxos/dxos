@@ -8,7 +8,7 @@ import React, { useEffect } from 'react';
 import { IntentPlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Filter, Obj } from '@dxos/echo';
-import { useDatabase, useQuery, useSpace } from '@dxos/react-client/echo';
+import { useDatabase, useQuery } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { Dialog } from '@dxos/react-ui';
 import { withTheme } from '@dxos/react-ui/testing';
@@ -55,13 +55,13 @@ export const Typename: StoryObj<typeof CreateObjectDialog> = {
 
 export const TargetSpace: StoryObj<typeof CreateObjectDialog> = {
   render: (args) => {
-    const space = useSpace();
+    const db = useDatabase();
 
-    if (!space) {
+    if (!db) {
       return <></>;
     }
 
-    return <Story {...args} target={space} />;
+    return <Story {...args} target={db} />;
   },
 };
 

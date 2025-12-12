@@ -34,7 +34,7 @@ export const MasonryPlugin = definePlugin(meta, () => [
           iconHue: 'green',
           inputSchema: MasonryAction.MasonryProps,
           createObjectIntent: ((props, options) =>
-            createIntent(MasonryAction.CreateMasonry, { ...props, space: options.space })) satisfies CreateObjectIntent,
+            createIntent(MasonryAction.CreateMasonry, { ...props, space: options.db })) satisfies CreateObjectIntent,
         },
       }),
   }),

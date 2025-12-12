@@ -6,7 +6,7 @@ import type * as Schema from 'effect/Schema';
 import React, { useMemo, useState } from 'react';
 
 import { Obj, Query, Type } from '@dxos/echo';
-import { getQueryTarget, resolveSchemaWithClientAndSpace } from '@dxos/plugin-space';
+import { getQueryTarget, resolveSchemaWithRegistry } from '@dxos/plugin-space';
 import { Filter, getSpace, isSpace, useQuery } from '@dxos/react-client/echo';
 import { useAsyncEffect, useTranslation } from '@dxos/react-ui';
 import { Card, CardStack, StackItem, cardStackDefaultInlineSizeRem, cardStackHeading } from '@dxos/react-ui-stack';
@@ -45,7 +45,7 @@ export const ProjectColumn = ({ column }: ProjectColumnProps) => {
       return;
     }
 
-    const schema = await resolveSchemaWithClientAndSpace(space, query.ast);
+    const schema = await resolveSchemaWithRegistry(space.db.schemaRegistry, query.ast);
     setSchema(() => schema);
   }, [space, query]);
 

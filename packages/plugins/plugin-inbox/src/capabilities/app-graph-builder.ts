@@ -7,7 +7,6 @@ import * as Function from 'effect/Function';
 import * as Option from 'effect/Option';
 
 import { Capabilities, type PluginContext, contributes } from '@dxos/app-framework';
-import { getSpace } from '@dxos/client/echo';
 import { Filter, Obj, type QueryResult } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
@@ -196,10 +195,10 @@ export default (context: PluginContext) =>
                     id: `${Obj.getDXN(mailbox).toString()}-sync`,
                     type: ACTION_TYPE,
                     data: async () => {
-                      const space = getSpace(mailbox);
-                      invariant(space);
+                      const db = Obj.getDatabase(mailbox);
+                      invariant(db);
                       const computeRuntime = context.getCapability(AutomationCapabilities.ComputeRuntime);
-                      const runtime = computeRuntime.getRuntime(space.id);
+                      const runtime = computeRuntime.getRuntime(db.spaceId);
                       await runtime.runPromise(
                         invokeFunctionWithTracing(gmail.sync, { mailboxId: Obj.getDXN(mailbox).toString() }),
                       );
@@ -233,10 +232,10 @@ export default (context: PluginContext) =>
                     id: `${Obj.getDXN(object).toString()}-sync`,
                     type: ACTION_TYPE,
                     data: async () => {
-                      const space = getSpace(object);
-                      invariant(space);
+                      const db = Obj.getDatabase(object);
+                      invariant(db);
                       const computeRuntime = context.getCapability(AutomationCapabilities.ComputeRuntime);
-                      const runtime = computeRuntime.getRuntime(space.id);
+                      const runtime = computeRuntime.getRuntime(db.spaceId);
                       await runtime.runPromise(
                         invokeFunctionWithTracing(calendar.sync, { calendarId: Obj.getDXN(object).toString() }),
                       );

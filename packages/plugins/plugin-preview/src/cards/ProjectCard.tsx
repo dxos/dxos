@@ -11,13 +11,13 @@ import { type Project } from '@dxos/types';
 import { CardHeader } from '../components';
 import { type CardPreviewProps } from '../types';
 
-export const ProjectCard = ({ subject, role, activeSpace }: CardPreviewProps<Project.Project>) => {
+export const ProjectCard = ({ subject, role, db }: CardPreviewProps<Project.Project>) => {
   const { name, image, description } = subject;
 
   return (
     <Card.SurfaceRoot id={subject.id} role={role}>
       {image && <Card.Poster image={image} alt={Obj.getLabel(subject) ?? ''} aspect='auto' />}
-      <CardHeader label={name} subject={subject} activeSpace={activeSpace} />
+      <CardHeader label={name} subject={subject} db={db} />
       {description && <Card.Text classNames='line-clamp-2'>{description}</Card.Text>}
     </Card.SurfaceRoot>
   );

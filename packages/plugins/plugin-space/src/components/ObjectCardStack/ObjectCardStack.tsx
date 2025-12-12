@@ -4,7 +4,8 @@
 
 import React, { forwardRef } from 'react';
 
-import { Filter, getSpace, useQuery, useSchema } from '@dxos/react-client/echo';
+import { Obj } from '@dxos/echo';
+import { Filter, useQuery, useSchema } from '@dxos/react-client/echo';
 import { Callout, Toolbar, useTranslation } from '@dxos/react-ui';
 import { useSelected } from '@dxos/react-ui-attention';
 import { Card, CardStack, StackItem } from '@dxos/react-ui-stack';
@@ -22,11 +23,11 @@ export type ObjectCardStackProps = {
 
 export const ObjectCardStack = forwardRef<HTMLDivElement, ObjectCardStackProps>(({ objectId, view }, forwardedRef) => {
   const { t } = useTranslation(meta.id);
-  const space = getSpace(view);
+  const db = Obj.getDatabase(view);
   const typename = view.query ? getTypenameFromQuery(view.query.ast) : undefined;
-  const schema = useSchema(space?.db, typename);
+  const schema = useSchema(db, typename);
 
-  const queriedObjects = useQuery(space?.db, schema ? Filter.type(schema) : Filter.nothing());
+  const queriedObjects = useQuery(db, schema ? Filter.type(schema) : Filter.nothing());
   const selectedRows = useSelected(objectId, 'multi');
   const selectedObjects = selectedRows.map((id) => queriedObjects.find((obj) => obj.id === id)).filter(isNonNullable);
 

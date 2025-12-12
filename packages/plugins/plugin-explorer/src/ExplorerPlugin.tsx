@@ -29,7 +29,7 @@ export const ExplorerPlugin = definePlugin(meta, () => [
           iconHue: 'green',
           inputSchema: ExplorerAction.GraphProps,
           createObjectIntent: ((props, options) =>
-            createIntent(ExplorerAction.CreateGraph, { ...props, space: options.space })) satisfies CreateObjectIntent,
+            createIntent(ExplorerAction.CreateGraph, { ...props, space: options.db })) satisfies CreateObjectIntent,
         },
       }),
   }),
