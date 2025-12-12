@@ -121,7 +121,7 @@ export type EchoDatabaseParams = {
  * Implements EchoDatabase interface.
  */
 export class EchoDatabaseImpl extends Resource implements EchoDatabase {
-  readonly [Database.__DatabaseId] = true;
+  readonly [Database.TypeId]: typeof Database.TypeId = Database.TypeId;
 
   /**
    * @internal

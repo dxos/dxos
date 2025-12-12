@@ -120,13 +120,17 @@ export type FlushOptions = {
   updates?: boolean;
 };
 
-export const __DatabaseId = Symbol.for('@dxos/echo/Database');
+/**
+ * Identifier denoting an ECHO Database.
+ */
+export const TypeId = Symbol.for('@dxos/echo/Database');
+export type TypeId = typeof TypeId;
 
 /**
  * ECHO Database interface.
  */
 export interface Database extends Queryable {
-  readonly [__DatabaseId]: true;
+  readonly [TypeId]: TypeId;
 
   get spaceId(): SpaceId;
 
@@ -174,7 +178,7 @@ export interface Database extends Queryable {
 }
 
 export const isDatabase = (obj: unknown): obj is Database => {
-  return obj ? typeof obj === 'object' && __DatabaseId in obj && obj[__DatabaseId] === true : false;
+  return obj ? typeof obj === 'object' && TypeId in obj && obj[TypeId] === TypeId : false;
 };
 
 export const Database: Schema.Schema<Database> = Schema.Any.pipe(Schema.filter((space) => isDatabase(space)));
