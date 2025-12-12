@@ -124,6 +124,7 @@ const L1PanelHeader = ({ item, path, onBack }: L1PanelProps) => {
       <h2 className='flex-1 truncate min-is-0'>{title}</h2>
       {(backCapable && (
         <IconButton
+          data-testid='treeView.primaryTreeButton'
           variant='ghost'
           icon='ph--arrow-u-down-left--regular'
           iconOnly
