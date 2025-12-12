@@ -2,6 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
+/* eslint-disable no-console */
+
 import { statSync } from 'node:fs';
 import { writeFile } from 'node:fs/promises';
 import * as fs from 'node:fs/promises';

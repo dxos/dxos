@@ -60,7 +60,6 @@ export const ObjectForm = ({ object, schema }: ObjectFormProps) => {
         }
 
         const value = Obj.getValue(values, parts);
-        console.log('set value', isValid, parts, value);
         Obj.setValue(object, parts, value);
       }
     },

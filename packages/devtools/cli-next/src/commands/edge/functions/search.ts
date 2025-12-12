@@ -16,7 +16,7 @@ export const search = Command.make(
     const client = yield* ClientService;
 
     // Produce normalized in-memory FunctionType objects for display.
-    const fns = yield* Effect.promise(() => getDeployedFunctions(client));
-    yield* Console.log(JSON.stringify(fns, null, 2));
+    const functions = yield* Effect.promise(() => getDeployedFunctions(client, true));
+    yield* Console.log(JSON.stringify(functions, null, 2));
   }),
 ).pipe(Command.withDescription('Search functions deployed to EDGE.'));

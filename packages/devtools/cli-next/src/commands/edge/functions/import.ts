@@ -5,6 +5,7 @@
 import * as Args from '@effect/cli/Args';
 import * as Command from '@effect/cli/Command';
 import * as Options from '@effect/cli/Options';
+import * as Console from 'effect/Console';
 import * as Effect from 'effect/Effect';
 
 import { ClientService } from '@dxos/client';
@@ -40,7 +41,7 @@ export const importCommand = Command.make(
       }
 
       yield* Database.Service.add(Obj.clone(fn));
-      console.log(JSON.stringify(fn, null, 2));
+      yield* Console.log(JSON.stringify(fn, null, 2));
     }),
 ).pipe(
   Command.withDescription('Import a function deployed to EDGE.'),

@@ -5,6 +5,7 @@
 import * as Inspector from 'node:inspector/promises';
 
 import * as Command from '@effect/cli/Command';
+import * as Console from 'effect/Console';
 import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
 
@@ -19,8 +20,8 @@ export const inspector = Command.make(
 
     Inspector.open();
     const url = Inspector.url();
-    console.log('PID:', process.pid);
-    console.log('hint: In VSCode, use: `Attach to Node Process` and paste the PID above.');
+    yield* Console.log('PID:', process.pid);
+    yield* Console.log('hint: In VSCode, use: `Attach to Node Process` and paste the PID above.');
     return yield* Effect.forever(Effect.sleep(Duration.minutes(1)));
   }),
 );

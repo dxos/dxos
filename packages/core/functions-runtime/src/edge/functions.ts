@@ -2,6 +2,9 @@
 // Copyright 2024 DXOS.org
 //
 
+import * as Array from 'effect/Array';
+import * as Function$ from 'effect/Function';
+import * as Order from 'effect/Order';
 import { type DID } from 'iso-did/types';
 
 import { type Client } from '@dxos/client';
@@ -71,10 +74,10 @@ export const uploadWorkerFunction = async ({
 /**
  * @deprecated Use {@link FunctionsServiceClient} instead.
  */
-export const getDeployedFunctions = async (client: Client): Promise<Function.Function[]> => {
+export const getDeployedFunctions = async (client: Client, dedupe = false): Promise<Function.Function[]> => {
   const edgeClient = createEdgeClient(client);
   const result = await edgeClient.listFunctions();
-  return result.uploadedFunctions.flatMap((record: any) => {
+  const functions: Function.Function[] = result.uploadedFunctions.flatMap((record: any) => {
     // Record shape is determined by EDGE API. We defensively parse.
     const latest = record.latestVersion ?? {};
     const versionMeta = safeParseJson<any>(latest.versionMetaJSON);
@@ -94,6 +97,18 @@ export const getDeployedFunctions = async (client: Client): Promise<Function.Fun
     setUserFunctionIdInMetadata(Obj.getMeta(fn), record.id);
     return [fn];
   });
+
+  if (dedupe) {
+    return Function$.pipe(
+      functions,
+      Array.filter((_) => _.key !== undefined),
+      Array.sort(Order.reverse(Order.mapInput(Order.string, (_: Function.Function) => _.updated ?? ''))),
+      Array.dedupeWith((self, that) => self.key === that.key),
+      Array.sort(Order.mapInput(Order.string, (_: Function.Function) => _.key ?? '')),
+    );
+  } else {
+    return functions;
+  }
 };
 
 /**

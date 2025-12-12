@@ -2,6 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
+/* eslint-disable no-console */
+
 import * as BrowserKeyValueStore from '@effect/platform-browser/BrowserKeyValueStore';
 import { Atom, useAtomSet, useAtomValue } from '@effect-atom/atom-react';
 import * as Schema from 'effect/Schema';
@@ -82,7 +84,7 @@ export const SyncBench = () => {
     console.log('code', code);
     if (code) {
       queueMicrotask(async () => {
-        const invitation = await client.spaces.join(InvitationEncoder.decode(code));
+        const invitation = client.spaces.join(InvitationEncoder.decode(code));
         invitation.subscribe((state) => console.log(state));
         await invitation.wait();
         // TODO(dmaretskyi): Invitation missing spaceId.

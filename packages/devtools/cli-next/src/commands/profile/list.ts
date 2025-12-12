@@ -6,6 +6,7 @@ import { extname, join } from 'node:path';
 
 import * as Command from '@effect/cli/Command';
 import * as FileSystem from '@effect/platform/FileSystem';
+import * as Console from 'effect/Console';
 import * as Effect from 'effect/Effect';
 import * as Yaml from 'yaml';
 
@@ -40,15 +41,15 @@ export const list = Command.make(
     );
 
     for (const profile of profiles) {
-      console.log(profile.name);
+      yield* Console.log(profile.name);
       // console.log(
       // Chalk.underline(`Profile: ${Chalk.bold(profile.name)}`),
       // profile.isCurrent ? Chalk.green(' (current)') : '',
       // );
-      console.log('  Full path:', profile.fullPath);
-      console.log('  Storage path:', profile.storagePath);
-      console.log('  EDGE:', profile.edge);
-      console.log();
+      yield* Console.log('  Full path:', profile.fullPath);
+      yield* Console.log('  Storage path:', profile.storagePath);
+      yield* Console.log('  EDGE:', profile.edge);
+      yield* Console.log();
     }
   }),
 );
