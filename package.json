@@ -202,16 +202,16 @@
       "yarn"
     ],
     "overrides": {
-      "@automerge/automerge": "3.1.1",
+      "@automerge/automerge": "3.2.1",
       "@lezer/lr": "^1.4.2",
       "@types/node": "22.10.2",
-      "@types/react": "~19.2.2",
-      "@types/react-dom": "~19.2.2",
+      "@types/react": "~19.2.7",
+      "@types/react-dom": "~19.2.3",
       "ipfs-utils": "9.0.14",
       "micromatch": "^4.0.8",
       "nan": "2.19.0",
-      "react": "~19.2.0",
-      "react-dom": "~19.2.0"
+      "react": "~19.2.3",
+      "react-dom": "~19.2.3"
     },
     "patchedDependencies": {
       "random-access-idb@1.2.2": "patches/random-access-idb@1.2.2.patch",
