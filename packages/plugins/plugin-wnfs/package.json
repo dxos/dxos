@@ -32,9 +32,9 @@
     "src"
   ],
   "dependencies": {
-    "@codemirror/language": "^6.11.3",
-    "@codemirror/state": "^6.5.2",
-    "@codemirror/view": "^6.38.4",
+    "@codemirror/language": "catalog:",
+    "@codemirror/state": "catalog:",
+    "@codemirror/view": "catalog:",
     "@dxos/app-framework": "workspace:*",
     "@dxos/crypto": "workspace:*",
     "@dxos/echo": "workspace:*",
@@ -51,19 +51,19 @@
     "@dxos/react-ui-form": "workspace:*",
     "@dxos/react-ui-stack": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@ipld/car": "^5.3.3",
-    "@preact-signals/safe-react": "^0.9.0",
-    "blockstore-core": "^5.0.1",
-    "blockstore-idb": "^2.0.0",
-    "debounce": "^2.2.0",
-    "effect": "3.18.3",
-    "idb-keyval": "^6.2.1",
-    "interface-blockstore": "^5.2.10",
-    "it-all": "^3.0.6",
-    "multiformats": "^13.2.2",
-    "react-dropzone": "^14.2.3",
-    "uint8arrays": "^5.1.0",
-    "wnfs": "0.2.2"
+    "@ipld/car": "catalog:",
+    "@preact-signals/safe-react": "catalog:",
+    "blockstore-core": "catalog:",
+    "blockstore-idb": "catalog:",
+    "debounce": "catalog:",
+    "effect": "catalog:",
+    "idb-keyval": "catalog:",
+    "interface-blockstore": "catalog:",
+    "it-all": "catalog:",
+    "multiformats": "catalog:",
+    "react-dropzone": "catalog:",
+    "uint8arrays": "catalog:",
+    "wnfs": "catalog:"
   },
   "devDependencies": {
     "@dxos/random": "workspace:*",
@@ -73,7 +73,7 @@
     "@types/react-dom": "~19.2.2",
     "react": "~19.2.0",
     "react-dom": "~19.2.0",
-    "vite": "7.1.9"
+    "vite": "catalog:"
   },
   "peerDependencies": {
     "@dxos/react-ui": "workspace:*",
