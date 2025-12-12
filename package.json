@@ -35,12 +35,13 @@
     "toolbox": "vite-node tools/toolbox/src/main.ts"
   },
   "dependencies": {
+    "js-yaml": "catalog:",
     "tslib": "catalog:"
   },
   "devDependencies": {
     "@1password/op-js": "catalog:",
     "@cloudflare/vitest-pool-workers": "catalog:",
-    "@cloudflare/workers-types": "^4.20250803.0",
+    "@cloudflare/workers-types": "^4.20251210.0",
     "@dxos/async": "workspace:*",
     "@dxos/client": "workspace:*",
     "@dxos/dx-build": "workspace:*",

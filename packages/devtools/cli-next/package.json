@@ -56,6 +56,8 @@
     "effect": "catalog:",
     "esbuild": "catalog:",
     "solid-js": "catalog:",
+    "stage-js": "1.0.0-alpha.17",
+    "web-tree-sitter": "^0.25.10",
     "wtfnode": "catalog:",
     "yaml": "^2.5.0"
   },

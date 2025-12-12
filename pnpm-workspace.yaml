@@ -9,6 +9,8 @@ packages:
   - '!**/dist/**'
   - '!**/out/**'
 
+strictPeerDependencies: true
+
 catalog:
   3d-force-graph: ^1.76.1
   '@1password/op-js': ^0.1.13
@@ -66,11 +68,11 @@ catalog:
   '@effect/experimental': 0.57.11
   '@effect/language-service': ^0.62.1
   '@effect/opentelemetry': ^0.59.2
+  '@effect/platform': 0.93.6
   '@effect/platform-browser': 0.73.0
   '@effect/platform-bun': 0.86.0
   '@effect/printer': 0.47.0
   '@effect/printer-ansi': 0.47.0
-  '@effect/platform': 0.93.6
   '@effect/rpc': 0.72.2
   '@effect/schema': ^0.75.5
   '@effect/sql': 0.48.6
@@ -443,7 +445,7 @@ catalog:
   isomorphic-ws: ^5.0.0
   it-all: ^3.0.6
   js-clipper: 1.0.1
-  js-yaml: ^4.1.0
+  js-yaml: 4.1.1
   jsdom: ^27.0.0
   jsdom-global: ^3.0.2
   json-stable-stringify: ^1.3.0
@@ -652,79 +654,3 @@ catalog:
   zen-push: ^0.3.1
   zone.js: '>=0.11.4 <0.12.0-0 || >=0.13.0 <0.14.0-0 || >=0.14.0 <0.15.0-0'
   zx: ^8.4.1
-
-packageExtensions:
-  '@hot-loader/react-dom':
-    peerDependencies:
-      react: ^18.0.0
-  '@rollup/pluginutils':
-    peerDependencies:
-      rollup: ^2.0.0||^3.0.0
-  '@sammacbeth/random-access-idb-mutable-file':
-    dependencies:
-      buffer: ^6.0.3
-  '@storybook/html':
-    peerDependencies:
-      '@babel/core': '-'
-  abstract-leveldown:
-    dependencies:
-      buffer: ^6.0.3
-  addons-scanner-utils:
-    peerDependencies:
-      node-fetch: '-'
-  bl:
-    dependencies:
-      buffer: ^6.0.3
-  crc:
-    dependencies:
-      buffer: ^6.0.3
-  detective-typescript:
-    dependencies:
-      '@typescript-eslint/typescript-estree': 8.39.0
-  eslint-plugin-prefer-arrow-functions:
-    dependencies:
-      '@typescript-eslint/types': 8.39.0
-      '@typescript-eslint/utils': 8.39.0
-  eslint-plugin-storybook:
-    dependencies:
-      '@typescript-eslint/types': 8.39.0
-      '@typescript-eslint/utils': 8.39.0
-  eslint-plugin-unused-imports:
-    peerDependencies:
-      '@typescript-eslint/eslint-plugin': ^6.5.0
-  level-codec:
-    dependencies:
-      buffer: ^6.0.3
-  level-js:
-    dependencies:
-      buffer: ^6.0.3
-  random-access-idb-mutable-file:
-    dependencies:
-      buffer: ^6.0.3
-  simple-handshake:
-    dependencies:
-      noise-protocol: 3.0.1
-  simple-hypercore-protocol:
-    dependencies:
-      noise-protocol: 3.0.1
-  storybook-addon-react-router-v6:
-    peerDependencies:
-      '@storybook/addons': ^7.0.0-beta
-      '@storybook/api': ^7.0.0-beta
-      '@storybook/components': ^7.0.0-beta
-      '@storybook/core-events': ^7.0.0-beta
-      '@storybook/theming': ^7.0.0-beta
-  typedoc:
-    peerDependencies:
-      typescript: ^5.0.0
-  unbzip2-stream:
-    dependencies:
-      buffer: ^6.0.3
-  vite-plugin-glslify:
-    peerDependencies:
-      vite: ^7.0.0
-  zen-push:
-    dependencies:
-      zen-observable: ^0.10.0
-
-strictPeerDependencies: true
