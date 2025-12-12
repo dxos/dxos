@@ -34,17 +34,17 @@ catalogs:
       specifier: ^1.0.3
       version: 1.0.3
     '@automerge/automerge-repo':
-      specifier: 2.4.0
-      version: 2.4.0
+      specifier: 2.5.1
+      version: 2.5.1
     '@automerge/automerge-repo-network-broadcastchannel':
-      specifier: 2.4.0
-      version: 2.4.0
+      specifier: 2.5.1
+      version: 2.5.1
     '@automerge/automerge-repo-network-websocket':
-      specifier: 2.4.0
-      version: 2.4.0
+      specifier: 2.5.1
+      version: 2.5.1
     '@automerge/automerge-repo-storage-indexeddb':
-      specifier: 2.4.0
-      version: 2.4.0
+      specifier: 2.5.1
+      version: 2.5.1
     '@babel/core':
       specifier: ^7.18.13
       version: 7.28.0
@@ -2993,6 +2993,12 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
+      '@effect-atom/atom-react':
+        specifier: ^0.3.4
+        version: 0.3.4(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.18.3))(effect@3.18.3)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.18.3))(@effect/rpc@0.72.2(@effect/platform@0.93.6(effect@3.18.3))(effect@3.18.3))(effect@3.18.3)(react@19.2.0)(scheduler@0.27.0)
+      '@effect/platform-browser':
+        specifier: 0.72.0
+        version: 0.72.0(@effect/platform@0.93.6(effect@3.18.3))(effect@3.18.3)
       '@ngneat/falso':
         specifier: 'catalog:'
         version: 7.1.1
@@ -3008,6 +3014,9 @@ importers:
       '@trpc/server':
         specifier: 'catalog:'
         version: 10.45.2
+      effect:
+        specifier: 3.18.3
+        version: 3.18.3
       partysocket:
         specifier: 'catalog:'
         version: 1.1.6
@@ -4526,7 +4535,7 @@ importers:
         version: 3.1.1
       '@automerge/automerge-repo':
         specifier: 'catalog:'
-        version: 2.4.0
+        version: 2.5.1
       '@dxos/async':
         specifier: workspace:*
         version: link:../../../common/async
@@ -4660,7 +4669,7 @@ importers:
         version: 3.1.1
       '@automerge/automerge-repo':
         specifier: 'catalog:'
-        version: 2.4.0
+        version: 2.5.1
       '@dxos/async':
         specifier: workspace:*
         version: link:../../../common/async
@@ -4854,7 +4863,7 @@ importers:
         version: 1.7.1
       tsdown:
         specifier: ^0.16.6
-        version: 0.16.8(@typescript/native-preview@7.0.0-dev.20250808.1)(oxc-resolver@11.9.0)(synckit@0.11.11)(typescript@5.9.3)
+        version: 0.16.8(@typescript/native-preview@7.0.0-dev.20250808.1)(oxc-resolver@11.6.0)(synckit@0.11.11)(typescript@5.9.3)
       typescript:
         specifier: 'catalog:'
         version: 5.9.3
@@ -6973,13 +6982,13 @@ importers:
         version: 3.1.1
       '@automerge/automerge-repo':
         specifier: 'catalog:'
-        version: 2.4.0
+        version: 2.5.1
       '@automerge/automerge-repo-network-websocket':
         specifier: 'catalog:'
-        version: 2.4.0
+        version: 2.5.1
       '@automerge/automerge-repo-storage-indexeddb':
         specifier: 'catalog:'
-        version: 2.4.0
+        version: 2.5.1
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
@@ -13254,7 +13263,7 @@ importers:
         version: 3.1.1
       '@automerge/automerge-repo':
         specifier: 'catalog:'
-        version: 2.4.0
+        version: 2.5.1
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
@@ -13435,7 +13444,7 @@ importers:
         version: 3.1.1
       '@automerge/automerge-repo':
         specifier: 'catalog:'
-        version: 2.4.0
+        version: 2.5.1
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
@@ -13698,7 +13707,7 @@ importers:
         version: 3.1.1
       '@automerge/automerge-repo':
         specifier: 'catalog:'
-        version: 2.4.0
+        version: 2.5.1
       '@dxos/client':
         specifier: workspace:*
         version: link:../client
@@ -16020,10 +16029,10 @@ importers:
     devDependencies:
       '@automerge/automerge-repo':
         specifier: 'catalog:'
-        version: 2.4.0
+        version: 2.5.1
       '@automerge/automerge-repo-network-broadcastchannel':
         specifier: 'catalog:'
-        version: 2.4.0
+        version: 2.5.1
       '@dxos/config':
         specifier: workspace:*
         version: link:../../sdk/config
@@ -18391,17 +18400,17 @@ packages:
   '@atlaskit/pragmatic-drag-and-drop@1.4.0':
     resolution: {integrity: sha512-qRY3PTJIcxfl/QB8Gwswz+BRvlmgAC5pB+J2hL6dkIxgqAgVwOhAamMUKsrOcFU/axG2Q7RbNs1xfoLKDuhoPg==}
 
-  '@automerge/automerge-repo-network-broadcastchannel@2.4.0':
-    resolution: {integrity: sha512-e/zPfrR7GdYNEH9ThIyAsVhlsPHUQTpzXhLLYpqNcX/oevNDxhBILWiSymJYNAOOfxB+b/8a6TDgbRf9jY4A1A==}
+  '@automerge/automerge-repo-network-broadcastchannel@2.5.1':
+    resolution: {integrity: sha512-htjVAPOzWvaal7jXkXhMBWW1OLHBAmGJp3fujdxgMmHa6/KUmhmHsn7VGvVqrU3vCfbfdu5PAupcla95AwlEbA==}
 
-  '@automerge/automerge-repo-network-websocket@2.4.0':
-    resolution: {integrity: sha512-xdJEMO+7oK40Y7hs/YyiTwaOrgxWv4JCQlQnVZ5KlGIkTwyzFoPguZYZskxYIJqmx239XXm8YikVsmm0CSSlDQ==}
+  '@automerge/automerge-repo-network-websocket@2.5.1':
+    resolution: {integrity: sha512-urvhlmTZ6VoJi5o0T2mtkVd4X1cuUdBC5/C/UY5FFgWczEq7PwCdNhUndv1CQSn8ePPsT59z7ZnRzZJbqqu22Q==}
 
-  '@automerge/automerge-repo-storage-indexeddb@2.4.0':
-    resolution: {integrity: sha512-oZlcr0Cp091aKr01F5YMPLhxpUxNfTEL6q/Ywjf7wMruSCWApA6Lt/S/jbU4bXIyvwjLUPQ6Ok7dzk1dr6Sdsg==}
+  '@automerge/automerge-repo-storage-indexeddb@2.5.1':
+    resolution: {integrity: sha512-klyemjiwEn2+PW+NTjvBtjmykjJVoaBbQgk5P02jIgvAO7KH8OACldFzPrJdO0o6WAxkiOdtte8RHFKrDPkBlw==}
 
-  '@automerge/automerge-repo@2.4.0':
-    resolution: {integrity: sha512-cpSl4VRyu4iDoxi1eFl91mAND+VXnZUt80Clxd15JMn6XD6RUzpAGVACVKLLhgsccqpQQ5VeFuyTFrszHV6PsA==}
+  '@automerge/automerge-repo@2.5.1':
+    resolution: {integrity: sha512-w242TXb2TaGHFux7dDtJIUVJMqSSq1iYvNia8FVYgVTUDvbm8chaGMe1kVdKMEINFiB/BNYPtsoJIPjJhQArLg==}
 
   '@automerge/automerge@3.1.1':
     resolution: {integrity: sha512-x7tZiMBLk4/SKYimVEVl1/wPntT9buGvLOWCey9ZcH8JUsB0dgm49C0S7Ojzgvflcs2hc/YjiXRPcFeFkinIgw==}
@@ -19738,12 +19747,27 @@ packages:
     peerDependencies:
       react: ~19.2.0
 
+  '@effect-atom/atom-react@0.3.4':
+    resolution: {integrity: sha512-1udCtYBTP597a/xwVfIku2NyYV7sEvoLeoCXAOyAaVciRu2pJgLfq6BU9TWoVf3/nkQTQgcUYAKH3SBc1lUHhA==}
+    peerDependencies:
+      effect: ^3.18
+      react: ~19.2.0
+      scheduler: '*'
+
   '@effect-atom/atom-react@0.4.4':
     resolution: {integrity: sha512-EWT9WpB67GNCecxQXJdAZNVMhuk3VxpdDfojxg1wOgWmR5TPaGiXA74Jqa2Y9AEjSB0hMMAk7RNve2CoIikg2w==}
     peerDependencies:
       effect: ^3.19
       react: ~19.2.0
       scheduler: '*'
+
+  '@effect-atom/atom@0.3.4':
+    resolution: {integrity: sha512-bHRJtbHkbNwlDnyYHttwGO5lpXcFauH6qCU3/v5IlOPPOnN8MUmPqk5aDiBt+NzkkeTiLfSvkcWxwT/0WU6mqA==}
+    peerDependencies:
+      '@effect/experimental': ^0.56.0
+      '@effect/platform': ^0.92.1
+      '@effect/rpc': ^0.71.0
+      effect: ^3.18.4
 
   '@effect-atom/atom@0.4.10':
     resolution: {integrity: sha512-SEPDN4rbNsz0LTWfu4+a//OGh+zIpe64pJ4SJDFN1k07c9l171FTKCHIQHVwjK84vE+TxIj/Tg/JZzgxEkdMsQ==}
@@ -19839,6 +19863,12 @@ packages:
         optional: true
       '@opentelemetry/sdk-trace-web':
         optional: true
+
+  '@effect/platform-browser@0.72.0':
+    resolution: {integrity: sha512-xLlhR2S5yGo7//i8rTOiu1wCyrmrotXk+lK7Y257odxmQ2+HhV4wA2E+xFa0bFbHnqFCE3Yza9r0BkA3y1tgag==}
+    peerDependencies:
+      '@effect/platform': ^0.92.0
+      effect: ^3.18.0
 
   '@effect/platform-browser@0.73.0':
     resolution: {integrity: sha512-G/LWu+roBHtjb9JEpCYe47XG0oB2xlUIp7fBQznDPYYMksqtrusEdtVtAWfPhO21aNvVmv7+agonisxK2vGaCQ==}
@@ -29566,6 +29596,9 @@ packages:
   ee-first@1.1.1:
     resolution: {integrity: sha512-WMwm9LhRUo+WUaRN+vRuETqG89IgZphVSNkdFgeb6sS/E4OrDIN7t48CAewSHXc6C8lefD8KKfr5vY61brQlow==}
 
+  effect@3.18.3:
+    resolution: {integrity: sha512-CmsQdMJdcBk+HigAtiNYb0Fp2xHtZmHjuCgYXDF74IGCCk+4EvQwQG4oHwG4XLFSqQ9eTIOIJ/+4FOYP05aBHg==}
+
   effect@3.19.11:
     resolution: {integrity: sha512-UTEj3c1s41Ha3uzSPKKvFBZaDjZ8ez00Q2NYWVm2mKh2LXeX8j6LTg1HcQHnmdUhOjr79KHmhVWYB/zbegLO1A==}
 
@@ -38607,32 +38640,32 @@ snapshots:
       bind-event-listener: 3.0.0
       raf-schd: 4.0.3
 
-  '@automerge/automerge-repo-network-broadcastchannel@2.4.0':
+  '@automerge/automerge-repo-network-broadcastchannel@2.5.1':
     dependencies:
-      '@automerge/automerge-repo': 2.4.0
+      '@automerge/automerge-repo': 2.5.1
     transitivePeerDependencies:
       - supports-color
 
-  '@automerge/automerge-repo-network-websocket@2.4.0':
+  '@automerge/automerge-repo-network-websocket@2.5.1':
     dependencies:
-      '@automerge/automerge-repo': 2.4.0
+      '@automerge/automerge-repo': 2.5.1
       cbor-x: 1.5.4
       debug: 4.4.3
       eventemitter3: 5.0.1
-      isomorphic-ws: 5.0.0(ws@8.18.2)
-      ws: 8.18.2
+      isomorphic-ws: 5.0.0(ws@8.18.3)
+      ws: 8.18.3
     transitivePeerDependencies:
       - bufferutil
       - supports-color
       - utf-8-validate
 
-  '@automerge/automerge-repo-storage-indexeddb@2.4.0':
+  '@automerge/automerge-repo-storage-indexeddb@2.5.1':
     dependencies:
-      '@automerge/automerge-repo': 2.4.0
+      '@automerge/automerge-repo': 2.5.1
     transitivePeerDependencies:
       - supports-color
 
-  '@automerge/automerge-repo@2.4.0':
+  '@automerge/automerge-repo@2.5.1':
     dependencies:
       '@automerge/automerge': 3.1.1
       bs58check: 3.0.1
@@ -40675,7 +40708,7 @@ snapshots:
       '@vladfrangu/async_event_emitter': 2.2.4
       discord-api-types: 0.37.61
       tslib: 2.8.1
-      ws: 8.18.2
+      ws: 8.18.3
     transitivePeerDependencies:
       - bufferutil
       - utf-8-validate
@@ -40713,6 +40746,17 @@ snapshots:
       react: 19.2.0
       tslib: 2.8.1
 
+  '@effect-atom/atom-react@0.3.4(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.18.3))(effect@3.18.3)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.18.3))(@effect/rpc@0.72.2(@effect/platform@0.93.6(effect@3.18.3))(effect@3.18.3))(effect@3.18.3)(react@19.2.0)(scheduler@0.27.0)':
+    dependencies:
+      '@effect-atom/atom': 0.3.4(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.18.3))(effect@3.18.3)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.18.3))(@effect/rpc@0.72.2(@effect/platform@0.93.6(effect@3.18.3))(effect@3.18.3))(effect@3.18.3)
+      effect: 3.18.3
+      react: 19.2.0
+      scheduler: 0.27.0
+    transitivePeerDependencies:
+      - '@effect/experimental'
+      - '@effect/platform'
+      - '@effect/rpc'
+
   '@effect-atom/atom-react@0.4.4(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(@effect/rpc@0.72.2(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)(react@19.2.0)(scheduler@0.27.0)':
     dependencies:
       '@effect-atom/atom': 0.4.10(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(@effect/rpc@0.72.2(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)
@@ -40723,6 +40767,13 @@ snapshots:
       - '@effect/experimental'
       - '@effect/platform'
       - '@effect/rpc'
+
+  '@effect-atom/atom@0.3.4(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.18.3))(effect@3.18.3)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.18.3))(@effect/rpc@0.72.2(@effect/platform@0.93.6(effect@3.18.3))(effect@3.18.3))(effect@3.18.3)':
+    dependencies:
+      '@effect/experimental': 0.57.11(@effect/platform@0.93.6(effect@3.18.3))(effect@3.18.3)(ioredis@5.3.2)
+      '@effect/platform': 0.93.6(effect@3.18.3)
+      '@effect/rpc': 0.72.2(@effect/platform@0.93.6(effect@3.18.3))(effect@3.18.3)
+      effect: 3.18.3
 
   '@effect-atom/atom@0.4.10(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(@effect/rpc@0.72.2(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)':
     dependencies:
@@ -40774,6 +40825,14 @@ snapshots:
       effect: 3.19.11
       kubernetes-types: 1.30.0
 
+  '@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.18.3))(effect@3.18.3)(ioredis@5.3.2)':
+    dependencies:
+      '@effect/platform': 0.93.6(effect@3.18.3)
+      effect: 3.18.3
+      uuid: 11.1.0
+    optionalDependencies:
+      ioredis: 5.3.2
+
   '@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2)':
     dependencies:
       '@effect/platform': 0.93.6(effect@3.19.11)
@@ -40797,6 +40856,12 @@ snapshots:
       '@opentelemetry/sdk-trace-base': 2.1.0(@opentelemetry/api@1.9.0)
       '@opentelemetry/sdk-trace-node': 2.1.0(@opentelemetry/api@1.9.0)
       '@opentelemetry/sdk-trace-web': 2.1.0(@opentelemetry/api@1.9.0)
+
+  '@effect/platform-browser@0.72.0(@effect/platform@0.93.6(effect@3.18.3))(effect@3.18.3)':
+    dependencies:
+      '@effect/platform': 0.93.6(effect@3.18.3)
+      effect: 3.18.3
+      multipasta: 0.2.7
 
   '@effect/platform-browser@0.73.0(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)':
     dependencies:
@@ -40846,6 +40911,13 @@ snapshots:
       - bufferutil
       - utf-8-validate
 
+  '@effect/platform@0.93.6(effect@3.18.3)':
+    dependencies:
+      effect: 3.18.3
+      find-my-way-ts: 0.1.6
+      msgpackr: 1.11.5
+      multipasta: 0.2.7
+
   '@effect/platform@0.93.6(effect@3.19.11)':
     dependencies:
       effect: 3.19.11
@@ -40863,6 +40935,12 @@ snapshots:
     dependencies:
       '@effect/typeclass': 0.38.0(effect@3.19.11)
       effect: 3.19.11
+
+  '@effect/rpc@0.72.2(@effect/platform@0.93.6(effect@3.18.3))(effect@3.18.3)':
+    dependencies:
+      '@effect/platform': 0.93.6(effect@3.18.3)
+      effect: 3.18.3
+      msgpackr: 1.11.5
 
   '@effect/rpc@0.72.2(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)':
     dependencies:
@@ -51585,10 +51663,6 @@ snapshots:
     optionalDependencies:
       oxc-resolver: 11.6.0
 
-  dts-resolver@2.1.3(oxc-resolver@11.9.0):
-    optionalDependencies:
-      oxc-resolver: 11.9.0
-
   dunder-proto@1.0.1:
     dependencies:
       call-bind-apply-helpers: 1.0.2
@@ -51638,6 +51712,11 @@ snapshots:
       semver: 7.7.3
 
   ee-first@1.1.1: {}
+
+  effect@3.18.3:
+    dependencies:
+      '@standard-schema/spec': 1.0.0
+      fast-check: 3.23.2
 
   effect@3.19.11:
     dependencies:
@@ -54113,7 +54192,7 @@ snapshots:
       type-fest: 4.41.0
       widest-line: 5.0.0
       wrap-ansi: 9.0.2
-      ws: 8.18.2
+      ws: 8.18.3
       yoga-wasm-web: 0.3.3
     optionalDependencies:
       '@types/react': 19.2.2
@@ -54576,6 +54655,10 @@ snapshots:
   isomorphic-ws@5.0.0(ws@8.18.2):
     dependencies:
       ws: 8.18.2
+
+  isomorphic-ws@5.0.0(ws@8.18.3):
+    dependencies:
+      ws: 8.18.3
 
   isomorphic.js@0.2.5: {}
 
@@ -59078,24 +59161,6 @@ snapshots:
     transitivePeerDependencies:
       - oxc-resolver
 
-  rolldown-plugin-dts@0.18.3(@typescript/native-preview@7.0.0-dev.20250808.1)(oxc-resolver@11.9.0)(rolldown@1.0.0-beta.52)(typescript@5.9.3):
-    dependencies:
-      '@babel/generator': 7.28.5
-      '@babel/parser': 7.28.5
-      '@babel/types': 7.28.5
-      ast-kit: 2.2.0
-      birpc: 3.0.0
-      dts-resolver: 2.1.3(oxc-resolver@11.9.0)
-      get-tsconfig: 4.13.0
-      magic-string: 0.30.21
-      obug: 2.1.1
-      rolldown: 1.0.0-beta.52
-    optionalDependencies:
-      '@typescript/native-preview': 7.0.0-dev.20250808.1
-      typescript: 5.9.3
-    transitivePeerDependencies:
-      - oxc-resolver
-
   rolldown@1.0.0-beta.52:
     dependencies:
       '@oxc-project/types': 0.99.0
@@ -60875,32 +60940,6 @@ snapshots:
       obug: 2.1.1
       rolldown: 1.0.0-beta.52
       rolldown-plugin-dts: 0.18.3(@typescript/native-preview@7.0.0-dev.20250808.1)(oxc-resolver@11.6.0)(rolldown@1.0.0-beta.52)(typescript@5.9.3)
-      semver: 7.7.3
-      tinyexec: 1.0.2
-      tinyglobby: 0.2.15
-      tree-kill: 1.2.2
-      unconfig-core: 7.4.2
-      unrun: 0.2.19(synckit@0.11.11)
-    optionalDependencies:
-      typescript: 5.9.3
-    transitivePeerDependencies:
-      - '@ts-macro/tsc'
-      - '@typescript/native-preview'
-      - oxc-resolver
-      - synckit
-      - vue-tsc
-
-  tsdown@0.16.8(@typescript/native-preview@7.0.0-dev.20250808.1)(oxc-resolver@11.9.0)(synckit@0.11.11)(typescript@5.9.3):
-    dependencies:
-      ansis: 4.2.0
-      cac: 6.7.14
-      chokidar: 5.0.0
-      diff: 8.0.2
-      empathic: 2.0.0
-      hookable: 5.5.3
-      obug: 2.1.1
-      rolldown: 1.0.0-beta.52
-      rolldown-plugin-dts: 0.18.3(@typescript/native-preview@7.0.0-dev.20250808.1)(oxc-resolver@11.9.0)(rolldown@1.0.0-beta.52)(typescript@5.9.3)
       semver: 7.7.3
       tinyexec: 1.0.2
       tinyglobby: 0.2.15

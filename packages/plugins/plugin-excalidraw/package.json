@@ -24,7 +24,13 @@
     "src"
   ],
   "dependencies": {
+<<<<<<< HEAD
     "@automerge/automerge": "catalog:",
+||||||| 5b94dae4c4
+    "@automerge/automerge": "3.1.2",
+=======
+    "@automerge/automerge": "3.2.1",
+>>>>>>> origin/main
     "@dxos/app-framework": "workspace:*",
     "@dxos/async": "workspace:*",
     "@dxos/echo": "workspace:*",

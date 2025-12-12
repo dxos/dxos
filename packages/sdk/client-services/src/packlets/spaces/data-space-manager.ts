@@ -23,7 +23,6 @@ import {
   DatabaseRoot,
   type EchoEdgeReplicator,
   type EchoHost,
-  FIND_PARAMS,
   type MeshEchoReplicator,
   type MetadataStore,
   type Space,
@@ -180,7 +179,7 @@ export class DataSpaceManager extends Resource {
           Array.from(this._spaces.values()).map(async (space) => {
             const rootUrl = space.automergeSpaceState.rootUrl;
             const rootHandle = rootUrl
-              ? await this._echoHost.automergeRepo.find<Doc<DatabaseDirectory>>(rootUrl as AutomergeUrl, FIND_PARAMS)
+              ? await this._echoHost.loadDoc<Doc<DatabaseDirectory>>(Context.default(), rootUrl as AutomergeUrl)
               : undefined;
             await rootHandle?.whenReady();
             const rootDoc = rootHandle?.doc();
@@ -388,7 +387,9 @@ export class DataSpaceManager extends Resource {
   private async _getSpaceRootDocument(space: DataSpace): Promise<DocHandle<DatabaseDirectory>> {
     const automergeIndex = space.automergeSpaceState.rootUrl;
     invariant(automergeIndex);
-    const document = await this._echoHost.automergeRepo.find<DatabaseDirectory>(automergeIndex as any, FIND_PARAMS);
+    const document = await this._echoHost.loadDoc<DatabaseDirectory>(Context.default(), automergeIndex as any, {
+      fetchFromNetwork: true,
+    });
     await document.whenReady();
     return document;
   }

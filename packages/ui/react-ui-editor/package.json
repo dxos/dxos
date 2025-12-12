@@ -34,7 +34,12 @@
     "vitest-ui": "vitest --ui"
   },
   "dependencies": {
+<<<<<<< HEAD
     "@automerge/automerge": "catalog:",
+||||||| 5b94dae4c4
+=======
+    "@automerge/automerge": "3.2.1",
+>>>>>>> origin/main
     "@codemirror/autocomplete": "catalog:",
     "@codemirror/commands": "catalog:",
     "@codemirror/lang-html": "catalog:",
@@ -89,9 +94,27 @@
     "style-mod": "catalog:"
   },
   "devDependencies": {
+<<<<<<< HEAD
     "@automerge/automerge": "catalog:",
+||||||| 5b94dae4c4
+    "@automerge/automerge": "3.1.2",
+=======
+    "@automerge/automerge": "3.2.1",
+>>>>>>> origin/main
+<<<<<<< HEAD
     "@automerge/automerge-repo": "catalog:",
+||||||| 5b94dae4c4
+    "@automerge/automerge-repo": "2.4.0",
+=======
+    "@automerge/automerge-repo": "2.5.1",
+>>>>>>> origin/main
+<<<<<<< HEAD
     "@automerge/automerge-repo-network-broadcastchannel": "catalog:",
+||||||| 5b94dae4c4
+    "@automerge/automerge-repo-network-broadcastchannel": "2.4.0",
+=======
+    "@automerge/automerge-repo-network-broadcastchannel": "2.5.1",
+>>>>>>> origin/main
     "@dxos/config": "workspace:*",
     "@dxos/echo": "workspace:*",
     "@dxos/echo-signals": "workspace:*",

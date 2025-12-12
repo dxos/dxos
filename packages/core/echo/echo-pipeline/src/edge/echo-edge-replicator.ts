@@ -17,6 +17,7 @@ import {
   type AutomergeProtocolMessage,
   DocumentCodec,
   EdgeService,
+  type ErrorProtocolMessage,
   type ExportBundleRequest,
   type ImportBundleRequest,
   type PeerId,
@@ -107,6 +108,7 @@ export class EchoEdgeReplicator implements EchoReplicator {
   }
 
   async connectToSpace(spaceId: SpaceId): Promise<void> {
+    log('connectToSpace', { spaceId });
     using _guard = await this._mutex.acquire();
 
     if (this._connectedSpaces.has(spaceId)) {
@@ -387,6 +389,7 @@ class EdgeReplicatorConnection extends Resource implements ReplicatorConnection 
     // AutomergeReplicator might return a Forbidden error if the credentials are not yet replicated.
     // We restart the connection with some delay to account for that.
     if (isErrorMessage(message)) {
+      log.verbose('stream error', { error: (message as ErrorProtocolMessage).message });
       this._onRestartRequested();
       return;
     }
@@ -442,6 +445,7 @@ const getMessageInfo = (msg: AutomergeProtocolMessage) => {
   return {
     type: msg.type,
     documentId: 'documentId' in msg ? msg.documentId : undefined,
+    collectionId: 'collectionId' in msg ? msg.collectionId : undefined,
     have,
     heads,
     need,

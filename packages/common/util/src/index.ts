@@ -56,3 +56,4 @@ export * from './unit';
 export * from './url';
 export * from './weak';
 export * from './error-format';
+export * from './retry';

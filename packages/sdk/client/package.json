@@ -102,8 +102,20 @@
     "typedoc": "typedoc --out typedoc"
   },
   "dependencies": {
+<<<<<<< HEAD
     "@automerge/automerge": "catalog:",
+||||||| 5b94dae4c4
+    "@automerge/automerge": "3.1.2",
+=======
+    "@automerge/automerge": "3.2.1",
+>>>>>>> origin/main
+<<<<<<< HEAD
     "@automerge/automerge-repo": "catalog:",
+||||||| 5b94dae4c4
+    "@automerge/automerge-repo": "2.4.0",
+=======
+    "@automerge/automerge-repo": "2.5.1",
+>>>>>>> origin/main
     "@dxos/async": "workspace:*",
     "@dxos/client-protocol": "workspace:*",
     "@dxos/client-services": "workspace:*",
@@ -144,7 +156,13 @@
     "ua-parser-js": "catalog:"
   },
   "devDependencies": {
+<<<<<<< HEAD
     "@automerge/automerge": "catalog:",
+||||||| 5b94dae4c4
+    "@automerge/automerge": "3.1.2",
+=======
+    "@automerge/automerge": "3.2.1",
+>>>>>>> origin/main
     "@dxos/test-utils": "workspace:*",
     "@types/lodash.isequal": "catalog:",
     "@types/lodash.isequalwith": "catalog:",
