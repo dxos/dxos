@@ -1,8 +1,8 @@
 {
   "name": "tasks",
   "version": "0.1.0",
-  "description": "tasks - a DXOS application",
   "private": true,
+  "description": "tasks - a DXOS application",
   "type": "module",
   "scripts": {
     "build": "tsc --noEmit && vite build",
@@ -15,13 +15,13 @@
     "@dxos/react-client": "workspace:*",
     "@dxos/shell": "workspace:*",
     "@dxos/util": "workspace:*",
-    "react": "~19.2.0",
-    "react-dom": "~19.2.0",
+    "react": "catalog:",
+    "react-dom": "catalog:",
     "react-router-dom": "catalog:"
   },
   "devDependencies": {
-    "@types/react": "~19.2.2",
-    "@types/react-dom": "~19.2.2",
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
     "autoprefixer": "catalog:",
     "postcss": "catalog:",
     "tailwindcss": "catalog:",

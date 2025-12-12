@@ -19,9 +19,9 @@
     "@storybook/addon-vitest": "catalog:",
     "@storybook/builder-vite": "catalog:",
     "@storybook/web-components-vite": "catalog:",
-    "eslint-plugin-storybook": "^10.1.0",
+    "eslint-plugin-storybook": "catalog:",
     "lit": "catalog:",
-    "storybook": "^10.1.0",
+    "storybook": "catalog:",
     "vite": "catalog:"
   }
 }

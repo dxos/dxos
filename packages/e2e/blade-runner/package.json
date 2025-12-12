@@ -93,7 +93,7 @@
   },
   "devDependencies": {
     "@dxos/test-utils": "workspace:*",
-    "@types/js-yaml": "^4.0.5",
+    "@types/js-yaml": "catalog:",
     "@types/seedrandom": "catalog:",
     "@types/yargs": "catalog:",
     "chart.js": "catalog:",

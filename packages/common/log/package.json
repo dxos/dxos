@@ -33,13 +33,13 @@
   "dependencies": {
     "@dxos/node-std": "workspace:*",
     "@dxos/util": "workspace:*",
-    "chalk": "^4.1.0",
+    "chalk": "catalog:",
     "js-yaml": "catalog:",
     "lodash.defaultsdeep": "catalog:",
     "lodash.omit": "catalog:"
   },
   "devDependencies": {
-    "@types/js-yaml": "^4.0.5",
+    "@types/js-yaml": "catalog:",
     "@types/lodash.defaultsdeep": "catalog:",
     "@types/lodash.omit": "catalog:"
   },

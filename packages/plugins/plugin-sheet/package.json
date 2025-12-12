@@ -109,22 +109,22 @@
     "@lezer/generator": "catalog:",
     "@tldraw/indices": "catalog:",
     "@types/lodash.defaultsdeep": "catalog:",
-    "@types/react": "~19.2.2",
-    "@types/react-dom": "~19.2.2",
-    "@types/react-window": "^1.8.8",
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
+    "@types/react-window": "catalog:",
     "effect": "catalog:",
-    "react": "~19.2.0",
-    "react-dom": "~19.2.0",
+    "react": "catalog:",
+    "react-dom": "catalog:",
     "vite": "catalog:"
   },
   "peerDependencies": {
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
-    "@effect-atom/atom-react": "^0.3.4",
-    "@effect/platform": "^0.80.12",
-    "effect": "^3.13.3",
-    "react": "^19.0.0",
-    "react-dom": "^19.0.0"
+    "@effect-atom/atom-react": "catalog:",
+    "@effect/platform": "catalog:",
+    "effect": "catalog:",
+    "react": "catalog:",
+    "react-dom": "catalog:"
   },
   "publishConfig": {
     "access": "public"

@@ -50,9 +50,9 @@
     "@dxos/util": "workspace:*",
     "@fluentui/react-tabster": "catalog:",
     "@preact-signals/safe-react": "catalog:",
-    "@preact/signals-react": "^3.2.0",
+    "@preact/signals-react": "catalog:",
     "@radix-ui/react-context": "catalog:",
-    "@radix-ui/react-use-controllable-state": "^1.2.2",
+    "@radix-ui/react-use-controllable-state": "catalog:",
     "date-fns": "catalog:",
     "jsonpath": "catalog:"
   },
@@ -65,20 +65,20 @@
     "@dxos/react-ui-theme": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
     "@types/jsonpath": "catalog:",
-    "@types/react": "~19.2.2",
-    "@types/react-dom": "~19.2.2",
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
     "effect": "catalog:",
     "fast-check": "catalog:",
-    "react": "~19.2.0",
-    "react-dom": "~19.2.0",
+    "react": "catalog:",
+    "react-dom": "catalog:",
     "vite": "catalog:"
   },
   "peerDependencies": {
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
-    "effect": "^3.13.3",
-    "react": "^19.0.0",
-    "react-dom": "^19.0.0"
+    "effect": "catalog:",
+    "react": "catalog:",
+    "react-dom": "catalog:"
   },
   "publishConfig": {
     "access": "public"

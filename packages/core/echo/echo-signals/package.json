@@ -55,15 +55,15 @@
   "dependencies": {
     "@preact/signals": "catalog:",
     "@preact/signals-core": "catalog:",
-    "@preact/signals-react": "^3.3.0"
+    "@preact/signals-react": "catalog:"
   },
   "devDependencies": {
-    "preact": "^10.26.9",
-    "react": "~19.2.0"
+    "preact": "catalog:",
+    "react": "catalog:"
   },
   "optionalDependencies": {
-    "preact": "^10.26.9",
-    "react": "^19.2.0"
+    "preact": "catalog:",
+    "react": "catalog:"
   },
   "publishConfig": {
     "access": "public"

@@ -16,7 +16,7 @@
     "@dxos/util": "workspace:*",
     "fuzzy": "catalog:",
     "ink": "catalog:",
-    "react": "~19.2.0",
-    "yaml": "^2.7.0"
+    "react": "catalog:",
+    "yaml": "catalog:"
   }
 }

@@ -132,7 +132,7 @@ export const useFormHandler = <T extends AnyProperties>({
   const [errors, setErrors] = useState<Record<JsonPath, string>>({});
   const [saving, setSaving] = useState(false);
   const defaultValues = useDefaultValue<Partial<T>>(defaultValuesProp, () => ({}));
-  const [values, setValues] = useControllableState<Partial<T>>({
+  const [values$, setValues] = useControllableState<Partial<T>>({
     prop: valuesProp,
     defaultProp: defaultValues,
     onChange: () => {
@@ -143,6 +143,8 @@ export const useFormHandler = <T extends AnyProperties>({
       setSaving(false);
     },
   });
+  // TODO(wittjosiah): Upgrade @radix-ui/react-use-controllable-state.
+  const values = values$ as Partial<T>;
 
   // Validate.
   const validate = useCallback(

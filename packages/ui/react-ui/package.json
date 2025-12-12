@@ -60,7 +60,7 @@
     "@radix-ui/react-dismissable-layer": "catalog:",
     "@radix-ui/react-focus-guards": "catalog:",
     "@radix-ui/react-focus-scope": "catalog:",
-    "@radix-ui/react-id": "1.1.0",
+    "@radix-ui/react-id": "catalog:",
     "@radix-ui/react-menu": "catalog:",
     "@radix-ui/react-popper": "catalog:",
     "@radix-ui/react-portal": "catalog:",
@@ -76,11 +76,11 @@
     "@radix-ui/react-toggle-group": "catalog:",
     "@radix-ui/react-toolbar": "catalog:",
     "@radix-ui/react-tooltip": "catalog:",
-    "@radix-ui/react-use-controllable-state": "1.1.0",
+    "@radix-ui/react-use-controllable-state": "catalog:",
     "@radix-ui/react-visually-hidden": "catalog:",
     "aria-hidden": "catalog:",
     "date-fns": "catalog:",
-    "i18next": "^21.10.0",
+    "i18next": "catalog:",
     "keyborg": "catalog:",
     "react-i18next": "catalog:",
     "react-remove-scroll": "catalog:"
@@ -93,16 +93,16 @@
     "@dxos/react-ui-theme": "workspace:*",
     "@dxos/util": "workspace:*",
     "@phosphor-icons/react": "catalog:",
-    "@types/react": "~19.2.2",
-    "@types/react-dom": "~19.2.2",
-    "react": "~19.2.0",
-    "react-dom": "~19.2.0",
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
+    "react": "catalog:",
+    "react-dom": "catalog:",
     "vite": "catalog:"
   },
   "peerDependencies": {
     "@dxos/react-ui-theme": "workspace:*",
-    "react": "^19.0.0",
-    "react-dom": "^19.0.0"
+    "react": "catalog:",
+    "react-dom": "catalog:"
   },
   "publishConfig": {
     "access": "public"

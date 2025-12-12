@@ -89,7 +89,7 @@
   "devDependencies": {
     "@sentry/types": "catalog:",
     "@types/debug": "catalog:",
-    "@types/js-yaml": "^4.0.5",
+    "@types/js-yaml": "catalog:",
     "sentry-testkit": "catalog:",
     "zone.js": "catalog:"
   },

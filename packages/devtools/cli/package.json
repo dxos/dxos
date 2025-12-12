@@ -3,8 +3,8 @@
   "version": "0.8.3",
   "description": "DXOS CLI",
   "keywords": [
-    "dxos",
     "cli",
+    "dxos",
     "oclif"
   ],
   "homepage": "https://dxos.org",
@@ -63,7 +63,7 @@
     "@oclif/plugin-plugins": "catalog:",
     "@oclif/plugin-update": "catalog:",
     "@octokit/core": "catalog:",
-    "chalk": "^4.1.0",
+    "chalk": "catalog:",
     "cli-progress": "catalog:",
     "date-fns": "catalog:",
     "do-wrapper": "catalog:",
@@ -82,7 +82,7 @@
     "node-fetch": "catalog:",
     "pkg-up": "catalog:",
     "platform": "catalog:",
-    "react": "~19.2.0",
+    "react": "catalog:",
     "ws": "catalog:",
     "wtfnode": "catalog:"
   },
@@ -90,18 +90,18 @@
     "@oclif/test": "catalog:",
     "@types/cli-progress": "catalog:",
     "@types/fs-extra": "catalog:",
-    "@types/js-yaml": "^4.0.5",
+    "@types/js-yaml": "catalog:",
     "@types/lodash.defaultsdeep": "catalog:",
     "@types/node-fetch": "catalog:",
     "@types/platform": "catalog:",
-    "@types/react-dom": "~19.2.2",
+    "@types/react-dom": "catalog:",
     "oclif": "catalog:",
     "shx": "catalog:",
     "ts-node": "catalog:",
     "undici": "catalog:"
   },
   "peerDependencies": {
-    "undici": "*"
+    "undici": "catalog:"
   },
   "engines": {
     "node": ">=18.0.0"
