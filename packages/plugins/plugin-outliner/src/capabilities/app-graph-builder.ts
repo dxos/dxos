@@ -11,7 +11,6 @@ import { Obj, Relation } from '@dxos/echo';
 import { SystemTypeAnnotation } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
 import { createExtension } from '@dxos/plugin-graph';
-import { getSpace } from '@dxos/react-client/echo';
 import { HasSubject } from '@dxos/types';
 
 import { meta } from '../meta';
@@ -44,7 +43,7 @@ export default (context: PluginContext) =>
             }),
             Option.map((object) => {
               const id = Obj.getDXN(object).toString();
-              const space = getSpace(object);
+              const db = Obj.getDatabase(object);
               return [
                 /**
                  * Menu item to create new Outline object with a relation to the existing object.
@@ -57,12 +56,12 @@ export default (context: PluginContext) =>
                     disposition: 'list-item',
                   },
                   data: async () => {
-                    invariant(space);
+                    invariant(db);
                     const { dispatchPromise: dispatch } = context.getCapability(Capabilities.IntentDispatcher);
                     const { data } = await dispatch(createIntent(OutlineAction.CreateOutline));
                     if (data?.object) {
-                      space.db.add(data.object);
-                      space.db.add(
+                      db.add(data.object);
+                      db.add(
                         Relation.make(HasSubject.HasSubject, {
                           [Relation.Source]: data.object,
                           [Relation.Target]: object,

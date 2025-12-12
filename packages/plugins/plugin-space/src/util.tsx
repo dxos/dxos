@@ -8,7 +8,7 @@ import * as Function from 'effect/Function';
 import type * as Schema from 'effect/Schema';
 
 import { LayoutAction, type PromiseIntentDispatcher, chain, createIntent } from '@dxos/app-framework';
-import { type Entity, Filter, Obj, Query, type QueryResult, Ref, Type } from '@dxos/echo';
+import { type Database, type Entity, Filter, Obj, Query, type QueryResult, Ref, Type } from '@dxos/echo';
 import { EXPANDO_TYPENAME } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
 import { Migrations } from '@dxos/migrations';
@@ -22,7 +22,7 @@ import {
   type ReadableGraph,
   isGraphNode,
 } from '@dxos/plugin-graph';
-import { type Space, SpaceState, getSpace, isSpace } from '@dxos/react-client/echo';
+import { type Space, SpaceState, isSpace } from '@dxos/react-client/echo';
 import { ATTENDABLE_PATH_SEPARATOR } from '@dxos/react-ui-attention';
 import { type TreeData } from '@dxos/react-ui-list';
 import { Collection } from '@dxos/schema';
@@ -66,16 +66,16 @@ export const getSpaceDisplayName = (
 
 const getCollectionGraphNodePartials = ({
   collection,
-  space,
+  db,
   resolve,
 }: {
   collection: Collection.Collection;
-  space: Space;
+  db: Database.Database;
   resolve: (typename: string) => Record<string, any>;
 }) => {
   return {
     acceptPersistenceClass: new Set(['echo']),
-    acceptPersistenceKey: new Set([space.id]),
+    acceptPersistenceKey: new Set([db.spaceId]),
     role: 'branch',
     onRearrangeChildren: (nextOrder: unknown[]) => {
       // Change on disk.
@@ -128,8 +128,8 @@ const getCollectionGraphNodePartials = ({
     },
     onCopy: async (child: Node<Obj.Any>, index?: number) => {
       // Create clone of child and add to destination space.
-      const newObject = await cloneObject(child.data, resolve, space);
-      space.db.add(newObject);
+      const newObject = await cloneObject(child.data, resolve, db);
+      db.add(newObject);
       if (typeof index !== 'undefined') {
         collection.objects.splice(index, 0, Ref.make(newObject));
       } else {
@@ -141,11 +141,11 @@ const getCollectionGraphNodePartials = ({
 
 const getSystemCollectionNodePartials = ({
   collection,
-  space,
+  db,
   resolve,
 }: {
   collection: Collection.Managed;
-  space: Space;
+  db: Database.Database;
   resolve: (typename: string) => Record<string, any>;
 }) => {
   const metadata = resolve(collection.key);
@@ -154,7 +154,7 @@ const getSystemCollectionNodePartials = ({
     icon: metadata.icon,
     iconHue: metadata.iconHue,
     acceptPersistenceClass: new Set(['echo']),
-    acceptPersistenceKey: new Set([space.id]),
+    acceptPersistenceKey: new Set([db.spaceId]),
     role: 'branch',
   };
 };
@@ -193,7 +193,7 @@ export const constructSpaceNode = ({
     space.state.get() === SpaceState.SPACE_READY && space.properties[Collection.Collection.typename]?.target;
   const partials =
     space.state.get() === SpaceState.SPACE_READY && Obj.instanceOf(Collection.Collection, collection)
-      ? getCollectionGraphNodePartials({ collection, space, resolve })
+      ? getCollectionGraphNodePartials({ collection, db: space.db, resolve })
       : {};
 
   return {
@@ -305,7 +305,7 @@ export const constructSpaceActions = ({
         id: getId(SpaceAction.OpenCreateObject._tag),
         type: ACTION_TYPE,
         data: async () => {
-          await dispatch(createIntent(SpaceAction.OpenCreateObject, { target: space }));
+          await dispatch(createIntent(SpaceAction.OpenCreateObject, { target: space.db }));
         },
         properties: {
           label: ['create object in space label', { ns: meta.id }],
@@ -378,7 +378,7 @@ export const createStaticSchemaActions = ({
       data: async () => {
         await dispatch(
           createIntent(SpaceAction.OpenCreateObject, {
-            target: space,
+            target: space.db,
             views: true,
             initialFormValues: { typename: Type.getTypename(schema) },
           }),
@@ -430,7 +430,7 @@ export const createStaticSchemaActions = ({
       data: async () => {
         const result = await dispatch(
           createIntent(SpaceAction.Snapshot, {
-            space,
+            db: space.db,
             query: Query.select(Filter.type(schema)).ast,
           }),
         );
@@ -453,7 +453,7 @@ export const createStaticSchemaActions = ({
 };
 
 export const createObjectNode = ({
-  space,
+  db,
   object,
   disposition,
   droppable = true,
@@ -461,7 +461,7 @@ export const createObjectNode = ({
   managedCollectionChild = false,
   resolve,
 }: {
-  space: Space;
+  db: Database.Database;
   object: Obj.Any;
   disposition?: string;
   droppable?: boolean;
@@ -476,9 +476,9 @@ export const createObjectNode = ({
 
   const metadata = resolve(type);
   const partials = Obj.instanceOf(Collection.Collection, object)
-    ? getCollectionGraphNodePartials({ collection: object, space, resolve })
+    ? getCollectionGraphNodePartials({ collection: object, db, resolve })
     : Obj.instanceOf(Collection.Managed, object)
-      ? getSystemCollectionNodePartials({ collection: object, space, resolve })
+      ? getSystemCollectionNodePartials({ collection: object, db, resolve })
       : Obj.instanceOf(Type.PersistentType, object)
         ? getSchemaGraphNodePartials()
         : metadata.graphProps;
@@ -508,7 +508,7 @@ export const createObjectNode = ({
       disposition,
       testId: 'spacePlugin.object',
       persistenceClass: 'echo',
-      persistenceKey: space?.id,
+      persistenceKey: db.spaceId,
       selectable,
       managedCollectionChild,
       blockInstruction: (source: TreeData, instruction: Instruction) => {
@@ -547,8 +547,8 @@ export const constructObjectActions = ({
   deletable?: boolean;
   navigable?: boolean;
 }) => {
-  const space = getSpace(object);
-  invariant(space, 'Space not found');
+  const db = Obj.getDatabase(object);
+  invariant(db, 'Database not found');
   const typename = Obj.getTypename(object);
   invariant(typename, 'Object has no typename');
 
@@ -585,7 +585,7 @@ export const constructObjectActions = ({
             data: async () => {
               await dispatch(
                 createIntent(SpaceAction.OpenCreateObject, {
-                  target: space,
+                  target: db,
                   views: true,
                   initialFormValues: { typename: object.typename },
                 }),
@@ -604,14 +604,14 @@ export const constructObjectActions = ({
             data: async () => {
               const result = await dispatch(
                 createIntent(SpaceAction.Snapshot, {
-                  space,
+                  db,
                   query: Query.select(Filter.type(Type.toEffectSchema(object.jsonSchema))).ast,
                 }),
               );
               if (result.data?.snapshot) {
                 await downloadBlob(
                   result.data.snapshot,
-                  createFilename({ parts: [space.id, object.typename], ext: 'json' }),
+                  createFilename({ parts: [db.spaceId, object.typename], ext: 'json' }),
                 );
               }
             },
@@ -632,15 +632,15 @@ export const constructObjectActions = ({
               if (inputSchema) {
                 await dispatch(
                   createIntent(SpaceAction.OpenCreateObject, {
-                    target: space,
+                    target: db,
                     typename: managedCollection ? managedCollection.key : undefined,
                   }),
                 );
               } else {
                 await dispatch(
                   Function.pipe(
-                    createObjectIntent({}, { space }),
-                    chain(SpaceAction.AddObject, { target: space, hidden: true }),
+                    createObjectIntent({}, { db }),
+                    chain(SpaceAction.AddObject, { target: db, hidden: true }),
                     chain(LayoutAction.Open, { part: 'main' }),
                   ),
                 );
@@ -704,7 +704,7 @@ export const constructObjectActions = ({
             id: getId('copy-link'),
             type: ACTION_TYPE,
             data: async () => {
-              const url = `${window.location.origin}/${space.id}/${Obj.getDXN(object).toString()}`;
+              const url = `${window.location.origin}/${db.spaceId}/${Obj.getDXN(object).toString()}`;
               await navigator.clipboard.writeText(url);
             },
             properties: {
@@ -781,7 +781,7 @@ export const getNestedObjects = async (
 export const cloneObject = async (
   object: Obj.Any,
   resolve: (typename: string) => Record<string, any>,
-  newSpace: Space,
+  newDb: Database.Database,
 ): Promise<Obj.Any> => {
   const schema = Obj.getSchema(object);
   const typename = schema ? (Type.getTypename(schema) ?? EXPANDO_TYPENAME) : EXPANDO_TYPENAME;
@@ -789,5 +789,5 @@ export const cloneObject = async (
   const serializer = metadata.serializer;
   invariant(serializer, `No serializer for type: ${typename}`);
   const content = await serializer.serialize({ object });
-  return serializer.deserialize({ content, space: newSpace, newId: true });
+  return serializer.deserialize({ content, db: newDb, newId: true });
 };

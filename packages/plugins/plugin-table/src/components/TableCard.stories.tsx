@@ -75,7 +75,7 @@ const meta = {
         const [storedSchema] = await space.db.schemaRegistry.register([schema]);
 
         // Initialize table.
-        const { view, jsonSchema } = await View.makeFromSpace({ space, typename });
+        const { view, jsonSchema } = await View.makeFromDatabase({ db: space.db, typename });
         const table = Table.make({ view, jsonSchema });
         space.db.add(table);
 

@@ -15,7 +15,7 @@ import { defaultMap } from '@dxos/util';
 
 const MIN_QUERY_INTERVAL = 5_000;
 
-const POLL_INTERVAL = 30_000;
+const POLL_INTERVAL = 10_000;
 
 export type CollectionSynchronizerParams = {
   sendCollectionState: (collectionId: string, peerId: PeerId, state: CollectionState) => void;
@@ -78,6 +78,10 @@ export class CollectionSynchronizer extends Resource {
     log('setLocalCollectionState', { collectionId, state });
     this._getOrCreatePerCollectionState(collectionId).localState = state;
 
+    for (const peerId of this._connectedPeers) {
+      this._diffCollectionState(collectionId, peerId);
+    }
+
     queueMicrotask(async () => {
       if (!this._ctx.disposed && this._activeCollections.has(collectionId)) {
         this._refreshInterestedPeers(collectionId);
@@ -119,6 +123,7 @@ export class CollectionSynchronizer extends Resource {
    * Callback when a connection to a peer is established.
    */
   onConnectionOpen(peerId: PeerId): void {
+    log('onConnectionOpen', { peerId });
     const spanId = getSpanName(peerId);
     trace.spanStart({
       id: spanId,
@@ -148,6 +153,8 @@ export class CollectionSynchronizer extends Resource {
    * Callback when a connection to a peer is closed.
    */
   onConnectionClosed(peerId: PeerId): void {
+    log('onConnectionClosed', { peerId });
+
     this._connectedPeers.delete(peerId);
 
     for (const perCollectionState of this._perCollectionStates.values()) {
@@ -173,8 +180,20 @@ export class CollectionSynchronizer extends Resource {
     log('onRemoteStateReceived', { collectionId, peerId, state });
     validateCollectionState(state);
     const perCollectionState = this._getOrCreatePerCollectionState(collectionId);
-    const existingState = perCollectionState.remoteStates.get(peerId) ?? { documents: {} };
-    const diff = diffCollectionState(existingState, state);
+    perCollectionState.remoteStates.set(peerId, state);
+    this._diffCollectionState(collectionId, peerId);
+  }
+
+  private _diffCollectionState(collectionId: string, peerId: PeerId) {
+    const perCollectionState = this._getOrCreatePerCollectionState(collectionId);
+    const remoteState = perCollectionState.remoteStates.get(peerId);
+    if (!remoteState) {
+      return;
+    }
+
+    log('diffCollectionState', { collectionId, peerId });
+    const localState = perCollectionState.localState ?? { documents: {} };
+    const diff = diffCollectionState(localState, remoteState);
     const spanId = getSpanName(peerId);
     if (diff.different.length === 0) {
       trace.spanEnd(spanId);
@@ -188,9 +207,20 @@ export class CollectionSynchronizer extends Resource {
         attributes: { peerId },
       });
     }
-    if (diff.missingOnLocal.length > 0 || diff.different.length > 0) {
-      perCollectionState.remoteStates.set(peerId, state);
-      this.remoteStateUpdated.emit({ peerId, collectionId, newDocsAppeared: diff.missingOnLocal.length > 0 });
+    log('diff', {
+      localState: localState.documents,
+      remoteState: remoteState.documents,
+      missingOnLocal: diff.missingOnLocal,
+      missingOnRemote: diff.missingOnRemote,
+      different: diff.different,
+    });
+    if (diff.missingOnLocal.length > 0 || diff.different.length > 0 || diff.missingOnRemote.length > 0) {
+      log('emit remote state update');
+      this.remoteStateUpdated.emit({
+        peerId,
+        collectionId,
+        newDocsAppeared: diff.missingOnLocal.length > 0,
+      });
     }
   }
 

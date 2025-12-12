@@ -49,7 +49,7 @@ export type AiSessionRunParams<Tools extends Record<string, Tool.Any>> = {
   objects?: Obj.Any[];
   blueprints?: Blueprint.Blueprint[];
   toolkit?: Toolkit.WithHandler<Tools>;
-  observer?: GenerationObserver;
+  observer?: GenerationObserver<Tools>;
 };
 
 export type AiSessionOptions = {};

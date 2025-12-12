@@ -9,6 +9,7 @@ import React, { StrictMode, useEffect, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { RouterProvider, createBrowserRouter } from 'react-router-dom';
 
+import { log } from '@dxos/log';
 import { initializeAppObservability } from '@dxos/observability';
 import { type Client, ClientProvider, Config, Defaults } from '@dxos/react-client';
 import { type ThemeMode, ThemeProvider } from '@dxos/react-ui';
@@ -16,6 +17,7 @@ import { defaultTx } from '@dxos/react-ui-theme';
 import { TRACE_PROCESSOR } from '@dxos/tracing';
 
 import { AppContainer, Error, Main } from './components';
+import { SyncBench } from './components/SyncBench';
 import { getConfig } from './config';
 import { Document, Item } from './data';
 import { translations } from './translations';
@@ -36,6 +38,10 @@ const router = createBrowserRouter([
         <Main />
       </AppContainer>
     ),
+  },
+  {
+    path: '/sync-bench',
+    element: <SyncBench />,
   },
 ]);
 
@@ -75,6 +81,8 @@ const main = async () => {
           type: 'module',
           name: 'dxos-client-worker',
         });
+
+  log.config({ filter: config.get('runtime.client.log.filter'), prefix: config.get('runtime.client.log.prefix') });
 
   const handleInitialized = async (client: Client) => {
     const searchParams = new URLSearchParams(location.search);

@@ -172,11 +172,11 @@ export default (context: PluginContext) =>
 
                     let meeting = state.activeMeeting;
                     if (!meeting) {
-                      const space = getSpace(channel);
-                      invariant(space);
+                      const db = Obj.getDatabase(channel);
+                      invariant(db);
                       const intent = Function.pipe(
                         createIntent(MeetingAction.Create, { channel }),
-                        chain(SpaceAction.AddObject, { target: space, hidden: true }),
+                        chain(SpaceAction.AddObject, { target: db, hidden: true }),
                         chain(MeetingAction.SetActive),
                       );
                       const { data } = await dispatch(intent);

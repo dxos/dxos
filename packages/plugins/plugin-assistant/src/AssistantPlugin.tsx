@@ -59,7 +59,7 @@ export const AssistantPlugin = definePlugin(meta, () => [
           icon: 'ph--atom--regular',
           iconHue: 'sky',
           createObjectIntent: ((_, options) =>
-            createIntent(AssistantAction.CreateChat, { space: options.space })) satisfies CreateObjectIntent,
+            createIntent(AssistantAction.CreateChat, { db: options.db })) satisfies CreateObjectIntent,
         },
       }),
       contributes(Capabilities.Metadata, {

@@ -443,10 +443,10 @@ export const WithMap: Story = {
     types: [View.View, Map.Map, Table.Table],
     onInit: async ({ space }) => {
       const [schema] = await space.db.schemaRegistry.register([createLocationSchema()]);
-      const { view: tableView, jsonSchema } = await View.makeFromSpace({ space, typename: schema.typename });
+      const { view: tableView, jsonSchema } = await View.makeFromDatabase({ db: space.db, typename: schema.typename });
       const table = Table.make({ name: 'Table', view: tableView, jsonSchema });
-      const { view: mapView } = await View.makeFromSpace({
-        space,
+      const { view: mapView } = await View.makeFromDatabase({
+        db: space.db,
         typename: schema.typename,
         pivotFieldName: 'location',
       });

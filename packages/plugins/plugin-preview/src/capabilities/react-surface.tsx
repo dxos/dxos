@@ -6,7 +6,6 @@ import React, { useCallback } from 'react';
 
 import { Capabilities, LayoutAction, contributes, createIntent, createSurface } from '@dxos/app-framework';
 import { Surface, SurfaceCardRole, useIntentDispatcher } from '@dxos/app-framework/react';
-import { getSpace } from '@dxos/client/echo';
 import { Obj } from '@dxos/echo';
 import { useActiveSpace } from '@dxos/plugin-space';
 import { type ProjectionModel } from '@dxos/schema';
@@ -30,7 +29,7 @@ export default () =>
       filter: (data): data is { subject: Person.Person } => Obj.instanceOf(Person.Person, data.subject),
       component: ({ data, role }) => {
         const { dispatchPromise: dispatch } = useIntentDispatcher();
-        const space = getSpace(data.subject);
+        const db = Obj.getDatabase(data.subject);
         const activeSpace = useActiveSpace(); // TODO(burdon): Disambiguate with space?
         const handleSelect = useCallback<NonNullable<CardPreviewProps['onSelect']>>(
           (object) =>
@@ -39,7 +38,7 @@ export default () =>
                 part: 'main',
                 subject: [Obj.getDXN(object).toString()],
                 options: {
-                  workspace: space?.id,
+                  workspace: db?.spaceId,
                 },
               }),
             ),
@@ -50,7 +49,7 @@ export default () =>
           <PersonCard
             role={role as SurfaceCardRole}
             subject={data.subject}
-            activeSpace={activeSpace}
+            db={activeSpace?.db}
             onSelect={handleSelect}
           >
             {role === 'card--popover' && <Surface role='related' data={data} />}
@@ -66,7 +65,7 @@ export default () =>
       component: ({ data, role }) => {
         const activeSpace = useActiveSpace();
         return (
-          <OrganizationCard role={role as SurfaceCardRole} subject={data.subject} activeSpace={activeSpace}>
+          <OrganizationCard role={role as SurfaceCardRole} subject={data.subject} db={activeSpace?.db}>
             {role === 'card--popover' && <Surface role='related' data={data} />}
           </OrganizationCard>
         );
@@ -78,7 +77,7 @@ export default () =>
       filter: (data): data is { subject: Project.Project } => Obj.instanceOf(Project.Project, data.subject),
       component: ({ data, role }) => {
         const activeSpace = useActiveSpace();
-        return <ProjectCard subject={data.subject} role={role as SurfaceCardRole} activeSpace={activeSpace} />;
+        return <ProjectCard subject={data.subject} role={role as SurfaceCardRole} db={activeSpace?.db} />;
       },
     }),
     createSurface({

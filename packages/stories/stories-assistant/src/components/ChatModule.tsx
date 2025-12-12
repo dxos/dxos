@@ -29,7 +29,7 @@ export const ChatModule = ({ space }: ComponentProps) => {
   const chat = chats.at(-1);
 
   const blueprintRegistry = useBlueprintRegistry();
-  const services = useChatServices({ space, chat });
+  const services = useChatServices({ id: space?.id, chat });
   const processor = useChatProcessor({ space, chat, preset, services, blueprintRegistry });
 
   if (!chat || !processor) {

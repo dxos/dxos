@@ -10,7 +10,6 @@ import { type PromiseIntentDispatcher, createIntent } from '@dxos/app-framework'
 import { Filter, Obj, Query, Relation } from '@dxos/echo';
 import { createDocAccessor, getTextInRange } from '@dxos/echo-db';
 import { type Markdown } from '@dxos/plugin-markdown/types';
-import { getSpace } from '@dxos/react-client/echo';
 import { comments, createExternalCommentSync } from '@dxos/react-ui-editor';
 import { AnchoredTo, Thread } from '@dxos/types';
 
@@ -28,14 +27,14 @@ const getName = (doc: Markdown.Document, anchor: string): string | undefined => 
  * Construct plugins.
  */
 export const threads = (state: ThreadState, doc?: Markdown.Document, dispatch?: PromiseIntentDispatcher): Extension => {
-  const space = getSpace(doc);
-  if (!doc || !space || !dispatch) {
+  const db = doc && Obj.getDatabase(doc);
+  if (!doc || !db || !dispatch) {
     // Include no-op comments extension here to ensure that the facets are always present when they are expected.
     // TODO(wittjosiah): The Editor should only look for these facets when comments are available.
     return [comments()];
   }
 
-  const query = space.db.query(Query.select(Filter.id(doc.id)).targetOf(AnchoredTo.AnchoredTo));
+  const query = db.query(Query.select(Filter.id(doc.id)).targetOf(AnchoredTo.AnchoredTo));
   const unsubscribe = query.subscribe();
 
   const anchors = computed(() =>

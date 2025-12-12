@@ -9,12 +9,12 @@
   "main": "./dist/src/index.js",
   "types": "./dist/src/index.d.ts",
   "dependencies": {
-    "debug": "^4.3.4",
-    "domain-browser": "^4.22.0",
-    "esbuild": "0.25.10",
-    "path-browserify": "^1.0.1",
-    "readable-stream": "^3.6.0",
-    "tty-browserify": "~0.0.1"
+    "debug": "catalog:",
+    "domain-browser": "catalog:",
+    "esbuild": "catalog:",
+    "path-browserify": "catalog:",
+    "readable-stream": "catalog:",
+    "tty-browserify": "catalog:"
   },
   "devDependencies": {},
   "publishConfig": {

@@ -3,6 +3,8 @@
 //
 
 import { Capabilities, type PluginContext, contributes, createResolver } from '@dxos/app-framework';
+import { invariant } from '@dxos/invariant';
+import { ClientCapabilities } from '@dxos/plugin-client';
 
 import { upload } from '../helpers';
 import { WnfsAction, WnfsFile } from '../types';
@@ -23,7 +25,10 @@ export default (context: PluginContext) =>
     }),
     createResolver({
       intent: WnfsAction.Upload,
-      resolve: async ({ file, space }) => {
+      resolve: async ({ file, db }) => {
+        const client = context.getCapability(ClientCapabilities.Client);
+        const space = client.spaces.get(db.spaceId);
+        invariant(space, 'Space not found');
         const blockstore = context.getCapability(WnfsCapabilities.Blockstore);
         const info = await upload({ file, blockstore, space });
         return { data: info };

@@ -4,8 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
-// TODO(burdon): Remove dependency.
-import { SpaceSchema } from '@dxos/client/echo';
+import { Database } from '@dxos/echo';
 import { Actor } from '@dxos/types';
 
 import { meta } from '../meta';
@@ -18,7 +17,7 @@ export namespace InboxAction {
 
   export class CreateMailbox extends Schema.TaggedClass<CreateMailbox>()(`${INBOX_ACTION}/create-mailbox`, {
     input: Schema.Struct({
-      space: SpaceSchema,
+      db: Database.Database,
       name: Schema.optional(Schema.String),
     }),
     output: Schema.Struct({
@@ -28,7 +27,7 @@ export namespace InboxAction {
 
   export class CreateCalendar extends Schema.TaggedClass<CreateCalendar>()(`${INBOX_ACTION}/create-calendar`, {
     input: Schema.Struct({
-      space: SpaceSchema,
+      db: Database.Database,
       name: Schema.optional(Schema.String),
     }),
     output: Schema.Struct({
@@ -38,7 +37,7 @@ export namespace InboxAction {
 
   export class ExtractContact extends Schema.TaggedClass<ExtractContact>()(`${INBOX_ACTION}/extract-contact`, {
     input: Schema.Struct({
-      space: SpaceSchema,
+      db: Database.Database,
       actor: Actor.Actor,
     }),
     output: Schema.Void,

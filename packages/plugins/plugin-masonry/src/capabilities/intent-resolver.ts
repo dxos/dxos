@@ -11,8 +11,8 @@ export default (context: PluginContext) =>
   contributes(Capabilities.IntentResolver, [
     createResolver({
       intent: MasonryAction.CreateMasonry,
-      resolve: async ({ space, name, typename }) => {
-        const { view } = await View.makeFromSpace({ space, typename });
+      resolve: async ({ db, name, typename }) => {
+        const { view } = await View.makeFromDatabase({ db, typename });
         const masonry = Masonry.make({ name, view });
         return { data: { object: masonry } };
       },

@@ -4,10 +4,10 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Filter } from '@dxos/echo';
+import { type Database, Filter } from '@dxos/echo';
 import { Trigger } from '@dxos/functions';
 import { TriggerDispatcher } from '@dxos/functions-runtime';
-import { type Space, useQuery } from '@dxos/react-client/echo';
+import { useQuery } from '@dxos/react-client/echo';
 import { useAsyncState } from '@dxos/react-ui';
 
 import { useComputeRuntimeCallback } from './useComputeRuntimeCallback';
@@ -19,15 +19,15 @@ interface TriggerRuntimeControls {
   stop: () => void;
 }
 
-export const useTriggerRuntimeControls = (space: Space | undefined): TriggerRuntimeControls => {
-  const triggers = useQuery(space?.db, Filter.type(Trigger.Trigger));
+export const useTriggerRuntimeControls = (db: Database.Database | undefined): TriggerRuntimeControls => {
+  const triggers = useQuery(db, Filter.type(Trigger.Trigger));
 
   const [isRunningState, setIsRunningState] = useAsyncState(
-    useComputeRuntimeCallback(space, () => TriggerDispatcher.pipe(Effect.map((t) => t.running))),
+    useComputeRuntimeCallback(db?.spaceId, () => TriggerDispatcher.pipe(Effect.map((t) => t.running))),
   );
 
   const start = useComputeRuntimeCallback(
-    space,
+    db?.spaceId,
     Effect.fnUntraced(function* () {
       const dispatcher = yield* TriggerDispatcher;
       yield* dispatcher.start();
@@ -36,7 +36,7 @@ export const useTriggerRuntimeControls = (space: Space | undefined): TriggerRunt
   );
 
   const stop = useComputeRuntimeCallback(
-    space,
+    db?.spaceId,
     Effect.fnUntraced(function* () {
       const dispatcher = yield* TriggerDispatcher;
       yield* dispatcher.stop();

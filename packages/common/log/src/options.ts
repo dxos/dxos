@@ -18,7 +18,9 @@ export const processors: Record<string, LogProcessor> = {
   [LogProcessorType.DEBUG]: DEBUG_PROCESSOR,
 };
 
-const browser = typeof window !== 'undefined' || typeof navigator !== 'undefined';
+const browser =
+  (typeof window !== 'undefined' || typeof navigator !== 'undefined') &&
+  !(typeof process !== 'undefined' && process?.env?.VITEST);
 
 export const DEFAULT_PROCESSORS = [browser ? BROWSER_PROCESSOR : CONSOLE_PROCESSOR];
 
