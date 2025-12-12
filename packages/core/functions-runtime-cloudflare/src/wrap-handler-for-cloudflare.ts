@@ -22,7 +22,6 @@ export const wrapHandlerForCloudflare = (func: FunctionProtocol.Func): ExportedH
     // TODO(mykola): Wrap in withNewExecutionContext;
     // Meta route is used to get the input schema of the function by the functions service.
     if (request.headers.get(FUNCTION_ROUTE_HEADER) === FunctionRouteValue.Meta) {
-      log.info('>>> meta', { func });
       return handleFunctionMetaCall(func, request);
     }
 
@@ -34,7 +33,7 @@ export const wrapHandlerForCloudflare = (func: FunctionProtocol.Func): ExportedH
         }
       }
 
-      const serviceContainer = new ServiceContainer({}, env.DATA_SERVICE, env.QUEUE_SERVICE, env.AI_SERVICE);
+      const serviceContainer = new ServiceContainer({}, env.DATA_SERVICE, env.QUEUE_SERVICE, env.FUNCTIONS_SERVICE);
       const context = await createFunctionContext({
         serviceContainer,
         contextSpaceId: spaceId as SpaceId | undefined,
@@ -105,7 +104,7 @@ const createFunctionContext = async ({
   serviceContainer: ServiceContainer;
   contextSpaceId: SpaceId | undefined;
 }): Promise<FunctionProtocol.Context> => {
-  const { dataService, queryService, queueService } = await serviceContainer.createServices();
+  const { dataService, queryService, queueService, functionsService } = await serviceContainer.createServices();
 
   let spaceKey: string | undefined;
   let rootUrl: string | undefined;
@@ -124,6 +123,7 @@ const createFunctionContext = async ({
       dataService,
       queryService,
       queueService,
+      functionsService,
     },
     spaceId: contextSpaceId,
     spaceKey,

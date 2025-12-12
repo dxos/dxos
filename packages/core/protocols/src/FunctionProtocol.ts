@@ -80,12 +80,10 @@ export interface Context {
     queueService?: QueueService;
 
     /**
-     * AI service.
+     * Functions service.
      * Available if the function is invoked in context of a space.
      */
-    aiService?: EdgeFunctionEnv.AiService;
-
-    // TODO(dmaretskyi): Add functionsService.
+    functionsService?: EdgeFunctionEnv.FunctionService;
   };
 
   /**

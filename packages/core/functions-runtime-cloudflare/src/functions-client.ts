@@ -14,6 +14,7 @@ import { SpaceProxy } from './space-proxy';
 type Services = {
   dataService: EdgeFunctionEnv.DataService;
   queueService: EdgeFunctionEnv.QueueService;
+  functionsService: EdgeFunctionEnv.FunctionService;
 };
 
 /**
@@ -31,7 +32,12 @@ export class FunctionsClient extends Resource {
     super();
     invariant(typeof services.dataService !== 'undefined', 'DataService is required');
     invariant(typeof services.queueService !== 'undefined', 'QueueService is required');
-    this._serviceContainer = new ServiceContainer(this._executionContext, services.dataService, services.queueService);
+    this._serviceContainer = new ServiceContainer(
+      this._executionContext,
+      services.dataService,
+      services.queueService,
+      services.functionsService,
+    );
     this._echoClient = new EchoClient({});
   }
 
@@ -69,6 +75,7 @@ export const createClientFromEnv = async (env: any): Promise<FunctionsClient> =>
   const client = new FunctionsClient({
     dataService: env.DATA_SERVICE,
     queueService: env.QUEUE_SERVICE,
+    functionsService: env.FUNCTIONS_SERVICE,
   });
   await client.open();
   return client;
