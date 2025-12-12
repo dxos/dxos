@@ -62,7 +62,7 @@
     "@moonrepo/cli": "1.41.7",
     "@octokit/rest": "^19.0.5",
     "@phosphor-icons/core": "^2.1.1",
-    "@playwright/test": "1.54.1",
+    "@playwright/test": "1.57.0",
     "@preact-signals/safe-react": "^0.9.0",
     "@rollup/plugin-inject": "^5.0.5",
     "@rushstack/eslint-patch": "^1.12.0",

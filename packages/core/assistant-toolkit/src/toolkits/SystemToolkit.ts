@@ -10,7 +10,7 @@ import * as Record from 'effect/Record';
 import * as Schema from 'effect/Schema';
 
 import { ArtifactId } from '@dxos/assistant';
-import { DXN, Obj, Relation, Tag, Type } from '@dxos/echo';
+import { DXN, Filter, Obj, Relation, Tag, Type } from '@dxos/echo';
 import { Database } from '@dxos/echo';
 import { trim } from '@dxos/util';
 
@@ -43,6 +43,23 @@ export const SystemToolkit = Toolkit.make(
       name: Schema.String,
       typename: Schema.String,
       jsonSchema: Schema.Any,
+    },
+    success: Schema.Any,
+    failure: Schema.Never,
+    dependencies: [Database.Service],
+  }),
+
+  //
+  // Query
+  //
+
+  Tool.make('query', {
+    description: trim`
+      Queries objects in the space.
+      Get the typename from the schema-list tool.
+    `,
+    parameters: {
+      typename: Schema.String,
     },
     success: Schema.Any,
     failure: Schema.Never,
@@ -179,6 +196,11 @@ export const layer = (): Layer.Layer<Tool.Handler<any>, never, never> =>
           },
         ]),
       );
+    }),
+
+    query: Effect.fnUntraced(function* ({ typename }) {
+      const objects = yield* Database.Service.runQuery(Filter.typename(typename));
+      return objects;
     }),
 
     'object-create': Effect.fnUntraced(function* ({ typename, data }) {

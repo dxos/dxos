@@ -6,23 +6,34 @@ import { type KeyEvent } from '@opentui/core';
 import { useKeyboard, useRenderer } from '@opentui/solid';
 import { type Accessor, type ParentProps, createContext, createEffect, createSignal, onMount } from 'solid-js';
 
+import { log } from '@dxos/log';
 import { isTruthy } from '@dxos/util';
 
+import { type LogBuffer } from '../../../util';
+import { DXOS_VERSION } from '../../../version';
 import { theme } from '../theme';
+
+import { Banner } from './Banner';
 
 export type KeyHandler = {
   hint: string;
   handler: (key: KeyEvent) => void;
 };
 
+/**
+ * App context.
+ */
 export const AppContext = createContext<{
   focus: Accessor<string | undefined>;
   hint: Accessor<string | undefined>;
+  processing: Accessor<boolean>;
+  setProcessing: (processing: boolean) => void;
 }>();
 
 export type AppProps = ParentProps<{
-  focusElements?: string[];
   showConsole?: boolean;
+  focusElements?: string[];
+  logBuffer?: LogBuffer;
 }>;
 
 /**
@@ -30,33 +41,47 @@ export type AppProps = ParentProps<{
  */
 // TODO(burdon): Factor out (common to all commands).
 export const App = (props: AppProps) => {
+  const renderer = useRenderer();
+  renderer.setBackgroundColor(theme.bg);
+  renderer.useConsole = props.showConsole ?? false;
+
   // Focus.
   const focusElements = [...(props.focusElements ?? [])];
   const [focus, setFocus] = createSignal<string | undefined>(props.focusElements?.[0]);
-  const [showConsole, setShowConsole] = createSignal<boolean>(props.showConsole ?? false);
+  const [showConsole, setShowConsole] = createSignal(false); // TODO(burdon): Option.
+  const [showBanner, setShowBanner] = createSignal(true);
+  const [processing, setProcessing] = createSignal(false);
 
   // Hints.
   const [hint, setHint] = createSignal<string | undefined>();
   const randomHint = () => {
     if (handlers.length) {
-      const idx = Math.floor(Math.random() * handlers.length);
-      setHint(handlers[idx].hint);
+      const hints = handlers.map((handler) => handler.hint);
+      const idx = Math.floor(Math.random() * hints.length);
+      setHint(hints[idx]);
     }
   };
 
+  // Hide banner when processing.
+  createEffect(() => {
+    if (processing()) {
+      setShowBanner(false);
+    }
+  });
+
   const handlers: KeyHandler[] = [
     //
-    // Quit
+    // Console
     //
-    {
-      hint: '[ctrl-c | esc]: Quit',
+    props.showConsole && {
+      hint: '[f1]: Toggle console',
       handler: (key: KeyEvent) => {
-        if (key.name === 'escape' || (key.ctrl && key.name === 'c')) {
-          renderer.destroy();
-          process.exit(0);
+        if (key.name === 'f1' && props.showConsole) {
+          setShowConsole(!showConsole());
         }
       },
     },
+
     //
     // Focus
     //
@@ -77,27 +102,8 @@ export const App = (props: AppProps) => {
         }
       },
     },
-    //
-    // Console
-    //
-    props.showConsole && {
-      hint: '[f1]: Toggle console',
-      handler: (key: KeyEvent) => {
-        if (key.name === 'f1' && props.showConsole) {
-          setShowConsole(!showConsole());
-        }
-      },
-    },
   ].filter(isTruthy);
 
-  const renderer = useRenderer();
-  onMount(() => {
-    console.log('OK');
-    renderer.setBackgroundColor(theme.bg);
-    randomHint();
-  });
-
-  renderer.useConsole = props.showConsole ?? false;
   createEffect(() => {
     if (!props.showConsole) {
       return;
@@ -106,23 +112,31 @@ export const App = (props: AppProps) => {
     // Use ctrl-p to cycle position; +/- to resize at runtime (when focused).
     if (showConsole()) {
       renderer.console.show();
-      renderer.console.focus();
       if (!focusElements.includes('console')) {
         focusElements.splice(0, 0, 'console');
       }
-      setFocus('console');
     } else {
       renderer.console.hide();
       const idx = focusElements.indexOf('console');
       if (idx !== -1) {
         focusElements.splice(idx, 1);
       }
+
       if (focus() === 'console') {
         setFocus(focusElements[0]);
       }
     }
 
     randomHint();
+  });
+
+  onMount(() => {
+    setFocus(props.focusElements?.[0]);
+    randomHint();
+
+    // Replay logs once.
+    props.logBuffer?.replay();
+    log.info('focus console then ctrl-s to save logs to file');
   });
 
   // Toggle focus between console and app content with tab.
@@ -132,5 +146,10 @@ export const App = (props: AppProps) => {
     });
   });
 
-  return <AppContext.Provider value={{ focus, hint }}>{props.children}</AppContext.Provider>;
+  return (
+    <AppContext.Provider value={{ focus, hint, processing, setProcessing }}>
+      {showBanner() && <Banner version={DXOS_VERSION} />}
+      {props.children}
+    </AppContext.Provider>
+  );
 };
