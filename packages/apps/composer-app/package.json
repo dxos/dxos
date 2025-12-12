@@ -117,7 +117,7 @@
     "@dxos/vite-plugin-icons": "workspace:*",
     "@dxos/vite-plugin-import-source": "workspace:*",
     "@effect/cli": "catalog:",
-    "@effect/platform": "0.93.6",
+    "@effect/platform": "catalog:",
     "@effect/platform-node": "0.103.0",
     "@sentry/vite-plugin": "catalog:",
     "@tauri-apps/cli": "catalog:",

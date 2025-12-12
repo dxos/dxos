@@ -70,6 +70,7 @@ catalog:
   '@effect/platform-bun': 0.86.0
   '@effect/printer': 0.47.0
   '@effect/printer-ansi': 0.47.0
+  '@effect/platform': 0.93.6
   '@effect/rpc': 0.72.2
   '@effect/schema': ^0.75.5
   '@effect/sql': 0.48.6

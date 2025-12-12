@@ -70,7 +70,7 @@
     "@dxos/react-ui-theme": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
     "@effect-atom/atom-react": "catalog:",
-    "@effect/platform": "0.93.6",
+    "@effect/platform": "catalog:",
     "@types/react": "~19.2.2",
     "@types/react-dom": "~19.2.2",
     "effect": "catalog:",

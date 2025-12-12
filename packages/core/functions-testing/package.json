@@ -43,7 +43,7 @@
     "@dxos/invariant": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/protocols": "workspace:*",
-    "@effect/platform": "0.93.6"
+    "@effect/platform": "catalog:"
   },
   "publishConfig": {
     "access": "public"

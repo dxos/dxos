@@ -156,6 +156,9 @@ catalogs:
     '@effect/opentelemetry':
       specifier: ^0.59.2
       version: 0.59.2
+    '@effect/platform':
+      specifier: 0.93.6
+      version: 0.93.6
     '@effect/platform-browser':
       specifier: 0.73.0
       version: 0.73.0
@@ -1918,7 +1921,7 @@ overrides:
   react: ~19.2.0
   react-dom: ~19.2.0
 
-packageExtensionsChecksum: sha256-VXmTT+NetylAox6quigfBiU2bnQlMcqaZeauyIwudyU=
+packageExtensionsChecksum: sha256-eEg00Hwsvi/FMA8jv7vbNQkOO6kBm3KlFTL6NPdVx6w=
 
 pnpmfileChecksum: sha256-167wTImkksLnOUsCo9vlgxE/vzjZHYBPOXqJamjXvfQ=
 
@@ -2667,7 +2670,7 @@ importers:
         specifier: 'catalog:'
         version: 0.72.1(@effect/platform@0.93.6(effect@3.19.11))(@effect/printer-ansi@0.47.0(@effect/typeclass@0.38.0(effect@3.19.11))(effect@3.19.11))(@effect/printer@0.47.0(@effect/typeclass@0.38.0(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)
       '@effect/platform':
-        specifier: 0.93.6
+        specifier: 'catalog:'
         version: 0.93.6(effect@3.19.11)
       '@effect/platform-node':
         specifier: 0.103.0
@@ -4452,7 +4455,7 @@ importers:
         specifier: 'catalog:'
         version: 0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2)
       '@effect/platform':
-        specifier: 0.93.6
+        specifier: 'catalog:'
         version: 0.93.6(effect@3.19.11)
       '@preact/signals-core':
         specifier: 'catalog:'
@@ -5047,7 +5050,7 @@ importers:
         specifier: workspace:*
         version: link:../../sdk/types
       '@effect/platform':
-        specifier: 0.93.6
+        specifier: 'catalog:'
         version: 0.93.6(effect@3.19.11)
       effect:
         specifier: 'catalog:'
@@ -5131,7 +5134,7 @@ importers:
         specifier: workspace:*
         version: link:../../common/util
       '@effect/platform':
-        specifier: 0.93.6
+        specifier: 'catalog:'
         version: 0.93.6(effect@3.19.11)
       effect:
         specifier: 'catalog:'
@@ -5250,7 +5253,7 @@ importers:
         specifier: workspace:*
         version: link:../protocols
       '@effect/platform':
-        specifier: 0.93.6
+        specifier: 'catalog:'
         version: 0.93.6(effect@3.19.11)
 
   packages/core/halo/credentials:
@@ -6482,7 +6485,7 @@ importers:
         specifier: 'catalog:'
         version: 0.55.0(@effect/platform@0.93.6(effect@3.19.11))(@effect/rpc@0.72.2(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(@effect/sql@0.48.6(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(@effect/workflow@0.15.2(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(@effect/rpc@0.72.2(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)
       '@effect/platform':
-        specifier: 0.93.6
+        specifier: 'catalog:'
         version: 0.93.6(effect@3.19.11)
       '@effect/platform-bun':
         specifier: 'catalog:'
@@ -6687,7 +6690,7 @@ importers:
         specifier: workspace:*
         version: link:../../common/util
       '@effect/platform':
-        specifier: 0.93.6
+        specifier: 'catalog:'
         version: 0.93.6(effect@3.19.11)
       '@preact-signals/safe-react':
         specifier: 'catalog:'
@@ -7576,7 +7579,7 @@ importers:
         specifier: 'catalog:'
         version: 0.4.4(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(@effect/rpc@0.72.2(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)(react@19.2.0)(scheduler@0.27.0)
       '@effect/platform':
-        specifier: 0.93.6
+        specifier: 'catalog:'
         version: 0.93.6(effect@3.19.11)
       '@types/lodash.defaultsdeep':
         specifier: 'catalog:'
@@ -7749,7 +7752,7 @@ importers:
         specifier: 'catalog:'
         version: 0.4.4(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(@effect/rpc@0.72.2(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)(react@19.2.0)(scheduler@0.27.0)
       '@effect/platform':
-        specifier: 0.93.6
+        specifier: 'catalog:'
         version: 0.93.6(effect@3.19.11)
       '@types/react':
         specifier: ~19.2.2
@@ -8070,7 +8073,7 @@ importers:
         specifier: 'catalog:'
         version: 0.4.4(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(@effect/rpc@0.72.2(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)(react@19.2.0)(scheduler@0.27.0)
       '@effect/platform':
-        specifier: 0.93.6
+        specifier: 'catalog:'
         version: 0.93.6(effect@3.19.11)
       '@types/react':
         specifier: ~19.2.2
@@ -8366,7 +8369,7 @@ importers:
         specifier: 'catalog:'
         version: 0.4.4(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(@effect/rpc@0.72.2(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)(react@19.2.0)(scheduler@0.27.0)
       '@effect/platform':
-        specifier: 0.93.6
+        specifier: 'catalog:'
         version: 0.93.6(effect@3.19.11)
       '@types/react':
         specifier: ~19.2.2
@@ -8496,7 +8499,7 @@ importers:
         specifier: 'catalog:'
         version: 0.4.4(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(@effect/rpc@0.72.2(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)(react@19.2.0)(scheduler@0.27.0)
       '@effect/platform':
-        specifier: 0.93.6
+        specifier: 'catalog:'
         version: 0.93.6(effect@3.19.11)
       '@types/react':
         specifier: ~19.2.2
@@ -8844,7 +8847,7 @@ importers:
         specifier: 'catalog:'
         version: 0.4.4(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(@effect/rpc@0.72.2(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)(react@19.2.0)(scheduler@0.27.0)
       '@effect/platform':
-        specifier: 0.93.6
+        specifier: 'catalog:'
         version: 0.93.6(effect@3.19.11)
       '@types/react':
         specifier: ~19.2.2
@@ -8896,7 +8899,7 @@ importers:
         specifier: 'catalog:'
         version: 0.4.4(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(@effect/rpc@0.72.2(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)(react@19.2.0)(scheduler@0.27.0)
       '@effect/platform':
-        specifier: 0.93.6
+        specifier: 'catalog:'
         version: 0.93.6(effect@3.19.11)
       '@types/react':
         specifier: ~19.2.2
@@ -8984,7 +8987,7 @@ importers:
         specifier: 'catalog:'
         version: 0.4.4(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(@effect/rpc@0.72.2(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)(react@19.2.0)(scheduler@0.27.0)
       '@effect/platform':
-        specifier: 0.93.6
+        specifier: 'catalog:'
         version: 0.93.6(effect@3.19.11)
       '@types/react':
         specifier: ~19.2.2
@@ -9204,7 +9207,7 @@ importers:
         specifier: 'catalog:'
         version: 0.4.4(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(@effect/rpc@0.72.2(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)(react@19.2.0)(scheduler@0.27.0)
       '@effect/platform':
-        specifier: 0.93.6
+        specifier: 'catalog:'
         version: 0.93.6(effect@3.19.11)
       '@types/js-yaml':
         specifier: ^4.0.9
@@ -9443,7 +9446,7 @@ importers:
         specifier: 'catalog:'
         version: 0.4.4(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(@effect/rpc@0.72.2(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)(react@19.2.0)(scheduler@0.27.0)
       '@effect/platform':
-        specifier: 0.93.6
+        specifier: 'catalog:'
         version: 0.93.6(effect@3.19.11)
       '@types/react':
         specifier: ~19.2.2
@@ -9618,7 +9621,7 @@ importers:
         specifier: 'catalog:'
         version: 0.4.4(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(@effect/rpc@0.72.2(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)(react@19.2.0)(scheduler@0.27.0)
       '@effect/platform':
-        specifier: 0.93.6
+        specifier: 'catalog:'
         version: 0.93.6(effect@3.19.11)
       '@types/react':
         specifier: ~19.2.2
@@ -9890,7 +9893,7 @@ importers:
         specifier: 'catalog:'
         version: 0.4.4(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(@effect/rpc@0.72.2(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)(react@19.2.0)(scheduler@0.27.0)
       '@effect/platform':
-        specifier: 0.93.6
+        specifier: 'catalog:'
         version: 0.93.6(effect@3.19.11)
       '@types/react':
         specifier: ~19.2.2
@@ -10154,7 +10157,7 @@ importers:
         specifier: 'catalog:'
         version: 0.4.4(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(@effect/rpc@0.72.2(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)(react@19.2.0)(scheduler@0.27.0)
       '@effect/platform':
-        specifier: 0.93.6
+        specifier: 'catalog:'
         version: 0.93.6(effect@3.19.11)
       '@types/react':
         specifier: ~19.2.2
@@ -10248,7 +10251,7 @@ importers:
         specifier: 'catalog:'
         version: 0.4.4(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(@effect/rpc@0.72.2(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)(react@19.2.0)(scheduler@0.27.0)
       '@effect/platform':
-        specifier: 0.93.6
+        specifier: 'catalog:'
         version: 0.93.6(effect@3.19.11)
       '@types/react':
         specifier: ~19.2.2
@@ -10360,7 +10363,7 @@ importers:
         specifier: 'catalog:'
         version: 0.4.4(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(@effect/rpc@0.72.2(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)(react@19.2.0)(scheduler@0.27.0)
       '@effect/platform':
-        specifier: 0.93.6
+        specifier: 'catalog:'
         version: 0.93.6(effect@3.19.11)
       '@types/react':
         specifier: ~19.2.2
@@ -10487,7 +10490,7 @@ importers:
         specifier: 'catalog:'
         version: 0.4.4(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(@effect/rpc@0.72.2(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)(react@19.2.0)(scheduler@0.27.0)
       '@effect/platform':
-        specifier: 0.93.6
+        specifier: 'catalog:'
         version: 0.93.6(effect@3.19.11)
       '@types/react':
         specifier: ~19.2.2
@@ -10836,7 +10839,7 @@ importers:
         specifier: 'catalog:'
         version: 0.4.4(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(@effect/rpc@0.72.2(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)(react@19.2.0)(scheduler@0.27.0)
       '@effect/platform':
-        specifier: 0.93.6
+        specifier: 'catalog:'
         version: 0.93.6(effect@3.19.11)
       '@types/react':
         specifier: ~19.2.2
@@ -11098,7 +11101,7 @@ importers:
         specifier: 'catalog:'
         version: 0.4.4(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(@effect/rpc@0.72.2(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)(react@19.2.0)(scheduler@0.27.0)
       '@effect/platform':
-        specifier: 0.93.6
+        specifier: 'catalog:'
         version: 0.93.6(effect@3.19.11)
       '@types/react':
         specifier: ~19.2.2
@@ -11213,7 +11216,7 @@ importers:
         specifier: 'catalog:'
         version: 0.4.4(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(@effect/rpc@0.72.2(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)(react@19.2.0)(scheduler@0.27.0)
       '@effect/platform':
-        specifier: 0.93.6
+        specifier: 'catalog:'
         version: 0.93.6(effect@3.19.11)
       '@types/react':
         specifier: ~19.2.2
@@ -11439,7 +11442,7 @@ importers:
         specifier: 'catalog:'
         version: 0.4.4(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(@effect/rpc@0.72.2(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)(react@19.2.0)(scheduler@0.27.0)
       '@effect/platform':
-        specifier: 0.93.6
+        specifier: 'catalog:'
         version: 0.93.6(effect@3.19.11)
       '@lezer/generator':
         specifier: 'catalog:'
@@ -11789,7 +11792,7 @@ importers:
         specifier: 'catalog:'
         version: 0.4.4(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(@effect/rpc@0.72.2(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)(react@19.2.0)(scheduler@0.27.0)
       '@effect/platform':
-        specifier: 0.93.6
+        specifier: 'catalog:'
         version: 0.93.6(effect@3.19.11)
       '@types/react':
         specifier: ~19.2.2
@@ -12123,7 +12126,7 @@ importers:
         specifier: 'catalog:'
         version: 0.4.4(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(@effect/rpc@0.72.2(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)(react@19.2.0)(scheduler@0.27.0)
       '@effect/platform':
-        specifier: 0.93.6
+        specifier: 'catalog:'
         version: 0.93.6(effect@3.19.11)
       '@types/react':
         specifier: ~19.2.2
@@ -12306,7 +12309,7 @@ importers:
         specifier: 'catalog:'
         version: 0.4.4(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(@effect/rpc@0.72.2(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)(react@19.2.0)(scheduler@0.27.0)
       '@effect/platform':
-        specifier: 0.93.6
+        specifier: 'catalog:'
         version: 0.93.6(effect@3.19.11)
       '@types/react':
         specifier: ~19.2.2
@@ -12508,7 +12511,7 @@ importers:
         specifier: 'catalog:'
         version: 0.4.4(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(@effect/rpc@0.72.2(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)(react@19.2.0)(scheduler@0.27.0)
       '@effect/platform':
-        specifier: 0.93.6
+        specifier: 'catalog:'
         version: 0.93.6(effect@3.19.11)
       '@types/react':
         specifier: ~19.2.2
@@ -12599,7 +12602,7 @@ importers:
         specifier: 'catalog:'
         version: 0.4.4(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(@effect/rpc@0.72.2(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)(react@19.2.0)(scheduler@0.27.0)
       '@effect/platform':
-        specifier: 0.93.6
+        specifier: 'catalog:'
         version: 0.93.6(effect@3.19.11)
       '@types/react':
         specifier: ~19.2.2
@@ -12807,7 +12810,7 @@ importers:
         specifier: 'catalog:'
         version: 0.4.4(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(@effect/rpc@0.72.2(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)(react@19.2.0)(scheduler@0.27.0)
       '@effect/platform':
-        specifier: 0.93.6
+        specifier: 'catalog:'
         version: 0.93.6(effect@3.19.11)
       '@types/dom-speech-recognition':
         specifier: 'catalog:'
@@ -13137,7 +13140,7 @@ importers:
         specifier: 'catalog:'
         version: 0.4.4(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(@effect/rpc@0.72.2(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)(react@19.2.0)(scheduler@0.27.0)
       '@effect/platform':
-        specifier: 0.93.6
+        specifier: 'catalog:'
         version: 0.93.6(effect@3.19.11)
       '@types/react':
         specifier: ~19.2.2
@@ -13216,7 +13219,7 @@ importers:
         specifier: 'catalog:'
         version: 0.4.4(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(@effect/rpc@0.72.2(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)(react@19.2.0)(scheduler@0.27.0)
       '@effect/platform':
-        specifier: 0.93.6
+        specifier: 'catalog:'
         version: 0.93.6(effect@3.19.11)
       '@types/react':
         specifier: ~19.2.2
@@ -13578,7 +13581,7 @@ importers:
         specifier: workspace:*
         version: link:../../common/util
       '@effect/platform':
-        specifier: 0.93.6
+        specifier: 'catalog:'
         version: 0.93.6(effect@3.19.11)
       boolean:
         specifier: 'catalog:'
@@ -15373,7 +15376,7 @@ importers:
         specifier: workspace:*
         version: link:../../common/util
       '@effect/platform':
-        specifier: 0.93.6
+        specifier: 'catalog:'
         version: 0.93.6(effect@3.19.11)
       '@preact-signals/safe-react':
         specifier: 'catalog:'
@@ -16051,7 +16054,7 @@ importers:
         specifier: 'catalog:'
         version: 0.4.4(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(@effect/rpc@0.72.2(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)(react@19.2.0)(scheduler@0.27.0)
       '@effect/platform':
-        specifier: 0.93.6
+        specifier: 'catalog:'
         version: 0.93.6(effect@3.19.11)
       '@types/chai':
         specifier: 'catalog:'
@@ -17010,7 +17013,7 @@ importers:
         specifier: 'catalog:'
         version: 0.4.4(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(@effect/rpc@0.72.2(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)(react@19.2.0)(scheduler@0.27.0)
       '@effect/platform':
-        specifier: 0.93.6
+        specifier: 'catalog:'
         version: 0.93.6(effect@3.19.11)
       '@types/react':
         specifier: ~19.2.2
@@ -17511,7 +17514,7 @@ importers:
         specifier: 'catalog:'
         version: 0.4.4(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(@effect/rpc@0.72.2(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)(react@19.2.0)(scheduler@0.27.0)
       '@effect/platform':
-        specifier: 0.93.6
+        specifier: 'catalog:'
         version: 0.93.6(effect@3.19.11)
       '@types/lodash.orderby':
         specifier: 'catalog:'

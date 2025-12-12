@@ -40,7 +40,7 @@
     "@effect/ai-openai": "^0.36.0",
     "@effect/cli": "catalog:",
     "@effect/cluster": "catalog:",
-    "@effect/platform": "0.93.6",
+    "@effect/platform": "catalog:",
     "@effect/platform-bun": "catalog:",
     "@effect/printer": "catalog:",
     "@effect/printer-ansi": "catalog:",
