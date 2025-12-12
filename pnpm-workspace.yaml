@@ -13,7 +13,7 @@ packages:
 strictPeerDependencies: true
 
 # Common version for workspace dependencies.
-# catalog:* specifiers are resolved here.
+# catalog: specifiers are resolved here.
 catalog:
   '@1password/op-js': ^0.1.13
   '@ai-sdk/react': ^2.0.86
