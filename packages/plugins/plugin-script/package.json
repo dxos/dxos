@@ -128,6 +128,7 @@
     "@dxos/react-ui-theme": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
     "@effect-atom/atom-react": "^0.3.4",
+    "@effect/ai": "0.29.1",
     "@effect/ai-anthropic": "0.21.1",
     "@effect/platform": "0.92.1",
     "@types/react": "~19.2.2",
