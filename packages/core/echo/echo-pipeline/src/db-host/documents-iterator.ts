@@ -28,7 +28,9 @@ export const createSelectedDocumentsIterator = (automergeHost: AutomergeHost) =>
     for (const [id, heads] of objects.entries()) {
       try {
         const { documentId, objectId } = objectPointerCodec.decode(id);
-        const handle = await automergeHost.loadDoc<DatabaseDirectory>(Context.default(), documentId as DocumentId);
+        const handle = await automergeHost.loadDoc<DatabaseDirectory>(Context.default(), documentId as DocumentId, {
+          fetchFromNetwork: true,
+        });
 
         let doc = handle.doc();
         invariant(doc);

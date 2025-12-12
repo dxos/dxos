@@ -110,6 +110,9 @@ export class ServiceContext extends Resource {
   ) {
     super();
 
+    console.log('runtimeParams', this._runtimeParams);
+    console.log('edgeFeatures', this._edgeFeatures);
+
     // TODO(burdon): Move strings to constants.
     this.metadataStore = new MetadataStore(storage.createDirectory('metadata'));
     this.blobStore = new BlobStore(storage.createDirectory('blobs'));
@@ -161,8 +164,6 @@ export class ServiceContext extends Resource {
       },
     });
 
-    this._meshReplicator = new MeshEchoReplicator();
-
     this.invitations = new InvitationsHandler(
       this.networkManager, //
       this._edgeHttpClient,
@@ -186,7 +187,9 @@ export class ServiceContext extends Resource {
         ),
     );
 
+    console.log('disableP2pReplication', this._runtimeParams?.disableP2pReplication);
     if (!this._runtimeParams?.disableP2pReplication) {
+      console.log('CREATE MESH REPLICATOR');
       this._meshReplicator = new MeshEchoReplicator();
     }
     if (this._edgeConnection && this._edgeFeatures?.echoReplicator && this._edgeHttpClient) {
