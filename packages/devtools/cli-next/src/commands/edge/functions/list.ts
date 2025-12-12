@@ -21,5 +21,5 @@ export const list = Command.make('list', { spaceId: Common.spaceId.pipe(Options.
   }),
 ).pipe(
   Command.withDescription('List functions deployed to EDGE.'),
-  Command.provide(({ spaceId }) => spaceLayer(spaceId)),
+  Command.provide(({ spaceId }) => spaceLayer(spaceId, true)),
 );
