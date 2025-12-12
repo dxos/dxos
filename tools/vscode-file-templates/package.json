@@ -34,7 +34,7 @@
     "onCommand:fileTemplates.newFromTemplate"
   ],
   "devDependencies": {
-    "@vscode/vsce": "^3.7.1"
+    "@vscode/vsce": "catalog:"
   },
   "engines": {
     "vscode": "^1.80.0"

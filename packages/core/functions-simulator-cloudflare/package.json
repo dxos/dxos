@@ -35,7 +35,7 @@
   "dependencies": {
     "@dxos/context": "workspace:*",
     "@dxos/protocols": "workspace:*",
-    "miniflare": "^4.20251128.0"
+    "miniflare": "catalog:"
   },
   "publishConfig": {
     "access": "public"

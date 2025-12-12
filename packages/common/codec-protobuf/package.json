@@ -44,12 +44,12 @@
     "@dxos/log": "workspace:*",
     "@dxos/node-std": "workspace:*",
     "@dxos/util": "workspace:*",
-    "compress-json": "^2.1.2",
-    "lodash.merge": "^4.6.2",
-    "protobufjs": "^7.2.5"
+    "compress-json": "catalog:",
+    "lodash.merge": "catalog:",
+    "protobufjs": "catalog:"
   },
   "devDependencies": {
-    "@types/lodash.merge": "^4.6.6"
+    "@types/lodash.merge": "catalog:"
   },
   "publishConfig": {
     "access": "public"

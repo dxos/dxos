@@ -107,6 +107,33 @@
       }
     },
     {
+      "label": "build all",
+      "type": "shell",
+      "command": "moon run :build --no-bail",
+      "problemMatcher": {
+        "owner": "typescript",
+        "pattern": [
+          {
+            "regexp": "^(.*?)\\s*\\|\\s*(.*?)\\((\\d+),(\\d+)\\):\\s*error\\s*TS(\\d+):\\s*(.*)",
+            "file": 2,
+            "line": 3,
+            "column": 4,
+            "code": 5,
+            "message": 6
+          }
+        ]
+      },
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "shared"
+      },
+      "group": {
+        "kind": "build"
+      }
+    },
+    {
       "label": "compile vscode-extension",
       "type": "shell",
       "command": "pnpm run compile",

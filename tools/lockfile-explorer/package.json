@@ -14,8 +14,8 @@
   },
   "dependencies": {
     "@dxos/util": "workspace:*",
-    "fuzzy": "^0.1.3",
-    "ink": "^6.3.1",
+    "fuzzy": "catalog:",
+    "ink": "catalog:",
     "react": "~19.2.0",
     "yaml": "^2.7.0"
   }

@@ -29,8 +29,8 @@
     "@dxos/log": "workspace:*",
     "@dxos/schema": "workspace:*",
     "@dxos/util": "workspace:*",
-    "effect": "3.18.3",
-    "handlebars": "4.7.8"
+    "effect": "catalog:",
+    "handlebars": "catalog:"
   },
   "devDependencies": {},
   "peerDependencies": {
