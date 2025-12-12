@@ -7,11 +7,13 @@ import * as Function from 'effect/Function';
 
 import { type AiParser, type ConsolePrinter } from '@dxos/ai';
 import { type Message } from '@dxos/types';
+import { type Tool } from '@effect/ai';
 
 /**
  * Live observer of the generation process.
  */
-export interface GenerationObserver extends AiParser.ParseResponseCallbacks {
+export interface GenerationObserver<Tools extends Record<string, Tool.Any> = any>
+  extends AiParser.ParseResponseCallbacks<Tools> {
   /**
    * Complete messages fired during the session, both from the model and from the user.
    * This message will contain all message blocks emitted through the `onBlock` callback.

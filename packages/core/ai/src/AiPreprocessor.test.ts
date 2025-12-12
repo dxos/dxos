@@ -75,6 +75,7 @@ describe('preprocessor', () => {
           id: 'call_1',
           name: 'calculator',
           result: 'Result of tool 1',
+          isFailure: false
         }),
       );
       expect(toolMessage.content[1]).toEqual(
@@ -82,6 +83,7 @@ describe('preprocessor', () => {
           id: 'call_2',
           name: 'calculator',
           result: 'Result of tool 2',
+          isFailure: false
         }),
       );
     }),
@@ -409,6 +411,7 @@ describe('preprocessor', () => {
           id: 'call_1',
           name: 'test',
           result: 'Testing',
+          isFailure: false
         }),
       ]);
     }),

@@ -16,6 +16,7 @@ import { log } from '@dxos/log';
 import { type ContentBlock } from '@dxos/types';
 
 import { type StreamBlock, StreamTransform } from './parser';
+import type { Tool } from '@effect/ai';
 
 /**
  * Tags that are used by the model to indicate the type of content.
@@ -46,7 +47,7 @@ enum ModelTags {
   TOOLKIT = 'toolkit',
 }
 
-export interface ParseResponseCallbacks {
+export interface ParseResponseCallbacks<Tools extends Record<string, Tool.Any> = any> {
   /**
    * Called when the stream begins.
    */
@@ -55,7 +56,7 @@ export interface ParseResponseCallbacks {
   /**
    * Called on every part received from the stream.
    */
-  onPart: (part: Response.StreamPart<any>) => Effect.Effect<void>;
+  onPart: (part: Response.StreamPart<Tools>) => Effect.Effect<void>;
 
   /**
    * Called on every partial or completed content block.
@@ -75,7 +76,7 @@ export interface ParseResponseCallbacks {
   onEnd: (block: ContentBlock.Summary) => Effect.Effect<void>;
 }
 
-export interface ParseResponseOptions extends ParseResponseCallbacks {
+export interface ParseResponseOptions<Tools extends Record<string, Tool.Any>> extends ParseResponseCallbacks<Tools> {
   /**
    * Whether to parse reasoning tags: <cot> and <think>.
    */
@@ -87,14 +88,14 @@ export interface ParseResponseOptions extends ParseResponseCallbacks {
  * Partial blocks are emitted to support streaming to the UI.
  */
 export const parseResponse =
-  ({
+  <Tools extends Record<string, Tool.Any>>({
     parseReasoningTags = false,
     onBegin = Function.constant(Effect.void),
     onPart = Function.constant(Effect.void),
     onBlock = Function.constant(Effect.void),
     onEnd = Function.constant(Effect.void),
-  }: Partial<ParseResponseOptions> = {}) =>
-  <E, R>(input: Stream.Stream<Response.StreamPart<any>, E, R>): Stream.Stream<ContentBlock.Any, E, R> =>
+  }: Partial<ParseResponseOptions<Tools>> = {}) =>
+  <E, R>(input: Stream.Stream<Response.StreamPart<Tools>, E, R>): Stream.Stream<ContentBlock.Any, E, R> =>
     Stream.asyncPush(
       Effect.fnUntraced(function* (emit) {
         const transformer = new StreamTransform();
@@ -387,7 +388,7 @@ export const parseResponse =
  */
 const makeContentBlock = (
   block: StreamBlock,
-  { parseReasoningTags }: Pick<ParseResponseOptions, 'parseReasoningTags'>,
+  { parseReasoningTags }: Pick<ParseResponseOptions<any>, 'parseReasoningTags'>,
 ): ContentBlock.Any | undefined => {
   switch (block.type) {
     //
