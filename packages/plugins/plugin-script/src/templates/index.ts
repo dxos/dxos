@@ -2,6 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
+import anthropic from './anthropic.ts?raw';
 import chat from './chat.ts?raw';
 import chess from './chess.ts?raw';
 import dataGenerator from './data-generator.ts?raw';
@@ -74,5 +75,10 @@ export const templates = [
     name: 'Data Generator',
     source: removeHeader(dataGenerator),
     presetId: 'dxos.org/function/data-generator',
+  },
+  {
+    id: 'dxos.org/script/anthropic',
+    name: 'Anthropic',
+    source: removeHeader(anthropic),
   },
 ] as const;
