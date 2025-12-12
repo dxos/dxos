@@ -6,6 +6,7 @@ import * as Command from '@effect/cli/Command';
 import * as Options from '@effect/cli/Options';
 import * as Prompt from '@effect/cli/Prompt';
 import * as FileSystem from '@effect/platform/FileSystem';
+import * as Console from 'effect/Console';
 import * as Effect from 'effect/Effect';
 
 import { DX_DATA, getProfilePath } from '@dxos/client-protocol';
@@ -33,6 +34,6 @@ export const reset = Command.make(
       }
     }
     yield* fs.remove(path, { recursive: true });
-    console.log(`Profile (${profile}) has been reset successfully.`);
+    yield* Console.log(`Profile (${profile}) has been reset successfully.`);
   }),
 );

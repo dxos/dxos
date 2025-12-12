@@ -52,7 +52,9 @@ class OllamaSidecar extends Context.Tag('@dxos/plugin-native/OllamaSidecar')<
       });
 
       // NOTE: Keeping those as console.log for consistent formatting.
+      // eslint-disable-next-line no-console
       command.stdout.on('data', (data) => console.log('[ollama]', data.toString()));
+      // eslint-disable-next-line no-console
       command.stderr.on('data', (data) => console.error('[ollama]', data.toString()));
       command.on('close', (code) => log.info('Ollama process exited', { code }));
       command.on('error', (error) => log.error('Ollama error', { error }));

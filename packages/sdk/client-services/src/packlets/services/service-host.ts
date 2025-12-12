@@ -202,11 +202,6 @@ export class ClientServicesHost {
     log('initializing...');
 
     if (config) {
-      console.log('SET P2P REPLICATION', {
-        current: this._runtimeParams.disableP2pReplication,
-        configured: config.get('runtime.client.disableP2pReplication', false),
-        config,
-      });
       if (this._runtimeParams.disableP2pReplication === undefined) {
         this._runtimeParams.disableP2pReplication = config?.get('runtime.client.disableP2pReplication', false);
       }
@@ -289,7 +284,6 @@ export class ClientServicesHost {
 
     await this._loggingService.open();
 
-    console.log('OPEN', { replication: this._runtimeParams.disableP2pReplication });
     this._serviceContext = new ServiceContext(
       this._storage,
       this._level,

@@ -27,7 +27,6 @@ const setupRuntime = async () => {
   const workerRuntime = new WorkerRuntime({
     configProvider: async () => {
       const config = new Config(await Storage(), Envs(), Local(), Defaults());
-      console.log({ config });
       log.config({ filter: config.get('runtime.client.log.filter'), prefix: config.get('runtime.client.log.prefix') });
       return config;
     },

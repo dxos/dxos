@@ -133,6 +133,7 @@ export const mountDevtoolsHooks = ({ client, host }: MountOptions) => {
     listDiagnostics: async () => {
       diagnostics = await TRACE_PROCESSOR.diagnosticsChannel.discover();
 
+      // eslint-disable-next-line no-console
       console.table(
         diagnostics.map((diagnostic) => ({
           ...diagnostic,
@@ -144,6 +145,7 @@ export const mountDevtoolsHooks = ({ client, host }: MountOptions) => {
                 return;
               }
 
+              // eslint-disable-next-line no-console
               console.table(data);
             });
             return undefined;

@@ -14,8 +14,6 @@ import { isNonNullable } from '@dxos/util';
 
 import { meta as pluginMeta } from '../../meta';
 
-const TagSchema = Tag.Tag.pipe(Schema.omit('id'));
-
 export type ObjectFormProps = {
   schema: Schema.Schema.AnyNoContext;
   object: Obj.Any;
@@ -63,7 +61,6 @@ export const ObjectForm = ({ object, schema }: ObjectFormProps) => {
         }
 
         const value = Obj.getValue(values, parts);
-        console.log('set value', isValid, parts, value);
         Obj.setValue(object, parts, value);
       }
     },
