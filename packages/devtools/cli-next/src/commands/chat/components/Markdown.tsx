@@ -14,10 +14,7 @@ export type MarkdownProps = {
   content?: string;
 };
 
-// TODO(burdon): Create unit test.
 export const Markdown = (props: MarkdownProps) => {
-  log.info('markdown', { content: props.content });
-
   const tree = createMemo(() => {
     return props.content ? parser.parse(props.content) : null;
   });
@@ -25,10 +22,13 @@ export const Markdown = (props: MarkdownProps) => {
   return (
     <ErrorBoundary
       fallback={(err) => {
+        // NOTE: Must log full content here since it would be stale if logged above.
+        log.info('markdown', { content: props.content, length: props.content?.length });
         log.catch(err);
+
         return (
           <box paddingLeft={1} paddingRight={1} borderStyle='single' style={{ borderColor: theme.log.error }}>
-            <text>{props.content}</text>
+            <text style={{ fg: theme.text.default }}>{props.content}</text>
           </box>
         );
       }}
@@ -94,12 +94,12 @@ const RenderNode = (props: { node: SyntaxNode; content: string }) => {
       );
 
     case 'CodeText':
-      return <span style={{ fg: theme.log.info }}>{props.content.slice(props.node.from, props.node.to)}</span>;
+      return <text style={{ fg: theme.log.info }}>{props.content.slice(props.node.from, props.node.to)}</text>;
 
     case 'InlineCode':
       return (
         <span style={{ fg: theme.log.info }}>
-          <RenderInline node={props.node} content={props.content} />;
+          <RenderInline node={props.node} content={props.content} />
         </span>
       );
 
@@ -111,15 +111,23 @@ const RenderNode = (props: { node: SyntaxNode; content: string }) => {
         </box>
       );
 
-    case 'ListItem':
+    case 'ListItem': {
+      const children = getChildren(props.node);
+      const mark = children.find((node) => node.name === 'ListMark');
+      const contentNodes = children.filter((node) => node.name !== 'ListMark');
+
       return (
         <box flexDirection='row'>
-          <For each={children}>{(child) => <RenderNode node={child} content={props.content} />}</For>
+          {mark && <RenderNode node={mark} content={props.content} />}
+          <box flexDirection='column'>
+            <For each={contentNodes}>{(child) => <RenderNode node={child} content={props.content} />}</For>
+          </box>
         </box>
       );
+    }
 
     case 'ListMark': // - or 1.
-      return <span style={{ fg: theme.text.primary }}>{props.content.slice(props.node.from, props.node.to)} </span>;
+      return <text style={{ fg: theme.text.primary }}>{props.content.slice(props.node.from, props.node.to)} </text>;
 
     case 'Blockquote':
       return (
@@ -145,7 +153,11 @@ const RenderNode = (props: { node: SyntaxNode; content: string }) => {
 
     // Use RenderInline for unknown nodes to ensure text gaps are rendered.
     default:
-      return <RenderInline node={props.node} content={props.content} />;
+      return (
+        <text>
+          <RenderInline node={props.node} content={props.content} />
+        </text>
+      );
   }
 };
 
@@ -160,12 +172,14 @@ const RenderInline = (props: { node: SyntaxNode; content: string }) => {
       }
       result.push({ type: 'node', node: child });
       pos = child.to;
+
       if (child.name === 'HeaderMark') {
         const char = props.content[pos];
         if (char === ' ') {
           pos++;
         }
       }
+
       child = child.nextSibling;
     }
 
@@ -184,12 +198,35 @@ const RenderInline = (props: { node: SyntaxNode; content: string }) => {
         }
 
         const text = props.content.slice(item.from, item.to);
-        // if (text === '\n') {
-        //   return null;
-        // }
-
         return <>{text}</>;
       })}
     </>
   );
 };
+
+// TODO(burdon): Create unit test.
+export const TEST_MARKDOWN = [
+  '# Example',
+  '',
+  'Hello! I am an AI assistant.',
+  '',
+  'You can ask me anything!',
+  '',
+  'Suggested actions:',
+  '- Ask a question',
+  '- Request artifact creation',
+  '',
+  '1. Outline',
+  '    - item 1',
+  '    - item 2',
+  '2. Details',
+  '    - item 3',
+  '',
+  "Here's **hello world** in `Typescript`",
+  '',
+  '```typescript',
+  "console.log('Hello world!')",
+  '```',
+  '',
+  'The End',
+].join('\n');

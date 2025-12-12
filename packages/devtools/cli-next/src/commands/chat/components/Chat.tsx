@@ -29,20 +29,7 @@ export const Chat = (props: ChatProps) => {
   const chatMessages = useChatMessages();
   const [inputValue, setInputValue] = createSignal('');
 
-  chatMessages.addMessage(
-    createAssistantMessage(
-      [
-        //
-        'Hello! I am an **AI** assistant.',
-        '',
-        'Suggested actions:',
-        '',
-        '- **Action 1**',
-        '- **Action 2**',
-        '',
-      ].join('\n'),
-    ),
-  );
+  // chatMessages.addMessage(createAssistantMessage(TEST_MARKDOWN));
 
   const handleSubmit = async (value: string) => {
     const prompt = value.trim();
