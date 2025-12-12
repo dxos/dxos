@@ -69,6 +69,7 @@ export default (context: PluginContext) =>
                     label: ['account label', { ns: meta.id }],
                     icon: 'ph--user--regular',
                     disposition: 'user-account',
+                    testId: 'clientPlugin.account',
                     // NOTE: This currently needs to be the identity key because the fallback is generated from hex.
                     userId: identity?.identityKey.toHex(),
                     hue: identity?.profile?.data?.hue,
