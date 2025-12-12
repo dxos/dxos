@@ -49,7 +49,7 @@ export const ChatCompanion = forwardRef<HTMLDivElement, ChatCompanionProps>(
         return;
       }
 
-      const { data } = await dispatch(createIntent(AssistantAction.CreateChat, { space }));
+      const { data } = await dispatch(createIntent(AssistantAction.CreateChat, { db: space.db }));
       setChat(data?.object);
     }, [chat, space]);
 
@@ -65,13 +65,13 @@ export const ChatCompanion = forwardRef<HTMLDivElement, ChatCompanionProps>(
           await dispatch(
             createIntent(SpaceAction.AddObject, {
               object: chat,
-              target: space,
+              target: space.db,
               hidden: true,
             }),
           );
           await dispatch(
             createIntent(SpaceAction.AddRelation, {
-              space,
+              db: space.db,
               schema: Assistant.CompanionTo,
               source: chat,
               target: companionTo,

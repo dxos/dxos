@@ -17,7 +17,7 @@ import { type Channel } from '@dxos/plugin-thread/types';
 import { TranscriptionCapabilities } from '@dxos/plugin-transcription';
 import { type buf } from '@dxos/protocols/buf';
 import { type MeetingPayloadSchema } from '@dxos/protocols/buf/dxos/edge/calls_pb';
-import { type Space, getSpace } from '@dxos/react-client/echo';
+import { type Space } from '@dxos/react-client/echo';
 import { type Message } from '@dxos/types';
 
 import { meta } from '../meta';
@@ -39,8 +39,6 @@ export default (context: PluginContext) => {
     onJoin: async ({ channel }: { channel?: Channel.Channel }) => {
       const identity = client.halo.identity.get();
       invariant(identity);
-      const space = getSpace(channel);
-      invariant(space);
 
       // let messageEnricher;
       // if (aiClient && settings.entityExtraction) {

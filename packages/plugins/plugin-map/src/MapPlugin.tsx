@@ -37,7 +37,7 @@ export const MapPlugin = definePlugin(meta, () => [
           iconHue: 'green',
           inputSchema: MapAction.CreateMap,
           createIntent: ((props, options) =>
-            createIntent(MapAction.Create, { ...props, space: options.space })) satisfies CreateObjectIntent,
+            createIntent(MapAction.Create, { ...props, space: options.db })) satisfies CreateObjectIntent,
         },
       }),
   }),

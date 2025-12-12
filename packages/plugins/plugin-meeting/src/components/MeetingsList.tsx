@@ -8,11 +8,11 @@ import React, { useCallback, useMemo } from 'react';
 
 import { Capabilities, chain, createIntent } from '@dxos/app-framework';
 import { useCapabilities, useIntentDispatcher } from '@dxos/app-framework/react';
-import { Type } from '@dxos/echo';
+import { Obj, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { SpaceAction } from '@dxos/plugin-space/types';
 import { type Channel } from '@dxos/plugin-thread/types';
-import { Query, getSpace, useQuery } from '@dxos/react-client/echo';
+import { Query, useQuery } from '@dxos/react-client/echo';
 import { Button, useTranslation } from '@dxos/react-ui';
 import { List } from '@dxos/react-ui-list';
 import { ghostHover, mx } from '@dxos/react-ui-theme';
@@ -60,8 +60,8 @@ export type MeetingsListProps = {
 export const MeetingsList = ({ channel }: MeetingsListProps) => {
   const { t } = useTranslation(meta.id);
   const { dispatchPromise: dispatch } = useIntentDispatcher();
-  const space = getSpace(channel);
-  const meetings = useQuery(space?.db, Query.type(Meeting.Meeting));
+  const db = Obj.getDatabase(channel);
+  const meetings = useQuery(db, Query.type(Meeting.Meeting));
   // TODO(wittjosiah): This should be done in the query.
   const sortedMeetings = useMemo(() => {
     return meetings.toSorted((a, b) => new Date(b.created).getTime() - new Date(a.created).getTime());
@@ -85,14 +85,14 @@ export const MeetingsList = ({ channel }: MeetingsListProps) => {
 
   const getId = useCallback((meeting: Meeting.Meeting) => meeting.id, []);
   const handleCreateMeeting = useCallback(async () => {
-    invariant(space);
+    invariant(db);
     const intent = Function.pipe(
       createIntent(MeetingAction.Create, { channel }),
-      chain(SpaceAction.AddObject, { target: space, hidden: true }),
+      chain(SpaceAction.AddObject, { target: db, hidden: true }),
       chain(MeetingAction.SetActive),
     );
     await dispatch(intent);
-  }, [dispatch, space]);
+  }, [dispatch, db]);
 
   return (
     <div>

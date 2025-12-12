@@ -85,9 +85,10 @@ export default () =>
         Obj.instanceOf(Script.Script, data.companionTo) && data.subject === 'logs',
       component: ({ data }) => {
         const space = getSpace(data.companionTo);
+        const queueDxn = space?.properties.invocationTraceQueue?.dxn;
         return (
           <StackItem.Content>
-            <InvocationTraceContainer space={space} target={data.companionTo} detailAxis='block' />
+            <InvocationTraceContainer db={space?.db} queueDxn={queueDxn} target={data.companionTo} detailAxis='block' />
           </StackItem.Content>
         );
       },

@@ -14,7 +14,7 @@ import { useAsyncEffect } from '@dxos/react-ui';
 import { ViewEditor as NaturalViewEditor } from '@dxos/react-ui-form';
 import { View } from '@dxos/schema';
 
-import { resolveSchemaWithClientAndSpace } from '../helpers';
+import { resolveSchemaWithRegistry } from '../helpers';
 import { useTypeOptions } from '../hooks';
 import { SpaceAction } from '../types';
 
@@ -40,7 +40,7 @@ export const ViewEditor = ({ view }: ViewEditorProps) => {
       return;
     }
 
-    const foundSchema = await resolveSchemaWithClientAndSpace(space, view.query.ast);
+    const foundSchema = await resolveSchemaWithRegistry(space.db.schemaRegistry, view.query.ast);
     if (foundSchema && foundSchema !== schema) {
       setSchema(() => foundSchema);
     }
@@ -55,7 +55,7 @@ export const ViewEditor = ({ view }: ViewEditorProps) => {
       const queue = target && DXN.tryParse(target) ? target : undefined;
       const query = queue ? Query.fromAst(newQuery).options({ queues: [queue] }) : Query.fromAst(newQuery);
       view.query.ast = query.ast;
-      const newSchema = await resolveSchemaWithClientAndSpace(space, query.ast);
+      const newSchema = await resolveSchemaWithRegistry(space.db.schemaRegistry, query.ast);
       if (!newSchema) {
         return;
       }

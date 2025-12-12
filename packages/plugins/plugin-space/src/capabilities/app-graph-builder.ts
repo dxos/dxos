@@ -301,7 +301,7 @@ export default (context: PluginContext) => {
                     Array.filter(isNonNullable),
                     Array.map((object) =>
                       createObjectNode({
-                        space,
+                        db: space.db,
                         object,
                         resolve: resolve(get),
                         navigable: state.navigableCollections,
@@ -342,7 +342,7 @@ export default (context: PluginContext) => {
                         space &&
                         createObjectNode({
                           object,
-                          space,
+                          db: space.db,
                           resolve: resolve(get),
                           navigable: state.navigableCollections,
                         }),
@@ -380,7 +380,7 @@ export default (context: PluginContext) => {
 
           return createObjectNode({
             object,
-            space,
+            db: space.db,
             resolve: resolve(get),
             disposition: 'hidden',
           });
@@ -417,7 +417,7 @@ export default (context: PluginContext) => {
                 .map((object) =>
                   createObjectNode({
                     object,
-                    space,
+                    db: space.db,
                     managedCollectionChild: true,
                     resolve: resolve(get),
                   }),
@@ -565,7 +565,7 @@ export default (context: PluginContext) => {
                     atomFromSignal(() =>
                       createObjectNode({
                         object,
-                        space,
+                        db: space.db,
                         resolve: resolve(get),
                         droppable: false,
                       }),

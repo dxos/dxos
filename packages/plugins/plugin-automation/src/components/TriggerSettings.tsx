@@ -4,15 +4,15 @@
 
 import React from 'react';
 
-import { type Space } from '@dxos/react-client/echo';
+import { type Database } from '@dxos/echo';
 import { Input, useTranslation } from '@dxos/react-ui';
 import { ControlItemInput } from '@dxos/react-ui-form';
 
 import { useTriggerRuntimeControls } from '../hooks';
 import { meta } from '../meta';
 
-export const TriggersSettings = ({ space }: { space: Space }) => {
-  const { triggers, isRunning, start, stop } = useTriggerRuntimeControls(space);
+export const TriggersSettings = ({ db }: { db: Database.Database }) => {
+  const { triggers, isRunning, start, stop } = useTriggerRuntimeControls(db);
   const { t } = useTranslation(meta.id);
 
   return (

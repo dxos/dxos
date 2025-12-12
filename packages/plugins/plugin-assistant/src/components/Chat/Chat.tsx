@@ -11,9 +11,9 @@ import * as Option from 'effect/Option';
 import React, { type PropsWithChildren, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { Event } from '@dxos/async';
-import { Obj } from '@dxos/echo';
+import { type Database, Obj } from '@dxos/echo';
 import { useVoiceInput } from '@dxos/plugin-transcription';
-import { type Space, getSpace, useQueue } from '@dxos/react-client/echo';
+import { useQueue } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { Input, type ThemedClassName, useDynamicRef, useTranslation } from '@dxos/react-ui';
 import { ChatEditor, type ChatEditorController, type ChatEditorProps } from '@dxos/react-ui-chat';
@@ -48,7 +48,7 @@ import { type ChatEvent } from './events';
 type ChatContextValue = {
   debug?: boolean;
   event: Event<ChatEvent>;
-  space?: Space;
+  db?: Database.Database;
   chat?: Assistant.Chat;
   messages: Message.Message[];
   processor: AiChatProcessor;
@@ -61,7 +61,7 @@ export const [ChatContextProvider, useChatContext] = createContext<ChatContextVa
 //
 
 type ChatRootProps = PropsWithChildren<
-  Pick<ChatContextValue, 'space' | 'chat' | 'processor'> & {
+  Pick<ChatContextValue, 'db' | 'chat' | 'processor'> & {
     onEvent?: (event: ChatEvent) => void;
   }
 >;
@@ -120,13 +120,13 @@ const ChatRoot = ({ children, chat, processor, onEvent, ...props }: ChatRootProp
     });
   }, [event, processor, streaming, onEvent]);
 
-  const space = props.space ?? getSpace(chat);
+  const db = props.db ?? (chat && Obj.getDatabase(chat));
 
   return (
     <ChatContextProvider
       debug={debug}
       event={event}
-      space={space}
+      db={db}
       chat={chat}
       messages={messages}
       processor={processor}
@@ -238,7 +238,7 @@ const ChatPrompt = ({
   onOnlineChange,
 }: ChatPromptProps) => {
   const { t } = useTranslation(meta.id);
-  const { space, processor, event } = useChatContext(ChatPrompt.displayName);
+  const { db, processor, event } = useChatContext(ChatPrompt.displayName);
 
   const error = useAtomValue(processor.error).pipe(Option.getOrUndefined);
   const streaming = useAtomValue(processor.streaming);
@@ -356,10 +356,10 @@ const ChatPrompt = ({
         />
       </div>
 
-      {space && settings && (
+      {db && settings && (
         <div role='none' className='flex items-center overflow-hidden'>
           <ChatOptions
-            db={space.db}
+            db={db}
             blueprintRegistry={processor.blueprintRegistry}
             context={processor.context}
             preset={preset}
@@ -368,7 +368,7 @@ const ChatPrompt = ({
           />
 
           <div role='none' className='flex grow overflow-x-auto scrollbar-none'>
-            <ChatReferences db={space.db} context={processor.context} />
+            <ChatReferences db={db} context={processor.context} />
           </div>
 
           <ChatActions

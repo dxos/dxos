@@ -10,7 +10,6 @@ import { Obj } from '@dxos/echo';
 import { type Live } from '@dxos/live-object';
 import { DeckCapabilities } from '@dxos/plugin-deck';
 import { DeckAction } from '@dxos/plugin-deck/types';
-import { getSpace } from '@dxos/react-client/echo';
 
 export const useExitPresenter = (object: Live<any>) => {
   const { dispatchPromise: dispatch } = useIntentDispatcher();
@@ -30,7 +29,7 @@ export const useExitPresenter = (object: Live<any>) => {
       createIntent(LayoutAction.Open, {
         part: 'main',
         subject: [objectId],
-        options: { workspace: getSpace(document)?.id },
+        options: { workspace: Obj.getDatabase(object)?.spaceId },
       }),
     );
   }, [dispatch, object]);

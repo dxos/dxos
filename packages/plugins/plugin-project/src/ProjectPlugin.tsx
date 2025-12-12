@@ -28,7 +28,7 @@ export const ProjectPlugin = definePlugin(meta, () => [
           icon: 'ph--check-square-offset--regular',
           iconHue: 'purple',
           createObjectIntent: ((_, options) =>
-            createIntent(ProjectAction.Create, { space: options.space })) satisfies CreateObjectIntent,
+            createIntent(ProjectAction.Create, { db: options.db })) satisfies CreateObjectIntent,
           addToCollectionOnCreate: true,
         },
       }),

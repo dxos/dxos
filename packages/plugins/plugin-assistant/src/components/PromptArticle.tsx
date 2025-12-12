@@ -9,7 +9,6 @@ import { Agent } from '@dxos/assistant-toolkit';
 import { type Prompt } from '@dxos/blueprints';
 import { Obj } from '@dxos/echo';
 import { invokeFunctionWithTracing, useComputeRuntimeCallback } from '@dxos/plugin-automation';
-import { getSpace } from '@dxos/react-client/echo';
 import { Toolbar, useTranslation } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
 import { StackItem } from '@dxos/react-ui-stack';
@@ -22,19 +21,19 @@ export type PromptArticleProps = SurfaceComponentProps<Prompt.Prompt>;
 
 export const PromptArticle = ({ subject }: PromptArticleProps) => {
   const { t } = useTranslation(meta.id);
-  const space = getSpace(subject);
+  const db = Obj.getDatabase(subject);
   const { hasAttention } = useAttention(Obj.getDXN(subject).toString());
 
   const inputData = useMemo(
     () =>
       subject && {
-        prompt: space?.db.makeRef(Obj.getDXN(subject)),
+        prompt: db?.makeRef(Obj.getDXN(subject)),
         input: {},
       },
-    [subject, space],
+    [subject, db],
   );
 
-  const handleRun = useComputeRuntimeCallback(space, () => invokeFunctionWithTracing(Agent.prompt, inputData), [
+  const handleRun = useComputeRuntimeCallback(db?.spaceId, () => invokeFunctionWithTracing(Agent.prompt, inputData), [
     inputData,
   ]);
 

@@ -5,9 +5,9 @@
 import * as Schema from 'effect/Schema';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { Type } from '@dxos/echo';
+import { Obj, Type } from '@dxos/echo';
 import { Format } from '@dxos/echo/internal';
-import { getSpace, useSchema } from '@dxos/react-client/echo';
+import { useSchema } from '@dxos/react-client/echo';
 import { Form, type FormFieldMap, SelectField } from '@dxos/react-ui-form';
 import { getTypenameFromQuery } from '@dxos/schema';
 
@@ -22,19 +22,19 @@ export const MapSettingsSchema = Schema.Struct({
 type MapViewEditorProps = { object: Map.Map };
 
 export const MapViewEditor = ({ object }: MapViewEditorProps) => {
-  const space = getSpace(object);
+  const db = Obj.getDatabase(object);
   const view = object?.view?.target;
   const typename = view?.query ? getTypenameFromQuery(view.query.ast) : undefined;
-  const currentSchema = useSchema(space?.db, typename);
+  const currentSchema = useSchema(db, typename);
 
   const [allSchemata, setAllSchemata] = useState<Type.RuntimeType[]>([]);
 
   useEffect(() => {
-    if (!space) {
+    if (!db) {
       return;
     }
 
-    const unsubscribe = space.db.schemaRegistry.query().subscribe(
+    const unsubscribe = db.schemaRegistry.query().subscribe(
       (query) => {
         const schemata = query.results;
         setAllSchemata(schemata);
@@ -42,7 +42,7 @@ export const MapViewEditor = ({ object }: MapViewEditorProps) => {
       { fire: true },
     );
     return () => unsubscribe();
-  }, [space]);
+  }, [db]);
 
   const schemaOptions = useMemo(() => {
     const uniqueTypenames = new Set(allSchemata.map((schema) => schema.typename));
@@ -90,7 +90,7 @@ export const MapViewEditor = ({ object }: MapViewEditorProps) => {
     [schemaOptions, locationFields],
   );
 
-  if (!space || !object) {
+  if (!db || !object) {
     return null;
   }
 

@@ -13,7 +13,7 @@ import { Filter, Obj } from '@dxos/echo';
 import { runAndForwardErrors } from '@dxos/effect';
 import { AttentionAction } from '@dxos/plugin-attention/types';
 import { ATTENDABLE_PATH_SEPARATOR, DeckAction } from '@dxos/plugin-deck/types';
-import { getSpace, useQuery, useSpace } from '@dxos/react-client/echo';
+import { useDatabase, useQuery } from '@dxos/react-client/echo';
 import { Table } from '@dxos/react-ui-table/types';
 import { getTypenameFromQuery } from '@dxos/schema';
 import { type Organization, Person } from '@dxos/types';
@@ -22,20 +22,17 @@ import { RelatedContacts } from './RelatedContacts';
 
 export const RelatedToOrganization = ({ subject: organization }: SurfaceComponentProps<Organization.Organization>) => {
   const { dispatch } = useIntentDispatcher();
-  const space = getSpace(organization);
-  const defaultSpace = useSpace();
-  const currentSpaceContacts = useQuery(space?.db, Filter.type(Person.Person));
-  const defaultSpaceContacts = useQuery(
-    defaultSpace === space ? undefined : defaultSpace?.db,
-    Filter.type(Person.Person),
-  );
+  const db = Obj.getDatabase(organization);
+  const defaultDb = useDatabase();
+  const currentSpaceContacts = useQuery(db, Filter.type(Person.Person));
+  const defaultSpaceContacts = useQuery(defaultDb === db ? undefined : defaultDb, Filter.type(Person.Person));
   const contacts = [...(currentSpaceContacts ?? []), ...(defaultSpaceContacts ?? [])];
   const related = contacts.filter((contact) =>
     typeof contact.organization === 'string' ? false : contact.organization?.target === organization,
   );
 
-  const currentSpaceViews = useQuery(space?.db, Filter.type(Table.Table));
-  const defaultSpaceViews = useQuery(defaultSpace?.db, Filter.type(Table.Table));
+  const currentSpaceViews = useQuery(db, Filter.type(Table.Table));
+  const defaultSpaceViews = useQuery(defaultDb, Filter.type(Table.Table));
   const currentSpaceContactTable = currentSpaceViews.find(
     (table) => getTypenameFromQuery(table.view.target?.query.ast) === Person.Person.typename,
   );
@@ -63,7 +60,7 @@ export const RelatedToOrganization = ({ subject: organization }: SurfaceComponen
             createIntent(LayoutAction.Open, {
               part: 'main',
               subject: [id],
-              options: { workspace: space?.id },
+              options: { workspace: db?.spaceId },
             }),
           );
           yield* dispatch(
@@ -80,7 +77,7 @@ export const RelatedToOrganization = ({ subject: organization }: SurfaceComponen
           );
         }
       }).pipe(runAndForwardErrors),
-    [dispatch, currentSpaceContacts, currentSpaceContactTable, defaultSpaceContactTable, space, defaultSpace],
+    [dispatch, currentSpaceContacts, currentSpaceContactTable, defaultSpaceContactTable, db, defaultDb],
   );
 
   return <RelatedContacts contacts={related} onContactClick={handleContactClick} />;

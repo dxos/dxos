@@ -11,7 +11,7 @@ import { Trigger } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { AutomationAction } from '@dxos/plugin-automation/types';
 import { ATTENDABLE_PATH_SEPARATOR } from '@dxos/plugin-deck/types';
-import { Filter, getSpace, useQuery } from '@dxos/react-client/echo';
+import { Filter, useQuery } from '@dxos/react-client/echo';
 import { Button, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '../../meta';
@@ -20,11 +20,11 @@ import { type Mailbox } from '../../types';
 export const MailboxSettings = ({ subject }: SurfaceComponentProps<Mailbox.Mailbox>) => {
   const { t } = useTranslation(meta.id);
   const { dispatchPromise: dispatch } = useIntentDispatcher();
-  const space = useMemo(() => getSpace(subject), [subject]);
-  const triggers = useQuery(space?.db, Filter.type(Trigger.Trigger));
+  const db = useMemo(() => Obj.getDatabase(subject), [subject]);
+  const triggers = useQuery(db, Filter.type(Trigger.Trigger));
 
   const handleConfigureSync = useCallback(() => {
-    invariant(space);
+    invariant(db);
 
     const syncTrigger = triggers.find(
       (trigger) => trigger.spec?.kind === 'timer' && trigger.input?.mailboxId === subject.id,
@@ -33,26 +33,26 @@ export const MailboxSettings = ({ subject }: SurfaceComponentProps<Mailbox.Mailb
       void dispatch(
         createIntent(LayoutAction.Open, {
           part: 'main',
-          subject: [`automation-settings${ATTENDABLE_PATH_SEPARATOR}${space.id}`],
+          subject: [`automation-settings${ATTENDABLE_PATH_SEPARATOR}${db.spaceId}`],
           options: {
-            workspace: space.id,
+            workspace: db.spaceId,
           },
         }),
       );
     } else {
       void dispatch(
         createIntent(AutomationAction.CreateTriggerFromTemplate, {
-          space,
+          db,
           template: { type: 'timer', cron: '*/30 * * * * *' },
           scriptName: 'Gmail',
           input: { mailboxId: Obj.getDXN(subject).toString() },
         }),
       );
     }
-  }, [dispatch, space, subject.id, triggers]);
+  }, [dispatch, db, subject.id, triggers]);
 
   const handleConfigureSubscription = useCallback(() => {
-    invariant(space);
+    invariant(db);
 
     const subscriptionTrigger = triggers.find((trigger) => {
       if (trigger.spec?.kind === 'queue') {
@@ -66,21 +66,21 @@ export const MailboxSettings = ({ subject }: SurfaceComponentProps<Mailbox.Mailb
       void dispatch(
         createIntent(LayoutAction.Open, {
           part: 'main',
-          subject: [`automation-settings${ATTENDABLE_PATH_SEPARATOR}${space.id}`],
+          subject: [`automation-settings${ATTENDABLE_PATH_SEPARATOR}${db.spaceId}`],
           options: {
-            workspace: space.id,
+            workspace: db.spaceId,
           },
         }),
       );
     } else {
       void dispatch(
         createIntent(AutomationAction.CreateTriggerFromTemplate, {
-          space,
+          db,
           template: { type: 'queue', queueDXN: subject.queue.dxn },
         }),
       );
     }
-  }, [dispatch, space, subject.queue.dxn, triggers]);
+  }, [dispatch, db, subject.queue.dxn, triggers]);
 
   // TODO(wittjosiah): More than one trigger may be desired, particularly for subscription.
   //   Distinguish between configuring existing triggers and adding new ones.

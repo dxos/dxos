@@ -6,6 +6,7 @@ import * as Option from 'effect/Option';
 import type * as Schema from 'effect/Schema';
 import React, { useCallback } from 'react';
 
+import { type Database } from '@dxos/echo';
 import { type AnyProperties, type TypeAnnotation, getTypeAnnotation } from '@dxos/echo/internal';
 import { type Space, type SpaceId } from '@dxos/react-client/echo';
 import { Icon, toLocalizedString, useDefaultValue, useTranslation } from '@dxos/react-ui';
@@ -31,12 +32,12 @@ export type CreateObjectPanelProps = {
   schemas: Schema.Schema.AnyNoContext[];
   spaces: Space[];
   typename?: string;
-  target?: Space | Collection.Collection;
+  target?: Database.Database | Collection.Collection;
   views?: boolean;
   initialFormValues?: Partial<AnyProperties>;
   defaultSpaceId?: SpaceId;
   resolve?: (typename: string) => Metadata | undefined;
-  onTargetChange?: (target: Space) => void;
+  onTargetChange?: (target: Database.Database) => void;
   onTypenameChange?: (typename: string) => void;
   onCreateObject?: (params: { metadata: Metadata; data?: Record<string, any> }) => MaybePromise<void>;
 };
@@ -125,7 +126,7 @@ const SelectSpace = ({
   spaces,
   defaultSpaceId,
   onChange,
-}: { onChange?: (space: Space) => void } & Pick<CreateObjectPanelProps, 'spaces' | 'defaultSpaceId'>) => {
+}: { onChange?: (db: Database.Database) => void } & Pick<CreateObjectPanelProps, 'spaces' | 'defaultSpaceId'>) => {
   const { t } = useTranslation(meta.id);
 
   return (
@@ -146,7 +147,7 @@ const SelectSpace = ({
             <SearchList.Item
               key={space.id}
               value={toLocalizedString(getSpaceDisplayName(space, { personal: space.id === defaultSpaceId }), t)}
-              onSelect={() => onChange?.(space)}
+              onSelect={() => onChange?.(space.db)}
               classNames='flex items-center gap-2'
             >
               <span className='grow truncate'>
