@@ -29,8 +29,18 @@ import { analysis, list, load } from '../functions';
 // TODO(wittjosiah): Factor out to a generic app-framework blueprint.
 const deckTools = ['open-item'];
 
-const functions: FunctionDefinition[] = [analysis, list, load];
-const tools = [...AssistantToolkit.tools, ...SystemToolkit.tools, ...deckTools];
+export const functions$: FunctionDefinition[] = [analysis, list, load];
+export const functions = [
+  ...functions$,
+  // Factor out.
+  Research.create,
+  Research.research,
+  Agent.prompt,
+  EntityExtraction.extract,
+  Discord.fetch,
+  Linear.sync,
+];
+export const tools = [...AssistantToolkit.tools, ...SystemToolkit.tools, ...deckTools];
 
 export const ASSISTANT_BLUEPRINT_KEY = 'dxos.org/blueprint/assistant';
 
@@ -44,8 +54,17 @@ export const createBlueprint = (): Blueprint.Blueprint =>
 
 const blueprint = createBlueprint();
 
+export const blueprints = [
+  blueprint,
+  // Factor out.
+  ResearchBlueprint,
+  WebSearchBlueprint,
+  DiscordBlueprint,
+  LinearBlueprint,
+];
+
 export default (): Capability<any>[] => [
-  contributes(Capabilities.Functions, functions),
+  contributes(Capabilities.Functions, functions$),
   contributes(Capabilities.BlueprintDefinition, blueprint),
 
   // TODO(burdon): Factor out.

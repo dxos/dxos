@@ -237,6 +237,7 @@ export const constructSpaceNode = ({
               label: ['space settings properties label', { ns: meta.id }],
               icon: 'ph--sliders--regular',
               position: 'hoist',
+              testId: 'spacePlugin.general',
             },
           },
           {
@@ -247,6 +248,7 @@ export const constructSpaceNode = ({
               label: ['members panel label', { ns: meta.id }],
               icon: 'ph--users--regular',
               position: 'hoist',
+              testId: 'spacePlugin.members',
             },
           },
           {
@@ -256,6 +258,7 @@ export const constructSpaceNode = ({
             properties: {
               label: ['space settings schema label', { ns: meta.id }],
               icon: 'ph--shapes--regular',
+              testId: 'spacePlugin.schema',
             },
           },
         ],

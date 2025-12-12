@@ -53,6 +53,7 @@ const buildPromises = platforms.map(async ({ target, platform, arch, ext }) => {
     compile: {
       target,
       outfile,
+      autoloadBunfig: false,
     },
   });
 
