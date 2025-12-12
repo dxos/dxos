@@ -66,21 +66,21 @@
     "@dxos/schema": "workspace:*",
     "@dxos/types": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@effect/ai": "0.29.1",
-    "@effect/ai-anthropic": "0.21.1",
+    "@effect/ai": "catalog:",
+    "@effect/ai-anthropic": "catalog:",
     "@effect/ai-openai": "0.32.1",
-    "@effect/experimental": "0.56.0",
+    "@effect/experimental": "catalog:",
     "@effect/platform": "^0.92.1",
     "@effect/platform-node": "^0.98.3",
     "@effect/workflow": "^0.11.3",
-    "diff": "^8.0.2",
-    "json-stable-stringify": "^1.3.0",
-    "parjs": "^1.3.9",
-    "parsimmon": "^1.18.1"
+    "diff": "catalog:",
+    "json-stable-stringify": "catalog:",
+    "parjs": "catalog:",
+    "parsimmon": "catalog:"
   },
   "devDependencies": {
-    "@types/parsimmon": "^1.10.9",
-    "effect": "3.18.3"
+    "@types/parsimmon": "catalog:",
+    "effect": "catalog:"
   },
   "peerDependencies": {
     "effect": "^3.13.3"

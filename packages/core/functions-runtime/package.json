@@ -85,11 +85,11 @@
     "@dxos/schema": "workspace:*",
     "@dxos/util": "workspace:*",
     "@effect/platform": "0.92.1",
-    "effect": "3.18.3",
-    "esbuild": "0.25.10",
-    "esbuild-wasm": "^0.16.14",
+    "effect": "catalog:",
+    "esbuild": "catalog:",
+    "esbuild-wasm": "catalog:",
     "i18next": "^24.2.1",
-    "iso-did": "^1.6.0"
+    "iso-did": "catalog:"
   },
   "devDependencies": {
     "@dxos/types": "workspace:*",

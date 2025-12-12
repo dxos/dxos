@@ -31,8 +31,8 @@
     "@dxos/node-std": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "@dxos/rpc": "workspace:*",
-    "isomorphic-ws": "^5.0.0",
-    "ws": "^8.14.2"
+    "isomorphic-ws": "catalog:",
+    "ws": "catalog:"
   },
   "devDependencies": {},
   "publishConfig": {

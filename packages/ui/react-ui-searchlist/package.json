@@ -25,12 +25,12 @@
     "src"
   ],
   "dependencies": {
-    "@fluentui/react-tabster": "^9.24.2",
-    "@preact-signals/safe-react": "^0.9.0",
-    "@radix-ui/react-compose-refs": "1.1.1",
-    "@radix-ui/react-context": "1.1.1",
+    "@fluentui/react-tabster": "catalog:",
+    "@preact-signals/safe-react": "catalog:",
+    "@radix-ui/react-compose-refs": "catalog:",
+    "@radix-ui/react-context": "catalog:",
     "@radix-ui/react-use-controllable-state": "1.1.0",
-    "cmdk": "^0.2.0"
+    "cmdk": "catalog:"
   },
   "devDependencies": {
     "@dxos/random": "workspace:*",
@@ -41,7 +41,7 @@
     "@types/react-dom": "~19.2.2",
     "react": "~19.2.0",
     "react-dom": "~19.2.0",
-    "vite": "7.1.9"
+    "vite": "catalog:"
   },
   "peerDependencies": {
     "@dxos/react-ui": "workspace:*",

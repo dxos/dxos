@@ -35,8 +35,8 @@
     "dist"
   ],
   "dependencies": {
-    "@atlaskit/pragmatic-drag-and-drop": "^1.4.0",
-    "lit": "^3.3.1"
+    "@atlaskit/pragmatic-drag-and-drop": "catalog:",
+    "lit": "catalog:"
   },
   "devDependencies": {
     "@dxos/random": "workspace:*",

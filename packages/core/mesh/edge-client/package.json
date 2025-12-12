@@ -56,8 +56,8 @@
     "@dxos/protocols": "workspace:*",
     "@dxos/util": "workspace:*",
     "@effect/platform": "^0.92.1",
-    "isomorphic-ws": "^5.0.0",
-    "ws": "^8.14.2"
+    "isomorphic-ws": "catalog:",
+    "ws": "catalog:"
   },
   "devDependencies": {
     "@dxos/test-utils": "workspace:*"

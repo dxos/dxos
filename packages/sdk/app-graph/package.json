@@ -33,8 +33,8 @@
     "@dxos/live-object": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@preact/signals-core": "^1.12.1",
-    "main-thread-scheduling": "^14.1.1"
+    "@preact/signals-core": "catalog:",
+    "main-thread-scheduling": "catalog:"
   },
   "devDependencies": {
     "@dxos/echo-db": "workspace:*",
@@ -45,14 +45,14 @@
     "@dxos/react-ui-tabs": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
-    "@effect-atom/atom-react": "^0.3.4",
+    "@effect-atom/atom-react": "catalog:",
     "@effect/platform": "0.92.1",
     "@types/react": "~19.2.2",
     "@types/react-dom": "~19.2.2",
-    "effect": "3.18.3",
+    "effect": "catalog:",
     "react": "~19.2.0",
     "react-dom": "~19.2.0",
-    "vite": "7.1.9"
+    "vite": "catalog:"
   },
   "peerDependencies": {
     "@dxos/react-ui": "workspace:*",

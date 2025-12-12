@@ -17,8 +17,8 @@
     "src"
   ],
   "dependencies": {
-    "@jitl/quickjs-wasmfile-release-sync": "^0.31.0",
-    "quickjs-emscripten": "0.31.0"
+    "@jitl/quickjs-wasmfile-release-sync": "catalog:",
+    "quickjs-emscripten": "catalog:"
   },
   "devDependencies": {},
   "publishConfig": {

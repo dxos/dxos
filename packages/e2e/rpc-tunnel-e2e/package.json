@@ -22,13 +22,13 @@
     "@dxos/rpc-tunnel": "workspace:*",
     "react": "~19.2.0",
     "react-dom": "~19.2.0",
-    "react-json-tree": "^0.18.0"
+    "react-json-tree": "catalog:"
   },
   "devDependencies": {
-    "@babel/core": "^7.18.13",
+    "@babel/core": "catalog:",
     "@dxos/test-utils": "workspace:*",
     "@types/react": "~19.2.2",
     "@types/react-dom": "~19.2.2",
-    "vite": "7.1.9"
+    "vite": "catalog:"
   }
 }
