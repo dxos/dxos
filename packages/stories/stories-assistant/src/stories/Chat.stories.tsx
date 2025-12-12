@@ -17,13 +17,11 @@ import { Filter, Obj, Query, Ref, Tag, Type } from '@dxos/echo';
 import { Example, Script, Trigger, serializeFunction } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { ASSISTANT_BLUEPRINT_KEY } from '@dxos/plugin-assistant';
-import { useContextBinder } from '@dxos/plugin-assistant';
-import { translations } from '@dxos/plugin-assistant';
+import { ASSISTANT_BLUEPRINT_KEY, translations, useContextBinder } from '@dxos/plugin-assistant';
 import { Assistant } from '@dxos/plugin-assistant/types';
 import { Board, BoardPlugin } from '@dxos/plugin-board';
 import { Chess, ChessPlugin } from '@dxos/plugin-chess';
-import * as chessFunctions from '@dxos/plugin-chess/functions';
+import { ChessFunctions } from '@dxos/plugin-chess/blueprints';
 import { InboxPlugin } from '@dxos/plugin-inbox';
 import { Calendar, Mailbox } from '@dxos/plugin-inbox/types';
 import { Map, MapPlugin } from '@dxos/plugin-map';
@@ -39,9 +37,9 @@ import { TokenManagerPlugin } from '@dxos/plugin-token-manager';
 import { TranscriptionPlugin } from '@dxos/plugin-transcription';
 import { useQuery, useSpace } from '@dxos/react-client/echo';
 import { useAsyncEffect, useSignalsMemo } from '@dxos/react-ui';
-import { withTheme } from '@dxos/react-ui/testing';
 import { Stack, StackItem } from '@dxos/react-ui-stack';
 import { Table } from '@dxos/react-ui-table/types';
+import { withTheme } from '@dxos/react-ui/testing';
 import { Text, View } from '@dxos/schema';
 import { render } from '@dxos/storybook-utils';
 import {
@@ -673,7 +671,7 @@ export const WithChessTrigger: Story = {
 
       space.db.add(
         Trigger.make({
-          function: Ref.make(serializeFunction(chessFunctions.play)),
+          function: Ref.make(serializeFunction(ChessFunctions.play)),
           enabled: true,
           spec: {
             kind: 'subscription',

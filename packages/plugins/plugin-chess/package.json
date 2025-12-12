@@ -10,22 +10,22 @@
   "type": "module",
   "exports": {
     ".": {
-      "source": "./src/index.ts",
-      "types": "./dist/types/src/index.d.ts",
       "browser": "./dist/lib/browser/index.mjs",
-      "node": "./dist/lib/node-esm/index.mjs"
+      "node": "./dist/lib/node-esm/index.mjs",
+      "source": "./src/index.ts",
+      "types": "./dist/types/src/index.d.ts"
+    },
+    "./blueprints": {
+      "browser": "./dist/lib/browser/blueprints/index.mjs",
+      "node": "./dist/lib/node-esm/blueprints/index.mjs",
+      "source": "./src/blueprints/index.ts",
+      "types": "./dist/types/src/blueprints/index.d.ts"
     },
     "./types": {
-      "source": "./src/types/index.ts",
-      "types": "./dist/types/src/types/index.d.ts",
       "browser": "./dist/lib/browser/types/index.mjs",
-      "node": "./dist/lib/node-esm/types/index.mjs"
-    },
-    "./functions": {
-      "source": "./src/functions/index.ts",
-      "types": "./dist/types/src/functions/index.d.ts",
-      "browser": "./dist/lib/browser/functions/index.mjs",
-      "node": "./dist/lib/node-esm/functions/index.mjs"
+      "node": "./dist/lib/node-esm/types/index.mjs",
+      "source": "./src/types/index.ts",
+      "types": "./dist/types/src/types/index.d.ts"
     }
   },
   "types": "dist/types/src/index.d.ts",

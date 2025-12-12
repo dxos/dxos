@@ -24,7 +24,7 @@ import { CommandConfig } from '../../services';
 import { type AiChatServices, Provider, chatLayer, createLogBuffer, withTypes } from '../../util';
 import { Common } from '../options';
 
-import { functions, toolkits } from './blueprints';
+import { functions, toolkits, types } from './blueprints';
 import { App, Chat } from './components';
 import { ChatProcessor } from './processor';
 import { theme } from './theme';
@@ -87,9 +87,14 @@ export const chat = Command.make(
       const processor = new ChatProcessor(runtime, toolkit, functions, service.metadata);
       const conversation = yield* Effect.promise(async () => {
         invariant(client.halo.identity);
+
+        // TODO(burdon): Add dynamically?
+        client.addTypes(types);
+
         // TODO(burdon): Hangs if identity is not ready.
         await client.spaces.waitUntilReady();
         const space = client.spaces.default;
+
         return processor.createConversation(space, options.blueprints);
       });
 

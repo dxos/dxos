@@ -126,7 +126,8 @@ export const Chat = (props: ChatProps) => {
         value={inputValue}
         onInput={setInputValue}
         onSubmit={() => handleSubmit(inputValue())}
-        focused={popup() ? false : undefined}
+        // focused={popup() ? false : undefined}
+        focused={true}
       />
       <StatusBar model={props.model} metadata={props.processor.metadata} processing={context?.processing} />
     </box>
