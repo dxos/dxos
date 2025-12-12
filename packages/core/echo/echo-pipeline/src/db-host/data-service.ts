@@ -60,7 +60,7 @@ export class DataServiceImpl implements DataService {
   subscribe(request: SubscribeRequest): Stream<BatchedDocumentUpdates> {
     return new Stream<BatchedDocumentUpdates>(({ next, ready }) => {
       const synchronizer = new DocumentsSynchronizer({
-        repo: this._automergeHost.repo,
+        automergeHost: this._automergeHost,
         sendUpdates: (updates) => next(updates),
       });
       synchronizer

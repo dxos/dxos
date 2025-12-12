@@ -3,17 +3,16 @@
 //
 
 import * as Effect from 'effect/Effect';
-import { createSignal } from 'solid-js';
+import { createSignal, useContext } from 'solid-js';
 
 import { type ModelName } from '@dxos/ai';
 import { type AiConversation, GenerationObserver } from '@dxos/assistant';
 
-import { DXOS_VERSION } from '../../../version';
 import { useChatMessages } from '../hooks';
 import { type ChatProcessor } from '../processor';
 import { createAssistantMessage, createUserMessage } from '../types';
 
-import { Banner } from './Banner';
+import { AppContext } from './App';
 import { ChatInput } from './ChatInput';
 import { ChatMessages } from './ChatMessages';
 import { StatusBar } from './StatusBar';
@@ -26,19 +25,16 @@ export type ChatProps = {
 };
 
 export const Chat = (props: ChatProps) => {
+  const context = useContext(AppContext);
   const chatMessages = useChatMessages();
-  const [showBanner, setShowBanner] = createSignal(true);
   const [inputValue, setInputValue] = createSignal('');
-  const [streaming, setStreaming] = createSignal(false);
+
+  // chatMessages.addMessage(createAssistantMessage(TEST_MARKDOWN));
 
   const handleSubmit = async (value: string) => {
     const prompt = value.trim();
-    if (!prompt || streaming()) {
+    if (!prompt || context?.processing()) {
       return;
-    }
-
-    if (showBanner()) {
-      setShowBanner(false);
     }
 
     const userMessage = createUserMessage(prompt);
@@ -49,7 +45,7 @@ export const Chat = (props: ChatProps) => {
     const assistantIndex = chatMessages.addMessage(assistantMessage);
 
     try {
-      setStreaming(true);
+      context?.setProcessing(true);
       const observer = GenerationObserver.make({
         onPart: (part) =>
           Effect.sync(() => {
@@ -62,9 +58,9 @@ export const Chat = (props: ChatProps) => {
             switch (message.sender.role) {
               case 'tool': {
                 if (props.verbose) {
-                  // for (const part of message.blocks) {
-                  // TODO(burdon): Add tool call.
-                  // }
+                  for (const block of message.blocks) {
+                    chatMessages.appendToMessage(assistantIndex, ['```json', JSON.stringify(block), '```'].join('\n'));
+                  }
                 }
                 break;
               }
@@ -75,25 +71,23 @@ export const Chat = (props: ChatProps) => {
       // Create and execute request.
       const request = props.conversation.createRequest({ prompt, observer });
       await props.processor.execute(request, props.model);
-    } catch (err) {
+    } catch (err: any) {
       chatMessages.updateMessage(assistantIndex, (message) => {
         message.role = 'error';
-        message.content = `Error: ${String(err)}`;
+        message.content = String(err);
       });
     } finally {
-      setStreaming(false);
+      context?.setProcessing(false);
     }
   };
 
   return (
     <box flexDirection='column'>
-      <box flexGrow={1} position='relative'>
-        {showBanner() && <Banner version={DXOS_VERSION} />}
+      <box padding={1}>
         <ChatMessages messages={chatMessages.messages.data} />
       </box>
-
       <ChatInput value={inputValue} onInput={setInputValue} onSubmit={() => handleSubmit(inputValue())} />
-      <StatusBar model={props.model} metadata={props.processor.metadata} processing={streaming} />
+      <StatusBar model={props.model} metadata={props.processor.metadata} processing={context?.processing} />
     </box>
   );
 };

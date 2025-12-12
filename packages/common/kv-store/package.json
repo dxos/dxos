@@ -37,12 +37,12 @@
   "dependencies": {
     "@dxos/keys": "workspace:*",
     "@dxos/node-std": "workspace:*",
-    "abstract-level": "^1.0.2",
-    "level": "^8.0.1"
+    "abstract-level": "catalog:",
+    "level": "catalog:"
   },
   "devDependencies": {
     "@dxos/test-utils": "workspace:*",
-    "level-transcoder": "^1.0.1"
+    "level-transcoder": "catalog:"
   },
   "publishConfig": {
     "access": "public"

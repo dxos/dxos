@@ -73,19 +73,19 @@
     "@dxos/protocols": "workspace:*",
     "@dxos/tracing": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@effect/platform": "0.92.1",
-    "boolean": "^3.0.1",
-    "effect": "3.18.3",
-    "localforage": "^1.10.0",
-    "lodash.defaultsdeep": "^4.6.1",
-    "lodash.ismatch": "^4.4.0",
-    "pkg-up": "^3.1.0",
+    "@effect/platform": "catalog:",
+    "boolean": "catalog:",
+    "effect": "catalog:",
+    "localforage": "catalog:",
+    "lodash.defaultsdeep": "catalog:",
+    "lodash.ismatch": "catalog:",
+    "pkg-up": "catalog:",
     "yaml": "^2.6.1"
   },
   "devDependencies": {
-    "@types/lodash.defaultsdeep": "^4.6.6",
-    "@types/lodash.ismatch": "^4.4.9",
-    "webpack": "^5.88.2"
+    "@types/lodash.defaultsdeep": "catalog:",
+    "@types/lodash.ismatch": "catalog:",
+    "webpack": "catalog:"
   },
   "publishConfig": {
     "access": "public"

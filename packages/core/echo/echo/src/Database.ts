@@ -204,6 +204,14 @@ export class Service extends Context.Tag('@dxos/echo/Database/Service')<
   };
 
   /**
+   * Returns the space ID of the database.
+   */
+  static spaceId = Effect.gen(function* () {
+    const { db } = yield* Service;
+    return db.spaceId;
+  });
+
+  /**
    * Resolves an object by its DXN.
    */
   static resolve: {

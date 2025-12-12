@@ -28,12 +28,12 @@
     "@dxos/debug": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/node-std": "workspace:*",
-    "effect": "3.18.3",
-    "ulidx": "^2.3.0"
+    "effect": "catalog:",
+    "ulidx": "catalog:"
   },
   "devDependencies": {
-    "base32-decode": "^1.0.0",
-    "base32-encode": "^2.0.0"
+    "base32-decode": "catalog:",
+    "base32-encode": "catalog:"
   },
   "publishConfig": {
     "access": "public"

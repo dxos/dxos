@@ -26,8 +26,8 @@
   "dependencies": {
     "@dxos/async": "workspace:*",
     "@dxos/node-std": "workspace:*",
-    "koffi": "^2.8.0",
-    "nan": "2.23.0"
+    "koffi": "catalog:",
+    "nan": "catalog:"
   },
   "devDependencies": {},
   "publishConfig": {

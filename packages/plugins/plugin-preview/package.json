@@ -48,16 +48,16 @@
     "@dxos/schema": "workspace:*",
     "@dxos/types": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@effect-atom/atom-react": "^0.3.4",
-    "@preact-signals/safe-react": "^0.9.0"
+    "@effect-atom/atom-react": "catalog:",
+    "@preact-signals/safe-react": "catalog:"
   },
   "devDependencies": {
     "@dxos/random": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
-    "effect": "3.18.3",
+    "effect": "catalog:",
     "react": "~19.2.0",
     "react-dom": "~19.2.0",
-    "vite": "7.1.9"
+    "vite": "catalog:"
   },
   "peerDependencies": {
     "effect": "^3.13.3",
