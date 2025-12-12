@@ -10,11 +10,11 @@ import { create, move, play, print } from './functions';
 
 export const functions: FunctionDefinition[] = [create, move, play, print];
 
-export const CHESS_BLUEPRINT_KEY = 'dxos.org/blueprint/chess';
+export const BLUEPRINT_KEY = 'dxos.org/blueprint/chess';
 
 export const make = () =>
   Blueprint.make({
-    key: CHESS_BLUEPRINT_KEY,
+    key: BLUEPRINT_KEY,
     name: 'Chess',
     tools: Blueprint.toolDefinitions({ functions }),
     instructions: Template.make({

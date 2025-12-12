@@ -15,11 +15,12 @@ import { type ChatProcessor } from '../processor';
 import { createAssistantMessage, createUserMessage } from '../types';
 
 import { DXOS_VERSION } from '../../../version';
+import { blueprintRegistry } from '../blueprints';
 import { AppContext } from './App';
 import { Banner } from './Banner';
 import { ChatInput } from './ChatInput';
 import { ChatMessages } from './ChatMessages';
-import { Picker } from './Picker';
+import { Picker, type PickerProps } from './Picker';
 import { StatusBar } from './StatusBar';
 
 // TODO(burdon): Show/select blueprints/objects.
@@ -37,6 +38,7 @@ export const Chat = (props: ChatProps) => {
   const [inputValue, setInputValue] = createSignal('');
   const [popup, setPopup] = createSignal<'logo' | 'blueprints' | undefined>('logo');
 
+  // TODO(burdon): Factor out key handling, hints, and dialogs.
   useKeyboard((key) => {
     if (key.name === 'b' && key.ctrl) {
       setPopup(popup() === 'blueprints' ? undefined : 'blueprints');
@@ -99,16 +101,9 @@ export const Chat = (props: ChatProps) => {
       <box padding={1} height='100%' justifyContent='center' alignItems='center'>
         <Switch>
           <Match when={popup() === 'blueprints'}>
-            <Picker
-              multi
-              title='Select Blueprints'
-              items={['Assistant', 'Chess', 'Markdown', 'Projects', 'Table']}
-              onSelect={(item) => {
-                log.info(`Selected: ${item}`);
-                setPopup(undefined);
-              }}
-              onConfirm={(items) => {
-                log.info(`Selected: ${items.join(', ')}`);
+            <BlueprintPicker
+              onConfirm={(ids) => {
+                log.info(`selected: [${ids.join(', ')}]`);
                 setPopup(undefined);
               }}
               onCancel={() => setPopup(undefined)}
@@ -126,10 +121,23 @@ export const Chat = (props: ChatProps) => {
         value={inputValue}
         onInput={setInputValue}
         onSubmit={() => handleSubmit(inputValue())}
-        // focused={popup() ? false : undefined}
-        focused={true}
+        focused={() => (popup() !== undefined ? false : undefined)}
       />
       <StatusBar model={props.model} metadata={props.processor.metadata} processing={context?.processing} />
     </box>
+  );
+};
+
+type BlueprintPickerProps = Pick<PickerProps, 'onConfirm' | 'onCancel'>;
+
+const BlueprintPicker = (props: BlueprintPickerProps) => {
+  return (
+    <Picker
+      multi
+      title='Select Blueprints'
+      items={blueprintRegistry.blueprints.map((blueprint) => ({ id: blueprint.key, label: blueprint.name }))}
+      onConfirm={(ids) => props.onConfirm?.(ids)}
+      onCancel={() => props.onCancel?.()}
+    />
   );
 };

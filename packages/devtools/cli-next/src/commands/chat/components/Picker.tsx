@@ -8,36 +8,40 @@ import { createEffect, createSignal, For, Show } from 'solid-js';
 
 import { theme } from '../theme';
 
-export type PickerProps<T> = {
-  items: T[];
-  onSelect: (item: T) => void;
-  onConfirm?: (items: T[]) => void;
-  onCancel: () => void;
-  renderItem?: (item: T) => string;
-  defaultSelected?: T[];
+export type PickerItem = {
+  id: string;
+  label: string;
+};
+
+export type PickerProps = {
+  items: PickerItem[];
+  onSelect?: (id: string) => void;
+  onConfirm?: (ids: string[]) => void;
+  onCancel?: () => void;
+  defaultSelected?: string[];
   title?: string;
   multi?: boolean;
 };
 
-export const Picker = <T extends any>(props: PickerProps<T>) => {
+export const Picker = (props: PickerProps) => {
   const [selectedIndex, setSelectedIndex] = createSignal(0);
-  const [selectedItems, setSelectedItems] = createSignal<Set<T>>(new Set(props.defaultSelected));
+  const [selectedIds, setSelectedIds] = createSignal<Set<string>>(new Set(props.defaultSelected));
 
   // Reset selection when items change.
   createEffect(() => {
     props.items;
     setSelectedIndex(0);
-    setSelectedItems(new Set(props.defaultSelected));
+    setSelectedIds(new Set(props.defaultSelected));
   });
 
-  const toggleSelection = (item: T) => {
-    const newSet = new Set(selectedItems());
-    if (newSet.has(item)) {
-      newSet.delete(item);
+  const toggleSelection = (id: string) => {
+    const newSet = new Set(selectedIds());
+    if (newSet.has(id)) {
+      newSet.delete(id);
     } else {
-      newSet.add(item);
+      newSet.add(id);
     }
-    setSelectedItems(newSet);
+    setSelectedIds(newSet);
   };
 
   useKeyboard((event: KeyEvent) => {
@@ -54,22 +58,22 @@ export const Picker = <T extends any>(props: PickerProps<T>) => {
 
       case 'space': {
         if (props.multi) {
-          toggleSelection(props.items[selectedIndex()]);
+          toggleSelection(props.items[selectedIndex()].id);
         }
         break;
       }
 
       case 'return': {
         if (props.multi) {
-          props.onConfirm?.(Array.from(selectedItems()));
+          props.onConfirm?.(Array.from(selectedIds()));
         } else {
-          props.onSelect(props.items[selectedIndex()]);
+          props.onSelect?.(props.items[selectedIndex()].id);
         }
         break;
       }
 
       case 'escape': {
-        props.onCancel();
+        props.onCancel?.();
         break;
       }
     }
@@ -91,10 +95,10 @@ export const Picker = <T extends any>(props: PickerProps<T>) => {
       </Show>
       <For each={props.items}>
         {(item, i) => (
-          <box height={1} backgroundColor={i() === selectedIndex() ? theme.accent : undefined}>
-            <text style={{ fg: i() === selectedIndex() ? theme.bg : undefined }}>
-              {props.multi ? (selectedItems().has(item) ? '[x] ' : '[ ] ') : ''}
-              {props.renderItem ? props.renderItem(item) : String(item)}
+          <box height={1} backgroundColor={i() === selectedIndex() ? theme.input.bg : undefined}>
+            <text style={{ bg: i() === selectedIndex() ? theme.input.bg : undefined }}>
+              {props.multi ? (selectedIds().has(item.id) ? '[x] ' : '[ ] ') : ''}
+              {item.label}
             </text>
           </box>
         )}
