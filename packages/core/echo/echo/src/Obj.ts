@@ -299,7 +299,8 @@ export const getTypename = (entity: Entity.Unknown): string | undefined => {
  * Get the database the object belongs to.
  */
 export const getDatabase = (entity: Entity.Unknown): Database.Database | undefined => {
-  return (entity as any)[ObjectDatabaseId];
+  assumeType<InternalObjectProps>(entity);
+  return entity[ObjectDatabaseId];
 };
 
 //
