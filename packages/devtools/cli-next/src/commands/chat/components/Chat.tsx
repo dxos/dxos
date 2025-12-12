@@ -9,12 +9,12 @@ import { Match, Switch, createSignal, useContext } from 'solid-js';
 import { type ModelName } from '@dxos/ai';
 import { type AiConversation, GenerationObserver } from '@dxos/assistant';
 
+import { DXOS_VERSION } from '../../../version';
+import { blueprintRegistry } from '../blueprints';
 import { useChatMessages } from '../hooks';
 import { type ChatProcessor } from '../processor';
 import { createAssistantMessage, createUserMessage } from '../types';
 
-import { DXOS_VERSION } from '../../../version';
-import { blueprintRegistry } from '../blueprints';
 import { AppContext } from './App';
 import { Banner } from './Banner';
 import { ChatInput } from './ChatInput';

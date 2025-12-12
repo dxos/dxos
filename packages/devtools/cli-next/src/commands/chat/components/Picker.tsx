@@ -4,7 +4,7 @@
 
 import { type KeyEvent } from '@opentui/core';
 import { useKeyboard } from '@opentui/solid';
-import { createEffect, createSignal, For, Show } from 'solid-js';
+import { For, Show, createEffect, createSignal } from 'solid-js';
 
 import { theme } from '../theme';
 

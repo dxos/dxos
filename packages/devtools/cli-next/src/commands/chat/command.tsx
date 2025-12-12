@@ -15,7 +15,7 @@ import * as Option from 'effect/Option';
 import { ErrorBoundary, createSignal } from 'solid-js';
 
 import { AiService, DEFAULT_EDGE_MODEL, DEFAULT_LMSTUDIO_MODEL, DEFAULT_OLLAMA_MODEL, ModelName } from '@dxos/ai';
-import { AiConversation, GenericToolkit } from '@dxos/assistant';
+import { type AiConversation, GenericToolkit } from '@dxos/assistant';
 import { ClientService } from '@dxos/client';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
@@ -74,9 +74,6 @@ export const chat = Command.make(
       const service = yield* AiService.AiService;
       const { verbose } = yield* CommandConfig;
 
-      // TODO(burdon): Add dynamically.
-      client.addTypes(types);
-
       const model = Option.getOrElse(options.model, () =>
         Match.value(options.provider).pipe(
           Match.when('lmstudio', () => DEFAULT_LMSTUDIO_MODEL),
@@ -92,6 +89,9 @@ export const chat = Command.make(
 
       invariant(client.halo.identity);
       const space = yield* Effect.promise(async () => {
+        // TODO(burdon): Add dynamically.
+        await client.addTypes(types);
+
         // TODO(burdon): Hangs if identity is not ready.
         await client.spaces.waitUntilReady();
         return client.spaces.default;
