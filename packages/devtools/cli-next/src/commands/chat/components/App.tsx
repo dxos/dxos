@@ -12,6 +12,7 @@ import { isTruthy } from '@dxos/util';
 import { type LogBuffer } from '../../../util';
 import { DXOS_VERSION } from '../../../version';
 import { theme } from '../theme';
+
 import { Banner } from './Banner';
 
 export type KeyHandler = {

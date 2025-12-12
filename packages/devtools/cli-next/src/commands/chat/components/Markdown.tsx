@@ -4,7 +4,7 @@
 
 import { type SyntaxNode } from '@lezer/common';
 import { parser } from '@lezer/markdown';
-import { createMemo, ErrorBoundary, For, Show } from 'solid-js';
+import { ErrorBoundary, For, Show, createMemo } from 'solid-js';
 
 import { log } from '@dxos/log';
 
