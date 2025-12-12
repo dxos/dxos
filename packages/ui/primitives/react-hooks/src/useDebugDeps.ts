@@ -2,6 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
+/* eslint-disable no-console */
+
 import { type DependencyList, useEffect, useRef } from 'react';
 
 /**

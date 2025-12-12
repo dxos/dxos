@@ -14,6 +14,7 @@ import { StackTrace } from './stack-trace';
 export const warnAfterTimeout = async <T>(timeout: number, context: string, body: () => Promise<T>): Promise<T> => {
   const stack = new StackTrace();
   const timeoutId = setTimeout(() => {
+    // eslint-disable-next-line no-console
     console.warn(
       `Action \`${context}\` is taking more then ${timeout.toLocaleString()}ms to complete. This might be a bug.\n${stack.getStack()}`,
     );

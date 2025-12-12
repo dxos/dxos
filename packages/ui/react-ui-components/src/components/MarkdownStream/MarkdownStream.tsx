@@ -21,6 +21,7 @@ import { createPortal } from 'react-dom';
 
 import { addEventListener } from '@dxos/async';
 import { runAndForwardErrors } from '@dxos/effect';
+import { log } from '@dxos/log';
 import { type ThemedClassName, useDynamicRef, useStateWithRef } from '@dxos/react-ui';
 import { useThemeContext } from '@dxos/react-ui';
 import {
@@ -250,7 +251,7 @@ class ErrorBoundary extends Component<PropsWithChildren, { hasError: boolean }> 
   }
 
   override componentDidCatch(error: unknown, info: ErrorInfo) {
-    console.error('ErrorBoundary caught:', error, info);
+    log.catch(error, info);
   }
 
   override render() {

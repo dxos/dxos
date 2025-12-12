@@ -5,6 +5,8 @@
 import { type Extension, Prec, StateEffect, StateField } from '@codemirror/state';
 import { keymap } from '@codemirror/view';
 
+import { log } from '@dxos/log';
+
 type Bookmark = {
   id: string;
   pos: number;
@@ -24,7 +26,7 @@ export const bookmarks = (): Extension => {
           key: 'Mod-ArrowUp',
           run: (view) => {
             const bookmarks = view.state.field(bookmarksField);
-            console.log('up', bookmarks);
+            log('up', bookmarks);
             return true;
           },
         },
@@ -32,7 +34,7 @@ export const bookmarks = (): Extension => {
           key: 'Mod-ArrowDown',
           run: (view) => {
             const bookmarks = view.state.field(bookmarksField);
-            console.log('down', bookmarks);
+            log('down', bookmarks);
             return true;
           },
         },
