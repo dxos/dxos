@@ -41,7 +41,7 @@
   },
   "peerDependencies": {
     "@dxos/random": "workspace:*",
-    "effect": "^3.13.3"
+    "effect": "catalog:"
   },
   "publishConfig": {
     "access": "public"

@@ -31,7 +31,7 @@
     "@dxos/plugin-help": "workspace:*",
     "@dxos/plugin-navtree": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@effect/platform": "^0.93.6",
+    "@effect/platform": "catalog:",
     "@tauri-apps/api": "catalog:",
     "@tauri-apps/plugin-os": "catalog:",
     "@tauri-apps/plugin-process": "catalog:",
@@ -45,7 +45,7 @@
   },
   "peerDependencies": {
     "@dxos/react-ui": "workspace:*",
-    "effect": "^3.13.3"
+    "effect": "catalog:"
   },
   "publishConfig": {
     "access": "public"

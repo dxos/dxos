@@ -26,17 +26,17 @@
   ],
   "dependencies": {
     "@dxos/log": "workspace:*",
-    "storybook": "^10.0.4"
+    "storybook": "catalog:"
   },
   "devDependencies": {
-    "@types/react": "~19.2.2",
-    "@types/react-dom": "~19.2.2",
-    "react": "~19.2.0",
-    "react-dom": "~19.2.0"
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
+    "react": "catalog:",
+    "react-dom": "catalog:"
   },
   "peerDependencies": {
-    "react": "^19.0.0",
-    "react-dom": "^19.0.0"
+    "react": "catalog:",
+    "react-dom": "catalog:"
   },
   "publishConfig": {
     "access": "public"

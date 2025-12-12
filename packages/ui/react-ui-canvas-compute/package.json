@@ -59,7 +59,7 @@
     "@dxos/util": "workspace:*",
     "@effect/platform": "catalog:",
     "@preact-signals/safe-react": "catalog:",
-    "chess.js": "^1.0.0"
+    "chess.js": "catalog:"
   },
   "devDependencies": {
     "@dxos/app-framework": "workspace:*",
@@ -73,20 +73,20 @@
     "@effect/ai": "catalog:",
     "@effect/experimental": "catalog:",
     "@types/lodash.defaultsdeep": "catalog:",
-    "@types/react": "~19.2.2",
-    "@types/react-dom": "~19.2.2",
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
     "effect": "catalog:",
     "lodash.defaultsdeep": "catalog:",
-    "react": "~19.2.0",
-    "react-dom": "~19.2.0",
+    "react": "catalog:",
+    "react-dom": "catalog:",
     "vite": "catalog:"
   },
   "peerDependencies": {
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
-    "effect": "^3.13.3",
-    "react": "^19.0.0",
-    "react-dom": "^19.0.0"
+    "effect": "catalog:",
+    "react": "catalog:",
+    "react-dom": "catalog:"
   },
   "publishConfig": {
     "access": "public"

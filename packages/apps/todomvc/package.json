@@ -20,8 +20,8 @@
     "@dxos/util": "workspace:*",
     "@sentry/react": "catalog:",
     "classnames": "catalog:",
-    "react": "~19.2.0",
-    "react-dom": "~19.2.0",
+    "react": "catalog:",
+    "react-dom": "catalog:",
     "react-router-dom": "catalog:",
     "todomvc-app-css": "catalog:",
     "todomvc-common": "catalog:"
@@ -30,8 +30,8 @@
     "@dxos/async": "workspace:*",
     "@dxos/test-utils": "workspace:*",
     "@sentry/vite-plugin": "catalog:",
-    "@types/react": "~19.2.2",
-    "@types/react-dom": "~19.2.2",
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
     "vite": "catalog:",
     "vite-plugin-top-level-await": "catalog:",
     "vite-plugin-wasm": "catalog:"

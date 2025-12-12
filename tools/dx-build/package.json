@@ -14,7 +14,7 @@
     "dx-build": "cli.js"
   },
   "dependencies": {
-    "chalk": "^4.1.0",
+    "chalk": "catalog:",
     "comment-json": "catalog:"
   },
   "devDependencies": {

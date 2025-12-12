@@ -64,24 +64,24 @@
     "@types/d3": "catalog:",
     "@types/geojson": "catalog:",
     "@types/leaflet": "catalog:",
-    "@types/react": "~19.2.2",
-    "@types/react-dom": "~19.2.2",
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
     "@types/three": "catalog:",
     "@types/topojson-client": "catalog:",
     "@types/topojson-simplify": "catalog:",
     "@types/topojson-specification": "catalog:",
     "JSONStream": "catalog:",
     "geojson2h3": "catalog:",
-    "leva": "^0.9.35",
-    "react": "~19.2.0",
-    "react-dom": "~19.2.0",
-    "three": "0.165.0"
+    "leva": "catalog:",
+    "react": "catalog:",
+    "react-dom": "catalog:",
+    "three": "catalog:"
   },
   "peerDependencies": {
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
-    "react": "^19.0.0",
-    "react-dom": "^19.0.0"
+    "react": "catalog:",
+    "react-dom": "catalog:"
   },
   "publishConfig": {
     "access": "public"

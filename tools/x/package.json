@@ -21,7 +21,7 @@
   "dependencies": {
     "@dxos/log": "workspace:*",
     "@octokit/rest": "catalog:",
-    "chalk": "^4.1.0",
+    "chalk": "catalog:",
     "color-hash": "catalog:",
     "columnify": "catalog:",
     "console-table-printer": "catalog:",
@@ -35,7 +35,7 @@
     "lodash.pick": "catalog:",
     "log-update": "catalog:",
     "node-notifier": "catalog:",
-    "react": "~19.2.0",
+    "react": "catalog:",
     "unzip-stream": "catalog:",
     "yargs": "catalog:"
   },
@@ -45,8 +45,8 @@
     "@types/columnify": "catalog:",
     "@types/lodash.defaultsdeep": "catalog:",
     "@types/lodash.pick": "catalog:",
-    "@types/minimatch": "^5.1.2",
-    "@types/react": "~19.2.2",
+    "@types/minimatch": "catalog:",
+    "@types/react": "catalog:",
     "@types/yargs": "catalog:"
   }
 }

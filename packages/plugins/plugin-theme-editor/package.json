@@ -25,7 +25,7 @@
   ],
   "dependencies": {
     "@ch-ui/tokens": "catalog:",
-    "@codemirror/lang-json": "6.0.2",
+    "@codemirror/lang-json": "catalog:",
     "@dxos/app-framework": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/plugin-graph": "workspace:*",
@@ -43,21 +43,21 @@
     "@dxos/storybook-utils": "workspace:*",
     "@effect-atom/atom-react": "catalog:",
     "@effect/platform": "catalog:",
-    "@types/react": "~19.2.2",
-    "@types/react-dom": "~19.2.2",
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
     "effect": "catalog:",
-    "react": "~19.2.0",
-    "react-dom": "~19.2.0",
+    "react": "catalog:",
+    "react-dom": "catalog:",
     "vite": "catalog:"
   },
   "peerDependencies": {
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
-    "@effect-atom/atom-react": "^0.3.4",
-    "@effect/platform": "^0.80.12",
-    "effect": "^3.13.3",
-    "react": "^19.0.0",
-    "react-dom": "^19.0.0"
+    "@effect-atom/atom-react": "catalog:",
+    "@effect/platform": "catalog:",
+    "effect": "catalog:",
+    "react": "catalog:",
+    "react-dom": "catalog:"
   },
   "publishConfig": {
     "access": "public"
