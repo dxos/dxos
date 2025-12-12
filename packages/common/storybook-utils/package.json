@@ -31,13 +31,13 @@
     "@dxos/log": "workspace:*",
     "@dxos/react-ui-dnd": "workspace:*",
     "@radix-ui/react-use-controllable-state": "1.1.0",
-    "lodash.defaultsdeep": "^4.6.1",
+    "lodash.defaultsdeep": "catalog:",
     "storybook": "^10.1.0"
   },
   "devDependencies": {
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
-    "@types/lodash.defaultsdeep": "^4.6.6",
+    "@types/lodash.defaultsdeep": "catalog:",
     "@types/react": "~19.2.2",
     "@types/react-dom": "~19.2.1",
     "react": "~19.2.0",

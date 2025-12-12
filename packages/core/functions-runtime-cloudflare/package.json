@@ -36,10 +36,10 @@
     "@dxos/log": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "@dxos/util": "workspace:*",
-    "effect": "3.18.3"
+    "effect": "catalog:"
   },
   "devDependencies": {
-    "@cloudflare/workers-types": "4.20251202.0",
+    "@cloudflare/workers-types": "^4.20251210.0",
     "@dxos/types": "workspace:*"
   },
   "publishConfig": {

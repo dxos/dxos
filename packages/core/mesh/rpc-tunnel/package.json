@@ -27,10 +27,10 @@
   "dependencies": {
     "@dxos/log": "workspace:*",
     "@dxos/rpc": "workspace:*",
-    "ua-parser-js": "^1.0.39"
+    "ua-parser-js": "catalog:"
   },
   "devDependencies": {
-    "@types/ua-parser-js": "^0.7.39"
+    "@types/ua-parser-js": "catalog:"
   },
   "publishConfig": {
     "access": "public"

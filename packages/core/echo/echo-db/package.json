@@ -35,8 +35,8 @@
     "src"
   ],
   "dependencies": {
-    "@automerge/automerge": "3.2.1",
-    "@automerge/automerge-repo": "2.5.1",
+    "@automerge/automerge": "catalog:",
+    "@automerge/automerge-repo": "catalog:",
     "@dxos/async": "workspace:*",
     "@dxos/codec-protobuf": "workspace:*",
     "@dxos/context": "workspace:*",
@@ -58,16 +58,16 @@
     "@dxos/teleport": "workspace:*",
     "@dxos/tracing": "workspace:*",
     "@dxos/util": "workspace:*",
-    "effect": "3.18.3",
-    "eventemitter3": "^5.0.1",
-    "lodash.isequal": "^4.5.0"
+    "effect": "catalog:",
+    "eventemitter3": "catalog:",
+    "lodash.isequal": "catalog:"
   },
   "devDependencies": {
     "@dxos/indexing": "workspace:*",
     "@dxos/random": "workspace:*",
     "@dxos/test-utils": "workspace:*",
-    "@preact/signals-core": "^1.12.1",
-    "@types/lodash.isequal": "^4.5.0"
+    "@preact/signals-core": "catalog:",
+    "@types/lodash.isequal": "catalog:"
   },
   "publishConfig": {
     "access": "public"

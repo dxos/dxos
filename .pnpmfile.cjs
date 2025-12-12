@@ -95,6 +95,11 @@ function readPackage(packageJson, context) {
       break;
     }
 
+    case '@opentui/solid': {
+      packageJson.peerDependencies['solid-js'] = '^1.9.9';
+      break;
+    }
+
     case '@rollup/pluginutils': {
       packageJson.peerDependencies['rollup'] = '^2.0.0||^3.0.0';
       break;

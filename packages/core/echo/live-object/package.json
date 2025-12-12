@@ -38,11 +38,11 @@
     "@dxos/log": "workspace:*",
     "@dxos/node-std": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@preact/signals-core": "^1.12.1",
-    "effect": "3.18.3"
+    "@preact/signals-core": "catalog:",
+    "effect": "catalog:"
   },
   "devDependencies": {
-    "@preact/signals-core": "^1.12.1"
+    "@preact/signals-core": "catalog:"
   },
   "publishConfig": {
     "access": "public"

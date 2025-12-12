@@ -40,16 +40,16 @@
     "@dxos/live-object": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@preact-signals/safe-react": "^0.9.0",
-    "@preact/signals-core": "^1.12.1",
-    "@radix-ui/primitive": "1.1.1",
-    "@radix-ui/react-compose-refs": "1.1.1",
-    "@radix-ui/react-context": "1.1.1",
-    "@radix-ui/react-menu": "2.1.6",
-    "@radix-ui/react-primitive": "2.0.2",
-    "@radix-ui/react-slot": "1.1.2",
+    "@preact-signals/safe-react": "catalog:",
+    "@preact/signals-core": "catalog:",
+    "@radix-ui/primitive": "catalog:",
+    "@radix-ui/react-compose-refs": "catalog:",
+    "@radix-ui/react-context": "catalog:",
+    "@radix-ui/react-menu": "catalog:",
+    "@radix-ui/react-primitive": "catalog:",
+    "@radix-ui/react-slot": "catalog:",
     "@radix-ui/react-use-controllable-state": "1.1.0",
-    "effect": "3.18.3"
+    "effect": "catalog:"
   },
   "devDependencies": {
     "@dxos/random": "workspace:*",
@@ -60,7 +60,7 @@
     "@types/react-dom": "~19.2.2",
     "react": "~19.2.0",
     "react-dom": "~19.2.0",
-    "vite": "7.1.9"
+    "vite": "catalog:"
   },
   "peerDependencies": {
     "@dxos/react-ui": "workspace:*",

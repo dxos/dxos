@@ -34,14 +34,14 @@
     "@dxos/node-std": "workspace:*",
     "@dxos/util": "workspace:*",
     "chalk": "^4.1.0",
-    "js-yaml": "^4.1.0",
-    "lodash.defaultsdeep": "^4.6.1",
-    "lodash.omit": "^4.5.0"
+    "js-yaml": "catalog:",
+    "lodash.defaultsdeep": "catalog:",
+    "lodash.omit": "catalog:"
   },
   "devDependencies": {
     "@types/js-yaml": "^4.0.5",
-    "@types/lodash.defaultsdeep": "^4.6.6",
-    "@types/lodash.omit": "^4.5.7"
+    "@types/lodash.defaultsdeep": "catalog:",
+    "@types/lodash.omit": "catalog:"
   },
   "publishConfig": {
     "access": "public"

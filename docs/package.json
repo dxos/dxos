@@ -16,10 +16,10 @@
     "typedoc": "./scripts/collect-typedoc.sh"
   },
   "dependencies": {
-    "@astrojs/starlight": "^0.32.5",
-    "astro": "^5.13.1",
-    "sharp": "^0.32.5",
-    "starlight-links-validator": "^0.14.3"
+    "@astrojs/starlight": "catalog:",
+    "astro": "catalog:",
+    "sharp": "catalog:",
+    "starlight-links-validator": "catalog:"
   },
   "devDependencies": {
     "@dxos/app-framework": "workspace:*",
@@ -30,6 +30,6 @@
     "@dxos/echo-signals": "workspace:*",
     "@dxos/live-object": "workspace:*",
     "@dxos/react-client": "workspace:*",
-    "@preact/signals-core": "^1.12.1"
+    "@preact/signals-core": "catalog:"
   }
 }
