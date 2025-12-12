@@ -7,24 +7,38 @@ import * as Options from '@effect/cli/Options';
 import * as Console from 'effect/Console';
 import * as Effect from 'effect/Effect';
 
-import { Filter } from '@dxos/echo';
-import { Database } from '@dxos/echo';
+import { Database, Filter } from '@dxos/echo';
 import { Trigger } from '@dxos/functions';
 
+import { CommandConfig } from '../../../services';
 import { spaceLayer } from '../../../util';
 import { Common } from '../../options';
+
+import { prettyPrintTrigger } from './util';
 
 export const list = Command.make(
   'list',
   {
     spaceId: Common.spaceId.pipe(Options.optional),
   },
-  () =>
-    Effect.gen(function* () {
-      const triggers = yield* Database.Service.runQuery(Filter.type(Trigger.Trigger));
+  Effect.fn(function* () {
+    const { json } = yield* CommandConfig;
+    const triggers = yield* Database.Service.runQuery(Filter.type(Trigger.Trigger));
+
+    if (json) {
       yield* Console.log(JSON.stringify(triggers, null, 2));
-    }),
+    } else {
+      if (triggers.length === 0) {
+        yield* Console.log('No triggers found.');
+      } else {
+        for (const trigger of triggers) {
+          yield* Console.log(yield* prettyPrintTrigger(trigger));
+          yield* Console.log('');
+        }
+      }
+    }
+  }),
 ).pipe(
   Command.withDescription('List triggers configured on EDGE.'),
-  Command.provide(({ spaceId }) => spaceLayer(spaceId)),
+  Command.provide(({ spaceId }) => spaceLayer(spaceId, true)),
 );
