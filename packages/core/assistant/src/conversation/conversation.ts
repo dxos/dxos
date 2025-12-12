@@ -88,12 +88,13 @@ export class AiConversation extends Resource {
   createRequest(
     params: AiConversationRunParams,
   ): Effect.Effect<Message.Message[], AiSessionRunError, AiSessionRunRequirements> {
-    return Effect.gen(this, function* () {
+    const self = this;
+    return Effect.gen(function* () {
       const session = new AiSession();
-      const history = yield* Effect.promise(() => this.getHistory());
+      const history = yield* Effect.promise(() => self.getHistory());
 
       // Get context objects.
-      const context = yield* Effect.promise(() => this.context.query());
+      const context = yield* Effect.promise(() => self.context.query());
       const blueprints = yield* Effect.forEach(context.blueprints.values(), Database.Service.loadOption).pipe(
         Effect.map(Array.filter(Option.isSome)),
         Effect.map(Array.map((option) => option.value)),
@@ -101,7 +102,7 @@ export class AiConversation extends Resource {
 
       // Create toolkit.
       const toolkit = yield* createToolkit({
-        toolkit: this._toolkit,
+        toolkit: self._toolkit,
         blueprints,
       });
 
@@ -112,7 +113,7 @@ export class AiConversation extends Resource {
       );
 
       const start = Date.now();
-      log('run', {
+      log.info('run', {
         history: history.length,
         blueprints: blueprints.length,
         objects: objects.length,
@@ -122,15 +123,15 @@ export class AiConversation extends Resource {
       // Process request.
       const messages = yield* session.run({ history, blueprints, toolkit, objects, ...params }).pipe(
         Effect.provideService(AiContextService, {
-          binder: this.context,
+          binder: self.context,
         }),
       );
 
-      log('result', { messages: messages.length, duration: Date.now() - start });
+      log.info('result', { messages: messages.length, duration: Date.now() - start });
 
       // Append to queue.
-      yield* Effect.promise(() => this._queue.append(messages));
+      yield* Effect.promise(() => self._queue.append(messages));
       return messages;
-    }).pipe(Effect.withSpan('AiConversation.request'));
+    });
   }
 }

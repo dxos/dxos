@@ -10,16 +10,24 @@ import { log } from '@dxos/log';
 import { isTruthy } from '@dxos/util';
 
 import { type LogBuffer } from '../../../util';
+import { DXOS_VERSION } from '../../../version';
 import { theme } from '../theme';
+
+import { Banner } from './Banner';
 
 export type KeyHandler = {
   hint: string;
   handler: (key: KeyEvent) => void;
 };
 
+/**
+ * App context.
+ */
 export const AppContext = createContext<{
   focus: Accessor<string | undefined>;
   hint: Accessor<string | undefined>;
+  processing: Accessor<boolean>;
+  setProcessing: (processing: boolean) => void;
 }>();
 
 export type AppProps = ParentProps<{
@@ -40,7 +48,9 @@ export const App = (props: AppProps) => {
   // Focus.
   const focusElements = [...(props.focusElements ?? [])];
   const [focus, setFocus] = createSignal<string | undefined>(props.focusElements?.[0]);
-  const [showConsole, setShowConsole] = createSignal<boolean>(false);
+  const [showConsole, setShowConsole] = createSignal(false); // TODO(burdon): Option.
+  const [showBanner, setShowBanner] = createSignal(true);
+  const [processing, setProcessing] = createSignal(false);
 
   // Hints.
   const [hint, setHint] = createSignal<string | undefined>();
@@ -51,6 +61,13 @@ export const App = (props: AppProps) => {
       setHint(hints[idx]);
     }
   };
+
+  // Hide banner when processing.
+  createEffect(() => {
+    if (processing()) {
+      setShowBanner(false);
+    }
+  });
 
   const handlers: KeyHandler[] = [
     //
@@ -130,8 +147,9 @@ export const App = (props: AppProps) => {
   });
 
   return (
-    <AppContext.Provider value={{ focus, hint }}>
-      <box marginTop={showConsole() ? 13 : 0}>{props.children}</box>
+    <AppContext.Provider value={{ focus, hint, processing, setProcessing }}>
+      {showBanner() && <Banner version={DXOS_VERSION} />}
+      {props.children}
     </AppContext.Provider>
   );
 };
