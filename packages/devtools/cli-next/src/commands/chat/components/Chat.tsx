@@ -29,18 +29,20 @@ export const Chat = (props: ChatProps) => {
   const chatMessages = useChatMessages();
   const [inputValue, setInputValue] = createSignal('');
 
-  // TODO(burdon): Testing.
-  // chatMessages.addMessage(
-  //   createAssistantMessage(
-  //     [
-  //       'this is `inline`',
-  //       '```typescript',
-  //       '// hello.ts',
-  //       'console.log("hello");',
-  //       '```',
-  //     ].join('\n'),
-  //   ),
-  // );
+  chatMessages.addMessage(
+    createAssistantMessage(
+      [
+        //
+        'Hello! I am an **AI** assistant.',
+        '',
+        'Suggested actions:',
+        '',
+        '- **Action 1**',
+        '- **Action 2**',
+        '',
+      ].join('\n'),
+    ),
+  );
 
   const handleSubmit = async (value: string) => {
     const prompt = value.trim();

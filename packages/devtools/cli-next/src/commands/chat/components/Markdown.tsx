@@ -14,6 +14,7 @@ export type MarkdownProps = {
   content?: string;
 };
 
+// TODO(burdon): Create unit test.
 export const Markdown = (props: MarkdownProps) => {
   log.info('markdown', { content: props.content });
 
@@ -41,6 +42,111 @@ export const Markdown = (props: MarkdownProps) => {
       </box>
     </ErrorBoundary>
   );
+};
+
+const getChildren = (node: SyntaxNode) => {
+  const nodes: SyntaxNode[] = [];
+  let child = node.firstChild;
+  while (child) {
+    nodes.push(child);
+    child = child.nextSibling;
+  }
+  return nodes;
+};
+
+const RenderNode = (props: { node: SyntaxNode; content: string }) => {
+  log('render', { type: props.node.name, content: props.content.length });
+
+  const children = getChildren(props.node);
+
+  switch (props.node.name) {
+    case 'Document':
+      return <For each={children}>{(child) => <RenderNode node={child} content={props.content} />}</For>;
+
+    case 'Paragraph':
+      return (
+        <box marginBottom={props.node.parent?.name === 'ListItem' ? 0 : 1}>
+          <text style={{ fg: theme.text.default }}>
+            <RenderInline node={props.node} content={props.content} />
+          </text>
+        </box>
+      );
+
+    case 'ATXHeading1':
+    case 'ATXHeading2':
+    case 'ATXHeading3':
+    case 'ATXHeading4':
+    case 'ATXHeading5':
+    case 'ATXHeading6':
+      return (
+        <box marginTop={1} marginBottom={1}>
+          <text style={{ fg: theme.text.bold }}>
+            <RenderInline node={props.node} content={props.content} />
+          </text>
+        </box>
+      );
+
+    case 'FencedCode':
+      return (
+        <box marginBottom={1} padding={1} flexDirection='column' style={{ backgroundColor: theme.input.bg }}>
+          <For each={children}>{(child) => <RenderNode node={child} content={props.content} />}</For>
+        </box>
+      );
+
+    case 'CodeText':
+      return <span style={{ fg: theme.log.info }}>{props.content.slice(props.node.from, props.node.to)}</span>;
+
+    case 'InlineCode':
+      return (
+        <span style={{ fg: theme.log.info }}>
+          <RenderInline node={props.node} content={props.content} />;
+        </span>
+      );
+
+    case 'BulletList':
+    case 'OrderedList':
+      return (
+        <box flexDirection='column' marginBottom={1}>
+          <For each={children}>{(child) => <RenderNode node={child} content={props.content} />}</For>
+        </box>
+      );
+
+    case 'ListItem':
+      return (
+        <box flexDirection='row'>
+          <For each={children}>{(child) => <RenderNode node={child} content={props.content} />}</For>
+        </box>
+      );
+
+    case 'ListMark': // - or 1.
+      return <span style={{ fg: theme.text.primary }}>{props.content.slice(props.node.from, props.node.to)} </span>;
+
+    case 'Blockquote':
+      return (
+        <box flexDirection='column' paddingLeft={1} borderStyle='single' style={{ borderColor: theme.text.subdued }}>
+          <For each={children}>{(child) => <RenderNode node={child} content={props.content} />}</For>
+        </box>
+      );
+
+    case 'Emphasis':
+    case 'StrongEmphasis':
+      return (
+        <span style={{ fg: theme.text.primary }}>
+          <RenderInline node={props.node} content={props.content} />
+        </span>
+      );
+
+    case 'CodeMark': // ```
+    case 'CodeInfo': // language
+    case 'HeaderMark': // #
+    case 'QuoteMark': // >
+    case 'EmphasisMark': // *
+      return null;
+
+    // Use RenderInline for unknown nodes to ensure text gaps are rendered.
+    default:
+      return <RenderInline node={props.node} content={props.content} />;
+  }
 };
 
 const RenderInline = (props: { node: SyntaxNode; content: string }) => {
@@ -78,117 +184,12 @@ const RenderInline = (props: { node: SyntaxNode; content: string }) => {
         }
 
         const text = props.content.slice(item.from, item.to);
-        if (text === '\n') {
-          return null;
-        }
+        // if (text === '\n') {
+        //   return null;
+        // }
 
         return <>{text}</>;
       })}
     </>
   );
-};
-
-const RenderNode = (props: { node: SyntaxNode; content: string }) => {
-  log('render', { type: props.node.name, content: props.content.length });
-
-  const getChildren = () => {
-    const nodes: SyntaxNode[] = [];
-    let child = props.node.firstChild;
-    while (child) {
-      nodes.push(child);
-      child = child.nextSibling;
-    }
-    return nodes;
-  };
-
-  const children = getChildren();
-
-  switch (props.node.name) {
-    case 'Document':
-      return <For each={children}>{(child) => <RenderNode node={child} content={props.content} />}</For>;
-
-    case 'Paragraph':
-      return (
-        <box marginBottom={props.node.parent?.name === 'ListItem' ? 0 : 1}>
-          <text style={{ fg: theme.text.default }}>
-            <RenderInline node={props.node} content={props.content} />
-          </text>
-        </box>
-      );
-
-    case 'ATXHeading1':
-    case 'ATXHeading2':
-    case 'ATXHeading3':
-    case 'ATXHeading4':
-    case 'ATXHeading5':
-    case 'ATXHeading6':
-      return (
-        <box marginTop={1} marginBottom={1}>
-          <text style={{ fg: theme.text.bold }}>
-            <RenderInline node={props.node} content={props.content} />
-          </text>
-        </box>
-      );
-
-    case 'FencedCode':
-      return (
-        <box marginBottom={1} padding={1} flexDirection='column' style={{ backgroundColor: theme.input.bg }}>
-          <For each={children}>{(child) => <RenderNode node={child} content={props.content} />}</For>
-        </box>
-      );
-
-    case 'CodeText':
-      return <text style={{ fg: theme.log.info }}>{props.content.slice(props.node.from, props.node.to)}</text>;
-
-    case 'InlineCode':
-      return (
-        <span style={{ fg: theme.log.info }}>
-          <RenderInline node={props.node} content={props.content} />
-        </span>
-      );
-
-    case 'BulletList':
-    case 'OrderedList':
-      return (
-        <box flexDirection='column' marginBottom={1}>
-          <For each={children}>{(child) => <RenderNode node={child} content={props.content} />}</For>
-        </box>
-      );
-
-    case 'ListItem':
-      return (
-        <box flexDirection='row'>
-          <For each={children}>{(child) => <RenderNode node={child} content={props.content} />}</For>
-        </box>
-      );
-
-    case 'ListMark': // - or 1.
-      return <text style={{ fg: theme.text.primary }}>{props.content.slice(props.node.from, props.node.to)} </text>;
-
-    case 'Blockquote':
-      return (
-        <box flexDirection='column' paddingLeft={1} borderStyle='single' style={{ borderColor: theme.text.subdued }}>
-          <For each={children}>{(child) => <RenderNode node={child} content={props.content} />}</For>
-        </box>
-      );
-
-    case 'CodeMark': // ```
-    case 'CodeInfo': // language
-    case 'HeaderMark': // #
-    case 'QuoteMark': // >
-    case 'EmphasisMark': // *
-      return null;
-
-    case 'Emphasis':
-    case 'StrongEmphasis':
-      return (
-        <span style={{ fg: theme.text.bold }}>
-          <RenderInline node={props.node} content={props.content} />
-        </span>
-      );
-
-    // Use RenderInline for unknown nodes to ensure text gaps are rendered.
-    default:
-      return <RenderInline node={props.node} content={props.content} />;
-  }
 };
