@@ -114,7 +114,7 @@
         "owner": "typescript",
         "pattern": [
           {
-            "regexp": "^(.*?)\\s*\\|\\s*(.*?)\\((\\d+),(\\d+)\\):\\s*(error\\s*TS\\d+:\\s*.*)",
+            "regexp": "^(.*?)\\s*\\|\\s*(.*?)\\((\\d+),(\\d+)\\):\\s*error\\s*TS(\\d+):\\s*(.*)",
             "file": 2,
             "line": 3,
             "column": 4,
