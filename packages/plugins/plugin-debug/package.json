@@ -26,12 +26,7 @@
   "dependencies": {
     "@antv/graphlib": "catalog:",
     "@antv/layout": "catalog:",
-<<<<<<< HEAD
     "@automerge/automerge": "catalog:",
-||||||| 5b94dae4c4
-=======
-    "@automerge/automerge": "3.2.1",
->>>>>>> origin/main
     "@dxos/app-framework": "workspace:*",
     "@dxos/assistant-toolkit": "workspace:*",
     "@dxos/async": "workspace:*",
