@@ -482,7 +482,7 @@ catalog:
   koffi: ^2.8.0
   kubo-rpc-client: ^4.1.1
   leaflet: ^1.9.4
-  leva: ^0.9.35
+  leva: ^0.10.1
   level-transcoder: ^1.0.1
   level: ^8.0.1
   lib0: ^0.2.65
