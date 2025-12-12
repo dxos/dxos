@@ -2,12 +2,12 @@
 // Copyright 2025 DXOS.org
 //
 
+import type * as Tool from '@effect/ai/Tool';
 import * as Effect from 'effect/Effect';
 import * as Function from 'effect/Function';
 
 import { type AiParser, type ConsolePrinter } from '@dxos/ai';
 import { type Message } from '@dxos/types';
-import { type Tool } from '@effect/ai';
 
 /**
  * Live observer of the generation process.

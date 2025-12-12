@@ -3,6 +3,7 @@
 //
 
 import type * as Response from '@effect/ai/Response';
+import type * as Tool from '@effect/ai/Tool';
 import * as Effect from 'effect/Effect';
 import * as Function from 'effect/Function';
 import * as Option from 'effect/Option';
@@ -16,7 +17,6 @@ import { log } from '@dxos/log';
 import { type ContentBlock } from '@dxos/types';
 
 import { type StreamBlock, StreamTransform } from './parser';
-import type { Tool } from '@effect/ai';
 
 /**
  * Tags that are used by the model to indicate the type of content.
