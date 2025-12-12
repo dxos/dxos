@@ -12,10 +12,10 @@ import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
 import * as Match from 'effect/Match';
 import * as Option from 'effect/Option';
-import { ErrorBoundary } from 'solid-js';
+import { ErrorBoundary, createSignal } from 'solid-js';
 
 import { AiService, DEFAULT_EDGE_MODEL, DEFAULT_LMSTUDIO_MODEL, DEFAULT_OLLAMA_MODEL, ModelName } from '@dxos/ai';
-import { GenericToolkit } from '@dxos/assistant';
+import { AiConversation, GenericToolkit } from '@dxos/assistant';
 import { ClientService } from '@dxos/client';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
@@ -74,6 +74,9 @@ export const chat = Command.make(
       const service = yield* AiService.AiService;
       const { verbose } = yield* CommandConfig;
 
+      // TODO(burdon): Add dynamically.
+      client.addTypes(types);
+
       const model = Option.getOrElse(options.model, () =>
         Match.value(options.provider).pipe(
           Match.when('lmstudio', () => DEFAULT_LMSTUDIO_MODEL),
@@ -85,18 +88,23 @@ export const chat = Command.make(
 
       const toolkit = GenericToolkit.merge(...toolkits);
       const processor = new ChatProcessor(runtime, toolkit, functions, service.metadata);
-      const conversation = yield* Effect.promise(async () => {
-        invariant(client.halo.identity);
+      const [conversation, setConversation] = createSignal<AiConversation | undefined>(undefined);
 
-        // TODO(burdon): Add dynamically?
-        client.addTypes(types);
-
+      invariant(client.halo.identity);
+      const space = yield* Effect.promise(async () => {
         // TODO(burdon): Hangs if identity is not ready.
         await client.spaces.waitUntilReady();
-        const space = client.spaces.default;
-
-        return processor.createConversation(space, options.blueprints);
+        return client.spaces.default;
       });
+
+      const handleConversationCreate = async (blueprints: string[]) => {
+        const conversation = await processor.createConversation(space, blueprints);
+        setConversation(conversation);
+        return conversation;
+      };
+
+      // TODO(burdon): Load previous conversation? Need Chat object for state.
+      yield* Effect.promise(() => handleConversationCreate(options.blueprints));
 
       const exitSignal = yield* Deferred.make<void, never>();
 
@@ -115,7 +123,20 @@ export const chat = Command.make(
               }}
             >
               <App showConsole={options.debug} focusElements={['input', 'messages']} logBuffer={logBuffer}>
-                <Chat processor={processor} conversation={conversation} model={model} verbose={verbose} />
+                {conversation() && (
+                  <Chat
+                    processor={processor}
+                    conversation={conversation()!}
+                    model={model}
+                    verbose={verbose}
+                    onConversationCreate={({ blueprints }) => {
+                      // TODO(burdon): This is a hack to get the promise to run.
+                      setTimeout(async () => {
+                        await handleConversationCreate(blueprints);
+                      });
+                    }}
+                  />
+                )}
               </App>
             </ErrorBoundary>
           ),

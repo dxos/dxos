@@ -8,7 +8,6 @@ import { Match, Switch, createSignal, useContext } from 'solid-js';
 
 import { type ModelName } from '@dxos/ai';
 import { type AiConversation, GenerationObserver } from '@dxos/assistant';
-import { log } from '@dxos/log';
 
 import { useChatMessages } from '../hooks';
 import { type ChatProcessor } from '../processor';
@@ -30,6 +29,7 @@ export type ChatProps = {
   conversation: AiConversation;
   model: ModelName;
   verbose?: boolean;
+  onConversationCreate?: ({ blueprints }: { blueprints: string[] }) => void;
 };
 
 export const Chat = (props: ChatProps) => {
@@ -103,8 +103,8 @@ export const Chat = (props: ChatProps) => {
           <Match when={popup() === 'blueprints'}>
             <BlueprintPicker
               onConfirm={(ids) => {
-                log.info(`selected: [${ids.join(', ')}]`);
                 setPopup(undefined);
+                props.onConversationCreate?.({ blueprints: ids });
               }}
               onCancel={() => setPopup(undefined)}
             />
@@ -121,7 +121,7 @@ export const Chat = (props: ChatProps) => {
         value={inputValue}
         onInput={setInputValue}
         onSubmit={() => handleSubmit(inputValue())}
-        focused={() => (popup() !== undefined ? false : undefined)}
+        focused={() => popup() === 'logo' || popup() === undefined}
       />
       <StatusBar model={props.model} metadata={props.processor.metadata} processing={context?.processing} />
     </box>
