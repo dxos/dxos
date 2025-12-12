@@ -12,6 +12,7 @@ import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
 import * as Match from 'effect/Match';
 import * as Option from 'effect/Option';
+import { ErrorBoundary } from 'solid-js';
 
 import { AiService, DEFAULT_EDGE_MODEL, DEFAULT_LMSTUDIO_MODEL, DEFAULT_OLLAMA_MODEL, ModelName } from '@dxos/ai';
 import { GenericToolkit } from '@dxos/assistant';
@@ -66,6 +67,7 @@ export const chat = Command.make(
       const logBuffer = createLogBuffer();
       log.config({ filter: options.logLevel });
       log.runtimeConfig.processors = [logBuffer.processor];
+      log.info('starting...');
 
       const client = yield* ClientService;
       const runtime = yield* Effect.runtime<AiChatServices>();
@@ -97,9 +99,20 @@ export const chat = Command.make(
       yield* Effect.promise(() =>
         render(
           () => (
-            <App showConsole={options.debug} focusElements={['input', 'messages']} logBuffer={logBuffer}>
-              <Chat processor={processor} conversation={conversation} model={model} verbose={verbose} />
-            </App>
+            <ErrorBoundary
+              fallback={(err: any) => {
+                log.catch(err);
+                return (
+                  <box flexDirection='column' overflow='hidden'>
+                    <text style={{ fg: theme.log.error }}>{err.stack}</text>
+                  </box>
+                );
+              }}
+            >
+              <App showConsole={options.debug} focusElements={['input', 'messages']} logBuffer={logBuffer}>
+                <Chat processor={processor} conversation={conversation} model={model} verbose={verbose} />
+              </App>
+            </ErrorBoundary>
           ),
           {
             exitOnCtrlC: true,
@@ -112,6 +125,7 @@ export const chat = Command.make(
             openConsoleOnError: true,
             consoleOptions: {
               position: ConsolePosition.TOP,
+              sizePercent: 25, // TODO(burdon): Option.
               colorDefault: theme.log.default,
               colorDebug: theme.log.debug,
               colorInfo: theme.log.info,
@@ -139,3 +153,21 @@ export const chat = Command.make(
   Command.provide(({ provider, spaceId }) => chatLayer({ provider, spaceId, functions })),
   Command.provideEffectDiscard(() => withTypes(...typeRegistry)),
 );
+function restoreTerminalState() {
+  // Leave raw mode if enabled
+  try {
+    process.stdin.setRawMode?.(false);
+  } catch {}
+
+  // Show cursor
+  process.stdout.write('\x1b[?25h');
+
+  // Exit alternate screen buffer
+  process.stdout.write('\x1b[?1049l');
+
+  // Reset colors & styles
+  process.stdout.write('\x1b[0m');
+
+  // Move cursor to a normal sane location
+  process.stdout.write('\x1b[H');
+}
