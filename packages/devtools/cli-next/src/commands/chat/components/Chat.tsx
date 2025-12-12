@@ -2,20 +2,27 @@
 // Copyright 2025 DXOS.org
 //
 
+import { useKeyboard } from '@opentui/solid';
 import * as Effect from 'effect/Effect';
-import { createSignal, useContext } from 'solid-js';
+import { Match, Switch, createSignal, useContext } from 'solid-js';
 
 import { type ModelName } from '@dxos/ai';
 import { type AiConversation, GenerationObserver } from '@dxos/assistant';
+import { log } from '@dxos/log';
 
 import { useChatMessages } from '../hooks';
 import { type ChatProcessor } from '../processor';
 import { createAssistantMessage, createUserMessage } from '../types';
 
+import { DXOS_VERSION } from '../../../version';
 import { AppContext } from './App';
+import { Banner } from './Banner';
 import { ChatInput } from './ChatInput';
 import { ChatMessages } from './ChatMessages';
+import { Picker } from './Picker';
 import { StatusBar } from './StatusBar';
+
+// TODO(burdon): Show/select blueprints/objects.
 
 export type ChatProps = {
   processor: ChatProcessor;
@@ -28,10 +35,16 @@ export const Chat = (props: ChatProps) => {
   const context = useContext(AppContext);
   const chatMessages = useChatMessages();
   const [inputValue, setInputValue] = createSignal('');
+  const [popup, setPopup] = createSignal<'logo' | 'blueprints' | undefined>('logo');
 
-  // chatMessages.addMessage(createAssistantMessage(TEST_MARKDOWN));
+  useKeyboard((key) => {
+    if (key.name === 'b' && key.ctrl) {
+      setPopup(popup() === 'blueprints' ? undefined : 'blueprints');
+    }
+  });
 
   const handleSubmit = async (value: string) => {
+    setPopup(undefined);
     const prompt = value.trim();
     if (!prompt || context?.processing()) {
       return;
@@ -83,10 +96,38 @@ export const Chat = (props: ChatProps) => {
 
   return (
     <box flexDirection='column'>
-      <box padding={1}>
-        <ChatMessages messages={chatMessages.messages.data} />
+      <box padding={1} height='100%' justifyContent='center' alignItems='center'>
+        <Switch>
+          <Match when={popup() === 'blueprints'}>
+            <Picker
+              multi
+              title='Select Blueprints'
+              items={['Assistant', 'Chess', 'Markdown', 'Projects', 'Table']}
+              onSelect={(item) => {
+                log.info(`Selected: ${item}`);
+                setPopup(undefined);
+              }}
+              onConfirm={(items) => {
+                log.info(`Selected: ${items.join(', ')}`);
+                setPopup(undefined);
+              }}
+              onCancel={() => setPopup(undefined)}
+            />
+          </Match>
+          <Match when={popup() === 'logo'}>
+            <Banner version={DXOS_VERSION} />
+          </Match>
+          <Match when={popup() === undefined}>
+            <ChatMessages messages={chatMessages.messages.data} />
+          </Match>
+        </Switch>
       </box>
-      <ChatInput value={inputValue} onInput={setInputValue} onSubmit={() => handleSubmit(inputValue())} />
+      <ChatInput
+        value={inputValue}
+        onInput={setInputValue}
+        onSubmit={() => handleSubmit(inputValue())}
+        focused={popup() ? false : undefined}
+      />
       <StatusBar model={props.model} metadata={props.processor.metadata} processing={context?.processing} />
     </box>
   );

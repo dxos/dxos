@@ -14,6 +14,7 @@ type ChatInputProps = {
   value: Accessor<string>;
   onInput: (value: string) => void;
   onSubmit: () => void;
+  focused?: boolean;
 };
 
 export const ChatInput = (props: ChatInputProps) => {
@@ -45,7 +46,7 @@ export const ChatInput = (props: ChatInputProps) => {
           ref={textarea}
           width='100%'
           height='100%'
-          focused={context?.focus?.() === 'input'}
+          focused={props.focused ?? context?.focus?.() === 'input'}
           placeholder='Search or ask anything...'
           initialValue={props.value()}
           onContentChange={() => props.onInput(textarea?.plainText ?? '')}

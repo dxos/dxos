@@ -173,10 +173,13 @@ const RenderInline = (props: { node: SyntaxNode; content: string }) => {
       result.push({ type: 'node', node: child });
       pos = child.to;
 
-      if (child.name === 'HeaderMark') {
-        const char = props.content[pos];
-        if (char === ' ') {
-          pos++;
+      switch (child.name) {
+        case 'HeaderMark': {
+          const char = props.content[pos];
+          if (char === ' ') {
+            pos++;
+          }
+          break;
         }
       }
 
