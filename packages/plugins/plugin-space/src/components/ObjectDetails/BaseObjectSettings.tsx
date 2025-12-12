@@ -11,7 +11,6 @@ import React, { type PropsWithChildren, useCallback, useMemo } from 'react';
 import { DXN, Obj, type Ref, Tag, Type } from '@dxos/echo';
 import { type JsonPath, splitJsonPath } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
-import { getSpace } from '@dxos/react-client/echo';
 import { type ThemedClassName } from '@dxos/react-ui';
 import { Form, omitId } from '@dxos/react-ui-form';
 import { isNonNullable } from '@dxos/util';
@@ -31,7 +30,7 @@ export type BaseObjectSettingsProps = ThemedClassName<
 
 // TODO(wittjosiah): Reconcile w/ ObjectDetailsPanel.
 export const BaseObjectSettings = ({ classNames, children, object }: BaseObjectSettingsProps) => {
-  const space = getSpace(object);
+  const db = Obj.getDatabase(object);
 
   const formSchema = useMemo(() => {
     return Function.pipe(
@@ -43,7 +42,7 @@ export const BaseObjectSettings = ({ classNames, children, object }: BaseObjectS
   }, [object]);
 
   const meta = Obj.getMeta(object);
-  const tags = (meta.tags ?? []).map((tag) => space?.db.makeRef(DXN.parse(tag))).filter(isNonNullable);
+  const tags = (meta.tags ?? []).map((tag) => db?.makeRef(DXN.parse(tag))).filter(isNonNullable);
   const values = useMemo(
     () => ({
       tags,
@@ -53,8 +52,8 @@ export const BaseObjectSettings = ({ classNames, children, object }: BaseObjectS
   );
 
   const handleCreate = useCallback((schema: Type.Entity.Any, values: any) => {
-    invariant(space);
-    const newObject = space.db.add(Obj.make(schema, values));
+    invariant(db);
+    const newObject = db.add(Obj.make(schema, values));
     if (Obj.instanceOf(newObject, Tag.Tag)) {
       const meta = Obj.getMeta(object);
       meta.tags = [...(meta.tags ?? []), Obj.getDXN(newObject).toString()];
@@ -101,7 +100,7 @@ export const BaseObjectSettings = ({ classNames, children, object }: BaseObjectS
       createOptionIcon='ph--plus--regular'
       createOptionLabel={['add tag label', { ns: pluginMeta.id }]}
       createInitialValuePath='label'
-      db={space?.db}
+      db={db}
       onValuesChanged={handleChange}
       onCreate={handleCreate}
     >

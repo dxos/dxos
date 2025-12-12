@@ -7,9 +7,9 @@ import React, { useCallback, useState } from 'react';
 
 import { createIntent } from '@dxos/app-framework';
 import { useIntentDispatcher } from '@dxos/app-framework/react';
-import { Obj } from '@dxos/echo';
+import { type Database, Filter, Obj } from '@dxos/echo';
 import { SpaceAction } from '@dxos/plugin-space/types';
-import { Filter, type Space, useQuery } from '@dxos/react-client/echo';
+import { useQuery } from '@dxos/react-client/echo';
 import { Separator, useTranslation } from '@dxos/react-ui';
 import { ControlItem, ControlPage, ControlSection, Form, controlItemClasses } from '@dxos/react-ui-form';
 import { StackItem } from '@dxos/react-ui-stack';
@@ -30,11 +30,11 @@ const initialValues = {
 const FormSchema = AccessToken.AccessToken.pipe(Schema.omit('id'));
 type TokenForm = Schema.Schema.Type<typeof FormSchema>;
 
-export const TokensContainer = ({ space }: { space: Space }) => {
+export const TokensContainer = ({ db }: { db: Database.Database }) => {
   const { t } = useTranslation(meta.id);
   const { dispatchPromise: dispatch } = useIntentDispatcher();
   const [adding, setAdding] = useState(false);
-  const tokens = useQuery(space.db, Filter.type(AccessToken.AccessToken));
+  const tokens = useQuery(db, Filter.type(AccessToken.AccessToken));
 
   const handleNew = useCallback(() => setAdding(true), []);
   const handleCancel = useCallback(() => setAdding(false), []);
@@ -45,7 +45,7 @@ export const TokensContainer = ({ space }: { space: Space }) => {
       const result = await dispatch(
         createIntent(SpaceAction.AddObject, {
           object: token,
-          target: space,
+          target: db,
           hidden: true,
         }),
       );
@@ -54,7 +54,7 @@ export const TokensContainer = ({ space }: { space: Space }) => {
         void dispatch(createIntent(TokenManagerAction.AccessTokenCreated, { accessToken: result.data?.object }));
       }
     },
-    [space, dispatch],
+    [db, dispatch],
   );
 
   const handleAdd = useCallback(
@@ -66,7 +66,7 @@ export const TokensContainer = ({ space }: { space: Space }) => {
     [handleAddAccessToken],
   );
 
-  const handleDelete = useCallback((token: AccessToken.AccessToken) => space.db.remove(token), [space]);
+  const handleDelete = useCallback((token: AccessToken.AccessToken) => db.remove(token), [db]);
 
   return (
     <StackItem.Content scrollable>
@@ -86,7 +86,11 @@ export const TokensContainer = ({ space }: { space: Space }) => {
             <div role='none' className={controlItemClasses}>
               <TokenManager tokens={tokens} onDelete={handleDelete} />
               {tokens.length > 0 && <Separator classNames='mlb-4' />}
-              <NewTokenSelector space={space} onAddAccessToken={handleAddAccessToken} onCustomToken={handleNew} />
+              <NewTokenSelector
+                spaceId={db.spaceId}
+                onAddAccessToken={handleAddAccessToken}
+                onCustomToken={handleNew}
+              />
             </div>
           )}
         </ControlSection>

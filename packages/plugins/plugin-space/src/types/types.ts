@@ -5,10 +5,10 @@
 import * as Schema from 'effect/Schema';
 
 import { type AnyIntentChain } from '@dxos/app-framework';
-import { type Obj, QueryAST, Type } from '@dxos/echo';
+import { Database, type Obj, QueryAST, Type } from '@dxos/echo';
 import { type PublicKey } from '@dxos/react-client';
 // TODO(wittjosiah): This pulls in full client.
-import { EchoObjectSchema, ReactiveObjectSchema, type Space, SpaceSchema } from '@dxos/react-client/echo';
+import { EchoObjectSchema, ReactiveObjectSchema, SpaceSchema } from '@dxos/react-client/echo';
 import { CancellableInvitationObservable, Invitation } from '@dxos/react-client/invitations';
 import { Collection, FieldSchema, View } from '@dxos/schema';
 import { type ComplexMap } from '@dxos/util';
@@ -91,10 +91,10 @@ export interface TypedObjectSerializer<T extends Obj.Any = Obj.Any> {
    * @param params.space Space to use for deserializing schema references.
    * @param params.newId Generate new ID for deserialized object.
    */
-  deserialize(params: { content: string; space: Space; newId?: boolean }): Promise<T>;
+  deserialize(params: { content: string; db: Database.Database; newId?: boolean }): Promise<T>;
 }
 
-export type CreateObjectIntent = (props: any, options: { space: Space }) => AnyIntentChain;
+export type CreateObjectIntent = (props: any, options: { db: Database.Database }) => AnyIntentChain;
 
 // TODO(burdon): Move to FormatEnum or SDK.
 export const IconAnnotationId = Symbol.for('@dxos/plugin-space/annotation/Icon');
@@ -213,7 +213,7 @@ export namespace SpaceAction {
 
   export class Snapshot extends Schema.TaggedClass<Snapshot>()(`${SPACE_ACTION}/snapshot`, {
     input: Schema.Struct({
-      space: SpaceSchema,
+      db: Database.Database,
       query: QueryAST.Query.pipe(Schema.optional),
     }),
     output: Schema.Struct({
@@ -236,7 +236,7 @@ export namespace SpaceAction {
 
   export class UseStaticSchema extends Schema.TaggedClass<UseStaticSchema>()(`${SPACE_ACTION}/use-static-schema`, {
     input: Schema.Struct({
-      space: SpaceSchema,
+      db: Database.Database,
       typename: Schema.String,
       // TODO(wittjosiah): This is leaky.
       show: Schema.optional(Schema.Boolean),
@@ -246,7 +246,7 @@ export namespace SpaceAction {
 
   export class AddSchema extends Schema.TaggedClass<AddSchema>()(`${SPACE_ACTION}/add-schema`, {
     input: Schema.Struct({
-      space: SpaceSchema,
+      db: Database.Database,
       name: Schema.optional(Schema.String),
       typename: Schema.optional(Schema.String),
       // TODO(wittjosiah): Semantic version format.
@@ -284,7 +284,7 @@ export namespace SpaceAction {
 
   export class OpenCreateObject extends Schema.TaggedClass<OpenCreateObject>()(`${SPACE_ACTION}/open-create-object`, {
     input: Schema.Struct({
-      target: Schema.Union(SpaceSchema, Collection.Collection),
+      target: Schema.Union(Database.Database, Collection.Collection),
       views: Schema.optional(Schema.Boolean),
       typename: Schema.optional(Schema.String),
       initialFormValues: Schema.optional(Schema.Any),
@@ -298,7 +298,7 @@ export namespace SpaceAction {
   export class AddObject extends Schema.TaggedClass<AddObject>()(`${SPACE_ACTION}/add-object`, {
     input: Schema.Struct({
       object: ReactiveObjectSchema,
-      target: Schema.Union(SpaceSchema, Collection.Collection),
+      target: Schema.Union(Database.Database, Collection.Collection),
       hidden: Schema.optional(Schema.Boolean),
     }),
     output: Schema.Struct({
@@ -311,7 +311,7 @@ export namespace SpaceAction {
 
   export class AddRelation extends Schema.TaggedClass<AddRelation>()(`${SPACE_ACTION}/add-relation`, {
     input: Schema.Struct({
-      space: SpaceSchema,
+      db: Database.Database,
       // TODO(wittjosiah): Relation schema.
       schema: Schema.Any,
       source: Type.Expando,
@@ -355,7 +355,7 @@ export namespace SpaceAction {
   export class DuplicateObject extends Schema.TaggedClass<DuplicateObject>()(`${SPACE_ACTION}/duplicate-object`, {
     input: Schema.Struct({
       object: EchoObjectSchema,
-      target: Schema.Union(SpaceSchema, Collection.Collection),
+      target: Schema.Union(Database.Database, Collection.Collection),
     }),
     output: Schema.Void,
   }) {}

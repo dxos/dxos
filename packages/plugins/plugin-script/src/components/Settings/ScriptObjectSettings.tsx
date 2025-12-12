@@ -14,7 +14,7 @@ import { Function, type Script, getUserFunctionIdInMetadata } from '@dxos/functi
 import { getInvocationUrl } from '@dxos/functions-runtime';
 import { log } from '@dxos/log';
 import { useClient } from '@dxos/react-client';
-import { getSpace, useQuery } from '@dxos/react-client/echo';
+import { useQuery } from '@dxos/react-client/echo';
 import { Button, Clipboard, Input, useAsyncEffect, useControlledState, useTranslation } from '@dxos/react-ui';
 import { AccessToken } from '@dxos/types';
 import { kebabize } from '@dxos/util';
@@ -53,9 +53,9 @@ export const ScriptProperties = ({ object }: ScriptObjectSettingsProps) => {
 
 const BlueprintEditor = ({ object }: ScriptObjectSettingsProps) => {
   const { t } = useTranslation(meta.id);
-  const space = getSpace(object);
-  const [fn] = useQuery(space?.db, Filter.type(Function.Function, { source: Ref.make(object) }));
-  const blueprints = useQuery(space?.db, Filter.type(Blueprint.Blueprint));
+  const db = Obj.getDatabase(object);
+  const [fn] = useQuery(db, Filter.type(Function.Function, { source: Ref.make(object) }));
+  const blueprints = useQuery(db, Filter.type(Blueprint.Blueprint));
 
   const [creating, setCreating] = useState(false);
   const [instructions, setInstructions] = useState<string>(`You can run the script "${object.name ?? 'script'}".`);
@@ -71,7 +71,7 @@ const BlueprintEditor = ({ object }: ScriptObjectSettingsProps) => {
   }, [existingBlueprint]);
 
   const handleSave = useCallback(async () => {
-    if (!space) {
+    if (!db) {
       return;
     }
 
@@ -87,7 +87,7 @@ const BlueprintEditor = ({ object }: ScriptObjectSettingsProps) => {
           }
         }
       } else if (fn?.key) {
-        space.db.add(
+        db.add(
           Blueprint.make({
             key: blueprintKey,
             name: object.name ?? 'Script',
@@ -98,11 +98,11 @@ const BlueprintEditor = ({ object }: ScriptObjectSettingsProps) => {
           }),
         );
       }
-      await space.db.flush();
+      await db.flush();
     } finally {
       setCreating(false);
     }
-  }, [space, existingBlueprint, fn, blueprintKey, object.name, instructions]);
+  }, [db, existingBlueprint, fn, blueprintKey, object.name, instructions]);
 
   return (
     <div className='flex flex-col gap-4 mlb-cardSpacingBlock'>
@@ -142,14 +142,14 @@ const BlueprintEditor = ({ object }: ScriptObjectSettingsProps) => {
 const Binding = ({ object }: ScriptObjectSettingsProps) => {
   const { t } = useTranslation(meta.id);
   const client = useClient();
-  const space = getSpace(object);
-  const [fn] = useQuery(space?.db, Filter.type(Function.Function, { source: Ref.make(object) }));
+  const db = Obj.getDatabase(object);
+  const [fn] = useQuery(db, Filter.type(Function.Function, { source: Ref.make(object) }));
 
   const functionId = fn && getUserFunctionIdInMetadata(Obj.getMeta(fn));
   const functionUrl =
     functionId &&
     getInvocationUrl(functionId, client.config.values.runtime?.services?.edge?.url ?? '', {
-      spaceId: space?.id,
+      spaceId: db?.spaceId,
     });
 
   const [binding, setBinding] = useControlledState(fn?.binding ?? '');
@@ -206,8 +206,8 @@ const Binding = ({ object }: ScriptObjectSettingsProps) => {
 const Publishing = ({ object }: ScriptObjectSettingsProps) => {
   const { t } = useTranslation(meta.id);
   const { dispatchPromise: dispatch } = useIntentDispatcher();
-  const space = getSpace(object);
-  const [githubToken] = useQuery(space?.db, Filter.type(AccessToken.AccessToken, { source: 'github.com' }));
+  const db = Obj.getDatabase(object);
+  const [githubToken] = useQuery(db, Filter.type(AccessToken.AccessToken, { source: 'github.com' }));
   const gistKey = Obj.getMeta(object).keys.find(({ source }) => source === 'github.com');
   const [gistUrl, setGistUrl] = useState<string | undefined>();
 

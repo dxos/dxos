@@ -32,7 +32,8 @@
 - [x] SchemaRegistry interface
 - [x] Schema registry should return Type.Entity.Any instead of Schema.Schema.AnyNoContext.
 - [x] Hypergraph interface
-- [ ] Obj.getDatabase
+- [x] Obj.getDatabase
+- [ ] space properties, queues, messagins preventing getSpace from being removed
 - [ ] SpaceAction.AddObject target should be a db not a space.
 - [ ] Schema registry should use Query.Query.
 - [ ] TODO(wittjosiah): Find a simpler way to define this type.

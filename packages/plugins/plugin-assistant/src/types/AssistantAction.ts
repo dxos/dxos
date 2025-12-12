@@ -7,6 +7,7 @@ import * as Schema from 'effect/Schema';
 import { Blueprint, Prompt } from '@dxos/blueprints';
 import { EchoObjectSchema, SpaceSchema } from '@dxos/client/echo';
 import { Sequence } from '@dxos/conductor';
+import { Database } from '@dxos/echo';
 import { Collection } from '@dxos/schema';
 
 import { meta } from '../meta';
@@ -24,7 +25,7 @@ export class OnCreateSpace extends Schema.TaggedClass<OnCreateSpace>()(`${meta.i
 
 export class CreateChat extends Schema.TaggedClass<CreateChat>()(`${meta.id}/action/create-chat`, {
   input: Schema.Struct({
-    space: SpaceSchema,
+    db: Database.Database,
     name: Schema.optional(Schema.String),
   }),
   output: Schema.Struct({

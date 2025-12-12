@@ -4,8 +4,8 @@
 
 import * as Schema from 'effect/Schema';
 
+import { Database } from '@dxos/echo';
 import { TypeInputOptionsAnnotation } from '@dxos/plugin-space/types';
-import { SpaceSchema } from '@dxos/react-client/echo';
 
 import { meta } from '../meta';
 
@@ -29,7 +29,7 @@ export const GraphProps = Schema.Struct({
 
 export class CreateGraph extends Schema.TaggedClass<CreateGraph>()(`${EXPLORER_ACTION}/create-graph`, {
   input: Schema.Struct({
-    space: SpaceSchema,
+    db: Database.Database,
   }).pipe(Schema.extend(GraphProps)),
   output: Schema.Struct({
     object: Graph.Graph,

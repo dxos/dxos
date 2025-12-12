@@ -27,7 +27,7 @@ export const ChatContainer = forwardRef<HTMLDivElement, ChatContainerProps>((pro
   const { space: spaceProp, chat, companionTo, onEvent } = props;
   const space = spaceProp ?? getSpace(chat);
   const settings = useCapability(Capabilities.SettingsStore).getStore<Assistant.Settings>(meta.id)?.value;
-  const services = useChatServices({ space, chat });
+  const services = useChatServices({ id: space?.id, chat });
   const [online, setOnline] = useOnline();
   const { preset, ...chatProps } = usePresets(online);
   const blueprintRegistry = useBlueprintRegistry();
@@ -46,7 +46,7 @@ export const ChatContainer = forwardRef<HTMLDivElement, ChatContainerProps>((pro
 
   return (
     <StackItem.Content toolbar ref={forwardedRef}>
-      <Chat.Root space={space} chat={chat} processor={processor} onEvent={onEvent}>
+      <Chat.Root db={space?.db} chat={chat} processor={processor} onEvent={onEvent}>
         <Chat.Toolbar companionTo={companionTo} />
         <Chat.Viewport classNames='container-max-width'>
           <Chat.Thread />

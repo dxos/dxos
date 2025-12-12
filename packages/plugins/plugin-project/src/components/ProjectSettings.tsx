@@ -7,7 +7,7 @@ import React, { useCallback, useMemo, useRef, useState } from 'react';
 
 import { DXN, Filter, Obj, Query, type QueryAST, Ref, Tag, Type } from '@dxos/echo';
 import { useTypeOptions } from '@dxos/plugin-space';
-import { resolveSchemaWithClientAndSpace } from '@dxos/plugin-space';
+import { resolveSchemaWithRegistry } from '@dxos/plugin-space';
 import { getSpace, useQuery } from '@dxos/react-client/echo';
 import { IconButton, type ThemedClassName, useAsyncEffect, useTranslation } from '@dxos/react-ui';
 import { Form, ViewEditor } from '@dxos/react-ui-form';
@@ -59,7 +59,7 @@ export const ProjectObjectSettings = ({ classNames, project }: ProjectObjectSett
       return;
     }
 
-    const foundSchema = await resolveSchemaWithClientAndSpace(space, view.query.ast);
+    const foundSchema = await resolveSchemaWithRegistry(space.db.schemaRegistry, view.query.ast);
     if (foundSchema && foundSchema !== schema) {
       setSchema(() => foundSchema);
     }
@@ -79,7 +79,7 @@ export const ProjectObjectSettings = ({ classNames, project }: ProjectObjectSett
       const queue = target && DXN.tryParse(target) ? target : undefined;
       const query = queue ? Query.fromAst(newQuery).options({ queues: [queue] }) : Query.fromAst(newQuery);
       view.query.ast = query.ast;
-      const newSchema = await resolveSchemaWithClientAndSpace(space, query.ast);
+      const newSchema = await resolveSchemaWithRegistry(space.db.schemaRegistry, query.ast);
       if (!newSchema) {
         return;
       }

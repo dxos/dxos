@@ -13,16 +13,15 @@ import {
   createIntent,
   createResolver,
 } from '@dxos/app-framework';
-import { Obj, Query, Ref, Relation, Type } from '@dxos/echo';
-import { Database } from '@dxos/echo';
-import { Serializer } from '@dxos/echo-db';
+import { Database, Obj, Query, Ref, Relation, Type } from '@dxos/echo';
+import { EchoDatabaseImpl, Serializer } from '@dxos/echo-db';
 import { runAndForwardErrors } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { Migrations } from '@dxos/migrations';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { ObservabilityAction } from '@dxos/plugin-observability/types';
 import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
-import { SpaceState, getSpace, isSpace } from '@dxos/react-client/echo';
+import { SpaceState, getSpace } from '@dxos/react-client/echo';
 import { Invitation, InvitationEncoder } from '@dxos/react-client/invitations';
 import { ATTENDABLE_PATH_SEPARATOR } from '@dxos/react-ui-attention';
 import { iconValues } from '@dxos/react-ui-pickers';
@@ -328,8 +327,9 @@ export default ({ context, observability, createInvitationUrl }: IntentResolverO
     }),
     createResolver({
       intent: SpaceAction.Snapshot,
-      resolve: async ({ space, query }) => {
-        const backup = await new Serializer().export(space.db, query && Query.fromAst(query));
+      resolve: async ({ db, query }) => {
+        invariant(db instanceof EchoDatabaseImpl, 'Database must be an instance of EchoDatabaseImpl');
+        const backup = await new Serializer().export(db, query && Query.fromAst(query));
         return {
           data: {
             snapshot: new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' }),
@@ -339,9 +339,11 @@ export default ({ context, observability, createInvitationUrl }: IntentResolverO
     }),
     createResolver({
       intent: SpaceAction.UseStaticSchema,
-      resolve: async ({ space, typename, show }) => {
+      resolve: async ({ db, typename, show }) => {
         const client = context.getCapability(ClientCapabilities.Client);
         const schema = await client.graph.schemaRegistry.query({ typename, location: ['runtime'] }).first();
+        const space = client.spaces.get(db.spaceId);
+        invariant(space, 'Space not found');
 
         if (!space.properties.staticRecords) {
           space.properties.staticRecords = [];
@@ -353,7 +355,7 @@ export default ({ context, observability, createInvitationUrl }: IntentResolverO
 
         await context.activatePromise(SpaceEvents.SchemaAdded);
         const onSchemaAdded = context.getCapabilities(SpaceCapabilities.OnSchemaAdded);
-        const schemaAddedIntents = onSchemaAdded.map((onSchemaAdded) => onSchemaAdded({ space, schema, show }));
+        const schemaAddedIntents = onSchemaAdded.map((onSchemaAdded) => onSchemaAdded({ db, schema, show }));
 
         return {
           data: {},
@@ -376,8 +378,8 @@ export default ({ context, observability, createInvitationUrl }: IntentResolverO
     }),
     createResolver({
       intent: SpaceAction.AddSchema,
-      resolve: async ({ space, name, typename, version, schema: schemaInput, show }) => {
-        const [schema] = await space.db.schemaRegistry.register([schemaInput]);
+      resolve: async ({ db, name, typename, version, schema: schemaInput, show }) => {
+        const [schema] = await db.schemaRegistry.register([schemaInput]);
         if (name) {
           schema.storedSchema.name = name;
         }
@@ -390,7 +392,7 @@ export default ({ context, observability, createInvitationUrl }: IntentResolverO
 
         await context.activatePromise(SpaceEvents.SchemaAdded);
         const onSchemaAdded = context.getCapabilities(SpaceCapabilities.OnSchemaAdded);
-        const schemaAddedIntents = onSchemaAdded.map((onSchemaAdded) => onSchemaAdded({ space, schema, show }));
+        const schemaAddedIntents = onSchemaAdded.map((onSchemaAdded) => onSchemaAdded({ db, schema, show }));
 
         return {
           data: {
@@ -405,7 +407,7 @@ export default ({ context, observability, createInvitationUrl }: IntentResolverO
                   createIntent(ObservabilityAction.SendEvent, {
                     name: 'space.schema.add',
                     properties: {
-                      spaceId: space.id,
+                      spaceId: db.spaceId,
                       objectId: schema.id,
                       typename: schema.typename,
                     },
@@ -419,11 +421,11 @@ export default ({ context, observability, createInvitationUrl }: IntentResolverO
     createResolver({
       intent: SpaceAction.DeleteField,
       resolve: async ({ view, fieldId, deletionData }, undo) => {
-        const space = getSpace(view);
-        invariant(space);
+        const db = Obj.getDatabase(view);
+        invariant(db);
         const typename = getTypenameFromQuery(view.query.ast);
         invariant(typename);
-        const schema = await space.db.schemaRegistry.query({ typename }).firstOrUndefined();
+        const schema = await db.schemaRegistry.query({ typename }).firstOrUndefined();
         invariant(schema);
         const projection = new ProjectionModel(schema.jsonSchema, view.projection);
         if (!undo) {
@@ -475,10 +477,10 @@ export default ({ context, observability, createInvitationUrl }: IntentResolverO
     createResolver({
       intent: SpaceAction.AddObject,
       resolve: async ({ target, object, hidden }) => {
-        const space = isSpace(target) ? target : getSpace(target);
-        invariant(space, 'Space not found.');
+        const db = Database.isDatabase(target) ? target : Obj.getDatabase(target);
+        invariant(db, 'Database not found.');
 
-        if (space.db.coreDatabase.getAllObjectIds().length >= SPACE_MAX_OBJECTS) {
+        if (db instanceof EchoDatabaseImpl && db.coreDatabase.getAllObjectIds().length >= SPACE_MAX_OBJECTS) {
           return {
             error: new Error('Space limit reached.'),
             intents: [
@@ -493,7 +495,7 @@ export default ({ context, observability, createInvitationUrl }: IntentResolverO
                   actionLabel: ['remove deleted objects label', { ns: meta.id }],
                   actionAlt: ['remove deleted objects alt', { ns: meta.id }],
                   closeLabel: ['close label', { ns: 'os' }],
-                  onAction: () => space.db.coreDatabase.unlinkDeletedObjects(),
+                  onAction: () => db.coreDatabase.unlinkDeletedObjects(),
                 },
               }),
               ...(observability
@@ -501,7 +503,7 @@ export default ({ context, observability, createInvitationUrl }: IntentResolverO
                     createIntent(ObservabilityAction.SendEvent, {
                       name: 'space.limit',
                       properties: {
-                        spaceId: space.id,
+                        spaceId: db.spaceId,
                       },
                     }),
                   ]
@@ -510,13 +512,11 @@ export default ({ context, observability, createInvitationUrl }: IntentResolverO
           };
         }
 
-        await Effect.gen(function* () {
-          yield* Collection.add({
-            object,
-            target: isSpace(target) ? undefined : target,
-            hidden,
-          });
-        }).pipe(Effect.provide(Database.Service.layer(space.db)), runAndForwardErrors);
+        await Collection.add({
+          object,
+          target: Database.isDatabase(target) ? undefined : target,
+          hidden,
+        }).pipe(Effect.provide(Database.Service.layer(db)), runAndForwardErrors);
 
         return {
           data: {
@@ -530,7 +530,7 @@ export default ({ context, observability, createInvitationUrl }: IntentResolverO
                   createIntent(ObservabilityAction.SendEvent, {
                     name: 'space.object.add',
                     properties: {
-                      spaceId: space.id,
+                      spaceId: db.spaceId,
                       objectId: object.id,
                       typename: Obj.getTypename(object),
                     },
@@ -543,8 +543,8 @@ export default ({ context, observability, createInvitationUrl }: IntentResolverO
     }),
     createResolver({
       intent: SpaceAction.AddRelation,
-      resolve: ({ space, schema, source, target, fields }) => {
-        const relation = space.db.add(
+      resolve: ({ db, schema, source, target, fields }) => {
+        const relation = db.add(
           Relation.make(schema, {
             [Relation.Source]: source,
             [Relation.Target]: target,
@@ -681,9 +681,9 @@ export default ({ context, observability, createInvitationUrl }: IntentResolverO
     createResolver({
       intent: SpaceAction.DuplicateObject,
       resolve: async ({ object, target }) => {
-        const space = isSpace(target) ? target : getSpace(target);
-        invariant(space, 'Space not found.');
-        const newObject = await cloneObject(object, resolve, space);
+        const db = Database.isDatabase(target) ? target : Obj.getDatabase(target);
+        invariant(db, 'Database not found.');
+        const newObject = await cloneObject(object, resolve, db);
         return {
           intents: [createIntent(SpaceAction.AddObject, { object: newObject, target })],
         };

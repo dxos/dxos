@@ -67,7 +67,7 @@ export const ThreadPlugin = definePlugin(meta, () => [
           iconHue: 'rose',
           createObjectIntent: ((_, options) =>
             createIntent(ThreadAction.CreateChannel, {
-              spaceId: options.space.id,
+              spaceId: options.db.spaceId,
             })) satisfies CreateObjectIntent,
         },
       }),
