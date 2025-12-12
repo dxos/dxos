@@ -34,7 +34,7 @@ export const wrapHandlerForCloudflare = (func: FunctionProtocol.Func): ExportedH
         }
       }
 
-      const serviceContainer = new ServiceContainer({}, env.DATA_SERVICE, env.QUEUE_SERVICE);
+      const serviceContainer = new ServiceContainer({}, env.DATA_SERVICE, env.QUEUE_SERVICE, env.AI_SERVICE);
       const context = await createFunctionContext({
         serviceContainer,
         contextSpaceId: spaceId as SpaceId | undefined,
