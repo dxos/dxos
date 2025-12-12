@@ -12,6 +12,7 @@ packages:
 strictPeerDependencies: true
 
 # TODO(wittjosiah): Introduce a separate catalog for peer dependencies.
+# https://pnpm.io/catalogs
 catalog:
   '@1password/op-js': ^0.1.13
   '@ai-sdk/react': ^2.0.86
