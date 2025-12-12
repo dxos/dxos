@@ -184,7 +184,6 @@ const getServiceKeys = (services: readonly Context.Tag<any, any>[]) => {
     if (typeof tag.key === 'string') {
       return tag.key;
     }
-    console.log(tag);
     failedInvariant();
   });
 };
