@@ -88,12 +88,12 @@
     "effect": "catalog:",
     "esbuild": "catalog:",
     "esbuild-wasm": "catalog:",
-    "i18next": "^24.2.1",
+    "i18next": "catalog:",
     "iso-did": "catalog:"
   },
   "devDependencies": {
     "@dxos/types": "workspace:*",
-    "wrangler": "^4.51.0"
+    "wrangler": "catalog:"
   },
   "publishConfig": {
     "access": "public"

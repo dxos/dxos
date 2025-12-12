@@ -55,7 +55,7 @@
     "@dxos/node-std": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@effect/platform": "^0.93.6",
+    "@effect/platform": "catalog:",
     "isomorphic-ws": "catalog:",
     "ws": "catalog:"
   },
@@ -63,7 +63,7 @@
     "@dxos/test-utils": "workspace:*"
   },
   "peerDependencies": {
-    "effect": "^3.13.3"
+    "effect": "catalog:"
   },
   "publishConfig": {
     "access": "public"

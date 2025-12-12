@@ -46,7 +46,7 @@
     "@dxos/echo-generator": "workspace:*",
     "@dxos/random": "workspace:*",
     "@lezer/generator": "catalog:",
-    "tsdown": "^0.16.6",
+    "tsdown": "catalog:",
     "typescript": "catalog:"
   },
   "publishConfig": {

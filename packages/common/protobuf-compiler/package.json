@@ -24,7 +24,7 @@
     "@dxos/log": "workspace:*",
     "@dxos/node-std": "workspace:*",
     "argparse": "catalog:",
-    "chalk": "^4.1.0",
+    "chalk": "catalog:",
     "extensionless": "catalog:",
     "glob": "catalog:",
     "protobufjs": "catalog:",
@@ -42,7 +42,7 @@
     "typescript": "catalog:"
   },
   "peerDependencies": {
-    "typescript": "^5.9.2"
+    "typescript": "catalog:"
   },
   "publishConfig": {
     "access": "public"

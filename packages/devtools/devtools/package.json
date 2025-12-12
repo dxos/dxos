@@ -81,7 +81,7 @@
     "lodash.defaultsdeep": "catalog:",
     "luxon": "catalog:",
     "ollama": "catalog:",
-    "react-charts": "beta",
+    "react-charts": "catalog:",
     "react-drag-drop-files": "catalog:",
     "react-is": "catalog:",
     "react-json-tree": "catalog:",
@@ -100,8 +100,8 @@
     "@dxos/react-ui-theme": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
     "@types/lodash.defaultsdeep": "catalog:",
-    "@types/react": "~19.2.2",
-    "@types/react-dom": "~19.2.2",
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
     "@types/react-syntax-highlighter": "catalog:",
     "@vitejs/plugin-react": "catalog:",
     "postcss": "catalog:",
@@ -114,11 +114,11 @@
     "workbox-window": "catalog:"
   },
   "peerDependencies": {
-    "@babel/core": "^7.18.13",
+    "@babel/core": "catalog:",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
-    "react": "^19.0.0",
-    "react-dom": "^19.0.0"
+    "react": "catalog:",
+    "react-dom": "catalog:"
   },
   "publishConfig": {
     "access": "public"

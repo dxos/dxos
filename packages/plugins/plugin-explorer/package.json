@@ -74,7 +74,7 @@
     "force-graph": "catalog:",
     "lodash.defaultsdeep": "catalog:",
     "react-resize-detector": "catalog:",
-    "three": "^0.178.0",
+    "three": "catalog:",
     "topojson-client": "catalog:"
   },
   "devDependencies": {
@@ -86,20 +86,20 @@
     "@types/d3": "catalog:",
     "@types/d3-hierarchy": "catalog:",
     "@types/lodash.defaultsdeep": "catalog:",
-    "@types/react": "~19.2.2",
-    "@types/react-dom": "~19.2.2",
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
     "@types/topojson-client": "catalog:",
     "@types/topojson-specification": "catalog:",
-    "react": "~19.2.0",
-    "react-dom": "~19.2.0",
+    "react": "catalog:",
+    "react-dom": "catalog:",
     "vite": "catalog:"
   },
   "peerDependencies": {
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
-    "effect": "^3.13.3",
-    "react": "^19.0.0",
-    "react-dom": "^19.0.0"
+    "effect": "catalog:",
+    "react": "catalog:",
+    "react-dom": "catalog:"
   },
   "publishConfig": {
     "access": "public"

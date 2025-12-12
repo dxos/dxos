@@ -40,7 +40,7 @@
     "@preact-signals/safe-react": "catalog:",
     "@preact/signals-core": "catalog:",
     "@radix-ui/react-context": "catalog:",
-    "chess.js": "^1.4.0",
+    "chess.js": "catalog:",
     "react-resize-detector": "catalog:"
   },
   "devDependencies": {
@@ -49,18 +49,18 @@
     "@dxos/storybook-utils": "workspace:*",
     "@svgr/cli": "catalog:",
     "@types/lodash.defaultsdeep": "catalog:",
-    "@types/react": "~19.2.2",
-    "@types/react-dom": "~19.2.2",
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
     "lodash.defaultsdeep": "catalog:",
-    "react": "~19.2.0",
-    "react-dom": "~19.2.0",
+    "react": "catalog:",
+    "react-dom": "catalog:",
     "vite": "catalog:"
   },
   "peerDependencies": {
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
-    "react": "^19.0.0",
-    "react-dom": "^19.0.0"
+    "react": "catalog:",
+    "react-dom": "catalog:"
   },
   "publishConfig": {
     "access": "public"

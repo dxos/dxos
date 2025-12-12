@@ -61,7 +61,7 @@
     "@dxos/util": "workspace:*",
     "@preact-signals/safe-react": "catalog:",
     "@preact/signals-core": "catalog:",
-    "@preact/signals-react": "^3.3.0",
+    "@preact/signals-react": "catalog:",
     "effect": "catalog:"
   },
   "devDependencies": {
@@ -71,18 +71,18 @@
     "@dxos/react-ui-theme": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
     "@dxos/test-utils": "workspace:*",
-    "@types/react": "~19.2.2",
-    "@types/react-dom": "~19.2.2",
-    "react": "~19.2.0",
-    "react-dom": "~19.2.0",
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
+    "react": "catalog:",
+    "react-dom": "catalog:",
     "vite": "catalog:"
   },
   "peerDependencies": {
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
-    "effect": "^3.13.3",
-    "react": "^19.0.0",
-    "react-dom": "^19.0.0"
+    "effect": "catalog:",
+    "react": "catalog:",
+    "react-dom": "catalog:"
   },
   "publishConfig": {
     "access": "public"
