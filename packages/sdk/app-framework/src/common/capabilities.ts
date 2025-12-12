@@ -11,7 +11,7 @@ import { type AiModelResolver, type AiService } from '@dxos/ai';
 import { type BuilderExtensions, type GraphBuilder } from '@dxos/app-graph';
 import { type GenericToolkit } from '@dxos/assistant';
 import { type Blueprint } from '@dxos/blueprints';
-import { type Space } from '@dxos/client-protocol';
+import { type Database } from '@dxos/echo';
 import { type FunctionDefinition } from '@dxos/functions';
 import { type RootSettingsStore } from '@dxos/local-storage';
 import { type AnchoredTo } from '@dxos/types';
@@ -194,7 +194,7 @@ export namespace Capabilities {
    */
   export const Functions = defineCapability<FunctionDefinition.Any[]>('dxos.org/app-framework/capability/functions');
 
-  export type FileUploader = (space: Space, file: File) => Promise<FileInfo | undefined>;
+  export type FileUploader = (db: Database.Database, file: File) => Promise<FileInfo | undefined>;
 
   /**
    * @category Capability

@@ -7,7 +7,7 @@ import React, { type FC, useEffect, useMemo, useState } from 'react';
 
 import { type InvocationSpan } from '@dxos/functions-runtime';
 import { InvocationOutcome } from '@dxos/functions-runtime';
-import { type Space } from '@dxos/react-client/echo';
+import { type Database } from '@dxos/react-client/echo';
 import { type ChromaticPalette, IconButton, Tag } from '@dxos/react-ui';
 
 import { useFunctionNameResolver } from './hooks';
@@ -20,12 +20,12 @@ const InvocationColor: Record<InvocationOutcome, ChromaticPalette> = {
 };
 
 type SpanSummaryProps = {
-  space?: Space;
+  db?: Database.Database;
   span: InvocationSpan;
   onClose: () => void;
 };
 
-export const SpanSummary: FC<SpanSummaryProps> = ({ space, span, onClose }) => {
+export const SpanSummary: FC<SpanSummaryProps> = ({ db, span, onClose }) => {
   const [currentDuration, setCurrentDuration] = useState<number | undefined>(undefined);
 
   useEffect(() => {
@@ -45,7 +45,7 @@ export const SpanSummary: FC<SpanSummaryProps> = ({ space, span, onClose }) => {
   }, [span]);
 
   const targetDxn = useMemo(() => span.invocationTarget?.dxn, [span.invocationTarget]);
-  const resolver = useFunctionNameResolver({ space });
+  const resolver = useFunctionNameResolver({ db });
   const targetName = useMemo(() => resolver(targetDxn), [targetDxn, resolver]);
 
   const timestamp = useMemo(() => formatDate(span.timestamp, 'yyyy-MM-dd HH:mm:ss'), [span.timestamp]);

@@ -376,7 +376,8 @@ export default (context: PluginContext) =>
       filter: (data): data is any => data.subject === Devtools.Edge.Traces,
       component: () => {
         const space = useCurrentSpace();
-        return <InvocationTraceContainer space={space} detailAxis='block' />;
+        const queueDxn = space?.properties.invocationTraceQueue?.dxn;
+        return <InvocationTraceContainer db={space?.db} queueDxn={queueDxn} detailAxis='block' />;
       },
     }),
     createSurface({
@@ -398,8 +399,8 @@ export default (context: PluginContext) =>
             await space.waitUntilReady();
             const result = await dispatch(
               Function.pipe(
-                createIntent(ScriptAction.CreateScript, { space }),
-                chain(SpaceAction.AddObject, { target: space }),
+                createIntent(ScriptAction.CreateScript, { db: space.db }),
+                chain(SpaceAction.AddObject, { target: space.db }),
               ),
             );
             log.info('script created', { result });

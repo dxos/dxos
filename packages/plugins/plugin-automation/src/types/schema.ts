@@ -4,7 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { SpaceSchema } from '@dxos/react-client/echo';
+import { Database } from '@dxos/echo';
 
 import { meta } from '../meta';
 
@@ -18,7 +18,7 @@ export namespace AutomationAction {
     `${meta.id}/action/create-trigger-from-template`,
     {
       input: Schema.Struct({
-        space: SpaceSchema,
+        db: Database.Database,
         template: TriggerTemplate,
         enabled: Schema.optional(Schema.Boolean),
         // TODO(wittjosiah): Improve how this lookup is done.

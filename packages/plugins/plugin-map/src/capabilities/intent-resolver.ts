@@ -13,8 +13,8 @@ export default (context: PluginContext) =>
   contributes(Capabilities.IntentResolver, [
     createResolver({
       intent: MapAction.Create,
-      resolve: async ({ space, name, typename, locationFieldName, center, zoom, coordinates }) => {
-        const { view } = await View.makeFromSpace({ space, typename, pivotFieldName: locationFieldName });
+      resolve: async ({ db, name, typename, locationFieldName, center, zoom, coordinates }) => {
+        const { view } = await View.makeFromDatabase({ db, typename, pivotFieldName: locationFieldName });
         const map = Map.make({ name, center, zoom, coordinates, view });
         return { data: { object: map } };
       },

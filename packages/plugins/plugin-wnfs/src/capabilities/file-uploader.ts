@@ -12,12 +12,12 @@ import { SpaceAction } from '@dxos/plugin-space/types';
 import { WnfsAction } from '../types';
 
 export default (context: PluginContext) => {
-  return contributes(Capabilities.FileUploader, (space, file) => {
+  return contributes(Capabilities.FileUploader, (db, file) => {
     const { dispatch } = context.getCapability(Capabilities.IntentDispatcher);
     const program = Effect.gen(function* () {
-      const fileInfo = yield* dispatch(createIntent(WnfsAction.Upload, { space, file }));
+      const fileInfo = yield* dispatch(createIntent(WnfsAction.Upload, { db, file }));
       yield* dispatch(
-        Function.pipe(createIntent(WnfsAction.Create, fileInfo), chain(SpaceAction.AddObject, { target: space })),
+        Function.pipe(createIntent(WnfsAction.Create, fileInfo), chain(SpaceAction.AddObject, { target: db })),
       );
 
       return fileInfo;

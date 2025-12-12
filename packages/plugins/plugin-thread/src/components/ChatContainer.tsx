@@ -60,7 +60,7 @@ export const ChatContainer = ({
   const { t } = useTranslation(meta.id);
   const id = Obj.getDXN(thread).toString();
   const identity = useIdentity()!;
-  const members = useMembers(space?.key);
+  const members = useMembers(space?.id);
   const activity = useStatus(space, id);
   // TODO(wittjosiah): This is a hack to reset the editor after a message is sent.
   const [_count, _setCount] = useState(0);

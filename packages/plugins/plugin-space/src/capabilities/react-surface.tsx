@@ -8,7 +8,7 @@ import React, { useCallback } from 'react';
 
 import { Capabilities, contributes, createSurface } from '@dxos/app-framework';
 import { Surface, useCapability, useLayout } from '@dxos/app-framework/react';
-import { Obj, type Ref } from '@dxos/echo';
+import { Database, Obj, type Ref } from '@dxos/echo';
 import { findAnnotation } from '@dxos/effect';
 import { SettingsStore } from '@dxos/local-storage';
 import { type Space, SpaceState, getSpace, isLiveObject, isSpace, parseId, useSpace } from '@dxos/react-client/echo';
@@ -242,7 +242,7 @@ export default ({ createInvitationUrl }: ReactSurfaceOptions) =>
       ): data is {
         prop: string;
         schema: Schema.Schema.Any;
-        target: Space | Collection.Collection | undefined;
+        target: Database.Database | Collection.Collection | undefined;
       } => {
         if (data.prop !== 'typename') {
           return false;
@@ -253,7 +253,8 @@ export default ({ createInvitationUrl }: ReactSurfaceOptions) =>
       },
       component: ({ data: { schema, target }, ...inputProps }) => {
         const props = inputProps as any as FormFieldComponentProps;
-        const space = isSpace(target) ? target : getSpace(target);
+        const db = Database.isDatabase(target) ? target : target && Obj.getDatabase(target);
+        const space = useSpace(db?.spaceId);
         const annotation = findAnnotation<TypeInputOptions>(schema.ast, TypeInputOptionsAnnotationId)!;
         const options = useTypeOptions({ space, annotation });
 

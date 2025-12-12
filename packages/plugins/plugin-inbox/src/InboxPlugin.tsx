@@ -36,7 +36,7 @@ export const InboxPlugin = definePlugin(meta, () => [
           iconHue: 'rose',
           blueprints: [INBOX_BLUEPRINT_KEY],
           createObjectIntent: ((_, options) =>
-            createIntent(InboxAction.CreateMailbox, { space: options.space })) satisfies CreateObjectIntent,
+            createIntent(InboxAction.CreateMailbox, { db: options.db })) satisfies CreateObjectIntent,
           addToCollectionOnCreate: true,
         },
       }),
@@ -54,7 +54,7 @@ export const InboxPlugin = definePlugin(meta, () => [
           iconHue: 'rose',
           blueprints: [CALENDAR_BLUEPRINT_KEY],
           createObjectIntent: ((_, options) =>
-            createIntent(InboxAction.CreateCalendar, { space: options.space })) satisfies CreateObjectIntent,
+            createIntent(InboxAction.CreateCalendar, { db: options.db })) satisfies CreateObjectIntent,
           addToCollectionOnCreate: true,
         },
       }),

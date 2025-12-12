@@ -8,13 +8,13 @@ import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 import React, { type FC, useCallback, useMemo, useState } from 'react';
 
-import { Filter, type Obj } from '@dxos/echo';
+import { type Database, Filter, type Obj } from '@dxos/echo';
 import { Format } from '@dxos/echo/internal';
 import { type InvocationSpan } from '@dxos/functions-runtime';
 import { TraceEvent } from '@dxos/functions-runtime';
 import { DXN } from '@dxos/keys';
 import { type SerializedError } from '@dxos/protocols';
-import { type Space, useQuery } from '@dxos/react-client/echo';
+import { useQuery } from '@dxos/react-client/echo';
 import { Toolbar } from '@dxos/react-ui';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { DynamicTable, type TableFeatures, type TablePropertyDefinition } from '@dxos/react-ui-table';
@@ -32,20 +32,22 @@ import { RawDataPanel } from './RawDataPanel';
 import { formatDuration } from './utils';
 
 export type InvocationTraceContainerProps = {
-  space?: Space;
+  db?: Database.Database;
+  queueDxn?: DXN;
   showSpaceSelector?: boolean;
   target?: Obj.Any;
   detailAxis?: 'block' | 'inline';
 };
 
 export const InvocationTraceContainer = ({
-  space,
+  db,
+  queueDxn,
   detailAxis = 'inline',
   showSpaceSelector = false,
   target,
 }: InvocationTraceContainerProps) => {
-  const resolver = useFunctionNameResolver({ space });
-  const invocationSpans = useInvocationSpans({ space, target });
+  const resolver = useFunctionNameResolver({ db });
+  const invocationSpans = useInvocationSpans({ queueDxn, target });
 
   const [selectedId, setSelectedId] = useState<string>();
   const selectedInvocation = useMemo(() => {

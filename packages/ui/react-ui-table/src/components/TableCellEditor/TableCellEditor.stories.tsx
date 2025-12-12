@@ -52,7 +52,7 @@ const meta = {
       createIdentity: true,
       createSpace: true,
       onCreateSpace: async ({ space }) => {
-        const { view, jsonSchema } = await View.makeFromSpace({ space, typename: Task.Task.typename });
+        const { view, jsonSchema } = await View.makeFromDatabase({ db: space.db, typename: Task.Task.typename });
         const table = Table.make({ view, jsonSchema });
         space.db.add(table);
         Array.from({ length: 10 }).forEach(() => {

@@ -13,7 +13,7 @@ import { type CellAddress, type CompleteCellRange, inRange } from '@dxos/compute
 import { Obj, Relation } from '@dxos/echo';
 import { ATTENDABLE_PATH_SEPARATOR, DeckAction } from '@dxos/plugin-deck/types';
 import { ThreadAction } from '@dxos/plugin-thread/types';
-import { Filter, Query, getSpace, useQuery } from '@dxos/react-client/echo';
+import { Filter, Query, useQuery } from '@dxos/react-client/echo';
 import { type DxGridElement, type GridContentProps } from '@dxos/react-ui-grid';
 import { AnchoredTo, Thread } from '@dxos/types';
 
@@ -74,8 +74,8 @@ export const useSelectThreadOnCellFocus = () => {
   const { model, cursor } = useSheetContext();
   const { dispatchPromise: dispatch } = useIntentDispatcher();
 
-  const space = getSpace(model.sheet);
-  const anchors = useQuery(space?.db, Query.select(Filter.id(model.sheet.id)).targetOf(AnchoredTo.AnchoredTo));
+  const db = Obj.getDatabase(model.sheet);
+  const anchors = useQuery(db, Query.select(Filter.id(model.sheet.id)).targetOf(AnchoredTo.AnchoredTo));
 
   const selectClosestThread = useCallback(
     (cellAddress: CellAddress) => {

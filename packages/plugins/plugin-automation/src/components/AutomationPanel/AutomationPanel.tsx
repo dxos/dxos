@@ -13,7 +13,7 @@ import { Function, Script, Trigger } from '@dxos/functions';
 import { FunctionsServiceClient } from '@dxos/functions-runtime/edge';
 import { useTypeOptions } from '@dxos/plugin-space';
 import { type Client, useClient } from '@dxos/react-client';
-import { type Space, getSpace, useQuery } from '@dxos/react-client/echo';
+import { type Space, useQuery } from '@dxos/react-client/echo';
 import { Clipboard, IconButton, Input, Separator, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { ControlItem, controlItemClasses } from '@dxos/react-ui-form';
 import { List } from '@dxos/react-ui-list';
@@ -175,7 +175,10 @@ export const AutomationPanel = ({ classNames, space, object, initialTrigger, onD
 
 const getCopyAction = (client: Client, trigger: Trigger.Trigger | undefined) => {
   if (trigger?.spec?.kind === 'email') {
-    return { translationKey: 'trigger copy email', contentProvider: () => `${getSpace(trigger)!.id}@dxos.network` };
+    return {
+      translationKey: 'trigger copy email',
+      contentProvider: () => `${Obj.getDatabase(trigger)!.spaceId}@dxos.network`,
+    };
   }
 
   if (trigger?.spec?.kind === 'webhook') {
@@ -186,7 +189,7 @@ const getCopyAction = (client: Client, trigger: Trigger.Trigger | undefined) => 
 };
 
 const getWebhookUrl = (client: Client, trigger: Trigger.Trigger) => {
-  const spaceId = getSpace(trigger)!.id;
+  const spaceId = Obj.getDatabase(trigger)!.spaceId;
   const edgeUrl = new URL(client.config.values.runtime!.services!.edge!.url!);
   const isSecure = edgeUrl.protocol.startsWith('https') || edgeUrl.protocol.startsWith('wss');
   edgeUrl.protocol = isSecure ? 'https' : 'http';

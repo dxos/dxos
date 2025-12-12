@@ -22,7 +22,9 @@ import { Filter, Obj, Ref } from '@dxos/echo';
 // import { runAndForwardErrors } from '@dxos/effect';
 // import { AiService, Database.Service, QueueService, ServiceContainer, ToolResolverService } from '@dxos/functions';
 // import { failedInvariant } from '@dxos/invariant';
+import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
+import { ClientCapabilities } from '@dxos/plugin-client';
 import { SpaceAction } from '@dxos/plugin-space/types';
 import { Organization, Person } from '@dxos/types';
 
@@ -35,21 +37,35 @@ export default (context: PluginContext) =>
   contributes(Capabilities.IntentResolver, [
     createResolver({
       intent: InboxAction.CreateMailbox,
-      resolve: ({ space, name }) => ({
-        data: { object: Mailbox.make({ name, space }) },
-      }),
+      resolve: ({ db, name }) => {
+        const client = context.getCapability(ClientCapabilities.Client);
+        const space = client.spaces.get(db.spaceId);
+        invariant(space, 'Space not found');
+        return {
+          data: { object: Mailbox.make({ name, space }) },
+        };
+      },
     }),
     createResolver({
       intent: InboxAction.CreateCalendar,
-      resolve: ({ space, name }) => ({
-        data: { object: Calendar.make({ space, name }) },
-      }),
+      resolve: ({ db, name }) => {
+        const client = context.getCapability(ClientCapabilities.Client);
+        const space = client.spaces.get(db.spaceId);
+        invariant(space, 'Space not found');
+        return {
+          data: { object: Calendar.make({ space, name }) },
+        };
+      },
     }),
     createResolver({
       intent: InboxAction.ExtractContact,
       // TODO(burdon): Factor out function (and test separately).
       // TODO(burdon): Reconcile with dxos.org/functions/entity-extraction
-      resolve: async ({ space, actor }) => {
+      resolve: async ({ db, actor }) => {
+        const client = context.getCapability(ClientCapabilities.Client);
+        const space = client.spaces.get(db.spaceId);
+        invariant(space, 'Space not found');
+
         log.info('extract contact', { actor });
         const name = actor.name;
         const email = actor.email;
@@ -58,7 +74,7 @@ export default (context: PluginContext) =>
           return;
         }
 
-        const existingContacts = await space.db.query(Filter.type(Person.Person)).run();
+        const existingContacts = await db.query(Filter.type(Person.Person)).run();
 
         // Check for existing contact
         const existingContact = existingContacts.find((contact) =>
@@ -83,7 +99,7 @@ export default (context: PluginContext) =>
             intents: [
               createIntent(SpaceAction.AddObject, {
                 object: newContact,
-                target: space,
+                target: db,
                 hidden: true,
               }),
             ],
@@ -91,7 +107,7 @@ export default (context: PluginContext) =>
         }
 
         log.info('extracted email domain', { emailDomain });
-        const existingOrganisations = await space.db.query(Filter.type(Organization.Organization)).run();
+        const existingOrganisations = await db.query(Filter.type(Organization.Organization)).run();
         const matchingOrg = existingOrganisations.find((org) => {
           if (org.website) {
             try {
@@ -129,7 +145,7 @@ export default (context: PluginContext) =>
           log.info('adding record type for contacts');
           intents.push(
             createIntent(SpaceAction.UseStaticSchema, {
-              space,
+              db,
               typename: Person.Person.typename,
             }),
           );
@@ -138,7 +154,7 @@ export default (context: PluginContext) =>
         intents.push(
           createIntent(SpaceAction.AddObject, {
             object: newContact,
-            target: space,
+            target: db,
             hidden: true,
           }),
         );

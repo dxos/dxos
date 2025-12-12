@@ -7,7 +7,7 @@ import React, { useCallback, useMemo } from 'react';
 import { Capabilities, CollaborationActions, LayoutAction, createIntent } from '@dxos/app-framework';
 import { useCapabilities, useCapability, useIntentDispatcher } from '@dxos/app-framework/react';
 import { Filter, Obj, Query, Relation } from '@dxos/echo';
-import { Ref, getSpace, useQuery } from '@dxos/react-client/echo';
+import { Ref, useQuery } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { useTranslation } from '@dxos/react-ui';
 import { useAttended } from '@dxos/react-ui-attention';
@@ -44,8 +44,8 @@ export const ThreadCompanion = ({ subject }: { subject: any }) => {
     [anchorSorts, subject],
   );
 
-  const space = getSpace(subject);
-  const objectsAnchoredTo = useQuery(space?.db, Query.select(Filter.id(subject.id)).targetOf(AnchoredTo.AnchoredTo));
+  const db = Obj.getDatabase(subject);
+  const objectsAnchoredTo = useQuery(db, Query.select(Filter.id(subject.id)).targetOf(AnchoredTo.AnchoredTo));
   const anchors = objectsAnchoredTo
     .toSorted((a, b) => sort?.(a, b) ?? 0)
     .filter((anchor) => Obj.instanceOf(Thread.Thread, Relation.getSource(anchor)))

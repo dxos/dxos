@@ -4,8 +4,8 @@
 
 import * as Schema from 'effect/Schema';
 
+import { Database } from '@dxos/echo';
 import { TypeInputOptionsAnnotation } from '@dxos/plugin-space/types';
-import { SpaceSchema } from '@dxos/react-client/echo';
 
 import { meta } from '../meta';
 
@@ -37,7 +37,7 @@ export type CreateMap = Schema.Schema.Type<typeof CreateMap>;
 
 export class Create extends Schema.TaggedClass<Create>()(`${meta.id}/action/create`, {
   input: Schema.Struct({
-    space: SpaceSchema,
+    db: Database.Database,
   }).pipe(
     // prettier-ignore
     Schema.extend(CreateMap),

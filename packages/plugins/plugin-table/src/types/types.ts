@@ -4,6 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
+import { Database } from '@dxos/echo';
 import { TypeInputOptionsAnnotation } from '@dxos/plugin-space/types';
 import { SpaceSchema } from '@dxos/react-client/echo';
 import { Table } from '@dxos/react-ui-table/types';
@@ -39,7 +40,7 @@ export namespace TableAction {
 
   export class OnSchemaAdded extends Schema.TaggedClass<OnSchemaAdded>()(`${TABLE_ACTION}/on-schema-added`, {
     input: Schema.Struct({
-      space: SpaceSchema,
+      db: Database.Database,
       // TODO(wittjosiah): Schema for schema?
       schema: Schema.Any,
       show: Schema.optional(Schema.Boolean),
@@ -50,7 +51,7 @@ export namespace TableAction {
   export class Create extends Schema.TaggedClass<Create>()(`${TABLE_ACTION}/create`, {
     input: Schema.extend(
       Schema.Struct({
-        space: SpaceSchema,
+        db: Database.Database,
       }),
       CreateTableSchema,
     ),

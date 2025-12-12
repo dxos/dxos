@@ -5,8 +5,7 @@
 import { type PropsWithChildren } from 'react';
 
 import { type SurfaceCardRole, type SurfaceComponentProps } from '@dxos/app-framework/react';
-import { type Obj } from '@dxos/echo';
-import { type Space } from '@dxos/react-client/echo';
+import { type Database, type Obj } from '@dxos/echo';
 
 /**
  * @deprecated Use {@link SurfaceComponentProps} instead.
@@ -17,8 +16,7 @@ export type CardPreviewProps<
   Role extends SurfaceCardRole = SurfaceCardRole,
 > = PropsWithChildren<
   SurfaceComponentProps<Subject, Role> & {
-    // TODO(burdon): Why is this required (why active?)
-    activeSpace?: Space;
+    db?: Database.Database;
     // TODO(burdon): Remove in favor of intents?
     onSelect?: (obj: Obj.Any) => void;
   }

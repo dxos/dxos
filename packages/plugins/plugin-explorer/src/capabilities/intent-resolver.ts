@@ -12,8 +12,8 @@ export default (context: PluginContext) =>
     Capabilities.IntentResolver,
     createResolver({
       intent: ExplorerAction.CreateGraph,
-      resolve: async ({ space, name, typename }) => {
-        const { view } = await View.makeFromSpace({ space, typename });
+      resolve: async ({ db, name, typename }) => {
+        const { view } = await View.makeFromDatabase({ db, typename });
         const graph = Graph.make({ name, view });
         return { data: { object: graph } };
       },

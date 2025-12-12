@@ -23,15 +23,15 @@ export default (context: PluginContext) =>
   contributes(Capabilities.IntentResolver, [
     createResolver({
       intent: AutomationAction.CreateTriggerFromTemplate,
-      resolve: async ({ space, template, enabled = false, scriptName, input }) => {
+      resolve: async ({ db, template, enabled = false, scriptName, input }) => {
         const trigger = Trigger.make({ enabled, input });
 
         // TODO(wittjosiah): Factor out function lookup by script name?
         if (scriptName) {
-          const scripts = await space.db.query(Filter.type(Script.Script, { name: scriptName })).run();
+          const scripts = await db.query(Filter.type(Script.Script, { name: scriptName })).run();
           const [script] = scripts;
           if (script) {
-            const functions = await space.db.query(Filter.type(Function.Function, { source: Ref.make(script) })).run();
+            const functions = await db.query(Filter.type(Function.Function, { source: Ref.make(script) })).run();
             const [fn] = functions;
             if (fn) {
               trigger.function = Ref.make(fn);
@@ -60,14 +60,14 @@ export default (context: PluginContext) =>
           intents: [
             createIntent(SpaceAction.AddObject, {
               object: trigger,
-              target: space,
+              target: db,
               hidden: true,
             }),
             createIntent(LayoutAction.Open, {
               part: 'main',
-              subject: [`automation-settings${ATTENDABLE_PATH_SEPARATOR}${space.id}`],
+              subject: [`automation-settings${ATTENDABLE_PATH_SEPARATOR}${db.spaceId}`],
               options: {
-                workspace: space.id,
+                workspace: db.spaceId,
               },
             }),
           ],

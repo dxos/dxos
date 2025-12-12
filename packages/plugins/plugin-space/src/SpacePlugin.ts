@@ -128,9 +128,9 @@ export const SpacePlugin = definePlugin<SpacePluginOptions>(
               inputSchema: SpaceAction.StoredSchemaForm,
               createObjectIntent: ((props, options) =>
                 props.typename
-                  ? createIntent(SpaceAction.UseStaticSchema, { space: options.space, typename: props.typename })
+                  ? createIntent(SpaceAction.UseStaticSchema, { db: options.db, typename: props.typename })
                   : createIntent(SpaceAction.AddSchema, {
-                      space: options.space,
+                      db: options.db,
                       name: props.name,
                       schema: createDefaultSchema(),
                     })) satisfies CreateObjectIntent,

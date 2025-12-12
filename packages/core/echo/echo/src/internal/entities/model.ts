@@ -9,6 +9,7 @@ import { invariant } from '@dxos/invariant';
 import { DXN, ObjectId } from '@dxos/keys';
 import { assumeType } from '@dxos/util';
 
+import type * as Database from '../../Database';
 import {
   type ATTR_META,
   type ATTR_TYPE,
@@ -60,24 +61,23 @@ export const ObjectDeletedId = Symbol.for('@dxos/echo/Deleted');
 export const ObjectVersionId: unique symbol = Symbol.for('@dxos/echo/Version');
 
 /**
+ * Object database accessor symbol.
+ */
+export const ObjectDatabaseId = Symbol.for('@dxos/echo/Database');
+
+/**
  * Internal runtime representation of an object.
  * The fields are accessed through getter functions.
  */
+// NOTE: Each symbol has a jsdoc describing its purpose.
 export interface InternalObjectProps {
-  id: ObjectId;
-
-  // Echo supports untyped objects O_O.
-  readonly [TypeId]?: DXN;
-
-  // TODO(burdon): ???
-  readonly [SelfDXNId]?: DXN;
-
-  /**
-   * Returns the schema for the object.
-   */
-  readonly [SchemaId]?: Schema.Schema.AnyNoContext;
+  readonly id: ObjectId;
+  readonly [SelfDXNId]: DXN;
   readonly [KindId]: EntityKind;
+  readonly [SchemaId]: Schema.Schema.AnyNoContext;
+  readonly [TypeId]: DXN;
   readonly [MetaId]?: ObjectMeta;
+  readonly [ObjectDatabaseId]?: Database.Database;
   readonly [ObjectDeletedId]?: boolean;
   readonly [ObjectVersionId]?: Version;
   readonly [RelationSourceDXNId]?: DXN;
