@@ -74,7 +74,7 @@ describe('RepoProxy', () => {
     expect(clientHandle.doc()?.text).to.equal(text);
   });
 
-  test.only('two peers exchange document', async () => {
+  test('two peers exchange document', async () => {
     const peer1 = await setup();
     const [repo1] = createProxyRepos(peer1.dataService);
     await openAndClose(repo1);
