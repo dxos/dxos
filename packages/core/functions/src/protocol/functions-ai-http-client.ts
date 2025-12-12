@@ -11,6 +11,7 @@ import * as FiberRef from 'effect/FiberRef';
 import * as Layer from 'effect/Layer';
 import * as Stream from 'effect/Stream';
 
+import { log } from '@dxos/log';
 import { type EdgeFunctionEnv } from '@dxos/protocols';
 /**
  * Copy pasted from https://github.com/Effect-TS/effect/blob/main/packages/platform/src/internal/fetchHttpClient.ts
@@ -18,7 +19,7 @@ import { type EdgeFunctionEnv } from '@dxos/protocols';
 export const requestInitTagKey = '@effect/platform/FetchHttpClient/FetchOptions';
 
 export class FunctionsAiHttpClient {
-  static make = (aiService: EdgeFunctionEnv.AiService) =>
+  static make = (service: EdgeFunctionEnv.FunctionService) =>
     HttpClient.make((request, url, signal, fiber) => {
       const context = fiber.getFiberRef(FiberRef.currentContext);
       const options: RequestInit = context.unsafeMap.get(requestInitTagKey) ?? {};
@@ -29,23 +30,23 @@ export class FunctionsAiHttpClient {
       const send = (body: BodyInit | undefined) =>
         Effect.tryPromise({
           try: () =>
-            aiService.proxyFetch(
-              {}, // ExecutionContext
+            service.aiFetch(
               new Request(url, {
                 ...options,
                 method: request.method,
                 headers,
                 body,
-                duplex: request.body._tag === 'Stream' ? 'half' : undefined,
-                signal,
-              } as any),
+                // Note: Don't pass signal - it can't be serialized through RPC
+              }),
             ),
-          catch: (cause) =>
-            new HttpClientError.RequestError({
+          catch: (cause) => {
+            log.error('Failed to fetch', { error: cause });
+            return new HttpClientError.RequestError({
               request,
               reason: 'Transport',
               cause,
-            }),
+            });
+          },
         }).pipe(Effect.map((response) => HttpClientResponse.fromWeb(request, response)));
 
       switch (request.body._tag) {
@@ -61,6 +62,6 @@ export class FunctionsAiHttpClient {
       return send(undefined);
     });
 
-  static layer = (aiService: EdgeFunctionEnv.AiService) =>
-    Layer.succeed(HttpClient.HttpClient, FunctionsAiHttpClient.make(aiService));
+  static layer = (service: EdgeFunctionEnv.FunctionService) =>
+    Layer.succeed(HttpClient.HttpClient, FunctionsAiHttpClient.make(service));
 }
