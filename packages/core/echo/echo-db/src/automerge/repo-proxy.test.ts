@@ -4,14 +4,17 @@
 
 import { next as A } from '@automerge/automerge';
 import { type AutomergeUrl } from '@automerge/automerge-repo';
+import * as Record from 'effect/Record';
 import { describe, expect, test } from 'vitest';
 
 import { Trigger, asyncTimeout, latch, sleep } from '@dxos/async';
-import { AutomergeHost, DataServiceImpl, FIND_PARAMS, SpaceStateManager } from '@dxos/echo-pipeline';
+import { Context } from '@dxos/context';
+import { AutomergeHost, DataServiceImpl, SpaceStateManager } from '@dxos/echo-pipeline';
 import { TestReplicationNetwork } from '@dxos/echo-pipeline/testing';
 import { IndexMetadataStore } from '@dxos/indexing';
 import { SpaceId } from '@dxos/keys';
 import { createTestLevel } from '@dxos/kv-store/testing';
+import { log } from '@dxos/log';
 import { openAndClose } from '@dxos/test-utils';
 
 import { createTmpPath } from '../testing';
@@ -25,10 +28,15 @@ describe('RepoProxy', () => {
     const [clientRepo] = createProxyRepos(dataService);
     await openAndClose(clientRepo);
 
+    log.break();
     const clientHandle = clientRepo.create<{ text: string }>();
-    const hostHandle = await host.repo!.find<{ text: string }>(clientHandle.url, FIND_PARAMS);
+    log.break();
+
+    const hostHandle = await host.loadDoc<{ text: string }>(Context.default(), clientHandle.url);
+    log.break();
     await hostHandle.whenReady();
 
+    log.break();
     const receivedChange = new Trigger();
     hostHandle.once('change', () => receivedChange.wake());
     const text = 'Hello World!';
@@ -38,6 +46,8 @@ describe('RepoProxy', () => {
     await receivedChange.wait();
 
     expect(hostHandle.doc()?.text).to.equal(text);
+
+    log.break();
 
     {
       // Change from another peer.
@@ -58,7 +68,7 @@ describe('RepoProxy', () => {
     await openAndClose(clientRepo);
 
     const text = 'Hello World!';
-    const hostHandle = host.repo!.create<{ text: string }>({ text });
+    const hostHandle = host.createDoc<{ text: string }>({ text });
     const clientHandle = clientRepo.find<{ text: string }>(hostHandle.url);
     await asyncTimeout(clientHandle.whenReady(), 1000);
     expect(clientHandle.doc()?.text).to.equal(text);
@@ -79,11 +89,12 @@ describe('RepoProxy', () => {
 
     const text = 'Hello World!';
     const handle1 = repo1.create<{ text: string }>({ text });
+    await repo1.flush();
 
     const handle2 = repo2.find<{ text: string }>(handle1.url);
     await handle2.whenReady();
     expect(handle2.doc()?.text).to.equal(text);
-    await peer1.host.repo.flush();
+    await peer1.host.flush();
 
     {
       // Change from another peer.
@@ -118,7 +129,7 @@ describe('RepoProxy', () => {
       });
 
       await clientRepo.flush();
-      await host.repo!.flush();
+      await host.flush();
       await clientRepo.close();
       await host.close();
       await level.close();
@@ -210,7 +221,7 @@ describe('RepoProxy', () => {
     await openAndClose(clientRepo);
 
     const handle = clientRepo.create<{ client: number; host: number }>();
-    const hostHandle = await host.repo!.find<{ client: number; host: number }>(handle.url);
+    const hostHandle = await host.loadDoc<{ client: number; host: number }>(Context.default(), handle.url);
 
     const numberOfUpdates = 1000;
     for (let i = 1; i <= numberOfUpdates; i++) {
@@ -249,7 +260,7 @@ describe('RepoProxy', () => {
     await cloneHandle.whenReady();
     expect(cloneHandle.doc()?.text).to.equal(text);
 
-    const hostHandle = await host.repo!.find<{ text: string }>(cloneHandle.url, FIND_PARAMS);
+    const hostHandle = await host.loadDoc<{ text: string }>(Context.default(), cloneHandle.url);
     await hostHandle.whenReady();
     await expect.poll(() => hostHandle.doc()?.text).toEqual(text);
   });
@@ -280,7 +291,7 @@ describe('RepoProxy', () => {
     }
 
     const hostHandles = await Promise.all(
-      handles.map(async (handle) => host.repo!.find<{ text: string }>(handle.url, FIND_PARAMS)),
+      handles.map(async (handle) => host.loadDoc<{ text: string }>(Context.default(), handle.url)),
     );
 
     for (const handle of hostHandles) {
@@ -359,7 +370,13 @@ const setup = async (kv = createTestLevel()) => {
     spaceStateManager: new SpaceStateManager(),
     updateIndexes: async () => {},
   });
-  return { kv, host, dataService };
+
+  const refreshCollectionState = async () => {
+    const documentIds = Record.keys(host.handles);
+    log('refreshCollectionState', { documentIds });
+    await host.updateLocalCollectionState('default', documentIds);
+  };
+  return { kv, host, dataService, refreshCollectionState };
 };
 
 function* createProxyRepos(dataService: DataServiceImpl): Generator<RepoProxy> {

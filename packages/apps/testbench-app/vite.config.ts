@@ -17,6 +17,7 @@ import tsconfigPaths from 'vite-tsconfig-paths';
 import { UserConfig } from 'vitest/config';
 
 import { createConfig as createTestConfig } from '../../../vitest.base.config';
+import PluginImportSource from '@dxos/vite-plugin-import-source';
 
 const dirname = typeof __dirname !== 'undefined' ? __dirname : path.dirname(fileURLToPath(import.meta.url));
 
@@ -50,6 +51,16 @@ export default defineConfig(
           ],
         },
       },
+      resolve: {
+        alias: {
+          ['node-fetch']: 'isomorphic-fetch',
+          ['node:util']: '@dxos/node-std/util',
+          ['node:path']: '@dxos/node-std/path',
+          ['util']: '@dxos/node-std/util',
+          ['path']: '@dxos/node-std/path',
+          ['tiktoken/lite']: path.resolve(dirname, 'stub.mjs'),
+        },
+      },
       esbuild: {
         keepNames: true,
       },
@@ -75,14 +86,46 @@ export default defineConfig(
       },
       worker: {
         format: 'es',
-        plugins: () => [WasmPlugin(), sourceMaps()],
+        plugins: () => [
+          WasmPlugin(),
+          sourceMaps(),
+          env.command === 'serve' &&
+            PluginImportSource({
+              exclude: [
+                '**/node_modules/**',
+                '**/common/random-access-storage/**',
+                '**/common/lock-file/**',
+                '**/mesh/network-manager/**',
+                '**/mesh/teleport/**',
+                '**/sdk/config/**',
+                '**/sdk/client-services/**',
+                '**/sdk/observability/**',
+                // TODO(dmaretskyi): Decorators break in lit.
+                '**/ui/lit-*/**',
+              ],
+            }),
+        ],
       },
       plugins: [
         sourceMaps(),
+
+        // Building from dist when creating a prod bundle.
         env.command === 'serve' &&
-          tsconfigPaths({
-            projects: ['../../../tsconfig.paths.json'],
+          PluginImportSource({
+            exclude: [
+              '**/node_modules/**',
+              '**/common/random-access-storage/**',
+              '**/common/lock-file/**',
+              '**/mesh/network-manager/**',
+              '**/mesh/teleport/**',
+              '**/sdk/config/**',
+              '**/sdk/client-services/**',
+              '**/sdk/observability/**',
+              // TODO(dmaretskyi): Decorators break in lit.
+              '**/ui/lit-*/**',
+            ],
           }),
+
         ConfigPlugin({
           root: dirname,
           env: ['DX_VAULT'],
