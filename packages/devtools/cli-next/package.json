@@ -52,7 +52,6 @@
     "@lezer/markdown": "catalog:",
     "@opentui/core": "catalog:",
     "@opentui/solid": "catalog:",
-    "chalk": "catalog:",
     "effect": "catalog:",
     "esbuild": "catalog:",
     "solid-js": "catalog:",
